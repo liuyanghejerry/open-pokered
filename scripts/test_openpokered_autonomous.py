@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from openpokered.playthrough_judgments import ObservedProtocol, move_question, JevGame, replacement_options, medicine_options
 from openpokered.autonomous_story import (AutonomousStoryAgent, counter_approaches, reachable_grass,
                                           training_tile, battle_readiness, encounter_value,
-                                          training_battler)
+                                          training_battler, storage_deposit_indices)
 from openpokered.story_agent import StoryStopped
 from openpokered.navigation_skills import cut_requirement, surf_requirement, water_tile, hm_compatible, water_planning
 from openpokered.story_rules import Rule
@@ -18,6 +18,27 @@ from openpokered.run_autonomous import observations_valid
 
 
 class AutonomousTests(unittest.TestCase):
+    def test_storage_retains_main_and_sole_required_field_move_carriers(self):
+        party = [{'species': 'Charizard', 'level': 36, 'moves': ['Slash']},
+                 {'species': 'Pidgey', 'level': 9, 'moves': ['Gust']},
+                 {'species': 'Oddish', 'level': 13, 'moves': ['Cut']},
+                 {'species': 'Lapras', 'level': 15, 'moves': ['Surf']},
+                 {'species': 'Machop', 'level': 20, 'moves': ['Strength']},
+                 {'species': 'Rattata', 'level': 3, 'moves': ['Tackle']}]
+        self.assertEqual(storage_deposit_indices(party), [1, 5])
+
+    def test_stored_main_is_retrieved_instead_of_training_low_level_replacement(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        rule = Mock()
+        rule.missing.return_value = False
+        agent.index = Mock(by_effect={('pc', 'storage', True): [rule]})
+        facts = {'party': [{'species': 'Oddish', 'level': 13}],
+                 'stored_pokemon': [{'species': 'Charizard', 'level': 36, 'box': 0, 'index': 0}]}
+        groups = {}
+        agent.add_stored_battler_retrieval(groups, facts)
+        self.assertTrue(groups['retrieve:Charizard']['context']['restore_main_battler'])
+        self.assertEqual(groups['retrieve:Charizard']['target'], ('pokemon', 'Charizard', None))
+
     def test_surf_finds_an_executable_shore_when_shortest_route_enters_water_across_map_border(self):
         import playthrough as pt
         from openpokered.navigation_skills import surf_requirement, water_tile

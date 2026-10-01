@@ -159,6 +159,19 @@ def training_battler(party):
     return max(candidates, key=lambda mon: mon.get('level', 0)) if candidates else None
 
 
+def storage_deposit_indices(party):
+    """Preserve the main battler and sole carriers of required field moves."""
+    if not party:
+        return []
+    main = max(range(len(party)), key=lambda index: party[index]['level'])
+    protected = {main}
+    for move in ('Cut', 'Surf', 'Strength'):
+        carriers = [i for i, mon in enumerate(party) if move in mon.get('moves', [])]
+        if len(carriers) == 1:
+            protected.update(carriers)
+    return [i for i in range(len(party)) if i not in protected]
+
+
 def type_options(party, opponents):
     """Super-effective party moves per opponent species, from public type data."""
     chart = data.type_chart()
@@ -1023,6 +1036,21 @@ class AutonomousStoryAgent(DualStoryAgent):
         if target not in entry['context']['required_for']:
             entry['context']['required_for'].append(target)
 
+    def add_stored_battler_retrieval(self, groups, facts):
+        """Recover an earned main battler rather than train a replacement."""
+        stored = facts.get('stored_pokemon', [])
+        if not stored or not facts.get('party'):
+            return
+        main = max(stored, key=lambda mon: mon.get('level', 0))
+        current_level = max(mon['level'] for mon in facts['party'])
+        if main.get('level', 0) < max(current_level + 5, current_level * 1.5):
+            return
+        self.add_storage_retrieval(groups, facts, main['species'], 'story battle readiness')
+        entry = groups.get(f'retrieve:{main["species"]}')
+        if entry:
+            entry['context']['restore_main_battler'] = True
+            entry['objectives'] = [f'Restore the already trained {main["species"]} to the party before further training or battles']
+
     def add_box_capacity_group(self, groups, facts):
         counts = facts.get('box_counts', [])
         current = facts.get('current_box_index', 0)
@@ -1796,6 +1824,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                 threats.append((max(mon['level'] for mon in opponents), group['objectives']))
         if not facts['party']:
             return groups
+        self.add_stored_battler_retrieval(groups, facts)
         self.add_recovery_groups(groups, facts)
         carried_healing = any(facts['bag'].get(name.replace('_', '').upper(), 0)
                               for name, item in MEDICINES.items() if 'hp' in item.get('tags', []))
@@ -1958,6 +1987,12 @@ class AutonomousStoryAgent(DualStoryAgent):
         self.transport_frontiers(groups, facts)
         self.add_mechanism_groups(groups, facts)
         self.annotate_navigation(groups, facts, previews)
+        restore = {key: group for key, group in groups.items()
+                   if group.get('context', {}).get('restore_main_battler')
+                   and any(route.get('tile_route_found') for route in
+                           group['context'].get('trigger_navigation', []))}
+        if restore:
+            groups = restore
         if self.avoids_optional_preparation:
             for key, group in list(groups.items()):
                 if group.get('context', {}).get('optional_preparation'):
@@ -2213,7 +2248,8 @@ class AutonomousStoryAgent(DualStoryAgent):
                 for sign_index, sign in enumerate(signs):
                     if sign.get('textId') not in sign_ids:
                         continue
-                    for deposit, mon in enumerate(facts['party']):
+                    for deposit in storage_deposit_indices(facts['party']):
+                        mon = facts['party'][deposit]
                         operation = f'deposit_pc:{deposit},{sign_index}'
                         key = f'action:{len(candidates)}'
                         candidates[key] = json.dumps({'operation': operation,
@@ -2262,7 +2298,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                 for sign_index, sign in enumerate(signs):
                     if sign.get('textId') not in sign_ids:
                         continue
-                    deposits = [-1] if len(facts['party']) < 6 else list(range(len(facts['party'])))
+                    deposits = [-1] if len(facts['party']) < 6 else storage_deposit_indices(facts['party'])
                     for deposit in deposits:
                         operation = (f'retrieve_pc:{stored["box"]},{stored["index"]},'
                                      f'{deposit},{sign_index}')
