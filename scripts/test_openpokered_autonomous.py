@@ -1664,6 +1664,28 @@ class AutonomousTests(unittest.TestCase):
         self.assertLess(calls.index('cutscene'), calls.index('tap'))
         self.assertEqual([call.args[0] for call in game.tap.call_args_list], ['start', 'a'])
 
+    def test_critical_main_requires_a_reachable_nurse_before_story(self):
+        nurse = Rule('heal', 'VermilionPokecenter', 'nurse', [], [], [], ('heal', 'party', True), [])
+        blocked = Rule('blocked', 'SaffronPokecenter', 'nurse', [], [], [], nurse.effect, [])
+        def groups(reachable):
+            return {'story': {'target': ('item', 'HM01', True), 'rules': []},
+                    'heal': {'target': nurse.effect, 'rules': [nurse, blocked], 'context': {
+                        'trigger_navigation': [{'map': nurse.map, 'tile_route_found': reachable},
+                                               {'map': blocked.map, 'tile_route_found': False}]}}}
+        facts = {'party': [{'species': 'Charmeleon', 'level': 30, 'hp': 14, 'max_hp': 88},
+                           {'species': 'Pidgey', 'level': 9, 'hp': 27, 'max_hp': 27}]}
+        offered = groups(True)
+        AutonomousStoryAgent.prioritize_critical_recovery(offered, facts)
+        self.assertEqual(set(offered), {'heal'})
+        self.assertEqual(offered['heal']['rules'], [nurse])
+        offered = groups(False)
+        AutonomousStoryAgent.prioritize_critical_recovery(offered, facts)
+        self.assertIn('story', offered)
+        facts['party'][0]['hp'] = 70
+        offered = groups(True)
+        AutonomousStoryAgent.prioritize_critical_recovery(offered, facts)
+        self.assertIn('story', offered)
+
     def test_forced_bike_road_is_not_a_surf_shortcut(self):
         import playthrough as pt
         from openpokered.navigation_skills import forced_bike_region

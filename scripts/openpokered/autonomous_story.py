@@ -1962,7 +1962,39 @@ class AutonomousStoryAgent(DualStoryAgent):
             for key, group in list(groups.items()):
                 if group.get('context', {}).get('optional_preparation'):
                     del groups[key]  # Preparation the run can survive without only spends frames.
+        self.prioritize_critical_recovery(groups, facts)
         return groups
+
+    @staticmethod
+    def prioritize_critical_recovery(groups, facts):
+        """Recover a critically hurt main battler when a nurse is executable.
+
+        Script preconditions do not mean a party can survive the next battle.
+        Keep recovery mandatory at <=25% HP, but only if an actual tile path
+        exists; otherwise retain the frontiers that can unlock that path.
+        """
+        party = facts.get('party', [])
+        if not party:
+            return
+        main = max(party, key=lambda mon: mon['level'])
+        if main.get('max_hp', 0) <= 0 or main['hp'] > main['max_hp'] * .25:
+            return
+        recovery = {}
+        for key, group in groups.items():
+            if group['target'][0] != 'heal':
+                continue
+            reachable = {route['map'] for route in
+                         group.get('context', {}).get('trigger_navigation', [])
+                         if route.get('tile_route_found')}
+            rules = [rule for rule in group['rules'] if rule.map in reachable]
+            if rules:
+                recovery[key] = {**group, 'rules': rules, 'context': {
+                    **group.get('context', {}), 'mandatory_recovery': True,
+                    'critical_battler': main,
+                    'reason': 'Main battler has at most 25% HP and a nurse has a confirmed tile path'}}
+        if recovery:
+            groups.clear()
+            groups.update(recovery)
 
     # Collecting burns balls faster than the starting funds replace them, so a
     # collector restocks well before the bag is empty.
