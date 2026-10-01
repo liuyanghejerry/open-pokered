@@ -16,10 +16,31 @@ from openpokered.autonomous_story import compact_strategy_candidates
 from openpokered.story_agent import StoryStopped
 from openpokered.navigation_skills import cut_requirement, surf_requirement, water_tile, hm_compatible, water_planning
 from openpokered.story_rules import Rule
-from openpokered.run_autonomous import observations_valid
+from openpokered.run_autonomous import observations_valid, checkpoint_field_requirements
 
 
 class AutonomousTests(unittest.TestCase):
+    def test_checkpoint_recovers_observed_hm_blockers_across_legacy_resumes(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as private:
+            old, latest = Path(private) / 'old', Path(private) / 'latest'
+            old.mkdir()
+            latest.mkdir()
+            old.joinpath('summary.json').write_text(json.dumps({'preparation_requirements': {}}))
+            cut = {'move': 'Cut', 'map': 'VermilionCity', 'tree': [15, 10]}
+            old.joinpath('trace.jsonl').write_text(json.dumps({
+                'kind': 'operation', 'result': {'field_obstruction': cut}}) + '\n')
+            latest.joinpath('summary.json').write_text(json.dumps({'resumed_from': str(old)}))
+            surf = {'move': 'Surf', 'map': 'Route24', 'landing': ['CeruleanCity', 5, 13]}
+            latest.joinpath('trace.jsonl').write_text(json.dumps({
+                'kind': 'operation', 'result': {'field_obstruction': surf}}) + '\n')
+            self.assertEqual(checkpoint_field_requirements(latest), {'Cut': cut, 'Surf': surf})
+            # A new complete checkpoint is authoritative: do not resurrect
+            # blockers explicitly cleared since the legacy observation.
+            latest.joinpath('summary.json').write_text(json.dumps({
+                'resumed_from': str(old), 'field_requirements_schema': 1,
+                'preparation_requirements': {'Surf': surf}}))
+            self.assertEqual(checkpoint_field_requirements(latest), {'Surf': surf})
     def test_strategy_compaction_preserves_goals_costs_and_blockers(self):
         routes = [{'map': 'Center', 'tile_route_found': True, 'steps': 11,
                    'requires_surf': False, 'scope': 'real trigger route'}]

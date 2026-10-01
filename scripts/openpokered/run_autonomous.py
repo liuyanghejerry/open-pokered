@@ -61,6 +61,45 @@ def observations_valid(observations):
         return False
 
 
+def checkpoint_field_requirements(run):
+    """Restore observed HM blockers, including legacy checkpoints that lost them."""
+    chain, seen, requirements = [], set(), {}
+    while run:
+        run = Path(run).resolve()
+        if run in seen:
+            break
+        seen.add(run)
+        summary_path = run / 'summary.json'
+        if not summary_path.is_file():
+            break
+        summary = json.loads(summary_path.read_text())
+        if summary.get('field_requirements_schema') == 1:
+            requirements.update(summary.get('preparation_requirements', {}))
+            break
+        chain.append((run, summary))
+        parent = summary.get('resumed_from')
+        run = (pt.ROOT / parent) if parent else None
+    for folder, summary in reversed(chain):
+        requirements.update(summary.get('preparation_requirements', {}))
+        trace = folder / 'trace.jsonl'
+        if not trace.is_file():
+            continue
+        with trace.open() as stream:
+            for line in stream:
+                if '"field_obstruction"' not in line:
+                    continue
+                try:
+                    event = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                if event.get('kind') != 'operation':
+                    continue
+                obstacle = (event.get('result') or {}).get('field_obstruction')
+                if isinstance(obstacle, dict) and obstacle.get('move') in ('Cut', 'Surf', 'Strength'):
+                    requirements[obstacle['move']] = obstacle
+    return requirements
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--until', choices=[o['id'] for o in load_objectives()], default='become-champion')
@@ -184,7 +223,7 @@ def main(argv=None):
                             for blockage in event.get('state', {}).get('known_navigation_failures', {}).values():
                                 key = json.dumps([blockage['destination'], blockage['map']])
                                 agent.navigation_history[key] = blockage
-                    agent.field_requirements.update(parent.get('preparation_requirements', {}))
+                    agent.field_requirements.update(checkpoint_field_requirements(args.resume))
                     agent.battle_requirements.update(parent.get('battle_requirements', {}))
                     game.stationary_npcs = {name: {int(k): tuple(v) for k, v in npcs.items()}
                                             for name, npcs in parent.get('stationary_npcs', {}).items()}
@@ -208,9 +247,8 @@ def main(argv=None):
                             result['navigation_memory'] = agent.navigation_memory
                             result['navigation_history'] = agent.navigation_history
                             result['mechanism_goal'] = agent.mechanism_goal
-                            result['preparation_requirements'] = {
-                                move: context for move, context in agent.field_requirements.items()
-                                if move == 'Strength'}
+                            result['preparation_requirements'] = dict(agent.field_requirements)
+                            result['field_requirements_schema'] = 1
                             result['battle_requirements'] = agent.battle_requirements
                             result['stationary_npcs'] = getattr(game, 'stationary_npcs', {})
                             result['battle_defeats'] = agent.battle_defeats
