@@ -2216,6 +2216,75 @@ class AutonomousTests(unittest.TestCase):
             groups, {'bag': {'POKEBALL': 12}, 'money': 3000, 'map': 'ViridianCity'})
         self.assertEqual(groups, {})
 
+    def scripted_ball_agent(self):
+        from openpokered.story_rules import StoryIndex, compile_story, literal
+        call = lambda name, *args: {'Call': {'callee': name, 'args': [literal(a) for a in args]}}
+        gift = {'id': 'SilphCo11F:talkSilphPresident', 'map': 'SilphCo11F',
+                'triggers': ['npc:1'], 'program': [{'If': {
+                    'condition': call('getFlag', 'EVENT_GOT_MASTER_BALL'), 'then_branch': [],
+                    'else_branch': [{'Command': {'name': 'giveItem',
+                                                 'args': [literal('MASTER_BALL'), literal(1)]}}]}}]}
+        agent = self.ball_supply_agent()
+        index = StoryIndex.__new__(StoryIndex)
+        index.rules = compile_story(gift)
+        index.by_effect = {}
+        for rule in index.rules:
+            index.by_effect.setdefault(rule.effect, []).append(rule)
+        agent.index = index
+        return agent
+
+    def test_scripted_ball_source_survives_full_ordinary_reserve_without_money(self):
+        agent = self.scripted_ball_agent()
+        groups = {}
+        facts = {'bag': {'ULTRABALL': 12}, 'flags': {}, 'money': 0, 'map': 'FuchsiaCity'}
+        agent.add_ball_supply(groups, facts)
+        gift = groups['ball-source:MASTER_BALL']
+        self.assertEqual(gift['target'], ('item', 'MASTER_BALL', True))
+        self.assertEqual(gift['context']['ball'], 'MasterBall')
+        self.assertEqual(gift['context']['source_maps'], ['SilphCo11F'])
+        self.assertIn('Guaranteed capture', gift['context']['capture_behavior'])
+        self.assertEqual(gift['rules'], agent.index.rules)
+        self.assertEqual(facts['bag'], {'ULTRABALL': 12})
+
+    def test_scripted_ball_source_is_not_replenishable_or_already_owned(self):
+        agent = self.scripted_ball_agent()
+        for bag, flags in [({'ULTRABALL': 12}, {'EVENT_GOT_MASTER_BALL': True}),
+                           ({'MASTERBALL': 1, 'ULTRABALL': 12}, {})]:
+            groups = {}
+            agent.add_ball_supply(groups, {'bag': bag, 'flags': flags, 'money': 0, 'map': 'FuchsiaCity'})
+            self.assertEqual(groups, {})
+        agent.collects_dex = False
+        groups = {}
+        agent.add_ball_supply(groups, {'bag': {}, 'flags': {}, 'money': 0, 'map': 'FuchsiaCity'})
+        self.assertEqual(groups, {})
+
+    def test_scripted_ball_source_preserves_backchained_prerequisites_and_bag_capacity(self):
+        agent = self.scripted_ball_agent()
+        gift = agent.index.rules[0]
+        from openpokered.story_rules import literal
+        gift.guards.append(({'Call': {'callee': 'getFlag', 'args': [literal('ACCESS')]}}, True))
+        access = Rule('access', 'SilphCo5F', 'SilphCo5F:access', [], [], [], ('flag', 'ACCESS', True), [])
+        agent.index.rules.append(access)
+        agent.index.by_effect[access.effect] = [access]
+        bag = {f'ITEM{i}': 1 for i in range(20)}
+        groups = {}
+        agent.add_ball_supply(groups, {'bag': bag, 'flags': {}, 'money': 0, 'map': 'FuchsiaCity'})
+        gift_group = groups['ball-source:MASTER_BALL']
+        self.assertEqual(gift_group['rules'], [access])
+        self.assertEqual(gift_group['target'], gift.effect)
+        self.assertEqual(gift_group['context']['occupied_bag_slots'], 20)
+        self.assertEqual(bag, {f'ITEM{i}': 1 for i in range(20)})
+
+    def test_scripted_ball_sources_are_not_a_master_ball_shortlist(self):
+        agent = self.scripted_ball_agent()
+        pickup = Rule('pickup', 'Route10', 'Route10:ball', [], [], [], ('item', 'GREAT_BALL', True), [])
+        agent.index.rules.append(pickup)
+        agent.index.by_effect[pickup.effect] = [pickup]
+        groups = {}
+        agent.add_ball_supply(groups, {'bag': {'ULTRABALL': 12}, 'flags': {}, 'money': 0, 'map': 'FuchsiaCity'})
+        self.assertEqual(set(groups), {'ball-source:MASTER_BALL', 'ball-source:GREAT_BALL'})
+        self.assertIn('not a guaranteed capture', groups['ball-source:GREAT_BALL']['context']['capture_behavior'])
+
     def test_ball_supply_offers_an_unvisited_mart_with_its_distance(self):
         agent = self.ball_supply_agent()
         agent.visited = set()  # A mart is a restock target before it is entered.

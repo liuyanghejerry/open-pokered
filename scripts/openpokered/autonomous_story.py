@@ -2776,7 +2776,7 @@ class AutonomousStoryAgent(DualStoryAgent):
     CATCH_WINDOW = 12
 
     def add_ball_supply(self, groups, facts):
-        """Buy balls through the same real shop path the recovery restock uses.
+        """Expose real scripted ball sources as well as normal shop restocking.
 
         That restock is defeat-triggered: a collector at full health would never
         be offered it and would simply stop catching once the bag ran dry.
@@ -2785,6 +2785,31 @@ class AutonomousStoryAgent(DualStoryAgent):
             return
         normalized = {name.replace('_', '').upper(): name for name in BALLS}
         carried = {normalized[key]: qty for key, qty in facts['bag'].items() if key in normalized}
+        # A reserve of ordinary balls does not replace a different ball's
+        # capture capability. Keep unclaimed gifts/pickups available even at
+        # full reserve; frontier retains their real guards and prerequisites.
+        effects = dict.fromkeys(rule.effect for rule in self.index.rules
+            if rule.effect[0] == 'item' and rule.effect[2]
+            and rule.effect[1].replace('_', '').upper() in normalized)
+        for effect in effects:
+            name = normalized[effect[1].replace('_', '').upper()]
+            rules = self.index.frontier(effect, facts)
+            if not rules:
+                continue
+            groups[f'ball-source:{effect[1]}'] = {'target': effect, 'rules': rules,
+                'objectives': ['Acquire a scripted ball gift or pickup for future captures'],
+                'context': {'optional_preparation': True, 'collecting': True,
+                            'ball': name, 'item': BALLS[name],
+                            'capture_behavior': ('Guaranteed capture of a catchable wild target without '
+                                'weakening or status setup; consumed on use. Not usable on trainer Pokémon.'
+                                if name == 'MasterBall' else
+                                'Capture probability depends on the ball, species catch rate, HP and status; '
+                                'not a guaranteed capture.'),
+                            'source_kind': 'scripted_item',
+                            'source_maps': sorted({r.map for r in self.index.rules if r.effect == effect}),
+                            'occupied_bag_slots': len(facts['bag']), 'bag_capacity': 20,
+                            'scope': 'Unclaimed script source, not an owned ball. Normal navigation, '
+                                     'script guards and bag space still apply; one-time rewards cannot be replenished.'}}
         held = sum(carried.values())
         if held >= self.BALL_RESERVE:
             return
