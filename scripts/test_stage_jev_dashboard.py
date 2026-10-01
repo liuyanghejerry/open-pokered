@@ -4,7 +4,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from scripts.stage_jev_dashboard import ASSETS, LFS_PREFIX, REQUIRED, stage
+from scripts.stage_jev_dashboard import ASSETS, DEX_REQUIRED, LFS_PREFIX, REQUIRED, stage
 
 
 class PagesStagingTest(unittest.TestCase):
@@ -55,6 +55,49 @@ class PagesStagingTest(unittest.TestCase):
 
     def test_rejects_corrupt_recording(self):
         self.recording.write_bytes(b'changed recording')
+        with self.assertRaisesRegex(ValueError, 'checksum mismatch'):
+            stage(self.repo, self.site, 'abc123')
+
+    def prepare_dex(self):
+        for name in DEX_REQUIRED:
+            path = self.source / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text('dex fixture')
+        video = self.source / 'dex-run/jev-dex-full.mp4'
+        digest = hashlib.sha256(video.read_bytes()).hexdigest()
+        (self.source / 'dex-run/manifest.json').write_text(json.dumps({
+            'files': {'jev-dex-full.mp4': {'bytes': video.stat().st_size, 'sha256': digest}}}))
+        (self.source / 'dex-run/jev-dex-dashboard.json').write_text(json.dumps({
+            'run': {'video_sha256': digest}}))
+        return video
+
+    def test_stages_complete_dex_alongside_existing_players(self):
+        video = self.prepare_dex()
+        stage(self.repo, self.site, 'abc123')
+        target = self.site / 'jev-dashboard/dex-run'
+        self.assertEqual((target / video.name).read_bytes(), video.read_bytes())
+        self.assertTrue((target / 'jev-dex-player.html').is_file())
+        self.assertTrue((self.site / 'jev-dashboard/full-run/jev-player.html').is_file())
+
+    def test_template_alone_is_not_a_publishable_dashboard(self):
+        template = self.source / DEX_REQUIRED[0]
+        template.parent.mkdir()
+        template.write_text('template')
+        stage(self.repo, self.site, 'abc123')
+        self.assertFalse((self.site / 'jev-dashboard/dex-run').exists())
+
+    def test_rejects_partial_dex_before_replacing_previous_dashboard(self):
+        self.prepare_dex()
+        (self.source / DEX_REQUIRED[1]).unlink()
+        target = self.site / 'jev-dashboard'
+        target.mkdir()
+        (target / 'index.html').write_text('previous dashboard')
+        with self.assertRaisesRegex(ValueError, 'Missing Pokédex'):
+            stage(self.repo, self.site, 'abc123')
+        self.assertEqual((target / 'index.html').read_text(), 'previous dashboard')
+
+    def test_rejects_corrupt_dex_recording(self):
+        self.prepare_dex().write_bytes(b'corrupt')
         with self.assertRaisesRegex(ValueError, 'checksum mismatch'):
             stage(self.repo, self.site, 'abc123')
 

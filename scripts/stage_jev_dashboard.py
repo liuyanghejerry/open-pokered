@@ -20,21 +20,27 @@ REQUIRED = (
     'full-run/jev-full.mp4', 'full-run/script-full.mp4',
     'full-run/script-vs-jev-full.mp4',
 )
+DEX_REQUIRED = (
+    'dex-run/jev-dex-player.html', 'dex-run/jev-dex-dashboard-data.js',
+    'dex-run/jev-dex-dashboard.json', 'dex-run/manifest.json',
+    'dex-run/jev-dex-full.mp4',
+)
 
 
-def selected_files(source):
+def selected_files(source, include_dex=False):
     # Chapter encodes are render inputs; the players use the continuous originals.
     files = []
     for path in sorted(source.rglob('*')):
         rel = path.relative_to(source)
         if not path.is_file() or len(rel.parts) > 2:
             continue
-        if len(rel.parts) == 2 and rel.parts[0] != 'full-run':
+        folders = {'full-run', 'dex-run'} if include_dex else {'full-run'}
+        if len(rel.parts) == 2 and rel.parts[0] not in folders:
             continue
         if re.fullmatch(r'(jev|script)-\d\d-x\d+\.mp4', path.name):
             continue
         if path.suffix not in {'.css', '.js', '.json', '.png', '.svg', '.mp4', '.patch'}:
-            if str(rel) not in REQUIRED:
+            if str(rel) not in REQUIRED + DEX_REQUIRED:
                 continue
         if path.name in {'hyperframes.json', 'package.json'}:
             continue
@@ -47,7 +53,14 @@ def stage(repo, site, revision):
     for name in REQUIRED:
         if not (source / name).is_file():
             raise ValueError(f'Missing dashboard dependency: {name}')
-    files = selected_files(source)
+    # The player template exists before a run is complete. Only publish it
+    # together with generated data and recording; partial delivery is an error.
+    include_dex = any((source / name).exists() for name in DEX_REQUIRED[1:])
+    if include_dex:
+        for name in DEX_REQUIRED:
+            if not (source / name).is_file():
+                raise ValueError(f'Missing Pokédex dashboard dependency: {name}')
+    files = selected_files(source, include_dex)
     for path in files:
         with path.open('rb') as stream:
             if stream.read(len(LFS_PREFIX)) == LFS_PREFIX:
@@ -59,6 +72,17 @@ def stage(repo, site, revision):
             digest = hashlib.file_digest(stream, 'sha256').hexdigest()
         if digest != record['sha256']:
             raise ValueError(f'Recording checksum mismatch: {path}')
+    if include_dex:
+        dex_manifest = json.loads((source / 'dex-run/manifest.json').read_text())
+        dex_data = json.loads((source / 'dex-run/jev-dex-dashboard.json').read_text())
+        path = source / 'dex-run/jev-dex-full.mp4'
+        record = dex_manifest['files']['jev-dex-full.mp4']
+        with path.open('rb') as stream:
+            digest = hashlib.file_digest(stream, 'sha256').hexdigest()
+        if digest != record['sha256'] or digest != dex_data['run']['video_sha256']:
+            raise ValueError(f'Recording checksum mismatch: {path}')
+        if path.stat().st_size != record['bytes']:
+            raise ValueError(f'Recording size mismatch: {path}')
     target = site / 'jev-dashboard'
     existing_size = sum(p.stat().st_size for p in site.rglob('*')
                         if p.is_file() and not p.is_relative_to(target))
