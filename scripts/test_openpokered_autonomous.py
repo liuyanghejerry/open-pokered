@@ -2285,6 +2285,99 @@ class AutonomousTests(unittest.TestCase):
         self.assertEqual(set(groups), {'ball-source:MASTER_BALL', 'ball-source:GREAT_BALL'})
         self.assertIn('not a guaranteed capture', groups['ball-source:GREAT_BALL']['context']['capture_behavior'])
 
+    def support_training_agent(self):
+        from openpokered.story_rules import StoryIndex
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.collects_dex = True
+        agent.index = StoryIndex.__new__(StoryIndex)
+        agent.validated_owned = Mock(return_value=set())
+        agent.capture_retreats = {'PowerPlant:Zapdos': {
+            'map': 'PowerPlant', 'species': 'Zapdos', 'retreat_observation': {
+                'enemy': {'species': 'Zapdos', 'level': 50, 'hp': 150, 'max_hp': 150, 'status': 'None'},
+                'party': [{'species': 'Gloom', 'hp': 0}]}}}
+        agent.find_training_sites = Mock(return_value={'Route24': (5, 18)})
+        agent.training_sites = {'Route24': (5, 18)}
+        agent.maps = {'Route24': {'wild': {'red': {'grass': {
+            'encounterRate': 25, 'mons': [{'species': 'Pidgey', 'level': 12}] * 10}}}}}
+        party = [{'species': 'Charizard', 'level': 70, 'hp': 240, 'max_hp': 240,
+                  'moves': ['Slash'], 'pp': [20], 'status': 'None'},
+                 {'species': 'Gloom', 'level': 24, 'hp': 71, 'max_hp': 71,
+                  'moves': ['Absorb', 'Poisonpowder', 'StunSpore', 'SleepPowder'],
+                  'pp': [20, 35, 30, 15], 'status': 'None'}]
+        return agent, {'party': party, 'bag': {}, 'map': 'CeruleanCity'}
+
+    def test_capture_support_training_uses_named_trainee_not_strong_leader(self):
+        agent, facts = self.support_training_agent()
+        groups = {}
+        agent.add_capture_support_training(groups, facts)
+        group = groups['prepare:capture-support:Gloom']
+        self.assertEqual(group['target'], ('level', 'Gloom', 25))
+        self.assertFalse(agent.index.satisfied(group['target'], facts))
+        self.assertEqual(group['context']['safe_status_moves'], ['StunSpore', 'SleepPowder'])
+        self.assertIn('not a survival guarantee', group['context']['scope'])
+        self.assertEqual(group['context']['training_cost']['levels_remaining'], 1)
+        self.assertEqual(group['context']['level_gap_to_highest_observed_target'], 26)
+        self.assertEqual(group['context']['training_cost_to_observed_target_level']['levels_remaining'], 26)
+        agent.find_training_sites.assert_called_once_with(facts, shared_experience=True)
+        agent.active = group
+        candidates, bindings = agent.action_candidates(facts)
+        self.assertEqual(bindings['action:0'][0], 'lead_with:Gloom')
+        facts['party'].reverse()
+        candidates, bindings = agent.action_candidates(facts)
+        self.assertEqual(bindings['action:0'][0], 'train_encounter:Route24,5,18')
+        facts['party'][0]['level'] = 25
+        self.assertTrue(agent.index.satisfied(group['target'], facts))
+
+    def test_capture_support_training_requires_observed_failure_and_healthy_trainee(self):
+        for change in ('unknown', 'registered', 'fainted', 'injured', 'status', 'noncollector', 'no_sites'):
+            agent, facts = self.support_training_agent()
+            if change == 'unknown':
+                agent.capture_retreats['PowerPlant:Zapdos'].pop('retreat_observation')
+            elif change == 'registered':
+                agent.validated_owned.return_value = {'Zapdos'}
+            elif change == 'fainted':
+                facts['party'][1]['hp'] = 0
+            elif change == 'injured':
+                facts['party'][1]['hp'] = 20
+            elif change == 'status':
+                facts['party'][1]['status'] = 'Paralysis'
+            elif change == 'noncollector':
+                agent.collects_dex = False
+            else:
+                agent.find_training_sites.return_value = {}
+            groups = {}
+            agent.add_capture_support_training(groups, facts)
+            self.assertEqual(groups, {}, change)
+
+    def test_capture_support_training_offers_all_eligible_supports(self):
+        agent, facts = self.support_training_agent()
+        facts['party'].append({'species': 'Paras', 'level': 23, 'hp': 60, 'max_hp': 60,
+                               'moves': ['StunSpore'], 'pp': [30], 'status': 'None'})
+        groups = {}
+        agent.add_capture_support_training(groups, facts)
+        self.assertEqual(set(groups), {'prepare:capture-support:Gloom', 'prepare:capture-support:Paras'})
+        target = groups['prepare:capture-support:Paras']['target']
+        self.assertFalse(agent.index.satisfied(target, facts))
+        facts['party'][-1].update(species='Parasect', level=24)
+        self.assertTrue(agent.index.satisfied(target, facts))
+
+    def test_capture_support_training_switches_once_to_finisher(self):
+        agent, facts = self.support_training_agent()
+        game = JevGame.__new__(JevGame)
+        game.judgments = Mock()
+        game.judgments.collects_dex = False
+        game.judgments.active = {'context': {'capture_support_training': True,
+            'trigger': 'level', 'from_species': 'Gloom'}}
+        game.judgments.choose.return_value = 'switch:1'
+        party = list(reversed(facts['party']))
+        state = {'party': party, 'battle_inventory': [], 'battle_live': {
+            'player': party[0], 'enemy': {'species': 'Kakuna'}, 'player_party': party}}
+        self.assertEqual(game.battle_recovery_plan(state), ('switch', 1))
+        self.assertIn('share experience', game.judgments.choose.call_args.args[2]['switch:1'])
+        self.assertIn('train the active trainee', game.judgments.choose.call_args.args[3])
+        state['battle_live']['player'] = party[1]
+        self.assertIsNone(game.battle_recovery_plan(state))
+
     def test_ball_supply_offers_an_unvisited_mart_with_its_distance(self):
         agent = self.ball_supply_agent()
         agent.visited = set()  # A mart is a restock target before it is entered.

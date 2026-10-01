@@ -634,6 +634,66 @@ def s20_transformed_capture():
         g.close()
 
 
+@scenario("s21-capture-support-training", "A capture support shares real victory XP after switching to a finisher")
+def s21_capture_support_training():
+    from types import SimpleNamespace
+    from openpokered.playthrough_judgments import JevGame
+    from openpokered.story_rules import StoryIndex
+
+    def choose(_axis, _state, candidates, _instruction):
+        if 'switch:1' in candidates:
+            return 'switch:1'
+        if 'skip' in candidates:
+            return 'skip'
+        return next(key for key, move in candidates.items() if move == 'Flamethrower')
+
+    g = Game(seed=42)
+    try:
+        boot_starter(g, 'Gloom', 5)
+        assert g.d.cmd(cmd='give_pokemon', species='Charizard', level=70)['ok']
+        g.judgments = SimpleNamespace(collects_dex=True,
+            active={'target': ('level', 'Gloom', 6), 'context': {
+                'capture_support_training': True, 'trigger': 'level', 'from_species': 'Gloom'}},
+            choose=choose, record=lambda *args, **kwargs: None)
+        g.move_cache, g.move_cache_hits, g.active_milestone = {}, 0, None
+        g.battles_driven, g.smart_moves = 0, True
+        g.battle_recovery_plan = lambda state: JevGame.battle_recovery_plan(g, state)
+        g._select_move = lambda: JevGame._select_move(g)
+        g.battle_party_target = lambda state: JevGame.battle_party_target(g, state)
+        before = g.st()['party']
+        index = StoryIndex.__new__(StoryIndex)
+        assert not index.satisfied(('level', 'Gloom', 6), {'party': before})
+        assert g.d.cmd(cmd='start_wild_battle', species='Metapod', level=40)['ok']
+        for _ in range(200):
+            state = g.st()
+            if state['battle_phase'] == 'PlayerMenu':
+                break
+            g.tap('a', 8)
+            g.step(30)
+        else:
+            raise AssertionError('support training battle did not reach the first menu')
+        assert g.battle_recovery_plan(state) == ('switch', 1), 'capture_support_finisher_not_offered'
+        for button in ('up', 'right', 'a'):
+            g.tap(button, 8)
+        assert g.st()['battle_phase'] == 'PartySelect'
+        while g.st()['battle_party_cursor'] != 1:
+            g.tap('down', 8)
+        g.tap('a', 8)
+        g.battle_loop(max_iters=400)
+        after = g.st()
+        assert after['screen'] == 'overworld'
+        assert after['party'][0]['species'] == 'Gloom'
+        assert after['party'][0]['hp'] > 0
+        assert after['party'][0]['level'] > before[0]['level'], (before, after['party'])
+        assert index.satisfied(('level', 'Gloom', 6), {'party': after['party']})
+        assert after['party'][1]['hp'] > 0
+        print(f"   support Gloom Lv{before[0]['level']} → Lv{after['party'][0]['level']}, "
+              f"HP={after['party'][0]['hp']}; finisher survived", flush=True)
+        g.evidence('s21')
+    finally:
+        g.close()
+
+
 def _static_retreat(ball_qty):
     from types import SimpleNamespace
     from openpokered.playthrough_judgments import JevGame

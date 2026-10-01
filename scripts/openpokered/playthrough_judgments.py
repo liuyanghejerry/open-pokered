@@ -543,7 +543,8 @@ class JevGame(pt.Game):
         bindings = {}
         objective = getattr(self.judgments, 'active', None)
         context = objective.get('context', {}) if isinstance(objective, dict) else {}
-        switch_training = (context.get('acquisition_method') == 'evolution'
+        switch_training = ((context.get('acquisition_method') == 'evolution'
+                            or context.get('capture_support_training'))
                            and context.get('trigger') == 'level'
                            and party[active]['species'] == context.get('from_species'))
         capturing = capture_intent(state, self.judgments) and not capture_storage_full(state)
@@ -566,7 +567,7 @@ class JevGame(pt.Game):
                     candidates[key] = json.dumps({'switch_to': mon,
                         'usable_effective_attacks': attacks,
                         'capture_status_options': statuses,
-                        'reason': ('The evolution trainee has entered battle and can share experience if it remains conscious; a stronger teammate can finish efficiently'
+                        'reason': ('The experience trainee has entered battle and can share experience if it remains conscious; a stronger teammate can finish efficiently'
                                    if switch_training else
                                    'Prepare capture using non-damaging status or weaker attacks; switching consumes a turn and does not guarantee survival'
                                    if capturing else
@@ -611,7 +612,7 @@ class JevGame(pt.Game):
             'A ball can only be thrown at a wild Pokémon: weigh the enemy species, its remaining HP, its catch rate, which ball you would spend, '
             'and whether that species is already registered, against simply attacking it.')
         if switch_training:
-            instruction += (' The current goal is to evolve the active trainee through experience. It has already '
+            instruction += (' The current goal is to train the active trainee through experience. It has already '
                 'participated and receives a share of victory experience after switching out if it remains conscious. '
                 'Compare defeating this opponent directly with switching to a stronger teammate: prefer switching '
                 'when weak or resisted attacks would consume many turns or PP, or risk fainting. Do not spend '

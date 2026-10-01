@@ -555,7 +555,20 @@ class StoryIndex:
         if kind == 'item':
             return (facts['bag'].get(name.replace('_', '').upper(), 0) > 0) == wanted
         if kind == 'level':
-            return bool(facts['party']) and facts['party'][0]['level'] >= wanted
+            if name == 'leader':
+                return bool(facts['party']) and facts['party'][0]['level'] >= wanted
+            # Named trainees must not inherit the stronger leader's level.
+            # A normal level evolution also counts as actual training gain.
+            from playthrough_late import species_data
+            species = {name}
+            pending = [name]
+            while pending:
+                for evolution in species_data(pending.pop()).get('evolutions', []):
+                    if (evolution['method'] == 'level' and evolution['level'] <= wanted
+                            and evolution['species'] not in species):
+                        species.add(evolution['species'])
+                        pending.append(evolution['species'])
+            return any(mon['species'] in species and mon['level'] >= wanted for mon in facts['party'])
         if kind == 'heal':
             return facts.get('fully_recovered', False)
         if kind == 'bag_space':

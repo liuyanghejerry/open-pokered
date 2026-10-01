@@ -667,7 +667,8 @@ class AutonomousStoryAgent(DualStoryAgent):
         if active.get('target', [None])[0] in ('catch', 'held_species'):
             return self.needs_capture_recovery(facts)
         party = facts.get('party', [])
-        if (party and context.get('acquisition_method') == 'evolution'
+        if (party and (context.get('acquisition_method') == 'evolution'
+                       or context.get('capture_support_training'))
                 and context.get('trigger') == 'level'
                 and self.same_species(party[0]['species'], context.get('from_species', ''))):
             trainee = party[0]
@@ -832,6 +833,11 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'support, safer preparation, or a ball that needs no setup. A retry being offered means '
                 'preparation changed, not that capture is now safe or likely. Missing retreat_observation '
                 'fields mean unobserved, not zero HP or confirmed failure of a specific tactic.')
+            instruction += (' Capture support training is a bounded experience step, not a complete '
+                'capture setup. Compare the remaining level gap and training_cost_to_observed_target_level '
+                'with alternate supports, ball capabilities and their acquisition prerequisites. Level '
+                'parity itself does not guarantee surviving an unfavorable matchup; a single gained '
+                'level should not erase the observed failure evidence.')
         if layer == 'action' and 'local_state' in state and getattr(self, 'active', None):
             state = {**state, 'strategy_context': self.active.get('context', {})}
         context = state.get('strategy_context') or {}
@@ -1949,12 +1955,13 @@ class AutonomousStoryAgent(DualStoryAgent):
                 costs[healer.map] = lost
         return costs
 
-    def find_training_sites(self, facts):
+    def find_training_sites(self, facts, *, shared_experience=False):
         ranked = []
         level = facts['party'][0]['level']
         active = getattr(self, 'active', None) or {}
         context = active.get('context', {})
-        if context.get('acquisition_method') == 'evolution' and context.get('trigger') == 'level':
+        if (shared_experience or context.get('capture_support_training')
+                or (context.get('acquisition_method') == 'evolution' and context.get('trigger') == 'level')):
             finisher = training_battler(facts['party'])
             if finisher:
                 level = max(level, finisher['level'])
@@ -2705,6 +2712,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                                                .get('water' if method == 'water' else 'grass'))},
                 })
             self.add_nonwild_collection_groups(groups, facts)
+            self.add_capture_support_training(groups, facts)
         if self.maximizes_coverage:
             self.add_coverage_groups(groups, facts)
         # Keep the blocked goals until their entrances have been considered.
@@ -2774,6 +2782,71 @@ class AutonomousStoryAgent(DualStoryAgent):
 
     # How many of the newest hunts the judge compares an area on.
     CATCH_WINDOW = 12
+
+    def add_capture_support_training(self, groups, facts):
+        """Offer bounded, real XP preparation after an observed failed setup.
+
+        A one-level step is not a claim that the next retry will be safe. Jev
+        compares its cost with other preparation and acquisition candidates.
+        """
+        if not self.collects_dex:
+            return
+        owned = self.validated_owned(facts)
+        failures = []
+        for retreat in getattr(self, 'capture_retreats', {}).values():
+            observation = retreat.get('retreat_observation') or {}
+            enemy = observation.get('enemy') or {}
+            if (retreat['species'] not in owned and enemy.get('level')
+                    and any(mon.get('hp') == 0 for mon in observation.get('party') or [])):
+                failures.append({'map': retreat['map'], 'species': retreat['species'],
+                                 'level': enemy['level'], 'observation': observation})
+        if not failures:
+            return
+        highest = max(row['level'] for row in failures)
+        trainees = {}
+        seen = set()
+        for mon in facts.get('party', []):
+            if mon['species'] in seen:
+                continue
+            seen.add(mon['species'])  # lead_with uses the first matching slot.
+            if mon['hp'] < mon['max_hp'] * .7 or mon.get('status', 'None') != 'None':
+                continue  # Heal through existing recovery first, then train.
+            moves = [move for move in mon.get('moves', []) if move != 'None'
+                     and data.move_data(move).get('power', 0) == 0
+                     and data.move_data(move).get('effect') in ('SleepEffect', 'ParalyzeEffect')]
+            if moves and mon['level'] < min(100, highest):
+                trainees.setdefault(mon['species'], (mon, moves))
+        if not trainees:
+            return
+        sites = self.find_training_sites(facts, shared_experience=True)
+        for source, (mon, moves) in sorted(trainees.items()):
+            target_level = mon['level'] + 1
+            target = ('level', source, target_level)
+            if self.index.satisfied(target, facts):
+                continue
+            rules = [Rule(f'train-support:{source}:{name}:{target_level}', name,
+                          'skill:train_encounter', [], [], [], target, []) for name in sites]
+            if not rules:
+                continue
+            participants = 2 if any(other['hp'] > 0 and other['level'] > mon['level']
+                                     for other in facts['party']) else 1
+            groups[f'prepare:capture-support:{source}'] = {
+                'target': target, 'rules': rules,
+                'objectives': ['Improve a capture status support through normal experience battles'],
+                'context': {'optional_preparation': True, 'capture_support_training': True,
+                            'trigger': 'level', 'from_species': source, 'level': target_level,
+                            'trainee': mon, 'safe_status_moves': moves,
+                            'level_gap_to_highest_observed_target': highest - mon['level'],
+                            'observed_failed_capture_setups': failures,
+                            'training_cost': evolution_training_cost(mon, target_level),
+                            'training_cost_to_observed_target_level': evolution_training_cost(mon, highest),
+                            'training_effort_examples': [{'map': name, **effort} for name in sites
+                                if (effort := evolution_training_effort(mon, target_level,
+                                    ((self.maps[name].get('wild') or {}).get('red') or {}).get('grass'),
+                                    participants))],
+                            'scope': 'One real level gain, then reassess; not a survival guarantee. '
+                                     'Trainee must remain conscious to share victory experience; '
+                                     'healing and switching still require normal menus.'}}
 
     def add_ball_supply(self, groups, facts):
         """Expose real scripted ball sources as well as normal shop restocking.
@@ -3073,9 +3146,11 @@ class AutonomousStoryAgent(DualStoryAgent):
                         candidates[key] = json.dumps(description)
                         bindings[key] = operation, rule
             return candidates, bindings
-        if (self.active['target'][0] == 'register'
-                and self.active.get('context', {}).get('acquisition_method') == 'evolution'):
+        if ((self.active['target'][0] == 'register'
+                and self.active.get('context', {}).get('acquisition_method') == 'evolution')
+                or self.active.get('context', {}).get('capture_support_training')):
             context = self.active['context']
+            support_training = bool(context.get('capture_support_training'))
             source = context['from_species']
             indices = [i for i, mon in enumerate(facts['party'])
                        if self.same_species(mon['species'], source)]
@@ -3096,8 +3171,8 @@ class AutonomousStoryAgent(DualStoryAgent):
                 operation = f'lead_with:{source}'
                 candidates['action:0'] = json.dumps({
                     'operation': operation,
-                    'purpose': f'Move {source} to the lead slot so battle experience can evolve it',
-                    'evolves_into': context['species']})
+                    'purpose': f'Move {source} to the lead slot so it can participate and earn experience',
+                    'evolves_into': context.get('species') if not support_training else None})
                 bindings['action:0'] = operation, rule
                 return candidates, bindings
             for name in self.find_training_sites(facts):
@@ -3106,7 +3181,8 @@ class AutonomousStoryAgent(DualStoryAgent):
                 key = f'action:{len(candidates)}'
                 candidates[key] = json.dumps({
                     'operation': operation,
-                    'purpose': f'Gain a level with {source} to evolve it into {context["species"]}',
+                    'purpose': (f'Gain a level with {source} to improve capture status support'
+                                if support_training else f'Gain a level with {source} to evolve it into {context["species"]}'),
                     'required_level': context['level'],
                     'current_level': facts['party'][0]['level'],
                     'training_cost': evolution_training_cost(facts['party'][0], context['level']),
