@@ -401,11 +401,22 @@ class JevGame(pt.Game):
         options = list(medicine_options(party, bag))
         candidates = {'fight': 'Attack this turn; preserve recovery supplies'}
         bindings = {}
-        if not effective_attacks(party[active], live['enemy']['species']):
+        objective = getattr(self.judgments, 'active', None)
+        context = objective.get('context', {}) if isinstance(objective, dict) else {}
+        switch_training = (context.get('acquisition_method') == 'evolution'
+                           and context.get('trigger') == 'level'
+                           and party[active]['species'] == context.get('from_species'))
+        if switch_training or not effective_attacks(party[active], live['enemy']['species']):
             for index, mon in enumerate(party):
                 if index != active and mon['hp'] > 0 and effective_attacks(mon, live['enemy']['species']):
+                    if switch_training and mon['level'] <= party[active]['level']:
+                        continue
                     key = f'switch:{index}'
-                    candidates[key] = json.dumps({'switch_to': mon, 'reason': 'The active battler has no usable attack that damages this opponent'})
+                    candidates[key] = json.dumps({'switch_to': mon,
+                        'usable_effective_attacks': effective_attacks(mon, live['enemy']['species']),
+                        'reason': ('The evolution trainee has entered battle and can share experience if it remains conscious; a stronger teammate can finish efficiently'
+                                   if switch_training else
+                                   'The active battler has no usable attack that damages this opponent')})
                     bindings[key] = 'switch', index
         for item, index, details in options:
             mon = party[index]
@@ -428,6 +439,12 @@ class JevGame(pt.Game):
             'Avoid healing loops when enemy damage exceeds recovery; use the strongest suitable medicine when needed. '
             'A ball can only be thrown at a wild Pokémon: weigh the enemy species, its remaining HP, its catch rate, which ball you would spend, '
             'and whether that species is already registered, against simply attacking it.')
+        if switch_training:
+            instruction += (' The current goal is to evolve the active trainee through experience. It has already '
+                'participated and receives a share of victory experience after switching out if it remains conscious. '
+                'Compare defeating this opponent directly with switching to a stronger teammate: prefer switching '
+                'when weak or resisted attacks would consume many turns or PP, or risk fainting. Do not spend '
+                'recovery supplies just to keep an inefficient trainee attacking when a healthy finisher is available.')
         if getattr(self.judgments, 'collects_dex', False) and any(not d['already_owned'] for _, _, d in balls):
             # Framed purely around turn economy, defeating an unregistered
             # species reads as the safe play and the run collects nothing.

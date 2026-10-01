@@ -2446,6 +2446,37 @@ class AutonomousTests(unittest.TestCase):
         self.assertEqual(game.battle_recovery_plan(state), ('switch', 1))
         self.assertIn('switch:1', game.judgments.choose.call_args.args[2])
 
+    def test_evolution_trainee_can_switch_to_stronger_finisher(self):
+        game = JevGame.__new__(JevGame)
+        game.judgments = Mock()
+        game.judgments.active = {'context': {'acquisition_method': 'evolution',
+            'trigger': 'level', 'from_species': 'Oddish'}}
+        game.judgments.choose.return_value = 'switch:1'
+        party = [{'species': 'Oddish', 'level': 14, 'hp': 40, 'max_hp': 40,
+                  'moves': ['Absorb'], 'pp': [20], 'status': 'None'},
+                 {'species': 'Charizard', 'level': 36, 'hp': 120, 'max_hp': 120,
+                  'moves': ['Ember'], 'pp': [25], 'status': 'None'}]
+        state = {'party': party, 'battle_inventory': [], 'battle_live': {
+            'player': party[0], 'enemy': {'species': 'Kakuna'}, 'player_party': party}}
+        self.assertEqual(game.battle_recovery_plan(state), ('switch', 1))
+        self.assertIn('share experience', game.judgments.choose.call_args.args[2]['switch:1'])
+        self.assertIn('remains conscious', game.judgments.choose.call_args.args[3])
+        # After switching, do not send the trainee back into harm's way.
+        state['battle_live']['player'] = party[1]
+        self.assertIsNone(game.battle_recovery_plan(state))
+
+    def test_normal_battle_does_not_offer_switch_training(self):
+        game = JevGame.__new__(JevGame)
+        game.judgments = Mock()
+        game.judgments.active = {'context': {}}
+        party = [{'species': 'Oddish', 'level': 14, 'hp': 40, 'max_hp': 40,
+                  'moves': ['Absorb'], 'pp': [20], 'status': 'None'},
+                 {'species': 'Charizard', 'level': 36, 'hp': 120, 'max_hp': 120,
+                  'moves': ['Ember'], 'pp': [25], 'status': 'None'}]
+        state = {'party': party, 'battle_inventory': [], 'battle_live': {
+            'player': party[0], 'enemy': {'species': 'Kakuna'}, 'player_party': party}}
+        self.assertIsNone(game.battle_recovery_plan(state))
+
     def test_failed_battle_preparation_changes_with_pp_or_recovery_stock(self):
         party = [{'species': 'Charizard', 'level': 65, 'hp': 203, 'max_hp': 203,
                   'moves': ['FireBlast', 'Slash'], 'pp': [1, 15], 'status': 'None'}]
