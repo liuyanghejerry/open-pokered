@@ -489,6 +489,26 @@ class AutonomousTests(unittest.TestCase):
         self.assertEqual(json.loads(candidates['action:0'])['operation'], 'lead_with:Charmander')
         self.assertEqual(bindings['action:0'][0], 'lead_with:Charmander')
 
+    def test_capture_reorders_weak_lead_but_evolution_retains_its_source(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        rule = Rule('hunt', 'Route24', 'skill:catch_encounter', [], [], [],
+                    ('catch', 'Route24', True), [])
+        agent.active = {'target': rule.effect, 'rules': [rule],
+                        'context': {'acquisition_method': 'grass'}}
+        facts = {'party': [
+            {'species': 'Pidgey', 'level': 9, 'hp': 27, 'moves': ['Gust'], 'pp': [35]},
+            {'species': 'Charmeleon', 'level': 27, 'hp': 79, 'moves': ['Ember'], 'pp': [25]},
+        ]}
+        _, bindings = agent.action_candidates(facts)
+        self.assertEqual(bindings['action:0'][0], 'lead_with:Charmeleon')
+        agent.active = {'target': ('register', 'Pidgeotto', True), 'rules': [rule],
+                        'context': {'acquisition_method': 'evolution', 'from_species': 'Pidgey',
+                                    'trigger': 'level', 'species': 'Pidgeotto', 'level': 18}}
+        agent.find_training_sites = Mock(return_value={'Route24': (5, 18)})
+        agent.training_sites = {'Route24': (5, 18)}
+        _, bindings = agent.action_candidates(facts)
+        self.assertEqual(bindings['action:0'][0], 'train_encounter:Route24,5,18')
+
     def test_training_is_not_offered_when_the_skill_would_stop_for_recovery(self):
         from openpokered.story_agent import DualStoryAgent
         client = Mock()

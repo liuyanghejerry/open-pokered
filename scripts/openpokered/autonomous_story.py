@@ -2118,14 +2118,19 @@ class AutonomousStoryAgent(DualStoryAgent):
         return options
 
     def action_candidates(self, facts):
-        if self.active['target'][:2] == ('level', 'leader'):
+        preparing_training = self.active['target'][:2] == ('level', 'leader')
+        preparing_capture = (self.active['target'][0] == 'catch'
+                             and self.active.get('context', {}).get('acquisition_method') != 'safari')
+        if preparing_training or preparing_capture:
             battler = training_battler(facts.get('party', []))
             if battler and facts['party'][0] is not battler:
                 operation = f'lead_with:{battler["species"]}'
                 return {'action:0': json.dumps({
                     'operation': operation,
-                    'purpose': 'Put the strongest battle-ready party member in front before training',
-                    'target_level': self.active['target'][2],
+                    'purpose': ('Put the strongest battle-ready party member in front before training'
+                                if preparing_training else
+                                'Put a capable battler in front to survive capture attempts and clear duplicate encounters'),
+                    'target_level': self.active['target'][2] if preparing_training else None,
                     'training_battler': battler,
                 })}, {'action:0': (operation, self.active['rules'][0])}
         if self.active.get('context', {}).get('coin_purchase'):
