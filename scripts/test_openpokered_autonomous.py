@@ -20,6 +20,34 @@ from openpokered.run_autonomous import observations_valid, checkpoint_field_requ
 
 
 class AutonomousTests(unittest.TestCase):
+    def test_static_retreat_requires_proof_for_every_post_battle_write(self):
+        from openpokered.story_rules import static_retreat_contract
+        result = {'Result': {'Call': {'callee': 'startWildBattle',
+            'args': [{'StringLit': 'ZAPDOS'}, {'NumberLit': 50}]}}}
+        guard = {'BinaryOp': {'op': 'Or', 'left': {'BinaryOp': {
+            'op': 'Eq', 'left': result, 'right': {'StringLit': 'win'}}},
+            'right': {'BinaryOp': {'op': 'Eq', 'left': result,
+                                 'right': {'StringLit': 'caught'}}}}}
+        battle = Rule('b', 'PowerPlant', 'PowerPlant:bird', [], [], [], ('battle', 'ZAPDOS', True), [])
+        hidden = Rule('h', battle.map, battle.storyline, [], [(guard, True)], [],
+                      ('visibility', 'BIRD', False), [battle.effect])
+        self.assertTrue(static_retreat_contract(battle, [battle, hidden])['menu_run_preserves_source'])
+        unconditional = Rule('u', battle.map, battle.storyline, [], [], [],
+                             ('flag', 'SPENT', True), [battle.effect])
+        self.assertFalse(static_retreat_contract(battle, [battle, hidden, unconditional])['menu_run_preserves_source'])
+        self.assertFalse(static_retreat_contract(battle, [battle])['menu_run_preserves_source'])
+        hidden.guards = [(guard, False)]
+        self.assertFalse(static_retreat_contract(battle, [hidden])['menu_run_preserves_source'])
+
+    def test_capture_threat_uses_native_move_shift_and_self_knockout(self):
+        from openpokered.playthrough_judgments import capture_threat
+        threat = capture_threat({'species': 'Electrode', 'level': 43})
+        self.assertEqual([row['move'] for row in threat['inferred_natural_moves']],
+                         ['Sonicboom', 'Selfdestruct', 'LightScreen', 'Swift'])
+        self.assertEqual(threat['self_knockout_moves'], ['Selfdestruct'])
+        self.assertNotIn('Explosion', threat['self_knockout_moves'])
+        self.assertIn('Explosion', capture_threat({'species': 'Electrode', 'level': 50})['self_knockout_moves'])
+
     def test_capture_inventory_risk_keeps_reference_assumptions_and_finite_source_cost(self):
         from openpokered.collection_planner import acquisition_contract
         risk = capture_inventory_risk('Snorlax', [{'ball': 'PokeBall', 'quantity': 9}])
@@ -2258,6 +2286,24 @@ class AutonomousTests(unittest.TestCase):
         self.assertEqual(details['capture_status_options'][0]['move'], 'SleepPowder')
         self.assertEqual(details['usable_effective_attacks'], [])
         self.assertIn('Switching and setup cost turns', game.judgments.choose.call_args.args[3])
+
+    def test_capture_retreat_binds_run_only_for_verified_scripted_source(self):
+        game = JevGame.__new__(JevGame)
+        game.judgments = Mock()
+        game.judgments.collects_dex = True
+        game.judgments.choose.return_value = 'run'
+        state = self.capture_support_state()
+        with patch('openpokered.playthrough_judgments.capture_retreat',
+                   return_value={'purpose': 'preserve verified source'}):
+            self.assertEqual(game.battle_recovery_plan(state), ('run', None))
+            state['battle_inventory'] = []
+            self.assertEqual(game.battle_recovery_plan(state), ('run', None))
+        question = game.judgments.choose.call_args
+        self.assertIn('run', question.args[2])
+        self.assertIn('inventory_failure_at_current_state', question.args[1])
+        self.assertIn('capture_threat', question.args[1])
+        from openpokered.playthrough_judgments import capture_retreat
+        self.assertIsNone(capture_retreat(state, game.judgments))
 
     def test_capture_menu_offers_only_usable_safe_status_and_updates_after_landing(self):
         from openpokered.playthrough_judgments import capture_move_question

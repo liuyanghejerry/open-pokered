@@ -375,6 +375,34 @@ def normalize_bag(bag):
             b.get('qty', b.get('quantity', 1)) for b in bag or []}
 
 
+def static_retreat_contract(battle, rules):
+    """Prove menu-run leaves the compiled source's post-battle writes inactive.
+
+    Unknown result expressions or unconditional writes do not prove retryability.
+    Native settlement returns 'ran' for RUN ('fled' is the different Doll path).
+    """
+    def resolve(node):
+        if isinstance(node, list):
+            return [resolve(value) for value in node]
+        if not isinstance(node, dict):
+            return node
+        call = (node.get('Result') or {}).get('Call', {})
+        if (call.get('callee', '').removeprefix('game.') == 'startWildBattle'
+                and call.get('args') and evaluate(call['args'][0], {}) == battle.effect[1]):
+            return literal('ran')
+        return {key: resolve(value) for key, value in node.items()}
+
+    writes = [rule for rule in rules if rule.storyline == battle.storyline
+              and battle.effect in rule.preceding and rule.effect[0] != 'battle']
+    retryable = bool(writes) and all(any(
+        (value := evaluate(resolve(expr), {})) is not None and bool(value) != wanted
+        for expr, wanted in rule.guards) for rule in writes)
+    return {'menu_run_preserves_source': retryable,
+            'scope': 'Compiled source post-battle effects under native menu-run result ran; unknown paths are not certified',
+            'script': battle.storyline,
+            'post_battle_effects': [rule.effect for rule in writes]}
+
+
 class StoryIndex:
     def __init__(self, client, maps_dir=None):
         self.client = client

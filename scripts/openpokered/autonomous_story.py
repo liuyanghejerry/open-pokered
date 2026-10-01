@@ -17,7 +17,7 @@ import playthrough as pt
 import playthrough_late as data
 
 from .story_agent import DualStoryAgent, StoryStopped, attempt_key
-from .story_rules import Rule, requirements, evaluate
+from .story_rules import Rule, requirements, evaluate, static_retreat_contract
 from .playthrough_judgments import (ObservedProtocol, NavigationPause, attack_profile, replacement_options,
                                     MEDICINES, BALLS, medicine_options, effective_attacks, ITEM_CATALOG,
                                     PREFERENCE_INSTRUCTIONS)
@@ -1259,6 +1259,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                             capture_inventory_risk=capture_inventory_risk(species, resources['ball_inventory']),
                             ready_static_source_maps=ready_sources,
                             last_currently_ready_static_source=len(ready_sources) == 1,
+                            retreat_contracts=[static_retreat_contract(rule, self.index.rules) for rule in rules],
                             failure_warning='Running out of balls, fleeing or knocking out a static target can permanently spend this source. Preparation and extra supplies must be compared before triggering it; a ready script does not guarantee capture.')
                 rules = [rule for rule in rules if not rule.missing(facts)]
                 if not rules:

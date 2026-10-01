@@ -1506,6 +1506,11 @@ class Game:
                     from playthrough_late import battle_recovery_plan
                     recovery = getattr(self, 'battle_recovery_plan', battle_recovery_plan)(s)
                     if recovery:
+                        if recovery[0] == 'run':
+                            for button in ('down', 'right', 'a'):
+                                self.tap(button, 8)
+                            self.step(30)
+                            continue
                         if recovery[0] == 'switch':
                             self._switch_target = recovery[1]
                             self.tap('up', 8)

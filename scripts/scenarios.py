@@ -529,6 +529,60 @@ def s14_capture_sleep():
         g.close()
 
 
+@scenario("s15-static-retreat", "Jev menu RUN preserves the native Zapdos source for a retry")
+def s15_static_retreat():
+    from types import SimpleNamespace
+    from openpokered.playthrough_judgments import JevGame
+    from openpokered.story_rules import StoryIndex
+
+    g = Game(seed=42)
+    try:
+        boot_starter(g, "Nidoqueen", 70)
+        assert g.d.cmd(cmd="give_item", item="POKE_BALL", qty=20)["ok"]
+        semantics = lambda name=None: (g.d.cmd(cmd="get_script_semantics", map=name)["data"]
+                                     if name else {"maps": ["PowerPlant"]})
+        index = StoryIndex(SimpleNamespace(script_semantics=semantics))
+        assert not index.errors, index.errors
+        choices = []
+        def choose(_axis, _state, candidates, _instruction):
+            assert "run" in candidates, candidates
+            choices.append("run")
+            return "run"
+        g.judgments = SimpleNamespace(index=index, collects_dex=True, active=None,
+            choose=choose, record=lambda *args, **kwargs: None)
+        g.smart_moves = True
+        g.battle_recovery_plan = lambda state: JevGame.battle_recovery_plan(g, state)
+        assert g.d.cmd(cmd="warp", map="PowerPlant", x=4, y=10)["ok"]
+        g.step(180)
+
+        def encounter():
+            g.tap("up", 8)
+            g.tap("a", 8)
+            for _ in range(100):
+                state = g.st()
+                if state["screen"] == "battle":
+                    assert state["battle_live"]["enemy"]["species"] == "Zapdos"
+                    assert state["script_awaiting_battle"]
+                    return
+                g.d.cmd(cmd="skip_dialogue")
+                g.step(20)
+            raise AssertionError("static Zapdos encounter did not start")
+
+        encounter()
+        g.battle_loop()
+        g.step(180)
+        assert choices, "production escape hook was not used"
+        assert g.st()["screen"] == "overworld"
+        bird = next(n for n in g.d.cmd(cmd="get_npcs")["data"] if n["text_id"] == 9)
+        assert bird["visible"], bird
+        assert "Zapdos" not in g.st()["pokedex"]["owned_species"]
+        # Start the same native source again: visibility alone is not enough.
+        encounter()
+        g.evidence("s15")
+    finally:
+        g.close()
+
+
 # ── runner ──────────────────────────────────────────────────────────────
 def main():
     ap = argparse.ArgumentParser()

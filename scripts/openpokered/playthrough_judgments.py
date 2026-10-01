@@ -16,6 +16,7 @@ from .client import AgentClient
 from .judgment_agent import load_objectives
 from .story_agent import DualStoryAgent, StoryStopped
 from .story_rules import evaluate
+from .story_rules import static_retreat_contract
 
 
 ITEM_CATALOG = {item['id']: item for path in (late.DATA / 'data/items').glob('*.json')
@@ -126,6 +127,44 @@ def capture_intent(state, judgments):
     return bool(context.get('required_capture_species') == species or
                 (getattr(judgments, 'collects_dex', False) and species not in
                  (state.get('pokedex') or {}).get('owned_species', [])))
+
+
+def capture_threat(enemy):
+    """Natural wild moves from native creation rules, not hidden live PP/stages."""
+    species = late.species_data(enemy['species'])
+    moves = list(species['initialMoves'])
+    for row in species.get('learnset', []):
+        if row['level'] > enemy['level']:
+            break
+        move = row['moveId']
+        if move == 'None' or move in moves:
+            continue
+        if 'None' in moves:
+            moves[moves.index('None')] = move
+        else:
+            moves = moves[1:] + [move]
+    details = [{'move': move, **late.move_data(move)} for move in moves if move != 'None']
+    return {'inferred_natural_moves': details,
+            'self_knockout_moves': [row['move'] for row in details
+                                   if row['move'] in ('Selfdestruct', 'Explosion')],
+            'scope': 'Native creation learnset at observed wild level; not observed live moves, PP, stages or damage. Transform/Mimic can differ.'}
+
+
+def capture_retreat(state, judgments):
+    if not state.get('script_awaiting_battle'):
+        return None  # Never infer static retryability from a travel goal alone.
+    rules = getattr(getattr(judgments, 'index', None), 'rules', [])
+    if not isinstance(rules, list):
+        return None
+    species = state['battle_live']['enemy']['species'].replace('_', '').upper()
+    sources = [rule for rule in rules if rule.map == state['map_name']
+               and rule.effect[0] == 'battle' and isinstance(rule.effect[1], str)
+               and rule.effect[1].replace('_', '').upper() == species]
+    contracts = [static_retreat_contract(rule, rules) for rule in sources]
+    if contracts and all(row['menu_run_preserves_source'] for row in contracts):
+        return {'contracts': contracts, 'escape_success_not_guaranteed': True,
+                'purpose': 'Menu RUN to preserve this retryable source, recover and prepare; unlike a knockout, successful RUN does not consume it.'}
+    return None
 
 
 def capture_status_options(mon, enemy, bag):
@@ -390,7 +429,8 @@ def capture_move_question(state, menu):
         compact['moves'][key] = option
         choices[key] = option['move']
     compact.update(goal='capture_without_knocking_out', enemy_state=live['enemy'],
-                   available_balls=list(ball_options(live, bag)))
+                   available_balls=list(ball_options(live, bag)),
+                   capture_threat=capture_threat(live['enemy']))
     return compact, choices
 
 
@@ -479,6 +519,17 @@ class JevGame(pt.Game):
                            and context.get('trigger') == 'level'
                            and party[active]['species'] == context.get('from_species'))
         capturing = capture_intent(state, self.judgments) and not capture_storage_full(state)
+        seeking_source = (live.get('is_wild') and not live.get('is_safari')
+            and not live.get('is_ghost') and (context.get('required_capture_species') == live['enemy']['species']
+            or getattr(self.judgments, 'collects_dex', False) and live['enemy']['species'] not in
+            (state.get('pokedex') or {}).get('owned_species', [])))
+        retreat = capture_retreat(state, self.judgments) if seeking_source else None
+        capturing = capturing or retreat is not None
+        if retreat:
+            candidates['run'] = json.dumps(retreat)
+            bindings['run'] = 'run', None
+        if capturing:
+            candidates['fight'] = 'Prepare capture with a safe status or weak attack; a knockout permanently loses this encounter. Do not select FIGHT just to win.'
         if switch_training or capturing or not effective_attacks(party[active], live['enemy']['species']):
             for index, mon in enumerate(party):
                 statuses = capture_status_options(mon, live['enemy'], bag) if capturing else []
@@ -547,7 +598,22 @@ class JevGame(pt.Game):
                 'Switching and setup cost turns and expose the party to damage. Do not blindly spend a '
                 'limited ball supply at full HP when viable preparation substantially raises capture odds; '
                 'do not knock out the target or use residual poison/burn damage to prepare it.')
-        chosen = self.judgments.choose('action', {'battle': live}, candidates,
+        if capturing:
+            instruction += (' Examine capture_threat: a self-knockout move can spend the target before setup succeeds. '
+                'A low-level support may faint before acting or on the switch turn. Do not keep switching '
+                'away from an immune/resistant survivor to fragile teammates just because they can apply status. '
+                'If RUN is offered, the script has been checked to preserve the source after successful menu escape: '
+                'compare retreat and proper preparation with spending this limited supply or risking a knockout. '
+                'When safe preparation is no longer available, throwing a ball is capture progress; defeating '
+                'the target is not a fallback success.')
+        judgment_state = {'battle': live}
+        if capturing:
+            judgment_state['capture_threat'] = capture_threat(live['enemy'])
+            judgment_state['inventory_failure_at_current_state'] = math.prod(
+                (1-details['capture_probability_now']) ** bag[ball]
+                for ball, _, details in balls)
+            judgment_state['inventory_failure_assumptions'] = 'All currently held balls thrown at fixed observed HP/status with independent rolls; excludes remaining party survival, enemy healing/status expiry and future damage.'
+        chosen = self.judgments.choose('action', judgment_state, candidates,
                                        instruction + preference_suffix(self.judgments))
         return bindings.get(chosen)
 
