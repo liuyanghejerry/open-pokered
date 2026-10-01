@@ -77,6 +77,9 @@ class PagesStagingTest(unittest.TestCase):
             'progress': [{'owned': 124, 'validated_owned': 124,
                           'pending_source_validation': [],
                           'owned_species': [f'Mon{number}' for number in range(1, 125)]}]}
+        snapshot = {'dex': {'owned': 124, 'owned_species': data['progress'][0]['owned_species']}}
+        data['run']['collection_continue_verification'] = {
+            'verified': True, 'save_sha256': 'a' * 64, 'expected': snapshot, 'restored': snapshot}
         self.write_dex_data(data)
         return video
 
@@ -93,6 +96,18 @@ class PagesStagingTest(unittest.TestCase):
         self.assertEqual((target / video.name).read_bytes(), video.read_bytes())
         self.assertTrue((target / 'jev-dex-player.html').is_file())
         self.assertTrue((self.site / 'jev-dashboard/full-run/jev-player.html').is_file())
+
+    def test_completion_requires_independent_continue_proof(self):
+        import copy
+        self.prepare_dex()
+        original = json.loads((self.source / 'dex-run/jev-dex-dashboard.json').read_text())
+        for proof in (None, {'verified': False}, {'verified': True, 'save_sha256': 'a'*64,
+                      'expected': {'dex': {'owned': 124}}, 'restored': {'dex': {'owned': 123}}}):
+            data = copy.deepcopy(original)
+            data['run']['collection_continue_verification'] = proof
+            self.write_dex_data(data)
+            with self.assertRaisesRegex(ValueError, 'CONTINUE evidence'):
+                stage(self.repo, self.site, 'abc123')
 
     def test_template_alone_is_not_a_publishable_dashboard(self):
         template = self.source / DEX_REQUIRED[0]

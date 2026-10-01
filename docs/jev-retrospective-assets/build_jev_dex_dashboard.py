@@ -273,6 +273,7 @@ def build(run, output, video=None, chain=False):
         'schema': 3,
         'run': {
             'success': summary.get('success'), 'reason': summary.get('reason'),
+            'collection_continue_verification': summary.get('collection_continue_verification'),
             'seed': summary.get('seed'), 'model': (summary.get('models') or ['jev-1.13.0'])[0],
             'actions': sum(segment['summary'].get('actions') or 0 for segment in segments),
             'calls': total_metrics(segments, 'calls'),

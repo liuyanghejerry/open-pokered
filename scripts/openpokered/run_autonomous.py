@@ -17,6 +17,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from openpokered.autonomous_story import AutonomousStoryAgent
+from openpokered.collection_verification import require_collection_completion, verify_collection_continue
 from openpokered.judgment_agent import load_objectives
 from openpokered.playthrough_judgments import JevGame
 from openpokered.typesafe import TypeSafeClient
@@ -312,7 +313,8 @@ def main(argv=None):
                             result.update(success=False, reason='invalid_final_protocol_observations')
                         if valid:
                             game.d.raw.cmd(cmd='capture_frame', path=str((folder / 'final.png').resolve()))
-                        if args.checkpoint and valid:
+                        completing_dex = args.goal == 'collect-dex' and result.get('success') is True
+                        if (args.checkpoint or completing_dex) and valid:
                             reply = game.d.raw.cmd(cmd='save')
                             valid = bool(reply.get('ok')) and reply.get('data') is None
                             result['development_checkpoint'] = valid
@@ -324,6 +326,16 @@ def main(argv=None):
                         flags = binary.parent / 'pokered.script_flags.json'
                         if valid and flags.exists():
                             shutil.copy2(flags, folder / 'game.script_flags.json')
+                        if completing_dex and valid:
+                            try:
+                                require_collection_completion(observations, result.get('collection_audit_pending', {}))
+                                proof = verify_collection_continue(folder / 'game.sav', binary, observations,
+                                                                   folder / 'game.script_flags.json')
+                                result['collection_continue_verification'] = proof
+                                if agent is not None:
+                                    agent.record('collection_continue_verified', verification=proof)
+                            except Exception as error:
+                                result.update(success=False, reason=f'collection_continue_verification_failed: {error}')
                         result['commands'] = game.d.counts
                         result['battles_driven'] = game.battles_driven
                         result['action_cache_hits'] = game.move_cache_hits
