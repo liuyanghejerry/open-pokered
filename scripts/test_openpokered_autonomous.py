@@ -2322,9 +2322,12 @@ class AutonomousTests(unittest.TestCase):
         groups = {label: {'rules': [Rule(label, name, name + ':' + label, [f'npc:{npc}'],
                                         [], [], ('flag', label, True), [])]}
                   for label, npc in [('key', 4), ('boss', 1)]}
+        groups['mixed'] = {'rules': [*groups['key']['rules'], *groups['boss']['rules']]}
         agent.annotate_navigation(groups, {'map': name, 'x': 19, 'y': 9, 'flags': {}})
         self.assertTrue(groups['key']['context']['trigger_navigation'][0]['tile_route_found'])
         self.assertNotIn('boss', groups)  # Its known failure must not suppress the reachable key region.
+        self.assertEqual([rule.id for rule in groups['mixed']['rules']], ['key'])
+        self.assertEqual(groups['mixed']['context']['deferred_trigger_maps'], [name])
         agent.game.nav_to_map.assert_not_called()
 
     def test_battle_preparation_uses_selected_trainer_without_overwriting_causal_context(self):

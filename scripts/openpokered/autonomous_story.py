@@ -658,6 +658,7 @@ class AutonomousStoryAgent(DualStoryAgent):
         barriers[facts['map']] = barriers.get(facts['map'], set()) | self.game.live_npcs(facts['map'])
         excluded = self.game.navigation_excluded_maps()
         previews = {} if previews is None else previews
+        rule_routes = {}
         for group in groups.values():
             routes = []
             for rule in group['rules']:
@@ -692,6 +693,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                                      'scope': 'this trigger region, using known geometry and observed obstacles; available Surf can be used en route'}
                 if previews[key] not in routes:
                     routes.append(previews[key])
+                rule_routes[id(rule)] = previews[key]
             if routes:
                 group['context'] = {**group.get('context', {}), 'trigger_navigation': routes}
         # Repeatedly selecting a route already disproved by real execution
@@ -702,6 +704,15 @@ class AutonomousStoryAgent(DualStoryAgent):
                for route in group.get('context', {}).get('trigger_navigation', [])):
             for key, group in list(groups.items()):
                 routes = group.get('context', {}).get('trigger_navigation', [])
+                deferred = [rule for rule in group['rules']
+                            if rule.map in self.navigation_memory
+                            and rule_routes.get(id(rule), {}).get('tile_route_found') is False]
+                if deferred:
+                    group['rules'] = [rule for rule in group['rules'] if rule not in deferred]
+                    group.setdefault('context', {})['deferred_trigger_maps'] = sorted({rule.map for rule in deferred})
+                if not group['rules']:
+                    del groups[key]
+                    continue
                 if (routes and not any(route['tile_route_found'] for route in routes)
                         and all(rule.map in self.navigation_memory for rule in group['rules'])):
                     del groups[key]
