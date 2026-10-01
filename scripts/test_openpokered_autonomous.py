@@ -36,6 +36,9 @@ class AutonomousTests(unittest.TestCase):
                              ('flag', 'SPENT', True), [battle.effect])
         self.assertFalse(static_retreat_contract(battle, [battle, hidden, unconditional])['menu_run_preserves_source'])
         self.assertFalse(static_retreat_contract(battle, [battle])['menu_run_preserves_source'])
+        battle.preceding = [('flag', 'SOURCE_SPENT_BEFORE_FIGHT', True)]
+        self.assertFalse(static_retreat_contract(battle, [hidden])['menu_run_preserves_source'])
+        battle.preceding = []
         hidden.guards = [(guard, False)]
         self.assertFalse(static_retreat_contract(battle, [hidden])['menu_run_preserves_source'])
 

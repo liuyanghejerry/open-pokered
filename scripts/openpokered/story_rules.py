@@ -394,12 +394,18 @@ def static_retreat_contract(battle, rules):
 
     writes = [rule for rule in rules if rule.storyline == battle.storyline
               and battle.effect in rule.preceding and rule.effect[0] != 'battle']
-    retryable = bool(writes) and all(any(
+    # A source can be consumed BEFORE the awaited battle, too. Do not certify
+    # re-entry when earlier persistent state/geometry writes have not been
+    # proven compatible with its entry guards (even if some are harmless).
+    earlier = [effect for effect in battle.preceding
+               if effect[0] in ('flag', 'visibility', 'block', 'item', 'pokemon', 'transport')]
+    retryable = not earlier and bool(writes) and all(any(
         (value := evaluate(resolve(expr), {})) is not None and bool(value) != wanted
         for expr, wanted in rule.guards) for rule in writes)
     return {'menu_run_preserves_source': retryable,
             'scope': 'Compiled source post-battle effects under native menu-run result ran; unknown paths are not certified',
             'script': battle.storyline,
+            'uncertified_pre_battle_writes': earlier,
             'post_battle_effects': [rule.effect for rule in writes]}
 
 
