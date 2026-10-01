@@ -20,6 +20,36 @@ from openpokered.run_autonomous import observations_valid, checkpoint_field_requ
 
 
 class AutonomousTests(unittest.TestCase):
+    def test_late_navigation_cannot_reintroduce_pushes_without_strength_and_badge(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.field_requirements = {}
+        agent.index = Mock()
+        teeth = Rule('teeth', 'SafariZoneWest', 'pickup', [], [], [], ('item', 'GOLD_TEETH', True), [])
+        erika = Rule('erika', 'CeladonGym', 'trainer', [], [], [], ('flag', 'EVENT_BEAT_ERIKA', True), [])
+        agent.index.frontier.side_effect = lambda target, facts: [teeth] if target[0] == 'item' else [erika]
+        push = Rule('boulder:FLAG', 'SeafoamIslandsB3F', 'engine_boulder', [], [], [], ('flag', 'FLAG', True), [])
+        other = Rule('other', 'PalletTown', 'pickup', [], [], [], ('item', 'POTION', True), [])
+        facts = {'map': 'SeafoamIslandsB4F', 'bag': {}, 'flags': {},
+                 'party': [{'species': 'Charizard', 'moves': ['Slash']}]}
+        for moves, flags in ((['Slash'], {}), (['Strength'], {})):
+            facts['party'][0]['moves'], facts['flags'] = moves, flags
+            groups = {'late': {'target': push.effect, 'rules': [push]},
+                      'mixed': {'target': other.effect, 'rules': [other, push]}}
+            agent.defer_unusable_boulders(groups, facts)
+            self.assertNotIn('late', groups)
+            self.assertEqual(groups['mixed']['rules'], [other])
+            self.assertIn(teeth.effect, [group['target'] for group in groups.values()])
+            self.assertIn(erika.effect, [group['target'] for group in groups.values()])
+        facts['party'][0]['moves'] = ['Slash']
+        facts['bag']['HM04'] = 1
+        groups = {'late': {'target': push.effect, 'rules': [push]}}
+        agent.defer_unusable_boulders(groups, facts)
+        self.assertIn('learn:Strength', groups)
+        facts['party'][0]['moves'], facts['flags'] = ['Strength'], {'EVENT_BEAT_ERIKA': True}
+        groups = {'late': {'target': push.effect, 'rules': [push]}}
+        agent.defer_unusable_boulders(groups, facts)
+        self.assertEqual(groups['late']['rules'], [push])
+
     def test_native_current_and_badge_prerequisites_are_position_and_flag_specific(self):
         from openpokered.navigation_skills import surf_current_prerequisites, field_badge_prerequisites
         obstacle = {'map': 'SeafoamIslandsB4F', 'stance': [7, 11]}

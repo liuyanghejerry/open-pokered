@@ -2208,6 +2208,36 @@ class AutonomousStoryAgent(DualStoryAgent):
                     if rule not in group['rules']:
                         group['rules'].append(rule)
 
+    def defer_unusable_boulders(self, groups, facts):
+        """Apply after ALL navigation frontiers, which can introduce new pushes."""
+        pending = [rule for group in groups.values() for rule in group['rules']
+                   if rule.id.startswith('boulder:')]
+        known = any('Strength' in mon.get('moves', []) for mon in facts['party'])
+        badges = field_badge_prerequisites('Strength', facts['flags'])
+        if not pending or known and not badges:
+            return
+        obstacle = {'move': 'Strength', 'map': pending[0].map,
+                    'puzzle_flags': sorted({rule.effect[1] for rule in pending})}
+        self.field_requirements['Strength'] = obstacle
+        for target in [('item', 'HM04', True), *badges]:
+            for rule in self.index.frontier(target, facts):
+                key = json.dumps(rule.effect)
+                group = groups.setdefault(key, {'target': rule.effect, 'rules': [],
+                    'objectives': ['Prepare Strength before attempting an engine-defined boulder puzzle'],
+                    'context': {'required_move': 'Strength', 'terrain_obstruction': obstacle}})
+                if rule not in group['rules']:
+                    group['rules'].append(rule)
+        if (facts['bag'].get('HM04') and not known
+                and any(hm_compatible(mon['species'], 'Strength') for mon in facts['party'])):
+            target = ('move', 'Strength', True)
+            groups['learn:Strength'] = {'target': target,
+                'rules': [Rule('learn:Strength', facts['map'], 'skill:learn', [], [], [], target, [])],
+                'objectives': ['Learn Strength before attempting the observed boulder puzzle'], 'context': obstacle}
+        for key, group in list(groups.items()):
+            group['rules'] = [rule for rule in group['rules'] if not rule.id.startswith('boulder:')]
+            if not group['rules']:
+                del groups[key]
+
     def strategy_groups(self, facts):
         groups = super().strategy_groups(facts)
         self.navigation_facts = facts
@@ -2504,6 +2534,7 @@ class AutonomousStoryAgent(DualStoryAgent):
         previews = self.annotate_navigation(groups, facts, previews, prune=False)
         self.transport_frontiers(groups, facts)
         self.add_mechanism_groups(groups, facts)
+        self.defer_unusable_boulders(groups, facts)
         self.annotate_navigation(groups, facts, previews)
         restore = {key: group for key, group in groups.items()
                    if group.get('context', {}).get('restore_main_battler')
