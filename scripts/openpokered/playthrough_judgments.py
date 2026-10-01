@@ -545,15 +545,22 @@ class JevGame(pt.Game):
         before = self.st()
         entered = before['screen'] == 'battle'
         if entered and (before.get('battle_live') or {}).get('is_ghost'):
-            if before.get('script_awaiting_battle') and hasattr(self.judgments, 'battle_requirements'):
+            if hasattr(self.judgments, 'battle_requirements'):
                 # Generic combat capability, not a route: the engine's ghost
                 # rule disables attacks until the identification item is owned.
-                self.judgments.battle_requirements['SILPH_SCOPE'] = {
+                prior = self.judgments.battle_requirements.get('SILPH_SCOPE', {})
+                requirement = {**prior,
                     'observed_map': before['map_name'], 'attack_blocked': 'unidentified_ghost',
                     'required_item': 'SILPH_SCOPE'}
+                if not before.get('script_awaiting_battle'):
+                    # Wild ghosts cannot be captured either. Remember only
+                    # observed areas; unseen maps must not inherit a failure.
+                    requirement['capture_blocked_maps'] = sorted(
+                        set(prior.get('capture_blocked_maps', [])) | {before['map_name']})
+                self.judgments.battle_requirements['SILPH_SCOPE'] = requirement
                 active = getattr(self.judgments, 'active', None)
-                if isinstance(active, dict):
-                    self.judgments.battle_requirements['SILPH_SCOPE']['blocked_goal'] = active['target']
+                if isinstance(active, dict) and before.get('script_awaiting_battle'):
+                    requirement['blocked_goal'] = active['target']
             if prefer == 'fight':
                 self.judgments.choose('action', {'battle': before['battle_live'],
                     'constraint': 'An unidentified ghost prevents all attacks; normal escape is allowed.'},

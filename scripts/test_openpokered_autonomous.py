@@ -20,6 +20,37 @@ from openpokered.run_autonomous import observations_valid, checkpoint_field_requ
 
 
 class AutonomousTests(unittest.TestCase):
+    def test_observed_ghost_hunts_reopen_after_identification_item(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.battle_requirements = {'SILPH_SCOPE': {'capture_blocked_maps': ['Tower3', 'Tower4']}}
+        agent.client = Mock()
+        self.assertTrue(agent.capture_area_blocked('Tower3', {'bag': {}}))
+        self.assertFalse(agent.capture_area_blocked('Other', {'bag': {}}))
+        self.assertFalse(agent.capture_area_blocked('Tower3', {'bag': {'SILPHSCOPE': 1}}))
+        self.assertEqual(agent.rank_catch_areas(['Tower3'], {'bag': {}}, set(), {}), [])
+        agent.client.route.assert_not_called()
+
+    def test_wild_ghost_escape_retains_observed_maps_and_story_requirement(self):
+        import playthrough as pt
+        game = JevGame.__new__(JevGame)
+        game.judgments = Mock()
+        story_goal = ['flag', 'STORY_GATE', True]
+        game.judgments.active = {'target': ['catch', 'Tower3', True]}
+        game.judgments.battle_requirements = {'SILPH_SCOPE': {
+            'capture_blocked_maps': ['Tower4'], 'blocked_goal': story_goal}}
+        game.battles_driven = 0
+        before = {'screen': 'battle', 'map_name': 'Tower3', 'battle_live': {'is_ghost': True},
+                  'script_awaiting_battle': False, 'party': []}
+        after = {'screen': 'overworld', 'map_name': 'Tower3', 'battle_phase': 'Over',
+                 'party': [], 'frame_count': 100}
+        game.st = Mock(side_effect=[before, after])
+        with patch.object(pt.Game, 'battle_loop') as drive:
+            game.battle_loop(prefer='catch')
+        self.assertEqual(drive.call_args.kwargs['prefer'], 'run')
+        requirement = game.judgments.battle_requirements['SILPH_SCOPE']
+        self.assertEqual(requirement['capture_blocked_maps'], ['Tower3', 'Tower4'])
+        self.assertEqual(requirement['blocked_goal'], story_goal)
+
     def test_shared_strategy_evidence_is_lossless_and_preserves_all_options(self):
         routes = [{'map': f'Center{i}', 'steps': i + 1, 'tile_route_found': i % 2 == 0,
                    'requires_surf': i % 3 == 0} for i in range(12)]

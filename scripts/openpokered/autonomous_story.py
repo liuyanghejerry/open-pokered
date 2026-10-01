@@ -1751,6 +1751,12 @@ class AutonomousStoryAgent(DualStoryAgent):
                     queue.append(other)
         return None
 
+    def capture_area_blocked(self, name, facts):
+        """Reopen an observed impossible hunt when its identification item exists."""
+        return any(name in requirement.get('capture_blocked_maps', [])
+                   and not facts.get('bag', {}).get(item.replace('_', '').upper())
+                   for item, requirement in getattr(self, 'battle_requirements', {}).items())
+
     def find_catch_areas(self, facts, requested_species=None):
         """Executable grass, Safari, Surf, and fishing acquisition areas."""
         owned = set((facts.get('dex') or {}).get('owned_species', []))
@@ -1777,6 +1783,8 @@ class AutonomousStoryAgent(DualStoryAgent):
         """Rank executable acquisition methods by expected travel + hunt effort."""
         ranked = []
         for name in nearby:
+            if self.capture_area_blocked(name, facts):
+                continue
             route = self.client.route(facts['map'], name)
             if not route.get('found'):
                 continue
@@ -2038,12 +2046,13 @@ class AutonomousStoryAgent(DualStoryAgent):
                     if rule not in group['rules']:
                         group['rules'].append(rule)
         for item, context in self.battle_requirements.items():
-            if context.get('blocked_goal') and self.index.satisfied(context['blocked_goal'], facts):
+            if (context.get('blocked_goal') and not context.get('capture_blocked_maps')
+                    and self.index.satisfied(context['blocked_goal'], facts)):
                 continue
             for rule in self.index.frontier(('item', item, True), facts):
                 key = json.dumps(rule.effect)
                 group = groups.setdefault(key, {'target': rule.effect, 'rules': [],
-                    'objectives': ['Prepare the item required by an observed blocked story battle'],
+                    'objectives': ['Prepare the item required by an observed blocked battle or wild capture'],
                     'context': context})
                 if rule not in group['rules']:
                     group['rules'].append(rule)
