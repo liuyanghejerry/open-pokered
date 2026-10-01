@@ -29,6 +29,12 @@ class AutonomousTests(unittest.TestCase):
         self.assertFalse(agent.capture_area_blocked('Tower3', {'bag': {'SILPHSCOPE': 1}}))
         self.assertEqual(agent.rank_catch_areas(['Tower3'], {'bag': {}}, set(), {}), [])
         agent.client.route.assert_not_called()
+        agent.replan_after_defeat = False
+        agent.needs_skill_recovery = Mock(return_value=False)
+        agent.active = {'target': ('catch', 'Tower3', True), 'rules': [
+            Rule('hunt', 'Tower3', 'skill:catch', [], [], [], ('catch', 'Tower3', True), [])]}
+        self.assertTrue(agent.should_replan({'bag': {}, 'party': []}))
+        self.assertFalse(agent.should_replan({'bag': {'SILPHSCOPE': 1}, 'party': []}))
 
     def test_wild_ghost_escape_retains_observed_maps_and_story_requirement(self):
         import playthrough as pt

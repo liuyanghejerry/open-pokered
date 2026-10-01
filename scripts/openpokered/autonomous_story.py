@@ -510,6 +510,10 @@ class AutonomousStoryAgent(DualStoryAgent):
     def should_replan(self, facts):
         if self.replan_after_defeat:
             return True
+        if (self.active and self.active['target'][0] in ('catch', 'held_species')
+                and any(self.capture_area_blocked(rule.map, facts)
+                        for rule in self.active.get('rules', []))):
+            return True  # The just-observed encounter cannot satisfy this hunt.
         if (self.active and self.active['target'][0] == 'item' and self.active['target'][2]
                 and len(facts.get('bag', {})) >= 20
                 and not facts['bag'].get(self.active['target'][1].replace('_', '').upper())):
