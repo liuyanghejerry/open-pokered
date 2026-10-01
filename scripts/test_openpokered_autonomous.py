@@ -12,7 +12,7 @@ from openpokered.autonomous_story import (AutonomousStoryAgent, counter_approach
                                           training_tile, battle_readiness, encounter_value,
                                           training_battler, storage_deposit_indices,
                                           level_experience, evolution_training_cost, training_yield)
-from openpokered.autonomous_story import compact_strategy_candidates
+from openpokered.autonomous_story import compact_strategy_candidates, evolution_training_effort
 from openpokered.story_agent import StoryStopped
 from openpokered.navigation_skills import cut_requirement, surf_requirement, water_tile, hm_compatible, water_planning
 from openpokered.story_rules import Rule
@@ -20,6 +20,43 @@ from openpokered.run_autonomous import observations_valid, checkpoint_field_requ
 
 
 class AutonomousTests(unittest.TestCase):
+    def test_stationary_actor_on_destination_warp_offers_ready_clearance_battle(self):
+        from types import SimpleNamespace
+        import playthrough as pt
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        target = ('item', 'HM01', True)
+        hidden = ('visibility', 'RIVAL', False)
+        clear = Rule('clear', 'GateRoom', 'GateRoom:coordBattle', ['coord:battle'],
+                     [], [], hidden, [('battle', 'RIVAL', True)])
+        agent.index = SimpleNamespace(rules=[clear], npc_toggles={('GateRoom', 2): ('RIVAL', False)},
+            satisfied=lambda goal, facts: False,
+            frontier=lambda goal, facts: [clear] if goal == hidden else [])
+        agent.game = SimpleNamespace(stationary_npcs={'GateRoom': {2: [36, 4]}})
+        agent.maps, agent.field_requirements, agent.navigation_memory = {}, {}, {}
+        agent.navigation_blockage = None
+        agent.navigation_history = {'failed': {'map': 'GateRoom', 'destination': 'End',
+            'goal': target, 'blocking_npcs': []}}
+        agent.client = Mock()
+        agent.client.route.return_value = {'found': True, 'legs': [{'to_map': 'GateRoom'}, {'to_map': 'End'}]}
+        groups = {'main': {'target': target, 'rules': [], 'objectives': []}}
+        with patch.object(pt, 'MAPS', {'GateRoom': {'warps': [
+                {'x': 36, 'y': 4, 'dest_map_name': 'End'}]}}):
+            agent.add_navigation_groups(groups, {'map': 'City'})
+        added = next(group for group in groups.values() if group['target'] == hidden)
+        self.assertEqual(added['rules'], [clear])
+        self.assertEqual(added['context']['observed_navigation_blockage']['blocking_npcs'], [2])
+
+    def test_training_effort_converts_observed_bounds_to_battles_and_steps(self):
+        mon = {'species': 'Pidgeotto', 'level': 18}
+        table = {'encounterRate': 32, 'mons': [{'species': 'Pidgey', 'level': 10}] * 10}
+        solo = evolution_training_effort(mon, 36, table)
+        shared = evolution_training_effort(mon, 36, table, 2)
+        self.assertGreater(shared['estimated_victories_max'], solo['estimated_victories_max'])
+        self.assertGreater(shared['estimated_victories_min'], 100)
+        self.assertEqual(shared['estimated_encounter_steps_max'], shared['estimated_victories_max'] * 8)
+        self.assertIsNone(evolution_training_effort(mon, 36, None))
+        complete = evolution_training_effort({'species': 'Pidgeotto', 'level': 36}, 36, table)
+        self.assertEqual(complete['estimated_victories_max'], 0)
     def test_checkpoint_recovers_observed_hm_blockers_across_legacy_resumes(self):
         import tempfile
         with tempfile.TemporaryDirectory() as private:

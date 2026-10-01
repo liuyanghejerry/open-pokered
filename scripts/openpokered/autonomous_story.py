@@ -5,6 +5,7 @@ scene conditions; preparation candidates come from available encounters and the
 party. The existing driver contributes only parameterized navigation and combat.
 """
 import json
+import math
 import re
 import hashlib
 import time
@@ -88,6 +89,21 @@ def training_yield(table, participants=1):
             'expected_encounter_attempts': round(256 / rate, 2) if rate else None,
             'participants': participants,
             'assumptions': 'Untraded conscious participants; wild victories only, no Exp All; healing and combat turns add cost'}
+
+
+def evolution_training_effort(mon, target_level, table, participants=1):
+    cost = evolution_training_cost(mon, target_level)
+    yield_info = training_yield(table, participants)
+    experience = yield_info['expected_experience_per_victory']
+    if experience <= 0:
+        return None
+    minimum = math.ceil(cost['remaining_experience_min'] / experience)
+    maximum = math.ceil(cost['remaining_experience_max'] / experience)
+    attempts = yield_info['expected_encounter_attempts']
+    return {**yield_info, 'estimated_victories_min': minimum,
+            'estimated_victories_max': maximum,
+            'estimated_encounter_steps_max': math.ceil(maximum * attempts) if attempts else None,
+            'scope': 'Expectation using the slot-weighted wild table, not a guaranteed battle count; excludes travel, combat turns and healing'}
 
 
 def catch_difficulty(species):
@@ -594,7 +610,11 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'cannot realistically catch them. Compare evolution training_cost with alternative_sources '
                 'and the value of unlocking new regions: a low-level trainee may require many victories, '
                 'while a later wild capture can register the evolved species directly. Potential alternative '
-                'sources are not guaranteed reachable; choose the prerequisites needed to reach them.')
+                'sources are not guaranteed reachable; choose the prerequisites needed to reach them. '
+                'Use training_effort_examples to compare the estimated number of victories and encounter '
+                'steps, not just levels remaining. Hundreds of low-yield battles have an opportunity '
+                'cost: acquiring an HM or resolving a story blocker may open better collecting and '
+                'training grounds. Previously visited tables are examples, not proof of current access.')
         if layer == 'action' and 'local_state' in state and getattr(self, 'active', None):
             state = {**state, 'strategy_context': self.active.get('context', {})}
         context = state.get('strategy_context') or {}
@@ -1080,7 +1100,21 @@ class AutonomousStoryAgent(DualStoryAgent):
                             continue
                     context['party_indices'] = source_party
                     if method['trigger'] == 'level':
-                        context['training_cost'] = evolution_training_cost(party[source_party[0]], method['level'])
+                        trainee = party[source_party[0]]
+                        context['training_cost'] = evolution_training_cost(trainee, method['level'])
+                        participants = 2 if any(mon.get('hp', 0) > 0 and mon['level'] > trainee['level']
+                                                for mon in party) else 1
+                        examples = []
+                        for name in getattr(self, 'visited', ()):
+                            table = ((getattr(self, 'maps', {}).get(name, {}).get('wild') or {})
+                                     .get('red') or {}).get('grass')
+                            effort = evolution_training_effort(trainee, method['level'], table, participants)
+                            if effort:
+                                examples.append({'map': name, **effort,
+                                    'navigation': getattr(self, 'training_navigation', {}).get(name),
+                                    'access_scope': 'Previously visited table; a current tile route must still be verified'})
+                        context['training_effort_examples'] = sorted(examples,
+                            key=lambda example: example['estimated_victories_max'])[:3]
                         context['alternative_sources'] = [
                             {'method': alternative['method'], 'map': alternative.get('map'),
                              'visited': alternative.get('map') in getattr(self, 'visited', ()),
@@ -1777,6 +1811,17 @@ class AutonomousStoryAgent(DualStoryAgent):
         for blockage in relevant_blockages():
             if self.index.satisfied(blockage['goal'], facts):
                 continue
+            # Legacy failed paths sometimes recorded only collision tiles.
+            # A remembered visible stationary actor standing on the actual
+            # destination warp is causal evidence, not a map-wide NPC guess.
+            blocked_npcs = set(blockage.get('blocking_npcs', []))
+            entrances = {(warp['x'], warp['y']) for warp in pt.MAPS.get(blockage['map'], {}).get('warps', [])
+                         if warp.get('dest_map_name') == blockage['destination']}
+            for text_id, position in getattr(getattr(self, 'game', None), 'stationary_npcs', {}).get(blockage['map'], {}).items():
+                if tuple(position) in entrances:
+                    blocked_npcs.add(int(text_id))
+            if blocked_npcs:
+                blockage = {**blockage, 'blocking_npcs': sorted(blocked_npcs)}
             route = self.client.route(facts['map'], blockage['destination'])
             corridor = {facts['map'], blockage['destination'], *[leg['to_map'] for leg in route.get('legs', [])]}
             # The high-level graph joins outdoor regions directly and can
@@ -1840,9 +1885,10 @@ class AutonomousStoryAgent(DualStoryAgent):
                 elif (local.effect[0] == 'visibility' and not local.effect[2]
                       and any(self.index.npc_toggles.get((blockage['map'], text_id), (None,))[0] == local.effect[1]
                               for text_id in blockage.get('blocking_npcs', []))):
-                    for missing in local.alternatives(facts):
-                        for prerequisite in missing:
-                            frontiers.extend(self.index.frontier(prerequisite, facts))
+                    # The hide producer itself can be a ready coordinate-
+                    # triggered battle. Backchain its whole effect, not only
+                    # missing guards (which are empty once battle-ready).
+                    frontiers.extend(self.index.frontier(local.effect, facts))
                 elif local.effect[0] == 'movement' and not local.missing(facts):
                     # A currently enabled push-back can be avoided by
                     # changing one of its branch guards (e.g. acquiring a ticket).
