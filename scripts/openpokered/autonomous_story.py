@@ -1526,7 +1526,15 @@ class AutonomousStoryAgent(DualStoryAgent):
                     context['party_indices'] = source_party
                     if method['trigger'] == 'level':
                         trainee = party[source_party[0]]
-                        context['training_cost'] = evolution_training_cost(trainee, method['level'])
+                        if trainee['level'] >= 100:
+                            continue  # Normal battle XP cannot trigger another level.
+                        trigger_level = max(method['level'], trainee['level'] + 1)
+                        context['experience_trigger_level'] = trigger_level
+                        context['evolution_trigger_scope'] = (
+                            'Level evolution is checked on a new level gain, not merely being above '
+                            'the natural threshold. An already overlevel wild capture still needs '
+                            'another real level-up; the threshold is not a zero-cost evolution action.')
+                        context['training_cost'] = evolution_training_cost(trainee, trigger_level)
                         participants = 2 if any(mon.get('hp', 0) > 0 and mon['level'] > trainee['level']
                                                 for mon in party) else 1
                         examples = []
@@ -1535,7 +1543,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                                 continue  # Capture-only encounters are not training victories.
                             table = ((getattr(self, 'maps', {}).get(name, {}).get('wild') or {})
                                      .get('red') or {}).get('grass')
-                            effort = evolution_training_effort(trainee, method['level'], table, participants)
+                            effort = evolution_training_effort(trainee, trigger_level, table, participants)
                             if effort:
                                 examples.append({'map': name, **effort,
                                     'navigation': getattr(self, 'training_navigation', {}).get(name),
@@ -3183,9 +3191,12 @@ class AutonomousStoryAgent(DualStoryAgent):
                     'operation': operation,
                     'purpose': (f'Gain a level with {source} to improve capture status support'
                                 if support_training else f'Gain a level with {source} to evolve it into {context["species"]}'),
-                    'required_level': context['level'],
+                    'required_level': context.get('experience_trigger_level', context['level']),
+                    'natural_evolution_level': context['level'] if not support_training else None,
+                    'evolution_trigger_scope': context.get('evolution_trigger_scope'),
                     'current_level': facts['party'][0]['level'],
-                    'training_cost': evolution_training_cost(facts['party'][0], context['level']),
+                    'training_cost': evolution_training_cost(facts['party'][0],
+                        context.get('experience_trigger_level', context['level'])),
                     'encounter_yield': training_yield(
                         ((getattr(self, 'maps', {}).get(name, {}).get('wild') or {}).get('red') or {}).get('grass'),
                         2 if any(mon['hp'] > 0 and mon['level'] > facts['party'][0]['level']

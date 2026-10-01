@@ -1870,6 +1870,44 @@ class AutonomousTests(unittest.TestCase):
                          ('register', 'Arcanine', True))
         self.assertEqual(groups['register:Lapras:gift:House']['rules'], [gift])
 
+    def test_overlevel_evolution_requires_a_real_new_level_not_zero_experience(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.collects_dex = True
+        agent.index = Mock(rules=[], by_effect={})
+        agent._complete_collection_graph = {
+            'Tentacool': [{'method': 'water', 'map': 'Route19'}],
+            'Tentacruel': [{'method': 'evolution', 'from_species': 'Tentacool',
+                           'trigger': 'level', 'level': 30}]}
+        agent.visited = {'Route19'}
+        agent.maps = {'Route19': {'wild': {'red': {'grass': {
+            'encounterRate': 25, 'mons': [{'species': 'Pidgey', 'level': 12}] * 10}}}}}
+        facts = {'party': [{'species': 'Tentacool', 'level': 40, 'hp': 89, 'max_hp': 89,
+                           'moves': ['Bubblebeam'], 'pp': [20], 'status': 'None'}],
+                 'stored_pokemon': [], 'bag': {}, 'flags': {}, 'coins': 0, 'money': 0,
+                 'map': 'FuchsiaCity', 'dex': {'owned_species': ['Tentacool']}}
+        for current, trigger in ((29, 30), (30, 31), (40, 41)):
+            facts['party'][0]['level'] = current
+            groups = {}
+            agent.add_nonwild_collection_groups(groups, facts)
+            group = groups['register:Tentacruel:evolution:Tentacool']
+            context = group['context']
+            self.assertEqual(context['level'], 30)
+            self.assertEqual(context['experience_trigger_level'], trigger)
+            self.assertEqual(context['training_cost']['levels_remaining'], 1)
+            self.assertGreater(context['training_cost']['remaining_experience_max'], 0)
+            agent.active = group
+            agent.find_training_sites = Mock(return_value={'Route19': (5, 18)})
+            agent.training_sites = {'Route19': (5, 18)}
+            candidates, _ = agent.action_candidates(facts)
+            action = json.loads(candidates['action:0'])
+            self.assertEqual(action['required_level'], trigger)
+            self.assertEqual(action['natural_evolution_level'], 30)
+            self.assertEqual(action['training_cost']['levels_remaining'], 1)
+        facts['party'][0]['level'] = 100
+        groups = {}
+        agent.add_nonwild_collection_groups(groups, facts)
+        self.assertNotIn('register:Tentacruel:evolution:Tentacool', groups)
+
     def test_party_capacity_preparation_requires_explored_ready_acquisition(self):
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
         agent.visited = {'CeruleanCity'}

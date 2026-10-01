@@ -694,6 +694,58 @@ def s21_capture_support_training():
         g.close()
 
 
+@scenario("s22-overlevel-evolution", "A captured overlevel Tentacool evolves only after a new real XP level-up")
+def s22_overlevel_evolution():
+    from types import SimpleNamespace
+    from openpokered.playthrough_judgments import JevGame
+
+    def choose(_axis, _state, candidates, _instruction):
+        if 'switch:1' in candidates:
+            return 'switch:1'
+        if 'skip' in candidates:
+            return 'skip'
+        return next(key for key, move in candidates.items() if move == 'Flamethrower')
+
+    g = Game(seed=42)
+    try:
+        boot_starter(g, 'Tentacool', 40)
+        assert g.d.cmd(cmd='give_pokemon', species='Charizard', level=100)['ok']
+        g.judgments = SimpleNamespace(collects_dex=False,
+            active={'target': ('register', 'Tentacruel', True), 'context': {
+                'acquisition_method': 'evolution', 'trigger': 'level', 'from_species': 'Tentacool'}},
+            choose=choose, record=lambda *args, **kwargs: None)
+        g.move_cache, g.move_cache_hits, g.active_milestone = {}, 0, None
+        g.smart_moves = True
+        g.battle_recovery_plan = lambda state: JevGame.battle_recovery_plan(g, state)
+        g._select_move = lambda: JevGame._select_move(g)
+        g.battle_party_target = lambda state: JevGame.battle_party_target(g, state)
+        assert 'Tentacruel' not in g.st()['pokedex']['owned_species']
+        for victory in range(12):
+            assert g.d.cmd(cmd='start_wild_battle', species='Metapod', level=100)['ok']
+            g.battle_loop(max_iters=400)
+            # Finish the real post-battle evolution presentation with A only.
+            for _ in range(180):
+                state = g.st()
+                if not state.get('evolution_phase') and not state.get('evolution'):
+                    break
+                g.tap('a', 8)
+                g.step(30)
+            state = g.st()
+            if state['party'][0]['species'] == 'Tentacruel':
+                break
+            assert state['party'][0]['level'] == 40, state['party'][0]
+        else:
+            raise AssertionError('twelve real shared-XP victories did not trigger evolution')
+        assert state['party'][0]['level'] > 40, state['party'][0]
+        assert 'Tentacruel' in state['pokedex']['owned_species']
+        assert state['party'][0]['hp'] > 0 and state['party'][1]['hp'] > 0
+        print(f"   Tentacool Lv40 → Tentacruel Lv{state['party'][0]['level']} "
+              f"after {victory+1} real victories", flush=True)
+        g.evidence('s22')
+    finally:
+        g.close()
+
+
 def _static_retreat(ball_qty):
     from types import SimpleNamespace
     from openpokered.playthrough_judgments import JevGame
