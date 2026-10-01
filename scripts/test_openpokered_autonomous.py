@@ -404,7 +404,7 @@ class AutonomousTests(unittest.TestCase):
         agent.active = {'target': ('catch', 'Tower3', True), 'rules': [
             Rule('hunt', 'Tower3', 'skill:catch', [], [], [], ('catch', 'Tower3', True), [])]}
         self.assertTrue(agent.should_replan({'bag': {}, 'party': []}))
-        self.assertFalse(agent.should_replan({'bag': {'SILPHSCOPE': 1}, 'party': []}))
+        self.assertFalse(agent.should_replan({'bag': {'SILPHSCOPE': 1, 'POKEBALL': 1}, 'party': []}))
 
     def test_wild_ghost_escape_retains_observed_maps_and_story_requirement(self):
         import playthrough as pt
@@ -1789,6 +1789,7 @@ class AutonomousTests(unittest.TestCase):
         rule = Rule('catch:Route2', 'Route2', 'skill:catch_encounter', [], [], [],
                     ('catch', 'Route2', True), [])
         agent.active = {'target': rule.effect, 'rules': [rule]}
+        agent.facts = Mock(return_value={'bag': {'POKEBALL': 1}})
         agent.actions, agent.max_actions = 0, 100
         before = {'map_name': 'Route2', 'player_x': 5, 'player_y': 18, 'screen': 'overworld',
                   'pokedex': {'owned': 2}, 'party': [{'level': 12}]}
@@ -1858,6 +1859,7 @@ class AutonomousTests(unittest.TestCase):
     def test_only_a_catch_trip_avoids_encounters_on_the_way(self):
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
         agent.actions, agent.max_actions = 0, 100
+        agent.facts = Mock(return_value={'bag': {'POKEBALL': 1}})
         agent.game = Mock()
         agent.game.st.return_value = {'map_name': 'Route2', 'player_x': 5, 'player_y': 18}
         agent.client = Mock()
@@ -2076,7 +2078,7 @@ class AutonomousTests(unittest.TestCase):
         from openpokered.story_agent import DualStoryAgent
         mon = {'species': 'Charmeleon', 'level': 16, 'hp': 47, 'max_hp': 47,
                'status': 'None', 'moves': ['Scratch', 'Ember'], 'pp': [8, 25]}
-        facts = {'party': [mon], 'bag': {}, 'flags': {}, 'fully_recovered': False,
+        facts = {'party': [mon], 'bag': {'POKEBALL': 1}, 'flags': {}, 'fully_recovered': False,
                  'map': 'PewterCity', 'x': 12, 'y': 18}
         with patch.object(DualStoryAgent, 'strategy_groups', side_effect=lambda facts: {}):
             collecting = self.catch_goal_agent([{
@@ -2090,7 +2092,7 @@ class AutonomousTests(unittest.TestCase):
         self.assertEqual(collecting['collect:Route2']['rules'][0].storyline, 'skill:catch_encounter')
         self.assertEqual(story, {})
 
-    def test_catch_targets_state_the_ball_prerequisite(self):
+    def test_catch_targets_require_balls_and_state_the_stock(self):
         from openpokered.story_agent import DualStoryAgent
         mon = {'species': 'Charmeleon', 'level': 16, 'hp': 47, 'max_hp': 47,
                'status': 'None', 'moves': ['Scratch', 'Ember'], 'pp': [8, 25]}
@@ -2099,13 +2101,57 @@ class AutonomousTests(unittest.TestCase):
                      'map': 'PewterCity', 'x': 12, 'y': 18}
             with patch.object(DualStoryAgent, 'strategy_groups', side_effect=lambda facts: {}):
                 return self.catch_goal_agent([{'id': 'collect-dex',
-                                               'agent_verified': True}]).strategy_groups(facts)['collect:Route2']
+                                               'agent_verified': True}]).strategy_groups(facts)
         empty = group({})
-        self.assertEqual(empty['context']['balls_held'], 0)
-        self.assertIn('No balls are carried', empty['context']['prerequisite'])
-        stocked = group({'POKEBALL': 7})
+        self.assertNotIn('collect:Route2', empty)
+        stocked = group({'POKEBALL': 7})['collect:Route2']
         self.assertEqual(stocked['context']['balls_held'], 7)
         self.assertIn('7 carried', stocked['context']['prerequisite'])
+
+    def test_exhausted_capture_stock_replans_except_safari_or_training(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.replan_after_defeat = False
+        agent.needs_skill_recovery = Mock(return_value=False)
+        agent.active = {'target': ('catch', 'Route2', True), 'rules': []}
+        for method in ('grass', 'water', 'fishing'):
+            agent.active['context'] = {'acquisition_method': method}
+            self.assertTrue(agent.should_replan({'bag': {}}))
+            self.assertFalse(agent.should_replan({'bag': {'GREATBALL': 1}}))
+        agent.active['context'] = {'acquisition_method': 'safari'}
+        self.assertFalse(agent.should_replan({'bag': {}}))
+        agent.active = {'target': ('level', 'leader', 40)}
+        self.assertFalse(agent.should_replan({'bag': {}}))
+
+    def test_empty_ball_hunt_never_walks_into_an_encounter(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        rule = Rule('hunt', 'Route2', 'skill:catch_encounter', [], [], [],
+                    ('catch', 'Route2', True), [])
+        agent.active = {'target': rule.effect}
+        agent.actions, agent.max_actions = 0, 100
+        agent.facts = Mock(return_value={'bag': {}})
+        agent.game, agent.client, agent.record = Mock(), Mock(), Mock()
+        result = agent.execute('catch_encounter:Route2,5,18', rule)
+        self.assertEqual(result['required_capability'], 'capture_balls')
+        self.assertIsNone(agent.active)
+        agent.game.d.drive.assert_not_called()
+        agent.client.state.assert_not_called()
+
+    def test_fishing_hunt_stops_immediately_after_spending_last_ball(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        rule = Rule('hunt', 'Route2', 'skill:catch_encounter', [], [], [],
+                    ('catch', 'fishing:OldRod:Route2', True), [])
+        agent.active = {'target': rule.effect}
+        agent.actions, agent.max_actions = 0, 100
+        agent.facts = Mock(side_effect=[{'bag': {'POKEBALL': 1}}, {'bag': {}}])
+        agent.needs_capture_recovery = Mock(return_value=False)
+        agent.game, agent.client, agent.record = Mock(), Mock(), Mock()
+        agent.client.state.return_value = {'map_name': 'Route2', 'party': [{'level': 20}],
+                                           'pokedex': {'owned': 58}}
+        agent.check_budget, agent.settle = Mock(), Mock()
+        result = agent.execute('catch_encounter:fishing,Route2,5,18,down,OldRod', rule)
+        self.assertEqual(result['owned_after'], 58)
+        self.assertIsNone(agent.active)
+        agent.game.use_field_item.assert_called_once_with('OldRod')
 
     def test_dex_completion_requires_every_supported_acquisition_and_is_never_vacuous(self):
         from openpokered.story_rules import StoryIndex

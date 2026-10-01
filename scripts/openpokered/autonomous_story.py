@@ -598,6 +598,8 @@ class AutonomousStoryAgent(DualStoryAgent):
     def should_replan(self, facts):
         if self.replan_after_defeat:
             return True
+        if self.capture_resources_missing(facts):
+            return True
         if (self.active and self.active.get('context', {}).get('acquisition_method') == 'static'
                 and any(self.static_capture_deferred(self.active['context']['species'], rule.map, facts)
                         for rule in self.active.get('rules', []))):
@@ -616,6 +618,15 @@ class AutonomousStoryAgent(DualStoryAgent):
                              and main['hp'] <= main['max_hp'] * .25)
         return (self.active and self.active['target'][0] != 'heal'
                 and (main_critical or self.needs_skill_recovery(facts)))
+
+    def capture_resources_missing(self, facts, method=None):
+        """A hunt cannot progress after ordinary balls run out; Safari is separate."""
+        active = getattr(self, 'active', None) or {}
+        if method is None:
+            if active.get('target', [None])[0] not in ('catch', 'held_species'):
+                return False
+            method = active.get('context', {}).get('acquisition_method', 'grass')
+        return method != 'safari' and 'bag' in facts and self.balls_held(facts) <= 0
 
     def needs_skill_recovery(self, facts):
         """A status-only evolution trainee can share XP with a ready finisher."""
@@ -2601,6 +2612,10 @@ class AutonomousStoryAgent(DualStoryAgent):
         self.add_mechanism_groups(groups, facts)
         self.defer_unusable_boulders(groups, facts)
         self.annotate_navigation(groups, facts, previews)
+        for key, group in list(groups.items()):
+            if (group['target'][0] in ('catch', 'held_species')
+                    and self.capture_resources_missing(facts, group.get('context', {}).get('acquisition_method', 'grass'))):
+                del groups[key]  # Retain supply, travel prerequisites and non-capture methods.
         restore = {key: group for key, group in groups.items()
                    if group.get('context', {}).get('restore_main_battler')
                    and any(route.get('tile_route_found') for route in
@@ -4014,6 +4029,12 @@ class AutonomousStoryAgent(DualStoryAgent):
             else:
                 method, name, x, y, *method_args = parts
             area_key = self.active.get('context', {}).get('catch_area', self.active['target'][1])
+            if self.capture_resources_missing(self.facts(), method):
+                result = {'result': 'blocked', 'detail': 'Ordinary capture balls exhausted; replan supply',
+                          'required_capability': 'capture_balls'}
+                self.active = None
+                self.record('operation', operation=operation, result=result, script=rule.storyline)
+                return result
         else:
             name, x, y = parts
             method, method_args, area_key = 'grass', [], name
@@ -4048,7 +4069,8 @@ class AutonomousStoryAgent(DualStoryAgent):
                     break
                 if after is not None and owned_before is not None and after > owned_before:
                     break
-                if self.needs_capture_recovery(self.facts()):
+                facts = self.facts()
+                if self.capture_resources_missing(facts, method) or self.needs_capture_recovery(facts):
                     self.active = None
                     break
             result = {'result': 'hunted', 'method': method, 'map': name,
@@ -4089,7 +4111,9 @@ class AutonomousStoryAgent(DualStoryAgent):
                 break
             if state['map_name'] != name:
                 break
-            if (self.needs_capture_recovery(self.facts()) if catching else self.needs_skill_recovery(self.facts())):
+            facts = self.facts()
+            if ((self.capture_resources_missing(facts, method) or self.needs_capture_recovery(facts))
+                    if catching else self.needs_skill_recovery(facts)):
                 self.active = None
                 break
             px, py = state['player_x'], state['player_y']
