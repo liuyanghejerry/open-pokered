@@ -354,11 +354,15 @@ class JevGame(pt.Game):
         if not options:
             return 'run'
         enemy = (live.get('enemy') or {}).get('species')
-        if enemy in set(owned) or 'ball' not in options:
+        objective = getattr(self.judgments, 'active', None)
+        context = objective.get('context', {}) if isinstance(objective, dict) else {}
+        required_source = context.get('required_capture_species') == enemy
+        if (enemy in set(owned) and not required_source) or 'ball' not in options:
             return 'run'
         candidates = {name: json.dumps(details) for name, details in options.items()}
         return self.judgments.choose('action', {'battle': live}, candidates,
-            'Choose one legal Safari action for this turn. The opponent is not registered, so the goal is capture, '
+            'Choose one legal Safari action for this turn. The opponent is either unregistered or required '
+            'as another held copy for the selected trade or evolution, so the goal is capture, '
             'not battle victory. Compare the supplied exact current capture probability, remaining Safari Balls, '
             'and current/projected flee probability. BALL is the direct baseline; use BAIT or ROCK only when its '
             'risk-adjusted future capture opportunity is better, and RUN only when capture is no longer viable.')
@@ -428,8 +432,11 @@ class JevGame(pt.Game):
             bindings[key] = item, index
         owned = (state.get('pokedex') or {}).get('owned_species', [])
         balls = list(ball_options(live, bag, owned))
+        required_source = context.get('required_capture_species') == live['enemy']['species']
         for ball, _target, details in balls:
             key = f'ball:{ball}'
+            if required_source:
+                details = {**details, 'required_as_trade_or_evolution_source': True}
             candidates[key] = json.dumps(details)
             bindings[key] = ball, None
         if (not effective_attacks(party[active], live['enemy']['species'])
@@ -451,6 +458,10 @@ class JevGame(pt.Game):
                 'Compare defeating this opponent directly with switching to a stronger teammate: prefer switching '
                 'when weak or resisted attacks would consume many turns or PP, or risk fainting. Do not spend '
                 'recovery supplies just to keep an inefficient trainee attacking when a healthy finisher is available.')
+        if required_source and balls:
+            instruction += (' This opponent is already registered but no longer held, and another copy is required '
+                'for the selected NPC trade or evolution. Capture it with a ball; defeating it does not satisfy '
+                'that requirement. Registration and possession are different facts.')
         if getattr(self.judgments, 'collects_dex', False) and any(not d['already_owned'] for _, _, d in balls):
             # Framed purely around turn economy, defeating an unregistered
             # species reads as the safe play and the run collects nothing.

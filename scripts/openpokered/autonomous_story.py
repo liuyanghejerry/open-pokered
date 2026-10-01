@@ -1015,6 +1015,7 @@ class AutonomousStoryAgent(DualStoryAgent):
         reachable = set(plan['choice_reachable_species'])
         party = facts.get('party', [])
         held = [*party, *facts.get('stored_pokemon', [])]
+        missing_sources = {}
         for species in sorted(reachable - owned):
             for method in self.complete_collection_graph().get(species, []):
                 if method.get('external_trade') or method['method'] in (
@@ -1034,6 +1035,8 @@ class AutonomousStoryAgent(DualStoryAgent):
                 rules = []
                 if method['method'] == 'evolution':
                     if not source_held:
+                        if source in owned:
+                            missing_sources.setdefault(source, set()).add(species)
                         continue
                     if not source_party:
                         self.add_storage_retrieval(groups, facts, source, species)
@@ -1056,8 +1059,13 @@ class AutonomousStoryAgent(DualStoryAgent):
                                   'skill:evolve', [], [], [],
                                   ('register', species, True), [])]
                 elif method['method'] == 'npc_trade':
-                    if (not source_held or len(party) < 2
-                            or facts['flags'].get(method['completion_flag'])):
+                    if facts['flags'].get(method['completion_flag']):
+                        continue
+                    if not source_held:
+                        if source in owned:
+                            missing_sources.setdefault(source, set()).add(species)
+                        continue
+                    if len(party) < 2:
                         continue
                     if not source_party:
                         self.add_storage_retrieval(groups, facts, source, species)
@@ -1087,6 +1095,37 @@ class AutonomousStoryAgent(DualStoryAgent):
                 groups[key] = {'target': ('register', species, True), 'rules': rules,
                                'objectives': [f'Register {species} in the solo Pokédex'],
                                'context': context}
+        self.add_source_reacquisition(groups, facts, missing_sources)
+
+    def add_source_reacquisition(self, groups, facts, missing_sources):
+        """Registered is not held: catch a replacement consumed by an edge."""
+        if not missing_sources:
+            return
+        counts = facts.get('box_counts', [])
+        if (len(facts.get('party', [])) >= 6 and counts
+                and counts[facts.get('current_box_index', 0)] >= 20):
+            return
+        areas = dict(getattr(self, 'catch_areas', {}))
+        navigation = dict(getattr(self, 'catch_navigation', {}))
+        for source, targets in sorted(missing_sources.items()):
+            found = self.find_catch_areas(facts, requested_species=(source,))
+            for old_key, area in found.items():
+                if area.get('method', 'grass') != 'safari' and not self.balls_held(facts):
+                    continue
+                key = f'source:{source}:{old_key}'
+                areas[key] = {**area, 'key': key}
+                navigation[key] = area.get('navigation') or self.catch_navigation.get(old_key)
+                target = ('held_species', source, True)
+                groups[key] = {'target': target,
+                    'rules': [Rule(key, area['map'], 'skill:catch_encounter', [], [], [], target, [])],
+                    'objectives': [f'Catch another {source} needed to register {name}' for name in sorted(targets)],
+                    'context': {'acquisition_method': area['method'], 'catch_area': key,
+                                'required_capture_species': source, 'required_for': sorted(targets),
+                                'already_registered_but_not_held': True,
+                                'balls_held': self.balls_held(facts),
+                                'encounter_value': area.get('encounter_value'),
+                                'trigger_navigation': [navigation[key]] if navigation[key] else []}}
+        self.catch_areas, self.catch_navigation = areas, navigation
 
     def acquisition_capacity_ready(self, facts, species, method):
         """Do not churn party slots for a pickup beyond the explored frontier."""
@@ -1556,9 +1595,11 @@ class AutonomousStoryAgent(DualStoryAgent):
                     queue.append(other)
         return None
 
-    def find_catch_areas(self, facts):
+    def find_catch_areas(self, facts, requested_species=None):
         """Executable grass, Safari, Surf, and fishing acquisition areas."""
         owned = set((facts.get('dex') or {}).get('owned_species', []))
+        if requested_species is not None:
+            owned = set(self.complete_collection_graph()) - set(requested_species)
         barriers = self.game.navigation_barriers()
         barriers[facts['map']] = barriers.get(facts['map'], set()) | self.game.live_npcs(facts['map'])
         ranked = []
@@ -2272,7 +2313,7 @@ class AutonomousStoryAgent(DualStoryAgent):
 
     def action_candidates(self, facts):
         preparing_training = self.active['target'][:2] == ('level', 'leader')
-        preparing_capture = (self.active['target'][0] == 'catch'
+        preparing_capture = (self.active['target'][0] in ('catch', 'held_species')
                              and self.active.get('context', {}).get('acquisition_method') != 'safari')
         if preparing_training or preparing_capture:
             battler = training_battler(facts.get('party', []))
@@ -2492,9 +2533,9 @@ class AutonomousStoryAgent(DualStoryAgent):
                         'purpose': f"Approach and use {obstacle['move']} through the party menu to pass this terrain", 'terrain': obstacle})
                     bindings[key] = operation, self.active['rules'][0]
             return candidates, bindings
-        if self.active['target'][0] == 'catch':
+        if self.active['target'][0] in ('catch', 'held_species'):
             candidates, bindings = {}, {}
-            area_key = self.active['target'][1]
+            area_key = self.active.get('context', {}).get('catch_area', self.active['target'][1])
             area = getattr(self, 'catch_areas', {}).get(area_key)
             if area:
                 rule = self.active['rules'][0]
@@ -3461,7 +3502,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                 method, method_args = 'grass', []
             else:
                 method, name, x, y, *method_args = parts
-            area_key = self.active['target'][1]
+            area_key = self.active.get('context', {}).get('catch_area', self.active['target'][1])
         else:
             name, x, y = parts
             method, method_args, area_key = 'grass', [], name
@@ -3486,6 +3527,9 @@ class AutonomousStoryAgent(DualStoryAgent):
                 self.game.use_field_item(rod)
                 self.settle(self.active['target'], rule)
                 after = self.client.state().get('pokedex', {}).get('owned')
+                if (self.active and self.active['target'][0] == 'held_species'
+                        and self.index.satisfied(self.active['target'], self.client.state())):
+                    break
                 if after is not None and owned_before is not None and after > owned_before:
                     break
                 if self.needs_healing(self.facts()):

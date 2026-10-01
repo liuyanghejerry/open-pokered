@@ -478,6 +478,11 @@ class StoryIndex:
         if kind == 'pokemon':
             return any(mon['species'].replace('_', '').upper() == str(name).replace('_', '').upper()
                        and (wanted is None or mon['level'] >= wanted) for mon in facts['party'])
+        if kind == 'held_species':
+            held = [*facts.get('party', []), *facts.get('stored_pokemon', [])]
+            present = any(mon['species'].replace('_', '').upper() == str(name).replace('_', '').upper()
+                          for mon in held)
+            return present == wanted
         if kind in ('location', 'transport'):
             return [facts['map'], facts['x'], facts['y']] == list(name)
         if kind == 'block':

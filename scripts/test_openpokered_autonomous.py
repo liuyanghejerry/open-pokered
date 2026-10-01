@@ -19,6 +19,79 @@ from openpokered.run_autonomous import observations_valid
 
 
 class AutonomousTests(unittest.TestCase):
+    def test_source_capture_keeps_normal_hunts_and_requires_possession(self):
+        from openpokered.story_rules import StoryIndex
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.catch_areas = {'Route2': {'method': 'grass'}}
+        agent.catch_navigation = {'Route2': {'map': 'Route2'}}
+        area = {'map': 'Route22', 'method': 'grass', 'species': ['Spearow'],
+                'spots': [(3, 4)], 'navigation': {'map': 'Route22'}}
+        def find(facts, requested_species=None):
+            self.assertEqual(requested_species, ('Spearow',))
+            agent.catch_areas = {'Route22': area}
+            agent.catch_navigation = {'Route22': area['navigation']}
+            return agent.catch_areas
+        agent.find_catch_areas = find
+        facts = {'party': [{'species': 'Fearow'}], 'bag': {'POKEBALL': 5},
+                 'dex': {'owned_species': ['Spearow', 'Fearow']}}
+        groups = {}
+        agent.add_source_reacquisition(groups, facts, {'Spearow': {'Farfetchd'}})
+        key = 'source:Spearow:Route22'
+        self.assertEqual(set(agent.catch_areas), {'Route2', key})
+        self.assertEqual(groups[key]['context']['required_capture_species'], 'Spearow')
+        index = StoryIndex.__new__(StoryIndex)
+        target = groups[key]['target']
+        self.assertFalse(index.satisfied(target, facts))
+        facts['stored_pokemon'] = [{'species': 'SPEAROW', 'box_index': 3}]
+        self.assertTrue(index.satisfied(target, facts))
+        facts['stored_pokemon'] = []
+        facts['party'].append({'species': 'Spearow'})
+        self.assertTrue(index.satisfied(target, facts))
+
+    def test_registered_required_source_is_captured_not_skipped(self):
+        state = self.battle_state()
+        state['pokedex']['owned_species'].append('Caterpie')
+        game = JevGame.__new__(JevGame)
+        game.judgments = Mock()
+        game.judgments.active = {'context': {'required_capture_species': 'Caterpie'}}
+        game.judgments.choose.return_value = 'ball:PokeBall'
+        self.assertEqual(game.battle_recovery_plan(state), ('PokeBall', None))
+        offered = json.loads(game.judgments.choose.call_args.args[2]['ball:PokeBall'])
+        self.assertTrue(offered['already_owned'])
+        self.assertTrue(offered['required_as_trade_or_evolution_source'])
+        self.assertIn('Registration and possession', game.judgments.choose.call_args.args[3])
+        state['battle_live'].update(is_safari=True, safari={
+            'base_catch_rate': 45, 'catch_rate': 45, 'bait_factor': 0,
+            'escape_factor': 0, 'balls': 9, 'enemy_speed': 60})
+        game.judgments.choose.return_value = 'ball'
+        self.assertEqual(game.safari_battle_action(state), 'ball')
+        game.judgments.active = {'context': {}}
+        self.assertEqual(game.safari_battle_action(state), 'run')
+
+    def test_consumed_trade_source_is_reacquired_unless_boxed(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.collects_dex = True
+        agent.index = Mock(rules=[], by_effect={})
+        agent._complete_collection_graph = {
+            'Spearow': [{'method': 'grass', 'map': 'Route22'}],
+            'Fearow': [{'method': 'evolution', 'from_species': 'Spearow',
+                        'trigger': 'level', 'level': 20}],
+            'Farfetchd': [{'method': 'npc_trade', 'from_species': 'Spearow',
+                          'map': 'VermilionTradeHouse', 'completion_flag': 'TRADED'}]}
+        agent.add_source_reacquisition = Mock()
+        agent.add_storage_retrieval = Mock()
+        facts = {'party': [{'species': 'Fearow'}], 'stored_pokemon': [],
+                 'bag': {}, 'flags': {}, 'map': 'Route22',
+                 'dex': {'owned_species': ['Spearow', 'Fearow']}}
+        agent.add_nonwild_collection_groups({}, facts)
+        self.assertEqual(agent.add_source_reacquisition.call_args.args[2],
+                         {'Spearow': {'Farfetchd'}})
+        facts['stored_pokemon'] = [{'species': 'Spearow'}]
+        facts['party'].append({'species': 'Charizard'})
+        agent.add_nonwild_collection_groups({}, facts)
+        self.assertEqual(agent.add_source_reacquisition.call_args.args[2], {})
+        agent.add_storage_retrieval.assert_called_once()
+
     def test_status_only_evolution_trainee_can_use_ready_finisher(self):
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
         agent.replan_after_defeat = False
@@ -1157,6 +1230,7 @@ class AutonomousTests(unittest.TestCase):
         from openpokered.story_agent import DualStoryAgent
         agent = self.catch_goal_agent([{'id': 'collect-dex', 'agent_verified': True}])
         agent.find_catch_areas = Mock(return_value={'Route2': {'species': ['Chansey', 'Zubat'],
+                                                              'map': 'Route2', 'method': 'grass',
                                                               'spots': [(5, 18)], 'reachable': True}})
         agent.catch_attempts = [{'map': 'Route2', 'registered': False},
                                 {'map': 'Route2', 'registered': True},
