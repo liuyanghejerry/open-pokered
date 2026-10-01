@@ -67,9 +67,24 @@ class PagesStagingTest(unittest.TestCase):
         digest = hashlib.sha256(video.read_bytes()).hexdigest()
         (self.source / 'dex-run/manifest.json').write_text(json.dumps({
             'files': {'jev-dex-full.mp4': {'bytes': video.stat().st_size, 'sha256': digest}}}))
-        (self.source / 'dex-run/jev-dex-dashboard.json').write_text(json.dumps({
-            'run': {'video_sha256': digest}}))
+        data = {'schema': 3, 'run': {'success': True, 'video_sha256': digest},
+            'target': {'solo_ceiling': 124, 'owned': 124, 'validated_owned': 124,
+                       'pending_source_validation': []},
+            'collection_audit': {'pending_species': []},
+            'species': [{'number': number, 'name': f'Mon{number}',
+                         'status': 'owned' if number <= 124 else 'unreachable'}
+                        for number in range(1, 152)],
+            'progress': [{'owned': 124, 'validated_owned': 124,
+                          'pending_source_validation': [],
+                          'owned_species': [f'Mon{number}' for number in range(1, 125)]}]}
+        self.write_dex_data(data)
         return video
+
+    def write_dex_data(self, data):
+        text = json.dumps(data)
+        (self.source / 'dex-run/jev-dex-dashboard.json').write_text(text)
+        (self.source / 'dex-run/jev-dex-dashboard-data.js').write_text(
+            'window.JEV_DEX_DASHBOARD=' + text + ';\n')
 
     def test_stages_complete_dex_alongside_existing_players(self):
         video = self.prepare_dex()
@@ -99,6 +114,41 @@ class PagesStagingTest(unittest.TestCase):
     def test_rejects_corrupt_dex_recording(self):
         self.prepare_dex().write_bytes(b'corrupt')
         with self.assertRaisesRegex(ValueError, 'checksum mismatch'):
+            stage(self.repo, self.site, 'abc123')
+
+    def test_rejects_incomplete_or_unresolved_run_before_replacing_site(self):
+        import copy
+        self.prepare_dex()
+        original = json.loads((self.source / 'dex-run/jev-dex-dashboard.json').read_text())
+        cases = [('run', 'success', False), ('target', 'owned', 50),
+                 ('target', 'validated_owned', 123),
+                 ('target', 'pending_source_validation', ['Marowak']),
+                 ('collection_audit', 'pending_species', ['Marowak'])]
+        target = self.site / 'jev-dashboard'
+        target.mkdir()
+        (target / 'index.html').write_text('previous dashboard')
+        for field, key, value in cases:
+            with self.subTest(field=field, key=key):
+                changed = copy.deepcopy(original)
+                changed[field][key] = value
+                self.write_dex_data(changed)
+                with self.assertRaisesRegex(ValueError, '124-species completion'):
+                    stage(self.repo, self.site, 'abc123')
+                self.assertEqual((target / 'index.html').read_text(), 'previous dashboard')
+
+    def test_final_species_list_must_support_the_completion_count(self):
+        self.prepare_dex()
+        data = json.loads((self.source / 'dex-run/jev-dex-dashboard.json').read_text())
+        data['progress'][-1]['owned_species'][-1] = 'Mon1'
+        self.write_dex_data(data)
+        with self.assertRaisesRegex(ValueError, 'final progress evidence'):
+            stage(self.repo, self.site, 'abc123')
+
+    def test_browser_runtime_must_equal_the_audited_json(self):
+        self.prepare_dex()
+        path = self.source / 'dex-run/jev-dex-dashboard-data.js'
+        path.write_text('window.JEV_DEX_DASHBOARD={};')
+        with self.assertRaisesRegex(ValueError, 'runtime data disagrees'):
             stage(self.repo, self.site, 'abc123')
 
     def test_rejects_missing_runtime_dependency(self):

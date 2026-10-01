@@ -48,6 +48,30 @@ def selected_files(source, include_dex=False):
     return files
 
 
+def verify_dex_completion(data):
+    """The requested full-run publication is not a partial-run preview."""
+    target = data.get('target') or {}
+    audit = data.get('collection_audit') or {}
+    progress = data.get('progress') or []
+    if (data.get('schema', 0) < 3 or (data.get('run') or {}).get('success') is not True
+            or target.get('solo_ceiling') != 124 or target.get('owned') != 124
+            or target.get('validated_owned') != 124
+            or target.get('pending_source_validation') != []
+            or audit.get('pending_species') != [] or not progress):
+        raise ValueError('Pokédex run is not a verified 124-species completion')
+    species = data.get('species') or []
+    owned = {mon['name'] for mon in species if mon.get('status') == 'owned'}
+    last = progress[-1]
+    names = last.get('owned_species') or []
+    if (len(species) != 151 or {mon.get('number') for mon in species} != set(range(1, 152))
+            or len({mon['name'] for mon in species}) != 151 or len(owned) != 124
+            or len(names) != 124 or set(names) != owned
+            or last.get('owned') != 124 or last.get('validated_owned') != 124
+            or last.get('pending_source_validation') != []
+            or any(mon.get('status') not in ('owned', 'unreachable') for mon in species)):
+        raise ValueError('Pokédex completion disagrees with catalog or final progress evidence')
+
+
 def stage(repo, site, revision):
     source = repo / ASSETS
     for name in REQUIRED:
@@ -83,6 +107,11 @@ def stage(repo, site, revision):
             raise ValueError(f'Recording checksum mismatch: {path}')
         if path.stat().st_size != record['bytes']:
             raise ValueError(f'Recording size mismatch: {path}')
+        verify_dex_completion(dex_data)
+        runtime = (source / 'dex-run/jev-dex-dashboard-data.js').read_text().strip()
+        payload = re.fullmatch(r'window\.JEV_DEX_DASHBOARD=(.*);', runtime, re.S)
+        if not payload or json.loads(payload[1]) != dex_data:
+            raise ValueError('Pokédex runtime data disagrees with audited JSON')
     target = site / 'jev-dashboard'
     existing_size = sum(p.stat().st_size for p in site.rglob('*')
                         if p.is_file() and not p.is_relative_to(target))
