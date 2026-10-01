@@ -432,6 +432,12 @@ class JevGame(pt.Game):
             key = f'ball:{ball}'
             candidates[key] = json.dumps(details)
             bindings[key] = ball, None
+        if (not effective_attacks(party[active], live['enemy']['species'])
+                and any(key.startswith('switch:') for key in bindings)):
+            # FIGHT only offers damaging moves to the attack judge. A status-
+            # only fallback cannot finish this opponent, so do not advertise
+            # it as an attack while a conscious, effective finisher exists.
+            candidates.pop('fight')
         if not bindings:
             return None
         instruction = ('Choose attack, an offered switch, one recovery item, or one ball for this turn. Switching, items and balls consume the turn and the enemy can attack. '

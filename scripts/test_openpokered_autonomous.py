@@ -1518,7 +1518,8 @@ class AutonomousTests(unittest.TestCase):
         # or it would treat the story objectives as the finish line.
         self.assertIn('terminal goal is the Pokédex', dex)
         self.assertIn('channel to more species', dex)
-        self.assertIn('never stop at the Champion', dex)
+        self.assertIn('never stop at the champion', dex.lower())
+        self.assertIn('even if local species remain', dex)
 
     def preference_agent(self, preference):
         client = Mock()
@@ -2522,6 +2523,7 @@ class AutonomousTests(unittest.TestCase):
             'player_party': live_party}}
         self.assertEqual(game.battle_recovery_plan(state), ('switch', 1))
         self.assertIn('switch:1', game.judgments.choose.call_args.args[2])
+        self.assertNotIn('fight', game.judgments.choose.call_args.args[2])
 
     def test_evolution_trainee_can_switch_to_stronger_finisher(self):
         game = JevGame.__new__(JevGame)
