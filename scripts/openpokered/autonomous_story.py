@@ -434,6 +434,18 @@ def factor_strategy_evidence(state, candidates, min_chars=160):
                 return {'shared_strategy_evidence_ref': shared[serial]}
             if isinstance(value, dict):
                 return {key: encode(child) for key, child in value.items()}
+            # Encounter tables, party snapshots and route records repeat the
+            # same field names on every row. Keep all rows and all values, but
+            # transmit those names once. Sharing entire identical objects alone
+            # cannot compress tables whose species/levels differ on each row.
+            if (len(value) >= 3 and all(isinstance(row, dict) for row in value)
+                    and value[0] and all(set(row) == set(value[0]) for row in value)):
+                columns = list(value[0])
+                table = {'strategy_table': {'columns': columns,
+                         'rows': [[encode(row[column]) for column in columns] for row in value]}}
+                ordinary = [encode(child) for child in value]
+                if len(fingerprint(table)) < len(fingerprint(ordinary)):
+                    return table
             return [encode(child) for child in value]
         return value
 
@@ -813,6 +825,10 @@ class AutonomousStoryAgent(DualStoryAgent):
                     'Each object containing only shared_strategy_evidence_ref means the complete '
                     'entry with that key in this library, including nested references. Resolve '
                     'those references when comparing candidates; no candidate or evidence was omitted.')
+            if '"strategy_table"' in json.dumps(state):
+                instruction += (' An object containing only strategy_table represents a list of records: '
+                    'columns names the fields, and each rows entry supplies their values in that order. '
+                    'All original records and values are retained, including nested evidence references.')
         return super().choose(layer, state, candidates, instruction,
                               allow_abstain=not (grounded or mechanism_grounded or trainer_switch_grounded))
 

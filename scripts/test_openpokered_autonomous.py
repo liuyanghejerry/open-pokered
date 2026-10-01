@@ -444,6 +444,10 @@ class AutonomousTests(unittest.TestCase):
             if isinstance(value, dict):
                 if set(value) == {'shared_strategy_evidence_ref'}:
                     return expand(library[value['shared_strategy_evidence_ref']])
+                if set(value) == {'strategy_table'}:
+                    table = value['strategy_table']
+                    return [{key: expand(child) for key, child in zip(table['columns'], row)}
+                            for row in table['rows']]
                 return {key: expand(child) for key, child in value.items()}
             if isinstance(value, list):
                 return [expand(child) for child in value]
@@ -463,6 +467,34 @@ class AutonomousTests(unittest.TestCase):
         state = {'map': 'City'}
         candidates = {'a': 'Continue', 'b': json.dumps({'cost': 2})}
         self.assertEqual(factor_strategy_evidence(state, candidates), (state, candidates))
+
+    def test_strategy_tables_keep_different_species_and_every_field(self):
+        rows = [{'species': f'Species{i}', 'expected_attempts': i + 0.5,
+                 'encounter_share_pct': i, 'levels': [i, i + 2],
+                 'catch_rate': 190, 'band': 'medium'} for i in range(30)]
+        state = {'encounters': rows}
+        candidates = {'a': json.dumps({'targets': rows}), 'b': 'Heal'}
+        factored, options = factor_strategy_evidence(state, candidates)
+        library = factored['shared_strategy_evidence']
+
+        def expand(value):
+            if isinstance(value, dict):
+                if set(value) == {'shared_strategy_evidence_ref'}:
+                    return expand(library[value['shared_strategy_evidence_ref']])
+                if set(value) == {'strategy_table'}:
+                    table = value['strategy_table']
+                    return [dict(zip(table['columns'], [expand(v) for v in row]))
+                            for row in table['rows']]
+                return {key: expand(child) for key, child in value.items()}
+            if isinstance(value, list):
+                return [expand(child) for child in value]
+            return value
+
+        self.assertEqual(expand(factored['encounters']), rows)
+        self.assertEqual(expand(json.loads(options['a'])), {'targets': rows})
+        self.assertEqual(options['b'], 'Heal')
+        self.assertIn('strategy_table', json.dumps(library))
+        self.assertLess(len(json.dumps(library)), len(json.dumps(rows)) * 0.55)
 
     def trainer_preview_agent(self):
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
