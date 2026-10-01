@@ -649,6 +649,64 @@ def s16_restless_soul():
         g.close()
 
 
+@scenario("s17-pc-withdraw-capacity", "Full-box withdrawal immediately reopens native capture capacity")
+def s17_pc_withdraw_capacity():
+    from types import SimpleNamespace
+    from playthrough_late import catch_master_ball
+    from openpokered.autonomous_story import AutonomousStoryAgent
+    g = Game(seed=42)
+    try:
+        boot_starter(g, "Charizard", 60)
+        for _ in range(5):
+            assert g.d.cmd(cmd="give_pokemon", species="Rattata", level=5)["ok"]
+        assert g.d.cmd(cmd="give_item", item="MASTER_BALL", qty=21)["ok"]
+        for _ in range(20):
+            assert g.d.cmd(cmd="start_wild_battle", species="Cubone", level=24)["ok"]
+            catch_master_ball(g)
+        assert g.st()["box_counts"][0] == 20
+        assert g.d.cmd(cmd="warp", map="FuchsiaPokecenter", x=12, y=3)["ok"]
+
+        def command(**args):
+            if args["cmd"] == "press_timeline":
+                args["advance"] = True
+            response = g.d.cmd(**args)
+            assert response["ok"], response
+            return response.get("data")
+
+        def interact(sign):
+            command(cmd="interact_with", id=sign)
+            for _ in range(40):
+                if g.st().get("pc_state"):
+                    return
+                g.tap("a", 4)
+                g.step(13)
+            raise AssertionError("PC did not open")
+
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.active = {"target": ("pokemon", "Cubone", None)}
+        agent.check_budget = lambda: None
+        agent.client = SimpleNamespace(state=g.st, step=g.step, cmd=command,
+                                       interact_with=interact)
+        agent.retrieve_from_pc(0, 0, 5, 0)
+        state = g.st()
+        assert state["box_counts"][:2] == [19, 1], state["box_counts"]
+        assert len(state["party"]) == 6 and state["party"][-1]["species"] == "Cubone"
+        assert g.d.cmd(cmd="start_wild_battle", species="Caterpie", level=3)["ok"]
+        for _ in range(100):
+            state = g.st()
+            if state["battle_phase"] == "PlayerMenu":
+                break
+            g.tap("a", 8)
+            g.step(30)
+        assert state["battle_live"]["capture_blocked_reason"] is None
+        catch_master_ball(g)
+        assert g.st()["box_counts"][:2] == [20, 1]
+        assert bag_qty(g, "MasterBall") == 0
+        g.evidence("s17")
+    finally:
+        g.close()
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--list", action="store_true")

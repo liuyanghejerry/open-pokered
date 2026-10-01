@@ -5388,6 +5388,11 @@ impl PokemonGame {
                             self.save_data.pc_storage.current_box().clone();
                         self.save_to_file();
                     }
+                    // DEPOSIT/WITHDRAW mutate PcStorage without requesting a
+                    // save. Battle capture checks and sCurBoxData must see the
+                    // active box after those operations too, not its last
+                    // CHANGE BOX snapshot (which may still be full).
+                    self.save_data.current_box = self.save_data.pc_storage.current_box().clone();
                     // Party membership may have changed (deposit/withdraw) — keep
                     // the overworld mirrors in sync (repel checks, scripts).
                     self.overworld.party_count = self.save_data.party.count() as u8;
@@ -6123,6 +6128,8 @@ impl PokemonGame {
                     Some("unidentified_ghost")
                 } else if self.battle.ghost_marowak_reveal {
                     Some("restless_soul")
+                } else if bs.player.party.len() >= 6 && self.battle.player_box_full {
+                    Some("storage_full")
                 } else {
                     None
                 },

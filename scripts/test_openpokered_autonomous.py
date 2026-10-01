@@ -92,6 +92,22 @@ class AutonomousTests(unittest.TestCase):
         facts['collection_audit_pending'] = []
         self.assertTrue(index.satisfied(('register', 'Marowak', True), facts))
 
+    def test_source_audit_accepts_evolution_after_native_battle_party_reordering(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.collection_audit_pending = {'Marowak': {'reason': 'uncatchable_restless_soul'}}
+        agent._complete_collection_graph = {'Marowak': [{
+            'method': 'evolution', 'trigger': 'level', 'from_species': 'Cubone', 'level': 28}]}
+        agent.active = {'context': {'acquisition_method': 'evolution',
+                                   'from_species': 'Cubone', 'species': 'Marowak'}}
+        agent.record = Mock()
+        agent.observe_audit_evolution([{'species': 'Cubone', 'level': 27},
+            {'species': 'Charizard', 'level': 58}, {'species': 'Marowak', 'level': 30}])
+        agent.observe_audit_evolution([{'species': 'Charizard', 'level': 59},
+            {'species': 'Marowak', 'level': 28}, {'species': 'Marowak', 'level': 30}], 1000)
+        self.assertFalse(agent.collection_audit_pending)
+        self.assertEqual(agent.record.call_args.kwargs['after']['level'], 28)
+        self.assertEqual(agent.record.call_args.kwargs['frame'], 1000)
+
     def test_checkpoint_audit_recovers_legacy_spirit_capture(self):
         from openpokered.run_autonomous import checkpoint_collection_audit
         import tempfile
@@ -1132,6 +1148,44 @@ class AutonomousTests(unittest.TestCase):
         self.assertIn('Route3', sites)
         self.assertNotIn('Route3', agent.visited)
         self.assertNotIn('VictoryRoad1F', sites)
+
+    def test_training_excludes_capture_only_safari_but_retains_normal_grass(self):
+        from openpokered.story_rules import MAPS_DIR
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.maps = {p.parent.name: json.loads(p.read_text()) for p in MAPS_DIR.glob('*/map.json')}
+        agent.visited = {'SafariZoneCenter', 'SafariZoneWest', 'Route15'}
+        agent.client = Mock()
+        agent.client.route.return_value = {'found': True, 'legs': []}
+        agent.game = Mock(last_map='FuchsiaCity')
+        agent.game.navigation_barriers.return_value = {}
+        agent.game.live_npcs.return_value = set()
+        agent.game.navigation_excluded_maps.return_value = ()
+        with patch('openpokered.autonomous_story.pt.bfs_cross', return_value=[]):
+            sites = agent.find_training_sites({'map': 'FuchsiaCity', 'x': 19, 'y': 18,
+                                               'party': [{'level': 58}]})
+        self.assertIn('Route15', sites)
+        self.assertFalse(any(name.startswith('SafariZone') for name in sites))
+        requested = {call.args[1] for call in agent.client.route.call_args_list}
+        self.assertFalse(any(name.startswith('SafariZone') for name in requested))
+
+    def test_safari_training_execution_is_rejected_before_travel_or_input(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.actions, agent.max_actions = 0, 10
+        agent.record, agent.client, agent.game = Mock(), Mock(), Mock()
+        result = agent.execute('train_encounter:SafariZoneCenter,12,22',
+                               Mock(storyline='skill:evolve'))
+        self.assertEqual(result['required_capability'], 'experience_awarding_battle')
+        agent.client.state.assert_not_called()
+        agent.game.st.assert_not_called()
+
+    def test_native_storage_guard_overrides_a_stale_public_box_count(self):
+        from openpokered.playthrough_judgments import capture_storage_full
+        state = {'party': [{'species': 'Cubone'}] * 6, 'box_counts': [19],
+                 'current_box_index': 0,
+                 'battle_live': {'capture_blocked_reason': 'storage_full'}}
+        self.assertTrue(capture_storage_full(state))
+        game = JevGame.__new__(JevGame)
+        self.assertEqual(game.safari_battle_action(state), 'run')
 
     def test_training_route_checks_current_npcs_and_keeps_reachable_alternative(self):
         from openpokered.story_rules import MAPS_DIR

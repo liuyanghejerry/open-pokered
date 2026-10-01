@@ -26,6 +26,8 @@ MEDICINES = {name: item for name, item in ITEM_CATALOG.items() if item.get('cate
 
 def capture_storage_full(state):
     """The native ball action rejects a full party plus a full current box."""
+    if (state.get('battle_live') or {}).get('capture_blocked_reason') == 'storage_full':
+        return True  # The engine's throw guard is authoritative during battle.
     counts = state.get('box_counts') or []
     index = state.get('current_box_index', 0)
     return (len(state.get('party', [])) >= 6 and 0 <= index < len(counts)

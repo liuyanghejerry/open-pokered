@@ -495,7 +495,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                                     ('box', 'index', 'species', 'level', 'hp', 'max_hp',
                                      'status', 'moves', 'pp')}
                                    for mon in self.client.state().get('stored_pokemon', [])]
-        self.observe_audit_evolution(facts['party'])
+        self.observe_audit_evolution(facts['party'], live.get('frame_count'))
         facts['collection_audit_pending'] = sorted(getattr(self, 'collection_audit_pending', {}))
         facts['current_box_index'] = self.client.state().get('current_box_index', 0)
         facts['box_counts'] = list(self.client.state().get('box_counts', []))
@@ -1141,27 +1141,38 @@ class AutonomousStoryAgent(DualStoryAgent):
         return set((facts.get('dex') or {}).get('owned_species', [])) - set(
             getattr(self, 'collection_audit_pending', {}))
 
-    def observe_audit_evolution(self, party):
+    def observe_audit_evolution(self, party, frame=None):
         """Accept a native party species replacement, not an existing invalid copy.
 
-        Requiring every other slot to remain identical rejects PC withdrawals,
-        switches and new catches. Evolution edges come from the native solo DAG.
+        Compare species multisets, not slots: battle switching can reorder the
+        party. Require one source replacement, the active evolution objective,
+        and a new target level not explained by an existing invalid copy.
         """
         current = [dict(mon) for mon in party]
         previous = getattr(self, '_audit_party', None)
         self._audit_party = current
         if not previous or len(previous) != len(current):
             return
-        changed = [(old, new) for old, new in zip(previous, current)
-                   if not self.same_species(old['species'], new['species'])]
-        if len(changed) != 1:
-            return
-        old, new = changed[0]
         context = (getattr(self, 'active', None) or {}).get('context', {})
-        if (context.get('acquisition_method') != 'evolution'
-                or not self.same_species(context.get('from_species'), old['species'])
-                or not self.same_species(context.get('species'), new['species'])):
+        if context.get('acquisition_method') != 'evolution':
             return
+        normalize = lambda name: str(name).replace('_', '').upper()
+        source, target_name = normalize(context.get('from_species')), normalize(context.get('species'))
+        before_species = Counter(normalize(mon['species']) for mon in previous)
+        after_species = Counter(normalize(mon['species']) for mon in current)
+        if (before_species - after_species != Counter({source: 1})
+                or after_species - before_species != Counter({target_name: 1})):
+            return
+        before_levels = Counter((normalize(mon['species']), mon['level']) for mon in previous)
+        after_levels = Counter((normalize(mon['species']), mon['level']) for mon in current)
+        removed = [key for key, count in (before_levels - after_levels).items()
+                   for _ in range(count) if key[0] == source]
+        added = [key for key, count in (after_levels - before_levels).items()
+                 for _ in range(count) if key[0] == target_name]
+        if len(removed) != 1 or len(added) != 1:
+            return  # Ambiguous evidence cannot clear a pending source audit.
+        old = next(mon for mon in previous if (normalize(mon['species']), mon['level']) == removed[0])
+        new = next(mon for mon in current if (normalize(mon['species']), mon['level']) == added[0])
         for target in list(getattr(self, 'collection_audit_pending', {})):
             if not self.same_species(new['species'], target):
                 continue
@@ -1173,7 +1184,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                     evidence = self.collection_audit_pending.pop(target)
                     self.record('collection_audit_resolved', species=target,
                         acquisition_method='evolution', before=old, after=new,
-                        invalid_acquisition=evidence)
+                        invalid_acquisition=evidence, frame=frame)
                     break
 
     def dex_complete(self, facts):
@@ -1309,6 +1320,8 @@ class AutonomousStoryAgent(DualStoryAgent):
                                                 for mon in party) else 1
                         examples = []
                         for name in getattr(self, 'visited', ()):
+                            if name.startswith('SafariZone'):
+                                continue  # Capture-only encounters are not training victories.
                             table = ((getattr(self, 'maps', {}).get(name, {}).get('wild') or {})
                                      .get('red') or {}).get('grass')
                             effort = evolution_training_effort(trainee, method['level'], table, participants)
@@ -1750,6 +1763,8 @@ class AutonomousStoryAgent(DualStoryAgent):
             nearby.update(c['targetMap'] for c in self.maps.get(name, {}).get('connections', {}).values())
             nearby.update(w['destMap'] for w in self.maps.get(name, {}).get('warps', []) if w.get('destMap'))
         for name in nearby:
+            if name.startswith('SafariZone'):
+                continue  # BALL/BAIT/ROCK/RUN cannot produce knockout XP.
             wild = ((self.maps.get(name, {}).get('wild') or {}).get('red') or {}).get('grass') or {}
             mons = wild.get('mons', [])
             if not mons or max(mon['level'] for mon in mons) > level + 2:
@@ -3856,6 +3871,11 @@ class AutonomousStoryAgent(DualStoryAgent):
         else:
             name, x, y = parts
             method, method_args, area_key = 'grass', [], name
+            if name.startswith('SafariZone'):
+                result = {'result': 'blocked', 'detail': 'Safari encounters provide no knockout experience',
+                          'required_capability': 'experience_awarding_battle'}
+                self.record('operation', operation=operation, result=result, script=rule.storyline)
+                return result
         owned_before = self.client.state().get('pokedex', {}).get('owned')
         start_level = self.client.state()['party'][0]['level']
         if self.client.state()['map_name'] != name:
