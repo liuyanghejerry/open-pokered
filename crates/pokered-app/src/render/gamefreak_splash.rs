@@ -10,20 +10,15 @@
 //!   (gfx/splash/gamefreak_logo.png, OAM dbsprite 10,9 → screen (72,56))
 //!   flashing via the `rOBP0` value from core, and the "GAME FREAK" wordmark
 //!   (OAM row 12 → screen y=80, tiles 6-15).
-//! - Big star: 16×16, OAM (160,0) → (0,160) at 4 px/frame. Approximation:
-//!   drawn with the falling-star tile 2×2 (the original reuses
-//!   `MoveAnimationTiles1` tiles 3/19, which we don't have as PNGs).
-//! - Small stars: gfx/splash/falling_star.png at the core-computed OAM
-//!   positions. Approximation: the original blinks only the *lower* star in
-//!   the tile (`rOBP1 ^= %10100000`); we blink the whole sprite.
+//! - Stars use the shared original tile/OAM/palette renderer in
+//!   `pokered_renderer::gamefreak_stars`.
 
 use pokered_core::gamefreak_splash::{GameFreakSplashState, SplashPhase};
 use pokered_data::layout_constants;
 use pokered_renderer::embedded_font::{draw_text, measure_text};
 use pokered_renderer::palette::{PaletteState, GRAYSCALE_PALETTE};
 use pokered_renderer::resource::ResourceManager;
-use pokered_renderer::tile::TileSet;
-use pokered_renderer::{FrameBuffer, Rgba, TILE_SIZE};
+use pokered_renderer::{FrameBuffer, Rgba};
 
 use super::blit_tileset;
 
@@ -56,10 +51,6 @@ pub fn draw_gamefreak_splash(
     let mut palette_state = PaletteState::new(GRAYSCALE_PALETTE);
     palette_state.obp0 = state.logo_obp0();
     let logo_pal = palette_state.obj_palette0();
-    // Stars use the identity shade mapping, but OBJ color 0 must stay
-    // transparent so their tile backgrounds do not erase the black bars.
-    palette_state.obp1 = 0b11100100;
-    let star_pal = palette_state.obj_palette1();
 
     if let Some(ref mut rm) = res {
         if let Ok(logo) = rm.load_splash("gamefreak_logo") {
@@ -70,35 +61,7 @@ pub fn draw_gamefreak_splash(
         let wordmark_x = (fb.width() - measure_text("GAME FREAK")) / 2;
         draw_text("GAME FREAK", wordmark_x, WORDMARK_SCREEN_Y, Rgba::BLACK, fb);
 
-        if let Some((oam_x, oam_y)) = state.big_star_oam() {
-            if let Ok(star) = rm.load_splash("falling_star") {
-                let ts = &star.tileset;
-                // 2×2 sprites (splash.asm:230-235), screen = OAM - (8, 16).
-                let sx = oam_x - 8;
-                let sy = oam_y - 16;
-                for dy in 0..2 {
-                    for dx in 0..2 {
-                        blit_tile_clipped(
-                            fb,
-                            &ts,
-                            0,
-                            sx + dx * TILE_SIZE as i32,
-                            sy + dy * TILE_SIZE as i32,
-                            &star_pal,
-                        );
-                    }
-                }
-            }
-        }
-
-        if !state.small_star_blink() {
-            if let Ok(star) = rm.load_splash("falling_star") {
-                let ts = &star.tileset;
-                for (oam_x, oam_y) in state.small_stars_oam() {
-                    blit_tile_clipped(fb, &ts, 0, oam_x - 8, oam_y - 16, &star_pal);
-                }
-            }
-        }
+        pokered_renderer::gamefreak_stars::draw_stars(state, rm, fb);
     } else {
         let wordmark_x = (fb.width() - measure_text("GAME FREAK")) / 2;
         draw_text("GAME FREAK", wordmark_x, WORDMARK_SCREEN_Y, Rgba::BLACK, fb);
@@ -121,20 +84,4 @@ fn draw_black_bars(fb: &mut FrameBuffer) {
         fb.height() - layout_constants::intro_scene::BLACK_BAR_BOTTOM_PIXEL_Y,
         Rgba::BLACK,
     );
-}
-
-/// Blit one tile at a signed screen position, clipping at the framebuffer
-/// edges (the star path starts/ends off-screen).
-fn blit_tile_clipped(
-    fb: &mut FrameBuffer,
-    tileset: &TileSet,
-    tile_idx: usize,
-    px: i32,
-    py: i32,
-    palette: &pokered_renderer::palette::Palette,
-) {
-    if tile_idx >= tileset.len() {
-        return;
-    }
-    fb.blit_gb_tile(px, py, tileset.get(tile_idx), palette, true, false, false);
 }

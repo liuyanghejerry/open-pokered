@@ -127,6 +127,8 @@ pub struct GameFreakSplashState {
     /// Big-star top-left sprite OAM position (only meaningful in
     /// [`SplashPhase::BigStar`]).
     big_star_oam: (i32, i32),
+    /// Current rOBP0 register, retained after the final logo flash and on skip.
+    logo_obp0: u8,
     /// Set once when [`SplashPhase::BigStar`] is entered — the frontend
     /// plays `SFX_SHOOTING_STAR` (splash.asm:29-30).
     sfx_pending: bool,
@@ -144,6 +146,7 @@ impl GameFreakSplashState {
             phase: SplashPhase::BlackDelay,
             frame: 0,
             big_star_oam: (BIG_STAR_START_OAM_X, BIG_STAR_START_OAM_Y),
+            logo_obp0: LOGO_OBP0,
             sfx_pending: false,
         }
     }
@@ -164,29 +167,24 @@ impl GameFreakSplashState {
         (self.phase == SplashPhase::BigStar).then_some(self.big_star_oam)
     }
 
-    /// Current rOBP0 value for the logo sprites: `0xf9` rotated right twice
-    /// per completed flash step (splash.asm:75-77). Frontends use it as the
-    /// OBJ palette to reproduce the flash.
+    /// Current rOBP0 value: rotate before each 10-frame wait, then retain
+    /// the final value (`$e7`) while the small stars fall and afterwards.
     pub fn logo_obp0(&self) -> u8 {
-        if self.phase == SplashPhase::LogoFlash {
-            let step = (self.frame / LOGO_FLASH_FRAMES) as u32;
-            LOGO_OBP0.rotate_right(2 * step)
-        } else {
-            LOGO_OBP0
-        }
+        self.logo_obp0
     }
 
     /// Small-star OAM positions (tile `$a2`, 8×8 px each) while
     /// [`SplashPhase::SmallStars`] is active. Wave `w` spawns at
     /// Y = $68 and falls 8 px per wave step, 1 px per 3 frames
-    /// (`MoveDownSmallStars`, splash.asm:186-209).
+    /// (`MoveDownSmallStars`, splash.asm:186-209). The first increment is
+    /// performed before the first 3-frame wait, so the first visible Y is $69.
     pub fn small_stars_oam(&self) -> Vec<(i32, i32)> {
         if self.phase != SplashPhase::SmallStars {
             return Vec::new();
         }
         let wave = self.frame / SMALL_STAR_WAVE_FRAMES;
         let sub = self.frame % SMALL_STAR_WAVE_FRAMES;
-        let partial = (sub / 3) as i32; // 1 px per 3 frames within the step
+        let partial = (sub / 3 + 1) as i32; // increment before each 3-frame wait
         let mut out = Vec::new();
         let last_populated = wave.min(SMALL_STAR_WAVE_OAM_X.len() as u16 - 1);
         for (w, xs) in SMALL_STAR_WAVE_OAM_X.iter().enumerate() {
@@ -205,21 +203,27 @@ impl GameFreakSplashState {
 
     /// True while the small-star palette is toggled (`rOBP1 ^= %10100000`
     /// every 3 frames, splash.asm:199-202) — the lower star in the tile
-    /// blinks.
+    /// blinks. The first wait already uses the toggled palette ($04).
     pub fn small_star_blink(&self) -> bool {
         if self.phase != SplashPhase::SmallStars {
             return false;
         }
         let sub = self.frame % SMALL_STAR_WAVE_FRAMES;
-        (sub / 3) % 2 == 1
+        (sub / 3) % 2 == 0
     }
 
     fn enter(&mut self, phase: SplashPhase) {
         self.phase = phase;
         self.frame = 0;
         if phase == SplashPhase::BigStar {
-            self.big_star_oam = (BIG_STAR_START_OAM_X, BIG_STAR_START_OAM_Y);
+            // The asm moves all four sprites before its first 1-frame wait.
+            self.big_star_oam = (
+                BIG_STAR_START_OAM_X - BIG_STAR_PX_PER_FRAME,
+                BIG_STAR_START_OAM_Y + BIG_STAR_PX_PER_FRAME,
+            );
             self.sfx_pending = true;
+        } else if phase == SplashPhase::LogoFlash {
+            self.logo_obp0 = LOGO_OBP0.rotate_right(2);
         }
     }
 
@@ -254,12 +258,13 @@ impl GameFreakSplashState {
                 ScreenAction::Continue
             }
             SplashPhase::BigStar => {
-                // splash.asm:39-44 — move first, then wait 1 frame.
-                self.big_star_oam.0 -= BIG_STAR_PX_PER_FRAME;
-                self.big_star_oam.1 += BIG_STAR_PX_PER_FRAME;
+                // The current position has completed its 1-frame wait.
                 self.frame += 1;
                 if self.frame >= BIG_STAR_FRAMES {
                     self.enter(SplashPhase::LogoFlash);
+                } else {
+                    self.big_star_oam.0 -= BIG_STAR_PX_PER_FRAME;
+                    self.big_star_oam.1 += BIG_STAR_PX_PER_FRAME;
                 }
                 ScreenAction::Continue
             }
@@ -267,6 +272,8 @@ impl GameFreakSplashState {
                 self.frame += 1;
                 if self.frame >= LOGO_FLASH_COUNT * LOGO_FLASH_FRAMES {
                     self.enter(SplashPhase::SmallStars);
+                } else if self.frame % LOGO_FLASH_FRAMES == 0 {
+                    self.logo_obp0 = self.logo_obp0.rotate_right(2);
                 }
                 ScreenAction::Continue
             }
@@ -328,9 +335,9 @@ mod tests {
     fn big_star_path_and_timing() {
         let mut s = GameFreakSplashState::new();
         s.enter(SplashPhase::BigStar);
-        assert_eq!(s.big_star_oam(), Some((160, 0)));
+        assert_eq!(s.big_star_oam(), Some((156, 4)), "moves before first wait");
         s.update_frame(SplashInput::none());
-        assert_eq!(s.big_star_oam(), Some((156, 4)), "moves before waiting");
+        assert_eq!(s.big_star_oam(), Some((152, 8)));
         for _ in 1..BIG_STAR_FRAMES {
             s.update_frame(SplashInput::none());
         }
@@ -343,20 +350,20 @@ mod tests {
     fn logo_flash_timing_and_palette() {
         let mut s = GameFreakSplashState::new();
         s.enter(SplashPhase::LogoFlash);
-        assert_eq!(s.logo_obp0(), 0xf9);
+        assert_eq!(s.logo_obp0(), 0x7e, "rotate before first wait");
         for _ in 0..LOGO_FLASH_FRAMES {
             s.update_frame(SplashInput::none());
         }
-        assert_eq!(s.logo_obp0(), 0xf9u8.rotate_right(2));
+        assert_eq!(s.logo_obp0(), 0x9f);
         for _ in 0..LOGO_FLASH_FRAMES {
             s.update_frame(SplashInput::none());
         }
-        assert_eq!(s.logo_obp0(), 0xf9u8.rotate_right(4));
+        assert_eq!(s.logo_obp0(), 0xe7);
         for _ in 0..LOGO_FLASH_FRAMES {
             s.update_frame(SplashInput::none());
         }
         assert_eq!(s.phase, SplashPhase::SmallStars);
-        assert_eq!(s.logo_obp0(), 0xf9, "palette restored after the flashes");
+        assert_eq!(s.logo_obp0(), 0xe7, "final palette persists after flashes");
     }
 
     /// Small stars: wave 1 spawns at Y=$68 with the asm X coords; each wave
@@ -368,23 +375,23 @@ mod tests {
         s.enter(SplashPhase::SmallStars);
         assert_eq!(
             s.small_stars_oam(),
-            vec![(0x30, 0x68), (0x40, 0x68), (0x58, 0x68), (0x78, 0x68)]
+            vec![(0x30, 0x69), (0x40, 0x69), (0x58, 0x69), (0x78, 0x69)]
         );
-        assert!(!s.small_star_blink());
-        // 3 frames → 1 px fallen, blink toggled on.
+        assert!(s.small_star_blink(), "toggle before first wait");
+        // The next 3-frame wait starts with another increment and toggle.
         for _ in 0..3 {
             s.update_frame(SplashInput::none());
         }
-        assert_eq!(s.small_stars_oam()[0], (0x30, 0x69));
-        assert!(s.small_star_blink());
+        assert_eq!(s.small_stars_oam()[0], (0x30, 0x6a));
+        assert!(!s.small_star_blink());
         // Finish wave step 1 (24 frames total): wave 2 spawns, wave 1 is 8 px down.
         for _ in 3..SMALL_STAR_WAVE_FRAMES {
             s.update_frame(SplashInput::none());
         }
         let stars = s.small_stars_oam();
         assert_eq!(stars.len(), 8, "waves 1+2 visible");
-        assert_eq!(stars[0], (0x30, 0x68 + 8));
-        assert_eq!(stars[4], (0x38, 0x68));
+        assert_eq!(stars[0], (0x30, 0x69 + 8));
+        assert_eq!(stars[4], (0x38, 0x69));
         // All 6 wave steps (144 frames total; 24 elapsed) → PostDelay.
         for _ in 0..(SMALL_STAR_WAVES - 1) * SMALL_STAR_WAVE_FRAMES {
             s.update_frame(SplashInput::none());
@@ -410,6 +417,86 @@ mod tests {
             s.update_frame(SplashInput::none()),
             ScreenAction::Transition(GameScreen::LanguageSelect)
         );
+    }
+
+    /// Literal asm wait trace: mutate registers/OAM, then observe each frame
+    /// of DelayFrames/CheckForUserInterruption. No production phase math.
+    #[test]
+    fn every_wait_frame_matches_original_instruction_order() {
+        let mut s = GameFreakSplashState::new();
+        let mut check = |phase, logo, big, small: &[(i32, i32)], blink| {
+            assert_eq!(s.phase, phase);
+            assert_eq!(s.logo_obp0(), logo);
+            assert_eq!(s.big_star_oam(), big);
+            assert_eq!(s.small_stars_oam(), small);
+            assert_eq!(s.small_star_blink(), blink);
+            assert_eq!(s.update_frame(SplashInput::none()), ScreenAction::Continue);
+        };
+        for _ in 0..180 {
+            check(SplashPhase::BlackDelay, 0xf9, None, &[], false);
+        }
+        for _ in 0..64 {
+            check(SplashPhase::Setup, 0xf9, None, &[], false);
+        }
+        let (mut x, mut y) = (160, 0);
+        for _ in 0..40 {
+            x -= 4;
+            y += 4;
+            check(SplashPhase::BigStar, 0xf9, Some((x, y)), &[], false);
+        }
+        // rrc twice precedes each ten-frame wait; there is no restore.
+        for palette in [0x7e, 0x9f, 0xe7] {
+            for _ in 0..10 {
+                check(SplashPhase::LogoFlash, palette, None, &[], false);
+            }
+        }
+        let mut stars = Vec::new();
+        let mut obp1 = 0xa4;
+        let waves: [&[i32]; 6] = [
+            &[0x30, 0x40, 0x58, 0x78],
+            &[0x38, 0x48, 0x60, 0x70],
+            &[0x34, 0x4c, 0x54, 0x64],
+            &[0x3c, 0x5c, 0x6c, 0x74],
+            &[],
+            &[],
+        ];
+        for wave in waves {
+            for &x in wave {
+                stars.push((x, 0x68));
+            }
+            for _ in 0..8 {
+                for (_, y) in &mut stars {
+                    *y += 1;
+                }
+                obp1 ^= 0xa0;
+                for _ in 0..3 {
+                    check(SplashPhase::SmallStars, 0xe7, None, &stars, obp1 == 0x04);
+                }
+            }
+        }
+        // The last wave has fallen entirely behind the bottom black bar.
+        assert!(stars.iter().all(|&(_, y)| y >= 128));
+        assert_eq!(obp1, 0xa4);
+        for _ in 0..40 {
+            check(SplashPhase::PostDelay, 0xe7, None, &[], false);
+        }
+        assert_eq!(s.phase, SplashPhase::Done);
+        assert_eq!(s.logo_obp0(), 0xe7);
+    }
+
+    #[test]
+    fn interruption_keeps_the_current_logo_palette_and_reset_restores_it() {
+        let mut s = GameFreakSplashState::new();
+        s.enter(SplashPhase::LogoFlash);
+        for _ in 0..10 {
+            s.update_frame(SplashInput::none());
+        }
+        assert_eq!(s.logo_obp0(), 0x9f);
+        s.update_frame(press_a());
+        assert_eq!(s.phase, SplashPhase::Done);
+        assert_eq!(s.logo_obp0(), 0x9f);
+        s.reset();
+        assert_eq!(s.logo_obp0(), 0xf9);
     }
 
     /// A/Start (or Up+Select+B) during the animation aborts it and skips the
