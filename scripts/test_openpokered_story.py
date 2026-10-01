@@ -34,6 +34,35 @@ def facts(**flags):
 
 
 class RulesTests(unittest.TestCase):
+    def test_badge_queries_use_native_bits_not_count_or_story_flags(self):
+        from openpokered.story_rules import BADGE_BITS
+        for name, bit in BADGE_BITS.items():
+            query = call('game.hasBadge', name.lower())
+            self.assertTrue(evaluate(query, {**facts(), 'badges': 1, 'badge_bits': 1 << bit}))
+            self.assertFalse(evaluate(query, {**facts(EVENT_BEAT_ERIKA=True),
+                                             'badges': 7, 'badge_bits': 255 ^ (1 << bit)}))
+        self.assertIsNone(evaluate(call('hasBadge', 'RAINBOWBADGE'), facts(EVENT_BEAT_ERIKA=True)))
+        self.assertIsNone(evaluate(call('hasBadge', 'INVALID'), {'badge_bits': 255}))
+        self.assertEqual(requirements(call('hasBadge', 'RAINBOWBADGE'), True,
+                                     {**facts(), 'badge_bits': 0}),
+                         [[('badge', 'RAINBOWBADGE', True)]])
+
+    def test_badge_guard_backchains_real_give_badge_producer(self):
+        earned = compile_story(story([conditional(call('getFlag', 'WON_GYM'),
+            [command('giveBadge', 'RAINBOWBADGE')])]))
+        index = StoryIndex.__new__(StoryIndex)
+        index.by_effect = {('badge', 'RAINBOWBADGE', True): earned}
+        missing = {**facts(WON_GYM=True), 'badge_bits': 0}
+        self.assertEqual(index.frontier(('badge', 'RAINBOWBADGE', True), missing), earned)
+        owned = {**missing, 'badge_bits': 8}
+        self.assertTrue(index.satisfied(('badge', 'RAINBOWBADGE', True), owned))
+        self.assertEqual(index.frontier(('badge', 'RAINBOWBADGE', True), owned), [])
+        self.assertFalse(index.satisfied(('badge', 'RAINBOWBADGE', False), facts()))
+        guard = compile_story(story([conditional(call('hasBadge', 'RAINBOWBADGE'), [],
+            [command('movePlayerRelative', 'down')])]))[0]
+        self.assertEqual(guard.missing(missing), [])
+        self.assertNotEqual(guard.missing(owned), [])
+
     def test_rival_triplet_base_survives_into_following_effect(self):
         rules = compile_story(story([
             command('startBattleSet', 'OPP_RIVAL2', 6), command('setFlag', 'RIVAL_BEATEN')]))

@@ -82,6 +82,7 @@ class DualStoryAgent:
                 'party': [{k: m.get(k) for k in ('species', 'level', 'hp', 'max_hp', 'status')}
                           for m in state.get('party', [])],
                 'badges': self.client.observe().get('badges', {}).get('count', 0),
+                'badge_bits': state.get('badges'),
                 'map': state['map_name'], 'x': state['player_x'], 'y': state['player_y'],
                 'money': state.get('money'), 'coins': state.get('coins'),
                 'dex': state.get('pokedex') or {}}

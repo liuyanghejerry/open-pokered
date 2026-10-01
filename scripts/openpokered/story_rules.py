@@ -15,6 +15,10 @@ from pathlib import Path
 MAPS_DIR = Path(__file__).resolve().parents[2] / 'crates/pokered-data/maps'
 UNKNOWN = None
 MAX_PATHS = 256
+# Canonical wObtainedBadges bit order, matching native_script::badge_bit_index.
+BADGE_BITS = {name: bit for bit, name in enumerate((
+    'BOULDERBADGE', 'CASCADEBADGE', 'THUNDERBADGE', 'RAINBOWBADGE',
+    'SOULBADGE', 'MARSHBADGE', 'VOLCANOBADGE', 'EARTHBADGE'))}
 
 
 def default_hidden_toggles():
@@ -121,6 +125,10 @@ def evaluate(expr, facts):
             return facts.get('bag', {}).get(args[0].replace('_', '').upper(), 0) > 0
         if name == 'getBadgeCount':
             return facts.get('badges', 0)
+        if name == 'hasBadge':
+            bit = BADGE_BITS.get(str(args[0]).upper()) if args else None
+            mask = facts.get('badge_bits')
+            return bool(mask & (1 << bit)) if bit is not None and isinstance(mask, int) else UNKNOWN
         if name == 'getPokedexOwnedCount':
             # Oak's aides gate rewards on this count; an unresolved call here
             # would make every one of those branches an unknown guard.
@@ -205,6 +213,10 @@ def requirements(expr, wanted, facts):
     if any(name in json.dumps(expr) for name in ('getPlayerX', 'getPlayerY', 'getPlayerFacing')):
         return [[]]
     call = expr.get('Call')
+    if call and call['callee'].removeprefix('game.') == 'hasBadge':
+        key = evaluate(call['args'][0], facts) if call.get('args') else None
+        if isinstance(key, str) and key.upper() in BADGE_BITS:
+            return [[('badge', key.upper(), wanted)]]
     if call and call['callee'].removeprefix('game.') in ('getFlag', 'hasItem'):
         key = evaluate(call['args'][0], facts)
         if key is not None:
@@ -252,6 +264,8 @@ def compile_story(story):
         effect = None
         if name in ('setFlag', 'resetFlag') and values and isinstance(values[0], str):
             effect = ('flag', values[0], name == 'setFlag')
+        elif name == 'giveBadge' and values and isinstance(values[0], str) and values[0].upper() in BADGE_BITS:
+            effect = ('badge', values[0].upper(), True)
         elif name in ('giveItem', 'takeItem') and values and isinstance(values[0], str):
             effect = ('item', values[0], name == 'giveItem')
         elif name == 'givePokemon' and values:
@@ -535,6 +549,9 @@ class StoryIndex:
         kind, name, wanted = target
         if kind == 'flag':
             return bool(facts['flags'].get(name)) == wanted
+        if kind == 'badge':
+            value = evaluate({'Call': {'callee': 'hasBadge', 'args': [literal(name)]}}, facts)
+            return value is not None and value == wanted
         if kind == 'item':
             return (facts['bag'].get(name.replace('_', '').upper(), 0) > 0) == wanted
         if kind == 'level':
