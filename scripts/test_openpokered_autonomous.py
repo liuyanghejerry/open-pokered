@@ -641,6 +641,15 @@ class AutonomousTests(unittest.TestCase):
         self.assertNotIn('Route5', sites)
         self.assertNotIn('Route9', sites)
         self.assertEqual(sites['Route24'], (5, 18))
+        agent.active = {'context': {'acquisition_method': 'evolution', 'trigger': 'level'}}
+        trainee_party = [{'species': 'NidoranF', 'level': 4, 'hp': 19,
+                          'moves': ['Tackle'], 'pp': [35]},
+                         {'species': 'Charizard', 'level': 36, 'hp': 120,
+                          'moves': ['Ember'], 'pp': [25]}]
+        with patch.object(pt, 'bfs_cross', side_effect=path):
+            switch_sites = agent.find_training_sites({'map': 'CeruleanCity', 'x': 19,
+                'y': 18, 'party': trainee_party})
+        self.assertIn('Route24', switch_sites)
         agent.active = {'target': ('level', 'leader', 25), 'rules': [
             Rule('train', 'Route24', 'skill:train_encounter', [], [], [], ('level', 'leader', 25), [])]}
         candidates, _ = agent.action_candidates({})
@@ -897,6 +906,20 @@ class AutonomousTests(unittest.TestCase):
         self.assertEqual(groups['register:Arcanine:evolution:Growlithe']['target'],
                          ('register', 'Arcanine', True))
         self.assertEqual(groups['register:Lapras:gift:House']['rules'], [gift])
+
+    def test_party_capacity_preparation_requires_explored_ready_acquisition(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.visited = {'CeruleanCity'}
+        rule = Mock()
+        rule.missing.return_value = []
+        agent.acquisition_story_rules = Mock(return_value=[rule])
+        facts = {'map': 'CeruleanPokecenter'}
+        method = {'map': 'CeladonMansionRoof', 'method': 'gift'}
+        self.assertFalse(agent.acquisition_capacity_ready(facts, 'Eevee', method))
+        agent.visited.add('CeladonMansionRoof')
+        self.assertTrue(agent.acquisition_capacity_ready(facts, 'Eevee', method))
+        rule.missing.return_value = [('flag', 'REQUIRED', True)]
+        self.assertFalse(agent.acquisition_capacity_ready(facts, 'Eevee', method))
 
     def test_uncommitted_solo_choices_offer_every_ceiling_preserving_branch(self):
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)

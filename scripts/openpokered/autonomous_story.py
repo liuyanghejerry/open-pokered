@@ -997,14 +997,16 @@ class AutonomousStoryAgent(DualStoryAgent):
                         self.add_coin_source(groups, facts, method['coins'], species)
                         continue
                     if len(party) >= 6:
-                        self.add_party_space_group(groups, facts, species)
+                        if self.acquisition_capacity_ready(facts, species, method):
+                            self.add_party_space_group(groups, facts, species)
                         continue
                     rules = self.acquisition_story_rules(species, method)
                 else:
                     if method['method'] == 'static' and not self.balls_held(facts):
                         continue
                     if method['method'] == 'gift' and len(party) >= 6:
-                        self.add_party_space_group(groups, facts, species)
+                        if self.acquisition_capacity_ready(facts, species, method):
+                            self.add_party_space_group(groups, facts, species)
                         continue
                     rules = self.acquisition_story_rules(species, method)
                 rules = [rule for rule in rules if not rule.missing(facts)]
@@ -1014,6 +1016,13 @@ class AutonomousStoryAgent(DualStoryAgent):
                 groups[key] = {'target': ('register', species, True), 'rules': rules,
                                'objectives': [f'Register {species} in the solo Pokédex'],
                                'context': context}
+
+    def acquisition_capacity_ready(self, facts, species, method):
+        """Do not churn party slots for a pickup beyond the explored frontier."""
+        if method.get('map') not in {facts['map'], *getattr(self, 'visited', {})}:
+            return False
+        return any(not rule.missing(facts)
+                   for rule in self.acquisition_story_rules(species, method))
 
     def add_storage_retrieval(self, groups, facts, source, target):
         stored = next((mon for mon in facts.get('stored_pokemon', [])
@@ -1306,6 +1315,12 @@ class AutonomousStoryAgent(DualStoryAgent):
     def find_training_sites(self, facts):
         ranked = []
         level = facts['party'][0]['level']
+        active = getattr(self, 'active', None) or {}
+        context = active.get('context', {})
+        if context.get('acquisition_method') == 'evolution' and context.get('trigger') == 'level':
+            finisher = training_battler(facts['party'])
+            if finisher:
+                level = max(level, finisher['level'])
         barriers = self.game.navigation_barriers()
         barriers[facts['map']] = barriers.get(facts['map'], set()) | self.game.live_npcs(facts['map'])
         self.training_navigation = {}
