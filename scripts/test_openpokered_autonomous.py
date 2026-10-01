@@ -12,6 +12,7 @@ from openpokered.autonomous_story import (AutonomousStoryAgent, counter_approach
                                           training_tile, battle_readiness, encounter_value,
                                           training_battler, storage_deposit_indices,
                                           level_experience, evolution_training_cost, training_yield)
+from openpokered.autonomous_story import compact_strategy_candidates
 from openpokered.story_agent import StoryStopped
 from openpokered.navigation_skills import cut_requirement, surf_requirement, water_tile, hm_compatible, water_planning
 from openpokered.story_rules import Rule
@@ -19,6 +20,25 @@ from openpokered.run_autonomous import observations_valid
 
 
 class AutonomousTests(unittest.TestCase):
+    def test_strategy_compaction_preserves_goals_costs_and_blockers(self):
+        routes = [{'map': 'Center', 'tile_route_found': True, 'steps': 11,
+                   'requires_surf': False, 'scope': 'real trigger route'}]
+        routes += [{'map': f'Blocked{i}', 'tile_route_found': False, 'steps': None,
+                    'requires_surf': False, 'scope': 'real trigger route'} for i in range(20)]
+        context = {'trigger_navigation': routes, 'required_for': ['Kadabra', 'MrMime'],
+                   'training_cost': {'remaining_experience_max': 1200}}
+        original = {'x': json.dumps({'establish': ['pokemon', 'Abra', None], 'context': context})}
+        compact = compact_strategy_candidates(original)
+        decoded = json.loads(compact['x'])
+        self.assertEqual(decoded['establish'], ['pokemon', 'Abra', None])
+        self.assertEqual(decoded['context']['required_for'], ['Kadabra', 'MrMime'])
+        self.assertEqual(decoded['context']['trigger_navigation'][0]['steps'], 11)
+        self.assertEqual(decoded['context']['unreachable_trigger_maps'],
+                         [f'Blocked{i}' for i in range(20)])
+        self.assertEqual(decoded['context']['navigation_scope'], 'real trigger route')
+        self.assertLess(len(compact['x']), len(original['x']) / 2)
+        self.assertEqual(len(context['trigger_navigation']), 21)
+        self.assertEqual(compact_strategy_candidates({'plain': 'Continue'}), {'plain': 'Continue'})
     def test_source_capture_keeps_normal_hunts_and_requires_possession(self):
         from openpokered.story_rules import StoryIndex
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)

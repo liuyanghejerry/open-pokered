@@ -177,8 +177,14 @@ class DualStoryAgent:
                 continue
             key = f'subgoal:{n}'
             offered[key] = group
+            routes = {route['map']: route for route in
+                      group.get('context', {}).get('trigger_navigation', [])}
+            ways = sorted(group['rules'], key=lambda rule: (
+                routes.get(rule.map, {}).get('tile_route_found') is not True,
+                routes.get(rule.map, {}).get('steps') if
+                routes.get(rule.map, {}).get('steps') is not None else float('inf')))
             candidates[key] = json.dumps({'establish': group['target'], 'advances': group['objectives'],
-                                          'ways': [r.description() for r in group['rules'][:6]],
+                                          'ways': [r.description() for r in ways[:6]],
                                           'context': group.get('context')})
         navigation = {}
         for group in offered.values():

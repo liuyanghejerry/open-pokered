@@ -291,6 +291,36 @@ def surf_spots(map_name):
             for stance, direction in fishing_spots(map_name)]
 
 
+def compact_strategy_candidates(candidates):
+    """Factor repeated navigation prose without dropping goals or blockers."""
+    result = {}
+    for key, value in candidates.items():
+        try:
+            candidate = json.loads(value)
+        except (ValueError, TypeError):
+            result[key] = value
+            continue
+        context = candidate.get('context') if isinstance(candidate, dict) else None
+        if isinstance(context, dict):
+            routes = context.get('trigger_navigation') or []
+            if routes:
+                scopes = list(dict.fromkeys(route.get('scope') for route in routes if route.get('scope')))
+                if len(scopes) == 1:
+                    context['navigation_scope'] = scopes[0]
+                    routes = [{k: v for k, v in route.items() if k != 'scope'} for route in routes]
+                # Keep every reachable cost and every blocked map. False
+                # routes carry identical null costs, so a map list is lossless.
+                blocked = [route for route in routes if route.get('tile_route_found') is False
+                           and route.get('steps') is None and not route.get('requires_surf')
+                           and set(route) <= {'map', 'tile_route_found', 'steps', 'requires_surf'}]
+                if blocked:
+                    context['unreachable_trigger_maps'] = [route['map'] for route in blocked]
+                    routes = [route for route in routes if route not in blocked]
+                context['trigger_navigation'] = routes
+        result[key] = json.dumps(candidate, separators=(',', ':'), ensure_ascii=False)
+    return result
+
+
 class AutonomousStoryAgent(DualStoryAgent):
     def __init__(self, *args, game, preference='none', **kwargs):
         super().__init__(*args, **kwargs)
@@ -529,6 +559,8 @@ class AutonomousStoryAgent(DualStoryAgent):
         return {'map': name, 'hops': hops, 'stock': stock}
 
     def choose(self, layer, state, candidates, instruction):
+        if layer == 'strategy':
+            candidates = compact_strategy_candidates(candidates)
         if layer == 'strategy' and any('route_resets_won_battles' in value for value in candidates.values()):
             instruction += (' Compare recovery travel with its supplied story-reset cost. '
                 'Depleted PP in one move does not require leaving when other usable attacks can handle '
