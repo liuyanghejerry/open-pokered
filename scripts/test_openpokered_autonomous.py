@@ -19,6 +19,30 @@ from openpokered.run_autonomous import observations_valid
 
 
 class AutonomousTests(unittest.TestCase):
+    def test_status_only_evolution_trainee_can_use_ready_finisher(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.replan_after_defeat = False
+        finisher = {'species': 'Charizard', 'level': 40, 'hp': 130, 'max_hp': 130,
+                    'status': 'None', 'moves': ['Ember'], 'pp': [25]}
+        for species, move in [('Abra', 'Teleport'), ('Metapod', 'Harden')]:
+            trainee = {'species': species, 'level': 10, 'hp': 30, 'max_hp': 30,
+                       'status': 'None', 'moves': [move], 'pp': [20]}
+            facts = {'party': [trainee, finisher]}
+            agent.active = {'target': ('register', 'evolved', True),
+                            'context': {'acquisition_method': 'evolution', 'trigger': 'level',
+                                        'from_species': species}}
+            self.assertTrue(agent.needs_healing(facts))
+            self.assertFalse(agent.needs_skill_recovery(facts))
+            self.assertFalse(agent.should_replan(facts))
+            finisher['pp'] = [0]
+            self.assertTrue(agent.needs_skill_recovery(facts))
+            finisher['pp'] = [25]
+            trainee['hp'] = 0
+            self.assertTrue(agent.needs_skill_recovery(facts))
+            trainee['hp'] = 30
+            agent.active['context'] = {'acquisition_method': 'grass'}
+            self.assertTrue(agent.needs_skill_recovery(facts))
+
     def test_evolution_cost_uses_native_growth_and_observed_level_bounds(self):
         self.assertEqual(level_experience('Rattata', 1), 0)
         self.assertEqual(level_experience('Rattata', 20), 8000)

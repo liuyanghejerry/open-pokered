@@ -425,7 +425,24 @@ class AutonomousStoryAgent(DualStoryAgent):
         main_critical = bool(main and main.get('max_hp', 0) > 0
                              and main['hp'] <= main['max_hp'] * .25)
         return (self.active and self.active['target'][0] != 'heal'
-                and (main_critical or self.needs_healing(facts)))
+                and (main_critical or self.needs_skill_recovery(facts)))
+
+    def needs_skill_recovery(self, facts):
+        """A status-only evolution trainee can share XP with a ready finisher."""
+        active = getattr(self, 'active', None) or {}
+        context = active.get('context', {})
+        party = facts.get('party', [])
+        if (party and context.get('acquisition_method') == 'evolution'
+                and context.get('trigger') == 'level'
+                and self.same_species(party[0]['species'], context.get('from_species', ''))):
+            trainee = party[0]
+            if trainee['hp'] < trainee['max_hp'] * .7 or trainee['status'] != 'None':
+                return True
+            finisher = training_battler(party)
+            if (finisher is not trainee and finisher and finisher['level'] > trainee['level']
+                    and not self.needs_healing({'party': [finisher]})):
+                return False
+        return self.needs_healing(facts)
 
     def select_strategy(self, facts):
         super().select_strategy(facts)
@@ -3512,7 +3529,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                 break
             if state['map_name'] != name:
                 break
-            if self.needs_healing(self.facts()):
+            if (self.needs_healing(self.facts()) if catching else self.needs_skill_recovery(self.facts())):
                 self.active = None
                 break
             px, py = state['player_x'], state['player_y']
