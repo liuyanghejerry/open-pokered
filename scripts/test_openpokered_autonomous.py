@@ -383,6 +383,42 @@ class AutonomousTests(unittest.TestCase):
         self.assertEqual(capture_preparation([mon], {'GreatBall': 2}),
                          restored['PowerPlant:Zapdos']['preparation'])
 
+    def test_retreat_outcome_stays_visible_when_more_balls_reopen_retry(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.collects_dex = True
+        agent.capture_retreats, agent.battle_defeats = {}, []
+        agent.record, agent.dex_progress = Mock(), Mock(return_value={})
+        mon = {'species': 'Gloom', 'level': 24, 'hp': 71, 'status': 'None',
+               'moves': ['SleepPowder'], 'pp': [15]}
+        enemy = {'species': 'Zapdos', 'capture_species': 'Zapdos', 'hp': 150,
+                 'max_hp': 150, 'status': 'None'}
+        before = {'script_awaiting_battle': True, 'map_name': 'PowerPlant', 'party': [mon],
+                  'battle_inventory': [{'item': 'UltraBall', 'qty': 8}],
+                  'battle_live': {'is_wild': True, 'enemy': enemy, 'player_party': [mon]}}
+        fainted = {**mon, 'hp': 0}
+        after = {'battle_phase': 'BattleOver { won: false, escaped: true }',
+                 'pokedex': {'owned_species': []}, 'party': [fainted],
+                 'battle_live': {'enemy': enemy, 'player_party': [fainted]},
+                 'battle_inventory': [{'item': 'UltraBall', 'qty': 8}]}
+        agent.observe_battle_result(before, after)
+        facts = {'party': [mon], 'bag': {'ULTRABALL': 10}}
+        state = {}
+        agent.augment_strategy_state(state, facts)
+        self.assertEqual(state['capture_retreats_requiring_preparation'], [])
+        evidence = state['capture_retry_evidence'][0]
+        self.assertEqual(evidence['retreat_observation']['party'][0]['hp'], 0)
+        self.assertEqual(evidence['retreat_observation']['enemy']['hp'], 150)
+        self.assertEqual(evidence['retreat_observation']['enemy']['status'], 'None')
+        self.assertEqual(evidence['preparation_changes_since_attempt'], ['more_ball_stock:ULTRABALL'])
+        self.assertEqual(evidence['preparation']['party'][0]['hp'], 71)
+        self.assertNotIn('preparation_changes_since_attempt', agent.capture_retreats['PowerPlant:Zapdos'])
+        # Legacy checkpoints have no post-retreat observations. Do not invent
+        # the result, and do not lose the rest of the preparation evidence.
+        del agent.capture_retreats['PowerPlant:Zapdos']['retreat_observation']
+        state = {}
+        agent.augment_strategy_state(state, facts)
+        self.assertNotIn('retreat_observation', state['capture_retry_evidence'][0])
+
     def test_fainted_status_support_is_not_a_collection_resource(self):
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
         facts = {'bag': {}, 'party': [{'species': 'Gloom', 'hp': 0,

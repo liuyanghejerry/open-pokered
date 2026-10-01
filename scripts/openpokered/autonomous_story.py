@@ -697,6 +697,14 @@ class AutonomousStoryAgent(DualStoryAgent):
             state['capture_retreats_requiring_preparation'] = [row for row in
                 getattr(self, 'capture_retreats', {}).values()
                 if self.static_capture_deferred(row['species'], row['map'], facts)]
+            # An improved stock/level reopens a legal attempt, not proof that
+            # the previous capture setup now survives. Keep its observed
+            # outcome visible even when it no longer blocks the retry.
+            preparation = capture_preparation(facts.get('party', []), facts.get('bag', {}))
+            state['capture_retry_evidence'] = [{**row,
+                'preparation_changes_since_attempt': capture_preparation_improvements(
+                    preparation, row['preparation'])}
+                for row in getattr(self, 'capture_retreats', {}).values()]
 
     def dex_progress(self, facts):
         """Collection panel: what is missing, where, and what it unlocks."""
@@ -817,6 +825,13 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'steps, not just levels remaining. Hundreds of low-yield battles have an opportunity '
                 'cost: acquiring an HM or resolving a story blocker may open better collecting and '
                 'training grounds. Previously visited tables are examples, not proof of current access.')
+            instruction += (' Compare capture_retry_evidence with current preparation: an observed '
+                'retreat can show a status support fainted while the target remained healthy and unstatused. '
+                'More balls do not make that support survive the switch or act; healing restores its prior '
+                'condition, not its combat strength. Consider viable alternatives or prerequisites, stronger '
+                'support, safer preparation, or a ball that needs no setup. A retry being offered means '
+                'preparation changed, not that capture is now safe or likely. Missing retreat_observation '
+                'fields mean unobserved, not zero HP or confirmed failure of a specific tactic.')
         if layer == 'action' and 'local_state' in state and getattr(self, 'active', None):
             state = {**state, 'strategy_context': self.active.get('context', {})}
         context = state.get('strategy_context') or {}
@@ -1239,6 +1254,12 @@ class AutonomousStoryAgent(DualStoryAgent):
             key = before['map_name'] + ':' + captured_species
             evidence = {'map': before['map_name'], 'species': captured_species,
                         'preparation': preparation, 'reason': 'native_menu_escape_without_registration'}
+            result_live = after.get('battle_live') or {}
+            evidence['retreat_observation'] = {
+                'enemy': result_live.get('enemy'),
+                'party': result_live.get('player_party') or after.get('party'),
+                'inventory': after.get('battle_inventory'),
+                'scope': 'Native observations at successful menu escape; not a damage forecast or proof of which move caused a faint.'}
             self.capture_retreats[key] = evidence
             self.record('capture_retreat', **evidence)
         opponents = (before.get('battle_live') or {}).get('enemy_party', [])
