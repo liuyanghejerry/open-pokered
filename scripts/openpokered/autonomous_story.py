@@ -142,6 +142,23 @@ def battle_readiness(party, bag):
             'medicine': {name: qty for name, qty in bag.items() if name in medicine_names}}
 
 
+def training_battler(party):
+    """Return the strongest conscious member that can earn battle experience.
+
+    Collection catches can replace the lead slot with a low-level Pokemon.  A
+    story preparation threshold is about the party's capable battler, not that
+    incidental slot order.  Prefer a member with a usable damaging move, then
+    fall back to any conscious member so callers remain useful for sparse test
+    fixtures and unusual early-game parties.
+    """
+    conscious = [mon for mon in party if mon.get('hp', 1) > 0]
+    usable = [mon for mon in conscious if any(
+        name != 'None' and pp > 0 and data.move_data(name)['power'] > 0
+        for name, pp in zip(mon.get('moves', []), mon.get('pp', [])))]
+    candidates = usable or conscious or list(party)
+    return max(candidates, key=lambda mon: mon.get('level', 0)) if candidates else None
+
+
 def type_options(party, opponents):
     """Super-effective party moves per opponent species, from public type data."""
     chart = data.type_chart()
@@ -1865,7 +1882,8 @@ class AutonomousStoryAgent(DualStoryAgent):
                 target_level += LEVEL_PREFERENCE_MARGIN
             # The training skill stops at this same recovery threshold.
             # Offering it while recovery is needed creates a choose/exit loop.
-            if target_level > facts['party'][0]['level'] and not self.needs_healing(facts):
+            battler = training_battler(facts['party'])
+            if battler and target_level > battler['level'] and not self.needs_healing(facts):
                 sites = self.find_training_sites(facts)
                 rules = [Rule(f'train:{name}:{target_level}', name, 'skill:train_encounter',
                               [], [], [], ('level', 'leader', target_level), [])
@@ -1879,7 +1897,8 @@ class AutonomousStoryAgent(DualStoryAgent):
                                     'training_regions': {name: ((self.maps[name].get('wild') or {}).get('red') or {}).get('grass')
                                                          for name in sites},
                                     'observed_defeats': self.battle_defeats[-3:],
-                                    'upcoming_moves': data.species_data(facts['party'][0]['species']).get('learnset', [])},
+                                    'training_battler': battler,
+                                    'upcoming_moves': data.species_data(battler['species']).get('learnset', [])},
                     }
         if self.collects_dex:
             balls = self.balls_held(facts)
@@ -2099,6 +2118,16 @@ class AutonomousStoryAgent(DualStoryAgent):
         return options
 
     def action_candidates(self, facts):
+        if self.active['target'][:2] == ('level', 'leader'):
+            battler = training_battler(facts.get('party', []))
+            if battler and facts['party'][0] is not battler:
+                operation = f'lead_with:{battler["species"]}'
+                return {'action:0': json.dumps({
+                    'operation': operation,
+                    'purpose': 'Put the strongest battle-ready party member in front before training',
+                    'target_level': self.active['target'][2],
+                    'training_battler': battler,
+                })}, {'action:0': (operation, self.active['rules'][0])}
         if self.active.get('context', {}).get('coin_purchase'):
             candidates, bindings = {}, {}
             npcs = self.client.cmd(cmd='get_npcs')

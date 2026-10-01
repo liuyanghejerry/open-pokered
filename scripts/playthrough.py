@@ -520,7 +520,8 @@ class Game:
             if record_video_fps is not None:
                 cmd += ["--record-video-fps", str(record_video_fps)]
         self.proc = subprocess.Popen(
-            cmd, cwd=str(ROOT), stdout=subprocess.DEVNULL, stderr=self.log)
+            cmd, cwd=str(ROOT), stdout=subprocess.DEVNULL, stderr=self.log,
+            start_new_session=True)
         # A connect failure must not orphan the just-spawned game: the
         # first crash of this driver leaked a headless instance that kept
         # port 9020 busy and hijacked every later run's connection.

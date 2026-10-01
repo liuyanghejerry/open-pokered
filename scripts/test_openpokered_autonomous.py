@@ -9,7 +9,8 @@ from unittest.mock import Mock, patch
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from openpokered.playthrough_judgments import ObservedProtocol, move_question, JevGame, replacement_options, medicine_options
 from openpokered.autonomous_story import (AutonomousStoryAgent, counter_approaches, reachable_grass,
-                                          training_tile, battle_readiness, encounter_value)
+                                          training_tile, battle_readiness, encounter_value,
+                                          training_battler)
 from openpokered.story_agent import StoryStopped
 from openpokered.navigation_skills import cut_requirement, surf_requirement, water_tile, hm_compatible, water_planning
 from openpokered.story_rules import Rule
@@ -462,6 +463,31 @@ class AutonomousTests(unittest.TestCase):
             state['local_state']['party'][0]['pp'] = [0]
             agent.choose('action', state, candidates, 'choose')
             self.assertTrue(choose.call_args.kwargs['allow_abstain'])
+
+    def test_training_uses_capable_member_instead_of_low_level_capture_lead(self):
+        from openpokered.story_agent import DualStoryAgent
+        weedle = {'species': 'Weedle', 'level': 3, 'hp': 12, 'max_hp': 12,
+                  'status': 'None', 'moves': ['PoisonSting'], 'pp': [35]}
+        charmeleon = {'species': 'Charmeleon', 'level': 21, 'hp': 52, 'max_hp': 52,
+                      'status': 'None', 'moves': ['Scratch', 'Ember'], 'pp': [35, 25]}
+        self.assertIs(training_battler([weedle, charmeleon]), charmeleon)
+        agent, facts, groups = self.preparation_agent('none')
+        facts['party'] = [weedle, charmeleon]
+        with patch.object(DualStoryAgent, 'strategy_groups', return_value=groups):
+            self.assertNotIn('prepare:train', agent.strategy_groups(facts))
+
+    def test_training_reorders_the_capable_member_before_seeking_an_encounter(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        rule = Rule('train', 'Route2', 'skill:train_encounter', [], [], [],
+                    ('level', 'leader', 14), [])
+        agent.active = {'target': ('level', 'leader', 14), 'rules': [rule]}
+        facts = {'party': [
+            {'species': 'Weedle', 'level': 3, 'hp': 12, 'moves': ['PoisonSting'], 'pp': [35]},
+            {'species': 'Charmander', 'level': 12, 'hp': 35, 'moves': ['Scratch'], 'pp': [35]},
+        ]}
+        candidates, bindings = agent.action_candidates(facts)
+        self.assertEqual(json.loads(candidates['action:0'])['operation'], 'lead_with:Charmander')
+        self.assertEqual(bindings['action:0'][0], 'lead_with:Charmander')
 
     def test_training_is_not_offered_when_the_skill_would_stop_for_recovery(self):
         from openpokered.story_agent import DualStoryAgent
