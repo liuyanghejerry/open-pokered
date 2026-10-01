@@ -1631,6 +1631,19 @@ class AutonomousTests(unittest.TestCase):
         game.use_consumable('RareCandy', 1)
         self.assertEqual([c.args[0] for c in game.tap.call_args_list], ['a', 'a', 'b'])
 
+    def test_start_menu_finishes_post_battle_dialogue_before_start_input(self):
+        from playthrough_late import open_start
+        game = Mock()
+        pending = {'screen': 'overworld', 'field_menu': None,
+                   'dialogue_state': {'waiting_for_input': True}, 'script_running': True}
+        menu = {'screen': 'overworld', 'field_menu': {
+            'kind': 'start', 'items': ['Pokedex', 'Pokemon', 'Item'], 'cursor': 2}}
+        game.st.side_effect = [pending, menu]
+        open_start(game, 'Item')
+        calls = [call[0] for call in game.mock_calls]
+        self.assertLess(calls.index('cutscene'), calls.index('tap'))
+        self.assertEqual([call.args[0] for call in game.tap.call_args_list], ['start', 'a'])
+
     def test_forced_bike_road_is_not_a_surf_shortcut(self):
         import playthrough as pt
         from openpokered.navigation_skills import forced_bike_region

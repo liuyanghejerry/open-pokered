@@ -147,11 +147,22 @@ def require_flag(g, name):
 
 
 def open_start(g, entry):
+    state = g.st()
+    if (state["screen"] == "overworld" and not state.get("field_menu")
+            and any(state.get(key) for key in
+                    ("dialogue_state", "choice", "script_running", "active_script_effect"))):
+        # A trainer can leave its post-battle script running after combat.
+        # START is ignored during dialogue; finish that handoff before trying
+        # to open a field menu. Jev's cutscene driver preserves typed choices.
+        g.cutscene()
     g.tap("start", 12)
     for _ in range(20):
         state = g.st()
         menu = state.get("field_menu")
         if menu is None and state["screen"] == "overworld":
+            if any(state.get(key) for key in
+                   ("dialogue_state", "choice", "script_running", "active_script_effect")):
+                g.cutscene()
             # A warp's final input lock can consume the first START tap.
             g.step(20)
             g.tap("start", 12)
