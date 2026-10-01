@@ -383,7 +383,12 @@ class AutonomousStoryAgent(DualStoryAgent):
                 and len(facts.get('bag', {})) >= 20
                 and not facts['bag'].get(self.active['target'][1].replace('_', '').upper())):
             return True
-        return self.active and self.active['target'][0] != 'heal' and self.needs_healing(facts)
+        party = facts.get('party', [])
+        main = max(party, key=lambda mon: mon['level']) if party else None
+        main_critical = bool(main and main.get('max_hp', 0) > 0
+                             and main['hp'] <= main['max_hp'] * .25)
+        return (self.active and self.active['target'][0] != 'heal'
+                and (main_critical or self.needs_healing(facts)))
 
     def select_strategy(self, facts):
         super().select_strategy(facts)

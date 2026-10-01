@@ -1730,6 +1730,20 @@ class AutonomousTests(unittest.TestCase):
         AutonomousStoryAgent.prioritize_critical_recovery(offered, facts)
         self.assertIn('story', offered)
 
+    def test_switch_training_replans_when_nonlead_main_faints(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.active = {'target': ('register', 'Fearow', True)}
+        agent.replan_after_defeat = False
+        agent.needs_healing = Mock(return_value=False)
+        facts = {'party': [{'species': 'Spearow', 'level': 5, 'hp': 20, 'max_hp': 20},
+                           {'species': 'Charizard', 'level': 36, 'hp': 0, 'max_hp': 120}]}
+        self.assertTrue(agent.should_replan(facts))
+        facts['party'][1]['hp'] = 120
+        self.assertFalse(agent.should_replan(facts))
+        agent.active['target'] = ('heal', 'party', True)
+        facts['party'][1]['hp'] = 0
+        self.assertFalse(agent.should_replan(facts))
+
     def test_forced_bike_road_is_not_a_surf_shortcut(self):
         import playthrough as pt
         from openpokered.navigation_skills import forced_bike_region

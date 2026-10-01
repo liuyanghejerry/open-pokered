@@ -192,6 +192,43 @@ fn test_deserialize_party_mon_roundtrip() {
 }
 
 #[test]
+fn box_roundtrip_rebuilds_battle_stats_without_healing() {
+    use crate::pokemon::stats::create_pokemon;
+    for saved_hp in [0, 17] {
+        let mut mon = create_pokemon(Species::Charizard, 36, [0x95, 0xAA]).unwrap();
+        mon.hp = saved_hp;
+        let mut buf = Vec::new();
+        serialize_box_mon(&mon, &mut buf);
+        let restored = deserialize_box_mon(&buf).unwrap();
+        assert_eq!(restored.hp, saved_hp);
+        assert_eq!(restored.max_hp, mon.max_hp);
+        assert_eq!(restored.attack, mon.attack);
+        assert_eq!(restored.defense, mon.defense);
+        assert_eq!(restored.speed, mon.speed);
+        assert_eq!(restored.special, mon.special);
+        assert_eq!(restored.total_exp, mon.total_exp);
+        assert_eq!(restored.pp, mon.pp);
+    }
+}
+
+#[test]
+fn party_import_repairs_zero_stats_from_legacy_box_withdrawal() {
+    use crate::pokemon::stats::create_pokemon;
+    let mut mon = create_pokemon(Species::Charizard, 36, [0x95, 0xAA]).unwrap();
+    mon.hp = 0;
+    mon.status = StatusCondition::Paralysis;
+    let expected = mon;
+    mon.attack = 0;
+    mon.defense = 0;
+    mon.speed = 0;
+    mon.special = 0;
+    let mut buf = Vec::new();
+    serialize_party_mon(&mon, &mut buf);
+    let restored = deserialize_party_mon(&buf).unwrap();
+    assert_eq!(restored, expected);
+}
+
+#[test]
 fn test_deserialize_box_mon_too_short() {
     let buf = [0u8; BOX_STRUCT_SIZE - 1];
     assert_eq!(deserialize_box_mon(&buf), Err(SaveError::DataTooShort));
