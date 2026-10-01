@@ -20,6 +20,54 @@ from openpokered.run_autonomous import observations_valid, checkpoint_field_requ
 
 
 class AutonomousTests(unittest.TestCase):
+    def test_surf_completion_retains_the_blocked_parent_not_the_shore_goal(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        obstacle = {'map': 'Route20', 'stance': [58, 11], 'direction': 'down',
+                    'landing': ['CinnabarIsland', 19, 5], 'destination': 'PokemonMansion1F'}
+        parent = ['flag', 'EVENT_MANSION_SWITCH_ON', False]
+        agent.active = {'context': obstacle}
+        agent.navigation_memory = {'PokemonMansion1F': {'goal': parent}}
+        agent.actions, agent.max_actions = 0, 10
+        agent.client, agent.game, agent.record = Mock(), Mock(), Mock()
+        agent.client.flags.return_value = {}
+        agent.game.st.return_value = {'player_transport': 'Surfing'}
+        agent.navigate_point = Mock()
+        agent.field_requirements, agent.crossed_passages = {'Surf': obstacle}, set()
+        rule = Rule('water', 'Route20', 'skill:surf', [], [], [], (), [])
+        self.assertEqual(agent.execute('surf:1', rule)['result'], 'crossed_water')
+        self.assertEqual(agent.route_continuation['goal'], parent)
+        self.assertEqual(agent.route_continuation['destination'], 'PokemonMansion1F')
+        self.assertEqual(agent.route_continuation['landing'], obstacle['landing'])
+
+    def test_completed_route_context_expires_on_goal_completion_or_departure(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.collects_dex = False
+        agent.index = Mock()
+        continuation = {'goal': ['flag', 'WON', True], 'destination': 'City',
+                        'landing': ['City', 4, 5]}
+        agent.route_continuation = continuation
+        agent.index.satisfied.return_value = False
+        state = {}
+        agent.augment_strategy_state(state, {'map': 'City'})
+        self.assertEqual(state['completed_route_prerequisite'], continuation)
+        agent.augment_strategy_state({}, {'map': 'Other'})
+        self.assertIsNone(agent.route_continuation)
+        agent.route_continuation = continuation
+        agent.index.satisfied.return_value = True
+        agent.augment_strategy_state({}, {'map': 'City'})
+        self.assertIsNone(agent.route_continuation)
+
+    def test_route_continuation_guidance_keeps_all_candidate_choices(self):
+        from openpokered.story_agent import DualStoryAgent
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        options = {'a': 'Continue parent', 'b': 'Heal', 'c': 'Investigate new blocker'}
+        state = {'completed_route_prerequisite': {'destination': 'City'}}
+        with patch.object(DualStoryAgent, 'choose', return_value='a') as choose:
+            agent.choose('strategy', state, options, 'pick')
+        self.assertEqual(choose.call_args.args[2], options)
+        self.assertIn('recorded parent goal', choose.call_args.args[3])
+        self.assertIn('Urgent healing', choose.call_args.args[3])
+
     def test_one_depleted_coverage_move_does_not_abort_ready_hunts(self):
         mon = {'species': 'Charizard', 'level': 57, 'hp': 193, 'max_hp': 193,
                'status': 'None', 'moves': ['Slash', 'Cut', 'Flamethrower', 'Dig'],

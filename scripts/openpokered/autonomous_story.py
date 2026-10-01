@@ -652,6 +652,13 @@ class AutonomousStoryAgent(DualStoryAgent):
         self.replan_after_defeat = False
 
     def augment_strategy_state(self, state, facts):
+        continuation = getattr(self, 'route_continuation', None)
+        if continuation:
+            if (self.index.satisfied(continuation['goal'], facts)
+                    or facts.get('map') != continuation['landing'][0]):
+                self.route_continuation = None
+            else:
+                state['completed_route_prerequisite'] = continuation
         if self.collects_dex:
             state['dex_progress'] = self.dex_progress(facts)
             state['collection_audit_pending'] = getattr(self, 'collection_audit_pending', {})
@@ -830,6 +837,14 @@ class AutonomousStoryAgent(DualStoryAgent):
         if bias and layer in ('strategy', 'action'):
             instruction += f' {bias}'
         if layer == 'strategy':
+            if state.get('completed_route_prerequisite'):
+                instruction += (' The player just completed the crossing described in '
+                    'state.completed_route_prerequisite for its recorded parent goal and destination. '
+                    'Prefer continuing that goal, or a reachable prerequisite at that destination, '
+                    'before choosing unrelated travel back across the same passage. This is not '
+                    'proof the destination is unlocked: compare current trigger navigation and '
+                    'native guards. Urgent healing, capture resources, a newly observed blocker, '
+                    'or an unavailable parent can justify changing goals.')
             state, candidates = factor_strategy_evidence(state, candidates)
             if 'shared_strategy_evidence' in state:
                 instruction += (' Repeated evidence is stored once in state.shared_strategy_evidence. '
@@ -3942,6 +3957,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                 result = {'result': 'used_machine', 'move': move}
             elif operation.startswith('surf:'):
                 obstacle = self.active['context']
+                parent = getattr(self, 'navigation_memory', {}).get(obstacle.get('destination'))
                 prerequisites = surf_current_prerequisites(obstacle, self.client.flags())
                 if prerequisites and self.game.st().get('player_transport') != 'Surfing':
                     result = {'result': 'blocked', 'detail': 'Native current blocks Surf until boulders fall',
@@ -3966,6 +3982,11 @@ class AutonomousStoryAgent(DualStoryAgent):
                         self.field_requirements.pop('Surf', None)
                         self.crossed_passages.add(json.dumps([obstacle['map'], obstacle['stance'], obstacle['landing']]))
                         result = {'result': 'crossed_water', 'landing': obstacle['landing']}
+                        if parent and parent.get('goal'):
+                            self.route_continuation = {
+                                'goal': parent['goal'], 'destination': obstacle['destination'],
+                                'landing': obstacle['landing'],
+                                'evidence': 'Real Surf crossing completed; parent trigger still requires execution'}
                     except NavigationPause as error:
                         result = {'result': 'paused_after_battle', 'detail': str(error)}
                     except pt.NavError as error:
