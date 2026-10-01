@@ -838,6 +838,24 @@ mod current_box_roundtrip_tests {
         assert_eq!(back.game_data.current_box_num & 0x7F, 4);
     }
 
+    #[test]
+    fn live_box_buffer_restores_catches_when_box_bank_is_stale() {
+        use pokered_data::species::Species;
+        let mut save = SaveData::new();
+        save.pc_storage.change_box(4).unwrap();
+        save.game_data.current_box_num = 4 | 0x80;
+        let caught = super::make_test_pokemon(Species::Abra, 12);
+        save.current_box.deposit(caught).unwrap();
+        assert_eq!(save.pc_storage.current_box().count(), 0);
+        let bytes = export_sram(&save);
+        let back = import_sram(&bytes).unwrap();
+        assert_eq!(back.pc_storage.current_box().count(), 1);
+        assert_eq!(back.pc_storage.current_box().get(0).unwrap().species, Species::Abra);
+        let no_checksum = crate::save::sram_import::import_sram_no_checksum(&bytes).unwrap();
+        assert_eq!(no_checksum.pc_storage.current_box_index(), 4);
+        assert_eq!(no_checksum.pc_storage.current_box().count(), 1);
+    }
+
     /// Legacy/damaged bytes (≥ 12 boxes) fall back to box 1 without panic.
     #[test]
     fn out_of_range_box_number_falls_back() {

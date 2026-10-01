@@ -201,6 +201,44 @@ def s05_wild_catch(g):
     g.evidence("s05")
 
 
+@scenario("s13-full-party-catch", "full-party catch appears in PC and survives CONTINUE")
+def s13_full_party_catch():
+    with tempfile.TemporaryDirectory(prefix="pokered-catch-box-") as private:
+        save_path = Path(private) / "catch.sav"
+        g = Game(save_path=save_path)
+        try:
+            boot_starter(g, "Bulbasaur", 8)
+            for _ in range(5):
+                reply = g.d.cmd(cmd="give_pokemon", species="Rattata", level=5)
+                assert reply["ok"], reply
+            assert g.st()["party_count"] == 6
+            reply = g.d.cmd(cmd="give_item", item="POKE_BALL", qty=20)
+            assert reply["ok"], reply
+            reply = g.d.cmd(cmd="start_wild_battle", species="Caterpie", level=3)
+            assert reply["ok"], reply
+            g.wait("screen=battle", 600)
+            throw_balls_until_caught(g, 20)
+            dismiss_dex_screen(g)
+            before = g.st()
+            assert before["party_count"] == 6
+            assert before["box_counts"][0] == 1, before["box_counts"]
+            assert before["stored_pokemon"][0]["species"] == "Caterpie"
+            assert 0 <= bag_qty(g, "PokeBall") < 20
+            assert g.d.cmd(cmd="save")["ok"]
+        finally:
+            g.close()
+        g = Game(save_path=save_path)
+        try:
+            resume_reentry(g)
+            after = g.st()
+            assert after["party_count"] == 6
+            assert after["box_counts"][0] == 1, after["box_counts"]
+            assert after["stored_pokemon"][0]["species"] == "Caterpie"
+            g.evidence("s13")
+        finally:
+            g.close()
+
+
 @scenario("s06-blackout", "total party KO: whiteout respawns at home, party healed")
 def s06_blackout(g):
     boot_starter(g, "Rattata", 2)
