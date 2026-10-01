@@ -225,6 +225,7 @@ def main(argv=None):
                                 agent.navigation_history[key] = blockage
                     agent.field_requirements.update(checkpoint_field_requirements(args.resume))
                     agent.battle_requirements.update(parent.get('battle_requirements', {}))
+                    agent.capture_retreats.update(parent.get('capture_retreats', {}))
                     game.stationary_npcs = {name: {int(k): tuple(v) for k, v in npcs.items()}
                                             for name, npcs in parent.get('stationary_npcs', {}).items()}
                     agent.battle_defeats.extend(parent.get('battle_defeats', []))
@@ -250,6 +251,7 @@ def main(argv=None):
                             result['preparation_requirements'] = dict(agent.field_requirements)
                             result['field_requirements_schema'] = 1
                             result['battle_requirements'] = agent.battle_requirements
+                            result['capture_retreats'] = agent.capture_retreats
                             result['stationary_npcs'] = getattr(game, 'stationary_npcs', {})
                             result['battle_defeats'] = agent.battle_defeats
                             result['defeat_preparation'] = agent.defeat_preparation

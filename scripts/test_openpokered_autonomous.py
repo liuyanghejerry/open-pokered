@@ -20,6 +20,45 @@ from openpokered.run_autonomous import observations_valid, checkpoint_field_requ
 
 
 class AutonomousTests(unittest.TestCase):
+    def test_capture_retreat_retries_require_actual_preparation_improvement(self):
+        from openpokered.autonomous_story import capture_preparation
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.collects_dex = True
+        agent.capture_retreats, agent.battle_defeats = {}, []
+        agent.record = Mock()
+        mon = {'species': 'Gloom', 'level': 21, 'hp': 0, 'status': 'None',
+               'moves': ['SleepPowder'], 'pp': [15]}
+        before = {'script_awaiting_battle': True, 'map_name': 'PowerPlant', 'party': [mon],
+                  'battle_inventory': [{'item': 'GreatBall', 'qty': 2}],
+                  'battle_live': {'is_wild': True, 'enemy': {'species': 'Zapdos'},
+                                  'player_party': [mon]}}
+        after = {'battle_phase': 'BattleOver { won: false, escaped: true }',
+                 'pokedex': {'owned_species': []}, 'party': [mon]}
+        agent.observe_battle_result(before, after)
+        self.assertIn('PowerPlant:Zapdos', agent.capture_retreats)
+        facts = {'party': [dict(mon)], 'bag': {'GREATBALL': 2}, 'map': 'Route10'}
+        self.assertTrue(agent.static_capture_deferred('ZAPDOS', 'PowerPlant', facts))
+        self.assertFalse(agent.static_capture_deferred('Zapdos', 'OtherMap', facts))
+        facts['bag']['GREATBALL'] = 1
+        self.assertTrue(agent.static_capture_deferred('Zapdos', 'PowerPlant', facts))
+        facts['party'][0]['hp'] = 50
+        self.assertFalse(agent.static_capture_deferred('Zapdos', 'PowerPlant', facts))
+        facts['party'][0]['hp'] = 0
+        facts['bag']['GREATBALL'] = 12
+        self.assertFalse(agent.static_capture_deferred('Zapdos', 'PowerPlant', facts))
+        restored = json.loads(json.dumps(agent.capture_retreats))
+        self.assertEqual(restored, agent.capture_retreats)
+        self.assertEqual(capture_preparation([mon], {'GreatBall': 2}),
+                         restored['PowerPlant:Zapdos']['preparation'])
+
+    def test_fainted_status_support_is_not_a_collection_resource(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        facts = {'bag': {}, 'party': [{'species': 'Gloom', 'hp': 0,
+                'moves': ['SleepPowder'], 'pp': [15]}]}
+        self.assertFalse(agent.collection_resources(facts)['can_apply_safe_capture_status'])
+        facts['party'][0]['hp'] = 1
+        self.assertTrue(agent.collection_resources(facts)['can_apply_safe_capture_status'])
+
     def test_static_retreat_requires_proof_for_every_post_battle_write(self):
         from openpokered.story_rules import static_retreat_contract
         result = {'Result': {'Call': {'callee': 'startWildBattle',
@@ -1800,6 +1839,7 @@ class AutonomousTests(unittest.TestCase):
             agent.visited, agent.observed_barrier_maps = set(), set()
             agent.navigation_memory, agent.navigation_history = {}, {}
             agent.field_requirements, agent.battle_requirements = {}, {}
+            agent.capture_retreats = {}
             agent.battle_defeats, agent.defeat_preparation = [], 0
             agent.first_clear_verification, agent.mechanism_goal = None, None
             with patch.object(run_autonomous.argparse.ArgumentParser, 'add_argument', record), \
