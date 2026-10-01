@@ -75,6 +75,8 @@ def main(argv=None):
     parser.add_argument('--seed', type=int, default=42)
     parser.add_argument('--binary', type=Path, default=pt.BIN)
     parser.add_argument('--model', default='jev-1.13.0')
+    parser.add_argument('--jev-provider', choices=['auto', 'openrouter', 'typesafe'], default='auto',
+                        help='Jev billing/API provider; auto prefers OPENROUTER_API_KEY when present')
     parser.add_argument('--max-calls', type=int, default=2500)
     parser.add_argument('--max-actions', type=int, default=2500)
     parser.add_argument('--wall-budget', type=float, default=7200)
@@ -97,7 +99,7 @@ def main(argv=None):
         video_path.parent.mkdir(parents=True, exist_ok=True)
     # A 10s read timeout with one retry aborted a whole 25-minute run on a
     # single transient network blip; long runs need more slack than that.
-    model = TypeSafeClient.from_env(timeout=30, max_retries=2)
+    model = TypeSafeClient.from_env(provider=args.jev_provider, timeout=30, max_retries=2)
     if args.goal == 'story':
         objectives = load_objectives()
         objectives = objectives[:next(i for i, obj in enumerate(objectives) if obj['id'] == args.until) + 1]
@@ -111,6 +113,9 @@ def main(argv=None):
               'target': args.until if args.goal == 'story' else args.goal,
               'layers': {'strategy': args.strategy, 'action': args.action},
               'seed': args.seed, 'mode': 'autonomous-new-game', 'uses_milestone_handlers': False}
+    resolved_provider = getattr(model, 'provider', args.jev_provider)
+    result['jev_provider'] = (resolved_provider if isinstance(resolved_provider, str)
+                              else args.jev_provider)
     if video_path:
         result['recording'] = {'path': str(video_path), 'simulated_fps': 60,
                                'game_frames_per_video_second': args.record_video_fps,

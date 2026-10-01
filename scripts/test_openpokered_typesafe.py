@@ -76,6 +76,21 @@ class CredentialTests(unittest.TestCase):
         self.assertEqual((base, key, source),
                          (ts.DEFAULT_BASE_URL, "k", "typesafe"))
 
+    def test_openrouter_is_preferred_in_auto_mode(self):
+        env = {ts.API_KEY_ENV: "ts", ts.OPENROUTER_API_KEY_ENV: "or"}
+        self.assertEqual(ts.resolve_credentials(env),
+                         (ts.DEFAULT_OPENROUTER_BASE_URL, "or", "openrouter"))
+        self.assertEqual(ts.default_model(env), ts.DEFAULT_OPENROUTER_MODEL)
+
+    def test_provider_can_force_typesafe_when_both_keys_exist(self):
+        env = {ts.API_KEY_ENV: "ts", ts.OPENROUTER_API_KEY_ENV: "or"}
+        self.assertEqual(ts.resolve_credentials(env, "typesafe"),
+                         (ts.DEFAULT_BASE_URL, "ts", "typesafe"))
+
+    def test_explicit_openrouter_requires_its_own_key(self):
+        with self.assertRaises(ts.CredentialError):
+            ts.resolve_credentials({ts.API_KEY_ENV: "ts"}, "openrouter")
+
     def test_base_and_model_overrides(self):
         env = {ts.API_KEY_ENV: "k", ts.BASE_URL_ENV: "http://v/",
                ts.MODEL_ENV: "jev-x"}
@@ -84,6 +99,8 @@ class CredentialTests(unittest.TestCase):
 
     def test_not_configured_without_key(self):
         self.assertFalse(ts.configured({}))
+        self.assertTrue(ts.configured({ts.OPENROUTER_API_KEY_ENV: "or"}))
+        self.assertFalse(ts.configured({ts.API_KEY_ENV: "ts"}, "openrouter"))
 
     def test_env_file_fills_gaps_only(self):
         path = Path(self.tmp()) / ".env"
@@ -130,6 +147,17 @@ class QuestionTests(unittest.TestCase):
 
 # ── HTTP client ───────────────────────────────────────────────────────
 class ClientTests(unittest.TestCase):
+    def test_openrouter_uses_native_system_one_path_and_public_model_slug(self):
+        opener = ScriptedOpener([answers_payload({"q": {"type": "noul", "noul": 0.9}})])
+        client = ts.TypeSafeClient.from_env(
+            {ts.OPENROUTER_API_KEY_ENV: "or"}, provider="openrouter", opener=opener)
+        client.system_one("state", {"q": ts.Noul("well?")}, model="jev-1.13.0")
+        request = opener.calls[0]
+        self.assertEqual(request.full_url, "https://openrouter.ai/api/v1/systemone")
+        self.assertEqual(request.get_header("Authorization"), "Bearer or")
+        self.assertEqual(json.loads(request.data)["model"], "typesafe/jev-1.13")
+        self.assertEqual(client.provider, "openrouter")
+
     def test_request_shape(self):
         opener = ScriptedOpener([answers_payload({"q": {"type": "noul",
                                                         "noul": 0.9}})])

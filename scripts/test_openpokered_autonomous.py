@@ -1346,6 +1346,8 @@ class AutonomousTests(unittest.TestCase):
                                             '--output', str(path / 'out')])
             self.assertEqual(options['--preference']['choices'], ['none', 'level', 'type', 'tactic'])
             self.assertEqual(options['--preference']['default'], 'none')
+            self.assertEqual(options['--jev-provider']['choices'],
+                             ['auto', 'openrouter', 'typesafe'])
             self.assertEqual(factory.call_args.kwargs['preference'], 'level')
             self.assertEqual(code, 1)
             folder = next((path / 'out').iterdir())

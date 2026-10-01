@@ -62,12 +62,18 @@ Pages 发布会恢复实际视频，并校验两条原片的 SHA-256；网站不
 ```bash
 python3 scripts/openpokered/run_autonomous.py \
   --goal collect-dex --strategy jev --action jev --checkpoint \
+  --jev-provider openrouter \
   --record-video --output .artifacts/jev-dex-recording
 
 python3 docs/jev-retrospective-assets/build_jev_dex_dashboard.py \
   .artifacts/jev-dex-recording/<run> \
   --output docs/jev-retrospective-assets/dex-run
 ```
+
+OpenRouter 路径读取 `OPENROUTER_API_KEY`，调用其原生
+`https://openrouter.ai/api/v1/systemone` 接口与 `typesafe/jev-1.13`；费用记入
+OpenRouter 账户。也可使用 `--jev-provider typesafe` 保留原直连方式，`auto`
+则在两个 key 都存在时优先 OpenRouter。
 
 录制器使用调试协议的优雅关机，让 ffmpeg 在游戏进程退出前关闭输入、刷新编码器
 并写完 MP4 索引。大盘时间使用绝对引擎帧除以录制倍率；网络等待只保留在墙钟

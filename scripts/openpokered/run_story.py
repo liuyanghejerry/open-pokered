@@ -33,6 +33,7 @@ def main(argv=None):
     p.add_argument('--binary')
     p.add_argument('--maps-dir')
     p.add_argument('--model', default='jev-1.13.0')
+    p.add_argument('--jev-provider', choices=['auto','openrouter','typesafe'], default='auto')
     p.add_argument('--assisted', action='store_true')
     p.add_argument('--strategy', choices=['jev','code'], default='jev')
     p.add_argument('--action', choices=['jev','code'], default='jev')
@@ -48,7 +49,8 @@ def main(argv=None):
         p.error('runs and budgets must be positive')
     objectives = load_objectives()
     objectives = objectives[:next(i for i,o in enumerate(objectives) if o['id']==args.until)+1]
-    client = TypeSafeClient.from_env(timeout=10,max_retries=1) if 'jev' in (args.strategy,args.action) else None
+    client = (TypeSafeClient.from_env(provider=args.jev_provider, timeout=10,max_retries=1)
+              if 'jev' in (args.strategy,args.action) else None)
     policy_files = sorted(Path(__file__).parent.glob('*.py'))
     policy_hashes = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in policy_files}
     policy_sha256 = hashlib.sha256(json.dumps(policy_hashes, sort_keys=True).encode()).hexdigest()
@@ -80,6 +82,7 @@ def main(argv=None):
                                        maps_dir=args.maps_dir,trace=trace)
                 result = agent.run()
                 result.update({'task':task,'repeat':repeat,'requested_model':args.model,
+                               'jev_provider': client.provider if client else None,
                                'strategy':args.strategy,'action':args.action,'assisted':args.assisted,
                                'policy_sha256':policy_sha256,'policy_files':policy_hashes,
                                'revision':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
