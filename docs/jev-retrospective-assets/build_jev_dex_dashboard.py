@@ -35,19 +35,126 @@ def method(event):
     explicit = event.get('acquisition_method')
     if explicit:
         return explicit
-    # The starter and Pokédex registration happen before collection-specific
-    # groups exist. Preserve them as deterministic gifts in the visual audit.
-    return 'gift' if event.get('acquired') else 'unknown'
+    # Legacy traces did not label every capture. Absence of evidence is not
+    # evidence of a gift (and a resumed initial snapshot is not an acquisition).
+    return 'unknown'
 
 
-def build(run, output, video=None):
-    summary = json.loads((run / 'summary.json').read_text())
-    trace = list(rows(run / 'trace.jsonl'))
+def load_chain(run, follow_parents=False):
+    """Only follow the checkpoint lineage, never unrelated failed attempts."""
+    segments, visited = [], set()
+    while True:
+        run = run.resolve()
+        if run in visited:
+            raise ValueError(f'cyclic checkpoint lineage: {run}')
+        visited.add(run)
+        summary = json.loads((run / 'summary.json').read_text())
+        segments.append({'run': run, 'summary': summary,
+                         'trace': list(rows(run / 'trace.jsonl'))})
+        parent = summary.get('resumed_from')
+        if not follow_parents or not parent:
+            break
+        run = Path(parent)
+        if not run.is_absolute():
+            run = ROOT / run
+    segments.reverse()
+    for segment in segments[:-1]:
+        if not segment['summary'].get('development_checkpoint'):
+            raise ValueError(f'parent is not a checkpoint: {segment["run"]}')
+    return segments
+
+
+def video_duration(path):
+    return float(subprocess.check_output([
+        'ffprobe', '-v', 'error', '-show_entries', 'format=duration',
+        '-of', 'default=noprint_wrappers=1:nokey=1', str(path)], text=True))
+
+
+def merge_traces(segments):
+    """Offsets use clip durations, not wall time or the last observed frame."""
+    merged, boundaries = [], []
+    offset, registered, milestones = 0.0, set(), set()
+    for index, segment in enumerate(segments):
+        trace, fps, duration = segment['trace'], segment['fps'], segment['duration_s']
+        if fps <= 0 or duration < 0:
+            raise ValueError('invalid recording clock')
+        boundaries.append({'segment': index, 'source_run': str(segment['run']),
+                           'source_s': round(offset, 6), 'duration_s': duration,
+                           'video_fps': fps})
+        next_frames = [None] * len(trace)
+        following = None
+        for position in range(len(trace) - 1, -1, -1):
+            next_frames[position] = following
+            if trace[position].get('frame') is not None:
+                following = trace[position]['frame']
+        previous = 0
+        for position, original in enumerate(trace):
+            event = dict(original)
+            frame = event.get('frame')
+            if frame is not None:
+                if frame < previous or frame / fps > duration + 1 / 60:
+                    raise ValueError(f'trace frame outside recording clock: {segment["run"]}')
+                previous = frame
+                event['timing_basis'] = 'engine_frame'
+            else:
+                frame = previous
+                upper = next_frames[position]
+                event['timing_basis'] = 'preceding_frame_estimate'
+                event['source_interval_s'] = [round(offset + frame / fps, 6),
+                    round(offset + (upper / fps if upper is not None else duration), 6)]
+            event['source_s'] = round(offset + frame / fps, 6)
+            event['segment'] = index
+            if event.get('kind') == 'dex_progress':
+                owned = set(event.get('owned_species') or [])
+                if event.get('owned', len(owned)) != len(owned):
+                    raise ValueError('dex count disagrees with species list')
+                if not registered <= owned:
+                    raise ValueError('registered species lost across checkpoint lineage')
+                event['acquired'] = sorted(owned - registered)
+                registered = owned
+            elif event.get('kind') == 'milestone':
+                key = (event.get('objective'), event.get('flag'))
+                if key in milestones:
+                    continue
+                milestones.add(key)
+            merged.append(event)
+        final = (segment.get('summary') or {}).get('final_dex')
+        if final and set(final.get('owned_species', [])) != registered:
+            raise ValueError('final dex disagrees with trace')
+        offset += duration
+    return merged, boundaries
+
+
+def total_metrics(segments, field):
+    counts = Counter()
+    for segment in segments:
+        counts.update(segment['summary'].get(field) or {})
+    return dict(counts)
+
+
+def build(run, output, video=None, chain=False):
+    segments = load_chain(run, chain)
+    summary = segments[-1]['summary']
     recording = summary.get('recording') or {}
     fps = int(recording.get('game_frames_per_video_second', 240))
     source_video = Path(video or recording.get('path') or run / 'jev-dex-full.mp4').resolve()
     if not source_video.is_file():
         raise ValueError(f'missing recording: {source_video}')
+    if len(segments) > 1 and video is None:
+        raise ValueError('--chain requires --video pointing to the assembled lineage recording')
+    for segment in segments:
+        metadata = segment['summary'].get('recording') or {}
+        clip = Path(metadata.get('path') or segment['run'] / 'jev-dex-full.mp4')
+        if not clip.is_absolute():
+            clip = ROOT / clip
+        segment['fps'] = int(metadata.get('game_frames_per_video_second', 240))
+        segment['duration_s'] = video_duration(clip)
+        segment['video'] = {'path': str(clip.resolve()), 'sha256': sha256(clip),
+                            'bytes': clip.stat().st_size}
+    duration = sum(segment['duration_s'] for segment in segments)
+    if abs(video_duration(source_video) - duration) > max(0.1, len(segments) / 60):
+        raise ValueError('assembled video duration disagrees with checkpoint lineage')
+    trace, boundaries = merge_traces(segments)
 
     maps = {path.parent.name: json.loads(path.read_text())
             for path in MAPS_DIR.glob('*/map.json')}
@@ -59,7 +166,7 @@ def build(run, output, video=None):
     order_body = build_source.split('const SPECIES_ORDER:', 1)[1].split('];', 1)[0]
     catalog = list(enumerate(re.findall(r'"([A-Za-z0-9]+)"', order_body), 1))
 
-    stamp = lambda event: round(event.get('frame', 0) / fps, 6)
+    stamp = lambda event: event['source_s']
     progress, decisions, operations, milestones = [], [], [], []
     counts = Counter()
     for event in trace:
@@ -91,20 +198,26 @@ def build(run, output, video=None):
                 'dex_progress': (event.get('state') or {}).get('dex_progress'),
             })
         elif kind == 'operation':
-            operations.append({'source_s': stamp(event), 'operation': event.get('operation'),
+            operations.append({'source_s': stamp(event), 'segment': event['segment'],
+                               'timing_basis': event['timing_basis'],
+                               'source_interval_s': event.get('source_interval_s'),
+                               'operation': event.get('operation'),
                                'result': event.get('result'), 'map': event.get('map')})
         elif kind == 'milestone':
             milestones.append({'source_s': stamp(event), 'objective': event.get('objective'),
                                'flag': event.get('flag')})
 
     data = {
-        'schema': 1,
+        'schema': 2,
         'run': {
             'success': summary.get('success'), 'reason': summary.get('reason'),
             'seed': summary.get('seed'), 'model': (summary.get('models') or ['jev-1.13.0'])[0],
-            'actions': summary.get('actions'), 'calls': summary.get('calls', {}),
-            'tokens': summary.get('tokens', {}), 'frames': summary.get('frames'),
+            'actions': sum(segment['summary'].get('actions') or 0 for segment in segments),
+            'calls': total_metrics(segments, 'calls'),
+            'tokens': total_metrics(segments, 'tokens'), 'frames': summary.get('frames'),
             'wall_s': summary.get('wall_s'), 'video_fps': fps,
+            'segment_count': len(segments), 'video_duration_s': duration,
+            'metrics_scope': 'actions/calls/tokens: lineage total; frames/wall_s: final segment only',
             'video_file': 'jev-dex-full.mp4', 'video_sha256': sha256(source_video),
             'video_bytes': source_video.stat().st_size,
         },
@@ -118,6 +231,7 @@ def build(run, output, video=None):
                     for number, name in catalog],
         'progress': progress, 'decisions': decisions, 'operations': operations,
         'milestones': milestones,
+        'resume_boundaries': boundaries,
     }
     output.mkdir(parents=True, exist_ok=True)
     text = json.dumps(data, ensure_ascii=False, separators=(',', ':'))
@@ -130,10 +244,18 @@ def build(run, output, video=None):
         shutil.copy2(source_video, target_video)
     manifest = {
         'source_run': str(run.resolve()),
-        'source_commit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
+        # Old summaries lack recorded code revisions. The builder's revision
+        # must never be presented as the revision used by every gameplay clip.
+        'builder_commit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
         'files': {'jev-dex-full.mp4': {'bytes': source_video.stat().st_size,
                                       'sha256': sha256(source_video)}},
-        'clock': f'video seconds = absolute engine frame / {fps}',
+        'segments': [{**boundary, 'recording': segment['video'],
+                      'source_commit': segment['summary'].get('source_commit'),
+                      'reason': segment['summary'].get('reason'),
+                      'development_checkpoint': segment['summary'].get('development_checkpoint', False)}
+                     for boundary, segment in zip(boundaries, segments)],
+        'clock': 'video seconds = preceding clip durations + segment engine frame / segment fps',
+        'legacy_operation_clock': 'preceding-frame estimate; source_interval_s brackets uncertainty',
     }
     (output / 'manifest.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n')
     print(json.dumps({'progress_events': len(progress), 'decisions': len(decisions),
@@ -147,5 +269,7 @@ if __name__ == '__main__':
     parser.add_argument('--output', type=Path,
                         default=ROOT / 'docs/jev-retrospective-assets/dex-run')
     parser.add_argument('--video', type=Path)
+    parser.add_argument('--chain', action='store_true',
+                        help='include checkpoint ancestors; requires an assembled --video')
     args = parser.parse_args()
-    build(args.run.resolve(), args.output.resolve(), args.video)
+    build(args.run.resolve(), args.output.resolve(), args.video, args.chain)
