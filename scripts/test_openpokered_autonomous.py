@@ -1446,6 +1446,47 @@ class AutonomousTests(unittest.TestCase):
         agent.client.route.return_value = {'found': True, 'legs': []}
         self.assertEqual(agent.healing_route_costs([heal], {**facts, 'map': 'Lobby'}), {})
 
+    def test_all_candidate_routes_share_reset_costs_without_pruning_or_stale_cache(self):
+        from copy import deepcopy
+        from types import SimpleNamespace
+        from openpokered.story_rules import literal
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        guard = {'Call': {'callee': 'getFlag', 'args': [literal('STARTED')]}}
+        win = Rule('win', 'Arena', 'Arena:trainer', [], [], [],
+                   ('flag', 'WON', True), [('battle', 'TRAINER', True)])
+        reset = Rule('reset', 'Lobby', 'Lobby:@load', ['load'], [(guard, True)], [],
+                     ('flag', 'WON', False), [])
+        agent.index = SimpleNamespace(rules=[win, reset])
+        agent.client = Mock()
+        agent.client.route.side_effect = lambda origin, destination: {
+            'found': destination != 'Unreachable',
+            'legs': [{'to_map': 'Lobby'}, {'to_map': destination}]}
+        groups = {}
+        for key, kind, destination in [('train', 'level', 'Grass'), ('pc', 'pokemon', 'Town'),
+                ('shop', 'supply', 'Town'), ('hunt', 'catch', 'Grass'), ('heal', 'heal', 'Lobby'),
+                ('local', 'flag', 'Arena'), ('unknown', 'pokemon', 'Unreachable')]:
+            target = (kind, key, True)
+            groups[key] = {'target': target, 'rules': [Rule(key, destination, 'skill:' + key,
+                [], [], [], target, [])], 'context': {'keep': key}}
+        facts = {'map': 'Arena', 'flags': {'STARTED': True, 'WON': True}}
+        original = deepcopy(facts)
+        agent.annotate_route_reset_costs(groups, facts)
+        self.assertEqual(set(groups), {'train', 'pc', 'shop', 'hunt', 'heal', 'local', 'unknown'})
+        for key in ('train', 'pc', 'shop', 'hunt', 'heal'):
+            context = groups[key]['context']
+            self.assertEqual(context['route_resets_won_battles'], {groups[key]['rules'][0].map: ['WON']})
+            self.assertIn('map-level', context['route_reset_scope'])
+            self.assertIn('No flag is changed', context['route_reset_scope'])
+            self.assertEqual(context['keep'], key)
+        for key in ('local', 'unknown'):
+            self.assertNotIn('route_resets_won_battles', groups[key]['context'])
+        self.assertEqual(agent.client.route.call_count, 4)  # one per nonlocal destination
+        self.assertEqual(facts, original)
+        agent.annotate_route_reset_costs(groups, {**facts, 'flags': {'WON': True}})
+        for group in groups.values():
+            self.assertNotIn('route_resets_won_battles', group['context'])
+            self.assertNotIn('route_reset_scope', group['context'])
+
     def test_coupled_doors_require_transport_before_toggling_back(self):
         from types import SimpleNamespace
         from openpokered.story_rules import literal

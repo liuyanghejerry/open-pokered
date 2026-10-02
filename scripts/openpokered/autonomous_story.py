@@ -829,7 +829,10 @@ class AutonomousStoryAgent(DualStoryAgent):
         if layer == 'strategy':
             candidates = compact_strategy_candidates(candidates)
         if layer == 'strategy' and any('route_resets_won_battles' in value for value in candidates.values()):
-            instruction += (' Compare recovery travel with its supplied story-reset cost. '
+            instruction += (' Compare every candidate travel route with its supplied story-reset cost. '
+                'Training, retrieving teammates, shopping and hunting can cross the same reset entry '
+                'as healing: their benefit must also outweigh replaying the already won battles. '
+                'This evidence describes a proposed route, not a ban on leaving or a fixed route to follow. '
                 'Depleted PP in one move does not require leaving when other usable attacks can handle '
                 'the remaining opponents. Prefer preserving completed battles when continuing or using '
                 'carried recovery is viable; retreat remains valid when the party cannot proceed.')
@@ -2048,26 +2051,48 @@ class AutonomousStoryAgent(DualStoryAgent):
         return available or [rule for _, rule in ranked[:3]]
 
     def healing_route_costs(self, healers, facts):
-        """Describe victories lost by entry scripts on a proposed healing route."""
-        won = {r.effect[1] for r in self.index.rules
+        """Compatibility wrapper; reset costs apply to more than healing."""
+        return self.route_battle_reset_costs(healers, facts)
+
+    def route_battle_reset_costs(self, rules, facts):
+        """Current entry guards on map-level routes; not a reachability proof."""
+        script_rules = getattr(self.index, 'rules', None)
+        if not isinstance(script_rules, list):
+            return {}
+        won = {r.effect[1] for r in script_rules
                if r.effect[0] == 'flag' and r.effect[2]
-               and facts['flags'].get(r.effect[1]) and any(e[0] == 'battle' for e in r.preceding)}
-        resets = [r for r in self.index.rules if r.effect[0] == 'flag' and not r.effect[2]
+               and facts.get('flags', {}).get(r.effect[1]) and any(e[0] == 'battle' for e in r.preceding)}
+        resets = [r for r in script_rules if r.effect[0] == 'flag' and not r.effect[2]
                   and r.effect[1] in won and 'load' in r.triggers
                   and not any(e[0] == 'battle' for e in r.preceding)]
         if not resets:
             return {}
         costs = {}
-        for healer in healers:
-            route = self.client.route(facts['map'], healer.map)
+        # A decision may offer many interactions at the same PC/shop. Query
+        # each destination once, and do not persist costs across flag changes.
+        for destination in sorted({rule.map for rule in rules} - {facts['map']}):
+            route = self.client.route(facts['map'], destination)
             if not route.get('found'):
                 continue
             entered = {leg['to_map'] for leg in route.get('legs', [])}
             lost = sorted({r.effect[1] for r in resets if r.map in entered
                            and not r.missing({**facts, 'map': r.map})})
             if lost:
-                costs[healer.map] = lost
+                costs[destination] = lost
         return costs
+
+    def annotate_route_reset_costs(self, groups, facts):
+        costs = self.route_battle_reset_costs(
+            [rule for group in groups.values() for rule in group['rules']], facts)
+        for group in groups.values():
+            context = group.get('context', {})
+            context.pop('route_resets_won_battles', None)
+            context.pop('route_reset_scope', None)
+            relevant = {name: costs[name] for name in sorted({rule.map for rule in group['rules']})
+                        if name in costs}
+            if relevant:
+                group['context'] = {**context, 'route_resets_won_battles': relevant,
+                    'route_reset_scope': 'Already won battle flags cleared by entry scripts on the proposed map-level route to each interaction or training site, using currently satisfied guards. Not a tile-path proof; alternate routes or changed guards may differ. Does not include effects after the destination interaction. No flag is changed by this preview.'}
 
     def find_training_sites(self, facts, *, shared_experience=False):
         ranked = []
@@ -2827,9 +2852,6 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'rules': self.healing_rules,
                 'context': {'urgently_needed': self.needs_healing(facts)},
             }
-            reset_costs = self.healing_route_costs(self.healing_rules, facts)
-            if reset_costs:
-                groups['prepare:heal']['context']['route_resets_won_battles'] = reset_costs
         if threats or self.defeat_preparation:
             target_level, objectives = (min(threats, key=lambda t: t[0]) if threats else
                                         (0, ['Prepare for an observed battle defeat']))
@@ -2936,6 +2958,7 @@ class AutonomousStoryAgent(DualStoryAgent):
         self.prioritize_critical_recovery(groups, facts)
         if self.collects_dex:
             self.annotate_script_unlocks(groups, facts)
+        self.annotate_route_reset_costs(groups, facts)
         return groups
 
     def annotate_script_unlocks(self, groups, facts):
