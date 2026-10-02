@@ -529,3 +529,16 @@ master 与修复版同一帧的截图见
 本轮相关 Python 测试 457 项通过（含独立 CONTINUE 验收单测）。
 本轮脚本、状态和前后测试证据保留于
 `.artifacts/jev-navigation-repair-20261002/`。
+
+### resume-48：伊布正式登记，74 种（运行中）
+
+`20261002-153958-seed42` 从 resume-47 正常 CONTINUE，使用提交
+`acb42de4`，OpenRouter Jev 负责策略及动作。40.566 秒自行选择
+伊布，43.266 秒走到屋顶房间 `(5,3)`，44.295 秒完成 NPC 交互，
+44.314 秒原生登记 Eevee：owned 74、seen 107，来源为 gift。
+这是正式运行的观察，不是隔离探针收益；运行尚未结束，74 种的新
+检查点与独立 CONTINUE 校验仍待完成。
+
+二进制 SHA256：`c13e92e2818e0a0a6c6f464436657c4456fc3b3d6090453ce275537da5b9fd61`。
+策略 SHA256：`37bac928c3db95d5a5bc9355b4f321e84bd69fb8a2862dc25d184401d9402fdc`。
+668 个 PNG 的资源指纹：`21e0adffe71d5236a3a0502476384a6574fdaf20b700eb04da769023038c8be0`。
