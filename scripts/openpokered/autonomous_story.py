@@ -22,7 +22,7 @@ from .story_rules import Rule, requirements, evaluate, static_retreat_contract, 
 from .playthrough_judgments import (ObservedProtocol, NavigationPause, attack_profile, replacement_options,
                                     MEDICINES, BALLS, medicine_options, effective_attacks, ITEM_CATALOG,
                                     PREFERENCE_INSTRUCTIONS)
-from .playthrough_judgments import capture_probability, capture_species, capture_status_options
+from .playthrough_judgments import capture_probability, capture_species, capture_status_options, capture_storage_full
 from .navigation_skills import (cut_requirement, surf_requirement, water_planning, water_tile,
                                 hm_compatible, machine_compatible, HM_MOVES, TM_MOVES, CUT_TILES)
 from .navigation_skills import surf_current_prerequisites, field_badge_prerequisites, surf_path_prerequisites
@@ -131,12 +131,19 @@ def capture_inventory_risk(species, balls):
             'assumptions': 'Reference max HP 100; all carried balls used at the stated fixed HP/status with independent rolls. Not actual battle odds: excludes HP rounding differences, status expiry, enemy recovery, party survival and travel ball spending.'}
 
 
-def capture_preparation(party, bag):
+def capture_preparation(party, bag, observation=None):
     ball_names = {name.replace('_', '').upper() for name in BALLS}
-    return {'balls': {name.replace('_', '').upper(): qty for name, qty in bag.items()
+    preparation = {'balls': {name.replace('_', '').upper(): qty for name, qty in bag.items()
                       if qty > 0 and name.replace('_', '').upper() in ball_names},
             'party': [{key: mon.get(key) for key in ('species', 'level', 'hp', 'status', 'moves', 'pp')}
                       for mon in party]}
+    observation = observation or {}
+    counts = observation.get('box_counts') or []
+    index = observation.get('current_box_index', 0)
+    if (0 <= index < len(counts)
+            or (observation.get('battle_live') or {}).get('capture_blocked_reason') == 'storage_full'):
+        preparation['storage_full'] = capture_storage_full({**observation, 'party': party})
+    return preparation
 
 
 def accumulate_capture_retreat(totals, evidence):
@@ -163,6 +170,8 @@ def accumulate_capture_retreat(totals, evidence):
 def capture_preparation_improvements(current, previous):
     """Public improvements only: movement, damage and spending do not reopen a retry."""
     changes = []
+    if previous.get('storage_full') is True and current.get('storage_full') is False:
+        changes.append('capture_storage_available')
     for name, qty in current['balls'].items():
         if qty > previous['balls'].get(name, 0):
             changes.append('more_ball_stock:' + name)
@@ -674,13 +683,15 @@ class AutonomousStoryAgent(DualStoryAgent):
                 and (main_critical or self.needs_skill_recovery(facts)))
 
     def capture_resources_missing(self, facts, method=None):
-        """A hunt cannot progress after ordinary balls run out; Safari is separate."""
+        """All captures need capacity; only Safari supplies its own balls."""
         active = getattr(self, 'active', None) or {}
         if method is None:
-            if active.get('target', [None])[0] not in ('catch', 'held_species'):
+            if (active.get('target', [None])[0] not in ('catch', 'held_species')
+                    and active.get('context', {}).get('acquisition_method') != 'static'):
                 return False
             method = active.get('context', {}).get('acquisition_method', 'grass')
-        return method != 'safari' and 'bag' in facts and self.balls_held(facts) <= 0
+        return (capture_storage_full(facts)
+                or method != 'safari' and 'bag' in facts and self.balls_held(facts) <= 0)
 
     def needs_skill_recovery(self, facts):
         """A status-only evolution trainee can share XP with a ready finisher."""
@@ -723,7 +734,7 @@ class AutonomousStoryAgent(DualStoryAgent):
             # An improved stock/level reopens a legal attempt, not proof that
             # the previous capture setup now survives. Keep its observed
             # outcome visible even when it no longer blocks the retry.
-            preparation = capture_preparation(facts.get('party', []), facts.get('bag', {}))
+            preparation = capture_preparation(facts.get('party', []), facts.get('bag', {}), facts)
             state['capture_retry_evidence'] = [{**row,
                 'recorded_history': getattr(self, 'capture_retreat_totals', {}).get(key, {}),
                 'history_scope': 'Recorded menu escapes in this checkpoint lineage only; ball costs cover inventory_observed_retreats, not unobserved attempts. Not a prediction of retry success.',
@@ -1345,7 +1356,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                 (after.get('pokedex') or {}).get('owned_species', [])):
             party = [{**base, **mon} for base, mon in zip(before.get('party', []), live.get('player_party', []))]
             preparation = capture_preparation(party, {row['item']: row['qty']
-                for row in before.get('battle_inventory', [])})
+                for row in before.get('battle_inventory', [])}, before)
             key = before['map_name'] + ':' + captured_species
             evidence = {'map': before['map_name'], 'species': captured_species,
                         'preparation': preparation,
@@ -1530,7 +1541,7 @@ class AutonomousStoryAgent(DualStoryAgent):
         previous = next((row for row in getattr(self, 'capture_retreats', {}).values()
                          if row['map'] == name and self.same_species(row['species'], species)), None)
         return bool(previous and not capture_preparation_improvements(
-            capture_preparation(facts.get('party', []), facts.get('bag', {})), previous['preparation']))
+            capture_preparation(facts.get('party', []), facts.get('bag', {}), facts), previous['preparation']))
 
     def acquisition_story_rules(self, species, method):
         """Resolve one graph edge back to the exact executable scene rules."""
@@ -1678,7 +1689,8 @@ class AutonomousStoryAgent(DualStoryAgent):
                 else:
                     if method['method'] == 'static' and self.static_capture_deferred(species, method['map'], facts):
                         continue  # Reopen after actual preparation improves, not map travel alone.
-                    if method['method'] == 'static' and not self.balls_held(facts):
+                    if method['method'] == 'static' and self.capture_resources_missing(facts, 'static'):
+                        self.add_box_capacity_group(groups, facts)
                         continue
                     if method['method'] == 'gift' and len(party) >= 6:
                         if self.acquisition_capacity_ready(facts, species, method):

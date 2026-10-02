@@ -17,7 +17,8 @@ import traceback
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from openpokered.autonomous_story import AutonomousStoryAgent, accumulate_capture_retreat
+from openpokered.autonomous_story import AutonomousStoryAgent, accumulate_capture_retreat, capture_preparation
+from openpokered.playthrough_judgments import capture_species
 from openpokered.collection_verification import require_collection_completion, verify_collection_continue
 from openpokered.judgment_agent import load_objectives
 from openpokered.playthrough_judgments import JevGame
@@ -116,6 +117,58 @@ def checkpoint_collection_audit(run):
                         'elapsed_s': event['elapsed_s'], 'map': event['map']}
                 previous_owned = set(event.get('owned_species', []))
     return pending
+
+
+def checkpoint_capture_retreats(run):
+    """Recover omitted capacity only from the matching recorded native battle.
+
+    Older summaries retained balls and party but dropped the box observation.
+    Do not infer historic capacity from today's box, an older attempt, or an
+    unrelated/sibling run. Missing observations stay unknown.
+    """
+    run = Path(run).resolve()
+    retreats = json.loads((run / 'summary.json').read_text()).get('capture_retreats', {})
+    pending = {key for key, row in retreats.items() if 'storage_full' not in row['preparation']}
+    seen = set()
+    while run and pending:
+        if run in seen:
+            raise ValueError('capture retreat checkpoint cycle')
+        seen.add(run)
+        summary = json.loads((run / 'summary.json').read_text())
+        trace = run / 'trace.jsonl'
+        latest, battle = {}, None
+        if trace.is_file():
+            with trace.open() as stream:
+                for line in stream:
+                    if not any('"' + kind + '"' in line for kind in
+                               ('battle_started', 'battle_resolved', 'capture_retreat')):
+                        continue
+                    event = json.loads(line)
+                    if event.get('kind') == 'battle_started':
+                        battle = event['state']
+                    elif event.get('kind') == 'battle_resolved':
+                        battle = None
+                    elif event.get('kind') == 'capture_retreat':
+                        key = event['map'] + ':' + event['species']
+                        latest[key] = (event, battle)
+        for key in pending & latest.keys():
+            pending.remove(key)  # Never substitute an older attempt if this one lacks evidence.
+            event, battle = latest[key]
+            saved = retreats[key]
+            enemy = ((battle or {}).get('battle_live') or {}).get('enemy') or {}
+            if (not battle or not isinstance(battle.get('party'), list)
+                    or not (enemy.get('capture_species') or enemy.get('species'))
+                    or not all(event.get(field) == value for field, value in saved.items())
+                    or battle.get('map_name') != event['map']
+                    or capture_species(enemy) != event['species']):
+                continue
+            observed = capture_preparation(battle.get('party', []), {}, battle)
+            if 'storage_full' in observed:
+                saved['preparation']['storage_full'] = observed['storage_full']
+                saved['capacity_evidence_source'] = {'trace': str(trace), 'elapsed_s': event['elapsed_s']}
+        parent = summary.get('resumed_from')
+        run = (pt.ROOT / parent).resolve() if parent else None
+    return retreats
 
 
 def checkpoint_capture_retreat_totals(run):
@@ -323,7 +376,7 @@ def main(argv=None):
                                 agent.navigation_history[key] = blockage
                     agent.field_requirements.update(checkpoint_field_requirements(args.resume))
                     agent.battle_requirements.update(parent.get('battle_requirements', {}))
-                    agent.capture_retreats.update(parent.get('capture_retreats', {}))
+                    agent.capture_retreats.update(checkpoint_capture_retreats(args.resume))
                     agent.capture_retreat_totals.update(checkpoint_capture_retreat_totals(args.resume))
                     agent.collection_audit_pending.update(checkpoint_collection_audit(args.resume))
                     game.stationary_npcs = {name: {int(k): tuple(v) for k, v in npcs.items()}

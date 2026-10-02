@@ -502,6 +502,43 @@ class AutonomousTests(unittest.TestCase):
         agent.discover_route_prerequisites.assert_called_once_with(
             agent.game.st.return_value, 'SaffronGym', [(5, 3)])
 
+    def test_checkpoint_recovers_capture_capacity_from_matching_attempt_only(self):
+        import tempfile
+        from openpokered.run_autonomous import checkpoint_capture_retreats
+        event = {'kind': 'capture_retreat', 'elapsed_s': 2, 'map': 'VictoryRoad2F',
+                 'species': 'Moltres', 'preparation': {'balls': {'POKEBALL': 12}, 'party': []}}
+        saved = {key: value for key, value in event.items() if key not in ('kind', 'elapsed_s')}
+        battle = {'kind': 'battle_started', 'state': {'map_name': 'VictoryRoad2F',
+                  'party': [{'species': 'Charizard'}] * 6, 'box_counts': [0, 20], 'current_box_index': 1,
+                  'battle_live': {'enemy': {'species': 'Moltres'}}}}
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            parent, child = root / 'parent', root / 'child'
+            parent.mkdir()
+            child.mkdir()
+            parent.joinpath('summary.json').write_text(json.dumps({'capture_retreats': {'VictoryRoad2F:Moltres': saved}}))
+            child.joinpath('summary.json').write_text(json.dumps({'resumed_from': str(parent),
+                'capture_retreats': {'VictoryRoad2F:Moltres': saved}}))
+            trace = parent / 'trace.jsonl'
+            trace.write_text('\n'.join(map(json.dumps, [battle, event])))
+            original = trace.read_bytes()
+            restored = checkpoint_capture_retreats(child)['VictoryRoad2F:Moltres']
+            self.assertIs(restored['preparation']['storage_full'], True)
+            self.assertEqual(restored['capacity_evidence_source']['elapsed_s'], 2)
+            self.assertEqual(trace.read_bytes(), original)
+            # A newer attempt missing its battle cannot borrow the old full box.
+            child.joinpath('trace.jsonl').write_text(json.dumps(event) + '\n')
+            self.assertNotIn('storage_full', checkpoint_capture_retreats(child)['VictoryRoad2F:Moltres']['preparation'])
+            for events in ([{'kind': 'battle_started', 'state': {**battle['state'], 'map_name': 'Other'}}, event],
+                           [{'kind': 'battle_started', 'state': {**battle['state'], 'battle_live': {}}}, event],
+                           [{'kind': 'battle_started', 'state': {key: value for key, value in battle['state'].items()
+                                                               if key != 'party'}}, event],
+                           [battle, {'kind': 'battle_resolved'}, event],
+                           [battle, {**event, 'preparation': {'balls': {'POKEBALL': 1}, 'party': []}}]):
+                with self.subTest(events=events):
+                    child.joinpath('trace.jsonl').write_text('\n'.join(map(json.dumps, events)))
+                    self.assertNotIn('storage_full', checkpoint_capture_retreats(child)['VictoryRoad2F:Moltres']['preparation'])
+
     def test_script_unlocks_are_guard_evidence_not_automatic_rewards(self):
         from openpokered.story_rules import literal
         from types import SimpleNamespace
@@ -1103,6 +1140,98 @@ class AutonomousTests(unittest.TestCase):
         state['battle_live']['is_safari'] = False
         game.judgments.choose.return_value = 'ball:PokeBall'
         self.assertEqual(game.battle_recovery_plan(state), ('PokeBall', None))
+
+    def test_capture_resource_replanning_includes_static_and_storage_capacity(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.replan_after_defeat = False
+        mon = {'species': 'Charizard', 'level': 77, 'hp': 270, 'max_hp': 270,
+               'status': 'None', 'moves': ['Slash'], 'pp': [20]}
+        facts = {'party': [mon] * 6, 'bag': {'POKEBALL': 12},
+                 'box_counts': [0, 20], 'current_box_index': 1}
+        for method, target in [('static', ('register', 'Moltres', True)),
+                               ('grass', ('catch', 'Route1', True)),
+                               ('safari', ('catch', 'SafariZoneCenter', True)),
+                               ('fishing', ('held_species', 'Poliwag', True))]:
+            with self.subTest(method=method):
+                agent.active = {'target': target, 'rules': [],
+                                'context': {'acquisition_method': method, 'species': 'Moltres'}}
+                self.assertTrue(agent.should_replan(facts))
+                facts['current_box_index'] = 0
+                self.assertFalse(agent.should_replan(facts))
+                facts['current_box_index'] = 1
+        facts['party'] = [mon] * 5
+        self.assertFalse(agent.capture_resources_missing(facts, 'static'))
+        facts['bag'] = {}
+        self.assertTrue(agent.capture_resources_missing(facts, 'static'))
+        self.assertFalse(agent.capture_resources_missing(facts, 'safari'))
+        agent.active = {'target': ('box_space', 'storage', True)}
+        facts['party'] = [mon] * 6
+        self.assertFalse(agent.capture_resources_missing(facts))
+
+    def test_static_capture_capacity_keeps_pc_and_non_capture_evolution_choices(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.collects_dex = True
+        capture = Rule('bird', 'VictoryRoad2F', 'VictoryRoad2F:talkMoltres', [], [], [],
+                       ('battle', 'MOLTRES', True), [])
+        pc = Rule('pc', 'Center', 'Center:pcStorage', ['sign:1'], [], [],
+                  ('pc', 'storage', True), [])
+        agent.index = Mock(rules=[capture, pc], by_effect={('pc', 'storage', True): [pc]})
+        agent._complete_collection_graph = {
+            'Moltres': [{'method': 'static', 'map': 'VictoryRoad2F', 'storyline': 'talkMoltres'}],
+            'Growlithe': [{'method': 'grass', 'map': 'Route8'}],
+            'Arcanine': [{'method': 'evolution', 'from_species': 'Growlithe',
+                          'trigger': 'item', 'item': 'FireStone'}]}
+        facts = {'party': [{'species': 'Growlithe'}] * 6, 'stored_pokemon': [],
+                 'bag': {'POKEBALL': 12, 'FIRESTONE': 1}, 'flags': {}, 'map': 'VictoryRoad2F',
+                 'box_counts': [0, 20], 'current_box_index': 1,
+                 'dex': {'owned_species': ['Growlithe']}}
+        groups = {}
+        agent.add_nonwild_collection_groups(groups, facts)
+        self.assertNotIn('register:Moltres:static:VictoryRoad2F', groups)
+        self.assertIn('storage:change_box', groups)
+        self.assertIn('register:Arcanine:evolution:Growlithe', groups)
+        self.assertEqual(groups['storage:change_box']['rules'], [pc])
+        for party_size, box_count in [(5, 20), (6, 19)]:
+            facts['party'] = [{'species': 'Growlithe'}] * party_size
+            facts['box_counts'][1] = box_count
+            groups = {}
+            agent.add_nonwild_collection_groups(groups, facts)
+            self.assertIn('register:Moltres:static:VictoryRoad2F', groups)
+
+    def test_capture_retry_recognizes_observed_storage_recovery_only(self):
+        from openpokered.autonomous_story import capture_preparation, capture_preparation_improvements
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.collects_dex = True
+        agent.capture_retreats, agent.battle_defeats = {}, []
+        agent.record, agent.dex_progress = Mock(), Mock(return_value={})
+        mon = {'species': 'Charizard', 'level': 77, 'hp': 270, 'status': 'None',
+               'moves': ['Slash'], 'pp': [20]}
+        before = {'script_awaiting_battle': True, 'map_name': 'VictoryRoad2F',
+                  'party': [mon] * 6, 'box_counts': [20, 20, 13], 'current_box_index': 1,
+                  'battle_inventory': [{'item': 'PokeBall', 'qty': 12}],
+                  'battle_live': {'is_wild': True, 'enemy': {'species': 'Moltres'},
+                                  'player_party': [mon] * 6, 'capture_blocked_reason': 'storage_full'}}
+        after = {'battle_phase': 'BattleOver { won: false, escaped: true }',
+                 'pokedex': {'owned_species': []}, 'party': [mon] * 6}
+        agent.observe_battle_result(before, after)
+        previous = agent.capture_retreats['VictoryRoad2F:Moltres']['preparation']
+        self.assertIs(previous['storage_full'], True)
+        facts = {'party': [mon] * 6, 'bag': {'POKEBALL': 12},
+                 'box_counts': [20, 20, 13], 'current_box_index': 0}
+        self.assertTrue(agent.static_capture_deferred('Moltres', 'VictoryRoad2F', facts))
+        facts['current_box_index'] = 2
+        self.assertFalse(agent.static_capture_deferred('Moltres', 'VictoryRoad2F', facts))
+        state = {}
+        agent.augment_strategy_state(state, facts)
+        self.assertEqual(state['capture_retry_evidence'][0]['preparation_changes_since_attempt'],
+                         ['capture_storage_available'])
+        # Absence of old capacity observations is not evidence it was full.
+        legacy = capture_preparation(facts['party'], facts['bag'])
+        current = capture_preparation(facts['party'], facts['bag'], facts)
+        self.assertEqual(capture_preparation_improvements(current, legacy), [])
+        facts['current_box_index'] = 0
+        facts['party'].pop()
+        self.assertFalse(agent.static_capture_deferred('Moltres', 'VictoryRoad2F', facts))
 
     def test_status_only_evolution_trainee_can_use_ready_finisher(self):
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
