@@ -983,3 +983,11 @@ PC取人、购物、狩猎未带代价。原生IndigoPlateauLobby的@load确实�
 选训练，新均选冠军方向；新选择置信度仅0.09～0.16，仍有不确定性，不能
 宣称正式循环或总体收集已解决。证据`.artifacts/jev-all-route-reset-20261002/`
 内`native-routes.json`、`ab.jsonl`、`summary.json`；不计新增图鉴。
+
+59段418.864秒到达IndigoPlateauLobby `(7,7)`后正常边界停机，未回退任何
+战斗或消耗；75 owned／120 seen，资金63,682，Charizard Lv83 HP124，
+Pikachu Lv47倒下，Drowzee仍Lv18。独立CONTINUE schema=2通过；SRAM
+`4cf50751077fc76bb605033c6cdb76aaa3399db7725960f61e77d366ff0f74a0`。
+本段MP4容器177.766667秒／2,956,716字节，仍非最终全片质量验收。
+60段`20261002-183444-seed42`从该最新存档使用`62f590cb`继续OpenRouter
+正式收集及录像；目标124与最终MP4／大盘交付仍未完成。
