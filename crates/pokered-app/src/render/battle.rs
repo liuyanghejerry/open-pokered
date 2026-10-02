@@ -4981,7 +4981,15 @@ pub fn redraw_battle_party_menu_viewport(
     // The old copy band included the original bottom border and copied its
     // ink into a retained label row. Redraw this small popup when it scrolls;
     // the surrounding battle scene remains untouched.
-    draw_battle_party_menu_overlay(party, cursor, fb, language);
+    let mut painter = FrameBufferPainter::new(fb).with_lang(language);
+    let mut ui = Ui::new(&mut painter);
+    menus::battle_party::draw(
+        party,
+        cursor,
+        &BATTLE_PARTY_DEFAULT_LAYOUT,
+        &mut ui,
+        language == Lang::Zh,
+    );
 }
 
 /// Repaint only the changed cursor cells of a battle YES/NO prompt.
