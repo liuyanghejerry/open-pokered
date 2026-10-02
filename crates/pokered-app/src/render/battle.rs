@@ -4749,6 +4749,9 @@ pub fn draw_battle(
                     | BattlePhase::LearnMoveChoose { .. }
             ) {
                 if let Some(ref mm) = screen.move_menu {
+                    if screen.mimic_choice.is_some() {
+                        menus::battle_move::draw_mimic(mm, &mut ui, language, &rd);
+                    } else {
                     menus::battle_move::draw(
                         mm,
                         &BATTLE_MOVE_DEFAULT_LAYOUT,
@@ -4756,6 +4759,7 @@ pub fn draw_battle(
                         language,
                         &rd,
                     );
+                    }
                 }
             } else if matches!(screen.phase, BattlePhase::BagSelect) {
                 if let Some(ref bm) = screen.bag_menu {
@@ -4770,7 +4774,7 @@ pub fn draw_battle(
             ) {
                 if let Some(ref bs) = screen.battle_state {
                     menus::battle_party::draw(
-                        &bs.player.party,
+                        &bs.player.persistent_party(),
                         screen.party_cursor,
                         &BATTLE_PARTY_DEFAULT_LAYOUT,
                         &mut ui,

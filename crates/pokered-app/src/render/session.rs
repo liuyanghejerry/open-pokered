@@ -190,7 +190,7 @@ impl BattleVisualKey {
     /// redraw every frame.
     fn new(game: &PokemonGame) -> Option<Self> {
         let battle = &game.battle;
-        if !game.battle_vfx.is_frame_stable() || battle.hp_bar_anim.is_active() {
+        if !game.battle_vfx.is_frame_stable() || battle.hp_bar_anim.is_active() || battle.mimic_choice.is_some() {
             return None;
         }
 

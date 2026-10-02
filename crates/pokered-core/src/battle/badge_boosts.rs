@@ -116,14 +116,18 @@ const RES_UNMOD_BASE: u16 = 0xBB10; // +0 atk, +1 def, +2 spd, +3 spc
 /// Seed the badge context onto an engine battler (the player side only).
 /// `unmodified` is the active mon's raw `[atk, def, spd, spc]`.
 pub fn seed_badge_context(b: &mut EngineBattler<PokeredRules>, badges: u8, unmodified: [u16; 4]) {
-    if badges == 0 {
-        return; // no boosts possible → stay fully inert
-    }
-    b.resources.set(RES_BADGE_BITS, badges as u16, 0xFF);
-    for (i, v) in unmodified.iter().enumerate() {
-        b.resources
-            .set(RES_UNMOD_BASE + i as u16, *v, u16::MAX);
-    }
+    if badges != 0 { b.resources.set(RES_BADGE_BITS, badges as u16, 0xFF); }
+    set_unmodified_stats(b, unmodified);
+}
+
+/// Transform copies the unmodified battle stats separately from party stats.
+pub fn set_unmodified_stats(b: &mut EngineBattler<PokeredRules>, values: [u16; 4]) {
+    for (i, value) in values.into_iter().enumerate() { b.resources.set(RES_UNMOD_BASE + i as u16, value, u16::MAX); }
+}
+pub fn unmodified_stats(b: &EngineBattler<PokeredRules>) -> [u16; 4] {
+    let indexes = [StatIndex::Attack,StatIndex::Defense,StatIndex::Speed,StatIndex::Special];
+    core::array::from_fn(|i| b.resources.current(RES_UNMOD_BASE + i as u16)
+        .unwrap_or_else(|| b.stats.get(indexes[i]).copied().unwrap_or(1)))
 }
 
 /// The seeded badge bits, if this battler carries the player badge context.

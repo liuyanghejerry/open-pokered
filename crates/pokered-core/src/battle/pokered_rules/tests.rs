@@ -273,7 +273,7 @@ fn engine_battler(m: &Mon, move_id: MoveId) -> EngineBattler<PokeredRules> {
     stats.set(StatIndex::Defense, m.defense);
     stats.set(StatIndex::Speed, m.speed);
     stats.set(StatIndex::Special, m.special);
-    EngineBattler::new(m.species, m.hp, m.hp, stats, vec![move_id])
+    EngineBattler::new(m.species, m.hp, m.hp, stats, vec![move_id]).with_level(m.level as u8)
 }
 
 fn first_mover(s: &Scenario) -> FirstMover {
@@ -356,7 +356,7 @@ fn build_stream_sub(s: &Scenario, first: FirstMover, tie: bool, second_subbed: b
         if md.power > 0 {
             bytes.push(mb.crit);
         }
-        let draws_acc = md.effect != MoveEffect::SwiftEffect;
+        let draws_acc = md.effect != MoveEffect::SwiftEffect && super::move_rolls_accuracy(md.effect);
         if draws_acc {
             bytes.push(mb.accuracy);
         }
@@ -607,7 +607,7 @@ fn hypnosis_sleeps_target_via_decoupled_stack() {
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Hypnosis },
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Hypnosis },
     ];
-    let mut rng = ScriptedRng::new(vec![0u8; 64]);
+    let mut rng = ScriptedRng::new(vec![1u8; 64]);
     let (_r, log) = StackDriver::execute_turn_logged(
         &PokeredRules, &mut state, &mut effects, actions, &mut rng,
     );
@@ -701,6 +701,8 @@ fn rest_sleeps_self_via_decoupled_stack() {
         vec![engine_battler(&Mon::new(Species::Snorlax, 200, 110), MoveId::Rest)],
         vec![engine_battler(&Mon::new(Species::Tauros, 200, 40), MoveId::Rest)],
     );
+    state.player_battlers[0].hp = 100;
+    state.opponent_battlers[0].hp = 100;
     let mut effects: Vec<EffectState<PokeredRules>> = Vec::new();
     let actions = [
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Rest },
@@ -1524,6 +1526,9 @@ fn trapped_user_is_forced_and_foe_stays_bound() {
         host: BattlerRef::PLAYER,
         effect_order: 0,
         kind: PokeVolatile::Trapping { move_: MoveId::Wrap, turns_left: 2 },
+    }, EffectState {
+        id: EffectId(801), host: BattlerRef::PLAYER, effect_order: 1,
+        kind: PokeVolatile::SharedDamage { amount: 12 },
     }];
     // Player's chosen action is Splash; forced_action must re-issue Wrap.
     let actions = [
@@ -1540,7 +1545,7 @@ fn trapped_user_is_forced_and_foe_stays_bound() {
 
 /// Trapping duration uses the multi-hit WEIGHTS (3/8 for 2–3, 1/8 for 4–5 —
 /// effects.asm TrappingEffect re-rolls `& 3` when the first draw ≥ 2), not a
-/// flat `& 3`. A duration byte of 200 lands in the 192..224 bucket ⇒ 4 turns.
+/// flat `& 3`. Initial 2 rerolls once, and a second 2 yields 4 total turns.
 #[test]
 fn wrap_duration_uses_multi_hit_weights() {
     install_canonical();
@@ -1556,9 +1561,8 @@ fn wrap_duration_uses_multi_hit_weights() {
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Wrap },
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Splash },
     ];
-    // All-200 stream: every roll sees 200 — the damage-roll rejection loop
-    // terminates via its bound, and the trapping-duration draw reads 200.
-    let mut rng = ScriptedRng::new(vec![200u8; 256]);
+    // Duration is rolled before crit, accuracy and formula randomization.
+    let mut rng = ScriptedRng::new(vec![2, 2, 255, 0, 255]);
     let _ = StackDriver::execute_turn_logged(
         &PokeredRules, &mut state, &mut effects, actions, &mut rng,
     );
@@ -1566,7 +1570,7 @@ fn wrap_duration_uses_multi_hit_weights() {
         PokeVolatile::Trapping { turns_left, .. } if e.host == BattlerRef::PLAYER => Some(*turns_left),
         _ => None,
     });
-    assert_eq!(turns, Some(3), "duration byte 200 ⇒ 4 turns (stored as turns − 1 = 3)");
+    assert_eq!(turns, Some(3), "duration bytes 2,2 ⇒ 4 turns (stored as turns − 1 = 3)");
 }
 
 // ── Bide ──
@@ -1610,11 +1614,10 @@ fn bide_accumulates_damage_taken() {
 
 /// Bide stores for 2 OR 3 turns at random — effects.asm:782-786
 /// `(BattleRandom & 1) + 2`. An even duration byte installs a 2-turn store, an
-/// odd byte a 3-turn store (observed after the same-turn residual decrement:
-/// 2→1 vs 3→2).
+/// odd byte a 3-turn store; the initial action does not decrement it.
 #[test]
 fn bide_duration_rolls_two_or_three_turns() {
-    for (byte, expected) in [(0u8, 1u8), (1u8, 2u8)] {
+    for (byte, expected) in [(0u8, 2u8), (1u8, 3u8)] {
         install_canonical();
         clear_current_moves();
         set_current_move(BattlerRef::PLAYER, real_move(MoveId::Bide));
@@ -1639,8 +1642,7 @@ fn bide_duration_rolls_two_or_three_turns() {
         assert_eq!(
             turns,
             Some(expected),
-            "byte {byte}: install {} turns, ticked to {expected}",
-            expected + 1
+            "byte {byte}: initial action retains all {expected} turns"
         );
     }
 }
@@ -2159,7 +2161,7 @@ fn sleep_goes_through_a_substitute() {
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Hypnosis },
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Splash },
     ];
-    let mut rng = ScriptedRng::new(vec![0u8; 64]);
+    let mut rng = ScriptedRng::new(vec![1u8; 64]);
     let (_r, log) = StackDriver::execute_turn_logged(&PokeredRules, &mut state, &mut effects, actions, &mut rng);
 
     // A 1-turn sleep (all-zero rng) is ticked away when the (asleep) enemy acts, so
@@ -3606,7 +3608,7 @@ fn self_boost_plus_1_special() {
     );
     // power-0: per mover only the accuracy byte. Two movers = 2 bytes.
     let _ = first;
-    assert_eq!(consumed, 2, "two power-0 self-Boost movers draw 2 accuracy bytes total");
+    assert_eq!(consumed, 0, "self-boosts skip MoveHitTest entirely");
 }
 
 /// +2 self-Boost (SwordsDance = AttackUp2Effect): both movers' Attack to +2.
@@ -4432,9 +4434,9 @@ fn special_damage_psywave_draws_one_byte() {
     s.enemy = Mon::lvl(Species::Snorlax, 300, 50, 50);
     // Player byte stream: [accuracy=0][psywave byte=255] then enemy [accuracy=0][psywave=255].
     // 255 * 3 / 2 = 382; 382 * 50 = 19100; 19100 / 256 = 74.
-    let (stack, consumed) = p3_special_stack(&s, vec![0, 255, 0, 255]);
+    let (stack, consumed) = p3_special_stack(&s, vec![0, 255, 0, 74, 0, 74]);
     assert_eq!(300 - stack.opponent_battlers[0].hp, 74, "Psywave: 255*3/2*50/256 = 74");
-    assert_eq!(consumed, 4, "two movers × (accuracy + psywave byte)");
+    assert_eq!(consumed, 6, "player rejects 255 and zero; enemy accepts 74");
 }
 
 /// Gen I compares current Speed, independently of either combatant's level.
@@ -4712,9 +4714,7 @@ fn p3_authored_as_data() {
     assert!(super::record_has_op("special.const_40", &Op::SetDamage {
         value: DamageValue::Const(40), of: Selector::Source
     }), "dragon rage is SetDamage(Const(40))");
-    assert!(super::record_has_op("special.psywave", &Op::SetDamage {
-        value: DamageValue::RngScaledLevel { num: 3, den: 2 }, of: Selector::Source
-    }), "psywave is SetDamage(RngScaledLevel)");
+    assert!(super::record_has_op("special.psywave", &Op::DealMoveDamage), "Psywave damage is ROM rejection-sampled natively");
     assert!(super::record_has_op("special.super_fang", &Op::DamageCurrentHpFraction {
         num: 1, den: 2, target: Selector::Target
     }), "super fang is DamageCurrentHpFraction(1/2, Target)");

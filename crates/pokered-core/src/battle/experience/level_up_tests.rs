@@ -2,6 +2,8 @@
 mod tests {
     use super::super::level_up::*;
     use crate::battle::state::*;
+    use crate::battle::experience::growth::exp_for_level;
+    use pokered_data::species::GrowthRate;
     use pokered_data::moves::MoveId;
     use pokered_data::species::Species;
     use pokered_data::types::PokemonType;
@@ -77,10 +79,10 @@ mod tests {
         // Bulbasaur learns LeechSeed at level 7
         // MediumSlow level 7 needs exp_for_level(MediumSlow, 7)
         // 6/5*343 - 15*49 + 700 - 140 = 411 - 735 + 700 - 140 = 236? Let's use a high value.
-        let mut mon = make_mon_at(Species::Bulbasaur, 6, 500);
+        let mut mon = make_mon_at(Species::Bulbasaur, 6, exp_for_level(GrowthRate::MediumSlow, 7));
         let result = process_level_up(&mut mon);
         assert!(result.leveled_up);
-        assert!(result.new_level >= 7);
+        assert_eq!(result.new_level, 7);
         assert!(result.learned_moves.contains(&MoveId::LeechSeed));
     }
 

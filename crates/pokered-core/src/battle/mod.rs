@@ -175,7 +175,7 @@ pub fn prepare_battle_rules() {
 
 // ── BattleScreen (frame-loop adapter) ─────────────────────────────
 
-use crate::battle::experience::gain::{calc_exp_gain, gain_experience};
+use crate::battle::experience::gain::gain_experience;
 use crate::battle::settlement::money::{calc_prize_money, calc_total_winnings, trainer_winnings_messages};
 use crate::battle::settlement::settle::settle_battle;
 use crate::battle::settlement::{BattleOutcome, BattleSettlement};
@@ -1007,6 +1007,8 @@ pub struct BattleScreen {
     // Real battle engine state
     pub battle_state: Option<BattleState>,
     pub move_menu: Option<MoveMenuState>,
+    /// Mimic: (original action slot, chosen enemy move slot).
+    pub mimic_choice: Option<(usize, Option<usize>)>,
     pub current_message: Option<String>,
     pub party_cursor: usize,
     /// Settlement result computed when battle ends (money, evolutions, etc.)
@@ -1297,6 +1299,7 @@ impl BattleScreen {
             show_enemy_pokeballs: false,
             battle_state: None,
             move_menu: None,
+            mimic_choice: None,
             current_message: None,
             is_zh: false,
             party_cursor: 0,
@@ -1396,6 +1399,7 @@ impl BattleScreen {
             show_enemy_pokeballs: false,
             battle_state: Some(bs),
             move_menu: None,
+            mimic_choice: None,
             current_message: None,
             is_zh: false,
             party_cursor: 0,
@@ -1773,7 +1777,7 @@ impl BattleScreen {
             return;
         }
         let skip = bs.player.has_status1(
-            status1::STORING_ENERGY | status1::THRASHING_ABOUT | status1::MULTI_HIT,
+            status1::STORING_ENERGY | status1::THRASHING_ABOUT | status1::MULTI_HIT | status1::USING_TRAPPING_MOVE,
         ) || bs.player.has_status2(status2::USING_RAGE);
         if skip {
             return;
@@ -1784,6 +1788,11 @@ impl BattleScreen {
         let mon = bs.player.active_mon_mut();
         if mon.pp[idx] > 0 && mon.pp[idx] < 0x80 {
             mon.pp[idx] -= 1;
+        }
+        if !bs.player.has_status3(state::status3::TRANSFORMED) {
+            if let Some((_, original)) = &mut bs.player.original_identity {
+                if original.pp[idx] > 0 && original.pp[idx] < 0x80 { original.pp[idx] -= 1; }
+            }
         }
     }
 
@@ -2078,6 +2087,11 @@ impl BattleScreen {
                     if let Some(result) = mm.update_frame(menu_input) {
                         match result {
                             MoveMenuResult::Selected(idx) => {
+                                if let Some((action, None)) = self.mimic_choice {
+                                    self.mimic_choice = Some((action, Some(idx)));
+                                    self.execute_turn_with_move(action);
+                                    return ScreenAction::Continue;
+                                }
                                 if self.link_mode {
                                     // Link battle: defer execution until the
                                     // remote action arrives (the original
@@ -2480,7 +2494,7 @@ impl BattleScreen {
                         // The forget list renders through the shared move-menu
                         // view; populate it with the LEARNER's moves.
                         self.move_menu =
-                            Some(Self::build_move_menu_for_mon(&bs.player.party[party_index]));
+                            Some(Self::build_move_menu_for_mon(bs.player.party_mon(party_index)));
                     }
                     self.phase = BattlePhase::LearnMoveChoose {
                         party_index,
@@ -2542,7 +2556,7 @@ impl BattleScreen {
                         return ScreenAction::Continue;
                     }
                     if input.a {
-                        let forgotten = bs.player.party[party_index].moves[cursor];
+                        let forgotten = bs.player.party_mon(party_index).moves[cursor];
                         if pokered_data::items::HM_MOVES.contains(&forgotten) {
                             // HMCantDeleteText: HM moves can't be forgotten.
                             self.show_text_then(
@@ -2559,6 +2573,12 @@ can't be deleted!".to_string()],
                         }
                         // The replacement: PP = the new move's max PP.
                         let bs = self.battle_state.as_mut().unwrap();
+                        if bs.player.original_identity.as_ref().is_some_and(|(idx, _)| *idx == party_index) {
+                            let original = bs.player.party_mon(party_index);
+                            let (moves, pp) = (original.moves, original.pp);
+                            bs.player.party[party_index].moves = moves;
+                            bs.player.party[party_index].pp = pp;
+                        }
                         let mon = &mut bs.player.party[party_index];
                         let old_name = pokered_data::lang_data::move_name(forgotten, false);
                         mon.moves[cursor] = move_id;
@@ -2570,6 +2590,12 @@ can't be deleted!".to_string()],
                                 .map(|m| m.pp)
                                 .unwrap_or(0)
                         };
+                        if let Some((idx, original)) = &mut bs.player.original_identity {
+                            if *idx == party_index {
+                                original.moves = bs.player.party[party_index].moves;
+                                original.pp = bs.player.party[party_index].pp;
+                            }
+                        }
                         let mon_name = self.learn_move_mon_name(party_index);
                         let learn_name = pokered_data::lang_data::move_name(move_id, false);
                         let mut texts = vec![
@@ -3182,7 +3208,7 @@ learn {learn_name}!")];
                             outcome: BallAnimOutcome::Caught,
                         });
                         if let Some(bs) = self.battle_state.as_ref() {
-                            self.captured_mon = Some(bs.enemy.active_mon().clone());
+                            self.captured_mon = Some(bs.enemy.persistent_party()[bs.enemy.active_pokemon_index].clone());
                         }
                         msgs.push(format!("Gotcha!\n{} was caught!", name));
                     }
@@ -3340,15 +3366,29 @@ learn {learn_name}!")];
         }
         if let Some(ref mut bs) = self.battle_state {
             let enemy = bs.enemy.active_mon();
-            let catch_rate = get_base_stats(enemy.species)
+            let catch_rate = bs.enemy.transform_catch_rate.unwrap_or_else(|| get_base_stats(enemy.species)
                 .map(|s| s.catch_rate)
-                .unwrap_or(255);
+                .unwrap_or(255));
             // Snapshot the wild mon in its current (weakened) state before the
             // borrow of `bs` ends, so it can be handed to the party on a catch.
             // A freshly caught mon is the player's own: stamp it with the
             // player's OT ID/name (MON_OTID + the party OT-name table) so
             // obedience and the SRAM round-trip see it as self-caught.
-            let mut caught_candidate = enemy.clone();
+            let mut caught_candidate = if bs.enemy.has_status3(state::status3::TRANSFORMED) {
+                // ItemUseBall assumes every transformed wild mon was Ditto,
+                // including a non-Ditto that copied Transform via Mirror Move.
+                // Reload its original DVs and fresh Ditto moves/stats, preserving
+                // only battle HP/status (item_effects.asm:466-517).
+                let original = bs.enemy.party_mon(bs.enemy.active_pokemon_index);
+                let mut caught = crate::pokemon::stats::create_pokemon(
+                    Species::Ditto, enemy.level, original.dv_bytes,
+                ).expect("Ditto base stats");
+                caught.hp = enemy.hp;
+                caught.status = enemy.status;
+                caught
+            } else {
+                bs.enemy.persistent_party()[bs.enemy.active_pokemon_index].clone()
+            };
             caught_candidate.ot_id = self.player_id;
             if caught_candidate.ot_name == [0x50; 11] {
                 if let Some(name) = &self.player_name {
@@ -3662,7 +3702,6 @@ learn {learn_name}!")];
 
         let (turn_msgs, escape_battle): (Vec<String>, bool) = {
             let bs = self.battle_state.as_mut().unwrap();
-            let player_prior_move = bs.player.last_move_used;
             bs.enemy.selected_move = enemy_move_id;
             bs.enemy.selected_move_index = enemy_move_idx;
             let e_recharging = bs.enemy.has_status2(NEEDS_TO_RECHARGE);
@@ -3675,7 +3714,7 @@ learn {learn_name}!")];
             // prints "GHOST: Get out..." and skips its move.
             let actions = [
                 BattleAction::<pokered_rules::PokeredRules>::Nothing,
-                if enemy_call_failed || ghost_enemy_blocked {
+                if ghost_enemy_blocked {
                     BattleAction::Nothing
                 } else {
                     BattleAction::Fight { move_: enemy_move_id }
@@ -3710,15 +3749,6 @@ learn {learn_name}!")];
                     && !log.events.iter().any(|ev| matches!(ev, TurnEvent::Missed { actor }
                         if *actor == BattlerRef::OPPONENT))
             };
-            // Enemy Mimic: overwrite its Mimic slot with the player's prior move (PP→5).
-            if enemy_connected(MoveId::Mimic) && player_prior_move != MoveId::None {
-                let slot = bs.enemy.selected_move_index as usize;
-                if slot < 4 {
-                    let mon = bs.enemy.active_mon_mut();
-                    mon.moves[slot] = player_prior_move;
-                    mon.pp[slot] = 5;
-                }
-            }
             // Enemy Pay Day scatters coins into the pot.
             if enemy_connected(MoveId::PayDay) {
                 let lvl = bs.enemy.active_mon().level as u32;
@@ -3973,6 +4003,33 @@ learn {learn_name}!")];
     }
 
     fn execute_turn_with_move(&mut self, move_index: usize) {
+        let choice = self.mimic_choice.and_then(|(_, choice)| choice);
+        pokered_rules::set_mimic_choice(choice, !self.link_mode);
+        // Simulate from a reversible snapshot. If a connecting player Mimic needs
+        // input, the native handler captures the foe's moves at that exact point.
+        // Replay the same state/RNG after selection, so misses/status gates never
+        // open the menu and a faster Transform changes the choices correctly.
+        let before = if !self.link_mode && choice.is_none() { Some(self.clone()) } else { None };
+        self.execute_turn_with_move_inner(move_index);
+        if let Some(moves) = pokered_rules::take_mimic_request() {
+            if let Some(before) = before {
+                *self = before;
+                let slots = moves.iter().filter(|m| **m != MoveId::None).map(|m| MoveSlot {
+                    move_id: *m, current_pp: 1, max_pp: MoveData::get(*m).map_or(1, |d| d.pp), is_disabled: false,
+                }).collect();
+                let mut menu = MoveMenuState::new(slots);
+                menu.can_cancel = false;
+                self.move_menu = Some(menu);
+                self.mimic_choice = Some((move_index, None));
+                self.current_message = Some("Choose a move to MIMIC!".to_string());
+                self.phase = BattlePhase::MoveSelect;
+                return;
+            }
+        }
+        self.mimic_choice = None;
+    }
+
+    fn execute_turn_with_move_inner(&mut self, move_index: usize) {
         // Badge stat boosts / obedience context: push the frontend-supplied
         // badges + trainer ID into the battle state and apply the send-out
         // badge boost if the active mon has none yet.
@@ -4239,25 +4296,6 @@ learn {learn_name}!")];
             None => return,
         };
 
-        // DecrementPP (decrement_pp.asm) — tick the used move's PP now, at
-        // PlayerCanExecuteMove (core.asm:3118-3122): the move is committed and
-        // the flags on entry decide the exemptions (Bide/Thrash/MultiHit/Rage
-        // continuations spend nothing). Skipped for the blocked paths that
-        // never reach PlayerCanExecuteMove: ghost-scared, disobedient, or a
-        // called-move failure.
-        {
-            use crate::battle::state::{status1, status2};
-            let bs = self.battle_state.as_mut().unwrap();
-            let pp_spend = !player_call_failed
-                && !player_scared
-                && !player_disobeyed
-                && !bs.player.has_status2(status2::NEEDS_TO_RECHARGE)
-                && !bs.player.has_status1(status1::FLINCHED);
-            if pp_spend {
-                Self::decrement_player_pp(bs);
-            }
-        }
-
         // ════ P6: the whole turn runs through the stack engine ════
         // pick_enemy_move (legacy AI) chose the enemy move above; both movers +
         // ordering + residual + the faint short-circuit then run in ONE StackDriver
@@ -4280,15 +4318,8 @@ learn {learn_name}!")];
                 use crate::battle::state::status1::CHARGING_UP;
                 use crate::battle::state::status2::NEEDS_TO_RECHARGE;
                 let bs = self.battle_state.as_mut().unwrap();
-                // Each side's PRIOR last-used move (before this turn) — what a Mimic
-                // this turn copies from the FOE (this repo's oracle: the foe's LAST
-                // move, not a random one).
-                let enemy_prior_move = bs.enemy.last_move_used;
-                let player_prior_move = bs.player.last_move_used;
-                // Prime the turn-start last-move-used so a Disable this turn disables
-                // its target's prior move (the engine battler carries no last-move).
-                // Filtered by the oracle's PP>0 guard: an out-of-PP last move primes
-                // None, so `disable_install` fails to a no-op exactly like apply_disable.
+                // Mirror Move keeps a separate last-action history. Disable and
+                // Mimic select known slots in their native handlers.
                 pokered_rules::set_last_move_live(BattlerRef::PLAYER, disable_target_last_move(&bs.player));
                 pokered_rules::set_last_move_live(BattlerRef::OPPONENT, disable_target_last_move(&bs.enemy));
                 bs.player.selected_move = player_move_id;
@@ -4317,12 +4348,12 @@ learn {learn_name}!")];
                 let e_had_sub = bs.enemy.has_status2(crate::battle::state::status2::HAS_SUBSTITUTE_UP);
                 let (mut state, mut effects) = pokered_rules::runtime::engine_state_from_legacy(bs);
                 let actions = [
-                    if player_call_failed || player_scared || player_disobeyed {
+                    if player_scared || player_disobeyed {
                         BattleAction::<pokered_rules::PokeredRules>::Nothing
                     } else {
                         BattleAction::Fight { move_: player_move_id }
                     },
-                    if enemy_ai_fired || enemy_call_failed || ghost_enemy_blocked {
+                    if enemy_ai_fired || ghost_enemy_blocked {
                         BattleAction::<pokered_rules::PokeredRules>::Nothing
                     } else {
                         BattleAction::Fight { move_: enemy_move_id }
@@ -4341,6 +4372,18 @@ learn {learn_name}!")];
             let (_result, log) = StackDriver::execute_turn_logged(
                 &pokered_rules::PokeredRules, &mut state, &mut effects, actions, rng,
             );
+                // DecrementPP runs only after all status gates allowed a move.
+                // Inspect the real MoveUsed log while `bs` still has entry flags
+                // for the Bide/Thrash/Wrap/Rage exemptions. Charging gathers
+                // skip PlayerCanExecuteMove; their strike consumes the PP.
+                let used = log.events.iter().any(|ev| matches!(ev,
+                    dotzuki_engine::battle::stack::TurnEvent::MoveUsed { actor, .. }
+                    if *actor == BattlerRef::PLAYER));
+                let gather = !p_was_charging && matches!(player_move.effect,
+                    pokered_data::moves::MoveEffect::FlyEffect | pokered_data::moves::MoveEffect::ChargeEffect);
+                if used && !gather {
+                    Self::decrement_player_pp(bs);
+                }
                 self.presentation.record_turn(&log, &state, &effects, [bs.player.active_mon().hp, bs.enemy.active_mon().hp]);
             pokered_rules::runtime::apply_engine_to_legacy(bs, &state, &effects);
                 // Track the last move each side ACTUALLY used (for Mimic / Mirror
@@ -4353,36 +4396,6 @@ learn {learn_name}!")];
                             bs.player.last_move_used = *move_;
                         } else {
                             bs.enemy.last_move_used = *move_;
-                        }
-                    }
-                }
-                // Mimic: if a side executed Mimic this turn, overwrite its Mimic slot
-                // with the FOE's prior last-used move, PP→5 (apply_mimic). Fails
-                // silently if the foe has no last move.
-                {
-                    use dotzuki_engine::battle::stack::TurnEvent;
-                    let used_mimic = |who: BattlerRef| {
-                        log.events.iter().any(|ev| {
-                            matches!(ev, TurnEvent::MoveUsed { actor, move_ }
-                                if *actor == who && *move_ == pokered_data::moves::MoveId::Mimic)
-                        }) && !log.events.iter().any(|ev| {
-                            matches!(ev, TurnEvent::Missed { actor } if *actor == who)
-                        })
-                    };
-                    if used_mimic(BattlerRef::PLAYER) && enemy_prior_move != pokered_data::moves::MoveId::None {
-                        let slot = bs.player.selected_move_index as usize;
-                        if slot < 4 {
-                            let mon = bs.player.active_mon_mut();
-                            mon.moves[slot] = enemy_prior_move;
-                            mon.pp[slot] = 5;
-                        }
-                    }
-                    if used_mimic(BattlerRef::OPPONENT) && player_prior_move != pokered_data::moves::MoveId::None {
-                        let slot = bs.enemy.selected_move_index as usize;
-                        if slot < 4 {
-                            let mon = bs.enemy.active_mon_mut();
-                            mon.moves[slot] = player_prior_move;
-                            mon.pp[slot] = 5;
                         }
                     }
                 }
@@ -4913,7 +4926,7 @@ learn {learn_name}!")];
     }
 
     fn process_exp_gain(&mut self) -> Vec<String> {
-        let (defeated_species, defeated_level, is_traded, is_trainer) =
+        let (defeated_species, defeated_level) =
             if let Some(ref bs) = self.battle_state {
                 let enemy = bs.enemy.active_mon();
                 if enemy.hp > 0 {
@@ -4922,8 +4935,6 @@ learn {learn_name}!")];
                 (
                     enemy.species,
                     enemy.level,
-                    bs.player.active_mon().is_traded,
-                    bs.battle_type == BattleType::Trainer,
                 )
             } else {
                 return vec![];
@@ -4947,13 +4958,15 @@ learn {learn_name}!")];
                 }
             }
             if result.leveled_up.contains(&active_idx) {
-                bs.player.refresh_unmodified_stats();
+                if !bs.player.has_status3(state::status3::TRANSFORMED) { bs.player.refresh_unmodified_stats(); }
                 // Mid-battle level-up (experience.asm:233-238): the battle stats
                 // are recomputed from the NEW unmodified stats, then
                 // `ApplyBadgeStatBoosts` runs once — the accumulated stat-up-
                 // glitch rounds are wiped and re-seeded fresh.
                 let mon = bs.player.active_mon();
-                let raw = [mon.attack, mon.defense, mon.speed, mon.special];
+                let raw = if bs.player.has_status3(state::status3::TRANSFORMED) {
+                    [bs.player.unmodified_attack,bs.player.unmodified_defense,bs.player.unmodified_speed,bs.player.unmodified_special]
+                } else { [mon.attack, mon.defense, mon.speed, mon.special] };
                 bs.player.badge_boosted_stats = Some(
                     crate::battle::badge_boosts::initial_boosted_stats(raw, bs.player_badges),
                 );
@@ -4962,39 +4975,27 @@ learn {learn_name}!")];
 
         self.sync_display_from_state();
 
-        let base_exp = get_base_stats(defeated_species)
-            .map(|b| b.base_exp)
-            .unwrap_or(0);
-        let exp_amount = calc_exp_gain(base_exp, defeated_level, is_traded, is_trainer);
-
-        let mut msgs = vec![format!(
-            "{} gained {} exp. points!",
-            self.player_species, exp_amount
-        )];
-
-        for &idx in &result.leveled_up {
-            if let Some(ref bs) = self.battle_state {
-                let mon = &bs.player.party[idx];
+        let mut msgs = vec![];
+        if let Some(bs) = self.battle_state.as_ref() {
+            use experience::gain::ExperienceNotice;
+            for notice in &result.notices {
+                let idx = match *notice {
+                    ExperienceNotice::Gained { party_index, .. }
+                    | ExperienceNotice::Leveled { party_index, .. }
+                    | ExperienceNotice::Learned { party_index, .. } => party_index,
+                };
+                let mon = bs.player.party_mon(idx);
                 let mut name_buf = [0u8; crate::battle::state::NAME_TEXT_BUF];
-                msgs.push(format!(
-                    "{} grew to level {}!",
-                    mon.display_name(&mut name_buf),
-                    mon.level
-                ));
+                let name = mon.display_name(&mut name_buf);
+                msgs.push(match *notice {
+                    ExperienceNotice::Gained { amount, .. } => format!("{name} gained {amount} exp. points!"),
+                    ExperienceNotice::Leveled { level, .. } => format!("{name} grew to level {level}!"),
+                    ExperienceNotice::Learned { move_id, .. } => format!("{name} learned {}!",
+                        pokered_data::lang_data::move_name(move_id, false)),
+                });
             }
         }
 
-        for &(idx, move_id) in &result.new_moves {
-            if let Some(ref bs) = self.battle_state {
-                let mon = &bs.player.party[idx];
-                let mut name_buf = [0u8; crate::battle::state::NAME_TEXT_BUF];
-                msgs.push(format!(
-                    "{} learned {}!",
-                    mon.display_name(&mut name_buf),
-                    pokered_data::lang_data::move_name(move_id, false)
-                ));
-            }
-        }
         // Full moveset: queue the forget/replace prompt (learnmove.asm) — the
         // mon does NOT silently lose its 4th move.
         self.pending_learn_moves.extend(result.blocked_moves.iter().copied());
@@ -5022,7 +5023,7 @@ learn {learn_name}!")];
 
     fn learn_move_trying_text(&self, party_index: usize, move_id: pokered_data::moves::MoveId) -> String {
         if let Some(ref bs) = self.battle_state {
-            let mon = &bs.player.party[party_index];
+            let mon = bs.player.party_mon(party_index);
             let mut name_buf = [0u8; crate::battle::state::NAME_TEXT_BUF];
             let name = mon.display_name(&mut name_buf);
             return format!(
@@ -5056,7 +5057,7 @@ learn {learn_name}!")];
         self.battle_state
             .as_ref()
             .map(|bs| {
-                let mon = &bs.player.party[party_index];
+                let mon = bs.player.party_mon(party_index);
                 let mut name_buf = [0u8; crate::battle::state::NAME_TEXT_BUF];
                 mon.display_name(&mut name_buf).to_string()
             })
@@ -5605,28 +5606,14 @@ mod recharge_lifecycle_tests {
         let mut screen = BattleScreen::from_parties(true, &player, &enemy, None);
         let enemy_hp = |s: &BattleScreen| s.battle_state.as_ref().unwrap().enemy.active_mon().hp;
 
-        // Turn 1 — player Mimics, but the foe has no last move yet → slot 0 stays Mimic.
+        let original_pp = screen.battle_state.as_ref().unwrap().player.active_mon().pp[0];
         screen.execute_turn_with_move(0);
-        assert_eq!(
-            screen.battle_state.as_ref().unwrap().player.active_mon().moves[0],
-            MoveId::Mimic,
-            "Mimic fails on turn 1 (foe had no last move)"
-        );
-
-        // Turn 2 — player Mimics again; the foe's prior move is now Swift → copy it.
-        // Mimic itself has 100% accuracy, so the faithful Gen-1 1/256 miss
-        // glitch can eat it — retry until it connects (Mimic has the PP).
-        for _ in 0..9 {
-            screen.execute_turn_with_move(0);
-            if screen.battle_state.as_ref().unwrap().player.active_mon().moves[0] == MoveId::Swift {
-                break;
-            }
-        }
-        {
-            let mon = screen.battle_state.as_ref().unwrap().player.active_mon();
-            assert_eq!(mon.moves[0], MoveId::Swift, "Mimic copies the foe's last move into the slot");
-            assert_eq!(mon.pp[0], 5, "copied move's PP set to 5");
-        }
+        assert_eq!(screen.phase, BattlePhase::MoveSelect);
+        assert_eq!(screen.move_menu.as_ref().unwrap().moves()[0].move_id, MoveId::Swift);
+        screen.update_frame(BattleInput { a: true, ..BattleInput::none() });
+        let mon = screen.battle_state.as_ref().unwrap().player.active_mon();
+        assert_eq!(mon.moves[0], MoveId::Swift, "Mimic chooses a known move on turn one");
+        assert_eq!(mon.pp[0], original_pp - 1, "Mimic retains its remaining PP");
 
         // Turn 3 — the copied Swift is selectable in slot 0 and (never missing) hits.
         let before = enemy_hp(&screen);

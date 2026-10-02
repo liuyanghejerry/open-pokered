@@ -179,7 +179,7 @@ pub fn settle_battle_into_save(
     // after the evolution cutscene confirms them.
     if let Some(ref bs) = battle.battle_state {
         if !bs.player.party.is_empty() {
-            if let Ok(p) = crate::pokemon::party::Party::from_pokemon(bs.player.party.clone()) {
+            if let Ok(p) = crate::pokemon::party::Party::from_pokemon(bs.player.persistent_party()) {
                 save.party = p;
             }
         }

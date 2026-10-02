@@ -4,13 +4,9 @@
 //! This module stands up a **game-side** [`PokeredRules`] provider that drives
 //! the bucket-A Gen-1 moves through the engine's [`StackDriver`] using effects
 //! authored in [`rules.ron`](./rules.ron) (loaded via the game-agnostic
-//! `dotzuki-rules` loader). It is **ADDITIVE and DIFFERENTIAL-ONLY** (`#![cfg(test)]`
-//! at the module-decl site): the legacy [`apply_move_effect`](super::effects) /
-//! [`execute_turn`](super::turn::execute_turn) dispatcher stays the **production
-//! oracle**, untouched, and the frame-stepped production loop is NOT routed
-//! through the stack (that is P6). All this module does is prove, side-by-side,
-//! that the data-driven bucket-A effects produce an **IDENTICAL `BattleState`**
-//! AND **identical `rng.consumed()`** vs the legacy oracle on real Gen-1 numbers.
+//! `dotzuki-rules` loader). The live [`BattleScreen`](super::BattleScreen) routes
+//! turns through this provider and [`runtime`]. Legacy turn execution remains a
+//! test oracle, while fidelity regressions use the original ROM control flow.
 //!
 //! ## The damage authority (the load-bearing invariant)
 //!
@@ -146,6 +142,13 @@ pub enum PokeVolatile {
     None,
     /// Focus Energy volatile (drives the Gen-1 `/4` crit bug, #1).
     FocusEnergy,
+    /// X Accuracy bypasses MoveHitTest's accuracy/evasion roll.
+    XAccuracy,
+    /// The original paralysis/confusion Fly/Dig bug can leave this bit set
+    /// after charging has been cancelled.
+    Invulnerable,
+    /// One-turn marker for a battle-only Mimic moveset replacement.
+    Mimicked,
     /// Substitute up (drives the side-status Substitute block, P2; and the P3
     /// foe-stat-down absorption via the nested-veto driver). The engine treats
     /// this opaquely; only [`PokeredBindings::has_volatile`] maps the name
@@ -208,6 +211,10 @@ pub enum PokeVolatile {
     /// Ground/Rock/etc., bug #20). Opaque to the engine like every other kind.
     DamageTaken { amount: u16, counterable: bool },
 
+    /// Original wDamage, shared by both sides and retained across turns.
+    /// Counter reads it after checking the target's currently selected move.
+    SharedDamage { amount: u16 },
+
     /// **Haze-cured move forfeit** — the target whose sleep/freeze a (faster)
     /// Haze cured loses its move this turn (the original writes $ff into the
     /// target's selected move, haze.asm:24-27). Per-turn scratch with no
@@ -228,8 +235,7 @@ pub enum PokeVolatile {
     /// CHARGE turn (the move deals no damage and draws nothing); on the STRIKE turn
     /// [`PokeredRules::forced_action`] forces `move_` and the native pipeline removes
     /// this volatile and lands the hit. `invulnerable` (Fly/Dig only) makes the
-    /// opponent's moves miss while charging — bar the Gen-1 exceptions (Gust/Thunder
-    /// vs Fly, Earthquake/Fissure vs Dig). The engine only sees an opaque kind + a
+    /// opponent's moves miss while charging, except for Swift. The engine sees an opaque kind + a
     /// forced action; the charge/strike meaning is entirely game-side.
     Charging { move_: MoveId, invulnerable: bool },
 
@@ -250,10 +256,20 @@ pub enum PokeVolatile {
     /// **Trapping move in progress** (Wrap/Bind/Fire Spin/Clamp; legacy
     /// `status1::USING_TRAPPING_MOVE` + `num_attacks_left`). The user is locked into
     /// `move_` for 2–5 turns ([`PokeredRules::forced_action`]) — it re-hits each turn
-    /// — and the FOE is bound: while this volatile is live on one side,
-    /// `forced_action` returns `Nothing` for the other side (it can't act). Opaque to
-    /// the engine.
+    /// — and the foe is held by the BeforeMove gate after sleep/freeze checks.
+    /// Continuations reuse the initial shared damage without more hit/formula RNG.
     Trapping { move_: MoveId, turns_left: u8 },
+
+    /// This action is a continuation: reuse wDamage without hit/crit/formula draws.
+    /// Per-turn scratch, discarded by the legacy adapter after the whole turn.
+    TrappingContinuation { damage: u16 },
+
+    /// Natural expiry resets the original shared multi-turn counter to zero;
+    /// status-gate interruption preserves its previous scalar value.
+    LockEnded,
+
+    /// Bide's natural release also clears its accumulated-damage word.
+    BideEnded { damage: u16 },
 
     /// **Bide storing energy** (legacy `status1::STORING_ENERGY` + `num_attacks_left`
     /// + `bide_accumulated_damage`). The user is forced to Bide for 2 more turns,
@@ -385,7 +401,7 @@ impl EffectProvider for PokeredRules {
             // self-guards on a fainted host (the legacy early-return).
             PokeVolatile::Toxic { .. } => Some(p5_native::toxic_residual_effect()),
             PokeVolatile::LeechSeed => Some(p5_native::leech_residual_effect()),
-            PokeVolatile::Bide { .. } => Some(bide_residual_effect()),
+
             _ => None,
         }
     }
@@ -415,14 +431,8 @@ impl EffectProvider for PokeredRules {
         actor: BattlerRef,
         chosen: &BattleAction<Self>,
     ) -> Option<BattleAction<Self>> {
-        // Bound by the FOE's trapping move (Wrap/Bind/…) → this actor can't act.
-        let foe = BattlerRef::new(if actor.side == 0 { 1 } else { 0 }, actor.slot);
-        if effects.iter().any(|e| {
-            e.host == foe
-                && matches!(e.kind, PokeVolatile::Trapping { turns_left, .. } if turns_left > 0)
-        }) {
-            return Some(BattleAction::Nothing);
-        }
+        // The held-in-place BeforeMove gate runs after sleep/freeze, matching
+        // the original status-check order even when the foe is already trapping.
         for e in effects.iter().filter(|e| e.host == actor) {
             match &e.kind {
                 PokeVolatile::Recharge => {
@@ -653,7 +663,7 @@ impl RuleBindings<PokeredRules> for PokeredBindings {
     /// comparing the species' two types. Pure read.
     fn has_type(&self, b: &EngineBattler<PokeredRules>, type_index: usize) -> bool {
         let Some(want) = Self::type_for_index(type_index) else { return false };
-        let (t1, t2) = species_types(b.species);
+        let (t1, t2) = bound_types(b);
         want == t1 || want == t2
     }
 
@@ -739,7 +749,7 @@ impl RuleBindings<PokeredRules> for PokeredBindings {
     /// (`set_level`); we look it up by species here. Defaults to 50 (the P1/P2
     /// fixed level) when the harness set nothing. Pure read; no entropy.
     fn battler_level(&self, b: &EngineBattler<PokeredRules>) -> u16 {
-        level_for_species(b.species)
+        b.level as u16
     }
 
     /// **The chart fold is NEUTRAL by design (the damage authority owns it).** The
@@ -1021,7 +1031,7 @@ fn rebuild_move_index() {
     // Ensure every authored record id has a slot even if hook-less (Splash), plus
     // the fully-native records whose behaviour is a native handler, not data ops
     // (Counter reflects via `counter_handler`, registered in the rebuild loop below).
-    for sid in ["move.splash", "special.counter", "status.transform", "move.mimic", "status.haze", "special.switch_teleport", "status.substitute", "status.conversion", "status.disable"] {
+    for sid in ["move.splash", "special.counter", "status.transform", "move.mimic", "status.haze", "special.switch_teleport", "status.substitute", "status.conversion", "status.disable", "status.sleep"] {
         if !records.iter().any(|r| r.source_id == sid) {
             records.push(MoveRecord {
                 source_id: sid.to_string(),
@@ -1076,9 +1086,11 @@ fn rebuild_move_index() {
         //    on the first Fail makes a confusion self-hit stop before the paralysis
         //    gate fires.
         for (order, call) in [
+            (0u32, enemy_held_at_entry_gate as dotzuki_engine::battle::stack::HandlerFn<PokeredRules>),
             (5u32, haze_cured_gate as dotzuki_engine::battle::stack::HandlerFn<PokeredRules>),
             (10u32, p5_native::sleep_gate as dotzuki_engine::battle::stack::HandlerFn<PokeredRules>),
             (20, p5_native::freeze_gate),
+            (25, held_in_place_gate),
             (30, p5_native::flinch_gate),
             // Disable: the ASM decrements the counter (step 6) then blocks the disabled
             // move (step 8), straddling confusion (step 7) — orders 50 / 80 reproduce
@@ -1088,6 +1100,9 @@ fn rebuild_move_index() {
             (70, p5_native::confusion_gate),
             (80, disable_veto_gate),
             (90, p5_native::paralysis_gate),
+            (95, bide_before_move),
+            (100, thrash_lockin),
+            (110, trapping_lockin),
         ] {
             event_hooks.push(EventHook {
                 event: Event::BeforeMove,
@@ -1097,11 +1112,23 @@ fn rebuild_move_index() {
                 sub_order: None,
             });
         }
-        // ── Counter's per-turn damage-taken recorder (bug #20). On DamagingHit,
-        //    stamp the DEFENDER's `DamageTaken` scratch so a Counter user (moving
-        //    last, −1 priority) can read the physical damage it took this turn. High
-        //    order → runs after any damage-adjusting DamagingHit hook. INERT unless a
-        //    Counter follows (the entry is dropped at write-back). ──
+        // Record original shared wDamage before Substitute/HP application.
+        event_hooks.push(EventHook {
+            event: Event::Damage,
+            call: record_shared_damage,
+            order: 0,
+            priority: 0,
+            sub_order: None,
+        });
+        // MoveHitTest's miss branch clears wDamage (core.asm:5330).
+        event_hooks.push(EventHook {
+            event: Event::OnMiss,
+            call: clear_shared_damage_on_miss,
+            order: 0,
+            priority: 0,
+            sub_order: None,
+        });
+        // Bide's per-defender scratch remains local to this turn.
         event_hooks.push(EventHook {
             event: Event::DamagingHit,
             call: record_damage_taken,
@@ -1119,28 +1146,11 @@ fn rebuild_move_index() {
             priority: 0,
             sub_order: None,
         });
-        // ── Thrash / Petal Dance lock-in (install/decrement + end-confuse). Keyed on
-        //    ThrashPetalDanceEffect → inert for other moves. ──
-        event_hooks.push(EventHook {
-            event: Event::DamagingHit,
-            call: thrash_lockin,
-            order: u32::MAX - 3,
-            priority: 0,
-            sub_order: None,
-        });
         // ── Rage: lock-in on use + Attack-up when the raging mon is hit. ──
         event_hooks.push(EventHook {
             event: Event::DamagingHit,
             call: rage_manage,
             order: u32::MAX - 4,
-            priority: 0,
-            sub_order: None,
-        });
-        // ── Trapping moves (Wrap/Bind/Fire Spin/Clamp): lock-in + counter. ──
-        event_hooks.push(EventHook {
-            event: Event::DamagingHit,
-            call: trapping_lockin,
-            order: u32::MAX - 5,
             priority: 0,
             sub_order: None,
         });
@@ -1167,6 +1177,10 @@ fn rebuild_move_index() {
             order: u32::MAX - 8,
             priority: 0,
             sub_order: None,
+        });
+        event_hooks.push(EventHook {
+            event: Event::DamagingHit, call: mimic_install,
+            order: u32::MAX - 13, priority: 0, sub_order: None,
         });
         // ── Disable: disable the target's last-used move slot. ──
         event_hooks.push(EventHook {
@@ -1198,6 +1212,13 @@ fn rebuild_move_index() {
             priority: -1,
             sub_order: None,
         });
+        event_hooks.push(EventHook {
+            event: Event::DamagingHit,
+            call: sleep_install,
+            order: u32::MAX - 12,
+            priority: 0,
+            sub_order: None,
+        });
         // ── Substitute: absorb the incoming hit into the doll's HP pool (the reserved
         //    Event::Damage seam, fired by the driver before the hp write). Inert unless
         //    the defender holds a Substitute. ──
@@ -1224,10 +1245,8 @@ fn rebuild_move_index() {
             priority: 0,
             sub_order: None,
         });
-        // ── Counter itself: the reflect-2×-physical handler on ModifyDamage (only
-        //    the special.counter record). power-0 record → the native crit/damage
-        //    draws already short-circuit; pokered_accuracy skips Counter; this native
-        //    handler is Counter's sole damage authority (reads its own DamageTaken). ──
+        // Counter installs the reflected amount after the hit test; the driver
+        // then runs the normal Damage/Substitute fold and HP application.
         if rec.source_id == "special.counter" {
             event_hooks.push(EventHook {
                 event: Event::ModifyDamage,
@@ -1475,20 +1494,51 @@ fn current_move_for(source: BattlerRef) -> MoveData {
         .unwrap_or_else(active_move)
 }
 
+// Resource ids are provider-private; the engine treats these as opaque values.
+pub(super) const RES_TYPE1: u16 = 0xff00;
+pub(super) const RES_TYPE2: u16 = 0xff01;
+pub(super) const RES_PP_BASE: u16 = 0xff10;
+pub(super) const RES_FINITE_PP: u16 = 0xff14;
+pub(super) const RES_SELECTED_SLOT: u16 = 0xff15;
+pub(super) const RES_HELD_AT_ENTRY: u16 = 0xff42;
+pub(super) const RES_DV0: u16 = 0xff20;
+pub(super) const RES_DV1: u16 = 0xff21;
+pub(super) const RES_CATCH_RATE: u16 = 0xff22;
+pub(super) const RES_CRIT_BASE: u16 = 0xff30;
 thread_local! {
-    /// Each side's last move used AS OF THE TURN START — what a Disable this turn
-    /// disables on its target. The engine `BattlerState` carries no last-move field,
-    /// so the production loop primes this from `bs.{player,enemy}.last_move_used`
-    /// before `execute_turn` (symmetric with [`CURRENT_MOVES`]); decoupled tests set
-    /// it directly. Read by `disable_install`. NOTE: this is the PRE-turn value, so a
-    /// Disable user that moves AFTER its target reads the target's PRIOR move, not the
-    /// one it just used this turn. Two consequences vs the oracle (which reads the
-    /// target's live `last_move_used` at effect time): (a) a slower Disable user whose
-    /// target VARIED its move this turn disables the prior move; (b) on turn 1 a slower
-    /// Disable is a no-op (the target's prior move is `None`) where the oracle would
-    /// disable the just-used move. Both are narrow speed-order cases — Disable is
-    /// normally used to lock a REPEATED move, where prior and just-used agree; a faster
-    /// Disable user (the common intent) is always exact.
+    static MIMIC_CHOICE: Cell<Option<usize>> = const { Cell::new(None) };
+    static MIMIC_INTERACTIVE: Cell<bool> = const { Cell::new(false) };
+    static MIMIC_REQUEST: RefCell<Option<Vec<MoveId>>> = const { RefCell::new(None) };
+}
+pub fn set_mimic_choice(slot: Option<usize>, interactive: bool) {
+    MIMIC_CHOICE.with(|c| c.set(slot));
+    MIMIC_INTERACTIVE.with(|c| c.set(interactive));
+    MIMIC_REQUEST.with(|c| *c.borrow_mut() = None);
+}
+pub fn take_mimic_request() -> Option<Vec<MoveId>> { MIMIC_REQUEST.with(|c| c.borrow_mut().take()) }
+fn bound_types(b: &EngineBattler<PokeredRules>) -> (PokemonType, PokemonType) {
+    let fallback = species_types(b.species);
+    let decode = |id, default| b.resources.current(id)
+        .map(|v| PokemonType::from_id(v as u8)).unwrap_or(default);
+    (decode(RES_TYPE1, fallback.0), decode(RES_TYPE2, fallback.1))
+}
+pub(super) fn bind_critical_stats(b: &mut EngineBattler<PokeredRules>, values: [u16; 4]) {
+    for (i, value) in values.into_iter().enumerate() { b.resources.set(RES_CRIT_BASE + i as u16, value, u16::MAX); }
+}
+fn enemy_critical_stats(b: &EngineBattler<PokeredRules>) -> [u16; 4] {
+    let Some(base) = get_base_stats(b.species) else { return [1;4] };
+    let dvs = [b.resources.current(RES_DV0).unwrap_or(255) as u8,b.resources.current(RES_DV1).unwrap_or(255) as u8];
+    let (_,atk,def,spd,spc) = crate::battle::experience::stats::calc_all_stats(base,dvs,&[0;5],b.level);
+    [atk,def,spd,spc]
+}
+fn bind_types(b: &mut EngineBattler<PokeredRules>, types: (PokemonType, PokemonType)) {
+    b.resources.set(RES_TYPE1, types.0 as u16, 255);
+    b.resources.set(RES_TYPE2, types.1 as u16, 255);
+}
+
+thread_local! {
+    /// Compatibility history for older differential harnesses. Original Disable
+    /// selects from all known moves and does not read last-move history.
     static LAST_MOVE_LIVE: RefCell<[MoveId; 2]> = const { RefCell::new([MoveId::None, MoveId::None]) };
 }
 
@@ -1524,7 +1574,9 @@ fn pokered_crit(
     _eff: EffectId,
 ) -> HandlerResult {
     let pm = current_move_for(source);
-    if pm.power == 0
+    if trapping_continuation_damage(ctx, source).is_some()
+        || bide_release_damage(ctx, source).is_some()
+        || pm.power == 0
         || is_special_damage_effect(pm.effect)
         || (is_charge_move(pm.effect) && charging_of(ctx, source).is_none())
     {
@@ -1560,29 +1612,80 @@ fn pokered_accuracy(
     source: BattlerRef,
     _eff: EffectId,
 ) -> HandlerResult {
+    // A continued trapping attack skips MoveHitTest, including Dig/Fly.
+    if trapping_continuation_damage(ctx, source).is_some() {
+        return HandlerResult::Unchanged;
+    }
     let pm = current_move_for(source);
-    if pm.effect == MoveEffect::SwiftEffect || pm.id == MoveId::Counter {
-        // Swift never misses; Counter is a fixed-damage reactive move that draws no
-        // accuracy byte (it fails via `counter_handler`, not the accuracy roll).
+    if pm.id == MoveId::Counter {
+        if !counter_can_reflect(ctx, target) {
+            return HandlerResult::Set(RelayVar::Bool(false));
+        }
+        let reflected = shared_damage(ctx).saturating_mul(2);
+        set_shared_damage(ctx, reflected);
+    }
+    // Self effects and Transform/Conversion/Haze/escape effects do not call
+    // MoveHitTest in the original. They ignore the foe's evasion/invulnerability.
+    // These residual effects do not call MoveHitTest, but have their own
+    // bit checks. Conversion checks the foe; Transform's original bug checks
+    // the player's OWN INVULNERABLE bit and never blocks the enemy.
+    let invulnerable = |who| ctx.effects.iter().any(|e| e.host == who && matches!(e.kind,
+        PokeVolatile::Invulnerable | PokeVolatile::Charging { invulnerable: true, .. }));
+    if (pm.effect == MoveEffect::ConversionEffect && invulnerable(target))
+        || (pm.effect == MoveEffect::TransformEffect && source.side == 0 && invulnerable(source)) {
+        return HandlerResult::Set(RelayVar::Bool(false));
+    }
+    if !move_rolls_accuracy(pm.effect) {
+        if pm.effect == MoveEffect::HealEffect && recovery_fails(ctx.battler(source)) {
+            return HandlerResult::Set(RelayVar::Bool(false));
+        }
+        return HandlerResult::Unchanged;
+    }
+    if pm.effect == MoveEffect::SleepEffect {
+        let recharging = ctx.effects.iter().any(|e| e.host == target && matches!(e.kind, PokeVolatile::Recharge));
+        // SleepEffect clears recharge before all tests. A recharging target
+        // can even have its existing status replaced by sleep.
+        ctx.effects.retain(|e| !(e.host == target && matches!(e.kind, PokeVolatile::Recharge)));
+        if recharging {
+            ctx.battler_mut(target).status = None;
+            return HandlerResult::Unchanged;
+        }
+    }
+    if pm.effect == MoveEffect::SwiftEffect {
+        // Swift alone skips the normal hit test.
         return HandlerResult::Unchanged;
     }
     // A charge move's GATHER turn draws no accuracy byte (it never "hits" turn 1).
     if is_charge_move(pm.effect) && charging_of(ctx, source).is_none() {
         return HandlerResult::Unchanged;
     }
-    // Bide never rolls accuracy (it stores, then bide_residual unleashes fixed damage).
+    // Bide release skips MoveHitTest, including invulnerability and accuracy.
+    // A zero release is the original wMoveMissed branch, without an RNG draw.
     if pm.effect == MoveEffect::BideEffect {
-        return HandlerResult::Unchanged;
+        return if bide_release_damage(ctx, source) == Some(0) {
+            HandlerResult::Set(RelayVar::Bool(false))
+        } else {
+            HandlerResult::Unchanged
+        };
     }
     // Semi-invulnerability: a mid-charge Fly/Dig target can't be hit, PERIOD.
     // Gen 1 has NO Gust/Thunder/Earthquake/Fissure exceptions (those are Gen 2+);
     // only Swift bypasses, via the early `ret z` above (core.asm:5246-5248 —
     // the swiftCheck precedes .checkForDigOrFlyStatus). Missing here draws no
     // accuracy byte (the invulnerability check precedes the roll).
-    if let Some((_charge_move, invulnerable)) = charging_of(ctx, target) {
-        if invulnerable {
+    if ctx.effects.iter().any(|e| e.host == target && matches!(e.kind,
+        PokeVolatile::Invulnerable | PokeVolatile::Charging { invulnerable: true, .. })) {
+        return HandlerResult::Set(RelayVar::Bool(false));
+    }
+    if ctx.effects.iter().any(|e| e.host == source && matches!(e.kind, PokeVolatile::XAccuracy)) {
+        // OneHitKOEffect sets wMoveMissed before MoveHitTest; the latter's
+        // X Accuracy return cannot erase a failed current-Speed comparison.
+        if pm.effect == MoveEffect::OhkoEffect
+            && effective_speed(ctx.battler(source)) < effective_speed(ctx.battler(target))
+        {
             return HandlerResult::Set(RelayVar::Bool(false));
         }
+        return HandlerResult::Unchanged;
     }
     let acc_stage = ctx.battler(source).stat_stages.get(StatIndex::Accuracy).copied().unwrap_or(0);
     let eva_stage = ctx.battler(target).stat_stages.get(StatIndex::Evasion).copied().unwrap_or(0);
@@ -1616,7 +1719,24 @@ fn pokered_damage(
     _eff: EffectId,
 ) -> HandlerResult {
     use crate::battle::damage::{calculate_damage, is_physical, DamageParams};
+    if let Some(damage) = trapping_continuation_damage(ctx, source) {
+        ctx.mv.damage = damage;
+        return HandlerResult::Unchanged;
+    }
     let pm = current_move_for(source);
+    // HandleCounterMove skips the ordinary formula and damage randomization.
+    if pm.id == MoveId::Counter { return HandlerResult::Unchanged; }
+
+    if pm.id == MoveId::Psywave {
+        let bound = (ctx.battler(source).level as u16 * 3 / 2) as u8;
+        loop {
+            let byte = ctx.rng.next_u8();
+            if byte < bound && (source.side != 0 || byte != 0) {
+                ctx.mv.damage = byte as u16;
+                return HandlerResult::Unchanged;
+            }
+        }
+    }
     // Two-turn charge moves: the GATHER turn installs the Charging volatile and deals
     // no damage; the STRIKE turn (forced by forced_action) consumes it and lands the
     // hit through the normal formula below. Removing the volatile here also drops the
@@ -1642,10 +1762,13 @@ fn pokered_damage(
             return HandlerResult::Unchanged;
         }
     }
-    // Bide deals no damage while storing (the release is dealt by bide_residual as
-    // 2× accumulated). First use installs the store for 2 or 3 turns at random
-    // (effects.asm:782-786 — `(BattleRandom & 1) + 2`).
+    // Initial Bide installs its full 2/3 counter without ticking it. Later
+    // actions store/release in BeforeMove after the status gates.
     if pm.effect == MoveEffect::BideEffect {
+        if let Some(damage) = bide_release_damage(ctx, source) {
+            ctx.mv.damage = damage;
+            return HandlerResult::Unchanged;
+        }
         if !ctx
             .effects
             .iter()
@@ -1659,6 +1782,8 @@ fn pokered_damage(
                 kind: PokeVolatile::Bide { turns_left: turns, accumulated: 0 },
             });
         }
+        // GetDamageVars clears wDamage before the zero-power initial effect.
+        set_shared_damage(ctx, 0);
         ctx.mv.damage = 0;
         return HandlerResult::Unchanged;
     }
@@ -1696,6 +1821,12 @@ fn pokered_damage(
         (a.stats.get(StatIndex::Special).copied().unwrap_or(0),
          d.stats.get(StatIndex::Special).copied().unwrap_or(1))
     };
+    let (atk, def) = if is_crit {
+        let atk_index = if physical { 0 } else { 3 };
+        let def_index = if physical { 1 } else { 3 };
+        (a.resources.current(RES_CRIT_BASE + atk_index).unwrap_or(atk),
+         d.resources.current(RES_CRIT_BASE + def_index).unwrap_or(def))
+    } else { (atk, def) };
     let (atk_stage, def_stage) = if physical {
         (a.stat_stages.get(StatIndex::Attack).copied().unwrap_or(0),
          d.stat_stages.get(StatIndex::Defense).copied().unwrap_or(0))
@@ -1743,6 +1874,8 @@ fn pokered_damage(
     let result = calculate_damage(&params);
     ctx.mv.damage = if result.is_miss { 0 } else { result.damage };
     if result.is_miss {
+        // AdjustDamageForMoveType zeroes wDamage on immunity.
+        set_shared_damage(ctx, 0);
         ctx.mv.move_missed = true;
         return HandlerResult::Set(RelayVar::Bool(false)); // type-immunity → "miss"
     }
@@ -1808,46 +1941,75 @@ fn record_damage_taken(
     HandlerResult::Unchanged
 }
 
-/// `ModifyDamage` handler for the Counter record (bug #20). Reads the Counter
-/// user's (`source`) own per-turn `DamageTaken` scratch and reflects `amount * 2`
-/// onto the opponent (`target`) via the load-bearing `pair_mut` — "mutate target
-/// while reading source" (design §3.2) — then zeroes `ctx.mv.damage` so the driver's
-/// own `take_damage(target, mv.damage)` does not double-apply, and returns
-/// `Set(Bool(false))` to stop the ModifyDamage chain. Counter FAILS (deals 0) when the
-/// user took no NORMAL/FIGHTING damage this turn (special / non-N/F / status / none),
-/// and a fainted Counter user reflects nothing. Draws NO rng.
+fn shared_damage(ctx: &BattleCtx<'_, PokeredRules>) -> u16 {
+    ctx.effects.iter().find_map(|entry| match entry.kind {
+        PokeVolatile::SharedDamage { amount } => Some(amount), _ => None,
+    }).unwrap_or(0)
+}
+
+fn set_shared_damage(ctx: &mut BattleCtx<'_, PokeredRules>, amount: u16) {
+    if let Some(entry) = ctx.effects.iter_mut()
+        .find(|entry| matches!(entry.kind, PokeVolatile::SharedDamage { .. })) {
+        entry.kind = PokeVolatile::SharedDamage { amount };
+    } else {
+        ctx.effects.push(EffectState {
+            id: EffectId(0x50_0f0), host: BattlerRef::PLAYER, effect_order: 999,
+            kind: PokeVolatile::SharedDamage { amount },
+        });
+    }
+}
+
+fn counter_can_reflect(ctx: &BattleCtx<'_, PokeredRules>, target: BattlerRef) -> bool {
+    let selected = current_move_for(target);
+    selected.id != MoveId::Counter && selected.power > 0
+        && matches!(selected.move_type, PokemonType::Normal | PokemonType::Fighting)
+        && shared_damage(ctx) > 0
+}
+
+/// ApplyDamage caps wDamage at real HP only when it overkills the actual mon;
+/// damage to a Substitute keeps the full calculated value (core.asm:4879).
+fn record_shared_damage(
+    ctx: &mut BattleCtx<'_, PokeredRules>, relay: RelayVar,
+    target: BattlerRef, source: BattlerRef, _effect: EffectId,
+) -> HandlerResult {
+    let amount = relay.as_damage();
+    // Zero-power and charge-gather moves retain the previous wDamage.
+    if amount != 0 {
+        let substitute = ctx.effects.iter().any(|entry| entry.host == target
+            && matches!(entry.kind, PokeVolatile::Substitute | PokeVolatile::SubstituteHp { .. }));
+        let saved = if substitute { amount } else { amount.min(ctx.battler(target).hp) };
+        set_shared_damage(ctx, saved);
+    }
+    let _ = source;
+    HandlerResult::Unchanged
+}
+
+fn clear_shared_damage_on_miss(
+    ctx: &mut BattleCtx<'_, PokeredRules>, _relay: RelayVar,
+    target: BattlerRef, source: BattlerRef, _effect: EffectId,
+) -> HandlerResult {
+    // Failed Counter prerequisites return before MoveHitTest and retain wDamage.
+    let pm = current_move_for(source);
+    if move_rolls_accuracy(pm.effect)
+        && (pm.id != MoveId::Counter || counter_can_reflect(ctx, target)) {
+        set_shared_damage(ctx, 0);
+        ctx.effects.retain(|entry| !(entry.host == source
+            && matches!(entry.kind, PokeVolatile::Trapping { .. })));
+    }
+    HandlerResult::Unchanged
+}
+
+/// Counter uses doubled shared wDamage through the ordinary Damage fold, so
+/// Substitute, Dig/Fly and accuracy all follow the same paths as other attacks.
 fn counter_handler(
-    ctx: &mut BattleCtx<'_, PokeredRules>,
-    _relay: RelayVar,
-    target: BattlerRef,
-    source: BattlerRef,
-    source_effect: EffectId,
+    ctx: &mut BattleCtx<'_, PokeredRules>, _relay: RelayVar,
+    _target: BattlerRef, _source: BattlerRef, source_effect: EffectId,
 ) -> HandlerResult {
     if !source_effect_is(source_effect, "special.counter") {
         return HandlerResult::Unchanged;
     }
-    let (amount, counterable) = match ctx
-        .effects
-        .iter()
-        .find(|e| e.host == source && matches!(e.kind, PokeVolatile::DamageTaken { .. }))
-        .map(|e| &e.kind)
-    {
-        Some(PokeVolatile::DamageTaken { amount, counterable }) => (*amount, *counterable),
-        _ => (0, false),
-    };
-    if amount == 0 || !counterable {
-        ctx.mv.damage = 0;
-        return HandlerResult::Set(RelayVar::Bool(false)); // Counter fails
-    }
-    let reflected = amount.saturating_mul(2);
-    let (counter_user, opponent) = ctx.pair_mut(source, target);
-    if counter_user.hp == 0 {
-        ctx.mv.damage = 0;
-        return HandlerResult::Set(RelayVar::Bool(false)); // dead user reflects nothing
-    }
-    opponent.take_damage(reflected);
-    ctx.mv.damage = 0; // applied via pair_mut → don't let the driver re-apply
-    HandlerResult::Set(RelayVar::Bool(false)) // STOP the ModifyDamage chain
+    ctx.mv.damage = shared_damage(ctx);
+    HandlerResult::Unchanged
 }
 
 /// `DamagingHit` hook (every record): after a Hyper Beam connects, install the
@@ -1885,11 +2047,9 @@ fn hyperbeam_recharge_install(
     HandlerResult::Unchanged
 }
 
-/// `DamagingHit` hook (every record): Thrash / Petal Dance lock-in. Re-homes
-/// `apply_thrash` (`multi_turn_effects.rs`): first use rolls a 2–3 counter and
-/// installs `LockedMove`; each forced re-use decrements it and, on exhaustion, the
-/// user self-confuses ((rng & 7).max(1) turns — the Gen-1 fatigue). Keyed on
-/// ThrashPetalDanceEffect → inert for every other move (draws no rng then).
+/// Thrash starts before the hit test. Continuations tick after the status gates,
+/// even on misses; the final continuation installs 2–5 turns of fatigue without
+/// running the confusion gate until the next turn (core.asm:3538-3550).
 fn thrash_lockin(
     ctx: &mut BattleCtx<'_, PokeredRules>,
     _relay: RelayVar,
@@ -1916,19 +2076,16 @@ fn thrash_lockin(
         };
         if ended {
             ctx.effects.remove(idx);
-            let turns = (ctx.rng.next_u8() & 0x07).max(1);
-            if !ctx
-                .effects
-                .iter()
-                .any(|e| e.host == source && matches!(e.kind, PokeVolatile::Confused { .. }))
-            {
-                ctx.effects.push(EffectState {
-                    id: EffectId(0x50_030 + if source.side == 0 { 0 } else { 1 }),
-                    host: source,
-                    effect_order: 970,
-                    kind: PokeVolatile::Confused { turns },
-                });
-            }
+            ctx.effects.push(EffectState { id: EffectId(0x50_0f4 + source.side as u32),
+                host: source, effect_order: 968, kind: PokeVolatile::LockEnded });
+            let turns = (ctx.rng.next_u8() & 0x03) + 2;
+            ctx.effects.retain(|entry| !(entry.host == source
+                && matches!(entry.kind, PokeVolatile::Confused { .. })));
+            ctx.effects.push(EffectState {
+                id: EffectId(0x50_030 + if source.side == 0 { 0 } else { 1 }),
+                host: source, effect_order: 970,
+                kind: PokeVolatile::Confused { turns },
+            });
         }
     } else {
         let counter = (ctx.rng.next_u8() & 0x01) + 2;
@@ -1979,51 +2136,73 @@ fn rage_manage(
     HandlerResult::Unchanged
 }
 
-/// `DamagingHit` hook (every record): trapping moves (Wrap/Bind/Fire Spin/Clamp).
-/// Re-homes `apply_trapping`: first HIT rolls 2–5 turns and installs `Trapping`
-/// (`turns_left = turns − 1`, the legacy `num_attacks_left`); each forced re-use
-/// decrements it and clears at 0. The forced re-hit deals the per-turn damage; the
-/// foe is bound via `forced_action`. Keyed on TrappingEffect → inert otherwise.
+/// AI selection returns CANNOT_MOVE for an enemy trapped at turn entry;
+/// ExecuteEnemyMove returns before all status gates in that case (core.asm:5439).
+fn enemy_held_at_entry_gate(
+    ctx: &mut BattleCtx<'_, PokeredRules>, _relay: RelayVar,
+    _target: BattlerRef, source: BattlerRef, _eff: EffectId,
+) -> HandlerResult {
+    if source.side == 1 && ctx.battler(source).resources.current(RES_HELD_AT_ENTRY) == Some(1) {
+        return HandlerResult::Fail;
+    }
+    HandlerResult::Unchanged
+}
+
+/// Held-in-place follows sleep/freeze and precedes flinch in the original.
+/// A zero counter stays active until both actors finish, then the adapter applies
+/// CheckNumAttacksLeft, so the foe also loses the final continuation turn.
+fn held_in_place_gate(
+    ctx: &mut BattleCtx<'_, PokeredRules>, _relay: RelayVar,
+    _target: BattlerRef, source: BattlerRef, _eff: EffectId,
+) -> HandlerResult {
+    let foe = BattlerRef::new(if source.side == 0 { 1 } else { 0 }, source.slot);
+    if ctx.effects.iter().any(|entry| entry.host == foe
+        && matches!(entry.kind, PokeVolatile::Trapping { .. })) {
+        return HandlerResult::Fail;
+    }
+    HandlerResult::Unchanged
+}
+
+fn trapping_continuation_damage(ctx: &BattleCtx<'_, PokeredRules>, source: BattlerRef) -> Option<u16> {
+    ctx.effects.iter().find_map(|entry| match entry.kind {
+        PokeVolatile::TrappingContinuation { damage } if entry.host == source => Some(damage),
+        _ => None,
+    })
+}
+
+/// First use installs the duration before testing the hit and clears target
+/// recharge even on a miss. A continuation decrements and reuses shared wDamage,
+/// skipping CriticalHitTest, damage calculation and MoveHitTest entirely.
 fn trapping_lockin(
-    ctx: &mut BattleCtx<'_, PokeredRules>,
-    _relay: RelayVar,
-    _target: BattlerRef,
-    source: BattlerRef,
-    _eff: EffectId,
+    ctx: &mut BattleCtx<'_, PokeredRules>, _relay: RelayVar,
+    target: BattlerRef, source: BattlerRef, _eff: EffectId,
 ) -> HandlerResult {
     if current_move_for(source).effect != MoveEffect::TrappingEffect {
         return HandlerResult::Unchanged;
     }
-    let existing = ctx
-        .effects
-        .iter()
-        .position(|e| e.host == source && matches!(e.kind, PokeVolatile::Trapping { .. }));
+    let existing = ctx.effects.iter().position(|entry| entry.host == source
+        && matches!(entry.kind, PokeVolatile::Trapping { .. }));
     if let Some(idx) = existing {
-        let ended = {
-            let PokeVolatile::Trapping { turns_left, .. } = &mut ctx.effects[idx].kind else {
-                return HandlerResult::Unchanged;
-            };
-            if *turns_left > 0 {
-                *turns_left -= 1;
-            }
-            *turns_left == 0
-        };
-        if ended {
-            ctx.effects.remove(idx);
+        if let PokeVolatile::Trapping { turns_left, .. } = &mut ctx.effects[idx].kind {
+            *turns_left = turns_left.saturating_sub(1);
         }
+        let damage = shared_damage(ctx);
+        ctx.effects.push(EffectState {
+            id: EffectId(0x50_0f2 + if source.side == 0 { 0 } else { 1 }),
+            host: source, effect_order: 967,
+            kind: PokeVolatile::TrappingContinuation { damage },
+        });
     } else {
-        // Gen-1: 2–5 turns with the multi-hit WEIGHTS (3/8 each for 2/3, 1/8
-        // each for 4/5 — effects.asm TrappingEffect re-rolls `& 3` when the
-        // first draw ≥ 2; `determine_hit_count` is the single-byte equivalent);
-        // store turns − 1.
-        let turns = crate::battle::effects::multi_hit_effects::determine_hit_count(ctx.rng.next_u8());
+        ctx.effects.retain(|entry| !(entry.host == target
+            && matches!(entry.kind, PokeVolatile::Recharge)));
+        // effects.asm:1092: first &3 byte; conditionally draw again when >=2.
+        let mut remaining = ctx.rng.next_u8() & 3;
+        if remaining >= 2 { remaining = ctx.rng.next_u8() & 3; }
         ctx.effects.push(EffectState {
             id: EffectId(0x50_036 + if source.side == 0 { 0 } else { 1 }),
-            host: source,
-            effect_order: 966,
+            host: source, effect_order: 966,
             kind: PokeVolatile::Trapping {
-                move_: current_move_for(source).id,
-                turns_left: turns - 1,
+                move_: current_move_for(source).id, turns_left: remaining + 1,
             },
         });
     }
@@ -2067,6 +2246,19 @@ fn pokered_defrost(
     HandlerResult::Unchanged
 }
 
+fn sleep_install(ctx: &mut BattleCtx<'_, PokeredRules>, _relay: RelayVar,
+    target: BattlerRef, source: BattlerRef, _eff: EffectId) -> HandlerResult {
+    if current_move_for(source).effect != MoveEffect::SleepEffect || ctx.battler(target).status.is_some() {
+        return HandlerResult::Unchanged;
+    }
+    let turns = loop {
+        let r = ctx.rng.next_u8() & 7;
+        if r != 0 { break r; }
+    };
+    ctx.battler_mut(target).status = Some(LegacyStatus::Sleep(turns));
+    HandlerResult::Unchanged
+}
+
 /// `DamagingHit` hook (every record): Transform. Copies the target's identity
 /// (species / stats / stat-stages / moves) onto the user's ENGINE battler and pushes
 /// the one-shot `Transformed` marker so `write_party` persists it to the legacy
@@ -2082,6 +2274,12 @@ fn transform_install(
     if current_move_for(source).effect != MoveEffect::TransformEffect {
         return HandlerResult::Unchanged;
     }
+    let types = effective_types(ctx, target);
+    let unmodified = crate::battle::badge_boosts::unmodified_stats(ctx.battler(target));
+    let copied_resources: [u16; 3] = core::array::from_fn(|idx| {
+        let id = [RES_DV0, RES_DV1, RES_CATCH_RATE][idx];
+        ctx.battler(target).resources.current(id).unwrap_or(0xff)
+    });
     let (species, stats, stages, moves) = {
         let d = ctx.battler(target);
         (d.species, d.stats.clone(), d.stat_stages.clone(), d.moves.clone())
@@ -2092,7 +2290,17 @@ fn transform_install(
         a.stats = stats;
         a.stat_stages = stages;
         a.moves = moves;
+        bind_types(a, types);
+        crate::battle::badge_boosts::set_unmodified_stats(a, unmodified);
+        for (id, value) in [RES_DV0, RES_DV1, RES_CATCH_RATE].into_iter().zip(copied_resources) {
+            a.resources.set(id, value, 255);
+        }
     }
+    if source.side == 1 && ctx.battler(source).resources.current(RES_FINITE_PP) != Some(1) {
+        let raw = enemy_critical_stats(ctx.battler(source));
+        bind_critical_stats(ctx.battler_mut(source), raw);
+    }
+    install_type_override(ctx, source, types);
     if !ctx
         .effects
         .iter()
@@ -2126,6 +2334,12 @@ fn conversion_install(
         return HandlerResult::Unchanged;
     }
     let (type1, type2) = effective_types(ctx, target);
+    bind_types(ctx.battler_mut(source), (type1, type2));
+    install_type_override(ctx, source, (type1, type2));
+    HandlerResult::Unchanged
+}
+
+fn install_type_override(ctx: &mut BattleCtx<'_ , PokeredRules>, source: BattlerRef, (type1, type2): (PokemonType, PokemonType)) {
     // Replace any prior override on the user (a re-Conversion re-copies).
     ctx.effects
         .retain(|e| !(e.host == source && matches!(e.kind, PokeVolatile::TypeOverride { .. })));
@@ -2135,21 +2349,11 @@ fn conversion_install(
         effect_order: 973,
         kind: PokeVolatile::TypeOverride { type1, type2 },
     });
-    HandlerResult::Unchanged
 }
 
-/// `DamagingHit` hook (every record): Disable. Disables the TARGET's last-used move
-/// for `(rng & 7) + 1` turns (legacy `apply_disable`). The target's prior move rides
-/// [`last_move_live`] (the engine battler carries no last-move field); the slot is its
-/// position in the compacted engine `moves` (1-based, == the legacy `disabled_move`
-/// full-array slot for a gapless moveset — the Gen-1 norm). Fails (no-op) if the target
-/// is already disabled or has no last move in a slot — matching the oracle's
-/// `StatusFailed`. Keyed on DisableEffect; fires only on a connecting Disable.
-///
-/// The oracle's `pp[i] > 0` guard is enforced UPSTREAM: the production loop primes
-/// [`last_move_live`] via `disable_target_last_move`, which yields `None` for an
-/// out-of-PP last move — so this handler naturally no-ops on it, exactly like
-/// `apply_disable`. (The decoupled harness primes `last_move_live` directly.)
+/// Connecting Disable selects a random known move, rejecting empty slots and
+/// depleted PP on player/link targets, then stores a one-based slot and 1–8 turns.
+/// Ordinary non-link opponents have infinite PP, as in effects.asm.
 fn disable_install(
     ctx: &mut BattleCtx<'_, PokeredRules>,
     _relay: RelayVar,
@@ -2168,12 +2372,13 @@ fn disable_install(
     {
         return HandlerResult::Unchanged;
     }
-    let last = last_move_live(target);
-    if last == MoveId::None {
-        return HandlerResult::Unchanged;
-    }
-    let Some(slot) = ctx.battler(target).moves.iter().position(|m| *m == last) else {
-        return HandlerResult::Unchanged;
+    let finite = target.side == 0 || ctx.battler(target).resources.current(RES_FINITE_PP) == Some(1);
+    let eligible: [bool; 4] = core::array::from_fn(|slot| ctx.battler(target).moves.get(slot).is_some_and(|m| *m != MoveId::None)
+        && (!finite || ctx.battler(target).resources.current(RES_PP_BASE + slot as u16).unwrap_or(1) != 0));
+    if !eligible.iter().any(|ok| *ok) { return HandlerResult::Unchanged; }
+    let slot = loop {
+        let slot = (ctx.rng.next_u8() & 3) as usize;
+        if eligible[slot] { break slot; }
     };
     let turns = (ctx.rng.next_u8() & 0x07) + 1; // (roll & 7) + 1, min 1 — matches apply_disable
     ctx.effects.push(EffectState {
@@ -2185,6 +2390,33 @@ fn disable_install(
             turns,
         },
     });
+    HandlerResult::Unchanged
+}
+
+/// ROM Mimic selects a known slot, never the opponent's previous action.
+fn mimic_install(ctx: &mut BattleCtx<'_, PokeredRules>, _relay: RelayVar,
+    target: BattlerRef, source: BattlerRef, _eff: EffectId) -> HandlerResult {
+    if current_move_for(source).effect != MoveEffect::MimicEffect { return HandlerResult::Unchanged; }
+    let moves = ctx.battler(target).moves.clone();
+    if !moves.iter().any(|m| *m != MoveId::None) { return HandlerResult::Unchanged; }
+    if source.side == 0 && MIMIC_INTERACTIVE.with(|c| c.get()) && MIMIC_CHOICE.with(|c| c.get()).is_none() {
+        MIMIC_REQUEST.with(|c| *c.borrow_mut() = Some(moves));
+        return HandlerResult::Unchanged;
+    }
+    let slot = if source.side == 0 && MIMIC_CHOICE.with(|c| c.get()).is_some() {
+        MIMIC_CHOICE.with(|c| c.get()).unwrap()
+    } else {
+        loop { let slot = (ctx.rng.next_u8() & 3) as usize;
+            if moves.get(slot).is_some_and(|m| *m != MoveId::None) { break slot; }
+        }
+    };
+    let Some(&copied) = moves.get(slot) else { return HandlerResult::Unchanged; };
+    let Some(own) = ctx.battler(source).resources.current(RES_SELECTED_SLOT).map(|slot| slot as usize)
+        .or_else(|| ctx.battler(source).moves.iter().position(|m| *m == MoveId::Mimic)) else { return HandlerResult::Unchanged; };
+    if own >= ctx.battler(source).moves.len() { return HandlerResult::Unchanged; }
+    ctx.battler_mut(source).moves[own] = copied;
+    ctx.effects.push(EffectState { id: EffectId(0x50_080 + source.side as u32), host: source,
+        effect_order: 975, kind: PokeVolatile::Mimicked });
     HandlerResult::Unchanged
 }
 
@@ -2347,6 +2579,7 @@ fn haze_reset(
                 | PokeVolatile::LeechSeed
                 | PokeVolatile::Toxic { .. }
                 | PokeVolatile::FocusEnergy
+                | PokeVolatile::XAccuracy
                 | PokeVolatile::Mist
                 | PokeVolatile::LightScreen
                 | PokeVolatile::Reflect
@@ -2474,81 +2707,49 @@ fn absorb_into_substitute(
     true
 }
 
-/// The damage the host took this turn (its per-turn `DamageTaken` scratch, 0 if
-/// none). Shared by Bide's accumulator.
-fn damage_taken_this_turn(ctx: &BattleCtx<'_, PokeredRules>, who: BattlerRef) -> u16 {
-    ctx.effects
-        .iter()
-        .find_map(|e| match &e.kind {
-            PokeVolatile::DamageTaken { amount, .. } if e.host == who => Some(*amount),
-            _ => None,
-        })
-        .unwrap_or(0)
-}
-
-/// `Residual` handler for the Bide volatile: fold the damage taken this turn into the
-/// accumulator, decrement the store counter, and on exhaustion unleash `accumulated
-/// × 2` (Gen-1 bug #18: ×2, not ×3) onto the opponent via the load-bearing `pair_mut`.
-/// Draws no rng; self-guards on a fainted host.
-fn bide_residual(
-    ctx: &mut BattleCtx<'_, PokeredRules>,
-    _relay: RelayVar,
-    target: BattlerRef,
-    _source: BattlerRef,
-    _eff: EffectId,
+/// Bide accumulates the original shared wDamage, then decrements before the
+/// user's action, not during residual processing (core.asm:3493-3533). Both the
+/// accumulator and doubling use the original 16-bit wrapping arithmetic.
+fn bide_before_move(
+    ctx: &mut BattleCtx<'_, PokeredRules>, _relay: RelayVar,
+    _target: BattlerRef, source: BattlerRef, _eff: EffectId,
 ) -> HandlerResult {
-    let host = target;
-    let Some(idx) = ctx
-        .effects
-        .iter()
-        .position(|e| e.host == host && matches!(e.kind, PokeVolatile::Bide { .. }))
-    else {
+    let Some(idx) = ctx.effects.iter().position(|entry| entry.host == source
+        && matches!(entry.kind, PokeVolatile::Bide { .. })) else {
         return HandlerResult::Unchanged;
     };
-    let taken = damage_taken_this_turn(ctx, host);
-    let (unleash, total) = {
-        let PokeVolatile::Bide { accumulated, turns_left } = &mut ctx.effects[idx].kind else {
+    let taken = shared_damage(ctx);
+    let (remaining, total) = {
+        let PokeVolatile::Bide { turns_left, accumulated } = &mut ctx.effects[idx].kind else {
             return HandlerResult::Unchanged;
         };
-        *accumulated = accumulated.saturating_add(taken);
-        if *turns_left > 0 {
-            *turns_left -= 1;
-        }
-        (*turns_left == 0, *accumulated)
+        *accumulated = accumulated.wrapping_add(taken);
+        *turns_left = turns_left.saturating_sub(1);
+        (*turns_left, *accumulated)
     };
-    if unleash {
-        ctx.effects.remove(idx);
-        let release = total.saturating_mul(2);
-        let opponent = BattlerRef::new(if host.side == 0 { 1 } else { 0 }, host.slot);
-        let (host_mon, opp_mon) = ctx.pair_mut(host, opponent);
-        if host_mon.hp > 0 {
-            opp_mon.take_damage(release);
-        }
+    if remaining != 0 {
+        return HandlerResult::Fail;
     }
+    ctx.effects.remove(idx);
+    let damage = total.wrapping_mul(2);
+    // Original release changes the live move-power byte to 1. Counter later in
+    // the turn reads that byte, even though Bide's authored base power is zero.
+    let mut selected = current_move_for(source);
+    selected.power = 1;
+    set_current_move(source, selected);
+    set_shared_damage(ctx, damage);
+    ctx.effects.push(EffectState {
+        id: EffectId(0x50_0f4 + source.side as u32), host: source, effect_order: 968,
+        kind: PokeVolatile::BideEnded { damage },
+    });
+    // The normal Damage fold applies the release, so a Substitute absorbs it.
     HandlerResult::Unchanged
 }
 
-/// The leaked `&'static` Bide residual effect (one `Residual` hook). Returned by
-/// `effect_for_volatile` for a `Bide` volatile so the driver ticks it each turn.
-fn bide_residual_effect() -> &'static Effect<PokeredRules> {
-    use crate::sync_compat::OnceLock;
-    static EFF: OnceLock<&'static Effect<PokeredRules>> = OnceLock::new();
-    EFF.get_or_init(|| {
-        let hooks: &'static [EventHook<PokeredRules>] = Box::leak(
-            vec![EventHook {
-                event: Event::Residual,
-                call: bide_residual,
-                order: 100,
-                priority: 0,
-                sub_order: None,
-            }]
-            .into_boxed_slice(),
-        );
-        Box::leak(Box::new(Effect {
-            id: EffectId(0x40_010),
-            kind: EffectType::Move,
-            hooks,
-        }))
+fn bide_release_damage(ctx: &BattleCtx<'_, PokeredRules>, source: BattlerRef) -> Option<u16> {
+    ctx.effects.iter().find_map(|entry| match entry.kind {
+        PokeVolatile::BideEnded { damage } if entry.host == source => Some(damage),
+        _ => None,
     })
 }
 
@@ -2904,17 +3105,12 @@ fn species_types(s: Species) -> (PokemonType, PokemonType) {
 }
 
 /// The battler's EFFECTIVE types: a live [`PokeVolatile::TypeOverride`] (Conversion)
-/// if present on `who`, else the species-derived types. Every in-turn type read that
+/// if present on `who`, else the adapter's current battle types. Every in-turn type read that
 /// must honour Conversion routes through here — the damage formula's attacker types
 /// (STAB) and defender types (effectiveness / type-immunity), plus the
 /// self-type-immunity quirk (`move_type_is_defender_type`).
-///
-/// KNOWN LIMITATION: the `HasType` binding (`has_type`, the `VetoIf(HasType(..))`
-/// status-move type-immunity predicate) receives only `&EngineBattler` — no
-/// `BattleCtx` and no `BattlerRef` — so it cannot reach the arena override and stays
-/// species-based. A Conversion therefore does not alter *status-move* type immunity
-/// (e.g. becoming Poison-type mid-battle to dodge a poison), an extremely narrow
-/// interaction; covering it would need an engine trait-signature change.
+/// Conversion also updates battler resources so `HasType` status-immunity checks
+/// observe the same effective types without needing access to the effect arena.
 fn effective_types(ctx: &BattleCtx<'_, PokeredRules>, who: BattlerRef) -> (PokemonType, PokemonType) {
     if let Some((t1, t2)) = ctx.effects.iter().find_map(|e| match &e.kind {
         PokeVolatile::TypeOverride { type1, type2 } if e.host == who => Some((*type1, *type2)),
@@ -2922,7 +3118,7 @@ fn effective_types(ctx: &BattleCtx<'_, PokeredRules>, who: BattlerRef) -> (Pokem
     }) {
         return (t1, t2);
     }
-    species_types(ctx.battler(who).species)
+    bound_types(ctx.battler(who))
 }
 
 /// Re-homes the `accuracy.rs` scaling chain (percentage→255, accuracy stage
@@ -2938,6 +3134,28 @@ fn scaled_accuracy(move_accuracy: u8, acc_stage: i8, eva_stage: i8) -> u8 {
     let (en, ed) = STAGE_RATIOS[((-eva_stage) + 6) as usize];
     accuracy = accuracy * en / ed;
     accuracy.min(255) as u8
+}
+
+pub(super) fn move_rolls_accuracy(effect: MoveEffect) -> bool {
+    !matches!(effect,
+        MoveEffect::AttackUp1Effect | MoveEffect::DefenseUp1Effect
+        | MoveEffect::SpeedUp1Effect | MoveEffect::SpecialUp1Effect
+        | MoveEffect::AccuracyUp1Effect | MoveEffect::EvasionUp1Effect
+        | MoveEffect::AttackUp2Effect | MoveEffect::DefenseUp2Effect
+        | MoveEffect::SpeedUp2Effect | MoveEffect::SpecialUp2Effect
+        | MoveEffect::AccuracyUp2Effect | MoveEffect::EvasionUp2Effect
+        | MoveEffect::HealEffect | MoveEffect::MistEffect | MoveEffect::FocusEnergyEffect
+        | MoveEffect::LightScreenEffect | MoveEffect::ReflectEffect | MoveEffect::HazeEffect
+        | MoveEffect::ConversionEffect | MoveEffect::TransformEffect
+        | MoveEffect::SubstituteEffect | MoveEffect::SplashEffect
+        | MoveEffect::SwitchAndTeleportEffect | MoveEffect::MirrorMoveEffect)
+}
+
+pub(super) fn recovery_fails(b: &EngineBattler<PokeredRules>) -> bool {
+    // HealEffect compares high bytes, then ignores that result except carry
+    // into the low-byte SBC. This preserves failures at deficits 255/511.
+    let borrow = u8::from((b.hp >> 8) < (b.max_hp >> 8));
+    (b.hp as u8).wrapping_sub(b.max_hp as u8).wrapping_sub(borrow) == 0
 }
 
 /// Sanity helper for tests: assert the op-list of a record id contains an op.

@@ -351,6 +351,7 @@ fn haze_reset(
                 | PokeVolatile::LeechSeed
                 | PokeVolatile::Toxic { .. }
                 | PokeVolatile::FocusEnergy
+                | PokeVolatile::XAccuracy
                 | PokeVolatile::Mist
                 | PokeVolatile::LightScreen
                 | PokeVolatile::Reflect
@@ -393,6 +394,9 @@ fn rest_heal(
     source: BattlerRef,
     _eff: EffectId,
 ) -> HandlerResult {
+    if super::recovery_fails(ctx.battler(source)) {
+        return HandlerResult::Fail;
+    }
     let max = ctx.battler(source).max_hp;
     let b = ctx.battler_mut(source);
     b.hp = max;
@@ -791,7 +795,9 @@ pub fn confusion_gate(
     let roll = ctx.rng.next_u8();
     if roll < 128 {
         let self_damage = confusion_self_hit_damage(ctx, source);
+        super::set_shared_damage(ctx, self_damage.min(ctx.battler(source).hp));
         ctx.battler_mut(source).take_damage(self_damage);
+        cancel_multiturn_after_status(ctx, source, false);
         return HandlerResult::Fail; // hit itself → move aborted
     }
     HandlerResult::Unchanged // confused but acts this turn
@@ -809,6 +815,7 @@ pub fn paralysis_gate(
     if ctx.battler(source).status == Some(StatusCondition::Paralysis) {
         let roll = ctx.rng.next_u8();
         if roll < 63 {
+            cancel_multiturn_after_status(ctx, source, true);
             return HandlerResult::Fail; // fully paralyzed → move aborted
         }
     }
@@ -831,20 +838,37 @@ fn confusion_self_hit_damage(ctx: &BattleCtx<'_, PokeredRules>, who: BattlerRef)
         move_id: pokered_data::moves::MoveId::None,
         attack_stat: atk,
         defense_stat: def,
-        attack_stage: 0,
-        defense_stage: 0,
-        attacker_type1: PokemonType::Normal,
-        attacker_type2: PokemonType::Normal,
+        attack_stage: b.stat_stages.get(StatIndex::Attack).copied().unwrap_or(0),
+        defense_stage: b.stat_stages.get(StatIndex::Defense).copied().unwrap_or(0),
+        // Neutral synthetic types avoid STAB and any type-chart multiplier.
+        attacker_type1: PokemonType::Fire,
+        attacker_type2: PokemonType::Fire,
         defender_type1: PokemonType::Normal,
         defender_type2: PokemonType::Normal,
         is_critical: false,
         random_value: 255,
-        has_reflect_or_light_screen: false,
+        // GetDamageVars still consults the opposite side's Reflect bit while
+        // its defense word has temporarily been replaced by the user's own.
+        has_reflect_or_light_screen: ctx.effects.iter().any(|e|
+            e.host == opposing(who) && matches!(e.kind, PokeVolatile::Reflect)),
         is_explode_effect: false,
-        // Confusion self-hit is typeless and unaffected by burn.
-        attacker_burned: false,
+        attacker_burned: b.status == Some(StatusCondition::Burn),
     };
     calculate_damage(&params).damage
+}
+
+fn cancel_multiturn_after_status(ctx: &mut BattleCtx<'_, PokeredRules>, who: BattlerRef, preserve_invulnerable: bool) {
+    let invulnerable = preserve_invulnerable && ctx.effects.iter().any(|e| e.host == who &&
+        matches!(e.kind, PokeVolatile::Charging { invulnerable: true, .. }));
+    ctx.effects.retain(|e| !(e.host == who && matches!(e.kind,
+        PokeVolatile::Charging { .. } | PokeVolatile::Trapping { .. }
+        | PokeVolatile::LockedMove { .. } | PokeVolatile::Bide { .. })));
+    if !preserve_invulnerable {
+        ctx.effects.retain(|e| !(e.host == who && matches!(e.kind, PokeVolatile::Invulnerable)));
+    }
+    if invulnerable {
+        set_vol(ctx, who, PokeVolatile::Invulnerable);
+    }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
