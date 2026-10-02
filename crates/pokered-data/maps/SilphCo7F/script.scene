@@ -174,10 +174,12 @@ game_scene SilphCo7F {
       @speaker("") {
         @t("Oh! Hi! You're not a ROCKET!\nYou came to save us? Why,\nthank you!\n\nI want you to have this\nPOKeMON for saving us.", "哦！嗨！你不是火箭队队员！你\n是来救我们的？啊，谢谢你！\n\n我想让你收下这只宝可梦作为救\n我们的谢礼。")
       }
-      givePokemon("LAPRAS", 15)
-      setFlag("EVENT_GOT_LAPRAS")
-      @speaker("") {
-        @t("It's LAPRAS. It's very\nintelligent.\n\nWe kept it in our lab, but\nit will be much better off\nwith you!\n\nI think you will be a good\ntrainer for LAPRAS!\n\nIt's a good swimmer. It'll\ngive you a lift!", "它是拉普拉斯。非常聪明。\n\n我们一直把它养在研究所里，不\n过跟着你会更好！\n\n我想你会是拉普拉斯的好训练\n家！\n\n它很擅长游泳，能载你一程！")
+      given = givePokemon("LAPRAS", 15)
+      @if (given) {
+        setFlag("EVENT_GOT_LAPRAS")
+        @speaker("") {
+          @t("It's LAPRAS. It's very\nintelligent.\n\nWe kept it in our lab, but\nit will be much better off\nwith you!\n\nI think you will be a good\ntrainer for LAPRAS!\n\nIt's a good swimmer. It'll\ngive you a lift!", "它是拉普拉斯。非常聪明。\n\n我们一直把它养在研究所里，不\n过跟着你会更好！\n\n我想你会是拉普拉斯的好训练\n家！\n\n它很擅长游泳，能载你一程！")
+        }
       }
     } @else {
       @if (getFlag("EVENT_BEAT_SILPH_CO_GIOVANNI")) {

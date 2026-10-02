@@ -118,7 +118,7 @@ game_scene VictoryRoad2F {
       }
       // Static wild Lv50 MOLTRES battle (catchable); flag set only on win/catch.
       result = startWildBattle("MOLTRES", 50)
-      @if (result == "win" || result == "caught") {
+      @if (result == "win" || result == "caught" || result == "ran" || result == "fled") {
         setFlag("EVENT_BEAT_MOLTRES")
         hideObjectByName("VICTORY_ROAD_2F_OBJ_6")
       }

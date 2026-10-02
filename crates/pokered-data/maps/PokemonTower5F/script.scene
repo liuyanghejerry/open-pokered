@@ -7,15 +7,9 @@
 // NUGGET (NPC 6), and an on-step "purified zone" heal cutscene. The original
 // healed the party + faded the screen when the player stood on coords
 // (10,8)/(11,8)/(10,9)/(11,9), guarded by EVENT_IN_PURIFIED_ZONE (set on enter,
-// reset when leaving). We approximate with heal()+fade+text, re-armed on map load.
+// reset when leaving). The runtime re-arms it on leaving and suppresses battles.
 
 game_scene PokemonTower5F {
-  // Re-arm the purified-zone trigger on every map entry (the original resets
-  // EVENT_IN_PURIFIED_ZONE in its per-frame default script when you leave the zone).
-  @load {
-    resetFlag("EVENT_IN_PURIFIED_ZONE")
-  }
-
   // ── Channeler 1 (npc 1) — non-trainer, guards the purified rest zone ──────
   @storyline("talkChanneler1") {
     @trigger(map = "PokemonTower5F", npc = 1)
@@ -77,7 +71,6 @@ game_scene PokemonTower5F {
     @trigger(map = "PokemonTower5F", name = "purifiedZone1")
     @if (!getFlag("EVENT_IN_PURIFIED_ZONE")) {
       setFlag("EVENT_IN_PURIFIED_ZONE")
-      fadeOutMusic()
       heal()
       @speaker("") {
         @t("Entered purified, protected\nzone!\n\n<PLAYER>'s POKeMON are fully\nhealed!", "进入了净化保护区！\n\n<PLAYER>的宝可梦已完全治愈！")

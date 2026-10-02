@@ -1879,6 +1879,7 @@ fn completed_static_encounters_hidden_from_persistent_events() {
         (MapId::PowerPlant, 9, "EVENT_BEAT_ZAPDOS"),
         (MapId::SeafoamIslandsB4F, 3, "EVENT_BEAT_ARTICUNO"),
         (MapId::VictoryRoad2F, 6, "EVENT_BEAT_MOLTRES"),
+        (MapId::CeruleanCaveB1F, 1, "EVENT_BEAT_MEWTWO"),
     ].into_iter().chain((0..8).map(|i| (MapId::PowerPlant, i+1, [
         "EVENT_BEAT_POWER_PLANT_VOLTORB_0", "EVENT_BEAT_POWER_PLANT_VOLTORB_1",
         "EVENT_BEAT_POWER_PLANT_VOLTORB_2", "EVENT_BEAT_POWER_PLANT_VOLTORB_3",

@@ -61,6 +61,5 @@
       "toggleId": "POKEMON_TOWER_5F_OBJ_6"
     }
   ],
-  "onLoad": "PokemonTower5FOnLoad",
   "signs": []
 }

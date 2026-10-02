@@ -2451,4 +2451,204 @@ mod tests {
             "shared bare binding must be restored"
         );
     }
+    // Drive real embedded map handlers, including command-return values, rather
+    // than asserting their source spelling. The caller chooses menu responses.
+    fn drive_fidelity_scene(
+        engine: &mut NativeScriptEngine,
+        handler: &str,
+        gift_ok: bool,
+        outcome: &str,
+        choices: &[usize],
+    ) -> Vec<ScriptCommand> {
+        let mut next = engine.call_function_no_args(handler).unwrap();
+        let mut commands = Vec::new();
+        let mut choices = choices.iter();
+        for _ in 0..150 {
+            let Some(command) = next else {
+                assert!(engine.is_idle());
+                return commands;
+            };
+            let result = match &command {
+                ScriptCommand::GiveMonster { .. } | ScriptCommand::GiveItem { .. } => CommandResult::Bool(gift_ok),
+                ScriptCommand::StartBattle { .. } | ScriptCommand::StartWildBattle { .. } => {
+                    CommandResult::Text(outcome.into())
+                }
+                ScriptCommand::ShowChoice { .. } => {
+                    CommandResult::Number(*choices.next().expect("menu response") as f64)
+                }
+                _ => CommandResult::Void,
+            };
+            commands.push(command);
+            next = engine.signal_done(result).unwrap();
+        }
+        panic!("handler {handler} did not finish");
+    }
+
+    #[test]
+    fn fidelity_gifts_commit_choice_and_lapras_only_after_delivery() {
+        for (map, handler, flag, toggle) in [
+            ("SilphCo7F", "talkSilphWorkerM1", "EVENT_GOT_LAPRAS", ""),
+            ("FightingDojo", "talkHitmonleeBall", "EVENT_GOT_HITMONLEE", "FIGHTINGDOJO_HITMONLEE_POKE_BALL"),
+            ("FightingDojo", "talkHitmonchanBall", "EVENT_GOT_HITMONCHAN", "FIGHTINGDOJO_HITMONCHAN_POKE_BALL"),
+        ] {
+            for success in [false, true] {
+                let scene = pokered_data::embedded_scenes::get_scene_ast(map).unwrap();
+                let mut engine = NativeScriptEngine::new();
+                engine.load_map(map, &scene);
+                let commands = drive_fidelity_scene(&mut engine, handler, success, "", &[0]);
+                assert_eq!(commands.iter().filter(|c| matches!(c, ScriptCommand::GiveMonster { .. })).count(), 1);
+                assert_eq!(engine.get_flag(flag), success, "{map} {handler}");
+                if !toggle.is_empty() {
+                    assert_eq!(commands.iter().any(|c| matches!(c, ScriptCommand::HideObjectByName { toggle_id } if toggle_id == toggle)), success);
+                    assert_eq!(engine.get_flag("EVENT_DEFEATED_FIGHTING_DOJO"), success);
+                } else {
+                    assert_eq!(commands.iter().any(|c| matches!(c, ScriptCommand::ShowText { text } if text.starts_with("It's LAPRAS."))), success);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn fidelity_fossils_remain_ready_after_a_full_box_and_can_be_retried() {
+        let scene = pokered_data::embedded_scenes::get_scene_ast("CinnabarLabFossilRoom").unwrap();
+        for species in ["KABUTO", "OMANYTE", "AERODACTYL"] {
+            let mut engine = NativeScriptEngine::new();
+            engine.load_map("CinnabarLabFossilRoom", &scene);
+            let reviving = format!("EVENT_REVIVING_{species}");
+            engine.set_flag("EVENT_GAVE_FOSSIL_TO_LAB", true);
+            engine.set_flag(&reviving, true);
+            let commands = drive_fidelity_scene(&mut engine, "talkScientist1", false, "", &[]);
+            assert!(commands.contains(&ScriptCommand::GiveMonster { species: species.into(), level: 30 }));
+            assert!(engine.get_flag("EVENT_GAVE_FOSSIL_TO_LAB"));
+            assert!(engine.get_flag(&reviving));
+            // The original sets HANDING_OVER before the failed GivePokemon.
+            assert!(engine.get_flag("EVENT_LAB_HANDING_OVER_FOSSIL_MON"));
+            drive_fidelity_scene(&mut engine, "talkScientist1", true, "", &[]);
+            assert!(!engine.get_flag("EVENT_GAVE_FOSSIL_TO_LAB"));
+            assert!(!engine.get_flag(&reviving));
+            assert!(!engine.get_flag("EVENT_LAB_HANDING_OVER_FOSSIL_MON"));
+        }
+    }
+
+    #[test]
+    fn fidelity_pokemon_prizes_require_confirmation_and_charge_only_after_delivery() {
+        let scene = pokered_data::embedded_scenes::get_scene_ast("GameCornerPrizeRoom").unwrap();
+        for version in [0.0, 1.0] {
+            for handler in ["prizeVendor1", "prizeVendor2"] {
+                for selection in 0..3 {
+                    for (confirm, success) in [(1, false), (0, false), (0, true)] {
+                        let mut engine = NativeScriptEngine::new();
+                        engine.load_map("GameCornerPrizeRoom", &scene);
+                        engine.seed_set("bag", &["COIN_CASE".into()]);
+                        engine.seed_number("coins", 9999.0);
+                        engine.seed_number("gameVersion", version);
+                        let commands = drive_fidelity_scene(&mut engine, handler, success, "", &[selection, confirm]);
+                        let delivered = commands.iter().any(|c| matches!(c, ScriptCommand::GiveMonster { .. }));
+                        let charged = commands.iter().any(|c| matches!(c, ScriptCommand::Custom { name, .. } if name == "takeCoins"));
+                        assert_eq!(delivered, confirm == 0);
+                        assert_eq!(charged, confirm == 0 && success, "version {version}, {handler}, selection {selection}");
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn fidelity_tm_prizes_require_confirmation_and_success_before_payment() {
+        let scene = pokered_data::embedded_scenes::get_scene_ast("GameCornerPrizeRoom").unwrap();
+        for selection in 0..3 {
+            for (confirm, success) in [(1, false), (0, false), (0, true)] {
+                let mut engine = NativeScriptEngine::new();
+                engine.load_map("GameCornerPrizeRoom", &scene);
+                engine.seed_set("bag", &["COIN_CASE".into()]);
+                engine.seed_number("coins", 9999.0);
+                let commands = drive_fidelity_scene(&mut engine, "prizeVendor3", success, "", &[selection, confirm]);
+                assert_eq!(commands.iter().any(|c| matches!(c, ScriptCommand::GiveItem { .. })), confirm == 0);
+                assert_eq!(commands.iter().any(|c| matches!(c, ScriptCommand::Custom { name, .. } if name == "takeCoins")), confirm == 0 && success);
+            }
+        }
+    }
+
+    #[test]
+    fn fidelity_static_monsters_are_consumed_by_run_and_poke_doll() {
+        let mut cases: Vec<(&str, String, String)> = vec![
+            ("PowerPlant", "talkZapdos".into(), "EVENT_BEAT_ZAPDOS".into()),
+            ("SeafoamIslandsB4F", "talkArticuno".into(), "EVENT_BEAT_ARTICUNO".into()),
+            ("VictoryRoad2F", "talkMoltres".into(), "EVENT_BEAT_MOLTRES".into()),
+            ("CeruleanCaveB1F", "talkMewtwo".into(), "EVENT_BEAT_MEWTWO".into()),
+        ];
+        for (i, handler) in ["talkVoltorb1", "talkVoltorb2", "talkVoltorb3", "talkElectrode1", "talkVoltorb4", "talkVoltorb5", "talkElectrode2", "talkVoltorb6"].iter().enumerate() {
+            cases.push(("PowerPlant", (*handler).into(), format!("EVENT_BEAT_POWER_PLANT_VOLTORB_{i}")));
+        }
+        for (map, handler, flag) in cases {
+            for outcome in ["win", "caught", "ran", "fled", "lose"] {
+                let scene = pokered_data::embedded_scenes::get_scene_ast(map).unwrap();
+                let mut engine = NativeScriptEngine::new();
+                engine.load_map(map, &scene);
+                let commands = drive_fidelity_scene(&mut engine, &handler, false, outcome, &[]);
+                assert_eq!(engine.get_flag(&flag), outcome != "lose", "{map} {handler} {outcome}");
+                assert_eq!(commands.iter().any(|c| matches!(c, ScriptCommand::HideObjectByName { .. })), outcome != "lose");
+            }
+        }
+    }
+
+    #[test]
+    fn fidelity_snorlax_is_hidden_before_battle_even_after_blackout() {
+        for map in ["Route12", "Route16"] {
+            for outcome in ["win", "caught", "ran", "fled", "lose"] {
+                let scene = pokered_data::embedded_scenes::get_scene_ast(map).unwrap();
+                let mut engine = NativeScriptEngine::new();
+                engine.load_map(map, &scene);
+                engine.seed_set("bag", &["POKE_FLUTE".into()]);
+                let commands = drive_fidelity_scene(&mut engine, "talkSnorlax", false, outcome, &[]);
+                let hide = commands.iter().position(|c| matches!(c, ScriptCommand::HideObjectByName { .. })).unwrap();
+                let battle = commands.iter().position(|c| matches!(c, ScriptCommand::StartWildBattle { .. })).unwrap();
+                assert!(hide < battle);
+                assert!(!engine.get_flag(&format!("EVENT_FIGHT_{}_SNORLAX", map.to_uppercase())));
+                assert_eq!(engine.get_flag(&format!("EVENT_BEAT_{}_SNORLAX", map.to_uppercase())), outcome != "lose");
+                let calmed = commands.iter().any(|c| matches!(c, ScriptCommand::ShowText { text } if text.contains("mountains!")));
+                assert_eq!(calmed, outcome == "win" || outcome == "fled");
+            }
+        }
+    }
+
+    #[test]
+    fn fidelity_lance_walks_reverse_rle_and_keeps_the_exit_locked_after_victory() {
+        let scene = pokered_data::embedded_scenes::get_scene_ast("LancesRoom").unwrap();
+        let mut engine = NativeScriptEngine::new();
+        engine.load_map("LancesRoom", &scene);
+        engine.set_player_position(24, 16);
+        let commands = drive_fidelity_scene(&mut engine, "LancesRoomOnLoad", false, "", &[]);
+        let path = commands.iter().find_map(|c| match c { ScriptCommand::MovePlayerRelative { steps } => Some(steps), _ => None }).unwrap();
+        let expected: Vec<_> = core::iter::repeat((-1,0)).take(6)
+            .chain(core::iter::repeat((0,1)).take(7))
+            .chain(core::iter::repeat((-1,0)).take(12))
+            .chain(core::iter::repeat((0,-1)).take(12)).collect();
+        assert_eq!(*path, expected);
+        assert!(engine.get_flag("EVENT_LANCES_ROOM_LOCK_DOOR"));
+        for handler in ["talkLance", "lanceStep"] {
+            engine.set_flag("EVENT_BEAT_LANCE", false);
+            let commands = drive_fidelity_scene(&mut engine, handler, false, "win", &[]);
+            assert!(engine.get_flag("EVENT_BEAT_LANCE"));
+            assert!(engine.get_flag("EVENT_LANCES_ROOM_LOCK_DOOR"));
+            assert!(!commands.contains(&custom("replaceTileBlock", vec![json!(2), json!(6), json!(49)])));
+        }
+        engine.set_flag("EVENT_BEAT_LANCE", false);
+        engine.set_player_position(6, 11);
+        let commands = drive_fidelity_scene(&mut engine, "LancesRoomOnLoad", false, "", &[]);
+        assert!(!commands.iter().any(|c| matches!(c, ScriptCommand::MovePlayerRelative { .. })));
+    }
+
+    #[test]
+    fn fidelity_cinnabar_entry_resets_mansion_switch_and_finishes_fossils() {
+        let scene = pokered_data::embedded_scenes::get_scene_ast("CinnabarIsland").unwrap();
+        let mut engine = NativeScriptEngine::new();
+        engine.load_map("CinnabarIsland", &scene);
+        engine.set_flag("EVENT_MANSION_SWITCH_ON", true);
+        engine.set_flag("EVENT_LAB_STILL_REVIVING_FOSSIL", true);
+        drive_fidelity_scene(&mut engine, "CinnabarIslandOnLoad", false, "", &[]);
+        assert!(!engine.get_flag("EVENT_MANSION_SWITCH_ON"));
+        assert!(!engine.get_flag("EVENT_LAB_STILL_REVIVING_FOSSIL"));
+    }
+
 }

@@ -97,7 +97,7 @@ game_scene SeafoamIslandsB4F {
       }
       // Static wild Lv50 ARTICUNO battle (catchable); flag set only on win/catch.
       result = startWildBattle("ARTICUNO", 50)
-      @if (result == "win" || result == "caught") {
+      @if (result == "win" || result == "caught" || result == "ran" || result == "fled") {
         setFlag("EVENT_BEAT_ARTICUNO")
         hideObjectByName("SEAFOAM_ISLANDS_B4F_OBJ_3")
       }

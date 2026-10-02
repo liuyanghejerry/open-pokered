@@ -100,27 +100,48 @@ game_scene CinnabarLabFossilRoom {
           @speaker("") {
             @t("Where were you?\n\nYour fossil is back to life!\n\nIt was KABUTO like I think!", "你去哪了？\n\n你的化石复活了！\n\n果然是化石盔，和我想的一样！")
           }
-          givePokemon("KABUTO", 30)
+          given = givePokemon("KABUTO", 30)
+          @if (given) {
+            // Revive consumed: reset so another fossil can be brought later.
+            resetFlag("EVENT_GAVE_FOSSIL_TO_LAB")
+            resetFlag("EVENT_LAB_STILL_REVIVING_FOSSIL")
+            resetFlag("EVENT_LAB_HANDING_OVER_FOSSIL_MON")
+            resetFlag("EVENT_REVIVING_KABUTO")
+            resetFlag("EVENT_REVIVING_OMANYTE")
+            resetFlag("EVENT_REVIVING_AERODACTYL")
+          }
         }
         @if (getFlag("EVENT_REVIVING_OMANYTE")) {
           @speaker("") {
             @t("Where were you?\n\nYour fossil is back to life!\n\nIt was OMANYTE like I think!", "你去哪了？\n\n你的化石复活了！\n\n果然是菊石兽，和我想的一样！")
           }
-          givePokemon("OMANYTE", 30)
+          given = givePokemon("OMANYTE", 30)
+          @if (given) {
+            // Revive consumed: reset so another fossil can be brought later.
+            resetFlag("EVENT_GAVE_FOSSIL_TO_LAB")
+            resetFlag("EVENT_LAB_STILL_REVIVING_FOSSIL")
+            resetFlag("EVENT_LAB_HANDING_OVER_FOSSIL_MON")
+            resetFlag("EVENT_REVIVING_KABUTO")
+            resetFlag("EVENT_REVIVING_OMANYTE")
+            resetFlag("EVENT_REVIVING_AERODACTYL")
+          }
         }
         @if (getFlag("EVENT_REVIVING_AERODACTYL")) {
           @speaker("") {
             @t("Where were you?\n\nYour fossil is back to life!\n\nIt was AERODACTYL like I\nthink!", "你去哪了？\n\n你的化石复活了！\n\n果然是化石翼龙，和我想的一\n样！")
           }
-          givePokemon("AERODACTYL", 30)
+          given = givePokemon("AERODACTYL", 30)
+          @if (given) {
+            // Revive consumed: reset so another fossil can be brought later.
+            resetFlag("EVENT_GAVE_FOSSIL_TO_LAB")
+            resetFlag("EVENT_LAB_STILL_REVIVING_FOSSIL")
+            resetFlag("EVENT_LAB_HANDING_OVER_FOSSIL_MON")
+            resetFlag("EVENT_REVIVING_KABUTO")
+            resetFlag("EVENT_REVIVING_OMANYTE")
+            resetFlag("EVENT_REVIVING_AERODACTYL")
+          }
         }
-        // Revive consumed: reset so another fossil can be brought later.
-        resetFlag("EVENT_GAVE_FOSSIL_TO_LAB")
-        resetFlag("EVENT_LAB_STILL_REVIVING_FOSSIL")
-        resetFlag("EVENT_LAB_HANDING_OVER_FOSSIL_MON")
-        resetFlag("EVENT_REVIVING_KABUTO")
-        resetFlag("EVENT_REVIVING_OMANYTE")
-        resetFlag("EVENT_REVIVING_AERODACTYL")
+
       }
     }
   }

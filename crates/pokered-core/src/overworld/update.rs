@@ -354,6 +354,15 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             }
         }
 
+        // PokemonTower5FDefaultScript clears the latch as soon as the player
+        // leaves the four protected tiles, allowing another heal on re-entry.
+        if self.state.current_map == MapId::PokemonTower5F
+            && self.state.player.movement_state == MovementState::Idle
+            && !self.player_in_purified_zone()
+        {
+            self.set_flag_live("EVENT_IN_PURIFIED_ZONE", false);
+        }
+
         // UpdateMovingBgTiles: water/flower tile animation ticks every frame
         // (vblank-driven in the original).
         self.tile_anim.tick();
@@ -492,6 +501,14 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             WarpFadeState::FadingOut { frames_remaining } => {
                 if frames_remaining <= 1 {
                     self.warp_fade_state = WarpFadeState::BlackScreen;
+                    if self.warp_fade_to_white
+                        && self.pending_warp.is_none()
+                        && self.player_in_purified_zone()
+                    {
+                        // Delay3 twice after GBFadeOutToWhite. The BlackScreen
+                        // transition itself consumes the sixth white frame.
+                        self.flash_lit_frames = 5;
+                    }
                 } else {
                     self.warp_fade_state = WarpFadeState::FadingOut {
                         frames_remaining: frames_remaining - 1,
@@ -1071,6 +1088,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         if self.pending_trainer_battle.is_none()
             && self.trainer_encounter_intro.is_none()
             && self.trainer_intro_text_pending.is_none()
+            && !self.player_in_purified_zone()
         {
             let trainer_headers =
                 pokered_data::trainer_headers::get_trainer_headers(self.state.current_map);
@@ -3209,6 +3227,14 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 }
                 script_bridge::ScriptEffect::Heal => {
                     self.heal_requested = true;
+                    if self.player_in_purified_zone() {
+                        // PokemonTower5FDefaultScript uses the palette fade,
+                        // keeps map music playing and holds white for Delay3×2.
+                        self.warp_fade_to_white = true;
+                        self.warp_fade_state = WarpFadeState::FadingOut {
+                            frames_remaining: WARP_FADE_OUT_WHITE_FRAMES,
+                        };
+                    }
                     // SetLastBlackoutMap (engine/events/set_blackout_map.asm):
                     // a script-driven heal (Pokémon Center nurse, mom, …)
                     // records the map the player came in from as the blackout
@@ -3788,7 +3814,13 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         false
     }
 
-    fn check_wild_encounter_on_step(
+    pub(crate) fn player_in_purified_zone(&self) -> bool {
+        self.state.current_map == MapId::PokemonTower5F
+            && (10..=11).contains(&self.state.player.x)
+            && (8..=9).contains(&self.state.player.y)
+    }
+
+    pub(crate) fn check_wild_encounter_on_step(
         &mut self,
         map_id: MapId,
         tileset: G::Tileset,
@@ -3800,6 +3832,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         use pokered_data::event_flags::EventFlag;
         use pokered_data::wild_data::GameVersion;
         use rand::Rng;
+
+        // PokemonTower5FDefaultScript sets BIT_NO_BATTLES throughout the
+        // purified zone. No encounter RNG or Repel steps are consumed there.
+        if map_id == MapId::PokemonTower5F && self.player_in_purified_zone() {
+            return false;
+        }
 
         // Original MtMoonB2F_Script: once the Super Nerd is beaten, wild
         // battles are disabled inside the fossil area (MtMoonB2FFossilAreaCoords:
@@ -4071,5 +4109,87 @@ mod object_visibility_tests {
             let id = screen.map_script_config.npc_id_by_toggle(toggle).unwrap();
             assert_eq!(screen.npc_states.iter().find(|n| n.text_id == id).unwrap().visible, visible);
         }
+    }
+}
+
+#[cfg(test)]
+mod late_fidelity_tests {
+    use super::*;
+    use pokered_data::{impl_traits::PokemonRedData, tilesets::TilesetId};
+
+    fn idle() -> OverworldInput {
+        OverworldInput::new(false, false, false, false, false, false, false, false)
+    }
+
+    #[test]
+    fn fidelity_purified_zone_rearms_without_consuming_repel_or_encounter_rng() {
+        let mut screen = OverworldScreen::new(MapId::PokemonTower5F, None, PokemonRedData);
+        screen.state.player.x = 10;
+        screen.state.player.y = 8;
+        screen.run_on_load();
+        screen.set_flag_live("EVENT_IN_PURIFIED_ZONE", true);
+        screen.state.repel_steps = 10;
+        // A tile/turn would otherwise roll the indoor cemetery encounter.
+        for _ in 0..100 {
+            assert!(!screen.check_wild_encounter_on_step(MapId::PokemonTower5F, TilesetId::Cemetery, 0, 0, false, false));
+        }
+        assert_eq!(screen.state.repel_steps, 10);
+        assert!(screen.pending_wild_encounter.is_none());
+        screen.update_frame(idle());
+        assert!(screen.unified_flags.get_flag("EVENT_IN_PURIFIED_ZONE"));
+        screen.state.player.x = 9;
+        screen.update_frame(idle());
+        assert!(!screen.unified_flags.get_flag("EVENT_IN_PURIFIED_ZONE"));
+        assert!(!screen.script_engine.get_flag("EVENT_IN_PURIFIED_ZONE"));
+        // Re-enter the same floor and run the actual coordinate handler again.
+        screen.state.player.x = 10;
+        let command = screen.script_engine.call_function_no_args("coordPurifiedZone").unwrap().unwrap();
+        assert_eq!(command, dotzuki_engine_script::ScriptCommand::Heal);
+        screen.sync_flags_from_engine();
+        assert!(screen.unified_flags.get_flag("EVENT_IN_PURIFIED_ZONE"));
+    }
+
+    #[test]
+    fn fidelity_purified_heal_fades_to_white_holds_six_frames_and_keeps_music() {
+        let mut screen = OverworldScreen::new(MapId::PokemonTower5F, None, PokemonRedData);
+        screen.state.player.x = 10;
+        screen.state.player.y = 8;
+        screen.apply_finished_effect(Some(script_bridge::ScriptEffect::Heal));
+        assert!(screen.heal_requested);
+        assert!(screen.warp_fade_to_white);
+        assert!(screen.pending_warp.is_none());
+        assert!(!screen.audio_requests.iter().any(|a| matches!(a, OverworldAudioRequest::StopMusic | OverworldAudioRequest::FadeOutMusic)));
+        for _ in 0..WARP_FADE_OUT_WHITE_FRAMES {
+            screen.update_frame(idle());
+        }
+        assert_eq!(screen.warp_fade_state, WarpFadeState::BlackScreen);
+        for _ in 0..5 {
+            screen.update_frame(idle());
+            assert_eq!(screen.warp_fade_state, WarpFadeState::BlackScreen);
+        }
+        screen.update_frame(idle());
+        assert_eq!(screen.warp_fade_state, WarpFadeState::FadingIn { frames_remaining: WARP_FADE_IN_FRAMES });
+        for _ in 0..WARP_FADE_IN_FRAMES {
+            screen.update_frame(idle());
+        }
+        assert_eq!(screen.warp_fade_state, WarpFadeState::Idle);
+        assert!(!screen.warp_fade_to_white);
+    }
+
+    #[test]
+    fn fidelity_lance_intro_reaches_the_original_coordinate_and_closes_door() {
+        let mut screen = OverworldScreen::new(MapId::LancesRoom, None, PokemonRedData);
+        screen.state.player.x = 24;
+        screen.state.player.y = 16;
+        screen.run_on_load();
+        for _ in 0..600 {
+            screen.update_frame(idle());
+        }
+        assert_eq!((screen.state.player.x, screen.state.player.y), (6, 11));
+        assert!(screen.unified_flags.get_flag("EVENT_LANCES_ROOM_LOCK_DOOR"));
+        assert!(screen.script_engine.is_idle());
+        let map = screen.map_data.as_ref().unwrap();
+        assert_eq!(map.blocks[6 * map.width as usize + 2], 114);
+        assert_eq!(map.blocks[6 * map.width as usize + 3], 115);
     }
 }

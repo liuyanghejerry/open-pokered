@@ -1,0 +1,639 @@
+{
+  "setup": "Debug-seeded snapshot; real scene/game dispatch; isolated sidecar",
+  "events": [
+    {
+      "command": {
+        "cmd": "step_frames",
+        "count": 100
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "frame_count": 100,
+          "stepped": 100
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "press",
+        "button": "right"
+      },
+      "result": {
+        "ok": true
+      }
+    },
+    {
+      "command": {
+        "cmd": "step_frames",
+        "count": 8
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "frame_count": 109,
+          "stepped": 8
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "press",
+        "button": "right"
+      },
+      "result": {
+        "ok": true
+      }
+    },
+    {
+      "command": {
+        "cmd": "step_frames",
+        "count": 8
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "frame_count": 118,
+          "stepped": 8
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "step_frames",
+        "count": 4
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "frame_count": 122,
+          "stepped": 4
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "capture_frame",
+        "path": "/workspace/pokered-fix-late/docs/screenshots/2026-10-02-late-fidelity/late-purified-before.png"
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "path": "/workspace/pokered-fix-late/docs/screenshots/2026-10-02-late-fidelity/late-purified-before.png",
+          "state": {
+            "active_script_effect": "ShowDialogue",
+            "badges": 0,
+            "battle_bag": null,
+            "battle_inventory": [],
+            "battle_live": null,
+            "battle_message": null,
+            "battle_moves": null,
+            "battle_party_cursor": 0,
+            "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+            "choice": null,
+            "coins": 0,
+            "credits_final_button": null,
+            "credits_phase": null,
+            "dialogue": "Ente",
+            "dialogue_state": {
+              "char_index": 4,
+              "done": false,
+              "holding_open": false,
+              "page": 1,
+              "text": "Ente",
+              "total_chars": 32,
+              "total_pages": 3,
+              "waiting_for_input": false
+            },
+            "evaluation": {
+              "party": [
+                {
+                  "hp": 286,
+                  "level": 100,
+                  "max_hp": 286,
+                  "moves": [
+                    "Slash",
+                    "Flamethrower",
+                    "Surf",
+                    "Strength"
+                  ],
+                  "pp": [
+                    20,
+                    15,
+                    15,
+                    15
+                  ],
+                  "species": "Charizard",
+                  "status": "None",
+                  "total_exp": 1059860
+                }
+              ],
+              "party_source": "save_data",
+              "pokedex": {
+                "owned": 0,
+                "owned_numbers": [],
+                "seen": 0,
+                "total": 151
+              }
+            },
+            "field_menu": null,
+            "frame_count": 122,
+            "hall_of_fame_count": 0,
+            "hof_phase": null,
+            "last_outside_map": "PalletTown",
+            "link": {
+              "cable_phase": "Inactive",
+              "role": "Host",
+              "status": "disabled",
+              "trade": null
+            },
+            "map_blocks": [
+              1,
+              1,
+              1,
+              3,
+              10,
+              6,
+              7,
+              3,
+              1,
+              1,
+              1,
+              1,
+              16,
+              91,
+              101,
+              54,
+              54,
+              6,
+              8,
+              1,
+              1,
+              12,
+              87,
+              105,
+              76,
+              54,
+              76,
+              106,
+              88,
+              13,
+              1,
+              58,
+              54,
+              54,
+              79,
+              79,
+              54,
+              54,
+              14,
+              7,
+              1,
+              17,
+              80,
+              82,
+              54,
+              51,
+              54,
+              82,
+              81,
+              18,
+              1,
+              28,
+              80,
+              54,
+              54,
+              79,
+              76,
+              54,
+              14,
+              30,
+              1,
+              12,
+              94,
+              103,
+              79,
+              14,
+              79,
+              104,
+              95,
+              13,
+              1,
+              1,
+              20,
+              29,
+              54,
+              54,
+              54,
+              29,
+              11,
+              1,
+              1,
+              1,
+              1,
+              5,
+              28,
+              29,
+              30,
+              5,
+              1,
+              1
+            ],
+            "map_id": 146,
+            "map_name": "PokemonTower5F",
+            "money": 3000,
+            "party": [
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None"
+              }
+            ],
+            "party_count": 1,
+            "pc_phase": null,
+            "player_facing": "Right",
+            "player_movement_state": "Idle",
+            "player_name": "RED",
+            "player_transport": "Walking",
+            "player_x": 10,
+            "player_y": 8,
+            "screen": "overworld",
+            "script_awaiting_battle": false,
+            "script_effect": {
+              "effect": "ShowDialogue",
+              "text": "Entered purified, protected\nzone!\n\nRED's POKeMON are fully\nhealed!"
+            },
+            "script_running": true,
+            "shop_phase": null,
+            "text_speed_delay_frames": 3,
+            "warp_fade": "Idle"
+          }
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "get_state"
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "active_script_effect": "ShowDialogue",
+          "badges": 0,
+          "battle_bag": null,
+          "battle_inventory": [],
+          "battle_live": null,
+          "battle_message": null,
+          "battle_moves": null,
+          "battle_party_cursor": 0,
+          "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+          "choice": null,
+          "coins": 0,
+          "credits_final_button": null,
+          "credits_phase": null,
+          "dialogue": "Ente",
+          "dialogue_state": {
+            "char_index": 4,
+            "done": false,
+            "holding_open": false,
+            "page": 1,
+            "text": "Ente",
+            "total_chars": 32,
+            "total_pages": 3,
+            "waiting_for_input": false
+          },
+          "evaluation": {
+            "party": [
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None",
+                "total_exp": 1059860
+              }
+            ],
+            "party_source": "save_data",
+            "pokedex": {
+              "owned": 0,
+              "owned_numbers": [],
+              "seen": 0,
+              "total": 151
+            }
+          },
+          "field_menu": null,
+          "frame_count": 122,
+          "hall_of_fame_count": 0,
+          "hof_phase": null,
+          "last_outside_map": "PalletTown",
+          "link": {
+            "cable_phase": "Inactive",
+            "role": "Host",
+            "status": "disabled",
+            "trade": null
+          },
+          "map_blocks": [
+            1,
+            1,
+            1,
+            3,
+            10,
+            6,
+            7,
+            3,
+            1,
+            1,
+            1,
+            1,
+            16,
+            91,
+            101,
+            54,
+            54,
+            6,
+            8,
+            1,
+            1,
+            12,
+            87,
+            105,
+            76,
+            54,
+            76,
+            106,
+            88,
+            13,
+            1,
+            58,
+            54,
+            54,
+            79,
+            79,
+            54,
+            54,
+            14,
+            7,
+            1,
+            17,
+            80,
+            82,
+            54,
+            51,
+            54,
+            82,
+            81,
+            18,
+            1,
+            28,
+            80,
+            54,
+            54,
+            79,
+            76,
+            54,
+            14,
+            30,
+            1,
+            12,
+            94,
+            103,
+            79,
+            14,
+            79,
+            104,
+            95,
+            13,
+            1,
+            1,
+            20,
+            29,
+            54,
+            54,
+            54,
+            29,
+            11,
+            1,
+            1,
+            1,
+            1,
+            5,
+            28,
+            29,
+            30,
+            5,
+            1,
+            1
+          ],
+          "map_id": 146,
+          "map_name": "PokemonTower5F",
+          "money": 3000,
+          "party": [
+            {
+              "hp": 286,
+              "level": 100,
+              "max_hp": 286,
+              "moves": [
+                "Slash",
+                "Flamethrower",
+                "Surf",
+                "Strength"
+              ],
+              "pp": [
+                20,
+                15,
+                15,
+                15
+              ],
+              "species": "Charizard",
+              "status": "None"
+            }
+          ],
+          "party_count": 1,
+          "pc_phase": null,
+          "player_facing": "Right",
+          "player_movement_state": "Idle",
+          "player_name": "RED",
+          "player_transport": "Walking",
+          "player_x": 10,
+          "player_y": 8,
+          "screen": "overworld",
+          "script_awaiting_battle": false,
+          "script_effect": {
+            "effect": "ShowDialogue",
+            "text": "Entered purified, protected\nzone!\n\nRED's POKeMON are fully\nhealed!"
+          },
+          "script_running": true,
+          "shop_phase": null,
+          "text_speed_delay_frames": 3,
+          "warp_fade": "Idle"
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "get_flags"
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "EVENT_IN_PURIFIED_ZONE": true
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "get_bag"
+      },
+      "result": {
+        "ok": true,
+        "data": []
+      }
+    },
+    {
+      "command": {
+        "cmd": "get_party"
+      },
+      "result": {
+        "ok": true,
+        "data": [
+          {
+            "current_hp": 286,
+            "experience": 1059860,
+            "level": 100,
+            "max_hp": 286,
+            "moves": [
+              "Slash",
+              "Flamethrower",
+              "Surf",
+              "Strength"
+            ],
+            "species": "Charizard",
+            "status": "None"
+          }
+        ]
+      }
+    },
+    {
+      "command": {
+        "cmd": "get_npcs"
+      },
+      "result": {
+        "ok": true,
+        "data": [
+          {
+            "facing": "Down",
+            "home_x": 12,
+            "home_y": 8,
+            "npc_index": 0,
+            "scripted_path_remaining": 0,
+            "sprite_id": 25,
+            "text_id": 1,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 12,
+            "y": 8
+          },
+          {
+            "facing": "Left",
+            "home_x": 17,
+            "home_y": 7,
+            "npc_index": 1,
+            "scripted_path_remaining": 0,
+            "sprite_id": 25,
+            "text_id": 2,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 17,
+            "y": 7
+          },
+          {
+            "facing": "Left",
+            "home_x": 14,
+            "home_y": 3,
+            "npc_index": 2,
+            "scripted_path_remaining": 0,
+            "sprite_id": 25,
+            "text_id": 3,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 14,
+            "y": 3
+          },
+          {
+            "facing": "Right",
+            "home_x": 6,
+            "home_y": 10,
+            "npc_index": 3,
+            "scripted_path_remaining": 0,
+            "sprite_id": 25,
+            "text_id": 4,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 6,
+            "y": 10
+          },
+          {
+            "facing": "Right",
+            "home_x": 9,
+            "home_y": 16,
+            "npc_index": 4,
+            "scripted_path_remaining": 0,
+            "sprite_id": 25,
+            "text_id": 5,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 9,
+            "y": 16
+          },
+          {
+            "facing": "Down",
+            "home_x": 6,
+            "home_y": 14,
+            "npc_index": 5,
+            "scripted_path_remaining": 0,
+            "sprite_id": 61,
+            "text_id": 6,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 6,
+            "y": 14
+          }
+        ]
+      }
+    },
+    {
+      "command": {
+        "cmd": "save"
+      },
+      "result": {
+        "ok": true
+      }
+    }
+  ]
+}

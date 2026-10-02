@@ -13,26 +13,30 @@
 // PowerPlant Zapdos translations.
 
 game_scene CeruleanCaveB1F {
+  @load {
+    @if (getFlag("EVENT_BEAT_MEWTWO")) {
+      hideObjectByName("CERULEANCAVEB1F_MEWTWO")
+    }
+  }
+
   // ── MEWTWO (npc 1, the Monster, textId 1) ─────────────────────────────────
   // Original: TalkToTrainer on MewtwoTrainerHeader (sight range 0) => a wild
   // legendary battle vs MEWTWO (Lv 70), preceded by its cry + "Mew!" text.
   @storyline("talkMewtwo") {
-    @trigger(map = "CeruleanCaveB1F", npc = 1)
+    @trigger(map = "CeruleanCaveB1F", npc = 1, toggle = "CERULEANCAVEB1F_MEWTWO")
     @if (!getFlag("EVENT_BEAT_MEWTWO")) {
       playCry("MEWTWO")
       @speaker("") {
         @t("Mew!", "梦幻！")
       }
-      // Static wild Lv70 MEWTWO battle (catchable); flag set only on win/catch.
+      // EndTrainerBattle removes static monsters after every non-blackout end.
       result = startWildBattle("MEWTWO", 70)
-      @if (result == "win" || result == "caught") {
+      @if (result == "win" || result == "caught" || result == "ran" || result == "fled") {
         setFlag("EVENT_BEAT_MEWTWO")
+        hideObjectByName("CERULEANCAVEB1F_MEWTWO")
       }
     } @else {
-      playCry("MEWTWO")
-      @speaker("") {
-        @t("Mew!", "梦幻！")
-      }
+      hideObjectByName("CERULEANCAVEB1F_MEWTWO")
     }
   }
 
