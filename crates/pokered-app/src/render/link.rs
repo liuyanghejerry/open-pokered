@@ -31,6 +31,7 @@ fn zh_link_text(text: &str) -> String {
         "Just a moment." => "请稍等。".to_string(),
         "Waiting...!" => "正在等待……！".to_string(),
         "PLEASE WAIT!" => "请稍候！".to_string(),
+        "OK, please wait\njust a moment." => "好的，请稍等\n片刻。".to_string(),
         "Trade completed!" => "交换完成！".to_string(),
         "Too bad! The trade\nwas canceled!" => "太可惜了！交换\n被取消了！".to_string(),
         "The link was\ncanceled." => "联机被\n取消了。".to_string(),

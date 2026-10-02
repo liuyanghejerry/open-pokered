@@ -203,7 +203,7 @@ fn execute(
 ) {
     let result = match &need {
         FlowNeed::None => return,
-        FlowNeed::CancelReception | FlowNeed::SaveReception | FlowNeed::EnterRoom(_) => panic!("receptionist action in in-room harness"),
+        FlowNeed::CancelReception | FlowNeed::CancelRoomSelection | FlowNeed::SaveReception | FlowNeed::EnterRoom(_) => panic!("receptionist action in in-room harness"),
         FlowNeed::RequestLink(LinkKind::Battle) => {
             battle.set_local_party(party());
             battle.request_battle()

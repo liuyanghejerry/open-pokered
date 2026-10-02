@@ -37,8 +37,8 @@ use crate::alloc_prelude::*;
 use pokered_core::battle::link_battle_driver::LinkDriverEvent;
 use pokered_core::battle::state::Pokemon;
 use pokered_core::link::link_trade::LinkTradePollResult;
-use pokered_core::party_select::PartySelectState;
 use pokered_core::party_screen::PartyScreenInput;
+use pokered_core::party_select::PartySelectState;
 use pokered_data::maps::MapId;
 
 /// The room's link activity: the Colosseum starts battles, the Trade Center
@@ -55,6 +55,7 @@ pub enum LinkKind {
 pub enum FlowNeed {
     SaveReception,
     CancelReception,
+    CancelRoomSelection,
     EnterRoom(LinkKind),
     None,
     /// Send `RequestBattle` / `RequestTrade` (the player used the gameboy).
@@ -80,8 +81,28 @@ pub enum CableClubPhase {
     /// No link session, or not inside a Cable Club room.
     Inactive,
     ReceptionText,
-    ReceptionSave { selected: u8 },
-    ReceptionMenu { selected: u8 },
+    ReceptionSave {
+        selected: u8,
+    },
+    ReceptionMenu {
+        selected: u8,
+    },
+    /// LinkMenu keeps the selected cursor visible for 40 frames.
+    ReceptionChosen {
+        selected: u8,
+        frames_left: u8,
+    },
+    ReceptionWait {
+        kind: LinkKind,
+        frames_left: u8,
+    },
+    ReceptionWarpDelay {
+        kind: LinkKind,
+        frames_left: u8,
+    },
+    ReceptionCancelDelay {
+        frames_left: u8,
+    },
     /// Connected and inside Colosseum/TradeCenter: the remote player's
     /// avatar is present; the gameboy on the table is live.
     InRoom,
@@ -137,7 +158,13 @@ impl CableClubPhase {
     pub fn is_modal(&self) -> bool {
         matches!(
             self,
-            CableClubPhase::ReceptionSave { .. } | CableClubPhase::ReceptionMenu { .. } | CableClubPhase::JustAMoment { .. }
+            CableClubPhase::ReceptionSave { .. }
+                | CableClubPhase::ReceptionMenu { .. }
+                | CableClubPhase::ReceptionChosen { .. }
+                | CableClubPhase::ReceptionWait { .. }
+                | CableClubPhase::ReceptionWarpDelay { .. }
+                | CableClubPhase::ReceptionCancelDelay { .. }
+                | CableClubPhase::JustAMoment { .. }
                 | CableClubPhase::WaitingResponse { .. }
                 | CableClubPhase::PeerPrompt { .. }
                 | CableClubPhase::Exchanging
@@ -179,6 +206,7 @@ pub struct CableClubFlow {
 pub const TEXT_JUST_A_MOMENT: &str = "Just a moment.";
 pub const TEXT_WAITING: &str = "Waiting...!";
 pub const TEXT_PLEASE_WAIT: &str = "PLEASE WAIT!";
+pub const TEXT_RECEPTION_WAIT: &str = "OK, please wait\njust a moment.";
 pub const TEXT_TRADE_COMPLETED: &str = "Trade completed!";
 pub const TEXT_TRADE_CANCELED: &str = "Too bad! The trade\nwas canceled!";
 pub const TEXT_LINK_CANCELED: &str = "The link was\ncanceled.";
@@ -220,24 +248,36 @@ impl CableClubFlow {
     pub fn kind(&self) -> Option<LinkKind> {
         match &self.phase {
             CableClubPhase::JustAMoment { kind }
+            | CableClubPhase::ReceptionWait { kind, .. }
+            | CableClubPhase::ReceptionWarpDelay { kind, .. }
             | CableClubPhase::WaitingResponse { kind }
             | CableClubPhase::PeerPrompt { kind, .. } => Some(*kind),
-            CableClubPhase::Exchanging
-            | CableClubPhase::BattleSetup
-            | CableClubPhase::Battle => Some(LinkKind::Battle),
+            CableClubPhase::Exchanging | CableClubPhase::BattleSetup | CableClubPhase::Battle => {
+                Some(LinkKind::Battle)
+            }
             CableClubPhase::TradeSelect
             | CableClubPhase::TradeWaitingPeer
             | CableClubPhase::TradeConfirm { .. }
             | CableClubPhase::TradeWaitingConfirm
             | CableClubPhase::TradeAnim
             | CableClubPhase::TradeCompleted => Some(LinkKind::Trade),
-            CableClubPhase::ReceptionText | CableClubPhase::Inactive | CableClubPhase::InRoom | CableClubPhase::Error { .. } | CableClubPhase::ReceptionSave { .. } | CableClubPhase::ReceptionMenu { .. } => None,
+            CableClubPhase::ReceptionText
+            | CableClubPhase::Inactive
+            | CableClubPhase::InRoom
+            | CableClubPhase::Error { .. }
+            | CableClubPhase::ReceptionSave { .. }
+            | CableClubPhase::ReceptionMenu { .. }
+            | CableClubPhase::ReceptionChosen { .. }
+            | CableClubPhase::ReceptionCancelDelay { .. } => None,
         }
     }
 
     /// The box text to draw over the map, if any.
     pub fn text_box(&self) -> Option<String> {
         match &self.phase {
+            CableClubPhase::ReceptionWait { .. } | CableClubPhase::ReceptionWarpDelay { .. } => {
+                Some(TEXT_RECEPTION_WAIT.to_string())
+            }
             CableClubPhase::JustAMoment { .. } => Some(TEXT_JUST_A_MOMENT.to_string()),
             CableClubPhase::WaitingResponse { .. } => Some(TEXT_WAITING.to_string()),
             CableClubPhase::Exchanging => Some(TEXT_PLEASE_WAIT.to_string()),
@@ -257,7 +297,10 @@ impl CableClubFlow {
     /// The yes/no prompt to draw, if any: `(title, selected index)`.
     pub fn prompt(&self) -> Option<(String, u8)> {
         match &self.phase {
-            CableClubPhase::ReceptionSave { selected } => Some(("the link, we have\nto save the game.".to_string(), *selected)),
+            CableClubPhase::ReceptionSave { selected } => Some((
+                "the link, we have\nto save the game.".to_string(),
+                *selected,
+            )),
             CableClubPhase::PeerPrompt { kind, selected } => {
                 let title = match kind {
                     LinkKind::Battle => TEXT_PROMPT_BATTLE,
@@ -361,7 +404,11 @@ impl CableClubFlow {
     }
 
     pub fn reception_menu(&self) -> Option<u8> {
-        if let CableClubPhase::ReceptionMenu { selected } = self.phase { Some(selected) } else { None }
+        match self.phase {
+            CableClubPhase::ReceptionMenu { selected }
+            | CableClubPhase::ReceptionChosen { selected, .. } => Some(selected),
+            _ => None,
+        }
     }
 
     pub fn on_gameboy_used(&mut self, map: MapId) -> FlowNeed {
@@ -374,10 +421,9 @@ impl CableClubFlow {
             }
             // Already mid-flow (e.g. the peer requested while the player was
             // at the table): pressing A again answers the pending request.
-            CableClubPhase::PeerPrompt { kind, .. } => FlowNeed::ReplyRequest {
-                kind,
-                accept: true,
-            },
+            CableClubPhase::PeerPrompt { kind, .. } => {
+                FlowNeed::ReplyRequest { kind, accept: true }
+            }
             _ => FlowNeed::None,
         }
     }
@@ -407,8 +453,12 @@ impl CableClubFlow {
         }
         match self.phase.clone() {
             CableClubPhase::ReceptionSave { mut selected } => {
-                if input.up { selected = 0; }
-                if input.down { selected = 1; }
+                if input.up {
+                    selected = 0;
+                }
+                if input.down {
+                    selected = 1;
+                }
                 self.phase = CableClubPhase::ReceptionSave { selected };
                 if input.b || (input.a && selected == 1) {
                     self.phase = CableClubPhase::Inactive;
@@ -420,16 +470,80 @@ impl CableClubFlow {
                 FlowNeed::None
             }
             CableClubPhase::ReceptionMenu { mut selected } => {
-                if input.up { selected = (selected + 2) % 3; }
-                if input.down { selected = (selected + 1) % 3; }
+                if input.up {
+                    selected = (selected + 2) % 3;
+                }
+                if input.down {
+                    selected = (selected + 1) % 3;
+                }
                 self.phase = CableClubPhase::ReceptionMenu { selected };
-                if input.b || (input.a && selected == 2) {
-                    self.phase = CableClubPhase::Inactive;
-                } else if input.a {
-                    self.phase = CableClubPhase::Inactive;
-                    return FlowNeed::EnterRoom(if selected == 0 { LinkKind::Trade } else { LinkKind::Battle });
+                if input.b || input.a {
+                    self.phase = CableClubPhase::ReceptionChosen {
+                        selected: if input.b { 2 } else { selected },
+                        frames_left: 40,
+                    };
                 }
                 FlowNeed::None
+            }
+            CableClubPhase::ReceptionChosen {
+                selected,
+                frames_left,
+            } => {
+                if frames_left > 1 {
+                    self.phase = CableClubPhase::ReceptionChosen {
+                        selected,
+                        frames_left: frames_left - 1,
+                    };
+                } else if selected == 2 {
+                    self.phase = CableClubPhase::ReceptionCancelDelay { frames_left: 3 };
+                } else {
+                    self.phase = CableClubPhase::ReceptionWait {
+                        kind: if selected == 0 {
+                            LinkKind::Trade
+                        } else {
+                            LinkKind::Battle
+                        },
+                        frames_left: 50,
+                    };
+                }
+                FlowNeed::None
+            }
+            CableClubPhase::ReceptionWait { kind, frames_left } => {
+                self.phase = if frames_left > 1 {
+                    CableClubPhase::ReceptionWait {
+                        kind,
+                        frames_left: frames_left - 1,
+                    }
+                } else {
+                    CableClubPhase::ReceptionWarpDelay {
+                        kind,
+                        frames_left: 20,
+                    }
+                };
+                FlowNeed::None
+            }
+            CableClubPhase::ReceptionWarpDelay { kind, frames_left } => {
+                if frames_left > 1 {
+                    self.phase = CableClubPhase::ReceptionWarpDelay {
+                        kind,
+                        frames_left: frames_left - 1,
+                    };
+                    FlowNeed::None
+                } else {
+                    self.phase = CableClubPhase::Inactive;
+                    FlowNeed::EnterRoom(kind)
+                }
+            }
+            CableClubPhase::ReceptionCancelDelay { frames_left } => {
+                if frames_left > 1 {
+                    self.phase = CableClubPhase::ReceptionCancelDelay {
+                        frames_left: frames_left - 1,
+                    };
+                    FlowNeed::None
+                } else {
+                    self.phase = CableClubPhase::Inactive;
+                    FlowNeed::CancelRoomSelection
+                }
             }
             CableClubPhase::JustAMoment { kind } => {
                 if input.a {
@@ -818,22 +932,156 @@ pub fn is_cable_room(map: MapId) -> bool {
 #[cfg(test)]
 mod receptionist_fidelity_tests {
     use super::*;
+    fn finish_room_delay(flow: &mut CableClubFlow, kind: LinkKind) {
+        for _ in 0..40 {
+            assert!(flow.reception_menu().is_some());
+            assert_eq!(flow.update(PartyScreenInput::none(), &[]), FlowNeed::None);
+        }
+        assert_eq!(flow.text_box().as_deref(), Some(TEXT_RECEPTION_WAIT));
+        for _ in 0..50 {
+            assert_eq!(flow.update(PartyScreenInput::none(), &[]), FlowNeed::None);
+        }
+        assert!(matches!(
+            flow.phase(),
+            CableClubPhase::ReceptionWarpDelay {
+                frames_left: 20,
+                ..
+            }
+        ));
+        for _ in 0..19 {
+            assert_eq!(flow.update(PartyScreenInput::none(), &[]), FlowNeed::None);
+        }
+        assert_eq!(
+            flow.update(PartyScreenInput::none(), &[]),
+            FlowNeed::EnterRoom(kind)
+        );
+    }
     #[test]
     fn receptionist_requires_save_consent_then_room_selection() {
-        let mut flow=CableClubFlow::new(); flow.on_receptionist_used(); assert!(!flow.is_modal()); flow.on_reception_text_done();
-        assert_eq!(flow.update(PartyScreenInput { a:true,..PartyScreenInput::none() },&[]),FlowNeed::SaveReception);
-        assert_eq!(flow.reception_menu(),Some(0));
-        flow.note_presence(true,false); assert_eq!(flow.reception_menu(),Some(0));
-        assert_eq!(flow.update(PartyScreenInput { a:true,..PartyScreenInput::none() },&[]),FlowNeed::EnterRoom(LinkKind::Trade));
-        assert_eq!(flow.phase(),&CableClubPhase::Inactive);
+        let mut flow = CableClubFlow::new();
+        flow.on_receptionist_used();
+        assert!(!flow.is_modal());
+        flow.on_reception_text_done();
+        assert_eq!(
+            flow.update(
+                PartyScreenInput {
+                    a: true,
+                    ..PartyScreenInput::none()
+                },
+                &[]
+            ),
+            FlowNeed::SaveReception
+        );
+        assert_eq!(flow.reception_menu(), Some(0));
+        flow.note_presence(true, false);
+        assert_eq!(flow.reception_menu(), Some(0));
+        assert_eq!(
+            flow.update(
+                PartyScreenInput {
+                    a: true,
+                    ..PartyScreenInput::none()
+                },
+                &[]
+            ),
+            FlowNeed::None
+        );
+        finish_room_delay(&mut flow, LinkKind::Trade);
+        assert_eq!(flow.phase(), &CableClubPhase::Inactive);
     }
     #[test]
     fn receptionist_can_cancel_or_choose_colosseum() {
-        let mut flow=CableClubFlow::new(); flow.on_receptionist_used(); assert!(!flow.is_modal()); flow.on_reception_text_done();
-        assert_eq!(flow.update(PartyScreenInput { b:true,..PartyScreenInput::none() },&[]),FlowNeed::CancelReception);
-        assert_eq!(flow.phase(),&CableClubPhase::Inactive);
-        flow.on_receptionist_used(); assert!(!flow.is_modal()); flow.on_reception_text_done(); flow.update(PartyScreenInput { a:true,..PartyScreenInput::none() },&[]);
-        flow.update(PartyScreenInput { down:true,..PartyScreenInput::none() },&[]);
-        assert_eq!(flow.update(PartyScreenInput { a:true,..PartyScreenInput::none() },&[]),FlowNeed::EnterRoom(LinkKind::Battle));
+        let mut flow = CableClubFlow::new();
+        flow.on_receptionist_used();
+        assert!(!flow.is_modal());
+        flow.on_reception_text_done();
+        assert_eq!(
+            flow.update(
+                PartyScreenInput {
+                    b: true,
+                    ..PartyScreenInput::none()
+                },
+                &[]
+            ),
+            FlowNeed::CancelReception
+        );
+        assert_eq!(flow.phase(), &CableClubPhase::Inactive);
+        flow.on_receptionist_used();
+        assert!(!flow.is_modal());
+        flow.on_reception_text_done();
+        flow.update(
+            PartyScreenInput {
+                a: true,
+                ..PartyScreenInput::none()
+            },
+            &[],
+        );
+        flow.update(
+            PartyScreenInput {
+                down: true,
+                ..PartyScreenInput::none()
+            },
+            &[],
+        );
+        assert_eq!(
+            flow.update(
+                PartyScreenInput {
+                    a: true,
+                    ..PartyScreenInput::none()
+                },
+                &[]
+            ),
+            FlowNeed::None
+        );
+        finish_room_delay(&mut flow, LinkKind::Battle);
+    }
+}
+
+#[cfg(test)]
+mod reception_room_cancel_tests {
+    use super::*;
+    #[test]
+    fn b_and_cancel_entry_share_original_link_canceled_path_after_cursor_delay() {
+        for use_b in [false, true] {
+            let mut flow = CableClubFlow::new();
+            flow.on_receptionist_used();
+            flow.on_reception_text_done();
+            flow.update(
+                PartyScreenInput {
+                    a: true,
+                    ..PartyScreenInput::none()
+                },
+                &[],
+            );
+            if !use_b {
+                for _ in 0..2 {
+                    flow.update(
+                        PartyScreenInput {
+                            down: true,
+                            ..PartyScreenInput::none()
+                        },
+                        &[],
+                    );
+                }
+            }
+            assert_eq!(
+                flow.update(
+                    PartyScreenInput {
+                        a: !use_b,
+                        b: use_b,
+                        ..PartyScreenInput::none()
+                    },
+                    &[]
+                ),
+                FlowNeed::None
+            );
+            for _ in 0..42 {
+                assert_eq!(flow.update(PartyScreenInput::none(), &[]), FlowNeed::None);
+            }
+            assert_eq!(
+                flow.update(PartyScreenInput::none(), &[]),
+                FlowNeed::CancelRoomSelection
+            );
+            assert_eq!(flow.phase(), &CableClubPhase::Inactive);
+        }
     }
 }
