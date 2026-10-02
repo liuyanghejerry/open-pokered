@@ -492,6 +492,35 @@ fn critical_rounding_and_screen_stat_low_byte_match_rom() {
 }
 
 #[test]
+fn stage_rounding_precedes_badges_and_persists_without_double_stage_application() {
+    let mut bs = state(MoveId::Sharpen, 50);
+    bs.player.active_mon_mut().attack = 73;
+    bs.player.refresh_unmodified_stats();
+    bs.player_badges = 1;
+    turn(&mut bs, MoveId::Sharpen, vec![255]);
+    assert_eq!(bs.player.staged_badge_stats.unwrap()[0], 122);
+    // floor(73*3/2)=109, then 109+floor(109/8)=122. Reversing gives123.
+    turn(&mut bs, MoveId::BodySlam, vec![255, 0, 255, 255]);
+    assert_eq!(
+        bs.enemy.active_mon().hp,
+        330,
+        "47 base damage with STAB =>70; reverse order gives72"
+    );
+    turn(&mut bs, MoveId::DoubleTeam, vec![255]);
+    assert_eq!(
+        bs.player.staged_badge_stats.unwrap()[0],
+        137,
+        "unchanged Attack compounds122→137"
+    );
+    turn(&mut bs, MoveId::Sharpen, vec![255]);
+    assert_eq!(
+        bs.player.staged_badge_stats.unwrap()[0],
+        164,
+        "changed Attack rebases73*2 thenbadges"
+    );
+}
+
+#[test]
 fn critical_damage_uses_party_stats_instead_of_badge_or_transform_copies() {
     // core.asm 4060-4074: the critical attacker is wPartyMonNAttack.
     let mut bs = state(MoveId::Tackle, 50);

@@ -1814,26 +1814,16 @@ fn pokered_damage(
 
     let a = ctx.battler(source);
     let d = ctx.battler(target);
-    let (atk, def) = if physical {
-        (a.stats.get(StatIndex::Attack).copied().unwrap_or(0),
-         d.stats.get(StatIndex::Defense).copied().unwrap_or(1))
-    } else {
-        (a.stats.get(StatIndex::Special).copied().unwrap_or(0),
-         d.stats.get(StatIndex::Special).copied().unwrap_or(1))
-    };
+    let (atk, atk_stage) = crate::battle::badge_boosts::stat_and_stage(
+        a, if physical { StatIndex::Attack } else { StatIndex::Special });
+    let (def, def_stage) = crate::battle::badge_boosts::stat_and_stage(
+        d, if physical { StatIndex::Defense } else { StatIndex::Special });
     let (atk, def) = if is_crit {
         let atk_index = if physical { 0 } else { 3 };
         let def_index = if physical { 1 } else { 3 };
         (a.resources.current(RES_CRIT_BASE + atk_index).unwrap_or(atk),
          d.resources.current(RES_CRIT_BASE + def_index).unwrap_or(def))
     } else { (atk, def) };
-    let (atk_stage, def_stage) = if physical {
-        (a.stat_stages.get(StatIndex::Attack).copied().unwrap_or(0),
-         d.stat_stages.get(StatIndex::Defense).copied().unwrap_or(0))
-    } else {
-        (a.stat_stages.get(StatIndex::Special).copied().unwrap_or(0),
-         d.stat_stages.get(StatIndex::Special).copied().unwrap_or(0))
-    };
     let level = level_of(a);
     // STAB (attacker) + type effectiveness/immunity (defender) honour Conversion via
     // the arena TypeOverride (effective_types), falling back to the species types.
@@ -2131,6 +2121,7 @@ fn rage_manage(
         let cur = b.stat_stages.get(StatIndex::Attack).copied().unwrap_or(0);
         if cur < 6 {
             b.stat_stages.set(StatIndex::Attack, cur + 1);
+            crate::battle::badge_boosts::reapply_on_stage_change(b, StatIndex::Attack);
         }
     }
     HandlerResult::Unchanged
@@ -2276,6 +2267,9 @@ fn transform_install(
     }
     let types = effective_types(ctx, target);
     let unmodified = crate::battle::badge_boosts::unmodified_stats(ctx.battler(target));
+    let staged = (crate::battle::badge_boosts::staged_stats(ctx.battler(target)).is_some()
+        || crate::battle::badge_boosts::staged_stats(ctx.battler(source)).is_some())
+        .then(|| crate::battle::badge_boosts::current_staged_stats(ctx.battler(target)));
     let copied_resources: [u16; 3] = core::array::from_fn(|idx| {
         let id = [RES_DV0, RES_DV1, RES_CATCH_RATE][idx];
         ctx.battler(target).resources.current(id).unwrap_or(0xff)
@@ -2292,6 +2286,7 @@ fn transform_install(
         a.moves = moves;
         bind_types(a, types);
         crate::battle::badge_boosts::set_unmodified_stats(a, unmodified);
+        if let Some(staged) = staged { crate::battle::badge_boosts::set_staged_stats(a, staged); }
         for (id, value) in [RES_DV0, RES_DV1, RES_CATCH_RATE].into_iter().zip(copied_resources) {
             a.resources.set(id, value, 255);
         }
@@ -3088,8 +3083,7 @@ fn effective_speed(b: &EngineBattler<PokeredRules>) -> u16 {
     // Speed stat stage (Agility, String Shot, …) applies to turn order, then
     // paralysis quarters the result. Kept as pure u16 to preserve the Gen-1
     // speed-overflow behaviour (no 255/999 clamp).
-    let base = b.stats.get(StatIndex::Speed).copied().unwrap_or(0);
-    let stage = b.stat_stages.get(StatIndex::Speed).copied().unwrap_or(0);
+    let (base, stage) = crate::battle::badge_boosts::stat_and_stage(b, StatIndex::Speed);
     let staged = crate::battle::stat_stages::apply_stage(base, stage);
     if b.status == Some(LegacyStatus::Paralysis) {
         (staged / 4).max(1)

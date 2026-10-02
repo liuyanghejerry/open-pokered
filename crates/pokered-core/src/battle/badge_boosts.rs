@@ -112,6 +112,36 @@ pub fn initial_boosted_stats(raw: [u16; 4], badges: u8) -> [u16; 4] {
 /// Resource ids (game-assigned, opaque to the engine) for the badge context.
 const RES_BADGE_BITS: u16 = 0xBB00;
 const RES_UNMOD_BASE: u16 = 0xBB10; // +0 atk, +1 def, +2 spd, +3 spc
+const RES_STAGED_BASE: u16 = 0xBB20;
+
+pub fn staged_stats(b: &EngineBattler<PokeredRules>) -> Option<[u16; 4]> {
+    b.resources.current(RES_STAGED_BASE)?;
+    Some(core::array::from_fn(|i| b.resources.current(RES_STAGED_BASE + i as u16).unwrap_or(1)))
+}
+
+pub fn set_staged_stats(b: &mut EngineBattler<PokeredRules>, values: [u16; 4]) {
+    for (i, value) in values.into_iter().enumerate() {
+        b.resources.set(RES_STAGED_BASE + i as u16, value, u16::MAX);
+    }
+}
+
+/// A current working value has already had its stage applied. Unseeded oracle
+/// battlers keep the generic raw-stat + separate-stage representation.
+pub fn stat_and_stage(b: &EngineBattler<PokeredRules>, stat: StatIndex) -> (u16, i8) {
+    if let (Some(values), Some(slot)) = (staged_stats(b), stat_index_to_slot(stat)) {
+        (values[slot], 0)
+    } else {
+        (get_stat(b, stat), b.stat_stages.get(stat).copied().unwrap_or(0))
+    }
+}
+
+pub fn current_staged_stats(b: &EngineBattler<PokeredRules>) -> [u16; 4] {
+    let indexes = [StatIndex::Attack, StatIndex::Defense, StatIndex::Speed, StatIndex::Special];
+    core::array::from_fn(|i| {
+        let (raw, stage) = stat_and_stage(b, indexes[i]);
+        super::stat_stages::apply_stage(raw, stage)
+    })
+}
 
 /// Seed the badge context onto an engine battler (the player side only).
 /// `unmodified` is the active mon's raw `[atk, def, spd, spc]`.
@@ -162,6 +192,16 @@ fn get_stat(b: &EngineBattler<PokeredRules>, stat: StatIndex) -> u16 {
 ///   2. `ApplyBadgeStatBoosts` then boosts ALL FOUR stats by one more round.
 /// Inert (no-op) for a battler without the seeded player badge context.
 pub fn reapply_on_stage_change(b: &mut EngineBattler<PokeredRules>, changed: StatIndex) {
+    if let Some(mut working) = staged_stats(b) {
+        if let Some(slot) = stat_index_to_slot(changed) {
+            let raw = unmodified_stat(b, slot).unwrap_or_else(|| get_stat(b, changed));
+            working[slot] = super::stat_stages::apply_stage(
+                raw, b.stat_stages.get(changed).copied().unwrap_or(0),
+            );
+        }
+        apply_badge_stat_boosts(&mut working, badge_bits(b).unwrap_or(0));
+        set_staged_stats(b, working);
+    }
     let Some(badges) = badge_bits(b) else { return };
     if let Some(slot) = stat_index_to_slot(changed) {
         if let Some(raw) = unmodified_stat(b, slot) {
@@ -185,6 +225,7 @@ pub fn reapply_on_stage_change(b: &mut EngineBattler<PokeredRules>, changed: Sta
 /// battle stats and does NOT re-apply badge boosts). Reset the four stats to
 /// their seeded unmodified values; inert without the badge context.
 pub fn wipe_boosts(b: &mut EngineBattler<PokeredRules>) {
+    if staged_stats(b).is_some() { set_staged_stats(b, unmodified_stats(b)); }
     if badge_bits(b).is_none() {
         return;
     }
@@ -209,6 +250,13 @@ pub fn ensure_initialized(battler: &mut super::state::BattlerState, badges: u8) 
         let raw = [mon.attack, mon.defense, mon.speed, mon.special];
         battler.badge_boosted_stats = Some(initial_boosted_stats(raw, badges));
     }
+    if badges != 0 && battler.staged_badge_stats.is_none() {
+        let raw = battler.badge_boosted_stats.unwrap();
+        let stages = [battler.stat_stages.attack, battler.stat_stages.defense,
+            battler.stat_stages.speed, battler.stat_stages.special];
+        battler.staged_badge_stats = Some(core::array::from_fn(|i|
+            super::stat_stages::apply_stage(raw[i], stages[i])));
+    }
 }
 
 /// One glitch round on the LEGACY copy, for stat-stage changes that happen
@@ -222,6 +270,19 @@ pub fn reapply_on_stage_change_legacy(
     changed: Option<StatIndex>,
 ) {
     ensure_initialized(battler, badges);
+    if let Some(mut working) = battler.staged_badge_stats {
+        if let Some(stat) = changed {
+            if let Some(slot) = stat_index_to_slot(stat) {
+                let raw = [battler.unmodified_attack, battler.unmodified_defense,
+                    battler.unmodified_speed, battler.unmodified_special];
+                let stages = [battler.stat_stages.attack, battler.stat_stages.defense,
+                    battler.stat_stages.speed, battler.stat_stages.special];
+                working[slot] = super::stat_stages::apply_stage(raw[slot], stages[slot]);
+            }
+        }
+        apply_badge_stat_boosts(&mut working, badges);
+        battler.staged_badge_stats = Some(working);
+    }
     if let Some(stat) = changed {
         let mon = battler.active_mon();
         let raw = [mon.attack, mon.defense, mon.speed, mon.special];

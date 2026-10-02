@@ -22,6 +22,7 @@
 | B23 | 暴击读原 party stats，忽略徽章/Transform working stats；单机敌 Transform 暴击按自己等级与复制 DVs 重算，联机读原 enemy party stats | `critical_damage_uses_party_stats_instead_of_badge_or_transform_copies`、`transformed_enemy_crit_recalculates_own_level_except_in_link_battles` |
 | B24 | Bide 继续回合在状态门后累加共享伤害、计时，初始回合不减；释放走正常 Damage/Substitute，清原计数/累积 word | `fidelity_multiturn.rs` 的初始计数、旧共享伤害、Substitute、零伤害、16-bit wrapping、Counter 反 Bide 回归 |
 | B25 | 捕获任何已 Transform 野怪时按原版强制重建 Ditto，保留原 DVs 和当前 HP/status | `catching_a_transformed_non_ditto_preserves_original_ditto_assumption_bug` |
+| B26 | 另存能力等级先取整、徽章再取整后的工作值；伤害/混乱/速度/RUN不二次乘级；Rage、Xitems、升级、Transform、Haze 同步处理 | `stage_rounding_precedes_badges_and_persists_without_double_stage_application` |
 
 Mimic 使用原作选择框，不显示普通攻击菜单的 TYPE/PP；app 与 TUI 同步渲染，snapshot 保留等待选择的状态。Transform/Mimic 的临时复制不会永久写入存档，EXP 与学招均查原始 party 身份。
 
@@ -29,4 +30,4 @@ Mimic 使用原作选择框，不显示普通攻击菜单的 TYPE/PP；app 与 T
 
 本分支首次验证：`cargo test -p pokered-core --test fidelity_battle --test fidelity_multiturn` 20 + 11 tests 全过；`cargo test -p pokered-core --lib` 2602 tests 全过；`cargo check -p pokered-app -p pokered-tui -p pokered-ui` 通过。之后追加 B24 完整机制回归与 B25 捕获回归，最终文件有 21 + 16 个 production tests；它们需要根分支集成后最后一次运行，当前不标为已验证。
 
-另一个待复核边界：徽章重施与非整数 stat-stage 的取整顺序。完整伤害数值并未宣称穷举一致。
+B26 徽章/能力级取整已源码确证并修复，新增数值回归尚待本轮测试。完整伤害数值并未宣称穷举一致。

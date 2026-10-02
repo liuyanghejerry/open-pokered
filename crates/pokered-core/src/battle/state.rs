@@ -328,6 +328,10 @@ pub struct BattlerState {
     /// only. See [`super::badge_boosts`].
     #[serde(default)]
     pub badge_boosted_stats: Option<[u16; 4]>,
+    /// Stage-modified working stats after badge reapplications. Kept apart
+    /// from the raw carrier to preserve the assembly's integer operation order.
+    #[serde(default)]
+    pub staged_badge_stats: Option<[u16; 4]>,
     /// Original party identity while Transform/Mimic alter the battle copy.
     /// The index belongs to the outgoing mon, even after active index changes.
     #[serde(default)]
@@ -414,6 +418,7 @@ impl BattlerState {
         // mon re-applies them from scratch at send-out (core.asm:1659), so the
         // accumulated stat-up-glitch rounds reset here.
         self.badge_boosted_stats = None;
+        self.staged_badge_stats = None;
 
         if badly_poisoned {
             self.toxic_counter = toxic_counter;
@@ -585,6 +590,7 @@ pub fn new_battler_state(party: Vec<Pokemon>) -> BattlerState {
         conversion_type1: None,
         conversion_type2: None,
         badge_boosted_stats: None,
+        staged_badge_stats: None,
         original_identity: None,
         transform_catch_rate: None,
     }

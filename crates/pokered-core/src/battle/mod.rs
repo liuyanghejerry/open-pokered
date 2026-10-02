@@ -3840,6 +3840,7 @@ learn {learn_name}!")];
                 let changed = bs.enemy.stat_stages.modify(stat, 1);
                 msgs.push(format!("{} used {}!", trainer_name, item));
                 if changed {
+                    crate::battle::badge_boosts::reapply_on_stage_change_legacy(&mut bs.enemy, 0, Some(stat));
                     msgs.push(format!("{}'s {} rose!", enemy_display, stat_name));
                 }
             }
@@ -4879,6 +4880,13 @@ learn {learn_name}!")];
                 bs.player.badge_boosted_stats = Some(
                     crate::battle::badge_boosts::initial_boosted_stats(raw, bs.player_badges),
                 );
+                if bs.player_badges != 0 || bs.player.staged_badge_stats.is_some() {
+                    let stages = [bs.player.stat_stages.attack, bs.player.stat_stages.defense,
+                        bs.player.stat_stages.speed, bs.player.stat_stages.special];
+                    let modified = core::array::from_fn(|i| crate::battle::stat_stages::apply_stage(raw[i], stages[i]));
+                    bs.player.staged_badge_stats = Some(
+                        crate::battle::badge_boosts::initial_boosted_stats(modified, bs.player_badges));
+                }
             }
         }
 

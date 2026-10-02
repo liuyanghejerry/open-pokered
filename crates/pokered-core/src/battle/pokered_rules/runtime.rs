@@ -466,6 +466,12 @@ pub fn engine_state_from_legacy(
             ls.player.unmodified_special,
         ],
     );
+    if let Some(working) = ls.player.staged_badge_stats {
+        crate::battle::badge_boosts::set_staged_stats(&mut player_b, working);
+    } else if ls.player_badges != 0 {
+        let working = crate::battle::badge_boosts::current_staged_stats(&player_b);
+        crate::battle::badge_boosts::set_staged_stats(&mut player_b, working);
+    }
     let mut enemy_b = engine_active(&ls.enemy);
     let enemy_original = ls.enemy.party_mon(ls.enemy.active_pokemon_index);
     let critical = if ls.link_battle || !ls.enemy.has_status3(status3::TRANSFORMED) {
@@ -474,6 +480,9 @@ pub fn engine_state_from_legacy(
     super::bind_critical_stats(&mut enemy_b, critical);
     crate::battle::badge_boosts::set_unmodified_stats(&mut enemy_b,
         [ls.enemy.unmodified_attack,ls.enemy.unmodified_defense,ls.enemy.unmodified_speed,ls.enemy.unmodified_special]);
+    if let Some(working) = ls.enemy.staged_badge_stats {
+        crate::battle::badge_boosts::set_staged_stats(&mut enemy_b, working);
+    }
     enemy_b.resources.set(super::RES_FINITE_PP, ls.link_battle as u16, 1);
     enemy_b.resources.set(super::RES_HELD_AT_ENTRY,
         (ls.player.has_status1(status1::USING_TRAPPING_MOVE) && ls.player.num_attacks_left > 0) as u16, 1);
@@ -488,6 +497,7 @@ pub fn engine_state_from_legacy(
 }
 
 fn write_party(party: &mut LegacyParty, b: &EngineBattler<PokeredRules>, effects: &[EffectState<PokeredRules>], host: BattlerRef) {
+    party.staged_badge_stats = crate::battle::badge_boosts::staged_stats(b);
     {
         let mon = party.active_mon_mut();
         mon.hp = b.hp.min(mon.max_hp);

@@ -829,8 +829,8 @@ fn confusion_self_hit_damage(ctx: &BattleCtx<'_, PokeredRules>, who: BattlerRef)
     use crate::battle::damage::{calculate_damage, DamageParams};
     use crate::battle::stat_stages::StatIndex;
     let b = ctx.battler(who);
-    let atk = b.stats.get(StatIndex::Attack).copied().unwrap_or(0);
-    let def = b.stats.get(StatIndex::Defense).copied().unwrap_or(1);
+    let (atk, atk_stage) = crate::battle::badge_boosts::stat_and_stage(b, StatIndex::Attack);
+    let (def, def_stage) = crate::battle::badge_boosts::stat_and_stage(b, StatIndex::Defense);
     let params = DamageParams {
         attacker_level: super::level_of(b),
         move_power: 40,
@@ -838,8 +838,8 @@ fn confusion_self_hit_damage(ctx: &BattleCtx<'_, PokeredRules>, who: BattlerRef)
         move_id: pokered_data::moves::MoveId::None,
         attack_stat: atk,
         defense_stat: def,
-        attack_stage: b.stat_stages.get(StatIndex::Attack).copied().unwrap_or(0),
-        defense_stage: b.stat_stages.get(StatIndex::Defense).copied().unwrap_or(0),
+        attack_stage: atk_stage,
+        defense_stage: def_stage,
         // Neutral synthetic types avoid STAB and any type-chart multiplier.
         attacker_type1: PokemonType::Fire,
         attacker_type2: PokemonType::Fire,
