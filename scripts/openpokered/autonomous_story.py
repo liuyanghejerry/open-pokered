@@ -741,7 +741,12 @@ class AutonomousStoryAgent(DualStoryAgent):
         plan = solo_plan(full_graph, owned, infer_solo_choices(owned))
         targets = set(plan['reachable_species'])
         choice_targets = set(plan['choice_reachable_species'])
-        rung = next((value for value in DEX_RUNGS if value > len(owned)), None)
+        # The 150-species diploma is not reachable under the solo/no-link
+        # contract. Keep reachable early thresholds and finish at this plan's
+        # actual ceiling; the final rung is completion, not an item reward.
+        rungs = sorted({value for value in DEX_RUNGS if value <= plan['ceiling']}
+                       | {plan['ceiling']})
+        rung = next((value for value in rungs if value > len(owned)), None)
         missing = {}
         yield_by_area = {}
         for name in self.neighbourhood():
@@ -773,9 +778,9 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'always_unreachable_count': len(plan['always_unreachable_species']),
                 'always_unreachable_species': plan['always_unreachable_species'],
                 'missing_acquisition_methods': missing_methods,
-                # Species already met are known-reachable, so this list is the
-                # strongest lead the collector has; the rung says what
-                # finishing the current count unlocks next.
+                # Seen does not prove solo availability (trainers may show
+                # excluded species); retain that observation separately from
+                # missing_acquisition_methods and the bounded solo progress.
                 'seen_not_owned': sorted(seen - owned),
                 'next_rung': None if rung is None else {'rung': rung, 'needs': rung,
                                                         'remaining': rung - len(owned)},

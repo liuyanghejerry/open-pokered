@@ -2319,7 +2319,9 @@ class AutonomousTests(unittest.TestCase):
         self.assertEqual(start['next_rung'], {'rung': 2, 'needs': 2, 'remaining': 2})
         self.assertEqual(panel({'Pidgey', 'Rattata'})['next_rung'],
                          {'rung': 10, 'needs': 10, 'remaining': 8})
-        self.assertIsNone(panel({f'Species{index}' for index in range(150)})['next_rung'])
+        from openpokered.collection_planner import solo_plan
+        reachable = set(solo_plan(agent.complete_collection_graph())['reachable_species'])
+        self.assertIsNone(panel(reachable)['next_rung'])
         # Species already met are known-reachable: the strongest collection lead.
         self.assertEqual(panel({'Pidgey'}, {'Zubat', 'Pidgey', 'Rattata'})['seen_not_owned'],
                          ['Rattata', 'Zubat'])
@@ -2327,6 +2329,21 @@ class AutonomousTests(unittest.TestCase):
         self.assertEqual(panel({'Pidgey'})['expected_yield_by_area']['Route2']
                      ['unregistered_encounter_share_pct'], 55.1)
         self.assertEqual(panel({'Pidgey'})['balls_held'], 3)
+
+    def test_dex_progress_rung_stops_at_verified_solo_ceiling(self):
+        from openpokered.collection_planner import solo_plan
+        agent = self.catch_goal_agent([{'id': 'collect-dex', 'agent_verified': True}])
+        reachable = solo_plan(agent.complete_collection_graph())['reachable_species']
+        self.assertEqual(len(reachable), 124)
+        for count in (50, 74, 123, 124):
+            facts = {'bag': {}, 'dex': {'owned_species': reachable[:count]}}
+            panel = agent.dex_progress(facts)
+            self.assertEqual(panel['next_rung'], None if count == 124 else
+                             {'rung': 124, 'needs': 124, 'remaining': 124 - count})
+        # A native registration still awaiting source proof cannot finish it.
+        agent.collection_audit_pending = {reachable[-1]: {'reason': 'test'}}
+        panel = agent.dex_progress({'bag': {}, 'dex': {'owned_species': reachable}})
+        self.assertEqual(panel['next_rung'], {'rung': 124, 'needs': 124, 'remaining': 1})
 
     def test_map_hops_counts_map_crossings_on_real_map_data(self):
         from openpokered.story_rules import MAPS_DIR

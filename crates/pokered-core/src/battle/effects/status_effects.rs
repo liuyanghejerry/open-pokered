@@ -150,10 +150,11 @@ pub fn apply_paralyze_primary(state: &mut BattleState, move_data: &MoveData) -> 
     if !d_mon.status.is_none() {
         return EffectResult::StatusFailed;
     }
-    if d_mon.type1 == move_data.move_type || d_mon.type2 == move_data.move_type {
-        return EffectResult::StatusFailed;
-    }
-    if defender.has_status2(status2::HAS_SUBSTITUTE_UP) {
+    // Legacy parity oracle: primary paralysis is not the same-type-immune
+    // damaging side effect. Gen I also lets it pass through Substitute.
+    if move_data.move_type == PokemonType::Electric
+        && (d_mon.type1 == PokemonType::Ground || d_mon.type2 == PokemonType::Ground)
+    {
         return EffectResult::StatusFailed;
     }
     let defender = state.defender_mut();
@@ -378,7 +379,7 @@ mod tests {
     }
 
     #[test]
-    fn paralyze_primary_blocked_by_electric_type() {
+    fn paralyze_primary_affects_electric_type() {
         let mut state = make_state_with_types(
             PokemonType::Electric,
             PokemonType::Electric,
@@ -386,7 +387,7 @@ mod tests {
             PokemonType::Electric,
         );
         let result = apply_paralyze_primary(&mut state, &thunderwave_data());
-        assert_eq!(result, EffectResult::StatusFailed);
+        assert_eq!(result, EffectResult::StatusInflicted(StatusEffectType::Paralysis));
     }
 
     #[test]

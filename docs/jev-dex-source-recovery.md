@@ -643,3 +643,46 @@ SRAM SHA256：`ebf7e7ff9c0610aed36cb750c981610976a7fddd608eff2c6d66f451757e1f5c`
 
 m38失败现场补查：终点`(10,5)`被可见NPC0占据，玩家停在邻格`(11,5)`。
 完整fresh复跑仍在运行；未据此修改原生碰撞，也未放宽导航测试预算。
+
+### resume-51：PC 准备实跑揭示原生纯麻痹招式错误
+
+`20261002-161957-seed42`加载`aed71055`。44.831秒Jev自主选择取出Pikachu
+作为捕捉状态手，50.078秒真实完成`retrieve_pc:3,11,0,0`，存入队首Raticate。
+下一次观察确认Lv44、HP101/101、ThunderWave20PP；不是隔离探针或手工换队。
+240.808与244.446秒实际使用电磁波，PP20→19→18，但闪电鸟仍为None状态。
+随后居合斩削血164→99，投2枚超级球，260.759秒逃跑；Pikachu在后续再次
+换入时倒下。仍74种，未将准备动作或隔离收益计作收集成功。
+
+根因是生产RON规则把伤害招式附带麻痹的同属性／替身免疫套给纯麻痹招式，
+旧legacy对照实现及其测试也复制了同一错误。原版
+[ParalyzeEffect_](https://github.com/pret/pokered/blob/d2704a63c26f9ba046ade877445216b3de0519a4/engine/battle/move_effects/paralyze.asm)
+只在招式为Electric时拒绝Ground目标，且不检查Substitute；
+[附加效果分支](https://github.com/pret/pokered/blob/d2704a63c26f9ba046ade877445216b3de0519a4/engine/battle/effects.asm)
+才做同属性检查。修复生产stack规则：电磁波保留Ground免疫，麻痹粉／
+大蛇瞪眼不套该免疫，纯麻痹穿替身；伤害招式附加效果的旧规则不变。
+同步纠正测试oracle，但验证不只依赖两份实现互相一致：新增直接生产
+stack测试先RED后GREEN，覆盖8种招式／目标组合及有无替身共16情形。
+
+复制51段存档，隔离环境正常护士治疗，经真实PKMN/FIGHT菜单对Lv30
+闪电鸟使用电磁波：旧二进制状态None，新二进制Paralysis，双方HP同为
+Pikachu60、Zapdos95；截图已人工检查。此低等级探针避免状态手在观察
+边界前倒下，只证明招式执行，不冒充正式Lv50捕获。原始状态、按键脚本、
+截图、RED/GREEN和全量测试日志在`.artifacts/jev-primary-paralysis-20261002/`。
+核心2609、App112、Python331项通过；改动属于纯战斗规则／策略事实，无
+renderer或界面布局变动。新二进制另启动fresh m01–m10；之前的fresh m49
+仍运行，不能将旧二进制回归算作本次规则修正覆盖。
+
+51段在PowerPlant `(5,9)`、脚本空闲时安全保存并独立CONTINUE验证，
+SRAM SHA256：`f122585af138a775df31aef01e14a93ee22bd3ea5a8c97a84330a0825c740632`。
+下段继承其真实消耗：3超级球、1高级球、2精灵球，Pikachu倒下状态保留，
+由Jev自行通过正常流程治疗／准备，未回档恢复资源。
+
+另修正策略面板的`next_rung`：50种以后此前错误指向单机不可达的150种。
+现在保留可达早期门槛，最终阶段由获取图计算的solo ceiling封顶（本存档124），
+只按来源已验证物种计数。74种→还差50、123种→还差1、完成→无下一阶段，
+来源待验证时不提前完成；新增测试先RED后GREEN。
+
+本轮只读性能探针还定位到规划耗时：副本单次策略构建在cProfile下约60.9秒，
+122次`bfs_cross`累计约60秒；不是模型网络等待。原始分析在
+`/tmp/jev-strategy-profile.prof`与`/tmp/jev-strategy-profile-fixed.log`，尚未优化
+或据此删减候选／改变路线。正式收集与最终MP4交付仍未完成。

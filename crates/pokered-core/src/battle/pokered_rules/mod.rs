@@ -695,7 +695,7 @@ impl RuleBindings<PokeredRules> for PokeredBindings {
         absorbed
     }
 
-    /// `MoveTypeIsDefenderType` — the Gen-1 burn/freeze/paralyze self-type-immunity
+    /// `MoveTypeIsDefenderType` — the Gen-1 damaging burn/freeze/paralyze side-effect immunity
     /// quirk #23 (`status_effects.rs:85/110/135`): a defender whose own type matches
     /// the move's type cannot be afflicted. `move_type_index` is the record's `type:`
     /// interned index. Pure read.
@@ -922,7 +922,7 @@ fn record_id_for_move(m: MoveId) -> &'static str {
         MoveId::Thunderbolt | MoveId::Thundershock | MoveId::Thunderpunch => "side.paralyze_1",
         MoveId::Lick => "side.paralyze_2",
         // ── P2 primary-status moves (guaranteed, power-0) ──
-        MoveId::ThunderWave => "status.paralyze", // ParalyzeEffect
+        MoveId::ThunderWave => "status.thunder_wave", // Electric-only Ground immunity
         MoveId::StunSpore | MoveId::Glare => "status.paralyze",
         MoveId::Poisonpowder => "status.poison",  // PoisonEffect (plain branch)
         MoveId::PoisonGas => "status.poison",
