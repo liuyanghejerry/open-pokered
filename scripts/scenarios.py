@@ -1029,6 +1029,31 @@ def s24_coordinate_falls():
         g.close()
 
 
+@scenario("s25-boulder-coordinate-hole", "A boulder may enter its target hole; the player falls only on the next step")
+def s25_boulder_coordinate_hole():
+    from save_builder import SaveBuilder
+    from playthrough_late import push_boulder
+    with tempfile.TemporaryDirectory(prefix='pokered-boulder-hole-') as folder:
+        folder = Path(folder)
+        builder = (SaveBuilder().party_add('Nidoqueen', 50, moves=['Strength', 'BodySlam'])
+                   .badges({'Rainbow': True}).position('VictoryRoad3F', 21, 15))
+        path = builder.write(folder / 'fixture.json')
+        g = Game(snapshot=path, save_path=folder / 'fixture.sav', seed=42, speed=0)
+        try:
+            resume_reentry(g)
+            flag = 'EVENT_VICTORY_ROAD_3_BOULDER_ON_SWITCH2'
+            assert not g.d.cmd(cmd='get_flags')['data'].get(flag)
+            push_boulder(g, 'VictoryRoad3F', 10, (23, 15), flag)
+            assert g.d.cmd(cmd='get_flags')['data'][flag]
+            assert g.pos() == ('VictoryRoad3F', 22, 15), g.pos()
+            g.nav_to(23, 15, 'VictoryRoad3F')
+            assert g.cutscene()
+            assert g.pos() == ('VictoryRoad2F', 22, 16), g.pos()
+            g.evidence('s25')
+        finally:
+            g.close()
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--list", action="store_true")

@@ -1375,3 +1375,24 @@ B3F水面，surf_requirement在这个不能使用菜单上水的步骤直接放�
 Fuchsia原本可执行的Surf方案仍保留；此前失败日志不覆盖。落穴导航的fresh
 全链仍在运行，目前通过m18；本次Surf前置 helper另以原生专项验证，不把
 运行中的全链提前记成通过。
+
+### 2026-10-02：fresh m43暴露洞口与推石占位的区别
+
+落穴导航版fresh全链通过m01–m42后，在m43停止：
+`AssertionError: ('VictoryRoad3F', (22, 15), (23, 15))`。
+`/tmp/jev-coordinate-warps-fresh-m49-20261002/`及同名前缀日志保留失败现场。
+新增坐标洞口被旧milestone推石器的warp障碍集合挡住，导致合法目标洞口
+也不能推入石头。正式Jev的独立`plan_pushes`不使用这段milestone规划。
+
+现从引擎推石目标表辨认真正落石洞口，仅允许指定石头推入指定目标；玩家
+行走及其他石头仍不能穿过该洞，普通楼梯不放开。精确回归先RED后GREEN。
+新增永久s25原生构造场景，真实队伍菜单Strength、一次右推、再一步落层：
+推石后在3F `(22,15)`且目标旗标真实成立，再走入洞才到2F `(22,16)`，
+1/1 PASS（6.6秒），日志`/tmp/jev-victory-hole-s25.log`。它是独立最小测试
+存档，不计正式收集或fresh主线。此前旧通关存档副本未能恢复隐藏石头的
+失败夹具保留于`.artifacts/jev-victory-hole-20261002/`和
+`/tmp/jev-victory-hole-native.log`，不把未执行的推石计通过。
+
+修正后另从NEW GAME启动`/tmp/jev-coordinate-warps-fresh-m49-20261002b/`，
+日志同名前缀`.log`。尚在运行，不能提前计m49通过；此前动画版fresh-d
+通过仍是独立旧版本证据。无渲染或游戏规则改动。

@@ -1369,6 +1369,9 @@ def m41_victory_road_entrance(g):
 def push_boulder(g, map_name, text_id, destination, flag):
     from collections import deque
     from playthrough import bfs, DELTA, MAPS, walkable_edge, tile_at, warp_tiles
+    from openpokered.boulder_skills import BOULDER_TARGETS
+    holes = {tuple(row['target']) for row in BOULDER_TARGETS.values()
+             if row['map'] == map_name and row['falls']}
     # A switch push can finish on the same frame that a wild encounter hands
     # control back to the overworld. Resolve that hand-off before opening the
     # party menu for the next Strength use.
@@ -1415,7 +1418,10 @@ def push_boulder(g, map_name, text_id, destination, flag):
                     and (n["x"], n["y"]) != (-1, -1)}
         exit_mats = {(w["x"], w["y"]) for w in MAPS[map_name]["warps"]
                      if w["y"] == MAPS[map_name]["height"] * 2 - 1}
-        occupied |= warp_tiles(map_name) - exit_mats
+        # A player falls through a scripted hole, but a requested boulder
+        # drop must be allowed to enter it. Keep it forbidden for walking
+        # and for other boulders; ordinary stairs remain obstacles.
+        occupied |= warp_tiles(map_name) - exit_mats - ({destination} & holes)
         root = ((s["player_x"], s["player_y"]), boulders)
         queue, previous = deque([root]), {root: None}
         solved = None
@@ -1424,7 +1430,7 @@ def push_boulder(g, map_name, text_id, destination, flag):
             if positions[target_slot] == destination:
                 solved = node
                 break
-            blocked = occupied | set(positions)
+            blocked = occupied | set(positions) | holes
             # Prefer the requested boulder, then use the others only when a
             # valid solution requires clearing their route.
             slots = [target_slot] + [slot for slot in range(len(positions))
@@ -1435,9 +1441,10 @@ def push_boulder(g, map_name, text_id, destination, flag):
                     behind = (boulder[0] - dx, boulder[1] - dy)
                     ahead = (boulder[0] + dx, boulder[1] + dy)
                     if (ahead in occupied or ahead in positions
+                            or ahead in holes and slot != target_slot
                             or not walkable_edge(map_name, behind, ahead)
                             or tile_at(map_name, *ahead) == 0x15
-                            or behind in occupied or behind in positions):
+                            or behind in occupied or behind in positions or behind in holes):
                         continue
                     if not bfs(map_name, player, behind, blocked=blocked):
                         continue

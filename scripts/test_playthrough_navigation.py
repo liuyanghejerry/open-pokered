@@ -11,6 +11,25 @@ from playthrough_late import damage_slot
 
 
 class NavigationRegression(unittest.TestCase):
+    def test_milestone_can_push_a_boulder_into_its_scripted_hole(self):
+        import playthrough_late as late
+        flag = 'EVENT_VICTORY_ROAD_3_BOULDER_ON_SWITCH2'
+        flags = {}
+        game = Mock()
+        game.st.return_value = {'screen': 'overworld', 'player_x': 21, 'player_y': 15,
+                                'party': [{'moves': ['Strength']}]}
+        game.d.cmd.side_effect = lambda **kw: {'data': flags if kw['cmd'] == 'get_flags' else [
+            {'text_id': 10, 'sprite_id': 63, 'x': 22, 'y': 15, 'visible': True}]}
+        game.d.drive.side_effect = lambda *args, **kw: flags.update({flag: True})
+        game.observed_npcs = {}
+        game.live_npcs.return_value = {(22, 15)}
+        with patch.object(nav, 'COORDINATE_WARPS', {
+                'VictoryRoad3F': {(23, 15): ('VictoryRoad2F', 22, 16)}}), \
+                patch.object(late, 'field_move'):
+            late.push_boulder(game, 'VictoryRoad3F', 10, (23, 15), flag)
+        game.nav_to.assert_called_once_with(21, 15, 'VictoryRoad3F')
+        game.d.drive.assert_called_once_with(['right'] * 8, frames=48)
+
     def test_coordinate_warp_reads_native_program_and_named_config_binding(self):
         warp = lambda name, x, y: {'Command': {'name': 'warpTo', 'args': [
             {'StringLit': name}, {'NumberLit': x}, {'NumberLit': y}]}}
