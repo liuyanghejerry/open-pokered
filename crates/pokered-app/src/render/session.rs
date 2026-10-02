@@ -2622,9 +2622,9 @@ mod session_tests {
         let stock = [ItemId::PokeBall, ItemId::Potion, ItemId::Antidote,
             ItemId::ParlyzHeal, ItemId::BurnHeal, ItemId::EscapeRope];
         for language in [Lang::En, Lang::Zh] {
-            let mut game = PokemonGame::new_with_options(GameVersion::Red,
-                None, None, None, true, None, false, true, None);
+            let mut game = PokemonGame::new(GameVersion::Red);
             game.audio = None;
+            game.save_data = pokered_core::save::SaveData::new();
             game.state.config.language = language;
             for &item in &stock {
                 game.save_data.game_data.bag.add_item(item, 3).unwrap();
@@ -2646,6 +2646,7 @@ mod session_tests {
                 let mut mart = MartState::new(ShopInventory::new(stock.to_vec()));
                 mart.phase = phase;
                 game.state.screen = GameScreen::Shop(mart);
+                assert!(ShopVisualKey::new(&game).is_some(), "exercise retained shop rendering");
                 session.render(&mut game, &mut retained, &mut scroll);
                 game.draw(&mut full);
                 for y in 0..144 { for x in 0..160 {
