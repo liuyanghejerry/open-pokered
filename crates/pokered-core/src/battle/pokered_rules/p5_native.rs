@@ -852,7 +852,8 @@ fn confusion_self_hit_damage(ctx: &BattleCtx<'_, PokeredRules>, who: BattlerRef)
         has_reflect_or_light_screen: ctx.effects.iter().any(|e|
             e.host == opposing(who) && matches!(e.kind, PokeVolatile::Reflect)),
         is_explode_effect: false,
-        attacker_burned: b.status == Some(StatusCondition::Burn),
+        attacker_burned: b.status == Some(StatusCondition::Burn)
+            && crate::battle::badge_boosts::staged_stats(b).is_none(),
     };
     calculate_damage(&params).damage
 }

@@ -458,7 +458,7 @@ pub fn engine_state_from_legacy(
     }
     crate::battle::badge_boosts::seed_badge_context(
         &mut player_b,
-        ls.player_badges,
+        if ls.link_battle { 0 } else { ls.player_badges },
         [
             ls.player.unmodified_attack,
             ls.player.unmodified_defense,
@@ -468,8 +468,14 @@ pub fn engine_state_from_legacy(
     );
     if let Some(working) = ls.player.staged_badge_stats {
         crate::battle::badge_boosts::set_staged_stats(&mut player_b, working);
-    } else if ls.player_badges != 0 {
-        let working = crate::battle::badge_boosts::current_staged_stats(&player_b);
+    } else {
+        let stages = [ls.player.stat_stages.attack, ls.player.stat_stages.defense,
+            ls.player.stat_stages.speed, ls.player.stat_stages.special];
+        let mon = ls.player.active_mon();
+        let raw = [mon.attack, mon.defense, mon.speed, mon.special];
+        let badges = if ls.link_battle { 0 } else { ls.player_badges };
+        let working = crate::battle::badge_boosts::initial_working_stats(raw, stages,
+            ls.player.active_mon().status, badges);
         crate::battle::badge_boosts::set_staged_stats(&mut player_b, working);
     }
     let mut enemy_b = engine_active(&ls.enemy);
@@ -481,6 +487,14 @@ pub fn engine_state_from_legacy(
     crate::battle::badge_boosts::set_unmodified_stats(&mut enemy_b,
         [ls.enemy.unmodified_attack,ls.enemy.unmodified_defense,ls.enemy.unmodified_speed,ls.enemy.unmodified_special]);
     if let Some(working) = ls.enemy.staged_badge_stats {
+        crate::battle::badge_boosts::set_staged_stats(&mut enemy_b, working);
+    } else {
+        let stages = [ls.enemy.stat_stages.attack, ls.enemy.stat_stages.defense,
+            ls.enemy.stat_stages.speed, ls.enemy.stat_stages.special];
+        let mon = ls.enemy.active_mon();
+        let raw = [mon.attack, mon.defense, mon.speed, mon.special];
+        let working = crate::battle::badge_boosts::initial_working_stats(raw, stages,
+            ls.enemy.active_mon().status, 0);
         crate::battle::badge_boosts::set_staged_stats(&mut enemy_b, working);
     }
     enemy_b.resources.set(super::RES_FINITE_PP, ls.link_battle as u16, 1);

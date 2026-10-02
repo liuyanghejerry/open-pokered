@@ -674,7 +674,7 @@ fn disobedience_self_hit_damage(bs: &BattleState) -> u16 {
     use crate::battle::damage::{calculate_damage, DamageParams};
     use pokered_data::types::PokemonType;
     let mon = bs.player.active_mon();
-    let (atk, def) = match bs.player.badge_boosted_stats {
+    let (atk, def) = match bs.player.staged_badge_stats.or(bs.player.badge_boosted_stats) {
         Some(b) => (b[0], b[1].max(1)),
         None => (mon.attack, mon.defense.max(1)),
     };
@@ -1363,7 +1363,8 @@ impl BattleScreen {
         if let Some(ref mut bs) = self.battle_state {
             bs.player_badges = self.player_badges;
             bs.player_id = self.player_id;
-            crate::battle::badge_boosts::ensure_initialized(&mut bs.player, self.player_badges);
+            crate::battle::badge_boosts::ensure_initialized(&mut bs.player, if bs.link_battle { 0 } else { self.player_badges });
+            crate::battle::badge_boosts::ensure_initialized(&mut bs.enemy, 0);
         }
     }
 
@@ -2914,6 +2915,11 @@ learn {learn_name}!")];
         }
 
         let category = ItemCategory::from_item(item_id);
+        self.sync_player_context();
+        let reset_working_on_cure = self.battle_state.as_ref().is_some_and(|bs|
+            pokemon_index == bs.player.active_pokemon_index &&
+            (category == ItemCategory::StatusCure ||
+                (item_id == ItemId::FullRestore && bs.player.active_mon().hp >= bs.player.active_mon().max_hp)));
         let (result_msg, item_used) = if let Some(ref mut bs) = self.battle_state {
             let mon = &mut bs.player.party[pokemon_index];
             match category {
@@ -2960,6 +2966,11 @@ learn {learn_name}!")];
             ("No effect!".to_string(), false)
         };
 
+        if item_used && reset_working_on_cure {
+            if let Some(bs) = self.battle_state.as_mut() {
+                crate::battle::badge_boosts::reset_after_player_status_cure(&mut bs.player);
+            }
+        }
         self.sync_display_from_state();
         self.bag_menu = None;
         if item_used {
@@ -3380,6 +3391,7 @@ learn {learn_name}!")];
                         badges,
                         Some(*stat),
                     );
+                    crate::battle::badge_boosts::apply_status_penalties_legacy(&mut bs.enemy);
                 }
                 _ => {}
             }
@@ -3841,6 +3853,7 @@ learn {learn_name}!")];
                 msgs.push(format!("{} used {}!", trainer_name, item));
                 if changed {
                     crate::battle::badge_boosts::reapply_on_stage_change_legacy(&mut bs.enemy, 0, Some(stat));
+                    crate::battle::badge_boosts::apply_status_penalties_legacy(&mut bs.player);
                     msgs.push(format!("{}'s {} rose!", enemy_display, stat_name));
                 }
             }
@@ -4080,9 +4093,10 @@ learn {learn_name}!")];
                         // In a link battle the disobedience rolls come from the
                         // shared stream (the original draws BattleRandom here).
                         let mut link_rng = self.link_rng.as_mut();
+                        let battle_rng = &mut self.rng;
                         let mut draw = || match &mut link_rng {
                             Some(r) => r.next_u8(),
-                            None => crate::rng::random::<u8>(),
+                            None => dotzuki_engine::battle::rng::BattleRng::next_u8(battle_rng),
                         };
                         let outcome = crate::battle::obedience::check_disobedience(
                             level,
@@ -4184,7 +4198,7 @@ learn {learn_name}!")];
                 Some(bs) => {
                     bs.player.selected_move = player_move_id;
                     bs.enemy.selected_move = enemy_move_id;
-                    crate::battle::turn_order::determine_order(bs, crate::rng::random())
+                    crate::battle::turn_order::determine_order(bs, dotzuki_engine::battle::rng::BattleRng::next_u8(&mut self.rng))
                         == crate::battle::turn_order::TurnOrder::EnemyFirst
                 }
                 None => return,
@@ -4272,7 +4286,7 @@ learn {learn_name}!")];
                 // Speed order of the (blocked) turns, for placing the ghost-battle
                 // texts (PrintGhostText prints each side's line as its turn comes).
                 let ghost_enemy_first = ghost_enemy_blocked
-                    && crate::battle::turn_order::determine_order(bs, crate::rng::random())
+                    && crate::battle::turn_order::determine_order(bs, dotzuki_engine::battle::rng::BattleRng::next_u8(&mut self.rng))
                         == crate::battle::turn_order::TurnOrder::EnemyFirst;
             let rng: &mut dyn dotzuki_engine::battle::rng::BattleRng = match self.link_rng.as_mut()
             {
@@ -4883,9 +4897,9 @@ learn {learn_name}!")];
                 if bs.player_badges != 0 || bs.player.staged_badge_stats.is_some() {
                     let stages = [bs.player.stat_stages.attack, bs.player.stat_stages.defense,
                         bs.player.stat_stages.speed, bs.player.stat_stages.special];
-                    let modified = core::array::from_fn(|i| crate::battle::stat_stages::apply_stage(raw[i], stages[i]));
                     bs.player.staged_badge_stats = Some(
-                        crate::battle::badge_boosts::initial_boosted_stats(modified, bs.player_badges));
+                        crate::battle::badge_boosts::initial_working_stats(raw, stages,
+                            bs.player.active_mon().status, bs.player_badges));
                 }
             }
         }
@@ -7359,4 +7373,32 @@ mod i18n_tests {
         assert_eq!(lines[0].chars().count(), 14);
     }
 
+}
+
+#[cfg(test)]
+mod mimic_replay_rng_fidelity_tests {
+    use super::*;
+    use crate::pokemon::stats::create_pokemon_with_moves;
+    use pokered_data::species::Species;
+    #[test]
+    fn traded_mimic_choice_replays_the_obedience_roll_that_opened_the_menu() {
+        let mut player = create_pokemon_with_moves(Species::Mew, 50, [0xff; 2],
+            [MoveId::Mimic, MoveId::None, MoveId::None, MoveId::None]).unwrap();
+        player.ot_id = 999;
+        let enemy = create_pokemon_with_moves(Species::Snorlax, 50, [0xff; 2],
+            [MoveId::Growl, MoveId::None, MoveId::None, MoveId::None]).unwrap();
+        for seed in 1..=512 {
+            let mut screen = BattleScreen::from_parties(true, &[player.clone()], &[enemy.clone()], None);
+            screen.player_id = 123;
+            screen.rng = pokered_rules::runtime::StdBattleRng::from_seed(seed);
+            screen.execute_turn_with_move(0);
+            if let Some((action, None)) = screen.mimic_choice {
+                screen.mimic_choice = Some((action, Some(0)));
+                screen.execute_turn_with_move(action);
+                assert_eq!(screen.battle_state.as_ref().unwrap().player.active_mon().moves[0], MoveId::Growl);
+                return;
+            }
+        }
+        panic!("no obeying Mimic found in the deterministic seed range");
+    }
 }

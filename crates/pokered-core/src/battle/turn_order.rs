@@ -74,7 +74,8 @@ fn effective_speed(battler: &BattlerState) -> u16 {
     let staged = battler.staged_badge_stats.map(|b| b[2])
         .unwrap_or_else(|| apply_stage(base, battler.stat_stages.speed));
     // Paralysis quarters speed (ASM: QuarterSpeedDueToParalysis)
-    if battler.active_mon().status == super::state::StatusCondition::Paralysis {
+    if battler.active_mon().status == super::state::StatusCondition::Paralysis
+        && battler.staged_badge_stats.is_none() {
         (staged / 4).max(1)
     } else {
         staged

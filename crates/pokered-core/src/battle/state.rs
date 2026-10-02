@@ -328,8 +328,9 @@ pub struct BattlerState {
     /// only. See [`super::badge_boosts`].
     #[serde(default)]
     pub badge_boosted_stats: Option<[u16; 4]>,
-    /// Stage-modified working stats after badge reapplications. Kept apart
-    /// from the raw carrier to preserve the assembly's integer operation order.
+    /// Actual battle working stats, including stages, badge reapplications and
+    /// each burn/paralysis penalty already applied by the original effect.
+    /// Kept apart from the raw carrier to preserve integer operation order.
     #[serde(default)]
     pub staged_badge_stats: Option<[u16; 4]>,
     /// Original party identity while Transform/Mimic alter the battle copy.

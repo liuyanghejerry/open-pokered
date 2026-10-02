@@ -610,6 +610,7 @@ impl RuleBindings<PokeredRules> for PokeredBindings {
             return false;
         }
         b.status = Some(status);
+        crate::battle::badge_boosts::apply_status_penalties(b);
         true
     }
 
@@ -1859,7 +1860,8 @@ fn pokered_damage(
         // Explosion / Self-Destruct halve the target's Defense (the self-KO is a
         // data op on the record).
         is_explode_effect: pm.effect == MoveEffect::ExplodeEffect,
-        attacker_burned: a.status == Some(LegacyStatus::Burn),
+        attacker_burned: a.status == Some(LegacyStatus::Burn)
+            && crate::battle::badge_boosts::staged_stats(a).is_none(),
     };
     let result = calculate_damage(&params);
     ctx.mv.damage = if result.is_miss { 0 } else { result.damage };
@@ -2122,6 +2124,8 @@ fn rage_manage(
         if cur < 6 {
             b.stat_stages.set(StatIndex::Attack, cur + 1);
             crate::battle::badge_boosts::reapply_on_stage_change(b, StatIndex::Attack);
+            // Rage temporarily flips whose turn it is before StatModifierUpEffect.
+            crate::battle::badge_boosts::apply_status_penalties(ctx.battler_mut(source));
         }
     }
     HandlerResult::Unchanged
@@ -2903,7 +2907,13 @@ fn bridge_foe_stat_down(
     // matching legacy `StatStages::modify`).
     if let Some(idx) = host_stat_index(&stat_name) {
         let host = PokeredRules::rules_host().expect("pokered rules host installed");
+        let stat = PokeredBindings::stat_for_index(idx).expect("registered stat");
+        let before = ctx.battler(lowered).stat_stages.get(stat).copied().unwrap_or(0);
         host.bindings.apply_boost(ctx.battler_mut(lowered), idx, stages);
+        if ctx.battler(lowered).stat_stages.get(stat).copied().unwrap_or(0) != before {
+            // StatModifierDownEffect reapplies penalties to the lowered side.
+            crate::battle::badge_boosts::apply_status_penalties(ctx.battler_mut(lowered));
+        }
     }
     HandlerResult::Unchanged
 }
@@ -3008,7 +3018,19 @@ fn bridge_damaging_hit(
     if is_foe_stat_down {
         return bridge_foe_stat_down(ctx, relay, target, source, source_effect);
     }
-    run_bridge(ctx, relay, target, source, source_effect, Event::DamagingHit)
+    let self_boost = hook_for(source_effect, Event::DamagingHit).is_some_and(|hook|
+        hook.ops.iter().any(|op| matches!(op, dotzuki_rules::Op::Boost {
+            target: dotzuki_rules::Selector::Source, ..
+        })));
+    let before = ctx.battler(source).stat_stages.clone();
+    let result = run_bridge(ctx, relay, target, source, source_effect, Event::DamagingHit);
+    if self_boost && [StatIndex::Attack, StatIndex::Defense, StatIndex::Speed,
+        StatIndex::Special, StatIndex::Accuracy, StatIndex::Evasion].into_iter()
+        .any(|stat| ctx.battler(source).stat_stages.get(stat) != before.get(stat)) {
+        // The original stat-up tail mistakenly penalizes the opposite side.
+        crate::battle::badge_boosts::apply_status_penalties(ctx.battler_mut(target));
+    }
+    result
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -3085,7 +3107,8 @@ fn effective_speed(b: &EngineBattler<PokeredRules>) -> u16 {
     // speed-overflow behaviour (no 255/999 clamp).
     let (base, stage) = crate::battle::badge_boosts::stat_and_stage(b, StatIndex::Speed);
     let staged = crate::battle::stat_stages::apply_stage(base, stage);
-    if b.status == Some(LegacyStatus::Paralysis) {
+    if b.status == Some(LegacyStatus::Paralysis)
+        && crate::battle::badge_boosts::staged_stats(b).is_none() {
         (staged / 4).max(1)
     } else {
         staged
