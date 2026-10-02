@@ -1867,6 +1867,87 @@ fn write_route22_native_branches(
     );
 }
 
+/// The fossil doctor's entire interaction contains all three deposit menus
+/// and all three revived gifts. Decode only the entry and the continuation
+/// selected by the *returned* filtered-bag result, never by bag membership.
+fn write_fossil_lab_native_branches(
+    functions: &mut Vec<(String, String, PathBuf)>,
+    out_dir: &Path,
+    statements: &[dotzuki_engine_dsl::ast::StoryStmt],
+) {
+    use dotzuki_engine_dsl::ast::{BinOp, Expression, StoryStmt};
+    assert_eq!(statements.len(), 1, "fossil doctor outer body changed");
+    let StoryStmt::If { then_branch: entry, else_branch: given, .. } = &statements[0] else {
+        panic!("fossil doctor missing GAVE guard");
+    };
+    assert_eq!(entry.len(), 2, "fossil doctor entry changed");
+    let StoryStmt::If { then_branch: menu, .. } = &entry[1] else {
+        panic!("fossil doctor missing bag guard");
+    };
+    assert_eq!(menu.len(), 5, "fossil doctor selection branches changed");
+    assert!(matches!(&menu[0], StoryStmt::Assign {
+        name, value: Expression::Call { callee, .. }, ..
+    } if name == "fossil" && callee == "filterBag"), "fossil doctor missing real bag selection");
+    let mut small_entry = entry.clone();
+    if let StoryStmt::If { then_branch, .. } = &mut small_entry[1] {
+        // Suspend immediately after the actual menu command. The native
+        // bridge releases this frame and resumes the selected leaf later.
+        then_branch.truncate(1);
+    }
+    let mut emit = |suffix: &str, body: &[StoryStmt]| {
+        let name = format!("__native_talkScientist1_{suffix}");
+        write_scene_function(functions, out_dir, "CinnabarLabFossilRoom", &name, &name, body);
+    };
+    emit("entry", &small_entry);
+    let StoryStmt::If {
+        condition: Expression::BinaryOp { op: BinOp::Eq, left, right },
+        then_branch: canceled, else_branch, ..
+    } = &menu[1] else { panic!("fossil doctor missing cancellation text"); };
+    assert!(matches!(left.as_ref(), Expression::Variable(name) if name == "fossil"));
+    assert!(matches!(right.as_ref(), Expression::StringLit(value) if value.is_empty()));
+    assert!(else_branch.is_empty());
+    emit("cancel", canceled);
+    // Unknown/non-text debug responses match none of the source guards.
+    emit("noop", &[]);
+    for ((suffix, item), statement) in [
+        ("fossil_dome", "DOME_FOSSIL"),
+        ("fossil_helix", "HELIX_FOSSIL"),
+        ("fossil_amber", "OLD_AMBER"),
+    ].into_iter().zip(&menu[2..]) {
+        let StoryStmt::If {
+            condition: Expression::BinaryOp { op: BinOp::Eq, left, right },
+            then_branch, else_branch, ..
+        } = statement else { panic!("fossil doctor selection guard changed"); };
+        assert!(matches!(left.as_ref(), Expression::Variable(name) if name == "fossil"));
+        assert!(matches!(right.as_ref(), Expression::StringLit(value) if value == item));
+        assert!(else_branch.is_empty());
+        emit(suffix, then_branch);
+    }
+    assert_eq!(given.len(), 1, "fossil doctor given body changed");
+    let StoryStmt::If { then_branch: still, else_branch: ready, .. } = &given[0] else {
+        panic!("fossil doctor missing STILL guard");
+    };
+    emit("still", still);
+    assert_eq!(ready.len(), 4, "fossil doctor ready branches changed");
+    emit("ready_none", &ready[..1]);
+    for ((suffix, flag), statement) in [
+        ("ready_kabuto", "EVENT_REVIVING_KABUTO"),
+        ("ready_omanyte", "EVENT_REVIVING_OMANYTE"),
+        ("ready_aerodactyl", "EVENT_REVIVING_AERODACTYL"),
+    ].into_iter().zip(&ready[1..]) {
+        let StoryStmt::If {
+            condition: Expression::Call { callee, args },
+            then_branch, else_branch, ..
+        } = statement else { panic!("fossil doctor ready guard changed"); };
+        assert_eq!(callee, "getFlag");
+        assert!(matches!(args.as_slice(), [Expression::StringLit(value)] if value == flag));
+        assert!(else_branch.is_empty());
+        let mut body = ready[..1].to_vec();
+        body.extend_from_slice(then_branch);
+        emit(suffix, &body);
+    }
+}
+
 fn find_speaker_containing(
     statements: &[dotzuki_engine_dsl::ast::StoryStmt],
     needle: &str,
@@ -2193,6 +2274,11 @@ fn generate_scene_scripts(manifest_dir: &Path, out_dir: &str) {
                 }
                 if map_name == "Route22" && storyline.name == "coordRivalBattle" {
                     write_route22_native_branches(
+                        &mut functions, &function_out_dir, &storyline.statements,
+                    );
+                }
+                if map_name == "CinnabarLabFossilRoom" && storyline.name == "talkScientist1" {
+                    write_fossil_lab_native_branches(
                         &mut functions, &function_out_dir, &storyline.statements,
                     );
                 }

@@ -681,6 +681,8 @@ pub struct NativeScriptEngine {
     state: InterpState,
     split_battle_active: bool,
     split_battle_waiting: bool,
+    split_fossil_active: bool,
+    split_fossil_waiting: bool,
 }
 
 fn embedded_function_alias(name: &'static str) -> Cow<'static, str> {
@@ -699,6 +701,8 @@ impl NativeScriptEngine {
             state: InterpState::Idle,
             split_battle_active: false,
             split_battle_waiting: false,
+            split_fossil_active: false,
+            split_fossil_waiting: false,
         }
     }
 
@@ -931,6 +935,10 @@ impl NativeScriptEngine {
             && self.functions.contains_key("__native_talkOak1_choose")
         {
             Some(self.oaks_lab_oak1_variant())
+        } else if matches!(fn_name, "talkScientist1" | "storyline_talkScientist1")
+            && self.functions.contains_key("__native_talkScientist1_entry")
+        {
+            self.fossil_lab_variant()
         } else if fn_name == "coordDontGoAway"
             && self
                 .functions
@@ -964,6 +972,8 @@ impl NativeScriptEngine {
         let fn_name = variant.as_deref().unwrap_or(fn_name);
         self.split_battle_active = fn_name == "__native_coordDontGoAway_battle_before";
         self.split_battle_waiting = false;
+        self.split_fossil_active = fn_name == "__native_talkScientist1_entry";
+        self.split_fossil_waiting = false;
         let resolved = if self.functions.contains_key(fn_name) {
             fn_name.to_string()
         } else {
@@ -994,7 +1004,51 @@ impl NativeScriptEngine {
             }
         };
         self.track_split_battle_command(&outcome);
+        if let Ok(command) = &outcome {
+            self.track_split_fossil_command(command);
+        }
         outcome
+    }
+
+    fn fossil_lab_variant(&self) -> Option<String> {
+        if !self.get_flag("EVENT_GAVE_FOSSIL_TO_LAB") {
+            return Some("__native_talkScientist1_entry".into());
+        }
+        if self.get_flag("EVENT_LAB_STILL_REVIVING_FOSSIL") {
+            return Some("__native_talkScientist1_still".into());
+        }
+        let mut selected = None;
+        for (flag, name) in [
+            ("EVENT_REVIVING_KABUTO", "__native_talkScientist1_ready_kabuto"),
+            ("EVENT_REVIVING_OMANYTE", "__native_talkScientist1_ready_omanyte"),
+            ("EVENT_REVIVING_AERODACTYL", "__native_talkScientist1_ready_aerodactyl"),
+        ] {
+            if self.get_flag(flag) {
+                // Multiple ready flags only occur in corrupt/debug state.
+                // Keep the full source's three independent If statements,
+                // including later gifts when an earlier delivery fails.
+                if selected.is_some() {
+                    return None;
+                }
+                selected = Some(name);
+            }
+        }
+        Some(selected.unwrap_or("__native_talkScientist1_ready_none").into())
+    }
+
+    fn track_split_fossil_command(&mut self, command: &Option<ScriptCommand>) {
+        if self.split_fossil_active
+            && matches!(command, Some(ScriptCommand::Custom { name, .. }) if name == "filterBag")
+        {
+            self.split_fossil_waiting = true;
+            // The real filtered menu remains pending in the overworld. Its
+            // returned item selects the continuation; discard the entry AST
+            // before constructing the menu, as with Oak's battle handoff.
+            self.interp.load_function(&[]);
+            let _ = self.interp.tick();
+        } else if self.state == InterpState::Idle {
+            self.split_fossil_active = false;
+        }
     }
 
     fn oaks_lab_oak1_variant(&self) -> String {
@@ -1122,6 +1176,7 @@ impl NativeScriptEngine {
             self.interp.load_function(&[]);
             let _ = self.interp.tick();
         }
+        self.track_split_fossil_command(&command);
         command
     }
 
@@ -1139,6 +1194,18 @@ impl NativeScriptEngine {
             }
             self.state = InterpState::Idle;
             return Ok(None);
+        }
+        if self.split_fossil_waiting {
+            let continuation = match &result {
+                CommandResult::Text(item) if item == "DOME_FOSSIL" => "__native_talkScientist1_fossil_dome",
+                CommandResult::Text(item) if item == "HELIX_FOSSIL" => "__native_talkScientist1_fossil_helix",
+                CommandResult::Text(item) if item == "OLD_AMBER" => "__native_talkScientist1_fossil_amber",
+                CommandResult::Text(item) if item.is_empty() => "__native_talkScientist1_cancel",
+                _ => "__native_talkScientist1_noop",
+            };
+            self.split_fossil_active = false;
+            self.split_fossil_waiting = false;
+            return self.call_function_no_args(continuation);
         }
         if self.split_battle_waiting {
             let won = matches!(&result, CommandResult::Text(value) if value == "win");
@@ -1174,6 +1241,9 @@ impl NativeScriptEngine {
             }
         };
         self.track_split_battle_command(&outcome);
+        if let Ok(command) = &outcome {
+            self.track_split_fossil_command(command);
+        }
         outcome
     }
 }
@@ -1196,6 +1266,10 @@ pub struct NativeScriptEngineSnapshot {
     state: InterpState,
     split_battle_active: bool,
     split_battle_waiting: bool,
+    #[serde(default)]
+    split_fossil_active: bool,
+    #[serde(default)]
+    split_fossil_waiting: bool,
 }
 
 impl NativeScriptEngine {
@@ -1207,6 +1281,8 @@ impl NativeScriptEngine {
             state: self.state,
             split_battle_active: self.split_battle_active,
             split_battle_waiting: self.split_battle_waiting,
+            split_fossil_active: self.split_fossil_active,
+            split_fossil_waiting: self.split_fossil_waiting,
         }
     }
 
@@ -1219,6 +1295,8 @@ impl NativeScriptEngine {
         self.state = snapshot.state;
         self.split_battle_active = snapshot.split_battle_active;
         self.split_battle_waiting = snapshot.split_battle_waiting;
+        self.split_fossil_active = snapshot.split_fossil_active;
+        self.split_fossil_waiting = snapshot.split_fossil_waiting;
     }
 }
 
@@ -2550,6 +2628,174 @@ mod tests {
             assert!(!engine.get_flag("EVENT_GAVE_FOSSIL_TO_LAB"));
             assert!(!engine.get_flag(&reviving));
             assert!(!engine.get_flag("EVENT_LAB_HANDING_OVER_FOSSIL_MON"));
+        }
+    }
+
+    fn drive_fossil_commands(
+        engine: &mut NativeScriptEngine,
+        mut next: Option<ScriptCommand>,
+        selected: &str,
+        choice: usize,
+        gift_ok: bool,
+    ) -> Vec<ScriptCommand> {
+        let mut commands = Vec::new();
+        for _ in 0..64 {
+            let Some(command) = next else {
+                assert!(engine.is_idle());
+                return commands;
+            };
+            let result = match &command {
+                ScriptCommand::Custom { name, .. } if name == "filterBag" => CommandResult::Text(selected.into()),
+                ScriptCommand::ShowChoice { .. } => CommandResult::Number(choice as f64),
+                ScriptCommand::GiveMonster { .. } => CommandResult::Bool(gift_ok),
+                _ => CommandResult::Void,
+            };
+            commands.push(command);
+            next = engine.signal_done(result).unwrap();
+        }
+        panic!("fossil doctor did not finish");
+    }
+
+    #[test]
+    fn fossil_lab_lazy_branches_match_full_dialogue_menus_flags_and_delivery() {
+        fn run(bits: u8, bag_mask: u8, selected: &str, choice: usize, gift_ok: bool, lang: &str, lazy: bool)
+            -> (Vec<ScriptCommand>, HashMap<String, bool>)
+        {
+            let mut engine = NativeScriptEngine::new();
+            engine.load_embedded_map("CinnabarLabFossilRoom", pokered_data::embedded_scenes::scene_functions());
+            if !lazy {
+                engine.functions.remove("__native_talkScientist1_entry");
+            }
+            for (bit, flag) in [
+                "EVENT_GAVE_FOSSIL_TO_LAB", "EVENT_LAB_STILL_REVIVING_FOSSIL",
+                "EVENT_REVIVING_KABUTO", "EVENT_REVIVING_OMANYTE", "EVENT_REVIVING_AERODACTYL",
+            ].iter().enumerate() {
+                engine.set_flag(flag, bits & (1 << bit) != 0);
+            }
+            let bag = ["DOME_FOSSIL", "HELIX_FOSSIL", "OLD_AMBER"].iter().enumerate()
+                .filter(|(bit, _)| bag_mask & (1 << bit) != 0)
+                .map(|(_, name)| (*name).to_string()).collect::<Vec<_>>();
+            engine.seed_set("bag", &bag);
+            engine.set_lang(lang);
+            let next = engine.call_function_no_args("talkScientist1").unwrap();
+            let commands = drive_fossil_commands(&mut engine, next, selected, choice, gift_ok);
+            (commands, engine.get_all_flags())
+        }
+        for lang in ["en", "zh"] {
+            for bag in 0..8 {
+                for selected in ["DOME_FOSSIL", "HELIX_FOSSIL", "OLD_AMBER", "", "UNKNOWN"] {
+                    for choice in [0, 1] {
+                        assert_eq!(run(0, bag, selected, choice, true, lang, true),
+                            run(0, bag, selected, choice, true, lang, false),
+                            "entry {lang}, bag {bag}, selection {selected}, choice {choice}");
+                    }
+                }
+            }
+            // Include no ready flag and all corrupt multiple-ready states:
+            // the original independently tests each flag after each result.
+            for ready in 0..8 {
+                for still in [0, 2] {
+                    for gift_ok in [false, true] {
+                        let bits = 1 | still | (ready << 2);
+                        assert_eq!(run(bits, 0, "", 0, gift_ok, lang, true),
+                            run(bits, 0, "", 0, gift_ok, lang, false),
+                            "ready {ready}, still {still}, gift {gift_ok}, {lang}");
+                    }
+                }
+            }
+        }
+        for species in ["KABUTO", "OMANYTE", "AERODACTYL"] {
+            let mut engine = NativeScriptEngine::new();
+            engine.load_embedded_map("CinnabarLabFossilRoom", pokered_data::embedded_scenes::scene_functions());
+            engine.set_flag("EVENT_GAVE_FOSSIL_TO_LAB", true);
+            let ready = format!("EVENT_REVIVING_{species}");
+            engine.set_flag(&ready, true);
+            for success in [false, true] {
+                let next = engine.call_function_no_args("talkScientist1").unwrap();
+                let commands = drive_fossil_commands(&mut engine, next, "", 0, success);
+                assert!(commands.contains(&ScriptCommand::GiveMonster { species: species.into(), level: 30 }));
+                assert_eq!(engine.get_flag("EVENT_GAVE_FOSSIL_TO_LAB"), !success);
+                assert_eq!(engine.get_flag(&ready), !success);
+                assert_eq!(engine.get_flag("EVENT_LAB_HANDING_OVER_FOSSIL_MON"), !success);
+            }
+        }
+    }
+
+    #[test]
+    fn fossil_lab_menu_wait_and_snapshot_resume_use_actual_returned_selection() {
+        let mut engine = NativeScriptEngine::new();
+        engine.load_embedded_map("CinnabarLabFossilRoom", pokered_data::embedded_scenes::scene_functions());
+        engine.seed_set("bag", &["DOME_FOSSIL".into(), "HELIX_FOSSIL".into(), "OLD_AMBER".into()]);
+        let intro = engine.call_function_no_args("talkScientist1").unwrap();
+        assert!(matches!(intro, Some(ScriptCommand::ShowText { .. })));
+        let menu = engine.signal_done(CommandResult::Void).unwrap();
+        assert_eq!(menu, Some(PokemonScriptCommand::FilterBag {
+            item_ids: vec!["DOME_FOSSIL".into(), "HELIX_FOSSIL".into(), "OLD_AMBER".into()],
+        }.into_script_command()));
+        assert!(engine.split_fossil_waiting);
+        let snapshot = engine.snapshot();
+        // The pending menu is held by the overworld, not re-emitted by the VM.
+        for _ in 0..100 {
+            assert!(engine.tick().is_none());
+            assert!(engine.is_waiting());
+            assert!(!engine.get_flag("EVENT_GAVE_FOSSIL_TO_LAB"));
+        }
+        for (item, expected) in [("DOME_FOSSIL", "KABUTO"), ("HELIX_FOSSIL", "OMANYTE"), ("OLD_AMBER", "AERODACTYL"), ("", "")] {
+            let mut restored = NativeScriptEngine::new();
+            restored.load_embedded_map("CinnabarLabFossilRoom", pokered_data::embedded_scenes::scene_functions());
+            restored.restore_snapshot(&snapshot);
+            let next = restored.signal_done(CommandResult::Text(item.into())).unwrap();
+            let commands = drive_fossil_commands(&mut restored, next, "", 0, true);
+            assert!(!commands.iter().any(|c| matches!(c, ScriptCommand::Custom { name, .. } if name == "filterBag")));
+            if item.is_empty() {
+                assert_eq!(commands, vec![ScriptCommand::ShowText { text: "Aiyah! You come again!".into() }]);
+                assert!(!restored.get_flag("EVENT_GAVE_FOSSIL_TO_LAB"));
+            } else {
+                assert!(commands.contains(&ScriptCommand::TakeItem { item_id: item.into(), quantity: 1 }));
+                assert!(restored.get_flag(&format!("EVENT_REVIVING_{expected}")));
+                assert!(restored.get_flag("EVENT_GAVE_FOSSIL_TO_LAB"));
+                assert!(restored.get_flag("EVENT_LAB_STILL_REVIVING_FOSSIL"));
+            }
+        }
+        // Earlier serialized debug snapshots remain readable.
+        let mut old = serde_json::to_value(snapshot).unwrap();
+        old.as_object_mut().unwrap().remove("split_fossil_active");
+        old.as_object_mut().unwrap().remove("split_fossil_waiting");
+        serde_json::from_value::<NativeScriptEngineSnapshot>(old).unwrap();
+    }
+
+    #[test]
+    fn fossil_lab_lazy_normal_paths_decode_small_independent_fragments() {
+        let mut count = 0;
+        for (map, name, bytes) in pokered_data::embedded_scenes::scene_functions() {
+            if *map == "CinnabarLabFossilRoom" && name.starts_with("__native_talkScientist1_") {
+                assert!(bytes.len() < 3000, "{name} grew to {} bytes", bytes.len());
+                serde_json::from_slice::<Vec<StoryStmt>>(bytes).unwrap();
+                count += 1;
+            }
+        }
+        assert_eq!(count, 11);
+    }
+
+    #[test]
+    fn fossil_lab_cancel_prints_original_come_again_without_consuming_the_fossil() {
+        // Independent original expectation: engine/events/cinnabar_lab.asm
+        // 30-34 branches B to .cancelledGivingFossil (75-78), which prints
+        // _CinnabarLabFossilRoomScientist1ComeAgainText. Its English original
+        // is "Aiyah! You come again!", also used by the NO response.
+        for lazy in [false, true] {
+            let mut engine = NativeScriptEngine::new();
+            engine.load_embedded_map("CinnabarLabFossilRoom", pokered_data::embedded_scenes::scene_functions());
+            if !lazy { engine.functions.remove("__native_talkScientist1_entry"); }
+            engine.seed_set("bag", &["OLD_AMBER".into()]);
+            let next = engine.call_function_no_args("talkScientist1").unwrap();
+            let commands = drive_fossil_commands(&mut engine, next, "", 0, true);
+            assert!(matches!(commands.last(), Some(ScriptCommand::ShowText { text }) if text == "Aiyah! You come again!"));
+            assert_eq!(commands.len(), 3); // intro, real filtered menu, cancel text
+            assert!(!commands.iter().any(|c| matches!(c, ScriptCommand::TakeItem { .. } | ScriptCommand::GiveMonster { .. } | ScriptCommand::ShowChoice { .. })));
+            assert!(!engine.get_flag("EVENT_GAVE_FOSSIL_TO_LAB"));
+            assert!(!engine.get_flag("EVENT_LAB_STILL_REVIVING_FOSSIL"));
+            assert!(!engine.get_flag("EVENT_REVIVING_AERODACTYL"));
         }
     }
 

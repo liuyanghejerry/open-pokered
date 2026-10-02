@@ -28,6 +28,9 @@ game_scene CinnabarLabFossilRoom {
         // confirm, hand it over. Original Lab4Script_GetFossilsInBag filters the
         // bag to DOME/HELIX/OLD_AMBER; filterBag reproduces the dynamic menu.
         fossil = filterBag(["DOME_FOSSIL", "HELIX_FOSSIL", "OLD_AMBER"])
+        @if (fossil == "") {
+          @speaker("") { @t("Aiyah! You come again!", "哎呀！下次再来吧！") }
+        }
         @if (fossil == "DOME_FOSSIL") {
           @speaker("") {
             @t("Oh! That is DOME FOSSIL!\n\nIt is fossil of KABUTO, a\nPOKeMON that is already\nextinct!\n\nMy Resurrection Machine will\nmake that POKeMON live\nagain!", "哦！这是甲壳化石！\n\n这是化石盔的化石，是已经灭绝\n的宝可梦！\n\n我的复活机器会让这只宝可梦复\n活！")
