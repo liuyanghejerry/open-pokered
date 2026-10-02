@@ -82,6 +82,42 @@ class AutonomousTests(unittest.TestCase):
         self.assertTrue(search.call_args.kwargs['reachable_goals'])
         self.assertIn(('PokemonMansionB1F', 3, 4), search.call_args.kwargs['goal_nodes'])
 
+    def test_inaccessible_transport_can_offer_its_reachable_causal_door(self):
+        from types import SimpleNamespace
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        goal = Rule('goal', 'PalletTown', 'Town:goal', ['npc:1'], [], [], ('heal', 'party', True), [])
+        transport = Rule('exit', 'HallOfFame', 'HallOfFame:@load', ['load'], [], [],
+            ('transport', ('PalletTown', 5, 6), True), [('ending', 'hall_of_fame_and_credits', True)])
+        door = Rule('door', 'BrunosRoom', 'BrunosRoom:battle', ['npc:1'], [], [],
+            ('flag', 'DOOR_OPEN', True), [('battle', 'TRAINER', True)])
+        agent.index = SimpleNamespace(rules=[transport], frontier=Mock(return_value=[door]))
+        agent.game = Mock(last_map='IndigoPlateau')
+        agent.game.navigation_barriers.return_value = {}
+        agent.game.navigation_excluded_maps.return_value = ()
+        agent.destination_points = Mock(return_value=[(4, 2)])
+        agent.discover_route_prerequisites = Mock(return_value=[door.effect])
+        facts = {'map': 'LoreleisRoom', 'x': 4, 'y': 2, 'party': []}
+        def search(source, position, destination, point, **kwargs):
+            if source == 'PalletTown':
+                return {('PalletTown', 4, 2)}
+            return ['real path'] if destination == 'BrunosRoom' else None
+        groups = {'heal': {'target': goal.effect, 'rules': [goal], 'context': {
+            'trigger_navigation': [{'map': 'PalletTown', 'tile_route_found': False}]}}}
+        with patch('playthrough.bfs_cross', side_effect=search):
+            self.assertTrue(agent.transport_frontiers(groups, facts))
+        self.assertEqual(groups[json.dumps(door.effect)]['rules'], [door])
+        self.assertNotIn(json.dumps(transport.effect), groups)  # No fictitious instant teleport.
+        self.assertEqual(groups[json.dumps(door.effect)]['context']['transport_script']['produces'], transport.effect)
+        agent.discover_route_prerequisites.assert_called_once_with(
+            {'map_name': 'LoreleisRoom', 'player_x': 4, 'player_y': 2}, 'HallOfFame', [(4, 2)])
+        # An inaccessible producer is not an executable first step, even if
+        # the hypothetical transport would reach the desired region.
+        groups = {'heal': groups['heal']}
+        with patch('playthrough.bfs_cross', side_effect=lambda source, *a, **k:
+                   {('PalletTown', 4, 2)} if source == 'PalletTown' else None):
+            self.assertFalse(agent.transport_frontiers(groups, facts))
+        self.assertEqual(list(groups), ['heal'])
+
     def test_surf_completion_retains_the_blocked_parent_not_the_shore_goal(self):
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
         obstacle = {'map': 'Route20', 'stance': [58, 11], 'direction': 'down',
@@ -1886,6 +1922,59 @@ class AutonomousTests(unittest.TestCase):
             self.assertFalse(agent.remembered_goal_reachable(blockage, groups,
                 {'map': 'Town', 'x': 5, 'y': 6}, {}))
             bfs.assert_not_called()
+
+    def test_training_history_needs_a_live_target_and_unreachable_training_sites(self):
+        from types import SimpleNamespace
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        target = ('level', 'Drowzee', 19)
+        unlock = ('flag', 'OLD_DOOR', True)
+        door = Rule('door', 'Room', 'Room:door', [], [], [], unlock, [])
+        agent.index = SimpleNamespace(rules=[], npc_toggles={('Room', 1): ('BLOCKER', False)},
+            satisfied=lambda goal, facts: False, frontier=lambda goal, facts: [door])
+        agent.maps, agent.field_requirements, agent.navigation_memory = {}, {}, {}
+        agent.navigation_blockage = None
+        agent.navigation_history = {'old': {'map': 'Room', 'destination': 'OldGrass',
+            'goal': target, 'blocking_npcs': [1]}}
+        agent.game = SimpleNamespace(stationary_npcs={})
+        agent.client = Mock()
+        agent.client.route.return_value = {'found': False}
+        groups = {}
+        agent.add_navigation_groups(groups, {'map': 'Town'})
+        self.assertEqual(groups, {})  # Historical training is not a standing goal.
+        training = Rule('train', 'NearbyGrass', 'skill:train', [], [], [], target, [])
+        agent.training_navigation = {'NearbyGrass': {'tile_route_found': True}}
+        groups = {'train': {'target': target, 'rules': [training]}}
+        agent.add_navigation_groups(groups, {'map': 'Town'})
+        self.assertEqual(list(groups), ['train'])  # Reachable alternative needs no old door.
+        agent.training_navigation['NearbyGrass']['tile_route_found'] = False
+        agent.add_navigation_groups(groups, {'map': 'Town'})
+        self.assertIn(unlock, [group['target'] for group in groups.values()])
+
+    def test_load_autowalk_is_not_a_coordinate_pushback_prerequisite(self):
+        from types import SimpleNamespace
+        from openpokered.story_rules import literal
+        target = ('level', 'Drowzee', 19)
+        entered = ('flag', 'WALKED_IN', True)
+        guard = ({'Call': {'callee': 'getFlag', 'args': [literal('WALKED_IN')]}}, False)
+        autowalk = Rule('walk', 'Room', 'Room:@load', ['load'], [guard], [],
+                        ('movement', 'movePlayerRelative', True), [])
+        producer = Rule('enter', 'Room', 'Room:@load', ['load'], [], [], entered, [])
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.index = SimpleNamespace(rules=[autowalk], npc_toggles={},
+            satisfied=lambda goal, facts: False, frontier=lambda goal, facts: [producer],
+            coordinates=lambda rule: [] if 'load' in rule.triggers else [(4, 10)])
+        agent.maps, agent.field_requirements, agent.navigation_memory = {}, {}, {}
+        agent.navigation_blockage = None
+        agent.navigation_history = {'old': {'map': 'Room', 'destination': 'Grass', 'goal': target}}
+        agent.game = SimpleNamespace(stationary_npcs={})
+        agent.client = Mock()
+        agent.client.route.return_value = {'found': False}
+        groups = {'train': {'target': target, 'rules': []}}
+        agent.add_navigation_groups(groups, {'map': 'Town', 'flags': {}})
+        self.assertEqual(list(groups), ['train'])
+        autowalk.triggers = ['coord:exit']
+        agent.add_navigation_groups(groups, {'map': 'Town', 'flags': {}})
+        self.assertIn(entered, [group['target'] for group in groups.values()])
 
     def test_reachable_frontier_precedes_a_remote_npc_detour(self):
         import playthrough as pt

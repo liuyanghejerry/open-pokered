@@ -34,6 +34,14 @@ def facts(**flags):
 
 
 class RulesTests(unittest.TestCase):
+    def test_native_ending_transport_requires_the_real_ceremony_and_credits(self):
+        from openpokered.story_rules import native_ending_destination
+        self.assertEqual(native_ending_destination(), ('PalletTown', 5, 6))
+        rules = compile_story(story([command('resetFlag', 'ROUND_WON'), command('enterHallOfFame')]))
+        self.assertEqual(rules[-1].effect, ('transport', native_ending_destination(), True))
+        self.assertIn(('ending', 'hall_of_fame_and_credits', True), rules[-1].preceding)
+        self.assertIn(('flag', 'ROUND_WON', False), rules[-1].preceding)
+
     def test_badge_queries_use_native_bits_not_count_or_story_flags(self):
         from openpokered.story_rules import BADGE_BITS
         for name, bit in BADGE_BITS.items():

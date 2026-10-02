@@ -1120,6 +1120,21 @@ class AutonomousStoryAgent(DualStoryAgent):
         arrivals = {}
         sources = {}
         added = False
+        def can_approach(rule):
+            points = self.destination_points(rule.map, rule)
+            key = rule.map, tuple(points)
+            if key not in sources:
+                def search():
+                    return bool(points) and bool(pt.bfs_cross(
+                        facts['map'], (facts['x'], facts['y']), rule.map, points[0],
+                        last_map=self.game.last_map, allow_ledges=True, allow_spinners=True,
+                        blocked_maps=barriers, excluded_maps=excluded,
+                        goal_nodes={(rule.map, *p) for p in points}))
+                sources[key] = search()
+                if not sources[key] and any('Surf' in m['moves'] for m in facts.get('party', [])):
+                    with water_planning():
+                        sources[key] = search()
+            return sources[key]
         for transport in self.index.rules:
             if transport.effect[0] != 'transport':
                 continue
@@ -1144,28 +1159,26 @@ class AutonomousStoryAgent(DualStoryAgent):
                 arrivals[arrival] = reachable
             if not arrivals[arrival]:
                 continue
-            if all(k in facts for k in ('map', 'x', 'y')):
-                if transport.storyline not in sources:
-                    points = self.destination_points(transport.map, transport)
-                    def can_approach():
-                        return bool(points) and bool(pt.bfs_cross(
-                            facts['map'], (facts['x'], facts['y']), transport.map, points[0],
-                            last_map=self.game.last_map, allow_ledges=True, allow_spinners=True,
-                            blocked_maps=barriers, excluded_maps=excluded,
-                            goal_nodes={(transport.map, *p) for p in points}))
-                    sources[transport.storyline] = can_approach()
-                    if not sources[transport.storyline] and any('Surf' in m['moves'] for m in facts.get('party', [])):
-                        with water_planning():
-                            sources[transport.storyline] = can_approach()
-                if not sources[transport.storyline]:
-                    continue  # A shortcut cannot help when its own entrance is behind the same wall.
-            for rule in self.index.frontier(transport.effect, facts):
+            entrance_prerequisites = []
+            if all(k in facts for k in ('map', 'x', 'y')) and not can_approach(transport):
+                entrance_prerequisites = self.discover_route_prerequisites(
+                    {'map_name': facts['map'], 'player_x': facts['x'], 'player_y': facts['y']},
+                    transport.map, self.destination_points(transport.map, transport))
+                # The destination benefit alone cannot make an inaccessible
+                # shortcut executable. Offer only a reachable causal producer
+                # of its entrance, never an assumed teleport or fixed route.
+                frontier = [rule for target in entrance_prerequisites
+                            for rule in self.index.frontier(target, facts) if can_approach(rule)]
+            else:
+                frontier = self.index.frontier(transport.effect, facts)
+            for rule in frontier:
                 key = json.dumps(rule.effect)
                 if key not in groups:
                     added = True
                     groups[key] = {'target': rule.effect, 'rules': [],
                                    'objectives': ['Enter a region with a walking path to an inaccessible story target'],
                                    'context': {'transport_script': transport.description(),
+                                               'transport_entrance_prerequisites': entrance_prerequisites,
                                                'blocked_destinations': sorted(arrivals[arrival]),
                                                'reachability_scope': 'Only destinations with a verified walking path from this landing; not every blocked world goal'}}
                 if rule not in groups[key]['rules']:
@@ -2437,11 +2450,20 @@ class AutonomousStoryAgent(DualStoryAgent):
         prerequisite when the requested location is now walkable without it.
         Unknown geometry remains unknown; an entrance is not a trigger proof.
         """
+        goal = blockage['goal']
+        if goal[0] == 'level':
+            # A level goal is satisfied at any usable training site. Its old
+            # failed region is not a prerequisite when a live alternative has
+            # a fresh path to actual grass (not just a map entrance).
+            for group in groups.values():
+                if list(group['target']) == list(goal) and any(
+                        getattr(self, 'training_navigation', {}).get(rule.map, {}).get('tile_route_found')
+                        for rule in group['rules'] if rule.storyline.startswith('skill:')):
+                    return True
         destination = blockage['destination']
         if (facts.get('map') not in pt.MAPS or destination not in pt.MAPS
                 or 'x' not in facts or 'y' not in facts):
             return False
-        goal = blockage['goal']
         points = []
         if goal[0] == 'location' and goal[1][0] == destination:
             points.append(tuple(goal[1][1:]))
@@ -2483,7 +2505,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                         live_targets.append(['terrain', ','.join(map(str, [obstacle['map'], *obstacle['tree']])), True])
                     elif move == 'Surf' and obstacle.get('landing'):
                         live_targets.append(['location', obstacle['landing'], True])
-                ready = [b for b in pending if list(b['goal']) in live_targets or b['goal'][0] == 'level']
+                ready = [b for b in pending if list(b['goal']) in live_targets]
                 if not ready:
                     return
                 for blockage in ready:
@@ -2574,9 +2596,12 @@ class AutonomousStoryAgent(DualStoryAgent):
                     # triggered battle. Backchain its whole effect, not only
                     # missing guards (which are empty once battle-ready).
                     frontiers.extend(self.index.frontier(local.effect, facts))
-                elif local.effect[0] == 'movement' and not local.missing(facts):
+                elif (local.effect[0] == 'movement' and not local.missing(facts)
+                      and self.index.coordinates(local)):
                     # A currently enabled push-back can be avoided by
                     # changing one of its branch guards (e.g. acquiring a ticket).
+                    # An entry autowalk has no obstructing coordinate trigger;
+                    # completing it is not evidence of removing an exit guard.
                     for guard, wanted in local.guards:
                         for missing in requirements(guard, not wanted, facts):
                             for prerequisite in missing:
@@ -3001,6 +3026,10 @@ class AutonomousStoryAgent(DualStoryAgent):
             self.add_capture_support_training(groups, facts)
         if self.maximizes_coverage:
             self.add_coverage_groups(groups, facts)
+        # Collection/support training is added late. Activate remembered
+        # dependencies only for these actual live goals, not every old level
+        # attempt irrespective of whether training is currently useful.
+        self.add_navigation_groups(groups, facts)
         # Keep the blocked goals until their entrances have been considered.
         readiness = battle_readiness(facts['party'], facts['bag'])
         failed_maps = {d['map'] for d in self.battle_defeats if not d.get('resolved_by_victory')

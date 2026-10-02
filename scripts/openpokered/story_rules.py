@@ -10,6 +10,7 @@ import hashlib
 import json
 import re
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 
 MAPS_DIR = Path(__file__).resolve().parents[2] / 'crates/pokered-data/maps'
@@ -39,6 +40,25 @@ def default_hidden_toggles():
 
 
 DEFAULT_HIDDEN = default_hidden_toggles()
+
+
+@lru_cache(maxsize=1)
+def native_ending_destination():
+    """Read the native post-credits CONTINUE location, not a route recipe.
+
+    Like native trainer outcomes, this consequence lives outside the scene
+    AST. Fail closed if the engine stops exposing the known simple contract.
+    Reaching it still requires the real ceremony, credits and saved CONTINUE.
+    """
+    source = (MAPS_DIR.parents[1] / 'pokered-app/src/game.rs').read_text()
+    body = source.split('fn finish_hof_ceremony(&mut self) {', 1)[1].split('\n    }', 1)[0]
+    name = re.search(r'self\.overworld\.state\.current_map = MapId::(\w+);', body)
+    x = re.search(r'self\.overworld\.state\.player\.x = (\d+);', body)
+    y = re.search(r'self\.overworld\.state\.player\.y = (\d+);', body)
+    if not (name and x and y and 'self.save_to_file();' in body
+            and 'self.handle_transition(GameScreen::TitleScreen);' in body):
+        raise ValueError('native ending no longer has a verified saved CONTINUE destination')
+    return name[1], int(x[1]), int(y[1])
 
 
 def trainer_victory_rules(maps_dir, configs, selected_maps):
@@ -288,6 +308,9 @@ def compile_story(story):
         elif (name == 'warpTo' and len(values) == 3 and isinstance(values[0], str)
               and all(isinstance(v, (int, float)) for v in values[1:])):
             effect = ('transport', (values[0], int(values[1]), int(values[2])), True)
+        elif name == 'enterHallOfFame':
+            ctx['effects'].append(('ending', 'hall_of_fame_and_credits', True))
+            effect = ('transport', native_ending_destination(), True)
         elif name in ('movePlayerRelative', 'movePlayer'):
             effect = ('movement', name, True)
         elif name == 'replaceTileBlock' and len(values) == 3 and all(isinstance(v, (int, float)) for v in values):
