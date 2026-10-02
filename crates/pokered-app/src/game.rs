@@ -5975,15 +5975,14 @@ impl PokemonGame {
             .received_mon()
             .map(|m| m.species)
             .unwrap_or(pokered_data::species::Species::Pikachu);
-        // The remote trainer's name is not on the wire for trades (protocol
-        // gap — `PartyExchangeData.trainer_name` is battle-only), so the
-        // cutscene uses the default partner line. Documented deviation.
+        // TradeParty carries the same peer name displayed by the party
+        // selection screen (wLinkEnemyTrainerName in the original movie).
         self.trade_anim = Some(TradeAnim::new(
             give,
             receive,
             self.player_name.clone(),
             is_zh,
-        ));
+        ).with_partner_name(driver.remote_name().to_string()));
         self.link_cable.on_trade_anim_started();
     }
 
@@ -8240,5 +8239,59 @@ mod captain_music_wait_fidelity_tests {
             }
         }
         panic!("no-audio WaitMusic remained blocked after the healed jingle");
+    }
+}
+
+
+#[cfg(all(test, not(target_os = "none"), not(target_arch = "wasm32")))]
+mod link_trade_movie_name_fidelity_tests {
+    use super::*;
+    use pokered_core::link::link_trade::{LinkTradeDriver, LinkTradePollResult};
+    use pokered_core::link::protocol::NetworkMessage;
+    use pokered_core::link::transport::ChannelTransport;
+    use pokered_core::pokemon::party::Party;
+    use pokered_core::trade::TradeAnimPhase;
+    use pokered_data::species::Species;
+
+    #[test]
+    fn completed_channel_trade_movie_uses_the_received_peer_name() {
+        let (mut local_wire, mut remote_wire) = ChannelTransport::<NetworkMessage>::new_pair();
+        let pikachu = pokered_core::pokemon::stats::create_pokemon(Species::Pikachu, 20, [0x99, 0x88]).unwrap();
+        let charmander = pokered_core::pokemon::stats::create_pokemon(Species::Charmander, 20, [0x99, 0x88]).unwrap();
+        let mut local = LinkTradeDriver::new(Party::from(vec![pikachu]), 1)
+            .with_trainer_name("RED".to_string());
+        let mut remote = LinkTradeDriver::new(Party::from(vec![charmander]), 2)
+            .with_trainer_name("GREEN".to_string());
+        local.request_trade(&mut local_wire).unwrap();
+        assert_eq!(remote.poll(&mut remote_wire), LinkTradePollResult::TradeRequested);
+        remote.accept_trade(&mut remote_wire).unwrap();
+        assert_eq!(local.poll(&mut local_wire), LinkTradePollResult::TradeAccepted);
+        assert_eq!(local.remote_name(), "GREEN");
+        local.select_mon(&mut local_wire, 0).unwrap();
+        assert_eq!(remote.poll(&mut remote_wire), LinkTradePollResult::PeerSelectedMon(0));
+        remote.select_mon(&mut remote_wire, 0).unwrap();
+        assert!(matches!(local.poll(&mut local_wire), LinkTradePollResult::BothSelected { .. }));
+        local.confirm_trade(&mut local_wire).unwrap();
+        assert_eq!(remote.poll(&mut remote_wire), LinkTradePollResult::PeerConfirmed);
+        remote.confirm_trade(&mut remote_wire).unwrap();
+        assert!(matches!(remote.poll(&mut remote_wire), LinkTradePollResult::TradeExecute { .. }));
+        assert_eq!(local.poll(&mut local_wire), LinkTradePollResult::PeerConfirmed);
+        assert!(matches!(local.poll(&mut local_wire), LinkTradePollResult::TradeExecute { .. }));
+
+        let mut game = PokemonGame::new(GameVersion::Red);
+        game.audio = None;
+        game.state.config.language = pokered_core::game_state::Lang::En;
+        game.player_name = "RED".to_string();
+        game.link_trade = Some(local);
+        game.start_link_trade_anim();
+        let anim = game.trade_anim.as_mut().unwrap();
+        assert_eq!((anim.give, anim.receive), (Species::Pikachu, Species::Charmander));
+        while anim.phase() != TradeAnimPhase::TextWentTo { anim.tick(); }
+        assert_eq!(anim.text_lines(), Some(("PIKACHU went".to_string(), "to GREEN.".to_string())));
+        while anim.phase() != TradeAnimPhase::TextForSends { anim.tick(); }
+        for _ in 0..80 { anim.tick(); }
+        assert_eq!(anim.text_lines(), Some(("GREEN sends".to_string(), "CHARMANDER.".to_string())));
+        while anim.phase() != TradeAnimPhase::TextFarewell { anim.tick(); }
+        assert_eq!(anim.text_lines(), Some(("GREEN waves".to_string(), "farewell as".to_string())));
     }
 }
