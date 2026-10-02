@@ -6,6 +6,7 @@ Run from the repository root with Python 3.
 from pathlib import Path
 import sys
 import os
+import time
 
 ROOT = Path(__file__).resolve().parents[4]
 sys.path.insert(0, str(ROOT / "scripts"))
@@ -34,6 +35,23 @@ class AuditGame(OriginalGame):
         if os.environ.get("AUDIT_BINARY"):
             kwargs.setdefault("binary", os.environ["AUDIT_BINARY"])
         super().__init__(*args, **kwargs)
+
+    def st(self):
+        state = super().st()
+        now = time.monotonic()
+        if now >= getattr(self, "_next_observation_log", 0):
+            live = state.get("battle_live") or {}
+            player, enemy = live.get("player", {}), live.get("enemy", {})
+            print(
+                f"[live] frame={state.get('frame')} screen={state.get('screen')} "
+                f"map={state.get('map_name')} "
+                f"pos=({state.get('player_x')},{state.get('player_y')}) "
+                f"phase={state.get('battle_phase')} "
+                f"HP={player.get('hp')}/{enemy.get('hp')}",
+                flush=True,
+            )
+            self._next_observation_log = now + 60
+        return state
 
     def battle_loop(self, prefer="fight", max_iters=1600):
         # A long, legitimate trainer fight can exceed the driver's 400
