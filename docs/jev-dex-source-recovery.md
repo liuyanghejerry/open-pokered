@@ -946,3 +946,14 @@ Lv43隆隆石四招中两招自爆，1／2次选择均未选自爆的参考值0.
 结果或推广成总体成功率。证据`.artifacts/jev-capture-turn-economy-20261002/`
 的`ab.jsonl`与`summary.json`；测试`/tmp/jev-capture-turn-economy-tests.log`。
 本次仅决策输入／测试，不改原生规则、执行绑定或屏幕输出。
+
+58段继续正常训练Drowzee至18级，并自主打赢科拿（714.654秒）、希巴
+（746.303秒）、菊子（787.664秒），原生战斗结束观测均`player_won: true`。
+857.473秒正常到达IndigoPlateauLobby `(7,7)`后请求边界停机以部署新输入，
+无新增图鉴，最终75 owned／120 seen、八徽章、资金23,686；Charizard Lv81
+倒下，Pikachu Lv45、Drowzee Lv18，其余队员与球耗原样保留，未回滚。
+独立原生CONTINUE schema=2通过，包含73个箱内个体；SRAM SHA256：
+`9223c038ca71801fbd8bed2f93b37d52793522c79cf7f66d7a63a15cf0572958`。
+分段MP4容器423.3秒／7,606,970字节，尚未做全片画质审计。
+59段`20261002-182721-seed42`从此存档加载`d6a35893`继续OpenRouter正式
+收集和录像，首次自主目标为治疗；不能将训练、对战胜利或对照试验计作新增。
