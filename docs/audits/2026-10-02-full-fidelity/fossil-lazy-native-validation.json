@@ -95,8 +95,24 @@
       "sha256": "2d1aa180dc142546e5f463ffd2b519e1fd798d1f26cce62c5bfbabf25b294926"
     }
   },
-  "gba_after": "Pending new frozen ROM full scenario run; native PASS does not certify GBA.",
+  "gba_after": "PASS: official GitHub GBA CI run 37023355401, job 110891720787, step 14, head_sha=eebde2fc3a4f78c38b4c7b5d49e0db2b830cb235. The unchanged gate requires all 13 scenario counts and ALL PASS, with observed heap and stack at least 4096 bytes. This is a source-linked official CI conclusion, not a completed local full stress run. Remote raw logs, actual minimum margins, and remote ROM SHA256 were unavailable.",
   "stress_data_and_4096_byte_thresholds": "unchanged",
   "source": "eebde2fc3a4f78c38b4c7b5d49e0db2b830cb235",
-  "legacy_snapshot_boundary": "Only serde loading when the two new marker fields are absent was tested; a pre-fix full VM program counter was not resumed. New lazy menu snapshot restore was exercised for all three fossils and B-cancel."
+  "legacy_snapshot_boundary": "Only serde loading when the two new marker fields are absent was tested; a pre-fix full VM program counter was not resumed. New lazy menu snapshot restore was exercised for all three fossils and B-cancel.",
+  "gba_after_evidence": {
+    "source": "eebde2fc3a4f78c38b4c7b5d49e0db2b830cb235",
+    "run_id": 37023355401,
+    "job_id": 110891720787,
+    "url": "https://github.com/liuyanghejerry/open-pokered/actions/runs/37023355401/job/110891720787",
+    "job_status": "completed",
+    "job_conclusion": "success",
+    "stress_step": 14,
+    "scenario_count": 13,
+    "heap_stack_floor_bytes": 4096,
+    "report": "validation/final-checked-gba.md",
+    "official_response": "validation/final-checked-gba/official-ci-jobs.json",
+    "remote_actual_min_heap_bytes": null,
+    "remote_actual_min_stack_bytes": null,
+    "remote_rom_sha256": null
+  }
 }
