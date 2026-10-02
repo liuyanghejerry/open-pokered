@@ -81,7 +81,17 @@ fn battle_fixtures(out: &Path, prefix: &str) {
     g.battle.update_frame(BattleInput {a:true,..BattleInput::none()});
     g.state.screen=GameScreen::Battle;
     for _ in 0..5000 {
-        if g.battle.current_message.as_deref().is_some_and(|text| text.contains("FULL") || text.contains("FLY")) {
+        let action_page = match &g.battle.phase {
+            BattlePhase::ShowingText { messages, current, .. } => messages.get(*current).is_some_and(|text| {
+                let normalized=text.split_whitespace().collect::<Vec<_>>().join(" ").to_ascii_uppercase();
+                normalized.contains("FULL HEAL") || normalized.contains("FLY")
+            }),
+            _ => false,
+        };
+        if action_page {
+            // Neutral input lets the last page become visible; continuous A
+            // would set then clear current_message in the same update.
+            for _ in 0..20 { g.battle.update_frame(BattleInput::none()); }
             let bs=g.battle.battle_state.as_ref().unwrap();
             println!("AI forced Fly {:?}; playerHP={} enemyStatus={:?} charge={} AIcount={}",g.battle.current_message,bs.player.active_mon().hp,bs.enemy.active_mon().status,bs.enemy.has_status1(pokered_core::battle::state::status1::CHARGING_UP),g.battle.enemy_ai_count);
             save(&mut g,out,prefix,"battle-ai-forced-fly");

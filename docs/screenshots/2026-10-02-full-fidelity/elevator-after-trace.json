@@ -1,0 +1,500 @@
+[
+  {
+    "request": {
+      "cmd": "step_frames",
+      "count": 30
+    },
+    "response": {
+      "ok": true,
+      "data": {
+        "frame_count": 30,
+        "stepped": 30
+      }
+    }
+  },
+  {
+    "request": {
+      "cmd": "get_nearby",
+      "radius": 10
+    },
+    "response": {
+      "ok": true,
+      "data": {
+        "entities": [
+          {
+            "distance": 1,
+            "id": "warp:0",
+            "interactable": false,
+            "kind": "warp",
+            "name": "CeladonMart1F",
+            "position": {
+              "x": 1,
+              "y": 3
+            }
+          },
+          {
+            "distance": 2,
+            "id": "warp:1",
+            "interactable": false,
+            "kind": "warp",
+            "name": "CeladonMart1F",
+            "position": {
+              "x": 2,
+              "y": 3
+            }
+          },
+          {
+            "distance": 4,
+            "id": "sign:0",
+            "interactable": false,
+            "kind": "sign",
+            "position": {
+              "x": 3,
+              "y": 0
+            }
+          }
+        ],
+        "map": {
+          "id": 127,
+          "name": "CeladonMartElevator"
+        },
+        "position": {
+          "x": 1,
+          "y": 2
+        },
+        "radius": 10
+      }
+    }
+  },
+  {
+    "request": {
+      "cmd": "interact_with",
+      "id": "sign:0"
+    },
+    "response": {
+      "ok": true,
+      "data": {
+        "agent_state": {
+          "badges": {
+            "count": 0
+          },
+          "dialogue": {
+            "done": false,
+            "page": 1,
+            "text": "Which floor do you want?",
+            "total_pages": 1,
+            "waiting_for_input": false
+          },
+          "facing": "Up",
+          "map": {
+            "id": 127,
+            "name": "CeladonMartElevator"
+          },
+          "mode": "dialogue",
+          "nearby": [
+            {
+              "distance": 1,
+              "id": "sign:0",
+              "interactable": true,
+              "kind": "sign",
+              "position": {
+                "x": 3,
+                "y": 0
+              }
+            },
+            {
+              "distance": 3,
+              "id": "warp:1",
+              "interactable": false,
+              "kind": "warp",
+              "name": "CeladonMart1F",
+              "position": {
+                "x": 2,
+                "y": 3
+              }
+            },
+            {
+              "distance": 4,
+              "id": "warp:0",
+              "interactable": false,
+              "kind": "warp",
+              "name": "CeladonMart1F",
+              "position": {
+                "x": 1,
+                "y": 3
+              }
+            }
+          ],
+          "position": {
+            "x": 3,
+            "y": 1
+          }
+        },
+        "facing": "Up",
+        "final": {
+          "x": 3,
+          "y": 1
+        },
+        "frames": 34,
+        "map": "CeladonMartElevator",
+        "navigation": {
+          "final": {
+            "x": 3,
+            "y": 1
+          },
+          "frames": 27,
+          "result": "reached",
+          "start": {
+            "x": 1,
+            "y": 2
+          },
+          "steps": 3,
+          "target": {
+            "x": 3,
+            "y": 1
+          }
+        },
+        "result": "dialogue",
+        "state": {
+          "active_script_effect": "ShowDialogue",
+          "badges": 0,
+          "battle_bag": null,
+          "battle_inventory": [],
+          "battle_live": null,
+          "battle_message": null,
+          "battle_moves": null,
+          "battle_party_cursor": 0,
+          "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+          "choice": null,
+          "coins": 0,
+          "credits_final_button": null,
+          "credits_phase": null,
+          "dialogue": "",
+          "dialogue_state": {
+            "char_index": 0,
+            "done": false,
+            "holding_open": false,
+            "page": 1,
+            "text": "",
+            "total_chars": 23,
+            "total_pages": 1,
+            "waiting_for_input": false
+          },
+          "evaluation": {
+            "party": [],
+            "party_source": "save_data",
+            "pokedex": {
+              "owned": 0,
+              "owned_numbers": [],
+              "seen": 0,
+              "total": 151
+            }
+          },
+          "field_menu": null,
+          "frame_count": 64,
+          "hall_of_fame_count": 0,
+          "hof_phase": null,
+          "last_outside_map": "PalletTown",
+          "link": {
+            "cable_phase": "Inactive",
+            "role": "Host",
+            "status": "disabled",
+            "trade": null
+          },
+          "map_blocks": [
+            42,
+            43,
+            40,
+            41
+          ],
+          "map_id": 127,
+          "map_name": "CeladonMartElevator",
+          "money": 3000,
+          "party": [],
+          "party_count": 0,
+          "pc_phase": null,
+          "player_facing": "Up",
+          "player_movement_state": "Idle",
+          "player_name": "",
+          "player_transport": "Walking",
+          "player_x": 3,
+          "player_y": 1,
+          "screen": "overworld",
+          "script_awaiting_battle": false,
+          "script_effect": {
+            "effect": "ShowDialogue",
+            "text": "Which floor do you want? "
+          },
+          "script_running": true,
+          "shop_phase": null,
+          "text_speed_delay_frames": 3,
+          "warp_fade": "Idle"
+        },
+        "target": "sign:0"
+      }
+    }
+  },
+  {
+    "request": {
+      "cmd": "skip_dialogue"
+    },
+    "response": {
+      "ok": true,
+      "data": {
+        "dialogue_closed": true,
+        "state": {
+          "active_script_effect": "ElevatorMenu",
+          "badges": 0,
+          "battle_bag": null,
+          "battle_inventory": [],
+          "battle_live": null,
+          "battle_message": null,
+          "battle_moves": null,
+          "battle_party_cursor": 0,
+          "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+          "choice": null,
+          "coins": 0,
+          "credits_final_button": null,
+          "credits_phase": null,
+          "dialogue": null,
+          "dialogue_state": null,
+          "evaluation": {
+            "party": [],
+            "party_source": "save_data",
+            "pokedex": {
+              "owned": 0,
+              "owned_numbers": [],
+              "seen": 0,
+              "total": 151
+            }
+          },
+          "field_menu": null,
+          "frame_count": 69,
+          "hall_of_fame_count": 0,
+          "hof_phase": null,
+          "last_outside_map": "PalletTown",
+          "link": {
+            "cable_phase": "Inactive",
+            "role": "Host",
+            "status": "disabled",
+            "trade": null
+          },
+          "map_blocks": [
+            42,
+            43,
+            40,
+            41
+          ],
+          "map_id": 127,
+          "map_name": "CeladonMartElevator",
+          "money": 3000,
+          "party": [],
+          "party_count": 0,
+          "pc_phase": null,
+          "player_facing": "Up",
+          "player_movement_state": "Idle",
+          "player_name": "",
+          "player_transport": "Walking",
+          "player_x": 3,
+          "player_y": 1,
+          "screen": "overworld",
+          "script_awaiting_battle": false,
+          "script_effect": {
+            "effect": "ElevatorMenu",
+            "floors": [
+              "1F",
+              "2F",
+              "3F",
+              "4F",
+              "5F"
+            ]
+          },
+          "script_running": true,
+          "shop_phase": null,
+          "text_speed_delay_frames": 3,
+          "warp_fade": "Idle"
+        },
+        "stepped": 5
+      }
+    }
+  },
+  {
+    "request": {
+      "cmd": "step_frames",
+      "count": 1
+    },
+    "response": {
+      "ok": true,
+      "data": {
+        "frame_count": 70,
+        "stepped": 1
+      }
+    }
+  },
+  {
+    "request": {
+      "cmd": "get_state"
+    },
+    "response": {
+      "ok": true,
+      "data": {
+        "active_script_effect": null,
+        "badges": 0,
+        "battle_bag": null,
+        "battle_inventory": [],
+        "battle_live": null,
+        "battle_message": null,
+        "battle_moves": null,
+        "battle_party_cursor": 0,
+        "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+        "choice": null,
+        "coins": 0,
+        "credits_final_button": null,
+        "credits_phase": null,
+        "dialogue": null,
+        "dialogue_state": null,
+        "evaluation": {
+          "party": [],
+          "party_source": "save_data",
+          "pokedex": {
+            "owned": 0,
+            "owned_numbers": [],
+            "seen": 0,
+            "total": 151
+          }
+        },
+        "field_menu": {
+          "cursor": 0,
+          "items": [
+            "1F",
+            "2F",
+            "3F",
+            "4F",
+            "5F"
+          ],
+          "kind": "elevator"
+        },
+        "frame_count": 70,
+        "hall_of_fame_count": 0,
+        "hof_phase": null,
+        "last_outside_map": "PalletTown",
+        "link": {
+          "cable_phase": "Inactive",
+          "role": "Host",
+          "status": "disabled",
+          "trade": null
+        },
+        "map_blocks": [
+          42,
+          43,
+          40,
+          41
+        ],
+        "map_id": 127,
+        "map_name": "CeladonMartElevator",
+        "money": 3000,
+        "party": [],
+        "party_count": 0,
+        "pc_phase": null,
+        "player_facing": "Up",
+        "player_movement_state": "Idle",
+        "player_name": "",
+        "player_transport": "Walking",
+        "player_x": 3,
+        "player_y": 1,
+        "screen": "elevator",
+        "script_awaiting_battle": false,
+        "script_effect": null,
+        "script_running": true,
+        "shop_phase": null,
+        "text_speed_delay_frames": 3,
+        "warp_fade": "Idle"
+      }
+    }
+  },
+  {
+    "request": {
+      "cmd": "capture_frame",
+      "path": "/workspace/pokered-fix-visual/docs/screenshots/2026-10-02-full-fidelity/after-elevator-script.png"
+    },
+    "response": {
+      "ok": true,
+      "data": {
+        "path": "/workspace/pokered-fix-visual/docs/screenshots/2026-10-02-full-fidelity/after-elevator-script.png",
+        "state": {
+          "active_script_effect": null,
+          "badges": 0,
+          "battle_bag": null,
+          "battle_inventory": [],
+          "battle_live": null,
+          "battle_message": null,
+          "battle_moves": null,
+          "battle_party_cursor": 0,
+          "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+          "choice": null,
+          "coins": 0,
+          "credits_final_button": null,
+          "credits_phase": null,
+          "dialogue": null,
+          "dialogue_state": null,
+          "evaluation": {
+            "party": [],
+            "party_source": "save_data",
+            "pokedex": {
+              "owned": 0,
+              "owned_numbers": [],
+              "seen": 0,
+              "total": 151
+            }
+          },
+          "field_menu": {
+            "cursor": 0,
+            "items": [
+              "1F",
+              "2F",
+              "3F",
+              "4F",
+              "5F"
+            ],
+            "kind": "elevator"
+          },
+          "frame_count": 70,
+          "hall_of_fame_count": 0,
+          "hof_phase": null,
+          "last_outside_map": "PalletTown",
+          "link": {
+            "cable_phase": "Inactive",
+            "role": "Host",
+            "status": "disabled",
+            "trade": null
+          },
+          "map_blocks": [
+            42,
+            43,
+            40,
+            41
+          ],
+          "map_id": 127,
+          "map_name": "CeladonMartElevator",
+          "money": 3000,
+          "party": [],
+          "party_count": 0,
+          "pc_phase": null,
+          "player_facing": "Up",
+          "player_movement_state": "Idle",
+          "player_name": "",
+          "player_transport": "Walking",
+          "player_x": 3,
+          "player_y": 1,
+          "screen": "elevator",
+          "script_awaiting_battle": false,
+          "script_effect": null,
+          "script_running": true,
+          "shop_phase": null,
+          "text_speed_delay_frames": 3,
+          "warp_fade": "Idle"
+        }
+      }
+    }
+  }
+]

@@ -14,7 +14,7 @@
 | VA08 | 英文命名坐标、框与键盘节距恢复；昵称携带物种名和17帧 GB party icon；满名保留抬起下划线。中文 IME 布局保留。 | 命名开闭闪白测试通过；player5、LAPRAS17 同概念输入图（基线丢弃物种字段）。下划线精确位图由字体提交补。 |
 | VA09 | 6/17/33 GB HP节拍、SGB数学5/16/32；球/化石上下1px；修正所有图标真实帧偏移、16px对称 OAM右列镜像；局部损伤高度17px。 | HP阈值与有效帧偏移测试通过；全部10类图标、绿6/黄17/红33图；三个 party 局部重画测试通过。 |
 | VA10 | 专用 trainer_info 边框/背景、圈、数字与徽章纵向摆放；Red按原 VRAM列重排裁剪；NAME/MONEY/TIME位置和补零金额。 | 原 start_sub_menus/draw_badges逐条核验；trainer-card5；最终集成图包含正确 TrainerCard asset category。 |
-| VA11 | 地图背景、(4,2)标准框、三 cursor 行/第四预览行、末项CANCEL；首尾不wrap、窗口到边再滚动；过滤背包用独立构造保留既有政策。 | 独立 rustc 对同一 core 源码10/10测试通过；实际 CeladonMartElevator sign流程 seed42/frame70前图与完整trace。最终after用相同driver重拍。 |
+| VA11 | 地图背景、(4,2)标准框、三 cursor 行/第四预览行、末项CANCEL；首尾不wrap、窗口到边再滚动；过滤背包用独立构造保留既有政策。 | 独立 rustc 对同一 core 源码10/10测试通过；实际 CeladonMartElevator sign流程 seed42/frame70前后图与完整trace，双方玩家(3,1)/Up/cursor0一致。 |
 | VA12 | GB Morph正常灰度；原 SGB PAL_BLACK 请求单独暴露，不将其错误套在普通 GB。 | evolution状态7项测试通过；evolution190图；visual_verify_evolution oracle同步普通GB和SGB请求。 |
 | VA13 | 专用 diploma边框/圈、Player/名字/正文/签名坐标；右侧Red按$90 OBP和behind-BG priority合成。中文正文保留。 | diploma5、中文0图；最终集成图包含正确 TrainerCard asset category。 |
 | VA14 | 三个8帧 FadePal6/7/8；MonFade保留Hall框、FinalFade保留stats；前导fade从实际地图开始；cry结束再计80帧。缓存必须区别首个fade帧。 | core Hof3项通过；Hof0/220/480/488图。app旧cache测试发现首阶key遗漏，已加1区分；根集成完整app测试已证明该项通过。 |
@@ -25,9 +25,11 @@
 
 | VA19 | Credits 27个8px剪影步进每 VBlank 一步，修正原来的二分之一速度。 | 同一production源码的5项状态测试通过，新增单步/27帧终点断言；最终credits定帧图。原VRAM staging和CPU扫描线采样仍未做ROM对拍。 |
 
-| VA20 | 两端地图共享原OBP0 $D0调色板；index1是不透明白、index2是AA，index0保持透明。 | 真实packed 2bpp图块覆盖地图背景的像素回归测试通过；最终固定地图帧截图。原SGB模式仍独立。 |
+| VA20 | native/TUI地图共享原OBP0 $D0调色板；index1是不透明白、index2是AA，index0保持透明；native镜像player也走palette-aware blit。 | 真实packed 2bpp图块覆盖地图背景的像素回归测试通过；down/left/right固定地图帧截图。原SGB模式仍独立，未声称验证GBA实际OBJ输出。 |
 
-本分支首次 app lib 结果为109通过、3失败。两项电梯局部光标测试发现擦除旧箭头时误擦右侧楼层，已将该处损伤限制到一个8px tile；HoF缓存测试发现 MonText 与首个 MonFade 使用相同 key，已修正首阶区别。根集成完整app测试已重跑且这三项通过；该轮另有五项英文原字库集成产生的菜单/地图局部重画失败，已由相关模块继续修正。最终原字库 after 图和最后统一检查仍以根代理最终记录为准。
+本分支首次 app lib 结果为109通过、3失败。两项电梯局部光标测试发现擦除旧箭头时误擦右侧楼层，已将该处损伤限制到一个8px tile；HoF缓存测试发现 MonText 与首个 MonFade 使用相同 key，已修正首阶区别。集成后完整app lib两组128/128、127/127通过。英文原字库集成后发现的菜单/地图局部重画问题也已修正。命名旧坐标测试按原汇编改为独立oracle，8项命名与全部57项菜单测试通过；标题三帧全白、真实Surf/Red/Bike的$D0 palette与VersionWait Delay3的三组旧测试已纠正，独立验证2/2、2/2和14/14通过。
+
+最终固定帧证据为[59对截图及manifest](../../screenshots/2026-10-02-full-fidelity/README.md)，全部after包含集成原字库/边框。CLI/debug截图来自6751981的immutable app；phase fixture来自cd9acde的精确extern metadata，其静态renderer与6751981一致。manifest分别记录两者真实source、二进制/图像哈希、帧与相位；未将后续集成HEAD假称为这些图的构建来源。
 
 资源表核验只能证明数据：战斗动画、move SFX、cry表全量0diff，不能推出实际呈现帧/播放采样已全量对拍。
 

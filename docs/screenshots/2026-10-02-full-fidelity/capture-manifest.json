@@ -1,0 +1,1025 @@
+{
+  "schema_version": 1,
+  "date_utc": "2026-10-02",
+  "reference_source_commit": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "evidence_scope": "Deterministic native software-renderer before/after; original assembly and independent regression oracles. No new original-ROM frame or PCM comparison.",
+  "baseline": {
+    "source_commit": "72ff719b39634c153cb82d3f3ece200bd413c4e0",
+    "cli_app_sha256": "fd832ed427cb33c0ea14a7fa10a97b6363381009a6a1a3ef037a0b1989ac1879",
+    "fixture_sha256": "93d720055f1b28e032ea52915b6a6044d58d844f225cd071a5d08858af823fdd",
+    "fixture_externs": [
+      {
+        "crate": "pokered_app",
+        "artifact": "libpokered_app-6f3c2526fa1f05b5.rlib",
+        "sha256": "ceca6b3a5c202be76f9213fe953ef3a1491cab57b3478caf07c6fd513e1127c6"
+      },
+      {
+        "crate": "pokered_core",
+        "artifact": "libpokered_core-d131d6da165148f6.rlib",
+        "sha256": "3cc865bae0447099164d8d4770dfb0625e93041a62c19ffb9a0a06128514bc80"
+      },
+      {
+        "crate": "pokered_data",
+        "artifact": "libpokered_data-0c35e7a9216ef546.rlib",
+        "sha256": "bd04302dc3a67aae769a1b5a16438ba14906d3398c9fd7bb13018c21f50ddb86"
+      },
+      {
+        "crate": "pokered_renderer",
+        "artifact": "libpokered_renderer-0bc4d454c222649f.rlib",
+        "sha256": "719b576134186d16139a82bdb4968e7b1c83e6fea88cfdad1f3b39f7d0910141"
+      },
+      {
+        "crate": "dotzuki_engine",
+        "artifact": "libdotzuki_engine-cdb89f3d1f01e1ce.rlib",
+        "sha256": "0b99d059d6475d0ee15a37d7d264b96186b63ce936c55d7a710a81c732c430c9"
+      }
+    ]
+  },
+  "after_cli_and_debug": {
+    "source_commit": "67519813e16a84565b5c6530a307f6e8febb3cb4",
+    "app_sha256": "9112fa231fd421448db775222c9bb6b49ed645ad654585bc7dad791b3cefa434"
+  },
+  "after_fixture": {
+    "source_commit": "cd9acde31a430e69768b39f598dc90c9fa536ccc",
+    "fixture_sha256": "ba772bd54ec4ec18930d552076589d5b70f78347d8de33b1cd2e38c5090ca540",
+    "fixture_externs": [
+      {
+        "crate": "pokered_app",
+        "artifact": "libpokered_app-475c23b1b06fbf3b.rlib",
+        "sha256": "a42be4e0a05207ac4b03a9365f51311344c4b800e8c762a250a9c4f577a6bec5"
+      },
+      {
+        "crate": "pokered_core",
+        "artifact": "libpokered_core-ae10d1a641ad251a.rlib",
+        "sha256": "14dd6583cfc6a5549d2dabc54ff31ca9cd117d7199cca82b1550cfa0c0f44ce4"
+      },
+      {
+        "crate": "pokered_data",
+        "artifact": "libpokered_data-c66c3f72a0aecae7.rlib",
+        "sha256": "5616287d6bd0f6b58dc4c7750f834e602713472b107447e8b95018374ddc074a"
+      },
+      {
+        "crate": "pokered_renderer",
+        "artifact": "libpokered_renderer-c99dc2b0433f9ca3.rlib",
+        "sha256": "13ae941a8a22f145685eef0380bc4b2e79e6c08bc00c6d5d2b491cbbb86bbbad"
+      },
+      {
+        "crate": "dotzuki_engine",
+        "artifact": "libdotzuki_engine-edfe23eba61adeff.rlib",
+        "sha256": "b52868319343db34ecf805395edc4c2e67392c685fba27ac9d41c61c531cc57c"
+      }
+    ],
+    "relationship": "Broad-suite build at cd9 without concurrent source mutation; these static renderer surfaces remain unchanged from 675. Core runtime provenance remains cd9."
+  },
+  "harness": {
+    "fixture_path": "crates/pokered-app/examples/fidelity_visual_capture.rs",
+    "fixture_source_sha256": "a05bcfe1e5d11bae36e5bf2ac9c8b33a05e726f9d5005b49e8efc1cccc2db60b",
+    "after_cfg": "fidelity_after (LAPRAS species metadata unavailable in baseline)",
+    "cli_capture_sha256": "11224341faff51ad395c79519a61dd611fd5c8cc4b5bdc6866a8c151d63c6dfd",
+    "elevator_capture_sha256": "c6bcc21d5fda96b372d5998a3c6d0b0d832f8be8cb2accfb420976f3b506e834",
+    "raw_link_helper_sha256": "0488aa6e1da7f1769e4b74e6d8dbcf72b24f0b64f370b754c7c869fd9ba35c33"
+  },
+  "initial_state": "Fresh executable directories without default .sav; 160x144; CLI en except explicit diploma-zh; controlled fixture state; battle seed 42.",
+  "pair_count": 59,
+  "pairs": [
+    {
+      "case": "battle-ai-forced-fly",
+      "before": "before-battle-ai-forced-fly.png",
+      "after": "after-battle-ai-forced-fly.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "2423350581c91457e7e38e495c39afa411edc3de9fc6034c6e03f22c99b7e06f",
+      "after_sha256": "9e0aa94038de0e2c5141956895a648efe27567faf58e0c1c7f31babfbbbd3f5e",
+      "changed_pixels": 1830,
+      "method": "controlled battle fixture",
+      "seed": 42,
+      "after_binary": "after_fixture",
+      "stop": "First enemy FULL HEAL/FLY ShowingText page, then 20 neutral frames; whitespace-normalized text match.",
+      "baseline_state": {
+        "player_hp": 73,
+        "enemy_status": "Poison",
+        "charging_up": false,
+        "ai_count": 5
+      },
+      "after_state": {
+        "player_hp": 110,
+        "enemy_status": "None",
+        "charging_up": true,
+        "ai_count": 4
+      }
+    },
+    {
+      "case": "battle-exp-share",
+      "before": "before-battle-exp-share.png",
+      "after": "after-battle-exp-share.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "24c8c4faddb7fbee394babcc6ce4bc2c2a7e54c06d341a93c277a0fa58ced385",
+      "after_sha256": "afa1ea7effdf57e250c0928222a616c07c8e847d341e69ff9c1a301e8980d6a6",
+      "changed_pixels": 1778,
+      "method": "controlled battle fixture",
+      "seed": 42,
+      "after_binary": "after_fixture",
+      "stop": "First gained-EXP message",
+      "baseline_exp": 660,
+      "after_exp": 330
+    },
+    {
+      "case": "battle-mimic-menu",
+      "before": "before-battle-mimic-menu.png",
+      "after": "after-battle-mimic-menu.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "4613965dcdf936b8f4ab5cdf46ba6abaa2a5a859996bf9f736332bf513d26222",
+      "after_sha256": "3adda3d1a9f5cbf11c697abb425f75de5bcc6664f99e5bb7237d38a3681ea224",
+      "changed_pixels": 2993,
+      "method": "controlled battle fixture",
+      "seed": 42,
+      "after_binary": "after_fixture",
+      "stop": "After A on Mimic; baseline copied Growl/PP5 vs after enemy technique menu/Mimic PP20"
+    },
+    {
+      "case": "copyright-0",
+      "before": "before-copyright-0.png",
+      "after": "after-copyright-0.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "6efadcbd43e4e6299443dad8f58bd41e37eb348886fcf8b10e593de082753aee",
+      "after_sha256": "62493a2cf474477aea8897e8517ee25d009022ce5cc7f03cf108de684fac9ab2",
+      "changed_pixels": 1181,
+      "method": "CLI screenshot",
+      "frame_count": 0,
+      "after_binary": "after_cli_and_debug"
+    },
+    {
+      "case": "credits-10",
+      "before": "before-credits-10.png",
+      "after": "after-credits-10.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "64f311b21456cf595e177187e3a2693dd9e51fc10b6cda947cf96474cf8b489c",
+      "after_sha256": "7af2c4e65963ddf3a3ea0287bd1eec30012bf45253651e8636e7b6baa7c79691",
+      "changed_pixels": 656,
+      "method": "CLI screenshot",
+      "frame_count": 10,
+      "after_binary": "after_cli_and_debug"
+    },
+    {
+      "case": "credits-15",
+      "before": "before-credits-15.png",
+      "after": "after-credits-15.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "8597c74a838a1f2a420ad19d4129e7d3040616153a5e3e2dea3ad942f1324139",
+      "after_sha256": "40e8246cb08a3177a511ae4e3cf95b0f2d45cd5afa0a4c38015dfedc2e5df8d6",
+      "changed_pixels": 656,
+      "method": "CLI screenshot",
+      "frame_count": 15,
+      "after_binary": "after_cli_and_debug"
+    },
+    {
+      "case": "credits-388",
+      "before": "before-credits-388.png",
+      "after": "after-credits-388.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "f99489f862da7367ed22d834765c5565c556b6691add61ab1a36896431b92f1c",
+      "after_sha256": "c06c32e10e336831a991c9b71d9d07e01026c8cba710b6b708405e25201d28b5",
+      "changed_pixels": 1014,
+      "method": "CLI screenshot",
+      "frame_count": 388,
+      "after_binary": "after_cli_and_debug"
+    },
+    {
+      "case": "credits-5",
+      "before": "before-credits-5.png",
+      "after": "after-credits-5.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "64f311b21456cf595e177187e3a2693dd9e51fc10b6cda947cf96474cf8b489c",
+      "after_sha256": "6cffcd41610b0050e89ebf3db674d5dd7cd141d8b56b46541d2e10a9e56e06b3",
+      "changed_pixels": 590,
+      "method": "CLI screenshot",
+      "frame_count": 5,
+      "after_binary": "after_cli_and_debug"
+    },
+    {
+      "case": "credits-6600",
+      "before": "before-credits-6600.png",
+      "after": "after-credits-6600.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "f4ff3477b61a6b6dbaf95cb8ccf7665603c5431a8f47dc25a179d80917812db9",
+      "after_sha256": "72194e21b0a6b9b7e667faf35124ab4ad43028cfd5037e84dcb74c93512ab953",
+      "changed_pixels": 567,
+      "method": "CLI screenshot",
+      "frame_count": 6600,
+      "after_binary": "after_cli_and_debug"
+    },
+    {
+      "case": "credits-copyright-0",
+      "before": "before-credits-copyright-0.png",
+      "after": "after-credits-copyright-0.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "e2ba93ddf64fccbcd5561cfea452061e34e9609328d260063bcec2363c0f9110",
+      "after_sha256": "f4401245397b320bcb0fca35eb5fe9e9854e251e9eea15daf2a35e9b3bb3723a",
+      "changed_pixels": 876,
+      "method": "fixed state/phase fixture",
+      "frame_count": 0,
+      "after_binary": "after_fixture",
+      "phase": "Hold",
+      "screen_index": 34,
+      "frame_basis": "relative to entry into Hold"
+    },
+    {
+      "case": "credits-copyright-10",
+      "before": "before-credits-copyright-10.png",
+      "after": "after-credits-copyright-10.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "ea1a5fbd8001c953648c9c13739961606301c097ec4981204a75cdfb130c4e91",
+      "after_sha256": "f4401245397b320bcb0fca35eb5fe9e9854e251e9eea15daf2a35e9b3bb3723a",
+      "changed_pixels": 1609,
+      "method": "fixed state/phase fixture",
+      "frame_count": 10,
+      "after_binary": "after_fixture",
+      "phase": "Hold",
+      "screen_index": 34,
+      "frame_basis": "relative to entry into Hold"
+    },
+    {
+      "case": "credits-copyright-15",
+      "before": "before-credits-copyright-15.png",
+      "after": "after-credits-copyright-15.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "0bc0014fc9b7b7b827269f480294524df37efe23cb40e93454f5495b0223d934",
+      "after_sha256": "f4401245397b320bcb0fca35eb5fe9e9854e251e9eea15daf2a35e9b3bb3723a",
+      "changed_pixels": 1609,
+      "method": "fixed state/phase fixture",
+      "frame_count": 15,
+      "after_binary": "after_fixture",
+      "phase": "Hold",
+      "screen_index": 34,
+      "frame_basis": "relative to entry into Hold"
+    },
+    {
+      "case": "credits-copyright-5",
+      "before": "before-credits-copyright-5.png",
+      "after": "after-credits-copyright-5.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "ea1a5fbd8001c953648c9c13739961606301c097ec4981204a75cdfb130c4e91",
+      "after_sha256": "f4401245397b320bcb0fca35eb5fe9e9854e251e9eea15daf2a35e9b3bb3723a",
+      "changed_pixels": 1609,
+      "method": "fixed state/phase fixture",
+      "frame_count": 5,
+      "after_binary": "after_fixture",
+      "phase": "Hold",
+      "screen_index": 34,
+      "frame_basis": "relative to entry into Hold"
+    },
+    {
+      "case": "credits-scroll-7",
+      "before": "before-credits-scroll-7.png",
+      "after": "after-credits-scroll-7.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "19c4a03823945121ddb239bece12500916058a14f59165c3d9b3e464f29539b9",
+      "after_sha256": "12076856e76318df629c68b48005caae8a39493d32a91b06180f9ec214e4fed6",
+      "changed_pixels": 2112,
+      "method": "fixed state/phase fixture",
+      "frame_count": 7,
+      "after_binary": "after_fixture",
+      "phase": "MonScroll",
+      "screen_index": 0,
+      "frame_basis": "relative to entry into MonScroll"
+    },
+    {
+      "case": "credits-the-end-16",
+      "before": "before-credits-the-end-16.png",
+      "after": "after-credits-the-end-16.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "f4ff3477b61a6b6dbaf95cb8ccf7665603c5431a8f47dc25a179d80917812db9",
+      "after_sha256": "72194e21b0a6b9b7e667faf35124ab4ad43028cfd5037e84dcb74c93512ab953",
+      "changed_pixels": 567,
+      "method": "fixed state/phase fixture",
+      "frame_count": 16,
+      "after_binary": "after_fixture",
+      "phase": "TheEnd",
+      "screen_index": 35,
+      "frame_basis": "relative to entry into TheEnd"
+    },
+    {
+      "case": "credits-the-end-21",
+      "before": "before-credits-the-end-21.png",
+      "after": "after-credits-the-end-21.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "f4ff3477b61a6b6dbaf95cb8ccf7665603c5431a8f47dc25a179d80917812db9",
+      "after_sha256": "72194e21b0a6b9b7e667faf35124ab4ad43028cfd5037e84dcb74c93512ab953",
+      "changed_pixels": 567,
+      "method": "fixed state/phase fixture",
+      "frame_count": 21,
+      "after_binary": "after_fixture",
+      "phase": "TheEnd",
+      "screen_index": 35,
+      "frame_basis": "relative to entry into TheEnd"
+    },
+    {
+      "case": "credits-the-end-26",
+      "before": "before-credits-the-end-26.png",
+      "after": "after-credits-the-end-26.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "f4ff3477b61a6b6dbaf95cb8ccf7665603c5431a8f47dc25a179d80917812db9",
+      "after_sha256": "72194e21b0a6b9b7e667faf35124ab4ad43028cfd5037e84dcb74c93512ab953",
+      "changed_pixels": 567,
+      "method": "fixed state/phase fixture",
+      "frame_count": 26,
+      "after_binary": "after_fixture",
+      "phase": "TheEnd",
+      "screen_index": 35,
+      "frame_basis": "relative to entry into TheEnd"
+    },
+    {
+      "case": "credits-the-end-31",
+      "before": "before-credits-the-end-31.png",
+      "after": "after-credits-the-end-31.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "f4ff3477b61a6b6dbaf95cb8ccf7665603c5431a8f47dc25a179d80917812db9",
+      "after_sha256": "72194e21b0a6b9b7e667faf35124ab4ad43028cfd5037e84dcb74c93512ab953",
+      "changed_pixels": 567,
+      "method": "fixed state/phase fixture",
+      "frame_count": 31,
+      "after_binary": "after_fixture",
+      "phase": "TheEnd",
+      "screen_index": 35,
+      "frame_basis": "relative to entry into TheEnd"
+    },
+    {
+      "case": "dex-Gengar-0",
+      "before": "before-dex-Gengar-0.png",
+      "after": "after-dex-Gengar-0.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "b35369a42ff83c437822cf0ab225f7d57e5da882bc67c5d99288a49f87722af4",
+      "after_sha256": "4f7477463d35b66572bd04a96952e022d58d222627604dd962febac6b9f4d06e",
+      "changed_pixels": 4768,
+      "method": "fixed state/phase fixture",
+      "frame_count": 0,
+      "after_binary": "after_fixture"
+    },
+    {
+      "case": "dex-Raichu-0",
+      "before": "before-dex-Raichu-0.png",
+      "after": "after-dex-Raichu-0.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "449f31a2f0695b2c71b6fee1f790925b740f7ead3cfe7628334ba8b4d1647d25",
+      "after_sha256": "92195a0ee54a51100713278eb74e4113501889d70b3e5d32d062365c580021f3",
+      "changed_pixels": 3277,
+      "method": "fixed state/phase fixture",
+      "frame_count": 0,
+      "after_binary": "after_fixture"
+    },
+    {
+      "case": "diploma-5",
+      "before": "before-diploma-5.png",
+      "after": "after-diploma-5.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "415600e871415dec0bcc29e757bd74e34857aa37392ce1d5f8e12760b8855daa",
+      "after_sha256": "7a633485212f5942b94316c062520e094e768410441588a46077b51ba3f854a9",
+      "changed_pixels": 4891,
+      "method": "CLI screenshot",
+      "frame_count": 5,
+      "after_binary": "after_cli_and_debug"
+    },
+    {
+      "case": "diploma-zh-0",
+      "before": "before-diploma-zh-0.png",
+      "after": "after-diploma-zh-0.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "9721dcf7beaf60278fc9ab09789f82ee0babaf307d712cde85f220e508fe2da9",
+      "after_sha256": "ad316fe0d36870876af258d939443341b790bb924fa75e247aa6edeb2df1023b",
+      "changed_pixels": 4526,
+      "method": "fixed state/phase fixture",
+      "frame_count": 0,
+      "after_binary": "after_fixture"
+    },
+    {
+      "case": "elevator-floor-0",
+      "before": "before-elevator-floor-0.png",
+      "after": "after-elevator-floor-0.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "59c86b4d7aa7fa9f0cb53a1e7ce94e0a7d5882aec90cf8a70ae181a7e7b1da1b",
+      "after_sha256": "8319994dd9ac7fce7de0882a70e51dacafe50328fe7a0f000bca1e1738a668fa",
+      "changed_pixels": 5069,
+      "method": "fixed state/phase fixture",
+      "frame_count": 0,
+      "after_binary": "after_fixture"
+    },
+    {
+      "case": "elevator-script",
+      "before": "before-elevator-script.png",
+      "after": "after-elevator-script.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "59c86b4d7aa7fa9f0cb53a1e7ce94e0a7d5882aec90cf8a70ae181a7e7b1da1b",
+      "after_sha256": "7078dede3c8c4a9ac31463437c494dc0e55be2ee61fbff45690478b693b75e5c",
+      "changed_pixels": 7312,
+      "method": "live debug sign interaction",
+      "frame_count": 70,
+      "seed": 42,
+      "map": "CeladonMartElevator",
+      "position": [
+        3,
+        1
+      ],
+      "facing": "Up",
+      "cursor": 0,
+      "trace_before": "elevator-before-trace.json",
+      "trace_after": "elevator-after-trace.json",
+      "after_binary": "after_cli_and_debug"
+    },
+    {
+      "case": "evolution-190",
+      "before": "before-evolution-190.png",
+      "after": "after-evolution-190.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "49ab92d429e98fa405df69b1bd346fce050a09effc7a178aa89628b32c6ca74e",
+      "after_sha256": "aaccc030261c283c5328f012564ee10e639b057794cb08c79da0a914f64fa549",
+      "changed_pixels": 22578,
+      "method": "fixed state/phase fixture",
+      "frame_count": 190,
+      "after_binary": "after_fixture"
+    },
+    {
+      "case": "gamefreak-splash-181",
+      "before": "before-gamefreak-splash-181.png",
+      "after": "after-gamefreak-splash-181.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "d1c9b1db7879d7d7c506fd8efa1eb469b077c959381cd08d78a12615b918c92c",
+      "after_sha256": "e2ba93ddf64fccbcd5561cfea452061e34e9609328d260063bcec2363c0f9110",
+      "changed_pixels": 297,
+      "method": "CLI screenshot",
+      "frame_count": 181,
+      "after_binary": "after_cli_and_debug"
+    },
+    {
+      "case": "gamefreak-splash-244",
+      "before": "before-gamefreak-splash-244.png",
+      "after": "after-gamefreak-splash-244.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "5d0d886a542cdce4a3a57a353da8cd240e363e999f14ca45ed1497ec27a805d2",
+      "after_sha256": "658eb13068fa23d15c3978f113f654e4321c7868fa14cd1c8440719408f17c31",
+      "changed_pixels": 322,
+      "method": "CLI screenshot",
+      "frame_count": 244,
+      "after_binary": "after_cli_and_debug"
+    },
+    {
+      "case": "gamefreak-splash-284",
+      "before": "before-gamefreak-splash-284.png",
+      "after": "after-gamefreak-splash-284.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "d1c9b1db7879d7d7c506fd8efa1eb469b077c959381cd08d78a12615b918c92c",
+      "after_sha256": "78def794e9a87b82e13eaff5cadf9e3c935993d025864f83e36ed111bafae203",
+      "changed_pixels": 365,
+      "method": "CLI screenshot",
+      "frame_count": 284,
+      "after_binary": "after_cli_and_debug"
+    },
+    {
+      "case": "hof-0",
+      "before": "before-hof-0.png",
+      "after": "after-hof-0.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "0ef06ad72321bb90c24a83e1eb7a60e6d9468772639feb4d9be498bfe8da5aa6",
+      "after_sha256": "d3b3a7ba49fcffa37c1f9be1e4485e537df225da96c7f0aa8484e4ec1022b902",
+      "changed_pixels": 5971,
+      "method": "CLI screenshot",
+      "frame_count": 0,
+      "after_binary": "after_cli_and_debug"
+    },
+    {
+      "case": "hof-220",
+      "before": "before-hof-220.png",
+      "after": "after-hof-220.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "a6dba6466d1ab6553226b9548fc67e1b71afcb02ba2a56ca59e32f02d294eda6",
+      "after_sha256": "b475e60e05a7f14c376c3b8ad8f81a01ef2952a5ee0c1c898cd05006cf9e2502",
+      "changed_pixels": 2914,
+      "method": "CLI screenshot",
+      "frame_count": 220,
+      "after_binary": "after_cli_and_debug"
+    },
+    {
+      "case": "hof-480",
+      "before": "before-hof-480.png",
+      "after": "after-hof-480.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "a6dba6466d1ab6553226b9548fc67e1b71afcb02ba2a56ca59e32f02d294eda6",
+      "after_sha256": "5f07e6c90b1ae2a023227885bc96a2d8ff2530db44b9f402101c0849a826c27f",
+      "changed_pixels": 3910,
+      "method": "CLI screenshot",
+      "frame_count": 480,
+      "after_binary": "after_cli_and_debug"
+    },
+    {
+      "case": "hof-488",
+      "before": "before-hof-488.png",
+      "after": "after-hof-488.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "0ef06ad72321bb90c24a83e1eb7a60e6d9468772639feb4d9be498bfe8da5aa6",
+      "after_sha256": "5f07e6c90b1ae2a023227885bc96a2d8ff2530db44b9f402101c0849a826c27f",
+      "changed_pixels": 3055,
+      "method": "CLI screenshot",
+      "frame_count": 488,
+      "after_binary": "after_cli_and_debug"
+    },
+    {
+      "case": "naming-lapras-17",
+      "before": "before-naming-lapras-17.png",
+      "after": "after-naming-lapras-17.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "469b250b1c4c59462f5f9ca9c555df15ab70c0f8fde1a282c845710e015c4d29",
+      "after_sha256": "596408103ed51228afd9e45586715bec8989574f0e67e775ef09bfbaee52fb6a",
+      "changed_pixels": 4020,
+      "method": "fixed state/phase fixture",
+      "frame_count": 17,
+      "after_binary": "after_fixture"
+    },
+    {
+      "case": "naming-player-5",
+      "before": "before-naming-player-5.png",
+      "after": "after-naming-player-5.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "8a36afa4871572bc2ac0fcb1f2a658eaa870949d736718887c7472bd6e61105d",
+      "after_sha256": "2be9977bbd3a456c6c0f2704827d676bb2e39d8e18bf725f92554a30fa08df53",
+      "changed_pixels": 3753,
+      "method": "fixed state/phase fixture",
+      "frame_count": 5,
+      "after_binary": "after_fixture"
+    },
+    {
+      "case": "oak-nidorino-65",
+      "before": "before-oak-nidorino-65.png",
+      "after": "after-oak-nidorino-65.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "fd158168933357306d7d27e64e87cb8d7fbd2803992f38250822d44592fe80ff",
+      "after_sha256": "59e85052441a3b413c109e960f1f6fb3b2b17e277712c6e88fe42d65215de85a",
+      "changed_pixels": 2643,
+      "method": "fixed state/phase fixture",
+      "frame_count": 65,
+      "after_binary": "after_fixture"
+    },
+    {
+      "case": "overworld-obj-down-0",
+      "before": "before-overworld-obj-down-0.png",
+      "after": "after-overworld-obj-down-0.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "13352bc1d546af2690cbf7406063009595f3cafe228945b6bedf23c0d3ca68a4",
+      "after_sha256": "c8c4121402c5eeba2785d4f93a7169674acb66b6879ee397db2a564cbb1d7124",
+      "changed_pixels": 176,
+      "method": "fixed state/phase fixture",
+      "frame_count": 0,
+      "after_binary": "after_fixture"
+    },
+    {
+      "case": "overworld-obj-left-0",
+      "before": "before-overworld-obj-left-0.png",
+      "after": "after-overworld-obj-left-0.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "79386b47f30c21b75ed9673426ebe3fd37d4e084edb7a6020c822ba95b7eddc5",
+      "after_sha256": "14ce1e4f64b6d1f00e368826e4f56f351dfeaa52951da413882eb731fe6c0c5d",
+      "changed_pixels": 160,
+      "method": "fixed state/phase fixture",
+      "frame_count": 0,
+      "after_binary": "after_fixture"
+    },
+    {
+      "case": "overworld-obj-right-0",
+      "before": "before-overworld-obj-right-0.png",
+      "after": "after-overworld-obj-right-0.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "61a70b5464fc0441733e05c5eeb8b5ba866245245879956dec879a05a4f099da",
+      "after_sha256": "b1d411f46f18793e3b3e49354eae2ead60822f0558319acb06a772f245019fa5",
+      "changed_pixels": 160,
+      "method": "fixed state/phase fixture",
+      "frame_count": 0,
+      "after_binary": "after_fixture"
+    },
+    {
+      "case": "party-Bulbasaur-green-6",
+      "before": "before-party-Bulbasaur-green-6.png",
+      "after": "after-party-Bulbasaur-green-6.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "8ab9fda128ede86db09af1bd69cfc534ee0cbff70a70ac4afcc54b3c7071087e",
+      "after_sha256": "b606988715842553cb1ed48224439a6533c6ad37bbeef95c74ae1909f13fc637",
+      "changed_pixels": 560,
+      "method": "fixed state/phase fixture",
+      "frame_count": 6,
+      "after_binary": "after_fixture"
+    },
+    {
+      "case": "party-Caterpie-green-6",
+      "before": "before-party-Caterpie-green-6.png",
+      "after": "after-party-Caterpie-green-6.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "b8e1fafdf08a40a4ddbcd21eb0dc9cb348591b22e8539aeb3c7093db8c361604",
+      "after_sha256": "9f3992aa0dd44eff7abe7bda0a0ae60121b0bcb31637b9d95cf553b1a38e6340",
+      "changed_pixels": 542,
+      "method": "fixed state/phase fixture",
+      "frame_count": 6,
+      "after_binary": "after_fixture"
+    },
+    {
+      "case": "party-Clefairy-green-6",
+      "before": "before-party-Clefairy-green-6.png",
+      "after": "after-party-Clefairy-green-6.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "04e89eff84babfed344873bad21db74640d069cf88a89a0a8d4c622514002c98",
+      "after_sha256": "087e0ff5ff8e3967b2a8814790b077aad84ef4c37680e1c6720d7444896e6a55",
+      "changed_pixels": 549,
+      "method": "fixed state/phase fixture",
+      "frame_count": 6,
+      "after_binary": "after_fixture"
+    },
+    {
+      "case": "party-Ekans-green-6",
+      "before": "before-party-Ekans-green-6.png",
+      "after": "after-party-Ekans-green-6.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "c237ef2d793fe9567197b50a39020b7c200374ed817f021041212c0baabc3d3c",
+      "after_sha256": "a2307a1ad27bc2d0ce53265b4a5f1dd2ce4204a5f6df76544f51bb81eab1855b",
+      "changed_pixels": 389,
+      "method": "fixed state/phase fixture",
+      "frame_count": 6,
+      "after_binary": "after_fixture"
+    },
+    {
+      "case": "party-Lapras-green-6",
+      "before": "before-party-Lapras-green-6.png",
+      "after": "after-party-Lapras-green-6.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "e07a3570c9118537744c2119ddbc2311454710018aaf6225e0fc18d7a0835453",
+      "after_sha256": "0625dbd627d951c8441dc7b7cd7cd42d5cc9b4aef9b09f0b2b102a36cd96f62d",
+      "changed_pixels": 418,
+      "method": "fixed state/phase fixture",
+      "frame_count": 6,
+      "after_binary": "after_fixture"
+    },
+    {
+      "case": "party-Omanyte-green-6",
+      "before": "before-party-Omanyte-green-6.png",
+      "after": "after-party-Omanyte-green-6.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "61614f5db966da6457477b452db6b8f5e0e17035f397b14b90ebb3ca7d63f847",
+      "after_sha256": "80fef3690807d3c347e0e188bf5b71352698e31cf27893ce60eae53580b899a3",
+      "changed_pixels": 560,
+      "method": "fixed state/phase fixture",
+      "frame_count": 6,
+      "after_binary": "after_fixture"
+    },
+    {
+      "case": "party-Pidgey-green-6",
+      "before": "before-party-Pidgey-green-6.png",
+      "after": "after-party-Pidgey-green-6.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "15264ee22d4e20e3b0a0687ca04dd9d2bfe102af1a1cec473154ded8d160f7bf",
+      "after_sha256": "e4e16701c7df72255b2ea044d7e48dd93e7431a845706fa4d6999b905e3a8c18",
+      "changed_pixels": 517,
+      "method": "fixed state/phase fixture",
+      "frame_count": 6,
+      "after_binary": "after_fixture"
+    },
+    {
+      "case": "party-Pidgey-red-33",
+      "before": "before-party-Pidgey-red-33.png",
+      "after": "after-party-Pidgey-red-33.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "07e722b8d3864686c33c23a4283d995c17452febdfcbe663089d796f6066ad0a",
+      "after_sha256": "ce86bee025dbb2a895bdde4f8430b3c95ca8d36e8beabe50bfda4bf813da710d",
+      "changed_pixels": 482,
+      "method": "fixed state/phase fixture",
+      "frame_count": 33,
+      "after_binary": "after_fixture"
+    },
+    {
+      "case": "party-Pidgey-yellow-17",
+      "before": "before-party-Pidgey-yellow-17.png",
+      "after": "after-party-Pidgey-yellow-17.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "114c67f3925e9e59a576462225ae56fb4ab51df13e5986cf8ba75d91146d8d18",
+      "after_sha256": "1c0cbb824711ea71c6b0f32cc22039f13c52c4760829b15eb9e54f3f5bbba878",
+      "changed_pixels": 513,
+      "method": "fixed state/phase fixture",
+      "frame_count": 17,
+      "after_binary": "after_fixture"
+    },
+    {
+      "case": "party-Pikachu-green-6",
+      "before": "before-party-Pikachu-green-6.png",
+      "after": "after-party-Pikachu-green-6.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "8e551421ea33b8c9bdbcff49fe9c74f72f76d237aee392d68ddfea74a326b02e",
+      "after_sha256": "e7218f71808e3fe03948d492024af6e630e297c16774da26dc6e8d8f9abd29e5",
+      "changed_pixels": 532,
+      "method": "fixed state/phase fixture",
+      "frame_count": 6,
+      "after_binary": "after_fixture"
+    },
+    {
+      "case": "party-Rhydon-green-6",
+      "before": "before-party-Rhydon-green-6.png",
+      "after": "after-party-Rhydon-green-6.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "6073401219070ad99e792956fb6291e4d817f5fb3faaf96d132d203b9bfae1a1",
+      "after_sha256": "192ac94f363891de91b9e2683c5c551a074f46948cca632d4c8fad6ecb406579",
+      "changed_pixels": 520,
+      "method": "fixed state/phase fixture",
+      "frame_count": 6,
+      "after_binary": "after_fixture"
+    },
+    {
+      "case": "party-Voltorb-green-6",
+      "before": "before-party-Voltorb-green-6.png",
+      "after": "after-party-Voltorb-green-6.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "c04527af9c931c312a2c9f2f636de1f7a5b7ba447a882cdb4eebe97072f47d4d",
+      "after_sha256": "0d5a34e3103865600f673a56be39fda3243e249721bba61b1bbc9a6ef1d389d7",
+      "changed_pixels": 508,
+      "method": "fixed state/phase fixture",
+      "frame_count": 6,
+      "after_binary": "after_fixture"
+    },
+    {
+      "case": "title-121",
+      "before": "before-title-121.png",
+      "after": "after-title-121.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "e4b0faf92a42fb7d94a09ba14135c7cde3ece4a304b33cb0c4636005e37ebf77",
+      "after_sha256": "bb3bd754fbef789dc9a82a3707df509f6605224a65580ce9f304bb0bfad03a38",
+      "changed_pixels": 4181,
+      "method": "CLI screenshot",
+      "frame_count": 121,
+      "after_binary": "after_cli_and_debug"
+    },
+    {
+      "case": "title-125",
+      "before": "before-title-125.png",
+      "after": "after-title-125.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "e4b0faf92a42fb7d94a09ba14135c7cde3ece4a304b33cb0c4636005e37ebf77",
+      "after_sha256": "413883057e37b459b734f7f1ee0ae512b70852ac7b344755b622bb497d5d0ada",
+      "changed_pixels": 4636,
+      "method": "CLI screenshot",
+      "frame_count": 125,
+      "after_binary": "after_cli_and_debug"
+    },
+    {
+      "case": "title-441",
+      "before": "before-title-441.png",
+      "after": "after-title-441.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "43356a347a21b1cec192875b26e32bf51728bdf8dedf75b8d1e67d3948a4d501",
+      "after_sha256": "303983b371a0207113576c82b25009ba79a7c195bac3e5ef386c5e82ddf297e2",
+      "changed_pixels": 1450,
+      "method": "CLI screenshot",
+      "frame_count": 441,
+      "after_binary": "after_cli_and_debug"
+    },
+    {
+      "case": "title-507",
+      "before": "before-title-507.png",
+      "after": "after-title-507.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "7c0d22136d17c73a08476a7de17c8af0b123873f5adb87b45929bf3ec8000b6e",
+      "after_sha256": "7b503e825ca5cadc0841f143f8495227b78a7a887eb519eedb3965a56e5579d5",
+      "changed_pixels": 713,
+      "method": "CLI screenshot",
+      "frame_count": 507,
+      "after_binary": "after_cli_and_debug"
+    },
+    {
+      "case": "title-563",
+      "before": "before-title-563.png",
+      "after": "after-title-563.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "7c0d22136d17c73a08476a7de17c8af0b123873f5adb87b45929bf3ec8000b6e",
+      "after_sha256": "7b503e825ca5cadc0841f143f8495227b78a7a887eb519eedb3965a56e5579d5",
+      "changed_pixels": 713,
+      "method": "CLI screenshot",
+      "frame_count": 563,
+      "after_binary": "after_cli_and_debug"
+    },
+    {
+      "case": "title-900",
+      "before": "before-title-900.png",
+      "after": "after-title-900.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "a298484b8a27e80946b595b1a2140fde6ec55a242f6046232e0c094c89f2eb3b",
+      "after_sha256": "242822d42b52fdd3b1e8719a0443221431905972caf691e175ccec298aaae16b",
+      "changed_pixels": 1335,
+      "method": "CLI screenshot",
+      "frame_count": 900,
+      "after_binary": "after_cli_and_debug"
+    },
+    {
+      "case": "title-blue-0",
+      "before": "before-title-blue-0.png",
+      "after": "after-title-blue-0.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "f0ef73f6ce2b25db4ebc353de15c68e5fb9057ba4abbb3f9e36b92a8a3e058bf",
+      "after_sha256": "512f279aebb4870632501c98c4aada28c5708cf3ecbbceb1dcc0474a0001a62e",
+      "changed_pixels": 729,
+      "method": "fixed state/phase fixture",
+      "frame_count": 0,
+      "after_binary": "after_fixture"
+    },
+    {
+      "case": "trade-40",
+      "before": "before-trade-40.png",
+      "after": "after-trade-40.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "af8a797d59b5b960f7d178bbad237ed22dc9604ab6ac03d5fc9f05a7efb58860",
+      "after_sha256": "d54735f1790d39dffd6fb31c4ee377117579ccd8e310088e94de945d7fdc1396",
+      "changed_pixels": 1343,
+      "method": "fixed state/phase fixture",
+      "frame_count": 40,
+      "after_binary": "after_fixture"
+    },
+    {
+      "case": "trainer-card-5",
+      "before": "before-trainer-card-5.png",
+      "after": "after-trainer-card-5.png",
+      "size": [
+        160,
+        144
+      ],
+      "before_sha256": "ac809feea0a4277262e38c879e18ea099ed46d3aec426f0d1f540ed37b1c11e1",
+      "after_sha256": "2751db713cb6496f401ccf30feb95038797d6f403c360b16885055a28524eee0",
+      "changed_pixels": 9543,
+      "method": "CLI screenshot",
+      "frame_count": 5,
+      "after_binary": "after_cli_and_debug"
+    }
+  ]
+}
