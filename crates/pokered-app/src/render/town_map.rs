@@ -3,7 +3,7 @@ use pokered_core::game_state::Lang;
 use pokered_core::town_map_screen::{TownMapMode, TownMapScreenState};
 use pokered_data::map_names::{map_name_str, map_name_str_zh};
 use pokered_data::town_map_data::{decode_town_map_tilemap, town_map_position, TOWN_MAP_WIDTH};
-use pokered_renderer::embedded_font::{draw_text, fill_tile, measure_text};
+use pokered_renderer::embedded_font::{draw_text, fill_tile};
 use pokered_renderer::palette::{Palette, GRAYSCALE_PALETTE};
 use pokered_renderer::resource::ResourceManager;
 use pokered_renderer::{FrameBuffer, Rgba, TILE_SIZE};
@@ -26,36 +26,15 @@ pub fn marker_damage(current_map: pokered_data::maps::MapId) -> Option<pokered_u
 pub fn cursor_damage(
     state: &TownMapScreenState,
     previous_map: pokered_data::maps::MapId,
-    lang: Lang,
+    _lang: Lang,
 ) -> Option<[pokered_ui::DamageRect; 4]> {
-    let (old_x, old_y, old_name) = town_map_position(previous_map)?;
-    let (new_x, new_y, new_name) = town_map_position(state.selected_map())?;
+    let (old_x, old_y, _) = town_map_position(previous_map)?;
+    let (new_x, new_y, _) = town_map_position(state.selected_map())?;
     let marker = marker_damage(state.current_map())?;
     let label = if state.mode() == TownMapMode::Fly {
         pokered_ui::DamageRect::new(0, 0, 160, 2 * TILE_SIZE)
     } else {
-        let overlaps_view_box = [(old_y, old_name), (new_y, new_name)]
-            .iter()
-            .any(|(y, _)| *y as u32 * TILE_SIZE + 5 + 16 > 15 * TILE_SIZE);
-        let marker_is_behind_box = town_map_position(state.current_map())
-            .is_some_and(|(_, y, _)| (y as u32 + 1) * TILE_SIZE >= 15 * TILE_SIZE);
-        if overlaps_view_box || marker_is_behind_box {
-            pokered_ui::DamageRect::new(0, 15 * TILE_SIZE, 160, 3 * TILE_SIZE)
-        } else {
-            let label_width = |name| {
-                measure_text(if lang == Lang::Zh {
-                    map_name_str_zh(name)
-                } else {
-                    map_name_str(name)
-                })
-            };
-            pokered_ui::DamageRect::new(
-                TILE_SIZE,
-                16 * TILE_SIZE,
-                label_width(old_name).max(label_width(new_name)).min(18 * TILE_SIZE),
-                13,
-            )
-        }
+        pokered_ui::DamageRect::new(0, 15 * TILE_SIZE, 160, 3 * TILE_SIZE)
     };
     Some([
         pokered_ui::DamageRect::new(
@@ -469,31 +448,11 @@ pub fn redraw_town_map_cursor(
                 }
             })
         };
-        let previous_label = label_for(previous_map);
         let current_label = label_for(state.selected_map());
-        let clear_width = previous_label
-            .map_or(0, measure_text)
-            .max(current_label.map_or(0, measure_text))
-            .min(18 * TILE_SIZE);
-        let reticle_overlaps_box = [previous_map, state.selected_map()]
-            .iter()
-            .filter_map(|&map| town_map_position(map))
-            .any(|(_, y, _)| y as u32 * TILE_SIZE + 5 + 16 > 15 * TILE_SIZE);
-        let marker_is_behind_box = town_map_position(state.current_map())
-            .is_some_and(|(_, y, _)| (y as u32 + 1) * TILE_SIZE >= 15 * TILE_SIZE);
-        if reticle_overlaps_box || marker_is_behind_box {
-            // These layers are conceptually below the box. Re-establish the
-            // complete box when restoring them touched its pixels.
-            draw_text_box(fb, 0, 15 * TILE_SIZE, 18, 1, Rgba::BLACK);
-        } else {
-            // The box itself is static. Clear only the old/new label union
-            // across its 13-pixel font bounds; keep the border intact.
-            for y in 16 * TILE_SIZE..16 * TILE_SIZE + 13 {
-                for x in TILE_SIZE..TILE_SIZE + clear_width {
-                    fb.set_pixel(x, y, Rgba::WHITE);
-                }
-            }
-        }
+        // A thirteen-pixel label clear crosses the original bottom border
+        // tile at y=136. Restore the small box before drawing the next label,
+        // in the same layer order as a complete frame (including CJK spill).
+        draw_text_box(fb, 0, 15 * TILE_SIZE, 18, 1, Rgba::BLACK);
         if let Some(label) = current_label {
             draw_text(label, TILE_SIZE, 16 * TILE_SIZE, Rgba::BLACK, fb);
         }

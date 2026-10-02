@@ -419,16 +419,34 @@ pub fn draw_stats_screen(
     }
 }
 
+pub(super) fn mart_list_scroll(cursor: usize, count: usize, lang: Lang) -> usize {
+    let list_visible = if lang == Lang::Zh { 3 } else { 4 };
+    cursor.saturating_sub(list_visible - 1).min(count.saturating_sub(list_visible))
+}
+
+pub(super) fn mart_main_cursor_position(index: usize) -> (u32, u32) {
+    let rect = MART_MAIN_MENU_LAYOUT.menu_box.rect;
+    let cursor = &MART_MAIN_MENU_LAYOUT.cursor;
+    (rect.tx + 1 + cursor.tx, rect.ty + 1 + cursor.base_ty + index as u32 * cursor.row_step)
+}
+
+pub(super) fn mart_list_cursor_position(index: usize, scroll: usize, lang: Lang, sell: bool) -> (u32, u32) {
+    use pokered_data::ui_layout::schema::{MART_BUY_ITEMS_WITH_MONEY_LAYOUT, MART_SELL_ITEMS_WITH_MONEY_LAYOUT};
+    let (rect, cursor) = if sell {
+        (MART_SELL_ITEMS_WITH_MONEY_LAYOUT.list_box.rect, &MART_SELL_ITEMS_WITH_MONEY_LAYOUT.cursor)
+    } else {
+        (MART_BUY_ITEMS_WITH_MONEY_LAYOUT.list_box.rect, &MART_BUY_ITEMS_WITH_MONEY_LAYOUT.cursor)
+    };
+    let extra_row = if lang == Lang::Zh { 1 } else { 0 };
+    let row_step = if lang == Lang::Zh { 3 } else { cursor.row_step };
+    (rect.tx + 1 + cursor.tx, rect.ty + extra_row + 1 + cursor.base_ty + (index - scroll) as u32 * row_step)
+}
+
 pub fn draw_mart(state: &MartState, player_money: u32, bag_items: &[(pokered_data::items::ItemId, u32)], fb: &mut FrameBuffer, lang: Lang) {
     let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
     let mut ui = Ui::new(&mut painter);
-    // The buy/sell list boxes show 5 entries at the 2-row CJK pitch
-    // (interior rows 1/3/5/7/9 of a 12-tall box). The core tracks a bare
-    // cursor, so window the scroll offset here to keep it on-screen.
-    let list_visible = if lang == Lang::Zh { 3 } else { 4 };
-    let list_scroll = |cursor: usize, count: usize| -> usize {
-        cursor.saturating_sub(list_visible - 1).min(count.saturating_sub(list_visible))
-    };
+    // Names and prices occupy separate rows: four English or three Chinese
+    // entries fit. RenderSession uses these same viewport/cursor helpers.
     match &state.phase {
         MartPhase::MainMenu { cursor } => {
             menus::mart::draw_main_with_money(cursor.position(), player_money, &MART_MAIN_MENU_LAYOUT, &mut ui, lang);
@@ -438,7 +456,7 @@ pub fn draw_mart(state: &MartState, player_money: u32, bag_items: &[(pokered_dat
                 menus::mart::draw_buy_items_with_money(
                     state.inventory.items(),
                     *cursor,
-                    list_scroll(*cursor, state.inventory.items().len()),
+                    mart_list_scroll(*cursor, state.inventory.items().len(), lang),
                     player_money,
                     &pokered_data::ui_layout::schema::MART_BUY_ITEMS_WITH_MONEY_LAYOUT,
                     &mut ui,
@@ -493,7 +511,7 @@ pub fn draw_mart(state: &MartState, player_money: u32, bag_items: &[(pokered_dat
                 menus::mart::draw_sell_items_with_money(
                     bag_items,
                     *cursor,
-                    list_scroll(*cursor, entries),
+                    mart_list_scroll(*cursor, entries, lang),
                     player_money,
                     &pokered_data::ui_layout::schema::MART_SELL_ITEMS_WITH_MONEY_LAYOUT,
                     &mut ui,
@@ -1203,6 +1221,20 @@ mod tests {
     }
 
     #[test]
+    fn mart_cursor_geometry_uses_the_drawn_original_boxes() {
+        assert_eq!(mart_main_cursor_position(0), (1, 1));
+        assert_eq!(mart_main_cursor_position(2), (1, 5));
+        for sell in [false, true] {
+            assert_eq!(mart_list_cursor_position(0, 0, Lang::En, sell), (5, 4));
+            assert_eq!(mart_list_cursor_position(3, 0, Lang::En, sell), (5, 10));
+            assert_eq!(mart_list_cursor_position(0, 0, Lang::Zh, sell), (5, 5));
+            assert_eq!(mart_list_cursor_position(2, 0, Lang::Zh, sell), (5, 11));
+        }
+        assert_eq!(mart_list_scroll(4, 5, Lang::En), 1);
+        assert_eq!(mart_list_scroll(3, 5, Lang::Zh), 1);
+    }
+
+    #[test]
     fn mart_cursor_repaint_matches_fresh_draws_for_all_local_transitions() {
         use pokered_core::items::shop::{ConfirmChoice, MartTopChoice, ShopInventory};
 
@@ -1243,8 +1275,8 @@ mod tests {
                                 cursor: *current_choice,
                             },
                         ),
-                        (1, 2 + previous_cursor as u32 * 2),
-                        (1, 2 + current_cursor as u32 * 2),
+                        mart_main_cursor_position(previous_cursor),
+                        mart_main_cursor_position(current_cursor),
                         &bag,
                         language,
                     );
@@ -1254,6 +1286,12 @@ mod tests {
             for previous_cursor in 0..stock.len() {
                 for current_cursor in 0..stock.len() {
                     if previous_cursor == current_cursor {
+                        continue;
+                    }
+                    let previous_scroll = mart_list_scroll(previous_cursor, stock.len(), language);
+                    let current_scroll = mart_list_scroll(current_cursor, stock.len(), language);
+                    // A changed viewport is a full popup redraw in RenderSession.
+                    if previous_scroll != current_scroll {
                         continue;
                     }
                     assert_mart_cursor_repaint(
@@ -1269,8 +1307,8 @@ mod tests {
                                 cursor: current_cursor,
                             }),
                         ),
-                        (2, 4 + previous_cursor as u32 * 2),
-                        (2, 4 + current_cursor as u32 * 2),
+                        mart_list_cursor_position(previous_cursor, previous_scroll, language, false),
+                        mart_list_cursor_position(current_cursor, current_scroll, language, false),
                         &bag,
                         language,
                     );
@@ -1283,6 +1321,11 @@ mod tests {
                     if previous_cursor == current_cursor {
                         continue;
                     }
+                    let previous_scroll = mart_list_scroll(previous_cursor, bag.len() + 1, language);
+                    let current_scroll = mart_list_scroll(current_cursor, bag.len() + 1, language);
+                    if previous_scroll != current_scroll {
+                        continue;
+                    }
                     assert_mart_cursor_repaint(
                         mart_state(
                             &stock,
@@ -1296,8 +1339,8 @@ mod tests {
                                 cursor: current_cursor,
                             }),
                         ),
-                        (2, 4 + previous_cursor as u32 * 2),
-                        (2, 4 + current_cursor as u32 * 2),
+                        mart_list_cursor_position(previous_cursor, previous_scroll, language, true),
+                        mart_list_cursor_position(current_cursor, current_scroll, language, true),
                         &bag,
                         language,
                     );

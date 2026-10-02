@@ -1618,13 +1618,6 @@ struct ShopVisualKey {
     language: Lang,
 }
 
-fn mart_list_scroll(cursor: usize, count: usize) -> usize {
-    const VISIBLE_ROWS: usize = 5;
-    cursor
-        .saturating_sub(VISIBLE_ROWS - 1)
-        .min(count.saturating_sub(VISIBLE_ROWS))
-}
-
 fn hash_buy_result(hash: &mut u32, result: &BuyResult) {
     match result {
         BuyResult::Success { total_cost } => {
@@ -1676,14 +1669,14 @@ impl ShopVisualKey {
         let (phase, cursor) = match &mart.phase {
             MartPhase::MainMenu { cursor } => (
                 ShopPhaseKind::MainMenu,
-                Some((1, 2 + cursor.position() as u32 * 2)),
+                Some(super::menu::mart_main_cursor_position(cursor.position())),
             ),
             MartPhase::Buy(BuyMenuState::SelectItem { cursor }) => {
-                let scroll = mart_list_scroll(*cursor, mart.inventory.items().len());
+                let scroll = super::menu::mart_list_scroll(*cursor, mart.inventory.items().len(), language);
                 hash_u32(&mut visual_hash, scroll as u32);
                 (
                     ShopPhaseKind::BuySelect,
-                    Some((2, 4 + (*cursor - scroll) as u32 * 2)),
+                    Some(super::menu::mart_list_cursor_position(*cursor, scroll, language, false)),
                 )
             }
             MartPhase::Buy(BuyMenuState::Quantity {
@@ -1718,11 +1711,11 @@ impl ShopVisualKey {
             }
             MartPhase::Sell(SellMenuState::SelectItem { cursor }) => {
                 let entries = game.save_data.game_data.bag.count() + 1;
-                let scroll = mart_list_scroll(*cursor, entries);
+                let scroll = super::menu::mart_list_scroll(*cursor, entries, language);
                 hash_u32(&mut visual_hash, scroll as u32);
                 (
                     ShopPhaseKind::SellSelect,
-                    Some((2, 4 + (*cursor - scroll) as u32 * 2)),
+                    Some(super::menu::mart_list_cursor_position(*cursor, scroll, language, true)),
                 )
             }
             MartPhase::Sell(SellMenuState::Quantity {
@@ -2620,6 +2613,48 @@ mod session_tests {
     use dotzuki_engine::render_config::RenderConfig;
     use pokered_core::options_menu::OptionsRow;
     use pokered_renderer::Rgba;
+
+    #[test]
+    fn mart_retained_frames_match_full_draw_across_cursor_and_viewport_changes() {
+        use pokered_core::items::shop::{MartState, MartTopChoice, ShopInventory};
+        use pokered_data::items::ItemId;
+
+        let stock = [ItemId::PokeBall, ItemId::Potion, ItemId::Antidote,
+            ItemId::ParlyzHeal, ItemId::BurnHeal, ItemId::EscapeRope];
+        for language in [Lang::En, Lang::Zh] {
+            let mut game = PokemonGame::new_with_options(GameVersion::Red,
+                None, None, None, true, None, false, true, None);
+            game.audio = None;
+            game.state.config.language = language;
+            for &item in &stock {
+                game.save_data.game_data.bag.add_item(item, 3).unwrap();
+            }
+            let phases: Vec<_> = [MartTopChoice::Buy, MartTopChoice::Sell, MartTopChoice::Quit]
+                .into_iter().map(|cursor| MartPhase::MainMenu { cursor })
+                .chain((0..stock.len()).map(|cursor| MartPhase::Buy(BuyMenuState::SelectItem { cursor })))
+                .chain((0..=stock.len()).map(|cursor| MartPhase::Sell(SellMenuState::SelectItem { cursor })))
+                .collect();
+            let mut session = RenderSession::new();
+            let config = RenderConfig::new(160, 144);
+            let mut retained = FrameBuffer::new(config, Rgba::WHITE);
+            let mut full = retained.clone();
+            let mut scroll = |_: &mut [u8], _: usize, _: usize, _: i32, _: i32, _: u8| {};
+            for phase in phases.into_iter().chain([
+                MartPhase::Buy(BuyMenuState::SelectItem { cursor: 0 }),
+                MartPhase::Sell(SellMenuState::SelectItem { cursor: 0 }),
+            ]) {
+                let mut mart = MartState::new(ShopInventory::new(stock.to_vec()));
+                mart.phase = phase;
+                game.state.screen = GameScreen::Shop(mart);
+                session.render(&mut game, &mut retained, &mut scroll);
+                game.draw(&mut full);
+                for y in 0..144 { for x in 0..160 {
+                    assert_eq!(retained.get_pixel(x, y), full.get_pixel(x, y),
+                        "{language:?} {:?} at ({x},{y})", game.state.screen);
+                } }
+            }
+        }
+    }
 
     #[test]
     fn unskipped_intro_and_title_cache_match_every_full_frame() {
