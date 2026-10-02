@@ -138,6 +138,9 @@ pub const MOVE_EFFECT_ID_BASE: u32 = 0x30_000;
 #[derive(Clone, Debug, PartialEq)]
 #[allow(dead_code)]
 pub enum PokeVolatile {
+    /// Per-turn scratch: a trainer item/switch replaces ExecuteEnemyMove.
+    /// Its existing multi-turn flags survive without executing or ticking.
+    TurnSuppressed,
     /// Inert.
     None,
     /// Focus Energy volatile (drives the Gen-1 `/4` crit bug, #1).
@@ -431,6 +434,12 @@ impl EffectProvider for PokeredRules {
         actor: BattlerRef,
         chosen: &BattleAction<Self>,
     ) -> Option<BattleAction<Self>> {
+        if effects
+            .iter()
+            .any(|e| e.host == actor && matches!(e.kind, PokeVolatile::TurnSuppressed))
+        {
+            return Some(BattleAction::Nothing);
+        }
         // The held-in-place BeforeMove gate runs after sleep/freeze, matching
         // the original status-check order even when the foe is already trapping.
         for e in effects.iter().filter(|e| e.host == actor) {

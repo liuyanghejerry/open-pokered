@@ -550,6 +550,19 @@ fn toxic_residual(
         return HandlerResult::Unchanged;
     }
 
+    // The original HandlePoisonBurnLeechSeed status-byte gate skips poison/
+    // burn damage when the current status has been cured. A stale toxic flag
+    // alone cannot deal status damage; Leech Seed has a separate gate.
+    if !matches!(
+        ctx.battler(target).status,
+        Some(
+            crate::battle::state::StatusCondition::Poison
+                | crate::battle::state::StatusCondition::Burn
+        )
+    ) {
+        return HandlerResult::Unchanged;
+    }
+
     // Find the Toxic volatile by HOST (it is the arena entry hosted on the
     // residual's `target`, NOT keyed by `source_effect` — the driver passes the
     // residual EFFECT's id, not the arena entry's). Increment + read the counter.
@@ -644,6 +657,13 @@ fn burn_residual(
         return HandlerResult::Unchanged;
     }
 
+    if ctx
+        .effects
+        .iter()
+        .any(|e| e.host == target && matches!(e.kind, PokeVolatile::Toxic { .. }))
+    {
+        return HandlerResult::Unchanged;
+    }
     let dmg = (ctx.battler(target).max_hp / 16).max(1);
     ctx.battler_mut(target).take_damage(dmg);
     HandlerResult::Unchanged
