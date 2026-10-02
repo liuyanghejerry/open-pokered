@@ -1,0 +1,495 @@
+{
+  "binary_sha256": "fd832ed427cb33c0ea14a7fa10a97b6363381009a6a1a3ef037a0b1989ac1879",
+  "frame": 1024,
+  "events": [
+    {
+      "command": {
+        "cmd": "step_frames",
+        "count": 100
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "frame_count": 100,
+          "stepped": 100
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "press_timeline",
+        "buttons": [
+          "left",
+          null,
+          null,
+          "a",
+          null,
+          null
+        ],
+        "advance": true
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "advanced": true,
+          "end_frame": 105,
+          "frame_count": 106,
+          "frames": 6,
+          "padding_frames": 0,
+          "queue_start_frame": 100,
+          "start_frame": 100
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "step_frames",
+        "count": 8
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "frame_count": 114,
+          "stepped": 8
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "skip_dialogue"
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "dialogue_closed": true,
+          "state": {
+            "active_script_effect": "OpenShop",
+            "badges": 0,
+            "battle_bag": null,
+            "battle_inventory": [],
+            "battle_live": null,
+            "battle_message": null,
+            "battle_moves": null,
+            "battle_party_cursor": 0,
+            "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+            "choice": null,
+            "coins": 0,
+            "credits_final_button": null,
+            "credits_phase": null,
+            "dialogue": null,
+            "dialogue_state": null,
+            "evaluation": {
+              "party": [
+                {
+                  "hp": 300,
+                  "level": 100,
+                  "max_hp": 300,
+                  "moves": [
+                    "Tackle",
+                    "Growl",
+                    "LeechSeed",
+                    "VineWhip"
+                  ],
+                  "pp": [
+                    35,
+                    40,
+                    10,
+                    10
+                  ],
+                  "species": "Venusaur",
+                  "status": "None",
+                  "total_exp": 1059860
+                }
+              ],
+              "party_source": "save_data",
+              "pokedex": {
+                "owned": 0,
+                "owned_numbers": [],
+                "seen": 0,
+                "total": 151
+              }
+            },
+            "field_menu": null,
+            "frame_count": 123,
+            "hall_of_fame_count": 0,
+            "hof_phase": null,
+            "last_outside_map": "PalletTown",
+            "link": {
+              "cable_phase": "Inactive",
+              "role": "Host",
+              "status": "disabled",
+              "trade": null
+            },
+            "map_blocks": [
+              18,
+              19,
+              19,
+              9,
+              22,
+              15,
+              20,
+              20,
+              24,
+              25,
+              21,
+              21,
+              23,
+              26,
+              11,
+              15
+            ],
+            "map_id": 42,
+            "map_name": "ViridianMart",
+            "money": 999999,
+            "party": [
+              {
+                "hp": 300,
+                "level": 100,
+                "max_hp": 300,
+                "moves": [
+                  "Tackle",
+                  "Growl",
+                  "LeechSeed",
+                  "VineWhip"
+                ],
+                "pp": [
+                  35,
+                  40,
+                  10,
+                  10
+                ],
+                "species": "Venusaur",
+                "status": "None"
+              }
+            ],
+            "party_count": 1,
+            "pc_phase": null,
+            "player_facing": "Left",
+            "player_movement_state": "Idle",
+            "player_name": "RED",
+            "player_transport": "Walking",
+            "player_x": 2,
+            "player_y": 5,
+            "screen": "overworld",
+            "script_awaiting_battle": false,
+            "script_effect": {
+              "effect": "OpenShop",
+              "items": [
+                "POKE_BALL",
+                "ANTIDOTE",
+                "PARLYZ_HEAL",
+                "BURN_HEAL"
+              ]
+            },
+            "script_running": true,
+            "shop_phase": null,
+            "text_speed_delay_frames": 3,
+            "warp_fade": "Idle"
+          },
+          "stepped": 9
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "step_frames",
+        "count": 20
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "frame_count": 143,
+          "stepped": 20
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "press_timeline",
+        "buttons": [
+          "a",
+          null,
+          null
+        ],
+        "advance": true
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "advanced": true,
+          "end_frame": 145,
+          "frame_count": 146,
+          "frames": 3,
+          "padding_frames": 0,
+          "queue_start_frame": 143,
+          "start_frame": 143
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "get_state"
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "active_script_effect": null,
+          "badges": 0,
+          "battle_bag": null,
+          "battle_inventory": [],
+          "battle_live": null,
+          "battle_message": null,
+          "battle_moves": null,
+          "battle_party_cursor": 0,
+          "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+          "choice": null,
+          "coins": 0,
+          "credits_final_button": null,
+          "credits_phase": null,
+          "dialogue": null,
+          "dialogue_state": null,
+          "evaluation": {
+            "party": [
+              {
+                "hp": 300,
+                "level": 100,
+                "max_hp": 300,
+                "moves": [
+                  "Tackle",
+                  "Growl",
+                  "LeechSeed",
+                  "VineWhip"
+                ],
+                "pp": [
+                  35,
+                  40,
+                  10,
+                  10
+                ],
+                "species": "Venusaur",
+                "status": "None",
+                "total_exp": 1059860
+              }
+            ],
+            "party_source": "save_data",
+            "pokedex": {
+              "owned": 0,
+              "owned_numbers": [],
+              "seen": 0,
+              "total": 151
+            }
+          },
+          "field_menu": null,
+          "frame_count": 146,
+          "hall_of_fame_count": 0,
+          "hof_phase": null,
+          "last_outside_map": "PalletTown",
+          "link": {
+            "cable_phase": "Inactive",
+            "role": "Host",
+            "status": "disabled",
+            "trade": null
+          },
+          "map_blocks": [
+            18,
+            19,
+            19,
+            9,
+            22,
+            15,
+            20,
+            20,
+            24,
+            25,
+            21,
+            21,
+            23,
+            26,
+            11,
+            15
+          ],
+          "map_id": 42,
+          "map_name": "ViridianMart",
+          "money": 999999,
+          "party": [
+            {
+              "hp": 300,
+              "level": 100,
+              "max_hp": 300,
+              "moves": [
+                "Tackle",
+                "Growl",
+                "LeechSeed",
+                "VineWhip"
+              ],
+              "pp": [
+                35,
+                40,
+                10,
+                10
+              ],
+              "species": "Venusaur",
+              "status": "None"
+            }
+          ],
+          "party_count": 1,
+          "pc_phase": null,
+          "player_facing": "Left",
+          "player_movement_state": "Idle",
+          "player_name": "RED",
+          "player_transport": "Walking",
+          "player_x": 2,
+          "player_y": 5,
+          "screen": "shop",
+          "script_awaiting_battle": false,
+          "script_effect": null,
+          "script_running": false,
+          "shop_phase": "Buy(SelectItem { cursor: 0 })",
+          "text_speed_delay_frames": 3,
+          "warp_fade": "Idle"
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "step_frames",
+        "count": 878
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "frame_count": 1024,
+          "stepped": 878
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "capture_frame",
+        "path": "/workspace/pokered-fix-late/docs/screenshots/2026-10-02-original-font/mart-buy-before.png"
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "path": "/workspace/pokered-fix-late/docs/screenshots/2026-10-02-original-font/mart-buy-before.png",
+          "state": {
+            "active_script_effect": null,
+            "badges": 0,
+            "battle_bag": null,
+            "battle_inventory": [],
+            "battle_live": null,
+            "battle_message": null,
+            "battle_moves": null,
+            "battle_party_cursor": 0,
+            "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+            "choice": null,
+            "coins": 0,
+            "credits_final_button": null,
+            "credits_phase": null,
+            "dialogue": null,
+            "dialogue_state": null,
+            "evaluation": {
+              "party": [
+                {
+                  "hp": 300,
+                  "level": 100,
+                  "max_hp": 300,
+                  "moves": [
+                    "Tackle",
+                    "Growl",
+                    "LeechSeed",
+                    "VineWhip"
+                  ],
+                  "pp": [
+                    35,
+                    40,
+                    10,
+                    10
+                  ],
+                  "species": "Venusaur",
+                  "status": "None",
+                  "total_exp": 1059860
+                }
+              ],
+              "party_source": "save_data",
+              "pokedex": {
+                "owned": 0,
+                "owned_numbers": [],
+                "seen": 0,
+                "total": 151
+              }
+            },
+            "field_menu": null,
+            "frame_count": 1024,
+            "hall_of_fame_count": 0,
+            "hof_phase": null,
+            "last_outside_map": "PalletTown",
+            "link": {
+              "cable_phase": "Inactive",
+              "role": "Host",
+              "status": "disabled",
+              "trade": null
+            },
+            "map_blocks": [
+              18,
+              19,
+              19,
+              9,
+              22,
+              15,
+              20,
+              20,
+              24,
+              25,
+              21,
+              21,
+              23,
+              26,
+              11,
+              15
+            ],
+            "map_id": 42,
+            "map_name": "ViridianMart",
+            "money": 999999,
+            "party": [
+              {
+                "hp": 300,
+                "level": 100,
+                "max_hp": 300,
+                "moves": [
+                  "Tackle",
+                  "Growl",
+                  "LeechSeed",
+                  "VineWhip"
+                ],
+                "pp": [
+                  35,
+                  40,
+                  10,
+                  10
+                ],
+                "species": "Venusaur",
+                "status": "None"
+              }
+            ],
+            "party_count": 1,
+            "pc_phase": null,
+            "player_facing": "Left",
+            "player_movement_state": "Idle",
+            "player_name": "RED",
+            "player_transport": "Walking",
+            "player_x": 2,
+            "player_y": 5,
+            "screen": "shop",
+            "script_awaiting_battle": false,
+            "script_effect": null,
+            "script_running": false,
+            "shop_phase": "Buy(SelectItem { cursor: 0 })",
+            "text_speed_delay_frames": 3,
+            "warp_fade": "Idle"
+          }
+        }
+      }
+    }
+  ]
+}

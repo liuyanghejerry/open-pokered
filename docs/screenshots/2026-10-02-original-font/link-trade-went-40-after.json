@@ -1,0 +1,53 @@
+{
+  "source_commit": "8837a2a32c2ba8c345db16e97b01f49016e88950",
+  "fixture_source_sha256": "5ebfc18739e955acdeed8808009e78805c21996aed5e447ff451a3dee8133d9c",
+  "fixture_sha256": "4f3cfbab4c1e5069a015507f1832761ae0b42452db26f8f25747bd43ba9745cb",
+  "phase": "TextWentTo",
+  "phase_frame": 40,
+  "wire_peer_name": "GREEN",
+  "compile_command": [
+    "rustc",
+    "--edition=2021",
+    "/workspace/pokered-fix-late/crates/pokered-app/examples/fidelity_link_movie_capture.rs",
+    "-L",
+    "dependency=/workspace/open-pokered/target/debug/deps",
+    "-L",
+    "native=/workspace/onboarding/sysroot/usr/lib/x86_64-linux-gnu",
+    "-o",
+    "/tmp/pokered-link-after-fixture",
+    "--extern",
+    "dotzuki_engine=/workspace/open-pokered/target/debug/deps/libdotzuki_engine-739bf15ab0ae0f54.rlib",
+    "--extern",
+    "pokered_data=/workspace/open-pokered/target/debug/deps/libpokered_data-706397b234cd2cbd.rlib",
+    "--extern",
+    "pokered_renderer=/workspace/open-pokered/target/debug/deps/libpokered_renderer-3940381f992e3066.rlib",
+    "--extern",
+    "pokered_core=/workspace/open-pokered/target/debug/deps/libpokered_core-c04e3b89468622a4.rlib",
+    "--extern",
+    "pokered_app=/workspace/open-pokered/target/debug/deps/libpokered_app-9a2c92716f801d99.rlib"
+  ],
+  "stdout": "received peer GREEN; phase TextWentTo; phase frame 40; text (\"PIKACHU went\", \"to GREEN.\")\n",
+  "stderr": "Asset root found: \"/workspace/open-pokered/crates/pokered-renderer/../../gfx\"\nALSA lib confmisc.c:855:(parse_card) cannot find card '0'\nALSA lib conf.c:5205:(_snd_config_evaluate) function snd_func_card_inum returned error: No such file or directory\nALSA lib confmisc.c:422:(snd_func_concat) error evaluating strings\nALSA lib conf.c:5205:(_snd_config_evaluate) function snd_func_concat returned error: No such file or directory\nALSA lib confmisc.c:1342:(snd_func_refer) error evaluating name\nALSA lib conf.c:5205:(_snd_config_evaluate) function snd_func_refer returned error: No such file or directory\nALSA lib conf.c:5728:(snd_config_expand) Evaluate error: No such file or directory\nALSA lib pcm.c:2722:(snd_pcm_open_noupdate) Unknown PCM default\nWarning: Could not initialize audio output.\n",
+  "direct_libraries": {
+    "dotzuki_engine": {
+      "filename": "libdotzuki_engine-739bf15ab0ae0f54.rlib",
+      "sha256": "e55c6df8bbf269e604a816f06deed9139f6a82b9f378bd0b064b91a584354f1b"
+    },
+    "pokered_data": {
+      "filename": "libpokered_data-706397b234cd2cbd.rlib",
+      "sha256": "4654310fdbca3ac7af0466758505d9bcc3c7fa71c27e481124237cb2e666037b"
+    },
+    "pokered_renderer": {
+      "filename": "libpokered_renderer-3940381f992e3066.rlib",
+      "sha256": "bada036a7357ab07c79dd6d897c64e545367c2c4eab3bce8d38097074ba1790b"
+    },
+    "pokered_core": {
+      "filename": "libpokered_core-c04e3b89468622a4.rlib",
+      "sha256": "65911234a90c79a493338db6163c7e964a341da427015f52fe6788efab480f58"
+    },
+    "pokered_app": {
+      "filename": "libpokered_app-9a2c92716f801d99.rlib",
+      "sha256": "4c828a409bfc08029742f766e12787daef3274d8e24b175019cd6a906db9fce5"
+    }
+  }
+}

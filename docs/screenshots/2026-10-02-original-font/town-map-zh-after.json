@@ -1,0 +1,19 @@
+{
+  "binary_sha256": "b8ba782f6cb22151964722ae958dae32f9085b356a71c145c3a3b37bdf513847",
+  "frame": 10,
+  "language": "zh",
+  "note": "Naming explicitly seeds the Chinese pinyin IME; Town Map explicitly starts on Pallet Town with no adjacent save.",
+  "command": [
+    "/tmp/pokered-font-cli-nmuagdv9/pokered-app",
+    "screenshot",
+    "--screen",
+    "town-map",
+    "--frames",
+    "10",
+    "--lang",
+    "zh",
+    "-o",
+    "/workspace/pokered-fix-late/docs/screenshots/2026-10-02-original-font/town-map-zh-after.png"
+  ],
+  "stdout": "Capturing screen: town-map (10 frames, lang=Zh)...\nSaved: /workspace/pokered-fix-late/docs/screenshots/2026-10-02-original-font/town-map-zh-after.png\n"
+}

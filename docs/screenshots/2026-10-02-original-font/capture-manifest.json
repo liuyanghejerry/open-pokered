@@ -1,0 +1,243 @@
+{
+  "reference_source": "pret/pokered@fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "capture_date": "2026-10-02",
+  "cases": [
+    {
+      "name": "main-menu",
+      "frame": 10,
+      "language": "en",
+      "before_source": "72ff719b39634c153cb82d3f3ece200bd413c4e0",
+      "after_source": "cd9acde31a430e69768b39f598dc90c9fa536ccc",
+      "images": {
+        "before": {
+          "file": "main-menu-before.png",
+          "sha256": "efcaa6207bb0241379d34d98fa821c9276e8aa9d540e0293db1a59b49732e9fb",
+          "binary_sha256": "fd832ed427cb33c0ea14a7fa10a97b6363381009a6a1a3ef037a0b1989ac1879",
+          "metadata": "main-menu-before.json"
+        },
+        "after": {
+          "file": "main-menu-after.png",
+          "sha256": "49d520b9d76d9acc98f8577cdb03896284b758f0abf3fdb18d3a4df610a386ce",
+          "binary_sha256": "0dba5dc0ab6870244c01f42adea919ddb27689bf197a58dc086207f9712132de",
+          "metadata": "main-menu-after.json"
+        }
+      }
+    },
+    {
+      "name": "options",
+      "frame": 10,
+      "language": "en",
+      "before_source": "72ff719b39634c153cb82d3f3ece200bd413c4e0",
+      "after_source": "cd9acde31a430e69768b39f598dc90c9fa536ccc",
+      "images": {
+        "before": {
+          "file": "options-before.png",
+          "sha256": "8dfa101dd930ba3a9a6b55d8c1a5d3b6547cb13d25ca98d0dca5c6a5450ebe0e",
+          "binary_sha256": "fd832ed427cb33c0ea14a7fa10a97b6363381009a6a1a3ef037a0b1989ac1879",
+          "metadata": "options-before.json"
+        },
+        "after": {
+          "file": "options-after.png",
+          "sha256": "bebfb21749b39756874853d6a621470507a67e562f02fb406bfa8a705f0080ad",
+          "binary_sha256": "0dba5dc0ab6870244c01f42adea919ddb27689bf197a58dc086207f9712132de",
+          "metadata": "options-after.json"
+        }
+      }
+    },
+    {
+      "name": "naming",
+      "frame": 10,
+      "language": "zh",
+      "before_source": "72ff719b39634c153cb82d3f3ece200bd413c4e0",
+      "after_source": "cd9acde31a430e69768b39f598dc90c9fa536ccc",
+      "images": {
+        "before": {
+          "file": "naming-before.png",
+          "sha256": "8c113dff128bf15586440d83f99255e0484874fb677dd0827ae134cca2f713df",
+          "binary_sha256": "fd832ed427cb33c0ea14a7fa10a97b6363381009a6a1a3ef037a0b1989ac1879",
+          "metadata": "naming-before.json"
+        },
+        "after": {
+          "file": "naming-after.png",
+          "sha256": "530c5e908b3c81fa06a794d2c2e06a629424b10528f4d45e332faea10d111bac",
+          "binary_sha256": "0dba5dc0ab6870244c01f42adea919ddb27689bf197a58dc086207f9712132de",
+          "metadata": "naming-after.json"
+        }
+      }
+    },
+    {
+      "name": "stats-zh",
+      "frame": 512,
+      "language": "zh",
+      "before_source": "72ff719b39634c153cb82d3f3ece200bd413c4e0",
+      "after_source": "cd9acde31a430e69768b39f598dc90c9fa536ccc",
+      "images": {
+        "before": {
+          "file": "stats-zh-before.png",
+          "sha256": "46467ac594b25887f20298116a2f93a6c475b896fa3e1f3bb878618a8748ccbf",
+          "binary_sha256": "fd832ed427cb33c0ea14a7fa10a97b6363381009a6a1a3ef037a0b1989ac1879",
+          "metadata": "stats-zh-before.json"
+        },
+        "after": {
+          "file": "stats-zh-after.png",
+          "sha256": "4260fc8122ed8a329208ae8704e09ea5366d8e5530d3dca8817801c7dd7d9c45",
+          "binary_sha256": "0dba5dc0ab6870244c01f42adea919ddb27689bf197a58dc086207f9712132de",
+          "metadata": "stats-zh-after.json"
+        }
+      }
+    },
+    {
+      "name": "mart-buy",
+      "frame": 1024,
+      "language": "en",
+      "before_source": "72ff719b39634c153cb82d3f3ece200bd413c4e0",
+      "after_source": "cd9acde31a430e69768b39f598dc90c9fa536ccc",
+      "images": {
+        "before": {
+          "file": "mart-buy-before.png",
+          "sha256": "a108c970bc54393e7098d18d8ff1c968c2be593b73de2922537b2cc041a81806",
+          "binary_sha256": "fd832ed427cb33c0ea14a7fa10a97b6363381009a6a1a3ef037a0b1989ac1879",
+          "metadata": "mart-buy-before.json"
+        },
+        "after": {
+          "file": "mart-buy-after.png",
+          "sha256": "625a07ed621d7d19155a2f66ca8196fd6544b08af44afcc1a2bc80e8b5e19f1a",
+          "binary_sha256": "0dba5dc0ab6870244c01f42adea919ddb27689bf197a58dc086207f9712132de",
+          "metadata": "mart-buy-after.json"
+        }
+      }
+    },
+    {
+      "name": "town-map-en",
+      "frame": 10,
+      "language": "en",
+      "before_source": "72ff719b39634c153cb82d3f3ece200bd413c4e0",
+      "after_source": "8837a2a32c2ba8c345db16e97b01f49016e88950",
+      "images": {
+        "before": {
+          "file": "town-map-en-before.png",
+          "sha256": "edf98bee2168c1e106dded7b8cb0c48ebfad5d8f38085430ffe6af935fb8c028",
+          "binary_sha256": "fd832ed427cb33c0ea14a7fa10a97b6363381009a6a1a3ef037a0b1989ac1879",
+          "metadata": "town-map-en-before.json"
+        },
+        "after": {
+          "file": "town-map-en-after.png",
+          "sha256": "c4fa2455ace451adcc02eaa62f4f1f1cf8600665bcef23797ce6911c8d509317",
+          "binary_sha256": "b8ba782f6cb22151964722ae958dae32f9085b356a71c145c3a3b37bdf513847",
+          "metadata": "town-map-en-after.json"
+        }
+      }
+    },
+    {
+      "name": "town-map-zh",
+      "frame": 10,
+      "language": "zh",
+      "before_source": "72ff719b39634c153cb82d3f3ece200bd413c4e0",
+      "after_source": "8837a2a32c2ba8c345db16e97b01f49016e88950",
+      "images": {
+        "before": {
+          "file": "town-map-zh-before.png",
+          "sha256": "04d2ddf0da5c5d5013397622751af5545348d638bdf95c7067d2c5ccbbd337dc",
+          "binary_sha256": "fd832ed427cb33c0ea14a7fa10a97b6363381009a6a1a3ef037a0b1989ac1879",
+          "metadata": "town-map-zh-before.json"
+        },
+        "after": {
+          "file": "town-map-zh-after.png",
+          "sha256": "bea1791be26bdba90a8175c523b199b65eb5e608f60809f2c458fce947a3aa7f",
+          "binary_sha256": "b8ba782f6cb22151964722ae958dae32f9085b356a71c145c3a3b37bdf513847",
+          "metadata": "town-map-zh-after.json"
+        }
+      }
+    },
+    {
+      "name": "trade-went-40",
+      "phase_frame": 40,
+      "language": "en",
+      "before_source": "72ff719b39634c153cb82d3f3ece200bd413c4e0",
+      "after_source": "cd9acde31a430e69768b39f598dc90c9fa536ccc",
+      "images": {
+        "before": {
+          "file": "trade-went-40-before.png",
+          "sha256": "94bcf983e0b4ca2a30a081eacd9df1dbd9a42fc97b1cd106ec8fe19a7a344254",
+          "binary_sha256": "fd832ed427cb33c0ea14a7fa10a97b6363381009a6a1a3ef037a0b1989ac1879",
+          "movie_frame": 379,
+          "metadata": "trade-text-before.json"
+        },
+        "after": {
+          "file": "trade-went-40-after.png",
+          "sha256": "26669be5f2acf48eff6e138ab2f6c43ae54a7579b2713603b0f77e04257d16b2",
+          "binary_sha256": "0dba5dc0ab6870244c01f42adea919ddb27689bf197a58dc086207f9712132de",
+          "movie_frame": 379,
+          "metadata": "trade-text-after.json"
+        }
+      }
+    },
+    {
+      "name": "trade-for-40",
+      "phase_frame": 40,
+      "language": "en",
+      "before_source": "72ff719b39634c153cb82d3f3ece200bd413c4e0",
+      "after_source": "cd9acde31a430e69768b39f598dc90c9fa536ccc",
+      "images": {
+        "before": {
+          "file": "trade-for-40-before.png",
+          "sha256": "5e982dbe64ac8239882b263f83eadd9b62d2d95a52580388481f278fc74457a0",
+          "binary_sha256": "fd832ed427cb33c0ea14a7fa10a97b6363381009a6a1a3ef037a0b1989ac1879",
+          "movie_frame": 459,
+          "metadata": "trade-text-before.json"
+        },
+        "after": {
+          "file": "trade-for-40-after.png",
+          "sha256": "f1fb19b8ba2d3d97323477c9a01c255da07da06d4ae9e0c989a7ddec42575d10",
+          "binary_sha256": "0dba5dc0ab6870244c01f42adea919ddb27689bf197a58dc086207f9712132de",
+          "movie_frame": 716,
+          "metadata": "trade-text-after.json"
+        }
+      }
+    },
+    {
+      "name": "trade-farewell-40",
+      "phase_frame": 40,
+      "language": "en",
+      "before_source": "72ff719b39634c153cb82d3f3ece200bd413c4e0",
+      "after_source": "cd9acde31a430e69768b39f598dc90c9fa536ccc",
+      "images": {
+        "before": {
+          "file": "trade-farewell-40-before.png",
+          "sha256": "371d2125bf122cb94a0103b5fb4a0e1a21255fbed933a2160943502e0003d0c1",
+          "binary_sha256": "fd832ed427cb33c0ea14a7fa10a97b6363381009a6a1a3ef037a0b1989ac1879",
+          "movie_frame": 539,
+          "metadata": "trade-text-before.json"
+        },
+        "after": {
+          "file": "trade-farewell-40-after.png",
+          "sha256": "ce3fecca5d2ba784a1836b0d3ecf5577af701f936220b1c957eb87b3c0383321",
+          "binary_sha256": "0dba5dc0ab6870244c01f42adea919ddb27689bf197a58dc086207f9712132de",
+          "movie_frame": 876,
+          "metadata": "trade-text-after.json"
+        }
+      }
+    },
+    {
+      "name": "link-trade-went-40",
+      "phase_frame": 40,
+      "language": "en",
+      "before_source": "72ff719b39634c153cb82d3f3ece200bd413c4e0",
+      "after_source": "8837a2a32c2ba8c345db16e97b01f49016e88950",
+      "images": {
+        "before": {
+          "file": "link-trade-went-40-before.png",
+          "sha256": "f5fa35529bb06cb381e789e58bacf7d319d679413d6656bc9988a66a1de8b6f5",
+          "fixture_sha256": "b260db5ae084f2e2b1d05a0321fa2f108ebb02352070cec932fadc97dfcdec29",
+          "metadata": "link-trade-went-40-before.json"
+        },
+        "after": {
+          "file": "link-trade-went-40-after.png",
+          "sha256": "da1a67d7439a38118fd9929c9fba329047f3995f111433739478d188ae32b3d5",
+          "fixture_sha256": "4f3cfbab4c1e5069a015507f1832761ae0b42452db26f8f25747bd43ba9745cb",
+          "metadata": "link-trade-went-40-after.json"
+        }
+      }
+    }
+  ]
+}
