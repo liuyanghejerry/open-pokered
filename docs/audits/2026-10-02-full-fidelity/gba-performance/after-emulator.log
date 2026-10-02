@@ -1,0 +1,163 @@
+QStandardPaths: XDG_RUNTIME_DIR not set, defaulting to '/tmp/runtime-agent'
+Fontconfig error: No writable cache directories
+Fontconfig error: No writable cache directories
+Fontconfig error: No writable cache directories
+Fontconfig error: No writable cache directories
+Fontconfig error: No writable cache directories
+Fontconfig error: No writable cache directories
+Fontconfig error: No writable cache directories
+Fontconfig error: No writable cache directories
+Fontconfig error: No writable cache directories
+Fontconfig error: No writable cache directories
+Fontconfig error: No writable cache directories
+Fontconfig error: No writable cache directories
+Fontconfig error: No writable cache directories
+Fontconfig error: No writable cache directories
+Fontconfig error: No writable cache directories
+Fontconfig error: No writable cache directories
+Fontconfig error: No writable cache directories
+Fontconfig error: No writable cache directories
+Fontconfig error: No writable cache directories
+Fontconfig error: No writable cache directories
+Fontconfig error: No writable cache directories
+Fontconfig error: No writable cache directories
+Fontconfig error: No writable cache directories
+Fontconfig error: No writable cache directories
+Fontconfig error: No writable cache directories
+Fontconfig error: No writable cache directories
+Fontconfig error: No writable cache directories
+Fontconfig error: No writable cache directories
+Fontconfig error: No writable cache directories
+Failed to create /home/agent/.cache/mesa_shader_cache for shader cache (Read-only file system)---disabling.
+Failed to create /home/agent/.cache/mesa_shader_cache_db for shader cache (Read-only file system)---disabling.
+[INFO] GBA Debug: pokered-gba: booting game core…
+[INFO] GBA Debug: pokered-gba: game constructed
+[INFO] GBA Debug: pokered-gba: battle rules ready
+[INFO] GBA Debug: pokered-gba: first frame done
+[INFO] GBA Debug: prof f60 ticks(avg) wait=4016 upd=128 draw/render=4517 present/render=767 dump=0 total=4408 max=10657 renders=1
+[INFO] GBA Debug: prof f120 ticks(avg) wait=4123 upd=75 draw/render=0 present/render=0 dump=0 total=4364 max=4369 renders=0
+[INFO] GBA Debug: prof f180 ticks(avg) wait=4124 upd=75 draw/render=1767 present/render=767 dump=0 total=4404 max=6737 renders=1
+[INFO] GBA Debug: prof f240 ticks(avg) wait=4071 upd=75 draw/render=0 present/render=0 dump=0 total=4325 max=4369 renders=0
+[INFO] GBA Debug: prof f300 ticks(avg) wait=1659 upd=97 draw/render=3643 present/render=776 dump=0 total=5964 max=12878 renders=57
+[INFO] GBA Debug: prof f360 ticks(avg) wait=1103 upd=85 draw/render=3368 present/render=769 dump=0 total=5327 max=8538 renders=60
+[INFO] GBA Debug: prof f420 ticks(avg) wait=1440 upd=98 draw/render=4244 present/render=771 dump=0 total=6554 max=8928 renders=60
+[INFO] GBA Debug: prof f480 ticks(avg) wait=1948 upd=78 draw/render=3152 present/render=769 dump=0 total=4584 max=8651 renders=38
+[INFO] GBA Debug: prof f540 ticks(avg) wait=3995 upd=81 draw/render=2687 present/render=766 dump=0 total=4364 max=7397 renders=2
+[INFO] GBA Debug: prof f600 ticks(avg) wait=1981 upd=110 draw/render=2859 present/render=766 dump=0 total=4565 max=16658 renders=40
+[INFO] GBA Debug: prof f660 ticks(avg) wait=840 upd=110 draw/render=2646 present/render=766 dump=0 total=4364 max=4569 renders=60
+[INFO] GBA Debug: prof f720 ticks(avg) wait=980 upd=112 draw/render=2898 present/render=768 dump=0 total=4758 max=12038 renders=60
+[INFO] GBA Debug: prof f780 ticks(avg) wait=3332 upd=116 draw/render=2567 present/render=775 dump=0 total=4961 max=12435 renders=25
+[INFO] GBA Debug: prof f840 ticks(avg) wait=3618 upd=124 draw/render=1146 present/render=766 dump=0 total=4493 max=12437 renders=19
+[INFO] GBA Debug: prof f900 ticks(avg) wait=4103 upd=87 draw/render=0 present/render=0 dump=0 total=4366 max=4559 renders=0
+[INFO] GBA Debug: gba-perf scenario=intro-title-v1 samples=250 update_avg_ticks=109 update_core_avg_ticks=100 update_flush_avg_ticks=1 renders=115 draw_per_frame_ticks=1156 draw_max_ticks=10259 present_per_frame_ticks=353 present_max_ticks=782
+[INFO] GBA Debug: prof f960 ticks(avg) wait=3897 upd=102 draw/render=3983 present/render=766 dump=0 total=4579 max=12451 renders=5
+[INFO] GBA Debug: prof f1020 ticks(avg) wait=3798 upd=114 draw/render=4069 present/render=766 dump=0 total=4450 max=11684 renders=4
+[INFO] GBA Debug: prof f1080 ticks(avg) wait=2898 upd=197 draw/render=5640 present/render=766 dump=0 total=6325 max=9787 renders=29
+[INFO] GBA Debug: prof f1140 ticks(avg) wait=2330 upd=289 draw/render=5574 present/render=766 dump=0 total=8268 max=9769 renders=53
+[INFO] GBA Debug: prof f1200 ticks(avg) wait=2842 upd=136 draw/render=3814 present/render=767 dump=0 total=5155 max=9919 renders=27
+[INFO] GBA Debug: prof f1260 ticks(avg) wait=2714 upd=257 draw/render=5125 present/render=766 dump=0 total=7272 max=9271 renders=43
+[INFO] GBA Debug: prof f1320 ticks(avg) wait=3181 upd=193 draw/render=5707 present/render=766 dump=0 total=6192 max=9837 renders=25
+[INFO] GBA Debug: prof f1380 ticks(avg) wait=2583 upd=251 draw/render=5796 present/render=766 dump=0 total=7390 max=9878 renders=41
+[INFO] GBA Debug: prof f1440 ticks(avg) wait=3372 upd=182 draw/render=5524 present/render=766 dump=0 total=5990 max=9860 renders=22
+[INFO] GBA Debug: prof f1500 ticks(avg) wait=2203 upd=194 draw/render=4886 present/render=767 dump=0 total=6332 max=9350 renders=41
+[INFO] GBA Debug: prof f1560 ticks(avg) wait=2788 upd=149 draw/render=6420 present/render=766 dump=0 total=6298 max=11352 renders=27
+[INFO] GBA Debug: prof f1620 ticks(avg) wait=2461 upd=133 draw/render=6148 present/render=766 dump=0 total=6630 max=11384 renders=34
+[INFO] GBA Debug: prof f1680 ticks(avg) wait=3656 upd=121 draw/render=4690 present/render=766 dump=0 total=4802 max=10611 renders=9
+[INFO] GBA Debug: prof f1740 ticks(avg) wait=2932 upd=220 draw/render=5835 present/render=766 dump=0 total=6759 max=9881 renders=32
+[INFO] GBA Debug: prof f1800 ticks(avg) wait=2807 upd=219 draw/render=5816 present/render=766 dump=0 total=6648 max=10072 renders=32
+[INFO] GBA Debug: gba-perf scenario=oak-dialogue-v1 samples=600 update_avg_ticks=192 update_core_avg_ticks=182 update_flush_avg_ticks=1 renders=307 draw_per_frame_ticks=2874 draw_max_ticks=8697 present_per_frame_ticks=392 present_max_ticks=781
+[INFO] GBA Debug: prof f1860 ticks(avg) wait=2756 upd=127 draw/render=6919 present/render=766 dump=0 total=6455 max=14385 renders=27
+[INFO] GBA Debug: prof f1920 ticks(avg) wait=2447 upd=138 draw/render=6128 present/render=766 dump=0 total=6287 max=9654 renders=31
+[INFO] GBA Debug: prof f1980 ticks(avg) wait=3039 upd=201 draw/render=5788 present/render=766 dump=0 total=6410 max=9880 renders=28
+[INFO] GBA Debug: prof f2040 ticks(avg) wait=3583 upd=155 draw/render=5316 present/render=766 dump=0 total=5606 max=9786 renders=17
+[INFO] GBA Debug: prof f2100 ticks(avg) wait=2651 upd=253 draw/render=5744 present/render=766 dump=0 total=7320 max=9996 renders=40
+[INFO] GBA Debug: prof f2160 ticks(avg) wait=2069 upd=176 draw/render=4785 present/render=767 dump=0 total=5931 max=8979 renders=39
+[INFO] GBA Debug: prof f2220 ticks(avg) wait=1941 upd=97 draw/render=1520 present/render=767 dump=0 total=4327 max=4553 renders=60
+[INFO] GBA Debug: prof f2280 ticks(avg) wait=3116 upd=283 draw/render=1689 present/render=766 dump=0 total=4482 max=15316 renders=23
+[INFO] GBA Debug: prof f2340 ticks(avg) wait=3808 upd=346 draw/render=0 present/render=0 dump=0 total=4362 max=4513 renders=0
+[INFO] GBA Debug: prof f2400 ticks(avg) wait=3813 upd=342 draw/render=0 present/render=0 dump=0 total=4363 max=4511 renders=0
+[INFO] GBA Debug: prof f2460 ticks(avg) wait=3811 upd=344 draw/render=0 present/render=0 dump=0 total=4363 max=4515 renders=0
+[INFO] GBA Debug: prof f2520 ticks(avg) wait=3813 upd=343 draw/render=0 present/render=0 dump=0 total=4363 max=4510 renders=0
+[INFO] GBA Debug: prof f2580 ticks(avg) wait=3810 upd=345 draw/render=0 present/render=0 dump=0 total=4363 max=4487 renders=0
+[INFO] GBA Debug: prof f2640 ticks(avg) wait=3815 upd=341 draw/render=0 present/render=0 dump=0 total=4363 max=4508 renders=0
+[INFO] GBA Debug: prof f2700 ticks(avg) wait=3813 upd=343 draw/render=0 present/render=0 dump=0 total=4364 max=4516 renders=0
+[INFO] GBA Debug: prof f2760 ticks(avg) wait=3815 upd=342 draw/render=0 present/render=0 dump=0 total=4364 max=4513 renders=0
+[INFO] GBA Debug: prof f2820 ticks(avg) wait=3811 upd=345 draw/render=0 present/render=0 dump=0 total=4364 max=4516 renders=0
+[INFO] GBA Debug: prof f2880 ticks(avg) wait=3815 upd=341 draw/render=0 present/render=0 dump=0 total=4364 max=4513 renders=0
+[INFO] GBA Debug: prof f2940 ticks(avg) wait=3814 upd=342 draw/render=0 present/render=0 dump=0 total=4364 max=4512 renders=0
+[INFO] GBA Debug: prof f3000 ticks(avg) wait=3815 upd=341 draw/render=0 present/render=0 dump=0 total=4364 max=4510 renders=0
+[INFO] GBA Debug: prof f3060 ticks(avg) wait=3811 upd=345 draw/render=0 present/render=0 dump=0 total=4363 max=4513 renders=0
+[INFO] GBA Debug: prof f3120 ticks(avg) wait=3815 upd=342 draw/render=0 present/render=0 dump=0 total=4364 max=4509 renders=0
+[INFO] GBA Debug: prof f3180 ticks(avg) wait=3814 upd=342 draw/render=0 present/render=0 dump=0 total=4363 max=4509 renders=0
+[INFO] GBA Debug: prof f3240 ticks(avg) wait=3815 upd=341 draw/render=0 present/render=0 dump=0 total=4363 max=4515 renders=0
+[INFO] GBA Debug: prof f3300 ticks(avg) wait=3814 upd=343 draw/render=0 present/render=0 dump=0 total=4364 max=4512 renders=0
+[INFO] GBA Debug: prof f3360 ticks(avg) wait=3815 upd=342 draw/render=0 present/render=0 dump=0 total=4364 max=4517 renders=0
+[INFO] GBA Debug: prof f3420 ticks(avg) wait=3813 upd=343 draw/render=0 present/render=0 dump=0 total=4364 max=4509 renders=0
+[INFO] GBA Debug: prof f3480 ticks(avg) wait=3814 upd=342 draw/render=0 present/render=0 dump=0 total=4364 max=4516 renders=0
+[INFO] GBA Debug: prof f3540 ticks(avg) wait=3813 upd=343 draw/render=0 present/render=0 dump=0 total=4363 max=4512 renders=0
+[INFO] GBA Debug: prof f3600 ticks(avg) wait=3814 upd=342 draw/render=0 present/render=0 dump=0 total=4363 max=4513 renders=0
+[INFO] GBA Debug: prof f3660 ticks(avg) wait=3813 upd=343 draw/render=0 present/render=0 dump=0 total=4364 max=4509 renders=0
+[INFO] GBA Debug: prof f3720 ticks(avg) wait=3815 upd=341 draw/render=0 present/render=0 dump=0 total=4364 max=4509 renders=0
+[INFO] GBA Debug: prof f3780 ticks(avg) wait=3813 upd=343 draw/render=0 present/render=0 dump=0 total=4363 max=4509 renders=0
+[INFO] GBA Debug: prof f3840 ticks(avg) wait=3815 upd=341 draw/render=0 present/render=0 dump=0 total=4363 max=4509 renders=0
+[INFO] GBA Debug: prof f3900 ticks(avg) wait=3815 upd=341 draw/render=0 present/render=0 dump=0 total=4363 max=4509 renders=0
+[INFO] GBA Debug: prof f3960 ticks(avg) wait=3815 upd=341 draw/render=0 present/render=0 dump=0 total=4363 max=4509 renders=0
+[INFO] GBA Debug: gba-perf scenario=overworld-idle-v1 samples=1400 update_avg_ticks=342 update_core_avg_ticks=332 update_flush_avg_ticks=1 renders=0 draw_per_frame_ticks=0 draw_max_ticks=0 present_per_frame_ticks=0 present_max_ticks=0
+[INFO] GBA Debug: prof f4020 ticks(avg) wait=3809 upd=342 draw/render=0 present/render=0 dump=0 total=4359 max=4509 renders=0
+[INFO] GBA Debug: prof f4080 ticks(avg) wait=3816 upd=340 draw/render=0 present/render=0 dump=0 total=4364 max=4510 renders=0
+[INFO] GBA Debug: prof f4140 ticks(avg) wait=3373 upd=360 draw/render=2250 present/render=688 dump=0 total=4363 max=6546 renders=9
+[INFO] GBA Debug: prof f4200 ticks(avg) wait=3815 upd=340 draw/render=0 present/render=0 dump=0 total=4363 max=4539 renders=0
+[INFO] GBA Debug: prof f4260 ticks(avg) wait=2910 upd=367 draw/render=2792 present/render=725 dump=0 total=4436 max=8559 renders=17
+[INFO] GBA Debug: gba-perf scenario=overworld-movement-v1 samples=240 update_avg_ticks=352 update_core_avg_ticks=342 update_flush_avg_ticks=1 renders=26 draw_per_frame_ticks=282 draw_max_ticks=2985 present_per_frame_ticks=77 present_max_ticks=781
+[INFO] GBA Debug: prof f4320 ticks(avg) wait=3811 upd=340 draw/render=0 present/render=0 dump=0 total=4358 max=4513 renders=0
+[INFO] GBA Debug: prof f4380 ticks(avg) wait=3813 upd=342 draw/render=0 present/render=0 dump=0 total=4363 max=4515 renders=0
+[INFO] GBA Debug: prof f4440 ticks(avg) wait=1409 upd=245 draw/render=3423 present/render=766 dump=0 total=4517 max=10886 renders=40
+[INFO] GBA Debug: prof f4500 ticks(avg) wait=1204 upd=245 draw/render=4105 present/render=766 dump=0 total=6322 max=9090 renders=60
+[INFO] GBA Debug: prof f4560 ticks(avg) wait=961 upd=178 draw/render=2451 present/render=766 dump=0 total=4358 max=4518 renders=60
+[INFO] GBA Debug: prof f4620 ticks(avg) wait=973 upd=180 draw/render=2970 present/render=770 dump=0 total=4894 max=10312 renders=60
+[INFO] GBA Debug: prof f4680 ticks(avg) wait=1834 upd=209 draw/render=3690 present/render=777 dump=0 total=6511 max=9071 renders=60
+[INFO] GBA Debug: prof f4740 ticks(avg) wait=1134 upd=202 draw/render=4451 present/render=766 dump=0 total=6555 max=7875 renders=60
+[INFO] GBA Debug: prof f4800 ticks(avg) wait=2915 upd=199 draw/render=5278 present/render=766 dump=0 total=6162 max=9147 renders=29
+[INFO] GBA Debug: prof f4860 ticks(avg) wait=3973 upd=169 draw/render=0 present/render=0 dump=0 total=4362 max=4505 renders=0
+[INFO] GBA Debug: gba-perf scenario=battle-entry-v1 samples=500 update_avg_ticks=196 update_core_avg_ticks=185 update_flush_avg_ticks=1 renders=369 draw_per_frame_ticks=2700 draw_max_ticks=8914 present_per_frame_ticks=567 present_max_ticks=782
+[INFO] GBA Debug: prof f4920 ticks(avg) wait=3968 upd=169 draw/render=0 present/render=0 dump=0 total=4358 max=4507 renders=0
+[INFO] GBA Debug: prof f4980 ticks(avg) wait=3974 upd=169 draw/render=0 present/render=0 dump=0 total=4363 max=4505 renders=0
+[INFO] GBA Debug: prof f5040 ticks(avg) wait=3975 upd=170 draw/render=0 present/render=0 dump=0 total=4365 max=4456 renders=0
+[INFO] GBA Debug: prof f5100 ticks(avg) wait=3968 upd=174 draw/render=0 present/render=0 dump=0 total=4361 max=4519 renders=0
+[INFO] GBA Debug: prof f5160 ticks(avg) wait=3968 upd=175 draw/render=0 present/render=0 dump=0 total=4363 max=4506 renders=0
+[INFO] GBA Debug: prof f5220 ticks(avg) wait=3968 upd=175 draw/render=0 present/render=0 dump=0 total=4363 max=4509 renders=0
+[INFO] GBA Debug: prof f5280 ticks(avg) wait=3975 upd=167 draw/render=0 present/render=0 dump=0 total=4362 max=4506 renders=0
+[INFO] GBA Debug: prof f5340 ticks(avg) wait=3968 upd=174 draw/render=0 present/render=0 dump=0 total=4363 max=4515 renders=0
+[INFO] GBA Debug: prof f5400 ticks(avg) wait=3968 upd=174 draw/render=0 present/render=0 dump=0 total=4363 max=4513 renders=0
+[INFO] GBA Debug: prof f5460 ticks(avg) wait=3966 upd=177 draw/render=0 present/render=0 dump=0 total=4363 max=4509 renders=0
+[INFO] GBA Debug: prof f5520 ticks(avg) wait=3968 upd=175 draw/render=0 present/render=0 dump=0 total=4363 max=4509 renders=0
+[INFO] GBA Debug: prof f5580 ticks(avg) wait=3968 upd=175 draw/render=0 present/render=0 dump=0 total=4363 max=4509 renders=0
+[INFO] GBA Debug: prof f5640 ticks(avg) wait=3160 upd=252 draw/render=4927 present/render=766 dump=0 total=7282 max=13910 renders=40
+[INFO] GBA Debug: prof f5700 ticks(avg) wait=2478 upd=274 draw/render=5237 present/render=766 dump=0 total=8756 max=8913 renders=60
+[INFO] GBA Debug: prof f5760 ticks(avg) wait=2578 upd=245 draw/render=5147 present/render=766 dump=0 total=8738 max=11619 renders=60
+[INFO] GBA Debug: prof f5820 ticks(avg) wait=1735 upd=241 draw/render=6051 present/render=766 dump=0 total=8795 max=11582 renders=60
+[INFO] GBA Debug: prof f5880 ticks(avg) wait=3640 upd=176 draw/render=7599 present/render=767 dump=0 total=4592 max=8864 renders=4
+[INFO] GBA Debug: prof f5940 ticks(avg) wait=3971 upd=171 draw/render=0 present/render=0 dump=0 total=4362 max=4508 renders=0
+[INFO] GBA Debug: prof f6000 ticks(avg) wait=3970 upd=172 draw/render=0 present/render=0 dump=0 total=4363 max=4513 renders=0
+[INFO] GBA Debug: prof f6060 ticks(avg) wait=3971 upd=171 draw/render=0 present/render=0 dump=0 total=4363 max=4510 renders=0
+[INFO] GBA Debug: gba-perf scenario=trainer-battle-entry-v1 samples=500 update_avg_ticks=211 update_core_avg_ticks=200 update_flush_avg_ticks=1 renders=224 draw_per_frame_ticks=2427 draw_max_ticks=10216 present_per_frame_ticks=343 present_max_ticks=767
+[INFO] GBA Debug: prof f6120 ticks(avg) wait=3968 upd=169 draw/render=0 present/render=0 dump=0 total=4358 max=4508 renders=0
+[INFO] GBA Debug: prof f6180 ticks(avg) wait=3971 upd=172 draw/render=0 present/render=0 dump=0 total=4363 max=4513 renders=0
+[INFO] GBA Debug: prof f6240 ticks(avg) wait=3969 upd=173 draw/render=0 present/render=0 dump=0 total=4363 max=4521 renders=0
+[INFO] GBA Debug: prof f6300 ticks(avg) wait=3973 upd=170 draw/render=0 present/render=0 dump=0 total=4363 max=4509 renders=0
+[INFO] GBA Debug: prof f6360 ticks(avg) wait=3971 upd=172 draw/render=0 present/render=0 dump=0 total=4363 max=4512 renders=0
+[INFO] GBA Debug: prof f6420 ticks(avg) wait=3971 upd=171 draw/render=0 present/render=0 dump=0 total=4363 max=4517 renders=0
+[INFO] GBA Debug: prof f6480 ticks(avg) wait=3968 upd=175 draw/render=0 present/render=0 dump=0 total=4363 max=4515 renders=0
+[INFO] GBA Debug: prof f6540 ticks(avg) wait=3970 upd=173 draw/render=0 present/render=0 dump=0 total=4363 max=4511 renders=0
+[INFO] GBA Debug: prof f6600 ticks(avg) wait=3970 upd=173 draw/render=0 present/render=0 dump=0 total=4363 max=4518 renders=0
+[INFO] GBA Debug: prof f6660 ticks(avg) wait=3972 upd=171 draw/render=0 present/render=0 dump=0 total=4363 max=4513 renders=0
+[INFO] GBA Debug: prof f6720 ticks(avg) wait=3973 upd=170 draw/render=0 present/render=0 dump=0 total=4363 max=4513 renders=0
+[INFO] GBA Debug: prof f6780 ticks(avg) wait=3972 upd=171 draw/render=0 present/render=0 dump=0 total=4363 max=4513 renders=0
+[INFO] GBA Debug: prof f6840 ticks(avg) wait=3959 upd=129 draw/render=15961 present/render=767 dump=0 total=4570 max=20333 renders=1
+[INFO] GBA Debug: prof f6900 ticks(avg) wait=4088 upd=94 draw/render=0 present/render=0 dump=0 total=4362 max=4513 renders=0
+[INFO] GBA Debug: prof f6960 ticks(avg) wait=4087 upd=95 draw/render=0 present/render=0 dump=0 total=4362 max=4488 renders=0
+[INFO] GBA Debug: prof f7020 ticks(avg) wait=4089 upd=93 draw/render=0 present/render=0 dump=0 total=4362 max=4515 renders=0
+[INFO] GBA Debug: prof f7080 ticks(avg) wait=4088 upd=95 draw/render=0 present/render=0 dump=0 total=4363 max=4509 renders=0
+[INFO] GBA Debug: prof f7140 ticks(avg) wait=4086 upd=96 draw/render=0 present/render=0 dump=0 total=4363 max=4515 renders=0
+[INFO] GBA Debug: prof f7200 ticks(avg) wait=4089 upd=93 draw/render=0 present/render=0 dump=0 total=4362 max=4512 renders=0
+[INFO] GBA Debug: gba-perf scenario=pokedex-entry-v1 samples=400 update_avg_ticks=96 update_core_avg_ticks=84 update_flush_avg_ticks=1 renders=1 draw_per_frame_ticks=39 draw_max_ticks=15961 present_per_frame_ticks=1 present_max_ticks=767
