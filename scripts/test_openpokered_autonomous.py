@@ -3836,6 +3836,52 @@ class AutonomousTests(unittest.TestCase):
         self.assertEqual(details['usable_effective_attacks'], [])
         self.assertIn('Switching and setup cost turns', game.judgments.choose.call_args.args[3])
 
+    def test_capture_fight_exposes_current_support_as_clearly_as_switches(self):
+        state = self.capture_support_state()
+        state['battle_live']['player'] = {'species': 'Gloom'}
+        game = JevGame.__new__(JevGame)
+        game.judgments = Mock(collects_dex=True, active=None, preference='none')
+        game.judgments.choose.return_value = 'fight'
+        self.assertIsNone(game.battle_recovery_plan(state))
+        candidates = game.judgments.choose.call_args.args[2]
+        fight = json.loads(candidates['fight'])
+        self.assertEqual(fight['active_party_index'], 1)
+        self.assertEqual(fight['active_pokemon']['species'], 'Gloom')
+        self.assertEqual(fight['capture_status_options'][0]['move'], 'SleepPowder')
+        self.assertEqual(fight['capture_status_options'][0]['pp'], 15)
+        self.assertIn('PokeBall', fight['capture_status_options'][0]['capture_probability_if_status_lands'])
+        self.assertEqual(fight['usable_effective_attacks'], [])
+        self.assertEqual(set(candidates), {'fight', 'switch:0', 'ball:PokeBall'})
+        self.assertIn('without switching', fight['reason'])
+        self.assertIn('does not apply', game.judgments.choose.call_args.args[3])
+
+    def test_capture_fight_capabilities_refresh_with_pp_status_and_active_member(self):
+        state = self.capture_support_state()
+        state['battle_live']['player'] = {'species': 'Gloom'}
+        state['battle_live']['player_party'][1].update(moves=['SleepPowder', 'Absorb'], pp=[0, 25])
+        game = JevGame.__new__(JevGame)
+        game.judgments = Mock(collects_dex=True, active=None, preference='none')
+        game.judgments.choose.return_value = 'fight'
+        for status, pp, expected in [('None', 0, []), ('Paralysis', 15, []), ('None', 15, ['SleepPowder'])]:
+            with self.subTest(status=status, pp=pp):
+                state['battle_live']['enemy']['status'] = status
+                state['battle_live']['player_party'][1]['pp'][0] = pp
+                game.battle_recovery_plan(state)
+                fight = json.loads(game.judgments.choose.call_args.args[2]['fight'])
+                self.assertEqual([row['move'] for row in fight['capture_status_options']], expected)
+                self.assertEqual(fight['usable_effective_attacks'], ['Absorb'])
+        state['battle_live']['player'] = {'species': 'Charmander'}
+        game.battle_recovery_plan(state)
+        fight = json.loads(game.judgments.choose.call_args.args[2]['fight'])
+        self.assertEqual(fight['active_party_index'], 0)
+        self.assertEqual(fight['capture_status_options'], [])
+        self.assertEqual(fight['usable_effective_attacks'], ['Scratch'])
+        # Ordinary non-collection combat retains the old attack contract.
+        game.judgments.collects_dex = False
+        game.battle_recovery_plan(state)
+        self.assertEqual(game.judgments.choose.call_args.args[2]['fight'],
+                         'Attack this turn; preserve recovery supplies')
+
     def test_capture_retreat_binds_run_only_for_verified_scripted_source(self):
         game = JevGame.__new__(JevGame)
         game.judgments = Mock()

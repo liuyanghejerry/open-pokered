@@ -567,7 +567,12 @@ class JevGame(pt.Game):
             candidates['run'] = json.dumps(retreat)
             bindings['run'] = 'run', None
         if capturing:
-            candidates['fight'] = 'Prepare capture with a safe status or weak attack; a knockout permanently loses this encounter. Do not select FIGHT just to win.'
+            candidates['fight'] = json.dumps({
+                'active_party_index': active, 'active_pokemon': party[active],
+                'usable_effective_attacks': effective_attacks(party[active], live['enemy']['species']),
+                'capture_status_options': capture_status_options(party[active], live['enemy'], bag),
+                'reason': 'Prepare capture using the current active Pokemon without switching. Open FIGHT and select its move; switching to another teammate does not use that teammate\'s move on the switching turn. A knockout loses this encounter, so do not select FIGHT just to win.',
+                'availability_scope': 'Observed moves and PP, known target status and type immunities. The real move menu still checks disabled moves; status success and surviving to act are not guaranteed.'})
         if switch_training or capturing or not effective_attacks(party[active], live['enemy']['species']):
             for index, mon in enumerate(party):
                 statuses = capture_status_options(mon, live['enemy'], bag) if capturing else []
@@ -644,6 +649,10 @@ class JevGame(pt.Game):
                 'limited ball supply at full HP when viable preparation substantially raises capture odds; '
                 'do not knock out the target or use residual poison/burn damage to prepare it.')
         if capturing:
+            instruction += (' FIGHT describes the current active Pokemon and its capture_status_options, '
+                'not just an attack. Compare using those existing tools now with the offered switches: '
+                'switching spends this turn and does not apply the incoming teammate\'s status move. '
+                'Do not switch back and forth just to obtain a tool the active teammate already has.')
             instruction += (' Use enemy.capture_species as the species that a successful ball registers, '
                 'and enemy.species for the current combat form and type matchups. Transform can copy an '
                 'already registered form without changing an unregistered capture target into a duplicate.')
