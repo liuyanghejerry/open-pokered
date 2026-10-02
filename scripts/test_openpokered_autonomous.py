@@ -22,6 +22,29 @@ from openpokered.run_autonomous import observations_valid, checkpoint_field_requ
 
 
 class AutonomousTests(unittest.TestCase):
+    def test_surf_probe_finds_a_shore_when_shortest_route_first_falls_into_water(self):
+        import playthrough as pt
+        falls = {
+            'SeafoamIslands1F': {(17, 6): ('SeafoamIslandsB1F', 18, 7),
+                                 (24, 6): ('SeafoamIslandsB1F', 23, 7)},
+            'SeafoamIslandsB1F': {(18, 6): ('SeafoamIslandsB2F', 19, 7),
+                                  (23, 6): ('SeafoamIslandsB2F', 22, 7)},
+            'SeafoamIslandsB2F': {(19, 6): ('SeafoamIslandsB3F', 18, 7),
+                                  (22, 6): ('SeafoamIslandsB3F', 19, 7)},
+        }
+        state = {'map_name': 'Route20', 'player_x': 48, 'player_y': 6, 'player_transport': 'Walking'}
+        with patch.object(pt, 'COORDINATE_WARPS', falls):
+            obstacle = surf_requirement(state, 'CinnabarPokecenter', [(3, 3)], 'Route20')
+            self.assertIsNotNone(obstacle)
+            self.assertIn(obstacle['direction'], pt.DELTA)
+            self.assertTrue(pt.bfs_cross('Route20', (48, 6), obstacle['map'], obstacle['stance']))
+            self.assertFalse(pt.bfs_cross('Route20', (48, 6), obstacle['landing'][0], obstacle['landing'][1:]))
+            # General route planning still knows the legal automatic fall.
+            with water_planning():
+                plan = pt.bfs_cross('SeafoamIslandsB2F', (19, 7), 'SeafoamIslandsB3F', (18, 7))
+            self.assertEqual(plan, [('SeafoamIslandsB2F', 19, 7),
+                                   (('SeafoamIslandsB3F', 18, 7), 'fall_up')])
+
     def test_scripted_fall_retains_approach_and_explicit_step_action(self):
         import playthrough as pt
         from types import SimpleNamespace

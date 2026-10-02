@@ -115,7 +115,7 @@ def forced_bike_region():
 
 
 @contextmanager
-def water_planning():
+def water_planning(*, require_surf_embarkation=False):
     """Relax only the in-memory planner; restore even when search fails."""
     bike_region = forced_bike_region()
     walkable, edge, cross = pt.walkable, pt.walkable_edge, pt.cross_step
@@ -130,6 +130,15 @@ def water_planning():
         return edge(name, start, end)
     def crossing(name, x, y, direction):
         node = cross(name, x, y, direction)
+        if node and require_surf_embarkation:
+            automatic = pt.COORDINATE_WARPS.get(node[0], {}).get(node[1:])
+            if automatic and water_tile(*automatic):
+                # Finding a Surf action is a different query from general
+                # water reachability. A shorter falling-into-water route
+                # cannot supply a dry stance at which to use the field menu;
+                # search an alternative with an executable embarkation.
+                # Ordinary planning retains this automatic transition.
+                return None
         # The field-menu skill starts Surf at an adjacent tile of the
         # current map. A relaxed BFS must not prefer a land-to-water map
         # connection that has no executable embarkation, hiding a valid
@@ -149,7 +158,7 @@ def surf_requirement(state, destination, points, last_map, blocked_maps=None, ex
     """Find a useful water crossing with an already reachable embarkation."""
     if not points:
         return None
-    with water_planning():
+    with water_planning(require_surf_embarkation=True):
         path = pt.bfs_cross(state['map_name'], (state['player_x'], state['player_y']),
                             destination, points[0], last_map=last_map, allow_ledges=True, allow_spinners=True,
                             blocked_maps=blocked_maps, excluded_maps=excluded_maps,
