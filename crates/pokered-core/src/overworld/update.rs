@@ -4508,11 +4508,13 @@ mod fidelity_systems_healing_tests {
     fn suspended_npc_trade_keeps_connect_text_advancing_without_reemitting_trade() {
         let mut ow=OverworldScreen::new(MapId::Route2TradeHouse,None,PokemonRedData);
         ow.reload_scene_source("Route2TradeHouse",r#"game_scene Route2TradeHouse {
-          @storyline("tradeProbe") {
-            traded=tradePokemon("ABRA","MR_MIME","MARCEL")
-            @if (traded) { setFlag("EVENT_TRADED_FOR_MARCEL") }
-          }
-        }"#).unwrap();
+    @storyline("tradeProbe") {
+        traded = tradePokemon("ABRA", "MR_MIME", "MARCEL")
+        @if (traded) {
+            setFlag("EVENT_TRADED_FOR_MARCEL")
+        }
+    }
+}"#).unwrap();
         let command=ow.script_engine.call_function_no_args("tradeProbe").unwrap().unwrap();
         ow.active_script_effect=Some(script_bridge::dispatch_command_with_names(&command,"RED","BLUE",""));
         let neutral=OverworldInput::new(false,false,false,false,false,false,false,false);
