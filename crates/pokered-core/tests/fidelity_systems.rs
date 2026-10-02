@@ -245,8 +245,15 @@ fn original_new_game_ignores_previous_playthroughs_valid_box_banks() {
     bytes[0x4000..0x8000].copy_from_slice(&previous[0x4000..0x8000]);
     assert_eq!(bytes[0x284c] & 0x80, 0); // new ROM game, no first CHANGE BOX yet
     let save = import_sram(&bytes).unwrap();
+    let mut streamed = SaveData::new();
+    pokered_core::save::sram_import::import_sram_banks_into(
+        |index, bank| bank.copy_from_slice(&bytes[index * 8192..(index + 1) * 8192]),
+        &mut streamed,
+    )
+    .unwrap();
     for index in 0..12 {
         assert_eq!(save.pc_storage.get_box(index).unwrap().count(), 0);
+        assert_eq!(streamed.pc_storage.get_box(index).unwrap().count(), 0);
     }
 }
 
@@ -265,11 +272,40 @@ fn previous_native_save_migrates_layout_and_species() {
     let mut old = original_sram();
     old[0x2000..0x4000].copy_from_slice(&bytes[0x2000..0x4000]);
     old[0x34cb] = pokered_core::save_menu::calc_checksum(&old[0x2598..0x34cb]);
+    // The old native writer also wrote all boxes before any CHANGE BOX,
+    // without setting the ROM's initialization bit. Preserve those boxes.
+    let complete_boxes = export_sram(&SaveData::new());
+    old[0x4000..].copy_from_slice(&complete_boxes[0x4000..]);
+    let mut legacy_box = PcBox::new();
+    legacy_box
+        .deposit(create_pokemon(Species::Bulbasaur, 20, [0x99, 0x88]).unwrap())
+        .unwrap();
+    let mut encoded = Vec::new();
+    pokered_core::save::ser_pokemon::serialize_box_into(&legacy_box, &mut encoded);
+    encoded[1] = 1; // old native dex ID in species list
+    encoded[22] = 1; // old native dex ID in box mon struct
+    let size = pokered_core::save::sram_layout::BOX_DATA_SIZE;
+    old[0x4000 + size..0x4000 + 2 * size].copy_from_slice(&encoded);
+    old[0x4000 + 6 * size] =
+        pokered_core::save_menu::calc_checksum(&old[0x4000..0x4000 + 6 * size]);
+    old[0x4000 + 6 * size + 2] = pokered_core::save_menu::calc_checksum(&encoded);
+    assert_eq!(old[0x284c] & 0x80, 0);
     let save = import_sram(&old).unwrap();
     assert!(save.imported_legacy_native);
     assert_eq!(save.party.get(0).unwrap().species, Species::Pikachu);
     assert_eq!(save.party.get(0).unwrap().ot_id, 1234);
     assert_eq!(save.game_data.safari_steps, 123);
+    assert_eq!(
+        save.pc_storage.get_box(1).unwrap().get(0).unwrap().species,
+        Species::Bulbasaur
+    );
+    let mut streamed = SaveData::new();
+    pokered_core::save::sram_import::import_sram_banks_into(
+        |index, bank| bank.copy_from_slice(&old[index * 8192..(index + 1) * 8192]),
+        &mut streamed,
+    )
+    .unwrap();
+    assert_eq!(export_sram(&streamed), export_sram(&save));
 }
 
 #[test]
