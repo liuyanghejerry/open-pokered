@@ -2535,6 +2535,87 @@ class AutonomousTests(unittest.TestCase):
         facts['party'][0]['level'] = 25
         self.assertTrue(agent.index.satisfied(group['target'], facts))
 
+    def capture_retrieval_fixture(self):
+        agent, facts = self.support_training_agent()
+        pc = Rule('pc', 'CeruleanPokecenter', 'pc', ['sign:1'], [], [],
+                  ('pc', 'storage', True), [])
+        agent.index.by_effect = {('pc', 'storage', True): [pc]}
+        facts['stored_pokemon'] = [
+            {'box': 3, 'index': 11, 'species': 'Pikachu', 'level': 44, 'hp': 101, 'max_hp': 101,
+             'status': 'None', 'moves': ['ThunderWave', 'Thunderbolt'], 'pp': [20, 15]},
+            {'box': 0, 'index': 8, 'species': 'Jigglypuff', 'level': 3, 'hp': 20, 'max_hp': 20,
+             'status': 'None', 'moves': ['Sing'], 'pp': [15]}]
+        return agent, facts
+
+    def test_stored_capture_support_is_offered_even_without_an_evolution_goal(self):
+        agent, facts = self.capture_retrieval_fixture()
+        facts['party'] = facts['party'][:1] * 6
+        groups = {}
+        agent.add_capture_support_retrieval(groups, facts)
+        self.assertEqual(len(groups), 2)
+        pika = groups['prepare:retrieve-capture-support:3:11']
+        self.assertEqual(pika['target'], ('pokemon', 'Pikachu', None))
+        self.assertEqual(pika['context']['required_for'], ['Zapdos'])
+        self.assertTrue(pika['context']['storage_retrieval'])
+        self.assertTrue(pika['context']['requires_party_deposit'])
+        self.assertFalse(pika['context']['requires_healing'])
+        moves = pika['context']['capture_support_matchups'][0]['non_damaging_status_moves']
+        self.assertEqual([m['move'] for m in moves], ['ThunderWave'])
+        self.assertEqual(moves[0]['pp'], 20)
+        self.assertIn('No survival guarantee', pika['context']['scope'])
+
+    def test_stored_capture_support_keeps_distinct_slots_and_healing_cost(self):
+        agent, facts = self.capture_retrieval_fixture()
+        facts['stored_pokemon'].append({**facts['stored_pokemon'][0], 'index': 12, 'level': 10,
+                                       'hp': 0, 'max_hp': 30})
+        groups = {}
+        agent.add_capture_support_retrieval(groups, facts)
+        self.assertEqual(len(groups), 3)
+        weak = groups['prepare:retrieve-capture-support:3:12']['context']
+        self.assertTrue(weak['requires_healing'])
+        self.assertEqual(weak['stored_pokemon']['level'], 10)
+
+    def test_stored_capture_support_binds_the_real_pc_slot_and_menu(self):
+        agent, facts = self.capture_retrieval_fixture()
+        groups = {}
+        agent.add_capture_support_retrieval(groups, facts)
+        agent.active = groups['prepare:retrieve-capture-support:3:11']
+        choices, bindings = agent.action_candidates(facts)
+        self.assertEqual(bindings['action:0'][0], 'travel_to:CeruleanPokecenter')
+        agent.index.maps_dir = Path(__file__).resolve().parents[1] / 'crates/pokered-data/maps'
+        facts['map'] = 'CeruleanPokecenter'
+        choices, bindings = agent.action_candidates(facts)
+        self.assertEqual(bindings['action:0'][0], 'retrieve_pc:3,11,-1,0')
+        self.assertEqual(json.loads(choices['action:0'])['withdraw']['level'], 44)
+
+    def test_stored_capture_support_rejects_unsupported_or_satisfied_candidates(self):
+        for change in ('no_retreat', 'registered', 'no_pc', 'already_present', 'no_pp',
+                       'damaging_move', 'poison', 'immune', 'noncollector'):
+            agent, facts = self.capture_retrieval_fixture()
+            facts['stored_pokemon'] = facts['stored_pokemon'][:1]
+            mon = facts['stored_pokemon'][0]
+            if change == 'no_retreat':
+                agent.capture_retreats.clear()
+            elif change == 'registered':
+                agent.validated_owned.return_value = {'Zapdos'}
+            elif change == 'no_pc':
+                agent.index.by_effect.clear()
+            elif change == 'already_present':
+                facts['party'].append(mon)
+            elif change == 'no_pp':
+                mon['pp'][0] = 0
+            elif change == 'damaging_move':
+                mon['moves'][0] = 'Thunderbolt'
+            elif change == 'poison':
+                mon['moves'][0] = 'Poisonpowder'
+            elif change == 'immune':
+                agent.capture_retreats['PowerPlant:Zapdos']['species'] = 'Onix'
+            else:
+                agent.collects_dex = False
+            groups = {}
+            agent.add_capture_support_retrieval(groups, facts)
+            self.assertEqual(groups, {}, change)
+
     def test_capture_support_training_requires_observed_failure_and_healthy_trainee(self):
         for change in ('unknown', 'registered', 'fainted', 'injured', 'status', 'noncollector', 'no_sites'):
             agent, facts = self.support_training_agent()

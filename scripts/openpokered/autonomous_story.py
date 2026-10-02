@@ -22,7 +22,7 @@ from .story_rules import Rule, requirements, evaluate, static_retreat_contract, 
 from .playthrough_judgments import (ObservedProtocol, NavigationPause, attack_profile, replacement_options,
                                     MEDICINES, BALLS, medicine_options, effective_attacks, ITEM_CATALOG,
                                     PREFERENCE_INSTRUCTIONS)
-from .playthrough_judgments import capture_probability, capture_species
+from .playthrough_judgments import capture_probability, capture_species, capture_status_options
 from .navigation_skills import (cut_requirement, surf_requirement, water_planning, water_tile,
                                 hm_compatible, machine_compatible, HM_MOVES, TM_MOVES, CUT_TILES)
 from .navigation_skills import surf_current_prerequisites, field_badge_prerequisites, surf_path_prerequisites
@@ -2824,6 +2824,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                                                .get('water' if method == 'water' else 'grass'))},
                 })
             self.add_nonwild_collection_groups(groups, facts)
+            self.add_capture_support_retrieval(groups, facts)
             self.add_capture_support_training(groups, facts)
         if self.maximizes_coverage:
             self.add_coverage_groups(groups, facts)
@@ -2926,6 +2927,60 @@ class AutonomousStoryAgent(DualStoryAgent):
 
     # How many of the newest hunts the judge compares an area on.
     CATCH_WINDOW = 12
+
+    def add_capture_support_retrieval(self, groups, facts):
+        """Expose earned PC status users as preparation, not only evolution inputs.
+
+        Each actual box slot remains a separate choice: duplicate species may
+        have different levels/moves. Retrieval uses the existing real PC skill.
+        """
+        if not self.collects_dex:
+            return
+        owned = self.validated_owned(facts)
+        targets = []
+        for retreat in getattr(self, 'capture_retreats', {}).values():
+            enemy = (retreat.get('retreat_observation') or {}).get('enemy') or {}
+            if retreat['species'] not in owned and enemy.get('level'):
+                targets.append({'species': retreat['species'], 'map': retreat['map'],
+                                'observed_level': enemy['level']})
+        if not targets:
+            return
+        rules = [rule for rule in self.index.by_effect.get(('pc', 'storage', True), [])
+                 if not rule.missing(facts)]
+        if not rules:
+            return
+        present = {mon['species'] for mon in facts.get('party', [])}
+        for mon in facts.get('stored_pokemon', []):
+            if mon['species'] in present:
+                continue  # The existing retrieval goal establishes party presence.
+            matchups = []
+            for target in targets:
+                # Compare known move effects/type immunity for a clean future
+                # encounter. Do not project yesterday's HP/DVs into the retry.
+                moves = capture_status_options(mon, {'species': target['species'],
+                                                      'status': 'None'}, {})
+                if moves:
+                    matchups.append({**target, 'non_damaging_status_moves': [
+                        {k: v for k, v in move.items() if k != 'capture_probability_if_status_lands'}
+                        for move in moves]})
+            if not matchups:
+                continue
+            key = f'prepare:retrieve-capture-support:{mon["box"]}:{mon["index"]}'
+            groups[key] = {
+                'target': ('pokemon', mon['species'], None), 'rules': rules,
+                'objectives': [f'Withdraw {mon["species"]} as capture status support'],
+                'context': {'optional_preparation': True, 'storage_retrieval': True,
+                            'capture_support_retrieval': True, 'stored_pokemon': mon,
+                            'required_for': sorted({row['species'] for row in matchups}),
+                            'capture_support_matchups': matchups,
+                            'requires_party_deposit': len(facts.get('party', [])) >= 6,
+                            'requires_healing': mon['hp'] < mon['max_hp'] or mon.get('status', 'None') != 'None',
+                            'current_party_capture_tools': self.collection_resources(facts),
+                            'scope': 'Owned stored Pokemon with observed non-damaging sleep/paralysis PP. '
+                                     'Normal PC withdrawal and any deposit/healing still required. '
+                                     'Move compatibility assumes a clean encounter, not status success: '
+                                     'compare level, HP, accuracy and matchup; switching consumes a turn '
+                                     'and the support may faint before acting. No survival guarantee.'}}
 
     def add_capture_support_training(self, groups, facts):
         """Offer bounded, real XP preparation after an observed failed setup.
