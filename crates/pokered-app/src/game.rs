@@ -8214,13 +8214,27 @@ mod captain_music_wait_fidelity_tests {
         game.overworld.state.player.x = 4;
         game.overworld.state.player.y = 3;
         game.audio.as_ref().unwrap().play_music(MusicId::PKMNHEALED);
-        game.overworld.active_script_effect = Some(pokered_core::overworld::script_bridge::ScriptEffect::WaitMusic);
+        // Use the public scene-loading seam: the native VM must suspend on
+        // waitMusic and continue to the flag command after CHAN1 finishes.
+        game.overworld.reload_scene_with_config(
+            "SSAnneCaptainsRoom",
+            r#"game_scene SSAnneCaptainsRoom {
+                @storyline("captainMusicProbe") {
+                    waitMusic()
+                    setFlag("CAPTAIN_MUSIC_PROBE_DONE")
+                }
+            }"#,
+            Some(r#"{"onLoad":"captainMusicProbe"}"#),
+        ).unwrap();
+        assert_eq!(game.overworld.active_script_effect_label().as_deref(), Some("WaitMusic"));
         game.update(&InputState::new());
-        assert!(matches!(game.overworld.active_script_effect,
-            Some(pokered_core::overworld::script_bridge::ScriptEffect::WaitMusic)));
+        assert_eq!(game.overworld.active_script_effect_label().as_deref(), Some("WaitMusic"));
+        assert!(!game.overworld.unified_flags().get_flag("CAPTAIN_MUSIC_PROBE_DONE"));
         for _ in 0..1024 {
             game.update(&InputState::new());
-            if game.overworld.active_script_effect.is_none() {
+            if game.overworld.unified_flags().get_flag("CAPTAIN_MUSIC_PROBE_DONE") {
+                assert!(game.overworld.script_engine_idle());
+                assert_eq!(game.overworld.active_script_effect_label(), None);
                 assert!(!game.audio.as_ref().unwrap().is_music_channel_playing(0));
                 return;
             }
