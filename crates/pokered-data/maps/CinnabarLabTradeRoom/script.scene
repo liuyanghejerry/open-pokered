@@ -40,14 +40,17 @@ game_scene CinnabarLabTradeRoom {
           // ConnectCableText -> real in-game trade (removes RAICHU, adds
           // ELECTRODE nicknamed DORIS). tradePokemon returns false if the
           // player doesn't actually carry RAICHU -> wrong-mon (dialogset EVOLUTION).
-          @speaker("") { @t("Okay, connect the cable like\nso!", "好，像这样连接线缆！") }
           traded = tradePokemon("RAICHU", "ELECTRODE", "DORIS")
           @if (traded) {
             setFlag("EVENT_TRADED_FOR_DORIS")
             @speaker("") { @t("<PLAYER> traded RAICHU for\nELECTRODE!", "<PLAYER>把雷丘换成了雷电球！") }
             @speaker("") { @t("Thanks!", "谢谢！") }
           } @else {
-            @speaker("") { @t("...This is no RAICHU.\n\nIf you get one, trade it\nwith me!", "……这不是雷丘。\n\n如果你弄到一只，来跟我换吧！") }
+            @if (getFlag("NPC_TRADE_CANCELLED")) {
+              @speaker("") { @t("Well, if you don't want\nto...", "好吧，如果你不想的话……") }
+            } @else {
+              @speaker("") { @t("...This is no RAICHU.\n\nIf you get one, trade it\nwith me!", "……这不是雷丘。\n\n如果你弄到一只，来跟我换吧！") }
+            }
           }
         }
         @option(@t("NO", "否")) {
@@ -76,14 +79,17 @@ game_scene CinnabarLabTradeRoom {
           // ConnectCableText -> real in-game trade (removes VENONAT, adds
           // TANGELA nicknamed CRINKLES). tradePokemon returns false if the
           // player doesn't actually carry VENONAT -> wrong-mon (dialogset HAPPY).
-          @speaker("") { @t("Okay, connect the cable like\nso!", "好，像这样连接线缆！") }
           traded = tradePokemon("VENONAT", "TANGELA", "CRINKLES")
           @if (traded) {
             setFlag("EVENT_TRADED_FOR_CRINKLES")
             @speaker("") { @t("<PLAYER> traded VENONAT for\nTANGELA!", "<PLAYER>把毛球换成了蔓藤怪！") }
             @speaker("") { @t("Thanks pal!", "谢啦，朋友！") }
           } @else {
-            @speaker("") { @t("Hmmm? This isn't VENONAT.\n\nThink of me when you get\none.", "嗯？这不是毛球。\n\n等你弄到一只，要记得我哦。") }
+            @if (getFlag("NPC_TRADE_CANCELLED")) {
+              @speaker("") { @t("That's too bad.", "那太可惜了。") }
+            } @else {
+              @speaker("") { @t("Hmmm? This isn't VENONAT.\n\nThink of me when you get\none.", "嗯？这不是毛球。\n\n等你弄到一只，要记得我哦。") }
+            }
           }
         }
         @option(@t("NO", "否")) {

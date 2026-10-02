@@ -192,10 +192,14 @@ pub fn settle_battle_into_save(
             let _ = save.party.add(caught);
         } else {
             let _ = save.current_box.deposit(caught);
+            save.sync_current_box_to_storage();
         }
         save.game_data.pokedex.set_seen(species);
         save.game_data.pokedex.set_owned(species);
     }
+    // Colosseum heals only after returning from InitOpponent, not on entry.
+    if battle.link_mode { save.party.heal_all(); }
+    overworld.box_count = save.current_box.count() as u8;
     overworld.party_count = save.party.count() as u8;
     overworld.party_lead_level = save.party.leader_level();
     overworld.set_post_battle_encounter_cooldown();

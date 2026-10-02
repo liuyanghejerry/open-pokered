@@ -53,6 +53,17 @@ impl SaveData {
         }
     }
 
+    /// Keep the bank-1 live box and the storage menu's current slot together.
+    /// `current_box` is authoritative at save/load/capture boundaries, just
+    /// like the original's wBoxData (inactive SRAM boxes may be stale).
+    pub fn sync_current_box_to_storage(&mut self) {
+        *self.pc_storage.current_box_mut() = self.current_box;
+    }
+
+    pub fn sync_current_box_from_storage(&mut self) {
+        self.current_box = *self.pc_storage.current_box();
+    }
+
     /// Deposit the party member at `index` (0-based) into the Day Care. Removes
     /// it from the party and stores it off-party in `game_data.daycare`, where
     /// it gains experience while the player walks. No-op if `index` is out of
@@ -68,7 +79,7 @@ impl SaveData {
             .map(|m| !m.moves.iter().any(|mv| is_hm_move(*mv)))
             .unwrap_or(false)
             && self.party.count() > 1;
-        if !ok {
+        if !ok || self.game_data.daycare.in_use {
             return;
         }
         let Ok(mon) = self.party.remove(idx) else {
@@ -77,7 +88,6 @@ impl SaveData {
         let catch_rate = get_base_stats(mon.species)
             .map(|b| b.catch_rate)
             .unwrap_or(0);
-        let player_id = self.game_data.player_id;
         let mut name_buf = [0u8; crate::battle::state::NAME_TEXT_BUF];
         let name = mon.display_name(&mut name_buf);
         let dc = &mut self.game_data.daycare;
@@ -85,11 +95,10 @@ impl SaveData {
         dc.species = mon.species as u8;
         dc.hp = mon.hp;
         dc.box_level = mon.level;
-        dc.status = 0;
-        // Types/catch-rate are re-derived from the species on withdrawal, so
-        // only the growth-relevant fields need to round-trip exactly.
-        dc.type1 = 0;
-        dc.type2 = 0;
+        dc.status = ser_pokemon::status_to_byte(&mon.status);
+        // Day Care copies the complete box struct, including current types.
+        dc.type1 = mon.type1 as u8;
+        dc.type2 = mon.type2 as u8;
         dc.catch_rate = catch_rate;
         dc.moves = [
             mon.moves[0] as u8,
@@ -97,7 +106,7 @@ impl SaveData {
             mon.moves[2] as u8,
             mon.moves[3] as u8,
         ];
-        dc.ot_id = player_id;
+        dc.ot_id = mon.ot_id;
         dc.exp = mon.total_exp;
         dc.hp_exp = mon.stat_exp[0];
         dc.attack_exp = mon.stat_exp[1];
@@ -105,23 +114,19 @@ impl SaveData {
         dc.speed_exp = mon.stat_exp[3];
         dc.special_exp = mon.stat_exp[4];
         dc.dvs = u16::from_be_bytes(mon.dv_bytes);
-        dc.pp = mon.pp;
+        dc.pp = core::array::from_fn(|i| (mon.pp[i] & 0x3F) | ((mon.pp_ups[i] & 3) << 6));
+        self.game_data.daycare_mon_ot = mon.ot_name.to_vec();
         self.game_data.daycare_mon_name =
             pokered_data::charmap::encode_string(&name).unwrap_or_default();
     }
 
-    /// Withdraw the Day Care Pokémon back into the party at its grown level:
-    /// level/stats are recomputed from the accumulated experience, HP is
-    /// restored to max, and any level-up moves learned since the deposit level
-    /// are taught (this preserves TM/HM-taught moves, unlike the original
-    /// `WriteMonMoves` rebuild). STAT EXP IS LOST — the original's
-    /// `wDayCareMon` is a 33-byte box_struct with no stat-exp fields
-    /// (ram/wram.asm:2221), so a deposit/withdraw round-trip resets effort to
-    /// zero (the famous Day-Care EV wipe). No-op if nothing is deposited or
-    /// the party is full.
+    /// Withdraw at the grown level. The original copies the full box struct
+    /// and OT/name tables, computes stats with stat experience, then learns
+    /// moves after the deposit level by shifting full move/PP slots left.
+    /// HP returns to max; existing status and existing PP are preserved.
     pub fn withdraw_daycare(&mut self) {
         use crate::battle::experience::growth::level_from_exp;
-        use crate::pokemon::move_learning::process_level_up_moves;
+        use crate::pokemon::move_learning::learn_daycare_moves;
         use crate::pokemon::stats::{create_pokemon, recalculate_stats};
         use pokered_data::moves::MoveId;
         use pokered_data::pokemon_data::get_base_stats;
@@ -143,9 +148,20 @@ impl SaveData {
                 ];
                 if box_moves.iter().any(|m| *m != MoveId::None) {
                     mon.moves = box_moves;
-                    mon.pp = dc.pp;
+                    mon.pp = dc.pp.map(|p| p & 0x3F);
+                    mon.pp_ups = dc.pp.map(|p| p >> 6);
                 }
-                process_level_up_moves(&mut mon, dc.box_level, new_level);
+                mon.stat_exp = [dc.hp_exp, dc.attack_exp, dc.defense_exp, dc.speed_exp, dc.special_exp];
+                mon.ot_id = dc.ot_id;
+                mon.is_traded = crate::battle::obedience::is_traded_for(dc.ot_id, self.game_data.player_id);
+                mon.status = ser_pokemon::byte_to_status(dc.status);
+                mon.type1 = pokered_data::types::PokemonType::from_id(dc.type1);
+                mon.type2 = pokered_data::types::PokemonType::from_id(dc.type2);
+                mon.ot_name.fill(0x50);
+                let ot = &self.game_data.daycare_mon_ot;
+                let len = ot.len().min(mon.ot_name.len());
+                mon.ot_name[..len].copy_from_slice(&ot[..len]);
+                learn_daycare_moves(&mut mon, dc.box_level, new_level);
                 recalculate_stats(&mut mon);
                 mon.hp = mon.max_hp;
                 let name = pokered_data::charmap::decode_string(&self.game_data.daycare_mon_name);

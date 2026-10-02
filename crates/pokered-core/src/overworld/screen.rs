@@ -674,6 +674,8 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     pub script_music_playing: bool,
     pub pending_healing_machine: Option<HealingMachineState>,
     pub last_map: Option<MapId>,
+    pub first_lock_trash_can: u8,
+    pub second_lock_trash_can: u8,
     /// Position on `last_map` where the player stepped onto the entrance warp —
     /// the tile just outside a dungeon/building. Recorded alongside `last_map`
     /// and used as the ESCAPE ROPE return point.
@@ -759,6 +761,7 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     /// bag-full success/failure synchronously (matching `hasItem`) so scenes'
     /// `@if (given = giveItem(...))` "no room" branches work correctly.
     pub(crate) script_bag_names: Vec<String>,
+    pub(crate) script_bag_snapshot: Option<crate::items::inventory::Inventory<{crate::items::inventory::BAG_ITEM_CAPACITY}>>,
     /// The app's input fingerprint cannot detect a replaced interpreter.
     /// New maps and restored snapshots must populate its query host again.
     pub(crate) script_queries_need_seed: bool,
@@ -1124,6 +1127,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             pending_emotion_bubble: None,
             script_music_playing: false,
             pending_healing_machine: None,
+            first_lock_trash_can: 0,
+            second_lock_trash_can: 0,
             last_map: super::map_loading::scripted_last_map(start_map).or(Some(MapId::PalletTown)),
             last_map_entry: None,
             warp_fade_state: WarpFadeState::Idle,
@@ -1175,6 +1180,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             script_awaiting_filter_bag: false,
             script_awaiting_trade: false,
             script_bag_names: Vec::new(),
+            script_bag_snapshot: None,
             script_queries_need_seed: true,
             script_party_species: Vec::new(),
             player_starter: 0,
@@ -1440,6 +1446,11 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             .seed_number("obtainedBadges", obtained_badges as f64);
         self.script_queries_need_seed = false;
         self.mix_script_rng();
+    }
+
+    /// Supply quantities as well as names for transactional gift checks.
+    pub fn seed_script_bag_quantities(&mut self, bag: &crate::items::inventory::Inventory<{crate::items::inventory::BAG_ITEM_CAPACITY}>) {
+        self.script_bag_snapshot = Some(bag.clone());
     }
 
     /// Feed real entropy from the overworld RNG into the script-side RNG so
@@ -2406,6 +2417,41 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     /// Whether a Safari Zone game is currently in progress.
     pub fn is_safari_game_active(&self) -> bool {
         self.safari_game_active
+    }
+
+    /// Restore counters and status bytes that live outside the event bitset.
+    pub fn restore_system_save_state(&mut self, data: &crate::save::game_data::GameData) {
+        self.first_lock_trash_can = data.first_lock_trash_can;
+        self.second_lock_trash_can = data.second_lock_trash_can;
+        self.script_engine.set_gym_trash_indices(self.first_lock_trash_can, self.second_lock_trash_can);
+        for (index, name) in ["TERRY", "MARCEL", "CHIKUCHIKU", "SAILOR", "DUX", "MARC", "LOLA", "DORIS", "CRINKLES", "SPOT"].iter().enumerate() {
+            self.set_flag_live(&format!("EVENT_TRADED_FOR_{}", name), data.completed_in_game_trade_flags & (1 << index) != 0);
+        }
+        self.set_flag_live("EVENT_GOT_LICKITUNG_FROM_TRADE", data.completed_in_game_trade_flags & (1 << 5) != 0);
+        self.safari_steps = data.safari_steps;
+        self.safari_balls = data.num_safari_balls;
+        self.safari_game_active = self.unified_flags.get_flag("EVENT_IN_SAFARI_ZONE");
+        for (name, bit) in [("EVENT_GOT_OLD_ROD", 3), ("EVENT_GOT_GOOD_ROD", 4), ("EVENT_GOT_SUPER_ROD", 5)] {
+            self.set_flag_live(name, data.status_flags[0] & (1 << bit) != 0);
+        }
+    }
+
+    /// Persist Safari allowances and original status-byte script aliases.
+    pub fn write_system_save_state(&self, data: &mut crate::save::game_data::GameData) {
+        data.first_lock_trash_can = self.first_lock_trash_can;
+        data.second_lock_trash_can = self.second_lock_trash_can;
+        for (index, name) in ["TERRY", "MARCEL", "CHIKUCHIKU", "SAILOR", "DUX", "MARC", "LOLA", "DORIS", "CRINKLES", "SPOT"].iter().enumerate() {
+            let mask = 1 << index;
+            if self.unified_flags.get_flag(&format!("EVENT_TRADED_FOR_{}", name))
+                || (index == 5 && self.unified_flags.get_flag("EVENT_GOT_LICKITUNG_FROM_TRADE")) { data.completed_in_game_trade_flags |= mask; }
+            else { data.completed_in_game_trade_flags &= !mask; }
+        }
+        data.safari_steps = self.safari_steps;
+        data.num_safari_balls = self.safari_balls;
+        for (name, bit) in [("EVENT_GOT_OLD_ROD", 3), ("EVENT_GOT_GOOD_ROD", 4), ("EVENT_GOT_SUPER_ROD", 5)] {
+            if self.unified_flags.get_flag(name) { data.status_flags[0] |= 1 << bit; }
+            else { data.status_flags[0] &= !(1 << bit); }
+        }
     }
 
     /// Begin a fresh Safari Zone game: full step + ball allowance.

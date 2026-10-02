@@ -53,6 +53,9 @@ pub enum LinkKind {
 /// save party).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FlowNeed {
+    SaveReception,
+    CancelReception,
+    EnterRoom(LinkKind),
     None,
     /// Send `RequestBattle` / `RequestTrade` (the player used the gameboy).
     RequestLink(LinkKind),
@@ -76,6 +79,9 @@ pub enum FlowNeed {
 pub enum CableClubPhase {
     /// No link session, or not inside a Cable Club room.
     Inactive,
+    ReceptionText,
+    ReceptionSave { selected: u8 },
+    ReceptionMenu { selected: u8 },
     /// Connected and inside Colosseum/TradeCenter: the remote player's
     /// avatar is present; the gameboy on the table is live.
     InRoom,
@@ -131,7 +137,7 @@ impl CableClubPhase {
     pub fn is_modal(&self) -> bool {
         matches!(
             self,
-            CableClubPhase::JustAMoment { .. }
+            CableClubPhase::ReceptionSave { .. } | CableClubPhase::ReceptionMenu { .. } | CableClubPhase::JustAMoment { .. }
                 | CableClubPhase::WaitingResponse { .. }
                 | CableClubPhase::PeerPrompt { .. }
                 | CableClubPhase::Exchanging
@@ -225,7 +231,7 @@ impl CableClubFlow {
             | CableClubPhase::TradeWaitingConfirm
             | CableClubPhase::TradeAnim
             | CableClubPhase::TradeCompleted => Some(LinkKind::Trade),
-            CableClubPhase::Inactive | CableClubPhase::InRoom | CableClubPhase::Error { .. } => None,
+            CableClubPhase::ReceptionText | CableClubPhase::Inactive | CableClubPhase::InRoom | CableClubPhase::Error { .. } | CableClubPhase::ReceptionSave { .. } | CableClubPhase::ReceptionMenu { .. } => None,
         }
     }
 
@@ -251,6 +257,7 @@ impl CableClubFlow {
     /// The yes/no prompt to draw, if any: `(title, selected index)`.
     pub fn prompt(&self) -> Option<(String, u8)> {
         match &self.phase {
+            CableClubPhase::ReceptionSave { selected } => Some(("the link, we have\nto save the game.".to_string(), *selected)),
             CableClubPhase::PeerPrompt { kind, selected } => {
                 let title = match kind {
                     LinkKind::Battle => TEXT_PROMPT_BATTLE,
@@ -343,6 +350,20 @@ impl CableClubFlow {
 
     /// The player used the gameboy on the table (the map scene called
     /// `game.linkStart()`). Starts the request for the room's activity.
+    pub fn on_receptionist_used(&mut self) {
+        self.phase = CableClubPhase::ReceptionText;
+        self.transient_text = None;
+    }
+
+    pub fn on_reception_text_done(&mut self) {
+        self.phase = CableClubPhase::ReceptionSave { selected: 0 };
+        self.transient_text = None;
+    }
+
+    pub fn reception_menu(&self) -> Option<u8> {
+        if let CableClubPhase::ReceptionMenu { selected } = self.phase { Some(selected) } else { None }
+    }
+
     pub fn on_gameboy_used(&mut self, map: MapId) -> FlowNeed {
         let kind = link_kind_for_room(map);
         match self.phase {
@@ -385,6 +406,31 @@ impl CableClubFlow {
             return FlowNeed::None;
         }
         match self.phase.clone() {
+            CableClubPhase::ReceptionSave { mut selected } => {
+                if input.up { selected = 0; }
+                if input.down { selected = 1; }
+                self.phase = CableClubPhase::ReceptionSave { selected };
+                if input.b || (input.a && selected == 1) {
+                    self.phase = CableClubPhase::Inactive;
+                    return FlowNeed::CancelReception;
+                } else if input.a {
+                    self.phase = CableClubPhase::ReceptionMenu { selected: 0 };
+                    return FlowNeed::SaveReception;
+                }
+                FlowNeed::None
+            }
+            CableClubPhase::ReceptionMenu { mut selected } => {
+                if input.up { selected = (selected + 2) % 3; }
+                if input.down { selected = (selected + 1) % 3; }
+                self.phase = CableClubPhase::ReceptionMenu { selected };
+                if input.b || (input.a && selected == 2) {
+                    self.phase = CableClubPhase::Inactive;
+                } else if input.a {
+                    self.phase = CableClubPhase::Inactive;
+                    return FlowNeed::EnterRoom(if selected == 0 { LinkKind::Trade } else { LinkKind::Battle });
+                }
+                FlowNeed::None
+            }
             CableClubPhase::JustAMoment { kind } => {
                 if input.a {
                     self.phase = CableClubPhase::WaitingResponse { kind };
@@ -767,4 +813,27 @@ pub fn link_kind_for_room(map: MapId) -> LinkKind {
 /// True when the map is one of the Cable Club rooms.
 pub fn is_cable_room(map: MapId) -> bool {
     matches!(map, MapId::Colosseum | MapId::TradeCenter)
+}
+
+#[cfg(test)]
+mod receptionist_fidelity_tests {
+    use super::*;
+    #[test]
+    fn receptionist_requires_save_consent_then_room_selection() {
+        let mut flow=CableClubFlow::new(); flow.on_receptionist_used(); assert!(!flow.is_modal()); flow.on_reception_text_done();
+        assert_eq!(flow.update(PartyScreenInput { a:true,..PartyScreenInput::none() },&[]),FlowNeed::SaveReception);
+        assert_eq!(flow.reception_menu(),Some(0));
+        flow.note_presence(true,false); assert_eq!(flow.reception_menu(),Some(0));
+        assert_eq!(flow.update(PartyScreenInput { a:true,..PartyScreenInput::none() },&[]),FlowNeed::EnterRoom(LinkKind::Trade));
+        assert_eq!(flow.phase(),&CableClubPhase::Inactive);
+    }
+    #[test]
+    fn receptionist_can_cancel_or_choose_colosseum() {
+        let mut flow=CableClubFlow::new(); flow.on_receptionist_used(); assert!(!flow.is_modal()); flow.on_reception_text_done();
+        assert_eq!(flow.update(PartyScreenInput { b:true,..PartyScreenInput::none() },&[]),FlowNeed::CancelReception);
+        assert_eq!(flow.phase(),&CableClubPhase::Inactive);
+        flow.on_receptionist_used(); assert!(!flow.is_modal()); flow.on_reception_text_done(); flow.update(PartyScreenInput { a:true,..PartyScreenInput::none() },&[]);
+        flow.update(PartyScreenInput { down:true,..PartyScreenInput::none() },&[]);
+        assert_eq!(flow.update(PartyScreenInput { a:true,..PartyScreenInput::none() },&[]),FlowNeed::EnterRoom(LinkKind::Battle));
+    }
 }

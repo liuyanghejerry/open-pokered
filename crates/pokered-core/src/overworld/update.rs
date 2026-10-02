@@ -650,7 +650,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 // borrowed; the room check runs after the borrow ends, against the
                 // frame-seeded bag snapshot (same source `hasItem` reads).
                 let give_item_id = match effect {
-                    script_bridge::ScriptEffect::GiveItem { item_id, .. } => Some(item_id.clone()),
+                    script_bridge::ScriptEffect::GiveItem { item_id, quantity } => Some((item_id.clone(), *quantity)),
                     _ => None,
                 };
                 // `givePokemon` must report whether the mon was handed over (the
@@ -693,10 +693,14 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 // below and applied by the app layer; here we only compute the
                 // await result the scene branches on. `true` when the item can be
                 // taken (already held, or a free slot exists), `false` when full.
-                let result = if let Some(item_id) = give_item_id {
-                    let held = self.script_bag_names.iter().any(|n| *n == item_id);
-                    let has_room = held
-                        || self.script_bag_names.len() < crate::items::inventory::BAG_ITEM_CAPACITY;
+                let result = if let Some((item_id, quantity)) = give_item_id {
+                    let has_room = if let Some(bag) = &self.script_bag_snapshot {
+                        pokered_data::items::ItemId::from_const_name(&item_id)
+                            .is_some_and(|id| bag.clone().add_item(id, quantity).is_ok())
+                    } else {
+                        let held = self.script_bag_names.iter().any(|n| *n == item_id);
+                        held || self.script_bag_names.len() < crate::items::inventory::BAG_ITEM_CAPACITY
+                    };
                     CommandResult::Bool(has_room)
                 } else if is_give_pokemon {
                     // Mirrors _GivePokemon: party first, else the current PC box;
@@ -3255,22 +3259,18 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                             frames_remaining: WARP_FADE_OUT_WHITE_FRAMES,
                         };
                     }
-                    // SetLastBlackoutMap (engine/events/set_blackout_map.asm):
-                    // a script-driven heal (Pokémon Center nurse, mom, …)
-                    // records the map the player came in from as the blackout
-                    // /Teleport target — except in Safari Zone rest houses,
-                    // which the original explicitly skips
-                    // (data/maps/rest_house_maps.asm).
-                    let is_rest_house = matches!(
-                        self.state.current_map,
-                        MapId::SafariZoneWestRestHouse
-                            | MapId::SafariZoneEastRestHouse
-                            | MapId::SafariZoneNorthRestHouse
-                    );
-                    if !is_rest_house {
+                    // Only the nurse records the recovery destination.
+                    // Mom, Tower purification and Silph beds only call HealParty.
+                    let is_center = matches!(self.state.current_map,
+                        MapId::ViridianPokecenter | MapId::PewterPokecenter
+                        | MapId::CeruleanPokecenter | MapId::MtMoonPokecenter
+                        | MapId::RockTunnelPokecenter | MapId::VermilionPokecenter
+                        | MapId::CeladonPokecenter | MapId::LavenderPokecenter
+                        | MapId::FuchsiaPokecenter | MapId::CinnabarPokecenter
+                        | MapId::SaffronPokecenter | MapId::IndigoPlateauLobby);
+                    if is_center {
                         if let Some(map) = self.last_map {
-                            self.game_data_requests
-                                .push(OverworldGameDataRequest::SetBlackoutMap { map });
+                            self.game_data_requests.push(OverworldGameDataRequest::SetBlackoutMap { map });
                         }
                     }
                 }
@@ -3284,7 +3284,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         .enumerate()
                         .map(|(i, c)| if i == 0 { c.to_ascii_uppercase() } else { c.to_ascii_lowercase() })
                         .collect::<String>();
-                    if let Ok(sp) = normalized.parse::<pokered_data::species::Species>() {
+                    if self.party_count >= 6 && self.box_count as usize >= crate::pokemon::pc_box::MONS_PER_BOX {
+                        self.pending_dialogue = Some(BedroomDialogue::from_message(&self.localize_message("Oops! This Box is\nfull of POKeMON.")));
+                    } else if let Ok(sp) = normalized.parse::<pokered_data::species::Species>() {
                         self.pending_give_pokemon = Some(screen::PendingGivePokemon {
                             species: sp,
                             level,
@@ -3458,6 +3460,11 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         // while materializing both the shared and target scenes exceeds EWRAM
         // during the Pallet Town → Oak's Lab escort transition.
         self.script_engine = super::native_script::OverworldScriptEngine::new();
+        // VermilionCity_Script randomizes only the first index at city entry.
+        if fire_on_load && map_id == MapId::VermilionCity {
+            self.first_lock_trash_can = self.next_rng_u8() & 0x0e;
+        }
+        self.script_engine.set_gym_trash_indices(self.first_lock_trash_can, self.second_lock_trash_can);
         self.script_queries_need_seed = true;
         self.script_engine.set_lang(&script_lang);
         self.active_script_effect = None;
@@ -3929,6 +3936,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     }
 
     pub(crate) fn sync_flags_from_engine(&mut self) {
+        (self.first_lock_trash_can, self.second_lock_trash_can) = self.script_engine.gym_trash_indices();
         let engine_flags = self.script_engine.get_all_flags();
         self.unified_flags.merge_from(&engine_flags);
         if self.safari_game_active && !self.unified_flags.get_flag("EVENT_IN_SAFARI_ZONE") {
@@ -4481,5 +4489,33 @@ mod ground_pickup_fidelity_tests {
             "sound end closes without an A press"
         );
         assert!(ow.active_script_effect.is_none());
+    }
+}
+
+#[cfg(test)]
+mod fidelity_systems_healing_tests {
+    use super::*;
+    use pokered_data::impl_traits::PokemonRedData;
+    #[test]
+    fn nurses_alone_record_blackout_destination() {
+        for map in [MapId::ViridianPokecenter,MapId::PewterPokecenter,MapId::CeruleanPokecenter,MapId::MtMoonPokecenter,MapId::RockTunnelPokecenter,MapId::VermilionPokecenter,MapId::CeladonPokecenter,MapId::LavenderPokecenter,MapId::FuchsiaPokecenter,MapId::CinnabarPokecenter,MapId::SaffronPokecenter,MapId::IndigoPlateauLobby] {
+            let mut ow=OverworldScreen::new(map,None,PokemonRedData); ow.last_map=Some(MapId::CeruleanCity);
+            ow.apply_finished_effect(Some(script_bridge::ScriptEffect::Heal));
+            assert!(ow.heal_requested,"{map:?}");
+            assert!(ow.game_data_requests.iter().any(|r| matches!(r,OverworldGameDataRequest::SetBlackoutMap { map:MapId::CeruleanCity })),"{map:?}");
+        }
+        for map in [MapId::RedsHouse1F,MapId::PokemonTower5F,MapId::SilphCo9F,MapId::SafariZoneEastRestHouse,MapId::SafariZoneWestRestHouse,MapId::SafariZoneNorthRestHouse] {
+            let mut ow=OverworldScreen::new(map,None,PokemonRedData); ow.last_map=Some(MapId::SaffronCity);
+            ow.apply_finished_effect(Some(script_bridge::ScriptEffect::Heal));
+            assert!(ow.heal_requested,"{map:?}");
+            assert!(!ow.game_data_requests.iter().any(|r| matches!(r,OverworldGameDataRequest::SetBlackoutMap { .. })),"{map:?}");
+        }
+    }
+    #[test]
+    fn failed_full_box_gift_never_queues_pokemon() {
+        let mut ow=OverworldScreen::new(MapId::CeladonMansionRoofHouse,None,PokemonRedData);
+        ow.party_count=6;ow.box_count=20;
+        ow.apply_finished_effect(Some(script_bridge::ScriptEffect::GivePokemon { species:"Eevee".to_string(), nickname:None,level:25 }));
+        assert!(ow.pending_give_pokemon.is_none());assert!(ow.pending_dialogue.is_some());
     }
 }

@@ -166,7 +166,11 @@ game_scene CinnabarLabFossilRoom {
             @speaker("") { @t("Hey thanks!", "嘿，谢谢！") }
             @speaker("") { @t("<PLAYER> traded PONYTA for\nSEEL!", "<PLAYER>用小火马换来了小海\n狮！") }
           } @else {
-            @speaker("") { @t("What? That's not PONYTA!\n\nIf you get one, come back\nhere!", "什么？那不是小火马！\n\n如果你弄到了，再来找我吧！") }
+            @if (getFlag("NPC_TRADE_CANCELLED")) {
+              @speaker("") { @t("Awww! Oh well...", "哎呀！那就算了……") }
+            } @else {
+              @speaker("") { @t("What? That's not PONYTA!\n\nIf you get one, come back\nhere!", "什么？那不是小火马！\n\n如果你弄到了，再来找我吧！") }
+            }
           }
         }
         @option(@t("NO", "否")) {

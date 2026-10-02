@@ -30,7 +30,11 @@ game_scene Route18Gate2F {
               @t("<PLAYER> traded SLOWBRO for\nLICKITUNG!", "<PLAYER>用呆壳兽换到了大舌\n头！")
             }
           } @else {
-            @speaker("") { @t("What? That's not SLOWBRO!\n\nIf you get one, come back\nhere!", "什么？那不是呆壳兽！\n\n如果你弄到一只，就回来找我\n吧！") }
+            @if (getFlag("NPC_TRADE_CANCELLED")) {
+              @speaker("") { @t("Awww! Oh well...", "唉！那就算了吧……") }
+            } @else {
+              @speaker("") { @t("What? That's not SLOWBRO!\n\nIf you get one, come back\nhere!", "什么？那不是呆壳兽！\n\n如果你弄到一只，就回来找我\n吧！") }
+            }
           }
         }
         @option(@t("NO", "否")) {

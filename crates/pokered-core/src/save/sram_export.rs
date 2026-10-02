@@ -56,7 +56,7 @@ fn write_bank0(hof: &HallOfFame, bank: &mut [u8]) {
     for team in hof.iter() {
         for (mon_idx, mon) in team.mons().iter().enumerate() {
             let base = offset + mon_idx * HOF_MON_SIZE;
-            bank[base] = mon.species;
+            bank[base] = pokered_data::species::Species::from_index_id(mon.species).to_rom_id();
             bank[base + 1] = mon.level;
             let name_slot = &mut bank[base + 2..base + HOF_MON_SIZE];
             name_slot.fill(0x50);
@@ -83,7 +83,9 @@ fn write_box_bank(save: &SaveData, start_box_index: usize, bank: &mut [u8]) {
     let mut buf = Vec::new();
     for i in 0..BOXES_PER_BANK {
         let box_idx = start_box_index + i;
-        if let Ok(pc_box) = save.pc_storage.get_box(box_idx) {
+        if box_idx == save.pc_storage.current_box_index() {
+            serialize_box_into(&save.current_box, &mut buf);
+        } else if let Ok(pc_box) = save.pc_storage.get_box(box_idx) {
             serialize_box_into(pc_box, &mut buf);
         } else {
             serialize_box_into(&crate::pokemon::pc_box::PcBox::new(), &mut buf);

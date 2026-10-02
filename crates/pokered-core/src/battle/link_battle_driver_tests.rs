@@ -627,3 +627,14 @@ fn handshake_rejects_peers_without_trade_previews() {
         ));
     }
 }
+
+#[test]
+fn fidelity_link_exchange_preserves_damage_status_and_pp() {
+    let mut injured=mk(Species::Pikachu,30,[MoveId::Thunderbolt,MoveId::None,MoveId::None,MoveId::None]);
+    injured.hp=1;injured.pp[0]=1;injured.status=crate::battle::state::StatusCondition::Poison;
+    let healthy=mk(Species::Bulbasaur,30,[MoveId::Tackle,MoveId::None,MoveId::None,MoveId::None]);
+    let (a,b)=setup_battle(party_of(vec![injured]),party_of(vec![healthy]));
+    assert_eq!(a.local_party().get(0).unwrap().hp,1);
+    let remote=b.screen().unwrap().battle_state.as_ref().unwrap().enemy.party[0];
+    assert_eq!(remote.hp,1);assert_eq!(remote.pp[0],1);assert_eq!(remote.status,injured.status);
+}

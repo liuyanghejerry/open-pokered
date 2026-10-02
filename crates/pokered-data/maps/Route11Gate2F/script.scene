@@ -30,14 +30,17 @@ game_scene Route11Gate2F {
           // ConnectCableText -> real in-game trade (removes NIDORINO, adds
           // NIDORINA nicknamed TERRY). tradePokemon returns false if the player
           // doesn't actually carry NIDORINO -> wrong-mon (dialogset CASUAL).
-          @speaker("") { @t("Okay, connect the cable like\nso!", "好，请像这样连接线缆！") }
           traded = tradePokemon("NIDORINO", "NIDORINA", "TERRY")
           @if (traded) {
             setFlag("EVENT_TRADED_FOR_TERRY")
             @speaker("") { @t("<PLAYER> traded NIDORINO for\nNIDORINA!", "<PLAYER>用尼多朗交换了尼多\n兰！") }
             @speaker("") { @t("Hey thanks!", "嘿，谢啦！") }
           } @else {
-            @speaker("") { @t("What? That's not NIDORINO!\n\nIf you get one, come back\nhere!", "什么？那不是尼多朗！\n\n你要是抓到，再来找我吧！") }
+            @if (getFlag("NPC_TRADE_CANCELLED")) {
+              @speaker("") { @t("Awww! Oh well...", "哎呀！算了吧……") }
+            } @else {
+              @speaker("") { @t("What? That's not NIDORINO!\n\nIf you get one, come back\nhere!", "什么？那不是尼多朗！\n\n你要是抓到，再来找我吧！") }
+            }
           }
         }
         @option(@t("NO", "否")) {
