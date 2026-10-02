@@ -70,6 +70,14 @@ fn title_screen_progresses_through_all_phases() {
     while title.phase == TitlePhase::VersionScroll {
         title.update_frame(false);
     }
+    // title.asm's ScrollTitleScreenGameVersion is followed by Delay3 and
+    // WaitForSoundToFinish; this device-free state has no active sound.
+    assert_eq!(title.phase, TitlePhase::VersionWait);
+    for _ in 0..2 {
+        title.update_frame(false);
+        assert_eq!(title.phase, TitlePhase::VersionWait);
+    }
+    title.update_frame(false);
     assert_eq!(title.phase, TitlePhase::WaitingForInput);
 }
 
