@@ -8,7 +8,7 @@ use crate::FbSurface;
 use dotzuki_engine::render::Rgba;
 use dotzuki_renderer::embedded_font as fusion;
 
-pub use fusion::{draw_box_tile, draw_glyph, fill_tile, is_cjk, GLYPH_SIZE};
+pub use fusion::{draw_box_tile, fill_tile, is_cjk, GLYPH_SIZE};
 
 const FONT: &[u8; 1024] = include_bytes!("../fonts/pokered-font.bin");
 const EXTRA: &[u8; 256] = include_bytes!("../fonts/pokered-font-extra.bin");
@@ -62,6 +62,16 @@ fn draw_bitmap(glyph: &[u8; 8], x: u32, y: u32, scale: u32, color: Rgba, fb: &mu
             }
         }
     }
+}
+
+/// Draw an opaque source tile. Filling its paper once avoids per-pixel color
+/// quantization for all white pixels of corners, symbols and blank tiles.
+pub fn draw_glyph(glyph: &[u8; 8], x: u32, y: u32, color: Rgba, bg: Rgba, fb: &mut impl FbSurface) {
+    if x >= fb.width() || y >= fb.height() {
+        return;
+    }
+    fb.fill_rect(x, y, 8.min(fb.width() - x), 8.min(fb.height() - y), bg);
+    draw_bitmap(glyph, x, y, 1, color, fb);
 }
 
 pub fn draw_char(ch: char, x: u32, y: u32, color: Rgba, fb: &mut impl FbSurface) -> u32 {
@@ -155,6 +165,43 @@ mod tests {
     use super::*;
     use crate::FrameBuffer;
     use dotzuki_engine::render_config::RenderConfig;
+
+    #[test]
+    fn batched_opaque_original_tiles_match_per_pixel_painter() {
+        for tile in 0x60..=0xFF {
+            let glyph = original_tile_glyph(tile).unwrap();
+            for (x, y) in [
+                (0, 0),
+                (1, 1),
+                (15, 9),
+                (16, 12),
+                (17, 13),
+                (u32::MAX, u32::MAX),
+            ] {
+                for ink in [
+                    Rgba::BLACK,
+                    Rgba::INK_DARK_GRAY,
+                    Rgba::WHITE,
+                    Rgba::rgb(17, 119, 201),
+                    Rgba::TRANSPARENT,
+                ] {
+                    for paper in [Rgba::WHITE, Rgba::INK_LIGHT_GRAY, Rgba::BLACK] {
+                        let mut expected =
+                            FrameBuffer::new(RenderConfig::new(17, 13), Rgba::INK_DARK_GRAY);
+                        let mut actual = expected.clone();
+                        fusion::draw_glyph(glyph, x, y, ink, paper, &mut expected);
+                        draw_glyph(glyph, x, y, ink, paper, &mut actual);
+                        for py in 0..13 {
+                            for px in 0..17 {
+                                assert_eq!(actual.get_pixel(px, py), expected.get_pixel(px, py),
+                                    "tile {tile:02x}, origin({x},{y}), {ink:?}/{paper:?}, pixel({px},{py})");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     #[test]
     fn fast_original_font_matches_rectangle_pixels_with_clipping_and_scaling() {

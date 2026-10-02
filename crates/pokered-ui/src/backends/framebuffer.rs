@@ -178,7 +178,7 @@ mod performance_pixel_tests {
                     (_, c) if c + 1 == rect.tw => &box_tiles::VERTICAL_LEFT,
                     _ => &[0; 8],
                 };
-                embedded_font::draw_glyph(
+                dotzuki_renderer::embedded_font::draw_glyph(
                     glyph,
                     (rect.tx + col) * 8,
                     (rect.ty + row) * 8,
