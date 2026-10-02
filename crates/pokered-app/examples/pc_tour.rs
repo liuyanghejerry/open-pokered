@@ -6,7 +6,7 @@ use dotzuki_engine::render_config::RenderConfig;
 use pokered_app::render::draw_pc;
 use pokered_core::game_state::Lang;
 use pokered_core::main_menu::MenuInput;
-use pokered_core::pc_screen::{PcContext, PcEntry, PcOpenContext, PcPhase, PcScreen};
+use pokered_core::pc_screen::{PcContext, PcEntry, HofMonView, HofTeamRecord, PcOpenContext, PcPhase, PcScreen};
 use pokered_core::pokemon::stats::create_pokemon;
 use pokered_core::save::SaveData;
 use pokered_data::items::ItemId;
@@ -260,6 +260,53 @@ fn main() {
         step(&mut pc, &mut full, A);
         press(&mut pc, &mut full, DOWN, 20);
         shot(&pc, &full, "23_full_box_cancel");
+    }
+    // Font-fidelity boundaries: two-digit box label, long withdrawal text,
+    // and the left-panel HoF type rows next to the front-picture area.
+    {
+        let mut last_box = save.clone();
+        last_box.pc_storage.change_box(11).unwrap();
+        let (pc, last_box) = fresh_at_bills_menu(&last_box);
+        shot(&pc, &last_box, "24_bills_box12");
+    }
+    {
+        let mut items = save.clone();
+        items.game_data.pc_items.clear();
+        items.game_data.pc_items.add_item(ItemId::ThunderStone, 1).unwrap();
+        let mut pc = PcScreen::new(PcEntry::PlayersPc, &open_ctx());
+        skip_msg(&mut pc, &mut items);
+        step(&mut pc, &mut items, A); // WITHDRAW ITEM
+        step(&mut pc, &mut items, A); // THUNDERSTONE quantity
+        step(&mut pc, &mut items, A); // withdrawal message
+        shot(&pc, &items, "25_withdrew_thunderstone");
+    }
+    {
+        let mut context = open_ctx();
+        context.beaten_league = true;
+        context.hof_teams = vec![HofTeamRecord { team_no: 1, mons: vec![HofMonView {
+            species: Species::Pikachu,
+            level: 100,
+            nickname: "PIKACHU".into(),
+        }] }];
+        let mut hof = save.clone();
+        let mut pc = PcScreen::new(PcEntry::PokemonCenter, &context);
+        skip_msg(&mut pc, &mut hof);
+        press(&mut pc, &mut hof, DOWN, 3); // #MON LEAGUE
+        step(&mut pc, &mut hof, A);
+        skip_msg(&mut pc, &mut hof);
+        assert_eq!(pc.phase(), PcPhase::LeagueHoF);
+        shot(&pc, &hof, "26_league_hof_type");
+    }
+    {
+        let lang = if std::env::args().nth(2).as_deref() == Some("zh") { Lang::Zh } else { Lang::En };
+        let state = pokered_core::bag_screen::BagScreenState::new(vec![
+            (ItemId::ThunderStone, 99), (ItemId::SilphScope, 1), (ItemId::Tm50, 99),
+        ]);
+        let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+        pokered_app::render::draw_bag(&state, &mut fb, lang);
+        let path = std::env::args().nth(1).map(|dir| format!("{dir}/27_bag_font_bounds.png"))
+            .unwrap_or_else(|| "/tmp/pc_tour_27_bag_font_bounds.png".into());
+        fb.save_png(std::path::Path::new(&path)).unwrap();
     }
     println!("done");
 }

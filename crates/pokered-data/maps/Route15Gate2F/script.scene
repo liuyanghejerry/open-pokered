@@ -29,12 +29,16 @@ game_scene Route15Gate2F {
             @speaker("") {
               @t("Great! You have caught 50\nkinds of POKeMON!\nCongratulations!\n\nHere you go!", "太棒了！你已经抓到了50种宝可\n梦！恭喜你！\n\n这个给你！")
             }
-            giveItem("EXP_ALL", 1)
-            setFlag("EVENT_GOT_EXP_ALL")
-            @speaker("") { @t("<PLAYER> got the EXP.ALL!", "<PLAYER>得到了 EXP.ALL！") }
-            // ExpAllText follows in the original once the item is received.
-            @speaker("") {
-              @t("EXP.ALL gives EXP points to\nall the POKeMON with you,\neven if they don't fight.\n\nIt does, however, reduce the\namount of EXP for each\nPOKeMON.\n\nIf you don't need it, you\nshould store it via PC.", "EXP.ALL会把经验值分给同行的\n所有宝可梦，即使它们没有参\n战。\n\n但是，它减少了每只宝可梦获得\n的经验值的数量。\n\n如果不需要，可以通过电脑存放\n起来。")
+            given = giveItem("EXP_ALL", 1)
+            @if (given) {
+              setFlag("EVENT_GOT_EXP_ALL")
+              @speaker("") { @t("<PLAYER> got the EXP.ALL!", "<PLAYER>得到了 EXP.ALL！") }
+              // ExpAllText follows in the original once the item is received.
+              @speaker("") {
+                @t("EXP.ALL gives EXP points to\nall the POKeMON with you,\neven if they don't fight.\n\nIt does, however, reduce the\namount of EXP for each\nPOKeMON.\n\nIf you don't need it, you\nshould store it via PC.", "EXP.ALL会把经验值分给同行的\n所有宝可梦，即使它们没有参\n战。\n\n但是，它减少了每只宝可梦获得\n的经验值的数量。\n\n如果不需要，可以通过电脑存放\n起来。")
+              }
+            } @else {
+              @speaker("") { @t("Oh! I see you don't have any\nroom for the EXP.ALL.", "哦！看来你没有地方放EXP.ALL。") }
             }
           } @else {
             // OaksAideUhOhText (not enough kinds owned)

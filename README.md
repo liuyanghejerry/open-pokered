@@ -183,6 +183,9 @@ scripts/fetch-gfx.sh
 # 2. Build / run
 cargo run --release --bin pokered-app
 
+# Blue version (default gameplay version is Red)
+cargo run --release --bin pokered-app -- --game-version blue run
+
 # 3. Test
 cargo test
 ```

@@ -884,6 +884,7 @@ fn accuracy_handler(
     source: BattlerRef,
     _eff: EffectId,
 ) -> HandlerResult {
+    if poc_move_data().effect == pokered_data::moves::MoveEffect::HazeEffect { return HandlerResult::Unchanged; }
     let move_data = poc_move_data();
     let (accuracy, effect) = (move_data.accuracy, move_data.effect);
     if effect == MoveEffect::SwiftEffect {
@@ -3984,14 +3985,14 @@ fn build_secondary_stream(s: &SecondaryScenario, first: FirstMover, tie: bool) -
             }
             if is_haze {
                 // Power-0 Haze: only the accuracy byte (no crit/damage).
-                bytes.push(mb.accuracy);
+                if !is_haze { bytes.push(mb.accuracy); }
                 return false; // Haze inflicts no flinch
             }
             // Damaging move: crit, accuracy, [damage iff hit].
             bytes.push(mb.crit);
-            bytes.push(mb.accuracy);
+            if !is_haze { bytes.push(mb.accuracy); }
             let scaled = (s.move_data.accuracy as u32 * 255 / 100).min(255) as u8;
-            let hit = mb.accuracy < scaled;
+            let hit = is_haze || mb.accuracy < scaled;
             if hit {
                 bytes.push(mb.damage);
                 // Side-effect byte drawn LAST iff the move has a roll-reading

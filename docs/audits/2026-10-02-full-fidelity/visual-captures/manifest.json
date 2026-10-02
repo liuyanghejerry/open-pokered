@@ -1,0 +1,258 @@
+{
+  "revision": "72ff719",
+  "method": "current native production screenshot CLI; seeded Hof/Credits; no new original ROM capture",
+  "captures": [
+    {
+      "scene": "title",
+      "frames": 0,
+      "exit_code": 0,
+      "file": "docs/audits/2026-10-02-full-fidelity/visual-captures/title-00000.png"
+    },
+    {
+      "scene": "title",
+      "frames": 1,
+      "exit_code": 0,
+      "file": "docs/audits/2026-10-02-full-fidelity/visual-captures/title-00001.png"
+    },
+    {
+      "scene": "title",
+      "frames": 5,
+      "exit_code": 0,
+      "file": "docs/audits/2026-10-02-full-fidelity/visual-captures/title-00005.png"
+    },
+    {
+      "scene": "title",
+      "frames": 10,
+      "exit_code": 0,
+      "file": "docs/audits/2026-10-02-full-fidelity/visual-captures/title-00010.png"
+    },
+    {
+      "scene": "title",
+      "frames": 14,
+      "exit_code": 0,
+      "file": "docs/audits/2026-10-02-full-fidelity/visual-captures/title-00014.png"
+    },
+    {
+      "scene": "title",
+      "frames": 15,
+      "exit_code": 0,
+      "file": "docs/audits/2026-10-02-full-fidelity/visual-captures/title-00015.png"
+    },
+    {
+      "scene": "title",
+      "frames": 16,
+      "exit_code": 0,
+      "file": "docs/audits/2026-10-02-full-fidelity/visual-captures/title-00016.png"
+    },
+    {
+      "scene": "title",
+      "frames": 20,
+      "exit_code": 0,
+      "file": "docs/audits/2026-10-02-full-fidelity/visual-captures/title-00020.png"
+    },
+    {
+      "scene": "title",
+      "frames": 24,
+      "exit_code": 0,
+      "file": "docs/audits/2026-10-02-full-fidelity/visual-captures/title-00024.png"
+    },
+    {
+      "scene": "title",
+      "frames": 35,
+      "exit_code": 0,
+      "file": "docs/audits/2026-10-02-full-fidelity/visual-captures/title-00035.png"
+    },
+    {
+      "scene": "title",
+      "frames": 271,
+      "exit_code": 0,
+      "file": "docs/audits/2026-10-02-full-fidelity/visual-captures/title-00271.png"
+    },
+    {
+      "scene": "title",
+      "frames": 281,
+      "exit_code": 0,
+      "file": "docs/audits/2026-10-02-full-fidelity/visual-captures/title-00281.png"
+    },
+    {
+      "scene": "title",
+      "frames": 285,
+      "exit_code": 0,
+      "file": "docs/audits/2026-10-02-full-fidelity/visual-captures/title-00285.png"
+    },
+    {
+      "scene": "title",
+      "frames": 289,
+      "exit_code": 0,
+      "file": "docs/audits/2026-10-02-full-fidelity/visual-captures/title-00289.png"
+    },
+    {
+      "scene": "hof",
+      "frames": 212,
+      "exit_code": 0,
+      "file": "docs/audits/2026-10-02-full-fidelity/visual-captures/hof-00212.png"
+    },
+    {
+      "scene": "hof",
+      "frames": 292,
+      "exit_code": 0,
+      "file": "docs/audits/2026-10-02-full-fidelity/visual-captures/hof-00292.png"
+    },
+    {
+      "scene": "hof",
+      "frames": 293,
+      "exit_code": 0,
+      "file": "docs/audits/2026-10-02-full-fidelity/visual-captures/hof-00293.png"
+    },
+    {
+      "scene": "hof",
+      "frames": 400,
+      "exit_code": 0,
+      "file": "docs/audits/2026-10-02-full-fidelity/visual-captures/hof-00400.png"
+    },
+    {
+      "scene": "hof",
+      "frames": 471,
+      "exit_code": 0,
+      "file": "docs/audits/2026-10-02-full-fidelity/visual-captures/hof-00471.png"
+    },
+    {
+      "scene": "hof",
+      "frames": 473,
+      "exit_code": 0,
+      "file": "docs/audits/2026-10-02-full-fidelity/visual-captures/hof-00473.png"
+    },
+    {
+      "scene": "hof",
+      "frames": 487,
+      "exit_code": 0,
+      "file": "docs/audits/2026-10-02-full-fidelity/visual-captures/hof-00487.png"
+    },
+    {
+      "scene": "credits",
+      "frames": 0,
+      "exit_code": 0,
+      "file": "docs/audits/2026-10-02-full-fidelity/visual-captures/credits-00000.png"
+    },
+    {
+      "scene": "credits",
+      "frames": 5,
+      "exit_code": 0,
+      "file": "docs/audits/2026-10-02-full-fidelity/visual-captures/credits-00005.png"
+    },
+    {
+      "scene": "credits",
+      "frames": 10,
+      "exit_code": 0,
+      "file": "docs/audits/2026-10-02-full-fidelity/visual-captures/credits-00010.png"
+    },
+    {
+      "scene": "credits",
+      "frames": 15,
+      "exit_code": 0,
+      "file": "docs/audits/2026-10-02-full-fidelity/visual-captures/credits-00015.png"
+    },
+    {
+      "scene": "credits",
+      "frames": 20,
+      "exit_code": 0,
+      "file": "docs/audits/2026-10-02-full-fidelity/visual-captures/credits-00020.png"
+    },
+    {
+      "scene": "credits",
+      "frames": 6600,
+      "exit_code": 0,
+      "file": "docs/audits/2026-10-02-full-fidelity/visual-captures/credits-06600.png"
+    },
+    {
+      "scene": "diploma",
+      "frames": 5,
+      "exit_code": 0,
+      "file": "docs/audits/2026-10-02-full-fidelity/visual-captures/diploma-00005.png"
+    },
+    {
+      "scene": "trainer-card",
+      "frames": 5,
+      "exit_code": 0,
+      "file": "docs/audits/2026-10-02-full-fidelity/visual-captures/trainer-card-00005.png"
+    },
+    {
+      "scene": "elevator",
+      "frames": 5,
+      "exit_code": 0,
+      "file": "docs/audits/2026-10-02-full-fidelity/visual-captures/elevator-00005.png"
+    },
+    {
+      "scene": "options",
+      "frames": 5,
+      "exit_code": 0,
+      "file": "docs/audits/2026-10-02-full-fidelity/visual-captures/options-00005.png"
+    },
+    {
+      "scene": "oak",
+      "frames": 65,
+      "exit_code": 0,
+      "file": "docs/audits/2026-10-02-full-fidelity/visual-captures/oak-00065.png"
+    },
+    {
+      "scene": "title",
+      "frames": 121,
+      "exit_code": 0,
+      "file": "docs/audits/2026-10-02-full-fidelity/visual-captures/title-00121.png"
+    },
+    {
+      "scene": "title",
+      "frames": 125,
+      "exit_code": 0,
+      "file": "docs/audits/2026-10-02-full-fidelity/visual-captures/title-00125.png"
+    },
+    {
+      "scene": "title",
+      "frames": 130,
+      "exit_code": 0,
+      "file": "docs/audits/2026-10-02-full-fidelity/visual-captures/title-00130.png"
+    },
+    {
+      "scene": "title",
+      "frames": 134,
+      "exit_code": 0,
+      "file": "docs/audits/2026-10-02-full-fidelity/visual-captures/title-00134.png"
+    },
+    {
+      "scene": "title",
+      "frames": 137,
+      "exit_code": 0,
+      "file": "docs/audits/2026-10-02-full-fidelity/visual-captures/title-00137.png"
+    },
+    {
+      "scene": "title",
+      "frames": 153,
+      "exit_code": 0,
+      "file": "docs/audits/2026-10-02-full-fidelity/visual-captures/title-00153.png"
+    },
+    {
+      "scene": "title",
+      "frames": 435,
+      "exit_code": 0,
+      "file": "docs/audits/2026-10-02-full-fidelity/visual-captures/title-00435.png"
+    },
+    {
+      "scene": "title",
+      "frames": 439,
+      "exit_code": 0,
+      "file": "docs/audits/2026-10-02-full-fidelity/visual-captures/title-00439.png"
+    },
+    {
+      "scene": "title",
+      "frames": 441,
+      "exit_code": 0,
+      "file": "docs/audits/2026-10-02-full-fidelity/visual-captures/title-00441.png"
+    },
+    {
+      "scene": "title",
+      "frames": 444,
+      "exit_code": 0,
+      "file": "docs/audits/2026-10-02-full-fidelity/visual-captures/title-00444.png"
+    }
+  ]
+}

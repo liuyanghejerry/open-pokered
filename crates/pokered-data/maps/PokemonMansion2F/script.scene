@@ -41,13 +41,15 @@ game_scene PokemonMansion2F {
   // ── Ground item: CALCIUM in a PokeBall (npc 2) ──────────────────────────
   @storyline("itemCalcium") {
     @trigger(map = "PokemonMansion2F", npc = 2, toggle = "POKEMON_MANSION_2F_OBJ_2")
-    @if (getFlag("EVENT_GOT_CALCIUM_MANSION_2F")) {
-      @speaker("") { @t("The item ball is empty.", "这个精灵球里是空的。") }
-    } @else {
-      giveItem("CALCIUM", 1)
-      setFlag("EVENT_GOT_CALCIUM_MANSION_2F")
-      hideObject("POKEMON_MANSION_2F_OBJ_2")
-      @speaker("") { @t("<PLAYER> found CALCIUM!", "<PLAYER>找到了特攻增强剂！") }
+    @if (!getFlag("EVENT_GOT_CALCIUM_MANSION_2F")) {
+      given = giveItem("CALCIUM", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_CALCIUM_MANSION_2F")
+        hideObjectByName("POKEMON_MANSION_2F_OBJ_2")
+        showItemDialogue(t("<PLAYER> found CALCIUM!", "<PLAYER>找到了特攻增强剂！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 

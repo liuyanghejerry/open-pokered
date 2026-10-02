@@ -48,7 +48,8 @@ fighting fit!", "感谢您的耐心等待。\n\n你的宝可梦已完全治愈�
 
   @storyline("talkLinkReceptionist") {
     @trigger(map = "CeruleanPokecenter", npc = 4)
-    @speaker("") { @t("Welcome to the CABLE CLUB!", "欢迎来到联机俱乐部！") }
+    @speaker("") { @t("Welcome to the\nCable Club!", "欢迎来到联机俱乐部！") }
+    linkStart()
   }
 
   // ── Pokémon Center PC (sign 1 at 13,3) ───────────────────────────────

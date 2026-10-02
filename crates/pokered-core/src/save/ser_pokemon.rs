@@ -53,7 +53,7 @@ fn read_u16_be(data: &[u8], offset: usize) -> u16 {
 }
 
 pub fn serialize_box_mon(mon: &Pokemon, buf: &mut Vec<u8>) {
-    buf.push(mon.species as u8);
+    buf.push(mon.species.to_rom_id());
     push_u16_be(buf, mon.hp);
     buf.push(mon.level);
     buf.push(status_to_byte(&mon.status));
@@ -125,7 +125,7 @@ pub fn serialize_party_into(party: &Party, buf: &mut Vec<u8>) {
     let count = party.count() as u8;
     buf.push(count);
     for mon in party.iter() {
-        buf.push(mon.species as u8);
+        buf.push(mon.species.to_rom_id());
     }
     buf.push(0xFF);
     let species_written = count as usize + 1;
@@ -157,7 +157,7 @@ pub fn serialize_box_into(box_data: &PcBox, buf: &mut Vec<u8>) {
     let count = box_data.count() as u8;
     buf.push(count);
     for mon in box_data.iter() {
-        buf.push(mon.species as u8);
+        buf.push(mon.species.to_rom_id());
     }
     buf.push(0xFF);
     let species_written = count as usize + 1;
@@ -192,7 +192,7 @@ pub fn deserialize_box_mon(data: &[u8]) -> Result<Pokemon, SaveError> {
     if data.len() < BOX_STRUCT_SIZE {
         return Err(SaveError::DataTooShort);
     }
-    let species = Species::from_index_id(data[0]);
+    let species = Species::from_rom_id(data[0]);
     let hp = read_u16_be(data, 1);
     let box_level = data[3];
     let status = byte_to_status(data[4]);

@@ -3,12 +3,31 @@ use pokered_core::game_state::Lang;
 use pokered_core::town_map_screen::{TownMapMode, TownMapScreenState};
 use pokered_data::map_names::{map_name_str, map_name_str_zh};
 use pokered_data::town_map_data::{decode_town_map_tilemap, town_map_position, TOWN_MAP_WIDTH};
-use pokered_renderer::embedded_font::{draw_text, fill_tile, measure_text};
+use pokered_renderer::embedded_font::{draw_text, fill_tile};
 use pokered_renderer::palette::{Palette, GRAYSCALE_PALETTE};
 use pokered_renderer::resource::ResourceManager;
 use pokered_renderer::{FrameBuffer, Rgba, TILE_SIZE};
 
 use super::{blit_single_tile, draw_text_box};
+
+fn view_box_top(_lang: Lang) -> u32 {
+    // The project font is 10px tall in both languages.
+    14 * TILE_SIZE
+}
+
+fn view_box_height(lang: Lang) -> u32 {
+    144 - view_box_top(lang)
+}
+
+fn draw_view_name_box(state: &TownMapScreenState, fb: &mut FrameBuffer, lang: Lang) {
+    let top = view_box_top(lang);
+    let interior_rows = view_box_height(lang) / TILE_SIZE - 2;
+    draw_text_box(fb, 0, top, 18, interior_rows, Rgba::BLACK);
+    if let Some((_, _, name)) = town_map_position(state.selected_map()) {
+        let label = if lang == Lang::Zh { map_name_str_zh(name) } else { map_name_str(name) };
+        draw_text(label, TILE_SIZE, top + TILE_SIZE, Rgba::BLACK, fb);
+    }
+}
 
 /// Region changed by one phase of the current-location marker.
 pub fn marker_damage(current_map: pokered_data::maps::MapId) -> Option<pokered_ui::DamageRect> {
@@ -28,34 +47,13 @@ pub fn cursor_damage(
     previous_map: pokered_data::maps::MapId,
     lang: Lang,
 ) -> Option<[pokered_ui::DamageRect; 4]> {
-    let (old_x, old_y, old_name) = town_map_position(previous_map)?;
-    let (new_x, new_y, new_name) = town_map_position(state.selected_map())?;
+    let (old_x, old_y, _) = town_map_position(previous_map)?;
+    let (new_x, new_y, _) = town_map_position(state.selected_map())?;
     let marker = marker_damage(state.current_map())?;
     let label = if state.mode() == TownMapMode::Fly {
         pokered_ui::DamageRect::new(0, 0, 160, 2 * TILE_SIZE)
     } else {
-        let overlaps_view_box = [(old_y, old_name), (new_y, new_name)]
-            .iter()
-            .any(|(y, _)| *y as u32 * TILE_SIZE + 5 + 16 > 15 * TILE_SIZE);
-        let marker_is_behind_box = town_map_position(state.current_map())
-            .is_some_and(|(_, y, _)| (y as u32 + 1) * TILE_SIZE >= 15 * TILE_SIZE);
-        if overlaps_view_box || marker_is_behind_box {
-            pokered_ui::DamageRect::new(0, 15 * TILE_SIZE, 160, 3 * TILE_SIZE)
-        } else {
-            let label_width = |name| {
-                measure_text(if lang == Lang::Zh {
-                    map_name_str_zh(name)
-                } else {
-                    map_name_str(name)
-                })
-            };
-            pokered_ui::DamageRect::new(
-                TILE_SIZE,
-                16 * TILE_SIZE,
-                label_width(old_name).max(label_width(new_name)).min(18 * TILE_SIZE),
-                13,
-            )
-        }
+        pokered_ui::DamageRect::new(0, view_box_top(lang), 160, view_box_height(lang))
     };
     Some([
         pokered_ui::DamageRect::new(
@@ -231,11 +229,7 @@ pub fn draw_town_map(
     // (View mode only — the FLY screen shows the name in the top row with
     // the original's "To" prompt).
     if state.mode() == TownMapMode::View {
-        draw_text_box(fb, 0, 15 * TILE_SIZE, 18, 1, Rgba::BLACK);
-        if let Some((_, _, name)) = town_map_position(state.selected_map()) {
-            let label = if lang == Lang::Zh { map_name_str_zh(name) } else { map_name_str(name) };
-            draw_text(label, TILE_SIZE, 16 * TILE_SIZE, Rgba::BLACK, fb);
-        }
+        draw_view_name_box(state, fb, lang);
     }
 }
 
@@ -367,7 +361,7 @@ pub fn redraw_town_map_marker(
     };
     let marker_tx = px as usize + 2;
     let marker_ty = py as usize + 1;
-    if state.mode() == TownMapMode::View && marker_ty as u32 * TILE_SIZE >= 15 * TILE_SIZE {
+    if state.mode() == TownMapMode::View && marker_ty as u32 * TILE_SIZE >= view_box_top(lang) {
         // The bottom location-name box is drawn after the marker and covers
         // it completely, so its animation has no visible pixels to update.
         return;
@@ -449,7 +443,7 @@ pub fn redraw_town_map_cursor(
         restore_town_map_marker_layers(state, res, fb, lang, marker_tx, marker_ty);
         if (frame_counter / 16) % 2 == 0
             && (state.mode() != TownMapMode::View
-                || marker_ty as u32 * TILE_SIZE < 15 * TILE_SIZE)
+                || marker_ty as u32 * TILE_SIZE < view_box_top(lang))
         {
             fill_tile(
                 marker_tx as u32 * TILE_SIZE,
@@ -460,43 +454,9 @@ pub fn redraw_town_map_cursor(
         }
     }
     if state.mode() == TownMapMode::View {
-        let label_for = |map| {
-            town_map_position(map).map(|(_, _, name)| {
-                if lang == Lang::Zh {
-                    map_name_str_zh(name)
-                } else {
-                    map_name_str(name)
-                }
-            })
-        };
-        let previous_label = label_for(previous_map);
-        let current_label = label_for(state.selected_map());
-        let clear_width = previous_label
-            .map_or(0, measure_text)
-            .max(current_label.map_or(0, measure_text))
-            .min(18 * TILE_SIZE);
-        let reticle_overlaps_box = [previous_map, state.selected_map()]
-            .iter()
-            .filter_map(|&map| town_map_position(map))
-            .any(|(_, y, _)| y as u32 * TILE_SIZE + 5 + 16 > 15 * TILE_SIZE);
-        let marker_is_behind_box = town_map_position(state.current_map())
-            .is_some_and(|(_, y, _)| (y as u32 + 1) * TILE_SIZE >= 15 * TILE_SIZE);
-        if reticle_overlaps_box || marker_is_behind_box {
-            // These layers are conceptually below the box. Re-establish the
-            // complete box when restoring them touched its pixels.
-            draw_text_box(fb, 0, 15 * TILE_SIZE, 18, 1, Rgba::BLACK);
-        } else {
-            // The box itself is static. Clear only the old/new label union
-            // across its 13-pixel font bounds; keep the border intact.
-            for y in 16 * TILE_SIZE..16 * TILE_SIZE + 13 {
-                for x in TILE_SIZE..TILE_SIZE + clear_width {
-                    fb.set_pixel(x, y, Rgba::WHITE);
-                }
-            }
-        }
-        if let Some(label) = current_label {
-            draw_text(label, TILE_SIZE, 16 * TILE_SIZE, Rgba::BLACK, fb);
-        }
+        // Reserve 16px for the project font above the original bottom border.
+        // Restore the box in complete-frame order.
+        draw_view_name_box(state, fb, lang);
     }
 }
 
@@ -518,6 +478,23 @@ mod tests {
                     "framebuffer mismatch at ({x}, {y})",
                 );
             }
+        }
+    }
+
+    #[test]
+    fn view_name_leaves_space_for_the_project_font_above_the_bottom_border() {
+        for lang in [Lang::En, Lang::Zh] {
+        for map in [MapId::PalletTown, MapId::ViridianCity, MapId::LavenderTown] {
+            let state = TownMapScreenState::new(map);
+            let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+            draw_town_map(&state, &mut None, 16, &mut fb, lang);
+            assert_eq!(view_box_top(Lang::Zh), 112);
+            assert_eq!(view_box_top(Lang::En), 112);
+            for y in 134..136 { for x in 8..152 {
+                assert_eq!(fb.get_pixel(x, y), Some(Rgba::WHITE), "glyph touches bottom border at {x},{y}");
+            } }
+            assert_eq!(fb.get_pixel(8, 138), Some(Rgba::BLACK), "restore original bottom border");
+        }
         }
     }
 

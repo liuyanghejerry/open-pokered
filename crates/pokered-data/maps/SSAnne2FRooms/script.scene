@@ -63,13 +63,15 @@ game_scene SSAnne2FRooms {
   // ── Ground item: MAX ETHER (npc 6) ────────────────────────────────────────
   @storyline("itemMaxEther") {
     @trigger(map = "SSAnne2FRooms", npc = 6, toggle = "SS_ANNE_2F_ROOMS_OBJ_6")
-    @if (getFlag("EVENT_GOT_MAX_ETHER_SS_ANNE_2F_ROOMS")) {
-      @speaker("") { @t("The item ball is empty.", "道具球是空的。") }
-    } @else {
-      giveItem("MAX_ETHER", 1)
-      setFlag("EVENT_GOT_MAX_ETHER_SS_ANNE_2F_ROOMS")
-      hideObject("SS_ANNE_2F_ROOMS_OBJ_6")
-      @speaker("") { @t("<PLAYER> found MAX_ETHER!", "<PLAYER>找到了元气药块！") }
+    @if (!getFlag("EVENT_GOT_MAX_ETHER_SS_ANNE_2F_ROOMS")) {
+      given = giveItem("MAX_ETHER", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_MAX_ETHER_SS_ANNE_2F_ROOMS")
+        hideObjectByName("SS_ANNE_2F_ROOMS_OBJ_6")
+        showItemDialogue(t("<PLAYER> found MAX_ETHER!", "<PLAYER>找到了元气药块！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 
@@ -88,13 +90,15 @@ game_scene SSAnne2FRooms {
   // ── Ground item: RARE CANDY (npc 9) ───────────────────────────────────────
   @storyline("itemRareCandy") {
     @trigger(map = "SSAnne2FRooms", npc = 9, toggle = "SS_ANNE_2F_ROOMS_OBJ_9")
-    @if (getFlag("EVENT_GOT_RARE_CANDY_SS_ANNE_2F_ROOMS")) {
-      @speaker("") { @t("The item ball is empty.", "道具球是空的。") }
-    } @else {
-      giveItem("RARE_CANDY", 1)
-      setFlag("EVENT_GOT_RARE_CANDY_SS_ANNE_2F_ROOMS")
-      hideObject("SS_ANNE_2F_ROOMS_OBJ_9")
-      @speaker("") { @t("<PLAYER> found RARE_CANDY!", "<PLAYER>找到了神奇糖果！") }
+    @if (!getFlag("EVENT_GOT_RARE_CANDY_SS_ANNE_2F_ROOMS")) {
+      given = giveItem("RARE_CANDY", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_RARE_CANDY_SS_ANNE_2F_ROOMS")
+        hideObjectByName("SS_ANNE_2F_ROOMS_OBJ_9")
+        showItemDialogue(t("<PLAYER> found RARE_CANDY!", "<PLAYER>找到了神奇糖果！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 

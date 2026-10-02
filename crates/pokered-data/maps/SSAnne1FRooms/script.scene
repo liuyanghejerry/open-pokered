@@ -106,15 +106,12 @@ game_scene SSAnne1FRooms {
   // ── PokeBall ground item (npc 10) — TM_08 (BODY SLAM) ───────────────────
   @storyline("talkPokeBall") {
     @trigger(map = "SSAnne1FRooms", npc = 10, toggle = "SS_ANNE_1F_ROOMS_OBJ_10")
-    given = giveItem("TM_08", 1)
+    given = giveItem("TM08", 1)
     @if (given) {
-      @speaker("") {
-        @t("<PLAYER> found TM_08!", "<PLAYER>发现了 TM_08！")
-      }
+      hideObjectByName("SS_ANNE_1F_ROOMS_OBJ_10")
+      showItemDialogue(t("<PLAYER> found TM_08!", "<PLAYER>发现了 TM_08！"))
     } @else {
-      @speaker("") {
-        @t("You have no more room for\nthis.", "你身上没有多余的地方了。")
-      }
+      @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
     }
   }
 

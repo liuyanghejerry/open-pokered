@@ -178,6 +178,35 @@ fn test_turn_action_exchange() {
     );
 }
 
+#[test]
+fn asynchronous_turn_keeps_the_first_action_until_both_players_commit() {
+    for first_is_a in [true, false] {
+        let (mut t_a, mut t_b) = ChannelTransport::new_pair();
+        let (mut a, mut b) = setup_battling_pair(&mut t_a, &mut t_b);
+        let (first, first_transport, later, later_transport) = if first_is_a {
+            (&mut a, &mut t_a, &mut b, &mut t_b)
+        } else {
+            (&mut b, &mut t_b, &mut a, &mut t_a)
+        };
+        first.send_turn_action(first_transport, LinkAction::UseMove(0)).unwrap();
+        // The actual frontend polls every frame while the other player is
+        // still choosing. Neither side may discard its one pending action.
+        for _ in 0..100 {
+            assert_eq!(first.poll(first_transport), LinkBattlePollResult::Pending);
+            assert_eq!(later.poll(later_transport), LinkBattlePollResult::Pending);
+        }
+        later.send_turn_action(later_transport, LinkAction::UseMove(1)).unwrap();
+        assert_eq!(later.poll(later_transport), LinkBattlePollResult::TurnReady {
+            local_action: LinkAction::UseMove(1), remote_action: LinkAction::UseMove(0),
+        });
+        assert_eq!(first.poll(first_transport), LinkBattlePollResult::TurnReady {
+            local_action: LinkAction::UseMove(0), remote_action: LinkAction::UseMove(1),
+        });
+        assert_eq!(later.poll(later_transport), LinkBattlePollResult::Pending);
+        assert_eq!(first.poll(first_transport), LinkBattlePollResult::Pending);
+    }
+}
+
 fn setup_battling_pair(
     t_a: &mut ChannelTransport<NetworkMessage>,
     t_b: &mut ChannelTransport<NetworkMessage>,

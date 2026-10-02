@@ -1,0 +1,13 @@
+mimic phase ShowingText { messages: ["PIKACHU used\nMIMIC!", "Enemy SNORLAX used\nGROWL!", "PIKACHU's ATTACK\nfell!"], current: 0, wait_frames: 10, next_phase: PlayerMenu }, move Growl, PP 5
+EXP message Some("Pikachu gained 660\nexp. points!")
+AI forced Fly Some("Enemy SNORLAX used\nFLY!"); playerHP=73 enemyStatus=Poison charge=false AIcount=5
+credits-scroll-7: screen 0, MonScroll, scroll step 3, palette step 4
+credits-copyright-0: screen 34, Hold, scroll step 0, palette step 0
+credits-copyright-5: screen 34, Hold, scroll step 0, palette step 1
+credits-copyright-10: screen 34, Hold, scroll step 0, palette step 2
+credits-copyright-15: screen 34, Hold, scroll step 0, palette step 3
+credits-the-end-16: screen 35, TheEnd, scroll step 0, palette step 4
+credits-the-end-21: screen 35, TheEnd, scroll step 0, palette step 4
+credits-the-end-26: screen 35, TheEnd, scroll step 0, palette step 4
+credits-the-end-31: screen 35, TheEnd, scroll step 0, palette step 4
+evolution-190 Morph

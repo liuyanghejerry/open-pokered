@@ -15,11 +15,8 @@
 // variants, ids $C9-$FA), so the exchange is pick -> hasCoins ->
 // giveItem("TM..") -> takeCoins, matching vendors 1 & 2.
 //
-// Approximation: the original inserts a "So, you want <PRIZE>?" YES/NO confirm
-// between selecting a prize and paying; here the menu selection is the choice
-// (consistent with the other scripted @choice menus). The "both party and box
-// full -> don't charge" edge isn't reproduced (givePokemon reports no result),
-// so a prize is always granted+charged if you can afford it.
+// All prizes retain the original confirmation and leave coins untouched
+// if both the party and current PC box are full.
 
 game_scene GameCornerPrizeRoom {
   // ── BaldingGuy (npc 1) — talk-only flavor ──────────────────────────────
@@ -50,30 +47,60 @@ game_scene GameCornerPrizeRoom {
             @if (getGameVersion() == 0) {
       @choice {
         @option(@t("ABRA     180", "凯西 180")) {
-          @if (hasCoins(180)) {
-            givePokemon("ABRA", 9)
-            takeCoins(180)
-            @speaker("") { @t("Here you go!", "给你！") }
-          } @else {
-            @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
+          @speaker("") { @t("So, you want\nABRA?", "那么，你想要\n凯西？") }
+          @choice {
+            @option(@t("YES", "是")) {
+              @if (hasCoins(180)) {
+                given = givePokemon("ABRA", 9)
+                @if (given) {
+                  takeCoins(180)
+                  @speaker("") { @t("Here you go!", "给你！") }
+                }
+              } @else {
+                @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
+              }
+            }
+            @option(@t("NO", "否")) {
+              @speaker("") { @t("Oh, fine then.", "那好吧。") }
+            }
           }
         }
         @option(@t("CLEFAIRY     500", "皮皮 500")) {
-          @if (hasCoins(500)) {
-            givePokemon("CLEFAIRY", 8)
-            takeCoins(500)
-            @speaker("") { @t("Here you go!", "给你！") }
-          } @else {
-            @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
+          @speaker("") { @t("So, you want\nCLEFAIRY?", "那么，你想要\n皮皮？") }
+          @choice {
+            @option(@t("YES", "是")) {
+              @if (hasCoins(500)) {
+                given = givePokemon("CLEFAIRY", 8)
+                @if (given) {
+                  takeCoins(500)
+                  @speaker("") { @t("Here you go!", "给你！") }
+                }
+              } @else {
+                @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
+              }
+            }
+            @option(@t("NO", "否")) {
+              @speaker("") { @t("Oh, fine then.", "那好吧。") }
+            }
           }
         }
         @option(@t("NIDORINA    1200", "尼多娜 1200")) {
-          @if (hasCoins(1200)) {
-            givePokemon("NIDORINA", 17)
-            takeCoins(1200)
-            @speaker("") { @t("Here you go!", "给你！") }
-          } @else {
-            @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
+          @speaker("") { @t("So, you want\nNIDORINA?", "那么，你想要\n尼多娜？") }
+          @choice {
+            @option(@t("YES", "是")) {
+              @if (hasCoins(1200)) {
+                given = givePokemon("NIDORINA", 17)
+                @if (given) {
+                  takeCoins(1200)
+                  @speaker("") { @t("Here you go!", "给你！") }
+                }
+              } @else {
+                @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
+              }
+            }
+            @option(@t("NO", "否")) {
+              @speaker("") { @t("Oh, fine then.", "那好吧。") }
+            }
           }
         }
         @option(@t("NO THANKS", "不用了")) {
@@ -83,30 +110,60 @@ game_scene GameCornerPrizeRoom {
       } @else {
       @choice {
         @option(@t("ABRA     120", "凯西 120")) {
-          @if (hasCoins(120)) {
-            givePokemon("ABRA", 6)
-            takeCoins(120)
-            @speaker("") { @t("Here you go!", "给你！") }
-          } @else {
-            @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
+          @speaker("") { @t("So, you want\nABRA?", "那么，你想要\n凯西？") }
+          @choice {
+            @option(@t("YES", "是")) {
+              @if (hasCoins(120)) {
+                given = givePokemon("ABRA", 6)
+                @if (given) {
+                  takeCoins(120)
+                  @speaker("") { @t("Here you go!", "给你！") }
+                }
+              } @else {
+                @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
+              }
+            }
+            @option(@t("NO", "否")) {
+              @speaker("") { @t("Oh, fine then.", "那好吧。") }
+            }
           }
         }
         @option(@t("CLEFAIRY     750", "皮皮 750")) {
-          @if (hasCoins(750)) {
-            givePokemon("CLEFAIRY", 12)
-            takeCoins(750)
-            @speaker("") { @t("Here you go!", "给你！") }
-          } @else {
-            @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
+          @speaker("") { @t("So, you want\nCLEFAIRY?", "那么，你想要\n皮皮？") }
+          @choice {
+            @option(@t("YES", "是")) {
+              @if (hasCoins(750)) {
+                given = givePokemon("CLEFAIRY", 12)
+                @if (given) {
+                  takeCoins(750)
+                  @speaker("") { @t("Here you go!", "给你！") }
+                }
+              } @else {
+                @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
+              }
+            }
+            @option(@t("NO", "否")) {
+              @speaker("") { @t("Oh, fine then.", "那好吧。") }
+            }
           }
         }
         @option(@t("NIDORINO    1200", "尼多力诺 1200")) {
-          @if (hasCoins(1200)) {
-            givePokemon("NIDORINO", 17)
-            takeCoins(1200)
-            @speaker("") { @t("Here you go!", "给你！") }
-          } @else {
-            @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
+          @speaker("") { @t("So, you want\nNIDORINO?", "那么，你想要\n尼多力诺？") }
+          @choice {
+            @option(@t("YES", "是")) {
+              @if (hasCoins(1200)) {
+                given = givePokemon("NIDORINO", 17)
+                @if (given) {
+                  takeCoins(1200)
+                  @speaker("") { @t("Here you go!", "给你！") }
+                }
+              } @else {
+                @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
+              }
+            }
+            @option(@t("NO", "否")) {
+              @speaker("") { @t("Oh, fine then.", "那好吧。") }
+            }
           }
         }
         @option(@t("NO THANKS", "不用了")) {
@@ -129,30 +186,60 @@ game_scene GameCornerPrizeRoom {
             @if (getGameVersion() == 0) {
       @choice {
         @option(@t("DRATINI    2800", "迷你龙 2800")) {
-          @if (hasCoins(2800)) {
-            givePokemon("DRATINI", 18)
-            takeCoins(2800)
-            @speaker("") { @t("Here you go!", "给你！") }
-          } @else {
-            @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
+          @speaker("") { @t("So, you want\nDRATINI?", "那么，你想要\n迷你龙？") }
+          @choice {
+            @option(@t("YES", "是")) {
+              @if (hasCoins(2800)) {
+                given = givePokemon("DRATINI", 18)
+                @if (given) {
+                  takeCoins(2800)
+                  @speaker("") { @t("Here you go!", "给你！") }
+                }
+              } @else {
+                @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
+              }
+            }
+            @option(@t("NO", "否")) {
+              @speaker("") { @t("Oh, fine then.", "那好吧。") }
+            }
           }
         }
         @option(@t("SCYTHER    5500", "飞天螳螂 5500")) {
-          @if (hasCoins(5500)) {
-            givePokemon("SCYTHER", 25)
-            takeCoins(5500)
-            @speaker("") { @t("Here you go!", "给你！") }
-          } @else {
-            @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
+          @speaker("") { @t("So, you want\nSCYTHER?", "那么，你想要\n飞天螳螂？") }
+          @choice {
+            @option(@t("YES", "是")) {
+              @if (hasCoins(5500)) {
+                given = givePokemon("SCYTHER", 25)
+                @if (given) {
+                  takeCoins(5500)
+                  @speaker("") { @t("Here you go!", "给你！") }
+                }
+              } @else {
+                @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
+              }
+            }
+            @option(@t("NO", "否")) {
+              @speaker("") { @t("Oh, fine then.", "那好吧。") }
+            }
           }
         }
         @option(@t("PORYGON    9999", "多边兽 9999")) {
-          @if (hasCoins(9999)) {
-            givePokemon("PORYGON", 26)
-            takeCoins(9999)
-            @speaker("") { @t("Here you go!", "给你！") }
-          } @else {
-            @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
+          @speaker("") { @t("So, you want\nPORYGON?", "那么，你想要\n多边兽？") }
+          @choice {
+            @option(@t("YES", "是")) {
+              @if (hasCoins(9999)) {
+                given = givePokemon("PORYGON", 26)
+                @if (given) {
+                  takeCoins(9999)
+                  @speaker("") { @t("Here you go!", "给你！") }
+                }
+              } @else {
+                @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
+              }
+            }
+            @option(@t("NO", "否")) {
+              @speaker("") { @t("Oh, fine then.", "那好吧。") }
+            }
           }
         }
         @option(@t("NO THANKS", "不用了")) {
@@ -162,30 +249,60 @@ game_scene GameCornerPrizeRoom {
       } @else {
       @choice {
         @option(@t("PINSIR    2500", "凯罗斯 2500")) {
-          @if (hasCoins(2500)) {
-            givePokemon("PINSIR", 20)
-            takeCoins(2500)
-            @speaker("") { @t("Here you go!", "给你！") }
-          } @else {
-            @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
+          @speaker("") { @t("So, you want\nPINSIR?", "那么，你想要\n凯罗斯？") }
+          @choice {
+            @option(@t("YES", "是")) {
+              @if (hasCoins(2500)) {
+                given = givePokemon("PINSIR", 20)
+                @if (given) {
+                  takeCoins(2500)
+                  @speaker("") { @t("Here you go!", "给你！") }
+                }
+              } @else {
+                @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
+              }
+            }
+            @option(@t("NO", "否")) {
+              @speaker("") { @t("Oh, fine then.", "那好吧。") }
+            }
           }
         }
         @option(@t("DRATINI    4600", "迷你龙 4600")) {
-          @if (hasCoins(4600)) {
-            givePokemon("DRATINI", 24)
-            takeCoins(4600)
-            @speaker("") { @t("Here you go!", "给你！") }
-          } @else {
-            @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
+          @speaker("") { @t("So, you want\nDRATINI?", "那么，你想要\n迷你龙？") }
+          @choice {
+            @option(@t("YES", "是")) {
+              @if (hasCoins(4600)) {
+                given = givePokemon("DRATINI", 24)
+                @if (given) {
+                  takeCoins(4600)
+                  @speaker("") { @t("Here you go!", "给你！") }
+                }
+              } @else {
+                @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
+              }
+            }
+            @option(@t("NO", "否")) {
+              @speaker("") { @t("Oh, fine then.", "那好吧。") }
+            }
           }
         }
         @option(@t("PORYGON    6500", "多边兽 6500")) {
-          @if (hasCoins(6500)) {
-            givePokemon("PORYGON", 18)
-            takeCoins(6500)
-            @speaker("") { @t("Here you go!", "给你！") }
-          } @else {
-            @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
+          @speaker("") { @t("So, you want\nPORYGON?", "那么，你想要\n多边兽？") }
+          @choice {
+            @option(@t("YES", "是")) {
+              @if (hasCoins(6500)) {
+                given = givePokemon("PORYGON", 18)
+                @if (given) {
+                  takeCoins(6500)
+                  @speaker("") { @t("Here you go!", "给你！") }
+                }
+              } @else {
+                @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
+              }
+            }
+            @option(@t("NO", "否")) {
+              @speaker("") { @t("Oh, fine then.", "那好吧。") }
+            }
           }
         }
         @option(@t("NO THANKS", "不用了")) {
@@ -213,42 +330,66 @@ game_scene GameCornerPrizeRoom {
       @speaker("") { @t("Which prize do you want?", "你想要哪个奖品？") }
       @choice {
         @option(@t("TM23  3300", "TM23 3300")) {
-          @if (hasCoins(3300)) {
-            given = giveItem("TM23", 1)
-            @if (given) {
-              takeCoins(3300)
-              @speaker("") { @t("Here you go!", "给你！") }
-            } @else {
-              @speaker("") { @t("You have no room for this!", "你身上没有空间放这个！") }
+          @speaker("") { @t("So, you want\nTM23?", "那么，你想要\nTM23？") }
+          @choice {
+            @option(@t("YES", "是")) {
+              @if (hasCoins(3300)) {
+                given = giveItem("TM23", 1)
+                @if (given) {
+                  takeCoins(3300)
+                  @speaker("") { @t("Here you go!", "给你！") }
+                } @else {
+                  @speaker("") { @t("You have no room for this!", "你身上没有空间放这个！") }
+                }
+              } @else {
+                @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
+              }
             }
-          } @else {
-            @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
+            @option(@t("NO", "否")) {
+              @speaker("") { @t("Oh, fine then.", "那好吧。") }
+            }
           }
         }
         @option(@t("TM15  5500", "TM15 5500")) {
-          @if (hasCoins(5500)) {
-            given = giveItem("TM15", 1)
-            @if (given) {
-              takeCoins(5500)
-              @speaker("") { @t("Here you go!", "给你！") }
-            } @else {
-              @speaker("") { @t("You have no room for this!", "你身上没有空间放这个！") }
+          @speaker("") { @t("So, you want\nTM15?", "那么，你想要\nTM15？") }
+          @choice {
+            @option(@t("YES", "是")) {
+              @if (hasCoins(5500)) {
+                given = giveItem("TM15", 1)
+                @if (given) {
+                  takeCoins(5500)
+                  @speaker("") { @t("Here you go!", "给你！") }
+                } @else {
+                  @speaker("") { @t("You have no room for this!", "你身上没有空间放这个！") }
+                }
+              } @else {
+                @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
+              }
             }
-          } @else {
-            @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
+            @option(@t("NO", "否")) {
+              @speaker("") { @t("Oh, fine then.", "那好吧。") }
+            }
           }
         }
         @option(@t("TM50  7700", "TM50 7700")) {
-          @if (hasCoins(7700)) {
-            given = giveItem("TM50", 1)
-            @if (given) {
-              takeCoins(7700)
-              @speaker("") { @t("Here you go!", "给你！") }
-            } @else {
-              @speaker("") { @t("You have no room for this!", "你身上没有空间放这个！") }
+          @speaker("") { @t("So, you want\nTM50?", "那么，你想要\nTM50？") }
+          @choice {
+            @option(@t("YES", "是")) {
+              @if (hasCoins(7700)) {
+                given = giveItem("TM50", 1)
+                @if (given) {
+                  takeCoins(7700)
+                  @speaker("") { @t("Here you go!", "给你！") }
+                } @else {
+                  @speaker("") { @t("You have no room for this!", "你身上没有空间放这个！") }
+                }
+              } @else {
+                @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
+              }
             }
-          } @else {
-            @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
+            @option(@t("NO", "否")) {
+              @speaker("") { @t("Oh, fine then.", "那好吧。") }
+            }
           }
         }
         @option(@t("NO THANKS", "不用了")) {

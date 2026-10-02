@@ -1092,3 +1092,72 @@ fn turn_only_result_semantics_documented() {
     );
     assert!(matches!(result, WildEncounterResult::Encounter { .. }));
 }
+
+#[test]
+fn original_half_block_anchor_does_not_read_the_next_player_cell() {
+    use pokered_data::map_data_loader::get_block_data;
+    let blocks = get_block_data(MapId::Route1);
+    // Original map/blockset bytes: ordinary ground west of grass, and the
+    // eastern grass edge. These failed in opposite directions before the fix.
+    for (x, y, expected) in [(5, 28, 0x2c), (5, 29, 0x2c), (7, 30, 0x52), (7, 31, 0x52)] {
+        let right = encounter_rate_tile(TilesetId::Overworld, blocks, 10, x, y);
+        assert_eq!(right, expected, "Route1 ({x},{y}) bottom-right tile");
+        let result = check_wild_encounter(MapId::Route1, TilesetId::Overworld,
+            expected, right, GameVersion::Red, &low_roll(), &no_repel(), false, false, 0);
+        assert_eq!(matches!(result, WildEncounterResult::Encounter { .. }), expected == 0x52);
+    }
+    // The final half-block is still in-bounds: width is in 32px blocks.
+    let block = blocks[9];
+    let tiles = pokered_data::blockset_data::block_tiles(TilesetId::Overworld, block).unwrap();
+    assert_eq!(encounter_rate_tile(TilesetId::Overworld, blocks, 10, 19, 0), tiles[7]);
+    assert_eq!(encounter_rate_tile(TilesetId::Overworld, blocks, 10, 20, 0), 0);
+}
+
+#[test]
+fn zero_rate_map_keeps_previous_lists_for_the_original_left_shore_quirk() {
+    let mut data = WildDataState::default();
+    data.load_map(MapId::Route1);
+    let grass = data.grass.mons.clone();
+    data.load_map(MapId::PalletTown);
+    assert_eq!(data.grass.encounter_rate, 0);
+    assert_eq!(data.grass.mons, grass);
+    data.load_map(MapId::Route19);
+    assert_eq!(data.water.encounter_rate, 5);
+    let result = check_wild_encounter_with_tables(
+        MapId::Route19, TilesetId::Overworld, 0x32, WATER_TILE,
+        &data.grass, &data.water, &low_roll(), &no_repel(), false, false, 0,
+    );
+    assert_eq!(result, WildEncounterResult::Encounter { species: Species::Pidgey, level: 3 });
+    let water = data.water.mons.clone();
+    data.load_map(MapId::Route2);
+    assert_eq!(data.water.encounter_rate, 0);
+    assert_eq!(data.water.mons, water);
+}
+
+#[test]
+fn blue_query_state_seeds_blue_encounters_and_snapshot_keeps_stale_buffers() {
+    use pokered_data::impl_traits::PokemonRedData;
+    use super::screen::OverworldScreen;
+    use crate::snapshot::OverworldSnapshot;
+    let mut screen = OverworldScreen::new(MapId::Route2, None, PokemonRedData);
+    screen.seed_script_query_state(0, &[], 0, 0, 0, 0, &[], 0, 0, 1);
+    assert_eq!(screen.wild_data_state.version, GameVersion::Blue);
+    assert_eq!(screen.wild_data_state.grass.mons[5].species, Species::Caterpie);
+    screen.wild_data_state.load_map(MapId::Route19);
+    let snap = OverworldSnapshot::capture(&screen);
+    screen.wild_data_state.set_version(GameVersion::Red, MapId::Route2);
+    snap.restore_into(&mut screen);
+    assert_eq!(screen.wild_data_state.version, GameVersion::Blue);
+    assert_eq!(screen.wild_data_state.grass.encounter_rate, 0);
+    assert_eq!(screen.wild_data_state.grass.mons[5].species, Species::Caterpie);
+    assert_eq!(screen.wild_data_state.water.encounter_rate, 5);
+}
+
+#[test]
+fn route1_mart_clerk_uses_the_original_vertical_wander_axis() {
+    use pokered_data::impl_traits::PokemonRedData;
+    use super::screen::OverworldScreen;
+    let screen = OverworldScreen::new(MapId::Route1, None, PokemonRedData);
+    assert_eq!(screen.npc_states[0].wander_axis, dotzuki_engine::overworld::NpcWanderAxis::Vertical);
+    assert_eq!(screen.npc_states[1].wander_axis, dotzuki_engine::overworld::NpcWanderAxis::Horizontal);
+}

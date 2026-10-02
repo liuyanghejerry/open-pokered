@@ -1,0 +1,594 @@
+Running: stdbuf -oL -eL /tmp/mgba-sysroot/usr/bin/mgba-qt -C logToStdout=1 -C logLevel.gba.debug=127 -C fpsTarget=0 -C audioSync=0 -C videoSync=0 /tmp/gba-memory-4gs4n6gv/regression.gba
+[INFO] GBA Debug: repro: heap low 65536B at frame 0
+[INFO] GBA Debug: repro: heap low 56128B at frame 561
+[INFO] GBA Debug: repro: heap low 55104B at frame 2145
+[INFO] GBA Debug: memory: START pokedex
+[INFO] GBA Debug: memory: dex=1 free=61376B stack=13232B
+[INFO] GBA Debug: memory: dex=2 free=61376B stack=13232B
+[INFO] GBA Debug: memory: dex=3 free=61376B stack=13232B
+[INFO] GBA Debug: memory: dex=4 free=61376B stack=13232B
+[INFO] GBA Debug: memory: dex=5 free=61376B stack=13232B
+[INFO] GBA Debug: memory: dex=6 free=58240B stack=13232B
+[INFO] GBA Debug: memory: dex=7 free=58240B stack=13232B
+[INFO] GBA Debug: memory: dex=8 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=9 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=10 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=11 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=12 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=13 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=14 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=15 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=16 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=17 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=18 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=19 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=20 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=21 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=22 free=58240B stack=13232B
+[INFO] GBA Debug: memory: dex=23 free=58240B stack=13232B
+[INFO] GBA Debug: memory: dex=24 free=58240B stack=13232B
+[INFO] GBA Debug: memory: dex=25 free=58240B stack=13232B
+[INFO] GBA Debug: memory: dex=26 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=27 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=28 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=29 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=30 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=31 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=32 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=33 free=59072B stack=13232B
+[INFO] GBA Debug: memory: dex=34 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=35 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=36 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=37 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=38 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=39 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=40 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=41 free=59072B stack=13232B
+[INFO] GBA Debug: memory: dex=42 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=43 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=44 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=45 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=46 free=55936B stack=13232B
+[INFO] GBA Debug: repro: heap low 52800B at frame 7262
+[INFO] GBA Debug: memory: dex=47 free=52800B stack=13232B
+[INFO] GBA Debug: memory: dex=48 free=52800B stack=13232B
+[INFO] GBA Debug: memory: dex=49 free=52800B stack=13232B
+[INFO] GBA Debug: memory: dex=50 free=52800B stack=13232B
+[INFO] GBA Debug: memory: dex=51 free=52800B stack=13232B
+[INFO] GBA Debug: memory: dex=52 free=52800B stack=13232B
+[INFO] GBA Debug: memory: dex=53 free=58240B stack=13232B
+[INFO] GBA Debug: memory: dex=54 free=58240B stack=13232B
+[INFO] GBA Debug: memory: dex=55 free=58240B stack=13232B
+[INFO] GBA Debug: memory: dex=56 free=58240B stack=13232B
+[INFO] GBA Debug: memory: dex=57 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=58 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=59 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=60 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=61 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=62 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=63 free=58240B stack=13232B
+[INFO] GBA Debug: memory: dex=64 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=65 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=66 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=67 free=52800B stack=13232B
+[INFO] GBA Debug: memory: dex=68 free=52800B stack=13232B
+[INFO] GBA Debug: memory: dex=69 free=52800B stack=13232B
+[INFO] GBA Debug: memory: dex=70 free=52800B stack=13232B
+[INFO] GBA Debug: memory: dex=71 free=52800B stack=13232B
+[INFO] GBA Debug: memory: dex=72 free=52800B stack=13232B
+[INFO] GBA Debug: memory: dex=73 free=58240B stack=13232B
+[INFO] GBA Debug: memory: dex=74 free=58240B stack=13232B
+[INFO] GBA Debug: memory: dex=75 free=58240B stack=13232B
+[INFO] GBA Debug: memory: dex=76 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=77 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=78 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=79 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=80 free=52800B stack=13232B
+[INFO] GBA Debug: memory: dex=81 free=52800B stack=13232B
+[INFO] GBA Debug: memory: dex=82 free=52800B stack=13232B
+[INFO] GBA Debug: memory: dex=83 free=52800B stack=13232B
+[INFO] GBA Debug: memory: dex=84 free=52800B stack=13232B
+[INFO] GBA Debug: memory: dex=85 free=52800B stack=13232B
+[INFO] GBA Debug: memory: dex=86 free=52800B stack=13232B
+[INFO] GBA Debug: memory: dex=87 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=88 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=89 free=52800B stack=13232B
+[INFO] GBA Debug: memory: dex=90 free=52800B stack=13232B
+[INFO] GBA Debug: memory: dex=91 free=52800B stack=13232B
+[INFO] GBA Debug: memory: dex=92 free=52800B stack=13232B
+[INFO] GBA Debug: memory: dex=93 free=52800B stack=13232B
+[INFO] GBA Debug: memory: dex=94 free=52800B stack=13232B
+[INFO] GBA Debug: memory: dex=95 free=58240B stack=13232B
+[INFO] GBA Debug: memory: dex=96 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=97 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=98 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=99 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=100 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=101 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=102 free=58240B stack=13232B
+[INFO] GBA Debug: memory: dex=103 free=58240B stack=13232B
+[INFO] GBA Debug: memory: dex=104 free=58240B stack=13232B
+[INFO] GBA Debug: memory: dex=105 free=58240B stack=13232B
+[INFO] GBA Debug: memory: dex=106 free=58240B stack=13232B
+[INFO] GBA Debug: memory: dex=107 free=58240B stack=13232B
+[INFO] GBA Debug: memory: dex=108 free=58240B stack=13232B
+[INFO] GBA Debug: memory: dex=109 free=58240B stack=13232B
+[INFO] GBA Debug: memory: dex=110 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=111 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=112 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=113 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=114 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=115 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=116 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=117 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=118 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=119 free=52800B stack=13232B
+[INFO] GBA Debug: memory: dex=120 free=52800B stack=13232B
+[INFO] GBA Debug: memory: dex=121 free=52800B stack=13232B
+[INFO] GBA Debug: memory: dex=122 free=52800B stack=13232B
+[INFO] GBA Debug: memory: dex=123 free=52800B stack=13232B
+[INFO] GBA Debug: memory: dex=124 free=52800B stack=13232B
+[INFO] GBA Debug: memory: dex=125 free=56768B stack=13232B
+[INFO] GBA Debug: memory: dex=126 free=56768B stack=13232B
+[INFO] GBA Debug: memory: dex=127 free=53632B stack=13232B
+[INFO] GBA Debug: repro: heap low 50496B at frame 12446
+[INFO] GBA Debug: memory: dex=128 free=50496B stack=13232B
+[INFO] GBA Debug: memory: dex=129 free=50496B stack=13232B
+[INFO] GBA Debug: repro: heap low 47360B at frame 12574
+[INFO] GBA Debug: memory: dex=130 free=47360B stack=13232B
+[INFO] GBA Debug: memory: dex=131 free=47360B stack=13232B
+[INFO] GBA Debug: memory: dex=132 free=47360B stack=13232B
+[INFO] GBA Debug: memory: dex=133 free=47360B stack=13232B
+[INFO] GBA Debug: memory: dex=134 free=47360B stack=13232B
+[INFO] GBA Debug: memory: dex=135 free=47360B stack=13232B
+[INFO] GBA Debug: memory: dex=136 free=47360B stack=13232B
+[INFO] GBA Debug: memory: dex=137 free=56768B stack=13232B
+[INFO] GBA Debug: memory: dex=138 free=56768B stack=13232B
+[INFO] GBA Debug: memory: dex=139 free=54464B stack=13232B
+[INFO] GBA Debug: memory: dex=140 free=54464B stack=13232B
+[INFO] GBA Debug: memory: dex=141 free=54464B stack=13232B
+[INFO] GBA Debug: memory: dex=142 free=51328B stack=13232B
+[INFO] GBA Debug: memory: dex=143 free=48192B stack=13232B
+[INFO] GBA Debug: memory: dex=144 free=48192B stack=13232B
+[INFO] GBA Debug: memory: dex=145 free=48192B stack=13232B
+[INFO] GBA Debug: memory: dex=146 free=48192B stack=13232B
+[INFO] GBA Debug: memory: dex=147 free=48192B stack=13232B
+[INFO] GBA Debug: memory: dex=148 free=58240B stack=13232B
+[INFO] GBA Debug: memory: dex=149 free=58240B stack=13232B
+[INFO] GBA Debug: memory: dex=150 free=58240B stack=13232B
+[INFO] GBA Debug: memory: dex=151 free=58240B stack=13232B
+[INFO] GBA Debug: memory: dex=1 free=58240B stack=13232B
+[INFO] GBA Debug: memory: dex=2 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=3 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=4 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=5 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=6 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=7 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=8 free=53632B stack=13232B
+[INFO] GBA Debug: memory: dex=9 free=53632B stack=13232B
+[INFO] GBA Debug: memory: dex=10 free=53632B stack=13232B
+[INFO] GBA Debug: memory: dex=11 free=53632B stack=13232B
+[INFO] GBA Debug: memory: dex=12 free=53632B stack=13232B
+[INFO] GBA Debug: memory: dex=13 free=53632B stack=13232B
+[INFO] GBA Debug: memory: dex=14 free=53632B stack=13232B
+[INFO] GBA Debug: memory: dex=15 free=58240B stack=13232B
+[INFO] GBA Debug: memory: dex=16 free=58240B stack=13232B
+[INFO] GBA Debug: memory: dex=17 free=58240B stack=13232B
+[INFO] GBA Debug: memory: dex=18 free=58240B stack=13232B
+[INFO] GBA Debug: memory: dex=19 free=58240B stack=13232B
+[INFO] GBA Debug: memory: dex=20 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=21 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=22 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=23 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=24 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=25 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=26 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=27 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=28 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=29 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=30 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=31 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=32 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=33 free=56768B stack=13232B
+[INFO] GBA Debug: memory: dex=34 free=53632B stack=13232B
+[INFO] GBA Debug: memory: dex=35 free=53632B stack=13232B
+[INFO] GBA Debug: memory: dex=36 free=53632B stack=13232B
+[INFO] GBA Debug: memory: dex=37 free=53632B stack=13232B
+[INFO] GBA Debug: memory: dex=38 free=53632B stack=13232B
+[INFO] GBA Debug: memory: dex=39 free=53632B stack=13232B
+[INFO] GBA Debug: memory: dex=40 free=53632B stack=13232B
+[INFO] GBA Debug: memory: dex=41 free=59072B stack=13232B
+[INFO] GBA Debug: memory: dex=42 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=43 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=44 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=45 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=46 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=47 free=52800B stack=13232B
+[INFO] GBA Debug: memory: dex=48 free=52800B stack=13232B
+[INFO] GBA Debug: memory: dex=49 free=52800B stack=13232B
+[INFO] GBA Debug: memory: dex=50 free=52800B stack=13232B
+[INFO] GBA Debug: memory: dex=51 free=52800B stack=13232B
+[INFO] GBA Debug: memory: dex=52 free=52800B stack=13232B
+[INFO] GBA Debug: memory: dex=53 free=58240B stack=13232B
+[INFO] GBA Debug: memory: dex=54 free=58240B stack=13232B
+[INFO] GBA Debug: memory: dex=55 free=58240B stack=13232B
+[INFO] GBA Debug: memory: dex=56 free=58240B stack=13232B
+[INFO] GBA Debug: memory: dex=57 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=58 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=59 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=60 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=61 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=62 free=51968B stack=13232B
+[INFO] GBA Debug: memory: dex=63 free=51968B stack=13232B
+[INFO] GBA Debug: memory: dex=64 free=51968B stack=13232B
+[INFO] GBA Debug: memory: dex=65 free=51968B stack=13232B
+[INFO] GBA Debug: memory: dex=66 free=51968B stack=13232B
+[INFO] GBA Debug: memory: dex=67 free=51968B stack=13232B
+[INFO] GBA Debug: memory: dex=68 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=69 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=70 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=71 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=72 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=73 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=74 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=75 free=59072B stack=13232B
+[INFO] GBA Debug: memory: dex=76 free=56768B stack=13232B
+[INFO] GBA Debug: memory: dex=77 free=56768B stack=13232B
+[INFO] GBA Debug: memory: dex=78 free=56768B stack=13232B
+[INFO] GBA Debug: memory: dex=79 free=56768B stack=13232B
+[INFO] GBA Debug: memory: dex=80 free=56768B stack=13232B
+[INFO] GBA Debug: memory: dex=81 free=56768B stack=13232B
+[INFO] GBA Debug: memory: dex=82 free=56768B stack=13232B
+[INFO] GBA Debug: memory: dex=83 free=56768B stack=13232B
+[INFO] GBA Debug: memory: dex=84 free=56768B stack=13232B
+[INFO] GBA Debug: memory: dex=85 free=56768B stack=13232B
+[INFO] GBA Debug: memory: dex=86 free=54464B stack=13232B
+[INFO] GBA Debug: memory: dex=87 free=54464B stack=13232B
+[INFO] GBA Debug: memory: dex=88 free=54464B stack=13232B
+[INFO] GBA Debug: memory: dex=89 free=51328B stack=13232B
+[INFO] GBA Debug: memory: dex=90 free=51328B stack=13232B
+[INFO] GBA Debug: memory: dex=91 free=51328B stack=13232B
+[INFO] GBA Debug: memory: dex=92 free=51328B stack=13232B
+[INFO] GBA Debug: memory: dex=93 free=51328B stack=13232B
+[INFO] GBA Debug: memory: dex=94 free=51328B stack=13232B
+[INFO] GBA Debug: memory: dex=95 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=96 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=97 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=98 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=99 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=100 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=101 free=58240B stack=13232B
+[INFO] GBA Debug: memory: dex=102 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=103 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=104 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=105 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=106 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=107 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=108 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=109 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=110 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=111 free=55936B stack=13232B
+[INFO] GBA Debug: memory: dex=112 free=52800B stack=13232B
+[INFO] GBA Debug: memory: dex=113 free=52800B stack=13232B
+[INFO] GBA Debug: memory: dex=114 free=52800B stack=13232B
+[INFO] GBA Debug: memory: dex=115 free=52800B stack=13232B
+[INFO] GBA Debug: memory: dex=116 free=52800B stack=13232B
+[INFO] GBA Debug: memory: dex=117 free=52800B stack=13232B
+[INFO] GBA Debug: memory: dex=118 free=56768B stack=13232B
+[INFO] GBA Debug: memory: dex=119 free=53632B stack=13232B
+[INFO] GBA Debug: memory: dex=120 free=53632B stack=13232B
+[INFO] GBA Debug: memory: dex=121 free=53632B stack=13232B
+[INFO] GBA Debug: memory: dex=122 free=53632B stack=13232B
+[INFO] GBA Debug: memory: dex=123 free=53632B stack=13232B
+[INFO] GBA Debug: memory: dex=124 free=53632B stack=13232B
+[INFO] GBA Debug: memory: dex=125 free=56768B stack=13232B
+[INFO] GBA Debug: memory: dex=126 free=56768B stack=13232B
+[INFO] GBA Debug: memory: dex=127 free=53632B stack=13232B
+[INFO] GBA Debug: memory: dex=128 free=50496B stack=13232B
+[INFO] GBA Debug: memory: dex=129 free=50496B stack=13232B
+[INFO] GBA Debug: memory: dex=130 free=50496B stack=13232B
+[INFO] GBA Debug: memory: dex=131 free=50496B stack=13232B
+[INFO] GBA Debug: memory: dex=132 free=50496B stack=13232B
+[INFO] GBA Debug: memory: dex=133 free=50496B stack=13232B
+[INFO] GBA Debug: memory: dex=134 free=59072B stack=13232B
+[INFO] GBA Debug: memory: dex=135 free=56768B stack=13232B
+[INFO] GBA Debug: memory: dex=136 free=56768B stack=13232B
+[INFO] GBA Debug: memory: dex=137 free=56768B stack=13232B
+[INFO] GBA Debug: memory: dex=138 free=56768B stack=13232B
+[INFO] GBA Debug: memory: dex=139 free=56768B stack=13232B
+[INFO] GBA Debug: memory: dex=140 free=56768B stack=13232B
+[INFO] GBA Debug: memory: dex=141 free=56768B stack=13232B
+[INFO] GBA Debug: memory: dex=142 free=58240B stack=13232B
+[INFO] GBA Debug: memory: dex=143 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=144 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=145 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=146 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=147 free=55104B stack=13232B
+[INFO] GBA Debug: memory: dex=148 free=59072B stack=13232B
+[INFO] GBA Debug: memory: dex=149 free=59072B stack=13232B
+[INFO] GBA Debug: memory: dex=150 free=59072B stack=13232B
+[INFO] GBA Debug: memory: dex=151 free=59072B stack=13232B
+[INFO] GBA Debug: memory: PASS case=pokedex count=302 free=59072B stack=13232B
+[INFO] GBA Debug: memory: map=0 PalletTown
+[INFO] GBA Debug: memory: map=1 ViridianCity
+[INFO] GBA Debug: repro: heap low 42984B at frame 23806
+[INFO] GBA Debug: repro: heap low 41360B at frame 23807
+[INFO] GBA Debug: repro: heap low 40464B at frame 23827
+[INFO] GBA Debug: memory: map=2 PewterCity
+[INFO] GBA Debug: repro: heap low 40408B at frame 23886
+[INFO] GBA Debug: repro: heap low 38576B at frame 23887
+[INFO] GBA Debug: repro: heap low 37680B at frame 23928
+[INFO] GBA Debug: memory: map=3 CeruleanCity
+[INFO] GBA Debug: repro: heap low 28600B at frame 23966
+[INFO] GBA Debug: repro: heap low 26768B at frame 23967
+[INFO] GBA Debug: memory: map=4 LavenderTown
+[INFO] GBA Debug: repro: heap low 25872B at frame 24014
+[INFO] GBA Debug: memory: map=5 VermilionCity
+[INFO] GBA Debug: memory: map=6 CeladonCity
+[INFO] GBA Debug: memory: map=7 FuchsiaCity
+[INFO] GBA Debug: memory: map=8 CinnabarIsland
+[INFO] GBA Debug: memory: map=9 IndigoPlateau
+[INFO] GBA Debug: memory: map=10 SaffronCity
+[INFO] GBA Debug: memory: map=11 UnusedMap0B
+[INFO] GBA Debug: memory: map=12 Route1
+[INFO] GBA Debug: memory: map=13 Route2
+[INFO] GBA Debug: memory: map=14 Route3
+[INFO] GBA Debug: memory: map=15 Route4
+[INFO] GBA Debug: memory: map=16 Route5
+[INFO] GBA Debug: memory: map=17 Route6
+[INFO] GBA Debug: memory: map=18 Route7
+[INFO] GBA Debug: memory: map=19 Route8
+[INFO] GBA Debug: memory: map=20 Route9
+[INFO] GBA Debug: memory: map=21 Route10
+[INFO] GBA Debug: memory: map=22 Route11
+[INFO] GBA Debug: memory: map=23 Route12
+[INFO] GBA Debug: memory: map=24 Route13
+[INFO] GBA Debug: memory: map=25 Route14
+[INFO] GBA Debug: memory: map=26 Route15
+[INFO] GBA Debug: repro: heap low 24448B at frame 25807
+[INFO] GBA Debug: repro: heap low 23552B at frame 25827
+[INFO] GBA Debug: memory: map=27 Route16
+[INFO] GBA Debug: memory: map=28 Route17
+[INFO] GBA Debug: memory: map=29 Route18
+[INFO] GBA Debug: memory: map=30 Route19
+[INFO] GBA Debug: memory: map=31 Route20
+[INFO] GBA Debug: memory: map=32 Route21
+[INFO] GBA Debug: memory: map=33 Route22
+[INFO] GBA Debug: memory: map=34 Route23
+[INFO] GBA Debug: memory: map=35 Route24
+[INFO] GBA Debug: memory: map=36 Route25
+[INFO] GBA Debug: memory: map=37 RedsHouse1F
+[INFO] GBA Debug: memory: map=38 RedsHouse2F
+[INFO] GBA Debug: memory: map=39 BluesHouse
+[INFO] GBA Debug: memory: map=40 OaksLab
+[INFO] GBA Debug: memory: map=41 ViridianPokecenter
+[INFO] GBA Debug: memory: map=42 ViridianMart
+[INFO] GBA Debug: memory: map=43 ViridianSchoolHouse
+[INFO] GBA Debug: memory: map=44 ViridianNicknameHouse
+[INFO] GBA Debug: memory: map=45 ViridianGym
+[INFO] GBA Debug: memory: map=46 DiglettsCaveRoute2
+[INFO] GBA Debug: memory: map=47 ViridianForestNorthGate
+[INFO] GBA Debug: memory: map=48 Route2TradeHouse
+[INFO] GBA Debug: memory: map=49 Route2Gate
+[INFO] GBA Debug: memory: map=50 ViridianForestSouthGate
+[INFO] GBA Debug: memory: map=51 ViridianForest
+[INFO] GBA Debug: memory: map=52 Museum1F
+[INFO] GBA Debug: memory: map=53 Museum2F
+[INFO] GBA Debug: memory: map=54 PewterGym
+[INFO] GBA Debug: memory: map=55 PewterNidoranHouse
+[INFO] GBA Debug: memory: map=56 PewterMart
+[INFO] GBA Debug: memory: map=57 PewterSpeechHouse
+[INFO] GBA Debug: memory: map=58 PewterPokecenter
+[INFO] GBA Debug: memory: map=59 MtMoon1F
+[INFO] GBA Debug: memory: map=60 MtMoonB1F
+[INFO] GBA Debug: memory: map=61 MtMoonB2F
+[INFO] GBA Debug: memory: map=62 CeruleanTrashedHouse
+[INFO] GBA Debug: memory: map=63 CeruleanTradeHouse
+[INFO] GBA Debug: memory: map=64 CeruleanPokecenter
+[INFO] GBA Debug: memory: map=65 CeruleanGym
+[INFO] GBA Debug: memory: map=66 BikeShop
+[INFO] GBA Debug: memory: map=67 CeruleanMart
+[INFO] GBA Debug: memory: map=68 MtMoonPokecenter
+[INFO] GBA Debug: memory: map=69 CeruleanTrashedHouseCopy
+[INFO] GBA Debug: memory: map=70 Route5Gate
+[INFO] GBA Debug: memory: map=71 UndergroundPathRoute5
+[INFO] GBA Debug: memory: map=72 Daycare
+[INFO] GBA Debug: memory: map=73 Route6Gate
+[INFO] GBA Debug: memory: map=74 UndergroundPathRoute6
+[INFO] GBA Debug: memory: map=75 UndergroundPathRoute6Copy
+[INFO] GBA Debug: memory: map=76 Route7Gate
+[INFO] GBA Debug: memory: map=77 UndergroundPathRoute7
+[INFO] GBA Debug: memory: map=78 UndergroundPathRoute7Copy
+[INFO] GBA Debug: memory: map=79 Route8Gate
+[INFO] GBA Debug: memory: map=80 UndergroundPathRoute8
+[INFO] GBA Debug: memory: map=81 RockTunnelPokecenter
+[INFO] GBA Debug: memory: map=82 RockTunnel1F
+[INFO] GBA Debug: memory: map=83 PowerPlant
+[INFO] GBA Debug: memory: map=84 Route11Gate1F
+[INFO] GBA Debug: memory: map=85 DiglettsCaveRoute11
+[INFO] GBA Debug: memory: map=86 Route11Gate2F
+[INFO] GBA Debug: memory: map=87 Route12Gate1F
+[INFO] GBA Debug: memory: map=88 BillsHouse
+[INFO] GBA Debug: memory: map=89 VermilionPokecenter
+[INFO] GBA Debug: memory: map=90 PokemonFanClub
+[INFO] GBA Debug: memory: map=91 VermilionMart
+[INFO] GBA Debug: memory: map=92 VermilionGym
+[INFO] GBA Debug: memory: map=93 VermilionPidgeyHouse
+[INFO] GBA Debug: memory: map=94 VermilionDock
+[INFO] GBA Debug: memory: map=95 SSAnne1F
+[INFO] GBA Debug: memory: map=96 SSAnne2F
+[INFO] GBA Debug: memory: map=97 SSAnne3F
+[INFO] GBA Debug: memory: map=98 SSAnneB1F
+[INFO] GBA Debug: memory: map=99 SSAnneBow
+[INFO] GBA Debug: memory: map=100 SSAnneKitchen
+[INFO] GBA Debug: memory: map=101 SSAnneCaptainsRoom
+[INFO] GBA Debug: memory: map=102 SSAnne1FRooms
+[INFO] GBA Debug: memory: map=103 SSAnne2FRooms
+[INFO] GBA Debug: memory: map=104 SSAnneB1FRooms
+[INFO] GBA Debug: memory: map=105 UnusedMap69
+[INFO] GBA Debug: memory: map=106 UnusedMap6A
+[INFO] GBA Debug: memory: map=107 UnusedMap6B
+[INFO] GBA Debug: memory: map=108 VictoryRoad1F
+[INFO] GBA Debug: memory: map=109 UnusedMap6D
+[INFO] GBA Debug: memory: map=110 UnusedMap6E
+[INFO] GBA Debug: memory: map=111 UnusedMap6F
+[INFO] GBA Debug: memory: map=112 UnusedMap70
+[INFO] GBA Debug: memory: map=113 LancesRoom
+[INFO] GBA Debug: memory: map=114 UnusedMap72
+[INFO] GBA Debug: memory: map=115 UnusedMap73
+[INFO] GBA Debug: memory: map=116 UnusedMap74
+[INFO] GBA Debug: memory: map=117 UnusedMap75
+[INFO] GBA Debug: memory: map=118 HallOfFame
+[INFO] GBA Debug: memory: map=119 UndergroundPathNorthSouth
+[INFO] GBA Debug: memory: map=120 ChampionsRoom
+[INFO] GBA Debug: memory: map=121 UndergroundPathWestEast
+[INFO] GBA Debug: memory: map=122 CeladonMart1F
+[INFO] GBA Debug: memory: map=123 CeladonMart2F
+[INFO] GBA Debug: memory: map=124 CeladonMart3F
+[INFO] GBA Debug: memory: map=125 CeladonMart4F
+[INFO] GBA Debug: memory: map=126 CeladonMartRoof
+[INFO] GBA Debug: memory: map=127 CeladonMartElevator
+[INFO] GBA Debug: memory: map=128 CeladonMansion1F
+[INFO] GBA Debug: memory: map=129 CeladonMansion2F
+[INFO] GBA Debug: memory: map=130 CeladonMansion3F
+[INFO] GBA Debug: memory: map=131 CeladonMansionRoof
+[INFO] GBA Debug: memory: map=132 CeladonMansionRoofHouse
+[INFO] GBA Debug: memory: map=133 CeladonPokecenter
+[INFO] GBA Debug: memory: map=134 CeladonGym
+[INFO] GBA Debug: memory: map=135 GameCorner
+[INFO] GBA Debug: memory: map=136 CeladonMart5F
+[INFO] GBA Debug: memory: map=137 GameCornerPrizeRoom
+[INFO] GBA Debug: memory: map=138 CeladonDiner
+[INFO] GBA Debug: memory: map=139 CeladonChiefHouse
+[INFO] GBA Debug: memory: map=140 CeladonHotel
+[INFO] GBA Debug: memory: map=141 LavenderPokecenter
+[INFO] GBA Debug: memory: map=142 PokemonTower1F
+[INFO] GBA Debug: memory: map=143 PokemonTower2F
+[INFO] GBA Debug: memory: map=144 PokemonTower3F
+[INFO] GBA Debug: memory: map=145 PokemonTower4F
+[INFO] GBA Debug: memory: map=146 PokemonTower5F
+[INFO] GBA Debug: memory: map=147 PokemonTower6F
+[INFO] GBA Debug: memory: map=148 PokemonTower7F
+[INFO] GBA Debug: memory: map=149 MrFujisHouse
+[INFO] GBA Debug: memory: map=150 LavenderMart
+[INFO] GBA Debug: memory: map=151 LavenderCuboneHouse
+[INFO] GBA Debug: memory: map=152 FuchsiaMart
+[INFO] GBA Debug: memory: map=153 FuchsiaBillsGrandpasHouse
+[INFO] GBA Debug: memory: map=154 FuchsiaPokecenter
+[INFO] GBA Debug: memory: map=155 WardensHouse
+[INFO] GBA Debug: memory: map=156 SafariZoneGate
+[INFO] GBA Debug: memory: map=157 FuchsiaGym
+[INFO] GBA Debug: memory: map=158 FuchsiaMeetingRoom
+[INFO] GBA Debug: memory: map=159 SeafoamIslandsB1F
+[INFO] GBA Debug: memory: map=160 SeafoamIslandsB2F
+[INFO] GBA Debug: memory: map=161 SeafoamIslandsB3F
+[INFO] GBA Debug: memory: map=162 SeafoamIslandsB4F
+[INFO] GBA Debug: memory: map=163 VermilionOldRodHouse
+[INFO] GBA Debug: memory: map=164 FuchsiaGoodRodHouse
+[INFO] GBA Debug: memory: map=165 PokemonMansion1F
+[INFO] GBA Debug: memory: map=166 CinnabarGym
+[INFO] GBA Debug: memory: map=167 CinnabarLab
+[INFO] GBA Debug: memory: map=168 CinnabarLabTradeRoom
+[INFO] GBA Debug: memory: map=169 CinnabarLabMetronomeRoom
+[INFO] GBA Debug: memory: map=170 CinnabarLabFossilRoom
+[INFO] GBA Debug: memory: map=171 CinnabarPokecenter
+[INFO] GBA Debug: memory: map=172 CinnabarMart
+[INFO] GBA Debug: memory: map=173 CinnabarMartCopy
+[INFO] GBA Debug: memory: map=174 IndigoPlateauLobby
+[INFO] GBA Debug: memory: map=175 CopycatsHouse1F
+[INFO] GBA Debug: memory: map=176 CopycatsHouse2F
+[INFO] GBA Debug: memory: map=177 FightingDojo
+[INFO] GBA Debug: memory: map=178 SaffronGym
+[INFO] GBA Debug: memory: map=179 SaffronPidgeyHouse
+[INFO] GBA Debug: memory: map=180 SaffronMart
+[INFO] GBA Debug: memory: map=181 SilphCo1F
+[INFO] GBA Debug: memory: map=182 SaffronPokecenter
+[INFO] GBA Debug: memory: map=183 MrPsychicsHouse
+[INFO] GBA Debug: memory: map=184 Route15Gate1F
+[INFO] GBA Debug: memory: map=185 Route15Gate2F
+[INFO] GBA Debug: memory: map=186 Route16Gate1F
+[INFO] GBA Debug: memory: map=187 Route16Gate2F
+[INFO] GBA Debug: memory: map=188 Route16FlyHouse
+[INFO] GBA Debug: memory: map=189 Route12SuperRodHouse
+[INFO] GBA Debug: memory: map=190 Route18Gate1F
+[INFO] GBA Debug: memory: map=191 Route18Gate2F
+[INFO] GBA Debug: memory: map=192 SeafoamIslands1F
+[INFO] GBA Debug: memory: map=193 Route22Gate
+[INFO] GBA Debug: memory: map=194 VictoryRoad2F
+[INFO] GBA Debug: memory: map=195 Route12Gate2F
+[INFO] GBA Debug: memory: map=196 VermilionTradeHouse
+[INFO] GBA Debug: memory: map=197 DiglettsCave
+[INFO] GBA Debug: memory: map=198 VictoryRoad3F
+[INFO] GBA Debug: memory: map=199 RocketHideoutB1F
+[INFO] GBA Debug: memory: map=200 RocketHideoutB2F
+[INFO] GBA Debug: memory: map=201 RocketHideoutB3F
+[INFO] GBA Debug: memory: map=202 RocketHideoutB4F
+[INFO] GBA Debug: memory: map=203 RocketHideoutElevator
+[INFO] GBA Debug: memory: map=204 UnusedMapCC
+[INFO] GBA Debug: memory: map=205 UnusedMapCD
+[INFO] GBA Debug: memory: map=206 UnusedMapCE
+[INFO] GBA Debug: memory: map=207 SilphCo2F
+[INFO] GBA Debug: memory: map=208 SilphCo3F
+[INFO] GBA Debug: memory: map=209 SilphCo4F
+[INFO] GBA Debug: memory: map=210 SilphCo5F
+[INFO] GBA Debug: memory: map=211 SilphCo6F
+[INFO] GBA Debug: memory: map=212 SilphCo7F
+[INFO] GBA Debug: memory: map=213 SilphCo8F
+[INFO] GBA Debug: memory: map=214 PokemonMansion2F
+[INFO] GBA Debug: memory: map=215 PokemonMansion3F
+[INFO] GBA Debug: memory: map=216 PokemonMansionB1F
+[INFO] GBA Debug: memory: map=217 SafariZoneEast
+[INFO] GBA Debug: memory: map=218 SafariZoneNorth
+[INFO] GBA Debug: memory: map=219 SafariZoneWest
+[INFO] GBA Debug: memory: map=220 SafariZoneCenter
+[INFO] GBA Debug: memory: map=221 SafariZoneCenterRestHouse
+[INFO] GBA Debug: memory: map=222 SafariZoneSecretHouse
+[INFO] GBA Debug: memory: map=223 SafariZoneWestRestHouse
+[INFO] GBA Debug: memory: map=224 SafariZoneEastRestHouse
+[INFO] GBA Debug: memory: map=225 SafariZoneNorthRestHouse
+[INFO] GBA Debug: memory: map=226 CeruleanCave2F
+[INFO] GBA Debug: memory: map=227 CeruleanCaveB1F
+[INFO] GBA Debug: memory: map=228 CeruleanCave1F
+[INFO] GBA Debug: memory: map=229 NameRatersHouse
+[INFO] GBA Debug: memory: map=230 CeruleanBadgeHouse
+[INFO] GBA Debug: memory: map=231 UnusedMapE7
+[INFO] GBA Debug: memory: map=232 RockTunnelB1F
+[INFO] GBA Debug: memory: map=233 SilphCo9F
+[INFO] GBA Debug: memory: map=234 SilphCo10F
+[INFO] GBA Debug: memory: map=235 SilphCo11F
+[INFO] GBA Debug: memory: map=236 SilphCoElevator
+[INFO] GBA Debug: memory: map=237 UnusedMapED
+[INFO] GBA Debug: memory: map=238 UnusedMapEE
+[INFO] GBA Debug: memory: map=239 TradeCenter
+[INFO] GBA Debug: memory: map=240 Colosseum
+[INFO] GBA Debug: memory: map=241 UnusedMapF1
+[INFO] GBA Debug: memory: map=242 UnusedMapF2
+[INFO] GBA Debug: memory: map=243 UnusedMapF3
+[INFO] GBA Debug: memory: map=244 UnusedMapF4
+[INFO] GBA Debug: memory: map=245 LoreleisRoom
+[INFO] GBA Debug: memory: map=246 BrunosRoom
+[INFO] GBA Debug: memory: map=247 AgathasRoom
+[INFO] GBA Debug: memory: PASS case=maps count=248 free=30208B stack=13232B
+[INFO] GBA Debug: memory: script=OaksLab case=0 free=30208B stack=13232B
+[INFO] GBA Debug: repro: heap low 7816B at frame 43662
+[INFO] GBA Debug: memory: PASS case=oak-parcel count=1 free=27416B stack=13232B
+[INFO] GBA Debug: memory: script=OaksLab case=1 free=26976B stack=13232B
+[INFO] GBA Debug: memory: script=OaksLab case=2 free=28512B stack=13232B
+[INFO] GBA Debug: memory: script=OaksLab case=3 free=22368B stack=13232B
+[INFO] GBA Debug: memory: script=OaksLab case=4 free=22368B stack=13232B
+[INFO] GBA Debug: memory: script=OaksLab case=5 free=22368B stack=13232B
+[INFO] GBA Debug: memory: script=OaksLab case=6 free=22368B stack=13232B
+[INFO] GBA Debug: memory: script=OaksLab case=7 free=22368B stack=13232B
+[INFO] GBA Debug: memory: script=OaksLab case=8 free=22368B stack=13232B
+[INFO] GBA Debug: memory: script=OaksLab case=9 free=22368B stack=13232B
+[INFO] GBA Debug: memory: script=OaksLab case=10 free=22368B stack=13232B
+[INFO] GBA Debug: memory: script=OaksLab case=11 free=22368B stack=13232B
+[INFO] GBA Debug: memory: script=OaksLab case=12 free=22368B stack=13232B
+[INFO] GBA Debug: memory: script=OaksLab case=13 free=22368B stack=13232B
+[INFO] GBA Debug: memory: script=OaksLab case=14 free=22368B stack=13232B
+[INFO] GBA Debug: memory: script=OaksLab case=15 free=22368B stack=13232B
+[INFO] GBA Debug: memory: script=OaksLab case=16 free=22368B stack=13232B
+[INFO] GBA Debug: memory: PASS case=oak-dex count=16 free=22368B stack=13232B
+[INFO] GBA Debug: memory: script=CinnabarLabFossilRoom case=17 free=28512B stack=13232B
+[FATAL] GBA Debug: panicked at /workspace/.rustup/toolchains/nightly-2025-12-07-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/alloc/src/alloc.rs:439:13:
+GBA runtime failure: [FATAL] GBA Debug: panicked at /workspace/.rustup/toolchains/nightly-2025-12-07-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/alloc/src/alloc.rs:439:13:

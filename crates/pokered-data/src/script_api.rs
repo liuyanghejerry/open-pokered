@@ -48,6 +48,15 @@ fn badge_index(name: &str) -> Option<u8> {
 
 impl ScriptApiRegistrar for PokemonScriptApi {
     fn register_api(&self, engine: &mut dotzuki_engine_script::ScriptEngine) {
+        // FoundItemText prints, plays GET_ITEM_1, then closes without A.
+        engine.register_async_fn(
+            "showItemDialogue",
+            |args: &[JsValue], ctx: &mut Context| -> JsResult<ScriptCommand> {
+                let text = args.get_or_undefined(0).to_string(ctx)?.to_std_string_lossy();
+                Ok(PokemonScriptCommand::ShowItemDialogue { text }.into_script_command())
+            },
+        );
+
         // game.giveItem(itemId: string, quantity: number) -> Promise<void>
         engine.register_async_fn(
             "giveItem",
@@ -390,6 +399,14 @@ impl ScriptApiRegistrar for PokemonScriptApi {
         // ── Game-side re-registrations: these verbs were registered by the
         // core engine before the `Custom` refactor dropped their dedicated
         // variants; games must now register them. JS names unchanged. ────────
+
+        // Wait for the sequencer, rather than guessing a jingle duration.
+        engine.register_async_fn(
+            "waitMusic",
+            |_args: &[JsValue], _ctx: &mut Context| -> JsResult<ScriptCommand> {
+                Ok(PokemonScriptCommand::WaitMusic.into_script_command())
+            },
+        );
 
         // game.playShipDeparture() -> Promise<void>
         // The S.S. Anne departure cutscene (VermilionDock): the blocking

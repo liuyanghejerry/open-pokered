@@ -1,0 +1,271 @@
+{
+  "reference_source": "pret/pokered@fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "capture_date": "2026-10-02",
+  "cases": [
+    {
+      "name": "main-menu",
+      "frame": 10,
+      "language": "en",
+      "before_source": "72ff719b39634c153cb82d3f3ece200bd413c4e0",
+      "after_source": "cd9acde31a430e69768b39f598dc90c9fa536ccc",
+      "images": {
+        "before": {
+          "file": "main-menu-before.png",
+          "sha256": "efcaa6207bb0241379d34d98fa821c9276e8aa9d540e0293db1a59b49732e9fb",
+          "binary_sha256": "fd832ed427cb33c0ea14a7fa10a97b6363381009a6a1a3ef037a0b1989ac1879",
+          "metadata": "main-menu-before.json"
+        },
+        "after": {
+          "file": "main-menu-after.png",
+          "sha256": "49d520b9d76d9acc98f8577cdb03896284b758f0abf3fdb18d3a4df610a386ce",
+          "binary_sha256": "0dba5dc0ab6870244c01f42adea919ddb27689bf197a58dc086207f9712132de",
+          "metadata": "main-menu-after.json"
+        }
+      },
+      "status": "Historical withdrawn font experiment; excluded from final PR acceptance"
+    },
+    {
+      "name": "options",
+      "frame": 10,
+      "language": "en",
+      "before_source": "72ff719b39634c153cb82d3f3ece200bd413c4e0",
+      "after_source": "cd9acde31a430e69768b39f598dc90c9fa536ccc",
+      "images": {
+        "before": {
+          "file": "options-before.png",
+          "sha256": "8dfa101dd930ba3a9a6b55d8c1a5d3b6547cb13d25ca98d0dca5c6a5450ebe0e",
+          "binary_sha256": "fd832ed427cb33c0ea14a7fa10a97b6363381009a6a1a3ef037a0b1989ac1879",
+          "metadata": "options-before.json"
+        },
+        "after": {
+          "file": "options-after.png",
+          "sha256": "bebfb21749b39756874853d6a621470507a67e562f02fb406bfa8a705f0080ad",
+          "binary_sha256": "0dba5dc0ab6870244c01f42adea919ddb27689bf197a58dc086207f9712132de",
+          "metadata": "options-after.json"
+        }
+      },
+      "status": "Historical withdrawn font experiment; excluded from final PR acceptance"
+    },
+    {
+      "name": "naming",
+      "frame": 10,
+      "language": "zh",
+      "before_source": "72ff719b39634c153cb82d3f3ece200bd413c4e0",
+      "after_source": "cd9acde31a430e69768b39f598dc90c9fa536ccc",
+      "images": {
+        "before": {
+          "file": "naming-before.png",
+          "sha256": "8c113dff128bf15586440d83f99255e0484874fb677dd0827ae134cca2f713df",
+          "binary_sha256": "fd832ed427cb33c0ea14a7fa10a97b6363381009a6a1a3ef037a0b1989ac1879",
+          "metadata": "naming-before.json"
+        },
+        "after": {
+          "file": "naming-after.png",
+          "sha256": "530c5e908b3c81fa06a794d2c2e06a629424b10528f4d45e332faea10d111bac",
+          "binary_sha256": "0dba5dc0ab6870244c01f42adea919ddb27689bf197a58dc086207f9712132de",
+          "metadata": "naming-after.json"
+        }
+      },
+      "status": "Historical withdrawn font experiment; excluded from final PR acceptance"
+    },
+    {
+      "name": "stats-zh",
+      "frame": 512,
+      "language": "zh",
+      "before_source": "72ff719b39634c153cb82d3f3ece200bd413c4e0",
+      "after_source": "cd9acde31a430e69768b39f598dc90c9fa536ccc",
+      "images": {
+        "before": {
+          "file": "stats-zh-before.png",
+          "sha256": "46467ac594b25887f20298116a2f93a6c475b896fa3e1f3bb878618a8748ccbf",
+          "binary_sha256": "fd832ed427cb33c0ea14a7fa10a97b6363381009a6a1a3ef037a0b1989ac1879",
+          "metadata": "stats-zh-before.json"
+        },
+        "after": {
+          "file": "stats-zh-after.png",
+          "sha256": "4260fc8122ed8a329208ae8704e09ea5366d8e5530d3dca8817801c7dd7d9c45",
+          "binary_sha256": "0dba5dc0ab6870244c01f42adea919ddb27689bf197a58dc086207f9712132de",
+          "metadata": "stats-zh-after.json"
+        }
+      },
+      "status": "Historical withdrawn font experiment; excluded from final PR acceptance"
+    },
+    {
+      "name": "mart-buy",
+      "frame": 1024,
+      "language": "en",
+      "before_source": "72ff719b39634c153cb82d3f3ece200bd413c4e0",
+      "after_source": "cd9acde31a430e69768b39f598dc90c9fa536ccc",
+      "images": {
+        "before": {
+          "file": "mart-buy-before.png",
+          "sha256": "a108c970bc54393e7098d18d8ff1c968c2be593b73de2922537b2cc041a81806",
+          "binary_sha256": "fd832ed427cb33c0ea14a7fa10a97b6363381009a6a1a3ef037a0b1989ac1879",
+          "metadata": "mart-buy-before.json"
+        },
+        "after": {
+          "file": "mart-buy-after.png",
+          "sha256": "625a07ed621d7d19155a2f66ca8196fd6544b08af44afcc1a2bc80e8b5e19f1a",
+          "binary_sha256": "0dba5dc0ab6870244c01f42adea919ddb27689bf197a58dc086207f9712132de",
+          "metadata": "mart-buy-after.json"
+        }
+      },
+      "status": "Historical withdrawn font experiment; excluded from final PR acceptance"
+    },
+    {
+      "name": "town-map-en",
+      "frame": 10,
+      "language": "en",
+      "before_source": "72ff719b39634c153cb82d3f3ece200bd413c4e0",
+      "after_source": "eebde2fc3a4f78c38b4c7b5d49e0db2b830cb235",
+      "images": {
+        "before": {
+          "file": "town-map-en-before.png",
+          "sha256": "edf98bee2168c1e106dded7b8cb0c48ebfad5d8f38085430ffe6af935fb8c028",
+          "binary_sha256": "fd832ed427cb33c0ea14a7fa10a97b6363381009a6a1a3ef037a0b1989ac1879",
+          "metadata": "town-map-en-before.json"
+        },
+        "after": {
+          "file": "town-map-en-after.png",
+          "sha256": "a74402aea375b2a3e394467b4478e41e9b7a308a3dc6c96af2195615e857e2d6",
+          "binary_sha256": "ea717f1c2d6332f4608fc13194296cdb166ea20662d8d0f7c379bd17ba005e52",
+          "metadata": "town-map-en-after.json"
+        }
+      },
+      "status": "Final functional capture with project font retained",
+      "changed_pixels": 2205
+    },
+    {
+      "name": "town-map-zh",
+      "frame": 10,
+      "language": "zh",
+      "before_source": "72ff719b39634c153cb82d3f3ece200bd413c4e0",
+      "after_source": "eebde2fc3a4f78c38b4c7b5d49e0db2b830cb235",
+      "images": {
+        "before": {
+          "file": "town-map-zh-before.png",
+          "sha256": "04d2ddf0da5c5d5013397622751af5545348d638bdf95c7067d2c5ccbbd337dc",
+          "binary_sha256": "fd832ed427cb33c0ea14a7fa10a97b6363381009a6a1a3ef037a0b1989ac1879",
+          "metadata": "town-map-zh-before.json"
+        },
+        "after": {
+          "file": "town-map-zh-after.png",
+          "sha256": "bea1791be26bdba90a8175c523b199b65eb5e608f60809f2c458fce947a3aa7f",
+          "binary_sha256": "ea717f1c2d6332f4608fc13194296cdb166ea20662d8d0f7c379bd17ba005e52",
+          "metadata": "town-map-zh-after.json"
+        }
+      },
+      "status": "Final functional capture with project font retained",
+      "changed_pixels": 2121
+    },
+    {
+      "name": "trade-went-40",
+      "phase_frame": 40,
+      "language": "en",
+      "before_source": "72ff719b39634c153cb82d3f3ece200bd413c4e0",
+      "after_source": "eebde2fc3a4f78c38b4c7b5d49e0db2b830cb235",
+      "images": {
+        "before": {
+          "file": "trade-went-40-before.png",
+          "sha256": "94bcf983e0b4ca2a30a081eacd9df1dbd9a42fc97b1cd106ec8fe19a7a344254",
+          "binary_sha256": "fd832ed427cb33c0ea14a7fa10a97b6363381009a6a1a3ef037a0b1989ac1879",
+          "movie_frame": 379,
+          "metadata": "trade-text-before.json"
+        },
+        "after": {
+          "file": "trade-went-40-after.png",
+          "sha256": "5655bc1ee3914b1a2e5df60b8c3b27a47f43bd415dcd62eb5eb4155fbe4960f0",
+          "binary_sha256": "ea717f1c2d6332f4608fc13194296cdb166ea20662d8d0f7c379bd17ba005e52",
+          "movie_frame": 379,
+          "metadata": "trade-text-after.json"
+        }
+      },
+      "status": "Final functional capture with project font retained",
+      "changed_pixels": 1760
+    },
+    {
+      "name": "trade-for-40",
+      "phase_frame": 40,
+      "language": "en",
+      "before_source": "72ff719b39634c153cb82d3f3ece200bd413c4e0",
+      "after_source": "eebde2fc3a4f78c38b4c7b5d49e0db2b830cb235",
+      "images": {
+        "before": {
+          "file": "trade-for-40-before.png",
+          "sha256": "5e982dbe64ac8239882b263f83eadd9b62d2d95a52580388481f278fc74457a0",
+          "binary_sha256": "fd832ed427cb33c0ea14a7fa10a97b6363381009a6a1a3ef037a0b1989ac1879",
+          "movie_frame": 459,
+          "metadata": "trade-text-before.json"
+        },
+        "after": {
+          "file": "trade-for-40-after.png",
+          "sha256": "960f472d27a48b07d3082d15bb4c75dd2ee9ec20ce20614376e77b0627b64fe5",
+          "binary_sha256": "ea717f1c2d6332f4608fc13194296cdb166ea20662d8d0f7c379bd17ba005e52",
+          "movie_frame": 716,
+          "metadata": "trade-text-after.json"
+        }
+      },
+      "status": "Final functional capture with project font retained",
+      "changed_pixels": 1817
+    },
+    {
+      "name": "trade-farewell-40",
+      "phase_frame": 40,
+      "language": "en",
+      "before_source": "72ff719b39634c153cb82d3f3ece200bd413c4e0",
+      "after_source": "eebde2fc3a4f78c38b4c7b5d49e0db2b830cb235",
+      "images": {
+        "before": {
+          "file": "trade-farewell-40-before.png",
+          "sha256": "371d2125bf122cb94a0103b5fb4a0e1a21255fbed933a2160943502e0003d0c1",
+          "binary_sha256": "fd832ed427cb33c0ea14a7fa10a97b6363381009a6a1a3ef037a0b1989ac1879",
+          "movie_frame": 539,
+          "metadata": "trade-text-before.json"
+        },
+        "after": {
+          "file": "trade-farewell-40-after.png",
+          "sha256": "9a239932dc0a30e3b48780b5de80ccf513da5cd9e169e4b79070d43c9fc839bf",
+          "binary_sha256": "ea717f1c2d6332f4608fc13194296cdb166ea20662d8d0f7c379bd17ba005e52",
+          "movie_frame": 876,
+          "metadata": "trade-text-after.json"
+        }
+      },
+      "status": "Final functional capture with project font retained",
+      "changed_pixels": 1918
+    },
+    {
+      "name": "link-trade-went-40",
+      "phase_frame": 40,
+      "language": "en",
+      "before_source": "72ff719b39634c153cb82d3f3ece200bd413c4e0",
+      "after_source": "eebde2fc3a4f78c38b4c7b5d49e0db2b830cb235",
+      "images": {
+        "before": {
+          "file": "link-trade-went-40-before.png",
+          "sha256": "f5fa35529bb06cb381e789e58bacf7d319d679413d6656bc9988a66a1de8b6f5",
+          "fixture_sha256": "b260db5ae084f2e2b1d05a0321fa2f108ebb02352070cec932fadc97dfcdec29",
+          "metadata": "link-trade-went-40-before.json"
+        },
+        "after": {
+          "file": "link-trade-went-40-after.png",
+          "sha256": "fa7839a3aca28bc1d5cfc6f71c8d5ae1bf01762b35ffe6cfdb648ed6f01b7d46",
+          "fixture_sha256": "ec563fc073d915a511c6cd80b9f947c54f0fb25ec642bb34403430200bf943c1",
+          "metadata": "link-trade-went-40-after.json"
+        }
+      },
+      "status": "Final functional capture with project font retained",
+      "changed_pixels": 1684
+    }
+  ],
+  "font_policy": "Replacement alphabet was withdrawn at user request; the five font-only pairs are historical and excluded from final PR acceptance. Six Town Map/NPC/link movie functional pairs were recaptured with the existing project font.",
+  "final_functional_pair_count": 6,
+  "historical_font_experiment_pair_count": 5,
+  "final_source_commit": "eebde2fc3a4f78c38b4c7b5d49e0db2b830cb235",
+  "final_engine_source": "92ba95f9526107e17874df53291ac7758d0930f0",
+  "final_capture_utc": "2026-10-02T14:56:37.540711+00:00",
+  "after_capture_ledger": {
+    "file": "../2026-10-02-full-fidelity/after-capture-ledger.json",
+    "sha256": "50d8f43f0e31e816e22fe5c73c03dc0adadf5c4b4bd0af73ad7e5f5fcc57225d",
+    "fresh_after_png_count": 65
+  }
+}

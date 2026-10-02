@@ -1,0 +1,8 @@
+[Debug] No --debug-modules flag provided
+Debug server started on port 56403
+Error: failed to read save file "/tmp/pokered-run-ug5nvfqq/play.sav": No such file or directory (os error 2)
+Asset root found: "/workspace/open-pokered/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
+Determinism pinned: seed 42
+Running headless (no window). Press Ctrl-C to exit.
+Driven-only mode: frames advance only via debug commands.

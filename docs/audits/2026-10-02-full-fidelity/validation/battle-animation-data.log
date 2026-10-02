@@ -1,0 +1,7 @@
+
+asm repo : /workspace/onboarding/pokered-reference-full
+rust data: /workspace/.cargo/git/checkouts/dotzuki-10858e612e941535/7efac8a/workspace/crates/dotzuki-renderer/src/battle_anim/data.rs
+entries compared: BASE_COORDS 177, FRAME_BLOCK_DATA 122, SUBANIM_DATA 86, MOVE_ANIM_DATA 203
+sub-tile pixel offsets preserved: 61 tile(s) (compared pixel-exact, 0 expected warnings)
+
+RESULT: 0 diffs — Rust data matches the disassembly

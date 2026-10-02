@@ -1,0 +1,16 @@
+
+running 1 test
+
+thread 'menus::battle_bag::pixel_tests::long_item_quantities_are_visible_inside_the_original_tile_border' (221464) panicked at /tmp/ui-battle-bag-before-source/menus/battle_bag.rs:125:33:
+assertion `left == right` failed: quantity bitmap: En SuperPotion ×1, cell 0 pixel (1,0)
+  left: Some(Rgba { r: 0, g: 0, b: 0, a: 255 })
+ right: Some(Rgba { r: 255, g: 255, b: 255, a: 255 })
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test menus::battle_bag::pixel_tests::long_item_quantities_are_visible_inside_the_original_tile_border ... FAILED
+
+failures:
+
+failures:
+    menus::battle_bag::pixel_tests::long_item_quantities_are_visible_inside_the_original_tile_border
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 10 filtered out; finished in 0.00s

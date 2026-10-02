@@ -1,14 +1,13 @@
 //! Pixel-level regression tests for the overworld dialog box layout.
 //!
-//! The game renders with the Fusion Pixel 10px font (Latin 5px, CJK 10px
-//! advance) on the original 20×18 grid of 8×8 tiles. Text wraps to fill the
-//! 144px box interior — ~28 Latin or 14 CJK characters per line — and must
+//! Keep the project's Fusion Pixel Latin/CJK typography on the 20×18 grid.
+//! Text wraps at its measured width inside the 144px box interior and must
 //! never cross the box's right border.
 
-use pokered_data::ui_layout::schema::DIALOG_DEFAULT_LAYOUT;
-use pokered_renderer::{FrameBuffer, Rgba};
 use dotzuki_engine::render_config::RenderConfig;
 use pokered_core::game_state::Lang;
+use pokered_data::ui_layout::schema::DIALOG_DEFAULT_LAYOUT;
+use pokered_renderer::{FrameBuffer, Rgba};
 use pokered_ui::backends::FrameBufferPainter;
 use pokered_ui::{menus, Ui};
 
@@ -22,18 +21,16 @@ fn render_dialog(text: &str, lang: Lang) -> FrameBuffer {
     fb
 }
 
-/// True if any ink pixel appears inside the 1-tile right border column of the
-/// standard 20×6 dialog box at (0,12) — tile column 19, pixel x 152..159,
-/// interior rows (y 104..135). The VERTICAL_RIGHT border glyph inks x 157..158
-/// (bitmap 0b00000110 → cols 5,6), so only x 155..156 is checked: ink there
-/// means text ran into the border padding.
+/// The rightmost border column must retain the original $7C tile. Compare
+/// every pixel with its stencil, including the padding beside both strokes.
 fn text_bleeds_into_right_border(fb: &FrameBuffer) -> bool {
+    let glyph = pokered_renderer::embedded_font::box_tiles::VERTICAL_RIGHT;
     for y in 104..136 {
-        for x in 155..157 {
-            if let Some(px) = fb.get_pixel(x, y) {
-                if px == Rgba::INK_BLACK || px == Rgba::BLACK {
-                    return true;
-                }
+        for x in 152..160 {
+            let ink = glyph[(y % 8) as usize] & (0x80 >> (x % 8)) != 0;
+            let expected = if ink { Rgba::BLACK } else { Rgba::WHITE };
+            if fb.get_pixel(x, y) != Some(expected) {
+                return true;
             }
         }
     }
@@ -41,8 +38,8 @@ fn text_bleeds_into_right_border(fb: &FrameBuffer) -> bool {
 }
 
 /// A typical zh dialogue page: two script-authored short lines joined the way
-/// the overworld renderer joins page lines. With pixel wrapping the two short
-/// lines are re-flowed into fuller lines rather than staying half-empty.
+/// the overworld renderer joins page lines. Authored hard breaks survive;
+/// each row also wraps independently at the actual pixel width.
 fn zh_page(joiner: &str) -> String {
     let line1 = "你好世界这是第一行对话哟"; // 12 chars
     let line2 = "第二行也写满了十三个字"; // 11 chars
@@ -53,7 +50,8 @@ fn zh_page(joiner: &str) -> String {
 fn zh_dialog_stays_inside_box() {
     for (joiner, tag) in [("\n", "nl"), (" ", "sp")] {
         let fb = render_dialog(&zh_page(joiner), Lang::Zh);
-        fb.save_png(std::path::Path::new(&format!("/tmp/dialog_zh_{}.png", tag))).ok();
+        fb.save_png(std::path::Path::new(&format!("/tmp/dialog_zh_{}.png", tag)))
+            .ok();
         assert!(
             !text_bleeds_into_right_border(&fb),
             "zh dialog text (joiner {:?}) must not cross the box's right border",
@@ -76,7 +74,8 @@ fn zh_dialog_wraps_long_unbroken_text() {
 
 #[test]
 fn en_dialog_stays_inside_box() {
-    let text = "Hello there!\nWelcome to the world of POKéMON! This is a long line that should wrap.";
+    let text =
+        "Hello there!\nWelcome to the world of POKéMON! This is a long line that should wrap.";
     let fb = render_dialog(text, Lang::En);
     fb.save_png(std::path::Path::new("/tmp/dialog_en.png")).ok();
     assert!(
@@ -109,4 +108,33 @@ fn en_dialog_line_fills_box() {
     }
     assert!(reached_past_90px, "a 135px line must extend past the old 90px limit");
     assert!(!text_bleeds_into_right_border(&fb), "…but never cross the right border");
+}
+
+#[test]
+fn project_font_descenders_do_not_touch_the_original_bottom_border() {
+    use pokered_data::ui_layout::schema::BATTLE_TEXT_DEFAULT_LAYOUT;
+    for lang in [Lang::En, Lang::Zh] {
+        for battle in [false, true] {
+            let mut actual = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+            let mut painter = FrameBufferPainter::new(&mut actual).with_lang(lang);
+            if battle {
+                menus::battle_text::draw_hard_lines("First row.\ngyp points!", false,
+                    &BATTLE_TEXT_DEFAULT_LAYOUT, &mut Ui::new(&mut painter), lang);
+            } else {
+                menus::dialog::draw("First row.\ngyp points!", false,
+                    &DIALOG_DEFAULT_LAYOUT, &mut Ui::new(&mut painter), lang);
+            }
+            let mut expected = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+            dotzuki_renderer::embedded_font::draw_text("gyp points!", 8,
+                if lang == Lang::Zh { 123 } else { 124 }, Rgba::BLACK, &mut expected);
+            for y in 124..136 { for x in 8..80 {
+                assert_eq!(actual.get_pixel(x,y), expected.get_pixel(x,y),
+                    "the entire unchanged project glyph must fit above the border: {lang:?} battle={battle} ({x},{y})");
+            } }
+            for y in 136..138 { for x in 8..144 {
+                assert_eq!(actual.get_pixel(x,y), Some(Rgba::WHITE),
+                    "keep descenders separate from the original border");
+            } }
+        }
+    }
 }

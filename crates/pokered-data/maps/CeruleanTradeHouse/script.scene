@@ -38,14 +38,17 @@ game_scene CeruleanTradeHouse {
           // ConnectCableText -> real in-game trade (removes POLIWHIRL, adds
           // JYNX nicknamed LOLA). tradePokemon returns false if the player
           // doesn't actually carry POLIWHIRL -> WrongMon3 (dialogset EVOLUTION).
-          @speaker("") { @t("Okay, connect the cable like\nso!", "好的，请像这样连接线路！") }
           traded = tradePokemon("POLIWHIRL", "JYNX", "LOLA")
           @if (traded) {
             setFlag("EVENT_TRADED_FOR_LOLA")
             @speaker("") { @t("<PLAYER> traded POLIWHIRL\nfor JYNX!", "<PLAYER>用蚊香君换到了迷唇\n姐！") }
             @speaker("") { @t("Thanks pal!", "谢啦，朋友！") }
           } @else {
-            @speaker("") { @t("...This is no POLIWHIRL.\n\nIf you get one, trade it\nwith me!", "……这不是蚊香君。\n\n如果你弄到一只，就来和我交换\n吧！") }
+            @if (getFlag("NPC_TRADE_CANCELLED")) {
+              @speaker("") { @t("That's too bad.", "那太可惜了。") }
+            } @else {
+              @speaker("") { @t("...This is no POLIWHIRL.\n\nIf you get one, trade it\nwith me!", "……这不是蚊香君。\n\n如果你弄到一只，就来和我交换\n吧！") }
+            }
           }
         }
         @option(@t("NO", "否")) {

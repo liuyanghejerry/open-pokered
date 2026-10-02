@@ -57,6 +57,8 @@ pub(crate) mod alloc_prelude {
 
 // Pokemon-specific modules (not in dotzuki-renderer)
 pub mod embedded;
+// Keep the project font while adding dedicated Pokémon UI graphics.
+pub mod embedded_font;
 pub mod hash_compat;
 pub mod gen1_battle_anim;
 mod gen1_wavy_schedule;
@@ -80,6 +82,7 @@ pub use gba_rom_dims::tile_dims as gba_rom_tile_dims;
 // glob re-export above so `pokered_renderer::mon_icon::load_mon_icon_tiles`
 // resolves the party icons against the real pret/pokered gfx files.
 pub mod mon_icon;
+pub mod overworld_palette;
 #[cfg(all(feature = "resource", not(target_os = "none")))]
 pub mod resource;
 

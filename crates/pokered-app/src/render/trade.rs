@@ -32,7 +32,7 @@ use pokered_renderer::{FrameBuffer, Rgba, TILE_SIZE};
 use pokered_ui::backends::FrameBufferPainter;
 use pokered_ui::{menus, Ui};
 
-use super::{blit_tileset, species_to_sprite_name};
+use super::{blit_front_pic, blit_tileset, species_to_sprite_name};
 
 /// SUBANIM_DATA indices for the trade ball sub-animations
 /// (`data/battle_anims/subanimations.asm` 0x48-0x4B).
@@ -122,7 +122,7 @@ pub fn draw_trade(anim: &TradeAnim, resources: &mut Option<ResourceManager>, fb:
     // Interstitial trade texts, in the standard dialogue box (CJK-safe).
     if let Some((l1, l2)) = anim.text_lines() {
         let combined = format!("{}\n{}", l1, l2);
-        let mut painter = FrameBufferPainter::new(fb);
+        let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
         let mut ui = Ui::new(&mut painter);
         menus::dialog::draw(&combined, false, &DIALOG_DEFAULT_LAYOUT, &mut ui, lang);
     }
@@ -210,13 +210,8 @@ fn draw_mon_pic(
     if let Some(rm) = resources.as_mut() {
         let sprite = species_to_sprite_name(&format!("{}", species));
         if let Ok(cached) = rm.load_pokemon_front(&sprite) {
-            let ts = &cached.tileset;
-            let w_tiles = cached.source_size.0 / TILE_SIZE;
-            let x = 56 + panel_offset_x;
-            if x >= 0 {
-                blit_tileset(fb, ts, x as u32, 16, w_tiles, &GRAYSCALE_SPRITE_PALETTE);
+            blit_front_pic(fb, cached, 56 + panel_offset_x, 16, true);
             }
-        }
     }
 }
 
@@ -377,7 +372,7 @@ mod tests {
             ticks += 1;
             assert!(ticks < 2000, "animation must terminate");
         }
-        assert_eq!(seen.len(), 15, "all visible phases rendered");
+        assert_eq!(seen.len(), 17, "all visible phases rendered");
     }
 
     #[test]

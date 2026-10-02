@@ -62,18 +62,14 @@ fighting fit!", "谢谢你等候。\n\n你的宝可梦已经全部痊愈！")
         @option(@t("YES", "是")) {
           @if (!hasMoney(500)) {
             @speaker("") { @t("You'll need more money than\nthat!", "你需要更多的钱！") }
-          } @else @if (getPartyCount() >= 6) {
-            // Original: GivePokemon fails when there is no room and the sale
-            // silently aborts (jr nc, .done) — no money taken, no flag set,
-            // no extra text. givePokemon() returns Promise<void>, so failure
-            // is not detectable from script; and engine-side a full party
-            // silently drops the gift (pokered-app game.rs ignores the
-            // party.add() result). Gate on the party count so the player is
-            // never charged for a MAGIKARP they cannot receive.
           } @else {
-            givePokemon("MAGIKARP", 5)
-            takeMoney(500)
-            setFlag("EVENT_BOUGHT_MAGIKARP")
+            // GivePokemon sends a full party's gift to the current PC box.
+            // Original charges only when GivePokemon sets carry.
+            given = givePokemon("MAGIKARP", 5)
+            @if (given) {
+              takeMoney(500)
+              setFlag("EVENT_BOUGHT_MAGIKARP")
+            }
           }
         }
         @option(@t("NO", "否")) {
@@ -90,7 +86,8 @@ fighting fit!", "谢谢你等候。\n\n你的宝可梦已经全部痊愈！")
 
   @storyline("talkLinkReceptionist") {
     @trigger(map = "MtMoonPokecenter", npc = 6)
-    @speaker("") { @t("Welcome to the CABLE CLUB!", "欢迎来到联机俱乐部！") }
+    @speaker("") { @t("Welcome to the\nCable Club!", "欢迎来到联机俱乐部！") }
+    linkStart()
   }
 
   // ── Pokémon Center PC (sign 1 at 13,3) ───────────────────────────────

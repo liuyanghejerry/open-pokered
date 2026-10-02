@@ -1,0 +1,129 @@
+{
+  "source_commit": "eebde2fc3a4f78c38b4c7b5d49e0db2b830cb235",
+  "engine_revision": "92ba95f9526107e17874df53291ac7758d0930f0",
+  "ordinary_font": "project original Fusion Pixel",
+  "command": "CARGO_INCREMENTAL=0 cargo build --offline --locked -p pokered-app -p pokered-tui --features debug-server --bin pokered-app --bin pokered-tui --example fidelity_visual_capture --example fidelity_link_movie_capture --example pc_tour --message-format=json",
+  "exit_code": 0,
+  "artifacts": {
+    "pokered-app": {
+      "path": "/workspace/onboarding/pokered-font-preserved-final-checked/pokered-app",
+      "sha256": "ea717f1c2d6332f4608fc13194296cdb166ea20662d8d0f7c379bd17ba005e52",
+      "features": [
+        "debug-server",
+        "default",
+        "desktop",
+        "pokered-debug-server"
+      ],
+      "target_kind": [
+        "bin"
+      ]
+    },
+    "pokered-tui": {
+      "path": "/workspace/onboarding/pokered-font-preserved-final-checked/pokered-tui",
+      "sha256": "a487618d8198776eb1a75febdfe0c29d7639005e6edd86b70caf897003e6d79e",
+      "features": [],
+      "target_kind": [
+        "bin"
+      ]
+    },
+    "pc_tour": {
+      "path": "/workspace/onboarding/pokered-font-preserved-final-checked/pc_tour",
+      "sha256": "32f88cbe1460667664092a137f40a7a4ba3b694b377bf096d73cd41c6a46466b",
+      "features": [
+        "debug-server",
+        "default",
+        "desktop",
+        "pokered-debug-server"
+      ],
+      "target_kind": [
+        "example"
+      ]
+    },
+    "fidelity_visual_capture": {
+      "path": "/workspace/onboarding/pokered-font-preserved-final-checked/fidelity_visual_capture",
+      "sha256": "bb19209a2e3cacdcd29aa07482edf476dedf4c56c9061131799d14ed1cc2adf2",
+      "features": [
+        "debug-server",
+        "default",
+        "desktop",
+        "pokered-debug-server"
+      ],
+      "target_kind": [
+        "example"
+      ]
+    },
+    "fidelity_link_movie_capture": {
+      "path": "/workspace/onboarding/pokered-font-preserved-final-checked/fidelity_link_movie_capture",
+      "sha256": "ec563fc073d915a511c6cd80b9f947c54f0fb25ec642bb34403430200bf943c1",
+      "features": [
+        "debug-server",
+        "default",
+        "desktop",
+        "pokered-debug-server"
+      ],
+      "target_kind": [
+        "example"
+      ]
+    }
+  },
+  "engine_production_source": "92ba95f9526107e17874df53291ac7758d0930f0",
+  "additional_raw_capture_fixture": {
+    "path": "/workspace/onboarding/pokered-font-preserved-final-checked/fidelity_visual_capture_after",
+    "sha256": "c0aa573eb408a0c3df6380df30909c29d0d8aa964c5e9b4208d297f5450f680f",
+    "cfgs": [
+      "fidelity_after",
+      "feature=\"debug-server\""
+    ],
+    "source_commit": "eebde2fc3a4f78c38b4c7b5d49e0db2b830cb235",
+    "fixture_source_sha256": "b59c75d46d26feb8e9f295a45c061143b8bd1f3b1fb625c5efbba531e738ff6c",
+    "fixture_externs": [
+      {
+        "crate": "pokered_app",
+        "artifact": "libpokered_app-9a2c92716f801d99.rlib",
+        "sha256": "c44bb7e3245327b7bba26e38cd181ddbb0266995ac94b268ca9af3a33314904b",
+        "features": [
+          "debug-server",
+          "default",
+          "desktop",
+          "pokered-debug-server"
+        ]
+      },
+      {
+        "crate": "pokered_core",
+        "artifact": "libpokered_core-c04e3b89468622a4.rlib",
+        "sha256": "732e2c1d5af66bb53e2e9fc79eb32dd04d14b64a5668f03d7e3607b98007ced4",
+        "features": []
+      },
+      {
+        "crate": "pokered_data",
+        "artifact": "libpokered_data-706397b234cd2cbd.rlib",
+        "sha256": "5ad261855089cc9c27c38141ff063c6f043512b121956ac12e0881b3d46798a6",
+        "features": [
+          "default"
+        ]
+      },
+      {
+        "crate": "pokered_renderer",
+        "artifact": "libpokered_renderer-3940381f992e3066.rlib",
+        "sha256": "9d66864ba8c2b9d8523d3698faf5ef60656810fb625df1009dad203c7e1466c6",
+        "features": [
+          "default",
+          "framebuffer",
+          "gpu",
+          "resource"
+        ]
+      },
+      {
+        "crate": "dotzuki_engine",
+        "artifact": "libdotzuki_engine-739bf15ab0ae0f54.rlib",
+        "sha256": "e55c6df8bbf269e604a816f06deed9139f6a82b9f378bd0b064b91a584354f1b",
+        "features": [
+          "default"
+        ]
+      }
+    ],
+    "dependency_directory": "/workspace/onboarding/pokered-font-preserved-final-checked/fixture-deps",
+    "dependency_hash_manifest": "/workspace/onboarding/pokered-font-preserved-final-checked/fixture-dependency-hashes.json",
+    "note": "Frozen exact app crate metadata selects the graph; ordinary Cargo example lacks fidelity_after."
+  }
+}

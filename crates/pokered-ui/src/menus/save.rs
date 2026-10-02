@@ -196,7 +196,7 @@ mod tests {
         }
 
         fn measure_text_px(&self, text: &str) -> u32 {
-            dotzuki_renderer::embedded_font::measure_text(text)
+            pokered_renderer::embedded_font::measure_text(text)
         }
 
         fn draw_text_px_scaled(&mut self, px: u32, py: u32, text: &str, scale: u32, color: Rgba) {

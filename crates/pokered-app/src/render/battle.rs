@@ -4749,6 +4749,9 @@ pub fn draw_battle(
                     | BattlePhase::LearnMoveChoose { .. }
             ) {
                 if let Some(ref mm) = screen.move_menu {
+                    if screen.mimic_choice.is_some() {
+                        menus::battle_move::draw_mimic(mm, &mut ui, language, &rd);
+                    } else {
                     menus::battle_move::draw(
                         mm,
                         &BATTLE_MOVE_DEFAULT_LAYOUT,
@@ -4756,6 +4759,7 @@ pub fn draw_battle(
                         language,
                         &rd,
                     );
+                    }
                 }
             } else if matches!(screen.phase, BattlePhase::BagSelect) {
                 if let Some(ref bm) = screen.bag_menu {
@@ -4770,7 +4774,7 @@ pub fn draw_battle(
             ) {
                 if let Some(ref bs) = screen.battle_state {
                     menus::battle_party::draw(
-                        &bs.player.party,
+                        &bs.player.persistent_party(),
                         screen.party_cursor,
                         &BATTLE_PARTY_DEFAULT_LAYOUT,
                         &mut ui,
@@ -4969,46 +4973,21 @@ pub fn redraw_battle_party_menu_cursor(
 pub fn redraw_battle_party_menu_viewport(
     party: &[pokered_core::battle::state::Pokemon],
     cursor: usize,
-    previous_start: usize,
-    current_start: usize,
+    _previous_start: usize,
+    _current_start: usize,
     fb: &mut FrameBuffer,
     language: pokered_core::game_state::Lang,
 ) {
-    let rect = BATTLE_PARTY_DEFAULT_LAYOUT.box_0.rect;
-    let label_x = (rect.tx + 2) * 8;
-    let band_y = ((rect.ty + 1) * 8).saturating_sub(1);
-    let label_width = rect.tw.saturating_sub(3) * 8;
-    let band_height = rect.th.saturating_sub(2) * 8 + 6;
-    let shift = current_start.abs_diff(previous_start) as u32 * 8;
-    if shift < band_height {
-        if current_start > previous_start {
-            fb.copy_rect_within(
-                label_x,
-                band_y + shift,
-                label_width,
-                band_height - shift,
-                label_x,
-                band_y,
-            );
-        } else {
-            fb.copy_rect_within(
-                label_x,
-                band_y,
-                label_width,
-                band_height - shift,
-                label_x,
-                band_y + shift,
-            );
-        }
-    }
-
+    // The old copy band included the original bottom border and copied its
+    // ink into a retained label row. Redraw this small popup when it scrolls;
+    // the surrounding battle scene remains untouched.
     let mut painter = FrameBufferPainter::new(fb).with_lang(language);
-    menus::battle_party::redraw_viewport_edges(
+    let mut ui = Ui::new(&mut painter);
+    menus::battle_party::draw(
         party,
         cursor,
-        previous_start,
         &BATTLE_PARTY_DEFAULT_LAYOUT,
-        &mut painter,
+        &mut ui,
         language == Lang::Zh,
     );
 }
@@ -6102,5 +6081,40 @@ mod tests {
         assert!(!BattleVisualEffects::is_charge_message(
             "CHARMANDER used FLY!"
         ));
+    }
+}
+
+#[cfg(test)]
+mod fidelity_flow_regressions {
+    use super::*;
+    use crate::PokemonGame;
+    use dotzuki_app::InputState;
+    use pokered_renderer::input::GbButton;
+    use pokered_core::{data::wild_data::GameVersion, game_state::GameScreen,
+        pokemon::stats::create_pokemon_with_moves, battle::pokered_rules::runtime::StdBattleRng};
+    use pokered_data::species::Species;
+
+    #[test]
+    fn forest_string_shot_turn_finishes_after_real_trainer_intro() {
+        let mut game = PokemonGame::new(GameVersion::Red);
+        game.audio = None;
+        let mut player = create_pokemon_with_moves(Species::Bulbasaur, 5, [0xff; 2],
+            [MoveId::Tackle, MoveId::Growl, MoveId::None, MoveId::None]).unwrap();
+        player.speed = 1;
+        let enemy = create_pokemon_with_moves(Species::Weedle, 9, [0xff; 2],
+            [MoveId::StringShot, MoveId::None, MoveId::None, MoveId::None]).unwrap();
+        game.battle = BattleScreen::from_parties(false, &[player], &[enemy],
+            Some(pokered_data::trainer_data::TrainerClass::BugCatcher));
+        game.battle.rng = StdBattleRng::from_seed(42);
+        game.state.screen = GameScreen::Battle;
+        let mut began = false;
+        for frame in 0..5000 {
+            let mut input = InputState::new();
+            if frame % 2 == 0 { input.press(GbButton::A); }
+            game.update(&input);
+            began |= matches!(game.battle.phase, BattlePhase::ShowingText { .. });
+            if began && matches!(game.battle.phase, BattlePhase::PlayerMenu) { return; }
+        }
+        panic!("stuck in {:?}, visual state: {:#?}", game.battle.phase, game.battle_vfx);
     }
 }

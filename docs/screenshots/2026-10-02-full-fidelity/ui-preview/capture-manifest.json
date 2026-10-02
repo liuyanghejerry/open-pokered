@@ -1,0 +1,334 @@
+{
+  "screen": "battle_bag",
+  "mock_state_id": 0,
+  "lang_argument": 0,
+  "frame_count": 0,
+  "items": [
+    [
+      "POTION",
+      3
+    ],
+    [
+      "SUPER POTION",
+      1
+    ],
+    [
+      "ANTIDOTE",
+      2
+    ]
+  ],
+  "cursor": 0,
+  "dimensions": [
+    160,
+    144
+  ],
+  "font": "project Fusion Pixel retained on both sides",
+  "baseline_render_source": "72ff719b39634c153cb82d3f3ece200bd413c4e0",
+  "after_render_source_head_at_capture": "2c6c941467b204ef2998387b985e5777d9f40ab6",
+  "after_render_source_note": "HEAD plus recorded in-progress layout edits; direct compiled-library hashes identify the rendered build.",
+  "after_crates_worktree_diff_sha256": "ccc96fd432419f9cdcb898bdb43a6b651cc02652d4a1bc6dcae426983b42a57d",
+  "preview_source_sha256_at_capture": "882c0edf68159a36729c35fc6308cf9fef8bcfc4bc9b47f1362e9f7348af0e31",
+  "preview_source_sha256_after_golden_update": "9362c58d56fd0dc9a7a8fea4463165dc435657855fc5b1dc49cb03ffcf43a48c",
+  "before_sha256": "6eb2ee432b7ec735084f2c190877cceb1e05aed6feebc1c2cc0168eac788d7cd",
+  "after_sha256": "1c1062369168e0b70f8439683c0a9e6b26ec051cd32fd9c5f6793b0cceceffe2",
+  "before_capture_method": "Same render_battle_bag mock/default-layout draw body, compiled exclusively against preserved base72 core/UI/data/render libraries.",
+  "before_fixture_source_sha256": "9ea6b25536e8dfe1f6f5517d3043da4f6f21997464804e197d16e03e371f2ed7",
+  "before_fixture_binary_sha256": "ecc107d2cfe508ec71ed42f95a69acb62c50ea3ae2f13df57639d89fb869c51c",
+  "before_externs": {
+    "pokered_data": {
+      "path": "/workspace/onboarding/pokered-visual-base-deps/libpokered_data-0c35e7a9216ef546.rlib",
+      "sha256": "bd04302dc3a67aae769a1b5a16438ba14906d3398c9fd7bb13018c21f50ddb86"
+    },
+    "pokered_renderer": {
+      "path": "/workspace/onboarding/pokered-visual-base-deps/libpokered_renderer-0bc4d454c222649f.rlib",
+      "sha256": "719b576134186d16139a82bdb4968e7b1c83e6fea88cfdad1f3b39f7d0910141"
+    },
+    "pokered_core": {
+      "path": "/workspace/onboarding/pokered-visual-base-deps/libpokered_core-d131d6da165148f6.rlib",
+      "sha256": "3cc865bae0447099164d8d4770dfb0625e93041a62c19ffb9a0a06128514bc80"
+    },
+    "pokered_ui": {
+      "path": "/workspace/onboarding/pokered-visual-base-deps/libpokered_ui-228ab90059389bca.rlib",
+      "sha256": "ac16be320272eaf22e0825067b5143c907084571fe341140b52b89c964136f8e"
+    }
+  },
+  "after_capture_method": "Actual native render_layout battle_bag mock0; temporary source omits only WASM exports. Exact Cargo JSON artifacts identify the compiled dependencies.",
+  "after_externs": {
+    "serde_json": {
+      "path": "/workspace/open-pokered/target/debug/deps/libserde_json-4659e53807af5d30.rlib",
+      "sha256": "fa1f90b959bf797fa5074bb420979a8a16e32ca24462c4a30fa7bf5d0a6c6701"
+    },
+    "dotzuki_renderer": {
+      "path": "/workspace/open-pokered/target/debug/deps/libdotzuki_renderer-8cdcb36eaf0f23c0.rlib",
+      "sha256": "84747e4ee3ee152fadb3e0eecc161ff351c79d244a069f42d6aeaceed8e9ee1e"
+    },
+    "pokered_data": {
+      "path": "/workspace/open-pokered/target/debug/deps/libpokered_data-84e154b4ec20994e.rlib",
+      "sha256": "f156bfb96f839b0d41ee178221157ef22d72c5363eace42ecd12183ed968498f"
+    },
+    "pokered_renderer": {
+      "path": "/workspace/open-pokered/target/debug/deps/libpokered_renderer-76ae40f551e35e65.rlib",
+      "sha256": "235629a97933853bf316dde94893f6ae41e2a51e864d0765e89852bd4cf73b9c"
+    },
+    "pokered_core": {
+      "path": "/workspace/open-pokered/target/debug/deps/libpokered_core-24a6527e164cfc0f.rlib",
+      "sha256": "b00987df8a22b3dc03f05e3baa82b9542464694e26a61d11183c36a14e6a271e"
+    },
+    "pokered_ui": {
+      "path": "/workspace/open-pokered/target/debug/deps/libpokered_ui-d5a265b5c0b9fe7a.rlib",
+      "sha256": "99df28647ae91938524e3f3b918395d035b5f8f480043a10e547d8d0954e2e9f"
+    }
+  },
+  "reviewed_current_goldens": {
+    "MAIN": "0x6c27fb19c19b24f4",
+    "START": "0x878c3a9d37d5e4bd",
+    "DIALOG": "0x599168bcd2b2e67c",
+    "BATTLE_MOVE": "0x918d8ffb023a916c",
+    "BAG": "0x566b67e173e9659d",
+    "BATTLE_BAG": "0xff875ed399b72f4c",
+    "POKEDEX": "0x9bc214819f25be1d",
+    "YES_NO": "0x6b0545ef95ec081d",
+    "OAK_SPEECH": "0x258b99ca20094fcc",
+    "SAVE": "0xfd9edd817f77cb5c",
+    "OPTIONS": "0x0c7d4dc94a2675f4",
+    "NAMING": "0x32fcae69d767c7fd",
+    "BATTLE_MAIN": "0x1b46f003e4ea076c",
+    "BATTLE_PARTY": "0x30daba56c999130c"
+  },
+  "changed_pixels": 1184,
+  "baseline_quantity_overflow_observed": false,
+  "validation": {
+    "all_14_previews_visually_reviewed": true,
+    "cargo_preview_tests_passed": 58,
+    "cargo_preview_doc_tests_passed": 0,
+    "log": "/tmp/pokered-font-preserved-preview/row-spacing-tests.log",
+    "captures_and_raw_artifacts": "/tmp/pokered-font-preserved-preview"
+  },
+  "baseline_boundary_probe": {
+    "source": "72ff719b39634c153cb82d3f3ece200bd413c4e0",
+    "capture_method": "Frozen base72 libraries, actual PokemonRenderData provider, Lang::En and Lang::Zh, default Battle Bag layout.",
+    "fixture_source_sha256": "c46060a3c8b82a21e57ac7a1072753e54c937a42fa2d7d86c3366de4704cc964",
+    "fixture_binary_sha256": "e42f145fa1ddb503348438c6c9d7d3b5ab923a81a171c1c44415f4268c0afcc3",
+    "log": "/tmp/pokered-font-preserved-preview/baseline-boundaries.log",
+    "log_sha256": "5dea1976c64d95d600977778bc2308e00f4bcf8fb68a30e17b233e4a98cb52cf",
+    "row_start_x": 56,
+    "right_border_x": 152,
+    "cases": [
+      {
+        "name": "base-zh-default",
+        "language": "Zh",
+        "provider_is_zh": true,
+        "items": [
+          [
+            "POTION",
+            3
+          ],
+          [
+            "SUPER POTION",
+            1
+          ],
+          [
+            "ANTIDOTE",
+            2
+          ]
+        ],
+        "maximum_measured_width": 75,
+        "maximum_measured_end_x": 131
+      },
+      {
+        "name": "base-en-99",
+        "language": "En",
+        "provider_is_zh": false,
+        "items": [
+          [
+            "SUPER POTION",
+            99
+          ],
+          [
+            "THUNDERSTONE",
+            99
+          ]
+        ],
+        "maximum_measured_width": 80,
+        "maximum_measured_end_x": 136
+      },
+      {
+        "name": "base-zh-99",
+        "language": "Zh",
+        "provider_is_zh": true,
+        "items": [
+          [
+            "SUPER POTION",
+            99
+          ],
+          [
+            "THUNDERSTONE",
+            99
+          ]
+        ],
+        "maximum_measured_width": 80,
+        "maximum_measured_end_x": 136
+      }
+    ],
+    "png_sha256": {
+      "base-zh-default": "ae3554269c355827ff8881a6cdb9267a78ad6e8f8f2f15177c69ae8d05e77d3f",
+      "base-en-99": "28ce540fd6fcf8ee2fc2ed489a2c11f818fe4139c3c19fd42d5ea3b3d1d6bab1",
+      "base-zh-99": "344c916a95dc5bb1d6c1aa977e4f21423b8b745d3e5b6d1d6165622b4729b706"
+    },
+    "actual_provider_item_names_localized": false,
+    "note": "The base72 production provider returns English item names even with is_zh=true. All three images were individually reviewed; none showed quantity overflow. This does not establish behavior for an artificial provider that returns CJK item names."
+  },
+  "latest_preview_recapture": {
+    "source_head": "d7291eaa68c1b144adadb65cc9ffe06c73083c0a",
+    "crates_worktree_diff_sha256_at_capture": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "preview_source_sha256_at_capture": "9362c58d56fd0dc9a7a8fea4463165dc435657855fc5b1dc49cb03ffcf43a48c",
+    "preview_source_sha256_after_golden_update": "b30a529dfd9727865ca9de253ce93389ef0ec192184400835ca9de68a80394e8",
+    "source_note": "Production crates were clean at capture. Only the preview golden/comment changed after capture; compiled-library hashes identify exact dependencies.",
+    "direct_libraries": {
+      "serde_json": {
+        "path": "/workspace/open-pokered/target/debug/deps/libserde_json-4659e53807af5d30.rlib",
+        "sha256": "fa1f90b959bf797fa5074bb420979a8a16e32ca24462c4a30fa7bf5d0a6c6701"
+      },
+      "dotzuki_renderer": {
+        "path": "/workspace/open-pokered/target/debug/deps/libdotzuki_renderer-8cdcb36eaf0f23c0.rlib",
+        "sha256": "84747e4ee3ee152fadb3e0eecc161ff351c79d244a069f42d6aeaceed8e9ee1e"
+      },
+      "pokered_data": {
+        "path": "/workspace/open-pokered/target/debug/deps/libpokered_data-84e154b4ec20994e.rlib",
+        "sha256": "f156bfb96f839b0d41ee178221157ef22d72c5363eace42ecd12183ed968498f"
+      },
+      "pokered_renderer": {
+        "path": "/workspace/open-pokered/target/debug/deps/libpokered_renderer-76ae40f551e35e65.rlib",
+        "sha256": "235629a97933853bf316dde94893f6ae41e2a51e864d0765e89852bd4cf73b9c"
+      },
+      "pokered_core": {
+        "path": "/workspace/open-pokered/target/debug/deps/libpokered_core-24a6527e164cfc0f.rlib",
+        "sha256": "80ec495b687f3ee2995653cd0dbb011c00e827df9ea0e333e5edb9d42eb066ca"
+      },
+      "pokered_ui": {
+        "path": "/workspace/open-pokered/target/debug/deps/libpokered_ui-d5a265b5c0b9fe7a.rlib",
+        "sha256": "163a6d264e23cf5305886dd0d5e01bf99e7fea9dafd27f2fadc2d370b9bc6a79"
+      }
+    },
+    "all_14_individually_reviewed": true,
+    "pixel_changes_from_previous_project_font_preview": [
+      {
+        "menu": "main",
+        "changed_pixels": 0,
+        "png_sha256": "59af3b0e9c29afb2088fce7e270208ac1b1d791d13c2bc0f90de9fec495c33b6"
+      },
+      {
+        "menu": "start",
+        "changed_pixels": 0,
+        "png_sha256": "f8ba4aeb2a6bd69ce8b855d988d30ca0863f61c9807b8e3ba28aec1547fa6196"
+      },
+      {
+        "menu": "dialog",
+        "changed_pixels": 364,
+        "png_sha256": "40f9c6029129c77d478cdd7352d06a51b154a3332b226bd19793e3f6e8f280a4"
+      },
+      {
+        "menu": "battle_move",
+        "changed_pixels": 0,
+        "png_sha256": "bf336bfed09cdf94d41d59bf4fbe4b128f575a5c8392870b53d799d0f6d5ebeb"
+      },
+      {
+        "menu": "bag",
+        "changed_pixels": 0,
+        "png_sha256": "b0071baad726e1fcd338d298ed54ef03268d887c6072fcfce20d63102ef7e8a2"
+      },
+      {
+        "menu": "battle_bag",
+        "changed_pixels": 0,
+        "png_sha256": "1c1062369168e0b70f8439683c0a9e6b26ec051cd32fd9c5f6793b0cceceffe2"
+      },
+      {
+        "menu": "pokedex",
+        "changed_pixels": 0,
+        "png_sha256": "238b600e3317f4c74fe36ea22d2efceadf0d3e0af8e5e71c53620c1cc8841792"
+      },
+      {
+        "menu": "yes_no",
+        "changed_pixels": 0,
+        "png_sha256": "1c74120ef193b5390da99e299367f9237abd360dce112b43767ace077d5b5aef"
+      },
+      {
+        "menu": "oak_speech",
+        "changed_pixels": 0,
+        "png_sha256": "5a0e765604bd468cacd47e41a1be3018a3c947c88d12f3b3d9028b8ec9f7ad77"
+      },
+      {
+        "menu": "save",
+        "changed_pixels": 0,
+        "png_sha256": "34ec20045058815ab65ccb839d9795a09f178c6272a35fddfa01dab94c5128fc"
+      },
+      {
+        "menu": "options",
+        "changed_pixels": 0,
+        "png_sha256": "df6e4b7b907ac9f29495e9166cee33dbdc5d3e10e7fb9a37ed94a53a75d92699"
+      },
+      {
+        "menu": "naming",
+        "changed_pixels": 0,
+        "png_sha256": "a234f18b3b920b879e9d73790e032e54d03033b0147196a8d32d10e0d289bedb"
+      },
+      {
+        "menu": "battle_main",
+        "changed_pixels": 0,
+        "png_sha256": "71ceaaad9f1f4facfda311c4b8d7f0c4825dd457bedd6956f9383261cca81564"
+      },
+      {
+        "menu": "battle_party",
+        "changed_pixels": 0,
+        "png_sha256": "7790c447c9271a5cbb296ccd2e1685383347d0d1c3d246dbcfa5a9d2f3a14817"
+      }
+    ],
+    "glyph_shape_or_size_changed": false,
+    "default_proportional_dialogue_row_pitch_px": 12,
+    "default_english_dialogue_row_origins_y": [
+      112,
+      124
+    ],
+    "descender_note": "Default proportional dialogue/battle text leaves a gap above the bottom border; glyphs and tile-coordinate mock positions are unchanged. EN/ZH gyp diagnostic images were individually viewed.",
+    "descender_diagnostic": {
+      "render_source_head": "d7291eaa68c1b144adadb65cc9ffe06c73083c0a",
+      "source_sha256": "9bd2d027307988df6cb941a6203c4b6e50a4fb6df4e5440cfcce69339a5a3c5b",
+      "compile_command": [
+        "rustc",
+        "--edition=2021",
+        "/tmp/pokered-font-preserved-preview/descender-render.rs",
+        "-L",
+        "dependency=/workspace/open-pokered/target/debug/deps",
+        "-L",
+        "native=/workspace/onboarding/sysroot/usr/lib/x86_64-linux-gnu",
+        "-o",
+        "/tmp/pokered-font-preserved-preview/descender-dump",
+        "--extern",
+        "serde_json=/workspace/open-pokered/target/debug/deps/libserde_json-4659e53807af5d30.rlib",
+        "--extern",
+        "dotzuki_renderer=/workspace/open-pokered/target/debug/deps/libdotzuki_renderer-8cdcb36eaf0f23c0.rlib",
+        "--extern",
+        "pokered_data=/workspace/open-pokered/target/debug/deps/libpokered_data-84e154b4ec20994e.rlib",
+        "--extern",
+        "pokered_renderer=/workspace/open-pokered/target/debug/deps/libpokered_renderer-76ae40f551e35e65.rlib",
+        "--extern",
+        "pokered_core=/workspace/open-pokered/target/debug/deps/libpokered_core-24a6527e164cfc0f.rlib",
+        "--extern",
+        "pokered_ui=/workspace/open-pokered/target/debug/deps/libpokered_ui-d5a265b5c0b9fe7a.rlib"
+      ],
+      "images": {
+        "descenders-en": "b0a4f8f688746c9d5e3ddf246ae63a37fb82e600ab7f8b446ad54a95e0f19214",
+        "descenders-zh": "82317e2647be9e92f83fbdda2079a84fd725f0011243ae62d372fcec10c56a9e"
+      }
+    },
+    "validation": {
+      "passed": 58,
+      "failed": 0,
+      "doc_tests": 0,
+      "exit_code": 0,
+      "log": "/tmp/pokered-font-preserved-preview/row-spacing-tests.log",
+      "log_sha256": "38afffb8a6ef07037479d8f2b7337cd75ed127623075f68528fa049603862099"
+    },
+    "raw_artifacts": "/tmp/pokered-font-preserved-preview/row-spacing-capture-manifest.json"
+  }
+}

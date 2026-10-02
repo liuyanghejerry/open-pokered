@@ -1,0 +1,1651 @@
+[
+  {
+    "file": "crates/pokered-data/maps/BikeShop/script.scene",
+    "line": 19,
+    "call": "giveItem(\"BICYCLE\", 1)",
+    "following": [
+      "        takeItem(\"BIKE_VOUCHER\", 1)",
+      "        setFlag(\"EVENT_GOT_BICYCLE\")",
+      "        @speaker(\"\") {",
+      "          @t(\"<PLAYER> exchanged the BIKE\\nVOUCHER for a BICYCLE.\", \"<PLAYER>用自行车兑换券换到了\\n一辆自行车。\")",
+      "        }",
+      "      } @else {",
+      "        @speaker(\"\") {",
+      "          @t(\"Hi! Welcome to our BIKE\\nSHOP.\\n\\nHave we got just the BIKE\\nfor you!\", \"你好！欢迎来到自行车店。\\n\\n我们正好有适合你的自行车！\")"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/CeladonDiner/script.scene",
+    "line": 51,
+    "call": "giveItem(\"COIN_CASE\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_COIN_CASE\")",
+      "      @speaker(\"\") {",
+      "        @t(\"<PLAYER> received a COIN\\nCASE!\", \"<PLAYER>得到了代币盒！\")",
+      "      }",
+      "    }",
+      "  }",
+      "}"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/CeladonMartRoof/script.scene",
+    "line": 45,
+    "call": "giveItem(\"TM13\", 1)",
+    "following": [
+      "              setFlag(\"EVENT_GOT_TM13\")",
+      "              @speaker(\"\") { @t(\"<PLAYER> received TM13!\", \"<PLAYER>得到了 TM13！\") }",
+      "              @speaker(\"\") {",
+      "                @t(\"TM13 contains ICE BEAM!\\n\\nIt can freeze the target\\nsometimes!\", \"TM13里有冰冻光束！\\n\\n有时能让对手冻住！\")",
+      "              }",
+      "            } @else {",
+      "              @speaker(\"\") {",
+      "                @t(\"No thank you! I'm not\\nthirsty after all!\", \"不用了！我突然又不渴了！\")"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/CeladonMartRoof/script.scene",
+    "line": 63,
+    "call": "giveItem(\"TM48\", 1)",
+    "following": [
+      "              setFlag(\"EVENT_GOT_TM48\")",
+      "              @speaker(\"\") { @t(\"<PLAYER> received TM48!\", \"<PLAYER>得到了 TM48！\") }",
+      "              @speaker(\"\") {",
+      "                @t(\"TM48 contains ROCK SLIDE!\\n\\nIt can spook the target\\nsometimes!\", \"TM48里有岩崩！\\n\\n有时会吓到对手！\")",
+      "              }",
+      "            } @else {",
+      "              @speaker(\"\") {",
+      "                @t(\"No thank you! I'm not\\nthirsty after all!\", \"不用了！我突然又不渴了！\")"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/CeladonMartRoof/script.scene",
+    "line": 81,
+    "call": "giveItem(\"TM49\", 1)",
+    "following": [
+      "              setFlag(\"EVENT_GOT_TM49\")",
+      "              @speaker(\"\") { @t(\"<PLAYER> received TM49!\", \"<PLAYER>得到了 TM49！\") }",
+      "              @speaker(\"\") {",
+      "                @t(\"TM49 contains TRI ATTACK!\", \"TM49里有三重攻击！\")",
+      "              }",
+      "            } @else {",
+      "              @speaker(\"\") {",
+      "                @t(\"No thank you! I'm not\\nthirsty after all!\", \"不用了！我突然又不渴了！\")"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/CeruleanCave1F/script.scene",
+    "line": 16,
+    "call": "giveItem(\"FULL_RESTORE\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_FULL_RESTORE_CERULEAN_CAVE_1F\")",
+      "      hideObject(\"CERULEAN_CAVE_1F_OBJ_1\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found FULL_RESTORE!\", \"<PLAYER>找到了全复药！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Ground item: MAX ELIXER (npc 2) ─────────────────────────────────────",
+      "  @storyline(\"itemMaxElixer\") {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/CeruleanCave1F/script.scene",
+    "line": 29,
+    "call": "giveItem(\"MAX_ELIXER\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_MAX_ELIXER_CERULEAN_CAVE_1F\")",
+      "      hideObject(\"CERULEAN_CAVE_1F_OBJ_2\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found MAX_ELIXER!\", \"<PLAYER>找到了招式全补药！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Ground item: NUGGET (npc 3) ─────────────────────────────────────────",
+      "  @storyline(\"itemNugget\") {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/CeruleanCave1F/script.scene",
+    "line": 42,
+    "call": "giveItem(\"NUGGET\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_NUGGET_CERULEAN_CAVE_1F\")",
+      "      hideObject(\"CERULEAN_CAVE_1F_OBJ_3\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found NUGGET!\", \"<PLAYER>找到了金珠！\") }",
+      "    }",
+      "  }",
+      "}"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/CeruleanCity/script.scene",
+    "line": 123,
+    "call": "giveItem(\"TM_28\", 1)",
+    "following": [
+      "        @speaker(\"\") {",
+      "          @t(\"<PLAYER> recovered TM28!\", \"<PLAYER>找回了 TM28！\")",
+      "        }",
+      "        @speaker(\"\") {",
+      "          @t(\"I better get moving! Bye!\", \"我最好赶快离开！再见！\")",
+      "        }",
+      "        hideObjectByName(\"CERULEAN_ROCKET\")",
+      "      }"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/CeruleanCity/script.scene",
+    "line": 138,
+    "call": "giveItem(\"TM_28\", 1)",
+    "following": [
+      "      @speaker(\"\") {",
+      "        @t(\"<PLAYER> recovered TM28!\", \"<PLAYER>找回了 TM28！\")",
+      "      }",
+      "      hideObjectByName(\"CERULEAN_ROCKET\")",
+      "    }",
+      "  }",
+      "",
+      "  // ── On-step Rocket interception (coords (30,7)/(30,9)) ───────────────────"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/CeruleanCity/script.scene",
+    "line": 167,
+    "call": "giveItem(\"TM_28\", 1)",
+    "following": [
+      "        @speaker(\"\") {",
+      "          @t(\"<PLAYER> recovered TM28!\", \"<PLAYER>找回了 TM28！\")",
+      "        }",
+      "        @speaker(\"\") {",
+      "          @t(\"I better get moving! Bye!\", \"我最好赶快离开！再见！\")",
+      "        }",
+      "        hideObjectByName(\"CERULEAN_ROCKET\")",
+      "      }"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/CeruleanGym/script.scene",
+    "line": 15,
+    "call": "giveItem(\"TM11\", 1)",
+    "following": [
+      "        setFlag(\"EVENT_GOT_TM11\")",
+      "        @speaker(\"\") { @t(\"<PLAYER> received TM11!\", \"<PLAYER>得到了 TM11！\") }",
+      "        @speaker(\"\") {",
+      "          @t(\"TM11 teaches BUBBLEBEAM!\\n\\nUse it on an aquatic\\nPOKeMON!\", \"TM11能学会泡沫光线！\\n\\n把它用在水系宝可梦身上！\")",
+      "        }",
+      "      } @else {",
+      "        @speaker(\"\") {",
+      "          @t(\"TM11 teaches BUBBLEBEAM!\\n\\nUse it on an aquatic\\nPOKeMON!\", \"TM11能学会泡沫光线！\\n\\n把它用在水系宝可梦身上！\")"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/CeruleanGym/script.scene",
+    "line": 40,
+    "call": "giveItem(\"TM11\", 1)",
+    "following": [
+      "        setFlag(\"EVENT_GOT_TM11\")",
+      "        @speaker(\"\") { @t(\"<PLAYER> received TM11!\", \"<PLAYER>得到了 TM11！\") }",
+      "        @speaker(\"\") {",
+      "          @t(\"TM11 teaches BUBBLEBEAM!\\n\\nUse it on an aquatic\\nPOKeMON!\", \"TM11能学会泡沫光线！\\n\\n把它用在水系宝可梦身上！\")",
+      "        }",
+      "        // Deactivate the gym trainers (original sets these in Misty's post-battle).",
+      "        setFlag(\"EVENT_BEAT_CERULEAN_GYM_TRAINER_0\")",
+      "        setFlag(\"EVENT_BEAT_CERULEAN_GYM_TRAINER_1\")"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/CinnabarGym/script.scene",
+    "line": 68,
+    "call": "giveItem(\"TM_38\", 1)",
+    "following": [
+      "        setFlag(\"EVENT_GOT_TM38\")",
+      "        @speaker(\"\") { @t(\"<PLAYER> received TM38!\", \"<PLAYER>得到了 TM38！\") }",
+      "        @speaker(\"\") {",
+      "          @t(\"TM38 contains FIRE BLAST!\\n\\nTeach it to fire- type\\nPOKeMON!\\n\\nCHARMELEON or PONYTA would\\nbe good bets!\", \"TM38里有大字爆炎！\\n\\n教给火系的宝可梦吧！\\n\\n火恐龙或小火马是不错的选择！\")",
+      "        }",
+      "      } @else {",
+      "        @speaker(\"\") {",
+      "          @t(\"FIRE BLAST is the ultimate\\nfire technique!\\n\\nDon't waste it on water\\nPOKeMON!\", \"大字爆炎是最终极的火系招式！\\n\\n别把它浪费在水系宝可梦上！\")"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/CinnabarGym/script.scene",
+    "line": 93,
+    "call": "giveItem(\"TM_38\", 1)",
+    "following": [
+      "        setFlag(\"EVENT_GOT_TM38\")",
+      "        @speaker(\"\") { @t(\"<PLAYER> received TM38!\", \"<PLAYER>得到了 TM38！\") }",
+      "        @speaker(\"\") {",
+      "          @t(\"TM38 contains FIRE BLAST!\\n\\nTeach it to fire- type\\nPOKeMON!\\n\\nCHARMELEON or PONYTA would\\nbe good bets!\", \"TM38里有大字爆炎！\\n\\n教给火系的宝可梦吧！\\n\\n火恐龙或小火马是不错的选择！\")",
+      "        }",
+      "        // Deactivate the gym trainers (original SetEventRange TRAINER_0..6).",
+      "        setFlag(\"EVENT_BEAT_CINNABAR_GYM_TRAINER_0\")",
+      "        setFlag(\"EVENT_BEAT_CINNABAR_GYM_TRAINER_1\")"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/CinnabarLabFossilRoom/script.scene",
+    "line": 103,
+    "call": "givePokemon(\"KABUTO\", 30)",
+    "following": [
+      "        }",
+      "        @if (getFlag(\"EVENT_REVIVING_OMANYTE\")) {",
+      "          @speaker(\"\") {",
+      "            @t(\"Where were you?\\n\\nYour fossil is back to life!\\n\\nIt was OMANYTE like I think!\", \"你去哪了？\\n\\n你的化石复活了！\\n\\n果然是菊石兽，和我想的一样！\")",
+      "          }",
+      "          givePokemon(\"OMANYTE\", 30)",
+      "        }",
+      "        @if (getFlag(\"EVENT_REVIVING_AERODACTYL\")) {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/CinnabarLabFossilRoom/script.scene",
+    "line": 109,
+    "call": "givePokemon(\"OMANYTE\", 30)",
+    "following": [
+      "        }",
+      "        @if (getFlag(\"EVENT_REVIVING_AERODACTYL\")) {",
+      "          @speaker(\"\") {",
+      "            @t(\"Where were you?\\n\\nYour fossil is back to life!\\n\\nIt was AERODACTYL like I\\nthink!\", \"你去哪了？\\n\\n你的化石复活了！\\n\\n果然是化石翼龙，和我想的一\\n样！\")",
+      "          }",
+      "          givePokemon(\"AERODACTYL\", 30)",
+      "        }",
+      "        // Revive consumed: reset so another fossil can be brought later."
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/CinnabarLabFossilRoom/script.scene",
+    "line": 115,
+    "call": "givePokemon(\"AERODACTYL\", 30)",
+    "following": [
+      "        }",
+      "        // Revive consumed: reset so another fossil can be brought later.",
+      "        resetFlag(\"EVENT_GAVE_FOSSIL_TO_LAB\")",
+      "        resetFlag(\"EVENT_LAB_STILL_REVIVING_FOSSIL\")",
+      "        resetFlag(\"EVENT_LAB_HANDING_OVER_FOSSIL_MON\")",
+      "        resetFlag(\"EVENT_REVIVING_KABUTO\")",
+      "        resetFlag(\"EVENT_REVIVING_OMANYTE\")",
+      "        resetFlag(\"EVENT_REVIVING_AERODACTYL\")"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/CinnabarLabMetronomeRoom/script.scene",
+    "line": 18,
+    "call": "giveItem(\"TM_35\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_TM35\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> received TM35!\", \"<PLAYER>得到了 TM35！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Scientist 2 (npc 2) — EEVEE flavor dialogue ────────────────────────",
+      "  @storyline(\"talkScientist2\") {",
+      "    @trigger(map = \"CinnabarLabMetronomeRoom\", npc = 2)"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/FightingDojo/script.scene",
+    "line": 104,
+    "call": "givePokemon(\"HITMONLEE\", 30)",
+    "following": [
+      "          hideObjectByName(\"FIGHTINGDOJO_HITMONLEE_POKE_BALL\")",
+      "          setFlag(\"EVENT_GOT_HITMONLEE\")",
+      "          setFlag(\"EVENT_DEFEATED_FIGHTING_DOJO\")",
+      "        }",
+      "        @option(@t(\"NO\", \"否\")) {",
+      "        }",
+      "      }",
+      "    }"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/FightingDojo/script.scene",
+    "line": 127,
+    "call": "givePokemon(\"HITMONCHAN\", 30)",
+    "following": [
+      "          hideObjectByName(\"FIGHTINGDOJO_HITMONCHAN_POKE_BALL\")",
+      "          setFlag(\"EVENT_GOT_HITMONCHAN\")",
+      "          setFlag(\"EVENT_DEFEATED_FIGHTING_DOJO\")",
+      "        }",
+      "        @option(@t(\"NO\", \"否\")) {",
+      "        }",
+      "      }",
+      "    }"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/GameCornerPrizeRoom/script.scene",
+    "line": 54,
+    "call": "givePokemon(\"ABRA\", 9)",
+    "following": [
+      "            takeCoins(180)",
+      "            @speaker(\"\") { @t(\"Here you go!\", \"给你！\") }",
+      "          } @else {",
+      "            @speaker(\"\") { @t(\"Sorry, you need more coins.\", \"对不起，你需要更多代币。\") }",
+      "          }",
+      "        }",
+      "        @option(@t(\"CLEFAIRY     500\", \"皮皮 500\")) {",
+      "          @if (hasCoins(500)) {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/GameCornerPrizeRoom/script.scene",
+    "line": 63,
+    "call": "givePokemon(\"CLEFAIRY\", 8)",
+    "following": [
+      "            takeCoins(500)",
+      "            @speaker(\"\") { @t(\"Here you go!\", \"给你！\") }",
+      "          } @else {",
+      "            @speaker(\"\") { @t(\"Sorry, you need more coins.\", \"对不起，你需要更多代币。\") }",
+      "          }",
+      "        }",
+      "        @option(@t(\"NIDORINA    1200\", \"尼多娜 1200\")) {",
+      "          @if (hasCoins(1200)) {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/GameCornerPrizeRoom/script.scene",
+    "line": 72,
+    "call": "givePokemon(\"NIDORINA\", 17)",
+    "following": [
+      "            takeCoins(1200)",
+      "            @speaker(\"\") { @t(\"Here you go!\", \"给你！\") }",
+      "          } @else {",
+      "            @speaker(\"\") { @t(\"Sorry, you need more coins.\", \"对不起，你需要更多代币。\") }",
+      "          }",
+      "        }",
+      "        @option(@t(\"NO THANKS\", \"不用了\")) {",
+      "          @speaker(\"\") { @t(\"Oh, fine then.\", \"那好吧。\") }"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/GameCornerPrizeRoom/script.scene",
+    "line": 87,
+    "call": "givePokemon(\"ABRA\", 6)",
+    "following": [
+      "            takeCoins(120)",
+      "            @speaker(\"\") { @t(\"Here you go!\", \"给你！\") }",
+      "          } @else {",
+      "            @speaker(\"\") { @t(\"Sorry, you need more coins.\", \"对不起，你需要更多代币。\") }",
+      "          }",
+      "        }",
+      "        @option(@t(\"CLEFAIRY     750\", \"皮皮 750\")) {",
+      "          @if (hasCoins(750)) {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/GameCornerPrizeRoom/script.scene",
+    "line": 96,
+    "call": "givePokemon(\"CLEFAIRY\", 12)",
+    "following": [
+      "            takeCoins(750)",
+      "            @speaker(\"\") { @t(\"Here you go!\", \"给你！\") }",
+      "          } @else {",
+      "            @speaker(\"\") { @t(\"Sorry, you need more coins.\", \"对不起，你需要更多代币。\") }",
+      "          }",
+      "        }",
+      "        @option(@t(\"NIDORINO    1200\", \"尼多力诺 1200\")) {",
+      "          @if (hasCoins(1200)) {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/GameCornerPrizeRoom/script.scene",
+    "line": 105,
+    "call": "givePokemon(\"NIDORINO\", 17)",
+    "following": [
+      "            takeCoins(1200)",
+      "            @speaker(\"\") { @t(\"Here you go!\", \"给你！\") }",
+      "          } @else {",
+      "            @speaker(\"\") { @t(\"Sorry, you need more coins.\", \"对不起，你需要更多代币。\") }",
+      "          }",
+      "        }",
+      "        @option(@t(\"NO THANKS\", \"不用了\")) {",
+      "          @speaker(\"\") { @t(\"Oh, fine then.\", \"那好吧。\") }"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/GameCornerPrizeRoom/script.scene",
+    "line": 133,
+    "call": "givePokemon(\"DRATINI\", 18)",
+    "following": [
+      "            takeCoins(2800)",
+      "            @speaker(\"\") { @t(\"Here you go!\", \"给你！\") }",
+      "          } @else {",
+      "            @speaker(\"\") { @t(\"Sorry, you need more coins.\", \"对不起，你需要更多代币。\") }",
+      "          }",
+      "        }",
+      "        @option(@t(\"SCYTHER    5500\", \"飞天螳螂 5500\")) {",
+      "          @if (hasCoins(5500)) {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/GameCornerPrizeRoom/script.scene",
+    "line": 142,
+    "call": "givePokemon(\"SCYTHER\", 25)",
+    "following": [
+      "            takeCoins(5500)",
+      "            @speaker(\"\") { @t(\"Here you go!\", \"给你！\") }",
+      "          } @else {",
+      "            @speaker(\"\") { @t(\"Sorry, you need more coins.\", \"对不起，你需要更多代币。\") }",
+      "          }",
+      "        }",
+      "        @option(@t(\"PORYGON    9999\", \"多边兽 9999\")) {",
+      "          @if (hasCoins(9999)) {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/GameCornerPrizeRoom/script.scene",
+    "line": 151,
+    "call": "givePokemon(\"PORYGON\", 26)",
+    "following": [
+      "            takeCoins(9999)",
+      "            @speaker(\"\") { @t(\"Here you go!\", \"给你！\") }",
+      "          } @else {",
+      "            @speaker(\"\") { @t(\"Sorry, you need more coins.\", \"对不起，你需要更多代币。\") }",
+      "          }",
+      "        }",
+      "        @option(@t(\"NO THANKS\", \"不用了\")) {",
+      "          @speaker(\"\") { @t(\"Oh, fine then.\", \"那好吧。\") }"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/GameCornerPrizeRoom/script.scene",
+    "line": 166,
+    "call": "givePokemon(\"PINSIR\", 20)",
+    "following": [
+      "            takeCoins(2500)",
+      "            @speaker(\"\") { @t(\"Here you go!\", \"给你！\") }",
+      "          } @else {",
+      "            @speaker(\"\") { @t(\"Sorry, you need more coins.\", \"对不起，你需要更多代币。\") }",
+      "          }",
+      "        }",
+      "        @option(@t(\"DRATINI    4600\", \"迷你龙 4600\")) {",
+      "          @if (hasCoins(4600)) {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/GameCornerPrizeRoom/script.scene",
+    "line": 175,
+    "call": "givePokemon(\"DRATINI\", 24)",
+    "following": [
+      "            takeCoins(4600)",
+      "            @speaker(\"\") { @t(\"Here you go!\", \"给你！\") }",
+      "          } @else {",
+      "            @speaker(\"\") { @t(\"Sorry, you need more coins.\", \"对不起，你需要更多代币。\") }",
+      "          }",
+      "        }",
+      "        @option(@t(\"PORYGON    6500\", \"多边兽 6500\")) {",
+      "          @if (hasCoins(6500)) {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/GameCornerPrizeRoom/script.scene",
+    "line": 184,
+    "call": "givePokemon(\"PORYGON\", 18)",
+    "following": [
+      "            takeCoins(6500)",
+      "            @speaker(\"\") { @t(\"Here you go!\", \"给你！\") }",
+      "          } @else {",
+      "            @speaker(\"\") { @t(\"Sorry, you need more coins.\", \"对不起，你需要更多代币。\") }",
+      "          }",
+      "        }",
+      "        @option(@t(\"NO THANKS\", \"不用了\")) {",
+      "          @speaker(\"\") { @t(\"Oh, fine then.\", \"那好吧。\") }"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/MtMoon1F/script.scene",
+    "line": 86,
+    "call": "giveItem(\"POTION\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_POTION_MT_MOON_1F_A\")",
+      "      hideObject(\"MT_MOON_1F_OBJ_8\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found POTION!\", \"<PLAYER>找到了伤药！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Ground item: MOON STONE (npc 9) ─────────────────────────────────────",
+      "  @storyline(\"itemMoonStone\") {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/MtMoon1F/script.scene",
+    "line": 99,
+    "call": "giveItem(\"MOON_STONE\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_MOON_STONE_MT_MOON_1F\")",
+      "      hideObject(\"MT_MOON_1F_OBJ_9\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found MOON_STONE!\", \"<PLAYER>找到了月之石！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Ground item: RARE CANDY (npc 10) ────────────────────────────────────",
+      "  @storyline(\"itemRareCandy\") {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/MtMoon1F/script.scene",
+    "line": 112,
+    "call": "giveItem(\"RARE_CANDY\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_RARE_CANDY_MT_MOON_1F\")",
+      "      hideObject(\"MT_MOON_1F_OBJ_10\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found RARE_CANDY!\", \"<PLAYER>找到了神奇糖果！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Ground item: ESCAPE ROPE (npc 11) ───────────────────────────────────",
+      "  @storyline(\"itemEscapeRope\") {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/MtMoon1F/script.scene",
+    "line": 125,
+    "call": "giveItem(\"ESCAPE_ROPE\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_ESCAPE_ROPE_MT_MOON_1F\")",
+      "      hideObject(\"MT_MOON_1F_OBJ_11\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found ESCAPE_ROPE!\", \"<PLAYER>找到了逃脱绳！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Ground item: POTION (npc 12) ────────────────────────────────────────",
+      "  @storyline(\"itemPotion2\") {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/MtMoon1F/script.scene",
+    "line": 138,
+    "call": "giveItem(\"POTION\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_POTION_MT_MOON_1F_B\")",
+      "      hideObject(\"MT_MOON_1F_OBJ_12\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found POTION!\", \"<PLAYER>找到了伤药！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Ground item: TM34 / WATER GUN (npc 13) ──────────────────────────────",
+      "  @storyline(\"itemTmWaterGun\") {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/MtMoon1F/script.scene",
+    "line": 151,
+    "call": "giveItem(\"TM34\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_TM34_MT_MOON_1F\")",
+      "      hideObject(\"MT_MOON_1F_OBJ_13\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found TM34!\", \"<PLAYER>找到了 TM34！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── ZUBAT warning sign (sign 1) ─────────────────────────────────────────",
+      "  @storyline(\"sign1\") {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/MtMoonPokecenter/script.scene",
+    "line": 74,
+    "call": "givePokemon(\"MAGIKARP\", 5)",
+    "following": [
+      "            takeMoney(500)",
+      "            setFlag(\"EVENT_BOUGHT_MAGIKARP\")",
+      "          }",
+      "        }",
+      "        @option(@t(\"NO\", \"否\")) {",
+      "          @speaker(\"\") { @t(\"No? I'm only doing this as a\\nfavor to you!\", \"不吗？我只是当作是在帮你忙而\\n已！\") }",
+      "        }",
+      "      }"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/OaksLab/script.scene",
+    "line": 155,
+    "call": "givePokemon(\"CHARMANDER\", 5)",
+    "following": [
+      "          @speaker(\"\") {",
+      "            @t(\"<PLAYER> received a\\nCHARMANDER!\", \"<PLAYER>得到了一只小火龙！\")",
+      "          }",
+      "          playSound(\"SFX_GET_KEY_ITEM\")",
+      "          setFlag(\"EVENT_GOT_STARTER\")",
+      "          // ── rival sequence (rival gets SQUIRTLE, the type advantage) ──",
+      "          // Orig OaksLabChoseStarterScript (player-below-table variant): the",
+      "          // rival walks down to row 5 and around, so he never crosses the"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/OaksLab/script.scene",
+    "line": 204,
+    "call": "givePokemon(\"SQUIRTLE\", 5)",
+    "following": [
+      "          @speaker(\"\") {",
+      "            @t(\"<PLAYER> received a\\nSQUIRTLE!\", \"<PLAYER>得到了一只杰尼龟！\")",
+      "          }",
+      "          playSound(\"SFX_GET_KEY_ITEM\")",
+      "          setFlag(\"EVENT_GOT_STARTER\")",
+      "          // ── rival sequence (rival gets BULBASAUR, the type advantage) ──",
+      "          // Orig OaksLabChoseStarterScript (player-below-table variant): the",
+      "          // rival walks down to row 5 and around, so he never crosses the"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/OaksLab/script.scene",
+    "line": 253,
+    "call": "givePokemon(\"BULBASAUR\", 5)",
+    "following": [
+      "          @speaker(\"\") {",
+      "            @t(\"<PLAYER> received a\\nBULBASAUR!\", \"<PLAYER>得到了一只妙蛙种子！\")",
+      "          }",
+      "          playSound(\"SFX_GET_KEY_ITEM\")",
+      "          setFlag(\"EVENT_GOT_STARTER\")",
+      "          // ── rival sequence (rival gets CHARMANDER, the type advantage) ──",
+      "          // Orig OaksLabChoseStarterScript: the rival walks below the ball he",
+      "          // takes, then speaks. The challenge battle happens later, when the"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/OaksLab/script.scene",
+    "line": 354,
+    "call": "giveItem(\"POKE_BALL\", 5)",
+    "following": [
+      "          @speaker(\"\") {",
+      "            @t(\"OAK: You can't get detailed\\ndata on POKeMON by just\\nseeing them.\\n\\nYou must catch them! Use\\nthese to capture wild\\nPOKeMON.\\n\\n<PLAYER> got 5 POKe BALLs!\", \"大木博士：只靠看是得不到宝可\\n梦的详细资料的。\\n\\n你必须捕捉它们！用这些来捕获\\n野生宝可梦。\\n\\n<PLAYER>得到了 5个精灵球！\")",
+      "          }",
+      "          playSound(\"SFX_GET_KEY_ITEM\")",
+      "          @speaker(\"\") {",
+      "            @t(\"When a wild POKeMON appears,\\nit's fair game.\\n\\nJust throw a POKe BALL at it\\nand try to catch it!\\n\\nThis won't always work,\\nthough.\\n\\nA healthy POKeMON could\\nescape. You have to be\\nlucky!\", \"当野生宝可梦出现时，就可以捕\\n捉。\\n\\n朝它扔出精灵球，试着捕捉它！\\n\\n但这并不总能成功。\\n\\n健康的宝可梦可能会逃走。你得\\n靠运气！\")",
+      "          }",
+      "        } @else {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/PokemonMansion1F/script.scene",
+    "line": 53,
+    "call": "giveItem(\"ESCAPE_ROPE\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_ESCAPE_ROPE_MANSION_1F\")",
+      "      hideObject(\"POKEMON_MANSION_1F_OBJ_2\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found ESCAPE_ROPE!\", \"<PLAYER>找到了逃脱绳！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Ground item: CARBOS (npc 3) ───────────────────────────────────────────",
+      "  @storyline(\"talkPokeBall1\") {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/PokemonMansion1F/script.scene",
+    "line": 66,
+    "call": "giveItem(\"CARBOS\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_CARBOS_MANSION_1F\")",
+      "      hideObject(\"POKEMON_MANSION_1F_OBJ_3\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found CARBOS!\", \"<PLAYER>找到了速度增强剂！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Secret switch (hidden_event at [2,5], original requires facing up) ─────",
+      "  // The original toggles EVENT_MANSION_SWITCH_ON and swaps gate/floor tile"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/PokemonMansion2F/script.scene",
+    "line": 47,
+    "call": "giveItem(\"CALCIUM\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_CALCIUM_MANSION_2F\")",
+      "      hideObject(\"POKEMON_MANSION_2F_OBJ_2\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found CALCIUM!\", \"<PLAYER>找到了特攻增强剂！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Diary panel 1 (npc 3) ───────────────────────────────────────────────",
+      "  @storyline(\"readDiary1\") {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/PokemonMansion3F/script.scene",
+    "line": 88,
+    "call": "giveItem(\"MAX_POTION\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_MANSION_3F_MAX_POTION\")",
+      "      hideObjectByName(\"POKEMON_MANSION_3F_OBJ_3\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found MAX POTION!\", \"<PLAYER>找到了厉害伤药！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Ground item: IRON Poke Ball (npc 4) ─────────────────────────────────",
+      "  @storyline(\"itemIron\") {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/PokemonMansion3F/script.scene",
+    "line": 99,
+    "call": "giveItem(\"IRON\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_MANSION_3F_IRON\")",
+      "      hideObjectByName(\"POKEMON_MANSION_3F_OBJ_4\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found IRON!\", \"<PLAYER>找到了防御增强剂！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Diary (npc 5) — readable bookshelf entry ────────────────────────────",
+      "  @storyline(\"talkDiary\") {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/PokemonMansionB1F/script.scene",
+    "line": 66,
+    "call": "giveItem(\"RARE_CANDY\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_RARE_CANDY_MANSION_B1F\")",
+      "      hideObject(\"POKEMON_MANSION_B1F_OBJ_3\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found RARE_CANDY!\", \"<PLAYER>找到了神奇糖果！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Ground item: FULL_RESTORE (npc 4) ─────────────────────────────────────",
+      "  @storyline(\"talkPokeBall1\") {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/PokemonMansionB1F/script.scene",
+    "line": 79,
+    "call": "giveItem(\"FULL_RESTORE\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_FULL_RESTORE_MANSION_B1F\")",
+      "      hideObject(\"POKEMON_MANSION_B1F_OBJ_4\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found FULL_RESTORE!\", \"<PLAYER>找到了全复药！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Ground item: TM18 / BLIZZARD (npc 5) ──────────────────────────────────",
+      "  @storyline(\"talkPokeBall2\") {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/PokemonMansionB1F/script.scene",
+    "line": 92,
+    "call": "giveItem(\"TM18\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_TM18_MANSION_B1F\")",
+      "      hideObject(\"POKEMON_MANSION_B1F_OBJ_5\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found TM18!\", \"<PLAYER>找到了 TM18！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Ground item: TM26 / SOLARBEAM (npc 6) ─────────────────────────────────",
+      "  @storyline(\"talkPokeBall3\") {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/PokemonMansionB1F/script.scene",
+    "line": 105,
+    "call": "giveItem(\"TM26\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_TM26_MANSION_B1F\")",
+      "      hideObject(\"POKEMON_MANSION_B1F_OBJ_6\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found TM26!\", \"<PLAYER>找到了 TM26！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Diary (npc 7, Pokedex sprite) — readable text only ────────────────────",
+      "  @storyline(\"talkDiary\") {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/PokemonMansionB1F/script.scene",
+    "line": 126,
+    "call": "giveItem(\"SECRET_KEY\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_SECRET_KEY_MANSION_B1F\")",
+      "      hideObject(\"POKEMON_MANSION_B1F_OBJ_8\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found SECRET_KEY!\", \"<PLAYER>找到了秘密钥匙！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Secret switch (hidden_event at [20,3], original requires facing up) ────",
+      "  // The original toggles EVENT_MANSION_SWITCH_ON and swaps gate/floor tile"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/PokemonTower3F/script.scene",
+    "line": 43,
+    "call": "giveItem(\"ESCAPE_ROPE\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_POKEMON_TOWER_3F_ESCAPE_ROPE\")",
+      "      hideObjectByName(\"POKEMON_TOWER_3F_OBJ_4\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found ESCAPE ROPE!\", \"<PLAYER>找到了逃脱绳！\") }",
+      "    }",
+      "  }",
+      "}"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/PokemonTower4F/script.scene",
+    "line": 44,
+    "call": "giveItem(\"ELIXER\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_ELIXER_POKEMON_TOWER_4F\")",
+      "      hideObject(\"POKEMON_TOWER_4F_OBJ_4\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found ELIXER!\", \"<PLAYER>发现了元气药片！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Ground item: AWAKENING (npc 5) ──────────────────────────────────────",
+      "  @storyline(\"itemAwakening\") {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/PokemonTower4F/script.scene",
+    "line": 57,
+    "call": "giveItem(\"AWAKENING\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_AWAKENING_POKEMON_TOWER_4F\")",
+      "      hideObject(\"POKEMON_TOWER_4F_OBJ_5\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found AWAKENING!\", \"<PLAYER>发现了清醒药！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Ground item: HP UP (npc 6) ──────────────────────────────────────────",
+      "  @storyline(\"itemHpUp\") {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/PokemonTower4F/script.scene",
+    "line": 70,
+    "call": "giveItem(\"HP_UP\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_HP_UP_POKEMON_TOWER_4F\")",
+      "      hideObject(\"POKEMON_TOWER_4F_OBJ_6\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found HP_UP!\", \"<PLAYER>发现了体力增强剂！\") }",
+      "    }",
+      "  }",
+      "}"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/PokemonTower5F/script.scene",
+    "line": 70,
+    "call": "giveItem(\"NUGGET\", 1)",
+    "following": [
+      "    hideObjectByName(\"POKEMON_TOWER_5F_OBJ_6\")",
+      "    @speaker(\"\") { @t(\"<PLAYER> found a NUGGET!\", \"<PLAYER>发现了一个金珠！\") }",
+      "  }",
+      "",
+      "  // ── Purified zone (orig PokemonTower5FPurifiedZoneCoords) — on-step heal ───",
+      "  @storyline(\"coordPurifiedZone\") {",
+      "    @trigger(map = \"PokemonTower5F\", name = \"purifiedZone1\")",
+      "    @if (!getFlag(\"EVENT_IN_PURIFIED_ZONE\")) {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/PokemonTower6F/script.scene",
+    "line": 66,
+    "call": "giveItem(\"RARE_CANDY\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_RARE_CANDY_POKEMON_TOWER_6F\")",
+      "      hideObject(\"POKEMON_TOWER_6F_OBJ_4\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found RARE_CANDY!\", \"<PLAYER>发现了神奇糖果！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Ground item: X ACCURACY (npc 5) ──────────────────────────────────────",
+      "  @storyline(\"itemXAccuracy\") {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/PokemonTower6F/script.scene",
+    "line": 79,
+    "call": "giveItem(\"X_ACCURACY\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_X_ACCURACY_POKEMON_TOWER_6F\")",
+      "      hideObject(\"POKEMON_TOWER_6F_OBJ_5\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found X_ACCURACY!\", \"<PLAYER>发现了特攻强化！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Ghost Marowak — coord-triggered scripted battle at the 7F stairs ──────",
+      "  // Original: PokemonTower6FDefaultScript fires when the player stands on"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/RocketHideoutB1F/script.scene",
+    "line": 92,
+    "call": "giveItem(\"ESCAPE_ROPE\", 1)",
+    "following": [
+      "    hideObjectByName(\"ROCKET_HIDEOUT_B1F_OBJ_6\")",
+      "    @speaker(\"\") { @t(\"<PLAYER> found ESCAPE ROPE!\", \"<PLAYER>发现了逃脱绳！\") }",
+      "  }",
+      "",
+      "  // ── Ground item: Poke Ball — HYPER POTION (npc 7) ───────────────────────",
+      "  @storyline(\"itemHyperPotion\") {",
+      "    @trigger(map = \"RocketHideoutB1F\", npc = 7, toggle = \"ROCKET_HIDEOUT_B1F_OBJ_7\")",
+      "    giveItem(\"HYPER_POTION\", 1)"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/RocketHideoutB1F/script.scene",
+    "line": 100,
+    "call": "giveItem(\"HYPER_POTION\", 1)",
+    "following": [
+      "    hideObjectByName(\"ROCKET_HIDEOUT_B1F_OBJ_7\")",
+      "    @speaker(\"\") { @t(\"<PLAYER> found HYPER POTION!\", \"<PLAYER>发现了厉害伤药！\") }",
+      "  }",
+      "}"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/RocketHideoutB2F/script.scene",
+    "line": 42,
+    "call": "giveItem(\"MOON_STONE\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_MOON_STONE_ROCKET_HIDEOUT_B2F\")",
+      "      hideObject(\"ROCKET_HIDEOUT_B2F_OBJ_2\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found MOON_STONE!\", \"<PLAYER>发现了月之石！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Ground item: NUGGET (npc 3) ─────────────────────────────────────────",
+      "  @storyline(\"itemNugget\") {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/RocketHideoutB2F/script.scene",
+    "line": 55,
+    "call": "giveItem(\"NUGGET\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_NUGGET_ROCKET_HIDEOUT_B2F\")",
+      "      hideObject(\"ROCKET_HIDEOUT_B2F_OBJ_3\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found NUGGET!\", \"<PLAYER>发现了金珠！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Ground item: TM07 / HORN DRILL (npc 4) ──────────────────────────────",
+      "  @storyline(\"itemTmHornDrill\") {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/RocketHideoutB2F/script.scene",
+    "line": 68,
+    "call": "giveItem(\"TM07\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_TM07_ROCKET_HIDEOUT_B2F\")",
+      "      hideObject(\"ROCKET_HIDEOUT_B2F_OBJ_4\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found TM07!\", \"<PLAYER>发现了 TM07！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Ground item: SUPER POTION (npc 5) ───────────────────────────────────",
+      "  @storyline(\"itemSuperPotion\") {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/RocketHideoutB2F/script.scene",
+    "line": 81,
+    "call": "giveItem(\"SUPER_POTION\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_SUPER_POTION_ROCKET_HIDEOUT_B2F\")",
+      "      hideObject(\"ROCKET_HIDEOUT_B2F_OBJ_5\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found SUPER_POTION!\", \"<PLAYER>发现了好伤药！\") }",
+      "    }",
+      "  }",
+      "}"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/Route11Gate2F/script.scene",
+    "line": 71,
+    "call": "giveItem(\"ITEMFINDER\", 1)",
+    "following": [
+      "            setFlag(\"EVENT_GOT_ITEMFINDER\")",
+      "            @speaker(\"\") { @t(\"<PLAYER> got the ITEMFINDER!\", \"<PLAYER>得到了探宝器！\") }",
+      "            // ItemfinderDescriptionText follows in the original.",
+      "            @speaker(\"\") {",
+      "              @t(\"There are items on the\\nground that can't be seen.\\n\\nITEMFINDER will detect an\\nitem close to you.\\n\\nIt can't pinpoint it, so you\\nhave to look yourself!\", \"地上有些看不见的道具。\\n\\n探宝器能探测到附近的道具。\\n\\n但无法准确定位，你得自己找才\\n行！\")",
+      "            }",
+      "          } @else {",
+      "            // OaksAideUhOhText (not enough kinds owned)"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/Route12Gate2F/script.scene",
+    "line": 21,
+    "call": "giveItem(\"TM39\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_TM39\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> received TM39!\", \"<PLAYER>得到了 TM39！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Left binoculars (sign 1) — only prints when facing up ──────────────",
+      "  @storyline(\"signLeftBinoculars\") {",
+      "    @trigger(map = \"Route12Gate2F\", sign = 1)"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/Route12SuperRodHouse/script.scene",
+    "line": 23,
+    "call": "giveItem(\"SUPER_ROD\", 1)",
+    "following": [
+      "          @speaker(\"\") {",
+      "            @t(\"Grand! I like your style!\\n\\nTake this and fish, young\\none!\\n\\n<PLAYER> received a SUPER\\nROD!\", \"很好！我喜欢你的风格！\\n\\n拿上这个，去钓鱼吧，少年！\\n\\n<PLAYER>得到了厉害钓竿！\")",
+      "          }",
+      "          @speaker(\"\") {",
+      "            @t(\"Fishing is a way of life!\\n\\nFrom the seas to rivers, go\\nout and land the big one!\", \"钓鱼是一种生活方式！\\n\\n从大海到河流，去钓上一条大家\\n伙吧！\")",
+      "          }",
+      "        }",
+      "        @option(@t(\"NO\", \"否\")) {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/Route15Gate2F/script.scene",
+    "line": 32,
+    "call": "giveItem(\"EXP_ALL\", 1)",
+    "following": [
+      "            setFlag(\"EVENT_GOT_EXP_ALL\")",
+      "            @speaker(\"\") { @t(\"<PLAYER> got the EXP.ALL!\", \"<PLAYER>得到了 EXP.ALL！\") }",
+      "            // ExpAllText follows in the original once the item is received.",
+      "            @speaker(\"\") {",
+      "              @t(\"EXP.ALL gives EXP points to\\nall the POKeMON with you,\\neven if they don't fight.\\n\\nIt does, however, reduce the\\namount of EXP for each\\nPOKeMON.\\n\\nIf you don't need it, you\\nshould store it via PC.\", \"EXP.ALL会把经验值分给同行的\\n所有宝可梦，即使它们没有参\\n战。\\n\\n但是，它减少了每只宝可梦获得\\n的经验值的数量。\\n\\n如果不需要，可以通过电脑存放\\n起来。\")",
+      "            }",
+      "          } @else {",
+      "            // OaksAideUhOhText (not enough kinds owned)"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/Route2/script.scene",
+    "line": 13,
+    "call": "giveItem(\"MOON_STONE\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_MOON_STONE_ROUTE2\")",
+      "      hideObject(\"ROUTE_2_OBJ_1\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found MOON_STONE!\", \"<PLAYER>找到了月之石！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Ground item: HP UP (npc 2, PokeBall) ────────────────────────────────",
+      "  @storyline(\"itemHpUp\") {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/Route2/script.scene",
+    "line": 26,
+    "call": "giveItem(\"HP_UP\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_HP_UP_ROUTE2\")",
+      "      hideObject(\"ROUTE_2_OBJ_2\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found HP_UP!\", \"<PLAYER>找到了体力增强剂！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Sign 1: Route 2 marker ──────────────────────────────────────────────",
+      "  @storyline(\"sign1\") {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/Route24/script.scene",
+    "line": 116,
+    "call": "giveItem(\"TM_45\", 1)",
+    "following": [
+      "    hideObjectByName(\"ROUTE_24_OBJ_8\")",
+      "    @speaker(\"\") { @t(\"<PLAYER> found TM45!\", \"<PLAYER>找到了 TM45！\") }",
+      "  }",
+      "}"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/Route25/script.scene",
+    "line": 119,
+    "call": "giveItem(\"TM39\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_TM39\")",
+      "      hideObjectByName(\"ROUTE_25_OBJ_10\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found TM39!\", \"<PLAYER>找到了 TM39！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Sign 1: Bill's SEA COTTAGE ──────────────────────────────────────────",
+      "  @storyline(\"sign1\") {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/Route4/script.scene",
+    "line": 31,
+    "call": "giveItem(\"TM04\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_TM04\")",
+      "      hideObjectByName(\"ROUTE_4_OBJ_3\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found TM04!\", \"<PLAYER>找到了 TM04！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Sign 1: Poke Center sign ────────────────────────────────────────────",
+      "  @storyline(\"sign1\") {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/SSAnne2FRooms/script.scene",
+    "line": 69,
+    "call": "giveItem(\"MAX_ETHER\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_MAX_ETHER_SS_ANNE_2F_ROOMS\")",
+      "      hideObject(\"SS_ANNE_2F_ROOMS_OBJ_6\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found MAX_ETHER!\", \"<PLAYER>找到了元气药块！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Gentleman #4 (npc 7) — flavor dialogue ────────────────────────────────",
+      "  @storyline(\"talkGentleman4\") {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/SSAnne2FRooms/script.scene",
+    "line": 94,
+    "call": "giveItem(\"RARE_CANDY\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_RARE_CANDY_SS_ANNE_2F_ROOMS\")",
+      "      hideObject(\"SS_ANNE_2F_ROOMS_OBJ_9\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found RARE_CANDY!\", \"<PLAYER>找到了神奇糖果！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Gentleman #5 (npc 10) — flavor dialogue ───────────────────────────────",
+      "  @storyline(\"talkGentleman5\") {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/SSAnneB1FRooms/script.scene",
+    "line": 119,
+    "call": "giveItem(\"ETHER\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_ETHER_SS_ANNE_B1F_ROOMS\")",
+      "      @speaker(\"\") {",
+      "        @t(\"<PLAYER> found ETHER!\", \"<PLAYER>发现了元气药片！\")",
+      "      }",
+      "    }",
+      "  }",
+      "",
+      "  // ── PokeBall ground item (npc 10) — TM44 (REST) ─────────────────────────"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/SSAnneB1FRooms/script.scene",
+    "line": 135,
+    "call": "giveItem(\"TM_44\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_TM44_SS_ANNE_B1F_ROOMS\")",
+      "      @speaker(\"\") {",
+      "        @t(\"<PLAYER> found TM44!\", \"<PLAYER>发现了招式机44！\")",
+      "      }",
+      "    }",
+      "  }",
+      "",
+      "  // ── PokeBall ground item (npc 11) — MAX_POTION ──────────────────────────"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/SSAnneB1FRooms/script.scene",
+    "line": 151,
+    "call": "giveItem(\"MAX_POTION\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_MAX_POTION_SS_ANNE_B1F_ROOMS\")",
+      "      @speaker(\"\") {",
+      "        @t(\"<PLAYER> found MAX POTION!\", \"<PLAYER>发现了全满药！\")",
+      "      }",
+      "    }",
+      "  }",
+      "}"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/SafariZoneNorth/script.scene",
+    "line": 15,
+    "call": "giveItem(\"PROTEIN\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_PROTEIN_FROM_SAFARI_ZONE\")",
+      "      hideObjectByName(\"SAFARI_ZONE_NORTH_OBJ_1\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found PROTEIN!\", \"<PLAYER>发现了攻击增强剂！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Ground item: TM40 SKULL BASH (npc 2, PokeBall at 19,7) ──────────────",
+      "  @storyline(\"itemTmSkullBash\") {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/SafariZoneNorth/script.scene",
+    "line": 26,
+    "call": "giveItem(\"TM40\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_TM40_FROM_SAFARI_ZONE\")",
+      "      hideObjectByName(\"SAFARI_ZONE_NORTH_OBJ_2\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found TM40!\", \"<PLAYER>发现了 TM40！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Sign 1: REST HOUSE sign (36,4) ──────────────────────────────────────",
+      "  @storyline(\"sign1\") {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/SafariZoneSecretHouse/script.scene",
+    "line": 21,
+    "call": "giveItem(\"HM03\", 1)",
+    "following": [
+      "        setFlag(\"EVENT_GOT_HM03\")",
+      "        @speaker(\"\") { @t(\"<PLAYER> received HM03!\", \"<PLAYER>得到了 HM03！\") }",
+      "      }",
+      "    }",
+      "  }",
+      "}"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/SilphCo10F/script.scene",
+    "line": 77,
+    "call": "giveItem(\"TM26\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_TM26\")",
+      "      hideObjectByName(\"SILPH_CO_10F_OBJ_4\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found TM26!\", \"<PLAYER>找到了 TM26！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Ground item: RARE_CANDY (npc 5) ──────────────────────────────────────",
+      "  @storyline(\"itemRareCandy\") {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/SilphCo10F/script.scene",
+    "line": 90,
+    "call": "giveItem(\"RARE_CANDY\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_RARE_CANDY_SILPH_CO_10F\")",
+      "      hideObjectByName(\"SILPH_CO_10F_OBJ_5\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found RARE_CANDY!\", \"<PLAYER>找到了神奇糖果！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Ground item: CARBOS (npc 6) ──────────────────────────────────────────",
+      "  @storyline(\"itemCarbos\") {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/SilphCo10F/script.scene",
+    "line": 103,
+    "call": "giveItem(\"CARBOS\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_CARBOS_SILPH_CO_10F\")",
+      "      hideObjectByName(\"SILPH_CO_10F_OBJ_6\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found CARBOS!\", \"<PLAYER>找到了速度增强剂！\") }",
+      "    }",
+      "  }",
+      "}"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/SilphCo3F/script.scene",
+    "line": 97,
+    "call": "giveItem(\"HYPER_POTION\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_HYPER_POTION_SILPH_CO_3F\")",
+      "      hideObject(\"SILPH_CO_3F_OBJ_4\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found HYPER_POTION!\", \"<PLAYER>找到了厉害伤药！\") }",
+      "    }",
+      "  }",
+      "}"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/SilphCo4F/script.scene",
+    "line": 74,
+    "call": "giveItem(\"FULL_HEAL\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_FULL_HEAL_SILPH_CO_4F\")",
+      "      hideObject(\"SILPH_CO_4F_OBJ_5\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found FULL_HEAL!\", \"<PLAYER>发现了万灵药！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Ground item: MAX REVIVE (npc 6) ─────────────────────────────────────",
+      "  @storyline(\"itemMaxRevive\") {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/SilphCo4F/script.scene",
+    "line": 87,
+    "call": "giveItem(\"MAX_REVIVE\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_MAX_REVIVE_SILPH_CO_4F\")",
+      "      hideObject(\"SILPH_CO_4F_OBJ_6\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found MAX_REVIVE!\", \"<PLAYER>发现了活力块！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Ground item: ESCAPE ROPE (npc 7) ────────────────────────────────────",
+      "  @storyline(\"itemEscapeRope\") {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/SilphCo4F/script.scene",
+    "line": 100,
+    "call": "giveItem(\"ESCAPE_ROPE\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_ESCAPE_ROPE_SILPH_CO_4F\")",
+      "      hideObject(\"SILPH_CO_4F_OBJ_7\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found ESCAPE_ROPE!\", \"<PLAYER>发现了逃脱绳！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // Door1 solve: original is a CARD_KEY inspect on the door tile (no tile-inspect",
+      "  // trigger exists, so approximate with a coord trigger at the door tiles gated"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/SilphCo5F/script.scene",
+    "line": 154,
+    "call": "giveItem(\"TM09\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_TM09_SILPH_CO_5F\")",
+      "      hideObject(\"SILPH_CO_5F_OBJ_6\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found TM09!\", \"<PLAYER>找到了 TM09！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Ground item: PROTEIN (npc 7) ────────────────────────────────────────",
+      "  @storyline(\"itemProtein\") {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/SilphCo5F/script.scene",
+    "line": 167,
+    "call": "giveItem(\"PROTEIN\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_PROTEIN_SILPH_CO_5F\")",
+      "      hideObject(\"SILPH_CO_5F_OBJ_7\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found PROTEIN!\", \"<PLAYER>找到了攻击增强剂！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Ground item: CARD KEY (npc 8) ───────────────────────────────────────",
+      "  @storyline(\"itemCardKey\") {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/SilphCo5F/script.scene",
+    "line": 180,
+    "call": "giveItem(\"CARD_KEY\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_CARD_KEY_SILPH_CO_5F\")",
+      "      hideObject(\"SILPH_CO_5F_OBJ_8\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found CARD_KEY!\", \"<PLAYER>找到了磁卡钥匙！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Clipboard (npc 9) — POKeMON REPORT 1 ────────────────────────────────",
+      "  @storyline(\"talkPokemonReport1\") {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/SilphCo6F/script.scene",
+    "line": 139,
+    "call": "giveItem(\"HP_UP\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_SILPH_CO_6F_HP_UP\")",
+      "      hideObject(\"SILPH_CO_6F_OBJ_9\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found HP UP!\", \"<PLAYER>找到了体力增强剂！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Ground item: X_ACCURACY (npc 10) ────────────────────────────────────",
+      "  @storyline(\"itemXAccuracy\") {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/SilphCo6F/script.scene",
+    "line": 150,
+    "call": "giveItem(\"X_ACCURACY\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_SILPH_CO_6F_X_ACCURACY\")",
+      "      hideObject(\"SILPH_CO_6F_OBJ_10\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found X ACCURACY!\", \"<PLAYER>找到了特攻强化！\") }",
+      "    }",
+      "  }",
+      "}"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/SilphCo7F/script.scene",
+    "line": 177,
+    "call": "givePokemon(\"LAPRAS\", 15)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_LAPRAS\")",
+      "      @speaker(\"\") {",
+      "        @t(\"It's LAPRAS. It's very\\nintelligent.\\n\\nWe kept it in our lab, but\\nit will be much better off\\nwith you!\\n\\nI think you will be a good\\ntrainer for LAPRAS!\\n\\nIt's a good swimmer. It'll\\ngive you a lift!\", \"它是拉普拉斯。非常聪明。\\n\\n我们一直把它养在研究所里，不\\n过跟着你会更好！\\n\\n我想你会是拉普拉斯的好训练\\n家！\\n\\n它很擅长游泳，能载你一程！\")",
+      "      }",
+      "    } @else {",
+      "      @if (getFlag(\"EVENT_BEAT_SILPH_CO_GIOVANNI\")) {",
+      "        @speaker(\"\") {",
+      "          @t(\"Saved at last! Thank you!\", \"终于得救了！谢谢你！\")"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/SilphCo7F/script.scene",
+    "line": 296,
+    "call": "giveItem(\"CALCIUM\", 1)",
+    "following": [
+      "    hideObjectByName(\"SILPH_CO_7F_OBJ_10\")",
+      "  }",
+      "",
+      "  // ── Ground item: TM03 / SWORDS DANCE (npc 11) ───────────────────────────",
+      "  @storyline(\"itemTmSwordsDance\") {",
+      "    @trigger(map = \"SilphCo7F\", npc = 11, toggle = \"SILPH_CO_7F_OBJ_11\")",
+      "    giveItem(\"TM03\", 1)",
+      "    hideObjectByName(\"SILPH_CO_7F_OBJ_11\")"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/SilphCo7F/script.scene",
+    "line": 303,
+    "call": "giveItem(\"TM03\", 1)",
+    "following": [
+      "    hideObjectByName(\"SILPH_CO_7F_OBJ_11\")",
+      "  }",
+      "}"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/VictoryRoad1F/script.scene",
+    "line": 50,
+    "call": "giveItem(\"TM43\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_TM43_VICTORY_ROAD_1F\")",
+      "      hideObject(\"VICTORY_ROAD_1F_OBJ_3\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found TM43!\", \"<PLAYER>发现了 TM43！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Ground item: RARE CANDY (npc 4) ─────────────────────────────────────",
+      "  @storyline(\"itemRareCandy\") {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/VictoryRoad1F/script.scene",
+    "line": 63,
+    "call": "giveItem(\"RARE_CANDY\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_RARE_CANDY_VICTORY_ROAD_1F\")",
+      "      hideObject(\"VICTORY_ROAD_1F_OBJ_4\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found RARE_CANDY!\", \"<PLAYER>发现了神奇糖果！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── STRENGTH boulder (npc 5) — the switch-puzzle boulder ─────────────────",
+      "  // EVENT_VICTORY_ROAD_1_BOULDER_ON_SWITCH is set ONLY when a STRENGTH boulder"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/VictoryRoad2F/script.scene",
+    "line": 134,
+    "call": "giveItem(\"TM17\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_TM17\")",
+      "      hideObject(\"VICTORY_ROAD_2F_OBJ_7\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found TM17!\", \"<PLAYER>找到了 TM17！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Ground item: FULL HEAL (npc 8) ────────────────────────────────────────",
+      "  @storyline(\"itemFullHeal\") {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/VictoryRoad2F/script.scene",
+    "line": 147,
+    "call": "giveItem(\"FULL_HEAL\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_FULL_HEAL_VICTORY_ROAD_2F\")",
+      "      hideObject(\"VICTORY_ROAD_2F_OBJ_8\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found FULL_HEAL!\", \"<PLAYER>找到了万灵药！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Ground item: TM05 MEGA KICK (npc 9) ───────────────────────────────────",
+      "  @storyline(\"itemTmMegaKick\") {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/VictoryRoad2F/script.scene",
+    "line": 160,
+    "call": "giveItem(\"TM05\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_TM05\")",
+      "      hideObject(\"VICTORY_ROAD_2F_OBJ_9\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found TM05!\", \"<PLAYER>找到了 TM05！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Ground item: GUARD SPEC. (npc 10) ─────────────────────────────────────",
+      "  @storyline(\"itemGuardSpec\") {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/VictoryRoad2F/script.scene",
+    "line": 173,
+    "call": "giveItem(\"GUARD_SPEC\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_GUARD_SPEC_VICTORY_ROAD_2F\")",
+      "      hideObject(\"VICTORY_ROAD_2F_OBJ_10\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found GUARD_SPEC!\", \"<PLAYER>找到了特殊防御！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Strength boulder (npc 11) — shared BoulderText ────────────────────────",
+      "  @storyline(\"talkBoulder1\") {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/VictoryRoad3F/script.scene",
+    "line": 75,
+    "call": "giveItem(\"MAX_REVIVE\", 1)",
+    "following": [
+      "    hideObjectByName(\"VICTORY_ROAD_3F_OBJ_5\")",
+      "    @speaker(\"\") { @t(\"<PLAYER> found MAX REVIVE!\", \"<PLAYER>找到了活力块！\") }",
+      "  }",
+      "",
+      "  // ── Ground item: TM47 EXPLOSION (npc 6) ─────────────────────────────────",
+      "  @storyline(\"itemTmExplosion\") {",
+      "    @trigger(map = \"VictoryRoad3F\", npc = 6, toggle = \"VICTORY_ROAD_3F_OBJ_6\")",
+      "    giveItem(\"TM47\", 1)"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/VictoryRoad3F/script.scene",
+    "line": 83,
+    "call": "giveItem(\"TM47\", 1)",
+    "following": [
+      "    hideObjectByName(\"VICTORY_ROAD_3F_OBJ_6\")",
+      "    @speaker(\"\") { @t(\"<PLAYER> found TM47!\", \"<PLAYER>找到了 TM47！\") }",
+      "  }",
+      "",
+      "  // ── Strength boulders (npcs 7-10) ───────────────────────────────────────",
+      "  @storyline(\"talkBoulder1\") {",
+      "    @trigger(map = \"VictoryRoad3F\", npc = 7)",
+      "    @speaker(\"\") { @t(\"This requires STRENGTH to\\nmove!\", \"这需要怪力才能推动！\") }"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/ViridianCity/script.scene",
+    "line": 121,
+    "call": "giveItem(\"TM42\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_TM42\")",
+      "      @speaker(\"\") {",
+      "        @t(\"<PLAYER> received TM42!\", \"<PLAYER>获得了 TM42！\")",
+      "      }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Old man (npc 7) — coffee gate + catch tutorial ─────────────────────"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/ViridianMart/script.scene",
+    "line": 29,
+    "call": "giveItem(\"OAKS_PARCEL\", 1)",
+    "following": [
+      "    setFlag(\"EVENT_GOT_OAKS_PARCEL\")",
+      "    playSound(\"SFX_GET_KEY_ITEM\")",
+      "    @say(\"\") {",
+      "      @t(\"<PLAYER> got OAK's PARCEL!\", \"<PLAYER>得到了大木博士的包\\n裹！\")",
+      "    }",
+      "    clearJoyIgnore()",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/WardensHouse/script.scene",
+    "line": 26,
+    "call": "giveItem(\"HM04\", 1)",
+    "following": [
+      "        setFlag(\"EVENT_GOT_HM04\")",
+      "        @speaker(\"\") { @t(\"<PLAYER> received HM04!\", \"<PLAYER>得到了 HM04！\") }",
+      "      } @else {",
+      "        @if (getFlag(\"EVENT_GAVE_GOLD_TEETH\")) {",
+      "          // Already gave the teeth (e.g. bag was full last time) — give HM04 now.",
+      "          @speaker(\"\") {",
+      "            @t(\"WARDEN: Thanks, kid! No one\\ncould understand a word that\\nI said.\\n\\nI couldn't work that way.\\nLet me give you something\\nfor your trouble.\", \"园长：谢谢，孩子！没人能听懂\\n我说的话。\\n\\n那样我无法工作。让我给你一点\\n东西作为答谢。\")",
+      "          }"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/WardensHouse/script.scene",
+    "line": 35,
+    "call": "giveItem(\"HM04\", 1)",
+    "following": [
+      "          setFlag(\"EVENT_GOT_HM04\")",
+      "          @speaker(\"\") { @t(\"<PLAYER> received HM04!\", \"<PLAYER>得到了 HM04！\") }",
+      "        } @else {",
+      "          // No teeth: the WARDEN can only mumble.",
+      "          @speaker(\"\") {",
+      "            @t(\"WARDEN: Hif fuff hefifoo!\\n\\nHa lof ha feef ee hafahi ho.\\nHeff hee fwee!\", \"园长：呜啦呜呼哇呜！\\n\\n哈噜 哈噜噜哈呜噜。呼噜呼噜\\n噜！\")",
+      "          }",
+      "          @choice {"
+    ]
+  },
+  {
+    "file": "crates/pokered-data/maps/WardensHouse/script.scene",
+    "line": 62,
+    "call": "giveItem(\"RARE_CANDY\", 1)",
+    "following": [
+      "      setFlag(\"EVENT_GOT_RARE_CANDY_WARDENS_HOUSE\")",
+      "      hideObjectByName(\"WARDENS_HOUSE_OBJ_2\")",
+      "      @speaker(\"\") { @t(\"<PLAYER> found RARE_CANDY!\", \"<PLAYER>找到了神奇糖果！\") }",
+      "    }",
+      "  }",
+      "",
+      "  // ── Boulder (npc 3) — needs STRENGTH to move ────────────────────────────",
+      "  @storyline(\"talkBoulder\") {"
+    ]
+  }
+]

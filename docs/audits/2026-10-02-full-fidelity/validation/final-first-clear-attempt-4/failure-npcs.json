@@ -1,0 +1,122 @@
+{
+  "ok": true,
+  "data": [
+    {
+      "facing": "Down",
+      "home_x": 25,
+      "home_y": 3,
+      "npc_index": 0,
+      "scripted_path_remaining": 0,
+      "sprite_id": 23,
+      "text_id": 1,
+      "visible": true,
+      "walk_counter": 0,
+      "x": 25,
+      "y": 3
+    },
+    {
+      "facing": "Down",
+      "home_x": 23,
+      "home_y": 12,
+      "npc_index": 1,
+      "scripted_path_remaining": 0,
+      "sprite_id": 24,
+      "text_id": 2,
+      "visible": true,
+      "walk_counter": 0,
+      "x": 23,
+      "y": 12
+    },
+    {
+      "facing": "Down",
+      "home_x": 26,
+      "home_y": 12,
+      "npc_index": 2,
+      "scripted_path_remaining": 0,
+      "sprite_id": 24,
+      "text_id": 3,
+      "visible": true,
+      "walk_counter": 0,
+      "x": 26,
+      "y": 12
+    },
+    {
+      "facing": "Down",
+      "home_x": 11,
+      "home_y": 2,
+      "npc_index": 3,
+      "scripted_path_remaining": 0,
+      "sprite_id": 24,
+      "text_id": 4,
+      "visible": true,
+      "walk_counter": 0,
+      "x": 11,
+      "y": 2
+    },
+    {
+      "facing": "Down",
+      "home_x": 10,
+      "home_y": 12,
+      "npc_index": 4,
+      "scripted_path_remaining": 0,
+      "sprite_id": 61,
+      "text_id": 5,
+      "visible": true,
+      "walk_counter": 0,
+      "x": 10,
+      "y": 12
+    },
+    {
+      "facing": "Down",
+      "home_x": 9,
+      "home_y": 4,
+      "npc_index": 5,
+      "scripted_path_remaining": 0,
+      "sprite_id": 61,
+      "text_id": 6,
+      "visible": true,
+      "walk_counter": 0,
+      "x": 9,
+      "y": 4
+    },
+    {
+      "facing": "Down",
+      "home_x": 12,
+      "home_y": 20,
+      "npc_index": 6,
+      "scripted_path_remaining": 0,
+      "sprite_id": 61,
+      "text_id": 7,
+      "visible": true,
+      "walk_counter": 0,
+      "x": 12,
+      "y": 20
+    },
+    {
+      "facing": "Down",
+      "home_x": 25,
+      "home_y": 2,
+      "npc_index": 7,
+      "scripted_path_remaining": 0,
+      "sprite_id": 61,
+      "text_id": 8,
+      "visible": false,
+      "walk_counter": 0,
+      "x": 25,
+      "y": 2
+    },
+    {
+      "facing": "Down",
+      "home_x": 10,
+      "home_y": 2,
+      "npc_index": 8,
+      "scripted_path_remaining": 0,
+      "sprite_id": 61,
+      "text_id": 9,
+      "visible": false,
+      "walk_counter": 0,
+      "x": 10,
+      "y": 2
+    }
+  ]
+}

@@ -11,7 +11,10 @@ use pokered_core::game_state::Lang;
 use pokered_core::pc_screen::{ItemListMode, MonListMode, PcPhase, PcScreen, PC_LIST_VISIBLE_ROWS};
 use pokered_core::save::SaveData;
 use pokered_data::lang_data;
-use pokered_renderer::embedded_font::{draw_text, measure_text};
+use pokered_data::text_layout::{wrap_hard_lines, DIALOGUE_LINE_WIDTH_PX};
+use pokered_ui::backends::FrameBufferPainter;
+use pokered_ui::{Painter, TilePos};
+use pokered_renderer::embedded_font::{draw_glyph, draw_text, measure_text, pkmn_tile_glyph};
 use pokered_renderer::palette::GRAYSCALE_SPRITE_PALETTE;
 use pokered_renderer::resource::ResourceManager;
 use pokered_renderer::{FrameBuffer, Rgba, TILE_SIZE};
@@ -27,11 +30,8 @@ const T: u32 = 8; // tile size in pixels
 
 /// Repaint the two cursor cells used by PC menus and lists.
 ///
-/// This is deliberately limited to the marker column: every PC cursor is a
-/// plain `>` on the white list/menu background, and the adjacent label never
-/// overlaps this 5x10 pixel cell. The proportional font advances `>` by five
-/// pixels; clearing a full tile would erase the first letter in the compact
-/// box chooser, which intentionally has no separating space.
+/// This is deliberately limited to the marker column: menu labels begin
+/// in the next 8px tile, and the box chooser has no separating space.
 pub fn redraw_pc_cursor(
     previous: (u32, u32),
     current: (u32, u32),
@@ -70,7 +70,7 @@ fn draw_message(lines: &[String], fb: &mut FrameBuffer, is_zh: bool) {
     let shown: Vec<String> = lines.iter().take(5)
         .flat_map(|line| {
             let text = if is_zh { zh_pc_line(line) } else { line.clone() };
-            if is_zh { wrap_message(&text) } else { vec![text] }
+            wrap_message(&text)
         }).collect();
     let pitch = if is_zh { 12 } else { T };
     let height = if is_zh {
@@ -83,20 +83,21 @@ fn draw_message(lines: &[String], fb: &mut FrameBuffer, is_zh: bool) {
     }
 }
 
-// Wrap translated lines by glyph width, including mixed Chinese/Latin names.
 fn wrap_message(text: &str) -> Vec<String> {
-    let mut lines = Vec::new();
-    let mut line = String::new();
-    for ch in text.chars() {
-        let mut next = line.clone();
-        next.push(ch);
-        if !line.is_empty() && measure_text(&next) > 18 * T {
-            lines.push(core::mem::take(&mut line));
-        }
-        line.push(ch);
+    wrap_hard_lines(text, DIALOGUE_LINE_WIDTH_PX)
+}
+
+/// The ROM's <PKMN> is two glyph tiles, not the four-letter #MON placeholder.
+fn draw_pc_label(text: &str, x: u32, y: u32, fb: &mut FrameBuffer) {
+    if let Some((before, after)) = text.split_once("#MON") {
+        draw_text(before, x, y, FG, fb);
+        let ligature_x = x + measure_text(before);
+        draw_glyph(pkmn_tile_glyph(0xE1).unwrap(), ligature_x, y, FG, BG, fb);
+        draw_glyph(pkmn_tile_glyph(0xE2).unwrap(), ligature_x + T, y, FG, BG, fb);
+        draw_text(after, ligature_x + 2 * T, y, FG, fb);
+    } else {
+        draw_text(text, x, y, FG, fb);
     }
-    lines.push(line);
-    lines
 }
 
 /// YES/NO popup on the right side (original: TWO_OPTION_MENU at hlcoord 14,7).
@@ -202,7 +203,8 @@ fn draw_menu(bx: u32, by: u32, bw: u32, labels: &[String], cursor: usize, fb: &m
     for (i, label) in labels.iter().enumerate() {
         let y = by + (1 + i as u32 * 2) * T;
         let marker = if i == cursor { ">" } else { " " };
-        draw_text(&format!("{} {}", marker, label), bx + T, y, FG, fb);
+        draw_text(marker, bx + T, y, FG, fb);
+        draw_pc_label(label, bx + 2 * T, y, fb);
     }
 }
 
@@ -213,7 +215,7 @@ fn draw_menu(bx: u32, by: u32, bw: u32, labels: &[String], cursor: usize, fb: &m
 fn draw_box_no(save: &SaveData, fb: &mut FrameBuffer, is_zh: bool) {
     let bx = 9 * T;
     let by = 14 * T;
-    draw_text_box(fb, bx, by, 8, 1, FG);
+    draw_text_box(fb, bx, by, 9, 1, FG);
     let n = save.pc_storage.current_box_index() + 1;
     let text = if is_zh {
         format!("盒子{}号", n)
@@ -250,7 +252,7 @@ pub fn draw_pc(
                 .iter()
                 .map(|s| if is_zh { zh_main_menu_label(s) } else { s.clone() })
                 .collect();
-            draw_menu(0, 0, 13, &labels, pc.main_menu().cursor(), fb);
+            draw_menu(0, 0, 14, &labels, pc.main_menu().cursor(), fb);
         }
         PcPhase::BillsMenu => {
             let labels: Vec<String> = BILLS_LABELS
@@ -342,7 +344,7 @@ pub fn draw_pc(
             };
             draw_text(h1, T, T, FG, fb);
             if !h2.is_empty() {
-                draw_text(h2, T, 3 * T, FG, fb);
+                draw_pc_label(h2, T, 3 * T, fb);
             }
             if is_zh {
                 for col in 0..2 {
@@ -373,7 +375,7 @@ pub fn draw_pc(
                 .iter()
                 .map(|s| lang_data::ui_label(s, is_zh).to_string())
                 .collect();
-            draw_menu(0, 0, 13, &labels, pc.players_menu().cursor(), fb);
+            draw_menu(0, 0, 14, &labels, pc.players_menu().cursor(), fb);
         }
         PcPhase::ItemList | PcPhase::ItemQuantity | PcPhase::TossConfirm => {
             let rows = item_rows(pc, save, is_zh);
@@ -447,9 +449,7 @@ fn draw_league_hof(pc: &PcScreen, resources: &mut Option<ResourceManager>, fb: &
     if let Some(rm) = resources.as_mut() {
         let sprite = species_to_sprite_name(&format!("{}", view.species));
         if let Ok(cached) = rm.load_pokemon_front(&sprite) {
-            let ts = &cached.tileset;
-            let w_tiles = cached.source_size.0 / TILE_SIZE;
-            blit_tileset(fb, ts, 12 * T, 5 * T, w_tiles, &GRAYSCALE_SPRITE_PALETTE);
+            super::blit_front_pic(fb, cached, (12 * T) as i32, (5 * T) as i32, false);
         }
     }
     let hof_no = if is_zh {
@@ -458,32 +458,27 @@ fn draw_league_hof(pc: &PcScreen, resources: &mut Option<ResourceManager>, fb: &
         format!("HALL OF FAME No.{:>3}", team_no)
     };
     draw_text(&hof_no, T, 15 * T, FG, fb);
-    draw_text(&view.nickname, T, T, FG, fb);
-    draw_text(&format!("{} :L{}", lang_data::ui_label("LEVEL/", is_zh), view.level), T, 3 * T, FG, fb);
+    // HoFDisplayMonInfo (engine/movie/hall_of_fame.asm:159-183) keeps
+    // labels and values on separate rows, to the left of the front picture.
+    draw_text_box(fb, 0, 2 * T, 10, if is_zh { 11 } else { 9 }, FG);
+    draw_text(&view.nickname, T, if is_zh { 3 * T } else { 4 * T }, FG, fb);
+    let (level_label_y, level_y, type1_label_y, type1_y, type2_label_y, type2_y) =
+        if is_zh { (40, 52, 64, 76, 88, 100) }
+        else { (6 * T, 7 * T, 8 * T, 9 * T, 10 * T, 11 * T) };
+    draw_text(lang_data::ui_label("LEVEL/", is_zh), 2 * T, level_label_y, FG, fb);
+    if view.level < 100 && !is_zh {
+        let mut painter = FrameBufferPainter::new(fb);
+        painter.draw_gb_tile(TilePos::new(8, 7), 0x6E, "L", FG);
+        draw_text(&format!("{:02}", view.level), 9 * T, level_y, FG, fb);
+    } else {
+        draw_text(&format!("{}", view.level), 8 * T, level_y, FG, fb);
+    }
     if let Some(stats) = pokered_data::pokemon_data::get_base_stats(view.species) {
-        draw_text(
-            &format!(
-                "{} {}",
-                lang_data::ui_label("TYPE1/", is_zh),
-                pokered_data::lang_data::type_name(stats.type1, is_zh)
-            ),
-            T,
-            5 * T,
-            FG,
-            fb,
-        );
+        draw_text(lang_data::ui_label("TYPE1/", is_zh), 2 * T, type1_label_y, FG, fb);
+        draw_text(lang_data::type_name(stats.type1, is_zh), 3 * T, type1_y, FG, fb);
+        draw_text(lang_data::ui_label("TYPE2/", is_zh), 2 * T, type2_label_y, FG, fb);
         if stats.type1 != stats.type2 {
-            draw_text(
-                &format!(
-                    "{} {}",
-                    lang_data::ui_label("TYPE2/", is_zh),
-                    pokered_data::lang_data::type_name(stats.type2, is_zh)
-                ),
-                T,
-                7 * T,
-                FG,
-                fb,
-            );
+            draw_text(lang_data::type_name(stats.type2, is_zh), 3 * T, type2_y, FG, fb);
         }
     }
 }
@@ -496,7 +491,7 @@ mod layout_tests {
     use super::*;
     use dotzuki_engine::render_config::RenderConfig;
     use pokered_core::main_menu::MenuInput;
-    use pokered_core::pc_screen::{PcContext, PcEntry, PcOpenContext};
+    use pokered_core::pc_screen::{HofMonView, HofTeamRecord, PcContext, PcEntry, PcOpenContext};
     use pokered_core::pokemon::stats::create_pokemon;
     use pokered_data::items::ItemId;
     use pokered_data::species::Species;
@@ -595,24 +590,160 @@ mod layout_tests {
     }
 
     #[test]
+    fn pkmn_menu_graphic_follows_fusion_text_at_exact_pixel_coordinates() {
+        let mut actual = FrameBuffer::new(RenderConfig::new(160, 144), BG);
+        draw_pc_label("Withdraw #MON!", 8, 11, &mut actual);
+        let mut expected = FrameBuffer::new(RenderConfig::new(160, 144), BG);
+        dotzuki_renderer::embedded_font::draw_text("Withdraw ", 8, 11, FG, &mut expected);
+        // Nine half-width characters occupy 45px: PK starts at 8 + 45,
+        // even though neither the x=53 nor y=11 origin is tile-aligned.
+        dotzuki_renderer::embedded_font::draw_glyph(
+            &[224, 160, 224, 138, 138, 12, 10, 10], 53, 11, FG, BG, &mut expected,
+        );
+        dotzuki_renderer::embedded_font::draw_glyph(
+            &[216, 168, 136, 136, 146, 26, 22, 18], 61, 11, FG, BG, &mut expected,
+        );
+        dotzuki_renderer::embedded_font::draw_text("!", 69, 11, FG, &mut expected);
+        assert_eq!(actual.get_pixel(53, 11), Some(FG));
+        assert_eq!(actual.get_pixel(61, 11), Some(FG));
+        assert_framebuffers_equal(&actual, &expected);
+    }
+
+    #[test]
     fn translated_message_wrap_preserves_text_and_fits_box() {
-        for text in ["一旦放生，CHARMANDER就永远消失了。可以吗？", "更换宝可梦盒子时，数据会被保存。", ""] {
+        for text in ["一旦放生，CHARMANDER就永远消失了。可以吗？", "更换宝可梦盒子时，数据会被保存。", "Withdrew THUNDERSTONE.", ""] {
             let lines = wrap_message(text);
-            assert_eq!(lines.concat(), text);
+            assert_eq!(lines.concat().split_whitespace().collect::<String>(), text.split_whitespace().collect::<String>());
             assert!(lines.iter().all(|line| measure_text(line) <= 144));
+        }
+    }
+
+    // Expected borders below use the ROM's c=12/14 menu widths and
+    // c=9 box-number width, rather than measuring the rendered strings.
+    #[test]
+    fn original_pc_menu_borders_survive_the_widest_labels() {
+        for language in [Lang::En, Lang::Zh] {
+            for (entry, inner_width, inner_height) in [
+                (PcEntry::PokemonCenter, 14, 8),
+                (PcEntry::BillsPc, 12, 10),
+                (PcEntry::PlayersPc, 14, 8),
+            ] {
+                let mut save = SaveData::new();
+                let mut context = open_context(true);
+                context.player_name = "ABCDEFG".into();
+                let mut pc = PcScreen::new(entry, &context);
+                skip_message(&mut pc, &mut save);
+                let actual = render_pc_state(&pc, &save, language);
+                let mut border = FrameBuffer::new(RenderConfig::new(160, 144), BG);
+                draw_text_box(&mut border, 0, 0, inner_width, inner_height, FG);
+                let right_x = (inner_width + 1) * T;
+                for y in T..(inner_height + 1) * T {
+                    for x in right_x..right_x + T {
+                        assert_eq!(actual.get_pixel(x, y), border.get_pixel(x, y),
+                            "PC {entry:?} {language:?} overwrote the original border at ({x},{y})");
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn box_twelve_number_and_withdrawn_item_leave_the_border_intact() {
+        let mut save = SaveData::new();
+        save.pc_storage.change_box(11).unwrap();
+        let mut actual = FrameBuffer::new(RenderConfig::new(160, 144), BG);
+        draw_box_no(&save, &mut actual, false);
+        let mut border = FrameBuffer::new(RenderConfig::new(160, 144), BG);
+        draw_text_box(&mut border, 9 * T, 14 * T, 9, 1, FG);
+        for y in 15 * T..16 * T {
+            for x in 19 * T..20 * T {
+                assert_eq!(actual.get_pixel(x, y), border.get_pixel(x, y));
+            }
+        }
+        actual.clear(BG);
+        let message = "Withdrew THUNDERSTONE from storage.";
+        // 35 half-width Latin characters occupy 175px, beyond the 144px
+        // interior. The short real-item message fits on one Fusion row.
+        assert_eq!(message.chars().count() * 5, 175);
+        assert_eq!(wrap_message(message), vec!["Withdrew THUNDERSTONE from", "storage."]);
+        draw_message(&[message.into()], &mut actual, false);
+        border.clear(BG);
+        // The longer message requires two rows inside the 144px box.
+        draw_text_box(&mut border, 0, 13 * T, 18, 3, FG);
+        for y in 14 * T..17 * T {
+            for x in 19 * T..20 * T {
+                assert_eq!(actual.get_pixel(x, y), border.get_pixel(x, y));
+            }
+        }
+    }
+
+    #[test]
+    fn hof_info_keeps_the_original_front_picture_region_clear() {
+        for language in [Lang::En, Lang::Zh] {
+            let mut save = SaveData::new();
+            let mut context = open_context(true);
+            context.beaten_league = true;
+            context.hof_teams = vec![HofTeamRecord {
+                team_no: 1,
+                mons: vec![HofMonView {
+                    species: Species::Pikachu,
+                    level: 100,
+                    nickname: "PIKACHU".into(),
+                }],
+            }];
+            let mut pc = PcScreen::new(PcEntry::PokemonCenter, &context);
+            skip_message(&mut pc, &mut save);
+            for _ in 0..3 { update_pc(&mut pc, &mut save, DOWN); }
+            update_pc(&mut pc, &mut save, A);
+            skip_message(&mut pc, &mut save);
+            assert_eq!(pc.phase(), PcPhase::LeagueHoF);
+            let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), BG);
+            draw_league_hof(&pc, &mut None, &mut fb, language == Lang::Zh);
+            // The ROM reserves (12,5)..(18,11) for the 7x7 front picture.
+            for y in 5 * T..12 * T {
+                for x in 12 * T..19 * T {
+                    assert_eq!(fb.get_pixel(x, y), Some(BG),
+                        "HoF {language:?} text entered the front-picture region at ({x},{y})");
+                }
+            }
         }
     }
 
     #[test]
     fn chinese_list_leaves_clear_pixels_between_rows() {
-        let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), BG);
+        let mut actual = FrameBuffer::new(RenderConfig::new(160, 144), BG);
         let rows = vec!["精灵球 x03".into(), "好伤药 x12".into()];
-        draw_list(0, 0, 18, 8, &rows, 0, 0, true, &mut fb);
-        // CJK ink includes the font baseline offset: the second row
-        // begins at y=22, with clear scanlines after the first row.
-        for y in 20..22 {
+        draw_list(0, 0, 18, 8, &rows, 0, 0, true, &mut actual);
+
+        // Keep both rows intact at their authored 12px baselines. The second
+        // row's digit 1 starts at x=58 (two spaces, three 10px Chinese glyphs,
+        // a space and x); its Fusion bitmap has ink at offset (2,3).
+        let mut first = FrameBuffer::new(RenderConfig::new(160, 144), BG);
+        let mut second = FrameBuffer::new(RenderConfig::new(160, 144), BG);
+        draw_text("> 精灵球 x03", 8, 8, FG, &mut first);
+        draw_text("  好伤药 x12", 8, 20, FG, &mut second);
+        assert_eq!(actual.get_pixel(60, 23), Some(FG), "project-font digit 1 must remain intact");
+
+        let mut last_first_ink = None;
+        let mut first_second_ink = None;
+        for y in 8..32 {
             for x in 8..152 {
-                assert_eq!(fb.get_pixel(x, y), Some(BG), "rows touch at {x},{y}");
+                let first_ink = first.get_pixel(x, y) == Some(FG);
+                let second_ink = second.get_pixel(x, y) == Some(FG);
+                assert!(!(first_ink && second_ink), "row glyphs intersect at {x},{y}");
+                if first_ink { last_first_ink = Some(y); }
+                if second_ink { first_second_ink.get_or_insert(y); }
+                let expected = if first_ink || second_ink { FG } else { BG };
+                assert_eq!(actual.get_pixel(x, y), Some(expected),
+                    "list lost or displaced row ink at {x},{y}");
+            }
+        }
+        let last_first_ink = last_first_ink.expect("first row has ink");
+        let first_second_ink = first_second_ink.expect("second row has ink");
+        assert!(first_second_ink >= last_first_ink + 2, "rows need a full clear scanline");
+        for y in last_first_ink + 1..first_second_ink {
+            for x in 8..152 {
+                assert_eq!(actual.get_pixel(x, y), Some(BG), "row gap occupied at {x},{y}");
             }
         }
     }

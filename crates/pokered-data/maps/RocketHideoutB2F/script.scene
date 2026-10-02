@@ -36,52 +36,60 @@ game_scene RocketHideoutB2F {
   // ── Ground item: MOON STONE (npc 2) ─────────────────────────────────────
   @storyline("itemMoonStone") {
     @trigger(map = "RocketHideoutB2F", npc = 2, toggle = "ROCKET_HIDEOUT_B2F_OBJ_2")
-    @if (getFlag("EVENT_GOT_MOON_STONE_ROCKET_HIDEOUT_B2F")) {
-      @speaker("") { @t("The item ball is empty.", "这个精灵球是空的。") }
-    } @else {
-      giveItem("MOON_STONE", 1)
-      setFlag("EVENT_GOT_MOON_STONE_ROCKET_HIDEOUT_B2F")
-      hideObject("ROCKET_HIDEOUT_B2F_OBJ_2")
-      @speaker("") { @t("<PLAYER> found MOON_STONE!", "<PLAYER>发现了月之石！") }
+    @if (!getFlag("EVENT_GOT_MOON_STONE_ROCKET_HIDEOUT_B2F")) {
+      given = giveItem("MOON_STONE", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_MOON_STONE_ROCKET_HIDEOUT_B2F")
+        hideObjectByName("ROCKET_HIDEOUT_B2F_OBJ_2")
+        showItemDialogue(t("<PLAYER> found MOON_STONE!", "<PLAYER>发现了月之石！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 
   // ── Ground item: NUGGET (npc 3) ─────────────────────────────────────────
   @storyline("itemNugget") {
     @trigger(map = "RocketHideoutB2F", npc = 3, toggle = "ROCKET_HIDEOUT_B2F_OBJ_3")
-    @if (getFlag("EVENT_GOT_NUGGET_ROCKET_HIDEOUT_B2F")) {
-      @speaker("") { @t("The item ball is empty.", "这个精灵球是空的。") }
-    } @else {
-      giveItem("NUGGET", 1)
-      setFlag("EVENT_GOT_NUGGET_ROCKET_HIDEOUT_B2F")
-      hideObject("ROCKET_HIDEOUT_B2F_OBJ_3")
-      @speaker("") { @t("<PLAYER> found NUGGET!", "<PLAYER>发现了金珠！") }
+    @if (!getFlag("EVENT_GOT_NUGGET_ROCKET_HIDEOUT_B2F")) {
+      given = giveItem("NUGGET", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_NUGGET_ROCKET_HIDEOUT_B2F")
+        hideObjectByName("ROCKET_HIDEOUT_B2F_OBJ_3")
+        showItemDialogue(t("<PLAYER> found NUGGET!", "<PLAYER>发现了金珠！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 
   // ── Ground item: TM07 / HORN DRILL (npc 4) ──────────────────────────────
   @storyline("itemTmHornDrill") {
     @trigger(map = "RocketHideoutB2F", npc = 4, toggle = "ROCKET_HIDEOUT_B2F_OBJ_4")
-    @if (getFlag("EVENT_GOT_TM07_ROCKET_HIDEOUT_B2F")) {
-      @speaker("") { @t("The item ball is empty.", "这个精灵球是空的。") }
-    } @else {
-      giveItem("TM07", 1)
-      setFlag("EVENT_GOT_TM07_ROCKET_HIDEOUT_B2F")
-      hideObject("ROCKET_HIDEOUT_B2F_OBJ_4")
-      @speaker("") { @t("<PLAYER> found TM07!", "<PLAYER>发现了 TM07！") }
+    @if (!getFlag("EVENT_GOT_TM07_ROCKET_HIDEOUT_B2F")) {
+      given = giveItem("TM07", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_TM07_ROCKET_HIDEOUT_B2F")
+        hideObjectByName("ROCKET_HIDEOUT_B2F_OBJ_4")
+        showItemDialogue(t("<PLAYER> found TM07!", "<PLAYER>发现了 TM07！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 
   // ── Ground item: SUPER POTION (npc 5) ───────────────────────────────────
   @storyline("itemSuperPotion") {
     @trigger(map = "RocketHideoutB2F", npc = 5, toggle = "ROCKET_HIDEOUT_B2F_OBJ_5")
-    @if (getFlag("EVENT_GOT_SUPER_POTION_ROCKET_HIDEOUT_B2F")) {
-      @speaker("") { @t("The item ball is empty.", "这个精灵球是空的。") }
-    } @else {
-      giveItem("SUPER_POTION", 1)
-      setFlag("EVENT_GOT_SUPER_POTION_ROCKET_HIDEOUT_B2F")
-      hideObject("ROCKET_HIDEOUT_B2F_OBJ_5")
-      @speaker("") { @t("<PLAYER> found SUPER_POTION!", "<PLAYER>发现了好伤药！") }
+    @if (!getFlag("EVENT_GOT_SUPER_POTION_ROCKET_HIDEOUT_B2F")) {
+      given = giveItem("SUPER_POTION", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_SUPER_POTION_ROCKET_HIDEOUT_B2F")
+        hideObjectByName("ROCKET_HIDEOUT_B2F_OBJ_5")
+        showItemDialogue(t("<PLAYER> found SUPER_POTION!", "<PLAYER>发现了好伤药！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 }

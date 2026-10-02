@@ -17,17 +17,63 @@ pub fn viewport_start(party_len: usize, cursor: usize) -> usize {
     }
 }
 
-fn party_label(mon: &Pokemon, is_zh: bool) -> String {
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use pokered_core::pokemon::stats::create_pokemon;
+    use pokered_data::species::Species;
+
+    #[test]
+    fn labels_preserve_health_and_fit_before_the_right_border() {
+        let width = pokered_data::ui_layout::schema::BATTLE_PARTY_DEFAULT_LAYOUT.box_0.rect.tw.saturating_sub(3) * 8;
+        for species in [Species::Charmander, Species::Victreebel, Species::Lickitung, Species::Snorlax] {
+            for level in [25, 100] {
+                for is_zh in [false, true] {
+                    let mon = create_pokemon(species, level, [0xff; 2]).unwrap();
+                    let label = party_label(&mon, is_zh, width);
+                    assert!(label.ends_with(&format!(" {}/{}", mon.hp, mon.max_hp)));
+                    assert!(pokered_data::text_layout::measure_text(&label) <= width, "{label}");
+                    let mut fainted = mon;
+                    fainted.hp = 0;
+                    let label = party_label(&fainted, is_zh, width);
+                    assert!(label.ends_with(if is_zh { " 倒下" } else { " FNT" }));
+                    assert!(pokered_data::text_layout::measure_text(&label) <= width, "{label}");
+                }
+            }
+        }
+    }
+}
+
+fn party_label(mon: &Pokemon, is_zh: bool, width: u32) -> String {
     let mut name_buf = [0u8; pokered_core::battle::state::NAME_TEXT_BUF];
     let name = mon.display_name(&mut name_buf);
-    if mon.hp == 0 {
+    let suffix = if mon.hp == 0 {
         if is_zh {
-            format!("{} 倒下", name)
+            " 倒下".to_string()
         } else {
-            format!("{} FNT", name)
+            " FNT".to_string()
         }
     } else {
-        format!("{} {}/{}", name, mon.hp, mon.max_hp)
+        format!(" {}/{}", mon.hp, mon.max_hp)
+    };
+    let name_width = width.saturating_sub(pokered_data::text_layout::measure_text(&suffix));
+    if pokered_data::text_layout::measure_text(name) <= name_width {
+        format!("{}{}", name, suffix)
+    } else {
+        let mut shortened = String::new();
+        let mut used = pokered_data::text_layout::char_advance('…');
+        for ch in name.chars() {
+            let advance = pokered_data::text_layout::char_advance(ch);
+            if used + advance > name_width {
+                break;
+            }
+            shortened.push(ch);
+            used += advance;
+        }
+        if name_width >= pokered_data::text_layout::char_advance('…') {
+            shortened.push('…');
+        }
+        format!("{}{}", shortened, suffix)
     }
 }
 
@@ -54,7 +100,7 @@ pub fn draw<P: Painter>(party: &[Pokemon], cursor: usize, layout: &BattlePartyDe
             let mon = &party[party_idx];
             let row = i as u32;
 
-            let label = party_label(mon, is_zh);
+            let label = party_label(mon, is_zh, layout.box_0.rect.tw.saturating_sub(3) * 8);
             frame.label(1, row, &label, InkColor::Black);
 
             if party_idx == cursor {
@@ -102,10 +148,10 @@ pub fn cursor_damage(row: usize, layout: &BattlePartyDefaultLayout) -> crate::Da
 pub fn viewport_damage(layout: &BattlePartyDefaultLayout) -> crate::DamageRect {
     let rect = layout.box_0.rect;
     crate::DamageRect::new(
-        (rect.tx + 1) * 8,
-        (rect.ty + 1) * 8 - 1,
-        rect.tw.saturating_sub(2) * 8,
-        rect.th.saturating_sub(2) * 8 + 6,
+        rect.tx * 8,
+        rect.ty * 8,
+        rect.tw * 8,
+        rect.th * 8,
     )
 }
 
@@ -183,7 +229,7 @@ pub fn redraw_viewport_edges<P: Painter>(
         };
         painter.draw_text(
             TilePos::new(rect.tx + 2, rect.ty + 1 + row as u32),
-            &party_label(mon, is_zh),
+            &party_label(mon, is_zh, rect.tw.saturating_sub(3) * 8),
             InkColor::Black.into(),
         );
     }

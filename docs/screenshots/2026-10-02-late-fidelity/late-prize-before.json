@@ -1,0 +1,4058 @@
+{
+  "setup": "Debug-seeded snapshot; real scene/game dispatch; isolated sidecar",
+  "events": [
+    {
+      "command": {
+        "cmd": "step_frames",
+        "count": 100
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "frame_count": 100,
+          "stepped": 100
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "interact_with",
+        "id": "sign:0"
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "agent_state": {
+            "badges": {
+              "count": 0
+            },
+            "bag": [
+              {
+                "item": "CoinCase",
+                "qty": 1
+              }
+            ],
+            "dialogue": {
+              "done": false,
+              "page": 1,
+              "text": "We exchange your coins for prizes.",
+              "total_pages": 1,
+              "waiting_for_input": false
+            },
+            "facing": "Up",
+            "map": {
+              "id": 137,
+              "name": "GameCornerPrizeRoom"
+            },
+            "mode": "dialogue",
+            "nearby": [
+              {
+                "distance": 1,
+                "id": "sign:0",
+                "interactable": true,
+                "kind": "sign",
+                "position": {
+                  "x": 2,
+                  "y": 2
+                }
+              },
+              {
+                "distance": 2,
+                "id": "npc:0",
+                "interactable": true,
+                "kind": "npc",
+                "name": "BaldingGuy",
+                "position": {
+                  "x": 1,
+                  "y": 4
+                }
+              },
+              {
+                "distance": 3,
+                "id": "sign:1",
+                "interactable": false,
+                "kind": "sign",
+                "position": {
+                  "x": 4,
+                  "y": 2
+                }
+              },
+              {
+                "distance": 5,
+                "id": "sign:2",
+                "interactable": false,
+                "kind": "sign",
+                "position": {
+                  "x": 6,
+                  "y": 2
+                }
+              },
+              {
+                "distance": 6,
+                "id": "npc:1",
+                "interactable": false,
+                "kind": "npc",
+                "name": "Gambler",
+                "position": {
+                  "x": 8,
+                  "y": 3
+                }
+              },
+              {
+                "distance": 6,
+                "id": "warp:0",
+                "interactable": false,
+                "kind": "warp",
+                "position": {
+                  "x": 4,
+                  "y": 7
+                }
+              },
+              {
+                "distance": 7,
+                "id": "warp:1",
+                "interactable": false,
+                "kind": "warp",
+                "position": {
+                  "x": 5,
+                  "y": 7
+                }
+              }
+            ],
+            "party": [
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "species": "Charizard",
+                "status": "None"
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "species": "Charizard",
+                "status": "None"
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "species": "Charizard",
+                "status": "None"
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "species": "Charizard",
+                "status": "None"
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "species": "Charizard",
+                "status": "None"
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "species": "Charizard",
+                "status": "None"
+              }
+            ],
+            "position": {
+              "x": 2,
+              "y": 3
+            }
+          },
+          "facing": "Up",
+          "final": {
+            "x": 2,
+            "y": 3
+          },
+          "frames": 7,
+          "map": "GameCornerPrizeRoom",
+          "result": "dialogue",
+          "state": {
+            "active_script_effect": "ShowDialogue",
+            "badges": 0,
+            "battle_bag": null,
+            "battle_inventory": [],
+            "battle_live": null,
+            "battle_message": null,
+            "battle_moves": null,
+            "battle_party_cursor": 0,
+            "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+            "choice": null,
+            "coins": 9999,
+            "credits_final_button": null,
+            "credits_phase": null,
+            "dialogue": "",
+            "dialogue_state": {
+              "char_index": 0,
+              "done": false,
+              "holding_open": false,
+              "page": 1,
+              "text": "",
+              "total_chars": 33,
+              "total_pages": 1,
+              "waiting_for_input": false
+            },
+            "evaluation": {
+              "party": [
+                {
+                  "hp": 286,
+                  "level": 100,
+                  "max_hp": 286,
+                  "moves": [
+                    "Slash",
+                    "Flamethrower",
+                    "Surf",
+                    "Strength"
+                  ],
+                  "pp": [
+                    20,
+                    15,
+                    15,
+                    15
+                  ],
+                  "species": "Charizard",
+                  "status": "None",
+                  "total_exp": 1059860
+                },
+                {
+                  "hp": 286,
+                  "level": 100,
+                  "max_hp": 286,
+                  "moves": [
+                    "Slash",
+                    "Flamethrower",
+                    "Surf",
+                    "Strength"
+                  ],
+                  "pp": [
+                    20,
+                    15,
+                    15,
+                    15
+                  ],
+                  "species": "Charizard",
+                  "status": "None",
+                  "total_exp": 1059860
+                },
+                {
+                  "hp": 286,
+                  "level": 100,
+                  "max_hp": 286,
+                  "moves": [
+                    "Slash",
+                    "Flamethrower",
+                    "Surf",
+                    "Strength"
+                  ],
+                  "pp": [
+                    20,
+                    15,
+                    15,
+                    15
+                  ],
+                  "species": "Charizard",
+                  "status": "None",
+                  "total_exp": 1059860
+                },
+                {
+                  "hp": 286,
+                  "level": 100,
+                  "max_hp": 286,
+                  "moves": [
+                    "Slash",
+                    "Flamethrower",
+                    "Surf",
+                    "Strength"
+                  ],
+                  "pp": [
+                    20,
+                    15,
+                    15,
+                    15
+                  ],
+                  "species": "Charizard",
+                  "status": "None",
+                  "total_exp": 1059860
+                },
+                {
+                  "hp": 286,
+                  "level": 100,
+                  "max_hp": 286,
+                  "moves": [
+                    "Slash",
+                    "Flamethrower",
+                    "Surf",
+                    "Strength"
+                  ],
+                  "pp": [
+                    20,
+                    15,
+                    15,
+                    15
+                  ],
+                  "species": "Charizard",
+                  "status": "None",
+                  "total_exp": 1059860
+                },
+                {
+                  "hp": 286,
+                  "level": 100,
+                  "max_hp": 286,
+                  "moves": [
+                    "Slash",
+                    "Flamethrower",
+                    "Surf",
+                    "Strength"
+                  ],
+                  "pp": [
+                    20,
+                    15,
+                    15,
+                    15
+                  ],
+                  "species": "Charizard",
+                  "status": "None",
+                  "total_exp": 1059860
+                }
+              ],
+              "party_source": "save_data",
+              "pokedex": {
+                "owned": 0,
+                "owned_numbers": [],
+                "seen": 0,
+                "total": 151
+              }
+            },
+            "field_menu": null,
+            "frame_count": 107,
+            "hall_of_fame_count": 0,
+            "hof_phase": null,
+            "last_outside_map": "PalletTown",
+            "link": {
+              "cable_phase": "Inactive",
+              "role": "Host",
+              "status": "disabled",
+              "trade": null
+            },
+            "map_blocks": [
+              63,
+              64,
+              64,
+              64,
+              63,
+              62,
+              62,
+              62,
+              62,
+              62,
+              32,
+              32,
+              32,
+              32,
+              32,
+              27,
+              27,
+              61,
+              27,
+              27
+            ],
+            "map_id": 137,
+            "map_name": "GameCornerPrizeRoom",
+            "money": 3000,
+            "party": [
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None"
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None"
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None"
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None"
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None"
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None"
+              }
+            ],
+            "party_count": 6,
+            "pc_phase": null,
+            "player_facing": "Up",
+            "player_movement_state": "Idle",
+            "player_name": "RED",
+            "player_transport": "Walking",
+            "player_x": 2,
+            "player_y": 3,
+            "screen": "overworld",
+            "script_awaiting_battle": false,
+            "script_effect": {
+              "effect": "ShowDialogue",
+              "text": "We exchange your coins for\nprizes."
+            },
+            "script_running": true,
+            "shop_phase": null,
+            "text_speed_delay_frames": 3,
+            "warp_fade": "Idle"
+          },
+          "target": "sign:0"
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "get_state"
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "active_script_effect": "ShowDialogue",
+          "badges": 0,
+          "battle_bag": null,
+          "battle_inventory": [],
+          "battle_live": null,
+          "battle_message": null,
+          "battle_moves": null,
+          "battle_party_cursor": 0,
+          "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+          "choice": null,
+          "coins": 9999,
+          "credits_final_button": null,
+          "credits_phase": null,
+          "dialogue": "",
+          "dialogue_state": {
+            "char_index": 0,
+            "done": false,
+            "holding_open": false,
+            "page": 1,
+            "text": "",
+            "total_chars": 33,
+            "total_pages": 1,
+            "waiting_for_input": false
+          },
+          "evaluation": {
+            "party": [
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None",
+                "total_exp": 1059860
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None",
+                "total_exp": 1059860
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None",
+                "total_exp": 1059860
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None",
+                "total_exp": 1059860
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None",
+                "total_exp": 1059860
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None",
+                "total_exp": 1059860
+              }
+            ],
+            "party_source": "save_data",
+            "pokedex": {
+              "owned": 0,
+              "owned_numbers": [],
+              "seen": 0,
+              "total": 151
+            }
+          },
+          "field_menu": null,
+          "frame_count": 107,
+          "hall_of_fame_count": 0,
+          "hof_phase": null,
+          "last_outside_map": "PalletTown",
+          "link": {
+            "cable_phase": "Inactive",
+            "role": "Host",
+            "status": "disabled",
+            "trade": null
+          },
+          "map_blocks": [
+            63,
+            64,
+            64,
+            64,
+            63,
+            62,
+            62,
+            62,
+            62,
+            62,
+            32,
+            32,
+            32,
+            32,
+            32,
+            27,
+            27,
+            61,
+            27,
+            27
+          ],
+          "map_id": 137,
+          "map_name": "GameCornerPrizeRoom",
+          "money": 3000,
+          "party": [
+            {
+              "hp": 286,
+              "level": 100,
+              "max_hp": 286,
+              "moves": [
+                "Slash",
+                "Flamethrower",
+                "Surf",
+                "Strength"
+              ],
+              "pp": [
+                20,
+                15,
+                15,
+                15
+              ],
+              "species": "Charizard",
+              "status": "None"
+            },
+            {
+              "hp": 286,
+              "level": 100,
+              "max_hp": 286,
+              "moves": [
+                "Slash",
+                "Flamethrower",
+                "Surf",
+                "Strength"
+              ],
+              "pp": [
+                20,
+                15,
+                15,
+                15
+              ],
+              "species": "Charizard",
+              "status": "None"
+            },
+            {
+              "hp": 286,
+              "level": 100,
+              "max_hp": 286,
+              "moves": [
+                "Slash",
+                "Flamethrower",
+                "Surf",
+                "Strength"
+              ],
+              "pp": [
+                20,
+                15,
+                15,
+                15
+              ],
+              "species": "Charizard",
+              "status": "None"
+            },
+            {
+              "hp": 286,
+              "level": 100,
+              "max_hp": 286,
+              "moves": [
+                "Slash",
+                "Flamethrower",
+                "Surf",
+                "Strength"
+              ],
+              "pp": [
+                20,
+                15,
+                15,
+                15
+              ],
+              "species": "Charizard",
+              "status": "None"
+            },
+            {
+              "hp": 286,
+              "level": 100,
+              "max_hp": 286,
+              "moves": [
+                "Slash",
+                "Flamethrower",
+                "Surf",
+                "Strength"
+              ],
+              "pp": [
+                20,
+                15,
+                15,
+                15
+              ],
+              "species": "Charizard",
+              "status": "None"
+            },
+            {
+              "hp": 286,
+              "level": 100,
+              "max_hp": 286,
+              "moves": [
+                "Slash",
+                "Flamethrower",
+                "Surf",
+                "Strength"
+              ],
+              "pp": [
+                20,
+                15,
+                15,
+                15
+              ],
+              "species": "Charizard",
+              "status": "None"
+            }
+          ],
+          "party_count": 6,
+          "pc_phase": null,
+          "player_facing": "Up",
+          "player_movement_state": "Idle",
+          "player_name": "RED",
+          "player_transport": "Walking",
+          "player_x": 2,
+          "player_y": 3,
+          "screen": "overworld",
+          "script_awaiting_battle": false,
+          "script_effect": {
+            "effect": "ShowDialogue",
+            "text": "We exchange your coins for\nprizes."
+          },
+          "script_running": true,
+          "shop_phase": null,
+          "text_speed_delay_frames": 3,
+          "warp_fade": "Idle"
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "skip_dialogue"
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "dialogue_closed": true,
+          "state": {
+            "active_script_effect": "ShowDialogue",
+            "badges": 0,
+            "battle_bag": null,
+            "battle_inventory": [],
+            "battle_live": null,
+            "battle_message": null,
+            "battle_moves": null,
+            "battle_party_cursor": 0,
+            "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+            "choice": null,
+            "coins": 9999,
+            "credits_final_button": null,
+            "credits_phase": null,
+            "dialogue": null,
+            "dialogue_state": null,
+            "evaluation": {
+              "party": [
+                {
+                  "hp": 286,
+                  "level": 100,
+                  "max_hp": 286,
+                  "moves": [
+                    "Slash",
+                    "Flamethrower",
+                    "Surf",
+                    "Strength"
+                  ],
+                  "pp": [
+                    20,
+                    15,
+                    15,
+                    15
+                  ],
+                  "species": "Charizard",
+                  "status": "None",
+                  "total_exp": 1059860
+                },
+                {
+                  "hp": 286,
+                  "level": 100,
+                  "max_hp": 286,
+                  "moves": [
+                    "Slash",
+                    "Flamethrower",
+                    "Surf",
+                    "Strength"
+                  ],
+                  "pp": [
+                    20,
+                    15,
+                    15,
+                    15
+                  ],
+                  "species": "Charizard",
+                  "status": "None",
+                  "total_exp": 1059860
+                },
+                {
+                  "hp": 286,
+                  "level": 100,
+                  "max_hp": 286,
+                  "moves": [
+                    "Slash",
+                    "Flamethrower",
+                    "Surf",
+                    "Strength"
+                  ],
+                  "pp": [
+                    20,
+                    15,
+                    15,
+                    15
+                  ],
+                  "species": "Charizard",
+                  "status": "None",
+                  "total_exp": 1059860
+                },
+                {
+                  "hp": 286,
+                  "level": 100,
+                  "max_hp": 286,
+                  "moves": [
+                    "Slash",
+                    "Flamethrower",
+                    "Surf",
+                    "Strength"
+                  ],
+                  "pp": [
+                    20,
+                    15,
+                    15,
+                    15
+                  ],
+                  "species": "Charizard",
+                  "status": "None",
+                  "total_exp": 1059860
+                },
+                {
+                  "hp": 286,
+                  "level": 100,
+                  "max_hp": 286,
+                  "moves": [
+                    "Slash",
+                    "Flamethrower",
+                    "Surf",
+                    "Strength"
+                  ],
+                  "pp": [
+                    20,
+                    15,
+                    15,
+                    15
+                  ],
+                  "species": "Charizard",
+                  "status": "None",
+                  "total_exp": 1059860
+                },
+                {
+                  "hp": 286,
+                  "level": 100,
+                  "max_hp": 286,
+                  "moves": [
+                    "Slash",
+                    "Flamethrower",
+                    "Surf",
+                    "Strength"
+                  ],
+                  "pp": [
+                    20,
+                    15,
+                    15,
+                    15
+                  ],
+                  "species": "Charizard",
+                  "status": "None",
+                  "total_exp": 1059860
+                }
+              ],
+              "party_source": "save_data",
+              "pokedex": {
+                "owned": 0,
+                "owned_numbers": [],
+                "seen": 0,
+                "total": 151
+              }
+            },
+            "field_menu": null,
+            "frame_count": 112,
+            "hall_of_fame_count": 0,
+            "hof_phase": null,
+            "last_outside_map": "PalletTown",
+            "link": {
+              "cable_phase": "Inactive",
+              "role": "Host",
+              "status": "disabled",
+              "trade": null
+            },
+            "map_blocks": [
+              63,
+              64,
+              64,
+              64,
+              63,
+              62,
+              62,
+              62,
+              62,
+              62,
+              32,
+              32,
+              32,
+              32,
+              32,
+              27,
+              27,
+              61,
+              27,
+              27
+            ],
+            "map_id": 137,
+            "map_name": "GameCornerPrizeRoom",
+            "money": 3000,
+            "party": [
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None"
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None"
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None"
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None"
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None"
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None"
+              }
+            ],
+            "party_count": 6,
+            "pc_phase": null,
+            "player_facing": "Up",
+            "player_movement_state": "Idle",
+            "player_name": "RED",
+            "player_transport": "Walking",
+            "player_x": 2,
+            "player_y": 3,
+            "screen": "overworld",
+            "script_awaiting_battle": false,
+            "script_effect": {
+              "effect": "ShowDialogue",
+              "text": "Which prize do you want?"
+            },
+            "script_running": true,
+            "shop_phase": null,
+            "text_speed_delay_frames": 3,
+            "warp_fade": "Idle"
+          },
+          "stepped": 5
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "get_state"
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "active_script_effect": "ShowDialogue",
+          "badges": 0,
+          "battle_bag": null,
+          "battle_inventory": [],
+          "battle_live": null,
+          "battle_message": null,
+          "battle_moves": null,
+          "battle_party_cursor": 0,
+          "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+          "choice": null,
+          "coins": 9999,
+          "credits_final_button": null,
+          "credits_phase": null,
+          "dialogue": null,
+          "dialogue_state": null,
+          "evaluation": {
+            "party": [
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None",
+                "total_exp": 1059860
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None",
+                "total_exp": 1059860
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None",
+                "total_exp": 1059860
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None",
+                "total_exp": 1059860
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None",
+                "total_exp": 1059860
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None",
+                "total_exp": 1059860
+              }
+            ],
+            "party_source": "save_data",
+            "pokedex": {
+              "owned": 0,
+              "owned_numbers": [],
+              "seen": 0,
+              "total": 151
+            }
+          },
+          "field_menu": null,
+          "frame_count": 112,
+          "hall_of_fame_count": 0,
+          "hof_phase": null,
+          "last_outside_map": "PalletTown",
+          "link": {
+            "cable_phase": "Inactive",
+            "role": "Host",
+            "status": "disabled",
+            "trade": null
+          },
+          "map_blocks": [
+            63,
+            64,
+            64,
+            64,
+            63,
+            62,
+            62,
+            62,
+            62,
+            62,
+            32,
+            32,
+            32,
+            32,
+            32,
+            27,
+            27,
+            61,
+            27,
+            27
+          ],
+          "map_id": 137,
+          "map_name": "GameCornerPrizeRoom",
+          "money": 3000,
+          "party": [
+            {
+              "hp": 286,
+              "level": 100,
+              "max_hp": 286,
+              "moves": [
+                "Slash",
+                "Flamethrower",
+                "Surf",
+                "Strength"
+              ],
+              "pp": [
+                20,
+                15,
+                15,
+                15
+              ],
+              "species": "Charizard",
+              "status": "None"
+            },
+            {
+              "hp": 286,
+              "level": 100,
+              "max_hp": 286,
+              "moves": [
+                "Slash",
+                "Flamethrower",
+                "Surf",
+                "Strength"
+              ],
+              "pp": [
+                20,
+                15,
+                15,
+                15
+              ],
+              "species": "Charizard",
+              "status": "None"
+            },
+            {
+              "hp": 286,
+              "level": 100,
+              "max_hp": 286,
+              "moves": [
+                "Slash",
+                "Flamethrower",
+                "Surf",
+                "Strength"
+              ],
+              "pp": [
+                20,
+                15,
+                15,
+                15
+              ],
+              "species": "Charizard",
+              "status": "None"
+            },
+            {
+              "hp": 286,
+              "level": 100,
+              "max_hp": 286,
+              "moves": [
+                "Slash",
+                "Flamethrower",
+                "Surf",
+                "Strength"
+              ],
+              "pp": [
+                20,
+                15,
+                15,
+                15
+              ],
+              "species": "Charizard",
+              "status": "None"
+            },
+            {
+              "hp": 286,
+              "level": 100,
+              "max_hp": 286,
+              "moves": [
+                "Slash",
+                "Flamethrower",
+                "Surf",
+                "Strength"
+              ],
+              "pp": [
+                20,
+                15,
+                15,
+                15
+              ],
+              "species": "Charizard",
+              "status": "None"
+            },
+            {
+              "hp": 286,
+              "level": 100,
+              "max_hp": 286,
+              "moves": [
+                "Slash",
+                "Flamethrower",
+                "Surf",
+                "Strength"
+              ],
+              "pp": [
+                20,
+                15,
+                15,
+                15
+              ],
+              "species": "Charizard",
+              "status": "None"
+            }
+          ],
+          "party_count": 6,
+          "pc_phase": null,
+          "player_facing": "Up",
+          "player_movement_state": "Idle",
+          "player_name": "RED",
+          "player_transport": "Walking",
+          "player_x": 2,
+          "player_y": 3,
+          "screen": "overworld",
+          "script_awaiting_battle": false,
+          "script_effect": {
+            "effect": "ShowDialogue",
+            "text": "Which prize do you want?"
+          },
+          "script_running": true,
+          "shop_phase": null,
+          "text_speed_delay_frames": 3,
+          "warp_fade": "Idle"
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "step_frames",
+        "count": 8
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "frame_count": 120,
+          "stepped": 8
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "get_state"
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "active_script_effect": "ShowDialogue",
+          "badges": 0,
+          "battle_bag": null,
+          "battle_inventory": [],
+          "battle_live": null,
+          "battle_message": null,
+          "battle_moves": null,
+          "battle_party_cursor": 0,
+          "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+          "choice": null,
+          "coins": 9999,
+          "credits_final_button": null,
+          "credits_phase": null,
+          "dialogue": "Whi",
+          "dialogue_state": {
+            "char_index": 3,
+            "done": false,
+            "holding_open": false,
+            "page": 1,
+            "text": "Whi",
+            "total_chars": 24,
+            "total_pages": 1,
+            "waiting_for_input": false
+          },
+          "evaluation": {
+            "party": [
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None",
+                "total_exp": 1059860
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None",
+                "total_exp": 1059860
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None",
+                "total_exp": 1059860
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None",
+                "total_exp": 1059860
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None",
+                "total_exp": 1059860
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None",
+                "total_exp": 1059860
+              }
+            ],
+            "party_source": "save_data",
+            "pokedex": {
+              "owned": 0,
+              "owned_numbers": [],
+              "seen": 0,
+              "total": 151
+            }
+          },
+          "field_menu": null,
+          "frame_count": 120,
+          "hall_of_fame_count": 0,
+          "hof_phase": null,
+          "last_outside_map": "PalletTown",
+          "link": {
+            "cable_phase": "Inactive",
+            "role": "Host",
+            "status": "disabled",
+            "trade": null
+          },
+          "map_blocks": [
+            63,
+            64,
+            64,
+            64,
+            63,
+            62,
+            62,
+            62,
+            62,
+            62,
+            32,
+            32,
+            32,
+            32,
+            32,
+            27,
+            27,
+            61,
+            27,
+            27
+          ],
+          "map_id": 137,
+          "map_name": "GameCornerPrizeRoom",
+          "money": 3000,
+          "party": [
+            {
+              "hp": 286,
+              "level": 100,
+              "max_hp": 286,
+              "moves": [
+                "Slash",
+                "Flamethrower",
+                "Surf",
+                "Strength"
+              ],
+              "pp": [
+                20,
+                15,
+                15,
+                15
+              ],
+              "species": "Charizard",
+              "status": "None"
+            },
+            {
+              "hp": 286,
+              "level": 100,
+              "max_hp": 286,
+              "moves": [
+                "Slash",
+                "Flamethrower",
+                "Surf",
+                "Strength"
+              ],
+              "pp": [
+                20,
+                15,
+                15,
+                15
+              ],
+              "species": "Charizard",
+              "status": "None"
+            },
+            {
+              "hp": 286,
+              "level": 100,
+              "max_hp": 286,
+              "moves": [
+                "Slash",
+                "Flamethrower",
+                "Surf",
+                "Strength"
+              ],
+              "pp": [
+                20,
+                15,
+                15,
+                15
+              ],
+              "species": "Charizard",
+              "status": "None"
+            },
+            {
+              "hp": 286,
+              "level": 100,
+              "max_hp": 286,
+              "moves": [
+                "Slash",
+                "Flamethrower",
+                "Surf",
+                "Strength"
+              ],
+              "pp": [
+                20,
+                15,
+                15,
+                15
+              ],
+              "species": "Charizard",
+              "status": "None"
+            },
+            {
+              "hp": 286,
+              "level": 100,
+              "max_hp": 286,
+              "moves": [
+                "Slash",
+                "Flamethrower",
+                "Surf",
+                "Strength"
+              ],
+              "pp": [
+                20,
+                15,
+                15,
+                15
+              ],
+              "species": "Charizard",
+              "status": "None"
+            },
+            {
+              "hp": 286,
+              "level": 100,
+              "max_hp": 286,
+              "moves": [
+                "Slash",
+                "Flamethrower",
+                "Surf",
+                "Strength"
+              ],
+              "pp": [
+                20,
+                15,
+                15,
+                15
+              ],
+              "species": "Charizard",
+              "status": "None"
+            }
+          ],
+          "party_count": 6,
+          "pc_phase": null,
+          "player_facing": "Up",
+          "player_movement_state": "Idle",
+          "player_name": "RED",
+          "player_transport": "Walking",
+          "player_x": 2,
+          "player_y": 3,
+          "screen": "overworld",
+          "script_awaiting_battle": false,
+          "script_effect": {
+            "effect": "ShowDialogue",
+            "text": "Which prize do you want?"
+          },
+          "script_running": true,
+          "shop_phase": null,
+          "text_speed_delay_frames": 3,
+          "warp_fade": "Idle"
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "skip_dialogue"
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "dialogue_closed": true,
+          "state": {
+            "active_script_effect": "ShowChoice",
+            "badges": 0,
+            "battle_bag": null,
+            "battle_inventory": [],
+            "battle_live": null,
+            "battle_message": null,
+            "battle_moves": null,
+            "battle_party_cursor": 0,
+            "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+            "choice": null,
+            "coins": 9999,
+            "credits_final_button": null,
+            "credits_phase": null,
+            "dialogue": null,
+            "dialogue_state": null,
+            "evaluation": {
+              "party": [
+                {
+                  "hp": 286,
+                  "level": 100,
+                  "max_hp": 286,
+                  "moves": [
+                    "Slash",
+                    "Flamethrower",
+                    "Surf",
+                    "Strength"
+                  ],
+                  "pp": [
+                    20,
+                    15,
+                    15,
+                    15
+                  ],
+                  "species": "Charizard",
+                  "status": "None",
+                  "total_exp": 1059860
+                },
+                {
+                  "hp": 286,
+                  "level": 100,
+                  "max_hp": 286,
+                  "moves": [
+                    "Slash",
+                    "Flamethrower",
+                    "Surf",
+                    "Strength"
+                  ],
+                  "pp": [
+                    20,
+                    15,
+                    15,
+                    15
+                  ],
+                  "species": "Charizard",
+                  "status": "None",
+                  "total_exp": 1059860
+                },
+                {
+                  "hp": 286,
+                  "level": 100,
+                  "max_hp": 286,
+                  "moves": [
+                    "Slash",
+                    "Flamethrower",
+                    "Surf",
+                    "Strength"
+                  ],
+                  "pp": [
+                    20,
+                    15,
+                    15,
+                    15
+                  ],
+                  "species": "Charizard",
+                  "status": "None",
+                  "total_exp": 1059860
+                },
+                {
+                  "hp": 286,
+                  "level": 100,
+                  "max_hp": 286,
+                  "moves": [
+                    "Slash",
+                    "Flamethrower",
+                    "Surf",
+                    "Strength"
+                  ],
+                  "pp": [
+                    20,
+                    15,
+                    15,
+                    15
+                  ],
+                  "species": "Charizard",
+                  "status": "None",
+                  "total_exp": 1059860
+                },
+                {
+                  "hp": 286,
+                  "level": 100,
+                  "max_hp": 286,
+                  "moves": [
+                    "Slash",
+                    "Flamethrower",
+                    "Surf",
+                    "Strength"
+                  ],
+                  "pp": [
+                    20,
+                    15,
+                    15,
+                    15
+                  ],
+                  "species": "Charizard",
+                  "status": "None",
+                  "total_exp": 1059860
+                },
+                {
+                  "hp": 286,
+                  "level": 100,
+                  "max_hp": 286,
+                  "moves": [
+                    "Slash",
+                    "Flamethrower",
+                    "Surf",
+                    "Strength"
+                  ],
+                  "pp": [
+                    20,
+                    15,
+                    15,
+                    15
+                  ],
+                  "species": "Charizard",
+                  "status": "None",
+                  "total_exp": 1059860
+                }
+              ],
+              "party_source": "save_data",
+              "pokedex": {
+                "owned": 0,
+                "owned_numbers": [],
+                "seen": 0,
+                "total": 151
+              }
+            },
+            "field_menu": null,
+            "frame_count": 125,
+            "hall_of_fame_count": 0,
+            "hof_phase": null,
+            "last_outside_map": "PalletTown",
+            "link": {
+              "cable_phase": "Inactive",
+              "role": "Host",
+              "status": "disabled",
+              "trade": null
+            },
+            "map_blocks": [
+              63,
+              64,
+              64,
+              64,
+              63,
+              62,
+              62,
+              62,
+              62,
+              62,
+              32,
+              32,
+              32,
+              32,
+              32,
+              27,
+              27,
+              61,
+              27,
+              27
+            ],
+            "map_id": 137,
+            "map_name": "GameCornerPrizeRoom",
+            "money": 3000,
+            "party": [
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None"
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None"
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None"
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None"
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None"
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None"
+              }
+            ],
+            "party_count": 6,
+            "pc_phase": null,
+            "player_facing": "Up",
+            "player_movement_state": "Idle",
+            "player_name": "RED",
+            "player_transport": "Walking",
+            "player_x": 2,
+            "player_y": 3,
+            "screen": "overworld",
+            "script_awaiting_battle": false,
+            "script_effect": {
+              "effect": "ShowChoice",
+              "options": [
+                "ABRA     180",
+                "CLEFAIRY     500",
+                "NIDORINA    1200",
+                "NO THANKS"
+              ],
+              "selected": 0,
+              "started": false
+            },
+            "script_running": true,
+            "shop_phase": null,
+            "text_speed_delay_frames": 3,
+            "warp_fade": "Idle"
+          },
+          "stepped": 5
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "get_state"
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "active_script_effect": "ShowChoice",
+          "badges": 0,
+          "battle_bag": null,
+          "battle_inventory": [],
+          "battle_live": null,
+          "battle_message": null,
+          "battle_moves": null,
+          "battle_party_cursor": 0,
+          "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+          "choice": null,
+          "coins": 9999,
+          "credits_final_button": null,
+          "credits_phase": null,
+          "dialogue": null,
+          "dialogue_state": null,
+          "evaluation": {
+            "party": [
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None",
+                "total_exp": 1059860
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None",
+                "total_exp": 1059860
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None",
+                "total_exp": 1059860
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None",
+                "total_exp": 1059860
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None",
+                "total_exp": 1059860
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None",
+                "total_exp": 1059860
+              }
+            ],
+            "party_source": "save_data",
+            "pokedex": {
+              "owned": 0,
+              "owned_numbers": [],
+              "seen": 0,
+              "total": 151
+            }
+          },
+          "field_menu": null,
+          "frame_count": 125,
+          "hall_of_fame_count": 0,
+          "hof_phase": null,
+          "last_outside_map": "PalletTown",
+          "link": {
+            "cable_phase": "Inactive",
+            "role": "Host",
+            "status": "disabled",
+            "trade": null
+          },
+          "map_blocks": [
+            63,
+            64,
+            64,
+            64,
+            63,
+            62,
+            62,
+            62,
+            62,
+            62,
+            32,
+            32,
+            32,
+            32,
+            32,
+            27,
+            27,
+            61,
+            27,
+            27
+          ],
+          "map_id": 137,
+          "map_name": "GameCornerPrizeRoom",
+          "money": 3000,
+          "party": [
+            {
+              "hp": 286,
+              "level": 100,
+              "max_hp": 286,
+              "moves": [
+                "Slash",
+                "Flamethrower",
+                "Surf",
+                "Strength"
+              ],
+              "pp": [
+                20,
+                15,
+                15,
+                15
+              ],
+              "species": "Charizard",
+              "status": "None"
+            },
+            {
+              "hp": 286,
+              "level": 100,
+              "max_hp": 286,
+              "moves": [
+                "Slash",
+                "Flamethrower",
+                "Surf",
+                "Strength"
+              ],
+              "pp": [
+                20,
+                15,
+                15,
+                15
+              ],
+              "species": "Charizard",
+              "status": "None"
+            },
+            {
+              "hp": 286,
+              "level": 100,
+              "max_hp": 286,
+              "moves": [
+                "Slash",
+                "Flamethrower",
+                "Surf",
+                "Strength"
+              ],
+              "pp": [
+                20,
+                15,
+                15,
+                15
+              ],
+              "species": "Charizard",
+              "status": "None"
+            },
+            {
+              "hp": 286,
+              "level": 100,
+              "max_hp": 286,
+              "moves": [
+                "Slash",
+                "Flamethrower",
+                "Surf",
+                "Strength"
+              ],
+              "pp": [
+                20,
+                15,
+                15,
+                15
+              ],
+              "species": "Charizard",
+              "status": "None"
+            },
+            {
+              "hp": 286,
+              "level": 100,
+              "max_hp": 286,
+              "moves": [
+                "Slash",
+                "Flamethrower",
+                "Surf",
+                "Strength"
+              ],
+              "pp": [
+                20,
+                15,
+                15,
+                15
+              ],
+              "species": "Charizard",
+              "status": "None"
+            },
+            {
+              "hp": 286,
+              "level": 100,
+              "max_hp": 286,
+              "moves": [
+                "Slash",
+                "Flamethrower",
+                "Surf",
+                "Strength"
+              ],
+              "pp": [
+                20,
+                15,
+                15,
+                15
+              ],
+              "species": "Charizard",
+              "status": "None"
+            }
+          ],
+          "party_count": 6,
+          "pc_phase": null,
+          "player_facing": "Up",
+          "player_movement_state": "Idle",
+          "player_name": "RED",
+          "player_transport": "Walking",
+          "player_x": 2,
+          "player_y": 3,
+          "screen": "overworld",
+          "script_awaiting_battle": false,
+          "script_effect": {
+            "effect": "ShowChoice",
+            "options": [
+              "ABRA     180",
+              "CLEFAIRY     500",
+              "NIDORINA    1200",
+              "NO THANKS"
+            ],
+            "selected": 0,
+            "started": false
+          },
+          "script_running": true,
+          "shop_phase": null,
+          "text_speed_delay_frames": 3,
+          "warp_fade": "Idle"
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "step_frames",
+        "count": 8
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "frame_count": 133,
+          "stepped": 8
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "get_state"
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "active_script_effect": "ShowChoice",
+          "badges": 0,
+          "battle_bag": null,
+          "battle_inventory": [],
+          "battle_live": null,
+          "battle_message": null,
+          "battle_moves": null,
+          "battle_party_cursor": 0,
+          "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+          "choice": {
+            "options": [
+              "ABRA     180",
+              "CLEFAIRY     500",
+              "NIDORINA    1200",
+              "NO THANKS"
+            ],
+            "selected": 0
+          },
+          "coins": 9999,
+          "credits_final_button": null,
+          "credits_phase": null,
+          "dialogue": null,
+          "dialogue_state": null,
+          "evaluation": {
+            "party": [
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None",
+                "total_exp": 1059860
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None",
+                "total_exp": 1059860
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None",
+                "total_exp": 1059860
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None",
+                "total_exp": 1059860
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None",
+                "total_exp": 1059860
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None",
+                "total_exp": 1059860
+              }
+            ],
+            "party_source": "save_data",
+            "pokedex": {
+              "owned": 0,
+              "owned_numbers": [],
+              "seen": 0,
+              "total": 151
+            }
+          },
+          "field_menu": null,
+          "frame_count": 133,
+          "hall_of_fame_count": 0,
+          "hof_phase": null,
+          "last_outside_map": "PalletTown",
+          "link": {
+            "cable_phase": "Inactive",
+            "role": "Host",
+            "status": "disabled",
+            "trade": null
+          },
+          "map_blocks": [
+            63,
+            64,
+            64,
+            64,
+            63,
+            62,
+            62,
+            62,
+            62,
+            62,
+            32,
+            32,
+            32,
+            32,
+            32,
+            27,
+            27,
+            61,
+            27,
+            27
+          ],
+          "map_id": 137,
+          "map_name": "GameCornerPrizeRoom",
+          "money": 3000,
+          "party": [
+            {
+              "hp": 286,
+              "level": 100,
+              "max_hp": 286,
+              "moves": [
+                "Slash",
+                "Flamethrower",
+                "Surf",
+                "Strength"
+              ],
+              "pp": [
+                20,
+                15,
+                15,
+                15
+              ],
+              "species": "Charizard",
+              "status": "None"
+            },
+            {
+              "hp": 286,
+              "level": 100,
+              "max_hp": 286,
+              "moves": [
+                "Slash",
+                "Flamethrower",
+                "Surf",
+                "Strength"
+              ],
+              "pp": [
+                20,
+                15,
+                15,
+                15
+              ],
+              "species": "Charizard",
+              "status": "None"
+            },
+            {
+              "hp": 286,
+              "level": 100,
+              "max_hp": 286,
+              "moves": [
+                "Slash",
+                "Flamethrower",
+                "Surf",
+                "Strength"
+              ],
+              "pp": [
+                20,
+                15,
+                15,
+                15
+              ],
+              "species": "Charizard",
+              "status": "None"
+            },
+            {
+              "hp": 286,
+              "level": 100,
+              "max_hp": 286,
+              "moves": [
+                "Slash",
+                "Flamethrower",
+                "Surf",
+                "Strength"
+              ],
+              "pp": [
+                20,
+                15,
+                15,
+                15
+              ],
+              "species": "Charizard",
+              "status": "None"
+            },
+            {
+              "hp": 286,
+              "level": 100,
+              "max_hp": 286,
+              "moves": [
+                "Slash",
+                "Flamethrower",
+                "Surf",
+                "Strength"
+              ],
+              "pp": [
+                20,
+                15,
+                15,
+                15
+              ],
+              "species": "Charizard",
+              "status": "None"
+            },
+            {
+              "hp": 286,
+              "level": 100,
+              "max_hp": 286,
+              "moves": [
+                "Slash",
+                "Flamethrower",
+                "Surf",
+                "Strength"
+              ],
+              "pp": [
+                20,
+                15,
+                15,
+                15
+              ],
+              "species": "Charizard",
+              "status": "None"
+            }
+          ],
+          "party_count": 6,
+          "pc_phase": null,
+          "player_facing": "Up",
+          "player_movement_state": "Idle",
+          "player_name": "RED",
+          "player_transport": "Walking",
+          "player_x": 2,
+          "player_y": 3,
+          "screen": "overworld",
+          "script_awaiting_battle": false,
+          "script_effect": {
+            "effect": "ShowChoice",
+            "options": [
+              "ABRA     180",
+              "CLEFAIRY     500",
+              "NIDORINA    1200",
+              "NO THANKS"
+            ],
+            "selected": 0,
+            "started": true
+          },
+          "script_running": true,
+          "shop_phase": null,
+          "text_speed_delay_frames": 3,
+          "warp_fade": "Idle"
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "press",
+        "button": "a"
+      },
+      "result": {
+        "ok": true
+      }
+    },
+    {
+      "command": {
+        "cmd": "step_frames",
+        "count": 80
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "frame_count": 214,
+          "stepped": 80
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "press",
+        "button": "a"
+      },
+      "result": {
+        "ok": true
+      }
+    },
+    {
+      "command": {
+        "cmd": "step_frames",
+        "count": 8
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "frame_count": 223,
+          "stepped": 8
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "capture_frame",
+        "path": "/workspace/pokered-fix-late/docs/screenshots/2026-10-02-late-fidelity/late-prize-confirm-before.png"
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "path": "/workspace/pokered-fix-late/docs/screenshots/2026-10-02-late-fidelity/late-prize-confirm-before.png",
+          "state": {
+            "active_script_effect": null,
+            "badges": 0,
+            "battle_bag": null,
+            "battle_inventory": [],
+            "battle_live": null,
+            "battle_message": null,
+            "battle_moves": null,
+            "battle_party_cursor": 0,
+            "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+            "choice": null,
+            "coins": 9819,
+            "credits_final_button": null,
+            "credits_phase": null,
+            "dialogue": null,
+            "dialogue_state": null,
+            "evaluation": {
+              "party": [
+                {
+                  "hp": 286,
+                  "level": 100,
+                  "max_hp": 286,
+                  "moves": [
+                    "Slash",
+                    "Flamethrower",
+                    "Surf",
+                    "Strength"
+                  ],
+                  "pp": [
+                    20,
+                    15,
+                    15,
+                    15
+                  ],
+                  "species": "Charizard",
+                  "status": "None",
+                  "total_exp": 1059860
+                },
+                {
+                  "hp": 286,
+                  "level": 100,
+                  "max_hp": 286,
+                  "moves": [
+                    "Slash",
+                    "Flamethrower",
+                    "Surf",
+                    "Strength"
+                  ],
+                  "pp": [
+                    20,
+                    15,
+                    15,
+                    15
+                  ],
+                  "species": "Charizard",
+                  "status": "None",
+                  "total_exp": 1059860
+                },
+                {
+                  "hp": 286,
+                  "level": 100,
+                  "max_hp": 286,
+                  "moves": [
+                    "Slash",
+                    "Flamethrower",
+                    "Surf",
+                    "Strength"
+                  ],
+                  "pp": [
+                    20,
+                    15,
+                    15,
+                    15
+                  ],
+                  "species": "Charizard",
+                  "status": "None",
+                  "total_exp": 1059860
+                },
+                {
+                  "hp": 286,
+                  "level": 100,
+                  "max_hp": 286,
+                  "moves": [
+                    "Slash",
+                    "Flamethrower",
+                    "Surf",
+                    "Strength"
+                  ],
+                  "pp": [
+                    20,
+                    15,
+                    15,
+                    15
+                  ],
+                  "species": "Charizard",
+                  "status": "None",
+                  "total_exp": 1059860
+                },
+                {
+                  "hp": 286,
+                  "level": 100,
+                  "max_hp": 286,
+                  "moves": [
+                    "Slash",
+                    "Flamethrower",
+                    "Surf",
+                    "Strength"
+                  ],
+                  "pp": [
+                    20,
+                    15,
+                    15,
+                    15
+                  ],
+                  "species": "Charizard",
+                  "status": "None",
+                  "total_exp": 1059860
+                },
+                {
+                  "hp": 286,
+                  "level": 100,
+                  "max_hp": 286,
+                  "moves": [
+                    "Slash",
+                    "Flamethrower",
+                    "Surf",
+                    "Strength"
+                  ],
+                  "pp": [
+                    20,
+                    15,
+                    15,
+                    15
+                  ],
+                  "species": "Charizard",
+                  "status": "None",
+                  "total_exp": 1059860
+                }
+              ],
+              "party_source": "save_data",
+              "pokedex": {
+                "owned": 1,
+                "owned_numbers": [
+                  63
+                ],
+                "seen": 1,
+                "total": 151
+              }
+            },
+            "field_menu": null,
+            "frame_count": 223,
+            "hall_of_fame_count": 0,
+            "hof_phase": null,
+            "last_outside_map": "PalletTown",
+            "link": {
+              "cable_phase": "Inactive",
+              "role": "Host",
+              "status": "disabled",
+              "trade": null
+            },
+            "map_blocks": [
+              63,
+              64,
+              64,
+              64,
+              63,
+              62,
+              62,
+              62,
+              62,
+              62,
+              32,
+              32,
+              32,
+              32,
+              32,
+              27,
+              27,
+              61,
+              27,
+              27
+            ],
+            "map_id": 137,
+            "map_name": "GameCornerPrizeRoom",
+            "money": 3000,
+            "party": [
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None"
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None"
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None"
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None"
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None"
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None"
+              }
+            ],
+            "party_count": 6,
+            "pc_phase": null,
+            "player_facing": "Up",
+            "player_movement_state": "Idle",
+            "player_name": "RED",
+            "player_transport": "Walking",
+            "player_x": 2,
+            "player_y": 3,
+            "screen": "overworld",
+            "script_awaiting_battle": false,
+            "script_effect": null,
+            "script_running": false,
+            "shop_phase": null,
+            "text_speed_delay_frames": 3,
+            "warp_fade": "Idle"
+          }
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "get_state"
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "active_script_effect": null,
+          "badges": 0,
+          "battle_bag": null,
+          "battle_inventory": [],
+          "battle_live": null,
+          "battle_message": null,
+          "battle_moves": null,
+          "battle_party_cursor": 0,
+          "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+          "choice": null,
+          "coins": 9819,
+          "credits_final_button": null,
+          "credits_phase": null,
+          "dialogue": null,
+          "dialogue_state": null,
+          "evaluation": {
+            "party": [
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None",
+                "total_exp": 1059860
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None",
+                "total_exp": 1059860
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None",
+                "total_exp": 1059860
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None",
+                "total_exp": 1059860
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None",
+                "total_exp": 1059860
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None",
+                "total_exp": 1059860
+              }
+            ],
+            "party_source": "save_data",
+            "pokedex": {
+              "owned": 1,
+              "owned_numbers": [
+                63
+              ],
+              "seen": 1,
+              "total": 151
+            }
+          },
+          "field_menu": null,
+          "frame_count": 223,
+          "hall_of_fame_count": 0,
+          "hof_phase": null,
+          "last_outside_map": "PalletTown",
+          "link": {
+            "cable_phase": "Inactive",
+            "role": "Host",
+            "status": "disabled",
+            "trade": null
+          },
+          "map_blocks": [
+            63,
+            64,
+            64,
+            64,
+            63,
+            62,
+            62,
+            62,
+            62,
+            62,
+            32,
+            32,
+            32,
+            32,
+            32,
+            27,
+            27,
+            61,
+            27,
+            27
+          ],
+          "map_id": 137,
+          "map_name": "GameCornerPrizeRoom",
+          "money": 3000,
+          "party": [
+            {
+              "hp": 286,
+              "level": 100,
+              "max_hp": 286,
+              "moves": [
+                "Slash",
+                "Flamethrower",
+                "Surf",
+                "Strength"
+              ],
+              "pp": [
+                20,
+                15,
+                15,
+                15
+              ],
+              "species": "Charizard",
+              "status": "None"
+            },
+            {
+              "hp": 286,
+              "level": 100,
+              "max_hp": 286,
+              "moves": [
+                "Slash",
+                "Flamethrower",
+                "Surf",
+                "Strength"
+              ],
+              "pp": [
+                20,
+                15,
+                15,
+                15
+              ],
+              "species": "Charizard",
+              "status": "None"
+            },
+            {
+              "hp": 286,
+              "level": 100,
+              "max_hp": 286,
+              "moves": [
+                "Slash",
+                "Flamethrower",
+                "Surf",
+                "Strength"
+              ],
+              "pp": [
+                20,
+                15,
+                15,
+                15
+              ],
+              "species": "Charizard",
+              "status": "None"
+            },
+            {
+              "hp": 286,
+              "level": 100,
+              "max_hp": 286,
+              "moves": [
+                "Slash",
+                "Flamethrower",
+                "Surf",
+                "Strength"
+              ],
+              "pp": [
+                20,
+                15,
+                15,
+                15
+              ],
+              "species": "Charizard",
+              "status": "None"
+            },
+            {
+              "hp": 286,
+              "level": 100,
+              "max_hp": 286,
+              "moves": [
+                "Slash",
+                "Flamethrower",
+                "Surf",
+                "Strength"
+              ],
+              "pp": [
+                20,
+                15,
+                15,
+                15
+              ],
+              "species": "Charizard",
+              "status": "None"
+            },
+            {
+              "hp": 286,
+              "level": 100,
+              "max_hp": 286,
+              "moves": [
+                "Slash",
+                "Flamethrower",
+                "Surf",
+                "Strength"
+              ],
+              "pp": [
+                20,
+                15,
+                15,
+                15
+              ],
+              "species": "Charizard",
+              "status": "None"
+            }
+          ],
+          "party_count": 6,
+          "pc_phase": null,
+          "player_facing": "Up",
+          "player_movement_state": "Idle",
+          "player_name": "RED",
+          "player_transport": "Walking",
+          "player_x": 2,
+          "player_y": 3,
+          "screen": "overworld",
+          "script_awaiting_battle": false,
+          "script_effect": null,
+          "script_running": false,
+          "shop_phase": null,
+          "text_speed_delay_frames": 3,
+          "warp_fade": "Idle"
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "get_state"
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "active_script_effect": null,
+          "badges": 0,
+          "battle_bag": null,
+          "battle_inventory": [],
+          "battle_live": null,
+          "battle_message": null,
+          "battle_moves": null,
+          "battle_party_cursor": 0,
+          "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+          "choice": null,
+          "coins": 9819,
+          "credits_final_button": null,
+          "credits_phase": null,
+          "dialogue": null,
+          "dialogue_state": null,
+          "evaluation": {
+            "party": [
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None",
+                "total_exp": 1059860
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None",
+                "total_exp": 1059860
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None",
+                "total_exp": 1059860
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None",
+                "total_exp": 1059860
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None",
+                "total_exp": 1059860
+              },
+              {
+                "hp": 286,
+                "level": 100,
+                "max_hp": 286,
+                "moves": [
+                  "Slash",
+                  "Flamethrower",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  20,
+                  15,
+                  15,
+                  15
+                ],
+                "species": "Charizard",
+                "status": "None",
+                "total_exp": 1059860
+              }
+            ],
+            "party_source": "save_data",
+            "pokedex": {
+              "owned": 1,
+              "owned_numbers": [
+                63
+              ],
+              "seen": 1,
+              "total": 151
+            }
+          },
+          "field_menu": null,
+          "frame_count": 223,
+          "hall_of_fame_count": 0,
+          "hof_phase": null,
+          "last_outside_map": "PalletTown",
+          "link": {
+            "cable_phase": "Inactive",
+            "role": "Host",
+            "status": "disabled",
+            "trade": null
+          },
+          "map_blocks": [
+            63,
+            64,
+            64,
+            64,
+            63,
+            62,
+            62,
+            62,
+            62,
+            62,
+            32,
+            32,
+            32,
+            32,
+            32,
+            27,
+            27,
+            61,
+            27,
+            27
+          ],
+          "map_id": 137,
+          "map_name": "GameCornerPrizeRoom",
+          "money": 3000,
+          "party": [
+            {
+              "hp": 286,
+              "level": 100,
+              "max_hp": 286,
+              "moves": [
+                "Slash",
+                "Flamethrower",
+                "Surf",
+                "Strength"
+              ],
+              "pp": [
+                20,
+                15,
+                15,
+                15
+              ],
+              "species": "Charizard",
+              "status": "None"
+            },
+            {
+              "hp": 286,
+              "level": 100,
+              "max_hp": 286,
+              "moves": [
+                "Slash",
+                "Flamethrower",
+                "Surf",
+                "Strength"
+              ],
+              "pp": [
+                20,
+                15,
+                15,
+                15
+              ],
+              "species": "Charizard",
+              "status": "None"
+            },
+            {
+              "hp": 286,
+              "level": 100,
+              "max_hp": 286,
+              "moves": [
+                "Slash",
+                "Flamethrower",
+                "Surf",
+                "Strength"
+              ],
+              "pp": [
+                20,
+                15,
+                15,
+                15
+              ],
+              "species": "Charizard",
+              "status": "None"
+            },
+            {
+              "hp": 286,
+              "level": 100,
+              "max_hp": 286,
+              "moves": [
+                "Slash",
+                "Flamethrower",
+                "Surf",
+                "Strength"
+              ],
+              "pp": [
+                20,
+                15,
+                15,
+                15
+              ],
+              "species": "Charizard",
+              "status": "None"
+            },
+            {
+              "hp": 286,
+              "level": 100,
+              "max_hp": 286,
+              "moves": [
+                "Slash",
+                "Flamethrower",
+                "Surf",
+                "Strength"
+              ],
+              "pp": [
+                20,
+                15,
+                15,
+                15
+              ],
+              "species": "Charizard",
+              "status": "None"
+            },
+            {
+              "hp": 286,
+              "level": 100,
+              "max_hp": 286,
+              "moves": [
+                "Slash",
+                "Flamethrower",
+                "Surf",
+                "Strength"
+              ],
+              "pp": [
+                20,
+                15,
+                15,
+                15
+              ],
+              "species": "Charizard",
+              "status": "None"
+            }
+          ],
+          "party_count": 6,
+          "pc_phase": null,
+          "player_facing": "Up",
+          "player_movement_state": "Idle",
+          "player_name": "RED",
+          "player_transport": "Walking",
+          "player_x": 2,
+          "player_y": 3,
+          "screen": "overworld",
+          "script_awaiting_battle": false,
+          "script_effect": null,
+          "script_running": false,
+          "shop_phase": null,
+          "text_speed_delay_frames": 3,
+          "warp_fade": "Idle"
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "get_flags"
+      },
+      "result": {
+        "ok": true,
+        "data": {}
+      }
+    },
+    {
+      "command": {
+        "cmd": "get_bag"
+      },
+      "result": {
+        "ok": true,
+        "data": [
+          {
+            "item": "CoinCase",
+            "qty": 1
+          }
+        ]
+      }
+    },
+    {
+      "command": {
+        "cmd": "get_party"
+      },
+      "result": {
+        "ok": true,
+        "data": [
+          {
+            "current_hp": 286,
+            "experience": 1059860,
+            "level": 100,
+            "max_hp": 286,
+            "moves": [
+              "Slash",
+              "Flamethrower",
+              "Surf",
+              "Strength"
+            ],
+            "species": "Charizard",
+            "status": "None"
+          },
+          {
+            "current_hp": 286,
+            "experience": 1059860,
+            "level": 100,
+            "max_hp": 286,
+            "moves": [
+              "Slash",
+              "Flamethrower",
+              "Surf",
+              "Strength"
+            ],
+            "species": "Charizard",
+            "status": "None"
+          },
+          {
+            "current_hp": 286,
+            "experience": 1059860,
+            "level": 100,
+            "max_hp": 286,
+            "moves": [
+              "Slash",
+              "Flamethrower",
+              "Surf",
+              "Strength"
+            ],
+            "species": "Charizard",
+            "status": "None"
+          },
+          {
+            "current_hp": 286,
+            "experience": 1059860,
+            "level": 100,
+            "max_hp": 286,
+            "moves": [
+              "Slash",
+              "Flamethrower",
+              "Surf",
+              "Strength"
+            ],
+            "species": "Charizard",
+            "status": "None"
+          },
+          {
+            "current_hp": 286,
+            "experience": 1059860,
+            "level": 100,
+            "max_hp": 286,
+            "moves": [
+              "Slash",
+              "Flamethrower",
+              "Surf",
+              "Strength"
+            ],
+            "species": "Charizard",
+            "status": "None"
+          },
+          {
+            "current_hp": 286,
+            "experience": 1059860,
+            "level": 100,
+            "max_hp": 286,
+            "moves": [
+              "Slash",
+              "Flamethrower",
+              "Surf",
+              "Strength"
+            ],
+            "species": "Charizard",
+            "status": "None"
+          }
+        ]
+      }
+    },
+    {
+      "command": {
+        "cmd": "get_npcs"
+      },
+      "result": {
+        "ok": true,
+        "data": [
+          {
+            "facing": "Down",
+            "home_x": 1,
+            "home_y": 4,
+            "npc_index": 0,
+            "scripted_path_remaining": 0,
+            "sprite_id": 52,
+            "text_id": 1,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 1,
+            "y": 4
+          },
+          {
+            "facing": "Right",
+            "home_x": 7,
+            "home_y": 3,
+            "npc_index": 1,
+            "scripted_path_remaining": 0,
+            "sprite_id": 11,
+            "text_id": 2,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 8,
+            "y": 3
+          }
+        ]
+      }
+    },
+    {
+      "command": {
+        "cmd": "save"
+      },
+      "result": {
+        "ok": true
+      }
+    }
+  ]
+}

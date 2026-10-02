@@ -6,6 +6,7 @@ use serde_json::{json, Value};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum PokemonScriptCommand {
+    ShowItemDialogue { text: String },
     OldManTutorial,
     TradePokemon {
         offered: String,
@@ -59,11 +60,13 @@ pub enum PokemonScriptCommand {
     },
     PlayShipDeparture,
     EnterHallOfFame,
+    WaitMusic,
 }
 
 impl PokemonScriptCommand {
     pub const fn name(&self) -> &'static str {
         match self {
+            Self::ShowItemDialogue { .. } => "showItemDialogue",
             Self::OldManTutorial => "oldManTutorial",
             Self::TradePokemon { .. } => "tradePokemon",
             Self::AnimateHealingMachine => "animateHealingMachine",
@@ -87,12 +90,14 @@ impl PokemonScriptCommand {
             Self::ReplaceTileBlock { .. } => "replaceTileBlock",
             Self::PlayShipDeparture => "playShipDeparture",
             Self::EnterHallOfFame => "enterHallOfFame",
+            Self::WaitMusic => "waitMusic",
         }
     }
 
     pub fn into_script_command(self) -> ScriptCommand {
         let name = self.name().to_string();
         let args = match self {
+            Self::ShowItemDialogue { text } => vec![json!(text)],
             Self::TradePokemon {
                 offered,
                 received,
@@ -126,7 +131,8 @@ impl PokemonScriptCommand {
             | Self::LinkStart
             | Self::WithdrawDaycare
             | Self::PlayShipDeparture
-            | Self::EnterHallOfFame => vec![],
+            | Self::EnterHallOfFame
+            | Self::WaitMusic => vec![],
         };
         ScriptCommand::Custom { name, args }
     }
@@ -165,6 +171,8 @@ impl PokemonScriptCommand {
                 .collect::<Result<Vec<_>, _>>()
         };
         Ok(match name {
+            "waitMusic" => Self::WaitMusic,
+            "showItemDialogue" => Self::ShowItemDialogue { text: string(0)? },
             "oldManTutorial" => Self::OldManTutorial,
             "tradePokemon" => Self::TradePokemon {
                 offered: string(0)?,

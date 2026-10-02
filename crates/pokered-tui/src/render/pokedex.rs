@@ -8,11 +8,10 @@ use pokered_core::pokedex_screen::{PokedexScreenMode, PokedexScreenState, LIST_R
 use pokered_data::lang_data::ui_label;
 use pokered_data::species::Species;
 use pokered_renderer::embedded_font::{draw_text, fill_tile};
-use pokered_renderer::palette::GRAYSCALE_PALETTE;
 use pokered_renderer::resource::ResourceManager;
 use pokered_renderer::{FrameBuffer, Rgba, TILE_SIZE};
 
-use super::{blit_single_tile_flipped, species_to_sprite_name};
+use super::species_to_sprite_name;
 
 pub fn draw_pokedex_screen(
     state: &PokedexScreenState,
@@ -78,7 +77,13 @@ fn draw_list(state: &PokedexScreenState, is_zh: bool, fb: &mut FrameBuffer) {
         draw_text(ui_label(item, is_zh), 16 * t, (10 + i) as u32 * t, fg, fb);
     }
     if state.mode() == PokedexScreenMode::SideMenu {
-        draw_text("▶", 15 * t, (10 + state.side_menu_cursor() as u32) * t, fg, fb);
+        draw_text(
+            "▶",
+            15 * t,
+            (10 + state.side_menu_cursor() as u32) * t,
+            fg,
+            fb,
+        );
     }
 }
 
@@ -121,24 +126,7 @@ fn draw_entry(state: &PokedexScreenState, res: &mut Option<ResourceManager>, fb:
     if let Some(ref mut rm) = res {
         let sprite_name = species_to_sprite_name(&sp.pascal_name());
         if let Ok(cached) = rm.load_pokemon_front(&sprite_name) {
-            let ts = cached.tileset.clone();
-            let tiles_w = cached.source_size.0 / t;
-            let tiles_h = cached.source_size.1 / t;
-            let x_offset = ((7 - tiles_w + 1) / 2) * t;
-            let y_offset = (7 - tiles_h) * t;
-            for idx in 0..ts.len() {
-                let tx = (idx as u32) % tiles_w;
-                let ty = (idx as u32) / tiles_w;
-                blit_single_tile_flipped(
-                    fb,
-                    &ts,
-                    idx,
-                    t + x_offset + (tiles_w - 1 - tx) * t,
-                    t + y_offset + ty * t,
-                    &GRAYSCALE_PALETTE,
-                    true,
-                );
-            }
+            super::blit_front_pic(fb, cached, 8, 8, true);
         }
     }
 
@@ -183,43 +171,5 @@ fn draw_entry(state: &PokedexScreenState, res: &mut Option<ResourceManager>, fb:
         // Seen-not-owned: the original prints placeholders and no description.
         draw_text("HT  ?'??\"", 9 * t, 6 * t, fg, fb);
         draw_text("WT   ???lb", 9 * t, 8 * t, fg, fb);
-    }
-}
-
-pub fn draw_trainer_card(
-    player_name: &str,
-    money: u32,
-    play_time_hours: u8,
-    play_time_minutes: u8,
-    obtained_badges: u8,
-    fb: &mut FrameBuffer,
-) {
-    fb.clear(Rgba::WHITE);
-    let fg = Rgba::BLACK;
-    let t = TILE_SIZE;
-
-    draw_text("NAME/", 2 * t, 2 * t, fg, fb);
-    draw_text(&player_name.to_uppercase(), 7 * t, 2 * t, fg, fb);
-    draw_text("MONEY/", 2 * t, 4 * t, fg, fb);
-    draw_text(&format!("${}", money), 8 * t, 4 * t, fg, fb);
-    draw_text("TIME/", 2 * t, 6 * t, fg, fb);
-    draw_text(
-        &format!("{}:{:02}", play_time_hours, play_time_minutes),
-        9 * t,
-        6 * t,
-        fg,
-        fb,
-    );
-
-    draw_text("BADGES", 6 * t, 9 * t, fg, fb);
-    // Two rows of four; owned slots are bracketed.
-    for i in 0..8u32 {
-        let x = (2 + (i % 4) * 4) * t;
-        let y = (11 + (i / 4) * 3) * t;
-        if obtained_badges & (1 << i) != 0 {
-            draw_text(&format!("[{}]", i + 1), x, y, fg, fb);
-        } else {
-            draw_text(&format!(" {} ", i + 1), x, y, fg, fb);
-        }
     }
 }

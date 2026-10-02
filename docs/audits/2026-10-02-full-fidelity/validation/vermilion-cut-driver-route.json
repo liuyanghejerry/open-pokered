@@ -1,0 +1,413 @@
+{
+  "scope": "Seeded driver-route regression only; not a fresh playthrough.",
+  "binary": "/workspace/onboarding/pokered-fidelity-final-link-loss/pokered-app",
+  "fixture": "SaveData::new position VermilionCity (15,17), last_map VermilionCity; Ivysaur L20 already knows CUT; Boulder/Cascade badges; event flags default.",
+  "tree_before": 53,
+  "tree_after_cut": 76,
+  "after_dialogue_before_animation": {
+    "frame_count": 893,
+    "tree_block": 53
+  },
+  "before": {
+    "map_name": "VermilionCity",
+    "player_x": 15,
+    "player_y": 17,
+    "frame_count": 589
+  },
+  "after": {
+    "map_name": "VermilionGym",
+    "player_x": 4,
+    "player_y": 17,
+    "frame_count": 1039
+  },
+  "observed_maps": [
+    "VermilionCity",
+    "VermilionGym"
+  ],
+  "observations": [
+    {
+      "frame_count": 615,
+      "screen": "start-menu",
+      "map_name": "VermilionCity",
+      "player_x": 15,
+      "player_y": 17,
+      "active_script_effect": null
+    },
+    {
+      "frame_count": 628,
+      "screen": "party",
+      "map_name": "VermilionCity",
+      "player_x": 15,
+      "player_y": 17,
+      "active_script_effect": null
+    },
+    {
+      "frame_count": 637,
+      "screen": "party",
+      "map_name": "VermilionCity",
+      "player_x": 15,
+      "player_y": 17,
+      "active_script_effect": null
+    },
+    {
+      "frame_count": 893,
+      "screen": "overworld",
+      "map_name": "VermilionCity",
+      "player_x": 15,
+      "player_y": 17,
+      "active_script_effect": null
+    },
+    {
+      "frame_count": 917,
+      "screen": "overworld",
+      "map_name": "VermilionCity",
+      "player_x": 15,
+      "player_y": 17,
+      "active_script_effect": null
+    },
+    {
+      "frame_count": 945,
+      "screen": "overworld",
+      "map_name": "VermilionCity",
+      "player_x": 15,
+      "player_y": 20,
+      "active_script_effect": null
+    },
+    {
+      "frame_count": 973,
+      "screen": "overworld",
+      "map_name": "VermilionCity",
+      "player_x": 12,
+      "player_y": 20,
+      "active_script_effect": null
+    },
+    {
+      "frame_count": 985,
+      "screen": "overworld",
+      "map_name": "VermilionCity",
+      "player_x": 12,
+      "player_y": 19,
+      "active_script_effect": null
+    },
+    {
+      "frame_count": 993,
+      "screen": "overworld",
+      "map_name": "VermilionCity",
+      "player_x": 12,
+      "player_y": 19,
+      "active_script_effect": null
+    },
+    {
+      "frame_count": 1003,
+      "screen": "overworld",
+      "map_name": "VermilionCity",
+      "player_x": 12,
+      "player_y": 19,
+      "active_script_effect": null
+    },
+    {
+      "frame_count": 1013,
+      "screen": "overworld",
+      "map_name": "VermilionCity",
+      "player_x": 12,
+      "player_y": 19,
+      "active_script_effect": null
+    },
+    {
+      "frame_count": 1023,
+      "screen": "overworld",
+      "map_name": "VermilionGym",
+      "player_x": 4,
+      "player_y": 17,
+      "active_script_effect": null
+    },
+    {
+      "frame_count": 1039,
+      "screen": "overworld",
+      "map_name": "VermilionGym",
+      "player_x": 4,
+      "player_y": 17,
+      "active_script_effect": null
+    }
+  ],
+  "commands": [
+    {
+      "cmd": "press_timeline",
+      "buttons": [
+        "down",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "advance": true
+    },
+    {
+      "cmd": "press_timeline",
+      "buttons": [
+        "start",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "advance": true
+    },
+    {
+      "cmd": "get_state"
+    },
+    {
+      "cmd": "press_timeline",
+      "buttons": [
+        "a",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "advance": true
+    },
+    {
+      "cmd": "get_state"
+    },
+    {
+      "cmd": "press_timeline",
+      "buttons": [
+        "a",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "advance": true
+    },
+    {
+      "cmd": "get_state"
+    },
+    {
+      "cmd": "press_timeline",
+      "buttons": [
+        "a",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "advance": true
+    },
+    {
+      "cmd": "wait_until",
+      "condition": "control_ready",
+      "max_frames": 240
+    },
+    {
+      "cmd": "skip_dialogue"
+    },
+    {
+      "cmd": "wait_until",
+      "condition": "control_ready",
+      "max_frames": 240
+    },
+    {
+      "cmd": "get_state"
+    },
+    {
+      "cmd": "step_frames",
+      "count": 24
+    },
+    {
+      "cmd": "get_state"
+    },
+    {
+      "cmd": "get_state"
+    },
+    {
+      "cmd": "get_state"
+    },
+    {
+      "cmd": "get_npcs"
+    },
+    {
+      "cmd": "get_state"
+    },
+    {
+      "cmd": "press_timeline",
+      "buttons": [
+        "down",
+        "down",
+        "down",
+        "down",
+        "down",
+        "down",
+        "down",
+        "down",
+        "down",
+        "down",
+        "down",
+        "down",
+        "down",
+        "down",
+        "down",
+        "down",
+        "down",
+        "down",
+        "down",
+        "down",
+        "down",
+        "down",
+        "down",
+        "down",
+        null,
+        null,
+        null,
+        null
+      ],
+      "advance": true
+    },
+    {
+      "cmd": "get_state"
+    },
+    {
+      "cmd": "get_state"
+    },
+    {
+      "cmd": "press_timeline",
+      "buttons": [
+        "left",
+        "left",
+        "left",
+        "left",
+        "left",
+        "left",
+        "left",
+        "left",
+        "left",
+        "left",
+        "left",
+        "left",
+        "left",
+        "left",
+        "left",
+        "left",
+        "left",
+        "left",
+        "left",
+        "left",
+        "left",
+        "left",
+        "left",
+        "left",
+        null,
+        null,
+        null,
+        null
+      ],
+      "advance": true
+    },
+    {
+      "cmd": "get_state"
+    },
+    {
+      "cmd": "get_state"
+    },
+    {
+      "cmd": "press_timeline",
+      "buttons": [
+        "up",
+        "up",
+        "up",
+        "up",
+        "up",
+        "up",
+        "up",
+        "up",
+        null,
+        null,
+        null,
+        null
+      ],
+      "advance": true
+    },
+    {
+      "cmd": "get_state"
+    },
+    {
+      "cmd": "step_frames",
+      "count": 8
+    },
+    {
+      "cmd": "get_state"
+    },
+    {
+      "cmd": "get_state"
+    },
+    {
+      "cmd": "step_frames",
+      "count": 10
+    },
+    {
+      "cmd": "get_state"
+    },
+    {
+      "cmd": "step_frames",
+      "count": 10
+    },
+    {
+      "cmd": "get_state"
+    },
+    {
+      "cmd": "step_frames",
+      "count": 10
+    },
+    {
+      "cmd": "get_state"
+    },
+    {
+      "cmd": "wait_until",
+      "condition": "control_ready",
+      "max_frames": 240
+    },
+    {
+      "cmd": "get_state"
+    },
+    {
+      "cmd": "get_state"
+    }
+  ]
+}

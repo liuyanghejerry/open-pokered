@@ -18,7 +18,7 @@ use pokered_data::species::Species;
 use pokered_data::trades::NPC_TRADE_OT_NAME;
 use rand::{Rng, SeedableRng};
 
-use crate::battle::obedience::is_traded_for;
+use crate::battle::obedience::is_traded_for_with_name;
 use crate::battle::state::Pokemon;
 
 /// Build the Pokémon received from an NPC in-game trade.
@@ -31,8 +31,7 @@ use crate::battle::state::Pokemon;
 /// - `ot_id` is the random 16-bit `wTradedEnemyMonOTID`.
 /// - OT name is the literal `<TRAINER>`; nickname comes from the table.
 /// - `is_traded` follows the original obedience rule: traded iff
-///   `ot_id != 0 && ot_id != player_id` (a freak matching/zero roll means the
-///   mon counts as the player's own, exactly like the original).
+///   `ot_id != player_id`; this recorded NPC identity can legitimately be 0.
 pub fn assemble_npc_trade_mon(
     species: Species,
     level: u8,
@@ -48,7 +47,7 @@ pub fn assemble_npc_trade_mon(
     // code), not part of the name, and '<' has no charmap glyph.
     mon.ot_name = crate::battle::state::encode_name("TRAINER");
     mon.ot_id = ot_id;
-    mon.is_traded = is_traded_for(ot_id, player_id);
+    mon.is_traded = is_traded_for_with_name(ot_id, player_id, &mon.ot_name);
     Some(mon)
 }
 
@@ -113,10 +112,14 @@ pub enum TradeAnimPhase {
     SlideOut,
     /// `_TradeWentToText` — "{GIVE} went to <TRAINER>."
     TextWentTo,
+    /// `PrintTradeWentToText` ends with `Trade_SlideTextBoxOffScreen`.
+    SlideWentToTextOff,
     /// `_TradeForText` + `_TradeSendsText`.
     TextForSends,
     /// `_TradeWavesFarewellText` + `_TradeTransferredText`.
     TextFarewell,
+    /// `PrintTradeFarewellText` ends with `Trade_SlideTextBoxOffScreen`.
+    SlideFarewellTextOff,
     /// `Trade_AnimRightToLeft` — the received mon travels back (modelled as
     /// the same ball-through-cable run in reverse).
     SlideBack,
@@ -149,12 +152,13 @@ impl TradeAnimPhase {
             Self::GiveMonBallDrop => 36,
             Self::BallEnterCable => 46,
             Self::SlideOut | Self::SlideBack => 96,
-            Self::TextWentTo | Self::TextForSends | Self::TextFarewell => 80,
+            Self::TextWentTo => 200,
+            Self::TextForSends | Self::TextFarewell => 160,
             Self::ReceiveBallTilt => 6,
             Self::ReceiveMonPoof => 18,
             Self::ShowReceiveMon => 100,
             Self::TextTakeCare => 80,
-            Self::SlideTextBoxOff => 137,
+            Self::SlideWentToTextOff | Self::SlideFarewellTextOff | Self::SlideTextBoxOff => 137,
             Self::Done => 0,
         }
     }
@@ -168,9 +172,11 @@ impl TradeAnimPhase {
             GiveMonBallDrop => BallEnterCable,
             BallEnterCable => SlideOut,
             SlideOut => TextWentTo,
-            TextWentTo => TextForSends,
+            TextWentTo => SlideWentToTextOff,
+            SlideWentToTextOff => TextForSends,
             TextForSends => TextFarewell,
-            TextFarewell => SlideBack,
+            TextFarewell => SlideFarewellTextOff,
+            SlideFarewellTextOff => SlideBack,
             SlideBack => ReceiveBallTilt,
             ReceiveBallTilt => ReceiveMonPoof,
             ReceiveMonPoof => ShowReceiveMon,
@@ -249,7 +255,7 @@ impl TradeAnim {
             receive,
             player_name,
             is_zh,
-            partner_name: NPC_TRADE_OT_NAME.to_string(),
+            partner_name: NPC_TRADE_OT_NAME.trim_matches(['<', '>']).to_string(),
             phase: TradeAnimPhase::SlideInGiveMon,
             frame: 0,
             pending_sfx: Vec::new(),
@@ -373,7 +379,7 @@ impl TradeAnim {
     /// `Trade_SlideTextBoxOffScreen` (50-frame hold, then WX += 2 per frame
     /// until $a1 — 77 slide frames, offset 2..=154); 0 at all other times.
     pub fn text_box_offset_x(&self) -> i32 {
-        if self.phase == TradeAnimPhase::SlideTextBoxOff && self.frame >= 50 {
+        if matches!(self.phase, TradeAnimPhase::SlideWentToTextOff | TradeAnimPhase::SlideFarewellTextOff | TradeAnimPhase::SlideTextBoxOff) && self.frame >= 50 {
             (2 * (self.frame as i32 - 49)).min(154)
         } else {
             0
@@ -388,7 +394,7 @@ impl TradeAnim {
             self.phase,
             BallEnterCable | SlideOut | TextWentTo | TextForSends | TextFarewell | SlideBack
                 | ReceiveBallTilt
-        )
+        ) || (matches!(self.phase, SlideWentToTextOff | SlideFarewellTextOff) && self.frame < 127)
     }
 
     /// Ball position in screen pixels while it travels the cable.
@@ -423,44 +429,43 @@ impl TradeAnim {
         let player = &self.player_name;
         let partner = &self.partner_name;
         let lines = match self.phase {
-            // _TradeWentToText: "{GIVE} went / to <TRAINER>."
-            TradeAnimPhase::TextWentTo if !self.is_zh => {
+            // Slide phases keep the last text until the original clears it.
+            TradeAnimPhase::SlideWentToTextOff | TradeAnimPhase::SlideFarewellTextOff | TradeAnimPhase::SlideTextBoxOff if self.frame >= 127 => return None,
+            TradeAnimPhase::TextWentTo | TradeAnimPhase::SlideWentToTextOff if !self.is_zh => {
                 (format!("{} went", give), format!("to {}.", partner))
             }
-            TradeAnimPhase::TextWentTo => {
+            TradeAnimPhase::TextWentTo | TradeAnimPhase::SlideWentToTextOff => {
                 (format!("{}传给了", give), format!("{}。", partner))
             }
-            // _TradeForText + _TradeSendsText:
-            // "For {PLAYER}'s {GIVE}," / "<TRAINER> sends {RECEIVE}."
+            // Two PrintText calls, each followed by its own Delay80.
+            TradeAnimPhase::TextForSends if !self.is_zh && self.frame < 80 => (
+                format!("For {}'s", player), format!("{},", give),
+            ),
             TradeAnimPhase::TextForSends if !self.is_zh => (
-                format!("For {}'s {},", player, give),
-                format!("{} sends {}.", partner, receive),
+                format!("{} sends", partner), format!("{}.", receive),
+            ),
+            TradeAnimPhase::TextForSends if self.frame < 80 => (
+                format!("用{}的", player), give.to_string(),
             ),
             TradeAnimPhase::TextForSends => (
-                format!("用{}的{}", player, give),
-                format!("换来{}的{}。", partner, receive),
+                format!("{}送来了", partner), format!("{}。", receive),
             ),
-            // _TradeWavesFarewellText + _TradeTransferredText.
-            TradeAnimPhase::TextFarewell if !self.is_zh => (
-                format!("{} waves farewell", partner),
-                format!("as {} is transferred.", receive),
+            TradeAnimPhase::TextFarewell if !self.is_zh && self.frame < 80 => (
+                format!("{} waves", partner), "farewell as".to_string(),
             ),
-            TradeAnimPhase::TextFarewell => (
-                format!("{}挥手告别，", partner),
-                format!("{}被传送走了。", receive),
+            TradeAnimPhase::TextFarewell | TradeAnimPhase::SlideFarewellTextOff if !self.is_zh => (
+                format!("{} is", receive), "transferred.".to_string(),
             ),
-            // _TradeTakeCareText: "Take good care of / {RECEIVE}."
-            TradeAnimPhase::TextTakeCare if !self.is_zh => {
+            TradeAnimPhase::TextFarewell if self.frame < 80 => (
+                format!("{}挥手", partner), "告别，".to_string(),
+            ),
+            TradeAnimPhase::TextFarewell | TradeAnimPhase::SlideFarewellTextOff => (
+                receive.to_string(), "被传送走了。".to_string(),
+            ),
+            TradeAnimPhase::TextTakeCare | TradeAnimPhase::SlideTextBoxOff if !self.is_zh => {
                 ("Take good care of".to_string(), format!("{}.", receive))
             }
-            TradeAnimPhase::TextTakeCare => ("好好照顾".to_string(), format!("{}。", receive)),
-            // The TakeCare text stays up while it slides off-screen; the
-            // original clears the tile map for the phase's last 10 frames.
-            TradeAnimPhase::SlideTextBoxOff if self.frame >= 127 => return None,
-            TradeAnimPhase::SlideTextBoxOff if !self.is_zh => {
-                ("Take good care of".to_string(), format!("{}.", receive))
-            }
-            TradeAnimPhase::SlideTextBoxOff => ("好好照顾".to_string(), format!("{}。", receive)),
+            TradeAnimPhase::TextTakeCare | TradeAnimPhase::SlideTextBoxOff => ("好好照顾".to_string(), format!("{}。", receive)),
             _ => return None,
         };
         Some(lines)
@@ -498,10 +503,10 @@ mod tests {
 
     #[test]
     fn received_mon_traded_flag_follows_obedience_rule() {
-        // ot_id == 0 → "unknown" → own mon (legacy-save rule in obedience.rs).
+        // NPC metadata records a real OT ID of 0; a different player is traded.
         let mon =
             assemble_npc_trade_mon(Species::Jynx, 20, "LOLA", [0, 0], 0, 12345).unwrap();
-        assert!(!mon.is_traded);
+        assert!(mon.is_traded);
         // ot_id == player_id → own mon (freak matching roll, faithful).
         let mon =
             assemble_npc_trade_mon(Species::Jynx, 20, "LOLA", [0, 0], 12345, 12345).unwrap();
@@ -558,8 +563,10 @@ mod tests {
                 BallEnterCable,
                 SlideOut,
                 TextWentTo,
+                SlideWentToTextOff,
                 TextForSends,
                 TextFarewell,
+                SlideFarewellTextOff,
                 SlideBack,
                 ReceiveBallTilt,
                 ReceiveMonPoof,
@@ -769,6 +776,47 @@ mod tests {
     }
 
     #[test]
+    fn separate_trade_texts_hold_eighty_frames_and_keep_original_hard_rows() {
+        let mut anim = TradeAnim::new(Species::Charmander, Species::Nidoqueen, "ABCDEFG".into(), false)
+            .with_partner_name("HIJKLMN".into());
+        while anim.phase() != TradeAnimPhase::TextForSends { anim.tick(); }
+        assert_eq!(anim.phase_duration(), 160);
+        let first = Some(("For ABCDEFG's".into(), "CHARMANDER,".into()));
+        assert_eq!(anim.text_lines(), first);
+        for _ in 0..79 { anim.tick(); }
+        assert_eq!(anim.text_lines(), first);
+        anim.tick();
+        assert_eq!(anim.text_lines(), Some(("HIJKLMN sends".into(), "NIDOQUEEN.".into())));
+        while anim.phase() != TradeAnimPhase::TextFarewell { anim.tick(); }
+        assert_eq!(anim.text_lines(), Some(("HIJKLMN waves".into(), "farewell as".into())));
+        for _ in 0..80 { anim.tick(); }
+        assert_eq!(anim.text_lines(), Some(("NIDOQUEEN is".into(), "transferred.".into())));
+        while anim.phase() != TradeAnimPhase::SlideFarewellTextOff { anim.tick(); }
+        for _ in 0..50 { anim.tick(); }
+        assert_eq!(anim.text_box_offset_x(), 2);
+        for _ in 50..127 { anim.tick(); }
+        assert!(anim.text_lines().is_none());
+        assert!(!anim.cable_visible(), "Trade_ClearTileMap clears the final ten frames");
+    }
+
+    #[test]
+    fn every_trade_text_fits_original_cells_for_maximum_trainer_names() {
+        let mut anim = TradeAnim::new(Species::Charmander, Species::Victreebel, "ABCDEFG".into(), false)
+            .with_partner_name("HIJKLMN".into());
+        let mut slides = 0;
+        while !anim.is_done() {
+            if let Some((line1, line2)) = anim.text_lines() {
+                for line in [line1, line2] {
+                    assert!(pokered_data::text_layout::measure_text(&line) <= 144, "overflow: {line}");
+                }
+            }
+            if anim.frame == 0 && matches!(anim.phase, TradeAnimPhase::SlideWentToTextOff | TradeAnimPhase::SlideFarewellTextOff | TradeAnimPhase::SlideTextBoxOff) { slides += 1; }
+            anim.tick();
+        }
+        assert_eq!(slides, 3, "all three original text-box slides must occur");
+    }
+
+    #[test]
     fn text_lines_match_original_strings() {
         let mut anim = TradeAnim::new(Species::Abra, Species::MrMime, "RED".to_string(), false);
         while anim.phase() != TradeAnimPhase::TextWentTo {
@@ -776,7 +824,7 @@ mod tests {
         }
         assert_eq!(
             anim.text_lines(),
-            Some(("ABRA went".to_string(), "to <TRAINER>.".to_string()))
+            Some(("ABRA went".to_string(), "to TRAINER.".to_string()))
         );
         while anim.phase() != TradeAnimPhase::TextForSends {
             anim.tick();
@@ -784,8 +832,8 @@ mod tests {
         assert_eq!(
             anim.text_lines(),
             Some((
-                "For RED's ABRA,".to_string(),
-                "<TRAINER> sends MR.MIME.".to_string()
+                "For RED's".to_string(),
+                "ABRA,".to_string()
             ))
         );
         while anim.phase() != TradeAnimPhase::TextTakeCare {
@@ -817,8 +865,8 @@ mod tests {
         assert_eq!(
             anim.text_lines(),
             Some((
-                "For RED's PIKACHU,".to_string(),
-                "GREEN sends CHARMANDER.".to_string()
+                "For RED's".to_string(),
+                "PIKACHU,".to_string()
             ))
         );
         while anim.phase() != TradeAnimPhase::TextFarewell {
@@ -827,8 +875,8 @@ mod tests {
         assert_eq!(
             anim.text_lines(),
             Some((
-                "GREEN waves farewell".to_string(),
-                "as CHARMANDER is transferred.".to_string()
+                "GREEN waves".to_string(),
+                "farewell as".to_string()
             ))
         );
     }

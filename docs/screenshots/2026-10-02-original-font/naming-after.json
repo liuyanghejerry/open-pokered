@@ -1,0 +1,19 @@
+{
+  "binary_sha256": "0dba5dc0ab6870244c01f42adea919ddb27689bf197a58dc086207f9712132de",
+  "frame": 10,
+  "language": "zh",
+  "note": "The naming screenshot fixture explicitly selects Chinese and seeds the pinyin IME.",
+  "command": [
+    "/tmp/pokered-font-cli-bhm37k_c/pokered-app",
+    "screenshot",
+    "--screen",
+    "naming",
+    "--frames",
+    "10",
+    "--lang",
+    "en",
+    "-o",
+    "/workspace/pokered-fix-late/docs/screenshots/2026-10-02-original-font/naming-after.png"
+  ],
+  "stdout": "Capturing screen: naming (10 frames, lang=En)...\nSaved: /workspace/pokered-fix-late/docs/screenshots/2026-10-02-original-font/naming-after.png\n"
+}

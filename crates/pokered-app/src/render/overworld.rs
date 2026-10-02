@@ -951,7 +951,7 @@ fn draw_overworld_impl(
     }
 
     if let Some(ref naming) = screen.pending_naming_screen {
-        super::draw_naming_screen(naming, fb, language);
+        super::draw_naming_screen(naming, res, fb, language);
         return;
     }
 
@@ -966,13 +966,7 @@ fn draw_overworld_impl(
         return;
     }
 
-    // Sprite palette: color 0 is transparent (matches Game Boy OBP0/OBP1 behavior).
-    let sprite_pal = Palette::new(&[
-        Rgba::TRANSPARENT,
-        Rgba::rgb(0xAA, 0xAA, 0xAA),
-        Rgba::rgb(0x55, 0x55, 0x55),
-        Rgba::rgb(0x00, 0x00, 0x00),
-    ]);
+    let sprite_pal = pokered_renderer::overworld_palette::normal_sprite_palette();
 
     let player_tx = screen.state.player.x as i32 * 2;
     let player_ty = screen.state.player.y as i32 * 2;
@@ -1410,30 +1404,15 @@ fn draw_overworld_impl(
                             continue;
                         }
 
-                        if flip_h {
-                            // The player OBJ palette is identity-mapped for
-                            // indices 1..=3, with index zero transparent.
-                            // Preserve those indices and skip RGBA palette
-                            // conversion on the mirrored hot path.
-                            fb.blit_gb_tile_indices(
-                                (draw_x + col * TILE_SIZE) as i32,
-                                (draw_y + row * TILE_SIZE) as i32,
-                                tile_ts.get(tile_idx),
-                                true,
-                                true,
-                                false,
-                            );
-                        } else {
-                            blit_single_tile_flipped(
-                                fb,
-                                tile_ts,
-                                tile_idx,
-                                draw_x + col * TILE_SIZE,
-                                draw_y + row * TILE_SIZE,
-                                &sprite_pal,
-                                false,
-                            );
-                        }
+                        blit_single_tile_flipped(
+                            fb,
+                            tile_ts,
+                            tile_idx,
+                            draw_x + col * TILE_SIZE,
+                            draw_y + row * TILE_SIZE,
+                            &sprite_pal,
+                            flip_h,
+                        );
                     }
                 }
             }
@@ -1729,28 +1708,26 @@ fn draw_overworld_impl(
             if let Ok(cached) = rm.load_emote(emote_asset) {
                 let ts = &cached.tileset;
                 let tpr = cached.source_size.0 / TILE_SIZE;
-                if let Some(npc) = screen
-                    .npc_states
-                    .iter()
-                    .find(|n| n.visible && format!("{}", n.npc_index) == bubble.npc_id)
-                {
-                    let npc_screen_tx = npc.x as i32 * 2 - view_origin_tx;
-                    let npc_screen_ty = npc.y as i32 * 2 - view_origin_ty;
-                    let (walk_dx, walk_dy) = if npc.walk_counter > 0 {
-                        let px = npc_walk_pixel_offset(npc.walk_counter);
-                        match npc.facing {
-                            Direction::Down => (0i32, px),
-                            Direction::Up => (0, -px),
-                            Direction::Left => (-px, 0),
-                            Direction::Right => (px, 0),
-                        }
-                    } else {
-                        (0, 0)
-                    };
-                    let npc_px_x = npc_screen_tx * TILE_SIZE as i32 + walk_dx - view_sub_x;
-                    let npc_px_y = npc_screen_ty * TILE_SIZE as i32 + walk_dy - view_sub_y;
-                    let emote_x = npc_px_x;
-                    let emote_y = npc_px_y - TILE_SIZE as i32 * 2;
+                let anchor = if bubble.npc_id == "player" {
+                    Some((screen_center_tx as i32 * TILE_SIZE as i32,
+                          screen_center_ty as i32 * TILE_SIZE as i32))
+                } else {
+                    screen.npc_states.iter()
+                        .find(|npc| npc.visible && format!("{}", npc.npc_index) == bubble.npc_id)
+                        .map(|npc| {
+                            let (walk_dx, walk_dy) = if npc.walk_counter > 0 {
+                                let px = npc_walk_pixel_offset(npc.walk_counter);
+                                match npc.facing {
+                                    Direction::Down => (0, px), Direction::Up => (0, -px),
+                                    Direction::Left => (-px, 0), Direction::Right => (px, 0),
+                                }
+                            } else { (0, 0) };
+                            ((npc.x as i32 * 2 - view_origin_tx) * TILE_SIZE as i32 + walk_dx - view_sub_x,
+                             (npc.y as i32 * 2 - view_origin_ty) * TILE_SIZE as i32 + walk_dy - view_sub_y)
+                        })
+                };
+                if let Some((emote_x, anchor_y)) = anchor {
+                    let emote_y = anchor_y - TILE_SIZE as i32 * 2;
                     for row in 0..2_u32 {
                         for col in 0..2_u32 {
                             let tile_idx = row as usize * tpr as usize + col as usize;
@@ -2101,7 +2078,7 @@ fn draw_overworld_impl(
             } else {
                 format!("{}\n{}", d1, d2)
             };
-            let show_arrow = dlg.waiting_for_input() && (screen.frame_counter / 16) % 2 == 0;
+            let show_arrow = dlg.waiting_for_input() && screen.dialogue_needs_button() && (screen.frame_counter / 16) % 2 == 0;
             let mut painter = FrameBufferPainter::new(fb);
             let mut ui = Ui::new(&mut painter);
             menus::dialog::draw(
@@ -2362,25 +2339,22 @@ mod tests {
     }
 
     #[test]
-    fn mirrored_player_index_blit_matches_sprite_palette_blit() {
+    fn mirrored_player_blit_respects_original_obj_palette() {
         let mut tile = Tile::blank();
         for row in 0..TILE_SIZE as usize {
             for column in 0..TILE_SIZE as usize {
                 tile.pixels[row][column] = ((row * 3 + column) & 3) as u8;
             }
         }
-        let sprite_palette = Palette::new(&[
-            Rgba::TRANSPARENT,
-            Rgba::rgb(0xAA, 0xAA, 0xAA),
-            Rgba::rgb(0x55, 0x55, 0x55),
-            Rgba::BLACK,
-        ]);
+        let sprite_palette = pokered_renderer::overworld_palette::normal_sprite_palette();
         let config = RenderConfig::new(10, 10);
         let mut palette_blit = FrameBuffer::new(config.clone(), Rgba::rgb(0x55, 0x55, 0x55));
         let mut index_blit = FrameBuffer::new(config, Rgba::rgb(0x55, 0x55, 0x55));
 
         palette_blit.blit_gb_tile(1, 1, &tile, &sprite_palette, true, true, false);
-        index_blit.blit_gb_tile_indices(1, 1, &tile, true, true, false);
+        let mut tileset = TileSet::blank(1);
+        tileset.set(0, tile);
+        blit_single_tile_flipped(&mut index_blit, &tileset, 0, 1, 1, &sprite_palette, true);
 
         assert_eq!(palette_blit.packed(), index_blit.packed());
     }

@@ -1,6 +1,6 @@
 use crate::alloc_prelude::*;
 use super::game_data::{
-    GameData, MapConnection, MAX_BG_EVENTS, MAX_OBJECT_EVENTS, MAX_WARP_EVENTS,
+    GameData, MapConnection, MAX_BG_EVENTS, MAX_OBJECT_EVENTS, MAX_WARP_EVENTS, GAME_PROGRESS_TAIL_SIZE,
 };
 use super::ser_pokemon::serialize_name;
 
@@ -222,6 +222,11 @@ pub fn serialize_game_data_into(data: &GameData, buf: &mut Vec<u8>) {
 
     // -- Game progress flags --
     buf.extend_from_slice(&data.game_progress_flags);
+    // wGameProgressFlags has 122 script bytes then ds 78. Preserve the tail
+    // on original-file imports, while accepting old JSON without that field.
+    for i in 0..GAME_PROGRESS_TAIL_SIZE {
+        buf.push(data.game_progress_tail.get(i).copied().unwrap_or(0));
+    }
 
     // -- 56 bytes padding after game_progress_flags --
     buf.extend_from_slice(&[0u8; 56]);
@@ -242,7 +247,7 @@ pub fn serialize_game_data_into(data: &GameData, buf: &mut Vec<u8>) {
 
     // -- Fossil item + fossil mon + 2 bytes padding --
     buf.push(data.fossil_item);
-    buf.push(data.fossil_mon);
+    buf.push(pokered_data::species::Species::from_index_id(data.fossil_mon).to_rom_id());
     buf.push(0); // padding
     buf.push(0); // padding
 
@@ -251,11 +256,11 @@ pub fn serialize_game_data_into(data: &GameData, buf: &mut Vec<u8>) {
     buf.push(0); // _jumping_y_index
 
     // -- Rival starter + 1 byte padding --
-    buf.push(data.rival_starter);
+    buf.push(pokered_data::species::Species::from_index_id(data.rival_starter).to_rom_id());
     buf.push(0); // padding
 
     // -- Player starter + _boulder_sprite --
-    buf.push(data.player_starter);
+    buf.push(pokered_data::species::Species::from_index_id(data.player_starter).to_rom_id());
     buf.push(0); // _boulder_sprite
 
     // -- Last blackout map + destination map + _unused_player_byte --
@@ -291,7 +296,7 @@ pub fn serialize_game_data_into(data: &GameData, buf: &mut Vec<u8>) {
     buf.push(data.status_flags[9]);
 
     // -- Completed in-game trade flags + 2 bytes padding --
-    push_u16_be(buf, data.completed_in_game_trade_flags);
+    buf.extend_from_slice(&data.completed_in_game_trade_flags.to_le_bytes());
     buf.push(0); // padding
     buf.push(0); // padding
 
@@ -326,12 +331,12 @@ pub fn serialize_game_data_into(data: &GameData, buf: &mut Vec<u8>) {
     buf.extend_from_slice(&data.water_mons);
 
     // -- UNION region (ram/wram.asm:2146-2187): branch 1 is the grass/water
-    // tables above (48 bytes); branch 2 is the link-battle enemy data
+    // tables above (50 bytes); branch 2 is the link-battle enemy data
     // (trainer name 11 + 1 + 9 + party count/species 8 + 6×44 party
     // structs + 6×11 OT + 6×11 nicks = 425). The UNION occupies its max:
-    // pad the remaining 425 − 48 = 377 bytes so every field after it sits
+    // pad the remaining 425 − 50 = 375 bytes so every field after it sits
     // at the original sMainData offsets.
-    buf.extend_from_slice(&[0u8; 377]);
+    buf.extend_from_slice(&[0u8; 375]);
 
     // -- Trainer header ptr + 6 bytes padding --
     push_u16_be(buf, data.trainer_header_ptr);
@@ -361,9 +366,8 @@ pub fn serialize_game_data_into(data: &GameData, buf: &mut Vec<u8>) {
 }
 
 fn serialize_daycare_mon(dc: &super::game_data::DayCareMon, buf: &mut Vec<u8>) {
-    // box_struct (33 bytes — ram/wram.asm wDayCareMon): NO stat-exp fields.
-    // The Rust model keeps them for gameplay, but they never hit SRAM.
-    buf.push(dc.species);
+    // box_struct: 33 bytes, including all five 16-bit stat-exp fields.
+    buf.push(pokered_data::species::Species::from_index_id(dc.species).to_rom_id());
     push_u16_be(buf, dc.hp);
     buf.push(dc.box_level);
     buf.push(dc.status);
@@ -377,6 +381,9 @@ fn serialize_daycare_mon(dc: &super::game_data::DayCareMon, buf: &mut Vec<u8>) {
     buf.push(((dc.exp >> 16) & 0xFF) as u8);
     buf.push(((dc.exp >> 8) & 0xFF) as u8);
     buf.push((dc.exp & 0xFF) as u8);
+    for value in [dc.hp_exp, dc.attack_exp, dc.defense_exp, dc.speed_exp, dc.special_exp] {
+        push_u16_be(buf, value);
+    }
     buf.push((dc.dvs >> 8) as u8);
     buf.push((dc.dvs & 0xFF) as u8);
     for &p in &dc.pp {

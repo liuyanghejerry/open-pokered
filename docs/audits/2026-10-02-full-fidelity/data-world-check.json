@@ -1,0 +1,1831 @@
+{
+  "reference": "pret/pokered@fbcf7d0",
+  "implementation": "open-pokered@72ff719",
+  "counts": {
+    "pokemon": 151,
+    "moves": 165,
+    "evolution_records": 151,
+    "trainer_classes": 47,
+    "trainer_parties": 391,
+    "trainer_pokemon": 994,
+    "pokedex_records": 151,
+    "maps": 248,
+    "warps": 805,
+    "npcs": 918,
+    "background_objects": 339,
+    "wandering_npcs": 98,
+    "item_objects": 106,
+    "wild_tables": 236,
+    "zero_wild_maps": 189,
+    "wild_pointer_maps": 248,
+    "good_rod_species": 2,
+    "super_rod_groups": 10,
+    "super_rod_maps": 33
+  },
+  "diffs": [
+    {
+      "kind": "pokemon",
+      "name": "Mew",
+      "field": "tmHmFlags",
+      "actual": [255, 255, 255, 255, 255, 255, 127],
+      "expected": [255, 255, 255, 255, 255, 255, 255],
+      "reference": "data/pokemon/base_stats/mew.asm"
+    },
+    {
+      "kind": "map",
+      "name": "BikeShop",
+      "field": "bg_coordinates",
+      "actual": [
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          1,
+          5
+        ]
+      ],
+      "expected": [],
+      "reference": "data/maps/objects/BikeShop.asm"
+    },
+    {
+      "kind": "map",
+      "name": "BillsHouse",
+      "field": "bg_coordinates",
+      "actual": [
+        [
+          1,
+          4
+        ]
+      ],
+      "expected": [],
+      "reference": "data/maps/objects/BillsHouse.asm"
+    },
+    {
+      "kind": "map",
+      "name": "BluesHouse",
+      "field": "bg_coordinates",
+      "actual": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          7,
+          1
+        ]
+      ],
+      "expected": [],
+      "reference": "data/maps/objects/BluesHouse.asm"
+    },
+    {
+      "kind": "npc",
+      "name": "CeladonGym",
+      "field": "1:isTrainer",
+      "actual": false,
+      "expected": true,
+      "reference": "data/maps/objects/CeladonGym.asm"
+    },
+    {
+      "kind": "map",
+      "name": "CeladonGym",
+      "field": "bg_coordinates",
+      "actual": [
+        [
+          3,
+          15
+        ],
+        [
+          6,
+          15
+        ]
+      ],
+      "expected": [],
+      "reference": "data/maps/objects/CeladonGym.asm"
+    },
+    {
+      "kind": "map",
+      "name": "CeladonHotel",
+      "field": "bg_coordinates",
+      "actual": [
+        [
+          13,
+          3
+        ],
+        [
+          0,
+          4
+        ]
+      ],
+      "expected": [],
+      "reference": "data/maps/objects/CeladonHotel.asm"
+    },
+    {
+      "kind": "map",
+      "name": "CeladonMansion2F",
+      "field": "bg_coordinates",
+      "actual": [
+        [
+          4,
+          9
+        ],
+        [
+          0,
+          5
+        ]
+      ],
+      "expected": [
+        [
+          4,
+          9
+        ]
+      ],
+      "reference": "data/maps/objects/CeladonMansion2F.asm"
+    },
+    {
+      "kind": "map",
+      "name": "CeladonMansionRoofHouse",
+      "field": "bg_coordinates",
+      "actual": [
+        [
+          3,
+          4
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          4,
+          0
+        ]
+      ],
+      "expected": [],
+      "reference": "data/maps/objects/CeladonMansionRoofHouse.asm"
+    },
+    {
+      "kind": "map",
+      "name": "CeladonPokecenter",
+      "field": "bg_coordinates",
+      "actual": [
+        [
+          13,
+          3
+        ],
+        [
+          0,
+          4
+        ]
+      ],
+      "expected": [],
+      "reference": "data/maps/objects/CeladonPokecenter.asm"
+    },
+    {
+      "kind": "npc",
+      "name": "CeruleanCity",
+      "field": "2:isTrainer",
+      "actual": false,
+      "expected": true,
+      "reference": "data/maps/objects/CeruleanCity.asm"
+    },
+    {
+      "kind": "npc",
+      "name": "CeruleanCity",
+      "field": "2:trainerClass",
+      "actual": "",
+      "expected": "rocket",
+      "reference": "data/maps/objects/CeruleanCity.asm"
+    },
+    {
+      "kind": "npc",
+      "name": "CeruleanCity",
+      "field": "2:trainerSet",
+      "actual": 0,
+      "expected": 5,
+      "reference": "data/maps/objects/CeruleanCity.asm"
+    },
+    {
+      "kind": "npc",
+      "name": "CeruleanGym",
+      "field": "1:isTrainer",
+      "actual": false,
+      "expected": true,
+      "reference": "data/maps/objects/CeruleanGym.asm"
+    },
+    {
+      "kind": "map",
+      "name": "CeruleanGym",
+      "field": "bg_coordinates",
+      "actual": [
+        [
+          3,
+          11
+        ],
+        [
+          6,
+          11
+        ]
+      ],
+      "expected": [],
+      "reference": "data/maps/objects/CeruleanGym.asm"
+    },
+    {
+      "kind": "map",
+      "name": "CeruleanPokecenter",
+      "field": "bg_coordinates",
+      "actual": [
+        [
+          13,
+          3
+        ],
+        [
+          0,
+          4
+        ]
+      ],
+      "expected": [],
+      "reference": "data/maps/objects/CeruleanPokecenter.asm"
+    },
+    {
+      "kind": "npc",
+      "name": "CinnabarGym",
+      "field": "1:isTrainer",
+      "actual": false,
+      "expected": true,
+      "reference": "data/maps/objects/CinnabarGym.asm"
+    },
+    {
+      "kind": "npc",
+      "name": "CinnabarGym",
+      "field": "2:isTrainer",
+      "actual": false,
+      "expected": true,
+      "reference": "data/maps/objects/CinnabarGym.asm"
+    },
+    {
+      "kind": "npc",
+      "name": "CinnabarGym",
+      "field": "3:isTrainer",
+      "actual": false,
+      "expected": true,
+      "reference": "data/maps/objects/CinnabarGym.asm"
+    },
+    {
+      "kind": "npc",
+      "name": "CinnabarGym",
+      "field": "4:isTrainer",
+      "actual": false,
+      "expected": true,
+      "reference": "data/maps/objects/CinnabarGym.asm"
+    },
+    {
+      "kind": "npc",
+      "name": "CinnabarGym",
+      "field": "5:isTrainer",
+      "actual": false,
+      "expected": true,
+      "reference": "data/maps/objects/CinnabarGym.asm"
+    },
+    {
+      "kind": "npc",
+      "name": "CinnabarGym",
+      "field": "6:isTrainer",
+      "actual": false,
+      "expected": true,
+      "reference": "data/maps/objects/CinnabarGym.asm"
+    },
+    {
+      "kind": "npc",
+      "name": "CinnabarGym",
+      "field": "7:isTrainer",
+      "actual": false,
+      "expected": true,
+      "reference": "data/maps/objects/CinnabarGym.asm"
+    },
+    {
+      "kind": "npc",
+      "name": "CinnabarGym",
+      "field": "8:isTrainer",
+      "actual": false,
+      "expected": true,
+      "reference": "data/maps/objects/CinnabarGym.asm"
+    },
+    {
+      "kind": "map",
+      "name": "CinnabarGym",
+      "field": "bg_coordinates",
+      "actual": [
+        [
+          17,
+          13
+        ]
+      ],
+      "expected": [],
+      "reference": "data/maps/objects/CinnabarGym.asm"
+    },
+    {
+      "kind": "map",
+      "name": "CinnabarLabFossilRoom",
+      "field": "bg_coordinates",
+      "actual": [
+        [
+          0,
+          4
+        ],
+        [
+          2,
+          4
+        ]
+      ],
+      "expected": [],
+      "reference": "data/maps/objects/CinnabarLabFossilRoom.asm"
+    },
+    {
+      "kind": "map",
+      "name": "CinnabarPokecenter",
+      "field": "bg_coordinates",
+      "actual": [
+        [
+          13,
+          3
+        ],
+        [
+          0,
+          4
+        ]
+      ],
+      "expected": [],
+      "reference": "data/maps/objects/CinnabarPokecenter.asm"
+    },
+    {
+      "kind": "map",
+      "name": "Colosseum",
+      "field": "bg_coordinates",
+      "actual": [
+        [
+          4,
+          4
+        ],
+        [
+          5,
+          4
+        ]
+      ],
+      "expected": [],
+      "reference": "data/maps/objects/Colosseum.asm"
+    },
+    {
+      "kind": "npc",
+      "name": "FightingDojo",
+      "field": "1:isTrainer",
+      "actual": false,
+      "expected": true,
+      "reference": "data/maps/objects/FightingDojo.asm"
+    },
+    {
+      "kind": "map",
+      "name": "FightingDojo",
+      "field": "bg_coordinates",
+      "actual": [
+        [
+          3,
+          9
+        ],
+        [
+          6,
+          9
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          5,
+          0
+        ]
+      ],
+      "expected": [],
+      "reference": "data/maps/objects/FightingDojo.asm"
+    },
+    {
+      "kind": "npc",
+      "name": "FuchsiaGym",
+      "field": "1:isTrainer",
+      "actual": false,
+      "expected": true,
+      "reference": "data/maps/objects/FuchsiaGym.asm"
+    },
+    {
+      "kind": "map",
+      "name": "FuchsiaGym",
+      "field": "bg_coordinates",
+      "actual": [
+        [
+          3,
+          15
+        ],
+        [
+          6,
+          15
+        ]
+      ],
+      "expected": [],
+      "reference": "data/maps/objects/FuchsiaGym.asm"
+    },
+    {
+      "kind": "map",
+      "name": "FuchsiaPokecenter",
+      "field": "bg_coordinates",
+      "actual": [
+        [
+          13,
+          3
+        ],
+        [
+          0,
+          4
+        ]
+      ],
+      "expected": [],
+      "reference": "data/maps/objects/FuchsiaPokecenter.asm"
+    },
+    {
+      "kind": "npc",
+      "name": "GameCorner",
+      "field": "11:isTrainer",
+      "actual": false,
+      "expected": true,
+      "reference": "data/maps/objects/GameCorner.asm"
+    },
+    {
+      "kind": "map",
+      "name": "GameCorner",
+      "field": "bg_coordinates",
+      "actual": [
+        [
+          9,
+          4
+        ],
+        [
+          18,
+          15
+        ],
+        [
+          18,
+          14
+        ],
+        [
+          18,
+          13
+        ],
+        [
+          18,
+          12
+        ],
+        [
+          18,
+          11
+        ],
+        [
+          18,
+          10
+        ],
+        [
+          13,
+          10
+        ],
+        [
+          13,
+          11
+        ],
+        [
+          13,
+          12
+        ],
+        [
+          13,
+          13
+        ],
+        [
+          13,
+          14
+        ],
+        [
+          13,
+          15
+        ],
+        [
+          12,
+          15
+        ],
+        [
+          12,
+          14
+        ],
+        [
+          12,
+          13
+        ],
+        [
+          12,
+          12
+        ],
+        [
+          12,
+          11
+        ],
+        [
+          12,
+          10
+        ],
+        [
+          7,
+          10
+        ],
+        [
+          7,
+          11
+        ],
+        [
+          7,
+          12
+        ],
+        [
+          7,
+          13
+        ],
+        [
+          7,
+          14
+        ],
+        [
+          7,
+          15
+        ],
+        [
+          6,
+          15
+        ],
+        [
+          6,
+          14
+        ],
+        [
+          6,
+          13
+        ],
+        [
+          6,
+          12
+        ],
+        [
+          6,
+          11
+        ],
+        [
+          6,
+          10
+        ],
+        [
+          1,
+          10
+        ],
+        [
+          1,
+          11
+        ],
+        [
+          1,
+          12
+        ],
+        [
+          1,
+          13
+        ],
+        [
+          1,
+          14
+        ],
+        [
+          1,
+          15
+        ]
+      ],
+      "expected": [
+        [
+          9,
+          4
+        ]
+      ],
+      "reference": "data/maps/objects/GameCorner.asm"
+    },
+    {
+      "kind": "map",
+      "name": "IndigoPlateau",
+      "field": "bg_coordinates",
+      "actual": [
+        [
+          8,
+          13
+        ],
+        [
+          11,
+          13
+        ]
+      ],
+      "expected": [],
+      "reference": "data/maps/objects/IndigoPlateau.asm"
+    },
+    {
+      "kind": "map",
+      "name": "IndigoPlateauLobby",
+      "field": "bg_coordinates",
+      "actual": [
+        [
+          15,
+          7
+        ]
+      ],
+      "expected": [],
+      "reference": "data/maps/objects/IndigoPlateauLobby.asm"
+    },
+    {
+      "kind": "npc",
+      "name": "LancesRoom",
+      "field": "1:isTrainer",
+      "actual": false,
+      "expected": true,
+      "reference": "data/maps/objects/LancesRoom.asm"
+    },
+    {
+      "kind": "map",
+      "name": "LavenderPokecenter",
+      "field": "bg_coordinates",
+      "actual": [
+        [
+          13,
+          3
+        ],
+        [
+          0,
+          4
+        ]
+      ],
+      "expected": [],
+      "reference": "data/maps/objects/LavenderPokecenter.asm"
+    },
+    {
+      "kind": "npc",
+      "name": "LoreleisRoom",
+      "field": "1:isTrainer",
+      "actual": false,
+      "expected": true,
+      "reference": "data/maps/objects/LoreleisRoom.asm"
+    },
+    {
+      "kind": "map",
+      "name": "MrFujisHouse",
+      "field": "bg_coordinates",
+      "actual": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          7,
+          1
+        ]
+      ],
+      "expected": [],
+      "reference": "data/maps/objects/MrFujisHouse.asm"
+    },
+    {
+      "kind": "npc",
+      "name": "MtMoonB2F",
+      "field": "1:isTrainer",
+      "actual": false,
+      "expected": true,
+      "reference": "data/maps/objects/MtMoonB2F.asm"
+    },
+    {
+      "kind": "map",
+      "name": "MtMoonPokecenter",
+      "field": "bg_coordinates",
+      "actual": [
+        [
+          13,
+          3
+        ],
+        [
+          0,
+          4
+        ]
+      ],
+      "expected": [],
+      "reference": "data/maps/objects/MtMoonPokecenter.asm"
+    },
+    {
+      "kind": "map",
+      "name": "Museum1F",
+      "field": "bg_coordinates",
+      "actual": [
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          6
+        ]
+      ],
+      "expected": [],
+      "reference": "data/maps/objects/Museum1F.asm"
+    },
+    {
+      "kind": "npc",
+      "name": "OaksLab",
+      "field": "1:isTrainer",
+      "actual": false,
+      "expected": true,
+      "reference": "data/maps/objects/OaksLab.asm"
+    },
+    {
+      "kind": "map",
+      "name": "OaksLab",
+      "field": "bg_coordinates",
+      "actual": [
+        [
+          4,
+          0
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "expected": [],
+      "reference": "data/maps/objects/OaksLab.asm"
+    },
+    {
+      "kind": "npc",
+      "name": "PewterGym",
+      "field": "1:isTrainer",
+      "actual": false,
+      "expected": true,
+      "reference": "data/maps/objects/PewterGym.asm"
+    },
+    {
+      "kind": "map",
+      "name": "PewterGym",
+      "field": "bg_coordinates",
+      "actual": [
+        [
+          3,
+          10
+        ],
+        [
+          6,
+          10
+        ]
+      ],
+      "expected": [],
+      "reference": "data/maps/objects/PewterGym.asm"
+    },
+    {
+      "kind": "map",
+      "name": "PewterPokecenter",
+      "field": "bg_coordinates",
+      "actual": [
+        [
+          13,
+          3
+        ],
+        [
+          0,
+          4
+        ]
+      ],
+      "expected": [],
+      "reference": "data/maps/objects/PewterPokecenter.asm"
+    },
+    {
+      "kind": "map",
+      "name": "PokemonMansion2F",
+      "field": "bg_coordinates",
+      "actual": [
+        [
+          2,
+          11
+        ]
+      ],
+      "expected": [],
+      "reference": "data/maps/objects/PokemonMansion2F.asm"
+    },
+    {
+      "kind": "map",
+      "name": "RedsHouse2F",
+      "field": "bg_coordinates",
+      "actual": [
+        [
+          0,
+          1
+        ],
+        [
+          3,
+          5
+        ]
+      ],
+      "expected": [],
+      "reference": "data/maps/objects/RedsHouse2F.asm"
+    },
+    {
+      "kind": "map",
+      "name": "RockTunnelPokecenter",
+      "field": "bg_coordinates",
+      "actual": [
+        [
+          13,
+          3
+        ],
+        [
+          0,
+          4
+        ]
+      ],
+      "expected": [],
+      "reference": "data/maps/objects/RockTunnelPokecenter.asm"
+    },
+    {
+      "kind": "npc",
+      "name": "RocketHideoutB4F",
+      "field": "1:isTrainer",
+      "actual": false,
+      "expected": true,
+      "reference": "data/maps/objects/RocketHideoutB4F.asm"
+    },
+    {
+      "kind": "npc",
+      "name": "Route1",
+      "field": "1:wander_axis",
+      "actual": 2,
+      "expected": 1,
+      "reference": "data/maps/objects/Route1.asm"
+    },
+    {
+      "kind": "map",
+      "name": "Route15Gate2F",
+      "field": "bg_coordinates",
+      "actual": [
+        [
+          6,
+          2
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          6,
+          2
+        ]
+      ],
+      "reference": "data/maps/objects/Route15Gate2F.asm"
+    },
+    {
+      "kind": "map",
+      "name": "Route22Gate",
+      "field": "warps",
+      "actual": [
+        [
+          4,
+          7,
+          "route22",
+          0
+        ],
+        [
+          5,
+          7,
+          "route22",
+          0
+        ],
+        [
+          4,
+          0,
+          "route23",
+          0
+        ],
+        [
+          5,
+          0,
+          "route23",
+          1
+        ]
+      ],
+      "expected": [
+        [
+          4,
+          7,
+          "lastmap",
+          0
+        ],
+        [
+          5,
+          7,
+          "lastmap",
+          0
+        ],
+        [
+          4,
+          0,
+          "lastmap",
+          0
+        ],
+        [
+          5,
+          0,
+          "lastmap",
+          1
+        ]
+      ],
+      "reference": "data/maps/objects/Route22Gate.asm"
+    },
+    {
+      "kind": "npc",
+      "name": "Route24",
+      "field": "1:isTrainer",
+      "actual": false,
+      "expected": true,
+      "reference": "data/maps/objects/Route24.asm"
+    },
+    {
+      "kind": "npc",
+      "name": "SSAnne2F",
+      "field": "2:isTrainer",
+      "actual": false,
+      "expected": true,
+      "reference": "data/maps/objects/SSAnne2F.asm"
+    },
+    {
+      "kind": "map",
+      "name": "SSAnneKitchen",
+      "field": "bg_coordinates",
+      "actual": [
+        [
+          13,
+          5
+        ],
+        [
+          13,
+          7
+        ]
+      ],
+      "expected": [],
+      "reference": "data/maps/objects/SSAnneKitchen.asm"
+    },
+    {
+      "kind": "map",
+      "name": "SafariZoneEastRestHouse",
+      "field": "bg_coordinates",
+      "actual": [
+        [
+          13,
+          3
+        ]
+      ],
+      "expected": [],
+      "reference": "data/maps/objects/SafariZoneEastRestHouse.asm"
+    },
+    {
+      "kind": "map",
+      "name": "SafariZoneNorthRestHouse",
+      "field": "bg_coordinates",
+      "actual": [
+        [
+          13,
+          3
+        ]
+      ],
+      "expected": [],
+      "reference": "data/maps/objects/SafariZoneNorthRestHouse.asm"
+    },
+    {
+      "kind": "map",
+      "name": "SafariZoneWestRestHouse",
+      "field": "bg_coordinates",
+      "actual": [
+        [
+          13,
+          3
+        ]
+      ],
+      "expected": [],
+      "reference": "data/maps/objects/SafariZoneWestRestHouse.asm"
+    },
+    {
+      "kind": "npc",
+      "name": "SaffronGym",
+      "field": "1:isTrainer",
+      "actual": false,
+      "expected": true,
+      "reference": "data/maps/objects/SaffronGym.asm"
+    },
+    {
+      "kind": "map",
+      "name": "SaffronGym",
+      "field": "bg_coordinates",
+      "actual": [
+        [
+          9,
+          15
+        ]
+      ],
+      "expected": [],
+      "reference": "data/maps/objects/SaffronGym.asm"
+    },
+    {
+      "kind": "map",
+      "name": "SaffronPokecenter",
+      "field": "bg_coordinates",
+      "actual": [
+        [
+          13,
+          3
+        ],
+        [
+          0,
+          4
+        ]
+      ],
+      "expected": [],
+      "reference": "data/maps/objects/SaffronPokecenter.asm"
+    },
+    {
+      "kind": "npc",
+      "name": "SilphCo11F",
+      "field": "3:isTrainer",
+      "actual": false,
+      "expected": true,
+      "reference": "data/maps/objects/SilphCo11F.asm"
+    },
+    {
+      "kind": "map",
+      "name": "SilphCo11F",
+      "field": "bg_coordinates",
+      "actual": [
+        [
+          10,
+          12
+        ]
+      ],
+      "expected": [],
+      "reference": "data/maps/objects/SilphCo11F.asm"
+    },
+    {
+      "kind": "map",
+      "name": "TradeCenter",
+      "field": "bg_coordinates",
+      "actual": [
+        [
+          4,
+          4
+        ],
+        [
+          5,
+          4
+        ]
+      ],
+      "expected": [],
+      "reference": "data/maps/objects/TradeCenter.asm"
+    },
+    {
+      "kind": "npc",
+      "name": "VermilionGym",
+      "field": "1:isTrainer",
+      "actual": false,
+      "expected": true,
+      "reference": "data/maps/objects/VermilionGym.asm"
+    },
+    {
+      "kind": "map",
+      "name": "VermilionGym",
+      "field": "bg_coordinates",
+      "actual": [
+        [
+          1,
+          7
+        ],
+        [
+          1,
+          9
+        ],
+        [
+          1,
+          11
+        ],
+        [
+          3,
+          7
+        ],
+        [
+          3,
+          9
+        ],
+        [
+          3,
+          11
+        ],
+        [
+          5,
+          7
+        ],
+        [
+          5,
+          9
+        ],
+        [
+          5,
+          11
+        ],
+        [
+          7,
+          7
+        ],
+        [
+          7,
+          9
+        ],
+        [
+          7,
+          11
+        ],
+        [
+          9,
+          7
+        ],
+        [
+          9,
+          9
+        ],
+        [
+          9,
+          11
+        ],
+        [
+          3,
+          14
+        ],
+        [
+          6,
+          14
+        ],
+        [
+          6,
+          1
+        ]
+      ],
+      "expected": [],
+      "reference": "data/maps/objects/VermilionGym.asm"
+    },
+    {
+      "kind": "map",
+      "name": "VermilionPokecenter",
+      "field": "bg_coordinates",
+      "actual": [
+        [
+          13,
+          3
+        ],
+        [
+          0,
+          4
+        ]
+      ],
+      "expected": [],
+      "reference": "data/maps/objects/VermilionPokecenter.asm"
+    },
+    {
+      "kind": "npc",
+      "name": "ViridianGym",
+      "field": "1:isTrainer",
+      "actual": false,
+      "expected": true,
+      "reference": "data/maps/objects/ViridianGym.asm"
+    },
+    {
+      "kind": "map",
+      "name": "ViridianGym",
+      "field": "bg_coordinates",
+      "actual": [
+        [
+          15,
+          15
+        ],
+        [
+          18,
+          15
+        ]
+      ],
+      "expected": [],
+      "reference": "data/maps/objects/ViridianGym.asm"
+    },
+    {
+      "kind": "map",
+      "name": "ViridianPokecenter",
+      "field": "bg_coordinates",
+      "actual": [
+        [
+          13,
+          3
+        ],
+        [
+          0,
+          4
+        ]
+      ],
+      "expected": [],
+      "reference": "data/maps/objects/ViridianPokecenter.asm"
+    },
+    {
+      "kind": "map",
+      "name": "ViridianSchoolHouse",
+      "field": "bg_coordinates",
+      "actual": [
+        [
+          3,
+          4
+        ],
+        [
+          3,
+          0
+        ]
+      ],
+      "expected": [],
+      "reference": "data/maps/objects/ViridianSchoolHouse.asm"
+    }
+  ],
+  "notes": [
+    {
+      "extra_map": "CeruleanTrashedHouseCopy"
+    },
+    {
+      "extra_map": "CinnabarMartCopy"
+    },
+    {
+      "stationary_variable_facing": "Colosseum",
+      "object": 1,
+      "direction": "ANY_DIR"
+    },
+    {
+      "stationary_variable_facing": "SeafoamIslands1F",
+      "object": 1,
+      "direction": "BOULDER_MOVEMENT_BYTE_2"
+    },
+    {
+      "stationary_variable_facing": "SeafoamIslands1F",
+      "object": 2,
+      "direction": "BOULDER_MOVEMENT_BYTE_2"
+    },
+    {
+      "stationary_variable_facing": "SeafoamIslandsB1F",
+      "object": 1,
+      "direction": "BOULDER_MOVEMENT_BYTE_2"
+    },
+    {
+      "stationary_variable_facing": "SeafoamIslandsB1F",
+      "object": 2,
+      "direction": "BOULDER_MOVEMENT_BYTE_2"
+    },
+    {
+      "stationary_variable_facing": "SeafoamIslandsB2F",
+      "object": 1,
+      "direction": "BOULDER_MOVEMENT_BYTE_2"
+    },
+    {
+      "stationary_variable_facing": "SeafoamIslandsB2F",
+      "object": 2,
+      "direction": "BOULDER_MOVEMENT_BYTE_2"
+    },
+    {
+      "stationary_variable_facing": "SeafoamIslandsB3F",
+      "object": 1,
+      "direction": "BOULDER_MOVEMENT_BYTE_2"
+    },
+    {
+      "stationary_variable_facing": "SeafoamIslandsB3F",
+      "object": 2,
+      "direction": "BOULDER_MOVEMENT_BYTE_2"
+    },
+    {
+      "stationary_variable_facing": "SeafoamIslandsB3F",
+      "object": 3,
+      "direction": "BOULDER_MOVEMENT_BYTE_2"
+    },
+    {
+      "stationary_variable_facing": "SeafoamIslandsB3F",
+      "object": 4,
+      "direction": "BOULDER_MOVEMENT_BYTE_2"
+    },
+    {
+      "stationary_variable_facing": "TradeCenter",
+      "object": 1,
+      "direction": "ANY_DIR"
+    },
+    {
+      "extra_map": "UndergroundPathRoute6Copy"
+    },
+    {
+      "extra_map": "UnusedMap0B"
+    },
+    {
+      "extra_map": "UnusedMap69"
+    },
+    {
+      "extra_map": "UnusedMap6A"
+    },
+    {
+      "extra_map": "UnusedMap6B"
+    },
+    {
+      "extra_map": "UnusedMap6D"
+    },
+    {
+      "extra_map": "UnusedMap6E"
+    },
+    {
+      "extra_map": "UnusedMap6F"
+    },
+    {
+      "extra_map": "UnusedMap70"
+    },
+    {
+      "extra_map": "UnusedMap72"
+    },
+    {
+      "extra_map": "UnusedMap73"
+    },
+    {
+      "extra_map": "UnusedMap74"
+    },
+    {
+      "extra_map": "UnusedMap75"
+    },
+    {
+      "extra_map": "UnusedMapCC"
+    },
+    {
+      "extra_map": "UnusedMapCD"
+    },
+    {
+      "extra_map": "UnusedMapCE"
+    },
+    {
+      "extra_map": "UnusedMapE7"
+    },
+    {
+      "extra_map": "UnusedMapED"
+    },
+    {
+      "extra_map": "UnusedMapEE"
+    },
+    {
+      "extra_map": "UnusedMapF1"
+    },
+    {
+      "extra_map": "UnusedMapF2"
+    },
+    {
+      "extra_map": "UnusedMapF3"
+    },
+    {
+      "extra_map": "UnusedMapF4"
+    },
+    {
+      "stationary_variable_facing": "VictoryRoad1F",
+      "object": 5,
+      "direction": "BOULDER_MOVEMENT_BYTE_2"
+    },
+    {
+      "stationary_variable_facing": "VictoryRoad1F",
+      "object": 6,
+      "direction": "BOULDER_MOVEMENT_BYTE_2"
+    },
+    {
+      "stationary_variable_facing": "VictoryRoad1F",
+      "object": 7,
+      "direction": "BOULDER_MOVEMENT_BYTE_2"
+    },
+    {
+      "stationary_variable_facing": "VictoryRoad2F",
+      "object": 11,
+      "direction": "BOULDER_MOVEMENT_BYTE_2"
+    },
+    {
+      "stationary_variable_facing": "VictoryRoad2F",
+      "object": 12,
+      "direction": "BOULDER_MOVEMENT_BYTE_2"
+    },
+    {
+      "stationary_variable_facing": "VictoryRoad2F",
+      "object": 13,
+      "direction": "BOULDER_MOVEMENT_BYTE_2"
+    },
+    {
+      "stationary_variable_facing": "VictoryRoad3F",
+      "object": 7,
+      "direction": "BOULDER_MOVEMENT_BYTE_2"
+    },
+    {
+      "stationary_variable_facing": "VictoryRoad3F",
+      "object": 8,
+      "direction": "BOULDER_MOVEMENT_BYTE_2"
+    },
+    {
+      "stationary_variable_facing": "VictoryRoad3F",
+      "object": 9,
+      "direction": "BOULDER_MOVEMENT_BYTE_2"
+    },
+    {
+      "stationary_variable_facing": "VictoryRoad3F",
+      "object": 10,
+      "direction": "BOULDER_MOVEMENT_BYTE_2"
+    },
+    {
+      "stationary_variable_facing": "WardensHouse",
+      "object": 3,
+      "direction": "BOULDER_MOVEMENT_BYTE_2"
+    }
+  ],
+  "encounter_anchor_proof": {
+    "affected_map_cell_counts": {
+      "Route1": 4,
+      "Route10": 4,
+      "Route11": 38,
+      "Route12": 8,
+      "Route15": 4,
+      "Route19": 3,
+      "Route2": 16,
+      "Route20": 24,
+      "Route21": 10,
+      "Route24": 14,
+      "Route25": 4,
+      "Route6": 14,
+      "Route9": 4,
+      "SafariZoneCenter": 80,
+      "SafariZoneEast": 66,
+      "SafariZoneNorth": 104,
+      "SafariZoneWest": 30,
+      "ViridianForest": 154
+    },
+    "sample_cells": [
+      {
+        "map": "Route1",
+        "x": 5,
+        "y": 28,
+        "standing": 44,
+        "actual_rate_tile": 82,
+        "expected_rate_tile": 44,
+        "actual_rate": 25,
+        "expected_rate": 0
+      },
+      {
+        "map": "Route1",
+        "x": 5,
+        "y": 29,
+        "standing": 44,
+        "actual_rate_tile": 82,
+        "expected_rate_tile": 44,
+        "actual_rate": 25,
+        "expected_rate": 0
+      },
+      {
+        "map": "Route1",
+        "x": 7,
+        "y": 30,
+        "standing": 82,
+        "actual_rate_tile": 44,
+        "expected_rate_tile": 82,
+        "actual_rate": 0,
+        "expected_rate": 25
+      },
+      {
+        "map": "Route1",
+        "x": 7,
+        "y": 31,
+        "standing": 82,
+        "actual_rate_tile": 44,
+        "expected_rate_tile": 82,
+        "actual_rate": 0,
+        "expected_rate": 25
+      },
+      {
+        "map": "Route10",
+        "x": 3,
+        "y": 6,
+        "standing": 44,
+        "actual_rate_tile": 82,
+        "expected_rate_tile": 44,
+        "actual_rate": 15,
+        "expected_rate": 0
+      },
+      {
+        "map": "Route10",
+        "x": 3,
+        "y": 7,
+        "standing": 44,
+        "actual_rate_tile": 82,
+        "expected_rate_tile": 44,
+        "actual_rate": 15,
+        "expected_rate": 0
+      },
+      {
+        "map": "Route10",
+        "x": 3,
+        "y": 8,
+        "standing": 44,
+        "actual_rate_tile": 82,
+        "expected_rate_tile": 44,
+        "actual_rate": 15,
+        "expected_rate": 0
+      },
+      {
+        "map": "Route10",
+        "x": 3,
+        "y": 9,
+        "standing": 44,
+        "actual_rate_tile": 82,
+        "expected_rate_tile": 44,
+        "actual_rate": 15,
+        "expected_rate": 0
+      },
+      {
+        "map": "Route11",
+        "x": 23,
+        "y": 0,
+        "standing": 35,
+        "actual_rate_tile": 82,
+        "expected_rate_tile": 16,
+        "actual_rate": 15,
+        "expected_rate": 0
+      },
+      {
+        "map": "Route11",
+        "x": 23,
+        "y": 1,
+        "standing": 35,
+        "actual_rate_tile": 82,
+        "expected_rate_tile": 16,
+        "actual_rate": 15,
+        "expected_rate": 0
+      },
+      {
+        "map": "Route11",
+        "x": 11,
+        "y": 2,
+        "standing": 35,
+        "actual_rate_tile": 82,
+        "expected_rate_tile": 16,
+        "actual_rate": 15,
+        "expected_rate": 0
+      },
+      {
+        "map": "Route11",
+        "x": 21,
+        "y": 2,
+        "standing": 82,
+        "actual_rate_tile": 16,
+        "expected_rate_tile": 82,
+        "actual_rate": 0,
+        "expected_rate": 15
+      },
+      {
+        "map": "Route11",
+        "x": 23,
+        "y": 2,
+        "standing": 35,
+        "actual_rate_tile": 82,
+        "expected_rate_tile": 16,
+        "actual_rate": 15,
+        "expected_rate": 0
+      },
+      {
+        "map": "Route11",
+        "x": 11,
+        "y": 3,
+        "standing": 35,
+        "actual_rate_tile": 82,
+        "expected_rate_tile": 16,
+        "actual_rate": 15,
+        "expected_rate": 0
+      },
+      {
+        "map": "Route11",
+        "x": 21,
+        "y": 3,
+        "standing": 82,
+        "actual_rate_tile": 16,
+        "expected_rate_tile": 82,
+        "actual_rate": 0,
+        "expected_rate": 15
+      },
+      {
+        "map": "Route11",
+        "x": 23,
+        "y": 3,
+        "standing": 35,
+        "actual_rate_tile": 82,
+        "expected_rate_tile": 16,
+        "actual_rate": 15,
+        "expected_rate": 0
+      },
+      {
+        "map": "Route11",
+        "x": 11,
+        "y": 4,
+        "standing": 35,
+        "actual_rate_tile": 82,
+        "expected_rate_tile": 16,
+        "actual_rate": 15,
+        "expected_rate": 0
+      },
+      {
+        "map": "Route11",
+        "x": 21,
+        "y": 4,
+        "standing": 82,
+        "actual_rate_tile": 16,
+        "expected_rate_tile": 82,
+        "actual_rate": 0,
+        "expected_rate": 15
+      },
+      {
+        "map": "Route11",
+        "x": 23,
+        "y": 4,
+        "standing": 35,
+        "actual_rate_tile": 82,
+        "expected_rate_tile": 16,
+        "actual_rate": 15,
+        "expected_rate": 0
+      },
+      {
+        "map": "Route11",
+        "x": 11,
+        "y": 5,
+        "standing": 35,
+        "actual_rate_tile": 82,
+        "expected_rate_tile": 16,
+        "actual_rate": 15,
+        "expected_rate": 0
+      },
+      {
+        "map": "Route11",
+        "x": 21,
+        "y": 5,
+        "standing": 82,
+        "actual_rate_tile": 16,
+        "expected_rate_tile": 82,
+        "actual_rate": 0,
+        "expected_rate": 15
+      },
+      {
+        "map": "Route11",
+        "x": 23,
+        "y": 5,
+        "standing": 35,
+        "actual_rate_tile": 82,
+        "expected_rate_tile": 16,
+        "actual_rate": 15,
+        "expected_rate": 0
+      },
+      {
+        "map": "Route11",
+        "x": 11,
+        "y": 6,
+        "standing": 35,
+        "actual_rate_tile": 82,
+        "expected_rate_tile": 16,
+        "actual_rate": 15,
+        "expected_rate": 0
+      },
+      {
+        "map": "Route11",
+        "x": 15,
+        "y": 6,
+        "standing": 82,
+        "actual_rate_tile": 16,
+        "expected_rate_tile": 82,
+        "actual_rate": 0,
+        "expected_rate": 15
+      },
+      {
+        "map": "Route11",
+        "x": 23,
+        "y": 6,
+        "standing": 35,
+        "actual_rate_tile": 82,
+        "expected_rate_tile": 16,
+        "actual_rate": 15,
+        "expected_rate": 0
+      },
+      {
+        "map": "Route11",
+        "x": 11,
+        "y": 7,
+        "standing": 35,
+        "actual_rate_tile": 82,
+        "expected_rate_tile": 16,
+        "actual_rate": 15,
+        "expected_rate": 0
+      },
+      {
+        "map": "Route11",
+        "x": 15,
+        "y": 7,
+        "standing": 82,
+        "actual_rate_tile": 16,
+        "expected_rate_tile": 82,
+        "actual_rate": 0,
+        "expected_rate": 15
+      },
+      {
+        "map": "Route11",
+        "x": 23,
+        "y": 7,
+        "standing": 35,
+        "actual_rate_tile": 82,
+        "expected_rate_tile": 16,
+        "actual_rate": 15,
+        "expected_rate": 0
+      },
+      {
+        "map": "Route11",
+        "x": 11,
+        "y": 8,
+        "standing": 35,
+        "actual_rate_tile": 82,
+        "expected_rate_tile": 16,
+        "actual_rate": 15,
+        "expected_rate": 0
+      },
+      {
+        "map": "Route11",
+        "x": 15,
+        "y": 8,
+        "standing": 82,
+        "actual_rate_tile": 16,
+        "expected_rate_tile": 82,
+        "actual_rate": 0,
+        "expected_rate": 15
+      }
+    ],
+    "scope": "Static walk/surf-passable cells on Overworld/Forest maps with wild tables; excludes sprite occupancy, warp gating and reachability, so counts are candidate coordinates, not encounter frequency."
+  },
+  "diff_counts": {
+    "pokemon": 1,
+    "map": 45,
+    "npc": 29
+  },
+  "diff_fields": {
+    "tmHmFlags": 1,
+    "bg_coordinates": 44,
+    "isTrainer": 26,
+    "trainerClass": 1,
+    "trainerSet": 1,
+    "wander_axis": 1,
+    "warps": 1
+  }
+}

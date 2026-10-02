@@ -1,0 +1,19 @@
+Traceback (most recent call last):
+  File "/workspace/open-pokered/scripts/playthrough.py", line 1064, in nav_warp
+    self.nav_to(x, y, map_name=from_map, tries=tries)
+  File "/workspace/open-pokered/scripts/playthrough.py", line 717, in nav_to
+    raise NavError(f"no path in {cm}: ({cx},{cy})->({x},{y})")
+playthrough.NavError: no path in VermilionCity: (15,17)->(12,19)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/workspace/open-pokered/scripts/playthrough.py", line 1986, in main
+    fn(g)
+  File "/workspace/open-pokered/scripts/playthrough_late.py", line 437, in m17_surge
+    g.nav_warp(12, 19, "VermilionCity", "VermilionGym")
+  File "/workspace/open-pokered/scripts/playthrough.py", line 1081, in nav_warp
+    self.nav_to_map(*inner, map_name=from_map,
+  File "/workspace/open-pokered/scripts/playthrough.py", line 876, in nav_to_map
+    raise NavError(f"no cross path: {cm}({cx},{cy}) "
+playthrough.NavError: no cross path: VermilionCity(15,17) -> VermilionCity(12,20) blocked=[(14, 6), (16, 7), (17, 7), (18, 7), (19, 7), (19, 30), (20, 7), (22, 27), (23, 27), (24, 27), (25, 27), (26, 27), (28, 27), (29, 7), (29, 8), (29, 9), (29, 10), (30, 7)]

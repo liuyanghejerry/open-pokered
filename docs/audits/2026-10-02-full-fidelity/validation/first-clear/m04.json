@@ -1,0 +1,117 @@
+{
+  "get_state": {
+    "ok": true,
+    "data": {
+      "active_script_effect": null,
+      "badges": 0,
+      "battle_bag": null,
+      "battle_inventory": [],
+      "battle_live": null,
+      "battle_message": null,
+      "battle_moves": null,
+      "battle_party_cursor": 0,
+      "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+      "choice": null,
+      "coins": 0,
+      "credits_final_button": null,
+      "credits_phase": null,
+      "dialogue": null,
+      "dialogue_state": null,
+      "evaluation": {
+        "party": [],
+        "party_source": "save_data",
+        "pokedex": {
+          "owned": 0,
+          "owned_numbers": [],
+          "seen": 0,
+          "total": 151
+        }
+      },
+      "field_menu": null,
+      "frame_count": 4090,
+      "hall_of_fame_count": 0,
+      "hof_phase": null,
+      "last_outside_map": "PalletTown",
+      "link": {
+        "cable_phase": "Inactive",
+        "role": "Host",
+        "status": "disabled",
+        "trade": null
+      },
+      "map_blocks": [
+        101,
+        102,
+        103,
+        104,
+        104,
+        107,
+        107,
+        5,
+        105,
+        106,
+        5,
+        5,
+        5,
+        109,
+        110,
+        104,
+        104,
+        5,
+        104,
+        104,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        4,
+        5,
+        5
+      ],
+      "map_id": 40,
+      "map_name": "OaksLab",
+      "money": 3000,
+      "party": [],
+      "party_count": 0,
+      "pc_phase": null,
+      "player_facing": "Up",
+      "player_movement_state": "Idle",
+      "player_name": "RED",
+      "player_transport": "Walking",
+      "player_x": 5,
+      "player_y": 3,
+      "screen": "overworld",
+      "script_awaiting_battle": false,
+      "script_effect": null,
+      "script_running": false,
+      "shop_phase": null,
+      "text_speed_delay_frames": 3,
+      "warp_fade": "Idle"
+    }
+  },
+  "get_flags": {
+    "ok": true,
+    "data": {
+      "EVENT_FOLLOWED_OAK_INTO_LAB": true,
+      "EVENT_FOLLOWED_OAK_INTO_LAB_2": true,
+      "EVENT_OAK_APPEARED_IN_PALLET": true,
+      "EVENT_OAK_ASKED_TO_CHOOSE_MON": true,
+      "__OBJ_HIDDEN_OAKS_LAB_OBJ_5": false,
+      "__OBJ_HIDDEN_OAKS_LAB_OBJ_8": true,
+      "__OBJ_HIDDEN_PALLET_TOWN_OBJ_1": true,
+      "__OBJ_SHOWN_OAKS_LAB_OBJ_5": true,
+      "__OBJ_SHOWN_OAKS_LAB_OBJ_8": false,
+      "__OBJ_SHOWN_PALLET_TOWN_OBJ_1": false
+    }
+  },
+  "get_party": {
+    "ok": true,
+    "data": []
+  },
+  "get_bag": {
+    "ok": true,
+    "data": []
+  }
+}

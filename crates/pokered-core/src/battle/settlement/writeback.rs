@@ -110,7 +110,9 @@ pub fn settle_battle_into_save(
                         battle.trainer_class,
                         Some(pokered_data::trainer_data::TrainerClass::Rival1)
                     );
-                if !is_oaks_lab_rival {
+                // Link defeats return to the Cable Club room after HealParty;
+                // they never queue the ordinary city's blackout warp.
+                if !is_oaks_lab_rival && !battle.link_mode {
                     let lost = settlement.money_lost;
                     save.game_data.player_money = save.game_data.player_money.saturating_sub(lost);
                     if lost > 0 {
@@ -161,7 +163,7 @@ pub fn settle_battle_into_save(
                     // releases the forced bike and restores walking.
                     overworld.forced_bike.clear();
                     overworld.state.player.transport = TransportMode::Walking;
-                } else {
+                } else if is_oaks_lab_rival {
                     log::info!("Oak's Lab Rival1 loss: skipping blackout (original behavior)");
                 }
             }
@@ -179,7 +181,7 @@ pub fn settle_battle_into_save(
     // after the evolution cutscene confirms them.
     if let Some(ref bs) = battle.battle_state {
         if !bs.player.party.is_empty() {
-            if let Ok(p) = crate::pokemon::party::Party::from_pokemon(bs.player.party.clone()) {
+            if let Ok(p) = crate::pokemon::party::Party::from_pokemon(bs.player.persistent_party()) {
                 save.party = p;
             }
         }
@@ -192,10 +194,14 @@ pub fn settle_battle_into_save(
             let _ = save.party.add(caught);
         } else {
             let _ = save.current_box.deposit(caught);
+            save.sync_current_box_to_storage();
         }
         save.game_data.pokedex.set_seen(species);
         save.game_data.pokedex.set_owned(species);
     }
+    // Colosseum heals only after returning from InitOpponent, not on entry.
+    if battle.link_mode { save.party.heal_all(); }
+    overworld.box_count = save.current_box.count() as u8;
     overworld.party_count = save.party.count() as u8;
     overworld.party_lead_level = save.party.leader_level();
     overworld.set_post_battle_encounter_cooldown();

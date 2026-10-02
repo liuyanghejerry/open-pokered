@@ -1,0 +1,129 @@
+{
+  "state": {
+    "ok": true,
+    "data": {
+      "active_script_effect": null,
+      "badges": 0,
+      "battle_bag": null,
+      "battle_inventory": [],
+      "battle_live": null,
+      "battle_message": null,
+      "battle_moves": null,
+      "battle_party_cursor": 0,
+      "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+      "choice": null,
+      "coins": 0,
+      "credits_final_button": null,
+      "credits_phase": null,
+      "dialogue": null,
+      "dialogue_state": null,
+      "evaluation": {
+        "party": [
+          {
+            "hp": 35,
+            "level": 15,
+            "max_hp": 35,
+            "moves": [
+              "Teleport",
+              "None",
+              "None",
+              "None"
+            ],
+            "pp": [
+              20,
+              0,
+              0,
+              0
+            ],
+            "species": "Abra",
+            "status": "None",
+            "total_exp": 2035
+          }
+        ],
+        "party_source": "save_data",
+        "pokedex": {
+          "owned": 0,
+          "owned_numbers": [],
+          "seen": 0,
+          "total": 151
+        }
+      },
+      "field_menu": null,
+      "frame_count": 3563,
+      "hall_of_fame_count": 0,
+      "hof_phase": null,
+      "last_outside_map": "PalletTown",
+      "link": {
+        "cable_phase": "Inactive",
+        "role": "Host",
+        "status": "disabled",
+        "trade": null
+      },
+      "map_blocks": [4, 14, 5, 9, 15, 1, 2, 15, 15, 12, 13, 15, 6, 11, 15, 7],
+      "map_id": 48,
+      "map_name": "Route2TradeHouse",
+      "money": 3000,
+      "party": [
+        {
+          "hp": 35,
+          "level": 15,
+          "max_hp": 35,
+          "moves": [
+            "Teleport",
+            "None",
+            "None",
+            "None"
+          ],
+          "pp": [
+            20,
+            0,
+            0,
+            0
+          ],
+          "species": "Abra",
+          "status": "None"
+        }
+      ],
+      "party_count": 1,
+      "pc_phase": null,
+      "player_facing": "Up",
+      "player_movement_state": "Idle",
+      "player_name": "",
+      "player_transport": "Walking",
+      "player_x": 4,
+      "player_y": 2,
+      "screen": "overworld",
+      "script_awaiting_battle": false,
+      "script_effect": null,
+      "script_running": false,
+      "shop_phase": null,
+      "text_speed_delay_frames": 3,
+      "warp_fade": "Idle"
+    }
+  },
+  "flags": {
+    "ok": true,
+    "data": {
+      "EVENT_TRADED_FOR_MARCEL": true
+    }
+  },
+  "party": {
+    "ok": true,
+    "data": [
+      {
+        "current_hp": 35,
+        "experience": 2035,
+        "level": 15,
+        "max_hp": 35,
+        "moves": [
+          "Teleport",
+          "None",
+          "None",
+          "None"
+        ],
+        "species": "Abra",
+        "status": "None"
+      }
+    ]
+  }
+}

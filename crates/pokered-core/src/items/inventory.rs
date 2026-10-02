@@ -92,6 +92,23 @@ impl<const N: usize> Inventory<N> {
             return Err(InventoryError::ZeroQuantity);
         }
 
+        // In a full inventory, the ROM refuses overflow at the FIRST matching
+        // slot before scanning later duplicate slots (inventory.asm:68-75).
+        if self.inner.is_full() && self.inner.iter().find(|slot| slot.0 == item)
+            .is_some_and(|slot| slot.1 + quantity as u32 > MAX_ITEM_QUANTITY as u32) {
+            return Err(InventoryError::InventoryFull);
+        }
+
+        // AddItemToInventory_ checks capacity before modifying an existing
+        // stack. A refused purchase/pickup must leave the inventory untouched.
+        let available: u32 = self.inner.iter()
+            .filter(|slot| slot.0 == item)
+            .map(|slot| (MAX_ITEM_QUANTITY as u32).saturating_sub(slot.1))
+            .sum::<u32>()
+            + (N - self.inner.count()) as u32 * MAX_ITEM_QUANTITY as u32;
+        if quantity as u32 > available {
+            return Err(InventoryError::InventoryFull);
+        }
         let mut remaining = quantity as u32;
 
         // Fill existing slots first

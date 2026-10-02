@@ -1,0 +1,18 @@
+   Compiling proc-macro2 v1.0.106
+   Compiling quote v1.0.45
+   Compiling unicode-ident v1.0.24
+   Compiling serde_core v1.0.228
+   Compiling serde v1.0.228
+   Compiling zmij v1.0.21
+   Compiling thiserror v2.0.18
+   Compiling serde_json v1.0.150
+   Compiling libm v0.2.16
+    Checking itoa v1.0.18
+    Checking memchr v2.8.2
+    Checking dotzuki-audio v0.8.2 (/workspace/dotzuki-fix-audio/workspace/crates/dotzuki-audio)
+   Compiling syn v2.0.118
+   Compiling serde_derive v1.0.228
+   Compiling thiserror-impl v2.0.18
+    Checking hashbrown v0.15.5
+    Checking dotzuki-engine v0.8.2 (/workspace/dotzuki-fix-audio/workspace/crates/dotzuki-engine)
+    Finished `dev` profile [unoptimized] target(s) in 13.11s

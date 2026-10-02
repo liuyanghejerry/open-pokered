@@ -1,0 +1,28 @@
+
+running 3 tests
+
+thread 'sleep_and_freeze_clear_used_move_before_a_slower_mirror_move' (191666) panicked at /tmp/b29-before-probe.rs:109:9:
+assertion `left == right` failed
+  left: 378
+ right: 400
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test sleep_and_freeze_clear_used_move_before_a_slower_mirror_move ... FAILED
+
+thread 'mirror_move_cannot_copy_another_failed_mirror_move' (191665) panicked at /tmp/b29-before-probe.rs:127:5:
+["SNORLAX used\nMIRROR MOVE!", "SNORLAX used\nMIRROR MOVE!", "Enemy SNORLAX used\nSPLASH!"]
+test mirror_move_cannot_copy_another_failed_mirror_move ... FAILED
+
+thread 'slower_mirror_move_copies_the_faster_actors_current_turn_on_both_sides' (191667) panicked at /tmp/b29-before-probe.rs:92:9:
+assertion `left == right` failed: enemy_first=false
+  left: 400
+ right: 350
+test slower_mirror_move_copies_the_faster_actors_current_turn_on_both_sides ... FAILED
+
+failures:
+
+failures:
+    mirror_move_cannot_copy_another_failed_mirror_move
+    sleep_and_freeze_clear_used_move_before_a_slower_mirror_move
+    slower_mirror_move_copies_the_faster_actors_current_turn_on_both_sides
+
+test result: FAILED. 0 passed; 3 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s

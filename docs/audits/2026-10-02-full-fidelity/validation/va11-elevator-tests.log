@@ -1,0 +1,14 @@
+
+running 10 tests
+test elevator_screen::tests::all_long_list_positions_fit_the_three_cursor_rows_in_both_directions ... ok
+test elevator_screen::tests::empty_floors_cancel_immediately ... ok
+test elevator_screen::tests::endpoints_do_not_wrap_and_cancel_is_selectable ... ok
+test elevator_screen::tests::b_cancels_from_a_floor_or_cancel ... ok
+test elevator_screen::tests::every_real_floor_preserves_its_script_index ... ok
+test elevator_screen::tests::filtered_bag_keeps_its_existing_entries_and_input_policy ... ok
+test elevator_screen::tests::floor_destinations_exclude_cancel_but_display_entries_include_it ... ok
+test elevator_screen::tests::fourth_entry_is_a_preview_until_the_window_scrolls ... ok
+test elevator_screen::tests::scroll_window_keeps_its_position_when_moving_back_up_within_it ... ok
+test elevator_screen::tests::single_floor_shows_cancel_without_scrolling ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s

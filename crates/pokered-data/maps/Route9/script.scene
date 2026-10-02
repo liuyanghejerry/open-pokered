@@ -106,7 +106,7 @@ game_scene Route9 {
       @if (given) {
         setFlag("EVENT_GOT_ROUTE_9_TM_TELEPORT")
         hideObjectByName("ROUTE_9_OBJ_10")
-        @speaker("") { @t("<PLAYER> found TM30!", "<PLAYER>找到了 TM30！") }
+        showItemDialogue(t("<PLAYER> found TM30!", "<PLAYER>找到了 TM30！"))
       } @else {
         @speaker("") { @t("You have too much stuff\nalready!", "你带的东西已经太多了！") }
       }

@@ -60,26 +60,30 @@ game_scene PokemonTower6F {
   // ── Ground item: RARE CANDY (npc 4) ──────────────────────────────────────
   @storyline("itemRareCandy") {
     @trigger(map = "PokemonTower6F", npc = 4, toggle = "POKEMON_TOWER_6F_OBJ_4")
-    @if (getFlag("EVENT_GOT_RARE_CANDY_POKEMON_TOWER_6F")) {
-      @speaker("") { @t("The item ball is empty.", "精灵球里是空的。") }
-    } @else {
-      giveItem("RARE_CANDY", 1)
-      setFlag("EVENT_GOT_RARE_CANDY_POKEMON_TOWER_6F")
-      hideObject("POKEMON_TOWER_6F_OBJ_4")
-      @speaker("") { @t("<PLAYER> found RARE_CANDY!", "<PLAYER>发现了神奇糖果！") }
+    @if (!getFlag("EVENT_GOT_RARE_CANDY_POKEMON_TOWER_6F")) {
+      given = giveItem("RARE_CANDY", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_RARE_CANDY_POKEMON_TOWER_6F")
+        hideObjectByName("POKEMON_TOWER_6F_OBJ_4")
+        showItemDialogue(t("<PLAYER> found RARE_CANDY!", "<PLAYER>发现了神奇糖果！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 
   // ── Ground item: X ACCURACY (npc 5) ──────────────────────────────────────
   @storyline("itemXAccuracy") {
     @trigger(map = "PokemonTower6F", npc = 5, toggle = "POKEMON_TOWER_6F_OBJ_5")
-    @if (getFlag("EVENT_GOT_X_ACCURACY_POKEMON_TOWER_6F")) {
-      @speaker("") { @t("The item ball is empty.", "精灵球里是空的。") }
-    } @else {
-      giveItem("X_ACCURACY", 1)
-      setFlag("EVENT_GOT_X_ACCURACY_POKEMON_TOWER_6F")
-      hideObject("POKEMON_TOWER_6F_OBJ_5")
-      @speaker("") { @t("<PLAYER> found X_ACCURACY!", "<PLAYER>发现了特攻强化！") }
+    @if (!getFlag("EVENT_GOT_X_ACCURACY_POKEMON_TOWER_6F")) {
+      given = giveItem("X_ACCURACY", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_X_ACCURACY_POKEMON_TOWER_6F")
+        hideObjectByName("POKEMON_TOWER_6F_OBJ_5")
+        showItemDialogue(t("<PLAYER> found X_ACCURACY!", "<PLAYER>发现了特攻强化！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 

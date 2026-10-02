@@ -229,12 +229,18 @@ mod tests {
                 ));
             }
         }
-        for name in ["__native_talkOak1_parcel", "__native_talkOak1_dex_other"] {
+        for name in ["__native_talkOak1_parcel", "__native_talkOak1_parcel_y1",
+            "__native_talkOak1_parcel_y3", "__native_talkOak1_dex_other"] {
             let (_, _, bytes) = scene_functions()
                 .iter()
                 .find(|(map, function, _)| *map == "OaksLab" && *function == name)
                 .unwrap();
             assert!(bytes.len() < 12 * 1024, "{name} exceeded its memory budget");
+            if name.starts_with("__native_talkOak1_parcel") {
+                let value: serde_json::Value = serde_json::from_slice(bytes).unwrap();
+                assert!(!value.to_string().contains("getPlayerY"),
+                    "{name} retained unselected rival movement paths");
+            }
         }
     }
 

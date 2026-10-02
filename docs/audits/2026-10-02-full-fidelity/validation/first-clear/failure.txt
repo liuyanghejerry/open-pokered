@@ -1,0 +1,15 @@
+Traceback (most recent call last):
+  File "/workspace/open-pokered/scripts/playthrough.py", line 1980, in main
+    fn(g)
+  File "/workspace/open-pokered/scripts/playthrough.py", line 1740, in m09_to_pewter
+    walk_pallet_to_pewter(g)
+  File "/workspace/open-pokered/scripts/playthrough.py", line 1725, in walk_pallet_to_pewter
+    g.nav_to(1, 1, map_name="ViridianForest")
+  File "/workspace/open-pokered/scripts/playthrough.py", line 693, in nav_to
+    self.battle_loop(prefer=prefer)
+  File "/workspace/open-pokered/scripts/playthrough.py", line 1553, in battle_loop
+    self.wait("not_battle", 1800)
+  File "/workspace/open-pokered/scripts/playthrough.py", line 593, in wait
+    assert r["data"]["reached"], (
+           ~~~~~~~~~^^^^^^^^^^^
+AssertionError: condition 'not_battle' not reached in 1800 frames

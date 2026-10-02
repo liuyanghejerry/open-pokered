@@ -56,14 +56,18 @@ fn capture_surf_comparisons() {
 }
 
 fn assert_sprite(fb: &FrameBuffer, asset: &str, frame: usize, flip: bool) {
-    use pokered_renderer::palette::{Palette, GRAYSCALE_PALETTE};
+    use pokered_renderer::palette::Palette;
     let mut rm = ResourceManager::new(AssetRoot::auto_detect().unwrap());
     let sheet = rm.load_sprite(asset).unwrap().tileset.clone();
+    // Independent original oracle: GBPalNormal writes OBP0=$D0
+    // (home/palettes.asm:20-26), selected by facing OAM's palette bit zero
+    // (data/sprites/facings.asm:47-59). Index1 is opaque WHITE, not AA;
+    // index2 is AA, not 55. Do not derive expected colors from the renderer.
     let pal = Palette::new(&[
         Rgba::TRANSPARENT,
-        GRAYSCALE_PALETTE.colors[1],
-        GRAYSCALE_PALETTE.colors[2],
-        GRAYSCALE_PALETTE.colors[3],
+        Rgba::WHITE,
+        Rgba::rgb(0xAA, 0xAA, 0xAA),
+        Rgba::BLACK,
     ]);
     let mut ink = 0;
     for y in 0..16u32 {

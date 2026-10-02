@@ -36,16 +36,16 @@ pub fn draw_gamefreak_splash(
     fb.clear(Rgba::WHITE);
 
     if state.phase == SplashPhase::BlackDelay {
-        // Copyright lines, left-aligned at x=16 (hlcoord 2,7 in the original);
-        // the 10-px font needs 10-px line spacing (the old 8-px tile font
-        // used 8-px spacing and would overlap now).
-        draw_text("©'95.'96.'98 Nintendo", 16, 56, Rgba::BLACK, fb);
-        draw_text("©'95.'96.'98 Creatures inc.", 16, 66, Rgba::BLACK, fb);
-        draw_text("©'95.'96.'98 GAME FREAK inc.", 16, 76, Rgba::BLACK, fb);
+        if let Some(rm) = res {
+            super::opening::draw_copyright(rm, fb);
+        }
         return;
     }
 
     draw_black_bars(fb);
+    if state.phase == SplashPhase::Setup {
+        return;
+    }
 
     // Game Freak logo, flashing via the core-computed rOBP0 (splash.asm:72-82).
     let mut palette_state = PaletteState::new(GRAYSCALE_PALETTE);
@@ -57,9 +57,34 @@ pub fn draw_gamefreak_splash(
             let ts = &logo.tileset;
             blit_tileset(fb, &ts, LOGO_SCREEN_X, LOGO_SCREEN_Y, 2, &logo_pal);
         }
-        // "GAME FREAK" wordmark, centered on the screen width.
-        let wordmark_x = (fb.width() - measure_text("GAME FREAK")) / 2;
-        draw_text("GAME FREAK", wordmark_x, WORDMARK_SCREEN_Y, Rgba::BLACK, fb);
+        if let Ok(wordmark) = rm.load_splash("gamefreak_presents") {
+            for (column, index) in [
+                Some(0),
+                Some(1),
+                Some(2),
+                Some(3),
+                None,
+                Some(4),
+                Some(5),
+                Some(3),
+                Some(1),
+                Some(6),
+            ]
+            .into_iter()
+            .enumerate()
+            {
+                if let Some(index) = index {
+                    super::blit_single_tile(
+                        fb,
+                        &wordmark.tileset,
+                        index,
+                        40 + column as u32 * 8,
+                        WORDMARK_SCREEN_Y,
+                        &logo_pal,
+                    );
+                }
+            }
+        }
 
         pokered_renderer::gamefreak_stars::draw_stars(state, rm, fb);
     } else {
