@@ -2041,6 +2041,35 @@ class AutonomousTests(unittest.TestCase):
         agent.add_navigation_groups(groups, {'map': 'Town'})
         self.assertIn(unlock, [group['target'] for group in groups.values()])
 
+    def test_fresh_exact_capture_terrain_supersedes_old_entrance_detour(self):
+        from types import SimpleNamespace
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        target = ('catch', 'safari:ParkEast', True)
+        unlock = ('flag', 'IN_PARK', False)
+        exit_rule = Rule('exit', 'Gate', 'Gate:exit', [], [], [], unlock, [])
+        agent.index = SimpleNamespace(rules=[], npc_toggles={('Gate', 1): ('GATE', False)},
+            satisfied=lambda goal, facts: False, frontier=lambda goal, facts: [exit_rule])
+        agent.maps, agent.field_requirements, agent.navigation_memory = {}, {}, {}
+        agent.navigation_blockage = None
+        blockage = {'map': 'Gate', 'destination': 'ParkEast', 'goal': target, 'blocking_npcs': [1]}
+        agent.navigation_history = {'old': blockage}
+        agent.game = SimpleNamespace(stationary_npcs={})
+        agent.client = Mock()
+        agent.client.route.return_value = {'found': False}
+        capture = Rule('catch', 'ParkEast', 'skill:catch_encounter', [], [], [], target, [])
+        for key, destination, found, cleared in [
+                ('safari:ParkEast', 'ParkEast', True, True),
+                ('safari:ParkEast', 'ParkEast', False, False),
+                ('safari:ParkEast', 'ParkEast', None, False),
+                ('safari:ParkEast', 'OtherArea', True, False),
+                ('fishing:SuperRod:ParkEast', 'ParkEast', True, False)]:
+            with self.subTest(key=key, destination=destination, found=found):
+                agent.catch_navigation = {key: {'map': destination, 'tile_route_found': found}}
+                groups = {'catch': {'target': target, 'rules': [capture]}}
+                agent.add_navigation_groups(groups, {'map': 'ParkCenter'})
+                self.assertEqual(unlock not in [g['target'] for g in groups.values()], cleared)
+                self.assertEqual(agent.navigation_history, {'old': blockage})
+
     def test_load_autowalk_is_not_a_coordinate_pushback_prerequisite(self):
         from types import SimpleNamespace
         from openpokered.story_rules import literal

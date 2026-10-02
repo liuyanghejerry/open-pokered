@@ -2544,6 +2544,14 @@ class AutonomousStoryAgent(DualStoryAgent):
         Unknown geometry remains unknown; an entrance is not a trigger proof.
         """
         goal = blockage['goal']
+        if goal[0] == 'catch':
+            # Capture skills have no script coordinates. Their fresh path
+            # ends at actual hunt terrain/rod stance, whereas falling back
+            # to a generic doorway would not establish useful access.
+            navigation = getattr(self, 'catch_navigation', {}).get(goal[1], {})
+            if (navigation.get('map') == blockage['destination']
+                    and navigation.get('tile_route_found') is True):
+                return True
         if goal[0] == 'level':
             # A level goal is satisfied at any usable training site. Its old
             # failed region is not a prerequisite when a live alternative has
