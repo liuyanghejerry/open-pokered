@@ -1944,9 +1944,12 @@ mod tests {
     // Every current preview was dumped and visually reviewed. battle_bag still
     // reserves quantity columns before measuring names, so SUPER POTION keeps
     // its count inside the border.
+    // Dialogue uses 12px proportional row spacing so the retained font's
+    // descenders clear the bottom border. All 14 were reviewed again; only
+    // DIALOG changed, while tile-coordinate mocks keep their existing rows.
     const GOLDEN_MAIN: u64                 = 0x6c27fb19c19b24f4;
     const GOLDEN_START: u64                = 0x878c3a9d37d5e4bd;
-    const GOLDEN_DIALOG: u64               = 0x920b9dabe816c89c;
+    const GOLDEN_DIALOG: u64               = 0x599168bcd2b2e67c;
     const GOLDEN_BATTLE_MOVE: u64          = 0x918d8ffb023a916c;
     const GOLDEN_BAG: u64                  = 0x566b67e173e9659d;
     const GOLDEN_BATTLE_BAG: u64           = 0xff875ed399b72f4c;
