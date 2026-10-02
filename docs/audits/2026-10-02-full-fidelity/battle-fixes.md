@@ -24,10 +24,18 @@
 | B25 | 捕获任何已 Transform 野怪时按原版强制重建 Ditto，保留原 DVs 和当前 HP/status | `catching_a_transformed_non_ditto_preserves_original_ditto_assumption_bug` |
 | B26 | 另存能力等级先取整、徽章再取整后的工作值；伤害/混乱/速度/RUN不二次乘级；Rage、Xitems、升级、Transform、Haze 同步处理 | `stage_rounding_precedes_badges_and_persists_without_double_stage_application` |
 
+| B27 | burn/paralysis 实际工作数值与施加时序；自身重算解除惩罚、对面重罚、Haze、Transform、即时 RUN 与 Mimic replay 同步 | `fidelity_working_stats.rs` 8 项生产回归及 traded Mimic 回放回归 |
+| B28 | 在敌方实际行动时点决策并施加 AI，原版允许连续/蓄力/充能时用物品或换人；该回合不执行招式、不推进计时/充能；治疗/换人在敌方持续伤害之前，先手 KO 不抽 AI 随机数 | `fidelity_ai_locks.rs` 9 tests 全过；包括 12 种锁定/先后手组合、同回合异常和低 HP、KO RNG、毒/种子、治疗上限、换入怪持续伤害、入口 PP |
+| B29 | used-move 文本时点更新实际历史；Sleep/Freeze 清0，Mirror Move 拒绝 Mirror Move；双方调用技通过状态门才解析，Metronome 的结果不改变已选优先级；AI roundtrip 保留 caller/resolved 演出 | `fidelity_called_history.rs` 6 个独立生产回归；修前3项 probe 全部失败，修后根集成6 tests全过 |
+
 Mimic 使用原作选择框，不显示普通攻击菜单的 TYPE/PP；app 与 TUI 同步渲染，snapshot 保留等待选择的状态。Transform/Mimic 的临时复制不会永久写入存档，EXP 与学招均查原始 party 身份。
 
 保留的原版行为：Focus Energy 降低暴击、Recover 等特定 HP 差失败、完全麻痹 Fly/Dig 半无敌、Trainer AI 首匹配、Counter 旧共享伤害，以及单机 Transform 捕获 DVs/catch-rate。伤害防御除零继续防冻结；不要求逐 byte 同步原版 RNG 旋转序列。
 
-本分支首次验证：`cargo test -p pokered-core --test fidelity_battle --test fidelity_multiturn` 20 + 11 tests 全过；`cargo test -p pokered-core --lib` 2602 tests 全过；`cargo check -p pokered-app -p pokered-tui -p pokered-ui` 通过。之后追加 B24 完整机制回归与 B25 捕获回归，最终文件有 21 + 16 个 production tests；它们需要根分支集成后最后一次运行，当前不标为已验证。
+本分支首次验证：`cargo test -p pokered-core --test fidelity_battle --test fidelity_multiturn` 20 + 11 tests 全过；`cargo test -p pokered-core --lib` 2602 tests 全过；`cargo check -p pokered-app -p pokered-tui -p pokered-ui` 通过。之后的根集成定点验证覆盖 `fidelity_battle`22 + `fidelity_multiturn`16 + `fidelity_working_stats`8 + `fidelity_ai_locks`9 + `fidelity_called_history`6，合计61个生产回归全部通过。
 
-B26 徽章/能力级取整已源码确证并修复，新增数值回归尚待本轮测试。完整伤害数值并未宣称穷举一致。
+B26 徽章/能力级取整已源码确证、修复并通过独立数值回归。完整伤害数值并未宣称穷举一致。
+
+B28 已在根集成分支运行 `cargo test -p pokered-core --test fidelity_ai_locks`：9 tests / 0 failures，0.02 秒；通用 engine before-action API 的 2 个新测试随 dotzuki 487-test 全量测试通过。完整 core/native/GBA/WASM 检查由根分支最后统一验收，以上局部结果不替代最终检查。
+
+B29 在根集成分支运行6 tests / 0 failures；包括AI adapter保留 caller/resolved 两段演出。此结果与上述61项联合回归同次取得。

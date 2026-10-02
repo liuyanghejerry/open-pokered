@@ -486,4 +486,3 @@ test mart_money_not_capped ... ok
 test sram_species_is_dex_id_instead_of_original_internal_id ... ok
 
 test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
-

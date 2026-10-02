@@ -1,0 +1,48 @@
+{
+  "before": {
+    "binary": "/workspace/onboarding/pokered-visual-base-pc-tour",
+    "sha256": "498231954213ccf93e0f00fbb22e5ef61cce1f56a358b08c4e6b56633d5b751b",
+    "source": "72ff719 baseline production renderers; same pc_tour fixtures from 31ad6e7; frozen original dependency lock",
+    "captures": [
+      "docs/screenshots/fidelity-ui-world/before-en/02_main_menu.png",
+      "docs/screenshots/fidelity-ui-world/before-en/04_bills_menu.png",
+      "docs/screenshots/fidelity-ui-world/before-en/06_withdraw_popup.png",
+      "docs/screenshots/fidelity-ui-world/before-en/14_item_menu.png",
+      "docs/screenshots/fidelity-ui-world/before-en/24_bills_box12.png",
+      "docs/screenshots/fidelity-ui-world/before-en/25_withdrew_thunderstone.png",
+      "docs/screenshots/fidelity-ui-world/before-en/26_league_hof_type.png",
+      "docs/screenshots/fidelity-ui-world/before-en/27_bag_font_bounds.png",
+      "docs/screenshots/fidelity-ui-world/before-zh/02_main_menu.png",
+      "docs/screenshots/fidelity-ui-world/before-zh/04_bills_menu.png",
+      "docs/screenshots/fidelity-ui-world/before-zh/06_withdraw_popup.png",
+      "docs/screenshots/fidelity-ui-world/before-zh/14_item_menu.png",
+      "docs/screenshots/fidelity-ui-world/before-zh/24_bills_box12.png",
+      "docs/screenshots/fidelity-ui-world/before-zh/25_withdrew_thunderstone.png",
+      "docs/screenshots/fidelity-ui-world/before-zh/26_league_hof_type.png",
+      "docs/screenshots/fidelity-ui-world/before-zh/27_bag_font_bounds.png"
+    ]
+  },
+  "after": {
+    "binary": "/workspace/onboarding/pokered-fidelity-final/pc_tour",
+    "sha256": "3ee8e23fcc99b373bb4c76e24e63ac467e8380f211924cd319de9494713db3eb",
+    "source": "8837a2a32c2ba8c345db16e97b01f49016e88950",
+    "captures": [
+      "docs/screenshots/fidelity-ui-world/after-en/02_main_menu.png",
+      "docs/screenshots/fidelity-ui-world/after-en/04_bills_menu.png",
+      "docs/screenshots/fidelity-ui-world/after-en/06_withdraw_popup.png",
+      "docs/screenshots/fidelity-ui-world/after-en/14_item_menu.png",
+      "docs/screenshots/fidelity-ui-world/after-en/24_bills_box12.png",
+      "docs/screenshots/fidelity-ui-world/after-en/25_withdrew_thunderstone.png",
+      "docs/screenshots/fidelity-ui-world/after-en/26_league_hof_type.png",
+      "docs/screenshots/fidelity-ui-world/after-en/27_bag_font_bounds.png",
+      "docs/screenshots/fidelity-ui-world/after-zh/02_main_menu.png",
+      "docs/screenshots/fidelity-ui-world/after-zh/04_bills_menu.png",
+      "docs/screenshots/fidelity-ui-world/after-zh/06_withdraw_popup.png",
+      "docs/screenshots/fidelity-ui-world/after-zh/14_item_menu.png",
+      "docs/screenshots/fidelity-ui-world/after-zh/24_bills_box12.png",
+      "docs/screenshots/fidelity-ui-world/after-zh/25_withdrew_thunderstone.png",
+      "docs/screenshots/fidelity-ui-world/after-zh/26_league_hof_type.png",
+      "docs/screenshots/fidelity-ui-world/after-zh/27_bag_font_bounds.png"
+    ]
+  }
+}

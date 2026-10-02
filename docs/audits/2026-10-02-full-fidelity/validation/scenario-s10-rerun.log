@@ -1,0 +1,4 @@
+== s10-npcs: get_npcs: live NPCs report sane fields on the current map
+[m02] frame=2053 screen=overworld map=RedsHouse2F pos=(3,6) party=0 money=3000 effect=None
+   FAIL: NavError: warped out of RedsHouse1F -> RedsHouse2F
+SCENARIOS 0/1 PASS (failed: s10-npcs)

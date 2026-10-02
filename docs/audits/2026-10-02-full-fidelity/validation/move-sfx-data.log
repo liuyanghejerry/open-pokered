@@ -1,0 +1,7 @@
+
+asm repo : /workspace/onboarding/pokered-reference-full
+rust data: /workspace/open-pokered/crates/pokered-data/src/move_sfx.rs
+rows compared: 166 (NUM_ATTACKS=165 + 1 table-tail row)
+sfx id space: 161 deduplicated SFX headers (asm2sfx.py convention)
+
+RESULT: 0 diffs — Rust table matches the disassembly

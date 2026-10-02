@@ -1,0 +1,1715 @@
+{
+  "case": "early-route24-tm45-full-bag",
+  "port_commit": "72ff719",
+  "seed": 42,
+  "before": {
+    "get_state": {
+      "active_script_effect": null,
+      "badges": 0,
+      "battle_bag": null,
+      "battle_inventory": [],
+      "battle_live": null,
+      "battle_message": null,
+      "battle_moves": null,
+      "battle_party_cursor": 0,
+      "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+      "choice": null,
+      "coins": 0,
+      "credits_final_button": null,
+      "credits_phase": null,
+      "dialogue": null,
+      "dialogue_state": null,
+      "evaluation": {
+        "party": [],
+        "party_source": "save_data",
+        "pokedex": {
+          "owned": 0,
+          "owned_numbers": [],
+          "seen": 0,
+          "total": 151
+        }
+      },
+      "field_menu": null,
+      "frame_count": 64,
+      "hall_of_fame_count": 0,
+      "hof_phase": null,
+      "last_outside_map": "PalletTown",
+      "link": {
+        "cable_phase": "Inactive",
+        "role": "Host",
+        "status": "disabled",
+        "trade": null
+      },
+      "map_blocks": [44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 43, 87, 87, 87, 87, 87, 87, 87, 87, 44, 41, 49, 49, 49, 49, 71, 49, 88, 10, 44, 41, 26, 92, 26, 26, 75, 49, 90, 7, 44, 41, 49, 49, 49, 49, 49, 49, 49, 49, 44, 41, 10, 10, 10, 49, 98, 81, 81, 81, 44, 41, 116, 116, 10, 49, 78, 10, 62, 63, 44, 41, 116, 116, 10, 49, 78, 10, 40, 44, 44, 41, 10, 29, 106, 84, 78, 10, 40, 44, 44, 41, 11, 101, 25, 84, 78, 10, 40, 44, 44, 41, 11, 101, 25, 84, 78, 10, 36, 87, 44, 41, 11, 101, 25, 84, 78, 77, 67, 67, 44, 41, 11, 101, 25, 84, 78, 77, 67, 67, 44, 41, 11, 101, 25, 84, 78, 77, 67, 67, 44, 41, 11, 101, 25, 84, 78, 77, 67, 67, 44, 41, 11, 101, 25, 84, 78, 77, 67, 67, 44, 41, 31, 46, 25, 84, 78, 77, 67, 67, 44, 41, 67, 67, 25, 84, 78, 77, 67, 67],
+      "map_id": 35,
+      "map_name": "Route24",
+      "money": 3000,
+      "party": [],
+      "party_count": 0,
+      "pc_phase": null,
+      "player_facing": "Down",
+      "player_movement_state": "Idle",
+      "player_name": "",
+      "player_transport": "Walking",
+      "player_x": 10,
+      "player_y": 6,
+      "screen": "overworld",
+      "script_awaiting_battle": false,
+      "script_effect": null,
+      "script_running": false,
+      "shop_phase": null,
+      "text_speed_delay_frames": 3,
+      "warp_fade": "Idle"
+    },
+    "get_bag": [
+      {
+        "item": "Potion",
+        "qty": 1
+      },
+      {
+        "item": "Antidote",
+        "qty": 1
+      },
+      {
+        "item": "ParlyzHeal",
+        "qty": 1
+      },
+      {
+        "item": "BurnHeal",
+        "qty": 1
+      },
+      {
+        "item": "IceHeal",
+        "qty": 1
+      },
+      {
+        "item": "Awakening",
+        "qty": 1
+      },
+      {
+        "item": "FullHeal",
+        "qty": 1
+      },
+      {
+        "item": "SuperPotion",
+        "qty": 1
+      },
+      {
+        "item": "HyperPotion",
+        "qty": 1
+      },
+      {
+        "item": "MaxPotion",
+        "qty": 1
+      },
+      {
+        "item": "FullRestore",
+        "qty": 1
+      },
+      {
+        "item": "Revive",
+        "qty": 1
+      },
+      {
+        "item": "MaxRevive",
+        "qty": 1
+      },
+      {
+        "item": "Ether",
+        "qty": 1
+      },
+      {
+        "item": "MaxEther",
+        "qty": 1
+      },
+      {
+        "item": "Elixer",
+        "qty": 1
+      },
+      {
+        "item": "MaxElixer",
+        "qty": 1
+      },
+      {
+        "item": "XAttack",
+        "qty": 1
+      },
+      {
+        "item": "XDefend",
+        "qty": 1
+      },
+      {
+        "item": "XSpeed",
+        "qty": 1
+      }
+    ],
+    "get_flags": {
+      "EVENT_BEAT_ROUTE_24_TRAINER_0": true,
+      "EVENT_BEAT_ROUTE_24_TRAINER_1": true,
+      "EVENT_BEAT_ROUTE_24_TRAINER_2": true,
+      "EVENT_BEAT_ROUTE_24_TRAINER_3": true,
+      "EVENT_BEAT_ROUTE_24_TRAINER_4": true,
+      "EVENT_BEAT_ROUTE_24_TRAINER_5": true,
+      "EVENT_GOT_NUGGET": true
+    },
+    "get_npcs": [
+      {
+        "facing": "Left",
+        "home_x": 11,
+        "home_y": 15,
+        "npc_index": 0,
+        "scripted_path_remaining": 0,
+        "sprite_id": 7,
+        "text_id": 1,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 11,
+        "y": 15
+      },
+      {
+        "facing": "Up",
+        "home_x": 5,
+        "home_y": 20,
+        "npc_index": 1,
+        "scripted_path_remaining": 0,
+        "sprite_id": 7,
+        "text_id": 2,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 5,
+        "y": 20
+      },
+      {
+        "facing": "Left",
+        "home_x": 11,
+        "home_y": 19,
+        "npc_index": 2,
+        "scripted_path_remaining": 0,
+        "sprite_id": 7,
+        "text_id": 3,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 11,
+        "y": 19
+      },
+      {
+        "facing": "Right",
+        "home_x": 10,
+        "home_y": 22,
+        "npc_index": 3,
+        "scripted_path_remaining": 0,
+        "sprite_id": 6,
+        "text_id": 4,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 10,
+        "y": 22
+      },
+      {
+        "facing": "Left",
+        "home_x": 11,
+        "home_y": 25,
+        "npc_index": 4,
+        "scripted_path_remaining": 0,
+        "sprite_id": 4,
+        "text_id": 5,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 11,
+        "y": 25
+      },
+      {
+        "facing": "Right",
+        "home_x": 10,
+        "home_y": 28,
+        "npc_index": 5,
+        "scripted_path_remaining": 0,
+        "sprite_id": 6,
+        "text_id": 6,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 10,
+        "y": 28
+      },
+      {
+        "facing": "Left",
+        "home_x": 11,
+        "home_y": 31,
+        "npc_index": 6,
+        "scripted_path_remaining": 0,
+        "sprite_id": 4,
+        "text_id": 7,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 11,
+        "y": 31
+      },
+      {
+        "facing": "Down",
+        "home_x": 10,
+        "home_y": 5,
+        "npc_index": 7,
+        "scripted_path_remaining": 0,
+        "sprite_id": 61,
+        "text_id": 8,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 10,
+        "y": 5
+      }
+    ]
+  },
+  "after": {
+    "get_state": {
+      "active_script_effect": null,
+      "badges": 0,
+      "battle_bag": null,
+      "battle_inventory": [],
+      "battle_live": null,
+      "battle_message": null,
+      "battle_moves": null,
+      "battle_party_cursor": 0,
+      "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+      "choice": null,
+      "coins": 0,
+      "credits_final_button": null,
+      "credits_phase": null,
+      "dialogue": null,
+      "dialogue_state": null,
+      "evaluation": {
+        "party": [],
+        "party_source": "save_data",
+        "pokedex": {
+          "owned": 0,
+          "owned_numbers": [],
+          "seen": 0,
+          "total": 151
+        }
+      },
+      "field_menu": null,
+      "frame_count": 93,
+      "hall_of_fame_count": 0,
+      "hof_phase": null,
+      "last_outside_map": "PalletTown",
+      "link": {
+        "cable_phase": "Inactive",
+        "role": "Host",
+        "status": "disabled",
+        "trade": null
+      },
+      "map_blocks": [44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 43, 87, 87, 87, 87, 87, 87, 87, 87, 44, 41, 49, 49, 49, 49, 71, 49, 88, 10, 44, 41, 26, 92, 26, 26, 75, 49, 90, 7, 44, 41, 49, 49, 49, 49, 49, 49, 49, 49, 44, 41, 10, 10, 10, 49, 98, 81, 81, 81, 44, 41, 116, 116, 10, 49, 78, 10, 62, 63, 44, 41, 116, 116, 10, 49, 78, 10, 40, 44, 44, 41, 10, 29, 106, 84, 78, 10, 40, 44, 44, 41, 11, 101, 25, 84, 78, 10, 40, 44, 44, 41, 11, 101, 25, 84, 78, 10, 36, 87, 44, 41, 11, 101, 25, 84, 78, 77, 67, 67, 44, 41, 11, 101, 25, 84, 78, 77, 67, 67, 44, 41, 11, 101, 25, 84, 78, 77, 67, 67, 44, 41, 11, 101, 25, 84, 78, 77, 67, 67, 44, 41, 11, 101, 25, 84, 78, 77, 67, 67, 44, 41, 31, 46, 25, 84, 78, 77, 67, 67, 44, 41, 67, 67, 25, 84, 78, 77, 67, 67],
+      "map_id": 35,
+      "map_name": "Route24",
+      "money": 3000,
+      "party": [],
+      "party_count": 0,
+      "pc_phase": null,
+      "player_facing": "Up",
+      "player_movement_state": "Idle",
+      "player_name": "",
+      "player_transport": "Walking",
+      "player_x": 10,
+      "player_y": 6,
+      "screen": "overworld",
+      "script_awaiting_battle": false,
+      "script_effect": null,
+      "script_running": false,
+      "shop_phase": null,
+      "text_speed_delay_frames": 3,
+      "warp_fade": "Idle"
+    },
+    "get_bag": [
+      {
+        "item": "Potion",
+        "qty": 1
+      },
+      {
+        "item": "Antidote",
+        "qty": 1
+      },
+      {
+        "item": "ParlyzHeal",
+        "qty": 1
+      },
+      {
+        "item": "BurnHeal",
+        "qty": 1
+      },
+      {
+        "item": "IceHeal",
+        "qty": 1
+      },
+      {
+        "item": "Awakening",
+        "qty": 1
+      },
+      {
+        "item": "FullHeal",
+        "qty": 1
+      },
+      {
+        "item": "SuperPotion",
+        "qty": 1
+      },
+      {
+        "item": "HyperPotion",
+        "qty": 1
+      },
+      {
+        "item": "MaxPotion",
+        "qty": 1
+      },
+      {
+        "item": "FullRestore",
+        "qty": 1
+      },
+      {
+        "item": "Revive",
+        "qty": 1
+      },
+      {
+        "item": "MaxRevive",
+        "qty": 1
+      },
+      {
+        "item": "Ether",
+        "qty": 1
+      },
+      {
+        "item": "MaxEther",
+        "qty": 1
+      },
+      {
+        "item": "Elixer",
+        "qty": 1
+      },
+      {
+        "item": "MaxElixer",
+        "qty": 1
+      },
+      {
+        "item": "XAttack",
+        "qty": 1
+      },
+      {
+        "item": "XDefend",
+        "qty": 1
+      },
+      {
+        "item": "XSpeed",
+        "qty": 1
+      }
+    ],
+    "get_flags": {
+      "EVENT_BEAT_ROUTE_24_TRAINER_0": true,
+      "EVENT_BEAT_ROUTE_24_TRAINER_1": true,
+      "EVENT_BEAT_ROUTE_24_TRAINER_2": true,
+      "EVENT_BEAT_ROUTE_24_TRAINER_3": true,
+      "EVENT_BEAT_ROUTE_24_TRAINER_4": true,
+      "EVENT_BEAT_ROUTE_24_TRAINER_5": true,
+      "EVENT_GOT_NUGGET": true,
+      "__OBJ_HIDDEN_ROUTE_24_OBJ_8": true,
+      "__OBJ_SHOWN_ROUTE_24_OBJ_8": false
+    },
+    "get_npcs": [
+      {
+        "facing": "Left",
+        "home_x": 11,
+        "home_y": 15,
+        "npc_index": 0,
+        "scripted_path_remaining": 0,
+        "sprite_id": 7,
+        "text_id": 1,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 11,
+        "y": 15
+      },
+      {
+        "facing": "Up",
+        "home_x": 5,
+        "home_y": 20,
+        "npc_index": 1,
+        "scripted_path_remaining": 0,
+        "sprite_id": 7,
+        "text_id": 2,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 5,
+        "y": 20
+      },
+      {
+        "facing": "Left",
+        "home_x": 11,
+        "home_y": 19,
+        "npc_index": 2,
+        "scripted_path_remaining": 0,
+        "sprite_id": 7,
+        "text_id": 3,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 11,
+        "y": 19
+      },
+      {
+        "facing": "Right",
+        "home_x": 10,
+        "home_y": 22,
+        "npc_index": 3,
+        "scripted_path_remaining": 0,
+        "sprite_id": 6,
+        "text_id": 4,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 10,
+        "y": 22
+      },
+      {
+        "facing": "Left",
+        "home_x": 11,
+        "home_y": 25,
+        "npc_index": 4,
+        "scripted_path_remaining": 0,
+        "sprite_id": 4,
+        "text_id": 5,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 11,
+        "y": 25
+      },
+      {
+        "facing": "Right",
+        "home_x": 10,
+        "home_y": 28,
+        "npc_index": 5,
+        "scripted_path_remaining": 0,
+        "sprite_id": 6,
+        "text_id": 6,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 10,
+        "y": 28
+      },
+      {
+        "facing": "Left",
+        "home_x": 11,
+        "home_y": 31,
+        "npc_index": 6,
+        "scripted_path_remaining": 0,
+        "sprite_id": 4,
+        "text_id": 7,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 11,
+        "y": 31
+      },
+      {
+        "facing": "Down",
+        "home_x": 10,
+        "home_y": 5,
+        "npc_index": 7,
+        "scripted_path_remaining": 0,
+        "sprite_id": 61,
+        "text_id": 8,
+        "visible": false,
+        "walk_counter": 0,
+        "x": 10,
+        "y": 5
+      }
+    ]
+  },
+  "transcript": [
+    {
+      "command": {
+        "cmd": "restore_state",
+        "slot": 0
+      },
+      "response": {
+        "ok": true,
+        "data": {
+          "agent_state": {
+            "badges": {
+              "count": 0
+            },
+            "facing": "Down",
+            "map": {
+              "id": 66,
+              "name": "BikeShop"
+            },
+            "mode": "overworld",
+            "nearby": [
+              {
+                "distance": 0,
+                "id": "warp:0",
+                "interactable": true,
+                "kind": "warp",
+                "position": {
+                  "x": 2,
+                  "y": 7
+                }
+              },
+              {
+                "distance": 1,
+                "id": "warp:1",
+                "interactable": false,
+                "kind": "warp",
+                "position": {
+                  "x": 3,
+                  "y": 7
+                }
+              },
+              {
+                "distance": 3,
+                "id": "sign:5",
+                "interactable": false,
+                "kind": "sign",
+                "position": {
+                  "x": 1,
+                  "y": 5
+                }
+              },
+              {
+                "distance": 4,
+                "id": "npc:1",
+                "interactable": false,
+                "kind": "npc",
+                "name": "MiddleAgedWoman",
+                "position": {
+                  "x": 5,
+                  "y": 6
+                }
+              },
+              {
+                "distance": 5,
+                "id": "npc:2",
+                "interactable": false,
+                "kind": "npc",
+                "name": "Youngster",
+                "position": {
+                  "x": 1,
+                  "y": 3
+                }
+              },
+              {
+                "distance": 5,
+                "id": "sign:4",
+                "interactable": false,
+                "kind": "sign",
+                "position": {
+                  "x": 0,
+                  "y": 4
+                }
+              },
+              {
+                "distance": 6,
+                "id": "sign:1",
+                "interactable": false,
+                "kind": "sign",
+                "position": {
+                  "x": 2,
+                  "y": 1
+                }
+              },
+              {
+                "distance": 6,
+                "id": "sign:2",
+                "interactable": false,
+                "kind": "sign",
+                "position": {
+                  "x": 1,
+                  "y": 2
+                }
+              },
+              {
+                "distance": 6,
+                "id": "sign:3",
+                "interactable": false,
+                "kind": "sign",
+                "position": {
+                  "x": 3,
+                  "y": 2
+                }
+              },
+              {
+                "distance": 8,
+                "id": "sign:0",
+                "interactable": false,
+                "kind": "sign",
+                "position": {
+                  "x": 1,
+                  "y": 0
+                }
+              },
+              {
+                "distance": 9,
+                "id": "npc:0",
+                "interactable": false,
+                "kind": "npc",
+                "name": "BikeShopClerk",
+                "position": {
+                  "x": 6,
+                  "y": 2
+                }
+              }
+            ],
+            "position": {
+              "x": 2,
+              "y": 7
+            }
+          },
+          "hash": "1fa68993b9fc34d6",
+          "restored": true,
+          "slot": 0,
+          "state": {
+            "active_script_effect": null,
+            "badges": 0,
+            "battle_bag": null,
+            "battle_inventory": [],
+            "battle_live": null,
+            "battle_message": null,
+            "battle_moves": null,
+            "battle_party_cursor": 0,
+            "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+            "choice": null,
+            "coins": 0,
+            "credits_final_button": null,
+            "credits_phase": null,
+            "dialogue": null,
+            "dialogue_state": null,
+            "evaluation": {
+              "party": [],
+              "party_source": "save_data",
+              "pokedex": {
+                "owned": 0,
+                "owned_numbers": [],
+                "seen": 0,
+                "total": 151
+              }
+            },
+            "field_menu": null,
+            "frame_count": 2,
+            "hall_of_fame_count": 0,
+            "hof_phase": null,
+            "last_outside_map": "PalletTown",
+            "link": {
+              "cable_phase": "Inactive",
+              "role": "Host",
+              "status": "disabled",
+              "trade": null
+            },
+            "map_blocks": [4, 5, 2, 3, 8, 8, 6, 7, 11, 10, 10, 10, 10, 1, 10, 9],
+            "map_id": 66,
+            "map_name": "BikeShop",
+            "money": 3000,
+            "party": [],
+            "party_count": 0,
+            "pc_phase": null,
+            "player_facing": "Down",
+            "player_movement_state": "Idle",
+            "player_name": "",
+            "player_transport": "Walking",
+            "player_x": 2,
+            "player_y": 7,
+            "screen": "overworld",
+            "script_awaiting_battle": false,
+            "script_effect": null,
+            "script_running": false,
+            "shop_phase": null,
+            "text_speed_delay_frames": 3,
+            "warp_fade": "Idle"
+          }
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "give_item",
+        "item": "POTION",
+        "qty": 1
+      },
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "command": {
+        "cmd": "give_item",
+        "item": "ANTIDOTE",
+        "qty": 1
+      },
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "command": {
+        "cmd": "give_item",
+        "item": "PARLYZ_HEAL",
+        "qty": 1
+      },
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "command": {
+        "cmd": "give_item",
+        "item": "BURN_HEAL",
+        "qty": 1
+      },
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "command": {
+        "cmd": "give_item",
+        "item": "ICE_HEAL",
+        "qty": 1
+      },
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "command": {
+        "cmd": "give_item",
+        "item": "AWAKENING",
+        "qty": 1
+      },
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "command": {
+        "cmd": "give_item",
+        "item": "FULL_HEAL",
+        "qty": 1
+      },
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "command": {
+        "cmd": "give_item",
+        "item": "SUPER_POTION",
+        "qty": 1
+      },
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "command": {
+        "cmd": "give_item",
+        "item": "HYPER_POTION",
+        "qty": 1
+      },
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "command": {
+        "cmd": "give_item",
+        "item": "MAX_POTION",
+        "qty": 1
+      },
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "command": {
+        "cmd": "give_item",
+        "item": "FULL_RESTORE",
+        "qty": 1
+      },
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "command": {
+        "cmd": "give_item",
+        "item": "REVIVE",
+        "qty": 1
+      },
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "command": {
+        "cmd": "give_item",
+        "item": "MAX_REVIVE",
+        "qty": 1
+      },
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "command": {
+        "cmd": "give_item",
+        "item": "ETHER",
+        "qty": 1
+      },
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "command": {
+        "cmd": "give_item",
+        "item": "MAX_ETHER",
+        "qty": 1
+      },
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "command": {
+        "cmd": "give_item",
+        "item": "ELIXER",
+        "qty": 1
+      },
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "command": {
+        "cmd": "give_item",
+        "item": "MAX_ELIXER",
+        "qty": 1
+      },
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "command": {
+        "cmd": "give_item",
+        "item": "X_ATTACK",
+        "qty": 1
+      },
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "command": {
+        "cmd": "give_item",
+        "item": "X_DEFEND",
+        "qty": 1
+      },
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "command": {
+        "cmd": "give_item",
+        "item": "X_SPEED",
+        "qty": 1
+      },
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "command": {
+        "cmd": "step_frames",
+        "count": 2
+      },
+      "response": {
+        "ok": true,
+        "data": {
+          "frame_count": 4,
+          "stepped": 2
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "set_flag",
+        "name": "EVENT_BEAT_ROUTE_24_TRAINER_0",
+        "value": true
+      },
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "command": {
+        "cmd": "set_flag",
+        "name": "EVENT_BEAT_ROUTE_24_TRAINER_1",
+        "value": true
+      },
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "command": {
+        "cmd": "set_flag",
+        "name": "EVENT_BEAT_ROUTE_24_TRAINER_2",
+        "value": true
+      },
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "command": {
+        "cmd": "set_flag",
+        "name": "EVENT_BEAT_ROUTE_24_TRAINER_3",
+        "value": true
+      },
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "command": {
+        "cmd": "set_flag",
+        "name": "EVENT_BEAT_ROUTE_24_TRAINER_4",
+        "value": true
+      },
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "command": {
+        "cmd": "set_flag",
+        "name": "EVENT_BEAT_ROUTE_24_TRAINER_5",
+        "value": true
+      },
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "command": {
+        "cmd": "set_flag",
+        "name": "EVENT_GOT_NUGGET",
+        "value": true
+      },
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "command": {
+        "cmd": "warp",
+        "map": "Route24",
+        "x": 10,
+        "y": 6
+      },
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "command": {
+        "cmd": "step_frames",
+        "count": 60
+      },
+      "response": {
+        "ok": true,
+        "data": {
+          "frame_count": 64,
+          "stepped": 60
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "get_state"
+      },
+      "response": {
+        "ok": true,
+        "data": {
+          "active_script_effect": null,
+          "badges": 0,
+          "battle_bag": null,
+          "battle_inventory": [],
+          "battle_live": null,
+          "battle_message": null,
+          "battle_moves": null,
+          "battle_party_cursor": 0,
+          "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+          "choice": null,
+          "coins": 0,
+          "credits_final_button": null,
+          "credits_phase": null,
+          "dialogue": null,
+          "dialogue_state": null,
+          "evaluation": {
+            "party": [],
+            "party_source": "save_data",
+            "pokedex": {
+              "owned": 0,
+              "owned_numbers": [],
+              "seen": 0,
+              "total": 151
+            }
+          },
+          "field_menu": null,
+          "frame_count": 64,
+          "hall_of_fame_count": 0,
+          "hof_phase": null,
+          "last_outside_map": "PalletTown",
+          "link": {
+            "cable_phase": "Inactive",
+            "role": "Host",
+            "status": "disabled",
+            "trade": null
+          },
+          "map_blocks": [44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 43, 87, 87, 87, 87, 87, 87, 87, 87, 44, 41, 49, 49, 49, 49, 71, 49, 88, 10, 44, 41, 26, 92, 26, 26, 75, 49, 90, 7, 44, 41, 49, 49, 49, 49, 49, 49, 49, 49, 44, 41, 10, 10, 10, 49, 98, 81, 81, 81, 44, 41, 116, 116, 10, 49, 78, 10, 62, 63, 44, 41, 116, 116, 10, 49, 78, 10, 40, 44, 44, 41, 10, 29, 106, 84, 78, 10, 40, 44, 44, 41, 11, 101, 25, 84, 78, 10, 40, 44, 44, 41, 11, 101, 25, 84, 78, 10, 36, 87, 44, 41, 11, 101, 25, 84, 78, 77, 67, 67, 44, 41, 11, 101, 25, 84, 78, 77, 67, 67, 44, 41, 11, 101, 25, 84, 78, 77, 67, 67, 44, 41, 11, 101, 25, 84, 78, 77, 67, 67, 44, 41, 11, 101, 25, 84, 78, 77, 67, 67, 44, 41, 31, 46, 25, 84, 78, 77, 67, 67, 44, 41, 67, 67, 25, 84, 78, 77, 67, 67],
+          "map_id": 35,
+          "map_name": "Route24",
+          "money": 3000,
+          "party": [],
+          "party_count": 0,
+          "pc_phase": null,
+          "player_facing": "Down",
+          "player_movement_state": "Idle",
+          "player_name": "",
+          "player_transport": "Walking",
+          "player_x": 10,
+          "player_y": 6,
+          "screen": "overworld",
+          "script_awaiting_battle": false,
+          "script_effect": null,
+          "script_running": false,
+          "shop_phase": null,
+          "text_speed_delay_frames": 3,
+          "warp_fade": "Idle"
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "get_bag"
+      },
+      "response": {
+        "ok": true,
+        "data": [
+          {
+            "item": "Potion",
+            "qty": 1
+          },
+          {
+            "item": "Antidote",
+            "qty": 1
+          },
+          {
+            "item": "ParlyzHeal",
+            "qty": 1
+          },
+          {
+            "item": "BurnHeal",
+            "qty": 1
+          },
+          {
+            "item": "IceHeal",
+            "qty": 1
+          },
+          {
+            "item": "Awakening",
+            "qty": 1
+          },
+          {
+            "item": "FullHeal",
+            "qty": 1
+          },
+          {
+            "item": "SuperPotion",
+            "qty": 1
+          },
+          {
+            "item": "HyperPotion",
+            "qty": 1
+          },
+          {
+            "item": "MaxPotion",
+            "qty": 1
+          },
+          {
+            "item": "FullRestore",
+            "qty": 1
+          },
+          {
+            "item": "Revive",
+            "qty": 1
+          },
+          {
+            "item": "MaxRevive",
+            "qty": 1
+          },
+          {
+            "item": "Ether",
+            "qty": 1
+          },
+          {
+            "item": "MaxEther",
+            "qty": 1
+          },
+          {
+            "item": "Elixer",
+            "qty": 1
+          },
+          {
+            "item": "MaxElixer",
+            "qty": 1
+          },
+          {
+            "item": "XAttack",
+            "qty": 1
+          },
+          {
+            "item": "XDefend",
+            "qty": 1
+          },
+          {
+            "item": "XSpeed",
+            "qty": 1
+          }
+        ]
+      }
+    },
+    {
+      "command": {
+        "cmd": "get_flags"
+      },
+      "response": {
+        "ok": true,
+        "data": {
+          "EVENT_BEAT_ROUTE_24_TRAINER_0": true,
+          "EVENT_BEAT_ROUTE_24_TRAINER_1": true,
+          "EVENT_BEAT_ROUTE_24_TRAINER_2": true,
+          "EVENT_BEAT_ROUTE_24_TRAINER_3": true,
+          "EVENT_BEAT_ROUTE_24_TRAINER_4": true,
+          "EVENT_BEAT_ROUTE_24_TRAINER_5": true,
+          "EVENT_GOT_NUGGET": true
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "get_npcs"
+      },
+      "response": {
+        "ok": true,
+        "data": [
+          {
+            "facing": "Left",
+            "home_x": 11,
+            "home_y": 15,
+            "npc_index": 0,
+            "scripted_path_remaining": 0,
+            "sprite_id": 7,
+            "text_id": 1,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 11,
+            "y": 15
+          },
+          {
+            "facing": "Up",
+            "home_x": 5,
+            "home_y": 20,
+            "npc_index": 1,
+            "scripted_path_remaining": 0,
+            "sprite_id": 7,
+            "text_id": 2,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 5,
+            "y": 20
+          },
+          {
+            "facing": "Left",
+            "home_x": 11,
+            "home_y": 19,
+            "npc_index": 2,
+            "scripted_path_remaining": 0,
+            "sprite_id": 7,
+            "text_id": 3,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 11,
+            "y": 19
+          },
+          {
+            "facing": "Right",
+            "home_x": 10,
+            "home_y": 22,
+            "npc_index": 3,
+            "scripted_path_remaining": 0,
+            "sprite_id": 6,
+            "text_id": 4,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 10,
+            "y": 22
+          },
+          {
+            "facing": "Left",
+            "home_x": 11,
+            "home_y": 25,
+            "npc_index": 4,
+            "scripted_path_remaining": 0,
+            "sprite_id": 4,
+            "text_id": 5,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 11,
+            "y": 25
+          },
+          {
+            "facing": "Right",
+            "home_x": 10,
+            "home_y": 28,
+            "npc_index": 5,
+            "scripted_path_remaining": 0,
+            "sprite_id": 6,
+            "text_id": 6,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 10,
+            "y": 28
+          },
+          {
+            "facing": "Left",
+            "home_x": 11,
+            "home_y": 31,
+            "npc_index": 6,
+            "scripted_path_remaining": 0,
+            "sprite_id": 4,
+            "text_id": 7,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 11,
+            "y": 31
+          },
+          {
+            "facing": "Down",
+            "home_x": 10,
+            "home_y": 5,
+            "npc_index": 7,
+            "scripted_path_remaining": 0,
+            "sprite_id": 61,
+            "text_id": 8,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 10,
+            "y": 5
+          }
+        ]
+      }
+    },
+    {
+      "command": {
+        "cmd": "press_timeline",
+        "buttons": [
+          "up",
+          null,
+          "a",
+          null
+        ],
+        "advance": true
+      },
+      "response": {
+        "ok": true,
+        "data": {
+          "advanced": true,
+          "end_frame": 67,
+          "frame_count": 68,
+          "frames": 4,
+          "padding_frames": 0,
+          "queue_start_frame": 64,
+          "start_frame": 64
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "step_frames",
+        "count": 20
+      },
+      "response": {
+        "ok": true,
+        "data": {
+          "frame_count": 88,
+          "stepped": 20
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "skip_dialogue"
+      },
+      "response": {
+        "ok": true,
+        "data": {
+          "dialogue_closed": true,
+          "state": {
+            "active_script_effect": null,
+            "badges": 0,
+            "battle_bag": null,
+            "battle_inventory": [],
+            "battle_live": null,
+            "battle_message": null,
+            "battle_moves": null,
+            "battle_party_cursor": 0,
+            "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+            "choice": null,
+            "coins": 0,
+            "credits_final_button": null,
+            "credits_phase": null,
+            "dialogue": null,
+            "dialogue_state": null,
+            "evaluation": {
+              "party": [],
+              "party_source": "save_data",
+              "pokedex": {
+                "owned": 0,
+                "owned_numbers": [],
+                "seen": 0,
+                "total": 151
+              }
+            },
+            "field_menu": null,
+            "frame_count": 93,
+            "hall_of_fame_count": 0,
+            "hof_phase": null,
+            "last_outside_map": "PalletTown",
+            "link": {
+              "cable_phase": "Inactive",
+              "role": "Host",
+              "status": "disabled",
+              "trade": null
+            },
+            "map_blocks": [44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 43, 87, 87, 87, 87, 87, 87, 87, 87, 44, 41, 49, 49, 49, 49, 71, 49, 88, 10, 44, 41, 26, 92, 26, 26, 75, 49, 90, 7, 44, 41, 49, 49, 49, 49, 49, 49, 49, 49, 44, 41, 10, 10, 10, 49, 98, 81, 81, 81, 44, 41, 116, 116, 10, 49, 78, 10, 62, 63, 44, 41, 116, 116, 10, 49, 78, 10, 40, 44, 44, 41, 10, 29, 106, 84, 78, 10, 40, 44, 44, 41, 11, 101, 25, 84, 78, 10, 40, 44, 44, 41, 11, 101, 25, 84, 78, 10, 36, 87, 44, 41, 11, 101, 25, 84, 78, 77, 67, 67, 44, 41, 11, 101, 25, 84, 78, 77, 67, 67, 44, 41, 11, 101, 25, 84, 78, 77, 67, 67, 44, 41, 11, 101, 25, 84, 78, 77, 67, 67, 44, 41, 11, 101, 25, 84, 78, 77, 67, 67, 44, 41, 31, 46, 25, 84, 78, 77, 67, 67, 44, 41, 67, 67, 25, 84, 78, 77, 67, 67],
+            "map_id": 35,
+            "map_name": "Route24",
+            "money": 3000,
+            "party": [],
+            "party_count": 0,
+            "pc_phase": null,
+            "player_facing": "Up",
+            "player_movement_state": "Idle",
+            "player_name": "",
+            "player_transport": "Walking",
+            "player_x": 10,
+            "player_y": 6,
+            "screen": "overworld",
+            "script_awaiting_battle": false,
+            "script_effect": null,
+            "script_running": false,
+            "shop_phase": null,
+            "text_speed_delay_frames": 3,
+            "warp_fade": "Idle"
+          },
+          "stepped": 5
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "get_state"
+      },
+      "response": {
+        "ok": true,
+        "data": {
+          "active_script_effect": null,
+          "badges": 0,
+          "battle_bag": null,
+          "battle_inventory": [],
+          "battle_live": null,
+          "battle_message": null,
+          "battle_moves": null,
+          "battle_party_cursor": 0,
+          "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+          "choice": null,
+          "coins": 0,
+          "credits_final_button": null,
+          "credits_phase": null,
+          "dialogue": null,
+          "dialogue_state": null,
+          "evaluation": {
+            "party": [],
+            "party_source": "save_data",
+            "pokedex": {
+              "owned": 0,
+              "owned_numbers": [],
+              "seen": 0,
+              "total": 151
+            }
+          },
+          "field_menu": null,
+          "frame_count": 93,
+          "hall_of_fame_count": 0,
+          "hof_phase": null,
+          "last_outside_map": "PalletTown",
+          "link": {
+            "cable_phase": "Inactive",
+            "role": "Host",
+            "status": "disabled",
+            "trade": null
+          },
+          "map_blocks": [44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 43, 87, 87, 87, 87, 87, 87, 87, 87, 44, 41, 49, 49, 49, 49, 71, 49, 88, 10, 44, 41, 26, 92, 26, 26, 75, 49, 90, 7, 44, 41, 49, 49, 49, 49, 49, 49, 49, 49, 44, 41, 10, 10, 10, 49, 98, 81, 81, 81, 44, 41, 116, 116, 10, 49, 78, 10, 62, 63, 44, 41, 116, 116, 10, 49, 78, 10, 40, 44, 44, 41, 10, 29, 106, 84, 78, 10, 40, 44, 44, 41, 11, 101, 25, 84, 78, 10, 40, 44, 44, 41, 11, 101, 25, 84, 78, 10, 36, 87, 44, 41, 11, 101, 25, 84, 78, 77, 67, 67, 44, 41, 11, 101, 25, 84, 78, 77, 67, 67, 44, 41, 11, 101, 25, 84, 78, 77, 67, 67, 44, 41, 11, 101, 25, 84, 78, 77, 67, 67, 44, 41, 11, 101, 25, 84, 78, 77, 67, 67, 44, 41, 31, 46, 25, 84, 78, 77, 67, 67, 44, 41, 67, 67, 25, 84, 78, 77, 67, 67],
+          "map_id": 35,
+          "map_name": "Route24",
+          "money": 3000,
+          "party": [],
+          "party_count": 0,
+          "pc_phase": null,
+          "player_facing": "Up",
+          "player_movement_state": "Idle",
+          "player_name": "",
+          "player_transport": "Walking",
+          "player_x": 10,
+          "player_y": 6,
+          "screen": "overworld",
+          "script_awaiting_battle": false,
+          "script_effect": null,
+          "script_running": false,
+          "shop_phase": null,
+          "text_speed_delay_frames": 3,
+          "warp_fade": "Idle"
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "get_bag"
+      },
+      "response": {
+        "ok": true,
+        "data": [
+          {
+            "item": "Potion",
+            "qty": 1
+          },
+          {
+            "item": "Antidote",
+            "qty": 1
+          },
+          {
+            "item": "ParlyzHeal",
+            "qty": 1
+          },
+          {
+            "item": "BurnHeal",
+            "qty": 1
+          },
+          {
+            "item": "IceHeal",
+            "qty": 1
+          },
+          {
+            "item": "Awakening",
+            "qty": 1
+          },
+          {
+            "item": "FullHeal",
+            "qty": 1
+          },
+          {
+            "item": "SuperPotion",
+            "qty": 1
+          },
+          {
+            "item": "HyperPotion",
+            "qty": 1
+          },
+          {
+            "item": "MaxPotion",
+            "qty": 1
+          },
+          {
+            "item": "FullRestore",
+            "qty": 1
+          },
+          {
+            "item": "Revive",
+            "qty": 1
+          },
+          {
+            "item": "MaxRevive",
+            "qty": 1
+          },
+          {
+            "item": "Ether",
+            "qty": 1
+          },
+          {
+            "item": "MaxEther",
+            "qty": 1
+          },
+          {
+            "item": "Elixer",
+            "qty": 1
+          },
+          {
+            "item": "MaxElixer",
+            "qty": 1
+          },
+          {
+            "item": "XAttack",
+            "qty": 1
+          },
+          {
+            "item": "XDefend",
+            "qty": 1
+          },
+          {
+            "item": "XSpeed",
+            "qty": 1
+          }
+        ]
+      }
+    },
+    {
+      "command": {
+        "cmd": "get_flags"
+      },
+      "response": {
+        "ok": true,
+        "data": {
+          "EVENT_BEAT_ROUTE_24_TRAINER_0": true,
+          "EVENT_BEAT_ROUTE_24_TRAINER_1": true,
+          "EVENT_BEAT_ROUTE_24_TRAINER_2": true,
+          "EVENT_BEAT_ROUTE_24_TRAINER_3": true,
+          "EVENT_BEAT_ROUTE_24_TRAINER_4": true,
+          "EVENT_BEAT_ROUTE_24_TRAINER_5": true,
+          "EVENT_GOT_NUGGET": true,
+          "__OBJ_HIDDEN_ROUTE_24_OBJ_8": true,
+          "__OBJ_SHOWN_ROUTE_24_OBJ_8": false
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "get_npcs"
+      },
+      "response": {
+        "ok": true,
+        "data": [
+          {
+            "facing": "Left",
+            "home_x": 11,
+            "home_y": 15,
+            "npc_index": 0,
+            "scripted_path_remaining": 0,
+            "sprite_id": 7,
+            "text_id": 1,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 11,
+            "y": 15
+          },
+          {
+            "facing": "Up",
+            "home_x": 5,
+            "home_y": 20,
+            "npc_index": 1,
+            "scripted_path_remaining": 0,
+            "sprite_id": 7,
+            "text_id": 2,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 5,
+            "y": 20
+          },
+          {
+            "facing": "Left",
+            "home_x": 11,
+            "home_y": 19,
+            "npc_index": 2,
+            "scripted_path_remaining": 0,
+            "sprite_id": 7,
+            "text_id": 3,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 11,
+            "y": 19
+          },
+          {
+            "facing": "Right",
+            "home_x": 10,
+            "home_y": 22,
+            "npc_index": 3,
+            "scripted_path_remaining": 0,
+            "sprite_id": 6,
+            "text_id": 4,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 10,
+            "y": 22
+          },
+          {
+            "facing": "Left",
+            "home_x": 11,
+            "home_y": 25,
+            "npc_index": 4,
+            "scripted_path_remaining": 0,
+            "sprite_id": 4,
+            "text_id": 5,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 11,
+            "y": 25
+          },
+          {
+            "facing": "Right",
+            "home_x": 10,
+            "home_y": 28,
+            "npc_index": 5,
+            "scripted_path_remaining": 0,
+            "sprite_id": 6,
+            "text_id": 6,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 10,
+            "y": 28
+          },
+          {
+            "facing": "Left",
+            "home_x": 11,
+            "home_y": 31,
+            "npc_index": 6,
+            "scripted_path_remaining": 0,
+            "sprite_id": 4,
+            "text_id": 7,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 11,
+            "y": 31
+          },
+          {
+            "facing": "Down",
+            "home_x": 10,
+            "home_y": 5,
+            "npc_index": 7,
+            "scripted_path_remaining": 0,
+            "sprite_id": 61,
+            "text_id": 8,
+            "visible": false,
+            "walk_counter": 0,
+            "x": 10,
+            "y": 5
+          }
+        ]
+      }
+    }
+  ]
+}

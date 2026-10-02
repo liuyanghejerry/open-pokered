@@ -1,0 +1,71 @@
+# open-pokered 原作保真审计与修复（2026-10-02）
+
+游戏基线为 `72ff719b39634c153cb82d3f3ece200bd413c4e0`；原作基准为
+`pret/pokered@fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c`，Red 为默认版本，Blue
+分支数据另行核对。各子报告记录**修复前**行为，行号属于冻结基线；不能把报告里描述的旧错误误认作修复后仍存在。
+
+本次先核对可穷举的内容表，再按开局、主线、四天王和通关后的顺序追踪实际调用链，
+结合 native interpreter、真实 frontend、独立原作内存符号、状态探针和真实按键复现。
+核心测试全绿不能证明保真，故预期值来自原作，而非项目自己的旧实现。
+
+## 按游玩顺序阅读
+
+| 阶段 | 确认的主要差异 | 详证 |
+| --- | --- | --- |
+| 开机、标题、大木、命名 | 英文8px字体、负坐标裁剪、抛球、字标、叫声等待、前图对齐 | [音画 VA01–08](visual-audio.md) |
+| 真新镇至月见山 | 大木气泡、劲敌路径/进场、Daisy重入、满包奖励、鲤鱼王满队送箱、化石研究员 | [早期 E01–10](early-story.md) |
+| 华蓝至枯叶、岩山隧道 | TM11/28补领、自行车券、桥上劲敌与Bill坐标、船长音乐、离船入口、垃圾桶谜题 | [早期 E11–20](early-story.md) |
+| 全地图地面球 | 97/104个对象受拾取/奖励错误影响；另104个均缺成功拾取提示音与自动收框 | [地图 D-W06–09](data-world.md) |
+| 彩虹至紫苑、狩猎区 | NPC赠物、奖品确认/失败不扣代币、净化区重入与保护、HM03和金牙兑换 | [后期 L01–04、L07](late-story.md)、[赠物扩展](validation/story-repairs.md) |
+| 金黄、红莲、神兽、胜利之路、交换动画 | Lapras/化石/道场满队满箱处理、静态遭遇消耗、宅邸开关、层间机关、原作文本时序和实际联机名字 | [后期 L03、L05–06、L09、L11–12](late-story.md) |
+| 四天王、冠军、名人堂、结尾 | Lance路径/门、前图、24帧渐白、叫声、credits前导/四阶渐变/THE END | [后期 L10](late-story.md)、[音画 VA14–17](visual-audio.md) |
+| 每场战斗 | PP状态门、混乱、X Accuracy、固定伤害、Disable/Mimic/Transform、Counter/Wrap/Thrash、经验、徽章/烧伤/麻痹、AI行动时点、调用技实时历史 | [战斗 B01–29](battle-mechanics.md) |
+| 移动、野遇、版本 | 同半块右下tile、旧表残留、Route1方向、经典NPC轴映射/256帧等待、Blue版本贯通 | [地图 D-W01–05](data-world.md) |
+| 背包/商店/PC/育成/交易/联机/存读 | 原子库存、金钱上限、箱镜像、能力重算、育成元数据、PP Ups、普通存读桥、Cable入口、合法OT ID 0 | [系统 SYS01–17](systems.md) |
+| 所有音乐及菜单 | 真正的note初始化滑音、专用边框、HP动画速度、卡片/文凭/电梯布局、credits滚动间隔、OBJ调色板 | [音画 VA09–13、VA18–20](visual-audio.md) |
+
+同一根因在不同阶段有重复证据，例如早期 E06、后期 L01/L04 和地图 D-W06；这些编号是阅读索引，不能直接相加作为独立bug总数。
+
+## 全量内容核对结果
+
+独立脚本 [check-data-world.py](check-data-world.py) 与 [机器结果](data-world-check.json)
+核对了151种基础数据与55项TM/HM位、165招式、151种进化/学招与图鉴描述、
+47类训练家391队994只、248地图805warp918对象、248个野遇指针的Red/Blue草水分支和钓鱼表。
+生效基础数值、队伍、地图主体与野遇表均无内容缺失；Route1一处运动轴错误已经定位。
+248个地图JSON均已检查；其中223个实体地图有原作文件可逐条比较尺寸/连接/blocks，
+另25个unused/alias没有独立原作实体文件，不声称它们完成逐字地图bytes对拍。
+Mew的第56个保留位没有可用道具能触发，仍同步原作字节；不把它计为玩法bug。
+
+战斗动画177个基础坐标、122个frameblock、86个subanimation、203个moveanimation，
+166项move SFX和cry表也独立检查为零差异。表完整不代表相应运行逻辑必然正确。
+
+SRAM布局由RGBDS1.0.1独立汇编原作 `ram.asm`，得到MainData1929字节、
+checksummed game region3979字节、party地址`$AF2C`和checksum地址`$B523`。
+据此修复基线序列化缺script状态段、union尾padding错位及10字节育成stat-exp，保留旧项目存档迁移。
+
+## 修复及验证
+
+各修复的原作依据、基线失败、修复后预期与回归见对应子报告及 validation 目录。
+整合复审补齐L09：进入VictoryRoad2F清1F开关，3F保持2F开关，新增两个生产warp回归。
+连续新游戏复现了森林转场及船长音乐永久等待，均已修复；最终连续流程结果单独记录，不用定点测试冒充通关。
+船长等待使用实际第一音乐声道完成状态；native、TUI共享原作条件。交易动画还补齐真实peer名字。
+引擎修复单独位于 [dotzuki PR #78](https://github.com/liuyanghejerry/dotzuki/pull/78)，
+游戏全部17处dotzuki manifest及两个lockfile固定 `92ba95f9526107e17874df53291ac7758d0930f0`，避免两个来源的引擎类型不一致。
+它以游戏原先的音频依赖分支 `fix/gba-psg-audio` 为目标，保留既有GBA支持。
+
+修复后全量内容结果见 [data-world-check-after.json](data-world-check-after.json)。原始结构比较保留73项已分类差异；生效数据没有未分类内容差异，不把raw JSON结构比较写成零差异。
+
+原作8px字体恢复后的PC、名人堂、背包及联机布局复审见 [ui-world-fixes.md](ui-world-fixes.md)，包含经验证基线与最终构建的16组EN/ZH前后截图，并注明合成边界测试与生产流程的区别。
+
+最终 native 八包完整检查：105个测试目标、4444次测试执行通过、0失败、9跳过（含app lib/bin重复执行，不把次数写成独立测试数）；core lib2648/2648，新增生产战斗61/61。Web两个包wasm32检查、GBA nightly release编译通过；GBA本轮没有硬件/模拟器运行证据。11个定点种子场景通过；它们与连续新游戏分开记录。
+具体命令、源码版本、二进制哈希和日志见 [最终验证](validation/final-validation.md) 与 [机器结果](validation/final-results.json)。历史不带final前缀的日志保留基线/中间诊断，不能当作最终源码验收。
+
+## 覆盖边界
+
+这是本轮全量内容检查与逐段机制审计，不声称动态穷举所有战斗组合、248张图的每条路线、
+151种精灵的每个画面，亦未做新的全曲目ROM PCM逐采样或所有画面的ROM逐帧对拍。
+9月历史ROM对拍仅作为历史依据，不当作本轮新验收。
+
+仍需单独工程的能力包括：完整SGB彩色/边框模式、原版串行协议及GBA物理联机、老人名字RAM
+别名导致的MissingNo/非法种类漏洞、credits最后一个越界读取。普通GB正常流程中的已确认差异
+与这些平台能力/非法内存行为分开记录；对应子报告注明具体边界，不把未测项目写成通过。

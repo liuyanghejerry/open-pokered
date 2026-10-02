@@ -1,0 +1,171 @@
+{
+  "status": "PASS",
+  "before_binary_sha256": "498231954213ccf93e0f00fbb22e5ef61cce1f56a358b08c4e6b56633d5b751b",
+  "after_binary_sha256": "3ee8e23fcc99b373bb4c76e24e63ac467e8380f211924cd319de9494713db3eb",
+  "after_source": "8837a2a32c2ba8c345db16e97b01f49016e88950",
+  "paired_cases": 16,
+  "png_count": 32,
+  "pairs": [
+    {
+      "before": "docs/screenshots/fidelity-ui-world/before-en/02_main_menu.png",
+      "after": "docs/screenshots/fidelity-ui-world/after-en/02_main_menu.png",
+      "before_sha256": "d155133ffa04f19cce8b9d30a7c8cfebff180380c6750c12e804b4abac96cca4",
+      "after_sha256": "1cdf117c3f6ffe402c461e9b9e08671da3292d222db5ac797db9622ea43e4edf",
+      "dimensions": [
+        160,
+        144
+      ]
+    },
+    {
+      "before": "docs/screenshots/fidelity-ui-world/before-en/04_bills_menu.png",
+      "after": "docs/screenshots/fidelity-ui-world/after-en/04_bills_menu.png",
+      "before_sha256": "86431810fa9348420cfed7c10381b2ec54f33a453859ec99fe0b1379a25cd641",
+      "after_sha256": "f5cf909a81413dbfb1117d666d75c885a68a8de1a91e0347cd73d05331dc009f",
+      "dimensions": [
+        160,
+        144
+      ]
+    },
+    {
+      "before": "docs/screenshots/fidelity-ui-world/before-en/06_withdraw_popup.png",
+      "after": "docs/screenshots/fidelity-ui-world/after-en/06_withdraw_popup.png",
+      "before_sha256": "f16675f483bd2ed704031f7f36707063eb43b9ab5cc11da03d1bfd97da25a80a",
+      "after_sha256": "46694d893a70b6f2f833fa577338c4a9211bb4011f6584d68b40ea461e4226f6",
+      "dimensions": [
+        160,
+        144
+      ]
+    },
+    {
+      "before": "docs/screenshots/fidelity-ui-world/before-en/14_item_menu.png",
+      "after": "docs/screenshots/fidelity-ui-world/after-en/14_item_menu.png",
+      "before_sha256": "2db9e4a97236bc9f157e111c3c8ae3288f166d10fd2d5193a920c1e0c4b7a78a",
+      "after_sha256": "41d69c7bc8ce1145f74dec998a5d0266d71346c2909339f0ad8ad71288c6e1a1",
+      "dimensions": [
+        160,
+        144
+      ]
+    },
+    {
+      "before": "docs/screenshots/fidelity-ui-world/before-en/24_bills_box12.png",
+      "after": "docs/screenshots/fidelity-ui-world/after-en/24_bills_box12.png",
+      "before_sha256": "94d46baf5028b039b0f0f5a0b7e2640f5df9fecf53942df1ac90057b0647f795",
+      "after_sha256": "caa42fdd39034bba9d504373e444e0079edacd3f83207f63a81c645c545f3318",
+      "dimensions": [
+        160,
+        144
+      ]
+    },
+    {
+      "before": "docs/screenshots/fidelity-ui-world/before-en/25_withdrew_thunderstone.png",
+      "after": "docs/screenshots/fidelity-ui-world/after-en/25_withdrew_thunderstone.png",
+      "before_sha256": "c3959a59480cdd9c267521e756f7d52bf685e46231f797abecc0d786bff7094c",
+      "after_sha256": "264bd3751e35fa24b76a1e064ec0f5788a13f8b357f23e07cc35a2f71abd1a11",
+      "dimensions": [
+        160,
+        144
+      ]
+    },
+    {
+      "before": "docs/screenshots/fidelity-ui-world/before-en/26_league_hof_type.png",
+      "after": "docs/screenshots/fidelity-ui-world/after-en/26_league_hof_type.png",
+      "before_sha256": "267359771094109cf28a9c6547f76885be3f32fbb8486300d5e5add7d6ee9bcf",
+      "after_sha256": "8179bbf6379d9cc3c0231b3c599b84599d501717b4748345719a98b67a6289ab",
+      "dimensions": [
+        160,
+        144
+      ]
+    },
+    {
+      "before": "docs/screenshots/fidelity-ui-world/before-en/27_bag_font_bounds.png",
+      "after": "docs/screenshots/fidelity-ui-world/after-en/27_bag_font_bounds.png",
+      "before_sha256": "c7b695a3c29cb8cbeac3e91195f8a816a1bb2358bddbdd64e176ab386ba35934",
+      "after_sha256": "a0d2ec3d4bc25d30f87be98685c708a0e4e9dc3f78a72c461071033bce8f6805",
+      "dimensions": [
+        160,
+        144
+      ]
+    },
+    {
+      "before": "docs/screenshots/fidelity-ui-world/before-zh/02_main_menu.png",
+      "after": "docs/screenshots/fidelity-ui-world/after-zh/02_main_menu.png",
+      "before_sha256": "53b7b19ca7fe83d5af0bd1d02d94d8412e27b851a0018bce715e347052384a24",
+      "after_sha256": "728fe20ae62a74a0eff8854595e7d67f163d627af780548f93703324de302347",
+      "dimensions": [
+        160,
+        144
+      ]
+    },
+    {
+      "before": "docs/screenshots/fidelity-ui-world/before-zh/04_bills_menu.png",
+      "after": "docs/screenshots/fidelity-ui-world/after-zh/04_bills_menu.png",
+      "before_sha256": "0b7fc14011fd8b9fc177df2d782bd1c483b7ca1d5cb084b174c2b99ead1994c8",
+      "after_sha256": "aafd2c5ffa80205791864dbf79e52e71470f9d2293a347e51595e60e45171067",
+      "dimensions": [
+        160,
+        144
+      ]
+    },
+    {
+      "before": "docs/screenshots/fidelity-ui-world/before-zh/06_withdraw_popup.png",
+      "after": "docs/screenshots/fidelity-ui-world/after-zh/06_withdraw_popup.png",
+      "before_sha256": "5bd9b0cc0f87fbdb33995f705b3f1f2b9068d5241a372a20e21e9116b709aa37",
+      "after_sha256": "0ad6a12803d9c04ca83fca60d25259760bd93e56a87544e3dd9873f85b11a1cc",
+      "dimensions": [
+        160,
+        144
+      ]
+    },
+    {
+      "before": "docs/screenshots/fidelity-ui-world/before-zh/14_item_menu.png",
+      "after": "docs/screenshots/fidelity-ui-world/after-zh/14_item_menu.png",
+      "before_sha256": "a3b853cf56442ec7fe64d8ce7caa663314d19acd4974c8c405b99ed484d1becd",
+      "after_sha256": "23440966bc768d1e853ea9028f84f7f4bb6924858bcecf93a5e97d246e1e62c9",
+      "dimensions": [
+        160,
+        144
+      ]
+    },
+    {
+      "before": "docs/screenshots/fidelity-ui-world/before-zh/24_bills_box12.png",
+      "after": "docs/screenshots/fidelity-ui-world/after-zh/24_bills_box12.png",
+      "before_sha256": "44c652f1fa493fc96d3cf7688e3b37a0894c7d76fc5b2c53ce497896fbc1ea85",
+      "after_sha256": "cf937178506e7f111bf3f97a56555796dbe7a6525af161c22d26569e87f1ea59",
+      "dimensions": [
+        160,
+        144
+      ]
+    },
+    {
+      "before": "docs/screenshots/fidelity-ui-world/before-zh/25_withdrew_thunderstone.png",
+      "after": "docs/screenshots/fidelity-ui-world/after-zh/25_withdrew_thunderstone.png",
+      "before_sha256": "f929a1b6673d372d279c0b67ad155d220182b2d71bed7aa4321bcc5bdaa70373",
+      "after_sha256": "17831cf94b3dee06c1380d048d00181186ad83eeeadff17d9358076da1690ad2",
+      "dimensions": [
+        160,
+        144
+      ]
+    },
+    {
+      "before": "docs/screenshots/fidelity-ui-world/before-zh/26_league_hof_type.png",
+      "after": "docs/screenshots/fidelity-ui-world/after-zh/26_league_hof_type.png",
+      "before_sha256": "ec9612b35a4dd2887e6d154add1db1d6f686b102e0dc31fed42552196a456ad9",
+      "after_sha256": "17d9f94944aa66628a4d8bce5b3df7f9314ac1128701d03b8c89102f13218897",
+      "dimensions": [
+        160,
+        144
+      ]
+    },
+    {
+      "before": "docs/screenshots/fidelity-ui-world/before-zh/27_bag_font_bounds.png",
+      "after": "docs/screenshots/fidelity-ui-world/after-zh/27_bag_font_bounds.png",
+      "before_sha256": "b4d1e7e90375137da4136b2ae0ac23363f3127734d2bdaf2da3e924e8b6632b1",
+      "after_sha256": "7ebaf33fdb00b83d15d3e867ca6ec40126dc995dbb4478ed6dcf1b40f7d90575",
+      "dimensions": [
+        160,
+        144
+      ]
+    }
+  ],
+  "after_visual_review": "All 16 after PNGs inspected. Captures use native fixed-state rendering, not ROM frame comparison or continuous gameplay."
+}

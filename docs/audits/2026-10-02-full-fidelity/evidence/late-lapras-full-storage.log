@@ -1,0 +1,8 @@
+[Debug] No --debug-modules flag provided
+Debug server started on port 52139
+Snapshot loaded: "/tmp/late-late-lapras-full-storage-gb5qx9in/input.json"
+Skip-intro: starting at SilphCo7F (212 x=1, y=6)
+Asset root found: "/workspace/open-pokered/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
+Running headless (no window). Press Ctrl-C to exit.
+Driven-only mode: frames advance only via debug commands.

@@ -1,0 +1,598 @@
+warning: dotzuki-renderer@0.8.2: CJK glyphs baked: 24793 chars (928 KiB blob)
+warning: unused variable: `a`
+    --> crates/dotzuki-renderer/src/battle_anim/data.rs:2810:29
+     |
+2810 |             for (j, &(kind, a, b, c)) in cmds.iter().enumerate() {
+     |                             ^ help: if this is intentional, prefix it with an underscore: `_a`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `0` and `1` are never read
+   --> crates/dotzuki-renderer/src/layout_engine/renderer.rs:344:17
+    |
+344 |         TextBox(TileRect, EngineRgba),
+    |         ------- ^^^^^^^^  ^^^^^^^^^^
+    |         |
+    |         fields in this variant
+    |
+    = note: `DrawOp` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+help: consider changing the fields to be of unit type to suppress this warning while preserving the field numbering, or remove the fields
+    |
+344 -         TextBox(TileRect, EngineRgba),
+344 +         TextBox((), ()),
+    |
+
+warning: fields `0`, `1`, and `2` are never read
+   --> crates/dotzuki-renderer/src/layout_engine/renderer.rs:345:14
+    |
+345 |         Text(TilePos, String, EngineRgba),
+    |         ---- ^^^^^^^  ^^^^^^  ^^^^^^^^^^
+    |         |
+    |         fields in this variant
+    |
+    = note: `DrawOp` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+help: consider changing the fields to be of unit type to suppress this warning while preserving the field numbering, or remove the fields
+    |
+345 -         Text(TilePos, String, EngineRgba),
+345 +         Text((), (), ()),
+    |
+
+warning: field `2` is never read
+   --> crates/dotzuki-renderer/src/layout_engine/renderer.rs:346:30
+    |
+346 |         Glyph(TilePos, char, EngineRgba),
+    |         -----                ^^^^^^^^^^
+    |         |
+    |         field in this variant
+    |
+    = note: `DrawOp` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+help: consider changing the field to be of unit type to suppress this warning while preserving the field numbering, or remove the field
+    |
+346 -         Glyph(TilePos, char, EngineRgba),
+346 +         Glyph(TilePos, char, ()),
+    |
+
+warning: fields `0`, `1`, `2`, `3`, and `4` are never read
+   --> crates/dotzuki-renderer/src/layout_engine/renderer.rs:347:19
+    |
+347 |         PixelRect(u32, u32, u32, u32, EngineRgba),
+    |         --------- ^^^  ^^^  ^^^  ^^^  ^^^^^^^^^^
+    |         |
+    |         fields in this variant
+    |
+    = note: `DrawOp` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+help: consider changing the fields to be of unit type to suppress this warning while preserving the field numbering, or remove the fields
+    |
+347 -         PixelRect(u32, u32, u32, u32, EngineRgba),
+347 +         PixelRect((), (), (), (), ()),
+    |
+
+warning: fields `2` and `3` are never read
+   --> crates/dotzuki-renderer/src/layout_engine/renderer.rs:348:29
+    |
+348 |         GbTile(TilePos, u8, String, EngineRgba),
+    |         ------              ^^^^^^  ^^^^^^^^^^
+    |         |
+    |         fields in this variant
+    |
+    = note: `DrawOp` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+help: consider changing the fields to be of unit type to suppress this warning while preserving the field numbering, or remove the fields
+    |
+348 -         GbTile(TilePos, u8, String, EngineRgba),
+348 +         GbTile(TilePos, u8, (), ()),
+    |
+
+warning: `dotzuki-renderer` (lib test) generated 6 warnings (run `cargo fix --lib -p dotzuki-renderer --tests` to apply 1 suggestion)
+    Finished `test` profile [unoptimized] target(s) in 0.31s
+     Running unittests src/lib.rs (/workspace/dotzuki/workspace/target/debug/deps/dotzuki_renderer-5d945e2c03be2d06)
+
+running 476 tests
+test battle_anim::data::tests::all_subanim_frames_valid ... ok
+test battle_anim::data::tests::all_move_anim_commands_valid ... ok
+test battle_anim::data::tests::base_coords_count ... ok
+test battle_anim::data::tests::base_coords_first_entries ... ok
+test battle_anim::data::tests::base_coords_last_entries ... ok
+test battle_anim::data::tests::base_coords_middle_entries ... ok
+test battle_anim::data::tests::effect_command_encoding ... ok
+test battle_anim::data::tests::frame_block_00_is_empty ... ok
+test battle_anim::data::tests::frame_block_01_tiles ... ok
+test battle_anim::data::tests::frame_block_large_black_circle ... ok
+test battle_anim::data::tests::frame_block_modes ... ok
+test battle_anim::data::tests::frame_block_02_tiles ... ok
+test battle_anim::data::tests::frame_block_small_black_circle ... ok
+test battle_anim::data::tests::frame_block_data_count ... ok
+test battle_anim::data::tests::move_anim_double_slap ... ok
+test battle_anim::data::tests::move_anim_data_count ... ok
+test battle_anim::data::tests::move_anim_karate_chop ... ok
+test battle_anim::data::tests::move_anim_last_entry ... ok
+test battle_anim::data::tests::move_anim_thunder_punch ... ok
+test battle_anim::data::tests::move_anim_pound ... ok
+test battle_anim::data::tests::special_effect_ids ... ok
+test battle_anim::data::tests::move_anim_tackle ... ok
+test battle_anim::data::tests::subanim_0_star ... ok
+test battle_anim::data::tests::subanim_0_beam ... ok
+test battle_anim::data::tests::subanim_0_ball_toss_high ... ok
+test battle_anim::data::tests::subanim_1_flame_beam ... ok
+test battle_anim::data::tests::subanim_command_encoding ... ok
+test battle_anim::data::tests::subanim_data_count ... ok
+test battle_anim::data::tests::subanim_0_star_twice ... ok
+test battle_anim::data::tests::subanim_transform_types ... ok
+test battle_anim::data::tests::tileset_delay_packing ... ok
+test battle_anim::effects::tests::blink_enemy_mon_blinks_defender ... ok
+test battle_anim::effects::tests::blink_hides_first_five_of_ten ... ok
+test battle_anim::effects::tests::bounce_slides_down_five_times_then_shows ... ok
+test battle_anim::effects::tests::chunky_wavy_row_matches_clamped_reference ... ok
+test battle_anim::effects::tests::chunky_screen_shifts_match_clone_based_reference ... ok
+test battle_anim::effects::tests::draw_minimized_blob_at_pic_offset ... ok
+test battle_anim::effects::tests::droplets_run_64_frames_and_scroll ... ok
+test battle_anim::effects::tests::draw_substitute_places_doll_tiles ... ok
+test battle_anim::effects::tests::draw_squished_scales_horizontally ... ok
+test battle_anim::effects::tests::draw_mon_rows_crops_bottom_rows ... ok
+test battle_anim::effects::tests::flash_long_palette_step_timing ... ok
+test battle_anim::effects::tests::flash_short_and_long_durations ... ok
+test battle_anim::effects::tests::hud_shake_alternates_plus_minus_two ... ok
+test battle_anim::effects::tests::falling_movement_byte_wraps_and_flips_direction ... ok
+test battle_anim::effects::tests::leaves_use_leaf_tile_and_three_objects ... ok
+test battle_anim::effects::tests::shake_back_and_forth_offsets_and_duration ... ok
+test battle_anim::effects::tests::petals_fall_until_first_reaches_104 ... ok
+test battle_anim::effects::tests::is_animating_tracks_transient_but_not_persistent_state ... ok
+test battle_anim::effects::tests::slide_down_hide_shrinks_rows_then_hides ... ok
+test battle_anim::effects::tests::shake_screen_decays_amplitude ... ok
+test battle_anim::effects::tests::shoot_many_balls_runs_six_pillars ... ok
+test battle_anim::effects::tests::small_shake_alternates ... ok
+test battle_anim::effects::tests::shoot_balls_rise_and_pop_at_top ... ok
+test battle_anim::effects::tests::spiral_balls_enemy_base_offset ... ok
+test battle_anim::effects::tests::squish_narrows_one_tile_per_pass_alternating_anchor ... ok
+test battle_anim::effects::tests::squish_targets_attacker_side_only ... ok
+test battle_anim::effects::tests::spiral_balls_follow_coordinate_sequence ... ok
+test battle_anim::effects::tests::substitute_and_minimize_latch_until_cleared ... ok
+test battle_anim::effects::tests::transform_blocks_stream_and_reveals_after_beat ... ok
+test battle_anim::effects::tests::transform_targets_attacker_side ... ok
+test battle_anim::effects::tests::wavy_screen_lasts_255_frames ... ok
+test battle_anim::player::tests::acid_armor_slides_down ... ok
+test battle_anim::player::tests::confusion_has_flash ... ok
+test battle_anim::player::tests::dig_slides_mon_up ... ok
+test battle_anim::player::tests::double_team_has_shake ... ok
+test battle_anim::player::tests::effect_command_reports_sound ... ok
+test battle_anim::player::tests::flash_screen_long_and_shake_screen_params ... ok
+test battle_anim::player::tests::earthquake_has_screen_shake ... ok
+test battle_anim::player::tests::growl_hook_duplicates_oam_entries ... ok
+test battle_anim::player::tests::minimize_has_minimize_effect ... ok
+test battle_anim::player::tests::hyper_beam_hook_flashes_every_four_frame_blocks ... ok
+test battle_anim::player::tests::hyper_beam_has_complex_sequence ... ok
+test battle_anim::player::tests::pound_animation_has_frames ... ok
+test battle_anim::player::tests::psychic_has_flash_and_wavy ... ok
+test battle_anim::player::tests::recover_has_blink ... ok
+test battle_anim::player::tests::rock_slide_hook_shakes_and_flashes ... ok
+test battle_anim::player::tests::selfdestruct_has_explosion ... ok
+test battle_anim::player::tests::selfdestruct_hook_flashes_and_hides_mon ... ok
+test battle_anim::player::tests::share_move_animations_player_turn_unchanged ... ok
+test battle_anim::player::tests::share_move_animations_enemy_turn ... ok
+test battle_anim::player::tests::slide_mon_off_is_full_slide ... ok
+test battle_anim::player::tests::sound_id_reported_on_first_frame_only ... ok
+test battle_anim::player::tests::splash_has_bounce ... ok
+test battle_anim::player::tests::substitute_has_substitute_effect ... ok
+test battle_anim::player::tests::teleport_has_squish_and_balls ... ok
+test battle_anim::player::tests::thunder_punch_has_palette_effects ... ok
+test battle_anim::player::tests::transform_has_transform_effect ... ok
+test battle_anim::player::tests::whirlwind_slides_enemy_off ... ok
+test battle_transition::tests::outward_spiral_starts_by_turning_into_the_unfilled_left_cell ... ok
+test battle_transition::tests::test_battle_transition_state_new ... ok
+test battle_transition::tests::outward_spiral_finishes_at_the_fixed_batch_count ... ok
+test battle_transition::tests::test_battle_transition_state_set_tile ... ok
+test battle_transition::tests::test_circle_completes_fully_black ... ok
+test battle_transition::tests::test_circle_first_arc_entry ... ok
+test battle_transition::tests::test_double_circle_completes_fully_black ... ok
+test battle_transition::tests::test_double_circle_first_tick_draws_both_halves ... ok
+test battle_transition::tests::test_shrink_first_step_compresses_toward_center ... ok
+test battle_transition::tests::test_shrink_completes_fully_black ... ok
+test battle_anim::player::tests::all_moves_produce_animations ... ok
+test embedded_font::tests::box_tiles_outside_masks_disjoint_from_strokes ... ok
+test embedded_font::tests::cjk_lookup_and_is_cjk ... ok
+test battle_transition::tests::test_split_first_step_pushes_away_from_center ... ok
+test battle_transition::tests::test_split_completes_fully_black ... ok
+test embedded_font::tests::draw_box_tile_leaves_outside_pixels_untouched ... ok
+test embedded_font::tests::cursor_right_fallback_centers_on_text_ink ... ok
+test embedded_font::tests::draw_char_returns_advance ... ok
+test embedded_font::tests::draw_text_does_not_panic ... ok
+test embedded_font::tests::draw_text_mixed_pixels ... ok
+test embedded_font::tests::full_cjk_repertoire_baked ... ok
+test indexed_framebuffer::facade_tests::apply_bgp_fade_to_black ... ok
+test indexed_framebuffer::facade_tests::bounds_checked_rgba_facade ... ok
+test indexed_framebuffer::facade_tests::blit_row_quantizes_each_pixel ... ok
+test indexed_framebuffer::facade_tests::clear_resets_display_palette ... ok
+test indexed_framebuffer::facade_tests::clear_and_fill_quantize ... ok
+test indexed_framebuffer::facade_tests::copy_from_with_delegates_storage_transfer ... ok
+test indexed_framebuffer::facade_tests::copy_rect_from_preserves_destination_palette_and_other_pixels ... ok
+test indexed_framebuffer::facade_tests::copy_from_copies_pixels_and_palette ... ok
+test indexed_framebuffer::facade_tests::copy_rect_within_preserves_palette_state ... ok
+test indexed_framebuffer::facade_tests::decoded_tiles_are_word_aligned_without_padding ... ok
+test indexed_framebuffer::facade_tests::fb_surface_present_and_pixels ... ok
+test indexed_framebuffer::facade_tests::fast_grayscale_quantizer_matches_generic_for_every_gray ... ok
+test embedded_font::tests::draw_text_sets_pixels ... ok
+test indexed_framebuffer::facade_tests::gb_tile_blit_maps_palette_and_preserves_transparency ... ok
+test indexed_framebuffer::facade_tests::gb_tile_blit_clips_and_flips ... ok
+test indexed_framebuffer::facade_tests::gb_tile_index_blit_copies_indices_and_skips_zero ... ok
+test indexed_framebuffer::facade_tests::grayscale_round_trips_exactly ... ok
+test indexed_framebuffer::facade_tests::near_grays_quantize_to_nearest_shade ... ok
+test indexed_framebuffer::facade_tests::gb_tile_index_blit_clips_opaque_edges ... ok
+test battle_transition::tests::test_shrink_render_copies_source_pixels ... ok
+test indexed_framebuffer::facade_tests::remap_shades_inverts ... ok
+test indexed_framebuffer::facade_tests::sprite_palette_quantization_matches_draw_palette ... ok
+test indexed_framebuffer::facade_tests::scale_shades_dims_display ... ok
+test indexed_framebuffer::facade_tests::palette_swap_does_not_touch_draws ... ok
+test indexed_framebuffer::facade_tests::to_rgba_uses_display_palette ... ok
+test indexed_framebuffer::facade_tests::transparent_writes_pick_nearest_opaque_shade ... ok
+test indexed_framebuffer::tests::bounds_are_checked ... ok
+test indexed_framebuffer::facade_tests::storage_is_packed ... ok
+test indexed_framebuffer::tests::clear_fills_every_pixel ... ok
+test indexed_framebuffer::tests::chunky_rect_copy_is_overlap_safe_in_every_direction ... ok
+test indexed_framebuffer::tests::copy_rect_within_is_overlap_safe_and_clipped ... ok
+test indexed_framebuffer::tests::copy_rect_from_preserves_pixels_outside_the_rectangle ... ok
+test indexed_framebuffer::tests::chunky_row_scroll_matches_reference_for_every_offset ... ok
+test indexed_framebuffer::tests::default_is_screen_sized_cleared ... ok
+test indexed_framebuffer::tests::fill_rect_clamps_to_bounds ... ok
+test indexed_framebuffer::tests::packed_data_feeds_tile_decoder ... ok
+test indexed_framebuffer::tests::packed_layout_is_gb_vram_bitplanes ... ok
+test indexed_framebuffer::tests::fill_rect_preserves_pixels_outside_partial_groups ... ok
+test indexed_framebuffer::tests::packing_round_trip_gb ... ok
+test indexed_framebuffer::tests::packing_round_trip_gba ... ok
+test indexed_framebuffer::tests::packing_round_trip_non_multiple_of_8 ... ok
+test indexed_framebuffer::tests::quantize_alpha_aware ... ok
+test indexed_framebuffer::tests::quantize_exact_match ... ok
+test indexed_framebuffer::tests::quantize_gba_palette ... ok
+test indexed_framebuffer::tests::quantize_picks_nearest ... ok
+test indexed_framebuffer::tests::scroll_clears_when_offset_exceeds_dimensions ... ok
+test indexed_framebuffer::tests::scroll_moves_pixels_and_clears_exposed_edges ... ok
+test indexed_framebuffer::tests::storage_sizes ... ok
+test indexed_framebuffer::tests::to_rgba_rejects_short_slice ... ok
+test indexed_framebuffer::tests::to_rgba_applies_palette ... ok
+test layer_renderer::tests::cache_invalidates_and_rebuilds ... ok
+test layer_renderer::tests::composite_additive ... ok
+test layer_renderer::tests::composite_additive_clamps_at_255 ... ok
+test layer_renderer::tests::composite_multiply ... ok
+test layer_renderer::tests::composite_normal_half_opaque ... ok
+test layer_renderer::tests::composite_normal_transparent_src_does_not_overwrite ... ok
+test layer_renderer::tests::dirty_region_empty_is_not_present ... ok
+test layer_renderer::tests::dirty_region_full_contains_all ... ok
+test layer_renderer::tests::composite_normal_fully_opaque ... ok
+test layer_renderer::tests::cached_tiles_render_same_as_non_cached ... ok
+test layer_renderer::tests::dirty_region_union_combines ... ok
+test layer_renderer::tests::dirty_region_union_with_empty ... ok
+test layer_renderer::tests::effective_pixel_flip_16px ... ok
+test layer_renderer::tests::effective_pixel_flip_both ... ok
+test layer_renderer::tests::effective_pixel_flip_v ... ok
+test layer_renderer::tests::effective_pixel_no_flip ... ok
+test layer_renderer::tests::empty_layers_produces_blank ... ok
+test layer_renderer::tests::effective_pixel_flip_h ... ok
+test layer_renderer::tests::frame_buffer_dirty_mark_and_check ... ok
+test layer_renderer::tests::invisible_layer_skipped ... ok
+test layer_renderer::tests::layer_without_no_animation_does_not_use_cache ... ok
+test layer_renderer::tests::frame_buffer_mark_dirty_tile ... ok
+test layer_renderer::tests::opacity_affects_visibility ... ok
+test layer_renderer::tests::render_layers_sized_16px_tiles ... ok
+test layer_renderer::tests::scroll_factor_half_speed ... ok
+test layer_renderer::tests::scroll_factor_vertical ... ok
+test layer_renderer::tests::single_layer_optimization_bypasses_temp_buffer ... ok
+test layer_renderer::tests::single_layer_renders_correctly ... ok
+test layer_renderer::tests::single_layer_respects_camera_offset ... ok
+test layer_renderer::tests::single_layer_transparent_tile_reveals_background ... ok
+test layer_renderer::tests::opaque_normal_fast_path_blends_partial_pixel_alpha ... ok
+test layer_renderer::tests::two_layers_composite_transparent_top ... ok
+test layer_renderer::tests::render_layers_ignores_dirty_region_and_always_redraws ... ok
+test layout::tests::test_oam_to_screen ... ok
+test layer_renderer::tests::z_index_sorting ... ok
+test layout::tests::test_screen_to_oam ... ok
+test layout::tests::test_tile_to_pixel ... ok
+test layout_engine::data_context::tests::test_bool_value ... ok
+test layout_engine::data_context::tests::test_empty_braces_passthrough ... ok
+test layer_renderer::tests::two_layers_opaque_top_covers_bottom ... ok
+test layout_engine::data_context::tests::test_float_value ... ok
+test layout_engine::data_context::tests::test_get_value ... ok
+test layout_engine::data_context::tests::test_is_truthy ... ok
+test layout_engine::data_context::tests::test_list_value ... ok
+test layout_engine::data_context::tests::test_modulo ... ok
+test layout_engine::data_context::tests::test_malformed_brace_passthrough ... ok
+test layout_engine::data_context::tests::test_mixed_text_and_vars ... ok
+test layout_engine::data_context::tests::test_modulo_non_zero ... ok
+test layout_engine::data_context::tests::test_simple_substitution ... ok
+test layout_engine::data_context::tests::test_plain_text_no_vars ... ok
+test layout_engine::data_context::tests::test_multiple_vars ... ok
+test layout_engine::data_context::tests::test_unknown_var_placeholder ... ok
+test layout_engine::data_context::tests::test_tile_id_value ... ok
+test layout_engine::data_context::tests::test_zero_pad_exact_width ... ok
+test layout_engine::data_context::tests::test_zero_padded ... ok
+test layout_engine::data_context::tests::test_zero_pad_large_number ... ok
+test layout_engine::deserialize::tests::renderer_builtin_element_types_are_known_to_validation ... ok
+test layout_engine::deserialize::tests::test_load_layout_not_found ... ok
+test layout_engine::deserialize::tests::test_parse_basic_layout ... ok
+test layout_engine::deserialize::tests::test_parse_custom_element ... ok
+test layout_engine::deserialize::tests::test_parse_empty_elements ... ok
+test layout_engine::deserialize::tests::test_parse_flex_list_layout ... ok
+test layout_engine::deserialize::tests::test_parse_invalid_json ... ok
+test layout_engine::deserialize::tests::test_parse_minimal_layout ... ok
+test layout_engine::deserialize::tests::test_parse_missing_required_field ... ok
+test layout_engine::deserialize::tests::test_parse_unknown_type ... ok
+test layout_engine::deserialize::tests::test_parse_group_layout ... ok
+test layout_engine::deserialize::tests::test_parse_visible_default_and_explicit ... ok
+test layout_engine::deserialize::tests::test_parse_wrong_types ... ok
+test layout_engine::elements::border::tests::border_tiles_copy_and_eq ... ok
+test layout_engine::elements::border::tests::custom_tiles_support ... ok
+test layout_engine::deserialize::tests::test_parse_z_index_default ... ok
+test layout_engine::deserialize::tests::test_parse_dex_layout ... ok
+test layout_engine::elements::border::tests::fill_border_has_no_style ... ok
+test layout_engine::elements::border::tests::default_tiles_match_textbox_constants ... ok
+test layout_engine::elements::border::tests::minimal_1x1_border ... ok
+test layout_engine::elements::border::tests::has_style_reflects_tiles_presence ... ok
+test layout_engine::elements::border::tests::thin_horizontal_border ... ok
+test layout_engine::elements::border::tests::new_border_has_default_tiles ... ok
+test layout_engine::elements::border::tests::thin_vertical_border ... ok
+test layout_engine::elements::border::tests::with_tiles_sets_custom_tiles ... ok
+test layout_engine::elements::cursor::tests::defaults_to_base_and_triangle_glyph ... ok
+test layout_engine::elements::cursor::tests::grid_position_computed_from_col_row ... ok
+test layout_engine::elements::divider::tests::default_orientation_is_horizontal ... ok
+test layout_engine::elements::divider::tests::empty_tiles_is_noop ... ok
+test layout_engine::elements::divider::tests::horizontal_default_tw_is_1 ... ok
+test layout_engine::elements::divider::tests::horizontal_places_tiles_left_to_right ... ok
+test layout_engine::elements::divider::tests::repeat_fills_remaining_rect ... ok
+test layout_engine::elements::divider::tests::repeat_zero_stops_after_explicit_tiles ... ok
+test layout_engine::elements::divider::tests::vertical_default_th_is_1 ... ok
+test layout_engine::elements::divider::tests::vertical_places_tiles_top_to_bottom ... ok
+test layout_engine::elements::flex_list::tests::align_center ... ok
+test layout_engine::elements::flex_list::tests::align_center_long_text_does_not_underflow ... ok
+test layout_engine::elements::flex_list::tests::align_left ... ok
+test layout_engine::elements::flex_list::tests::align_right ... ok
+test layout_engine::elements::flex_list::tests::align_right_long_text_does_not_underflow ... ok
+test layout_engine::elements::flex_list::tests::column_alignment_center ... ok
+test layout_engine::elements::flex_list::tests::column_positions_empty ... ok
+test layout_engine::elements::flex_list::tests::column_alignment_right ... ok
+test layout_engine::elements::flex_list::tests::column_positions_multiple ... ok
+test layout_engine::elements::flex_list::tests::column_positions_with_offset ... ok
+test layout_engine::elements::flex_list::tests::cursor_on_active_row ... ok
+test layout_engine::elements::flex_list::tests::column_positions_single ... ok
+test layout_engine::elements::flex_list::tests::empty_columns_no_render ... ok
+test layout_engine::elements::flex_list::tests::empty_items_no_render ... ok
+test layout_engine::elements::flex_list::tests::item_scalar_to_strings ... ok
+test layout_engine::elements::flex_list::tests::missing_items_key_no_render ... ok
+test layout_engine::elements::flex_list::tests::padding_applied ... ok
+test layout_engine::elements::flex_list::tests::gap_between_rows ... ok
+test layout_engine::elements::flex_list::tests::prefix_appended_to_value ... ok
+test layout_engine::elements::flex_list::tests::item_list_to_strings ... ok
+test layout_engine::elements::group::tests::absolute_layout_offset_is_zero ... ok
+test layout_engine::elements::group::tests::child_rect_absolute_mode ... ok
+test layout_engine::elements::flex_list::tests::renders_multi_column_items ... ok
+test layout_engine::elements::group::tests::child_rect_horizontal_mode ... ok
+test layout_engine::elements::group::tests::child_rect_vertical_mode ... ok
+test layout_engine::elements::group::tests::group_builder_pattern ... ok
+test layout_engine::elements::group::tests::group_defaults ... ok
+test layout_engine::elements::group::tests::horizontal_layout_no_gap ... ok
+test layout_engine::elements::group::tests::horizontal_layout_offset_accumulates_widths ... ok
+test layout_engine::elements::group::tests::is_auto_returns_false_for_absolute ... ok
+test layout_engine::elements::group::tests::is_auto_returns_true_for_horizontal_and_vertical ... ok
+test layout_engine::elements::group::tests::layout_from_config_absolute_when_no_direction ... ok
+test layout_engine::elements::group::tests::layout_from_config_horizontal ... ok
+test layout_engine::elements::group::tests::layout_from_config_vertical ... ok
+test layout_engine::elements::group::tests::overlaps_detects_non_intersection ... ok
+test layout_engine::elements::group::tests::overlaps_detects_intersection ... ok
+test layout_engine::elements::group::tests::resolve_empty_children ... ok
+test layout_engine::elements::group::tests::rect_to_absolute_preserves_size ... ok
+test layout_engine::elements::group::tests::resolve_absolute_children_preserves_positions ... ok
+test layout_engine::elements::group::tests::resolve_horizontal_children ... ok
+test layout_engine::elements::group::tests::resolve_passes_z_index_and_visibility ... ok
+test layout_engine::elements::group::tests::resolve_single_child_at_origin ... ok
+test layout_engine::elements::group::tests::to_absolute_adds_group_offset ... ok
+test layout_engine::elements::group::tests::resolve_vertical_children ... ok
+test layout_engine::elements::group::tests::vertical_layout_offset_accumulates_heights ... ok
+test layout_engine::elements::image::tests::default_tw_th_is_1 ... ok
+test layout_engine::elements::image::tests::empty_resolved_source_draws_placeholder ... ok
+test layout_engine::elements::image::tests::flip_params_are_accepted ... ok
+test layout_engine::elements::image::tests::placeholder_spans_full_rect ... ok
+test layout_engine::elements::image::tests::placeholder_alternates_colors ... ok
+test layout_engine::elements::image::tests::registered_image_is_blitted_not_placeholder ... ok
+test layout_engine::elements::image::tests::resolves_source_from_datacontext ... ok
+test layout_engine::elements::image::tests::unknown_source_draws_placeholder ... ok
+test layout_engine::elements::image::tests::unknown_key_with_nonempty_registry_still_placeholders ... ok
+test layout_engine::elements::list::tests::bool_value_to_string ... ok
+test layout_engine::elements::list::tests::cursor_on_second_item ... ok
+test layout_engine::elements::list::tests::empty_items_no_render ... ok
+test indexed_framebuffer::tests::linear_and_packed_storage_agree_through_clipped_moves_and_blits ... ok
+test layout_engine::elements::list::tests::footer_rendered ... ok
+test layout_engine::elements::list::tests::int_value_to_string ... ok
+test layout_engine::elements::list::tests::footer_resolves_template ... ok
+test layout_engine::elements::list::tests::list_value_to_string ... ok
+test layout_engine::elements::list::tests::missing_items_key_no_render ... ok
+test layout_engine::elements::list::tests::no_scroll_indicators_when_fits ... ok
+test layout_engine::elements::list::tests::renders_items_with_cursor ... ok
+test layout_engine::elements::list::tests::scroll_window_cursor_at_bottom ... ok
+test layout_engine::elements::list::tests::scroll_down_indicator_when_content_below ... ok
+test layout_engine::elements::list::tests::scroll_window_cursor_in_middle ... ok
+test layout_engine::elements::list::tests::scroll_up_indicator_when_scrolled_down ... ok
+test layout_engine::elements::list::tests::scroll_window_cursor_at_top ... ok
+test layout_engine::elements::list::tests::scroll_window_exact_fit ... ok
+test layout_engine::elements::list::tests::scroll_window_empty_list ... ok
+test layout_engine::elements::list::tests::scroll_window_small_list ... ok
+test layout_engine::elements::primitives::tests::bracket_draws_requested_sides_only ... ok
+test layout_engine::elements::primitives::tests::pixel_rect_draws_raw_rect ... ok
+test layout_engine::elements::list::tests::string_value_to_string ... ok
+test layout_engine::elements::text::tests::align_center ... ok
+test layout_engine::elements::text::tests::align_center_clamped ... ok
+test layout_engine::elements::text::tests::align_left_is_zero ... ok
+test layout_engine::elements::text::tests::align_right ... ok
+test layout_engine::elements::text::tests::chunk_str_empty ... ok
+test layout_engine::elements::text::tests::chunk_str_exact_multiple ... ok
+test layout_engine::elements::text::tests::chunk_str_simple ... ok
+test layout_engine::elements::text::tests::parse_color_black ... ok
+test layout_engine::elements::text::tests::localized_value_get_selects_and_falls_back ... ok
+test layout_engine::elements::text::tests::parse_color_case_insensitive ... ok
+test layout_engine::elements::text::tests::parse_color_lightgray_variants ... ok
+test layout_engine::elements::text::tests::parse_color_unknown_returns_black ... ok
+test layout_engine::elements::text::tests::parse_color_white ... ok
+test layout_engine::elements::text::tests::render_center_aligned ... ok
+test layout_engine::elements::text::tests::render_clips_to_rect_height ... ok
+test layout_engine::elements::text::tests::render_color_from_params ... ok
+test layout_engine::elements::text::tests::render_font_config ... ok
+test layout_engine::elements::text::tests::render_line_spacing ... ok
+test layout_engine::elements::text::tests::parse_color_darkgray_variants ... ok
+test layout_engine::elements::text::tests::render_localized_text_picks_active_language ... ok
+test layout_engine::elements::text::tests::render_right_aligned ... ok
+test layout_engine::elements::text::tests::render_template_resolution ... ok
+test layout_engine::elements::text::tests::render_simple_text ... ok
+test layout_engine::elements::text::tests::word_wrap_empty_returns_empty_line ... ok
+test layout_engine::elements::text::tests::word_wrap_exact_fit ... ok
+test layout_engine::elements::text::tests::word_wrap_long_word_breaks ... ok
+test layout_engine::elements::text::tests::word_wrap_preserves_spaces_in_result ... ok
+test layout_engine::elements::text::tests::word_wrap_short_text ... ok
+test layout_engine::elements::text::tests::word_wrap_splits_at_space ... ok
+test layout_engine::elements::tile::tests::parse_black ... ok
+test layout_engine::elements::tile::tests::parse_darkgray ... ok
+test layout_engine::elements::tile::tests::parse_unknown_returns_black ... ok
+test layout_engine::elements::tile::tests::render_from_template ... ok
+test layout_engine::elements::tile::tests::render_repeat_fills_rect ... ok
+test layout_engine::elements::text::tests::render_word_wrap ... ok
+test layout_engine::elements::tile::tests::render_repeat_none_draws_once ... ok
+test layout_engine::elements::tile::tests::render_single_tile ... ok
+test layout_engine::elements::tile::tests::render_tile_with_tiles_repeat ... ok
+test layout_engine::elements::tile::tests::render_tile_with_tiles_no_flip ... ok
+test layout_engine::elements::tile::tests::render_tile_with_tiles_flip_x ... ok
+test layout_engine::elements::tile::tests::render_tile_with_tiles_out_of_bounds_tile_does_not_panic ... ok
+test layout_engine::elements::tile::tests::render_with_palette ... ok
+test layout_engine::elements::tile::tests::resolve_from_json_number ... ok
+test layout_engine::elements::tile::tests::resolve_from_json_string ... ok
+test layout_engine::elements::tile::tests::resolve_from_template ... ok
+test layout_engine::elements::tile::tests::resolve_invalid_number_errors ... ok
+test layout_engine::elements::tile::tests::resolve_invalid_string_errors ... ok
+test layout_engine::elements::tile::tests::resolve_missing_template_errors ... ok
+test layout_engine::registry::tests::test_register_and_get ... ok
+test layout_engine::registry::tests::test_multiple_custom_elements ... ok
+test layout_engine::registry::tests::test_register_replaces_existing ... ok
+test layout_engine::registry::tests::test_registry_empty ... ok
+test layout_engine::registry::tests::validate_flags_missing_required_prop ... ok
+test layout_engine::registry::tests::validate_flags_prop_type_mismatch ... ok
+test layout_engine::registry::tests::validate_flags_unregistered_custom_type ... ok
+test layout_engine::registry::tests::validate_accepts_well_formed_custom_element ... ok
+test layout_engine::registry::tests::validate_ignores_extra_and_standard_props ... ok
+test layout_engine::renderer::tests::test_dispatch_border ... ok
+test layout_engine::renderer::tests::test_dispatch_custom ... ok
+test layout_engine::registry::tests::validate_recurses_into_border_children ... ok
+test layout_engine::renderer::tests::test_dispatch_divider ... ok
+test layout_engine::renderer::tests::test_dispatch_image ... ok
+test layout_engine::renderer::tests::test_dispatch_invisible_element ... ok
+test layout_engine::renderer::tests::test_dispatch_group ... ok
+test layout_engine::renderer::tests::test_dispatch_tile ... ok
+test layout_engine::renderer::tests::test_dispatch_text ... ok
+test layout_engine::renderer::tests::test_dispatch_z_order ... ok
+test layout_engine::renderer::tests::test_dispatch_unknown_type ... ok
+test layout_engine::renderer::tests::test_parse_bg_color_black ... ok
+test layout_engine::renderer::tests::test_parse_bg_color_darkgray ... ok
+test layout_engine::renderer::tests::test_parse_bg_color_unknown ... ok
+test layout_engine::renderer::tests::test_parse_bg_color_white ... ok
+test mon_icon::tests::frame_from_counter_alternates ... ok
+test layout_engine::static_layout::tests::direct_bindings_match_dynamic_semantics ... ok
+test layout_engine::renderer::tests::test_render_title_screen ... ok
+test palette::tests::color_palette_state_is_generic_over_custom_palette ... ok
+test palette::tests::dmg_palette_const_is_valid ... ok
+test palette::tests::gb_color_to_index ... ok
+test palette::tests::gba_color_to_index ... ok
+test palette::tests::gba_palette_from_array ... ok
+test palette::tests::grayscale_palette_const_is_valid ... ok
+test palette::tests::palette_color_lookup ... ok
+test palette::tests::palette_copy_and_eq ... ok
+test palette::tests::palette_from_bgp_register ... ok
+test palette::tests::gba_color_from_u8 ... ok
+test palette::tests::palette_new_from_slice ... ok
+test palette::tests::gb_color_from_u8 ... ok
+test palette::tests::palette_state_white_out ... ok
+test palette::tests::palette_state_defaults ... ok
+test party_hp_bar::tests::segment_tile_full_and_empty ... ok
+test party_hp_bar::tests::segment_tile_partial ... ok
+test party_hp_bar::tests::tileset_index_maps_correctly ... ok
+test resource::tests::bw_black_maps_to_color_3 ... ok
+test resource::tests::bw_white_maps_to_color_0 ... ok
+test mon_icon::tests::draw_mon_icon_respects_transparent_color0 ... ok
+test resource::tests::asset_root_resolve_and_list ... ok
+test resource::tests::grayscale_black_maps_to_color_3 ... ok
+test resource::tests::grayscale_light_gray_maps_to_color_1 ... ok
+test resource::tests::grayscale_snapping_near_black ... ok
+test resource::tests::grayscale_snapping_near_dark_gray ... ok
+test resource::tests::grayscale_dark_gray_maps_to_color_2 ... ok
+test resource::tests::grayscale_snapping_near_white ... ok
+test resource::tests::grayscale_white_maps_to_color_0 ... ok
+test resource::tests::grayscale_snapping_near_light_gray ... ok
+test resource::tests::png_to_1bpp_all_white ... ok
+test resource::tests::png_to_1bpp_all_black ... ok
+test resource::tests::loaded_png_missing_file ... ok
+test resource::tests::png_to_1bpp_checkerboard ... ok
+test resource::tests::png_to_1bpp_rejects_non_multiple_of_8 ... ok
+test resource::tests::png_to_1bpp_roundtrip_with_tileset ... ok
+test resource::tests::png_to_2bpp_dark_gray_tile ... ok
+test resource::tests::png_to_2bpp_2x2_tiles ... ok
+test resource::tests::png_to_2bpp_light_gray_tile ... ok
+test resource::tests::png_to_2bpp_multi_tile ... ok
+test resource::tests::png_to_2bpp_rejects_non_multiple_of_8 ... ok
+test resource::tests::png_to_2bpp_alternating_colors ... ok
+test resource::tests::png_to_2bpp_roundtrip_with_tileset ... ok
+test resource::tests::png_to_2bpp_single_black_tile ... ok
+test resource::tests::png_to_2bpp_single_white_tile ... ok
+test resource::tests::png_to_tileset_2bpp_produces_correct_tile_count ... ok
+test resource::tests::strict_grayscale_exact_values ... ok
+test resource::tests::strict_grayscale_rejects_non_standard ... ok
+test tests::constants_are_consistent ... ok
+test tests::from_4bpp_decodes_multiple_tiles ... ok
+test tests::from_4bpp_decodes_single_tile ... ok
+test tests::from_4bpp_max_color_is_15 ... ok
+test tests::from_4bpp_zero_data_is_all_color_0 ... ok
+test tests::from_rgba_creates_fullcolor_tileset ... ok
+test tests::from_rgba_multiple_tiles ... ok
+test tests::get_rgba_returns_none_for_non_fullcolor ... ok
+test tests::get_rgba_returns_none_for_out_of_bounds ... ok
+test tests::tileset_blank_has_gb_format ... ok
+test tests::tileset_from_1bpp_has_gb_format ... ok
+test tests::tileset_from_2bpp_has_gb_format ... ok
+test text_renderer::tests::test_screen_tile_buffer_copy_from_flat ... ok
+test text_renderer::tests::test_screen_tile_buffer_dynamic_sizes ... ok
+test resource::tests::resource_manager_category_default_encoding ... ok
+test text_renderer::tests::test_screen_tile_buffer_fill ... ok
+test resource::tests::resource_manager_caches_by_category_and_filename ... ok
+test resource::tests::png_to_tileset_1bpp_produces_correct_tile_count ... ok
+test text_renderer::tests::test_screen_tile_buffer_out_of_bounds ... ok
+test text_renderer::tests::test_screen_tile_buffer_set_out_of_bounds ... ok
+test title::tests::blink_toggles_over_the_period ... ok
+test text_renderer::tests::test_screen_tile_buffer_set_row ... ok
+test title::tests::confirm_reports_selected_index ... ok
+test title::tests::cursor_moves_and_wraps ... ok
+test title::tests::disabled_entries_are_skipped_and_unselectable ... ok
+test text_renderer::tests::test_screen_tile_buffer_set_get ... ok
+test title::tests::first_entry_disabled_seeks_forward ... ok
+
+test result: ok. 476 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+     Running tests/gui_layout_render.rs (/workspace/dotzuki/workspace/target/debug/deps/gui_layout_render-9c00cc138d2d8930)
+
+running 7 tests
+test image_element_compiles_and_blits_registered_image ... ok
+test cursor_element_grid_follows_bindings ... ok
+test at_t_labels_render_active_language ... ok
+test dialog_panel_draws_nested_text ... ok
+test image_element_without_registry_draws_placeholder ... ok
+test start_menu_list_draws_items ... ok
+test save_menu_draws_label_and_resolved_text ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/gui_layout_roundtrip.rs (/workspace/dotzuki/workspace/target/debug/deps/gui_layout_roundtrip-e21a46d9f9dc7ca9)
+
+running 1 test
+test all_gui_layouts_round_trip_to_matching_params ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests dotzuki_renderer
+
+running 4 tests
+test crates/dotzuki-renderer/src/layout_engine/registry.rs - layout_engine::registry::ElementRegistry (line 156) ... ignored
+test crates/dotzuki-renderer/src/layout_engine/elements/border.rs - layout_engine::elements::border::Border (line 74) ... ok
+test crates/dotzuki-renderer/src/layout_engine/elements/group.rs - layout_engine::elements::group::Group (line 84) ... ok
+test crates/dotzuki-renderer/src/layout_engine/data_context.rs - layout_engine::data_context::DataContext::resolve (line 52) ... ok
+
+test result: ok. 3 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.58s

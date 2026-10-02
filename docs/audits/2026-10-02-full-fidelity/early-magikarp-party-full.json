@@ -1,0 +1,2699 @@
+{
+  "case": "early-magikarp-party-full",
+  "port_commit": "72ff719",
+  "seed": 42,
+  "before": {
+    "get_state": {
+      "active_script_effect": null,
+      "badges": 0,
+      "battle_bag": null,
+      "battle_inventory": [],
+      "battle_live": null,
+      "battle_message": null,
+      "battle_moves": null,
+      "battle_party_cursor": 0,
+      "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+      "choice": null,
+      "coins": 0,
+      "credits_final_button": null,
+      "credits_phase": null,
+      "dialogue": null,
+      "dialogue_state": null,
+      "evaluation": {
+        "party": [
+          {
+            "hp": 20,
+            "level": 5,
+            "max_hp": 20,
+            "moves": [
+              "Gust",
+              "SandAttack",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              15,
+              0,
+              0
+            ],
+            "species": "Pidgey",
+            "status": "None",
+            "total_exp": 135
+          },
+          {
+            "hp": 20,
+            "level": 5,
+            "max_hp": 20,
+            "moves": [
+              "Gust",
+              "SandAttack",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              15,
+              0,
+              0
+            ],
+            "species": "Pidgey",
+            "status": "None",
+            "total_exp": 135
+          },
+          {
+            "hp": 20,
+            "level": 5,
+            "max_hp": 20,
+            "moves": [
+              "Gust",
+              "SandAttack",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              15,
+              0,
+              0
+            ],
+            "species": "Pidgey",
+            "status": "None",
+            "total_exp": 135
+          },
+          {
+            "hp": 20,
+            "level": 5,
+            "max_hp": 20,
+            "moves": [
+              "Gust",
+              "SandAttack",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              15,
+              0,
+              0
+            ],
+            "species": "Pidgey",
+            "status": "None",
+            "total_exp": 135
+          },
+          {
+            "hp": 20,
+            "level": 5,
+            "max_hp": 20,
+            "moves": [
+              "Gust",
+              "SandAttack",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              15,
+              0,
+              0
+            ],
+            "species": "Pidgey",
+            "status": "None",
+            "total_exp": 135
+          },
+          {
+            "hp": 20,
+            "level": 5,
+            "max_hp": 20,
+            "moves": [
+              "Gust",
+              "SandAttack",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              15,
+              0,
+              0
+            ],
+            "species": "Pidgey",
+            "status": "None",
+            "total_exp": 135
+          }
+        ],
+        "party_source": "save_data",
+        "pokedex": {
+          "owned": 0,
+          "owned_numbers": [],
+          "seen": 0,
+          "total": 151
+        }
+      },
+      "field_menu": null,
+      "frame_count": 62,
+      "hall_of_fame_count": 0,
+      "hof_phase": null,
+      "last_outside_map": "PalletTown",
+      "link": {
+        "cable_phase": "Inactive",
+        "role": "Host",
+        "status": "disabled",
+        "trade": null
+      },
+      "map_blocks": [32, 16, 1, 2, 12, 13, 13, 33, 4, 5, 7, 7, 34, 35, 8, 15, 15, 15, 15, 15, 27, 14, 10, 11, 14, 15, 15, 14],
+      "map_id": 68,
+      "map_name": "MtMoonPokecenter",
+      "money": 3000,
+      "party": [
+        {
+          "hp": 20,
+          "level": 5,
+          "max_hp": 20,
+          "moves": [
+            "Gust",
+            "SandAttack",
+            "None",
+            "None"
+          ],
+          "pp": [
+            35,
+            15,
+            0,
+            0
+          ],
+          "species": "Pidgey",
+          "status": "None"
+        },
+        {
+          "hp": 20,
+          "level": 5,
+          "max_hp": 20,
+          "moves": [
+            "Gust",
+            "SandAttack",
+            "None",
+            "None"
+          ],
+          "pp": [
+            35,
+            15,
+            0,
+            0
+          ],
+          "species": "Pidgey",
+          "status": "None"
+        },
+        {
+          "hp": 20,
+          "level": 5,
+          "max_hp": 20,
+          "moves": [
+            "Gust",
+            "SandAttack",
+            "None",
+            "None"
+          ],
+          "pp": [
+            35,
+            15,
+            0,
+            0
+          ],
+          "species": "Pidgey",
+          "status": "None"
+        },
+        {
+          "hp": 20,
+          "level": 5,
+          "max_hp": 20,
+          "moves": [
+            "Gust",
+            "SandAttack",
+            "None",
+            "None"
+          ],
+          "pp": [
+            35,
+            15,
+            0,
+            0
+          ],
+          "species": "Pidgey",
+          "status": "None"
+        },
+        {
+          "hp": 20,
+          "level": 5,
+          "max_hp": 20,
+          "moves": [
+            "Gust",
+            "SandAttack",
+            "None",
+            "None"
+          ],
+          "pp": [
+            35,
+            15,
+            0,
+            0
+          ],
+          "species": "Pidgey",
+          "status": "None"
+        },
+        {
+          "hp": 20,
+          "level": 5,
+          "max_hp": 20,
+          "moves": [
+            "Gust",
+            "SandAttack",
+            "None",
+            "None"
+          ],
+          "pp": [
+            35,
+            15,
+            0,
+            0
+          ],
+          "species": "Pidgey",
+          "status": "None"
+        }
+      ],
+      "party_count": 6,
+      "pc_phase": null,
+      "player_facing": "Down",
+      "player_movement_state": "Idle",
+      "player_name": "",
+      "player_transport": "Walking",
+      "player_x": 10,
+      "player_y": 7,
+      "screen": "overworld",
+      "script_awaiting_battle": false,
+      "script_effect": null,
+      "script_running": false,
+      "shop_phase": null,
+      "text_speed_delay_frames": 3,
+      "warp_fade": "Idle"
+    },
+    "get_bag": [],
+    "get_flags": {},
+    "get_npcs": [
+      {
+        "facing": "Down",
+        "home_x": 3,
+        "home_y": 1,
+        "npc_index": 0,
+        "scripted_path_remaining": 0,
+        "sprite_id": 41,
+        "text_id": 1,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 3,
+        "y": 1
+      },
+      {
+        "facing": "Up",
+        "home_x": 4,
+        "home_y": 3,
+        "npc_index": 1,
+        "scripted_path_remaining": 0,
+        "sprite_id": 4,
+        "text_id": 2,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 4,
+        "y": 3
+      },
+      {
+        "facing": "Up",
+        "home_x": 7,
+        "home_y": 3,
+        "npc_index": 2,
+        "scripted_path_remaining": 0,
+        "sprite_id": 16,
+        "text_id": 3,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 7,
+        "y": 3
+      },
+      {
+        "facing": "Right",
+        "home_x": 10,
+        "home_y": 6,
+        "npc_index": 3,
+        "scripted_path_remaining": 0,
+        "sprite_id": 10,
+        "text_id": 4,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 11,
+        "y": 6
+      },
+      {
+        "facing": "Down",
+        "home_x": 7,
+        "home_y": 2,
+        "npc_index": 4,
+        "scripted_path_remaining": 0,
+        "sprite_id": 66,
+        "text_id": 5,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 7,
+        "y": 2
+      },
+      {
+        "facing": "Down",
+        "home_x": 11,
+        "home_y": 2,
+        "npc_index": 5,
+        "scripted_path_remaining": 0,
+        "sprite_id": 42,
+        "text_id": 6,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 11,
+        "y": 2
+      }
+    ]
+  },
+  "after": {
+    "get_state": {
+      "active_script_effect": null,
+      "badges": 0,
+      "battle_bag": null,
+      "battle_inventory": [],
+      "battle_live": null,
+      "battle_message": null,
+      "battle_moves": null,
+      "battle_party_cursor": 0,
+      "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+      "choice": null,
+      "coins": 0,
+      "credits_final_button": null,
+      "credits_phase": null,
+      "dialogue": null,
+      "dialogue_state": null,
+      "evaluation": {
+        "party": [
+          {
+            "hp": 20,
+            "level": 5,
+            "max_hp": 20,
+            "moves": [
+              "Gust",
+              "SandAttack",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              15,
+              0,
+              0
+            ],
+            "species": "Pidgey",
+            "status": "None",
+            "total_exp": 135
+          },
+          {
+            "hp": 20,
+            "level": 5,
+            "max_hp": 20,
+            "moves": [
+              "Gust",
+              "SandAttack",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              15,
+              0,
+              0
+            ],
+            "species": "Pidgey",
+            "status": "None",
+            "total_exp": 135
+          },
+          {
+            "hp": 20,
+            "level": 5,
+            "max_hp": 20,
+            "moves": [
+              "Gust",
+              "SandAttack",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              15,
+              0,
+              0
+            ],
+            "species": "Pidgey",
+            "status": "None",
+            "total_exp": 135
+          },
+          {
+            "hp": 20,
+            "level": 5,
+            "max_hp": 20,
+            "moves": [
+              "Gust",
+              "SandAttack",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              15,
+              0,
+              0
+            ],
+            "species": "Pidgey",
+            "status": "None",
+            "total_exp": 135
+          },
+          {
+            "hp": 20,
+            "level": 5,
+            "max_hp": 20,
+            "moves": [
+              "Gust",
+              "SandAttack",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              15,
+              0,
+              0
+            ],
+            "species": "Pidgey",
+            "status": "None",
+            "total_exp": 135
+          },
+          {
+            "hp": 20,
+            "level": 5,
+            "max_hp": 20,
+            "moves": [
+              "Gust",
+              "SandAttack",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              15,
+              0,
+              0
+            ],
+            "species": "Pidgey",
+            "status": "None",
+            "total_exp": 135
+          }
+        ],
+        "party_source": "save_data",
+        "pokedex": {
+          "owned": 0,
+          "owned_numbers": [],
+          "seen": 0,
+          "total": 151
+        }
+      },
+      "field_menu": null,
+      "frame_count": 121,
+      "hall_of_fame_count": 0,
+      "hof_phase": null,
+      "last_outside_map": "PalletTown",
+      "link": {
+        "cable_phase": "Inactive",
+        "role": "Host",
+        "status": "disabled",
+        "trade": null
+      },
+      "map_blocks": [32, 16, 1, 2, 12, 13, 13, 33, 4, 5, 7, 7, 34, 35, 8, 15, 15, 15, 15, 15, 27, 14, 10, 11, 14, 15, 15, 14],
+      "map_id": 68,
+      "map_name": "MtMoonPokecenter",
+      "money": 3000,
+      "party": [
+        {
+          "hp": 20,
+          "level": 5,
+          "max_hp": 20,
+          "moves": [
+            "Gust",
+            "SandAttack",
+            "None",
+            "None"
+          ],
+          "pp": [
+            35,
+            15,
+            0,
+            0
+          ],
+          "species": "Pidgey",
+          "status": "None"
+        },
+        {
+          "hp": 20,
+          "level": 5,
+          "max_hp": 20,
+          "moves": [
+            "Gust",
+            "SandAttack",
+            "None",
+            "None"
+          ],
+          "pp": [
+            35,
+            15,
+            0,
+            0
+          ],
+          "species": "Pidgey",
+          "status": "None"
+        },
+        {
+          "hp": 20,
+          "level": 5,
+          "max_hp": 20,
+          "moves": [
+            "Gust",
+            "SandAttack",
+            "None",
+            "None"
+          ],
+          "pp": [
+            35,
+            15,
+            0,
+            0
+          ],
+          "species": "Pidgey",
+          "status": "None"
+        },
+        {
+          "hp": 20,
+          "level": 5,
+          "max_hp": 20,
+          "moves": [
+            "Gust",
+            "SandAttack",
+            "None",
+            "None"
+          ],
+          "pp": [
+            35,
+            15,
+            0,
+            0
+          ],
+          "species": "Pidgey",
+          "status": "None"
+        },
+        {
+          "hp": 20,
+          "level": 5,
+          "max_hp": 20,
+          "moves": [
+            "Gust",
+            "SandAttack",
+            "None",
+            "None"
+          ],
+          "pp": [
+            35,
+            15,
+            0,
+            0
+          ],
+          "species": "Pidgey",
+          "status": "None"
+        },
+        {
+          "hp": 20,
+          "level": 5,
+          "max_hp": 20,
+          "moves": [
+            "Gust",
+            "SandAttack",
+            "None",
+            "None"
+          ],
+          "pp": [
+            35,
+            15,
+            0,
+            0
+          ],
+          "species": "Pidgey",
+          "status": "None"
+        }
+      ],
+      "party_count": 6,
+      "pc_phase": null,
+      "player_facing": "Up",
+      "player_movement_state": "Idle",
+      "player_name": "",
+      "player_transport": "Walking",
+      "player_x": 11,
+      "player_y": 7,
+      "screen": "overworld",
+      "script_awaiting_battle": false,
+      "script_effect": null,
+      "script_running": false,
+      "shop_phase": null,
+      "text_speed_delay_frames": 3,
+      "warp_fade": "Idle"
+    },
+    "get_bag": [],
+    "get_flags": {},
+    "get_npcs": [
+      {
+        "facing": "Down",
+        "home_x": 3,
+        "home_y": 1,
+        "npc_index": 0,
+        "scripted_path_remaining": 0,
+        "sprite_id": 41,
+        "text_id": 1,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 3,
+        "y": 1
+      },
+      {
+        "facing": "Up",
+        "home_x": 4,
+        "home_y": 3,
+        "npc_index": 1,
+        "scripted_path_remaining": 0,
+        "sprite_id": 4,
+        "text_id": 2,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 4,
+        "y": 3
+      },
+      {
+        "facing": "Up",
+        "home_x": 7,
+        "home_y": 3,
+        "npc_index": 2,
+        "scripted_path_remaining": 0,
+        "sprite_id": 16,
+        "text_id": 3,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 7,
+        "y": 3
+      },
+      {
+        "facing": "Down",
+        "home_x": 10,
+        "home_y": 6,
+        "npc_index": 3,
+        "scripted_path_remaining": 0,
+        "sprite_id": 10,
+        "text_id": 4,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 11,
+        "y": 6
+      },
+      {
+        "facing": "Down",
+        "home_x": 7,
+        "home_y": 2,
+        "npc_index": 4,
+        "scripted_path_remaining": 0,
+        "sprite_id": 66,
+        "text_id": 5,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 7,
+        "y": 2
+      },
+      {
+        "facing": "Down",
+        "home_x": 11,
+        "home_y": 2,
+        "npc_index": 5,
+        "scripted_path_remaining": 0,
+        "sprite_id": 42,
+        "text_id": 6,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 11,
+        "y": 2
+      }
+    ]
+  },
+  "transcript": [
+    {
+      "command": {
+        "cmd": "restore_state",
+        "slot": 0
+      },
+      "response": {
+        "ok": true,
+        "data": {
+          "agent_state": {
+            "badges": {
+              "count": 0
+            },
+            "facing": "Down",
+            "map": {
+              "id": 66,
+              "name": "BikeShop"
+            },
+            "mode": "overworld",
+            "nearby": [
+              {
+                "distance": 0,
+                "id": "warp:0",
+                "interactable": true,
+                "kind": "warp",
+                "position": {
+                  "x": 2,
+                  "y": 7
+                }
+              },
+              {
+                "distance": 1,
+                "id": "warp:1",
+                "interactable": false,
+                "kind": "warp",
+                "position": {
+                  "x": 3,
+                  "y": 7
+                }
+              },
+              {
+                "distance": 3,
+                "id": "sign:5",
+                "interactable": false,
+                "kind": "sign",
+                "position": {
+                  "x": 1,
+                  "y": 5
+                }
+              },
+              {
+                "distance": 4,
+                "id": "npc:1",
+                "interactable": false,
+                "kind": "npc",
+                "name": "MiddleAgedWoman",
+                "position": {
+                  "x": 5,
+                  "y": 6
+                }
+              },
+              {
+                "distance": 5,
+                "id": "npc:2",
+                "interactable": false,
+                "kind": "npc",
+                "name": "Youngster",
+                "position": {
+                  "x": 1,
+                  "y": 3
+                }
+              },
+              {
+                "distance": 5,
+                "id": "sign:4",
+                "interactable": false,
+                "kind": "sign",
+                "position": {
+                  "x": 0,
+                  "y": 4
+                }
+              },
+              {
+                "distance": 6,
+                "id": "sign:1",
+                "interactable": false,
+                "kind": "sign",
+                "position": {
+                  "x": 2,
+                  "y": 1
+                }
+              },
+              {
+                "distance": 6,
+                "id": "sign:2",
+                "interactable": false,
+                "kind": "sign",
+                "position": {
+                  "x": 1,
+                  "y": 2
+                }
+              },
+              {
+                "distance": 6,
+                "id": "sign:3",
+                "interactable": false,
+                "kind": "sign",
+                "position": {
+                  "x": 3,
+                  "y": 2
+                }
+              },
+              {
+                "distance": 8,
+                "id": "sign:0",
+                "interactable": false,
+                "kind": "sign",
+                "position": {
+                  "x": 1,
+                  "y": 0
+                }
+              },
+              {
+                "distance": 9,
+                "id": "npc:0",
+                "interactable": false,
+                "kind": "npc",
+                "name": "BikeShopClerk",
+                "position": {
+                  "x": 6,
+                  "y": 2
+                }
+              }
+            ],
+            "position": {
+              "x": 2,
+              "y": 7
+            }
+          },
+          "hash": "1fa68993b9fc34d6",
+          "restored": true,
+          "slot": 0,
+          "state": {
+            "active_script_effect": null,
+            "badges": 0,
+            "battle_bag": null,
+            "battle_inventory": [],
+            "battle_live": null,
+            "battle_message": null,
+            "battle_moves": null,
+            "battle_party_cursor": 0,
+            "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+            "choice": null,
+            "coins": 0,
+            "credits_final_button": null,
+            "credits_phase": null,
+            "dialogue": null,
+            "dialogue_state": null,
+            "evaluation": {
+              "party": [],
+              "party_source": "save_data",
+              "pokedex": {
+                "owned": 0,
+                "owned_numbers": [],
+                "seen": 0,
+                "total": 151
+              }
+            },
+            "field_menu": null,
+            "frame_count": 2,
+            "hall_of_fame_count": 0,
+            "hof_phase": null,
+            "last_outside_map": "PalletTown",
+            "link": {
+              "cable_phase": "Inactive",
+              "role": "Host",
+              "status": "disabled",
+              "trade": null
+            },
+            "map_blocks": [4, 5, 2, 3, 8, 8, 6, 7, 11, 10, 10, 10, 10, 1, 10, 9],
+            "map_id": 66,
+            "map_name": "BikeShop",
+            "money": 3000,
+            "party": [],
+            "party_count": 0,
+            "pc_phase": null,
+            "player_facing": "Down",
+            "player_movement_state": "Idle",
+            "player_name": "",
+            "player_transport": "Walking",
+            "player_x": 2,
+            "player_y": 7,
+            "screen": "overworld",
+            "script_awaiting_battle": false,
+            "script_effect": null,
+            "script_running": false,
+            "shop_phase": null,
+            "text_speed_delay_frames": 3,
+            "warp_fade": "Idle"
+          }
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "give_pokemon",
+        "species": "Pidgey",
+        "level": 5
+      },
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "command": {
+        "cmd": "give_pokemon",
+        "species": "Pidgey",
+        "level": 5
+      },
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "command": {
+        "cmd": "give_pokemon",
+        "species": "Pidgey",
+        "level": 5
+      },
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "command": {
+        "cmd": "give_pokemon",
+        "species": "Pidgey",
+        "level": 5
+      },
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "command": {
+        "cmd": "give_pokemon",
+        "species": "Pidgey",
+        "level": 5
+      },
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "command": {
+        "cmd": "give_pokemon",
+        "species": "Pidgey",
+        "level": 5
+      },
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "command": {
+        "cmd": "warp",
+        "map": "MtMoonPokecenter",
+        "x": 10,
+        "y": 7
+      },
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "command": {
+        "cmd": "step_frames",
+        "count": 60
+      },
+      "response": {
+        "ok": true,
+        "data": {
+          "frame_count": 62,
+          "stepped": 60
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "get_state"
+      },
+      "response": {
+        "ok": true,
+        "data": {
+          "active_script_effect": null,
+          "badges": 0,
+          "battle_bag": null,
+          "battle_inventory": [],
+          "battle_live": null,
+          "battle_message": null,
+          "battle_moves": null,
+          "battle_party_cursor": 0,
+          "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+          "choice": null,
+          "coins": 0,
+          "credits_final_button": null,
+          "credits_phase": null,
+          "dialogue": null,
+          "dialogue_state": null,
+          "evaluation": {
+            "party": [
+              {
+                "hp": 20,
+                "level": 5,
+                "max_hp": 20,
+                "moves": [
+                  "Gust",
+                  "SandAttack",
+                  "None",
+                  "None"
+                ],
+                "pp": [
+                  35,
+                  15,
+                  0,
+                  0
+                ],
+                "species": "Pidgey",
+                "status": "None",
+                "total_exp": 135
+              },
+              {
+                "hp": 20,
+                "level": 5,
+                "max_hp": 20,
+                "moves": [
+                  "Gust",
+                  "SandAttack",
+                  "None",
+                  "None"
+                ],
+                "pp": [
+                  35,
+                  15,
+                  0,
+                  0
+                ],
+                "species": "Pidgey",
+                "status": "None",
+                "total_exp": 135
+              },
+              {
+                "hp": 20,
+                "level": 5,
+                "max_hp": 20,
+                "moves": [
+                  "Gust",
+                  "SandAttack",
+                  "None",
+                  "None"
+                ],
+                "pp": [
+                  35,
+                  15,
+                  0,
+                  0
+                ],
+                "species": "Pidgey",
+                "status": "None",
+                "total_exp": 135
+              },
+              {
+                "hp": 20,
+                "level": 5,
+                "max_hp": 20,
+                "moves": [
+                  "Gust",
+                  "SandAttack",
+                  "None",
+                  "None"
+                ],
+                "pp": [
+                  35,
+                  15,
+                  0,
+                  0
+                ],
+                "species": "Pidgey",
+                "status": "None",
+                "total_exp": 135
+              },
+              {
+                "hp": 20,
+                "level": 5,
+                "max_hp": 20,
+                "moves": [
+                  "Gust",
+                  "SandAttack",
+                  "None",
+                  "None"
+                ],
+                "pp": [
+                  35,
+                  15,
+                  0,
+                  0
+                ],
+                "species": "Pidgey",
+                "status": "None",
+                "total_exp": 135
+              },
+              {
+                "hp": 20,
+                "level": 5,
+                "max_hp": 20,
+                "moves": [
+                  "Gust",
+                  "SandAttack",
+                  "None",
+                  "None"
+                ],
+                "pp": [
+                  35,
+                  15,
+                  0,
+                  0
+                ],
+                "species": "Pidgey",
+                "status": "None",
+                "total_exp": 135
+              }
+            ],
+            "party_source": "save_data",
+            "pokedex": {
+              "owned": 0,
+              "owned_numbers": [],
+              "seen": 0,
+              "total": 151
+            }
+          },
+          "field_menu": null,
+          "frame_count": 62,
+          "hall_of_fame_count": 0,
+          "hof_phase": null,
+          "last_outside_map": "PalletTown",
+          "link": {
+            "cable_phase": "Inactive",
+            "role": "Host",
+            "status": "disabled",
+            "trade": null
+          },
+          "map_blocks": [32, 16, 1, 2, 12, 13, 13, 33, 4, 5, 7, 7, 34, 35, 8, 15, 15, 15, 15, 15, 27, 14, 10, 11, 14, 15, 15, 14],
+          "map_id": 68,
+          "map_name": "MtMoonPokecenter",
+          "money": 3000,
+          "party": [
+            {
+              "hp": 20,
+              "level": 5,
+              "max_hp": 20,
+              "moves": [
+                "Gust",
+                "SandAttack",
+                "None",
+                "None"
+              ],
+              "pp": [
+                35,
+                15,
+                0,
+                0
+              ],
+              "species": "Pidgey",
+              "status": "None"
+            },
+            {
+              "hp": 20,
+              "level": 5,
+              "max_hp": 20,
+              "moves": [
+                "Gust",
+                "SandAttack",
+                "None",
+                "None"
+              ],
+              "pp": [
+                35,
+                15,
+                0,
+                0
+              ],
+              "species": "Pidgey",
+              "status": "None"
+            },
+            {
+              "hp": 20,
+              "level": 5,
+              "max_hp": 20,
+              "moves": [
+                "Gust",
+                "SandAttack",
+                "None",
+                "None"
+              ],
+              "pp": [
+                35,
+                15,
+                0,
+                0
+              ],
+              "species": "Pidgey",
+              "status": "None"
+            },
+            {
+              "hp": 20,
+              "level": 5,
+              "max_hp": 20,
+              "moves": [
+                "Gust",
+                "SandAttack",
+                "None",
+                "None"
+              ],
+              "pp": [
+                35,
+                15,
+                0,
+                0
+              ],
+              "species": "Pidgey",
+              "status": "None"
+            },
+            {
+              "hp": 20,
+              "level": 5,
+              "max_hp": 20,
+              "moves": [
+                "Gust",
+                "SandAttack",
+                "None",
+                "None"
+              ],
+              "pp": [
+                35,
+                15,
+                0,
+                0
+              ],
+              "species": "Pidgey",
+              "status": "None"
+            },
+            {
+              "hp": 20,
+              "level": 5,
+              "max_hp": 20,
+              "moves": [
+                "Gust",
+                "SandAttack",
+                "None",
+                "None"
+              ],
+              "pp": [
+                35,
+                15,
+                0,
+                0
+              ],
+              "species": "Pidgey",
+              "status": "None"
+            }
+          ],
+          "party_count": 6,
+          "pc_phase": null,
+          "player_facing": "Down",
+          "player_movement_state": "Idle",
+          "player_name": "",
+          "player_transport": "Walking",
+          "player_x": 10,
+          "player_y": 7,
+          "screen": "overworld",
+          "script_awaiting_battle": false,
+          "script_effect": null,
+          "script_running": false,
+          "shop_phase": null,
+          "text_speed_delay_frames": 3,
+          "warp_fade": "Idle"
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "get_bag"
+      },
+      "response": {
+        "ok": true,
+        "data": []
+      }
+    },
+    {
+      "command": {
+        "cmd": "get_flags"
+      },
+      "response": {
+        "ok": true,
+        "data": {}
+      }
+    },
+    {
+      "command": {
+        "cmd": "get_npcs"
+      },
+      "response": {
+        "ok": true,
+        "data": [
+          {
+            "facing": "Down",
+            "home_x": 3,
+            "home_y": 1,
+            "npc_index": 0,
+            "scripted_path_remaining": 0,
+            "sprite_id": 41,
+            "text_id": 1,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 3,
+            "y": 1
+          },
+          {
+            "facing": "Up",
+            "home_x": 4,
+            "home_y": 3,
+            "npc_index": 1,
+            "scripted_path_remaining": 0,
+            "sprite_id": 4,
+            "text_id": 2,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 4,
+            "y": 3
+          },
+          {
+            "facing": "Up",
+            "home_x": 7,
+            "home_y": 3,
+            "npc_index": 2,
+            "scripted_path_remaining": 0,
+            "sprite_id": 16,
+            "text_id": 3,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 7,
+            "y": 3
+          },
+          {
+            "facing": "Right",
+            "home_x": 10,
+            "home_y": 6,
+            "npc_index": 3,
+            "scripted_path_remaining": 0,
+            "sprite_id": 10,
+            "text_id": 4,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 11,
+            "y": 6
+          },
+          {
+            "facing": "Down",
+            "home_x": 7,
+            "home_y": 2,
+            "npc_index": 4,
+            "scripted_path_remaining": 0,
+            "sprite_id": 66,
+            "text_id": 5,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 7,
+            "y": 2
+          },
+          {
+            "facing": "Down",
+            "home_x": 11,
+            "home_y": 2,
+            "npc_index": 5,
+            "scripted_path_remaining": 0,
+            "sprite_id": 42,
+            "text_id": 6,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 11,
+            "y": 2
+          }
+        ]
+      }
+    },
+    {
+      "command": {
+        "cmd": "interact_with",
+        "id": "npc:3"
+      },
+      "response": {
+        "ok": true,
+        "data": {
+          "agent_state": {
+            "badges": {
+              "count": 0
+            },
+            "dialogue": {
+              "done": false,
+              "page": 1,
+              "text": "MAN: Hello, there!",
+              "total_pages": 5,
+              "waiting_for_input": false
+            },
+            "facing": "Up",
+            "map": {
+              "id": 68,
+              "name": "MtMoonPokecenter"
+            },
+            "mode": "dialogue",
+            "nearby": [
+              {
+                "distance": 1,
+                "id": "npc:3",
+                "interactable": true,
+                "kind": "npc",
+                "name": "MiddleAgedMan",
+                "position": {
+                  "x": 11,
+                  "y": 6
+                }
+              },
+              {
+                "distance": 5,
+                "id": "npc:5",
+                "interactable": false,
+                "kind": "npc",
+                "name": "LinkReceptionist",
+                "position": {
+                  "x": 11,
+                  "y": 2
+                }
+              },
+              {
+                "distance": 6,
+                "id": "sign:0",
+                "interactable": false,
+                "kind": "sign",
+                "position": {
+                  "x": 13,
+                  "y": 3
+                }
+              },
+              {
+                "distance": 7,
+                "id": "warp:1",
+                "interactable": false,
+                "kind": "warp",
+                "position": {
+                  "x": 4,
+                  "y": 7
+                }
+              },
+              {
+                "distance": 8,
+                "id": "npc:2",
+                "interactable": false,
+                "kind": "npc",
+                "name": "Gentleman",
+                "position": {
+                  "x": 7,
+                  "y": 3
+                }
+              },
+              {
+                "distance": 8,
+                "id": "warp:0",
+                "interactable": false,
+                "kind": "warp",
+                "position": {
+                  "x": 3,
+                  "y": 7
+                }
+              },
+              {
+                "distance": 9,
+                "id": "npc:4",
+                "interactable": false,
+                "kind": "npc",
+                "name": "Clipboard",
+                "position": {
+                  "x": 7,
+                  "y": 2
+                }
+              }
+            ],
+            "party": [
+              {
+                "hp": 20,
+                "level": 5,
+                "max_hp": 20,
+                "species": "Pidgey",
+                "status": "None"
+              },
+              {
+                "hp": 20,
+                "level": 5,
+                "max_hp": 20,
+                "species": "Pidgey",
+                "status": "None"
+              },
+              {
+                "hp": 20,
+                "level": 5,
+                "max_hp": 20,
+                "species": "Pidgey",
+                "status": "None"
+              },
+              {
+                "hp": 20,
+                "level": 5,
+                "max_hp": 20,
+                "species": "Pidgey",
+                "status": "None"
+              },
+              {
+                "hp": 20,
+                "level": 5,
+                "max_hp": 20,
+                "species": "Pidgey",
+                "status": "None"
+              },
+              {
+                "hp": 20,
+                "level": 5,
+                "max_hp": 20,
+                "species": "Pidgey",
+                "status": "None"
+              }
+            ],
+            "position": {
+              "x": 11,
+              "y": 7
+            }
+          },
+          "facing": "Up",
+          "final": {
+            "x": 11,
+            "y": 7
+          },
+          "frames": 16,
+          "map": "MtMoonPokecenter",
+          "navigation": {
+            "final": {
+              "x": 11,
+              "y": 7
+            },
+            "frames": 9,
+            "result": "reached",
+            "start": {
+              "x": 10,
+              "y": 7
+            },
+            "steps": 1,
+            "target": {
+              "x": 11,
+              "y": 7
+            }
+          },
+          "result": "dialogue",
+          "state": {
+            "active_script_effect": "ShowDialogue",
+            "badges": 0,
+            "battle_bag": null,
+            "battle_inventory": [],
+            "battle_live": null,
+            "battle_message": null,
+            "battle_moves": null,
+            "battle_party_cursor": 0,
+            "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+            "choice": null,
+            "coins": 0,
+            "credits_final_button": null,
+            "credits_phase": null,
+            "dialogue": "",
+            "dialogue_state": {
+              "char_index": 0,
+              "done": false,
+              "holding_open": false,
+              "page": 1,
+              "text": "",
+              "total_chars": 18,
+              "total_pages": 5,
+              "waiting_for_input": false
+            },
+            "evaluation": {
+              "party": [
+                {
+                  "hp": 20,
+                  "level": 5,
+                  "max_hp": 20,
+                  "moves": [
+                    "Gust",
+                    "SandAttack",
+                    "None",
+                    "None"
+                  ],
+                  "pp": [
+                    35,
+                    15,
+                    0,
+                    0
+                  ],
+                  "species": "Pidgey",
+                  "status": "None",
+                  "total_exp": 135
+                },
+                {
+                  "hp": 20,
+                  "level": 5,
+                  "max_hp": 20,
+                  "moves": [
+                    "Gust",
+                    "SandAttack",
+                    "None",
+                    "None"
+                  ],
+                  "pp": [
+                    35,
+                    15,
+                    0,
+                    0
+                  ],
+                  "species": "Pidgey",
+                  "status": "None",
+                  "total_exp": 135
+                },
+                {
+                  "hp": 20,
+                  "level": 5,
+                  "max_hp": 20,
+                  "moves": [
+                    "Gust",
+                    "SandAttack",
+                    "None",
+                    "None"
+                  ],
+                  "pp": [
+                    35,
+                    15,
+                    0,
+                    0
+                  ],
+                  "species": "Pidgey",
+                  "status": "None",
+                  "total_exp": 135
+                },
+                {
+                  "hp": 20,
+                  "level": 5,
+                  "max_hp": 20,
+                  "moves": [
+                    "Gust",
+                    "SandAttack",
+                    "None",
+                    "None"
+                  ],
+                  "pp": [
+                    35,
+                    15,
+                    0,
+                    0
+                  ],
+                  "species": "Pidgey",
+                  "status": "None",
+                  "total_exp": 135
+                },
+                {
+                  "hp": 20,
+                  "level": 5,
+                  "max_hp": 20,
+                  "moves": [
+                    "Gust",
+                    "SandAttack",
+                    "None",
+                    "None"
+                  ],
+                  "pp": [
+                    35,
+                    15,
+                    0,
+                    0
+                  ],
+                  "species": "Pidgey",
+                  "status": "None",
+                  "total_exp": 135
+                },
+                {
+                  "hp": 20,
+                  "level": 5,
+                  "max_hp": 20,
+                  "moves": [
+                    "Gust",
+                    "SandAttack",
+                    "None",
+                    "None"
+                  ],
+                  "pp": [
+                    35,
+                    15,
+                    0,
+                    0
+                  ],
+                  "species": "Pidgey",
+                  "status": "None",
+                  "total_exp": 135
+                }
+              ],
+              "party_source": "save_data",
+              "pokedex": {
+                "owned": 0,
+                "owned_numbers": [],
+                "seen": 0,
+                "total": 151
+              }
+            },
+            "field_menu": null,
+            "frame_count": 78,
+            "hall_of_fame_count": 0,
+            "hof_phase": null,
+            "last_outside_map": "PalletTown",
+            "link": {
+              "cable_phase": "Inactive",
+              "role": "Host",
+              "status": "disabled",
+              "trade": null
+            },
+            "map_blocks": [32, 16, 1, 2, 12, 13, 13, 33, 4, 5, 7, 7, 34, 35, 8, 15, 15, 15, 15, 15, 27, 14, 10, 11, 14, 15, 15, 14],
+            "map_id": 68,
+            "map_name": "MtMoonPokecenter",
+            "money": 3000,
+            "party": [
+              {
+                "hp": 20,
+                "level": 5,
+                "max_hp": 20,
+                "moves": [
+                  "Gust",
+                  "SandAttack",
+                  "None",
+                  "None"
+                ],
+                "pp": [
+                  35,
+                  15,
+                  0,
+                  0
+                ],
+                "species": "Pidgey",
+                "status": "None"
+              },
+              {
+                "hp": 20,
+                "level": 5,
+                "max_hp": 20,
+                "moves": [
+                  "Gust",
+                  "SandAttack",
+                  "None",
+                  "None"
+                ],
+                "pp": [
+                  35,
+                  15,
+                  0,
+                  0
+                ],
+                "species": "Pidgey",
+                "status": "None"
+              },
+              {
+                "hp": 20,
+                "level": 5,
+                "max_hp": 20,
+                "moves": [
+                  "Gust",
+                  "SandAttack",
+                  "None",
+                  "None"
+                ],
+                "pp": [
+                  35,
+                  15,
+                  0,
+                  0
+                ],
+                "species": "Pidgey",
+                "status": "None"
+              },
+              {
+                "hp": 20,
+                "level": 5,
+                "max_hp": 20,
+                "moves": [
+                  "Gust",
+                  "SandAttack",
+                  "None",
+                  "None"
+                ],
+                "pp": [
+                  35,
+                  15,
+                  0,
+                  0
+                ],
+                "species": "Pidgey",
+                "status": "None"
+              },
+              {
+                "hp": 20,
+                "level": 5,
+                "max_hp": 20,
+                "moves": [
+                  "Gust",
+                  "SandAttack",
+                  "None",
+                  "None"
+                ],
+                "pp": [
+                  35,
+                  15,
+                  0,
+                  0
+                ],
+                "species": "Pidgey",
+                "status": "None"
+              },
+              {
+                "hp": 20,
+                "level": 5,
+                "max_hp": 20,
+                "moves": [
+                  "Gust",
+                  "SandAttack",
+                  "None",
+                  "None"
+                ],
+                "pp": [
+                  35,
+                  15,
+                  0,
+                  0
+                ],
+                "species": "Pidgey",
+                "status": "None"
+              }
+            ],
+            "party_count": 6,
+            "pc_phase": null,
+            "player_facing": "Up",
+            "player_movement_state": "Idle",
+            "player_name": "",
+            "player_transport": "Walking",
+            "player_x": 11,
+            "player_y": 7,
+            "screen": "overworld",
+            "script_awaiting_battle": false,
+            "script_effect": {
+              "effect": "ShowDialogue",
+              "text": "MAN: Hello, there!\n\nHave I got a deal just for\nyou!\n\nI'll let you have a swell\nMAGIKARP for just ¥500!\n\nWhat do you say?"
+            },
+            "script_running": true,
+            "shop_phase": null,
+            "text_speed_delay_frames": 3,
+            "warp_fade": "Idle"
+          },
+          "target": "npc:3"
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "skip_dialogue"
+      },
+      "response": {
+        "ok": true,
+        "data": {
+          "dialogue_closed": true,
+          "state": {
+            "active_script_effect": "ShowChoice",
+            "badges": 0,
+            "battle_bag": null,
+            "battle_inventory": [],
+            "battle_live": null,
+            "battle_message": null,
+            "battle_moves": null,
+            "battle_party_cursor": 0,
+            "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+            "choice": null,
+            "coins": 0,
+            "credits_final_button": null,
+            "credits_phase": null,
+            "dialogue": null,
+            "dialogue_state": null,
+            "evaluation": {
+              "party": [
+                {
+                  "hp": 20,
+                  "level": 5,
+                  "max_hp": 20,
+                  "moves": [
+                    "Gust",
+                    "SandAttack",
+                    "None",
+                    "None"
+                  ],
+                  "pp": [
+                    35,
+                    15,
+                    0,
+                    0
+                  ],
+                  "species": "Pidgey",
+                  "status": "None",
+                  "total_exp": 135
+                },
+                {
+                  "hp": 20,
+                  "level": 5,
+                  "max_hp": 20,
+                  "moves": [
+                    "Gust",
+                    "SandAttack",
+                    "None",
+                    "None"
+                  ],
+                  "pp": [
+                    35,
+                    15,
+                    0,
+                    0
+                  ],
+                  "species": "Pidgey",
+                  "status": "None",
+                  "total_exp": 135
+                },
+                {
+                  "hp": 20,
+                  "level": 5,
+                  "max_hp": 20,
+                  "moves": [
+                    "Gust",
+                    "SandAttack",
+                    "None",
+                    "None"
+                  ],
+                  "pp": [
+                    35,
+                    15,
+                    0,
+                    0
+                  ],
+                  "species": "Pidgey",
+                  "status": "None",
+                  "total_exp": 135
+                },
+                {
+                  "hp": 20,
+                  "level": 5,
+                  "max_hp": 20,
+                  "moves": [
+                    "Gust",
+                    "SandAttack",
+                    "None",
+                    "None"
+                  ],
+                  "pp": [
+                    35,
+                    15,
+                    0,
+                    0
+                  ],
+                  "species": "Pidgey",
+                  "status": "None",
+                  "total_exp": 135
+                },
+                {
+                  "hp": 20,
+                  "level": 5,
+                  "max_hp": 20,
+                  "moves": [
+                    "Gust",
+                    "SandAttack",
+                    "None",
+                    "None"
+                  ],
+                  "pp": [
+                    35,
+                    15,
+                    0,
+                    0
+                  ],
+                  "species": "Pidgey",
+                  "status": "None",
+                  "total_exp": 135
+                },
+                {
+                  "hp": 20,
+                  "level": 5,
+                  "max_hp": 20,
+                  "moves": [
+                    "Gust",
+                    "SandAttack",
+                    "None",
+                    "None"
+                  ],
+                  "pp": [
+                    35,
+                    15,
+                    0,
+                    0
+                  ],
+                  "species": "Pidgey",
+                  "status": "None",
+                  "total_exp": 135
+                }
+              ],
+              "party_source": "save_data",
+              "pokedex": {
+                "owned": 0,
+                "owned_numbers": [],
+                "seen": 0,
+                "total": 151
+              }
+            },
+            "field_menu": null,
+            "frame_count": 99,
+            "hall_of_fame_count": 0,
+            "hof_phase": null,
+            "last_outside_map": "PalletTown",
+            "link": {
+              "cable_phase": "Inactive",
+              "role": "Host",
+              "status": "disabled",
+              "trade": null
+            },
+            "map_blocks": [32, 16, 1, 2, 12, 13, 13, 33, 4, 5, 7, 7, 34, 35, 8, 15, 15, 15, 15, 15, 27, 14, 10, 11, 14, 15, 15, 14],
+            "map_id": 68,
+            "map_name": "MtMoonPokecenter",
+            "money": 3000,
+            "party": [
+              {
+                "hp": 20,
+                "level": 5,
+                "max_hp": 20,
+                "moves": [
+                  "Gust",
+                  "SandAttack",
+                  "None",
+                  "None"
+                ],
+                "pp": [
+                  35,
+                  15,
+                  0,
+                  0
+                ],
+                "species": "Pidgey",
+                "status": "None"
+              },
+              {
+                "hp": 20,
+                "level": 5,
+                "max_hp": 20,
+                "moves": [
+                  "Gust",
+                  "SandAttack",
+                  "None",
+                  "None"
+                ],
+                "pp": [
+                  35,
+                  15,
+                  0,
+                  0
+                ],
+                "species": "Pidgey",
+                "status": "None"
+              },
+              {
+                "hp": 20,
+                "level": 5,
+                "max_hp": 20,
+                "moves": [
+                  "Gust",
+                  "SandAttack",
+                  "None",
+                  "None"
+                ],
+                "pp": [
+                  35,
+                  15,
+                  0,
+                  0
+                ],
+                "species": "Pidgey",
+                "status": "None"
+              },
+              {
+                "hp": 20,
+                "level": 5,
+                "max_hp": 20,
+                "moves": [
+                  "Gust",
+                  "SandAttack",
+                  "None",
+                  "None"
+                ],
+                "pp": [
+                  35,
+                  15,
+                  0,
+                  0
+                ],
+                "species": "Pidgey",
+                "status": "None"
+              },
+              {
+                "hp": 20,
+                "level": 5,
+                "max_hp": 20,
+                "moves": [
+                  "Gust",
+                  "SandAttack",
+                  "None",
+                  "None"
+                ],
+                "pp": [
+                  35,
+                  15,
+                  0,
+                  0
+                ],
+                "species": "Pidgey",
+                "status": "None"
+              },
+              {
+                "hp": 20,
+                "level": 5,
+                "max_hp": 20,
+                "moves": [
+                  "Gust",
+                  "SandAttack",
+                  "None",
+                  "None"
+                ],
+                "pp": [
+                  35,
+                  15,
+                  0,
+                  0
+                ],
+                "species": "Pidgey",
+                "status": "None"
+              }
+            ],
+            "party_count": 6,
+            "pc_phase": null,
+            "player_facing": "Up",
+            "player_movement_state": "Idle",
+            "player_name": "",
+            "player_transport": "Walking",
+            "player_x": 11,
+            "player_y": 7,
+            "screen": "overworld",
+            "script_awaiting_battle": false,
+            "script_effect": {
+              "effect": "ShowChoice",
+              "options": [
+                "YES",
+                "NO"
+              ],
+              "selected": 0,
+              "started": false
+            },
+            "script_running": true,
+            "shop_phase": null,
+            "text_speed_delay_frames": 3,
+            "warp_fade": "Idle"
+          },
+          "stepped": 21
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "step_frames",
+        "count": 20
+      },
+      "response": {
+        "ok": true,
+        "data": {
+          "frame_count": 119,
+          "stepped": 20
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "press_timeline",
+        "buttons": [
+          "a",
+          null
+        ],
+        "advance": true
+      },
+      "response": {
+        "ok": true,
+        "data": {
+          "advanced": true,
+          "end_frame": 120,
+          "frame_count": 121,
+          "frames": 2,
+          "padding_frames": 0,
+          "queue_start_frame": 119,
+          "start_frame": 119
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "get_state"
+      },
+      "response": {
+        "ok": true,
+        "data": {
+          "active_script_effect": null,
+          "badges": 0,
+          "battle_bag": null,
+          "battle_inventory": [],
+          "battle_live": null,
+          "battle_message": null,
+          "battle_moves": null,
+          "battle_party_cursor": 0,
+          "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+          "choice": null,
+          "coins": 0,
+          "credits_final_button": null,
+          "credits_phase": null,
+          "dialogue": null,
+          "dialogue_state": null,
+          "evaluation": {
+            "party": [
+              {
+                "hp": 20,
+                "level": 5,
+                "max_hp": 20,
+                "moves": [
+                  "Gust",
+                  "SandAttack",
+                  "None",
+                  "None"
+                ],
+                "pp": [
+                  35,
+                  15,
+                  0,
+                  0
+                ],
+                "species": "Pidgey",
+                "status": "None",
+                "total_exp": 135
+              },
+              {
+                "hp": 20,
+                "level": 5,
+                "max_hp": 20,
+                "moves": [
+                  "Gust",
+                  "SandAttack",
+                  "None",
+                  "None"
+                ],
+                "pp": [
+                  35,
+                  15,
+                  0,
+                  0
+                ],
+                "species": "Pidgey",
+                "status": "None",
+                "total_exp": 135
+              },
+              {
+                "hp": 20,
+                "level": 5,
+                "max_hp": 20,
+                "moves": [
+                  "Gust",
+                  "SandAttack",
+                  "None",
+                  "None"
+                ],
+                "pp": [
+                  35,
+                  15,
+                  0,
+                  0
+                ],
+                "species": "Pidgey",
+                "status": "None",
+                "total_exp": 135
+              },
+              {
+                "hp": 20,
+                "level": 5,
+                "max_hp": 20,
+                "moves": [
+                  "Gust",
+                  "SandAttack",
+                  "None",
+                  "None"
+                ],
+                "pp": [
+                  35,
+                  15,
+                  0,
+                  0
+                ],
+                "species": "Pidgey",
+                "status": "None",
+                "total_exp": 135
+              },
+              {
+                "hp": 20,
+                "level": 5,
+                "max_hp": 20,
+                "moves": [
+                  "Gust",
+                  "SandAttack",
+                  "None",
+                  "None"
+                ],
+                "pp": [
+                  35,
+                  15,
+                  0,
+                  0
+                ],
+                "species": "Pidgey",
+                "status": "None",
+                "total_exp": 135
+              },
+              {
+                "hp": 20,
+                "level": 5,
+                "max_hp": 20,
+                "moves": [
+                  "Gust",
+                  "SandAttack",
+                  "None",
+                  "None"
+                ],
+                "pp": [
+                  35,
+                  15,
+                  0,
+                  0
+                ],
+                "species": "Pidgey",
+                "status": "None",
+                "total_exp": 135
+              }
+            ],
+            "party_source": "save_data",
+            "pokedex": {
+              "owned": 0,
+              "owned_numbers": [],
+              "seen": 0,
+              "total": 151
+            }
+          },
+          "field_menu": null,
+          "frame_count": 121,
+          "hall_of_fame_count": 0,
+          "hof_phase": null,
+          "last_outside_map": "PalletTown",
+          "link": {
+            "cable_phase": "Inactive",
+            "role": "Host",
+            "status": "disabled",
+            "trade": null
+          },
+          "map_blocks": [32, 16, 1, 2, 12, 13, 13, 33, 4, 5, 7, 7, 34, 35, 8, 15, 15, 15, 15, 15, 27, 14, 10, 11, 14, 15, 15, 14],
+          "map_id": 68,
+          "map_name": "MtMoonPokecenter",
+          "money": 3000,
+          "party": [
+            {
+              "hp": 20,
+              "level": 5,
+              "max_hp": 20,
+              "moves": [
+                "Gust",
+                "SandAttack",
+                "None",
+                "None"
+              ],
+              "pp": [
+                35,
+                15,
+                0,
+                0
+              ],
+              "species": "Pidgey",
+              "status": "None"
+            },
+            {
+              "hp": 20,
+              "level": 5,
+              "max_hp": 20,
+              "moves": [
+                "Gust",
+                "SandAttack",
+                "None",
+                "None"
+              ],
+              "pp": [
+                35,
+                15,
+                0,
+                0
+              ],
+              "species": "Pidgey",
+              "status": "None"
+            },
+            {
+              "hp": 20,
+              "level": 5,
+              "max_hp": 20,
+              "moves": [
+                "Gust",
+                "SandAttack",
+                "None",
+                "None"
+              ],
+              "pp": [
+                35,
+                15,
+                0,
+                0
+              ],
+              "species": "Pidgey",
+              "status": "None"
+            },
+            {
+              "hp": 20,
+              "level": 5,
+              "max_hp": 20,
+              "moves": [
+                "Gust",
+                "SandAttack",
+                "None",
+                "None"
+              ],
+              "pp": [
+                35,
+                15,
+                0,
+                0
+              ],
+              "species": "Pidgey",
+              "status": "None"
+            },
+            {
+              "hp": 20,
+              "level": 5,
+              "max_hp": 20,
+              "moves": [
+                "Gust",
+                "SandAttack",
+                "None",
+                "None"
+              ],
+              "pp": [
+                35,
+                15,
+                0,
+                0
+              ],
+              "species": "Pidgey",
+              "status": "None"
+            },
+            {
+              "hp": 20,
+              "level": 5,
+              "max_hp": 20,
+              "moves": [
+                "Gust",
+                "SandAttack",
+                "None",
+                "None"
+              ],
+              "pp": [
+                35,
+                15,
+                0,
+                0
+              ],
+              "species": "Pidgey",
+              "status": "None"
+            }
+          ],
+          "party_count": 6,
+          "pc_phase": null,
+          "player_facing": "Up",
+          "player_movement_state": "Idle",
+          "player_name": "",
+          "player_transport": "Walking",
+          "player_x": 11,
+          "player_y": 7,
+          "screen": "overworld",
+          "script_awaiting_battle": false,
+          "script_effect": null,
+          "script_running": false,
+          "shop_phase": null,
+          "text_speed_delay_frames": 3,
+          "warp_fade": "Idle"
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "get_bag"
+      },
+      "response": {
+        "ok": true,
+        "data": []
+      }
+    },
+    {
+      "command": {
+        "cmd": "get_flags"
+      },
+      "response": {
+        "ok": true,
+        "data": {}
+      }
+    },
+    {
+      "command": {
+        "cmd": "get_npcs"
+      },
+      "response": {
+        "ok": true,
+        "data": [
+          {
+            "facing": "Down",
+            "home_x": 3,
+            "home_y": 1,
+            "npc_index": 0,
+            "scripted_path_remaining": 0,
+            "sprite_id": 41,
+            "text_id": 1,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 3,
+            "y": 1
+          },
+          {
+            "facing": "Up",
+            "home_x": 4,
+            "home_y": 3,
+            "npc_index": 1,
+            "scripted_path_remaining": 0,
+            "sprite_id": 4,
+            "text_id": 2,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 4,
+            "y": 3
+          },
+          {
+            "facing": "Up",
+            "home_x": 7,
+            "home_y": 3,
+            "npc_index": 2,
+            "scripted_path_remaining": 0,
+            "sprite_id": 16,
+            "text_id": 3,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 7,
+            "y": 3
+          },
+          {
+            "facing": "Down",
+            "home_x": 10,
+            "home_y": 6,
+            "npc_index": 3,
+            "scripted_path_remaining": 0,
+            "sprite_id": 10,
+            "text_id": 4,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 11,
+            "y": 6
+          },
+          {
+            "facing": "Down",
+            "home_x": 7,
+            "home_y": 2,
+            "npc_index": 4,
+            "scripted_path_remaining": 0,
+            "sprite_id": 66,
+            "text_id": 5,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 7,
+            "y": 2
+          },
+          {
+            "facing": "Down",
+            "home_x": 11,
+            "home_y": 2,
+            "npc_index": 5,
+            "scripted_path_remaining": 0,
+            "sprite_id": 42,
+            "text_id": 6,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 11,
+            "y": 2
+          }
+        ]
+      }
+    }
+  ]
+}

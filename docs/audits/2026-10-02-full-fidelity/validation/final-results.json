@@ -1,0 +1,44 @@
+{
+  "game_production_source": "8837a2a32c2ba8c345db16e97b01f49016e88950",
+  "game_test_source": "9ad9034",
+  "engine_code": "92ba95f9526107e17874df53291ac7758d0930f0",
+  "engine_final_test_source": "9d09696be2cd33a1e94c118192b7b5c1fe4872f4",
+  "native": {
+    "test_targets": 105,
+    "passed_executions": 4444,
+    "failed": 0,
+    "ignored": 9,
+    "exit_code": 0
+  },
+  "web_check": {
+    "target": "wasm32-unknown-unknown",
+    "packages": [
+      "pokered-web",
+      "pokered-runner-web"
+    ],
+    "exit_code": 0
+  },
+  "gba_build": {
+    "toolchain": "nightly-2025-12-07",
+    "profile": "release",
+    "exit_code": 0,
+    "scope": "compilation; no device or emulator execution"
+  },
+  "engine_tests": {
+    "unit_passed": 488,
+    "doctest_passed": 3,
+    "doctest_ignored": 7,
+    "exit_code": 0
+  },
+  "seeded_scenarios": {
+    "passed": 11,
+    "total": 11,
+    "exit_code": 0
+  },
+  "continuous_fresh_first_clear": {
+    "status": "running",
+    "seed": 42,
+    "save": "independent empty slot",
+    "binary_manifest": "final-build-manifest.json"
+  }
+}

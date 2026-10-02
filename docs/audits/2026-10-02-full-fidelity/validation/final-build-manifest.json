@@ -1,0 +1,26 @@
+{
+  "source": "8837a2a32c2ba8c345db16e97b01f49016e88950",
+  "engine": "92ba95f9526107e17874df53291ac7758d0930f0",
+  "artifacts": [
+    {
+      "target": "pokered-tui",
+      "path": "/workspace/onboarding/pokered-fidelity-final/pokered-tui",
+      "sha256": "c401e450c5f0f6a0d53c615d93b7cff99869e2b49c16352db9e1b8b191c937ff"
+    },
+    {
+      "target": "pc_tour",
+      "path": "/workspace/onboarding/pokered-fidelity-final/pc_tour",
+      "sha256": "3ee8e23fcc99b373bb4c76e24e63ac467e8380f211924cd319de9494713db3eb"
+    },
+    {
+      "target": "fidelity_visual_capture",
+      "path": "/workspace/onboarding/pokered-fidelity-final/fidelity_visual_capture",
+      "sha256": "a011d3257181a1d693cd3b61f516ae38c1961cfb9357cf9054b3cc60042cc761"
+    },
+    {
+      "target": "pokered-app",
+      "path": "/workspace/onboarding/pokered-fidelity-final/pokered-app",
+      "sha256": "b8ba782f6cb22151964722ae958dae32f9085b356a71c145c3a3b37bdf513847"
+    }
+  ]
+}
