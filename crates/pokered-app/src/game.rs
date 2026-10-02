@@ -218,6 +218,19 @@ fn web_local_storage() -> Option<web_sys::Storage> {
     web_sys::window().and_then(|w| w.local_storage().ok().flatten())
 }
 
+/// Inspect the original JSON before serde defaults fill its progress tail.
+/// Only the real browser save reader grants companion-alias migration;
+/// debug snapshots continue to deserialize without import provenance.
+#[cfg(any(target_arch = "wasm32", test))]
+fn decode_web_save(raw: &str) -> Result<SaveData, serde_json::Error> {
+    let value: serde_json::Value = serde_json::from_str(raw)?;
+    let legacy = value.get("game_data").and_then(serde_json::Value::as_object)
+        .is_some_and(|data| !data.contains_key("game_progress_tail"));
+    let mut save: SaveData = serde_json::from_value(value)?;
+    save.imported_legacy_json = legacy;
+    Ok(save)
+}
+
 /// Attempts to load a previously persisted [`SaveData`] from the
 /// browser's `localStorage`. The save is stored as a JSON serialization
 /// of [`SaveData`] (whose `game_data.event_flags` carries the event-flag
@@ -240,7 +253,7 @@ fn try_load_save_from_local_storage() -> (SaveData, Option<SaveFileSummary>) {
             return (SaveData::new(), None);
         }
     };
-    match serde_json::from_str::<SaveData>(&raw) {
+    match decode_web_save(&raw) {
         Ok(save) => {
             let summary = save_summary_from_data(&save);
             log::info!(
@@ -1943,6 +1956,7 @@ impl PokemonGame {
     fn build_save_data(&self) -> SaveData {
         let mut save = self.save_data.clone();
         save.imported_legacy_native=false;
+        save.imported_legacy_json=false;
         Self::apply_live_state_to_save(&mut save, &self.overworld, &self.player_name, &self.rival_name);
         save
     }
@@ -8107,5 +8121,34 @@ mod wall_town_map_tests {
             game.overworld.pending_town_map,
             "wall map can be inspected again"
         );
+    }
+}
+
+#[cfg(test)]
+mod web_legacy_save_fidelity_tests {
+    use super::*;
+    #[test]
+    fn web_reader_migrates_same_slot_extras_only_for_original_json_without_tail() {
+        let aliases = ["EVENT_TRADED_FOR_MARCEL", "EVENT_GOT_OLD_ROD", "EVENT_GOT_GOOD_ROD", "EVENT_GOT_SUPER_ROD"];
+        for old in [false, true] {
+            let mut value = serde_json::to_value(SaveData::new()).unwrap();
+            if old { value["game_data"].as_object_mut().unwrap().remove("game_progress_tail"); }
+            let raw = serde_json::to_string(&value).unwrap();
+            let save = decode_web_save(&raw).unwrap();
+            assert_eq!(save.imported_legacy_json, old);
+            let extras = aliases.into_iter().map(|name| (name.to_string(), true)).collect();
+            let mut overworld = OverworldScreen::new(MapId::ViridianCity, None, PokemonRedData);
+            overworld.restore_loaded_save_flags(&save, Some(extras));
+            for name in aliases { assert_eq!(overworld.unified_flags().get_flag(name), old, "{name}"); }
+            // The debug snapshot parser must not acquire the real-reader provenance.
+            let snapshot: SaveData = serde_json::from_str(&raw).unwrap();
+            assert!(!snapshot.imported_legacy_json);
+        }
+    }
+    #[test]
+    fn invalid_web_json_does_not_grant_legacy_import() {
+        for raw in ["not json", "{}", r#"{"game_data":{"game_progress_tail":null}}"#] {
+            assert!(decode_web_save(raw).is_err());
+        }
     }
 }
