@@ -24,6 +24,7 @@ from .playthrough_judgments import (ObservedProtocol, NavigationPause, attack_pr
                                     MEDICINES, BALLS, medicine_options, effective_attacks, ITEM_CATALOG,
                                     PREFERENCE_INSTRUCTIONS)
 from .playthrough_judgments import capture_probability, capture_species, capture_status_options, capture_storage_full
+from .playthrough_judgments import safari_ball_sequence
 from .navigation_skills import (cut_requirement, surf_requirement, water_planning, water_tile,
                                 hm_compatible, machine_compatible, HM_MOVES, TM_MOVES, CUT_TILES)
 from .navigation_skills import surf_current_prerequisites, field_badge_prerequisites, surf_path_prerequisites
@@ -130,6 +131,67 @@ def capture_inventory_risk(species, balls):
                           'throws': throws, 'inventory_failure_probability': round(failure, 4)})
     return {'scenarios': scenarios,
             'assumptions': 'Reference max HP 100; all carried balls used at the stated fixed HP/status with independent rolls. Not actual battle odds: excludes HP rounding differences, status expiry, enemy recovery, party survival and travel ball spending.'}
+
+
+@lru_cache(maxsize=512)
+def safari_species_reference(species, level, balls):
+    """Bounds over legal wild HP/Speed DVs, never a predicted hidden individual.
+
+    stats.rs::calc_stat and extract_hp_iv: wild stat exp is zero, and HP DV
+    bit 1 is Speed DV bit 0. safari.rs::flee_roll uses the Speed low byte.
+    """
+    mon = data.species_data(species)
+    base = mon['baseStats']
+    catches, escapes, successes, spent = [], [], [], []
+    for speed_dv in range(16):
+        speed = min(999, (base['speed'] + speed_dv) * 2 * level // 100 + 5) & 255
+        flee = 1.0 if speed > 127 else speed * 2 / 256
+        for hp_dv in range(16):
+            if (hp_dv >> 1) & 1 != speed_dv & 1:
+                continue
+            hp = min(999, (base['hp'] + hp_dv) * 2 * level // 100 + level + 10)
+            chance = capture_probability('SafariBall', {
+                'hp': hp, 'max_hp': hp, 'catch_rate': mon['catchRate']}, digits=None)
+            success, used = safari_ball_sequence(chance, flee, balls)
+            catches.append(chance)
+            escapes.append(flee)
+            successes.append(success)
+            spent.append(used)
+    return tuple((min(values), max(values)) for values in (catches, escapes, successes, spent))
+
+
+def safari_capture_reference(table, owned_species=(), balls=30):
+    """Slot-weighted registration reference, separate from encounter-only yield."""
+    owned = set(owned_species)
+    slots = Counter()
+    for weight, mon in zip(ENCOUNTER_SLOT_WEIGHTS, (table or {}).get('mons', [])):
+        if mon['species'] not in owned:
+            slots[(mon['species'], mon['level'])] += weight
+    bounds, targets = [0.0, 0.0], []
+    rate = int((table or {}).get('encounterRate', 0)) / 256
+
+    def outward(values, digits=4):
+        scale = 10 ** digits
+        return [math.floor(values[0] * scale) / scale, math.ceil(values[1] * scale) / scale]
+
+    for (species, level), weight in sorted(slots.items()):
+        catch, flee, success, spent = safari_species_reference(species, level, balls)
+        for index in range(2):
+            bounds[index] += rate * weight / 256 * success[index]
+        targets.append({'species': species, 'level': level, 'slot_weight_per_256': weight,
+                        'per_ball_capture_probability_range': outward(catch),
+                        'flee_after_failed_ball_probability_range': outward(flee),
+                        'capture_before_flee_probability_range': outward(success),
+                        'expected_balls_spent_in_encounter_range': outward(spent, 2)})
+    return {'policy': 'ball_only_reference', 'ball_budget_per_encounter': balls,
+            'scope': 'Reference bounds, not a forecast: full HP, no status, no bait/rock, zero wild stat exp, all legal HP/Speed DVs and independent rolls. '
+                     'Ball budget is per encounter; admission supplies 30 shared balls, not 30 for every encounter. '
+                     'Eligible encounter checks only; excludes travel, entry cost, step limit, earlier ball spending and changing owned species. '
+                     'Stationary expectation with renewed budgets, not a guarantee within this visit.',
+            'targets': targets,
+            'new_registration_per_eligible_step_pct_range': outward([p * 100 for p in bounds]),
+            'expected_eligible_steps_to_registration_range': (
+                outward([1 / bounds[1], 1 / bounds[0]], 1) if bounds[0] > 0 else [None, None])}
 
 
 def capture_preparation(party, bag, observation=None):
@@ -2363,6 +2425,8 @@ class AutonomousStoryAgent(DualStoryAgent):
             table = (((self.maps.get(name, {}).get('wild') or {}).get('red') or {})
                      .get(table_name) or {})
             value = table_profile(table, owned)
+            if method == 'safari':
+                value['safari_registration_reference'] = safari_capture_reference(table, owned)
         if value:
             for target in value['targets']:
                 target.update(catch_difficulty(target['species']))

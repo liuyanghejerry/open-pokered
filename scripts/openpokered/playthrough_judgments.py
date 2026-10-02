@@ -62,7 +62,7 @@ def medicine_options(party, bag):
 BALLS = {name: item for name, item in ITEM_CATALOG.items() if 'ball' in item.get('tags', [])}
 
 
-def capture_probability(ball, enemy):
+def capture_probability(ball, enemy, *, digits=4):
     """Exact success probability for a throw in the current battle state.
 
     This mirrors ``pokered-core/src/battle/capture.rs`` including Gen-I's
@@ -88,7 +88,22 @@ def capture_probability(ball, enemy):
             successes += 256
         elif rand1 - status_subtract <= int(enemy['catch_rate']):
             successes += 256 if w_raw > 255 else min(w_raw, 255) + 1
-    return round(successes / ((threshold + 1) * 256), 4)
+    probability = successes / ((threshold + 1) * 256)
+    return probability if digits is None else round(probability, digits)
+
+
+def safari_ball_sequence(capture_probability, flee_probability, balls):
+    """Ball-only encounter: success probability and expected balls spent.
+
+    Capture is rolled first; only an unsuccessful throw can be followed by
+    fleeing. No bait/rock, status changes, or ball replenishment is assumed.
+    """
+    reach_turn, success, spent = 1.0, 0.0, 0.0
+    for _ in range(max(0, int(balls))):
+        spent += reach_turn
+        success += reach_turn * capture_probability
+        reach_turn *= (1 - capture_probability) * (1 - flee_probability)
+    return success, spent
 
 
 def capture_species(enemy):

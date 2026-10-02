@@ -22,6 +22,63 @@ from openpokered.run_autonomous import observations_valid, checkpoint_field_requ
 
 
 class AutonomousTests(unittest.TestCase):
+    def test_safari_ball_sequence_counts_capture_before_flee_and_budget(self):
+        from openpokered.playthrough_judgments import safari_ball_sequence
+        self.assertEqual(safari_ball_sequence(.2, .5, 0), (0, 0))
+        self.assertEqual(safari_ball_sequence(.2, 1, 30), (.2, 1))
+        self.assertEqual(safari_ball_sequence(1, .5, 30), (1, 1))
+        self.assertEqual(safari_ball_sequence(0, 0, 5), (0, 5))
+        success, spent = safari_ball_sequence(.2, .5, 2)
+        self.assertAlmostEqual(success, .28)
+        self.assertAlmostEqual(spent, 1.4)
+        self.assertAlmostEqual(safari_ball_sequence(.2, 0, 5)[0], 1 - .8 ** 5)
+
+    def test_safari_reference_uses_public_stats_and_bounds_actual_encounter(self):
+        from openpokered.autonomous_story import safari_capture_reference
+        from openpokered.playthrough_judgments import capture_probability, safari_ball_sequence
+        table = {'encounterRate': 30, 'mons': [{'species': 'Kangaskhan', 'level': 25}] * 10}
+        reference = safari_capture_reference(table)
+        # The observed resume69 encounter: HP 91, Speed 56. No unseen DV is supplied.
+        p = capture_probability('SafariBall', {'hp': 91, 'max_hp': 91, 'catch_rate': 45})
+        actual, _ = safari_ball_sequence(p, 112 / 256, 30)
+        row = reference['targets'][0]
+        low, high = row['capture_before_flee_probability_range']
+        self.assertLess(low, actual)
+        self.assertGreater(high, actual)
+        self.assertLess(high, .3)  # Seeing this species is far from registering it.
+        self.assertEqual(reference['ball_budget_per_encounter'], 30)
+        self.assertIn('not a forecast', reference['scope'])
+        self.assertIn('shared', reference['scope'])
+        per_step = reference['new_registration_per_eligible_step_pct_range']
+        self.assertLess(per_step[1], 30 / 256 * 100)
+
+    def test_safari_reference_respects_slots_levels_owned_and_zero_balls(self):
+        from openpokered.autonomous_story import safari_capture_reference
+        table = {'encounterRate': 30, 'mons': [
+            {'species': 'Kangaskhan', 'level': 25}, {'species': 'Kangaskhan', 'level': 28},
+            *[{'species': 'Paras', 'level': 20}] * 8]}
+        reference = safari_capture_reference(table, {'Paras'})
+        self.assertEqual([(r['species'], r['level']) for r in reference['targets']],
+                         [('Kangaskhan', 25), ('Kangaskhan', 28)])
+        self.assertEqual([r['slot_weight_per_256'] for r in reference['targets']], [51, 51])
+        empty = safari_capture_reference(table, {'Paras', 'Kangaskhan'})
+        exhausted = safari_capture_reference(table, balls=0)
+        for result in (empty, exhausted):
+            self.assertEqual(result['new_registration_per_eligible_step_pct_range'], [0, 0])
+            self.assertEqual(result['expected_eligible_steps_to_registration_range'], [None, None])
+
+    def test_safari_strategy_value_adds_reference_without_changing_encounter_candidates(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        table = {'encounterRate': 30, 'mons': [{'species': 'Kangaskhan', 'level': 25}] * 10}
+        agent.maps = {'SafariZoneEast': {'wild': {'red': {'grass': table}}}}
+        grass = agent.method_value('grass', 'SafariZoneEast', set())
+        safari = agent.method_value('safari', 'SafariZoneEast', set())
+        self.assertNotIn('safari_registration_reference', grass)
+        self.assertIn('safari_registration_reference', safari)
+        self.assertEqual(grass['targets'], safari['targets'])
+        self.assertEqual(grass['expected_attempts_to_any_new_species'],
+                         safari['expected_attempts_to_any_new_species'])
+
     def test_surf_probe_finds_a_shore_when_shortest_route_first_falls_into_water(self):
         import playthrough as pt
         falls = {

@@ -78,6 +78,7 @@ def table_profile(table, owned_species=()):
             'expected_attempts': round(1 / species_per_step, 1) if species_per_step else None,
         })
     return {
+        'scope': 'Encounter-only probabilities per eligible encounter check; seeing an unregistered species is not a successful capture.',
         'encounter_rate_per_256_steps': encounter_rate,
         'unregistered_species_count': len(missing),
         'unregistered_encounter_share_pct': round(novel_weight / 256 * 100, 1),
