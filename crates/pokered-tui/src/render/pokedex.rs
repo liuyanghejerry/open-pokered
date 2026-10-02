@@ -8,11 +8,10 @@ use pokered_core::pokedex_screen::{PokedexScreenMode, PokedexScreenState, LIST_R
 use pokered_data::lang_data::ui_label;
 use pokered_data::species::Species;
 use pokered_renderer::embedded_font::{draw_text, fill_tile};
-use pokered_renderer::palette::GRAYSCALE_PALETTE;
 use pokered_renderer::resource::ResourceManager;
 use pokered_renderer::{FrameBuffer, Rgba, TILE_SIZE};
 
-use super::{blit_single_tile_flipped, species_to_sprite_name};
+use super::species_to_sprite_name;
 
 pub fn draw_pokedex_screen(
     state: &PokedexScreenState,
@@ -78,7 +77,13 @@ fn draw_list(state: &PokedexScreenState, is_zh: bool, fb: &mut FrameBuffer) {
         draw_text(ui_label(item, is_zh), 16 * t, (10 + i) as u32 * t, fg, fb);
     }
     if state.mode() == PokedexScreenMode::SideMenu {
-        draw_text("▶", 15 * t, (10 + state.side_menu_cursor() as u32) * t, fg, fb);
+        draw_text(
+            "▶",
+            15 * t,
+            (10 + state.side_menu_cursor() as u32) * t,
+            fg,
+            fb,
+        );
     }
 }
 
@@ -121,24 +126,7 @@ fn draw_entry(state: &PokedexScreenState, res: &mut Option<ResourceManager>, fb:
     if let Some(ref mut rm) = res {
         let sprite_name = species_to_sprite_name(&sp.pascal_name());
         if let Ok(cached) = rm.load_pokemon_front(&sprite_name) {
-            let ts = cached.tileset.clone();
-            let tiles_w = cached.source_size.0 / t;
-            let tiles_h = cached.source_size.1 / t;
-            let x_offset = ((7 - tiles_w + 1) / 2) * t;
-            let y_offset = (7 - tiles_h) * t;
-            for idx in 0..ts.len() {
-                let tx = (idx as u32) % tiles_w;
-                let ty = (idx as u32) / tiles_w;
-                blit_single_tile_flipped(
-                    fb,
-                    &ts,
-                    idx,
-                    t + x_offset + (tiles_w - 1 - tx) * t,
-                    t + y_offset + ty * t,
-                    &GRAYSCALE_PALETTE,
-                    true,
-                );
-            }
+            super::blit_front_pic(fb, cached, 8, 8, true);
         }
     }
 
