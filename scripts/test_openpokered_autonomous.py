@@ -156,6 +156,54 @@ class AutonomousTests(unittest.TestCase):
         self.assertTrue(agent.needs_healing(facts))
         self.assertTrue(agent.needs_capture_recovery(facts))
 
+    def test_selected_goal_is_not_cancelled_by_the_same_known_fatigue(self):
+        from openpokered.story_agent import DualStoryAgent
+        mon = {'species': 'Charizard', 'level': 84, 'hp': 213, 'max_hp': 293,
+               'status': 'None', 'moves': ['Slash', 'Cut', 'Flamethrower', 'Dig'],
+               'pp': [18, 30, 3, 0]}
+        facts = {'party': [mon], 'bag': {}, 'map': 'AgathasRoom'}
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.active = {'target': ('supply', 'UltraBall', 12)}
+        agent.replan_after_defeat = False
+        self.assertTrue(agent.should_replan(facts))
+        with patch.object(DualStoryAgent, 'select_strategy'):
+            agent.select_strategy(facts)
+        self.assertFalse(agent.should_replan(facts))
+        self.assertFalse(agent.should_replan({**facts, 'map': 'IndigoPlateauLobby'}))
+        # A new HP change within the same band also warrants reconsideration.
+        for change in ({'hp': 212}, {'pp': [17, 30, 3, 0]}, {'status': 'Poison'},
+                       {'level': 85}, {'hp': 0}):
+            with self.subTest(change=change):
+                self.assertTrue(agent.should_replan({**facts, 'party': [{**mon, **change}]}))
+        self.assertTrue(agent.should_replan({**facts, 'bag': {'HYPERPOTION': 1}}))
+        agent.active = {'target': ('flag', 'NEXT_BATTLE', True)}
+        self.assertTrue(agent.should_replan(facts))
+        agent.active = {'target': ('supply', 'UltraBall', 12)}
+        agent.replan_after_defeat = True
+        self.assertTrue(agent.should_replan(facts))
+
+    def test_accepted_fatigue_never_bypasses_critical_or_capture_resource_guards(self):
+        from openpokered.story_agent import DualStoryAgent
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.replan_after_defeat = False
+        mon = {'species': 'Charizard', 'level': 84, 'hp': 1, 'max_hp': 293,
+               'status': 'None', 'moves': ['Slash'], 'pp': [20]}
+        facts = {'party': [mon], 'bag': {}}
+        for target in [('supply', 'UltraBall', 12), ('catch', 'VictoryRoad3F', True)]:
+            agent.active = {'target': target}
+            with patch.object(DualStoryAgent, 'select_strategy'):
+                agent.select_strategy(facts)
+            self.assertTrue(agent.should_replan(facts))
+        # A fresh judgment replaces the baseline; mutating observations later
+        # must not mutate the stored comparison.
+        mon['hp'] = 200
+        agent.active = {'target': ('supply', 'UltraBall', 12)}
+        with patch.object(DualStoryAgent, 'select_strategy'):
+            agent.select_strategy(facts)
+        self.assertFalse(agent.should_replan(facts))
+        mon['pp'][0] = 0
+        self.assertTrue(agent.should_replan(facts))
+
     def test_late_navigation_cannot_reintroduce_pushes_without_strength_and_badge(self):
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
         agent.field_requirements = {}

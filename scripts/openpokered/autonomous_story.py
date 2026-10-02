@@ -680,7 +680,24 @@ class AutonomousStoryAgent(DualStoryAgent):
         main_critical = bool(main and main.get('max_hp', 0) > 0
                              and main['hp'] <= main['max_hp'] * .25)
         return (self.active and self.active['target'][0] != 'heal'
-                and (main_critical or self.needs_skill_recovery(facts)))
+                and (main_critical or (self.needs_skill_recovery(facts)
+                     and getattr(self, '_selected_recovery_key', None) != self.recovery_replan_key(facts))))
+
+    def recovery_replan_key(self, facts):
+        """Exact recovery evidence accepted by the latest strategic choice.
+
+        Coordinates are not fatigue: arriving at a selected shop with unchanged
+        HP/PP must not cancel the purchase just because those PP were already
+        low when Jev selected it. New injury, PP/status/party or medicine changes
+        still re-open planning. Serialize to avoid aliasing mutable observations.
+        """
+        fields = ('species', 'level', 'hp', 'max_hp', 'status', 'moves', 'pp')
+        medicine_names = {name.replace('_', '').upper() for name in MEDICINES}
+        return json.dumps([
+            (self.active or {}).get('target'),
+            [{key: mon.get(key) for key in fields} for mon in facts.get('party', [])],
+            {name: qty for name, qty in facts.get('bag', {}).items() if name in medicine_names},
+        ], sort_keys=True)
 
     def capture_resources_missing(self, facts, method=None):
         """All captures need capacity; only Safari supplies its own balls."""
@@ -715,6 +732,7 @@ class AutonomousStoryAgent(DualStoryAgent):
 
     def select_strategy(self, facts):
         super().select_strategy(facts)
+        self._selected_recovery_key = self.recovery_replan_key(facts)
         self.replan_after_defeat = False
 
     def augment_strategy_state(self, state, facts):
