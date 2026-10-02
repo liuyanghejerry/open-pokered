@@ -2425,6 +2425,17 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         }
     }
 
+    /// InGameTrade_DoTrade records success after species validation, before
+    /// ConnectCableText and the trade movie.
+    pub fn mark_npc_trade_completed(&mut self, nickname: &str) {
+        if pokered_data::trades::NPC_TRADES.iter().any(|trade| trade.nickname == nickname) {
+            self.set_flag_live(&format!("EVENT_TRADED_FOR_{}", nickname), true);
+            if nickname == "MARC" {
+                self.set_flag_live("EVENT_GOT_LICKITUNG_FROM_TRADE", true);
+            }
+        }
+    }
+
     /// Restore counters and status bytes that live outside the event bitset.
     pub fn restore_system_save_state(&mut self, data: &crate::save::game_data::GameData) {
         self.first_lock_trash_can = data.first_lock_trash_can;

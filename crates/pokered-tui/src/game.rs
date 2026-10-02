@@ -1831,6 +1831,7 @@ impl PokemonGame {
                             self.overworld.party_count = self.save_data.party.count() as u8;
                             self.overworld.party_lead_level = self.save_data.party.leader_level();
                             if traded {
+                                self.overworld.mark_npc_trade_completed(&nickname);
                                 self.overworld.pending_dialogue=Some(pokered_core::overworld::BedroomDialogue::from_message(
                                     if self.state.config.language==Lang::Zh { "好，请把通信线接上！" }
                                     else { "Okay, connect the\ncable like so!" }));

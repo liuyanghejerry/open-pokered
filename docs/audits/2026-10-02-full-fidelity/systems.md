@@ -73,3 +73,5 @@ PC主入口/12箱切换/物品PC/Oak评级/League HOF存在；图鉴seen+owned�
 SYS-15进一步按原作 `wCurrentBoxNum` bit7判断箱bank是否已初始化，不能把“checksum有效”等同于已初始化。原作NEW GAME可以保留前一位trainer的有效bank2/3，而bit7为0；新增独立fixture把前局有效箱bank复制进原作新局存档，验证12箱仍为空。原作bit7为0时忽略这些bank，已识别旧native布局仍可迁移其有效bank；本项目导出每次均写完整箱bank，所以同时设置bit7。whole-image及GBA逐bank导入采取同一策略。
 
 Web旧JSON仅由实际localStorage读取入口检查原始JSON缺少 `game_data.game_progress_tail` 后标记一次迁移；同slot extras只接收旧NPC/Rod alias的true。新JSON和原作SRAM保持存档位权威，普通debug snapshot反序列化不会获得此标记。追加旧/新JSON同slot迁移、snapshot不迁移及无效JSON回归；上述追加source测试等待根代理最终集成检查，未沿用此前14项通过结果宣称已运行。
+
+SYS-16时点也补原作顺序：正确party选择后、ConnectCableText/动画前登记完成位（`engine/events/in_game_trades.asm:129-134`），取消或选错不登记；动画完成后scene的setFlag幂等。App新增真实选择输入三分支回归，证明登记时仍持有原精灵且动画尚未开始；TUI在显示Connect文字前使用同一别名登记桥接。

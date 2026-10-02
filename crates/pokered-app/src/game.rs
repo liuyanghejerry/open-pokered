@@ -3968,6 +3968,9 @@ impl PokemonGame {
                                 if self.save_data.party.get(idx).is_some_and(|m| m.species == trade.give) {
                                     trade.party_index = idx;
                                     trade.ready_to_animate = true;
+                                    // InGameTrade_DoTrade sets the completed bit after
+                                    // a valid pick, before ConnectCableText/animation.
+                                    self.overworld.mark_npc_trade_completed(&trade.nickname);
                                     self.overworld.pending_dialogue=Some(pokered_core::overworld::BedroomDialogue::from_message(
                                         if self.state.config.language==pokered_core::game_state::Lang::Zh {
                                             "好，请把通信线接上！"
@@ -7965,6 +7968,34 @@ mod fidelity_systems_npc_tests {
                 receive:Species::MrMime,nickname:"MARCEL".to_string() }));
             assert_eq!(*game.save_data.party.get(0).unwrap(),mon);
             assert!(!game.save_data.game_data.pokedex.is_owned(Species::MrMime));
+        }
+    }
+
+    #[test]
+    fn fidelity_npc_completed_flag_precedes_connect_text_only_for_valid_pick() {
+        for (offered, button, completed) in [
+            (Species::Abra, GbButton::A, true),
+            (Species::Abra, GbButton::B, false),
+            (Species::Pikachu, GbButton::A, false),
+        ] {
+            let mut game = game();
+            game.state.screen = GameScreen::Overworld;
+            game.overworld = OverworldScreen::new(MapId::Route2TradeHouse, None, PokemonRedData);
+            game.save_data.party.clear();
+            game.save_data.party.add(create_pokemon(offered, 15, [0x99, 0x88]).unwrap()).unwrap();
+            game.pending_trade = Some(PendingTrade { party_index: 0, ready_to_animate: false,
+                give: Species::Abra, receive: Species::MrMime, nickname: "MARCEL".to_string() });
+            game.overworld.begin_party_select(game.save_data.party.to_vec());
+            let mut input = InputState::new();
+            input.press(button);
+            game.update(&input);
+            assert_eq!(game.overworld.unified_flags().get_flag("EVENT_TRADED_FOR_MARCEL"), completed);
+            assert_eq!(game.save_data.party.get(0).unwrap().species, offered);
+            assert!(game.trade_anim.is_none());
+            if completed {
+                assert!(game.overworld.pending_dialogue.is_some());
+                assert!(game.pending_trade.as_ref().unwrap().ready_to_animate);
+            }
         }
     }
 }
