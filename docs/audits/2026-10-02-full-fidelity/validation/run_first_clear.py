@@ -43,7 +43,7 @@ class AuditGame(OriginalGame):
             live = state.get("battle_live") or {}
             player, enemy = live.get("player", {}), live.get("enemy", {})
             print(
-                f"[live] frame={state.get('frame')} screen={state.get('screen')} "
+                f"[live] frame={state.get('frame_count')} screen={state.get('screen')} "
                 f"map={state.get('map_name')} "
                 f"pos=({state.get('player_x')},{state.get('player_y')}) "
                 f"phase={state.get('battle_phase')} "

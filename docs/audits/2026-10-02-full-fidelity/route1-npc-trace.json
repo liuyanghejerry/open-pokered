@@ -435,14 +435,14 @@
         "data": {
           "entities": [
             {
-              "distance": 2,
+              "distance": 3,
               "id": "npc:0",
-              "interactable": true,
+              "interactable": false,
               "kind": "npc",
               "name": "Youngster",
               "position": {
                 "x": 5,
-                "y": 24
+                "y": 25
               }
             },
             {
@@ -481,7 +481,7 @@
             "visible": true,
             "walk_counter": 0,
             "x": 5,
-            "y": 24
+            "y": 25
           },
           {
             "facing": "Right",
@@ -506,14 +506,14 @@
         "data": {
           "entities": [
             {
-              "distance": 2,
+              "distance": 4,
               "id": "npc:0",
-              "interactable": true,
+              "interactable": false,
               "kind": "npc",
               "name": "Youngster",
               "position": {
                 "x": 5,
-                "y": 24
+                "y": 26
               }
             },
             {
@@ -552,10 +552,10 @@
             "visible": true,
             "walk_counter": 0,
             "x": 5,
-            "y": 24
+            "y": 26
           },
           {
-            "facing": "Right",
+            "facing": "Left",
             "home_x": 15,
             "home_y": 13,
             "npc_index": 1,
@@ -564,7 +564,7 @@
             "text_id": 2,
             "visible": true,
             "walk_counter": 0,
-            "x": 16,
+            "x": 15,
             "y": 13
           }
         ]
@@ -577,14 +577,14 @@
         "data": {
           "entities": [
             {
-              "distance": 2,
+              "distance": 3,
               "id": "npc:0",
-              "interactable": true,
+              "interactable": false,
               "kind": "npc",
               "name": "Youngster",
               "position": {
                 "x": 5,
-                "y": 24
+                "y": 25
               }
             },
             {
@@ -623,10 +623,10 @@
             "visible": true,
             "walk_counter": 0,
             "x": 5,
-            "y": 24
+            "y": 25
           },
           {
-            "facing": "Right",
+            "facing": "Left",
             "home_x": 15,
             "home_y": 13,
             "npc_index": 1,
@@ -635,7 +635,7 @@
             "text_id": 2,
             "visible": true,
             "walk_counter": 0,
-            "x": 16,
+            "x": 14,
             "y": 13
           }
         ]
@@ -697,7 +697,7 @@
             "y": 24
           },
           {
-            "facing": "Left",
+            "facing": "Right",
             "home_x": 15,
             "home_y": 13,
             "npc_index": 1,
@@ -705,12 +705,20 @@
             "sprite_id": 4,
             "text_id": 2,
             "visible": true,
-            "walk_counter": 16,
-            "x": 17,
+            "walk_counter": 0,
+            "x": 15,
             "y": 13
           }
         ]
       }
     }
-  ]
+  ],
+  "_capture": {
+    "after": {
+      "binary": "/workspace/onboarding/pokered-font-preserved-final-checked/pokered-app",
+      "binary_sha256": "ea717f1c2d6332f4608fc13194296cdb166ea20662d8d0f7c379bd17ba005e52",
+      "source": "eebde2fc3a4f78c38b4c7b5d49e0db2b830cb235",
+      "font": "Fusion Pixel original project EN/ZH"
+    }
+  }
 }

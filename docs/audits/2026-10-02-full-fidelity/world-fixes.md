@@ -1,6 +1,6 @@
 # World fidelity fixes and verification
 
-The audit baseline is `72ff719`; the original is `pret/pokered@fbcf7d0`. The complete independent table comparison and baseline findings are in `data-world.md` and `data-world-check.json` (the coordinator's audit commit). These fixes cover D-W01–03 and D-W05–09; the original NPC RNG strategy D-W04 is coordinated separately.
+The audit baseline is `72ff719`; the original is `pret/pokered@fbcf7d0`. The complete independent table comparison and baseline findings are in `data-world.md` and `data-world-check.json` (the coordinator's audit commit). These world changes cover D-W01–03 and D-W05–09. The final integrated after captures also include the coordinator's classic NPC RNG strategy D-W04.
 
 - Encounter probability samples the bottom-right 8px tile in the current 16px player cell, including the map's eastern half. Grass/water list selection still follows the original bottom-left tile.
 - Map entry updates rates and preserves the last nonzero grass/water lists, reproducing legal-species left-shore encounters. Blue propagates from existing GameConfig through overworld and snapshots. Native launch accepts `--game-version blue`; Red remains the default.
@@ -9,6 +9,8 @@ The audit baseline is `72ff719`; the original is `pret/pokered@fbcf7d0`. The com
 - Successful found text prints, plays GET_ITEM_1, waits for the sequencer, and closes without a new A press. Holding A retains the original HoldTextDisplayOpen behavior. Failed pickups keep ordinary manual dialogue and play no found-item jingle. Native and TUI render no prompt arrow during automatic found text.
 
 ## Checks actually run
+
+The targeted Cargo checks below were run at the isolated world-fix checkpoint. Final integrated build/test results are recorded in the audit's validation directory; the screenshot drivers below were rerun against the final font-preserved build.
 
 | Check | Result |
 | --- | --- |
@@ -32,15 +34,21 @@ The 104-handler test fills 20 actual item names excluding the target, verifies f
 
 Both binaries start with seed 123 and driven-only headless input. All PNGs are 160×144 direct game renders in `docs/screenshots/fidelity-world/`. Logs are `ground-native-trace.json` and `route1-npc-trace.json`.
 
+All 13 before PNGs and their original before trace entries are preserved unchanged. The 13 after PNGs were recaptured from frozen source `eebde2fc3a4f78c38b4c7b5d49e0db2b830cb235`, with app SHA256 `ea717f1c2d6332f4608fc13194296cdb166ea20662d8d0f7c379bd17ba005e52`. Both phases use the project's Fusion Pixel font for English and Chinese. This capture does not replace the project's alphabet. [world-captures.json](world-captures.json) records binary provenance, every PNG hash, dimensions and before-preservation checks; all 13 after images were visually inspected.
+
 ```sh
 python3 docs/audits/2026-10-02-full-fidelity/check-ground-pickups.py
 python3 docs/audits/2026-10-02-full-fidelity/capture-ground-regressions.py \
-  --before /workspace/onboarding/pokered-audit-base-app \
-  --after /workspace/onboarding/pokered-world-fixed-app
+  --after /workspace/onboarding/pokered-font-preserved-final-checked/pokered-app \
+  --after-source eebde2fc3a4f78c38b4c7b5d49e0db2b830cb235 \
+  --after-font 'Fusion Pixel original project EN/ZH'
 python3 docs/audits/2026-10-02-full-fidelity/capture-route1-axis.py \
-  --before /workspace/onboarding/pokered-audit-base-app \
-  --after /workspace/onboarding/pokered-world-fixed-app
+  --after /workspace/onboarding/pokered-font-preserved-final-checked/pokered-app \
+  --after-source eebde2fc3a4f78c38b4c7b5d49e0db2b830cb235 \
+  --after-font 'Fusion Pixel original project EN/ZH'
 ```
+
+Omitting `--before` preserves the existing verified baseline trace and PNGs. Supplying `--before /workspace/onboarding/pokered-audit-base-app` explicitly recaptures that phase; it is not required for the final after refresh.
 
 | Scenario | Before | After |
 | --- | --- | --- |
@@ -50,6 +58,6 @@ python3 docs/audits/2026-10-02-full-fidelity/capture-route1-axis.py \
 | Correct TM, found text | [Before](../../screenshots/fidelity-world/ground-correct-tm-before-dialogue.png) | [After](../../screenshots/fidelity-world/ground-correct-tm-after-dialogue.png) |
 | Missing PowerPlant handler | [Before](../../screenshots/fidelity-world/ground-missing-handler-before-dialogue.png) | [After](../../screenshots/fidelity-world/ground-missing-handler-after-dialogue.png) |
 
-The NPC screenshots isolate the axis data change using the baseline generic movement implementation: frame 240 is `(6,24)` before and `(5,24)` after. The corrected NPC attempts Up/Down and is blocked by local terrain in these sampled frames; these captures do not claim a matching original RNG path. The separate classic movement strategy is tested by the coordinator. Headless captures disable audio output; sound wait uses a controlled sequencer status in the phase regression, while normal frontends sample the actual backend.
+The final NPC screenshots compare baseline generic movement against the integrated classic strategy and corrected vertical axis. At frames `0/60/120/180/240`, the final NPC positions are `(5,24)/(5,25)/(5,26)/(5,25)/(5,24)`, while baseline frame 240 is `(6,24)`. This confirms vertical movement in the sampled final runtime; it does not isolate the axis change from the RNG strategy or claim a matching original ROM RNG path. Headless captures disable audio output; sound wait uses a controlled sequencer status in the phase regression, while normal frontends sample the actual backend.
 
-The preserved encounter buffers cover the original quirk with valid species. The old-man player-name RAM overlay, MissingNo and invalid internal species remain outside this implementation. Snapshot tests preserve the logical sound phase; live audio sample positions remain in the frontend backend rather than the existing runtime snapshot schema.
+The preserved encounter buffers cover the original quirk with valid species. The old-man player-name RAM overlay, MissingNo and invalid internal species remain outside this implementation. World snapshot tests cover the logical sound phase; frontend audio sample snapshots are reviewed separately in the systems audit and are not established by these headless captures.

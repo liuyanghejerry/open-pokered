@@ -1,0 +1,55 @@
+{
+  "source_commit": "c51209a492f804f58486607919c9ba0c62eb2eb7",
+  "font": "Original project Fusion Pixel (English, Chinese and numeric text); no replacement alphabet",
+  "build_exit": 0,
+  "engine_production_source": "92ba95f9526107e17874df53291ac7758d0930f0",
+  "command": "CARGO_INCREMENTAL=0 cargo build --offline --locked -p pokered-app -p pokered-tui --features debug-server --bin pokered-app --bin pokered-tui --example fidelity_visual_capture --example fidelity_link_movie_capture --example pc_tour --message-format=json",
+  "artifacts": {
+    "pokered-tui": {
+      "path": "/workspace/onboarding/pokered-font-preserved-final/pokered-tui",
+      "sha256": "1868849ff90f66749184766f0a4d4d3892615ce10352dbb01d2f8a5f8597e4f1",
+      "features": []
+    },
+    "pc_tour": {
+      "path": "/workspace/onboarding/pokered-font-preserved-final/pc_tour",
+      "sha256": "9ada5a930ea7e250b2af80a6e2ce896d959fee768b008551d6a2832fd464ee62",
+      "features": [
+        "debug-server",
+        "default",
+        "desktop",
+        "pokered-debug-server"
+      ]
+    },
+    "fidelity_link_movie_capture": {
+      "path": "/workspace/onboarding/pokered-font-preserved-final/fidelity_link_movie_capture",
+      "sha256": "a143cb1db435415414885e7394932c8b9fecbbf49d650fc56a0c95029463d51d",
+      "features": [
+        "debug-server",
+        "default",
+        "desktop",
+        "pokered-debug-server"
+      ]
+    },
+    "fidelity_visual_capture": {
+      "path": "/workspace/onboarding/pokered-font-preserved-final/fidelity_visual_capture",
+      "sha256": "3da109ee784d3417915a001ceecddd350af7298f49a87443f314757db303cab4",
+      "features": [
+        "debug-server",
+        "default",
+        "desktop",
+        "pokered-debug-server"
+      ]
+    },
+    "pokered-app": {
+      "path": "/workspace/onboarding/pokered-font-preserved-final/pokered-app",
+      "sha256": "a137d17f0239357710f351003ffbae6999150a4df0732ca58a8d39fb50fe633f",
+      "features": [
+        "debug-server",
+        "default",
+        "desktop",
+        "pokered-debug-server"
+      ]
+    }
+  },
+  "source_tree_diff_during_build": ""
+}

@@ -1,0 +1,172 @@
+== m01: boot to NEW GAME / Oak speech
+[live] frame=None screen=title map=PalletTown pos=(0,0) phase=Intro { phase: TransitionFlash, wait_frames: 72 } HP=None/None
+   done (1.5s wall)
+== m02: Oak speech + default names → bedroom
+[m02] frame=1805 screen=overworld map=RedsHouse2F pos=(3,6) party=0 money=3000 effect=None
+   done (4.6s wall)
+== m03: leave home → Pallet Town
+[m03] frame=2111 screen=overworld map=PalletTown pos=(5,5) party=0 money=3000 effect=None
+   done (1.8s wall)
+== m04: Oak interception → OaksLab
+[m04] frame=4034 screen=overworld map=OaksLab pos=(5,3) party=0 money=3000 effect=None
+   done (2.0s wall)
+== m05: take starter (bulbasaur)
+[m05] frame=5158 screen=overworld map=OaksLab pos=(8,4) party=1 money=3000 effect=None
+   done (1.4s wall)
+== m06: first rival battle
+[m06] frame=7820 screen=overworld map=OaksLab pos=(5,6) party=1 money=3000 effect=None
+   done (12.9s wall)
+== m07: Route 1 → Viridian Mart parcel
+[m07-in-mart] frame=11175 screen=overworld map=ViridianMart pos=(3,5) party=1 money=3000 effect=None
+[m07-back-outside] frame=11273 screen=overworld map=ViridianCity pos=(29,19) party=1 money=3000 effect=None
+   done (18.8s wall)
+== m08: deliver parcel → POKéDEX
+[m08-southlane] frame=11517 screen=overworld map=ViridianCity pos=(20,32) party=1 money=3000 effect=None
+[m08-back-home] frame=12791 screen=overworld map=PalletTown pos=(12,12) party=1 money=3000 effect=None
+[m08-delivered] frame=15573 screen=overworld map=OaksLab pos=(5,3) party=1 money=3000 effect=None
+[m08] oak-after-delivery: POKeMON around the world
+   done (12.4s wall)
+== m09: Viridian Forest → Pewter City
+[live] frame=None screen=battle map=Route1 pos=(10,34) phase=Intro { phase: BattleTransitionWipe(DoubleCircle), wait_frames: 3 } HP=19/15
+[live] frame=None screen=overworld map=Route2 pos=(6,8) phase=BattleOver { won: false, escaped: true, wait_frames: 20 } HP=3/18
+[m09] frame=26369 screen=overworld map=PewterCity pos=(16,29) party=1 money=3090 effect=None
+   done (64.7s wall)
+== m10: train + Boulder Badge (Brock)
+[m10-arrived] frame=26369 screen=overworld map=PewterCity pos=(16,29) party=1 money=3090 effect=None
+[train] grass spot Route1 (12,7), target L13
+[train] cyc=0 battles=0 L6 hp=21/21 (0s)
+[live] frame=None screen=battle map=Route1 pos=(12,8) phase=Intro { phase: WildReveal, wait_frames: 97 } HP=17/13
+[train] hp 13/23 -> heal
+[train] hp 14/25 -> heal
+[live] frame=None screen=battle map=Route1 pos=(12,9) phase=Intro { phase: BattleTransitionWipe(DoubleCircle), wait_frames: 42 } HP=25/14
+[train] cyc=25 battles=7 L8 hp=25/25 (87s)
+[train] hp 16/27 -> heal
+[live] frame=None screen=battle map=Route1 pos=(12,9) phase=Intro { phase: BattleTransitionWipe(DoubleCircle), wait_frames: 108 } HP=23/15
+[train] hp 11/27 -> heal
+[live] frame=None screen=battle map=Route1 pos=(12,8) phase=ShowingText { messages: ["BULBASAUR used\nTACKLE!", "Enemy PIDGEY used\nGUST!"], current: 1, wait_frames: 0, next_phase: PlayerMenu } HP=24/5
+[train] cyc=75 battles=21 L10 hp=18/30 (228s)
+[train] hp 15/30 -> heal
+[live] frame=None screen=battle map=Route1 pos=(12,7) phase=Intro { phase: BattleTransitionWipe(DoubleCircle), wait_frames: 91 } HP=30/15
+[train] hp 18/32 -> heal
+[live] frame=None screen=battle map=Route1 pos=(12,9) phase=Intro { phase: BattleTransitionWipe(DoubleCircle), wait_frames: 108 } HP=32/15
+[train] hp 20/34 -> heal
+[live] frame=None screen=battle map=Route1 pos=(12,7) phase=BattleOver { won: false, escaped: true, wait_frames: 20 } HP=20/16
+[train] cyc=150 battles=42 L12 hp=19/34 (430s)
+[train] hp 19/34 -> heal
+[live] frame=None screen=overworld map=Route1 pos=(10,0) phase=BattleOver { won: false, escaped: true, wait_frames: 20 } HP=19/13
+[train] level 13 reached (480s, 48 battles)
+[m10-trained] frame=96835 screen=overworld map=Route1 pos=(12,6) party=1 money=3090 effect=None
+[live] frame=None screen=overworld map=ViridianForest pos=(8,3) phase=BattleOver { won: false, escaped: true, wait_frames: 20 } HP=36/15
+[m10] frame=109006 screen=overworld map=PewterGym pos=(4,2) party=1 money=4696 effect=None
+   done (578.1s wall)
+== m11: Route 3 trainers → Mt Moon entrance
+[live] frame=None screen=battle map=Route3 pos=(11,6) phase=ShowingText { messages: ["Enemy WEEDLE used\nSTRING SHOT!", "BULBASAUR's SPEED\nfell!", "BULBASAUR used\nTACKLE!", "Enemy WEEDLE\nfainted!", "BULBASAUR gained\n111 exp. points!"], current: 0, wait_frames: 10, next_phase: EnemySendingNext { wait_frames: 30 } } HP=36/0
+[live] frame=None screen=battle map=Route3 pos=(19,6) phase=ShowingText { messages: ["IVYSAUR used\nTACKLE!", "Enemy WEEDLE\nfainted!", "IVYSAUR gained 99\nexp. points!", "IVYSAUR grew to\nlevel 17!"], current: 3, wait_frames: 0, next_phase: EnemySendingNext { wait_frames: 30 } } HP=10/0
+[live] frame=None screen=battle map=Route3 pos=(33,8) phase=ShowingText { messages: ["IVYSAUR used VINE\nWHIP!", "Enemy JIGGLYPUFF\nused SING!", "IVYSAUR fell\nasleep!"], current: 1, wait_frames: 0, next_phase: PlayerMenu } HP=52/34
+[m11] frame=133390 screen=overworld map=Route4 pos=(11,5) party=1 money=2866 effect=None
+   done (167.4s wall)
+== m12: Mt Moon fossil → Cerulean City
+   [ntoPINCH] at MtMoon1F(30,7)
+[live] frame=None screen=overworld map=MtMoon1F pos=(6,6) phase=BattleOver { won: false, escaped: true, wait_frames: 20 } HP=49/26
+   [ntoPINCH] at MtMoonB2F(10,16)
+   [ntoPINCH] at MtMoonB2F(10,16)
+   [ntoPINCH] at MtMoonB2F(10,16)
+   [ntoPINCH] at MtMoonB2F(10,16)
+   [ntoPINCH] at MtMoonB2F(10,16)
+   [ntoPINCH] at MtMoonB2F(10,16)
+   [ntoPINCH] at MtMoonB2F(13,9)
+[live] frame=None screen=battle map=MtMoonB2F pos=(13,8) phase=ShowingText { messages: ["IVYSAUR used VINE\nWHIP!", "It's not very\neffective...", "Enemy KOFFING used\nSMOG!"], current: 2, wait_frames: 0, next_phase: PlayerMenu } HP=15/18
+[m12] frame=151764 screen=overworld map=CeruleanCity pos=(19,17) party=1 money=3721 effect=None
+   done (120.8s wall)
+== m13: Cascade Badge (Misty)
+   [ntoPINCH] at CeruleanGym(5,3)
+[live] frame=None screen=battle map=CeruleanGym pos=(5,2) phase=ShowingText { messages: ["MISTY used X\nDEFEND!", "Enemy STARMIE's\nDEFENSE rose!", "IVYSAUR used VINE\nWHIP!", "It's super\neffective!"], current: 2, wait_frames: 0, next_phase: PlayerMenu } HP=55/41
+[m13] frame=159194 screen=overworld map=CeruleanGym pos=(5,2) party=1 money=6260 effect=None
+   done (51.8s wall)
+== m14: Nugget Bridge → Bill → S.S. Ticket
+[live] frame=None screen=battle map=CeruleanCity pos=(20,6) phase=TrainerVictory { phase: TrainerPicScrollIn, wait_frames: 18, player_won: false } HP=0/25
+[live] frame=None screen=overworld map=CeruleanCity pos=(20,6) phase=TrainerVictory { phase: EndBattleText, wait_frames: 0, player_won: false } HP=0/3
+[live] frame=None screen=battle map=Route24 pos=(11,28) phase=MoveSelect HP=9/23
+[live] frame=None screen=battle map=Route24 pos=(10,19) phase=Intro { phase: BattleTransitionWipe(Spiral { outward: false }), wait_frames: 89 } HP=22/45
+[live] frame=None screen=battle map=Route25 pos=(9,4) phase=MoveSelect HP=69/48
+[live] frame=None screen=battle map=Route25 pos=(23,8) phase=ShowingText { messages: ["IVYSAUR used\nTACKLE!", "Critical hit!", "It's not very\neffective...", "Enemy GEODUDE\nfainted!", "IVYSAUR gained 238\nexp. points!"], current: 4, wait_frames: 0, next_phase: EnemySendingNext { wait_frames: 30 } } HP=23/0
+[live] frame=None screen=battle map=Route25 pos=(37,5) phase=ShowingText { messages: ["IVYSAUR used\nTACKLE!", "Enemy ODDISH used\nABSORB!", "It's not very\neffective..."], current: 1, wait_frames: 0, next_phase: PlayerMenu } HP=70/13
+[m14] frame=221538 screen=overworld map=BillsHouse pos=(4,5) party=1 money=1621 effect=None
+   done (411.2s wall)
+== m15: Cerulean thief → Underground Path → Vermilion
+[live] frame=None screen=battle map=Route6 pos=(16,26) phase=ShowingText { messages: ["Enemy BUTTERFREE\nused CONFUSION!", "It's super\neffective!", "IVYSAUR used\nTACKLE!", "Critical hit!"], current: 2, wait_frames: 0, next_phase: PlayerMenu } HP=20/1
+[live] frame=None screen=overworld map=Route5 pos=(17,28) phase=TrainerVictory { phase: EndBattleText, wait_frames: 0, player_won: false } HP=0/41
+[live] frame=None screen=battle map=Route6 pos=(10,31) phase=ShowingText { messages: ["IVYSAUR used\nTACKLE!", "Enemy RATICATE\nused TACKLE!"], current: 0, wait_frames: 10, next_phase: PlayerMenu } HP=10/20
+[m15] frame=254101 screen=overworld map=VermilionCity pos=(11,3) party=1 money=797 effect=None
+   done (206.0s wall)
+== m16: S.S. Anne rival + captain → HM01
+   [ntoPINCH] at SSAnne1F(11,7)
+[live] frame=None screen=battle map=SSAnne2F pos=(36,8) phase=ShowingText { messages: ["IVYSAUR used VINE\nWHIP!", "It's not very\neffective...", "Enemy PIDGEOTTO\nused SAND-ATTACK!", "IVYSAUR's ACCURACY\nfell!"], current: 0, wait_frames: 10, next_phase: PlayerMenu } HP=53/17
+[m16] rival blackout 1: boarding again
+[train] grass spot Route6 (10,23), target L30
+[train] cyc=0 battles=0 L29 hp=80/80 (0s)
+[train] cyc=25 battles=0 L29 hp=80/80 (12s)
+[train] cyc=50 battles=2 L29 hp=80/80 (32s)
+[live] frame=None screen=battle map=Route6 pos=(10,23) phase=Intro { phase: BattleTransitionWipe(DoubleCircle), wait_frames: 12 } HP=80/43
+[train] cyc=75 battles=5 L29 hp=60/80 (61s)
+[train] cyc=100 battles=8 L29 hp=49/80 (88s)
+[train] hp 39/80 -> heal
+[live] frame=None screen=battle map=Route6 pos=(14,24) phase=Intro { phase: SilhouetteSlide, wait_frames: 61 } HP=39/36
+[train] cyc=125 battles=11 L29 hp=79/80 (127s)
+[train] cyc=150 battles=13 L29 hp=74/80 (145s)
+[train] cyc=175 battles=13 L29 hp=74/80 (150s)
+[live] frame=None screen=battle map=Route6 pos=(10,23) phase=ShowingText { messages: ["IVYSAUR used\nTACKLE!", "Enemy ODDISH used\nPOISONPOWDER!"], current: 0, wait_frames: 0, next_phase: PlayerMenu } HP=73/2
+[train] cyc=200 battles=16 L29 hp=68/80 (179s)
+[train] level 30 reached (197s, 18 battles)
+[live] frame=None screen=battle map=SSAnne2F pos=(36,8) phase=ShowingText { messages: ["IVYSAUR used RAZOR\nLEAF!", "Critical hit!", "It's not very\neffective...", "Enemy PIDGEOTTO\nused SAND-ATTACK!", "IVYSAUR's ACCURACY\nfell!"], current: 0, wait_frames: 10, next_phase: PlayerMenu } HP=82/10
+[m16] frame=304855 screen=overworld map=SSAnneCaptainsRoom pos=(4,3) party=1 money=1699 effect=None
+   done (292.5s wall)
+== m17: CUT + trash switches → Thunder Badge
+   [ntoPINCH] at VermilionGym(2,10)
+[live] frame=None screen=battle map=VermilionGym pos=(2,10) phase=ShowingText { messages: ["IVYSAUR used RAZOR\nLEAF!", "Critical hit!", "Enemy PIKACHU\nfainted!", "IVYSAUR gained 369\nexp. points!", "IVYSAUR grew to\nlevel 31!"], current: 0, wait_frames: 10, next_phase: TrainerVictory { phase: DefeatedText, wait_frames: 30, player_won: true } } HP=76/0
+   [ntoPINCH] at VermilionGym(2,8)
+[m17] both switches found on search 1
+[m17] frame=322339 screen=overworld map=VermilionGym pos=(5,2) party=1 money=5205 effect=None
+   done (80.5s wall)
+== m18: Route 9 CUT → Rock Tunnel entrance
+[live] frame=None screen=overworld map=Route6 pos=(13,20) phase=TrainerVictory { phase: EndBattleText, wait_frames: 0, player_won: true } HP=74/0
+[live] frame=None screen=overworld map=Route9 pos=(20,11) phase=TrainerVictory { phase: EndBattleText, wait_frames: 0, player_won: true } HP=88/0
+[m18] frame=342096 screen=overworld map=Route10 pos=(11,19) party=1 money=6225 effect=None
+   done (116.0s wall)
+== m19: Rock Tunnel → Lavender Town
+[live] frame=None screen=overworld map=Route10 pos=(6,18) phase=TrainerVictory { phase: EndBattleText, wait_frames: 0, player_won: true } HP=100/0
+   [ntoPINCH] at RockTunnelB1F(26,31)
+[live] frame=None screen=battle map=RockTunnelB1F pos=(21,21) phase=ShowingText { messages: ["VENUSAUR used\nRAZOR LEAF!", "Critical hit!", "It's not very\neffective...", "Enemy CHARMANDER\nfainted!", "VENUSAUR gained\n306 exp. points!"], current: 0, wait_frames: 10, next_phase: EnemySendingNext { wait_frames: 30 } } HP=100/0
+   [ntoPINCH] at RockTunnelB1F(30,11)
+   [ntoPINCH] at RockTunnel1F(7,9)
+[live] frame=None screen=battle map=RockTunnelB1F pos=(11,14) phase=Intro { phase: SilhouetteSlide, wait_frames: 11 } HP=102/40
+   [ntoPINCH] at RockTunnelB1F(11,14)
+   [ntoPINCH] at RockTunnelB1F(6,11)
+   [ntoPINCH] at RockTunnel1F(36,24)
+[live] frame=None screen=battle map=RockTunnel1F pos=(36,24) phase=ShowingText { messages: ["Enemy RATTATA used\nQUICK ATTACK!", "VENUSAUR used\nRAZOR LEAF!", "Critical hit!", "Enemy RATTATA\nfainted!", "VENUSAUR gained\n231 exp. points!"], current: 0, wait_frames: 10, next_phase: EnemySendingNext { wait_frames: 30 } } HP=101/0
+   [ntoPINCH] at RockTunnel1F(22,27)
+[m19] frame=375036 screen=overworld map=LavenderTown pos=(3,5) party=1 money=14480 effect=None
+   done (237.8s wall)
+== m20: Lavender → Underground Path → Celadon
+[live] frame=None screen=overworld map=Route8 pos=(16,6) phase=TrainerVictory { phase: EndBattleText, wait_frames: 0, player_won: true } HP=113/0
+[m20] frame=379976 screen=overworld map=CeladonCity pos=(41,9) party=1 money=14810 effect=None
+   done (27.0s wall)
+== m21: Rainbow Badge (Erika)
+   [ntoPINCH] at CeladonGym(4,11)
+   [ntoPINCH] at CeladonGym(5,6)
+[live] frame=None screen=battle map=CeladonGym pos=(4,4) phase=MoveSelect HP=98/90
+[m21] frame=392808 screen=overworld map=CeladonGym pos=(4,4) party=1 money=18866 effect=None
+   done (82.7s wall)
+== m22: Game Corner poster → Rocket Hideout Lift Key
+[live] frame=None screen=overworld map=RocketHideoutB1F pos=(23,2) phase=TrainerVictory { phase: EndBattleText, wait_frames: 0, player_won: true } HP=116/0
+Traceback (most recent call last):
+  File "/workspace/open-pokered/docs/audits/2026-10-02-full-fidelity/validation/run_first_clear.py", line 66, in <module>
+    playthrough.main()
+  File "/workspace/open-pokered/scripts/playthrough.py", line 1987, in main
+    fn(g)
+  File "/workspace/open-pokered/scripts/playthrough_late.py", line 623, in m22_lift_key
+    require_flag(g, "EVENT_BEAT_ROCKET_HIDEOUT_4_TRAINER_2")
+  File "/workspace/open-pokered/scripts/playthrough_late.py", line 146, in require_flag
+    assert flags.get(name), f"missing story flag {name}"
+           ^^^^^^^^^^^^^^^
+AssertionError: missing story flag EVENT_BEAT_ROCKET_HIDEOUT_4_TRAINER_2

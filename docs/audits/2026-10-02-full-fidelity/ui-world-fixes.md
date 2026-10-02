@@ -8,12 +8,12 @@
 
 ## 可重跑截图
 
-[capture-ui-world.py](capture-ui-world.py) 直接运行预构建 `pc_tour`；[ui-world-captures.json](ui-world-captures.json) 保存二进制哈希、源码版本、全部32张图路径及16张after逐图哈希。基线为 `72ff719` 生产渲染器、冻结的原依赖和 `31ad6e7` 同一套fixture。after为 `c51209a492f804f58486607919c9ba0c62eb2eb7`，二进制SHA256为 `9ada5a930ea7e250b2af80a6e2ce896d959fee768b008551d6a2832fd464ee62`。
+[capture-ui-world.py](capture-ui-world.py) 直接运行预构建 `pc_tour`；[ui-world-captures.json](ui-world-captures.json) 保存二进制哈希、源码版本、全部32张图路径及16张after逐图哈希。基线为 `72ff719` 生产渲染器、冻结的原依赖和 `31ad6e7` 同一套fixture。after为 `eebde2fc3a4f78c38b4c7b5d49e0db2b830cb235`，二进制SHA256为 `32f88cbe1460667664092a137f40a7a4ba3b694b377bf096d73cd41c6a46466b`。
 
 ```sh
 python3 docs/audits/2026-10-02-full-fidelity/capture-ui-world.py \
-  --after /workspace/onboarding/pokered-font-preserved-final/pc_tour \
-  --after-source c51209a492f804f58486607919c9ba0c62eb2eb7
+  --after /workspace/onboarding/pokered-font-preserved-final-checked/pc_tour \
+  --after-source eebde2fc3a4f78c38b4c7b5d49e0db2b830cb235
 ```
 
 8个案例各运行EN/ZH，16组配对文件名和语言一致，全部32张图为160×144；逐一目检16张after，原有16张before的SHA256保持不变。截图是固定存档状态的生产渲染结果，不是ROM逐帧对拍或连续玩家流程。

@@ -1,11 +1,13 @@
-# 原字库集成后的 UI-preview 验证
+# 保留项目字体后的 UI-preview 验证
 
-实际 native UI-preview 结果为58项中43通过、15失败：14个固定图像哈希仍锁定旧Fusion ASCII/箭头/边框/命名坐标，另外一个命名JSON测试修改英文已固定为原作坐标的外框。现已逐一导出并查看14幅预览，恢复其哈希；命名测试改为移动仍可编辑的文本region，保留像素必须变化的断言。
+按用户要求恢复并保留项目原有 Fusion Pixel 字体。14个固定图像哈希已用当前实际预览重新导出、逐张查看后更新，边框、光标、命名专用下划线及命名字段修复继续保留。英文命名键盘框为 `(0,4,20,12)`，大小写切换行在16，给现有字体较高的标点留出空间。命名JSON测试继续移动可编辑的文本region，保留像素必须变化的断言。
 
-预览检查同时确证一处实际回归：SUPER POTION整行按11字符加数量拼接，在8px原字库下将数量挤到右框外。`04286e4`将名字与数量分开绘制；数量固定右对齐，名字按实际glyph像素预算保留前缀并附原ellipsis。现有box位置保留，原作依据仅为`home/list_menu.asm:364,479–491`的独立名称/×/两位数量字段，不将本修复声称为完整原版背包坐标还原。
+Battle Bag图对已重新从真正的 `72ff719` 冻结库生成before，与当前项目字体的after比较：POTION×3、SUPER POTION×1、ANTIDOTE×2、cursor0、English、frame0。**原项目字体基线中，SUPER POTION及数量已经完整位于框内，未观察到数量溢出。** 当前变化是数量独立右对齐并保留边框/光标修复，不再将中间8px字体引入的回归描述成原基线缺陷。
 
-[同mock/同frame前后图与精确provenance](../../screenshots/2026-10-02-full-fidelity/ui-preview/README.md)已保留。真实生产pixel回归覆盖EN/ZH×SuperPotion/ThunderStone×1/99八种状态；每位数量按原font tile逐bit核验，同时确保一tile空隙和原右框纹理未被覆盖。原生产renderer复跑该回归失败，修复后通过；[after pixel日志](validation/battle-bag-quantity-pixel-tests.log)与[before预期失败](validation/battle-bag-quantity-before-expected-failure.log)分别记录结果。
+[同mock/同frame图对与精确来源](../../screenshots/2026-10-02-full-fidelity/ui-preview/README.md)记录before72库、after实际构建HEAD及未提交布局差异hash、依赖库和PNG checksum。after捕获时HEAD为 `2c6c941`，含记录的布局工作树修改；没有追溯标成后来完整构建。全部14张当前预览、Cargo JSON artifacts、hash打印与最终日志保存在 `/tmp/pokered-font-preserved-preview`。
 
-最小修复之后，原生raw-rustc核验为57/57菜单测试、58/58 UI-preview测试；[完整preview日志](validation/ui-preview-original-font-tests.log)记录所有golden与layout fixture结果。该核验使用实际Cargo preview build的精确serde-feature extern图，临时源仅移除WASM export annotations；没有修改生产render bodies或占用Cargo。
+标准 `cargo test --offline --locked -p pokered-ui-preview`（`CARGO_INCREMENTAL=0`）通过全部58项，doc target0项，退出码0。测试既验证14个golden，也保留命名metadata及可编辑region、布局JSON变化产生像素差异等行为断言。数量的生产pixel回归以现有Fusion Pixel绘制和测量为oracle，覆盖EN/ZH、SUPER POTION/THUNDERSTONE、1/99与右边框；此前使用临时8px字库的before失败日志属于历史记录，不作为项目字体基线缺陷证据。新图对变化1184像素，包含边框、光标与数量位置调整。
 
-随后`c3847df`正式Cargo九包检验再次通过UI-preview全部58项，完整检验为107个测试目标、4508次通过执行、0失败、9忽略；lib/bin重复计入执行次数。以上总数已独立解析最终Cargo日志复核，见[最终验收数据](validation/final-results.json)。截图仍保留其真实构建来源：原修复`04286e4`以内容相同的`4a28a40`集成，golden与命名测试集成为`c3847df`，没有把最终检验HEAD追溯标成截图构建来源。
+另外用冻结72库及真实 `PokemonRenderData` 验证了中文模式默认mock，以及英/中文模式的 SUPER POTION、THUNDERSTONE×99。最长量宽为80px，从x56到x136，右边框为x152，三张图均逐张核验，无数量溢出。72版真实provider在中文模式仍返回英文道具名；本次证据不声称生产环境已出现中文道具名溢出。额外图和日志位于上述临时目录，manifest记录其checksum。
+
+对话行距修复 `d7291ea` 后再次导出并逐张核验14张：只有DIALOG变化364像素，golden更新为 `599168bcd2b2e67c`，另13张完全相同，Battle Bag图对及其实际来源不变。比例绘制的对话/战斗文本默认行距为12px，英文两行起点y112/y124，原有10px字体的下伸笔画与下边框分离；字形、字号和tile mock坐标均未改变。额外EN/ZH两行 `gyp` 图也已核验。当前58项preview测试及doc0项再次通过，精确d729 capture/库hash/日志见manifest。

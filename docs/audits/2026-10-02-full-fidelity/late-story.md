@@ -87,7 +87,7 @@
 
 ### L09 — 冠军路跨楼开路旗标未按原作重置（P2）
 
-世界代理指出并在本报告核对：原作 `scripts/VictoryRoad2F.asm:4–5、18–19` 进入2F清1F开路石flag；原作3F没有相应清2F的逻辑，不能类推补重置。当前2F @load 仅重铺本楼开路块，没有清1Fflag；涉及进入别层/再回来时flag与实际石头位置不同步。推石物理/地图代理负责确证全部范围，不把此前已有掉落石修复重新当新bug。
+世界代理指出并在本报告核对：原作 `scripts/VictoryRoad2F.asm:4–5、18–19` 进入2F清1F开路石flag；原作3F没有相应清2F的逻辑，不能类推补重置。基线2F @load 仅重铺本楼开路块，没有清1Fflag；涉及进入别层/再回来时flag与实际石头位置不同步。推石物理/地图代理负责确证全部范围，不把此前已有掉落石修复重新当新bug。
 
 ### L10 — Lance进场自动行走和打赢后的后门保持不一致（P2/P3，未还原）
 
@@ -95,15 +95,15 @@
 
 ### L11 — 交换电影将四个文本合并成两行、遗漏文字和独立停留/滑出（P2/P3，未还原）
 
-此项是字体收口时对通用交换电影的追加对照，适用于 NPC/连接交换。baseline `core/trade.rs:152` 把 WentTo/ForSends/Farewell 均设80帧；`435–446` 把 For/Sends、Farewell/Transferred 各自的两个 PrintText 合并成一个两行长句。原作 `data/text/text_2.asm:28–54` 的 For 是“`For <PLAYER>'s` / `MON,`”，Sends 是“`TRAINER sends` / `MON.`”，Farewell 是“`TRAINER waves` / `farewell as`”，Transferred 是“`MON is` / `transferred.`”。原作 `engine/movie/trade.asm:792–826` 给 WentTo 200帧并滑出，For/Sends 各80帧，Farewell/Transferred 各80帧后再次滑出。当前只有结尾 TakeCare 的滑出，NPC TRAINER 控制码还显示为字面角括号。
+此项是字体收口时对通用交换电影的追加对照，适用于 NPC/连接交换。baseline `core/trade.rs:152` 把 WentTo/ForSends/Farewell 均设80帧；`435–446` 把 For/Sends、Farewell/Transferred 各自的两个 PrintText 合并成一个两行长句。原作 `data/text/text_2.asm:28–54` 的 For 是“`For <PLAYER>'s` / `MON,`”，Sends 是“`TRAINER sends` / `MON.`”，Farewell 是“`TRAINER waves` / `farewell as`”，Transferred 是“`MON is` / `transferred.`”。原作 `engine/movie/trade.asm:792–826` 给 WentTo 200帧并滑出，For/Sends 各80帧，Farewell/Transferred 各80帧后再次滑出。基线只有结尾 TakeCare 的滑出，NPC TRAINER 控制码还显示为字面角括号。
 
-复现：以原作8px字格绘制最高7字母训练家名及10字母物种名，旧合并行将超过18格框并裁去后半句；即使旧5px字体暂时装下，也丢失独立文本切换、停留与两次滑出。已代码确证，修复 `21ce784` 按原作拆为四个硬换行文本与各80帧停留、补两次137帧window滑出、WentTo200帧、展开TRAINER。17项 `trade::tests` 全通过，包含第79/80帧文本边界、滑出第50/127帧和最大名字宽度。现已以保留72ff719与实际cd9acde集成binary，定点运行Route11Gate2F真实NPC交谈/YES/实际队伍选择（修后）/ConnectCableText/movie/移除和添加，分别在WentTo、ForSends、Farewell的phase frame40截图，完成1016（base）/1570（修后）帧movie并断言Nidorina/Pikachu与EVENT_TRADED_FOR_TERRY。输入/完整命令响应和binary checksum见 `docs/screenshots/2026-10-02-original-font/trade-text-before/after.json` 与README；不是自然全流程或实体连接协议实测。
+基线使用项目Fusion Pixel字体；本项确定差异是丢失独立文本切换、停留与两次滑出。早期原作8px字库实验中的长行裁切不作为项目字体基线缺陷证据，该字体实验已按用户要求撤回。已代码确证，修复 `21ce784` 按原作拆为四个硬换行文本与各80帧停留、补两次137帧window滑出、WentTo200帧、展开TRAINER。17项 `trade::tests` 全通过，包含第79/80帧文本边界、滑出第50/127帧和最大名字宽度。历史cd9acde集成binary的定点验证曾运行Route11Gate2F真实NPC交谈/YES/实际队伍选择（修后）/ConnectCableText/movie/移除和添加，并完成1016（base）/1570（修后）帧movie、断言Nidorina/Pikachu与EVENT_TRADED_FOR_TERRY；该记录属于撤回字体实验前的构建。保留项目字体后已用c51209a冻结binary重新运行同fixture，在WentTo、ForSends、Farewell的phase frame40重拍，before仍为72ff719。精确输入、帧、实际source和binary checksum见 `docs/screenshots/2026-10-02-original-font/trade-text-before/after.json`、该目录README与capture-manifest；最终冻结eebde2f的复验以统一manifest实际记录为准，不将历史日志追溯标成eebde2f完成。此处不是自然全流程或实体连接协议实测。
 
 ### L12 — 连接交换电影丢弃已收到的对方训练家名（P3，bug）
 
 baseline `app/game.rs:5846–5854` 错误注释“名字未在线上传输”并以默认NPC TRAINER构造movie。但同一baseline的 `core/link/protocol.rs:75–78` 已包含 `TradeParty.trainer_name`，`core/link/link_trade.rs:354–365` 已收到并保存 `remote_name`，选择菜单也读取它。原作 `data/text/text_2.asm:20–26,35–47` 的 WentTo/Sends/Farewell均读取 `wLinkEnemyTrainerName`。复现：RED与GREEN执行连接交换，选择Pikachu/Charmander并双方确认；预期“to GREEN.”/“GREEN sends”/“GREEN waves”，base movie实际显示默认TRAINER。
 
-修复原分支 `fdff65e`（集成 `8837a2a`）将driver真实peer name传入movie；native和web共用该hook，TUI无同构link movie调用。生产前端回归通过ChannelTransport双driver完整request/accept/select/confirm→TradeExecute，验证三段文本；同一Rust视觉fixture另经公共 `PokemonGame::update` 实际启动movie，基线截图“to <TRAINER>.”，8837截图“to GREEN.”，均为WentTo phase frame40。fixture/原始库checksum见 `docs/screenshots/2026-10-02-original-font/link-trade-went-40-before/after.json`。此证据覆盖内存传输与真实app构造器，不宣称TCP、实体串行或原作ROM联机兼容已验证。
+修复原分支 `fdff65e`（最初集成 `8837a2a`）将driver真实peer name传入movie；native和web共用该hook，TUI无同构link movie调用。生产前端回归通过ChannelTransport双driver完整request/accept/select/confirm→TradeExecute，验证三段文本；同一Rust视觉fixture另经公共 `PokemonGame::update` 实际启动movie，基线截图“to <TRAINER>.”，8837截图“to GREEN.”，均为WentTo phase frame40。fixture/原始库checksum见 `docs/screenshots/2026-10-02-original-font/link-trade-went-40-before/after.json`。8837截图属于历史构建；保留项目字体后的同fixture重拍及最终复验以该目录README/capture-manifest的实际source为准。此图对证据覆盖内存传输与真实app构造器，不宣称TCP、实体串行或原作ROM联机兼容已验证。
 
 ## 不重复报告/保留原作行为
 
@@ -116,6 +116,6 @@ baseline `app/game.rs:5846–5854` 错误注释“名字未在线上传输”并
 
 `fix/fidelity-late-events` 已对 L02/L03（场景部分）/L05/L06/L07/L10 落实修复。原作给道具失败/物品球隐藏由早期代理，给宝可梦失败的底层 Pokédex/BoxFull 与非中心 heal 黑屏目标由系统代理处理；不能从本独立 late binary 日志宣称这些集成改动已通过。
 
-当前修复构建运行确认：满队/满箱的 Lapras 不置已领取flag；Kabuto 交付失败保留复活/待领取flag；PrizeRoom 满队/满箱仍为9999币（baseline为9819）。三种化石、两拳手、12种红蓝宝可梦奖品、3种TM奖品均由实际 native AST 结果矩阵覆盖成功/失败与确认取消，另覆盖静态遇敌win/caught/ran/fled/lose、Snorlax原版败北前隐藏细节、Cinnabar双重置、Lance完整37步和保持门锁、净化区同楼重入/禁战/白闪6帧保持。`cargo test -p pokered-core --lib fidelity` 27项通过（11项新增），静态持久事件恢复矩阵12对象通过。
+late分支初始修复构建运行确认：满队/满箱的 Lapras 不置已领取flag；Kabuto 交付失败保留复活/待领取flag；PrizeRoom 满队/满箱仍为9999币（baseline为9819）。三种化石、两拳手、12种红蓝宝可梦奖品、3种TM奖品均由实际 native AST 结果矩阵覆盖成功/失败与确认取消，另覆盖静态遇敌win/caught/ran/fled/lose、Snorlax原版败北前隐藏细节、Cinnabar双重置、Lance完整37步和保持门锁、净化区同楼重入/禁战/白闪6帧保持。`cargo test -p pokered-core --lib fidelity` 27项通过（11项新增），静态持久事件恢复矩阵12对象通过。
 
 同屏同帧截图与完整命令响应位于修复提交 `docs/screenshots/2026-10-02-late-fidelity/`：Lance600帧、净化区122帧、Prize确认223帧；before/after分别以已核验baseline和late修复binary产生。未声称完成红蓝全流程、全部存档/敗北与岩山隧道/石头路由实机覆盖。

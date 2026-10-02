@@ -1,14 +1,21 @@
 #!/usr/bin/env python3
-import argparse,sys,json,subprocess
+import argparse,sys,json,subprocess,hashlib
 from pathlib import Path
 ap=argparse.ArgumentParser(description="Capture four native ground-item before/after regressions.")
-ap.add_argument('--before',required=True);ap.add_argument('--after',required=True)
+ap.add_argument('--before',help='Optional: omit to preserve previously verified before captures/trace');ap.add_argument('--after',required=True)
+ap.add_argument('--after-source',default='not specified');ap.add_argument('--after-font',default='not specified')
 ap.add_argument('--root',type=Path,default=Path(__file__).resolve().parents[3])
 opt=ap.parse_args();root=opt.root.resolve();sys.path.insert(0,str(root/'scripts'));from debug_drive import DebugClient
-out=root/'docs/screenshots/fidelity-world';out.mkdir(parents=True,exist_ok=True);trace={}
+out=root/'docs/screenshots/fidelity-world';out.mkdir(parents=True,exist_ok=True)
+trace_path=root/'docs/audits/2026-10-02-full-fidelity/ground-native-trace.json'
+trace=json.loads(trace_path.read_text()) if trace_path.exists() else {}
+if opt.before is None and not all(case+'-before' in trace for case in ['full-bag','repeat-pickup','correct-tm','missing-handler']):
+ ap.error('after-only capture requires an existing verified before trace')
 items=json.loads((root/'crates/pokered-data/data/items/item_list.json').read_text())['items']
 cases=[('full-bag','Route2',13,55,0),('repeat-pickup','MtMoonB2F',25,22,7),('correct-tm','MtMoon1F',5,33,12),('missing-handler','PowerPlant',7,26,9)]
 for label,binary in [('before',opt.before),('after',opt.after)]:
+ if binary is None:continue
+ metadata={'binary':str(Path(binary).resolve()),'binary_sha256':hashlib.sha256(Path(binary).read_bytes()).hexdigest(),'source':opt.after_source if label=='after' else '72ff719b39634c153cb82d3f3ece200bd413c4e0','font':opt.after_font if label=='after' else 'Fusion Pixel baseline'}
  for i,(case,mapname,x,y,npc) in enumerate(cases):
   port=9430+i
   log=open('/tmp/world-ground-'+case+'-'+label+'.log','w')
@@ -31,10 +38,10 @@ for label,binary in [('before',opt.before),('after',opt.after)]:
    if case=='repeat-pickup':
     d.cmd(cmd='interact_with',id=f'npc:{npc}');d.cmd(cmd='step_frames',count=30);d.cmd(cmd='skip_dialogue');d.cmd(cmd='wait_until',condition='control_ready',max_frames=300)
     second={'bag':d.cmd(cmd='get_bag'),'npcs':d.cmd(cmd='get_npcs')}
-   trace[f'{case}-{label}']={'initial_bag':beforebag,'interaction':interaction,'ready':ready,'first_pickup':first,'second_pickup':second}
+   trace[f'{case}-{label}']={'initial_bag':beforebag,'interaction':interaction,'ready':ready,'first_pickup':first,'second_pickup':second,'capture':metadata}
   finally:
    proc.terminate();proc.wait(timeout=8);log.close()
-(root/'docs/audits/2026-10-02-full-fidelity/ground-native-trace.json').write_text(json.dumps(trace,indent=2)+'\n')
+trace_path.write_text(json.dumps(trace,indent=2)+'\n')
 for key,v in trace.items():
  print(key, 'start',v['initial_bag'],'first',v['first_pickup']['bag'],'second',v['second_pickup'] and v['second_pickup']['bag'])
 

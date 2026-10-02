@@ -1,3 +1,7 @@
+> 最终范围更新：用户要求不改字体。本文记录此前 8px 字库实验及相关诊断，
+> alphabet 替换与纯字体配套布局已撤回。最终范围和原字体回归见
+> [font-preserved.md](font-preserved.md)，不可把本页旧图当作最终结果。
+
 # Font integration repaint repairs
 
 These fixes follow the integrated host-library failures on source `a5f2d1b`.

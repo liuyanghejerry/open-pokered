@@ -1,5 +1,10 @@
 # 音画保真审计（2026-10-02）
 
+最终范围更新：用户明确要求不改字体，普通英中字体保留项目原有 Fusion Pixel。
+VA01 的字体差异继续作为设计差异记录，替换尝试已撤回；该行的边框／标题图块等独立问题仍修复。
+下表记录冻结基线的问题，不表示每项都仍存在，也不把字体保留说成字体还原。
+
+
 审计基线：open-pokered `72ff719`，原作 pret/pokered `fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c`。参考树 `/workspace/onboarding/pokered-reference-full`。以下行号均指该冻结基线，后续修复会移动行号。普通 GB 灰度为主要基准；SGB 独立列出。中文是扩展功能，以下英文字体和英文布局差异不要求取消中文。
 
 这是本轮源码逐项核对、当前 native 截图及真实音序器状态探针。没有进行新的原版 ROM 音画对拍。9 月的招式逐帧对拍、选项截图和卧室对拍只标作历史证据。`visual-captures/manifest.json` 记录当前截图，Hof/Credits 使用 CLI 播种电影状态；title CLI 有自身 Copyright 120 帧前导，真正 LogoBounce 从截图帧 121 开始。不能将任意 CLI 截图帧直接视作原版开机的帧号。

@@ -917,4 +917,3 @@ test menus::options::tests::compiled_gba_layout_matches_v2_for_all_states_and_la
 test backends::framebuffer::performance_pixel_tests::batched_original_textbox_matches_tile_renderer_at_every_pixel ... ok
 
 test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.82s
-
