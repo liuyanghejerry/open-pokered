@@ -199,6 +199,8 @@ fn transform_copies_the_targets_already_penalized_stat_words() {
     );
     assert_eq!(bs.player.staged_badge_stats.unwrap()[0], 50);
     assert_eq!(bs.player.active_mon().status, StatusCondition::None);
+    // HandlePoisonBurnLeechSeed (core.asm:546-574): max HP 400 / 16 = 25.
+    assert_eq!(bs.enemy.active_mon().hp, 375); // First turn's burn chip.
     turn(
         &mut bs,
         MoveId::Tackle,
@@ -207,7 +209,8 @@ fn transform_copies_the_targets_already_penalized_stat_words() {
         vec![255, 0, 255, 255],
     );
     assert_eq!(bs.player.staged_badge_stats.unwrap()[0], 50);
-    assert_eq!(bs.enemy.active_mon().hp, 387); // copied burn penalty survives despite no user burn.
+    assert_eq!(bs.damage, 13); // Tackle uses copied Attack 50 despite no user burn.
+    assert_eq!(bs.enemy.active_mon().hp, 337); // 400 - 25 - 13 - 25: two burn ticks.
 }
 
 #[test]
