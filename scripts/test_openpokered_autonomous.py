@@ -703,6 +703,27 @@ class AutonomousTests(unittest.TestCase):
         self.assertNotIn('Explosion', threat['self_knockout_moves'])
         self.assertIn('Explosion', capture_threat({'species': 'Electrode', 'level': 50})['self_knockout_moves'])
 
+    def test_capture_self_ko_reference_is_conditional_not_live_survival(self):
+        from openpokered.playthrough_judgments import capture_threat
+        enemy = {'species': 'Graveler', 'level': 43, 'status': 'None'}
+        reference = capture_threat(enemy)['self_ko_selection_reference']
+        self.assertEqual(reference['self_ko_slots'], 2)
+        self.assertEqual(reference['natural_move_slots'], 4)
+        self.assertEqual(reference['no_self_ko_selection'], [
+            {'enemy_selections': 1, 'probability': .5},
+            {'enemy_selections': 2, 'probability': .25}])
+        for phrase in ('uniform', 'PP', 'not survival', 'status'):
+            self.assertIn(phrase, reference['assumptions'])
+        # Absence/changed status and a transformed combat form are not evidence
+        # that the inferred natural slots are currently usable.
+        for changed in ({'status': 'Sleep(2)'}, {'status': 'Paralysis'},
+                        {'status': None}, {'capture_species': 'Ditto'},
+                        {'species': 'Machoke'}):
+            with self.subTest(changed=changed):
+                self.assertNotIn('self_ko_selection_reference', capture_threat({**enemy, **changed}))
+        self.assertNotIn('self_ko_selection_reference',
+                         capture_threat({'species': 'Graveler', 'level': 43}))
+
     def test_consumed_static_source_requires_observed_monotone_entry_blocker(self):
         from openpokered.story_rules import spent_static_source
         guard = {'Call': {'callee': 'getFlag', 'args': [{'StringLit': 'SPENT'}]}}
@@ -3854,6 +3875,26 @@ class AutonomousTests(unittest.TestCase):
         self.assertEqual(set(candidates), {'fight', 'switch:0', 'ball:PokeBall'})
         self.assertIn('without switching', fight['reason'])
         self.assertIn('does not apply', game.judgments.choose.call_args.args[3])
+
+    def test_capture_turn_economy_preserves_choices_and_separates_first_throw(self):
+        state = self.capture_support_state()
+        game = JevGame.__new__(JevGame)
+        game.judgments = Mock(collects_dex=True, active=None, preference='none')
+        game.judgments.choose.return_value = 'switch:1'
+        self.assertEqual(game.battle_recovery_plan(state), ('switch', 1))
+        _, evidence, candidates, instruction = game.judgments.choose.call_args.args
+        timing = evidence['capture_turn_economy']
+        self.assertEqual(timing['throw_now']['enemy_response_opportunities_before_throw'], 0)
+        self.assertEqual(timing['active_move_then_throw']['enemy_response_opportunities_before_throw'], 1)
+        self.assertEqual(timing['switch_then_move_then_throw']['enemy_response_opportunities_before_throw'], 2)
+        self.assertEqual(timing['switch_then_move_then_throw']['earliest_ball_turn'], 3)
+        self.assertIn('speed', timing['scope'])
+        self.assertIn('status', timing['scope'])
+        self.assertIn('conditional', instruction)
+        self.assertEqual(set(candidates), {'fight', 'switch:1', 'ball:PokeBall'})
+        game.judgments.collects_dex = False
+        game.battle_recovery_plan(state)
+        self.assertNotIn('capture_turn_economy', game.judgments.choose.call_args.args[1])
 
     def test_capture_fight_capabilities_refresh_with_pp_status_and_active_member(self):
         state = self.capture_support_state()

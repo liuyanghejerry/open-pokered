@@ -166,10 +166,35 @@ def capture_threat(enemy):
         else:
             moves = moves[1:] + [move]
     details = [{'move': move, **late.move_data(move)} for move in moves if move != 'None']
-    return {'inferred_natural_moves': details,
-            'self_knockout_moves': [row['move'] for row in details
-                                   if row['move'] in ('Selfdestruct', 'Explosion')],
-            'scope': 'Native creation learnset at observed wild level; not observed live moves, PP, stages or damage. Transform/Mimic can differ.'}
+    self_ko = [row['move'] for row in details if row['move'] in ('Selfdestruct', 'Explosion')]
+    threat = {'inferred_natural_moves': details, 'self_knockout_moves': self_ko,
+              'scope': 'Native creation learnset at observed wild level; not observed live moves, PP, stages or damage. Transform/Mimic can differ.'}
+    if (self_ko and enemy.get('status') == 'None'
+            and capture_species(enemy) == enemy['species']):
+        # Wild pick_enemy_move_impl selects among nonempty positive-PP slots.
+        # We do NOT observe those PP or future RNG: this is only a uniform-slot
+        # reference, never an asserted probability of surviving the next turn.
+        no_self_ko = 1 - len(self_ko) / len(details)
+        threat['self_ko_selection_reference'] = {
+            'self_ko_slots': len(self_ko), 'natural_move_slots': len(details),
+            'no_self_ko_selection': [{'enemy_selections': turns, 'probability': no_self_ko ** turns}
+                                     for turns in (1, 2)],
+            'assumptions': 'Conditional reference: all inferred natural moves still have PP, unchanged moves, independent uniform slot selection, no forced move. These are move-selection probabilities, not survival or capture probabilities. Actual PP, Disable, Transform/Mimic, status prevention, speed order and damage can change the outcome; no future RNG is observed.'}
+    return threat
+
+
+def capture_turn_economy():
+    """Native wild-battle action order, not a prediction of enemy execution."""
+    return {
+        'throw_now': {'earliest_ball_turn': 1, 'enemy_response_opportunities_before_throw': 0,
+                      'order': 'Capture roll first; only a failed ball gives the enemy a response.'},
+        'active_move_then_throw': {'earliest_ball_turn': 2,
+                                   'enemy_response_opportunities_before_throw': 1,
+                                   'order': 'Use the active Pokemon move this turn; throw next turn if the encounter remains.'},
+        'switch_then_move_then_throw': {'earliest_ball_turn': 3,
+                                        'enemy_response_opportunities_before_throw': 2,
+                                        'order': 'Switch and allow an enemy response; use the incoming Pokemon move on a later turn; then throw.'},
+        'scope': 'Earliest sequences if each planned action is legal and no extra recovery/setup is needed. Opportunities are not guaranteed attacks: speed/priority decides move order, and successful status can prevent a response. Switching itself neither applies status nor makes a capture attempt. Conditional capture odds after status exclude the chance of losing the target or support before that status and throw.'}
 
 
 def capture_retreat(state, judgments):
@@ -667,9 +692,16 @@ class JevGame(pt.Game):
                 'compare retreat and proper preparation with spending this limited supply or risking a knockout. '
                 'When safe preparation is no longer available, throwing a ball is capture progress; defeating '
                 'the target is not a fallback success.')
+            instruction += (' Compare capture_turn_economy with the immediate ball odds. A higher '
+                'capture_probability_if_status_lands is conditional on reaching that prepared state, '
+                'not the chance of capturing from here. Weigh losing the target during setup against '
+                'the benefit: a ball rolls before any enemy response, while switching grants a response '
+                'before the incoming teammate can use its move. Self-knockout selection references '
+                'are conditional illustrations, not known live odds or guarantees of survival.')
         judgment_state = {'battle': live}
         if capturing:
             judgment_state['capture_threat'] = capture_threat(live['enemy'])
+            judgment_state['capture_turn_economy'] = capture_turn_economy()
             judgment_state['inventory_failure_at_current_state'] = math.prod(
                 (1-details['capture_probability_now']) ** bag[ball]
                 for ball, _, details in balls)
