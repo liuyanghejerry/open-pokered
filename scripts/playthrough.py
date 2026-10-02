@@ -1046,7 +1046,13 @@ class Game:
                     if to_map is not None and self.pos()[0] == to_map:
                         assert self.cutscene(), f"{to_map} on-enter cutscene stalled"
                         return to_map
-                    raise
+                    if self.pos()[0] != from_map:
+                        raise
+                    # One map can contain disconnected rooms. Reach the
+                    # inward tile via real stairs/connections before the
+                    # final directional step onto the requested warp.
+                    self.nav_to_map(x - ax, y - ay, from_map,
+                                    tries=tries, avoid_grass=False)
                 self.d.drive([approach] * (2 * FRAMES_PER_TILE + 32),
                              frames=2 * FRAMES_PER_TILE + 40)
                 destination = self._wait_for_warp(from_map, to_map)
@@ -1066,14 +1072,14 @@ class Game:
                     return to_map
                 if current_map != from_map:
                     raise
-                # Model blocked (e.g. an NPC patrol sealed the single
-                # approach): walk to an inward neighbor and long-hold
-                # onto the warp instead.
+                # An inward neighbor may be in another disconnected room
+                # of this map (Mt Moon B1F). Cross-map BFS follows the real
+                # stairs back through the connecting floor when necessary.
                 for d, (dx, dy) in DELTA.items():
                     inner = (x - dx, y - dy)
                     if walkable(from_map, *inner):
-                        self.nav_to(*inner, map_name=from_map,
-                                    tries=tries)
+                        self.nav_to_map(*inner, map_name=from_map,
+                                        tries=tries, avoid_grass=False)
                         self.d.drive([d] * 40, frames=48)
                         break
                 else:
