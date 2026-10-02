@@ -45,9 +45,9 @@ PC主入口/12箱切换/物品PC/Oak评级/League HOF存在；图鉴seen+owned�
 
 原作所谓“育成会擦除EV”和“WriteMonMoves完全重建TM”均没有这份参考ASM支持：box_struct包含stat-exp；育成learning flag只处理deposit起点之后的新招。把这些错误解释写进测试会使全绿测试仍不保真。
 
-修复实施边界（2026-10-02）：systems分支保持JSON model的dex编号，SRAM边界转换原作internal species ID；识别此前native .sav并修正净88字节布局差；新增serde-default尾段，保留原作GP末2个script byte与78个reserved bytes，保留之前项目存档可读。育成恢复原作五项stat-exp、OT、PP Ups和FIFO招式覆盖；NPC交易用真实party selector并允许仅一只精灵交换；每次PC操作与满队捕获同步活动箱镜像。Safari计数、Rod status aliases与垃圾桶索引补普通Save/Continue桥接。Cable Club原作柜员恢复Welcome文本/Pokedex门槛、连接检查、原作apply/save完整文字再确认、保存同意、选房与warp。TCP/网页协议仍是跨平台实现；GBA物理联机后端与原作串行比特流不在本轮修复的实测范围内；入房使用本项目warp桥接，原作是SpecialWarp，未作逐帧差分。
+修复实施边界（2026-10-02）：systems分支保持JSON model的dex编号，SRAM边界转换原作internal species ID；识别此前native .sav并修正净88字节布局差；新增serde-default尾段，保留原作GP末2个script byte与78个reserved bytes，保留之前项目存档可读。育成恢复原作五项stat-exp、OT、PP Ups和FIFO招式覆盖；NPC交易用真实party selector并允许仅一只精灵交换；每次PC操作与满队捕获同步活动箱镜像。Safari计数、Rod status aliases与垃圾桶索引补普通Save/Continue桥接。Cable Club原作柜员恢复Welcome文本/Pokedex门槛、连接检查、原作apply/save完整文字再确认、保存同意、选房与warp。TCP/网页协议仍是跨平台实现；GBA物理联机后端与原作串行比特流不在本轮修复的实测范围内；原作SpecialWarp选房40/50/20等待及Cancel40/3等待已补，并做边界测试；未作真实ROM逐帧差分。
 
-## 修复验收（systems 分支）
+## 初始修复验收（systems 提交 cefda0c）
 
 所有 SYS-01 至 SYS-16 均纳入本轮修复。core lib 全量 2605/2605 通过；新增独立 integration 14/14 通过，包含原作地址 fixture、旧版 native layout migration、背包失败原子性、sale cap、151个物种边界映射、育成元数据/FIFO/PP Ups、PC box trick、12个活动箱满队捕获→PC→普通SRAM，10项NPC完成位、Safari/Rod状态恢复及联机战后治疗。治疗测试按12个护士位置和6个其他治疗位置矩阵，只有护士登记回城目标。
 
@@ -63,9 +63,9 @@ PC主入口/12箱切换/物品PC/Oak评级/League HOF存在；图鉴seen+owned�
 | Daycare stat-exp / Sprite start | `$2D1C` / `$2D2C` | 五项10字节EV，完整box33 |
 | Party / CurrentBox / checksum | `$2F2C` / `$30C0` / `$3523` | 原作独立常量，region3979 |
 
-边界：已证明固定布局与字段转换，尚未用真实原作 ROM 打开导出存档；未知运行时指针和未建模的原作状态仍有零填充。旧版native育成未保存的EV/OT等历史信息无法恢复。NPC选择/取消和最后一只交易已修；有效party选择后才显示“connect cable”，关闭后才开始动画与最终mutation。默认Native VM的垃圾桶索引有普通SRAM桥接；可选Boa引擎未作等价实玩。联机柜员房间选择恢复，但SpecialWarp入房时序、自定义TCP/Web协议与原作物理串口互通未声明完成。
+边界：已证明固定布局与字段转换，尚未用真实原作 ROM 打开导出存档；未知运行时指针和未建模的原作状态仍有零填充。旧版native育成未保存的EV/OT等历史信息无法恢复。NPC选择/取消和最后一只交易已修；有效party选择后才显示“connect cable”，关闭后才开始动画与最终mutation。默认Native VM的垃圾桶索引有普通SRAM桥接；可选Boa引擎未作等价实玩。联机柜员选房40/50/20及Cancel40/3等待已恢复；自定义TCP/Web协议与原作物理串口互通未声明完成。
 
-最终本分支验收：core lib2605，systems integration14，app NPC/柜员fidelity4，existing cable flow8全过；TUI cargo check、debug-server app build成功。联机前不heal的双channel driver测试与战后heal settlement测试已纳入core。截图及双进程TCP app桥接动态结果另补后续证据commit。
+初始提交验收：core lib2605，systems integration14，app NPC/柜员fidelity4，existing cable flow8全过；TUI cargo check、debug-server app build成功。联机前不heal的双channel driver测试与战后heal settlement测试已纳入core。截图及双进程TCP app桥接动态结果另补后续证据commit。
 
 动态时序补验发现并追加修复：NPC选对后的ConnectCableText需在外部await期间正常推进，而NativeVM WaitingForCommand会重发同一tradePokemon。core现在在await trade/battle/elevator/filterBag期间跳过VM polling，继续处理手动dialogue，直到frontend resume；追加复现该重发问题的core测试，最终集成分支统一执行。
 
@@ -73,8 +73,27 @@ PC主入口/12箱切换/物品PC/Oak评级/League HOF存在；图鉴seen+owned�
 
 SYS-15进一步按原作 `wCurrentBoxNum` bit7判断箱bank是否已初始化，不能把“checksum有效”等同于已初始化。原作NEW GAME可以保留前一位trainer的有效bank2/3，而bit7为0；新增独立fixture把前局有效箱bank复制进原作新局存档，验证12箱仍为空。原作bit7为0时忽略这些bank，已识别旧native布局仍可迁移其有效bank；本项目导出每次均写完整箱bank，所以同时设置bit7。whole-image及GBA逐bank导入采取同一策略。
 
-Web旧JSON仅由实际localStorage读取入口检查原始JSON缺少 `game_data.game_progress_tail` 后标记一次迁移；同slot extras只接收旧NPC/Rod alias的true。新JSON和原作SRAM保持存档位权威，普通debug snapshot反序列化不会获得此标记。追加旧/新JSON同slot迁移、snapshot不迁移及无效JSON回归；上述追加source测试等待根代理最终集成检查，未沿用此前14项通过结果宣称已运行。
+Web旧JSON仅由实际localStorage读取入口检查原始JSON缺少 `game_data.game_progress_tail` 后标记一次迁移；同slot extras只接收旧NPC/Rod alias的true。新JSON和原作SRAM保持存档位权威，普通debug snapshot反序列化不会获得此标记。追加旧/新JSON同slot迁移、snapshot不迁移及无效JSON回归；上述追加source测试已纳入最终8包host全量测试和WASM编译检查，均通过；此前14项结果仅属于初始提交。
 
 SYS-16时点也补原作顺序：正确party选择后、ConnectCableText/动画前登记完成位（`engine/events/in_game_trades.asm:129-134`），取消或选错不登记；动画完成后scene的setFlag幂等。App新增真实选择输入三分支回归，证明登记时仍持有原精灵且动画尚未开始；TUI在显示Connect文字前使用同一别名登记桥接。
 
 SYS-17追加named-identity helper：有OT name的ID0按原作直接比较玩家ID；仅OT name为空且ID0保留旧unstamped兼容。NPC、联机、育成、原作存档导入及战斗obedience统一用新helper。独立原作fixture把 `$2605` owner写1234、`$2F40` OT写0、`$303C` OT name写TRAINER，验证导入/重导仍traded；NPC/育成owner0则仍own。之前16项报告与14项验收是在该追加项之前，最终数量以根代理集成检查为准。
+
+## 最终集成与实际入口验收
+
+所有SYS-01至SYS-17均纳入最终集成。根代理确认8包native全量105个test target，4444通过、0失败、9忽略（core2648、app lib132）；systems独立integration17/17，WASM与GBA检查通过。TUI Continue也已改用同一authority helper，旧native坏箱checksum在whole/stream两种入口均拒绝且不改resident slot。
+
+实际入口使用最终独立binary，source `8837a2a32c2ba8c345db16e97b01f49016e88950`，sha256 `b8ba782f6cb22151964722ae958dae32f9085b356a71c145c3a3b37bdf513847`。所有测试slot独立，新测试启动会清自己的slot及companion，避免旧文件成为保存成功的误证。完整状态、普通SRAM字段核验见 [systems-final-runtime.json](systems-final-runtime.json)，可复现driver与输入见 [systems_runtime.py](systems_runtime.py)、[systems-runtime-input.json](systems-runtime-input.json)。
+
+- sole Abra：实际YES后进入选择界面；选对后Connect文字正常推进，完成位已true、party仍Abra、动画尚未mutation；动画完成后仅一只MrMime、等级15。
+- 实际START→SAVE生成32768-byte SRAM，完成位 `$29E3..$29E5=[2,0]`、物种内部ID42、初始化箱bit7=128，独立checksum计算相同。将该slot的companion MARCEL人为改false后，关闭进程并实际读同一SRAM，party仍MrMime、flag仍true，NPC不再提供重复交易。
+- 两个真实TCP app进程连接：柜员完整Apply文字→SAVE同意→3选项菜单→实际进入TradeCenter；再次进入柜员菜单选Cancel，留在原Center并显示原文“The link was canceled.”。柜员SAVE的32768-byte文件独立checksum一致，companion写在绑定的slot路径。
+
+| 场景 | 基线 | 最终 |
+|---|---|---|
+| NPC选择 | [before](../../screenshots/fidelity-systems/npc-selector-before.png) | [after](../../screenshots/fidelity-systems/npc-selector-after.png) |
+| 连接后的柜员入口 | [before](../../screenshots/fidelity-systems/cable-reception-before.png) | [Apply](../../screenshots/fidelity-systems/cable-reception-after.png) |
+| 选房 | 基线无选房菜单 | [3选项](../../screenshots/fidelity-systems/cable-room-selection-after.png) |
+| 选房取消 | 基线无对应入口 | [原文取消](../../screenshots/fidelity-systems/cable-room-cancel-after.png) |
+
+本轮双进程实际验证的是柜员/保存/选房/取消；整局TCP联机Battle尚未实玩，其战前保留伤势、战后全员治疗由双channel driver与真实settlement测试验证。上述检查不等于GBA物理串口互通或真实原作ROM存档加载验收。
