@@ -40,10 +40,14 @@ game_scene PokemonTower3F {
   @storyline("talkPokeBall") {
     @trigger(map = "PokemonTower3F", npc = 4, toggle = "POKEMON_TOWER_3F_OBJ_4")
     @if (!getFlag("EVENT_GOT_POKEMON_TOWER_3F_ESCAPE_ROPE")) {
-      giveItem("ESCAPE_ROPE", 1)
-      setFlag("EVENT_GOT_POKEMON_TOWER_3F_ESCAPE_ROPE")
-      hideObjectByName("POKEMON_TOWER_3F_OBJ_4")
-      @speaker("") { @t("<PLAYER> found ESCAPE ROPE!", "<PLAYER>找到了逃脱绳！") }
+      given = giveItem("ESCAPE_ROPE", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_POKEMON_TOWER_3F_ESCAPE_ROPE")
+        hideObjectByName("POKEMON_TOWER_3F_OBJ_4")
+        showItemDialogue(t("<PLAYER> found ESCAPE ROPE!", "<PLAYER>找到了逃脱绳！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 }

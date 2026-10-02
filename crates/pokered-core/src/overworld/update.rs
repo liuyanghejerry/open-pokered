@@ -637,6 +637,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 &mut self.sfx_event,
                 &mut self.ship_departure,
                 self.script_music_playing,
+                self.script_sfx_playing,
             );
             if !naming_was_open && self.pending_naming_screen.is_some() {
                 // DisplayNamingScreen entry: GBPalWhiteOutWithDelay3 before the
@@ -1819,20 +1820,11 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     self.state.player.x,
                     self.state.player.y,
                 );
-                // The RATE anchor is the tile right of the standing tile
-                // (screen (9,9), wild_encounters.asm:28-47). Off-map right:
-                // the original still reads a BG tile (the map edge row) —
-                // approximate with the standing tile so the roll (and the
-                // REPEL tick inside its gate) still happens.
-                let right_tile = if self.state.player.x + 1 < map.width as u16 {
-                    collision_provider.get_tile_at_position(
-                        map.tileset, &map.blocks, map.width,
-                        self.state.player.x + 1,
-                        self.state.player.y,
-                    )
-                } else {
-                    new_standing_tile
-                };
+                // hlcoord 9,9: current half-block's bottom-right 8px tile.
+                let right_tile = wild_encounters::encounter_rate_tile(
+                    map.tileset, &map.blocks, map.width,
+                    self.state.player.x, self.state.player.y,
+                );
                 Some((map.id, map.tileset, new_standing_tile, right_tile))
             } else {
                 None
@@ -1967,17 +1959,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                             map.id,
                             map.tileset,
                             standing_tile,
-                            if self.state.player.x + 1 < map.width as u16 {
-                                collision_provider.get_tile_at_position(
-                                    map.tileset,
-                                    &map.blocks,
-                                    map.width,
-                                    self.state.player.x + 1,
-                                    self.state.player.y,
-                                )
-                            } else {
-                                standing_tile
-                            },
+                            wild_encounters::encounter_rate_tile(
+                                map.tileset, &map.blocks, map.width,
+                                self.state.player.x, self.state.player.y,
+                            ),
                         ));
                     }
                 }
@@ -2395,8 +2380,42 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         sfx_event: &mut OverworldSfxEvent,
         ship_departure: &mut Option<presentation::ShipDepartureState>,
         script_music_playing: bool,
+        script_sfx_playing: bool,
     ) -> bool {
         match effect {
+            script_bridge::ScriptEffect::ShowItemDialogue { text, sound_started } => {
+                if *sound_started {
+                    // Keep the complete found text visible until the sequencer
+                    // has finished. A/B cannot close the box during the jingle.
+                    if script_sfx_playing || a_pressed {
+                        // HoldTextDisplayOpen (home/text_script.asm:98-103)
+                        // also keeps automatic text open while A stays held.
+                        return false;
+                    }
+                    *pending_dialogue = None;
+                    return true;
+                }
+                if pending_dialogue.is_none() {
+                    *pending_dialogue = Some(script_bridge::text_to_dialogue(text));
+                    return false;
+                }
+                let dialogue = pending_dialogue.as_mut().unwrap();
+                if !dialogue.waiting_for_input() {
+                    dialogue.reveal_next_char();
+                }
+                if dialogue.waiting_for_input() {
+                    if dialogue.has_more_pages() {
+                        dialogue.advance();
+                    } else {
+                        // sound_get_item_1 follows text_far in FoundItemText.
+                        audio_requests.push(OverworldAudioRequest::PlaySound {
+                            sound_id: "SFX_GET_ITEM_1".to_string(),
+                        });
+                        *sound_started = true;
+                    }
+                }
+                false
+            }
             script_bridge::ScriptEffect::ShowDialogue { text } => {
                 if pending_dialogue.is_none() {
                     *pending_dialogue = Some(script_bridge::text_to_dialogue(text));
@@ -3424,6 +3443,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     /// this path but must NOT fire `@load` (the restored storyline state
     /// is authoritative; re-firing would double-apply its effects).
     pub(crate) fn load_map_script_ex(&mut self, map_id: MapId, fire_on_load: bool) {
+        self.wild_data_state.load_map(map_id);
         self.sync_flags_from_engine();
 
         let map_key = script_bridge::map_id_to_script_key(map_id);
@@ -3830,7 +3850,6 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         has_script_effect: bool,
     ) -> bool {        use crate::battle::wild::{EncounterContext, WildEncounterRandoms};
         use pokered_data::event_flags::EventFlag;
-        use pokered_data::wild_data::GameVersion;
         use rand::Rng;
 
         // PokemonTower5FDefaultScript sets BIT_NO_BATTLES throughout the
@@ -3850,8 +3869,6 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         {
             return false;
         }
-
-        let version = GameVersion::Red;
 
         // The encounter-check gate (the classic TryDoWildEncounter call
         // conditions): only steps that may actually roll consume a REPEL
@@ -3890,12 +3907,13 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             party_lead_level: self.party_lead_level,
         };
 
-        let result = wild_encounters::check_wild_encounter(
+        let result = wild_encounters::check_wild_encounter_with_tables(
             map_id,
             tileset,
             standing_tile,
             right_tile,
-            version,
+            &self.wild_data_state.grass,
+            &self.wild_data_state.water,
             &randoms,
             &context,
             standing_on_warp,
@@ -4191,5 +4209,276 @@ mod late_fidelity_tests {
         let map = screen.map_data.as_ref().unwrap();
         assert_eq!(map.blocks[6 * map.width as usize + 2], 114);
         assert_eq!(map.blocks[6 * map.width as usize + 3], 115);
+    }
+}
+
+#[cfg(test)]
+mod ground_pickup_fidelity_tests {
+    use super::*;
+    use pokered_data::impl_traits::PokemonRedData;
+    use pokered_data::items::ItemId;
+    use pokered_data::npc_data::get_map_npcs;
+    use pokered_data::toggleable_objects::{is_object_hidden, toggle_id_to_bit_index};
+
+    fn input(a: bool) -> OverworldInput {
+        OverworldInput::new(false, false, false, false, a, false, false, false)
+    }
+
+    fn finish_dialogue(ow: &mut OverworldScreen<PokemonRedData>) -> usize {
+        let mut item_jingles = 0;
+        for frame in 0..320 {
+            if let Some(dialogue) = ow.pending_dialogue.as_mut() {
+                dialogue.skip_to_full_page();
+            }
+            ow.update_frame(input(frame % 2 == 1));
+            item_jingles += ow
+                .audio_requests
+                .iter()
+                .filter(|request| {
+                    matches!(request,
+                OverworldAudioRequest::PlaySound { sound_id } if sound_id == "SFX_GET_ITEM_1")
+                })
+                .count();
+            if ow.active_script_effect.is_none() && ow.pending_dialogue.is_none() {
+                break;
+            }
+        }
+        assert!(
+            ow.active_script_effect.is_none(),
+            "pickup script must finish: {:?}",
+            ow.active_script_effect
+        );
+        assert!(ow.pending_dialogue.is_none(), "pickup dialogue must close");
+        ow.update_frame(input(false));
+        item_jingles
+    }
+
+    fn full_bag_without(item: ItemId) -> Vec<String> {
+        (1..=pokered_data::items::NUM_ITEMS)
+            .map(ItemId::from_id)
+            .filter(|candidate| *candidate != item)
+            .take(20)
+            .map(|candidate| candidate.const_name())
+            .collect()
+    }
+
+    fn verify_pickup(map: MapId, index: usize, press_a: bool) {
+        let data = &get_map_npcs(map)[index];
+        let expected = ItemId::from_id(data.item_id);
+        let mut ow = OverworldScreen::new(map, None, PokemonRedData);
+        // Isolate the ball from trainer sight and unrelated automatic NPCs.
+        for (i, npc) in ow.npc_states.iter_mut().enumerate() {
+            npc.visible = i == index;
+        }
+        let toggle = ow
+            .map_script_config
+            .npcs
+            .iter()
+            .find(|npc| npc.id == data.text_id)
+            .unwrap()
+            .toggle_id
+            .as_ref()
+            .unwrap()
+            .clone();
+        let bit = toggle_id_to_bit_index(&toggle).expect("every ball has its original SRAM bit");
+        ow.state.player.x = data.x as u16;
+        ow.state.player.y = data.y as u16 + 1;
+        ow.state.player.facing = Direction::Up;
+        if map == MapId::ViridianGym {
+            // The tile south of Revive is an arrow; talk from its west side.
+            ow.state.player.x = data.x as u16 - 1;
+            ow.state.player.y = data.y as u16;
+            ow.state.player.facing = Direction::Right;
+        }
+        let bag = full_bag_without(expected);
+        ow.seed_script_query_state(0, &bag, 0, 0, 0, 0, &[], 0, 0, 0);
+        let before_flags = ow.script_flags();
+        ow.audio_requests.clear();
+        if press_a {
+            ow.update_frame(input(true));
+        } else {
+            assert!(
+                ow.try_call_script_npc_talk(data.text_id),
+                "{map:?} npc {} handler",
+                data.text_id
+            );
+        }
+        let failed_jingles = finish_dialogue(&mut ow);
+        assert!(
+            ow.npc_states[index].visible,
+            "{map:?} npc {} must survive full bag",
+            data.text_id
+        );
+        assert!(
+            !is_object_hidden(ow.toggleable_object_flags(), bit),
+            "failed pickup must preserve SRAM bit"
+        );
+        for (flag, enabled) in ow.script_flags() {
+            if enabled && flag.starts_with("EVENT_GOT_") {
+                assert_eq!(
+                    before_flags.get(&flag),
+                    Some(&true),
+                    "failed pickup set {flag}"
+                );
+            }
+        }
+        assert_eq!(
+            failed_jingles, 0,
+            "full bag must not play the found-item jingle"
+        );
+        ow.game_data_requests.clear();
+        ow.audio_requests.clear();
+        // Free one bag slot and retry the same ball, then verify its byte item.
+        ow.seed_script_query_state(0, &bag[..19], 0, 0, 0, 0, &[], 0, 0, 0);
+        if press_a {
+            ow.update_frame(input(true));
+        } else {
+            assert!(ow.try_call_script_npc_talk(data.text_id));
+        }
+        let success_jingles = finish_dialogue(&mut ow);
+        let given: Vec<_> = ow
+            .game_data_requests
+            .iter()
+            .filter_map(|request| match request {
+                OverworldGameDataRequest::GiveItem { item, quantity } => {
+                    Some((ItemId::from_const_name(item), *quantity))
+                }
+                _ => None,
+            })
+            .collect();
+        assert_eq!(
+            given,
+            vec![(Some(expected), 1)],
+            "{map:?} npc {} reward",
+            data.text_id
+        );
+        assert_eq!(
+            success_jingles, 1,
+            "successful pickup must play exactly one found-item jingle"
+        );
+        assert!(
+            !ow.npc_states[index].visible,
+            "successful pickup must hide the ball"
+        );
+        assert!(
+            is_object_hidden(ow.toggleable_object_flags(), bit),
+            "successful pickup must persist SRAM bit"
+        );
+        let mut reloaded = OverworldScreen::new(map, None, PokemonRedData);
+        reloaded.set_script_flags(ow.script_flags());
+        reloaded.set_toggleable_object_flags(*ow.toggleable_object_flags());
+        reloaded.apply_hidden_object_flags();
+        assert!(
+            !reloaded.npc_states[index].visible,
+            "{map:?} npc {} must stay hidden on reload",
+            data.text_id
+        );
+    }
+
+    #[test]
+    fn every_original_ground_ball_preserves_failure_and_persists_success() {
+        let mut count = 0;
+        for id in 0..248u8 {
+            let Some(map) = MapId::from_u8(id) else {
+                continue;
+            };
+            for (index, npc) in get_map_npcs(map).iter().enumerate() {
+                if npc.item_id != 0 {
+                    verify_pickup(map, index, false);
+                    count += 1;
+                }
+            }
+        }
+        assert_eq!(count, 104);
+    }
+
+    #[test]
+    fn item_pickup_a_button_path_handles_full_bag_wrong_tm_and_missing_handlers() {
+        for (map, npc_id) in [
+            (MapId::Route2, 1),
+            (MapId::MtMoon1F, 13),
+            (MapId::MtMoonB2F, 8),
+            (MapId::PowerPlant, 10),
+            (MapId::ViridianGym, 11),
+        ] {
+            let index = get_map_npcs(map)
+                .iter()
+                .position(|npc| npc.text_id == npc_id)
+                .unwrap();
+            verify_pickup(map, index, true);
+        }
+    }
+
+    #[test]
+    fn found_text_prints_before_sound_waits_for_completion_and_closes_without_a() {
+        let mut ow = OverworldScreen::new(MapId::Route2, None, PokemonRedData);
+        ow.seed_script_query_state(0, &[], 0, 0, 0, 0, &[], 0, 0, 0);
+        assert!(ow.try_call_script_npc_talk(1));
+        for _ in 0..200 {
+            ow.update_frame(input(false));
+            if ow.audio_requests.iter().any(|request| {
+                matches!(request,
+                OverworldAudioRequest::PlaySound { sound_id } if sound_id == "SFX_GET_ITEM_1")
+            }) {
+                break;
+            }
+        }
+        let dialogue = ow
+            .pending_dialogue
+            .as_ref()
+            .expect("found text stays during sound");
+        assert_eq!(
+            dialogue.char_index(),
+            dialogue.total_chars(),
+            "print precedes jingle"
+        );
+        assert!(
+            !ow.dialogue_needs_button(),
+            "automatic item text has no prompt arrow"
+        );
+        assert!(matches!(
+            ow.active_script_effect,
+            Some(script_bridge::ScriptEffect::ShowItemDialogue {
+                sound_started: true,
+                ..
+            })
+        ));
+        // Simulate the same sequencer status sampled by the native frontend.
+        ow.script_sfx_playing = true;
+        for frame in 0..20 {
+            ow.update_frame(input(frame % 2 == 0));
+            assert!(
+                ow.pending_dialogue.is_some(),
+                "A cannot close a playing fanfare"
+            );
+        }
+        let snap = crate::snapshot::OverworldSnapshot::capture(&ow);
+        ow.pending_dialogue = None;
+        ow.active_script_effect = None;
+        snap.restore_into(&mut ow);
+        assert!(matches!(
+            ow.active_script_effect,
+            Some(script_bridge::ScriptEffect::ShowItemDialogue {
+                sound_started: true,
+                ..
+            })
+        ));
+        ow.update_frame(input(false));
+        assert!(
+            ow.pending_dialogue.is_some(),
+            "restored pending sound must still block"
+        );
+        ow.script_sfx_playing = false;
+        ow.update_frame(input(true));
+        assert!(
+            ow.pending_dialogue.is_some(),
+            "original HoldTextDisplayOpen waits for A release"
+        );
+        ow.update_frame(input(false));
+        assert!(
+            ow.pending_dialogue.is_none(),
+            "sound end closes without an A press"
+        );
+        assert!(ow.active_script_effect.is_none());
     }
 }

@@ -295,14 +295,24 @@ game_scene SilphCo7F {
   // ── Ground item: CALCIUM (npc 10) ───────────────────────────────────────
   @storyline("itemCalcium") {
     @trigger(map = "SilphCo7F", npc = 10, toggle = "SILPH_CO_7F_OBJ_10")
-    giveItem("CALCIUM", 1)
-    hideObjectByName("SILPH_CO_7F_OBJ_10")
+    given = giveItem("CALCIUM", 1)
+    @if (given) {
+      hideObjectByName("SILPH_CO_7F_OBJ_10")
+      showItemDialogue(t("<PLAYER> found CALCIUM!", "<PLAYER>找到了特攻增强剂！"))
+    } @else {
+      @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+    }
   }
 
   // ── Ground item: TM03 / SWORDS DANCE (npc 11) ───────────────────────────
   @storyline("itemTmSwordsDance") {
     @trigger(map = "SilphCo7F", npc = 11, toggle = "SILPH_CO_7F_OBJ_11")
-    giveItem("TM03", 1)
-    hideObjectByName("SILPH_CO_7F_OBJ_11")
+    given = giveItem("TM03", 1)
+    @if (given) {
+      hideObjectByName("SILPH_CO_7F_OBJ_11")
+      showItemDialogue(t("<PLAYER> found TM03!", "<PLAYER>找到了TM03！"))
+    } @else {
+      @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+    }
   }
 }

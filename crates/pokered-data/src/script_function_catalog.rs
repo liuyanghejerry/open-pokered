@@ -46,6 +46,7 @@ pub const POKERED_SCRIPT_FUNCTIONS: &[&str] = &[
     "replaceTileBlock",
     "setPartyNickname",
     "showDiploma",
+    "showItemDialogue",
     "showPokedexEntry",
     "startBattle",
     "startBattleSet",

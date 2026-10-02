@@ -148,39 +148,45 @@ game_scene SilphCo5F {
   // ── Ground item: TM09 / TAKE DOWN (npc 6) ───────────────────────────────
   @storyline("itemTM09") {
     @trigger(map = "SilphCo5F", npc = 6, toggle = "SILPH_CO_5F_OBJ_6")
-    @if (getFlag("EVENT_GOT_TM09_SILPH_CO_5F")) {
-      @speaker("") { @t("The item ball is empty.", "精灵球里面是空的。") }
-    } @else {
-      giveItem("TM09", 1)
-      setFlag("EVENT_GOT_TM09_SILPH_CO_5F")
-      hideObject("SILPH_CO_5F_OBJ_6")
-      @speaker("") { @t("<PLAYER> found TM09!", "<PLAYER>找到了 TM09！") }
+    @if (!getFlag("EVENT_GOT_TM09_SILPH_CO_5F")) {
+      given = giveItem("TM09", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_TM09_SILPH_CO_5F")
+        hideObjectByName("SILPH_CO_5F_OBJ_6")
+        showItemDialogue(t("<PLAYER> found TM09!", "<PLAYER>找到了 TM09！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 
   // ── Ground item: PROTEIN (npc 7) ────────────────────────────────────────
   @storyline("itemProtein") {
     @trigger(map = "SilphCo5F", npc = 7, toggle = "SILPH_CO_5F_OBJ_7")
-    @if (getFlag("EVENT_GOT_PROTEIN_SILPH_CO_5F")) {
-      @speaker("") { @t("The item ball is empty.", "精灵球里面是空的。") }
-    } @else {
-      giveItem("PROTEIN", 1)
-      setFlag("EVENT_GOT_PROTEIN_SILPH_CO_5F")
-      hideObject("SILPH_CO_5F_OBJ_7")
-      @speaker("") { @t("<PLAYER> found PROTEIN!", "<PLAYER>找到了攻击增强剂！") }
+    @if (!getFlag("EVENT_GOT_PROTEIN_SILPH_CO_5F")) {
+      given = giveItem("PROTEIN", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_PROTEIN_SILPH_CO_5F")
+        hideObjectByName("SILPH_CO_5F_OBJ_7")
+        showItemDialogue(t("<PLAYER> found PROTEIN!", "<PLAYER>找到了攻击增强剂！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 
   // ── Ground item: CARD KEY (npc 8) ───────────────────────────────────────
   @storyline("itemCardKey") {
     @trigger(map = "SilphCo5F", npc = 8, toggle = "SILPH_CO_5F_OBJ_8")
-    @if (getFlag("EVENT_GOT_CARD_KEY_SILPH_CO_5F")) {
-      @speaker("") { @t("The item ball is empty.", "精灵球里面是空的。") }
-    } @else {
-      giveItem("CARD_KEY", 1)
-      setFlag("EVENT_GOT_CARD_KEY_SILPH_CO_5F")
-      hideObject("SILPH_CO_5F_OBJ_8")
-      @speaker("") { @t("<PLAYER> found CARD_KEY!", "<PLAYER>找到了磁卡钥匙！") }
+    @if (!getFlag("EVENT_GOT_CARD_KEY_SILPH_CO_5F")) {
+      given = giveItem("CARD_KEY", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_CARD_KEY_SILPH_CO_5F")
+        hideObjectByName("SILPH_CO_5F_OBJ_8")
+        showItemDialogue(t("<PLAYER> found CARD_KEY!", "<PLAYER>找到了磁卡钥匙！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 

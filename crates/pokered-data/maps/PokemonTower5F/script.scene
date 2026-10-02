@@ -61,9 +61,13 @@ game_scene PokemonTower5F {
   // ── Ground item: Poke Ball containing a NUGGET (npc 6) ────────────────────
   @storyline("itemNugget") {
     @trigger(map = "PokemonTower5F", npc = 6, toggle = "POKEMON_TOWER_5F_OBJ_6")
-    giveItem("NUGGET", 1)
-    hideObjectByName("POKEMON_TOWER_5F_OBJ_6")
-    @speaker("") { @t("<PLAYER> found a NUGGET!", "<PLAYER>发现了一个金珠！") }
+    given = giveItem("NUGGET", 1)
+    @if (given) {
+      hideObjectByName("POKEMON_TOWER_5F_OBJ_6")
+      showItemDialogue(t("<PLAYER> found a NUGGET!", "<PLAYER>发现了一个金珠！"))
+    } @else {
+      @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+    }
   }
 
   // ── Purified zone (orig PokemonTower5FPurifiedZoneCoords) — on-step heal ───

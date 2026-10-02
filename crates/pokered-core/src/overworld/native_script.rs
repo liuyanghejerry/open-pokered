@@ -296,6 +296,10 @@ impl ScriptHost for NativeHost {
             }
 
             // ── async commands: build a ScriptCommand for the driver ──────
+            "showItemDialogue" => {
+                let text = args::text(v.first().ok_or("showItemDialogue: missing text")?, "showItemDialogue")?;
+                Ok(pokemon(PokemonScriptCommand::ShowItemDialogue { text }))
+            }
             "giveItem" => {
                 let item_id = args::text(v.first().ok_or("giveItem: missing item")?, "giveItem")?;
                 let quantity = args::u8(v.get(1).ok_or("giveItem: missing quantity")?, "giveItem")?;

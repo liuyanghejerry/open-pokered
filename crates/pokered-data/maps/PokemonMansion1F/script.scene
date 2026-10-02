@@ -47,26 +47,30 @@ game_scene PokemonMansion1F {
   // ── Ground item: ESCAPE_ROPE (npc 2) ──────────────────────────────────────
   @storyline("talkPokeBall") {
     @trigger(map = "PokemonMansion1F", npc = 2, toggle = "POKEMON_MANSION_1F_OBJ_2")
-    @if (getFlag("EVENT_GOT_ESCAPE_ROPE_MANSION_1F")) {
-      @speaker("") { @t("The item ball is empty.", "这个精灵球里是空的。") }
-    } @else {
-      giveItem("ESCAPE_ROPE", 1)
-      setFlag("EVENT_GOT_ESCAPE_ROPE_MANSION_1F")
-      hideObject("POKEMON_MANSION_1F_OBJ_2")
-      @speaker("") { @t("<PLAYER> found ESCAPE_ROPE!", "<PLAYER>找到了逃脱绳！") }
+    @if (!getFlag("EVENT_GOT_ESCAPE_ROPE_MANSION_1F")) {
+      given = giveItem("ESCAPE_ROPE", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_ESCAPE_ROPE_MANSION_1F")
+        hideObjectByName("POKEMON_MANSION_1F_OBJ_2")
+        showItemDialogue(t("<PLAYER> found ESCAPE_ROPE!", "<PLAYER>找到了逃脱绳！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 
   // ── Ground item: CARBOS (npc 3) ───────────────────────────────────────────
   @storyline("talkPokeBall1") {
     @trigger(map = "PokemonMansion1F", npc = 3, toggle = "POKEMON_MANSION_1F_OBJ_3")
-    @if (getFlag("EVENT_GOT_CARBOS_MANSION_1F")) {
-      @speaker("") { @t("The item ball is empty.", "这个精灵球里是空的。") }
-    } @else {
-      giveItem("CARBOS", 1)
-      setFlag("EVENT_GOT_CARBOS_MANSION_1F")
-      hideObject("POKEMON_MANSION_1F_OBJ_3")
-      @speaker("") { @t("<PLAYER> found CARBOS!", "<PLAYER>找到了速度增强剂！") }
+    @if (!getFlag("EVENT_GOT_CARBOS_MANSION_1F")) {
+      given = giveItem("CARBOS", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_CARBOS_MANSION_1F")
+        hideObjectByName("POKEMON_MANSION_1F_OBJ_3")
+        showItemDialogue(t("<PLAYER> found CARBOS!", "<PLAYER>找到了速度增强剂！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 

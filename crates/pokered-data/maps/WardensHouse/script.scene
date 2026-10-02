@@ -64,13 +64,15 @@ game_scene WardensHouse {
   // ── PokeBall (npc 2) — RARE_CANDY ground item ───────────────────────────
   @storyline("talkPokeBall") {
     @trigger(map = "WardensHouse", npc = 2, toggle = "WARDENS_HOUSE_OBJ_2")
-    @if (getFlag("EVENT_GOT_RARE_CANDY_WARDENS_HOUSE")) {
-      @speaker("") { @t("The item ball is empty.", "这个道具球是空的。") }
-    } @else {
-      giveItem("RARE_CANDY", 1)
-      setFlag("EVENT_GOT_RARE_CANDY_WARDENS_HOUSE")
-      hideObjectByName("WARDENS_HOUSE_OBJ_2")
-      @speaker("") { @t("<PLAYER> found RARE_CANDY!", "<PLAYER>找到了神奇糖果！") }
+    @if (!getFlag("EVENT_GOT_RARE_CANDY_WARDENS_HOUSE")) {
+      given = giveItem("RARE_CANDY", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_RARE_CANDY_WARDENS_HOUSE")
+        hideObjectByName("WARDENS_HOUSE_OBJ_2")
+        showItemDialogue(t("<PLAYER> found RARE_CANDY!", "<PLAYER>找到了神奇糖果！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 

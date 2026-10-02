@@ -71,39 +71,45 @@ game_scene SilphCo10F {
   // ── Ground item: TM_EARTHQUAKE / TM26 (npc 4) ────────────────────────────
   @storyline("itemTmEarthquake") {
     @trigger(map = "SilphCo10F", npc = 4, toggle = "SILPH_CO_10F_OBJ_4")
-    @if (getFlag("EVENT_GOT_TM26")) {
-      @speaker("") { @t("It's an empty POKe BALL.", "这是一个空的精灵球。") }
-    } @else {
-      giveItem("TM26", 1)
-      setFlag("EVENT_GOT_TM26")
-      hideObjectByName("SILPH_CO_10F_OBJ_4")
-      @speaker("") { @t("<PLAYER> found TM26!", "<PLAYER>找到了 TM26！") }
+    @if (!getFlag("EVENT_GOT_TM26")) {
+      given = giveItem("TM26", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_TM26")
+        hideObjectByName("SILPH_CO_10F_OBJ_4")
+        showItemDialogue(t("<PLAYER> found TM26!", "<PLAYER>找到了 TM26！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 
   // ── Ground item: RARE_CANDY (npc 5) ──────────────────────────────────────
   @storyline("itemRareCandy") {
     @trigger(map = "SilphCo10F", npc = 5, toggle = "SILPH_CO_10F_OBJ_5")
-    @if (getFlag("EVENT_GOT_RARE_CANDY_SILPH_CO_10F")) {
-      @speaker("") { @t("It's an empty POKe BALL.", "这是一个空的精灵球。") }
-    } @else {
-      giveItem("RARE_CANDY", 1)
-      setFlag("EVENT_GOT_RARE_CANDY_SILPH_CO_10F")
-      hideObjectByName("SILPH_CO_10F_OBJ_5")
-      @speaker("") { @t("<PLAYER> found RARE_CANDY!", "<PLAYER>找到了神奇糖果！") }
+    @if (!getFlag("EVENT_GOT_RARE_CANDY_SILPH_CO_10F")) {
+      given = giveItem("RARE_CANDY", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_RARE_CANDY_SILPH_CO_10F")
+        hideObjectByName("SILPH_CO_10F_OBJ_5")
+        showItemDialogue(t("<PLAYER> found RARE_CANDY!", "<PLAYER>找到了神奇糖果！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 
   // ── Ground item: CARBOS (npc 6) ──────────────────────────────────────────
   @storyline("itemCarbos") {
     @trigger(map = "SilphCo10F", npc = 6, toggle = "SILPH_CO_10F_OBJ_6")
-    @if (getFlag("EVENT_GOT_CARBOS_SILPH_CO_10F")) {
-      @speaker("") { @t("It's an empty POKe BALL.", "这是一个空的精灵球。") }
-    } @else {
-      giveItem("CARBOS", 1)
-      setFlag("EVENT_GOT_CARBOS_SILPH_CO_10F")
-      hideObjectByName("SILPH_CO_10F_OBJ_6")
-      @speaker("") { @t("<PLAYER> found CARBOS!", "<PLAYER>找到了速度增强剂！") }
+    @if (!getFlag("EVENT_GOT_CARBOS_SILPH_CO_10F")) {
+      given = giveItem("CARBOS", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_CARBOS_SILPH_CO_10F")
+        hideObjectByName("SILPH_CO_10F_OBJ_6")
+        showItemDialogue(t("<PLAYER> found CARBOS!", "<PLAYER>找到了速度增强剂！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 }

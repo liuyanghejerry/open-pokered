@@ -636,6 +636,7 @@ pub(crate) struct PendingCut {
 use crate::overworld::collision;
 
 pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedData> {
+    pub(crate) wild_data_state: super::wild_encounters::WildDataState,
     pub(crate) game_data: G,
     pub state: OverworldState,
     pub map_data: Option<MapData<G::Tileset>>,
@@ -737,6 +738,8 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     pub(crate) cutscene_manager: CutsceneManager,
     pub(crate) trigger_manager: TriggerManager,
     pub(crate) active_script_effect: Option<crate::overworld::script_bridge::ScriptEffect>,
+    /// Frontend sequencer status, sampled before each overworld update.
+    pub script_sfx_playing: bool,
     pub(crate) joy_ignore_mask: u8,
     #[cfg(not(target_os = "none"))]
     pub(crate) scripts_dir: Option<std::path::PathBuf>,
@@ -1102,6 +1105,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
 
         log::info!("gba:ow building struct");
         let mut screen = Self {
+            wild_data_state: super::wild_encounters::WildDataState::default(),
             game_data,
             state: OverworldState::new(start_map),
             map_data,
@@ -1158,6 +1162,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             cutscene_manager: CutsceneManager::new(),
             trigger_manager: TriggerManager::new(),
             active_script_effect: None,
+            script_sfx_playing: false,
             joy_ignore_mask: 0,
             #[cfg(not(target_os = "none"))]
             scripts_dir,
@@ -1227,6 +1232,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         };
         // EnterMap: CheckForceBikeOrSurf runs for the start map too — mount/
         // lock the bike if the screen starts on a Cycling Road tile.
+        screen.wild_data_state.load_map(start_map);
         screen.apply_map_entry_transport(start_map, screen.state.player.x, screen.state.player.y);
         screen
     }
@@ -1362,6 +1368,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
 
     /// Push the configured text speed (frames between revealed characters —
     /// 1/3/5) into any active dialogue. Called by the frontend every frame.
+    /// FoundItemText has no ManualTextScroll prompt while its jingle plays.
+    pub fn dialogue_needs_button(&self) -> bool {
+        !matches!(self.active_script_effect,
+            Some(super::script_bridge::ScriptEffect::ShowItemDialogue { .. }))
+    }
+
     pub fn set_text_delay_frames(&mut self, frames: u16) {
         self.text_delay_frames = frames.max(1);
     }
@@ -1406,6 +1418,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         self.script_engine.seed_number("money", money as f64);
         self.script_engine.seed_number("coins", coins as f64);
         self.script_engine.seed_number("gameVersion", game_version as f64);
+        self.wild_data_state.set_version(
+            if game_version == 1 { pokered_data::wild_data::GameVersion::Blue } else { pokered_data::wild_data::GameVersion::Red },
+            self.state.current_map,
+        );
         self.player_coins = coins;
         self.script_engine.seed_set("bag", bag_const_names);
         self.script_bag_names = bag_const_names.to_vec();

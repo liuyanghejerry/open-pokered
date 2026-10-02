@@ -68,39 +68,45 @@ game_scene SilphCo4F {
   // ── Ground item: FULL HEAL (npc 5) ──────────────────────────────────────
   @storyline("itemFullHeal") {
     @trigger(map = "SilphCo4F", npc = 5, toggle = "SILPH_CO_4F_OBJ_5")
-    @if (getFlag("EVENT_GOT_FULL_HEAL_SILPH_CO_4F")) {
-      @speaker("") { @t("The item ball is empty.", "精灵球里是空的。") }
-    } @else {
-      giveItem("FULL_HEAL", 1)
-      setFlag("EVENT_GOT_FULL_HEAL_SILPH_CO_4F")
-      hideObject("SILPH_CO_4F_OBJ_5")
-      @speaker("") { @t("<PLAYER> found FULL_HEAL!", "<PLAYER>发现了万灵药！") }
+    @if (!getFlag("EVENT_GOT_FULL_HEAL_SILPH_CO_4F")) {
+      given = giveItem("FULL_HEAL", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_FULL_HEAL_SILPH_CO_4F")
+        hideObjectByName("SILPH_CO_4F_OBJ_5")
+        showItemDialogue(t("<PLAYER> found FULL_HEAL!", "<PLAYER>发现了万灵药！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 
   // ── Ground item: MAX REVIVE (npc 6) ─────────────────────────────────────
   @storyline("itemMaxRevive") {
     @trigger(map = "SilphCo4F", npc = 6, toggle = "SILPH_CO_4F_OBJ_6")
-    @if (getFlag("EVENT_GOT_MAX_REVIVE_SILPH_CO_4F")) {
-      @speaker("") { @t("The item ball is empty.", "精灵球里是空的。") }
-    } @else {
-      giveItem("MAX_REVIVE", 1)
-      setFlag("EVENT_GOT_MAX_REVIVE_SILPH_CO_4F")
-      hideObject("SILPH_CO_4F_OBJ_6")
-      @speaker("") { @t("<PLAYER> found MAX_REVIVE!", "<PLAYER>发现了活力块！") }
+    @if (!getFlag("EVENT_GOT_MAX_REVIVE_SILPH_CO_4F")) {
+      given = giveItem("MAX_REVIVE", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_MAX_REVIVE_SILPH_CO_4F")
+        hideObjectByName("SILPH_CO_4F_OBJ_6")
+        showItemDialogue(t("<PLAYER> found MAX_REVIVE!", "<PLAYER>发现了活力块！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 
   // ── Ground item: ESCAPE ROPE (npc 7) ────────────────────────────────────
   @storyline("itemEscapeRope") {
     @trigger(map = "SilphCo4F", npc = 7, toggle = "SILPH_CO_4F_OBJ_7")
-    @if (getFlag("EVENT_GOT_ESCAPE_ROPE_SILPH_CO_4F")) {
-      @speaker("") { @t("The item ball is empty.", "精灵球里是空的。") }
-    } @else {
-      giveItem("ESCAPE_ROPE", 1)
-      setFlag("EVENT_GOT_ESCAPE_ROPE_SILPH_CO_4F")
-      hideObject("SILPH_CO_4F_OBJ_7")
-      @speaker("") { @t("<PLAYER> found ESCAPE_ROPE!", "<PLAYER>发现了逃脱绳！") }
+    @if (!getFlag("EVENT_GOT_ESCAPE_ROPE_SILPH_CO_4F")) {
+      given = giveItem("ESCAPE_ROPE", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_ESCAPE_ROPE_SILPH_CO_4F")
+        hideObjectByName("SILPH_CO_4F_OBJ_7")
+        showItemDialogue(t("<PLAYER> found ESCAPE_ROPE!", "<PLAYER>发现了逃脱绳！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 

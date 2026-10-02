@@ -93,7 +93,8 @@ game_scene RocketHideoutB4F {
     @trigger(map = "RocketHideoutB4F", npc = 5, toggle = "ROCKET_HIDEOUT_B4F_OBJ_5")
     given = giveItem("HP_UP", 1)
     @if (given) {
-      @speaker("") { @t("<PLAYER> found HP_UP!", "<PLAYER>找到了体力增强剂！") }
+      hideObjectByName("ROCKET_HIDEOUT_B4F_OBJ_5")
+      showItemDialogue(t("<PLAYER> found HP_UP!", "<PLAYER>找到了体力增强剂！"))
     } @else {
       @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
     }
@@ -102,9 +103,10 @@ game_scene RocketHideoutB4F {
   // ── PokeBall ground item (npc 6) — TM_02 (RAZOR WIND) ────────────────────
   @storyline("talkPokeBall1") {
     @trigger(map = "RocketHideoutB4F", npc = 6, toggle = "ROCKET_HIDEOUT_B4F_OBJ_6")
-    given = giveItem("TM_02", 1)
+    given = giveItem("TM02", 1)
     @if (given) {
-      @speaker("") { @t("<PLAYER> found TM_02!", "<PLAYER>找到了 TM_02！") }
+      hideObjectByName("ROCKET_HIDEOUT_B4F_OBJ_6")
+      showItemDialogue(t("<PLAYER> found TM_02!", "<PLAYER>找到了 TM_02！"))
     } @else {
       @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
     }
@@ -115,7 +117,8 @@ game_scene RocketHideoutB4F {
     @trigger(map = "RocketHideoutB4F", npc = 7, toggle = "ROCKET_HIDEOUT_B4F_OBJ_7")
     given = giveItem("IRON", 1)
     @if (given) {
-      @speaker("") { @t("<PLAYER> found IRON!", "<PLAYER>找到了防御增强剂！") }
+      hideObjectByName("ROCKET_HIDEOUT_B4F_OBJ_7")
+      showItemDialogue(t("<PLAYER> found IRON!", "<PLAYER>找到了防御增强剂！"))
     } @else {
       @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
     }
@@ -127,7 +130,8 @@ game_scene RocketHideoutB4F {
     @trigger(map = "RocketHideoutB4F", npc = 8, toggle = "ROCKET_HIDEOUT_B4F_OBJ_8", hidden = true)
     given = giveItem("SILPH_SCOPE", 1)
     @if (given) {
-      @speaker("") { @t("<PLAYER> found SILPH SCOPE!", "<PLAYER>找到了西尔佛透视镜！") }
+      hideObjectByName("ROCKET_HIDEOUT_B4F_OBJ_8")
+      showItemDialogue(t("<PLAYER> found SILPH SCOPE!", "<PLAYER>找到了西尔佛透视镜！"))
     } @else {
       @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
     }
@@ -139,7 +143,8 @@ game_scene RocketHideoutB4F {
     @trigger(map = "RocketHideoutB4F", npc = 9, toggle = "ROCKET_HIDEOUT_B4F_OBJ_9", hidden = true)
     given = giveItem("LIFT_KEY", 1)
     @if (given) {
-      @speaker("") { @t("<PLAYER> found LIFT KEY!", "<PLAYER>找到了电梯钥匙！") }
+      hideObjectByName("ROCKET_HIDEOUT_B4F_OBJ_9")
+      showItemDialogue(t("<PLAYER> found LIFT KEY!", "<PLAYER>找到了电梯钥匙！"))
     } @else {
       @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
     }

@@ -1205,7 +1205,7 @@ pub fn draw_overworld(
             // Blinking ▼ arrow indicator (matches original ManualTextScroll behavior).
             // Toggle visibility every 16 frames (~267ms at 60fps). Same tile
             // (18,16) as the native frontend (bottom-right of the 20×6 box).
-            if dlg.waiting_for_input() {
+            if dlg.waiting_for_input() && screen.dialogue_needs_button() {
                 let blink_visible = (screen.frame_counter / 16) % 2 == 0;
                 if blink_visible {
                     let arrow_x = 18 * TILE_SIZE;

@@ -118,8 +118,12 @@ game_scene Route24 {
   // ── Ground item: Poke Ball with TM45 THUNDER WAVE (npc 8) ────────────────
   @storyline("itemTmThunderWave") {
     @trigger(map = "Route24", npc = 8, toggle = "ROUTE_24_OBJ_8")
-    giveItem("TM_45", 1)
-    hideObjectByName("ROUTE_24_OBJ_8")
-    @speaker("") { @t("<PLAYER> found TM45!", "<PLAYER>找到了 TM45！") }
+    given = giveItem("TM45", 1)
+    @if (given) {
+      hideObjectByName("ROUTE_24_OBJ_8")
+      showItemDialogue(t("<PLAYER> found TM45!", "<PLAYER>找到了 TM45！"))
+    } @else {
+      @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+    }
   }
 }

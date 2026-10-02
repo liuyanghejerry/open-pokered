@@ -45,13 +45,10 @@ game_scene CeruleanCaveB1F {
     @trigger(map = "CeruleanCaveB1F", npc = 2, toggle = "CERULEAN_CAVE_B1F_OBJ_2")
     given = giveItem("ULTRA_BALL", 1)
     @if (given) {
-      @speaker("") {
-        @t("<PLAYER> found ULTRA_BALL!", "<PLAYER>找到了高级球！")
-      }
+      hideObjectByName("CERULEAN_CAVE_B1F_OBJ_2")
+      showItemDialogue(t("<PLAYER> found ULTRA_BALL!", "<PLAYER>找到了高级球！"))
     } @else {
-      @speaker("") {
-        @t("You have too much stuff\nalready!", "你带的东西太多了！")
-      }
+      @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
     }
   }
 
@@ -60,13 +57,10 @@ game_scene CeruleanCaveB1F {
     @trigger(map = "CeruleanCaveB1F", npc = 3, toggle = "CERULEAN_CAVE_B1F_OBJ_3")
     given = giveItem("MAX_REVIVE", 1)
     @if (given) {
-      @speaker("") {
-        @t("<PLAYER> found MAX_REVIVE!", "<PLAYER>找到了活力块！")
-      }
+      hideObjectByName("CERULEAN_CAVE_B1F_OBJ_3")
+      showItemDialogue(t("<PLAYER> found MAX_REVIVE!", "<PLAYER>找到了活力块！"))
     } @else {
-      @speaker("") {
-        @t("You have too much stuff\nalready!", "你带的东西太多了！")
-      }
+      @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
     }
   }
 }

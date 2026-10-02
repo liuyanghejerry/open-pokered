@@ -42,6 +42,11 @@
     {
       "id": 10,
       "talk": "talkGymGuide"
+    },
+    {
+      "id": 11,
+      "talk": "groundItem11",
+      "toggleId": "VIRIDIAN_GYM_OBJ_11"
     }
   ],
   "signs": [

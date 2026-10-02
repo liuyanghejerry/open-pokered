@@ -125,7 +125,7 @@ game_scene Route12 {
       @if (given) {
         setFlag("EVENT_GOT_ROUTE_12_TM_PAY_DAY")
         hideObjectByName("ROUTE_12_OBJ_9")
-        @speaker("") { @t("<PLAYER> found TM16!", "<PLAYER>找到了 TM16！") }
+        showItemDialogue(t("<PLAYER> found TM16!", "<PLAYER>找到了 TM16！"))
       } @else {
         @speaker("") { @t("You have too much stuff\nalready!", "你身上的东西太多了！") }
       }
@@ -140,7 +140,7 @@ game_scene Route12 {
       @if (given) {
         setFlag("EVENT_GOT_ROUTE_12_IRON")
         hideObjectByName("ROUTE_12_OBJ_10")
-        @speaker("") { @t("<PLAYER> found IRON!", "<PLAYER>找到了防御增强剂！") }
+        showItemDialogue(t("<PLAYER> found IRON!", "<PLAYER>找到了防御增强剂！"))
       } @else {
         @speaker("") { @t("You have too much stuff\nalready!", "你身上的东西太多了！") }
       }
