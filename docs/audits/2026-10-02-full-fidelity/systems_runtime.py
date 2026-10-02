@@ -11,6 +11,7 @@ from debug_drive import DebugClient
 
 parser = argparse.ArgumentParser()
 parser.add_argument('binary')
+parser.add_argument('--source', default='unknown')
 parser.add_argument('--base-port', type=int, default=9491)
 parser.add_argument('--tcp-port', type=int, default=9603)
 parser.add_argument('--output-dir')
@@ -23,17 +24,18 @@ out.mkdir(exist_ok=True, parents=True)
 shots = pathlib.Path(args.screenshots_dir or repo / 'docs/screenshots/fidelity-systems')
 shots.mkdir(exist_ok=True, parents=True)
 fixture = pathlib.Path(args.snapshot or pathlib.Path(__file__).with_name('systems-runtime-input.json'))
-evidence={'binary_sha256': hashlib.sha256(pathlib.Path(binary).read_bytes()).hexdigest()}
+evidence={'source': args.source, 'binary_sha256': hashlib.sha256(pathlib.Path(binary).read_bytes()).hexdigest()}
 processes=[]
 
-def launch(name, port, extra=(), snapshot=True, save_name=None):
+def launch(name, port, extra=(), snapshot=True, save_name=None, skip_intro=True):
     log=open(out/f'{name}.log','w')
     save_path=out/f'{save_name or name}.sav'
     if snapshot:
         save_path.unlink(missing_ok=True)
         save_path.with_suffix('.script_flags.json').unlink(missing_ok=True)
     args=[binary,'run','--save',str(save_path),
-          '--skip-intro','--no-audio','--headless','--speed','0','--debug-port',str(port),*extra]
+          '--no-audio','--headless','--speed','0','--debug-port',str(port),*extra]
+    if skip_intro: args.append('--skip-intro')
     if snapshot: args.extend(['--snapshot',str(fixture)])
     p=subprocess.Popen(args,stdout=log,stderr=log,cwd=repo)
     processes.append((p,log))
@@ -101,9 +103,22 @@ try:
     extras=json.loads(companion.read_text())
     extras['EVENT_TRADED_FOR_MARCEL']=False
     companion.write_text(json.dumps(extras))
-    npc=launch('npc_reload',args.base_port,snapshot=False,save_name='npc')
-    step(npc,90)
+    npc=launch('npc_reload',args.base_port,snapshot=False,save_name='npc',skip_intro=False)
+    boot_trace=[]
+    for _ in range(40):
+        boot=state(npc)
+        boot_trace.append(boot['screen'])
+        if boot['screen']=='main-menu': break
+        tap(npc,'a');step(npc,90)
+    assert boot['screen']=='main-menu',boot
+    step(npc,25)
+    save('npc_actual_continue_menu',{'boot_screen_trace':boot_trace,'state':state(npc)})
+    tap(npc,'a');step(npc,90)
+    assert state(npc)['screen']=='main-menu',state(npc)
+    save('npc_actual_continue_info',state(npc))
+    tap(npc,'a');step(npc,90)
     reloaded=state(npc)
+    assert reloaded['screen']=='overworld' and reloaded['map_name']=='Route2TradeHouse',reloaded
     flags=command(npc,cmd='get_flags')
     assert reloaded['party'][0]['species']=='MrMime',reloaded
     assert flags['data']['EVENT_TRADED_FOR_MARCEL'],flags

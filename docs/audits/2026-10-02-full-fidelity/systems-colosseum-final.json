@@ -1,6 +1,6 @@
 {
-  "source": "7897c04a2cec95b8b26e2f9755799a15c8a24181",
-  "binary_sha256": "ece0a06b6a9ea0f6a96355f46de163f4c55498a8c979735eccaed21b70207506",
+  "source": "c51209a492f804f58486607919c9ba0c62eb2eb7",
+  "binary_sha256": "a137d17f0239357710f351003ffbae6999150a4df0732ca58a8d39fb50fe633f",
   "host_room_before_battle": {
     "active_script_effect": null,
     "badges": 0,
@@ -583,7 +583,7 @@
     "battle_message": null,
     "battle_moves": null,
     "battle_party_cursor": 0,
-    "battle_phase": "Intro { phase: SilhouetteSlide, wait_frames: 14 }",
+    "battle_phase": "Intro { phase: TrainerReveal, wait_frames: 28 }",
     "choice": null,
     "coins": 0,
     "credits_final_button": null,
@@ -1070,7 +1070,7 @@
       }
     },
     "field_menu": null,
-    "frame_count": 1093,
+    "frame_count": 1026,
     "hall_of_fame_count": 0,
     "hof_phase": null,
     "last_outside_map": "PalletTown",
@@ -1499,7 +1499,7 @@
         }
       },
       "field_menu": null,
-      "frame_count": 1193,
+      "frame_count": 1126,
       "hall_of_fame_count": 0,
       "hof_phase": null,
       "last_outside_map": "PalletTown",
@@ -1644,10 +1644,10 @@
           }
         ]
       },
-      "battle_message": "BLASTOISE used\nSURF!",
+      "battle_message": "BLASTOISE used SURF!",
       "battle_moves": null,
       "battle_party_cursor": 0,
-      "battle_phase": "ShowingText { messages: [\"BLASTOISE used\\nSURF!\", \"Enemy RATTATA\\nfainted!\"], current: 0, wait_frames: 0, next_phase: TrainerVictory { phase: DefeatedText, wait_frames: 30, player_won: true } }",
+      "battle_phase": "ShowingText { messages: [\"BLASTOISE used SURF!\", \"Enemy RATTATA fainted!\"], current: 0, wait_frames: 0, next_phase: TrainerVictory { phase: DefeatedText, wait_frames: 30, player_won: true } }",
       "choice": null,
       "coins": 0,
       "credits_final_button": null,
@@ -1849,10 +1849,10 @@
           }
         ]
       },
-      "battle_message": "Enemy BLASTOISE\nused SURF!",
+      "battle_message": "Enemy BLASTOISE used SURF!",
       "battle_moves": null,
       "battle_party_cursor": 0,
-      "battle_phase": "ShowingText { messages: [\"Enemy BLASTOISE\\nused SURF!\", \"RATTATA fainted!\"], current: 0, wait_frames: 0, next_phase: TrainerVictory { phase: TrainerPicScrollIn, wait_frames: 50, player_won: false } }",
+      "battle_phase": "ShowingText { messages: [\"Enemy BLASTOISE used SURF!\", \"RATTATA fainted!\"], current: 0, wait_frames: 0, next_phase: TrainerVictory { phase: TrainerPicScrollIn, wait_frames: 50, player_won: false } }",
       "choice": null,
       "coins": 0,
       "credits_final_button": null,
@@ -1911,7 +1911,7 @@
         }
       },
       "field_menu": null,
-      "frame_count": 1320,
+      "frame_count": 1253,
       "hall_of_fame_count": 0,
       "hof_phase": null,
       "last_outside_map": "PalletTown",
@@ -2323,7 +2323,7 @@
         }
       },
       "field_menu": null,
-      "frame_count": 1628,
+      "frame_count": 1561,
       "hall_of_fame_count": 0,
       "hof_phase": null,
       "last_outside_map": "PalletTown",
@@ -2734,7 +2734,7 @@
       }
     },
     "field_menu": null,
-    "frame_count": 1628,
+    "frame_count": 1561,
     "hall_of_fame_count": 0,
     "hof_phase": null,
     "last_outside_map": "PalletTown",
@@ -2831,15 +2831,81 @@
   },
   "result": "Both real TCP apps completed the battle and healed every party member only afterward.",
   "runtime_logs": {
-    "host": "[Debug] No --debug-modules flag provided\nDebug server started on port 9501\nSnapshot loaded: \"/tmp/systems-colosseum-789-final/host-input.json\"\nSkip-intro: starting at CeruleanPokecenter (64 x=11, y=5)\nAsset root found: \"/workspace/open-pokered/crates/pokered-renderer/../../gfx\"\nAudio output disabled (--no-audio).\n[link] listening on port 9604 (waiting for peer)\nRunning headless (no window). Press Ctrl-C to exit.\nDriven-only mode: frames advance only via debug commands.\n[link] peer connected, waiting for its Hello\n[link] handshake complete \u2014 connected\n",
-    "peer": "[Debug] No --debug-modules flag provided\nDebug server started on port 9502\nSnapshot loaded: \"/tmp/systems-colosseum-789-final/peer-input.json\"\nSkip-intro: starting at CeruleanPokecenter (64 x=11, y=5)\nAsset root found: \"/workspace/open-pokered/crates/pokered-renderer/../../gfx\"\nAudio output disabled (--no-audio).\n[link] connecting to 127.0.0.1:9604\nRunning headless (no window). Press Ctrl-C to exit.\nDriven-only mode: frames advance only via debug commands.\n[link] handshake complete \u2014 connected\n"
+    "host": "[Debug] No --debug-modules flag provided\nDebug server started on port 9514\nSnapshot loaded: \"/tmp/systems-font-preserved-final-colosseum/host-input.json\"\nSkip-intro: starting at CeruleanPokecenter (64 x=11, y=5)\nAsset root found: \"/workspace/open-pokered/crates/pokered-renderer/../../gfx\"\nAudio output disabled (--no-audio).\n[link] listening on port 9615 (waiting for peer)\nRunning headless (no window). Press Ctrl-C to exit.\nDriven-only mode: frames advance only via debug commands.\n[link] peer connected, waiting for its Hello\n[link] handshake complete — connected\n",
+    "peer": "[Debug] No --debug-modules flag provided\nDebug server started on port 9515\nSnapshot loaded: \"/tmp/systems-font-preserved-final-colosseum/peer-input.json\"\nSkip-intro: starting at CeruleanPokecenter (64 x=11, y=5)\nAsset root found: \"/workspace/open-pokered/crates/pokered-renderer/../../gfx\"\nAudio output disabled (--no-audio).\n[link] connecting to 127.0.0.1:9615\nRunning headless (no window). Press Ctrl-C to exit.\nDriven-only mode: frames advance only via debug commands.\n[link] handshake complete — connected\n"
   },
   "screenshots": {
-    "host-colosseum-entry-moves.png": "ba651ab13de41323fa778aab33581e7cd038bc6ac05eef22561c28b3fdbfd3c1",
-    "peer-colosseum-entry-moves.png": "145fed0f736a2430360cb85553b0c2415ad4644f4e1017b803ef5855c47d3acf",
+    "host-colosseum-entry-moves.png": "c5f6264d05b70a5056a6689130dfd20613a618763ff6c4f693887da1af6cd045",
+    "peer-colosseum-entry-moves.png": "1c37078d1074340d1e09418c17950987784e65974df9e8bb11af9982795fba74",
     "host-colosseum-room-after.png": "7ff1de3d8f64fc9c2aa89ac80db158839510dea7d6c01bd2644af71142104431",
     "peer-colosseum-room-after.png": "871f77367470fb88f0f584df29d3ed6c7a5282b23cf36e6668be22a711c68753",
-    "host-colosseum-party-after.png": "5d993ebfd301319934a1bac03a5471d57aa302dd12b4f37140cf138e4e680454",
-    "peer-colosseum-party-after.png": "ed26c820bf95d6b04f564366645a3360732ecc99ebc97b058d57c6a319330bf5"
+    "host-colosseum-party-after.png": "65ac2947c5ee9696e5b499467dc61f3662717406e484a60e26b2323750bbddf0",
+    "peer-colosseum-party-after.png": "6135d14697b04fae0f615b9b7137913b32b91a6825a04a84fcd315532761c867"
+  },
+  "build": {
+    "source_commit": "c51209a492f804f58486607919c9ba0c62eb2eb7",
+    "font": "Original project Fusion Pixel (English, Chinese and numeric text); no replacement alphabet",
+    "build_exit": 0,
+    "engine_production_source": "92ba95f9526107e17874df53291ac7758d0930f0",
+    "command": "CARGO_INCREMENTAL=0 cargo build --offline --locked -p pokered-app -p pokered-tui --features debug-server --bin pokered-app --bin pokered-tui --example fidelity_visual_capture --example fidelity_link_movie_capture --example pc_tour --message-format=json",
+    "artifacts": {
+      "pokered-tui": {
+        "path": "/workspace/onboarding/pokered-font-preserved-final/pokered-tui",
+        "sha256": "1868849ff90f66749184766f0a4d4d3892615ce10352dbb01d2f8a5f8597e4f1",
+        "features": []
+      },
+      "pc_tour": {
+        "path": "/workspace/onboarding/pokered-font-preserved-final/pc_tour",
+        "sha256": "9ada5a930ea7e250b2af80a6e2ce896d959fee768b008551d6a2832fd464ee62",
+        "features": [
+          "debug-server",
+          "default",
+          "desktop",
+          "pokered-debug-server"
+        ]
+      },
+      "fidelity_link_movie_capture": {
+        "path": "/workspace/onboarding/pokered-font-preserved-final/fidelity_link_movie_capture",
+        "sha256": "a143cb1db435415414885e7394932c8b9fecbbf49d650fc56a0c95029463d51d",
+        "features": [
+          "debug-server",
+          "default",
+          "desktop",
+          "pokered-debug-server"
+        ]
+      },
+      "fidelity_visual_capture": {
+        "path": "/workspace/onboarding/pokered-font-preserved-final/fidelity_visual_capture",
+        "sha256": "3da109ee784d3417915a001ceecddd350af7298f49a87443f314757db303cab4",
+        "features": [
+          "debug-server",
+          "default",
+          "desktop",
+          "pokered-debug-server"
+        ]
+      },
+      "pokered-app": {
+        "path": "/workspace/onboarding/pokered-font-preserved-final/pokered-app",
+        "sha256": "a137d17f0239357710f351003ffbae6999150a4df0732ca58a8d39fb50fe633f",
+        "features": [
+          "debug-server",
+          "default",
+          "desktop",
+          "pokered-debug-server"
+        ]
+      }
+    },
+    "source_tree_diff_during_build": "",
+    "additional_raw_capture_fixture": {
+      "path": "/workspace/onboarding/pokered-font-preserved-final/fidelity_visual_capture_after",
+      "sha256": "38282ee5cad15d136ef31aeae1ee0a28d667669a968aad6c9a1e4823c28184cb",
+      "cfgs": [
+        "fidelity_after",
+        "feature=\"debug-server\""
+      ],
+      "source_commit": "c51209a492f804f58486607919c9ba0c62eb2eb7",
+      "fixture_source_sha256": "b59c75d46d26feb8e9f295a45c061143b8bd1f3b1fb625c5efbba531e738ff6c",
+      "note": "Exact libraries selected from this build’s compiler-artifacts.jsonl; not the normal Cargo example without fidelity_after."
+    }
   }
 }

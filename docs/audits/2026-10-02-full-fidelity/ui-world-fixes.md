@@ -1,22 +1,22 @@
 # PC、背包与联机布局复审
 
-原作拉丁字形恢复为8px后，PC菜单使用原作的两tile `PK/MN` 字形和菜单/BOX框尺寸，光标与标签分开绘制；名人堂等级、属性标签和值分行，保留右侧正面图区域。native与TUI采用相同布局。联机提示缩为屏内可显示的 `L/R A:OK B:BACK`。背包按像素分别放置名称与数量，数量右缘固定为152px。
+按用户要求保留项目原有Fusion Pixel字体，普通英文、中文及混合文本继续使用项目字形和度量。PC保留有独立原作依据的菜单/BOX框和名人堂布局，专用 `PK/MN` 菜单图形与普通字体分开。名人堂等级、属性标签和值分行，保留右侧正面图区域；native与TUI采用相同布局。联机提示恢复原项目的 `L/R:SIDE  A:OK  B:BACK`。背包名称与数量按实际像素宽度布局。
 
-原作依据包括 `engine/pokemon/bills_pc.asm:121–129` 的12tile菜单及标签坐标、`:149–168` 的9tile BOX框和两位数字，`:342–350` 的菜单字形/BOX标签，以及 `engine/menus/league_pc.asm:98–121` 的正面图位置和名人堂入口。对应回归位于 `crates/pokered-app/src/render/pc.rs` 的 `layout_tests` 和 `crates/pokered-ui/src/menus/bag.rs` 的 `mixed_glyph_item_names_do_not_push_quantities_through_the_border`。
+原作依据包括 `engine/pokemon/bills_pc.asm:13–27` 和 `engine/menus/players_pc.asm:25–32` 的14tile主/道具PC框，`engine/pokemon/bills_pc.asm:121–129` 的12tile菜单及标签坐标、`:149–168` 的9tile BOX框和两位数字，`:342–350` 的菜单字形/BOX标签，以及 `engine/menus/league_pc.asm:98–121` 的正面图位置和名人堂入口；名人堂左侧框、昵称、等级与属性分行另直接对应 `engine/movie/hall_of_fame.asm:159–183`。对应回归位于 `crates/pokered-app/src/render/pc.rs` 的 `layout_tests` 和 `crates/pokered-ui/src/menus/bag.rs` 的 `mixed_glyph_item_names_do_not_push_quantities_through_the_border`。
 
-中文列表回归保留12px行距及完整字形。旧断言误把第二行原作数字 `1` 在 `(73,21)` 的合法像素当成重叠；新断言检查两行字形完整、没有相交且具有完整空白扫描行，不移动生产行坐标。
+中文列表保留项目既有12px行距。文字边界按Fusion Pixel实际字宽计算；英文换行仅在超过144px时发生。此前8px阶段的22字符固定两行和 `(73,21)` 固定墨点断言不作为最终字体证据。
 
 ## 可重跑截图
 
-[capture-ui-world.py](capture-ui-world.py) 直接运行预构建 `pc_tour`；[ui-world-captures.json](ui-world-captures.json) 保存二进制哈希、源码版本和全部32张图路径。基线为 `72ff719` 生产渲染器、冻结的原依赖和 `31ad6e7` 同一套fixture。after为 `8837a2a32c2ba8c345db16e97b01f49016e88950`，二进制SHA256为 `3ee8e23fcc99b373bb4c76e24e63ac467e8380f211924cd319de9494713db3eb`。
+[capture-ui-world.py](capture-ui-world.py) 直接运行预构建 `pc_tour`；[ui-world-captures.json](ui-world-captures.json) 保存二进制哈希、源码版本、全部32张图路径及16张after逐图哈希。基线为 `72ff719` 生产渲染器、冻结的原依赖和 `31ad6e7` 同一套fixture。after为 `c51209a492f804f58486607919c9ba0c62eb2eb7`，二进制SHA256为 `9ada5a930ea7e250b2af80a6e2ce896d959fee768b008551d6a2832fd464ee62`。
 
 ```sh
 python3 docs/audits/2026-10-02-full-fidelity/capture-ui-world.py \
-  --after /workspace/onboarding/pokered-fidelity-final/pc_tour \
-  --after-source 8837a2a32c2ba8c345db16e97b01f49016e88950
+  --after /workspace/onboarding/pokered-font-preserved-final/pc_tour \
+  --after-source c51209a492f804f58486607919c9ba0c62eb2eb7
 ```
 
-8个案例各运行EN/ZH，16组配对文件名和语言一致，全部32张图为160×144；逐一目检16张after。截图是固定存档状态的生产渲染结果，不是ROM逐帧对拍或连续玩家流程。
+8个案例各运行EN/ZH，16组配对文件名和语言一致，全部32张图为160×144；逐一目检16张after，原有16张before的SHA256保持不变。截图是固定存档状态的生产渲染结果，不是ROM逐帧对拍或连续玩家流程。
 
 | 案例 | EN before / after | ZH before / after |
 | --- | --- | --- |
