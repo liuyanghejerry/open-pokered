@@ -1,6 +1,6 @@
 # 音画确定项修复状态
 
-审计基线和原作引用见 [visual-audio.md](visual-audio.md)。修复提交为 `cf977c7`、`5b80516`、`4373d2d`。这里只汇总已证实的差异；完整 SGB 显示模式、原作非法物种越界，以及逐曲 PCM/全游戏逐帧 ROM 对拍仍是明确的验证边界。
+审计基线和原作引用见 [visual-audio.md](visual-audio.md)。源代码修复提交从 `cf977c7` 开始；后续提交补标题版权、TUI图鉴与credits专用图块。这里只汇总已证实的差异；完整 SGB 显示模式、原作非法物种越界，以及逐曲 PCM/全游戏逐帧 ROM 对拍仍是明确的验证边界。
 
 | 项 | 实现 | 本分支验证与截图 |
 |---|---|---|
@@ -20,9 +20,11 @@
 | VA14 | 三个8帧 FadePal6/7/8；MonFade保留Hall框、FinalFade保留stats；前导fade从实际地图开始；cry结束再计80帧。缓存必须区别首个fade帧。 | core Hof3项通过；Hof0/220/480/488图。app旧cache测试发现首阶key遗漏，已加1区分，待统一最终重跑。 |
 | VA15 | HoF后clear100、黑条128；音乐在黑条开始时触发。 | credits开场228帧/音乐事件测试通过；该状态由真实HoF完成路径进入。 |
 | VA16 | 四级 WHITE/AA/55/BLACK每级5帧；fade20帧后再完整等待90/120，避免漏算20帧。 | credits4项状态测试、完整credits cache像素测试通过；credits5/10/15图。 |
-| VA17 | 原THE END双行 interleave图块、原坐标与四阶fade；cache包含其fade级别。保留有意省略非法越界种类的现有政策。 | credits6600图、完整credits cache测试；未声称复制原越界bug。 |
+| VA17 | 原THE END双行 interleave图块、原坐标与四阶palette等待；字形index3从出现起即黑。copyright页使用原专用三行图块。保留有意省略非法越界种类的现有政策。 | credits6600图、完整credits cache测试；未声称复制原越界bug。 |
 | VA18 | 已交共享 dotzuki 音序器修复：新音符初始化、整数/小数 pitch-slide 步长及原借位行为；游戏升级其依赖由主集成提交完成。 | 当前bug trace和原汇编引用在审计文档；共享引擎测试由主代理提供。没有新ROM PCM对拍。 |
 
 本分支首次 app lib 结果为109通过、3失败。两项电梯局部光标测试发现擦除旧箭头时误擦右侧楼层，已将该处损伤限制到一个8px tile；HoF缓存测试发现 MonText 与首个 MonFade 使用相同 key，已修正首阶区别。最终集成应重跑这三项及完整 app lib，并以最终英文原字库重新抓相关 after 图。此前通过的检查不代替这一步。
 
 资源表核验只能证明数据：战斗动画、move SFX、cry表全量0diff，不能推出实际呈现帧/播放采样已全量对拍。
+
+原调色板的纠正已用仓库RGBDS工具转换真实PNG核验：`HoFGBPalettes` 的dc宏是MSB→LSB（macros/data.asm:60），字节C0/D0/E0/F0；普通字库经ShiftFontColorIndex成为index2、按四级渐显。THE END图形不经过该转换，实际仅index0/3，因此原作只执行palette等待，文字本身从出现起就是黑色。copyright页也用LoadCopyrightTiles，不能按普通credits字符串重排。

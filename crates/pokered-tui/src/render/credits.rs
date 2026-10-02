@@ -5,12 +5,12 @@
 //! with the mon scrolling left as a black silhouette
 //! (`DisplayCreditsMon`); the roll closes on "THE END".
 
-use std::borrow::Cow;
 use pokered_core::credits::{CreditsPhase, CreditsState};
 use pokered_renderer::embedded_font::draw_text;
 use pokered_renderer::palette::Palette;
 use pokered_renderer::resource::ResourceManager;
 use pokered_renderer::{FrameBuffer, Rgba};
+use std::borrow::Cow;
 
 use super::species_to_sprite_name;
 
@@ -52,7 +52,6 @@ pub fn credits_visual_key(roll: &CreditsState) -> CreditsVisualKey {
     match roll.phase() {
         CreditsPhase::TheEnd if roll.the_end_visible() => {
             key.visual_phase = 3;
-            key.fade_step = roll.fade_step();
             return key;
         }
         CreditsPhase::TheEnd | CreditsPhase::Done => return key,
@@ -146,7 +145,7 @@ pub fn draw_credits(
                         "the_end",
                     ) {
                         let ink = FADE_SHADES[roll.fade_step() as usize];
-                        let palette = Palette::new(&[Rgba::WHITE, ink, ink, ink]);
+                        let palette = Palette::new(&[Rgba::WHITE, Rgba::WHITE, ink, Rgba::BLACK]);
                         for (column, index) in [0, 1, 2, 2, 3, 4].into_iter().enumerate() {
                             let x = [4, 6, 8, 11, 13, 15][column] * T;
                             super::blit_single_tile(fb, &cached.tileset, index, x, 8 * T, &palette);
@@ -196,6 +195,19 @@ fn draw_scrolling_band(
     resources: &mut Option<ResourceManager>,
     fb: &mut FrameBuffer,
 ) {
+    // CRED_COPYRIGHT invokes LoadCopyrightTiles, not ordinary credits text.
+    // HoFGBPalettes controls index 2; these custom tiles' black index 3
+    // remains black throughout the palette sequence (C0/D0/E0/F0).
+    if matches!(
+        screen.kind,
+        pokered_core::credits::CreditsScreenKind::TextFadeMon(None)
+    ) {
+        if let Some(rm) = resources.as_mut() {
+            super::opening::draw_copyright(rm, fb);
+        }
+        fb.apply_bgp([0xc0, 0xd0, 0xe0, 0xf0][roll.fade_step() as usize]);
+        return;
+    }
     let step = roll.mon_scroll_step() as i32;
     let b = step * 8; // SCX offset for scanlines 32-111
     let erase_edge = 216 - b; // white window sweep line (>= 160 until step 7)
