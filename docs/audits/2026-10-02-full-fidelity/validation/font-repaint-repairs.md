@@ -28,6 +28,15 @@ expectations are retained. Root runs the focused and integrated Cargo checks.
   render order; report that complete small box as damage. The existing
   view/FLY and every-landmark pixel comparisons remain unchanged.
 
+Follow-up visual review found that the complete Chinese frame itself placed
+13px Fusion glyphs at y=128, touching the restored original bottom border at
+y=138. The Chinese name box now reserves two interior tile rows, starting at
+y=112 and placing the name at y=120. English retains its original three-row
+box/name at y=120/128. Marker visibility and reported damage use the same
+language-specific box boundary. A pixel regression requires two blank rows
+between the Chinese name and bottom border, and the original stroke at
+(8,138); the existing every-landmark retained/full comparisons also remain.
+
 This is a correction of real retained-frame behavior after introducing the
 original font/borders, not a claim that the old hardcoded coordinates or
 font bounds were correct. Source validation before handing the commit to

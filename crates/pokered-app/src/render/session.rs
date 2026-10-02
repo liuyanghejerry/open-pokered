@@ -1789,12 +1789,13 @@ impl TownMapVisualKey {
     fn new(game: &PokemonGame) -> Self {
         let state = &game.town_map_screen;
         let marker_position = pokered_data::town_map_data::town_map_position(state.current_map());
+        let visible_marker_rows = if game.state.config.language == Lang::Zh { 13 } else { 14 };
         Self {
             current_map: state.current_map(),
             selected_map: state.selected_map(),
             mode: state.mode(),
             marker_phase: match marker_position {
-                Some((_, y, _)) if state.mode() != TownMapMode::View || y < 14 => {
+                Some((_, y, _)) if state.mode() != TownMapMode::View || y < visible_marker_rows => {
                     ((game.frame_count / 16) & 1) as u8
                 }
                 _ => 0,
