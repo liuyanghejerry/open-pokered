@@ -1,0 +1,269 @@
+{
+  "source": "c51209a492f804f58486607919c9ba0c62eb2eb7",
+  "binary_sha256": "a137d17f0239357710f351003ffbae6999150a4df0732ca58a8d39fb50fe633f",
+  "input": "OldAmber x1; warp 5,3; scientist1; finish intro; real filtered menu B; 120 frames",
+  "menu_before_cancel": {
+    "active_script_effect": null,
+    "badges": 0,
+    "battle_bag": null,
+    "battle_inventory": [],
+    "battle_live": null,
+    "battle_message": null,
+    "battle_moves": null,
+    "battle_party_cursor": 0,
+    "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+    "choice": null,
+    "coins": 0,
+    "credits_final_button": null,
+    "credits_phase": null,
+    "dialogue": null,
+    "dialogue_state": null,
+    "evaluation": {
+      "party": [
+        {
+          "hp": 35,
+          "level": 15,
+          "max_hp": 35,
+          "moves": [
+            "Teleport",
+            "None",
+            "None",
+            "None"
+          ],
+          "pp": [
+            20,
+            0,
+            0,
+            0
+          ],
+          "species": "Abra",
+          "status": "None",
+          "total_exp": 2035
+        }
+      ],
+      "party_source": "save_data",
+      "pokedex": {
+        "owned": 0,
+        "owned_numbers": [],
+        "seen": 0,
+        "total": 151
+      }
+    },
+    "field_menu": null,
+    "frame_count": 168,
+    "hall_of_fame_count": 0,
+    "hof_phase": null,
+    "last_outside_map": "PalletTown",
+    "link": {
+      "cable_phase": "Inactive",
+      "role": "Host",
+      "status": "disabled",
+      "trade": null
+    },
+    "map_blocks": [
+      18,
+      19,
+      22,
+      2,
+      11,
+      11,
+      7,
+      7,
+      8,
+      8,
+      7,
+      15,
+      7,
+      12,
+      7,
+      7
+    ],
+    "map_id": 170,
+    "map_name": "CinnabarLabFossilRoom",
+    "money": 3000,
+    "party": [
+      {
+        "hp": 35,
+        "level": 15,
+        "max_hp": 35,
+        "moves": [
+          "Teleport",
+          "None",
+          "None",
+          "None"
+        ],
+        "pp": [
+          20,
+          0,
+          0,
+          0
+        ],
+        "species": "Abra",
+        "status": "None"
+      }
+    ],
+    "party_count": 1,
+    "pc_phase": null,
+    "player_facing": "Up",
+    "player_movement_state": "Idle",
+    "player_name": "RED",
+    "player_transport": "Walking",
+    "player_x": 3,
+    "player_y": 3,
+    "screen": "filter-bag",
+    "script_awaiting_battle": false,
+    "script_effect": null,
+    "script_running": true,
+    "shop_phase": null,
+    "text_speed_delay_frames": 3,
+    "warp_fade": "Idle"
+  },
+  "after_cancel": {
+    "active_script_effect": null,
+    "badges": 0,
+    "battle_bag": null,
+    "battle_inventory": [],
+    "battle_live": null,
+    "battle_message": null,
+    "battle_moves": null,
+    "battle_party_cursor": 0,
+    "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+    "choice": null,
+    "coins": 0,
+    "credits_final_button": null,
+    "credits_phase": null,
+    "dialogue": null,
+    "dialogue_state": null,
+    "evaluation": {
+      "party": [
+        {
+          "hp": 35,
+          "level": 15,
+          "max_hp": 35,
+          "moves": [
+            "Teleport",
+            "None",
+            "None",
+            "None"
+          ],
+          "pp": [
+            20,
+            0,
+            0,
+            0
+          ],
+          "species": "Abra",
+          "status": "None",
+          "total_exp": 2035
+        }
+      ],
+      "party_source": "save_data",
+      "pokedex": {
+        "owned": 0,
+        "owned_numbers": [],
+        "seen": 0,
+        "total": 151
+      }
+    },
+    "field_menu": null,
+    "frame_count": 295,
+    "hall_of_fame_count": 0,
+    "hof_phase": null,
+    "last_outside_map": "PalletTown",
+    "link": {
+      "cable_phase": "Inactive",
+      "role": "Host",
+      "status": "disabled",
+      "trade": null
+    },
+    "map_blocks": [
+      18,
+      19,
+      22,
+      2,
+      11,
+      11,
+      7,
+      7,
+      8,
+      8,
+      7,
+      15,
+      7,
+      12,
+      7,
+      7
+    ],
+    "map_id": 170,
+    "map_name": "CinnabarLabFossilRoom",
+    "money": 3000,
+    "party": [
+      {
+        "hp": 35,
+        "level": 15,
+        "max_hp": 35,
+        "moves": [
+          "Teleport",
+          "None",
+          "None",
+          "None"
+        ],
+        "pp": [
+          20,
+          0,
+          0,
+          0
+        ],
+        "species": "Abra",
+        "status": "None"
+      }
+    ],
+    "party_count": 1,
+    "pc_phase": null,
+    "player_facing": "Up",
+    "player_movement_state": "Idle",
+    "player_name": "RED",
+    "player_transport": "Walking",
+    "player_x": 3,
+    "player_y": 3,
+    "screen": "overworld",
+    "script_awaiting_battle": false,
+    "script_effect": null,
+    "script_running": false,
+    "shop_phase": null,
+    "text_speed_delay_frames": 3,
+    "warp_fade": "Idle"
+  },
+  "bag_before": [
+    {
+      "item": "OldAmber",
+      "qty": 1
+    }
+  ],
+  "bag_after": [
+    {
+      "item": "OldAmber",
+      "qty": 1
+    }
+  ],
+  "flags": {
+    "EVENT_GOT_GOOD_ROD": false,
+    "EVENT_GOT_LICKITUNG_FROM_TRADE": false,
+    "EVENT_GOT_OLD_ROD": false,
+    "EVENT_GOT_POKEDEX": true,
+    "EVENT_GOT_SUPER_ROD": false,
+    "EVENT_TRADED_FOR_CHIKUCHIKU": false,
+    "EVENT_TRADED_FOR_CRINKLES": false,
+    "EVENT_TRADED_FOR_DORIS": false,
+    "EVENT_TRADED_FOR_DUX": false,
+    "EVENT_TRADED_FOR_LOLA": false,
+    "EVENT_TRADED_FOR_MARC": false,
+    "EVENT_TRADED_FOR_MARCEL": false,
+    "EVENT_TRADED_FOR_SAILOR": false,
+    "EVENT_TRADED_FOR_SPOT": false,
+    "EVENT_TRADED_FOR_TERRY": false
+  },
+  "screenshot": "docs/screenshots/fidelity-systems/fossil-cancel-before.png",
+  "screenshot_sha256": "f44b3de4ed1be9e2824e59bf487f37ae9babee21a130d8e44a70f0644d713cb7",
+  "runtime_log": "[Debug] No --debug-modules flag provided\nDebug server started on port 9530\nSnapshot loaded: \"/tmp/pokered-fossil-cancel-0lnsuijw/input.json\"\nSkip-intro: starting at Route2TradeHouse (48 x=2, y=7)\nAsset root found: \"/workspace/open-pokered/crates/pokered-renderer/../../gfx\"\nAudio output disabled (--no-audio).\nRunning headless (no window). Press Ctrl-C to exit.\nDriven-only mode: frames advance only via debug commands.\n"
+}
