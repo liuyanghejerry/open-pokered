@@ -122,7 +122,7 @@ pub fn draw_trade(anim: &TradeAnim, resources: &mut Option<ResourceManager>, fb:
     // Interstitial trade texts, in the standard dialogue box (CJK-safe).
     if let Some((l1, l2)) = anim.text_lines() {
         let combined = format!("{}\n{}", l1, l2);
-        let mut painter = FrameBufferPainter::new(fb);
+        let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
         let mut ui = Ui::new(&mut painter);
         menus::dialog::draw(&combined, false, &DIALOG_DEFAULT_LAYOUT, &mut ui, lang);
     }
@@ -372,7 +372,7 @@ mod tests {
             ticks += 1;
             assert!(ticks < 2000, "animation must terminate");
         }
-        assert_eq!(seen.len(), 15, "all visible phases rendered");
+        assert_eq!(seen.len(), 17, "all visible phases rendered");
     }
 
     #[test]
