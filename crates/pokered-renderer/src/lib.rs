@@ -57,7 +57,7 @@ pub(crate) mod alloc_prelude {
 
 // Pokemon-specific modules (not in dotzuki-renderer)
 pub mod embedded;
-// Original Pokémon glyphs shadow the generic Fusion Pixel font module.
+// Keep the project font while adding dedicated Pokémon UI graphics.
 pub mod embedded_font;
 pub mod hash_compat;
 pub mod gen1_battle_anim;

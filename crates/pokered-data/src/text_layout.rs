@@ -1,69 +1,14 @@
 //! Text metrics shared by pagination and raster drawing.
 //!
-//! Original English charmap glyphs occupy 8px cells; other glyphs retain
-//! Fusion Pixel's metrics (Chinese 10px). Language does not change a glyph's
-//! width. Authored newlines are hard breaks, as in the ROM's text controls.
+//! Text keeps the project's Fusion Pixel metrics: Latin 5px, Chinese 10px.
+//! Authored newlines remain hard breaks, as in the ROM's text controls.
 
 use crate::alloc_prelude::*;
 
 pub const DIALOGUE_LINE_WIDTH_PX: usize = 18 * 8;
 
-/// The English charmap in constants/charmap.asm. FontGraphics is copied to
-/// vFont (tile $80), while TextBoxGraphics is copied to tile $60.
-pub fn tile_for_char(ch: char) -> Option<u8> {
-    Some(match ch {
-        'A'..='Z' => 0x80 + (ch as u8 - b'A'),
-        'a'..='z' => 0xA0 + (ch as u8 - b'a'),
-        '0'..='9' => 0xF6 + (ch as u8 - b'0'),
-        ' ' => 0x7F,
-        '(' => 0x9A,
-        ')' => 0x9B,
-        ':' => 0x9C,
-        ';' => 0x9D,
-        '[' => 0x9E,
-        ']' => 0x9F,
-        'é' => 0xBA,
-        '\'' => 0xE0,
-        '-' => 0xE3,
-        '?' => 0xE6,
-        '!' => 0xE7,
-        '.' => 0xE8,
-        '▷' => 0xEC,
-        '▶' | '>' => 0xED,
-        '▼' => 0xEE,
-        '♂' => 0xEF,
-        '¥' | '$' => 0xF0,
-        '×' => 0xF1,
-        '/' => 0xF3,
-        ',' => 0xF4,
-        '♀' => 0xF5,
-        '‘' => 0x70,
-        '’' => 0x71,
-        '“' => 0x72,
-        '”' => 0x73,
-        '·' | '№' => 0x74,
-        '…' => 0x75,
-        '┌' => 0x79,
-        '─' => 0x7A,
-        '┐' => 0x7B,
-        '│' => 0x7C,
-        '└' => 0x7D,
-        '┘' => 0x7E,
-        _ => return None,
-    })
-}
+pub use dotzuki_renderer::embedded_font::{char_advance, measure_text};
 
-pub fn char_advance(ch: char) -> u32 {
-    if tile_for_char(ch).is_some() || (ch.is_ascii() && !ch.is_ascii_control()) {
-        8
-    } else {
-        dotzuki_renderer::embedded_font::char_advance(ch)
-    }
-}
-
-pub fn measure_text(text: &str) -> u32 {
-    text.chars().map(char_advance).sum()
-}
 /// Wrap every authored row without joining it to the next row or dropping
 /// overflow. Callers paginate the result in pairs before typewriter reveal.
 /// The punctuation/word wrapping helpers are adapted from dotzuki-ui v0.8.2
@@ -392,20 +337,20 @@ mod tests {
     use super::*;
 
     #[test]
-    fn original_rows_and_full_eighteen_cell_width_survive_wrapping() {
+    fn authored_rows_and_project_font_width_survive_wrapping() {
         assert_eq!(
             wrap_hard_lines("Hello!\nWelcome!", 144),
             vec!["Hello!", "Welcome!"]
         );
         assert_eq!(
-            wrap_hard_lines("1234567890123456789", 144),
-            vec!["123456789012345678", "9"]
+            wrap_hard_lines("12345678901234567890123456789", 144),
+            vec!["1234567890123456789012345678", "9"]
         );
         assert_eq!(wrap_hard_lines("AB\n\nCD", 144), vec!["AB", "", "CD"]);
     }
 
     #[test]
-    fn mixed_words_use_eight_and_ten_pixel_advances_without_border_overflow() {
+    fn mixed_words_use_project_font_advances_without_border_overflow() {
         for text in [
             "第123456789012345678901234567890级，皮卡丘！",
             "123456789012345678901234567890等级",
@@ -419,7 +364,7 @@ mod tests {
                 "overflow: {lines:?}"
             );
         }
-        assert_eq!(measure_text("一二三四五六七八九十ABCD"), 132);
+        assert_eq!(measure_text("一二三四五六七八九十ABCD"), 120);
     }
 
     #[test]
@@ -428,7 +373,7 @@ mod tests {
             wrap_hard_lines("你好你好，世界", 40),
             vec!["你好你", "好，世界"]
         );
-        assert_eq!(wrap_hard_lines("等级10级", 30), vec!["等级", "10级"]);
+        assert_eq!(wrap_hard_lines("等级10级", 30), vec!["等级10", "级"]);
         assert_eq!(wrap_hard_lines("他说「你好", 30), vec!["他说", "「你好"]);
     }
 }

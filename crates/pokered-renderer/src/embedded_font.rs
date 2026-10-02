@@ -1,152 +1,75 @@
-//! Pokémon Red's tile font (8×8 and 8-pixel advance), with Fusion Pixel kept
-//! for Chinese and characters outside the original English character map.
+//! The project's Fusion Pixel font, plus dedicated Game Boy UI graphics.
 //!
-//! The row-major bitmaps are exact conversions of pret/pokered's font PNGs;
-//! see fonts/POKERED.md. Runtime drawing needs no PNG decoder or heap storage.
+//! Ordinary English, Chinese and mixed text keeps the engine's original
+//! glyphs and metrics. The opaque tile helpers below serve only box borders,
+//! the battle menu's PK/MN graphic and naming-slot underscores.
 
 use crate::FbSurface;
 use dotzuki_engine::render::Rgba;
 use dotzuki_renderer::embedded_font as fusion;
 
-pub use fusion::{draw_box_tile, fill_tile, is_cjk, GLYPH_SIZE};
+pub use fusion::{
+    char_advance, draw_box_tile, draw_char, draw_char_scaled, draw_text, draw_text_scaled,
+    fill_tile, is_cjk, measure_text, measure_text_scaled, GLYPH_SIZE,
+};
 
-const FONT: &[u8; 1024] = include_bytes!("../fonts/pokered-font.bin");
-const EXTRA: &[u8; 256] = include_bytes!("../fonts/pokered-font-extra.bin");
-const NUMBER_SYMBOL: &[u8; 8] = include_bytes!("../fonts/pokered-number-symbol.bin");
+const BOX_TILES: &[u8; 48] = include_bytes!("../fonts/pokered-box-tiles.bin");
+const PKMN_TILES: &[u8; 16] = include_bytes!("../fonts/pokered-pkmn-tiles.bin");
 const NAMING_UNDERSCORES: &[u8; 16] = include_bytes!("../fonts/pokered-naming-underscores.bin");
 
-pub use pokered_data::text_layout::{char_advance, measure_text, tile_for_char};
-
-/// One raw original tile. Includes the PK/MN ligatures at $E1/$E2.
-pub fn original_tile_glyph(tile: u8) -> Option<&'static [u8; 8]> {
-    let (data, offset): (&[u8], usize) = match tile {
-        0x60..=0x7F => (EXTRA, (tile - 0x60) as usize * 8),
-        0x80..=0xFF => (FONT, (tile - 0x80) as usize * 8),
+/// Dedicated PK/MN menu graphics. This cannot resolve ordinary font tiles.
+pub fn pkmn_tile_glyph(tile: u8) -> Option<&'static [u8; 8]> {
+    let offset = match tile {
+        0xE1 => 0,
+        0xE2 => 8,
         _ => return None,
     };
-    data[offset..offset + 8].try_into().ok()
+    PKMN_TILES[offset..offset + 8].try_into().ok()
 }
 
-/// Naming first loads HpBarAndStatusGraphics at $62. Its underscores replace
-/// the unused hiragana glyphs in the regular extra font (naming_screen.asm:93).
+/// Naming loads HpBarAndStatusGraphics at $62. Its underscores replace the
+/// regular extra tiles at $76/$77 (naming_screen.asm:93).
 pub fn naming_underscore_glyph(raised: bool) -> &'static [u8; 8] {
     let offset = if raised { 8 } else { 0 };
     NAMING_UNDERSCORES[offset..offset + 8].try_into().unwrap()
 }
 
-fn draw_bitmap(glyph: &[u8; 8], x: u32, y: u32, scale: u32, color: Rgba, fb: &mut impl FbSurface) {
-    if scale == 1 {
-        for (row, bits) in glyph.iter().enumerate() {
-            for col in 0..8 {
-                if bits & (0x80 >> col) != 0 {
-                    fb.set_pixel(x.saturating_add(col), y.saturating_add(row as u32), color);
-                }
-            }
-        }
-        return;
-    }
-    for (row, bits) in glyph.iter().enumerate() {
-        for col in 0..8 {
-            if bits & (0x80 >> col) != 0 {
-                let px = x.saturating_add(col * scale);
-                let py = y.saturating_add(row as u32 * scale);
-                if px < fb.width() && py < fb.height() {
-                    fb.fill_rect(
-                        px,
-                        py,
-                        scale.min(fb.width() - px),
-                        scale.min(fb.height() - py),
-                        color,
-                    );
-                }
-            }
-        }
-    }
-}
-
-/// Draw an opaque source tile. Filling its paper once avoids per-pixel color
+/// Draw an opaque UI tile. Fill its paper once to avoid per-pixel color
 /// quantization for all white pixels of corners, symbols and blank tiles.
 pub fn draw_glyph(glyph: &[u8; 8], x: u32, y: u32, color: Rgba, bg: Rgba, fb: &mut impl FbSurface) {
     if x >= fb.width() || y >= fb.height() {
         return;
     }
     fb.fill_rect(x, y, 8.min(fb.width() - x), 8.min(fb.height() - y), bg);
-    draw_bitmap(glyph, x, y, 1, color, fb);
-}
-
-pub fn draw_char(ch: char, x: u32, y: u32, color: Rgba, fb: &mut impl FbSurface) -> u32 {
-    draw_char_scaled(ch, x, y, 1, color, fb)
-}
-
-pub fn draw_char_scaled(
-    ch: char,
-    x: u32,
-    y: u32,
-    scale: u32,
-    color: Rgba,
-    fb: &mut impl FbSurface,
-) -> u32 {
-    let scale = scale.max(1);
-    if let Some(tile) = tile_for_char(ch) {
-        let glyph = if ch == '№' {
-            NUMBER_SYMBOL
-        } else {
-            original_tile_glyph(tile).unwrap()
-        };
-        draw_bitmap(glyph, x, y, scale, color, fb);
-        8 * scale
-    } else {
-        fusion::draw_char_scaled(ch, x, y, scale, color, fb);
-        char_advance(ch) * scale
-    }
-}
-
-pub fn draw_text(text: &str, mut x: u32, y: u32, color: Rgba, fb: &mut impl FbSurface) {
-    for ch in text.chars() {
-        if x >= fb.width() {
-            break;
+    for (row, bits) in glyph.iter().enumerate() {
+        for col in 0..8 {
+            if bits & (0x80 >> col) != 0 {
+                fb.set_pixel(x.saturating_add(col), y.saturating_add(row as u32), color);
+            }
         }
-        x += draw_char(ch, x, y, color, fb);
     }
 }
 
-pub fn draw_text_scaled(
-    text: &str,
-    mut x: u32,
-    y: u32,
-    scale: u32,
-    color: Rgba,
-    fb: &mut impl FbSurface,
-) {
-    for ch in text.chars() {
-        x += draw_char_scaled(ch, x, y, scale, color, fb);
-    }
-}
-
-pub fn measure_text_scaled(text: &str, scale: u32) -> u32 {
-    measure_text(text) * scale.max(1)
-}
-
-const fn extra_tile(tile: u8) -> [u8; 8] {
+const fn box_tile(index: usize) -> [u8; 8] {
     let mut glyph = [0; 8];
     let mut i = 0;
     while i < 8 {
-        glyph[i] = EXTRA[(tile - 0x60) as usize * 8 + i];
+        glyph[i] = BOX_TILES[index * 8 + i];
         i += 1;
     }
     glyph
 }
 
 /// TextBoxBorder uses the same $7A top/bottom and $7C left/right tile;
-/// white pixels are opaque Game Boy background tiles, including the corners.
+/// white pixels are opaque background tiles, including the corners.
 pub mod box_tiles {
-    pub const TOP_LEFT: [u8; 8] = super::extra_tile(0x79);
-    pub const HORIZONTAL: [u8; 8] = super::extra_tile(0x7A);
-    pub const TOP_RIGHT: [u8; 8] = super::extra_tile(0x7B);
-    pub const VERTICAL_LEFT: [u8; 8] = super::extra_tile(0x7C);
+    pub const TOP_LEFT: [u8; 8] = super::box_tile(0);
+    pub const HORIZONTAL: [u8; 8] = super::box_tile(1);
+    pub const TOP_RIGHT: [u8; 8] = super::box_tile(2);
+    pub const VERTICAL_LEFT: [u8; 8] = super::box_tile(3);
     pub const VERTICAL_RIGHT: [u8; 8] = VERTICAL_LEFT;
-    pub const BOTTOM_LEFT: [u8; 8] = super::extra_tile(0x7D);
-    pub const BOTTOM_RIGHT: [u8; 8] = super::extra_tile(0x7E);
+    pub const BOTTOM_LEFT: [u8; 8] = super::box_tile(4);
+    pub const BOTTOM_RIGHT: [u8; 8] = super::box_tile(5);
     pub const HORIZONTAL_BOTTOM: [u8; 8] = HORIZONTAL;
     pub mod outside {
         pub const TOP_LEFT: [u8; 8] = [0; 8];
@@ -167,34 +90,26 @@ mod tests {
     use dotzuki_engine::render_config::RenderConfig;
 
     #[test]
-    fn batched_opaque_original_tiles_match_per_pixel_painter() {
-        for tile in 0x60..=0xFF {
-            let glyph = original_tile_glyph(tile).unwrap();
-            for (x, y) in [
-                (0, 0),
-                (1, 1),
-                (15, 9),
-                (16, 12),
-                (17, 13),
-                (u32::MAX, u32::MAX),
-            ] {
-                for ink in [
-                    Rgba::BLACK,
-                    Rgba::INK_DARK_GRAY,
-                    Rgba::WHITE,
-                    Rgba::rgb(17, 119, 201),
-                    Rgba::TRANSPARENT,
-                ] {
+    fn batched_opaque_ui_tiles_match_per_pixel_painter() {
+        let graphics = [
+            box_tiles::TOP_LEFT, box_tiles::HORIZONTAL, box_tiles::TOP_RIGHT,
+            box_tiles::VERTICAL_LEFT, box_tiles::BOTTOM_LEFT, box_tiles::BOTTOM_RIGHT,
+            *pkmn_tile_glyph(0xE1).unwrap(), *pkmn_tile_glyph(0xE2).unwrap(),
+            *naming_underscore_glyph(false), *naming_underscore_glyph(true),
+            [0; 8], [0xAA, 0x55, 0x81, 0x42, 0x24, 0x18, 0xFF, 0],
+        ];
+        for (tile, glyph) in graphics.iter().enumerate() {
+            for (x, y) in [(0, 0), (1, 1), (15, 9), (16, 12), (17, 13), (u32::MAX, u32::MAX)] {
+                for ink in [Rgba::BLACK, Rgba::INK_DARK_GRAY, Rgba::WHITE, Rgba::rgb(17, 119, 201), Rgba::TRANSPARENT] {
                     for paper in [Rgba::WHITE, Rgba::INK_LIGHT_GRAY, Rgba::BLACK] {
-                        let mut expected =
-                            FrameBuffer::new(RenderConfig::new(17, 13), Rgba::INK_DARK_GRAY);
+                        let mut expected = FrameBuffer::new(RenderConfig::new(17, 13), Rgba::INK_DARK_GRAY);
                         let mut actual = expected.clone();
                         fusion::draw_glyph(glyph, x, y, ink, paper, &mut expected);
                         draw_glyph(glyph, x, y, ink, paper, &mut actual);
                         for py in 0..13 {
                             for px in 0..17 {
                                 assert_eq!(actual.get_pixel(px, py), expected.get_pixel(px, py),
-                                    "tile {tile:02x}, origin({x},{y}), {ink:?}/{paper:?}, pixel({px},{py})");
+                                    "UI tile {tile}, origin({x},{y}), {ink:?}/{paper:?}, pixel({px},{py})");
                             }
                         }
                     }
@@ -204,95 +119,29 @@ mod tests {
     }
 
     #[test]
-    fn fast_original_font_matches_rectangle_pixels_with_clipping_and_scaling() {
-        for tile in 0x60..=0xFF {
-            let glyph = original_tile_glyph(tile).unwrap();
-            for scale in [1, 2, 3] {
-                for (x, y) in [
-                    (0, 0),
-                    (1, 1),
-                    (15, 9),
-                    (16, 12),
-                    (17, 13),
-                    (u32::MAX, u32::MAX),
-                ] {
-                    for ink in [
-                        Rgba::BLACK,
-                        Rgba::INK_DARK_GRAY,
-                        Rgba::WHITE,
-                        Rgba::rgb(17, 119, 201),
-                    ] {
-                        let mut expected =
-                            FrameBuffer::new(RenderConfig::new(17, 13), Rgba::INK_LIGHT_GRAY);
-                        let mut actual = expected.clone();
-                        // Previous bitmap renderer: one clipped scale-by-scale
-                        // rectangle for each source ink pixel.
-                        for (row, bits) in glyph.iter().enumerate() {
-                            for col in 0..8 {
-                                if bits & (0x80 >> col) != 0 {
-                                    let px = x.saturating_add(col * scale);
-                                    let py = y.saturating_add(row as u32 * scale);
-                                    if px < 17 && py < 13 {
-                                        expected.fill_rect(
-                                            px,
-                                            py,
-                                            scale.min(17 - px),
-                                            scale.min(13 - py),
-                                            ink,
-                                        );
-                                    }
-                                }
-                            }
-                        }
-                        draw_bitmap(glyph, x, y, scale, ink, &mut actual);
-                        for py in 0..13 {
-                            for px in 0..17 {
-                                assert_eq!(actual.get_pixel(px, py), expected.get_pixel(px, py),
-                                    "tile {tile:02x}, scale {scale}, origin({x},{y}), {ink:?}, pixel({px},{py})");
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    #[test]
-    fn original_font_uses_eight_pixel_cells_and_preserves_chinese_advance() {
-        assert_eq!(measure_text("POKéMON 123!?"), 13 * 8);
-        assert_eq!(char_advance('▶'), 8);
-        assert_eq!(char_advance('▷'), 8);
-        assert_eq!(char_advance('_'), 8);
-        assert_eq!(char_advance('+'), 8);
-        assert_eq!(char_advance('№'), 8);
-        assert_eq!(char_advance('中'), fusion::char_advance('中'));
+    fn project_font_metrics_keep_half_width_latin_and_full_width_chinese() {
+        assert_eq!(char_advance('A'), 5);
         assert_eq!(char_advance('中'), 10);
-        assert_eq!(measure_text("A中1"), 26);
+        assert_eq!(measure_text("A中1"), 20);
+        assert_eq!(measure_text_scaled("A中1", 2), 40);
+        assert!(pkmn_tile_glyph(0x80).is_none());
+        assert!(pkmn_tile_glyph(0xF6).is_none());
     }
 
     #[test]
-    fn original_letter_pixels_fill_the_eight_by_eight_cell() {
-        let mut fb = FrameBuffer::new(RenderConfig::new(24, 16), Rgba::WHITE);
-        assert_eq!(draw_char('A', 8, 4, Rgba::BLACK, &mut fb), 8);
-        // The original A tile is [10,28,28,44,7C,82,82,00]. Its rightmost
-        // pixels occupy column 6, beyond the previous five-pixel Latin cell.
-        assert_eq!(
-            original_tile_glyph(0x80).unwrap(),
-            &[16, 40, 40, 68, 124, 130, 130, 0]
-        );
-        assert_eq!(fb.get_pixel(14, 9), Some(Rgba::BLACK));
-        assert_eq!(fb.get_pixel(15, 9), Some(Rgba::WHITE));
-        assert_eq!(fb.get_pixel(8, 12), Some(Rgba::WHITE));
-    }
-    #[test]
-    fn chinese_glyph_pixels_remain_identical_to_fusion_pixel() {
-        let mut actual = FrameBuffer::new(RenderConfig::new(24, 16), Rgba::WHITE);
-        let mut expected = FrameBuffer::new(RenderConfig::new(24, 16), Rgba::WHITE);
-        assert_eq!(draw_char('中', 8, 2, Rgba::BLACK, &mut actual), 10);
-        fusion::draw_char('中', 8, 2, Rgba::BLACK, &mut expected);
-        for y in 0..16 {
-            for x in 0..24 {
-                assert_eq!(actual.get_pixel(x, y), expected.get_pixel(x, y));
+    fn english_chinese_and_mixed_text_keep_project_font_pixels() {
+        for text in ["POKéMON 123!?", "中文皮卡丘", "Pikachu等级10", "№ $×…▷▶▼"] {
+            for scale in [1, 2] {
+                let mut actual = FrameBuffer::new(RenderConfig::new(96, 32), Rgba::WHITE);
+                let mut expected = actual.clone();
+                draw_text_scaled(text, 3, 2, scale, Rgba::BLACK, &mut actual);
+                fusion::draw_text_scaled(text, 3, 2, scale, Rgba::BLACK, &mut expected);
+                assert_eq!(measure_text(text), fusion::measure_text(text));
+                for y in 0..32 {
+                    for x in 0..96 {
+                        assert_eq!(actual.get_pixel(x, y), expected.get_pixel(x, y), "{text}, scale {scale}, pixel({x},{y})");
+                    }
+                }
             }
         }
     }

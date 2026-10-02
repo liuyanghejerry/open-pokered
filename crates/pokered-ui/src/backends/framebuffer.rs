@@ -76,7 +76,7 @@ impl<'fb> Painter for FrameBufferPainter<'fb> {
         draw_text(text, px, py, color, self.fb);
     }
 
-    // Pixel-precise text: mixed 8-pixel Latin and 10-pixel Chinese glyphs cannot
+    // Pixel-precise text: mixed 5-pixel Latin and 10-pixel Chinese glyphs cannot
     // share a flush right edge when snapped to the 8 px tile grid, so callers
     // that need exact alignment (e.g. the CONTINUE info values) draw through
     // this path. Layouts must also opt in through their theme; ordinary
@@ -103,6 +103,20 @@ impl<'fb> Painter for FrameBufferPainter<'fb> {
         if self.lang == Lang::Zh {
             py = py.saturating_sub(1);
         }
+        if glyph == '▷' {
+            // Preserve the project's dedicated 8x9 option-value marker.
+            for (y, bits) in [0u8, 0, 0x40, 0x60, 0x50, 0x48, 0x50, 0x60, 0x40]
+                .iter()
+                .enumerate()
+            {
+                for x in 0..8 {
+                    if bits & (0x80 >> x) != 0 {
+                        self.fb.fill_rect(px + x, py + y as u32, 1, 1, color);
+                    }
+                }
+            }
+            return;
+        }
         let mut buf = [0u8; 4];
         let s = glyph.encode_utf8(&mut buf);
         draw_text(s, px, py, color, self.fb);
@@ -116,8 +130,8 @@ impl<'fb> Painter for FrameBufferPainter<'fb> {
         let (px, py) = pos.to_pixels();
         let ink = color;
         let bg = Rgba::INK_WHITE;
-        // The generic widget cursor IDs are aliases; original glyph IDs draw
-        // the source tile, including the two PK/MN ligatures.
+        // The generic widget cursor IDs use the project font's arrows.
+        // Only the explicit UI graphics below draw dedicated source tiles.
         match tile_id {
             // Menu cursor ▶
             223 => {
@@ -130,7 +144,7 @@ impl<'fb> Painter for FrameBufferPainter<'fb> {
             // Battle-menu "PKMN" ligature pair (0xE1 = Pk, 0xE2 = Mn). The v1
             // menu drew these as "PK"/"MN" text; the v2 tile element only knows
             // the tile id, so map them here to keep the framebuffer rendering.
-            0xE1 | 0xE2 => embedded_font::draw_glyph(embedded_font::original_tile_glyph(tile_id).unwrap(), px, py, ink, bg, self.fb),
+            0xE1 | 0xE2 => embedded_font::draw_glyph(embedded_font::pkmn_tile_glyph(tile_id).unwrap(), px, py, ink, bg, self.fb),
             // Default box-border tile set (0x79–0x7F)
             0x79 => draw_box_tile(&box_tiles::TOP_LEFT, &box_tiles::outside::TOP_LEFT, px, py, ink, bg, self.fb),
             0x7A => draw_box_tile(&box_tiles::HORIZONTAL, &box_tiles::outside::HORIZONTAL, px, py, ink, bg, self.fb),
@@ -143,13 +157,54 @@ impl<'fb> Painter for FrameBufferPainter<'fb> {
             // seven-pixel, two-scanline normal/raised underscores.
             0x76 | 0x77 => embedded_font::draw_glyph(embedded_font::naming_underscore_glyph(tile_id == 0x77), px, py, ink, bg, self.fb),
             // Unknown tile id — fall back to the placeholder text glyph.
-            _ => {
-                if let Some(glyph) = embedded_font::original_tile_glyph(tile_id) {
-                    embedded_font::draw_glyph(glyph, px, py, ink, bg, self.fb);
-                } else {
-                    draw_text(fallback, px, py, ink, self.fb);
+            _ => draw_text(fallback, px, py, ink, self.fb),
+        }
+    }
+}
+
+#[cfg(test)]
+mod project_font_pixel_tests {
+    use super::*;
+    use dotzuki_engine::render_config::RenderConfig;
+    use dotzuki_renderer::embedded_font as fusion;
+
+    fn assert_same_pixels(actual: &FrameBuffer, expected: &FrameBuffer) {
+        for y in 0..32 {
+            for x in 0..96 {
+                assert_eq!(actual.get_pixel(x, y), expected.get_pixel(x, y), "pixel({x},{y})");
+            }
+        }
+    }
+
+    #[test]
+    fn production_text_paths_keep_project_font_for_both_languages() {
+        for lang in [Lang::En, Lang::Zh] {
+            for text in ["POKéMON 123!?", "中文皮卡丘", "Pikachu等级10"] {
+                for pixel_position in [false, true] {
+                    let mut actual = FrameBuffer::new(RenderConfig::new(96, 32), Rgba::WHITE);
+                    let mut expected = actual.clone();
+                    let mut painter = FrameBufferPainter::new(&mut actual).with_lang(lang);
+                    assert_eq!(painter.measure_text_px("A中1"), 20);
+                    if pixel_position {
+                        painter.draw_text_px(8, 8, text, Rgba::BLACK);
+                    } else {
+                        painter.draw_text(TilePos::new(1, 1), text, Rgba::BLACK);
+                    }
+                    fusion::draw_text(text, 8, if lang == Lang::Zh { 7 } else { 8 }, Rgba::BLACK, &mut expected);
+                    assert_same_pixels(&actual, &expected);
                 }
             }
+        }
+    }
+
+    #[test]
+    fn ordinary_gb_tile_ids_use_fallback_text_instead_of_original_alphabet() {
+        for (tile, fallback) in [(0x80, "Z"), (0xF6, "9"), (0x74, "中")] {
+            let mut actual = FrameBuffer::new(RenderConfig::new(96, 32), Rgba::WHITE);
+            let mut expected = actual.clone();
+            FrameBufferPainter::new(&mut actual).draw_gb_tile(TilePos::new(1, 1), tile, fallback, Rgba::BLACK);
+            fusion::draw_text(fallback, 8, 8, Rgba::BLACK, &mut expected);
+            assert_same_pixels(&actual, &expected);
         }
     }
 }
