@@ -421,3 +421,10 @@ game.sav/sidecar 和 continue-proof.json；summary 明确为控制器丢失后
 哈希、父检查点、模型和预算；该文件不冒充完成结果或可读档检查点。
 SIGTERM 与 SIGINT 一样在协议命令边界请求停机，以便正常留证和
 封口。无法捕获的进程终止仍可能需要恢复，不能宣称已解决所有中断。
+
+resume-46 已加载这些修复并正式验证守卫解锁：85.814 秒 Jev 选择
+购买清水，102.887 秒在 CeladonMartRoof 的原生背包实际获得
+`FRESHWATER`；138.146 秒选择给守卫饮料，142.651 秒正常步行到
+Route7Gate 后取得 `EVENT_GAVE_SAFFRON_GUARDS_DRINK`、饮料被消耗。
+不是规划回放或测试种子。随后进入 SaffronCity，观察到道馆门口仍
+有剧情 NPC 阻挡，不能把城市通行与完成西尔佛／道馆混为一谈。
