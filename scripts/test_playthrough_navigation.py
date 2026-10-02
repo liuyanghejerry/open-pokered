@@ -10,6 +10,93 @@ import playthrough as nav
 from playthrough_late import damage_slot
 
 
+class SearchGeometryCacheRegression(unittest.TestCase):
+    def setUp(self):
+        self.name = 'SearchCacheFixture'
+        self.data = {'width': 2, 'height': 1, 'tileset_id': 999,
+                     'tileset_name': 'Cavern', 'blocks': [0, 0],
+                     'passable_tiles': [0], 'warps': []}
+        for table, entries in ((nav.MAPS, {self.name: self.data}),
+                               (nav.CONNS, {self.name: {}}),
+                               (nav.BLOCKSETS, {999: [[0] * 16, [1] * 16]})):
+            context = patch.dict(table, entries)
+            context.start()
+            self.addCleanup(context.stop)
+
+    def search(self, **kwargs):
+        return nav.bfs_cross(self.name, (0, 0), self.name, (3, 0), **kwargs)
+
+    def test_geometry_is_sampled_once_per_key_per_search_not_across_searches(self):
+        with patch.object(nav, 'tile_at', wraps=nav.tile_at) as tiles, \
+                patch.object(nav, 'warp_tiles', wraps=nav.warp_tiles) as warps:
+            route = self.search()
+            self.assertIsNotNone(route)
+            tile_calls = [call.args for call in tiles.call_args_list]
+            self.assertEqual(len(tile_calls), len(set(tile_calls)))
+            warps.assert_called_once_with(self.name)
+            self.assertIs(nav.tile_at, tiles)
+            self.assertIs(nav.warp_tiles, warps)
+            count = tiles.call_count
+            self.assertEqual(self.search(), route)
+            self.assertEqual(tiles.call_count, count * 2)
+            self.assertEqual(warps.call_count, 2)
+
+    def test_next_search_observes_in_place_block_warp_and_npc_changes(self):
+        route = self.search()
+        self.data['blocks'][1] = 1
+        self.assertIsNone(self.search())
+        self.data['blocks'][1] = 0
+        self.assertEqual(self.search(), route)
+        # A scripted fall cannot be treated as floor by an old warp cache.
+        with patch.dict(nav.COORDINATE_WARPS, {self.name: {(3, 0): (self.name, 0, 0)}}):
+            self.assertIsNone(self.search())
+        self.assertEqual(self.search(), route)
+        self.data['warps'].append({'x': 3, 'y': 0, 'dest_map_name': 'MissingMap',
+                                   'dest_warp_id': 0})
+        with patch.object(nav, 'warp_triggers', return_value=True):
+            self.assertIsNone(self.search())
+        self.data['warps'].clear()
+        self.assertEqual(self.search(), route)
+        self.assertIsNone(self.search(blocked_maps={self.name: {(3, 0)}}))
+        self.assertEqual(self.search(), route)
+
+    def test_geometry_functions_are_restored_after_nested_search_failure(self):
+        original = nav.tile_at, nav.warp_tiles
+        cross = nav.cross_step
+        nested = False
+        def fail_inside_outer(*args):
+            nonlocal nested
+            if not nested:
+                nested = True
+                outer = nav.tile_at, nav.warp_tiles
+                with patch.object(nav, 'cross_step', side_effect=ValueError('inner search')):
+                    with self.assertRaisesRegex(ValueError, 'inner search'):
+                        self.search()
+                self.assertEqual((nav.tile_at, nav.warp_tiles), outer)
+            return cross(*args)
+        with patch.object(nav, 'cross_step', side_effect=fail_inside_outer):
+            self.assertIsNotNone(self.search())
+        self.assertEqual((nav.tile_at, nav.warp_tiles), original)
+        with patch.object(nav, 'cross_step', side_effect=ValueError('outer search')):
+            with self.assertRaisesRegex(ValueError, 'outer search'):
+                self.search()
+        self.assertEqual((nav.tile_at, nav.warp_tiles), original)
+
+    def test_geometry_cache_does_not_leak_surf_passability_into_land_search(self):
+        from openpokered.navigation_skills import water_planning
+        name = 'PalletTown'
+        # Bound the search to this map, keeping this a small real-data test.
+        excluded = set(nav.MAPS) - {name}
+        def search():
+            return nav.bfs_cross(name, (5, 13), name, (5, 14), excluded_maps=excluded)
+        original = nav.tile_at, nav.warp_tiles
+        self.assertIsNone(search())
+        with water_planning():
+            self.assertEqual(search(), [(name, 5, 13), ((name, 5, 14), 'down')])
+        self.assertIsNone(search())
+        self.assertEqual((nav.tile_at, nav.warp_tiles), original)
+
+
 class NavigationRegression(unittest.TestCase):
     def test_milestone_can_push_a_boulder_into_its_scripted_hole(self):
         import playthrough_late as late

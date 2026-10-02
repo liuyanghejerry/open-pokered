@@ -25,6 +25,7 @@ import sys
 import tempfile
 import time
 from collections import deque
+from functools import cache, wraps
 from pathlib import Path
 
 # Late helpers import the driver's navigation primitives. When this file is
@@ -467,6 +468,24 @@ def _path_of(prev, start, goal):
     return [start] + out[::-1]
 
 
+def _cache_search_geometry(search):
+    @wraps(search)
+    def cached(*args, **kwargs):
+        # The synchronous search never advances the game or edits geometry.
+        # Cache only within this call: live blocks, Cut, doors and coordinate
+        # warps may all change before the next query. Preserve any enclosing
+        # planner overrides and restore them even on early return/failure.
+        global tile_at, warp_tiles
+        original_tile, original_warps = tile_at, warp_tiles
+        tile_at, warp_tiles = cache(original_tile), cache(original_warps)
+        try:
+            return search(*args, **kwargs)
+        finally:
+            tile_at, warp_tiles = original_tile, original_warps
+    return cached
+
+
+@_cache_search_geometry
 def bfs_cross(map_name, start, goal_map, goal, blocked_maps=None,
               last_map=None, allow_ledges=False, excluded_maps=(), allow_spinners=False,
               goal_nodes=None, reachable_goals=False):
