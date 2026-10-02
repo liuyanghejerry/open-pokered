@@ -29,7 +29,7 @@ game_scene CinnabarLabFossilRoom {
         // bag to DOME/HELIX/OLD_AMBER; filterBag reproduces the dynamic menu.
         fossil = filterBag(["DOME_FOSSIL", "HELIX_FOSSIL", "OLD_AMBER"])
         @if (fossil == "") {
-          @speaker("") { @t("Aiyah! You come again!", "哎呀！下次再来吧！") }
+          @speaker("") { @t("Aiyah! You come\nagain!", "哎呀！下次再来吧！") }
         }
         @if (fossil == "DOME_FOSSIL") {
           @speaker("") {
@@ -45,7 +45,7 @@ game_scene CinnabarLabFossilRoom {
               setFlag("EVENT_LAB_STILL_REVIVING_FOSSIL")
             }
             @option(@t("NO", "否")) {
-              @speaker("") { @t("Aiyah! You come again!", "哎呀！下次再来吧！") }
+              @speaker("") { @t("Aiyah! You come\nagain!", "哎呀！下次再来吧！") }
             }
           }
         }
@@ -63,7 +63,7 @@ game_scene CinnabarLabFossilRoom {
               setFlag("EVENT_LAB_STILL_REVIVING_FOSSIL")
             }
             @option(@t("NO", "否")) {
-              @speaker("") { @t("Aiyah! You come again!", "哎呀！下次再来吧！") }
+              @speaker("") { @t("Aiyah! You come\nagain!", "哎呀！下次再来吧！") }
             }
           }
         }
@@ -81,7 +81,7 @@ game_scene CinnabarLabFossilRoom {
               setFlag("EVENT_LAB_STILL_REVIVING_FOSSIL")
             }
             @option(@t("NO", "否")) {
-              @speaker("") { @t("Aiyah! You come again!", "哎呀！下次再来吧！") }
+              @speaker("") { @t("Aiyah! You come\nagain!", "哎呀！下次再来吧！") }
             }
           }
         }

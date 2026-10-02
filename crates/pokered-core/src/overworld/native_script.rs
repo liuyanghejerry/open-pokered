@@ -2748,7 +2748,7 @@ mod tests {
             let commands = drive_fossil_commands(&mut restored, next, "", 0, true);
             assert!(!commands.iter().any(|c| matches!(c, ScriptCommand::Custom { name, .. } if name == "filterBag")));
             if item.is_empty() {
-                assert_eq!(commands, vec![ScriptCommand::ShowText { text: "Aiyah! You come again!".into() }]);
+                assert_eq!(commands, vec![ScriptCommand::ShowText { text: "Aiyah! You come\nagain!".into() }]);
                 assert!(!restored.get_flag("EVENT_GAVE_FOSSIL_TO_LAB"));
             } else {
                 assert!(commands.contains(&ScriptCommand::TakeItem { item_id: item.into(), quantity: 1 }));
@@ -2780,22 +2780,27 @@ mod tests {
     #[test]
     fn fossil_lab_cancel_prints_original_come_again_without_consuming_the_fossil() {
         // Independent original expectation: engine/events/cinnabar_lab.asm
-        // 30-34 branches B to .cancelledGivingFossil (75-78), which prints
+        // 30-31 branches B to .cancelledGivingFossil (70-73), which prints
         // _CinnabarLabFossilRoomScientist1ComeAgainText. Its English original
-        // is "Aiyah! You come again!", also used by the NO response.
+        // is "Aiyah! You come\nagain!", also used by the NO response.
         for lazy in [false, true] {
+          for selected in ["", "DOME_FOSSIL", "HELIX_FOSSIL", "OLD_AMBER"] {
             let mut engine = NativeScriptEngine::new();
             engine.load_embedded_map("CinnabarLabFossilRoom", pokered_data::embedded_scenes::scene_functions());
             if !lazy { engine.functions.remove("__native_talkScientist1_entry"); }
-            engine.seed_set("bag", &["OLD_AMBER".into()]);
+            engine.seed_set("bag", &["DOME_FOSSIL".into(), "HELIX_FOSSIL".into(), "OLD_AMBER".into()]);
             let next = engine.call_function_no_args("talkScientist1").unwrap();
-            let commands = drive_fossil_commands(&mut engine, next, "", 0, true);
-            assert!(matches!(commands.last(), Some(ScriptCommand::ShowText { text }) if text == "Aiyah! You come again!"));
-            assert_eq!(commands.len(), 3); // intro, real filtered menu, cancel text
-            assert!(!commands.iter().any(|c| matches!(c, ScriptCommand::TakeItem { .. } | ScriptCommand::GiveMonster { .. } | ScriptCommand::ShowChoice { .. })));
+            let commands = drive_fossil_commands(&mut engine, next, selected, 1, true);
+            assert!(matches!(commands.last(), Some(ScriptCommand::ShowText { text }) if text == "Aiyah! You come\nagain!"));
+            assert_eq!(commands.len(), if selected.is_empty() { 3 } else { 5 });
+            assert!(!commands.iter().any(|c| matches!(c, ScriptCommand::TakeItem { .. } | ScriptCommand::GiveMonster { .. })));
+            assert_eq!(commands.iter().any(|c| matches!(c, ScriptCommand::ShowChoice { .. })), !selected.is_empty());
             assert!(!engine.get_flag("EVENT_GAVE_FOSSIL_TO_LAB"));
             assert!(!engine.get_flag("EVENT_LAB_STILL_REVIVING_FOSSIL"));
-            assert!(!engine.get_flag("EVENT_REVIVING_AERODACTYL"));
+            for species in ["KABUTO", "OMANYTE", "AERODACTYL"] {
+                assert!(!engine.get_flag(&format!("EVENT_REVIVING_{species}")));
+            }
+          }
         }
     }
 
