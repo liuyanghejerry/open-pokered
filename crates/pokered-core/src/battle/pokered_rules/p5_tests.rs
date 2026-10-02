@@ -228,6 +228,9 @@ fn p5_leech_seed_scales_with_toxic_counter() {
     // order): toxic tick bumps counter 0→1 (dmg 12); the leech tick then bumps
     // 1→2 and drains 12×2 = 24, healing the seeder 24.
     let mut es = EngineState::new(vec![engine_battler(Species::Pikachu, 100, 200)], vec![engine_battler(Species::Pikachu, 200, 200)]);
+    // Original residual checks the nonvolatile poison bit before consulting
+    // BADLY_POISONED. Installing only its volatile does not poison a battler.
+    es.opponent_battlers[0].status = StatusCondition::Poison;
     let mut effects = vec![
         EffectState { id: dotzuki_engine::battle::stack::EffectId(0x50_910), host: OPP, effect_order: 0, kind: PokeVolatile::Toxic { counter: 0 } },
         EffectState { id: dotzuki_engine::battle::stack::EffectId(0x50_911), host: OPP, effect_order: 1, kind: PokeVolatile::LeechSeed },

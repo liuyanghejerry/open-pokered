@@ -37,7 +37,7 @@ opening-timing = ["frame-timing"]
 # masks the original failure behind a misleading "Double panic" screen.
 agb = { version = "0.25.0", default-features = false, features = ["testing"] }
 getrandom = { version = "0.2", features = ["custom"] }
-dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "b3389535e284ef48bf4c54d95156d1a21b7c1312" }
+dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "92ba95f9526107e17874df53291ac7758d0930f0" }
 log = { version = "0.4", default-features = false }
 
 # The pokered game crates. Built for thumbv4t via this crate's
