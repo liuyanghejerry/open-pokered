@@ -18,7 +18,6 @@
 use pokered_core::game_state::Lang;
 use pokered_core::hof_ceremony::{HofCeremonyState, HofPhase, HofScrollStage};
 use pokered_data::lang_data;
-use pokered_data::ui_text::zh_pc_line;
 use pokered_renderer::embedded_font::draw_text;
 use pokered_renderer::palette::GRAYSCALE_SPRITE_PALETTE;
 use pokered_renderer::resource::{AssetCategory, ResourceManager};
@@ -227,33 +226,35 @@ fn draw_player_stats(hof: &HofCeremonyState, fb: &mut FrameBuffer, is_zh: bool) 
     let stats = hof.stats();
     // Name box (hlcoord 5,0) + stats box (hlcoord 0,4).
     draw_text_box(fb, 5 * T, 0, 9, 2, FG);
-    draw_text(&stats.name, 7 * T, 2 * T, FG, fb);
+    draw_text(&stats.name, 7 * T, if is_zh { T } else { 2 * T }, FG, fb);
     draw_text_box(fb, 0, 4 * T, 10, 6, FG);
     draw_text(lang_data::ui_label("PLAY TIME", is_zh), T, 6 * T, FG, fb);
     draw_text(
         &format!("{}:{:02}", stats.play_time_hours, stats.play_time_minutes),
-        5 * T,
+        if is_zh { 6 * T } else { 5 * T },
         7 * T,
         FG,
         fb,
     );
     draw_text(lang_data::ui_label("MONEY", is_zh), T, 9 * T, FG, fb);
-    draw_text(&format!("${}", stats.money), 4 * T, 10 * T, FG, fb);
+    draw_text(&format!("${}", stats.money), 4 * T, if is_zh { 76 } else { 10 * T }, FG, fb);
     // DexSeenOwnedText / DexRatingText equivalents.
-    let seen = if is_zh {
-        format!("图鉴已见{:>3}", stats.dex_seen)
-    } else {
-        format!("#DEX SEEN {:>3}", stats.dex_seen)
-    };
+    if is_zh {
+        draw_text(&format!("图鉴：已见{}，拥有{}", stats.dex_seen, stats.dex_owned), T, 12 * T, FG, fb);
+        let lines = pokered_core::pc_screen::chinese_message_lines(
+            &stats.rating.lines().map(str::to_owned).collect::<Vec<_>>(), &[],
+        );
+        assert!(lines.len() <= 3, "Chinese Hall of Fame rating exceeds three rows");
+        for (i, line) in lines.iter().enumerate() {
+            draw_text(line, T, 108 + i as u32 * 12, FG, fb);
+        }
+        return;
+    }
+    let seen = format!("#DEX SEEN {:>3}", stats.dex_seen);
     draw_text(&seen, T, 12 * T, FG, fb);
-    let owned = if is_zh {
-        format!("拥有     {:>3}", stats.dex_owned)
-    } else {
-        format!("     OWNED {:>3}", stats.dex_owned)
-    };
+    let owned = format!("     OWNED {:>3}", stats.dex_owned);
     draw_text(&owned, T, 13 * T, FG, fb);
     for (i, line) in stats.rating.split('\n').take(2).enumerate() {
-        let shown = if is_zh { zh_pc_line(line) } else { line.to_string() };
-        draw_text(&shown, T, (14 + i as u32) * T, FG, fb);
+        draw_text(line, T, (14 + i as u32) * T, FG, fb);
     }
 }

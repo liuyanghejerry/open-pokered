@@ -39,14 +39,14 @@ def main():
             position += len(word)
         offset = 0
         for page_index, page in enumerate(row['pages']):
-            for field in ['line1', 'line2']:
+            for field in sorted(page):
                 offset += len(compact(page[field]))
                 for start, end, word in spans:
                     if start < offset < end and re.fullmatch(r'[\u3400-\u9fff]{2,}', word):
                         candidates.append({'source': row['source'], 'page': page_index,
                                            'row': field, 'word': word, 'text': page[field]})
     summary = {'records': len(rows), 'pages': sum(len(r['pages']) for r in rows),
-               'blank_pages': sum(not compact(p['line1'] + p['line2'])
+               'blank_pages': sum(not compact(''.join(p.values()))
                                   for r in rows for p in r['pages']),
                'word_boundary_candidates': candidates}
     if args.before:
@@ -57,7 +57,7 @@ def main():
         summary['before_blank_pages'] = [
             {'source': r['source'], 'page': i}
             for r in before for i, p in enumerate(r['pages'])
-            if not compact(p['line1'] + p['line2'])]
+            if not compact(''.join(p.values()))]
     if args.transcript:
         args.transcript.write_text(''.join(
             json.dumps(row, ensure_ascii=False, separators=(',', ':')) + '\n'

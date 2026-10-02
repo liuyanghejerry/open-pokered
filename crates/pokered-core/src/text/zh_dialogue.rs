@@ -1,4 +1,4 @@
-//! Chinese overworld dialogue layout, completed before the typewriter starts.
+//! Chinese dialogue and description layout using actual font metrics.
 use crate::alloc_prelude::*;
 use crate::overworld::screen::DialoguePage;
 use pokered_data::dialogue_layout::{
@@ -131,7 +131,7 @@ fn split_overlong(unit: &str, width: usize) -> (String, String) {
     (unit[..end].to_string(), unit[end..].to_string())
 }
 
-fn take_line(tokens: &mut Vec<String>, width: usize, second: bool) -> String {
+fn take_line(tokens: &mut Vec<String>, width: usize, second: bool, description: bool) -> String {
     while tokens.first().is_some_and(|s| s.trim().is_empty()) {
         tokens.remove(0);
     }
@@ -158,7 +158,12 @@ fn take_line(tokens: &mut Vec<String>, width: usize, second: bool) -> String {
         }
         // Prefer a complete clause to a nearly full row; page boundaries
         // have a stronger preference than ordinary line boundaries.
-        if clause_end(token) && used >= width * if second { 1 } else { 2 } / 3 {
+        let clause_width = if description {
+            width / 2
+        } else {
+            width * if second { 1 } else { 2 } / 3
+        };
+        if clause_end(token) && used >= clause_width {
             clause = Some(count);
         }
     }
@@ -216,6 +221,87 @@ fn next_sentence_width(tokens: &[String]) -> usize {
     width
 }
 
+/// Wrap a static description to a caller's pixel width, protecting words and
+/// punctuation. Descriptions have their own row budgets (e.g. three in the
+/// Pokédex); callers must verify the resulting rows fit their screen.
+pub fn wrap_lines(text: &str, width: usize, protected: &[&str]) -> Vec<String> {
+    assert!(width > 0);
+    let mut tokens = units(&soft_join(&text.lines().collect::<Vec<_>>()), protected);
+    // Keep an isolated structural particle with the preceding Chinese word.
+    // Do not enlarge a protected name beyond the available row width.
+    let mut index = 1;
+    while index < tokens.len() {
+        if ["的", "地", "得"].contains(&tokens[index].as_str())
+            && tokens[index - 1]
+                .chars()
+                .last()
+                .is_some_and(|c| ('\u{3400}'..='\u{9fff}').contains(&c))
+            && (measure_text(&tokens[index - 1]) + measure_text(&tokens[index])) as usize <= width
+        {
+            let particle = tokens.remove(index);
+            tokens[index - 1].push_str(&particle);
+        } else {
+            index += 1;
+        }
+    }
+    let mut lines = Vec::new();
+    while !tokens.is_empty() {
+        let line = take_line(&mut tokens, width, false, true);
+        if !line.is_empty() {
+            lines.push(line);
+        }
+    }
+    // A description should not end on a lone particle or a tiny orphan row.
+    // Move complete words from the preceding row without crossing a clause.
+    if lines.len() > 1 {
+        let last = lines.len() - 1;
+        if measure_text(&lines[last]) <= 40 && !clause_end(&lines[last - 1]) {
+            let mut previous = units(&lines[last - 1], protected);
+            let mut tail = lines[last].clone();
+            while previous.len() > 1 && measure_text(&tail) < 60 {
+                let word = previous.last().unwrap();
+                if clause_end(word) || measure_text(word) + measure_text(&tail) > width as u32 {
+                    break;
+                }
+                tail = format!("{}{}", previous.pop().unwrap(), tail);
+            }
+            lines[last - 1] = previous.concat();
+            lines[last] = tail;
+        }
+    }
+    lines
+}
+
+/// Pack complete sentences into fixed-height description pages. If the next
+/// sentence fits a page but not its remaining rows, begin a fresh page.
+pub fn description_pages(text: &str, width: usize, rows: usize, protected: &[&str]) -> Vec<String> {
+    assert!(rows > 0);
+    let mut sentences = Vec::new();
+    let mut sentence = String::new();
+    for token in units(&soft_join(&text.lines().collect::<Vec<_>>()), protected) {
+        sentence.push_str(&token);
+        if sentence_end(&token) {
+            sentences.push(core::mem::take(&mut sentence));
+        }
+    }
+    if !sentence.is_empty() {
+        sentences.push(sentence);
+    }
+    let mut lines = Vec::new();
+    for sentence in sentences {
+        let wrapped = wrap_lines(&sentence, width, protected);
+        let used = lines.len() % rows;
+        if used > 0 && wrapped.len() <= rows && used + wrapped.len() > rows {
+            lines.resize(lines.len().div_ceil(rows) * rows, String::new());
+        }
+        lines.extend(wrapped);
+    }
+    if !lines.is_empty() {
+        lines.resize(lines.len().div_ceil(rows) * rows, String::new());
+    }
+    lines
+}
+
 /// Single newlines are soft wrapping; one or more blank lines end a paragraph
 /// and start a fresh page without generating a blank page. Explicit names
 /// are substituted by the caller first and protected as complete units.
@@ -235,12 +321,12 @@ pub fn paginate(text: &str, protected: &[&str]) -> Vec<DialoguePage> {
         let paragraph = soft_join(&lines);
         let mut tokens = units(&paragraph, protected);
         while !tokens.is_empty() {
-            let line1 = take_line(&mut tokens, LINE_WIDTH_PX, false);
+            let line1 = take_line(&mut tokens, LINE_WIDTH_PX, false, false);
             let line2 =
                 if sentence_end(&line1) && next_sentence_width(&tokens) > SECOND_LINE_WIDTH_PX {
                     String::new()
                 } else {
-                    take_line(&mut tokens, SECOND_LINE_WIDTH_PX, true)
+                    take_line(&mut tokens, SECOND_LINE_WIDTH_PX, true, false)
                 };
             if !line1.is_empty() || !line2.is_empty() {
                 pages.push(DialoguePage {
@@ -260,6 +346,15 @@ mod tests {
 
     fn compact(text: &str) -> String {
         text.chars().filter(|c| !c.is_whitespace()).collect()
+    }
+
+    #[test]
+    fn static_descriptions_do_not_leave_a_lone_particle_row() {
+        let text = "短脚的尖端有吸盘，能不知疲倦地";
+        let lines = wrap_lines(text, 144, &[]);
+        assert_eq!(compact(&lines.concat()), compact(text));
+        assert!(lines.last().unwrap().ends_with("不知疲倦地"));
+        assert!(measure_text(lines.last().unwrap()) >= 50);
     }
 
     fn check(text: &str, names: &[&str]) -> Vec<DialoguePage> {

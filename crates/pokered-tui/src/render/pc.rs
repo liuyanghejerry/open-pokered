@@ -41,13 +41,18 @@ fn mon_row(mon: &Pokemon) -> String {
 /// Bottom text box holding up to `lines` lines (max 5), plus the current
 /// message page of the Message phase.
 fn draw_message(lines: &[String], fb: &mut FrameBuffer, is_zh: bool) {
-    let rows = lines.len().clamp(1, 5) as u32;
-    let bh = rows + 1; // interior tiles: lines at 8px pitch
+    let shown: Vec<String> = lines.iter().take(5).flat_map(|line| {
+        if is_zh {
+            pokered_core::text::zh_dialogue::wrap_lines(&zh_pc_line(line), 144, &[])
+        } else { vec![line.clone()] }
+    }).collect();
+    let pitch = if is_zh { 12 } else { T };
+    let bh = if is_zh { (shown.len().max(1) as u32 * pitch).div_ceil(T) }
+        else { shown.len().max(1) as u32 + 1 };
     let by = 144 - (bh + 2) * T;
     draw_text_box(fb, 0, by, 18, bh, FG);
-    for (i, line) in lines.iter().take(5).enumerate() {
-        let shown = if is_zh { zh_pc_line(line) } else { line.clone() };
-        draw_text(&shown, T, by + (1 + i as u32) * T, FG, fb);
+    for (i, line) in shown.iter().enumerate() {
+        draw_text(line, T, by + T + i as u32 * pitch, FG, fb);
     }
 }
 

@@ -22,9 +22,11 @@ pub fn draw_oak_speech(
     state: &OakSpeechState,
     res: &mut Option<ResourceManager>,
     fb: &mut FrameBuffer,
+    language: pokered_core::game_state::Lang,
 ) {
     fb.clear(Rgba::WHITE);
     let pal = &GRAYSCALE_PALETTE;
+    let is_zh = language == pokered_core::game_state::Lang::Zh;
 
     // Naming screen open/submit white flash (GBPalWhiteOutWithDelay3).
     if state.is_flashing() {
@@ -133,8 +135,8 @@ pub fn draw_oak_speech(
 
     match phase {
         OakSpeechPhase::PlayerNameChoice { cursor } => {
-            draw_text_box(fb, 0, 0, 9, 10, Rgba::BLACK);
-            draw_text("NAME", 3 * TILE_SIZE, TILE_SIZE, Rgba::BLACK, fb);
+            draw_text_box(fb, 0, 0, 9, if is_zh { 8 } else { 10 }, Rgba::BLACK);
+            draw_text(if is_zh { "姓名" } else { "NAME" }, 3 * TILE_SIZE, TILE_SIZE, Rgba::BLACK, fb);
             for (i, name) in DEFAULT_PLAYER_NAMES.iter().enumerate() {
                 if i == *cursor {
                     draw_text("▶", TILE_SIZE, (2 + i as u32 * 2) * TILE_SIZE, Rgba::BLACK, fb);
@@ -156,7 +158,7 @@ pub fn draw_oak_speech(
                 Rgba::BLACK,
             );
             draw_text(
-                "Your name?",
+                if is_zh { "你的名字？" } else { "Your name?" },
                 TILE_SIZE,
                 TEXT_BOX_Y + TILE_SIZE,
                 Rgba::BLACK,
@@ -164,8 +166,8 @@ pub fn draw_oak_speech(
             );
         }
         OakSpeechPhase::RivalNameChoice { cursor } => {
-            draw_text_box(fb, 0, 0, 9, 10, Rgba::BLACK);
-            draw_text("NAME", 3 * TILE_SIZE, TILE_SIZE, Rgba::BLACK, fb);
+            draw_text_box(fb, 0, 0, 9, if is_zh { 8 } else { 10 }, Rgba::BLACK);
+            draw_text(if is_zh { "姓名" } else { "NAME" }, 3 * TILE_SIZE, TILE_SIZE, Rgba::BLACK, fb);
             for (i, name) in DEFAULT_RIVAL_NAMES.iter().enumerate() {
                 if i == *cursor {
                     draw_text("▶", TILE_SIZE, (2 + i as u32 * 2) * TILE_SIZE, Rgba::BLACK, fb);
@@ -187,7 +189,7 @@ pub fn draw_oak_speech(
                 Rgba::BLACK,
             );
             draw_text(
-                "His name?",
+                if is_zh { "他的名字？" } else { "His name?" },
                 TILE_SIZE,
                 TEXT_BOX_Y + TILE_SIZE,
                 Rgba::BLACK,
@@ -202,7 +204,9 @@ pub fn draw_oak_speech(
         // printing yet; during the menu slide the intro text stays visible.
         OakSpeechPhase::SlidePic { subject, .. } => {
             let pages: &[pokered_core::oak_speech::TextPage] = match subject {
+                PicSlideSubject::Player if is_zh => pokered_core::oak_speech::INTRODUCE_PLAYER_TEXT_PAGES_ZH,
                 PicSlideSubject::Player => pokered_core::oak_speech::INTRODUCE_PLAYER_TEXT_PAGES,
+                PicSlideSubject::Rival if is_zh => pokered_core::oak_speech::INTRODUCE_RIVAL_TEXT_PAGES_ZH,
                 PicSlideSubject::Rival => pokered_core::oak_speech::INTRODUCE_RIVAL_TEXT_PAGES,
             };
             draw_text_box(
@@ -236,7 +240,7 @@ pub fn draw_oak_speech(
                     Rgba::BLACK,
                 );
 
-                if let Some(page) = state.current_text_page() {
+                if let Some(page) = pokered_core::oak_speech::text_pages_for_lang(phase, language) {
                     let char_index = state.current_char_index();
                     let (line1, line2) =
                         page.get_display_text(state.player_name.as_deref(), char_index);

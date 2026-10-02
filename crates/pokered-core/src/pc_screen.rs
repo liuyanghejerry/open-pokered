@@ -228,9 +228,17 @@ pub fn dex_rating_text(owned: u32) -> &'static str {
         .unwrap_or(DEX_RATINGS[DEX_RATINGS.len() - 1].1)
 }
 
+/// Shared by localized PC messages and the Hall of Fame's complete rating.
+pub fn chinese_message_lines(lines: &[String], protected: &[&str]) -> Vec<String> {
+    pokered_data::ui_text::zh_pc_message(lines).iter()
+        .flat_map(|text| crate::text::zh_dialogue::wrap_lines(text, 144, protected))
+        .collect()
+}
+
 /// The whole PC flow, from "turned on the PC" to LOG OFF.
 #[derive(Debug, Clone)]
 pub struct PcScreen {
+    language: crate::game_state::Lang,
     entry: PcEntry,
     met_bill: bool,
     has_pokedex: bool,
@@ -281,7 +289,12 @@ pub struct PcScreen {
 
 impl PcScreen {
     pub fn new(entry: PcEntry, open: &PcOpenContext) -> Self {
+        Self::new_with_language(entry, open, crate::game_state::Lang::En)
+    }
+
+    pub fn new_with_language(entry: PcEntry, open: &PcOpenContext, language: crate::game_state::Lang) -> Self {
         let mut screen = Self {
+            language,
             entry,
             met_bill: open.met_bill,
             has_pokedex: open.has_pokedex,
@@ -455,7 +468,11 @@ impl PcScreen {
     // ── Internals ─────────────────────────────────────────────────────────
 
     fn set_message(&mut self, lines: Vec<String>, next: AfterMessage) {
-        self.msg_lines = lines;
+        self.msg_lines = if self.language == crate::game_state::Lang::Zh {
+            chinese_message_lines(&lines, &[&self.player_name])
+        } else {
+            lines
+        };
         self.msg_page = 0;
         self.msg_next = next;
         self.phase = PcPhase::Message;

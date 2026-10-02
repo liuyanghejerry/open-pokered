@@ -22,7 +22,7 @@ pub fn draw_pokedex_screen(
 ) {
     match state.mode() {
         PokedexScreenMode::List | PokedexScreenMode::SideMenu => draw_list(state, is_zh, fb),
-        PokedexScreenMode::Entry => draw_entry(state, res, fb),
+        PokedexScreenMode::Entry => draw_entry(state, is_zh, res, fb),
         PokedexScreenMode::Area => draw_area(state, is_zh, fb),
     }
 }
@@ -110,7 +110,7 @@ fn draw_area(state: &PokedexScreenState, is_zh: bool, fb: &mut FrameBuffer) {
     }
 }
 
-fn draw_entry(state: &PokedexScreenState, res: &mut Option<ResourceManager>, fb: &mut FrameBuffer) {
+fn draw_entry(state: &PokedexScreenState, is_zh: bool, res: &mut Option<ResourceManager>, fb: &mut FrameBuffer) {
     fb.clear(Rgba::WHITE);
     let fg = Rgba::BLACK;
     let t = TILE_SIZE;
@@ -142,7 +142,7 @@ fn draw_entry(state: &PokedexScreenState, res: &mut Option<ResourceManager>, fb:
         }
     }
 
-    let name = pokered_data::lang_data::species_name(sp, false).to_uppercase();
+    let name = pokered_data::lang_data::species_name(sp, is_zh).to_uppercase();
     draw_text(&name, 9 * t, 2 * t, fg, fb);
     draw_text(&format!("No.{:03}", sp as u16), 2 * t, 8 * t, fg, fb);
 
@@ -150,7 +150,9 @@ fn draw_entry(state: &PokedexScreenState, res: &mut Option<ResourceManager>, fb:
         draw_text("No data.", t, 11 * t, fg, fb);
         return;
     };
-    draw_text(entry.category, 9 * t, 4 * t, fg, fb);
+    let category = entry.category_for(is_zh);
+    let category_x = (19 * t).saturating_sub(pokered_renderer::embedded_font::measure_text(category)).min(9 * t);
+    draw_text(category, category_x, 4 * t, fg, fb);
     if owned {
         draw_text(
             &format!("HT  {}'{:02}\"", entry.height_feet, entry.height_inches),
@@ -167,12 +169,12 @@ fn draw_entry(state: &PokedexScreenState, res: &mut Option<ResourceManager>, fb:
             fb,
         );
         // Flavor pages: 3 lines per page, page selected by the state machine.
-        let lines: Vec<String> = entry
-            .flavor_text_pages
-            .iter()
-            .flat_map(|p| p.split('\n'))
-            .map(|l| l.replace('#', "POKé"))
-            .collect();
+        let lines: Vec<String> = if is_zh {
+            pokered_core::pokedex_screen::chinese_description_lines(entry)
+        } else {
+            entry.flavor_text_pages.iter().flat_map(|p| p.split('\n'))
+                .map(|l| l.replace('#', "POKé")).collect()
+        };
         let page = state.entry_page();
         let start = page * 3;
         let end = lines.len().min(start + 3);

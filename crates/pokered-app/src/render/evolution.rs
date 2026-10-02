@@ -103,7 +103,7 @@ pub fn draw_evolution(
         let lang = if anim.is_zh { Lang::Zh } else { Lang::En };
         let mut painter = FrameBufferPainter::new(fb);
         let mut ui = Ui::new(&mut painter);
-        menus::dialog::draw(&combined, false, &DIALOG_DEFAULT_LAYOUT, &mut ui, lang);
+        menus::dialog::draw_paginated(&combined, false, &DIALOG_DEFAULT_LAYOUT, &mut ui, lang);
     }
 
     // Subtle "press A" hint on the phases that wait for a button (the

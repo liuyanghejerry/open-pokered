@@ -26,6 +26,25 @@ def main():
         texts.extend(json.loads('"' + m[2] + '"') for m in PAIRS.finditer(path.read_text()))
     source = (ROOT / 'crates/pokered-data/src/dialog_text.rs').read_text()
     texts.extend(json.loads('"' + m[2] + '"') for m in re.finditer(r'\(' + LITERAL + r',\s*' + LITERAL + r'\)', source))
+    for filename in ['ui_text.rs', 'battle_text.rs']:
+        source = (ROOT / 'crates/pokered-data/src' / filename).read_text().split('#[cfg(test)]')[0]
+        texts.extend(json.loads('"' + m[1] + '"') for m in re.finditer(LITERAL, source)
+                     if re.search(r'[\u3400-\u9fff]', m[1]))
+    for path in sorted((ROOT / 'crates/pokered-data/pokemon').glob('*.json')):
+        dex = json.loads(path.read_text()).get('pokedex', {})
+        texts.extend(dex.get('flavorTextPagesZh', []))
+        texts.append(dex.get('categoryZh', ''))
+    # Include shipped introductory/UI/system text, excluding test examples.
+    for tree in ['crates/pokered-core/src', 'crates/pokered-ui/src', 'crates/pokered-app/src/render']:
+        for path in sorted((ROOT / tree).rglob('*.rs')):
+            source = path.read_text().split('#[cfg(test)]')[0]
+            for match in re.finditer(LITERAL, source):
+                try:
+                    text = json.loads('"' + match[1] + '"')
+                except json.JSONDecodeError:
+                    continue
+                if re.search(r'[\u3400-\u9fff]', text):
+                    texts.append(text)
     names = []
     for filename in ['lang_data.rs', 'map_names.rs']:
         names.extend(re.findall(r'"([\u3400-\u9fff]{2,14})"', (ROOT / 'crates/pokered-data/src' / filename).read_text()))

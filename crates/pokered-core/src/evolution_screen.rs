@@ -482,6 +482,25 @@ impl EvolutionScreenState {
 mod tests {
     use super::*;
 
+    #[test]
+    fn chinese_evolution_rows_fit_all_species_and_valid_nicknames() {
+        use pokered_data::dialogue_layout::measure_text;
+        for entry in pokered_data::pokedex::POKEDEX_ENTRIES {
+            for name in ["ABCDEFGHIJ", "阿尔法贝塔", "AB张三丰"] {
+                let mut s = EvolutionScreenState::new(vec![PendingEvolution {
+                    party_index: 0, from: Species::Bulbasaur, to: entry.species,
+                    name: name.into(), force: false,
+                }], None, true);
+                for phase in [EvolutionPhase::IsEvolving, EvolutionPhase::EvolvedText, EvolutionPhase::StoppedText] {
+                    s.phase = phase;
+                    let (a,b) = s.text_lines().unwrap();
+                    assert!(measure_text(&a) <= 144 && measure_text(&b) <= 144,
+                        "{:?}/{phase:?}/{name}: {a} / {b}", entry.species);
+                }
+            }
+        }
+    }
+
     fn evo(force: bool) -> PendingEvolution {
         PendingEvolution {
             party_index: 0,

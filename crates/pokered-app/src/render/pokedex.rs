@@ -274,84 +274,17 @@ fn flavor_lines(entry: &PokedexEntry) -> Vec<String> {
         .collect()
 }
 
-/// Display width of a char in half-width tiles: CJK glyphs render full-width
-/// (2 tiles) in the Fusion Pixel font, everything else 1. Range-based mirror
-/// of the renderer's glyph-table classification — same convention as the
-/// battle-text wrapping in core.
-fn char_tile_width(c: char) -> usize {
-    let cp = c as u32;
-    let wide = (0x1100..=0x115F).contains(&cp)
-        || (0x2010..=0x2027).contains(&cp) // …, quotes, dashes as full-width punct
-        || (0x2E80..=0xA4CF).contains(&cp) // CJK radicals, punct, kana, CJK unified
-        || (0xAC00..=0xD7A3).contains(&cp) // Hangul
-        || (0xF900..=0xFAFF).contains(&cp) // CJK compat ideographs
-        || (0xFE30..=0xFE4F).contains(&cp) // CJK compat forms
-        || (0xFF00..=0xFF60).contains(&cp) // full-width forms
-        || (0xFFE0..=0xFFE6).contains(&cp)
-        || (0x20000..=0x3FFFD).contains(&cp);
-    usize::from(wide) + 1
-}
-
-/// Width of the entry-description box in half-width tile units (18 tiles →
-/// 9 full-width chars per line).
-const ENTRY_LINE_WIDTH_TILES: usize = 18;
-
-/// No line may START with one of these closers (kinsoku): pull it back to
-/// the previous line instead.
-const NO_LINE_START: &[char] = &['」', '』', '）', '、', '。', '，', '！', '？', '…', '：', '；'];
-
-/// Wrap one Chinese flavor-text page into lines of at most
-/// [`ENTRY_LINE_WIDTH_TILES`] tile units. Each page maps to its own screen
-/// (like the original's one-screen-per-page entries), so the wrapped page
-/// must stay within the 3 display rows — guaranteed for the shipped data by
-/// `all_zh_pages_fit_three_lines` in pokered-data.
+/// Use the same word/kinsoku rules as dialogue, with the actual 144px
+/// description width rather than estimating CJK as two 8px tiles.
 fn wrap_zh_page(page: &str) -> Vec<String> {
-    let mut lines = Vec::new();
-    let mut current = String::new();
-    let mut width = 0usize;
-    for c in page.chars() {
-        let w = char_tile_width(c);
-        if width + w > ENTRY_LINE_WIDTH_TILES {
-            if current.chars().count() > 1 && NO_LINE_START.contains(&c) {
-                // Break one char earlier so the closer doesn't start a line.
-                let last = current.chars().last().unwrap();
-                let popped_w = char_tile_width(last);
-                current.pop();
-                lines.push(core::mem::take(&mut current));
-                current.push(last);
-                current.push(c);
-                width = popped_w + w;
-                continue;
-            }
-            lines.push(core::mem::take(&mut current));
-            width = 0;
-        }
-        current.push(c);
-        width += w;
-    }
-    lines.push(current);
-    lines
+    pokered_core::text::zh_dialogue::wrap_lines(page, 18 * TILE_SIZE as usize, &[])
 }
 
 /// Chinese flavor-text pages flattened into display lines. Each page fills
 /// exactly one screen (3 rows, short pages padded blank) so the drawn page
-/// count stays in parity with the English pages the entry state machine
-/// paginates by — a wrapped page exceeding 3 rows is a data bug.
+/// count matches the localized entry state machine.
 fn flavor_lines_zh(entry: &PokedexEntry) -> Vec<String> {
-    let mut out = Vec::new();
-    for page in entry.flavor_text_pages_zh {
-        let mut lines = wrap_zh_page(page);
-        assert!(
-            lines.len() <= 3,
-            "{:?}: zh page wraps to {} rows (max 3): {:?}",
-            entry.species,
-            lines.len(),
-            page
-        );
-        lines.resize(3, String::new());
-        out.extend(lines);
-    }
-    out
+    pokered_core::pokedex_screen::chinese_description_lines(entry)
 }
 
 /// Draw one species' entry (`ShowPokedexDataInternal`): the framed data view,
@@ -728,9 +661,8 @@ mod tests {
         fb.save_png(&path).expect("save area png");
     }
 
-    /// Every zh flavor page wraps into at most the 3 rows of its screen, so
-    /// the drawn page count stays in parity with the English pages the entry
-    /// state machine paginates by (`entry_total_pages`).
+    /// Source fragments fit the row budget; reflowing the complete Chinese
+    /// entry preserves all text and pads only the final screen.
     #[test]
     fn all_zh_pages_wrap_within_three_rows() {
         for entry in &pokered_data::pokedex::POKEDEX_ENTRIES[..151] {
@@ -745,38 +677,27 @@ mod tests {
                     lines
                 );
             }
-            assert_eq!(
-                flavor_lines_zh(entry).len(),
-                3 * entry.flavor_text_pages_zh.len(),
-                "{:?}: padded zh lines must fill one screen per page",
-                entry.species
-            );
+            let lines = flavor_lines_zh(entry);
+            assert_eq!(lines.len() % 3, 0, "{:?}: entry pages have three rows", entry.species);
+            assert_eq!(lines.concat().chars().filter(|c| !c.is_whitespace()).collect::<String>(),
+                entry.flavor_text_pages_zh.concat().chars().filter(|c| !c.is_whitespace()).collect::<String>());
         }
     }
 
-    /// Wrapped zh lines never exceed the 18-tile entry box, and no line
-    /// starts with closing punctuation (kinsoku).
     #[test]
     fn zh_wrap_respects_width_and_kinsoku() {
-        let width = |s: &str| s.chars().map(char_tile_width).sum::<usize>();
-        let long = "尾鳍舒展如优雅的舞裙，因此被称为水中女王，游动时姿态十分优雅。";
-        for line in wrap_zh_page(long) {
-            assert!(width(&line) <= 18, "line too wide: {line:?}");
-            assert!(
-                line.is_empty() || !NO_LINE_START.contains(&line.chars().next().unwrap()),
-                "line starts with a closer: {line:?}"
-            );
+        use pokered_core::text::zh_dialogue::{no_line_start, no_line_end};
+        use pokered_data::dialogue_layout::measure_text;
+        for line in wrap_zh_page("尾鳍舒展如优雅的舞裙，因此被称为水中女王，游动时姿态十分优雅。") {
+            assert!(measure_text(&line) <= 144, "line too wide: {line:?}");
+            assert!(!line.chars().next().is_some_and(no_line_start));
+            assert!(!line.chars().last().is_some_and(no_line_end));
         }
-        // A closer landing exactly on the row boundary pulls the preceding
-        // char down with it instead of starting the next row.
-        let lines = wrap_zh_page("一二三四五六七八九，再写九个字。");
-        assert_eq!(lines[0], "一二三四五六七八", "break pulled back: {lines:?}");
-        assert!(lines[1].starts_with("九，"), "closer kept: {lines:?}");
     }
 
     /// With zh selected the entry draws the Chinese category and flavor text:
-    /// the rendered frame differs from the English entry, and page parity
-    /// matches the English page count the state machine drives.
+    /// the rendered frame differs from the English entry, and its page count
+    /// follows the complete Chinese description rather than the English rows.
     #[test]
     fn zh_entry_draws_chinese_text() {
         let mut fb_en = new_fb();
@@ -791,7 +712,8 @@ mod tests {
             .count();
         assert!(diff > 200, "zh entry must render differently ({diff} px)");
         let entry = pokered_data::pokedex::get_pokedex_entry(Species::Bulbasaur).unwrap();
-        assert_eq!(zh_pages, entry.flavor_text_pages.len());
+        assert_eq!(en_pages, entry.flavor_text_pages.len());
+        assert_eq!(zh_pages, pokered_core::pokedex_screen::chinese_description_lines(entry).len() / 3);
     }
 
 }

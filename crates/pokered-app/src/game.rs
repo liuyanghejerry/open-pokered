@@ -3701,6 +3701,7 @@ impl PokemonGame {
             }
             GameScreen::OakSpeech => {
                 let prev_tag = self.prev_oak_phase_tag;
+                self.oak_speech.language = self.state.config.language;
                 let result = if self.oak_speech.is_naming_active() {
                     let naming_input = NamingInput {
                         up: input.is_just_pressed(GbButton::Up),
@@ -4247,7 +4248,7 @@ impl PokemonGame {
                             player_name: self.player_name.clone(),
                             hof_teams: hof_team_records(&self.save_data),
                         };
-                        self.pc_screen = Some(PcScreen::new(entry, &open));
+                        self.pc_screen = Some(PcScreen::new_with_language(entry, &open, self.state.config.language));
                         ScreenAction::Transition(GameScreen::PC)
                     } else if self.overworld.pending_hof_ceremony {
                         // game.enterHallOfFame() — record the team and start
@@ -5115,6 +5116,7 @@ impl PokemonGame {
             GameScreen::Pokedex => {
                 // The cry plays when an entry opens (PlayCry in
                 // ShowPokedexDataInternal).
+                self.pokedex_screen.language = self.state.config.language;
                 if self.pokedex_screen.take_cry_pending() {
                     if let Some(ref audio) = self.audio {
                         play_species_cry(audio, self.pokedex_screen.cursor_species());

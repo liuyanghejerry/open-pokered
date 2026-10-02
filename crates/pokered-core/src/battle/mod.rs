@@ -623,6 +623,13 @@ fn wrap_battle_text_lines(text: &str, width: usize) -> Vec<String> {
 }
 
 fn paginate_battle_text(text: &str) -> Vec<String> {
+    if pokered_data::dialogue_layout::contains_chinese(text) {
+        return crate::text::zh_dialogue::paginate(text, &[]).into_iter()
+            .map(|page| {
+                if page.line2.is_empty() { page.line1.into_string() }
+                else { format!("{}\n{}", page.line1, page.line2) }
+            }).collect();
+    }
     let lines = wrap_battle_text_lines(text, BATTLE_TEXT_LINE_WIDTH);
     let mut pages = Vec::new();
 
@@ -7438,11 +7445,11 @@ mod i18n_tests {
     }
 
     #[test]
-    fn cjk_wraps_at_tile_width() {
-        // 10 CJK chars = 20 tiles > 18 → wraps at ≤9 chars per line.
+    fn cjk_wraps_at_actual_pixel_width() {
         let pages = paginate_battle_text("皮卡丘使用了十万伏特!");
         let lines: Vec<&str> = pages[0].split('\n').collect();
-        assert!(lines.iter().all(|l| l.chars().count() <= 9));
+        assert!(lines.iter().all(|l| pokered_data::dialogue_layout::measure_text(l) <= 144));
+        assert!(lines.iter().any(|l| l.contains("十万伏特")));
     }
 
 }
