@@ -7043,6 +7043,45 @@ mod badge_obedience_integration_tests {
         );
     }
 
+    #[test]
+    fn capture_preview_matches_first_action_after_initial_or_forced_send_out() {
+        use pokered_rules::preview::player_direct_hit;
+        for forced_switch in [false, true] {
+            for seed in 0..32 {
+                let player = mk(Species::Charizard, 74,
+                    [MoveId::Cut, MoveId::None, MoveId::None, MoveId::None]);
+                let mut enemy = mk(Species::Zapdos, 50,
+                    [MoveId::Splash, MoveId::None, MoveId::None, MoveId::None]);
+                enemy.hp = 1000;
+                enemy.max_hp = 1000;
+                let mut screen = BattleScreen::from_parties(true,
+                    &[player.clone(), player], &[enemy], None);
+                screen.rng = pokered_rules::runtime::StdBattleRng::from_seed(seed);
+                screen.player_badges = BOULDER | THUNDER;
+                if forced_switch {
+                    screen.sync_player_context();
+                    screen.force_switch_player(1);
+                }
+                let bs = screen.battle_state.as_ref().unwrap();
+                assert!(bs.player.badge_boosted_stats.is_none());
+                if !forced_switch {
+                    assert_eq!(bs.player_badges, 0, "frontend context not synchronized yet");
+                }
+                let before = serde_json::to_value(bs).unwrap();
+                let preview = player_direct_hit(bs, MoveId::Cut, screen.player_badges).unwrap();
+                assert_eq!(serde_json::to_value(bs).unwrap(), before);
+                screen.sync_player_context();
+                assert_eq!(preview, player_direct_hit(screen.battle_state.as_ref().unwrap(),
+                    MoveId::Cut, screen.player_badges).unwrap());
+                screen.execute_turn_with_move(0);
+                let damage = 1000 - screen.battle_state.as_ref().unwrap().enemy.active_mon().hp;
+                assert!(damage == 0 || (preview.normal_damage[0]..=preview.normal_damage[1]).contains(&damage)
+                    || (preview.critical_damage[0]..=preview.critical_damage[1]).contains(&damage),
+                    "switch={forced_switch} seed={seed} damage={damage} preview={preview:?}");
+            }
+        }
+    }
+
     /// The stat-up glitch, in-turn, through the stack engine: Swords Dance
     /// re-applies the badge boosts to ALL FOUR working stats (effects.asm:499),
     /// while Attack itself is first recomputed from its unmodified value.

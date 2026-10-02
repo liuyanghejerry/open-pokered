@@ -6345,7 +6345,8 @@ impl PokemonGame {
                             "pp": m.current_pp,
                             "disabled": m.is_disabled,
                             "direct_hit_preview": self.battle.battle_state.as_ref().and_then(|bs|
-                                pokered_core::battle::pokered_rules::preview::player_direct_hit(bs, m.move_id)),
+                                pokered_core::battle::pokered_rules::preview::player_direct_hit(
+                                    bs, m.move_id, self.battle.player_badges)),
                         })
                     }).collect::<Vec<_>>(),
                 })
@@ -7853,6 +7854,14 @@ mod synchronous_input_tests {
         assert!(preview["normal_damage"][0].as_u64().unwrap() > 0);
         assert_eq!(preview["critical_threshold"], 50);
         assert_eq!(preview["direct_hit_can_ko"], false);
+        assert_eq!(serde_json::to_value(&game.battle.battle_state).unwrap(), before);
+        assert_eq!(game.frame_count, frame);
+        // The frontend context is assigned after BattleState construction;
+        // before turn one its badges are newer than the lazy state copy.
+        game.battle.player_badges = 1;
+        let with_badge = game.debug_state_snapshot();
+        assert!(with_badge["battle_moves"]["moves"][0]["direct_hit_preview"]["critical_damage"][1]
+            .as_u64().unwrap() > preview["critical_damage"][1].as_u64().unwrap());
         assert_eq!(serde_json::to_value(&game.battle.battle_state).unwrap(), before);
         assert_eq!(game.frame_count, frame);
     }

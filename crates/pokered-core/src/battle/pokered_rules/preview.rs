@@ -19,7 +19,11 @@ pub struct DirectHitPreview {
     pub direct_hit_can_ko: bool,
 }
 
-pub fn player_direct_hit(bs: &BattleState, move_id: MoveId) -> Option<DirectHitPreview> {
+pub fn player_direct_hit(
+    bs: &BattleState,
+    move_id: MoveId,
+    player_badges: u8,
+) -> Option<DirectHitPreview> {
     let md = MoveData::get(move_id)?;
     // Explicit coverage: never apply a single ordinary hit's formula to fixed
     // damage, OHKO, multi-hit/trapping, charge/locked turns or called moves.
@@ -51,7 +55,15 @@ pub fn player_direct_hit(bs: &BattleState, move_id: MoveId) -> Option<DirectHitP
     {
         return None;
     }
-    let (state, effects) = runtime::engine_state_from_legacy(bs);
+    // BattleScreen::sync_player_context runs at action execution, not when a
+    // menu opens. Initial send-out and forced/Shift switches can therefore
+    // expose None here; reading the raw adapter would underestimate damage.
+    // Mirror that deterministic preparation on a COPY. The frontend badges
+    // are authoritative before the first action (bs.player_badges may be 0).
+    let mut prepared = bs.clone();
+    prepared.player_badges = player_badges;
+    crate::battle::badge_boosts::ensure_initialized(&mut prepared.player, player_badges);
+    let (state, effects) = runtime::engine_state_from_legacy(&prepared);
     let player = &state.player_battlers[0];
     let enemy = &state.opponent_battlers[0];
     let damage = |critical, roll| {
@@ -95,6 +107,10 @@ mod tests {
     use crate::battle::state::{new_battle_state, status3, BattleType, StatusCondition};
     use crate::pokemon::stats::create_pokemon;
     use pokered_data::{species::Species, types::PokemonType};
+
+    fn player_direct_hit(bs: &BattleState, move_id: MoveId) -> Option<DirectHitPreview> {
+        super::player_direct_hit(bs, move_id, bs.player_badges)
+    }
 
     fn battle() -> BattleState {
         new_battle_state(
@@ -179,6 +195,26 @@ mod tests {
         bs.enemy.clear_status2(status2::HAS_SUBSTITUTE_UP);
         bs.enemy.set_status1(status1::INVULNERABLE);
         assert!(player_direct_hit(&bs, MoveId::Cut).is_none());
+    }
+
+    #[test]
+    fn capture_preview_after_forced_switch_includes_pending_send_out_boost() {
+        let mut bs = battle();
+        bs.player_badges = 1;
+        bs.player.reset_volatile_status();
+        assert!(bs.player.badge_boosted_stats.is_none());
+        let raw = player_direct_hit(&bs, MoveId::Cut).unwrap();
+        let mut initialized = bs.clone();
+        crate::battle::badge_boosts::ensure_initialized(&mut initialized.player, bs.player_badges);
+        let expected = player_direct_hit(&initialized, MoveId::Cut).unwrap();
+        assert_eq!(
+            raw, expected,
+            "preview must include the boost execution applies lazily"
+        );
+        assert!(
+            bs.player.badge_boosted_stats.is_none(),
+            "preview must not mutate live state"
+        );
     }
 
     #[test]
