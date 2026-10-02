@@ -1,6 +1,6 @@
 # 系统保真审计（基线 72ff719；原作 fbcf7d0）
 
-审计次序：背包/商店 → PC/箱子 → 育成 → NPC/联机交换 → 图鉴 → 存档。下面列的是当前代码的新确认项；`FIDELITY_GAPS.md` 中 PC 无入口、图鉴未填充、联机不存在等旧报告不再成立。原作参考仓库为 sparse checkout，部分 ASM 用 `git show HEAD:path | nl -ba` 读取，行号均属于该固定提交。
+审计次序：背包/商店 → PC/箱子 → 育成 → NPC/联机交换 → 图鉴 → 存档。SYS-01至SYS-17以基线审计为起点，SYS-18/19是整合后`8837a2a`真实TCP战斗追加确认，SYS-20由之后`6fb9812`整局验证确认。下面列的是本轮新确认项；`FIDELITY_GAPS.md` 中 PC 无入口、图鉴未填充、联机不存在等旧报告不再成立。原作参考仓库为 sparse checkout，部分 ASM 用 `git show HEAD:path | nl -ba` 读取，行号均属于该固定提交。
 
 验证：当前源码构建；`systems_probe.rs` 临时复制为 `crates/pokered-core/tests/audit_systems_probe.rs` 运行，8/8 观察成立，随后删除临时测试。输出在 `systems-probe.log`。这些观察测试断言的是基线实际问题，并不是对正确行为的验收。
 
@@ -18,11 +18,14 @@
 | SYS-10 | 严重 | “canonical” SRAM中育成box struct只写23字节；另漏wGameProgressFlags尾部2个script byte及78个保留字节，UNION又多填2字节；sprite、party、current box、checksum比原作提前88；双方互导失真/拒绝 | wDayCareMon为33字节宏且含五项stat-exp；`macros/ram.asm:7-25`、`ram/wram.asm:2216-2223`；SRAM紧邻固定区 `ram/sram.asm:16-24` | `save/ser_game_data.rs:363-384`遗漏10；`save/sram_deser_game_data.rs:259-266`同步漏读；`save/sram_import.rs:31-35,189-196`从同一错误serializer导长度 | 运行probe：main1841，daycare23，region3891；原作此尾段应33，根代理独立以RGBDS1.0.1组装原作RAM后确认：Main1929、sprite=$2D2C、party=$2F2C、current box=$30C0、checksum=$3523、region3979；另缺wGameProgressFlags末2个script byte+ds78（ram/wram.asm:2042-2044），同时UNION中50-byte wild branch旧版按48-byte填充多2；净差80-2+10=88。现有`canonical_region_length_matches_original`没有真实原作常量而只自比较（`sram_import_tests.rs:228-250`） |
 | SYS-11 | 严重 | .sav物种写dex编号；Pikachu输出$19，原作$54读成Doduo；Rhydon$01读成Bulbasaur，高于151原作物种变None | SRAM结构species用内部ROM ID：Rhydon$01、Pikachu$54；`constants/pokemon_constants.asm:10,93`；图鉴号码另有映射 | `data/species.rs:7-10`枚举dex顺序；`save/ser_pokemon.rs:56,128,160,195`直接as u8/from_index_id；Daycare/HOF同样 | 运行probe；原作互导不能用自回环证明 |
 | SYS-12 | 高 | Safari猎场存档没有写活跃步数/球数，Continue没有恢复active；在猎场读档可变普通战斗，下一warp重新得到全额步数球数 | wSafariSteps/wNumSafariBalls属于MainData，SaveGame复制保存；`ram/wram.asm:2062,2211`、`engine/menus/save.asm:220-223`；`engine/events/hidden_events/safari_game.asm:1-24`按保存字段继续 | `overworld/screen.rs:1196-1198`初始化0/inactive；`app/game.rs:1855-1927`save bridge没同步；Continue`app/game.rs:2336-2370`没恢复；`overworld/screen.rs:2479-2482`inactive再入猎场直接补满 | 静态确认；TUI同样独立状态；移动/Web沿用app bridge；debug save_state包含runtime与普通Save不同，应分开验 |
-| SYS-13 | 高 | Colosseum战前强制heal、战后却留下HP/status/PP；原作允许带伤入战而战后全队heal | 原作唯一CableClub HealParty在`InitOpponent`返回后：`engine/link/cable_club.asm:280-287` | `battle/link_battle_driver.rs:176,210-212`战前heal；`494-513`结算保留战后party；通用`battle/settlement/writeback.rs:180-184`直接保存；`app/game.rs:4535-4541`rematch reset无heal | 静态确认（源码把asm:292音乐行误引为战前heal）；双进程动态待验 |
+| SYS-13 | 高 | Colosseum战前强制heal、战后却留下HP/status/PP；原作允许带伤入战而战后全队heal | 原作唯一CableClub HealParty在`InitOpponent`返回后：`engine/link/cable_club.asm:280-287` | `battle/link_battle_driver.rs:176,210-212`战前heal；`494-513`结算保留战后party；通用`battle/settlement/writeback.rs:180-184`直接保存；`app/game.rs:4535-4541`rematch reset无heal | 静态确认（源码把asm:292音乐行误引为战前heal）；最终789实际双TCP整局已验证战前伤势/PP保留、战后全四只治疗，详见末段 |
 | SYS-14 | 高/缺失 | 普通PokéCenter柜员只显示Welcome，游戏内没有选择TradeCenter/Colosseum、存档/入场动作；现有TCP/BC backend需CLI/网页入口并debug warp进入房间 | `scripts/CeruleanPokecenter.asm:12-13`调用cable_club_receptionist；原作LinkMenu选房 `engine/menus/main_menu.asm:182-287` | 所有Pokecenter.scene柜员分支（如`maps/CeruleanPokecenter/script.scene`talkLinkReceptionist）仅文字；TradeCenter桌面linkStart已实现 | 确認内容代码，不应重报为“link不存在”；GBA app的link代码cfg剔除，硬件无后端，属平台未还原 |
 | SYS-15 | 高 | 原作首次未CHANGE BOX的合法存档，banks2/3仍可含任意SRAM；import却先无条件校验两bank而拒绝Continue | 原作Load只校验bank1（`engine/menus/save.asm:1-11,31-130`）；首切箱才EmptyAllSRAMBoxes（`save.asm:368-370`） | `save/sram_import.rs:68-69,91-94`无条件validate box banks | 静态确证；修复回归用独立原作布局fixture+0xa7填充未初始化boxbank |
 | SYS-16 | 高 | NPC交易完成标记仅runtime script alias，普通.sav没有与completed_in_game_trade_flags同步；重载后可重复交易；原作存档导入的完成位亦不显示 | `engine/events/in_game_trades.asm:47-51`测试wCompletedInGameTradeFlags；FlagAction按byte序bit0-9，`constants/script_constants.asm:23-32`原作10项顺序 | `app/game.rs:1855-1927,2336-2370`没有alias桥接；`save/ser_game_data.rs`对completed_in_game_trade_flags用BE，相反byte顺序 | 静态确认；修复fixture用原作$29E3 bit1(MARCEL)验证导入/导出/alias |
 | SYS-17 | 中 | 合法原作/NPC/联机精灵OT ID=$0000、玩家ID非零时被当作own，失去交易EXP和不听话行为 | 原作仅比较两字节OT/玩家ID，不特判0；`engine/battle/experience.asm:69-83`、`engine/battle/core.asm:3841-3853` | `battle/obedience.rs:79-85`为旧unstamped兼容无条件排除0；NPC生成、联机收包、育成、SRAM导入与战斗共同调用 | 静态确证；追加独立原作offset fixture、NPC/育成owner1234与owner0矩阵，以及obedience helper回归，根代理最终统一执行 |
+| SYS-18 | 严重 | 实际双TCP Colosseum，先选招一端发送动作；另一端仍选招时逐帧poll会take丢掉已到remote，后选招又没有新包触发resolve，双方永久LinkWaiting | 原作`engine/battle/core.asm:3008-3043` LinkBattleExchangeData保留本地选择并轮询收到对方选择，之后正常执行回合 | `8837a2a`的`link/link_battle.rs:233-236,379-390`无包直接Pending、单边值也take清空 | 两个真实app柜员/SAVE/入Battle房间/桌sign/A选招，交替各600帧仍阻塞；[完整before状态](systems-colosseum-before.json)；追加双向先后100poll回归 |
+| SYS-19 | 严重 | 同一实际双TCP战斗，KO首次产生result时App漏克隆canonical最终画面；前一帧mirror还在LinkWaiting，结束文字及返回房间永远不能执行 | 原作`engine/link/cable_club.asm:286-288` InitOpponent返回后HealParty并ReturnToCableClubRoom | `8837a2a`的`app/game.rs:4439-4444`仅result为空才镜像；`battle/mod.rs:4586`整队KO当帧设置link_result | 真实单回合Surf KO与SYS-18同次复现；新增真实PokemonGame双端异步KO退出/全队治疗回归；修复对终局canonical只镜像一次 |
+| SYS-20 | 高 | 解决前述阻塞后，真实TCP败方已全队heal却仍排普通Blackout；退出战斗后短暂在房间，后续fade实际离开Colosseum回PalletTown | 原作`engine/link/cable_club.asm:286-288`无论胜负，InitOpponent返回后HealParty并ReturnToCableClubRoom | `6fb9812`的`battle/settlement/writeback.rs:106-163`Loss仅排除Oak实验室Rival，未排除link_mode；结尾的link heal不撤销已排warp | [真实6fb状态](systems-colosseum-defeat-before.json)及败方Pallet截图；原App回归在刚回overworld即停止，补继续120帧及无pendingwarp断言 |
 
 所有open-pokered行号基准路径：未写`app/`的逻辑在`crates/pokered-core/src/`；`app/game.rs`为`crates/pokered-app/src/game.rs`；`data/species.rs`为`crates/pokered-data/src/species.rs`。
 
@@ -36,7 +39,7 @@
 | 育成 | EXP增长，HM/最后一只拒绝，领取元数据，FIFO学招，SRAM结构 | EXP接近原作$50上限的超长步数；L100cap差异暂不单列，因为正常取回会cap100 |
 | NPC交易 | 10组数据/共同桥接/动画后mutation/flag、last mon/同种多只 | 所有10处NPC逐一实玩；动画像素代理另审 |
 | 图鉴 | 编号列表、seen/owned gated数据、CRY/AREA入口及原作区域排除，PC rating阈值 | 151项描述逐字/中文视觉、全部habitat比较 |
-| 联机 | 生产TCP/BC/session/router、trade last-mon专用remove、双方confirm取消和disconnect代码路径、battle healing位置 | 原作硬件串口互通，本项目自定义wire协议不能视作ROM互通；整局双进程及断线时序待验 |
+| 联机 | 生产TCP/BC/session/router、trade last-mon专用remove、双方confirm取消和disconnect代码路径、battle healing位置；实际双TCP柜员/选房/整局异步KO/胜负双方留房与全队heal | 原作硬件串口互通，本项目自定义wire协议不能视作ROM互通；真实断线各时序及多回合/强制换人穷举未覆盖 |
 | 存读 | SRAM序列化/反序列化/HOF/当前箱与外部箱/legacy迁移、Safari桥接、OT/PP Ups | 所有原作合法存档逐一导入，真实ROM打开导出文件；8项probe为源码运行证据，尚无ROM差分运行 |
 
 ## 排除的旧报告与额外风险
@@ -96,4 +99,23 @@ SYS-17追加named-identity helper：有OT name的ID0按原作直接比较玩家I
 | 选房 | 基线无选房菜单 | [3选项](../../screenshots/fidelity-systems/cable-room-selection-after.png) |
 | 选房取消 | 基线无对应入口 | [原文取消](../../screenshots/fidelity-systems/cable-room-cancel-after.png) |
 
-本轮双进程实际验证的是柜员/保存/选房/取消；整局TCP联机Battle尚未实玩，其战前保留伤势、战后全员治疗由双channel driver与真实settlement测试验证。上述检查不等于GBA物理串口互通或真实原作ROM存档加载验收。
+此前883双进程检查仅覆盖柜员/保存/选房/取消；以下追加整局TCP联机Battle实测，保留各阶段真实源码来源。上述检查不等于GBA物理串口互通或真实原作ROM存档加载验收。
+
+
+## 最终实际双TCP Colosseum整局（SYS-13、SYS-18至SYS-20）
+
+SYS-18/19在此前883 immutable的真实战斗追加确认；SYS-20在第一轮修后6fb整局继续推进才暴露。修复source分别为`1eaeef7`与`1e0a0db`，根代理集成为`6fb9812`与`7897c04`；双向100poll先后选招回归、真实PokemonGame异步KO与退战后120帧回归、link败方无blackout settlement回归均由根代理定点执行通过。
+
+最终真实运行source `7897c04a2cec95b8b26e2f9755799a15c8a24181`，binary SHA256 `ece0a06b6a9ea0f6a96355f46de163f4c55498a8c979735eccaed21b70207506`。两个独立slot与TCP app，用合成SaveData作为受伤/缺PP/备用已倒下的初始队伍；加载后全部走生产柜员、普通SAVE、Colosseum选房、桌上GB交互和A键战斗，未用debug直接启动战斗或修改战斗精灵。复现见[systems_colosseum_runtime.py](systems_colosseum_runtime.py)，最终完整状态、应用日志及逐图哈希见[systems-colosseum-final.json](systems-colosseum-final.json)。
+
+- 实际交换后的battle_live仍是Blastoise100/300 Burn、Surf2PP和Rattata1/20 Burn、Tackle3PP，两端备用仍0HP/Poison/0PP；因此没有战前治疗。
+- Host先选Surf后等待100帧，peer之后才选Tackle；实际回合双方一致，Surf2→1PP且Rattata1→0HP，随后胜负文字均能推进。
+- 两端退战后再真实推进120 neutral frames，仍是Colosseum/InRoom；Blastoise300/300+Surf15PP、Pikachu30/30+Thundershock30PP、Rattata20/20+Tackle35PP、Pidgey20/20+Gust35PP，四只status均None。四只EXP仍2035，双方money仍3000。
+
+| 修复实际图 | before来源 | after来源 |
+|---|---|---|
+| SYS-18：peer等招永久阻塞 → 正常结束并全队恢复 | [883 peer LinkWaiting](../../screenshots/fidelity-systems/peer-colosseum-blocked-before.png) | [789 peer治疗后队伍](../../screenshots/fidelity-systems/peer-colosseum-party-after.png) |
+| SYS-19：host终局镜像仍阻塞 → 正常结束并全队恢复 | [883 host LinkWaiting](../../screenshots/fidelity-systems/host-colosseum-blocked-before.png) | [789 host治疗后队伍](../../screenshots/fidelity-systems/host-colosseum-party-after.png) |
+| SYS-20：败方离房回Pallet → 留Colosseum | [6fb败方Pallet](../../screenshots/fidelity-systems/peer-colosseum-blackout-before.png) | [789败方Colosseum](../../screenshots/fidelity-systems/peer-colosseum-room-after.png) |
+
+另附789进入实际招式菜单的[host Surf2PP+Burn100HP](../../screenshots/fidelity-systems/host-colosseum-entry-moves.png)及[peer Tackle3PP+Burn1HP](../../screenshots/fidelity-systems/peer-colosseum-entry-moves.png)。这轮覆盖实际TCP单回合KO、先后选招、伤势交换、双方结算及退战延迟；多回合/强制换人/断线时序穷举与原作硬件串口互通仍为明确验证边界。

@@ -1,0 +1,2845 @@
+{
+  "source": "7897c04a2cec95b8b26e2f9755799a15c8a24181",
+  "binary_sha256": "ece0a06b6a9ea0f6a96355f46de163f4c55498a8c979735eccaed21b70207506",
+  "host_room_before_battle": {
+    "active_script_effect": null,
+    "badges": 0,
+    "battle_bag": null,
+    "battle_inventory": [],
+    "battle_live": null,
+    "battle_message": null,
+    "battle_moves": null,
+    "battle_party_cursor": 0,
+    "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+    "choice": null,
+    "coins": 0,
+    "credits_final_button": null,
+    "credits_phase": null,
+    "dialogue": null,
+    "dialogue_state": null,
+    "evaluation": {
+      "party": [
+        {
+          "hp": 100,
+          "level": 100,
+          "max_hp": 300,
+          "moves": [
+            "Surf",
+            "None",
+            "None",
+            "None"
+          ],
+          "pp": [
+            2,
+            0,
+            0,
+            0
+          ],
+          "species": "Blastoise",
+          "status": "Burn",
+          "total_exp": 2035
+        },
+        {
+          "hp": 0,
+          "level": 10,
+          "max_hp": 30,
+          "moves": [
+            "Thundershock",
+            "None",
+            "None",
+            "None"
+          ],
+          "pp": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "species": "Pikachu",
+          "status": "Poison",
+          "total_exp": 2035
+        }
+      ],
+      "party_source": "save_data",
+      "pokedex": {
+        "owned": 0,
+        "owned_numbers": [],
+        "seen": 0,
+        "total": 151
+      }
+    },
+    "field_menu": null,
+    "frame_count": 508,
+    "hall_of_fame_count": 0,
+    "hof_phase": null,
+    "last_outside_map": "PalletTown",
+    "link": {
+      "cable_phase": "InRoom",
+      "role": "Host",
+      "status": "connected",
+      "trade": {
+        "given": null,
+        "received": null,
+        "state": "Idle"
+      }
+    },
+    "map_blocks": [
+      27,
+      23,
+      19,
+      27,
+      23,
+      10,
+      16,
+      17,
+      18,
+      10,
+      10,
+      20,
+      21,
+      22,
+      10,
+      10,
+      24,
+      25,
+      26,
+      10
+    ],
+    "map_id": 240,
+    "map_name": "Colosseum",
+    "money": 3000,
+    "party": [
+      {
+        "hp": 100,
+        "level": 100,
+        "max_hp": 300,
+        "moves": [
+          "Surf",
+          "None",
+          "None",
+          "None"
+        ],
+        "pp": [
+          2,
+          0,
+          0,
+          0
+        ],
+        "species": "Blastoise",
+        "status": "Burn"
+      },
+      {
+        "hp": 0,
+        "level": 10,
+        "max_hp": 30,
+        "moves": [
+          "Thundershock",
+          "None",
+          "None",
+          "None"
+        ],
+        "pp": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "species": "Pikachu",
+        "status": "Poison"
+      }
+    ],
+    "party_count": 2,
+    "pc_phase": null,
+    "player_facing": "Up",
+    "player_movement_state": "Idle",
+    "player_name": "RED",
+    "player_transport": "Walking",
+    "player_x": 2,
+    "player_y": 3,
+    "screen": "overworld",
+    "script_awaiting_battle": false,
+    "script_effect": null,
+    "script_running": false,
+    "shop_phase": null,
+    "text_speed_delay_frames": 3,
+    "warp_fade": "Idle"
+  },
+  "peer_room_before_battle": {
+    "active_script_effect": null,
+    "badges": 0,
+    "battle_bag": null,
+    "battle_inventory": [],
+    "battle_live": null,
+    "battle_message": null,
+    "battle_moves": null,
+    "battle_party_cursor": 0,
+    "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+    "choice": null,
+    "coins": 0,
+    "credits_final_button": null,
+    "credits_phase": null,
+    "dialogue": null,
+    "dialogue_state": null,
+    "evaluation": {
+      "party": [
+        {
+          "hp": 1,
+          "level": 5,
+          "max_hp": 20,
+          "moves": [
+            "Tackle",
+            "None",
+            "None",
+            "None"
+          ],
+          "pp": [
+            3,
+            0,
+            0,
+            0
+          ],
+          "species": "Rattata",
+          "status": "Burn",
+          "total_exp": 2035
+        },
+        {
+          "hp": 0,
+          "level": 5,
+          "max_hp": 20,
+          "moves": [
+            "Gust",
+            "None",
+            "None",
+            "None"
+          ],
+          "pp": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "species": "Pidgey",
+          "status": "Poison",
+          "total_exp": 2035
+        }
+      ],
+      "party_source": "save_data",
+      "pokedex": {
+        "owned": 0,
+        "owned_numbers": [],
+        "seen": 0,
+        "total": 151
+      }
+    },
+    "field_menu": null,
+    "frame_count": 508,
+    "hall_of_fame_count": 0,
+    "hof_phase": null,
+    "last_outside_map": "PalletTown",
+    "link": {
+      "cable_phase": "InRoom",
+      "role": "Guest",
+      "status": "connected",
+      "trade": {
+        "given": null,
+        "received": null,
+        "state": "Idle"
+      }
+    },
+    "map_blocks": [
+      27,
+      23,
+      19,
+      27,
+      23,
+      10,
+      16,
+      17,
+      18,
+      10,
+      10,
+      20,
+      21,
+      22,
+      10,
+      10,
+      24,
+      25,
+      26,
+      10
+    ],
+    "map_id": 240,
+    "map_name": "Colosseum",
+    "money": 3000,
+    "party": [
+      {
+        "hp": 1,
+        "level": 5,
+        "max_hp": 20,
+        "moves": [
+          "Tackle",
+          "None",
+          "None",
+          "None"
+        ],
+        "pp": [
+          3,
+          0,
+          0,
+          0
+        ],
+        "species": "Rattata",
+        "status": "Burn"
+      },
+      {
+        "hp": 0,
+        "level": 5,
+        "max_hp": 20,
+        "moves": [
+          "Gust",
+          "None",
+          "None",
+          "None"
+        ],
+        "pp": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "species": "Pidgey",
+        "status": "Poison"
+      }
+    ],
+    "party_count": 2,
+    "pc_phase": null,
+    "player_facing": "Up",
+    "player_movement_state": "Idle",
+    "player_name": "RED",
+    "player_transport": "Walking",
+    "player_x": 2,
+    "player_y": 3,
+    "screen": "overworld",
+    "script_awaiting_battle": false,
+    "script_effect": null,
+    "script_running": false,
+    "shop_phase": null,
+    "text_speed_delay_frames": 3,
+    "warp_fade": "Idle"
+  },
+  "host_battle_start_no_heal": {
+    "active_script_effect": null,
+    "badges": 0,
+    "battle_bag": null,
+    "battle_inventory": [],
+    "battle_live": {
+      "enemy": {
+        "hp": 1,
+        "level": 5,
+        "max_hp": 20,
+        "species": "Rattata",
+        "status": "Burn"
+      },
+      "enemy_party": [
+        {
+          "hp": 1,
+          "level": 5,
+          "species": "Rattata"
+        },
+        {
+          "hp": 0,
+          "level": 5,
+          "species": "Pidgey"
+        }
+      ],
+      "is_ghost": false,
+      "player": {
+        "hp": 100,
+        "level": 100,
+        "max_hp": 300,
+        "species": "Blastoise",
+        "status": "Burn"
+      },
+      "player_party": [
+        {
+          "hp": 100,
+          "level": 100,
+          "max_hp": 300,
+          "species": "Blastoise"
+        },
+        {
+          "hp": 0,
+          "level": 10,
+          "max_hp": 30,
+          "species": "Pikachu"
+        }
+      ]
+    },
+    "battle_message": null,
+    "battle_moves": null,
+    "battle_party_cursor": 0,
+    "battle_phase": "Intro { phase: TrainerReveal, wait_frames: 25 }",
+    "choice": null,
+    "coins": 0,
+    "credits_final_button": null,
+    "credits_phase": null,
+    "dialogue": null,
+    "dialogue_state": null,
+    "evaluation": {
+      "party": [
+        {
+          "hp": 100,
+          "level": 100,
+          "max_hp": 300,
+          "moves": [
+            "Surf",
+            "None",
+            "None",
+            "None"
+          ],
+          "pp": [
+            2,
+            0,
+            0,
+            0
+          ],
+          "species": "Blastoise",
+          "status": "Burn",
+          "total_exp": 2035
+        },
+        {
+          "hp": 0,
+          "level": 10,
+          "max_hp": 30,
+          "moves": [
+            "Thundershock",
+            "None",
+            "None",
+            "None"
+          ],
+          "pp": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "species": "Pikachu",
+          "status": "Poison",
+          "total_exp": 2035
+        }
+      ],
+      "party_source": "battle_live",
+      "pokedex": {
+        "owned": 0,
+        "owned_numbers": [],
+        "seen": 0,
+        "total": 151
+      }
+    },
+    "field_menu": null,
+    "frame_count": 893,
+    "hall_of_fame_count": 0,
+    "hof_phase": null,
+    "last_outside_map": "PalletTown",
+    "link": {
+      "cable_phase": "Battle",
+      "role": "Host",
+      "status": "connected",
+      "trade": {
+        "given": null,
+        "received": null,
+        "state": "Idle"
+      }
+    },
+    "map_blocks": [
+      27,
+      23,
+      19,
+      27,
+      23,
+      10,
+      16,
+      17,
+      18,
+      10,
+      10,
+      20,
+      21,
+      22,
+      10,
+      10,
+      24,
+      25,
+      26,
+      10
+    ],
+    "map_id": 240,
+    "map_name": "Colosseum",
+    "money": 3000,
+    "party": [
+      {
+        "hp": 100,
+        "level": 100,
+        "max_hp": 300,
+        "moves": [
+          "Surf",
+          "None",
+          "None",
+          "None"
+        ],
+        "pp": [
+          2,
+          0,
+          0,
+          0
+        ],
+        "species": "Blastoise",
+        "status": "Burn"
+      },
+      {
+        "hp": 0,
+        "level": 10,
+        "max_hp": 30,
+        "moves": [
+          "Thundershock",
+          "None",
+          "None",
+          "None"
+        ],
+        "pp": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "species": "Pikachu",
+        "status": "Poison"
+      }
+    ],
+    "party_count": 2,
+    "pc_phase": null,
+    "player_facing": "Down",
+    "player_movement_state": "Idle",
+    "player_name": "RED",
+    "player_transport": "Walking",
+    "player_x": 4,
+    "player_y": 3,
+    "screen": "battle",
+    "script_awaiting_battle": false,
+    "script_effect": null,
+    "script_running": false,
+    "shop_phase": null,
+    "text_speed_delay_frames": 3,
+    "warp_fade": "Idle"
+  },
+  "peer_battle_start_no_heal": {
+    "active_script_effect": null,
+    "badges": 0,
+    "battle_bag": null,
+    "battle_inventory": [],
+    "battle_live": {
+      "enemy": {
+        "hp": 100,
+        "level": 100,
+        "max_hp": 300,
+        "species": "Blastoise",
+        "status": "Burn"
+      },
+      "enemy_party": [
+        {
+          "hp": 100,
+          "level": 100,
+          "species": "Blastoise"
+        },
+        {
+          "hp": 0,
+          "level": 10,
+          "species": "Pikachu"
+        }
+      ],
+      "is_ghost": false,
+      "player": {
+        "hp": 1,
+        "level": 5,
+        "max_hp": 20,
+        "species": "Rattata",
+        "status": "Burn"
+      },
+      "player_party": [
+        {
+          "hp": 1,
+          "level": 5,
+          "max_hp": 20,
+          "species": "Rattata"
+        },
+        {
+          "hp": 0,
+          "level": 5,
+          "max_hp": 20,
+          "species": "Pidgey"
+        }
+      ]
+    },
+    "battle_message": null,
+    "battle_moves": null,
+    "battle_party_cursor": 0,
+    "battle_phase": "Intro { phase: SilhouetteSlide, wait_frames: 14 }",
+    "choice": null,
+    "coins": 0,
+    "credits_final_button": null,
+    "credits_phase": null,
+    "dialogue": null,
+    "dialogue_state": null,
+    "evaluation": {
+      "party": [
+        {
+          "hp": 1,
+          "level": 5,
+          "max_hp": 20,
+          "moves": [
+            "Tackle",
+            "None",
+            "None",
+            "None"
+          ],
+          "pp": [
+            3,
+            0,
+            0,
+            0
+          ],
+          "species": "Rattata",
+          "status": "Burn",
+          "total_exp": 2035
+        },
+        {
+          "hp": 0,
+          "level": 5,
+          "max_hp": 20,
+          "moves": [
+            "Gust",
+            "None",
+            "None",
+            "None"
+          ],
+          "pp": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "species": "Pidgey",
+          "status": "Poison",
+          "total_exp": 2035
+        }
+      ],
+      "party_source": "battle_live",
+      "pokedex": {
+        "owned": 0,
+        "owned_numbers": [],
+        "seen": 0,
+        "total": 151
+      }
+    },
+    "field_menu": null,
+    "frame_count": 815,
+    "hall_of_fame_count": 0,
+    "hof_phase": null,
+    "last_outside_map": "PalletTown",
+    "link": {
+      "cable_phase": "Battle",
+      "role": "Guest",
+      "status": "connected",
+      "trade": {
+        "given": null,
+        "received": null,
+        "state": "Idle"
+      }
+    },
+    "map_blocks": [
+      27,
+      23,
+      19,
+      27,
+      23,
+      10,
+      16,
+      17,
+      18,
+      10,
+      10,
+      20,
+      21,
+      22,
+      10,
+      10,
+      24,
+      25,
+      26,
+      10
+    ],
+    "map_id": 240,
+    "map_name": "Colosseum",
+    "money": 3000,
+    "party": [
+      {
+        "hp": 1,
+        "level": 5,
+        "max_hp": 20,
+        "moves": [
+          "Tackle",
+          "None",
+          "None",
+          "None"
+        ],
+        "pp": [
+          3,
+          0,
+          0,
+          0
+        ],
+        "species": "Rattata",
+        "status": "Burn"
+      },
+      {
+        "hp": 0,
+        "level": 5,
+        "max_hp": 20,
+        "moves": [
+          "Gust",
+          "None",
+          "None",
+          "None"
+        ],
+        "pp": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "species": "Pidgey",
+        "status": "Poison"
+      }
+    ],
+    "party_count": 2,
+    "pc_phase": null,
+    "player_facing": "Up",
+    "player_movement_state": "Idle",
+    "player_name": "RED",
+    "player_transport": "Walking",
+    "player_x": 2,
+    "player_y": 3,
+    "screen": "battle",
+    "script_awaiting_battle": false,
+    "script_effect": null,
+    "script_running": false,
+    "shop_phase": null,
+    "text_speed_delay_frames": 3,
+    "warp_fade": "Idle"
+  },
+  "host_move_selection": {
+    "active_script_effect": null,
+    "badges": 0,
+    "battle_bag": null,
+    "battle_inventory": [],
+    "battle_live": {
+      "enemy": {
+        "hp": 1,
+        "level": 5,
+        "max_hp": 20,
+        "species": "Rattata",
+        "status": "Burn"
+      },
+      "enemy_party": [
+        {
+          "hp": 1,
+          "level": 5,
+          "species": "Rattata"
+        },
+        {
+          "hp": 0,
+          "level": 5,
+          "species": "Pidgey"
+        }
+      ],
+      "is_ghost": false,
+      "player": {
+        "hp": 100,
+        "level": 100,
+        "max_hp": 300,
+        "species": "Blastoise",
+        "status": "Burn"
+      },
+      "player_party": [
+        {
+          "hp": 100,
+          "level": 100,
+          "max_hp": 300,
+          "species": "Blastoise"
+        },
+        {
+          "hp": 0,
+          "level": 10,
+          "max_hp": 30,
+          "species": "Pikachu"
+        }
+      ]
+    },
+    "battle_message": "The enemy's weak!\nGet'm! BLASTOISE!",
+    "battle_moves": {
+      "cursor": 0,
+      "moves": [
+        {
+          "disabled": false,
+          "move": "Surf",
+          "pp": 2
+        }
+      ]
+    },
+    "battle_party_cursor": 0,
+    "battle_phase": "MoveSelect",
+    "choice": null,
+    "coins": 0,
+    "credits_final_button": null,
+    "credits_phase": null,
+    "dialogue": null,
+    "dialogue_state": null,
+    "evaluation": {
+      "party": [
+        {
+          "hp": 100,
+          "level": 100,
+          "max_hp": 300,
+          "moves": [
+            "Surf",
+            "None",
+            "None",
+            "None"
+          ],
+          "pp": [
+            2,
+            0,
+            0,
+            0
+          ],
+          "species": "Blastoise",
+          "status": "Burn",
+          "total_exp": 2035
+        },
+        {
+          "hp": 0,
+          "level": 10,
+          "max_hp": 30,
+          "moves": [
+            "Thundershock",
+            "None",
+            "None",
+            "None"
+          ],
+          "pp": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "species": "Pikachu",
+          "status": "Poison",
+          "total_exp": 2035
+        }
+      ],
+      "party_source": "battle_live",
+      "pokedex": {
+        "owned": 0,
+        "owned_numbers": [],
+        "seen": 0,
+        "total": 151
+      }
+    },
+    "field_menu": null,
+    "frame_count": 1104,
+    "hall_of_fame_count": 0,
+    "hof_phase": null,
+    "last_outside_map": "PalletTown",
+    "link": {
+      "cable_phase": "Battle",
+      "role": "Host",
+      "status": "connected",
+      "trade": {
+        "given": null,
+        "received": null,
+        "state": "Idle"
+      }
+    },
+    "map_blocks": [
+      27,
+      23,
+      19,
+      27,
+      23,
+      10,
+      16,
+      17,
+      18,
+      10,
+      10,
+      20,
+      21,
+      22,
+      10,
+      10,
+      24,
+      25,
+      26,
+      10
+    ],
+    "map_id": 240,
+    "map_name": "Colosseum",
+    "money": 3000,
+    "party": [
+      {
+        "hp": 100,
+        "level": 100,
+        "max_hp": 300,
+        "moves": [
+          "Surf",
+          "None",
+          "None",
+          "None"
+        ],
+        "pp": [
+          2,
+          0,
+          0,
+          0
+        ],
+        "species": "Blastoise",
+        "status": "Burn"
+      },
+      {
+        "hp": 0,
+        "level": 10,
+        "max_hp": 30,
+        "moves": [
+          "Thundershock",
+          "None",
+          "None",
+          "None"
+        ],
+        "pp": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "species": "Pikachu",
+        "status": "Poison"
+      }
+    ],
+    "party_count": 2,
+    "pc_phase": null,
+    "player_facing": "Down",
+    "player_movement_state": "Idle",
+    "player_name": "RED",
+    "player_transport": "Walking",
+    "player_x": 4,
+    "player_y": 3,
+    "screen": "battle",
+    "script_awaiting_battle": false,
+    "script_effect": null,
+    "script_running": false,
+    "shop_phase": null,
+    "text_speed_delay_frames": 3,
+    "warp_fade": "Idle"
+  },
+  "peer_move_selection": {
+    "active_script_effect": null,
+    "badges": 0,
+    "battle_bag": null,
+    "battle_inventory": [],
+    "battle_live": {
+      "enemy": {
+        "hp": 100,
+        "level": 100,
+        "max_hp": 300,
+        "species": "Blastoise",
+        "status": "Burn"
+      },
+      "enemy_party": [
+        {
+          "hp": 100,
+          "level": 100,
+          "species": "Blastoise"
+        },
+        {
+          "hp": 0,
+          "level": 10,
+          "species": "Pikachu"
+        }
+      ],
+      "is_ghost": false,
+      "player": {
+        "hp": 1,
+        "level": 5,
+        "max_hp": 20,
+        "species": "Rattata",
+        "status": "Burn"
+      },
+      "player_party": [
+        {
+          "hp": 1,
+          "level": 5,
+          "max_hp": 20,
+          "species": "Rattata"
+        },
+        {
+          "hp": 0,
+          "level": 5,
+          "max_hp": 20,
+          "species": "Pidgey"
+        }
+      ]
+    },
+    "battle_message": "Get'm! RATTATA!",
+    "battle_moves": {
+      "cursor": 0,
+      "moves": [
+        {
+          "disabled": false,
+          "move": "Tackle",
+          "pp": 3
+        }
+      ]
+    },
+    "battle_party_cursor": 0,
+    "battle_phase": "MoveSelect",
+    "choice": null,
+    "coins": 0,
+    "credits_final_button": null,
+    "credits_phase": null,
+    "dialogue": null,
+    "dialogue_state": null,
+    "evaluation": {
+      "party": [
+        {
+          "hp": 1,
+          "level": 5,
+          "max_hp": 20,
+          "moves": [
+            "Tackle",
+            "None",
+            "None",
+            "None"
+          ],
+          "pp": [
+            3,
+            0,
+            0,
+            0
+          ],
+          "species": "Rattata",
+          "status": "Burn",
+          "total_exp": 2035
+        },
+        {
+          "hp": 0,
+          "level": 5,
+          "max_hp": 20,
+          "moves": [
+            "Gust",
+            "None",
+            "None",
+            "None"
+          ],
+          "pp": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "species": "Pidgey",
+          "status": "Poison",
+          "total_exp": 2035
+        }
+      ],
+      "party_source": "battle_live",
+      "pokedex": {
+        "owned": 0,
+        "owned_numbers": [],
+        "seen": 0,
+        "total": 151
+      }
+    },
+    "field_menu": null,
+    "frame_count": 1093,
+    "hall_of_fame_count": 0,
+    "hof_phase": null,
+    "last_outside_map": "PalletTown",
+    "link": {
+      "cable_phase": "Battle",
+      "role": "Guest",
+      "status": "connected",
+      "trade": {
+        "given": null,
+        "received": null,
+        "state": "Idle"
+      }
+    },
+    "map_blocks": [
+      27,
+      23,
+      19,
+      27,
+      23,
+      10,
+      16,
+      17,
+      18,
+      10,
+      10,
+      20,
+      21,
+      22,
+      10,
+      10,
+      24,
+      25,
+      26,
+      10
+    ],
+    "map_id": 240,
+    "map_name": "Colosseum",
+    "money": 3000,
+    "party": [
+      {
+        "hp": 1,
+        "level": 5,
+        "max_hp": 20,
+        "moves": [
+          "Tackle",
+          "None",
+          "None",
+          "None"
+        ],
+        "pp": [
+          3,
+          0,
+          0,
+          0
+        ],
+        "species": "Rattata",
+        "status": "Burn"
+      },
+      {
+        "hp": 0,
+        "level": 5,
+        "max_hp": 20,
+        "moves": [
+          "Gust",
+          "None",
+          "None",
+          "None"
+        ],
+        "pp": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "species": "Pidgey",
+        "status": "Poison"
+      }
+    ],
+    "party_count": 2,
+    "pc_phase": null,
+    "player_facing": "Up",
+    "player_movement_state": "Idle",
+    "player_name": "RED",
+    "player_transport": "Walking",
+    "player_x": 2,
+    "player_y": 3,
+    "screen": "battle",
+    "script_awaiting_battle": false,
+    "script_effect": null,
+    "script_running": false,
+    "shop_phase": null,
+    "text_speed_delay_frames": 3,
+    "warp_fade": "Idle"
+  },
+  "host_commits_100_frames_before_peer": {
+    "host": {
+      "active_script_effect": null,
+      "badges": 0,
+      "battle_bag": null,
+      "battle_inventory": [],
+      "battle_live": {
+        "enemy": {
+          "hp": 1,
+          "level": 5,
+          "max_hp": 20,
+          "species": "Rattata",
+          "status": "Burn"
+        },
+        "enemy_party": [
+          {
+            "hp": 1,
+            "level": 5,
+            "species": "Rattata"
+          },
+          {
+            "hp": 0,
+            "level": 5,
+            "species": "Pidgey"
+          }
+        ],
+        "is_ghost": false,
+        "player": {
+          "hp": 100,
+          "level": 100,
+          "max_hp": 300,
+          "species": "Blastoise",
+          "status": "Burn"
+        },
+        "player_party": [
+          {
+            "hp": 100,
+            "level": 100,
+            "max_hp": 300,
+            "species": "Blastoise"
+          },
+          {
+            "hp": 0,
+            "level": 10,
+            "max_hp": 30,
+            "species": "Pikachu"
+          }
+        ]
+      },
+      "battle_message": "The enemy's weak!\nGet'm! BLASTOISE!",
+      "battle_moves": {
+        "cursor": 0,
+        "moves": [
+          {
+            "disabled": false,
+            "move": "Surf",
+            "pp": 2
+          }
+        ]
+      },
+      "battle_party_cursor": 0,
+      "battle_phase": "LinkWaiting",
+      "choice": null,
+      "coins": 0,
+      "credits_final_button": null,
+      "credits_phase": null,
+      "dialogue": null,
+      "dialogue_state": null,
+      "evaluation": {
+        "party": [
+          {
+            "hp": 100,
+            "level": 100,
+            "max_hp": 300,
+            "moves": [
+              "Surf",
+              "None",
+              "None",
+              "None"
+            ],
+            "pp": [
+              2,
+              0,
+              0,
+              0
+            ],
+            "species": "Blastoise",
+            "status": "Burn",
+            "total_exp": 2035
+          },
+          {
+            "hp": 0,
+            "level": 10,
+            "max_hp": 30,
+            "moves": [
+              "Thundershock",
+              "None",
+              "None",
+              "None"
+            ],
+            "pp": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "species": "Pikachu",
+            "status": "Poison",
+            "total_exp": 2035
+          }
+        ],
+        "party_source": "battle_live",
+        "pokedex": {
+          "owned": 0,
+          "owned_numbers": [],
+          "seen": 0,
+          "total": 151
+        }
+      },
+      "field_menu": null,
+      "frame_count": 1211,
+      "hall_of_fame_count": 0,
+      "hof_phase": null,
+      "last_outside_map": "PalletTown",
+      "link": {
+        "cable_phase": "Battle",
+        "role": "Host",
+        "status": "connected",
+        "trade": {
+          "given": null,
+          "received": null,
+          "state": "Idle"
+        }
+      },
+      "map_blocks": [
+        27,
+        23,
+        19,
+        27,
+        23,
+        10,
+        16,
+        17,
+        18,
+        10,
+        10,
+        20,
+        21,
+        22,
+        10,
+        10,
+        24,
+        25,
+        26,
+        10
+      ],
+      "map_id": 240,
+      "map_name": "Colosseum",
+      "money": 3000,
+      "party": [
+        {
+          "hp": 100,
+          "level": 100,
+          "max_hp": 300,
+          "moves": [
+            "Surf",
+            "None",
+            "None",
+            "None"
+          ],
+          "pp": [
+            2,
+            0,
+            0,
+            0
+          ],
+          "species": "Blastoise",
+          "status": "Burn"
+        },
+        {
+          "hp": 0,
+          "level": 10,
+          "max_hp": 30,
+          "moves": [
+            "Thundershock",
+            "None",
+            "None",
+            "None"
+          ],
+          "pp": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "species": "Pikachu",
+          "status": "Poison"
+        }
+      ],
+      "party_count": 2,
+      "pc_phase": null,
+      "player_facing": "Down",
+      "player_movement_state": "Idle",
+      "player_name": "RED",
+      "player_transport": "Walking",
+      "player_x": 4,
+      "player_y": 3,
+      "screen": "battle",
+      "script_awaiting_battle": false,
+      "script_effect": null,
+      "script_running": false,
+      "shop_phase": null,
+      "text_speed_delay_frames": 3,
+      "warp_fade": "Idle"
+    },
+    "peer": {
+      "active_script_effect": null,
+      "badges": 0,
+      "battle_bag": null,
+      "battle_inventory": [],
+      "battle_live": {
+        "enemy": {
+          "hp": 100,
+          "level": 100,
+          "max_hp": 300,
+          "species": "Blastoise",
+          "status": "Burn"
+        },
+        "enemy_party": [
+          {
+            "hp": 100,
+            "level": 100,
+            "species": "Blastoise"
+          },
+          {
+            "hp": 0,
+            "level": 10,
+            "species": "Pikachu"
+          }
+        ],
+        "is_ghost": false,
+        "player": {
+          "hp": 1,
+          "level": 5,
+          "max_hp": 20,
+          "species": "Rattata",
+          "status": "Burn"
+        },
+        "player_party": [
+          {
+            "hp": 1,
+            "level": 5,
+            "max_hp": 20,
+            "species": "Rattata"
+          },
+          {
+            "hp": 0,
+            "level": 5,
+            "max_hp": 20,
+            "species": "Pidgey"
+          }
+        ]
+      },
+      "battle_message": "Get'm! RATTATA!",
+      "battle_moves": {
+        "cursor": 0,
+        "moves": [
+          {
+            "disabled": false,
+            "move": "Tackle",
+            "pp": 3
+          }
+        ]
+      },
+      "battle_party_cursor": 0,
+      "battle_phase": "MoveSelect",
+      "choice": null,
+      "coins": 0,
+      "credits_final_button": null,
+      "credits_phase": null,
+      "dialogue": null,
+      "dialogue_state": null,
+      "evaluation": {
+        "party": [
+          {
+            "hp": 1,
+            "level": 5,
+            "max_hp": 20,
+            "moves": [
+              "Tackle",
+              "None",
+              "None",
+              "None"
+            ],
+            "pp": [
+              3,
+              0,
+              0,
+              0
+            ],
+            "species": "Rattata",
+            "status": "Burn",
+            "total_exp": 2035
+          },
+          {
+            "hp": 0,
+            "level": 5,
+            "max_hp": 20,
+            "moves": [
+              "Gust",
+              "None",
+              "None",
+              "None"
+            ],
+            "pp": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "species": "Pidgey",
+            "status": "Poison",
+            "total_exp": 2035
+          }
+        ],
+        "party_source": "battle_live",
+        "pokedex": {
+          "owned": 0,
+          "owned_numbers": [],
+          "seen": 0,
+          "total": 151
+        }
+      },
+      "field_menu": null,
+      "frame_count": 1193,
+      "hall_of_fame_count": 0,
+      "hof_phase": null,
+      "last_outside_map": "PalletTown",
+      "link": {
+        "cable_phase": "Battle",
+        "role": "Guest",
+        "status": "connected",
+        "trade": {
+          "given": null,
+          "received": null,
+          "state": "Idle"
+        }
+      },
+      "map_blocks": [
+        27,
+        23,
+        19,
+        27,
+        23,
+        10,
+        16,
+        17,
+        18,
+        10,
+        10,
+        20,
+        21,
+        22,
+        10,
+        10,
+        24,
+        25,
+        26,
+        10
+      ],
+      "map_id": 240,
+      "map_name": "Colosseum",
+      "money": 3000,
+      "party": [
+        {
+          "hp": 1,
+          "level": 5,
+          "max_hp": 20,
+          "moves": [
+            "Tackle",
+            "None",
+            "None",
+            "None"
+          ],
+          "pp": [
+            3,
+            0,
+            0,
+            0
+          ],
+          "species": "Rattata",
+          "status": "Burn"
+        },
+        {
+          "hp": 0,
+          "level": 5,
+          "max_hp": 20,
+          "moves": [
+            "Gust",
+            "None",
+            "None",
+            "None"
+          ],
+          "pp": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "species": "Pidgey",
+          "status": "Poison"
+        }
+      ],
+      "party_count": 2,
+      "pc_phase": null,
+      "player_facing": "Up",
+      "player_movement_state": "Idle",
+      "player_name": "RED",
+      "player_transport": "Walking",
+      "player_x": 2,
+      "player_y": 3,
+      "screen": "battle",
+      "script_awaiting_battle": false,
+      "script_effect": null,
+      "script_running": false,
+      "shop_phase": null,
+      "text_speed_delay_frames": 3,
+      "warp_fade": "Idle"
+    }
+  },
+  "first_turn_resolution": {
+    "host": {
+      "active_script_effect": null,
+      "badges": 0,
+      "battle_bag": null,
+      "battle_inventory": [],
+      "battle_live": {
+        "enemy": {
+          "hp": 0,
+          "level": 5,
+          "max_hp": 20,
+          "species": "Rattata",
+          "status": "Burn"
+        },
+        "enemy_party": [
+          {
+            "hp": 0,
+            "level": 5,
+            "species": "Rattata"
+          },
+          {
+            "hp": 0,
+            "level": 5,
+            "species": "Pidgey"
+          }
+        ],
+        "is_ghost": false,
+        "player": {
+          "hp": 100,
+          "level": 100,
+          "max_hp": 300,
+          "species": "Blastoise",
+          "status": "Burn"
+        },
+        "player_party": [
+          {
+            "hp": 100,
+            "level": 100,
+            "max_hp": 300,
+            "species": "Blastoise"
+          },
+          {
+            "hp": 0,
+            "level": 10,
+            "max_hp": 30,
+            "species": "Pikachu"
+          }
+        ]
+      },
+      "battle_message": "BLASTOISE used\nSURF!",
+      "battle_moves": null,
+      "battle_party_cursor": 0,
+      "battle_phase": "ShowingText { messages: [\"BLASTOISE used\\nSURF!\", \"Enemy RATTATA\\nfainted!\"], current: 0, wait_frames: 0, next_phase: TrainerVictory { phase: DefeatedText, wait_frames: 30, player_won: true } }",
+      "choice": null,
+      "coins": 0,
+      "credits_final_button": null,
+      "credits_phase": null,
+      "dialogue": null,
+      "dialogue_state": null,
+      "evaluation": {
+        "party": [
+          {
+            "hp": 100,
+            "level": 100,
+            "max_hp": 300,
+            "moves": [
+              "Surf",
+              "None",
+              "None",
+              "None"
+            ],
+            "pp": [
+              1,
+              0,
+              0,
+              0
+            ],
+            "species": "Blastoise",
+            "status": "Burn",
+            "total_exp": 2035
+          },
+          {
+            "hp": 0,
+            "level": 10,
+            "max_hp": 30,
+            "moves": [
+              "Thundershock",
+              "None",
+              "None",
+              "None"
+            ],
+            "pp": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "species": "Pikachu",
+            "status": "Poison",
+            "total_exp": 2035
+          }
+        ],
+        "party_source": "battle_live",
+        "pokedex": {
+          "owned": 0,
+          "owned_numbers": [],
+          "seen": 0,
+          "total": 151
+        }
+      },
+      "field_menu": null,
+      "frame_count": 1331,
+      "hall_of_fame_count": 0,
+      "hof_phase": null,
+      "last_outside_map": "PalletTown",
+      "link": {
+        "cable_phase": "Battle",
+        "role": "Host",
+        "status": "connected",
+        "trade": {
+          "given": null,
+          "received": null,
+          "state": "Idle"
+        }
+      },
+      "map_blocks": [
+        27,
+        23,
+        19,
+        27,
+        23,
+        10,
+        16,
+        17,
+        18,
+        10,
+        10,
+        20,
+        21,
+        22,
+        10,
+        10,
+        24,
+        25,
+        26,
+        10
+      ],
+      "map_id": 240,
+      "map_name": "Colosseum",
+      "money": 3000,
+      "party": [
+        {
+          "hp": 100,
+          "level": 100,
+          "max_hp": 300,
+          "moves": [
+            "Surf",
+            "None",
+            "None",
+            "None"
+          ],
+          "pp": [
+            2,
+            0,
+            0,
+            0
+          ],
+          "species": "Blastoise",
+          "status": "Burn"
+        },
+        {
+          "hp": 0,
+          "level": 10,
+          "max_hp": 30,
+          "moves": [
+            "Thundershock",
+            "None",
+            "None",
+            "None"
+          ],
+          "pp": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "species": "Pikachu",
+          "status": "Poison"
+        }
+      ],
+      "party_count": 2,
+      "pc_phase": null,
+      "player_facing": "Down",
+      "player_movement_state": "Idle",
+      "player_name": "RED",
+      "player_transport": "Walking",
+      "player_x": 4,
+      "player_y": 3,
+      "screen": "battle",
+      "script_awaiting_battle": false,
+      "script_effect": null,
+      "script_running": false,
+      "shop_phase": null,
+      "text_speed_delay_frames": 3,
+      "warp_fade": "Idle"
+    },
+    "peer": {
+      "active_script_effect": null,
+      "badges": 0,
+      "battle_bag": null,
+      "battle_inventory": [],
+      "battle_live": {
+        "enemy": {
+          "hp": 100,
+          "level": 100,
+          "max_hp": 300,
+          "species": "Blastoise",
+          "status": "Burn"
+        },
+        "enemy_party": [
+          {
+            "hp": 100,
+            "level": 100,
+            "species": "Blastoise"
+          },
+          {
+            "hp": 0,
+            "level": 10,
+            "species": "Pikachu"
+          }
+        ],
+        "is_ghost": false,
+        "player": {
+          "hp": 0,
+          "level": 5,
+          "max_hp": 20,
+          "species": "Rattata",
+          "status": "Burn"
+        },
+        "player_party": [
+          {
+            "hp": 0,
+            "level": 5,
+            "max_hp": 20,
+            "species": "Rattata"
+          },
+          {
+            "hp": 0,
+            "level": 5,
+            "max_hp": 20,
+            "species": "Pidgey"
+          }
+        ]
+      },
+      "battle_message": "Enemy BLASTOISE\nused SURF!",
+      "battle_moves": null,
+      "battle_party_cursor": 0,
+      "battle_phase": "ShowingText { messages: [\"Enemy BLASTOISE\\nused SURF!\", \"RATTATA fainted!\"], current: 0, wait_frames: 0, next_phase: TrainerVictory { phase: TrainerPicScrollIn, wait_frames: 50, player_won: false } }",
+      "choice": null,
+      "coins": 0,
+      "credits_final_button": null,
+      "credits_phase": null,
+      "dialogue": null,
+      "dialogue_state": null,
+      "evaluation": {
+        "party": [
+          {
+            "hp": 0,
+            "level": 5,
+            "max_hp": 20,
+            "moves": [
+              "Tackle",
+              "None",
+              "None",
+              "None"
+            ],
+            "pp": [
+              3,
+              0,
+              0,
+              0
+            ],
+            "species": "Rattata",
+            "status": "Burn",
+            "total_exp": 2035
+          },
+          {
+            "hp": 0,
+            "level": 5,
+            "max_hp": 20,
+            "moves": [
+              "Gust",
+              "None",
+              "None",
+              "None"
+            ],
+            "pp": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "species": "Pidgey",
+            "status": "Poison",
+            "total_exp": 2035
+          }
+        ],
+        "party_source": "battle_live",
+        "pokedex": {
+          "owned": 0,
+          "owned_numbers": [],
+          "seen": 0,
+          "total": 151
+        }
+      },
+      "field_menu": null,
+      "frame_count": 1320,
+      "hall_of_fame_count": 0,
+      "hof_phase": null,
+      "last_outside_map": "PalletTown",
+      "link": {
+        "cable_phase": "Battle",
+        "role": "Guest",
+        "status": "connected",
+        "trade": {
+          "given": null,
+          "received": null,
+          "state": "Idle"
+        }
+      },
+      "map_blocks": [
+        27,
+        23,
+        19,
+        27,
+        23,
+        10,
+        16,
+        17,
+        18,
+        10,
+        10,
+        20,
+        21,
+        22,
+        10,
+        10,
+        24,
+        25,
+        26,
+        10
+      ],
+      "map_id": 240,
+      "map_name": "Colosseum",
+      "money": 3000,
+      "party": [
+        {
+          "hp": 1,
+          "level": 5,
+          "max_hp": 20,
+          "moves": [
+            "Tackle",
+            "None",
+            "None",
+            "None"
+          ],
+          "pp": [
+            3,
+            0,
+            0,
+            0
+          ],
+          "species": "Rattata",
+          "status": "Burn"
+        },
+        {
+          "hp": 0,
+          "level": 5,
+          "max_hp": 20,
+          "moves": [
+            "Gust",
+            "None",
+            "None",
+            "None"
+          ],
+          "pp": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "species": "Pidgey",
+          "status": "Poison"
+        }
+      ],
+      "party_count": 2,
+      "pc_phase": null,
+      "player_facing": "Up",
+      "player_movement_state": "Idle",
+      "player_name": "RED",
+      "player_transport": "Walking",
+      "player_x": 2,
+      "player_y": 3,
+      "screen": "battle",
+      "script_awaiting_battle": false,
+      "script_effect": null,
+      "script_running": false,
+      "shop_phase": null,
+      "text_speed_delay_frames": 3,
+      "warp_fade": "Idle"
+    }
+  },
+  "room_after_120_neutral_frames": {
+    "host": {
+      "active_script_effect": null,
+      "badges": 0,
+      "battle_bag": null,
+      "battle_inventory": [],
+      "battle_live": {
+        "enemy": {
+          "hp": 0,
+          "level": 5,
+          "max_hp": 20,
+          "species": "Rattata",
+          "status": "Burn"
+        },
+        "enemy_party": [
+          {
+            "hp": 0,
+            "level": 5,
+            "species": "Rattata"
+          },
+          {
+            "hp": 0,
+            "level": 5,
+            "species": "Pidgey"
+          }
+        ],
+        "is_ghost": false,
+        "player": {
+          "hp": 100,
+          "level": 100,
+          "max_hp": 300,
+          "species": "Blastoise",
+          "status": "Burn"
+        },
+        "player_party": [
+          {
+            "hp": 100,
+            "level": 100,
+            "max_hp": 300,
+            "species": "Blastoise"
+          },
+          {
+            "hp": 0,
+            "level": 10,
+            "max_hp": 30,
+            "species": "Pikachu"
+          }
+        ]
+      },
+      "battle_message": null,
+      "battle_moves": null,
+      "battle_party_cursor": 0,
+      "battle_phase": "TrainerVictory { phase: EndBattleText, wait_frames: 0, player_won: true }",
+      "choice": null,
+      "coins": 0,
+      "credits_final_button": null,
+      "credits_phase": null,
+      "dialogue": null,
+      "dialogue_state": null,
+      "evaluation": {
+        "party": [
+          {
+            "hp": 300,
+            "level": 100,
+            "max_hp": 300,
+            "moves": [
+              "Surf",
+              "None",
+              "None",
+              "None"
+            ],
+            "pp": [
+              15,
+              0,
+              0,
+              0
+            ],
+            "species": "Blastoise",
+            "status": "None",
+            "total_exp": 2035
+          },
+          {
+            "hp": 30,
+            "level": 10,
+            "max_hp": 30,
+            "moves": [
+              "Thundershock",
+              "None",
+              "None",
+              "None"
+            ],
+            "pp": [
+              30,
+              0,
+              0,
+              0
+            ],
+            "species": "Pikachu",
+            "status": "None",
+            "total_exp": 2035
+          }
+        ],
+        "party_source": "save_data",
+        "pokedex": {
+          "owned": 0,
+          "owned_numbers": [],
+          "seen": 0,
+          "total": 151
+        }
+      },
+      "field_menu": null,
+      "frame_count": 1639,
+      "hall_of_fame_count": 0,
+      "hof_phase": null,
+      "last_outside_map": "PalletTown",
+      "link": {
+        "cable_phase": "InRoom",
+        "role": "Host",
+        "status": "connected",
+        "trade": {
+          "given": null,
+          "received": null,
+          "state": "Idle"
+        }
+      },
+      "map_blocks": [
+        27,
+        23,
+        19,
+        27,
+        23,
+        10,
+        16,
+        17,
+        18,
+        10,
+        10,
+        20,
+        21,
+        22,
+        10,
+        10,
+        24,
+        25,
+        26,
+        10
+      ],
+      "map_id": 240,
+      "map_name": "Colosseum",
+      "money": 3000,
+      "party": [
+        {
+          "hp": 300,
+          "level": 100,
+          "max_hp": 300,
+          "moves": [
+            "Surf",
+            "None",
+            "None",
+            "None"
+          ],
+          "pp": [
+            15,
+            0,
+            0,
+            0
+          ],
+          "species": "Blastoise",
+          "status": "None"
+        },
+        {
+          "hp": 30,
+          "level": 10,
+          "max_hp": 30,
+          "moves": [
+            "Thundershock",
+            "None",
+            "None",
+            "None"
+          ],
+          "pp": [
+            30,
+            0,
+            0,
+            0
+          ],
+          "species": "Pikachu",
+          "status": "None"
+        }
+      ],
+      "party_count": 2,
+      "pc_phase": null,
+      "player_facing": "Down",
+      "player_movement_state": "Idle",
+      "player_name": "RED",
+      "player_transport": "Walking",
+      "player_x": 4,
+      "player_y": 3,
+      "screen": "overworld",
+      "script_awaiting_battle": false,
+      "script_effect": null,
+      "script_running": false,
+      "shop_phase": null,
+      "text_speed_delay_frames": 3,
+      "warp_fade": "Idle"
+    },
+    "peer": {
+      "active_script_effect": null,
+      "badges": 0,
+      "battle_bag": null,
+      "battle_inventory": [],
+      "battle_live": {
+        "enemy": {
+          "hp": 100,
+          "level": 100,
+          "max_hp": 300,
+          "species": "Blastoise",
+          "status": "Burn"
+        },
+        "enemy_party": [
+          {
+            "hp": 100,
+            "level": 100,
+            "species": "Blastoise"
+          },
+          {
+            "hp": 0,
+            "level": 10,
+            "species": "Pikachu"
+          }
+        ],
+        "is_ghost": false,
+        "player": {
+          "hp": 0,
+          "level": 5,
+          "max_hp": 20,
+          "species": "Rattata",
+          "status": "Burn"
+        },
+        "player_party": [
+          {
+            "hp": 0,
+            "level": 5,
+            "max_hp": 20,
+            "species": "Rattata"
+          },
+          {
+            "hp": 0,
+            "level": 5,
+            "max_hp": 20,
+            "species": "Pidgey"
+          }
+        ]
+      },
+      "battle_message": null,
+      "battle_moves": null,
+      "battle_party_cursor": 0,
+      "battle_phase": "TrainerVictory { phase: EndBattleText, wait_frames: 0, player_won: false }",
+      "choice": null,
+      "coins": 0,
+      "credits_final_button": null,
+      "credits_phase": null,
+      "dialogue": null,
+      "dialogue_state": null,
+      "evaluation": {
+        "party": [
+          {
+            "hp": 20,
+            "level": 5,
+            "max_hp": 20,
+            "moves": [
+              "Tackle",
+              "None",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              0,
+              0,
+              0
+            ],
+            "species": "Rattata",
+            "status": "None",
+            "total_exp": 2035
+          },
+          {
+            "hp": 20,
+            "level": 5,
+            "max_hp": 20,
+            "moves": [
+              "Gust",
+              "None",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              0,
+              0,
+              0
+            ],
+            "species": "Pidgey",
+            "status": "None",
+            "total_exp": 2035
+          }
+        ],
+        "party_source": "save_data",
+        "pokedex": {
+          "owned": 0,
+          "owned_numbers": [],
+          "seen": 0,
+          "total": 151
+        }
+      },
+      "field_menu": null,
+      "frame_count": 1628,
+      "hall_of_fame_count": 0,
+      "hof_phase": null,
+      "last_outside_map": "PalletTown",
+      "link": {
+        "cable_phase": "InRoom",
+        "role": "Guest",
+        "status": "connected",
+        "trade": {
+          "given": null,
+          "received": null,
+          "state": "Idle"
+        }
+      },
+      "map_blocks": [
+        27,
+        23,
+        19,
+        27,
+        23,
+        10,
+        16,
+        17,
+        18,
+        10,
+        10,
+        20,
+        21,
+        22,
+        10,
+        10,
+        24,
+        25,
+        26,
+        10
+      ],
+      "map_id": 240,
+      "map_name": "Colosseum",
+      "money": 3000,
+      "party": [
+        {
+          "hp": 20,
+          "level": 5,
+          "max_hp": 20,
+          "moves": [
+            "Tackle",
+            "None",
+            "None",
+            "None"
+          ],
+          "pp": [
+            35,
+            0,
+            0,
+            0
+          ],
+          "species": "Rattata",
+          "status": "None"
+        },
+        {
+          "hp": 20,
+          "level": 5,
+          "max_hp": 20,
+          "moves": [
+            "Gust",
+            "None",
+            "None",
+            "None"
+          ],
+          "pp": [
+            35,
+            0,
+            0,
+            0
+          ],
+          "species": "Pidgey",
+          "status": "None"
+        }
+      ],
+      "party_count": 2,
+      "pc_phase": null,
+      "player_facing": "Up",
+      "player_movement_state": "Idle",
+      "player_name": "RED",
+      "player_transport": "Walking",
+      "player_x": 2,
+      "player_y": 3,
+      "screen": "overworld",
+      "script_awaiting_battle": false,
+      "script_effect": null,
+      "script_running": false,
+      "shop_phase": null,
+      "text_speed_delay_frames": 3,
+      "warp_fade": "Idle"
+    }
+  },
+  "host_battle_finished_all_healed": {
+    "active_script_effect": null,
+    "badges": 0,
+    "battle_bag": null,
+    "battle_inventory": [],
+    "battle_live": {
+      "enemy": {
+        "hp": 0,
+        "level": 5,
+        "max_hp": 20,
+        "species": "Rattata",
+        "status": "Burn"
+      },
+      "enemy_party": [
+        {
+          "hp": 0,
+          "level": 5,
+          "species": "Rattata"
+        },
+        {
+          "hp": 0,
+          "level": 5,
+          "species": "Pidgey"
+        }
+      ],
+      "is_ghost": false,
+      "player": {
+        "hp": 100,
+        "level": 100,
+        "max_hp": 300,
+        "species": "Blastoise",
+        "status": "Burn"
+      },
+      "player_party": [
+        {
+          "hp": 100,
+          "level": 100,
+          "max_hp": 300,
+          "species": "Blastoise"
+        },
+        {
+          "hp": 0,
+          "level": 10,
+          "max_hp": 30,
+          "species": "Pikachu"
+        }
+      ]
+    },
+    "battle_message": null,
+    "battle_moves": null,
+    "battle_party_cursor": 0,
+    "battle_phase": "TrainerVictory { phase: EndBattleText, wait_frames: 0, player_won: true }",
+    "choice": null,
+    "coins": 0,
+    "credits_final_button": null,
+    "credits_phase": null,
+    "dialogue": null,
+    "dialogue_state": null,
+    "evaluation": {
+      "party": [
+        {
+          "hp": 300,
+          "level": 100,
+          "max_hp": 300,
+          "moves": [
+            "Surf",
+            "None",
+            "None",
+            "None"
+          ],
+          "pp": [
+            15,
+            0,
+            0,
+            0
+          ],
+          "species": "Blastoise",
+          "status": "None",
+          "total_exp": 2035
+        },
+        {
+          "hp": 30,
+          "level": 10,
+          "max_hp": 30,
+          "moves": [
+            "Thundershock",
+            "None",
+            "None",
+            "None"
+          ],
+          "pp": [
+            30,
+            0,
+            0,
+            0
+          ],
+          "species": "Pikachu",
+          "status": "None",
+          "total_exp": 2035
+        }
+      ],
+      "party_source": "save_data",
+      "pokedex": {
+        "owned": 0,
+        "owned_numbers": [],
+        "seen": 0,
+        "total": 151
+      }
+    },
+    "field_menu": null,
+    "frame_count": 1639,
+    "hall_of_fame_count": 0,
+    "hof_phase": null,
+    "last_outside_map": "PalletTown",
+    "link": {
+      "cable_phase": "InRoom",
+      "role": "Host",
+      "status": "connected",
+      "trade": {
+        "given": null,
+        "received": null,
+        "state": "Idle"
+      }
+    },
+    "map_blocks": [
+      27,
+      23,
+      19,
+      27,
+      23,
+      10,
+      16,
+      17,
+      18,
+      10,
+      10,
+      20,
+      21,
+      22,
+      10,
+      10,
+      24,
+      25,
+      26,
+      10
+    ],
+    "map_id": 240,
+    "map_name": "Colosseum",
+    "money": 3000,
+    "party": [
+      {
+        "hp": 300,
+        "level": 100,
+        "max_hp": 300,
+        "moves": [
+          "Surf",
+          "None",
+          "None",
+          "None"
+        ],
+        "pp": [
+          15,
+          0,
+          0,
+          0
+        ],
+        "species": "Blastoise",
+        "status": "None"
+      },
+      {
+        "hp": 30,
+        "level": 10,
+        "max_hp": 30,
+        "moves": [
+          "Thundershock",
+          "None",
+          "None",
+          "None"
+        ],
+        "pp": [
+          30,
+          0,
+          0,
+          0
+        ],
+        "species": "Pikachu",
+        "status": "None"
+      }
+    ],
+    "party_count": 2,
+    "pc_phase": null,
+    "player_facing": "Down",
+    "player_movement_state": "Idle",
+    "player_name": "RED",
+    "player_transport": "Walking",
+    "player_x": 4,
+    "player_y": 3,
+    "screen": "overworld",
+    "script_awaiting_battle": false,
+    "script_effect": null,
+    "script_running": false,
+    "shop_phase": null,
+    "text_speed_delay_frames": 3,
+    "warp_fade": "Idle"
+  },
+  "peer_battle_finished_all_healed": {
+    "active_script_effect": null,
+    "badges": 0,
+    "battle_bag": null,
+    "battle_inventory": [],
+    "battle_live": {
+      "enemy": {
+        "hp": 100,
+        "level": 100,
+        "max_hp": 300,
+        "species": "Blastoise",
+        "status": "Burn"
+      },
+      "enemy_party": [
+        {
+          "hp": 100,
+          "level": 100,
+          "species": "Blastoise"
+        },
+        {
+          "hp": 0,
+          "level": 10,
+          "species": "Pikachu"
+        }
+      ],
+      "is_ghost": false,
+      "player": {
+        "hp": 0,
+        "level": 5,
+        "max_hp": 20,
+        "species": "Rattata",
+        "status": "Burn"
+      },
+      "player_party": [
+        {
+          "hp": 0,
+          "level": 5,
+          "max_hp": 20,
+          "species": "Rattata"
+        },
+        {
+          "hp": 0,
+          "level": 5,
+          "max_hp": 20,
+          "species": "Pidgey"
+        }
+      ]
+    },
+    "battle_message": null,
+    "battle_moves": null,
+    "battle_party_cursor": 0,
+    "battle_phase": "TrainerVictory { phase: EndBattleText, wait_frames: 0, player_won: false }",
+    "choice": null,
+    "coins": 0,
+    "credits_final_button": null,
+    "credits_phase": null,
+    "dialogue": null,
+    "dialogue_state": null,
+    "evaluation": {
+      "party": [
+        {
+          "hp": 20,
+          "level": 5,
+          "max_hp": 20,
+          "moves": [
+            "Tackle",
+            "None",
+            "None",
+            "None"
+          ],
+          "pp": [
+            35,
+            0,
+            0,
+            0
+          ],
+          "species": "Rattata",
+          "status": "None",
+          "total_exp": 2035
+        },
+        {
+          "hp": 20,
+          "level": 5,
+          "max_hp": 20,
+          "moves": [
+            "Gust",
+            "None",
+            "None",
+            "None"
+          ],
+          "pp": [
+            35,
+            0,
+            0,
+            0
+          ],
+          "species": "Pidgey",
+          "status": "None",
+          "total_exp": 2035
+        }
+      ],
+      "party_source": "save_data",
+      "pokedex": {
+        "owned": 0,
+        "owned_numbers": [],
+        "seen": 0,
+        "total": 151
+      }
+    },
+    "field_menu": null,
+    "frame_count": 1628,
+    "hall_of_fame_count": 0,
+    "hof_phase": null,
+    "last_outside_map": "PalletTown",
+    "link": {
+      "cable_phase": "InRoom",
+      "role": "Guest",
+      "status": "connected",
+      "trade": {
+        "given": null,
+        "received": null,
+        "state": "Idle"
+      }
+    },
+    "map_blocks": [
+      27,
+      23,
+      19,
+      27,
+      23,
+      10,
+      16,
+      17,
+      18,
+      10,
+      10,
+      20,
+      21,
+      22,
+      10,
+      10,
+      24,
+      25,
+      26,
+      10
+    ],
+    "map_id": 240,
+    "map_name": "Colosseum",
+    "money": 3000,
+    "party": [
+      {
+        "hp": 20,
+        "level": 5,
+        "max_hp": 20,
+        "moves": [
+          "Tackle",
+          "None",
+          "None",
+          "None"
+        ],
+        "pp": [
+          35,
+          0,
+          0,
+          0
+        ],
+        "species": "Rattata",
+        "status": "None"
+      },
+      {
+        "hp": 20,
+        "level": 5,
+        "max_hp": 20,
+        "moves": [
+          "Gust",
+          "None",
+          "None",
+          "None"
+        ],
+        "pp": [
+          35,
+          0,
+          0,
+          0
+        ],
+        "species": "Pidgey",
+        "status": "None"
+      }
+    ],
+    "party_count": 2,
+    "pc_phase": null,
+    "player_facing": "Up",
+    "player_movement_state": "Idle",
+    "player_name": "RED",
+    "player_transport": "Walking",
+    "player_x": 2,
+    "player_y": 3,
+    "screen": "overworld",
+    "script_awaiting_battle": false,
+    "script_effect": null,
+    "script_running": false,
+    "shop_phase": null,
+    "text_speed_delay_frames": 3,
+    "warp_fade": "Idle"
+  },
+  "result": "Both real TCP apps completed the battle and healed every party member only afterward.",
+  "runtime_logs": {
+    "host": "[Debug] No --debug-modules flag provided\nDebug server started on port 9501\nSnapshot loaded: \"/tmp/systems-colosseum-789-final/host-input.json\"\nSkip-intro: starting at CeruleanPokecenter (64 x=11, y=5)\nAsset root found: \"/workspace/open-pokered/crates/pokered-renderer/../../gfx\"\nAudio output disabled (--no-audio).\n[link] listening on port 9604 (waiting for peer)\nRunning headless (no window). Press Ctrl-C to exit.\nDriven-only mode: frames advance only via debug commands.\n[link] peer connected, waiting for its Hello\n[link] handshake complete \u2014 connected\n",
+    "peer": "[Debug] No --debug-modules flag provided\nDebug server started on port 9502\nSnapshot loaded: \"/tmp/systems-colosseum-789-final/peer-input.json\"\nSkip-intro: starting at CeruleanPokecenter (64 x=11, y=5)\nAsset root found: \"/workspace/open-pokered/crates/pokered-renderer/../../gfx\"\nAudio output disabled (--no-audio).\n[link] connecting to 127.0.0.1:9604\nRunning headless (no window). Press Ctrl-C to exit.\nDriven-only mode: frames advance only via debug commands.\n[link] handshake complete \u2014 connected\n"
+  },
+  "screenshots": {
+    "host-colosseum-entry-moves.png": "ba651ab13de41323fa778aab33581e7cd038bc6ac05eef22561c28b3fdbfd3c1",
+    "peer-colosseum-entry-moves.png": "145fed0f736a2430360cb85553b0c2415ad4644f4e1017b803ef5855c47d3acf",
+    "host-colosseum-room-after.png": "7ff1de3d8f64fc9c2aa89ac80db158839510dea7d6c01bd2644af71142104431",
+    "peer-colosseum-room-after.png": "871f77367470fb88f0f584df29d3ed6c7a5282b23cf36e6668be22a711c68753",
+    "host-colosseum-party-after.png": "5d993ebfd301319934a1bac03a5471d57aa302dd12b4f37140cf138e4e680454",
+    "peer-colosseum-party-after.png": "ed26c820bf95d6b04f564366645a3360732ecc99ebc97b058d57c6a319330bf5"
+  }
+}
