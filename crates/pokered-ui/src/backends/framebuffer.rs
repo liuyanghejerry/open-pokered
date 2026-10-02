@@ -41,23 +41,30 @@ impl<'fb> Painter for FrameBufferPainter<'fb> {
         }
         let bg = Rgba::WHITE;
         let t = TILE_SIZE_PX;
-        // TextBoxBorder writes whole tiles: $7A on both horizontal edges,
-        // $7C on both vertical edges, and opaque white space inside.
-        for row in 0..rect.th {
-            for col in 0..rect.tw {
-                let glyph = match (row, col) {
-                    (0, 0) => &box_tiles::TOP_LEFT,
-                    (0, c) if c + 1 == rect.tw => &box_tiles::TOP_RIGHT,
-                    (r, 0) if r + 1 == rect.th => &box_tiles::BOTTOM_LEFT,
-                    (r, c) if r + 1 == rect.th && c + 1 == rect.tw => &box_tiles::BOTTOM_RIGHT,
-                    (0, _) => &box_tiles::HORIZONTAL,
-                    (r, _) if r + 1 == rect.th => &box_tiles::HORIZONTAL,
-                    (_, 0) => &box_tiles::VERTICAL_LEFT,
-                    (_, c) if c + 1 == rect.tw => &box_tiles::VERTICAL_LEFT,
-                    _ => &[0; 8],
-                };
-                embedded_font::draw_glyph(glyph, (rect.tx + col) * t, (rect.ty + row) * t, color, bg, self.fb);
-            }
+        let (x, y) = (rect.tx * t, rect.ty * t);
+        let (right, bottom) = (x + (rect.tw - 1) * t, y + (rect.th - 1) * t);
+        let (inner_w, inner_h) = ((rect.tw - 2) * t, (rect.th - 2) * t);
+        // TextBoxBorder writes opaque white tiles. Quantize/fill that paper
+        // once, then batch the repeated original $7A/$7C ink runs instead of
+        // quantizing every pixel of every empty interior tile on the GBA.
+        self.fb.fill_rect(x, y, rect.tw * t, rect.th * t, bg);
+        // $7A = [00,00,FF,00,FF,FF,00,00] on BOTH horizontal edges.
+        for edge_y in [y, bottom] {
+            self.fb.fill_rect(x + t, edge_y + 2, inner_w, 1, color);
+            self.fb.fill_rect(x + t, edge_y + 4, inner_w, 2, color);
+        }
+        // $7C = [28;8] on BOTH vertical edges (columns 2 and 4).
+        for edge_x in [x, right] {
+            self.fb.fill_rect(edge_x + 2, y + t, 1, inner_h, color);
+            self.fb.fill_rect(edge_x + 4, y + t, 1, inner_h, color);
+        }
+        for (glyph, px, py) in [
+            (&box_tiles::TOP_LEFT, x, y),
+            (&box_tiles::TOP_RIGHT, right, y),
+            (&box_tiles::BOTTOM_LEFT, x, bottom),
+            (&box_tiles::BOTTOM_RIGHT, right, bottom),
+        ] {
+            embedded_font::draw_glyph(glyph, px, py, color, bg, self.fb);
         }
     }
 
@@ -141,6 +148,94 @@ impl<'fb> Painter for FrameBufferPainter<'fb> {
                     embedded_font::draw_glyph(glyph, px, py, ink, bg, self.fb);
                 } else {
                     draw_text(fallback, px, py, ink, self.fb);
+                }
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod performance_pixel_tests {
+    use super::*;
+    use dotzuki_engine::render_config::RenderConfig;
+
+    /// The pre-optimization TextBoxBorder renderer writes the source tile at
+    /// every cell, including opaque white interior/corner pixels.
+    fn original_tile_box(fb: &mut FrameBuffer, rect: TileRect, ink: Rgba) {
+        if rect.tw < 2 || rect.th < 2 {
+            return;
+        }
+        for row in 0..rect.th {
+            for col in 0..rect.tw {
+                let glyph = match (row, col) {
+                    (0, 0) => &box_tiles::TOP_LEFT,
+                    (0, c) if c + 1 == rect.tw => &box_tiles::TOP_RIGHT,
+                    (r, 0) if r + 1 == rect.th => &box_tiles::BOTTOM_LEFT,
+                    (r, c) if r + 1 == rect.th && c + 1 == rect.tw => &box_tiles::BOTTOM_RIGHT,
+                    (0, _) => &box_tiles::HORIZONTAL,
+                    (r, _) if r + 1 == rect.th => &box_tiles::HORIZONTAL,
+                    (_, 0) => &box_tiles::VERTICAL_LEFT,
+                    (_, c) if c + 1 == rect.tw => &box_tiles::VERTICAL_LEFT,
+                    _ => &[0; 8],
+                };
+                embedded_font::draw_glyph(
+                    glyph,
+                    (rect.tx + col) * 8,
+                    (rect.ty + row) * 8,
+                    ink,
+                    Rgba::WHITE,
+                    fb,
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn batched_original_textbox_matches_tile_renderer_at_every_pixel() {
+        assert_eq!(box_tiles::HORIZONTAL, [0, 0, 255, 0, 255, 255, 0, 0]);
+        assert_eq!(box_tiles::VERTICAL_LEFT, [40; 8]);
+        let sizes = [
+            (0, 0),
+            (1, 6),
+            (2, 1),
+            (2, 2),
+            (3, 2),
+            (2, 3),
+            (3, 3),
+            (12, 6),
+            (20, 6),
+            (20, 18),
+            (23, 21),
+        ];
+        let origins = [(0, 0), (1, 1), (8, 12), (19, 17), (20, 18)];
+        let inks = [
+            Rgba::BLACK,
+            Rgba::INK_DARK_GRAY,
+            Rgba::WHITE,
+            Rgba::rgb(17, 119, 201),
+        ];
+        for (width, height) in [(160, 144), (17, 13)] {
+            for (tw, th) in sizes {
+                for (tx, ty) in origins {
+                    for ink in inks {
+                        let rect = TileRect { tx, ty, tw, th };
+                        let mut expected = FrameBuffer::new(
+                            RenderConfig::new(width, height),
+                            Rgba::INK_LIGHT_GRAY,
+                        );
+                        let mut actual = expected.clone();
+                        original_tile_box(&mut expected, rect, ink);
+                        FrameBufferPainter::new(&mut actual).draw_text_box(rect, ink);
+                        for y in 0..height {
+                            for x in 0..width {
+                                assert_eq!(
+                                    actual.get_pixel(x, y),
+                                    expected.get_pixel(x, y),
+                                    "{width}x{height}, {rect:?}, {ink:?}, pixel({x},{y})"
+                                );
+                            }
+                        }
+                    }
                 }
             }
         }

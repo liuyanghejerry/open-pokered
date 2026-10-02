@@ -35,6 +35,16 @@ pub fn naming_underscore_glyph(raised: bool) -> &'static [u8; 8] {
 }
 
 fn draw_bitmap(glyph: &[u8; 8], x: u32, y: u32, scale: u32, color: Rgba, fb: &mut impl FbSurface) {
+    if scale == 1 {
+        for (row, bits) in glyph.iter().enumerate() {
+            for col in 0..8 {
+                if bits & (0x80 >> col) != 0 {
+                    fb.set_pixel(x.saturating_add(col), y.saturating_add(row as u32), color);
+                }
+            }
+        }
+        return;
+    }
     for (row, bits) in glyph.iter().enumerate() {
         for col in 0..8 {
             if bits & (0x80 >> col) != 0 {
@@ -145,6 +155,60 @@ mod tests {
     use super::*;
     use crate::FrameBuffer;
     use dotzuki_engine::render_config::RenderConfig;
+
+    #[test]
+    fn fast_original_font_matches_rectangle_pixels_with_clipping_and_scaling() {
+        for tile in 0x60..=0xFF {
+            let glyph = original_tile_glyph(tile).unwrap();
+            for scale in [1, 2, 3] {
+                for (x, y) in [
+                    (0, 0),
+                    (1, 1),
+                    (15, 9),
+                    (16, 12),
+                    (17, 13),
+                    (u32::MAX, u32::MAX),
+                ] {
+                    for ink in [
+                        Rgba::BLACK,
+                        Rgba::INK_DARK_GRAY,
+                        Rgba::WHITE,
+                        Rgba::rgb(17, 119, 201),
+                    ] {
+                        let mut expected =
+                            FrameBuffer::new(RenderConfig::new(17, 13), Rgba::INK_LIGHT_GRAY);
+                        let mut actual = expected.clone();
+                        // Previous bitmap renderer: one clipped scale-by-scale
+                        // rectangle for each source ink pixel.
+                        for (row, bits) in glyph.iter().enumerate() {
+                            for col in 0..8 {
+                                if bits & (0x80 >> col) != 0 {
+                                    let px = x.saturating_add(col * scale);
+                                    let py = y.saturating_add(row as u32 * scale);
+                                    if px < 17 && py < 13 {
+                                        expected.fill_rect(
+                                            px,
+                                            py,
+                                            scale.min(17 - px),
+                                            scale.min(13 - py),
+                                            ink,
+                                        );
+                                    }
+                                }
+                            }
+                        }
+                        draw_bitmap(glyph, x, y, scale, ink, &mut actual);
+                        for py in 0..13 {
+                            for px in 0..17 {
+                                assert_eq!(actual.get_pixel(px, py), expected.get_pixel(px, py),
+                                    "tile {tile:02x}, scale {scale}, origin({x},{y}), {ink:?}, pixel({px},{py})");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     #[test]
     fn original_font_uses_eight_pixel_cells_and_preserves_chinese_advance() {
