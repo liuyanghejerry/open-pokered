@@ -7,7 +7,8 @@ use pokered_renderer::{FrameBuffer,Rgba};
 use dotzuki_engine::render_config::RenderConfig;
 use std::path::Path;
 fn game() -> PokemonGame {
-    PokemonGame::new_with_options(GameVersion::Red,None,None,None,true,None,false,true,None)
+    PokemonGame::new_with_options(GameVersion::Red,None,None,None,true,None,false,true,
+        #[cfg(feature = "debug-server")] None)
 }
 fn save(game: &mut PokemonGame, out: &Path, prefix: &str, name: &str) {
     let mut fb = FrameBuffer::new(RenderConfig::new(160,144), Rgba::WHITE);
