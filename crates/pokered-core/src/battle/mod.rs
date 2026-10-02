@@ -7359,8 +7359,8 @@ mod i18n_tests {
     fn show_text_then_localizes_before_pagination() {
         let mut s = BattleScreen::new(true);
         s.is_zh = true;
-        // 21 chars: the EN side paginates ("It's super\neffective!") — the
-        // localized zh must not be broken by the EN wrap.
+        // Localization must see the original whole English template. Its
+        // 21 Fusion Latin glyphs occupy 105px and fit on one English row.
         s.show_text_then(
             vec!["It's super effective!".to_string()],
             BattlePhase::PlayerMenu,
@@ -7377,7 +7377,7 @@ mod i18n_tests {
         );
         assert_eq!(
             s.current_message.as_deref(),
-            Some("It's super\neffective!")
+            Some("It's super effective!")
         );
     }
 
@@ -7395,11 +7395,18 @@ mod i18n_tests {
     }
 
     #[test]
-    fn battle_pages_keep_hard_rows_and_every_eighteen_cell_overflow() {
-        let pages = paginate_battle_text("ABCDEFGHIJKLMNOPQRS\nappeared!\nFinal row.");
-        assert_eq!(pages, vec!["ABCDEFGHIJKLMNOPQR\nS", "appeared!\nFinal row."]);
+    fn battle_pages_keep_hard_rows_and_pixel_overflow() {
+        // BDF DWIDTH 5 is an independent oracle: 28 ASCII glyphs are
+        // 140px and fit, while 29 are 145px and exceed the 144px box.
+        assert_eq!(
+            paginate_battle_text("ABCDEFGHIJKLMNOPQRSTUVWXYZ12\nappeared!\nFinal row."),
+            vec!["ABCDEFGHIJKLMNOPQRSTUVWXYZ12\nappeared!", "Final row."]
+        );
+        let pages = paginate_battle_text("ABCDEFGHIJKLMNOPQRSTUVWXYZ123\nappeared!\nFinal row.");
+        assert_eq!(pages, vec!["ABCDEFGHIJKLMNOPQRSTUVWXYZ12\n3", "appeared!\nFinal row."]);
         for row in pages.iter().flat_map(|page| page.split('\n')) {
-            assert!(pokered_data::text_layout::measure_text(row) <= 144);
+            assert!(row.is_ascii());
+            assert!(row.len() * 5 <= 144, "overflow: {row}");
         }
     }
 

@@ -2799,33 +2799,56 @@ mod typewriter_tests {
         BedroomDialogue::from_message(text)
     }
 
+    fn assert_latin_rows_fit(d: &BedroomDialogue) {
+        // Independent of the wrapper's measurement: the retained Fusion
+        // Latin BDF declares DWIDTH 5 for every ASCII glyph used here.
+        for page in d.pages() {
+            for row in [&page.line1, &page.line2] {
+                assert!(row.is_ascii());
+                assert!(row.len() * 5 <= 144, "overflow: {row}");
+            }
+        }
+    }
+
     #[test]
     fn expanded_message_is_paginated_before_reveal_without_losing_rows() {
         let d = dlg("ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789\nThe final row.");
         assert_eq!(d.pages().len(), 2);
-        assert_eq!(&*d.pages()[0].line1, "ABCDEFGHIJKLMNOPQR");
-        assert_eq!(&*d.pages()[0].line2, "STUVWXYZ123456789");
+        assert_eq!(&*d.pages()[0].line1, "ABCDEFGHIJKLMNOPQRSTUVWXYZ12");
+        assert_eq!(&*d.pages()[0].line2, "3456789");
         assert_eq!(&*d.pages()[1].line1, "The final row.");
         assert_eq!(&*d.pages()[1].line2, "");
+        assert_latin_rows_fit(&d);
     }
 
     #[test]
     fn placeholder_growth_preserves_authored_page_boundaries() {
         use pokered_data::map_json::TextPageJson;
-        let d = BedroomDialogue::from_text_pages(&[
+        let short = BedroomDialogue::from_text_pages(&[
             TextPageJson { line1: "Hello <PLAYER>! Welcome!".into(), line2: "Second row.".into() },
             TextPageJson { line1: "Next page.".into(), line2: "".into() },
         ], "ABCDEFG", "RIVAL", "STARTER");
+        // The expanded 23-character row is 115px, so it fits intact.
+        assert_eq!(short.pages().len(), 2);
+        assert_eq!(&*short.pages()[0].line1, "Hello ABCDEFG! Welcome!");
+        assert_eq!(&*short.pages()[0].line2, "Second row.");
+        assert_eq!(&*short.pages()[1].line1, "Next page.");
+        assert_latin_rows_fit(&short);
+
+        // An expanded row over 144px still spills to a new page without
+        // absorbing the separately authored next page.
+        let d = BedroomDialogue::from_text_pages(&[
+            TextPageJson { line1: "Hello <PLAYER>! Welcome to Pallet Town!".into(), line2: "Second row.".into() },
+            TextPageJson { line1: "Next page.".into(), line2: "".into() },
+        ], "ABCDEFG", "RIVAL", "STARTER");
         assert_eq!(d.pages().len(), 3);
-        assert_eq!(&*d.pages()[0].line1, "Hello ABCDEFG!");
-        assert_eq!(&*d.pages()[0].line2, "Welcome!");
+        assert_eq!(&*d.pages()[0].line1, "Hello ABCDEFG! Welcome to");
+        assert_eq!(&*d.pages()[0].line2, "Pallet Town!");
         assert_eq!(&*d.pages()[1].line1, "Second row.");
+        assert_eq!(&*d.pages()[1].line2, "");
         assert_eq!(&*d.pages()[2].line1, "Next page.");
-        for page in d.pages() {
-            for row in [&page.line1, &page.line2] {
-                assert!(pokered_data::text_layout::measure_text(row) <= 144);
-            }
-        }
+        assert_eq!(&*d.pages()[2].line2, "");
+        assert_latin_rows_fit(&d);
     }
 
     /// FAST text (wOptions TEXT_DELAY_FAST = 1): one character per frame —
