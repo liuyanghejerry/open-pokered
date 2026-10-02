@@ -1,4 +1,4 @@
-//! Original 8px prices/quantities and mixed Chinese item labels must fit.
+//! Project-font prices/quantities and mixed Chinese item labels must fit.
 use pokered_core::game_state::Lang;
 use pokered_data::{
     impl_traits::PokemonRenderData,
@@ -27,12 +27,8 @@ impl Painter for Recorder {
     fn draw_pixel_rect(&mut self, _: u32, _: u32, _: u32, _: u32, _: Rgba) {}
     fn draw_gb_tile(&mut self, _: TilePos, _: u8, _: &str, _: Rgba) {}
 }
-fn height(text: &str) -> u32 {
-    if text.chars().any(pokered_renderer::embedded_font::is_cjk) {
-        10
-    } else {
-        8
-    }
+fn height(_text: &str) -> u32 {
+    10
 }
 
 #[test]

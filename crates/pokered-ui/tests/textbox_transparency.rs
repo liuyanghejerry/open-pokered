@@ -165,23 +165,21 @@ fn original_text_box_matches_tile_reference_pixel_for_pixel() {
 }
 
 #[test]
-fn latin_text_measurement_matches_the_glyphs_on_the_tile_grid() {
+fn text_painter_preserves_the_project_font_and_measurements() {
     use pokered_ui::TilePos;
-    let mut whole = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
-    let mut tiles = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
-    let mut painter = FrameBufferPainter::new(&mut whole);
-    assert_eq!(painter.measure_text_px("Ab▷19"), 5 * 8);
-    painter.draw_text(TilePos::new(2, 3), "Ab▷19", Rgba::BLACK);
-    for (i, ch) in "Ab▷19".chars().enumerate() {
-        FrameBufferPainter::new(&mut tiles).draw_glyph(
-            TilePos::new(2 + i as u32, 3),
-            ch,
-            Rgba::BLACK,
-        );
-    }
-    for y in 0..144 {
-        for x in 0..160 {
-            assert_eq!(whole.get_pixel(x, y), tiles.get_pixel(x, y));
+    for text in ["Ab19", "POKéMON", "中文", "▷"] {
+        let mut actual = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+        let mut expected = actual.clone();
+        let mut painter = FrameBufferPainter::new(&mut actual);
+        assert_eq!(painter.measure_text_px(text),
+            dotzuki_renderer::embedded_font::measure_text(text));
+        painter.draw_text(TilePos::new(2, 3), text, Rgba::BLACK);
+        dotzuki_renderer::embedded_font::draw_text(text, 16, 24, Rgba::BLACK, &mut expected);
+        for y in 0..144 {
+            for x in 0..160 {
+                assert_eq!(actual.get_pixel(x, y), expected.get_pixel(x, y),
+                    "project font changed: {text:?} pixel ({x},{y})");
+            }
         }
     }
 }

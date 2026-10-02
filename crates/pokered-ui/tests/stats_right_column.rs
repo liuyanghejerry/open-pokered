@@ -45,7 +45,7 @@ impl Painter for Recorder {
 }
 
 /// Stands in for the framebuffer painter's pixel path: proportional metrics
-/// (8 px original charmap / 10 px CJK), so an anchor computed from tile counts (8 px per
+/// (project Fusion Pixel glyph widths), so an anchor computed from tile counts (8 px per
 /// char) fails the flush-edge assertion.
 #[derive(Default)]
 struct PxRecorder {
@@ -109,16 +109,8 @@ fn zh_right_column_renders_labels_via_tile_path_only() {
     let text: String = glyphs.iter().map(|(_, c)| *c).collect();
     // zh labels come from the layout's @t values.
     assert!(text.contains('属'), "属性1/ label missing: {text}");
-    // ID and OT labels also leave the tile grid so 10px Chinese rows can
-    // stack above their wider original-font values without a collision.
-    assert!(
-        !text.contains('编'),
-        "ID label must use its pixel-spaced row"
-    );
-    assert!(
-        !text.contains('主'),
-        "OT label must use its pixel-spaced row"
-    );
+    assert!(text.contains('编'), "编号/ label missing: {text}");
+    assert!(text.contains('主'), "主人/ label missing: {text}");
     // Values left the tile path — they are pixel-drawn by menus::stats, and a
     // tile-path value here would double-draw over them.
     assert!(
@@ -195,31 +187,14 @@ fn zh_stats_labels_use_font_metrics_and_leave_room_for_values() {
             .iter()
             .find(|(_, _, text)| text == label)
             .unwrap_or_else(|| panic!("label {label} did not use proportional text"));
-        if matches!(label, "编号/" | "主人/") {
-            let (_, value_y, value) = rec
-                .placed
-                .iter()
-                .find(|(_, vy, text)| *vy == y + 12 && text != label)
-                .expect("value below label");
-            assert!(
-                y + 10 <= *value_y,
-                "{label} must leave room for its Chinese glyph height"
-            );
-            let value_x = ZH_RIGHT_COL_RIGHT_PX - rec.measure_text_px(value);
-            assert!(
-                value_x >= 88,
-                "maximum original OT/ID must fit in its right column"
-            );
-        } else {
-            let label_end = x + rec.measure_text_px(label);
-            let value_x = rec
-                .placed
-                .iter()
-                .filter(|(vx, vy, text)| vy == y && vx > x && text != label)
-                .map(|(vx, _, _)| *vx)
-                .min()
-                .expect("value beside label");
-            assert!(label_end + 4 <= value_x, "{label} collides with its value");
-        }
+        let label_end = x + rec.measure_text_px(label);
+        let value_x = rec
+            .placed
+            .iter()
+            .filter(|(vx, vy, text)| vy == y && vx > x && text != label)
+            .map(|(vx, _, _)| *vx)
+            .min()
+            .expect("value beside label");
+        assert!(label_end + 4 <= value_x, "{label} collides with its value");
     }
 }

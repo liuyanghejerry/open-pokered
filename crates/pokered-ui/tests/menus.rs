@@ -683,14 +683,14 @@ fn naming_player_screen_renders_title_box_underscores_and_keyboard() {
     }).collect();
     // Original TextBoxBorder at (0,4), b=9/c=18, adds its border:
     // naming_screen.asm:96-99. Chinese keeps the separate taller IME box.
-    assert_eq!(boxes, vec![TileRect::new(0, 4, 20, 11)]);
+    assert_eq!(boxes, vec![TileRect::new(0, 4, 20, 12)]);
 
     let texts = collect_texts(&rec.ops);
     // PrintNamingText (453-483), PrintNicknameAndUnderscores (373-379),
     // and PrintAlphabet (346-362) use authored GB tile coordinates.
     assert!(texts.contains(&(0, 1, "YOUR NAME?".into())));
     assert!(texts.contains(&(10, 2, "".into())));
-    assert!(texts.contains(&(2, 15, "lower case".into())));
+    assert!(texts.contains(&(2, 16, "lower case".into())));
 
     let tiles = collect_gb_tiles(&rec.ops);
     let underscore_tiles: Vec<_> = tiles.iter().filter(|(_, ty, _, _)| *ty == 3).collect();
@@ -808,7 +808,7 @@ fn naming_cursor_on_case_row_renders_arrow_at_keyboard_x_minus_one() {
     menus::naming::draw(&state, &NAMING_DEFAULT_LAYOUT, &mut Ui::new(&mut rec), false);
     let tiles = collect_gb_tiles(&rec.ops);
     let case_row_arrows: Vec<_> = tiles.iter()
-        .filter(|(tx, ty, id, _)| *ty == 15 && *tx == 1 && *id == naming_tiles::CURSOR_ARROW)
+        .filter(|(tx, ty, id, _)| *ty == 16 && *tx == 1 && *id == naming_tiles::CURSOR_ARROW)
         .collect();
     assert_eq!(case_row_arrows.len(), 1, "case row cursor must be at (1, 15)");
 }
@@ -816,7 +816,7 @@ fn naming_cursor_on_case_row_renders_arrow_at_keyboard_x_minus_one() {
 #[test]
 fn naming_name_text_is_drawn_after_underscores() {
     // Keep the same draw-order contract in both layout variants. English
-    // uses the original 8px glyphs at name row2/underscore row3; the Chinese
+    // uses the project font at name row2/underscore row3; the Chinese
     // extension retains 10px CJK glyphs at row3/row4, where underscore fills
     // must precede text to preserve the glyph's bottom pixels.
     let mut state = NamingScreenState::new(NamingScreenType::Player);
@@ -1087,7 +1087,7 @@ fn battle_party_single_pokemon_renders_name_and_hp() {
     assert_eq!(texts.len(), 1);
     let (x, y, label) = &texts[0];
     assert_eq!((*x, *y), (3, 13));
-    assert!(label.starts_with("CHARIZ") && label.contains('…'), "abbreviate the name: {label}");
+    assert!(label.starts_with("CHARIZARD"), "the project font should fit the name: {label}");
     assert!(label.ends_with(" 150/200"), "preserve both complete health values: {label}");
     assert!(pokered_data::text_layout::measure_text(label) <= 120, "keep the right border clear: {label}");
 
@@ -1138,7 +1138,7 @@ fn battle_party_scrolls_when_more_than_four_pokemon() {
     let texts = collect_texts(&rec.ops);
     assert_eq!(texts.len(), 4, "only the four visible party rows are drawn");
     let first = texts.iter().find(|(x, y, _)| (*x, *y) == (3, 13)).unwrap();
-    assert!(first.2.starts_with("VENUSA") && first.2.contains('…'));
+    assert!(first.2.starts_with("VENUSAUR"));
     assert!(first.2.ends_with(" 100/200"));
     for (_, _, label) in &texts {
         assert!(label.ends_with(" 100/200"), "preserve complete health after scrolling: {label}");
@@ -1174,12 +1174,11 @@ fn battle_text_wraps_overlong_input_without_dropping_lines() {
 
     // Native dialog renders text at screen (1,14)/(1,16). text_box adds +1,+1 padding,
     // so frame.label(0,1)/(0,3) → absolute (1,14)/(1,16). Lines wrap at the 144px
-    // interior width (18 original Latin cells). Core paginates these rows
+    // interior pixel width using the project font. Core paginates these rows
     // before passing two-line pages to the renderer.
     assert_eq!(collect_texts(&rec.ops), vec![
-        (1, 14, "What will".into()),
-        (1, 16, "CHARIZARD do with".into()),
-        (1, 18, "its last move?".into()),
+        (1, 14, "What will CHARIZARD do with".into()),
+        (1, 16, "its last move?".into()),
     ]);
 
     assert!(collect_glyphs(&rec.ops).is_empty());
@@ -1353,7 +1352,7 @@ fn draw_result_dialog_single_line() {
     mart::draw_result_dialog(&["You don't have enough money."], &MART_RESULT_DIALOG_LAYOUT, &mut ui);
 
     let texts = collect_texts(&rec.ops);
-    assert_eq!(texts, vec![(2, 14, "You don't have".into()), (2, 16, "enough money.".into())]);
+    assert_eq!(texts, vec![(2, 14, "You don't have enough".into()), (2, 16, "money.".into())]);
 }
 
 #[test]

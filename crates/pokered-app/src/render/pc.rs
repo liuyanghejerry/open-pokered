@@ -14,7 +14,7 @@ use pokered_data::lang_data;
 use pokered_data::text_layout::{wrap_hard_lines, DIALOGUE_LINE_WIDTH_PX};
 use pokered_ui::backends::FrameBufferPainter;
 use pokered_ui::{Painter, TilePos};
-use pokered_renderer::embedded_font::{draw_text, measure_text};
+use pokered_renderer::embedded_font::{draw_glyph, draw_text, measure_text, pkmn_tile_glyph};
 use pokered_renderer::palette::GRAYSCALE_SPRITE_PALETTE;
 use pokered_renderer::resource::ResourceManager;
 use pokered_renderer::{FrameBuffer, Rgba, TILE_SIZE};
@@ -92,9 +92,8 @@ fn draw_pc_label(text: &str, x: u32, y: u32, fb: &mut FrameBuffer) {
     if let Some((before, after)) = text.split_once("#MON") {
         draw_text(before, x, y, FG, fb);
         let ligature_x = x + measure_text(before);
-        let mut painter = FrameBufferPainter::new(fb);
-        painter.draw_gb_tile(TilePos::new(ligature_x / T, y / T), 0xE1, "PK", FG);
-        painter.draw_gb_tile(TilePos::new(ligature_x / T + 1, y / T), 0xE2, "MN", FG);
+        draw_glyph(pkmn_tile_glyph(0xE1).unwrap(), ligature_x, y, FG, BG, fb);
+        draw_glyph(pkmn_tile_glyph(0xE2).unwrap(), ligature_x + T, y, FG, BG, fb);
         draw_text(after, ligature_x + 2 * T, y, FG, fb);
     } else {
         draw_text(text, x, y, FG, fb);
@@ -279,8 +278,7 @@ pub fn draw_pc(
                         .iter()
                         .map(|s| lang_data::ui_label(s, is_zh).to_string())
                         .collect();
-                    let (bx, bw) = if is_zh { (10 * T, 8) } else { (9 * T, 9) };
-                    draw_menu(bx, 8 * T, bw, &labels, pc.mon_action_cursor(), fb);
+                    draw_menu(10 * T, 8 * T, 8, &labels, pc.mon_action_cursor(), fb);
                 }
                 PcPhase::ReleaseConfirm => {
                     let mut name_buf = [0u8; pokered_core::battle::state::NAME_TEXT_BUF];
@@ -592,6 +590,26 @@ mod layout_tests {
     }
 
     #[test]
+    fn pkmn_menu_graphic_follows_fusion_text_at_exact_pixel_coordinates() {
+        let mut actual = FrameBuffer::new(RenderConfig::new(160, 144), BG);
+        draw_pc_label("Withdraw #MON!", 8, 11, &mut actual);
+        let mut expected = FrameBuffer::new(RenderConfig::new(160, 144), BG);
+        dotzuki_renderer::embedded_font::draw_text("Withdraw ", 8, 11, FG, &mut expected);
+        // Nine half-width characters occupy 45px: PK starts at 8 + 45,
+        // even though neither the x=53 nor y=11 origin is tile-aligned.
+        dotzuki_renderer::embedded_font::draw_glyph(
+            &[224, 160, 224, 138, 138, 12, 10, 10], 53, 11, FG, BG, &mut expected,
+        );
+        dotzuki_renderer::embedded_font::draw_glyph(
+            &[216, 168, 136, 136, 146, 26, 22, 18], 61, 11, FG, BG, &mut expected,
+        );
+        dotzuki_renderer::embedded_font::draw_text("!", 69, 11, FG, &mut expected);
+        assert_eq!(actual.get_pixel(53, 11), Some(FG));
+        assert_eq!(actual.get_pixel(61, 11), Some(FG));
+        assert_framebuffers_equal(&actual, &expected);
+    }
+
+    #[test]
     fn translated_message_wrap_preserves_text_and_fits_box() {
         for text in ["一旦放生，CHARMANDER就永远消失了。可以吗？", "更换宝可梦盒子时，数据会被保存。", "Withdrew THUNDERSTONE.", ""] {
             let lines = wrap_message(text);
@@ -643,9 +661,14 @@ mod layout_tests {
             }
         }
         actual.clear(BG);
-        draw_message(&["Withdrew THUNDERSTONE.".into()], &mut actual, false);
+        let message = "Withdrew THUNDERSTONE from storage.";
+        // 35 half-width Latin characters occupy 175px, beyond the 144px
+        // interior. The short real-item message fits on one Fusion row.
+        assert_eq!(message.chars().count() * 5, 175);
+        assert_eq!(wrap_message(message), vec!["Withdrew THUNDERSTONE from", "storage."]);
+        draw_message(&[message.into()], &mut actual, false);
         border.clear(BG);
-        // A 22-cell input must wrap to two rows inside the original 18-cell box.
+        // The longer message requires two rows inside the 144px box.
         draw_text_box(&mut border, 0, 13 * T, 18, 3, FG);
         for y in 14 * T..17 * T {
             for x in 19 * T..20 * T {
@@ -692,14 +715,14 @@ mod layout_tests {
         let rows = vec!["精灵球 x03".into(), "好伤药 x12".into()];
         draw_list(0, 0, 18, 8, &rows, 0, 0, true, &mut actual);
 
-        // Keep both rows intact at their authored 12px baselines. Original
-        // Latin glyphs start earlier than Fusion Pixel's CJK glyphs: digit
-        // '1' in the second row has ink at (73,21), before the CJK y=22 ink.
+        // Keep both rows intact at their authored 12px baselines. The second
+        // row's digit 1 starts at x=58 (two spaces, three 10px Chinese glyphs,
+        // a space and x); its Fusion bitmap has ink at offset (2,3).
         let mut first = FrameBuffer::new(RenderConfig::new(160, 144), BG);
         let mut second = FrameBuffer::new(RenderConfig::new(160, 144), BG);
         draw_text("> 精灵球 x03", 8, 8, FG, &mut first);
         draw_text("  好伤药 x12", 8, 20, FG, &mut second);
-        assert_eq!(actual.get_pixel(73, 21), Some(FG), "original digit 1 must remain intact");
+        assert_eq!(actual.get_pixel(60, 23), Some(FG), "project-font digit 1 must remain intact");
 
         let mut last_first_ink = None;
         let mut first_second_ink = None;
@@ -801,8 +824,7 @@ mod layout_tests {
                     }
                     let previous = cursor_state(&mon_action, &mut mon_save, previous_cursor);
                     let current = cursor_state(&mon_action, &mut mon_save, current_cursor);
-                    let cursor_x = if language == Lang::Zh { 11 } else { 10 };
-                    let position = |cursor| (cursor_x * T, (9 + cursor as u32 * 2) * T);
+                    let position = |cursor| (11 * T, (9 + cursor as u32 * 2) * T);
                     assert_cursor_repaint(
                         &previous,
                         &current,

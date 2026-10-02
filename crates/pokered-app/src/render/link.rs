@@ -157,7 +157,7 @@ fn draw_trade_party_list(flow: &CableClubFlow, fb: &mut FrameBuffer, language: L
         if is_zh {
             "左右切换 A选择 B取消"
         } else {
-            "L/R A:OK B:BACK"
+            "L/R:SIDE  A:OK  B:BACK"
         },
         Rgba::INK_BLACK,
     );

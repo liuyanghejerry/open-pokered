@@ -127,7 +127,7 @@ mod pixel_tests {
     use pokered_core::game_state::Lang;
     use pokered_data::impl_traits::PokemonRenderData;
     use pokered_data::ui_layout::schema::BATTLE_BAG_DEFAULT_LAYOUT;
-    use pokered_renderer::{embedded_font::original_tile_glyph, FrameBuffer, RenderConfig};
+    use pokered_renderer::{FrameBuffer, RenderConfig};
 
     #[test]
     fn long_item_quantities_are_visible_inside_the_original_tile_border() {
@@ -140,30 +140,30 @@ mod pixel_tests {
                     draw(&state, &BATTLE_BAG_DEFAULT_LAYOUT, &mut Ui::new(&mut painter),
                         &PokemonRenderData::new(lang == Lang::Zh));
                     let y = if lang == Lang::Zh { 95 } else { 96 };
-                    // Independent original-font bitmap oracle: the last three
-                    // interior columns contain ×, a blank/9, and the unit digit.
-                    let glyphs = [Some(0xF1), if qty == 99 { Some(0xFF) } else { None },
-                        Some(if qty == 99 { 0xFF } else { 0xF7 })];
-                    for (cell, tile) in glyphs.into_iter().enumerate() {
-                        let bits = tile.and_then(original_tile_glyph).copied().unwrap_or([0; 8]);
-                        for row in 0..8 {
-                            for col in 0..8 {
-                                let expected = if bits[row] & (0x80 >> col) != 0 { Rgba::BLACK } else { Rgba::WHITE };
-                                assert_eq!(fb.get_pixel(128 + cell as u32 * 8 + col, y + row as u32), Some(expected),
-                                    "quantity bitmap: {lang:?} {item:?} ×{qty}, cell {cell} pixel ({col},{row})");
-                            }
+                    // The existing Fusion Pixel provider is the typography
+                    // oracle. Quantities have their own right-aligned region;
+                    // neither long names nor the quantity may overwrite it.
+                    let quantity = format!("×{qty:>2}");
+                    let quantity_x = 152 - dotzuki_renderer::embedded_font::measure_text(&quantity);
+                    let mut expected = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+                    dotzuki_renderer::embedded_font::draw_text(
+                        &quantity, quantity_x, y, Rgba::BLACK, &mut expected);
+                    for row in 0..10 {
+                        for x in quantity_x..152 {
+                            assert_eq!(fb.get_pixel(x, y + row), expected.get_pixel(x, y + row),
+                                "quantity must use the project font: {lang:?} {item:?} ×{qty} at ({x},{row})");
+                        }
+                        for x in quantity_x - 8..quantity_x {
+                            assert_eq!(fb.get_pixel(x, y + row), Some(Rgba::WHITE),
+                                "name and quantity must have a clear separating cell");
                         }
                     }
-                    let border = original_tile_glyph(0x7C).unwrap();
+                    let border = pokered_renderer::embedded_font::box_tiles::VERTICAL_RIGHT;
                     for row in 0..8 {
                         for col in 0..8 {
                             let expected = if border[row] & (0x80 >> col) != 0 { Rgba::BLACK } else { Rgba::WHITE };
                             assert_eq!(fb.get_pixel(152 + col, 96 + row as u32), Some(expected),
                                 "item text must preserve the right border");
-                        }
-                        for x in 120..128 {
-                            assert_eq!(fb.get_pixel(x, y + row as u32), Some(Rgba::WHITE),
-                                "one empty tile separates the name from the quantity");
                         }
                     }
                 }

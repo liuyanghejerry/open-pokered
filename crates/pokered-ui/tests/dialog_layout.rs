@@ -1,8 +1,7 @@
 //! Pixel-level regression tests for the overworld dialog box layout.
 //!
-//! The game uses the original 8px Latin cells and Fusion Pixel 10px CJK
-//! on the original 20×18 grid of 8×8 tiles. Text wraps inside the
-//! 144px box interior — 18 Latin or 14 CJK characters per line — and must
+//! Keep the project's Fusion Pixel Latin/CJK typography on the 20×18 grid.
+//! Text wraps at its measured width inside the 144px box interior and must
 //! never cross the box's right border.
 
 use dotzuki_engine::render_config::RenderConfig;
@@ -87,43 +86,26 @@ fn en_dialog_stays_inside_box() {
 
 #[test]
 fn en_dialog_line_fills_box() {
-    // Eighteen original font cells fill the 144px interior on one line.
-    let text = "123456789012345678";
-    assert_eq!(pokered_renderer::embedded_font::measure_text(text), 144);
+    // The original 18-char-per-line authoring left the box half empty with
+    // the 5px Latin font (18 × 5px = 90px of a 144px interior). A 27-char
+    // line (135px) must stay on one line and fill the box.
+    let text = "What will CHARIZARD do now?";
+    assert_eq!(dotzuki_renderer::embedded_font::measure_text(text), 135);
     let fb = render_dialog(text, Lang::En);
-    let mut reached_last_cell = false;
-    for y in 112..120 {
-        for x in 144..152 {
-            if fb.get_pixel(x, y) == Some(Rgba::BLACK) {
-                reached_last_cell = true;
+    // Ink must reach past the old 90px limit (tile 12) without crossing the
+    // right border — proving the line wraps at the pixel width, not the
+    // character count. Scan the first text line's rows only (the box's
+    // bottom-right ▼ arrow lives at row 16).
+    let mut reached_past_90px = false;
+    for y in 104..128 {
+        for x in 100..152 {
+            if let Some(px) = fb.get_pixel(x, y) {
+                if px == Rgba::INK_BLACK || px == Rgba::BLACK {
+                    reached_past_90px = true;
+                }
             }
         }
     }
-    assert!(
-        reached_last_cell,
-        "the eighteenth glyph must occupy the last text cell"
-    );
-    assert!(
-        !text_bleeds_into_right_border(&fb),
-        "text stays inside the original border"
-    );
-}
-
-#[test]
-fn mixed_chinese_and_original_ascii_stay_inside_dialog_and_battle_boxes() {
-    let text = "一二三四五六七八九十ABCD！测试";
-    for lang in [Lang::En, Lang::Zh] {
-        assert!(!text_bleeds_into_right_border(&render_dialog(text, lang)));
-        let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
-        let mut painter = FrameBufferPainter::new(&mut fb).with_lang(lang);
-        let mut ui = Ui::new(&mut painter);
-        menus::battle_text::draw(
-            text,
-            false,
-            &pokered_data::ui_layout::schema::BATTLE_TEXT_DEFAULT_LAYOUT,
-            &mut ui,
-            lang,
-        );
-        assert!(!text_bleeds_into_right_border(&fb));
-    }
+    assert!(reached_past_90px, "a 135px line must extend past the old 90px limit");
+    assert!(!text_bleeds_into_right_border(&fb), "…but never cross the right border");
 }

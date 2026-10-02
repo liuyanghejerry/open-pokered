@@ -30,7 +30,6 @@ const CURSOR_DX: u32 = 1;
 ///   apart. The candidate at the cursor is drawn as "[X]", others as " X ".
 const ROW_STEP_ALPHA: u32 = 2;
 const ROW_STEP_PINYIN: u32 = 1;
-const CASE_ROW_GAP: u32 = 2;
 /// Gap between the last pinyin letter row and the buffer line, and between
 /// the buffer and the first candidate line.
 const INFO_ROW_STEP: u32 = 2;
@@ -51,7 +50,7 @@ pub fn draw<P: Painter>(
     let box_rect = if is_zh {
         layout.box_0.rect
     } else {
-        pokered_data::ui_layout::types::TileRect::new(0, 4, 20, 11)
+        pokered_data::ui_layout::types::TileRect::new(0, 4, 20, 12)
     };
     ui.text_box(box_rect, layout.box_0.color, true, |_| {});
 
@@ -164,7 +163,9 @@ pub fn draw<P: Painter>(
             }
 
             if !in_pinyin {
-                let case_ty = keyboard_ty + (GRID_ROWS as u32 - 1) * row_step + CASE_ROW_GAP;
+                // The existing font extends below its 8px tile row. Leave the
+                // last punctuation row clear of the bottom border.
+                let case_ty = 16;
                 if cursor_row == GRID_ROWS {
                     frame.gb_tile(
                         KEYBOARD_TX - CURSOR_DX,

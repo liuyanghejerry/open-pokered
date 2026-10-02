@@ -14,7 +14,7 @@ use pokered_data::text_layout::{wrap_hard_lines, DIALOGUE_LINE_WIDTH_PX};
 use pokered_ui::backends::FrameBufferPainter;
 use pokered_ui::{Painter, TilePos};
 use pokered_data::ui_text::{zh_main_menu_label, zh_pc_line};
-use pokered_renderer::embedded_font::{draw_text, measure_text};
+use pokered_renderer::embedded_font::{draw_glyph, draw_text, measure_text, pkmn_tile_glyph};
 use pokered_renderer::resource::ResourceManager;
 use pokered_renderer::{FrameBuffer, Rgba, TILE_SIZE};
 
@@ -68,9 +68,8 @@ fn draw_pc_label(text: &str, x: u32, y: u32, fb: &mut FrameBuffer) {
     if let Some((before, after)) = text.split_once("#MON") {
         draw_text(before, x, y, FG, fb);
         let ligature_x = x + measure_text(before);
-        let mut painter = FrameBufferPainter::new(fb);
-        painter.draw_gb_tile(TilePos::new(ligature_x / T, y / T), 0xE1, "PK", FG);
-        painter.draw_gb_tile(TilePos::new(ligature_x / T + 1, y / T), 0xE2, "MN", FG);
+        draw_glyph(pkmn_tile_glyph(0xE1).unwrap(), ligature_x, y, FG, BG, fb);
+        draw_glyph(pkmn_tile_glyph(0xE2).unwrap(), ligature_x + T, y, FG, BG, fb);
         draw_text(after, ligature_x + 2 * T, y, FG, fb);
     } else {
         draw_text(text, x, y, FG, fb);
@@ -250,8 +249,7 @@ pub fn draw_pc(
                         .iter()
                         .map(|s| lang_data::ui_label(s, is_zh).to_string())
                         .collect();
-                    let (bx, bw) = if is_zh { (10 * T, 8) } else { (9 * T, 9) };
-                    draw_menu(bx, 8 * T, bw, &labels, pc.mon_action_cursor(), fb);
+                    draw_menu(10 * T, 8 * T, 8, &labels, pc.mon_action_cursor(), fb);
                 }
                 PcPhase::ReleaseConfirm => {
                     let name = save

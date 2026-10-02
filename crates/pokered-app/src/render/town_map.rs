@@ -10,8 +10,9 @@ use pokered_renderer::{FrameBuffer, Rgba, TILE_SIZE};
 
 use super::{blit_single_tile, draw_text_box};
 
-fn view_box_top(lang: Lang) -> u32 {
-    if lang == Lang::Zh { 14 * TILE_SIZE } else { 15 * TILE_SIZE }
+fn view_box_top(_lang: Lang) -> u32 {
+    // The project font is 10px tall in both languages.
+    14 * TILE_SIZE
 }
 
 fn view_box_height(lang: Lang) -> u32 {
@@ -453,8 +454,8 @@ pub fn redraw_town_map_cursor(
         }
     }
     if state.mode() == TownMapMode::View {
-        // The English label has an 8px row; Chinese reserves 16px above the
-        // original bottom border. Restore the box in complete-frame order.
+        // Reserve 16px for the project font above the original bottom border.
+        // Restore the box in complete-frame order.
         draw_view_name_box(state, fb, lang);
     }
 }
@@ -481,17 +482,19 @@ mod tests {
     }
 
     #[test]
-    fn chinese_view_name_leaves_space_above_the_original_bottom_border() {
+    fn view_name_leaves_space_for_the_project_font_above_the_bottom_border() {
+        for lang in [Lang::En, Lang::Zh] {
         for map in [MapId::PalletTown, MapId::ViridianCity, MapId::LavenderTown] {
             let state = TownMapScreenState::new(map);
             let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
-            draw_town_map(&state, &mut None, 16, &mut fb, Lang::Zh);
+            draw_town_map(&state, &mut None, 16, &mut fb, lang);
             assert_eq!(view_box_top(Lang::Zh), 112);
-            assert_eq!(view_box_top(Lang::En), 120);
+            assert_eq!(view_box_top(Lang::En), 112);
             for y in 134..136 { for x in 8..152 {
                 assert_eq!(fb.get_pixel(x, y), Some(Rgba::WHITE), "glyph touches bottom border at {x},{y}");
             } }
             assert_eq!(fb.get_pixel(8, 138), Some(Rgba::BLACK), "restore original bottom border");
+        }
         }
     }
 

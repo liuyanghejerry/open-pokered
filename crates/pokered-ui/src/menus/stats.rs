@@ -95,27 +95,17 @@ fn draw_page1_v2<P: Painter>(
     // Keep value columns anchored to exact pixel edges independently of
     // label width, with padding inside the left stats box.
     if is_zh {
-        let rows: [(u32, u32, String); 6] = [
+        let rows: [(u32, u32, String); 8] = [
             (9, ZH_STATS_RIGHT_PX, mon.attack.to_string()),
             (11, ZH_STATS_RIGHT_PX, mon.defense.to_string()),
             (13, ZH_STATS_RIGHT_PX, mon.speed.to_string()),
             (15, ZH_STATS_RIGHT_PX, mon.special.to_string()),
             (9, ZH_RIGHT_COL_RIGHT_PX, type1_name.to_string()),
             (11, ZH_RIGHT_COL_RIGHT_PX, type2_name.to_string()),
+            (13, ZH_RIGHT_COL_RIGHT_PX, format!("{:05}", mon.ot_id)),
+            (15, ZH_RIGHT_COL_RIGHT_PX, ot_name.to_string()),
         ];
         draw_values_flush_right(ui.painter(), &rows);
-        // A five-digit ID and a seven-letter OT no longer fit beside Chinese
-        // labels once original ASCII cells are 8px wide. Stack these two
-        // fields with 12px row spacing, leaving room for 10px Chinese glyphs.
-        let painter = ui.painter();
-        for (py, label, value) in [
-            (98, "编号/", format!("{:05}", mon.ot_id)),
-            (122, "主人/", ot_name.to_string()),
-        ] {
-            painter.draw_text_px(88, py, label, InkColor::DarkGray.into());
-            let px = ZH_RIGHT_COL_RIGHT_PX.saturating_sub(painter.measure_text_px(&value));
-            painter.draw_text_px(px, py + 12, &value, InkColor::Black.into());
-        }
     }
 }
 

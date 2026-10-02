@@ -98,7 +98,7 @@ fn draw_money_box<P: Painter>(
         label_px,
         rect.ty * 8,
         painter.measure_text_px(label),
-        if lang == Lang::Zh { 10 } else { 8 },
+        10,
         InkColor::White.into(),
     );
     painter.draw_text(TilePos::new(rect.tx + 2, rect.ty), label, color.into());

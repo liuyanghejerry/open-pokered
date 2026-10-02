@@ -1938,27 +1938,28 @@ mod tests {
     // NOTE: all cursor-bearing screens re-recorded after the dotzuki-renderer
     // v0.5.6 bump — the ▶ fallback bitmap moved to the text ink center
     // (dotzuki#57). dialog/pokedex/oak_speech have no ▶ and are unchanged.
-    // NOTE: all 14 re-recorded for the full-fidelity fixes: original 8px
-    // ASCII/font tiles, border/cursor/underscore tiles, and English naming
-    // coordinates. Every current preview was dumped and visually reviewed;
-    // battle_bag additionally reserves its quantity columns before measuring
-    // names, so SUPER POTION no longer pushes its count through the border.
-    const GOLDEN_MAIN: u64                 = 0x1b746bff69a1eb0d;
-    const GOLDEN_START: u64                = 0xc0bc80ff9326b69d;
-    const GOLDEN_DIALOG: u64               = 0xfa32b4d5e00385d5;
-    const GOLDEN_BATTLE_MOVE: u64          = 0x525c1566c4abb1cc;
-    const GOLDEN_BAG: u64                  = 0x95d5c446f11977fd;
-    const GOLDEN_BATTLE_BAG: u64           = 0x8b17776abc8d10e4;
-    const GOLDEN_POKEDEX: u64              = 0x9dce7502d3afa85d;
-    const GOLDEN_YES_NO: u64               = 0x965801232ac97e65;
-    const GOLDEN_OAK_SPEECH: u64           = 0x21b9deab4370fc34;
+    // NOTE: all 14 re-recorded with the project's Fusion Pixel font preserved.
+    // The border/cursor/underscore fixes and English naming coordinates remain;
+    // the keyboard box leaves room for the existing font's taller punctuation.
+    // Every current preview was dumped and visually reviewed. battle_bag still
+    // reserves quantity columns before measuring names, so SUPER POTION keeps
+    // its count inside the border.
+    const GOLDEN_MAIN: u64                 = 0x6c27fb19c19b24f4;
+    const GOLDEN_START: u64                = 0x878c3a9d37d5e4bd;
+    const GOLDEN_DIALOG: u64               = 0x920b9dabe816c89c;
+    const GOLDEN_BATTLE_MOVE: u64          = 0x918d8ffb023a916c;
+    const GOLDEN_BAG: u64                  = 0x566b67e173e9659d;
+    const GOLDEN_BATTLE_BAG: u64           = 0xff875ed399b72f4c;
+    const GOLDEN_POKEDEX: u64              = 0x9bc214819f25be1d;
+    const GOLDEN_YES_NO: u64               = 0x6b0545ef95ec081d;
+    const GOLDEN_OAK_SPEECH: u64           = 0x258b99ca20094fcc;
     // Save: full-width v2 information card with integrated confirmation.
-    const GOLDEN_SAVE: u64                 = 0x26bf5a30becf45ac;
+    const GOLDEN_SAVE: u64                 = 0xfd9edd817f77cb5c;
     // Original-style hollow markers remain visible on inactive option rows.
-    const GOLDEN_OPTIONS: u64              = 0x1ed9f5681fc37ef4;
-    const GOLDEN_NAMING: u64               = 0xf71a37e99cd161c4;
-    const GOLDEN_BATTLE_MAIN: u64          = 0xe92ae75655d06d44;
-    const GOLDEN_BATTLE_PARTY: u64         = 0x15d7a14fa68b92cd;
+    const GOLDEN_OPTIONS: u64              = 0x0c7d4dc94a2675f4;
+    const GOLDEN_NAMING: u64               = 0x32fcae69d767c7fd;
+    const GOLDEN_BATTLE_MAIN: u64          = 0x1b46f003e4ea076c;
+    const GOLDEN_BATTLE_PARTY: u64         = 0x30daba56c999130c;
 
     macro_rules! assert_golden {
         ($name:expr, $mock:expr, $golden:ident) => {
