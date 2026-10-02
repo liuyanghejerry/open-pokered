@@ -16,10 +16,7 @@ use crate::alloc_prelude::*;
 
 // Link play, save files and the recorders are hosted-only (std fs/net/time).
 #[cfg(not(target_os = "none"))]
-use std::path::PathBuf;
-
-#[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
 use crate::link::LinkServer;
@@ -178,6 +175,22 @@ fn save_dir() -> std::path::PathBuf {
 #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
 fn save_file_path() -> std::path::PathBuf {
     save_dir().join(SAVE_FILE_NAME)
+}
+
+#[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
+fn companion_path_for_save(path: &Path) -> PathBuf {
+    path.with_extension("script_flags.json")
+}
+
+#[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
+fn companion_lookup_paths(path: Option<&Path>, legacy_native: bool) -> Vec<PathBuf> {
+    let old=script_flags_file_path();
+    let own=path.map(companion_path_for_save).unwrap_or_else(||old.clone());
+    let mut paths=vec![own.clone()];
+    // Old --save files shared the executable's sidecar. Only the positively
+    // identified old layout can recover that unbound file, once on migration.
+    if legacy_native && own!=old { paths.push(old); }
+    paths
 }
 
 #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
@@ -1133,11 +1146,7 @@ impl PokemonGame {
             overworld.rival_name = rival_name.clone();
             // Seed the event-flag bitset from SRAM bytes, then merge any
             // runtime-only extras (companion sidecar) on top.
-            overworld.set_event_flags_bytes(&save_data.game_data.event_flags);
-            overworld.restore_system_save_state(&save_data.game_data);
-            if let Some(extras) = Self::read_companion_script_flags() {
-                overworld.set_script_flags(extras);
-            }
+            overworld.restore_loaded_save_flags(&save_data, Self::read_companion_script_flags(save_path.as_deref(), save_data.imported_legacy_native));
             overworld.set_toggleable_object_flags(save_data.game_data.toggleable_object_flags);
             overworld.set_hidden_item_flags(save_data.game_data.obtained_hidden_items);
             overworld.set_hidden_coin_flags(save_data.game_data.obtained_hidden_coins);
@@ -1675,7 +1684,7 @@ impl PokemonGame {
         if self.external_saves {
             Some(self.mobile_flags.clone())
         } else {
-            Self::read_companion_script_flags()
+            Self::read_companion_script_flags(self.save_path.as_deref(), self.save_data.imported_legacy_native)
         }
     }
 
@@ -1749,9 +1758,9 @@ impl PokemonGame {
     /// in the fixed SRAM event-flags region). Named event flags in old
     /// sidecars are harmless: `set_script_flags` routes them to the bitset.
     #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
-    fn read_companion_script_flags() -> Option<pokered_core::hash_compat::HashMap<String, bool>> {
-        let flags_path = script_flags_file_path();
-        let data = std::fs::read(&flags_path).ok()?;
+    fn read_companion_script_flags(save_path: Option<&Path>, legacy_native: bool) -> Option<pokered_core::hash_compat::HashMap<String, bool>> {
+        let paths=companion_lookup_paths(save_path,legacy_native);
+        let (flags_path,data)=paths.into_iter().find_map(|path|std::fs::read(&path).ok().map(|data|(path,data)))?;
         match serde_json::from_slice::<pokered_core::hash_compat::HashMap<String, bool>>(&data) {
             Ok(flags) => Some(flags),
             Err(e) => {
@@ -1768,7 +1777,7 @@ impl PokemonGame {
     /// Same companion store on web: the runtime-only extras live in a
     /// separate `localStorage` key next to the SaveData JSON.
     #[cfg(target_arch = "wasm32")]
-    fn read_companion_script_flags() -> Option<pokered_core::hash_compat::HashMap<String, bool>> {
+    fn read_companion_script_flags(_save_path: Option<&Path>, _legacy_native: bool) -> Option<pokered_core::hash_compat::HashMap<String, bool>> {
         let storage = web_local_storage()?;
         let data = storage.get_item(WEB_SCRIPT_FLAGS_STORAGE_KEY).ok()??;
         match serde_json::from_str::<pokered_core::hash_compat::HashMap<String, bool>>(&data) {
@@ -1784,9 +1793,9 @@ impl PokemonGame {
     /// remove a stale sidecar when none do, so a previous save's extras
     /// can't re-merge onto a different save on next load.
     #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
-    fn save_companion_script_flags(overworld: &OverworldScreen<PokemonRedData>) {
+    fn save_companion_script_flags(overworld: &OverworldScreen<PokemonRedData>, save_path: &Path) {
         let extras = overworld.unified_flags().extras();
-        let flags_path = script_flags_file_path();
+        let flags_path = companion_path_for_save(save_path);
         if extras.is_empty() {
             if let Err(e) = std::fs::remove_file(&flags_path) {
                 if e.kind() != std::io::ErrorKind::NotFound {
@@ -1933,6 +1942,7 @@ impl PokemonGame {
 
     fn build_save_data(&self) -> SaveData {
         let mut save = self.save_data.clone();
+        save.imported_legacy_native=false;
         Self::apply_live_state_to_save(&mut save, &self.overworld, &self.player_name, &self.rival_name);
         save
     }
@@ -2033,7 +2043,7 @@ impl PokemonGame {
                 dbg_eprintln!("Error: failed to write save file: {}", e);
             }
         }
-        Self::save_companion_script_flags(&self.overworld);
+        Self::save_companion_script_flags(&self.overworld, &path);
     }
 
     /// Bare metal: persist the 32 KiB SRAM image directly onto the cartridge
@@ -2353,12 +2363,10 @@ impl PokemonGame {
                         // Seed the event-flag bitset from SRAM bytes, then
                         // merge any runtime-only extras (companion sidecar)
                         // on top.
-                        overworld.set_event_flags_bytes(&self.save_data.game_data.event_flags);
-                        overworld.restore_system_save_state(&self.save_data.game_data);
                         #[cfg(not(target_os = "none"))]
-                        if let Some(extras) = self.companion_flags() {
-                            overworld.set_script_flags(extras);
-                        }
+                        overworld.restore_loaded_save_flags(&self.save_data, self.companion_flags());
+                        #[cfg(target_os = "none")]
+                        overworld.restore_loaded_save_flags(&self.save_data, None);
                         overworld.set_toggleable_object_flags(
                             self.save_data.game_data.toggleable_object_flags,
                         );
@@ -7888,6 +7896,19 @@ mod fidelity_systems_npc_tests {
     fn game() -> PokemonGame {
         PokemonGame::new_with_options(GameVersion::Red, None, None, None, false, None,
             false, true, #[cfg(feature = "debug-server")] None)
+    }
+
+    #[test]
+    #[cfg(not(target_arch="wasm32"))]
+    fn fidelity_companions_are_bound_to_save_path_with_legacy_only_fallback() {
+        let first=Path::new("/tmp/fidelity/slot-one.sav");
+        let second=Path::new("/tmp/fidelity/slot-two.sav");
+        assert_eq!(companion_path_for_save(first),Path::new("/tmp/fidelity/slot-one.script_flags.json"));
+        assert_ne!(companion_path_for_save(first),companion_path_for_save(second));
+        assert_eq!(companion_lookup_paths(Some(first),false),vec![companion_path_for_save(first)]);
+        assert_eq!(companion_lookup_paths(Some(first),true),vec![companion_path_for_save(first),script_flags_file_path()]);
+        assert_eq!(companion_lookup_paths(None,true),vec![script_flags_file_path()]);
+        assert_eq!(companion_path_for_save(&save_file_path()),script_flags_file_path());
     }
 
     #[test]

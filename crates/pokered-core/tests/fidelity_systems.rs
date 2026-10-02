@@ -209,6 +209,7 @@ fn original_sram() -> Vec<u8> {
 #[test]
 fn original_offsets_and_uninitialized_box_banks_import() {
     let save = import_sram(&original_sram()).unwrap();
+    assert!(!save.imported_legacy_native);
     assert_eq!(save.party.get(0).unwrap().species, Species::Pikachu);
     assert_eq!(save.party.get(0).unwrap().stat_exp[0], 54321);
     assert_eq!(save.game_data.safari_steps, 123);
@@ -245,6 +246,7 @@ fn previous_native_save_migrates_layout_and_species() {
     old[0x2000..0x4000].copy_from_slice(&bytes[0x2000..0x4000]);
     old[0x34cb] = pokered_core::save_menu::calc_checksum(&old[0x2598..0x34cb]);
     let save = import_sram(&old).unwrap();
+    assert!(save.imported_legacy_native);
     assert_eq!(save.party.get(0).unwrap().species, Species::Pikachu);
     assert_eq!(save.party.get(0).unwrap().ot_id, 1234);
     assert_eq!(save.game_data.safari_steps, 123);
@@ -327,6 +329,53 @@ fn every_original_npc_trade_completion_bit_survives_sram() {
         ow.write_system_save_state(&mut save.game_data);
         let output = export_sram(&save);
         assert_eq!(&output[0x29e3..0x29e5], &(1u16 << index).to_le_bytes());
+    }
+}
+
+#[test]
+fn sram_flags_are_authoritative_and_only_old_native_recovers_companion_aliases() {
+    for legacy in [false, true] {
+        let mut save = SaveData::new();
+        save.imported_legacy_native = legacy;
+        save.game_data.completed_in_game_trade_flags = 2;
+        save.game_data.status_flags[0] = 8;
+        save.game_data.event_flags[0x25 / 8] |= 1 << (0x25 % 8); // original EVENT_GOT_POKEDEX
+        let mut extras = pokered_core::hash_compat::HashMap::new();
+        for (name, value) in [
+            ("EVENT_GOT_POKEDEX", false),
+            ("EVENT_TRADED_FOR_MARCEL", false),
+            ("EVENT_TRADED_FOR_SAILOR", true),
+            ("EVENT_GOT_GOOD_ROD", true),
+            ("RUNTIME_UNKNOWN", true),
+        ] {
+            extras.insert(name.to_string(), value);
+        }
+        let mut ow = pokered_core::overworld::OverworldScreen::new(
+            pokered_data::maps::MapId::CeruleanPokecenter,
+            None,
+            pokered_data::impl_traits::PokemonRedData,
+        );
+        ow.restore_loaded_save_flags(&save, Some(extras));
+        assert!(ow.unified_flags().get_flag("EVENT_GOT_POKEDEX"));
+        assert!(ow.unified_flags().get_flag("EVENT_TRADED_FOR_MARCEL"));
+        assert!(ow.unified_flags().get_flag("EVENT_GOT_OLD_ROD"));
+        assert_eq!(
+            ow.unified_flags().get_flag("EVENT_TRADED_FOR_SAILOR"),
+            legacy
+        );
+        assert_eq!(ow.unified_flags().get_flag("EVENT_GOT_GOOD_ROD"), legacy);
+        assert!(ow.unified_flags().get_flag("RUNTIME_UNKNOWN"));
+        ow.write_system_save_state(&mut save.game_data);
+        let reloaded = import_sram(&export_sram(&save)).unwrap();
+        assert!(!reloaded.imported_legacy_native);
+        assert_eq!(
+            reloaded.game_data.completed_in_game_trade_flags,
+            if legacy { 10 } else { 2 }
+        );
+        assert_eq!(
+            reloaded.game_data.status_flags[0] & 0x38,
+            if legacy { 24 } else { 8 }
+        );
     }
 }
 

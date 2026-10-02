@@ -148,6 +148,7 @@ fn import_bank1_into(bank: &[u8], out: &mut SaveData) -> Result<bool, SaveError>
     out.party = party;
     out.current_box = current_box;
     out.tile_animations = tile_animations;
+    out.imported_legacy_native = legacy_native;
     Ok(legacy_native)
 }
 
@@ -416,6 +417,7 @@ pub fn import_sram_no_checksum(data: &[u8]) -> Result<SaveData, SaveError> {
     parse_box_bank(bank3, &mut pc_storage, 6, false)?;
 
     let mut save = SaveData {
+        imported_legacy_native: false,
         player_name,
         game_data,
         party,

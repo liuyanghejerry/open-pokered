@@ -2408,6 +2408,23 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         self.safari_game_active
     }
 
+    /// SRAM owns all mapped flags. Only an identified old native layout may
+    /// recover the system aliases it formerly kept solely in its companion.
+    pub fn restore_loaded_save_flags(&mut self, save: &crate::save::SaveData, extras: Option<HashMap<String, bool>>) {
+        self.set_event_flags_bytes(&save.game_data.event_flags);
+        self.restore_system_save_state(&save.game_data);
+        if let Some(mut extras)=extras {
+            extras.retain(|name,value| {
+                if pokered_data::event_flags::EventFlag::from_name(name).is_some() { return false; }
+                let system_alias=name.starts_with("EVENT_TRADED_FOR_")
+                    || name=="EVENT_GOT_LICKITUNG_FROM_TRADE"
+                    || matches!(name.as_str(),"EVENT_GOT_OLD_ROD"|"EVENT_GOT_GOOD_ROD"|"EVENT_GOT_SUPER_ROD");
+                !system_alias || (save.imported_legacy_native && *value)
+            });
+            self.set_script_flags(extras);
+        }
+    }
+
     /// Restore counters and status bytes that live outside the event bitset.
     pub fn restore_system_save_state(&mut self, data: &crate::save::game_data::GameData) {
         self.first_lock_trash_can = data.first_lock_trash_can;

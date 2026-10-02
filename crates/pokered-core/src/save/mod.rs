@@ -31,6 +31,10 @@ pub use serialization::{SaveError, SRAM_BANK_SIZE};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SaveData {
+    /// Import provenance only: old native SRAM did not persist system aliases.
+    /// Its companion may supply those bits once, before the next canonical save.
+    #[serde(skip)]
+    pub imported_legacy_native: bool,
     pub player_name: Vec<u8>,
     pub game_data: GameData,
     pub party: Party,
@@ -43,6 +47,7 @@ pub struct SaveData {
 impl SaveData {
     pub fn new() -> Self {
         Self {
+            imported_legacy_native: false,
             player_name: Vec::new(),
             game_data: GameData::new(),
             party: Party::new(),

@@ -67,3 +67,5 @@ PC主入口/12箱切换/物品PC/Oak评级/League HOF存在；图鉴seen+owned�
 最终本分支验收：core lib2605，systems integration14，app NPC/柜员fidelity4，existing cable flow8全过；TUI cargo check、debug-server app build成功。联机前不heal的双channel driver测试与战后heal settlement测试已纳入core。截图及双进程TCP app桥接动态结果另补后续证据commit。
 
 动态时序补验发现并追加修复：NPC选对后的ConnectCableText需在外部await期间正常推进，而NativeVM WaitingForCommand会重发同一tradePokemon。core现在在await trade/battle/elevator/filterBag期间跳过VM polling，继续处理手动dialogue，直到frontend resume；追加复现该重发问题的core测试，最终集成分支统一执行。
+
+存读边界追加：原作/新canonical SRAM的所有已映射event/status/NPC完成位为authority，不允许companion的false覆盖，也不允许companion的旧true伪造尚未完成的NPC/Rod位。已独立识别为旧native布局的文件，仅迁移历史sidecar中为true的NPC/Rod alias；新Save导出后provenance清除。此标记为serde-skip运行态，不改变SRAM或JSON格式。显式 `--save slot.sav` 的companion改绑定 `slot.script_flags.json`；默认pokered路径兼容旧文件名。旧native首次迁移且缺绑定sidecar时允许读取旧exe旁global文件，下一次保存写绑定路径；历史global文件没有trainer身份，无法证明它属于哪个旧自定义save，这是旧格式本身的信息缺失，不适用于新/raw SRAM。追加回归覆盖canonical与legacy两类false/true、mapped event、未知extra以及2条不同save路径隔离/默认旧路径。
