@@ -850,8 +850,8 @@ impl NativeScriptEngine {
     }
 
     pub fn set_gym_trash_indices(&mut self, first: u8, second: u8) {
-        self.vgym.first = first.min(14) as i32;
-        self.vgym.second = second.min(14) as i32;
+        self.vgym.first = first as i32;
+        self.vgym.second = second as i32;
     }
 
     pub fn set_flag(&mut self, flag: &str, value: bool) {
@@ -2222,6 +2222,17 @@ mod tests {
             "second={}",
             vgym.second
         );
+    }
+
+    #[test]
+    fn imported_trash_indices_preserve_original_sram_bytes() {
+        let mut engine = NativeScriptEngine::new();
+        engine.set_gym_trash_indices(255, 254);
+        assert_eq!(engine.gym_trash_indices(), (255, 254));
+        let snapshot = engine.snapshot();
+        let mut restored = NativeScriptEngine::new();
+        restored.restore_snapshot(&snapshot);
+        assert_eq!(restored.gym_trash_indices(), (255, 254));
     }
 
     #[test]
