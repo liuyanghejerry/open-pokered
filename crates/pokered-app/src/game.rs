@@ -6344,6 +6344,8 @@ impl PokemonGame {
                             "move": format!("{:?}", m.move_id),
                             "pp": m.current_pp,
                             "disabled": m.is_disabled,
+                            "direct_hit_preview": self.battle.battle_state.as_ref().and_then(|bs|
+                                pokered_core::battle::pokered_rules::preview::player_direct_hit(bs, m.move_id)),
                         })
                     }).collect::<Vec<_>>(),
                 })
@@ -7827,6 +7829,33 @@ mod session_guard_tests {
 #[cfg(all(test, feature = "debug-server"))]
 mod synchronous_input_tests {
     use super::*;
+
+    #[test]
+    fn move_menu_exposes_read_only_conditional_damage_preview() {
+        use pokered_core::battle::{menu::{MoveMenuState, MoveSlot}, state::{new_battle_state, BattleType}};
+        use pokered_core::pokemon::stats::create_pokemon;
+        use pokered_data::{species::Species, moves::MoveId};
+        let mut game = PokemonGame::new_with_options(
+            GameVersion::Red, None, None, None, false, None, false, true, None,
+        );
+        game.battle.battle_state = Some(new_battle_state(BattleType::Wild,
+            vec![create_pokemon(Species::Charizard, 74, [0x88, 0x88]).unwrap()],
+            vec![create_pokemon(Species::Zapdos, 50, [0x88, 0x88]).unwrap()]));
+        game.battle.move_menu = Some(MoveMenuState::new(vec![MoveSlot {
+            move_id: MoveId::Cut, current_pp: 30, max_pp: 30, is_disabled: false,
+        }]));
+        let before = serde_json::to_value(&game.battle.battle_state).unwrap();
+        let frame = game.frame_count;
+        let first = game.debug_state_snapshot();
+        let second = game.debug_state_snapshot();
+        assert_eq!(first, second);
+        let preview = &first["battle_moves"]["moves"][0]["direct_hit_preview"];
+        assert!(preview["normal_damage"][0].as_u64().unwrap() > 0);
+        assert_eq!(preview["critical_threshold"], 50);
+        assert_eq!(preview["direct_hit_can_ko"], false);
+        assert_eq!(serde_json::to_value(&game.battle.battle_state).unwrap(), before);
+        assert_eq!(game.frame_count, frame);
+    }
 
     #[test]
     fn control_ready_waits_for_door_exit_and_unfinished_movement() {

@@ -449,6 +449,15 @@ def move_question(state, menu):
 def capture_move_question(state, menu):
     compact, choices = move_question(state, menu)
     live = state['battle_live']
+    for index, slot in enumerate(menu['moves']):
+        if str(index) in compact['moves']:
+            compact['moves'][str(index)]['direct_hit_preview'] = slot.get('direct_hit_preview')
+    compact['direct_hit_preview_scope'] = (
+        'Native formula ranges for one hit if it lands with current combat stats, stages, '
+        'badge boosts, burn, screens and types unchanged. Includes critical damage. '
+        'critical_threshold / 256 is the current critical probability. '
+        'Not a whole-turn safety guarantee: excludes opponent action, move failure, '
+        'secondary and residual damage. Null means unsupported or unavailable, NOT zero damage.')
     bag = {slot['item']: slot['qty'] for slot in state.get('battle_inventory', [])}
     mon = {'moves': [slot['move'] for slot in menu['moves']],
            'pp': [0 if slot['disabled'] else slot['pp'] for slot in menu['moves']]}
@@ -943,8 +952,12 @@ class JevGame(pt.Game):
                         'Sleep or paralysis can improve the supplied capture probability without damaging '
                         'the target. Their projected odds are conditional on the status actually landing. '
                         'Compare accuracy, PP, target status and remaining balls. For damaging moves, '
-                        'compare levels, base stats, power and critical risk; these are proxies, not exact '
-                        'damage guarantees. Prefer safe non-damaging preparation or a suitably weak attack '
+                        'use direct_hit_preview when present: compare both normal and critical damage '
+                        'ranges with current target HP, under direct_hit_preview_scope. A hit whose '
+                        'maximum is below target HP cannot directly knock it out at unchanged stats, '
+                        'but secondary/residual damage and the opponent acting first still matter. '
+                        'Without a preview, levels, base stats and power are only proxies, not damage '
+                        'guarantees. Prefer safe non-damaging preparation or a suitably weak attack '
                         'over a knockout; do not repeatedly try status that is already present.' if capturing else
                         'Which usable attack gives the best progress on this turn? '
                         'This does not require a guaranteed battle victory. If the only available '

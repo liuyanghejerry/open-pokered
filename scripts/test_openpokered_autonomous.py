@@ -3387,6 +3387,27 @@ class AutonomousTests(unittest.TestCase):
         state['battle_live']['enemy']['status'] = 'Sleep(1)'
         self.assertEqual(capture_move_question(state, menu)[1], {})
 
+    def test_capture_menu_preserves_native_hit_ranges_and_unknown_is_not_zero(self):
+        from openpokered.playthrough_judgments import capture_move_question
+        state = self.capture_support_state()
+        state['battle_live']['player'] = state['party'][0]
+        preview = {'normal_damage': [25, 30], 'critical_damage': [50, 59],
+                   'critical_threshold': 50, 'target_hp': 139, 'direct_hit_can_ko': False}
+        menu = {'moves': [
+            {'move': 'Cut', 'pp': 20, 'disabled': False, 'direct_hit_preview': preview},
+            {'move': 'Dig', 'pp': 10, 'disabled': False},
+            {'move': 'Tackle', 'pp': 0, 'disabled': False, 'direct_hit_preview': preview}]}
+        compact, choices = capture_move_question(state, menu)
+        self.assertEqual(choices, {'0': 'Cut', '1': 'Dig'})
+        self.assertEqual(compact['moves']['0']['direct_hit_preview'], preview)
+        self.assertIsNone(compact['moves']['1']['direct_hit_preview'])
+        self.assertIn('Not a whole-turn safety guarantee', compact['direct_hit_preview_scope'])
+        self.assertIn('NOT zero damage', compact['direct_hit_preview_scope'])
+        old_key = json.dumps(compact, sort_keys=True)
+        preview['normal_damage'] = [40, 48]
+        new_compact, _ = capture_move_question(state, menu)
+        self.assertNotEqual(old_key, json.dumps(new_compact, sort_keys=True))
+
     def test_real_move_selector_drives_the_judged_capture_status_slot(self):
         game = JevGame.__new__(JevGame)
         state = self.capture_support_state()
