@@ -16,7 +16,7 @@ import traceback
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from openpokered.autonomous_story import AutonomousStoryAgent
+from openpokered.autonomous_story import AutonomousStoryAgent, accumulate_capture_retreat
 from openpokered.collection_verification import require_collection_completion, verify_collection_continue
 from openpokered.judgment_agent import load_objectives
 from openpokered.playthrough_judgments import JevGame
@@ -96,6 +96,35 @@ def checkpoint_collection_audit(run):
                         'elapsed_s': event['elapsed_s'], 'map': event['map']}
                 previous_owned = set(event.get('owned_species', []))
     return pending
+
+
+def checkpoint_capture_retreat_totals(run):
+    """Replay only ancestors of this save; never count discarded sibling runs."""
+    chain, seen, totals = [], set(), {}
+    while run:
+        run = Path(run).resolve()
+        if run in seen:
+            raise ValueError('capture retreat checkpoint cycle')
+        seen.add(run)
+        summary = json.loads((run / 'summary.json').read_text())
+        if summary.get('capture_retreat_totals_schema') == 1:
+            totals = summary['capture_retreat_totals']
+            break
+        chain.append(run)
+        parent = summary.get('resumed_from')
+        run = pt.ROOT / parent if parent else None
+    for folder in reversed(chain):
+        trace = folder / 'trace.jsonl'
+        if not trace.is_file():
+            continue  # Counts describe recorded events, not an invented total.
+        with trace.open() as stream:
+            for line in stream:
+                if '"capture_retreat"' not in line:
+                    continue
+                event = json.loads(line)
+                if event.get('kind') == 'capture_retreat':
+                    accumulate_capture_retreat(totals, event)
+    return totals
 
 
 def checkpoint_field_requirements(run):
@@ -271,6 +300,7 @@ def main(argv=None):
                     agent.field_requirements.update(checkpoint_field_requirements(args.resume))
                     agent.battle_requirements.update(parent.get('battle_requirements', {}))
                     agent.capture_retreats.update(parent.get('capture_retreats', {}))
+                    agent.capture_retreat_totals.update(checkpoint_capture_retreat_totals(args.resume))
                     agent.collection_audit_pending.update(checkpoint_collection_audit(args.resume))
                     game.stationary_npcs = {name: {int(k): tuple(v) for k, v in npcs.items()}
                                             for name, npcs in parent.get('stationary_npcs', {}).items()}
@@ -299,6 +329,8 @@ def main(argv=None):
                             result['field_requirements_schema'] = 1
                             result['battle_requirements'] = agent.battle_requirements
                             result['capture_retreats'] = agent.capture_retreats
+                            result['capture_retreat_totals_schema'] = 1
+                            result['capture_retreat_totals'] = agent.capture_retreat_totals
                             result['collection_audit_schema'] = 1
                             result['collection_audit_pending'] = agent.collection_audit_pending
                             result['stationary_npcs'] = getattr(game, 'stationary_npcs', {})

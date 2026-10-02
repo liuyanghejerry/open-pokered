@@ -411,6 +411,9 @@ class AutonomousTests(unittest.TestCase):
         self.assertEqual(evidence['retreat_observation']['enemy']['status'], 'None')
         self.assertEqual(evidence['preparation_changes_since_attempt'], ['more_ball_stock:ULTRABALL'])
         self.assertEqual(evidence['preparation']['party'][0]['hp'], 71)
+        self.assertEqual(evidence['recorded_history']['recorded_retreats'], 1)
+        self.assertEqual(evidence['recorded_history']['inventory_observed_retreats'], 1)
+        self.assertEqual(evidence['recorded_history']['balls_spent'], {})
         self.assertNotIn('preparation_changes_since_attempt', agent.capture_retreats['PowerPlant:Zapdos'])
         # Legacy checkpoints have no post-retreat observations. Do not invent
         # the result, and do not lose the rest of the preparation evidence.
@@ -418,6 +421,109 @@ class AutonomousTests(unittest.TestCase):
         state = {}
         agent.augment_strategy_state(state, facts)
         self.assertNotIn('retreat_observation', state['capture_retry_evidence'][0])
+
+    def test_capture_history_distinguishes_unobserved_from_zero_ball_cost(self):
+        from openpokered.autonomous_story import accumulate_capture_retreat
+        totals = {}
+        event = {'map': 'PowerPlant', 'species': 'Zapdos',
+                 'preparation': {'balls': {'ULTRA_BALL': 8}}}
+        accumulate_capture_retreat(totals, event)
+        event['retreat_observation'] = {'inventory': [{'item': 'UltraBall', 'qty': 3}]}
+        accumulate_capture_retreat(totals, event)
+        event['preparation']['balls'] = {'ULTRABALL': 3}
+        accumulate_capture_retreat(totals, event)
+        event['start_inventory_observed'] = False
+        accumulate_capture_retreat(totals, event)
+        self.assertEqual(totals['PowerPlant:Zapdos'], {'recorded_retreats': 4,
+            'inventory_observed_retreats': 2, 'balls_spent': {'ULTRABALL': 5}})
+        self.assertEqual(json.loads(json.dumps(totals)), totals)
+
+    def test_capture_history_resume_counts_only_lineage_and_does_not_double_count(self):
+        import tempfile
+        from openpokered.run_autonomous import checkpoint_capture_retreat_totals
+        with tempfile.TemporaryDirectory() as temporary:
+            folders = [Path(temporary) / name for name in ('parent', 'child', 'discarded')]
+            parent, child, discarded = folders
+            event = {'kind': 'capture_retreat', 'map': 'PowerPlant', 'species': 'Zapdos',
+                     'preparation': {'balls': {'GREATBALL': 4}},
+                     'retreat_observation': {'inventory': []}}
+            for folder in folders:
+                folder.mkdir()
+                folder.joinpath('summary.json').write_text(json.dumps(
+                    {'resumed_from': str(parent)} if folder != parent else {}))
+                folder.joinpath('trace.jsonl').write_text(json.dumps(event) + '\n')
+            totals = checkpoint_capture_retreat_totals(child)
+            self.assertEqual(totals['PowerPlant:Zapdos']['recorded_retreats'], 2)
+            self.assertEqual(totals['PowerPlant:Zapdos']['balls_spent'], {'GREATBALL': 8})
+            child.joinpath('summary.json').write_text(json.dumps({
+                'resumed_from': str(parent), 'capture_retreat_totals_schema': 1,
+                'capture_retreat_totals': totals}))
+            self.assertEqual(checkpoint_capture_retreat_totals(child), totals)
+            # The schema is authoritative, including an empty history.
+            child.joinpath('summary.json').write_text(json.dumps({
+                'resumed_from': str(parent), 'capture_retreat_totals_schema': 1,
+                'capture_retreat_totals': {}}))
+            self.assertEqual(checkpoint_capture_retreat_totals(child), {})
+            parent.joinpath('summary.json').write_text(json.dumps({'resumed_from': str(parent)}))
+            with self.assertRaisesRegex(ValueError, 'checkpoint cycle'):
+                checkpoint_capture_retreat_totals(parent)
+
+    def test_route_requirements_refresh_after_consumed_drink_unlocks_guard(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        goal = ('flag', 'EVENT_BEAT_SABRINA', True)
+        agent.route_requirements = {'SaffronGym': {'goal': goal,
+            'trigger_points': [(5, 3)], 'prerequisites': [('item', 'FRESH_WATER', True)]}}
+        agent.index, agent.game = Mock(), Mock()
+        agent.index.satisfied.return_value = False  # Gym still unfinished.
+        agent.discover_route_prerequisites = Mock(return_value=[])
+        facts = {'flags': {'EVENT_GAVE_SAFFRON_GUARDS_DRINK': True}, 'bag': {}}
+        agent.refresh_route_requirements(facts)
+        self.assertEqual(agent.route_requirements, {})
+        agent.discover_route_prerequisites.assert_called_once_with(
+            agent.game.st.return_value, 'SaffronGym', [(5, 3)])
+
+    def test_script_unlocks_are_guard_evidence_not_automatic_rewards(self):
+        from openpokered.story_rules import literal
+        from types import SimpleNamespace
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        key_guard = {'Call': {'callee': 'hasItem', 'args': [literal('CARD_KEY')]}}
+        other_guard = {'Call': {'callee': 'hasItem', 'args': [literal('OTHER_KEY')]}}
+        door = Rule('door', 'Office', 'door', [], [(key_guard, True)], [],
+                    ('block', 'Office,1,1', 14), [])
+        gift = Rule('gift', 'Office', 'gift', [], [(key_guard, True)], [],
+                    ('pokemon', 'LAPRAS', 15), [('battle', 'RIVAL', True)])
+        blocked = Rule('blocked', 'Other', 'blocked', [],
+                       [(key_guard, True), (other_guard, True)], [], ('item', 'PRIZE', True), [])
+        agent.index = SimpleNamespace(rules=[door, door, gift, blocked])
+        facts = {'bag': {}, 'flags': {}}
+        groups = {'key': {'target': ('item', 'CARD_KEY', True)}}
+        agent.annotate_script_unlocks(groups, facts)
+        result = groups['key']['context']['script_unlocks']
+        self.assertEqual(result['scripts'], 2)
+        self.assertEqual(result['maps'], ['Office'])
+        self.assertEqual(result['effect_counts'], {'block': 1, 'pokemon': 1})
+        self.assertEqual(result['potential_gift_species'], ['LAPRAS'])
+        self.assertIn('battles still require execution', result['scope'])
+        self.assertEqual(facts, {'bag': {}, 'flags': {}})
+        already_owned = {'key': {'target': ('item', 'CARD_KEY', True)}}
+        agent.annotate_script_unlocks(already_owned, {'bag': {'CARDKEY': 1}, 'flags': {}})
+        self.assertNotIn('context', already_owned['key'])
+
+    def test_route_requirements_refresh_keeps_new_blocker_and_removes_finished_goal(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        goal = ('flag', 'EVENT_BEAT_SILPH_CO_GIOVANNI', True)
+        agent.route_requirements = {'SilphCo11F': {'goal': goal,
+            'trigger_points': [(5, 3)], 'prerequisites': [('item', 'FRESH_WATER', True)]}}
+        agent.index, agent.game = Mock(), Mock()
+        agent.index.satisfied.return_value = False
+        agent.discover_route_prerequisites = Mock(return_value=[('item', 'CARD_KEY', True)])
+        agent.refresh_route_requirements({})
+        self.assertEqual(agent.route_requirements['SilphCo11F']['prerequisites'],
+                         [('item', 'CARD_KEY', True)])
+        agent.index.satisfied.return_value = True
+        agent.refresh_route_requirements({})
+        self.assertEqual(agent.route_requirements, {})
+        self.assertEqual(agent.discover_route_prerequisites.call_count, 1)
 
     def test_fainted_status_support_is_not_a_collection_resource(self):
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
@@ -2665,6 +2771,7 @@ class AutonomousTests(unittest.TestCase):
             agent.navigation_memory, agent.navigation_history = {}, {}
             agent.field_requirements, agent.battle_requirements = {}, {}
             agent.capture_retreats = {}
+            agent.capture_retreat_totals = {}
             agent.collection_audit_pending = {}
             agent.battle_defeats, agent.defeat_preparation = [], 0
             agent.first_clear_verification, agent.mechanism_goal = None, None

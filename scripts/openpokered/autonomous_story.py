@@ -139,6 +139,27 @@ def capture_preparation(party, bag):
                       for mon in party]}
 
 
+def accumulate_capture_retreat(totals, evidence):
+    """Count recorded escapes, measuring costs only across observed inventories."""
+    key = evidence['map'] + ':' + evidence['species']
+    total = totals.setdefault(key, {'recorded_retreats': 0,
+        'inventory_observed_retreats': 0, 'balls_spent': {}})
+    total['recorded_retreats'] += 1
+    start = evidence.get('preparation', {}).get('balls', {})
+    end = (evidence.get('retreat_observation') or {}).get('inventory')
+    # Legacy nonempty start stock is evidence; an absent/empty legacy field
+    # cannot establish that a full inventory was observed.
+    if not evidence.get('start_inventory_observed', bool(start)) or not isinstance(end, list):
+        return
+    total['inventory_observed_retreats'] += 1
+    remaining = capture_preparation([], {row['item']: row['qty'] for row in end})['balls']
+    for name, qty in start.items():
+        name = name.replace('_', '').upper()
+        spent = max(0, qty - remaining.get(name, 0))
+        if spent:
+            total['balls_spent'][name] = total['balls_spent'].get(name, 0) + spent
+
+
 def capture_preparation_improvements(current, previous):
     """Public improvements only: movement, damage and spending do not reopen a retry."""
     changes = []
@@ -523,6 +544,7 @@ class AutonomousStoryAgent(DualStoryAgent):
         self.battle_requirements = {}
         self.battle_defeats = []
         self.capture_retreats = {}
+        self.capture_retreat_totals = {}
         self.collection_audit_pending = {}
         self._audit_party = None
         self.defeat_preparation = 0
@@ -703,9 +725,11 @@ class AutonomousStoryAgent(DualStoryAgent):
             # outcome visible even when it no longer blocks the retry.
             preparation = capture_preparation(facts.get('party', []), facts.get('bag', {}))
             state['capture_retry_evidence'] = [{**row,
+                'recorded_history': getattr(self, 'capture_retreat_totals', {}).get(key, {}),
+                'history_scope': 'Recorded menu escapes in this checkpoint lineage only; ball costs cover inventory_observed_retreats, not unobserved attempts. Not a prediction of retry success.',
                 'preparation_changes_since_attempt': capture_preparation_improvements(
                     preparation, row['preparation'])}
-                for row in getattr(self, 'capture_retreats', {}).values()]
+                for key, row in getattr(self, 'capture_retreats', {}).items()]
 
     def dex_progress(self, facts):
         """Collection panel: what is missing, where, and what it unlocks."""
@@ -822,6 +846,9 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'and the value of unlocking new regions: a low-level trainee may require many victories, '
                 'while a later wild capture can register the evolved species directly. Potential alternative '
                 'sources are not guaranteed reachable; choose the prerequisites needed to reach them. '
+                'script_unlocks describes scene guards that obtaining an item or flag would satisfy; '
+                'weigh those durable opportunities against repeat preparation. It does not prove the '
+                'resulting rooms reachable or battles won, and is not a promised registration count. '
                 'Use training_effort_examples to compare the estimated number of victories and encounter '
                 'steps, not just levels remaining. Hundreds of low-yield battles have an opportunity '
                 'cost: acquiring an HM or resolving a story blocker may open better collecting and '
@@ -832,7 +859,11 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'condition, not its combat strength. Consider viable alternatives or prerequisites, stronger '
                 'support, safer preparation, or a ball that needs no setup. A retry being offered means '
                 'preparation changed, not that capture is now safe or likely. Missing retreat_observation '
-                'fields mean unobserved, not zero HP or confirmed failure of a specific tactic.')
+                'fields mean unobserved, not zero HP or confirmed failure of a specific tactic. '
+                'Compare recorded_history across repeated retreats with the durable unlocks and new '
+                'registrations offered by other candidates. Replenishing balls or gaining one level '
+                'does not erase this history; prior spending is not a reason to keep spending. '
+                'Past failures also do not prove a materially different setup will fail.')
             instruction += (' Capture support training is a bounded experience step, not a complete '
                 'capture setup. Compare the remaining level gap and training_cost_to_observed_target_level '
                 'with alternate supports, ball capabilities and their acquisition prerequisites. Level '
@@ -1304,7 +1335,9 @@ class AutonomousStoryAgent(DualStoryAgent):
                 for row in before.get('battle_inventory', [])})
             key = before['map_name'] + ':' + captured_species
             evidence = {'map': before['map_name'], 'species': captured_species,
-                        'preparation': preparation, 'reason': 'native_menu_escape_without_registration'}
+                        'preparation': preparation,
+                        'start_inventory_observed': isinstance(before.get('battle_inventory'), list),
+                        'reason': 'native_menu_escape_without_registration'}
             result_live = after.get('battle_live') or {}
             evidence['retreat_observation'] = {
                 'enemy': result_live.get('enemy'),
@@ -1312,6 +1345,9 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'inventory': after.get('battle_inventory'),
                 'scope': 'Native observations at successful menu escape; not a damage forecast or proof of which move caused a faint.'}
             self.capture_retreats[key] = evidence
+            if not hasattr(self, 'capture_retreat_totals'):
+                self.capture_retreat_totals = {}
+            accumulate_capture_retreat(self.capture_retreat_totals, evidence)
             self.record('capture_retreat', **evidence)
         opponents = (before.get('battle_live') or {}).get('enemy_party', [])
         signature = lambda team: [(m['species'], m.get('level')) for m in team]
@@ -2481,11 +2517,34 @@ class AutonomousStoryAgent(DualStoryAgent):
             if not group['rules']:
                 del groups[key]
 
+    def refresh_route_requirements(self, facts):
+        """Retain destinations, not stale alternatives to already-open gates."""
+        for name, requirement in list(getattr(self, 'route_requirements', {}).items()):
+            if self.index.satisfied(requirement['goal'], facts):
+                del self.route_requirements[name]
+                continue
+            points = requirement.get('trigger_points')
+            if points is None:
+                # Old in-memory records did not retain the exact trigger.
+                # Re-ground it in the scene index, never in a fixed itinerary.
+                points = [point for rule in self.index.rules
+                          if rule.map == name and tuple(rule.effect) == tuple(requirement['goal'])
+                          for point in self.destination_points(name, rule)]
+            prerequisites = self.discover_route_prerequisites(self.game.st(), name, points)
+            if prerequisites:
+                self.route_requirements[name] = {**requirement,
+                    'trigger_points': points, 'prerequisites': prerequisites}
+            else:
+                # No currently grounded blocker: do not re-offer a consumed
+                # drink simply because a later gym battle remains unfinished.
+                del self.route_requirements[name]
+
     def strategy_groups(self, facts):
         groups = super().strategy_groups(facts)
         self.navigation_facts = facts
         if getattr(self, 'navigation_memory', {}):
             self.game.script_navigation_barriers = self.observed_navigation_barriers(facts)
+        self.refresh_route_requirements(facts)
         # A known blocked goal needs a newly grounded prerequisite before
         # asking strategy to select it again. This also reconstructs geometric
         # dependencies after a checkpoint without replaying an old itinerary.
@@ -2493,11 +2552,11 @@ class AutonomousStoryAgent(DualStoryAgent):
             for rule in group['rules']:
                 if rule.map not in getattr(self, 'navigation_memory', {}):
                     continue
-                prerequisites = self.discover_route_prerequisites(
-                    self.game.st(), rule.map, self.destination_points(rule.map, rule))
+                points = self.destination_points(rule.map, rule)
+                prerequisites = self.discover_route_prerequisites(self.game.st(), rule.map, points)
                 if prerequisites:
                     self.route_requirements[rule.map] = {'destination': rule.map, 'goal': group['target'],
-                        'prerequisites': prerequisites,
+                        'trigger_points': points, 'prerequisites': prerequisites,
                         'evidence': 'Planning with doors relaxed; each prerequisite requires real execution'}
         for requirement in getattr(self, 'route_requirements', {}).values():
             if self.index.satisfied(requirement['goal'], facts):
@@ -2796,7 +2855,38 @@ class AutonomousStoryAgent(DualStoryAgent):
                 if group.get('context', {}).get('optional_preparation'):
                     del groups[key]  # Preparation the run can survive without only spends frames.
         self.prioritize_critical_recovery(groups, facts)
+        if self.collects_dex:
+            self.annotate_script_unlocks(groups, facts)
         return groups
+
+    def annotate_script_unlocks(self, groups, facts):
+        """Expose immediate script dependencies without simulating game progress."""
+        rules = getattr(self.index, 'rules', None)
+        if not isinstance(rules, list):
+            return
+        blocked = [rule for rule in rules if rule.missing(facts)]
+        for group in groups.values():
+            kind, name, wanted = group['target']
+            if kind not in ('flag', 'item') or wanted is not True:
+                continue
+            hypothetical = {**facts, 'flags': dict(facts['flags']), 'bag': dict(facts['bag'])}
+            if kind == 'flag':
+                hypothetical['flags'][name] = True
+            else:
+                hypothetical['bag'][name.replace('_', '').upper()] = 1
+            unlocked = [rule for rule in blocked if not rule.missing(hypothetical)]
+            if not unlocked:
+                continue
+            # A single script may emit several flags alongside the same door
+            # opening. Count distinct effects and scripts, not duplicated paths.
+            effects = {(rule.map, json.dumps(rule.effect)): rule.effect for rule in unlocked}
+            group.setdefault('context', {})['script_unlocks'] = {
+                'scripts': len({(rule.map, rule.storyline) for rule in unlocked}),
+                'maps': sorted({rule.map for rule in unlocked}),
+                'effect_counts': dict(Counter(effect[0] for effect in effects.values())),
+                'potential_gift_species': sorted({effect[1] for effect in effects.values()
+                                                 if effect[0] == 'pokemon'}),
+                'scope': 'Only guards newly satisfied if this target is obtained; preceding effects, navigation and battles still require execution. Not guaranteed rewards.'}
 
     @staticmethod
     def prioritize_critical_recovery(groups, facts):
@@ -3666,7 +3756,7 @@ class AutonomousStoryAgent(DualStoryAgent):
             prerequisites = self.discover_route_prerequisites(state, name, points)
             if prerequisites:
                 self.route_requirements[name] = {'destination': name, 'goal': self.active['target'],
-                    'prerequisites': prerequisites,
+                    'trigger_points': points, 'prerequisites': prerequisites,
                     'evidence': 'A planning path with doors relaxed and NPC collisions omitted; all proposed prerequisites still require real execution'}
                 return {'result': 'blocked', 'detail': 'The route crosses a closed mechanism',
                         'destination': name, 'prerequisites': prerequisites}
