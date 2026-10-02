@@ -5738,6 +5738,15 @@ impl PokemonGame {
                     if self.state.config.language==pokered_core::game_state::Lang::Zh { "欢迎下次再来！" } else { "Please come again!" }));
                 return;
             }
+            FlowNeed::CancelRoomSelection => {
+                self.overworld.pending_dialogue = Some(pokered_core::overworld::BedroomDialogue::from_message(
+                    if self.state.config.language == pokered_core::game_state::Lang::Zh {
+                        "联机被\n取消了。"
+                    } else {
+                        "The link was\ncanceled."
+                    }));
+                return;
+            }
             FlowNeed::SaveReception => {
                 self.save_to_file();
                 if let Some(audio) = &self.audio { audio.play_sfx(SfxId::Save); }
@@ -6008,6 +6017,9 @@ impl PokemonGame {
             // Cable Club entry: plain fade-in, no EnterMapAnim spin.
             arrival_spin: false,
         });
+        self.overworld.warp_fade_state=pokered_core::overworld::WarpFadeState::FadingOut {
+            frames_remaining:pokered_core::overworld::WARP_FADE_OUT_FRAMES,
+        };
     }
 
     /// Drain script-requested bag/money mutations and apply them to the
@@ -7876,6 +7888,19 @@ mod fidelity_systems_npc_tests {
     fn game() -> PokemonGame {
         PokemonGame::new_with_options(GameVersion::Red, None, None, None, false, None,
             false, true, #[cfg(feature = "debug-server")] None)
+    }
+
+    #[test]
+    fn fidelity_cable_room_selection_completes_actual_warp() {
+        for (kind,map) in [(LinkKind::Trade,MapId::TradeCenter),(LinkKind::Battle,MapId::Colosseum)] {
+            let mut game=game();
+            game.state.screen=GameScreen::Overworld;
+            game.overworld=OverworldScreen::new(MapId::CeruleanPokecenter,None,PokemonRedData);
+            game.handle_flow_need(FlowNeed::EnterRoom(kind));
+            assert!(matches!(game.overworld.warp_fade_state,pokered_core::overworld::WarpFadeState::FadingOut { .. }));
+            for _ in 0..90 { game.update(&InputState::new()); }
+            assert_eq!(game.overworld.state.current_map,map);
+        }
     }
 
     #[test]
