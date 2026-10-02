@@ -29,6 +29,8 @@ P1：明显影响主要体验或系统性的错误；P2：正常可见的保真�
 | VA17 / P2 未还原 | THE END：当前单行小字体文字，原作用 gfx/credits/the_end 的 2 行专用图块于(4,8)/(4,9)，再执行4×5帧 palette等待。注意PNG转2bpp只有index0/3，所以文字从出现起即黑，不能把FadeInCredits调用误认为其字形视觉渐显。 | `render/credits.rs:146` 至 `:149`，当前 credits-06600.png。 | `engine/movie/credits.asm:245` 至 `:265`。copyright 后第16只越界宝可梦当前有意省略（credits.rs:22），必须另列原作 bug 选择，不计作无意新 bug。 |
 | VA18 / P1 音频 bug | Safari/进化、治疗音乐和标题 CH3 的 pitch_slide：用前一音符而不是紧随命令的新音符算方向与 freq_step，且用全部差值作为每帧步长，没有按 note_delay-length_modifier 求商与保留小数（含原作借位 bug）。Safari 第一音一帧冲到目标，下一音 step=0 完全不滑。 | 实际锁定 dotzuki-audio `f57af30` 的 `sequencer.rs:450` 至 `:474`、`:598` 至 `:639`、`effects.rs:89` 至 `:125`。本轮现行 rlib 状态探针：`audio-pitch-slide-current.csv`，SAFARI_ZONE f0 freq1548 step1899，f1直接1899，f6新音1714 step0直至f11。 | `audio/engine_1.asm:432` 至 `:461`、`:785` 至 `:799`、`:1140` 至 `:1236`；使用曲目 `audio/music/safarizone.asm:9`、`pkmnhealed.asm:8`、`titlescreen.asm:380`。这是实际音序器路径确认，不只是 approximate 注释。尚无新 ROM PCM 对拍。 |
 
+| VA19 / P2 bug | Credits 宝可梦剪影每个8px步进保持2帧，总54帧；原`ScrollCreditsMonLeft`在同一帧等LY=$20、$70，下一次循环再等下一帧，因此27次步进各1帧。 | `credits.rs:44`至`:46`、`:264`至`:266`。 | `engine/movie/credits.asm:109`至`:131`。此项来自实际循环控制与扫描线条件，不依赖≈2frames注释；VRAM staging/CPU扫描线写入不在新ROM逐帧证据内。 |
+
 ## 覆盖矩阵与本轮未发现新增差异的边界
 
 | 流程 | 阅读/核对范围 | 结果及验证边界 |

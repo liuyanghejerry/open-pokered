@@ -9,7 +9,7 @@
 //! - `CRED_TEXT_FADE_MON` — palette fade-in (`FadeInCredits`, 4 steps × 5
 //!   frames), 90-frame hold, then the next mon from `CreditsMons`
 //!   (data/credits/credits_mons.asm) scrolls left across the screen as a
-//!   black silhouette (7 + 20 tile scrolls ≈ 54 frames).
+//!   black silhouette (7 + 20 tile scrolls in 27 frames).
 //! - `CRED_TEXT_MON` — same without the fade, 110-frame hold.
 //! - `CRED_TEXT_FADE` — fade + 120-frame hold, no mon.
 //! - `CRED_TEXT` — 140-frame hold, no mon.
@@ -24,7 +24,7 @@
 //!   `DisplayCreditsMon` reads one byte past `CreditsMons` (a stray opcode
 //!   byte) — an original bug we don't reproduce.
 //! - The mon silhouette's per-scanline scroll (`ScrollCreditsMonLeft`) is
-//!   modelled as 27 discrete 8 px steps (`mon_scroll_step`); the renderer
+//!   modelled as 27 discrete 8 px steps, one per frame (`mon_scroll_step`); the renderer
 //!   applies them to the middle band only, like the original's SCX writes on
 //!   scanlines 32-111.
 //! - The credits are not skippable, matching the original (no
@@ -41,9 +41,10 @@ pub const HOLD_FADE: u16 = 120;
 pub const HOLD_TEXT: u16 = 140;
 /// `FadeInCredits`: 4 palette steps × 5 frames (credits.asm:43-54).
 pub const FADE_IN_FRAMES: u16 = 20;
-/// Mon silhouette scroll: 7 + 20 tile scrolls ≈ 2 frames each
-/// (`DisplayCreditsMon`, credits.asm:56-133).
-pub const MON_SCROLL_FRAMES: u16 = 54;
+/// Mon silhouette scroll: 7 + 20 tile scrolls, one per VBlank.
+/// `ScrollCreditsMonLeft` waits for LY=$20 then LY=$70 in the same frame
+/// (credits.asm:109-131); only the next iteration waits for another frame.
+pub const MON_SCROLL_FRAMES: u16 = 27;
 /// `CRED_THE_END`: 16-frame delay before "THE END" appears (credits.asm:255-263).
 pub const THE_END_DELAY_FRAMES: u16 = 16;
 /// Post-credits delay before the button wait (scripts/HallOfFame.asm:50-54:
@@ -288,7 +289,7 @@ impl CreditsState {
     /// (the mon's right edge, credits.asm:107-114).
     pub fn mon_scroll_step(&self) -> u8 {
         if self.phase == CreditsPhase::MonScroll {
-            ((self.frame / 2) as u8).min(27)
+            (self.frame as u8).min(27)
         } else {
             0
         }
@@ -405,6 +406,24 @@ mod tests {
     fn blue_version_string() {
         let screens = credits_screens(GameVersion::Blue);
         assert_eq!(screens[0].lines[1].text, "BLUE VERSION STAFF");
+    }
+
+    #[test]
+    fn silhouette_scroll_advances_each_vblank() {
+        let mut s = CreditsState::new(GameVersion::Red);
+        for _ in 0..HOLD_FADE_MON + FADE_IN_FRAMES {
+            s.update_frame(CreditsInput::none());
+        }
+        assert_eq!(s.phase(), CreditsPhase::MonScroll);
+        assert_eq!(s.mon_scroll_step(), 0);
+        for expected in 1..27 {
+            s.update_frame(CreditsInput::none());
+            assert_eq!(s.phase(), CreditsPhase::MonScroll);
+            assert_eq!(s.mon_scroll_step(), expected);
+        }
+        s.update_frame(CreditsInput::none());
+        assert_eq!(s.phase(), CreditsPhase::Hold);
+        assert_eq!(s.screen_index(), 1);
     }
 
     /// Per-screen flow: hold → mon scroll → next; copyright ends in THE END.

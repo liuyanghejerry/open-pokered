@@ -23,6 +23,8 @@
 | VA17 | 原THE END双行 interleave图块、原坐标与四阶palette等待；字形index3从出现起即黑。copyright页使用原专用三行图块。保留有意省略非法越界种类的现有政策。 | credits6600图、完整credits cache测试；未声称复制原越界bug。 |
 | VA18 | 已交共享 dotzuki 音序器修复：新音符初始化、整数/小数 pitch-slide 步长及原借位行为；游戏升级其依赖由主集成提交完成。 | 当前bug trace和原汇编引用在审计文档；共享引擎测试由主代理提供。没有新ROM PCM对拍。 |
 
+| VA19 | Credits 27个8px剪影步进每 VBlank 一步，修正原来的二分之一速度。 | 同一production源码的5项状态测试通过，新增单步/27帧终点断言；最终credits定帧图。原VRAM staging和CPU扫描线采样仍未做ROM对拍。 |
+
 本分支首次 app lib 结果为109通过、3失败。两项电梯局部光标测试发现擦除旧箭头时误擦右侧楼层，已将该处损伤限制到一个8px tile；HoF缓存测试发现 MonText 与首个 MonFade 使用相同 key，已修正首阶区别。最终集成应重跑这三项及完整 app lib，并以最终英文原字库重新抓相关 after 图。此前通过的检查不代替这一步。
 
 资源表核验只能证明数据：战斗动画、move SFX、cry表全量0diff，不能推出实际呈现帧/播放采样已全量对拍。
