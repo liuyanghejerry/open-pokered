@@ -2830,6 +2830,32 @@ class AutonomousTests(unittest.TestCase):
         # The level fallthrough would raise here; a catch target has no training site.
         self.assertFalse(hasattr(agent, 'training_sites'))
 
+    def test_stochastic_hunts_are_observed_bounded_attempts_not_registration(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        target = ('catch', 'safari:Park', True)
+        rule = Rule('hunt', 'Park', 'skill:catch_encounter', [], [], [], target, [])
+        self.assertFalse(agent.completed_stochastic_attempt('catch_encounter:safari,Park,5,8', rule,
+            {'result': 'hunted'}, 0))
+        self.assertFalse(agent.completed_stochastic_attempt('travel_to:Park', rule,
+            {'result': 'hunted'}, 1))
+        self.assertFalse(agent.completed_stochastic_attempt('catch_encounter:safari,Park,5,8', rule,
+            {'result': 'blocked'}, 1))
+        agent.active = {'target': target, 'rules': [rule]}
+        agent.replan_after_defeat = False
+        agent.capture_resources_missing = Mock(return_value=False)
+        agent.capture_area_blocked = Mock(return_value=False)
+        agent.needs_skill_recovery = Mock(return_value=False)
+        for _ in range(agent.CATCH_WINDOW - 1):
+            self.assertTrue(agent.completed_stochastic_attempt('catch_encounter:safari,Park,5,8', rule,
+                {'result': 'hunted', 'owned_before': 76, 'owned_after': 76}, 1))
+        self.assertFalse(agent.should_replan({'party': []}))
+        agent.completed_stochastic_attempt('catch_encounter:safari,Park,5,8', rule,
+            {'result': 'hunted', 'owned_before': 76, 'owned_after': 76}, 1)
+        self.assertTrue(agent.should_replan({'party': []}))
+        with patch('openpokered.story_agent.DualStoryAgent.select_strategy'):
+            agent.select_strategy({'party': [], 'bag': {}})
+        self.assertEqual(agent._completed_hunts_since_strategy, 0)
+
     def test_catch_encounter_reports_the_dex_delta_of_whatever_battle_started(self):
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
         rule = Rule('catch:Route2', 'Route2', 'skill:catch_encounter', [], [], [],

@@ -692,6 +692,9 @@ class AutonomousStoryAgent(DualStoryAgent):
     def should_replan(self, facts):
         if self.replan_after_defeat:
             return True
+        if (self.active and self.active['target'][0] in ('catch', 'held_species')
+                and getattr(self, '_completed_hunts_since_strategy', 0) >= self.CATCH_WINDOW):
+            return True  # Reassess a bounded hunt batch without blacklisting its valid terrain.
         if self.capture_resources_missing(facts):
             return True
         if (self.active and self.active.get('context', {}).get('acquisition_method') == 'static'
@@ -763,8 +766,21 @@ class AutonomousStoryAgent(DualStoryAgent):
 
     def select_strategy(self, facts):
         super().select_strategy(facts)
+        self._completed_hunts_since_strategy = 0
         self._selected_recovery_key = self.recovery_replan_key(facts)
         self.replan_after_defeat = False
+
+    def completed_stochastic_attempt(self, operation, rule, result, resolved_battles):
+        # Reaching an actual encounter and returning empty-handed is normal
+        # for rare species. Do not mark the site unexecutable just because
+        # bag/party/position ended unchanged after an escape. A label alone
+        # is not enough: settle() must have observed a completed battle.
+        observed = (operation.startswith('catch_encounter:')
+            and rule.storyline == 'skill:catch_encounter'
+            and result.get('result') == 'hunted' and resolved_battles > 0)
+        if observed:
+            self._completed_hunts_since_strategy = getattr(self, '_completed_hunts_since_strategy', 0) + 1
+        return observed
 
     def augment_strategy_state(self, state, facts):
         continuation = getattr(self, 'route_continuation', None)

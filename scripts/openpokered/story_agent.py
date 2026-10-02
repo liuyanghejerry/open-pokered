@@ -364,6 +364,14 @@ class DualStoryAgent:
     def should_replan(self, facts):
         return False
 
+    def completed_stochastic_attempt(self, operation, rule, result, resolved_battles):
+        """Subclasses may distinguish observed trials from failed operations.
+
+        This never establishes the goal or changes the observed progress key.
+        The default preserves deterministic story-action failure accounting.
+        """
+        return False
+
     def action_rejected(self, facts, reason):
         return False
 
@@ -430,14 +438,20 @@ class DualStoryAgent:
                         continue
                     raise
                 operation, rule = bindings[selection]
+                battles_before = self.resolved_battles
                 result = self.execute(operation, rule)
                 after = self.facts()
+                stochastic_attempt = self.completed_stochastic_attempt(
+                    operation, rule, result, self.resolved_battles - battles_before)
                 changed = progress_key(facts) != progress_key(after)
                 moved = tuple(facts[k] for k in ('map', 'x', 'y')) != tuple(after[k] for k in ('map', 'x', 'y'))
                 delta = {'operation': operation, 'result': result.get('result'),
                          'flags_gained': sorted(k for k,v in after['flags'].items() if v and not facts['flags'].get(k)),
                          'bag_after': after['bag'], 'map': after['map'], 'story_state_changed': changed}
                 delta['intended_effect_observed'] = self.index.satisfied(rule.effect, after)
+                if stochastic_attempt:
+                    delta['completed_stochastic_attempt'] = True
+                    delta['resolved_encounters'] = self.resolved_battles - battles_before
                 self.recent.append(delta)
                 self.record('outcome', **delta)
                 blocked = result.get('result') == 'blocked'
@@ -445,7 +459,7 @@ class DualStoryAgent:
                     # Reaching a story barrier is new planning evidence even
                     # when the player walked there. Offer its prerequisites now.
                     self.active = None
-                if not changed and (not moved or blocked):
+                if not changed and (not moved or blocked) and not stochastic_attempt:
                     self.failures[attempt_key(rule, facts)] += 1
                     if self.failures[attempt_key(rule, facts)] >= 2:
                         self.active = None

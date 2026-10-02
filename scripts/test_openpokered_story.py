@@ -385,6 +385,44 @@ class DecisionTests(unittest.TestCase):
     def agent(self,model=None,**kwargs):
         return DualStoryAgent(Client(),model or FakeModel(),OBJECTIVES[:2],trace=io.StringIO(),**kwargs)
 
+    def test_completed_stochastic_hunts_do_not_blacklist_an_unchanged_site(self):
+        from openpokered.autonomous_story import AutonomousStoryAgent
+        from types import MethodType
+        for observed, result_kind, expected_selections in [(True, 'hunted', 1),
+                (False, 'hunted', 4), (True, 'blocked', 5)]:
+            with self.subTest(observed=observed, result_kind=result_kind):
+                agent = self.agent(FakeModel(choice='a'))
+                agent.completed_stochastic_attempt = MethodType(
+                    AutonomousStoryAgent.completed_stochastic_attempt, agent)
+                agent.objectives = agent.objectives[:1]
+                flag = agent.objectives[0]['satisfied_when']['flag']
+                current = {**facts(), 'map': 'Park', 'x': 5, 'y': 8}
+                agent.facts = lambda: {**current, 'flags': dict(current['flags'])}
+                target = ('catch', 'safari:Park', True)
+                rule = Rule('hunt', 'Park', 'skill:catch_encounter', [], [], [], target, [])
+                index = Mock(rules=[rule], errors=[], sha256='test')
+                index.satisfied.return_value = False
+                agent.settle = Mock()
+                agent.action_candidates = lambda f: ({'a': 'hunt'}, {'a': ('catch_encounter:safari,Park,5,8', rule)})
+                selections, executions = [], []
+                def select(f):
+                    selections.append(len(executions))
+                    agent.active = {'target': target, 'objectives': ['catch'], 'rules': [rule]}
+                agent.select_strategy = select
+                def execute(*args):
+                    executions.append(1)
+                    if observed:
+                        agent.resolved_battles += 1
+                    if len(executions) == 5:
+                        current['flags'][flag] = True
+                    return {'result': result_kind}
+                agent.execute = execute
+                with patch('openpokered.story_agent.StoryIndex', return_value=index):
+                    self.assertTrue(agent.run()['success'])
+                self.assertEqual(len(selections), expected_selections)
+                if observed and result_kind == 'hunted':
+                    self.assertFalse(any(agent.failures.values()))
+
     def test_refused_strategy_is_not_completion(self):
         with self.assertRaisesRegex(StoryStopped,'strategy:no_selection'):
             self.agent().choose('strategy',{}, {'a':'obtain key'},'pick a goal')
