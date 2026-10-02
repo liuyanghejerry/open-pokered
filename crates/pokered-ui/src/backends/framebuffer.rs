@@ -218,7 +218,7 @@ mod performance_pixel_tests {
             for (tw, th) in sizes {
                 for (tx, ty) in origins {
                     for ink in inks {
-                        let rect = TileRect { tx, ty, tw, th };
+                        let rect = TileRect::new(tx, ty, tw, th);
                         let mut expected = FrameBuffer::new(
                             RenderConfig::new(width, height),
                             Rgba::INK_LIGHT_GRAY,
