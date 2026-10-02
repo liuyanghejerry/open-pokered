@@ -1,10 +1,10 @@
 {
-  "binary_sha256": "b8ba782f6cb22151964722ae958dae32f9085b356a71c145c3a3b37bdf513847",
+  "binary_sha256": "ea717f1c2d6332f4608fc13194296cdb166ea20662d8d0f7c379bd17ba005e52",
   "frame": 10,
   "language": "zh",
   "note": "Naming explicitly seeds the Chinese pinyin IME; Town Map explicitly starts on Pallet Town with no adjacent save.",
   "command": [
-    "/tmp/pokered-font-cli-nmuagdv9/pokered-app",
+    "/tmp/pokered-font-cli-dm23vlz9/pokered-app",
     "screenshot",
     "--screen",
     "town-map",
@@ -13,7 +13,9 @@
     "--lang",
     "zh",
     "-o",
-    "/workspace/pokered-fix-late/docs/screenshots/2026-10-02-original-font/town-map-zh-after.png"
+    "/workspace/open-pokered/docs/screenshots/2026-10-02-original-font/town-map-zh-after.png"
   ],
-  "stdout": "Capturing screen: town-map (10 frames, lang=Zh)...\nSaved: /workspace/pokered-fix-late/docs/screenshots/2026-10-02-original-font/town-map-zh-after.png\n"
+  "stdout": "Capturing screen: town-map (10 frames, lang=Zh)...\nSaved: /workspace/open-pokered/docs/screenshots/2026-10-02-original-font/town-map-zh-after.png\n",
+  "source_commit": "eebde2fc3a4f78c38b4c7b5d49e0db2b830cb235",
+  "font": "Original project Fusion Pixel preserved"
 }

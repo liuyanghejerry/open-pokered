@@ -1,13 +1,124 @@
+Skip-intro: starting at PalletTown (0 x=5, y=5)
+Asset root found: "/workspace/open-pokered/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
 mimic phase MoveSelect, move Mimic, PP 20
-EXP message Some("PIKACHU gained 330\nexp. points!")
-AI forced Fly Some("BROCK used FULL\nHEAL!"); playerHP=110 enemyStatus=None charge=true AIcount=4
+Skip-intro: starting at PalletTown (0 x=5, y=5)
+Asset root found: "/workspace/open-pokered/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
+EXP message Some("PIKACHU gained 330 exp.\npoints!")
+Skip-intro: starting at PalletTown (0 x=5, y=5)
+Asset root found: "/workspace/open-pokered/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
+AI forced Fly Some("BROCK used FULL HEAL!"); playerHP=110 enemyStatus=None charge=true AIcount=4
 credits-scroll-7: screen 0, MonScroll, scroll step 7, palette step 3
+Skip-intro: starting at PalletTown (0 x=5, y=5)
+Asset root found: "/workspace/open-pokered/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
 credits-copyright-0: screen 34, Hold, scroll step 0, palette step 0
+Skip-intro: starting at PalletTown (0 x=5, y=5)
+Asset root found: "/workspace/open-pokered/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
 credits-copyright-5: screen 34, Hold, scroll step 0, palette step 1
+Skip-intro: starting at PalletTown (0 x=5, y=5)
+Asset root found: "/workspace/open-pokered/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
 credits-copyright-10: screen 34, Hold, scroll step 0, palette step 2
+Skip-intro: starting at PalletTown (0 x=5, y=5)
+Asset root found: "/workspace/open-pokered/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
 credits-copyright-15: screen 34, Hold, scroll step 0, palette step 3
+Skip-intro: starting at PalletTown (0 x=5, y=5)
+Asset root found: "/workspace/open-pokered/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
 credits-the-end-16: screen 35, TheEnd, scroll step 0, palette step 0
+Skip-intro: starting at PalletTown (0 x=5, y=5)
+Asset root found: "/workspace/open-pokered/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
 credits-the-end-21: screen 35, TheEnd, scroll step 0, palette step 1
+Skip-intro: starting at PalletTown (0 x=5, y=5)
+Asset root found: "/workspace/open-pokered/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
 credits-the-end-26: screen 35, TheEnd, scroll step 0, palette step 2
+Skip-intro: starting at PalletTown (0 x=5, y=5)
+Asset root found: "/workspace/open-pokered/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
 credits-the-end-31: screen 35, TheEnd, scroll step 0, palette step 3
+Skip-intro: starting at PalletTown (0 x=5, y=5)
+Asset root found: "/workspace/open-pokered/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
+Skip-intro: starting at PalletTown (0 x=5, y=5)
+Asset root found: "/workspace/open-pokered/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
+Skip-intro: starting at PalletTown (0 x=5, y=5)
+Asset root found: "/workspace/open-pokered/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
+Skip-intro: starting at PalletTown (0 x=5, y=5)
+Asset root found: "/workspace/open-pokered/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
+Skip-intro: starting at PalletTown (0 x=5, y=5)
+Asset root found: "/workspace/open-pokered/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
 evolution-190 Morph
+Skip-intro: starting at PalletTown (0 x=5, y=5)
+Asset root found: "/workspace/open-pokered/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
+Skip-intro: starting at PalletTown (0 x=5, y=5)
+Asset root found: "/workspace/open-pokered/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
+Skip-intro: starting at PalletTown (0 x=5, y=5)
+Asset root found: "/workspace/open-pokered/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
+Skip-intro: starting at PalletTown (0 x=5, y=5)
+Asset root found: "/workspace/open-pokered/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
+Skip-intro: starting at PalletTown (0 x=5, y=5)
+Asset root found: "/workspace/open-pokered/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
+Skip-intro: starting at PalletTown (0 x=5, y=5)
+Asset root found: "/workspace/open-pokered/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
+Skip-intro: starting at PalletTown (0 x=5, y=5)
+Asset root found: "/workspace/open-pokered/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
+Skip-intro: starting at PalletTown (0 x=5, y=5)
+Asset root found: "/workspace/open-pokered/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
+Skip-intro: starting at PalletTown (0 x=5, y=5)
+Asset root found: "/workspace/open-pokered/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
+Skip-intro: starting at PalletTown (0 x=5, y=5)
+Asset root found: "/workspace/open-pokered/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
+Skip-intro: starting at PalletTown (0 x=5, y=5)
+Asset root found: "/workspace/open-pokered/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
+Skip-intro: starting at PalletTown (0 x=5, y=5)
+Asset root found: "/workspace/open-pokered/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
+Skip-intro: starting at PalletTown (0 x=5, y=5)
+Asset root found: "/workspace/open-pokered/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
+Skip-intro: starting at PalletTown (0 x=5, y=5)
+Asset root found: "/workspace/open-pokered/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
+Skip-intro: starting at PalletTown (0 x=5, y=5)
+Asset root found: "/workspace/open-pokered/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
+Skip-intro: starting at PalletTown (0 x=5, y=5)
+Asset root found: "/workspace/open-pokered/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
+Skip-intro: starting at PalletTown (0 x=5, y=5)
+Asset root found: "/workspace/open-pokered/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
+Skip-intro: starting at PalletTown (0 x=5, y=5)
+Asset root found: "/workspace/open-pokered/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
+Skip-intro: starting at PalletTown (0 x=5, y=5)
+Asset root found: "/workspace/open-pokered/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
+Skip-intro: starting at PalletTown (0 x=5, y=5)
+Asset root found: "/workspace/open-pokered/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
+Skip-intro: starting at PalletTown (0 x=5, y=5)
+Asset root found: "/workspace/open-pokered/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).

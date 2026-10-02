@@ -1,6 +1,8 @@
 from pathlib import Path
 import json, os, re, subprocess, sys
 artifacts, deps, source, output = sys.argv[1:5]
+options = set(sys.argv[5:])
+assert options <= {"after", "debug-server"}, options
 if artifacts.endswith(".rlib"):
     # Match the exact feature/engine versions in the app, instead of picking
     # the newest core/data library from an unrelated target build.
@@ -21,6 +23,13 @@ for name in ["pokered_app","pokered_core","pokered_data","pokered_renderer","dot
     assert paths,name
     lib=str(Path(deps)/Path(paths[-1]).name)
     args += ["--extern",name+"="+lib]
-if len(sys.argv)>5 and sys.argv[5]=="after": args += ["--cfg","fidelity_after"]
+if "after" in options: args += ["--cfg","fidelity_after"]
+# Raw rustc does not inherit Cargo's package feature cfgs. The initialized
+# game constructor has a ninth argument only in the debug-server graph.
+debug_server = "debug-server" in options or any(
+    a["target"]["name"] == "pokered_app" and "debug-server" in a.get("features", [])
+    for a in records
+)
+if debug_server: args += ["--cfg", 'feature="debug-server"']
 args += ["-o",output]
 subprocess.run(args,check=True)

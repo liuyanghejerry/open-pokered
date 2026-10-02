@@ -10,6 +10,13 @@ call({'cmd':'get_nearby','radius':10})
 call({'cmd':'interact_with','id':'sign:0'})
 call({'cmd':'skip_dialogue'})
 call({'cmd':'step_frames','count':1})
-call({'cmd':'get_state'})
+state=call({'cmd':'get_state'})['data']
+# Keep the established baseline's global frame 70. Updated dialogue skipping
+# reaches the same initialized menu sooner, so pad with neutral frames.
+assert state['screen']=='elevator' and state['field_menu']['cursor']==0,state
+assert state['frame_count']<=70,state
+if state['frame_count']<70:
+ call({'cmd':'step_frames','count':70-state['frame_count']})
+ call({'cmd':'get_state'})
 call({'cmd':'capture_frame','path':str(Path(__file__).resolve().parent/f'{prefix}-elevator-script.png')})
 Path(f'/tmp/visual-elevator-{prefix}-trace.json').write_text(json.dumps(log,indent=2))

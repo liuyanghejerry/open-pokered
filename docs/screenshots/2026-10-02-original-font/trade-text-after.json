@@ -1,6 +1,6 @@
 {
-  "binary_sha256": "0dba5dc0ab6870244c01f42adea919ddb27689bf197a58dc086207f9712132de",
-  "movie_origin_frame": 169,
+  "binary_sha256": "ea717f1c2d6332f4608fc13194296cdb166ea20662d8d0f7c379bd17ba005e52",
+  "movie_origin_frame": 165,
   "phase_frame": 40,
   "movie_frames": {
     "went": 379,
@@ -36,8 +36,8 @@
             "dialogue": {
               "done": false,
               "page": 1,
-              "text": "I'm looking for NIDORINO!",
-              "total_pages": 3,
+              "text": "I'm looking for NIDORINO! Wanna",
+              "total_pages": 2,
               "waiting_for_input": false
             },
             "facing": "Up",
@@ -168,8 +168,8 @@
               "holding_open": false,
               "page": 1,
               "text": "",
-              "total_chars": 24,
-              "total_pages": 3,
+              "total_chars": 30,
+              "total_pages": 2,
               "waiting_for_input": false
             },
             "evaluation": {
@@ -394,7 +394,7 @@
               }
             },
             "field_menu": null,
-            "frame_count": 147,
+            "frame_count": 143,
             "hall_of_fame_count": 0,
             "hof_phase": null,
             "last_outside_map": "PalletTown",
@@ -489,7 +489,7 @@
             "text_speed_delay_frames": 3,
             "warp_fade": "Idle"
           },
-          "stepped": 13
+          "stepped": 9
         }
       }
     },
@@ -501,7 +501,7 @@
       "result": {
         "ok": true,
         "data": {
-          "frame_count": 148,
+          "frame_count": 144,
           "stepped": 1
         }
       }
@@ -586,7 +586,7 @@
             }
           },
           "field_menu": null,
-          "frame_count": 148,
+          "frame_count": 144,
           "hall_of_fame_count": 0,
           "hof_phase": null,
           "last_outside_map": "PalletTown",
@@ -697,12 +697,12 @@
         "ok": true,
         "data": {
           "advanced": true,
-          "end_frame": 150,
-          "frame_count": 151,
+          "end_frame": 146,
+          "frame_count": 147,
           "frames": 3,
           "padding_frames": 0,
-          "queue_start_frame": 148,
-          "start_frame": 148
+          "queue_start_frame": 144,
+          "start_frame": 144
         }
       }
     },
@@ -714,7 +714,7 @@
       "result": {
         "ok": true,
         "data": {
-          "frame_count": 161,
+          "frame_count": 157,
           "stepped": 10
         }
       }
@@ -733,12 +733,12 @@
         "ok": true,
         "data": {
           "advanced": true,
-          "end_frame": 163,
-          "frame_count": 164,
+          "end_frame": 159,
+          "frame_count": 160,
           "frames": 3,
           "padding_frames": 0,
-          "queue_start_frame": 161,
-          "start_frame": 161
+          "queue_start_frame": 157,
+          "start_frame": 157
         }
       }
     },
@@ -818,7 +818,7 @@
               }
             },
             "field_menu": null,
-            "frame_count": 169,
+            "frame_count": 165,
             "hall_of_fame_count": 0,
             "hof_phase": null,
             "last_outside_map": "PalletTown",
@@ -983,7 +983,7 @@
             }
           },
           "field_menu": null,
-          "frame_count": 169,
+          "frame_count": 165,
           "hall_of_fame_count": 0,
           "hof_phase": null,
           "last_outside_map": "PalletTown",
@@ -1080,7 +1080,7 @@
       "result": {
         "ok": true,
         "data": {
-          "frame_count": 170,
+          "frame_count": 166,
           "stepped": 1
         }
       }
@@ -1103,7 +1103,7 @@
       "result": {
         "ok": true,
         "data": {
-          "frame_count": 548,
+          "frame_count": 544,
           "stepped": 378
         }
       }
@@ -1111,12 +1111,12 @@
     {
       "command": {
         "cmd": "capture_frame",
-        "path": "/workspace/pokered-fix-late/docs/screenshots/2026-10-02-original-font/trade-went-40-after.png"
+        "path": "/workspace/open-pokered/docs/screenshots/2026-10-02-original-font/trade-went-40-after.png"
       },
       "result": {
         "ok": true,
         "data": {
-          "path": "/workspace/pokered-fix-late/docs/screenshots/2026-10-02-original-font/trade-went-40-after.png",
+          "path": "/workspace/open-pokered/docs/screenshots/2026-10-02-original-font/trade-went-40-after.png",
           "state": {
             "active_script_effect": null,
             "badges": 0,
@@ -1185,7 +1185,7 @@
               }
             },
             "field_menu": null,
-            "frame_count": 548,
+            "frame_count": 544,
             "hall_of_fame_count": 0,
             "hof_phase": null,
             "last_outside_map": "PalletTown",
@@ -1283,7 +1283,7 @@
       "result": {
         "ok": true,
         "data": {
-          "frame_count": 885,
+          "frame_count": 881,
           "stepped": 337
         }
       }
@@ -1291,12 +1291,12 @@
     {
       "command": {
         "cmd": "capture_frame",
-        "path": "/workspace/pokered-fix-late/docs/screenshots/2026-10-02-original-font/trade-for-40-after.png"
+        "path": "/workspace/open-pokered/docs/screenshots/2026-10-02-original-font/trade-for-40-after.png"
       },
       "result": {
         "ok": true,
         "data": {
-          "path": "/workspace/pokered-fix-late/docs/screenshots/2026-10-02-original-font/trade-for-40-after.png",
+          "path": "/workspace/open-pokered/docs/screenshots/2026-10-02-original-font/trade-for-40-after.png",
           "state": {
             "active_script_effect": null,
             "badges": 0,
@@ -1365,7 +1365,7 @@
               }
             },
             "field_menu": null,
-            "frame_count": 885,
+            "frame_count": 881,
             "hall_of_fame_count": 0,
             "hof_phase": null,
             "last_outside_map": "PalletTown",
@@ -1463,7 +1463,7 @@
       "result": {
         "ok": true,
         "data": {
-          "frame_count": 1045,
+          "frame_count": 1041,
           "stepped": 160
         }
       }
@@ -1471,12 +1471,12 @@
     {
       "command": {
         "cmd": "capture_frame",
-        "path": "/workspace/pokered-fix-late/docs/screenshots/2026-10-02-original-font/trade-farewell-40-after.png"
+        "path": "/workspace/open-pokered/docs/screenshots/2026-10-02-original-font/trade-farewell-40-after.png"
       },
       "result": {
         "ok": true,
         "data": {
-          "path": "/workspace/pokered-fix-late/docs/screenshots/2026-10-02-original-font/trade-farewell-40-after.png",
+          "path": "/workspace/open-pokered/docs/screenshots/2026-10-02-original-font/trade-farewell-40-after.png",
           "state": {
             "active_script_effect": null,
             "badges": 0,
@@ -1545,7 +1545,7 @@
               }
             },
             "field_menu": null,
-            "frame_count": 1045,
+            "frame_count": 1041,
             "hall_of_fame_count": 0,
             "hof_phase": null,
             "last_outside_map": "PalletTown",
@@ -1643,7 +1643,7 @@
       "result": {
         "ok": true,
         "data": {
-          "frame_count": 1744,
+          "frame_count": 1740,
           "stepped": 699
         }
       }
@@ -1675,8 +1675,8 @@
             "holding_open": false,
             "page": 1,
             "text": "RE",
-            "total_chars": 22,
-            "total_pages": 2,
+            "total_chars": 32,
+            "total_pages": 1,
             "waiting_for_input": false
           },
           "evaluation": {
@@ -1702,9 +1702,9 @@
                 "total_exp": 8000
               },
               {
-                "hp": 62,
+                "hp": 59,
                 "level": 20,
-                "max_hp": 62,
+                "max_hp": 59,
                 "moves": [
                   "Growl",
                   "Tackle",
@@ -1733,7 +1733,7 @@
             }
           },
           "field_menu": null,
-          "frame_count": 1744,
+          "frame_count": 1740,
           "hall_of_fame_count": 0,
           "hof_phase": null,
           "last_outside_map": "PalletTown",
@@ -1785,9 +1785,9 @@
               "status": "None"
             },
             {
-              "hp": 62,
+              "hp": 59,
               "level": 20,
-              "max_hp": 62,
+              "max_hp": 59,
               "moves": [
                 "Growl",
                 "Tackle",
@@ -1851,5 +1851,7 @@
         }
       }
     }
-  ]
+  ],
+  "source_commit": "eebde2fc3a4f78c38b4c7b5d49e0db2b830cb235",
+  "font": "Original project Fusion Pixel preserved"
 }
