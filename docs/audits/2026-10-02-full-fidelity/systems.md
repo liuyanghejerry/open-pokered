@@ -44,7 +44,7 @@ PC主入口/12箱切换/物品PC/Oak评级/League HOF存在；图鉴seen+owned�
 
 原作所谓“育成会擦除EV”和“WriteMonMoves完全重建TM”均没有这份参考ASM支持：box_struct包含stat-exp；育成learning flag只处理deposit起点之后的新招。把这些错误解释写进测试会使全绿测试仍不保真。
 
-修复实施边界（2026-10-02）：systems分支保持JSON model的dex编号，SRAM边界转换原作internal species ID；识别此前native .sav并修正净88字节布局差；新增serde-default尾段，保留原作GP末2个script byte与78个reserved bytes，保留之前项目存档可读。育成恢复原作五项stat-exp、OT、PP Ups和FIFO招式覆盖；NPC交易用真实party selector并允许仅一只精灵交换；每次PC操作与满队捕获同步活动箱镜像。Safari计数、Rod status aliases与垃圾桶索引补普通Save/Continue桥接。Cable Club原作柜员恢复Welcome文本/Pokedex门槛、连接检查、原作apply/save完整文字再确认、保存同意、选房与warp。TCP/网页协议仍是跨平台实现；GBA物理联机后端、原作串行比特流与具体入房步行动画不在本轮修复的实测范围内。
+修复实施边界（2026-10-02）：systems分支保持JSON model的dex编号，SRAM边界转换原作internal species ID；识别此前native .sav并修正净88字节布局差；新增serde-default尾段，保留原作GP末2个script byte与78个reserved bytes，保留之前项目存档可读。育成恢复原作五项stat-exp、OT、PP Ups和FIFO招式覆盖；NPC交易用真实party selector并允许仅一只精灵交换；每次PC操作与满队捕获同步活动箱镜像。Safari计数、Rod status aliases与垃圾桶索引补普通Save/Continue桥接。Cable Club原作柜员恢复Welcome文本/Pokedex门槛、连接检查、原作apply/save完整文字再确认、保存同意、选房与warp。TCP/网页协议仍是跨平台实现；GBA物理联机后端与原作串行比特流不在本轮修复的实测范围内；入房使用本项目warp桥接，原作是SpecialWarp，未作逐帧差分。
 
 ## 修复验收（systems 分支）
 
@@ -62,6 +62,8 @@ PC主入口/12箱切换/物品PC/Oak评级/League HOF存在；图鉴seen+owned�
 | Daycare stat-exp / Sprite start | `$2D1C` / `$2D2C` | 五项10字节EV，完整box33 |
 | Party / CurrentBox / checksum | `$2F2C` / `$30C0` / `$3523` | 原作独立常量，region3979 |
 
-边界：已证明固定布局与字段转换，尚未用真实原作 ROM 打开导出存档；未知运行时指针和未建模的原作状态仍有零填充。旧版native育成未保存的EV/OT等历史信息无法恢复。NPC选择/取消和最后一只交易已修；有效party选择后才显示“connect cable”，关闭后才开始动画与最终mutation。默认Native VM的垃圾桶索引有普通SRAM桥接；可选Boa引擎未作等价实玩。联机柜员房间选择恢复，但room步行动画、自定义TCP/Web协议与原作物理串口互通未声明完成。
+边界：已证明固定布局与字段转换，尚未用真实原作 ROM 打开导出存档；未知运行时指针和未建模的原作状态仍有零填充。旧版native育成未保存的EV/OT等历史信息无法恢复。NPC选择/取消和最后一只交易已修；有效party选择后才显示“connect cable”，关闭后才开始动画与最终mutation。默认Native VM的垃圾桶索引有普通SRAM桥接；可选Boa引擎未作等价实玩。联机柜员房间选择恢复，但SpecialWarp入房时序、自定义TCP/Web协议与原作物理串口互通未声明完成。
 
 最终本分支验收：core lib2605，systems integration14，app NPC/柜员fidelity4，existing cable flow8全过；TUI cargo check、debug-server app build成功。联机前不heal的双channel driver测试与战后heal settlement测试已纳入core。截图及双进程TCP app桥接动态结果另补后续证据commit。
+
+动态时序补验发现并追加修复：NPC选对后的ConnectCableText需在外部await期间正常推进，而NativeVM WaitingForCommand会重发同一tradePokemon。core现在在await trade/battle/elevator/filterBag期间跳过VM polling，继续处理手动dialogue，直到frontend resume；追加复现该重发问题的core测试，最终集成分支统一执行。

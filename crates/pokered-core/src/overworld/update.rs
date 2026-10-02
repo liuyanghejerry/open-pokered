@@ -768,14 +768,21 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             self.run_npc_movement_tick();
             return ScreenAction::Continue;
         }
-        if let Some(cmd) = self.script_engine.tick() {
-            self.active_script_effect = Some(script_bridge::dispatch_command_with_names(
-                &cmd,
-                &self.player_name,
-                &self.rival_name,
-                &self.starter_display_name(),
-            ));
-            return ScreenAction::Continue;
+        // External awaits are completed by the frontend, not by VM polling.
+        // The pending command can be emitted again while WaitingForCommand;
+        // an NPC trade's connect dialogue must not reopen its party selector.
+        let externally_waiting=self.script_awaiting_trade || self.script_awaiting_battle
+            || self.script_awaiting_elevator || self.script_awaiting_filter_bag;
+        if !externally_waiting {
+            if let Some(cmd) = self.script_engine.tick() {
+                self.active_script_effect = Some(script_bridge::dispatch_command_with_names(
+                    &cmd,
+                    &self.player_name,
+                    &self.rival_name,
+                    &self.starter_display_name(),
+                ));
+                return ScreenAction::Continue;
+            }
         }
 
         // ── Cutscene management ────────────────────────────────────────
@@ -4496,6 +4503,33 @@ mod ground_pickup_fidelity_tests {
 mod fidelity_systems_healing_tests {
     use super::*;
     use pokered_data::impl_traits::PokemonRedData;
+    #[test]
+    #[cfg(not(feature = "script-boa"))]
+    fn suspended_npc_trade_keeps_connect_text_advancing_without_reemitting_trade() {
+        let mut ow=OverworldScreen::new(MapId::Route2TradeHouse,None,PokemonRedData);
+        ow.reload_scene_source("Route2TradeHouse",r#"game_scene Route2TradeHouse {
+          @storyline("tradeProbe") {
+            traded=tradePokemon("ABRA","MR_MIME","MARCEL")
+            @if (traded) { setFlag("EVENT_TRADED_FOR_MARCEL") }
+          }
+        }"#).unwrap();
+        let command=ow.script_engine.call_function_no_args("tradeProbe").unwrap().unwrap();
+        ow.active_script_effect=Some(script_bridge::dispatch_command_with_names(&command,"RED","BLUE",""));
+        let neutral=OverworldInput::new(false,false,false,false,false,false,false,false);
+        ow.update_frame(neutral);
+        assert!(ow.script_awaiting_trade);
+        assert_eq!(ow.game_data_requests.len(),1);
+        ow.game_data_requests.clear();
+        ow.pending_dialogue=Some(BedroomDialogue::from_message("Okay, connect the\ncable like so!"));
+        for _ in 0..10 { ow.update_frame(neutral); }
+        assert!(ow.active_script_effect.is_none());
+        assert!(ow.game_data_requests.is_empty());
+        assert!(ow.pending_dialogue.as_ref().unwrap().char_index()>0);
+        ow.pending_dialogue=None;
+        ow.resume_script_after_trade(true);
+        for _ in 0..4 { ow.update_frame(neutral); }
+        assert!(ow.unified_flags.get_flag("EVENT_TRADED_FOR_MARCEL"));
+    }
     #[test]
     fn nurses_alone_record_blackout_destination() {
         for map in [MapId::ViridianPokecenter,MapId::PewterPokecenter,MapId::CeruleanPokecenter,MapId::MtMoonPokecenter,MapId::RockTunnelPokecenter,MapId::VermilionPokecenter,MapId::CeladonPokecenter,MapId::LavenderPokecenter,MapId::FuchsiaPokecenter,MapId::CinnabarPokecenter,MapId::SaffronPokecenter,MapId::IndigoPlateauLobby] {
