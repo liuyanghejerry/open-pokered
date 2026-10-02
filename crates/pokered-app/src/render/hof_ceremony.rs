@@ -339,16 +339,24 @@ fn draw_player_stats(hof: &HofCeremonyState, fb: &mut FrameBuffer, is_zh: bool) 
     draw_text_box(fb, 5 * T, 0, 9, 2, FG);
     draw_text(&stats.name, 7 * T, if is_zh { T } else { 2 * T }, FG, fb);
     draw_text_box(fb, 0, 4 * T, 10, 6, FG);
+    // Chinese labels and values share a baseline and value column. The 4px
+    // gap after 游戏时间 still leaves room for 255:59 and $999999 in the box.
     draw_text(lang_data::ui_label("PLAY TIME", is_zh), T, 6 * T, FG, fb);
     draw_text(
         &format!("{}:{:02}", stats.play_time_hours, stats.play_time_minutes),
-        if is_zh { 6 * T } else { 5 * T },
-        7 * T,
+        if is_zh { 6 * T + 4 } else { 5 * T },
+        if is_zh { 6 * T } else { 7 * T },
         FG,
         fb,
     );
     draw_text(lang_data::ui_label("MONEY", is_zh), T, 9 * T, FG, fb);
-    draw_text(&format!("${}", stats.money), 4 * T, if is_zh { 76 } else { 10 * T }, FG, fb);
+    draw_text(
+        &format!("${}", stats.money),
+        if is_zh { 6 * T + 4 } else { 4 * T },
+        if is_zh { 9 * T } else { 10 * T },
+        FG,
+        fb,
+    );
     // DexSeenOwnedText / DexRatingText equivalents.
     if is_zh {
         draw_text(&format!("图鉴：已见{}，拥有{}", stats.dex_seen, stats.dex_owned), T, 12 * T, FG, fb);

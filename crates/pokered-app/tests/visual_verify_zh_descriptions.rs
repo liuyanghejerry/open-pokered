@@ -138,6 +138,14 @@ fn chinese_pc_is_localized_before_pagination_in_the_real_game_loop() {
 }
 
 fn hof_stats() -> pokered_core::hof_ceremony::HofCeremonyState {
+    hof_stats_with_values(25, 30, 99999)
+}
+
+fn hof_stats_with_values(
+    hours: u16,
+    minutes: u8,
+    money: u32,
+) -> pokered_core::hof_ceremony::HofCeremonyState {
     use pokered_core::hof_ceremony::{HofCeremonyState, HofEntry, HofPhase, HofPlayerStats};
     let mut hof = HofCeremonyState::new(
         vec![HofEntry {
@@ -147,9 +155,9 @@ fn hof_stats() -> pokered_core::hof_ceremony::HofCeremonyState {
         }],
         HofPlayerStats {
             name: "张三丰".into(),
-            play_time_hours: 25,
-            play_time_minutes: 30,
-            money: 99999,
+            play_time_hours: hours,
+            play_time_minutes: minutes,
+            money,
             dex_seen: 75,
             dex_owned: 50,
             rating: pokered_core::pc_screen::dex_rating_text(50),
@@ -162,6 +170,27 @@ fn hof_stats() -> pokered_core::hof_ceremony::HofCeremonyState {
         hof.update_frame();
     }
     panic!("Hall of Fame did not reach player stats");
+}
+
+#[test]
+#[ignore = "writes Hall of Fame value limits to PR_SCREENSHOTS"]
+fn capture_zh_hof_stats_limits() {
+    let output = std::path::PathBuf::from(std::env::var("PR_SCREENSHOTS").unwrap());
+    std::fs::create_dir_all(&output).unwrap();
+    let mut resources = Some(ResourceManager::new(AssetRoot::auto_detect().unwrap()));
+    for (name, hours, minutes, money) in [
+        ("hof-stats-zero", 0, 0, 0),
+        ("hof-stats-max", 255, 59, 999999),
+    ] {
+        let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+        render::draw_hof_ceremony(
+            &hof_stats_with_values(hours, minutes, money),
+            &mut resources,
+            &mut fb,
+            Lang::Zh,
+        );
+        fb.save_png(&output.join(format!("{name}.png"))).unwrap();
+    }
 }
 
 #[test]

@@ -53,6 +53,9 @@ PC 原本先按四个英文源行分页，再在绘制时逐行翻译。
 名人堂结算原本只绘制评价的前两个英文源行，后半段直接丢失。
 现在中文评价使用同一份完整译文，以 12px 行距显示三行。
 已见/拥有数量合成一行，为完整评价留出空间；中文名字、时间及金额也放回各自框内。
+时间与金额的标签、数值使用同一行基线，两组数值统一从 x=52px 开始；
+“游戏时间”标签后留 4px 空隙。核对正常值、零值及游戏上限 `255:59` / `$999999`，
+均完整处于统计框内。原生/Web 与 TUI 对应帧逐像素一致，框外评价和人物图不变。
 
 中文 TM/HM 学习提示改为 16px 行距，避免末两行重叠。
 战斗提示保持核心准备好的中文两行；进化、交换保留各阶段的明确行界。
@@ -72,6 +75,9 @@ PC 原本先按四个英文源行分页，再在绘制时逐行翻译。
 截图在 `docs/screenshots/zh-descriptions/`；PR 描述嵌入全部 19 组前/后图。
 涵盖开场真实输入、静态开场、命名、图鉴、学习提示、战斗、进化、交换、联机、
 PC 评价、名人堂结算、场景图鉴预览及 TUI 对应界面。
+另在 `docs/screenshots/zh-hof-stats-alignment/` 保存四组名人堂对齐对照：
+原生/TUI 的正常值与上限值。此处前图来自修正对齐前的 PR 提交 `9b07393`，
+用于直接展示数值错位；上面的主对照仍以 master `72ff719` 为前图。
 
 ## 复查
 
@@ -85,6 +91,10 @@ PR_SCREENSHOTS=/tmp/zh-description-shots \
   cargo test --locked -p pokered-app --test visual_verify_zh_descriptions -- --ignored
 PR_SCREENSHOTS=/tmp/zh-description-shots \
   cargo test --locked -p pokered-tui capture_tui_zh_descriptions -- --ignored
+PR_SCREENSHOTS=/tmp/zh-description-shots \
+  cargo test --locked -p pokered-app --test visual_verify_zh_descriptions capture_zh_hof_stats_limits -- --ignored
+PR_SCREENSHOTS=/tmp/zh-description-shots \
+  cargo test --locked -p pokered-tui capture_tui_zh_hof_stats_limits -- --ignored
 ```
 
 全量回归按 crate 分别运行，避免 workspace feature 合并影响平台测试。

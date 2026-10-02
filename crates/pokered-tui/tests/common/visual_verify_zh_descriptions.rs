@@ -114,6 +114,16 @@ fn capture_tui_zh_descriptions() {
     game.draw(&mut fb);
     save(&fb, "tui-starter-dex-overlay");
 
+    game.hof_ceremony = Some(hof_stats_with_values(25, 30, 99999));
+    game.draw(&mut fb);
+    save(&fb, "tui-hof-rating-50");
+}
+
+fn hof_stats_with_values(
+    hours: u16,
+    minutes: u8,
+    money: u32,
+) -> pokered_core::hof_ceremony::HofCeremonyState {
     use pokered_core::hof_ceremony::{HofCeremonyState, HofEntry, HofPhase, HofPlayerStats};
     let mut hof = HofCeremonyState::new(
         vec![HofEntry {
@@ -123,9 +133,9 @@ fn capture_tui_zh_descriptions() {
         }],
         HofPlayerStats {
             name: "张三丰".into(),
-            play_time_hours: 25,
-            play_time_minutes: 30,
-            money: 99999,
+            play_time_hours: hours,
+            play_time_minutes: minutes,
+            money,
             dex_seen: 75,
             dex_owned: 50,
             rating: pokered_core::pc_screen::dex_rating_text(50),
@@ -138,7 +148,24 @@ fn capture_tui_zh_descriptions() {
         hof.update_frame();
     }
     assert_eq!(hof.phase(), HofPhase::PlayerStats);
-    game.hof_ceremony = Some(hof);
-    game.draw(&mut fb);
-    save(&fb, "tui-hof-rating-50");
+    hof
+}
+
+#[test]
+#[ignore = "writes TUI Hall of Fame value limits to PR_SCREENSHOTS"]
+fn capture_tui_zh_hof_stats_limits() {
+    let output = std::path::PathBuf::from(std::env::var("PR_SCREENSHOTS").unwrap());
+    std::fs::create_dir_all(&output).unwrap();
+    let mut game = PokemonGame::new(GameVersion::Red);
+    game.state.config.language = Lang::Zh;
+    game.state.screen = GameScreen::Overworld;
+    for (name, hours, minutes, money) in [
+        ("tui-hof-stats-zero", 0, 0, 0),
+        ("tui-hof-stats-max", 255, 59, 999999),
+    ] {
+        game.hof_ceremony = Some(hof_stats_with_values(hours, minutes, money));
+        let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+        game.draw(&mut fb);
+        fb.save_png(&output.join(format!("{name}.png"))).unwrap();
+    }
 }
