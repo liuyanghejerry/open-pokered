@@ -200,6 +200,44 @@ def checkpoint_capture_retreat_totals(run):
     return totals
 
 
+def checkpoint_first_clear_verification(run, restored):
+    """Carry a verified ending along this save's lineage, not transient flags.
+
+    Legacy collection checkpoints forgot this proof and re-offered the Elite
+    Four after every resume. A live Hall of Fame record corroborates an actual
+    ancestor proof; neither a victory flag nor the count alone creates one.
+    """
+    seen = set()
+    while run:
+        run = Path(run).resolve()
+        if run in seen:
+            raise ValueError('first-clear checkpoint cycle')
+        seen.add(run)
+        summary = json.loads((run / 'summary.json').read_text())
+        proof = summary.get('first_clear_verification')
+        if proof is not None:
+            continued = proof.get('separate_process_continue', {}) if isinstance(proof, dict) else {}
+            phases = proof.get('phases', []) if isinstance(proof, dict) else []
+            signatures = [row.get('phase') for row in phases if isinstance(row, dict)]
+            count = continued.get('hall_of_fame_count')
+            digest = proof.get('autosave_sha256', '') if isinstance(proof, dict) else ''
+            valid = (type(count) is int and count > 0 and continued.get('map_name') == 'PalletTown'
+                and continued.get('badges') == 255 and isinstance(digest, str) and len(digest) == 64
+                and all(c in '0123456789abcdef' for c in digest)
+                and signatures and all(isinstance(p, list) and len(p) == 3 for p in signatures)
+                and any(p[1] for p in signatures) and any(p[2] == 'TheEnd' for p in signatures)
+                and signatures[-1][0] == 'title' and signatures[-1][1:] == [None, None])
+            if not valid:
+                raise ValueError('incomplete inherited first-clear verification')
+            if (restored.get('badges') != 255 or type(restored.get('hall_of_fame_count')) is not int
+                    or restored['hall_of_fame_count'] < count):
+                raise ValueError('restored save contradicts inherited first-clear verification')
+            return {**proof, 'inherited_from': proof.get('inherited_from', str(run))}
+        parent = summary.get('resumed_from')
+        run = pt.ROOT / parent if parent else None
+    return None
+
+
 def checkpoint_field_requirements(run):
     """Restore observed HM blockers, including legacy checkpoints that lost them."""
     chain, seen, requirements = [], set(), {}
@@ -356,6 +394,12 @@ def main(argv=None):
                     max_calls=args.max_calls, max_actions=args.max_actions,
                     wall_budget=args.wall_budget, frame_budget=args.frame_budget, trace=trace)
                 if parent:
+                    agent.first_clear_verification = checkpoint_first_clear_verification(args.resume, initial)
+                    if agent.first_clear_verification is not None:
+                        agent.record('first_clear_inherited',
+                            source=agent.first_clear_verification['inherited_from'],
+                            autosave_sha256=agent.first_clear_verification['autosave_sha256'],
+                            restored_hall_of_fame_count=initial['hall_of_fame_count'])
                     agent.visited.update(parent.get('visited_maps', []))
                     agent.observed_barrier_maps.update(parent.get('observed_barrier_maps', []))
                     agent.navigation_memory.update(parent.get('navigation_memory', {}))

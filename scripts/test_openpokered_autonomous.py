@@ -18,7 +18,7 @@ from openpokered.typesafe import TypeSafeError
 from openpokered.story_agent import StoryStopped
 from openpokered.navigation_skills import cut_requirement, surf_requirement, water_tile, hm_compatible, water_planning
 from openpokered.story_rules import Rule
-from openpokered.run_autonomous import observations_valid, checkpoint_field_requirements
+from openpokered.run_autonomous import observations_valid, checkpoint_field_requirements, checkpoint_first_clear_verification
 
 
 class AutonomousTests(unittest.TestCase):
@@ -4770,6 +4770,63 @@ class AutonomousTests(unittest.TestCase):
         self.assertEqual(before, {name: tuple(data['blocks']) for name, data in pt.MAPS.items()})
         self.assertTrue(hm_compatible('Ivysaur', 'Cut'))
         self.assertFalse(hm_compatible('Venusaur', 'Strength'))
+
+    def test_checkpoint_inherits_verified_ending_through_legacy_gap(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            ancestor, checkpoint = root / 'ancestor', root / 'checkpoint'
+            ancestor.mkdir()
+            checkpoint.mkdir()
+            proof = {'autosave_sha256': 'a' * 64,
+                'phases': [{'phase': ['overworld', 'MonInfo', None]},
+                           {'phase': ['overworld', None, 'TheEnd']},
+                           {'phase': ['title', None, None]}],
+                'separate_process_continue': {'map_name': 'PalletTown', 'badges': 255, 'hall_of_fame_count': 1}}
+            original = json.dumps({'first_clear_verification': proof})
+            (ancestor / 'summary.json').write_text(original)
+            (checkpoint / 'summary.json').write_text(json.dumps({'resumed_from': str(ancestor)}))
+            inherited = checkpoint_first_clear_verification(checkpoint,
+                {'map_name': 'VictoryRoad1F', 'badges': 255, 'hall_of_fame_count': 1})
+            self.assertEqual(inherited, {**proof, 'inherited_from': str(ancestor.resolve())})
+            self.assertEqual((ancestor / 'summary.json').read_text(), original)
+            agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+            agent.first_clear_verification = inherited
+            agent.objectives = [{'id': 'become-champion', 'name': 'First clear',
+                                 'satisfied_when': {'flag': 'EVENT_BEAT_CHAMPION_RIVAL'}}]
+            agent.index = Mock()
+            self.assertEqual(DualStoryAgent.strategy_groups(agent, {'flags': {}}), {})
+            agent.index.frontier.assert_not_called()  # Reset Elite Four flags do not re-open the objective.
+            (checkpoint / 'summary.json').write_text(json.dumps({'first_clear_verification': inherited}))
+            self.assertEqual(checkpoint_first_clear_verification(checkpoint,
+                {'badges': 255, 'hall_of_fame_count': 2})['inherited_from'], str(ancestor.resolve()))
+
+    def test_checkpoint_first_clear_requires_proof_and_matching_live_record(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / 'summary.json').write_text(json.dumps({'completed': ['become-champion']}))
+            restored = {'badges': 255, 'hall_of_fame_count': 1}
+            self.assertIsNone(checkpoint_first_clear_verification(root, restored))
+            proof = {'autosave_sha256': 'a' * 64,
+                'phases': [{'phase': ['overworld', 'MonInfo', None]},
+                           {'phase': ['overworld', None, 'TheEnd']},
+                           {'phase': ['title', None, None]}],
+                'separate_process_continue': {'map_name': 'PalletTown', **restored}}
+            for invalid in [{**proof, 'phases': proof['phases'][:1]},
+                            {**proof, 'autosave_sha256': ''},
+                            {**proof, 'separate_process_continue': {}}]:
+                (root / 'summary.json').write_text(json.dumps({'first_clear_verification': invalid}))
+                with self.assertRaisesRegex(ValueError, 'incomplete'):
+                    checkpoint_first_clear_verification(root, restored)
+            (root / 'summary.json').write_text(json.dumps({'first_clear_verification': proof}))
+            for stale in [{'badges': 255, 'hall_of_fame_count': 0},
+                          {'badges': 127, 'hall_of_fame_count': 1}]:
+                with self.assertRaisesRegex(ValueError, 'contradicts'):
+                    checkpoint_first_clear_verification(root, stale)
+            (root / 'summary.json').write_text(json.dumps({'resumed_from': str(root)}))
+            with self.assertRaisesRegex(ValueError, 'cycle'):
+                checkpoint_first_clear_verification(root, restored)
 
     def test_champion_flag_is_not_durable_first_clear_proof(self):
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
