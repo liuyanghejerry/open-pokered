@@ -170,3 +170,28 @@ pub(super) fn draw_copyright(
         }
     }
 }
+
+/// Title bottom line uses seven copyright prefix tiles and nine GAME FREAK
+/// tiles, not the whole Nintendo/Creatures copyright sheet (title.asm:117).
+pub(super) fn draw_title_copyright(
+    resources: &mut pokered_renderer::resource::ResourceManager,
+    fb: &mut FrameBuffer,
+) {
+    let copyright = resources
+        .load_splash("copyright")
+        .ok()
+        .map(|c| c.tileset.clone());
+    let gamefreak = resources
+        .load_title("gamefreak_inc")
+        .ok()
+        .map(|c| c.tileset.clone());
+    let (Some(copyright), Some(gamefreak)) = (copyright, gamefreak) else {
+        return;
+    };
+    for (column, index) in [0, 1, 2, 1, 3, 1, 4].into_iter().enumerate() {
+        blit(fb, 16 + column as i32 * 8, 136, copyright.get(index), false);
+    }
+    for index in 0..9 {
+        blit(fb, 72 + index as i32 * 8, 136, gamefreak.get(index), false);
+    }
+}

@@ -86,20 +86,7 @@ pub fn draw_title_screen(
             }
         }
 
-        if let Ok(copyright) = rm.load_splash("copyright") {
-            let cw = copyright.source_size.0;
-            let tiles_per_row = cw / TILE_SIZE;
-            let copyright_ts = &copyright.tileset;
-            let copyright_x = (fb.width() - cw) / 2;
-            blit_title_tiles(
-                fb,
-                &copyright_ts,
-                copyright_x as i32,
-                layout_constants::title_screen::COPYRIGHT_PIXEL_Y as i32,
-                tiles_per_row,
-                false,
-            );
-        }
+        super::opening::draw_title_copyright(rm, fb);
     } else {
         let phase_text = format!("Title Screen: {:?}", state.phase);
         draw_text(&phase_text, 10, 10, Rgba::BLACK, fb);
