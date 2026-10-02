@@ -1776,6 +1776,59 @@ class AutonomousTests(unittest.TestCase):
         agent.add_navigation_groups(completed, {'map': 'City', 'completed': ['BOSS']})
         self.assertEqual(list(completed), ['main'])
 
+    def test_reachable_exact_goal_does_not_reactivate_historical_detour(self):
+        from types import SimpleNamespace
+        import playthrough as pt
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        target = ('location', ['Road', 10, 104], True)
+        unlock = ('flag', 'OLD_PUZZLE', True)
+        rule = Rule('open', 'SideRoom', 'open', [], [], [], unlock, [])
+        agent.index = SimpleNamespace(rules=[], npc_toggles={('SideRoom', 1): ('BLOCKER', False)},
+            satisfied=lambda goal, facts: False, frontier=lambda goal, facts: [rule])
+        agent.maps, agent.field_requirements, agent.navigation_memory = {}, {}, {}
+        blockage = {'map': 'SideRoom', 'destination': 'Road', 'goal': target, 'blocking_npcs': [1]}
+        agent.navigation_history, agent.navigation_blockage = {'old': blockage}, None
+        agent.game = SimpleNamespace(last_map='Town', stationary_npcs={},
+            navigation_barriers=lambda: {'SideRoom': {(2, 3)}},
+            navigation_excluded_maps=lambda: {'LockedHouse'})
+        agent.client = Mock()
+        agent.client.route.return_value = {'found': True, 'legs': [{'to_map': 'Road'}]}
+        geometry = {'Town': {}, 'Road': {'warps': [{'dest_map_name': 'SideRoom'}]}}
+        facts = {'map': 'Town', 'x': 5, 'y': 6}
+        for path, expected in [([('Town', 5, 6), (('Road', 10, 104), 'up')], {str(target)}),
+                               (None, {str(target), str(unlock)})]:
+            groups = {'main': {'target': target, 'rules': [], 'objectives': []}}
+            with self.subTest(route_found=bool(path)), patch.object(pt, 'MAPS', geometry), \
+                    patch.object(pt, 'bfs_cross', return_value=path) as bfs:
+                agent.add_navigation_groups(groups, facts)
+                self.assertEqual({str(g['target']) for g in groups.values()}, expected)
+                bfs.assert_called_once_with('Town', (5, 6), 'Road', (10, 104),
+                    last_map='Town', allow_ledges=True, allow_spinners=True,
+                    blocked_maps={'SideRoom': {(2, 3)}}, excluded_maps={'LockedHouse'},
+                    goal_nodes={('Road', 10, 104)})
+            self.assertEqual(agent.navigation_history, {'old': blockage})  # Preserve history for a return.
+
+    def test_remembered_route_requires_trigger_not_generic_entry_evidence(self):
+        import playthrough as pt
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.index = Mock()
+        agent.index.coordinates.return_value = []
+        agent.maps = {'Room': {}}
+        target = ('item', 'KEY', True)
+        rule = Rule('unknown', 'Room', 'Room:unknown', [], [], [], target, [])
+        blockage = {'destination': 'Room', 'goal': target}
+        groups = {'main': {'target': target, 'rules': [rule]}}
+        with patch.object(pt, 'MAPS', {'Town': {}, 'Room': {
+                'warps': [{'x': 3, 'y': 7}]}}), \
+                patch.object(pt, 'walkable', return_value=True), \
+                patch.object(pt, 'warp_tiles', return_value=set()), \
+                patch.object(pt, 'bfs_cross', return_value=['entry']) as bfs:
+            self.assertTrue(agent.destination_points('Room', rule))
+            self.assertEqual(agent.destination_points('Room', rule, allow_entry_fallback=False), [])
+            self.assertFalse(agent.remembered_goal_reachable(blockage, groups,
+                {'map': 'Town', 'x': 5, 'y': 6}, {}))
+            bfs.assert_not_called()
+
     def test_reachable_frontier_precedes_a_remote_npc_detour(self):
         import playthrough as pt
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)

@@ -2420,6 +2420,42 @@ class AutonomousStoryAgent(DualStoryAgent):
                     return x, y
         return None
 
+    def remembered_goal_reachable(self, blockage, groups, facts, cache):
+        """A fresh exact-trigger path supersedes an old route obstruction.
+
+        Returning from the ending can put us on the other side of an old
+        puzzle. Keep that history, but do not advertise its unlock as a
+        prerequisite when the requested location is now walkable without it.
+        Unknown geometry remains unknown; an entrance is not a trigger proof.
+        """
+        destination = blockage['destination']
+        if (facts.get('map') not in pt.MAPS or destination not in pt.MAPS
+                or 'x' not in facts or 'y' not in facts):
+            return False
+        goal = blockage['goal']
+        points = []
+        if goal[0] == 'location' and goal[1][0] == destination:
+            points.append(tuple(goal[1][1:]))
+        else:
+            for group in groups.values():
+                if list(group['target']) != list(goal):
+                    continue
+                for rule in group['rules']:
+                    if rule.map == destination:
+                        points.extend(self.destination_points(destination, rule, allow_entry_fallback=False))
+        if not points:
+            return False
+        points = sorted(set(points))
+        key = destination, tuple(points)
+        if key not in cache:
+            cache[key] = bool(pt.bfs_cross(facts['map'], (facts['x'], facts['y']),
+                destination, points[0], last_map=self.game.last_map,
+                allow_ledges=True, allow_spinners=True,
+                blocked_maps=self.game.navigation_barriers(),
+                excluded_maps=self.game.navigation_excluded_maps(),
+                goal_nodes={(destination, *point) for point in points}))
+        return cache[key]
+
     def add_navigation_groups(self, groups, facts):
         blockages = dict(getattr(self, 'navigation_history', {}))
         for blockage in getattr(self, 'navigation_memory', {}).values():
@@ -2445,8 +2481,11 @@ class AutonomousStoryAgent(DualStoryAgent):
                     pending.remove(blockage)
                     yield blockage
 
+        reachable = {}
         for blockage in relevant_blockages():
             if self.index.satisfied(blockage['goal'], facts):
+                continue
+            if self.remembered_goal_reachable(blockage, groups, facts, reachable):
                 continue
             # Legacy failed paths sometimes recorded only collision tiles.
             # A remembered visible stationary actor standing on the actual
@@ -3796,7 +3835,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                 continue
             yield (x-dx, y-dy), direction
 
-    def destination_points(self, name, rule):
+    def destination_points(self, name, rule, *, allow_entry_fallback=True):
         """Ground a destination in its trigger geometry, never an itinerary."""
         points = []
         if rule.map == name:
@@ -3821,7 +3860,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                 if npc['textId'] in ids:
                     points.extend(p for p, _ in counter_approaches(name, npc))
                     points.extend((npc['x']+dx, npc['y']+dy) for dx, dy in pt.DELTA.values())
-        if not points:
+        if not points and allow_entry_fallback:
             for warp in pt.MAPS[name]['warps']:
                 points.extend((warp['x']+dx, warp['y']+dy) for dx, dy in pt.DELTA.values())
         return [p for p in dict.fromkeys(points) if pt.walkable(name, *p)
