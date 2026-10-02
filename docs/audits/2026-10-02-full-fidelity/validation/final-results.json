@@ -177,8 +177,16 @@
     "performance_gates_passed": 31,
     "performance_scenes": 7,
     "performance_thresholds": "unchanged baseline, 15 percent allowance and 25 tick floor",
-    "remaining_gate_status": "Route22, full memory and frame/hardware/opening timing in progress",
-    "evidence": "final-checked-gba.md"
+    "evidence": "final-checked-gba.md",
+    "status": "passed",
+    "route22_encounters": 40,
+    "memory_scenario_gate": "passed in exact-source CI",
+    "frame_pacing_gate": "passed in exact-source CI",
+    "slow_cart_hardware_gate": "passed in exact-source CI",
+    "slow_cart_opening_gate": "passed in exact-source CI",
+    "ci_run": 37023355401,
+    "ci_job": 110891720787,
+    "metric_scope": "31 performance gates and 40 Route22 encounters additionally measured locally; detailed remote metrics not claimed"
   },
   "actual_npc_save_continue": {
     "source": "eebde2fc3a4f78c38b4c7b5d49e0db2b830cb235",
@@ -194,5 +202,21 @@
     "reply": "Aiyah! You come\nagain!",
     "items_and_flags_preserved": true,
     "evidence": "../fossil-cancel-after.json"
+  },
+  "production_ci": {
+    "source": "eebde2fc3a4f78c38b4c7b5d49e0db2b830cb235",
+    "successful_checks": 21,
+    "skipped_checks": 1,
+    "failed_checks": 0,
+    "evidence": "final-checked-ci.json"
+  },
+  "engine_workflow_ci": {
+    "pr": 78,
+    "source": "5f724eb16c66e58ae0595de5130ce7d0b277a19b",
+    "successful_checks": 9,
+    "failed_checks": 0,
+    "android_apk": "passed",
+    "ci_run": 37024244792,
+    "scope": "workflow-only change; production engine pin unchanged"
   }
 }

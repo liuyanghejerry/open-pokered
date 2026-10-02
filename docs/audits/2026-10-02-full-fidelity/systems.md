@@ -1,6 +1,6 @@
 # 系统保真审计（基线 72ff719；原作 fbcf7d0）
 
-审计次序：背包/商店 → PC/箱子 → 育成 → NPC/联机交换 → 图鉴 → 存档。SYS-01至SYS-17以基线审计为起点，SYS-18/19是整合后`8837a2a`真实TCP战斗追加确认，SYS-20由之后`6fb9812`整局验证确认，SYS-21/22是保留原字体后的GBA压力与真实化石菜单追加确认。SYS-01至SYS-20均已修复并纳入最终验收；下表保留修前触发、实际结果与源码依据，修后结果见后文。`FIDELITY_GAPS.md` 中 PC 无入口、图鉴未填充、联机不存在等旧报告不再成立。原作参考仓库为 sparse checkout，部分 ASM 用 `git show HEAD:path | nl -ba` 读取，行号均属于该固定提交。
+审计次序：背包/商店 → PC/箱子 → 育成 → NPC/联机交换 → 图鉴 → 存档。SYS-01至SYS-17以基线审计为起点，SYS-18/19是整合后`8837a2a`真实TCP战斗追加确认，SYS-20由之后`6fb9812`整局验证确认，SYS-21/22是保留原字体后的GBA压力与真实化石菜单追加确认。SYS-01至SYS-22均已修复并纳入最终验收；下表保留修前触发、实际结果与源码依据，修后结果见后文。`FIDELITY_GAPS.md` 中 PC 无入口、图鉴未填充、联机不存在等旧报告不再成立。原作参考仓库为 sparse checkout，部分 ASM 用 `git show HEAD:path | nl -ba` 读取，行号均属于该固定提交。
 
 基线验证（72ff719）：`systems_probe.rs` 临时复制为 `crates/pokered-core/tests/audit_systems_probe.rs` 运行，8/8 观察成立，随后删除临时测试。输出在 `systems-probe.log`。这些观察测试断言的是基线实际问题，并不是对正确行为的验收。
 
@@ -28,7 +28,7 @@
 | SYS-20 | 高 | 解决前述阻塞后，真实TCP败方已全队heal却仍排普通Blackout；退出战斗后短暂在房间，后续fade实际离开Colosseum回PalletTown | 原作`engine/link/cable_club.asm:286-288`无论胜负，InitOpponent返回后HealParty并ReturnToCableClubRoom | `6fb9812`的`battle/settlement/writeback.rs:106-163`Loss仅排除Oak实验室Rival，未排除link_mode；结尾的link heal不撤销已排warp | [真实6fb状态](systems-colosseum-defeat-before.json)及败方Pallet截图；原App回归在刚回overworld即停止，补继续120帧及无pendingwarp断言；eebde2f真实TCP整局PASS，胜负双方都留Colosseum |
 
 
-| SYS-21 | 严重 | GBA满队/满12箱/50×6名人堂、80B昵称压力fixture；无化石也在Scientist1入口分配失败；入口free28720B/stack13224B，完整AST17490B | 未交化石且bag无化石时应仅介绍/NoFossils返回；`scripts/CinnabarLabFossilRoom.asm:51–65` | `c51209a`的`overworld/native_script.rs:990–993,1069`整函数解码后load_function深clone，未将化石六条大分支按执行路径拆分 | 真实mGBA0.10.5在前4场景PASS后panic；修复`537eda7/eebde2f`，正常11blob均<3000B；native4+旧retry1/agent53正式PASS；完整修后GBA压力由独立验证负责，详见[补验](systems-fossil-gba.md) |
+| SYS-21 | 严重 | GBA满队/满12箱/50×6名人堂、80B昵称压力fixture；无化石也在Scientist1入口分配失败；入口free28720B/stack13224B，完整AST17490B | 未交化石且bag无化石时应仅介绍/NoFossils返回；`scripts/CinnabarLabFossilRoom.asm:51–65` | `c51209a`的`overworld/native_script.rs:990–993,1069`整函数解码后load_function深clone，未将化石六条大分支按执行路径拆分 | 真实mGBA0.10.5在前4场景PASS后panic；修复`537eda7/eebde2f`，正常11blob均<3000B；native4+旧retry1/agent53正式PASS；修后实际CI全内存压力门槛PASS，run37023355401/step14，详见[补验](systems-fossil-gba.md) |
 | SYS-22 | 中 | 持有化石→真实filteredBag按B后没有回应；三个NO分支还把原作硬分行合并一行 | B与NO均到 `.cancelledGivingFossil`；`engine/events/cinnabar_lab.asm:30–31,57–60,70–73,87–89`；原文两行 `text/CinnabarLabFossilRoom.asm:75–78` | `c51209a`的`maps/CinnabarLabFossilRoom/script.scene:30–31`只接三个物种返回，空返回均不进；`:45,63,81`NO字符串缺换行 | c512真实B-cancel before无对话；eebde2f同输入B+120frames显示两行原文且物品/flags不变；full/lazy独立原作断言覆盖B和三NO；[状态/图片](systems-fossil-gba.md) |
 
 所有open-pokered行号基准路径：未写`app/`的逻辑在`crates/pokered-core/src/`；`app/game.rs`为`crates/pokered-app/src/game.rs`；`data/species.rs`为`crates/pokered-data/src/species.rs`。
