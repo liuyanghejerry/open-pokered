@@ -1024,9 +1024,11 @@ fn battle_bag_renders_items_with_quantity_and_cancel() {
     assert_eq!(collect_boxes(&rec.ops), vec![TileRect::new(4, 10, 16, 7)]);
 
     assert_eq!(collect_texts(&rec.ops), vec![
-        (7, 12, "POTION \u{00D7}3".into()),
-        (7, 13, "ANTIDOTE \u{00D7}1".into()),
+        (7, 12, "POTION".into()),
+        (7, 13, "ANTIDOTE".into()),
         (7, 14, "CANCEL".into()),
+        (16, 12, "× 3".into()),
+        (16, 13, "× 1".into()),
     ]);
 
     assert_eq!(collect_glyphs(&rec.ops), vec![(6, 12, '\u{25B6}')]);
