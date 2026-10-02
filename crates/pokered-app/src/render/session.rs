@@ -1364,7 +1364,8 @@ impl PcVisualKey {
                     }
                     PcPhase::MonAction => {
                         hash_u32(&mut visual_hash, pc.mon_cursor() as u32);
-                        cursor = Some((11 * 8, (9 + pc.mon_action_cursor() as u32 * 2) * 8));
+                        let cursor_x = if language == Lang::Zh { 11 } else { 10 };
+                        cursor = Some((cursor_x * 8, (9 + pc.mon_action_cursor() as u32 * 2) * 8));
                     }
                     PcPhase::ReleaseConfirm => {
                         hash_u32(&mut visual_hash, pc.mon_cursor() as u32);

@@ -26,20 +26,26 @@ pub fn draw<P: Painter>(
     let start_y = list_child.padding.top;
     let row_pitch = 1 + list_child.gap;
 
+    let name_x = (rect.tx + 3) * 8;
+    let right_x = (rect.tx + rect.tw - 1) * 8;
+    let mut rows = Vec::new();
+    for (i, (item_id, qty)) in items.iter().enumerate().skip(offset).take(visible_rows as usize) {
+        let y = start_y + (i - offset) as u32 * row_pitch;
+        let qty_label = format!("×{:>qty_w$}", (*qty).min(99), qty_w = list_child.qty_width as usize);
+        let qty_x = right_x.saturating_sub(ui.painter().measure_text_px(&qty_label));
+        let name_width = (list_child.item_name_width * 8).min(qty_x.saturating_sub(name_x + 8));
+        let mut name = String::new();
+        for ch in render_data.item_name(*item_id).chars() {
+            let next = format!("{name}{ch}");
+            if ui.painter().measure_text_px(&next) > name_width { break; }
+            name.push(ch);
+        }
+        rows.push((y, name, qty_label, qty_x));
+    }
+
     ui.text_box(rect, list_child.color, true, |frame| {
-        for (i, (item_id, qty)) in items.iter().enumerate().skip(offset).take(visible_rows as usize) {
-            let y = start_y + (i - offset) as u32 * row_pitch;
-            let item_name = render_data.item_name(*item_id);
-            let name: String = item_name.chars().take(layout.list.item_name_width as usize).collect();
-            let qty = (*qty).min(99);
-            let label = format!(
-                "{:<name_w$} ×{:<qty_w$}",
-                name,
-                qty,
-                name_w = layout.list.item_name_width as usize,
-                qty_w = layout.list.qty_width as usize,
-            );
-            frame.label(2, y, &label, InkColor::Black);
+        for (y, name, _, _) in &rows {
+            frame.label(2, *y, name, InkColor::Black);
         }
 
         let cancel_index = items.len();
@@ -53,6 +59,9 @@ pub fn draw<P: Painter>(
             frame.cursor_glyph_at(1, cur_y, c.glyph, c.color);
         }
     });
+    for (y, _, qty_label, qty_x) in rows {
+        ui.painter().draw_text_px(qty_x, (rect.ty + 1 + y) * 8, &qty_label, InkColor::Black.into());
+    }
 }
 
 fn list_geometry(
@@ -220,6 +229,7 @@ mod tests {
         Box(TileRect, Rgba),
         Text(TilePos, String),
         Cursor(TilePos),
+        TextPx(u32, u32, String),
     }
 
     impl Painter for Rec {
@@ -233,11 +243,17 @@ mod tests {
         fn draw_glyph(&mut self, pos: TilePos, _glyph: char, _color: Rgba) {
             self.ops.push(Op::Cursor(pos));
         }
+        fn measure_text_px(&self, text: &str) -> u32 {
+            pokered_data::text_layout::measure_text(text)
+        }
+        fn draw_text_px(&mut self, x: u32, y: u32, text: &str, _color: Rgba) {
+            self.ops.push(Op::TextPx(x, y, text.into()));
+        }
         fn draw_pixel_rect(&mut self, _x: u32, _y: u32, _w: u32, _h: u32, _c: Rgba) {}
         fn draw_gb_tile(&mut self, _pos: TilePos, _tile_id: u8, _fallback: &str, _color: Rgba) {}
     }
 
-    struct StubData;
+    struct StubData { item_name: &'static str }
     impl RenderData for StubData {
         type Move = MoveId;
         type Item = ItemId;
@@ -245,7 +261,7 @@ mod tests {
         fn move_name(&self, _: MoveId) -> &str { "" }
         fn move_pp(&self, _: MoveId) -> (u8, u8) { (0, 0) }
         fn move_type(&self, _: MoveId) -> u8 { 0 }
-        fn item_name(&self, _: ItemId) -> &str { "POTION" }
+        fn item_name(&self, _: ItemId) -> &str { self.item_name }
         fn species_name(&self, _: Species) -> &str { "" }
     }
 
@@ -264,7 +280,7 @@ mod tests {
         for &cursor in &[0usize, 5, 10, 15, items.len()] {
             let mut rec = Rec::default();
             let mut ui = Ui::new(&mut rec);
-            draw(&items, cursor, layout, &mut ui, &StubData);
+            draw(&items, cursor, layout, &mut ui, &StubData { item_name: "POTION" });
 
             let list_box = rec
                 .ops
@@ -305,9 +321,32 @@ mod tests {
             }
             // The cursor must be drawn for the selected entry.
             assert!(
-                matches!(rec.ops.last(), Some(Op::Cursor(_))),
+                rec.ops.iter().any(|op| matches!(op, Op::Cursor(_))),
                 "cursor drawn at cursor {cursor}"
             );
+        }
+    }
+
+    #[test]
+    fn mixed_glyph_item_names_do_not_push_quantities_through_the_border() {
+        for name in ["THUNDERSTONE", "雷之石", "西尔佛检视镜", "招式学习器TM50"] {
+            for quantity in [1, 99] {
+                let mut rec = Rec::default();
+                draw(&[(ItemId::ThunderStone, quantity)], 0, &BAG_DEFAULT_LAYOUT,
+                    &mut Ui::new(&mut rec), &StubData { item_name: name });
+                let drawn_name = rec.ops.iter().find_map(|op| match op {
+                    Op::Text(pos, text) if pos.ty == 5 => Some((pos.tx * 8, text)),
+                    _ => None,
+                }).expect("item name");
+                let (qty_x, qty) = rec.ops.iter().find_map(|op| match op {
+                    Op::TextPx(x, _, text) if text.starts_with('×') => Some((*x, text)),
+                    _ => None,
+                }).expect("separate quantity");
+                assert_eq!(drawn_name.1, name, "valid item names remain complete");
+                assert!(drawn_name.0 + pokered_data::text_layout::measure_text(drawn_name.1) + 8 <= qty_x);
+                assert_eq!(qty_x + pokered_data::text_layout::measure_text(qty), 152);
+                assert_eq!(qty.trim_start_matches('×').trim().parse::<u32>().unwrap(), quantity);
+            }
         }
     }
 
@@ -318,7 +357,7 @@ mod tests {
         let items = bag_items(20);
         let mut rec = Rec::default();
         let mut ui = Ui::new(&mut rec);
-        draw(&items, items.len(), &BAG_DEFAULT_LAYOUT, &mut ui, &StubData);
+        draw(&items, items.len(), &BAG_DEFAULT_LAYOUT, &mut ui, &StubData { item_name: "POTION" });
         let has_cancel = rec.ops.iter().any(|op| matches!(op, Op::Text(_, t) if t == "CANCEL"));
         assert!(has_cancel, "CANCEL row visible when the cursor is on it");
     }
