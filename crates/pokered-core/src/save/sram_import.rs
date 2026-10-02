@@ -183,7 +183,7 @@ fn finish_import(out: &mut SaveData) {
 /// performs on the fly (`wPartyMon1OTID` vs `wPlayerID`) — the flag drives the
 /// 1.5× traded EXP bonus; obedience re-does the comparison itself. `ot_id == 0`
 /// (legacy saves / unstamped mons) counts as own.
-fn derive_traded_flags(save: &mut SaveData) {
+pub fn derive_traded_flags(save: &mut SaveData) {
     let player_id = save.game_data.player_id;
     for mon in save.party.iter_mut() {
         mon.is_traded = crate::battle::obedience::is_traded_for_with_name(mon.ot_id, player_id, &mon.ot_name);

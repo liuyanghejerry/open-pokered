@@ -228,6 +228,8 @@ fn decode_web_save(raw: &str) -> Result<SaveData, serde_json::Error> {
         .is_some_and(|data| !data.contains_key("game_progress_tail"));
     let mut save: SaveData = serde_json::from_value(value)?;
     save.imported_legacy_json = legacy;
+    // Older browser JSON may contain the former OT-ID-0 derived flag.
+    pokered_core::save::sram_import::derive_traded_flags(&mut save);
     Ok(save)
 }
 
@@ -8180,6 +8182,21 @@ mod web_legacy_save_fidelity_tests {
     fn invalid_web_json_does_not_grant_legacy_import() {
         for raw in ["not json", "{}", r#"{"game_data":{"game_progress_tail":null}}"#] {
             assert!(decode_web_save(raw).is_err());
+        }
+    }
+
+    #[test]
+    fn web_reader_recomputes_named_zero_ot_trade_identity() {
+        for (owner, expected) in [(1234, true), (0, false)] {
+            let mut save = SaveData::new();
+            save.game_data.player_id = owner;
+            let mut mon = pokered_core::trade::assemble_npc_trade_mon(
+                pokered_data::species::Species::MrMime, 15, "MARCEL", [0x99, 0x88], 0, owner,
+            ).unwrap();
+            mon.is_traded = !expected; // stale derived flag from prior JSON
+            save.party.add(mon).unwrap();
+            let raw = serde_json::to_string(&save).unwrap();
+            assert_eq!(decode_web_save(&raw).unwrap().party.get(0).unwrap().is_traded, expected);
         }
     }
 }
