@@ -22,6 +22,7 @@
 | SYS-14 | 高/缺失 | 普通PokéCenter柜员只显示Welcome，游戏内没有选择TradeCenter/Colosseum、存档/入场动作；现有TCP/BC backend需CLI/网页入口并debug warp进入房间 | `scripts/CeruleanPokecenter.asm:12-13`调用cable_club_receptionist；原作LinkMenu选房 `engine/menus/main_menu.asm:182-287` | 所有Pokecenter.scene柜员分支（如`maps/CeruleanPokecenter/script.scene`talkLinkReceptionist）仅文字；TradeCenter桌面linkStart已实现 | 确認内容代码，不应重报为“link不存在”；GBA app的link代码cfg剔除，硬件无后端，属平台未还原 |
 | SYS-15 | 高 | 原作首次未CHANGE BOX的合法存档，banks2/3仍可含任意SRAM；import却先无条件校验两bank而拒绝Continue | 原作Load只校验bank1（`engine/menus/save.asm:1-11,31-130`）；首切箱才EmptyAllSRAMBoxes（`save.asm:368-370`） | `save/sram_import.rs:68-69,91-94`无条件validate box banks | 静态确证；修复回归用独立原作布局fixture+0xa7填充未初始化boxbank |
 | SYS-16 | 高 | NPC交易完成标记仅runtime script alias，普通.sav没有与completed_in_game_trade_flags同步；重载后可重复交易；原作存档导入的完成位亦不显示 | `engine/events/in_game_trades.asm:47-51`测试wCompletedInGameTradeFlags；FlagAction按byte序bit0-9，`constants/script_constants.asm:23-32`原作10项顺序 | `app/game.rs:1855-1927,2336-2370`没有alias桥接；`save/ser_game_data.rs`对completed_in_game_trade_flags用BE，相反byte顺序 | 静态确认；修复fixture用原作$29E3 bit1(MARCEL)验证导入/导出/alias |
+| SYS-17 | 中 | 合法原作/NPC/联机精灵OT ID=$0000、玩家ID非零时被当作own，失去交易EXP和不听话行为 | 原作仅比较两字节OT/玩家ID，不特判0；`engine/battle/experience.asm:69-83`、`engine/battle/core.asm:3841-3853` | `battle/obedience.rs:79-85`为旧unstamped兼容无条件排除0；NPC生成、联机收包、育成、SRAM导入与战斗共同调用 | 静态确证；追加独立原作offset fixture、NPC/育成owner1234与owner0矩阵，以及obedience helper回归，根代理最终统一执行 |
 
 所有open-pokered行号基准路径：未写`app/`的逻辑在`crates/pokered-core/src/`；`app/game.rs`为`crates/pokered-app/src/game.rs`；`data/species.rs`为`crates/pokered-data/src/species.rs`。
 
@@ -75,3 +76,5 @@ SYS-15进一步按原作 `wCurrentBoxNum` bit7判断箱bank是否已初始化，
 Web旧JSON仅由实际localStorage读取入口检查原始JSON缺少 `game_data.game_progress_tail` 后标记一次迁移；同slot extras只接收旧NPC/Rod alias的true。新JSON和原作SRAM保持存档位权威，普通debug snapshot反序列化不会获得此标记。追加旧/新JSON同slot迁移、snapshot不迁移及无效JSON回归；上述追加source测试等待根代理最终集成检查，未沿用此前14项通过结果宣称已运行。
 
 SYS-16时点也补原作顺序：正确party选择后、ConnectCableText/动画前登记完成位（`engine/events/in_game_trades.asm:129-134`），取消或选错不登记；动画完成后scene的setFlag幂等。App新增真实选择输入三分支回归，证明登记时仍持有原精灵且动画尚未开始；TUI在显示Connect文字前使用同一别名登记桥接。
+
+SYS-17追加named-identity helper：有OT name的ID0按原作直接比较玩家ID；仅OT name为空且ID0保留旧unstamped兼容。NPC、联机、育成、原作存档导入及战斗obedience统一用新helper。独立原作fixture把 `$2605` owner写1234、`$2F40` OT写0、`$303C` OT name写TRAINER，验证导入/重导仍traded；NPC/育成owner0则仍own。之前16项报告与14项验收是在该追加项之前，最终数量以根代理集成检查为准。

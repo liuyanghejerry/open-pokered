@@ -161,7 +161,6 @@ impl SaveData {
                 }
                 mon.stat_exp = [dc.hp_exp, dc.attack_exp, dc.defense_exp, dc.speed_exp, dc.special_exp];
                 mon.ot_id = dc.ot_id;
-                mon.is_traded = crate::battle::obedience::is_traded_for(dc.ot_id, self.game_data.player_id);
                 mon.status = ser_pokemon::byte_to_status(dc.status);
                 mon.type1 = pokered_data::types::PokemonType::from_id(dc.type1);
                 mon.type2 = pokered_data::types::PokemonType::from_id(dc.type2);
@@ -169,6 +168,8 @@ impl SaveData {
                 let ot = &self.game_data.daycare_mon_ot;
                 let len = ot.len().min(mon.ot_name.len());
                 mon.ot_name[..len].copy_from_slice(&ot[..len]);
+                mon.is_traded = crate::battle::obedience::is_traded_for_with_name(
+                    dc.ot_id, self.game_data.player_id, &mon.ot_name);
                 learn_daycare_moves(&mut mon, dc.box_level, new_level);
                 recalculate_stats(&mut mon);
                 mon.hp = mon.max_hp;

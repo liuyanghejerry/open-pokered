@@ -4094,18 +4094,19 @@ learn {learn_name}!")];
                         move_index
                     };
                     let mut name_buf = [0u8; crate::battle::state::NAME_TEXT_BUF];
-                    let (level, ot_id, moves, pp, has_disabled, name) = {
+                    let (level, ot_id, ot_name, moves, pp, has_disabled, name) = {
                         let m = p.active_mon();
                         (
                             m.level,
                             m.ot_id,
+                            m.ot_name,
                             m.moves,
                             m.pp,
                             p.disabled_move > 0,
                             m.display_name(&mut name_buf),
                         )
                     };
-                    if crate::battle::obedience::is_traded_for(ot_id, bs.player_id) {
+                    if crate::battle::obedience::is_traded_for_with_name(ot_id, bs.player_id, &ot_name) {
                         use crate::battle::obedience::DisobedienceOutcome as Outcome;
                         // In a link battle the disobedience rolls come from the
                         // shared stream (the original draws BattleRandom here).

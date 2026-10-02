@@ -231,6 +231,45 @@ fn original_offsets_and_uninitialized_box_banks_import() {
 }
 
 #[test]
+fn canonical_and_npc_named_zero_ot_ids_retain_trade_identity() {
+    let mut bytes = original_sram();
+    bytes[0x2605..0x2607].copy_from_slice(&1234u16.to_be_bytes()); // wPlayerID
+    bytes[0x2f40..0x2f42].fill(0); // party mon's real wPartyMon1OTID
+    bytes[0x303c..0x3047].copy_from_slice(&pokered_core::battle::state::encode_name("TRAINER"));
+    bytes[0x3523] = pokered_core::save_menu::calc_checksum(&bytes[0x2598..0x3523]);
+    let save = import_sram(&bytes).unwrap();
+    assert!(!save.imported_legacy_native);
+    assert_eq!(save.game_data.player_id, 1234);
+    let mon = save.party.get(0).unwrap();
+    assert_eq!(mon.ot_id, 0);
+    assert!(mon.is_traded);
+    let round_trip = import_sram(&export_sram(&save)).unwrap();
+    assert!(round_trip.party.get(0).unwrap().is_traded);
+    for (owner, traded) in [(1234, true), (0, false)] {
+        let mon = pokered_core::trade::assemble_npc_trade_mon(
+            Species::MrMime,
+            15,
+            "MARCEL",
+            [0x99, 0x88],
+            0,
+            owner,
+        )
+        .unwrap();
+        assert_eq!(mon.is_traded, traded);
+        let mut daycare = SaveData::new();
+        daycare.game_data.player_id = owner;
+        daycare.party.add(mon).unwrap();
+        daycare
+            .party
+            .add(create_pokemon(Species::Pidgey, 10, [0x99, 0x88]).unwrap())
+            .unwrap();
+        daycare.deposit_daycare(0);
+        daycare.withdraw_daycare();
+        assert_eq!(daycare.party.get(1).unwrap().is_traded, traded);
+    }
+}
+
+#[test]
 fn original_new_game_ignores_previous_playthroughs_valid_box_banks() {
     let mut previous = SaveData::new();
     previous

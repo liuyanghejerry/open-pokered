@@ -18,7 +18,7 @@ use pokered_data::species::Species;
 use pokered_data::trades::NPC_TRADE_OT_NAME;
 use rand::{Rng, SeedableRng};
 
-use crate::battle::obedience::is_traded_for;
+use crate::battle::obedience::is_traded_for_with_name;
 use crate::battle::state::Pokemon;
 
 /// Build the Pokémon received from an NPC in-game trade.
@@ -48,7 +48,7 @@ pub fn assemble_npc_trade_mon(
     // code), not part of the name, and '<' has no charmap glyph.
     mon.ot_name = crate::battle::state::encode_name("TRAINER");
     mon.ot_id = ot_id;
-    mon.is_traded = is_traded_for(ot_id, player_id);
+    mon.is_traded = is_traded_for_with_name(ot_id, player_id, &mon.ot_name);
     Some(mon)
 }
 
