@@ -360,7 +360,7 @@ fn sram_flags_are_authoritative_and_only_old_native_recovers_companion_aliases()
         save.game_data.completed_in_game_trade_flags = 2;
         save.game_data.status_flags[0] = 8;
         save.game_data.event_flags[0x25 / 8] |= 1 << (0x25 % 8); // original EVENT_GOT_POKEDEX
-        let mut extras = pokered_core::hash_compat::HashMap::new();
+        let mut extras = pokered_core::hash_compat::HashMap::default();
         for (name, value) in [
             ("EVENT_GOT_POKEDEX", false),
             ("EVENT_TRADED_FOR_MARCEL", false),

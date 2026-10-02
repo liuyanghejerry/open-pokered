@@ -645,7 +645,7 @@ mod layout_tests {
         actual.clear(BG);
         draw_message(&["Withdrew THUNDERSTONE.".into()], &mut actual, false);
         border.clear(BG);
-        // A real 22-cell PC withdrawal message wraps to two rows.
+        // A 22-cell input must wrap to two rows inside the original 18-cell box.
         draw_text_box(&mut border, 0, 13 * T, 18, 3, FG);
         for y in 14 * T..17 * T {
             for x in 19 * T..20 * T {
