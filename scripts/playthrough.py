@@ -935,6 +935,7 @@ class Game:
         search_goals = {'goal_nodes': goals} if goal_points is not None else {}
         self.last_pinch = None
         self.pinch_count = 0
+        script_displacements = {}
         excluded_maps = self.navigation_excluded_maps()
         for attempt in range(tries):
             # Single snapshot for battle + position, same race as nav_to.
@@ -946,9 +947,36 @@ class Game:
             # A direction-only navigator would keep walking into that dialogue
             # forever. Use the existing dialogue driver; choices still fail.
             if s["screen"] == "overworld" and s.get("dialogue_state") is not None:
+                dialogue_start = s
                 if not self.cutscene():
                     raise NavError("navigation dialogue did not finish")
                 s = self.st()
+                # A coordinate guard can repeatedly walk us back without
+                # changing the collision map. Replanning the same walk for
+                # the entire attempt budget cannot pass it. Report observed
+                # failure to the caller so it can learn the guard or choose
+                # another route; do not invent a bypass or mark the trip done.
+                start = (dialogue_start['player_x'], dialogue_start['player_y'])
+                end = (s['player_x'], s['player_y'])
+                if (s['screen'] == 'overworld' and s['map_name'] == dialogue_start['map_name']
+                        and start != end and not s.get('script_running')
+                        and not s.get('dialogue_state') and not s.get('choice')
+                        and not s.get('active_script_effect') and not s.get('door_exit_pending')
+                        and s.get('warp_fade', 'Idle') == 'Idle'
+                        and s.get('player_movement_state', 'Idle') == 'Idle'):
+                    # Repeated position alone is insufficient: story flags,
+                    # rewards, damage/XP and terrain changes can be progress.
+                    progress = {key: s.get(key) for key in (
+                        'party', 'evaluation', 'pokedex', 'money', 'coins', 'badges',
+                        'map_blocks', 'player_transport', 'box_counts', 'stored_pokemon',
+                        'current_box_index', 'safari_game', 'hall_of_fame_count')}
+                    progress['flags'] = self.d.cmd(cmd='get_flags')['data']
+                    progress['bag'] = self.d.cmd(cmd='get_bag')['data']
+                    signature = (s['map_name'], start, end, json.dumps(progress, sort_keys=True))
+                    script_displacements[signature] = script_displacements.get(signature, 0) + 1
+                    if script_displacements[signature] >= 3:
+                        raise NavError(f"repeated unchanged script displacement: "
+                                       f"{s['map_name']} {start} -> {end}")
             if s["screen"] == "battle":
                 prefer = ("fight" if s["script_awaiting_battle"]
                           else "run")

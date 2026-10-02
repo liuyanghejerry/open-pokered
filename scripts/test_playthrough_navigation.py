@@ -98,6 +98,66 @@ class SearchGeometryCacheRegression(unittest.TestCase):
 
 
 class NavigationRegression(unittest.TestCase):
+    def pushback_game(self, changes=False):
+        from copy import deepcopy
+        changing = 'flags' if changes is True else changes
+        game = nav.Game.__new__(nav.Game)
+        state = {'screen': 'overworld', 'map_name': 'Route16Gate1F',
+                 'player_x': 4, 'player_y': 7, 'dialogue_state': {'text': 'Wait!'},
+                 'player_movement_state': 'Idle', 'warp_fade': 'Idle',
+                 'party': [], 'money': 0, 'map_blocks': [], 'script_running': True}
+        progress = {'rounds': 0}
+        game.st = lambda: deepcopy(state)
+        game.navigation_state = game.st
+        game.navigation_excluded_maps = lambda: ()
+        game.navigation_barriers = lambda: {}
+        game.npc_blocked = lambda name: set()
+        game.live_npcs = lambda name: set()
+        game.track_last_map = lambda name: None
+        game.last_map = 'Route16'
+        game.d = Mock()
+        game.d.cmd.side_effect = lambda **kw: {'data': (
+            {'progress': progress['rounds'] if changing == 'flags' else 0}
+            if kw['cmd'] == 'get_flags' else
+            [{'item': 'PokeBall', 'qty': progress['rounds']}] if changing == 'bag' else [])}
+        def settle():
+            progress['rounds'] += 1
+            state.update(player_x=3 if changes and progress['rounds'] == 5 else 5,
+                         dialogue_state=None, script_running=False)
+            if changing not in (False, 'flags', 'bag'):
+                state[changing] = {'observed_progress': progress['rounds']}
+            return True
+        game.cutscene = Mock(side_effect=settle)
+        game.d.drive.side_effect = lambda *a, **kw: state.update(
+            player_x=4, dialogue_state={'text': 'Wait!'}, script_running=True)
+        path = [('Route16Gate1F', 5, 7), (('Route16Gate1F', 4, 7), 'left'),
+                (('Route16Gate1F', 3, 7), 'left')]
+        return game, path
+
+    def test_repeated_unchanged_script_pushback_reports_before_full_walk_budget(self):
+        game, path = self.pushback_game()
+        with patch.object(nav, 'bfs_cross', return_value=path), \
+                self.assertRaisesRegex(nav.NavError, 'repeated unchanged script displacement'):
+            game.nav_to_map(3, 7, 'Route16Gate1F', tries=20, avoid_grass=False)
+        self.assertEqual(game.cutscene.call_count, 3)
+        self.assertEqual(game.d.drive.call_count, 2)
+
+    def test_same_script_displacement_with_changed_flags_can_still_make_progress(self):
+        game, path = self.pushback_game(changes=True)
+        with patch.object(nav, 'bfs_cross', return_value=path):
+            self.assertEqual(game.nav_to_map(3, 7, 'Route16Gate1F', tries=20,
+                                            avoid_grass=False), (3, 7))
+        self.assertEqual(game.cutscene.call_count, 5)
+
+    def test_script_pushback_does_not_hide_inventory_party_or_terrain_progress(self):
+        for field in ('bag', 'money', 'party', 'evaluation', 'pokedex', 'map_blocks', 'safari_game'):
+            with self.subTest(field=field):
+                game, path = self.pushback_game(changes=field)
+                with patch.object(nav, 'bfs_cross', return_value=path):
+                    self.assertEqual(game.nav_to_map(3, 7, 'Route16Gate1F', tries=20,
+                                                    avoid_grass=False), (3, 7))
+                self.assertEqual(game.cutscene.call_count, 5)
+
     def test_milestone_can_push_a_boulder_into_its_scripted_hole(self):
         import playthrough_late as late
         flag = 'EVENT_VICTORY_ROAD_3_BOULDER_ON_SWITCH2'

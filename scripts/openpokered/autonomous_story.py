@@ -514,7 +514,10 @@ def compact_strategy_candidates(candidates):
 
 
 def factor_strategy_evidence(state, candidates, min_chars=160):
-    """Losslessly share identical evidence; never shortlist candidate options."""
+    """Losslessly share decision evidence on either layer; never shortlist options.
+
+    Retain the historical strategy-prefixed wire names for trace compatibility.
+    """
     decoded = {}
     for key, value in candidates.items():
         try:
@@ -1130,22 +1133,31 @@ class AutonomousStoryAgent(DualStoryAgent):
                     'proof the destination is unlocked: compare current trigger navigation and '
                     'native guards. Urgent healing, capture resources, a newly observed blocker, '
                     'or an unavailable parent can justify changing goals.')
-            state, candidates = factor_strategy_evidence(state, candidates)
-            if 'shared_strategy_evidence' in state:
-                instruction += (' Repeated evidence is stored once in state.shared_strategy_evidence. '
-                    'Each object containing only shared_strategy_evidence_ref means the complete '
-                    'entry with that key in this library, including nested references. Resolve '
-                    'those references when comparing candidates; no candidate or evidence was omitted.')
-            if '"strategy_table"' in json.dumps(state):
-                instruction += (' An object containing only strategy_table represents a list of records: '
-                    'columns names the fields, and each rows entry supplies their values in that order. '
-                    'All original records and values are retained, including nested evidence references.')
+        # Action choices can be larger than strategic ones (e.g. every legal
+        # inventory disposal/teaching operation). Keep their complete evidence
+        # and options under the same lossless request representation.
+        state, candidates = factor_strategy_evidence(state, candidates)
+        if 'shared_strategy_evidence' in state:
+            instruction += (' Repeated evidence is stored once in state.shared_strategy_evidence. '
+                'Each object containing only shared_strategy_evidence_ref means the complete '
+                'entry with that key in this library, including nested references. Resolve '
+                'those references when comparing candidates; no candidate or evidence was omitted.')
+        if ('"strategy_table"' in json.dumps(state)
+                or any('"strategy_table"' in value for value in candidates.values())):
+            instruction += (' An object containing only strategy_table represents a list of records: '
+                'columns names the fields, and each rows entry supplies their values in that order. '
+                'All original records and values are retained, including nested evidence references.')
+        if layer == 'strategy':
             return self.choose_bounded_strategy(state, candidates, instruction,
                 allow_abstain=not (grounded or mechanism_grounded))
-        return super().choose(layer, state, candidates, instruction,
-                              allow_abstain=not (grounded or mechanism_grounded or trainer_switch_grounded))
+        return self.choose_bounded_choice(layer, state, candidates, instruction,
+            allow_abstain=not (grounded or mechanism_grounded or trainer_switch_grounded))
 
     def choose_bounded_strategy(self, state, candidates, instruction, *, allow_abstain=True):
+        return self.choose_bounded_choice('strategy', state, candidates, instruction,
+                                          allow_abstain=allow_abstain)
+
+    def choose_bounded_choice(self, layer, state, candidates, instruction, *, allow_abstain=True):
         """On explicit context overflow, compare every option in bounded rounds.
 
         No code-ranked shortlist: Jev chooses each disjoint group's representative
@@ -1153,7 +1165,7 @@ class AutonomousStoryAgent(DualStoryAgent):
         This is a tournament, not an identical full-set probability distribution.
         """
         try:
-            return super().choose('strategy', state, candidates, instruction,
+            return super().choose(layer, state, candidates, instruction,
                                   allow_abstain=allow_abstain)
         except StoryStopped as error:
             if (not isinstance(error.__cause__, TypeSafeError)
@@ -1163,17 +1175,17 @@ class AutonomousStoryAgent(DualStoryAgent):
         keys = list(candidates)
         midpoint = len(keys) // 2
         partitions = [keys[:midpoint], keys[midpoint:]]
-        self.record('strategy_partition', candidate_ids=keys, partitions=partitions,
+        self.record(f'{layer}_partition', candidate_ids=keys, partitions=partitions,
                     reason='max_tokens_exceeded', state_preserved=True)
         local_instruction = instruction + (
-            ' This is one disjoint comparison group from a larger strategy choice. '
+            f' This is one disjoint comparison group from a larger {layer} choice. '
             'Choose the best relative next step in this group using the full unchanged state. '
             'A separate final comparison will judge the group representatives; '
             'select one representative even if this group has no ideal option.')
-        winners = [self.choose_bounded_strategy(state, {key: candidates[key] for key in group},
+        winners = [self.choose_bounded_choice(layer, state, {key: candidates[key] for key in group},
                     local_instruction, allow_abstain=False) for group in partitions]
-        self.record('strategy_partition_finalists', candidate_ids=keys, finalists=winners)
-        return self.choose_bounded_strategy(state, {key: candidates[key] for key in winners},
+        self.record(f'{layer}_partition_finalists', candidate_ids=keys, finalists=winners)
+        return self.choose_bounded_choice(layer, state, {key: candidates[key] for key in winners},
             instruction + ' These candidates are the model-selected representatives of '
             'disjoint comparison groups. Compare them for the overall next step.',
             allow_abstain=allow_abstain)

@@ -1162,6 +1162,62 @@ class AutonomousTests(unittest.TestCase):
                 self.assertEqual(calls.call_count, 1)
         agent.record.assert_not_called()
 
+    def test_action_choice_shares_evidence_without_dropping_candidates(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.active = {'context': {'goal': 'Make room for a quest item'}}
+        evidence = {'description': 'Exact item effects and loss consequences. ' * 20}
+        state = {'subgoal': ['bag_space', 'inventory', 20],
+                 'local_state': {'item_reference': evidence}}
+        candidates = {f'action:{i}': json.dumps({'operation': f'sell:{i}',
+                      'reference': evidence}) for i in range(39)}
+        original = json.loads(json.dumps([state, candidates]))
+        with patch.object(DualStoryAgent, 'choose', return_value='action:38') as decide:
+            self.assertEqual(agent.choose('action', state, candidates, 'Pick'), 'action:38')
+        layer, actual, options, instruction = decide.call_args.args
+        self.assertEqual(layer, 'action')
+        self.assertEqual(set(options), set(candidates))
+        self.assertIn('shared_strategy_evidence', actual)
+        self.assertIn('shared_strategy_evidence_ref', instruction)
+        library = actual['shared_strategy_evidence']
+        def expand(value):
+            if isinstance(value, dict):
+                if set(value) == {'shared_strategy_evidence_ref'}:
+                    return expand(library[value['shared_strategy_evidence_ref']])
+                return {key: expand(child) for key, child in value.items()}
+            return value
+        for key, value in options.items():
+            row = expand(json.loads(value))
+            self.assertEqual(row['reference'], evidence)
+            self.assertEqual(row['operation'], json.loads(candidates[key])['operation'])
+        self.assertEqual([state, candidates], original)
+
+    def test_action_overflow_compares_every_option_and_fails_closed_at_two(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.record = Mock()
+        state = {'subgoal': ['bag_space', 'inventory', 20], 'local_state': {}}
+        candidates = {str(i): f'Action {i}' for i in range(9)}
+        evaluated = set()
+        def decide(layer, actual, options, instruction, *, allow_abstain):
+            self.assertEqual(layer, 'action')
+            self.assertEqual(actual, state)
+            if len(options) > 3:
+                raise StoryStopped('action:service_unavailable') from TypeSafeError(
+                    'HTTP 400 max_tokens_exceeded')
+            evaluated.update(options)
+            return max(options, key=int)
+        with patch.object(DualStoryAgent, 'choose', side_effect=decide):
+            self.assertEqual(agent.choose('action', state, candidates, 'Pick'), '8')
+        self.assertEqual(evaluated, set(candidates))
+        self.assertTrue(any(call.args[0] == 'action_partition_finalists'
+                            for call in agent.record.call_args_list))
+        for detail in ('HTTP 401 unauthorized', 'max_tokens_exceeded'):
+            def fail(*args, **kwargs):
+                raise StoryStopped('action:service_unavailable') from TypeSafeError(detail)
+            with patch.object(DualStoryAgent, 'choose', side_effect=fail) as calls:
+                with self.assertRaises(StoryStopped):
+                    agent.choose('action', state, {'a': 'A', 'b': 'B'}, 'Pick')
+                self.assertEqual(calls.call_count, 1)
+
     def test_shared_strategy_text_and_tables_have_no_unreferenced_library_entries(self):
         text = 'Detailed acquisition evidence and native prerequisites. ' * 10
         rows = [{'species': f'Species{i}', 'description': text, 'extra': 'value ' * 40}
