@@ -8319,10 +8319,14 @@ mod asynchronous_colosseum_fidelity_tests {
             }
             if host.state.screen == GameScreen::Overworld && peer.state.screen == GameScreen::Overworld { break; }
         }
+        // A queued ordinary blackout can leave the room only AFTER the
+        // Battle -> Overworld transition. Let the real fade/warp loop run.
+        for _ in 0..120 { host.update(&idle); peer.update(&idle); }
         for g in [&host, &peer] {
             assert_eq!(g.state.screen, GameScreen::Overworld, "terminal mirror must leave LinkWaiting");
             assert_eq!(g.overworld.state.current_map, MapId::Colosseum);
             assert_eq!(g.link_cable.phase(), &CableClubPhase::InRoom);
+            assert!(g.overworld.pending_warp.is_none());
             for mon in g.save_data.party.iter() {
                 assert_eq!(mon.hp, mon.max_hp);
                 assert_eq!(mon.status, StatusCondition::None);

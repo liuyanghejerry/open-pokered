@@ -110,7 +110,9 @@ pub fn settle_battle_into_save(
                         battle.trainer_class,
                         Some(pokered_data::trainer_data::TrainerClass::Rival1)
                     );
-                if !is_oaks_lab_rival {
+                // Link defeats return to the Cable Club room after HealParty;
+                // they never queue the ordinary city's blackout warp.
+                if !is_oaks_lab_rival && !battle.link_mode {
                     let lost = settlement.money_lost;
                     save.game_data.player_money = save.game_data.player_money.saturating_sub(lost);
                     if lost > 0 {
@@ -161,7 +163,7 @@ pub fn settle_battle_into_save(
                     // releases the forced bike and restores walking.
                     overworld.forced_bike.clear();
                     overworld.state.player.transport = TransportMode::Walking;
-                } else {
+                } else if is_oaks_lab_rival {
                     log::info!("Oak's Lab Rival1 loss: skipping blackout (original behavior)");
                 }
             }
