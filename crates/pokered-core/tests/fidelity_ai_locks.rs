@@ -64,6 +64,16 @@ fn messages(s: &BattleScreen) -> &[String] {
     }
 }
 
+fn has_message(s: &BattleScreen, text: &str) -> bool {
+    messages(s).iter().any(|message| {
+        message
+            .split_whitespace()
+            .collect::<Vec<_>>()
+            .join(" ")
+            .contains(text)
+    })
+}
+
 #[test]
 fn brock_full_heal_replaces_each_forced_turn_without_consuming_its_lock() {
     // core.asm:416/454 calls TrainerAI before any ExecuteEnemyMove status gates.
@@ -108,10 +118,12 @@ fn brock_full_heal_replaces_each_forced_turn_without_consuming_its_lock() {
             assert_eq!(bs.enemy.bide_accumulated_damage, 17);
             assert_eq!(bs.enemy.last_move_used, MoveId::None);
             assert_eq!(s.enemy_ai_count, 4);
-            assert!(messages(&s).iter().any(|m| m.contains("FULL HEAL")));
-            assert!(!messages(&s)
-                .iter()
-                .any(|m| m.contains("must recharge") || m.contains("hurt by POISON")));
+            assert!(
+                has_message(&s, "FULL HEAL"),
+                "actual item pages: {:?}",
+                messages(&s)
+            );
+            assert!(!has_message(&s, "must recharge") && !has_message(&s, "hurt by POISON"));
             if mv == MoveId::HyperBeam {
                 act(&mut s, MoveId::Splash);
                 assert!(!s
@@ -121,7 +133,7 @@ fn brock_full_heal_replaces_each_forced_turn_without_consuming_its_lock() {
                     .enemy
                     .has_status2(status2::NEEDS_TO_RECHARGE));
                 assert_eq!(s.enemy_ai_count, 4);
-                assert!(messages(&s).iter().any(|m| m.contains("must recharge")));
+                assert!(has_message(&s, "must recharge"), "{:?}", messages(&s));
             }
         }
     }
@@ -141,7 +153,11 @@ fn a_faster_player_can_trigger_brocks_full_heal_in_the_same_turn() {
     assert_eq!(bs.enemy.active_mon().hp, 400);
     assert_eq!(bs.player.active_mon().hp, 400);
     assert_eq!(s.enemy_ai_count, 4);
-    assert!(messages(&s).iter().any(|m| m.contains("FULL HEAL")));
+    assert!(
+        has_message(&s, "FULL HEAL"),
+        "actual item pages: {:?}",
+        messages(&s)
+    );
 }
 
 #[test]
@@ -173,7 +189,7 @@ fn a_player_first_ko_cancels_ai_consultation_and_its_random_draw() {
     );
     assert_eq!(enabled.enemy_ai_count, 5);
     assert_eq!(enabled.rng.next_u8(), exhausted.rng.next_u8());
-    assert!(!messages(&enabled).iter().any(|m| m.contains("FULL HEAL")));
+    assert!(!has_message(&enabled, "FULL HEAL"));
 }
 
 #[test]
@@ -205,7 +221,12 @@ fn ai_full_heal_clears_badly_poisoned_before_leech_seed_residual() {
 #[test]
 fn player_first_transform_pays_original_pp_before_installing_the_copied_five_pp() {
     let mut s = screen(MoveId::Transform, MoveId::Tackle, false);
-    s.battle_state.as_mut().unwrap().enemy.active_mon_mut().status = StatusCondition::Poison;
+    s.battle_state
+        .as_mut()
+        .unwrap()
+        .enemy
+        .active_mon_mut()
+        .status = StatusCondition::Poison;
     act(&mut s, MoveId::Transform);
     let bs = s.battle_state.as_ref().unwrap();
     assert_eq!(bs.player.active_mon().moves[0], MoveId::Tackle);
@@ -218,7 +239,12 @@ fn player_first_transform_pays_original_pp_before_installing_the_copied_five_pp(
 #[test]
 fn player_first_initial_bide_still_pays_its_one_pp() {
     let mut s = screen(MoveId::Bide, MoveId::Tackle, false);
-    s.battle_state.as_mut().unwrap().enemy.active_mon_mut().status = StatusCondition::Poison;
+    s.battle_state
+        .as_mut()
+        .unwrap()
+        .enemy
+        .active_mon_mut()
+        .status = StatusCondition::Poison;
     act(&mut s, MoveId::Bide);
     let bs = s.battle_state.as_ref().unwrap();
     assert!(bs.player.has_status1(status1::STORING_ENERGY));
@@ -230,8 +256,12 @@ fn player_first_damage_can_trigger_erikas_potion_before_poison_residual() {
     // Erika checks current HP < max/10, after a faster player's attack.
     let mut observed = false;
     for seed in 0..64 {
-        let mut s = BattleScreen::from_parties(false, &[mon(MoveId::SeismicToss, 200)],
-            &[mon(MoveId::Bide, 10)], Some(TrainerClass::Erika));
+        let mut s = BattleScreen::from_parties(
+            false,
+            &[mon(MoveId::SeismicToss, 200)],
+            &[mon(MoveId::Bide, 10)],
+            Some(TrainerClass::Erika),
+        );
         s.rng = StdBattleRng::from_seed(seed);
         let count = s.enemy_ai_count;
         let bs = s.battle_state.as_mut().unwrap();
@@ -242,7 +272,7 @@ fn player_first_damage_can_trigger_erikas_potion_before_poison_residual() {
         bs.enemy.selected_move = MoveId::Bide;
         bs.enemy.num_attacks_left = 3;
         act(&mut s, MoveId::SeismicToss);
-        if messages(&s).iter().any(|m| m.contains("SUPER POTION")) {
+        if has_message(&s, "SUPER POTION") {
             let bs = s.battle_state.as_ref().unwrap();
             assert_eq!(bs.enemy.active_mon().hp, 35); // 60 - 50 + 50 - 25
             assert_eq!(bs.player.active_mon().hp, 400);
@@ -259,8 +289,12 @@ fn player_first_damage_can_trigger_erikas_potion_before_poison_residual() {
 fn a_potion_caps_hp_before_the_enemys_poison_tick() {
     let mut observed = false;
     for seed in 0..64 {
-        let mut s = BattleScreen::from_parties(false, &[mon(MoveId::Splash, 200)],
-            &[mon(MoveId::Thrash, 10)], Some(TrainerClass::Blaine));
+        let mut s = BattleScreen::from_parties(
+            false,
+            &[mon(MoveId::Splash, 200)],
+            &[mon(MoveId::Thrash, 10)],
+            Some(TrainerClass::Blaine),
+        );
         s.rng = StdBattleRng::from_seed(seed);
         let bs = s.battle_state.as_mut().unwrap();
         bs.enemy.active_mon_mut().hp = 399;
@@ -269,7 +303,7 @@ fn a_potion_caps_hp_before_the_enemys_poison_tick() {
         bs.enemy.selected_move = MoveId::Thrash;
         bs.enemy.num_attacks_left = 3;
         act(&mut s, MoveId::Splash);
-        if messages(&s).iter().any(|m| m.contains("SUPER POTION")) {
+        if has_message(&s, "SUPER POTION") {
             let bs = s.battle_state.as_ref().unwrap();
             assert_eq!(bs.enemy.active_mon().hp, 375); // cap400, then /16 poison
             assert_eq!(bs.enemy.num_attacks_left, 3);
@@ -289,8 +323,12 @@ fn an_ai_switch_uses_outgoing_speed_and_ticks_the_incoming_mon() {
         outgoing.status = StatusCondition::Poison;
         let mut incoming = mon(MoveId::Tackle, 1000);
         incoming.status = StatusCondition::Poison;
-        let mut s = BattleScreen::from_parties(false, &[mon(MoveId::SeismicToss, 200)],
-            &[outgoing, incoming], Some(TrainerClass::Juggler));
+        let mut s = BattleScreen::from_parties(
+            false,
+            &[mon(MoveId::SeismicToss, 200)],
+            &[outgoing, incoming],
+            Some(TrainerClass::Juggler),
+        );
         s.rng = StdBattleRng::from_seed(seed);
         let bs = s.battle_state.as_mut().unwrap();
         bs.player.set_status2(status2::USING_X_ACCURACY);
@@ -299,8 +337,15 @@ fn an_ai_switch_uses_outgoing_speed_and_ticks_the_incoming_mon() {
         act(&mut s, MoveId::SeismicToss);
         if s.battle_state.as_ref().unwrap().enemy.active_pokemon_index == 1 {
             let bs = s.battle_state.as_ref().unwrap();
-            assert_eq!(bs.enemy.party[0].hp, 350, "faster player hits outgoing, which does not tick");
-            assert_eq!(bs.enemy.active_mon().hp, 375, "incoming gets its own poison residual");
+            assert_eq!(
+                bs.enemy.party[0].hp, 350,
+                "faster player hits outgoing, which does not tick"
+            );
+            assert_eq!(
+                bs.enemy.active_mon().hp,
+                375,
+                "incoming gets its own poison residual"
+            );
             assert_eq!(bs.player.active_mon().hp, 400);
             assert!(!bs.enemy.has_status1(status1::CHARGING_UP));
             observed = true;
