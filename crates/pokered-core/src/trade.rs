@@ -31,8 +31,7 @@ use crate::battle::state::Pokemon;
 /// - `ot_id` is the random 16-bit `wTradedEnemyMonOTID`.
 /// - OT name is the literal `<TRAINER>`; nickname comes from the table.
 /// - `is_traded` follows the original obedience rule: traded iff
-///   `ot_id != 0 && ot_id != player_id` (a freak matching/zero roll means the
-///   mon counts as the player's own, exactly like the original).
+///   `ot_id != player_id`; this recorded NPC identity can legitimately be 0.
 pub fn assemble_npc_trade_mon(
     species: Species,
     level: u8,
@@ -504,10 +503,10 @@ mod tests {
 
     #[test]
     fn received_mon_traded_flag_follows_obedience_rule() {
-        // ot_id == 0 → "unknown" → own mon (legacy-save rule in obedience.rs).
+        // NPC metadata records a real OT ID of 0; a different player is traded.
         let mon =
             assemble_npc_trade_mon(Species::Jynx, 20, "LOLA", [0, 0], 0, 12345).unwrap();
-        assert!(!mon.is_traded);
+        assert!(mon.is_traded);
         // ot_id == player_id → own mon (freak matching roll, faithful).
         let mon =
             assemble_npc_trade_mon(Species::Jynx, 20, "LOLA", [0, 0], 12345, 12345).unwrap();
