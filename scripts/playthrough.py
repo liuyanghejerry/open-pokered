@@ -578,9 +578,10 @@ class Game:
     # ── protocol helpers ────────────────────────────────────────────────
     def st(self):
         s = self.d.cmd(cmd="get_state")["data"]
-        if getattr(self, "smart_moves", False) and s.get("map_blocks") is not None:
+        if s.get("screen") == "overworld" and s.get("map_blocks") is not None:
             # CUT, switches and boulders change collision geometry live.
-            # Update the planning copy from read-only protocol observation.
+            # Every driver must use observed geometry. Battle observations
+            # report a placeholder map, so never update a map cache from them.
             MAPS[s["map_name"]]["blocks"] = s["map_blocks"]
             self.track_last_map(s["map_name"])
         return s

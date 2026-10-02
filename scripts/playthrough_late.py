@@ -248,6 +248,12 @@ def field_move(g, name, party_index=0):
             g.tap("a", 12)
             if name != "Fly":
                 assert g.cutscene()
+                if name == "Cut":
+                    # Closing UsedCutText precedes the map mutation and
+                    # 18-frame animation. control_ready only covers dialogue
+                    # and scripts; advance those normal frames before BFS.
+                    g.step(24)
+                    g.st()  # Refresh the planner from the live block bytes.
             return
         g.tap("down", 8)
     raise RuntimeError(f"field move not selected: {name}")
