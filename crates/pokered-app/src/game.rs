@@ -8219,11 +8219,11 @@ mod captain_music_wait_fidelity_tests {
         game.overworld.reload_scene_with_config(
             "SSAnneCaptainsRoom",
             r#"game_scene SSAnneCaptainsRoom {
-                @storyline("captainMusicProbe") {
-                    waitMusic()
-                    setFlag("CAPTAIN_MUSIC_PROBE_DONE")
-                }
-            }"#,
+  @storyline("captainMusicProbe") {
+    waitMusic()
+    setFlag("CAPTAIN_MUSIC_PROBE_DONE")
+  }
+}"#,
             Some(r#"{"onLoad":"captainMusicProbe"}"#),
         ).unwrap();
         assert_eq!(game.overworld.active_script_effect_label().as_deref(), Some("WaitMusic"));
