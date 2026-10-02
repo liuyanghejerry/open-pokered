@@ -297,5 +297,16 @@ fn main() {
         assert_eq!(pc.phase(), PcPhase::LeagueHoF);
         shot(&pc, &hof, "26_league_hof_type");
     }
+    {
+        let lang = if std::env::args().nth(2).as_deref() == Some("zh") { Lang::Zh } else { Lang::En };
+        let state = pokered_core::bag_screen::BagScreenState::new(vec![
+            (ItemId::ThunderStone, 99), (ItemId::SilphScope, 1), (ItemId::Tm50, 99),
+        ]);
+        let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+        pokered_app::render::draw_bag(&state, &mut fb, lang);
+        let path = std::env::args().nth(1).map(|dir| format!("{dir}/27_bag_font_bounds.png"))
+            .unwrap_or_else(|| "/tmp/pc_tour_27_bag_font_bounds.png".into());
+        fb.save_png(std::path::Path::new(&path)).unwrap();
+    }
     println!("done");
 }
