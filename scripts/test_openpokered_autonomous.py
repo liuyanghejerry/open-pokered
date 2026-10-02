@@ -1621,6 +1621,7 @@ class AutonomousTests(unittest.TestCase):
                                     'trigger': 'level', 'species': 'Pidgeotto', 'level': 18}}
         agent.find_training_sites = Mock(return_value={'Route24': (5, 18)})
         agent.training_sites = {'Route24': (5, 18)}
+        facts.update(map='Route24', x=5, y=18)
         _, bindings = agent.action_candidates(facts)
         self.assertEqual(bindings['action:0'][0], 'train_encounter:Route24,5,18')
 
@@ -2067,6 +2068,10 @@ class AutonomousTests(unittest.TestCase):
             agent.active = group
             agent.find_training_sites = Mock(return_value={'Route19': (5, 18)})
             agent.training_sites = {'Route19': (5, 18)}
+            facts.update(map='FuchsiaCity', x=10, y=10)
+            _, bindings = agent.action_candidates(facts)
+            self.assertEqual(bindings['action:0'][0], 'reach_training:Route19,5,18')
+            facts.update(map='Route19', x=5, y=18)
             candidates, _ = agent.action_candidates(facts)
             action = json.loads(candidates['action:0'])
             self.assertEqual(action['required_level'], trigger)
@@ -2544,6 +2549,7 @@ class AutonomousTests(unittest.TestCase):
         self.assertEqual(group['context']['training_cost_to_observed_target_level']['levels_remaining'], 26)
         agent.find_training_sites.assert_called_once_with(facts, shared_experience=True)
         agent.active = group
+        facts.update(map='Route24', x=5, y=18)
         candidates, bindings = agent.action_candidates(facts)
         self.assertEqual(bindings['action:0'][0], 'lead_with:Gloom')
         facts['party'].reverse()
@@ -2551,6 +2557,72 @@ class AutonomousTests(unittest.TestCase):
         self.assertEqual(bindings['action:0'][0], 'train_encounter:Route24,5,18')
         facts['party'][0]['level'] = 25
         self.assertTrue(agent.index.satisfied(group['target'], facts))
+
+    def test_support_training_reaches_terrain_before_exposing_trainee(self):
+        agent, facts = self.support_training_agent()
+        groups = {}
+        agent.add_capture_support_training(groups, facts)
+        agent.active = next(iter(groups.values()))
+        facts.update(map='CeruleanCity', x=10, y=10)
+        choices, bindings = agent.action_candidates(facts)
+        operations = {value[0] for value in bindings.values()}
+        self.assertEqual(operations, {'reach_training:Route24,5,18'})
+        self.assertIn('training point', json.loads(choices['action:0'])['purpose'])
+        # A trainee already leading (e.g. a resumed training trip) does not
+        # force a specific replacement; Jev may select the other living lead.
+        facts['party'].reverse()
+        _, bindings = agent.action_candidates(facts)
+        self.assertEqual({value[0] for value in bindings.values()},
+                         {'reach_training:Route24,5,18', 'lead_with:Charizard'})
+        facts.update(map='Route24', x=5, y=17)
+        _, bindings = agent.action_candidates(facts)
+        self.assertIn('reach_training:Route24,5,18', {value[0] for value in bindings.values()})
+        facts.update(x=5, y=18)
+        _, bindings = agent.action_candidates(facts)
+        self.assertEqual({value[0] for value in bindings.values()}, {'train_encounter:Route24,5,18'})
+
+    def test_training_transit_preserves_arrival_and_interruption_results(self):
+        rule = Rule('train', 'Route24', 'skill:train_encounter', [], [], [],
+                    ('level', 'Gloom', 25), [])
+        for outcome in ('reached', 'blocked', 'paused_after_battle'):
+            with self.subTest(outcome=outcome):
+                agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+                agent.actions, agent.max_actions = 0, 10
+                agent.active = {'target': rule.effect}
+                result = {'result': outcome, 'destination': 'Route24'}
+                agent.travel = Mock(return_value=result)
+                agent.settle, agent.remember_travel_result, agent.record = Mock(), Mock(), Mock()
+                agent.game, agent.client = Mock(), Mock()
+                self.assertIs(agent.execute('reach_training:Route24,5,18', rule), result)
+                agent.travel.assert_called_once_with('Route24', rule, [(5, 18)], avoid_encounters=True)
+                agent.settle.assert_called_once_with(rule.effect, rule)
+                agent.remember_travel_result.assert_called_once_with('Route24', result)
+                agent.record.assert_called_once_with('operation', operation='reach_training:Route24,5,18',
+                                                      result=result, script=rule.storyline)
+                self.assertEqual(agent.actions, 1)
+                # Transit does not reorder the party or initiate a training hunt.
+                self.assertEqual(agent.game.mock_calls, [])
+                self.assertEqual(agent.client.mock_calls, [])
+                agent.actions = agent.max_actions
+                agent.travel.reset_mock()
+                with self.assertRaisesRegex(StoryStopped, 'action_budget'):
+                    agent.execute('reach_training:Route24,5,18', rule)
+                agent.travel.assert_not_called()
+
+    def test_training_transit_offers_all_other_living_leads(self):
+        agent, facts = self.support_training_agent()
+        groups = {}
+        agent.add_capture_support_training(groups, facts)
+        agent.active = next(iter(groups.values()))
+        facts['party'].reverse()
+        facts['party'].extend([
+            {**facts['party'][0], 'species': 'Pidgey', 'level': 3},
+            {**facts['party'][0], 'species': 'Pikachu', 'hp': 0},
+        ])
+        facts.update(x=10, y=10)
+        _, bindings = agent.action_candidates(facts)
+        self.assertEqual({value[0] for value in bindings.values()},
+                         {'reach_training:Route24,5,18', 'lead_with:Charizard', 'lead_with:Pidgey'})
 
     def capture_retrieval_fixture(self):
         agent, facts = self.support_training_agent()

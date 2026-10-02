@@ -3371,7 +3371,10 @@ class AutonomousStoryAgent(DualStoryAgent):
                     'evolves_into': context['species'], 'item': item})
                 bindings['action:0'] = operation, rule
                 return candidates, bindings
-            if index:
+            sites = self.find_training_sites(facts)
+            position = (facts.get('map'), facts.get('x'), facts.get('y'))
+            at_training_point = any(position == (name, *point) for name, point in sites.items())
+            if index and at_training_point:
                 operation = f'lead_with:{source}'
                 candidates['action:0'] = json.dumps({
                     'operation': operation,
@@ -3379,8 +3382,18 @@ class AutonomousStoryAgent(DualStoryAgent):
                     'evolves_into': context.get('species') if not support_training else None})
                 bindings['action:0'] = operation, rule
                 return candidates, bindings
-            for name in self.find_training_sites(facts):
-                x, y = self.training_sites[name]
+            for name, (x, y) in sites.items():
+                if position != (name, x, y):
+                    operation = f'reach_training:{name},{x},{y}'
+                    key = f'action:{len(candidates)}'
+                    candidates[key] = json.dumps({
+                        'operation': operation,
+                        'purpose': f'Reach the training point before moving {source} to the lead; transit encounters give no experience when escaped',
+                        'trainee': facts['party'][index], 'current_transit_leader': facts['party'][0],
+                        'navigation': getattr(self, 'training_navigation', {}).get(name),
+                        'scope': 'Normal travel only; avoid incidental grass where possible. Battles and healing may interrupt. No party reorder or training until arrival.'})
+                    bindings[key] = operation, rule
+                    continue
                 operation = f'train_encounter:{name},{x},{y}'
                 key = f'action:{len(candidates)}'
                 candidates[key] = json.dumps({
@@ -3399,6 +3412,21 @@ class AutonomousStoryAgent(DualStoryAgent):
                                  for mon in facts['party'][1:]) else 1),
                     'navigation': getattr(self, 'training_navigation', {}).get(name)})
                 bindings[key] = operation, rule
+            if not at_training_point and index == 0:
+                # A resumed trip may already have the fragile trainee in front.
+                # Offer every other living species, not an automatic best lead.
+                offered = {source}
+                for mon in facts['party'][1:]:
+                    if mon['hp'] <= 0 or mon['species'] in offered:
+                        continue
+                    offered.add(mon['species'])
+                    operation = f'lead_with:{mon["species"]}'
+                    key = f'action:{len(candidates)}'
+                    candidates[key] = json.dumps({
+                        'operation': operation, 'transit_leader': mon,
+                        'purpose': f'Protect {source} from incidental travel encounters; restore the trainee lead at the training point',
+                        'scope': 'Optional transit preparation, not training experience or a survival guarantee.'})
+                    bindings[key] = operation, rule
             return candidates, bindings
         if self.active['target'][0] in ('health', 'pp_reserve'):
             names = {name.replace('_', '').upper(): name for name in MEDICINES}
@@ -4424,6 +4452,16 @@ class AutonomousStoryAgent(DualStoryAgent):
                     if pt.tile_at(obstacle['map'], *obstacle['tree']) != CUT_TILES[pt.MAPS[obstacle['map']]['tileset_name']]:
                         self.cleared_terrain.add(self.active['target'][1])
                         result = {'result': 'tree_cleared', 'terrain': obstacle}
+            self.record('operation', operation=operation, result=result, script=rule.storyline)
+            return result
+        if operation.startswith('reach_training:'):
+            if self.actions >= self.max_actions:
+                raise StoryStopped('action_budget')
+            self.actions += 1
+            name, x, y = operation.split(':', 1)[1].split(',')
+            result = self.travel(name, rule, [(int(x), int(y))], avoid_encounters=True)
+            self.settle(self.active['target'], rule)
+            self.remember_travel_result(name, result)
             self.record('operation', operation=operation, result=result, script=rule.storyline)
             return result
         if operation.startswith('travel_to:'):
