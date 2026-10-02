@@ -64,7 +64,6 @@ fn messages(s: &BattleScreen) -> &[String] {
     }
 }
 
-
 #[test]
 fn slower_mirror_move_copies_the_faster_actors_current_turn_on_both_sides() {
     for enemy_first in [false, true] {
@@ -208,4 +207,25 @@ fn metronome_quick_attack_keeps_the_selected_moves_original_turn_priority() {
     );
     rules::runtime::apply_engine_to_legacy(&mut bs, &state, &effects);
     assert_eq!(bs.player.last_move_used, MoveId::QuickAttack);
+}
+
+#[test]
+fn player_first_call_narration_survives_a_trainer_item_state_round_trip() {
+    let mut s = screen(MoveId::MirrorMove, MoveId::Tackle, false);
+    let bs = s.battle_state.as_mut().unwrap();
+    bs.enemy.last_move_used = MoveId::Poisonpowder;
+    bs.player.set_status2(status2::USING_X_ACCURACY);
+    act(&mut s, MoveId::MirrorMove);
+    let text = messages(&s)
+        .iter()
+        .flat_map(|m| m.split_whitespace())
+        .collect::<Vec<_>>()
+        .join(" ");
+    assert!(text.contains("MIRROR MOVE"), "{text}");
+    assert!(text.contains("POISONPOWDER"), "{text}");
+    assert!(text.contains("FULL HEAL"), "{text}");
+    let bs = s.battle_state.as_ref().unwrap();
+    assert!(bs.enemy.active_mon().status.is_none());
+    assert_eq!(bs.player.active_mon().hp, 400);
+    assert_eq!(s.enemy_ai_count, 4);
 }
