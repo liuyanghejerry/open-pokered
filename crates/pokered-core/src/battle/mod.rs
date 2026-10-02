@@ -3495,6 +3495,7 @@ learn {learn_name}!")];
     }
 
     fn handle_run(&mut self) {
+        self.sync_player_context();
         if self.link_mode {
             // Link battles: running ALWAYS succeeds and is COORDINATED with
             // the remote player (TryRunningFromBattle skips the speed check
