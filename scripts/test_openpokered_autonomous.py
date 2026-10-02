@@ -545,6 +545,88 @@ class AutonomousTests(unittest.TestCase):
         self.assertEqual(agent.route_requirements, {})
         self.assertEqual(agent.discover_route_prerequisites.call_count, 1)
 
+    def test_late_source_backchains_exact_region_and_keeps_all_parent_goals(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.navigation_memory = {'Office': {}}
+        agent.game, agent.index = Mock(), Mock()
+        door = Rule('door', 'Lobby', 'unlock', ['coord:door'], [], [],
+                    ('flag', 'DOOR_OPEN', True), [])
+        agent.index.frontier.return_value = [door]
+        agent.discover_route_prerequisites = Mock(return_value=[('block', 'Office,1,1', 3)])
+        agent.destination_points = Mock(side_effect=lambda name, rule: [(rule.triggers[0], 5)])
+        groups = {}
+        for name, x in [('MASTER_BALL', 6), ('GIFT', 6), ('OTHER_REWARD', 8)]:
+            target = ('item', name, True)
+            groups[name] = {'target': target, 'objectives': ['Obtain ' + name],
+                'rules': [Rule(name, 'Office', 'reward', [x], [], [], target, [])],
+                'context': {'trigger_navigation': [{'map': 'Office', 'tile_route_found': False}]}}
+        ready = ('item', 'READY_REWARD', True)
+        groups['reachable'] = {'target': ready, 'rules': [
+            Rule('blocked-source', 'Office', 'gift', [6], [], [], ready, []),
+            Rule('open-source', 'Other', 'gift', [4], [], [], ready, [])],
+            'context': {'trigger_navigation': [
+                {'map': 'Office', 'tile_route_found': False},
+                {'map': 'Other', 'tile_route_found': True}]}}
+        previews = {('Office', ((x, 5),)): {'tile_route_found': False} for x in (6, 8)}
+        facts = {'map': 'Road', 'x': 2, 'y': 3}
+        agent.add_deferred_route_frontiers(groups, facts, previews)
+        added = groups[json.dumps(door.effect)]
+        self.assertEqual(added['rules'], [door])
+        self.assertEqual(added['context']['prerequisite_for_goals'],
+                         [('item', name, True) for name in ('MASTER_BALL', 'GIFT', 'OTHER_REWARD')])
+        self.assertEqual(agent.discover_route_prerequisites.call_count, 2)
+        self.assertEqual([call.args[2] for call in agent.discover_route_prerequisites.call_args_list],
+                         [[(6, 5)], [(8, 5)]])
+        self.assertEqual(len(added['context']['route_unlocks']), 3)
+        agent.game.nav_to_map.assert_not_called()
+        agent.game.st.assert_not_called()
+        # Unknown failures, successful previews, and disproved causal paths
+        # must never manufacture an unlock.
+        for memory, preview, prerequisites in [({}, previews, [('block', 'Office,1,1', 3)]),
+                ({'Office': {}}, {}, [('block', 'Office,1,1', 3)]),
+                ({'Office': {}}, previews, [])]:
+            agent.navigation_memory = memory
+            agent.discover_route_prerequisites.return_value = prerequisites
+            offered = {'reward': groups['MASTER_BALL']}
+            agent.add_deferred_route_frontiers(offered, facts, preview)
+            self.assertEqual(list(offered), ['reward'])
+
+    def test_collection_source_unlock_is_added_before_final_navigation_pruning(self):
+        agent = self.catch_goal_agent([{'id': 'collect-dex', 'agent_verified': True}])
+        agent.find_catch_areas.return_value = {}
+        agent.navigation_memory = {'Office': {}}
+        agent.observed_navigation_barriers = Mock(return_value={})
+        agent.add_navigation_groups = Mock()
+        agent.add_cut_route_frontiers = Mock()
+        agent.add_mechanism_groups = Mock()
+        target = ('item', 'MASTER_BALL', True)
+        reward = Rule('reward', 'Office', 'reward', [], [], [], target, [])
+        door = Rule('door', 'Lobby', 'unlock', [], [], [], ('flag', 'DOOR_OPEN', True), [])
+        agent.index.frontier.return_value = [door]
+        agent.discover_route_prerequisites = Mock(return_value=[('block', 'Office,1,1', 3)])
+        agent.destination_points = Mock(return_value=[(6, 5)])
+        def insert_late(groups, facts):
+            groups['ball-source'] = {'target': target, 'rules': [reward], 'objectives': ['Ball supply']}
+        agent.add_recovery_groups = insert_late
+        def preview(groups, facts, previews=None, *, prune=True):
+            if prune:
+                self.assertIn(json.dumps(door.effect), groups)
+                groups.pop('ball-source')
+            else:
+                groups['ball-source']['context'] = {'trigger_navigation': [
+                    {'map': 'Office', 'tile_route_found': False}]}
+            return {('Office', ((6, 5),)): {'tile_route_found': False}}
+        agent.annotate_navigation = preview
+        mon = {'species': 'Charmeleon', 'level': 16, 'hp': 47, 'max_hp': 47,
+               'status': 'None', 'moves': ['Scratch', 'Ember'], 'pp': [35, 25]}
+        facts = {'map': 'PewterCity', 'x': 12, 'y': 18, 'party': [mon],
+                 'bag': {}, 'flags': {}, 'fully_recovered': True}
+        with patch.object(DualStoryAgent, 'strategy_groups', return_value={}):
+            groups = agent.strategy_groups(facts)
+        self.assertNotIn('ball-source', groups)
+        self.assertEqual(groups[json.dumps(door.effect)]['rules'], [door])
+        self.assertEqual(groups[json.dumps(door.effect)]['context']['prerequisite_for_goals'], [target])
+
     def test_fainted_status_support_is_not_a_collection_resource(self):
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
         facts = {'bag': {}, 'party': [{'species': 'Gloom', 'hp': 0,
@@ -3826,6 +3908,35 @@ class AutonomousTests(unittest.TestCase):
             self.assertIn('interact_tile:6,13', [op for op, _ in bindings.values()])
         # Other floors only declare OnStep: do not invent A-button bindings.
         self.assertNotIn('SilphCo7F:cardKeyDoor1', NATIVE_INTERACTIONS)
+
+    def test_door_approach_does_not_offer_a_zero_step_trip_instead_of_interaction(self):
+        import playthrough as pt
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        name = 'SilphCo3F'
+        rule = Rule('door', name, name + ':cardKeyDoor2', [], [], [],
+                    ('flag', 'UNLOCKED', True), [])
+        agent.active = {'target': rule.effect, 'rules': [rule]}
+        agent.client, agent.index = Mock(), Mock()
+        agent.client.cmd.return_value = []
+        agent.client.route.return_value = {'legs': []}
+        agent.visited = {name}
+        agent.destination_points = Mock(return_value=[(18, 8)])
+        facts = {'map': name, 'x': 18, 'y': 8}
+        def initial(_facts):
+            return {'a': json.dumps({'operation': 'move_to:16,8'})}, {'a': ('move_to:16,8', rule)}
+        def path(name, start, end, **kwargs):
+            return [start, end] if end == (18, 8) else None
+        with patch.object(DualStoryAgent, 'action_candidates', side_effect=initial), \
+                patch.object(pt, 'bfs', side_effect=path), patch.object(pt, 'walkable', return_value=True):
+            _, bindings = agent.action_candidates(facts)
+            self.assertEqual([op for op, _ in bindings.values()], ['interact_tile:17,8'])
+            # Before arriving at the approach tile the trip is not a no-op.
+            _, bindings = agent.action_candidates({**facts, 'x': 19})
+            self.assertIn('travel_to:SilphCo3F', [op for op, _ in bindings.values()])
+        with patch.object(DualStoryAgent, 'action_candidates', side_effect=initial), \
+                patch.object(pt, 'bfs', return_value=None), patch.object(pt, 'walkable', return_value=True):
+            _, bindings = agent.action_candidates(facts)
+            self.assertEqual([op for op, _ in bindings.values()], ['travel_to:SilphCo3F'])
 
     def test_recovery_does_not_forget_a_healer_behind_a_locked_door(self):
         from types import SimpleNamespace

@@ -2552,6 +2552,58 @@ class AutonomousStoryAgent(DualStoryAgent):
                 # drink simply because a later gym battle remains unfinished.
                 del self.route_requirements[name]
 
+    def add_deferred_route_frontiers(self, groups, facts, previews):
+        """Recover causal unlocks for goals added after the story frontier.
+
+        Collection and supply sources are inserted late. Before pruning a
+        known blocked target, backchain its exact trigger region, not merely
+        its map. An alternative already reachable source needs no new door.
+        Relaxed geometry supplies evidence only; Jev still selects a real
+        script action and execution retains the actual collision checks.
+        """
+        pending = []
+        for group in list(groups.values()):
+            routes = group.get('context', {}).get('trigger_navigation', [])
+            if any(route.get('tile_route_found') for route in routes):
+                continue
+            for rule in group['rules']:
+                if rule.map not in getattr(self, 'navigation_memory', {}):
+                    continue
+                points = self.destination_points(rule.map, rule)
+                key = rule.map, tuple(points)
+                if previews.get(key, {}).get('tile_route_found') is False:
+                    pending.append((key, points, group))
+        if not pending:
+            return
+        # Use the same observed position as the reachability previews; do
+        # not refresh geometry partway through a planning pass.
+        state = {'map_name': facts['map'], 'player_x': facts['x'], 'player_y': facts['y']}
+        discovered = {}
+        for (destination, points_key), points, parent in pending:
+            key = destination, points_key
+            if key not in discovered:
+                discovered[key] = self.discover_route_prerequisites(state, destination, points)
+            for target in discovered[key]:
+                for rule in self.index.frontier(target, facts):
+                    if rule.effect == parent['target']:
+                        continue
+                    group = groups.setdefault(json.dumps(rule.effect), {
+                        'target': rule.effect, 'rules': [],
+                        'objectives': ['Open a route to an otherwise deferred acquisition or story goal'],
+                        'context': {}})
+                    if rule not in group['rules']:
+                        group['rules'].append(rule)
+                    context = group.setdefault('context', {})
+                    goals = context.setdefault('prerequisite_for_goals', [])
+                    if parent['target'] not in goals:
+                        goals.append(parent['target'])
+                    evidence = context.setdefault('route_unlocks', [])
+                    requirement = {'destination': destination, 'goal': parent['target'],
+                        'trigger_points': points, 'objectives': parent.get('objectives', []),
+                        'evidence': 'Causal blocker on a relaxed planning path; real execution and remaining obstacles still required'}
+                    if requirement not in evidence:
+                        evidence.append(requirement)
+
     def strategy_groups(self, facts):
         groups = super().strategy_groups(facts)
         self.navigation_facts = facts
@@ -2849,6 +2901,7 @@ class AutonomousStoryAgent(DualStoryAgent):
             if group['target'][0] in ('flag', 'block', 'transport') and all(r.map in failed_maps for r in group['rules']):
                 del groups[key]  # Repeating the same failed preparation is not a new plan.
         previews = self.annotate_navigation(groups, facts, previews, prune=False)
+        self.add_deferred_route_frontiers(groups, facts, previews)
         self.add_cut_route_frontiers(groups, facts)
         self.transport_frontiers(groups, facts)
         self.add_mechanism_groups(groups, facts)
@@ -3648,6 +3701,17 @@ class AutonomousStoryAgent(DualStoryAgent):
                         'caution': 'Travel can consume HP and PP in encounters; recovery should prefer a short known route.',
                     }
                     candidates[key] = json.dumps(description)
+            # A door's OnStep coordinate can lie on its inaccessible side
+            # while its native A interaction is already reachable. The
+            # converted travel then selects our current approach tile and
+            # returns "reached" forever. Remove only that proven no-op, not
+            # cross-region travel or actual reachable step triggers.
+            interactable = {rule.id for operation, rule in bindings.values()
+                            if operation.startswith('interact_tile:')}
+            for key, (operation, rule) in list(bindings.items()):
+                if (operation == f'travel_to:{facts["map"]}' and rule.id in interactable
+                        and (facts['x'], facts['y']) in self.destination_points(rule.map, rule)):
+                    del candidates[key], bindings[key]
             return candidates, bindings
         candidates, bindings = {}, {}
         rules = self.active['rules']
