@@ -605,9 +605,9 @@ fn metronome_pick(rng: &mut dyn dotzuki_engine::battle::rng::BattleRng) -> MoveI
 
 /// Resolve a "call another move" effect (Metronome / Mirror Move) into the move that
 /// actually executes, following nested calls (Metronome→Mirror Move→…) up to a small
-/// bound. Returns `(resolved_move, narration_label, failed)`; `failed` is true only
-/// for Mirror Move with no foe last move → the caller resolves `BattleAction::Nothing`.
-/// This flattens Gen-1's "call another move" into a pre-driver substitution.
+/// bound. Returns `(resolved_move, narration_label, failed)`; Mirror Move fails
+/// when the foe's used-move byte is zero or Mirror Move itself. Production calls
+/// this only after the native BeforeMove status gates passed.
 /// The Metronome pick draws from `rng` — in a link battle this must be the
 /// shared stream so both sides pick the same move (`BattleRandom`).
 fn resolve_called_move(
@@ -626,7 +626,7 @@ fn resolve_called_move(
             }
             Some(MoveEffect::MirrorMoveEffect) => {
                 label = Some("MIRROR MOVE");
-                if foe_last_move == MoveId::None {
+                if matches!(foe_last_move, MoveId::None | MoveId::MirrorMove) {
                     return (cur, label, true);
                 }
                 cur = foe_last_move;
@@ -4171,27 +4171,12 @@ learn {learn_name}!")];
             }
         }
 
-        // Resolve "call another move" effects (Metronome / Mirror Move) BEFORE building
-        // the MoveData + Fight actions, so both resolution channels (the action's move_
-        // and CURRENT_MOVES) agree on the actual move. A failed Mirror Move (no foe last
-        // move) resolves to Nothing so no phantom move runs.
+        // Native called-move resolution runs after status gates. Keep the original
+        // selected moves here so a Metronome result cannot change turn priority.
         let (mut player_call, mut enemy_call): (Option<&'static str>, Option<&'static str>) =
             (None, None);
         let (mut player_call_failed, mut enemy_call_failed) = (false, false);
-        if let Some(ref bs) = self.battle_state {
-            let rng: &mut dyn dotzuki_engine::battle::rng::BattleRng = match self.link_rng.as_mut()
-            {
-                Some(link) => link,
-                None => &mut self.rng,
-            };
-            let (pid, pl, pf) =
-                resolve_called_move(player_move_id, bs.enemy.last_move_used, rng);
-            player_move_id = pid;
-            player_call = pl;
-            player_call_failed = pf;
-            // Enemy called moves are resolved at its turn, only after TrainerAI
-            // declined to replace ExecuteEnemyMove.
-        }
+
         // A blocked side (ghost battle) never announces a called move.
         if player_scared {
             player_call = None;
@@ -4337,22 +4322,22 @@ learn {learn_name}!")];
                                 effect_order: 0,
                                 kind: pokered_rules::PokeVolatile::TurnSuppressed,
                             });
+                            next_effects.extend(effects.iter().filter(|entry| matches!(entry.kind, pokered_rules::PokeVolatile::CalledMove { .. })).cloned());
                             *state = next_state;
                             *effects = next_effects;
-                        } else if !enemy_ai_fired && !ghost_enemy_blocked {
-                            let (resolved, label, failed) =
-                                resolve_called_move(enemy_move_id, bs.player.last_move_used, rng);
-                            enemy_move_id = resolved;
-                            enemy_call = label;
-                            enemy_call_failed = failed;
-                            if let Some(data) = MoveData::get(resolved) {
-                                pokered_rules::set_current_move(BattlerRef::OPPONENT, *data);
-                                bs.enemy.selected_move = resolved;
-                                *action = BattleAction::Fight { move_: resolved };
-                            }
                         }
                     },
                 );
+                for entry in &effects {
+                    if let pokered_rules::PokeVolatile::CalledMove { caller, resolved, failed } = entry.kind {
+                        let label = match caller { MoveId::Metronome => "METRONOME", _ => "MIRROR MOVE" };
+                        if entry.host == BattlerRef::PLAYER {
+                            player_call = Some(label); player_call_failed = failed; player_move_id = resolved;
+                        } else {
+                            enemy_call = Some(label); enemy_call_failed = failed; enemy_move_id = resolved;
+                        }
+                    }
+                }
                 // DecrementPP runs only after all status gates allowed a move.
                 // Inspect the real MoveUsed log while `bs` still has entry flags
                 // for the Bide/Thrash/Wrap/Rage exemptions. Charging gathers

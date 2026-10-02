@@ -385,6 +385,7 @@ fn build_volatiles(party: &LegacyParty, host: BattlerRef, out: &mut Vec<EffectSt
         out.push(EffectState { id: EffectId(*next), host, effect_order: *next as u64, kind });
         *next += 1;
     };
+    push(out, PokeVolatile::UsedMove { move_: party.last_move_used });
     if party.has_status2(status2::GETTING_PUMPED) { push(out, PokeVolatile::FocusEnergy); }
     if party.has_status2(status2::USING_X_ACCURACY) { push(out, PokeVolatile::XAccuracy); }
     if party.has_status1(status1::INVULNERABLE) && !party.has_status1(status1::CHARGING_UP) {
@@ -578,6 +579,8 @@ fn write_party(party: &mut LegacyParty, b: &EngineBattler<PokeredRules>, effects
     party.disabled_turns_left = 0;
     for e in effects.iter().filter(|e| e.host == host) {
         match e.kind {
+            PokeVolatile::UsedMove { move_ } => party.last_move_used = move_,
+            PokeVolatile::CalledMove { resolved, .. } => party.selected_move = resolved,
             PokeVolatile::FocusEnergy => party.set_status2(status2::GETTING_PUMPED),
             PokeVolatile::XAccuracy => party.set_status2(status2::USING_X_ACCURACY),
             PokeVolatile::Invulnerable => party.set_status1(status1::INVULNERABLE),

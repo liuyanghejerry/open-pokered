@@ -141,6 +141,10 @@ pub enum PokeVolatile {
     /// Per-turn scratch: a trainer item/switch replaces ExecuteEnemyMove.
     /// Its existing multi-turn flags survive without executing or ticking.
     TurnSuppressed,
+    /// Original wPlayerUsedMove/wEnemyUsedMove, updated when move text prints.
+    UsedMove { move_: MoveId },
+    /// Per-turn call narration; the resolved move executes after status gates.
+    CalledMove { caller: MoveId, resolved: MoveId, failed: bool },
     /// Inert.
     None,
     /// Focus Energy volatile (drives the Gen-1 `/4` crit bug, #1).
@@ -364,6 +368,16 @@ impl EffectProvider for PokeredRules {
     /// pipeline-handler draws; the move's data hooks ride the effect events).
     fn effect_for_move(&self, m: &Self::Move) -> Option<&'static Effect<Self>> {
         move_effect_for(*m)
+    }
+
+    fn resolved_move(
+        &self, _state: &EngineState<Self>, effects: &[EffectState<Self>],
+        actor: BattlerRef, selected: &MoveId,
+    ) -> MoveId {
+        effects.iter().find_map(|e| match e.kind {
+            PokeVolatile::CalledMove { resolved, .. } if e.host == actor => Some(resolved),
+            _ => None,
+        }).unwrap_or(*selected)
     }
 
     /// Non-volatile status RESIDUAL (P6b-prereq). Burn and plain Poison each chip a
@@ -1110,9 +1124,11 @@ fn rebuild_move_index() {
             (70, p5_native::confusion_gate),
             (80, disable_veto_gate),
             (90, p5_native::paralysis_gate),
+            (94, resolve_call_after_status),
             (95, bide_before_move),
             (100, thrash_lockin),
             (110, trapping_lockin),
+            (120, remember_used_move),
         ] {
             event_hooks.push(EventHook {
                 event: Event::BeforeMove,
@@ -1493,6 +1509,49 @@ fn mark_sub_created(who: BattlerRef) {
 /// Whether `who` raised a doll this turn (read game-side for the creation narration).
 pub fn sub_created_this_turn(who: BattlerRef) -> bool {
     SUB_CREATED.with(|c| c.borrow()[who.side as usize])
+}
+
+/// Live wPlayerUsedMove/wEnemyUsedMove for Mirror Move.
+fn used_move_for(effects: &[EffectState<PokeredRules>], who: BattlerRef) -> MoveId {
+    effects.iter().find_map(|e| match e.kind {
+        PokeVolatile::UsedMove { move_ } if e.host == who => Some(move_),
+        _ => None,
+    }).unwrap_or(MoveId::None)
+}
+
+fn set_used_move(ctx: &mut BattleCtx<'_, PokeredRules>, who: BattlerRef, move_: MoveId) {
+    if let Some(entry) = ctx.effects.iter_mut().find(|e| e.host == who && matches!(e.kind, PokeVolatile::UsedMove { .. })) {
+        entry.kind = PokeVolatile::UsedMove { move_ };
+    } else {
+        ctx.effects.push(EffectState {
+            id: EffectId(0x50_fa0 + who.side as u32), host: who, effect_order: 0,
+            kind: PokeVolatile::UsedMove { move_ },
+        });
+    }
+}
+
+fn resolve_call_after_status(
+    ctx: &mut BattleCtx<'_, PokeredRules>, _relay: RelayVar, _target: BattlerRef,
+    source: BattlerRef, _eff: EffectId,
+) -> HandlerResult {
+    let caller = current_move_for(source).id;
+    if !matches!(caller, MoveId::Metronome | MoveId::MirrorMove) { return HandlerResult::Unchanged; }
+    let previous = used_move_for(ctx.effects, BattlerRef::new(1 - source.side, source.slot));
+    let (resolved, _, failed) = super::resolve_called_move(caller, previous, ctx.rng);
+    if let Some(data) = MoveData::get(resolved) { set_current_move(source, *data); }
+    ctx.effects.push(EffectState {
+        id: EffectId(0x50_fb0 + source.side as u32), host: source, effect_order: 0,
+        kind: PokeVolatile::CalledMove { caller, resolved, failed },
+    });
+    HandlerResult::Unchanged
+}
+
+fn remember_used_move(
+    ctx: &mut BattleCtx<'_, PokeredRules>, _relay: RelayVar, _target: BattlerRef,
+    source: BattlerRef, _eff: EffectId,
+) -> HandlerResult {
+    set_used_move(ctx, source, current_move_for(source).id);
+    HandlerResult::Unchanged
 }
 
 /// The `MoveData` for the mover at `source`: the per-side [`CURRENT_MOVES`] if set

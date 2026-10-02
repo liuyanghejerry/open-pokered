@@ -731,6 +731,7 @@ pub fn sleep_gate(
         ctx.battler_mut(source).status = None; // defensive: Sleep(0) ⇒ awake
         return HandlerResult::Unchanged;
     }
+    super::set_used_move(ctx, source, pokered_data::moves::MoveId::None);
     let new_counter = counter - 1;
     ctx.battler_mut(source).status = if new_counter == 0 {
         None // woke up …
@@ -750,6 +751,7 @@ pub fn freeze_gate(
     _eff: EffectId,
 ) -> HandlerResult {
     if ctx.battler(source).status == Some(StatusCondition::Freeze) {
+        super::set_used_move(ctx, source, pokered_data::moves::MoveId::None);
         HandlerResult::Fail
     } else {
         HandlerResult::Unchanged
