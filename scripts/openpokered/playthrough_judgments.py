@@ -128,6 +128,21 @@ def ball_options(live, bag, owned_species=()):
                            'already_owned': capture_species(enemy) in owned}
 
 
+def collection_capture_value(state, active):
+    """Registration yield and explicitly requested possession are different."""
+    species = capture_species(state['battle_live']['enemy'])
+    owned = (state.get('pokedex') or {}).get('owned_species')
+    registered = species in owned if isinstance(owned, list) else None
+    context = active.get('context', {}) if isinstance(active, dict) else {}
+    return {'capture_species': species, 'already_registered': registered,
+            'registration_increment_if_caught': None if registered is None else int(not registered),
+            'requested_held_copy': context.get('required_capture_species') == species,
+            'active_subgoal': active.get('target') if isinstance(active, dict) else None,
+            'balls_remaining': sum(row['qty'] for row in state.get('battle_inventory', [])
+                                   if row['item'] in BALLS),
+            'scope': 'A successful capture adds an individual, but an existing species registration is not counted again. A requested trade/evolution copy can be useful without adding a registration.'}
+
+
 def capture_source_requested(state, judgments):
     """Collection intent does not disappear when the last ball is spent."""
     live = state['battle_live']
@@ -699,6 +714,15 @@ class JevGame(pt.Game):
                 'before the incoming teammate can use its move. Self-knockout selection references '
                 'are conditional illustrations, not known live odds or guarantees of survival.')
         judgment_state = {'battle': live}
+        if balls and getattr(self.judgments, 'collects_dex', False):
+            value = collection_capture_value(state, objective)
+            judgment_state['collection_capture_value'] = value
+            if value['registration_increment_if_caught'] == 0 and not value['requested_held_copy']:
+                instruction += (' This capture would register zero new species, and the selected goal '
+                    'does not request this opponent as a held trade/evolution copy. Compare the concrete '
+                    'utility of another individual with reserving these finite balls for unregistered '
+                    'targets. Easy capture odds alone are not Pokédex progress. Duplicate capture remains '
+                    'an option when its specific usefulness justifies the supply cost.')
         if capturing:
             judgment_state['capture_threat'] = capture_threat(live['enemy'])
             judgment_state['capture_turn_economy'] = capture_turn_economy()

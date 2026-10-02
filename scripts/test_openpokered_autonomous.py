@@ -1191,6 +1191,43 @@ class AutonomousTests(unittest.TestCase):
         game.judgments.active = {'context': {}}
         self.assertEqual(game.safari_battle_action(state), 'run')
 
+    def test_collection_balls_expose_registration_gain_without_banning_duplicates(self):
+        state = self.battle_state()
+        state['pokedex']['owned_species'].append('Caterpie')
+        game = JevGame.__new__(JevGame)
+        game.judgments = Mock(collects_dex=True)
+        game.judgments.active = {'target': ['catch', 'Forest', True], 'context': {}}
+        game.judgments.choose.return_value = 'ball:PokeBall'
+        self.assertEqual(game.battle_recovery_plan(state), ('PokeBall', None))
+        _layer, evidence, candidates, instruction = game.judgments.choose.call_args.args
+        value = evidence['collection_capture_value']
+        self.assertEqual(value['registration_increment_if_caught'], 0)
+        self.assertFalse(value['requested_held_copy'])
+        self.assertEqual(value['active_subgoal'], ['catch', 'Forest', True])
+        self.assertEqual(value['balls_remaining'], 5)
+        self.assertIn('zero new species', instruction)
+        self.assertIn('ball:PokeBall', candidates)
+        game.judgments.active['context']['required_capture_species'] = 'Caterpie'
+        game.battle_recovery_plan(state)
+        value = game.judgments.choose.call_args.args[1]['collection_capture_value']
+        self.assertEqual(value['registration_increment_if_caught'], 0)
+        self.assertTrue(value['requested_held_copy'])
+        self.assertNotIn('zero new species', game.judgments.choose.call_args.args[3])
+        state['pokedex']['owned_species'].remove('Caterpie')
+        game.battle_recovery_plan(state)
+        self.assertEqual(game.judgments.choose.call_args.args[1]['collection_capture_value'][
+            'registration_increment_if_caught'], 1)
+
+    def test_collection_capture_value_tracks_transform_identity_and_unknown_dex(self):
+        from openpokered.playthrough_judgments import collection_capture_value
+        state = self.battle_state()
+        state['battle_live']['enemy'].update(species='Pidgey', capture_species='Ditto')
+        self.assertEqual(collection_capture_value(state, {})['registration_increment_if_caught'], 1)
+        state['pokedex']['owned_species'].append('Ditto')
+        self.assertEqual(collection_capture_value(state, {})['registration_increment_if_caught'], 0)
+        state.pop('pokedex')
+        self.assertIsNone(collection_capture_value(state, {})['registration_increment_if_caught'])
+
     def test_consumed_trade_source_is_reacquired_unless_boxed(self):
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
         agent.collects_dex = True
