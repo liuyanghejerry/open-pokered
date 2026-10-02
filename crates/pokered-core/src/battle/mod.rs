@@ -4266,8 +4266,8 @@ learn {learn_name}!")];
                 let e_had_sub = bs.enemy.has_status2(crate::battle::state::status2::HAS_SUBSTITUTE_UP);
                 let (mut state, mut effects) = pokered_rules::runtime::engine_state_from_legacy(bs);
                 if enemy_ai_fired {
-                    effects.push(dotzuki_engine::battle::EffectState {
-                        id: dotzuki_engine::battle::EffectId(0x50_ff0),
+                    effects.push(dotzuki_engine::battle::stack::EffectState {
+                        id: dotzuki_engine::battle::stack::EffectId(0x50_ff0),
                         host: BattlerRef::OPPONENT,
                         effect_order: 0,
                         kind: pokered_rules::PokeVolatile::TurnSuppressed,
@@ -4330,8 +4330,8 @@ learn {learn_name}!")];
                             );
                             let (next_state, mut next_effects) =
                                 pokered_rules::runtime::engine_state_from_legacy(bs);
-                            next_effects.push(dotzuki_engine::battle::EffectState {
-                                id: dotzuki_engine::battle::EffectId(0x50_ff0),
+                            next_effects.push(dotzuki_engine::battle::stack::EffectState {
+                                id: dotzuki_engine::battle::stack::EffectId(0x50_ff0),
                                 host: BattlerRef::OPPONENT,
                                 effect_order: 0,
                                 kind: pokered_rules::PokeVolatile::TurnSuppressed,
