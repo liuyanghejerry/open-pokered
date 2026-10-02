@@ -11,6 +11,8 @@ pub mod battle_quips;
 pub mod battle_text;
 pub mod blockset_data;
 pub mod dialog_text;
+pub mod dialogue_layout;
+pub mod zh_dialogue_words;
 pub mod impl_traits;
 pub mod ui_layout;
 pub mod ui_text;

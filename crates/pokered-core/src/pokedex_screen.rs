@@ -45,6 +45,13 @@ pub const LIST_ROWS: u16 = 7;
 /// engine/menus/pokedex.asm:371-375).
 pub const SIDE_MENU_OPTIONS: usize = 4;
 
+/// Reflow the complete Chinese description. Source page boundaries were
+/// inherited from English and can split a Chinese word or clause.
+pub fn chinese_description_lines(entry: &pokered_data::pokedex::PokedexEntry) -> Vec<String> {
+    let text = entry.flavor_text_pages_zh.concat();
+    crate::text::zh_dialogue::description_pages(&text, 144, 3, &[])
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct PokedexScreenInput {
     pub up: bool,
@@ -84,6 +91,7 @@ pub enum PokedexScreenMode {
 
 #[derive(Debug, Clone)]
 pub struct PokedexScreenState {
+    pub language: crate::game_state::Lang,
     dex: Pokedex,
     /// Highest seen dex number (`wDexMaxSeenMon`); the list ends here.
     max_seen: u16,
@@ -113,6 +121,7 @@ impl PokedexScreenState {
     pub fn new(dex: Pokedex, version: GameVersion) -> Self {
         let max_seen = Self::compute_max_seen(&dex);
         Self {
+            language: crate::game_state::Lang::En,
             dex,
             max_seen,
             cursor: 1,
@@ -133,6 +142,7 @@ impl PokedexScreenState {
         let max_seen = Self::compute_max_seen(&dex);
         let cursor = (species as u16).clamp(1, max_seen);
         Self {
+            language: crate::game_state::Lang::En,
             dex,
             max_seen,
             cursor,
@@ -236,7 +246,9 @@ impl PokedexScreenState {
             return 1;
         }
         pokered_data::pokedex::get_pokedex_entry(self.cursor_species())
-            .map(|e| e.flavor_text_pages.len().max(1))
+            .map(|e| if self.language == crate::game_state::Lang::Zh {
+                (chinese_description_lines(e).len() / 3).max(1)
+            } else { e.flavor_text_pages.len().max(1) })
             .unwrap_or(1)
     }
 

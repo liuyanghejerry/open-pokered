@@ -4,33 +4,15 @@ use pokered_data::TILE_SIZE_PX;
 
 use crate::engine::{InkColor, Painter, Ui};
 
-/// Display width of a char in half-width tiles: CJK glyphs render full-width
-/// (2 tiles) in the Fusion Pixel font, everything else 1. Range-based mirror
-/// of the renderer's glyph-table classification (same convention as the
-/// battle-text wrapping in core).
-fn char_tile_width(c: char) -> usize {
-    let cp = c as u32;
-    let wide = (0x1100..=0x115F).contains(&cp)
-        || (0x2010..=0x2027).contains(&cp)
-        || (0x2E80..=0xA4CF).contains(&cp)
-        || (0xAC00..=0xD7A3).contains(&cp)
-        || (0xF900..=0xFAFF).contains(&cp)
-        || (0xFE30..=0xFE4F).contains(&cp)
-        || (0xFF00..=0xFF60).contains(&cp)
-        || (0xFFE0..=0xFFE6).contains(&cp)
-        || (0x20000..=0x3FFFD).contains(&cp);
-    usize::from(wide) + 1
-}
-
-/// Interior x for the category label: the asm prints it at (8,3); wide CJK
-/// categories (e.g. 毛毛虫宝可梦) shift left just enough to end at the
-/// interior's right edge (18 tiles) instead of clipping.
+/// Keep categories beside the sprite and measure the proportional font
+/// instead of treating each Chinese character as a 16px tile pair.
 fn category_x(category: &str) -> u32 {
-    let w: usize = category.chars().map(char_tile_width).sum();
-    if 8 + w <= 18 {
+    let width = pokered_data::dialogue_layout::measure_text(category);
+    let right_edge = 18 * TILE_SIZE_PX;
+    if 8 * TILE_SIZE_PX + width <= right_edge {
         8
     } else {
-        (18 - w).max(0) as u32
+        right_edge.saturating_sub(width) / TILE_SIZE_PX
     }
 }
 
@@ -137,8 +119,8 @@ mod tests {
         // Short EN categories keep the original (8,3) label position.
         assert_eq!(category_x("SEED"), 8);
         assert_eq!(category_x("POISON BEE"), 8); // 10 tiles: exactly fits
-        // Wide CJK categories shift left to end at the interior's right edge.
-        assert_eq!(category_x("毛毛虫宝可梦"), 6); // 12 tiles
-        assert_eq!(category_x("百万吨宝可梦"), 6); // 12 tiles
+        // Chinese categories use their real 10px advances.
+        assert_eq!(category_x("毛毛虫宝可梦"), 8); // 60px fits beside sprite
+        assert_eq!(category_x("百万吨宝可梦"), 8); // 60px
     }
 }

@@ -189,6 +189,11 @@ const EXACT: &[(&str, &str)] = &[
     ("See those ledges\nalong the road?\nIt's a bit scary,\nbut you can jump\nfrom them.\nYou can get back\nto PALLET TOWN\nquicker that way.", "看到路上的\n那些台阶了吗？\n虽然有点吓人，\n但可以从上面\n跳下去。\n那样回真新镇\n会快一些。"),
 ];
 
+/// Static overworld translations, also exposed to the dialogue corpus audit.
+pub fn static_translations() -> &'static [(&'static str, &'static str)] {
+    EXACT
+}
+
 /// Template-based translations for parametrized messages. Checked in order
 /// after [`EXACT`]; each entry is `(suffix, zh_prefix_placeholder)` pairs
 /// handled inline in [`localize`].

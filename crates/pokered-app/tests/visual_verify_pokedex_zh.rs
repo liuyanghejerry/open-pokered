@@ -24,6 +24,7 @@ fn owned(species: Species) -> PokedexScreenState {
     dex.set_seen(species);
     dex.set_owned(species);
     let mut state = PokedexScreenState::new(dex, GameVersion::Red);
+    state.language = pokered_core::game_state::Lang::Zh;
     // Walk the cursor down to the target row (edge-detected per frame).
     for _ in 1..species as u16 {
         state.update_frame(PokedexScreenInput {
@@ -75,12 +76,12 @@ fn render_pokedex_entry_zh_bulbasaur_and_caterpie() {
     to_entry(&mut state);
     render_zh(&state, "pokedex-entry-bulbasaur-zh.png");
 
-    // Page 2 of the flavor text.
+    // The complete Chinese description fits one page; A returns to the list.
     state.update_frame(PokedexScreenInput {
         a: true,
         ..Default::default()
     });
-    render_zh(&state, "pokedex-entry-bulbasaur-zh-page2.png");
+    assert_eq!(state.mode(), pokered_core::pokedex_screen::PokedexScreenMode::List);
 
     // Caterpie: 6-char category 毛毛虫宝可梦 shifts the label left.
     let mut state = owned(Species::Caterpie);

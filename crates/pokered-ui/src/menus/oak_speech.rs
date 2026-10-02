@@ -19,12 +19,25 @@ pub fn draw_text_phase<P: Painter>(
     layout: &OakSpeechTextPhaseLayout,
     ui: &mut Ui<P>,
 ) {
+    draw_text_phase_localized(line1, line2, show_arrow, layout, ui, pokered_core::game_state::Lang::En);
+}
+
+/// Chinese glyphs need twelve pixels of height inside the four-tile box.
+pub fn draw_text_phase_localized<P: Painter>(
+    line1: &str,
+    line2: &str,
+    show_arrow: bool,
+    layout: &OakSpeechTextPhaseLayout,
+    ui: &mut Ui<P>,
+    language: pokered_core::game_state::Lang,
+) {
+    let offset = if language == pokered_core::game_state::Lang::Zh { 0 } else { 1 };
     ui.text_box(layout.dialog_box.rect, layout.dialog_box.color, true, |frame| {
         if !line1.is_empty() {
-            frame.label(1, 1, line1, InkColor::Black);
+            frame.label(offset, offset, line1, InkColor::Black);
         }
         if !line2.is_empty() {
-            frame.label(1, 3, line2, InkColor::Black);
+            frame.label(offset, offset + 2, line2, InkColor::Black);
         }
         if show_arrow {
             let cursor = &layout.cursor;
@@ -78,6 +91,7 @@ pub fn draw_name_choice<P: Painter>(
     });
 
     ui.text_box(layout.prompt_box.rect, layout.prompt_box.color, true, |frame| {
-        frame.label(1, 1, prompt, InkColor::Black);
+        let offset = if pokered_data::dialogue_layout::contains_chinese(prompt) { 0 } else { 1 };
+        frame.label(offset, offset, prompt, InkColor::Black);
     });
 }

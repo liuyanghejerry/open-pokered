@@ -186,12 +186,13 @@ pub fn draw_oak_speech(
                 let (line1, line2) = page.get_display_text(state.player_name.as_deref(), u16::MAX);
                 let mut painter = FrameBufferPainter::new(fb).with_lang(language);
                 let mut ui = Ui::new(&mut painter);
-                menus::oak_speech::draw_text_phase(
+                menus::oak_speech::draw_text_phase_localized(
                     &line1,
                     &line2,
                     false,
                     &OAK_SPEECH_TEXT_PHASE_LAYOUT,
                     &mut ui,
+                    language,
                 );
             }
         }
@@ -206,7 +207,7 @@ pub fn draw_oak_speech(
                 let show_arrow = state.is_waiting_for_input();
                 let mut painter = FrameBufferPainter::new(fb).with_lang(language);
                 let mut ui = Ui::new(&mut painter);
-                menus::oak_speech::draw_text_phase(&line1, &line2, show_arrow, &OAK_SPEECH_TEXT_PHASE_LAYOUT, &mut ui);
+                menus::oak_speech::draw_text_phase_localized(&line1, &line2, show_arrow, &OAK_SPEECH_TEXT_PHASE_LAYOUT, &mut ui, language);
             }
         }
     }

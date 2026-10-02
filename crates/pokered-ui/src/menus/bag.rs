@@ -180,9 +180,9 @@ pub fn draw_machine_prompt<P: Painter>(
         .unwrap_or("???");
     ui.text_box(TileRect::new(0, 10, 20, 8), InkColor::Black, true, |frame| {
         if is_zh {
-            frame.label(1, 1, &format!("里面是{}！", move_name), InkColor::Black);
-            frame.label(1, 4, "让宝可梦学会", InkColor::Black);
-            frame.label(1, 5, &format!("{}吗？", move_name), InkColor::Black);
+            frame.label(1, 0, &format!("里面是{}！", move_name), InkColor::Black);
+            frame.label(1, 2, "让宝可梦学会", InkColor::Black);
+            frame.label(1, 4, &format!("{}吗？", move_name), InkColor::Black);
         } else {
             frame.label(1, 1, "It contained", InkColor::Black);
             frame.label(1, 2, &format!("{}!", move_name), InkColor::Black);

@@ -1,7 +1,8 @@
 //! Display-layer translation helpers shared by the frontends (pokered-app,
 //! pokered-tui). These translate renderer-visible strings (PC status lines,
 //! slot-machine messages, PC main-menu labels, reel symbol labels) at draw
-//! time — the core strings themselves stay English state-machine data.
+//! time. Complete PC messages are translated before core pagination;
+//! other menu/confirmation strings are translated when drawn.
 //!
 //! `zh_name` (names embedded in messages) lives in [`crate::battle_text`].
 
@@ -85,7 +86,6 @@ const PC_LINE_ZH: &[(&str, &str)] = &[
     ("Good, you're", "不错，你"),
     ("trying hard!", "很努力！"),
     ("Get an ITEMFINDER", "去我的助手"),
-    ("from my AIDE!", "那里拿探宝器！"),
     ("Looking good!", "看起来不错！"),
     ("Go find my AIDE", "去找我的助手"),
     ("when you get 50!", "凑满50只时！"),
@@ -178,6 +178,40 @@ pub fn zh_pc_line(line: &str) -> String {
         return format!("{}。", zh_name(name));
     }
     line.to_string()
+}
+
+/// Translate a whole PC message before deciding where its Chinese pages end.
+/// English row fragments (including the repeated AIDE line) need context.
+pub fn zh_pc_message(lines: &[String]) -> Vec<String> {
+    let mut paragraphs = Vec::new();
+    let mut paragraph = String::new();
+    for (index, line) in lines.iter().enumerate() {
+        if line.is_empty() {
+            if !paragraph.is_empty() {
+                paragraphs.push(core::mem::take(&mut paragraph));
+            }
+            continue;
+        }
+        let translated = if line == "from my AIDE!"
+            && index > 0 && lines[index - 1] == "Get an ITEMFINDER" {
+            "那里拿探宝器！".to_string()
+        } else {
+            zh_pc_line(line)
+        };
+        // Keep a word boundary in an untranslated English fallback.
+        if paragraph.ends_with(|c: char| c.is_ascii_alphanumeric())
+            && translated.starts_with(|c: char| c.is_ascii_alphabetic()) {
+            paragraph.push(' ');
+        }
+        paragraph.push_str(&translated);
+        if line.ends_with(" #MON seen") || line.ends_with(" #MON owned") {
+            paragraph.push('。');
+        }
+    }
+    if !paragraph.is_empty() {
+        paragraphs.push(paragraph);
+    }
+    paragraphs
 }
 
 /// Display label for a reel symbol (core symbols stay as-is; names get a

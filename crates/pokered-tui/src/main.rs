@@ -2,6 +2,10 @@ mod audio;
 mod game;
 mod render;
 
+#[cfg(test)]
+#[path = "../tests/common/visual_verify_zh_descriptions.rs"]
+mod visual_verify_zh_descriptions;
+
 use core::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 

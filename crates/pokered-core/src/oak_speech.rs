@@ -191,36 +191,33 @@ pub const OAK_SPEECH_TEXT3_PAGES: &[TextPage] = &[
 
 pub const OAK_SPEECH_TEXT1_PAGES_ZH: &[TextPage] = &[
     TextPage::new("你好！欢迎来到", "宝可梦的世界！"),
-    TextPage::new("我是大木博士！", "大家都叫我"),
-    TextPage::new("宝可梦博士！", ""),
+    TextPage::new("我是大木博士！", "大家都叫我宝可梦博士！"),
 ];
 
 pub const OAK_SPEECH_TEXT2A_PAGES_ZH: &[TextPage] = &[
-    TextPage::new("这个世界生活着", "一种叫做宝可梦的"),
-    TextPage::new("神奇生物！", ""),
+    TextPage::new("这个世界生活着", "一种叫做宝可梦的神奇生物！"),
 ];
 
 pub const OAK_SPEECH_TEXT2B_PAGES_ZH: &[TextPage] = &[
     TextPage::new("对一些人来说，", "宝可梦是宠物。"),
     TextPage::new("另一些人会用", "它们来对战。"),
     TextPage::new("而我……", ""),
-    TextPage::new("则以研究宝可梦", "为职业。"),
+    TextPage::new("则以研究宝可梦为职业。", ""),
 ];
 
 pub const INTRODUCE_PLAYER_TEXT_PAGES_ZH: &[TextPage] =
     &[TextPage::new("首先，请问你", "叫什么名字？")];
 
 pub const INTRODUCE_RIVAL_TEXT_PAGES_ZH: &[TextPage] = &[
-    TextPage::new("这是我的孙子。", "从你还是婴儿时"),
-    TextPage::new("他就是你的", "竞争对手了。"),
-    TextPage::new("……呃，他叫", "什么名字来着？"),
+    TextPage::new("这是我的孙子。", ""),
+    TextPage::new("从你还是婴儿时他就是", "你的竞争对手了。"),
+    TextPage::new("……呃，他叫什么名字来着？", ""),
 ];
 
 pub const OAK_SPEECH_TEXT3_PAGES_ZH: &[TextPage] = &[
     TextPage::new("<PLAYER>！", ""),
     TextPage::new("属于你的宝可梦", "传说就要开始了！"),
-    TextPage::new("一个充满梦想", "与冒险的世界"),
-    TextPage::new("正等着你！", "出发吧！"),
+    TextPage::new("一个充满梦想与冒险的", "世界正等着你！出发吧！"),
 ];
 
 pub fn text_pages_for_lang(phase: &OakSpeechPhase, lang: Lang) -> Option<&'static TextPage> {
@@ -311,7 +308,18 @@ pub enum OakSpeechPhase {
 }
 
 impl OakSpeechPhase {
-    fn text_pages(&self) -> Option<&'static [TextPage]> {
+    fn text_pages(&self, language: Lang) -> Option<&'static [TextPage]> {
+        if language == Lang::Zh {
+            return match self {
+                Self::Greeting { .. } => Some(OAK_SPEECH_TEXT1_PAGES_ZH),
+                Self::ShowNidorino { .. } => Some(OAK_SPEECH_TEXT2A_PAGES_ZH),
+                Self::Explanation { .. } => Some(OAK_SPEECH_TEXT2B_PAGES_ZH),
+                Self::IntroducePlayer { .. } => Some(INTRODUCE_PLAYER_TEXT_PAGES_ZH),
+                Self::IntroduceRival { .. } => Some(INTRODUCE_RIVAL_TEXT_PAGES_ZH),
+                Self::FinalSpeech { .. } => Some(OAK_SPEECH_TEXT3_PAGES_ZH),
+                _ => None,
+            };
+        }
         match self {
             OakSpeechPhase::Greeting { .. } => Some(OAK_SPEECH_TEXT1_PAGES),
             OakSpeechPhase::ShowNidorino { .. } => Some(OAK_SPEECH_TEXT2A_PAGES),
@@ -354,6 +362,7 @@ pub enum OakSpeechResult {
 #[derive(Debug, Clone)]
 pub struct OakSpeechState {
     pub phase: OakSpeechPhase,
+    pub language: Lang,
     pub player_name: Option<String>,
     pub rival_name: Option<String>,
     pub naming_screen: Option<NamingScreenState>,
@@ -377,6 +386,7 @@ impl OakSpeechState {
                 char_index: 0,
                 waiting_for_input: false,
             },
+            language: Lang::En,
             player_name: None,
             rival_name: None,
             naming_screen: None,
@@ -418,6 +428,7 @@ impl OakSpeechState {
     }
 
     fn process_phase(&mut self, input: OakSpeechInput) -> Option<OakSpeechPhase> {
+        let pages = self.phase.text_pages(self.language).unwrap_or(&[]);
         let new_phase = match &self.phase {
             OakSpeechPhase::Greeting {
                 page_index,
@@ -428,7 +439,7 @@ impl OakSpeechState {
                 *page_index,
                 *char_index,
                 *waiting_for_input,
-                OAK_SPEECH_TEXT1_PAGES,
+                pages,
                 INTRO_FADE_IN_FRAMES,
                 |pi, ci, wfi| OakSpeechPhase::Greeting {
                     page_index: pi,
@@ -450,7 +461,7 @@ impl OakSpeechState {
                 *page_index,
                 *char_index,
                 *waiting_for_input,
-                OAK_SPEECH_TEXT2A_PAGES,
+                pages,
                 INTRO_SLIDE_IN_FRAMES,
                 |pi, ci, wfi| OakSpeechPhase::ShowNidorino {
                     page_index: pi,
@@ -472,7 +483,7 @@ impl OakSpeechState {
                 *page_index,
                 *char_index,
                 *waiting_for_input,
-                OAK_SPEECH_TEXT2B_PAGES,
+                pages,
                 0,
                 |pi, ci, wfi| OakSpeechPhase::Explanation {
                     page_index: pi,
@@ -494,7 +505,7 @@ impl OakSpeechState {
                 *page_index,
                 *char_index,
                 *waiting_for_input,
-                INTRODUCE_PLAYER_TEXT_PAGES,
+                pages,
                 INTRO_SLIDE_IN_FRAMES,
                 |pi, ci, wfi| OakSpeechPhase::IntroducePlayer {
                     page_index: pi,
@@ -516,7 +527,7 @@ impl OakSpeechState {
                 *page_index,
                 *char_index,
                 *waiting_for_input,
-                INTRODUCE_RIVAL_TEXT_PAGES,
+                pages,
                 INTRO_FADE_IN_FRAMES,
                 |pi, ci, wfi| OakSpeechPhase::IntroduceRival {
                     page_index: pi,
@@ -538,7 +549,7 @@ impl OakSpeechState {
                 *page_index,
                 *char_index,
                 *waiting_for_input,
-                OAK_SPEECH_TEXT3_PAGES,
+                pages,
                 FINAL_FADE_IN_FRAMES,
                 |pi, ci, wfi| OakSpeechPhase::FinalSpeech {
                     page_index: pi,
@@ -758,27 +769,7 @@ impl OakSpeechState {
     }
 
     pub fn current_text_page(&self) -> Option<TextPage> {
-        match &self.phase {
-            OakSpeechPhase::Greeting { page_index, .. } => {
-                OAK_SPEECH_TEXT1_PAGES.get(*page_index).cloned()
-            }
-            OakSpeechPhase::ShowNidorino { page_index, .. } => {
-                OAK_SPEECH_TEXT2A_PAGES.get(*page_index).cloned()
-            }
-            OakSpeechPhase::Explanation { page_index, .. } => {
-                OAK_SPEECH_TEXT2B_PAGES.get(*page_index).cloned()
-            }
-            OakSpeechPhase::IntroducePlayer { page_index, .. } => {
-                INTRODUCE_PLAYER_TEXT_PAGES.get(*page_index).cloned()
-            }
-            OakSpeechPhase::IntroduceRival { page_index, .. } => {
-                INTRODUCE_RIVAL_TEXT_PAGES.get(*page_index).cloned()
-            }
-            OakSpeechPhase::FinalSpeech { page_index, .. } => {
-                OAK_SPEECH_TEXT3_PAGES.get(*page_index).cloned()
-            }
-            _ => None,
-        }
+        text_pages_for_lang(&self.phase, self.language).cloned()
     }
 
     pub fn current_char_index(&self) -> u16 {

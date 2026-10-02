@@ -31,10 +31,10 @@ fn zh_link_text(text: &str) -> String {
         "Waiting...!" => "正在等待……！".to_string(),
         "PLEASE WAIT!" => "请稍候！".to_string(),
         "Trade completed!" => "交换完成！".to_string(),
-        "Too bad! The trade\nwas canceled!" => "太可惜了！交换\n被取消了！".to_string(),
-        "The link was\ncanceled." => "联机被\n取消了。".to_string(),
-        "Start a link\nbattle?" => "开始联机\n对战？".to_string(),
-        "Start a link\ntrade?" => "开始联机\n交换？".to_string(),
+        "Too bad! The trade\nwas canceled!" => "太可惜了！交换被取消了！".to_string(),
+        "The link was\ncanceled." => "联机被取消了。".to_string(),
+        "Start a link\nbattle?" => "开始联机对战？".to_string(),
+        "Start a link\ntrade?" => "开始联机交换？".to_string(),
         _ => {
             if let Some((local, remote)) = text.split_once(" and\n") {
                 if let Some(remote) = remote.strip_suffix(" will be traded.") {
@@ -89,7 +89,7 @@ pub fn draw_link_flow(
 fn draw_dialog(text: &str, fb: &mut FrameBuffer, language: Lang) {
     let mut painter = FrameBufferPainter::new(fb);
     let mut ui = Ui::new(&mut painter);
-    menus::dialog::draw(text, false, &DIALOG_DEFAULT_LAYOUT, &mut ui, language);
+    menus::dialog::draw_paginated(text, false, &DIALOG_DEFAULT_LAYOUT, &mut ui, language);
 }
 
 /// Both parties remain visible while choosing; left/right switches the list.

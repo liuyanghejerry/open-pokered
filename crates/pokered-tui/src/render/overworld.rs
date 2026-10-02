@@ -163,7 +163,26 @@ fn draw_pokedex_entry(
     page: usize,
     res: &mut Option<ResourceManager>,
     fb: &mut FrameBuffer,
+    is_zh: bool,
 ) -> usize {
+    if is_zh {
+        if let Some(sp) = pokered_data::species::Species::from_scene_name(species) {
+            let mut dex = pokered_core::pokemon::pokedex::Pokedex::new();
+            dex.set_owned(sp);
+            dex.set_seen(sp);
+            let mut state = pokered_core::pokedex_screen::PokedexScreenState::new_entry(
+                dex, sp, pokered_data::wild_data::GameVersion::Red,
+            );
+            state.language = pokered_core::game_state::Lang::Zh;
+            // This overlay can be shown outside the start-menu entry state.
+            let total = state.entry_total_pages();
+            for _ in 0..page.min(total.saturating_sub(1)) {
+                state.update_frame(pokered_core::pokedex_screen::PokedexScreenInput { a: true, ..Default::default() });
+            }
+            super::pokedex::draw_pokedex_screen(&state, true, res, fb);
+            return total;
+        }
+    }
     // Layout from engine/menus/pokedex.asm ShowPokedexDataInternal
     fb.clear(Rgba::WHITE);
     let pal = &GRAYSCALE_PALETTE;
@@ -387,6 +406,7 @@ pub fn draw_overworld(
     fb: &mut FrameBuffer,
 ) {
     fb.clear(Rgba::WHITE);
+    let is_zh = screen.script_lang() == Some("zh");
 
     // Naming screen open/submit white flash (GBPalWhiteOutWithDelay3).
     if screen.naming_flash_frames > 0 {
@@ -1180,7 +1200,7 @@ pub fn draw_overworld(
 
     // Fullscreen Pokédex entry overlay — takes over the entire screen.
     if let Some(ref mut dex_state) = screen.pending_pokedex_entry {
-        let total = draw_pokedex_entry(&dex_state.species, dex_state.page, res, fb);
+        let total = draw_pokedex_entry(&dex_state.species, dex_state.page, res, fb, is_zh);
         dex_state.total_pages = total;
         return;
     }

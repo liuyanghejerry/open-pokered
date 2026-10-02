@@ -63,9 +63,8 @@ fn mon_row(mon: &Pokemon) -> String {
 }
 
 /// Bottom text box holding up to `lines` lines (max 5), plus the current
-/// message page of the Message phase. Lines are routed through
-/// [`zh_pc_line`] so the English messages produced by `pokered_core::pc_screen`
-/// are translated at display time only.
+/// message page of the Message phase. Core messages have finalized localized
+/// rows; renderer-built confirmations are translated through [`zh_pc_line`].
 fn draw_message(lines: &[String], fb: &mut FrameBuffer, is_zh: bool) {
     let shown: Vec<String> = lines.iter().take(5)
         .flat_map(|line| {
@@ -85,18 +84,7 @@ fn draw_message(lines: &[String], fb: &mut FrameBuffer, is_zh: bool) {
 
 // Wrap translated lines by glyph width, including mixed Chinese/Latin names.
 fn wrap_message(text: &str) -> Vec<String> {
-    let mut lines = Vec::new();
-    let mut line = String::new();
-    for ch in text.chars() {
-        let mut next = line.clone();
-        next.push(ch);
-        if !line.is_empty() && measure_text(&next) > 18 * T {
-            lines.push(core::mem::take(&mut line));
-        }
-        line.push(ch);
-    }
-    lines.push(line);
-    lines
+    pokered_core::text::zh_dialogue::wrap_lines(text, 18 * T as usize, &[])
 }
 
 /// YES/NO popup on the right side (original: TWO_OPTION_MENU at hlcoord 14,7).

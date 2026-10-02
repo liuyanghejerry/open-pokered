@@ -124,7 +124,7 @@ pub fn draw_trade(anim: &TradeAnim, resources: &mut Option<ResourceManager>, fb:
         let combined = format!("{}\n{}", l1, l2);
         let mut painter = FrameBufferPainter::new(fb);
         let mut ui = Ui::new(&mut painter);
-        menus::dialog::draw(&combined, false, &DIALOG_DEFAULT_LAYOUT, &mut ui, lang);
+        menus::dialog::draw_paginated(&combined, false, &DIALOG_DEFAULT_LAYOUT, &mut ui, lang);
     }
 
     // Trade_SlideTextBoxOffScreen: shift the whole scene right 2px/frame

@@ -475,6 +475,24 @@ mod tests {
     use rand::SeedableRng;
 
     #[test]
+    fn chinese_trade_rows_fit_all_species_and_valid_trainer_names() {
+        use pokered_data::dialogue_layout::measure_text;
+        for entry in pokered_data::pokedex::POKEDEX_ENTRIES {
+            for name in ["ABCDEFG", "张三丰", "AB张三"] {
+                let mut anim = TradeAnim::new(entry.species, entry.species, name.into(), true)
+                    .with_partner_name(name.into());
+                for phase in [TradeAnimPhase::TextWentTo, TradeAnimPhase::TextForSends,
+                    TradeAnimPhase::TextFarewell, TradeAnimPhase::TextTakeCare] {
+                    anim.phase = phase;
+                    let (a,b) = anim.text_lines().unwrap();
+                    assert!(measure_text(&a) <= 144 && measure_text(&b) <= 144,
+                        "{:?}/{phase:?}/{name}: {a} / {b}", entry.species);
+                }
+            }
+        }
+    }
+
+    #[test]
     fn received_mon_uses_table_data_and_given_level() {
         let trade = find_npc_trade(Species::Abra, Species::MrMime).unwrap();
         let mon = assemble_npc_trade_mon(
