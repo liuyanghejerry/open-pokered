@@ -35,6 +35,13 @@ class AuditGame(OriginalGame):
             kwargs.setdefault("binary", os.environ["AUDIT_BINARY"])
         super().__init__(*args, **kwargs)
 
+    def battle_loop(self, prefer="fight", max_iters=1600):
+        # A long, legitimate trainer fight can exceed the driver's 400
+        # input iterations when the lead's stronger move has no PP left.
+        # Continue real menu/text input instead of treating that budget
+        # as an engine stall. No battle state or inventory is changed.
+        return super().battle_loop(prefer=prefer, max_iters=max_iters)
+
 
 playthrough.Game = AuditGame
 if __name__ == "__main__":

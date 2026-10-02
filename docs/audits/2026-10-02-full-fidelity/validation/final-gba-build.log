@@ -1,16 +1,6 @@
     Blocking waiting for file lock on package cache
     Blocking waiting for file lock on package cache
     Blocking waiting for file lock on package cache
-   Compiling dotzuki-engine-script v0.8.2 (https://github.com/liuyanghejerry/dotzuki?rev=92ba95f9526107e17874df53291ac7758d0930f0#92ba95f9)
-   Compiling dotzuki-engine-dsl v0.8.2 (https://github.com/liuyanghejerry/dotzuki?rev=92ba95f9526107e17874df53291ac7758d0930f0#92ba95f9)
-   Compiling dotzuki-engine v0.8.2 (https://github.com/liuyanghejerry/dotzuki?rev=92ba95f9526107e17874df53291ac7758d0930f0#92ba95f9)
-   Compiling dotzuki-renderer v0.8.2 (https://github.com/liuyanghejerry/dotzuki?rev=92ba95f9526107e17874df53291ac7758d0930f0#92ba95f9)
-warning: pokered-renderer@0.1.0: CJK glyphs generated: 519 chars (95 ASCII + 562 CJK)
-   Compiling dotzuki-audio v0.8.2 (https://github.com/liuyanghejerry/dotzuki?rev=92ba95f9526107e17874df53291ac7758d0930f0#92ba95f9)
-   Compiling pokered-audio v0.1.0 (/workspace/open-pokered/crates/pokered-audio)
-   Compiling dotzuki-rules v0.8.2 (https://github.com/liuyanghejerry/dotzuki?rev=92ba95f9526107e17874df53291ac7758d0930f0#92ba95f9)
-   Compiling dotzuki-ui v0.8.2 (https://github.com/liuyanghejerry/dotzuki?rev=92ba95f9526107e17874df53291ac7758d0930f0#92ba95f9)
-   Compiling pokered-data v0.1.0 (/workspace/open-pokered/crates/pokered-data)
 warning: function `emit_flex_container` is never used
     --> /workspace/open-pokered/crates/pokered-data/build.rs:2648:4
      |
@@ -26,6 +16,8 @@ warning: function `emit_list_params` is never used
      |    ^^^^^^^^^^^^^^^^
 
 warning: `pokered-data` (build script) generated 2 warnings
+   Compiling pokered-data v0.1.0 (/workspace/open-pokered/crates/pokered-data)
+warning: pokered-renderer@0.1.0: CJK glyphs generated: 519 chars (95 ASCII + 562 CJK)
 warning: unused imports: `Display`, `EnumCount`, `EnumIter`, and `EnumString`
  --> /workspace/open-pokered/crates/pokered-data/src/items.rs:4:20
   |
@@ -365,7 +357,6 @@ warning: unreachable expression
 1603 |         Ok(())
      |         ^^^^^^ unreachable expression
 
-warning: `pokered-data` (lib) generated 17 warnings (run `cargo fix --lib -p pokered-data` to apply 2 suggestions)
 warning: unused variable: `randoms`
    --> /workspace/open-pokered/crates/pokered-core/src/battle/capture.rs:113:9
     |
@@ -402,6 +393,7 @@ warning: unused variable: `action`
 4293 |                     &mut |state, effects, actor, action, rng| {
      |                                                  ^^^^^^ help: if this is intentional, prefix it with an underscore: `_action`
 
+warning: `pokered-data` (lib) generated 17 warnings (run `cargo fix --lib -p pokered-data` to apply 2 suggestions)
 warning: unused variable: `tileset`
    --> /workspace/open-pokered/crates/pokered-core/src/overworld/collision.rs:166:9
     |
@@ -820,4 +812,4 @@ warning: field `0` is never read
    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
 
 warning: `pokered-gba` (bin "pokered-gba") generated 2 warnings (run `cargo fix --bin "pokered-gba" -p pokered-gba` to apply 1 suggestion)
-    Finished `release` profile [optimized + debuginfo] target(s) in 2m 56s
+    Finished `release` profile [optimized + debuginfo] target(s) in 3m 18s

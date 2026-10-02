@@ -77,7 +77,9 @@
     "after_cfg": "fidelity_after (LAPRAS species metadata unavailable in baseline)",
     "cli_capture_sha256": "11224341faff51ad395c79519a61dd611fd5c8cc4b5bdc6866a8c151d63c6dfd",
     "elevator_capture_sha256": "c6bcc21d5fda96b372d5998a3c6d0b0d832f8be8cb2accfb420976f3b506e834",
-    "raw_link_helper_sha256": "0488aa6e1da7f1769e4b74e6d8dbcf72b24f0b64f370b754c7c869fd9ba35c33"
+    "raw_link_helper_sha256": "0488aa6e1da7f1769e4b74e6d8dbcf72b24f0b64f370b754c7c869fd9ba35c33",
+    "fixture_source_commit": "142657d429396ee119347b3e7b7eb49a4c8420d2",
+    "post_capture_change": "f0f0633 adds a default-feature compilation guard for the ninth constructor argument. The frozen capture harness hash refers to the commit above; debug-enabled behavior is unchanged."
   },
   "initial_state": "Fresh executable directories without default .sav; 160x144; CLI en except explicit diploma-zh; controlled fixture state; battle seed 42.",
   "pair_count": 59,

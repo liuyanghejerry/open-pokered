@@ -1,8 +1,3 @@
-    Blocking waiting for file lock on package cache
-    Blocking waiting for file lock on package cache
-    Blocking waiting for file lock on package cache
-   Compiling pokered-data v0.1.0 (/workspace/open-pokered/crates/pokered-data)
-warning: pokered-renderer@0.1.0: CJK glyphs generated: 519 chars (95 ASCII + 562 CJK)
 warning: function `emit_flex_container` is never used
     --> crates/pokered-data/build.rs:2648:4
      |
@@ -18,6 +13,8 @@ warning: function `emit_list_params` is never used
      |    ^^^^^^^^^^^^^^^^
 
 warning: `pokered-data` (build script) generated 2 warnings
+   Compiling pokered-data v0.1.0 (/workspace/open-pokered/crates/pokered-data)
+warning: pokered-renderer@0.1.0: CJK glyphs generated: 519 chars (95 ASCII + 562 CJK)
 warning: unused imports: `Display`, `EnumCount`, `EnumIter`, and `EnumString`
  --> crates/pokered-data/src/items.rs:4:20
   |
@@ -105,34 +102,39 @@ warning: unreachable pattern
 389 |         "EXIT" => "退出",
     |         ^^^^^^ no value can reach this
 
-warning: variable does not need to be mutable
-   --> crates/pokered-data/src/map_data_loader.rs:863:9
+warning: function `default_true` is never used
+   --> crates/pokered-data/src/ui_layout/schema.rs:112:4
     |
-863 |     let mut progress = 0usize;
-    |         ----^^^^^^^^
-    |         |
-    |         help: remove this `mut`
-    |
-    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
-
-warning: struct `EmbeddedMapCache` is never constructed
-   --> crates/pokered-data/src/map_data_loader.rs:139:8
-    |
-139 | struct EmbeddedMapCache {
-    |        ^^^^^^^^^^^^^^^^
+112 | fn default_true() -> bool { true }
+    |    ^^^^^^^^^^^^
     |
     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
 
-warning: method `get` is never used
-   --> crates/pokered-data/src/map_data_loader.rs:144:8
+warning: function `default_gap` is never used
+   --> crates/pokered-data/src/ui_layout/schema.rs:113:4
     |
-143 | impl EmbeddedMapCache {
-    | --------------------- method in this implementation
-144 |     fn get(&mut self, name: &str) -> Option<MapJsonHandle> {
-    |        ^^^
+113 | fn default_gap() -> u32 { 1 }
+    |    ^^^^^^^^^^^
 
-warning: `pokered-data` (lib) generated 10 warnings (run `cargo fix --lib -p pokered-data` to apply 2 suggestions)
-    Checking pokered-core v0.1.0 (/workspace/open-pokered/crates/pokered-core)
+warning: function `default_item_name_width` is never used
+   --> crates/pokered-data/src/ui_layout/schema.rs:114:4
+    |
+114 | fn default_item_name_width() -> u32 { 14 }
+    |    ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `default_qty_width` is never used
+   --> crates/pokered-data/src/ui_layout/schema.rs:115:4
+    |
+115 | fn default_qty_width() -> u32 { 2 }
+    |    ^^^^^^^^^^^^^^^^^
+
+warning: function `one` is never used
+   --> crates/pokered-data/src/ui_layout/schema.rs:224:4
+    |
+224 | fn one() -> u32 { 1 }
+    |    ^^^
+
+   Compiling pokered-core v0.1.0 (/workspace/open-pokered/crates/pokered-core)
 warning: unused import: `crate::alloc_prelude::*`
  --> crates/pokered-core/src/battle/effects/damage_effects.rs:6:5
   |
@@ -286,6 +288,7 @@ warning: unused import: `pokered_data::items::ItemId`
 61 | use pokered_data::items::ItemId;
    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+warning: `pokered-data` (lib) generated 12 warnings (run `cargo fix --lib -p pokered-data` to apply 1 suggestion)
 warning: unused variable: `randoms`
    --> crates/pokered-core/src/battle/capture.rs:113:9
     |
@@ -481,222 +484,22 @@ warning: methods `map_scene_ast` and `repel_wore_off` are never used
 2045 |     pub(crate) fn repel_wore_off(&self, repel_before: u16) -> bool {
      |                   ^^^^^^^^^^^^^^
 
+   Compiling pokered-renderer v0.1.0 (/workspace/open-pokered/crates/pokered-renderer)
 warning: `pokered-core` (lib) generated 43 warnings (run `cargo fix --lib -p pokered-core` to apply 29 suggestions)
-    Checking pokered-renderer v0.1.0 (/workspace/open-pokered/crates/pokered-renderer)
-    Checking pokered-agent v0.1.0 (/workspace/open-pokered/crates/pokered-agent)
-warning: unused import: `Deserialize`
-  --> crates/pokered-agent/src/world.rs:22:13
-   |
-22 | use serde::{Deserialize, Serialize};
-   |             ^^^^^^^^^^^
-   |
-   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
-
-warning: unused import: `pokered_data::map_data_loader::get_map_json`
-   --> crates/pokered-agent/src/world.rs:333:5
-    |
-333 | use pokered_data::map_data_loader::get_map_json;
-    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-    Checking pokered-ui v0.1.0 (/workspace/open-pokered/crates/pokered-ui)
-warning: unused import: `crate::alloc_prelude`
+   Compiling pokered-ui v0.1.0 (/workspace/open-pokered/crates/pokered-ui)
+warning: unused import: `crate::alloc_prelude::*`
  --> crates/pokered-ui/src/v2.rs:9:5
   |
 9 | use crate::alloc_prelude::*;
-  |     ^^^^^^^^^^^^^^^^^^^^
+  |     ^^^^^^^^^^^^^^^^^^^^^^^
   |
   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
 
-warning: `pokered-ui` (lib) generated 1 warning
-    Checking pokered-ui-preview v0.1.0 (/workspace/open-pokered/crates/pokered-ui-preview)
-warning: unreachable pattern
-   --> crates/pokered-agent/src/world.rs:498:25
-    |
-498 |                         _ => unreachable!(),
-    |                         ^ no value can reach this
-    |
-note: multiple earlier patterns match some of the same values
-   --> crates/pokered-agent/src/world.rs:498:25
-    |
-488 |                         Direction::Up => (
-    |                         ------------- matches some of the same values
-...
-492 |                         Direction::Down => (apply_connection_offset(cx, data.offset), 0),
-    |                         --------------- matches some of the same values
-493 |                         Direction::Left => (
-    |                         --------------- matches some of the same values
-...
-497 |                         Direction::Right => (0, apply_connection_offset(cy, data.offset)),
-    |                         ---------------- matches some of the same values
-498 |                         _ => unreachable!(),
-    |                         ^ collectively making this unreachable
-    = note: `#[warn(unreachable_patterns)]` (part of `#[warn(unused)]`) on by default
+warning: `pokered-ui` (lib test) generated 1 warning (run `cargo fix --lib -p pokered-ui --tests` to apply 1 suggestion)
+    Finished `test` profile [unoptimized] target(s) in 20.82s
+     Running unittests src/lib.rs (target/debug/deps/pokered_ui-cbbee389f36a1e88)
 
-warning: `pokered-agent` (lib) generated 3 warnings (run `cargo fix --lib -p pokered-agent` to apply 2 suggestions)
-    Checking pokered-app v0.1.0 (/workspace/open-pokered/crates/pokered-app)
-warning: unused import: `export_sram_into`
-  --> crates/pokered-app/src/game.rs:64:52
-   |
-64 | use pokered_core::save::sram_export::{export_sram, export_sram_into};
-   |                                                    ^^^^^^^^^^^^^^^^
-   |
-   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+running 1 test
+test menus::battle_bag::pixel_tests::long_item_quantities_are_visible_inside_the_original_tile_border ... ok
 
-warning: unused import: `AssetCategory`
- --> crates/pokered-app/src/render/intro.rs:5:34
-  |
-5 | use pokered_renderer::resource::{AssetCategory, ResourceManager};
-  |                                  ^^^^^^^^^^^^^
-
-warning: unused import: `IconKind`
-  --> crates/pokered-app/src/render/menu.rs:14:55
-   |
-14 | use pokered_data::mon_party_icons::{icon_for_species, IconKind};
-   |                                                       ^^^^^^^^
-
-warning: unused import: `resolve_map_id`
- --> crates/pokered-app/src/render/overworld.rs:6:73
-  |
-6 | use pokered_core::data::map_data_loader::{get_block_data, get_map_json, resolve_map_id};
-  |                                                                         ^^^^^^^^^^^^^^
-
-warning: unused import: `pokered_renderer::palette::GRAYSCALE_SPRITE_PALETTE`
-  --> crates/pokered-app/src/render/pc.rs:18:5
-   |
-18 | use pokered_renderer::palette::GRAYSCALE_SPRITE_PALETTE;
-   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-warning: unused import: `TILE_SIZE`
-  --> crates/pokered-app/src/render/pc.rs:20:43
-   |
-20 | use pokered_renderer::{FrameBuffer, Rgba, TILE_SIZE};
-   |                                           ^^^^^^^^^
-
-warning: unused import: `blit_tileset`
-  --> crates/pokered-app/src/render/pc.rs:22:13
-   |
-22 | use super::{blit_tileset, draw_text_box, species_to_sprite_name};
-   |             ^^^^^^^^^^^^
-
-warning: unused import: `crate::render::battle_i18n::zh_name`
-  --> crates/pokered-app/src/render/pc.rs:23:5
-   |
-23 | use crate::render::battle_i18n::zh_name;
-   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-warning: unnecessary parentheses around assigned value
-   --> crates/pokered-app/src/render/title.rs:173:22
-    |
-173 |         let logo_y = (layout_constants::title_screen::LOGO_PIXEL_Y as i32 - state.scroll_y);
-    |                      ^                                                                    ^
-    |
-    = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
-help: remove these parentheses
-    |
-173 -         let logo_y = (layout_constants::title_screen::LOGO_PIXEL_Y as i32 - state.scroll_y);
-173 +         let logo_y = layout_constants::title_screen::LOGO_PIXEL_Y as i32 - state.scroll_y;
-    |
-
-warning: unused import: `crate::alloc_prelude::*`
- --> crates/pokered-app/src/render/town_map.rs:1:5
-  |
-1 | use crate::alloc_prelude::*;
-  |     ^^^^^^^^^^^^^^^^^^^^^^^
-
-warning: unused import: `pokered_core::items::inventory::Inventory`
-  --> crates/pokered-app/src/save_editor.rs:14:5
-   |
-14 | use pokered_core::items::inventory::Inventory;
-   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-warning: unused variable: `pal`
-   --> crates/pokered-app/src/render/pokedex.rs:374:9
-    |
-374 |     let pal = &GRAYSCALE_PALETTE;
-    |         ^^^ help: if this is intentional, prefix it with an underscore: `_pal`
-    |
-    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
-
-warning: constant `SAVE_FILE_NAME` is never used
-   --> crates/pokered-app/src/game.rs:113:7
-    |
-113 | const SAVE_FILE_NAME: &str = "pokered.sav";
-    |       ^^^^^^^^^^^^^^
-    |
-    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
-
-warning: constant `SCRIPT_FLAGS_FILE_NAME` is never used
-   --> crates/pokered-app/src/game.rs:114:7
-    |
-114 | const SCRIPT_FLAGS_FILE_NAME: &str = "pokered.script_flags.json";
-    |       ^^^^^^^^^^^^^^^^^^^^^^
-
-warning: variant `BattleTransition` is never constructed
-   --> crates/pokered-app/src/render/battle.rs:362:5
-    |
-359 | enum IntroAnimState {
-    |      -------------- variant in this enum
-...
-362 |     BattleTransition {
-    |     ^^^^^^^^^^^^^^^^
-    |
-    = note: `IntroAnimState` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
-
-warning: struct `MoveAnimationCaptureState` is never constructed
-   --> crates/pokered-app/src/render/battle.rs:565:19
-    |
-565 | pub(crate) struct MoveAnimationCaptureState {
-    |                   ^^^^^^^^^^^^^^^^^^^^^^^^^
-
-warning: struct `MoveAnimationCaptureOam` is never constructed
-   --> crates/pokered-app/src/render/battle.rs:584:19
-    |
-584 | pub(crate) struct MoveAnimationCaptureOam {
-    |                   ^^^^^^^^^^^^^^^^^^^^^^^
-
-warning: multiple methods are never used
-   --> crates/pokered-app/src/render/battle.rs:648:19
-    |
-591 | impl BattleVisualEffects {
-    | ------------------------ methods in this implementation
-...
-648 |     pub(crate) fn prime_move_animation_capture_scene(&mut self, screen: &BattleScreen) {
-    |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-...
-657 |     pub(crate) fn start_move_animation_capture(
-    |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-...
-693 |     pub(crate) fn move_animation_capture_finished(&self) -> bool {
-    |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-...
-700 |     pub(crate) fn start_non_move_animation_capture(
-    |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-...
-712 |     pub(crate) fn item_animation_capture_finished(&self) -> bool {
-    |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-...
-716 |     pub(crate) fn set_capture_applying_type(&mut self, kind: u8, player: bool) {
-    |                   ^^^^^^^^^^^^^^^^^^^^^^^^^
-...
-729 |     pub(crate) fn move_animation_capture_state(&self) -> MoveAnimationCaptureState {
-    |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-warning: function `draw_overworld_cached` is never used
-   --> crates/pokered-app/src/render/overworld.rs:894:15
-    |
-894 | pub(crate) fn draw_overworld_cached(
-    |               ^^^^^^^^^^^^^^^^^^^^^
-
-warning: `pokered-app` (lib) generated 19 warnings (run `cargo fix --lib -p pokered-app` to apply 12 suggestions)
-    Checking pokered-web v0.1.0 (/workspace/open-pokered/crates/pokered-web)
-    Checking pokered-runner-web v0.1.0 (/workspace/open-pokered/crates/pokered-runner-web)
-warning: unused import: `pokered_data::items::ItemId`
-  --> crates/pokered-runner-web/src/lib.rs:71:5
-   |
-71 | use pokered_data::items::ItemId;
-   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-   |
-   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
-
-warning: `pokered-runner-web` (lib) generated 1 warning (run `cargo fix --lib -p pokered-runner-web` to apply 1 suggestion)
-    Finished `dev` profile [unoptimized] target(s) in 1m 02s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 10 filtered out; finished in 0.01s

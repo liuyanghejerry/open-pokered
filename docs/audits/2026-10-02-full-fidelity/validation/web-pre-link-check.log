@@ -1,8 +1,20 @@
     Blocking waiting for file lock on package cache
     Blocking waiting for file lock on package cache
     Blocking waiting for file lock on package cache
-   Compiling pokered-data v0.1.0 (/workspace/open-pokered/crates/pokered-data)
+   Compiling dotzuki-engine-dsl v0.8.2 (https://github.com/liuyanghejerry/dotzuki?rev=92ba95f9526107e17874df53291ac7758d0930f0#92ba95f9)
+    Checking dotzuki-engine v0.8.2 (https://github.com/liuyanghejerry/dotzuki?rev=92ba95f9526107e17874df53291ac7758d0930f0#92ba95f9)
+   Compiling dotzuki-renderer v0.8.2 (https://github.com/liuyanghejerry/dotzuki?rev=92ba95f9526107e17874df53291ac7758d0930f0#92ba95f9)
+   Compiling dotzuki-engine-script v0.8.2 (https://github.com/liuyanghejerry/dotzuki?rev=92ba95f9526107e17874df53291ac7758d0930f0#92ba95f9)
+    Checking pokered-platform v0.1.0 (/workspace/open-pokered/crates/pokered-platform)
+    Checking dotzuki-rules v0.8.2 (https://github.com/liuyanghejerry/dotzuki?rev=92ba95f9526107e17874df53291ac7758d0930f0#92ba95f9)
+   Compiling pokered-renderer v0.1.0 (/workspace/open-pokered/crates/pokered-renderer)
+    Checking dotzuki-ui v0.8.2 (https://github.com/liuyanghejerry/dotzuki?rev=92ba95f9526107e17874df53291ac7758d0930f0#92ba95f9)
+    Checking dotzuki-audio v0.8.2 (https://github.com/liuyanghejerry/dotzuki?rev=92ba95f9526107e17874df53291ac7758d0930f0#92ba95f9)
+   Compiling dotzuki-web v0.8.2 (https://github.com/liuyanghejerry/dotzuki?rev=92ba95f9526107e17874df53291ac7758d0930f0#92ba95f9)
+    Checking dotzuki-app v0.8.2 (https://github.com/liuyanghejerry/dotzuki?rev=92ba95f9526107e17874df53291ac7758d0930f0#92ba95f9)
 warning: pokered-renderer@0.1.0: CJK glyphs generated: 519 chars (95 ASCII + 562 CJK)
+    Checking pokered-audio v0.1.0 (/workspace/open-pokered/crates/pokered-audio)
+   Compiling pokered-data v0.1.0 (/workspace/open-pokered/crates/pokered-data)
 warning: function `emit_flex_container` is never used
     --> crates/pokered-data/build.rs:2648:4
      |
@@ -115,13 +127,43 @@ warning: variable does not need to be mutable
     |
     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
 
+warning: function `default_true` is never used
+   --> crates/pokered-data/src/ui_layout/schema.rs:112:4
+    |
+112 | fn default_true() -> bool { true }
+    |    ^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `default_gap` is never used
+   --> crates/pokered-data/src/ui_layout/schema.rs:113:4
+    |
+113 | fn default_gap() -> u32 { 1 }
+    |    ^^^^^^^^^^^
+
+warning: function `default_item_name_width` is never used
+   --> crates/pokered-data/src/ui_layout/schema.rs:114:4
+    |
+114 | fn default_item_name_width() -> u32 { 14 }
+    |    ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `default_qty_width` is never used
+   --> crates/pokered-data/src/ui_layout/schema.rs:115:4
+    |
+115 | fn default_qty_width() -> u32 { 2 }
+    |    ^^^^^^^^^^^^^^^^^
+
+warning: function `one` is never used
+   --> crates/pokered-data/src/ui_layout/schema.rs:224:4
+    |
+224 | fn one() -> u32 { 1 }
+    |    ^^^
+
 warning: struct `EmbeddedMapCache` is never constructed
    --> crates/pokered-data/src/map_data_loader.rs:139:8
     |
 139 | struct EmbeddedMapCache {
     |        ^^^^^^^^^^^^^^^^
-    |
-    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
 
 warning: method `get` is never used
    --> crates/pokered-data/src/map_data_loader.rs:144:8
@@ -131,7 +173,7 @@ warning: method `get` is never used
 144 |     fn get(&mut self, name: &str) -> Option<MapJsonHandle> {
     |        ^^^
 
-warning: `pokered-data` (lib) generated 10 warnings (run `cargo fix --lib -p pokered-data` to apply 2 suggestions)
+warning: `pokered-data` (lib) generated 15 warnings (run `cargo fix --lib -p pokered-data` to apply 2 suggestions)
     Checking pokered-core v0.1.0 (/workspace/open-pokered/crates/pokered-core)
 warning: unused import: `crate::alloc_prelude::*`
  --> crates/pokered-core/src/battle/effects/damage_effects.rs:6:5
@@ -482,7 +524,6 @@ warning: methods `map_scene_ast` and `repel_wore_off` are never used
      |                   ^^^^^^^^^^^^^^
 
 warning: `pokered-core` (lib) generated 43 warnings (run `cargo fix --lib -p pokered-core` to apply 29 suggestions)
-    Checking pokered-renderer v0.1.0 (/workspace/open-pokered/crates/pokered-renderer)
     Checking pokered-agent v0.1.0 (/workspace/open-pokered/crates/pokered-agent)
 warning: unused import: `Deserialize`
   --> crates/pokered-agent/src/world.rs:22:13
@@ -508,7 +549,6 @@ warning: unused import: `crate::alloc_prelude`
   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
 
 warning: `pokered-ui` (lib) generated 1 warning
-    Checking pokered-ui-preview v0.1.0 (/workspace/open-pokered/crates/pokered-ui-preview)
 warning: unreachable pattern
    --> crates/pokered-agent/src/world.rs:498:25
     |
@@ -688,8 +728,8 @@ warning: function `draw_overworld_cached` is never used
     |               ^^^^^^^^^^^^^^^^^^^^^
 
 warning: `pokered-app` (lib) generated 19 warnings (run `cargo fix --lib -p pokered-app` to apply 12 suggestions)
-    Checking pokered-web v0.1.0 (/workspace/open-pokered/crates/pokered-web)
     Checking pokered-runner-web v0.1.0 (/workspace/open-pokered/crates/pokered-runner-web)
+    Checking pokered-web v0.1.0 (/workspace/open-pokered/crates/pokered-web)
 warning: unused import: `pokered_data::items::ItemId`
   --> crates/pokered-runner-web/src/lib.rs:71:5
    |
@@ -699,4 +739,4 @@ warning: unused import: `pokered_data::items::ItemId`
    = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
 
 warning: `pokered-runner-web` (lib) generated 1 warning (run `cargo fix --lib -p pokered-runner-web` to apply 1 suggestion)
-    Finished `dev` profile [unoptimized] target(s) in 1m 02s
+    Finished `dev` profile [unoptimized] target(s) in 1m 10s

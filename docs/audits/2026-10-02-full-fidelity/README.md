@@ -21,7 +21,7 @@
 | 四天王、冠军、名人堂、结尾 | Lance路径/门、前图、24帧渐白、叫声、credits前导/四阶渐变/THE END | [后期 L10](late-story.md)、[音画 VA14–17](visual-audio.md) |
 | 每场战斗 | PP状态门、混乱、X Accuracy、固定伤害、Disable/Mimic/Transform、Counter/Wrap/Thrash、经验、徽章/烧伤/麻痹、AI行动时点、调用技实时历史 | [战斗 B01–29](battle-mechanics.md) |
 | 移动、野遇、版本 | 同半块右下tile、旧表残留、Route1方向、经典NPC轴映射/256帧等待、Blue版本贯通 | [地图 D-W01–05](data-world.md) |
-| 背包/商店/PC/育成/交易/联机/存读 | 原子库存、金钱上限、箱镜像、能力重算、育成元数据、PP Ups、普通存读桥、Cable入口、合法OT ID 0 | [系统 SYS01–17](systems.md) |
+| 背包/商店/PC/育成/交易/联机/存读 | 原子库存、金钱上限、箱镜像、能力重算、育成元数据、PP Ups、普通存读桥、Cable入口、合法OT ID 0、TCP行动等待/终局/败方返回 | [系统 SYS01–20](systems.md) |
 | 所有音乐及菜单 | 真正的note初始化滑音、专用边框、HP动画速度、卡片/文凭/电梯布局、credits滚动间隔、OBJ调色板 | [音画 VA09–13、VA18–20](visual-audio.md) |
 
 同一根因在不同阶段有重复证据，例如早期 E06、后期 L01/L04 和地图 D-W06；这些编号是阅读索引，不能直接相加作为独立bug总数。
@@ -57,7 +57,8 @@ checksummed game region3979字节、party地址`$AF2C`和checksum地址`$B523`�
 
 原作8px字体恢复后的PC、名人堂、背包及联机布局复审见 [ui-world-fixes.md](ui-world-fixes.md)，包含经验证基线与最终构建的16组EN/ZH前后截图，并注明合成边界测试与生产流程的区别。
 
-最终 native 八包完整检查：105个测试目标、4444次测试执行通过、0失败、9跳过（含app lib/bin重复执行，不把次数写成独立测试数）；core lib2648/2648，新增生产战斗61/61。Web两个包wasm32检查、GBA nightly release编译通过；GBA本轮没有硬件/模拟器运行证据。11个定点种子场景通过；它们与连续新游戏分开记录。
+最终 `c3847df` native 九包完整检查：107个测试目标、4508次测试执行通过、0失败、9跳过（含app lib/bin重复执行，不把次数写成独立测试数）；core lib2650/2650，生产战斗61/61、系统integration17/17、UI preview58/58。Web三个包wasm32检查、GBA nightly release编译通过；GBA本轮没有硬件/模拟器运行证据。11个定点种子场景通过；它们与连续新游戏分开记录。
+实际双TCP战斗补修SYS18–20，双方战后及再等待120帧均留在竞技场；HP/状态/PP恢复、金钱/经验不变。背包数量列追加英/中长名×1/99的真实像素回归，见 [预览复审](ui-preview-regression.md)。
 具体命令、源码版本、二进制哈希和日志见 [最终验证](validation/final-validation.md) 与 [机器结果](validation/final-results.json)。历史不带final前缀的日志保留基线/中间诊断，不能当作最终源码验收。
 
 ## 覆盖边界

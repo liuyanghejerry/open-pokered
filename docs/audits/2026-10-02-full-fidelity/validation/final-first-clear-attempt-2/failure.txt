@@ -1,0 +1,22 @@
+Traceback (most recent call last):
+  File "/workspace/open-pokered/scripts/playthrough.py", line 1058, in nav_warp
+    self.nav_to(x, y, map_name=from_map, tries=tries)
+  File "/workspace/open-pokered/scripts/playthrough.py", line 717, in nav_to
+    raise NavError(f"no path in {cm}: ({cx},{cy})->({x},{y})")
+playthrough.NavError: no path in MtMoonB1F: (25,9)->(21,17)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/workspace/open-pokered/scripts/playthrough.py", line 1980, in main
+    fn(g)
+  File "/workspace/open-pokered/scripts/playthrough_late.py", line 268, in m12_mt_moon
+    return cross_mt_moon(g)
+           ^^^^^^^^^^^^^^^^
+  File "/workspace/open-pokered/scripts/playthrough_late.py", line 285, in cross_mt_moon
+    g.nav_warp(21, 17, "MtMoonB1F", "MtMoonB2F")
+  File "/workspace/open-pokered/scripts/playthrough.py", line 1075, in nav_warp
+    self.nav_to(*inner, map_name=from_map,
+  File "/workspace/open-pokered/scripts/playthrough.py", line 717, in nav_to
+    raise NavError(f"no path in {cm}: ({cx},{cy})->({x},{y})")
+playthrough.NavError: no path in MtMoonB1F: (25,9)->(21,16)

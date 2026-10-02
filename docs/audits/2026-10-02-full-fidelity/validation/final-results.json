@@ -1,20 +1,33 @@
 {
-  "game_production_source": "8837a2a32c2ba8c345db16e97b01f49016e88950",
-  "game_test_source": "9ad9034",
+  "game_production_source": "c3847df43513ffba0b626da230a9af866ffd5cde",
+  "game_test_source": "c3847df43513ffba0b626da230a9af866ffd5cde",
   "engine_code": "92ba95f9526107e17874df53291ac7758d0930f0",
   "engine_final_test_source": "9d09696be2cd33a1e94c118192b7b5c1fe4872f4",
   "native": {
-    "test_targets": 105,
-    "passed_executions": 4444,
+    "test_targets": 107,
+    "passed_executions": 4508,
     "failed": 0,
     "ignored": 9,
-    "exit_code": 0
+    "exit_code": 0,
+    "packages": [
+      "pokered-core",
+      "pokered-data",
+      "pokered-app",
+      "pokered-ui",
+      "pokered-ui-preview",
+      "pokered-renderer",
+      "pokered-audio",
+      "pokered-tui",
+      "pokered-debug-server"
+    ],
+    "count_scope": "passed executions, including repeated app lib/bin tests; not unique tests"
   },
   "web_check": {
     "target": "wasm32-unknown-unknown",
     "packages": [
       "pokered-web",
-      "pokered-runner-web"
+      "pokered-runner-web",
+      "pokered-ui-preview"
     ],
     "exit_code": 0
   },
@@ -36,9 +49,53 @@
     "exit_code": 0
   },
   "continuous_fresh_first_clear": {
-    "status": "running",
+    "status": "attempt 3 running; earlier attempts retained as driver failures",
     "seed": 42,
     "save": "independent empty slot",
-    "binary_manifest": "final-build-manifest.json"
+    "binary_manifest": "final-link-build-manifest.json",
+    "binary_source": "7897c04a2cec95b8b26e2f9755799a15c8a24181",
+    "driver_source": "c731f27",
+    "audit_wrapper": "run_first_clear.py with max_iters=1600",
+    "earlier_attempts": [
+      {
+        "attempt": 1,
+        "passed_through": "m13",
+        "failure_scope": "400 input iteration budget exhausted during live Route25 trainer battle, ordinary ShowingText to PlayerMenu; no game hardlock"
+      },
+      {
+        "attempt": 2,
+        "passed_through": "m11",
+        "failure_scope": "same-map navigation could not cross disconnected MtMoonB1F rooms after a normal blackout; real cross-floor route independently verified"
+      }
+    ]
+  },
+  "default_app_tests": {
+    "source": "f0f0633",
+    "test_targets": 34,
+    "passed_executions": 350,
+    "failed": 0,
+    "ignored": 7,
+    "exit_code": 0
+  },
+  "driver_tests": {
+    "source": "c731f27",
+    "passed": 47,
+    "failed": 0,
+    "exit_code": 0
+  },
+  "actual_tcp_colosseum": {
+    "status": "passed",
+    "binary_manifest": "final-link-build-manifest.json",
+    "binary_source": "7897c04a2cec95b8b26e2f9755799a15c8a24181",
+    "start_scope": "independently seeded SaveData fixtures, real two frontend processes and TCP",
+    "first_action_wait_frames": 100,
+    "post_room_neutral_frames": 120,
+    "verified": [
+      "both return to Colosseum and stay",
+      "party HP/status/PP restored",
+      "money unchanged",
+      "experience unchanged"
+    ],
+    "evidence": "../systems-colosseum-final.json"
   }
 }
