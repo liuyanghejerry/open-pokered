@@ -1016,7 +1016,11 @@ impl NativeScriptEngine {
                 .get("bag")
                 .is_some_and(|items| items.iter().any(|item| item == "OAKS_PARCEL"))
         {
-            return "__native_talkOak1_parcel".to_string();
+            return match host.player_y {
+                1 => "__native_talkOak1_parcel_y1",
+                3 => "__native_talkOak1_parcel_y3",
+                _ => "__native_talkOak1_parcel",
+            }.to_string();
         }
         if flag("EVENT_BATTLED_RIVAL_IN_OAKS_LAB") {
             return "__native_talkOak1_battled".to_string();
@@ -1649,6 +1653,7 @@ mod tests {
             bits: u8,
             bag: &[String],
             lang: &str,
+            player_y: u8,
             lazy: bool,
         ) -> (Vec<ScriptCommand>, HashMap<String, bool>) {
             let mut engine = NativeScriptEngine::new();
@@ -1675,6 +1680,7 @@ mod tests {
             engine.seed_number("pokedexSeen", 151.0);
             engine.seed_set("bag", bag);
             engine.set_lang(lang);
+            engine.set_player_position(0, player_y);
             let mut commands = Vec::new();
             let mut command = engine.call_function_no_args("talkOak1").unwrap();
             for _ in 0..128 {
@@ -1689,18 +1695,20 @@ mod tests {
         for lang in ["en", "zh"] {
             for owned in 0..=151 {
                 assert_eq!(
-                    run(owned, 15, &[], lang, true),
-                    run(owned, 15, &[], lang, false),
+                    run(owned, 15, &[], lang, 0, true),
+                    run(owned, 15, &[], lang, 0, false),
                     "rating changed at {owned} owned, {lang}"
                 );
             }
             for bits in 0..64 {
                 for bag in [vec![], vec!["POKE_BALL".into()], vec!["OAKS_PARCEL".into()]] {
-                    assert_eq!(
-                        run(1, bits, &bag, lang, true),
-                        run(1, bits, &bag, lang, false),
-                        "story branch changed for flags={bits}, bag={bag:?}, {lang}"
-                    );
+                    for player_y in [0, 1, 2, 3, 4] {
+                        assert_eq!(
+                            run(1, bits, &bag, lang, player_y, true),
+                            run(1, bits, &bag, lang, player_y, false),
+                            "story branch changed for flags={bits}, bag={bag:?}, row={player_y}, {lang}"
+                        );
+                    }
                 }
             }
         }

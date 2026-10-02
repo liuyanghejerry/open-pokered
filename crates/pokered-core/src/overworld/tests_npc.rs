@@ -1970,14 +1970,16 @@ fn victory_road_2f_entry_resets_1f_switch_and_preserves_2f_switches() {
     screen.set_flag_live("EVENT_VICTORY_ROAD_1_BOULDER_ON_SWITCH", true);
     screen.set_flag_live("EVENT_VICTORY_ROAD_2_BOULDER_ON_SWITCH1", true);
     screen.set_flag_live("EVENT_VICTORY_ROAD_2_BOULDER_ON_SWITCH2", true);
+    assert!(screen.unified_flags().get_flag("EVENT_VICTORY_ROAD_1_BOULDER_ON_SWITCH"));
     screen.warp_to_map(MapId::VictoryRoad2F, 5, 5);
     for _ in 0..120 {
         screen.update_frame(super::OverworldInput::new(false, false, false, false, false, false, false, false));
     }
     assert_eq!(screen.state.current_map, MapId::VictoryRoad2F);
-    assert_eq!(screen.script_flags().get("EVENT_VICTORY_ROAD_1_BOULDER_ON_SWITCH"), Some(&false));
-    assert_eq!(screen.script_flags().get("EVENT_VICTORY_ROAD_2_BOULDER_ON_SWITCH1"), Some(&true));
-    assert_eq!(screen.script_flags().get("EVENT_VICTORY_ROAD_2_BOULDER_ON_SWITCH2"), Some(&true));
+    // Cleared canonical bits are omitted from script_flags()'s sparse snapshot.
+    assert!(!screen.unified_flags().get_flag("EVENT_VICTORY_ROAD_1_BOULDER_ON_SWITCH"));
+    assert!(screen.unified_flags().get_flag("EVENT_VICTORY_ROAD_2_BOULDER_ON_SWITCH1"));
+    assert!(screen.unified_flags().get_flag("EVENT_VICTORY_ROAD_2_BOULDER_ON_SWITCH2"));
 }
 
 #[test]

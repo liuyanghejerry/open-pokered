@@ -1942,21 +1942,43 @@ fn write_oaks_lab_native_branches(
         }) => (then_branch, else_branch),
         _ => panic!("talkOak1 missing rating branch"),
     };
-    for (name, body) in [("parcel", parcel), ("dex_other", other)] {
-        let mut body = body.clone();
-        if name == "dex_other" {
-            body.extend_from_slice(&dex[1..]);
+    // The parcel cutscene moves only the rival; the player's row remains
+    // fixed while input is locked. Specialize its arrival/departure paths so
+    // the GBA never expands all three rows' nested AST branches at once.
+    fn select_parcel_row(statements: &[StoryStmt], row: u8) -> Vec<StoryStmt> {
+        use dotzuki_engine_dsl::ast::{BinOp, Expression};
+        let mut selected = Vec::new();
+        for statement in statements {
+            match statement {
+                StoryStmt::If {
+                    condition: Expression::BinaryOp { op: BinOp::Eq, left, right },
+                    then_branch, else_branch, ..
+                } if matches!(left.as_ref(), Expression::Call { callee, args }
+                    if callee == "getPlayerY" && args.is_empty()) => {
+                    let Expression::NumberLit(expected) = right.as_ref() else {
+                        panic!("nonconstant Oak parcel row")
+                    };
+                    assert!(*expected == 1.0 || *expected == 3.0,
+                        "Oak parcel rows changed; update the native selector");
+                    selected.extend(select_parcel_row(
+                        if row as f64 == *expected { then_branch } else { else_branch }, row));
+                }
+                _ => selected.push(statement.clone()),
+            }
         }
-        body.extend_from_slice(&statements[1..]);
-        write_scene_function(
-            functions,
-            out_dir,
-            "OaksLab",
-            &format!("__native_talkOak1_{name}"),
-            &format!("OaksLab_talkOak1_{name}"),
-            &body,
-        );
+        selected
     }
+    for (name, row) in [("parcel", 2), ("parcel_y1", 1), ("parcel_y3", 3)] {
+        let mut body = select_parcel_row(parcel, row);
+        body.extend_from_slice(&statements[1..]);
+        write_scene_function(functions, out_dir, "OaksLab",
+            &format!("__native_talkOak1_{name}"), &format!("OaksLab_talkOak1_{name}"), &body);
+    }
+    let mut body = other.clone();
+    body.extend_from_slice(&dex[1..]);
+    body.extend_from_slice(&statements[1..]);
+    write_scene_function(functions, out_dir, "OaksLab", "__native_talkOak1_dex_other",
+        "OaksLab_talkOak1_dex_other", &body);
     // Specialize only the pure owned-count comparisons. Walk the entire
     // compiled tail: the compiler may emit more than one top-level If.
     // All commands, text and trailing statements stay in their exact order.
