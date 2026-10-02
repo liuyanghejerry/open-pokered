@@ -208,15 +208,18 @@ def capture_status_options(mon, enemy, bag):
         if move.get('power') != 0 or not status:
             continue
         enemy_data = late.species_data(enemy['species'])
-        effectiveness = math.prod(late.type_chart().get((move['type'], typ), 1)
-                                  for typ in {enemy_data['type1'], enemy_data['type2']})
-        if effectiveness == 0:
+        # Gen-I SleepEffect has no type immunity; ParalyzeEffect checks Ground
+        # only when the move is Electric. Do not apply the damage chart (e.g.
+        # Sing/Glare work on Ghost, Stun Spore works on Grass). "1" denotes
+        # type compatibility, never certainty of landing or a damage multiplier.
+        enemy_types = {enemy_data['type1'], enemy_data['type2']}
+        if move['effect'] == 'ParalyzeEffect' and move['type'] == 'Electric' and 'Ground' in enemy_types:
             continue
         projected = {ball: capture_probability(ball, {**enemy, 'status': status,
                          'catch_rate': capture_catch_rate(enemy)})
                      for ball, quantity in bag.items() if ball in BALLS and quantity > 0}
         result.append({'slot': index, 'move': name, 'pp': pp, 'power': 0,
-                       'accuracy': move['accuracy'], 'effectiveness': effectiveness,
+                       'accuracy': move['accuracy'], 'effectiveness': 1,
                        'effect': move['effect'], 'status_if_successful': status,
                        'residual_damage_risk': False,
                        'capture_probability_if_status_lands': projected})

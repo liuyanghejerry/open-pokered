@@ -686,3 +686,17 @@ SRAM SHA256：`f122585af138a775df31aef01e14a93ee22bd3ea5a8c97a84330a0825c740632`
 122次`bfs_cross`累计约60秒；不是模型网络等待。原始分析在
 `/tmp/jev-strategy-profile.prof`与`/tmp/jev-strategy-profile-fixed.log`，尚未优化
 或据此删减候选／改变路线。正式收集与最终MP4交付仍未完成。
+
+### 状态候选与原版纯状态属性规则对齐
+
+后续检查发现Python的`capture_status_options`仍用伤害属性表过滤纯状态招式：
+Sing／Glare对Ghost因此被错误省略，StunSpore对Grass／Onix等则出现虚假的
+半效／四倍“效果”。该字段现在只表示原版类型兼容性（兼容为1），睡眠无
+属性免疫、纯麻痹仅Electric→Ground免疫；准确率／PP／已有异常状态约束
+继续保留，不把兼容说成必中。它同时修正战斗招式与PC准备候选，仍由Jev
+决定是否使用。8个允许组合与2个地面免疫反例覆盖该边界，测试先RED后GREEN；
+相关Python332项通过。原生规则未再次变化，此输入修正留待下一次续跑加载。
+
+修正麻痹规则的新二进制fresh m01–m10已通过：终点PewterGym `(4,2)`，
+frame101852、money4871，退出0，日志`/tmp/jev-primary-paralysis-fresh-m10.log`。
+旧二进制完整m49回归仍运行，不能视为完成。

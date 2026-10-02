@@ -3366,6 +3366,21 @@ class AutonomousTests(unittest.TestCase):
         self.assertEqual(JevGame.battle_recovery_plan(agent, state), ('PokeBall', None))
         self.assertIn('ball:PokeBall', agent.judgments.choose.call_args.args[2])
 
+    def test_capture_status_uses_primary_rules_not_damage_type_chart(self):
+        from openpokered.playthrough_judgments import capture_status_options
+        for move, species in [('Sing', 'Gastly'), ('Glare', 'Gastly'),
+                              ('Glare', 'Snorlax'), ('StunSpore', 'Bulbasaur'),
+                              ('Hypnosis', 'Abra'), ('ThunderWave', 'Pikachu'),
+                              ('ThunderWave', 'Zapdos'), ('StunSpore', 'Onix')]:
+            with self.subTest(move=move, species=species):
+                options = capture_status_options({'moves': [move], 'pp': [1]},
+                                                 {'species': species, 'status': 'None'}, {})
+                self.assertEqual(len(options), 1)
+                self.assertEqual(options[0]['effectiveness'], 1)
+        for species in ('Onix', 'Nidoking'):
+            self.assertEqual(capture_status_options({'moves': ['ThunderWave'], 'pp': [20]},
+                                                    {'species': species}, {}), [])
+
     def test_transform_keeps_capture_identity_and_original_catch_rate(self):
         from types import SimpleNamespace
         from openpokered.playthrough_judgments import ball_options, capture_intent, capture_status_options, JevGame
