@@ -2624,6 +2624,97 @@ class AutonomousTests(unittest.TestCase):
         self.assertEqual({value[0] for value in bindings.values()},
                          {'reach_training:Route24,5,18', 'lead_with:Charizard', 'lead_with:Pidgey'})
 
+    def test_collection_travel_exposes_leader_choices_without_forcing_one(self):
+        agent, facts = self.support_training_agent()
+        facts['party'].reverse()
+        agent.maps['PowerPlant'] = {'wild': {'red': {'grass': {'encounterRate': 10,
+            'mons': [{'species': 'Voltorb', 'level': 21}, {'species': 'Magnemite', 'level': 24}]}}}}
+        # Static capture, healing and Surf must also expose preparation,
+        # not only evolution/shared-experience training.
+        for target, operation in ((('register', 'Zapdos', True), 'travel_to:PowerPlant'),
+                                  (('heal', 'party', True), 'travel_to:CeruleanPokecenter'),
+                                  (('location', ('Route10', 15, 44), True), 'surf:1')):
+            with self.subTest(operation=operation):
+                rule = Rule('trip', 'Route10', 'trip', [], [], [], target, [])
+                agent.active = {'target': target}
+                agent._action_candidates = Mock(return_value=(
+                    {'action:0': json.dumps({'operation': operation})},
+                    {'action:0': (operation, rule)}))
+                choices, bindings = agent.action_candidates(facts)
+                self.assertEqual({op for op, _ in bindings.values()}, {operation, 'lead_with:Charizard'})
+                self.assertEqual(bindings['action:0'], (operation, rule))
+                self.assertEqual(json.loads(choices['action:1'])['current_leader']['species'], 'Gloom')
+                self.assertIs(bindings['action:1'][1], rule)
+                if operation == 'travel_to:PowerPlant':
+                    route = json.loads(choices['action:0'])['route_encounters']
+                    self.assertEqual(route, [{'map': 'PowerPlant', 'terrain': 'grass',
+                        'level_range': [21, 24], 'species': ['Magnemite', 'Voltorb']}])
+                    self.assertEqual(json.loads(choices['action:1'])['route_encounters'], route)
+
+    def test_transit_leader_choice_explains_preparation_without_forcing_it(self):
+        agent, facts = self.support_training_agent()
+        agent.active = {'context': {}}
+        candidates = {'action:0': json.dumps({'operation': 'lead_with:Charizard',
+                                             'transit_leader': facts['party'][0]})}
+        with patch.object(DualStoryAgent, 'choose', return_value='action:0') as choose:
+            agent.choose('action', {'subgoal': ['register', 'Zapdos', True], 'local_state': facts},
+                         candidates, 'Choose the next operation.')
+        instruction = choose.call_args.args[3]
+        self.assertIn('valid preparation step', instruction)
+        self.assertIn('already suitable', instruction)
+        self.assertIn('not a forecast or a survival guarantee', instruction)
+        self.assertTrue(choose.call_args.kwargs['allow_abstain'])
+
+    def test_transit_leader_options_do_not_mask_duplicates_or_change_local_work(self):
+        agent, facts = self.support_training_agent()
+        rule = Rule('trip', 'Route24', 'trip', [], [], [], (), [])
+        facts['party'].extend([{**facts['party'][1], 'species': 'Pikachu', 'hp': 0},
+                               {**facts['party'][1], 'species': 'Pikachu', 'hp': 30}])
+        candidates = {'action:0': '{}', 'action:2': '{}'}
+        bindings = {'action:0': ('travel_to:Route24', rule), 'action:2': ('lead_with:Gloom', rule)}
+        agent.add_transit_lead_candidates(candidates, bindings, facts)
+        self.assertEqual(len(bindings), 2)  # Already offered Gloom; first Pikachu is fainted.
+        for operation in ('train_encounter:Route24,5,18', 'lead_with:Gloom', 'interact_counter:3,3,up,0'):
+            candidates, bindings = {'action:0': '{}'}, {'action:0': (operation, rule)}
+            agent.add_transit_lead_candidates(candidates, bindings, facts)
+            self.assertEqual(bindings, {'action:0': (operation, rule)})
+
+    def test_selected_journey_asks_leader_separately_and_keeps_field_move_user(self):
+        agent, facts = self.support_training_agent()
+        rule = Rule('surf', 'Route10', 'surf', [], [], [], (), [])
+        facts['party'][1]['moves'].append('Surf')
+        agent.active = {'target': ('location', ('Route10', 15, 44), True),
+                        'context': {'map': 'Route10', 'destination': 'PowerPlant'}}
+        agent.facts = Mock(return_value=facts)
+        agent.execute = Mock(side_effect=lambda *args: facts['party'].reverse())
+        with patch.object(DualStoryAgent, 'choose', return_value='lead_with:Gloom') as choose:
+            self.assertEqual(agent.prepare_transit_lead('surf:1', rule), 'surf:0')
+        agent.execute.assert_called_once_with('lead_with:Gloom', rule)
+        self.assertEqual(choose.call_args.args[1]['stage'], 'transit_preparation')
+        self.assertEqual(set(choose.call_args.args[2]), {'keep', 'lead_with:Gloom'})
+        self.assertFalse(choose.call_args.kwargs['allow_abstain'])
+        # Keeping the already suitable leader is a complete valid outcome.
+        agent.execute.reset_mock()
+        with patch.object(DualStoryAgent, 'choose', return_value='keep'):
+            self.assertEqual(agent.prepare_transit_lead('surf:0', rule), 'surf:0')
+        agent.execute.assert_not_called()
+
+    def test_transit_preparation_is_scoped_and_respects_action_budget(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.collects_dex = True
+        agent.actions = agent.max_actions = 1
+        agent.prepare_transit_lead = Mock(return_value='travel_to:Route24')
+        rule = Rule('trip', 'Route24', 'trip', [], [], [], (), [])
+        with self.assertRaisesRegex(StoryStopped, 'action_budget'):
+            agent.execute('travel_to:Route24', rule)
+        agent.prepare_transit_lead.assert_not_called()
+        agent.actions = 0
+        agent.active = {'target': ('location', 'Route24', True)}
+        agent.travel, agent.settle, agent.remember_travel_result, agent.record = Mock(), Mock(), Mock(), Mock()
+        agent.execute('travel_to:Route24', rule)
+        agent.prepare_transit_lead.assert_called_once_with('travel_to:Route24', rule)
+        agent.travel.assert_called_once_with('Route24', rule)
+
     def capture_retrieval_fixture(self):
         agent, facts = self.support_training_agent()
         pc = Rule('pc', 'CeruleanPokecenter', 'pc', ['sign:1'], [], [],

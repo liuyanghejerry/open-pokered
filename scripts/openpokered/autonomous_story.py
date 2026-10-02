@@ -920,6 +920,14 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'switching to a capable finisher is progress even though it does not itself register a species '
                 'or reach the nurse. Compare effective attacks, level and health rather than continuing '
                 'to use an immune or depleted active battler.')
+        if layer == 'action' and any('"transit_leader"' in value for value in candidates.values()):
+            instruction += (' Travel exposes the current party leader to incidental wild encounters before '
+                'the destination interaction. Changing the leader is a valid preparation step, even though '
+                'it does not move the player. Compare current_leader and transit_leader HP, level and moves '
+                'against route_encounters. A low-level capture status supporter can stay in the party '
+                'until the capture battle; it need not lead the entire trip. Prefer continuing travel '
+                'when the current leader is already suitable, rather than swapping repeatedly. '
+                'Encounter ranges are possibilities, not a forecast or a survival guarantee.')
         # Appended after the rewrites above: the menu and training instructions
         # replace the incoming text, and the bias must still reach the question.
         bias = PREFERENCE_INSTRUCTIONS.get(getattr(self, 'preference', 'none'))
@@ -3224,6 +3232,65 @@ class AutonomousStoryAgent(DualStoryAgent):
         return options
 
     def action_candidates(self, facts):
+        candidates, bindings = self._action_candidates(facts)
+        if getattr(self, 'collects_dex', False):
+            self.add_transit_lead_candidates(candidates, bindings, facts)
+        return candidates, bindings
+
+    def add_transit_lead_candidates(self, candidates, bindings, facts):
+        """Expose ordinary party preparation beside travel, never select it."""
+        trips = [(operation, rule) for operation, rule in bindings.values()
+                 if operation.startswith(('travel_to:', 'reach_training:', 'surf:'))]
+        party = facts.get('party', [])
+        if not trips or len(party) < 2:
+            return
+        operations = {operation for operation, _ in bindings.values()}
+        if any(operation.startswith('train_encounter:') for operation in operations):
+            return  # Already at a training point: retain the trainee for experience.
+        context = (getattr(self, 'active', None) or {}).get('context', {})
+        trainee = (context.get('from_species') if context.get('capture_support_training')
+                   or (context.get('acquisition_method') == 'evolution'
+                       and context.get('trigger') == 'level') else None)
+        regions = {facts.get('map'), context.get('map'), context.get('destination')}
+        for key, (operation, _) in bindings.items():
+            if operation.startswith(('travel_to:', 'reach_training:')):
+                regions.add(operation.split(':', 1)[1].split(',')[0])
+                regions.update((json.loads(candidates[key]).get('navigation') or {}).get('via', []))
+        encounters = []
+        for name in sorted(regions - {None}):
+            for method, table in ((getattr(self, 'maps', {}).get(name, {}).get('wild') or {}).get('red') or {}).items():
+                mons = table.get('mons', []) if table else []
+                if not mons:
+                    continue
+                encounters.append({'map': name, 'terrain': method,
+                    'level_range': [min(mon['level'] for mon in mons), max(mon['level'] for mon in mons)],
+                    'species': sorted({mon['species'] for mon in mons})})
+        for key, (operation, _) in bindings.items():
+            if operation.startswith(('travel_to:', 'reach_training:', 'surf:')):
+                candidates[key] = json.dumps({**json.loads(candidates[key]),
+                    'current_leader': party[0], 'route_encounters': encounters,
+                    'encounter_scope': 'Public wild tables for known trip regions, not predicted battles or complete intermediate-route coverage'})
+        # lead_with names the first matching species. Do not describe a later
+        # duplicate's HP/moves while the menu skill would select the first.
+        offered = {party[0]['species']}
+        for mon in party[1:]:
+            if mon['species'] in offered:
+                continue
+            offered.add(mon['species'])
+            operation = f'lead_with:{mon["species"]}'
+            if mon['hp'] <= 0 or mon['species'] == trainee or operation in operations:
+                continue
+            key = f'action:{len(candidates)}'
+            while key in candidates:
+                key += ':lead'
+            candidates[key] = json.dumps({
+                'operation': operation, 'current_leader': party[0], 'transit_leader': mon,
+                'route_encounters': encounters,
+                'purpose': 'Optionally change the leader before normal travel or a water crossing; compare survival and escape capability against the current leader',
+                'scope': 'Party preparation only, not experience or a capture status turn. Other party members remain available; selecting a different leader does not guarantee safety.'})
+            bindings[key] = operation, trips[0][1]
+
+    def _action_candidates(self, facts):
         preparing_training = self.active['target'][:2] == ('level', 'leader')
         preparing_capture = (self.active['target'][0] in ('catch', 'held_species')
                              and self.active.get('context', {}).get('acquisition_method') != 'safari')
@@ -3412,21 +3479,6 @@ class AutonomousStoryAgent(DualStoryAgent):
                                  for mon in facts['party'][1:]) else 1),
                     'navigation': getattr(self, 'training_navigation', {}).get(name)})
                 bindings[key] = operation, rule
-            if not at_training_point and index == 0:
-                # A resumed trip may already have the fragile trainee in front.
-                # Offer every other living species, not an automatic best lead.
-                offered = {source}
-                for mon in facts['party'][1:]:
-                    if mon['hp'] <= 0 or mon['species'] in offered:
-                        continue
-                    offered.add(mon['species'])
-                    operation = f'lead_with:{mon["species"]}'
-                    key = f'action:{len(candidates)}'
-                    candidates[key] = json.dumps({
-                        'operation': operation, 'transit_leader': mon,
-                        'purpose': f'Protect {source} from incidental travel encounters; restore the trainee lead at the training point',
-                        'scope': 'Optional transit preparation, not training experience or a survival guarantee.'})
-                    bindings[key] = operation, rule
             return candidates, bindings
         if self.active['target'][0] in ('health', 'pp_reserve'):
             names = {name.replace('_', '').upper(): name for name in MEDICINES}
@@ -4203,7 +4255,54 @@ class AutonomousStoryAgent(DualStoryAgent):
                 raise StoryStopped(f'unsupported_pc_deposit_phase:{phase}')
         raise StoryStopped('pc_deposit_did_not_finish')
 
+    def prepare_transit_lead(self, operation, rule):
+        """Ask about this selected journey, then apply only Jev's menu choice."""
+        facts = self.facts()
+        description = {'operation': operation}
+        if operation.startswith(('travel_to:', 'reach_training:')):
+            destination = operation.split(':', 1)[1].split(',')[0]
+            description['navigation'] = {'via': [leg['to_map'] for leg in
+                self.client.route(facts['map'], destination).get('legs', [])]}
+        candidates = {'trip': json.dumps(description)}
+        bindings = {'trip': (operation, rule)}
+        self.add_transit_lead_candidates(candidates, bindings, facts)
+        if len(bindings) == 1:
+            return operation
+        leaders = {'keep': json.dumps({'pokemon': facts['party'][0],
+            'effect': 'Keep the current leader and begin the selected journey'})}
+        for key, (candidate, _) in bindings.items():
+            if candidate.startswith('lead_with:'):
+                leaders[candidate] = json.dumps({'pokemon': json.loads(candidates[key])['transit_leader'],
+                    'effect': 'Move this party member to the lead through the normal party menu, then begin the selected journey'})
+        choice = super().choose('action', {'selected_journey': json.loads(candidates['trip']),
+            'party': facts['party'], 'subgoal': self.active['target'], 'stage': 'transit_preparation'},
+            leaders,
+            'Which party member should lead this selected journey through incidental wild encounters? '
+            'The journey itself has already been selected. Compare level, current HP and usable moves with '
+            'the possible route encounters to preserve the party and escape safely. A capture status supporter '
+            'can remain in the party for the destination battle without leading the trip. Keep the current '
+            'leader when already suitable to avoid unnecessary swapping. This is not selection of an attack '
+            'or training participant. Field moves may be used by a non-leading party member; the selected '
+            'field-move user is unchanged by this choice. Table ranges do not guarantee what will be encountered.',
+            allow_abstain=False)
+        if choice == 'keep':
+            return operation
+        # The selected field-move user is an individual party member, not a
+        # stable slot number. Reordering must not silently change that choice.
+        actor = facts['party'][int(operation.split(':')[1])] if operation.startswith('surf:') else None
+        self.execute(choice, rule)
+        if actor is not None:
+            party = self.facts()['party']
+            index = next(i for i, mon in enumerate(party) if mon == actor)
+            return f'surf:{index}'
+        return operation
+
     def execute(self, operation, rule):
+        if (getattr(self, 'collects_dex', False)
+                and operation.startswith(('travel_to:', 'reach_training:', 'surf:'))):
+            if self.actions >= self.max_actions:
+                raise StoryStopped('action_budget')
+            operation = self.prepare_transit_lead(operation, rule)
         if operation.startswith('buy_coins:'):
             if self.actions >= self.max_actions:
                 raise StoryStopped('action_budget')
