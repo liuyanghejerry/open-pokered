@@ -607,7 +607,8 @@ impl PokemonGame {
     /// Read the companion script-flags file (native sidecar for the
     /// runtime-only dynamic keys — e.g. `__OBJ_HIDDEN_*` — that have no bit
     /// in the fixed SRAM event-flags region). Named event flags in old
-    /// sidecars are harmless: `set_script_flags` routes them to the bitset.
+    /// Older sidecar aliases are reconciled by `restore_loaded_save_flags`;
+    /// canonical SRAM event/status bits retain authority.
     #[cfg(not(target_arch = "wasm32"))]
     fn read_companion_script_flags() -> Option<pokered_core::hash_compat::HashMap<String, bool>> {
         let flags_path = script_flags_file_path();
@@ -899,14 +900,10 @@ impl PokemonGame {
                         self.rival_name = pokered_data::charmap::decode_string(
                             &self.save_data.game_data.rival_name,
                         );
-                        // Seed the event-flag bitset from SRAM bytes, then
-                        // merge any runtime-only extras (companion sidecar)
-                        // on top.
-                        overworld.set_event_flags_bytes(&self.save_data.game_data.event_flags);
-            overworld.restore_system_save_state(&self.save_data.game_data);
-                        if let Some(extras) = Self::read_companion_script_flags() {
-                            overworld.set_script_flags(extras);
-                        }
+                        overworld.restore_loaded_save_flags(
+                            &self.save_data,
+                            Self::read_companion_script_flags(),
+                        );
                         overworld.set_toggleable_object_flags(
                             self.save_data.game_data.toggleable_object_flags,
                         );
