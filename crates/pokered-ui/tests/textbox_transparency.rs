@@ -1,6 +1,5 @@
-//! Regression test: text-box border pixels OUTSIDE the border line must stay
-//! transparent (leave the underlying framebuffer untouched) instead of being
-//! painted with the box background color.
+//! Original Game Boy text boxes write opaque font tiles, including the
+//! white corners around the border stroke.
 
 use dotzuki_engine::render_config::RenderConfig;
 use pokered_renderer::embedded_font::{box_tiles, draw_box_tile, fill_tile};
@@ -116,24 +115,34 @@ fn render_box_reference(rect: TileRect) -> FrameBuffer {
 }
 
 #[test]
-fn border_outside_is_transparent() {
+fn original_box_tiles_are_opaque_and_leave_the_next_tile_untouched() {
     let fb = render_box();
-    // Box occupies tiles (2,2)..(11,7) => pixels x 16..=95, y 16..=63.
-    // Top-left corner tile starts at (16,16); pixel (16,16) is outside the
-    // rounded corner arc and must keep the background color.
-    assert_eq!(fb.get_pixel(16, 16), Some(BG), "corner outside arc");
-    // One pixel above the top edge line (line is at rows 1-2 of the tile).
-    assert_eq!(fb.get_pixel(24, 16), Some(BG), "above top edge");
-    // One pixel left of the left edge line (line is at cols 1-2).
-    assert_eq!(fb.get_pixel(16, 32), Some(BG), "left of left edge");
-    // Interior must still be opaque white.
+    assert_eq!(
+        fb.get_pixel(16, 16),
+        Some(Rgba::WHITE),
+        "corner tile background"
+    );
+    assert_eq!(
+        fb.get_pixel(24, 16),
+        Some(Rgba::WHITE),
+        "top tile background"
+    );
+    assert_eq!(
+        fb.get_pixel(16, 32),
+        Some(Rgba::WHITE),
+        "side tile background"
+    );
     assert_eq!(fb.get_pixel(24, 24), Some(Rgba::WHITE), "interior");
-    // The border stroke itself is still ink.
-    assert_eq!(fb.get_pixel(24, 17), Some(Rgba::BLACK), "top edge stroke");
+    assert_eq!(
+        fb.get_pixel(24, 18),
+        Some(Rgba::BLACK),
+        "original $7A row 2 stroke"
+    );
+    assert_eq!(fb.get_pixel(15, 16), Some(BG), "adjacent map tile");
 }
 
 #[test]
-fn batched_text_box_matches_tile_reference_pixel_for_pixel() {
+fn original_text_box_matches_tile_reference_pixel_for_pixel() {
     for rect in [
         TileRect::new(0, 12, 20, 6),
         TileRect::new(2, 2, 10, 6),
@@ -151,6 +160,28 @@ fn batched_text_box_matches_tile_reference_pixel_for_pixel() {
                     "text box mismatch for {rect:?} at ({x}, {y})",
                 );
             }
+        }
+    }
+}
+
+#[test]
+fn latin_text_measurement_matches_the_glyphs_on_the_tile_grid() {
+    use pokered_ui::TilePos;
+    let mut whole = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+    let mut tiles = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+    let mut painter = FrameBufferPainter::new(&mut whole);
+    assert_eq!(painter.measure_text_px("Ab▷19"), 5 * 8);
+    painter.draw_text(TilePos::new(2, 3), "Ab▷19", Rgba::BLACK);
+    for (i, ch) in "Ab▷19".chars().enumerate() {
+        FrameBufferPainter::new(&mut tiles).draw_glyph(
+            TilePos::new(2 + i as u32, 3),
+            ch,
+            Rgba::BLACK,
+        );
+    }
+    for y in 0..144 {
+        for x in 0..160 {
+            assert_eq!(whole.get_pixel(x, y), tiles.get_pixel(x, y));
         }
     }
 }

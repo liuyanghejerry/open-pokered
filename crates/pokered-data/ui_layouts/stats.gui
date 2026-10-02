@@ -123,13 +123,5 @@ screen Stats {
       rect = {tx: 11, ty: 11, tw: 6, th: 1}
       color = "DarkGray"
     }
-    text(@t("ID №/", "编号/")) {
-      rect = {tx: 11, ty: 13, tw: 6, th: 1}
-      color = "DarkGray"
-    }
-    text(@t("OT/", "主人/")) {
-      rect = {tx: 11, ty: 15, tw: 6, th: 1}
-      color = "DarkGray"
-    }
   }
 }

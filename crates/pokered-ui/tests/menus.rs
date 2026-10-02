@@ -1147,7 +1147,7 @@ fn battle_party_empty_party_draws_nothing() {
 // -- battle_text --
 
 #[test]
-fn battle_text_wraps_long_text_to_two_lines() {
+fn battle_text_wraps_overlong_input_without_dropping_lines() {
     let mut rec = Recorder::default();
     let mut ui = Ui::new(&mut rec);
     battle_text::draw("What will CHARIZARD do with its last move?", false, &BATTLE_TEXT_DEFAULT_LAYOUT, &mut ui, Lang::En);
@@ -1157,10 +1157,12 @@ fn battle_text_wraps_long_text_to_two_lines() {
 
     // Native dialog renders text at screen (1,14)/(1,16). text_box adds +1,+1 padding,
     // so frame.label(0,1)/(0,3) → absolute (1,14)/(1,16). Lines wrap at the 144px
-    // interior width (28 Latin chars), not the old 18-char cap.
+    // interior width (18 original Latin cells). Core paginates these rows
+    // before passing two-line pages to the renderer.
     assert_eq!(collect_texts(&rec.ops), vec![
-        (1, 14, "What will CHARIZARD do with".into()),
-        (1, 16, "its last move?".into()),
+        (1, 14, "What will".into()),
+        (1, 16, "CHARIZARD do with".into()),
+        (1, 18, "its last move?".into()),
     ]);
 
     assert!(collect_glyphs(&rec.ops).is_empty());
@@ -1226,17 +1228,17 @@ fn draw_main_with_money_shows_buy_sell_quit_and_money_box() {
 
     let boxes = collect_boxes(&rec.ops);
     assert_eq!(boxes, vec![
-        TileRect::new(0, 0, 7, 8),
-        TileRect::new(6, 0, 14, 3),
+        TileRect::new(0, 0, 11, 7),
+        TileRect::new(11, 0, 9, 3),
     ]);
 
     let texts = collect_texts(&rec.ops);
-    assert!(texts.contains(&(2, 2, "BUY".into())));
-    assert!(texts.contains(&(2, 4, "SELL".into())));
-    assert!(texts.contains(&(2, 6, "QUIT".into())));
-    assert!(texts.contains(&(7, 1, "MONEY $3500".into())));
+    assert!(texts.contains(&(2, 1, "BUY".into())));
+    assert!(texts.contains(&(2, 3, "SELL".into())));
+    assert!(texts.contains(&(2, 5, "QUIT".into())));
+    assert!(texts.contains(&(13, 0, "MONEY".into())));
 
-    assert_eq!(collect_glyphs(&rec.ops), vec![(1, 2, '\u{25B6}')]);
+    assert_eq!(collect_glyphs(&rec.ops), vec![(1, 1, '\u{25B6}')]);
 }
 
 #[test]
@@ -1245,7 +1247,7 @@ fn draw_main_with_money_cursor_follows_selection() {
     let mut ui = Ui::new(&mut rec);
     mart::draw_main_with_money(2, 1000, &MART_MAIN_MENU_LAYOUT, &mut ui, Lang::En);
 
-    assert_eq!(collect_glyphs(&rec.ops), vec![(1, 6, '\u{25B6}')]);
+    assert_eq!(collect_glyphs(&rec.ops), vec![(1, 5, '\u{25B6}')]);
 }
 
 #[test]
@@ -1257,14 +1259,14 @@ fn draw_quantity_shows_item_name_qty_cost_and_money() {
     let boxes = collect_boxes(&rec.ops);
     assert_eq!(boxes, vec![
         TileRect::new(0, 3, 20, 6),
-        TileRect::new(6, 0, 14, 3),
+        TileRect::new(11, 0, 9, 3),
     ]);
 
     let texts = collect_texts(&rec.ops);
     assert!(texts.contains(&(2, 5, "POTION".into())));
     assert!(texts.contains(&(2, 7, "× 5".into())));
     assert!(texts.contains(&(11, 7, "$1500".into())));
-    assert!(texts.contains(&(7, 1, "MONEY $5000".into())));
+    assert!(texts.contains(&(12, 1, "  $5000".into())));
 }
 
 #[test]
@@ -1277,7 +1279,7 @@ fn draw_confirm_box_rect_is_exact() {
     // borderless region reads as stray glyphs on the scene), then the
     // yes/no box.
     let boxes = collect_boxes(&rec.ops);
-    assert_eq!(boxes, vec![TileRect::new(0, 0, 18, 8), TileRect::new(14, 7, 6, 5)]);
+    assert_eq!(boxes, vec![TileRect::new(0, 0, 20, 8), TileRect::new(14, 7, 6, 5)]);
 }
 
 #[test]
@@ -1310,7 +1312,7 @@ fn draw_confirm_message_rendered_above_box() {
 
     let texts = collect_texts(&rec.ops);
     // Framed message box: interior origin (1,1) + label (1,0) → (2,1).
-    assert!(texts.contains(&(2, 1, "Buy for $300?".into())));
+    assert!(texts.contains(&(1, 1, "Buy for $300?".into())));
 }
 
 #[test]
@@ -1334,7 +1336,7 @@ fn draw_result_dialog_single_line() {
     mart::draw_result_dialog(&["You don't have enough money."], &MART_RESULT_DIALOG_LAYOUT, &mut ui);
 
     let texts = collect_texts(&rec.ops);
-    assert_eq!(texts, vec![(2, 14, "You don't have enough money.".into())]);
+    assert_eq!(texts, vec![(2, 14, "You don't have".into()), (2, 16, "enough money.".into())]);
 }
 
 #[test]
@@ -1351,12 +1353,12 @@ fn draw_main_menu_uses_layout_static() {
     // - Labels BUY/SELL/QUIT at relative positions (1,1), (1,3), (1,5)
     // - Cursor glyph at (1, 2) since cursor.tx=0 and cursor starts at 0
     let boxes = collect_boxes(&rec.ops);
-    assert_eq!(boxes, vec![TileRect::new(0, 0, 7, 8)]);
+    assert_eq!(boxes, vec![TileRect::new(0, 0, 11, 7)]);
 
     let texts = collect_texts(&rec.ops);
-    assert!(texts.contains(&(2, 2, "BUY".into())));   // origin +1 + label.tx=1
-    assert!(texts.contains(&(2, 4, "SELL".into())));
-    assert!(texts.contains(&(2, 6, "QUIT".into())));
+    assert!(texts.contains(&(2, 1, "BUY".into())));   // origin +1 + label.tx=1
+    assert!(texts.contains(&(2, 3, "SELL".into())));
+    assert!(texts.contains(&(2, 5, "QUIT".into())));
 
-    assert_eq!(collect_glyphs(&rec.ops), vec![(1, 2, '\u{25B6}')]); // origin +1 + cursor.tx=0
+    assert_eq!(collect_glyphs(&rec.ops), vec![(1, 1, '\u{25B6}')]); // origin +1 + cursor.tx=0
 }

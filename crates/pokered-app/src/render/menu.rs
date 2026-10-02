@@ -425,9 +425,9 @@ pub fn draw_mart(state: &MartState, player_money: u32, bag_items: &[(pokered_dat
     // The buy/sell list boxes show 5 entries at the 2-row CJK pitch
     // (interior rows 1/3/5/7/9 of a 12-tall box). The core tracks a bare
     // cursor, so window the scroll offset here to keep it on-screen.
-    const LIST_VISIBLE: usize = 5;
+    let list_visible = if lang == Lang::Zh { 3 } else { 4 };
     let list_scroll = |cursor: usize, count: usize| -> usize {
-        cursor.saturating_sub(LIST_VISIBLE - 1).min(count.saturating_sub(LIST_VISIBLE))
+        cursor.saturating_sub(list_visible - 1).min(count.saturating_sub(list_visible))
     };
     match &state.phase {
         MartPhase::MainMenu { cursor } => {
@@ -469,9 +469,9 @@ pub fn draw_mart(state: &MartState, player_money: u32, bag_items: &[(pokered_dat
                             data.name
                         };
                         let msg = if lang == Lang::Zh {
-                            format!("{} ×{} ${}.00\n总共${}.00。可以吗？", item_name, quantity, total, total)
+                            format!("{}？\n总共${}。\n可以吗？", item_name, total)
                         } else {
-                            format!("{} ×{} ${}.00\nThat'll be ${}.00. OK?", item_name, quantity, total, total)
+                            format!("{}?\nThat will be\n${}. OK?", item_name, total)
                         };
                         let choice = match selected {
                             pokered_core::items::ConfirmChoice::Yes => menus::mart::ConfirmChoice::Yes,
@@ -521,15 +521,10 @@ pub fn draw_mart(state: &MartState, player_money: u32, bag_items: &[(pokered_dat
                     if let Some(data) = pokered_data::item_data::get_item_data(*item_id) {
                         let price = (data.price as u32) / 2;
                         let total = price * *quantity as u32;
-                        let item_name = if lang == Lang::Zh {
-                            pokered_data::lang_data::item_name(*item_id, true)
-                        } else {
-                            data.name
-                        };
                         let msg = if lang == Lang::Zh {
-                            format!("{} ×{} ${}.00\n我可以支付${}.00。\n可以吗？", item_name, quantity, total, total)
+                            format!("我可以支付\n${}。\n可以吗？", total)
                         } else {
-                            format!("{} ×{} ${}.00\nI can pay ${}.00.\nOK?", data.name, quantity, total, total)
+                            format!("I can pay you\n${} for that.", total)
                         };
                         let choice = match selected {
                             pokered_core::items::ConfirmChoice::Yes => menus::mart::ConfirmChoice::Yes,

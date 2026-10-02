@@ -40,77 +40,25 @@ impl<'fb> Painter for FrameBufferPainter<'fb> {
             return;
         }
         let bg = Rgba::WHITE;
-        let ink = color;
         let t = TILE_SIZE_PX;
-        let bx = rect.tx * t;
-        let by = rect.ty * t;
-        let inner_w = rect.tw - 2;
-        let inner_h = rect.th - 2;
-        let right_x = bx + (rect.tw - 1) * t;
-        let bot_y = by + (rect.th - 1) * t;
-        let inner_px_w = inner_w * t;
-        let inner_px_h = inner_h * t;
-
-        draw_box_tile(
-            &box_tiles::TOP_LEFT,
-            &box_tiles::outside::TOP_LEFT,
-            bx,
-            by,
-            ink,
-            bg,
-            self.fb,
-        );
-        // The repeated edge tiles are solid horizontal/vertical runs. Batch
-        // those runs while retaining the four transparent corner masks.
-        if inner_w > 0 {
-            self.fb.fill_rect(bx + t, by + 1, inner_px_w, 2, ink);
-            self.fb.fill_rect(bx + t, by + 3, inner_px_w, 5, bg);
+        // TextBoxBorder writes whole tiles: $7A on both horizontal edges,
+        // $7C on both vertical edges, and opaque white space inside.
+        for row in 0..rect.th {
+            for col in 0..rect.tw {
+                let glyph = match (row, col) {
+                    (0, 0) => &box_tiles::TOP_LEFT,
+                    (0, c) if c + 1 == rect.tw => &box_tiles::TOP_RIGHT,
+                    (r, 0) if r + 1 == rect.th => &box_tiles::BOTTOM_LEFT,
+                    (r, c) if r + 1 == rect.th && c + 1 == rect.tw => &box_tiles::BOTTOM_RIGHT,
+                    (0, _) => &box_tiles::HORIZONTAL,
+                    (r, _) if r + 1 == rect.th => &box_tiles::HORIZONTAL,
+                    (_, 0) => &box_tiles::VERTICAL_LEFT,
+                    (_, c) if c + 1 == rect.tw => &box_tiles::VERTICAL_LEFT,
+                    _ => &[0; 8],
+                };
+                embedded_font::draw_glyph(glyph, (rect.tx + col) * t, (rect.ty + row) * t, color, bg, self.fb);
+            }
         }
-        draw_box_tile(
-            &box_tiles::TOP_RIGHT,
-            &box_tiles::outside::TOP_RIGHT,
-            right_x,
-            by,
-            ink,
-            bg,
-            self.fb,
-        );
-
-        if inner_w > 0 && inner_h > 0 {
-            self.fb
-                .fill_rect(bx + t, by + t, inner_w * t, inner_h * t, bg);
-        }
-        if inner_h > 0 {
-            self.fb.fill_rect(bx + 1, by + t, 2, inner_px_h, ink);
-            self.fb.fill_rect(bx + 3, by + t, 5, inner_px_h, bg);
-            self.fb.fill_rect(right_x, by + t, 5, inner_px_h, bg);
-            self.fb
-                .fill_rect(right_x + 5, by + t, 2, inner_px_h, ink);
-        }
-
-        draw_box_tile(
-            &box_tiles::BOTTOM_LEFT,
-            &box_tiles::outside::BOTTOM_LEFT,
-            bx,
-            bot_y,
-            ink,
-            bg,
-            self.fb,
-        );
-        if inner_w > 0 {
-            self.fb.fill_rect(bx + t, bot_y, inner_px_w, 5, bg);
-            self.fb
-                .fill_rect(bx + t, bot_y + 5, inner_px_w, 2, ink);
-        }
-        draw_box_tile(
-            &box_tiles::BOTTOM_RIGHT,
-            &box_tiles::outside::BOTTOM_RIGHT,
-            right_x,
-            bot_y,
-            ink,
-            bg,
-            self.fb,
-        );
     }
 
     fn draw_text(&mut self, pos: TilePos, text: &str, color: EngineRgba) {
@@ -121,7 +69,7 @@ impl<'fb> Painter for FrameBufferPainter<'fb> {
         draw_text(text, px, py, color, self.fb);
     }
 
-    // Pixel-precise text: proportional ASCII glyphs (5 px advance) cannot
+    // Pixel-precise text: mixed 8-pixel Latin and 10-pixel Chinese glyphs cannot
     // share a flush right edge when snapped to the 8 px tile grid, so callers
     // that need exact alignment (e.g. the CONTINUE info values) draw through
     // this path. Layouts must also opt in through their theme; ordinary
@@ -148,21 +96,6 @@ impl<'fb> Painter for FrameBufferPainter<'fb> {
         if self.lang == Lang::Zh {
             py = py.saturating_sub(1);
         }
-        if glyph == '▷' {
-            // Option-value marker: the font's triangle is not the GB cursor.
-            // Same 8x9 ink cell as the filled selection arrow.
-            for (y, bits) in [0u8, 0, 0x40, 0x60, 0x50, 0x48, 0x50, 0x60, 0x40]
-                .iter()
-                .enumerate()
-            {
-                for x in 0..8 {
-                    if bits & (0x80 >> x) != 0 {
-                        self.fb.fill_rect(px + x, py + y as u32, 1, 1, color);
-                    }
-                }
-            }
-            return;
-        }
         let mut buf = [0u8; 4];
         let s = glyph.encode_utf8(&mut buf);
         draw_text(s, px, py, color, self.fb);
@@ -176,8 +109,8 @@ impl<'fb> Painter for FrameBufferPainter<'fb> {
         let (px, py) = pos.to_pixels();
         let ink = color;
         let bg = Rgba::INK_WHITE;
-        // Map common Game Boy tile IDs to Fusion Pixel glyphs.
-        // Matches the mapping in dotzuki-ui/src/lib.rs.
+        // The generic widget cursor IDs are aliases; original glyph IDs draw
+        // the source tile, including the two PK/MN ligatures.
         match tile_id {
             // Menu cursor ▶
             223 => {
@@ -190,8 +123,7 @@ impl<'fb> Painter for FrameBufferPainter<'fb> {
             // Battle-menu "PKMN" ligature pair (0xE1 = Pk, 0xE2 = Mn). The v1
             // menu drew these as "PK"/"MN" text; the v2 tile element only knows
             // the tile id, so map them here to keep the framebuffer rendering.
-            0xE1 => draw_text("PK", px, py, ink, self.fb),
-            0xE2 => draw_text("MN", px, py, ink, self.fb),
+            0xE1 | 0xE2 => embedded_font::draw_glyph(embedded_font::original_tile_glyph(tile_id).unwrap(), px, py, ink, bg, self.fb),
             // Default box-border tile set (0x79–0x7F)
             0x79 => draw_box_tile(&box_tiles::TOP_LEFT, &box_tiles::outside::TOP_LEFT, px, py, ink, bg, self.fb),
             0x7A => draw_box_tile(&box_tiles::HORIZONTAL, &box_tiles::outside::HORIZONTAL, px, py, ink, bg, self.fb),
@@ -200,17 +132,17 @@ impl<'fb> Painter for FrameBufferPainter<'fb> {
             0x7D => draw_box_tile(&box_tiles::BOTTOM_LEFT, &box_tiles::outside::BOTTOM_LEFT, px, py, ink, bg, self.fb),
             0x7E => draw_box_tile(&box_tiles::BOTTOM_RIGHT, &box_tiles::outside::BOTTOM_RIGHT, px, py, ink, bg, self.fb),
             0x7F => fill_tile(px, py, bg, self.fb),
-            // Naming-screen underscore tiles. The BDF fallback glyph for '_'
-            // is drawn below the 8×8 tile grid (10px cell, y_off -1), so it
-            // would land on the row below; draw a crisp full-width underline
-            // instead. 0x76 = normal slot, 0x77 = raised (current editing slot).
-            0x76 | 0x77 => {
-                fill_tile(px, py, bg, self.fb);
-                let line_y = if tile_id == 0x77 { py + 4 } else { py + 6 };
-                self.fb.fill_rect(px, line_y, TILE_SIZE_PX, 1, ink);
-            }
+            // Naming has loaded HpBarAndStatusGraphics: $76/$77 are its
+            // seven-pixel, two-scanline normal/raised underscores.
+            0x76 | 0x77 => embedded_font::draw_glyph(embedded_font::naming_underscore_glyph(tile_id == 0x77), px, py, ink, bg, self.fb),
             // Unknown tile id — fall back to the placeholder text glyph.
-            _ => draw_text(fallback, px, py, ink, self.fb),
+            _ => {
+                if let Some(glyph) = embedded_font::original_tile_glyph(tile_id) {
+                    embedded_font::draw_glyph(glyph, px, py, ink, bg, self.fb);
+                } else {
+                    draw_text(fallback, px, py, ink, self.fb);
+                }
+            }
         }
     }
 }

@@ -185,7 +185,8 @@ fn draw_entry<P: Painter>(
         painter.draw_text_px(dl.tx * 8, (dl.ty + row) * 8, &display_name, dl.color.into());
     }
 
-    let lvl_str = format!("Lv{}", pokemon.level);
+    // PrintLevel omits the level marker at 100 (home/pokemon.asm).
+    let lvl_str = if pokemon.level >= 100 { pokemon.level.to_string() } else { format!("Lv{}", pokemon.level) };
     if let Some(dl) = level_dl {
         let right = (dl.tx + 5) * 8 - 8;
         painter.draw_text_px(

@@ -214,7 +214,7 @@ fn full_party_numbers_and_status_have_room_for_tall_glyphs() {
     for (i, (x, y, text)) in labels.iter().enumerate() {
         let right = x + pokered_renderer::embedded_font::measure_text(text);
         assert!(right <= 152 && y + 10 <= 144, "{text} outside screen");
-        if text.starts_with("Lv") || text.contains('/') { assert_eq!(right, 152); }
+        if text == &"100" || text.starts_with("Lv") || text.contains('/') { assert_eq!(right, 152); }
         for (other_x, other_y, other) in &labels[i + 1..] {
             let other_right = other_x + pokered_renderer::embedded_font::measure_text(other);
             assert!(right <= *other_x || other_right <= *x || y + 10 <= *other_y || other_y + 10 <= *y,

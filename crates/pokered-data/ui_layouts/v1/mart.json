@@ -6,7 +6,7 @@
   "main_menu": {
    "cursor": {
     "tx": 0,
-    "base_ty": 1,
+    "base_ty": 0,
     "row_step": 2,
     "glyph": "▶",
     "color": "Black"
@@ -25,26 +25,26 @@
      "rect": {
       "tx": 0,
       "ty": 0,
-      "tw": 7,
-      "th": 8
+      "tw": 11,
+      "th": 7
      },
      "color": "Black",
      "labels": [
       {
        "tx": 1,
-       "ty": 1,
+       "ty": 0,
        "text": "BUY",
        "color": "Black"
       },
       {
        "tx": 1,
-       "ty": 3,
+       "ty": 2,
        "text": "SELL",
        "color": "Black"
       },
       {
        "tx": 1,
-       "ty": 5,
+       "ty": 4,
        "text": "QUIT",
        "color": "Black"
       }
@@ -53,9 +53,9 @@
     {
      "id": "money_box",
      "rect": {
-      "tx": 6,
+      "tx": 11,
       "ty": 0,
-      "tw": 14,
+      "tw": 9,
       "th": 3
      },
      "color": "Black",
@@ -124,7 +124,7 @@
      "rect": {
       "tx": 0,
       "ty": 0,
-      "tw": 18,
+      "tw": 20,
       "th": 8
      },
      "border": false,
@@ -174,9 +174,9 @@
     {
      "id": "money_box",
      "rect": {
-      "tx": 6,
+      "tx": 11,
       "ty": 0,
-      "tw": 14,
+      "tw": 9,
       "th": 3
      },
      "color": "Black",
@@ -186,7 +186,7 @@
   },
   "buy_items_with_money": {
    "cursor": {
-    "tx": 1,
+    "tx": 0,
     "base_ty": 1,
     "row_step": 2,
     "glyph": "▶",
@@ -204,10 +204,10 @@
     {
      "id": "list_box",
      "rect": {
-      "tx": 0,
+      "tx": 4,
       "ty": 2,
-      "tw": 18,
-      "th": 12
+      "tw": 16,
+      "th": 11
      },
      "color": "Black",
      "labels": []
@@ -215,9 +215,9 @@
     {
      "id": "money_box",
      "rect": {
-      "tx": 10,
+      "tx": 11,
       "ty": 0,
-      "tw": 10,
+      "tw": 9,
       "th": 3
      },
      "color": "Black",
@@ -227,7 +227,7 @@
   },
   "sell_items_with_money": {
    "cursor": {
-    "tx": 1,
+    "tx": 0,
     "base_ty": 1,
     "row_step": 2,
     "glyph": "▶",
@@ -245,10 +245,10 @@
     {
      "id": "list_box",
      "rect": {
-      "tx": 0,
+      "tx": 4,
       "ty": 2,
-      "tw": 18,
-      "th": 12
+      "tw": 16,
+      "th": 11
      },
      "color": "Black",
      "labels": []
@@ -256,9 +256,9 @@
     {
      "id": "money_box",
      "rect": {
-      "tx": 10,
+      "tx": 11,
       "ty": 0,
-      "tw": 10,
+      "tw": 9,
       "th": 3
      },
      "color": "Black",

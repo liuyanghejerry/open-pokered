@@ -405,29 +405,14 @@ impl BedroomDialogue {
     /// Build a one-off message box from `\n`-separated text, paginated two
     /// lines per box. Used for overworld item-use messages.
     pub fn from_message(text: &str) -> Self {
-        let lines: Vec<&str> = text.split('\n').collect();
-        let mut pages: Vec<DialoguePage> = lines
-            .chunks(2)
-            .map(|c| DialoguePage {
-                line1: c.first().copied().unwrap_or("").into(),
-                line2: c.get(1).copied().unwrap_or("").into(),
-            })
-            .collect();
-        if pages.is_empty() {
-            pages.push(DialoguePage {
-                line1: "".into(),
-                line2: "".into(),
-            });
-        }
-        Self {
-            pages,
-            current_page: 0,
-            char_index: 0,
-            waiting_for_input: false,
-            holding_open: false,
-            text_delay_frames: DEFAULT_TEXT_DELAY_FRAMES,
-            delay_counter: 0,
-        }
+        let lines = pokered_data::text_layout::wrap_hard_lines(
+            text, pokered_data::text_layout::DIALOGUE_LINE_WIDTH_PX,
+        );
+        let pages = lines.chunks(2).map(|c| DialoguePage {
+            line1: c[0].as_str().into(),
+            line2: c.get(1).map(String::as_str).unwrap_or("").into(),
+        }).collect();
+        Self::from_pages(pages)
     }
 
     pub fn from_text_pages(
@@ -447,18 +432,22 @@ impl BedroomDialogue {
                 }
             })
             .collect();
-        Self {
-            pages,
-            current_page: 0,
-            char_index: 0,
-            waiting_for_input: false,
-            holding_open: false,
-            text_delay_frames: DEFAULT_TEXT_DELAY_FRAMES,
-            delay_counter: 0,
-        }
+        Self::from_pages(pages)
     }
 
     pub fn from_pages(pages: Vec<DialoguePage>) -> Self {
+        // Keep authored page boundaries, then paginate any row that grows
+        // beyond the box after placeholder expansion or localization.
+        let pages = pages.into_iter().flat_map(|page| {
+            let text = format!("{}\n{}", page.line1, page.line2);
+            let lines = pokered_data::text_layout::wrap_hard_lines(
+                &text, pokered_data::text_layout::DIALOGUE_LINE_WIDTH_PX,
+            );
+            lines.chunks(2).map(|c| DialoguePage {
+                line1: c[0].as_str().into(),
+                line2: c.get(1).map(String::as_str).unwrap_or("").into(),
+            }).collect::<Vec<_>>()
+        }).collect();
         Self {
             pages,
             current_page: 0,
@@ -2780,6 +2769,35 @@ mod typewriter_tests {
 
     fn dlg(text: &str) -> BedroomDialogue {
         BedroomDialogue::from_message(text)
+    }
+
+    #[test]
+    fn expanded_message_is_paginated_before_reveal_without_losing_rows() {
+        let d = dlg("ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789\nThe final row.");
+        assert_eq!(d.pages().len(), 2);
+        assert_eq!(&*d.pages()[0].line1, "ABCDEFGHIJKLMNOPQR");
+        assert_eq!(&*d.pages()[0].line2, "STUVWXYZ123456789");
+        assert_eq!(&*d.pages()[1].line1, "The final row.");
+        assert_eq!(&*d.pages()[1].line2, "");
+    }
+
+    #[test]
+    fn placeholder_growth_preserves_authored_page_boundaries() {
+        use pokered_data::map_json::TextPageJson;
+        let d = BedroomDialogue::from_text_pages(&[
+            TextPageJson { line1: "Hello <PLAYER>! Welcome!".into(), line2: "Second row.".into() },
+            TextPageJson { line1: "Next page.".into(), line2: "".into() },
+        ], "ABCDEFG", "RIVAL", "STARTER");
+        assert_eq!(d.pages().len(), 3);
+        assert_eq!(&*d.pages()[0].line1, "Hello ABCDEFG!");
+        assert_eq!(&*d.pages()[0].line2, "Welcome!");
+        assert_eq!(&*d.pages()[1].line1, "Second row.");
+        assert_eq!(&*d.pages()[2].line1, "Next page.");
+        for page in d.pages() {
+            for row in [&page.line1, &page.line2] {
+                assert!(pokered_data::text_layout::measure_text(row) <= 144);
+            }
+        }
     }
 
     /// FAST text (wOptions TEXT_DELAY_FAST = 1): one character per frame —

@@ -5,7 +5,7 @@ use dotzuki_engine_script::{CommandResult, ScriptCommand};
 use serde_json::Value;
 
 use super::npc_movement::NpcRuntimeState;
-use super::{BedroomDialogue, DialoguePage, Direction};
+use super::{BedroomDialogue, Direction};
 use crate::naming_screen::NamingScreenState;
 
 pub use dotzuki_engine_script::config::{CoordEventBinding, NpcBinding, SignBinding};
@@ -915,30 +915,7 @@ fn resolve_placeholders(text: &str, player_name: &str, rival_name: &str, starter
 }
 
 pub fn text_to_dialogue(text: &str) -> BedroomDialogue {
-    let lines: Vec<&str> = text.lines().collect();
-    let mut pages = Vec::new();
-
-    if lines.is_empty() {
-        pages.push(DialoguePage {
-            line1: text.into(),
-            line2: "".into(),
-        });
-    } else {
-        let mut i = 0;
-        while i < lines.len() {
-            let line1: Box<str> = lines[i].into();
-            let line2: Box<str> = if i + 1 < lines.len() {
-                i += 1;
-                lines[i].into()
-            } else {
-                "".into()
-            };
-            pages.push(DialoguePage { line1, line2 });
-            i += 1;
-        }
-    }
-
-    BedroomDialogue::from_pages(pages)
+    BedroomDialogue::from_message(text)
 }
 
 pub fn map_id_to_script_key(map_id: MapId) -> String {
