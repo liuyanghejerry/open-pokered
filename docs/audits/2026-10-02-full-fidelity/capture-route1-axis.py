@@ -4,7 +4,7 @@ import argparse,json,subprocess,sys
 from pathlib import Path
 ap=argparse.ArgumentParser();ap.add_argument('--before',required=True);ap.add_argument('--after',required=True);ap.add_argument('--root',type=Path,default=Path(__file__).resolve().parents[3]);opt=ap.parse_args()
 root=opt.root.resolve();sys.path.insert(0,str(root/'scripts'));from debug_drive import DebugClient
-out=root/'docs/audits/2026-10-02-full-fidelity/screenshots';out.mkdir(parents=True,exist_ok=True);traces={}
+out=root/'docs/screenshots/fidelity-world';out.mkdir(parents=True,exist_ok=True);traces={}
 for label,binary,port in [('before',opt.before,9411),('after',opt.after,9412)]:
     with open('/tmp/world-route1-'+label+'.log','w') as log:
         proc=subprocess.Popen([binary,'run','--skip-intro','--warp','Route1,7,24','--seed','123','--no-audio','--headless','--debug-port',str(port),'--speed','0'],stdout=log,stderr=log,cwd=root)

@@ -1885,6 +1885,8 @@ impl PokemonGame {
                         );
                     }
 
+                    self.overworld.script_music_playing = self.audio.as_ref()
+                        .is_some_and(|audio| audio.is_music_playing());
                     self.overworld.script_sfx_playing = self.audio.as_ref()
                         .is_some_and(|audio| audio.is_sfx_playing() && !audio.low_health_alarm_active());
                     // wOptions text delay — pushed every frame so the dialogue

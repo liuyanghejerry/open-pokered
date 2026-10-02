@@ -5,7 +5,7 @@ ap=argparse.ArgumentParser(description="Capture four native ground-item before/a
 ap.add_argument('--before',required=True);ap.add_argument('--after',required=True)
 ap.add_argument('--root',type=Path,default=Path(__file__).resolve().parents[3])
 opt=ap.parse_args();root=opt.root.resolve();sys.path.insert(0,str(root/'scripts'));from debug_drive import DebugClient
-out=root/'docs/audits/2026-10-02-full-fidelity/screenshots';out.mkdir(parents=True,exist_ok=True);trace={}
+out=root/'docs/screenshots/fidelity-world';out.mkdir(parents=True,exist_ok=True);trace={}
 items=json.loads((root/'crates/pokered-data/data/items/item_list.json').read_text())['items']
 cases=[('full-bag','Route2',13,55,0),('repeat-pickup','MtMoonB2F',25,22,7),('correct-tm','MtMoon1F',5,33,12),('missing-handler','PowerPlant',7,26,9)]
 for label,binary in [('before',opt.before),('after',opt.after)]:

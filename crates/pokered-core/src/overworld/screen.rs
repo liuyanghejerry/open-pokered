@@ -1366,14 +1366,13 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             .or_else(|| pokered_data::embedded_scenes::get_scene_ast("shared/pokecenter"))
     }
 
-    /// Push the configured text speed (frames between revealed characters —
-    /// 1/3/5) into any active dialogue. Called by the frontend every frame.
     /// FoundItemText has no ManualTextScroll prompt while its jingle plays.
     pub fn dialogue_needs_button(&self) -> bool {
         !matches!(self.active_script_effect,
             Some(super::script_bridge::ScriptEffect::ShowItemDialogue { .. }))
     }
 
+    /// Set the configured dialogue delay (1/3/5 frames per character).
     pub fn set_text_delay_frames(&mut self, frames: u16) {
         self.text_delay_frames = frames.max(1);
     }

@@ -30,7 +30,7 @@ The 104-handler test fills 20 actual item names excluding the target, verifies f
 
 ## Screenshots and reproducible drivers
 
-Both binaries start with seed 123 and driven-only headless input. All PNGs are 160×144 direct game renders. Logs are `ground-native-trace.json` and `route1-npc-trace.json`.
+Both binaries start with seed 123 and driven-only headless input. All PNGs are 160×144 direct game renders in `docs/screenshots/fidelity-world/`. Logs are `ground-native-trace.json` and `route1-npc-trace.json`.
 
 ```sh
 python3 docs/audits/2026-10-02-full-fidelity/check-ground-pickups.py
@@ -44,11 +44,11 @@ python3 docs/audits/2026-10-02-full-fidelity/capture-route1-axis.py \
 
 | Scenario | Before | After |
 | --- | --- | --- |
-| Route1 NPC, same frame 240 | [Before](screenshots/route1-npc-before-240.png) | [After](screenshots/route1-npc-after-240.png) |
-| Full-bag pickup, dialogue closed | [Before](screenshots/ground-full-bag-before-closed.png) | [After](screenshots/ground-full-bag-after-closed.png) |
-| Repeated pickup, first dialogue closed | [Before](screenshots/ground-repeat-pickup-before-closed.png) | [After](screenshots/ground-repeat-pickup-after-closed.png) |
-| Correct TM, found text | [Before](screenshots/ground-correct-tm-before-dialogue.png) | [After](screenshots/ground-correct-tm-after-dialogue.png) |
-| Missing PowerPlant handler | [Before](screenshots/ground-missing-handler-before-dialogue.png) | [After](screenshots/ground-missing-handler-after-dialogue.png) |
+| Route1 NPC, same frame 240 | [Before](../../screenshots/fidelity-world/route1-npc-before-240.png) | [After](../../screenshots/fidelity-world/route1-npc-after-240.png) |
+| Full-bag pickup, dialogue closed | [Before](../../screenshots/fidelity-world/ground-full-bag-before-closed.png) | [After](../../screenshots/fidelity-world/ground-full-bag-after-closed.png) |
+| Repeated pickup, first dialogue closed | [Before](../../screenshots/fidelity-world/ground-repeat-pickup-before-closed.png) | [After](../../screenshots/fidelity-world/ground-repeat-pickup-after-closed.png) |
+| Correct TM, found text | [Before](../../screenshots/fidelity-world/ground-correct-tm-before-dialogue.png) | [After](../../screenshots/fidelity-world/ground-correct-tm-after-dialogue.png) |
+| Missing PowerPlant handler | [Before](../../screenshots/fidelity-world/ground-missing-handler-before-dialogue.png) | [After](../../screenshots/fidelity-world/ground-missing-handler-after-dialogue.png) |
 
 The NPC screenshots isolate the axis data change using the baseline generic movement implementation: frame 240 is `(6,24)` before and `(5,24)` after. The corrected NPC attempts Up/Down and is blocked by local terrain in these sampled frames; these captures do not claim a matching original RNG path. The separate classic movement strategy is tested by the coordinator. Headless captures disable audio output; sound wait uses a controlled sequencer status in the phase regression, while normal frontends sample the actual backend.
 
