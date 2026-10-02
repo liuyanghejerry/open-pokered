@@ -1158,3 +1158,30 @@ MP4容器182.933333秒／3,197,035字节，未据此宣称全片视觉验收。
 CONTINUE后运行完整候选生成，实际出现11步可达的Bruno战斗作为原生结局出口
 前置；没有执行该战斗或计入正式进展。原生状态和来源SRAM不变，证据
 `.artifacts/jev-native-exit-20261002/{candidates.json,native-proof.json}`。
+
+### 2026-10-02：结局重置不是重打成本，访问证据要可横向比较
+
+64段`20261002-192704-seed42`使用bcb358eb，Jev自主选择并打赢Bruno、Agatha，
+之后仍选择区外训练，实际走回Lorelei出口受阻。197.649秒操作后边界保存；
+76 owned／125 seen、LoreleisRoom `(4,1)`、资金149,132、Charizard Lv94 HP248，
+全部战果／消耗保留。独立CONTINUE schema=2通过，SRAM
+`b0a3a748a8f616e4d029ec836b6dca4c5ddca5116d0d28a80037723998dd5a8e`；
+MP4容器35.366667秒／389,796字节。
+
+114.114秒正式判断把HallOfFame作为正常出口，却将该终点@load中清除已赢
+战斗旗标的行为归入“必须重打”成本。现在为真正选择完成的原生结局单独
+标注`completion_resets_won_battles`；若同名旗标在此前大厅也重置，仍保留
+真实路线成本，不按旗标名全局相减。另一处修复在实际结局及独立CONTINUE
+完成后更新hof_baseline，防止同进程后续真实结局计数误报，验证条件未放宽。
+
+补充`immediate_access_comparison`，把每个候选当前触发点路径证据汇总为
+path_found／no_path_found／not_evaluated；未知不当作可达，找不到路径也不
+宣称永久不可达，所有合法候选和模型选择均保留。没有指定地图或固定路线。
+
+同一114.114秒记录、完整相同候选，OpenRouter各3次：仅修正结局成本前后
+均选Drowzee训练；在修正成本基础上再加访问比较面板，旧3次训练、新3次
+选择正常出口，置信度仍低，不当作正式完成证明。证据
+`.artifacts/jev-completion-reset-20261002/`及同名`-access/`。
+原生64段副本完整候选验证保持状态／来源SRAM不变；初次证明说明文字误沿用
+63编号（哈希实际对应64），保留原件，在`jev-native-exit-20261002-64-retry/`
+重新运行并纠正来源标注。

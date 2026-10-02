@@ -22,6 +22,35 @@ from openpokered.run_autonomous import observations_valid, checkpoint_field_requ
 
 
 class AutonomousTests(unittest.TestCase):
+    def test_access_panel_distinguishes_missing_paths_from_unknown_without_pruning(self):
+        from openpokered.autonomous_story import strategy_access_evidence
+        from copy import deepcopy
+        def candidate(target, routes=(), **context):
+            return json.dumps({'establish': target, 'context': {**context, 'trigger_navigation': [
+                {'map': f'Room{index}', **route} for index, route in enumerate(routes)]}})
+        candidates = {
+            'reachable': candidate(['heal', 'party', True], [{'tile_route_found': True}, {'tile_route_found': False}]),
+            'blocked': candidate(['level', 'Drowzee', 19], [{'tile_route_found': False}]),
+            'compact': candidate(['level', 'Parasect', 31], unreachable_trigger_maps=['Grass']),
+            'unknown': candidate(['terrain', 'Tree', True]),
+            'partial': candidate(['item', 'Key', True], [{'tile_route_found': False}, {}]),
+            'none': 'No suitable action',
+        }
+        original = deepcopy(candidates)
+        panel = strategy_access_evidence(candidates)
+        self.assertEqual(set(panel['path_found']), {'reachable'})
+        self.assertEqual(set(panel['no_path_found']), {'blocked', 'compact'})
+        self.assertEqual(set(panel['not_evaluated']), {'unknown', 'partial'})
+        self.assertEqual(candidates, original)
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.active = None
+        agent.choose_bounded_strategy = Mock(return_value='blocked')
+        self.assertEqual(agent.choose('strategy', {}, candidates, 'Compare'), 'blocked')
+        state, retained, instruction = agent.choose_bounded_strategy.call_args.args
+        self.assertIn('immediate_access_comparison', state)
+        self.assertEqual(set(retained), set(candidates))
+        self.assertIn('concrete new access', instruction)
+
     def test_recording_rejects_missing_assets_and_fingerprints_png_changes(self):
         import tempfile
         from openpokered.run_autonomous import recording_assets
@@ -1628,6 +1657,41 @@ class AutonomousTests(unittest.TestCase):
         for group in groups.values():
             self.assertNotIn('route_resets_won_battles', group['context'])
             self.assertNotIn('route_reset_scope', group['context'])
+
+    def test_completion_resets_are_not_replay_costs_but_en_route_resets_still_are(self):
+        from types import SimpleNamespace
+        from copy import deepcopy
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        win = Rule('win', 'Arena', 'Arena:trainer', [], [], [],
+            ('flag', 'WON', True), [('battle', 'TRAINER', True)])
+        reset = Rule('reset', 'Exit', 'Exit:@load', ['load'], [], [], ('flag', 'WON', False), [])
+        transport = Rule('exit', 'Exit', 'Exit:@load', ['load'], [], [],
+            ('transport', ('Town', 5, 6), True),
+            [('flag', 'WON', False), ('ending', 'hall_of_fame_and_credits', True)])
+        heal = Rule('heal', 'Lobby', 'Lobby:nurse', ['npc:1'], [], [], ('heal', 'party', True), [])
+        retreat_reset = Rule('retreat', 'Lobby', 'Lobby:@load', ['load'], [], [], ('flag', 'WON', False), [])
+        agent.index = SimpleNamespace(rules=[win, reset, transport, retreat_reset])
+        agent.client = Mock()
+        agent.client.route.side_effect = lambda origin, destination: {'found': True,
+            'legs': [{'to_map': destination}]}
+        groups = {key: {'target': rule.effect, 'rules': [rule], 'context': {}}
+                  for key, rule in [('complete', transport), ('retreat', heal)]}
+        facts = {'map': 'Arena', 'flags': {'WON': True}}
+        original = deepcopy(facts)
+        agent.annotate_route_reset_costs(groups, facts)
+        completed = groups['complete']['context']
+        self.assertNotIn('route_resets_won_battles', completed)
+        self.assertEqual(completed['completion_resets_won_battles'], {'Exit': ['WON']})
+        self.assertIn('not a replay cost', completed['completion_reset_scope'])
+        self.assertEqual(groups['retreat']['context']['route_resets_won_battles'], {'Lobby': ['WON']})
+        self.assertEqual(facts, original)
+        # The same flag can also reset BEFORE reaching the ceremony. Do not
+        # subtract flags globally and accidentally erase that genuine cost.
+        agent.client.route.return_value = {'found': True, 'legs': [{'to_map': 'Lobby'}, {'to_map': 'Exit'}]}
+        agent.client.route.side_effect = None
+        agent.annotate_route_reset_costs(groups, facts)
+        self.assertEqual(completed['completion_resets_won_battles'], {'Exit': ['WON']})
+        self.assertEqual(groups['complete']['context']['route_resets_won_battles'], {'Exit': ['WON']})
 
     def test_coupled_doors_require_transport_before_toggling_back(self):
         from types import SimpleNamespace
@@ -4947,6 +5011,35 @@ class AutonomousTests(unittest.TestCase):
             (checkpoint / 'summary.json').write_text(json.dumps({'first_clear_verification': inherited}))
             self.assertEqual(checkpoint_first_clear_verification(checkpoint,
                 {'badges': 255, 'hall_of_fame_count': 2})['inherited_from'], str(ancestor.resolve()))
+
+    def test_each_completed_ending_advances_the_next_ceremony_baseline(self):
+        import tempfile
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.hof_baseline = 1
+        agent.check_budget = Mock()
+        agent.tap = Mock()
+        agent.record = Mock()
+        agent.client = Mock()
+        with tempfile.TemporaryDirectory() as temporary:
+            saved = Path(temporary) / 'game.sav'
+            saved.write_bytes(bytes(32768))
+            agent.game = Mock(save_path=saved, seed=42)
+            check = Mock()
+            for count in (2, 3):
+                states = [
+                    {'screen': 'overworld', 'hof_phase': 'MonInfo'},
+                    {'screen': 'overworld', 'credits_phase': 'TheEnd', 'credits_final_button': True},
+                    {'screen': 'title'},
+                ]
+                states = [{**row, 'frame_count': i, 'hall_of_fame_count': count}
+                          for i, row in enumerate(states)]
+                agent.client.state.side_effect = states
+                check.st.return_value = {'map_name': 'PalletTown', 'badges': 255,
+                                         'hall_of_fame_count': count}
+                with patch('playthrough.Game', return_value=check), patch('playthrough.resume_reentry'):
+                    self.assertTrue(agent.settle_special(states[0]))
+                self.assertEqual(agent.hof_baseline, count)
+                self.assertEqual(agent.first_clear_verification['separate_process_continue']['hall_of_fame_count'], count)
 
     def test_checkpoint_first_clear_requires_proof_and_matching_live_record(self):
         import tempfile

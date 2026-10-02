@@ -521,6 +521,33 @@ def factor_strategy_evidence(state, candidates, min_chars=160):
     return factored_state, factored_candidates
 
 
+def strategy_access_evidence(candidates):
+    """Compare fresh trigger access without removing legal future goals."""
+    result = {key: {} for key in ('path_found', 'no_path_found', 'not_evaluated')}
+    for key, value in candidates.items():
+        try:
+            row = json.loads(value)
+        except (ValueError, TypeError):
+            continue
+        if not isinstance(row, dict) or 'establish' not in row:
+            continue
+        context = row.get('context') or {}
+        routes = context.get('trigger_navigation') or []
+        if any(route.get('tile_route_found') is True for route in routes):
+            status = 'path_found'
+        elif (routes or context.get('unreachable_trigger_maps')) and all(
+                route.get('tile_route_found') is False for route in routes):
+            status = 'no_path_found'
+        else:
+            status = 'not_evaluated'
+        result[status][key] = row['establish']
+    result['scope'] = ('Current planning evidence to actual trigger regions, not a victory or legal-action '
+        'guarantee. No path found means access still needs resolving before the target can make progress; '
+        'it does not prove permanent impossibility. Not evaluated is unknown, not reachable. '
+        'All candidates remain available, including exploration of unproven access.')
+    return result
+
+
 class AutonomousStoryAgent(DualStoryAgent):
     def __init__(self, *args, game, preference='none', **kwargs):
         super().__init__(*args, **kwargs)
@@ -847,6 +874,15 @@ class AutonomousStoryAgent(DualStoryAgent):
     def choose(self, layer, state, candidates, instruction):
         if layer == 'strategy':
             candidates = compact_strategy_candidates(candidates)
+            access = strategy_access_evidence(candidates)
+            if access['path_found'] or access['no_path_found']:
+                state = {**state, 'immediate_access_comparison': access}
+                instruction += (' Use immediate_access_comparison to distinguish progress that can '
+                    'currently be approached from goals still needing access. Compare reachable '
+                    'prerequisites and local actions before repeating an inaccessible training, shopping '
+                    'or collection destination. A cheap future goal is not cheap immediate progress '
+                    'when its access remains unresolved; choosing it should have a concrete new access '
+                    'hypothesis rather than repeating the unchanged failed approach.')
             if any('downstream_context' in value for value in candidates.values()):
                 instruction += (' A route unlock is an intermediate step, not a Pokédex registration. '
                     'Each route_unlocks entry carries its parent goal and downstream_context: '
@@ -869,6 +905,13 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'those resources are sufficient. The urgently_needed field is a heuristic warning, not a '
                 'requirement to refill each depleted move. A depleted attack can be replaced by another '
                 'effective attack with PP remaining. Retreat only when its benefit outweighs replaying all reset battles.')
+        if layer == 'strategy' and any('completion_resets_won_battles' in value for value in candidates.values()):
+            instruction += (' completion_resets_won_battles is different from route_resets_won_battles: '
+                'the former clears temporary flags while completing the selected ending and returning '
+                'to its saved destination; it does not require replaying those already won battles '
+                'to complete this exit. Remaining opponents and the ceremony still require real execution. '
+                'Compare the exit and any reachable preparations with goals whose trigger regions '
+                'currently have no walking path; remote training cannot grant experience before access is restored.')
         if layer == 'strategy' and getattr(self, 'maximizes_coverage', False):
             instruction += (' The terminal goal is coverage: visiting a new map is progress in itself, so once the '
                 'current objective is satisfied prefer reaching an unexplored bordering area over optional '
@@ -1993,6 +2036,7 @@ class AutonomousStoryAgent(DualStoryAgent):
         finally:
             check.close()
         pt.resume_reentry(self.game)
+        self.hof_baseline = expected
         self.record('first_clear_verified', verification=self.first_clear_verification)
         return True
 
@@ -2094,7 +2138,7 @@ class AutonomousStoryAgent(DualStoryAgent):
         """Compatibility wrapper; reset costs apply to more than healing."""
         return self.route_battle_reset_costs(healers, facts)
 
-    def route_battle_reset_costs(self, rules, facts):
+    def route_battle_reset_costs(self, rules, facts, *, completed_scripts=()):
         """Current entry guards on map-level routes; not a reachability proof."""
         script_rules = getattr(self.index, 'rules', None)
         if not isinstance(script_rules, list):
@@ -2104,6 +2148,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                and facts.get('flags', {}).get(r.effect[1]) and any(e[0] == 'battle' for e in r.preceding)}
         resets = [r for r in script_rules if r.effect[0] == 'flag' and not r.effect[2]
                   and r.effect[1] in won and 'load' in r.triggers
+                  and r.storyline not in completed_scripts
                   and not any(e[0] == 'battle' for e in r.preceding)]
         if not resets:
             return {}
@@ -2126,10 +2171,33 @@ class AutonomousStoryAgent(DualStoryAgent):
             [rule for group in groups.values() for rule in group['rules']], facts)
         for group in groups.values():
             context = group.get('context', {})
-            context.pop('route_resets_won_battles', None)
-            context.pop('route_reset_scope', None)
-            relevant = {name: costs[name] for name in sorted({rule.map for rule in group['rules']})
-                        if name in costs}
+            for key in ('route_resets_won_battles', 'route_reset_scope',
+                        'completion_resets_won_battles', 'completion_reset_scope'):
+                context.pop(key, None)
+            applicable = costs
+            rules = group['rules']
+            if rules and all(rule.effect == group['target'] and 'load' in rule.triggers
+                    and ('ending', 'hall_of_fame_and_credits', True) in rule.preceding for rule in rules):
+                completion = {}
+                for rule in rules:
+                    cleared = {name for kind, name, wanted in rule.preceding
+                               if kind == 'flag' and not wanted}
+                    flags = sorted(cleared & set(costs.get(rule.map, [])))
+                    if flags:
+                        completion[rule.map] = flags
+                if completion:
+                    context['completion_resets_won_battles'] = completion
+                    context['completion_reset_scope'] = (
+                        'Temporary flags cleared by the selected completed ending, not a replay cost '
+                        'before this exit. Actual remaining battles, ceremony, credits and saved '
+                        'CONTINUE are still required. No flag is changed by this preview.')
+                    # Exclude these exact scripts, not their flag names: an
+                    # earlier lobby may clear the same flag as a real detour.
+                    applicable = self.route_battle_reset_costs(rules, facts,
+                        completed_scripts={rule.storyline for rule in rules})
+            relevant = {name: applicable[name] for name in sorted({rule.map for rule in rules})
+                        if name in applicable}
+            group['context'] = context
             if relevant:
                 group['context'] = {**context, 'route_resets_won_battles': relevant,
                     'route_reset_scope': 'Already won battle flags cleared by entry scripts on the proposed map-level route to each interaction or training site, using currently satisfied guards. Not a tile-path proof; alternate routes or changed guards may differ. Does not include effects after the destination interaction. No flag is changed by this preview.'}
