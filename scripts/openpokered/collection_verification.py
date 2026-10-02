@@ -18,12 +18,29 @@ def collection_snapshot(observations):
             or len(set(seen)) != len(seen) or dex.get('owned') != len(owned)
             or dex.get('seen') != len(seen) or not set(owned) <= set(seen)):
         raise ValueError('Invalid overworld collection snapshot')
+    stored = state.get('stored_pokemon')
+    counts = state.get('box_counts')
+    fields = {'box', 'index', 'species', 'level', 'hp', 'max_hp', 'status', 'moves', 'pp'}
+    if (not isinstance(counts, list) or len(counts) != 12
+            or any(type(count) is not int or not 0 <= count <= 20 for count in counts)
+            or not isinstance(stored, list)
+            or any(not isinstance(mon, dict) or not fields <= mon.keys()
+                   or type(mon['box']) is not int or type(mon['index']) is not int
+                   for mon in stored)):
+        raise ValueError('Incomplete stored Pokemon observation')
+    slots = [(mon['box'], mon['index']) for mon in stored]
+    expected_slots = {(box, index) for box, count in enumerate(counts) for index in range(count)}
+    if len(slots) != len(expected_slots) or set(slots) != expected_slots:
+        raise ValueError('Invalid stored Pokemon slots or box counts')
     return {
         'dex': {**dex, 'owned_species': sorted(owned), 'seen_species': sorted(seen)},
         'state': {key: state[key] for key in (
             'map_name', 'player_x', 'player_y', 'money', 'coins', 'badges',
             'current_box_index', 'box_counts')},
         'party': observations['get_party']['data'],
+        # Counts alone cannot detect a replaced species, altered moves/HP,
+        # or a different occupied slot. Compare every exposed stored field.
+        'stored_pokemon': sorted(stored, key=lambda mon: (mon['box'], mon['index'])),
         'bag': observations['get_bag']['data'],
         'flags': observations['get_flags']['data'],
     }
@@ -67,7 +84,7 @@ def verify_collection_continue(saved, binary, observations, script_flags=None):
                 raise ValueError('CONTINUE changed persisted collection facts: ' + ', '.join(differences))
             if hashlib.sha256(saved.read_bytes()).hexdigest() != digest:
                 raise ValueError('Source SRAM changed during isolated verification')
-            return {'verified': True, 'save_sha256': digest,
+            return {'schema': 2, 'verified': True, 'save_sha256': digest,
                     'binary_sha256': hashlib.sha256(binary.read_bytes()).hexdigest(),
                     'separate_process_pid': check.proc.pid,
                     'verification_commands': dict(check.d.counts),

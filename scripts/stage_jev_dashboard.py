@@ -65,7 +65,11 @@ def verify_dex_completion(data):
     names = last.get('owned_species') or []
     proof = (data.get('run') or {}).get('collection_continue_verification') or {}
     restored = (proof.get('restored') or {}).get('dex') or {}
-    if (proof.get('verified') is not True or proof.get('expected') != proof.get('restored')
+    snapshot = proof.get('restored') or {}
+    if (proof.get('schema') != 2 or proof.get('verified') is not True
+            or not {'dex', 'state', 'party', 'bag', 'flags', 'stored_pokemon'} <= snapshot.keys()
+            or not isinstance(snapshot.get('stored_pokemon'), list)
+            or proof.get('expected') != proof.get('restored')
             or not re.fullmatch(r'[0-9a-f]{64}', proof.get('save_sha256') or '')
             or restored.get('owned') != 124 or set(restored.get('owned_species') or []) != owned):
         raise ValueError('Pokédex completion lacks matching separate-process CONTINUE evidence')

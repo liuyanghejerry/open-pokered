@@ -77,9 +77,11 @@ class PagesStagingTest(unittest.TestCase):
             'progress': [{'owned': 124, 'validated_owned': 124,
                           'pending_source_validation': [],
                           'owned_species': [f'Mon{number}' for number in range(1, 125)]}]}
-        snapshot = {'dex': {'owned': 124, 'owned_species': data['progress'][0]['owned_species']}}
+        snapshot = {'dex': {'owned': 124, 'owned_species': data['progress'][0]['owned_species']},
+                    'state': {'box_counts': [0] * 12, 'current_box_index': 0},
+                    'party': [{'species': 'Mon1'}], 'stored_pokemon': [], 'bag': [], 'flags': {}}
         data['run']['collection_continue_verification'] = {
-            'verified': True, 'save_sha256': 'a' * 64, 'expected': snapshot, 'restored': snapshot}
+            'schema': 2, 'verified': True, 'save_sha256': 'a' * 64, 'expected': snapshot, 'restored': snapshot}
         self.write_dex_data(data)
         return video
 
@@ -115,6 +117,22 @@ class PagesStagingTest(unittest.TestCase):
         template.write_text('template')
         stage(self.repo, self.site, 'abc123')
         self.assertFalse((self.site / 'jev-dashboard/dex-run').exists())
+
+    def test_completion_rejects_legacy_count_only_storage_proof(self):
+        import copy
+        self.prepare_dex()
+        original = json.loads((self.source / 'dex-run/jev-dex-dashboard.json').read_text())
+        for missing_schema in (True, False):
+            data = copy.deepcopy(original)
+            proof = data['run']['collection_continue_verification']
+            if missing_schema:
+                proof.pop('schema')
+            else:
+                proof['expected'].pop('stored_pokemon')
+                proof['restored'].pop('stored_pokemon')
+            self.write_dex_data(data)
+            with self.assertRaisesRegex(ValueError, 'CONTINUE evidence'):
+                stage(self.repo, self.site, 'abc123')
 
     def test_rejects_partial_dex_before_replacing_previous_dashboard(self):
         self.prepare_dex()
