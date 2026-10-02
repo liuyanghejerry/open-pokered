@@ -712,3 +712,15 @@ fn test_play_script_music_dispatch() {
         mgr.fade_state() == FadeState::FadingOut || mgr.last_music_id() == Some(MusicId::CITIES1)
     );
 }
+
+#[test]
+fn healed_jingle_first_music_channel_reports_natural_completion() {
+    let mut manager = AudioManager::new();
+    manager.play_music(MusicId::PKMNHEALED);
+    assert!(manager.sequencer.is_music_channel_active(0));
+    for _ in 0..1024 {
+        manager.update_frame();
+        if !manager.sequencer.is_music_channel_active(0) { return; }
+    }
+    panic!("finite healed jingle never ended its first music channel");
+}

@@ -4143,8 +4143,9 @@ impl PokemonGame {
                             resources.clear_cache();
                         }
                     }
+                    // SSAnneCaptainsRoom.asm waits on music channel 1.
                     self.overworld.script_music_playing = self.audio.as_ref()
-                        .is_some_and(|audio| audio.is_music_playing());
+                        .is_some_and(|audio| audio.is_music_channel_playing(0));
                     let action = self.overworld.update_frame(ow_input);
 
                     self.apply_overworld_game_data_requests();
@@ -8198,5 +8199,32 @@ mod web_legacy_save_fidelity_tests {
             let raw = serde_json::to_string(&save).unwrap();
             assert_eq!(decode_web_save(&raw).unwrap().party.get(0).unwrap().is_traded, expected);
         }
+    }
+}
+
+#[cfg(test)]
+mod captain_music_wait_fidelity_tests {
+    use super::*;
+    #[test]
+    fn no_audio_frontend_resumes_wait_music_when_the_real_healed_channel_ends() {
+        let mut game = PokemonGame::new_with_options(GameVersion::Red, None, None, None,
+            false, None, false, true, #[cfg(feature = "debug-server")] None);
+        game.state.screen = GameScreen::Overworld;
+        game.overworld = OverworldScreen::new(MapId::SSAnneCaptainsRoom, None, PokemonRedData);
+        game.overworld.state.player.x = 4;
+        game.overworld.state.player.y = 3;
+        game.audio.as_ref().unwrap().play_music(MusicId::PKMNHEALED);
+        game.overworld.active_script_effect = Some(pokered_core::overworld::script_bridge::ScriptEffect::WaitMusic);
+        game.update(&InputState::new());
+        assert!(matches!(game.overworld.active_script_effect,
+            Some(pokered_core::overworld::script_bridge::ScriptEffect::WaitMusic)));
+        for _ in 0..1024 {
+            game.update(&InputState::new());
+            if game.overworld.active_script_effect.is_none() {
+                assert!(!game.audio.as_ref().unwrap().is_music_channel_playing(0));
+                return;
+            }
+        }
+        panic!("no-audio WaitMusic remained blocked after the healed jingle");
     }
 }

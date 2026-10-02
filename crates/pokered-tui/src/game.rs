@@ -1947,8 +1947,9 @@ impl PokemonGame {
                         );
                     }
 
+                    // SSAnneCaptainsRoom.asm waits on music channel 1.
                     self.overworld.script_music_playing = self.audio.as_ref()
-                        .is_some_and(|audio| audio.is_music_playing());
+                        .is_some_and(|audio| audio.is_music_channel_playing(0));
                     self.overworld.script_sfx_playing = self.audio.as_ref()
                         .is_some_and(|audio| audio.is_sfx_playing() && !audio.low_health_alarm_active());
                     // wOptions text delay — pushed every frame so the dialogue

@@ -188,6 +188,14 @@ impl AudioOutput {
         self.manager.lock().map(|manager| manager.is_music_playing()).unwrap_or(false)
     }
 
+    /// Live music-channel state, including natural sound_ret termination.
+    /// Original script waits inspect channel 1's sound ID rather than the
+    /// sequencer's track-selection latch.
+    pub fn is_music_channel_playing(&self, channel: usize) -> bool {
+        self.manager.lock().map(|manager|
+            manager.sequencer.is_music_channel_active(channel)).unwrap_or(false)
+    }
+
     pub fn last_music_id(&self) -> Option<MusicId> {
         if let Ok(mgr) = self.manager.lock() {
             mgr.last_music_id()

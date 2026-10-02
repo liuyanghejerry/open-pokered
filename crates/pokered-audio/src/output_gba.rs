@@ -90,6 +90,9 @@ impl AudioOutput {
     pub fn is_music_playing(&self) -> bool {
         self.manager.borrow_mut().is_music_playing()
     }
+    pub fn is_music_channel_playing(&self, channel: usize) -> bool {
+        self.manager.borrow().sequencer.is_music_channel_active(channel)
+    }
     pub fn last_music_id(&self) -> Option<MusicId> {
         self.manager.borrow_mut().last_music_id()
     }

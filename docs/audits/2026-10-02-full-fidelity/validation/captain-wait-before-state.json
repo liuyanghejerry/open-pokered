@@ -1,0 +1,188 @@
+{
+  "active_script_effect": "WaitMusic",
+  "badges": 3,
+  "battle_bag": null,
+  "battle_inventory": [
+    {
+      "item": "Tm34",
+      "qty": 1
+    },
+    {
+      "item": "HelixFossil",
+      "qty": 1
+    },
+    {
+      "item": "Tm11",
+      "qty": 1
+    },
+    {
+      "item": "Nugget",
+      "qty": 1
+    },
+    {
+      "item": "SsTicket",
+      "qty": 1
+    },
+    {
+      "item": "Tm28",
+      "qty": 1
+    }
+  ],
+  "battle_live": {
+    "enemy": {
+      "hp": 0,
+      "level": 20,
+      "max_hp": 56,
+      "species": "Charmeleon",
+      "status": "None"
+    },
+    "enemy_party": [
+      {
+        "hp": 0,
+        "level": 19,
+        "species": "Pidgeotto"
+      },
+      {
+        "hp": 0,
+        "level": 16,
+        "species": "Raticate"
+      },
+      {
+        "hp": 0,
+        "level": 18,
+        "species": "Kadabra"
+      },
+      {
+        "hp": 0,
+        "level": 20,
+        "species": "Charmeleon"
+      }
+    ],
+    "is_ghost": false,
+    "player": {
+      "hp": 43,
+      "level": 30,
+      "max_hp": 81,
+      "species": "Ivysaur",
+      "status": "None"
+    },
+    "player_party": [
+      {
+        "hp": 43,
+        "level": 30,
+        "max_hp": 81,
+        "species": "Ivysaur"
+      }
+    ]
+  },
+  "battle_message": null,
+  "battle_moves": null,
+  "battle_party_cursor": 0,
+  "battle_phase": "TrainerVictory { phase: EndBattleText, wait_frames: 0, player_won: true }",
+  "choice": null,
+  "coins": 0,
+  "credits_final_button": null,
+  "credits_phase": null,
+  "dialogue": null,
+  "dialogue_state": null,
+  "evaluation": {
+    "party": [
+      {
+        "hp": 43,
+        "level": 30,
+        "max_hp": 81,
+        "moves": [
+          "Tackle",
+          "RazorLeaf",
+          "LeechSeed",
+          "VineWhip"
+        ],
+        "pp": [
+          35,
+          18,
+          10,
+          10
+        ],
+        "species": "Ivysaur",
+        "status": "None",
+        "total_exp": 23852
+      }
+    ],
+    "party_source": "save_data",
+    "pokedex": {
+      "owned": 2,
+      "owned_numbers": [
+        1,
+        2
+      ],
+      "seen": 40,
+      "total": 151
+    }
+  },
+  "field_menu": null,
+  "frame_count": 361054,
+  "hall_of_fame_count": 0,
+  "hof_phase": null,
+  "last_outside_map": "VermilionCity",
+  "link": {
+    "cable_phase": "Inactive",
+    "role": "Host",
+    "status": "disabled",
+    "trade": null
+  },
+  "map_blocks": [
+    48,
+    49,
+    47,
+    50,
+    51,
+    7,
+    11,
+    11,
+    7,
+    46,
+    11,
+    11
+  ],
+  "map_id": 101,
+  "map_name": "SSAnneCaptainsRoom",
+  "money": 2021,
+  "party": [
+    {
+      "hp": 43,
+      "level": 30,
+      "max_hp": 81,
+      "moves": [
+        "Tackle",
+        "RazorLeaf",
+        "LeechSeed",
+        "VineWhip"
+      ],
+      "pp": [
+        35,
+        18,
+        10,
+        10
+      ],
+      "species": "Ivysaur",
+      "status": "None"
+    }
+  ],
+  "party_count": 1,
+  "pc_phase": null,
+  "player_facing": "Up",
+  "player_movement_state": "Idle",
+  "player_name": "RED",
+  "player_transport": "Walking",
+  "player_x": 4,
+  "player_y": 3,
+  "screen": "overworld",
+  "script_awaiting_battle": false,
+  "script_effect": {
+    "effect": "WaitMusic"
+  },
+  "script_running": true,
+  "shop_phase": null,
+  "text_speed_delay_frames": 3,
+  "warp_fade": "Idle"
+}
