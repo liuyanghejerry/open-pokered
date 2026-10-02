@@ -2427,6 +2427,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             self.state.player.movement_state = MovementState::Idle;
             self.state.walk_counter = 0;
             self.state.exiting_door = false;
+            self.state.standing_on_door = false;
             self.state.standing_on_warp = false;
 
             // EnterMap: ResetUsingStrengthOutOfBattleBit — STRENGTH wears off

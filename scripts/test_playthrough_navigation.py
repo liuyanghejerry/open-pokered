@@ -1,6 +1,6 @@
 """Regression cases exposed by real post-Brock playthroughs (stdlib unittest)."""
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 from types import SimpleNamespace
 import subprocess
 import sys
@@ -11,6 +11,89 @@ from playthrough_late import damage_slot
 
 
 class NavigationRegression(unittest.TestCase):
+    def test_cross_map_trip_retargets_after_discovering_destination_npcs(self):
+        game = nav.Game.__new__(nav.Game)
+        state = {'screen': 'overworld', 'map_name': 'SilphCo4F', 'player_x': 26, 'player_y': 1}
+        game.st = lambda: state.copy()
+        game.last_map = 'SaffronCity'
+        game.smart_moves = True
+        game.navigation_excluded_maps = lambda: ()
+        occupied = {(28, 4), (21, 16), (13, 9), (8, 16), (8, 3),
+                    (18, 10), (2, 13), (4, 6), (22, 12), (25, 10), (24, 6)}
+        game.npc_blocked = game.live_npcs = lambda name: occupied if name == 'SilphCo5F' else set()
+        search = nav.bfs_cross
+        def plan(name, start, target, preferred, **kwargs):
+            self.assertEqual(kwargs['goal_nodes'], {('SilphCo5F', 22, 16), ('SilphCo5F', 20, 16)})
+            if name == 'SilphCo4F':
+                return [(name, *start), (('SilphCo5F', 26, 0), 'up')]
+            path = search(name, start, target, preferred, **kwargs)
+            self.assertEqual(path[-1][0], ('SilphCo5F', 20, 16))
+            self.assertTrue(any(node[0] == 'SilphCo9F' for node, _ in path[1:]))
+            return path
+        def drive(buttons, frames):
+            if state['map_name'] == 'SilphCo4F':
+                state.update(map_name='SilphCo5F', player_y=1)
+            else:
+                state.update(player_x=20, player_y=16)
+        game.d = SimpleNamespace(drive=drive, step=lambda _: None)
+        with patch.object(nav, 'bfs_cross', side_effect=plan) as planned:
+            self.assertEqual(game.nav_to_map(22, 16, 'SilphCo5F', tries=3,
+                avoid_grass=False, goal_points=[(22, 16), (20, 16)]), (20, 16))
+        self.assertEqual(planned.call_count, 2)
+
+    def test_cross_map_trip_rejects_empty_approach_region(self):
+        game = nav.Game.__new__(nav.Game)
+        with self.assertRaisesRegex(nav.NavError, 'no destination points'):
+            game.nav_to_map(22, 16, 'SilphCo5F', goal_points=[])
+
+    def test_navigation_observes_final_arrival_before_accepting_target(self):
+        game = nav.Game.__new__(nav.Game)
+        state = {'screen': 'overworld', 'map_name': 'CeladonMansion1F',
+                 'player_x': 2, 'player_y': 1, 'warp_fade': 'FadingOut { frames_remaining: 2 }'}
+        game.st = lambda: state.copy()
+        game.last_map = 'CeladonCity'
+        game.d = Mock()
+        def settle(*args, **kwargs):
+            state.update(map_name='CeladonMansion2F', player_y=2, warp_fade='Idle')
+        game.wait = Mock(side_effect=settle)
+        game.nav_to_map(2, 2, 'CeladonMansion2F', tries=1)
+        game.wait.assert_called_once_with('control_ready', max_frames=240, must=False)
+        game.d.drive.assert_not_called()
+
+    def test_navigation_wait_is_scoped_to_observed_transition_not_dialogue(self):
+        game = nav.Game.__new__(nav.Game)
+        state = {'screen': 'overworld', 'warp_fade': 'Idle', 'player_movement_state': 'Idle'}
+        game.st = lambda: state.copy()
+        game.wait = Mock()
+        self.assertEqual(game.navigation_state(), state)
+        game.wait.assert_not_called()
+        state['dialogue_state'] = {'waiting_for_input': True}
+        game.navigation_state()
+        game.wait.assert_not_called()
+        for changes in ({'door_exit_pending': True}, {'player_movement_state': 'Walking'}):
+            previous = dict(state)
+            state.update(changes)
+            game.navigation_state()
+            game.wait.assert_called_once_with('control_ready', max_frames=240, must=False)
+            game.wait.reset_mock()
+            state.clear()
+            state.update(previous)
+
+    def test_navigation_settles_warp_before_evaluating_segment_result(self):
+        game = nav.Game.__new__(nav.Game)
+        state = {'screen': 'overworld', 'map_name': 'Route16', 'player_x': 15, 'player_y': 13}
+        game.st = lambda: state.copy()
+        game.last_map = 'Route16'
+        game.npc_blocked = game.live_npcs = lambda _: set()
+        def drive(buttons, frames):
+            state.update(player_y=12, warp_fade='FadingIn { frames_remaining: 3 }')
+        game.d = SimpleNamespace(drive=drive, step=lambda _: None)
+        game.wait = Mock(side_effect=lambda *args, **kwargs: state.update(warp_fade='Idle'))
+        with patch.object(nav, 'bfs_cross', return_value=[
+                ('Route16', 15, 13), (('Route16', 15, 12), 'up')]):
+            game.nav_to_map(15, 12, 'Route16', tries=2, avoid_grass=False)
+        game.wait.assert_called_once_with('control_ready', max_frames=240, must=False)
+
     def test_grass_detour_returning_to_current_map_uses_stable_fallback(self):
         game = nav.Game.__new__(nav.Game)
         state = {'screen': 'overworld', 'map_name': 'Route16', 'player_x': 15, 'player_y': 13}

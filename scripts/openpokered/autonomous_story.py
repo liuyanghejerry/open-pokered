@@ -3685,9 +3685,8 @@ class AutonomousStoryAgent(DualStoryAgent):
         error = None
         for avoid_maps in ((transit, None) if transit else (None,)):
             try:
-                self.navigate_point(name, point, **kwargs,
-                                    **({'avoid_maps': avoid_maps} if avoid_maps else {}))
-                return
+                return self.navigate_point(name, point, **kwargs,
+                                           **({'avoid_maps': avoid_maps} if avoid_maps else {}))
             except pt.NavError as failure:
                 error = failure
         raise error
@@ -3797,9 +3796,10 @@ class AutonomousStoryAgent(DualStoryAgent):
         walk_transit = ({map_name: tiles for map_name, tiles in transit.items()
                          if map_name != state['map_name']} if transit else None)
         try:
-            self.navigate_trip(name, point, walk_transit,
+            position = self.navigate_trip(name, point, walk_transit,
+                               **({'goal_points': points} if len(points) > 1 else {}),
                                **({'avoid_tiles': puzzle_holes} if puzzle_holes else {}))
-            return {'result': 'reached', 'destination': name, 'position': point}
+            return {'result': 'reached', 'destination': name, 'position': position}
         except NavigationPause as error:
             return {'result': 'paused_after_battle', 'detail': str(error), 'destination': name}
         except pt.NavError as error:
@@ -3928,7 +3928,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                     return targets
         return []
 
-    def navigate_point(self, name, point, tries=80, avoid_tiles=(), avoid_maps=None):
+    def navigate_point(self, name, point, tries=80, avoid_tiles=(), avoid_maps=None, goal_points=None):
         previous = getattr(self.game, 'script_navigation_barriers', {})
         if avoid_tiles or avoid_maps:
             # `avoid_maps` supplies tiles the walk may not cross on the maps it
@@ -3939,7 +3939,8 @@ class AutonomousStoryAgent(DualStoryAgent):
                    for map_name, tiles in (avoid_maps or {}).items()}}
         self.game.navigation_active = True
         try:
-            self.game.nav_to_map(*point, name, tries=tries)
+            return self.game.nav_to_map(*point, name, tries=tries,
+                **({'goal_points': goal_points} if goal_points is not None else {}))
         finally:
             self.game.navigation_active = False
             if avoid_tiles or avoid_maps:

@@ -7,6 +7,7 @@ handler, ordered route, seeded party, scripted flag or warp is used.
 import argparse
 import hashlib
 import json
+import os
 import shutil
 import signal
 import sys
@@ -34,6 +35,25 @@ GOAL_OBJECTIVES = {
                    'name': 'Reach the Hall of Fame in as few operations and frames as possible'},
 }
 DEX_OBJECTIVE = GOAL_OBJECTIVES['collect-dex']
+
+
+def recording_assets(root):
+    """Fail early on an incomplete gfx checkout; fingerprint the PNG inputs.
+
+    These essential files guard the empty-map/sprite failure, not pixel-level
+    correctness of every asset. Native frame inspection is still required.
+    """
+    root = Path(root).resolve()
+    required = ('sprites/red.png', 'tilesets/overworld.png', 'font/font.png',
+                'pokemon/front/charizard.png', 'pokemon/back/charizardb.png')
+    for name in required:
+        path = root / name
+        if not path.is_file() or not path.read_bytes().startswith(b'\x89PNG\r\n\x1a\n'):
+            raise ValueError(f'Recording needs PNG asset {path}; run scripts/fetch-gfx.sh')
+    files = {str(p.relative_to(root)): hashlib.sha256(p.read_bytes()).hexdigest()
+             for p in sorted(root.rglob('*.png'))}
+    return {'root': str(root), 'png_count': len(files),
+            'sha256': hashlib.sha256(json.dumps(files, sort_keys=True).encode()).hexdigest()}
 
 
 def boot_new_game(game):
@@ -222,9 +242,13 @@ def main(argv=None):
     result['jev_provider'] = (resolved_provider if isinstance(resolved_provider, str)
                               else args.jev_provider)
     if video_path:
+        assets = recording_assets(os.environ.get('POKERED_GFX_DIR', pt.ROOT / 'gfx'))
+        # Ensure the child uses the same root we checked, not a stale build's
+        # baked path to a different worktree.
+        os.environ['POKERED_GFX_DIR'] = assets['root']
         result['recording'] = {'path': str(video_path), 'simulated_fps': 60,
                                'game_frames_per_video_second': args.record_video_fps,
-                               'container': 'mp4'}
+                               'container': 'mp4', 'assets': assets}
     policy_files = [*Path(__file__).parent.glob('*.py'),
                     pt.ROOT / 'scripts/playthrough.py', pt.ROOT / 'scripts/playthrough_late.py',
                     pt.ROOT / 'scripts/debug_drive.py']

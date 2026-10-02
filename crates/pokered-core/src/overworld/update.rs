@@ -40,6 +40,22 @@ use alloc::collections::VecDeque;
 
 // ── Free helper functions ─────────────────────────────────────────
 
+fn npc_collision_positions(npcs: &[npc_movement::NpcRuntimeState]) -> Vec<collision::SpritePosition> {
+    // Reserve both the current tile and the destination of a moving NPC.
+    npcs.iter().filter(|npc| npc.visible).flat_map(|npc| {
+        let current = collision::SpritePosition { x: npc.x, y: npc.y };
+        if npc.walk_counter > 0 {
+            let (dx, dy) = player_movement::direction_delta(npc.facing);
+            vec![current, collision::SpritePosition {
+                x: (npc.x as i32 + dx as i32).max(0) as u16,
+                y: (npc.y as i32 + dy as i32).max(0) as u16,
+            }]
+        } else {
+            vec![current]
+        }
+    }).collect()
+}
+
 fn resolve_npc_index(
     npc_id: &str,
     npc_states: &[npc_movement::NpcRuntimeState],
@@ -807,9 +823,27 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         if self.state.standing_on_door {
             self.state.standing_on_door = false;
             self.state.player.facing = Direction::Down;
-            self.state.player.movement_state = MovementState::Walking;
-            self.state.walk_counter = player_movement::WALK_COUNTER_INIT;
-            self.state.exiting_door = true;
+            // PlayerStepOutFromDoor queues ONE PAD_DOWN. JoypadOverworld
+            // decrements the simulated-input index to zero before
+            // CollisionCheckOnLand, so this final step is NOT collision-free.
+            // Mansion back stairs have a wall immediately below the landing.
+            if let Some(map) = &self.map_data {
+                let provider = collision::PokemonCollisionProvider::new(map.id, map.tileset);
+                let tile = |x, y| provider.get_tile_at_position(
+                    map.tileset, &map.blocks, map.width, x, y,
+                );
+                let standing = tile(self.state.player.x, self.state.player.y);
+                let target = tile(self.state.player.x, self.state.player.y + 1);
+                let result = player_movement::try_move(
+                    &mut self.state, Direction::Down, map.tileset, map.width, map.height,
+                    standing, target,
+                    &npc_collision_positions(&self.npc_states), collision::PAD_DOWN, &provider,
+                );
+                self.state.exiting_door = matches!(result, MoveResult::Walking | MoveResult::LedgeJump);
+                if matches!(result, MoveResult::Blocked(_)) {
+                    self.sfx_event = OverworldSfxEvent::Collision;
+                }
+            }
             return ScreenAction::Continue;
         }
 
@@ -1676,29 +1710,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 standing_tile
             };
 
-            // Build sprite positions for collision check.
-            // Include NPC destinations (tiles they're walking toward) to prevent
-            // race conditions where player walks into a tile an NPC is heading to.
-            // This mirrors the occupied vector logic in npc_movement.rs.
-            let npc_positions: Vec<collision::SpritePosition> = self
-                .npc_states
-                .iter()
-                .filter(|npc| npc.visible)
-                .flat_map(|npc| {
-                    let cur = collision::SpritePosition { x: npc.x, y: npc.y };
-                    if npc.walk_counter > 0 {
-                        // NPC is walking - include destination tile
-                        let (dx, dy) = player_movement::direction_delta(npc.facing);
-                        let dest = collision::SpritePosition {
-                            x: (npc.x as i32 + dx as i32).max(0) as u16,
-                            y: (npc.y as i32 + dy as i32).max(0) as u16,
-                        };
-                        vec![cur, dest]
-                    } else {
-                        vec![cur]
-                    }
-                })
-                .collect();
+            let npc_positions = npc_collision_positions(&self.npc_states);
 
             let movement_before = self.state.player.movement_state;
             let transport_before = self.state.player.transport;

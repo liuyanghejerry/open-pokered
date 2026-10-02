@@ -22,6 +22,26 @@ from openpokered.run_autonomous import observations_valid, checkpoint_field_requ
 
 
 class AutonomousTests(unittest.TestCase):
+    def test_recording_rejects_missing_assets_and_fingerprints_png_changes(self):
+        import tempfile
+        from openpokered.run_autonomous import recording_assets
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            with self.assertRaisesRegex(ValueError, 'fetch-gfx'):
+                recording_assets(root)
+            for name in ('sprites/red.png', 'tilesets/overworld.png', 'font/font.png',
+                         'pokemon/front/charizard.png', 'pokemon/back/charizardb.png'):
+                path = root / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(b'\x89PNG\r\n\x1a\nfixture')
+            first = recording_assets(root)
+            self.assertEqual(first['png_count'], 5)
+            (root / 'sprites/red.png').write_bytes(b'\x89PNG\r\n\x1a\nchanged')
+            self.assertNotEqual(first['sha256'], recording_assets(root)['sha256'])
+            (root / 'sprites/red.png').write_text('version https://git-lfs.github.com/spec/v1')
+            with self.assertRaisesRegex(ValueError, 'PNG asset'):
+                recording_assets(root)
+
     def test_cross_search_reports_all_reachable_goals_not_the_first_only(self):
         import playthrough as pt
         name = 'CinnabarIsland'
@@ -1385,11 +1405,23 @@ class AutonomousTests(unittest.TestCase):
         agent.index = object()
         agent.facts = Mock(return_value={})
         agent.observed_navigation_barriers = Mock(return_value={})
-        agent.navigate_point = Mock()
+        agent.navigate_point = Mock(return_value=(20, 16))
         rule = Rule('key', 'SilphCo5F', 'SilphCo5F:itemCardKey', [], [], [], ('item', 'CARD_KEY', True), [])
         result = agent.travel('SilphCo5F', rule, [(22, 16), (20, 16)])
         self.assertEqual(result['position'], (20, 16))
-        agent.navigate_point.assert_called_once_with('SilphCo5F', (20, 16))
+        agent.navigate_point.assert_called_once_with('SilphCo5F', (20, 16), goal_points=[(22, 16), (20, 16)])
+
+    def test_travel_reports_the_live_arrival_not_the_preselected_approach(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.game = Mock(last_map='SaffronCity')
+        agent.game.st.return_value = {'map_name': 'SilphCo4F', 'player_x': 26, 'player_y': 1}
+        agent.game.navigation_excluded_maps.return_value = ()
+        agent.navigate_point = Mock(return_value=(20, 16))
+        rule = Rule('key', 'SilphCo5F', 'SilphCo5F:itemCardKey', [], [], [], ('item', 'CARD_KEY', True), [])
+        with patch('playthrough.bfs_cross', side_effect=[['short'], ['long', 'path']]):
+            result = agent.travel('SilphCo5F', rule, [(22, 16), (20, 16)])
+        agent.navigate_point.assert_called_once_with('SilphCo5F', (22, 16), goal_points=[(22, 16), (20, 16)])
+        self.assertEqual(result['position'], (20, 16))
 
     def test_navigation_dependencies_expand_recursively_but_ignore_unrelated_memories(self):
         from types import SimpleNamespace

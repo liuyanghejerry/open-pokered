@@ -6395,6 +6395,9 @@ impl PokemonGame {
             // Warp transition state ("Idle"/"FadingOut { .. }"/…), so a
             // driver knows when a warp is still settling.
             "warp_fade": format!("{:?}", self.overworld.warp_fade_state),
+            // The automatic door step owns input even after the fade is idle.
+            "door_exit_pending": self.overworld.state.standing_on_door
+                || self.overworld.state.exiting_door,
         });
         // Keep this separate from the large snapshot macro's recursion budget.
         let live = self.battle.battle_state.as_ref()
@@ -6536,7 +6539,7 @@ impl PokemonGame {
             "not_battle" => self.state.screen != pokered_core::game_state::GameScreen::Battle,
             // Player control back after a cutscene: overworld, no dialogue /
             // choice / script effect, script engine idle, warp settled,
-            // and no battle suspended on the script.
+            // no arrival auto-step / unfinished walk, and no suspended battle.
             "control_ready" => {
                 crate::cli::screen_name(&self.state.screen) == "overworld"
                     && self.overworld.pending_dialogue.is_none()
@@ -6549,6 +6552,10 @@ impl PokemonGame {
                         pokered_core::overworld::WarpFadeState::Idle
                     )
                     && !self.overworld.script_awaiting_battle
+                    && !self.overworld.state.standing_on_door
+                    && !self.overworld.state.exiting_door
+                    && self.overworld.state.player.movement_state
+                        == pokered_core::overworld::MovementState::Idle
             }
             other => {
                 if let Some(name) = other.strip_prefix("screen=") {
@@ -7820,6 +7827,39 @@ mod session_guard_tests {
 #[cfg(all(test, feature = "debug-server"))]
 mod synchronous_input_tests {
     use super::*;
+
+    #[test]
+    fn control_ready_waits_for_door_exit_and_unfinished_movement() {
+        use pokered_core::overworld::{MovementState, WarpFadeState};
+        let mut game = PokemonGame::new_with_options(
+            GameVersion::Red, None, None, None, false, None, false, true, None,
+        );
+        game.state.screen = GameScreen::Overworld;
+        game.overworld = OverworldScreen::new(MapId::SilphCo5F, None, PokemonRedData);
+        game.overworld.state.player.x = 26;
+        game.overworld.state.player.y = 0;
+        assert!(game.debug_condition_met("control_ready"));
+        game.overworld.state.standing_on_door = true;
+        assert!(!game.debug_condition_met("control_ready"), "arrival auto-step has not started");
+        game.overworld.state.standing_on_door = false;
+        game.overworld.state.exiting_door = true;
+        assert!(!game.debug_condition_met("control_ready"), "arrival auto-step still owns input");
+        game.overworld.state.exiting_door = false;
+        game.overworld.state.player.movement_state = MovementState::Walking;
+        assert!(!game.debug_condition_met("control_ready"), "previous step is unfinished");
+        game.overworld.state.player.movement_state = MovementState::Idle;
+        game.overworld.state.standing_on_door = true;
+        game.overworld.warp_fade_state = WarpFadeState::FadingIn { frames_remaining: 2 };
+        let command = serde_json::from_value(serde_json::json!({
+            "cmd": "wait_until", "condition": "control_ready", "max_frames": 240,
+        })).unwrap();
+        let response = serde_json::to_value(game.handle_debug_command(command)).unwrap();
+        assert_eq!(response["data"]["reached"], true);
+        assert_eq!(response["data"]["state"]["player_y"], 1);
+        assert!(!game.overworld.state.standing_on_door);
+        assert!(!game.overworld.state.exiting_door);
+        assert_eq!(game.overworld.state.player.movement_state, MovementState::Idle);
+    }
 
     #[test]
     fn evaluation_telemetry_reads_dex_and_experience_without_advancing() {

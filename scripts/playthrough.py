@@ -810,21 +810,44 @@ class Game:
         """Observed script barriers supplied by a planner, keyed by map."""
         return getattr(self, 'script_navigation_barriers', {})
 
-    def nav_to_map(self, x, y, map_name, tries=150, avoid_grass=True):
+    def navigation_state(self):
+        """Observe the final landing before planning or sending another segment.
+
+        A fade may still show the source map; after arrival, PlayerStepOutFromDoor
+        can consume input and change position again. Wait on the native condition,
+        only for observed movement/warp ownership, not a blanket settling delay.
+        Dialogue/battle handoffs remain the caller's responsibility.
+        """
+        state = self.st()
+        if (state.get('screen') == 'overworld' and
+                (state.get('warp_fade', 'Idle') != 'Idle'
+                 or state.get('door_exit_pending', False)
+                 or state.get('player_movement_state', 'Idle') != 'Idle')):
+            self.wait('control_ready', max_frames=240, must=False)
+            state = self.st()  # Refresh live map geometry as well as position.
+        return state
+
+    def nav_to_map(self, x, y, map_name, tries=150, avoid_grass=True, goal_points=None):
         """Cross-map closed-loop walk (connections included). Prefers a
         route that avoids wild-encounter grass when one exists (wilds
         interrupt the walk — sometimes fatally at low HP); falls back
         to any walkable path. Wild encounters that still happen are run
-        from (or fought for trainers) and the walk re-localizes."""
+        from (or fought for trainers) and the walk re-localizes. When several
+        approach tiles can trigger the same interaction, keep all of them
+        available during live replanning. Return the actual reached tile."""
+        goals = {(map_name, *point) for point in goal_points} if goal_points is not None else {(map_name, x, y)}
+        if not goals:
+            raise NavError(f"no destination points for {map_name}")
+        search_goals = {'goal_nodes': goals} if goal_points is not None else {}
         self.last_pinch = None
         self.pinch_count = 0
         excluded_maps = self.navigation_excluded_maps()
         for attempt in range(tries):
             # Single snapshot for battle + position, same race as nav_to.
-            s = self.st()
-            if (s["screen"] == "overworld" and s["map_name"] == map_name
-                    and (s["player_x"], s["player_y"]) == (x, y)):
-                return
+            s = self.navigation_state()
+            if (s["screen"] == "overworld" and
+                    (s["map_name"], s["player_x"], s["player_y"]) in goals):
+                return (s["player_x"], s["player_y"])
             # Sighted trainers now speak before opening the battle screen.
             # A direction-only navigator would keep walking into that dialogue
             # forever. Use the existing dialogue driver; choices still fail.
@@ -844,8 +867,8 @@ class Game:
             if os.environ.get("PT_DEBUG") and attempt % 10 == 0:
                 print(f"   [nav {map_name}({x},{y}) try={attempt} "
                       f"at {cm}({cx},{cy}) last={self.last_map}]", flush=True)
-            if cm == map_name and (cx, cy) == (x, y):
-                return
+            if (cm, cx, cy) in goals:
+                return (cx, cy)
             blocked = {cm: self.npc_blocked(cm)}
             barriers = self.navigation_barriers()
             path = None
@@ -857,7 +880,7 @@ class Game:
                                  last_map=self.last_map,
                                  allow_ledges=getattr(self, "smart_moves", False),
                                  allow_spinners=getattr(self, "smart_moves", False),
-                                 excluded_maps=excluded_maps)
+                                 excluded_maps=excluded_maps, **search_goals)
                 if path:
                     departed = False
                     for node, _ in path[1:]:
@@ -880,11 +903,12 @@ class Game:
                                  last_map=self.last_map,
                                  allow_ledges=getattr(self, "smart_moves", False),
                                  allow_spinners=getattr(self, "smart_moves", False),
-                                 excluded_maps=excluded_maps)
+                                 excluded_maps=excluded_maps, **search_goals)
             if not path:
                 if self.navigation_snapshot_changed(s):
                     continue
-                if self.destination_blocked_by_live_npc(cm, map_name, x, y):
+                if any(self.destination_blocked_by_live_npc(cm, map_name, gx, gy)
+                       for _, gx, gy in goals):
                     self.step(200)
                     continue
                 raise NavError(f"no cross path: {cm}({cx},{cy}) "
@@ -967,7 +991,7 @@ class Game:
                           f"held={held}", flush=True)
                 self.d.drive(movement_buttons(s, steps[i], held, frames), frames=frames)
                 i = j + 1
-                s = self.st()
+                s = self.navigation_state()
                 if (s["screen"] == "battle" or s["map_name"] != cm
                         or s.get("dialogue_state") is not None):
                     break
