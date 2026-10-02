@@ -688,14 +688,39 @@ mod layout_tests {
 
     #[test]
     fn chinese_list_leaves_clear_pixels_between_rows() {
-        let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), BG);
+        let mut actual = FrameBuffer::new(RenderConfig::new(160, 144), BG);
         let rows = vec!["精灵球 x03".into(), "好伤药 x12".into()];
-        draw_list(0, 0, 18, 8, &rows, 0, 0, true, &mut fb);
-        // CJK ink includes the font baseline offset: the second row
-        // begins at y=22, with clear scanlines after the first row.
-        for y in 20..22 {
+        draw_list(0, 0, 18, 8, &rows, 0, 0, true, &mut actual);
+
+        // Keep both rows intact at their authored 12px baselines. Original
+        // Latin glyphs start earlier than Fusion Pixel's CJK glyphs: digit
+        // '1' in the second row has ink at (73,21), before the CJK y=22 ink.
+        let mut first = FrameBuffer::new(RenderConfig::new(160, 144), BG);
+        let mut second = FrameBuffer::new(RenderConfig::new(160, 144), BG);
+        draw_text("> 精灵球 x03", 8, 8, FG, &mut first);
+        draw_text("  好伤药 x12", 8, 20, FG, &mut second);
+        assert_eq!(actual.get_pixel(73, 21), Some(FG), "original digit 1 must remain intact");
+
+        let mut last_first_ink = None;
+        let mut first_second_ink = None;
+        for y in 8..32 {
             for x in 8..152 {
-                assert_eq!(fb.get_pixel(x, y), Some(BG), "rows touch at {x},{y}");
+                let first_ink = first.get_pixel(x, y) == Some(FG);
+                let second_ink = second.get_pixel(x, y) == Some(FG);
+                assert!(!(first_ink && second_ink), "row glyphs intersect at {x},{y}");
+                if first_ink { last_first_ink = Some(y); }
+                if second_ink { first_second_ink.get_or_insert(y); }
+                let expected = if first_ink || second_ink { FG } else { BG };
+                assert_eq!(actual.get_pixel(x, y), Some(expected),
+                    "list lost or displaced row ink at {x},{y}");
+            }
+        }
+        let last_first_ink = last_first_ink.expect("first row has ink");
+        let first_second_ink = first_second_ink.expect("second row has ink");
+        assert!(first_second_ink >= last_first_ink + 2, "rows need a full clear scanline");
+        for y in last_first_ink + 1..first_second_ink {
+            for x in 8..152 {
+                assert_eq!(actual.get_pixel(x, y), Some(BG), "row gap occupied at {x},{y}");
             }
         }
     }
