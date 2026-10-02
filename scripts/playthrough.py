@@ -107,6 +107,74 @@ for _map, _body in re.findall(r'"(\w+)" => &\[(.*?)\n\s*\],', _spin_source, re.S
             _count += int(_length)
         SPINNERS.setdefault(_map, {})[(int(_x), int(_y))] = ((_end_x, _end_y), _count)
 
+# Coordinate scripts are not map.json stairs. Populate this planning cache
+# from the running binary's read-only AST, alongside the live MAPS cache.
+COORDINATE_WARPS = {}
+
+
+def coordinate_warp_destination(program, x, y):
+    """Prove a pure automatic warp, optionally branched on trigger position.
+
+    Do not turn dialogue, choices, battles, flag guards or arbitrary scripts
+    into free travel. Unsupported programs remain the story planner's job.
+    """
+    from openpokered.story_rules import evaluate
+    if not isinstance(program, list) or len(program) != 1:
+        return None
+    statement = program[0]
+    command = statement.get('Command', {})
+    if command.get('name', '').removeprefix('game.') == 'warpTo':
+        args = command.get('args', [])
+        if len(args) != 3 or any(set(arg) != {kind} for arg, kind in zip(
+                args, ('StringLit', 'NumberLit', 'NumberLit'))):
+            return None
+        name, tx, ty = (evaluate(arg, {}) for arg in args)
+        if (name in MAPS and all(isinstance(v, (int, float)) and not isinstance(v, bool)
+                                and v >= 0 and int(v) == v for v in (tx, ty))):
+            return name, int(tx), int(ty)
+        return None
+    branch = statement.get('If')
+    if branch:
+        def spatial_only(expr):
+            if isinstance(expr, list):
+                return all(spatial_only(value) for value in expr)
+            if not isinstance(expr, dict):
+                return True
+            if 'Call' in expr and expr['Call']['callee'].removeprefix('game.') not in (
+                    'getPlayerX', 'getPlayerY'):
+                return False
+            return all(spatial_only(value) for value in expr.values())
+        condition = branch['condition']
+        if spatial_only(condition):
+            value = evaluate(condition, {'x': x, 'y': y})
+            if value is not None:
+                return coordinate_warp_destination(
+                    branch['then_branch' if value else 'else_branch'], x, y)
+    return None
+
+
+def load_coordinate_warps(client, configs=None):
+    """Bind native programs to the same named coordinate events as the game."""
+    if configs is None:
+        configs = {p.parent.name: json.loads(p.read_text()) for p in
+                   (ROOT / 'crates/pokered-data/maps').glob('*/script_config.json')}
+    result = {}
+    for name, config in configs.items():
+        events = config.get('coordEvents', [])
+        if not events:
+            continue
+        response = client.cmd(cmd='get_script_semantics', map=name)
+        if not response.get('ok'):
+            raise NavError(f'cannot observe coordinate scripts for {name}: {response}')
+        programs = {story['id'].partition(':')[2]: story.get('program', [])
+                    for story in response['data']['storylines']}
+        for event in events:
+            position = tuple(event['position'])
+            destination = coordinate_warp_destination(programs.get(event['trigger'], []), *position)
+            if destination is not None:
+                result.setdefault(name, {})[position] = destination
+    return result
+
 
 def tile_at(map_name, x, y):
     """Sample the blockset tile id at tile coordinates (blockset_data
@@ -167,7 +235,8 @@ def find_grass(map_name, x0, y0, radius=12):
 def warp_tiles(map_name):
     """All warp tiles on a map — stepping onto any of them warps, so
     pathfinding treats them as walls unless explicitly targeted."""
-    return {(w["x"], w["y"]) for w in MAPS[map_name]["warps"]}
+    return ({(w["x"], w["y"]) for w in MAPS[map_name]["warps"]}
+            | set(COORDINATE_WARPS.get(map_name, {})))
 
 
 def grass_tiles(map_name):
@@ -190,6 +259,8 @@ def bfs(map_name, start, goal, blocked=frozenset(), allow_spinners=False):
             n = (cx + dx, cy + dy)
             if n in prev or n in blocked or not walkable_edge(map_name, (cx, cy), n):
                 continue
+            if n in COORDINATE_WARPS.get(map_name, {}) and n != goal:
+                continue  # A local walk cannot pass through a forced map change.
             how = d
             if allow_spinners and n in SPINNERS.get(map_name, {}):
                 n, count = SPINNERS[map_name][n]
@@ -443,8 +514,10 @@ def bfs_cross(map_name, start, goal_map, goal, blocked_maps=None,
             key = (landed[1], landed[2])
             if key in blocked_maps.get(landed[0], ()):
                 continue
-            if key in warp_tiles(landed[0]):
-                mats = warps_at(*landed)
+            if key in COORDINATE_WARPS.get(landed[0], {}):
+                cands = [COORDINATE_WARPS[landed[0]][key]]
+                how = 'fall_' + d
+            elif key in warp_tiles(landed[0]):
                 # Exit mats (no dest_map) fire only when stepping TOWARD
                 # the map edge — sideways steps onto them are plain tiles,
                 # otherwise plans ping-pong on the mat (school house bug).
@@ -538,6 +611,8 @@ class Game:
         # port 9020 busy and hijacked every later run's connection.
         try:
             self.d = DebugClient(port)
+            COORDINATE_WARPS.clear()
+            COORDINATE_WARPS.update(load_coordinate_warps(self.d))
         except BaseException:
             self.proc.terminate()
             try:
@@ -940,6 +1015,11 @@ class Game:
             # re-localizes and re-plans either way)
             i = 0
             while i < len(steps):
+                if steps[i].startswith('fall_'):
+                    direction = steps[i].removeprefix('fall_')
+                    self.d.drive([direction] * movement_frames(s, direction),
+                                 frames=movement_frames(s, direction) + 32)
+                    break  # Let the coordinate script own the fall; re-observe.
                 if steps[i].startswith("spin_"):
                     _, direction, count = steps[i].split("_")
                     self.d.drive([direction] * FRAMES_PER_TILE,

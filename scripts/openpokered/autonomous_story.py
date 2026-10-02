@@ -3910,7 +3910,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                         del candidates[key], bindings[key]
                         continue
                     if not pt.bfs(facts['map'], (facts['x'], facts['y']), point,
-                                    blocked=blocked | pt.warp_tiles(facts['map']), allow_spinners=True):
+                                    blocked=blocked | (pt.warp_tiles(facts['map']) - {point}), allow_spinners=True):
                         operation = f'travel_to:{rule.map}'
                     bindings[key] = operation, rule
                     candidates[key] = json.dumps({'operation': operation, 'script_effects': rule.description()})
@@ -4003,7 +4003,15 @@ class AutonomousStoryAgent(DualStoryAgent):
         points = []
         if rule.map == name:
             coordinates = [p for p in self.index.coordinates(rule) if trigger_position_matches(rule, p)]
-            points.extend(coordinates)
+            for point in coordinates:
+                if point in pt.COORDINATE_WARPS.get(name, {}):
+                    # Travel stops beside an automatic trigger. Its explicit
+                    # move_to action then performs the fall, not an impossible
+                    # stable standing position on the hole itself.
+                    points.extend((point[0]+dx, point[1]+dy) for dx, dy in pt.DELTA.values()
+                                  if pt.walkable_edge(name, (point[0]+dx, point[1]+dy), point))
+                else:
+                    points.append(point)
             if rule.id.startswith('boulder:'):
                 target = BOULDER_TARGETS[rule.effect[1]]
                 sources = boulder_sources(name, tuple(target['target']), str(self.index.maps_dir))

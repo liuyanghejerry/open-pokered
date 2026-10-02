@@ -983,6 +983,52 @@ def s23_battle_presentation_budget():
         g.close()
 
 
+@scenario("s24-coordinate-falls", "Native coordinate holes match navigation; ordinary stairs remain usable")
+def s24_coordinate_falls():
+    import playthrough as nav
+    g = Game(seed=42, speed=0)
+    try:
+        boot_starter(g, 'Charizard', 60)
+        g.smart_moves = True
+        # Isolated fixture: suppress the separate downstream current scripts.
+        # These writes are not collection progress or a formal-run shortcut.
+        for floor in (3, 4):
+            for boulder in (1, 2):
+                reply = g.d.cmd(cmd='set_flag', name=f'EVENT_SEAFOAM{floor}_BOULDER{boulder}_DOWN_HOLE',
+                                value=True)
+                assert reply['ok'], reply
+        expected = {
+            'SeafoamIslands1F': 2, 'SeafoamIslandsB1F': 2,
+            'SeafoamIslandsB2F': 2, 'SeafoamIslandsB3F': 2,
+            'PokemonMansion3F': 3,
+        }
+        for name, count in expected.items():
+            falls = nav.COORDINATE_WARPS.get(name, {})
+            assert len(falls) == count, (name, falls)
+            for (x, y), destination in falls.items():
+                approaches = [(x+dx, y+dy) for dx, dy in nav.DELTA.values()
+                              if nav.walkable_edge(name, (x+dx, y+dy), (x, y))
+                              and nav.walkable(name, x+dx, y+dy)
+                              and (x+dx, y+dy) not in nav.warp_tiles(name)]
+                assert approaches, (name, x, y)
+                sx, sy = approaches[0]
+                assert g.d.cmd(cmd='warp', map=name, x=sx, y=sy)['ok']
+                g.step(120)
+                plan = nav.bfs_cross(name, (sx, sy), destination[0], destination[1:])
+                assert len(plan) == 2 and plan[1][1].startswith('fall_'), plan
+                g.nav_to_map(*destination[1:], destination[0], tries=10, avoid_grass=False)
+                assert g.pos() == destination, (name, (x, y), destination, g.pos())
+                g.evidence(f's24-{name}-{x}-{y}')
+        assert g.d.cmd(cmd='warp', map='SeafoamIslands1F', x=24, y=3)['ok']
+        g.step(120)
+        target = nav.warp_edges_from('SeafoamIslands1F', 25, 3)[0]
+        g.nav_to_map(*target[1:], target[0], tries=10, avoid_grass=False)
+        assert g.pos() == target, (target, g.pos())
+        g.evidence('s24-stairs')
+    finally:
+        g.close()
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--list", action="store_true")

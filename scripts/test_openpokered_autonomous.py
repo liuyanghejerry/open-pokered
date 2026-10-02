@@ -22,6 +22,30 @@ from openpokered.run_autonomous import observations_valid, checkpoint_field_requ
 
 
 class AutonomousTests(unittest.TestCase):
+    def test_scripted_fall_retains_approach_and_explicit_step_action(self):
+        import playthrough as pt
+        from types import SimpleNamespace
+        from openpokered.story_rules import MAPS_DIR
+        name = 'SeafoamIslands1F'
+        rule = Rule('hole', name, name + ':coordHole2', ['coord:(24,6)'], [], [],
+                    ('transport', ('SeafoamIslandsB1F', 23, 7), True), [])
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.maps = {name: json.loads((MAPS_DIR / name / 'map.json').read_text())}
+        agent.index = SimpleNamespace(coordinates=lambda _: [(24, 6)])
+        agent.active = {'target': rule.effect, 'rules': [rule]}
+        agent.client = Mock()
+        agent.client.cmd.return_value = []
+        agent.client.route.return_value = {'legs': []}
+        agent.visited = {name}
+        with patch.object(pt, 'COORDINATE_WARPS', {name: {(24, 6): rule.effect[1]}}):
+            points = agent.destination_points(name, rule, allow_entry_fallback=False)
+            self.assertIn((25, 6), points)
+            self.assertNotIn((24, 6), points)
+            with patch.object(DualStoryAgent, 'action_candidates', return_value=(
+                    {'step': '{}'}, {'step': ('move_to:24,6', rule)})):
+                _, bindings = agent.action_candidates({'map': name, 'x': 25, 'y': 6})
+            self.assertEqual(bindings['step'], ('move_to:24,6', rule))
+
     def test_access_panel_distinguishes_missing_paths_from_unknown_without_pruning(self):
         from openpokered.autonomous_story import strategy_access_evidence
         from copy import deepcopy

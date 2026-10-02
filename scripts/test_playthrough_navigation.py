@@ -11,6 +11,63 @@ from playthrough_late import damage_slot
 
 
 class NavigationRegression(unittest.TestCase):
+    def test_coordinate_warp_reads_native_program_and_named_config_binding(self):
+        warp = lambda name, x, y: {'Command': {'name': 'warpTo', 'args': [
+            {'StringLit': name}, {'NumberLit': x}, {'NumberLit': y}]}}
+        program = [warp('SeafoamIslandsB1F', 23, 7)]
+        client = Mock()
+        client.cmd.return_value = {'ok': True, 'data': {'storylines': [{
+            'id': 'SeafoamIslands1F:coordHole2', 'program': program}]}}
+        configs = {'SeafoamIslands1F': {'coordEvents': [
+            {'position': [24, 6], 'trigger': 'coordHole2'}]}}
+        self.assertEqual(nav.load_coordinate_warps(client, configs), {
+            'SeafoamIslands1F': {(24, 6): ('SeafoamIslandsB1F', 23, 7)}})
+        client.cmd.assert_called_once_with(cmd='get_script_semantics', map='SeafoamIslands1F')
+
+        conditional = [{'If': {'condition': {'BinaryOp': {'op': 'Eq',
+            'left': {'Call': {'callee': 'getPlayerX', 'args': []}},
+            'right': {'NumberLit': 19}}}, 'then_branch': [warp('PokemonMansion2F', 18, 14)],
+            'else_branch': [warp('PokemonMansion1F', 16, 14)]}}]
+        self.assertEqual(nav.coordinate_warp_destination(conditional, 19, 14), ('PokemonMansion2F', 18, 14))
+        self.assertEqual(nav.coordinate_warp_destination(conditional, 16, 14), ('PokemonMansion1F', 16, 14))
+        conditional[0]['If']['condition'] = {'Call': {'callee': 'getFlag', 'args': [{'StringLit': 'PAID'}]}}
+        self.assertIsNone(nav.coordinate_warp_destination(conditional, 16, 14))
+        self.assertIsNone(nav.coordinate_warp_destination([{'Choice': {}}, *program], 24, 6))
+        self.assertIsNone(nav.coordinate_warp_destination([
+            {'Command': {'name': 'heal', 'args': []}}, *program], 24, 6))
+
+    def test_cross_map_planning_models_one_way_scripted_fall(self):
+        holes = {'SeafoamIslands1F': {(17, 6): ('SeafoamIslandsB1F', 18, 7),
+                                       (24, 6): ('SeafoamIslandsB1F', 23, 7)}}
+        with patch.object(nav, 'COORDINATE_WARPS', holes):
+            path = nav.bfs_cross('SeafoamIslands1F', (25, 6), 'SeafoamIslandsB1F', (23, 7))
+            self.assertEqual(path, [('SeafoamIslands1F', 25, 6),
+                                   (('SeafoamIslandsB1F', 23, 7), 'fall_left')])
+            self.assertIsNone(nav.bfs_cross('SeafoamIslands1F', (25, 6), 'SeafoamIslands1F', (24, 6)))
+            self.assertIsNone(nav.bfs_cross('SeafoamIslands1F', (25, 6), 'SeafoamIslandsB1F', (23, 7),
+                blocked_maps={'SeafoamIslandsB1F': {(23, 7)}}))
+            local = nav.bfs('SeafoamIslands1F', (25, 6), (21, 6))
+            self.assertTrue(local)
+            self.assertNotIn((24, 6), [point for point, _ in local])
+            # Explicit local hole targets remain usable by the milestone driver.
+            self.assertEqual(nav.bfs('SeafoamIslands1F', (25, 6), (24, 6)),
+                             [((25, 6), None), ((24, 6), 'left')])
+
+    def test_scripted_fall_input_stops_before_driving_the_destination(self):
+        game = nav.Game.__new__(nav.Game)
+        state = {'screen': 'overworld', 'map_name': 'SeafoamIslands1F', 'player_x': 25, 'player_y': 6}
+        game.st = lambda: state.copy()
+        game.last_map = 'Route20'
+        game.npc_blocked = game.live_npcs = lambda _: set()
+        def drive(buttons, frames):
+            self.assertEqual(buttons, ['left'] * nav.FRAMES_PER_TILE)
+            state.update(map_name='SeafoamIslandsB1F', player_x=23, player_y=7)
+        game.d = SimpleNamespace(drive=Mock(side_effect=drive), step=lambda _: None)
+        with patch.object(nav, 'COORDINATE_WARPS', {
+                'SeafoamIslands1F': {(24, 6): ('SeafoamIslandsB1F', 23, 7)}}):
+            game.nav_to_map(23, 7, 'SeafoamIslandsB1F', tries=2, avoid_grass=False)
+        game.d.drive.assert_called_once()
+
     def test_battle_presentation_waits_without_spending_input_iterations(self):
         game = nav.Game.__new__(nav.Game)
         state = {'screen': 'battle', 'map_name': 'Arena', 'battle_phase': 'ShowingText',
