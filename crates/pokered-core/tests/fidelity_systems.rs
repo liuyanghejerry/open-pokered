@@ -306,6 +306,19 @@ fn previous_native_save_migrates_layout_and_species() {
     )
     .unwrap();
     assert_eq!(export_sram(&streamed), export_sram(&save));
+    // Corrupt legacy media must fail before mutating the resident slot;
+    // it must not silently discard the trainer's initialized inactive boxes.
+    old[0x4000 + 6 * size] ^= 1;
+    let mut resident = SaveData::new();
+    resident.game_data.player_money = 12345;
+    assert!(pokered_core::save::sram_import::import_sram_into(&old, &mut resident).is_err());
+    assert_eq!(resident.game_data.player_money, 12345);
+    assert!(pokered_core::save::sram_import::import_sram_banks_into(
+        |index, bank| bank.copy_from_slice(&old[index * 8192..(index + 1) * 8192]),
+        &mut resident,
+    )
+    .is_err());
+    assert_eq!(resident.game_data.player_money, 12345);
 }
 
 #[test]

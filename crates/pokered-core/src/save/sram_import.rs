@@ -68,12 +68,13 @@ pub fn import_sram_into(data: &[u8], out: &mut SaveData) -> Result<(), SaveError
     let valid_box_banks = validate_box_bank_checksum(bank2).is_ok()
         && validate_box_bank_checksum(bank3).is_ok();
     let box_initialization_bit = bank1[0x084c] & 0x80 != 0;
+    let legacy_native = uses_legacy_native_layout(bank1);
     // The ROM only initializes box banks on the first CHANGE BOX. A valid
     // initial save can contain arbitrary power-on SRAM in banks 2 and 3.
-    if !valid_box_banks && box_initialization_bit {
+    if !valid_box_banks && (box_initialization_bit || legacy_native) {
         return Err(SaveError::BadChecksum);
     }
-    let legacy_native = import_bank1_into(bank1, out)?;
+    import_bank1_into(bank1, out)?;
     // A new ROM playthrough can retain checksum-valid boxes from a previous
     // trainer. Bit 7, not checksum validity, decides whether those banks exist.
     let boxes_initialized=valid_box_banks && (box_initialization_bit || legacy_native);
@@ -107,10 +108,11 @@ pub fn import_sram_banks_into(
     }
     read_bank(1, &mut bank);
     let box_initialization_bit=bank[0x084c]&0x80!=0;
-    if !valid_box_banks && box_initialization_bit {
+    let legacy_native = uses_legacy_native_layout(&bank);
+    if !valid_box_banks && (box_initialization_bit || legacy_native) {
         return Err(SaveError::BadChecksum);
     }
-    let legacy_native = import_bank1_into(&bank, out)?;
+    import_bank1_into(&bank, out)?;
     let boxes_initialized=valid_box_banks && (box_initialization_bit || legacy_native);
     if boxes_initialized {
         for index in [2, 3] {
@@ -124,13 +126,17 @@ pub fn import_sram_banks_into(
     Ok(())
 }
 
+fn uses_legacy_native_layout(bank: &[u8]) -> bool {
+    validate_canonical_bank1(bank).is_err()
+        || (recent_native_layout(bank) && !party_layout_matches(bank, 0x0f2c, false))
+}
+
 #[inline(never)]
 fn import_bank1_into(bank: &[u8], out: &mut SaveData) -> Result<bool, SaveError> {
     // A previous native checksum lies *inside* the longer ROM region. With
     // zero tail padding it also makes the ROM checksum zero, so checksum alone
     // cannot identify that layout. Validate the party header/struct positions.
-    let legacy_native = validate_canonical_bank1(bank).is_err()
-        || (recent_native_layout(bank) && !party_layout_matches(bank, 0x0f2c, false));
+    let legacy_native = uses_legacy_native_layout(bank);
     let mut bank1_owned;
     let bank1: &[u8] = {
         let b = bank;
