@@ -1,0 +1,80 @@
+{
+  "baseline_render_source": "6fb9812eece19893f9ae9e2a35c938d9c3489965",
+  "after_battle_bag_source": "04286e4519f060aeee2005a69ccdbe654bbe4859",
+  "screen": "battle_bag",
+  "mock_state_id": 0,
+  "lang_argument": 0,
+  "frame_count": 0,
+  "items": [
+    [
+      "POTION",
+      3
+    ],
+    [
+      "SUPER POTION",
+      1
+    ],
+    [
+      "ANTIDOTE",
+      2
+    ]
+  ],
+  "cursor": 0,
+  "dimensions": [
+    160,
+    144
+  ],
+  "before_sha256": "5dd2401c81631c56d6e4915d0a08719298ed92108532e586630726d90b0648ce",
+  "after_sha256": "a410df41b62e2934fedd415714974a00534194ec4eea4a04d2c85a1e520f8f27",
+  "capture_method": "Native render_layout bodies, only wasm_bindgen export annotations omitted for standalone rustc; exact serde-feature metadata from the actual native Cargo UI-preview build.",
+  "externs": [
+    {
+      "name": "pokered_core",
+      "artifact": "libpokered_core-24a6527e164cfc0f.rlib",
+      "sha256": "09404836106e26a0ca48894164fc282b5ccd6484b47062e10c63209aee6cc11c"
+    },
+    {
+      "name": "pokered_ui",
+      "artifact": "libpokered_ui-d5a265b5c0b9fe7a.rlib",
+      "sha256": "4b25994bf79b32104b3f85eb8e8ad540c3fb807875c6dfe03573ab90e7b49bb1"
+    },
+    {
+      "name": "pokered_data",
+      "artifact": "libpokered_data-84e154b4ec20994e.rlib",
+      "sha256": "66c12a3c16b5277b3cce298377636a2d2f3ae1ff4b6ceb87c54469a8fb6bd3d0"
+    },
+    {
+      "name": "pokered_renderer",
+      "artifact": "libpokered_renderer-76ae40f551e35e65.rlib",
+      "sha256": "b7195ad358d4a6697a3f016895896b713ee330e0255030e7b9a7ea4aeddccc33"
+    },
+    {
+      "name": "dotzuki_renderer",
+      "artifact": "libdotzuki_renderer-8cdcb36eaf0f23c0.rlib",
+      "sha256": "84747e4ee3ee152fadb3e0eecc161ff351c79d244a069f42d6aeaceed8e9ee1e"
+    },
+    {
+      "name": "serde_json",
+      "artifact": "libserde_json-4659e53807af5d30.rlib",
+      "sha256": "fa1f90b959bf797fa5074bb420979a8a16e32ca24462c4a30fa7bf5d0a6c6701"
+    }
+  ],
+  "after_ui_rlib_sha256": "a281d6eb30be04cf770d7ebb29ad4f7fd2626ed037f0643ec6deb44a676cdf0f",
+  "reviewed_current_goldens": {
+    "MAIN": "0x1b746bff69a1eb0d",
+    "START": "0xc0bc80ff9326b69d",
+    "DIALOG": "0xfa32b4d5e00385d5",
+    "BATTLE_MOVE": "0x525c1566c4abb1cc",
+    "BAG": "0x95d5c446f11977fd",
+    "BATTLE_BAG": "0x8b17776abc8d10e4",
+    "POKEDEX": "0x9dce7502d3afa85d",
+    "YES_NO": "0x965801232ac97e65",
+    "OAK_SPEECH": "0x21b9deab4370fc34",
+    "SAVE": "0x26bf5a30becf45ac",
+    "OPTIONS": "0x1ed9f5681fc37ef4",
+    "NAMING": "0xf71a37e99cd161c4",
+    "BATTLE_MAIN": "0xe92ae75655d06d44",
+    "BATTLE_PARTY": "0x15d7a14fa68b92cd"
+  },
+  "changed_pixels": 204
+}

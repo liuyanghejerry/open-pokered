@@ -30,7 +30,7 @@ pub fn draw<P: Painter>(
 
     let start_y = list_child.padding.top;
     // PrintListMenuEntries prints the name and the separate × / two-digit
-    // quantity (home/list_menu.asm:376, 476-494). As in the ordinary bag,
+    // quantity (home/list_menu.asm:364, 479-491). As in the ordinary bag,
     // reserve the quantity columns before measuring mixed-width name glyphs.
     let name_x = (rect.tx + 3) * 8;
     let right_x = (rect.tx + rect.tw - 1) * 8;
@@ -145,7 +145,7 @@ mod pixel_tests {
                     let glyphs = [Some(0xF1), if qty == 99 { Some(0xFF) } else { None },
                         Some(if qty == 99 { 0xFF } else { 0xF7 })];
                     for (cell, tile) in glyphs.into_iter().enumerate() {
-                        let bits = tile.map(original_tile_glyph).flatten().copied().unwrap_or([0; 8]);
+                        let bits = tile.and_then(original_tile_glyph).copied().unwrap_or([0; 8]);
                         for row in 0..8 {
                             for col in 0..8 {
                                 let expected = if bits[row] & (0x80 >> col) != 0 { Rgba::BLACK } else { Rgba::WHITE };

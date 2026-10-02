@@ -1938,22 +1938,27 @@ mod tests {
     // NOTE: all cursor-bearing screens re-recorded after the dotzuki-renderer
     // v0.5.6 bump — the ▶ fallback bitmap moved to the text ink center
     // (dotzuki#57). dialog/pokedex/oak_speech have no ▶ and are unchanged.
-    const GOLDEN_MAIN: u64                 = 0x6d264a1f2185a9e4;
-    const GOLDEN_START: u64                = 0x14141abf1066dced;
-    const GOLDEN_DIALOG: u64               = 0x70fcd165c797e06c;
-    const GOLDEN_BATTLE_MOVE: u64          = 0xe4fd67084d932d0c;
-    const GOLDEN_BAG: u64                  = 0xbc4c4e5e4871a905;
-    const GOLDEN_BATTLE_BAG: u64           = 0x4faac6aa8e169e94;
-    const GOLDEN_POKEDEX: u64              = 0xa57ba6970d36f9ed;
-    const GOLDEN_YES_NO: u64               = 0x8d281b17ab10370d;
-    const GOLDEN_OAK_SPEECH: u64           = 0x7a144f18ff89940c;
+    // NOTE: all 14 re-recorded for the full-fidelity fixes: original 8px
+    // ASCII/font tiles, border/cursor/underscore tiles, and English naming
+    // coordinates. Every current preview was dumped and visually reviewed;
+    // battle_bag additionally reserves its quantity columns before measuring
+    // names, so SUPER POTION no longer pushes its count through the border.
+    const GOLDEN_MAIN: u64                 = 0x1b746bff69a1eb0d;
+    const GOLDEN_START: u64                = 0xc0bc80ff9326b69d;
+    const GOLDEN_DIALOG: u64               = 0xfa32b4d5e00385d5;
+    const GOLDEN_BATTLE_MOVE: u64          = 0x525c1566c4abb1cc;
+    const GOLDEN_BAG: u64                  = 0x95d5c446f11977fd;
+    const GOLDEN_BATTLE_BAG: u64           = 0x8b17776abc8d10e4;
+    const GOLDEN_POKEDEX: u64              = 0x9dce7502d3afa85d;
+    const GOLDEN_YES_NO: u64               = 0x965801232ac97e65;
+    const GOLDEN_OAK_SPEECH: u64           = 0x21b9deab4370fc34;
     // Save: full-width v2 information card with integrated confirmation.
-    const GOLDEN_SAVE: u64                 = 0x0af4f280dd3dd6dc;
+    const GOLDEN_SAVE: u64                 = 0x26bf5a30becf45ac;
     // Original-style hollow markers remain visible on inactive option rows.
-    const GOLDEN_OPTIONS: u64              = 0x7faba4442db6b8e4;
-    const GOLDEN_NAMING: u64               = 0x685ded37c5a7bd5d;
-    const GOLDEN_BATTLE_MAIN: u64          = 0x321da02cc038553d;
-    const GOLDEN_BATTLE_PARTY: u64         = 0x957e7c99f7c6b3bc;
+    const GOLDEN_OPTIONS: u64              = 0x1ed9f5681fc37ef4;
+    const GOLDEN_NAMING: u64               = 0xf71a37e99cd161c4;
+    const GOLDEN_BATTLE_MAIN: u64          = 0xe92ae75655d06d44;
+    const GOLDEN_BATTLE_PARTY: u64         = 0x15d7a14fa68b92cd;
 
     macro_rules! assert_golden {
         ($name:expr, $mock:expr, $golden:ident) => {
@@ -2121,14 +2126,16 @@ mod tests {
     }
 
     #[test]
-    fn pixel_naming_text_change_differs() {
+    fn pixel_naming_region_tx_shift_differs() {
         let canonical = pokered_data::ui_layout::schema::get_layout_json("naming").unwrap();
         let mut json_val: serde_json::Value = serde_json::from_str(&canonical).unwrap();
-        json_val["variants"]["default"]["children"][0]["rect"]["tx"] = serde_json::Value::Number(8.into());
+        // English fixes the outer keyboard box to the original (0,4,20,11)
+        // rectangle. The editable region still controls text placement.
+        json_val["variants"]["default"]["children"][1]["rect"]["tx"] = serde_json::Value::Number(1.into());
         let a = render_layout("naming", "", 0, 0);
         let b = render_layout("naming", &serde_json::to_string(&json_val).unwrap(), 0, 0);
-        assert_valid_framebuffer(&b, "naming tx=8");
-        assert_ne!(framebuffer_hash(&a), framebuffer_hash(&b), "box tx shift must change pixels");
+        assert_valid_framebuffer(&b, "naming region tx=1");
+        assert_ne!(framebuffer_hash(&a), framebuffer_hash(&b), "text region tx shift must change pixels");
     }
 
     #[test]
