@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "baseline_commit": "72ff719b39634c153cb82d3f3ece200bd413c4e0",
+  "tested_production_commit": "eebde2fc3a4f78c38b4c7b5d49e0db2b830cb235",
+  "engine_revision": "92ba95f9526107e17874df53291ac7758d0930f0",
+  "ordinary_font": "Original project Fusion Pixel retained",
+  "checks": {
+    "native": {
+      "source": "eebde2fc3a4f78c38b4c7b5d49e0db2b830cb235",
+      "test_targets": 123,
+      "passed_executions": 4596,
+      "failed": 0,
+      "ignored": 9,
+      "exit_code": 0,
+      "packages": [
+        "pokered-platform",
+        "pokered-mobile",
+        "pokered-web",
+        "pokered-runner-web",
+        "pokered-debug-server",
+        "pokered-agent",
+        "scene_apply",
+        "pokered-layout-preview",
+        "pokered-core",
+        "pokered-data",
+        "pokered-renderer",
+        "pokered-ui",
+        "pokered-audio",
+        "pokered-app",
+        "pokered-ui-preview",
+        "pokered-tui"
+      ],
+      "command": "CARGO_INCREMENTAL=0 cargo test --workspace --offline --locked --no-fail-fast",
+      "count_scope": "passed executions, including repeated app lib/bin tests; not unique tests"
+    },
+    "web_check": {
+      "target": "wasm32-unknown-unknown",
+      "packages": [
+        "pokered-web",
+        "pokered-runner-web",
+        "pokered-ui-preview"
+      ],
+      "exit_code": 0,
+      "source": "eebde2fc3a4f78c38b4c7b5d49e0db2b830cb235"
+    },
+    "driver_tests": {
+      "source": "eebde2fc3a4f78c38b4c7b5d49e0db2b830cb235",
+      "passed": 63,
+      "failed": 0,
+      "exit_code": 0,
+      "scope": "54 test_playthrough*.py + 9 test_exploration_playthrough.py; unit tests, not a continuous clear"
+    },
+    "seeded_scenarios": {
+      "passed": 11,
+      "total": 11,
+      "exit_code": 0,
+      "source": "eebde2fc3a4f78c38b4c7b5d49e0db2b830cb235"
+    },
+    "actual_tcp_colosseum": {
+      "status": "passed",
+      "binary_source": "eebde2fc3a4f78c38b4c7b5d49e0db2b830cb235",
+      "start_scope": "independently seeded SaveData fixtures, real two frontend processes and TCP",
+      "first_action_wait_frames": 100,
+      "post_room_neutral_frames": 120,
+      "verified": [
+        "both return to Colosseum and stay",
+        "party HP/status/PP restored",
+        "money unchanged",
+        "experience unchanged"
+      ]
+    },
+    "actual_npc_save_continue": {
+      "source": "eebde2fc3a4f78c38b4c7b5d49e0db2b830cb235",
+      "status": "passed",
+      "stages": 15,
+      "startup": "normal startup and actual MainMenu CONTINUE button"
+    },
+    "actual_fossil_cancel": {
+      "source": "eebde2fc3a4f78c38b4c7b5d49e0db2b830cb235",
+      "status": "passed",
+      "neutral_frames_after_cancel": 120,
+      "reply": "Aiyah! You come\nagain!",
+      "items_and_flags_preserved": true
+    },
+    "gba_emulator": {
+      "source": "eebde2fc3a4f78c38b4c7b5d49e0db2b830cb235",
+      "performance_gates_passed": 31,
+      "performance_scenes": 7,
+      "performance_thresholds": "unchanged baseline, 15 percent allowance and 25 tick floor",
+      "status": "passed",
+      "route22_encounters": 40,
+      "memory_scenario_gate": "passed in exact-source CI",
+      "frame_pacing_gate": "passed in exact-source CI",
+      "slow_cart_hardware_gate": "passed in exact-source CI",
+      "slow_cart_opening_gate": "passed in exact-source CI",
+      "ci_run": 37023355401,
+      "ci_job": 110891720787,
+      "metric_scope": "31 performance gates and 40 Route22 encounters additionally measured locally; detailed remote metrics not claimed"
+    },
+    "production_ci": {
+      "source": "eebde2fc3a4f78c38b4c7b5d49e0db2b830cb235",
+      "successful_checks": 21,
+      "skipped_checks": 1,
+      "failed_checks": 0
+    },
+    "engine_tests": {
+      "unit_passed": 488,
+      "doctest_passed": 3,
+      "doctest_ignored": 7,
+      "exit_code": 0
+    },
+    "engine_workflow_ci": {
+      "pr": 78,
+      "source": "5f724eb16c66e58ae0595de5130ce7d0b277a19b",
+      "successful_checks": 9,
+      "failed_checks": 0,
+      "android_apk": "passed",
+      "ci_run": 37024244792,
+      "scope": "workflow-only change; production engine pin unchanged"
+    }
+  },
+  "continuous_fresh_clear": {
+    "completed": false,
+    "last_continuous_milestone": "m21",
+    "later_driver_fix": "609e880 independently verified; not a continuous clear"
+  },
+  "archive_commit": "129cd8e79212fb5b1d2679d7512052ddd0c5faa8",
+  "archive_evidence_url": "https://github.com/liuyanghejerry/open-pokered/blob/129cd8e79212fb5b1d2679d7512052ddd0c5faa8/docs/audits/2026-10-02-full-fidelity/validation/final-validation.md",
+  "source_preservation": {
+    "status": "passed",
+    "comparison_commit": "129cd8e79212fb5b1d2679d7512052ddd0c5faa8",
+    "checked_tracked_source_files": 2238,
+    "changed_production_or_formal_test_files": 0,
+    "source_set_sha256": "33fd9856b50427ff5cc0811e43c51133123f92ab698312e6af5183db25da38cb",
+    "excluded_audit_tools": [
+      "crates/pokered-app/examples/fidelity_link_movie_capture.rs",
+      "crates/pokered-app/examples/fidelity_visual_capture.rs",
+      "crates/pokered-app/examples/pc_tour.rs",
+      "scripts/verify_font_fidelity.py",
+      "scripts/verify_late_fidelity.py",
+      "scripts/verify_trade_text_fidelity.py"
+    ],
+    "pc_tour": "restored exactly to baseline example; extra capture cases independently archived"
+  },
+  "cleanup_checks": {
+    "pc_tour_default_and_debug_server": {
+      "status": "passed",
+      "command": "cargo check --offline --locked -p pokered-app --example pc_tour [--features debug-server]"
+    },
+    "python_driver": {
+      "status": "passed",
+      "tests": 63,
+      "command": "python3 -m unittest discover -s scripts -p 'test_playthrough*.py'; python3 -m unittest discover -s scripts -p 'test_exploration_playthrough.py'"
+    }
+  },
+  "supplemental_mart_archive_commit": "7d172fd3e04da632c128c1ff1592570e949cc311"
+}

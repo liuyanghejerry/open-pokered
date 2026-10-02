@@ -1,0 +1,1093 @@
+{
+  "schema_version": 1,
+  "archive_branch": "archive/full-fidelity-audit-2026-10-02",
+  "archive_commit": "129cd8e79212fb5b1d2679d7512052ddd0c5faa8",
+  "ordinary_font": "Original project Fusion Pixel preserved",
+  "read_only_source_review": true,
+  "selection_status": "22 primary pairs retained; 4 extra pairs available in immutable archive; actual source and scope recorded per case",
+  "primary_pairs": [
+    {
+      "id": "copyright-0",
+      "label": "开场版权专用图块",
+      "before": "docs/screenshots/2026-10-02-full-fidelity/selected/copyright-0-before.png",
+      "after": "docs/screenshots/2026-10-02-full-fidelity/selected/copyright-0-after.png",
+      "coverage": [
+        "copyright graphic/layout"
+      ],
+      "provenance_ref": "full_cli",
+      "matching_basis": {
+        "case": "copyright-0",
+        "method": "CLI screenshot",
+        "frame_count": 0,
+        "after_binary": "after_cli_and_debug"
+      },
+      "status": "verified",
+      "dimensions": [
+        160,
+        144
+      ],
+      "before_sha256": "6efadcbd43e4e6299443dad8f58bd41e37eb348886fcf8b10e593de082753aee",
+      "after_sha256": "62493a2cf474477aea8897e8517ee25d009022ce5cc7f03cf108de684fac9ab2",
+      "archive_paths": {
+        "before": "docs/screenshots/2026-10-02-full-fidelity/before-copyright-0.png",
+        "after": "docs/screenshots/2026-10-02-full-fidelity/after-copyright-0.png"
+      }
+    },
+    {
+      "id": "gamefreak-splash-244",
+      "label": "GAME FREAK字标",
+      "before": "docs/screenshots/2026-10-02-full-fidelity/selected/gamefreak-splash-244-before.png",
+      "after": "docs/screenshots/2026-10-02-full-fidelity/selected/gamefreak-splash-244-after.png",
+      "coverage": [
+        "splash wordmark/asset"
+      ],
+      "provenance_ref": "full_cli",
+      "matching_basis": {
+        "case": "gamefreak-splash-244",
+        "method": "CLI screenshot",
+        "frame_count": 244,
+        "after_binary": "after_cli_and_debug"
+      },
+      "status": "verified",
+      "dimensions": [
+        160,
+        144
+      ],
+      "before_sha256": "5d0d886a542cdce4a3a57a353da8cd240e363e999f14ca45ed1497ec27a805d2",
+      "after_sha256": "658eb13068fa23d15c3978f113f654e4321c7868fa14cd1c8440719408f17c31",
+      "archive_paths": {
+        "before": "docs/screenshots/2026-10-02-full-fidelity/before-gamefreak-splash-244.png",
+        "after": "docs/screenshots/2026-10-02-full-fidelity/after-gamefreak-splash-244.png"
+      }
+    },
+    {
+      "id": "title-121",
+      "label": "标题负Y裁剪",
+      "before": "docs/screenshots/2026-10-02-full-fidelity/selected/title-121-before.png",
+      "after": "docs/screenshots/2026-10-02-full-fidelity/selected/title-121-after.png",
+      "coverage": [
+        "signed logo y clipping"
+      ],
+      "provenance_ref": "full_cli",
+      "matching_basis": {
+        "case": "title-121",
+        "method": "CLI screenshot",
+        "frame_count": 121,
+        "after_binary": "after_cli_and_debug"
+      },
+      "status": "verified",
+      "dimensions": [
+        160,
+        144
+      ],
+      "before_sha256": "e4b0faf92a42fb7d94a09ba14135c7cde3ece4a304b33cb0c4636005e37ebf77",
+      "after_sha256": "bb3bd754fbef789dc9a82a3707df509f6605224a65580ce9f304bb0bfad03a38",
+      "archive_paths": {
+        "before": "docs/screenshots/2026-10-02-full-fidelity/before-title-121.png",
+        "after": "docs/screenshots/2026-10-02-full-fidelity/after-title-121.png"
+      }
+    },
+    {
+      "id": "title-441",
+      "label": "标题负X与抛球",
+      "before": "docs/screenshots/2026-10-02-full-fidelity/selected/title-441-before.png",
+      "after": "docs/screenshots/2026-10-02-full-fidelity/selected/title-441-after.png",
+      "coverage": [
+        "signed mon x clipping",
+        "Red title assets",
+        "ball toss OAM"
+      ],
+      "provenance_ref": "full_cli",
+      "matching_basis": {
+        "case": "title-441",
+        "method": "CLI screenshot",
+        "frame_count": 441,
+        "after_binary": "after_cli_and_debug"
+      },
+      "status": "verified",
+      "dimensions": [
+        160,
+        144
+      ],
+      "before_sha256": "43356a347a21b1cec192875b26e32bf51728bdf8dedf75b8d1e67d3948a4d501",
+      "after_sha256": "303983b371a0207113576c82b25009ba79a7c195bac3e5ef386c5e82ddf297e2",
+      "archive_paths": {
+        "before": "docs/screenshots/2026-10-02-full-fidelity/before-title-441.png",
+        "after": "docs/screenshots/2026-10-02-full-fidelity/after-title-441.png"
+      }
+    },
+    {
+      "id": "battle-mimic-menu",
+      "label": "Mimic特殊选择菜单",
+      "before": "docs/screenshots/2026-10-02-full-fidelity/selected/battle-mimic-menu-before.png",
+      "after": "docs/screenshots/2026-10-02-full-fidelity/selected/battle-mimic-menu-after.png",
+      "coverage": [
+        "independent enemy-technique menu",
+        "textbox tiles"
+      ],
+      "provenance_ref": "full_raw",
+      "matching_basis": {
+        "case": "battle-mimic-menu",
+        "method": "controlled battle fixture",
+        "seed": 42,
+        "after_binary": "after_fixture",
+        "stop": "After A on Mimic; baseline copied Growl/PP5 vs after enemy technique menu/Mimic PP20"
+      },
+      "status": "verified",
+      "dimensions": [
+        160,
+        144
+      ],
+      "before_sha256": "4613965dcdf936b8f4ab5cdf46ba6abaa2a5a859996bf9f736332bf513d26222",
+      "after_sha256": "963df18752a83a075c1e9459b12d82bd740f51094d42e80824a176ffac2d6576",
+      "archive_paths": {
+        "before": "docs/screenshots/2026-10-02-full-fidelity/before-battle-mimic-menu.png",
+        "after": "docs/screenshots/2026-10-02-full-fidelity/after-battle-mimic-menu.png"
+      }
+    },
+    {
+      "id": "battle-exp-share",
+      "label": "战斗两行文字与下伸笔画",
+      "before": "docs/screenshots/2026-10-02-full-fidelity/selected/battle-exp-share-before.png",
+      "after": "docs/screenshots/2026-10-02-full-fidelity/selected/battle-exp-share-after.png",
+      "coverage": [
+        "battle_text layout",
+        "12px spacing",
+        "actual330exp content"
+      ],
+      "provenance_ref": "full_raw",
+      "matching_basis": {
+        "case": "battle-exp-share",
+        "method": "controlled battle fixture",
+        "seed": 42,
+        "after_binary": "after_fixture",
+        "stop": "First gained-EXP message",
+        "baseline_exp": 660,
+        "after_exp": 330
+      },
+      "status": "verified",
+      "dimensions": [
+        160,
+        144
+      ],
+      "before_sha256": "24c8c4faddb7fbee394babcc6ce4bc2c2a7e54c06d341a93c277a0fa58ced385",
+      "after_sha256": "608059535b88575c1f381b30c8bfe49268503e395a7a86917184adad47c20370",
+      "archive_paths": {
+        "before": "docs/screenshots/2026-10-02-full-fidelity/before-battle-exp-share.png",
+        "after": "docs/screenshots/2026-10-02-full-fidelity/after-battle-exp-share.png"
+      }
+    },
+    {
+      "id": "evolution-190",
+      "label": "普通GB进化灰度",
+      "before": "docs/screenshots/2026-10-02-full-fidelity/selected/evolution-190-before.png",
+      "after": "docs/screenshots/2026-10-02-full-fidelity/selected/evolution-190-after.png",
+      "coverage": [
+        "evolution palette",
+        "shared7x7front picture alignment"
+      ],
+      "provenance_ref": "full_raw",
+      "matching_basis": {
+        "case": "evolution-190",
+        "method": "fixed state/phase fixture",
+        "frame_count": 190,
+        "after_binary": "after_fixture"
+      },
+      "status": "verified",
+      "dimensions": [
+        160,
+        144
+      ],
+      "before_sha256": "49ab92d429e98fa405df69b1bd346fce050a09effc7a178aa89628b32c6ca74e",
+      "after_sha256": "aaccc030261c283c5328f012564ee10e639b057794cb08c79da0a914f64fa549",
+      "archive_paths": {
+        "before": "docs/screenshots/2026-10-02-full-fidelity/before-evolution-190.png",
+        "after": "docs/screenshots/2026-10-02-full-fidelity/after-evolution-190.png"
+      }
+    },
+    {
+      "id": "naming-lapras-17",
+      "label": "昵称与物种/专用下划线",
+      "before": "docs/screenshots/2026-10-02-full-fidelity/selected/naming-lapras-17-before.png",
+      "after": "docs/screenshots/2026-10-02-full-fidelity/selected/naming-lapras-17-after.png",
+      "coverage": [
+        "naming screen geometry",
+        "underscores",
+        "species metadata",
+        "party icon sample"
+      ],
+      "provenance_ref": "full_raw",
+      "matching_basis": {
+        "case": "naming-lapras-17",
+        "method": "fixed state/phase fixture",
+        "frame_count": 17,
+        "after_binary": "after_fixture"
+      },
+      "status": "verified",
+      "dimensions": [
+        160,
+        144
+      ],
+      "before_sha256": "469b250b1c4c59462f5f9ca9c555df15ab70c0f8fde1a282c845710e015c4d29",
+      "after_sha256": "a3279c7cc47622f8aca682e01685197847decb0b6d43808113d8c1bbee23bc95",
+      "archive_paths": {
+        "before": "docs/screenshots/2026-10-02-full-fidelity/before-naming-lapras-17.png",
+        "after": "docs/screenshots/2026-10-02-full-fidelity/after-naming-lapras-17.png"
+      }
+    },
+    {
+      "id": "party-Omanyte-green-6",
+      "label": "队伍图标代表",
+      "before": "docs/screenshots/2026-10-02-full-fidelity/selected/party-Omanyte-green-6-before.png",
+      "after": "docs/screenshots/2026-10-02-full-fidelity/selected/party-Omanyte-green-6-after.png",
+      "coverage": [
+        "party icon tiling/mirror",
+        "Helix 1px bob",
+        "HP cadence sample"
+      ],
+      "provenance_ref": "full_raw",
+      "matching_basis": {
+        "case": "party-Omanyte-green-6",
+        "method": "fixed state/phase fixture",
+        "frame_count": 6,
+        "after_binary": "after_fixture"
+      },
+      "status": "verified",
+      "dimensions": [
+        160,
+        144
+      ],
+      "before_sha256": "61614f5db966da6457477b452db6b8f5e0e17035f397b14b90ebb3ca7d63f847",
+      "after_sha256": "e39e5feb62619f0c4710bf2ce9868ee1b6198543edd9e3c08fc6f5c643b15d3a",
+      "archive_paths": {
+        "before": "docs/screenshots/2026-10-02-full-fidelity/before-party-Omanyte-green-6.png",
+        "after": "docs/screenshots/2026-10-02-full-fidelity/after-party-Omanyte-green-6.png"
+      }
+    },
+    {
+      "id": "trainer-card-5",
+      "label": "训练家卡",
+      "before": "docs/screenshots/2026-10-02-full-fidelity/selected/trainer-card-5-before.png",
+      "after": "docs/screenshots/2026-10-02-full-fidelity/selected/trainer-card-5-after.png",
+      "coverage": [
+        "trainer asset/background",
+        "labels/values",
+        "badge geometry"
+      ],
+      "provenance_ref": "full_cli",
+      "matching_basis": {
+        "case": "trainer-card-5",
+        "method": "CLI screenshot",
+        "frame_count": 5,
+        "after_binary": "after_cli_and_debug"
+      },
+      "status": "verified",
+      "dimensions": [
+        160,
+        144
+      ],
+      "before_sha256": "ac809feea0a4277262e38c879e18ea099ed46d3aec426f0d1f540ed37b1c11e1",
+      "after_sha256": "aec90e63cae86a714c0d57822117736cb5e4985a50b6d2542a5083aaaad78f74",
+      "archive_paths": {
+        "before": "docs/screenshots/2026-10-02-full-fidelity/before-trainer-card-5.png",
+        "after": "docs/screenshots/2026-10-02-full-fidelity/after-trainer-card-5.png"
+      }
+    },
+    {
+      "id": "diploma-5",
+      "label": "毕业证",
+      "before": "docs/screenshots/2026-10-02-full-fidelity/selected/diploma-5-before.png",
+      "after": "docs/screenshots/2026-10-02-full-fidelity/selected/diploma-5-after.png",
+      "coverage": [
+        "diploma geometry/asset",
+        "sprite priority/palette"
+      ],
+      "provenance_ref": "full_cli",
+      "matching_basis": {
+        "case": "diploma-5",
+        "method": "CLI screenshot",
+        "frame_count": 5,
+        "after_binary": "after_cli_and_debug"
+      },
+      "status": "verified",
+      "dimensions": [
+        160,
+        144
+      ],
+      "before_sha256": "415600e871415dec0bcc29e757bd74e34857aa37392ce1d5f8e12760b8855daa",
+      "after_sha256": "e538bb5464db41bc32bb04253551993a78dcc719239b9eba152b8d26ec16ee2e",
+      "archive_paths": {
+        "before": "docs/screenshots/2026-10-02-full-fidelity/before-diploma-5.png",
+        "after": "docs/screenshots/2026-10-02-full-fidelity/after-diploma-5.png"
+      }
+    },
+    {
+      "id": "elevator-script",
+      "label": "实际电梯菜单",
+      "before": "docs/screenshots/2026-10-02-full-fidelity/selected/elevator-script-before.png",
+      "after": "docs/screenshots/2026-10-02-full-fidelity/selected/elevator-script-after.png",
+      "coverage": [
+        "elevator geometry",
+        "3 cursor rows+preview",
+        "original sameframe70 flow"
+      ],
+      "provenance_ref": "full_cli",
+      "matching_basis": {
+        "case": "elevator-script",
+        "method": "live debug sign interaction",
+        "frame_count": 70,
+        "seed": 42,
+        "map": "CeladonMartElevator",
+        "position": [
+          3,
+          1
+        ],
+        "facing": "Up",
+        "cursor": 0,
+        "trace_before": "elevator-before-trace.json",
+        "trace_after": "elevator-after-trace.json",
+        "after_binary": "after_cli_and_debug",
+        "matching_frame_note": "Neutral padding preserves baseline frame 70; final dialogue skip reaches the same initialized menu earlier."
+      },
+      "status": "verified",
+      "dimensions": [
+        160,
+        144
+      ],
+      "before_sha256": "59c86b4d7aa7fa9f0cb53a1e7ce94e0a7d5882aec90cf8a70ae181a7e7b1da1b",
+      "after_sha256": "17ce0a3b472f7b1d40bb658a222980ec8187f34abaa4e8fa70dad04e4bd72e58",
+      "archive_paths": {
+        "before": "docs/screenshots/2026-10-02-full-fidelity/before-elevator-script.png",
+        "after": "docs/screenshots/2026-10-02-full-fidelity/after-elevator-script.png"
+      }
+    },
+    {
+      "id": "hof-488",
+      "label": "名人堂演出",
+      "before": "docs/screenshots/2026-10-02-full-fidelity/selected/hof-488-before.png",
+      "after": "docs/screenshots/2026-10-02-full-fidelity/selected/hof-488-after.png",
+      "coverage": [
+        "HoF info box/picture",
+        "fades preserve original overlay; stage matrix archived"
+      ],
+      "provenance_ref": "full_cli",
+      "matching_basis": {
+        "case": "hof-488",
+        "method": "CLI screenshot",
+        "frame_count": 488,
+        "after_binary": "after_cli_and_debug"
+      },
+      "status": "verified",
+      "dimensions": [
+        160,
+        144
+      ],
+      "before_sha256": "0ef06ad72321bb90c24a83e1eb7a60e6d9468772639feb4d9be498bfe8da5aa6",
+      "after_sha256": "b3b84f7fe952cff04ed5676c1ee5e1c03d2777effc989d56ad52d60b851f87a8",
+      "archive_paths": {
+        "before": "docs/screenshots/2026-10-02-full-fidelity/before-hof-488.png",
+        "after": "docs/screenshots/2026-10-02-full-fidelity/after-hof-488.png"
+      }
+    },
+    {
+      "id": "credits-scroll-7",
+      "label": "Credits剪影滚动",
+      "before": "docs/screenshots/2026-10-02-full-fidelity/selected/credits-scroll-7-before.png",
+      "after": "docs/screenshots/2026-10-02-full-fidelity/selected/credits-scroll-7-after.png",
+      "coverage": [
+        "credits silhouette clipping",
+        "one step perVBlank sample"
+      ],
+      "provenance_ref": "full_raw",
+      "matching_basis": {
+        "case": "credits-scroll-7",
+        "method": "fixed state/phase fixture",
+        "frame_count": 7,
+        "after_binary": "after_fixture",
+        "phase": "MonScroll",
+        "screen_index": 0,
+        "frame_basis": "relative to entry into MonScroll"
+      },
+      "status": "verified",
+      "dimensions": [
+        160,
+        144
+      ],
+      "before_sha256": "19c4a03823945121ddb239bece12500916058a14f59165c3d9b3e464f29539b9",
+      "after_sha256": "d874a5f8d78b093e39c892fe3e49fc693a05899d7537f7bb830142914b93947e",
+      "archive_paths": {
+        "before": "docs/screenshots/2026-10-02-full-fidelity/before-credits-scroll-7.png",
+        "after": "docs/screenshots/2026-10-02-full-fidelity/after-credits-scroll-7.png"
+      }
+    },
+    {
+      "id": "credits-the-end-16",
+      "label": "THE END专用图块",
+      "before": "docs/screenshots/2026-10-02-full-fidelity/selected/credits-the-end-16-before.png",
+      "after": "docs/screenshots/2026-10-02-full-fidelity/selected/credits-the-end-16-after.png",
+      "coverage": [
+        "THE END interleaving/coordinates/index3black"
+      ],
+      "provenance_ref": "full_raw",
+      "matching_basis": {
+        "case": "credits-the-end-16",
+        "method": "fixed state/phase fixture",
+        "frame_count": 16,
+        "after_binary": "after_fixture",
+        "phase": "TheEnd",
+        "screen_index": 35,
+        "frame_basis": "relative to entry into TheEnd"
+      },
+      "status": "verified",
+      "dimensions": [
+        160,
+        144
+      ],
+      "before_sha256": "f4ff3477b61a6b6dbaf95cb8ccf7665603c5431a8f47dc25a179d80917812db9",
+      "after_sha256": "72194e21b0a6b9b7e667faf35124ab4ad43028cfd5037e84dcb74c93512ab953",
+      "archive_paths": {
+        "before": "docs/screenshots/2026-10-02-full-fidelity/before-credits-the-end-16.png",
+        "after": "docs/screenshots/2026-10-02-full-fidelity/after-credits-the-end-16.png"
+      }
+    },
+    {
+      "id": "overworld-obj-right-0",
+      "label": "地图OBJ调色板/镜像",
+      "before": "docs/screenshots/2026-10-02-full-fidelity/selected/overworld-obj-right-0-before.png",
+      "after": "docs/screenshots/2026-10-02-full-fidelity/selected/overworld-obj-right-0-after.png",
+      "coverage": [
+        "OBP0D0 opaque white",
+        "mirrored player"
+      ],
+      "provenance_ref": "full_raw",
+      "matching_basis": {
+        "case": "overworld-obj-right-0",
+        "method": "fixed state/phase fixture",
+        "frame_count": 0,
+        "after_binary": "after_fixture"
+      },
+      "status": "verified",
+      "dimensions": [
+        160,
+        144
+      ],
+      "before_sha256": "61a70b5464fc0441733e05c5eeb8b5ba866245245879956dec879a05a4f099da",
+      "after_sha256": "b1d411f46f18793e3b3e49354eae2ead60822f0558319acb06a772f245019fa5",
+      "archive_paths": {
+        "before": "docs/screenshots/2026-10-02-full-fidelity/before-overworld-obj-right-0.png",
+        "after": "docs/screenshots/2026-10-02-full-fidelity/after-overworld-obj-right-0.png"
+      }
+    },
+    {
+      "id": "town-map-en",
+      "label": "地图名称框",
+      "before": "docs/screenshots/2026-10-02-full-fidelity/selected/town-map-en-before.png",
+      "after": "docs/screenshots/2026-10-02-full-fidelity/selected/town-map-en-after.png",
+      "coverage": [
+        "Town Map name geometry/full+partial redraw"
+      ],
+      "provenance_ref": "town_map",
+      "matching_basis": {
+        "frame": 10,
+        "location": "Pallet Town",
+        "lang": "en"
+      },
+      "status": "verified",
+      "dimensions": [
+        160,
+        144
+      ],
+      "before_sha256": "edf98bee2168c1e106dded7b8cb0c48ebfad5d8f38085430ffe6af935fb8c028",
+      "after_sha256": "a74402aea375b2a3e394467b4478e41e9b7a308a3dc6c96af2195615e857e2d6",
+      "archive_paths": {
+        "before": "docs/screenshots/2026-10-02-original-font/town-map-en-before.png",
+        "after": "docs/screenshots/2026-10-02-original-font/town-map-en-after.png"
+      }
+    },
+    {
+      "id": "link-trade-went-40",
+      "label": "实际收到的交易对方名字",
+      "before": "docs/screenshots/2026-10-02-full-fidelity/selected/link-trade-went-40-before.png",
+      "after": "docs/screenshots/2026-10-02-full-fidelity/selected/link-trade-went-40-after.png",
+      "coverage": [
+        "link movie peer name",
+        "shared generic dialog12px layout"
+      ],
+      "provenance_ref": "link_movie",
+      "matching_basis": {
+        "phase": "TextWentTo",
+        "relative_frame": 40,
+        "transport": "actual ChannelTransport+app update hook"
+      },
+      "status": "verified",
+      "dimensions": [
+        160,
+        144
+      ],
+      "before_sha256": "f5fa35529bb06cb381e789e58bacf7d319d679413d6656bc9988a66a1de8b6f5",
+      "after_sha256": "fa7839a3aca28bc1d5cfc6f71c8d5ae1bf01762b35ffe6cfdb648ed6f01b7d46",
+      "archive_paths": {
+        "before": "docs/screenshots/2026-10-02-original-font/link-trade-went-40-before.png",
+        "after": "docs/screenshots/2026-10-02-original-font/link-trade-went-40-after.png"
+      }
+    },
+    {
+      "id": "pc-bills-box12",
+      "label": "Bill PC与两位BOX",
+      "before": "docs/screenshots/2026-10-02-full-fidelity/selected/pc-bills-box12-before.png",
+      "after": "docs/screenshots/2026-10-02-full-fidelity/selected/pc-bills-box12-after.png",
+      "coverage": [
+        "PC labels/PKMN exactpixel placement",
+        "BOX12 label geometry"
+      ],
+      "provenance_ref": "pc_tour",
+      "matching_basis": {
+        "fixture": "pc_tour case24",
+        "lang": "en",
+        "frame": 0
+      },
+      "status": "verified",
+      "dimensions": [
+        160,
+        144
+      ],
+      "before_sha256": "94d46baf5028b039b0f0f5a0b7e2640f5df9fecf53942df1ac90057b0647f795",
+      "after_sha256": "e0beb0a4a8d8198f84ff8ad07b99e305de77411cf4523b693cfd6ac18bac700a",
+      "archive_paths": {
+        "before": "docs/screenshots/fidelity-ui-world/before-en/24_bills_box12.png",
+        "after": "docs/screenshots/fidelity-ui-world/after-en/24_bills_box12.png"
+      }
+    },
+    {
+      "id": "bag-font-bounds",
+      "label": "普通背包名称与数量列",
+      "before": "docs/screenshots/2026-10-02-full-fidelity/selected/bag-font-bounds-before.png",
+      "after": "docs/screenshots/2026-10-02-full-fidelity/selected/bag-font-bounds-after.png",
+      "coverage": [
+        "ordinary bag quantity column/name budget"
+      ],
+      "provenance_ref": "pc_tour",
+      "matching_basis": {
+        "fixture": "pc_tour case27",
+        "lang": "en",
+        "frame": 0
+      },
+      "status": "verified",
+      "dimensions": [
+        160,
+        144
+      ],
+      "before_sha256": "c7b695a3c29cb8cbeac3e91195f8a816a1bb2358bddbdd64e176ab386ba35934",
+      "after_sha256": "404ec410275402273654813a65bedf7764526e0b94c87ea2db08829942b9bf89",
+      "archive_paths": {
+        "before": "docs/screenshots/fidelity-ui-world/before-en/27_bag_font_bounds.png",
+        "after": "docs/screenshots/fidelity-ui-world/after-en/27_bag_font_bounds.png"
+      }
+    },
+    {
+      "id": "battle-bag",
+      "label": "战斗背包动态框与数量列",
+      "before": "docs/screenshots/2026-10-02-full-fidelity/selected/battle-bag-before.png",
+      "after": "docs/screenshots/2026-10-02-full-fidelity/selected/battle-bag-after.png",
+      "coverage": [
+        "independent BattleBag frame/cursor/quantity/name budget"
+      ],
+      "provenance_ref": "battle_bag",
+      "matching_basis": {
+        "frame": 0,
+        "mock": [
+          [
+            "POTION",
+            3
+          ],
+          [
+            "SUPER POTION",
+            1
+          ],
+          [
+            "ANTIDOTE",
+            2
+          ]
+        ],
+        "cursor": 0,
+        "lang": "en",
+        "note": "Fusion baseline already fits; do not claim baseline overflow"
+      },
+      "status": "verified",
+      "dimensions": [
+        160,
+        144
+      ],
+      "before_sha256": "6eb2ee432b7ec735084f2c190877cceb1e05aed6feebc1c2cc0168eac788d7cd",
+      "after_sha256": "1c1062369168e0b70f8439683c0a9e6b26ec051cd32fd9c5f6793b0cceceffe2",
+      "archive_paths": {
+        "before": "docs/screenshots/2026-10-02-full-fidelity/ui-preview/before-battle-bag.png",
+        "after": "docs/screenshots/2026-10-02-full-fidelity/ui-preview/after-battle-bag.png"
+      }
+    },
+    {
+      "id": "mart-buy",
+      "label": "最终普通字体商店",
+      "before": "docs/screenshots/2026-10-02-full-fidelity/selected/mart-buy-before.png",
+      "after": "docs/screenshots/2026-10-02-full-fidelity/selected/mart-buy-after.png",
+      "coverage": [
+        "Mart list name/price rows",
+        "MONEY title+balance",
+        "original box/cursor viewport geometry"
+      ],
+      "provenance_ref": "mart_final",
+      "matching_basis": {
+        "frame": 1024,
+        "lang": "en",
+        "seed": 49,
+        "map": "ViridianMart",
+        "snapshot_semantically_identical_to_before": true,
+        "snapshot_url": "https://raw.githubusercontent.com/liuyanghejerry/open-pokered/129cd8e79212fb5b1d2679d7512052ddd0c5faa8/docs/screenshots/2026-10-02-original-font/mart-buy-before-input.json"
+      },
+      "status": "verified",
+      "dimensions": [
+        160,
+        144
+      ],
+      "before_sha256": "a108c970bc54393e7098d18d8ff1c968c2be593b73de2922537b2cc041a81806",
+      "after_sha256": "7dd9e05069779c97d67a9f3604a8069865f93e6ca38d4a9e503f638d1c0fd527",
+      "metadata_after": "https://raw.githubusercontent.com/liuyanghejerry/open-pokered/7d172fd3e04da632c128c1ff1592570e949cc311/docs/screenshots/2026-10-02-original-font/mart-buy-after.json",
+      "archive_paths": {
+        "before": "docs/screenshots/2026-10-02-original-font/mart-buy-before.png",
+        "after": "docs/screenshots/2026-10-02-original-font/mart-buy-after.png"
+      }
+    }
+  ],
+  "required_archive_pairs": [
+    {
+      "id": "dex-Gengar-0",
+      "label": "图鉴镜像留白",
+      "before": "docs/screenshots/2026-10-02-full-fidelity/before-dex-Gengar-0.png",
+      "after": "docs/screenshots/2026-10-02-full-fidelity/after-dex-Gengar-0.png",
+      "coverage": [
+        "dex mirrored full7x7 buffer"
+      ],
+      "provenance_ref": "full_raw",
+      "matching_basis": {
+        "case": "dex-Gengar-0",
+        "method": "fixed state/phase fixture",
+        "frame_count": 0,
+        "after_binary": "after_fixture"
+      },
+      "status": "verified",
+      "dimensions": [
+        160,
+        144
+      ],
+      "before_sha256": "b35369a42ff83c437822cf0ab225f7d57e5da882bc67c5d99288a49f87722af4",
+      "after_sha256": "4d98a48b1717f49c1f3b45194db895bba9a9423461962527818e89695422bb4a",
+      "before_raw_url": "https://raw.githubusercontent.com/liuyanghejerry/open-pokered/129cd8e79212fb5b1d2679d7512052ddd0c5faa8/docs/screenshots/2026-10-02-full-fidelity/before-dex-Gengar-0.png",
+      "after_raw_url": "https://raw.githubusercontent.com/liuyanghejerry/open-pokered/129cd8e79212fb5b1d2679d7512052ddd0c5faa8/docs/screenshots/2026-10-02-full-fidelity/after-dex-Gengar-0.png"
+    },
+    {
+      "id": "credits-copyright-10",
+      "label": "Credits版权页与灰阶",
+      "before": "docs/screenshots/2026-10-02-full-fidelity/before-credits-copyright-10.png",
+      "after": "docs/screenshots/2026-10-02-full-fidelity/after-credits-copyright-10.png",
+      "coverage": [
+        "credits copyright phase",
+        "palette fade level2"
+      ],
+      "provenance_ref": "full_raw",
+      "matching_basis": {
+        "case": "credits-copyright-10",
+        "method": "fixed state/phase fixture",
+        "frame_count": 10,
+        "after_binary": "after_fixture",
+        "phase": "Hold",
+        "screen_index": 34,
+        "frame_basis": "relative to entry into Hold"
+      },
+      "status": "verified",
+      "dimensions": [
+        160,
+        144
+      ],
+      "before_sha256": "ea1a5fbd8001c953648c9c13739961606301c097ec4981204a75cdfb130c4e91",
+      "after_sha256": "f4401245397b320bcb0fca35eb5fe9e9854e251e9eea15daf2a35e9b3bb3723a",
+      "before_raw_url": "https://raw.githubusercontent.com/liuyanghejerry/open-pokered/129cd8e79212fb5b1d2679d7512052ddd0c5faa8/docs/screenshots/2026-10-02-full-fidelity/before-credits-copyright-10.png",
+      "after_raw_url": "https://raw.githubusercontent.com/liuyanghejerry/open-pokered/129cd8e79212fb5b1d2679d7512052ddd0c5faa8/docs/screenshots/2026-10-02-full-fidelity/after-credits-copyright-10.png"
+    },
+    {
+      "id": "pc-league-hof-zh",
+      "label": "PC名人堂中文独立信息框",
+      "before": "docs/screenshots/fidelity-ui-world/before-zh/26_league_hof_type.png",
+      "after": "docs/screenshots/fidelity-ui-world/after-zh/26_league_hof_type.png",
+      "coverage": [
+        "PC HoF type/level lines/CJK geometry"
+      ],
+      "provenance_ref": "pc_tour",
+      "matching_basis": {
+        "fixture": "pc_tour case26",
+        "lang": "zh",
+        "frame": 0
+      },
+      "status": "verified",
+      "dimensions": [
+        160,
+        144
+      ],
+      "before_sha256": "ec9612b35a4dd2887e6d154add1db1d6f686b102e0dc31fed42552196a456ad9",
+      "after_sha256": "97cd759613872310909d9bc28f3cf0cb23a41b240fbe5ff239b1883ef43ac577",
+      "before_raw_url": "https://raw.githubusercontent.com/liuyanghejerry/open-pokered/129cd8e79212fb5b1d2679d7512052ddd0c5faa8/docs/screenshots/fidelity-ui-world/before-zh/26_league_hof_type.png",
+      "after_raw_url": "https://raw.githubusercontent.com/liuyanghejerry/open-pokered/129cd8e79212fb5b1d2679d7512052ddd0c5faa8/docs/screenshots/fidelity-ui-world/after-zh/26_league_hof_type.png"
+    },
+    {
+      "id": "oak-player-exclamation",
+      "label": "玩家表情泡泡",
+      "before": "docs/screenshots/fidelity-story/oak-player-exclamation-before.png",
+      "after": "docs/screenshots/fidelity-story/oak-player-exclamation-after.png",
+      "coverage": [
+        "player ID emotionbubble renderer branch"
+      ],
+      "provenance_ref": "early_bubble",
+      "matching_basis": {
+        "seed": 42,
+        "frame": 98,
+        "player": [
+          10,
+          1
+        ],
+        "facing": "Down"
+      },
+      "status": "verified",
+      "dimensions": [
+        160,
+        144
+      ],
+      "before_sha256": "6112caa07aa2993dc9063f32a9855cf713757b8a85c6154ac4eda73a9d838743",
+      "after_sha256": "b5ac0726733252e30510c9d698b3ea48bb80afe889b11b1b4d9b2412d2db88d2",
+      "before_raw_url": "https://raw.githubusercontent.com/liuyanghejerry/open-pokered/129cd8e79212fb5b1d2679d7512052ddd0c5faa8/docs/screenshots/fidelity-story/oak-player-exclamation-before.png",
+      "after_raw_url": "https://raw.githubusercontent.com/liuyanghejerry/open-pokered/129cd8e79212fb5b1d2679d7512052ddd0c5faa8/docs/screenshots/fidelity-story/oak-player-exclamation-after.png"
+    }
+  ],
+  "provenance_registry": {
+    "full_cli": {
+      "before": {
+        "source_commit": "72ff719b39634c153cb82d3f3ece200bd413c4e0",
+        "cli_app_sha256": "fd832ed427cb33c0ea14a7fa10a97b6363381009a6a1a3ef037a0b1989ac1879",
+        "fixture_sha256": "93d720055f1b28e032ea52915b6a6044d58d844f225cd071a5d08858af823fdd",
+        "fixture_externs": [
+          {
+            "crate": "pokered_app",
+            "artifact": "libpokered_app-6f3c2526fa1f05b5.rlib",
+            "sha256": "ceca6b3a5c202be76f9213fe953ef3a1491cab57b3478caf07c6fd513e1127c6"
+          },
+          {
+            "crate": "pokered_core",
+            "artifact": "libpokered_core-d131d6da165148f6.rlib",
+            "sha256": "3cc865bae0447099164d8d4770dfb0625e93041a62c19ffb9a0a06128514bc80"
+          },
+          {
+            "crate": "pokered_data",
+            "artifact": "libpokered_data-0c35e7a9216ef546.rlib",
+            "sha256": "bd04302dc3a67aae769a1b5a16438ba14906d3398c9fd7bb13018c21f50ddb86"
+          },
+          {
+            "crate": "pokered_renderer",
+            "artifact": "libpokered_renderer-0bc4d454c222649f.rlib",
+            "sha256": "719b576134186d16139a82bdb4968e7b1c83e6fea88cfdad1f3b39f7d0910141"
+          },
+          {
+            "crate": "dotzuki_engine",
+            "artifact": "libdotzuki_engine-cdb89f3d1f01e1ce.rlib",
+            "sha256": "0b99d059d6475d0ee15a37d7d264b96186b63ce936c55d7a710a81c732c430c9"
+          }
+        ]
+      },
+      "after": {
+        "source_commit": "eebde2fc3a4f78c38b4c7b5d49e0db2b830cb235",
+        "app_sha256": "ea717f1c2d6332f4608fc13194296cdb166ea20662d8d0f7c379bd17ba005e52",
+        "engine_production_source": "92ba95f9526107e17874df53291ac7758d0930f0",
+        "font": "Original project Fusion Pixel retained for English, Chinese and numeric text"
+      },
+      "source_document": "https://raw.githubusercontent.com/liuyanghejerry/open-pokered/129cd8e79212fb5b1d2679d7512052ddd0c5faa8/docs/screenshots/2026-10-02-full-fidelity/capture-manifest.json"
+    },
+    "full_raw": {
+      "before": {
+        "source_commit": "72ff719b39634c153cb82d3f3ece200bd413c4e0",
+        "cli_app_sha256": "fd832ed427cb33c0ea14a7fa10a97b6363381009a6a1a3ef037a0b1989ac1879",
+        "fixture_sha256": "93d720055f1b28e032ea52915b6a6044d58d844f225cd071a5d08858af823fdd",
+        "fixture_externs": [
+          {
+            "crate": "pokered_app",
+            "artifact": "libpokered_app-6f3c2526fa1f05b5.rlib",
+            "sha256": "ceca6b3a5c202be76f9213fe953ef3a1491cab57b3478caf07c6fd513e1127c6"
+          },
+          {
+            "crate": "pokered_core",
+            "artifact": "libpokered_core-d131d6da165148f6.rlib",
+            "sha256": "3cc865bae0447099164d8d4770dfb0625e93041a62c19ffb9a0a06128514bc80"
+          },
+          {
+            "crate": "pokered_data",
+            "artifact": "libpokered_data-0c35e7a9216ef546.rlib",
+            "sha256": "bd04302dc3a67aae769a1b5a16438ba14906d3398c9fd7bb13018c21f50ddb86"
+          },
+          {
+            "crate": "pokered_renderer",
+            "artifact": "libpokered_renderer-0bc4d454c222649f.rlib",
+            "sha256": "719b576134186d16139a82bdb4968e7b1c83e6fea88cfdad1f3b39f7d0910141"
+          },
+          {
+            "crate": "dotzuki_engine",
+            "artifact": "libdotzuki_engine-cdb89f3d1f01e1ce.rlib",
+            "sha256": "0b99d059d6475d0ee15a37d7d264b96186b63ce936c55d7a710a81c732c430c9"
+          }
+        ]
+      },
+      "after": {
+        "source_commit": "eebde2fc3a4f78c38b4c7b5d49e0db2b830cb235",
+        "fixture_sha256": "c0aa573eb408a0c3df6380df30909c29d0d8aa964c5e9b4208d297f5450f680f",
+        "fixture_externs": [
+          {
+            "crate": "pokered_app",
+            "artifact": "libpokered_app-9a2c92716f801d99.rlib",
+            "sha256": "c44bb7e3245327b7bba26e38cd181ddbb0266995ac94b268ca9af3a33314904b",
+            "features": [
+              "debug-server",
+              "default",
+              "desktop",
+              "pokered-debug-server"
+            ]
+          },
+          {
+            "crate": "pokered_core",
+            "artifact": "libpokered_core-c04e3b89468622a4.rlib",
+            "sha256": "732e2c1d5af66bb53e2e9fc79eb32dd04d14b64a5668f03d7e3607b98007ced4",
+            "features": []
+          },
+          {
+            "crate": "pokered_data",
+            "artifact": "libpokered_data-706397b234cd2cbd.rlib",
+            "sha256": "5ad261855089cc9c27c38141ff063c6f043512b121956ac12e0881b3d46798a6",
+            "features": [
+              "default"
+            ]
+          },
+          {
+            "crate": "pokered_renderer",
+            "artifact": "libpokered_renderer-3940381f992e3066.rlib",
+            "sha256": "9d66864ba8c2b9d8523d3698faf5ef60656810fb625df1009dad203c7e1466c6",
+            "features": [
+              "default",
+              "framebuffer",
+              "gpu",
+              "resource"
+            ]
+          },
+          {
+            "crate": "dotzuki_engine",
+            "artifact": "libdotzuki_engine-739bf15ab0ae0f54.rlib",
+            "sha256": "e55c6df8bbf269e604a816f06deed9139f6a82b9f378bd0b064b91a584354f1b",
+            "features": [
+              "default"
+            ]
+          }
+        ],
+        "cfgs": [
+          "fidelity_after",
+          "feature=\"debug-server\""
+        ],
+        "relationship": "Raw fixture links a frozen copy of the exact app crate metadata graph from this native build; all after images were recaptured after removing the replacement alphabet."
+      },
+      "source_document": "https://raw.githubusercontent.com/liuyanghejerry/open-pokered/129cd8e79212fb5b1d2679d7512052ddd0c5faa8/docs/screenshots/2026-10-02-full-fidelity/capture-manifest.json",
+      "harness": {
+        "fixture_path": "crates/pokered-app/examples/fidelity_visual_capture.rs",
+        "fixture_source_sha256": "b59c75d46d26feb8e9f295a45c061143b8bd1f3b1fb625c5efbba531e738ff6c",
+        "after_cfg": "fidelity_after and feature=\"debug-server\"; LAPRAS species metadata is enabled",
+        "cli_capture_sha256": "11224341faff51ad395c79519a61dd611fd5c8cc4b5bdc6866a8c151d63c6dfd",
+        "elevator_capture_sha256": "d745eb873e7aa90a1201a8c86c46ef5bb9babc54485ed656a3782217859174ef",
+        "raw_link_helper_sha256": "0cbd40881a09ed0ed0b3a66804c91a275edac7c7c0544d56110c21b880ba50b4",
+        "fixture_source_commit": "eebde2fc3a4f78c38b4c7b5d49e0db2b830cb235",
+        "post_capture_change": "The baseline harness has an unconditional ninth constructor argument; the final harness guards that argument by feature=\"debug-server\". Both captured dependency graphs enable that feature, so initialized fixture behavior is unchanged.",
+        "baseline_fixture_source_sha256": "a05bcfe1e5d11bae36e5bf2ac9c8b33a05e726f9d5005b49e8efc1cccc2db60b",
+        "baseline_fixture_source_commit": "142657d429396ee119347b3e7b7eb49a4c8420d2"
+      }
+    },
+    "pc_tour": {
+      "before": {
+        "binary": "/workspace/onboarding/pokered-visual-base-pc-tour",
+        "sha256": "498231954213ccf93e0f00fbb22e5ef61cce1f56a358b08c4e6b56633d5b751b",
+        "source": "72ff719 baseline production renderers; same pc_tour fixtures from 31ad6e7; frozen original dependency lock"
+      },
+      "after": {
+        "binary": "/workspace/onboarding/pokered-font-preserved-final-checked/pc_tour",
+        "sha256": "32f88cbe1460667664092a137f40a7a4ba3b694b377bf096d73cd41c6a46466b",
+        "source": "eebde2fc3a4f78c38b4c7b5d49e0db2b830cb235",
+        "font": "Project original Fusion Pixel ordinary text; dedicated PK/MN menu graphics retained.",
+        "artifact_features": [
+          "debug-server",
+          "default",
+          "desktop",
+          "pokered-debug-server"
+        ],
+        "engine_source": "92ba95f9526107e17874df53291ac7758d0930f0"
+      },
+      "source_document": "https://raw.githubusercontent.com/liuyanghejerry/open-pokered/129cd8e79212fb5b1d2679d7512052ddd0c5faa8/docs/audits/2026-10-02-full-fidelity/validation/ui-world-captures.json"
+    },
+    "town_map": {
+      "case": {
+        "name": "town-map-en",
+        "frame": 10,
+        "language": "en",
+        "before_source": "72ff719b39634c153cb82d3f3ece200bd413c4e0",
+        "after_source": "eebde2fc3a4f78c38b4c7b5d49e0db2b830cb235",
+        "images": {
+          "before": {
+            "file": "town-map-en-before.png",
+            "sha256": "edf98bee2168c1e106dded7b8cb0c48ebfad5d8f38085430ffe6af935fb8c028",
+            "binary_sha256": "fd832ed427cb33c0ea14a7fa10a97b6363381009a6a1a3ef037a0b1989ac1879",
+            "metadata": "town-map-en-before.json"
+          },
+          "after": {
+            "file": "town-map-en-after.png",
+            "sha256": "a74402aea375b2a3e394467b4478e41e9b7a308a3dc6c96af2195615e857e2d6",
+            "binary_sha256": "ea717f1c2d6332f4608fc13194296cdb166ea20662d8d0f7c379bd17ba005e52",
+            "metadata": "town-map-en-after.json"
+          }
+        },
+        "status": "Final functional capture with project font retained",
+        "changed_pixels": 2205
+      },
+      "source_document": "https://raw.githubusercontent.com/liuyanghejerry/open-pokered/129cd8e79212fb5b1d2679d7512052ddd0c5faa8/docs/screenshots/2026-10-02-original-font/capture-manifest.json",
+      "metadata_document": "https://raw.githubusercontent.com/liuyanghejerry/open-pokered/129cd8e79212fb5b1d2679d7512052ddd0c5faa8/docs/screenshots/2026-10-02-original-font/town-map-en-after.json"
+    },
+    "link_movie": {
+      "case": {
+        "name": "link-trade-went-40",
+        "phase_frame": 40,
+        "language": "en",
+        "before_source": "72ff719b39634c153cb82d3f3ece200bd413c4e0",
+        "after_source": "eebde2fc3a4f78c38b4c7b5d49e0db2b830cb235",
+        "images": {
+          "before": {
+            "file": "link-trade-went-40-before.png",
+            "sha256": "f5fa35529bb06cb381e789e58bacf7d319d679413d6656bc9988a66a1de8b6f5",
+            "fixture_sha256": "b260db5ae084f2e2b1d05a0321fa2f108ebb02352070cec932fadc97dfcdec29",
+            "metadata": "link-trade-went-40-before.json"
+          },
+          "after": {
+            "file": "link-trade-went-40-after.png",
+            "sha256": "fa7839a3aca28bc1d5cfc6f71c8d5ae1bf01762b35ffe6cfdb648ed6f01b7d46",
+            "fixture_sha256": "ec563fc073d915a511c6cd80b9f947c54f0fb25ec642bb34403430200bf943c1",
+            "metadata": "link-trade-went-40-after.json"
+          }
+        },
+        "status": "Final functional capture with project font retained",
+        "changed_pixels": 1684
+      },
+      "source_document": "https://raw.githubusercontent.com/liuyanghejerry/open-pokered/129cd8e79212fb5b1d2679d7512052ddd0c5faa8/docs/screenshots/2026-10-02-original-font/capture-manifest.json",
+      "metadata_document": "https://raw.githubusercontent.com/liuyanghejerry/open-pokered/129cd8e79212fb5b1d2679d7512052ddd0c5faa8/docs/screenshots/2026-10-02-original-font/link-trade-went-40-after.json"
+    },
+    "battle_bag": {
+      "before_source": "72ff719b39634c153cb82d3f3ece200bd413c4e0",
+      "after_source": "2c6c941467b204ef2998387b985e5777d9f40ab6",
+      "after_source_note": "HEAD plus recorded in-progress layout edits; direct compiled-library hashes identify the rendered build.",
+      "after_worktree_diff_sha256": "ccc96fd432419f9cdcb898bdb43a6b651cc02652d4a1bc6dcae426983b42a57d",
+      "font": "project Fusion Pixel retained on both sides",
+      "source_document": "https://raw.githubusercontent.com/liuyanghejerry/open-pokered/129cd8e79212fb5b1d2679d7512052ddd0c5faa8/docs/screenshots/2026-10-02-full-fidelity/ui-preview/capture-manifest.json",
+      "note": "Actual captured build is 2c6c941 plus recorded layout edits, not relabeled eebde2f. Later re-export confirmed BattleBag bytes unchanged."
+    },
+    "early_bubble": {
+      "before_source": "72ff719",
+      "after_source": null,
+      "before_binary": "/workspace/onboarding/pokered-audit-base-app",
+      "after_binary": "/workspace/onboarding/pokered-story-fixed-app",
+      "source_document": "https://raw.githubusercontent.com/liuyanghejerry/open-pokered/129cd8e79212fb5b1d2679d7512052ddd0c5faa8/docs/audits/2026-10-02-full-fidelity/validation/story-repairs.md",
+      "before_metadata": "https://raw.githubusercontent.com/liuyanghejerry/open-pokered/129cd8e79212fb5b1d2679d7512052ddd0c5faa8/docs/screenshots/fidelity-story/oak-player-exclamation-before.json",
+      "after_metadata": "https://raw.githubusercontent.com/liuyanghejerry/open-pokered/129cd8e79212fb5b1d2679d7512052ddd0c5faa8/docs/screenshots/fidelity-story/oak-player-exclamation-after.json",
+      "note": "Earlier branch proof at matching seed42/frame98/player(10,1)/Down. Exact after commit is not recorded by the adjacent JSON; do not relabel this archive image as final eebde2f. Final shared OBJ palette is separately shown by overworld-obj-right-0."
+    },
+    "mart_final": {
+      "status": "verified",
+      "before_source": "72ff719",
+      "after_source": "eebde2fc3a4f78c38b4c7b5d49e0db2b830cb235",
+      "before_binary_sha256": "fd832ed427cb33c0ea14a7fa10a97b6363381009a6a1a3ef037a0b1989ac1879",
+      "after_binary_sha256": "ea717f1c2d6332f4608fc13194296cdb166ea20662d8d0f7c379bd17ba005e52",
+      "before_metadata_archive": "https://raw.githubusercontent.com/liuyanghejerry/open-pokered/129cd8e79212fb5b1d2679d7512052ddd0c5faa8/docs/screenshots/2026-10-02-original-font/mart-buy-before.json",
+      "before_input_archive": "https://raw.githubusercontent.com/liuyanghejerry/open-pokered/129cd8e79212fb5b1d2679d7512052ddd0c5faa8/docs/screenshots/2026-10-02-original-font/mart-buy-before-input.json",
+      "after_metadata": "https://raw.githubusercontent.com/liuyanghejerry/open-pokered/7d172fd3e04da632c128c1ff1592570e949cc311/docs/screenshots/2026-10-02-original-font/mart-buy-after.json",
+      "frame": 1024,
+      "font": "Original project Fusion Pixel on both sides; final shop layout, no replacement alphabet",
+      "after_metadata_sha256": "cf53c51378f16ed233b9cfc792881ed6c3db3842d65447caea7dc428a355d639",
+      "after_input_sha256": "c93168e1d35b27346f064ae52f5b7c437199c5aae62240dba9cd71804e2f982b",
+      "snapshot_semantically_identical_to_before": true,
+      "before_png_sha256": "a108c970bc54393e7098d18d8ff1c968c2be593b73de2922537b2cc041a81806",
+      "after_png_sha256": "7dd9e05069779c97d67a9f3604a8069865f93e6ca38d4a9e503f638d1c0fd527",
+      "after_input_archive": "https://raw.githubusercontent.com/liuyanghejerry/open-pokered/7d172fd3e04da632c128c1ff1592570e949cc311/docs/screenshots/2026-10-02-original-font/mart-buy-after-input.json"
+    }
+  },
+  "policy": {
+    "AGENTS_reference": "AGENTS.md:29–47",
+    "current_PR_png_count": 44,
+    "primary_pair_count": 22,
+    "archive_embedded_pair_count": 4,
+    "instructions": "Keep 22 primary pairs in the selected directory and this consolidated manifest. Embed primary and four necessary immutable-archive pairs via absolute raw URLs; link the complete archive for repeated variants."
+  },
+  "archive_links_only": [
+    {
+      "group": "all extra title/splash frames/Blue variant",
+      "manifest": "https://raw.githubusercontent.com/liuyanghejerry/open-pokered/129cd8e79212fb5b1d2679d7512052ddd0c5faa8/docs/screenshots/2026-10-02-full-fidelity/capture-manifest.json",
+      "reason": "Same renderer, additional timing/asset variants; keep title121+441 and splash244 representatives."
+    },
+    {
+      "group": "party ten icon kinds, allHP speeds, all three map facings",
+      "manifest": "https://raw.githubusercontent.com/liuyanghejerry/open-pokered/129cd8e79212fb5b1d2679d7512052ddd0c5faa8/docs/screenshots/2026-10-02-full-fidelity/capture-manifest.json",
+      "reason": "Same icon/palette paths; mainHelix+mirroredright and focusedregressions representimplementation."
+    },
+    {
+      "group": "HoF/credits remaining palette stages and THEEND waits",
+      "manifest": "https://raw.githubusercontent.com/liuyanghejerry/open-pokered/129cd8e79212fb5b1d2679d7512052ddd0c5faa8/docs/screenshots/2026-10-02-full-fidelity/capture-manifest.json",
+      "reason": "State/cache tests supplytemporal coverage; stage matricesremainarchive."
+    },
+    {
+      "group": "NPC trade Went/Sends/Farewell + ordinary oldtrade sprite phases",
+      "manifest": "https://raw.githubusercontent.com/liuyanghejerry/open-pokered/129cd8e79212fb5b1d2679d7512052ddd0c5faa8/docs/screenshots/2026-10-02-original-font/capture-manifest.json",
+      "reason": "Primaryactuallinkpeer movie coversgenericdialog; longerclip/timing coveragearchive."
+    },
+    {
+      "group": "PC remainingmenus/translated duplicates, TownMapZH, namingplayer, diplomaZH",
+      "manifest": "https://raw.githubusercontent.com/liuyanghejerry/open-pokered/129cd8e79212fb5b1d2679d7512052ddd0c5faa8/docs/audits/2026-10-02-full-fidelity/validation/ui-world-captures.json",
+      "reason": "Sharedimplementation/localevariants; PC中文HoF keptas archiveexception."
+    },
+    {
+      "group": "BattleAI/grounditem/NPC paths/GBA performance snapshots/freshchain",
+      "manifest": "https://raw.githubusercontent.com/liuyanghejerry/open-pokered/129cd8e79212fb5b1d2679d7512052ddd0c5faa8/docs/audits/2026-10-02-full-fidelity/README.md",
+      "reason": "Primarilygame logic/runtimevalidation or performance; AGENTSscreenshots notmandatoryforlogic-onlyfixes."
+    },
+    {
+      "group": "Five withdrawnfont experiments",
+      "manifest": "https://raw.githubusercontent.com/liuyanghejerry/open-pokered/129cd8e79212fb5b1d2679d7512052ddd0c5faa8/docs/screenshots/2026-10-02-original-font/capture-manifest.json",
+      "reason": "Keep historicalarchive only; never use theirafter imagesas finalretained-font acceptance."
+    }
+  ],
+  "honest_evidence_limits": [
+    {
+      "surface": "Mart sell/quantity/confirm variants",
+      "status": "No finalsame-inputbefore/after pairs; mainnewFusionbuycovers common shop painter. Separatepixel/layout regressions covervariants; do not mislabel withdrawnfontimages."
+    },
+    {
+      "surface": "BattleParty longnickname HP/FNT preservation",
+      "status": "No targetedfinalpairedscreenshot; productionpixel regression only. OrdinaryPartyiconimage doesnot independently prove longname boundary."
+    },
+    {
+      "surface": "Cable threeroom choices",
+      "status": "72ff719has no samephase entry; archive after-only diagnostic canbe shown without pretendingmatchedpair. Otherreception/NPCbeforelackfullcaptureframed metadata."
+    },
+    {
+      "surface": "TUI Mart",
+      "status": "Native screenshots do not prove TUI. Readonlyfoundfixedscroll_offset0/oldconfirmtext; note savedseparately, no sourcechangesorfulltestrerunforcleanup."
+    },
+    {
+      "surface": "Original ROM/fullSGB/hardwarePCM",
+      "status": "These images are deterministic reimplementation captures, not new original-ROMframe/PCM comparisons."
+    }
+  ],
+  "supplemental_mart_archive_commit": "7d172fd3e04da632c128c1ff1592570e949cc311"
+}

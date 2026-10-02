@@ -1,4 +1,0 @@
-Baseline: open-pokered 72ff719; frozen native libraries.
-Shared fixture: fidelity_visual_capture.rs battle-ai-forced-fly.
-Brock poisoned Snorlax50: Fly CHARGING_UP|INVULNERABLE; Pikachu50: Splash; seeded42.
-AI forced Fly Some("Enemy SNORLAX used\nFLY!"); playerHP=73 enemyStatus=Poison charge=false AIcount=5

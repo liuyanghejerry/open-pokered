@@ -1,9 +1,0 @@
-   Compiling pokered-data v0.1.0 (/workspace/open-pokered/crates/pokered-data)
-warning: pokered-renderer@0.1.0: CJK glyphs generated: 519 chars (95 ASCII + 562 CJK)
-   Compiling pokered-core v0.1.0 (/workspace/open-pokered/crates/pokered-core)
-   Compiling pokered-renderer v0.1.0 (/workspace/open-pokered/crates/pokered-renderer)
-   Compiling pokered-agent v0.1.0 (/workspace/open-pokered/crates/pokered-agent)
-   Compiling pokered-ui v0.1.0 (/workspace/open-pokered/crates/pokered-ui)
-   Compiling pokered-tui v0.1.0 (/workspace/open-pokered/crates/pokered-tui)
-   Compiling pokered-app v0.1.0 (/workspace/open-pokered/crates/pokered-app)
-    Finished `dev` profile [unoptimized] target(s) in 58.92s

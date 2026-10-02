@@ -1,8 +1,0 @@
-[Debug] No --debug-modules flag provided
-Debug server started on port 44727
-Snapshot loaded: "/tmp/late-late-hm03-full-bag-r03x03p6/input.json"
-Skip-intro: starting at SafariZoneSecretHouse (222 x=3, y=4)
-Asset root found: "/workspace/open-pokered/crates/pokered-renderer/../../gfx"
-Audio output disabled (--no-audio).
-Running headless (no window). Press Ctrl-C to exit.
-Driven-only mode: frames advance only via debug commands.

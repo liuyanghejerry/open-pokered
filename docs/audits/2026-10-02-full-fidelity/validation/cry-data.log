@@ -1,4 +1,0 @@
-checked 151 species against data/pokemon/cries.asm
-(SfxId id space: Cry00 = 19, consecutive cries step by 1)
-
-RESULT: 0 diffs — Rust table matches the disassembly

@@ -1,7 +1,0 @@
-== s10-npcs: get_npcs: live NPCs report sane fields on the current map
-[m02] frame=1855 screen=overworld map=RedsHouse2F pos=(3,6) party=0 money=3000 effect=None
-[m03] frame=2197 screen=overworld map=PalletTown pos=(5,5) party=1 money=3000 effect=None
-   PalletTown NPCs: [(3, 8), (11, 14)]
-[s10] frame=2197 screen=overworld map=PalletTown pos=(5,5) party=1 money=3000 effect=None
-   PASS (12.3s)
-SCENARIOS 1/1 PASS

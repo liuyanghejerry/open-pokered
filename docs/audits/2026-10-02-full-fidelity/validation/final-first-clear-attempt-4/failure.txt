@@ -1,9 +1,0 @@
-Traceback (most recent call last):
-  File "/workspace/open-pokered/scripts/playthrough.py", line 1987, in main
-    fn(g)
-  File "/workspace/open-pokered/scripts/playthrough_late.py", line 623, in m22_lift_key
-    require_flag(g, "EVENT_BEAT_ROCKET_HIDEOUT_4_TRAINER_2")
-  File "/workspace/open-pokered/scripts/playthrough_late.py", line 146, in require_flag
-    assert flags.get(name), f"missing story flag {name}"
-           ^^^^^^^^^^^^^^^
-AssertionError: missing story flag EVENT_BEAT_ROCKET_HIDEOUT_4_TRAINER_2
