@@ -1087,6 +1087,51 @@ class AutonomousStoryAgent(DualStoryAgent):
                     groups[key]['rules'].append(rule)
         return added
 
+    def add_cut_route_frontiers(self, groups, facts):
+        """Keep the executable first tree when an old destination is deferred.
+
+        Walking previews cannot cross a tree. Pruning that destination before
+        calling travel used to also remove the only opportunity to discover
+        its Cut prerequisite, even with Cut already learned. Probe planning
+        geometry only; the skill still walks to the stance and uses the menu.
+        """
+        if (not any('Cut' in mon.get('moves', []) and mon.get('hp', 0) > 0
+                    for mon in facts.get('party', []))
+                or field_badge_prerequisites('Cut', facts.get('flags', {}))):
+            return
+        targets = {}
+        for group in groups.values():
+            unreachable = {route['map'] for route in
+                group.get('context', {}).get('trigger_navigation', [])
+                if not route['tile_route_found']}
+            for rule in group['rules']:
+                if (rule.map in unreachable and rule.map in self.navigation_memory
+                        and not rule.storyline.startswith('skill:')):
+                    points = tuple(self.destination_points(rule.map, rule))
+                    if points:
+                        targets.setdefault((rule.map, points), []).append(group['target'])
+        if not targets:
+            return
+        barriers = {name: set(tiles) for name, tiles in self.game.navigation_barriers().items()}
+        barriers.setdefault(facts['map'], set()).update(self.game.live_npcs(facts['map']))
+        state = {'map_name': facts['map'], 'player_x': facts['x'], 'player_y': facts['y']}
+        excluded = self.game.navigation_excluded_maps()
+        for (name, points), goals in targets.items():
+            obstacle = cut_requirement(state, name, points, self.game.last_map, barriers, excluded)
+            if not obstacle:
+                continue
+            key = ','.join(map(str, [obstacle['map'], *obstacle['tree']]))
+            target = ('terrain', key, True)
+            group = groups.setdefault('field:' + key, {'target': target,
+                'rules': [Rule('field:' + key, obstacle['map'], 'skill:field', [], [], [], target, [])],
+                'objectives': ['Clear a reachable tree on a route to a deferred goal'],
+                'context': {**obstacle,
+                    'scope': 'Planning identifies a reachable Cut stance; real navigation and the field menu remain required.'}})
+            prerequisites = group['context'].setdefault('prerequisite_for_goals', [])
+            for goal in goals:
+                if goal not in prerequisites:
+                    prerequisites.append(goal)
+
     def action_rejected(self, facts, reason):
         if reason not in ('action:no_selection', 'action:no_candidates'):
             return False
@@ -2731,6 +2776,7 @@ class AutonomousStoryAgent(DualStoryAgent):
             if group['target'][0] in ('flag', 'block', 'transport') and all(r.map in failed_maps for r in group['rules']):
                 del groups[key]  # Repeating the same failed preparation is not a new plan.
         previews = self.annotate_navigation(groups, facts, previews, prune=False)
+        self.add_cut_route_frontiers(groups, facts)
         self.transport_frontiers(groups, facts)
         self.add_mechanism_groups(groups, facts)
         self.defer_unusable_boulders(groups, facts)
@@ -3744,11 +3790,12 @@ class AutonomousStoryAgent(DualStoryAgent):
                 m['blocks'][offset] = rule.effect[2]
                 changed[name, offset] = rule.effect
             with water_planning():
-                def search(blocked):
+                excluded = self.game.navigation_excluded_maps()
+                def search(blocked, excluded_maps=excluded):
                     return pt.bfs_cross(state['map_name'], (state['player_x'], state['player_y']),
                         destination, points[0], last_map=self.game.last_map,
                         allow_ledges=True, allow_spinners=True, blocked_maps=blocked,
-                        excluded_maps=self.game.navigation_excluded_maps(),
+                        excluded_maps=excluded_maps,
                         goal_nodes={(destination, *point) for point in points})
                 # A push-back tile may merely be a shortcut to some other
                 # destination. Prefer paths preserving those known walls;
@@ -3756,6 +3803,20 @@ class AutonomousStoryAgent(DualStoryAgent):
                 path = search(observed_barriers)
                 if not path and barriers != observed_barriers:
                     path = search(barriers)
+                if not path and excluded and guarded_tiles:
+                    # Execution correctly excludes a guarded region, but using
+                    # that same exclusion to discover its unlock hides the
+                    # guard's prerequisites forever. Relax only in this plan,
+                    # and accept it only when a known causal guard is crossed
+                    # BEFORE the first excluded region. Never expose the
+                    # relaxed path as executable navigation.
+                    relaxed = search(barriers, ())
+                    for node, _ in (relaxed or [])[1:]:
+                        if node[0] in excluded:
+                            break
+                        if node in guarded_tiles:
+                            path = relaxed
+                            break
         finally:
             for name, blocks in originals.items():
                 pt.MAPS[name]['blocks'] = blocks

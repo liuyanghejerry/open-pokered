@@ -221,6 +221,14 @@ def main(argv=None):
                 shutil.copy2(extras, binary.parent / 'pokered.script_flags.json')
             result['resumed_from'] = str(args.resume)
         result['binary_sha256'] = hashlib.sha256(binary.read_bytes()).hexdigest()
+        # Preserve provenance before any long-running controller work. A
+        # process loss must not require inferring its policy/binary/parent
+        # from the worktree present at recovery time. This is NOT a checkpoint.
+        (folder / 'run-manifest.json').write_text(json.dumps({**result,
+            'status': 'starting', 'model': args.model,
+            'budgets': {'wall_seconds': args.wall_budget, 'calls': args.max_calls,
+                        'actions': args.max_actions, 'frames': args.frame_budget}},
+            ensure_ascii=False, indent=2) + '\n')
         game = agent = None
         with (folder / 'trace.jsonl').open('w') as trace:
             try:
@@ -272,6 +280,7 @@ def main(argv=None):
                 # Raising KeyboardInterrupt inside readline would leave its
                 # reply queued and misalign final observations / checkpoint.
                 signal.signal(signal.SIGINT, lambda *_: setattr(game.d, 'stop_requested', True))
+                signal.signal(signal.SIGTERM, lambda *_: setattr(game.d, 'stop_requested', True))
                 result.update(agent.run())
                 result['action_cache_hits'] = game.move_cache_hits
             except (Exception, KeyboardInterrupt) as error:

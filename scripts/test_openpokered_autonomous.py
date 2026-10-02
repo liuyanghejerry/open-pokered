@@ -1198,6 +1198,37 @@ class AutonomousTests(unittest.TestCase):
             self.assertEqual(search.call_count, 1)
             self.assertEqual(search.call_args.kwargs['blocked_maps'], original)
 
+    def test_excluded_region_unlock_requires_observed_guard_before_entry(self):
+        from types import SimpleNamespace
+        from openpokered.story_rules import literal
+        import playthrough as pt
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        condition = {'Call': {'callee': 'hasItem', 'args': [literal('DRINK')]}}
+        target = ('item', 'DRINK', True)
+        guard = Rule('guard', 'Gate', 'Gate:guard', [], [(condition, False)], [],
+                     ('movement', 'down', True), [])
+        agent.index = SimpleNamespace(rules=[guard], coordinates=lambda _: [(2, 3)],
+            frontier=lambda goal, facts: [guard] if goal == target else [])
+        barriers = {'Gate': {(2, 3), (8, 8)}}
+        agent.game = SimpleNamespace(last_map='Road', script_navigation_barriers=barriers,
+            navigation_excluded_maps=lambda: ('ClosedCity',))
+        agent.navigation_facts = {'flags': {}, 'bag': {}}
+        state = {'map_name': 'Road', 'player_x': 0, 'player_y': 0}
+        for nodes, expected in [
+            ([('Gate', 2, 3), ('ClosedCity', 1, 1)], [target]),
+            ([('ClosedCity', 1, 1), ('Gate', 2, 3)], []),
+            ([('ClosedCity', 1, 1)], [])]:
+            with self.subTest(nodes=nodes):
+                def search(*args, **kwargs):
+                    if kwargs['excluded_maps'] or kwargs['blocked_maps'] == barriers:
+                        return None
+                    self.assertEqual(kwargs['blocked_maps'], {'Gate': {(8, 8)}})
+                    return [('Road', 0, 0), *[(node, 'up') for node in nodes]]
+                with patch.object(pt, 'bfs_cross', side_effect=search):
+                    self.assertEqual(agent.discover_route_prerequisites(state, 'Room', [(1, 1)]), expected)
+                self.assertEqual(barriers, {'Gate': {(2, 3), (8, 8)}})
+                self.assertEqual(agent.game.navigation_excluded_maps(), ('ClosedCity',))
+
     def test_puzzle_walk_avoids_fall_holes_and_restores_navigation_barriers(self):
         import playthrough as pt
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
@@ -2637,11 +2668,23 @@ class AutonomousTests(unittest.TestCase):
             agent.collection_audit_pending = {}
             agent.battle_defeats, agent.defeat_preparation = [], 0
             agent.first_clear_verification, agent.mechanism_goal = None, None
+            def verify_start_manifest():
+                manifest = json.loads(next((path / 'out').glob('*/run-manifest.json')).read_text())
+                self.assertEqual(manifest['status'], 'starting')
+                self.assertEqual(manifest['preference'], 'level')
+                self.assertFalse(manifest['success'])
+                self.assertNotIn('development_checkpoint', manifest)
+                self.assertTrue(manifest['policy_sha256'])
+                self.assertTrue(manifest['binary_sha256'])
+                self.assertEqual(manifest['budgets']['wall_seconds'], 7200)
+                return {}
+            agent.run.side_effect = verify_start_manifest
             with patch.object(run_autonomous.argparse.ArgumentParser, 'add_argument', record), \
                     patch.object(run_autonomous, 'TypeSafeClient'), \
                     patch.object(run_autonomous, 'JevGame', return_value=game), \
                     patch.object(run_autonomous, 'boot_new_game', return_value={'screen': 'overworld'}), \
                     patch.object(run_autonomous, 'AutonomousStoryAgent', return_value=agent) as factory, \
+                    patch.object(run_autonomous.signal, 'signal') as signals, \
                     patch('sys.stdout', new_callable=io.StringIO):
                 code = run_autonomous.main(['--preference', 'level',
                                             '--binary', str(path / 'pokered-app'),
@@ -2651,6 +2694,11 @@ class AutonomousTests(unittest.TestCase):
             self.assertEqual(options['--jev-provider']['choices'],
                              ['auto', 'openrouter', 'typesafe'])
             self.assertEqual(factory.call_args.kwargs['preference'], 'level')
+            handlers = dict(call.args for call in signals.call_args_list)
+            for signal in (run_autonomous.signal.SIGINT, run_autonomous.signal.SIGTERM):
+                game.d.stop_requested = False
+                handlers[signal]()
+                self.assertTrue(game.d.stop_requested)
             self.assertEqual(code, 1)
             folder = next((path / 'out').iterdir())
             self.assertFalse((folder / 'failure.txt').exists())  # The stubbed run reached the end.
@@ -3502,6 +3550,77 @@ class AutonomousTests(unittest.TestCase):
         self.assertEqual([rule.id for rule in groups['mixed']['rules']], ['key'])
         self.assertEqual(groups['mixed']['context']['deferred_trigger_maps'], [name])
         agent.game.nav_to_map.assert_not_called()
+
+    def test_deferred_goal_keeps_reachable_cut_prerequisite_without_execution(self):
+        from types import SimpleNamespace
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.navigation_memory = {'Gym': {}}
+        agent.game = Mock(last_map='Road')
+        barriers = {'Road': {(9, 9)}}
+        agent.game.navigation_barriers.return_value = barriers
+        agent.game.live_npcs.return_value = {(3, 3)}
+        agent.game.navigation_excluded_maps.return_value = ('ClosedCity',)
+        agent.destination_points = Mock(return_value=[(1, 1)])
+        goal = ('flag', 'BADGE', True)
+        rule = Rule('leader', 'Gym', 'Gym:leader', [], [], [], goal, [])
+        def groups():
+            return {'boss': {'target': goal, 'rules': [rule], 'context': {
+                'trigger_navigation': [{'map': 'Gym', 'tile_route_found': False}]}},
+                'other': {'target': ('item', 'TM', True), 'rules': [rule], 'context': {
+                'trigger_navigation': [{'map': 'Gym', 'tile_route_found': False}]}}}
+        facts = {'map': 'Road', 'x': 2, 'y': 3, 'flags': {'EVENT_BEAT_MISTY': True},
+                 'party': [{'moves': ['Cut'], 'hp': 10}]}
+        obstacle = {'move': 'Cut', 'map': 'City', 'tree': [4, 5],
+                    'stance': [4, 6], 'direction': 'up', 'destination': 'Gym'}
+        with patch('openpokered.autonomous_story.cut_requirement', return_value=obstacle) as probe:
+            offered = groups()
+            agent.add_cut_route_frontiers(offered, facts)
+            added = offered['field:City,4,5']
+            self.assertEqual(added['target'], ('terrain', 'City,4,5', True))
+            self.assertEqual(added['context']['prerequisite_for_goals'], [goal, ('item', 'TM', True)])
+            self.assertEqual(probe.call_count, 1)
+            self.assertEqual(probe.call_args.args[-2], {'Road': {(9, 9), (3, 3)}})
+            self.assertEqual(probe.call_args.args[-1], ('ClosedCity',))
+            self.assertEqual(barriers, {'Road': {(9, 9)}})
+            agent.active = added
+            candidates, bindings = agent.action_candidates(facts)
+            self.assertEqual([value[0] for value in bindings.values()], ['cut:0'])
+            agent.game.nav_to_map.assert_not_called()
+            for missing in [dict(facts, flags={}), dict(facts, party=[{'moves': ['Cut'], 'hp': 0}]),
+                            dict(facts, party=[{'moves': ['Tackle'], 'hp': 10}])]:
+                offered = groups()
+                agent.add_cut_route_frontiers(offered, missing)
+                self.assertNotIn('field:City,4,5', offered)
+            probe.assert_called_once()
+        with patch('openpokered.autonomous_story.cut_requirement', return_value=None):
+            offered = groups()
+            agent.add_cut_route_frontiers(offered, facts)
+            self.assertEqual(set(offered), {'boss', 'other'})
+
+    def test_cut_frontier_uses_real_regrown_celadon_gym_tree(self):
+        import playthrough as pt
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.navigation_memory = {'CeladonGym': {}}
+        agent.game = Mock(last_map='CeladonCity')
+        agent.game.navigation_barriers.return_value = {}
+        agent.game.live_npcs.return_value = set()
+        agent.game.navigation_excluded_maps.return_value = ('SaffronCity',)
+        agent.destination_points = Mock(return_value=[(4, 5)])
+        goal = ('flag', 'EVENT_BEAT_ERIKA', True)
+        rule = Rule('leader', 'CeladonGym', 'CeladonGym:leader', [], [], [], goal, [])
+        groups = {'boss': {'target': goal, 'rules': [rule], 'context': {
+            'trigger_navigation': [{'map': 'CeladonGym', 'tile_route_found': False}]}}}
+        original = {name: row['blocks'] for name, row in pt.MAPS.items()}
+        facts = {'map': 'CeladonCity', 'x': 20, 'y': 17,
+                 'flags': {'EVENT_BEAT_MISTY': True}, 'party': [{'moves': ['Cut'], 'hp': 10}]}
+        agent.add_cut_route_frontiers(groups, facts)
+        added = [value for key, value in groups.items() if key.startswith('field:')]
+        self.assertEqual(len(added), 1)
+        self.assertEqual(added[0]['context']['map'], 'CeladonCity')
+        self.assertEqual(added[0]['context']['destination'], 'CeladonGym')
+        self.assertEqual(added[0]['context']['prerequisite_for_goals'], [goal])
+        for name, blocks in original.items():
+            self.assertIs(pt.MAPS[name]['blocks'], blocks)
 
     def test_battle_preparation_uses_selected_trainer_without_overwriting_causal_context(self):
         from types import SimpleNamespace
