@@ -2753,15 +2753,16 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 }
             }
             script_bridge::ScriptEffect::NamingScreen {
-                species: _,
+                species,
                 naming_state,
                 started,
                 result_name,
             } => {
                 if !*started {
-                    let ns = crate::naming_screen::NamingScreenState::new(
+                    let mut ns = crate::naming_screen::NamingScreenState::new(
                         crate::naming_screen::NamingScreenType::Pokemon,
                     );
+                    ns.species = pokered_data::species::Species::from_scene_name(species);
                     *naming_state = Some(ns.clone());
                     *pending_naming_screen = Some(ns);
                     *started = true;

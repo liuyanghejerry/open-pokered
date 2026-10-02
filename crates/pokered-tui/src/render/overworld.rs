@@ -394,7 +394,7 @@ pub fn draw_overworld(
     }
 
     if let Some(ref naming) = screen.pending_naming_screen {
-        super::draw_naming_screen(naming, fb);
+        super::draw_naming_screen(naming, res, fb, pokered_core::game_state::Lang::En);
         return;
     }
 

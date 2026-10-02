@@ -55,7 +55,7 @@ impl TitleVisualKey {
             version_text_visible: state.version_text_visible,
             version_scroll_progress: state.version_scroll_progress.to_bits(),
             mon_scroll_offset: state.mon_scroll_offset,
-            effect_frame: if state.phase == TitlePhase::FadeOut {
+            effect_frame: if matches!(state.phase , TitlePhase::FadeOut | TitlePhase::BallToss) {
                 state.frame_counter
             } else {
                 0
@@ -949,7 +949,13 @@ impl PartyVisualKey {
             icon_frame: if state.party().is_empty() {
                 0
             } else {
-                ((game.frame_count / 16) & 1) as u8
+                match pokered_renderer::mon_icon::party_icon_frame(game.frame_count ,
+                    state.party() [state.cursor()].hp,
+                    state.party()[state.cursor()].max_hp,
+                ) {
+                    pokered_renderer::mon_icon::IconFrame::Frame1 => 0,
+                    pokered_renderer::mon_icon::IconFrame::Frame2 => 1,
+                }
             },
             language: game.state.config.language,
         }
@@ -1537,22 +1543,30 @@ impl AuxiliaryMenuVisualKey {
             hash_byte(&mut list_hash, 0xff);
         }
 
-        let scroll_offset = menu.scroll_offset(7);
+        let scroll_offset = menu.scroll_offset(if kind == AuxiliaryMenuKind::Elevator {
+            3
+        } else {
+            7});
         let x = match kind {
-            AuxiliaryMenuKind::Elevator => 60,
+            AuxiliaryMenuKind::Elevator => 40,
             AuxiliaryMenuKind::FilterBag => 44,
         };
         Some(Self {
             kind,
             list_hash,
             scroll_offset,
-            cursor: (x, 30 + (menu.selected_index() - scroll_offset) as u32 * 14),
+            cursor: (x, if kind == AuxiliaryMenuKind::Elevator {
+                    32 + (menu.selected_index() - scroll_offset) as u32 * 16
+                } else {
+                    30 + (menu.selected_index() - scroll_offset) as u32 * 14},
+            ),
             language: game.state.config.language,
         })
     }
 
     fn cursor_change_from(&self, previous: &Self) -> Option<((u32, u32), (u32, u32))> {
-        (self.kind == previous.kind
+        (self.kind != AuxiliaryMenuKind::Elevator
+            && self.kind == previous.kind
             && self.list_hash == previous.list_hash
             && self.scroll_offset == previous.scroll_offset
             && self.language == previous.language

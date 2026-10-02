@@ -337,7 +337,7 @@ pub fn selection_damage(cursor: usize) -> crate::DamageRect {
 
 /// Animated icon region for one party row.
 pub fn icon_damage(cursor: usize) -> crate::DamageRect {
-    crate::DamageRect::new(8, cursor as u32 * 24, 16, 16)
+    crate::DamageRect::new(8, cursor as u32 * 24, 16, 17)
 }
 
 /// Cursor ink region for an action/choose-move overlay.

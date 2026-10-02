@@ -69,7 +69,8 @@ fn render_evolution_phases() {
     for _ in 0..16 {
         anim.tick(none);
     }
-    assert!(anim.black_palette());
+    assert!(!anim.black_palette());
+    assert!(anim.sgb_black_palette_requested());
     assert_eq!(anim.visible_species(), Some(Species::Ivysaur));
     render(&anim, &mut rm, "evolution_2_morph_new.png");
     // 3 frames later the flicker shows the old species again.

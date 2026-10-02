@@ -951,7 +951,7 @@ fn draw_overworld_impl(
     }
 
     if let Some(ref naming) = screen.pending_naming_screen {
-        super::draw_naming_screen(naming, fb, language);
+        super::draw_naming_screen(naming, res, fb, language);
         return;
     }
 

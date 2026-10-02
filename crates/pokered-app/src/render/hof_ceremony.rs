@@ -11,10 +11,6 @@
 //! (`HoFDisplayPlayerStats`) with the player's front pic still on screen:
 //! name, PLAY TIME, MONEY, #DEX seen/owned and the rating.
 //!
-//! Scoped simplifications: the palette fades are plain white flashes, and the
-//! front/back pics keep the reimpl's native sprite sizes (the mon front pics
-//! are 40×40 here vs the original's 7×7-tile 56×56).
-
 use crate::alloc_prelude::*;
 use pokered_core::game_state::Lang;
 use pokered_core::hof_ceremony::{HofCeremonyState, HofPhase, HofScrollStage};
@@ -25,8 +21,8 @@ use pokered_renderer::resource::{AssetCategory, ResourceManager};
 use pokered_renderer::{FrameBuffer, Rgba, TILE_SIZE};
 
 use super::battle::scale_sprite_by_two;
-use pokered_data::ui_text::zh_pc_line;
 use super::{blit_tileset, draw_text_box, species_to_sprite_name};
+use pokered_data::ui_text::zh_pc_line;
 
 const FG: Rgba = Rgba::BLACK;
 const T: u32 = 8;
@@ -52,6 +48,7 @@ pub struct HofVisualKey {
     scroll_x: u16,
     content_hash: u32,
     is_zh: bool,
+    fade_step: u8,
 }
 
 pub fn hof_visual_key(hof: &HofCeremonyState, lang: Lang) -> HofVisualKey {
@@ -63,6 +60,14 @@ pub fn hof_visual_key(hof: &HofCeremonyState, lang: Lang) -> HofVisualKey {
         scroll_x: 0,
         content_hash: 0x811c_9dc5,
         is_zh,
+        fade_step: if matches!(
+            hof.phase(),
+            HofPhase::FadeOut | HofPhase::MonFade | HofPhase::FinalFade
+        ) {
+            1 + hof.fade_step()
+        } else {
+            0
+        },
     };
     let hash_byte = |hash: &mut u32, byte: u8| {
         *hash = (*hash ^ byte as u32).wrapping_mul(0x0100_0193);
@@ -100,7 +105,7 @@ pub fn hof_visual_key(hof: &HofCeremonyState, lang: Lang) -> HofVisualKey {
             let Some(entry) = hof.current_entry() else {
                 return key;
             };
-            key.visual_phase = if hof.phase() == HofPhase::MonText {
+            key.visual_phase = if matches!(hof.phase(), HofPhase::MonText | HofPhase::MonFade) {
                 3
             } else {
                 2
@@ -112,7 +117,7 @@ pub fn hof_visual_key(hof: &HofCeremonyState, lang: Lang) -> HofVisualKey {
                 hash_byte(&mut key.content_hash, byte);
             }
         }
-        HofPhase::PlayerStats => {
+        HofPhase::PlayerStats | HofPhase::FinalFade => {
             key.visual_phase = 5;
             let stats = hof.stats();
             for byte in stats.name.bytes() {
@@ -127,10 +132,7 @@ pub fn hof_visual_key(hof: &HofCeremonyState, lang: Lang) -> HofVisualKey {
                 hash_byte(&mut key.content_hash, byte);
             }
         }
-        HofPhase::FadeOut
-        | HofPhase::Opening
-        | HofPhase::FinalFade
-        | HofPhase::Done => {}
+        HofPhase::FadeOut | HofPhase::Opening | HofPhase::Done => {}
     }
     key
 }
@@ -143,9 +145,16 @@ pub fn draw_hof_ceremony(
     lang: Lang,
 ) {
     let is_zh = lang == Lang::Zh;
+    if hof.phase() == HofPhase::FadeOut {
+        super::apply_gb_palette(
+            fb,
+            &dotzuki_renderer::transition::FADE_PALETTES[5 + hof.fade_step() as usize],
+        );
+        return;
+    }
     fb.clear(Rgba::WHITE);
     match hof.phase() {
-        HofPhase::FadeOut | HofPhase::Opening | HofPhase::FinalFade | HofPhase::Done => {}
+        HofPhase::FadeOut | HofPhase::Opening | HofPhase::Done => {}
         HofPhase::MonScroll => {
             if let Some(entry) = hof.current_entry() {
                 draw_scroll_pic(
@@ -161,7 +170,7 @@ pub fn draw_hof_ceremony(
             if let Some(entry) = hof.current_entry() {
                 draw_mon_front(entry.species, FRONT_REST_X, FRONT_REST_Y, resources, fb);
                 draw_mon_info(entry, fb, is_zh);
-                if hof.phase() == HofPhase::MonText {
+                if matches!(hof.phase(), HofPhase::MonText | HofPhase::MonFade) {
                     // hlcoord 2, 13 / "HALL OF FAME" (hall_of_fame.asm:96-99).
                     draw_text_box(fb, 2 * T, 13 * T, 14, 2, FG);
                     draw_text(
@@ -175,20 +184,20 @@ pub fn draw_hof_ceremony(
             }
         }
         HofPhase::PlayerScroll => {
-            draw_scroll_pic(
-                None,
-                hof.scroll_stage(),
-                hof.scroll_pic_x(),
-                resources,
-                fb,
-            );
+            draw_scroll_pic(None, hof.scroll_stage(), hof.scroll_pic_x(), resources, fb);
         }
-        HofPhase::PlayerStats => {
+        HofPhase::PlayerStats | HofPhase::FinalFade => {
             // The player's front pic stays on screen (HoFShowMonOrPlayer left
             // it at hlcoord 12,5; HoFDisplayPlayerStats does not clear).
             draw_player_front(FRONT_REST_X, FRONT_REST_Y, resources, fb);
             draw_player_stats(hof, fb, is_zh);
         }
+    }
+    if matches!(hof.phase(), HofPhase::MonFade | HofPhase::FinalFade) {
+        super::apply_gb_palette(
+            fb,
+            &dotzuki_renderer::transition::FADE_PALETTES[5 + hof.fade_step() as usize],
+        );
     }
 }
 
@@ -229,7 +238,7 @@ fn draw_mon_front(
     if let Some(rm) = resources.as_mut() {
         let sprite = species_to_sprite_name(&format!("{}", species));
         if let Ok(cached) = rm.load_pokemon_front(&sprite) {
-            blit_native(fb, cached, x, y);
+            super::blit_front_pic(fb, cached, x as i32, y as i32, false);
         }
     }
 }
@@ -266,12 +275,7 @@ fn draw_player_front(
 
 /// RedPicBack is scaled 4×4 → 7×7 (`ScaleSpriteByTwo`, hall_of_fame.asm
 /// HoFLoadPlayerPics).
-fn draw_player_back(
-    x: u32,
-    y: u32,
-    resources: &mut Option<ResourceManager>,
-    fb: &mut FrameBuffer,
-) {
+fn draw_player_back(x: u32, y: u32, resources: &mut Option<ResourceManager>, fb: &mut FrameBuffer) {
     if let Some(rm) = resources.as_mut() {
         if let Ok(cached) = rm.load(AssetCategory::Player, "redb") {
             blit_scaled(fb, cached, x, y);
@@ -286,7 +290,14 @@ fn blit_native(
     y: u32,
 ) {
     let w_tiles = cached.source_size.0 / TILE_SIZE;
-    blit_tileset(fb, &cached.tileset, x, y, w_tiles, &GRAYSCALE_SPRITE_PALETTE);
+    blit_tileset(
+        fb,
+        &cached.tileset,
+        x,
+        y,
+        w_tiles,
+        &GRAYSCALE_SPRITE_PALETTE,
+    );
 }
 
 fn blit_scaled(
@@ -364,7 +375,11 @@ fn draw_player_stats(hof: &HofCeremonyState, fb: &mut FrameBuffer, is_zh: bool) 
     };
     draw_text(&owned, T, 13 * T, FG, fb);
     for (i, line) in stats.rating.split('\n').take(2).enumerate() {
-        let shown = if is_zh { zh_pc_line(line) } else { line.to_string() };
+        let shown = if is_zh {
+            zh_pc_line(line)
+        } else {
+            line.to_string()
+        };
         draw_text(&shown, T, (14 + i as u32) * T, FG, fb);
     }
 }
@@ -390,11 +405,7 @@ mod tests {
         }
     }
 
-    fn assert_framebuffers_equal(
-        actual: &FrameBuffer,
-        expected: &FrameBuffer,
-        context: &str,
-    ) {
+    fn assert_framebuffers_equal(actual: &FrameBuffer, expected: &FrameBuffer, context: &str) {
         assert_eq!(actual.width(), expected.width());
         assert_eq!(actual.height(), expected.height());
         for y in 0..actual.height() {

@@ -207,6 +207,8 @@ pub struct CreditsState {
     screen_idx: usize,
     phase: CreditsPhase,
     frame: u16,
+    opening_remaining: u16,
+    music_pending: bool,
 }
 
 impl CreditsState {
@@ -216,7 +218,24 @@ impl CreditsState {
             screen_idx: 0,
             phase: CreditsPhase::Hold,
             frame: 0,
+            opening_remaining: 0,
+            music_pending: false,
         }
+    }
+
+    /// HallOfFamePC clears for 100 frames, starts music, then waits 128.
+    pub fn new_with_opening(version: GameVersion) -> Self {
+        let mut state = Self::new(version);
+        state.opening_remaining = 228;
+        state
+    }
+
+    pub fn opening_clear(&self) -> bool {
+        self.opening_remaining > 128
+    }
+
+    pub fn take_music_pending(&mut self) -> bool {
+        core::mem::take(&mut self.music_pending)
     }
 
     pub fn phase(&self) -> CreditsPhase {
@@ -229,21 +248,27 @@ impl CreditsState {
 
     /// The screen being held/scrolled (`None` once "THE END" is reached).
     pub fn current_screen(&self) -> Option<&CreditsScreen> {
-        if self.phase == CreditsPhase::TheEnd || self.phase == CreditsPhase::Done {
+        if self.opening_remaining > 0
+            || self.phase == CreditsPhase::TheEnd
+            || self.phase == CreditsPhase::Done
+        {
             return None;
         }
         self.screens.get(self.screen_idx)
     }
 
-    /// Fade-in ramp for fade screens: 0..=4 palette steps
-    /// (`HoFGBPalettes`, credits.asm:135-140); 4 (fully visible) afterwards
+    /// Fade-in ramp for fade screens: 0..=3 palette steps
+    /// (`HoFGBPalettes`, credits.asm:133-137); 3 (fully visible) afterwards
     /// and on non-fade screens.
     pub fn fade_step(&self) -> u8 {
         match self.current_screen() {
             Some(screen) if self.phase == CreditsPhase::Hold && screen.fades_in() => {
-                ((self.frame / 5) as u8).min(4)
+                ((self.frame / 5) as u8).min(3)
             }
-            _ => 4,
+            _ if self.phase == CreditsPhase::TheEnd => {
+                (self.frame.saturating_sub(THE_END_DELAY_FRAMES) / 5).min(3) as u8
+            }
+            _ => 3,
         }
     }
 
@@ -277,16 +302,25 @@ impl CreditsState {
     /// True once the 600-frame dwell has elapsed and a button dismisses the
     /// roll (the original's `WaitForTextScrollButtonPress`).
     pub fn awaiting_final_button(&self) -> bool {
-        self.phase == CreditsPhase::TheEnd && self.frame >= THE_END_DELAY_FRAMES + POST_END_FRAMES
+        self.phase == CreditsPhase::TheEnd
+            && self.frame >= THE_END_DELAY_FRAMES + FADE_IN_FRAMES + POST_END_FRAMES
     }
 
     /// Advance one frame. Returns `true` on the frame the roll completes.
     pub fn update_frame(&mut self, input: CreditsInput) -> bool {
+        if self.opening_remaining > 0 {
+            self.opening_remaining -= 1;
+            if self.opening_remaining == 128 {
+                self.music_pending = true;
+            }
+            return false;
+        }
         self.frame += 1;
         match self.phase {
             CreditsPhase::Hold => {
                 let screen = self.screens[self.screen_idx];
-                if self.frame >= screen.hold_frames() {
+                let fade = if screen.fades_in() { FADE_IN_FRAMES } else { 0 };
+                if self.frame >= screen.hold_frames() + fade {
                     self.frame = 0;
                     if screen.mon().is_some() {
                         self.phase = CreditsPhase::MonScroll;
@@ -384,11 +418,11 @@ mod tests {
             s.update_frame(CreditsInput::none());
         }
         assert_eq!(s.fade_step(), 1);
-        for _ in 0..(HOLD_FADE_MON - 5) {
+        for _ in 0..(HOLD_FADE_MON + FADE_IN_FRAMES - 5) {
             s.update_frame(CreditsInput::none());
         }
         assert_eq!(s.phase(), CreditsPhase::MonScroll);
-        assert_eq!(s.fade_step(), 4);
+        assert_eq!(s.fade_step(), 3);
         for _ in 0..MON_SCROLL_FRAMES {
             s.update_frame(CreditsInput::none());
         }
@@ -412,11 +446,37 @@ mod tests {
         // Buttons during the 600-frame dwell do nothing (not skippable).
         s.update_frame(CreditsInput { a: true, b: false });
         assert_eq!(s.phase(), CreditsPhase::TheEnd);
-        for _ in 0..POST_END_FRAMES {
+        for _ in 0..POST_END_FRAMES + FADE_IN_FRAMES {
             s.update_frame(CreditsInput::none());
         }
         assert!(s.awaiting_final_button());
         assert!(s.update_frame(CreditsInput { a: true, b: false }));
         assert_eq!(s.phase(), CreditsPhase::Done);
+    }
+}
+#[cfg(test)]
+mod fidelity_timing_tests {
+    use super::*;
+    #[test]
+    fn credits_opening_clears_for_one_hundred_frames_then_waits_128_with_music() {
+        let mut credits = CreditsState::new_with_opening(GameVersion::Red);
+        for _ in 0..99 {
+            assert!(credits.opening_clear());
+            assert!(credits.current_screen().is_none());
+            credits.update_frame(CreditsInput::default());
+            assert!(!credits.take_music_pending());
+        }
+        assert!(credits.opening_clear());
+        credits.update_frame(CreditsInput::default());
+        assert!(!credits.opening_clear());
+        assert!(credits.take_music_pending());
+        for _ in 0..127 {
+            assert!(credits.current_screen().is_none());
+            credits.update_frame(CreditsInput::default());
+        }
+        assert!(credits.current_screen().is_none());
+        credits.update_frame(CreditsInput::default());
+        assert!(credits.current_screen().is_some());
+        assert_eq!(credits.fade_step(), 0);
     }
 }

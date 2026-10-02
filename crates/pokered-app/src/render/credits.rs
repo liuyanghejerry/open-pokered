@@ -8,22 +8,20 @@
 use crate::alloc_prelude::*;
 use pokered_core::credits::{CreditsPhase, CreditsState};
 use pokered_renderer::embedded_font::draw_text;
-use pokered_renderer::palette::{Palette, GRAYSCALE_SPRITE_PALETTE};
+use pokered_renderer::palette::Palette;
 use pokered_renderer::resource::ResourceManager;
-use pokered_renderer::{FrameBuffer, Rgba, TILE_SIZE};
+use pokered_renderer::{FrameBuffer, Rgba};
 
 use super::species_to_sprite_name;
 
-const FG: Rgba = Rgba::BLACK;
 const T: u32 = 8;
 
 /// `HoFGBPalettes` fade ramp (credits.asm:135-140): 4 steps from white to
 /// full black text.
-const FADE_SHADES: [Rgba; 5] = [
+const FADE_SHADES: [Rgba; 4] = [
     Rgba::WHITE,
-    Rgba::rgb(0xC0, 0xC0, 0xC0),
-    Rgba::rgb(0x80, 0x80, 0x80),
-    Rgba::rgb(0x40, 0x40, 0x40),
+    Rgba::rgb(0xAA, 0xAA, 0xAA),
+    Rgba::rgb(0x55, 0x55, 0x55),
     Rgba::BLACK,
 ];
 
@@ -47,9 +45,14 @@ pub fn credits_visual_key(roll: &CreditsState) -> CreditsVisualKey {
         fade_step: 0,
         mon_scroll_step: 0,
     };
+    if roll.opening_clear() {
+        key.visual_phase = 4;
+        return key;
+    }
     match roll.phase() {
         CreditsPhase::TheEnd if roll.the_end_visible() => {
             key.visual_phase = 3;
+            key.fade_step = roll.fade_step();
             return key;
         }
         CreditsPhase::TheEnd | CreditsPhase::Done => return key,
@@ -76,20 +79,14 @@ pub fn credits_visual_key(roll: &CreditsState) -> CreditsVisualKey {
     } else {
         hash_byte(&mut key.screen_hash, 0);
     }
-    key.visual_phase = if roll.phase() == CreditsPhase::Hold { 1 } else { 2 };
+    key.visual_phase = if roll.phase() == CreditsPhase::Hold {
+        1
+    } else {
+        2
+    };
     key.fade_step = roll.fade_step();
     key.mon_scroll_step = roll.mon_scroll_step();
     key
-}
-
-/// Solid-black silhouette palette for the scrolling mon
-/// (`ld a, %11111100 / ldh [rBGP]`, credits.asm:104-106).
-fn silhouette_palette() -> Palette {
-    let mut p = GRAYSCALE_SPRITE_PALETTE;
-    p.colors[1] = Rgba::BLACK;
-    p.colors[2] = Rgba::BLACK;
-    p.colors[3] = Rgba::BLACK;
-    p
 }
 
 /// Expand the original `$54` "POKé insertion" control char (`#`,
@@ -123,6 +120,9 @@ pub fn draw_credits(
     // Black letterbox bars over a white middle band (FillFourRowsWithBlack ×
     // 2, credits.asm:14-17).
     fb.clear(Rgba::WHITE);
+    if roll.opening_clear() {
+        return;
+    }
     for y in 0..(4 * T) {
         for x in 0..fb.width() {
             fb.set_pixel(x, y, Rgba::BLACK);
@@ -140,7 +140,27 @@ pub fn draw_credits(
         CreditsPhase::TheEnd => {
             if roll.the_end_visible() {
                 // hlcoord 4,8 "T H E  E N D" (TheEndTextString).
-                draw_text("T H E  E N D", 4 * T, 8 * T, FG, fb);
+                if let Some(rm) = resources.as_mut() {
+                    if let Ok(cached) = rm.load(
+                        pokered_renderer::resource::AssetCategory::Credits,
+                        "the_end",
+                    ) {
+                        let ink = FADE_SHADES[roll.fade_step() as usize];
+                        let palette = Palette::new(&[Rgba::WHITE, ink, ink, ink]);
+                        for (column, index) in [0, 1, 2, 2, 3, 4].into_iter().enumerate() {
+                            let x = [4, 6, 8, 11, 13, 15][column] * T;
+                            super::blit_single_tile(fb, &cached.tileset, index, x, 8 * T, &palette);
+                            super::blit_single_tile(
+                                fb,
+                                &cached.tileset,
+                                index + 5,
+                                x,
+                                9 * T,
+                                &palette,
+                            );
+                        }
+                    }
+                }
             }
         }
         CreditsPhase::Done => {}
@@ -198,7 +218,11 @@ fn draw_scrolling_band(
                 continue;
             }
             // Left-edge clip: drop whole glyphs that start off-screen.
-            let skip = if x < 0 { ((-x) as usize).div_ceil(8) } else { 0 };
+            let skip = if x < 0 {
+                ((-x) as usize).div_ceil(8)
+            } else {
+                0
+            };
             let visible = skip_glyphs(&text, skip.min(glyph_count));
             if visible.is_empty() {
                 continue;
@@ -213,23 +237,17 @@ fn draw_scrolling_band(
             if let Some(rm) = resources.as_mut() {
                 let sprite = species_to_sprite_name(&format!("{}", species));
                 if let Ok(cached) = rm.load_pokemon_front(&sprite) {
-                    let w_tiles = cached.source_size.0 / TILE_SIZE;
-                    let w_px = cached.source_size.0 as i32;
                     let x = 160 - b;
-                    if x + w_px > 0 && x < fb.width() as i32 {
-                        let pal = silhouette_palette();
-                        blit_silhouette_left_clipped(
-                            fb,
-                            &cached.tileset,
-                            x,
-                            6 * T,
-                            w_tiles,
-                            &pal,
-                        );
+                    if x + 56 > 0 && x < fb.width() as i32 {
+                        super::blit_front_pic(fb, cached, x, (6 * T) as i32, false);
                     }
                 }
             }
         }
+    }
+
+    if roll.phase() == CreditsPhase::MonScroll {
+        fb.apply_bgp(0xfc);
     }
 
     // 3. White window sweep: tiles 4-13 right of the mon's right edge.
@@ -238,46 +256,6 @@ fn draw_scrolling_band(
         for y in 4 * T..14 * T {
             for x in x0..fb.width() {
                 fb.set_pixel(x, y, Rgba::WHITE);
-            }
-        }
-    }
-}
-
-/// `blit_tileset` with a left-edge clip: pixels at negative x are dropped
-/// instead of being shifted to x=0 (the mon slides in/out at the screen
-/// edges during the credits scroll).
-fn blit_silhouette_left_clipped(
-    fb: &mut FrameBuffer,
-    tileset: &pokered_renderer::tile::TileSet,
-    x: i32,
-    y: u32,
-    tiles_per_row: u32,
-    palette: &Palette,
-) {
-    let x0 = x.max(0) as u32;
-    // Preserve the release-build clipping calculation without relying on an
-    // overflowing signed-to-unsigned subtraction in debug builds.
-    let skip_px = if x < 0 { x.unsigned_abs() } else { 0 };
-    for idx in 0..tileset.len() {
-        let tile = tileset.get(idx);
-        let tcol = (idx as u32) % tiles_per_row;
-        let trow = (idx as u32) / tiles_per_row;
-        let px = x0 + tcol * TILE_SIZE;
-        if px + TILE_SIZE <= skip_px {
-            continue; // whole tile off-screen left
-        }
-        let py = y + trow * TILE_SIZE;
-        for row in 0..TILE_SIZE {
-            let rgba_row = tile.render_row(row as usize, palette);
-            for col in 0..TILE_SIZE {
-                let sx = px + col;
-                if sx < skip_px || sx >= fb.width() || py + row >= fb.height() {
-                    continue;
-                }
-                let c = rgba_row[col as usize];
-                if c != Rgba::TRANSPARENT {
-                    fb.set_pixel(sx, py + row, c);
-                }
             }
         }
     }
@@ -304,11 +282,7 @@ mod tests {
         }
     }
 
-    fn assert_framebuffers_equal(
-        actual: &FrameBuffer,
-        expected: &FrameBuffer,
-        context: &str,
-    ) {
+    fn assert_framebuffers_equal(actual: &FrameBuffer, expected: &FrameBuffer, context: &str) {
         assert_eq!(actual.width(), expected.width());
         assert_eq!(actual.height(), expected.height());
         for y in 0..actual.height() {

@@ -1,24 +1,25 @@
 use crate::alloc_prelude::*;
+use pokered_core::bag_screen::{BagPhase, BagScreenState};
 use pokered_core::game_state::Lang;
-use pokered_core::items::{BuyMenuState, BuyResult, MartPhase, MartState, SellMenuState, SellResult};
+use pokered_core::items::{BuyMenuState, BuyResult, MartPhase, MartState, SellMenuState, SellResult,
+};
 use pokered_core::main_menu::MainMenuState;
 use pokered_core::options_menu::OptionsMenuState;
 use pokered_core::party_screen::{PartyScreenPhase, PartyScreenState};
 use pokered_core::save_menu::{SaveMenuState, YesNoChoice};
 use pokered_core::start_menu::StartMenuState;
 use pokered_core::stats_screen::{StatsPage, StatsScreenState};
-use pokered_data::mon_party_icons::{icon_for_species, IconKind};
 use pokered_data::impl_traits::PokemonRenderData;
 use pokered_data::lang_data;
-use pokered_data::ui_layout::schema::{MART_CONFIRM_LAYOUT, MART_MAIN_MENU_LAYOUT, MART_QUANTITY_LAYOUT, MART_RESULT_DIALOG_LAYOUT, MAIN_DEFAULT_LAYOUT, START_DEFAULT_LAYOUT, OPTIONS_DEFAULT_LAYOUT, SAVE_DEFAULT_LAYOUT, SAVE_ASK_PROMPT_LAYOUT, PARTY_DEFAULT_LAYOUT, PARTY_ENTRY_LAYOUT, STATS_PAGE1_LAYOUT, STATS_PAGE2_LAYOUT, BAG_DEFAULT_LAYOUT};
-use pokered_renderer::mon_icon::{draw_mon_icon, load_mon_icon_tiles, IconFrame};
+use pokered_data::mon_party_icons::{icon_for_species, IconKind};
+use pokered_data::ui_layout::schema::{BAG_DEFAULT_LAYOUT, MAIN_DEFAULT_LAYOUT, MART_CONFIRM_LAYOUT, MART_MAIN_MENU_LAYOUT, MART_QUANTITY_LAYOUT, MART_RESULT_DIALOG_LAYOUT, OPTIONS_DEFAULT_LAYOUT, PARTY_DEFAULT_LAYOUT, PARTY_ENTRY_LAYOUT, SAVE_ASK_PROMPT_LAYOUT, SAVE_DEFAULT_LAYOUT, START_DEFAULT_LAYOUT, STATS_PAGE1_LAYOUT, STATS_PAGE2_LAYOUT, };
+use pokered_renderer::mon_icon::{draw_mon_icon, icon_y_offset, load_mon_icon_tiles, party_icon_frame, IconFrame};
 use pokered_renderer::palette::GRAYSCALE_SPRITE_PALETTE;
 use pokered_renderer::party_hp_bar::draw_party_hp_bar;
 use pokered_renderer::resource::ResourceManager;
 use pokered_renderer::{FrameBuffer, TILE_SIZE};
 use pokered_ui::backends::FrameBufferPainter;
 use pokered_ui::{menus, InkColor, Painter, TilePos, TileRect, Ui};
-use pokered_core::bag_screen::{BagPhase, BagScreenState};
 
 use super::{blit_tileset, species_to_sprite_name};
 
@@ -151,13 +152,13 @@ pub fn draw_party_screen(
         for (i, pokemon) in state.party().iter().enumerate() {
             let kind = icon_for_species(pokemon.species);
             let frame = if i == cursor {
-                IconFrame::from_counter(frame_counter, 16)
+                party_icon_frame(frame_counter, pokemon.hp, pokemon.max_hp)
             } else {
                 IconFrame::Frame1
             };
             match load_mon_icon_tiles(rm, kind, frame) {
                 Ok(tiles) => {
-                    let y = (i as u32) * row_height;
+                    let y = (i as u32) * row_height+ icon_y_offset(kind, frame);
                     draw_mon_icon(fb, tiles, ICON_X_PX, y, &GRAYSCALE_SPRITE_PALETTE);
                 }
                 Err(e) => {
@@ -189,6 +190,14 @@ pub fn draw_party_screen(
     let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
     menus::party::draw_overlay(state, &mut Ui::new(&mut painter), lang);
 }
+fn selected_party_icon_frame(state: &PartyScreenState, counter: u64) -> IconFrame {
+    state
+        .party_member(state.cursor())
+        .map_or(IconFrame::Frame1, |pokemon| {
+            party_icon_frame(counter, pokemon.hp, pokemon.max_hp)
+        })
+}
+
 
 fn clear_top_level_party_icon_at(party_index: usize, fb: &mut FrameBuffer) {
     const ICON_X_PX: u32 = 8;
@@ -199,7 +208,7 @@ fn clear_top_level_party_icon_at(party_index: usize, fb: &mut FrameBuffer) {
         ICON_X_PX,
         icon_y,
         ICON_SIZE_PX,
-        ICON_SIZE_PX,
+        ICON_SIZE_PX + 1,
         pokered_renderer::Rgba::WHITE,
     );
 }
@@ -223,7 +232,7 @@ fn draw_top_level_party_icon_at(
             fb,
             tiles,
             ICON_X_PX,
-            icon_y,
+            icon_y+ icon_y_offset(kind, frame),
             &GRAYSCALE_SPRITE_PALETTE,
         );
     }
@@ -241,7 +250,7 @@ pub fn redraw_top_level_party_icon(
     draw_top_level_party_icon_at(
         state,
         state.cursor(),
-        IconFrame::from_counter(frame_counter, 16),
+        selected_party_icon_frame(state, frame_counter),
         resources,
         fb,
     );
@@ -317,7 +326,7 @@ pub fn redraw_top_level_party_selection(
     draw_top_level_party_icon_at(
         state,
         current_cursor,
-        IconFrame::from_counter(frame_counter, 16),
+        selected_party_icon_frame(state, frame_counter),
         resources,
         fb,
     );

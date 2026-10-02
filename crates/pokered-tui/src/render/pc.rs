@@ -12,11 +12,10 @@ use pokered_core::save::SaveData;
 use pokered_data::lang_data;
 use pokered_data::ui_text::{zh_main_menu_label, zh_pc_line};
 use pokered_renderer::embedded_font::draw_text;
-use pokered_renderer::palette::GRAYSCALE_SPRITE_PALETTE;
 use pokered_renderer::resource::ResourceManager;
 use pokered_renderer::{FrameBuffer, Rgba, TILE_SIZE};
 
-use super::{blit_tileset, draw_text_box, species_to_sprite_name};
+use super::{blit_front_pic, draw_text_box, species_to_sprite_name};
 
 const BG: Rgba = Rgba::WHITE;
 const FG: Rgba = Rgba::BLACK;
@@ -403,9 +402,7 @@ fn draw_league_hof(
     if let Some(rm) = resources.as_mut() {
         let sprite = species_to_sprite_name(&format!("{}", view.species));
         if let Ok(cached) = rm.load_pokemon_front(&sprite) {
-            let ts = cached.tileset.clone();
-            let w_tiles = cached.source_size.0 / TILE_SIZE;
-            blit_tileset(fb, &ts, 12 * T, 5 * T, w_tiles, &GRAYSCALE_SPRITE_PALETTE);
+            blit_front_pic(fb, cached, 96, 40, false);
         }
     }
     let hof_no = if is_zh {

@@ -7,16 +7,14 @@
 use crate::alloc_prelude::*;
 use pokered_core::game_state::Lang;
 use pokered_data::lang_data::ui_label;
-use pokered_renderer::embedded_font::{draw_text, measure_text};
+use pokered_renderer::embedded_font::draw_text;
 use pokered_renderer::palette::GRAYSCALE_PALETTE;
 use pokered_renderer::resource::{AssetCategory, ResourceManager};
 use pokered_renderer::{FrameBuffer, Rgba, TILE_SIZE};
 
-use super::draw_text_box;
-
 /// Four equal-width cells inside the frame, with the number beside the icon.
-const BADGE_ROW_Y: [u32; 2] = [92, 118];
-const BADGE_ROW_X: [u32; 4] = [13, 49, 85, 121];
+const BADGE_ROW_Y: [u32; 2] = [88, 112];
+const BADGE_ROW_X: [u32; 4] = [16, 48, 80, 112];
 
 #[allow(clippy::too_many_arguments)]
 pub fn draw_trainer_card(
@@ -34,54 +32,51 @@ pub fn draw_trainer_card(
     let fg = Rgba::BLACK;
     let t = TILE_SIZE;
 
-    // Matching full-width frames. Seven interior rows keep the 56px trainer
-    // sprite clear of the top card's bottom border.
-    draw_text_box(fb, 0, 0, 18, 7, fg);
-    draw_text_box(fb, 0, 10 * t, 18, 6, fg);
-
-    // Red front sprite, upper right (DisplayPicCenteredOrUpperRight), unflipped.
-    if let Some(ref mut rm) = res {
+    if let Some(rm) = res.as_mut() {
         if let Ok(cached) = rm.load_asset(AssetCategory::Player, "red.png") {
-            let ts = cached.tileset.clone();
-            let tiles_w = cached.source_size.0 / t;
-            for idx in 0..ts.len() {
-                let tx = (idx as u32) % tiles_w;
-                let ty = (idx as u32) / tiles_w;
-                blit_tile(fb, &ts, idx, 12 * t + tx * t, t + ty * t, pal);
+            for row in 0..6 {
+                for col in 1..5 {
+                    blit_tile(
+                        fb,
+                        &cached.tileset,
+                        (row * 7 + col) as usize,
+                        120 + (col - 1) * 8,
+                        8 + row * 8,
+                        pal,
+                    );
+                }
+            }
+        }
+        if let Ok(cached) = rm.load_asset(AssetCategory::TrainerCard, "trainer_info.png") {
+            super::draw_trainer_info_box(fb, &cached.tileset, 0, 0, 18, 6);
+            super::draw_trainer_info_box(fb, &cached.tileset, 1, 10, 16, 6);
+            for y in 10..18 {
+                for x in [0, 19] {
+                    blit_tile(fb, &cached.tileset, 8, x * 8, y * 8, pal);
+                }
+            }
+        }
+        if let Ok(cached) = rm.load_asset(AssetCategory::TrainerCard, "circle_tile.png") {
+            for x in [6, 13] {
+                blit_tile(fb, &cached.tileset, 0, x * 8, 9 * 8, pal);
             }
         }
     }
-
     let is_zh = lang == Lang::Zh;
-    for (label, value, y) in [
-        ("NAME/", player_name.to_uppercase(), 14),
-        ("MONEY/", format!("${}", money), 32),
+    for (label, value, x, y) in [
+        ("NAME/", player_name.to_uppercase(), 56, 16),
+        ("MONEY/", format!("${:06}", money), 64, 32),
         (
             "TIME/",
             format!("{}:{:02}", play_time_hours, play_time_minutes),
-            50,
+            72,
+            48,
         ),
     ] {
-        draw_text(ui_label(label, is_zh), 12, y, fg, fb);
-        draw_text(
-            &value,
-            96u32.saturating_sub(measure_text(&value)),
-            y,
-            fg,
-            fb,
-        );
+        draw_text(ui_label(label, is_zh), 16, y, fg, fb);
+        draw_text(&value, x, y, fg, fb);
     }
-
-    // Center the localized heading in a cutout in the badge frame's top edge.
-    let heading = ui_label("BADGES", is_zh);
-    let heading_width = measure_text(heading);
-    let heading_x = (fb.width() - heading_width) / 2;
-    for y in 78..88 {
-        for x in heading_x - 6..heading_x + heading_width + 6 {
-            fb.set_pixel(x, y, Rgba::WHITE);
-        }
-    }
-    draw_text(heading, heading_x, 78, fg, fb);
+    draw_text(ui_label("BADGES", is_zh), 56, 72, fg, fb);
 
     // Badge rows: number tile beside the 2×2 face (unowned) or badge (owned)
     // graphic (GymLeaderFaceAndBadgeTileGraphics layout: face i at
@@ -99,7 +94,7 @@ pub fn draw_trainer_card(
             let x = BADGE_ROW_X[col];
             let y = BADGE_ROW_Y[row];
             if let Ok(ref ts) = numbers {
-                blit_tile(fb, ts, i as usize, x, y + 4, pal);
+                blit_tile(fb, ts, i as usize, x, y, pal);
             }
             if let Ok(ref ts) = faces {
                 let owned = obtained_badges & (1 << i) != 0;
@@ -107,7 +102,7 @@ pub fn draw_trainer_card(
                 for k in 0..4u32 {
                     let dx = (k % 2) * t;
                     let dy = (k / 2) * t;
-                    blit_tile(fb, ts, (base + k) as usize, x + 10 + dx, y + dy, pal);
+                    blit_tile(fb, ts, (base + k) as usize, x + dx, y + 8 + dy, pal);
                 }
             }
         }
