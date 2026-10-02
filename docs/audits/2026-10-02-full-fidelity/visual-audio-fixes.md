@@ -25,6 +25,8 @@
 
 | VA19 | Credits 27个8px剪影步进每 VBlank 一步，修正原来的二分之一速度。 | 同一production源码的5项状态测试通过，新增单步/27帧终点断言；最终credits定帧图。原VRAM staging和CPU扫描线采样仍未做ROM对拍。 |
 
+| VA20 | 两端地图共享原OBP0 $D0调色板；index1是不透明白、index2是AA，index0保持透明。 | 真实packed 2bpp图块覆盖地图背景的像素回归测试通过；最终固定地图帧截图。原SGB模式仍独立。 |
+
 本分支首次 app lib 结果为109通过、3失败。两项电梯局部光标测试发现擦除旧箭头时误擦右侧楼层，已将该处损伤限制到一个8px tile；HoF缓存测试发现 MonText 与首个 MonFade 使用相同 key，已修正首阶区别。最终集成应重跑这三项及完整 app lib，并以最终英文原字库重新抓相关 after 图。此前通过的检查不代替这一步。
 
 资源表核验只能证明数据：战斗动画、move SFX、cry表全量0diff，不能推出实际呈现帧/播放采样已全量对拍。

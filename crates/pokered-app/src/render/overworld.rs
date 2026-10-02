@@ -966,13 +966,7 @@ fn draw_overworld_impl(
         return;
     }
 
-    // Sprite palette: color 0 is transparent (matches Game Boy OBP0/OBP1 behavior).
-    let sprite_pal = Palette::new(&[
-        Rgba::TRANSPARENT,
-        Rgba::rgb(0xAA, 0xAA, 0xAA),
-        Rgba::rgb(0x55, 0x55, 0x55),
-        Rgba::rgb(0x00, 0x00, 0x00),
-    ]);
+    let sprite_pal = pokered_renderer::overworld_palette::normal_sprite_palette();
 
     let player_tx = screen.state.player.x as i32 * 2;
     let player_ty = screen.state.player.y as i32 * 2;
