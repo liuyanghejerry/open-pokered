@@ -681,27 +681,28 @@ fn naming_player_screen_renders_title_box_underscores_and_keyboard() {
         Op::Box(r, _) => Some(*r),
         _ => None,
     }).collect();
-    // Box is 20×13 (rows 5..=17): tall enough to also contain the zh pinyin
-    // buffer/candidate lines, matching naming.gui.
-    assert_eq!(boxes, vec![TileRect::new(0, 5, 20, 13)]);
+    // Original TextBoxBorder at (0,4), b=9/c=18, adds its border:
+    // naming_screen.asm:96-99. Chinese keeps the separate taller IME box.
+    assert_eq!(boxes, vec![TileRect::new(0, 4, 20, 11)]);
 
     let texts = collect_texts(&rec.ops);
-    // Title and name box are centered on the 20-column screen.
-    assert!(texts.contains(&(5, 1, "YOUR NAME?".into())));
-    assert!(texts.contains(&(6, 3, "".into())));
-    assert!(texts.contains(&(2, 16, "lower case".into())));
+    // PrintNamingText (453-483), PrintNicknameAndUnderscores (373-379),
+    // and PrintAlphabet (346-362) use authored GB tile coordinates.
+    assert!(texts.contains(&(0, 1, "YOUR NAME?".into())));
+    assert!(texts.contains(&(10, 2, "".into())));
+    assert!(texts.contains(&(2, 15, "lower case".into())));
 
     let tiles = collect_gb_tiles(&rec.ops);
-    let underscore_tiles: Vec<_> = tiles.iter().filter(|(_, ty, _, _)| *ty == 4).collect();
-    assert_eq!(underscore_tiles.len(), 7, "Player name max_len = 7 underscores at row ty=4");
+    let underscore_tiles: Vec<_> = tiles.iter().filter(|(_, ty, _, _)| *ty == 3).collect();
+    assert_eq!(underscore_tiles.len(), 7, "Player name max_len = 7 underscores at row ty=3");
     let raised_count = underscore_tiles.iter().filter(|(_, _, id, _)| *id == naming_tiles::RAISED_UNDERSCORE).count();
     assert_eq!(raised_count, 1, "Empty name → first slot is raised underscore");
 
-    // Alphabet rows are spaced 2 rows apart (6,8,10,12,14) in alphabet mode.
-    let keyboard_tiles: Vec<_> = tiles.iter().filter(|(_, ty, _, _)| *ty >= 6 && *ty <= 14 && *ty % 2 == 0).collect();
+    // Alphabet rows are spaced 2 rows apart (5,7,9,11,13) in alphabet mode.
+    let keyboard_tiles: Vec<_> = tiles.iter().filter(|(_, ty, _, _)| *ty >= 5 && *ty <= 13 && *ty % 2 == 1).collect();
     let cursor_tiles: Vec<_> = keyboard_tiles.iter().filter(|(_, _, id, _)| *id == naming_tiles::CURSOR_ARROW).collect();
     assert_eq!(cursor_tiles.len(), 1);
-    assert_eq!((cursor_tiles[0].0, cursor_tiles[0].1), (1, 6), "Initial cursor at (1,6) = KEYBOARD_X-1, KEYBOARD_Y");
+    assert_eq!((cursor_tiles[0].0, cursor_tiles[0].1), (1, 5), "Initial cursor at (1,5) = KEYBOARD_X-1, KEYBOARD_Y");
 }
 
 #[test]
@@ -767,16 +768,18 @@ fn naming_rival_screen_uses_rival_title() {
     let mut rec = Recorder::default();
     menus::naming::draw(&state, &NAMING_DEFAULT_LAYOUT, &mut Ui::new(&mut rec), false);
     let texts = collect_texts(&rec.ops);
-    assert!(texts.contains(&(3, 1, "RIVAL's NAME?".into())));
+    assert!(texts.contains(&(0, 1, "RIVAL's NAME?".into())));
 }
 
 #[test]
 fn naming_pokemon_screen_uses_nickname_title() {
-    let state = NamingScreenState::new(NamingScreenType::Pokemon);
+    let mut state = NamingScreenState::new(NamingScreenType::Pokemon);
+    state.species = Some(Species::Lapras);
     let mut rec = Recorder::default();
     menus::naming::draw(&state, &NAMING_DEFAULT_LAYOUT, &mut Ui::new(&mut rec), false);
     let texts = collect_texts(&rec.ops);
-    assert!(texts.contains(&(5, 1, "NICKNAME?".into())));
+    assert!(texts.contains(&(1, 3, "NICKNAME?".into())));
+    assert!(texts.contains(&(4, 1, "LAPRAS".into())));
 }
 
 #[test]
@@ -789,10 +792,10 @@ fn naming_lowercase_toggle_shows_upper_case_label_when_in_lowercase() {
     let mut rec = Recorder::default();
     menus::naming::draw(&state, &NAMING_DEFAULT_LAYOUT, &mut Ui::new(&mut rec), false);
     let texts = collect_texts(&rec.ops);
-    let case_label = texts.iter().find(|(tx, ty, _)| *tx == 2 && *ty == 16);
+    assert!(state.is_lowercase());
+    let case_label = texts.iter().find(|(tx, ty, _)| *tx == 2 && *ty == 15);
     assert!(case_label.is_some());
-    assert!(case_label.unwrap().2 == "UPPER CASE" || case_label.unwrap().2 == "lower case",
-        "case row label must toggle between cases, got {:?}", case_label);
+    assert_eq!(case_label.unwrap().2, "UPPER CASE");
 }
 
 #[test]
@@ -805,37 +808,38 @@ fn naming_cursor_on_case_row_renders_arrow_at_keyboard_x_minus_one() {
     menus::naming::draw(&state, &NAMING_DEFAULT_LAYOUT, &mut Ui::new(&mut rec), false);
     let tiles = collect_gb_tiles(&rec.ops);
     let case_row_arrows: Vec<_> = tiles.iter()
-        .filter(|(tx, ty, id, _)| *ty == 16 && *tx == 1 && *id == naming_tiles::CURSOR_ARROW)
+        .filter(|(tx, ty, id, _)| *ty == 15 && *tx == 1 && *id == naming_tiles::CURSOR_ARROW)
         .collect();
-    assert_eq!(case_row_arrows.len(), 1, "case row cursor must be at (1, 16)");
+    assert_eq!(case_row_arrows.len(), 1, "case row cursor must be at (1, 15)");
 }
 
 #[test]
 fn naming_name_text_is_drawn_after_underscores() {
-    // Regression: the Fusion Pixel glyphs are 10px tall — one 8px tile row
-    // plus a couple of pixels below — so the name bleeds into the underscore
-    // row. If the underscore slots were drawn after the name, their background
-    // fill would clip the bottom of the name. `draw()` must emit the name text
-    // op AFTER the underscore tile ops so the name renders on top.
+    // Keep the same draw-order contract in both layout variants. English
+    // uses the original 8px glyphs at name row2/underscore row3; the Chinese
+    // extension retains 10px CJK glyphs at row3/row4, where underscore fills
+    // must precede text to preserve the glyph's bottom pixels.
     let mut state = NamingScreenState::new(NamingScreenType::Player);
     state.update_frame(NamingInput { a: true, ..NamingInput::none() }, false); // 'A'
     state.update_frame(NamingInput { right: true, ..NamingInput::none() }, false);
     state.update_frame(NamingInput { a: true, ..NamingInput::none() }, false); // 'B'
     assert_eq!(state.name(), "AB");
 
-    let mut rec = Recorder::default();
-    menus::naming::draw(&state, &NAMING_DEFAULT_LAYOUT, &mut Ui::new(&mut rec), false);
+    for (is_zh, name_ty, underscore_ty) in [(false, 2, 3), (true, 3, 4)] {
+        let mut rec = Recorder::default();
+        menus::naming::draw(&state, &NAMING_DEFAULT_LAYOUT, &mut Ui::new(&mut rec), is_zh);
 
-    let name_text_index = rec.ops.iter().position(|op| {
-        matches!(op, Op::Text(pos, s, _) if pos.ty == 3 && s == "AB")
-    }).expect("name text op at row 3");
-    let last_underscore_index = rec.ops.iter().rposition(|op| {
-        matches!(op, Op::GbTile(pos, id, _, _)
-            if pos.ty == 4 && (*id == naming_tiles::UNDERSCORE || *id == naming_tiles::RAISED_UNDERSCORE))
-    }).expect("underscore tile op at row 4");
+        let name_text_index = rec.ops.iter().position(|op| {
+            matches!(op, Op::Text(pos, s, _) if pos.ty == name_ty && s == "AB")
+        }).expect("name text op in the language's name row");
+        let last_underscore_index = rec.ops.iter().rposition(|op| {
+            matches!(op, Op::GbTile(pos, id, _, _)
+                if pos.ty == underscore_ty && (*id == naming_tiles::UNDERSCORE || *id == naming_tiles::RAISED_UNDERSCORE))
+        }).expect("underscore tile op in the language's underscore row");
 
-    assert!(name_text_index > last_underscore_index,
-        "name text (op {name_text_index}) must be drawn after the underscores (op {last_underscore_index}) so the underscore fill does not clip the glyph bottoms");
+        assert!(name_text_index > last_underscore_index,
+            "is_zh={is_zh}: name op {name_text_index} must follow underscore op {last_underscore_index}");
+    }
 }
 
 // ── Battle menu tests ──
