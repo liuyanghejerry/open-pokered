@@ -6,4 +6,6 @@
 
 [同mock/同frame前后图与精确provenance](../../screenshots/2026-10-02-full-fidelity/ui-preview/README.md)已保留。真实生产pixel回归覆盖EN/ZH×SuperPotion/ThunderStone×1/99八种状态；每位数量按原font tile逐bit核验，同时确保一tile空隙和原右框纹理未被覆盖。原生产renderer复跑该回归失败，修复后通过；[after pixel日志](validation/battle-bag-quantity-pixel-tests.log)与[before预期失败](validation/battle-bag-quantity-before-expected-failure.log)分别记录结果。
 
-最小修复之后，原生raw-rustc核验为57/57菜单测试、58/58 UI-preview测试；[完整preview日志](validation/ui-preview-original-font-tests.log)记录所有golden与layout fixture结果。该核验使用实际Cargo preview build的精确serde-feature extern图，临时源仅移除WASM export annotations；没有修改生产render bodies或占用Cargo。最终标准Cargo/CI结果由主集成验证记录更新。
+最小修复之后，原生raw-rustc核验为57/57菜单测试、58/58 UI-preview测试；[完整preview日志](validation/ui-preview-original-font-tests.log)记录所有golden与layout fixture结果。该核验使用实际Cargo preview build的精确serde-feature extern图，临时源仅移除WASM export annotations；没有修改生产render bodies或占用Cargo。
+
+随后`c3847df`正式Cargo九包检验再次通过UI-preview全部58项，完整检验为107个测试目标、4508次通过执行、0失败、9忽略；lib/bin重复计入执行次数。以上总数已独立解析最终Cargo日志复核，见[最终验收数据](validation/final-results.json)。截图仍保留其真实构建来源：原修复`04286e4`以内容相同的`4a28a40`集成，golden与命名测试集成为`c3847df`，没有把最终检验HEAD追溯标成截图构建来源。
