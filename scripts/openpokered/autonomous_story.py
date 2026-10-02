@@ -10,6 +10,7 @@ import re
 import hashlib
 import time
 from collections import Counter, deque
+from copy import deepcopy
 from functools import lru_cache
 from pathlib import Path
 
@@ -846,6 +847,14 @@ class AutonomousStoryAgent(DualStoryAgent):
     def choose(self, layer, state, candidates, instruction):
         if layer == 'strategy':
             candidates = compact_strategy_candidates(candidates)
+            if any('downstream_context' in value for value in candidates.values()):
+                instruction += (' A route unlock is an intermediate step, not a Pokédex registration. '
+                    'Each route_unlocks entry carries its parent goal and downstream_context: '
+                    'compare the remaining acquisition effort, inventory risk, preparation and source '
+                    'constraints with the other goals before investing in this route. Opening access '
+                    'does not itself solve the downstream capture, training, purchase or capacity need. '
+                    'Reference capture scenarios are conditional estimates, not promised outcomes; '
+                    'a difficult parent can still be worthwhile when its durable benefit justifies the cost.')
         if layer == 'strategy' and any('route_resets_won_battles' in value for value in candidates.values()):
             instruction += (' Compare every candidate travel route with its supplied story-reset cost. '
                 'Training, retrieving teammates, shopping and hunting can cross the same reset entry '
@@ -2694,6 +2703,14 @@ class AutonomousStoryAgent(DualStoryAgent):
                     evidence = context.setdefault('route_unlocks', [])
                     requirement = {'destination': destination, 'goal': parent['target'],
                         'trigger_points': points, 'objectives': parent.get('objectives', []),
+                        # Preserve the actual acquisition costs even after the
+                        # inaccessible parent is pruned. Navigation bookkeeping
+                        # belongs to the unlock, not to a recursively nested
+                        # parent route; unknown economic/risk fields stay intact.
+                        'downstream_context': deepcopy({key: value for key, value in
+                            parent.get('context', {}).items() if key not in {
+                                'trigger_navigation', 'deferred_trigger_maps', 'navigation_scope',
+                                'route_unlocks', 'prerequisite_for_goals'}}),
                         'evidence': 'Causal blocker on a relaxed planning path; real execution and remaining obstacles still required'}
                     if requirement not in evidence:
                         evidence.append(requirement)

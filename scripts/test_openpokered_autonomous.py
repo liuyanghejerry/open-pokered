@@ -644,7 +644,8 @@ class AutonomousTests(unittest.TestCase):
             target = ('item', name, True)
             groups[name] = {'target': target, 'objectives': ['Obtain ' + name],
                 'rules': [Rule(name, 'Office', 'reward', [x], [], [], target, [])],
-                'context': {'trigger_navigation': [{'map': 'Office', 'tile_route_found': False}]}}
+                'context': {'trigger_navigation': [{'map': 'Office', 'tile_route_found': False}],
+                            'remaining_cost': {'coins': 25}, 'acquisition_method': 'gift'}}
         ready = ('item', 'READY_REWARD', True)
         groups['reachable'] = {'target': ready, 'rules': [
             Rule('blocked-source', 'Office', 'gift', [6], [], [], ready, []),
@@ -663,6 +664,11 @@ class AutonomousTests(unittest.TestCase):
         self.assertEqual([call.args[2] for call in agent.discover_route_prerequisites.call_args_list],
                          [[(6, 5)], [(8, 5)]])
         self.assertEqual(len(added['context']['route_unlocks']), 3)
+        downstream = added['context']['route_unlocks'][0]['downstream_context']
+        self.assertEqual(downstream, {'remaining_cost': {'coins': 25}, 'acquisition_method': 'gift'})
+        self.assertNotIn('trigger_navigation', downstream)
+        groups['MASTER_BALL']['context']['remaining_cost']['coins'] = 50
+        self.assertEqual(downstream['remaining_cost']['coins'], 25)
         agent.game.nav_to_map.assert_not_called()
         agent.game.st.assert_not_called()
         # Unknown failures, successful previews, and disproved causal paths
@@ -675,6 +681,21 @@ class AutonomousTests(unittest.TestCase):
             offered = {'reward': groups['MASTER_BALL']}
             agent.add_deferred_route_frontiers(offered, facts, preview)
             self.assertEqual(list(offered), ['reward'])
+
+    def test_route_unlock_guidance_retains_all_choices_and_downstream_costs(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.choose_bounded_strategy = Mock(return_value='unlock')
+        candidates = {'unlock': json.dumps({'context': {'route_unlocks': [{
+            'goal': ['register', 'Moltres', True],
+            'downstream_context': {'acquisition_method': 'static', 'remaining_cost': 25}}]}}),
+            'gift': json.dumps({'context': {'acquisition_method': 'gift'}})}
+        before = dict(candidates)
+        self.assertEqual(agent.choose('strategy', {}, candidates, 'Compare options.'), 'unlock')
+        _state, offered, instructions = agent.choose_bounded_strategy.call_args.args
+        self.assertEqual(set(offered), set(candidates))
+        self.assertIn('intermediate step, not a Pokédex registration', instructions)
+        self.assertIn('remaining acquisition effort', instructions)
+        self.assertEqual(candidates, before)
 
     def test_collection_source_unlock_is_added_before_final_navigation_pruning(self):
         agent = self.catch_goal_agent([{'id': 'collect-dex', 'agent_verified': True}])
