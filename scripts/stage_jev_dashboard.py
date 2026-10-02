@@ -66,9 +66,14 @@ def verify_dex_completion(data):
     proof = (data.get('run') or {}).get('collection_continue_verification') or {}
     restored = (proof.get('restored') or {}).get('dex') or {}
     snapshot = proof.get('restored') or {}
-    if (proof.get('schema') != 2 or proof.get('verified') is not True
+    saved_state = snapshot.get('state')
+    safari = saved_state.get('safari_game') if isinstance(saved_state, dict) else None
+    if (proof.get('schema') != 3 or proof.get('verified') is not True
             or not {'dex', 'state', 'party', 'bag', 'flags', 'stored_pokemon'} <= snapshot.keys()
             or not isinstance(snapshot.get('stored_pokemon'), list)
+            or not isinstance(safari, dict) or type(safari.get('active')) is not bool
+            or not all(type(safari.get(key)) is int and 0 <= safari[key] <= limit
+                       for key, limit in (('balls_remaining', 30), ('steps_remaining', 500)))
             or proof.get('expected') != proof.get('restored')
             or not re.fullmatch(r'[0-9a-f]{64}', proof.get('save_sha256') or '')
             or restored.get('owned') != 124 or set(restored.get('owned_species') or []) != owned):

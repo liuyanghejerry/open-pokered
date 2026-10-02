@@ -2390,6 +2390,19 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         self.safari_game_active
     }
 
+    /// Restore a saved admission without issuing a new ball/step allowance.
+    /// Load the saved flags first. An expired admission remains active until
+    /// the normal step handler ejects it; legacy saves with missing counters
+    /// must not silently receive another free Safari game on CONTINUE.
+    pub fn restore_safari_game(&mut self, steps: u16, balls: u8) {
+        let in_facility = pokered_data::map_flags::is_safari_zone_map(self.state.current_map)
+            || self.state.current_map == MapId::SafariZoneGate;
+        self.safari_game_active = in_facility
+            && self.unified_flags.get_flag("EVENT_IN_SAFARI_ZONE");
+        self.safari_steps = if self.safari_game_active { steps } else { 0 };
+        self.safari_balls = if self.safari_game_active { balls } else { 0 };
+    }
+
     /// Begin a fresh Safari Zone game: full step + ball allowance.
     pub fn start_safari_game(&mut self) {
         self.safari_steps = SAFARI_ZONE_STEP_COUNT;

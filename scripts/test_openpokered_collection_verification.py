@@ -21,7 +21,8 @@ def observations(count=124):
         'get_state': {'screen': 'overworld', 'pokedex': {'owned': count, 'seen': count,
             'owned_species': names, 'seen_species': names}, 'map_name': 'PalletTown',
             'player_x': 5, 'player_y': 6, 'money': 15441, 'coins': 0, 'badges': 15,
-            'current_box_index': 1, 'box_counts': counts, 'stored_pokemon': stored},
+            'current_box_index': 1, 'box_counts': counts, 'stored_pokemon': stored,
+            'safari_game': {'active': False, 'balls_remaining': 0, 'steps_remaining': 0}},
         'get_party': [{'species': 'Charizard', 'hp': 181, 'pp': [18, 30, 15, 10]}],
         'get_bag': [{'item': 'PokeBall', 'qty': 12}],
         'get_flags': {'EVENT_GOT_POKEDEX': True},
@@ -62,6 +63,16 @@ class CollectionContinueTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'stored Pokemon'):
                 collection_snapshot(invalid)
 
+    def test_safari_session_observation_is_required_and_bounded(self):
+        for safari in (None, {}, {'active': False, 'balls_remaining': 0},
+                       {'active': 1, 'balls_remaining': 30, 'steps_remaining': 500},
+                       {'active': True, 'balls_remaining': 31, 'steps_remaining': 500},
+                       {'active': True, 'balls_remaining': 30, 'steps_remaining': -1}):
+            invalid = observations()
+            invalid['get_state']['data']['safari_game'] = safari
+            with self.subTest(safari=safari), self.assertRaisesRegex(ValueError, 'Safari'):
+                collection_snapshot(invalid)
+
     def test_independent_continue_preserves_source_and_detects_persisted_loss(self):
         with tempfile.TemporaryDirectory() as folder:
             folder = Path(folder)
@@ -78,7 +89,7 @@ class CollectionContinueTests(unittest.TestCase):
                     patch('scripts.openpokered.collection_verification.pt.resume_reentry') as resume:
                 proof = verify_collection_continue(saved, binary, expected, flags)
                 self.assertTrue(proof['verified'])
-                self.assertEqual(proof['schema'], 2)
+                self.assertEqual(proof['schema'], 3)
                 self.assertEqual(proof['expected'], proof['restored'])
                 self.assertNotEqual(create.call_args.kwargs['save_path'], saved)
                 self.assertNotEqual(create.call_args.kwargs['binary'], binary)
@@ -114,6 +125,15 @@ class CollectionContinueTests(unittest.TestCase):
                             stored[0][field] = value
                         raw.cmd.side_effect = lambda **kw: restored[kw['cmd']]
                         with self.assertRaisesRegex(ValueError, 'CONTINUE changed.*stored_pokemon'):
+                            verify_collection_continue(saved, binary, expected, flags)
+                expected['get_state']['data']['safari_game'] = {
+                    'active': True, 'balls_remaining': 23, 'steps_remaining': 85}
+                for field, value in [('active', False), ('balls_remaining', 0), ('steps_remaining', 0)]:
+                    with self.subTest(safari_field=field):
+                        restored = copy.deepcopy(expected)
+                        restored['get_state']['data']['safari_game'][field] = value
+                        raw.cmd.side_effect = lambda **kw: restored[kw['cmd']]
+                        with self.assertRaisesRegex(ValueError, 'CONTINUE changed.*state'):
                             verify_collection_continue(saved, binary, expected, flags)
 
 

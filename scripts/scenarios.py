@@ -1054,6 +1054,81 @@ def s25_boulder_coordinate_hole():
             g.close()
 
 
+@scenario("s26-safari-save-allowance", "Paid Safari allowance survives save and independent CONTINUE without a refill")
+def s26_safari_save_allowance():
+    import playthrough as pt
+    from save_builder import SaveBuilder
+    from openpokered.autonomous_story import training_tile
+    from openpokered.collection_verification import verify_collection_continue
+    from openpokered.playthrough_judgments import ObservedProtocol
+
+    # Seed only this isolated subsystem fixture. Admission, walking, throwing
+    # and persistence use native gameplay; this is not autonomous dex evidence.
+    with tempfile.TemporaryDirectory(prefix='pokered-safari-save-') as folder:
+        folder = Path(folder)
+        binary = folder / 'pokered-app'
+        shutil.copy2(pt.BIN, binary)
+        fixture = (SaveBuilder().party_add('Bulbasaur', 5).money(2000)
+                   .position('SafariZoneGate', 3, 3).write(folder / 'fixture.json'))
+        saved = folder / 'safari.sav'
+        g = Game(binary=binary, snapshot=fixture, save_path=saved, seed=42, speed=0)
+        raw = g.d
+        g.d = ObservedProtocol(raw, lambda *args, **kwargs: None, time.monotonic() + 120)
+        g.smart_moves = True
+        try:
+            resume_reentry(g)
+            assert not g.st()['safari_game']['active']
+            g.d.drive(['up'] * 8, frames=16)
+            g.dialogue_then_choice()
+            g.choose('YES')
+            assert g.cutscene()
+            state = g.st()
+            assert state['map_name'] == 'SafariZoneCenter' and state['money'] == 1500
+            assert state['safari_game'] == {
+                'active': True, 'steps_remaining': 500, 'balls_remaining': 30}
+
+            # Use the native encounter terrain predicate, not Overworld-only
+            # grass tiles: Safari maps use the Forest tileset.
+            grass = {(x, y) for x in range(pt.MAPS['SafariZoneCenter']['width'] * 2)
+                     for y in range(pt.MAPS['SafariZoneCenter']['height'] * 2)
+                     if training_tile('SafariZoneCenter', x, y)}
+            origin = (state['player_x'], state['player_y'])
+            target = next(xy for xy in sorted(grass, key=lambda xy:
+                abs(xy[0] - origin[0]) + abs(xy[1] - origin[1]))
+                if pt.bfs('SafariZoneCenter', origin, xy))
+            g.nav_to(*target, 'SafariZoneCenter')
+            for step in range(200):
+                state = g.st()
+                if state['screen'] == 'battle':
+                    break
+                assert state['safari_game']['active'], state['safari_game']
+                x, y = state['player_x'], state['player_y']
+                choices = [direction for direction, (dx, dy) in pt.DELTA.items()
+                           if (x + dx, y + dy) in grass
+                           and pt.walkable_edge('SafariZoneCenter', (x, y), (x + dx, y + dy))]
+                assert choices, (x, y)
+                g.d.drive([choices[step % len(choices)]] * 8, frames=12)
+            else:
+                raise AssertionError('No natural Safari encounter')
+            assert g.st()['battle_live']['is_safari']
+            g.safari_battle_action = lambda state: (
+                'ball' if state['battle_live']['safari']['balls'] == 30 else 'run')
+            g.battle_loop(prefer='run')
+            assert g.cutscene()
+            safari = g.st()['safari_game']
+            assert safari['active'] and safari['balls_remaining'] == 29, safari
+            assert 0 < safari['steps_remaining'] < 500, safari
+            observations = {cmd: g.d.cmd(cmd=cmd) for cmd in (
+                'get_state', 'get_party', 'get_bag', 'get_flags')}
+            assert raw.cmd(cmd='save')['ok']
+        finally:
+            g.close()
+        proof = verify_collection_continue(saved, binary, observations,
+                                            folder / 'pokered.script_flags.json')
+        assert proof['verified'] and proof['restored']['state']['safari_game'] == safari
+        print(f"   paid 500; spent one native ball; independently restored {safari}")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--list", action="store_true")

@@ -78,10 +78,11 @@ class PagesStagingTest(unittest.TestCase):
                           'pending_source_validation': [],
                           'owned_species': [f'Mon{number}' for number in range(1, 125)]}]}
         snapshot = {'dex': {'owned': 124, 'owned_species': data['progress'][0]['owned_species']},
-                    'state': {'box_counts': [0] * 12, 'current_box_index': 0},
+                    'state': {'box_counts': [0] * 12, 'current_box_index': 0,
+                              'safari_game': {'active': False, 'balls_remaining': 0, 'steps_remaining': 0}},
                     'party': [{'species': 'Mon1'}], 'stored_pokemon': [], 'bag': [], 'flags': {}}
         data['run']['collection_continue_verification'] = {
-            'schema': 2, 'verified': True, 'save_sha256': 'a' * 64, 'expected': snapshot, 'restored': snapshot}
+            'schema': 3, 'verified': True, 'save_sha256': 'a' * 64, 'expected': snapshot, 'restored': snapshot}
         self.write_dex_data(data)
         return video
 
@@ -132,6 +133,25 @@ class PagesStagingTest(unittest.TestCase):
                 proof['restored'].pop('stored_pokemon')
             self.write_dex_data(data)
             with self.assertRaisesRegex(ValueError, 'CONTINUE evidence'):
+                stage(self.repo, self.site, 'abc123')
+
+    def test_completion_rejects_proof_without_safari_session_coverage(self):
+        import copy
+        self.prepare_dex()
+        original = json.loads((self.source / 'dex-run/jev-dex-dashboard.json').read_text())
+        for mutation in ('old_schema', 'missing_safari', 'malformed_safari'):
+            data = copy.deepcopy(original)
+            proof = data['run']['collection_continue_verification']
+            if mutation == 'old_schema':
+                proof['schema'] = 2
+            else:
+                for key in ('expected', 'restored'):
+                    if mutation == 'missing_safari':
+                        proof[key]['state'].pop('safari_game', None)
+                    else:
+                        proof[key]['state']['safari_game'] = {'active': True}
+            self.write_dex_data(data)
+            with self.subTest(mutation=mutation), self.assertRaisesRegex(ValueError, 'CONTINUE evidence'):
                 stage(self.repo, self.site, 'abc123')
 
     def test_rejects_partial_dex_before_replacing_previous_dashboard(self):

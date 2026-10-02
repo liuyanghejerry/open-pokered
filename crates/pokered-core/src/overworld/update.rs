@@ -3964,6 +3964,45 @@ mod safari_timer_tests {
     }
 
     #[test]
+    fn restored_safari_admission_keeps_exact_allowance() {
+        for map in [MapId::SafariZoneWest, MapId::SafariZoneWestRestHouse, MapId::SafariZoneGate] {
+            let mut ow = screen_at(map);
+            ow.set_flag_live("EVENT_IN_SAFARI_ZONE", true);
+            ow.restore_safari_game(85, 23);
+            assert!(ow.is_safari_game_active());
+            assert_eq!((ow.safari_steps_remaining(), ow.safari_balls_remaining()), (85, 23));
+            assert_eq!(ow.use_safari_ball(), 22);
+            ow.tick_safari_steps();
+            assert_eq!(ow.safari_steps_remaining(), if map == MapId::SafariZoneGate { 85 } else { 84 });
+        }
+    }
+
+    #[test]
+    fn restoring_counters_does_not_grant_safari_admission() {
+        for (map, admitted) in [(MapId::SafariZoneWest, false), (MapId::FuchsiaCity, true)] {
+            let mut ow = screen_at(map);
+            ow.set_flag_live("EVENT_IN_SAFARI_ZONE", admitted);
+            ow.restore_safari_game(85, 23);
+            assert!(!ow.is_safari_game_active());
+            assert_eq!((ow.safari_steps_remaining(), ow.safari_balls_remaining()), (0, 0));
+        }
+    }
+
+    #[test]
+    fn restored_expired_admission_expires_normally_instead_of_refilling() {
+        let mut ow = screen_at(MapId::SafariZoneWest);
+        ow.set_flag_live("EVENT_IN_SAFARI_ZONE", true);
+        ow.restore_safari_game(0, 0);
+        assert!(ow.is_safari_game_active());
+        assert_eq!((ow.safari_steps_remaining(), ow.safari_balls_remaining()), (0, 0));
+        ow.tick_safari_steps();
+        assert!(!ow.is_safari_game_active());
+        assert_eq!(ow.safari_eject_pending.unwrap().dest_map, MapId::SafariZoneGate);
+        assert!(!ow.unified_flags.get_flag("EVENT_IN_SAFARI_ZONE"));
+        assert!(ow.unified_flags.get_flag("EVENT_SAFARI_GAME_OVER"));
+    }
+
+    #[test]
     fn gate_return_preserves_steps_and_balls_until_player_quits() {
         let mut ow = screen_at(MapId::SafariZoneGate);
         warp_to(&mut ow, MapId::SafariZoneCenter);

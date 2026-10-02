@@ -1135,6 +1135,10 @@ impl PokemonGame {
             if let Some(extras) = Self::read_companion_script_flags() {
                 overworld.set_script_flags(extras);
             }
+            overworld.restore_safari_game(
+                save_data.game_data.safari_steps,
+                save_data.game_data.num_safari_balls,
+            );
             overworld.set_toggleable_object_flags(save_data.game_data.toggleable_object_flags);
             overworld.set_hidden_item_flags(save_data.game_data.obtained_hidden_items);
             overworld.set_hidden_coin_flags(save_data.game_data.obtained_hidden_coins);
@@ -1921,6 +1925,14 @@ impl PokemonGame {
     // 320-byte SRAM region (wEventFlags, NUM_EVENTS = $A00 bits).
     save.game_data.event_flags = overworld.unified_flags().as_bytes().to_vec();
 
+    // These SRAM fields mirror the live Safari session, not the last loaded
+    // SaveData. Omitting them makes CONTINUE lose the paid allowance while
+    // the admission flag and the player's in-zone position survive.
+    save.game_data.safari_steps = overworld.safari_steps_remaining();
+    save.game_data.num_safari_balls = overworld.safari_balls_remaining();
+    save.game_data.safari_zone_game_over =
+        u8::from(overworld.unified_flags().get_flag("EVENT_SAFARI_GAME_OVER"));
+
     save.game_data.toggleable_object_flags = *overworld.toggleable_object_flags();
     save.game_data.obtained_hidden_items = *overworld.hidden_item_flags();
     save.game_data.obtained_hidden_coins = *overworld.hidden_coin_flags();
@@ -2354,6 +2366,10 @@ impl PokemonGame {
                         if let Some(extras) = self.companion_flags() {
                             overworld.set_script_flags(extras);
                         }
+                        overworld.restore_safari_game(
+                            self.save_data.game_data.safari_steps,
+                            self.save_data.game_data.num_safari_balls,
+                        );
                         overworld.set_toggleable_object_flags(
                             self.save_data.game_data.toggleable_object_flags,
                         );
@@ -7830,6 +7846,32 @@ mod session_guard_tests {
 #[cfg(all(test, feature = "debug-server"))]
 mod synchronous_input_tests {
     use super::*;
+
+    #[test]
+    fn save_sync_preserves_live_safari_allowance_and_clears_finished_session() {
+        let mut game = PokemonGame::new_with_options(
+            GameVersion::Red, None, None, None, false, None, false, true, None,
+        );
+        game.overworld = OverworldScreen::new(MapId::SafariZoneWest, None, PokemonRedData);
+        game.overworld.start_safari_game();
+        for _ in 0..7 {
+            game.overworld.use_safari_ball();
+        }
+        let saved = game.build_save_data();
+        assert_eq!(saved.game_data.safari_steps, 500);
+        assert_eq!(saved.game_data.num_safari_balls, 23);
+        assert_eq!(saved.game_data.safari_zone_game_over, 0);
+        // The serialized bytes, not merely the in-memory fields, carry them.
+        let restored = pokered_core::save::sram_import::import_sram(
+            &pokered_core::save::sram_export::export_sram(&saved),
+        ).unwrap();
+        assert_eq!(restored.game_data.safari_steps, 500);
+        assert_eq!(restored.game_data.num_safari_balls, 23);
+        game.overworld.end_safari_game();
+        let finished = game.build_save_data();
+        assert_eq!(finished.game_data.safari_steps, 0);
+        assert_eq!(finished.game_data.num_safari_balls, 0);
+    }
 
     #[test]
     fn move_menu_exposes_read_only_conditional_damage_preview() {

@@ -9,6 +9,12 @@ import playthrough as pt
 from .playthrough_judgments import ObservedProtocol
 
 
+def valid_safari_snapshot(safari):
+    return (isinstance(safari, dict) and type(safari.get('active')) is bool
+            and type(safari.get('balls_remaining')) is int and 0 <= safari['balls_remaining'] <= 30
+            and type(safari.get('steps_remaining')) is int and 0 <= safari['steps_remaining'] <= 500)
+
+
 def collection_snapshot(observations):
     state = observations['get_state']['data']
     dex = state.get('pokedex') or {}
@@ -32,11 +38,13 @@ def collection_snapshot(observations):
     expected_slots = {(box, index) for box, count in enumerate(counts) for index in range(count)}
     if len(slots) != len(expected_slots) or set(slots) != expected_slots:
         raise ValueError('Invalid stored Pokemon slots or box counts')
+    if not valid_safari_snapshot(state.get('safari_game')):
+        raise ValueError('Incomplete or invalid Safari session observation')
     return {
         'dex': {**dex, 'owned_species': sorted(owned), 'seen_species': sorted(seen)},
         'state': {key: state[key] for key in (
             'map_name', 'player_x', 'player_y', 'money', 'coins', 'badges',
-            'current_box_index', 'box_counts')},
+            'current_box_index', 'box_counts', 'safari_game')},
         'party': observations['get_party']['data'],
         # Counts alone cannot detect a replaced species, altered moves/HP,
         # or a different occupied slot. Compare every exposed stored field.
@@ -84,7 +92,7 @@ def verify_collection_continue(saved, binary, observations, script_flags=None):
                 raise ValueError('CONTINUE changed persisted collection facts: ' + ', '.join(differences))
             if hashlib.sha256(saved.read_bytes()).hexdigest() != digest:
                 raise ValueError('Source SRAM changed during isolated verification')
-            return {'schema': 2, 'verified': True, 'save_sha256': digest,
+            return {'schema': 3, 'verified': True, 'save_sha256': digest,
                     'binary_sha256': hashlib.sha256(binary.read_bytes()).hexdigest(),
                     'separate_process_pid': check.proc.pid,
                     'verification_commands': dict(check.d.counts),
