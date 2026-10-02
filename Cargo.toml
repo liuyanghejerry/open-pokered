@@ -46,7 +46,6 @@ strum_macros = "0.26"
 num-derive = "0.4"
 num-traits = { version = "0.2", default-features = false }
 
-# All dotzuki engine crates are pinned to the `v0.8.2` tag of the engine repo
-# in each crate's Cargo.toml. v0.8.2 carries the serde additions the agent
-# snapshot needs (interpreter, trigger manager, NPC runtime state, cutscene
-# manager, connection transition, presentation states, CommandResult).
+# All dotzuki crates use the same audited commit in their Cargo.toml files.
+# This includes byte-stream pitch slides and the optional classic NPC policy,
+# on top of v0.8.2 and the existing bare-metal audio fixes (dotzuki PR #78).
