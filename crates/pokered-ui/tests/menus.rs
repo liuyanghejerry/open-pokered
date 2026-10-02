@@ -1082,8 +1082,12 @@ fn battle_party_single_pokemon_renders_name_and_hp() {
     assert_eq!(collect_boxes(&rec.ops), vec![TileRect::new(1, 12, 18, 6)]);
 
     let texts = collect_texts(&rec.ops);
-    assert!(texts.contains(&(3, 13, "CHARIZARD 150/200".into())),
-        "expected CHARIZARD 150/200, got {:?}", texts);
+    assert_eq!(texts.len(), 1);
+    let (x, y, label) = &texts[0];
+    assert_eq!((*x, *y), (3, 13));
+    assert!(label.starts_with("CHARIZ") && label.contains('…'), "abbreviate the name: {label}");
+    assert!(label.ends_with(" 150/200"), "preserve both complete health values: {label}");
+    assert!(pokered_data::text_layout::measure_text(label) <= 120, "keep the right border clear: {label}");
 
     assert_eq!(collect_glyphs(&rec.ops), vec![(2, 13, '\u{25B6}')]);
 }
@@ -1130,7 +1134,14 @@ fn battle_party_scrolls_when_more_than_four_pokemon() {
     battle_party::draw(&party, 5, &BATTLE_PARTY_DEFAULT_LAYOUT, &mut ui, false);
 
     let texts = collect_texts(&rec.ops);
-    assert!(texts.contains(&(3, 13, "VENUSAUR 100/200".into())));
+    assert_eq!(texts.len(), 4, "only the four visible party rows are drawn");
+    let first = texts.iter().find(|(x, y, _)| (*x, *y) == (3, 13)).unwrap();
+    assert!(first.2.starts_with("VENUSA") && first.2.contains('…'));
+    assert!(first.2.ends_with(" 100/200"));
+    for (_, _, label) in &texts {
+        assert!(label.ends_with(" 100/200"), "preserve complete health after scrolling: {label}");
+        assert!(pokered_data::text_layout::measure_text(label) <= 120, "keep the right border clear: {label}");
+    }
     assert!(texts.contains(&(3, 14, "PIKACHU 100/200".into())));
     assert!(texts.contains(&(3, 15, "SNORLAX 100/200".into())));
     assert!(texts.contains(&(3, 16, "MEWTWO 100/200".into())));
