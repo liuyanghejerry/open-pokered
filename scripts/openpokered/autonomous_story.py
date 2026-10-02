@@ -1831,7 +1831,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                             missing_sources.setdefault(source, set()).add(species)
                         continue
                     if not source_party:
-                        self.add_storage_retrieval(groups, facts, source, species)
+                        self.add_storage_retrieval(groups, facts, source, species, method)
                         continue
                     if method['trigger'] == 'item':
                         item = method['item']
@@ -1884,7 +1884,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                     if len(party) < 2:
                         continue
                     if not source_party:
-                        self.add_storage_retrieval(groups, facts, source, species)
+                        self.add_storage_retrieval(groups, facts, source, species, method)
                         continue
                     rules = self.acquisition_story_rules(species, method)
                 elif method['method'] == 'prize':
@@ -1967,7 +1967,41 @@ class AutonomousStoryAgent(DualStoryAgent):
         return any(not rule.missing(facts)
                    for rule in self.acquisition_story_rules(species, method))
 
-    def add_storage_retrieval(self, groups, facts, source, target):
+    @staticmethod
+    def post_withdrawal_acquisition(stored, target, method, facts):
+        """Price the follow-up, not the PC action, using this actual box slot.
+
+        A retrieval prerequisite otherwise hides the difference between an
+        available stone, many real level gains, and giving away the source.
+        These are alternatives for one individual, never cumulative rewards.
+        """
+        preview = {'species': target, 'acquisition_method': method['method'],
+                   'withdrawal_registers_target': False,
+                   'acquisition_contract': acquisition_contract(target, method)}
+        if method['method'] == 'evolution':
+            if method['trigger'] == 'level':
+                can_level = stored['level'] < 100
+                trigger = max(method['level'], stored['level'] + 1) if can_level else None
+                preview.update(level_up_possible=can_level, experience_trigger_level=trigger)
+                if can_level:
+                    preview['training_cost'] = evolution_training_cost(stored, trigger)
+            elif method['trigger'] == 'item':
+                item = method['item']
+                key = item.replace('_', '').upper()
+                quantity = sum(count for name, count in facts.get('bag', {}).items()
+                               if name.replace('_', '').upper() == key)
+                info = next((info for name, info in ITEM_CATALOG.items()
+                             if name.replace('_', '').upper() == key), {})
+                preview.update(required_item=item, item_quantity_held=quantity,
+                               item_missing=quantity < 1,
+                               item_unit_price_reference=info.get('price') or None)
+        elif method['method'] == 'npc_trade':
+            if method.get('completion_flag'):
+                preview['trade_already_completed'] = bool(facts.get('flags', {}).get(method['completion_flag']))
+            preview['party_count_requirement_after_withdrawal_met'] = len(facts.get('party', [])) >= 1
+        return preview
+
+    def add_storage_retrieval(self, groups, facts, source, target, method=None):
         stored = next((mon for mon in facts.get('stored_pokemon', [])
                        if self.same_species(mon.get('species'), source)), None)
         if not stored:
@@ -1981,12 +2015,28 @@ class AutonomousStoryAgent(DualStoryAgent):
             'target': ('pokemon', source, None), 'rules': rules,
             'objectives': [],
             'context': {'storage_retrieval': True, 'stored_pokemon': stored,
+                        'requires_party_deposit': len(facts.get('party', [])) >= 6,
+                        'stored_pokemon_not_fully_healthy': (
+                            stored.get('hp', 0) < stored.get('max_hp', 0)
+                            or stored.get('status', 'None') != 'None'),
                         'required_for': []}})
         objective = f'Withdraw {source} from storage so it can produce {target}'
         if objective not in entry['objectives']:
             entry['objectives'].append(objective)
         if target not in entry['context']['required_for']:
             entry['context']['required_for'].append(target)
+        if method is not None:
+            context = entry['context']
+            preview = self.post_withdrawal_acquisition(stored, target, method, facts)
+            options = context.setdefault('post_withdrawal_acquisitions', [])
+            if preview not in options:
+                options.append(preview)
+            context['post_withdrawal_options_share_one_individual'] = True
+            context['post_withdrawal_scope'] = (
+                'Possible follow-ups, not rewards of withdrawal or a guaranteed combined yield. '
+                'Evolution changes this individual; NPC trade gives it away. Travel, access, '
+                'any needed recovery and menu execution still need planning. Recovery is not '
+                'required by every alternative; item price does not prove an accessible seller.')
 
     def add_stored_battler_retrieval(self, groups, facts):
         """Recover an earned main battler rather than train a replacement."""

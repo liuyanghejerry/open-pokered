@@ -2933,6 +2933,76 @@ class AutonomousTests(unittest.TestCase):
         self.assertEqual(groups['retrieve:Charmander']['target'], ('pokemon', 'Charmander', None))
         self.assertEqual(groups['retrieve:Charmander']['context']['stored_pokemon']['box'], 2)
 
+    def test_storage_preview_accounts_for_real_level_trigger_and_level_cap(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        pc = Rule('pc', 'Center', 'Center:pc', ['sign:1'], [], [], ('pc', 'storage', True), [])
+        agent.index = Mock(by_effect={('pc', 'storage', True): [pc]})
+        method = {'method': 'evolution', 'from_species': 'Tentacool', 'trigger': 'level', 'level': 30}
+        for current, trigger in ((29, 30), (40, 41), (100, None)):
+            stored = {'box': 2, 'index': 4, 'species': 'Tentacool', 'level': current}
+            facts = {'party': [], 'stored_pokemon': [stored], 'bag': {}}
+            groups = {}
+            agent.add_storage_retrieval(groups, facts, 'Tentacool', 'Tentacruel', method)
+            context = groups['retrieve:Tentacool']['context']
+            preview = context['post_withdrawal_acquisitions'][0]
+            self.assertFalse(preview['withdrawal_registers_target'])
+            self.assertEqual(preview['experience_trigger_level'], trigger)
+            self.assertEqual(preview['level_up_possible'], current < 100)
+            if trigger:
+                self.assertEqual(preview['training_cost']['levels_remaining'], 1)
+                self.assertGreater(preview['training_cost']['remaining_experience_min'], 0)
+            else:
+                self.assertNotIn('training_cost', preview)
+            self.assertEqual(context['stored_pokemon'], stored)
+            self.assertEqual(facts['party'], [])
+
+    def test_storage_preview_distinguishes_held_stone_from_reference_purchase_cost(self):
+        from openpokered.autonomous_story import ITEM_CATALOG
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        pc = Rule('pc', 'Center', 'Center:pc', ['sign:1'], [], [], ('pc', 'storage', True), [])
+        agent.index = Mock(by_effect={('pc', 'storage', True): [pc]})
+        method = {'method': 'evolution', 'from_species': 'Growlithe', 'trigger': 'item', 'item': 'FireStone'}
+        stored = {'box': 1, 'index': 3, 'species': 'Growlithe', 'level': 32,
+                  'hp': 10, 'max_hp': 80, 'status': 'Sleep(1)'}
+        for quantity in (0, 1):
+            facts = {'party': [{}] * 6, 'stored_pokemon': [stored], 'bag': {'FIRESTONE': quantity}}
+            groups = {}
+            agent.add_storage_retrieval(groups, facts, 'Growlithe', 'Arcanine', method)
+            context = groups['retrieve:Growlithe']['context']
+            preview = context['post_withdrawal_acquisitions'][0]
+            self.assertEqual(preview['required_item'], 'FireStone')
+            self.assertEqual(preview['item_quantity_held'], quantity)
+            self.assertEqual(preview['item_missing'], not quantity)
+            self.assertEqual(preview['item_unit_price_reference'], ITEM_CATALOG['FireStone']['price'])
+            self.assertEqual(preview['acquisition_contract']['direct_cost']['consumed_items'], {'FireStone': 1})
+            self.assertTrue(context['requires_party_deposit'])
+            self.assertTrue(context['stored_pokemon_not_fully_healthy'])
+            self.assertEqual(len(groups), 1)  # Evidence does not force a shop or route.
+
+    def test_storage_preview_keeps_trade_and_evolution_as_alternatives_for_one_individual(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        pc = Rule('pc', 'Center', 'Center:pc', ['sign:1'], [], [], ('pc', 'storage', True), [])
+        agent.index = Mock(by_effect={('pc', 'storage', True): [pc]})
+        evolution = {'method': 'evolution', 'from_species': 'Abra', 'trigger': 'level', 'level': 16}
+        trade = {'method': 'npc_trade', 'from_species': 'Abra', 'map': 'Route2TradeHouse',
+                 'completion_flag': 'TRADE_COMPLETE'}
+        stored = {'box': 0, 'index': 10, 'species': 'Abra', 'level': 10}
+        facts = {'party': [{'species': 'Charizard'}], 'stored_pokemon': [stored],
+                 'bag': {}, 'flags': {'TRADE_COMPLETE': False}}
+        groups = {}
+        for target, method in [('Kadabra', evolution), ('MrMime', trade), ('MrMime', trade)]:
+            agent.add_storage_retrieval(groups, facts, 'Abra', target, method)
+        context = groups['retrieve:Abra']['context']
+        previews = context['post_withdrawal_acquisitions']
+        self.assertEqual(len(previews), 2)
+        self.assertEqual(context['required_for'], ['Kadabra', 'MrMime'])
+        self.assertTrue(context['post_withdrawal_options_share_one_individual'])
+        self.assertEqual(previews[0]['training_cost']['levels_remaining'], 6)
+        self.assertEqual(previews[1]['acquisition_contract']['direct_cost']['relinquished_species'], ['Abra'])
+        self.assertFalse(previews[1]['trade_already_completed'])
+        self.assertTrue(previews[1]['party_count_requirement_after_withdrawal_met'])
+        self.assertEqual(len(groups), 1)
+
     def test_story_semantics_compile_pc_and_coin_sources(self):
         from openpokered.story_rules import compile_story
         story = {'id': 'Room:test', 'map': 'Room', 'triggers': ['sign:1'], 'program': [
