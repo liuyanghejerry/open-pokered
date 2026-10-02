@@ -523,7 +523,7 @@ def factor_strategy_evidence(state, candidates, min_chars=160):
 
 def strategy_access_evidence(candidates):
     """Compare fresh trigger access without removing legal future goals."""
-    result = {key: {} for key in ('path_found', 'no_path_found', 'not_evaluated')}
+    result = {key: {} for key in ('path_found', 'field_action_needed', 'no_path_found', 'not_evaluated')}
     for key, value in candidates.items():
         try:
             row = json.loads(value)
@@ -533,8 +533,10 @@ def strategy_access_evidence(candidates):
             continue
         context = row.get('context') or {}
         routes = context.get('trigger_navigation') or []
-        if any(route.get('tile_route_found') is True for route in routes):
+        if any(route.get('tile_route_found') is True and not route.get('requires_surf') for route in routes):
             status = 'path_found'
+        elif any(route.get('tile_route_found') is True for route in routes):
+            status = 'field_action_needed'
         elif (routes or context.get('unreachable_trigger_maps')) and all(
                 route.get('tile_route_found') is False for route in routes):
             status = 'no_path_found'
@@ -543,6 +545,7 @@ def strategy_access_evidence(candidates):
         result[status][key] = row['establish']
     result['scope'] = ('Current planning evidence to actual trigger regions, not a victory or legal-action '
         'guarantee. No path found means access still needs resolving before the target can make progress; '
+        'field_action_needed has only a water-relaxed path: an actual Surf action must occur first. '
         'it does not prove permanent impossibility. Not evaluated is unknown, not reachable. '
         'All candidates remain available, including exploration of unproven access.')
     return result
@@ -875,14 +878,16 @@ class AutonomousStoryAgent(DualStoryAgent):
         if layer == 'strategy':
             candidates = compact_strategy_candidates(candidates)
             access = strategy_access_evidence(candidates)
-            if access['path_found'] or access['no_path_found']:
+            if access['path_found'] or access['field_action_needed'] or access['no_path_found']:
                 state = {**state, 'immediate_access_comparison': access}
                 instruction += (' Use immediate_access_comparison to distinguish progress that can '
                     'currently be approached from goals still needing access. Compare reachable '
                     'prerequisites and local actions before repeating an inaccessible training, shopping '
                     'or collection destination. A cheap future goal is not cheap immediate progress '
                     'when its access remains unresolved; choosing it should have a concrete new access '
-                    'hypothesis rather than repeating the unchanged failed approach.')
+                    'hypothesis rather than repeating the unchanged failed approach. '
+                    'field_action_needed is conditional access, not immediate walking access: compare '
+                    'the actual offered field-move prerequisite at its reachable embarkation stance.')
             if any('downstream_context' in value for value in candidates.values()):
                 instruction += (' A route unlock is an intermediate step, not a Pokédex registration. '
                     'Each route_unlocks entry carries its parent goal and downstream_context: '
@@ -1094,6 +1099,26 @@ class AutonomousStoryAgent(DualStoryAgent):
                         routes.append(self.training_navigation[rule.map])
                     elif group['target'][0] == 'catch' and group['target'][1] in getattr(self, 'catch_navigation', {}):
                         routes.append(self.catch_navigation[group['target'][1]])
+                    elif rule.storyline == 'skill:surf':
+                        obstacle = group.get('context', {})
+                        stance = obstacle.get('stance')
+                        name = obstacle.get('map')
+                        if name and stance and obstacle.get('move') == 'Surf':
+                            prerequisites = (field_badge_prerequisites('Surf', facts.get('flags', {}))
+                                + surf_current_prerequisites(obstacle, facts.get('flags', {})))
+                            knows = any('Surf' in mon.get('moves', []) for mon in facts.get('party', []))
+                            # This candidate executes Surf. Its immediate
+                            # approach is the observed dry embarkation stance,
+                            # not the distant landing it has yet to reach.
+                            path = pt.bfs_cross(facts['map'], (facts['x'], facts['y']), name, tuple(stance),
+                                last_map=self.game.last_map, allow_ledges=True, allow_spinners=True,
+                                blocked_maps=barriers, excluded_maps=excluded)
+                            available = bool(path) and knows and not prerequisites
+                            routes.append({'map': name, 'stance': stance, 'field_action': 'Surf',
+                                'tile_route_found': available, 'steps': len(path)-1 if available else None,
+                                'unmet_native_field_prerequisites': prerequisites,
+                                'knows_required_move': knows,
+                                'scope': 'Walk to the observed dry embarkation stance, then execute Surf; landing and onward travel remain uncompleted'})
                     continue
                 points = self.destination_points(rule.map, rule)
                 key = rule.map, tuple(points)

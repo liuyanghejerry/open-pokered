@@ -34,6 +34,7 @@ class AutonomousTests(unittest.TestCase):
             'compact': candidate(['level', 'Parasect', 31], unreachable_trigger_maps=['Grass']),
             'unknown': candidate(['terrain', 'Tree', True]),
             'partial': candidate(['item', 'Key', True], [{'tile_route_found': False}, {}]),
+            'water': candidate(['flag', 'Boulder', True], [{'tile_route_found': True, 'requires_surf': True}]),
             'none': 'No suitable action',
         }
         original = deepcopy(candidates)
@@ -41,6 +42,7 @@ class AutonomousTests(unittest.TestCase):
         self.assertEqual(set(panel['path_found']), {'reachable'})
         self.assertEqual(set(panel['no_path_found']), {'blocked', 'compact'})
         self.assertEqual(set(panel['not_evaluated']), {'unknown', 'partial'})
+        self.assertEqual(set(panel['field_action_needed']), {'water'})
         self.assertEqual(candidates, original)
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
         agent.active = None
@@ -50,6 +52,31 @@ class AutonomousTests(unittest.TestCase):
         self.assertIn('immediate_access_comparison', state)
         self.assertEqual(set(retained), set(candidates))
         self.assertIn('concrete new access', instruction)
+
+    def test_surf_frontier_is_grounded_at_its_dry_stance_not_remote_landing(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.game = Mock(last_map='Town')
+        agent.game.navigation_barriers.return_value = {}
+        agent.game.navigation_excluded_maps.return_value = ()
+        agent.game.live_npcs.return_value = set()
+        agent.observed_navigation_barriers = Mock(return_value={})
+        target = ('location', ['FarTown', 4, 13], True)
+        rule = Rule('surf', 'Island', 'skill:surf', [], [], [], target, [])
+        group = {'target': target, 'rules': [rule], 'context': {
+            'move': 'Surf', 'map': 'Island', 'stance': [4, 10], 'landing': target[1]}}
+        facts = {'map': 'Island', 'x': 8, 'y': 8, 'flags': {'EVENT_BEAT_KOGA': True},
+                 'party': [{'moves': ['Surf']}]}
+        for known, badge, path, expected in [(True, True, ['start', 'step'], True),
+                (False, True, ['start'], False), (True, False, ['start'], False), (True, True, None, False)]:
+            current = {**facts, 'party': [{'moves': ['Surf'] if known else []}],
+                       'flags': {'EVENT_BEAT_KOGA': badge}}
+            with patch('playthrough.bfs_cross', return_value=path) as bfs:
+                agent.annotate_navigation({'surf': group}, current, prune=False)
+            route = group['context']['trigger_navigation'][0]
+            self.assertEqual(route['tile_route_found'], expected)
+            self.assertEqual(route['stance'], [4, 10])
+            self.assertEqual(bfs.call_args.args[2:4], ('Island', (4, 10)))
+            self.assertNotIn('requires_surf', route)  # This is the offered move, not another prerequisite.
 
     def test_recording_rejects_missing_assets_and_fingerprints_png_changes(self):
         import tempfile

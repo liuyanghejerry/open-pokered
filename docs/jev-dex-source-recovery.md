@@ -1219,3 +1219,29 @@ Venusaur Lv48、正常菜单学习Cut／MegaDrain、8瓶HyperPotion、400次预�
 
 新增永久s23-battle-presentation-budget场景，独立运行1/1 PASS（9.6秒）。
 旧驱动c继续保留诊断；新驱动另起fresh m01–m49-d，尚不提前判全链通过。
+
+### 2026-10-02：冲浪的即时入口与条件路线分开核验
+
+65段在986.457秒受阻操作后的协议边界正常保存，仍76 owned／125 seen。
+最终CinnabarPokecenter `(3,3)`、殿堂3队、资金154,505、12枚GreatBall、
+Drowzee Lv19；本段真实购买与训练完整保留。独立原生CONTINUE schema=2
+通过，SRAM `e2cb12ff19c4a076ebd77d9fe9145e550333f2d1efd56779368a59ef1e2981ea`。
+MP4容器151.8秒／1,828,570字节；不是最终成片质量验收。
+
+正式890.245秒决策仍重复选择远方推石：水面放宽后存在的路线被归入
+path_found，但真正能执行的Surf候选没有接近路径证据。现在单独列出
+field_action_needed；Surf候选按已观察到的干岸站位，用严格陆路BFS和
+当前NPC占位验证接近路径，并检查原生徽章／水流前置和队伍招式。
+不把未完成的远端登陆当作当前位置，不删候选，不规定正式收集路线。
+
+528项Python测试通过（15.873秒），涵盖水路分类以及缺招式、缺徽章、
+岸边无路时不能报告可执行。最新存档隔离副本的完整原生规划得到48个
+候选：29个有即时路径、11个需要场地动作、6个未找到路径、2个未知；
+Surf岸边CinnabarIsland `(4,10)`有14步严格陆路，原生条件满足。
+诊断全过程原生状态和来源SRAM均未变化，没有执行Surf或增加图鉴。
+证据 `.artifacts/jev-surf-access-20261002/native-proof.json`，仅证明规划输入，
+尚不声称模型选择或正式跨水成功。
+
+战斗动画修复的联合原生场景s03/s04/s06/s11/s14/s15/s18/s19/s20/s21/s22/s23
+现12/12 PASS（`/tmp/jev-presentation-scenarios.log`）。新驱动fresh-d与旧
+诊断fresh-c仍在运行，各自结果不可混用；124种、完整MP4与大盘尚未达成。
