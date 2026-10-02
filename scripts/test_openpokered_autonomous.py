@@ -2118,6 +2118,58 @@ class AutonomousTests(unittest.TestCase):
                 {'map': 'Town', 'x': 5, 'y': 6}, {}))
             bfs.assert_not_called()
 
+    def test_reachable_alternative_producer_supersedes_old_pc_route_obstruction(self):
+        from types import SimpleNamespace
+        import playthrough as pt
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        target = ('pokemon', 'Pikachu', None)
+        unlock = ('flag', 'OLD_DOOR', True)
+        door = Rule('door', 'SideRoom', 'SideRoom:door', [], [], [], unlock, [])
+        far = Rule('far-pc', 'FarPC', 'FarPC:pc', ['sign:1'], [], [], ('pc', 'storage', True), [])
+        near = Rule('local-pc', 'Town', 'Town:pc', ['sign:1'], [], [], ('pc', 'storage', True), [])
+        blockage = {'map': 'SideRoom', 'destination': 'FarPC', 'goal': target, 'blocking_npcs': [1]}
+        agent.index = SimpleNamespace(rules=[], npc_toggles={('SideRoom', 1): ('BLOCKER', False)},
+            satisfied=lambda goal, facts: False, frontier=lambda goal, facts: [door])
+        agent.maps, agent.field_requirements, agent.navigation_memory = {}, {}, {}
+        agent.navigation_history, agent.navigation_blockage = {'old': blockage}, None
+        agent.game = SimpleNamespace(last_map='Town', stationary_npcs={},
+            navigation_barriers=lambda: {}, navigation_excluded_maps=lambda: ())
+        agent.client = Mock()
+        agent.client.route.return_value = {'found': True, 'legs': [{'to_map': 'FarPC'}]}
+        agent.destination_points = Mock(return_value=[(2, 3)])
+        geometry = {'Town': {}, 'FarPC': {'warps': [{'dest_map_name': 'SideRoom'}]}}
+        facts = {'map': 'Town', 'x': 5, 'y': 6}
+        for local_reachable in (True, False):
+            groups = {'retrieve': {'target': target, 'rules': [far, near], 'objectives': []}}
+            def search(start_map, start, destination, point, **kwargs):
+                return ['real PC trigger'] if local_reachable and destination == 'Town' else None
+            with self.subTest(local_reachable=local_reachable), patch.object(pt, 'MAPS', geometry), \
+                    patch.object(pt, 'bfs_cross', side_effect=search) as bfs:
+                agent.add_navigation_groups(groups, facts)
+            self.assertEqual(unlock in [g['target'] for g in groups.values()], not local_reachable)
+            self.assertEqual(bfs.call_args_list[0].args[2], 'Town')
+            self.assertTrue(all(call.kwargs == {'allow_entry_fallback': False}
+                                for call in agent.destination_points.call_args_list))
+            self.assertEqual(agent.navigation_history, {'old': blockage})
+
+    def test_an_unrelated_reachable_producer_cannot_clear_another_goal_obstruction(self):
+        from types import SimpleNamespace
+        import playthrough as pt
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        target = ('pokemon', 'Pikachu', None)
+        far = Rule('far', 'FarPC', 'FarPC:pc', ['sign:1'], [], [], ('pc', 'storage', True), [])
+        near = Rule('near', 'Town', 'Town:heal', ['npc:1'], [], [], ('heal', 'party', True), [])
+        groups = {'retrieve': {'target': target, 'rules': [far]},
+                  'heal': {'target': ('heal', 'party', True), 'rules': [near]}}
+        agent.destination_points = Mock(return_value=[(2, 3)])
+        agent.game = SimpleNamespace(last_map='Town', navigation_barriers=lambda: {},
+                                     navigation_excluded_maps=lambda: ())
+        with patch.object(pt, 'MAPS', {'Town': {}, 'FarPC': {}}), \
+                patch.object(pt, 'bfs_cross', return_value=None) as bfs:
+            self.assertFalse(agent.remembered_goal_reachable(
+                {'destination': 'FarPC', 'goal': target}, groups, {'map': 'Town', 'x': 5, 'y': 6}, {}))
+        self.assertEqual([call.args[2] for call in bfs.call_args_list], ['FarPC'])
+
     def test_training_history_needs_a_live_target_and_unreachable_training_sites(self):
         from types import SimpleNamespace
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)

@@ -2642,6 +2642,9 @@ class AutonomousStoryAgent(DualStoryAgent):
         Returning from the ending can put us on the other side of an old
         puzzle. Keep that history, but do not advertise its unlock as a
         prerequisite when the requested location is now walkable without it.
+        A reusable goal (healing, PC retrieval, shopping) may also have a
+        different live producer: reaching that exact trigger does not require
+        reopening the failed route to an older provider of the same goal.
         Unknown geometry remains unknown; an entrance is not a trigger proof.
         """
         goal = blockage['goal']
@@ -2662,32 +2665,40 @@ class AutonomousStoryAgent(DualStoryAgent):
                         getattr(self, 'training_navigation', {}).get(rule.map, {}).get('tile_route_found')
                         for rule in group['rules'] if rule.storyline.startswith('skill:')):
                     return True
-        destination = blockage['destination']
-        if (facts.get('map') not in pt.MAPS or destination not in pt.MAPS
-                or 'x' not in facts or 'y' not in facts):
+        if facts.get('map') not in pt.MAPS or 'x' not in facts or 'y' not in facts:
             return False
-        points = []
-        if goal[0] == 'location' and goal[1][0] == destination:
-            points.append(tuple(goal[1][1:]))
+        ways = {}
+        if goal[0] == 'location':
+            ways[goal[1][0]] = []
         else:
             for group in groups.values():
                 if list(group['target']) != list(goal):
                     continue
                 for rule in group['rules']:
-                    if rule.map == destination:
-                        points.extend(self.destination_points(destination, rule, allow_entry_fallback=False))
-        if not points:
-            return False
-        points = sorted(set(points))
-        key = destination, tuple(points)
-        if key not in cache:
-            cache[key] = bool(pt.bfs_cross(facts['map'], (facts['x'], facts['y']),
-                destination, points[0], last_map=self.game.last_map,
-                allow_ledges=True, allow_spinners=True,
-                blocked_maps=self.game.navigation_barriers(),
-                excluded_maps=self.game.navigation_excluded_maps(),
-                goal_nodes={(destination, *point) for point in points}))
-        return cache[key]
+                    ways.setdefault(rule.map, []).append(rule)
+        # Check a local provider first; proving access to the PC beside us
+        # should not require exhaustively searching every distant hotel.
+        for destination in sorted(ways, key=lambda name: (
+                name != facts['map'], name != blockage['destination'], name)):
+            if destination not in pt.MAPS:
+                continue
+            points = ([tuple(goal[1][1:])] if goal[0] == 'location' else
+                      [point for rule in ways[destination] for point in
+                       self.destination_points(destination, rule, allow_entry_fallback=False)])
+            if not points:
+                continue
+            points = sorted(set(points))
+            key = destination, tuple(points)
+            if key not in cache:
+                cache[key] = bool(pt.bfs_cross(facts['map'], (facts['x'], facts['y']),
+                    destination, points[0], last_map=self.game.last_map,
+                    allow_ledges=True, allow_spinners=True,
+                    blocked_maps=self.game.navigation_barriers(),
+                    excluded_maps=self.game.navigation_excluded_maps(),
+                    goal_nodes={(destination, *point) for point in points}))
+            if cache[key]:
+                return True
+        return False
 
     def add_navigation_groups(self, groups, facts):
         blockages = dict(getattr(self, 'navigation_history', {}))
