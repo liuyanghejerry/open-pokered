@@ -1199,3 +1199,23 @@ fresh m49-b已越过a的m21失败点，后在m32驱动400次迭代耗尽，仍�
 回归调查，不把a的结束文本或b的“接近获胜”判成通过，也不盲目放宽预算。
 原始现场分别保留于`/tmp/jev-current-binary-fresh-m49-20261002{a,b}/`；另启
 c同范围fresh并打开PT_DEBUG，记录逐次战斗阶段以定位耗费迭代的原因。
+
+### 2026-10-02：原生动画等待不应消耗战斗操作预算
+
+原生`agent_travel.rs::auto_resolve_battle`已在presentation.waiting时仅推进
+动画帧，而Python驱动仍每11帧按A，动画拒绝输入却消耗400次循环预算。
+现在按只读battle_presentation.waiting等到动画允许输入，再处理同一个操作；
+每次等待另有1800帧硬上限，卡死动画仍失败。400次默认操作上限、胜利旗标、
+fresh里程碑判据未变，游戏及renderer没有修改。
+
+527项Python测试通过（15.744秒），包括动画等待不耗操作次数、动画永久
+卡住仍有界失败的先RED后GREEN测试。隔离原生5只西尔佛劲敌夹具，相同种子、
+Venusaur Lv48、正常菜单学习Cut／MegaDrain、8瓶HyperPotion、400次预算：
+旧版267次在动画等待期按键，耗尽预算仍在胡地结束文本；新0次此类按键，
+真实打赢全部5只，结束HP52。证据`.artifacts/jev-presentation-budget-20261002-prepared/`。
+这不是fresh m32原存档精确重放，也不是正式图鉴：队伍／物品／定位为隔离种子。
+初次夹具未等待warp就开始走而未触发战斗；随后未补招式／药品的对照两版
+均正常战败，全部日志保留，没有把这些记录当成获胜证明。
+
+新增永久s23-battle-presentation-budget场景，独立运行1/1 PASS（9.6秒）。
+旧驱动c继续保留诊断；新驱动另起fresh m01–m49-d，尚不提前判全链通过。

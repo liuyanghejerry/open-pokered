@@ -935,6 +935,54 @@ def s17_pc_withdraw_capacity():
         g.close()
 
 
+@scenario("s23-battle-presentation-budget", "Native animation waits do not spend the 400 battle input iterations")
+def s23_battle_presentation_budget():
+    """Seeded diagnostic only; real five-opponent battle, no outcome injection."""
+    from playthrough_late import use_item
+    g = Game(seed=42, speed=0)
+    try:
+        g.smart_moves = True
+        boot_starter(g, "Venusaur", 48)
+        for item, qty in (("HM01", 1), ("TM21", 1), ("HYPER_POTION", 8)):
+            assert g.d.cmd(cmd="give_item", item=item, qty=qty)["ok"]
+        use_item(g, "Hm01", party_index=0, forget="Growth")
+        use_item(g, "Tm21", party_index=0, forget="Poisonpowder")
+        assert g.d.cmd(cmd="warp", map="SilphCo7F", x=3, y=1)["ok"]
+        g.wait("control_ready", 240)
+        assert g.d.cmd(cmd="set_seed", seed=42)["ok"]
+        g.d.drive(["down"] * 16, frames=20)
+        for _ in range(100):
+            state = g.st()
+            if state["screen"] == "battle":
+                break
+            if state.get("dialogue_state"):
+                g.skip()
+            else:
+                g.tap("a", 30)
+        else:
+            raise AssertionError("Rival fixture did not enter battle")
+        assert len(state["battle_live"]["enemy_party"]) == 5
+        tap, step = g.tap, g.step
+        waited = 0
+        def ready_tap(*args, **kwargs):
+            assert not g.st()["battle_presentation"]["waiting"], "input while native presentation is blocked"
+            return tap(*args, **kwargs)
+        def observe_step(frames):
+            nonlocal waited
+            if g.st()["battle_presentation"]["waiting"]:
+                waited += frames
+            return step(frames)
+        g.tap, g.step = ready_tap, observe_step
+        g.battle_loop(max_iters=400)
+        final = g.st()
+        assert final["screen"] == "overworld" and "player_won: true" in final["battle_phase"], final
+        assert all(mon["hp"] == 0 for mon in final["battle_live"]["enemy_party"])
+        assert waited > 0, "Fixture did not exercise native presentation waiting"
+        g.evidence("s23")
+    finally:
+        g.close()
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--list", action="store_true")

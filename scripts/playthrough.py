@@ -1509,10 +1509,21 @@ class Game:
         dbg = os.environ.get("PT_DEBUG")
         for it in range(max_iters):
             s = self.st()
+            # Native move presentation temporarily rejects all battle input.
+            # Match the native resolver's handshake: spend bounded animation
+            # frames, not this driver's action budget, while input is blocked.
+            # A stuck renderer remains a failure, not an unbounded wait.
+            presentation_frames = 0
+            while s['screen'] == 'battle' and (s.get('battle_presentation') or {}).get('waiting'):
+                assert presentation_frames < 1800, (
+                    f"battle presentation did not finish in 1800 frames: {s['battle_presentation']}")
+                self.step(30)
+                presentation_frames += 30
+                s = self.st()
             if dbg:
                 print(f"   [battle it={it} fight={fight} mode_iters="
                       f"{iters_in_mode}] phase={s['battle_phase']!r} "
-                      f"msg={s['battle_message']!r}", flush=True)
+                      f"msg={s['battle_message']!r} presentation_frames={presentation_frames}", flush=True)
             # LOS trainer battles are not script-suspended, so the
             # caller's wild/run heuristic can't see them — detect the
             # trainer marker in the phase and commit to fighting.

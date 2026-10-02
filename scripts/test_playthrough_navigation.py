@@ -11,6 +11,37 @@ from playthrough_late import damage_slot
 
 
 class NavigationRegression(unittest.TestCase):
+    def test_battle_presentation_waits_without_spending_input_iterations(self):
+        game = nav.Game.__new__(nav.Game)
+        state = {'screen': 'battle', 'map_name': 'Arena', 'battle_phase': 'ShowingText',
+                 'battle_message': 'Move animation', 'battle_presentation': {'waiting': True}}
+        steps = []
+        game.st = lambda: state.copy()
+        def step(frames):
+            steps.append(frames)
+            if sum(steps) >= 90:
+                state['battle_presentation'] = {'waiting': False}
+        def tap(*args):
+            self.assertFalse(state['battle_presentation']['waiting'])
+            state['screen'] = 'overworld'
+        game.step = step
+        game.tap = Mock(side_effect=tap)
+        game.wait = lambda *args: self.assertEqual(state['screen'], 'overworld')
+        game.battle_loop(max_iters=1)
+        self.assertEqual(sum(steps), 90)
+        game.tap.assert_called_once_with('a', 10)
+
+    def test_stuck_battle_presentation_has_a_separate_bounded_frame_guard(self):
+        game = nav.Game.__new__(nav.Game)
+        game.st = lambda: {'screen': 'battle', 'battle_phase': 'ShowingText', 'battle_message': '',
+                          'battle_presentation': {'waiting': True, 'vfx_blockers': ['wave']}}
+        game.step, game.tap, game.wait = Mock(), Mock(), Mock()
+        with self.assertRaisesRegex(AssertionError, 'battle presentation.*1800'):
+            game.battle_loop(max_iters=1)
+        self.assertEqual(sum(call.args[0] for call in game.step.call_args_list), 1800)
+        game.tap.assert_not_called()
+        game.wait.assert_not_called()
+
     def test_cross_map_trip_retargets_after_discovering_destination_npcs(self):
         game = nav.Game.__new__(nav.Game)
         state = {'screen': 'overworld', 'map_name': 'SilphCo4F', 'player_x': 26, 'player_y': 1}
