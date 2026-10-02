@@ -1060,3 +1060,11 @@ HP110，Drowzee仍Lv18；尚未买到球。独立CONTINUE schema=2通过（73只
 测试`/tmp/jev-postclear-navigation-final-tests.log`。首个探针仅因输出路径时
 误解BFS首节点结构而失败，原日志保留，修正报告代码后两次验证通过。
 本次改动是控制器逻辑，不改变屏幕输出。
+
+61段在861.191秒训练操作结束后边界停机，保存于VictoryRoad1F `(17,11)`：
+75 owned／125 seen、八徽章、殿堂1队、资金102,107、12枚PokeBall，Charizard
+Lv91 HP313/317，Drowzee仍Lv18。独立CONTINUE schema=2全字段通过，73只箱内
+个体一致，SRAM `2e3c9f6e7092b74040a4179bea2a78a175147e8fb6394c5b8cc0176b161d0ef5`。
+分段MP4容器226.05秒／3,476,507字节；非完整录像质量审核。62段从此检查点
+加载`733496a3`继续正式OpenRouter收集和录像。fresh m01–m49目前仍在运行，
+尚不计完整通过。
