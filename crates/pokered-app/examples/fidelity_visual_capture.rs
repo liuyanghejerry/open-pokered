@@ -62,6 +62,33 @@ fn battle_fixtures(out: &Path, prefix: &str) {
         }
         g.battle.update_frame(BattleInput {a:true,..BattleInput::none()});
     }
+    // TrainerAI must replace a forced Fly strike, retaining its charge flags.
+    let mut g=game();
+    let player=mk(Species::Pikachu,50,[MoveId::Splash,MoveId::None,MoveId::None,MoveId::None]);
+    let mut enemy=mk(Species::Snorlax,50,[MoveId::Fly,MoveId::None,MoveId::None,MoveId::None]);
+    enemy.status=pokered_core::battle::state::StatusCondition::Poison;
+    g.battle=BattleScreen::from_parties(false,&[player],&[enemy],Some(pokered_data::trainer_data::TrainerClass::Brock));
+    g.battle.trainer_name=Some("BROCK".to_string());
+    g.battle.set_presentation_enabled(false);
+    {
+        let bs=g.battle.battle_state.as_mut().unwrap();
+        bs.enemy.selected_move=MoveId::Fly;
+        bs.enemy.set_status1(pokered_core::battle::state::status1::CHARGING_UP | pokered_core::battle::state::status1::INVULNERABLE);
+    }
+    g.battle.rng=StdBattleRng::from_seed(42);
+    g.battle.phase=BattlePhase::MoveSelect;
+    g.battle.move_menu=Some(MoveMenuState::new(vec![MoveSlot {move_id:MoveId::Splash,current_pp:40,max_pp:40,is_disabled:false}]));
+    g.battle.update_frame(BattleInput {a:true,..BattleInput::none()});
+    g.state.screen=GameScreen::Battle;
+    for _ in 0..5000 {
+        if g.battle.current_message.as_deref().is_some_and(|text| text.contains("FULL") || text.contains("FLY")) {
+            let bs=g.battle.battle_state.as_ref().unwrap();
+            println!("AI forced Fly {:?}; playerHP={} enemyStatus={:?} charge={} AIcount={}",g.battle.current_message,bs.player.active_mon().hp,bs.enemy.active_mon().status,bs.enemy.has_status1(pokered_core::battle::state::status1::CHARGING_UP),g.battle.enemy_ai_count);
+            save(&mut g,out,prefix,"battle-ai-forced-fly");
+            break;
+        }
+        g.battle.update_frame(BattleInput {a:true,..BattleInput::none()});
+    }
 }
 
 fn main() {
