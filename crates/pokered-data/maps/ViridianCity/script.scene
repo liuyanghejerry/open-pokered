@@ -118,10 +118,14 @@ game_scene ViridianCity {
       @speaker("") {
         @t("Yawn! I must have dozed off\nin the sun.\n\nI had this dream about a\nDROWZEE eating my dream.\nWhat's this? Where did this\nTM come from?\n\nThis is spooky! Here, you\ncan have this TM.", "哈欠！我一定是晒太阳晒得睡着\n了。\n\n我做了个梦，梦见一只催眠貘在\n吃我的梦。这是什么？这个TM是\n从哪来的？\n\n真吓人！这个TM就给你吧。")
       }
-      giveItem("TM42", 1)
-      setFlag("EVENT_GOT_TM42")
-      @speaker("") {
-        @t("<PLAYER> received TM42!", "<PLAYER>获得了 TM42！")
+      given = giveItem("TM42", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_TM42")
+        @speaker("") {
+          @t("<PLAYER> received TM42!", "<PLAYER>获得了 TM42！")
+        }
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready.", "你已经带了太多东西。") }
       }
     }
   }

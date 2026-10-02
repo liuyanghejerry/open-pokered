@@ -1,0 +1,1036 @@
+{
+  "case": "early-daisy-reentry",
+  "port_commit": "fix/fidelity-story-rewards",
+  "seed": 42,
+  "before": {
+    "get_state": {
+      "active_script_effect": null,
+      "badges": 0,
+      "battle_bag": null,
+      "battle_inventory": [],
+      "battle_live": null,
+      "battle_message": null,
+      "battle_moves": null,
+      "battle_party_cursor": 0,
+      "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+      "choice": null,
+      "coins": 0,
+      "credits_final_button": null,
+      "credits_phase": null,
+      "dialogue": null,
+      "dialogue_state": null,
+      "evaluation": {
+        "party": [],
+        "party_source": "save_data",
+        "pokedex": {
+          "owned": 0,
+          "owned_numbers": [],
+          "seen": 0,
+          "total": 151
+        }
+      },
+      "field_menu": null,
+      "frame_count": 62,
+      "hall_of_fame_count": 0,
+      "hof_phase": null,
+      "last_outside_map": "PalletTown",
+      "link": {
+        "cable_phase": "Inactive",
+        "role": "Host",
+        "status": "disabled",
+        "trade": null
+      },
+      "map_blocks": [
+        82,
+        79,
+        82,
+        82,
+        79,
+        11,
+        80,
+        82,
+        82,
+        80,
+        78,
+        1,
+        56,
+        57,
+        1,
+        1,
+        56,
+        57,
+        1,
+        77,
+        78,
+        8,
+        60,
+        61,
+        1,
+        8,
+        60,
+        61,
+        1,
+        77,
+        78,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        77,
+        78,
+        1,
+        119,
+        86,
+        1,
+        12,
+        13,
+        14,
+        1,
+        77,
+        78,
+        1,
+        116,
+        116,
+        1,
+        16,
+        58,
+        0,
+        1,
+        77,
+        78,
+        1,
+        1,
+        1,
+        1,
+        119,
+        86,
+        119,
+        49,
+        77,
+        78,
+        10,
+        29,
+        30,
+        49,
+        116,
+        116,
+        10,
+        49,
+        77,
+        80,
+        10,
+        101,
+        100,
+        97,
+        97,
+        97,
+        97,
+        97,
+        79
+      ],
+      "map_id": 0,
+      "map_name": "PalletTown",
+      "money": 3000,
+      "party": [],
+      "party_count": 0,
+      "pc_phase": null,
+      "player_facing": "Down",
+      "player_movement_state": "Idle",
+      "player_name": "",
+      "player_transport": "Walking",
+      "player_x": 15,
+      "player_y": 6,
+      "screen": "overworld",
+      "script_awaiting_battle": false,
+      "script_effect": null,
+      "script_running": false,
+      "shop_phase": null,
+      "text_speed_delay_frames": 3,
+      "warp_fade": "Idle"
+    },
+    "get_bag": [],
+    "get_flags": {
+      "EVENT_DAISY_WALKING": true,
+      "EVENT_ENTERED_BLUES_HOUSE": true,
+      "EVENT_FOLLOWED_OAK_INTO_LAB": true,
+      "EVENT_GOT_TOWN_MAP": true,
+      "__OBJ_HIDDEN_BLUESHOUSE_DAISY1": true,
+      "__OBJ_HIDDEN_BLUESHOUSE_DAISY2": false,
+      "__OBJ_HIDDEN_PALLET_TOWN_OBJ_1": true,
+      "__OBJ_SHOWN_BLUESHOUSE_DAISY1": false,
+      "__OBJ_SHOWN_BLUESHOUSE_DAISY2": true,
+      "__OBJ_SHOWN_PALLET_TOWN_OBJ_1": false
+    },
+    "get_npcs": [
+      {
+        "facing": "Down",
+        "home_x": 8,
+        "home_y": 5,
+        "npc_index": 0,
+        "scripted_path_remaining": 0,
+        "sprite_id": 3,
+        "text_id": 1,
+        "visible": false,
+        "walk_counter": 0,
+        "x": 8,
+        "y": 5
+      },
+      {
+        "facing": "Left",
+        "home_x": 3,
+        "home_y": 8,
+        "npc_index": 1,
+        "scripted_path_remaining": 0,
+        "sprite_id": 13,
+        "text_id": 2,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 2,
+        "y": 8
+      },
+      {
+        "facing": "Right",
+        "home_x": 11,
+        "home_y": 14,
+        "npc_index": 2,
+        "scripted_path_remaining": 0,
+        "sprite_id": 47,
+        "text_id": 3,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 12,
+        "y": 14
+      }
+    ]
+  },
+  "after": {
+    "get_state": {
+      "active_script_effect": null,
+      "badges": 0,
+      "battle_bag": null,
+      "battle_inventory": [],
+      "battle_live": null,
+      "battle_message": null,
+      "battle_moves": null,
+      "battle_party_cursor": 0,
+      "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+      "choice": null,
+      "coins": 0,
+      "credits_final_button": null,
+      "credits_phase": null,
+      "dialogue": null,
+      "dialogue_state": null,
+      "evaluation": {
+        "party": [],
+        "party_source": "save_data",
+        "pokedex": {
+          "owned": 0,
+          "owned_numbers": [],
+          "seen": 0,
+          "total": 151
+        }
+      },
+      "field_menu": null,
+      "frame_count": 122,
+      "hall_of_fame_count": 0,
+      "hof_phase": null,
+      "last_outside_map": "PalletTown",
+      "link": {
+        "cable_phase": "Inactive",
+        "role": "Host",
+        "status": "disabled",
+        "trade": null
+      },
+      "map_blocks": [
+        4,
+        14,
+        5,
+        9,
+        15,
+        1,
+        2,
+        15,
+        15,
+        12,
+        13,
+        15,
+        6,
+        11,
+        15,
+        7
+      ],
+      "map_id": 39,
+      "map_name": "BluesHouse",
+      "money": 3000,
+      "party": [],
+      "party_count": 0,
+      "pc_phase": null,
+      "player_facing": "Down",
+      "player_movement_state": "Idle",
+      "player_name": "",
+      "player_transport": "Walking",
+      "player_x": 3,
+      "player_y": 7,
+      "screen": "overworld",
+      "script_awaiting_battle": false,
+      "script_effect": null,
+      "script_running": false,
+      "shop_phase": null,
+      "text_speed_delay_frames": 3,
+      "warp_fade": "Idle"
+    },
+    "get_bag": [],
+    "get_flags": {
+      "EVENT_DAISY_WALKING": true,
+      "EVENT_ENTERED_BLUES_HOUSE": true,
+      "EVENT_FOLLOWED_OAK_INTO_LAB": true,
+      "EVENT_GOT_TOWN_MAP": true,
+      "__OBJ_HIDDEN_BLUESHOUSE_DAISY1": true,
+      "__OBJ_HIDDEN_BLUESHOUSE_DAISY2": false,
+      "__OBJ_HIDDEN_PALLET_TOWN_OBJ_1": true,
+      "__OBJ_SHOWN_BLUESHOUSE_DAISY1": false,
+      "__OBJ_SHOWN_BLUESHOUSE_DAISY2": true,
+      "__OBJ_SHOWN_PALLET_TOWN_OBJ_1": false
+    },
+    "get_npcs": [
+      {
+        "facing": "Right",
+        "home_x": 2,
+        "home_y": 3,
+        "npc_index": 0,
+        "scripted_path_remaining": 0,
+        "sprite_id": 17,
+        "text_id": 1,
+        "visible": false,
+        "walk_counter": 0,
+        "x": 2,
+        "y": 3
+      },
+      {
+        "facing": "Down",
+        "home_x": 6,
+        "home_y": 4,
+        "npc_index": 1,
+        "scripted_path_remaining": 0,
+        "sprite_id": 17,
+        "text_id": 2,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 6,
+        "y": 5
+      },
+      {
+        "facing": "Down",
+        "home_x": 3,
+        "home_y": 3,
+        "npc_index": 2,
+        "scripted_path_remaining": 0,
+        "sprite_id": 65,
+        "text_id": 3,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 3,
+        "y": 3
+      }
+    ]
+  },
+  "transcript": [
+    {
+      "command": {
+        "cmd": "restore_state",
+        "slot": 0
+      },
+      "response": {
+        "ok": true,
+        "data": {
+          "agent_state": {
+            "badges": {
+              "count": 0
+            },
+            "facing": "Down",
+            "map": {
+              "id": 66,
+              "name": "BikeShop"
+            },
+            "mode": "overworld",
+            "nearby": [
+              {
+                "distance": 0,
+                "id": "warp:0",
+                "interactable": true,
+                "kind": "warp",
+                "position": {
+                  "x": 2,
+                  "y": 7
+                }
+              },
+              {
+                "distance": 1,
+                "id": "warp:1",
+                "interactable": false,
+                "kind": "warp",
+                "position": {
+                  "x": 3,
+                  "y": 7
+                }
+              },
+              {
+                "distance": 3,
+                "id": "sign:5",
+                "interactable": false,
+                "kind": "sign",
+                "position": {
+                  "x": 1,
+                  "y": 5
+                }
+              },
+              {
+                "distance": 4,
+                "id": "npc:1",
+                "interactable": false,
+                "kind": "npc",
+                "name": "MiddleAgedWoman",
+                "position": {
+                  "x": 5,
+                  "y": 6
+                }
+              },
+              {
+                "distance": 5,
+                "id": "npc:2",
+                "interactable": false,
+                "kind": "npc",
+                "name": "Youngster",
+                "position": {
+                  "x": 1,
+                  "y": 3
+                }
+              },
+              {
+                "distance": 5,
+                "id": "sign:4",
+                "interactable": false,
+                "kind": "sign",
+                "position": {
+                  "x": 0,
+                  "y": 4
+                }
+              },
+              {
+                "distance": 6,
+                "id": "sign:1",
+                "interactable": false,
+                "kind": "sign",
+                "position": {
+                  "x": 2,
+                  "y": 1
+                }
+              },
+              {
+                "distance": 6,
+                "id": "sign:2",
+                "interactable": false,
+                "kind": "sign",
+                "position": {
+                  "x": 1,
+                  "y": 2
+                }
+              },
+              {
+                "distance": 6,
+                "id": "sign:3",
+                "interactable": false,
+                "kind": "sign",
+                "position": {
+                  "x": 3,
+                  "y": 2
+                }
+              },
+              {
+                "distance": 8,
+                "id": "sign:0",
+                "interactable": false,
+                "kind": "sign",
+                "position": {
+                  "x": 1,
+                  "y": 0
+                }
+              },
+              {
+                "distance": 9,
+                "id": "npc:0",
+                "interactable": false,
+                "kind": "npc",
+                "name": "BikeShopClerk",
+                "position": {
+                  "x": 6,
+                  "y": 2
+                }
+              }
+            ],
+            "position": {
+              "x": 2,
+              "y": 7
+            }
+          },
+          "hash": "c95da784521dd5cc",
+          "restored": true,
+          "slot": 0,
+          "state": {
+            "active_script_effect": null,
+            "badges": 0,
+            "battle_bag": null,
+            "battle_inventory": [],
+            "battle_live": null,
+            "battle_message": null,
+            "battle_moves": null,
+            "battle_party_cursor": 0,
+            "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+            "choice": null,
+            "coins": 0,
+            "credits_final_button": null,
+            "credits_phase": null,
+            "dialogue": null,
+            "dialogue_state": null,
+            "evaluation": {
+              "party": [],
+              "party_source": "save_data",
+              "pokedex": {
+                "owned": 0,
+                "owned_numbers": [],
+                "seen": 0,
+                "total": 151
+              }
+            },
+            "field_menu": null,
+            "frame_count": 2,
+            "hall_of_fame_count": 0,
+            "hof_phase": null,
+            "last_outside_map": "PalletTown",
+            "link": {
+              "cable_phase": "Inactive",
+              "role": "Host",
+              "status": "disabled",
+              "trade": null
+            },
+            "map_blocks": [
+              4,
+              5,
+              2,
+              3,
+              8,
+              8,
+              6,
+              7,
+              11,
+              10,
+              10,
+              10,
+              10,
+              1,
+              10,
+              9
+            ],
+            "map_id": 66,
+            "map_name": "BikeShop",
+            "money": 3000,
+            "party": [],
+            "party_count": 0,
+            "pc_phase": null,
+            "player_facing": "Down",
+            "player_movement_state": "Idle",
+            "player_name": "",
+            "player_transport": "Walking",
+            "player_x": 2,
+            "player_y": 7,
+            "screen": "overworld",
+            "script_awaiting_battle": false,
+            "script_effect": null,
+            "script_running": false,
+            "shop_phase": null,
+            "text_speed_delay_frames": 3,
+            "warp_fade": "Idle"
+          }
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "set_flag",
+        "name": "EVENT_FOLLOWED_OAK_INTO_LAB",
+        "value": true
+      },
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "command": {
+        "cmd": "set_flag",
+        "name": "EVENT_GOT_TOWN_MAP",
+        "value": true
+      },
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "command": {
+        "cmd": "set_flag",
+        "name": "EVENT_ENTERED_BLUES_HOUSE",
+        "value": true
+      },
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "command": {
+        "cmd": "warp",
+        "map": "PalletTown",
+        "x": 15,
+        "y": 6
+      },
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "command": {
+        "cmd": "step_frames",
+        "count": 60
+      },
+      "response": {
+        "ok": true,
+        "data": {
+          "frame_count": 62,
+          "stepped": 60
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "get_state"
+      },
+      "response": {
+        "ok": true,
+        "data": {
+          "active_script_effect": null,
+          "badges": 0,
+          "battle_bag": null,
+          "battle_inventory": [],
+          "battle_live": null,
+          "battle_message": null,
+          "battle_moves": null,
+          "battle_party_cursor": 0,
+          "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+          "choice": null,
+          "coins": 0,
+          "credits_final_button": null,
+          "credits_phase": null,
+          "dialogue": null,
+          "dialogue_state": null,
+          "evaluation": {
+            "party": [],
+            "party_source": "save_data",
+            "pokedex": {
+              "owned": 0,
+              "owned_numbers": [],
+              "seen": 0,
+              "total": 151
+            }
+          },
+          "field_menu": null,
+          "frame_count": 62,
+          "hall_of_fame_count": 0,
+          "hof_phase": null,
+          "last_outside_map": "PalletTown",
+          "link": {
+            "cable_phase": "Inactive",
+            "role": "Host",
+            "status": "disabled",
+            "trade": null
+          },
+          "map_blocks": [
+            82,
+            79,
+            82,
+            82,
+            79,
+            11,
+            80,
+            82,
+            82,
+            80,
+            78,
+            1,
+            56,
+            57,
+            1,
+            1,
+            56,
+            57,
+            1,
+            77,
+            78,
+            8,
+            60,
+            61,
+            1,
+            8,
+            60,
+            61,
+            1,
+            77,
+            78,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            77,
+            78,
+            1,
+            119,
+            86,
+            1,
+            12,
+            13,
+            14,
+            1,
+            77,
+            78,
+            1,
+            116,
+            116,
+            1,
+            16,
+            58,
+            0,
+            1,
+            77,
+            78,
+            1,
+            1,
+            1,
+            1,
+            119,
+            86,
+            119,
+            49,
+            77,
+            78,
+            10,
+            29,
+            30,
+            49,
+            116,
+            116,
+            10,
+            49,
+            77,
+            80,
+            10,
+            101,
+            100,
+            97,
+            97,
+            97,
+            97,
+            97,
+            79
+          ],
+          "map_id": 0,
+          "map_name": "PalletTown",
+          "money": 3000,
+          "party": [],
+          "party_count": 0,
+          "pc_phase": null,
+          "player_facing": "Down",
+          "player_movement_state": "Idle",
+          "player_name": "",
+          "player_transport": "Walking",
+          "player_x": 15,
+          "player_y": 6,
+          "screen": "overworld",
+          "script_awaiting_battle": false,
+          "script_effect": null,
+          "script_running": false,
+          "shop_phase": null,
+          "text_speed_delay_frames": 3,
+          "warp_fade": "Idle"
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "get_bag"
+      },
+      "response": {
+        "ok": true,
+        "data": []
+      }
+    },
+    {
+      "command": {
+        "cmd": "get_flags"
+      },
+      "response": {
+        "ok": true,
+        "data": {
+          "EVENT_DAISY_WALKING": true,
+          "EVENT_ENTERED_BLUES_HOUSE": true,
+          "EVENT_FOLLOWED_OAK_INTO_LAB": true,
+          "EVENT_GOT_TOWN_MAP": true,
+          "__OBJ_HIDDEN_BLUESHOUSE_DAISY1": true,
+          "__OBJ_HIDDEN_BLUESHOUSE_DAISY2": false,
+          "__OBJ_HIDDEN_PALLET_TOWN_OBJ_1": true,
+          "__OBJ_SHOWN_BLUESHOUSE_DAISY1": false,
+          "__OBJ_SHOWN_BLUESHOUSE_DAISY2": true,
+          "__OBJ_SHOWN_PALLET_TOWN_OBJ_1": false
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "get_npcs"
+      },
+      "response": {
+        "ok": true,
+        "data": [
+          {
+            "facing": "Down",
+            "home_x": 8,
+            "home_y": 5,
+            "npc_index": 0,
+            "scripted_path_remaining": 0,
+            "sprite_id": 3,
+            "text_id": 1,
+            "visible": false,
+            "walk_counter": 0,
+            "x": 8,
+            "y": 5
+          },
+          {
+            "facing": "Left",
+            "home_x": 3,
+            "home_y": 8,
+            "npc_index": 1,
+            "scripted_path_remaining": 0,
+            "sprite_id": 13,
+            "text_id": 2,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 2,
+            "y": 8
+          },
+          {
+            "facing": "Right",
+            "home_x": 11,
+            "home_y": 14,
+            "npc_index": 2,
+            "scripted_path_remaining": 0,
+            "sprite_id": 47,
+            "text_id": 3,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 12,
+            "y": 14
+          }
+        ]
+      }
+    },
+    {
+      "command": {
+        "cmd": "warp",
+        "map": "BluesHouse",
+        "x": 3,
+        "y": 7
+      },
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "command": {
+        "cmd": "step_frames",
+        "count": 60
+      },
+      "response": {
+        "ok": true,
+        "data": {
+          "frame_count": 122,
+          "stepped": 60
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "get_state"
+      },
+      "response": {
+        "ok": true,
+        "data": {
+          "active_script_effect": null,
+          "badges": 0,
+          "battle_bag": null,
+          "battle_inventory": [],
+          "battle_live": null,
+          "battle_message": null,
+          "battle_moves": null,
+          "battle_party_cursor": 0,
+          "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+          "choice": null,
+          "coins": 0,
+          "credits_final_button": null,
+          "credits_phase": null,
+          "dialogue": null,
+          "dialogue_state": null,
+          "evaluation": {
+            "party": [],
+            "party_source": "save_data",
+            "pokedex": {
+              "owned": 0,
+              "owned_numbers": [],
+              "seen": 0,
+              "total": 151
+            }
+          },
+          "field_menu": null,
+          "frame_count": 122,
+          "hall_of_fame_count": 0,
+          "hof_phase": null,
+          "last_outside_map": "PalletTown",
+          "link": {
+            "cable_phase": "Inactive",
+            "role": "Host",
+            "status": "disabled",
+            "trade": null
+          },
+          "map_blocks": [
+            4,
+            14,
+            5,
+            9,
+            15,
+            1,
+            2,
+            15,
+            15,
+            12,
+            13,
+            15,
+            6,
+            11,
+            15,
+            7
+          ],
+          "map_id": 39,
+          "map_name": "BluesHouse",
+          "money": 3000,
+          "party": [],
+          "party_count": 0,
+          "pc_phase": null,
+          "player_facing": "Down",
+          "player_movement_state": "Idle",
+          "player_name": "",
+          "player_transport": "Walking",
+          "player_x": 3,
+          "player_y": 7,
+          "screen": "overworld",
+          "script_awaiting_battle": false,
+          "script_effect": null,
+          "script_running": false,
+          "shop_phase": null,
+          "text_speed_delay_frames": 3,
+          "warp_fade": "Idle"
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "get_bag"
+      },
+      "response": {
+        "ok": true,
+        "data": []
+      }
+    },
+    {
+      "command": {
+        "cmd": "get_flags"
+      },
+      "response": {
+        "ok": true,
+        "data": {
+          "EVENT_DAISY_WALKING": true,
+          "EVENT_ENTERED_BLUES_HOUSE": true,
+          "EVENT_FOLLOWED_OAK_INTO_LAB": true,
+          "EVENT_GOT_TOWN_MAP": true,
+          "__OBJ_HIDDEN_BLUESHOUSE_DAISY1": true,
+          "__OBJ_HIDDEN_BLUESHOUSE_DAISY2": false,
+          "__OBJ_HIDDEN_PALLET_TOWN_OBJ_1": true,
+          "__OBJ_SHOWN_BLUESHOUSE_DAISY1": false,
+          "__OBJ_SHOWN_BLUESHOUSE_DAISY2": true,
+          "__OBJ_SHOWN_PALLET_TOWN_OBJ_1": false
+        }
+      }
+    },
+    {
+      "command": {
+        "cmd": "get_npcs"
+      },
+      "response": {
+        "ok": true,
+        "data": [
+          {
+            "facing": "Right",
+            "home_x": 2,
+            "home_y": 3,
+            "npc_index": 0,
+            "scripted_path_remaining": 0,
+            "sprite_id": 17,
+            "text_id": 1,
+            "visible": false,
+            "walk_counter": 0,
+            "x": 2,
+            "y": 3
+          },
+          {
+            "facing": "Down",
+            "home_x": 6,
+            "home_y": 4,
+            "npc_index": 1,
+            "scripted_path_remaining": 0,
+            "sprite_id": 17,
+            "text_id": 2,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 6,
+            "y": 5
+          },
+          {
+            "facing": "Down",
+            "home_x": 3,
+            "home_y": 3,
+            "npc_index": 2,
+            "scripted_path_remaining": 0,
+            "sprite_id": 65,
+            "text_id": 3,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 3,
+            "y": 3
+          }
+        ]
+      }
+    }
+  ]
+}

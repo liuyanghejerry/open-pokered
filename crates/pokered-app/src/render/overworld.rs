@@ -1729,28 +1729,26 @@ fn draw_overworld_impl(
             if let Ok(cached) = rm.load_emote(emote_asset) {
                 let ts = &cached.tileset;
                 let tpr = cached.source_size.0 / TILE_SIZE;
-                if let Some(npc) = screen
-                    .npc_states
-                    .iter()
-                    .find(|n| n.visible && format!("{}", n.npc_index) == bubble.npc_id)
-                {
-                    let npc_screen_tx = npc.x as i32 * 2 - view_origin_tx;
-                    let npc_screen_ty = npc.y as i32 * 2 - view_origin_ty;
-                    let (walk_dx, walk_dy) = if npc.walk_counter > 0 {
-                        let px = npc_walk_pixel_offset(npc.walk_counter);
-                        match npc.facing {
-                            Direction::Down => (0i32, px),
-                            Direction::Up => (0, -px),
-                            Direction::Left => (-px, 0),
-                            Direction::Right => (px, 0),
-                        }
-                    } else {
-                        (0, 0)
-                    };
-                    let npc_px_x = npc_screen_tx * TILE_SIZE as i32 + walk_dx - view_sub_x;
-                    let npc_px_y = npc_screen_ty * TILE_SIZE as i32 + walk_dy - view_sub_y;
-                    let emote_x = npc_px_x;
-                    let emote_y = npc_px_y - TILE_SIZE as i32 * 2;
+                let anchor = if bubble.npc_id == "player" {
+                    Some((screen_center_tx as i32 * TILE_SIZE as i32,
+                          screen_center_ty as i32 * TILE_SIZE as i32))
+                } else {
+                    screen.npc_states.iter()
+                        .find(|npc| npc.visible && format!("{}", npc.npc_index) == bubble.npc_id)
+                        .map(|npc| {
+                            let (walk_dx, walk_dy) = if npc.walk_counter > 0 {
+                                let px = npc_walk_pixel_offset(npc.walk_counter);
+                                match npc.facing {
+                                    Direction::Down => (0, px), Direction::Up => (0, -px),
+                                    Direction::Left => (-px, 0), Direction::Right => (px, 0),
+                                }
+                            } else { (0, 0) };
+                            ((npc.x as i32 * 2 - view_origin_tx) * TILE_SIZE as i32 + walk_dx - view_sub_x,
+                             (npc.y as i32 * 2 - view_origin_ty) * TILE_SIZE as i32 + walk_dy - view_sub_y)
+                        })
+                };
+                if let Some((emote_x, anchor_y)) = anchor {
+                    let emote_y = anchor_y - TILE_SIZE as i32 * 2;
                     for row in 0..2_u32 {
                         for col in 0..2_u32 {
                             let tile_idx = row as usize * tpr as usize + col as usize;

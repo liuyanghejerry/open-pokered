@@ -184,6 +184,10 @@ impl AudioOutput {
         }
     }
 
+    pub fn is_music_playing(&self) -> bool {
+        self.manager.lock().map(|manager| manager.is_music_playing()).unwrap_or(false)
+    }
+
     pub fn last_music_id(&self) -> Option<MusicId> {
         if let Ok(mgr) = self.manager.lock() {
             mgr.last_music_id()

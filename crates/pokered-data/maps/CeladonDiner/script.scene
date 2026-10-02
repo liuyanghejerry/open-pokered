@@ -48,10 +48,14 @@ game_scene CeladonDiner {
       @speaker("") {
         @t("Go ahead! Laugh!\n\nI'm flat out busted!\n\nNo more slots for me! I'm\ngoing straight!\n\nHere! I won't be needing\nthis any- more!", "尽管笑吧！\n\n我彻底破产了！\n\n我再也不玩老虎机了！我要改邪\n归正！\n\n给你！这个我再也用不上了！")
       }
-      giveItem("COIN_CASE", 1)
-      setFlag("EVENT_GOT_COIN_CASE")
-      @speaker("") {
-        @t("<PLAYER> received a COIN\nCASE!", "<PLAYER>得到了代币盒！")
+      given = giveItem("COIN_CASE", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_COIN_CASE")
+        @speaker("") {
+          @t("<PLAYER> received a COIN\nCASE!", "<PLAYER>得到了代币盒！")
+        }
+      } @else {
+        @speaker("") { @t("Make room for this!", "给这个腾出地方来！") }
       }
     }
   }

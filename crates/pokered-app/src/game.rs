@@ -4038,6 +4038,8 @@ impl PokemonGame {
                             resources.clear_cache();
                         }
                     }
+                    self.overworld.script_music_playing = self.audio.as_ref()
+                        .is_some_and(|audio| audio.is_music_playing());
                     let action = self.overworld.update_frame(ow_input);
 
                     self.apply_overworld_game_data_requests();

@@ -59,6 +59,7 @@ pub enum PokemonScriptCommand {
     },
     PlayShipDeparture,
     EnterHallOfFame,
+    WaitMusic,
 }
 
 impl PokemonScriptCommand {
@@ -87,6 +88,7 @@ impl PokemonScriptCommand {
             Self::ReplaceTileBlock { .. } => "replaceTileBlock",
             Self::PlayShipDeparture => "playShipDeparture",
             Self::EnterHallOfFame => "enterHallOfFame",
+            Self::WaitMusic => "waitMusic",
         }
     }
 
@@ -126,7 +128,8 @@ impl PokemonScriptCommand {
             | Self::LinkStart
             | Self::WithdrawDaycare
             | Self::PlayShipDeparture
-            | Self::EnterHallOfFame => vec![],
+            | Self::EnterHallOfFame
+            | Self::WaitMusic => vec![],
         };
         ScriptCommand::Custom { name, args }
     }
@@ -165,6 +168,7 @@ impl PokemonScriptCommand {
                 .collect::<Result<Vec<_>, _>>()
         };
         Ok(match name {
+            "waitMusic" => Self::WaitMusic,
             "oldManTutorial" => Self::OldManTutorial,
             "tradePokemon" => Self::TradePokemon {
                 offered: string(0)?,

@@ -391,6 +391,14 @@ impl ScriptApiRegistrar for PokemonScriptApi {
         // core engine before the `Custom` refactor dropped their dedicated
         // variants; games must now register them. JS names unchanged. ────────
 
+        // Wait for the sequencer, rather than guessing a jingle duration.
+        engine.register_async_fn(
+            "waitMusic",
+            |_args: &[JsValue], _ctx: &mut Context| -> JsResult<ScriptCommand> {
+                Ok(PokemonScriptCommand::WaitMusic.into_script_command())
+            },
+        );
+
         // game.playShipDeparture() -> Promise<void>
         // The S.S. Anne departure cutscene (VermilionDock): the blocking
         // ship-sail animation (smoke puffs + view scroll + erase).

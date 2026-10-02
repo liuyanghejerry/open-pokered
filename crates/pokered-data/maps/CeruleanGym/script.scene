@@ -11,12 +11,15 @@ game_scene CeruleanGym {
     @if (getFlag("EVENT_BEAT_MISTY")) {
       @if (!getFlag("EVENT_GOT_TM11")) {
         // Beat Misty previously but had no room for the TM — try again.
-        @speaker("") { @t("You better make room for\nthis!", "你最好腾出地方来！") }
-        giveItem("TM11", 1)
-        setFlag("EVENT_GOT_TM11")
-        @speaker("") { @t("<PLAYER> received TM11!", "<PLAYER>得到了 TM11！") }
-        @speaker("") {
-          @t("TM11 teaches BUBBLEBEAM!\n\nUse it on an aquatic\nPOKeMON!", "TM11能学会泡沫光线！\n\n把它用在水系宝可梦身上！")
+        given = giveItem("TM11", 1)
+        @if (given) {
+          setFlag("EVENT_GOT_TM11")
+          @speaker("") { @t("<PLAYER> received TM11!", "<PLAYER>得到了 TM11！") }
+          @speaker("") {
+            @t("TM11 teaches BUBBLEBEAM!\n\nUse it on an aquatic\nPOKeMON!", "TM11能学会泡沫光线！\n\n把它用在水系宝可梦身上！")
+          }
+        } @else {
+          @speaker("") { @t("You better make room for\nthis!", "你最好腾出地方来！") }
         }
       } @else {
         @speaker("") {
@@ -37,11 +40,15 @@ game_scene CeruleanGym {
         @speaker("") {
           @t("The CASCADEBADGE makes all\nPOKeMON up to L30 obey!\n\nThat includes even\noutsiders!\n\nThere's more, you can now\nuse CUT any time!\n\nYou can CUT down small\nbushes to open new paths!\n\nYou can also have my\nfavorite TM!", "蓝色徽章能让所有宝可梦到L30\n都听话！\n\n就算不是自己人也可以！\n\n还有，你现在可以随时使用居合\n斩！\n\n你能用居合斩砍倒小树丛开辟新\n路！\n\n你还可以拿到我最爱的TM！")
         }
-        giveItem("TM11", 1)
-        setFlag("EVENT_GOT_TM11")
-        @speaker("") { @t("<PLAYER> received TM11!", "<PLAYER>得到了 TM11！") }
-        @speaker("") {
-          @t("TM11 teaches BUBBLEBEAM!\n\nUse it on an aquatic\nPOKeMON!", "TM11能学会泡沫光线！\n\n把它用在水系宝可梦身上！")
+        given = giveItem("TM11", 1)
+        @if (given) {
+          setFlag("EVENT_GOT_TM11")
+          @speaker("") { @t("<PLAYER> received TM11!", "<PLAYER>得到了 TM11！") }
+          @speaker("") {
+            @t("TM11 teaches BUBBLEBEAM!\n\nUse it on an aquatic\nPOKeMON!", "TM11能学会泡沫光线！\n\n把它用在水系宝可梦身上！")
+          }
+        } @else {
+          @speaker("") { @t("You better make room for\nthis!", "你最好腾出地方来！") }
         }
         // Deactivate the gym trainers (original sets these in Misty's post-battle).
         setFlag("EVENT_BEAT_CERULEAN_GYM_TRAINER_0")

@@ -669,6 +669,8 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     /// drained + applied by the app layer (which owns the party).
     pub pending_set_nickname: Option<(u8, String)>,
     pub pending_emotion_bubble: Option<EmotionBubbleState>,
+    /// Frontend sequencer status for blocking script jingles.
+    pub script_music_playing: bool,
     pub pending_healing_machine: Option<HealingMachineState>,
     pub last_map: Option<MapId>,
     /// Position on `last_map` where the player stepped onto the entrance warp —
@@ -1116,6 +1118,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             link_opponent: None,
             pending_set_nickname: None,
             pending_emotion_bubble: None,
+            script_music_playing: false,
             pending_healing_machine: None,
             last_map: super::map_loading::scripted_last_map(start_map).or(Some(MapId::PalletTown)),
             last_map_entry: None,

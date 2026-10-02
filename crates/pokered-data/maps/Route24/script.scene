@@ -44,6 +44,11 @@ game_scene Route24 {
         // Bag full — defer the prize; re-arm the reward for the next walk-in.
         setFlag("EVENT_NUGGET_REWARD_AVAILABLE")
         @speaker("") { @t("You don't have any room!", "你没有空位了！") }
+        // Original DefaultScript pushes a blocked automatic approach down.
+        @if (getPlayerX() == 10 && getPlayerY() == 15) {
+          movePlayerRelative(["down"])
+          resetFlag("EVENT_NUGGET_REWARD_AVAILABLE")
+        }
       }
     }
   }

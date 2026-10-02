@@ -87,6 +87,9 @@ impl AudioOutput {
     pub fn stop_all(&self) {
         self.manager.borrow_mut().stop_all()
     }
+    pub fn is_music_playing(&self) -> bool {
+        self.manager.borrow_mut().is_music_playing()
+    }
     pub fn last_music_id(&self) -> Option<MusicId> {
         self.manager.borrow_mut().last_music_id()
     }

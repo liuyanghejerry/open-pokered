@@ -619,6 +619,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 self.state.current_map,
                 &mut self.sfx_event,
                 &mut self.ship_departure,
+                self.script_music_playing,
             );
             if !naming_was_open && self.pending_naming_screen.is_some() {
                 // DisplayNamingScreen entry: GBPalWhiteOutWithDelay3 before the
@@ -2375,6 +2376,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         current_map: MapId,
         sfx_event: &mut OverworldSfxEvent,
         ship_departure: &mut Option<presentation::ShipDepartureState>,
+        script_music_playing: bool,
     ) -> bool {
         match effect {
             script_bridge::ScriptEffect::ShowDialogue { text } => {
@@ -2748,6 +2750,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     result_index.is_some()
                 }
             }
+            script_bridge::ScriptEffect::WaitMusic => !script_music_playing,
             script_bridge::ScriptEffect::SetPartyNickname { .. } => true,
             script_bridge::ScriptEffect::ShowEmotionBubble {
                 npc_id,

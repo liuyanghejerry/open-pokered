@@ -139,7 +139,8 @@ game_scene MtMoonB2F {
           }
           setFlag("EVENT_GOT_DOME_FOSSIL")
           hideObjectByName("MTMOONB2F_DOME_FOSSIL")
-          // The Super Nerd grabs the other (Helix) fossil for himself.
+          // Original: walk RIGHT then UP to the other fossil before taking it.
+          moveNpc("1", [[13, 8], [13, 7]])
           @speaker("") {
             @t("All right. Then this is\nmine!", "好吧。那这个归我了！")
           }
@@ -173,7 +174,8 @@ game_scene MtMoonB2F {
           }
           setFlag("EVENT_GOT_HELIX_FOSSIL")
           hideObjectByName("MTMOONB2F_HELIX_FOSSIL")
-          // The Super Nerd grabs the other (Dome) fossil for himself.
+          // Original: walk UP to the other fossil before taking it.
+          moveNpc("1", [[12, 7]])
           @speaker("") {
             @t("All right. Then this is\nmine!", "好吧。那这个归我了！")
           }

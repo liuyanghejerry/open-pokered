@@ -54,6 +54,7 @@ pub const POKERED_SCRIPT_FUNCTIONS: &[&str] = &[
     "takeItem",
     "takeMoney",
     "tradePokemon",
+    "waitMusic",
     "withdrawDaycare",
 ];
 

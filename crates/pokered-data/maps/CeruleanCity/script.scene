@@ -31,19 +31,15 @@ game_scene CeruleanCity {
       setJoyIgnore(0xF0)
       playSound("SFX_STOP_ALL_MUSIC")
       playMusic("MUSIC_MEET_RIVAL")
-      // Orig: for the (21,6) trigger the rival's mapX is overwritten to 25
-      // BEFORE ShowObject, so he appears in the fenced yard east of the bridge
-      // and walks down there; for (20,6) he walks down from his (20,2) spawn.
-      // Both cases: movement DOWN x3 (CeruleanCityMovement1), then face DOWN
-      // (CeruleanCityFaceRivalScript).
+      // Original sprite mapX 25 includes a four-tile border: map x=21.
       @if (getPlayerX() == 21) {
-        setNpcPosition("CERULEAN_RIVAL", 25, 2)
+        setNpcPosition("CERULEAN_RIVAL", 21, 2)
       }
       showObjectByName("CERULEAN_RIVAL")
       @if (getPlayerX() == 20) {
         moveNpc("CERULEAN_RIVAL", [[20, 3], [20, 4], [20, 5]])
       } @else {
-        moveNpc("CERULEAN_RIVAL", [[25, 3], [25, 4], [25, 5]])
+        moveNpc("CERULEAN_RIVAL", [[21, 3], [21, 4], [21, 5]])
       }
       faceNpc("CERULEAN_RIVAL", "down")
       clearJoyIgnore()
@@ -68,10 +64,14 @@ game_scene CeruleanCity {
 
       setFlag("EVENT_BEAT_CERULEAN_RIVAL")
 
+      @say("") {
+        @t("<RIVAL>: Hey, guess what?\n\nI went to BILL's and got him\nto show me his rare POKeMON!\n\nThat added a lot of pages to\nmy POKeDEX!\n\nAfter all, BILL's world\nfamous as a POKeMANIAC!\n\nHe invented the POKeMON\nStorage System on PC!\n\nSince you're using his\nsystem, go thank him!\n\nWell, I better get rolling!\nSmell ya later!", "<RIVAL>：嘿，你知道吗？\n\n我去找正辉，让他给我看了他珍\n藏的宝可梦！\n\n这让我的图鉴增加了很多页数！\n\n毕竟，正辉是世界闻名的宝可梦\n狂！\n\n他发明了电脑上的宝可梦存储系\n统！\n\n既然你在用他的系统，去谢谢他\n吧！\n\n好了，我该走了！回头见！")
+      }
+
       // Orig CeruleanCityRivalDefeatedScript/Cleanup: stop battle music, face
       // DOWN, sidestep around the player and walk DOWN x6 off the bridge, hide
       // him, restore the default town music. From (20,5): RIGHT then down
-      // (CeruleanCityMovement4); from (25,5): LEFT then down (Movement3).
+      // (CeruleanCityMovement4); from (21,5): LEFT then down (Movement3).
       playSound("SFX_STOP_ALL_MUSIC")
       // Orig CeruleanCity.asm:182: Music_RivalAlternateStart — the rival theme
       // restarts with a different first measure as he walks off.
@@ -81,7 +81,7 @@ game_scene CeruleanCity {
       @if (getPlayerX() == 20) {
         moveNpc("CERULEAN_RIVAL", [[21, 5], [21, 6], [21, 7], [21, 8], [21, 9], [21, 10], [21, 11]])
       } @else {
-        moveNpc("CERULEAN_RIVAL", [[24, 5], [24, 6], [24, 7], [24, 8], [24, 9], [24, 10], [24, 11]])
+        moveNpc("CERULEAN_RIVAL", [[20, 5], [20, 6], [20, 7], [20, 8], [20, 9], [20, 10], [20, 11]])
       }
       hideObjectByName("CERULEAN_RIVAL")
       playMusic("Cities2")
@@ -120,26 +120,33 @@ game_scene CeruleanCity {
         @speaker("") {
           @t("OK! I'll return the TM I\nstole!", "好！我会把偷来的TM还回去！")
         }
-        giveItem("TM_28", 1)
-        @speaker("") {
-          @t("<PLAYER> recovered TM28!", "<PLAYER>找回了 TM28！")
+        given = giveItem("TM_28", 1)
+        @if (given) {
+          @speaker("") {
+            @t("<PLAYER> recovered TM28!", "<PLAYER>找回了 TM28！")
+          }
+          @speaker("") {
+            @t("I better get moving! Bye!", "我最好赶快离开！再见！")
+          }
+          hideObjectByName("CERULEAN_ROCKET")
+        } @else {
+          @speaker("") { @t("Make room for this!\n\nI can't run until I give it\nto you!", "腾出地方来！\n\n不把它给你，我可不能跑！") }
         }
-        @speaker("") {
-          @t("I better get moving! Bye!", "我最好赶快离开！再见！")
-        }
-        hideObjectByName("CERULEAN_ROCKET")
       }
     } @else {
-      // Already beaten: thief is gone (object hidden). If room was full before,
-      // returning the TM. Orig re-offers the TM until accepted.
+      // A full-bag failure leaves the thief here until TM28 is accepted.
       @speaker("") {
         @t("OK! I'll return the TM I\nstole!", "好！我会把偷来的TM还回去！")
       }
-      giveItem("TM_28", 1)
-      @speaker("") {
-        @t("<PLAYER> recovered TM28!", "<PLAYER>找回了 TM28！")
+      given = giveItem("TM_28", 1)
+      @if (given) {
+        @speaker("") {
+          @t("<PLAYER> recovered TM28!", "<PLAYER>找回了 TM28！")
+        }
+        hideObjectByName("CERULEAN_ROCKET")
+      } @else {
+        @speaker("") { @t("Make room for this!\n\nI can't run until I give it\nto you!", "腾出地方来！\n\n不把它给你，我可不能跑！") }
       }
-      hideObjectByName("CERULEAN_ROCKET")
     }
   }
 
@@ -164,14 +171,18 @@ game_scene CeruleanCity {
         @speaker("") {
           @t("OK! I'll return the TM I\nstole!", "好！我会把偷来的TM还回去！")
         }
-        giveItem("TM_28", 1)
-        @speaker("") {
-          @t("<PLAYER> recovered TM28!", "<PLAYER>找回了 TM28！")
+        given = giveItem("TM_28", 1)
+        @if (given) {
+          @speaker("") {
+            @t("<PLAYER> recovered TM28!", "<PLAYER>找回了 TM28！")
+          }
+          @speaker("") {
+            @t("I better get moving! Bye!", "我最好赶快离开！再见！")
+          }
+          hideObjectByName("CERULEAN_ROCKET")
+        } @else {
+          @speaker("") { @t("Make room for this!\n\nI can't run until I give it\nto you!", "腾出地方来！\n\n不把它给你，我可不能跑！") }
         }
-        @speaker("") {
-          @t("I better get moving! Bye!", "我最好赶快离开！再见！")
-        }
-        hideObjectByName("CERULEAN_ROCKET")
       }
     }
   }

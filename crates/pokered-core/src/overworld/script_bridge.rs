@@ -129,6 +129,8 @@ pub enum ScriptEffect {
     PlaySound {
         sound_id: String,
     },
+    /// Block until the frontend sequencer reports the current jingle ended.
+    WaitMusic,
     StopMusic,
     FadeOutMusic,
     StartBattle {
@@ -422,6 +424,7 @@ impl ScriptEffect {
             ScriptEffect::PlayMusic { music_id } => {
                 json!({ "effect": "PlayMusic", "music_id": music_id })
             }
+            ScriptEffect::WaitMusic => json!({ "effect": "WaitMusic" }),
             ScriptEffect::PlaySound { sound_id } => {
                 json!({ "effect": "PlaySound", "sound_id": sound_id })
             }
@@ -872,6 +875,7 @@ fn dispatch_custom(name: &str, args: &[Value]) -> ScriptEffect {
         },
         PokemonScriptCommand::PlayShipDeparture => ScriptEffect::PlayShipDeparture { started: false },
         PokemonScriptCommand::EnterHallOfFame => ScriptEffect::HallOfFameCeremony,
+        PokemonScriptCommand::WaitMusic => ScriptEffect::WaitMusic,
     }
 }
 

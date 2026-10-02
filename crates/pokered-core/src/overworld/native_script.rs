@@ -407,6 +407,7 @@ impl ScriptHost for NativeHost {
             }
             "withdrawDaycare" => Ok(pokemon(PokemonScriptCommand::WithdrawDaycare)),
 
+            "waitMusic" => Ok(pokemon(PokemonScriptCommand::WaitMusic)),
             "playShipDeparture" => Ok(pokemon(PokemonScriptCommand::PlayShipDeparture)),
             "animateHealingMachine" => Ok(pokemon(PokemonScriptCommand::AnimateHealingMachine)),
             "openNamingScreen" => {
@@ -486,8 +487,8 @@ impl VgymTrashState {
     fn new() -> Self {
         Self {
             active: false,
-            first: -1,
-            second: -1,
+            first: 0,
+            second: 0,
             phase: 0,
             steps: VecDeque::new(),
             pending: None,
@@ -520,6 +521,20 @@ impl VgymTrashState {
         (((fx - 1) / 2) * 3) + ((fy - 7) / 2)
     }
 
+    fn second_index(first: u8, random: u8) -> u8 {
+        const CANS: [[u8; 5]; 15] = [
+            [2, 1, 3, 0, 0], [3, 0, 2, 4, 0], [2, 1, 5, 0, 0],
+            [3, 0, 4, 6, 0], [4, 1, 3, 5, 7], [3, 2, 4, 8, 0],
+            [3, 3, 7, 9, 0], [4, 4, 6, 8, 10], [3, 5, 7, 11, 0],
+            [3, 6, 10, 12, 0], [4, 7, 9, 11, 13], [3, 8, 10, 14, 0],
+            [2, 9, 13, 0, 0], [3, 10, 12, 14, 0], [2, 11, 13, 0, 0],
+        ];
+        let row = &CANS[first.min(14) as usize];
+        let selected = row[0] & random.rotate_left(4);
+        // DEC $00 -> $ff: the original lands in zero bank padding.
+        if selected == 0 { 0 } else { row[selected as usize] & 0x0f }
+    }
+
     /// Begin a trash-can interaction: decide the outcome from the current
     /// puzzle state + which can was inspected, and queue the effect steps.
     fn start(&mut self, host: &mut NativeHost) {
@@ -532,29 +547,13 @@ impl VgymTrashState {
                 "Nope, there's\nonly trash here.",
                 "不，这里\n只有垃圾。",
             )));
-        } else if self.phase == 0 {
-            if self.first < 0 {
-                self.first = (host.next_rand() % 15) as i32;
-            }
+        } else if !host.flags.get("EVENT_1ST_LOCK_OPENED").copied().unwrap_or(false) {
+            self.phase = 0;
             let can = Self::can_index(host);
             if can == self.first {
-                // Found the 1st switch: seed the 2nd into an adjacent can.
-                let col = self.first / 3;
-                let row = self.first % 3;
-                let mut adj: Vec<i32> = Vec::new();
-                if row > 0 {
-                    adj.push(self.first - 1);
-                }
-                if row < 2 {
-                    adj.push(self.first + 1);
-                }
-                if col > 0 {
-                    adj.push(self.first - 3);
-                }
-                if col < 4 {
-                    adj.push(self.first + 3);
-                }
-                self.second = adj[(host.next_rand() % adj.len() as u64) as usize];
+                // GymTrashCans: preserve the original mask/swap/DEC bug.
+                // A zero masked result underflows and reads bank padding (can 0).
+                self.second = Self::second_index(self.first as u8, host.next_rand() as u8) as i32;
                 self.phase = 1;
                 self.steps.push_back(TrashStep::SetFlag("EVENT_1ST_LOCK_OPENED"));
                 self.steps.push_back(TrashStep::PlaySound("SFX_SWITCH".to_string()));
@@ -585,8 +584,7 @@ impl VgymTrashState {
             } else {
                 // Wrong can: both locks re-lock, the 1st switch relocates.
                 self.phase = 0;
-                self.first = (host.next_rand() % 15) as i32;
-                self.second = -1;
+                self.first = (host.next_rand() as u8 & 0x0e) as i32;
                 self.steps.push_back(TrashStep::ResetFlag("EVENT_1ST_LOCK_OPENED"));
                 self.steps.push_back(TrashStep::PlaySound("SFX_DENIED".to_string()));
                 self.steps.push_back(TrashStep::ShowText(zh_or_en(
@@ -841,6 +839,15 @@ impl NativeScriptEngine {
 
     pub fn is_waiting(&self) -> bool {
         self.state == InterpState::WaitingForCommand
+    }
+
+    pub fn gym_trash_indices(&self) -> (u8, u8) {
+        (self.vgym.first as u8, self.vgym.second as u8)
+    }
+
+    pub fn set_gym_trash_indices(&mut self, first: u8, second: u8) {
+        self.vgym.first = first.min(14) as i32;
+        self.vgym.second = second.min(14) as i32;
     }
 
     pub fn set_flag(&mut self, flag: &str, value: bool) {
@@ -1244,6 +1251,20 @@ impl OverworldScriptEngine {
             #[cfg(feature = "script-boa")]
             OverworldScriptEngine::Boa(e) => e.is_waiting(),
             OverworldScriptEngine::Native(e) => e.is_waiting(),
+        }
+    }
+
+    pub fn gym_trash_indices(&self) -> (u8, u8) {
+        match self {
+            Self::Native(engine) => engine.gym_trash_indices(),
+            #[cfg(feature = "script-boa")]
+            Self::Boa(_) => (0, 0),
+        }
+    }
+
+    pub fn set_gym_trash_indices(&mut self, first: u8, second: u8) {
+        if let Self::Native(engine) = self {
+            engine.set_gym_trash_indices(first, second);
         }
     }
 
@@ -2036,6 +2057,125 @@ mod tests {
     }
 
     #[test]
+    fn npc_rewards_keep_their_completion_flags_unset_until_item_is_accepted() {
+        let cases = [
+            ("BikeShop", "talkBikeShopClerk", "", "EVENT_GOT_BICYCLE", "BIKE_VOUCHER"),
+            ("CeruleanGym", "talkMisty", "EVENT_BEAT_MISTY", "EVENT_GOT_TM11", ""),
+            ("CinnabarGym", "talkBlaine", "EVENT_BEAT_BLAINE", "EVENT_GOT_TM38", ""),
+            ("ViridianCity", "talkFisher", "", "EVENT_GOT_TM42", ""),
+            ("CeladonDiner", "talkGymGuide", "", "EVENT_GOT_COIN_CASE", ""),
+            ("CinnabarLabMetronomeRoom", "talkScientist1", "", "EVENT_GOT_TM35", ""),
+            ("Route11Gate2F", "talkOaksAide", "", "EVENT_GOT_ITEMFINDER", ""),
+            ("Route12Gate2F", "talkBrunetteGirl", "", "EVENT_GOT_TM39", ""),
+            ("Route12SuperRodHouse", "talkFishingGuru", "", "EVENT_GOT_SUPER_ROD", ""),
+            ("Route15Gate2F", "talkOaksAide", "", "EVENT_GOT_EXP_ALL", ""),
+            ("SafariZoneSecretHouse", "talkFishingGuru", "", "EVENT_GOT_HM03", ""),
+            ("WardensHouse", "talkWarden", "EVENT_GAVE_GOLD_TEETH", "EVENT_GOT_HM04", ""),
+        ];
+        for (map, function, prerequisite, completed, bag_item) in cases {
+            let scene = pokered_data::embedded_scenes::get_scene_ast(map).unwrap();
+            let mut engine = NativeScriptEngine::new();
+            engine.load_map(map, &scene);
+            engine.seed_number("pokedexOwned", 50.0);
+            if !prerequisite.is_empty() { engine.set_flag(prerequisite, true); }
+            if !bag_item.is_empty() { engine.seed_set("bag", &[bag_item.to_string()]); }
+            for accepted in [false, true] {
+                let mut next = engine.call_function_no_args(function).unwrap();
+                let mut offered = 0;
+                let mut voucher_removed = false;
+                for _ in 0..100 {
+                    let Some(command) = next else { break };
+                    let result = match command {
+                        ScriptCommand::GiveItem { .. } => { offered += 1; CommandResult::Bool(accepted) },
+                        ScriptCommand::ShowChoice { .. } => CommandResult::Number(0.0),
+                        ScriptCommand::TakeItem { .. } => { voucher_removed = true; CommandResult::Void },
+                        _ => CommandResult::Void,
+                    };
+                    next = engine.signal_done(result).unwrap();
+                }
+                assert_eq!(offered, 1, "{map}: reward was not re-offered");
+                assert_eq!(engine.get_flag(completed), accepted, "{map}: wrong completion flag");
+                if map == "BikeShop" { assert_eq!(voucher_removed, accepted); }
+            }
+        }
+    }
+
+    #[test]
+    fn rocket_keeps_stolen_tm_and_does_not_disappear_when_bag_rejects_it() {
+        let scene = pokered_data::embedded_scenes::get_scene_ast("CeruleanCity").unwrap();
+        let mut engine = NativeScriptEngine::new();
+        engine.load_map("CeruleanCity", &scene);
+        engine.set_flag("EVENT_BEAT_CERULEAN_ROCKET_THIEF", true);
+        for accepted in [false, true] {
+            let mut next = engine.call_function_no_args("talkRocket").unwrap();
+            let mut hidden = false;
+            for _ in 0..50 {
+                let Some(command) = next else { break };
+                let result = if matches!(command, ScriptCommand::GiveItem { .. }) {
+                    CommandResult::Bool(accepted)
+                } else {
+                    hidden |= matches!(command, ScriptCommand::HideObjectByName { .. });
+                    CommandResult::Void
+                };
+                next = engine.signal_done(result).unwrap();
+            }
+            assert_eq!(hidden, accepted);
+        }
+    }
+
+    #[test]
+    fn magikarp_sale_uses_gift_acceptance_for_a_full_party_and_charges_once() {
+        let scene = pokered_data::embedded_scenes::get_scene_ast("MtMoonPokecenter").unwrap();
+        for accepted in [false, true] {
+            let mut engine = NativeScriptEngine::new();
+            engine.load_map("MtMoonPokecenter", &scene);
+            engine.seed_number("money", 500.0);
+            engine.seed_number("partyCount", 6.0);
+            let mut next = engine.call_function_no_args("talkMagikarpSalesman").unwrap();
+            let mut offers = 0;
+            let mut charged = 0;
+            for _ in 0..50 {
+                let Some(command) = next else { break };
+                let result = match command {
+                    ScriptCommand::GiveMonster { .. } => { offers += 1; CommandResult::Bool(accepted) },
+                    ScriptCommand::ShowChoice { .. } => CommandResult::Number(0.0),
+                    ScriptCommand::TakeMoney { amount } => { charged += amount; CommandResult::Void },
+                    _ => CommandResult::Void,
+                };
+                next = engine.signal_done(result).unwrap();
+            }
+            assert_eq!(offers, 1);
+            assert_eq!(charged, if accepted { 500 } else { 0 });
+            assert_eq!(engine.get_flag("EVENT_BOUGHT_MAGIKARP"), accepted);
+        }
+    }
+
+    #[test]
+    fn vgym_original_mask_can_put_second_switch_in_can_zero() {
+        // Original mask/DEC underflow reads zero padding, even far from can 0.
+        assert_eq!(VgymTrashState::second_index(14, 0), 0);
+        assert_eq!(VgymTrashState::second_index(14, 0x20), 13);
+        // For mask 4, only candidate 4 or the underflow is reachable.
+        assert_eq!(VgymTrashState::second_index(4, 0x40), 7);
+        assert_eq!(VgymTrashState::second_index(4, 0x10), 0);
+    }
+
+    #[test]
+    fn vgym_restored_first_lock_flag_checks_saved_second_index() {
+        let mut host = NativeHost::new();
+        let mut state = VgymTrashState::new();
+        state.first = 14;
+        state.second = 0;
+        host.flags.insert("EVENT_1ST_LOCK_OPENED".into(), true);
+        host.player_x = 1;
+        host.player_y = 8;
+        host.texts.insert("playerFacing".into(), "up".into());
+        state.start(&mut host);
+        state.next_command(&mut host);
+        assert!(host.flags["EVENT_2ND_LOCK_OPENED"]);
+    }
+
+    #[test]
     fn vgym_can_index_matches_js_arithmetic() {
         let mut host = NativeHost::new();
         host.player_x = 3;
@@ -2074,7 +2214,7 @@ mod tests {
         // The 2nd switch must be orthogonally adjacent to can 7
         // (cols x∈{1,3,5,7,9}, rows y∈{7,9,11}): 4, 6, 8 or 10.
         assert!(
-            vgym.second == 4 || vgym.second == 6 || vgym.second == 8 || vgym.second == 10,
+            vgym.second == 0 || vgym.second == 10,
             "second={}",
             vgym.second
         );
@@ -2100,15 +2240,8 @@ mod tests {
             .call_function_no_args("trashCans")
             .expect("trashCans call");
         // Facing up from (1,7) → (1,6): ((1-1)/2)*3 + ((6-7)/2) = 0 — can 0.
-        // With no pinned switch, the first rng draw picks it; can 0 may or
-        // may not match — accept either outcome, then pin the switch for the
-        // deterministic part.
-        match cmd {
-            Some(ScriptCommand::ShowText { text }) => {
-                assert!(text.contains("only trash") || text.contains("switch"), "got: {}", text)
-            }
-            other => panic!("expected ShowText, got {:?}", other),
-        }
+        // Default saved index is can 0, so this opens the first lock.
+        assert!(matches!(cmd, Some(ScriptCommand::PlaySound { .. })));
 
         // Deterministic lock-open: pin the 1st switch at can 7, stand on it.
         let mut e = NativeScriptEngine::new();
@@ -2150,8 +2283,8 @@ mod tests {
         );
         // Wrong can while hunting the 2nd switch: both locks re-lock and the
         // 1st switch relocates (phase → 0).
-        e.set_player_position(1, 7);
-        e.seed_text("playerFacing", "up"); // can 0 ≠ the seeded 2nd switch
+        e.set_player_position(9, 12);
+        e.seed_text("playerFacing", "up"); // can 14 differs from either original result (0 or 10)
         let _ = e.call_function_no_args("trashCans");
         assert!(
             !e.get_flag("EVENT_1ST_LOCK_OPENED"),
@@ -2164,8 +2297,7 @@ mod tests {
         e.seed_text("playerFacing", "up"); // can 7
         let _ = e.call_function_no_args("trashCans");
         assert!(e.get_flag("EVENT_1ST_LOCK_OPENED"));
-        // The 2nd switch sits in a can adjacent to 7 (the adjacency itself is
-        // covered by vgym_first_switch_locks_and_opens); pin it at can 4 and
+        // Pin the restored second switch at can 4 and
         // confirm the door-opening flow. Can 4 = col 1, row 1: facing up from
         // (3,10) → (3,9) → ((3-1)/2)*3 + ((9-7)/2) = 3 + 1 = 4.
         e.vgym.second = 4;
