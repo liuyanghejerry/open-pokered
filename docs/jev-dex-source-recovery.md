@@ -1692,3 +1692,21 @@ ObservedProtocol后一次确认即正常扣费，未改游戏选择逻辑或放�
 （lib及bin各跑一次）、相关Python完整555项通过（16.752秒）。新的fresh
 NEW GAME至m49全链`/tmp/jev-safari-save-fresh-m49-20261002/`仍运行中，
 不能提前计为通过。此修改是会话／存档逻辑及验收，不涉及渲染或布局。
+
+### 2026-10-02：修复正式生效，肯泰罗成为第82种，schema=3读档通过
+
+74段从最新73段原生存档加载`ad87bbf1`与PC后续成本版，无回退／注入。
+过期会话经正常广播及入口流程结束，实际支付500入园；82.791秒观察到
+Tauros的`is_safari=true`、30球／266步、资金49,403，随后真实投球。
+95.543秒完整捕获操作从81变82，95.560秒登记Tauros。之后Jev自主离园并
+在FuchsiaMart真实购买UltraBall，168.517秒完整交互结束后请求安全停机，
+168.529秒保存；最终82 owned／127 seen、资金8,603、99 GreatBall及
+34 UltraBall、Safari会话已正常结束、来源审计待补为空。
+
+独立进程CONTINUE schema=3通过，恢复FuchsiaMart `(2,5)`、82种、队伍、
+全部仓库个体、背包、位置／资金、flags及inactive／0球／0步会话均一致。
+SRAM SHA256 `35516005961d8dec54e8838242279511f7e5ac6c399955cc3b46d4e64c2d85f8`；
+日志`/tmp/jev-continue-82-resume74.log`，证据在
+`.artifacts/jev-dex-recording-resume-74/20261002-230220-seed42/`。
+分段MP4容器86.366667秒／1,246,329字节，未作最终全片画质通过结论。
+第75段将从这份最新82种检查点继续；124种及最终MP4／大盘交付仍未完成。
