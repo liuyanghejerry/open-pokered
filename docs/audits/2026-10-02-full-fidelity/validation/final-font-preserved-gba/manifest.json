@@ -1,0 +1,101 @@
+{
+  "source": "c51209a492f804f58486607919c9ba0c62eb2eb7",
+  "evidence_scope": "Fusion font restored; before final descender layout and Fossil lazy decoding repair. Not final PR source.",
+  "rust_toolchain": "nightly-2025-12-07",
+  "cargo_flags": [
+    "--locked",
+    "--offline",
+    "--release"
+  ],
+  "cargo_incremental": 0,
+  "gba_fixer": "agb-gbafix 0.25.0",
+  "mgba": {
+    "version": "0.10.5 (26b7884bc25a5933960f3cdcd98bac1ae14d42e2)",
+    "archive_sha256": "0bbf1e7ca511cd4b443239b97546f699df72211241a1db9177e331866031d8e9",
+    "display": ":88",
+    "sync": [
+      "fpsTarget=0",
+      "audioSync=0",
+      "videoSync=0"
+    ]
+  },
+  "roms": {
+    "release": {
+      "path": "/workspace/onboarding/pokered-final-font-preserved-release.gba",
+      "sha256": "9617e29b7e9341a00aef1654c6f670b0ba1c93b16b93d5e16042f14d44081066",
+      "bytes": 5522492,
+      "build_features": []
+    },
+    "perf": {
+      "path": "/workspace/onboarding/pokered-final-font-preserved-perf.gba",
+      "sha256": "8b1c7154a8c32b8244fff91b6205a3d77d2739dae71893a638be327cb8b1e945",
+      "bytes": 5525564,
+      "build_features": [
+        "perf-benchmark"
+      ]
+    },
+    "stress": {
+      "path": "/workspace/onboarding/pokered-final-font-preserved-stress.gba",
+      "sha256": "ce0726021859ce9d2e814e33ff0fd4cc294153d0b3d4f2802ba383a0aeb69e8e",
+      "bytes": 5565152,
+      "build_features": [
+        "memory-scenarios"
+      ]
+    }
+  },
+  "baseline_sha256": "c9ef15a97a6f43d994fe177d7e0212a6a6cbaf561be955a5995fef4da7faebba",
+  "memory_scenarios_source_sha256": "73abfd17eae918f56e9ead9f321936f2ba2f1468c16c2f0f1cc7a43c0c666360",
+  "results": {
+    "release_build": "PASS",
+    "performance_build": "PASS",
+    "stress_build": "PASS",
+    "performance_gate": "31/31 PASS in 7 scenarios",
+    "tool_tests": "27/27 PASS",
+    "stress_gate": "FAIL: allocator panic in talkScientist1 after 4/13 completed scenarios",
+    "stress_completed": [
+      {
+        "case": "pokedex",
+        "count": 302
+      },
+      {
+        "case": "maps",
+        "count": 248
+      },
+      {
+        "case": "oak-parcel",
+        "count": 1
+      },
+      {
+        "case": "oak-dex",
+        "count": 16
+      }
+    ],
+    "stress_min_contiguous_heap_observed_bytes": 7824,
+    "stress_min_untouched_stack_observed_bytes": 13224,
+    "stress_fossil_entry_contiguous_heap_bytes": 28720
+  },
+  "prefont_ci_reproduction": {
+    "source": "a4eb175",
+    "rom_path": "/tmp/pokered-gba-stress-a4.gba",
+    "rom_sha256": "aaade83795816932047834f68ff42e0cfa7eb5ac81263f4320a5048c1066aaee",
+    "ci_run": 37011906210,
+    "ci_job": 110853395344,
+    "result": "same allocator panic in Fossil Room; 4/13 completed scenarios",
+    "entry_contiguous_heap_bytes": 28512,
+    "entry_untouched_stack_bytes": 13232,
+    "remote_evidence_limit": "REST job steps and annotations available; logs/artifacts domain access denied; no remote panic text retrieved."
+  },
+  "evidence_files": {
+    "release-build.log": "c79af5ca87e39214846449f2222893239c46a87835d682d53b9709f9348f7590",
+    "performance-build.log": "adba4e1671ff4049911035dc507a04efc83dc7fcd3e6660cc476a8d71021522f",
+    "performance.json": "5e47382ddc517cd563469d1f9027db6a25cd5af180b60b0b469a348f911791c3",
+    "performance-mgba.log": "1bf1a60565cc4328aa598a62048bea90e04a909600f21839d173560c40b4ad66",
+    "performance-compare.log": "31635f7516495567805e671d9f5afe0f6fdd2c133112c0b46602a4ed821c1613",
+    "stress-build.log": "546cbbdff695f05eb2c427710dd9cc1fba6b0eb24ff141a678e3a3074b3b5a97",
+    "stress-mgba.log": "e8b7845d3f3a477cc8f6afbf0742a28bc7968c6509f863a1a9947bf7d1cc3115",
+    "stress-gate.log": "a3cea2449513cfb3081c7800185e9ffbbaf55451253300a8cba05b48bc7dc930",
+    "tool-tests.log": "3bb7e17d522657e1552a7ca4069365ded28df63e091fac6c696f2a61be8f09db",
+    "prefont-ci-stress-mgba.log": "783f13d65b7db7e002642fa927420ee705ed2689af3a5f4bbf0ff80bb152b18f",
+    "prefont-ci-stress-gate.log": "044f242f3781aa3458dc7abae0505788b5096936cb5ccd0c8c5bbf4c40015daf"
+  }
+}
