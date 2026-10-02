@@ -1020,3 +1020,13 @@ Pikachu Lv47倒下，Drowzee仍Lv18。独立CONTINUE schema=2通过；SRAM
 证据`.artifacts/jev-fatigue-replan-20261002/`的`native-proof.json`、
 `native-observations.json`、两份native trace；`/tmp/jev-fatigue-replan-tests.log`
 与`/tmp/jev-fatigue-replan-native-retry.log`。本次控制器修复不改变屏幕输出。
+
+60段537.573秒正常到达店内IndigoPlateauLobby `(2,5)`后边界保存，75 owned／
+120 seen、八徽章、资金138,130，Charizard Lv88 HP220无状态，Pikachu Lv48
+HP110，Drowzee仍Lv18；尚未买到球。独立CONTINUE schema=2通过（73只箱内
+个体），SRAM `fbd7370f79655dfe92f4cf78f65f2670af07b83b624d758f45305bc459adbc77`。
+分段MP4容器217.85秒／2,828,341字节；完整画质审核和最终交付仍未完成。
+61段`20261002-184412-seed42`从此检查点加载`8b5ed7df`继续正式OpenRouter
+收集及录像。另以当前原生二进制`ed035335…`启动独立fresh m01–m49回归，
+目录`/tmp/jev-current-binary-fresh-m49-20261002a/`；完成前不计通过，也不计
+正式图鉴。此前该二进制已通过范围仍为核心／app／麻痹专项及fresh m01–m10。
