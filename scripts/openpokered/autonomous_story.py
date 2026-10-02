@@ -133,6 +133,27 @@ def capture_inventory_risk(species, balls):
             'assumptions': 'Reference max HP 100; all carried balls used at the stated fixed HP/status with independent rolls. Not actual battle odds: excludes HP rounding differences, status expiry, enemy recovery, party survival and travel ball spending.'}
 
 
+def capture_supply_reference(targets, carried, planned):
+    """Compare the same conditional scenarios before and after a purchase."""
+    inventory = lambda stock: [{'ball': name, 'quantity': qty} for name, qty in sorted(stock.items())]
+    rows = []
+    for target in targets:
+        before = capture_inventory_risk(target['species'], inventory(carried))
+        after = capture_inventory_risk(target['species'], inventory(planned))
+        rows.append({**target, 'scenarios': [
+            {'reference_hp_percent': old['reference_hp_percent'],
+             'reference_status': old['reference_status'],
+             'failure_before_purchase': old['inventory_failure_probability'],
+             'failure_after_purchase': new['inventory_failure_probability']}
+            for old, new in zip(before['scenarios'], after['scenarios'])]})
+    return {'targets': rows,
+            'scope': 'Conditional reference, not a guarantee: max HP 100, all carried balls used '
+                     'at fixed HP/status with independent rolls. Excludes actual HP rounding, '
+                     'status expiry, enemy recovery, party survival and balls spent en route. '
+                     'Each target uses the same inventory separately, not a budget sufficient '
+                     'for all targets together. Ready script guards do not prove navigation access.'}
+
+
 @lru_cache(maxsize=512)
 def safari_species_reference(species, level, balls):
     """Bounds over legal wild HP/Speed DVs, never a predicted hidden individual.
@@ -3467,8 +3488,19 @@ class AutonomousStoryAgent(DualStoryAgent):
                             'occupied_bag_slots': len(facts['bag']), 'bag_capacity': 20,
                             'scope': 'Unclaimed script source, not an owned ball. Normal navigation, '
                                      'script guards and bag space still apply; one-time rewards cannot be replenished.'}}
+        owned = self.validated_owned(facts)
+        targets = []
+        for species, methods in self.complete_collection_graph().items():
+            if species in owned:
+                continue
+            ready = sorted({method['map'] for method in methods
+                            if method['method'] == 'static' and any(not rule.missing(facts)
+                                for rule in self.acquisition_story_rules(species, method))})
+            if ready:
+                targets.append({'species': species, 'catch_rate': data.species_data(species)['catchRate'],
+                                'ready_source_maps': ready})
         held = sum(carried.values())
-        if held >= self.BALL_RESERVE:
+        if held >= self.BALL_RESERVE and not targets:
             return
         nearest = {}
         for rule in self.index.rules:
@@ -3494,16 +3526,34 @@ class AutonomousStoryAgent(DualStoryAgent):
                     del shops[2:]
         for name, shops in sorted(nearest.items()):
             info = BALLS[name]
-            qty = min(self.BALL_RESERVE - held, int(facts['money'] * .6) // max(1, info['price']))
-            if qty < 1 or (len(facts['bag']) >= 20 and name not in carried):
+            if len(facts['bag']) >= 20 and name not in carried:
                 continue
-            for hops, map_name, _rule_id, stock_index, rule in shops:
-                target = ('supply', name, carried.get(name, 0) + qty)
-                groups[f'ball:{rule.id}:{name}'] = {'target': target, 'rules': [rule],
-                    'objectives': ['Buy balls to keep collecting unregistered species'],
-                    'context': {'optional_preparation': True, 'stock_index': stock_index,
-                                'item': info, 'collecting': True,
-                                'map': map_name, 'map_hops': hops}}
+            current = carried.get(name, 0)
+            # The ordinary reserve is not a capture-sufficiency limit. Offer
+            # larger optional stocks for known unregistered static sources;
+            # Jev still compares money, setup and all other acquisition goals.
+            batches = [('reserve', self.BALL_RESERVE - held)]
+            if targets:
+                batches += [('extended', self.BALL_RESERVE * 3 - current), ('stack', 99 - current)]
+            offered = set()
+            for batch, desired in batches:
+                qty = min(desired, 99 - current, int(facts['money'] * .6) // max(1, info['price']))
+                if qty < 1 or qty in offered:
+                    continue
+                offered.add(qty)
+                total = current + qty
+                cost = qty * info['price']
+                reference = capture_supply_reference(targets, carried, {**carried, name: total}) if targets else None
+                for hops, map_name, _rule_id, stock_index, rule in shops:
+                    key = f'ball:{rule.id}:{name}' + (f':stock{total}' if batch != 'reserve' else '')
+                    groups[key] = {'target': ('supply', name, total), 'rules': [rule],
+                        'objectives': ['Buy balls to keep collecting unregistered species'],
+                        'context': {'optional_preparation': True, 'stock_index': stock_index,
+                                    'item': info, 'collecting': True, 'batch': batch,
+                                    'purchase_quantity': qty, 'target_quantity': total,
+                                    'total_cost': cost, 'money_after_purchase': facts['money'] - cost,
+                                    'capture_supply_reference': reference,
+                                    'map': map_name, 'map_hops': hops}}
 
     def add_recovery_groups(self, groups, facts):
         self.add_ball_supply(groups, facts)

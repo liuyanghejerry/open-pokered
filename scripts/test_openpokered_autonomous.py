@@ -3194,6 +3194,7 @@ class AutonomousTests(unittest.TestCase):
         rule = Rule('shop:ViridianMart', 'ViridianMart', 'ViridianMart:shop', [], [], [],
                     ('shop', ('POTION', 'POKE_BALL'), True), [])
         agent.index = Mock(rules=[rule])
+        agent._complete_collection_graph = {}
         agent.visited = {'ViridianMart'}
         agent.client = Mock()
         agent.client.route.return_value = {'found': True, 'legs': [{'to_map': 'ViridianMart'}]}
@@ -3215,6 +3216,71 @@ class AutonomousTests(unittest.TestCase):
         self.ball_supply_agent().add_ball_supply(
             groups, {'bag': {'POKEBALL': 12}, 'money': 3000, 'map': 'ViridianCity'})
         self.assertEqual(groups, {})
+
+    def bulk_ball_agent(self):
+        agent = self.ball_supply_agent()
+        method = {'method': 'static', 'map': 'VictoryRoad2F', 'storyline': 'talkMoltres'}
+        agent._complete_collection_graph = {'Moltres': [method]}
+        agent.index.rules.append(Rule('moltres', method['map'], 'VictoryRoad2F:talkMoltres',
+            [], [], [], ('battle', 'MOLTRES', True), []))
+        return agent
+
+    def test_low_catch_rate_target_can_offer_more_than_the_ordinary_reserve(self):
+        agent = self.bulk_ball_agent()
+        facts = {'bag': {'POKEBALL': 12}, 'money': 100000, 'map': 'ViridianCity'}
+        groups = {}
+        agent.add_ball_supply(groups, facts)
+        self.assertEqual({g['target'] for g in groups.values()},
+                         {('supply', 'PokeBall', 36), ('supply', 'PokeBall', 99)})
+        for group in groups.values():
+            context = group['context']
+            quantity = group['target'][2] - 12
+            self.assertEqual(context['purchase_quantity'], quantity)
+            self.assertEqual(context['total_cost'], quantity * 200)
+            self.assertEqual(context['money_after_purchase'], 100000 - quantity * 200)
+            target = context['capture_supply_reference']['targets'][0]
+            self.assertEqual(target['species'], 'Moltres')
+            for scenario in target['scenarios']:
+                self.assertLess(scenario['failure_after_purchase'], scenario['failure_before_purchase'])
+            self.assertIn('not a guarantee', context['capture_supply_reference']['scope'])
+        self.assertEqual(facts['bag'], {'POKEBALL': 12})
+
+    def test_bulk_ball_budget_deduplicates_affordable_limits_and_respects_bag_space(self):
+        agent = self.bulk_ball_agent()
+        groups = {}
+        agent.add_ball_supply(groups, {'bag': {}, 'money': 3000, 'map': 'ViridianCity'})
+        self.assertEqual([g['target'] for g in groups.values()], [('supply', 'PokeBall', 9)])
+        bag = {f'ITEM{i}': 1 for i in range(20)}
+        facts = {'bag': bag, 'money': 100000, 'map': 'ViridianCity'}
+        groups = {}
+        agent.add_ball_supply(groups, facts)
+        self.assertEqual(groups, {})
+        del bag['ITEM0']
+        bag['POKEBALL'] = 98
+        agent.add_ball_supply(groups, facts)
+        self.assertEqual([g['target'] for g in groups.values()], [('supply', 'PokeBall', 99)])
+        bag['POKEBALL'] = 99
+        groups = {}
+        agent.add_ball_supply(groups, facts)
+        self.assertEqual(groups, {})
+
+    def test_bulk_ball_references_require_an_unregistered_ready_static_source(self):
+        agent = self.bulk_ball_agent()
+        facts = {'bag': {'POKEBALL': 12}, 'money': 100000, 'map': 'ViridianCity',
+                 'dex': {'owned_species': ['Moltres']}}
+        groups = {}
+        agent.add_ball_supply(groups, facts)
+        self.assertEqual(groups, {})
+        facts['dex']['owned_species'] = []
+        from openpokered.story_rules import literal
+        agent.index.rules[-1].guards.append(({'Call': {'callee': 'getFlag',
+            'args': [literal('CAN_MEET_TARGET')]}}, True))
+        facts['flags'] = {}
+        agent.add_ball_supply(groups, facts)
+        self.assertEqual(groups, {})
+        facts['flags']['CAN_MEET_TARGET'] = True
+        agent.add_ball_supply(groups, facts)
+        self.assertTrue(groups)
 
     def scripted_ball_agent(self):
         from openpokered.story_rules import StoryIndex, compile_story, literal
