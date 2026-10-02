@@ -4437,9 +4437,14 @@ impl PokemonGame {
                         //    advances through the end-of-battle text below,
                         //    so it must not be re-cloned over that progress.
                         let result = driver.result();
-                        if result.is_none() {
+                        // Copy the terminal canonical screen once as well:
+                        // a KO can set the result while our previous mirror
+                        // is still LinkWaiting. The mirror's result marks that
+                        // final copy, so later frames keep its narration progress.
+                        if result.is_none() || self.battle.link_result.is_none() {
                             if let Some(screen) = driver.screen() {
                                 self.battle = screen.clone();
+                                self.battle.link_result = result;
                             }
                         }
                         // 5. The link dropped mid-battle: settle what we
@@ -8239,6 +8244,91 @@ mod captain_music_wait_fidelity_tests {
             }
         }
         panic!("no-audio WaitMusic remained blocked after the healed jingle");
+    }
+}
+
+#[cfg(all(test, not(target_os = "none")))]
+mod asynchronous_colosseum_fidelity_tests {
+    use super::*;
+    use pokered_core::battle::state::StatusCondition;
+    use pokered_core::battle::BattlePhase;
+    use pokered_core::link::transport::ChannelTransport;
+    use pokered_core::pokemon::stats::create_pokemon_with_moves;
+    use pokered_data::{moves::MoveId, species::Species};
+
+    fn game(species: Species, level: u8, attack: MoveId, hp: u16) -> PokemonGame {
+        let mut game = PokemonGame::new_with_options(GameVersion::Red, None, None, None,
+            false, None, false, true, #[cfg(feature = "debug-server")] None);
+        let mut mon = create_pokemon_with_moves(species, level, [0x99, 0x88],
+            [attack, MoveId::None, MoveId::None, MoveId::None]).unwrap();
+        mon.hp = hp;
+        mon.status = StatusCondition::Burn;
+        mon.pp[0] = 2;
+        let mut backup = create_pokemon_with_moves(Species::Pikachu, 10, [0x99, 0x88],
+            [MoveId::Thundershock, MoveId::None, MoveId::None, MoveId::None]).unwrap();
+        backup.hp = 0;
+        backup.status = StatusCondition::Poison;
+        backup.pp[0] = 0;
+        game.save_data.party = pokered_core::pokemon::party::Party::from(vec![mon, backup]);
+        game.state.screen = GameScreen::Overworld;
+        game.main_menu.last_choice = Some(pokered_core::game_state::MainMenuChoice::Continue);
+        game.overworld = OverworldScreen::new(MapId::Colosseum, None, PokemonRedData);
+        game
+    }
+
+    #[test]
+    fn actual_frontend_asynchronous_ko_returns_both_sides_to_room_and_heals_all() {
+        let mut host = game(Species::Blastoise, 100, MoveId::Surf, 100);
+        let mut peer = game(Species::Rattata, 5, MoveId::Tackle, 1);
+        let (ta, tb) = ChannelTransport::new_pair();
+        host.attach_link_transport(Box::new(ta), LinkRole::Host);
+        peer.attach_link_transport(Box::new(tb), LinkRole::Guest);
+        let idle = InputState::new();
+        let mut a = InputState::new(); a.press(GbButton::A);
+        for _ in 0..20 { host.update(&idle); peer.update(&idle); }
+        let request = host.link_cable.on_gameboy_used(MapId::Colosseum);
+        host.handle_flow_need(request);
+        for _ in 0..20 { host.update(&idle); peer.update(&idle); }
+        assert!(matches!(peer.link_cable.phase(), CableClubPhase::PeerPrompt { .. }));
+        peer.update(&a);
+        for frame in 0..1200 {
+            for g in [&mut host, &mut peer] {
+                let ready = matches!(g.state.screen, GameScreen::Battle)
+                    && g.battle.phase == BattlePhase::PlayerMenu;
+                g.update(if !ready && frame % 2 == 0 { &a } else { &idle });
+            }
+            if host.battle.phase == BattlePhase::PlayerMenu && peer.battle.phase == BattlePhase::PlayerMenu { break; }
+        }
+        for g in [&mut host, &mut peer] {
+            assert_eq!(g.state.screen, GameScreen::Battle);
+            assert_eq!(g.battle.phase, BattlePhase::PlayerMenu);
+            let party = &g.battle.battle_state.as_ref().unwrap().player.party;
+            assert_eq!(party[0].status, StatusCondition::Burn);
+            assert_eq!(party[0].pp[0], 2, "no prebattle PP heal");
+            assert_eq!(party[1].hp, 0, "no prebattle revival");
+            g.update(&a); // FIGHT -> move menu
+        }
+        host.update(&a); // Host commits, guest still choosing.
+        for _ in 0..100 { host.update(&idle); peer.update(&idle); }
+        assert_eq!(host.battle.phase, BattlePhase::LinkWaiting);
+        assert_eq!(peer.battle.phase, BattlePhase::MoveSelect);
+        peer.update(&a);
+        for frame in 0..2400 {
+            for g in [&mut host, &mut peer] {
+                g.update(if matches!(g.state.screen, GameScreen::Battle) && frame % 2 == 0 { &a } else { &idle });
+            }
+            if host.state.screen == GameScreen::Overworld && peer.state.screen == GameScreen::Overworld { break; }
+        }
+        for g in [&host, &peer] {
+            assert_eq!(g.state.screen, GameScreen::Overworld, "terminal mirror must leave LinkWaiting");
+            assert_eq!(g.overworld.state.current_map, MapId::Colosseum);
+            assert_eq!(g.link_cable.phase(), &CableClubPhase::InRoom);
+            for mon in g.save_data.party.iter() {
+                assert_eq!(mon.hp, mon.max_hp);
+                assert_eq!(mon.status, StatusCondition::None);
+                assert_eq!(mon.pp[0], pokered_core::pokemon::move_learning::get_move_max_pp(mon.moves[0]));
+            }
+        }
     }
 }
 
