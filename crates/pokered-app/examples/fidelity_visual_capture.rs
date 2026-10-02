@@ -68,6 +68,37 @@ fn main() {
     let args:Vec<String>=std::env::args().collect(); let out=Path::new(&args[1]); let prefix=&args[2];
     std::fs::create_dir_all(out).unwrap();
     battle_fixtures(out,prefix);
+    // Same phase-relative frame for custom credits tiles and scrolling cadence.
+    use pokered_core::credits::{CreditsState, CreditsPhase, CreditsInput};
+    for (index, phase, frames, name) in [
+        (0, CreditsPhase::MonScroll, 7, "credits-scroll-7"),
+        (34, CreditsPhase::Hold, 0, "credits-copyright-0"),
+        (34, CreditsPhase::Hold, 5, "credits-copyright-5"),
+        (34, CreditsPhase::Hold, 10, "credits-copyright-10"),
+        (34, CreditsPhase::Hold, 15, "credits-copyright-15"),
+        (35, CreditsPhase::TheEnd, 16, "credits-the-end-16"),
+        (35, CreditsPhase::TheEnd, 21, "credits-the-end-21"),
+        (35, CreditsPhase::TheEnd, 26, "credits-the-end-26"),
+        (35, CreditsPhase::TheEnd, 31, "credits-the-end-31"),
+    ] {
+        let mut roll = CreditsState::new(GameVersion::Red);
+        for _ in 0..10000 {
+            if roll.screen_index() == index && roll.phase() == phase { break; }
+            roll.update_frame(CreditsInput::none());
+        }
+        assert_eq!((roll.screen_index(),roll.phase()),(index,phase));
+        for _ in 0..frames { roll.update_frame(CreditsInput::none()); }
+        println!("{name}: screen {}, {:?}, scroll step {}, palette step {}",roll.screen_index(),roll.phase(),roll.mon_scroll_step(),roll.fade_step());
+        let mut g=game();g.credits=Some(roll);save(&mut g,out,prefix,name);
+    }
+    for (facing,label) in [
+        (pokered_core::overworld::Direction::Down,"down"),
+        (pokered_core::overworld::Direction::Left,"left"),
+        (pokered_core::overworld::Direction::Right,"right"),
+    ] {
+        let mut g=game();g.overworld.state.player.facing=facing;
+        save(&mut g,out,prefix,&format!("overworld-obj-{label}-0"));
+    }
     // Identical state and frame: tight front-picture padding, mirror and GB palette.
     let mut g=game();
     let mut evo=EvolutionScreenState::new(vec![PendingEvolution{party_index:0,from:Species::Bulbasaur,to:Species::Ivysaur,name:"BULBASAUR".into(),force:false}],None,false);
