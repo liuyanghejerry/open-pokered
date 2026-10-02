@@ -65,14 +65,18 @@ pub fn import_sram_into(data: &[u8], out: &mut SaveData) -> Result<(), SaveError
     let bank2 = &data[SRAM_BANK_SIZE_LAYOUT * 2..SRAM_BANK_SIZE_LAYOUT * 3];
     let bank3 = &data[SRAM_BANK_SIZE_LAYOUT * 3..SRAM_BANK_SIZE_LAYOUT * 4];
 
-    let boxes_initialized = validate_box_bank_checksum(bank2).is_ok()
+    let valid_box_banks = validate_box_bank_checksum(bank2).is_ok()
         && validate_box_bank_checksum(bank3).is_ok();
+    let box_initialization_bit = bank1[0x084c] & 0x80 != 0;
     // The ROM only initializes box banks on the first CHANGE BOX. A valid
     // initial save can contain arbitrary power-on SRAM in banks 2 and 3.
-    if !boxes_initialized && bank1[0x084c] & 0x80 != 0 {
+    if !valid_box_banks && box_initialization_bit {
         return Err(SaveError::BadChecksum);
     }
     let legacy_native = import_bank1_into(bank1, out)?;
+    // A new ROM playthrough can retain checksum-valid boxes from a previous
+    // trainer. Bit 7, not checksum validity, decides whether those banks exist.
+    let boxes_initialized=valid_box_banks && (box_initialization_bit || legacy_native);
     // Every box slot is fully overwritten by parse_box_bank, so the resident
     // storage needs no reset (its 18 KB reset temporary would defeat the
     // point of importing in place).
@@ -96,16 +100,18 @@ pub fn import_sram_banks_into(
     let mut bank = vec![0u8; SRAM_BANK_SIZE_LAYOUT];
     // Check both box banks before changing the resident save, matching the
     // whole-image import's behavior on corrupt media.
-    let mut boxes_initialized = true;
+    let mut valid_box_banks = true;
     for index in [2, 3] {
         read_bank(index, &mut bank);
-        boxes_initialized &= validate_box_bank_checksum(&bank).is_ok();
+        valid_box_banks &= validate_box_bank_checksum(&bank).is_ok();
     }
     read_bank(1, &mut bank);
-    if !boxes_initialized && bank[0x084c] & 0x80 != 0 {
+    let box_initialization_bit=bank[0x084c]&0x80!=0;
+    if !valid_box_banks && box_initialization_bit {
         return Err(SaveError::BadChecksum);
     }
     let legacy_native = import_bank1_into(&bank, out)?;
+    let boxes_initialized=valid_box_banks && (box_initialization_bit || legacy_native);
     if boxes_initialized {
         for index in [2, 3] {
             read_bank(index, &mut bank);
@@ -149,6 +155,7 @@ fn import_bank1_into(bank: &[u8], out: &mut SaveData) -> Result<bool, SaveError>
     out.current_box = current_box;
     out.tile_animations = tile_animations;
     out.imported_legacy_native = legacy_native;
+    out.imported_legacy_json = false;
     Ok(legacy_native)
 }
 
@@ -418,6 +425,7 @@ pub fn import_sram_no_checksum(data: &[u8]) -> Result<SaveData, SaveError> {
 
     let mut save = SaveData {
         imported_legacy_native: false,
+        imported_legacy_json: false,
         player_name,
         game_data,
         party,

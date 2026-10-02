@@ -35,6 +35,8 @@ pub struct SaveData {
     /// Its companion may supply those bits once, before the next canonical save.
     #[serde(skip)]
     pub imported_legacy_native: bool,
+    #[serde(skip)]
+    pub imported_legacy_json: bool,
     pub player_name: Vec<u8>,
     pub game_data: GameData,
     pub party: Party,
@@ -48,6 +50,7 @@ impl SaveData {
     pub fn new() -> Self {
         Self {
             imported_legacy_native: false,
+            imported_legacy_json: false,
             player_name: Vec::new(),
             game_data: GameData::new(),
             party: Party::new(),
@@ -206,10 +209,15 @@ impl SaveData {
         ser_pokemon::serialize_party_into(&self.party, &mut buf);
         ser_pokemon::serialize_box_into(&self.current_box, &mut buf);
         buf.push(self.tile_animations);
+        // Our SRAM exporter writes complete box banks on every save, so they
+        // are initialized even before the player's first CHANGE BOX.
+        buf[0x284c-0x2598] |= 0x80; // original wCurrentBoxNum
         buf
     }
 
     pub fn clear(&mut self) {
+        self.imported_legacy_native=false;
+        self.imported_legacy_json=false;
         // Keep the large inline PC and Hall-of-Fame arrays in place. Building
         // a complete `SaveData::new()` temporary here can exhaust the GBA's
         // stack when this runs inside the top-level update state machine.

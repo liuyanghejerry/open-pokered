@@ -2419,7 +2419,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 let system_alias=name.starts_with("EVENT_TRADED_FOR_")
                     || name=="EVENT_GOT_LICKITUNG_FROM_TRADE"
                     || matches!(name.as_str(),"EVENT_GOT_OLD_ROD"|"EVENT_GOT_GOOD_ROD"|"EVENT_GOT_SUPER_ROD");
-                !system_alias || (save.imported_legacy_native && *value)
+                !system_alias || ((save.imported_legacy_native || save.imported_legacy_json) && *value)
             });
             self.set_script_flags(extras);
         }

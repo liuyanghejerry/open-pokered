@@ -231,6 +231,26 @@ fn original_offsets_and_uninitialized_box_banks_import() {
 }
 
 #[test]
+fn original_new_game_ignores_previous_playthroughs_valid_box_banks() {
+    let mut previous = SaveData::new();
+    previous
+        .pc_storage
+        .get_box_mut(7)
+        .unwrap()
+        .deposit(create_pokemon(Species::Pikachu, 25, [0x99, 0x88]).unwrap())
+        .unwrap();
+    let previous = export_sram(&previous);
+    assert_ne!(previous[0x284c] & 0x80, 0);
+    let mut bytes = original_sram();
+    bytes[0x4000..0x8000].copy_from_slice(&previous[0x4000..0x8000]);
+    assert_eq!(bytes[0x284c] & 0x80, 0); // new ROM game, no first CHANGE BOX yet
+    let save = import_sram(&bytes).unwrap();
+    for index in 0..12 {
+        assert_eq!(save.pc_storage.get_box(index).unwrap().count(), 0);
+    }
+}
+
+#[test]
 fn previous_native_save_migrates_layout_and_species() {
     let mut bytes = original_sram();
     bytes[0x2f2d] = 25;
