@@ -109,3 +109,32 @@ fn en_dialog_line_fills_box() {
     assert!(reached_past_90px, "a 135px line must extend past the old 90px limit");
     assert!(!text_bleeds_into_right_border(&fb), "…but never cross the right border");
 }
+
+#[test]
+fn project_font_descenders_do_not_touch_the_original_bottom_border() {
+    use pokered_data::ui_layout::schema::BATTLE_TEXT_DEFAULT_LAYOUT;
+    for lang in [Lang::En, Lang::Zh] {
+        for battle in [false, true] {
+            let mut actual = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+            let mut painter = FrameBufferPainter::new(&mut actual).with_lang(lang);
+            if battle {
+                menus::battle_text::draw_hard_lines("First row.\ngyp points!", false,
+                    &BATTLE_TEXT_DEFAULT_LAYOUT, &mut Ui::new(&mut painter), lang);
+            } else {
+                menus::dialog::draw("First row.\ngyp points!", false,
+                    &DIALOG_DEFAULT_LAYOUT, &mut Ui::new(&mut painter), lang);
+            }
+            let mut expected = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+            dotzuki_renderer::embedded_font::draw_text("gyp points!", 8,
+                if lang == Lang::Zh { 123 } else { 124 }, Rgba::BLACK, &mut expected);
+            for y in 124..136 { for x in 8..80 {
+                assert_eq!(actual.get_pixel(x,y), expected.get_pixel(x,y),
+                    "the entire unchanged project glyph must fit above the border: {lang:?} battle={battle} ({x},{y})");
+            } }
+            for y in 136..138 { for x in 8..144 {
+                assert_eq!(actual.get_pixel(x,y), Some(Rgba::WHITE),
+                    "keep descenders separate from the original border");
+            } }
+        }
+    }
+}

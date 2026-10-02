@@ -793,7 +793,7 @@ fn naming_lowercase_toggle_shows_upper_case_label_when_in_lowercase() {
     menus::naming::draw(&state, &NAMING_DEFAULT_LAYOUT, &mut Ui::new(&mut rec), false);
     let texts = collect_texts(&rec.ops);
     assert!(state.is_lowercase());
-    let case_label = texts.iter().find(|(tx, ty, _)| *tx == 2 && *ty == 15);
+    let case_label = texts.iter().find(|(tx, ty, _)| *tx == 2 && *ty == 16);
     assert!(case_label.is_some());
     assert_eq!(case_label.unwrap().2, "UPPER CASE");
 }
@@ -810,7 +810,7 @@ fn naming_cursor_on_case_row_renders_arrow_at_keyboard_x_minus_one() {
     let case_row_arrows: Vec<_> = tiles.iter()
         .filter(|(tx, ty, id, _)| *ty == 16 && *tx == 1 && *id == naming_tiles::CURSOR_ARROW)
         .collect();
-    assert_eq!(case_row_arrows.len(), 1, "case row cursor must be at (1, 15)");
+    assert_eq!(case_row_arrows.len(), 1, "case row cursor must be at (1, 16)");
 }
 
 #[test]
