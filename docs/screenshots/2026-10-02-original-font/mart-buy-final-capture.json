@@ -1,0 +1,17 @@
+{
+  "status": "verified",
+  "before_source": "72ff719",
+  "after_source": "eebde2fc3a4f78c38b4c7b5d49e0db2b830cb235",
+  "before_binary_sha256": "fd832ed427cb33c0ea14a7fa10a97b6363381009a6a1a3ef037a0b1989ac1879",
+  "after_binary_sha256": "ea717f1c2d6332f4608fc13194296cdb166ea20662d8d0f7c379bd17ba005e52",
+  "before_metadata_archive": "https://raw.githubusercontent.com/liuyanghejerry/open-pokered/129cd8e/docs/screenshots/2026-10-02-original-font/mart-buy-before.json",
+  "before_input_archive": "https://raw.githubusercontent.com/liuyanghejerry/open-pokered/129cd8e/docs/screenshots/2026-10-02-original-font/mart-buy-before-input.json",
+  "after_metadata": "docs/screenshots/2026-10-02-original-font/mart-buy-after.json",
+  "frame": 1024,
+  "font": "Original project Fusion Pixel on both sides; final shop layout, no replacement alphabet",
+  "after_metadata_sha256": "cf53c51378f16ed233b9cfc792881ed6c3db3842d65447caea7dc428a355d639",
+  "after_input_sha256": "c93168e1d35b27346f064ae52f5b7c437199c5aae62240dba9cd71804e2f982b",
+  "snapshot_semantically_identical_to_before": true,
+  "before_png_sha256": "a108c970bc54393e7098d18d8ff1c968c2be593b73de2922537b2cc041a81806",
+  "after_png_sha256": "7dd9e05069779c97d67a9f3604a8069865f93e6ca38d4a9e503f638d1c0fd527"
+}

@@ -21,3 +21,9 @@ The three `trade-*-40-*` pairs drive the actual Route 11 Youngster with Nidorino
 Dedicated border, PK/MN and naming-underscore UI graphics remain documented in [POKERED.md](../../../crates/pokered-renderer/fonts/POKERED.md). The ordinary alphabet and numeric font bank have been removed, while pagination still preserves authored lines and wraps expanded text using the retained project's actual glyph advances.
 
 The shared [final capture ledger](../2026-10-02-full-fidelity/after-capture-ledger.json) records this run's 65 newly written after PNGs, including all six functional pairs here. Their before checksums remain unchanged. The earlier `c51209a` capture run is archived separately as evidence before the final dialogue-row spacing repair and is not claimed as the final after source.
+
+## 商店补验
+
+原有商店after曾属于已撤回字体实验。此归档后补同输入、seed49、frame1024的
+`eebde2f` 最终普通Fusion Pixel版本，before保持原hash。实际输入、逐步命令及二进制
+来源见 [补验记录](mart-buy-final-capture.json)。其余被标注的纯字体实验仍为历史资料。

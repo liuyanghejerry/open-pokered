@@ -1,5 +1,5 @@
 {
-  "binary_sha256": "0dba5dc0ab6870244c01f42adea919ddb27689bf197a58dc086207f9712132de",
+  "binary_sha256": "ea717f1c2d6332f4608fc13194296cdb166ea20662d8d0f7c379bd17ba005e52",
   "frame": 1024,
   "events": [
     {
@@ -366,12 +366,12 @@
     {
       "command": {
         "cmd": "capture_frame",
-        "path": "/workspace/pokered-fix-late/docs/screenshots/2026-10-02-original-font/mart-buy-after.png"
+        "path": "/workspace/open-pokered/docs/screenshots/2026-10-02-original-font/mart-buy-after.png"
       },
       "result": {
         "ok": true,
         "data": {
-          "path": "/workspace/pokered-fix-late/docs/screenshots/2026-10-02-original-font/mart-buy-after.png",
+          "path": "/workspace/open-pokered/docs/screenshots/2026-10-02-original-font/mart-buy-after.png",
           "state": {
             "active_script_effect": null,
             "badges": 0,
@@ -491,5 +491,12 @@
         }
       }
     }
-  ]
+  ],
+  "source_commit": "eebde2fc3a4f78c38b4c7b5d49e0db2b830cb235",
+  "font": "Project original Fusion Pixel",
+  "matching_input_sha256": "c93168e1d35b27346f064ae52f5b7c437199c5aae62240dba9cd71804e2f982b",
+  "snapshot_semantically_identical_to_before": true,
+  "before_png_sha256": "a108c970bc54393e7098d18d8ff1c968c2be593b73de2922537b2cc041a81806",
+  "after_png_sha256": "7dd9e05069779c97d67a9f3604a8069865f93e6ca38d4a9e503f638d1c0fd527",
+  "note": "Final native Mart buy layout with retained project font. Same72ff719originalinput, seed49, ViridianMart, synchronousinput timeline and globalframe1024. Other shop phases have formalpixel regressions; thisimage is not their separatepair."
 }

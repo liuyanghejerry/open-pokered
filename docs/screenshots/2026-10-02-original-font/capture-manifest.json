@@ -95,7 +95,7 @@
       "frame": 1024,
       "language": "en",
       "before_source": "72ff719b39634c153cb82d3f3ece200bd413c4e0",
-      "after_source": "cd9acde31a430e69768b39f598dc90c9fa536ccc",
+      "after_source": "eebde2fc3a4f78c38b4c7b5d49e0db2b830cb235",
       "images": {
         "before": {
           "file": "mart-buy-before.png",
@@ -105,12 +105,12 @@
         },
         "after": {
           "file": "mart-buy-after.png",
-          "sha256": "625a07ed621d7d19155a2f66ca8196fd6544b08af44afcc1a2bc80e8b5e19f1a",
-          "binary_sha256": "0dba5dc0ab6870244c01f42adea919ddb27689bf197a58dc086207f9712132de",
+          "sha256": "7dd9e05069779c97d67a9f3604a8069865f93e6ca38d4a9e503f638d1c0fd527",
+          "binary_sha256": "ea717f1c2d6332f4608fc13194296cdb166ea20662d8d0f7c379bd17ba005e52",
           "metadata": "mart-buy-after.json"
         }
       },
-      "status": "Historical withdrawn font experiment; excluded from final PR acceptance"
+      "status": "Final functional Mart capture with project original Fusion Pixel retained"
     },
     {
       "name": "town-map-en",
