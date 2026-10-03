@@ -3387,3 +3387,72 @@ Exeggcute31的39035、Charizard69的341707等与独立CONTINUE证明一致。
 max_tokens_exceeded后原有分组比较继续推进，未替模型选目标。
 原生4×录像继续在持久目录写入，无回退、存档编辑、warp、热替换
 或固定里程碑路线；起点62不计新增，当前运行不当成已封存检查点。
+
+### 完整目标集诊断范围补正与金黄市前置发现
+
+此前37→37的XP比较及28→37的维生素候选比较，诊断helper仅使用
+`[DEX_OBJECTIVE]`，不是正式runner的`load_objectives()+[DEX_OBJECTIVE]`。
+其限定范围内的逐项守恒仍有效，但不能称为整个正式候选集覆盖；
+保留旧证据并明确补正。helper现提供full-story-frontier，载入正式
+相同12个目标。最新第22段62种来源，旧8ad3dcf3完整历史模块／新
+XP模块各隔离正常CONTINUE，全38组target／规则／说明／完整context
+仅有正常XP及条件训练成本36叶子变化，其他facts严格一致。帧627
+前后不变，源SRAM及dade binary相同；不调用模型或执行输入。
+Exeggcute31经验39035，升32旧1–3722→实际1925，Gloom升26实际1470。
+这是补齐验证范围，不是新增登记或实战收益承诺。
+
+完整目标集暴露一个真实候选缺口：导航已因缺饮料及共享guard旗标
+排除SaffronCity，但四个gate的pushback尚无历史观察，旧前置发现
+只承认已观察守卫地块，因此Sabrina不可达却找不到饮料解锁任务。
+现在Game将既有实际排除条件与其真实共享flag生产目标一起提供，
+navigation_excluded_maps仍来自同一谓词，持有有效饮料或已给过守卫
+仍按原规则解除排除。没有新增写死行程或全局假定未见地块是墙。
+
+前置发现只在原路径不存在时放松有可生产解释的排除地区；没有
+真实producer的未知地区保持排除。仅实际规划路径经过该地区才
+返回其解锁任务，既有可达路径和无关捷径不增加假前置，路径上
+更早的守卫／门／已观测NPC仍先解决。执行导航不获得放松路径，
+现实碰撞／守卫／支付／战斗仍须正常输入完成，不能假定已获通行。
+
+同一第22段源SRAM，完整目标集隔离CONTINUE旧38→新41组；原38组
+完整target／rules／objectives／context逐字守恒，facts完全不变。
+新增仅FRESH_WATER／SODA_POP／LEMONADE三组，均来自实际CeladonMartRoof
+三处售货机，已知触发区域路线存在，连接Sabrina及实际共享guard
+前置；不是自动购买、进入金黄市或击败馆主。原生帧627、源SRAM
+不变，SaffronCity执行排除及既有观察barriers不变，地图几何恢复；
+没有模型调用、正式输入或登记。只读完整规划20.046秒，不能视为
+线上性能保证。凭据未读出或加入证据。
+
+四项新增回归：实际排除原因／正常观察／饮料数量／旗标及非smart
+行为；无需失败地块即可发现原因；已有可达或无关路径不产生前置；
+未知地区与无producer保持排除。旧版2FAIL／1ERROR／1PASS保留，
+六项重点含既有守卫测试通过，完整Python900项通过（18.467秒）。
+按playthrough-regression范围选择导航／规划回归；没有Rust／原生
+画面变更，dade不变，不冒称本轮重跑已有fresh m49或截图。
+
+### 第二十三段真实训练成果与独立持久性核验
+
+同一第23段正常训练将Gloom25→31（经验24366）、Exeggcute31→32
+（41171）、Charizard69→70（349592）；没有新增物种，仍62 owned／
+100 seen，不能把准备训练称为捕获收益。1013.182秒Fuchsia护士
+完整治疗后future watcher核验controller27287身份并合作式SIGINT，
+checkpoint严格安全及最终观察通过，development_checkpoint=true、
+success=false／StoryStopped: interrupted_at_command_boundary，113动作、
+策略108／动作361调用，不是Goal暂停或124完成。
+
+独立新进程正常CONTINUE schema=3逐项恢复实际XP、队伍、PC逐槽、
+图鉴、背包、位置与旗标，源SRAM未改写，SHA256
+`eafeb28ff416abcd2669de1aebf612a8cc3ff932c2bdfff4b2ab267805b2cb7c`。
+FuchsiaPokecenter `(3,3)`，资金553、六徽章、UltraBall5／GreatBall18、
+队伍6／PC39、全员实际HP／PP及异常恢复。原生仍dade；从此最新
+存档正常续跑新策略，不回退到第22段抹去训练，也不热替换录制。
+历史幽灵访问缺口仍未解决，合法124／完整MP4／大盘最终验收未完成。
+
+第23段MP4正常封口479.300000秒、28758帧、7439638字节。23段容器／
+时钟／登记守恒通过，合计15247.999997秒、280322条记录、62种唯一
+登记，22次续跑起点新增均为空；不替代合片、合法来源或全片视觉。
+最新检查点及trace／manifest、独立读档／停止／时钟、900测试与旧
+失败、完整目标集三组规划／两组比较及冻结源另备份worktree外
+`verified62-training-region-unlock-evidence-20261004.tar.gz`（3520329字节、
+48条，SHA256 `e1522860c9194ebc3eaf7a794baeb192541001c86b6e8d5945fbb632b6bc9a3e`）。
+条目及归档内SRAM哈希复核通过，无凭据／重复MP4／binary，原件保留。

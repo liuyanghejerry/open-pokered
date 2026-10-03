@@ -2946,6 +2946,79 @@ class AutonomousTests(unittest.TestCase):
                 self.assertEqual(barriers, {'Gate': {(2, 3), (8, 8)}})
                 self.assertEqual(agent.game.navigation_excluded_maps(), ('ClosedCity',))
 
+    def test_observed_map_exclusion_backchains_unlock_without_inventing_tile_barriers(self):
+        from types import SimpleNamespace
+        import playthrough as pt
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        target = ('flag', 'ACTUAL_REGION_UNLOCK', True)
+        producer = Rule('drink', 'CeladonMartRoof', 'Roof:vending', [], [], [],
+                        ('item', 'FRESH_WATER', True), [])
+        agent.index = SimpleNamespace(rules=[],
+            frontier=lambda goal, facts: [producer] if goal == target else [])
+        barriers = {'Route7': {(8, 8)}}
+        causes = {'SaffronCity': (target,)}
+        agent.game = SimpleNamespace(last_map='Route7', script_navigation_barriers=barriers,
+            navigation_excluded_maps=lambda: ('SaffronCity',),
+            navigation_map_requirements=lambda: causes)
+        agent.navigation_facts = {'flags': {}, 'bag': {}}
+        agent.maps = {'Route7': {'npcs': []}, 'SaffronCity': {'npcs': []}}
+        state = {'map_name': 'Route7', 'player_x': 0, 'player_y': 0}
+        def search(*args, **kwargs):
+            self.assertEqual(kwargs['blocked_maps'], barriers)
+            if kwargs['excluded_maps']:
+                return None
+            return [(('Route7', 0, 0), ''), (('Route7', 1, 0), 'right'),
+                    (('SaffronCity', 0, 0), 'right')]
+        with patch.object(pt, 'bfs_cross', side_effect=search):
+            self.assertEqual(agent.discover_route_prerequisites(state, 'SaffronGym', [(1, 1)]), [target])
+        self.assertIs(agent.game.script_navigation_barriers, barriers)
+        self.assertEqual(barriers, {'Route7': {(8, 8)}})
+        self.assertEqual(causes, {'SaffronCity': (target,)})
+        self.assertEqual(agent.game.navigation_excluded_maps(), ('SaffronCity',))
+
+    def test_map_exclusion_unlock_is_not_added_for_reachable_or_unrelated_paths(self):
+        from types import SimpleNamespace
+        import playthrough as pt
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        target = ('flag', 'ACTUAL_REGION_UNLOCK', True)
+        agent.index = SimpleNamespace(rules=[], frontier=lambda goal, facts: [object()])
+        agent.game = SimpleNamespace(last_map='Route7', script_navigation_barriers={},
+            navigation_excluded_maps=lambda: ('SaffronCity',),
+            navigation_map_requirements=lambda: {'SaffronCity': (target,)})
+        agent.navigation_facts = {'flags': {}, 'bag': {}}
+        agent.maps = {'Route7': {'npcs': []}}
+        state = {'map_name': 'Route7', 'player_x': 0, 'player_y': 0}
+        path = [(('Route7', 0, 0), ''), (('Route7', 1, 0), 'right')]
+        with patch.object(pt, 'bfs_cross', return_value=path) as search:
+            self.assertEqual(agent.discover_route_prerequisites(state, 'Route7', [(1, 0)]), [])
+            self.assertEqual(search.call_count, 1)
+        with patch.object(pt, 'bfs_cross', side_effect=lambda *a, **kw:
+                None if kw['excluded_maps'] else path):
+            self.assertEqual(agent.discover_route_prerequisites(state, 'Route7', [(1, 0)]), [])
+
+    def test_map_exclusion_discovery_preserves_unknown_regions_and_requires_a_producer(self):
+        from types import SimpleNamespace
+        import playthrough as pt
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        target = ('flag', 'ACTUAL_REGION_UNLOCK', True)
+        agent.index = SimpleNamespace(rules=[], frontier=lambda goal, facts: [])
+        agent.game = SimpleNamespace(last_map='Route7', script_navigation_barriers={},
+            navigation_excluded_maps=lambda: ('SaffronCity', 'UnknownRegion'),
+            navigation_map_requirements=lambda: {'SaffronCity': (target,)})
+        agent.navigation_facts = {'flags': {}, 'bag': {}}
+        state = {'map_name': 'Route7', 'player_x': 0, 'player_y': 0}
+        with patch.object(pt, 'bfs_cross', return_value=None) as search:
+            self.assertEqual(agent.discover_route_prerequisites(state, 'SaffronGym', [(1, 1)]), [])
+            self.assertEqual(search.call_count, 1)
+        agent.index.frontier = lambda goal, facts: [object()]
+        def search(*args, **kwargs):
+            self.assertIn('UnknownRegion', kwargs['excluded_maps'])
+            if 'SaffronCity' in kwargs['excluded_maps']:
+                return None
+            return [(('Route7', 0, 0), ''), (('SaffronCity', 0, 0), 'right')]
+        with patch.object(pt, 'bfs_cross', side_effect=search):
+            self.assertEqual(agent.discover_route_prerequisites(state, 'SaffronGym', [(1, 1)]), [target])
+
     def test_puzzle_walk_avoids_fall_holes_and_restores_navigation_barriers(self):
         import playthrough as pt
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)

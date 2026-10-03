@@ -5080,6 +5080,14 @@ class AutonomousStoryAgent(DualStoryAgent):
                 changed[name, offset] = rule.effect
             with water_planning():
                 excluded = self.game.navigation_excluded_maps()
+                explain = getattr(self.game, 'navigation_map_requirements', None)
+                region_requirements = explain() if callable(explain) else {}
+                if not isinstance(region_requirements, dict):
+                    region_requirements = {}
+                region_targets = {name: [target for target in targets
+                    if self.index.frontier(target, facts)]
+                    for name, targets in region_requirements.items() if name in excluded}
+                region_targets = {name: targets for name, targets in region_targets.items() if targets}
                 def search(blocked, excluded_maps=excluded):
                     return pt.bfs_cross(state['map_name'], (state['player_x'], state['player_y']),
                         destination, points[0], last_map=self.game.last_map,
@@ -5092,16 +5100,24 @@ class AutonomousStoryAgent(DualStoryAgent):
                 path = search(observed_barriers)
                 if not path and barriers != observed_barriers:
                     path = search(barriers)
-                if not path and excluded and guarded_tiles:
+                if not path and excluded and (guarded_tiles or region_targets):
                     # Execution correctly excludes a guarded region, but using
                     # that same exclusion to discover its unlock hides the
                     # guard's prerequisites forever. Relax only in this plan,
                     # and accept it only when a known causal guard is crossed
-                    # BEFORE the first excluded region. Never expose the
-                    # relaxed path as executable navigation.
-                    relaxed = search(barriers, ())
+                    # BEFORE the first excluded region, or that region has
+                    # an explanation from the very same exclusion predicate.
+                    # Such an observed exclusion needs no failed tile walk.
+                    # Keep unexplained regions excluded unless the older
+                    # observed-guard proof applies. Never expose this relaxed
+                    # path as executable navigation.
+                    still_excluded = () if guarded_tiles else tuple(
+                        name for name in excluded if name not in region_targets)
+                    relaxed = search(barriers, still_excluded)
                     for node, _ in (relaxed or [])[1:]:
                         if node[0] in excluded:
+                            if node[0] in region_targets:
+                                path = relaxed
                             break
                         if node in guarded_tiles:
                             path = relaxed
@@ -5117,6 +5133,8 @@ class AutonomousStoryAgent(DualStoryAgent):
             observed_npcs, toggles = {}, {}
         for node, _ in path[1:]:
             name, x, y = node
+            if name in region_targets:
+                return list(dict.fromkeys(region_targets[name]))
             if node in guarded_tiles:
                 return list(dict.fromkeys(guarded_tiles[node]))
             effect = changed.get((name, (y//2)*pt.MAPS[name]['width'] + x//2))

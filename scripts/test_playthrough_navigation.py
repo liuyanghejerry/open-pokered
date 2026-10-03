@@ -947,6 +947,34 @@ class NavigationRegression(unittest.TestCase):
         bag.append({'item': 'FreshWater', 'qty': 1})
         self.assertEqual(game.navigation_excluded_maps(), ())
 
+    def test_excluded_map_exposes_its_real_unlock_without_a_failed_walk(self):
+        game = nav.Game.__new__(nav.Game)
+        game.smart_moves = True
+        flags, bag, commands = {}, [], []
+        def observe(cmd):
+            commands.append(cmd)
+            return {'data': flags if cmd == 'get_flags' else bag}
+        game.d = SimpleNamespace(cmd=observe)
+        expected = {'SaffronCity': (('flag', 'EVENT_GAVE_SAFFRON_GUARDS_DRINK', True),)}
+        self.assertEqual(game.navigation_map_requirements(), expected)
+        self.assertEqual(tuple(expected), game.navigation_excluded_maps())
+        self.assertEqual(set(commands), {'get_flags', 'get_bag'})
+        for drink in ('FreshWater', 'SodaPop', 'Lemonade'):
+            with self.subTest(drink=drink):
+                bag[:] = [{'item': drink, 'qty': 0}]
+                self.assertEqual(game.navigation_map_requirements(), expected)
+                bag[0]['qty'] = 1
+                self.assertEqual(game.navigation_map_requirements(), {})
+                self.assertEqual(game.navigation_excluded_maps(), ())
+        bag.clear()
+        flags['EVENT_GAVE_SAFFRON_GUARDS_DRINK'] = True
+        self.assertEqual(game.navigation_map_requirements(), {})
+        game.smart_moves = False
+        commands.clear()
+        self.assertEqual(game.navigation_map_requirements(), {})
+        self.assertEqual(game.navigation_excluded_maps(), ())
+        self.assertEqual(commands, [])
+
     def test_explicit_exit_carpet_does_not_warp_on_a_sideways_step(self):
         path = nav.bfs_cross('CeladonMartElevator', (1, 3), 'CeladonMart1F', (5, 5),
                              last_map='CeladonCity')

@@ -991,15 +991,24 @@ class Game:
             return
         raise NavError(f"object approach did not settle: {map_name} ({x},{y})")
 
-    def navigation_excluded_maps(self):
+    def navigation_map_requirements(self):
+        """Explain current region exclusions with real script producer goals.
+
+        Carrying a drink makes the ordinary gate walk retryable; the shared
+        guard flag is the persistent unlock. This is planning evidence, not
+        permission to cross an excluded map or proof the guard was satisfied.
+        """
         if getattr(self, "smart_moves", False):
             flags = self.d.cmd(cmd="get_flags")["data"]
             if not flags.get("EVENT_GAVE_SAFFRON_GUARDS_DRINK"):
                 bag = self.d.cmd(cmd="get_bag")["data"]
                 if not any(item['item'] in ('FreshWater', 'SodaPop', 'Lemonade')
                            and item.get('qty', 0) > 0 for item in bag):
-                    return ("SaffronCity",)
-        return ()
+                    return {"SaffronCity": (("flag", "EVENT_GAVE_SAFFRON_GUARDS_DRINK", True),)}
+        return {}
+
+    def navigation_excluded_maps(self):
+        return tuple(self.navigation_map_requirements())
 
     def navigation_barriers(self):
         """Observed script barriers supplied by a planner, keyed by map."""
