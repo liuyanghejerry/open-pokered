@@ -695,6 +695,64 @@ class AutonomousTests(unittest.TestCase):
             self.assertEqual(bfs.call_args.args[2:4], ('Island', (4, 10)))
             self.assertNotIn('requires_surf', route)  # This is the offered move, not another prerequisite.
 
+    def test_surf_prerequisite_exposes_its_observed_unfinished_healing_parent(self):
+        from copy import deepcopy
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        obstacle = {'move': 'Surf', 'map': 'SeafoamIslandsB3F', 'stance': [15, 7],
+                    'direction': 'down', 'landing': ['SeafoamIslandsB3F', 23, 9],
+                    'destination': 'CinnabarPokecenter'}
+        parent = {'goal': ['heal', 'party', True], 'map': 'SeafoamIslandsB2F',
+                  'position': [24, 8], 'destination': 'CinnabarPokecenter',
+                  'detail': 'The target region requires crossing water'}
+        agent.navigation_memory = {'CinnabarPokecenter': parent}
+        agent.index = Mock()
+        agent.index.satisfied.return_value = False
+        facts = {'map': 'SeafoamIslandsB3F', 'x': 15, 'y': 7, 'fully_recovered': False}
+        originals = deepcopy((obstacle, parent, facts))
+        context = agent.field_prerequisite_context(obstacle, facts)
+        self.assertEqual(context['landing'], obstacle['landing'])
+        linked = context['route_prerequisite_for']
+        self.assertEqual(linked['goal'], ['heal', 'party', True])
+        self.assertEqual(linked['destination'], 'CinnabarPokecenter')
+        self.assertEqual(linked['observed_blockage']['position'], [24, 8])
+        self.assertIn('not arrival', linked['execution_scope'])
+        agent.index.satisfied.assert_called_once_with(parent['goal'], facts)
+        linked['goal'].append('changed diagnostic copy')
+        linked['observed_blockage']['position'][0] = 0
+        self.assertEqual((obstacle, parent, facts), originals)
+
+    def test_field_prerequisite_context_does_not_invent_or_retain_a_finished_parent(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.index = Mock()
+        obstacle = {'move': 'Surf', 'map': 'Shore', 'stance': [1, 2],
+                    'landing': ['Island', 3, 4], 'destination': 'Nurse'}
+        for memory in ({}, {'Other': {'goal': ['heal', 'party', True]}}, {'Nurse': {}},
+                       {'Nurse': {'goal': ['heal', 'party', True]}}):
+            agent.navigation_memory = memory
+            agent.index.satisfied.return_value = True
+            self.assertEqual(agent.field_prerequisite_context(obstacle, {}), obstacle)
+        agent.index.satisfied.return_value = False
+        agent.navigation_memory = {'Nurse': {'goal': ['item', 'SecretKey', True]}}
+        context = agent.field_prerequisite_context(obstacle, {})
+        self.assertEqual(context['route_prerequisite_for']['goal'], ['item', 'SecretKey', True])
+        self.assertEqual(context['route_prerequisite_for']['observed_blockage'], {})
+
+    def test_field_prerequisite_guidance_preserves_all_strategy_options(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        candidates = {'surf': json.dumps({'context': {'route_prerequisite_for': {
+            'goal': ['heal', 'party', True], 'destination': 'Nurse'}}}),
+            'heal': json.dumps({'establish': ['heal', 'party', True]}),
+            'other': 'Consider another route'}
+        agent.choose_bounded_strategy = Mock(return_value='other')
+        self.assertEqual(agent.choose('strategy', {}, candidates, 'Choose'), 'other')
+        _, options, instruction = agent.choose_bounded_strategy.call_args.args
+        self.assertEqual(set(options), set(candidates))
+        for key in ('surf', 'heal'):
+            self.assertEqual(json.loads(options[key]), json.loads(candidates[key]))
+        self.assertEqual(options['other'], candidates['other'])
+        self.assertIn('choosing a nurse destination again does not execute', instruction)
+        self.assertIn('genuinely different routes remain valid', instruction)
+
     def test_recording_rejects_missing_assets_and_fingerprints_png_changes(self):
         import tempfile
         from openpokered.run_autonomous import recording_assets

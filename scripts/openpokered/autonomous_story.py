@@ -1242,6 +1242,15 @@ class AutonomousStoryAgent(DualStoryAgent):
                     'Surf are conditional, not immediately walkable; map hops alone do not '
                     'measure current access. Preparation and alternative destinations remain valid '
                     'when supported by their current evidence.')
+        if (layer == 'strategy' and any('"route_prerequisite_for"' in value
+                                        for value in candidates.values())):
+            instruction += (' A field action with route_prerequisite_for is an indirect step toward '
+                'that recorded unfinished goal, not unrelated exploration. In particular, urgent '
+                'healing may first require the offered Surf crossing: choosing a nurse destination '
+                'again does not execute that crossing. Compare the parent goal, observed blocker, '
+                'current stance access and native field guards before retrying a conditional route '
+                'or choosing a different destination. Completing the crossing still does not heal '
+                'the party or guarantee arrival; other goals and genuinely different routes remain valid.')
         # Action choices can be larger than strategic ones (e.g. every legal
         # inventory disposal/teaching operation). Keep their complete evidence
         # and options under the same lossless request representation.
@@ -3210,6 +3219,26 @@ class AutonomousStoryAgent(DualStoryAgent):
                 # drink simply because a later gym battle remains unfinished.
                 del self.route_requirements[name]
 
+    def field_prerequisite_context(self, obstacle, facts):
+        """Connect an observed field crossing to its unfinished requested goal.
+
+        The landing is only this action's effect. It must not hide why the
+        player requested the route (e.g. healing), or claim that goal is done.
+        No destination, crossing or model choice is selected here.
+        """
+        context = dict(obstacle)
+        destination = obstacle.get('destination')
+        parent = getattr(self, 'navigation_memory', {}).get(destination)
+        if (not isinstance(parent, dict) or not parent.get('goal')
+                or self.index.satisfied(parent['goal'], facts)):
+            return context
+        context['route_prerequisite_for'] = {
+            'goal': deepcopy(parent['goal']), 'destination': destination,
+            'observed_blockage': {key: deepcopy(parent[key])
+                for key in ('map', 'position', 'detail') if key in parent},
+            'execution_scope': 'Execute this field crossing toward the recorded unfinished goal; its landing is not arrival at the destination or completion of the parent interaction.'}
+        return context
+
     def add_deferred_route_frontiers(self, groups, facts, previews):
         """Recover causal unlocks for goals added after the story frontier.
 
@@ -3381,7 +3410,8 @@ class AutonomousStoryAgent(DualStoryAgent):
                     key = json.dumps(target)
                     groups['surf:' + key] = {'target': target,
                         'rules': [Rule('surf:' + key, obstacle['map'], 'skill:surf', [], [], [], target, [])],
-                        'objectives': ['Cross the observed water passage'], 'context': obstacle}
+                        'objectives': ['Cross the observed water passage'],
+                        'context': self.field_prerequisite_context(obstacle, facts)}
                     continue
                 key = ','.join(map(str, [obstacle['map'], *obstacle['tree']]))
                 if key not in self.cleared_terrain:
