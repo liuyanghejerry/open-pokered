@@ -607,6 +607,53 @@ def factor_strategy_evidence(state, candidates, min_chars=160):
     return factored_state, factored_candidates
 
 
+def scope_shared_evidence(state, candidates):
+    """Keep the complete world and this round's transitive evidence closure.
+
+    A partition must not resend storage reachable only from OTHER partitions.
+    These are unreferenced library entries, not world facts or a shortlist.
+    Values, references and all current candidate descriptions remain unchanged.
+    """
+    library = state.get('shared_strategy_evidence')
+    if not isinstance(library, dict):
+        return state
+    used, visiting = set(), set()
+
+    def mark(value):
+        if isinstance(value, dict):
+            if set(value) == {'shared_strategy_evidence_ref'}:
+                key = value['shared_strategy_evidence_ref']
+                if not isinstance(key, str) or key not in library:
+                    raise ValueError('Missing shared evidence reference')
+                if key in visiting:
+                    raise ValueError('Cyclic shared evidence reference')
+                if key not in used:
+                    visiting.add(key)
+                    mark(library[key])
+                    visiting.remove(key)
+                    used.add(key)
+            else:
+                for child in value.values():
+                    mark(child)
+        elif isinstance(value, list):
+            for child in value:
+                mark(child)
+
+    for key, value in state.items():
+        if key != 'shared_strategy_evidence':
+            mark(value)
+    for value in candidates.values():
+        try:
+            decoded = json.loads(value)
+        except (ValueError, TypeError):
+            continue  # Plain criteria contain no encoded references.
+        mark(decoded)
+    if used == set(library):
+        return state
+    return {**state, 'shared_strategy_evidence': {
+        key: value for key, value in library.items() if key in used}}
+
+
 def strategy_access_evidence(candidates):
     """Compare fresh trigger access without removing legal future goals."""
     result = {key: {} for key in ('path_found', 'field_action_needed', 'no_path_found', 'not_evaluated')}
@@ -1282,8 +1329,14 @@ class AutonomousStoryAgent(DualStoryAgent):
         with the same full state, then judges those representatives together.
         This is a tournament, not an identical full-set probability distribution.
         """
+        choice_state = scope_shared_evidence(state, candidates)
+        if choice_state is not state:
+            self.record(f'{layer}_evidence_scope', candidate_ids=list(candidates),
+                library_entries_before=len(state['shared_strategy_evidence']),
+                library_entries_sent=len(choice_state['shared_strategy_evidence']),
+                semantic_state_preserved=True, candidate_values_preserved=True)
         try:
-            return super().choose(layer, state, candidates, instruction,
+            return super().choose(layer, choice_state, candidates, instruction,
                                   allow_abstain=allow_abstain)
         except StoryStopped as error:
             if (not isinstance(error.__cause__, TypeSafeError)

@@ -1839,10 +1839,112 @@ class AutonomousTests(unittest.TestCase):
         candidates = {'a': 'Continue', 'b': json.dumps({'cost': 2})}
         self.assertEqual(factor_strategy_evidence(state, candidates), (state, candidates))
 
+    def test_choice_scope_preserves_world_and_nested_current_candidate_evidence(self):
+        from copy import deepcopy
+        from openpokered.autonomous_story import scope_shared_evidence
+        ref = lambda key: {'shared_strategy_evidence_ref': key}
+        library = {
+            'world': {'party': [{'species': 'Hypno', 'hp': 88}], 'money': 610},
+            'shared': {'native_inputs_only': True, 'price': ref('price')},
+            'price': {'UltraBall': 1200, 'LeafStone': 2100},
+            'a': {'reason': ref('shared'), 'rows': {'strategy_table': {
+                'columns': ['species', 'reference'], 'rows': [['Hypno', ref('price')]]}}},
+            'b': {'unselected_description': 'Different candidate evidence ' * 100},
+            'unused': {'unreferenced': 'Extra storage'},
+        }
+        state = {'world': ref('world'), 'global_policy': ref('shared'),
+                 'shared_strategy_evidence': library}
+        candidates = {'a': json.dumps({'context': ref('a')}), 'plain': 'No matching action'}
+        original = deepcopy((state, candidates))
+        scoped = scope_shared_evidence(state, candidates)
+        self.assertEqual(set(scoped['shared_strategy_evidence']), {'world', 'shared', 'price', 'a'})
+        def expand(value, evidence):
+            if isinstance(value, dict):
+                if set(value) == {'shared_strategy_evidence_ref'}:
+                    return expand(evidence[value['shared_strategy_evidence_ref']], evidence)
+                return {key: expand(child, evidence) for key, child in value.items()}
+            if isinstance(value, list):
+                return [expand(child, evidence) for child in value]
+            return value
+        for key in ('world', 'global_policy'):
+            self.assertEqual(expand(scoped[key], scoped['shared_strategy_evidence']),
+                             expand(state[key], library))
+        self.assertEqual(expand(json.loads(candidates['a']), scoped['shared_strategy_evidence']),
+                         expand(json.loads(candidates['a']), library))
+        # Even an unselected alternative's evidence remains if explicitly
+        # referenced by global decision state, such as shared-budget comparisons.
+        global_state = {**state, 'global_economics': ref('b')}
+        self.assertIn('b', scope_shared_evidence(global_state, candidates)['shared_strategy_evidence'])
+        self.assertEqual((state, candidates), original)
+
+    def test_choice_scope_is_identity_when_every_entry_is_needed_or_no_library_exists(self):
+        from openpokered.autonomous_story import scope_shared_evidence
+        for state in ({'world': {'money': 610}},
+                      {'world': {'shared_strategy_evidence_ref': 'e0'},
+                       'shared_strategy_evidence': {'e0': {'money': 610}}}):
+            self.assertIs(scope_shared_evidence(state, {'plain': 'Continue'}), state)
+        state = {'world': {}, 'shared_strategy_evidence': {'unused': 'Not referenced'}}
+        self.assertEqual(scope_shared_evidence(state, {}), {'world': {}, 'shared_strategy_evidence': {}})
+
+    def test_choice_scope_rejects_missing_or_cyclic_referenced_evidence(self):
+        from openpokered.autonomous_story import scope_shared_evidence
+        state = {'world': {'shared_strategy_evidence_ref': 'missing'},
+                 'shared_strategy_evidence': {}}
+        with self.assertRaisesRegex(ValueError, 'Missing shared evidence'):
+            scope_shared_evidence(state, {})
+        state = {'world': {'shared_strategy_evidence_ref': 'a'},
+                 'shared_strategy_evidence': {'a': {'shared_strategy_evidence_ref': 'b'},
+                                              'b': {'shared_strategy_evidence_ref': 'a'}}}
+        with self.assertRaisesRegex(ValueError, 'Cyclic shared evidence'):
+            scope_shared_evidence(state, {})
+
+    def test_overflow_rounds_scope_library_without_losing_world_or_any_strategy_choice(self):
+        from copy import deepcopy
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.record = Mock()
+        ref = lambda key: {'shared_strategy_evidence_ref': key}
+        library = {'world': {'money': 610, 'party': ['Hypno', 'Snorlax']}}
+        library.update({f'e{i}': {'detail': 'evidence ' * 60, 'index': i} for i in range(8)})
+        state = {'world': ref('world'), 'shared_strategy_evidence': library}
+        candidates = {str(i): json.dumps({'reference': ref(f'e{i}')}) for i in range(8)}
+        original = deepcopy((state, candidates))
+        evaluated = set()
+        def decide(layer, actual, options, instruction, *, allow_abstain):
+            self.assertEqual(layer, 'strategy')
+            self.assertEqual(actual['world'], state['world'])
+            self.assertEqual(actual['shared_strategy_evidence']['world'], library['world'])
+            for key in options:
+                self.assertEqual(actual['shared_strategy_evidence'][f'e{key}'], library[f'e{key}'])
+            if len(json.dumps([actual, options])) > 3000:
+                raise StoryStopped('strategy:service_unavailable') from TypeSafeError('max_tokens_exceeded')
+            evaluated.update(options)
+            return max(options, key=int)
+        with patch.object(DualStoryAgent, 'choose', side_effect=decide) as calls:
+            self.assertEqual(agent.choose_bounded_strategy(state, candidates, 'Pick'), '7')
+        self.assertEqual(evaluated, set(candidates))
+        self.assertEqual(calls.call_count, 4)  # Full-set attempt, two groups, finalists.
+        self.assertTrue(calls.call_args.kwargs['allow_abstain'])
+        self.assertEqual((state, candidates), original)
+
+    def test_action_scope_uses_the_same_lossless_library_closure(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.record = Mock()
+        state = {'local_state': {'shared_strategy_evidence_ref': 'world'},
+                 'shared_strategy_evidence': {'world': {'hp': 88}, 'unused': 'Other action'}}
+        candidates = {'heal': 'Use actual medicine', 'switch': 'Switch a healthy member'}
+        with patch.object(DualStoryAgent, 'choose', return_value='switch') as decide:
+            self.assertEqual(agent.choose_bounded_choice('action', state, candidates, 'Pick'), 'switch')
+        layer, actual, options, _ = decide.call_args.args
+        self.assertEqual(layer, 'action')
+        self.assertEqual(options, candidates)
+        self.assertEqual(actual['local_state'], state['local_state'])
+        self.assertEqual(actual['shared_strategy_evidence'], {'world': {'hp': 88}})
+
     def test_strategy_overflow_partition_keeps_state_and_considers_every_option(self):
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
         agent.record = Mock()
-        state = {'world': {'map': 'City'}, 'shared_strategy_evidence': {'e0': ['facts']}}
+        state = {'world': {'map': 'City', 'facts': {'shared_strategy_evidence_ref': 'e0'}},
+                 'shared_strategy_evidence': {'e0': ['facts']}}
         options = {str(i): f'Candidate {i}' for i in range(8)}
         evaluated = set()
 
