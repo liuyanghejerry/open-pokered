@@ -4821,3 +4821,39 @@ legal26-cut-context-frontier-comparison。worktree外46项／2095040字节
 无凭据、native binary或重复MP4，全部原件保留，无删除。后继只从
 最新26源正常CONTINUE，不回退／热替换／注入／另开NEW GAME；距124
 仍98种，最终全程MP4与完成图鉴大盘尚未交付，Goal仍active。
+
+## 2026-10-04：合法第8段27种，真实经验登记Raticate与用途记忆保存
+
+第8段`20261004-065205-seed42`从上述最新合法26源普通CONTINUE，
+干净b51cfad0／实际policy2aab0c33／冻结native6d8e／gfx21e0，原双层
+OpenRouter Jev1.13.0、seed42、预算及4×原生实录不变。初始全部持久
+字段守恒，实际策略16.890秒／动作19.178秒成功；真实请求包含精确
+Cut两个旧用途均true及可读共享scope，不替Jev指定选择。它仍先切树，
+随后自主选择register:Raticate、普通训练与护士恢复；本段实际切树
+5次，不能据此声称减少重复准备或把收集增益归因于新context。
+
+520.310秒／frame101737在Route11正常经验Rattata8→20进化、真实登记
+Raticate，27 owned／63 seen；正常学习HyperFang，实际XP8052，非注入
+等级。550.494秒自主护士操作完成，2026-10-03 23:01:17 UTC精确身份、
+源hash及byte-stable trace guard只向controller90159合作式SIGINT；
+native90171／recorder90172无信号或第二连接，三者正常退出。安全、
+最终观察及development checkpoint均true，success=false／
+interrupted_at_command_boundary；118动作、策略68／动作372调用、
+86次普通战斗。终点VermilionPokecenter `(3,3)`／frame103374，三枚
+徽章位掩码7、资金151、PokeBall49／GreatBall23、party6／PC15；
+Charizard44 XP80462、Raticate20 XP8052及正常HP／四槽PP保存。
+field_route_goals_schema1及两个实际用途正常落入summary；本段没有
+进一步改游戏代码或新构建／测试／m49结论，运行policy未热替换。
+
+最新SRAM `042639b9450e408f7946801c0e079d574aea4491b40df13a8d2f1266f5dbc180`
+独立新进程schema4普通CONTINUE通过，普通XP／HP／四槽PP、PC、物品、
+旗标及图鉴严格同；本段与上一26源hash不变。原生MP4 6029117字节／
+430.750000秒／25845帧全帧解码，SHA256
+`63138a29e311eb76d431e0d4ebdf8acd43209768a108fe47d9bd92ec51f7312c`。
+八段合法祖先链4552.166667秒／27唯一登记，resume初始快照不重复，
+第5段恢复只计一次，source audit无history／pending。证据为
+legal8-start-proof、cooperative-checkpoint-request、independent-continue
+与checkpoint-proof，均在持久目录；最新27增量备份另存worktree外，
+不含凭据／binary／重复MP4，全部原件保留，无删除。后继只从最新
+27源正常继续；距124仍97种，最终全程MP4与完成图鉴大盘尚未交付，
+Goal仍active。
