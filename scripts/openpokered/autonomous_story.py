@@ -2137,6 +2137,55 @@ class AutonomousStoryAgent(DualStoryAgent):
             entry['context']['restore_main_battler'] = True
             entry['objectives'] = [f'Restore the already trained {main["species"]} to the party before further training or battles']
 
+    def add_stored_field_carrier_retrieval(self, groups, facts, move, obstacle):
+        """An owned PC carrier is a field prerequisite even with a full party.
+
+        Keep withdrawal distinct from teaching, badge/current gates and the
+        eventual crossing. Reuse real PC rules and the existing protected
+        deposit choices rather than treating box ownership as a usable HM.
+        """
+        if any(move in mon.get('moves', []) or hm_compatible(mon['species'], move)
+               for mon in facts.get('party', [])):
+            return
+        item = f'HM{HM_MOVES.index(move)+1:02d}'
+        prerequisites = field_badge_prerequisites(move, facts.get('flags', {}))
+        if move == 'Surf':
+            prerequisites += surf_current_prerequisites(obstacle, facts.get('flags', {}))
+        seen_species = set()
+        for mon in facts.get('stored_pokemon', []):
+            species = mon.get('species')
+            # add_storage_retrieval binds the first observed slot for a
+            # species. Do not attach a later duplicate's moves to that slot.
+            if not species or species in seen_species:
+                continue
+            seen_species.add(species)
+            compatible = hm_compatible(species, move)
+            known = move in mon.get('moves', [])
+            if not compatible and not known:
+                continue
+            purpose = f'{move} field access'
+            self.add_storage_retrieval(groups, facts, species, purpose)
+            entry = groups.get(f'retrieve:{species}')
+            if not entry:
+                continue  # No currently enabled PC rule, not an invented action.
+            requirement = {
+                'required_move': move, 'compatible': compatible,
+                'already_knows_move': known, 'required_machine': item,
+                'machine_held': bool(facts.get('bag', {}).get(item)),
+                'unmet_native_field_prerequisites': prerequisites,
+                'terrain_obstruction': obstacle,
+                'scope': 'Withdraw this observed owned slot first; teach the HM if unknown. '
+                         'Badge/current gates, any recovery and actual field execution remain '
+                         'separate prerequisites; not a completed crossing or new registration.'}
+            requirements = entry['context'].setdefault('field_move_requirements', [])
+            if requirement not in requirements:
+                requirements.append(requirement)
+            generic_objective = f'Withdraw {species} from storage so it can produce {purpose}'
+            entry['objectives'] = [text for text in entry['objectives'] if text != generic_objective]
+            objective = f'Withdraw the owned {species} to prepare {move} for the observed terrain'
+            if objective not in entry['objectives']:
+                entry['objectives'].append(objective)
+
     def add_box_capacity_group(self, groups, facts):
         counts = facts.get('box_counts', [])
         current = facts.get('current_box_index', 0)
@@ -3006,6 +3055,7 @@ class AutonomousStoryAgent(DualStoryAgent):
             groups['learn:Strength'] = {'target': target,
                 'rules': [Rule('learn:Strength', facts['map'], 'skill:learn', [], [], [], target, [])],
                 'objectives': ['Learn Strength before attempting the observed boulder puzzle'], 'context': obstacle}
+        self.add_stored_field_carrier_retrieval(groups, facts, 'Strength', obstacle)
         for key, group in list(groups.items()):
             group['rules'] = [rule for rule in group['rules'] if not rule.id.startswith('boulder:')]
             if not group['rules']:
@@ -3175,6 +3225,8 @@ class AutonomousStoryAgent(DualStoryAgent):
                     group['rules'].append(rule)
             known = any(move in mon['moves'] for mon in facts['party'])
             compatible = any(hm_compatible(mon['species'], move) for mon in facts['party'])
+            if not known and not compatible:
+                self.add_stored_field_carrier_retrieval(groups, facts, move, obstacle)
             if not compatible and len(facts['party']) < 6:
                 for effect in self.index.by_effect:
                     if effect[0] != 'pokemon' or not hm_compatible(effect[1], move):

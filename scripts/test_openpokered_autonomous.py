@@ -3611,6 +3611,112 @@ class AutonomousTests(unittest.TestCase):
         self.assertEqual(groups['retrieve:Charmander']['target'], ('pokemon', 'Charmander', None))
         self.assertEqual(groups['retrieve:Charmander']['context']['stored_pokemon']['box'], 2)
 
+    def field_carrier_agent(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        pc = Rule('pc', 'FuchsiaPokecenter', 'FuchsiaPokecenter:pc',
+                  ['sign:1'], [], [], ('pc', 'storage', True), [])
+        agent.index = Mock(by_effect={('pc', 'storage', True): [pc]})
+        return agent, pc
+
+    def field_carrier_facts(self):
+        return {
+            'party': [{'species': species, 'moves': [], 'level': 20}
+                      for species in ('Charizard', 'Wigglytuff', 'Exeggcute',
+                                      'Parasect', 'Gloom', 'Hypno')],
+            'stored_pokemon': [{'box': 0, 'index': 14, 'species': 'Snorlax',
+                'level': 30, 'hp': 139, 'max_hp': 139, 'status': 'Sleep(1)',
+                'moves': ['Headbutt', 'Amnesia', 'Rest', 'None'], 'pp': [15, 20, 10, 0]}],
+            'bag': {'HM03': 1}, 'flags': {'EVENT_BEAT_KOGA': True}}
+
+    def test_full_party_backchains_surf_through_owned_stored_carrier(self):
+        agent, pc = self.field_carrier_agent()
+        facts = self.field_carrier_facts()
+        obstacle = {'move': 'Surf', 'map': 'Route10', 'stance': [15, 4],
+                    'direction': 'right', 'landing': ['Route10', 15, 44],
+                    'destination': 'PowerPlant'}
+        groups = {}
+        agent.add_stored_field_carrier_retrieval(groups, facts, 'Surf', obstacle)
+        group = groups['retrieve:Snorlax']
+        self.assertEqual(group['rules'], [pc])
+        self.assertEqual(group['target'], ('pokemon', 'Snorlax', None))
+        context = group['context']
+        self.assertTrue(context['storage_retrieval'])
+        self.assertTrue(context['requires_party_deposit'])
+        self.assertTrue(context['stored_pokemon_not_fully_healthy'])
+        self.assertEqual(context['stored_pokemon']['index'], 14)
+        requirement = context['field_move_requirements'][0]
+        self.assertEqual(requirement['required_move'], 'Surf')
+        self.assertTrue(requirement['compatible'])
+        self.assertFalse(requirement['already_knows_move'])
+        self.assertTrue(requirement['machine_held'])
+        self.assertEqual(requirement['unmet_native_field_prerequisites'], [])
+        self.assertEqual(requirement['terrain_obstruction'], obstacle)
+        self.assertIn('not a completed crossing', requirement['scope'])
+        self.assertEqual(len(facts['party']), 6)  # Planning is not PC execution.
+
+    def test_field_carrier_preview_keeps_missing_machine_and_badge_explicit(self):
+        agent, _ = self.field_carrier_agent()
+        facts = self.field_carrier_facts()
+        facts['bag'], facts['flags'] = {}, {}
+        groups = {}
+        agent.add_stored_field_carrier_retrieval(groups, facts, 'Surf', {'move': 'Surf'})
+        requirement = groups['retrieve:Snorlax']['context']['field_move_requirements'][0]
+        self.assertFalse(requirement['machine_held'])
+        self.assertEqual(requirement['unmet_native_field_prerequisites'],
+                         [('flag', 'EVENT_BEAT_KOGA', True)])
+
+    def test_field_carrier_can_already_know_move_without_requiring_machine(self):
+        agent, _ = self.field_carrier_agent()
+        facts = self.field_carrier_facts()
+        facts['bag'] = {}
+        facts['stored_pokemon'][0]['moves'].append('Surf')
+        groups = {}
+        agent.add_stored_field_carrier_retrieval(groups, facts, 'Surf', {'move': 'Surf'})
+        requirement = groups['retrieve:Snorlax']['context']['field_move_requirements'][0]
+        self.assertTrue(requirement['already_knows_move'])
+        self.assertFalse(requirement['machine_held'])
+
+    def test_stored_field_carrier_merges_existing_followups_and_deduplicates_moves(self):
+        agent, _ = self.field_carrier_agent()
+        facts = self.field_carrier_facts()
+        stored = facts['stored_pokemon'][0]
+        stored['species'] = 'Tentacool'
+        method = {'method': 'evolution', 'from_species': 'Tentacool',
+                  'trigger': 'level', 'level': 30}
+        groups = {}
+        agent.add_storage_retrieval(groups, facts, 'Tentacool', 'Tentacruel', method)
+        preview = groups['retrieve:Tentacool']['context']['post_withdrawal_acquisitions'][0]
+        for _ in range(2):
+            agent.add_stored_field_carrier_retrieval(groups, facts, 'Surf', {'move': 'Surf'})
+        context = groups['retrieve:Tentacool']['context']
+        self.assertEqual(len(groups), 1)
+        self.assertEqual(len(context['field_move_requirements']), 1)
+        self.assertEqual(context['post_withdrawal_acquisitions'], [preview])
+        self.assertIn('Tentacruel', context['required_for'])
+
+    def test_stored_field_carrier_is_not_needed_when_party_can_learn_or_use_move(self):
+        agent, _ = self.field_carrier_agent()
+        for learned in (False, True):
+            with self.subTest(learned=learned):
+                facts = self.field_carrier_facts()
+                facts['party'][1] = {'species': 'Snorlax', 'moves': ['Surf'] if learned else []}
+                groups = {}
+                agent.add_stored_field_carrier_retrieval(groups, facts, 'Surf', {'move': 'Surf'})
+                self.assertEqual(groups, {})
+
+    def test_stored_field_carrier_requires_actual_compatible_slot_and_available_pc_rule(self):
+        agent, _ = self.field_carrier_agent()
+        for missing in ('carrier', 'pc'):
+            with self.subTest(missing=missing):
+                facts = self.field_carrier_facts()
+                if missing == 'carrier':
+                    facts['stored_pokemon'][0]['species'] = 'Pidgey'
+                else:
+                    agent.index.by_effect = {}
+                groups = {}
+                agent.add_stored_field_carrier_retrieval(groups, facts, 'Surf', {'move': 'Surf'})
+                self.assertEqual(groups, {})
+
     def test_storage_preview_accounts_for_real_level_trigger_and_level_cap(self):
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
         pc = Rule('pc', 'Center', 'Center:pc', ['sign:1'], [], [], ('pc', 'storage', True), [])
