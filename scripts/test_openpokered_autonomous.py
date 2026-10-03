@@ -375,7 +375,8 @@ class AutonomousTests(unittest.TestCase):
             game.d.raw.cmd.side_effect = lambda **r: {'ok': True, 'data': data.get(r['cmd'])}
             agent = Mock(visited=set(), observed_barrier_maps=set(), navigation_memory={},
                 navigation_history={}, mechanism_goal=None, field_requirements={}, battle_requirements={},
-                capture_retreats={}, capture_retreat_totals={}, collection_audit_pending={},
+                capture_retreats={}, capture_retreat_totals={}, capture_blackouts={},
+                capture_blackout_totals={}, collection_audit_pending={},
                 battle_defeats=[], defeat_preparation=0, first_clear_verification=None,
                 calls={}, tokens={}, completed=[], actions=0, models=set(), resolved_battles=0)
             agent.run.return_value = {'success': True}
@@ -6394,6 +6395,8 @@ class AutonomousTests(unittest.TestCase):
             agent.field_requirements, agent.battle_requirements = {}, {}
             agent.capture_retreats = {}
             agent.capture_retreat_totals = {}
+            agent.capture_blackouts = {}
+            agent.capture_blackout_totals = {}
             agent.collection_audit_pending = {}
             agent.battle_defeats, agent.defeat_preparation = [], 0
             agent.first_clear_verification, agent.mechanism_goal = None, None

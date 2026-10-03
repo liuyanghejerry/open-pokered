@@ -4002,3 +4002,51 @@ gfx21e0；同双层OpenRouter Jev1.13、原预算和原生4×录像，没有
 EVENT_GAVE_FOSSIL_TO_LAB准备，115.622秒选择Route20真实Surf
 通路并实际过水。此时仍63种，未送交或领取；不能以孤立夹具64
 或准备决策充作新增。最终合法NEW GAME尚未开始，Goal仍active。
+
+## 2026-10-04：捕获全队败退证据与重试准备（原型仍63种）
+
+第30段真实输入已在287.661秒Surf抵达CinnabarIsland，316.225秒
+正常到达CinnabarLabFossilRoom；318.575秒Jev自己的interact_with:npc:0
+送交圆顶化石，原生实际新增EVENT_GAVE_FOSSIL_TO_LAB、
+EVENT_LAB_STILL_REVIVING_FOSSIL、EVENT_REVIVING_KABUTO。未观察到
+Kabuto领取或登记，不能计64。此后控制器高CPU规划耗时异常，保持
+游戏进程和原始trace，另做只读诊断；尚不宣称定位或修复该规划问题。
+
+原生第29段两次Zapdos捕获全队败退此前只留下通用battle_defeat，
+没有纳入静态捕获的准备后重试记忆。新增独立capture_blackouts及
+capture_blackout_totals，不冒充successful menu RUN，不改变原生战斗
+或Jev provider/model/预算。必须是实际script_awaiting的可捕获野生源，
+匹配起止地图和capture_species、原生BattleOver won:false/escaped:false、
+终点battle_live全队HP为0、已观察图鉴未登记；训练师、随机野怪、
+Safari、幽灵、获胜、逃跑、缺失图鉴/战斗队伍或不匹配结果均不产生证据。
+出战准备取初始战斗队伍，不能用原生败退后已恢复的persistent party
+倒推改进。移动/自动回血/球减少不会使同配置重试重新开放；真实更多
+球、等级/队员/状态/PP或容量改善只准重新评估，并非生存/捕获保证。
+
+资金仅由明确非负整数起止观测计差，bool/浮点/缺失不是零；球耗只
+跨完整合法起止库存计差。每项累计附实际观测次数，与未知成本分开。
+恢复时只按所选存档祖先battle_started/battle_resolved成对回放，不
+跨段配对、不重复使用start、不读兄弟链、不从battle_defeat推造成本。
+新schema1（包括空记录）是权威起点；后来的真实逃跑清除最新败退
+准备，但保留累计败退成本。最新败退覆盖旧逃跑配置，避免旧记录
+把刚失败的配置误判为改善。现有真实PC支援取出与单级XP训练能力
+也接收败退记录，并标明实际result_kind，仍由Jev比较候选自主选择。
+
+新增14项专项测试：旧版2FAIL/34ERROR（含参数子例）；新逻辑首轮
+两个夹具错误（macOS路径别名与测试内共享字典导致非预期HP联动）
+修正后14PASS。原有两个runner Mock显式补齐新增状态字段，未弱化
+断言。全量discover为963PASS/20.040秒；最初仅test_openpokered*.py
+的746项子集2ERROR及全部日志保留，不冒充全量或成功。
+证据：checkpoint-safety-20261003/capture-blackout-before-20261004.log、
+capture-blackout-after-20261004{,-v2}.log、
+capture-blackout-python-discover-20261004{,-v2}.log。
+
+replay-capture-blackout-source29-20261004.py只读封存第29段及祖先，
+与0131cc99实际历史模块比较：终点同一63种/资金14/无球/全HP，
+旧static_capture_deferred为false，新为true；实际Zapdos累计2次败退、
+2次完整库存观测、ULTRA5+GREAT18=23球、2次资金观测共39元。
+起止钱为53→27→14，26+13，不把此前Safari入场500算作败退损失。
+SRAM/sidecar/fulltrace哈希前后完全相同，没有游戏连接、输入、模型
+调用、存档改写或新增图鉴。JSON/log：
+capture-blackout-source29-replay-20261004.{json,log}。
+这次是可回归的决策能力改善，不是最终合法124或视频交付。

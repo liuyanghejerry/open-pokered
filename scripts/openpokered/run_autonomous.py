@@ -18,6 +18,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from openpokered.autonomous_story import AutonomousStoryAgent, accumulate_capture_retreat, capture_preparation
+from openpokered.autonomous_story import capture_blackout_evidence, accumulate_capture_blackout
 from openpokered.playthrough_judgments import capture_species
 from openpokered.collection_verification import require_collection_completion, verify_collection_continue
 from openpokered.judgment_agent import load_objectives
@@ -217,6 +218,57 @@ def checkpoint_capture_retreat_totals(run):
                 if event.get('kind') == 'capture_retreat':
                     accumulate_capture_retreat(totals, event)
     return totals
+
+
+def checkpoint_capture_blackouts(run):
+    """Recover losses from matched native battle pairs in this save's lineage.
+
+    Generic battle_defeat rows cannot establish a capture loss or its costs.
+    A persisted schema (including empty) is authoritative; replay only its
+    descendants, never siblings or an attempt spanning two recording segments.
+    """
+    chain, seen, blackouts, totals = [], set(), {}, {}
+    while run:
+        run = Path(run).resolve()
+        if run in seen:
+            raise ValueError('capture blackout checkpoint cycle')
+        seen.add(run)
+        summary = json.loads((run / 'summary.json').read_text())
+        if summary.get('capture_blackouts_schema') == 1:
+            blackouts, totals = summary.get('capture_blackouts'), summary.get('capture_blackout_totals')
+            if not isinstance(blackouts, dict) or not isinstance(totals, dict):
+                raise ValueError('invalid capture blackout checkpoint schema')
+            break
+        chain.append(run)
+        parent = summary.get('resumed_from')
+        run = pt.ROOT / parent if parent else None
+    for folder in reversed(chain):
+        trace, started = folder / 'trace.jsonl', None
+        if not trace.is_file():
+            continue  # Missing records stay unknown, not synthetic failures.
+        with trace.open() as stream:
+            for line in stream:
+                if not any('"' + kind + '"' in line for kind in
+                           ('battle_started', 'battle_resolved', 'capture_retreat')):
+                    continue
+                event = json.loads(line)
+                kind = event.get('kind')
+                if kind == 'battle_started':
+                    started = event
+                elif kind == 'capture_retreat':
+                    blackouts.pop(event['map'] + ':' + event['species'], None)
+                elif kind == 'battle_resolved':
+                    before = (started or {}).get('state')
+                    after = event.get('state')
+                    row = capture_blackout_evidence(before, after) if isinstance(before, dict) and isinstance(after, dict) else None
+                    if row is not None:
+                        row['recorded_battle_pair'] = {'trace': str(trace),
+                            'battle_started_elapsed_s': started.get('elapsed_s'),
+                            'battle_resolved_elapsed_s': event.get('elapsed_s')}
+                        blackouts[row['map'] + ':' + row['species']] = row
+                        accumulate_capture_blackout(totals, row)
+                    started = None  # Never reuse one start for a later result.
+    return blackouts, totals
 
 
 def checkpoint_first_clear_verification(run, restored):
@@ -445,6 +497,9 @@ def main(argv=None):
                     agent.battle_requirements.update(parent.get('battle_requirements', {}))
                     agent.capture_retreats.update(checkpoint_capture_retreats(args.resume))
                     agent.capture_retreat_totals.update(checkpoint_capture_retreat_totals(args.resume))
+                    blackouts, blackout_totals = checkpoint_capture_blackouts(args.resume)
+                    agent.capture_blackouts.update(blackouts)
+                    agent.capture_blackout_totals.update(blackout_totals)
                     agent.collection_audit_pending.update(checkpoint_collection_audit(args.resume))
                     game.stationary_npcs = {name: {int(k): tuple(v) for k, v in npcs.items()}
                                             for name, npcs in parent.get('stationary_npcs', {}).items()}
@@ -475,6 +530,9 @@ def main(argv=None):
                             result['capture_retreats'] = agent.capture_retreats
                             result['capture_retreat_totals_schema'] = 1
                             result['capture_retreat_totals'] = agent.capture_retreat_totals
+                            result['capture_blackouts_schema'] = 1
+                            result['capture_blackouts'] = agent.capture_blackouts
+                            result['capture_blackout_totals'] = agent.capture_blackout_totals
                             result['collection_audit_schema'] = 1
                             result['collection_audit_pending'] = agent.collection_audit_pending
                             result['stationary_npcs'] = getattr(game, 'stationary_npcs', {})

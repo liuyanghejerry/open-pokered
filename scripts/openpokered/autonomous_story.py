@@ -325,6 +325,85 @@ def accumulate_capture_retreat(totals, evidence):
             total['balls_spent'][name] = total['balls_spent'].get(name, 0) + spent
 
 
+def capture_inventory_observed(inventory):
+    """An absent/malformed inventory is not a measured zero-cost battle."""
+    return isinstance(inventory, list) and all(
+        isinstance(row, dict) and isinstance(row.get('item'), str)
+        and type(row.get('qty')) is int and row['qty'] >= 0 for row in inventory)
+
+
+def capture_blackout_evidence(before, after):
+    """Bind a static capture loss to two actual native battle observations.
+
+    The native persistent party can already be healed when BattleOver is
+    observed. Preparation is the initial battle party, never this auto-heal.
+    Money is measured here, not inferred from a blackout penalty formula.
+    """
+    live, result = before.get('battle_live') or {}, after.get('battle_live') or {}
+    enemy, result_enemy = live.get('enemy') or {}, result.get('enemy') or {}
+    phase, dex = after.get('battle_phase', ''), after.get('pokedex') or {}
+    party, battle_party = before.get('party'), live.get('player_party')
+    defeated = result.get('player_party')
+    species = capture_species(enemy) if enemy.get('species') else None
+    if (before.get('screen') != 'battle' or before.get('script_awaiting_battle') is not True
+            or live.get('is_wild') is not True or live.get('is_safari') or live.get('is_ghost')
+            or live.get('capture_blocked_reason') not in (None, 'storage_full')
+            or not isinstance(phase, str) or not phase.startswith('BattleOver {')
+            or 'won: false' not in phase or 'escaped: false' not in phase
+            or not species or not result_enemy.get('species')
+            or capture_species(result_enemy) != species
+            or not isinstance(before.get('map_name'), str)
+            or after.get('map_name') != before['map_name']
+            or not isinstance(dex.get('owned_species'), list)
+            or any(not isinstance(name, str) for name in dex['owned_species'])
+            or any(name.upper() == species.upper() for name in dex['owned_species'])
+            or not isinstance(party, list) or not party
+            or not isinstance(battle_party, list) or len(party) != len(battle_party)
+            or any(not isinstance(base, dict) or not isinstance(mon, dict)
+                   or base.get('species') != mon.get('species') for base, mon in zip(party, battle_party))
+            or not isinstance(defeated, list) or len(defeated) != len(party)
+            or any(not isinstance(mon, dict) or type(mon.get('hp')) is not int
+                   or mon['hp'] != 0 for mon in defeated)):
+        return None
+    inventory = before.get('battle_inventory')
+    observed = capture_inventory_observed(inventory)
+    row = {'map': before['map_name'], 'species': species,
+           'reason': 'native_blackout_without_registration',
+           'start_inventory_observed': observed,
+           'preparation': capture_preparation(
+               [{**base, **mon} for base, mon in zip(party, battle_party)],
+               {entry['item']: entry['qty'] for entry in inventory} if observed else {}, before),
+           'blackout_observation': {'enemy': result_enemy, 'party': defeated,
+               'inventory': after.get('battle_inventory'), 'screen': after.get('screen'),
+               'map': after.get('map_name'), 'battle_phase': phase,
+               'scope': 'Native terminal battle observations, before whiteout travel settles. '
+                        'All battle party HP is zero; persistent party may already be healed. '
+                        'Not a successful escape, damage forecast, proof of a remaining source '
+                        'or an attribution to one enemy move.'}}
+    if all(type(state.get('money')) is int and state['money'] >= 0 for state in (before, after)):
+        row.update(money_before=before['money'], money_after=after['money'])
+    return deepcopy(row)
+
+
+def accumulate_capture_blackout(totals, evidence):
+    """Separate recorded blackouts from menu escapes and unobserved costs."""
+    key = evidence['map'] + ':' + evidence['species']
+    total = totals.setdefault(key, {'recorded_blackouts': 0, 'inventory_observed_blackouts': 0,
+                                   'balls_spent': {}, 'cash_observed_blackouts': 0, 'cash_decrease': 0})
+    total['recorded_blackouts'] += 1
+    inventory = (evidence.get('blackout_observation') or {}).get('inventory')
+    if evidence.get('start_inventory_observed') is True and capture_inventory_observed(inventory):
+        total['inventory_observed_blackouts'] += 1
+        remaining = capture_preparation([], {row['item']: row['qty'] for row in inventory})['balls']
+        for name, qty in evidence['preparation']['balls'].items():
+            spent = max(0, qty - remaining.get(name, 0))
+            if spent:
+                total['balls_spent'][name] = total['balls_spent'].get(name, 0) + spent
+    if all(type(evidence.get(key)) is int and evidence[key] >= 0 for key in ('money_before', 'money_after')):
+        total['cash_observed_blackouts'] += 1
+        total['cash_decrease'] += max(0, evidence['money_before'] - evidence['money_after'])
+
+
 def capture_preparation_improvements(current, previous):
     """Public improvements only: movement, damage and spending do not reopen a retry."""
     changes = []
@@ -798,6 +877,8 @@ class AutonomousStoryAgent(DualStoryAgent):
         self.battle_defeats = []
         self.capture_retreats = {}
         self.capture_retreat_totals = {}
+        self.capture_blackouts = {}
+        self.capture_blackout_totals = {}
         self.collection_audit_pending = {}
         self._audit_party = None
         self.defeat_preparation = 0
@@ -1069,8 +1150,9 @@ class AutonomousStoryAgent(DualStoryAgent):
         if self.collects_dex:
             state['dex_progress'] = self.dex_progress(facts)
             state['collection_audit_pending'] = getattr(self, 'collection_audit_pending', {})
-            state['capture_retreats_requiring_preparation'] = [row for row in
-                getattr(self, 'capture_retreats', {}).values()
+            state['capture_retreats_requiring_preparation'] = [row for key, row in
+                getattr(self, 'capture_retreats', {}).items()
+                if key not in getattr(self, 'capture_blackouts', {})
                 if self.static_capture_deferred(row['species'], row['map'], facts)]
             # An improved stock/level reopens a legal attempt, not proof that
             # the previous capture setup now survives. Keep its observed
@@ -1082,7 +1164,21 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'history_scope': 'Recorded menu escapes in this checkpoint lineage only; ball costs cover inventory_observed_retreats, not unobserved attempts. Not a prediction of retry success.',
                 'preparation_changes_since_attempt': capture_preparation_improvements(
                     preparation, row['preparation'])}
-                for key, row in getattr(self, 'capture_retreats', {}).items()]
+                for key, row in getattr(self, 'capture_retreats', {}).items()
+                if key not in getattr(self, 'capture_blackouts', {})]
+            state['capture_blackouts_requiring_preparation'] = [row for row in
+                getattr(self, 'capture_blackouts', {}).values()
+                if self.static_capture_deferred(row['species'], row['map'], facts)]
+            state['capture_blackout_retry_evidence'] = [{**row,
+                'source_evidence': self.capture_source_evidence(row['species'], row['map']),
+                'recorded_history': getattr(self, 'capture_blackout_totals', {}).get(key, {}),
+                'history_scope': 'Recorded static capture blackouts in this checkpoint lineage only. '
+                    'Ball costs cover inventory_observed_blackouts; cash costs cover cash_observed_blackouts. '
+                    'Not menu escapes, unobserved attempts, a penalty formula or a survival forecast. '
+                    'Automatic whiteout healing is compared with initial preparation, not fainted result HP.',
+                'preparation_changes_since_attempt': capture_preparation_improvements(
+                    preparation, row['preparation'])}
+                for key, row in getattr(self, 'capture_blackouts', {}).items()]
 
     def dex_progress(self, facts):
         """Collection panel: what is missing, where, and what it unlocks."""
@@ -1914,10 +2010,19 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'inventory': after.get('battle_inventory'),
                 'scope': 'Native observations at successful menu escape; not a damage forecast or proof of which move caused a faint.'}
             self.capture_retreats[key] = evidence
+            getattr(self, 'capture_blackouts', {}).pop(key, None)
             if not hasattr(self, 'capture_retreat_totals'):
                 self.capture_retreat_totals = {}
             accumulate_capture_retreat(self.capture_retreat_totals, evidence)
             self.record('capture_retreat', **evidence)
+        blackout = capture_blackout_evidence(before, after) if getattr(self, 'collects_dex', False) else None
+        if blackout is not None:
+            if not hasattr(self, 'capture_blackouts'):
+                self.capture_blackouts, self.capture_blackout_totals = {}, {}
+            key = blackout['map'] + ':' + blackout['species']
+            self.capture_blackouts[key] = blackout
+            accumulate_capture_blackout(self.capture_blackout_totals, blackout)
+            self.record('capture_blackout', **blackout)
         opponents = (before.get('battle_live') or {}).get('enemy_party', [])
         signature = lambda team: [(m['species'], m.get('level')) for m in team]
         if 'player_won: true' in phase or 'won: true' in phase:
@@ -2104,10 +2209,19 @@ class AutonomousStoryAgent(DualStoryAgent):
                          'An unsupported battle cannot justify capture preparation here; '
                          'other maps or evolution may still register the species. Unknown maps remain unknown.'}
 
+    def latest_capture_failures(self):
+        """Latest result per source; a newer blackout overrides an older escape.
+
+        A later native escape clears that source's latest blackout, without
+        clearing cumulative blackout costs. Frame clocks reset on CONTINUE,
+        so ordering comes from observed events/checkpoint lineage, not frames.
+        """
+        return {**getattr(self, 'capture_retreats', {}), **getattr(self, 'capture_blackouts', {})}
+
     def static_capture_deferred(self, species, name, facts):
         if self.capture_source_evidence(species, name)['catchable_source_indexed'] is False:
             return False  # Do not defer a legal alternative for an uncatchable historic battle.
-        previous = next((row for row in getattr(self, 'capture_retreats', {}).values()
+        previous = next((row for row in self.latest_capture_failures().values()
                          if row['map'] == name and self.same_species(row['species'], species)), None)
         return bool(previous and not capture_preparation_improvements(
             capture_preparation(facts.get('party', []), facts.get('bag', {}), facts), previous['preparation']))
@@ -3993,8 +4107,8 @@ class AutonomousStoryAgent(DualStoryAgent):
             return
         owned = self.validated_owned(facts)
         targets = []
-        for retreat in getattr(self, 'capture_retreats', {}).values():
-            enemy = (retreat.get('retreat_observation') or {}).get('enemy') or {}
+        for retreat in self.latest_capture_failures().values():
+            enemy = (retreat.get('blackout_observation') or retreat.get('retreat_observation') or {}).get('enemy') or {}
             source = self.capture_source_evidence(retreat['species'], retreat['map'])
             if (retreat['species'] not in owned and enemy.get('level')
                     and source['catchable_source_indexed'] is not False):
@@ -4049,8 +4163,8 @@ class AutonomousStoryAgent(DualStoryAgent):
             return
         owned = self.validated_owned(facts)
         failures = []
-        for retreat in getattr(self, 'capture_retreats', {}).values():
-            observation = retreat.get('retreat_observation') or {}
+        for retreat in self.latest_capture_failures().values():
+            observation = retreat.get('blackout_observation') or retreat.get('retreat_observation') or {}
             enemy = observation.get('enemy') or {}
             source = self.capture_source_evidence(retreat['species'], retreat['map'])
             if (retreat['species'] not in owned and enemy.get('level')
@@ -4058,6 +4172,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                     and any(mon.get('hp') == 0 for mon in observation.get('party') or [])):
                 failures.append({'map': retreat['map'], 'species': retreat['species'],
                                  'level': enemy['level'], 'observation': observation,
+                                 'result_kind': retreat.get('reason', 'legacy_recorded_capture_retreat'),
                                  'source_evidence': source})
         if not failures:
             return
