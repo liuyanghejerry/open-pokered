@@ -329,6 +329,12 @@ def compile_story(story):
             effect = ('transport', native_ending_destination(), True)
         elif name in ('movePlayerRelative', 'movePlayer'):
             effect = ('movement', name, True)
+        elif (name == 'followNpc' and len(values) == 3 and isinstance(values[0], str)
+              and all(type(value) in (int, float) for value in values[1:])):
+            # A coordinate-triggered escort can move the PLAYER away from a
+            # passage. Keep its real branch guard so observed failed travel
+            # can backchain the condition that disables this interception.
+            effect = ('movement', name, True)
         elif name == 'replaceTileBlock' and len(values) == 3 and all(isinstance(v, (int, float)) for v in values):
             effect = ('block', f"{story['map']},{int(values[0])},{int(values[1])}", int(values[2]))
         elif name in ('hideObject', 'hideObjectByName', 'showObject', 'showObjectByName') and values:
@@ -446,7 +452,20 @@ def compile_story(story):
     if not story.get('program'):
         raise ValueError(f"missing planning AST: {story['id']}; rebuild the debug binary")
     walk(story['program'], [{'guards': [], 'choices': [], 'variables': {}, 'writes': {}, 'effects': []}])
-    return list({r.id: r for r in rules}.values())
+    # Visibility during a cutscene is not necessarily its settled result.
+    # A guide can hide while walking away and immediately reset/show itself.
+    # Only a later write to this SAME object on the SAME expanded guard/choice
+    # path supersedes the earlier candidate. Different branches/choices remain
+    # independent; unknown paths are not certified as permanent removals.
+    # Keep every actual intermediate effect in `preceding` for downstream
+    # battle/source contracts and ordered execution evidence.
+    def visibility_path(rule):
+        return json.dumps([rule.guards, rule.choices, rule.effect[1]], sort_keys=True)
+    last_visibility = {visibility_path(rule): rule for rule in rules
+                       if rule.effect[0] == 'visibility'}
+    settled = [rule for rule in rules if rule.effect[0] != 'visibility'
+               or last_visibility[visibility_path(rule)] is rule]
+    return list({r.id: r for r in settled}.values())
 
 
 def normalize_bag(bag):

@@ -3562,6 +3562,24 @@ class AutonomousStoryAgent(DualStoryAgent):
                                     'prerequisite_for': local.description()}})
                     if rule not in group['rules']:
                         group['rules'].append(rule)
+                    if local.effect[0] == 'movement':
+                        # The producer may already be a story candidate (for
+                        # example a gym victory). setdefault must not discard
+                        # its newly observed navigation purpose or overwrite
+                        # its opponent/resource costs with a generic detour.
+                        reference = {'destination': blockage['destination'],
+                            'requested_goal': blockage['goal'],
+                            'observed_blockage': deepcopy(blockage),
+                            'coordinate_script': local.description(),
+                            'coordinate_triggers': self.index.coordinates(local),
+                            'enabling_guards': [{'expression': deepcopy(expr),
+                                'required_value': wanted, 'observed_value': evaluate(expr, facts)}
+                                for expr, wanted in local.guards],
+                            'scope': 'A prerequisite derived by reversing an enabled coordinate movement guard on the observed blocked map; not a whole-route, victory, reward, or collection guarantee. Alternative access and other obstacles still require normal execution.'}
+                        references = group.setdefault('context', {}).setdefault(
+                            'observed_navigation_prerequisites', [])
+                        if reference not in references:
+                            references.append(reference)
             for (map_name, text_id), (toggle, _) in self.index.npc_toggles.items():
                 if map_name != blockage['map'] or toggle in pickups:
                     continue

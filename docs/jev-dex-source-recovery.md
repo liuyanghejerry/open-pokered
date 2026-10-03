@@ -4396,3 +4396,74 @@ manifest／NEW GAME初始状态、实际CLI／PID父子／binary／录像路径�
 这仅是初始来源快照，不是安全checkpoint／独立CONTINUE／封口MP4，
 也不保证后续所有策略已验证。真实新链与录制继续，Goal active；
 124种／最终完整MP4／新图鉴大盘仍须真正完成后再交付。
+
+## 2026-10-04：合法链的导游阻挡与临时隐藏规划修复
+
+上一轮已产生真实进展：新合法NEW GAME从0登记启动、988项测试通过、
+543556d5／bb805d7a提交及PR107同步。本轮核验活controller9767／native9777
+后，从原owner trace定位重复Misty旅行被PewterCity `(35,17)→(12,18)`
+送回，以及反复尝试visibility PEWTER_CITY_OBJ_3=false。没有第二连接。
+
+真实DSL里两位导游及东出口拦截使用followNpc移动玩家；旧compile_story
+只识别movePlayer／movePlayerRelative，遗漏这一动作，无法以实际未满足
+分支推导禁行与解锁。两名导游walk-off的hide后又直接show/reset，旧
+编译器仍把中途隐藏当永久移除。修复只识别完整已知参数的followNpc为
+movement，以实际分支guard／坐标反推前置；同一对象、同一展开guard／
+choice路径只保留最后visibility写入作为候选，原始中间效果仍留preceding。
+不同对象、分支／选择、Return后的不可达写入、未知参数不互相替代或
+伪造可执行性。不修改DSL或引擎，不写死Brock→Misty路线、预算或偏好。
+
+还修复existing-strategy-group的上下文遗漏：真实推导出的道馆前置已
+存在于候选时，setdefault会丢掉新观察的通行用途。现在额外传递
+observed_navigation_prerequisites：实际受阻目标／目的地／观察、坐标
+剧情与启用guard值，保留已有对手／资源代价，重复证据去重；只解释
+分支逆转，不保证整条路径、胜利、奖励或新登记。仍由Jev选择下一步。
+
+初始7项规则测试旧3FAIL／1ERROR，新加已有候选上下文测试旧1ERROR；
+修复后8项通过。规则／既有story及autonomous组合469PASS，最终全部
+Python discover **996PASS／19.592秒**，git diff --check通过。
+仅策略／工具代码变化，无新Rust构建、屏幕变化或新m49结论。
+
+### 第一合法段安全保存：不是重开或回退
+
+首次合作停止检查发现最后是动作判断，原守卫拒绝，未发送信号；
+失败日志保留。v2确认是根层local_state/subgoal动作而非嵌套战斗／菜单，
+2026-10-03 20:38:35 UTC只向核验controller9767发SIGINT；原handler完成
+当前协议轮转、下一输入边界退出，native9777没有进程信号或第二连接。
+summary success=false／interrupted_at_command_boundary，真实safe／最终
+观察／development_checkpoint均通过，正常save后双方已退出。77动作、
+策略54／动作133调用；终点Route2 `(1,7)`／frame149907，资金117，
+袋内空，Charmander13 HP37／37、Scratch35／Growl40／Ember12／None0。
+实际早期训练和正常败退／支出全部保留；仍合法1 owned／12 seen，
+未将训练、球购买或模型选择当作新增登记。
+
+最新合法SRAM SHA256
+`d33d8cf1a05c27465063dbdbd5255896a5f7d95d044919f8e360ba3aca58c0b0`。
+独立schema4普通CONTINUE verified=true，原始party XP／HP／四项PP、
+物品、旗标、PC和登记全部守恒，源SAV／sidecar／trace／summary未改。
+原生首段MP4封口10036177字节／624.633333秒／37478帧全帧解码，SHA256
+`43d23721f212c73c14068b7bdfa7e3d24224dda3656f482fe83816b3178b6203`。
+证据legal1-independent-continue-20261004.json及legal1-checkpoint-proof。
+视频按已检查的HyperFrames入口保持原生实录验证，无替代演示动画。
+
+### 同一合法源的完整策略对照
+
+旧bb805编译器／新修复在同一合法1种SRAM普通CONTINUE隔离副本上、
+全部12目标／真实原记忆，facts和原生Pewter AST严格相同，627帧前后
+不动，零模型／CONTINUE后输入、源save未改。旧31／新29候选：移除
+不能持久实现的museum导游隐藏、当前实际不能通行的Misty直达；
+三个followNpc动作可识别，已观察Pewter四个拦截坐标成为实际分支墙。
+原Brock候选保留Geodude12／Onix14代价并补上CeruleanGym／Misty目标
+的真实guard逆转用途。Route3不再被当作立即可执行训练点，保留正常
+可达的Route2／Route22／ViridianForest。其他经同一通路的候选导航／
+训练代价相应变化，不能宣称所有旧候选JSON相同；新12.558秒相对旧
+8.239秒，不声称全规划加速。不是模型已选择或已获得徽章／捕获。
+比较证明legal1-escort-frontier-comparison-20261004.json/log，完整旧／
+新groups、facts、native故事／规则及route-requirements均原样保留。
+
+worktree外新备份verified1-checkpoint-and-escort-fix-20261004.tar.gz：
+40项／1084473字节，SHA256
+`5044e1c81a1d579e4b7619a28b99731714aa3c2862b6091a270d2de826619519`，
+逐项字节／SHA通过，无凭据／native binary／重复MP4，原件全部保留。
+下一段只从最新d33合法源普通CONTINUE部署修复，不重开、回档、热替换、
+固定路线或注入；Goal active，124／最终全程MP4／图鉴大盘仍未完成。
