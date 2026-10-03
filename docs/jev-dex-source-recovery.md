@@ -4635,3 +4635,48 @@ worktree外增量备份verified13-checkpoint-and-story-training-20261004.tar.gz�
 `1aa7b1a1e040263476f6e9b121ee8ca93b12a48a6c18e48b39228d4bf64f1f74`，
 逐项字节／hash及安全源hash核验通过；不含凭据、native binary或
 重复MP4，全部原件保留，无删除。
+
+## 2026-10-04：合法第4段21种安全保存与原生录像核验
+
+第4段 `20261004-052250-seed42` 从最新合法13种c1ce源普通CONTINUE，
+启动时干净0aa31490／实际policy b3853911／native6d8e／gfx21e0；
+双层OpenRouter Jev1.13.0、seed42、预算和4×原生实录保持不变。
+实际净新增8种：Drowzee215.929秒、Charizard438.231秒、Zubat485.268秒、
+Geodude500.092秒、Machop506.613秒、Voltorb934.492秒、Onix1075.156秒，
+以及Arbok1534.177秒／frame259742。Charizard和Arbok都是普通经验进化；
+Ekans真实10→22级、Bite正常学习，治疗后继续训练，不存在零经验循环。
+正常取得HM01并学习Cut，309.642秒实际清除Route9树；无SilphScope时
+PokemonTower6F的756.926秒真实阻挡保留，未利用旧幽灵通行漏洞。
+塔内未知幽灵、领取物品、旅行、模型选择和resume初始13不算新登记。
+本段无新发现的bug、代码修复、Rust构建或额外回归／m49声明；此前
+剧情训练因子已加载，但不把这些新增归因于它或声称必定改善捕获率。
+
+1557.072秒正常护士操作完成后，2026-10-03 21:48:48 UTC精确核验
+PID父子／CLI／源hash和byte-stable trace，仅向controller39532请求
+SIGINT。native39548／recorder39549无信号、第二连接或强制治疗，
+三者现已正常退出。safe／最终观察／development checkpoint均true，
+success=false／interrupted_at_command_boundary；195动作、策略255／
+动作710调用。终点RockTunnelPokecenter `(3,3)`／frame260667，
+21 owned／57 seen、两枚徽章（位掩码3）、资金745、PokeBall25／GreatBall20、
+party6／PC10。Arbok22 XP10703 HP63／63 PP20,30,35,25，Charizard41
+XP62911 HP137／137 PP20,30,25,10；全部正常恢复及实际消耗保留。
+
+最新SRAM SHA256
+`35dc6322cd01bdc6b0bdbfe5987613c7f17194703e4a50756617a8a829da0a1d`。
+独立新进程schema4普通CONTINUE verified=true，实际XP／HP／四槽PP、
+物品、PC、旗标和登记严格守恒；本段源四项hash及上一13种源均未改。
+原生第4段MP4封口15592697字节／1086.133333秒／65168帧，全帧解码，
+SHA256 `d2a86e63c8284c2f42520822fb18265440188e8d90ce0908e8dc50bdc2622f2b`。
+四段合法NEW GAME祖先链时钟累计3004.483333秒，21个唯一实际登记，
+resume初始快照不重复、collection source audit无pending或history；
+旧prototype64及丢失tmp83不计入。按HyperFrames入口核验原生实录，
+没有替代演示动画，也尚无最终124、全程合片或完成图鉴大盘。
+
+证据legal4-independent-continue、legal4-checkpoint-proof及合作保存记录
+保留在持久checkpoint-safety目录。worktree外新增
+verified21-checkpoint-and-native-recording-evidence-20261004.tar.gz，
+30项／5688192字节、SHA256
+`f4e7cb8df10c834281c0e5bd64e20465c29cbd76ea2289724f5456dc11aaf92f`，
+逐项字节／hash及安全源hash通过，无凭据、native binary或重复MP4；
+所有原件保留，无删除。后继只从上述最新合法21源正常CONTINUE，
+不回档到13、不热替换／注入／另开NEW GAME，Goal仍active。
