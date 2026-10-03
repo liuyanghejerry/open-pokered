@@ -3342,7 +3342,8 @@ class AutonomousTests(unittest.TestCase):
         agent.game.navigation_barriers.return_value = {}
         agent.game.live_npcs.return_value = set()
         agent.game.navigation_excluded_maps.return_value = ()
-        with patch('openpokered.autonomous_story.pt.bfs_cross', return_value=[]):
+        with patch('openpokered.autonomous_story.pt.bfs_cross_routes',
+                   side_effect=lambda start, position, regions, **kwargs: {name: [] for name in regions}):
             sites = agent.find_training_sites({'map': 'FuchsiaCity', 'x': 19, 'y': 18,
                                                'party': [{'level': 58}]})
         self.assertIn('Route15', sites)
@@ -3377,7 +3378,8 @@ class AutonomousTests(unittest.TestCase):
                 agent.game.navigation_barriers.return_value={}
                 agent.game.live_npcs.return_value=set()
                 agent.game.navigation_excluded_maps.return_value=()
-                with patch('openpokered.autonomous_story.pt.bfs_cross',return_value=[]):
+                with patch('openpokered.autonomous_story.pt.bfs_cross_routes',
+                           side_effect=lambda start, position, regions, **kwargs: {name: [] for name in regions}):
                     sites=agent.find_training_sites({'map':'LavenderTown','x':1,'y':1,
                         'party':[{'level':66}],'bag':{'SILPHSCOPE':quantity},
                         'flags':{'EVENT_GOT_SILPH_SCOPE':True}})
@@ -3453,12 +3455,11 @@ class AutonomousTests(unittest.TestCase):
         agent.game.navigation_barriers.return_value = {}
         agent.game.live_npcs.return_value = {(27, 12)}
         agent.game.navigation_excluded_maps.return_value = ()
-        def path(start, position, destination, target, **kwargs):
+        def paths(start, position, regions, **kwargs):
             self.assertIn((27, 12), kwargs['blocked_maps']['CeruleanCity'])
-            if destination == 'Route24':
-                return [(('CeruleanCity', *position), None), (('Route24', 5, 18), 'up')]
-            return None
-        with patch.object(pt, 'bfs_cross', side_effect=path):
+            return {name: [(('CeruleanCity', *position), None), (('Route24', 5, 18), 'up')]
+                    if name == 'Route24' else None for name in regions}
+        with patch.object(pt, 'bfs_cross_routes', side_effect=paths):
             sites = agent.find_training_sites({'map': 'CeruleanCity', 'x': 19, 'y': 18, 'party': [{'level': 23}]})
         self.assertNotIn('Route5', sites)
         self.assertNotIn('Route9', sites)
@@ -3468,7 +3469,7 @@ class AutonomousTests(unittest.TestCase):
                           'moves': ['Tackle'], 'pp': [35]},
                          {'species': 'Charizard', 'level': 36, 'hp': 120,
                           'moves': ['Ember'], 'pp': [25]}]
-        with patch.object(pt, 'bfs_cross', side_effect=path):
+        with patch.object(pt, 'bfs_cross_routes', side_effect=paths):
             switch_sites = agent.find_training_sites({'map': 'CeruleanCity', 'x': 19,
                 'y': 18, 'party': trainee_party})
         self.assertIn('Route24', switch_sites)
@@ -3492,6 +3493,98 @@ class AutonomousTests(unittest.TestCase):
         sites = agent.find_training_sites({'map': name, 'x': 0, 'y': 7, 'party': [{'level': 61}]})
         self.assertEqual(sites[name], (0, 7))
         self.assertEqual(agent.training_navigation[name]['steps'], 0)
+
+    def test_training_batch_matches_independent_paths_with_current_navigation_gates(self):
+        from openpokered.story_rules import MAPS_DIR
+        import playthrough as pt
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        names = ('Route1', 'Route2', 'ViridianForest')
+        agent.maps = {name: {**json.loads((MAPS_DIR / name / 'map.json').read_text()),
+                             'connections': {}, 'warps': []} for name in names}
+        agent.visited = set(names)
+        agent.client = Mock()
+        agent.client.route.return_value = {'found': True, 'legs': [0]}
+        agent.game = Mock(last_map='Route1')
+        agent.game.navigation_barriers.return_value = {'ViridianCity': {(19, 17)}}
+        agent.game.live_npcs.return_value = {(18, 18)}
+        agent.game.navigation_excluded_maps.return_value = ('Route22',)
+        batch = pt.bfs_cross_routes
+        observed = {}
+
+        def compare(start, position, regions, **options):
+            self.assertEqual(set(regions), set(names))
+            self.assertEqual(start, 'ViridianCity')
+            self.assertEqual(position, (19, 18))
+            self.assertEqual(options['last_map'], 'Route1')
+            self.assertTrue(options['allow_ledges'])
+            self.assertTrue(options['allow_spinners'])
+            self.assertEqual(options['excluded_maps'], ('Route22',))
+            self.assertEqual(options['blocked_maps']['ViridianCity'], {(19, 17), (18, 18)})
+            result = batch(start, position, regions, **options)
+            for name, region in regions.items():
+                expected = {(name, x, y) for x in range(pt.MAPS[name]['width'] * 2)
+                            for y in range(pt.MAPS[name]['height'] * 2)
+                            if training_tile(name, x, y)}
+                self.assertEqual(region, expected)
+                first = next(iter(region))
+                independent = pt.bfs_cross(start, position, name, first[1:],
+                                           goal_nodes=region, **options)
+                self.assertEqual(result[name], independent)
+            observed.update(result)
+            return result
+
+        with patch.object(pt, 'bfs_cross_routes', side_effect=compare) as search:
+            sites = agent.find_training_sites({'map': 'ViridianCity', 'x': 19, 'y': 18,
+                                               'party': [{'level': 16}]})
+        search.assert_called_once()
+        self.assertEqual(set(sites), set(names))
+        self.assertEqual(set(agent.training_navigation), set(names))
+        for name, path in observed.items():
+            self.assertTrue(path)
+            endpoint = path[-1][0] if len(path) > 1 else path[0]
+            self.assertEqual(sites[name], tuple(endpoint[1:]))
+            self.assertEqual(agent.training_navigation[name]['steps'], len(path) - 1)
+            self.assertTrue(agent.training_navigation[name]['tile_route_found'])
+
+    def test_training_batch_keeps_unproven_terrain_but_discards_disproved_routes(self):
+        from openpokered.story_rules import MAPS_DIR
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        names = ('Route1', 'Route2')
+        agent.maps = {name: {**json.loads((MAPS_DIR / name / 'map.json').read_text()),
+                             'connections': {}, 'warps': []} for name in names}
+        agent.visited = set(names)
+        agent.navigation_memory = {'Route2': {}}
+        agent.client = Mock()
+        agent.client.route.return_value = {'found': True, 'legs': []}
+        agent.game = Mock(last_map='Route1')
+        agent.game.navigation_barriers.return_value = {}
+        agent.game.live_npcs.return_value = set()
+        agent.game.navigation_excluded_maps.return_value = ()
+        with patch('openpokered.autonomous_story.pt.bfs_cross_routes',
+                   return_value=dict.fromkeys(names)) as search:
+            sites = agent.find_training_sites({'map': 'ViridianCity', 'x': 19, 'y': 18,
+                                               'party': [{'level': 16}]})
+        search.assert_called_once()
+        self.assertEqual(set(sites), {'Route1'})
+        self.assertNotIn('Route2', agent.training_navigation)
+        self.assertFalse(agent.training_navigation['Route1']['tile_route_found'])
+        self.assertIsNone(agent.training_navigation['Route1']['steps'])
+
+    def test_training_without_eligible_terrain_does_not_search_tiles(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.maps = {'PalletTown': {}}
+        agent.visited = {'PalletTown'}
+        agent.client = Mock()
+        agent.game = Mock()
+        agent.game.navigation_barriers.return_value = {}
+        agent.game.live_npcs.return_value = set()
+        with patch('openpokered.autonomous_story.pt.bfs_cross_routes') as search:
+            sites = agent.find_training_sites({'map': 'PalletTown', 'x': 5, 'y': 6,
+                                               'party': [{'level': 5}]})
+        self.assertEqual(sites, {})
+        self.assertEqual(agent.training_navigation, {})
+        agent.client.route.assert_not_called()
+        search.assert_not_called()
 
     def test_catch_areas_skip_registered_tables_and_record_their_navigation(self):
         from openpokered.story_rules import MAPS_DIR

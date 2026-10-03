@@ -2640,6 +2640,7 @@ class AutonomousStoryAgent(DualStoryAgent):
         for name in self.visited:
             nearby.update(c['targetMap'] for c in self.maps.get(name, {}).get('connections', {}).values())
             nearby.update(w['destMap'] for w in self.maps.get(name, {}).get('warps', []) if w.get('destMap'))
+        eligible, regions = {}, {}
         for name in nearby:
             if name.startswith('SafariZone'):
                 continue  # BALL/BAIT/ROCK/RUN cannot produce knockout XP.
@@ -2656,10 +2657,16 @@ class AutonomousStoryAgent(DualStoryAgent):
                      for y in range(pt.MAPS[name]['height']*2) if training_tile(name, x, y)]
             if not spots:
                 continue
-            paths = pt.bfs_cross(facts['map'], (facts['x'], facts['y']), name, spots[0],
-                last_map=self.game.last_map, allow_ledges=True, allow_spinners=True,
-                blocked_maps=barriers, excluded_maps=self.game.navigation_excluded_maps(),
-                goal_nodes={(name, *p) for p in spots})
+            eligible[name] = (route, spots, wild)
+            regions[name] = {(name, *p) for p in spots}
+        # Share traversal only among regions with the same through-map
+        # permissions. Each destination still gets its own shortest path to
+        # actual encounter terrain, with this call's current NPC barriers.
+        paths_by_map = pt.bfs_cross_routes(facts['map'], (facts['x'], facts['y']), regions,
+            last_map=self.game.last_map, allow_ledges=True, allow_spinners=True,
+            blocked_maps=barriers, excluded_maps=self.game.navigation_excluded_maps()) if regions else {}
+        for name, (route, spots, wild) in eligible.items():
+            paths = paths_by_map[name]
             if not paths and name in getattr(self, 'navigation_memory', {}):
                 continue  # Include live NPCs when rechecking a disproved route.
             self.training_navigation[name] = {'map': name, 'tile_route_found': bool(paths),
