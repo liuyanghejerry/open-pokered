@@ -4367,3 +4367,32 @@ Goal保持active；下一阶段在独立持久目录合法NEW GAME，登记从0�
 不继承旧链64种／旗标／资金／XP／审计结论。124／最终全程MP4及图鉴
 大盘仍未交付。当前证据入口为checkpoint-safety-20261003中各同名
 report／log／backup-receipt，旧active64快照只代表当时历史状态。
+
+### 获授权的最终合法NEW GAME已独立启动（从0登记）
+
+运行根目录是主仓库持久
+`.artifacts/jev-dex-legal-newgame-20261004/`，不是/tmp或旧prototype目录。
+首段 `20261004-042913-seed42` 启动时工作树干净543556d5，实际
+policy SHA256
+`cabbc3454d1d0190429e43f6c20adae1566835b47f405a5ac6f3f43124ecc3fa`，
+native仍6d8e、668份gfx仍21e0；没有--resume／snapshot／里程碑路线。
+同一双层OpenRouter Jev1.13.0，原10000调用／10000动作／86400秒／
+24000000帧预算，原生逐帧MP4输入240／输出60fps。控制器9767／
+native9777／debug51542独占，未建立第二连接查询活游戏。
+
+真实new_game观察0.209秒／frame1674：RedsHouse2F、RED，队伍空、
+0 owned／0 seen、零徽章／名人堂、初始资金3000。追踪初次dex_progress
+5.688秒明确0种、acquired=[]；9.900秒／frame2983在Oak实验室
+真实0→1、唯一新增Charmander。首次来源与物种增量集合守恒通过，
+旧链64／旗标／资金／XP／审计结论未继承；首次新增不是旧存档CONTINUE。
+Jev随后正常进行实验室对战、包裹与图鉴流程，未固定路线或另设规则预算。
+
+初始合法性只读proof位于
+`checkpoint-safety-20261003/legal-newgame-start-proof-20261004.json/log`
+以及新根目录`initial-newgame-proof.json`：核对所有policy文件SHA、
+manifest／NEW GAME初始状态、实际CLI／PID父子／binary／录像路径，
+2026-10-03 20:30:48 UTC的1310行完整trace前缀1310296字节、SHA256
+`91321d7730a1765abe397d6112eee32f362fd6dd0b9b402aa964f0312b732c43`。
+这仅是初始来源快照，不是安全checkpoint／独立CONTINUE／封口MP4，
+也不保证后续所有策略已验证。真实新链与录制继续，Goal active；
+124种／最终完整MP4／新图鉴大盘仍须真正完成后再交付。
