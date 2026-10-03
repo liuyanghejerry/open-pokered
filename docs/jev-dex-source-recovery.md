@@ -4680,3 +4680,54 @@ verified21-checkpoint-and-native-recording-evidence-20261004.tar.gz，
 逐项字节／hash及安全源hash通过，无凭据、native binary或重复MP4；
 所有原件保留，无删除。后继只从上述最新合法21源正常CONTINUE，
 不回档到13、不热替换／注入／另开NEW GAME，Goal仍active。
+
+## 2026-10-04：合法第5段24种，原进程恢复与战斗决策修正
+
+第5段从最新合法21种普通CONTINUE，实际新增Growlithe
+（355.498秒／frame30877）、Hitmonchan（431.799秒／41601）和Eevee
+（960.787秒／152399），共24 owned／61 seen。金黄守卫饮料交付、
+格斗道场训练师及领取、玉虹大厦伊布均正常执行，初始21不算新增。
+无SilphScope时塔内真实阻挡保留，未绕过幽灵；Kadabra尚未登记。
+
+旧控制器53274在Route7／frame154099因子类choose不接受
+`allow_abstain`退出，native53306／recorder53309及未保存进度被保留。
+732247e7修复子类关键字接口，保留默认弃权，仅遵守必选继续回合的
+调用约束。另保留多个实际受阻目标，并给对应候选补
+observed_battle_prerequisites：几何路径不代表战斗可通过，识别不
+保证胜利，也不排除其他合法解法；不删候选或代替Jev选路线。
+5项战斗证据与2项接口专项通过，完整Python1013PASS／19.853秒。
+纯Python决策与证据修改，无Rust构建／玩家画面变更或新m49结论。
+
+确认原控制器退出、端口无其他客户端后独占接回，五组普通观察与
+故障现场完全相同。新策略40915295只从此真实handover frame生效，
+此前仍为原b3853911；没有重启、CONTINUE、重置RNG或固定换人。
+真实Jev选择switch:5、fight、move0，正常结束战斗并保存，随后普通
+shutdown封口同一原生MP4。原失败summary／trace／manifest／现场
+观察及旧21源hash均未改；恢复trace包含原失败trace的完整字节前缀。
+安全恢复目录`20261004-062054-native-recovery-seed42`直接继承合法第4段，
+不是从诊断旧SRAM续跑，也不把同一第5段算作两段录像或重复登记。
+
+最终Route7 `(10,4)`／frame154655、两徽章、资金260；Abra10 XP665、
+Charizard43 XP73661等正常战斗消耗保留。最新SRAM
+`5efc884578d3a01f1ad855b92a5921d6c25a800c4e395b9057ca4a5db6c1bb91`
+独立新进程schema4普通CONTINUE通过，XP／HP／四槽PP、PC／物品／
+旗标／图鉴严格一致。原第5段MP4 9803324字节／644.416667秒／38665帧
+全帧解码，SHA256
+`ae744d39385c1bf46b32912e10346b2ef1788c0a27342b8c69a01fd960b45aa4`。
+五段合法祖先链3648.900000秒、24唯一登记，source audit无history或pending。
+
+同一最新合法24源、全部12目标与实际记忆的普通CONTINUE只读对照：
+固定两边相同Python hash seed42后41→41，facts／普通队伍／原生AST／
+路径前置及帧627严格相同；仅Fuji候选新增上述战斗context，去除该键
+所有候选JSON严格同。零模型／CONTINUE后零输入，不推断捕获效果或
+加速。首次未固定hash seed的对照因等分训练点集合迭代变化而不能
+作为严格对照，原报告保留；未改变正式运行的hash seed设置。
+
+持久proof为legal5-recovered24-checkpoint-proof、independent-continue及
+legal24-ghost-context-frontier-comparison-v2。worktree外35项／4834547字节
+备份`verified24-checkpoint-and-exclusive-recovery-evidence-20261004.tar.gz`
+逐项字节／hash通过，SHA256
+`bcc2c695e967f9a8d26af05ced69ae037912cd90dceddc2880e041ae440da41c`；
+无凭据、native binary或重复MP4，全部原件及私有runtime保留，无删除。
+后继仅从最新合法24种继续；旧prototype64不继承，距124仍100种，
+最终全程合片与完成图鉴大盘尚未交付，Goal仍active。
