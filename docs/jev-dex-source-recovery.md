@@ -2177,3 +2177,38 @@ Cut执行现在最多观察60次、每次正常推进2帧，以只读原生地�
 未变，每条原始行号与event SHA256保留在
 `legacy-source-evidence-20261003.json`。这只是四条证据，不是全物种合法
 审计；未覆写null、未重写原始日志／大盘、未默认将未知方式算成gift。
+
+### 2026-10-03：28种独立CONTINUE；正式Cut开路与新捕获到30种
+
+第六段在自然治疗后的命令边界合作式停止：elapsed989.774秒实际完成
+VermilionPokecenter治疗，990.227秒控制器正常finalizer封口。严格原生
+checkpoint检查与独立进程正常CONTINUE schema=3通过，28 owned／53 seen、
+VermilionPokecenter `(3,3)`、资金177、三徽章、6只队伍／11只PC及全部
+持久字段精确一致。Oddish正常训练到18级、经验4454也保留，未回退到旧
+26种。源SRAM SHA256
+`a8195cc4049a773e17fae675611361c4c70f3e8bcb293f756d2481c19f351e87`
+未变，证明为`formal28-independent-continue.json`。第六段MP4正常封口：
+1019.483333秒、61169帧、13749991字节。
+
+六段已结束正式父链录像合计8499.466666秒（约142分钟），真实合并159362
+条记录、独特登记28种，五次CONTINUE初始快照新增登记均为[]；每段trace／
+video哈希和原始策略身份保留在
+`closed-formal28-lineage-clock-20261003.json`。这只是容器、时钟与登记
+守恒检查，不是全来源审计、全片视觉质量结论或最终合成MP4。
+
+正式第七段`20261003-144907-seed42`只从上述28种检查点正常CONTINUE，
+实际加载`dfd72440`，策略SHA256
+`70fa5d6c6ccaaad77e493df40361279ce0ad7c9b68c4c328af20241cb70751a5`，
+私有native仍为
+`a28be59cc6ae0e7f20705c32086fdb83fe8a17c6ea05471b1a11a9a21a526984`。
+elapsed16.963秒Jev自主选择Route9砍树，18.363秒正式outcome为
+`tree_cleared`；之后自主选择Route10捕获。frame13696／elapsed63.167秒
+正常草丛捕获Voltorb，登记至29种。实际清除Route10两处树木后，自主选择
+RockTunnel1F，frame19037／elapsed128.364秒正常野战捕获Machop至30/124。
+这是正式原生运行对Cut收尾修复的验证，不是诊断路线或固定策略指令。
+树木重新进图会复原，后续两次真实砍树不是永久解锁或新登记。
+
+30种为第七段在线进度，最新独立封口验证仍是28种；正式收集、双层
+OpenRouter Jev与原生录制继续。全部存档、录像及诊断证据在仓库持久
+`.artifacts`，未使用`/tmp`、未清理删除。124种、完整合法来源审计、最终
+全程MP4和正式图鉴大盘仍未完成。
