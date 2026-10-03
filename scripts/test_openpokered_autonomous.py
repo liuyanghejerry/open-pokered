@@ -22,6 +22,76 @@ from openpokered.run_autonomous import observations_valid, checkpoint_field_requ
 
 
 class AutonomousTests(unittest.TestCase):
+    def test_level_evolution_gets_fresh_access_to_actual_training_terrain(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.game = Mock(last_map=None)
+        agent.game.navigation_barriers.return_value = {}
+        agent.game.live_npcs.return_value = set()
+        agent.game.navigation_excluded_maps.return_value = set()
+        agent.observed_navigation_barriers = Mock(return_value={})
+        agent.training_navigation = {'OldMap': {'tile_route_found': True}}
+        current = {'map': 'VermilionPokecenter', 'x': 13, 'y': 1, 'flags': {}}
+        fresh = {
+            'Route6': {'map': 'Route6', 'tile_route_found': True, 'steps': 35,
+                       'scope': 'actual encounter terrain'},
+            'Route9': {'map': 'Route9', 'tile_route_found': False, 'steps': None,
+                       'scope': 'actual encounter terrain'},
+        }
+
+        def training(facts, *, shared_experience=False):
+            self.assertIs(facts, current)
+            self.assertTrue(shared_experience)
+            agent.training_navigation = fresh
+            return {'Route6': (4, 18), 'Route9': (8, 10)}
+
+        agent.find_training_sites = Mock(side_effect=training)
+        groups = {}
+        for source, species in [('Geodude', 'Graveler'), ('Drowzee', 'Hypno')]:
+            target = ('register', species, True)
+            groups[species] = {'target': target,
+                'rules': [Rule(species, current['map'], 'skill:evolve', [], [], [], target, [])],
+                'context': {'acquisition_method': 'evolution', 'trigger': 'level',
+                            'from_species': source, 'training_effort_examples': [
+                                {'map': 'Route6', 'navigation': None},
+                                {'map': 'OldMap', 'navigation': {'tile_route_found': True}}]}}
+        agent.annotate_navigation(groups, current, prune=False)
+        agent.find_training_sites.assert_called_once()
+        for group in groups.values():
+            routes = group['context']['trigger_navigation']
+            self.assertEqual([(r['map'], r['tile_route_found'], r['steps']) for r in routes],
+                             [('Route6', True, 35), ('Route9', False, None)])
+            self.assertNotIn('VermilionPokecenter', [r['map'] for r in routes])
+            self.assertIn('experience', routes[0]['scope'])
+            examples = group['context']['training_effort_examples']
+            self.assertEqual(examples[0]['navigation'], fresh['Route6'])
+            self.assertIsNone(examples[1]['navigation'])
+        self.assertEqual(set(groups), {'Graveler', 'Hypno'})
+
+    def test_item_evolution_access_requires_carried_item_and_party_source(self):
+        for held_item, source_in_party, expected in [(1, True, True), (0, True, False),
+                                                     (1, False, False)]:
+            with self.subTest(held_item=held_item, source_in_party=source_in_party):
+                agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+                agent.game = Mock()
+                agent.game.navigation_barriers.return_value = {}
+                agent.game.live_npcs.return_value = set()
+                agent.game.navigation_excluded_maps.return_value = set()
+                agent.observed_navigation_barriers = Mock(return_value={})
+                agent.find_training_sites = Mock()
+                current = {'map': 'Route8', 'x': 1, 'y': 1, 'flags': {},
+                    'bag': {'FIRESTONE': held_item},
+                    'party': [{'species': 'Growlithe'}] if source_in_party else []}
+                target = ('register', 'Arcanine', True)
+                group = {'target': target,
+                    'rules': [Rule('evolve', 'Route8', 'skill:evolve', [], [], [], target, [])],
+                    'context': {'acquisition_method': 'evolution', 'trigger': 'item',
+                                'item': 'FireStone', 'from_species': 'Growlithe'}}
+                agent.annotate_navigation({'evolve': group}, current, prune=False)
+                route = group['context']['trigger_navigation'][0]
+                self.assertEqual(route['tile_route_found'], expected)
+                self.assertEqual(route['steps'], 0 if expected else None)
+                agent.find_training_sites.assert_not_called()
+
     def test_native_inputs_and_agent_judgments_share_the_boot_trace_clock(self):
         import io
         from types import SimpleNamespace

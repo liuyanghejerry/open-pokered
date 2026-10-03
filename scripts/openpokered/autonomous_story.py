@@ -1223,6 +1223,7 @@ class AutonomousStoryAgent(DualStoryAgent):
         excluded = self.game.navigation_excluded_maps()
         previews = {} if previews is None else previews
         rule_routes = {}
+        evolution_training_routes = None
         for group in groups.values():
             routes = []
             for rule in group['rules']:
@@ -1234,6 +1235,32 @@ class AutonomousStoryAgent(DualStoryAgent):
                         routes.append(self.training_navigation[rule.map])
                     elif group['target'][0] == 'catch' and group['target'][1] in getattr(self, 'catch_navigation', {}):
                         routes.append(self.catch_navigation[group['target'][1]])
+                    elif rule.storyline == 'skill:evolve':
+                        context = group.get('context', {})
+                        if context.get('trigger') == 'level':
+                            if evolution_training_routes is None:
+                                # This primitive needs a real encounter tile,
+                                # not its synthetic rule's current-map location.
+                                # Refresh once for this facts snapshot; old route
+                                # evidence must not make new training look ready.
+                                sites = self.find_training_sites(facts, shared_experience=True)
+                                evolution_training_routes = [
+                                    {**self.training_navigation[name],
+                                     'scope': 'Path to actual encounter terrain; ordinary battles must still earn experience and trigger evolution. Travel and healing may interrupt.'}
+                                    for name in sites if name in self.training_navigation]
+                            routes.extend(route for route in evolution_training_routes if route not in routes)
+                            for example in context.get('training_effort_examples', []):
+                                example['navigation'] = self.training_navigation.get(example['map'])
+                                example['access_scope'] = (
+                                    'Current tile-path preview when provided; estimated victories are not earned experience or guaranteed evolution')
+                        elif context.get('trigger') == 'item':
+                            item = context.get('item', '').replace('_', '').upper()
+                            ready = bool(facts.get('bag', {}).get(item, 0)) and any(
+                                self.same_species(mon.get('species'), context.get('from_species'))
+                                for mon in facts.get('party', []))
+                            routes.append({'map': facts['map'], 'tile_route_found': ready,
+                                'steps': 0 if ready else None, 'field_action': 'item_evolution',
+                                'scope': 'Use the carried evolution item on the actual party source through the inventory menu; consumes the item and changes that individual'})
                     elif rule.storyline == 'skill:surf':
                         obstacle = group.get('context', {})
                         stance = obstacle.get('stance')

@@ -2084,3 +2084,44 @@ CeruleanCity `(19,27)`、资金177、badge位图7（三枚徽章）、25 owned�
 `debug_drive.py`实录哈希与防重放修复版一致，`3d067b21`保护这次已经生效，
 不再只是准备下次加载。没有回退到17种或重开NEW GAME；当前策略／动作
 仍由双层OpenRouter Jev选择，开始从真实PC准备未登记进化与NPC交换所需物种。
+
+### 2026-10-03：正式26种独立存档；修复PC素材循环的候选覆盖与可达性偏差
+
+第五段frame65104／elapsed306.737秒通过真实战斗将Abra进化为Kadabra，
+正式登记达到26/124；随后实际补抓已消耗的Abra以保留MrMime交换来源。
+重复种没有增加图鉴计数。此后六种素材争用五个非主力队伍槽，发生
+PC换入／换出循环，勇基拉之后没有新增登记。
+
+仅观察trace尾部的新事件，elapsed831.081秒完成取出Spearow后向身份匹配的
+控制器发送合作式SIGINT；正常finalizer在命令边界保存并封口录像。
+严格原生安全检查通过，独立副本真实CONTINUE核对全部持久字段一致：
+26已拥有／51已见、VermilionPokecenter `(12,3)`、三枚徽章、资金177、
+6只队伍／11只PC。源SRAM SHA256
+`638594f0cbcd53b02f92d35d7cbb979959fe146e55ce53cb65fe0eece19414d2`
+保持不变，证明为持久目录`formal26-independent-continue.json`。
+第五段原生MP4可读：H.264、160×144、60fps、26813帧、446.883333秒、
+7177598字节。未删除录像，也不回退到25种存档。
+
+scene编译器没有把`tradePokemon`赋值结果标为执行后条件：实际两个交换
+完成旗标都带有unknown entry guard，已经携带Abra／Spearow时对应交换仍
+被候选过滤。将这一已知原生调用与现有battle／giveItem结果同样标为
+`Result`；未知调用仍为unknown，输入物种、最少两只队伍和完成旗标仍由
+收集图验证。只是允许尝试真实交换，成功仍以原生效果和图鉴登记为准。
+
+另一个偏差是level进化没有对实际遭遇训练地形进行即时路径预览，比较中
+始终是not_evaluated，PC取出却有path_found。现在同一facts快照刷新一次
+共享训练地形预览，同时更新训练成本样例中的旧路径；item进化必须实际
+携带进化石并有队伍来源才提供菜单零步路径。没有伪造经验、把PC位置当
+训练地、屏蔽素材或固定Jev路线，原有候选仍保留。
+
+四项新增回归在旧代码暴露交换unknown、缺失训练路径和三个缺失item路径
+子例，修复后通过；未来未知赋值调用继续保持unknown。Python全套805项
+通过（17.492秒），播放器JavaScript与diff检查通过。
+同一真实26种副本、正常CONTINUE及完整恢复历史状态的OpenRouter对照：
+旧版`7b928d93`选择PC取出Oddish，修复版选择登记Farfetchd；两项交换规则的
+missing从unknown变为[]，Arbok／Graveler／Hypno候选都有真实训练地形路径。
+每组各一次策略请求，输入26397／27799 tokens、输出355／379 tokens；
+不是统计效果保证，诊断不产生正式进度。证据为
+`pc-loop-access-restored-before/`、`pc-loop-access-restored-after/`及
+`tests-pc-loop-access-*.log`。124、最终来源审计、完整MP4和正式大盘尚未
+完成；下一段只允许从上述已验证26种检查点继续。

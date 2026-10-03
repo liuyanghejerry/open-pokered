@@ -317,6 +317,27 @@ class RulesTests(unittest.TestCase):
         rule=compile_story(story([conditional(call('futureUnknown'),[command('setFlag','DONE')])]))[0]
         self.assertEqual(rule.missing(facts())[0][0],'unknown')
 
+    def test_npc_trade_result_is_a_postcondition_not_an_unknown_entry_guard(self):
+        program = [conditional(call('getFlag', 'TRADED'), [], [
+            {'Choice': {'options': [{'label': literal('YES'), 'body': [
+                {'Assign': {'name': 'traded',
+                            'value': call('game.tradePokemon', 'ABRA', 'MR_MIME', 'MARCEL')}},
+                conditional({'Variable': 'traded'}, [command('setFlag', 'TRADED')])
+            ]}]}}
+        ])]
+        rule = compile_story(story(program))[0]
+        self.assertEqual(rule.missing(facts()), [])
+        self.assertEqual(rule.choices, ['YES'])
+        self.assertEqual(rule.missing(facts(TRADED=True)), [('flag', 'TRADED', False)])
+        self.assertIn('Result', json.dumps(rule.guards))
+
+    def test_unknown_assigned_call_remains_an_unknown_entry_guard(self):
+        rule = compile_story(story([
+            {'Assign': {'name': 'ready', 'value': call('futureUnknown')}},
+            conditional({'Variable': 'ready'}, [command('setFlag', 'DONE')])
+        ]))[0]
+        self.assertEqual(rule.missing(facts())[0][0], 'unknown')
+
     def test_bag_uses_runtime_names_without_underscores(self):
         f=facts();f['bag']={'OAKSPARCEL':1}
         self.assertTrue(evaluate(call('hasItem','OAKS_PARCEL'),f))

@@ -389,7 +389,13 @@ def compile_story(story):
                                         following.append(arm)
                                     continue
                             command(call['callee'], call['args'], ctx)
-                            if call['callee'].removeprefix('game.') in ('startBattle', 'startBattleSet', 'startWildBattle', 'giveItem'):
+                            if call['callee'].removeprefix('game.') in (
+                                    'startBattle', 'startBattleSet', 'startWildBattle',
+                                    'giveItem', 'tradePokemon'):
+                                # Awaited native outcomes are checked after
+                                # execution, not unknown facts to arrange before
+                                # approaching the script. Collection separately
+                                # requires the actual offered party species.
                                 expr = {'Result': expr}
                         ctx['variables'][data['name']] = expr
                     following.append(ctx)
