@@ -4731,3 +4731,35 @@ legal24-ghost-context-frontier-comparison-v2。worktree外35项／4834547字节
 无凭据、native binary或重复MP4，全部原件及私有runtime保留，无删除。
 后继仅从最新合法24种继续；旧prototype64不继承，距124仍100种，
 最终全程合片与完成图鉴大盘尚未交付，Goal仍active。
+
+## 2026-10-04：合法第6段25种安全保存，正常经验登记Kadabra
+
+第6段`20261004-062527-seed42`仅从最新合法24源普通CONTINUE，
+干净bfab0800／policy40915295／冻结native6d8e／gfx21e0；相同双层
+OpenRouter Jev1.13.0、seed42、原预算及4×原生录像。启动全持久字段
+严格守恒，真实策略17.411秒／动作19.622秒成功；Fuji战斗context
+已在实际请求中，不以此声称完成通行或改善捕获率。256.897秒／
+frame47693通过正常经验训练将Abra10→16并登记Kadabra，25 owned／
+61 seen、两徽章；正常学习Confusion，非提案或注入等级。此后塔6F
+未识别幽灵仍真实阻挡；实际blocked_goals同时保留Fuji与catch:Tower7F，
+不把这些尝试、重复Abra捕获准备、初始24或护士恢复算作新增登记。
+
+377.567秒Jev自主护士操作完成，2026-10-03 22:31:45 UTC精确身份及
+byte-stable trace guard仅向controller73587合作式SIGINT；native73599／
+recorder73600无信号或第二连接，三者正常退出。safe／最终观察／
+development checkpoint均true，success=false／interrupted_at_command_boundary，
+59动作、策略68／动作165调用。终点CeruleanPokecenter `(3,3)`／frame85288，
+资金260、PokeBall35／GreatBall25、party6／PC13，Charizard43 XP76121、
+Kadabra16 XP2585、普通HP／四槽PP消耗与恢复全部保留。
+
+最新SRAM `eafe588bf5b928ece93196572308fc6d96cac271b94ef44a0db4cf48a9b4dc38`
+独立新进程schema4普通CONTINUE全持久字段核验通过，本段源及上一
+恢复24源hash均未改。第6段MP4 5751232字节／355.400000秒／21324帧
+全帧解码，SHA256
+`a0b7010462fcf02d98014955fc95f22472e98455f160260b51518db0f62a41a6`。
+六段合法祖先链4004.300000秒、25唯一登记，source audit无history／pending；
+第5段恢复仍只算一段。38项／1647433字节worktree外增量备份
+`verified25-checkpoint-and-ghost-context-evidence-20261004.tar.gz`逐项核验，
+SHA256 `4b89d4937cffa7fcba232bfaefcfd330502481dbc1c6175ab31f02be8b1347d0`，
+无凭据／binary／重复MP4，原件保留，无删除。后继只从最新25源继续；
+距124仍99种，最终全程MP4与完成图鉴大盘尚未交付，Goal仍active。
