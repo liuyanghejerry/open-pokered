@@ -2463,6 +2463,115 @@ class AutonomousTests(unittest.TestCase):
         self.assertEqual(evolution_training_cost({'species': 'Rattata', 'level': 20}, 20)
                          ['remaining_experience_max'], 0)
 
+    def test_training_cost_uses_valid_observed_experience_without_a_level_guess(self):
+        mon = {'species': 'Rattata', 'level': 15, 'experience': 4090}
+        cost = evolution_training_cost(mon, 20)
+        self.assertEqual(cost['remaining_experience_min'], 3910)
+        self.assertEqual(cost['remaining_experience_max'], 3910)
+        self.assertEqual(cost['observed_experience'], 4090)
+        self.assertEqual(cost['levels_remaining'], 5)
+        self.assertIn('get_party', cost['scope'])
+        self.assertEqual(evolution_training_cost(mon, 15)['remaining_experience_max'], 0)
+
+    def test_training_cost_rejects_invalid_or_stale_experience_and_keeps_old_bounds(self):
+        mon = {'species': 'Rattata', 'level': 15}
+        old = evolution_training_cost(mon, 20)
+        for experience in (None, True, 4090.0, '4090', -1, 3374, 4096, 8000):
+            with self.subTest(experience=experience):
+                self.assertEqual(evolution_training_cost({**mon, 'experience': experience}, 20), old)
+
+    @staticmethod
+    def experience_observation_fixture():
+        mon = {'species': 'Rattata', 'level': 15, 'hp': 40, 'max_hp': 40,
+               'status': 'None', 'moves': ['Tackle'], 'pp': [35]}
+        state = {'screen': 'overworld', 'party': [mon], 'frame_count': 123,
+                 'evaluation': {'party': [{**mon, 'total_exp': 4000}]}}
+        observation = [{k: mon[k] for k in ('species', 'level', 'max_hp', 'status', 'moves')}]
+        observation[0].update(current_hp=40, experience=4090)
+        return state, observation
+
+    def test_party_experience_binds_normal_observation_without_mutating_or_using_evaluation(self):
+        from openpokered.autonomous_story import observed_party_experience
+        state, observation = self.experience_observation_fixture()
+        before = json.dumps([state, observation], sort_keys=True)
+        self.assertEqual(observed_party_experience(state, observation), {0: 4090})
+        observation[0].pop('experience')
+        self.assertEqual(observed_party_experience(state, observation), {})
+        observation[0]['experience'] = 4090
+        self.assertEqual(json.dumps([state, observation], sort_keys=True), before)
+
+    def test_party_experience_does_not_use_persistent_roster_during_battle_or_other_screens(self):
+        from openpokered.autonomous_story import observed_party_experience
+        state, observation = self.experience_observation_fixture()
+        for screen in ('battle', 'title', 'party', None):
+            with self.subTest(screen=screen):
+                self.assertEqual(observed_party_experience({**state, 'screen': screen}, observation), {})
+
+    def test_party_experience_rejects_changed_roster_identity_not_just_species(self):
+        from openpokered.autonomous_story import observed_party_experience
+        state, observation = self.experience_observation_fixture()
+        for field, value in (('species', 'Abra'), ('level', 16), ('current_hp', 39),
+                             ('max_hp', 41), ('status', 'Poison'), ('moves', ['Scratch'])):
+            with self.subTest(field=field):
+                self.assertEqual(observed_party_experience(state, [{**observation[0], field: value}]), {})
+        self.assertEqual(observed_party_experience(state, observation * 2), {})
+
+    def test_party_experience_validates_each_observed_value_and_malformed_payloads(self):
+        from openpokered.autonomous_story import observed_party_experience
+        state, observation = self.experience_observation_fixture()
+        for value in (None, True, 4090.0, '4090', -1, 3374, 4096):
+            with self.subTest(value=value):
+                self.assertEqual(observed_party_experience(state, [{**observation[0], 'experience': value}]), {})
+        for payload in (None, {}, [None], ['private'], []):
+            with self.subTest(payload=payload):
+                self.assertEqual(observed_party_experience(state, payload), {})
+
+    def test_observed_training_experience_handles_native_level_endpoints(self):
+        from openpokered.autonomous_story import observed_party_experience
+        state, observation = self.experience_observation_fixture()
+        for level in (1, 100):
+            with self.subTest(level=level):
+                experience = level_experience('Rattata', level)
+                state['party'][0]['level'] = level
+                observation[0].update(level=level, experience=experience)
+                self.assertEqual(observed_party_experience(state, observation), {0: experience})
+                cost = evolution_training_cost({'species': 'Rattata', 'level': level,
+                                                'experience': experience}, level)
+                self.assertEqual(cost['remaining_experience_min'], 0)
+                self.assertEqual(cost['remaining_experience_max'], 0)
+
+    def test_autonomous_facts_observe_party_experience_only_on_the_field(self):
+        state, observation = self.experience_observation_fixture()
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.client, agent.game = Mock(), Mock()
+        agent.client.state.return_value = state
+        agent.client.party.return_value = observation
+        agent.game.st.return_value = state
+        agent.observe_audit_evolution = Mock()
+        agent.collection_audit_pending, agent.cleared_terrain = {}, set()
+        agent.battle_defeats, agent.visited, agent.crossed_passages = [], set(), set()
+        agent.collects_dex, agent.index = False, None
+        base = {'map': 'Route1', 'bag': {}, 'flags': {}, 'dex': {}}
+        with patch.object(DualStoryAgent, 'facts', return_value=base):
+            facts = agent.facts()
+        self.assertEqual(facts['party'][0]['experience'], 4090)
+        self.assertNotIn('evaluation', facts)
+        agent.client.party.assert_called_once_with()
+        agent.client.party.reset_mock()
+        state['screen'] = 'battle'
+        with patch.object(DualStoryAgent, 'facts', return_value=base):
+            self.assertNotIn('experience', agent.facts()['party'][0])
+        agent.client.party.assert_not_called()
+
+    def test_exact_training_experience_tightens_effort_not_encounter_or_victory_claims(self):
+        table = {'encounterRate': 32, 'mons': [{'species': 'Rattata', 'level': 10}] * 10}
+        mon = {'species': 'Rattata', 'level': 15, 'experience': 4090}
+        effort = evolution_training_effort(mon, 20, table, 2)
+        self.assertEqual(effort['estimated_victories_min'], effort['estimated_victories_max'])
+        self.assertEqual(effort['participants'], 2)
+        self.assertIn('not a guaranteed battle count', effort['scope'])
+        self.assertEqual(mon['experience'], 4090)
+
     def test_training_yield_weights_slots_and_switch_participants(self):
         table = {'encounterRate': 32, 'mons': [
             {'species': 'Rattata', 'level': 10}] * 9 + [{'species': 'Chansey', 'level': 30}]}

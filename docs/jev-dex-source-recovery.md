@@ -3300,3 +3300,79 @@ FuchsiaPokecenter `(3,3)`／资金453／61种，起点列表不计新增。
 双层OpenRouter Jev真实请求已成功，25.460秒实际Fuchsia Cut完成，
 新维生素选项从干净冻结版本载入，不热替换、不回退。此时运行中，
 尚未证明Jev选择出售或新登记，原生录像与关键产物均在持久目录。
+
+### 第二十二段真实变现、换箱与白海狮登记
+
+本段后续elapsed45.422秒正常商店SELL实际售出Carbos1，资金453→5353，
+记录sold_vitamin；没有注入钱或物品。后来实际GreatBall11→19，
+资金553。388.693秒正常PC菜单切换current box0→1，完整后续观察
+确认box0计20／box1计18，释放真实捕获容量；柜台通用effect标签
+false不代替具体钱／库存／箱位观测，也不算新增物种。
+
+海沫岛低概率搜寻多次仅遇已登记物种，随后正常训练Exeggcute29→31、
+Charizard68→69。808.581秒／frame101718在SeafoamIslandsB3F实际登记
+Dewgong，owned61→62、seen99→100：原生野生37级／HP116，对方先
+保持None，实际两次Hypnosis后为Sleep(2)，支援HP84→16；Jev选择
+GreatBall，库存19→18，只消耗一颗，PC新增该个体。其时父目标为
+Exeggcute训练至32，实际机会捕获不应误称训练自然进化，也不归因
+为尚未加载的经验值策略。不把睡眠／满HP案例视为普遍捕获保证。
+
+909.007秒FuchsiaPokecenter护士完整治疗后，未来事件watcher核对
+controller身份并合作式SIGINT封存。reason为
+`StoryStopped: interrupted_at_command_boundary`，success=false；严格
+安全与最终观察通过，development_checkpoint=true。107动作、策略
+133／动作289次调用，不是124完成或Goal暂停。
+
+独立新进程正常CONTINUE schema=3全部持久字段一致，包含正常
+get_party的experience、队伍、PC逐槽、图鉴、背包、位置与旗标；
+源SRAM未改写，SHA256
+`decb83d7fd5fc3f4ede66f409aed0c359fb6ee5f9f9aaa443b453fb23b5bb7eb`。
+终点62 owned／100 seen、六徽章、资金553，FuchsiaPokecenter `(3,3)`、
+队伍6／PC39、current box1，box0计20／box1计19；全队HP／PP及异常
+实际恢复，UltraBall5／GreatBall18。Exeggcute31／经验39035，未达到32。
+历史幽灵访问缺口未消除；独立读档不追认整个旧访问链为合法。
+
+本段MP4正常封口447.716667秒、26863帧、8371223字节。22个封存段
+容器／时钟／登记守恒通过，14768.699997秒、271541条合并记录、
+62种唯一登记，21次续跑起点新增均为空。只核对分段原生录像，
+未做最终合片、完整合法来源审计或全片视觉验收。
+
+### 正常经验观测与更精确的训练成本
+
+原生get_party已提供experience；策略此前只保留等级，训练成本为
+该等级的上下界。现在场地facts用正常只读get_party补齐当前经验，
+不读取evaluation专用测量字段、不改变原生数据、RNG或推进帧。
+按实际队伍顺序逐项比对species／level／HP／max HP／status／moves，
+只接受与原生成长曲线、1–100级一致的整数XP；人数或身份不一致
+不绑定，战斗及非overworld不使用持久队伍数据。缺失、布尔、非整
+数、越界或与等级不一致时保持原等级区间，不伪造零经验。
+
+已观测XP将训练剩余经验上下界收紧到同一个实际差值，沿用原生
+成长曲线及原条件经验收益；胜场／遭遇步数仍是条件期望，不能
+保证未来收益、成功捕获或要求继续训练。PC中未知XP不补造，
+只有正常取回后才可获得同样的场地观测；所有原目标和执行保持。
+策略源SHA256
+`d139f3616fdb99d0ceae4332528c7320640a0290bbaff232b9f1365caa677b2f`。
+
+九项新增回归。四项旧实现检查中1FAIL／2ERROR／1PASS保留；不将
+既有无效XP回退检查称为旧故障。最终全部Python896项通过
+（18.514秒），autonomous模块382项通过（6.524秒），不相加。
+无Rust或画面变更，原生仍已验证的dade，不冒称重跑既有Rust或
+fresh m49。`git diff --check`通过。
+
+同一已核验第21段61种存档旧8ad3dcf3完整历史模块／新模块各独立
+正常CONTINUE只读规划，两边37组target／rule IDs／objectives严格
+一致，全部其他facts不变，仅正常XP及条件训练成本改变30个叶子。
+原生帧627前后不变，源SRAM不变，没有模型调用、执行或新增登记。
+例：Exeggcute29经验30492，升30旧1–3264→实际3258；Gloom25经验
+11941，升26旧1–1676→实际1470。不是胜场保证或新策略已改善实战。
+首次诊断抽取旧facts函数丢失super的__class__闭包而失败，日志
+保留；改为加载完整历史模块后才得上述比较，不称为游戏故障。
+
+最新62种存档／trace／manifest、独立证明／停止／时钟、896测试与
+旧失败、完整旧／新规划及冻结策略源，另备份worktree外
+`verified62-dewgong-xp-evidence-20261004.tar.gz`（3458240字节、37条）。
+条目与归档内SRAM哈希已核验，无凭据或重复MP4／binary，原件
+全部保留；首轮备份误写manifest文件名在写归档前拒绝，修正为
+run-manifest后正常完成，无丢失或覆盖。后续仅从此最新检查点正常
+CONTINUE加载新策略，124、完整来源及最终全程／大盘仍未完成。

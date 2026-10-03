@@ -72,8 +72,50 @@ def level_experience(species, level):
     return max(0, num * level**3 // den + quad * level**2 + linear * level - sub)
 
 
+def valid_training_experience(mon):
+    """Accept native integer XP only when it agrees with the observed level."""
+    level, experience = mon.get('level'), mon.get('experience')
+    if (type(level) is not int or not 1 <= level <= 100
+            or type(experience) is not int):
+        return False
+    floor = level_experience(mon['species'], level)
+    ceiling = level_experience(mon['species'], level + 1) - 1 if level < 100 else floor
+    return floor <= experience <= ceiling
+
+
+def observed_party_experience(state, observation):
+    """Bind normal get_party XP to the same ordered field roster, never evaluation.
+
+    get_party reads persistent save data, so it must not supply a stale battle
+    roster. Identity/condition and level bounds also guard mismatched replies.
+    Missing XP remains unknown; it is not reconstructed from evaluation data.
+    """
+    party = state.get('party', [])
+    if (state.get('screen') != 'overworld' or not isinstance(party, list)
+            or not isinstance(observation, list) or len(party) != len(observation)):
+        return {}
+    fields = ('species', 'level', 'max_hp', 'status', 'moves')
+    for mon, observed in zip(party, observation):
+        if (not isinstance(mon, dict) or not isinstance(observed, dict)
+                or any(key not in mon or key not in observed or mon[key] != observed[key]
+                       for key in fields)
+                or 'hp' not in mon or 'current_hp' not in observed
+                or mon['hp'] != observed['current_hp']):
+            return {}
+    return {index: mon['experience'] for index, mon in enumerate(observation)
+            if valid_training_experience(mon)}
+
+
 def evolution_training_cost(mon, target_level):
     target = level_experience(mon['species'], target_level)
+    if valid_training_experience(mon):
+        remaining = max(0, target - mon['experience'])
+        return {'levels_remaining': max(0, target_level - mon['level']),
+                'remaining_experience_min': remaining,
+                'remaining_experience_max': remaining,
+                'observed_experience': mon['experience'],
+                'scope': 'Exact XP gap from normal field get_party observation and native growth curve; '
+                         'future experience gains and victory count remain conditional'}
     floor = level_experience(mon['species'], mon['level'])
     next_floor = level_experience(mon['species'], min(100, mon['level'] + 1))
     return {'levels_remaining': max(0, target_level - mon['level']),
@@ -734,9 +776,13 @@ class AutonomousStoryAgent(DualStoryAgent):
     def facts(self):
         facts = super().facts()
         live = self.game.st()  # Refresh live geometry after field moves / map reloads.
+        party_state = self.client.state()
         facts['party'] = [{k: mon.get(k) for k in
                            ('species', 'level', 'hp', 'max_hp', 'status', 'moves', 'pp')}
-                          for mon in self.client.state().get('party', [])]
+                          for mon in party_state.get('party', [])]
+        if party_state.get('screen') == 'overworld':
+            for index, experience in observed_party_experience(party_state, self.client.party()).items():
+                facts['party'][index]['experience'] = experience
         facts['stored_pokemon'] = [{k: mon.get(k) for k in
                                     ('box', 'index', 'species', 'level', 'hp', 'max_hp',
                                      'status', 'moves', 'pp')}
