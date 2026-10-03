@@ -5283,10 +5283,25 @@ class AutonomousStoryAgent(DualStoryAgent):
             spot = reachable_grass(name, (current['player_x'], current['player_y']), blocked)
             if spot is None:
                 return {'result': 'no_reachable_training_grass'}
-            moved = self.client.move_to(*spot)
+            # A raw move_to can interrupt on a dialogue/script while still on
+            # the bridge, not on grass. Settling the dialogue does not make
+            # that partial arrival a usable encounter stance. Use the normal
+            # closed-loop navigator, which re-localizes after interactions and
+            # only returns when the actual destination tile is reached.
+            try:
+                self.navigate_point(name, spot, tries=50)
+            except NavigationPause as error:
+                self.settle(self.active['target'], rule)
+                result = {'result': 'paused_after_battle', 'detail': str(error),
+                          'destination': name}
+                self.record('operation', operation=operation, result=result, script=rule.storyline)
+                return result
+            except pt.NavError as error:
+                result = {'result': 'blocked', 'detail': str(error), 'destination': name}
+                self.remember_travel_result(name, result)
+                self.record('operation', operation=operation, result=result, script=rule.storyline)
+                return result
             self.settle(self.active['target'], rule)
-            if moved.get('result') not in ('reached', 'interrupted', 'entered_battle'):
-                return moved
         for cycle in range(600):
             self.check_budget()
             state = self.client.state()

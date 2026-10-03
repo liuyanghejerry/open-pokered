@@ -3592,6 +3592,7 @@ class AutonomousTests(unittest.TestCase):
         agent.client.move_to.return_value = {'result': 'reached'}
         agent.game = Mock()
         agent.game.st.return_value = {'player_x': 5, 'player_y': 18}
+        agent.navigate_point = Mock(return_value=(5, 18))
         agent.check_budget, agent.settle, agent.record = Mock(), Mock(), Mock()
         agent.record_travel = Mock()
         with patch('openpokered.autonomous_story.reachable_grass', return_value=(5, 18)):
@@ -3600,6 +3601,42 @@ class AutonomousTests(unittest.TestCase):
         self.assertEqual(agent.record.call_args.kwargs['operation'], 'catch_encounter:Route2,5,18')
         self.assertEqual(agent.record.call_args.kwargs['result'], result)
         self.assertEqual(agent.catch_attempts, [{'map': 'Route2', 'registered': True}])
+
+    def test_encounter_approach_uses_normal_navigation_and_preserves_battle_or_blocker_interruptions(self):
+        import playthrough as pt
+        from openpokered.playthrough_judgments import NavigationPause
+        for error, expected in ((NavigationPause('trainer interrupted'), 'paused_after_battle'),
+                                (pt.NavError('observed obstruction'), 'blocked')):
+            with self.subTest(interruption=expected):
+                agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+                rule = Rule('catch', 'Route24', 'skill:catch_encounter', [], [], [],
+                            ('catch', 'Route24', True), [])
+                agent.active = {'target': rule.effect, 'rules': [rule]}
+                agent.actions, agent.max_actions = 0, 30
+                state = {'map_name': 'Route24', 'player_x': 10, 'player_y': 15,
+                         'screen': 'overworld', 'party': [{'level': 40}],
+                         'pokedex': {'owned': 17}}
+                agent.client, agent.game = Mock(), Mock()
+                agent.client.state.return_value = state
+                agent.client.cmd.return_value = []
+                agent.client.move_to.return_value = {'result': 'interrupted'}
+                agent.game.st.return_value = state
+                agent.facts = Mock(return_value={'bag': {'POKEBALL': 10}})
+                agent.check_budget = Mock()
+                agent.needs_capture_recovery = Mock(return_value=False)
+                agent.navigate_point = Mock(side_effect=error)
+                agent.settle, agent.record = Mock(), Mock()
+                agent.remember_travel_result = Mock()
+                with patch('openpokered.autonomous_story.reachable_grass', return_value=(4, 18)):
+                    result = agent.execute('catch_encounter:Route24,4,18', rule)
+                self.assertEqual(result['result'], expected)
+                self.assertEqual(result['destination'], 'Route24')
+                agent.navigate_point.assert_called_once_with('Route24', (4, 18), tries=50)
+                agent.client.move_to.assert_not_called()
+                agent.game.d.drive.assert_not_called()
+                self.assertFalse(hasattr(agent, 'catch_attempts'))
+                if expected == 'blocked':
+                    agent.remember_travel_result.assert_called_once_with('Route24', result)
 
     def travel_goal_agent(self, legs, origin='ViridianCity'):
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)

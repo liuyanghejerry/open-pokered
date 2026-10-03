@@ -1967,3 +1967,27 @@ manifest明确指向父`20261003-133404-seed42`，策略SHA256为
 真实旅行战斗获`EVENT_BEAT_MT_MOON_EXIT_SUPER_NERD`，elapsed22.605秒
 实际领取DomeFossil且两块化石NPC消失。它是物品／主线解锁，不是新图鉴登记；
 正式仍为16/124，策略和动作继续由Jev选择、记录全时段原生录像。
+
+### 2026-10-03：正式17种／小霞胜利，修复捕捉步行的部分到达误判
+
+第三段正式elapsed66.095秒真实击败Misty，frame32641／elapsed115.135秒
+正常草丛捕获Ekans，达到17/124。随后正常打过金珠大桥训练家并取得Nugget，
+elapsed148.471秒以`no_training_step:Route24:10,15`退出；严格安全原生检查点
+有效，仍是17种，未退回16种。独立CONTINUE schema=3通过，Route24 `(10,15)`、
+资金2416、队伍、PC、背包、旗标和Safari会话一致，源SRAM SHA256
+`3466e54bf4c356cca0e1fb27e837251a9f719d36b680fb00dad7d1d9215ce39e`。
+
+两个隔离存档副本都复现旧错误。原始`move_to`去草丛 `(4,18)`被桥上对话
+打断：只推进1帧／0步，仍位于 `(10,15)`，返回`interrupted`。原代码在
+settle后把这种部分到达当成草丛，就在桥面寻找草地相邻步并停止整场运行。
+改用现有正常按键、重新定位的closed-loop导航，只在真正抵达草丛后开始
+捕捉步行；真实战斗中断返回`paused_after_battle`，实际寻路阻挡保留为
+`blocked`并记入因果导航记忆。两者不是成功hunt，不累计捕获失败次数。
+
+新增回归的两个中断分支在旧实现都抛出同一个`no_training_step`，修复后通过，
+已有捕捉途中图鉴增量契约保持通过。Python全套794项通过（17.095秒），
+播放器JavaScript回归与diff检查通过。修复后的隔离副本正常完成途中训练家
+战斗、重新规划抵达草丛，并真实捕获Oddish；策略0次／动作4次，副本18种
+**不计入正式17种，也不回灌正式存档**。源档哈希未改变；证据在
+`.artifacts/checkpoint-safety-20261003/grass-arrival-native-a/`、`-b/`、`-c/`，
+独立证明为同目录的`formal17-independent-continue.json`。
