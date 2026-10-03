@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 import playthrough as nav
+import playthrough_late as late
 from playthrough_late import damage_slot
 from debug_drive import DebugClient
 
@@ -60,6 +61,173 @@ class AtomicDebugDriveRegression(unittest.TestCase):
                 with self.assertRaises(RuntimeError):
                     client.drive(['a'], frames=7)
                 self.assertEqual(client.cmd.call_count, 1)
+
+
+class GrassTrainingRegression(unittest.TestCase):
+    def test_standing_grass_with_a_dry_rate_anchor_is_not_a_training_run(self):
+        # Native wild_encounters.rs rolls against the right-hand tile, not
+        # the grass under the player. The Route6 column is visibly grassy
+        # but its vertical shuttle cannot produce outdoor encounters.
+        self.assertTrue(nav.is_grass('Route6', 3, 21))
+        self.assertFalse(nav.is_grass('Route6', 4, 21))
+        self.assertEqual(nav.grass_training_run('Route6', (3, 21), 'down'), ('left', 3))
+
+    def test_every_selected_training_step_has_both_native_grass_anchors(self):
+        for start in ((3, 21), (2, 21), (10, 23), (14, 23)):
+            run = nav.grass_training_run('Route6', start, 'down')
+            self.assertIsNotNone(run)
+            direction, steps = run
+            dx, dy = nav.DELTA[direction]
+            for offset in range(1, steps + 1):
+                x, y = start[0] + dx * offset, start[1] + dy * offset
+                self.assertTrue(nav.is_grass('Route6', x, y), (start, direction, x, y))
+                self.assertTrue(nav.is_grass('Route6', x + 1, y), (start, direction, x, y))
+
+    def test_actual_grass_run_avoids_live_npcs_and_coordinate_warps(self):
+        self.assertEqual(nav.grass_training_run('Route6', (10, 23), 'down', {(10, 21)}),
+                         ('left', 4))
+        self.assertEqual(nav.grass_training_run('Route6', (10, 23), 'down', {(11, 23)}),
+                         ('left', 4))
+        self.assertEqual(nav.grass_training_run('Route6', (10, 23), 'down', {(9, 23)}),
+                         ('right', 4))
+        with patch.dict(nav.COORDINATE_WARPS, {'Route6': {(9, 23): ('OtherMap', 0, 0)}}):
+            self.assertEqual(nav.grass_training_run('Route6', (10, 23), 'down'), ('right', 4))
+
+    def test_reobserved_endpoint_preserves_ties_and_reroutes_around_occupancy(self):
+        self.assertEqual(nav.grass_training_run('Route6', (14, 23), 'left'), ('left', 4))
+        self.assertEqual(nav.grass_training_run('Route6', (14, 23), 'left', {(13, 23)}),
+                         ('down', 4))
+        self.assertIsNone(nav.grass_training_run('Route6', (10, 23), 'down',
+                                               {(10, 22), (9, 23), (11, 23)}))
+
+    def test_route_six_training_uses_actual_grass_in_the_same_input_budget(self):
+        game = nav.Game.__new__(nav.Game)
+        state = dict(screen='overworld', map_name='Route6', player_x=10, player_y=23,
+                     party=[dict(level=28, hp=76, max_hp=76)])
+        game.st = lambda: state.copy()
+        game.pos = lambda: ('Route6', state['player_x'], state['player_y'])
+        game.npc_blocked = lambda _: {(10, 21)}
+        game.d = Mock()
+
+        def drive(buttons, frames=None):
+            dx, dy = nav.DELTA[buttons[0]]
+            for _ in range(len(buttons) // 8):
+                start = state['player_x'], state['player_y']
+                target = start[0] + dx, start[1] + dy
+                if target == (10, 21) or not nav.walkable_edge('Route6', start, target):
+                    break
+                state['player_x'], state['player_y'] = target
+
+        game.d.drive.side_effect = drive
+        self.assertFalse(game.train_until(30, 'Route6', (12, 25), None, max_cycles=1))
+        bursts = game.d.drive.call_args_list
+        self.assertEqual([call.args[0][0] for call in bursts], ['left', 'right'])
+        self.assertEqual([len(call.args[0]) for call in bursts], [32, 32])
+        self.assertEqual([call.kwargs['frames'] for call in bursts], [36, 36])
+        self.assertEqual((state['player_x'], state['player_y']), (10, 23))
+        self.assertEqual(state['party'][0]['level'], 28)
+
+    def test_second_burst_is_not_sent_after_battle_or_map_change(self):
+        for interrupted in ({'screen': 'battle'}, {'map_name': 'OtherMap'}):
+            with self.subTest(interrupted=interrupted):
+                game = nav.Game.__new__(nav.Game)
+                state = dict(screen='overworld', map_name='Route6', player_x=10, player_y=23,
+                             party=[dict(level=28, hp=76, max_hp=76)])
+                game.st = lambda: state.copy()
+                game.pos = lambda: (state['map_name'], state['player_x'], state['player_y'])
+                game.npc_blocked = lambda _: set()
+                game.d = Mock()
+                game.d.drive.side_effect = lambda *_args, **_options: state.update(interrupted)
+                self.assertFalse(game.train_until(30, 'Route6', (12, 25), None, max_cycles=1))
+                game.d.drive.assert_called_once()
+                self.assertEqual(game.d.drive.call_args.kwargs['frames'], 36)
+
+
+class CutFieldMoveCompletionRegression(unittest.TestCase):
+    def game(self, name='Cut', unchanged=False, departed=False, target_tile=0x3D,
+             preserved_tree=False):
+        game = Mock()
+        progress = {'phase': 'initial', 'selections': 0, 'stepped': 0}
+        menu = {'kind': 'party', 'cursor': 0, 'phase': 'FieldMoves { cursor: 0 }',
+                'field_moves': [name]}
+
+        def state():
+            pending = progress['phase'] == 'pending'
+            cleared = pending and not unchanged and progress['stepped'] >= 2
+            return {'map_name': 'OtherMap' if pending and departed else 'VermilionCity',
+                    'player_x': 15, 'player_y': 17, 'player_facing': 'Down',
+                    'map_blocks': [1, 2 if cleared else 1],
+                    'field_menu': menu if progress['phase'] == 'party' else None}
+
+        def open_start(*_):
+            progress['phase'] = 'party'
+
+        def tap(button, _):
+            if button == 'a':
+                progress['selections'] += 1
+                if progress['selections'] == 2:
+                    progress['phase'] = 'pending'
+
+        game.st.side_effect = state
+        game.tap.side_effect = tap
+        game.step.side_effect = lambda frames: progress.update(stepped=progress['stepped'] + frames)
+        game.cutscene.return_value = True
+        # Explicit native tile observation for this isolated menu/effect test.
+        target = patch.object(nav, 'tile_at', side_effect=lambda *_args:
+            0x2C if (target_tile == 0x3D and not unchanged and not preserved_tree
+                     and progress['stepped'] >= 2) else target_tile)
+        target.start()
+        self.addCleanup(target.stop)
+        return game, open_start, progress
+
+    def test_cut_waits_for_actual_native_map_change_without_replaying_the_menu(self):
+        game, open_start, progress = self.game()
+        with patch.object(late, 'open_start', side_effect=open_start):
+            late.field_move(game, 'Cut')
+        game.step.assert_called_once_with(2)
+        self.assertEqual(progress['selections'], 2)
+        self.assertEqual(game.st()['map_blocks'], [1, 2])
+
+    def test_closed_text_without_native_cut_change_is_not_success(self):
+        game, open_start, progress = self.game(unchanged=True)
+        with patch.object(late, 'open_start', side_effect=open_start):
+            with self.assertRaisesRegex(RuntimeError, 'CUT did not change'):
+                late.field_move(game, 'Cut')
+        self.assertEqual(progress['selections'], 2)
+        self.assertLessEqual(progress['stepped'], 120)
+
+    def test_another_map_does_not_prove_cut_completed(self):
+        game, open_start, _ = self.game(departed=True)
+        with patch.object(late, 'open_start', side_effect=open_start):
+            with self.assertRaisesRegex(RuntimeError, 'CUT left'):
+                late.field_move(game, 'Cut')
+        game.step.assert_not_called()
+
+    def test_an_unrelated_block_edit_does_not_prove_the_tree_was_cut(self):
+        game, open_start, progress = self.game(preserved_tree=True)
+        with patch.object(late, 'open_start', side_effect=open_start):
+            with self.assertRaisesRegex(RuntimeError, 'CUT did not change'):
+                late.field_move(game, 'Cut')
+        self.assertEqual(progress['selections'], 2)
+        self.assertLessEqual(progress['stepped'], 120)
+
+    def test_already_cleared_tree_and_grass_cut_do_not_require_a_block_edit(self):
+        for tile in (0x2C, 0x52):
+            with self.subTest(tile=tile):
+                game, open_start, progress = self.game(target_tile=tile, unchanged=True)
+                with patch.object(late, 'open_start', side_effect=open_start):
+                    late.field_move(game, 'Cut')
+                game.step.assert_not_called()
+                self.assertEqual(progress['selections'], 2)
+
+    def test_other_field_move_handoffs_are_unchanged(self):
+        for name in ('Surf', 'Fly'):
+            with self.subTest(name=name):
+                game, open_start, _ = self.game(name=name, unchanged=True)
+                with patch.object(late, 'open_start', side_effect=open_start):
+                    late.field_move(game, name)
+                game.step.assert_not_called()
+                self.assertEqual(game.cutscene.call_count, 0 if name == 'Fly' else 1)
 
 
 class DebugTransportRetryRegression(unittest.TestCase):

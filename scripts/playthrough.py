@@ -247,6 +247,36 @@ def grass_tiles(map_name):
             if is_grass(map_name, x, y)}
 
 
+def grass_training_run(map_name, start, preferred, blocked=frozenset(), max_steps=4):
+    """Longest short, collision-safe grass run; stable preference breaks ties.
+
+    Reuse the observed planning map, NPC occupancy and forced-warp exclusions.
+    Require grass at both native anchors: the standing tile selects the
+    table, but the tile to its right supplies the outdoor encounter rate.
+    A four-tile vertical hold at a grass edge can spend most of its input
+    budget against a wall instead of earning encounters.
+    """
+    best = None
+    warps = warp_tiles(map_name)
+    for direction in [preferred] + [name for name in DELTA if name != preferred]:
+        dx, dy = DELTA[direction]
+        position = start
+        steps = 0
+        for _ in range(max_steps):
+            target = position[0] + dx, position[1] + dy
+            rate_x = target[0] + 1 if target[0] + 1 < MAPS[map_name]['width'] * 2 else target[0]
+            if (target in blocked or target in warps
+                    or not walkable_edge(map_name, position, target)
+                    or not is_grass(map_name, *target)
+                    or not is_grass(map_name, rate_x, target[1])):
+                break
+            position = target
+            steps += 1
+        if steps and (best is None or steps > best[1]):
+            best = direction, steps
+    return best
+
+
 def bfs(map_name, start, goal, blocked=frozenset(), allow_spinners=False):
     """BFS over one map; `blocked` is a set of (x, y) tiles NPCs occupy.
     Returns [(tile, direction-of-arrival), …] from start to goal."""
@@ -1620,10 +1650,20 @@ class Game:
                         self.step(300)
                         self.nav_to_map(x, y, map_name, tries=450)
                 continue
-            dy = 4 if cy <= y else -4
-            self.d.drive(["down" if dy > 0 else "up"] * 32, frames=36)
-            if self.st()["screen"] != "battle":
-                self.d.drive(["up" if dy > 0 else "down"] * 32, frames=36)
+            preferred = "down" if cy <= y else "up"
+            for _ in range(2):
+                observed = self.st()
+                if observed['screen'] == 'battle' or observed['map_name'] != map_name:
+                    break
+                start = observed['player_x'], observed['player_y']
+                run = grass_training_run(map_name, start, preferred,
+                                         self.npc_blocked(map_name))
+                # Preserve the old short shuttle when no adjacent grass run
+                # exists (e.g. a one-tile patch). Never add cycles or frames.
+                direction, steps = run or (preferred, 4)
+                self.d.drive([direction] * (steps * 8), frames=steps * 8 + 4)
+                preferred = {'up': 'down', 'down': 'up',
+                             'left': 'right', 'right': 'left'}[direction]
         return False
 
     # ── battle ──────────────────────────────────────────────────────────

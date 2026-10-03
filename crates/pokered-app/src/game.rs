@@ -6564,7 +6564,8 @@ impl PokemonGame {
             "not_battle" => self.state.screen != pokered_core::game_state::GameScreen::Battle,
             // Player control back after a cutscene: overworld, no dialogue /
             // choice / script effect, script engine idle, warp settled,
-            // no arrival auto-step / unfinished walk, and no suspended battle.
+            // no arrival auto-step / unfinished walk, no trainer engagement
+            // or queued trainer battle, and no suspended scripted battle.
             "control_ready" => {
                 crate::cli::screen_name(&self.state.screen) == "overworld"
                     && self.overworld.pending_dialogue.is_none()
@@ -6577,6 +6578,8 @@ impl PokemonGame {
                         pokered_core::overworld::WarpFadeState::Idle
                     )
                     && !self.overworld.script_awaiting_battle
+                    && !self.overworld.trainer_encounter_pending()
+                    && self.overworld.pending_trainer_battle.is_none()
                     && !self.overworld.state.standing_on_door
                     && !self.overworld.state.exiting_door
                     && self.overworld.state.player.movement_state
@@ -7974,6 +7977,38 @@ mod synchronous_input_tests {
             .as_u64().unwrap() > preview["critical_damage"][1].as_u64().unwrap());
         assert_eq!(serde_json::to_value(&game.battle.battle_state).unwrap(), before);
         assert_eq!(game.frame_count, frame);
+    }
+
+    #[test]
+    fn control_ready_waits_for_real_sighted_trainer_and_queued_battle() {
+        use pokered_core::overworld::{Direction, OverworldInput};
+        let mut game = PokemonGame::new_with_options(
+            GameVersion::Red, None, None, None, false, None, false, true, None,
+        );
+        game.state.screen = GameScreen::Overworld;
+        game.overworld = OverworldScreen::new(MapId::RocketHideoutB4F, None, PokemonRedData);
+        game.overworld.state.player.x = 11;
+        game.overworld.state.player.y = 3;
+        game.overworld.state.player.facing = Direction::Left;
+        game.overworld.update_frame(OverworldInput::new(
+            false, false, false, false, false, false, false, false,
+        ));
+        assert!(game.overworld.trainer_encounter_pending(), "real Lift Key trainer saw the player");
+        assert!(!game.debug_condition_met("control_ready"), "the engage intro still owns input");
+
+        // Close the real before-battle text with normal alternating A/release
+        // inputs, using only the overworld so the queued battle is observable.
+        for frame in 0..1800 {
+            game.overworld.update_frame(OverworldInput::new(
+                false, false, false, false, frame % 2 == 1, false, false, false,
+            ));
+            if game.overworld.pending_trainer_battle.is_some() {
+                break;
+            }
+        }
+        assert!(game.overworld.pending_trainer_battle.is_some(), "trainer battle was queued");
+        assert!(!game.overworld.trainer_encounter_pending(), "text handed off to battle");
+        assert!(!game.debug_condition_met("control_ready"), "a queued battle is not player control");
     }
 
     #[test]

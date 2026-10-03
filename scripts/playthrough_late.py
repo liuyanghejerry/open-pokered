@@ -243,6 +243,19 @@ def use_item(g, name, party_index=None, forget=None):
 
 
 def field_move(g, name, party_index=0):
+    before_cut = None
+    if name == 'Cut':
+        from playthrough import DELTA, MAPS, tile_at
+        before = g.st()
+        tree_tile = {'overworld': 0x3D, 'gym': 0x50}.get(
+            MAPS[before['map_name']]['tileset_name'].lower())
+        dx, dy = DELTA[before['player_facing'].lower()]
+        cut_target = before['player_x'] + dx, before['player_y'] + dy
+        # Fresh runs can revisit an already-cleared tree without a reload.
+        # Grass CUT also deliberately doesn't edit blocks in the native game.
+        # Only an observed tree makes a native map edit a required effect.
+        if tree_tile is not None and tile_at(before['map_name'], *cut_target) == tree_tile:
+            before_cut = before
     open_start(g, "Pokemon")
     for _ in range(8):
         menu = g.st()["field_menu"]
@@ -259,6 +272,20 @@ def field_move(g, name, party_index=0):
             g.tap("a", 12)
             if name != "Fly":
                 assert g.cutscene()
+            if before_cut is not None:
+                # Closing CUT's text only queues the native map edit. Wait
+                # for that edit before navigation reads the old tree as a
+                # wall; never replay the menu or change planning blocks here.
+                for _ in range(60):
+                    observed = g.st()
+                    if observed['map_name'] != before_cut['map_name']:
+                        raise RuntimeError('CUT left the original map before its effect was observed')
+                    if (observed['map_blocks'] != before_cut['map_blocks']
+                            and tile_at(observed['map_name'], *cut_target) != tree_tile):
+                        break
+                    g.step(2)
+                else:
+                    raise RuntimeError('CUT did not change the native map after its text closed')
             return
         g.tap("down", 8)
     raise RuntimeError(f"field move not selected: {name}")
