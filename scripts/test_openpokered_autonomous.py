@@ -933,6 +933,79 @@ class AutonomousTests(unittest.TestCase):
         self.assertTrue(agent.needs_healing(facts))
         self.assertTrue(agent.needs_capture_recovery(facts))
 
+    def test_healing_context_separates_coverage_from_urgent_survival(self):
+        from copy import deepcopy
+        mon = {'species': 'Charizard', 'level': 62, 'hp': 219, 'max_hp': 219,
+               'status': 'None', 'moves': ['Slash', 'Cut', 'Flamethrower', 'Dig'],
+               'pp': [14, 30, 14, 0]}
+        facts = {'party': [mon]}
+        before = deepcopy(facts)
+        context = AutonomousStoryAgent.healing_context(facts)
+        self.assertFalse(context['urgently_needed'])
+        self.assertTrue(context['coverage_recovery_recommended'])
+        evidence = context['lead_recovery_evidence']
+        self.assertEqual(evidence['remaining_attack_pp'], 58)
+        self.assertEqual([row['move'] for row in evidence['usable_attacks']],
+                         ['Slash', 'Cut', 'Flamethrower'])
+        self.assertEqual([row['move'] for row in evidence['low_pp_coverage_attacks']], ['Dig'])
+        self.assertFalse(evidence['health_or_status_warning'])
+        self.assertIn('matchups', context['scope'])
+        self.assertEqual(facts, before)
+
+    def test_healing_context_keeps_actual_health_status_and_exhaustion_warnings(self):
+        base = {'species': 'Charizard', 'level': 62, 'hp': 219, 'max_hp': 219,
+                'status': 'None', 'moves': ['Slash', 'Cut', 'Flamethrower', 'Dig'],
+                'pp': [20, 30, 15, 10]}
+        for changes in ({'hp': 0}, {'hp': 100}, {'status': 'Sleep(1)'},
+                        {'pp': [0, 0, 0, 0]}, {'pp': [1, 2, 1, 0]}, {'pp': [4, 7, 3, 0]}):
+            with self.subTest(changes=changes):
+                context = AutonomousStoryAgent.healing_context({'party': [{**base, **changes}]})
+                self.assertTrue(context['urgently_needed'])
+        context = AutonomousStoryAgent.healing_context({'party': [{**base,
+            'species': 'Abra', 'moves': ['Teleport'], 'pp': [20]}]})
+        self.assertTrue(context['urgently_needed'])
+        self.assertEqual(context['lead_recovery_evidence']['usable_attacks'], [])
+        self.assertFalse(AutonomousStoryAgent.healing_context({'party': []})['urgently_needed'])
+
+    def test_healing_group_uses_survival_warning_without_removing_recovery(self):
+        agent = self.catch_goal_agent([{'id': 'collect-dex', 'agent_verified': True}])
+        agent.find_catch_areas.return_value = {}
+        healer = Rule('heal', 'Center', 'nurse', ['npc:1'], [], [], ('heal', 'party', True), [])
+        agent.nearby_healers = Mock(return_value=[healer])
+        mon = {'species': 'Charizard', 'level': 62, 'hp': 219, 'max_hp': 219,
+               'status': 'None', 'moves': ['Slash', 'Cut', 'Flamethrower', 'Dig'],
+               'pp': [14, 30, 14, 0]}
+        facts = {'party': [mon], 'bag': {}, 'flags': {}, 'fully_recovered': False,
+                 'map': 'Room', 'x': 10, 'y': 6}
+        with patch.object(DualStoryAgent, 'strategy_groups', return_value={}):
+            groups = agent.strategy_groups(facts)
+        context = groups['prepare:heal']['context']
+        self.assertFalse(context['urgently_needed'])
+        self.assertTrue(context['coverage_recovery_recommended'])
+        self.assertEqual(groups['prepare:heal']['rules'], [healer])
+
+    def test_unfinished_mechanism_parent_is_visible_without_forcing_a_strategy(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.collects_dex = False
+        agent.index = Mock()
+        agent.index.satisfied.return_value = False
+        agent.mechanism_goal = ('item', 'KEY', True)
+        state = {}
+        agent.augment_strategy_state(state, {'map': 'Room'})
+        self.assertEqual(state['unfinished_mechanism_parent']['target'], agent.mechanism_goal)
+        options = {'continue': '{}', 'heal': json.dumps({'context': {
+            'coverage_recovery_recommended': True, 'urgently_needed': False}}), 'other': '{}'}
+        with patch.object(DualStoryAgent, 'choose', return_value='other') as choose:
+            self.assertEqual(agent.choose('strategy', state, options, 'pick'), 'other')
+        self.assertEqual({key: json.loads(value) for key, value in choose.call_args.args[2].items()},
+                         {key: json.loads(value) for key, value in options.items()})
+        self.assertIn('coverage', choose.call_args.args[3])
+        self.assertIn('unfinished_mechanism_parent', choose.call_args.args[3])
+        agent.index.satisfied.return_value = True
+        completed = {}
+        agent.augment_strategy_state(completed, {'map': 'Room'})
+        self.assertNotIn('unfinished_mechanism_parent', completed)
+
     def test_selected_goal_is_not_cancelled_by_the_same_known_fatigue(self):
         from openpokered.story_agent import DualStoryAgent
         mon = {'species': 'Charizard', 'level': 84, 'hp': 213, 'max_hp': 293,

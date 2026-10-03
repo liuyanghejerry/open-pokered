@@ -781,6 +781,40 @@ class AutonomousStoryAgent(DualStoryAgent):
     def needs_capture_recovery(facts):
         return AutonomousStoryAgent.needs_healing(facts, preserve_coverage=False)
 
+    @staticmethod
+    def healing_context(facts):
+        """Separate a lost coverage move from observed survival resources.
+
+        This describes recovery, not a permission to skip it or a prediction
+        that the remaining attacks can beat every encountered opponent.
+        """
+        party = facts.get('party', [])
+        mon = party[0] if party else None
+        attacks = []
+        if mon:
+            for move, pp in zip(mon['moves'], mon['pp']):
+                if move == 'None':
+                    continue
+                move_data = data.move_data(move)
+                if move_data['power'] > 0:
+                    attacks.append({'move': move, 'pp': pp, 'maximum_pp': move_data['pp'],
+                                    'type': move_data['type'], 'power': move_data['power']})
+        return {
+            'urgently_needed': AutonomousStoryAgent.needs_healing(facts, preserve_coverage=False),
+            'coverage_recovery_recommended': AutonomousStoryAgent.needs_healing(facts),
+            'lead_recovery_evidence': None if mon is None else {
+                'species': mon['species'], 'hp': mon['hp'], 'max_hp': mon['max_hp'],
+                'status': mon['status'],
+                'health_or_status_warning': mon['hp'] < mon['max_hp'] * .7 or mon['status'] != 'None',
+                'remaining_attack_pp': sum(row['pp'] for row in attacks),
+                'usable_attacks': [row for row in attacks if row['pp'] > 0],
+                'low_pp_coverage_attacks': [row for row in attacks if row['pp'] <= row['maximum_pp'] * .25],
+            },
+            'scope': 'Observed leader HP/status/PP and public move data. Urgency is a resource heuristic, '
+                'not guaranteed survival; compare remaining attacks with opponent matchups. '
+                'Other party members may still need optional recovery.',
+        }
+
     def should_replan(self, facts):
         if self.replan_after_defeat:
             return True
@@ -888,6 +922,14 @@ class AutonomousStoryAgent(DualStoryAgent):
         continuation = self.completed_route_context(facts)
         if continuation:
             state['completed_route_prerequisite'] = continuation
+        mechanism_parent = getattr(self, 'mechanism_goal', None)
+        if mechanism_parent and not self.index.satisfied(mechanism_parent, facts):
+            state['unfinished_mechanism_parent'] = {
+                'target': mechanism_parent,
+                'scope': 'Unfinished parent retained by the reversible mechanism planner. '
+                    'Compare its offered next steps from the observed position; leaving may '
+                    'change access even when switch flags persist. This is not a forced itinerary.',
+            }
         if self.collects_dex:
             state['dex_progress'] = self.dex_progress(facts)
             state['collection_audit_pending'] = getattr(self, 'collection_audit_pending', {})
@@ -1038,6 +1080,15 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'to complete this exit. Remaining opponents and the ceremony still require real execution. '
                 'Compare the exit and any reachable preparations with goals whose trigger regions '
                 'currently have no walking path; remote training cannot grant experience before access is restored.')
+        if layer == 'strategy' and any('coverage_recovery_recommended' in value for value in candidates.values()):
+            instruction += (' Recovery distinguishes low PP in one coverage attack from poor health, '
+                'status or depleted total usable attacks. Compare lead_recovery_evidence with the '
+                'actual offered opponents and goals: missing one attack type does not alone mean '
+                'the party cannot proceed. Coverage restoration remains a valid optional choice. '
+                'If state.unfinished_mechanism_parent is present, compare continuing its reachable '
+                'next step with the travel and access cost of leaving for recovery; a preserved '
+                'switch flag is not the same as preserved positional progress. These are comparisons, '
+                'not a requirement to skip recovery or complete that parent before other goals.')
         if layer == 'strategy' and getattr(self, 'maximizes_coverage', False):
             instruction += (' The terminal goal is coverage: visiting a new map is progress in itself, so once the '
                 'current objective is satisfied prefer reaching an unexplored bordering area over optional '
@@ -3374,7 +3425,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'target': ('heal', 'party', True),
                 'objectives': ['Restore HP, status and move PP before continuing the story'],
                 'rules': self.healing_rules,
-                'context': {'urgently_needed': self.needs_healing(facts)},
+                'context': self.healing_context(facts),
             }
         if threats or self.defeat_preparation:
             target_level, objectives = (min(threats, key=lambda t: t[0]) if threats else
