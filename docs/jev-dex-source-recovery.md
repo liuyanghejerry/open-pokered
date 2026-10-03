@@ -3291,3 +3291,12 @@ vitamin标签且原生effect.type=Vitamin、sellable、非key且正价格的
 （1823480字节、54条），条目及抽取的SRAM哈希已检查，无凭据或
 重复MP4／binary，原件全部保留。正式新策略仅从此最新检查点正常
 CONTINUE载入，未热替换或回退；完整合法来源及124交付仍未完成。
+
+第二十二段`20261004-001329-seed42`从此最新61种检查点正常
+CONTINUE，启动时worktree干净`21787a8c`；策略SHA256
+`7bd0f28eef472cae9a50003b4b21160d6fab3a7ef0029e452fd859792a7bfb0c`，
+autonomous源d61b，私有native仍dade、gfx668仍21e0。恢复
+FuchsiaPokecenter `(3,3)`／资金453／61种，起点列表不计新增。
+双层OpenRouter Jev真实请求已成功，25.460秒实际Fuchsia Cut完成，
+新维生素选项从干净冻结版本载入，不热替换、不回退。此时运行中，
+尚未证明Jev选择出售或新登记，原生录像与关键产物均在持久目录。
