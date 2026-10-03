@@ -48,10 +48,14 @@ def movement_frames(state, direction=None):
     return 4 if state.get('player_transport') == 'Biking' and not uphill else FRAMES_PER_TILE
 
 
-def movement_buttons(state, direction, held, frames):
+def movement_buttons(state, direction, held, frames, *, landing_map=None):
     # The engine's cycling-road slope injects DOWN on neutral frames; B is
     # the real brake. Other maps retain their ordinary neutral tails.
-    return [direction] * held + (['b'] * (frames-held) if state.get('map_name') == 'Route17' else [])
+    # A connection can enter the slope during this very input timeline. Its
+    # neutral tail must brake too: otherwise navigation_state's control-ready
+    # settlement observes a downhill walk and can slide back over the border.
+    brake = state.get('map_name') == 'Route17' or landing_map == 'Route17'
+    return [direction] * held + (['b'] * (frames-held) if brake else [])
 TAP_GAP = 6          # idle frames after a 1-frame tap (edge-trigger safety)
 
 # ── static map data ─────────────────────────────────────────────────────
@@ -1226,7 +1230,8 @@ class Game:
                 if _os.environ.get("PT_DEBUG"):
                     print(f"   [seg] {cm}({px0},{py0}) {steps[i]}x{tiles} "
                           f"held={held}", flush=True)
-                self.d.drive(movement_buttons(s, steps[i], held, frames), frames=frames)
+                self.d.drive(movement_buttons(s, steps[i], held, frames,
+                                              landing_map=seg_end[0]), frames=frames)
                 i = j + 1
                 s = self.navigation_state()
                 if (s["screen"] == "battle" or s["map_name"] != cm

@@ -3641,3 +3641,50 @@ XP366982，仍62 owned／100 seen，未登记新种类；拟选Gloom37不是已
 验收。历史幽灵访问缺口未消除；保留现有策略验证链并另开合法NEW
 GAME的非阻塞询问仍未据此得到删除／替换许可。Goal仍active，真正
 124、完整合法流程及最终MP4／图鉴大盘交付继续未完成。
+
+## 2026-10-04 用户授权合法新链与骑车坡道入口刹车
+
+用户明确回复“允许，保留现有证据后另开合法 NEW GAME”。现有62种
+链继续保留为策略验证，不追认幽灵访问为合法；策略稳定后另开最终
+合法NEW GAME收集／录像，旧62及旧tmp83均不计入新链。此为新增授权，
+不是删除原件或回退当前训练的授权；最终合法新链尚未开始。
+
+第25段最新存档／独立证明、满队gift完整规划与真实Jev只读选择、
+915测试等已另备份worktree外 `verified62-box-gift-capacity-evidence-20261004.tar.gz`，
+3262212字节、40项，SHA256
+`e42be746afdf318d03d3ef032944eb4623efd4b191c40322833ca56b3f1cf5eb`。
+归档条目和SRAM哈希核验，无凭据／重复MP4／binary，原件保留。
+
+第26段 `20261004-012728-seed42` 从最新25段正常CONTINUE，干净
+`33d04a0e`、autonomous0474、policyec42、native仍dade／gfx21e0。
+41.664秒真实Jev选择register:Eevee，49.967秒实际旅行停在Route18
+`(9,0)`，`nav_to_map(CeladonMansionRoofHouse,4,2)`不收敛；没有领取
+或新登记。后续策略正常训练，680.299秒Fuchsia护士完整治疗后合作
+式SIGINT；安全检查点／最终观察通过，development_checkpoint=true、
+success=false／StoryStopped边界中断，58动作、策略103／动作185调用。
+实际Gloom36→38／XP51145，Charizard71／XP370767，Exeggcute34／
+XP49242；仍62 owned／100 seen、资金553、六徽章、Ultra5／Great18，
+队伍6／PC39、当前box1计19，全员HP／PP补满。独立正常CONTINUE
+schema=3逐项一致，源SRAM不改写：
+`61325e265fa21a1c6032bafc72767cd578e59472d6d4a1f3d39f8852a1ebc0c8`。
+
+同一第25段副本／native，仅正常CONTINUE和普通骑行输入诊断：旧
+实现跨Route18→Route17后，中立尾帧触发原生坡道DOWN，随后等待
+control_ready继续下滑，返回Route18；不是碰撞或实际道路未开放。
+修复movement_buttons在已知本段landing_map=Route17时同样使用
+真实B刹车，其余地图保持原中立尾帧。原生物理、地图、路线选择、
+模型和预算未修改，也没有给正式Jev指定伊布路线。
+
+有效旧v4／新配对的完整before及入口状态相同，frame620启动、
+frame1711到Route18 `(9,0)`；旧150次不收敛，新frame1811正常到
+Route17 `(10,143)`。源46b4和native dade相同、图鉴及源SRAM均不变；
+只验证入口，不声称全程抵达伊布、正式新增或合法来源。前两轮诊断
+command guard遗漏及第三轮不可走的测试目标失败均保留，不用它们
+替代有效旧实现复现。3项新增回归旧3ERROR，新导航模块86PASS，
+完整Python discover918PASS（18.897秒），diff --check通过；未声称
+重跑Rust／m49，本次只有输入驱动工具改变，不改renderer输出。
+
+第26段原生4×MP4封口279.800秒、16788帧、4734052字节。26段容器／
+时钟／登记守恒通过，共16346.549997秒、300782条记录、62唯一登记，
+25次续跑初始新增均为空；不替代全片视觉、完整合法来源或最终合片。
+Goal保持active，最终合法124／MP4／图鉴大盘尚未交付。

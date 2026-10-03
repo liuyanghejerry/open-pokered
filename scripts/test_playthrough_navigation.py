@@ -862,6 +862,49 @@ class NavigationRegression(unittest.TestCase):
         game.step(6)
         self.assertEqual(calls, [(['b']*6, 6)])
 
+    def test_connection_landing_on_cycling_road_brakes_the_neutral_tail(self):
+        state = {'map_name': 'Route18', 'player_transport': 'Biking'}
+        self.assertEqual(nav.movement_buttons(state, 'up', 36, 44, landing_map='Route17'),
+                         ['up'] * 36 + ['b'] * 8)
+        # Starting on the road retains the old brake, including when leaving.
+        self.assertEqual(nav.movement_buttons({**state, 'map_name': 'Route17'},
+                         'down', 4, 12, landing_map='Route18'), ['down'] * 4 + ['b'] * 8)
+
+    def test_ordinary_connection_tail_is_not_changed_to_button_input(self):
+        state = {'map_name': 'Route18', 'player_transport': 'Biking'}
+        self.assertEqual(nav.movement_buttons(state, 'right', 4, 12, landing_map='FuchsiaCity'),
+                         ['right'] * 4)
+        self.assertEqual(nav.movement_buttons(state, 'right', 4, 12), ['right'] * 4)
+
+    def test_cross_map_navigation_brakes_the_planned_cycling_road_arrival(self):
+        game = nav.Game.__new__(nav.Game)
+        state = {'screen': 'overworld', 'map_name': 'Route18', 'player_x': 10,
+                 'player_y': 0, 'player_transport': 'Biking', 'player_movement_state': 'Idle'}
+        game.st = lambda: state.copy()
+        game.navigation_state = lambda: state.copy()
+        game.last_map = 'Route18'
+        game.npc_blocked = game.live_npcs = lambda _: set()
+        game.step = Mock()
+        calls = []
+
+        def drive(buttons, frames):
+            calls.append((buttons, frames))
+            if 'b' in buttons:
+                state.update(map_name='Route17', player_y=143)
+            # Without the brake, the native neutral control-ready settlement
+            # slides back out; observation cannot retain the planned landing.
+
+        game.d = SimpleNamespace(drive=drive)
+        with patch.object(nav, 'bfs_cross', return_value=[
+                ('Route18', 10, 0), (('Route17', 10, 143), 'up')]), \
+                patch.object(nav, 'warp_tiles', return_value=set()), \
+                patch.object(nav, 'walkable', return_value=False):
+            self.assertEqual(game.nav_to_map(10, 143, 'Route17', tries=2, avoid_grass=False), (10, 143))
+        self.assertEqual(len(calls), 1)
+        buttons, frames = calls[0]
+        self.assertEqual(buttons[-8:], ['b'] * 8)
+        self.assertEqual(len(buttons), frames)
+
     def test_bike_navigation_does_not_overshoot_a_one_tile_turn(self):
         game = nav.Game.__new__(nav.Game)
         state = {'screen': 'overworld', 'map_name': 'Route16', 'player_x': 15, 'player_y': 13,
