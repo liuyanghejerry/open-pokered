@@ -4586,6 +4586,103 @@ class AutonomousTests(unittest.TestCase):
         })
         return agent
 
+    def collection_funding_agent(self):
+        agent = self.stone_spending_agent()
+        agent.visited = {'ViridianMart'}
+        facts = {'bag': {'NUGGET': 1, 'MASTERBALL': 1, 'TM34': 1}, 'money': 410,
+                 'map': 'ViridianCity', 'flags': {},
+                 'party': [{'species': 'Growlithe'}],
+                 'stored_pokemon': [{'species': 'Pikachu', 'box': 0, 'index': 0}],
+                 'dex': {'owned_species': ['Growlithe', 'Pikachu']},
+                 'fully_recovered': True}
+        return agent, facts
+
+    def test_healthy_collector_can_sell_treasure_to_fund_balls_and_held_source_evolutions(self):
+        agent, facts = self.collection_funding_agent()
+        facts['bag'].update(RARECANDY=1, MOONSTONE=1, HM03=1)
+        original = json.loads(json.dumps(facts))
+        groups = {'existing': {'target': ('item', 'HM01', True)}}
+        agent.add_collection_funding(groups, facts)
+        sales = [g for g in groups.values() if g['target'][0] == 'sale']
+        self.assertEqual(len(sales), 1)
+        sale = sales[0]
+        self.assertEqual(sale['target'], ('sale', 'Nugget', False))
+        self.assertEqual(sale['context']['expected_proceeds'], 5000)
+        reference = sale['context']['collection_funding_reference']
+        self.assertEqual(reference['money_before_sale'], 410)
+        self.assertEqual(reference['money_after_sale_reference'], 5410)
+        ball, = reference['ball_purchase_options_here']
+        self.assertEqual(ball['ball'], 'PokeBall')
+        self.assertEqual(ball['max_quantity_affordable_before_sale'], 2)
+        self.assertEqual(ball['max_quantity_affordable_after_sale'], 27)
+        evolutions = reference['held_source_evolution_options']
+        self.assertEqual({row['species'] for row in evolutions}, {'Arcanine', 'Raichu'})
+        self.assertTrue(all(row['sale_makes_affordable'] for row in evolutions))
+        self.assertTrue(all(not row['affordable_before_sale'] and row['affordable_after_sale']
+                            for row in evolutions))
+        self.assertIn('not a joint registration yield', reference['scope'])
+        self.assertIn('existing', groups)
+        self.assertEqual(facts, original)
+
+    def test_collection_funding_uses_the_actual_owned_treasure_stack(self):
+        for quantity in (2, 3):
+            with self.subTest(quantity=quantity):
+                agent, facts = self.collection_funding_agent()
+                facts['bag']['NUGGET'] = quantity
+                groups = {}
+                agent.add_collection_funding(groups, facts)
+                sale, = groups.values()
+                self.assertEqual(sale['context']['quantity'], quantity)
+                self.assertEqual(sale['context']['expected_proceeds'], 5000 * quantity)
+                reference = sale['context']['collection_funding_reference']
+                self.assertEqual(reference['money_after_sale_reference'], 410 + 5000 * quantity)
+                self.assertEqual(facts['money'], 410)
+                self.assertEqual(facts['bag']['NUGGET'], quantity)
+
+    def test_collection_funding_requires_actual_treasure_a_known_shop_and_current_guards(self):
+        for case in ('not_collecting', 'no_treasure', 'unvisited', 'unreachable', 'guard_missing'):
+            with self.subTest(case=case):
+                agent, facts = self.collection_funding_agent()
+                if case == 'not_collecting': agent.collects_dex = False
+                if case == 'no_treasure': facts['bag']['NUGGET'] = 0
+                if case == 'unvisited': agent.visited.clear()
+                if case == 'unreachable': agent.client.route.return_value = {'found': False}
+                if case == 'guard_missing': agent.index.rules[0].missing = Mock(return_value=['ACCESS'])
+                groups = {}
+                agent.add_collection_funding(groups, facts)
+                self.assertEqual(groups, {})
+
+    def test_collection_funding_retains_existing_recovery_sale_and_does_not_impose_cash_cap(self):
+        agent, facts = self.collection_funding_agent()
+        facts['money'] = 7000
+        rule = agent.index.rules[0]
+        key = 'sell:' + rule.id + ':Nugget'
+        sale = {'target': ('sale', 'Nugget', False), 'rules': [rule],
+                'objectives': ['Sell a treasure item to fund recovery supplies'],
+                'context': {'optional_preparation': True, 'legacy_evidence': 'preserved'}}
+        groups = {key: sale}
+        agent.add_collection_funding(groups, facts)
+        self.assertEqual(len(groups), 1)
+        self.assertIs(groups[key], sale)
+        self.assertEqual(sale['context']['legacy_evidence'], 'preserved')
+        self.assertIn('Sell a treasure item to fund recovery supplies', sale['objectives'])
+        self.assertEqual(sale['context']['collection_funding_reference']['money_after_sale_reference'], 12000)
+
+    def test_collection_funding_keeps_unknown_stone_prices_unknown(self):
+        agent, facts = self.collection_funding_agent()
+        agent._complete_collection_graph['Nidorino'] = [{'method': 'grass', 'map': 'Route23'}]
+        agent._complete_collection_graph['Nidoking'] = [{'method': 'evolution', 'trigger': 'item',
+            'from_species': 'Nidorino', 'item': 'MoonStone'}]
+        facts['party'].append({'species': 'Nidorino'})
+        facts['dex']['owned_species'].append('Nidorino')
+        groups = {}
+        agent.add_collection_funding(groups, facts)
+        reference = next(iter(groups.values()))['context']['collection_funding_reference']
+        option, = [row for row in reference['held_source_evolution_options'] if row['species'] == 'Nidoking']
+        self.assertIsNone(option['cash_needed_for_one_evolution'])
+        self.assertIsNone(option['affordable_after_sale'])
+        self.assertFalse(option['sale_makes_affordable'])
+
     def test_ball_spending_exposes_lost_stone_affordability_without_removing_batches(self):
         agent = self.stone_spending_agent()
         facts = {'bag': {}, 'money': 5000, 'map': 'ViridianCity',

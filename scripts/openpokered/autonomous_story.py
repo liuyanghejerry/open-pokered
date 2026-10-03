@@ -1152,6 +1152,12 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'not a joint registration yield. Prices are references, not proof of shop access, '
                 'and PC sources still require withdrawal. Compare this opportunity cost with the '
                 'capture benefit and other goals; it is not a fixed cash reserve or a ban on shopping.')
+            instruction += (' A treasure sale is optional collection funding, not only defeat recovery. '
+                'Compare collection_funding_reference with ball supplies and evolutions of actually '
+                'held party/PC sources. Sale proceeds and affordability are price references until '
+                'normal shop menus execute; independent purchases share the same money, so do not '
+                'treat all newly affordable alternatives as a joint registration yield. Compare '
+                'travel and other goals; selling is not a forced prerequisite.')
         if layer == 'action' and 'local_state' in state and getattr(self, 'active', None):
             state = {**state, 'strategy_context': self.active.get('context', {})}
         context = state.get('strategy_context') or {}
@@ -3550,6 +3556,7 @@ class AutonomousStoryAgent(DualStoryAgent):
             self.add_nonwild_collection_groups(groups, facts)
             self.add_capture_support_retrieval(groups, facts)
             self.add_capture_support_training(groups, facts)
+            self.add_collection_funding(groups, facts)
         if self.maximizes_coverage:
             self.add_coverage_groups(groups, facts)
         # Collection/support training is added late. Activate remembered
@@ -3828,6 +3835,72 @@ class AutonomousStoryAgent(DualStoryAgent):
                          'are references, not proof of shop access, bag space or an executed evolution; '
                          'a missing/nonpositive purchase price is unknown, not a free stone. '
                          'No fixed cash reserve and no candidates are removed.'}
+
+    def add_collection_funding(self, groups, facts):
+        """Offer owned treasure sales even when collection has caused no defeat.
+
+        Reuse real shop interactions and sale menus, never sell ordinary
+        capture/evolution/quest resources or mutate money during planning.
+        """
+        if not self.collects_dex:
+            return
+        treasures = []
+        for name, item in ITEM_CATALOG.items():
+            quantity = facts['bag'].get(name.replace('_', '').upper(), 0)
+            unit_price = (item.get('price') or 0) // 2
+            if (quantity > 0 and unit_price > 0 and item.get('sellable')
+                    and not item.get('key_item') and 'treasure' in item.get('tags', [])):
+                treasures.append((name, item, quantity, quantity * unit_price))
+        if not treasures:
+            return
+        shops = []
+        for rule in self.index.rules:
+            if rule.effect[0] != 'shop' or rule.map not in self.visited or rule.missing(facts):
+                continue
+            route = self.client.route(facts['map'], rule.map)
+            if route.get('found'):
+                shops.append((rule, len(route.get('legs', []))))
+        if not shops:
+            return
+        for name, item, quantity, proceeds in treasures:
+            money_after = facts['money'] + proceeds
+            spending = self.item_evolution_spending_reference(facts, money_after)
+            evolutions = [{
+                **{key: value for key, value in option.items() if key not in (
+                    'affordable_before_purchase', 'affordable_after_purchase', 'purchase_removes_affordability')},
+                'affordable_before_sale': option['affordable_before_purchase'],
+                'affordable_after_sale': option['affordable_after_purchase'],
+                'sale_makes_affordable': option['affordable_before_purchase'] is False
+                    and option['affordable_after_purchase'] is True,
+            } for option in spending['held_source_options']]
+            for rule, hops in shops:
+                stock = {key.replace('_', '').upper() for key in rule.effect[1]}
+                balls = [{'ball': ball, 'quantity_held': facts['bag'].get(ball.replace('_', '').upper(), 0),
+                    'item_unit_price_reference': info['price'],
+                    'max_quantity_affordable_before_sale': facts['money'] // info['price'],
+                    'max_quantity_affordable_after_sale': money_after // info['price']}
+                    for ball, info in sorted(BALLS.items())
+                    if ball.replace('_', '').upper() in stock and info['price'] > 0]
+                context = {'optional_preparation': True, 'collecting': True, 'treasure_sale': True,
+                    'item': item, 'quantity': quantity, 'expected_proceeds': proceeds,
+                    'map': rule.map, 'map_hops': hops,
+                    'collection_funding_reference': {'money_before_sale': facts['money'],
+                        'money_after_sale_reference': money_after,
+                        'ball_purchase_options_here': balls,
+                        'held_source_evolution_options': evolutions,
+                        'scope': 'Catalog sale prices and independent affordability references, not a joint '
+                            'registration yield. Money, stones and source individuals are shared. Actual '
+                            'sale, navigation, purchase quantities, bag space and PC withdrawal still require '
+                            'normal inputs. Stone prices do not prove an accessible seller; unknown prices '
+                            'stay unknown. No money is credited by this preview.'}}
+                key = f'sell:{rule.id}:{name}'
+                group = groups.setdefault(key, {'target': ('sale', name, False), 'rules': [rule],
+                    'objectives': [], 'context': {}})
+                group['context'] = {**context, **group.get('context', {}),
+                                   'collection_funding_reference': context['collection_funding_reference']}
+                objective = 'Sell an owned treasure through a known shop to fund capture balls or held-source evolutions'
+                if objective not in group['objectives']:
+                    group['objectives'].append(objective)
 
     def add_ball_supply(self, groups, facts):
         """Expose real scripted ball sources as well as normal shop restocking.
