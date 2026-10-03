@@ -4854,6 +4854,10 @@ class AutonomousStoryAgent(DualStoryAgent):
                 # locked room farther ahead makes the full path impossible.
                 obstruction = surf_requirement(state, stage, stage_points, self.game.last_map, barriers, excluded)
                 if obstruction:
+                    # The water search targets this intermediate region;
+                    # preserve the requested destination for causal backchain
+                    # and post-crossing continuation, as Cut frontiers do.
+                    obstruction = {**obstruction, 'destination': name, 'frontier': stage}
                     self.field_requirements['Surf'] = obstruction
                     return {'result': 'blocked', 'detail': 'Water separates a reachable frontier from the final goal',
                             'field_obstruction': obstruction, 'destination': name, 'stage': stage}

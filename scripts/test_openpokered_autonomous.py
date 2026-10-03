@@ -3100,6 +3100,50 @@ class AutonomousTests(unittest.TestCase):
         self.assertEqual(result['stage'], 'Frontier')
         agent.navigate_point.assert_called_once_with('Frontier', (3, 4), tries=50)
 
+    def test_frontier_surf_keeps_final_destination_for_its_healing_parent(self):
+        from copy import deepcopy
+        import playthrough as pt
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.game = Mock(last_map='City')
+        state = {'map_name': 'City', 'player_x': 3, 'player_y': 3}
+        agent.game.st.return_value = state
+        agent.game.navigation_excluded_maps.return_value = ()
+        agent.index = None
+        agent.client = Mock()
+        agent.client.state.return_value = state
+        agent.client.route.return_value = {'legs': [{'to_map': 'Frontier'}, {'to_map': 'FarNurse'}]}
+        agent.destination_points = Mock(return_value=[(3, 4)])
+        agent.remembered_route_blocker = Mock(return_value=None)
+        agent.discover_route_prerequisites = Mock(return_value=[])
+        agent.navigate_point = Mock()
+        agent.field_requirements, agent.navigation_memory, agent.navigation_history = {}, {}, {}
+        agent.observed_barrier_maps = set()
+        goal = ('heal', 'party', True)
+        rule = Rule('heal', 'FarNurse', 'FarNurse:heal', [], [], [], goal, [])
+        agent.active = {'target': goal, 'rules': [rule], 'context': {}}
+        crossing = {'move': 'Surf', 'map': 'Shore', 'stance': [4, 5], 'direction': 'down',
+                    'landing': ['Island', 6, 7], 'destination': 'Frontier'}
+        original = deepcopy(crossing)
+        def water(_state, destination, *args):
+            return crossing if destination == 'Frontier' else None
+        with patch.object(pt, 'bfs_cross', return_value=None), patch(
+                'openpokered.autonomous_story.cut_requirement', return_value=None), patch(
+                'openpokered.autonomous_story.surf_requirement', side_effect=water):
+            result = agent.travel('FarNurse', rule, [(5, 5)])
+        self.assertEqual(result['destination'], 'FarNurse')
+        self.assertEqual(result['stage'], 'Frontier')
+        self.assertEqual(result['field_obstruction']['destination'], 'FarNurse')
+        self.assertEqual(result['field_obstruction']['frontier'], 'Frontier')
+        self.assertEqual(agent.field_requirements['Surf'], result['field_obstruction'])
+        self.assertEqual(crossing, original)  # Do not mutate the geometric search result.
+        agent.navigate_point.assert_not_called()  # Only discovered a dependency.
+        agent.remember_travel_result('FarNurse', result)
+        agent.index = Mock()
+        agent.index.satisfied.return_value = False
+        context = agent.field_prerequisite_context(agent.field_requirements['Surf'], {})
+        self.assertEqual(context['route_prerequisite_for']['goal'], goal)
+        self.assertEqual(context['route_prerequisite_for']['destination'], 'FarNurse')
+
     def test_remote_npc_does_not_hide_an_alternative_cut_route(self):
         import playthrough as pt
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)

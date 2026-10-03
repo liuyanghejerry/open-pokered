@@ -2989,3 +2989,32 @@ CONTINUE，启动时worktree干净`48d5eaec`，策略SHA256
 治疗；这一小段真实跨水不等于全程阻塞已解决。双层OpenRouter及
 原生录像继续，所有运行／存档／录像与任务临时目录均在持久
 `.artifacts`，不将CONTINUE起点60计新增、不回退或热替换。
+
+### Surf中转前沿保留最终导航目的地
+
+第十八段elapsed67.967秒的真实`travel_to:SilphCo9F`返回中转前沿
+Route7。外层结果的最终目的地正确，但`field_obstruction.destination`
+被写成Route7；已观察导航历史以SilphCo9F为键，因此父目标关联和
+跨水后的原目标续行都找不到。这是明确的记录缺陷，不是Jev没有
+Surf选择或原生Surf不能执行。
+
+修正与已有Cut中转处理保持一致：保留几何搜索选出的真实map、
+stance、direction和landing，将最终请求目的地保留为destination，
+另以frontier记录中转地图。既不执行搜索路径、消除碰撞，也不声称
+落地即抵达治疗点；只修正上下文身份，不指定去哪一个中心。
+
+新增回归在旧生产实现实际断言失败：`Frontier != FarNurse`；新实现
+覆盖几何结果不被改写、最终／中转身份分别保存、未执行任何导航、
+真实阻塞历史可关联原治疗父目标。首轮测试夹具漏导入pt而失败，
+日志保留；修正夹具后才复现上述生产记录缺陷。最终全部Python876项
+通过（18.192秒），diff检查通过。
+
+隔离`native-seafoam-silph-frontier-parent`从第十七段原生存档正常
+CONTINUE、恢复实际导航历史，真实只读几何查询重现SilphCo9F／
+Route7前沿，得到Route20 `(61,4)`→Route19 `(4,9)`的水路参考。
+最终目的地及治疗父目标正确保留为SilphCo9F，中转单列Route7；
+原生帧627未推进、源SRAM不变、图鉴仍60、无warp／模型调用，未
+执行该跨水。这是上下文回归，不能作为正式跨水或治疗证明。
+
+当前第十八段仍使用冻结的ecb策略，不热替换；新中转修正只在未来
+实际安全边界封存并独立验读后，从最新存档正常CONTINUE载入。
