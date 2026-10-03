@@ -518,7 +518,7 @@ def _cache_search_geometry(search):
 @_cache_search_geometry
 def bfs_cross(map_name, start, goal_map, goal, blocked_maps=None,
               last_map=None, allow_ledges=False, excluded_maps=(), allow_spinners=False,
-              goal_nodes=None, reachable_goals=False):
+              goal_nodes=None, reachable_goals=False, goal_regions=None):
     """BFS whose steps are plain directions. Stepping onto a warp tile
     takes the warp: the expansion replaces the landed tile with its warp
     destinations (doors fire immediately; bottom-edge exit mats fire via
@@ -529,16 +529,40 @@ def bfs_cross(map_name, start, goal_map, goal, blocked_maps=None,
 
     With reachable_goals=True, return the set of reachable target nodes,
     not just a path to the first target. This uses the same collision/warp
-    rules and does not relax water or script gates."""
+    rules and does not relax water or script gates.
+
+    goal_regions is used by bfs_cross_routes to find a shortest path to each
+    region in one search. All regions must permit the same NO_THROUGH maps;
+    otherwise combining destinations would create new transit shortcuts."""
+    if goal_regions is not None:
+        if reachable_goals or goal_nodes is not None:
+            raise ValueError('goal_regions cannot be combined with other goal modes')
+        allowed = {frozenset(n[0] for n in region if n[0] in NO_THROUGH)
+                   for region in goal_regions.values() if region}
+        if len(allowed) > 1:
+            raise ValueError('Regions must have identical NO_THROUGH permissions')
+        requests = {}
+        routes = {key: None for key in goal_regions}
+        pending = {key for key, region in goal_regions.items() if region}
+        for key, region in goal_regions.items():
+            for node in region:
+                requests.setdefault(node, []).append(key)
     blocked_maps = blocked_maps or {}
     s = (map_name, *start)
     t = (goal_map, *goal)
-    targets = set(goal_nodes) if goal_nodes is not None else {t}
+    targets = (set(requests) if goal_regions is not None else
+               set(goal_nodes) if goal_nodes is not None else {t})
     target_maps = {node[0] for node in targets}
     if not targets:
-        return set() if reachable_goals else None
+        return routes if goal_regions is not None else set() if reachable_goals else None
     reached = {s} & targets
-    if s in targets and not reachable_goals:
+    if goal_regions is not None:
+        for key in requests.get(s, []):
+            routes[key] = [s]
+            pending.discard(key)
+        if not pending:
+            return routes
+    elif s in targets and not reachable_goals:
         return [s]
     if MAPS[map_name]["tileset_name"].lower() in OUTSIDE_MAP_TILESETS:
         last_map = map_name
@@ -590,6 +614,23 @@ def bfs_cross(map_name, start, goal_map, goal, blocked_maps=None,
                     continue
                 prev[node] = (current, how)
                 if n in targets:
+                    if goal_regions is not None:
+                        selected = [key for key in requests[n] if key in pending]
+                        if selected:
+                            out = []
+                            cur = node
+                            while prev[cur] is not None:
+                                parent, step = prev[cur]
+                                out.append((cur[:3], step))
+                                cur = parent
+                            path = [s] + out[::-1]
+                            for key in selected:
+                                routes[key] = list(path)
+                                pending.remove(key)
+                            if not pending:
+                                return routes
+                        q.append(node)
+                        continue
                     if reachable_goals:
                         reached.add(n)
                         if reached == targets:
@@ -604,7 +645,35 @@ def bfs_cross(map_name, start, goal_map, goal, blocked_maps=None,
                         cur = parent
                     return [s] + out[::-1]
                 q.append(node)
-    return reached if reachable_goals else None
+    return routes if goal_regions is not None else reached if reachable_goals else None
+
+
+def bfs_cross_routes(map_name, start, regions, **options):
+    """Exact single-query paths, sharing only searches with identical gates.
+
+    regions maps caller keys to sets of (map, x, y) target nodes. Empty and
+    unreachable regions return None. Geometry caches and predecessor trees
+    live only for this synchronous search, never across state observations.
+    """
+    if any(key in options for key in ('goal_nodes', 'reachable_goals', 'goal_regions')):
+        raise ValueError('Regions define the goal mode')
+    batches = {}
+    routes = {key: None for key in regions}
+    for key, region in regions.items():
+        if not region:
+            continue
+        permissions = frozenset(n[0] for n in region if n[0] in NO_THROUGH)
+        batches.setdefault(permissions, {})[key] = region
+    for batch in batches.values():
+        first = next(iter(next(iter(batch.values()))))
+        if len(batch) == 1:
+            key, region = next(iter(batch.items()))
+            routes[key] = bfs_cross(map_name, start, first[0], first[1:],
+                goal_nodes=region, **options)
+        else:
+            routes.update(bfs_cross(map_name, start, first[0], first[1:],
+                goal_regions=batch, **options))
+    return routes
 
 
 class NavError(RuntimeError):

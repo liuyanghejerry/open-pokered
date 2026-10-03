@@ -436,6 +436,143 @@ class SearchGeometryCacheRegression(unittest.TestCase):
         self.assertEqual((nav.tile_at, nav.warp_tiles), original)
 
 
+class SharedRouteSearchRegression(unittest.TestCase):
+    def setUp(self):
+        self.name, self.closed = 'SharedRouteFixture', 'SharedRouteClosed'
+        self.data = {'width': 2, 'height': 1, 'tileset_id': 998,
+                     'tileset_name': 'Cavern', 'blocks': [0, 0],
+                     'passable_tiles': [0], 'warps': []}
+        for table, entries in ((nav.MAPS, {self.name: self.data}),
+                               (nav.CONNS, {self.name: {}}),
+                               (nav.BLOCKSETS, {998: [[0] * 16, [1] * 16]})):
+            context = patch.dict(table, entries)
+            context.start()
+            self.addCleanup(context.stop)
+
+    def compare(self, name, start, regions, **options):
+        expected = {}
+        for key, region in regions.items():
+            if region:
+                first = next(iter(region))
+                expected[key] = nav.bfs_cross(name, start, first[0], first[1:],
+                                              goal_nodes=region, **options)
+            else:
+                expected[key] = None
+        with patch.object(nav, 'bfs_cross', wraps=nav.bfs_cross) as search:
+            actual = nav.bfs_cross_routes(name, start, regions, **options)
+        self.assertEqual(actual, expected)
+        return actual, search.call_count
+
+    def test_regions_keep_exact_ties_root_overlap_empty_and_unreachable_paths(self):
+        n = self.name
+        regions = {'far': {(n, 3, 0)}, 'ties': {(n, 1, 0), (n, 0, 1)},
+                   'overlap': {(n, 3, 0)}, 'root': {(n, 0, 0)},
+                   'empty': set(), 'blocked': {(n, 3, 1)}}
+        routes, calls = self.compare(n, (0, 0), regions, blocked_maps={n: {(3, 1)}})
+        self.assertEqual(calls, 1)
+        self.assertEqual(routes['root'], [(n, 0, 0)])
+        self.assertIsNone(routes['blocked'])
+        routes['far'].append('caller mutation')
+        self.assertNotIn('caller mutation', routes['overlap'])
+
+    def test_no_through_destination_cannot_unlock_transit_for_other_queries(self):
+        n, closed = self.name, self.closed
+        self.data['warps'] = [dict(x=1, y=0, dest_map_name=closed, dest_warp_id=0),
+                              dict(x=3, y=0, dest_map_name=closed, dest_warp_id=1)]
+        building = {**self.data, 'blocks': [0, 0], 'warps': [
+            dict(x=0, y=0, dest_map_name=n, dest_warp_id=0),
+            dict(x=3, y=0, dest_map_name=n, dest_warp_id=1)]}
+        regions = {'east': {(n, 3, 0)}, 'building': {(closed, 2, 0)}}
+        with patch.dict(nav.MAPS, {closed: building}), patch.dict(nav.CONNS, {closed: {}}), \
+                patch.object(nav, 'NO_THROUGH', nav.NO_THROUGH | {closed}), \
+                patch.object(nav, 'warp_triggers', return_value=True):
+            routes, calls = self.compare(n, (0, 0), regions,
+                blocked_maps={n: {(2, 0), (2, 1)}})
+            self.assertEqual(calls, 2)
+            self.assertIsNone(routes['east'])
+            self.assertIsNotNone(routes['building'])
+            with self.assertRaisesRegex(ValueError, 'NO_THROUGH'):
+                nav.bfs_cross(n, (0, 0), n, (3, 0), goal_regions=regions)
+
+    def test_next_batch_observes_blocks_coordinate_warps_and_live_occupancy(self):
+        n = self.name
+        regions = {'near': {(n, 0, 1)}, 'far': {(n, 3, 0)}}
+        before, _ = self.compare(n, (0, 0), regions)
+        self.data['blocks'][1] = 1
+        closed, _ = self.compare(n, (0, 0), regions)
+        self.assertIsNone(closed['far'])
+        self.assertEqual(closed['near'], before['near'])
+        self.data['blocks'][1] = 0
+        with patch.dict(nav.COORDINATE_WARPS, {n: {(3, 0): (n, 0, 0)}}):
+            fallen, _ = self.compare(n, (0, 0), regions)
+            self.assertIsNone(fallen['far'])
+        occupied, _ = self.compare(n, (0, 0), regions, blocked_maps={n: {(3, 0)}})
+        self.assertIsNone(occupied['far'])
+        self.assertEqual(self.compare(n, (0, 0), regions)[0], before)
+
+    def test_empty_batches_and_conflicting_goal_modes_fail_without_search(self):
+        with patch.object(nav, 'bfs_cross', wraps=nav.bfs_cross) as search:
+            self.assertEqual(nav.bfs_cross_routes(self.name, (0, 0), {}), {})
+            self.assertEqual(nav.bfs_cross_routes(self.name, (0, 0), {'empty': set()}),
+                             {'empty': None})
+            search.assert_not_called()
+        for options in ({'goal_nodes': set()}, {'reachable_goals': True}, {'goal_regions': {}}):
+            with self.subTest(options=options), self.assertRaises(ValueError):
+                nav.bfs_cross_routes(self.name, (0, 0), {}, **options)
+
+    def test_water_relaxation_is_per_batch_and_restores_dry_geometry(self):
+        from openpokered.navigation_skills import water_planning
+        name = 'PalletTown'
+        regions = {'water': {(name, 5, 14)}, 'shore': {(name, 5, 13)}}
+        options = {'excluded_maps': set(nav.MAPS) - {name}}
+        original = nav.tile_at, nav.warp_tiles, nav.cross_step, nav.walkable_edge
+        dry, calls = self.compare(name, (5, 13), regions, **options)
+        self.assertEqual(calls, 1)
+        self.assertIsNone(dry['water'])
+        with water_planning():
+            wet, _ = self.compare(name, (5, 13), regions, **options)
+            self.assertEqual(wet['water'], [(name, 5, 13), ((name, 5, 14), 'down')])
+        self.assertEqual(self.compare(name, (5, 13), regions, **options)[0], dry)
+        self.assertEqual((nav.tile_at, nav.warp_tiles, nav.cross_step, nav.walkable_edge), original)
+
+    def test_forced_spinner_and_jump_paths_match_independent_searches(self):
+        name = 'RocketHideoutB3F'
+        endpoint, _ = nav.SPINNERS[name][(10, 13)]
+        self.compare(name, (10, 12), {'spinner': {(name, *endpoint)}, 'root': {(name, 10, 12)}},
+                     allow_spinners=True, excluded_maps=set(nav.MAPS) - {name})
+        name = 'Route3'
+        jumps = [(x, y, direction, node)
+                 for x in range(nav.MAPS[name]['width'] * 2)
+                 for y in range(nav.MAPS[name]['height'] * 2)
+                 for direction in nav.DELTA
+                 if (node := nav.ledge_step(name, x, y, direction))
+                 and nav.cross_step(name, x, y, direction) is None]
+        self.assertTrue(jumps)
+        x, y, direction, node = jumps[0]
+        routes, _ = self.compare(name, (x, y), {'ledge': {node}, 'root': {(name, x, y)}},
+                                 allow_ledges=True, excluded_maps=set(nav.MAPS) - {name})
+        self.assertEqual(routes['ledge'], [(name, x, y), (node, 'jump_' + direction)])
+
+    def test_entry_context_and_directional_warp_paths_match_independent_searches(self):
+        target = nav.warp_edges_from('VermilionDock', 14, 2, 'VermilionCity')[0]
+        self.compare('VermilionDock', (14, 1), {'ship': {target},
+                     'dock': {('VermilionDock', 14, 1)}}, last_map='VermilionCity',
+                     excluded_maps=set(nav.MAPS) - {'VermilionDock', target[0]})
+        self.compare('CeladonMartElevator', (1, 3), {
+                     'floor': {('CeladonMart1F', 5, 5)}, 'room': {('CeladonMartElevator', 1, 3)}},
+                     last_map='CeladonCity', excluded_maps=set(nav.MAPS) - {
+                         'CeladonMartElevator', 'CeladonMart1F'})
+
+    def test_search_exception_restores_geometry_and_leaves_no_batch_cache(self):
+        original = nav.tile_at, nav.warp_tiles
+        regions = {'near': {(self.name, 0, 1)}, 'far': {(self.name, 3, 0)}}
+        with patch.object(nav, 'cross_step', side_effect=ValueError('search failed')):
+            with self.assertRaisesRegex(ValueError, 'search failed'):
+                nav.bfs_cross_routes(self.name, (0, 0), regions)
+        self.assertEqual((nav.tile_at, nav.warp_tiles), original)
+        self.assertIsNotNone(self.compare(self.name, (0, 0), regions)[0]['far'])
+
+
 class NavigationRegression(unittest.TestCase):
     def pushback_game(self, changes=False):
         from copy import deepcopy

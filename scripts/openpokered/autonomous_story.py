@@ -1294,6 +1294,34 @@ class AutonomousStoryAgent(DualStoryAgent):
         barriers[facts['map']] = barriers.get(facts['map'], set()) | self.game.live_npcs(facts['map'])
         excluded = self.game.navigation_excluded_maps()
         previews = {} if previews is None else previews
+        # Ordinary scene triggers use the same observed geometry and gates.
+        # Share traversal, not candidate selection: each region retains the
+        # exact path of an independent BFS, including NO_THROUGH permissions.
+        regions = {}
+        for group in groups.values():
+            for rule in group['rules']:
+                if rule.storyline.startswith('skill:'):
+                    continue
+                points = self.destination_points(rule.map, rule)
+                key = rule.map, tuple(points)
+                if key not in previews:
+                    regions[key] = {(rule.map, *point) for point in points}
+        options = dict(last_map=self.game.last_map, allow_ledges=True, allow_spinners=True,
+                       blocked_maps=barriers, excluded_maps=excluded)
+        paths = pt.bfs_cross_routes(facts['map'], (facts['x'], facts['y']), regions, **options)
+        wet_paths = {}
+        missing = {key: region for key, region in regions.items() if region and not paths[key]}
+        if missing and any('Surf' in mon['moves'] for mon in facts.get('party', [])):
+            with water_planning():
+                wet_paths = pt.bfs_cross_routes(facts['map'], (facts['x'], facts['y']), missing, **options)
+        for key in regions:
+            path = paths[key] or wet_paths.get(key)
+            requires_surf = bool(not paths[key] and path)
+            prerequisites = surf_path_prerequisites(path, facts.get('flags', {})) if requires_surf else []
+            previews[key] = {'map': key[0], 'tile_route_found': bool(path) and not prerequisites,
+                'steps': len(path)-1 if path and not prerequisites else None,
+                'requires_surf': requires_surf, 'unmet_native_field_prerequisites': prerequisites,
+                'scope': 'this trigger region, using known geometry and observed obstacles; available Surf can be used en route'}
         rule_routes = {}
         evolution_training_routes = None
         for group in groups.values():
@@ -1377,26 +1405,6 @@ class AutonomousStoryAgent(DualStoryAgent):
                     continue
                 points = self.destination_points(rule.map, rule)
                 key = rule.map, tuple(points)
-                if key not in previews:
-                    found = None
-                    requires_surf = False
-                    def search():
-                        return pt.bfs_cross(facts['map'], (facts['x'], facts['y']), rule.map, points[0],
-                            last_map=self.game.last_map, allow_ledges=True, allow_spinners=True,
-                            blocked_maps=barriers, excluded_maps=excluded,
-                            goal_nodes={(rule.map, *p) for p in points}) if points else None
-                    path = search()
-                    if not path and any('Surf' in m['moves'] for m in facts.get('party', [])):
-                        with water_planning():
-                            path = search()
-                        requires_surf = bool(path)
-                    native_prerequisites = surf_path_prerequisites(path, facts.get('flags', {})) if requires_surf else []
-                    if path and not native_prerequisites:
-                        found = len(path)-1
-                    previews[key] = {'map': rule.map, 'tile_route_found': found is not None,
-                                     'steps': found, 'requires_surf': requires_surf,
-                                     'unmet_native_field_prerequisites': native_prerequisites,
-                                     'scope': 'this trigger region, using known geometry and observed obstacles; available Surf can be used en route'}
                 if previews[key] not in routes:
                     routes.append(previews[key])
                 rule_routes[id(rule)] = previews[key]
