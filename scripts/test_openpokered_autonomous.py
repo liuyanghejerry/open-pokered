@@ -4792,6 +4792,77 @@ class AutonomousTests(unittest.TestCase):
         self.assertEqual(moves[0]['pp'], 20)
         self.assertIn('No survival guarantee', pika['context']['scope'])
 
+    def test_uncatchable_historic_battle_does_not_offer_capture_support_or_training(self):
+        agent, facts = self.capture_retrieval_fixture()
+        agent.maps['PokemonTower6F'] = {}
+        retreat = agent.capture_retreats.pop('PowerPlant:Zapdos')
+        retreat.update(map='PokemonTower6F', species='Marowak')
+        retreat['retreat_observation']['enemy'].update(species='Marowak', level=30)
+        agent.capture_retreats['PokemonTower6F:Marowak'] = retreat
+        before = json.loads(json.dumps(agent.capture_retreats))
+        groups = {}
+        agent.add_capture_support_retrieval(groups, facts)
+        agent.add_capture_support_training(groups, facts)
+        self.assertEqual(groups, {})
+        evidence = agent.capture_source_evidence('MAROWAK', 'PokemonTower6F')
+        self.assertIs(evidence['catchable_source_indexed'], False)
+        self.assertEqual(evidence['methods'], [])
+        self.assertFalse(agent.static_capture_deferred('Marowak', 'PokemonTower6F', facts))
+        self.assertEqual(agent.capture_retreats, before)
+
+    def test_capture_preparation_keeps_other_indexed_sources_and_unknown_maps(self):
+        agent, facts = self.capture_retrieval_fixture()
+        agent.maps['PowerPlant'] = {}
+        agent.maps['PokemonTower6F'] = {}
+        ghost = json.loads(json.dumps(agent.capture_retreats['PowerPlant:Zapdos']))
+        ghost.update(map='PokemonTower6F', species='Marowak')
+        ghost['retreat_observation']['enemy'].update(species='Marowak', level=90)
+        agent.capture_retreats['PokemonTower6F:Marowak'] = ghost
+        groups = {}
+        agent.add_capture_support_retrieval(groups, facts)
+        agent.add_capture_support_training(groups, facts)
+        self.assertTrue(groups)
+        for group in groups.values():
+            context = group['context']
+            self.assertNotIn('Marowak', context.get('required_for', []))
+            self.assertTrue(all(row['species'] == 'Zapdos' for row in
+                                context.get('observed_failed_capture_setups', [])))
+        self.assertEqual(groups['prepare:capture-support:Gloom']['context'][
+            'level_gap_to_highest_observed_target'], 26)
+        self.assertIs(agent.capture_source_evidence('ZAPDOS', 'PowerPlant')[
+            'catchable_source_indexed'], True)
+        unknown = agent.capture_source_evidence('Marowak', 'UnindexedMap')
+        self.assertIsNone(unknown['catchable_source_indexed'])
+
+    def test_source_evidence_preserves_wild_marowak_and_other_registration_methods(self):
+        agent, _facts = self.capture_retrieval_fixture()
+        agent.maps['VictoryRoad2F'] = {'wild': {'red': {'grass': {
+            'mons': [{'species': 'Marowak', 'level': 40}]}}}}
+        evidence = agent.capture_source_evidence('MAROWAK', 'VictoryRoad2F')
+        self.assertIs(evidence['catchable_source_indexed'], True)
+        self.assertEqual(evidence['methods'][0]['method'], 'grass')
+        self.assertTrue(any(method['method'] == 'evolution' for method in
+                            agent.complete_collection_graph()['Marowak']))
+
+    def test_unsupported_capture_source_remains_visible_as_history_not_preparation(self):
+        agent, facts = self.capture_retrieval_fixture()
+        agent.maps['PokemonTower6F'] = {}
+        retreat = agent.capture_retreats.pop('PowerPlant:Zapdos')
+        retreat.update(map='PokemonTower6F', species='Marowak',
+                       preparation={'balls': {}, 'party': []})
+        agent.capture_retreats['PokemonTower6F:Marowak'] = retreat
+        agent.capture_retreat_totals = {'PokemonTower6F:Marowak': {'menu_escapes': 1}}
+        agent.completed_route_context = Mock(return_value=None)
+        agent.dex_progress = Mock(return_value={'owned': 0})
+        state = {}
+        agent.augment_strategy_state(state, facts)
+        self.assertEqual(state['capture_retreats_requiring_preparation'], [])
+        row = state['capture_retry_evidence'][0]
+        self.assertEqual(row['species'], 'Marowak')
+        self.assertIs(row['source_evidence']['catchable_source_indexed'], False)
+        self.assertEqual(row['recorded_history'], {'menu_escapes': 1})
+        self.assertEqual(row['retreat_observation'], retreat['retreat_observation'])
+
     def test_stored_capture_support_keeps_distinct_slots_and_healing_cost(self):
         agent, facts = self.capture_retrieval_fixture()
         facts['stored_pokemon'].append({**facts['stored_pokemon'][0], 'index': 12, 'level': 10,

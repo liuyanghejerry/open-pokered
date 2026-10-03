@@ -942,6 +942,7 @@ class AutonomousStoryAgent(DualStoryAgent):
             # outcome visible even when it no longer blocks the retry.
             preparation = capture_preparation(facts.get('party', []), facts.get('bag', {}), facts)
             state['capture_retry_evidence'] = [{**row,
+                'source_evidence': self.capture_source_evidence(row['species'], row['map']),
                 'recorded_history': getattr(self, 'capture_retreat_totals', {}).get(key, {}),
                 'history_scope': 'Recorded menu escapes in this checkpoint lineage only; ball costs cover inventory_observed_retreats, not unobserved attempts. Not a prediction of retry success.',
                 'preparation_changes_since_attempt': capture_preparation_improvements(
@@ -1903,7 +1904,31 @@ class AutonomousStoryAgent(DualStoryAgent):
     def same_species(left, right):
         return str(left).replace('_', '').upper() == str(right).replace('_', '').upper()
 
+    def capture_source_evidence(self, species, name):
+        """A historic battle is not evidence of a catchable producer.
+
+        Use the same public acquisition graph as collection planning. Unknown
+        maps stay unknown; an indexed source does not certify access, inventory,
+        source availability or capture success. Never discard the old history.
+        """
+        known = name in getattr(self, 'maps', {})
+        methods = []
+        if known:
+            for target, entries in self.complete_collection_graph().items():
+                if self.same_species(target, species):
+                    methods = [entry for entry in entries if entry.get('map') == name
+                               and entry['method'] in ('grass', 'water', 'safari', 'fishing', 'static')]
+                    break
+        return {'catchable_source_indexed': bool(methods) if known else None,
+                'methods': methods,
+                'scope': 'Public Red acquisition producers at the recorded map, not proof of '
+                         'current access, remaining source, resources or a successful retry. '
+                         'An unsupported battle cannot justify capture preparation here; '
+                         'other maps or evolution may still register the species. Unknown maps remain unknown.'}
+
     def static_capture_deferred(self, species, name, facts):
+        if self.capture_source_evidence(species, name)['catchable_source_indexed'] is False:
+            return False  # Do not defer a legal alternative for an uncatchable historic battle.
         previous = next((row for row in getattr(self, 'capture_retreats', {}).values()
                          if row['map'] == name and self.same_species(row['species'], species)), None)
         return bool(previous and not capture_preparation_improvements(
@@ -3621,9 +3646,11 @@ class AutonomousStoryAgent(DualStoryAgent):
         targets = []
         for retreat in getattr(self, 'capture_retreats', {}).values():
             enemy = (retreat.get('retreat_observation') or {}).get('enemy') or {}
-            if retreat['species'] not in owned and enemy.get('level'):
+            source = self.capture_source_evidence(retreat['species'], retreat['map'])
+            if (retreat['species'] not in owned and enemy.get('level')
+                    and source['catchable_source_indexed'] is not False):
                 targets.append({'species': retreat['species'], 'map': retreat['map'],
-                                'observed_level': enemy['level']})
+                                'observed_level': enemy['level'], 'source_evidence': source})
         if not targets:
             return
         rules = [rule for rule in self.index.by_effect.get(('pc', 'storage', True), [])
@@ -3676,10 +3703,13 @@ class AutonomousStoryAgent(DualStoryAgent):
         for retreat in getattr(self, 'capture_retreats', {}).values():
             observation = retreat.get('retreat_observation') or {}
             enemy = observation.get('enemy') or {}
+            source = self.capture_source_evidence(retreat['species'], retreat['map'])
             if (retreat['species'] not in owned and enemy.get('level')
+                    and source['catchable_source_indexed'] is not False
                     and any(mon.get('hp') == 0 for mon in observation.get('party') or [])):
                 failures.append({'map': retreat['map'], 'species': retreat['species'],
-                                 'level': enemy['level'], 'observation': observation})
+                                 'level': enemy['level'], 'observation': observation,
+                                 'source_evidence': source})
         if not failures:
             return
         highest = max(row['level'] for row in failures)
