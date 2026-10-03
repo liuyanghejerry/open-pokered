@@ -2606,3 +2606,10 @@ worktree为干净`e67743a6`，实际策略SHA256
 私有native仍为`c5c3ac58`。没有回退、存档编辑或热替换；OpenRouter
 Jev双层决策和原生录像继续，CONTINUE初始59列表不计新增。所有当前
 运行及诊断保持持久目录，不使用`/tmp`。
+
+第十三段elapsed55.102起的真实策略请求已携带塔幽灵
+`catchable_source_indexed=false`、methods为空的历史来源证据；两组首轮
+候选及最终比较均未再提供该旧记录的捕获支援取回。随后Jev实际取回
+Grimer准备合法Muk进化，elapsed112.277完成PC操作。这里只证明新因子
+进入真实决策并开始下一准备动作，独立封存数量仍为59，不把取回或
+CONTINUE初始列表当作新增登记，也不声称Muk已完成。
