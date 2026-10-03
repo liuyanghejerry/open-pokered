@@ -2808,6 +2808,9 @@ Safari无经验门槛；每张地图仍取自己的最短路径、原排序和�
 15.474→11.184秒，下降27.7%。首组预试与测试并发，未纳入性能结论。
 报告`shared-training-search-frozen60-comparison.json`仅证明冻结状态
 等价性及测量，不保证在线延迟、不代表新捕获或完整合法来源验收。
+同存档附加cProfile只读诊断中，BFS从103次降至64次，训练地点方法
+仍仅调用一次，耗时8.253→0.386秒，全部决策证据仍相同；剖析开销
+不能与上述未剖析墙钟测量混用。报告`formal60-training-batch-profile`。
 
 第十六段此时仍冻结7d策略，已实际购买UltraBall2及GreatBall3、拿到
 GoldTeeth，并通过正常野生战将Gloom升至24级、Charizard升至67级。
