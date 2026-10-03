@@ -4212,3 +4212,45 @@ recovered-fossil-frontier-20261004/{report,facts,groups,normal-party-observation
 `7f5011d93c4c7674c8fe2730d834847f26995edac9d34fd48fe2869dda88451f`。
 逐项读取字节/哈希通过，无凭据/二进制/重复MP4，原件全部保留。
 receipt为native-recovery-delta-backup-receipt-20261004.json/log。
+
+### 修复首次真实部署：第31段Kabuto领取，独立64种成立
+
+第31段20261004-035502-seed42从最新第30段3e4862正常CONTINUE，启动
+干净b61d3b9f、policy20287459、autonomous_story8341b6a4／runner5738db9a，
+冻结native6d8e和gfx21e0均实际匹配；相同OpenRouter双层Jev1.13.0及
+原调用/动作/墙钟/帧预算。没有热替换、回退、里程碑路线、warp或注入。
+33.316秒Jev自主选择STILL_REVIVING=false准备，34.900正常到Island
+触发load；61.808自主选择register:Kabuto，63.501正常返回实验室，
+实际菜单/对话领取后65.180秒/frame1618原生63→64，seen102→103，
+唯一新增Kabuto，真实gift、队伍6不变、PC40→41。不是独立夹具64。
+共享准备候选的advances标注Prepare Aerodactyl，实际effect确为
+清等待旗标，不能据此宣称Aerodactyl收集或修改该次模型输出。
+
+92.293秒Jev继续选择Exeggcute36捕获支援训练，114.602秒实际mansion
+训练完成后合作请求保存。首次请求未满足所检查的trace边界，断言拒绝、
+没有发送信号，保留失败日志；v2确认已完成训练边界，仅向控制器
+90602发SIGINT，现有handler按下一命令边界退出（没有native90615
+信号、第二连接或强杀）。summary success=false／StoryStopped:
+interrupted_at_command_boundary，但safe/最终观察/development checkpoint
+全通过，18动作、策略12/动作42调用，仍64种。终点Mansion1F(4,14)、
+frame17093、资金14、零球；Exeggcute35 XP57263、Charizard73 XP394893，
+保留真实队伍顺序、伤害/PP消耗、两次历史Zapdos败退成本及Kabuto领取。
+
+最新真实SRAM
+`a21cecfd54e61897f68fe49aa2c1f9f7dd33be4209171a375ce7b2843e6f81c7`，
+冻结6d独立schema4普通CONTINUE verified=true，PC逐槽Kabuto、party
+HP/PP/经验/招式、资金/物品/旗标与原终点一致；源hash保持。证明
+formal64-kabuto-independent-continue-20261004.json/log。MP4封口788423
+字节／71.250秒／4275编码帧，全4275解码；31段时钟/登记守恒通过，
+17896.783331秒／329261行／64唯一登记，30次resume初始新增均空，
+closed-formal64-kabuto-lineage-clock-20261004.json/log。原native与控制器
+已实际退出，无第二连接读活游戏。这是策略验证链真实64，不追认
+早期幽灵访问，也不是最终合法NEW GAME、124种或最终合片交付。
+
+最新64种SRAM/sidecar/trace/manifest/summary/终点观察、独立schema4与
+时钟证明、合作请求成功/失败记录另备份worktree外18项／459461字节，
+verified64-kabuto-20261004.tar.gz，SHA256
+`a1d64608824669da7fa26afd5cb1848b3835eb075988de85de3b9a5ce5018249`。
+逐项字节/哈希通过，原件保留，无凭据/重复MP4/binary。父30备份保持
+独立，不把其未保存控制器统计补成完整数值。receipt：verified64-
+kabuto-backup-receipt-20261004.json/log。
