@@ -2835,9 +2835,15 @@ class AutonomousStoryAgent(DualStoryAgent):
             # warp-connected rooms as part of the corridor.
             corridor.update(warp['dest_map_name'] for name in list(corridor)
                 for warp in pt.MAPS.get(name, {}).get('warps', []) if warp.get('dest_map_name'))
-            if route.get('found') and blockage['map'] not in corridor:
+            if (route.get('found') and blockage['map'] not in corridor
+                    and not blockage.get('blocking_npcs')
+                    and not blockage.get('blocking_trainers')):
                 # A resettable puzzle behind us is not a prerequisite for
-                # the remaining route. Keep the memory for a later return.
+                # the remaining route. But map topology can omit several
+                # interior rooms (e.g. a cave exit), so it cannot disprove an
+                # actually observed actor blocking the live goal. Fresh exact
+                # access and already-won trainer flags still supersede that
+                # memory above/below; no fixed route is imposed.
                 continue
             for text_id in blockage.get('blocking_trainers', []):
                 config = next((n for n in self.index.configs.get(blockage['map'], {}).get('npcs', [])

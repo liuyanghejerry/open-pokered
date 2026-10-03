@@ -2482,6 +2482,60 @@ class AutonomousTests(unittest.TestCase):
                     goal_nodes={('Road', 10, 104)})
             self.assertEqual(agent.navigation_history, {'old': blockage})  # Preserve history for a return.
 
+    def nested_npc_corridor_fixture(self):
+        from types import SimpleNamespace
+        from openpokered.story_rules import literal
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        target = ('flag', 'BOSS', True)
+        flag = 'EVENT_BEAT_DEEP_GATE_TRAINER'
+        blockage = {'map': 'DeepGate', 'destination': 'Gym', 'goal': target,
+                    'blocking_trainers': [2], 'blocking_npcs': [2]}
+        program = [{'Call': {'callee': 'getFlag', 'args': [literal(flag)]}}]
+        agent.index = SimpleNamespace(rules=[], npc_toggles={},
+            configs={'DeepGate': {'npcs': [{'id': 2, 'talk': 'talkTrainer'}]}},
+            stories={'DeepGate:talkTrainer': {'program': program}},
+            satisfied=lambda goal, facts: False)
+        agent.maps, agent.field_requirements, agent.navigation_memory = {}, {}, {}
+        agent.navigation_history, agent.navigation_blockage = {'old': blockage}, None
+        agent.game = SimpleNamespace(stationary_npcs={})
+        agent.remembered_goal_reachable = Mock(return_value=False)
+        agent.client = Mock()
+        agent.client.route.return_value = {'found': True,
+                                           'legs': [{'to_map': 'Road'}, {'to_map': 'Gym'}]}
+        geometry = {'Road': {'warps': [{'dest_map_name': 'Entrance'}]},
+                    'Entrance': {'warps': [{'dest_map_name': 'DeepGate'}]}}
+        groups = {'boss': {'target': target, 'rules': [], 'objectives': []}}
+        return agent, groups, geometry, flag
+
+    def test_map_only_corridor_cannot_discard_an_observed_nested_trainer_blocker(self):
+        import playthrough as pt
+        agent, groups, geometry, flag = self.nested_npc_corridor_fixture()
+        with patch.object(pt, 'MAPS', geometry):
+            agent.add_navigation_groups(groups, {'map': 'Town', 'flags': {}})
+        added = groups['trainer:' + flag]
+        self.assertEqual(added['target'], ('flag', flag, True))
+        self.assertEqual(added['rules'][0].triggers, ['npc:2'])
+        self.assertEqual(added['context']['observed_navigation_blockage']['map'], 'DeepGate')
+
+    def test_nested_npc_memory_does_not_override_fresh_access_or_a_won_trainer(self):
+        import playthrough as pt
+        for reachable, defeated in ((True, False), (False, True)):
+            with self.subTest(reachable=reachable, defeated=defeated):
+                agent, groups, geometry, flag = self.nested_npc_corridor_fixture()
+                agent.remembered_goal_reachable.return_value = reachable
+                with patch.object(pt, 'MAPS', geometry):
+                    agent.add_navigation_groups(groups, {'map': 'Town', 'flags': {flag: defeated}})
+                self.assertEqual(list(groups), ['boss'])
+
+    def test_map_only_corridor_still_defers_unrelated_old_puzzles_without_actor_evidence(self):
+        import playthrough as pt
+        agent, groups, geometry, _ = self.nested_npc_corridor_fixture()
+        agent.navigation_history['old'].pop('blocking_trainers')
+        agent.navigation_history['old'].pop('blocking_npcs')
+        with patch.object(pt, 'MAPS', geometry):
+            agent.add_navigation_groups(groups, {'map': 'Town', 'flags': {}})
+        self.assertEqual(list(groups), ['boss'])
+
     def test_remembered_route_requires_trigger_not_generic_entry_evidence(self):
         import playthrough as pt
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
