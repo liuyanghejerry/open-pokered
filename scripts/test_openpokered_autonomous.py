@@ -6553,6 +6553,72 @@ class AutonomousTests(unittest.TestCase):
         self.assertEqual(biased['target'], ('level', 'leader', 21 + LEVEL_PREFERENCE_MARGIN))
         self.assertEqual(biased['context']['target_level'], 21 + LEVEL_PREFERENCE_MARGIN)
 
+    def test_story_training_reports_exact_observed_xp_and_conditional_site_effort(self):
+        from openpokered.story_agent import DualStoryAgent
+        agent, facts, groups = self.preparation_agent('none')
+        mon = facts['party'][0]
+        mon['experience'] = level_experience(mon['species'], mon['level']) + 101
+        table = {'encounterRate': 25, 'mons': [{'species': 'Rattata', 'level': 10}] * 10}
+        agent.maps['Route2']['wild'] = {'red': {'grass': table}}
+        navigation = {'map': 'Route2', 'tile_route_found': True, 'steps': 17}
+        agent.training_navigation = {'Route2': navigation}
+        with patch.object(DualStoryAgent, 'strategy_groups', return_value=groups):
+            training = agent.strategy_groups(facts)['prepare:train']
+        cost = training['context']['training_cost']
+        self.assertEqual(cost['remaining_experience_min'],
+                         level_experience(mon['species'], 21) - mon['experience'])
+        self.assertEqual(cost['remaining_experience_min'], cost['remaining_experience_max'])
+        example = training['context']['training_effort_examples'][0]
+        self.assertEqual(example['map'], 'Route2')
+        self.assertEqual(example['participants'], 1)
+        self.assertEqual(example['navigation'], navigation)
+        self.assertGreater(example['estimated_victories_max'], 0)
+        self.assertIn('not a guaranteed battle count', example['scope'])
+        self.assertIn('healing', example['scope'])
+        self.assertIn('not a required level', training['context']['training_completion_scope'])
+        self.assertEqual(training['target'], ('level', 'leader', 21))
+        self.assertEqual(training['rules'][0].map, 'Route2')
+        self.assertEqual(training['context']['training_battler'], mon)
+
+    def test_story_training_unknown_xp_stays_bounded_and_missing_yield_is_not_zero_cost(self):
+        from openpokered.story_agent import DualStoryAgent
+        for experience in (None, -1, True, '3000'):
+            with self.subTest(experience=experience):
+                agent, facts, groups = self.preparation_agent('none')
+                facts['party'][0]['experience'] = experience
+                with patch.object(DualStoryAgent, 'strategy_groups', return_value=groups):
+                    context = agent.strategy_groups(facts)['prepare:train']['context']
+                cost = context['training_cost']
+                self.assertNotIn('observed_experience', cost)
+                self.assertLess(cost['remaining_experience_min'], cost['remaining_experience_max'])
+                self.assertGreater(cost['remaining_experience_min'], 0)
+                self.assertEqual(context['training_effort_examples'], [])
+
+    def test_story_training_cost_belongs_to_capable_member_not_weak_capture_lead(self):
+        from openpokered.story_agent import DualStoryAgent
+        agent, facts, groups = self.preparation_agent('none')
+        battler = facts['party'][0]
+        battler['level'] = 20
+        battler['experience'] = level_experience('Charmeleon', 20) + 73
+        facts['party'] = [
+            {'species': 'Pidgey', 'level': 3, 'experience': 57, 'hp': 16, 'max_hp': 16,
+             'status': 'None', 'moves': ['Gust'], 'pp': [35]}, battler]
+        with patch.object(DualStoryAgent, 'strategy_groups', return_value=groups):
+            context = agent.strategy_groups(facts)['prepare:train']['context']
+        self.assertEqual(context['training_battler'], battler)
+        self.assertEqual(context['training_cost']['remaining_experience_min'],
+                         level_experience('Charmeleon', 21) - battler['experience'])
+
+    def test_story_training_effort_does_not_upgrade_missing_navigation_to_access(self):
+        from openpokered.story_agent import DualStoryAgent
+        agent, facts, groups = self.preparation_agent('none')
+        agent.maps['Route2']['wild'] = {'red': {'grass': {
+            'encounterRate': 20, 'mons': [{'species': 'Rattata', 'level': 8}] * 10}}}
+        with patch.object(DualStoryAgent, 'strategy_groups', return_value=groups):
+            example = agent.strategy_groups(facts)['prepare:train']['context']['training_effort_examples'][0]
+        self.assertIsNone(example['navigation'])
+        self.assertIn('not proof of arrival', example['access_scope'])
+
     def test_type_preference_adds_super_effective_options_to_the_battle_context(self):
         context = self.preparation_groups('type')['youngster']['context']
         self.assertEqual(context['type_options']['Bellsprout']['types'], ['Grass', 'Poison'])

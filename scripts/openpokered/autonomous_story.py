@@ -3982,6 +3982,15 @@ class AutonomousStoryAgent(DualStoryAgent):
                                                          for name in sites},
                                     'observed_defeats': self.battle_defeats[-3:],
                                     'training_battler': battler,
+                                    'training_cost': evolution_training_cost(battler, target_level),
+                                    'training_effort_examples': [
+                                        {'map': name, **effort,
+                                         'navigation': getattr(self, 'training_navigation', {}).get(name),
+                                         'access_scope': 'Current encounter-terrain path preview when present, not proof of arrival or earned experience'}
+                                        for name in sites
+                                        if (effort := evolution_training_effort(battler, target_level,
+                                            ((self.maps[name].get('wild') or {}).get('red') or {}).get('grass')))],
+                                    'training_completion_scope': 'Target is a preparation proposal, not a required level or guaranteed victory. Recovery or travel can interrupt it before the target is reached; compare the observed XP gap with recovery and other attainable goals.',
                                     'upcoming_moves': data.species_data(battler['species']).get('learnset', [])},
                     }
         if self.collects_dex:

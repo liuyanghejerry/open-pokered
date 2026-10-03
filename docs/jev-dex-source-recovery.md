@@ -4539,3 +4539,56 @@ worktree外新备份verified4-checkpoint-and-solo-choice-fix-20261004.tar.gz：
 逐项字节／SHA核验通过，不含凭据／native binary／重复MP4，原件全保留。
 下一段仅从最新412bfd合法源加载新修正，不回退、热替换、固定路线或
 另开NEW GAME；Goal active，真实124／最终全程MP4／图鉴大盘仍未完成。
+
+## 2026-10-04：合法第3段推进到12种与剧情训练投入参照
+
+第3段 `20261004-050409-seed42` 从最新合法4种安全源412bfd正常CONTINUE，
+实际加载468cf1a6／policy52f8f2ee，冻结native6d8e／gfx21e0；双层
+OpenRouter Jev1.13.0、seed42、原预算及4×原生录像不变。217.656秒
+正常击败Misty，第二枚徽章取得。284.226秒Rattata、290.342秒Ekans，
+后续Route24实际捕获Abra、Weedle、Oddish，519.910秒正常进化Kakuna，
+561.107秒Route4捕获Spearow，656.234秒普通经验进化Beedrill。第3段
+新增8个登记，合法链实时12 owned／37 seen；resume初始4不算新增。
+Helix物品及训练提案不算图鉴登记，旧prototype64不继承。
+
+这是独占controller的实际trace观察，不是新的独立验读安全检查点。
+首次治疗边界停止守卫发现trace已进入后续操作，明确拒绝且未发送
+信号；后续只可核验身份并请求既有合作式controller停止，不能杀
+native、开启第二连接或从旧4种存档覆盖本段新进展。当前MP4仍开放，
+最新独立验证安全源仍为第2段412bfd；最终124、全程合片与完成大盘
+均未交付。真实败退、资金／PP消耗和训练中断全部保留。
+
+### 给Jev比较训练、恢复和推进剧情所需的代价，而非固定训练路线
+
+实际早期prepare:train提议27／29／30级，PP恢复可以在到达提议等级
+之前中断；本段仍正常升级并击败Misty，并无证据证明训练死循环。
+原剧情训练context提供目标级别、训练成员、野生表与败退史，但未
+量化普通get_party实际经验到目标等级的缺口。现在复用现有条件成本
+函数，增加training_cost、training_effort_examples与明确的提案范围。
+选定的可战斗成员拥有成本，不误用弱捕获首位；未知／非法经验保留
+上下界，缺野生表省略估计而不假设零成本。条件估计注明单个未交换
+存活参与者、槽位加权野生经验，不包含旅行、战斗回合及治疗，不
+保证野战数量、到达或胜利。训练点路径只读当前导航证据，缺失／
+false不提升为可达。目标只是准备选项，不强制达到目标才推进剧情。
+所有候选、规则与原context不变，仍由Jev选择，不热替换当前进程。
+
+4项新回归旧版7个参数化ERROR；修复后AutonomousTests 411PASS／
+6.948秒，完整Python discover **1006PASS／20.063秒**，diff-check通过。
+无Rust／画面修改、原生构建或新增m49声明。此技能驱动的结构化状态
+补充仅解释既有候选，不注入资源、改变偏好或固定Brock→Misty路径。
+
+### 同一安全源完整原生frontier，只有三个context键发生变化
+
+第2段已独立核验的4种安全SRAM上，旧468cf1a6整份agent／当前修改
+各自隔离普通CONTINUE，载入全部12目标及真实导航、败退、捕获审计
+记忆，零模型／CONTINUE后输入。facts、party、route requirements及
+原生故事AST完全一致，627帧前后不动，source保存未改。完整24候选
+仅prepare:train新增上述三键，去除三键后全部候选JSON严格同。
+Charmeleon25 XP13033→目标27精确缺2211 XP；条件野战期望Route24
+23胜／236遇敌检查，路径71步已找到；Route4 29胜／372检查，路径
+40步已找到；Route5 18胜／308检查，但当前tile_route_found=false，
+不能以更高经验收益称为立即可执行。旧12.332284秒／新12.351339秒，
+不宣称规划加速或实际胜利／收集收益。这不是第3段实时状态重现。
+证据legal2-story-training-frontier-comparison-20261004.json/log及完整
+旧／新profile保留在持久checkpoint-safety目录。本轮12种真实收集
+仍来自已加载的旧468策略，不能归因于尚未部署的训练成本补充。
