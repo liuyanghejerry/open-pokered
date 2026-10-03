@@ -3117,3 +3117,92 @@ CONTINUE，启动时worktree干净`d8259cce`，策略SHA256
 已进入实际请求：elapsed18.395秒库50→40、19.605秒50→30；不热
 替换、不回退，起点60不计新增。OpenRouter Jev双层决策及持久
 目录原生录像继续，仍待真正124与最终来源／全程交付验收。
+
+### 捕获菜单在FIGHT之前提供原生活跃招式预览
+
+第二十段真实发电厂Zapdos战提供了新的失败证据：目标50级、HP155，
+未成功削血或施加状态，本段消耗UltraBall5／GreatBall2。菜单已提供
+FIGHT、支援换人、状态准备及原生认证的RUN，不是缺少攻击／状态
+能力。Exeggcute实际Hypnosis PP20→19，目标状态仍None；其他成员
+倒下只记录实际HP，不推定具体致因。elapsed264.028秒真实菜单逃离
+且未登记，owned仍60，不把逃离或保留有限来源当作捕获成功。
+
+旧native只在已经打开招式菜单后提供单次命中伤害范围，Jev在更早的
+FIGHT／球／换人比较中看不到这些数据。debug_state_snapshot现在
+从当前battle_state活跃成员生成全部四槽player_move_previews，包含
+实际PP、Disable与现有原生纯函数的direct_hit_preview；不读旧菜单
+缓存，不替模型选招，不改伤害公式、随机数、战斗输入或画面。
+
+捕获菜单仅在真实原生观察包含该列表时，把它加入原FIGHT描述及
+完整battle证据。普通／暴击范围与当前target_hp用于比较削血和击倒
+风险，只有正PP且未禁用／非None招式可用。false只排除该条件下的
+单次直接命中击倒，不保证活到出手、不覆盖对手／失败／残余伤害；
+null为不支持或不可用，绝不是零伤害或安全认证。预览不适用于
+尚未换入的成员；旧native没有列表时不伪造数据。原FIGHT／球／RUN／
+换人／药品候选、绑定及选择预算保持不变。
+
+新增两项Python、两项应用库回归。旧生产实现的缺失字段失败日志
+保留。首次新Rust全测119通过／1失败是测试夹具误认74级Slash必然
+可击倒；修正为Flamethrower并明确断言普通上限低于HP、暴击上限
+达到HP后才通过，不称为生产引擎故障。最终Python883项通过
+（19.883秒）、应用库120项通过（30.08秒）、核心2613项单测及全部
+integration测试通过、release debug-server构建通过（51.97秒）；
+核心doctest有一项原有ignored。播放器内联JavaScript及diff检查通过。
+
+两版本使用同一个健康第十九段存档的隔离副本，正常CONTINUE后
+显式debug warp／wild fixture准备Zapdos，并以普通A输入推进开场。
+首次夹具仅等待而未推进开场导致超时，失败日志保留。修正后的
+旧c5与新native在PlayerMenu frame926完整运行时哈希均为
+`b4c6beab2aff019d`，读取观察／构造请求前后完全一致，源SRAM未改。
+所有候选ID、其他候选值及原world／FIGHT证据相同，仅增加新字段。
+此隔离目标HP152不是第二十段的155：Cut普通51–60／暴击97–115，
+Slash普通71–84／暴击136–160，Flamethrower普通97–115／暴击187–220；
+Dig不支持返回null。没有模型调用、实际菜单选择或新增登记，不能
+据此宣称Jev行为或捕获率已经改善。
+
+新native SHA256
+`dadeb192c97478a609403c394d3b0ba19563eb08186801c739bdb68e2d990ce7`，
+game.rs源SHA256
+`252778fc2db0a9a4ac5be155e74e0bcd7e03a353fb0c5bc892d4188188f65fad`，
+judgments源SHA256
+`88e5a5c1b6c8849083209205f6a5dec428d1274f5b43dab8a10ebd8f6c537b1b`；
+autonomous源仍e3eb。持久隔离fresh-m49-capture-turn-preview使用该
+冻结binary，从NEW GAME seed42／speed0真实输入跑完m01–m49。
+m49 Hall of Fame从0→1，frame769307经过TheEnd、769924回title，
+最终770234到PalletTown；独立新进程正常CONTINUE frame620仍计数1、
+PalletTown `(5,6)`、资金29948。此为里程碑驱动引擎回归，不是Jev
+正式图鉴收集，夹具owned5不计入正式60。
+
+### 第二十段因Key总额度结束，最新检查点保留
+
+第二十段在elapsed440.122秒的最终两候选策略请求返回OpenRouter
+HTTP403 `Key limit exceeded (total limit)`，不是上下文溢出或引擎崩溃。
+只读GET `/api/v1/key`在2026-10-03T12:03:24.694295Z返回HTTP200，
+当前Key limit10、usage10.022462772、limit_remaining0、limit_reset=null。
+这只证明Key总额度耗尽，不判断账户余额；未修改额度、凭据或
+供应商，也未用代码代替Jev继续。新招式预览尚未进入正式模型请求，
+额度恢复前不反复启动失败运行。
+
+终止reason=`strategy:service_unavailable`、success=false，严格原生
+安全与最终观察均通过，development_checkpoint=true；18动作、策略
+90／动作50调用。最新正常存档保留Route10 `(15,4)`、60 owned／99 seen、
+六徽章、资金953、UltraBall5／GreatBall11、SecretKey1、队伍6／PC37。
+Charizard／Muk／Gloom／Exeggcute实际HP0，Snorlax24／Abra25；未声称
+已治疗，不回退到第十九段健康存档来抹去资源／战斗结果。
+
+旧c5及新dade各自独立进程正常CONTINUE schema=3全部持久字段一致，
+源SRAM未改写，SHA256
+`c816e808f2f14ff02547577e0a7b7aa44ad62d3be0fcb8051d94b802d90d08f2`。
+后续正式续跑应从第二十段最新检查点使用已验证的新binary及冻结
+策略加载，不热替换；仍待额度恢复后的真实Jev行为验证。
+
+第二十段MP4封口134.600000秒、8076帧、2617809字节。20个封存段
+容器／时钟／登记守恒通过，合计13909.183330秒、257003条合并记录、
+60种唯一登记，19次续跑起点新增均为空；历史幽灵访问缺口仍false，
+不替代完整合法来源、全片视觉、最终合片或真正124验收。
+
+最新存档、trace／manifest、两版本独立证明、时钟、额度元数据、
+883／120／核心测试、匹配夹具及完整新m49证据另备份worktree外
+`verified60-zapdos-preview-evidence-20261003.tar.gz`（1880853字节、95条），
+归档条目已检查，无凭据或重复MP4／binary，全部原件保留于持久
+`.artifacts`。未删除用户内容，124、合法来源及最终录像／大盘尚未完成。

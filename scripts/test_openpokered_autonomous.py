@@ -6398,6 +6398,51 @@ class AutonomousTests(unittest.TestCase):
         new_compact, _ = capture_move_question(state, menu)
         self.assertNotEqual(old_key, json.dumps(new_compact, sort_keys=True))
 
+    def test_capture_turn_receives_native_hit_ranges_before_opening_fight(self):
+        from copy import deepcopy
+        state = self.capture_support_state()
+        state['battle_live']['player_move_previews'] = [
+            {'slot': 0, 'move': 'Cut', 'pp': 20, 'disabled': False,
+             'direct_hit_preview': {'normal_damage': [25, 30], 'critical_damage': [50, 59],
+                 'critical_threshold': 50, 'target_hp': 139, 'direct_hit_can_ko': False}},
+            {'slot': 1, 'move': 'Dig', 'pp': 10, 'disabled': False, 'direct_hit_preview': None},
+            {'slot': 2, 'move': 'Tackle', 'pp': 0, 'disabled': True, 'direct_hit_preview': None}]
+        original = deepcopy(state)
+        game = JevGame.__new__(JevGame)
+        game.judgments = Mock()
+        game.judgments.collects_dex = True
+        game.judgments.active = {'context': {'acquisition_method': 'static'}}
+        game.judgments.choose.return_value = 'fight'
+        self.assertIsNone(game.battle_recovery_plan(state))  # Existing FIGHT binding is unchanged.
+        _, actual, candidates, instruction = game.judgments.choose.call_args.args
+        fight = json.loads(candidates['fight'])
+        self.assertEqual(fight['native_active_move_previews'], state['battle_live']['player_move_previews'])
+        self.assertEqual(actual['battle'], state['battle_live'])
+        self.assertIn('Not a whole-turn safety guarantee', fight['direct_hit_preview_scope'])
+        self.assertIn('NOT zero damage', fight['direct_hit_preview_scope'])
+        self.assertIn('native_active_move_previews', instruction)
+        self.assertIn('positive PP', instruction)
+        self.assertEqual(state, original)
+        # Refresh every observation, not a cached safety certificate.
+        state['battle_live']['player_move_previews'][0]['direct_hit_preview']['target_hp'] = 1
+        game.battle_recovery_plan(state)
+        updated = json.loads(game.judgments.choose.call_args.args[2]['fight'])
+        self.assertEqual(updated['native_active_move_previews'][0]['direct_hit_preview']['target_hp'], 1)
+
+    def test_capture_turn_does_not_invent_previews_for_older_native_observations(self):
+        game = JevGame.__new__(JevGame)
+        game.judgments = Mock()
+        game.judgments.collects_dex = True
+        game.judgments.active = {'context': {'acquisition_method': 'static'}}
+        game.judgments.choose.return_value = 'fight'
+        state = self.capture_support_state()
+        for observed in (None, 'unsupported'):
+            state['battle_live']['player_move_previews'] = observed
+            game.battle_recovery_plan(state)
+            fight = json.loads(game.judgments.choose.call_args.args[2]['fight'])
+            self.assertNotIn('native_active_move_previews', fight)
+            self.assertNotIn('native_active_move_previews', game.judgments.choose.call_args.args[3])
+
     def test_real_move_selector_drives_the_judged_capture_status_slot(self):
         game = JevGame.__new__(JevGame)
         state = self.capture_support_state()

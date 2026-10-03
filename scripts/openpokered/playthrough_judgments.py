@@ -23,6 +23,13 @@ ITEM_CATALOG = {item['id']: item for path in (late.DATA / 'data/items').glob('*.
                 if (item := json.loads(path.read_text())).get('id')}
 MEDICINES = {name: item for name, item in ITEM_CATALOG.items() if item.get('category') == 'Medicine'}
 
+DIRECT_HIT_PREVIEW_SCOPE = (
+    'Native formula ranges for one hit if it lands with current combat stats, stages, '
+    'badge boosts, burn, screens and types unchanged. Includes critical damage. '
+    'critical_threshold / 256 is the current critical probability. '
+    'Not a whole-turn safety guarantee: excludes opponent action, move failure, '
+    'secondary and residual damage. Null means unsupported or unavailable, NOT zero damage.')
+
 
 def capture_storage_full(state):
     """The native ball action rejects a full party plus a full current box."""
@@ -524,12 +531,7 @@ def capture_move_question(state, menu):
     for index, slot in enumerate(menu['moves']):
         if str(index) in compact['moves']:
             compact['moves'][str(index)]['direct_hit_preview'] = slot.get('direct_hit_preview')
-    compact['direct_hit_preview_scope'] = (
-        'Native formula ranges for one hit if it lands with current combat stats, stages, '
-        'badge boosts, burn, screens and types unchanged. Includes critical damage. '
-        'critical_threshold / 256 is the current critical probability. '
-        'Not a whole-turn safety guarantee: excludes opponent action, move failure, '
-        'secondary and residual damage. Null means unsupported or unavailable, NOT zero damage.')
+    compact['direct_hit_preview_scope'] = DIRECT_HIT_PREVIEW_SCOPE
     bag = {slot['item']: slot['qty'] for slot in state.get('battle_inventory', [])}
     mon = {'moves': [slot['move'] for slot in menu['moves']],
            'pp': [0 if slot['disabled'] else slot['pp'] for slot in menu['moves']]}
@@ -637,12 +639,16 @@ class JevGame(pt.Game):
             candidates['run'] = json.dumps(retreat)
             bindings['run'] = 'run', None
         if capturing:
-            candidates['fight'] = json.dumps({
+            fight = {
                 'active_party_index': active, 'active_pokemon': party[active],
                 'usable_effective_attacks': effective_attacks(party[active], live['enemy']['species']),
                 'capture_status_options': capture_status_options(party[active], live['enemy'], bag),
                 'reason': 'Prepare capture using the current active Pokemon without switching. Open FIGHT and select its move; switching to another teammate does not use that teammate\'s move on the switching turn. A knockout loses this encounter, so do not select FIGHT just to win.',
-                'availability_scope': 'Observed moves and PP, known target status and type immunities. The real move menu still checks disabled moves; status success and surviving to act are not guaranteed.'})
+                'availability_scope': 'Observed moves and PP, known target status and type immunities. The real move menu still checks disabled moves; status success and surviving to act are not guaranteed.'}
+            if isinstance(live.get('player_move_previews'), list):
+                fight['native_active_move_previews'] = live['player_move_previews']
+                fight['direct_hit_preview_scope'] = DIRECT_HIT_PREVIEW_SCOPE
+            candidates['fight'] = json.dumps(fight)
         if switch_training or capturing or not effective_attacks(party[active], live['enemy']['species']):
             for index, mon in enumerate(party):
                 statuses = capture_status_options(mon, live['enemy'], bag) if capturing else []
@@ -719,6 +725,15 @@ class JevGame(pt.Game):
                 'limited ball supply at full HP when viable preparation substantially raises capture odds; '
                 'do not knock out the target or use residual poison/burn damage to prepare it.')
         if capturing:
+            if isinstance(live.get('player_move_previews'), list):
+                instruction += (' FIGHT.native_active_move_previews provides current active-battler '
+                    'damage ranges before opening FIGHT. Only non-disabled, non-None slots with '
+                    'positive PP can be used. Compare a supported hit\'s normal and critical '
+                    'range with target_hp to distinguish careful weakening from a possible knockout. '
+                    'A false direct_hit_can_ko only excludes a knockout from that conditional '
+                    'single hit; it does not guarantee surviving to act, prevent residual damage, '
+                    'or certify unsupported null previews as safe. These are not previews for '
+                    'an incoming teammate, and no attack is selected by this evidence.')
             instruction += (' FIGHT describes the current active Pokemon and its capture_status_options, '
                 'not just an attack. Compare using those existing tools now with the offered switches: '
                 'switching spends this turn and does not apply the incoming teammate\'s status move. '

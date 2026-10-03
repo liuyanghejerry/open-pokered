@@ -6142,6 +6142,20 @@ impl PokemonGame {
             let player = bs.player.active_mon();
             let enemy = bs.enemy.active_mon();
             let safari = self.battle.safari.as_ref();
+            // A controller must decide FIGHT versus a ball BEFORE opening
+            // the move menu. Read the active battler, not a stale menu/save
+            // snapshot; previewing never selects a move or consumes RNG.
+            let player_move_previews = player.moves.iter().enumerate().map(|(slot, move_id)| {
+                serde_json::json!({
+                    "slot": slot,
+                    "move": format!("{:?}", move_id),
+                    "pp": player.pp[slot],
+                    "disabled": bs.player.disabled_move > 0
+                        && bs.player.disabled_move == slot as u8 + 1,
+                    "direct_hit_preview": pokered_core::battle::pokered_rules::preview::player_direct_hit(
+                        bs, *move_id, self.battle.player_badges),
+                })
+            }).collect::<Vec<_>>();
             serde_json::json!({
                 "is_ghost": self.battle.is_ghost,
                 "capture_blocked_reason": if !self.battle.is_wild {
@@ -6180,6 +6194,7 @@ impl PokemonGame {
                 })).collect::<Vec<_>>(),
                 "player": { "species": format!("{:?}", player.species), "level": player.level, "hp": player.hp,
                     "max_hp": player.max_hp, "status": format!("{:?}", player.status) },
+                "player_move_previews": player_move_previews,
                 "enemy": { "species": format!("{:?}", enemy.species), "level": enemy.level, "hp": enemy.hp,
                     "capture_species": self.battle.wild_capture_species().map(|sp| format!("{:?}", sp)),
                     "capture_catch_rate": self.battle.wild_capture_rate(),
@@ -7977,6 +7992,88 @@ mod synchronous_input_tests {
             .as_u64().unwrap() > preview["critical_damage"][1].as_u64().unwrap());
         assert_eq!(serde_json::to_value(&game.battle.battle_state).unwrap(), before);
         assert_eq!(game.frame_count, frame);
+    }
+
+    #[test]
+    fn player_menu_exposes_live_move_previews_without_opening_fight() {
+        use pokered_core::battle::state::{new_battle_state, BattleType};
+        use pokered_core::pokemon::stats::create_pokemon;
+        use pokered_data::{species::Species, moves::MoveId};
+        let mut game = PokemonGame::new_with_options(
+            GameVersion::Red, None, None, None, false, None, false, true, None,
+        );
+        let mut player = create_pokemon(Species::Charizard, 74, [0x88, 0x88]).unwrap();
+        player.moves = [MoveId::Cut, MoveId::Flamethrower, MoveId::Dig, MoveId::None];
+        player.pp = [2, 15, 9, 0];
+        let mut bs = new_battle_state(BattleType::Wild, vec![player],
+            vec![create_pokemon(Species::Zapdos, 50, [0x88, 0x88]).unwrap()]);
+        bs.player.disabled_move = 2;
+        game.battle.battle_state = Some(bs);
+        game.battle.player_badges = 1;
+        assert!(game.battle.move_menu.is_none());
+        let before = serde_json::to_value(&game.battle.battle_state).unwrap();
+        let frame = game.frame_count;
+        let first = game.debug_state_snapshot();
+        assert_eq!(game.debug_state_snapshot(), first);
+        let moves = first["battle_live"]["player_move_previews"].as_array().unwrap();
+        assert_eq!(moves.len(), 4);
+        assert_eq!(moves[0]["slot"], 0);
+        assert_eq!(moves[0]["move"], "Cut");
+        assert_eq!(moves[0]["pp"], 2);
+        assert_eq!(moves[0]["disabled"], false);
+        assert_eq!(moves[0]["direct_hit_preview"]["direct_hit_can_ko"], false);
+        assert_eq!(moves[1]["disabled"], true);
+        assert!(moves[1]["direct_hit_preview"]["normal_damage"][1].as_u64().unwrap()
+            < moves[1]["direct_hit_preview"]["target_hp"].as_u64().unwrap());
+        assert!(moves[1]["direct_hit_preview"]["critical_damage"][1].as_u64().unwrap()
+            >= moves[1]["direct_hit_preview"]["target_hp"].as_u64().unwrap());
+        assert_eq!(moves[1]["direct_hit_preview"]["direct_hit_can_ko"], true);
+        assert!(moves[2]["direct_hit_preview"].is_null()); // Dig's charged turn is unsupported.
+        assert_eq!(moves[3]["move"], "None");
+        assert_eq!(serde_json::to_value(&game.battle.battle_state).unwrap(), before);
+        assert_eq!(game.frame_count, frame);
+        assert!(game.battle.move_menu.is_none());
+    }
+
+    #[test]
+    fn player_menu_move_previews_refresh_hp_pp_disable_and_active_member() {
+        use pokered_core::battle::state::{new_battle_state, BattleType};
+        use pokered_core::pokemon::stats::create_pokemon;
+        use pokered_data::{species::Species, moves::MoveId};
+        let mut game = PokemonGame::new_with_options(
+            GameVersion::Red, None, None, None, false, None, false, true, None,
+        );
+        let mut player = create_pokemon(Species::Charizard, 74, [0x88, 0x88]).unwrap();
+        player.moves = [MoveId::Cut, MoveId::None, MoveId::None, MoveId::None];
+        player.pp = [30, 0, 0, 0];
+        game.battle.battle_state = Some(new_battle_state(BattleType::Wild,
+            vec![player], vec![create_pokemon(Species::Zapdos, 50, [0x88, 0x88]).unwrap()]));
+        let initial = game.debug_state_snapshot();
+        let bs = game.battle.battle_state.as_mut().unwrap();
+        bs.player.party[0].pp[0] = 0;
+        bs.player.disabled_move = 1;
+        bs.enemy.party[0].hp = 1;
+        let next = game.debug_state_snapshot();
+        let cut = &next["battle_live"]["player_move_previews"][0];
+        assert_eq!(cut["pp"], 0);
+        assert_eq!(cut["disabled"], true);
+        assert_eq!(cut["direct_hit_preview"]["target_hp"], 1);
+        assert_eq!(cut["direct_hit_preview"]["direct_hit_can_ko"], true);
+        assert_ne!(initial, next);
+        let mut support = create_pokemon(Species::Gloom, 25, [0x88, 0x88]).unwrap();
+        support.moves = [MoveId::SleepPowder, MoveId::None, MoveId::None, MoveId::None];
+        support.pp = [15, 0, 0, 0];
+        let bs = game.battle.battle_state.as_mut().unwrap();
+        bs.player.party.push(support);
+        bs.player.active_pokemon_index = 1;
+        bs.player.disabled_move = 0;
+        let switched = game.debug_state_snapshot();
+        let status = &switched["battle_live"]["player_move_previews"][0];
+        assert_eq!(status["move"], "SleepPowder");
+        assert_eq!(status["pp"], 15);
+        assert_eq!(status["disabled"], false);
+        assert!(status["direct_hit_preview"].is_null());
+        assert!(game.battle.move_menu.is_none());
     }
 
     #[test]
