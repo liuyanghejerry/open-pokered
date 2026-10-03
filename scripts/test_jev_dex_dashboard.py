@@ -4,6 +4,9 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
+import contextlib
+import io
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -120,6 +123,57 @@ class DexDashboardTest(unittest.TestCase):
                       [dex(1, ['Cubone']), dex(2, ['Cubone', 'Marowak'], map='Route1')]):
             events, _ = dashboard.merge_traces([segment(trace)])
             self.assertEqual(dashboard.collection_audit(events, {})['pending_species'], [])
+
+    def build_manifest(self, summaries):
+        """Fixture containers only: exercise metadata, not video decoding."""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            segments = []
+            for index, metadata in enumerate(summaries):
+                run = root / f'run-{index}'
+                run.mkdir()
+                clip = run / 'clip.mp4'
+                clip.write_bytes(b'fixture container')
+                summary = {**metadata, 'final_dex': {'owned_species': ['Abra']},
+                           'recording': {**metadata.get('recording', {}),
+                                         'path': str(clip), 'game_frames_per_video_second': 240}}
+                segments.append({**segment([dex(240, ['Abra'])]),
+                                 'run': run, 'summary': summary})
+            assembled = root / 'assembled.mp4'
+            assembled.write_bytes(b'fixture assembled container')
+            duration = lambda path: len(segments) if Path(path).resolve() == assembled.resolve() else 1
+            output = root / 'out'
+            with patch.object(dashboard, 'load_chain', return_value=segments), \
+                    patch.object(dashboard, 'video_duration', side_effect=duration), \
+                    patch.object(dashboard.subprocess, 'check_output', return_value='builder-head\n'), \
+                    contextlib.redirect_stdout(io.StringIO()):
+                dashboard.build(segments[-1]['run'], output, video=assembled, chain=True)
+            return json.loads((output / 'manifest.json').read_text())
+
+    def test_export_preserves_each_segments_recorded_runtime_fingerprints(self):
+        summaries = [
+            {'policy_sha256': 'a' * 64, 'binary_sha256': 'b' * 64,
+             'policy_files': {'scripts/controller.py': 'c' * 64},
+             'recording': {'assets': {'sha256': 'd' * 64, 'png_count': 668}}},
+            {'source_commit': 'recorded-second-commit', 'policy_sha256': 'e' * 64,
+             'binary_sha256': 'f' * 64,
+             'policy_files': {'scripts/controller.py': '0' * 64},
+             'recording': {'assets': {'sha256': '1' * 64, 'png_count': 669}}},
+        ]
+        manifest = self.build_manifest(summaries)
+        self.assertEqual(manifest['builder_commit'], 'builder-head')
+        for exported, recorded in zip(manifest['segments'], summaries):
+            for field in ('policy_sha256', 'policy_files', 'binary_sha256'):
+                self.assertEqual(exported.get(field), recorded[field])
+            self.assertEqual(exported.get('recording_assets'), recorded['recording']['assets'])
+            self.assertEqual(exported['source_commit'], recorded.get('source_commit'))
+
+    def test_legacy_segment_identity_stays_unknown_instead_of_using_builder(self):
+        exported = self.build_manifest([{}])['segments'][0]
+        for field in ('source_commit', 'policy_sha256', 'policy_files',
+                      'binary_sha256', 'recording_assets'):
+            self.assertIn(field, exported)
+            self.assertIsNone(exported[field])
 
 
 if __name__ == '__main__':

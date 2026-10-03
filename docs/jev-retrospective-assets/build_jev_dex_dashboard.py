@@ -317,6 +317,13 @@ def build(run, output, video=None, chain=False):
                                       'sha256': sha256(source_video)}},
         'segments': [{**boundary, 'recording': segment['video'],
                       'source_commit': segment['summary'].get('source_commit'),
+                      # Preserve the runtime's recorded content identities,
+                      # even when its source commit was never recorded. Never
+                      # substitute the builder's current files or executable.
+                      'policy_sha256': segment['summary'].get('policy_sha256'),
+                      'policy_files': segment['summary'].get('policy_files'),
+                      'binary_sha256': segment['summary'].get('binary_sha256'),
+                      'recording_assets': (segment['summary'].get('recording') or {}).get('assets'),
                       'reason': segment['summary'].get('reason'),
                       'development_checkpoint': segment['summary'].get('development_checkpoint', False)}
                      for boundary, segment in zip(boundaries, segments)],
