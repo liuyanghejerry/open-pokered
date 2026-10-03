@@ -2817,3 +2817,36 @@ GoldTeeth，并通过正常野生战将Gloom升至24级、Charizard升至67级�
 目前仍60种，不将新道具／等级／seen算作新增图鉴；这些结果不是
 尚未载入的共享训练搜索效果。将等待未来真实治疗／PC完成边界封存，
 独立验读后从最新存档续跑，不热替换、不回退或改写状态。
+
+### 遇敌地块不在本地陆地连通块：正常导航绕行
+
+第十六段拿到GoldTeeth后位于SafariZoneWest `(20,7)`；实际Jev选择
+该地图草地 `(6,20)`，旧执行逻辑仅用不跨地图的`reachable_grass`，
+两次返回`no_reachable_training_grass`，没有执行规划已知可用的路线。
+公开碰撞图可经SafariZoneNorth绕回目标陆地，故不能把本地搜索失败
+当成全局不可达。现在保留廉价本地搜索，失败时仅对原选中的有效
+遇敌地块调用已有闭环跨地图导航；站位及至少一步遇敌地块都必须
+合法、没有当前NPC占用。导航仍处理实际脚本／战斗／障碍与原预算，
+未抵达不标记捕捉完成，不忽略碰撞或注入Safari资格／步数／捕获球。
+
+2项新增回归先在旧实现复现两个中断结果错误，再覆盖战斗中断、
+实际障碍、无效地块、占用站位及无可走邻居。全量Python867项通过
+（18.225秒），播放器JavaScript及diff检查通过。隔离原生c5场景
+`native-safari-component-approach-20261003-v2`正常CONTINUE后仅在
+输入保护之前debug warp准备起点；新执行器随后以真实输入从frame691
+走至frame4049、SafariZoneWest `(6,20)`，抵达即停止、未执行hunt。
+源SRAM不变、前后仍60种、无模型调用；这是带种子状态的原生行走
+回归，不是正式收集，也不验证真实Safari剩余时间／球资源。首轮
+夹具遗漏warp提交帧而断言失败，日志保留；补64帧提交后第二轮通过，
+没有删除失败证据或对正式进程使用warp。
+
+正式第十六段始终冻结7d策略，elapsed1005.934原生金牙交换得到HM04，
+1048.674实际以Strength替换Snorlax的Amnesia；1250.387秒护士治疗
+完成后合作式封存，安全及最终观察均通过。独立正常CONTINUE
+schema=3全部持久字段一致，60 owned／96 seen，源SRAM未改写，SHA256
+`2f9f89a7961befc44c290c27b675ed8949d20e0c0a1c7084c6a1bb45dd08b3e7`。
+终点FuchsiaPokecenter `(3,3)`、资金410、五徽章，Gloom24、Charizard67，
+全队HP／PP恢复，UltraBall2、GreatBall3、HM04真实保存；未新增种类。
+证明`formal60-shared-training-ready-independent-continue.json`。两个新
+修正将在从此最新存档正常CONTINUE时载入，不回退或热替换；独立
+读档通过仍不消除旧幽灵访问的历史来源缺口。

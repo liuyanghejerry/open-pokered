@@ -5541,7 +5541,18 @@ class AutonomousStoryAgent(DualStoryAgent):
         if method in ('grass', 'safari'):
             spot = reachable_grass(name, (current['player_x'], current['player_y']), blocked)
             if spot is None:
-                return {'result': 'no_reachable_training_grass'}
+                # Some maps have disconnected land components connected via
+                # another map (e.g. the Safari gold-teeth corner). Keep the
+                # cheap local search first, then let ordinary closed-loop
+                # navigation prove the planner's chosen encounter stance.
+                chosen = (int(x), int(y))
+                if (chosen in blocked or not training_tile(name, *chosen)
+                        or not any((chosen[0]+dx, chosen[1]+dy) not in blocked
+                            and training_tile(name, chosen[0]+dx, chosen[1]+dy)
+                            and pt.walkable_edge(name, chosen, (chosen[0]+dx, chosen[1]+dy))
+                            for dx, dy in pt.DELTA.values())):
+                    return {'result': 'no_reachable_training_grass'}
+                spot = chosen
             # A raw move_to can interrupt on a dialogue/script while still on
             # the bridge, not on grass. Settling the dialogue does not make
             # that partial arrival a usable encounter stance. Use the normal

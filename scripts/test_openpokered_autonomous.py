@@ -4246,6 +4246,66 @@ class AutonomousTests(unittest.TestCase):
         agent.navigate_point = Mock()
         return agent
 
+    def test_encounter_approach_can_leave_and_reenter_a_disconnected_grass_component(self):
+        import playthrough as pt
+        from openpokered.playthrough_judgments import NavigationPause
+        name, origin, destination = 'SafariZoneWest', (20, 7), (6, 20)
+        self.assertIsNone(reachable_grass(name, origin))
+        path = pt.bfs_cross(name, origin, name, destination, last_map='SafariZoneCenter',
+                            allow_ledges=True, allow_spinners=True)
+        self.assertTrue(path)
+        self.assertTrue(any(node[0][0] == 'SafariZoneNorth' for node in path[1:]))
+        for error, expected in ((NavigationPause('native battle interrupted approach'), 'paused_after_battle'),
+                                (pt.NavError('native obstacle remains'), 'blocked')):
+            with self.subTest(interruption=expected):
+                agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+                target = ('catch', 'safari:' + name, True)
+                rule = Rule('hunt', name, 'skill:catch_encounter', [], [], [], target, [])
+                agent.active = {'target': target, 'rules': [rule]}
+                agent.actions, agent.max_actions = 0, 30
+                state = {'map_name': name, 'player_x': origin[0], 'player_y': origin[1],
+                         'screen': 'overworld', 'party': [{'level': 40}],
+                         'pokedex': {'owned': 60}}
+                agent.client, agent.game = Mock(), Mock()
+                agent.client.state.return_value = state
+                agent.client.cmd.return_value = []
+                agent.game.st.return_value = state
+                agent.facts = Mock(return_value={'bag': {}})
+                agent.navigate_point = Mock(side_effect=error)
+                agent.settle, agent.record, agent.remember_travel_result = Mock(), Mock(), Mock()
+                result = agent.execute('catch_encounter:safari,SafariZoneWest,6,20', rule)
+                self.assertEqual(result['result'], expected)
+                self.assertEqual(result['destination'], name)
+                agent.navigate_point.assert_called_once_with(name, destination, tries=50)
+                agent.client.move_to.assert_not_called()
+                agent.game.d.drive.assert_not_called()
+                self.assertFalse(hasattr(agent, 'catch_attempts'))
+
+    def test_disconnected_encounter_fallback_rejects_invalid_or_occupied_terrain(self):
+        for waypoint, blocked in (((20, 7), ()), ((6, 20), ((6, 20),)),
+                                  ((6, 20), ((5, 20), (7, 20), (6, 19), (6, 21)))):
+            with self.subTest(waypoint=waypoint, blocked=blocked):
+                agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+                target = ('catch', 'safari:SafariZoneWest', True)
+                rule = Rule('hunt', 'SafariZoneWest', 'skill:catch_encounter', [], [], [], target, [])
+                agent.active = {'target': target, 'rules': [rule]}
+                agent.actions, agent.max_actions = 0, 30
+                state = {'map_name': 'SafariZoneWest', 'player_x': 20, 'player_y': 7,
+                         'screen': 'overworld', 'party': [{'level': 40}],
+                         'pokedex': {'owned': 60}}
+                agent.client, agent.game = Mock(), Mock()
+                agent.client.state.return_value = state
+                agent.client.cmd.return_value = [{'x': x, 'y': y, 'visible': True} for x, y in blocked]
+                agent.game.st.return_value = state
+                agent.facts = Mock(return_value={'bag': {}})
+                agent.navigate_point = Mock()
+                result = agent.execute('catch_encounter:safari,SafariZoneWest,' +
+                                       ','.join(map(str, waypoint)), rule)
+                self.assertEqual(result, {'result': 'no_reachable_training_grass'})
+                agent.navigate_point.assert_not_called()
+                agent.game.d.drive.assert_not_called()
+                self.assertFalse(hasattr(agent, 'catch_attempts'))
+
     def test_catch_trip_blocks_grass_on_the_maps_it_only_crosses(self):
         import playthrough as pt
         agent = self.travel_goal_agent([{'to_map': 'Route2'}, {'to_map': 'Route22'}])
