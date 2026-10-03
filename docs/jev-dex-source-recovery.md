@@ -4134,3 +4134,81 @@ Exeggcute36的单级支援训练候选两项context：observed_failed_capture_se
 source29-blackout-frontier-20261004/{report,facts,groups}.json及同名.log；
 capture-blackout-mid-attempt-and-frontier-20261004.json/log由只读helper
 verify-capture-blackout-mid-attempt-20261004.py验证。
+
+### 旧搜索失败的量化与第30段同原生进程恢复
+
+旧搜索并非仅仅“暂时没有新trace”：从同一冻结6d原生导出的实际
+compiled rules，使用明确标注的交付后诊断facts，保留重复producer
+边和路径内seen/depth10约束，离线memo计数Kabuto根为6,114,805,354
+递归调用、596,573,794次alternatives计算、113,995,697个去重前ready
+叶出现。另一个校验器保留depth10调用depth11的计数，并以原始逐路径
+DFS交叉核对depth0..4，全部一致；20个图节点最短深度最大2，原始
+完整Kabuto计数一致。4个Aerodactyl根计数自身45秒诊断超时，仍未知，
+不推算总量、实时栈位置或剩余ETA。证据：old-fossil-search-exact-count-
+20261004/{compiled-rules,report,commands}.json，以及validated-kabuto-
+search-count-20261004.json/log/v2.log。首次校验漏把nested effect列表
+恢复为tuple，创建报告前失败，保留日志；修正后通过。零正式连接、
+输入或模型调用。
+
+实际锁定的dotzuki0.8.2提交7efac8ad单客户端transport允许旧连接EOF
+后接下一客户端，不能在原控制器持有连接时并发连接。隔离副本
+controller-only-recovery-fixture-20261004-v2先用正常门/实际化石菜单
+完成交付，再让测试控制器进入CPU循环。证明：活owner阶段恢复器
+在连接前拒绝；合作SIGINT仅置标记；只终止测试控制器后native继续
+存活，全5项普通观察/帧1169完全一致；save不改变任何观察，独立
+schema4普通CONTINUE保留交付、party HP/PP/XP、PC和资源；原生优雅
+shutdown封口MP4，全294编码帧可解码，原生日志实际写入1169游戏帧。
+仅初始诊断warp，不计正式新增。v1同状态/CONTINUE通过，但误用
+输出帧四舍五入±1门槛失败；视频实际4.9秒/294帧完整。修正依据是
+既有ffmpeg输入240→输出60管线允许边界重复：严格核对原生finalized
+input frame count与native frame_count相等、全输出帧解码，再核对
+ceil(input/4)±2；未改录像管线/速率或存档验证标准。v1原件保留。
+
+隔离v2通过后，对第30段核对精确PID54905/54936、native CLI与stderr
+路径、冻结6d二进制、原manifest和未变trace SHA4ae9b832；原SIGINT
+合作请求未能越过旧CPU搜索。先持久写recovery intent，随后只对
+控制器54905发SIGKILL（原toolsession退出137），没有向native54936
+发送信号/结束进程组。其独立session继续存活，控制器退出后才开
+唯一继任debug连接。native为安全overworld CinnabarLabFossilRoom，
+帧8278与原最后native_input相同，63owned/102seen、实际3交付flags
+true、Dome已消耗。全5观察save前后完全一致；没有输入、step、注入、
+RNG重设、回滚或从29重演交付。普通save得到新SRAM
+`3e4862ae8b251194f54c0e2cd3b9f7e1694b97e5046f9c9675468b1959842885`，
+独立schema4普通CONTINUE verified=true。最后同继任连接优雅shutdown
+关闭原native和ffmpeg，MP4 997046字节／34.516667秒／2071帧，全帧
+解码，原生finalized8278输入帧。原trace未改，原manifest保留旧policy
+5cc236ef，并不把后来修复代码伪装成第30段的执行代码。
+
+第30段summary明确success=false、confirmed_controller_planning_failure_
+same_native_recovery，development_checkpoint/native安全/独立续读通过。
+恢复summary继承父链记忆，并只回放真实导航/Surf结果；已到目的地的
+旧阻塞移除，真实Zapdos两次blackout成本恢复。没有该段战斗/捕获/
+新增dex，故旧审计等记忆不变；控制器内存统计、未记录的中间地图/
+NPC观察/cache计数丢失，均不伪造，记录行数另作recovery_trace_metrics，
+不能当完整调用或账单总数。首次summary比较物种列表顺序失败，改为
+严格计数63及唯一物种集合相等后通过，原失败日志保留。原game.log
+导出，private runtime原件保留。被动监测器70223仅在两原进程已关闭
+且独立续读已完成后停止，避免重复核验；不是停止原生游戏。
+
+证据：live30-same-native-recovery-intent-20261004.json、live30-same-native-
+recovery-20261004.log、live30-recovery-summary-20261004.log/v2.log及
+第30段native-recovery-{commands,proof}.json、recovery-continue-proof.json、
+recovery-after-save-observations.json。30段封口链clock audit通过：
+17825.533331秒、327929行、63唯一登记、29个resume初始acquired均空；
+closed-formal63-handover30-lineage-clock-20261004.json/log。仍只是旧链
+策略验证，不是Kabuto领取/64种、完全合法录像或最终fresh NEW GAME。
+
+从最新3e4862原生save再做一次独立普通CONTINUE全12目标规划，继承
+真实记忆和blackout，未使用derived post-handover facts：35候选／
+23.593秒，原生627帧前后不变、源save未改、零模型调用。真正可执行
+Kabuto准备叶770ba47d0974bb2f产生EVENT_LAB_STILL_REVIVING_FOSSIL=false
+（正常CinnabarIsland地图load），不是提前登记Kabuto。证据source30-
+recovered-fossil-frontier-20261004/{report,facts,groups,normal-party-observation}.json/log。
+
+最新第30段存档/sidecar/原trace/manifest/恢复summary、独立schema4续读、
+原生game.log、恢复夹具/计数/失败日志及实际全候选另做worktree外
+58项增量备份verified63-handover30-native-recovery-20261004.tar.gz：
+1109758字节，SHA256
+`7f5011d93c4c7674c8fe2730d834847f26995edac9d34fd48fe2869dda88451f`。
+逐项读取字节/哈希通过，无凭据/二进制/重复MP4，原件全部保留。
+receipt为native-recovery-delta-backup-receipt-20261004.json/log。
