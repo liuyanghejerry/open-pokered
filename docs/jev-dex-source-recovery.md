@@ -1991,3 +1991,33 @@ settle后把这种部分到达当成草丛，就在桥面寻找草地相邻步�
 **不计入正式17种，也不回灌正式存档**。源档哈希未改变；证据在
 `.artifacts/checkpoint-safety-20261003/grass-arrival-native-a/`、`-b/`、`-c/`，
 独立证明为同目录的`formal17-independent-continue.json`。
+
+### 2026-10-03：正式21种与船票；丢失输入回执不再盲目重发
+
+第四段`20261003-135306-seed42`从已独立验证的17种原生存档正常CONTINUE，
+加载`49ce4c40`闭环到达修复，未注入状态或回退。正式新增Oddish
+（frame6802／elapsed28.748秒）、Raticate（frame50656／elapsed244.789秒）、
+Metapod（frame55648／elapsed265.566秒）和Abra
+（frame76921／elapsed327.302秒），达到运行中的21/124。
+之后真实完成Bill的细胞分离流程并取得船票，elapsed414.355秒获得
+`EVENT_GOT_SS_TICKET`；elapsed430.883秒打赢华蓝市火箭队盗贼，
+正常继续5号道路草丛捕捉。正式策略、动作和录像仍运行在原有持久目录。
+这里21种是在线原生观察，最新封口存档的独立CONTINUE证明仍为17种，
+不是21种最终验收，更不是124完成。
+
+检查输入审计时发现旧`DebugClient.cmd`会在任何传输OSError后自动重发：
+未收到回执并不能证明原生端未执行，重复按键、推进帧、投球或导航并不幂等。
+改为只对12个已确认不推进游戏的观察命令精确放行一次重试；所有变更命令
+以及未来未知命令都报`transport outcome unknown; command not replayed`，
+不擅自重连或重发。重连观察时同时关闭旧makefile和socket，避免文件持有
+socket引用导致原生端收不到EOF。没有放宽输入回执或安全检查点契约。
+
+新增5项回归覆盖17个非观察／未知命令的write、flush、readline、EOF四类
+故障（修复前68个子例失败，修复后通过）、12个观察命令的一次重试、
+两次故障后的停止、明确原生拒绝不重试及旧文件关闭出错仍释放socket。
+连同原子输入契约10项通过，Python全套799项通过（17.673秒），
+播放器JavaScript回归通过。日志位于持久目录
+`.artifacts/checkpoint-safety-20261003/tests-transport-before.log`、
+`tests-transport-after.log`和`tests-transport-python-full.log`。
+这是已验证、准备供下次正常续跑加载的保护；第四段没有观察到传输超时，
+没有为了尚未发生的故障打断其正在进行的真实收集，不能声称在线进程已热更新。

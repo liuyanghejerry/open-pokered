@@ -62,6 +62,77 @@ class AtomicDebugDriveRegression(unittest.TestCase):
                 self.assertEqual(client.cmd.call_count, 1)
 
 
+class DebugTransportRetryRegression(unittest.TestCase):
+    def client(self):
+        client = object.__new__(DebugClient)
+        client.f = Mock()
+        client.f.readline.return_value = '{"ok": true, "data": {}}\n'
+        client._reconnect = Mock()
+        return client
+
+    def test_unacknowledged_mutations_are_never_replayed(self):
+        commands = ('press', 'press_sequence', 'press_timeline', 'step_frames',
+                    'run_frames', 'wait_until', 'skip_dialogue', 'move_to',
+                    'travel_to', 'interact', 'interact_with', 'save',
+                    'save_state', 'restore_state', 'shutdown', 'capture_frame',
+                    'get_future_mutating_command')
+        for command in commands:
+            for failure in ('write', 'flush', 'readline', 'eof'):
+                with self.subTest(command=command, failure=failure):
+                    client = self.client()
+                    if failure == 'eof':
+                        client.f.readline.side_effect = ['', '{"ok": true}\n']
+                    else:
+                        getattr(client.f, failure).side_effect = [TimeoutError('lost reply'), None]
+                    with self.assertRaisesRegex(OSError, 'not replayed'):
+                        client.cmd(cmd=command)
+                    self.assertEqual(client.f.write.call_count, 1)
+                    client._reconnect.assert_not_called()
+
+    def test_allowlisted_observations_can_retry_once(self):
+        commands = ('get_state', 'get_position', 'get_party', 'get_bag',
+                    'get_flags', 'get_npcs', 'get_map', 'get_agent_state',
+                    'get_nearby', 'get_world_graph', 'find_world_route',
+                    'get_script_semantics')
+        for command in commands:
+            with self.subTest(command=command):
+                client = self.client()
+                client.f.readline.side_effect = [TimeoutError('lost reply'),
+                                                 '{"ok": true, "data": {}}\n']
+                self.assertEqual(client.cmd(cmd=command), {'ok': True, 'data': {}})
+                self.assertEqual(client.f.write.call_count, 2)
+                client._reconnect.assert_called_once_with()
+
+    def test_observation_retry_is_bounded_after_two_transport_failures(self):
+        client = self.client()
+        client.f.readline.side_effect = TimeoutError('still disconnected')
+        with self.assertRaises(TimeoutError):
+            client.cmd(cmd='get_state')
+        self.assertEqual(client.f.write.call_count, 2)
+        client._reconnect.assert_called_once_with()
+
+    def test_acknowledged_native_rejection_is_not_retried(self):
+        client = self.client()
+        client.f.readline.return_value = '{"ok": false, "error": "blocked"}\n'
+        self.assertEqual(client.cmd(cmd='move_to'), {'ok': False, 'error': 'blocked'})
+        client.f.write.assert_called_once()
+        client._reconnect.assert_not_called()
+
+    def test_reconnect_closes_makefile_and_socket_even_if_file_close_fails(self):
+        client = object.__new__(DebugClient)
+        old_file, old_socket, new_socket = Mock(), Mock(), Mock()
+        client.f, client.sock = old_file, old_socket
+        old_file.close.side_effect = OSError('timed out while flushing')
+        client._connect = Mock(side_effect=lambda timeout: setattr(client, 'sock', new_socket))
+        client._reconnect()
+        old_file.close.assert_called_once_with()
+        old_socket.close.assert_called_once_with()
+        client._connect.assert_called_once_with(60)
+        new_socket.settimeout.assert_called_once_with(120.0)
+        new_socket.makefile.assert_called_once_with('rw')
+        self.assertIs(client.f, new_socket.makefile.return_value)
+
+
 class SearchGeometryCacheRegression(unittest.TestCase):
     def setUp(self):
         self.name = 'SearchCacheFixture'
