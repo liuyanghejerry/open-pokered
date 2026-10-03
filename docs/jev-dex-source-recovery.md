@@ -3456,3 +3456,16 @@ FuchsiaPokecenter `(3,3)`，资金553、六徽章、UltraBall5／GreatBall18、
 `verified62-training-region-unlock-evidence-20261004.tar.gz`（3520329字节、
 48条，SHA256 `e1522860c9194ebc3eaf7a794baeb192541001c86b6e8d5945fbb632b6bc9a3e`）。
 条目及归档内SRAM哈希复核通过，无凭据／重复MP4／binary，原件保留。
+
+第二十四段`20261004-005249-seed42`已从最新第23段正常CONTINUE，
+启动时worktree干净`e249a531`，autonomous源fa95、playthrough源dec8，
+策略SHA256 `5a85e5b66a9da9abc9d29db286fbfba55e31b42c44f019b25c0889918d3437e4`，
+私有native仍dade、gfx668仍21e0。恢复62 owned／100 seen、资金553
+及真实训练后等级；不是从第22段退回，所有产物在持久目录。
+27.579秒实际OpenRouter策略请求中三种饮料、九条原生售货机规则
+及共享guard／Sabrina解锁父目标确实进入本组候选，真实Jev返回
+选择；原有分组保留其他候选，不强制选择饮料。30.633秒实际
+Cut完成，后续自主选择Gloom升32训练；一处max_tokens_exceeded
+后原有分组比较成功继续，无新额度阻断。双层Jev及原生4×录像
+仍运行，无热替换／warp／存档编辑；尚未购买饮料、进入金黄市
+或新增登记，不把正式载入证据称为捕获效果或最终124完成。
