@@ -3688,3 +3688,23 @@ command guard遗漏及第三轮不可走的测试目标失败均保留，不用�
 时钟／登记守恒通过，共16346.549997秒、300782条记录、62唯一登记，
 25次续跑初始新增均为空；不替代全片视觉、完整合法来源或最终合片。
 Goal保持active，最终合法124／MP4／图鉴大盘尚未交付。
+
+第26段最新SRAM、独立证明、停止／时钟、918回归、有效坡道配对及
+诊断失败日志／冻结修复源另备份worktree外
+`verified62-cycling-road-entry-evidence-20261004.tar.gz`，3016396字节、
+34项、SHA256 `65cce44e64a637ec4e6bbb675d6af2e692b659c34ad804f7749d6f24e135a904`。
+归档条目与SRAM哈希检查通过，无凭据／重复MP4／binary，原件保留；
+这是prototype证据备份，不是最终合法新链或合片。
+
+第27段 `20261004-014137-seed42` 从最新26段正常CONTINUE，启动
+时干净 `0d9ebc03`、policy
+`c3e519e7637ec036b191e4140d63272a0ed866cf837165064bae7adba3c2d300`，
+playthrough c844／autonomous0474、native dade／gfx21e0，载入修复；
+双层真实OpenRouter Jev和原生4×录像继续，无热替换／warp／状态
+注入／回退或指定伊布路线。85.464秒自主选择register:Eevee，
+90.301秒实际到CeladonMansionRoofHouse，91.236秒正常talkPokeBall，
+91.245秒／frame5654原生图鉴62→63、seen100→101，新增Eevee，
+acquisition_method=gift、party_count仍6／stored_count39→40。
+这是真实满队送箱登记，不是只读模型选择或夹具结果。该段仍运行、
+尚未独立验读新检查点；63种仅属已有prototype链，不计最终合法新链，
+亦不声称所有未解策略已经稳定。
