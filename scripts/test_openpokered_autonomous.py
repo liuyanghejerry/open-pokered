@@ -4342,6 +4342,122 @@ class AutonomousTests(unittest.TestCase):
         rule.missing.return_value = [('flag', 'REQUIRED', True)]
         self.assertFalse(agent.acquisition_capacity_ready(facts, 'Eevee', method))
 
+    def nonwild_box_capacity_fixture(self, method='gift', *, party_count=6):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.collects_dex = True
+        agent.visited = set()
+        gift = Rule('gift', 'House', 'House:talkGift', [], [], [],
+                    ('pokemon', 'EEVEE', 25), [])
+        pc = Rule('pc', 'Center', 'Center:pcStorage', ['sign:1'], [], [],
+                  ('pc', 'storage', True), [])
+        agent.index = Mock(rules=[gift, pc], by_effect={('pc', 'storage', True): [pc]})
+        edge = {'method': method, 'map': 'House', 'storyline': 'talkGift', 'level': 25}
+        if method == 'prize':
+            edge['coins'] = 500
+        agent._complete_collection_graph = {'Eevee': [edge]}
+        facts = {'party': [{'species': 'Pidgey', 'level': 8}] * party_count,
+                 'stored_pokemon': [], 'bag': {'COINCASE': 1}, 'flags': {},
+                 'coins': 500, 'money': 553, 'map': 'Center',
+                 'dex': {'owned_species': []}, 'box_counts': [20, 19, 0],
+                 'current_box_index': 1}
+        return agent, facts, gift, pc
+
+    def test_unvisited_gift_uses_observed_current_box_room_without_deposit(self):
+        import copy
+        agent, facts, gift, _ = self.nonwild_box_capacity_fixture()
+        original = copy.deepcopy(facts)
+        groups = {}
+        agent.add_nonwild_collection_groups(groups, facts)
+        group = groups['register:Eevee:gift:House']
+        self.assertEqual(group['rules'], [gift])
+        capacity = group['context']['acquisition_storage_capacity']
+        self.assertEqual(capacity['native_delivery_destination'], 'current_pc_box')
+        self.assertEqual(capacity['current_box_index'], 1)
+        self.assertEqual(capacity['current_box_count'], 19)
+        self.assertEqual(capacity['current_box_space_available'], True)
+        self.assertFalse(capacity['party_space_available'])
+        self.assertFalse(capacity['requires_party_deposit'])
+        self.assertIn('snapshot', capacity['scope'])
+        self.assertNotIn('storage:party_space', groups)
+        self.assertEqual(facts, original)
+
+    def test_ready_prize_uses_box_room_and_retains_real_coin_cost(self):
+        agent, facts, prize, _ = self.nonwild_box_capacity_fixture('prize')
+        groups = {}
+        agent.add_nonwild_collection_groups(groups, facts)
+        group = groups['register:Eevee:prize:House']
+        self.assertEqual(group['rules'], [prize])
+        self.assertEqual(group['context']['acquisition_contract']['direct_cost']['coins'], 500)
+        self.assertEqual(group['context']['acquisition_storage_capacity']['native_delivery_destination'],
+                         'current_pc_box')
+        self.assertNotIn('storage:party_space', groups)
+        facts['coins'] = 499
+        agent.add_coin_source = Mock()
+        groups = {}
+        agent.add_nonwild_collection_groups(groups, facts)
+        self.assertFalse(groups)
+        agent.add_coin_source.assert_called_once_with(groups, facts, 500, 'Eevee')
+
+    def test_box_delivery_still_requires_actual_gift_guards(self):
+        from openpokered.story_rules import literal
+        agent, facts, gift, _ = self.nonwild_box_capacity_fixture()
+        gift.guards = [({'Call': {'callee': 'getFlag', 'args': [literal('READY')]}}, True)]
+        groups = {}
+        agent.add_nonwild_collection_groups(groups, facts)
+        self.assertFalse(groups)
+        facts['flags']['READY'] = True
+        agent.add_nonwild_collection_groups(groups, facts)
+        self.assertEqual(groups['register:Eevee:gift:House']['rules'], [gift])
+
+    def test_gift_and_prize_with_both_full_request_real_box_change(self):
+        for method in ('gift', 'prize'):
+            with self.subTest(method=method):
+                agent, facts, _, pc = self.nonwild_box_capacity_fixture(method)
+                facts['box_counts'] = [0, 20, 19]
+                groups = {}
+                agent.add_nonwild_collection_groups(groups, facts)
+                self.assertNotIn(f'register:Eevee:{method}:House', groups)
+                self.assertEqual(groups['storage:change_box']['rules'], [pc])
+                self.assertNotIn('storage:party_space', groups)
+                self.assertEqual(groups['storage:change_box']['context']['available_boxes'], [0, 2])
+                agent.index.by_effect.clear()
+                groups = {}
+                agent.add_nonwild_collection_groups(groups, facts)
+                self.assertFalse(groups)
+
+    def test_gift_unknown_or_malformed_box_count_is_not_assumed_room(self):
+        for counts, current in (([], 0), ([20], 4), ([20], -1), ([False], 0),
+                                ([21], 0), ([None], 0), ([19], True), ('19', 0)):
+            with self.subTest(counts=counts, current=current):
+                agent, facts, _, _ = self.nonwild_box_capacity_fixture()
+                facts.update(box_counts=counts, current_box_index=current)
+                groups = {}
+                agent.add_nonwild_collection_groups(groups, facts)
+                self.assertFalse(groups)
+        # Old adapters without box telemetry retain the explored-source
+        # deposit alternative, never an invented empty box.
+        agent, facts, _, pc = self.nonwild_box_capacity_fixture()
+        facts.pop('box_counts')
+        agent.visited = {'House'}
+        groups = {}
+        agent.add_nonwild_collection_groups(groups, facts)
+        self.assertEqual(groups['storage:party_space']['rules'], [pc])
+        self.assertNotIn('register:Eevee:gift:House', groups)
+
+    def test_party_room_allows_gift_and_prize_even_with_full_current_box(self):
+        for method in ('gift', 'prize'):
+            with self.subTest(method=method):
+                agent, facts, gift, _ = self.nonwild_box_capacity_fixture(method, party_count=5)
+                facts['box_counts'] = [0, 20]
+                groups = {}
+                agent.add_nonwild_collection_groups(groups, facts)
+                group = groups[f'register:Eevee:{method}:House']
+                self.assertEqual(group['rules'], [gift])
+                self.assertEqual(group['context']['acquisition_storage_capacity']['native_delivery_destination'],
+                                 'party')
+                self.assertFalse(group['context']['acquisition_storage_capacity']['current_box_space_available'])
+                self.assertNotIn('storage:change_box', groups)
+
     def test_uncommitted_solo_choices_offer_every_ceiling_preserving_branch(self):
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
         agent.collects_dex = True

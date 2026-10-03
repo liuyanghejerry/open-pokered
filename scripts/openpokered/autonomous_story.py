@@ -2247,20 +2247,12 @@ class AutonomousStoryAgent(DualStoryAgent):
                     if facts.get('coins', 0) < method['coins']:
                         self.add_coin_source(groups, facts, method['coins'], species)
                         continue
-                    if len(party) >= 6:
-                        if self.acquisition_capacity_ready(facts, species, method):
-                            self.add_party_space_group(groups, facts, species)
-                        continue
                     rules = self.acquisition_story_rules(species, method)
                 else:
                     if method['method'] == 'static' and self.static_capture_deferred(species, method['map'], facts):
                         continue  # Reopen after actual preparation improves, not map travel alone.
                     if method['method'] == 'static' and self.capture_resources_missing(facts, 'static'):
                         self.add_box_capacity_group(groups, facts)
-                        continue
-                    if method['method'] == 'gift' and len(party) >= 6:
-                        if self.acquisition_capacity_ready(facts, species, method):
-                            self.add_party_space_group(groups, facts, species)
                         continue
                     rules = self.acquisition_story_rules(species, method)
                     if method['method'] == 'static':
@@ -2280,6 +2272,17 @@ class AutonomousStoryAgent(DualStoryAgent):
                 rules = [rule for rule in rules if not rule.missing(facts)]
                 if not rules:
                     continue
+                if method['method'] in ('gift', 'prize'):
+                    capacity = self.acquisition_storage_capacity(facts)
+                    if capacity['native_delivery_destination'] is None:
+                        if capacity['current_box_space_available'] is False:
+                            self.add_box_capacity_group(groups, facts)
+                        elif self.acquisition_capacity_ready(facts, species, method):
+                            # Legacy observations without box telemetry retain
+                            # their conservative, explored-source deposit path.
+                            self.add_party_space_group(groups, facts, species)
+                        continue
+                    context['acquisition_storage_capacity'] = capacity
                 key = f"register:{species}:{method['method']}:{method.get('map', source or '')}"
                 groups[key] = {'target': ('register', species, True), 'rules': rules,
                                'objectives': [f'Register {species} in the solo Pokédex'],
@@ -2315,6 +2318,35 @@ class AutonomousStoryAgent(DualStoryAgent):
                                 'encounter_value': area.get('encounter_value'),
                                 'trigger_navigation': [navigation[key]] if navigation[key] else []}}
         self.catch_areas, self.catch_navigation = areas, navigation
+
+    @staticmethod
+    def acquisition_storage_capacity(facts):
+        """Native givePokemon uses party room OR the current box, not both.
+
+        Only the selected observed box counts; another box with room needs a
+        real PC box change. Missing/malformed telemetry remains unknown.
+        """
+        party_count = len(facts.get('party', []))
+        party_room = party_count < 6
+        counts, current = facts.get('box_counts'), facts.get('current_box_index')
+        valid_index = (isinstance(current, int) and not isinstance(current, bool)
+                       and current >= 0)
+        count = (counts[current] if valid_index and isinstance(counts, (list, tuple))
+                 and current < len(counts) else None)
+        if not (isinstance(count, int) and not isinstance(count, bool) and 0 <= count <= 20):
+            count = None
+        box_room = count < 20 if count is not None else None
+        destination = 'party' if party_room else 'current_pc_box' if box_room is True else None
+        return {'party_count': party_count, 'party_space_available': party_room,
+                'current_box_index': current if valid_index else None,
+                'current_box_count': count, 'current_box_space_available': box_room,
+                'native_delivery_destination': destination,
+                'requires_party_deposit': False if destination else None,
+                'scope': 'Observed capacity snapshot for native givePokemon delivery, not a '
+                         'reserved slot or guaranteed receipt. Alternatives share this space; '
+                         'travel captures can fill it before arrival. Script guards, payments, '
+                         'navigation and real menu execution still apply. A boxed receipt '
+                         'registers the species but needs normal withdrawal for party use.'}
 
     def acquisition_capacity_ready(self, facts, species, method):
         """Do not churn party slots for a pickup beyond the explored frontier."""
