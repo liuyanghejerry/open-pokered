@@ -2575,3 +2575,34 @@ worktree为干净`e67743a6`，实际策略SHA256
 `profile57-planning-20261003-v2/report.json`及`planning-stats.txt`定位本地
 重复搜索为该副本的主要耗时，不把隔离测量当成当前现场复现、新增登记
 或已实现性能提升。v1清理时误拒绝shutdown的失败日志亦保留，未隐去。
+
+### 2026-10-03：59种封存验读，并载入捕获来源校验继续
+
+第十二段Jev真实取回Horsea，正常使用已取得的TM11学习Bubblebeam，
+在Route18通过普通经验战训练；elapsed1324.275／frame72690自然升级
+并登记Seadra（34级），在线59 owned／90 seen。没有神奇糖果代替该
+升级、改等级／图鉴或回档。1380.157秒实际完成浅红市护士治疗后合作式
+停止，原生安全及最终观察均通过，独立新进程正常CONTINUE schema=3
+全部持久字段一致，源SRAM未改写，SHA256
+`9e39a97d798514a2f9ba702013d309c253b31fdc832d312c57edecea686da07f`。
+终点FuchsiaPokecenter `(3,3)`、资金725、五徽章、队伍6只／PC37只，
+箱1、GreatBall3颗；Seadra34和Charizard65等全队HP／PP真实补满。
+证明为`formal59-independent-continue.json`，不是全链来源缺口已修复。
+
+第十二段MP4封口308.683333秒、18521帧、5805507字节，H.264／160×144／
+60fps。全部12个已封存正式分段容器、时钟及登记守恒审计通过，合计
+12121.866664秒、223760条合并记录、59种唯一登记；11个续跑起点新增
+列表均为空。报告`closed-formal59-lineage-clock-20261003.json`仍明确
+历史幽灵访问缺口未消除，不替代全片视觉、合法来源或最终合片验收。
+最新存档和独立证明／测试／停止／时钟证据另备份到worktree外的
+`verified59-evidence-20261003.tar.gz`（33959字节），不重复MP4、无凭据，
+原始trace及所有原件保留。
+
+第十三段`20261003-174243-seed42`已从该最新59种正常CONTINUE，启动
+时worktree为干净`398119bd`，实际策略SHA256
+`b3f413c8e50dcdd3196ce1c22ec94f78e6d899992ce953328e37712c2532247e`，
+策略源文件SHA256
+`5509e3daa6167881817ea18d78c7ee79abfe2256b7d5a5f2ae1c2b76df17d022`，
+私有native仍为`c5c3ac58`。没有回退、存档编辑或热替换；OpenRouter
+Jev双层决策和原生录像继续，CONTINUE初始59列表不计新增。所有当前
+运行及诊断保持持久目录，不使用`/tmp`。
