@@ -4871,7 +4871,7 @@ frame103245在Route11普通经验Spearow13→20进化真实登记Fearow，
 13次max_tokens_exceeded均由原有策略拆组回退处理并继续，没有额度、
 模型或预算改动，也不把成功回退当作解决服务输入限制。
 
-460.904秒自主护士outcome后，2026-10-03 23:11:09 UTC精确身份／
+460.905秒自主护士outcome后，2026-10-03 23:11:09 UTC精确身份／
 源hash及byte-stable trace guard仅controller96478合作式SIGINT；
 native96495／recorder96496无信号或第二连接，三者正常退出。安全／
 最终观察／development checkpoint均true，success=false／
