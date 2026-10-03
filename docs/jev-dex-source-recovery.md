@@ -4749,7 +4749,7 @@ byte-stable trace guard仅向controller73587合作式SIGINT；native73599／
 recorder73600无信号或第二连接，三者正常退出。safe／最终观察／
 development checkpoint均true，success=false／interrupted_at_command_boundary，
 59动作、策略68／动作165调用。终点CeruleanPokecenter `(3,3)`／frame85288，
-资金260、PokeBall35／GreatBall25、party6／PC13，Charizard43 XP76121、
+资金260、PokeBall35／GreatBall25、party6／PC14，Charizard43 XP76121、
 Kadabra16 XP2585、普通HP／四槽PP消耗与恢复全部保留。
 
 最新SRAM `eafe588bf5b928ece93196572308fc6d96cac271b94ef44a0db4cf48a9b4dc38`
@@ -4781,7 +4781,7 @@ native78633／recorder78634无信号或第二连接，三者正常退出。安�
 最终观察与development checkpoint均true，success=false／
 interrupted_at_command_boundary。32动作、策略102／动作56调用，
 5次战斗；终点VermilionPokecenter `(3,3)`／frame28100，26 owned／
-63 seen、资金151、PokeBall49／GreatBall23、party6／PC14，Charizard44
+63 seen、资金151、PokeBall49／GreatBall23、party6／PC15，Charizard44
 XP78035、Arbok23 XP12696、Kadabra16 XP2585，正常HP／四槽PP、PC、
 消费与恢复全部保留。没有强制治疗／换人或回退存档。
 
