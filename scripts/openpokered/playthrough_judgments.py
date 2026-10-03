@@ -858,7 +858,12 @@ class JevGame(pt.Game):
                                   result_phase=state['battle_phase'], party=state['party'],
                                   map=state['map_name'], frame=state['frame_count'])
         changed = before.get('party') != state.get('party') or before['map_name'] != state['map_name']
-        if getattr(self, 'navigation_active', False) and (prefer == 'fight' or changed):
+        # A scripted battle can leave deferred dialogue, pushback, flags or
+        # transport even after a run with unchanged party/map. Discard the
+        # old direction string and let the caller settle/reobserve the script;
+        # ordinary wild escapes still allow unchanged navigation to continue.
+        scripted = entered and before.get('script_awaiting_battle') is True
+        if getattr(self, 'navigation_active', False) and (prefer == 'fight' or changed or scripted):
             raise NavigationPause('Battle ended; reassess travel, healing and preparation')
 
     def attach_judgments(self, model_client, *, model='jev-1.13.0', trace=None,

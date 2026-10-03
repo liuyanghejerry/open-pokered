@@ -6122,6 +6122,47 @@ class AutonomousTests(unittest.TestCase):
         self.assertIn('SILPH_SCOPE', game.judgments.battle_requirements)
         game.judgments.choose.assert_called_once()
 
+    def test_scripted_battle_escape_interrupts_navigation_without_party_or_map_change(self):
+        import playthrough as pt
+        from openpokered.playthrough_judgments import NavigationPause
+        for ghost in (True, False):
+            with self.subTest(ghost=ghost):
+                game = JevGame.__new__(JevGame)
+                game.judgments = Mock()
+                game.judgments.active = {'target': ['transport', ['Destination', 1, 1], True]}
+                game.judgments.battle_requirements = {}
+                game.battles_driven = 0
+                game.navigation_active = True
+                before = {'screen': 'battle', 'map_name': 'Tower',
+                          'battle_live': {'is_ghost': ghost},
+                          'script_awaiting_battle': True, 'party': []}
+                after = {'screen': 'overworld', 'map_name': 'Tower', 'battle_phase': 'Over',
+                         'party': [], 'frame_count': 100}
+                game.st = Mock(side_effect=[before, after])
+                with patch.object(pt.Game, 'battle_loop') as drive, \
+                        self.assertRaises(NavigationPause):
+                    game.battle_loop(prefer='run')
+                self.assertEqual(drive.call_args.kwargs['prefer'], 'run')
+                self.assertEqual(game.battles_driven, 1)
+                if ghost:
+                    self.assertEqual(game.judgments.battle_requirements['SILPH_SCOPE']['blocked_goal'],
+                                     game.judgments.active['target'])
+
+    def test_ordinary_wild_escape_keeps_unchanged_navigation(self):
+        import playthrough as pt
+        game = JevGame.__new__(JevGame)
+        game.judgments = Mock()
+        game.battles_driven = 0
+        game.navigation_active = True
+        before = {'screen': 'battle', 'map_name': 'Route', 'battle_live': {'is_ghost': False},
+                  'script_awaiting_battle': False, 'party': []}
+        after = {'screen': 'overworld', 'map_name': 'Route', 'battle_phase': 'Over',
+                 'party': [], 'frame_count': 100}
+        game.st = Mock(side_effect=[before, after])
+        with patch.object(pt.Game, 'battle_loop') as drive:
+            game.battle_loop(prefer='run')
+        self.assertEqual(drive.call_args.kwargs['prefer'], 'run')
+
     def test_failed_tile_route_reports_the_object_occupying_its_passage(self):
         import playthrough as pt
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)

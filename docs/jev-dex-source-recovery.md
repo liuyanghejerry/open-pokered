@@ -2226,3 +2226,65 @@ OpenRouter Jev与原生录制继续。全部存档、录像及诊断证据在仓
 播放器JavaScript及diff检查通过，未放宽任何预算／断言。第七段仍加载
 原冻结策略，没有为这一验收工具变更热更新或停止。frame51322／elapsed
 398.532秒正常捕获Onix，正式在线31/124，最新独立封口核验仍是28种。
+
+### 2026-10-03：33种独立CONTINUE；脚本战后的旧步行越界
+
+第七段后续在Route8正常捕获Growlithe（frame116077／elapsed867.681秒），
+Route12原生静态战实际捕获Snorlax（frame172035／elapsed1427.451秒），
+登记到33种。莉佳和阿桔的实际胜利旗标分别在elapsed1004.502／1639.751秒
+出现，达五徽章。没有把诊断副本、旧83种存档或CONTINUE初始快照加进计数。
+
+elapsed1671.927秒未来一次FuchsiaPokecenter真实治疗完成后，合作式SIGINT
+仅发送给该轮控制器；正常finalizer保存并封口，未注入快照或连接原生实例。
+严格安全检查及独立进程真实CONTINUE schema=3通过：33 owned／75 seen、
+FuchsiaPokecenter `(3,3)`、资金27035、徽章31、6只队伍／16只PC及全部
+持久字段一致。喷火龙54级、HP189／189，Oddish18级／经验4454保留。
+源SRAM SHA256
+`cd3e386a0adb64aa30373cc2c938af96a9a65f181f7c480481616f615db6cbdf`；
+证明为`formal33-independent-continue.json`。该段MP4正常封口为876.283333秒、
+52577帧、13476096字节。七段正式父链合计9375.749999秒（约156分钟）、
+合并174604条记录、独特登记33种，六次恢复初始新增均为[]；
+`closed-formal33-lineage-clock-20261003.json`只证明容器／时钟／登记守恒，
+不是全片视觉验收、最终合成MP4或完整合法来源审计。
+
+须保留一个来源／访问审计缺口：本段未持有SilphScope，塔内普通幽灵不能
+捕捉；Ghost Marowak两次菜单RUN都没有`EVENT_BEAT_GHOST_MAROWAK`，但普通
+步行竟到达7F，随后真实救富士、获得笛子。Snorlax战开始时确实持有笛子、
+敌方存活且非幽灵，登记和球消耗来自原生；不能据此声称幽灵门禁正确解除，
+也不能把33种读档核验说成33种完整合法来源验收。原始记录不改写，后续不得
+注入幽灵胜利旗标、回退存档或隐藏这条异常路径。
+
+第一层修复让脚本战结束后即便逃跑且队伍／地图不变，也抛出NavigationPause，
+丢弃旧方向串；普通野战同状态逃跑仍允许继续导航。新增回归旧版两子例失败，
+新版通过，Python全套812项通过、播放器JavaScript及diff检查通过。同一33种
+真实CONTINUE副本的原生对照证明：旧版直接到7F；新版先在6F暂停，但只推进
+无按键帧仍到7F，幽灵旗标始终false，两个源存档均不变。故导航暂停本身
+不能宣称修好原生门禁；证据为`scripted-escape-native-before-b/`和
+`scripted-escape-native-after-b/`。
+
+原生根因是进入坐标触发格的同帧，held LEFT已连起下一步Walking；剧情和
+战斗冻结这一步，战后MovePlayerRelative的RIGHT推回先续跑旧LEFT，踩到
+楼梯并丢弃尚未完成的脚本。现在只在脚本战挂起交接时保留当前格、清除旧
+movement_state／walk_counter，普通野战不走该分支。实际场景测试从(11,16)
+持LEFT触发原生Marowak，旧版断言Walking失败；修复后RUN／caught推回右格，
+win／玩偶fled保留胜利分支，均不在无按键阶段越过楼梯。核心库2613项通过。
+真实读档对照、master／PR截图和fresh全链验证另行记录；此处单元测试不作为
+正式新增登记、fresh通关或最终124验收。
+
+修复版真实33种副本CONTINUE对照（`scripted-escape-native-after-c/`）确认
+同样frame30823在6F `(11,16)`接近幽灵，逃跑后frame31732仍在6F `(10,16)`；
+只推进正常无按键帧，frame31764正确推回6F `(11,16)`，33→33、幽灵旗标
+false→false、源SRAM不变。未用诊断副本推进正式进度。
+master／修复版同一隔离场景都在frame464返回，追加100无按键帧后frame564
+前者误到7F `(9,16)`，后者仍为6F `(11,16)`。原生PNG与完整说明在
+`docs/screenshots/jev-dex-collection/ghost-handoff-*.png`和comparison.md。
+
+修复native SHA256
+`2eab8a49e38cb78e5207e49fcf8c3273962b38993169399a7501dee363ed091e`
+正常CONTINUE上述正式33种存档也通过全部持久字段比较，证明为
+`formal33-fixed-native-independent-continue.json`，不证明逐帧／RNG连续。
+新的真实NEW GAME、seed42／speed0 fresh m01–m49请求实跑通过m01–m15，
+仍在m16原断言`ship preparation stalled`失败：400个原训练周期未到30级。
+与此前atomic-input引擎的同点失败一致，没有降低等级／断言或扩大预算，
+不能宣称fresh全链通过；证据为`fresh-m49-pinned42-ghost-handoff/`。
+该回归目录、所有运行及诊断继续放在持久`.artifacts`，不使用`/tmp`。

@@ -709,6 +709,15 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 }
                 self.apply_finished_effect(effect_done);
                 if awaiting_battle {
+                    // A coord trigger can claim a completed tile after held
+                    // input has already chained the next walk. That old step
+                    // must not survive the scripted battle: otherwise it can
+                    // reach a warp before the scene's post-battle pushback.
+                    // Keep the current tile and let the resumed scene own
+                    // subsequent movement. Ordinary wild battles don't use
+                    // this scripted suspension path.
+                    self.state.player.movement_state = MovementState::Idle;
+                    self.state.walk_counter = 0;
                     // Hold the script; it resumes when the battle ends.
                     self.script_awaiting_battle = true;
                 } else if awaiting_elevator {
