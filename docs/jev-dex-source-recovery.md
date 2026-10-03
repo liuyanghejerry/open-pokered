@@ -3847,3 +3847,21 @@ PC40、current box2空；原生终点普通party观察显示实际HP／PP补满�
 时钟／登记守恒通过，总16844.649997秒、309921条记录、63唯一登记，
 27次续跑初始新增均为空；不代替全片视觉、最终合法来源或最终合片。
 继续仅从本段最新检查点加载修复，不把版本修复当成已付款或新物种。
+
+最新第28段SRAM、旧／新独立证明及旧路径失败日志、完整前后规划、
+930测试／app测试／构建、fresh49观察／native autosave与冻结修复源，
+另备份worktree外`verified63-native-game-version-evidence-20261004.tar.gz`，
+3923719字节、107项，SHA256
+`f9b6d1c33187c787185cf8ef596fe6a05b2f048aadda831b419309af5f67f56b`。
+条目和SRAM哈希检查通过，无凭据／重复MP4／binary，所有原件保留；
+不是最终合法NEW GAME或合片备份。
+
+第29段 `20261004-021243-seed42` 仅从最新28段正常CONTINUE，启动
+时干净`97aa4378`，policy
+`f0d2bca43fd972bf5980cc112af3848c05899b20bffdfc1a231265f8cb7aacb9`，
+autonomous3ba5／story_rules998c／playthroughc844，native2bdf／gfx21e0。
+版本0已进入真实OpenRouter Jev策略请求，40.751秒自主选择Fuchsia
+Cut、41.790秒实际清树；双层Jev1.13、同预算及原生4×录像继续，
+无指定路线／milestone调用／热替换／回退。起点63不计新增，未执行
+兑奖或鲤鱼王购买；仍prototype验证，尚未启动最终合法NEW GAME。
+Goal保持active，继续补策略及核验能力，最终124／MP4／大盘未交付。
