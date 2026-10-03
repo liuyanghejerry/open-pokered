@@ -1952,4 +1952,18 @@ elapsed16.860秒，正式双层Jev选月见山训练家；elapsed21.219秒实际
 策略2次、动作27次；此轮没有额外录制视频，证据在持久目录
 `.artifacts/checkpoint-safety-20261003/npc-pickup-native-d/`。
 这是使用milestone准备的诊断夹具，不是正式图鉴或全链故事验收。
-正式16种续跑仍冻结于`25516a44`，新修复待下一次安全治疗检查点接入。
+正式16种续跑在elapsed501.186秒完整治疗后正常停机，严格安全检查通过。
+第二次独立CONTINUE schema=3恢复持久字段一致，源SRAM哈希
+`5c4a6de453b6cfc33efbcb53c19f1a0483ba6e21f50b9a03d66f7e0424181a41`；
+正常训练取得的等级／经验没有回退。证明保留在
+`.artifacts/checkpoint-safety-20261003/formal16-route-unlock-independent-continue.json`。
+第二段MP4正常封口，687.717秒、11157315字节，未删除或替换第一段。
+
+已从第二段检查点加载`2b18b2a2`续跑，目录
+`.artifacts/jev-dex-recording-newgame-20261003/20261003-134249-seed42/`，
+manifest明确指向父`20261003-133404-seed42`，策略SHA256为
+`59fa9c2ac9ea1fe092ee11ce42f4cb5f3050b2656c110cb232e5d98e45a11fc6`。
+第三段正式elapsed15.913秒Jev选择化石占位清除前置，elapsed21.238秒
+真实旅行战斗获`EVENT_BEAT_MT_MOON_EXIT_SUPER_NERD`，elapsed22.605秒
+实际领取DomeFossil且两块化石NPC消失。它是物品／主线解锁，不是新图鉴登记；
+正式仍为16/124，策略和动作继续由Jev选择、记录全时段原生录像。
