@@ -1,4 +1,5 @@
 import copy
+import json
 import tempfile
 import unittest
 import sys
@@ -8,10 +9,21 @@ from unittest.mock import Mock, patch
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from scripts.openpokered.collection_verification import (
     collection_snapshot, require_collection_completion, verify_collection_continue)
+from scripts.openpokered.collection_planner import (
+    SUPER_ROD_MAP_GROUP, complete_acquisition_graph, solo_plan)
+from scripts.openpokered.story_rules import MAPS_DIR
+
+
+def solo_species():
+    maps = {path.parent.name: json.loads(path.read_text())
+            for path in MAPS_DIR.glob('*/map.json')}
+    graph = complete_acquisition_graph(maps, SUPER_ROD_MAP_GROUP)
+    return solo_plan(graph, forced_choices={'starter': 'Charmander', 'fossil': 'Kabuto',
+        'dojo': 'Hitmonlee', 'eevee_evolution': 'Jolteon'})['reachable_species']
 
 
 def observations(count=124):
-    names = [f'Species{i}' for i in range(count)]
+    names = solo_species()[:count]
     counts = [20, 19, 2] + [0] * 9
     stored = [{'box': box, 'index': index, 'species': f'Stored{box}_{index}',
                'level': 10, 'hp': 30, 'max_hp': 30, 'status': 'None',
@@ -37,9 +49,25 @@ class CollectionContinueTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'source-validated'):
             require_collection_completion(observations(), {'Marowak': {}})
         invalid = observations()
-        invalid['get_state']['data']['pokedex']['owned_species'][-1] = 'Species0'
+        invalid['get_state']['data']['pokedex']['owned_species'][-1] = \
+            invalid['get_state']['data']['pokedex']['owned_species'][0]
         with self.assertRaisesRegex(ValueError, 'Invalid'):
             require_collection_completion(invalid, {})
+
+    def test_final_gate_requires_exact_red_solo_species_not_just_count(self):
+        valid = observations()
+        self.assertEqual(valid['get_state']['data']['pokedex']['owned'], 124)
+        require_collection_completion(valid, {})
+        # Keeping count, uniqueness and owned-subset-of-seen intact cannot
+        # make an unavailable, external, mutually-exclusive or unknown source
+        # a legitimate substitute for one of the actual solo targets.
+        for substitute in ('Mew', 'Alakazam', 'Sandshrew', 'Squirtle', 'TypoSpecies'):
+            invalid = copy.deepcopy(valid)
+            dex = invalid['get_state']['data']['pokedex']
+            dex['owned_species'][-1] = substitute
+            dex['seen_species'][-1] = substitute
+            with self.subTest(substitute=substitute), self.assertRaisesRegex(ValueError, 'Red solo'):
+                require_collection_completion(invalid, {})
 
     def test_battle_state_cannot_be_final_save_proof(self):
         invalid = observations()

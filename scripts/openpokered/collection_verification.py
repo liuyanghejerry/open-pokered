@@ -1,12 +1,17 @@
 """Independent native CONTINUE proof, never a substitute for source auditing."""
 import hashlib
+import json
 import shutil
 import tempfile
 import time
+from functools import lru_cache
 from pathlib import Path
 
 import playthrough as pt
+from .collection_planner import (SOLO_CHOICE_BRANCHES, SUPER_ROD_MAP_GROUP,
+                                 complete_acquisition_graph, infer_solo_choices, solo_plan)
 from .playthrough_judgments import ObservedProtocol
+from .story_rules import MAPS_DIR
 
 
 def valid_safari_snapshot(safari):
@@ -54,10 +59,32 @@ def collection_snapshot(observations):
     }
 
 
+@lru_cache(maxsize=1)
+def _red_solo_graph():
+    maps = {path.parent.name: json.loads(path.read_text())
+            for path in MAPS_DIR.glob('*/map.json')}
+    return complete_acquisition_graph(maps, SUPER_ROD_MAP_GROUP)
+
+
 def require_collection_completion(observations, pending):
+    """Require the exact native solo target set, not merely 124 owned bits.
+
+    This checks registrations and known invalid-source remedies only. A full
+    acquisition-evidence audit remains a separate publication requirement;
+    empty known-source pending state cannot prove every source was legitimate.
+    """
     snapshot = collection_snapshot(observations)
     if pending or snapshot['dex']['owned'] != 124:
         raise ValueError('Collection is not a source-validated 124-species completion')
+    owned = set(snapshot['dex']['owned_species'])
+    if any(sum(bool(owned & species) for species in branches.values()) > 1
+           for branches in SOLO_CHOICE_BRANCHES.values()):
+        raise ValueError('Collection violates mutually exclusive Red solo choices')
+    # Do not pass observed owned species as closure seeds: doing so would
+    # launder Mew, a Blue-only species or a link evolution into reachability.
+    plan = solo_plan(_red_solo_graph(), forced_choices=infer_solo_choices(owned))
+    if plan['ceiling'] != 124 or owned != set(plan['reachable_species']):
+        raise ValueError('Collection does not match the exact Red solo 124-species target')
     return snapshot
 
 
