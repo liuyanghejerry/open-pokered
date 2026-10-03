@@ -2978,3 +2978,14 @@ context保留，帧627与源SRAM不变。证明
 父目标候选比较、原生导航及真实模型只读证据另备份到worktree外
 `verified60-seafoam-evidence-20261003.tar.gz`（379251字节），归档
 条目已检查，不含凭据、不重复MP4／binary、全部原件保留。
+
+第十八段`20261003-192808-seed42`已从上述最新双子岛存档正常
+CONTINUE，启动时worktree干净`48d5eaec`，策略SHA256
+`ecb6587c662cf6226ba1cd38343c7d673141faeec171ca10340177185dbf118a`，
+策略源SHA256
+`9a1fbf2dcdbeca65af3234b727d19dde2a087fff54c1f6b017db4707fc65df46`，
+私有native仍c5、668份gfx仍21e0。宝物资金及跨水父目标证据已进入
+真实Jev请求，elapsed35.273秒实际完成B3F `(23,9)`落地，后续再选择
+治疗；这一小段真实跨水不等于全程阻塞已解决。双层OpenRouter及
+原生录像继续，所有运行／存档／录像与任务临时目录均在持久
+`.artifacts`，不将CONTINUE起点60计新增、不回退或热替换。
