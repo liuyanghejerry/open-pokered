@@ -1328,6 +1328,12 @@ class AutonomousStoryAgent(DualStoryAgent):
                     'Compare unfinished purposes or a concrete new use with other collection goals. '
                     'This history neither proves Cut is the only route nor rules out other uses; '
                     'no candidate or route is prescribed by it.')
+            if any('known_direct_collection_targets' in value for value in candidates.values()):
+                instruction += (' A held source may have been consumed or evolved after completing '
+                    'a registration. Its currently unsatisfied possession goal does not alone mean '
+                    'a collection objective remains unfinished: compare the known direct targets and '
+                    'their validated registrations. The catalogue does not rule out other uses, '
+                    'prove current feasibility or prescribe reacquisition or a route.')
         if layer == 'strategy' and any('route_resets_won_battles' in value for value in candidates.values()):
             instruction += (' Compare every candidate travel route with its supplied story-reset cost. '
                 'Training, retrieving teammates, shopping and hunting can cross the same reset entry '
@@ -3718,6 +3724,19 @@ class AutonomousStoryAgent(DualStoryAgent):
                 # drink simply because a later gym battle remains unfinished.
                 del self.route_requirements[name]
 
+    def collection_source_uses(self, source, facts):
+        """Current validated registration status, separate from source possession."""
+        owned = self.validated_owned(facts)
+        registered = lambda species: any(self.same_species(species, name) for name in owned)
+        targets = sorted(species for species, methods in self.complete_collection_graph().items()
+            if any(method.get('method') in ('evolution', 'npc_trade')
+                and not method.get('external_trade')
+                and self.same_species(method.get('from_species'), source) for method in methods))
+        return {'source_validated_registered': registered(source),
+            'known_direct_collection_targets': [
+                {'species': species, 'validated_registered': registered(species)} for species in targets],
+            'collection_use_scope': 'These are only catalogued evolution/NPC-trade source edges excluding external trades, not proof of current feasibility or an exhaustive list of purposes. Already validated registrations are not new Pokédex gains; source registration is not possession. This does not rule out other uses or prescribe reacquisition.'}
+
     def field_prerequisite_context(self, obstacle, facts):
         """Connect an observed field crossing to its unfinished requested goal.
 
@@ -3733,6 +3752,8 @@ class AutonomousStoryAgent(DualStoryAgent):
                 recorded.append({'goal': deepcopy(goal),
                     'currently_satisfied': self.index.satisfied(goal, facts),
                     'scope': 'A previous failed route attempt proposed clearing this exact tree while pursuing this goal. Current goal status uses current facts, not a claim that the tree is cleared, Cut is necessary or sufficient, or other uses are impossible.'})
+                if getattr(self, 'collects_dex', False) and goal[0] == 'held_species':
+                    recorded[-1].update(self.collection_source_uses(goal[1], facts))
         if recorded:
             context['recorded_field_route_goals'] = recorded
         destination = obstacle.get('destination')

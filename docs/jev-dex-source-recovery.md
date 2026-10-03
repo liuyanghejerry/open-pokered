@@ -4857,3 +4857,61 @@ legal8-start-proof、cooperative-checkpoint-request、independent-continue
 不含凭据／binary／重复MP4，全部原件保留，无删除。后继只从最新
 27源正常继续；距124仍97种，最终全程MP4与完成图鉴大盘尚未交付，
 Goal仍active。
+
+## 2026-10-04：合法第9段28种，大嘴雀真实登记与消耗来源用途补充
+
+第9段`20261004-070327-seed42`只从最新合法27源普通CONTINUE，干净
+9e7eeff4／实际policy2aab0c33／冻结native6d8e／gfx21e0；双层OpenRouter
+Jev1.13.0、seed42、原预算及4×原生实录不变。初始全持久字段守恒，
+真实策略16.628秒／动作19.104秒成功，schema1 Cut用途进入实际请求。
+正常从PC取回Machop17和Spearow13，自主训练、治疗与回程；432.057秒／
+frame103245在Route11普通经验Spearow13→20进化真实登记Fearow，
+28 owned／64 seen，正常学习FuryAttack、XP8036。不是重复Spearow、
+物品、治疗、准备或初始27新增。实际3次切树，不据此声称减少重复；
+13次max_tokens_exceeded均由原有策略拆组回退处理并继续，没有额度、
+模型或预算改动，也不把成功回退当作解决服务输入限制。
+
+460.904秒自主护士outcome后，2026-10-03 23:11:09 UTC精确身份／
+源hash及byte-stable trace guard仅controller96478合作式SIGINT；
+native96495／recorder96496无信号或第二连接，三者正常退出。安全／
+最终观察／development checkpoint均true，success=false／
+interrupted_at_command_boundary；101动作、策略52／动作353调用、
+75次普通战斗。终点VermilionPokecenter `(3,3)`／frame104891，三徽章
+位掩码7、资金151、PokeBall49／GreatBall23、party6／PC15。Fearow20
+XP8036、Charizard45 XP84342，普通HP／四槽PP、PC及所有实际消耗保留。
+
+最新SRAM `4e9cb66b0fd133afb0d576f7db7f47429bc5a40a694513bd279cbf275e6ca2cd`
+独立新进程schema4普通CONTINUE全持久字段严格同，本段与上一27源
+hash均未改。原生MP4 5859842字节／437.066667秒／26224帧全帧解码，
+SHA256 `634a8739e51d41e90f42742d16b8c625bb8e16cc1a734d9ad5e28e918ecfbd7a`。
+九段合法NEW GAME祖先链4989.233334秒／28唯一登记，resume快照不重复、
+第5段恢复只计一次，source audit无history／pending。这是partial证明，
+不是最终124、完整来源／全片质量验收或最终合片。
+
+本段进化后的真实状态不再持有Spearow，故旧held_species用途的
+currently_satisfied正常变false，但Farfetchd和Fearow都已登记。新增
+collection_source_uses从现有完整来源图只读枚举直接evolution／npc_trade
+边（排除external_trade），补source_validated_registered及
+known_direct_collection_targets的当前有效登记状态；pending登记不计
+完成，大小写／下划线物种身份一致。仅给图鉴模式的已记录held_species
+用途追加这些信息，原持有false不改true；不声称来源目录穷尽所有用途、
+保证当前可行或禁止重捕／其他路线，不推断它们都是原旅行的真实目的。
+让Jev比较“来源消耗后的持有变化”与“后续收集是否仍未完成”。
+
+4项专项旧代码1FAIL／2ERROR（非图鉴不变项通过），新4PASS；完整
+Python1023PASS／20.373秒、diff-check通过。同一最新28源、schema1真实
+记忆与完整12目标只读普通CONTINUE旧9e整份agent／新代码，36→36，
+facts／普通party／原生AST／路径需求／帧627严格同；仅精确Cut候选的
+held_species记录追加上述3键，移除后全部JSON严格同。两边控制Python
+hash seed42，正式设置不变，零模型调用／CONTINUE后零输入；不声明
+实际收集收益或规划加速。本段28来自旧2aab策略，新因子只在后继部署；
+纯Python决策／证据补充，无Rust构建／玩家画面变更或新m49结论。
+
+持久legal9-checkpoint-proof、independent-continue及
+legal28-cut-source-frontier-comparison保留。worktree外44项／1862824字节
+增量备份`verified28-checkpoint-and-fearow-source-uses-evidence-20261004.tar.gz`
+逐项字节／hash通过，SHA256
+`33abaf1a02d0fa1e7aa7e12ea2c2ee9d09d8c3d37a0630f13baa37c1587aa1c2`，
+上一27archive hash未改；无凭据／binary／重复MP4，所有原件保留，无删除。
+后继只从上述最新28源普通CONTINUE，不热替换／回退／注入／另开
+NEW GAME；距124仍96种，最终全程MP4与完成图鉴大盘尚未交付，Goal active。

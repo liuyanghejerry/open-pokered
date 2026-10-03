@@ -2346,6 +2346,82 @@ class AutonomousTests(unittest.TestCase):
         self.assertIn('already completed parent goal', instructions)
         self.assertIn('other uses', instructions)
 
+    def test_cut_consumed_source_preserves_possession_fact_and_registered_uses(self):
+        from openpokered.autonomous_story import cut_obstruction_identity
+        from openpokered.story_rules import StoryIndex
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.collects_dex = True
+        agent.index = StoryIndex.__new__(StoryIndex)
+        agent.navigation_memory = {}
+        cut = {'move': 'Cut', 'map': 'City', 'tree': [2, 3]}
+        agent.field_route_goals = {cut_obstruction_identity(cut): [['held_species', 'Spearow', True]]}
+        agent._complete_collection_graph = {
+            'Fearow': [{'method': 'evolution', 'from_species': 'Spearow'}],
+            'Farfetchd': [{'method': 'npc_trade', 'from_species': 'Spearow'}],
+            'Other': [{'method': 'grass', 'from_species': 'Spearow'}],
+            'External': [{'method': 'evolution', 'from_species': 'Spearow', 'external_trade': True}]}
+        facts = {'party': [{'species': 'Fearow'}], 'stored_pokemon': [],
+                 'dex': {'owned_species': ['Spearow', 'Fearow', 'Farfetchd']}}
+        record = agent.field_prerequisite_context(cut, facts)['recorded_field_route_goals'][0]
+        self.assertFalse(record['currently_satisfied'])
+        self.assertTrue(record['source_validated_registered'])
+        self.assertEqual(record['known_direct_collection_targets'], [
+            {'species': 'Farfetchd', 'validated_registered': True},
+            {'species': 'Fearow', 'validated_registered': True}])
+        self.assertIn('does not rule out other uses', record['collection_use_scope'])
+        self.assertEqual(agent.field_route_goals[cut_obstruction_identity(cut)],
+                         [['held_species', 'Spearow', True]])
+
+    def test_cut_source_uses_keep_pending_registration_and_partial_catalogue_unknown(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent._complete_collection_graph = {
+            'Fearow': [{'method': 'evolution', 'from_species': 'Spearow'}],
+            'Farfetchd': [{'method': 'npc_trade', 'from_species': 'Spearow'}]}
+        agent.collection_audit_pending = {'Fearow': {'reason': 'not yet validated'}}
+        facts = {'dex': {'owned_species': ['Spearow', 'Fearow']}}
+        record = agent.collection_source_uses('SPEAROW', facts)
+        self.assertTrue(record['source_validated_registered'])
+        self.assertEqual(record['known_direct_collection_targets'], [
+            {'species': 'Farfetchd', 'validated_registered': False},
+            {'species': 'Fearow', 'validated_registered': False}])
+        record = agent.collection_source_uses('Unknown', {})
+        self.assertFalse(record['source_validated_registered'])
+        self.assertEqual(record['known_direct_collection_targets'], [])
+        self.assertIn('only catalogued', record['collection_use_scope'])
+
+    def test_cut_source_uses_do_not_change_noncollection_or_other_goal_context(self):
+        from openpokered.autonomous_story import cut_obstruction_identity
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.index = Mock()
+        agent.index.satisfied.return_value = False
+        agent.navigation_memory = {}
+        agent.complete_collection_graph = Mock(side_effect=AssertionError('No source query needed'))
+        cut = {'move': 'Cut', 'map': 'City', 'tree': [2, 3]}
+        for collects, goal in ((False, ['held_species', 'Spearow', True]),
+                               (True, ['flag', 'LEADER', True])):
+            agent.collects_dex = collects
+            agent.field_route_goals = {cut_obstruction_identity(cut): [goal]}
+            row = agent.field_prerequisite_context(cut, {})['recorded_field_route_goals'][0]
+            self.assertNotIn('known_direct_collection_targets', row)
+            self.assertNotIn('source_validated_registered', row)
+
+    def test_cut_consumed_source_guidance_preserves_every_strategy_option(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        options = {'cut': json.dumps({'context': {'recorded_field_route_goals': [
+            {'goal': ['held_species', 'Spearow', True], 'currently_satisfied': False,
+             'known_direct_collection_targets': [{'species': 'Fearow', 'validated_registered': True}]}]}}),
+            'collect': json.dumps({'establish': ['register', 'Machoke', True]}),
+            'other': 'Consider another legal use of the tree'}
+        agent.choose_bounded_strategy = Mock(return_value='other')
+        self.assertEqual(agent.choose('strategy', {}, options, 'Choose'), 'other')
+        _, actual, instructions = agent.choose_bounded_strategy.call_args.args
+        self.assertEqual(set(actual), set(options))
+        for key in ('cut', 'collect'):
+            self.assertEqual(json.loads(actual[key]), json.loads(options[key]))
+        self.assertEqual(actual['other'], options['other'])
+        self.assertIn('consumed or evolved', instructions)
+        self.assertIn('other uses', instructions)
+
     def test_checkpoint_cut_purposes_bind_only_actual_strategy_and_matching_tree(self):
         import tempfile
         from openpokered.run_autonomous import checkpoint_field_route_goals
