@@ -70,8 +70,22 @@ def battle_party_target(state):
     party = state["battle_live"]["player_party"]
     enemy = species_data(state["battle_live"]["enemy"]["species"])
     preferred = "Venusaur" if "Ground" in {enemy["type1"], enemy["type2"]} else "Zapdos"
-    return next((i for i, mon in enumerate(party) if mon["species"] == preferred and mon["hp"] > 0),
-                max((i for i, mon in enumerate(party) if mon["hp"] > 0), key=lambda i: party[i]["level"]))
+    conscious = [i for i, mon in enumerate(party) if mon['hp'] > 0]
+    capable = []
+    for i in conscious:
+        for name, pp in zip(party[i].get('moves', []), party[i].get('pp', [])):
+            move = move_data(name)
+            if (pp > 0 and move['power'] > 0
+                    and all(type_chart().get((move['type'], defense), 1) > 0
+                            for defense in {enemy['type1'], enemy['type2']})):
+                capable.append(i)
+                break
+    # An immune last move or exhausted attacks are not useful readiness.
+    # Keep the old preference among capable members; with none, preserve
+    # the conscious fallback rather than inventing PP or an attack.
+    candidates = capable or conscious
+    return next((i for i in candidates if party[i]['species'] == preferred),
+                max(candidates, key=lambda i: party[i]['level']))
 
 
 def recovery_hp_threshold(state):

@@ -143,6 +143,54 @@ class GrassTrainingRegression(unittest.TestCase):
                 self.assertEqual(game.d.drive.call_args.kwargs['frames'], 36)
 
 
+class LegacyPartyReadinessRegression(unittest.TestCase):
+    def test_observed_agatha_party_switches_to_remaining_effective_attack(self):
+        state = {'battle_live': {'enemy': {'species': 'Gengar'}, 'player_party': [
+            {'species': 'Zapdos', 'level': 56, 'hp': 0,
+             'moves': ['Thunder', 'DrillPeck', 'Fly', 'Thunderbolt'], 'pp': [10, 18, 15, 11]},
+            {'species': 'Lapras', 'level': 21, 'hp': 89,
+             'moves': ['WaterGun', 'Growl', 'Surf', 'Strength'], 'pp': [25, 40, 15, 15]},
+            {'species': 'Venusaur', 'level': 56, 'hp': 92,
+             'moves': ['MegaDrain', 'RazorLeaf', 'Cut', 'VineWhip'], 'pp': [0, 0, 24, 0]},
+        ]}}
+        self.assertEqual(late.battle_party_target(state), 1)
+
+    def test_conscious_preferred_member_with_empty_attack_pp_does_not_seal_the_battle(self):
+        state = {'battle_live': {'enemy': {'species': 'Gengar'}, 'player_party': [
+            {'species': 'Zapdos', 'level': 60, 'hp': 150,
+             'moves': ['Thunderbolt'], 'pp': [0]},
+            {'species': 'Lapras', 'level': 21, 'hp': 89,
+             'moves': ['Surf'], 'pp': [1]},
+        ]}}
+        self.assertEqual(late.battle_party_target(state), 1)
+
+    def test_weak_but_nonzero_damage_still_counts_as_a_legal_attack(self):
+        state = {'battle_live': {'enemy': {'species': 'Gengar'}, 'player_party': [
+            {'species': 'Zapdos', 'level': 60, 'hp': 150,
+             'moves': ['Growl'], 'pp': [40]},
+            {'species': 'Paras', 'level': 5, 'hp': 19,
+             'moves': ['Absorb'], 'pp': [1]},
+        ]}}
+        self.assertEqual(late.battle_party_target(state), 1)
+
+    def test_existing_ground_preference_is_retained_when_it_can_damage(self):
+        state = {'battle_live': {'enemy': {'species': 'Rhydon'}, 'player_party': [
+            {'species': 'Zapdos', 'level': 60, 'hp': 150,
+             'moves': ['DrillPeck'], 'pp': [10]},
+            {'species': 'Venusaur', 'level': 55, 'hp': 170,
+             'moves': ['RazorLeaf'], 'pp': [10]},
+        ]}}
+        self.assertEqual(late.battle_party_target(state), 1)
+
+    def test_no_usable_attacks_keeps_a_conscious_fallback_without_faking_pp(self):
+        state = {'battle_live': {'enemy': {'species': 'Gengar'}, 'player_party': [
+            {'species': 'Zapdos', 'level': 60, 'hp': 0, 'moves': ['Thunderbolt'], 'pp': [0]},
+            {'species': 'Lapras', 'level': 21, 'hp': 89, 'moves': ['Surf'], 'pp': [0]},
+            {'species': 'Venusaur', 'level': 56, 'hp': 92, 'moves': ['Cut'], 'pp': [24]},
+        ]}}
+        self.assertEqual(late.battle_party_target(state), 2)
+
+
 class CutFieldMoveCompletionRegression(unittest.TestCase):
     def game(self, name='Cut', unchanged=False, departed=False, target_tile=0x3D,
              preserved_tree=False):
