@@ -3360,6 +3360,77 @@ class AutonomousTests(unittest.TestCase):
         agent.client.state.assert_not_called()
         agent.game.st.assert_not_called()
 
+    def test_training_skips_observed_unidentified_ghosts_and_reopens_with_scope(self):
+        from openpokered.story_rules import MAPS_DIR
+        names=('PokemonTower3F','PokemonTower4F','PokemonTower5F','Route15')
+        for quantity in (0,1):
+            with self.subTest(scope_quantity=quantity):
+                agent=AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+                agent.maps={name:{**json.loads((MAPS_DIR/name/'map.json').read_text()),
+                                  'connections':{},'warps':[]} for name in names}
+                agent.visited=set(names)
+                agent.battle_requirements={'SILPH_SCOPE':{
+                    'attack_blocked':'unidentified_ghost',
+                    'capture_blocked_maps':['PokemonTower3F','PokemonTower4F']}}
+                agent.client=Mock();agent.client.route.return_value={'found':True,'legs':[]}
+                agent.game=Mock(last_map='LavenderTown')
+                agent.game.navigation_barriers.return_value={}
+                agent.game.live_npcs.return_value=set()
+                agent.game.navigation_excluded_maps.return_value=()
+                with patch('openpokered.autonomous_story.pt.bfs_cross',return_value=[]):
+                    sites=agent.find_training_sites({'map':'LavenderTown','x':1,'y':1,
+                        'party':[{'level':66}],'bag':{'SILPHSCOPE':quantity},
+                        'flags':{'EVENT_GOT_SILPH_SCOPE':True}})
+                requested={call.args[1] for call in agent.client.route.call_args_list}
+                self.assertIn('Route15',requested)
+                self.assertIn('PokemonTower5F',requested)  # Do not invent an unobserved failure.
+                for name in ('PokemonTower3F','PokemonTower4F'):
+                    self.assertEqual(name in requested,bool(quantity))
+                    if not quantity:self.assertNotIn(name,sites)
+
+    def test_observed_ghost_training_replans_for_level_and_evolution_goals(self):
+        for target,context in ((('level','Gloom',22),{'capture_support_training':True}),
+                               (('register','Venomoth',True),
+                                {'acquisition_method':'evolution','trigger':'level'})):
+            agent=AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+            agent.replan_after_defeat=False
+            agent.needs_skill_recovery=Mock(return_value=False)
+            agent.battle_requirements={'SILPH_SCOPE':{
+                'capture_blocked_maps':['PokemonTower3F']}}
+            agent.active={'target':target,'context':context,'rules':[
+                Rule('train','PokemonTower3F','skill:train_encounter',[],[],[],target,[])]}
+            self.assertTrue(agent.should_replan({'bag':{},'party':[]}))
+            self.assertFalse(agent.should_replan({'bag':{'SILPHSCOPE':1},'party':[]}))
+            agent.active['rules'][0].map='Other'
+            self.assertFalse(agent.should_replan({'bag':{},'party':[]}))
+
+    def test_observed_ghost_training_execution_is_blocked_before_native_input(self):
+        agent=AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.actions,agent.max_actions=0,10
+        agent.record,agent.client,agent.game,agent.travel=Mock(),Mock(),Mock(),Mock()
+        agent.facts=Mock(return_value={'bag':{}})
+        agent.battle_requirements={'SILPH_SCOPE':{
+            'capture_blocked_maps':['PokemonTower3F']}}
+        result=agent.execute('train_encounter:PokemonTower3F,8,4',
+                             Mock(storyline='skill:train_encounter'))
+        self.assertEqual(result['required_capability'],'identifiable_wild_opponent')
+        self.assertIsNone(agent.active)
+        agent.client.state.assert_not_called()
+        agent.game.st.assert_not_called()
+        agent.travel.assert_not_called()
+
+    def test_ghost_training_execution_rechecks_current_scope_possession(self):
+        agent=AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.actions,agent.max_actions=0,10
+        agent.record,agent.client,agent.game=Mock(),Mock(),Mock()
+        agent.facts=Mock(return_value={'bag':{'SILPHSCOPE':1}})
+        agent.battle_requirements={'SILPH_SCOPE':{
+            'capture_blocked_maps':['PokemonTower3F']}}
+        agent.client.state.side_effect=RuntimeError('native training reached')
+        with self.assertRaisesRegex(RuntimeError,'native training reached'):
+            agent.execute('train_encounter:PokemonTower3F,8,4',
+                          Mock(storyline='skill:train_encounter'))
+
     def test_native_storage_guard_overrides_a_stale_public_box_count(self):
         from openpokered.playthrough_judgments import capture_storage_full
         state = {'party': [{'species': 'Cubone'}] * 6, 'box_counts': [19],

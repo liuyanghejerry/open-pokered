@@ -832,6 +832,13 @@ class AutonomousStoryAgent(DualStoryAgent):
                 and any(self.capture_area_blocked(rule.map, facts)
                         for rule in self.active.get('rules', []))):
             return True  # The just-observed encounter cannot satisfy this hunt.
+        context = (self.active or {}).get('context', {})
+        training = (self.active and (self.active['target'][0] == 'level'
+                    or context.get('acquisition_method') == 'evolution'
+                    and context.get('trigger') == 'level'))
+        if training and any(self.capture_area_blocked(rule.map, facts)
+                            for rule in self.active.get('rules', [])):
+            return True  # Unidentified wild ghosts cannot award knockout XP either.
         if (self.active and self.active['target'][0] == 'item' and self.active['target'][2]
                 and len(facts.get('bag', {})) >= 20
                 and not facts['bag'].get(self.active['target'][1].replace('_', '').upper())):
@@ -2636,6 +2643,8 @@ class AutonomousStoryAgent(DualStoryAgent):
         for name in nearby:
             if name.startswith('SafariZone'):
                 continue  # BALL/BAIT/ROCK/RUN cannot produce knockout XP.
+            if self.capture_area_blocked(name, facts):
+                continue  # Observed ghost identification also gates wild knockout XP.
             wild = ((self.maps.get(name, {}).get('wild') or {}).get('red') or {}).get('grass') or {}
             mons = wild.get('mons', [])
             if not mons or max(mon['level'] for mon in mons) > level + 2:
@@ -2795,7 +2804,7 @@ class AutonomousStoryAgent(DualStoryAgent):
         return None
 
     def capture_area_blocked(self, name, facts):
-        """Reopen an observed impossible hunt when its identification item exists."""
+        """Observed wild-ghost identification gates capture and knockout XP."""
         return any(name in requirement.get('capture_blocked_maps', [])
                    and not facts.get('bag', {}).get(item.replace('_', '').upper())
                    for item, requirement in getattr(self, 'battle_requirements', {}).items())
@@ -5460,6 +5469,14 @@ class AutonomousStoryAgent(DualStoryAgent):
             if name.startswith('SafariZone'):
                 result = {'result': 'blocked', 'detail': 'Safari encounters provide no knockout experience',
                           'required_capability': 'experience_awarding_battle'}
+                self.record('operation', operation=operation, result=result, script=rule.storyline)
+                return result
+            if (getattr(self, 'battle_requirements', {})
+                    and self.capture_area_blocked(name, self.facts())):
+                result = {'result': 'blocked',
+                          'detail': 'Observed unidentified wild ghosts cannot be defeated for experience',
+                          'required_capability': 'identifiable_wild_opponent'}
+                self.active = None
                 self.record('operation', operation=operation, result=result, script=rule.storyline)
                 return result
         owned_before = self.client.state().get('pokedex', {}).get('owned')
