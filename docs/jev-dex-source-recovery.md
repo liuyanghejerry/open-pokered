@@ -4972,3 +4972,74 @@ worktree外30项／2719692字节增量备份
 Python／Rust／m49结论。后继仅从最新32源普通CONTINUE，不热替换／
 回退／注入／另开NEW GAME；距124仍92种，最终全程MP4与完成图鉴
 大盘尚未交付，Goal仍active。
+
+### 2026-10-04：合法41种安全核验与脚本资源门槛因子
+
+第11段 `20261004-073152-seed42` 仅从上述32源普通CONTINUE，干净
+e7521e49／policy8a85b2ab／冻结native6d8e与gfx21e0；原双层OpenRouter
+Jev1.13.0、seed42、预算与4×逐帧原生录像不变。73.484秒正常击败Koga；
+144.294秒通过普通SafariZoneSecretHouse交互取得HM03，220.695秒正常
+PC交换取出Snorlax，236.557秒通过教学菜单学会Surf，335.248秒起实际
+使用Surf过水。以上准备、剧情、重复捕获与初始32不计新增。
+
+真实新增9种：112.965秒／frame36417 Route18 Doduo；254.530秒／
+frame69529 SafariZoneCenter Nidorina（safari）；665.232秒／frame172755
+Route18 Golbat（Zubat正常经验升级至22的evolution）；SeafoamIslands1F
+927.082秒 Seel、933.164秒 Horsea、937.591秒 Shellder、941.637秒 Slowpoke、
+954.257秒 Psyduck；SeafoamIslandsB1F 969.588秒／frame245704 Staryu。
+除Nidorina与Golbat之外这七种均有实际grass登记。海岛训练时主力与
+Surf携带者曾倒下，Jev自行过水返回并于632.218秒完成护士恢复，再继续
+训练与收集；没有人工治疗、强制换队、指定路线或回档。
+
+1052.859秒自主浅红护士完成，2026-10-03 23:49:26 UTC精确身份与
+byte-stable原始轨迹guard仅向controller13411合作式SIGINT；native13425／
+recorder13426无信号、无第二连接，三者正常退出。第一观察窗口超时，
+没有发信号；第二窗口的独立v2日志与成功请求均保留。安全／最终观察／
+development checkpoint均true，success=false／interrupted_at_command_boundary。
+149动作、策略188／动作451调用；39次策略超长回退仍存在，不宣称解决
+服务输入限制。终点FuchsiaPokecenter `(3,3)`／frame259427，41 owned／87
+seen，四徽章位掩码23、资金217、PokeBall68／GreatBall33／UltraBall1、
+party6／PC27，Charizard56 XP171416、Golbat22 XP10920及全队真实HP／
+四槽PP／PC／全部消耗保存。
+
+最新SRAM `3eb852b97ac4339ba7a95ceb42f7c8d5c71e1e13e461e30f9a865f58073cbe99`
+独立新进程schema4普通CONTINUE全部持久字段严格同，32源与本段hash均
+未改。MP4 18815864字节／1080.966667秒／64858帧全帧解码通过，SHA256
+`0663d1f297736edeb9713c95cb36b4447a0193dd4efcdc938842edd697b3662b`。
+11段合法NEW GAME原生祖先录像共6550.650001秒，41唯一登记，resume
+快照不重复、第5段恢复只计一次，source audit无history／pending。额外
+只读完整性复查验证原始0种NEW GAME前缀、11段文件与录像hash、已有
+schema4 expected==restored，以及97,671条成功普通推进命令回执。恢复5
+比其不可改历史summary多40条普通回执（press_timeline29／step_frames10／
+wait_until1），明确单独列账，不改旧证据；无其他计数差异。原始method
+为空的Charmander／Charmeleon／Charizard／Snorlax仍保持未知，不自动
+改成gift。此复查不是逐种完整来源／原作路径合法性最终验收。
+
+worktree外36项／4492368字节备份
+`verified41-checkpoint-and-surf-koga-and-seafoam-evidence-20261004.tar.gz`
+逐项字节／hash通过，SHA256
+`27fe54e47c86bdd23103b4a02890bbfb8ba1a28ac8a158730c538f8f673d6021`；
+上一32备份未改，无凭据、binary或重复MP4，原件全部保留，无删除。
+
+封存后才修改AI决策context：此前补球至434元后，SafariZoneGate真实
+hasMoney(500)不满足并推回；常磐门口getBadgeCount()<7也实际推回。
+新增script_resource_guard_reference／script_resource_spending_reference，
+保留完整原生表达式、其他旗标、确认选项与未知值，比较花钱前后门槛；
+现金谓词不冒充已收费用，复合分支不求和成收费，徽章数不误用位掩码。
+从真实giveBadge场景给现有道馆候选增加script_offered_badges与
+observed_badge_count_barriers，已有对手／成本信息保留。所有候选与普通
+执行不变，没有固定预留现金、徽章顺序、强制路线或替换未知谓词的
+硬编码生产者。TypeSafe Choice／State指引用于把客观条件留在代码、
+把取舍留给Jev；不改变provider、模型、额度或预算。
+
+新增11项测试；其中最初9项在旧代码失败（10个error，含子测试），
+新代码全Python 1034通过／19.897秒。完整同源冷启动对照，PYTHONHASHSEED42、
+实际41源／普通CONTINUE／原native／完整故事frontier／真实恢复记忆，
+frame627固定、无模型调用或启动后推进：42→42候选，仅三个原生徽章
+脚本候选增加四个context键；移除新键后全部候选／rules／targets／成本
+严格同，facts／party／routes／导出的原生AST也相同。本源资金217没有
+可买的新补球批次，不伪造其真实购买收益；未来实际请求仍需验证。
+新policy `c5fc97754cb18c4e4f128f45907c88c7f14df08012798bf898e085d19df087c4`
+仅供下一段从最新41源普通CONTINUE，不热替换存活运行。没有新Rust构建、
+新m49结果或玩家画面改变，已有PR截图保留。距124仍83种，最终完整MP4
+与完成图鉴大盘尚未交付，Goal仍active。

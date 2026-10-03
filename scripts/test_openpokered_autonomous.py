@@ -8533,6 +8533,166 @@ class AutonomousTests(unittest.TestCase):
         self.assertEqual(agent.observed_navigation_barriers({'map': 'Lobby', 'flags': {'ENTERED': True}}),
                          {'Room': {(4, 10)}})
 
+    def resource_guard_agent(self):
+        from types import SimpleNamespace
+        from openpokered.story_rules import literal
+        money = {'Call': {'callee': 'game.hasMoney', 'args': [literal(500)]}}
+        inside = {'Call': {'callee': 'getFlag', 'args': [literal('INSIDE')]}}
+        count = {'BinaryOp': {'op': 'Lt', 'left': {
+            'Call': {'callee': 'getBadgeCount', 'args': []}}, 'right': literal(7)}}
+        entrance = Rule('entry', 'Gate', 'Gate:entry', ['coord:entry'],
+            [(inside, False), (money, True)], ['YES'], ('transport', ('Park', 14, 25), True), [])
+        barrier = Rule('gym-door', 'City', 'City:gym-door', ['coord:door'],
+            [(count, True)], [], ('movement', 'movePlayerRelative', True), [])
+        badge = Rule('badge', 'Gym', 'Gym:leader', [], [], [], ('badge', 'RAINBOW', True), [])
+        victory = Rule('victory', 'Gym', 'Gym:leader', [], [], [], ('flag', 'WON', True), [])
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.collects_dex = True
+        agent.observed_barrier_maps = {'City', 'Gate'}
+        agent.index = SimpleNamespace(rules=[entrance, barrier, badge, victory],
+            coordinates=lambda rule: [(32, 8)] if rule.id == 'gym-door' else [(3, 2)])
+        return agent, entrance, barrier, victory
+
+    def test_script_resource_guards_compare_cash_without_claiming_a_charge(self):
+        agent, entrance, _, _ = self.resource_guard_agent()
+        facts = {'money': 500, 'badges': 4, 'badge_bits': 23, 'flags': {}}
+        original = json.loads(json.dumps(facts))
+        reference = agent.script_resource_guard_reference(facts, money_after=499)
+        entry, = reference['resource_guarded_transports']
+        self.assertEqual(entry['rule_id'], entrance.id)
+        guard, = entry['resource_guards']
+        self.assertEqual(guard['expression'], entrance.guards[1][0])
+        self.assertTrue(guard['required_value'])
+        self.assertTrue(guard['observed_value'])
+        self.assertFalse(guard['value_after_money_change'])
+        query, = guard['queries']
+        self.assertEqual(query['arguments'], [500])
+        self.assertTrue(query['observed_value'])
+        self.assertFalse(query['value_after_money_change'])
+        self.assertIn('not proof of a fee charged', reference['scope'])
+        self.assertIn('not a fixed cash reserve', reference['scope'])
+        self.assertEqual(facts, original)
+
+    def test_script_resource_guards_retain_other_flags_and_confirmation(self):
+        agent, entrance, _, _ = self.resource_guard_agent()
+        reference = agent.script_resource_guard_reference({'money': 1000, 'badges': 4,
+                                                           'flags': {'INSIDE': True}})
+        entry, = reference['resource_guarded_transports']
+        self.assertEqual(entry['script']['confirmation_options'], ['YES'])
+        other, = entry['other_guards']
+        self.assertEqual(other['expression'], entrance.guards[0][0])
+        self.assertFalse(other['required_value'])
+        self.assertTrue(other['observed_value'])
+        self.assertTrue(entry['missing_script_predicates'])
+
+    def test_script_resource_badge_barrier_uses_count_not_bitmask(self):
+        agent, _, barrier, _ = self.resource_guard_agent()
+        reference = agent.script_resource_guard_reference({'money': 217, 'badges': 4,
+                                                           'badge_bits': 23, 'flags': {}})
+        door, = reference['observed_coordinate_barriers']
+        self.assertEqual(door['coordinate_triggers'], [(32, 8)])
+        guard, = door['resource_guards']
+        self.assertEqual(guard['expression'], barrier.guards[0][0])
+        self.assertTrue(guard['observed_value'])
+        self.assertFalse(guard['required_value'])
+        self.assertEqual(guard['queries'][0]['observed_value'], 4)
+        self.assertIn('any enabled branch guard', door['scope'])
+
+    def test_script_resource_badge_barrier_expires_and_requires_observation(self):
+        for badges, observed in ((7, {'City'}), (4, set())):
+            with self.subTest(badges=badges, observed=observed):
+                agent, _, _, _ = self.resource_guard_agent()
+                agent.observed_barrier_maps = observed
+                reference = agent.script_resource_guard_reference(
+                    {'money': 217, 'badges': badges, 'flags': {}})
+                self.assertEqual(reference['observed_coordinate_barriers'], [])
+
+    def test_script_resource_barrier_does_not_turn_possible_battle_loss_into_wall(self):
+        agent, _, barrier, _ = self.resource_guard_agent()
+        barrier.preceding = [('battle', 'LEADER', True)]
+        reference = agent.script_resource_guard_reference({'money': 217, 'badges': 4, 'flags': {}})
+        self.assertEqual(reference['observed_coordinate_barriers'], [])
+
+    def test_script_resource_guards_preserve_compound_expression_not_joint_threshold(self):
+        from openpokered.story_rules import literal
+        agent, entrance, _, _ = self.resource_guard_agent()
+        original = entrance.guards[1][0]
+        alternative = {'Call': {'callee': 'hasMoney', 'args': [literal(100)]}}
+        expression = {'BinaryOp': {'op': 'Or', 'left': original, 'right': alternative}}
+        entrance.guards[1] = (expression, True)
+        entry, = agent.script_resource_guard_reference(
+            {'money': 200, 'badges': 4, 'flags': {}}, money_after=99)['resource_guarded_transports']
+        guard, = entry['resource_guards']
+        self.assertEqual(guard['expression'], expression)
+        self.assertEqual([q['arguments'] for q in guard['queries']], [[500], [100]])
+        self.assertTrue(guard['observed_value'])
+        self.assertFalse(guard['value_after_money_change'])
+        self.assertNotIn('total_cost', guard)
+
+    def test_script_resource_unknown_money_is_not_zero_or_free(self):
+        agent, _, _, _ = self.resource_guard_agent()
+        entry, = agent.script_resource_guard_reference(
+            {'badges': 4, 'flags': {}})['resource_guarded_transports']
+        guard, = entry['resource_guards']
+        self.assertIsNone(guard['observed_value'])
+        self.assertIsNone(guard['queries'][0]['observed_value'])
+
+    def test_script_resource_unknown_badge_count_does_not_certify_an_enabled_barrier(self):
+        agent, _, _, _ = self.resource_guard_agent()
+        reference = agent.script_resource_guard_reference({'money': 217, 'flags': {}})
+        self.assertEqual(reference['observed_coordinate_barriers'], [])
+
+    def test_script_resource_badge_context_preserves_existing_candidates_and_costs(self):
+        agent, _, _, victory = self.resource_guard_agent()
+        candidate = {'target': victory.effect, 'rules': [victory], 'objectives': ['Win'],
+                     'context': {'opponent_parties': [{'level': 29}], 'existing': True}}
+        groups = {'leader': candidate, 'unrelated': {'target': ('catch', 'Road', True),
+                                                   'rules': [], 'context': {}}}
+        agent.annotate_script_resource_guards(groups, {'money': 217, 'badges': 4, 'flags': {}})
+        self.assertEqual(list(groups), ['leader', 'unrelated'])
+        self.assertIs(groups['leader'], candidate)
+        self.assertEqual(candidate['rules'], [victory])
+        self.assertEqual(candidate['context']['opponent_parties'], [{'level': 29}])
+        self.assertEqual(candidate['context']['script_offered_badges'], ['RAINBOW'])
+        self.assertEqual(len(candidate['context']['observed_badge_count_barriers']), 1)
+        self.assertEqual(groups['unrelated']['context'], {})
+
+    def test_script_resource_ball_spending_preserves_batch_and_records_access_cost(self):
+        agent = self.ball_supply_agent()
+        _, entrance, _, _ = self.resource_guard_agent()
+        agent.index.rules.append(entrance)
+        facts = {'money': 800, 'bag': {'POKEBALL': 10}, 'map': 'Town', 'flags': {}}
+        groups = {}
+        agent.add_ball_supply(groups, facts)
+        self.assertEqual(list(groups), ['ball:shop:ViridianMart:PokeBall'])
+        group, = groups.values()
+        self.assertEqual(group['target'], ('supply', 'PokeBall', 12))
+        reference = group['context']['script_resource_spending_reference']
+        self.assertEqual(reference['money_after_reference'], 400)
+        entry, = reference['resource_guarded_transports']
+        guard, = entry['resource_guards']
+        self.assertTrue(guard['observed_value'])
+        self.assertFalse(guard['value_after_money_change'])
+
+    def test_script_resource_guards_reach_strategy_state_without_native_or_model_calls(self):
+        agent, _, _, _ = self.resource_guard_agent()
+        agent.completed_route_context = Mock(return_value=None)
+        agent.dex_progress = Mock(return_value={'owned': 41})
+        agent.client, agent.model = Mock(), Mock()
+        facts = {'money': 217, 'badges': 4, 'flags': {}, 'bag': {}, 'party': []}
+        state = {}
+        agent.augment_strategy_state(state, facts)
+        reference = state['script_resource_guard_reference']
+        self.assertEqual(reference['money_before_reference'], 217)
+        self.assertEqual(len(reference['resource_guarded_transports']), 1)
+        self.assertEqual(len(reference['observed_coordinate_barriers']), 1)
+        self.assertFalse(agent.client.mock_calls)
+        self.assertFalse(agent.model.mock_calls)
+        agent.collects_dex = False
+        unrelated = {}
+        agent.augment_strategy_state(unrelated, facts)
+        self.assertEqual(unrelated, {})
+
     def test_depleted_attacks_require_recovery_even_at_full_hp(self):
         facts = {'party': [{'hp': 30, 'max_hp': 30, 'status': 'None',
                             'moves': ['Tackle', 'Growl'], 'pp': [0, 40]}]}

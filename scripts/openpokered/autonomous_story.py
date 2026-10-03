@@ -1170,6 +1170,9 @@ class AutonomousStoryAgent(DualStoryAgent):
             }
         if self.collects_dex:
             state['dex_progress'] = self.dex_progress(facts)
+            resource_guards = self.script_resource_guard_reference(facts)
+            if resource_guards:
+                state['script_resource_guard_reference'] = resource_guards
             state['collection_audit_pending'] = getattr(self, 'collection_audit_pending', {})
             state['capture_retreats_requiring_preparation'] = [row for key, row in
                 getattr(self, 'capture_retreats', {}).items()
@@ -1427,6 +1430,13 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'not a joint registration yield. Prices are references, not proof of shop access, '
                 'and PC sources still require withdrawal. Compare this opportunity cost with the '
                 'capture benefit and other goals; it is not a fixed cash reserve or a ban on shopping.')
+            instruction += (' Compare script_resource_guard_reference and script_resource_spending_reference: '
+                'optional ball spending may change whether a cash-guarded transport can be attempted, '
+                'and observed_badge_count_barriers describes an active coordinate push-back, not a '
+                'broken door. The full expressions and other guards remain relevant; cash query '
+                'thresholds are not summed fees or proof of a charged payment. script_offered_badges '
+                'describes script rewards still requiring normal battles and interaction. Compare '
+                'these opportunities with all other goals; no cash reserve, badge order or route is forced.')
             instruction += (' A treasure or vitamin sale is optional collection funding, not only defeat recovery. '
                 'Compare collection_funding_reference with ball supplies and evolutions of actually '
                 'held party/PC sources. Sale proceeds and affordability are price references until '
@@ -4189,8 +4199,103 @@ class AutonomousStoryAgent(DualStoryAgent):
         self.prioritize_critical_recovery(groups, facts)
         if self.collects_dex:
             self.annotate_script_unlocks(groups, facts)
+            self.annotate_script_resource_guards(groups, facts)
         self.annotate_route_reset_costs(groups, facts)
         return groups
+
+    def script_resource_guard_reference(self, facts, *, money_after=None):
+        """Read native cash/badge guards, without producing or enforcing a route."""
+        rules = getattr(getattr(self, 'index', None), 'rules', None)
+        if not isinstance(rules, list):
+            return None
+        projected = facts if money_after is None else {**facts, 'money': money_after}
+
+        def queries(node):
+            if isinstance(node, list):
+                return [query for child in node for query in queries(child)]
+            if not isinstance(node, dict):
+                return []
+            call = node.get('Call') or {}
+            name = call.get('callee', '').removeprefix('game.')
+            if name in ('hasMoney', 'getBadgeCount'):
+                # A missing observation is unknown, not a zero badge count.
+                field = 'money' if name == 'hasMoney' else 'badges'
+                return [{'query': name, 'arguments': [evaluate(arg, facts) for arg in call.get('args', [])],
+                    'observed_value': evaluate(node, facts) if field in facts else None,
+                    'value_after_money_change': evaluate(node, projected) if field in projected else None}]
+            return [query for child in node.values() for query in queries(child)]
+
+        transports, barriers = [], []
+        for rule in rules:
+            transport = rule.effect[0] == 'transport'
+            barrier = (rule.effect[0] == 'movement'
+                and rule.map in getattr(self, 'observed_barrier_maps', set())
+                and not any(effect[0] == 'battle' for effect in rule.preceding)
+                and not rule.missing(facts) and bool(self.index.coordinates(rule)))
+            if not transport and not barrier:
+                continue
+            guards, other = [], []
+            for expression, wanted in rule.guards:
+                references = queries(expression)
+                observed = evaluate(expression, facts)
+                if references:
+                    guards.append({'expression': deepcopy(expression),
+                        'required_value': not wanted if barrier else wanted,
+                        'observed_value': observed if all(q['observed_value'] is not None for q in references) else None,
+                        'value_after_money_change': evaluate(expression, projected)
+                            if all(q['value_after_money_change'] is not None for q in references) else None,
+                        'queries': references})
+                else:
+                    other.append({'expression': deepcopy(expression), 'required_value': wanted,
+                                  'observed_value': observed})
+            if not guards or barrier and any(guard['observed_value'] is None for guard in guards):
+                continue
+            reference = {'rule_id': rule.id, 'script': rule.description(),
+                'resource_guards': guards, 'other_guards': other,
+                'missing_script_predicates': rule.missing(facts)}
+            if barrier:
+                reference['coordinate_triggers'] = self.index.coordinates(rule)
+                reference['scope'] = ('Currently enabled coordinate movement on an observed blocked map. '
+                    'Reversing any enabled branch guard can disable this branch; reversing all resource '
+                    'guards is not required. Other branches, navigation and battles still apply. '
+                    'Not proof that a specific candidate removes the whole-route obstruction.')
+                barriers.append(reference)
+            else:
+                transports.append(reference)
+        if not transports and not barriers:
+            return None
+        return {'money_before_reference': facts.get('money'),
+            'money_after_reference': projected.get('money'),
+            'resource_guarded_transports': transports, 'observed_coordinate_barriers': barriers,
+            'scope': 'Native scene predicates with full expressions, branch requirements and other guards. '
+                'A cash query threshold is not proof of a fee charged or an access guarantee; '
+                'compound alternatives are not summed costs. Money-change values are hypothetical, '
+                'not executed purchases. Alternatives share money; not a joint registration yield, '
+                'not a fixed cash reserve, badge order or route. Confirmations, payments, navigation '
+                'and battles still require ordinary execution.'}
+
+    def annotate_script_resource_guards(self, groups, facts):
+        reference = self.script_resource_guard_reference(facts)
+        if not reference:
+            return
+        barriers = [row for row in reference['observed_coordinate_barriers']
+            if any(query['query'] == 'getBadgeCount'
+                for guard in row['resource_guards'] for query in guard['queries'])]
+        if not barriers:
+            return
+        rewards = {}
+        for rule in self.index.rules:
+            if rule.effect[0] == 'badge' and rule.effect[2] is True:
+                rewards.setdefault(rule.storyline, set()).add(rule.effect[1])
+        for group in groups.values():
+            badges = sorted({badge for rule in group['rules'] for badge in rewards.get(rule.storyline, ())})
+            if badges:
+                context = group.setdefault('context', {})
+                context['script_offered_badges'] = badges
+                context['observed_badge_count_barriers'] = deepcopy(barriers)
+                context['script_badge_reward_scope'] = ('Potential rewards in the candidate script, '
+                    'not proof of satisfied guards, reachability, victory or a new badge. '
+                    'Already held badges do not add to the count; normal execution still applies.')
 
     def annotate_script_unlocks(self, groups, facts):
         """Expose immediate script dependencies without simulating game progress."""
@@ -4687,6 +4792,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                 cost = qty * info['price']
                 reference = capture_supply_reference(targets, carried, {**carried, name: total}) if targets else None
                 spending = self.item_evolution_spending_reference(facts, facts['money'] - cost)
+                resource_spending = self.script_resource_guard_reference(facts, money_after=facts['money'] - cost)
                 for hops, map_name, _rule_id, stock_index, rule in shops:
                     key = f'ball:{rule.id}:{name}' + (f':stock{total}' if batch != 'reserve' else '')
                     groups[key] = {'target': ('supply', name, total), 'rules': [rule],
@@ -4698,6 +4804,8 @@ class AutonomousStoryAgent(DualStoryAgent):
                                     'capture_supply_reference': reference,
                                     'item_evolution_spending_reference': spending,
                                     'map': map_name, 'map_hops': hops}}
+                    if resource_spending:
+                        groups[key]['context']['script_resource_spending_reference'] = resource_spending
 
     def add_recovery_groups(self, groups, facts):
         self.add_ball_supply(groups, facts)
