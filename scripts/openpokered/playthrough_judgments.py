@@ -884,6 +884,16 @@ class JevGame(pt.Game):
                 self.judgments.battle_requirements['SILPH_SCOPE'] = requirement
                 active = getattr(self.judgments, 'active', None)
                 if isinstance(active, dict) and before.get('script_awaiting_battle'):
+                    # Different real goals can meet the same encounter. Keep
+                    # their observations instead of allowing a later capture
+                    # attempt to erase the earlier story/travel dependency.
+                    goals = list(prior.get('blocked_goals', []))
+                    for target in (prior.get('blocked_goal'), active['target']):
+                        if isinstance(target, (tuple, list)) and len(target) == 3:
+                            target = list(target)
+                            if target not in goals:
+                                goals.append(target)
+                    requirement['blocked_goals'] = goals
                     requirement['blocked_goal'] = active['target']
             if prefer == 'fight':
                 self.judgments.choose('action', {'battle': before['battle_live'],

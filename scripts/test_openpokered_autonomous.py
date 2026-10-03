@@ -7748,6 +7748,122 @@ class AutonomousTests(unittest.TestCase):
             protocol.cmd(cmd='get_flags')
         raw.cmd.assert_called_once()
 
+    def test_scripted_ghost_retains_distinct_actual_blocked_goals_and_legacy_memory(self):
+        import playthrough as pt
+        from copy import deepcopy
+        story = ['visibility', 'Fuji', True]
+        capture = ['catch', 'UpperTower', True]
+        prior = {'blocked_goal': story, 'capture_blocked_maps': ['LowerTower']}
+        original = deepcopy(prior)
+        game = JevGame.__new__(JevGame)
+        game.judgments = Mock()
+        game.judgments.battle_requirements = {'SILPH_SCOPE': prior}
+        game.battles_driven = 0
+        before = {'screen': 'battle', 'map_name': 'Tower', 'battle_live': {'is_ghost': True},
+                  'script_awaiting_battle': True, 'party': []}
+        after = {'screen': 'overworld', 'map_name': 'Tower', 'battle_phase': 'Over',
+                 'party': [], 'frame_count': 100}
+        for target in (capture, story, capture):
+            game.judgments.active = {'target': target}
+            game.st = Mock(side_effect=[before, after])
+            with patch.object(pt.Game, 'battle_loop') as drive:
+                game.battle_loop(prefer='run')
+            drive.assert_called_once_with(prefer='run', max_iters=1200)
+        remembered = game.judgments.battle_requirements['SILPH_SCOPE']
+        self.assertEqual(remembered['blocked_goals'], [story, capture])
+        self.assertEqual(remembered['blocked_goal'], capture)
+        self.assertEqual(remembered['capture_blocked_maps'], ['LowerTower'])
+        self.assertEqual(prior, original)
+
+    def test_observed_combat_context_preserves_all_candidates_paths_and_other_fields(self):
+        from copy import deepcopy
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        story, capture, unrelated = ('visibility', 'Fuji', True), ('catch', 'UpperTower', True), ('flag', 'Other', True)
+        agent.battle_requirements = {'SILPH_SCOPE': {'required_item': 'SILPH_SCOPE',
+            'observed_map': 'Tower', 'attack_blocked': 'unidentified_ghost',
+            'blocked_goal': list(capture), 'blocked_goals': [list(story), list(capture)]}}
+        groups = {str(i): {'target': target, 'rules': ['original rule'], 'objectives': ['original objective'],
+            'context': {'trigger_navigation': [{'map': 'UpperTower', 'tile_route_found': True, 'steps': 17}],
+                        'resource_cost': 2400}} for i, target in enumerate((story, capture, unrelated))}
+        facts = {'bag': {}, 'flags': {'EVENT_GOT_SILPH_SCOPE': True}}
+        original_groups, original_facts, original_memory = deepcopy((groups, facts, agent.battle_requirements))
+        agent.annotate_observed_battle_requirements(groups, facts)
+        self.assertEqual(set(groups), set(original_groups))
+        for key in ('0', '1'):
+            evidence = groups[key]['context'].pop('observed_battle_prerequisites')
+            self.assertEqual(len(evidence), 1)
+            self.assertEqual(evidence[0]['blocked_goal'], list(groups[key]['target']))
+            self.assertTrue(evidence[0]['goal_was_observed_blocked'])
+            self.assertEqual(evidence[0]['current_item_quantity'], 0)
+            self.assertIn('Other legal resolutions', evidence[0]['scope'])
+        self.assertEqual(groups, original_groups)
+        self.assertEqual(facts, original_facts)
+        self.assertEqual(agent.battle_requirements, original_memory)
+
+    def test_observed_combat_context_legacy_goal_and_actual_item_conservation(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        target = ('visibility', 'Fuji', True)
+        agent.battle_requirements = {'SILPH_SCOPE': {'required_item': 'SILPH_SCOPE',
+            'attack_blocked': 'unidentified_ghost', 'blocked_goal': list(target), 'observed_map': 'Tower'}}
+        group = {'target': target, 'context': {'other': 'preserved'}}
+        for quantity, expected in ((0, 0), (-1, None), (True, None), ('1', None), (None, None)):
+            with self.subTest(quantity=quantity):
+                agent.annotate_observed_battle_requirements({'goal': group}, {'bag': {'SILPHSCOPE': quantity}})
+                evidence = group['context']['observed_battle_prerequisites']
+                self.assertEqual(evidence[0]['current_item_quantity'], expected)
+        agent.annotate_observed_battle_requirements({'goal': group}, {'bag': {'SILPHSCOPE': 1}})
+        self.assertEqual(group['context'], {'other': 'preserved'})
+        agent.annotate_observed_battle_requirements({'goal': group}, {})
+        self.assertIsNone(group['context']['observed_battle_prerequisites'][0]['current_item_quantity'])
+
+    def test_wild_ghost_observations_do_not_invent_scripted_goal_dependencies(self):
+        import playthrough as pt
+        game = JevGame.__new__(JevGame)
+        game.judgments = Mock()
+        game.judgments.active = {'target': ['catch', 'Tower', True]}
+        game.judgments.battle_requirements = {}
+        game.battles_driven = 0
+        before = {'screen': 'battle', 'map_name': 'Tower', 'battle_live': {'is_ghost': True},
+                  'script_awaiting_battle': False, 'party': []}
+        after = {'screen': 'overworld', 'map_name': 'Tower', 'battle_phase': 'Over',
+                 'party': [], 'frame_count': 100}
+        game.st = Mock(side_effect=[before, after])
+        with patch.object(pt.Game, 'battle_loop'):
+            game.battle_loop(prefer='run')
+        requirement = game.judgments.battle_requirements['SILPH_SCOPE']
+        self.assertEqual(requirement['capture_blocked_maps'], ['Tower'])
+        self.assertNotIn('blocked_goal', requirement)
+        self.assertNotIn('blocked_goals', requirement)
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.battle_requirements = game.judgments.battle_requirements
+        groups = {'goal': {'target': ('catch', 'Tower', True), 'context': {'original': True}}}
+        agent.annotate_observed_battle_requirements(groups, {'bag': {}})
+        self.assertEqual(groups['goal']['context'], {'original': True})
+
+    def test_navigation_retains_geometry_and_attaches_actual_combat_constraint(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.game = Mock(last_map='Source')
+        agent.game.navigation_barriers.return_value = {}
+        agent.game.live_npcs.return_value = set()
+        agent.game.navigation_excluded_maps.return_value = ()
+        agent.observed_navigation_barriers = Mock(return_value={})
+        agent.destination_points = Mock(return_value=[(1, 1)])
+        agent.navigation_memory = {}
+        target = ('visibility', 'Fuji', True)
+        agent.battle_requirements = {'SILPH_SCOPE': {'required_item': 'SILPH_SCOPE',
+            'observed_map': 'Tower', 'attack_blocked': 'unidentified_ghost', 'blocked_goal': list(target)}}
+        rule = Rule('fuji', 'UpperTower', 'talkFuji', [], [], [], target, [])
+        groups = {'goal': {'target': target, 'rules': [rule], 'objectives': ['Original goal']}}
+        facts = {'map': 'Source', 'x': 0, 'y': 0, 'party': [], 'flags': {}, 'bag': {}}
+        key = ('UpperTower', ((1, 1),))
+        with patch('openpokered.autonomous_story.pt.bfs_cross_routes',
+                   return_value={key: [('Source', 0, 0), ('UpperTower', 1, 1)]}):
+            previews = agent.annotate_navigation(groups, facts)
+        self.assertTrue(previews[key]['tile_route_found'])
+        self.assertEqual(groups['goal']['rules'], [rule])
+        self.assertEqual(groups['goal']['objectives'], ['Original goal'])
+        self.assertEqual(groups['goal']['context']['observed_battle_prerequisites'][0]['required_item'], 'SILPH_SCOPE')
+
     def test_observed_unidentified_ghost_escapes_and_records_story_requirement(self):
         import playthrough as pt
         game = JevGame.__new__(JevGame)
@@ -7764,6 +7880,26 @@ class AutonomousTests(unittest.TestCase):
         self.assertEqual(drive.call_args.kwargs['prefer'], 'run')
         self.assertIn('SILPH_SCOPE', game.judgments.battle_requirements)
         game.judgments.choose.assert_called_once()
+
+    def test_autonomous_choice_accepts_required_continuation_no_abstention_argument(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.active = None
+        options = {'switch:1': 'Use a conscious effective teammate', 'switch:2': 'Another legal teammate'}
+        for layer, method in (('action', 'choose_bounded_choice'), ('strategy', 'choose_bounded_strategy')):
+            with self.subTest(layer=layer), patch.object(agent, method, return_value='switch:1') as decide:
+                self.assertEqual(agent.choose(layer, {'battle': {'is_wild': True}}, options,
+                                              'Choose a legal continuation', allow_abstain=False), 'switch:1')
+                self.assertFalse(decide.call_args.kwargs['allow_abstain'])
+                actual_options = decide.call_args.args[2 if layer == 'action' else 1]
+                self.assertEqual(actual_options, options)
+
+    def test_autonomous_choice_default_still_allows_strategic_abstention(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.active = None
+        with patch.object(agent, 'choose_bounded_choice', return_value='run') as decide:
+            self.assertEqual(agent.choose('action', {'battle': {'is_wild': True}},
+                                          {'run': 'Leave normally'}, 'Pick'), 'run')
+        self.assertTrue(decide.call_args.kwargs['allow_abstain'])
 
     def test_scripted_battle_escape_interrupts_navigation_without_party_or_map_change(self):
         import playthrough as pt

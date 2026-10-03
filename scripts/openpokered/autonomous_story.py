@@ -1264,7 +1264,7 @@ class AutonomousStoryAgent(DualStoryAgent):
         hops, name, _rule_id, stock = min(candidates)
         return {'map': name, 'hops': hops, 'stock': stock}
 
-    def choose(self, layer, state, candidates, instruction):
+    def choose(self, layer, state, candidates, instruction, *, allow_abstain=True):
         if layer == 'action' and 'local_state' in state:
             continuation = self.completed_route_context(state['local_state'])
             if continuation and list(state.get('subgoal') or []) == list(continuation['goal']):
@@ -1293,6 +1293,13 @@ class AutonomousStoryAgent(DualStoryAgent):
                     'does not itself solve the downstream capture, training, purchase or capacity need. '
                     'Reference capture scenarios are conditional estimates, not promised outcomes; '
                     'a difficult parent can still be worthwhile when its durable benefit justifies the cost.')
+            if any('observed_battle_prerequisites' in value for value in candidates.values()):
+                instruction += (' observed_battle_prerequisites links an actual previous combat '
+                    'constraint to that same goal. A geometric walking path does not certify that '
+                    'the encounter can be resolved. Compare actual identification-item preparation '
+                    'or other goals before repeating an unchanged escape. The observation is not a '
+                    'mandatory route or a ban on other legal resolutions; acquiring the item alone '
+                    'does not guarantee navigation, victory or registration.')
         if layer == 'strategy' and any('route_resets_won_battles' in value for value in candidates.values()):
             instruction += (' Compare every candidate travel route with its supplied story-reset cost. '
                 'Training, retrieving teammates, shopping and hunting can cross the same reset entry '
@@ -1514,9 +1521,9 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'All original records and values are retained, including nested evidence references.')
         if layer == 'strategy':
             return self.choose_bounded_strategy(state, candidates, instruction,
-                allow_abstain=not (grounded or mechanism_grounded))
+                allow_abstain=allow_abstain and not (grounded or mechanism_grounded))
         return self.choose_bounded_choice(layer, state, candidates, instruction,
-            allow_abstain=not (grounded or mechanism_grounded or trainer_switch_grounded or forced_replacement))
+            allow_abstain=allow_abstain and not (grounded or mechanism_grounded or trainer_switch_grounded or forced_replacement))
 
     def choose_bounded_strategy(self, state, candidates, instruction, *, allow_abstain=True):
         return self.choose_bounded_choice('strategy', state, candidates, instruction,
@@ -1706,7 +1713,40 @@ class AutonomousStoryAgent(DualStoryAgent):
                 if (routes and not any(route['tile_route_found'] for route in routes)
                         and all(rule.map in self.navigation_memory for rule in group['rules'])):
                     del groups[key]
+        self.annotate_observed_battle_requirements(groups, facts)
         return previews
+
+    def annotate_observed_battle_requirements(self, groups, facts):
+        """Attach actual goal-specific combat evidence, not a geometric veto."""
+        for group in groups.values():
+            evidence = []
+            for item, requirement in getattr(self, 'battle_requirements', {}).items():
+                if (requirement.get('attack_blocked') != 'unidentified_ghost'
+                        or requirement.get('required_item') != item):
+                    continue
+                goals = list(requirement.get('blocked_goals', []))
+                legacy = requirement.get('blocked_goal')
+                if legacy is not None:
+                    goals.append(legacy)
+                if not any(isinstance(goal, (tuple, list)) and list(goal) == list(group['target'])
+                           for goal in goals):
+                    continue
+                bag = facts.get('bag')
+                quantity = bag.get(item.replace('_', '').upper(), 0) if isinstance(bag, dict) else None
+                known = isinstance(quantity, int) and not isinstance(quantity, bool) and quantity >= 0
+                if known and quantity > 0:
+                    continue
+                evidence.append({'required_item': item, 'observed_map': requirement.get('observed_map'),
+                    'attack_blocked': requirement['attack_blocked'],
+                    'blocked_goal': list(group['target']), 'goal_was_observed_blocked': True,
+                    'current_item_quantity': quantity if known else None,
+                    'scope': 'Actual earlier unidentified ghost disabled ordinary attacks while pursuing this goal. Walking geometry alone does not certify completion. Identification enables ordinary attacks, not guaranteed victory, onward access or registration. Other legal resolutions are not ruled out.'})
+            context = group.get('context', {})
+            if evidence:
+                group['context'] = {**context, 'observed_battle_prerequisites': evidence}
+            elif 'observed_battle_prerequisites' in context:
+                group['context'] = {key: value for key, value in context.items()
+                                    if key != 'observed_battle_prerequisites'}
 
     def transport_frontiers(self, groups, facts):
         """Backchain menu transport when walking cannot reach a target region."""
