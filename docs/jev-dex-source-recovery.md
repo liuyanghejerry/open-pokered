@@ -4089,3 +4089,48 @@ CinnabarIsland @load的WAITING=false前置，Aerodactyl另有OldAmber
 CONTINUE通过后，从第30段最新存档加载。不能用第29段回退吞掉交付
 化石，不能强杀游戏、把离线修复当已部署或把准备当64种。最终合法
 NEW GAME尚未开始，Goal继续active。
+
+### 合作退出请求、持久增量备份与准备门槛验证边界
+
+第30段在最后完整的318.575秒送交outcome之后，没有新的native_input。
+严格核对控制器54905的父存档/输出路径及未变化trace后，仅发一次
+SIGINT给现有合作handler；没有向native54936发信号。trace请求时SHA
+`4ae9b832131b647f19b2505722cdb1fcbb6edd75e3f408d1f6fef084648bbaac`。
+handler只置stop_requested，旧纯Python搜索尚未返回；不能宣称已经
+checkpoint、安全退出、MP4封口或从修复代码续跑。请求证据
+live30-cooperative-planning-stop-request-20261004.json/log及对应helper。
+只读watch-live30-close-and-verify-20261004.py已启动监测：无信号/正式
+连接/输入；只有两原进程都结束、最终summary安全、送交flags和实际
+消耗保留后，才另开复制存档的schema4普通CONTINUE核验。监测不自动
+续跑、不因监测区间超时强杀游戏。Goal remains active。
+
+修复29fc012b／1d07b1f0已推PR107，远端head
+`1d07b1f0c278f68fe9b594746276cb0223d22cbf`，PR正文8张绝对raw截图／
+0相对截图。worktree外新增不可变增量
+verified63-capture-retry-planning-delta-20261004.tar.gz：1147329字节／
+44项，SHA256 `09910edd10ab6b9b450fcdcfa16b076680b0b8ae1b279b626653a650c6ce4a2a`。
+包含源码、全部专项/全量成功及失败记录、真实29源败退回放、循环
+before/after profile和比较、live30送交trace快照及请求/监测helper。
+逐项archive读取字节与哈希通过，无凭据、二进制或重复视频，全部
+原件保留；live30快照明确不是SRAM/封口MP4。首次helper误用manifest.json
+（实际run-manifest.json）、第二次秘密前缀检测误中自己的检测源码，
+都在创建归档前失败，日志保留；v3完整key形状检查及归档读取通过，
+不是删除/清理操作。receipt：capture-retry-planning-delta-backup-receipt-20261004.json/log/v2.log/v3.log。
+
+进一步将准备门槛和真实候选分开验证：第29段终点无球，原生库存约束
+本来就生效；旧static_capture_deferred=false不能等同“实际旧策略此时
+会再次捕获”。从原生第一场败退成对记录取实际资金27／Great9／已恢复
+队伍，并与第二场实际2162.144秒battle_started核对：队伍与库存完全
+相同，期间没有capture_retreat改变记忆。这个仍有球的失败后配置，
+旧准备门槛false、新门槛true；旧链确实随后二次出战，但不把离线新
+门槛当成模型选择的反事实保证。没有当前存档重写或重新运行战斗。
+
+从同一d5d4正式全部12目标正常CONTINUE，额外恢复真实败退记忆，
+原生627帧不变、普通facts相同、源SRAM未改；候选33→33，全部target/
+rule_ids/objectives保留，31整条JSON值完全相同。只改Gloom47和
+Exeggcute36的单级支援训练候选两项context：observed_failed_capture_setups
+及preparation_comparison_to_failed_setups now包含实际blackout而非旧
+逃跑终点。未新增/删除静态源、注入状态/物品、模型调用或新增图鉴。
+source29-blackout-frontier-20261004/{report,facts,groups}.json及同名.log；
+capture-blackout-mid-attempt-and-frontier-20261004.json/log由只读helper
+verify-capture-blackout-mid-attempt-20261004.py验证。
