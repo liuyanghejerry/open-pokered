@@ -1654,7 +1654,9 @@ def retry_elite_four(g, milestone, retries, max_retries=5):
     # there is no save reload, injected money or skip over the cleared trainers.
     bag = {v['item']: v['qty'] for v in g.d.cmd(cmd='get_bag')['data']}
     money = g.st()['money']
-    for item, price, wanted, slot in [('FullRestore', 3000, 16, 2), ('Revive', 1500, 4, 5)]:
+    # HP medicine cannot restore a fainted party member. Reserve the missing
+    # Revives first so a limited retry budget cannot buy only Full Restores.
+    for item, price, wanted, slot in [('Revive', 1500, 4, 5), ('FullRestore', 3000, 16, 2)]:
         quantity = min(max(0, wanted - bag.get(item, 0)), money // price)
         if quantity:
             g.nav_to(2, 5, 'IndigoPlateauLobby'); g.face('left'); g.tap('a', 16)
