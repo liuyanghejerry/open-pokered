@@ -153,6 +153,38 @@ def evolution_training_effort(mon, target_level, table, participants=1):
             'scope': 'Expectation using the slot-weighted wild table, not a guaranteed battle count; excludes travel, combat turns and healing'}
 
 
+def capture_support_preparation_comparison(mon, failures):
+    """Compare current support facts with actual same-species failure observations.
+
+    The native protocol does not identify individuals. Differences between
+    these snapshots cannot prove training actions, survival or retry success.
+    """
+    def number(value, maximum):
+        return value if type(value) is int and 1 <= value <= maximum else None
+
+    current_level = number(mon.get('level'), 100)
+    current_hp = number(mon.get('max_hp'), 65535)
+    rows = []
+    for failure in failures:
+        observed = next((other for other in failure.get('observation', {}).get('party', [])
+                         if isinstance(other, dict) and other.get('species') == mon['species']), {})
+        old_level = number(observed.get('level'), 100)
+        old_hp = number(observed.get('max_hp'), 65535)
+        rows.append({'map': failure['map'], 'failed_capture_species': failure['species'],
+                     'observed_target_level': failure['level'],
+                     'support_species': mon['species'], 'current_support_level': current_level,
+                     'current_max_hp': current_hp, 'observed_same_species_level': old_level,
+                     'observed_same_species_max_hp': old_hp,
+                     'level_difference': current_level - old_level
+                         if current_level is not None and old_level is not None else None,
+                     'max_hp_difference': current_hp - old_hp
+                         if current_hp is not None and old_hp is not None else None,
+                     'scope': 'Same-species snapshots, not individual identity or measured training actions. '
+                              'Differences are observed comparisons, not a survival forecast or proof of '
+                              'capture readiness; missing values remain unknown.'})
+    return rows
+
+
 def catch_difficulty(species):
     rate = data.species_data(species).get('catchRate', 0)
     return {'species': species, 'catch_rate': rate,
@@ -1237,6 +1269,15 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'with alternate supports, ball capabilities and their acquisition prerequisites. Level '
                 'parity itself does not guarantee surviving an unfavorable matchup; a single gained '
                 'level should not erase the observed failure evidence.')
+            instruction += (' training_effort_to_observed_target_level_examples describes the whole '
+                'optional level-parity investment at each known training table, not just the next '
+                'cheap level. Parity is not a required level or a survival threshold: compare this '
+                'complete conditional cost with durable unlocks, other collecting grounds and '
+                'alternative capture preparations. preparation_comparison_to_failed_setups retains '
+                'the actual earlier same-species levels and max HP alongside current values. '
+                'Its differences are not measured training actions or individual identity, and are '
+                'not proof that another level makes switching safe. safe_status_moves means '
+                'non-damaging move effects only, not survival-safe switching or a guaranteed status.')
             instruction += (' Compare item_evolution_spending_reference on ball purchases: '
                 'spending may remove the ability to buy a stone for an unregistered evolution '
                 'of a Pokémon actually held in the party or PC. An already carried stone needs '
@@ -3353,29 +3394,43 @@ class AutonomousStoryAgent(DualStoryAgent):
         Relaxed geometry supplies evidence only; Jev still selects a real
         script action and execution retains the actual collision checks.
         """
+        explain = getattr(self.game, 'navigation_map_requirements', None)
+        region_requirements = explain() if callable(explain) else {}
+        if not isinstance(region_requirements, dict):
+            region_requirements = {}
+        excluded = self.game.navigation_excluded_maps() if region_requirements else ()
+        # A current, explained map exclusion is itself an observed blockage.
+        # A source need not have failed an additional walk to that same wall.
+        # For unattempted sources, accept only the exact exclusion cause found
+        # on their planning path, never other hypothetical doors or badges.
+        region_targets = {tuple(target) for name, targets in region_requirements.items()
+                          if name in excluded for target in targets}
         pending = []
         for group in list(groups.values()):
             routes = group.get('context', {}).get('trigger_navigation', [])
             if any(route.get('tile_route_found') for route in routes):
                 continue
             for rule in group['rules']:
-                if rule.map not in getattr(self, 'navigation_memory', {}):
+                known_failure = rule.map in getattr(self, 'navigation_memory', {})
+                if not known_failure and not region_targets:
                     continue
                 points = self.destination_points(rule.map, rule)
                 key = rule.map, tuple(points)
                 if previews.get(key, {}).get('tile_route_found') is False:
-                    pending.append((key, points, group))
+                    pending.append((key, points, group, known_failure))
         if not pending:
             return
         # Use the same observed position as the reachability previews; do
         # not refresh geometry partway through a planning pass.
         state = {'map_name': facts['map'], 'player_x': facts['x'], 'player_y': facts['y']}
         discovered = {}
-        for (destination, points_key), points, parent in pending:
+        for (destination, points_key), points, parent, known_failure in pending:
             key = destination, points_key
             if key not in discovered:
                 discovered[key] = self.discover_route_prerequisites(state, destination, points)
             for target in discovered[key]:
+                if not known_failure and tuple(target) not in region_targets:
+                    continue
                 for rule in self.index.frontier(target, facts):
                     if rule.effect == parent['target']:
                         continue
@@ -3912,10 +3967,18 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'context': {'optional_preparation': True, 'capture_support_training': True,
                             'trigger': 'level', 'from_species': source, 'level': target_level,
                             'trainee': mon, 'safe_status_moves': moves,
+                            'status_move_scope': 'Non-damaging sleep/paralysis effects, not safe switching, '
+                                                 'survival or guaranteed status application.',
                             'level_gap_to_highest_observed_target': highest - mon['level'],
                             'observed_failed_capture_setups': failures,
                             'training_cost': evolution_training_cost(mon, target_level),
                             'training_cost_to_observed_target_level': evolution_training_cost(mon, highest),
+                            'preparation_comparison_to_failed_setups': capture_support_preparation_comparison(mon, failures),
+                            'training_effort_to_observed_target_level_examples': [
+                                {'map': name, **effort} for name in sites
+                                if (effort := evolution_training_effort(mon, highest,
+                                    ((self.maps[name].get('wild') or {}).get('red') or {}).get('grass'),
+                                    participants))],
                             'training_effort_examples': [{'map': name, **effort} for name in sites
                                 if (effort := evolution_training_effort(mon, target_level,
                                     ((self.maps[name].get('wild') or {}).get('red') or {}).get('grass'),

@@ -1607,6 +1607,84 @@ class AutonomousTests(unittest.TestCase):
         self.assertIn('remaining acquisition effort', instructions)
         self.assertEqual(candidates, before)
 
+    def test_unattempted_acquisition_can_link_an_actual_excluded_region_unlock(self):
+        from copy import deepcopy
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        target = ('item', 'MASTER_BALL', True)
+        unlock = ('flag', 'ACTUAL_REGION_UNLOCK', True)
+        reward = Rule('reward', 'Office', 'Office:reward', [], [], [], target, [])
+        drink = Rule('drink', 'Roof', 'Roof:vending', [], [], [], ('item', 'DRINK', True), [])
+        agent.index = Mock()
+        agent.index.frontier.return_value = [drink]
+        agent.game = Mock()
+        agent.game.navigation_excluded_maps.return_value = ('ClosedCity',)
+        agent.game.navigation_map_requirements.return_value = {'ClosedCity': (unlock,)}
+        agent.navigation_memory = {}
+        agent.destination_points = Mock(return_value=[(6, 5)])
+        agent.discover_route_prerequisites = Mock(return_value=[unlock])
+        facts = {'map': 'Road', 'x': 1, 'y': 2}
+        context = {'trigger_navigation': [{'map': 'Office', 'tile_route_found': False}],
+                   'ball': 'MasterBall', 'capture_behavior': 'guaranteed', 'remaining_cost': {'battles': 'unknown'}}
+        parent = {'target': target, 'rules': [reward], 'objectives': ['Acquire ball'], 'context': context}
+        original = deepcopy(context)
+        groups = {'reward': parent}
+        previews = {('Office', ((6, 5),)): {'tile_route_found': False}}
+        agent.add_deferred_route_frontiers(groups, facts, previews)
+        added = groups[json.dumps(drink.effect)]
+        self.assertEqual(added['rules'], [drink])
+        self.assertEqual(added['context']['prerequisite_for_goals'], [target])
+        route = added['context']['route_unlocks'][0]
+        self.assertEqual(route['goal'], target)
+        self.assertEqual(route['downstream_context'], {key: value for key, value in original.items()
+                                                     if key != 'trigger_navigation'})
+        self.assertEqual(context, original)
+        self.assertEqual(agent.navigation_memory, {})
+        agent.game.st.assert_not_called()
+        agent.game.nav_to_map.assert_not_called()
+
+    def test_unattempted_frontier_requires_current_exclusion_not_an_unrelated_inferred_door(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        unlock = ('flag', 'ACTUAL_REGION_UNLOCK', True)
+        reward = Rule('reward', 'Office', 'Office:reward', [], [], [], ('item', 'MASTER_BALL', True), [])
+        agent.index, agent.game = Mock(), Mock()
+        door = Rule('door', 'Lobby', 'Lobby:unlock', [], [], [], ('flag', 'UNOBSERVED_DOOR', True), [])
+        agent.index.frontier.return_value = [door]
+        agent.navigation_memory = {}
+        agent.destination_points = Mock(return_value=[(6, 5)])
+        agent.discover_route_prerequisites = Mock(return_value=[('flag', 'UNOBSERVED_DOOR', True)])
+        facts = {'map': 'Road', 'x': 1, 'y': 2}
+        parent = {'target': reward.effect, 'rules': [reward], 'objectives': ['Acquire ball'],
+                  'context': {'trigger_navigation': [{'map': 'Office', 'tile_route_found': False}]}}
+        previews = {('Office', ((6, 5),)): {'tile_route_found': False}}
+        for explained, excluded in [({'ClosedCity': (unlock,)}, ('ClosedCity',)),
+                                     ({'ClosedCity': (unlock,)}, ()),
+                                     ({}, ('ClosedCity',)), (None, ('ClosedCity',))]:
+            with self.subTest(explained=explained, excluded=excluded):
+                agent.game.navigation_map_requirements.return_value = explained
+                agent.game.navigation_excluded_maps.return_value = excluded
+                groups = {'reward': parent}
+                agent.add_deferred_route_frontiers(groups, facts, previews)
+                self.assertEqual(groups, {'reward': parent})
+        agent.navigation_memory = {'Office': {}}
+        groups = {'reward': parent}
+        agent.add_deferred_route_frontiers(groups, facts, previews)
+        # Previously observed failures retain their older causal-door behavior.
+        self.assertGreater(len(groups), 1)
+
+    def test_current_exclusion_does_not_add_frontiers_to_an_already_reachable_source(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        reward = Rule('reward', 'Office', 'Office:reward', [], [], [], ('item', 'MASTER_BALL', True), [])
+        agent.game = Mock()
+        agent.game.navigation_excluded_maps.return_value = ('ClosedCity',)
+        agent.game.navigation_map_requirements.return_value = {'ClosedCity': (('flag', 'UNLOCK', True),)}
+        agent.navigation_memory = {}
+        agent.discover_route_prerequisites = Mock()
+        groups = {'reward': {'target': reward.effect, 'rules': [reward], 'context': {
+            'trigger_navigation': [{'map': 'Office', 'tile_route_found': True}]}}}
+        agent.add_deferred_route_frontiers(groups, {'map': 'Road', 'x': 1, 'y': 2}, {})
+        self.assertEqual(list(groups), ['reward'])
+        agent.discover_route_prerequisites.assert_not_called()
+
     def test_collection_source_unlock_is_added_before_final_navigation_pruning(self):
         agent = self.catch_goal_agent([{'id': 'collect-dex', 'agent_verified': True}])
         agent.find_catch_areas.return_value = {}
@@ -5371,6 +5449,115 @@ class AutonomousTests(unittest.TestCase):
         self.assertEqual(bindings['action:0'][0], 'train_encounter:Route24,5,18')
         facts['party'][0]['level'] = 25
         self.assertTrue(agent.index.satisfied(group['target'], facts))
+
+    def test_support_training_exposes_full_parity_effort_without_changing_the_step(self):
+        from copy import deepcopy
+        agent, facts = self.support_training_agent()
+        original = deepcopy(facts)
+        groups = {}
+        agent.add_capture_support_training(groups, facts)
+        group = groups['prepare:capture-support:Gloom']
+        context = group['context']
+        table = agent.maps['Route24']['wild']['red']['grass']
+        expected = {'map': 'Route24', **evolution_training_effort(facts['party'][1], 50, table, 2)}
+        self.assertEqual(context['training_effort_to_observed_target_level_examples'], [expected])
+        self.assertGreater(expected['estimated_victories_min'],
+                           context['training_effort_examples'][0]['estimated_victories_max'])
+        self.assertEqual(group['target'], ('level', 'Gloom', 25))
+        self.assertTrue(all(rule.effect == group['target'] for rule in group['rules']))
+        self.assertEqual(facts, original)
+        self.assertIn('not a survival guarantee', context['scope'])
+        self.assertIn('not safe switching', context['status_move_scope'])
+
+    def test_full_support_effort_uses_valid_xp_and_preserves_unknown_yield(self):
+        agent, facts = self.support_training_agent()
+        mon = facts['party'][1]
+        mon['experience'] = level_experience('Gloom', 24) + 100
+        agent.find_training_sites.return_value['UnknownYield'] = (1, 1)
+        agent.maps['UnknownYield'] = {'wild': {}}
+        groups = {}
+        agent.add_capture_support_training(groups, facts)
+        context = groups['prepare:capture-support:Gloom']['context']
+        table = agent.maps['Route24']['wild']['red']['grass']
+        expected = evolution_training_effort(mon, 50, table, 2)
+        self.assertEqual(context['training_effort_to_observed_target_level_examples'],
+                         [{'map': 'Route24', **expected}])
+        self.assertEqual(expected['estimated_victories_min'], expected['estimated_victories_max'])
+        self.assertEqual(context['training_cost_to_observed_target_level']['observed_experience'],
+                         mon['experience'])
+        self.assertEqual({rule.map for rule in groups['prepare:capture-support:Gloom']['rules']},
+                         {'Route24', 'UnknownYield'})
+
+    def test_support_preparation_comparison_uses_actual_same_species_observation_only(self):
+        from openpokered.autonomous_story import capture_support_preparation_comparison
+        from copy import deepcopy
+        mon = {'species': 'Gloom', 'level': 31, 'hp': 86, 'max_hp': 86}
+        failures = [{'map': 'PowerPlant', 'species': 'Zapdos', 'level': 50,
+            'observation': {'party': [
+                {'species': 'Gloom', 'level': 25, 'hp': 0, 'max_hp': 70},
+                {'species': 'Gloom', 'level': 20, 'hp': 0, 'max_hp': 50}]}}]
+        original = deepcopy((mon, failures))
+        row = capture_support_preparation_comparison(mon, failures)[0]
+        self.assertEqual(row['failed_capture_species'], 'Zapdos')
+        self.assertEqual(row['observed_target_level'], 50)
+        self.assertEqual(row['current_support_level'], 31)
+        self.assertEqual(row['observed_same_species_level'], 25)
+        self.assertEqual(row['level_difference'], 6)
+        self.assertEqual(row['max_hp_difference'], 16)
+        self.assertIn('not individual identity', row['scope'])
+        self.assertIn('not a survival forecast', row['scope'])
+        self.assertEqual((mon, failures), original)
+
+    def test_support_preparation_comparison_keeps_missing_or_malformed_values_unknown(self):
+        from openpokered.autonomous_story import capture_support_preparation_comparison
+        mon = {'species': 'Gloom', 'level': 31, 'hp': 86, 'max_hp': 86}
+        for observed in (None, {'species': 'Oddish', 'level': 25, 'max_hp': 70},
+                         {'species': 'Gloom', 'level': True, 'max_hp': False},
+                         {'species': 'Gloom', 'level': 0, 'max_hp': -1},
+                         {'species': 'Gloom', 'level': 101, 'max_hp': '70'}):
+            with self.subTest(observed=observed):
+                failures = [{'map': 'PowerPlant', 'species': 'Zapdos', 'level': 50,
+                             'observation': {'party': [observed] if observed else []}}]
+                row = capture_support_preparation_comparison(mon, failures)[0]
+                self.assertIsNone(row['observed_same_species_level'])
+                self.assertIsNone(row['level_difference'])
+                self.assertIsNone(row['max_hp_difference'])
+
+    def test_support_training_comparison_does_not_claim_any_previous_training_or_capture(self):
+        agent, facts = self.support_training_agent()
+        agent.capture_retreats['PowerPlant:Zapdos']['retreat_observation']['party'] = [
+            {'species': 'Gloom', 'level': 24, 'hp': 0, 'max_hp': 71}]
+        groups = {}
+        agent.add_capture_support_training(groups, facts)
+        context = groups['prepare:capture-support:Gloom']['context']
+        row = context['preparation_comparison_to_failed_setups'][0]
+        self.assertEqual(row['level_difference'], 0)
+        self.assertEqual(row['max_hp_difference'], 0)
+        self.assertNotIn('training_actions', row)
+        self.assertNotIn('capture_safe', row)
+        self.assertNotIn('ready', row)
+        self.assertEqual(groups['prepare:capture-support:Gloom']['target'], ('level', 'Gloom', 25))
+
+    def test_training_parity_instruction_compares_complete_optional_cost_not_a_required_level(self):
+        agent, facts = self.support_training_agent()
+        agent.choose = AutonomousStoryAgent.choose.__get__(agent)
+        agent.capture_history = []
+        groups = {}
+        agent.add_capture_support_training(groups, facts)
+        candidates = {'train': json.dumps(groups['prepare:capture-support:Gloom']['context']),
+                      'unlock': json.dumps({'script_unlocks': {'scope': 'Actual prerequisite'}})}
+        # Only the question is observed: no model call, action selection or
+        # change to the current offered candidates is permitted here.
+        with patch('openpokered.autonomous_story.compact_strategy_candidates', side_effect=lambda value: value), \
+                patch('openpokered.autonomous_story.factor_strategy_evidence', side_effect=lambda s, c: (s, c)), \
+                patch.object(DualStoryAgent, 'choose', return_value='unlock') as choose:
+            selected = agent.choose('strategy', {}, candidates, 'Compare the actual choices')
+        self.assertEqual(selected, 'unlock')
+        self.assertEqual(choose.call_args.args[2], candidates)
+        instruction = choose.call_args.args[3]
+        self.assertIn('training_effort_to_observed_target_level_examples', instruction)
+        self.assertIn('not a required level', instruction)
+        self.assertIn('not proof that another level makes switching safe', instruction)
 
     def test_support_training_reaches_terrain_before_exposing_trainee(self):
         agent, facts = self.support_training_agent()
