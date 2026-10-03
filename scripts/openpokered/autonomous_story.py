@@ -59,6 +59,26 @@ BALL_QUALITY = {
 }
 
 
+def cut_obstruction_identity(obstacle):
+    """Exact proposed tree identity; nearby or malformed trees are not evidence."""
+    if not isinstance(obstacle, dict) or obstacle.get('move') != 'Cut':
+        return None
+    name, tree = obstacle.get('map'), obstacle.get('tree')
+    if (not isinstance(name, str) or not name or not isinstance(tree, (tuple, list))
+            or len(tree) != 2 or any(type(value) is not int or value < 0 for value in tree)):
+        return None
+    return json.dumps([name, *tree])
+
+
+def cut_route_goal(obstacle, goal):
+    """Retain a real route purpose, never the same tree-clear goal as its parent."""
+    if (not cut_obstruction_identity(obstacle) or not isinstance(goal, (tuple, list)) or len(goal) != 3
+            or any(not isinstance(value, str) or not value for value in goal[:2])):
+        return None
+    self_goal = ['terrain', ','.join(map(str, [obstacle['map'], *obstacle['tree']])), True]
+    return list(goal) if list(goal[:2]) != self_goal[:2] else None
+
+
 def level_experience(species, level):
     """Native growth curves; level alone gives bounds, not exact current XP."""
     if level <= 1:
@@ -870,6 +890,7 @@ class AutonomousStoryAgent(DualStoryAgent):
         self.navigation_history = {}
         self.observed_barrier_maps = set()
         self.field_requirements = {}
+        self.field_route_goals = {}
         self.route_requirements = {}
         self.cleared_terrain = set()
         self.crossed_passages = set()
@@ -1300,6 +1321,13 @@ class AutonomousStoryAgent(DualStoryAgent):
                     'or other goals before repeating an unchanged escape. The observation is not a '
                     'mandatory route or a ban on other legal resolutions; acquiring the item alone '
                     'does not guarantee navigation, victory or registration.')
+            if any('recorded_field_route_goals' in value for value in candidates.values()):
+                instruction += (' recorded_field_route_goals explains the actual earlier purpose '
+                    'of a proposed Cut preparation and whether that purpose is satisfied now. '
+                    'A regrown tree does not make an already completed parent goal new progress. '
+                    'Compare unfinished purposes or a concrete new use with other collection goals. '
+                    'This history neither proves Cut is the only route nor rules out other uses; '
+                    'no candidate or route is prescribed by it.')
         if layer == 'strategy' and any('route_resets_won_battles' in value for value in candidates.values()):
             instruction += (' Compare every candidate travel route with its supplied story-reset cost. '
                 'Training, retrieving teammates, shopping and hunting can cross the same reset entry '
@@ -3698,6 +3726,15 @@ class AutonomousStoryAgent(DualStoryAgent):
         No destination, crossing or model choice is selected here.
         """
         context = dict(obstacle)
+        key = cut_obstruction_identity(obstacle)
+        recorded = []
+        for goal in getattr(self, 'field_route_goals', {}).get(key, []):
+            if cut_route_goal(obstacle, goal) is not None:
+                recorded.append({'goal': deepcopy(goal),
+                    'currently_satisfied': self.index.satisfied(goal, facts),
+                    'scope': 'A previous failed route attempt proposed clearing this exact tree while pursuing this goal. Current goal status uses current facts, not a claim that the tree is cleared, Cut is necessary or sufficient, or other uses are impossible.'})
+        if recorded:
+            context['recorded_field_route_goals'] = recorded
         destination = obstacle.get('destination')
         parent = getattr(self, 'navigation_memory', {}).get(destination)
         if (not isinstance(parent, dict) or not parent.get('goal')
@@ -3709,6 +3746,18 @@ class AutonomousStoryAgent(DualStoryAgent):
                 for key in ('map', 'position', 'detail') if key in parent},
             'execution_scope': 'Execute this field crossing toward the recorded unfinished goal; its landing is not arrival at the destination or completion of the parent interaction.'}
         return context
+
+    def remember_field_route_goal(self, obstacle):
+        """Preserve the purpose of an observed failed approach, not a fixed itinerary."""
+        active = getattr(self, 'active', None)
+        goal = cut_route_goal(obstacle, active.get('target') if isinstance(active, dict) else None)
+        if goal is None:
+            return
+        if not hasattr(self, 'field_route_goals'):
+            self.field_route_goals = {}
+        goals = self.field_route_goals.setdefault(cut_obstruction_identity(obstacle), [])
+        if goal not in goals:
+            goals.append(deepcopy(goal))
 
     def add_deferred_route_frontiers(self, groups, facts, previews):
         """Recover causal unlocks for goals added after the story frontier.
@@ -3903,7 +3952,8 @@ class AutonomousStoryAgent(DualStoryAgent):
                     target = ('terrain', key, True)
                     groups['field:' + key] = {'target': target,
                         'rules': [Rule('field:' + key, obstacle['map'], 'skill:field', [], [], [], target, [])],
-                        'objectives': [f'Use {move} to clear the terrain obstruction'], 'context': obstacle}
+                        'objectives': [f'Use {move} to clear the terrain obstruction'],
+                        'context': self.field_prerequisite_context(obstacle, facts)}
         self.add_navigation_groups(groups, facts)
         threats = []
         preference = getattr(self, 'preference', 'none')
@@ -5409,6 +5459,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                         break
             if obstruction:
                 self.field_requirements[obstruction['move']] = obstruction
+                self.remember_field_route_goal(obstruction)
                 return {**(npc_obstruction or {}), 'result': 'blocked', 'detail': 'An alternative route needs terrain clearance',
                         'field_obstruction': obstruction, 'destination': name}
             obstruction = surf_requirement(state, name, points, self.game.last_map, barriers, excluded)
@@ -5496,6 +5547,7 @@ class AutonomousStoryAgent(DualStoryAgent):
             obstruction = cut_requirement(current, name, [point], self.game.last_map, blocked, excluded)
             if obstruction:
                 self.field_requirements[obstruction['move']] = obstruction
+                self.remember_field_route_goal(obstruction)
                 return {'result': 'blocked', 'detail': 'An alternative route needs terrain clearance',
                         'field_obstruction': obstruction, 'destination': name,
                         'navigation_error': str(error), **blocker_details}

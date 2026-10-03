@@ -374,7 +374,8 @@ class AutonomousTests(unittest.TestCase):
                     'get_party': [], 'get_bag': [], 'get_npcs': []}
             game.d.raw.cmd.side_effect = lambda **r: {'ok': True, 'data': data.get(r['cmd'])}
             agent = Mock(visited=set(), observed_barrier_maps=set(), navigation_memory={},
-                navigation_history={}, mechanism_goal=None, field_requirements={}, battle_requirements={},
+                navigation_history={}, mechanism_goal=None, field_requirements={}, field_route_goals={},
+                battle_requirements={},
                 capture_retreats={}, capture_retreat_totals={}, capture_blackouts={},
                 capture_blackout_totals={}, collection_audit_pending={},
                 battle_defeats=[], defeat_preparation=0, first_clear_verification=None,
@@ -2270,6 +2271,123 @@ class AutonomousTests(unittest.TestCase):
                 'resumed_from': str(old), 'field_requirements_schema': 1,
                 'preparation_requirements': {'Surf': surf}}))
             self.assertEqual(checkpoint_field_requirements(latest), {'Surf': surf})
+
+    def test_cut_goal_identity_rejects_unknown_or_malformed_geometry(self):
+        from openpokered.autonomous_story import cut_obstruction_identity, cut_route_goal
+        obstacle = {'move': 'Cut', 'map': 'City', 'tree': [2, 3]}
+        self.assertEqual(cut_obstruction_identity(obstacle), json.dumps(['City', 2, 3]))
+        for other in (None, {}, {**obstacle, 'move': 'Surf'}, {**obstacle, 'map': ''},
+                      {**obstacle, 'tree': [True, 3]}, {**obstacle, 'tree': [-1, 3]},
+                      {**obstacle, 'tree': [2]}, {**obstacle, 'tree': '2,3'}):
+            self.assertIsNone(cut_obstruction_identity(other))
+        for goal in (None, {}, ['flag'], ['', 'X', True], ['flag', {}, True],
+                     ['terrain', 'City,2,3', True], ['terrain', 'City,2,3', False]):
+            self.assertIsNone(cut_route_goal(obstacle, goal))
+
+    def test_cut_remembers_distinct_real_purposes_without_self_dependency(self):
+        from copy import deepcopy
+        from openpokered.autonomous_story import cut_obstruction_identity
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        obstacle = {'move': 'Cut', 'map': 'City', 'tree': [2, 3]}
+        key = cut_obstruction_identity(obstacle)
+        parent = ['flag', 'BEAT_LEADER', True]
+        agent.active = {'target': parent}
+        original = deepcopy(obstacle)
+        agent.remember_field_route_goal(obstacle)
+        agent.remember_field_route_goal(obstacle)
+        parent[1] = 'CHANGED_LOCAL_COPY'
+        agent.active = {'target': ['held_species', 'Spearow', True]}
+        agent.remember_field_route_goal(obstacle)
+        self.assertEqual(agent.field_route_goals[key], [
+            ['flag', 'BEAT_LEADER', True], ['held_species', 'Spearow', True]])
+        agent.active = {'target': ['terrain', 'City,2,3', True]}
+        agent.remember_field_route_goal(obstacle)
+        agent.remember_field_route_goal({**obstacle, 'move': 'Surf'})
+        self.assertEqual(len(agent.field_route_goals[key]), 2)
+        self.assertEqual(obstacle, original)
+
+    def test_cut_purpose_context_reports_current_status_without_changing_geometry(self):
+        from copy import deepcopy
+        from openpokered.autonomous_story import cut_obstruction_identity
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.navigation_memory = {}
+        agent.index = Mock()
+        agent.index.satisfied.side_effect = lambda goal, facts: facts['flags'].get(goal[1], False)
+        obstacle = {'move': 'Cut', 'map': 'City', 'tree': [2, 3], 'stance': [2, 4], 'direction': 'up'}
+        key = cut_obstruction_identity(obstacle)
+        agent.field_route_goals = {key: [['flag', 'DONE', True], ['flag', 'PENDING', True]]}
+        facts = {'flags': {'DONE': True, 'PENDING': False}}
+        original = deepcopy((obstacle, agent.field_route_goals, facts))
+        context = agent.field_prerequisite_context(obstacle, facts)
+        records = context.pop('recorded_field_route_goals')
+        self.assertEqual(context, obstacle)
+        self.assertEqual([row['currently_satisfied'] for row in records], [True, False])
+        self.assertTrue(all('Cut is necessary or sufficient' in row['scope'] for row in records))
+        records[0]['goal'][1] = 'changed only in context'
+        self.assertEqual((obstacle, agent.field_route_goals, facts), original)
+        self.assertEqual(agent.field_prerequisite_context({**obstacle, 'tree': [2, 5]}, facts),
+                         {**obstacle, 'tree': [2, 5]})
+        self.assertNotIn('recorded_field_route_goals', agent.field_prerequisite_context(
+            {**obstacle, 'move': 'Surf'}, facts))
+
+    def test_cut_purpose_guidance_preserves_every_strategy_option(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        options = {'cut': json.dumps({'context': {'recorded_field_route_goals': [
+            {'goal': ['flag', 'DONE', True], 'currently_satisfied': True}]}}),
+            'collect': json.dumps({'establish': ['register', 'Fearow', True]}),
+            'other': 'Consider another legal use of the tree'}
+        agent.choose_bounded_strategy = Mock(return_value='other')
+        self.assertEqual(agent.choose('strategy', {}, options, 'Choose'), 'other')
+        _, actual, instructions = agent.choose_bounded_strategy.call_args.args
+        self.assertEqual(set(actual), set(options))
+        for key in ('cut', 'collect'):
+            self.assertEqual(json.loads(actual[key]), json.loads(options[key]))
+        self.assertEqual(actual['other'], options['other'])
+        self.assertIn('already completed parent goal', instructions)
+        self.assertIn('other uses', instructions)
+
+    def test_checkpoint_cut_purposes_bind_only_actual_strategy_and_matching_tree(self):
+        import tempfile
+        from openpokered.run_autonomous import checkpoint_field_route_goals
+        from openpokered.autonomous_story import cut_obstruction_identity
+        with tempfile.TemporaryDirectory() as private:
+            old, latest = Path(private) / 'old', Path(private) / 'latest'
+            old.mkdir()
+            latest.mkdir()
+            cut = {'move': 'Cut', 'map': 'City', 'tree': [2, 3]}
+            key = cut_obstruction_identity(cut)
+            old.joinpath('summary.json').write_text('{}')
+            latest.joinpath('summary.json').write_text(json.dumps({'resumed_from': str(old),
+                'field_requirements_schema': 1, 'preparation_requirements': {'Cut': cut}}))
+            blocked = lambda obstacle: {'kind': 'operation', 'result': {
+                'result': 'blocked', 'field_obstruction': obstacle}}
+            rows = [blocked(cut), {'kind': 'strategy', 'target': ['flag', 'LEADER', True]},
+                blocked(cut), blocked(cut), blocked({**cut, 'tree': [3, 3]}),
+                {'kind': 'strategy', 'target': ['terrain', 'City,2,3', True]}, blocked(cut)]
+            old.joinpath('trace.jsonl').write_text('\n'.join(json.dumps(row) for row in rows) + '\n')
+            latest.joinpath('trace.jsonl').write_text(json.dumps(blocked(cut)) + '\n' + '\n'.join(
+                json.dumps(row) for row in [{'kind': 'strategy', 'target': ['held_species', 'Spearow', True]},
+                    blocked(cut)]) + '\n' + '{"field_obstruction": malformed\n')
+            before = {folder: folder.joinpath('summary.json').read_bytes() for folder in (old, latest)}
+            self.assertEqual(checkpoint_field_route_goals(latest), {key: [
+                ['flag', 'LEADER', True], ['held_species', 'Spearow', True]]})
+            self.assertEqual(before, {folder: folder.joinpath('summary.json').read_bytes() for folder in before})
+
+    def test_checkpoint_cut_purposes_respect_authoritative_empty_and_no_retained_cut(self):
+        import tempfile
+        from openpokered.run_autonomous import checkpoint_field_route_goals
+        with tempfile.TemporaryDirectory() as private:
+            folder = Path(private)
+            cut = {'move': 'Cut', 'map': 'City', 'tree': [2, 3]}
+            folder.joinpath('trace.jsonl').write_text(json.dumps({'kind': 'strategy',
+                'target': ['flag', 'LEADER', True]}) + '\n' + json.dumps({'kind': 'operation',
+                'result': {'result': 'blocked', 'field_obstruction': cut}}) + '\n')
+            for summary in ({'field_requirements_schema': 1, 'preparation_requirements': {}},
+                            {'field_requirements_schema': 1, 'preparation_requirements': {'Cut': cut},
+                             'field_route_goals_schema': 1, 'field_route_goals': {}}):
+                folder.joinpath('summary.json').write_text(json.dumps(summary))
+                self.assertEqual(checkpoint_field_route_goals(folder), {})
+
     def test_strategy_compaction_preserves_goals_costs_and_blockers(self):
         routes = [{'map': 'Center', 'tile_route_found': True, 'steps': 11,
                    'requires_surf': False, 'scope': 'real trigger route'}]
@@ -6393,6 +6511,7 @@ class AutonomousTests(unittest.TestCase):
             agent.visited, agent.observed_barrier_maps = set(), set()
             agent.navigation_memory, agent.navigation_history = {}, {}
             agent.field_requirements, agent.battle_requirements = {}, {}
+            agent.field_route_goals = {}
             agent.capture_retreats = {}
             agent.capture_retreat_totals = {}
             agent.capture_blackouts = {}
@@ -6438,6 +6557,8 @@ class AutonomousTests(unittest.TestCase):
             folder = next((path / 'out').iterdir())
             self.assertFalse((folder / 'failure.txt').exists())  # The stubbed run reached the end.
             self.assertEqual(json.loads((folder / 'summary.json').read_text())['preference'], 'level')
+            self.assertEqual(json.loads((folder / 'summary.json').read_text())['field_route_goals_schema'], 1)
+            self.assertEqual(json.loads((folder / 'summary.json').read_text())['field_route_goals'], {})
 
     def test_every_goal_entry_appends_a_terminal_objective_to_the_story_prefix(self):
         from openpokered import run_autonomous

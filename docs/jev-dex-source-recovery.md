@@ -4763,3 +4763,61 @@ Kadabra16 XP2585、普通HP／四槽PP消耗与恢复全部保留。
 SHA256 `4b89d4937cffa7fcba232bfaefcfd330502481dbc1c6175ab31f02be8b1347d0`，
 无凭据／binary／重复MP4，原件保留，无删除。后继只从最新25源继续；
 距124仍99种，最终全程MP4与完成图鉴大盘尚未交付，Goal仍active。
+
+## 2026-10-04：合法第7段26种安全源、第三徽章与切树用途因子
+
+第7段`20261004-063356-seed42`仅从最新合法25源普通CONTINUE，
+干净b2f81882／policy40915295／冻结native6d8e／gfx21e0；原双层
+OpenRouter Jev1.13.0、seed42、预算及4×逐帧原生录像。68.751秒／
+frame8165正常交出Spearow10，NPC交换取得Farfetchd10并真实登记，
+26 owned；99.700秒正常Cut，118.632秒正常击败LtSurge及道馆训练师，
+领取TM24，三枚徽章位掩码7。重新捕获的Spearow13已在PC，不把重复
+捕获、准备、治疗或初始25算新增。先前只看队伍而误称烈雀仍缺失，
+经实际保存与独立CONTINUE的stored_pokemon逐项核查纠正。
+
+361.113秒自主护士操作完成，2026-10-03 22:39:58 UTC精确身份、
+源hash和byte-stable trace guard仅向controller78622合作式SIGINT；
+native78633／recorder78634无信号或第二连接，三者正常退出。安全、
+最终观察与development checkpoint均true，success=false／
+interrupted_at_command_boundary。32动作、策略102／动作56调用，
+5次战斗；终点VermilionPokecenter `(3,3)`／frame28100，26 owned／
+63 seen、资金151、PokeBall49／GreatBall23、party6／PC14，Charizard44
+XP78035、Arbok23 XP12696、Kadabra16 XP2585，正常HP／四槽PP、PC、
+消费与恢复全部保留。没有强制治疗／换人或回退存档。
+
+最新SRAM `c0745ba252a55d1a6137e3aff53b5bf3016a260c34ad40a19696378e6b4c5bd9`
+独立新进程schema4普通CONTINUE全持久字段严格同；本段及上一25源
+hash均未改。原生MP4封口1660735字节／117.116667秒／7027帧，
+全帧解码通过，SHA256
+`445b73e43e887e5e19ae6fab82aef4c2d823d6bed0965df919fcae816d30fa7c`。
+七段合法NEW GAME祖先链4121.416667秒／26唯一真实登记，resume起始
+快照不重复，第5段恢复仍只算一段；source audit无history／pending。
+这是partial checkpoint，不替代最终124或完整来源与全片验收。
+
+记录显示LtSurge目标已完成后仍多次单独提出切同一会再生的树。
+新增field_route_goals记忆仅绑定实际失败旅行当时的策略目标与精确
+Cut地图／树坐标，排除切树目标自身、未知几何及相邻树。正常resume
+可从本合法链真实strategy／blocked operation恢复旧用途，schema1
+显式空记忆不从祖先复活；不改变HM需求。切树候选只追加
+recorded_field_route_goals及当前facts满足状态，不解释为Cut唯一／
+必要／充分路线、树已清除、其他用途不存在或预设选择；Jev仍比较
+全部候选。该树实际关联LtSurge与held_species:Spearow两个旧目标，
+当前两者均true（后者包括PC持有，不混同登记或队伍持有）。
+
+6项专项PASS；首次全量测试的字符串空白断言及两个缺字段Mock失败
+日志保留，修正测试夹具后完整Python1019PASS／19.931秒，diff-check
+通过。同一最新26源、实际记忆与完整12目标只读普通CONTINUE旧b2整份
+agent／新代码对照：38→38，facts／普通party／原生AST／路径需求和
+帧627严格同；仅上述精确Cut候选追加用途键，去除后所有JSON严格同。
+两边控制Python hash seed42，正式hash-seed设置不变；零模型调用、
+CONTINUE后零输入，不推断实际收集收益或规划加速。纯Python策略／
+证据修改，无Rust构建、renderer／玩家画面变更或新m49结论。
+
+持久proof为legal7-checkpoint-proof、independent-continue及
+legal26-cut-context-frontier-comparison。worktree外46项／2095040字节
+增量备份`verified26-checkpoint-and-cut-purpose-evidence-20261004.tar.gz`
+逐项字节／hash通过，SHA256
+`5cb0e1abcff4e68b27793967fe54dbcffbba665de07b8891ff76cda230d161f5`；
+无凭据、native binary或重复MP4，全部原件保留，无删除。后继只从
+最新26源正常CONTINUE，不回退／热替换／注入／另开NEW GAME；距124
+仍98种，最终全程MP4与完成图鉴大盘尚未交付，Goal仍active。

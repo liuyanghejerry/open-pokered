@@ -19,6 +19,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from openpokered.autonomous_story import AutonomousStoryAgent, accumulate_capture_retreat, capture_preparation
 from openpokered.autonomous_story import capture_blackout_evidence, accumulate_capture_blackout
+from openpokered.autonomous_story import cut_obstruction_identity, cut_route_goal
 from openpokered.playthrough_judgments import capture_species
 from openpokered.collection_verification import require_collection_completion, verify_collection_continue
 from openpokered.judgment_agent import load_objectives
@@ -400,6 +401,53 @@ def checkpoint_field_requirements(run):
     return requirements
 
 
+def checkpoint_field_route_goals(run):
+    """Restore purposes, not HM requirements, from this checkpoint's own observations."""
+    current = checkpoint_field_requirements(run).get('Cut')
+    identity = cut_obstruction_identity(current)
+    goals, chain, seen = {}, [], set()
+    while run:
+        folder = Path(run).resolve()
+        if folder in seen or not (folder / 'summary.json').is_file():
+            break
+        seen.add(folder)
+        summary = json.loads((folder / 'summary.json').read_text())
+        if summary.get('field_route_goals_schema') == 1:
+            goals.update(summary.get('field_route_goals', {}))
+            break
+        chain.append(folder)
+        parent = summary.get('resumed_from')
+        run = (pt.ROOT / parent) if parent else None
+    # Legacy traces can explain an actually retained tree, but must not
+    # resurrect requirements intentionally absent in an authoritative save.
+    if identity:
+        for folder in reversed(chain):
+            trace = folder / 'trace.jsonl'
+            if not trace.is_file():
+                continue
+            active = None
+            with trace.open() as stream:
+                for line in stream:
+                    if '"strategy"' not in line and '"field_obstruction"' not in line:
+                        continue
+                    try:
+                        event = json.loads(line)
+                    except json.JSONDecodeError:
+                        continue
+                    if event.get('kind') == 'strategy':
+                        active = event.get('target')
+                    elif event.get('kind') == 'operation' and isinstance(event.get('result'), dict):
+                        result = event['result']
+                        obstacle = result.get('field_obstruction')
+                        goal = cut_route_goal(obstacle, active)
+                        if (result.get('result') == 'blocked' and goal is not None
+                                and cut_obstruction_identity(obstacle) == identity):
+                            recorded = goals.setdefault(identity, [])
+                            if goal not in recorded:
+                                recorded.append(goal)
+    return goals
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--until', choices=[o['id'] for o in load_objectives()], default='become-champion')
@@ -546,6 +594,7 @@ def main(argv=None):
                                 key = json.dumps([blockage['destination'], blockage['map']])
                                 agent.navigation_history[key] = blockage
                     agent.field_requirements.update(checkpoint_field_requirements(args.resume))
+                    agent.field_route_goals.update(checkpoint_field_route_goals(args.resume))
                     agent.battle_requirements.update(parent.get('battle_requirements', {}))
                     agent.capture_retreats.update(checkpoint_capture_retreats(args.resume))
                     agent.capture_retreat_totals.update(checkpoint_capture_retreat_totals(args.resume))
@@ -578,6 +627,8 @@ def main(argv=None):
                             result['mechanism_goal'] = agent.mechanism_goal
                             result['preparation_requirements'] = dict(agent.field_requirements)
                             result['field_requirements_schema'] = 1
+                            result['field_route_goals_schema'] = 1
+                            result['field_route_goals'] = agent.field_route_goals
                             result['battle_requirements'] = agent.battle_requirements
                             result['capture_retreats'] = agent.capture_retreats
                             result['capture_retreat_totals_schema'] = 1
