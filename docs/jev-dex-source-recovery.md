@@ -4592,3 +4592,46 @@ Charmeleon25 XP13033→目标27精确缺2211 XP；条件野战期望Route24
 证据legal2-story-training-frontier-comparison-20261004.json/log及完整
 旧／新profile保留在持久checkpoint-safety目录。本轮12种真实收集
 仍来自已加载的旧468策略，不能归因于尚未部署的训练成本补充。
+
+### 第3段最终13种安全源、独立CONTINUE及第三段原生录像
+
+后续924.170秒／frame154936在Route5实际捕获Mankey，13 owned／38 seen，
+本段净新增9种。正常取得SS Ticket并解除Cerulean出口guard，取得
+TM28后真实教Charmeleon Dig，Nugget正常出售并补球，不算新增登记。
+原生badges=3是Brock／Misty两枚徽章的位掩码，不解释成第三枚徽章。
+
+两次过期即时边界守卫均拒绝，第一次未来治疗／野战守卫180秒超时，
+都未发送信号，失败原日志保留。核查interact_counter最终settle返回
+必须是overworld控制、无script／effect／fishing后，扩大仅已完成的
+CeruleanMart正常交互边界守卫。2026-10-03 21:20:12 UTC核验实际PID
+父子链、原加载policy52f8、native6d8e、原resume、byte-stable trace；
+961.987秒完成操作只向controller28245 SIGINT，无native／recorder
+信号或第二连接。现controller／native／recorder正常退出，安全与
+最终观察／development checkpoint全部true，success=false／
+interrupted_at_command_boundary；164动作，策略122／动作368调用。
+
+终点CeruleanMart `(2,5)`／frame156704，资金525、PokeBall36、TM34、
+TM11、HelixFossil与SS Ticket；Charmeleon32 HP71／94、真实PP35／40／
+5／10，未强制治疗或补满；party6／PC4，正常消耗和全部真实XP保留。
+最新SRAM SHA256
+`c1ce50d1b941fb86e0a9a047b7514142607985f7e140219c08626cb3f78e2f4e`。
+独立新进程schema4普通CONTINUE verified=true，XP／HP／四槽PP、物品、
+PC、旗标及登记全部严格一致。源save／sidecar／trace／summary四项
+hash及原第2段四项源hash前后不变，没有从旧4源回放或覆盖本段进展。
+
+第3段MP4封口10210531字节／652.966667秒／39178帧，全帧解码通过，
+SHA256
+`2ebeb2be392f59a37a9a213115490df5e9842adbf7a147c61a0300abae82c5ed`。
+合法3段clock／登记合计1918.350000秒、13唯一登记，两个resume初始
+快照不计新增；collection source audit没有history或pending。只按
+HyperFrames入口核验原生实录，不生成替代动画；尚无最终124、合片
+或完成图鉴大盘。证据legal3-independent-continue-20261004.json、
+legal3-checkpoint-proof-20261004.json/log及v4合作停止记录均持久保留。
+新训练因子0840f19a已提交并推送PR107，仅从上述最新合法13源部署，
+不回退／热替换／强制路线，Goal仍active。
+
+worktree外增量备份verified13-checkpoint-and-story-training-20261004.tar.gz，
+47项／2994478字节，SHA256
+`1aa7b1a1e040263476f6e9b121ee8ca93b12a48a6c18e48b39228d4bf64f1f74`，
+逐项字节／hash及安全源hash核验通过；不含凭据、native binary或
+重复MP4，全部原件保留，无删除。
