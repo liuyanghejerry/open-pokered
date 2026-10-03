@@ -34,6 +34,40 @@ def facts(**flags):
 
 
 class RulesTests(unittest.TestCase):
+    def test_party_count_reads_the_observed_roster_without_assuming_an_empty_party(self):
+        for size in range(7):
+            for name in ('getPartyCount', 'game.getPartyCount'):
+                self.assertEqual(evaluate(call(name), {'party': [{}] * size}), size)
+        for state in ({}, {'party': None}, {'party': {}}, {'party': 'six'},
+                      {'party': [{}] * 7}):
+            self.assertIsNone(evaluate(call('getPartyCount'), state))
+        self.assertIsNone(evaluate(call('getPartyCount', 0), {'party': []}))
+
+    def test_scene_party_room_guard_becomes_a_real_deposit_prerequisite(self):
+        full = {'party': [{}] * 6}
+        room = {'party': [{}] * 5}
+        for op, bound, wanted in (('Gte', 6, False), ('Lt', 6, True),
+                                  ('Gt', 5, False), ('Lte', 5, True)):
+            expr = {'BinaryOp': {'op': op, 'left': call('game.getPartyCount'),
+                                 'right': literal(bound)}}
+            self.assertEqual(requirements(expr, wanted, full), [[('party_space', 'party', True)]])
+            self.assertEqual(requirements(expr, wanted, room), [[]])
+            self.assertEqual(requirements(expr, wanted, {})[0][0][0], 'unknown')
+        index = StoryIndex.__new__(StoryIndex)
+        self.assertTrue(index.satisfied(('party_space', 'party', True), room))
+        self.assertFalse(index.satisfied(('party_space', 'party', True), full))
+        self.assertFalse(index.satisfied(('party_space', 'party', True), {}))
+        self.assertFalse(index.satisfied(('party_space', 'party', False), {}))
+
+    def test_other_party_count_thresholds_are_not_replaced_by_a_free_slot(self):
+        # Daycare's minimum-party guard is not a gift-capacity prerequisite.
+        for op, bound, wanted in (('Lte', 1, False), ('Gte', 3, False),
+                                  ('Eq', 5, True), ('Gte', 6, True)):
+            expr = {'BinaryOp': {'op': op, 'left': call('getPartyCount'),
+                                 'right': literal(bound)}}
+            state = {'party': [{}] * (1 if op == 'Lte' else 5 if wanted and op == 'Gte' else 6)}
+            self.assertEqual(requirements(expr, wanted, state)[0][0][0], 'unknown')
+
     def test_native_ending_transport_requires_the_real_ceremony_and_credits(self):
         from openpokered.story_rules import native_ending_destination
         self.assertEqual(native_ending_destination(), ('PalletTown', 5, 6))

@@ -153,6 +153,10 @@ def evaluate(expr, facts):
             # Oak's aides gate rewards on this count; an unresolved call here
             # would make every one of those branches an unknown guard.
             return (facts.get('dex') or {}).get('owned')
+        if name == 'getPartyCount':
+            party = facts.get('party')
+            return (len(party) if not args and isinstance(party, (list, tuple))
+                    and len(party) <= 6 else UNKNOWN)
         if name in ('hasMoney', 'hasCoins'):
             amount = facts.get('money' if name == 'hasMoney' else 'coins')
             return None if amount is None else amount >= args[0]
@@ -228,6 +232,15 @@ def requirements(expr, wanted, facts):
     count_goal = pokedex_count_goal(expr, wanted)
     if count_goal:
         return [[count_goal]]
+    if binary and (binary['op'], (binary.get('right') or {}).get('NumberLit'), wanted) in (
+            ('Gte', 6, False), ('Lt', 6, True), ('Gt', 5, False), ('Lte', 5, True)):
+        query = (binary.get('left') or {}).get('Call')
+        if (query and query['callee'].removeprefix('game.') == 'getPartyCount'
+                and not query.get('args') and evaluate(binary['left'], facts) is not None):
+            # A scene can explicitly refuse a full party even though native
+            # givePokemon normally accepts a current-box slot. Preserve that
+            # real scene guard; only its exact free-slot threshold is mapped.
+            return [[('party_space', 'party', True)]]
     # Only defer the spatial predicate, preserving any AND/OR-linked
     # flag or item guard above. The trigger's actual landing verifies it.
     if any(name in json.dumps(expr) for name in ('getPlayerX', 'getPlayerY', 'getPlayerFacing')):
@@ -652,7 +665,8 @@ class StoryIndex:
             current = facts.get('current_box_index', 0)
             return (bool(counts) and counts[current] < 20) == wanted
         if kind == 'party_space':
-            return (len(facts.get('party', [])) < 6) == wanted
+            count = evaluate({'Call': {'callee': 'getPartyCount', 'args': []}}, facts)
+            return count is not None and (count < 6) == wanted
         if kind == 'coin_supply':
             return facts.get('coins', 0) >= wanted
         if kind == 'explore':

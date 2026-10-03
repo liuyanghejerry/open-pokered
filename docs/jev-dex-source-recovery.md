@@ -3708,3 +3708,37 @@ acquisition_method=gift、party_count仍6／stored_count39→40。
 这是真实满队送箱登记，不是只读模型选择或夹具结果。该段仍运行、
 尚未独立验读新检查点；63种仅属已有prototype链，不计最终合法新链，
 亦不声称所有未解策略已经稳定。
+
+## 2026-10-04 明确队伍空位的场景前置，不用PC送箱绕过
+
+继续审计gift实际规则：MtMoonPokecenter:talkMagikarpSalesman在
+付款／一次性旗标之外明确要求getPartyCount()<6。一般原生送箱
+容量不能绕过该场景分支；旧规划器不支持getPartyCount，既不能
+确认未满队的领取，也不能为满队生成寄存准备，真实可用来源被遗漏。
+新增只从普通facts实际队伍观测计数，缺失／非数组／超过6只及错误
+参数保持unknown，不以缺失队伍当空队，不读取evaluation。
+
+仅场景getPartyCount<6等价的四种比较，且队伍观测有效时，把不足
+空位解释为既有party_space真实PC准备目标。Daycare最少队员门槛、
+指定人数和未知表达式不改写成“空一位”。gift／prize仅在该空位是
+唯一missing条件时提供正常寄存；原付款、领取旗标、其他unknown、
+金币及PC实际规则保持。当前箱满先正常换箱，没有可用PC不伪造。
+准备context保留原来源、领取契约、完整entry_guards、当前资金及
+边界：寄存不登记，也不预留领取条件；之后仍需导航／确认／付款。
+这不是恢复原先“所有gift满队必须寄存”的错误限制；Eevee等普通
+来源仍可送入当前箱，不指定Jev去买鲤鱼王或寄存具体成员。
+
+7新增回归旧2FAIL2ERROR、新7PASS；完整Python discover925PASS
+（18.935秒），diff --check通过；本轮只有Python策略／规则解释，
+无Rust／renderer／画面变更，不冒称重跑m49或录制合法新链。
+
+同一最新第26段源6132、同一native dade、正式全部12目标、独立
+正常CONTINUE旧45→新46。旧实验在首次导入agent前加载完整历史
+story_rules与autonomous两个模块（8633），不混用新getPartyCount
+解释去伪造旧现场。全部facts字节相同，原45组完整目标／规则／说明／
+context均相同，原生帧627及源SRAM不变；仅新增storage:party_space
+为实际Magikarp规则准备。其原unknown准确变为party_space，仍无
+register:Magikarp候选；当前实际资金553足够原500门槛，未扣款。
+没有模型调用、正常CONTINUE后游戏输入、寄存／购买／新增登记；
+不是当前63种现场或捕获率改善证据。getGameVersion奖品条件与资金／
+化石流程仍需继续核查，不能据此宣布所有单机策略已稳定。

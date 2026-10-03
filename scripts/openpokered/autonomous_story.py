@@ -2269,6 +2269,27 @@ class AutonomousStoryAgent(DualStoryAgent):
                             last_currently_ready_static_source=len(ready_sources) == 1,
                             retreat_contracts=[static_retreat_contract(rule, self.index.rules) for rule in rules],
                             failure_warning='Running out of balls, fleeing or knocking out a static target can permanently spend this source. Preparation and extra supplies must be compared before triggering it; a ready script does not guarantee capture.')
+                if method['method'] in ('gift', 'prize'):
+                    party_rules = [rule for rule in rules
+                                   if rule.missing(facts) == [('party_space', 'party', True)]]
+                    if party_rules:
+                        # This is an explicit scene entry restriction, unlike
+                        # native gift delivery capacity. All other scene guards
+                        # must already hold before offering a normal PC deposit.
+                        self.add_party_space_group(groups, facts, species)
+                        entry = groups.get('storage:party_space')
+                        if entry:
+                            evidence = {**deepcopy(context),
+                                'source_rules': [{**rule.description(), 'entry_guards': deepcopy(rule.guards)}
+                                                 for rule in party_rules],
+                                'current_money': facts.get('money'),
+                                'scope': 'A normal deposit does not register this target; it prepares '
+                                         'the explicit scene party-room guard. Source navigation, '
+                                         'confirmation and payment still need actual execution. '
+                                         'Other guards hold in this snapshot, not a reservation.'}
+                            acquisitions = entry['context'].setdefault('party_space_acquisitions', [])
+                            if evidence not in acquisitions:
+                                acquisitions.append(evidence)
                 rules = [rule for rule in rules if not rule.missing(facts)]
                 if not rules:
                     continue

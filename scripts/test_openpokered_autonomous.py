@@ -4362,6 +4362,74 @@ class AutonomousTests(unittest.TestCase):
                  'current_box_index': 1}
         return agent, facts, gift, pc
 
+    def scene_party_room_fixture(self, *, party_count=6):
+        from openpokered.story_rules import literal
+        agent, facts, gift, pc = self.nonwild_box_capacity_fixture(party_count=party_count)
+        gift.map, gift.storyline, gift.effect = ('MtMoonPokecenter',
+            'MtMoonPokecenter:talkMagikarpSalesman', ('pokemon', 'MAGIKARP', 5))
+        gift.guards = [({'Call': {'callee': 'getFlag',
+                        'args': [literal('EVENT_BOUGHT_MAGIKARP')]}}, False),
+                       ({'Call': {'callee': 'hasMoney', 'args': [literal(500)]}}, True),
+                       ({'BinaryOp': {'op': 'Gte',
+                         'left': {'Call': {'callee': 'getPartyCount', 'args': []}},
+                         'right': literal(6)}}, False)]
+        agent._complete_collection_graph = {'Magikarp': [{'method': 'gift',
+            'map': gift.map, 'storyline': 'talkMagikarpSalesman', 'level': 5}]}
+        return agent, facts, gift, pc
+
+    def test_scene_party_guard_requests_deposit_even_with_box_room_and_unvisited_source(self):
+        import copy
+        agent, facts, gift, pc = self.scene_party_room_fixture()
+        original = copy.deepcopy(facts)
+        groups = {}
+        agent.add_nonwild_collection_groups(groups, facts)
+        entry = groups['storage:party_space']
+        self.assertEqual(entry['rules'], [pc])
+        self.assertEqual(entry['context']['required_for'], ['Magikarp'])
+        followup = entry['context']['party_space_acquisitions'][0]
+        self.assertEqual(followup['species'], 'Magikarp')
+        self.assertEqual(followup['source_rules'][0]['entry_guards'], gift.guards)
+        self.assertEqual(followup['current_money'], 553)
+        self.assertIn('does not register', followup['scope'])
+        self.assertNotIn('register:Magikarp:gift:MtMoonPokecenter', groups)
+        self.assertEqual(facts, original)
+        facts['party'].pop()
+        groups = {}
+        agent.add_nonwild_collection_groups(groups, facts)
+        self.assertEqual(groups['register:Magikarp:gift:MtMoonPokecenter']['rules'], [gift])
+        self.assertNotIn('storage:party_space', groups)
+
+    def test_scene_party_preparation_preserves_payment_and_one_time_guards(self):
+        for money, bought in ((499, False), (553, True)):
+            with self.subTest(money=money, bought=bought):
+                agent, facts, _, _ = self.scene_party_room_fixture()
+                facts['money'] = money
+                facts['flags']['EVENT_BOUGHT_MAGIKARP'] = bought
+                groups = {}
+                agent.add_nonwild_collection_groups(groups, facts)
+                self.assertFalse(groups)
+        agent, facts, gift, _ = self.scene_party_room_fixture()
+        gift.guards.append(({'Call': {'callee': 'unsupportedGiftGuard', 'args': []}}, True))
+        groups = {}
+        agent.add_nonwild_collection_groups(groups, facts)
+        self.assertFalse(groups)
+
+    def test_scene_party_room_changes_full_box_before_depositing(self):
+        agent, facts, _, pc = self.scene_party_room_fixture()
+        facts['box_counts'] = [0, 20, 0]
+        groups = {}
+        agent.add_nonwild_collection_groups(groups, facts)
+        self.assertEqual(groups['storage:change_box']['rules'], [pc])
+        self.assertNotIn('storage:party_space', groups)
+        self.assertNotIn('register:Magikarp:gift:MtMoonPokecenter', groups)
+
+    def test_scene_party_room_does_not_invent_an_available_pc(self):
+        agent, facts, _, _ = self.scene_party_room_fixture()
+        agent.index.by_effect = {}
+        groups = {}
+        agent.add_nonwild_collection_groups(groups, facts)
+        self.assertFalse(groups)
+
     def test_unvisited_gift_uses_observed_current_box_room_without_deposit(self):
         import copy
         agent, facts, gift, _ = self.nonwild_box_capacity_fixture()
