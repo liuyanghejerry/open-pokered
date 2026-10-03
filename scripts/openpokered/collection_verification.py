@@ -73,14 +73,17 @@ def verify_collection_continue(saved, binary, observations, script_flags=None):
     if saved.stat().st_size != 32768:
         raise ValueError('Native SRAM must contain 32768 bytes')
     digest = hashlib.sha256(saved.read_bytes()).hexdigest()
-    with tempfile.TemporaryDirectory(prefix='jev-dex-continue-') as folder:
+    # Keep even the isolated verifier under the durable evidence directory.
+    # System temporary cleanup must not remove an in-flight native save/log.
+    with tempfile.TemporaryDirectory(prefix='.continue-', dir=saved.resolve().parent) as folder:
         folder = Path(folder)
         copied_binary, copied_save = folder / 'pokered-app', folder / 'collection.sav'
         shutil.copy2(binary, copied_binary)
         shutil.copy2(saved, copied_save)
         if script_flags and Path(script_flags).is_file():
             shutil.copy2(script_flags, folder / 'pokered.script_flags.json')
-        check = pt.Game(save_path=copied_save, binary=copied_binary, seed=42, speed=0)
+        check = pt.Game(save_path=copied_save, binary=copied_binary, seed=42, speed=0,
+                        runtime_root=folder)
         check.d = ObservedProtocol(check.d, lambda *args, **kwargs: None, time.monotonic() + 120)
         try:
             pt.resume_reentry(check)

@@ -1909,3 +1909,22 @@ milestone驱动，正式图鉴控制器仍不调用milestone。
 
 正式接入将等待本轮完整治疗的正常停机窗口，只有严格安全的原生检查点和
 独立CONTINUE一致后才续跑；既有录像、来源记录及父子lineage全部保留。
+
+随后正式frame1256773／elapsed3767.035秒正常进化登记Golbat，达到16/124。
+在elapsed3783.221秒完整治疗后，通过控制器已有SIGINT处理器在命令边界
+正常停机，未杀死原生进程或FFmpeg。严格观察与检查点均通过：中心 `(3,3)`、
+overworld／移动和fade为Idle，无战斗／对话／选择／脚本／菜单／钓鱼接管。
+`success=false`的原因是`StoryStopped: interrupted_at_command_boundary`，
+并不是124完成或游戏失败。原录像已封口，160×144 H.264／60fps，
+314720帧、5245.333秒、85089024字节；只确认容器可读，最终全片画质尚未验收。
+
+独立新原生进程CONTINUE schema=3通过，精确恢复16 owned／30 seen、
+地图与坐标、资金182、队伍和PC完整字段、背包、旗标、Safari会话。
+原SRAM哈希保持`e5b3ecd80b78e7eec12d66e6886033e52fbd1a4fbbb5becc6ae1f706c7b8d049`，
+证据为`.artifacts/checkpoint-safety-20261003/formal16-independent-continue.json`。
+这验证的是检查点持久字段，不包含此前RNG流／战斗运行时，也不替代来源审计。
+
+独立CONTINUE验证器的私有原生运行也改为放在源证据目录下，不再落入系统
+临时目录；SRAM复制验证后正常清理自己的临时副本，保留源档和独立证明。
+新增路径断言在修复前失败、修复后通过，相关5项和Python全套790项通过
+（17.640秒）。正式进程、录像、诊断与验证不共享固定端口或原生连接。

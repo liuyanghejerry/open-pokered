@@ -93,6 +93,9 @@ class CollectionContinueTests(unittest.TestCase):
                 self.assertEqual(proof['expected'], proof['restored'])
                 self.assertNotEqual(create.call_args.kwargs['save_path'], saved)
                 self.assertNotEqual(create.call_args.kwargs['binary'], binary)
+                isolated = create.call_args.kwargs['binary'].parent
+                self.assertEqual(isolated.parent, saved.parent.resolve())
+                self.assertEqual(create.call_args.kwargs['runtime_root'], isolated)
                 resume.assert_called_once_with(game)
                 game.close.assert_called_once()
                 self.assertEqual(saved.read_bytes(), b'a' * 32768)
