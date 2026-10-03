@@ -1187,7 +1187,8 @@ class AutonomousStoryAgent(DualStoryAgent):
         seen = set(dex.get('seen_species', []))
         wild_graph = self.collection_graph()
         full_graph = self.complete_collection_graph()
-        plan = solo_plan(full_graph, owned, infer_solo_choices(owned))
+        plan = solo_plan(full_graph, owned,
+                         infer_solo_choices(owned, bag=facts.get('bag'), flags=facts.get('flags')))
         targets = set(plan['reachable_species'])
         choice_targets = set(plan['choice_reachable_species'])
         # The 150-species diploma is not reachable under the solo/no-link
@@ -2136,7 +2137,8 @@ class AutonomousStoryAgent(DualStoryAgent):
         owned = self.validated_owned(facts)
         if not owned:
             return False
-        plan = solo_plan(self.complete_collection_graph(), owned, infer_solo_choices(owned))
+        plan = solo_plan(self.complete_collection_graph(), owned,
+                         infer_solo_choices(owned, bag=facts.get('bag'), flags=facts.get('flags')))
         return set(plan['reachable_species']) <= owned
 
     def require_static_sources(self, facts):
@@ -2357,7 +2359,8 @@ class AutonomousStoryAgent(DualStoryAgent):
         if not self.collects_dex or facts.get('dex') is None:
             return
         owned = self.validated_owned(facts)
-        plan = solo_plan(self.complete_collection_graph(), owned, infer_solo_choices(owned))
+        plan = solo_plan(self.complete_collection_graph(), owned,
+                         infer_solo_choices(owned, bag=facts.get('bag'), flags=facts.get('flags')))
         reachable = set(plan['choice_reachable_species'])
         party = facts.get('party', [])
         held = [*party, *facts.get('stored_pokemon', [])]
@@ -4274,7 +4277,8 @@ class AutonomousStoryAgent(DualStoryAgent):
         """Expose alternative held-source stone costs; never reserve cash or cut options."""
         graph = self.complete_collection_graph()
         owned = self.validated_owned(facts)
-        plan = solo_plan(graph, owned, infer_solo_choices(owned))
+        plan = solo_plan(graph, owned,
+                         infer_solo_choices(owned, bag=facts.get('bag'), flags=facts.get('flags')))
         party, stored = facts.get('party', []), facts.get('stored_pokemon', [])
         catalog = {name.replace('_', '').upper(): info for name, info in ITEM_CATALOG.items()}
         bag = Counter()
@@ -4325,7 +4329,8 @@ class AutonomousStoryAgent(DualStoryAgent):
         """
         graph = self.complete_collection_graph()
         owned = self.validated_owned(facts)
-        plan = solo_plan(graph, owned, infer_solo_choices(owned))
+        plan = solo_plan(graph, owned,
+                         infer_solo_choices(owned, bag=facts.get('bag'), flags=facts.get('flags')))
         missing = set(plan['choice_reachable_species']) - owned
         options, unknown_levels = [], []
         for origin, mons in (('party', facts.get('party', [])), ('pc', facts.get('stored_pokemon', []))):

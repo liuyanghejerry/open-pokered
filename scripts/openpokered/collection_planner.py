@@ -414,8 +414,8 @@ def solo_plan(graph, owned=(), forced_choices=None):
     ``choices`` is one stable representative assignment, useful for computing a
     concrete ceiling and explaining which species that particular save excludes.
     ``optimal_choices`` preserves every branch that occurs in any maximum-size
-    assignment.  Callers should offer those bounded alternatives to Jev until an
-    observed registration makes the irreversible choice concrete.
+    assignment.  Callers should offer those bounded alternatives to Jev until
+    observed source selection or registration makes the choice concrete.
     """
     best_size = -1
     optimal = []
@@ -444,12 +444,27 @@ def solo_plan(graph, owned=(), forced_choices=None):
             'optimal_assignment_count': len(optimal)}
 
 
-def infer_solo_choices(owned_species=()):
-    """Irreversible choices already proven by registered descendants."""
+def infer_solo_choices(owned_species=(), *, bag=None, flags=None):
+    """Observed irreversible choices, not credits for unreceived Pokémon.
+
+    MtMoonB2F hides both fossils after either successful item receipt. Its
+    branch-specific receipt flag persists after Cinnabar consumes that item;
+    the lab's species-specific revival flag also identifies an in-flight source.
+    Stones, Old Amber and generic lab progress do not select a one-copy branch.
+    Conflicting evidence stays ambiguous rather than silently preferring a source.
+    """
     owned = set(owned_species)
     forced = {}
     for group, branches in SOLO_CHOICE_BRANCHES.items():
-        matches = [choice for choice, species in branches.items() if species & owned]
+        matches = {choice for choice, species in branches.items() if species & owned}
+        if group == 'fossil':
+            carried = {str(item).replace('_', '').upper() for item, quantity in (bag or {}).items()
+                       if type(quantity) is int and quantity > 0}
+            for choice, item, evidence_flags in (
+                    ('Kabuto', 'DOMEFOSSIL', ('EVENT_GOT_DOME_FOSSIL', 'EVENT_REVIVING_KABUTO')),
+                    ('Omanyte', 'HELIXFOSSIL', ('EVENT_GOT_HELIX_FOSSIL', 'EVENT_REVIVING_OMANYTE'))):
+                if item in carried or any((flags or {}).get(flag) is True for flag in evidence_flags):
+                    matches.add(choice)
         if len(matches) == 1:
-            forced[group] = matches[0]
+            forced[group] = next(iter(matches))
     return forced

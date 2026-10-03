@@ -4467,3 +4467,75 @@ worktree外新备份verified1-checkpoint-and-escort-fix-20261004.tar.gz：
 逐项字节／SHA通过，无凭据／native binary／重复MP4，原件全部保留。
 下一段只从最新d33合法源普通CONTINUE部署修复，不重开、回档、热替换、
 固定路线或注入；Goal active，124／最终全程MP4／图鉴大盘仍未完成。
+
+## 2026-10-04：合法4种安全保存与已选化石分支因子
+
+合法第2段 `20261004-044826-seed42` 从上述最新d33普通CONTINUE，
+干净09cedf66／实际policy a9421820／native6d8e／gfx21e0，同一双层
+OpenRouter Jev1.13.0、seed42、原调用／动作／时间／帧预算与4×原生实录。
+只读核验实际CLI／PID父子／运行binary、09版本每个policy文件、gfx、
+旧源四项hash；初始party/evaluation含真实PP、dex、PC、钱包及位置
+严格守恒。未查询活native第二连接，旧原型64不继承。首次resume的
+Charmander只代表已有1种，不再次计新增。
+
+真实新增：159.086秒／frame34222正常经验进化Charmeleon；266.938秒／
+frame48847在Route2捕获Pidgey；408.524秒／frame82448在MtMoonPokecenter
+正常花500购入Magikarp。187.462秒／frame44440实际击败Brock；373.757秒
+正常取得HelixFossil并留下EVENT_GOT_HELIX_FOSSIL、两化石隐藏旗标。
+这段新增3种，合法链共4种；化石领取及训练不当成菊石兽登记，Misty
+仍未击败。合法源最初0 owned的来源proof、原型证据及全部原件保留。
+
+### 已完成的唯一来源选择，不应等到复活登记才识别
+
+真实384.805秒策略观察持有HelixFossil，但旧面板solo_choices仍用稳定
+代表Kabuto，仍列两条fossil optimal分支。infer_solo_choices此前只读
+已登记后代，忽略实际已经消耗的唯一化石选择。现在可额外读取正常
+bag及flags：完整正整数化石持有量，或具体领取／复活旗标，约束相应
+化石分支；item消耗后原领取旗标或物种复活旗标仍可识别。同一函数
+用于策略面板、非野生来源、完成检查及资金／训练机会成本参照。
+不改变来源、注册位、单机124上限或模型选择；OldAmber、进化石、
+通用实验室进度、未知／false旗标不推断选择；矛盾来源保留歧义，不
+静默选一条。最终独立124严格物种集合验证仍用实际登记，不放宽门槛。
+
+6项新测试覆盖上述边界，修复前1FAIL／17个参数化ERROR；修复后通过。
+专项首次运行的导入路径错误原日志保留，正确PYTHONPATH重跑31PASS／
+2.094秒；全部Python discover **1002PASS／19.836秒**，diff-check通过。
+只修改Python策略逻辑，无Rust／玩家画面更改或新m49结论。
+
+真实384.805秒同观察只读面板对照Kabuto→Omanyte、可选分支2→1，
+owned仍3、remaining仍121、ceiling仍124；非相关区域／资源面板在该
+小型对照中mock，不声称完整frontier。随后最新合法4种真实安全源上，
+旧09 helper／新helper两份原生普通CONTINUE，完整12目标和真实记忆、
+零模型／CONTINUE后输入：facts、24个完整候选JSON、route requirements
+以及原生故事／规则严格一致，627帧前后不动，源SAV未改。
+旧12.240580秒／新12.236666秒，不宣称加速、选择改善或额外捕获。
+两种对照分别证明面板因子修正与既有可执行候选保留，不能混为真实进展。
+
+### 第2段合作保存、独立验读与录像封存
+
+2026-10-03 21:00:18 UTC核对完成operation边界，仅向controller18335
+SIGINT，native18348／recorder无信号或第二连接。现双方正常退出，
+safe／最终观察／development_checkpoint均true，success=false／
+interrupted_at_command_boundary，136动作、策略47／动作305调用。
+终点CeruleanCity `(19,18)`／frame153773，4 owned／31 seen、一徽章，
+资金5、零球、TM34与HelixFossil；Charmeleon25 XP13033／HP74／74、
+PP35／40／25／30，Pidgey3及Magikarp5的真实XP／HP／PP全部保存。
+普通败退和实际消费不回放、退款、注入或隐去。
+
+最新SRAM SHA256
+`412bfd2ae7836f6748ecc915afd69027c44fd0952d92b913be4e3880c2683d30`。
+独立schema4原生普通CONTINUE verified=true，四项PP、XP／HP、登记、
+物品、PC及旗标守恒；源SAV／sidecar／trace／summary四项hash未变。
+第2段MP4封口10073036字节／640.750000秒／38445帧全帧解码，SHA256
+`09f8c635ba644272b9c4dcff575e84a6c7df05d3a2c2e7ffe6ad4078f65e5324`。
+合法两段clock／登记增量合计1265.383333秒、4个唯一登记，resume初始
+1不重复；没有旧原型片段，尚未生成最终合片或发布完成图鉴大盘。
+
+证据入口checkpoint-safety-20261003的legal2-independent-continue、
+legal2-checkpoint-proof、legal2-solo-choice-live-proof及frontier-comparison。
+worktree外新备份verified4-checkpoint-and-solo-choice-fix-20261004.tar.gz：
+41项／1329309字节，SHA256
+`f378b9945bfe62937a91eaec2b26e9acc9a0faf87d60802b45e7ec00e10ddd9e`，
+逐项字节／SHA核验通过，不含凭据／native binary／重复MP4，原件全保留。
+下一段仅从最新412bfd合法源加载新修正，不回退、热替换、固定路线或
+另开NEW GAME；Goal active，真实124／最终全程MP4／图鉴大盘仍未完成。
