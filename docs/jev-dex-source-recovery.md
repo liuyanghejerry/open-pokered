@@ -2336,3 +2336,26 @@ NEW GAME主线驱动的m16训练原400周期仍不能到30级。轨迹确认旧3
 再次通过m01–m48，m49重挑战确实正常换到仍有Surf的Lapras；仍在同场预算
 内超时，停于敌方NightShade文字、Lapras39HP、Gengar1HP，不能宣称整个
 联盟重试或最终通关已修好。下一步仍须诊断补给／战斗推进并保留真实失败。
+
+第八段在elapsed2581.526秒下一次FuchsiaPokecenter真实治疗完成后合作式
+停止，正常finalizer保存，严格原生安全及最终观察检查均通过。独立新进程
+使用修复native正常CONTINUE schema=3核验45 owned／83 seen，图鉴、队伍、
+PC、背包、位置及旗标一致，源SRAM SHA256
+`3a43bff06511d782f95c42cae86317677df51fd6c90c2102d1d11431b81654fd`
+不变。FuchsiaPokecenter `(3,3)`、资金270、五徽章、6只队伍及25只PC；
+Charizard59级／经验202083、Drowzee21级／经验9760，HP及PP真实补满。
+该读档核验不消除历史幽灵访问审计缺口，也不是45种完整来源审批。
+
+第八段原生MP4封口1384.733333秒、83084帧、23016584字节；八段正式父链
+合计10760.483332秒（约179分钟），198613条合并记录、45个独特登记，
+七次CONTINUE初始新增均为空。`closed-formal45-lineage-clock-20261003.json`
+仅核验容器／时钟／登记守恒，不是最终合片、完整来源或全片画质验收。
+存档、sidecar、summary、最终观察、运行manifest、独立证明及测试日志另存
+在正式持久目录外层的`verified45-evidence-20261003-v2.tar.gz`；不重复打包
+MP4或凭此替代原始trace归档，所有原件保留。
+
+已从这个最新45种检查点正常CONTINUE第九段`20261003-162423-seed42`，
+实际加载`08abba91`策略，SHA256
+`56a1e4480929c8ec37b018f8649fa3415dd2fd6a8abed910006e1da3bdd1d9cb`，
+私有native为上述`c5c3ac58`；双层OpenRouter Jev及原生录制继续，没有回退
+或热替换。所有正式及诊断内容仍在项目`.artifacts`，未删除存档／录像。
