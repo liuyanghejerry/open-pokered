@@ -4915,3 +4915,60 @@ legal28-cut-source-frontier-comparison保留。worktree外44项／1862824字节
 上一27archive hash未改；无凭据／binary／重复MP4，所有原件保留，无删除。
 后继只从上述最新28源普通CONTINUE，不热替换／回退／注入／另开
 NEW GAME；距124仍96种，最终全程MP4与完成图鉴大盘尚未交付，Goal active。
+
+## 2026-10-04：合法第10段32种，真实识别器／富士／笛子链与四次捕获
+
+第10段`20261004-071953-seed42`只从上述最新合法28源普通CONTINUE，
+干净f2a82fbc／实际policy8a85b2ab／冻结native6d8e／gfx21e0，双层
+OpenRouter Jev1.13.0、seed42、预算与4×原生实录不变。初始经验／HP／
+四槽PP、PC、图鉴、资金与位置守恒，真实策略16.423秒／动作18.799秒
+成功；schema1实际Cut用途及
+新来源用途因子进入真实请求：LtSurge已完成、Spearow持有false，但
+Spearow／Farfetchd／Fearow有效登记true。Jev仍先切一次树，不能宣称
+新因子避免切树或把后续增益归因于它。
+
+识别器取得前11次原生Marowak遭遇均为unidentified_ghost／is_ghost，
+仍正常阻挡。154.924秒自主改选火箭队地下基地目标，212.728秒普通
+交互掉落电梯钥匙、229.421秒取得，282.709秒正常击败Giovanni，
+289.428秒普通拾取SILPH_SCOPE。随后原生野生战斗明确is_wild=true、
+is_ghost=false、capture_blocked_reason=null：317.696秒／frame64352在
+PokemonTower6F登记Gastly，333.996秒／frame69572登记Haunter，30种。
+364.454秒正常击败识别后的Marowak，才有实际Tower7F观察；397.133秒／
+frame85762在7F捕获登记Cubone，31种。442.696秒正常救出MrFuji，
+456.081秒正常领取POKE_FLUTE；479.072秒才发生Route12野生Snorlax
+战斗，486.351秒／frame103938真实捕获登记，32种。上述剧情目标或
+物品均不计新增，初始28／重复捕获／准备／治疗也不计新增；未使用
+旧幽灵通行bug。目标来源时序是局部证据，不替代最终全链合法性验收。
+
+两次action:no_selection后Jev自主继续并实际完成富士交互，不据此
+判为已复现的引擎bug。本段33次max_tokens_exceeded均为策略层，现有
+拆组回退后继续，没有提高额度、改预算／模型或声称已解决服务输入
+限制。随后自主前往浅红道馆，实际推进到Route13，未声称已击败Koga。
+
+558.288秒自主护士操作完成，2026-10-03 23:29:13 UTC精确身份、源hash及
+byte-stable trace guard仅controller6448合作式SIGINT；native6467／
+recorder6468无信号或第二连接，三者正常退出。安全／最终观察／
+development checkpoint均true，success=false／interrupted_at_command_boundary。
+60动作、策略131／动作189调用、81次普通战斗；终点LavenderPokecenter
+`(3,3)`／frame115302，32 owned／74 seen，三徽章位掩码7、资金9542、
+PokeBall48／GreatBall14、party6／PC19。Charizard48 XP108306及各成员
+普通HP／四槽PP、实际消耗、PC与全部剧情进度保存。
+
+最新SRAM `213a435b1c3c3b51750b8df7998dc74d76823aa81ce2a626491e1a7cd79e86b6`
+独立新进程schema4普通CONTINUE全部持久字段严格同，本段与上一28源
+hash未改。原生MP4 6950201字节／480.450000秒／28827帧全帧解码，
+SHA256 `2df55f639b34549e963a854de5347dd2cc30ec364398ef369680603fcc5e684b`。
+十段真实NEW GAME祖先链5469.683334秒／32唯一登记，resume初始快照不
+重复，第5段恢复只算一次，source audit无history／pending。上述闭合
+时序另由legal10-scope-and-tower-source-order只读核验；checkpoint-proof、
+independent-continue、start-proof及两份原始被动观察保留。
+
+worktree外30项／2719692字节增量备份
+`verified32-checkpoint-and-scope-tower-and-snorlax-evidence-20261004.tar.gz`
+逐项字节／hash通过，SHA256
+`88b45b95aa3ff86649dfce47d72eb298bd237169dd6223a13c82e32de9bb6164`，
+上一28archive hash未改；无凭据、binary或重复MP4，所有原件保留，无删除。
+本轮仅运行核验／证据文档，没有进一步游戏代码修改、新构建或新
+Python／Rust／m49结论。后继仅从最新32源普通CONTINUE，不热替换／
+回退／注入／另开NEW GAME；距124仍92种，最终全程MP4与完成图鉴
+大盘尚未交付，Goal仍active。
