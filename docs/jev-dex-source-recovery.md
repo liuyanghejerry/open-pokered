@@ -3206,3 +3206,25 @@ Charizard／Muk／Gloom／Exeggcute实际HP0，Snorlax24／Abra25；未声称
 `verified60-zapdos-preview-evidence-20261003.tar.gz`（1880853字节、95条），
 归档条目已检查，无凭据或重复MP4／binary，全部原件保留于持久
 `.artifacts`。未删除用户内容，124、合法来源及最终录像／大盘尚未完成。
+
+### 用户恢复额度后从最新检查点继续
+
+用户确认额度已更新，只读GET `/api/v1/key`于
+2026-10-03T15:51:28.317007Z返回HTTP200：Key limit30、remaining
+19.977537228、usage仍10.022462772；不等同于账户总余额，未自行
+修改额度或更换凭据。第二十一段`20261003-235240-seed42`从第二十段
+最新SRAM正常CONTINUE，起点Route10 `(15,4)`、60 owned／99 seen，
+消耗球及倒下状态保留，没有回退、warp或状态注入。
+
+启动时worktree干净`beb0d8e0`，私有native为上述dade，judgments源
+88e5，策略SHA256
+`2569b0101a6f0788cc9076dbdf9e8cc1797bcc550c091d767dfc5a735a5993ab`，
+gfx668份仍21e0。新FIGHT前观察已加载；双层OpenRouter Jev真实调用
+已成功返回，但尚未据此证明捕获行为改善。elapsed27.474秒实际
+RockTunnelPokecenter护士交互完成，后续正常Cut受遭遇中断后重新
+执行，60.899秒实际FuchsiaCity树清除；不计新增物种。
+
+新分段、私有runtime、存档与原生4× MP4均在持久`.artifacts`，不热
+替换运行中的策略／binary。此时仍运行，不能将实时治疗或既有
+60种起点列表当作新的独立持久检查点、新增登记或最终124验收；
+历史幽灵访问缺口及最终全程／大盘交付仍待解决。
