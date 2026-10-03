@@ -3772,3 +3772,78 @@ gfx仍21e0。新场景队伍前置已载入；40.247秒Jev自主选择Fuchsia
 Cut、41.305秒实际清树。双层OpenRouter及原生4×录像继续，不热
 替换／回退／指定寄存、未执行鲤鱼王购买或新增登记，起点63不计新增。
 Goal保持active，最终合法124／MP4／图鉴大盘继续未完成。
+
+## 2026-10-04 普通版本观测与奖品分支的精确匹配
+
+继续核查GameCorner奖品时确认：原生脚本getGameVersion实际使用
+config.version（Red=0／Blue=1），但普通get_state没有该字段，规划器
+也不解释这个查询。即使持有COINCASE和足额金币，版本guard仍为
+unknown；且旧物种／vendor匹配会把红版图边同时绑定蓝版不同等级、
+价格的奖励。这是观测／规则匹配缺口，不是金币已支付或原生奖品故障。
+
+get_state新增只读game_version，与脚本query seed使用完全相同的值；
+独立小字段不增加巨大snapshot宏的递归需求。规划facts仅从普通原生
+观测取0或1，缺失、bool、float、字符串、越界或错误参数仍unknown，
+不默认红版、不读取evaluation或改变游戏版本。pokemon图边已明确
+level时精确匹配实际奖励等级；旧无level边兼容，NPC trade／battle
+不受影响。实际版本guard仍必须成立；付款、一次性旗标、COINCASE、
+空间与导航限制保持，不改scene／价格／模型／预算，也不注入金币。
+
+5项Python新增回归在旧实现3FAIL／11个subtest ERROR，新5PASS；
+完整discover930PASS（36.285秒）。原生新增Red／Blue get_state查询
+与query_seed同值测试，反复观察不推进帧，前后完整运行时hash包含
+RNG不变；旧实现1FAIL／120filtered，新app lib121PASS、binary120PASS，
+全部app集成测试通过（既有5项ignored保持）。release构建通过，
+冻结新binary SHA256：
+`2bdf2fa1bb00e7e064f81a179efcfa557a23f3fcc000edb6e1c878b5bc25f8ba`。
+测试自动改写／生成的PNG完整保存在ignored证据目录，原PR截图恢复，
+不把测试副产物提交成视觉变更；本修复无renderer或玩家画面差异。
+
+最新已封存第27段源b113分别用旧dade／新2bdf binary正常CONTINUE，
+旧历史story_rules及autonomous在导入agent前完整加载（768580dc）。
+正式全部12目标、恢复已有agent memory；44组候选完整JSON字节一致，
+全部既有facts一致，仅新增game_version=0。帧627在只读规划前后不变，
+原始SRAM不改写、owned仍63、金钱553／金币0，无模型调用或CONTINUE
+后输入。实际Clefairy8／500、Dratini18／2800、Porygon26／9999的
+规则从各2个红／蓝奖励变为1个精确红版奖励，version unknown消失，
+只剩真实hasCoins不足。当前仍无可领取register奖品候选，不声称
+购买／获得新种或提升捕获率。新binary独立CONTINUE schema=3也通过。
+配对及receipt位于持久checkpoint-safety目录native-game-version系列。
+
+同一冻结新binary另跑真正fresh m01–m49回归，实际49个里程碑全过，
+73.979秒；两次正常联盟败退后重新进门挑战，未回档或补写资源。
+frame769307实际TheEnd、769924回title，游戏自行写出通关存档，
+无debug save；独立新进程CONTINUE到PalletTown `(5,6)`，badges255、
+名人堂1、金钱29948、game_version=0。终队Zapdos62／Lapras15／
+Venusaur57；当前进程m49 frame770234。全部观察、native autosave、
+sidecar／日志及manifest保存在worktree外持久目录
+`.artifacts/jev-dex-regression-20261004/fresh-m49-native-game-version/`。
+这是milestone引擎回归，不是Jev自主策略、最终合法收集NEW GAME
+或124种证据；两者不能混算。
+
+证据范围补正：既有schema=3逐项比较get_party公开字段（包含经验、
+HP、等级、招式和状态），以及get_state的PC逐槽PP，但get_party目前
+未返回队伍PP。历史“全部持久字段一致”不能扩大解释成已核对队伍PP；
+后续需补普通get_state.party PP的交叉核验，不读取evaluation来填补。
+原有证明／历史原件保留，既不宣称无PP差异，也不据此追认幽灵早期链。
+用户已允许保留prototype，策略稳定后另开最终合法NEW GAME；当前
+63和旧tmp83均不计最终新链，Goal保持active，最终124／MP4／大盘未交付。
+
+第28段在928.607秒正常Fuchsia护士完整治疗后，future watcher核对
+controller8501身份合作式SIGINT；安全及最终观察通过，92动作、
+策略126／动作290调用、success=false／development checkpoint。
+本段无新增登记，63 owned／102 seen；真实Gloom38→41／XP61738、
+Charizard71→72／XP377998、Exeggcute34／XP51861。终点Fuchsia
+中心 `(3,3)`、资金553／金币0、六徽章、Ultra5／Great18，队伍6／
+PC40、current box2空；原生终点普通party观察显示实际HP／PP补满。
+新2bdf／旧dade分别独立正常CONTINUE schema=3核验通过，源SRAM
+未改写：
+`b30735918aeef81b914889af39ea73d588295a8e3fcf75cf812ea27af9bcc5be`。
+其核验范围遵守上述队伍PP说明，不冒称schema=3已核对PP。第一份
+旧binary核验因已正常清理的run私有runtime路径不存在而未运行；
+失败日志保留，改用早前已冻结同hash dade硬链接后v2通过，未回退存档。
+
+第28段原生MP4封口377.450秒、22647帧、5910892字节。28段容器／
+时钟／登记守恒通过，总16844.649997秒、309921条记录、63唯一登记，
+27次续跑初始新增均为空；不代替全片视觉、最终合法来源或最终合片。
+继续仅从本段最新检查点加载修复，不把版本修复当成已付款或新物种。

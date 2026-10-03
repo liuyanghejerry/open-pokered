@@ -6440,6 +6440,12 @@ impl PokemonGame {
                 || self.overworld.state.exiting_door,
         });
         // Keep this separate from the large snapshot macro's recursion budget.
+        // This is the same configured value seeded into getGameVersion();
+        // expose it as ordinary read-only state, not evaluation telemetry.
+        snapshot["game_version"] = serde_json::json!(match self.state.config.version {
+            GameVersion::Red => 0u8,
+            GameVersion::Blue => 1u8,
+        });
         let live = self.battle.battle_state.as_ref()
             .filter(|_| matches!(self.state.screen, GameScreen::Battle));
         let party: Vec<_> = if let Some(bs) = live {
@@ -7957,6 +7963,27 @@ mod synchronous_input_tests {
         let finished = game.build_save_data();
         assert_eq!(finished.game_data.safari_steps, 0);
         assert_eq!(finished.game_data.num_safari_balls, 0);
+    }
+
+    #[test]
+    fn debug_snapshot_exposes_script_game_version_without_mutation() {
+        for (version, expected) in [(GameVersion::Red, 0), (GameVersion::Blue, 1)] {
+            let mut game = PokemonGame::new_with_options(
+                version, None, None, None, true, None, false, true, None,
+            );
+            let before = game.agent_save_state_slot(0).unwrap();
+            let frame = game.frame_count;
+            let command = serde_json::from_value(serde_json::json!({"cmd": "get_state"})).unwrap();
+            let response = serde_json::to_value(game.handle_debug_command(command)).unwrap();
+            assert_eq!(response["ok"], true);
+            let snapshot = game.debug_state_snapshot();
+            assert_eq!(snapshot["game_version"], expected);
+            assert_eq!(response["data"], snapshot);
+            assert_eq!(snapshot["game_version"], game.query_seed_snapshot().version);
+            assert_eq!(game.debug_state_snapshot(), snapshot);
+            assert_eq!(game.frame_count, frame);
+            assert_eq!(game.agent_save_state_slot(1).unwrap(), before);
+        }
     }
 
     #[test]

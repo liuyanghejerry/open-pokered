@@ -2618,6 +2618,31 @@ class AutonomousTests(unittest.TestCase):
                 self.assertEqual(cost['remaining_experience_min'], 0)
                 self.assertEqual(cost['remaining_experience_max'], 0)
 
+    def test_autonomous_facts_copy_native_version_without_evaluation_or_red_default(self):
+        state, observation = self.experience_observation_fixture()
+        state['evaluation'] = {'game_version': 0}
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.client, agent.game = Mock(), Mock()
+        agent.client.state.return_value = state
+        agent.client.party.return_value = observation
+        agent.game.st.return_value = state
+        agent.observe_audit_evolution = Mock()
+        agent.collection_audit_pending, agent.cleared_terrain = {}, set()
+        agent.battle_defeats, agent.visited, agent.crossed_passages = [], set(), set()
+        agent.collects_dex, agent.index = False, None
+        for version in (0, 1, None, False, True, -1, 2, '0', 0.0):
+            with self.subTest(version=version):
+                state['game_version'] = version
+                with patch.object(DualStoryAgent, 'facts', return_value={
+                        'map': 'Route1', 'bag': {}, 'flags': {}, 'dex': {}}):
+                    observed = agent.facts()
+                self.assertEqual(observed['game_version'], version if type(version) is int and version in (0, 1) else None)
+                self.assertNotIn('evaluation', observed)
+        state.pop('game_version')
+        with patch.object(DualStoryAgent, 'facts', return_value={
+                'map': 'Route1', 'bag': {}, 'flags': {}, 'dex': {}}):
+            self.assertIsNone(agent.facts()['game_version'])
+
     def test_autonomous_facts_observe_party_experience_only_on_the_field(self):
         state, observation = self.experience_observation_fixture()
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
@@ -4429,6 +4454,53 @@ class AutonomousTests(unittest.TestCase):
         groups = {}
         agent.add_nonwild_collection_groups(groups, facts)
         self.assertFalse(groups)
+
+    def prize_version_fixture(self):
+        from openpokered.story_rules import literal
+        agent, facts, red, pc = self.nonwild_box_capacity_fixture('prize')
+        red.map, red.storyline, red.effect = ('GameCornerPrizeRoom',
+            'GameCornerPrizeRoom:prizeVendor1', ('pokemon', 'CLEFAIRY', 8))
+        branch = {'BinaryOp': {'op': 'Eq',
+                  'left': {'Call': {'callee': 'getGameVersion', 'args': []}}, 'right': literal(0)}}
+        case = {'Call': {'callee': 'hasItem', 'args': [literal('COIN_CASE')]}}
+        red.guards = [(case, True), (branch, True),
+                      ({'Call': {'callee': 'hasCoins', 'args': [literal(500)]}}, True)]
+        blue = Rule('blue', red.map, red.storyline, [], [(case, True), (branch, False),
+                    ({'Call': {'callee': 'hasCoins', 'args': [literal(750)]}}, True)],
+                    ['CLEFAIRY 750'], ('pokemon', 'CLEFAIRY', 12), [])
+        agent.index.rules = [red, blue, pc]
+        agent._complete_collection_graph = {'Clefairy': [{'method': 'prize',
+            'map': red.map, 'storyline': 'prizeVendor1', 'level': 8, 'coins': 500}]}
+        return agent, facts, red, blue
+
+    def test_acquisition_rule_binds_the_exact_reward_level_not_other_version_prizes(self):
+        agent, _, red, _ = self.prize_version_fixture()
+        method = agent._complete_collection_graph['Clefairy'][0]
+        self.assertEqual(agent.acquisition_story_rules('Clefairy', method), [red])
+
+    def test_observed_version_reopens_only_the_exact_red_prize_with_paid_coins(self):
+        agent, facts, red, _ = self.prize_version_fixture()
+        facts['game_version'] = 0
+        groups = {}
+        agent.add_nonwild_collection_groups(groups, facts)
+        entry = groups['register:Clefairy:prize:GameCornerPrizeRoom']
+        self.assertEqual(entry['rules'], [red])
+        self.assertEqual(entry['context']['acquisition_contract']['direct_cost']['coins'], 500)
+        for version in (None, 1):
+            facts.update(game_version=version, coins=9999)
+            groups = {}
+            agent.add_nonwild_collection_groups(groups, facts)
+            self.assertFalse(groups)  # This collection graph is explicitly Red's.
+        facts.update(game_version=0, coins=500, bag={})
+        groups = {}
+        agent.add_nonwild_collection_groups(groups, facts)
+        self.assertFalse(groups)
+        facts.update(coins=499, bag={'COINCASE': 1})
+        agent.add_coin_source = Mock()
+        groups = {}
+        agent.add_nonwild_collection_groups(groups, facts)
+        self.assertFalse(groups)
+        agent.add_coin_source.assert_called_once_with(groups, facts, 500, 'Clefairy')
 
     def test_unvisited_gift_uses_observed_current_box_room_without_deposit(self):
         import copy

@@ -809,6 +809,9 @@ class AutonomousStoryAgent(DualStoryAgent):
         facts = super().facts()
         live = self.game.st()  # Refresh live geometry after field moves / map reloads.
         party_state = self.client.state()
+        # Same native 0=Red / 1=Blue value used by scene queries. Older
+        # binaries or invalid observations remain unknown, never default Red.
+        facts['game_version'] = evaluate({'Call': {'callee': 'getGameVersion', 'args': []}}, party_state)
         facts['party'] = [{k: mon.get(k) for k in
                            ('species', 'level', 'hp', 'max_hp', 'status', 'moves', 'pp')}
                           for mon in party_state.get('party', [])]
@@ -2120,7 +2123,12 @@ class AutonomousStoryAgent(DualStoryAgent):
                 if rule.map == method.get('map')
                 and (not suffix or rule.storyline.endswith(suffix))
                 and rule.effect[0] == expected
-                and self.same_species(rule.effect[1], species)]
+                and self.same_species(rule.effect[1], species)
+                # A Red graph edge must not bind Blue's differently priced
+                # reward for the same species/vendor. Version guards still
+                # need the actual native observation; matching isn't access.
+                and (expected != 'pokemon' or method.get('level') is None
+                     or type(rule.effect[2]) in (int, float) and rule.effect[2] == method['level'])]
 
     def add_evolution_item_source(self, groups, facts, item, species):
         """Expose either a real pickup or shop purchase for a needed stone."""

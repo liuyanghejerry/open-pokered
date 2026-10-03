@@ -34,6 +34,23 @@ def facts(**flags):
 
 
 class RulesTests(unittest.TestCase):
+    def test_game_version_uses_only_valid_explicit_native_observation(self):
+        for version in (0, 1):
+            for name in ('getGameVersion', 'game.getGameVersion'):
+                self.assertEqual(evaluate(call(name), {'game_version': version}), version)
+        for version in (None, False, True, -1, 2, 'Red', '0', 0.0, []):
+            self.assertIsNone(evaluate(call('getGameVersion'), {'game_version': version}))
+        self.assertIsNone(evaluate(call('getGameVersion'), {}))
+        self.assertIsNone(evaluate(call('getGameVersion', 0), {'game_version': 0}))
+
+    def test_prize_version_guard_keeps_red_blue_and_unknown_distinct(self):
+        expr = {'BinaryOp': {'op': 'Eq', 'left': call('getGameVersion'), 'right': literal(0)}}
+        self.assertEqual(requirements(expr, True, {'game_version': 0}), [[]])
+        self.assertEqual(requirements(expr, False, {'game_version': 1}), [[]])
+        for state, wanted in (({}, True), ({}, False), ({'game_version': 1}, True),
+                              ({'game_version': 0}, False)):
+            self.assertEqual(requirements(expr, wanted, state)[0][0][0], 'unknown')
+
     def test_party_count_reads_the_observed_roster_without_assuming_an_empty_party(self):
         for size in range(7):
             for name in ('getPartyCount', 'game.getPartyCount'):

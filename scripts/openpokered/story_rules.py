@@ -157,6 +157,9 @@ def evaluate(expr, facts):
             party = facts.get('party')
             return (len(party) if not args and isinstance(party, (list, tuple))
                     and len(party) <= 6 else UNKNOWN)
+        if name == 'getGameVersion':
+            version = facts.get('game_version')
+            return version if not args and type(version) is int and version in (0, 1) else UNKNOWN
         if name in ('hasMoney', 'hasCoins'):
             amount = facts.get('money' if name == 'hasMoney' else 'coins')
             return None if amount is None else amount >= args[0]
