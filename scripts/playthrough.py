@@ -584,10 +584,12 @@ class NavError(RuntimeError):
 class Game:
     def __init__(self, port=None, save_path=None, record_dir=None,
                  record_video=None, record_video_fps=None, snapshot=None, binary=None, seed=None,
-                 speed=None):
+                 speed=None, runtime_root=None):
         self.binary = Path(binary) if binary else BIN
         self.seed, self.speed = seed, speed
-        self.run_dir = Path(tempfile.mkdtemp(prefix="pokered-run-"))
+        # Autonomous collection supplies its durable per-run private root.
+        # Short-lived regression fixtures retain their historical default.
+        self.run_dir = Path(tempfile.mkdtemp(prefix="pokered-run-", dir=runtime_root))
         self.log = open(self.run_dir / "game.log", "w")
         # Persistent save ONLY for --resume (Game(..., save_path=...));
         # a plain run must boot clean or the main menu offers CONTINUE.

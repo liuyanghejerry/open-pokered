@@ -83,6 +83,25 @@ def observations_valid(observations):
         return False
 
 
+def native_checkpoint_safe(observations):
+    """SRAM resumes a settled overworld, not a battle or modal runtime.
+
+    In battle, persistent party HP can still be the pre-battle snapshot.
+    Well-formed protocol observations therefore do not prove resumability.
+    Missing control-state fields are unknown, not evidence of idle control.
+    """
+    if not isinstance(observations, dict) or not observations_valid(observations):
+        return False
+    state = observations['get_state']['data']
+    return (state.get('screen') == 'overworld'
+            and state.get('warp_fade') == 'Idle'
+            and state.get('player_movement_state') == 'Idle'
+            and all(state.get(key) is False for key in
+                    ('script_running', 'script_awaiting_battle', 'door_exit_pending', 'fishing_active'))
+            and all(key in state and state[key] is None for key in
+                    ('active_script_effect', 'dialogue', 'choice', 'field_menu')))
+
+
 def checkpoint_collection_audit(run):
     """Keep historical invalid acquisitions pending without rewriting native SRAM."""
     chain, seen = [], set()
@@ -346,7 +365,10 @@ def main(argv=None):
     result['policy_files'] = {str(p.relative_to(pt.ROOT)): hashlib.sha256(p.read_bytes()).hexdigest()
                               for p in sorted(policy_files)}
     result['policy_sha256'] = hashlib.sha256(json.dumps(result['policy_files'], sort_keys=True).encode()).hexdigest()
-    with tempfile.TemporaryDirectory(prefix='jev-autonomous-') as private:
+    # Formal saves and native logs must survive OS /tmp cleanup while running.
+    # On an abnormal process loss this private directory remains inside the
+    # durable evidence folder; normal shutdown exports evidence then cleans it.
+    with tempfile.TemporaryDirectory(prefix='.runtime-', dir=folder.resolve()) as private:
         binary = Path(private) / 'pokered-app'
         shutil.copy2(args.binary, binary)
         saved = None
@@ -356,8 +378,8 @@ def main(argv=None):
             if parent.get('mode') != 'autonomous-new-game':
                 parser.error('resume requires an autonomous-run checkpoint')
             evidence = args.resume / 'final-observations.json'
-            if not parent.get('development_checkpoint') or not observations_valid(json.loads(evidence.read_text())):
-                parser.error('resume requires a checkpoint with valid final protocol observations')
+            if not parent.get('development_checkpoint') or not native_checkpoint_safe(json.loads(evidence.read_text())):
+                parser.error('resume requires a settled overworld checkpoint; native SRAM does not restore battle or modal runtime')
             saved = Path(private) / 'continuation.sav'
             shutil.copy2(args.resume / 'game.sav', saved)
             extras = args.resume / 'game.script_flags.json'
@@ -377,7 +399,8 @@ def main(argv=None):
         with (folder / 'trace.jsonl').open('w') as trace:
             try:
                 game = JevGame(binary=binary, save_path=saved, seed=args.seed, speed=0,
-                               record_video=video_path, record_video_fps=args.record_video_fps)
+                               record_video=video_path, record_video_fps=args.record_video_fps,
+                               runtime_root=binary.parent)
                 game.attach_judgments(model, model=args.model, trace=trace,
                                       max_calls=args.max_calls, wall_budget=args.wall_budget,
                                       frame_budget=args.frame_budget)
@@ -470,25 +493,38 @@ def main(argv=None):
                         (folder / 'final-observations.json').write_text(json.dumps(observations, indent=2))
                         valid = observations_valid(observations)
                         result['final_observations_valid'] = valid
-                        result['final_dex'] = observations['get_state'].get('data', {}).get('pokedex')
+                        safe = native_checkpoint_safe(observations)
+                        result['native_checkpoint_safe'] = safe
+                        result['development_checkpoint'] = False
+                        reply = observations['get_state']
+                        final_state = reply.get('data') if isinstance(reply, dict) else None
+                        result['final_dex'] = final_state.get('pokedex') if isinstance(final_state, dict) else None
                         if not valid:
                             result.update(success=False, reason='invalid_final_protocol_observations')
                         if valid:
                             game.d.raw.cmd(cmd='capture_frame', path=str((folder / 'final.png').resolve()))
                         completing_dex = args.goal == 'collect-dex' and result.get('success') is True
                         if (args.checkpoint or completing_dex) and valid:
-                            reply = game.d.raw.cmd(cmd='save')
-                            valid = bool(reply.get('ok')) and reply.get('data') is None
-                            result['development_checkpoint'] = valid
-                            if not valid:
-                                result.update(success=False, reason='invalid_checkpoint_acknowledgement')
                             result['development_checkpoint_screen'] = observations['get_state']['data']['screen']
-                        if valid and game.save_path.exists():
-                            shutil.copy2(game.save_path, folder / 'game.sav')
+                            if not safe:
+                                result['checkpoint_rejection_reason'] = 'native_runtime_not_serialized'
+                                if completing_dex:
+                                    result.update(success=False, reason='unsafe_collection_checkpoint')
+                            else:
+                                reply = game.d.raw.cmd(cmd='save')
+                                valid = bool(reply.get('ok')) and reply.get('data') is None
+                                result['development_checkpoint'] = valid
+                                if not valid:
+                                    result.update(success=False, reason='invalid_checkpoint_acknowledgement')
+                        if game.save_path.exists():
+                            # Preserve stale/native SRAM as failure evidence only.
+                            name = 'game.sav' if valid and safe else 'nonresumable-native-save.sav'
+                            shutil.copy2(game.save_path, folder / name)
                         flags = binary.parent / 'pokered.script_flags.json'
-                        if valid and flags.exists():
-                            shutil.copy2(flags, folder / 'game.script_flags.json')
-                        if completing_dex and valid:
+                        if flags.exists():
+                            name = 'game.script_flags.json' if valid and safe else 'nonresumable-native-save.script_flags.json'
+                            shutil.copy2(flags, folder / name)
+                        if completing_dex and valid and safe:
                             try:
                                 require_collection_completion(observations, result.get('collection_audit_pending', {}))
                                 proof = verify_collection_continue(folder / 'game.sav', binary, observations,

@@ -642,7 +642,13 @@ class AutonomousStoryAgent(DualStoryAgent):
         super().__init__(*args, **kwargs)
         self.preference = preference
         self.game = game
+        # Boot input, judgments and native commands share one trace clock.
+        started = getattr(getattr(game, 'judgments', None), 'start_time', None)
+        if isinstance(started, (int, float)):
+            self.start_time = started
         game.judgments = self
+        if isinstance(game.d, ObservedProtocol):
+            game.d.record = self.record
         game.smart_moves = True
         self.maps = {p.parent.name: json.loads(p.read_text())
                      for p in data.DATA.glob('maps/*/map.json')}
@@ -1111,6 +1117,16 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'switching to a capable finisher is progress even though it does not itself register a species '
                 'or reach the nurse. Compare effective attacks, level and health rather than continuing '
                 'to use an immune or depleted active battler.')
+        forced_replacement = (layer == 'action'
+            and str(state.get('battle_phase') or '').startswith('PlayerFaintSwitch')
+            and any(str(index) in candidates and mon.get('hp', 0) > 0
+                    for index, mon in enumerate(battle.get('player_party') or [])))
+        if forced_replacement:
+            state = {**state, 'immediate_goal': 'Replace the fainted active Pokémon to restore legal battle input.'}
+            instruction += (' The native battle is waiting for a mandatory replacement. '
+                'Choose an offered conscious member even if it has only status moves or is much weaker '
+                'than the opponent. Refusing cannot open RUN, BAG or FIGHT; those legal turns become '
+                'available only after replacement. This does not guarantee escape, victory or capture.')
         if layer == 'action' and any('"transit_leader"' in value for value in candidates.values()):
             instruction += (' Travel exposes the current party leader to incidental wild encounters before '
                 'the destination interaction. Changing the leader is a valid preparation step, even though '
@@ -1151,7 +1167,7 @@ class AutonomousStoryAgent(DualStoryAgent):
             return self.choose_bounded_strategy(state, candidates, instruction,
                 allow_abstain=not (grounded or mechanism_grounded))
         return self.choose_bounded_choice(layer, state, candidates, instruction,
-            allow_abstain=not (grounded or mechanism_grounded or trainer_switch_grounded))
+            allow_abstain=not (grounded or mechanism_grounded or trainer_switch_grounded or forced_replacement))
 
     def choose_bounded_strategy(self, state, candidates, instruction, *, allow_abstain=True):
         return self.choose_bounded_choice('strategy', state, candidates, instruction,

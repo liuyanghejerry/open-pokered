@@ -22,6 +22,308 @@ from openpokered.run_autonomous import observations_valid, checkpoint_field_requ
 
 
 class AutonomousTests(unittest.TestCase):
+    def test_native_inputs_and_agent_judgments_share_the_boot_trace_clock(self):
+        import io
+        from types import SimpleNamespace
+        client = Mock()
+        client.state.return_value = {'map_name': 'PalletTown', 'hall_of_fame_count': 0}
+        raw, old_record = Mock(), Mock()
+        raw.cmd.return_value = {'ok': True, 'data': {'frame_count': 100}}
+        protocol = ObservedProtocol(raw, old_record, time.monotonic()+60)
+        started = time.monotonic()-10
+        game = Mock(d=protocol, judgments=SimpleNamespace(start_time=started))
+        trace = io.StringIO()
+        agent = AutonomousStoryAgent(client, Mock(), [{'id': 'collect-dex', 'agent_verified': True}],
+                                     game=game, trace=trace)
+        self.assertEqual(agent.start_time, started)
+        protocol.step(1)
+        row = json.loads(trace.getvalue())
+        self.assertEqual(row['kind'], 'native_input')
+        self.assertGreaterEqual(row['elapsed_s'], 10)
+        old_record.assert_not_called()
+
+    def test_native_game_private_save_and_log_can_use_a_durable_root(self):
+        import tempfile
+        import playthrough as pt
+        with tempfile.TemporaryDirectory() as root:
+            path = Path(root)
+            proc = Mock()
+            proc.poll.return_value = 0
+            with patch.object(pt.subprocess, 'Popen', return_value=proc), \
+                    patch.object(pt, 'DebugClient'), \
+                    patch.object(pt, 'load_coordinate_warps', return_value={}), \
+                    patch.dict(pt.COORDINATE_WARPS, clear=True):
+                game = pt.Game(port=9876, binary=path / 'pokered-app', runtime_root=path)
+                try:
+                    self.assertTrue(game.run_dir.is_relative_to(path))
+                    self.assertTrue(game.save_path.is_relative_to(path))
+                    self.assertTrue((game.run_dir / 'game.log').is_file())
+                finally:
+                    game.close()
+                self.assertTrue(path.is_dir())  # Cleanup removes only the private child.
+                self.assertFalse(game.run_dir.exists())
+
+    def test_forced_replacement_cannot_abstain_with_a_conscious_status_only_member(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.active = {'target': ('heal', 'party', True)}
+        party = [{'species': 'Charizard', 'hp': 0},
+                 {'species': 'Metapod', 'hp': 25, 'moves': ['Harden'], 'pp': [40]}]
+        state = {'battle_phase': 'PlayerFaintSwitch { cursor: 1 }',
+                 'battle': {'is_wild': True, 'player_party': party,
+                            'enemy': {'species': 'Mewtwo'}}}
+        with patch.object(DualStoryAgent, 'choose', return_value='1') as choose:
+            self.assertEqual(agent.choose('action', state, {'1': '{}'}, 'Choose a member.'), '1')
+            self.assertFalse(choose.call_args.kwargs['allow_abstain'])
+            self.assertIn('fainted', choose.call_args.args[1]['immediate_goal'])
+            self.assertIn('does not guarantee', choose.call_args.args[3])
+            self.assertNotIn('immediate_goal', state)
+            for change in ({'battle_phase': 'PlayerParty'},
+                           {'battle': {'player_party': [{'hp': 0}, {'hp': 0}]}},
+                           {'battle': {'player_party': []}}):
+                agent.choose('action', {**state, **change}, {'1': '{}'}, 'Choose a member.')
+                self.assertTrue(choose.call_args.kwargs['allow_abstain'])
+            agent.choose('action', state, {'0': '{}'}, 'Choose a member.')
+            self.assertTrue(choose.call_args.kwargs['allow_abstain'])
+
+    def test_party_target_exposes_native_phase_and_live_hp_not_stale_sram(self):
+        game = JevGame.__new__(JevGame)
+        game.judgments = Mock()
+        game.judgments.choose.return_value = '1'
+        party = [{'species': 'Charizard', 'hp': 200, 'level': 99, 'moves': ['Slash'], 'pp': [10]},
+                 {'species': 'Metapod', 'hp': 25, 'level': 7, 'moves': ['Harden'], 'pp': [40]}]
+        live = {'enemy': {'species': 'Mewtwo'}, 'player_party': [
+            {**party[0], 'hp': 0}, party[1]]}
+        state = {'party': party, 'battle_live': live, 'battle_phase': 'PlayerFaintSwitch'}
+        self.assertEqual(game.battle_party_target(state), 1)
+        args = game.judgments.choose.call_args.args
+        self.assertEqual(args[1]['battle_phase'], 'PlayerFaintSwitch')
+        self.assertEqual(args[1]['battle'], live)
+        self.assertEqual(set(args[2]), {'1'})
+        self.assertEqual(json.loads(args[2]['1'])['usable_effective_attacks'], [])
+        self.assertEqual(party[0]['hp'], 200)
+        game.battle_party_target(state)
+        self.assertEqual(game.judgments.choose.call_count, 1)
+        game.battle_party_target({**state, 'battle_phase': 'PlayerParty'})
+        self.assertEqual(game.judgments.choose.call_count, 2)
+
+    def test_settled_checkpoint_publication_also_requires_an_unshifted_save_ack(self):
+        import io
+        import tempfile
+        from openpokered import run_autonomous
+        state = {'screen': 'overworld', 'warp_fade': 'Idle', 'player_movement_state': 'Idle',
+                 'script_running': False, 'script_awaiting_battle': False,
+                 'door_exit_pending': False, 'active_script_effect': None,
+                 'dialogue': None, 'choice': None, 'field_menu': None, 'fishing_active': False}
+        for save_reply, published in (({'ok': True, 'data': None}, True),
+                                      ({'ok': True, 'data': {'screen': 'overworld'}}, False),
+                                      ({'ok': False, 'error': 'save failed'}, False)):
+            with self.subTest(reply=save_reply), tempfile.TemporaryDirectory() as root:
+                path = Path(root)
+                (path / 'pokered-app').write_bytes(b'binary')
+                (path / 'game.sav').write_bytes(b'native SRAM')
+                (path / 'game.log').write_text('native log')
+                game = Mock()
+                game.run_dir, game.save_path, game.d.counts = path, path / 'game.sav', {}
+                game.battles_driven, game.move_cache_hits = 0, 0
+                data = {'get_state': state, 'get_flags': {}, 'get_party': [], 'get_bag': [], 'get_npcs': []}
+                def reply(**request):
+                    return save_reply if request['cmd'] == 'save' else {'ok': True, 'data': data.get(request['cmd'])}
+                game.d.raw.cmd.side_effect = reply
+                with patch.object(run_autonomous, 'TypeSafeClient'), \
+                        patch.object(run_autonomous, 'JevGame', return_value=game), \
+                        patch.object(run_autonomous, 'boot_new_game', side_effect=RuntimeError('interrupted')), \
+                        patch('sys.stdout', new_callable=io.StringIO):
+                    run_autonomous.main(['--checkpoint', '--binary', str(path / 'pokered-app'),
+                                         '--output', str(path / 'out')])
+                folder = next((path / 'out').iterdir())
+                summary = json.loads((folder / 'summary.json').read_text())
+                self.assertTrue(summary['native_checkpoint_safe'])
+                self.assertEqual(summary['development_checkpoint'], published)
+                self.assertEqual((folder / 'game.sav').exists(), published)
+                self.assertEqual([call.kwargs['cmd'] for call in game.d.raw.cmd.call_args_list].count('save'), 1)
+                if not published:
+                    self.assertEqual(summary['reason'], 'invalid_checkpoint_acknowledgement')
+                    self.assertEqual((folder / 'nonresumable-native-save.sav').read_bytes(), b'native SRAM')
+
+    def test_malformed_final_state_keeps_failure_evidence_without_a_checkpoint(self):
+        import io
+        import tempfile
+        from openpokered import run_autonomous
+        with tempfile.TemporaryDirectory() as root:
+            path = Path(root)
+            (path / 'pokered-app').write_bytes(b'binary')
+            (path / 'game.sav').write_bytes(b'unverified SRAM')
+            (path / 'game.log').write_text('native log')
+            game = Mock(run_dir=path, save_path=path / 'game.sav', battles_driven=0, move_cache_hits=0)
+            game.d.counts = {}
+            data = {'get_state': None, 'get_flags': {}, 'get_party': [], 'get_bag': [], 'get_npcs': []}
+            game.d.raw.cmd.side_effect = lambda **r: {'ok': True, 'data': data.get(r['cmd'])}
+            with patch.object(run_autonomous, 'TypeSafeClient'), \
+                    patch.object(run_autonomous, 'JevGame', return_value=game), \
+                    patch.object(run_autonomous, 'boot_new_game', side_effect=RuntimeError('interrupted')), \
+                    patch('sys.stdout', new_callable=io.StringIO):
+                code = run_autonomous.main(['--checkpoint', '--binary', str(path / 'pokered-app'),
+                                            '--output', str(path / 'out')])
+            folder = next((path / 'out').iterdir())
+            summary = json.loads((folder / 'summary.json').read_text())
+            self.assertEqual(code, 1)
+            self.assertEqual(summary['reason'], 'invalid_final_protocol_observations')
+            self.assertFalse(summary['development_checkpoint'])
+            self.assertFalse((folder / 'game.sav').exists())
+            self.assertEqual((folder / 'nonresumable-native-save.sav').read_bytes(), b'unverified SRAM')
+            self.assertTrue((folder / 'final-observations.json').exists())
+            self.assertTrue((folder / 'game.log').exists())
+            game.close.assert_called_once()
+
+    def test_collection_completion_cannot_publish_or_verify_a_battle_checkpoint(self):
+        import io
+        import tempfile
+        from openpokered import run_autonomous
+        with tempfile.TemporaryDirectory() as root:
+            path = Path(root)
+            (path / 'pokered-app').write_bytes(b'binary')
+            (path / 'game.sav').write_bytes(b'prebattle SRAM')
+            (path / 'game.log').write_text('native log')
+            game = Mock(run_dir=path, save_path=path / 'game.sav', battles_driven=0, move_cache_hits=0)
+            game.d.counts = {}
+            data = {'get_state': {'screen': 'battle'}, 'get_flags': {},
+                    'get_party': [], 'get_bag': [], 'get_npcs': []}
+            game.d.raw.cmd.side_effect = lambda **r: {'ok': True, 'data': data.get(r['cmd'])}
+            agent = Mock(visited=set(), observed_barrier_maps=set(), navigation_memory={},
+                navigation_history={}, mechanism_goal=None, field_requirements={}, battle_requirements={},
+                capture_retreats={}, capture_retreat_totals={}, collection_audit_pending={},
+                battle_defeats=[], defeat_preparation=0, first_clear_verification=None,
+                calls={}, tokens={}, completed=[], actions=0, models=set(), resolved_battles=0)
+            agent.run.return_value = {'success': True}
+            game.stationary_npcs = {}
+            with patch.object(run_autonomous, 'TypeSafeClient'), \
+                    patch.object(run_autonomous, 'JevGame', return_value=game), \
+                    patch.object(run_autonomous, 'AutonomousStoryAgent', return_value=agent), \
+                    patch.object(run_autonomous, 'boot_new_game', return_value=data['get_state']), \
+                    patch.object(run_autonomous, 'require_collection_completion') as require, \
+                    patch.object(run_autonomous, 'verify_collection_continue') as verify, \
+                    patch.object(run_autonomous.signal, 'signal'), \
+                    patch('sys.stdout', new_callable=io.StringIO):
+                code = run_autonomous.main(['--goal', 'collect-dex', '--binary', str(path / 'pokered-app'),
+                                            '--output', str(path / 'out')])
+            folder = next((path / 'out').iterdir())
+            summary = json.loads((folder / 'summary.json').read_text())
+            self.assertEqual(code, 1)
+            self.assertFalse(summary['success'])
+            self.assertEqual(summary['reason'], 'unsafe_collection_checkpoint')
+            self.assertFalse(summary['development_checkpoint'])
+            self.assertFalse((folder / 'game.sav').exists())
+            require.assert_not_called()
+            verify.assert_not_called()
+
+    def test_native_checkpoint_requires_settled_overworld_not_just_valid_json(self):
+        from openpokered.run_autonomous import native_checkpoint_safe
+        state = {'screen': 'overworld', 'warp_fade': 'Idle', 'player_movement_state': 'Idle',
+                 'script_running': False, 'script_awaiting_battle': False,
+                 'door_exit_pending': False, 'active_script_effect': None,
+                 'dialogue': None, 'choice': None, 'field_menu': None, 'fishing_active': False}
+        data = {'get_state': state, 'get_flags': {}, 'get_party': [], 'get_bag': [], 'get_npcs': []}
+        observations = {cmd: {'ok': True, 'data': value} for cmd, value in data.items()}
+        self.assertTrue(native_checkpoint_safe(observations))
+        for change in ({'screen': 'battle'}, {'screen': 'start_menu'},
+                       {'warp_fade': 'FadingOut'}, {'player_movement_state': 'Walking'},
+                       {'script_running': True}, {'script_awaiting_battle': True},
+                       {'door_exit_pending': True}, {'active_script_effect': 'Delay'},
+                       {'dialogue': 'still open'}, {'choice': {'cursor': 0}},
+                       {'field_menu': {'kind': 'bag'}}, {'fishing_active': True}):
+            with self.subTest(change=change):
+                unsafe = {**observations, 'get_state': {'ok': True, 'data': {**state, **change}}}
+                self.assertTrue(observations_valid(unsafe))
+                self.assertFalse(native_checkpoint_safe(unsafe))
+        for malformed in (None, [], {}, {'get_state': {'ok': True, 'data': None}}):
+            self.assertFalse(native_checkpoint_safe(malformed))
+        for missing in ('warp_fade', 'player_movement_state', 'script_running', 'dialogue'):
+            with self.subTest(missing=missing):
+                partial = {key: value for key, value in state.items() if key != missing}
+                self.assertFalse(native_checkpoint_safe({**observations,
+                    'get_state': {'ok': True, 'data': partial}}))
+
+    def test_unsafe_final_state_keeps_diagnostic_sram_but_never_publishes_checkpoint(self):
+        import io
+        import tempfile
+        from openpokered import run_autonomous
+        with tempfile.TemporaryDirectory() as root:
+            path = Path(root)
+            (path / 'pokered-app').write_bytes(b'binary')
+            (path / 'game.sav').write_bytes(b'old uncompleted SRAM')
+            (path / 'game.log').write_text('native log')
+            game = Mock()
+            game.run_dir, game.save_path, game.d.counts = path, path / 'game.sav', {}
+            game.battles_driven, game.move_cache_hits = 0, 0
+            data = {'get_state': {'screen': 'battle'}, 'get_flags': {},
+                    'get_party': [], 'get_bag': [], 'get_npcs': []}
+            def reply(**request):
+                return {'ok': True, 'data': data.get(request['cmd'])}
+            game.d.raw.cmd.side_effect = reply
+            with patch.object(run_autonomous, 'TypeSafeClient'), \
+                    patch.object(run_autonomous, 'JevGame', return_value=game), \
+                    patch.object(run_autonomous, 'boot_new_game', side_effect=RuntimeError('interrupted')), \
+                    patch.object(run_autonomous.signal, 'signal'), \
+                    patch('sys.stdout', new_callable=io.StringIO):
+                code = run_autonomous.main(['--checkpoint', '--binary', str(path / 'pokered-app'),
+                                            '--output', str(path / 'out')])
+            folder = next((path / 'out').iterdir())
+            summary = json.loads((folder / 'summary.json').read_text())
+            self.assertEqual(code, 1)
+            self.assertTrue(summary['final_observations_valid'])
+            self.assertFalse(summary['native_checkpoint_safe'])
+            self.assertFalse(summary['development_checkpoint'])
+            self.assertFalse((folder / 'game.sav').exists())
+            self.assertEqual((folder / 'nonresumable-native-save.sav').read_bytes(), b'old uncompleted SRAM')
+            self.assertNotIn('save', [call.kwargs['cmd'] for call in game.d.raw.cmd.call_args_list])
+            game.close.assert_called_once()
+
+    def test_resume_rejects_historical_battle_checkpoint_before_spawning_game(self):
+        import io
+        import tempfile
+        from openpokered import run_autonomous
+        with tempfile.TemporaryDirectory() as root:
+            path = Path(root)
+            (path / 'pokered-app').write_bytes(b'binary')
+            parent = path / 'parent'
+            parent.mkdir()
+            (parent / 'summary.json').write_text(json.dumps({
+                'mode': 'autonomous-new-game', 'development_checkpoint': True}))
+            (parent / 'game.sav').write_bytes(b'not a runtime snapshot')
+            data = {'get_state': {'screen': 'battle'}, 'get_flags': {},
+                    'get_party': [], 'get_bag': [], 'get_npcs': []}
+            (parent / 'final-observations.json').write_text(json.dumps({
+                cmd: {'ok': True, 'data': value} for cmd, value in data.items()}))
+            with patch.object(run_autonomous, 'TypeSafeClient'), \
+                    patch.object(run_autonomous, 'JevGame') as factory, \
+                    patch('sys.stderr', new_callable=io.StringIO), \
+                    self.assertRaises(SystemExit) as stopped:
+                run_autonomous.main(['--resume', str(parent), '--binary', str(path / 'pokered-app'),
+                                     '--output', str(path / 'out')])
+            self.assertEqual(stopped.exception.code, 2)
+            factory.assert_not_called()
+
+    def test_native_input_log_records_acknowledged_atomic_requests_not_reads_or_timeouts(self):
+        raw, record = Mock(), Mock()
+        raw.cmd.return_value = {'ok': True, 'data': {'advanced': True,
+            'queue_start_frame': 100, 'frame_count': 103}}
+        protocol = ObservedProtocol(raw, record, time.monotonic()+60)
+        protocol.drive([None, 'a', None])
+        record.assert_called_once_with('native_input', request={
+            'cmd': 'press_timeline', 'buttons': [None, 'a', None], 'advance': True}, ok=True, frame=103)
+        record.reset_mock()
+        protocol.cmd(cmd='get_state')
+        record.assert_not_called()
+        raw.cmd.side_effect = TimeoutError('transport was not acknowledged')
+        with self.assertRaises(TimeoutError):
+            protocol.cmd(cmd='step_frames', count=1)
+        record.assert_not_called()
+        raw.cmd.side_effect = None
+        raw.cmd.return_value = {'ok': False, 'error': 'blocked'}
+        protocol.cmd(cmd='move_to', x=1, y=2)
+        record.assert_called_once_with('native_input', request={'cmd': 'move_to', 'x': 1, 'y': 2},
+                                       ok=False, frame=None)
+
     def test_safari_ball_sequence_counts_capture_before_flee_and_budget(self):
         from openpokered.playthrough_judgments import safari_ball_sequence
         self.assertEqual(safari_ball_sequence(.2, .5, 0), (0, 0))
@@ -4070,6 +4372,7 @@ class AutonomousTests(unittest.TestCase):
             (logs / 'game.log').write_text('')
             game, agent = Mock(), Mock()
             game.run_dir, game.d.counts = logs, {}
+            game.save_path = path / 'absent-native-save.sav'
             game.battles_driven, game.move_cache_hits, game.stationary_npcs = 0, 0, {}
             game.d.raw.cmd.return_value = {'ok': True, 'data': {}}
             agent.run.return_value = {}
@@ -4092,6 +4395,9 @@ class AutonomousTests(unittest.TestCase):
                 self.assertTrue(manifest['policy_sha256'])
                 self.assertTrue(manifest['binary_sha256'])
                 self.assertEqual(manifest['budgets']['wall_seconds'], 7200)
+                root = Path(run_autonomous.JevGame.call_args.kwargs['runtime_root'])
+                self.assertTrue(root.is_relative_to((path / 'out').resolve()))
+                self.assertEqual(run_autonomous.JevGame.call_args.kwargs['binary'].parent, root)
                 return {}
             agent.run.side_effect = verify_start_manifest
             with patch.object(run_autonomous.argparse.ArgumentParser, 'add_argument', record), \

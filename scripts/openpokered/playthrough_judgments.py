@@ -382,6 +382,11 @@ class ObservedProtocol:
         'press', 'press_sequence', 'press_timeline', 'step_frames',
         'capture_frame', 'move_to', 'interact', 'interact_with', 'travel_to',
     }
+    ADVANCING = {
+        'wait_until', 'skip_dialogue', 'press', 'press_sequence',
+        'press_timeline', 'step_frames', 'move_to', 'interact',
+        'interact_with', 'travel_to',
+    }
 
     def __init__(self, raw, record, deadline):
         self.raw, self.record, self.deadline = raw, record, deadline
@@ -399,7 +404,12 @@ class ObservedProtocol:
         if name == 'press_timeline':
             kwargs['advance'] = True
         self.counts[name] = self.counts.get(name, 0) + 1
-        return self.raw.cmd(**kwargs)
+        reply = self.raw.cmd(**kwargs)
+        if name in self.ADVANCING:
+            data = reply.get('data')
+            frame = data.get('frame_count') if isinstance(data, dict) else None
+            self.record('native_input', request=kwargs, ok=reply.get('ok') is True, frame=frame)
+        return reply
 
     def drive(self, buttons, frames=None):
         # Queue and execute in one request. The driven-only loop can drain a
@@ -537,12 +547,13 @@ class JevGame(pt.Game):
         pending = getattr(self, '_switch_target', None)
         if pending is not None and party[pending]['hp'] > 0:
             return pending
-        signature = json.dumps([party, live['enemy']['species']], sort_keys=True)
+        signature = json.dumps([party, live['enemy']['species'], state.get('battle_phase')], sort_keys=True)
         if getattr(self, '_party_signature', None) != signature:
             candidates = {str(i): json.dumps({'pokemon': mon,
                 'usable_effective_attacks': effective_attacks(mon, live['enemy']['species'])})
                 for i, mon in enumerate(party) if mon['hp'] > 0}
-            self._party_target = int(self.judgments.choose('action', {'enemy': live['enemy']}, candidates,
+            self._party_target = int(self.judgments.choose('action', {
+                'enemy': live['enemy'], 'battle': live, 'battle_phase': state.get('battle_phase')}, candidates,
                 'Choose a conscious party member to battle this opponent. Compare level, remaining HP, '
                 'usable effective attacks and type matchups. Even a weak remaining member can take a legal turn.'))
             self._party_signature = signature
