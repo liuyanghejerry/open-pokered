@@ -3744,6 +3744,131 @@ class AutonomousTests(unittest.TestCase):
         agent.add_ball_supply(groups, facts)
         self.assertEqual(groups, {})
 
+    def stone_spending_agent(self):
+        agent = self.bulk_ball_agent()
+        agent._complete_collection_graph.update({
+            'Growlithe': [{'method': 'grass', 'map': 'Route7'}],
+            'Arcanine': [{'method': 'evolution', 'trigger': 'item',
+                         'from_species': 'Growlithe', 'item': 'FireStone'}],
+            'Pikachu': [{'method': 'grass', 'map': 'ViridianForest'}],
+            'Raichu': [{'method': 'evolution', 'trigger': 'item',
+                       'from_species': 'Pikachu', 'item': 'ThunderStone'}],
+        })
+        return agent
+
+    def test_ball_spending_exposes_lost_stone_affordability_without_removing_batches(self):
+        agent = self.stone_spending_agent()
+        facts = {'bag': {}, 'money': 5000, 'map': 'ViridianCity',
+                 'party': [{'species': 'Growlithe'}], 'stored_pokemon': [],
+                 'dex': {'owned_species': ['Growlithe']}}
+        original = json.loads(json.dumps(facts))
+        groups = {}
+        agent.add_ball_supply(groups, facts)
+        self.assertEqual({g['target'] for g in groups.values()},
+                         {('supply', 'PokeBall', 12), ('supply', 'PokeBall', 15)})
+        for group in groups.values():
+            context = group['context']
+            reference = context['item_evolution_spending_reference']
+            self.assertEqual(reference['money_before_purchase'], 5000)
+            self.assertEqual(reference['money_after_purchase'], context['money_after_purchase'])
+            option, = reference['held_source_options']
+            self.assertEqual(option['species'], 'Arcanine')
+            self.assertEqual(option['source_party_count'], 1)
+            self.assertEqual(option['source_stored_count'], 0)
+            self.assertTrue(option['affordable_before_purchase'])
+            self.assertEqual(option['affordable_after_purchase'], group['target'][2] == 12)
+            self.assertEqual(option['purchase_removes_affordability'], group['target'][2] == 15)
+            self.assertIn('not a joint registration yield', reference['scope'])
+            self.assertIn('not proof of shop access', reference['scope'])
+        self.assertEqual(facts, original)
+
+    def test_stone_spending_does_not_count_registered_but_unheld_sources(self):
+        agent = self.stone_spending_agent()
+        facts = {'money': 5000, 'bag': {}, 'party': [], 'stored_pokemon': [],
+                 'dex': {'owned_species': ['Growlithe', 'Pikachu']}}
+        reference = agent.item_evolution_spending_reference(facts, 0)
+        self.assertEqual(reference['held_source_options'], [])
+
+    def test_stone_spending_includes_pc_sources_but_excludes_registered_targets(self):
+        agent = self.stone_spending_agent()
+        facts = {'money': 2100, 'bag': {}, 'party': [{'species': 'Growlithe'}],
+                 'stored_pokemon': [{'species': 'Pikachu', 'box': 2, 'index': 0}],
+                 'dex': {'owned_species': ['Growlithe', 'Pikachu', 'Arcanine']}}
+        option, = agent.item_evolution_spending_reference(facts, 2099)['held_source_options']
+        self.assertEqual(option['species'], 'Raichu')
+        self.assertEqual(option['source_party_count'], 0)
+        self.assertEqual(option['source_stored_count'], 1)
+        self.assertEqual(option['cash_needed_for_one_evolution'], 2100)
+        self.assertTrue(option['affordable_before_purchase'])
+        self.assertFalse(option['affordable_after_purchase'])
+
+    def test_stone_spending_uses_carried_stone_without_repurchase_or_cash_reserve(self):
+        facts = {'money': 2100, 'bag': {'FIRE_STONE': 1},
+                 'party': [{'species': 'Growlithe'}], 'stored_pokemon': []}
+        option, = self.stone_spending_agent().item_evolution_spending_reference(
+            facts, 0)['held_source_options']
+        self.assertEqual(option['item_quantity_held'], 1)
+        self.assertEqual(option['cash_needed_for_one_evolution'], 0)
+        self.assertTrue(option['affordable_before_purchase'])
+        self.assertTrue(option['affordable_after_purchase'])
+        self.assertFalse(option['purchase_removes_affordability'])
+
+    def test_stone_spending_unknown_purchase_price_is_not_free_or_unaffordable(self):
+        facts = {'money': 2100, 'bag': {}, 'party': [{'species': 'Growlithe'}]}
+        from openpokered.autonomous_story import ITEM_CATALOG
+        for catalog_entry in ({}, {'price': None}, {'price': 0}, {'price': -1}):
+            with self.subTest(catalog_entry=catalog_entry):
+                with patch.dict(ITEM_CATALOG, {'FireStone': catalog_entry}):
+                    option, = self.stone_spending_agent().item_evolution_spending_reference(
+                        facts, 0)['held_source_options']
+                self.assertIsNone(option['item_unit_price_reference'])
+                self.assertIsNone(option['cash_needed_for_one_evolution'])
+                self.assertIsNone(option['affordable_before_purchase'])
+                self.assertIsNone(option['affordable_after_purchase'])
+                self.assertFalse(option['purchase_removes_affordability'])
+
+    def test_reserve_ball_batch_also_carries_stone_spending_evidence(self):
+        agent = self.stone_spending_agent()
+        agent._complete_collection_graph.pop('Moltres')
+        facts = {'bag': {}, 'money': 2200, 'map': 'ViridianCity',
+                 'party': [{'species': 'Growlithe'}]}
+        groups = {}
+        agent.add_ball_supply(groups, facts)
+        group, = groups.values()
+        self.assertEqual(group['context']['batch'], 'reserve')
+        self.assertEqual(group['target'], ('supply', 'PokeBall', 6))
+        option, = group['context']['item_evolution_spending_reference']['held_source_options']
+        self.assertTrue(option['purchase_removes_affordability'])
+
+    def test_stone_spending_alternatives_do_not_duplicate_a_shared_stone(self):
+        agent = self.stone_spending_agent()
+        agent._complete_collection_graph.update({
+            'Vulpix': [{'method': 'grass', 'map': 'Route7'}],
+            'Ninetales': [{'method': 'evolution', 'trigger': 'item',
+                          'from_species': 'Vulpix', 'item': 'FireStone'}],
+        })
+        facts = {'money': 0, 'bag': {'FIRESTONE': 1},
+                 'party': [{'species': 'Growlithe'}, {'species': 'Vulpix'}]}
+        reference = agent.item_evolution_spending_reference(facts, 0)
+        self.assertEqual({row['species'] for row in reference['held_source_options']},
+                         {'Arcanine', 'Ninetales'})
+        self.assertTrue(all(row['item_quantity_held'] == 1 for row in reference['held_source_options']))
+        self.assertIn('carried stones and source individuals are shared', reference['scope'])
+        self.assertNotIn('guaranteed_registrations', reference)
+
+    def test_stone_spending_respects_an_observed_exclusive_evolution_choice(self):
+        agent = self.stone_spending_agent()
+        agent._complete_collection_graph.update({
+            'Eevee': [{'method': 'gift', 'map': 'CeladonMansionRoofHouse'}],
+            'Flareon': [{'method': 'evolution', 'trigger': 'item', 'from_species': 'Eevee',
+                        'item': 'FireStone', 'exclusive_group': 'eevee_evolution', 'choice': 'Flareon'}],
+            'Jolteon': [{'method': 'evolution', 'trigger': 'item', 'from_species': 'Eevee',
+                        'item': 'ThunderStone', 'exclusive_group': 'eevee_evolution', 'choice': 'Jolteon'}],
+        })
+        facts = {'money': 5000, 'bag': {}, 'party': [{'species': 'Eevee'}],
+                 'dex': {'owned_species': ['Eevee', 'Jolteon']}}
+        self.assertEqual(agent.item_evolution_spending_reference(facts, 0)['held_source_options'], [])
+
     def test_bulk_ball_references_require_an_unregistered_ready_static_source(self):
         agent = self.bulk_ball_agent()
         facts = {'bag': {'POKEBALL': 12}, 'money': 100000, 'map': 'ViridianCity',

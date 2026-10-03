@@ -1071,6 +1071,14 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'with alternate supports, ball capabilities and their acquisition prerequisites. Level '
                 'parity itself does not guarantee surviving an unfavorable matchup; a single gained '
                 'level should not erase the observed failure evidence.')
+            instruction += (' Compare item_evolution_spending_reference on ball purchases: '
+                'spending may remove the ability to buy a stone for an unregistered evolution '
+                'of a Pokémon actually held in the party or PC. An already carried stone needs '
+                'no repurchase; a registered but unheld source is not a ready evolution input. '
+                'These are independent alternatives sharing money, stones and source individuals, '
+                'not a joint registration yield. Prices are references, not proof of shop access, '
+                'and PC sources still require withdrawal. Compare this opportunity cost with the '
+                'capture benefit and other goals; it is not a fixed cash reserve or a ban on shopping.')
         if layer == 'action' and 'local_state' in state and getattr(self, 'active', None):
             state = {**state, 'strategy_context': self.active.get('context', {})}
         context = state.get('strategy_context') or {}
@@ -3542,6 +3550,53 @@ class AutonomousStoryAgent(DualStoryAgent):
                                      'Trainee must remain conscious to share victory experience; '
                                      'healing and switching still require normal menus.'}}
 
+    def item_evolution_spending_reference(self, facts, money_after):
+        """Expose alternative held-source stone costs; never reserve cash or cut options."""
+        graph = self.complete_collection_graph()
+        owned = self.validated_owned(facts)
+        plan = solo_plan(graph, owned, infer_solo_choices(owned))
+        party, stored = facts.get('party', []), facts.get('stored_pokemon', [])
+        catalog = {name.replace('_', '').upper(): info for name, info in ITEM_CATALOG.items()}
+        bag = Counter()
+        for name, quantity in facts.get('bag', {}).items():
+            bag[name.replace('_', '').upper()] += quantity
+        options = []
+        for species in sorted(set(plan['choice_reachable_species']) - owned):
+            for method in graph.get(species, []):
+                if (method['method'] != 'evolution' or method.get('trigger') != 'item'
+                        or method.get('external_trade')):
+                    continue
+                group = method.get('exclusive_group')
+                if group and method.get('choice') not in plan['optimal_choices'].get(group, ()):
+                    continue
+                source = method['from_species']
+                party_count = sum(self.same_species(mon.get('species'), source) for mon in party)
+                stored_count = sum(self.same_species(mon.get('species'), source) for mon in stored)
+                if not party_count + stored_count:
+                    continue
+                item = method['item']
+                key = item.replace('_', '').upper()
+                price = catalog.get(key, {}).get('price') or 0
+                price = price if price > 0 else None
+                quantity = bag[key]
+                needed = 0 if quantity > 0 else price
+                before = facts['money'] >= needed if needed is not None else None
+                after = money_after >= needed if needed is not None else None
+                options.append({'species': species, 'from_species': source,
+                    'source_party_count': party_count, 'source_stored_count': stored_count,
+                    'required_item': item, 'item_quantity_held': quantity,
+                    'item_unit_price_reference': price, 'cash_needed_for_one_evolution': needed,
+                    'affordable_before_purchase': before, 'affordable_after_purchase': after,
+                    'purchase_removes_affordability': before is True and after is False})
+        return {'money_before_purchase': facts['money'], 'money_after_purchase': money_after,
+                'held_source_options': options,
+                'scope': 'Independent alternatives for observed party/PC sources, not a joint registration yield: '
+                         'money, carried stones and source individuals are shared. Carried stones need no '
+                         'repurchase; PC sources still require normal withdrawal. Positive catalog prices '
+                         'are references, not proof of shop access, bag space or an executed evolution; '
+                         'a missing/nonpositive purchase price is unknown, not a free stone. '
+                         'No fixed cash reserve and no candidates are removed.'}
+
     def add_ball_supply(self, groups, facts):
         """Expose real scripted ball sources as well as normal shop restocking.
 
@@ -3633,6 +3688,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                 total = current + qty
                 cost = qty * info['price']
                 reference = capture_supply_reference(targets, carried, {**carried, name: total}) if targets else None
+                spending = self.item_evolution_spending_reference(facts, facts['money'] - cost)
                 for hops, map_name, _rule_id, stock_index, rule in shops:
                     key = f'ball:{rule.id}:{name}' + (f':stock{total}' if batch != 'reserve' else '')
                     groups[key] = {'target': ('supply', name, total), 'rules': [rule],
@@ -3642,6 +3698,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                                     'purchase_quantity': qty, 'target_quantity': total,
                                     'total_cost': cost, 'money_after_purchase': facts['money'] - cost,
                                     'capture_supply_reference': reference,
+                                    'item_evolution_spending_reference': spending,
                                     'map': map_name, 'map_hops': hops}}
 
     def add_recovery_groups(self, groups, facts):

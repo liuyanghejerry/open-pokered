@@ -1790,3 +1790,44 @@ Magikarp倒下、仅Metapod存活，实际OpenRouter Jev选择槽位1，真实�
 
 最新版本的fresh m01–m49全链尚未重新通过；单元测试里的模拟里程碑输出
 不能代替全链实跑。新的124种收集、独立读档、完整MP4与大盘交付仍未完成。
+
+### 2026-10-03：持久NEW GAME链已到12种，补齐购球的进化石机会成本
+
+正式新链为仓库内
+`.artifacts/jev-dex-recording-newgame-20261003/20261003-122902-seed42/`，
+manifest记录`mode=autonomous-new-game`、seed42、`resumed_from=null`、
+OpenRouter Jev双层决策；原生私有SRAM、日志及H.264 MP4均位于该轮持久目录。
+没有注入旧存档、队伍、物品或旗标，不回滚。默认240fps输入／60fps输出对应
+4倍速全时段录像，不声称保留每个原生帧。
+
+trace在frame231820／elapsed670.117秒记录12种：Charmander、Charmeleon、
+Weedle、Kakuna、Beedrill、Pidgey、Rattata、Spearow、Jigglypuff、Wigglytuff、
+Zubat、Geodude。已获Brock徽章，后续主线、收集及录像仍运行；这是新链实时
+进度，不沿用旧83。Wigglytuff来自本轮正常拾取月之石和道具进化。
+
+为所有正常购球批次补充`item_evolution_spending_reference`：按实际队伍／PC
+持有的源物种，比较购买前后现金是否还能支付一个未登记道具进化的石头。
+源物种仅登记但不在队伍／PC时不列为可用输入；目标已登记或排他选择已确定
+时不列入。已持有的石头无需重买；缺失／非正价格保持未知，不当成免费或
+不可负担。明确多条记录共享源个体、钱和石头，是独立备选，不是累计可获数量；
+PC仍需实际取回，目录价格不证明商店、背包或进化可立即执行。
+
+该因子只提供上下文，不保留固定金额，不删除较大的购球批次；原候选覆盖和
+真实购买执行路径保持不变。8项新增回归覆盖现金2100／2099边界、持有／
+未持有源、PC、已持有石头、未知价格、共享石头、排他选择及普通／大批补球。
+Python全套780项通过（17.592秒），播放器JavaScript回归及diff检查通过。
+
+另以真实OpenRouter `typesafe/jev-1.13-20260917`做6次合成购物判断：相同
+候选和指令，薄证据／完整花费证据各3次，均选12球而非15球。
+输入13302／输出386tokens。完整请求、概率和报告在新worktree的
+`.artifacts/checkpoint-safety-20261003/stone-spending-live-probe/`。
+这验证了新证据能进入现有选择流程，未观察到本例选择差异，不证明收集效率
+已经提高；无原生游戏或存档，不计正式种数。
+
+正式控制器仍使用开始时冻结的`54c55e3e`策略（manifest的policy SHA256
+`8abc8a078d7a6db71e38bd7c3b4e3c7b728a82f92ef3ba9076dc06c4f3675747`），
+没有热更新新因子。新策略待后续安全检查点续跑时加载。
+同原生release二进制另起独立fresh m01–m49回归，持久目录为
+`.artifacts/jev-dex-regression-20261003/fresh-m49-release/`；此时实际通过
+m01–m13，m14仍运行，不提前计为m49通过。最初启动错误只因驱动默认
+debug路径不存在；改为显式使用现有release二进制，没有额外重复构建。
