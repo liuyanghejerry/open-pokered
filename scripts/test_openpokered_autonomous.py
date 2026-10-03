@@ -839,6 +839,70 @@ class AutonomousTests(unittest.TestCase):
         self.assertIn('recorded parent goal', choose.call_args.args[3])
         self.assertIn('Urgent healing', choose.call_args.args[3])
 
+    def test_route_continuation_reaches_action_layer_for_the_same_parent_goal(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.index = Mock()
+        agent.index.satisfied.return_value = False
+        continuation = {'goal': ['heal', 'party', True], 'destination': 'CinnabarPokecenter',
+                        'landing': ['SeafoamIslandsB3F', 23, 9],
+                        'evidence': 'Real Surf crossing completed'}
+        agent.route_continuation = continuation
+        state = {'subgoal': ('heal', 'party', True),
+                 'local_state': {'map': 'SeafoamIslandsB3F'}}
+        options = {key: json.dumps({'operation': operation}) for key, operation in (
+            ('a', 'travel_to:CinnabarPokecenter'), ('b', 'travel_to:FuchsiaPokecenter'),
+            ('c', 'lead_with:Charizard'))}
+        with patch.object(DualStoryAgent, 'choose', return_value='b') as choose:
+            self.assertEqual(agent.choose('action', state, options, 'pick'), 'b')
+        forwarded_state, forwarded_options, instruction = choose.call_args.args[1:4]
+        self.assertEqual(forwarded_state['completed_route_prerequisite'], continuation)
+        self.assertNotIn('completed_route_prerequisite', state)
+        self.assertEqual(forwarded_options, options)  # Evidence, not a forced route.
+        self.assertIn('recorded parent goal', instruction)
+        self.assertIn('different destination', instruction)
+        self.assertIn('newly observed blocker', instruction)
+
+    def test_route_continuation_does_not_leak_into_unrelated_or_stale_action(self):
+        for subgoal, facts, satisfied in (
+                (['catch', 'PokemonMansion1F', True], {'map': 'SeafoamIslandsB3F'}, False),
+                (['heal', 'party', True], {'map': 'Other'}, False),
+                (['heal', 'party', True], {'map': 'SeafoamIslandsB3F'}, True)):
+            with self.subTest(subgoal=subgoal, facts=facts, satisfied=satisfied):
+                agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+                agent.index = Mock()
+                agent.index.satisfied.return_value = satisfied
+                agent.route_continuation = {'goal': ['heal', 'party', True],
+                    'destination': 'CinnabarPokecenter', 'landing': ['SeafoamIslandsB3F', 23, 9]}
+                with patch.object(DualStoryAgent, 'choose', return_value='a') as choose:
+                    agent.choose('action', {'subgoal': subgoal, 'local_state': facts}, {'a': '{}'}, 'pick')
+                self.assertNotIn('completed_route_prerequisite', choose.call_args.args[1])
+
+    def test_travel_action_includes_current_trigger_route_not_only_map_hops(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        target = ('heal', 'party', True)
+        rules = [Rule(name, name, 'talkNurse', [], [], [], target, [])
+                 for name in ('CinnabarPokecenter', 'FuchsiaPokecenter')]
+        routes = [{'map': rules[0].map, 'tile_route_found': True, 'steps': 135,
+                   'requires_surf': True, 'unmet_native_field_prerequisites': []},
+                  {'map': rules[1].map, 'tile_route_found': False, 'steps': None,
+                   'requires_surf': False}]
+        agent.active = {'target': target, 'rules': rules, 'context': {'trigger_navigation': routes}}
+        agent.visited = set()
+        agent.client = Mock()
+        agent.client.cmd.return_value = []
+        agent.client.route.return_value = {'found': True, 'legs': [{'to_map': 'Route20'}]}
+        options = {str(i): json.dumps({'operation': f'travel_to:{rule.map}'})
+                   for i, rule in enumerate(rules)}
+        bindings = {str(i): (f'travel_to:{rule.map}', rule) for i, rule in enumerate(rules)}
+        with patch.object(DualStoryAgent, 'action_candidates', return_value=(options, bindings)):
+            candidates, actual_bindings = agent._action_candidates({'map': 'SeafoamIslandsB3F'})
+        self.assertEqual(actual_bindings, bindings)
+        for i, route in enumerate(routes):
+            value = json.loads(candidates[str(i)])
+            self.assertEqual(value['trigger_navigation'], route)
+            self.assertEqual(value['navigation']['map_hops'], 1)
+            self.assertIn('conditional', value['trigger_navigation_scope'])
+
     def test_one_depleted_coverage_move_does_not_abort_ready_hunts(self):
         mon = {'species': 'Charizard', 'level': 57, 'hp': 193, 'max_hp': 193,
                'status': 'None', 'moves': ['Slash', 'Cut', 'Flamethrower', 'Dig'],

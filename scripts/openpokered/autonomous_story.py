@@ -874,14 +874,20 @@ class AutonomousStoryAgent(DualStoryAgent):
             self._completed_hunts_since_strategy = getattr(self, '_completed_hunts_since_strategy', 0) + 1
         return observed
 
-    def augment_strategy_state(self, state, facts):
+    def completed_route_context(self, facts):
         continuation = getattr(self, 'route_continuation', None)
         if continuation:
             if (self.index.satisfied(continuation['goal'], facts)
                     or facts.get('map') != continuation['landing'][0]):
                 self.route_continuation = None
             else:
-                state['completed_route_prerequisite'] = continuation
+                return continuation
+        return None
+
+    def augment_strategy_state(self, state, facts):
+        continuation = self.completed_route_context(facts)
+        if continuation:
+            state['completed_route_prerequisite'] = continuation
         if self.collects_dex:
             state['dex_progress'] = self.dex_progress(facts)
             state['collection_audit_pending'] = getattr(self, 'collection_audit_pending', {})
@@ -983,6 +989,13 @@ class AutonomousStoryAgent(DualStoryAgent):
         return {'map': name, 'hops': hops, 'stock': stock}
 
     def choose(self, layer, state, candidates, instruction):
+        if layer == 'action' and 'local_state' in state:
+            continuation = self.completed_route_context(state['local_state'])
+            if continuation and list(state.get('subgoal') or []) == list(continuation['goal']):
+                # A shared goal (e.g. heal) can have many destination rules.
+                # Preserve the real crossing's intent without removing any
+                # alternative operation or overriding the model's choice.
+                state = {**state, 'completed_route_prerequisite': continuation}
         if layer == 'strategy':
             candidates = compact_strategy_candidates(candidates)
             access = strategy_access_evidence(candidates)
@@ -1148,15 +1161,21 @@ class AutonomousStoryAgent(DualStoryAgent):
         bias = PREFERENCE_INSTRUCTIONS.get(getattr(self, 'preference', 'none'))
         if bias and layer in ('strategy', 'action'):
             instruction += f' {bias}'
-        if layer == 'strategy':
-            if state.get('completed_route_prerequisite'):
-                instruction += (' The player just completed the crossing described in '
-                    'state.completed_route_prerequisite for its recorded parent goal and destination. '
-                    'Prefer continuing that goal, or a reachable prerequisite at that destination, '
-                    'before choosing unrelated travel back across the same passage. This is not '
-                    'proof the destination is unlocked: compare current trigger navigation and '
-                    'native guards. Urgent healing, capture resources, a newly observed blocker, '
-                    'or an unavailable parent can justify changing goals.')
+        if layer in ('strategy', 'action') and state.get('completed_route_prerequisite'):
+            instruction += (' The player just completed the crossing described in '
+                'state.completed_route_prerequisite for its recorded parent goal and destination. '
+                'Prefer continuing that goal, or a reachable prerequisite at that destination, '
+                'before choosing unrelated travel back across the same passage. This is not '
+                'proof the destination is unlocked: compare current trigger navigation and '
+                'native guards. Urgent healing, capture resources, a newly observed blocker, '
+                'or an unavailable parent can justify changing goals.')
+            if layer == 'action':
+                instruction += (' Compare each operation destination and script_effects.map with '
+                    'the recorded destination: pursuing the same shared subgoal at a different '
+                    'destination does not continue the same journey. Trigger routes requiring '
+                    'Surf are conditional, not immediately walkable; map hops alone do not '
+                    'measure current access. Preparation and alternative destinations remain valid '
+                    'when supported by their current evidence.')
         # Action choices can be larger than strategic ones (e.g. every legal
         # inventory disposal/teaching operation). Keep their complete evidence
         # and options under the same lossless request representation.
@@ -4321,6 +4340,14 @@ class AutonomousStoryAgent(DualStoryAgent):
                         'unvisited_maps': [name for name in via if name not in self.visited],
                         'caution': 'Travel can consume HP and PP in encounters; recovery should prefer a short known route.',
                     }
+                    trigger_route = next((row for row in self.active.get('context', {}).get('trigger_navigation', [])
+                                          if row.get('map') == rule.map), None)
+                    if trigger_route is not None:
+                        description['trigger_navigation'] = trigger_route
+                        description['trigger_navigation_scope'] = (
+                            'Current strategy geometry for this trigger, not a guarantee of arrival; '
+                            'Surf access is conditional on executing field actions and native guards. '
+                            'Encounters or newly observed obstacles can interrupt travel.')
                     candidates[key] = json.dumps(description)
             # A door's OnStep coordinate can lie on its inaccessible side
             # while its native A interaction is already reachable. The
