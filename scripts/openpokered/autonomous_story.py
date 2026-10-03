@@ -2162,8 +2162,64 @@ class AutonomousStoryAgent(DualStoryAgent):
                                 'total_cost': info['price'], 'acquisition_method': 'evolution',
                                 'evolution_target': species}}
 
+    def add_acquisition_preparation(self, groups, facts, species, method, source_rules, context):
+        """Backchain one exact gift edge to real, source-bound preparation.
+
+        A shared flag is not permission to hand over another edge's item.
+        Unknown entry conditions remain unknown, and every offered leaf must
+        itself be executable. Its target is its real effect, not registration.
+        """
+        item = method.get('item')
+        normalized_item = item.replace('_', '').upper() if item else None
+
+        def frontier(rule, seen=(), depth=0):
+            if rule.id in seen or depth > 10:
+                return []
+            debits = [effect[1] for effect in [*rule.preceding, rule.effect]
+                      if effect[0] == 'item' and effect[2] is False]
+            if normalized_item and any(str(debit).replace('_', '').upper() != normalized_item
+                                       for debit in debits):
+                return []
+            alternatives = rule.alternatives(facts)
+            if [] in alternatives:
+                return [rule]
+            found = []
+            for missing in alternatives:
+                if any(target[0] == 'unknown' for target in missing):
+                    continue
+                for target in missing:
+                    if self.index.satisfied(target, facts):
+                        continue
+                    for producer in self.index.by_effect.get(tuple(target), []):
+                        found.extend(frontier(producer, seen + (rule.id,), depth + 1))
+            return found
+
+        for source_rule in source_rules:
+            if not source_rule.missing(facts):
+                continue
+            for rule in {r.id: r for r in frontier(source_rule)}.values():
+                key = f'acquisition-prepare:{species}:{method["method"]}:{rule.id}'
+                entry = groups.setdefault(key, {'target': rule.effect, 'rules': [rule],
+                    'objectives': [f'Prepare {species} acquisition through its actual scene prerequisites'],
+                    'context': {**deepcopy(context),
+                        'purpose': f'Prepare the source of {species}; this action is not registration',
+                        'registration_requires_receipt': True,
+                        'parent_acquisition_target': ('register', species, True),
+                        'source_preparation_paths': [],
+                        'preparation_effect': rule.effect,
+                        'acquisition_storage_capacity': self.acquisition_storage_capacity(facts),
+                        'scope': 'Only an observed Pokémon receipt establishes registration. '
+                                 'Preparation may consume the exact source item or require a later '
+                                 'normal map visit. Access, menu confirmation and final delivery still '
+                                 'require actual execution; a ready leaf does not certify the whole route.'}})
+                path = {'source_rule': {**source_rule.description(),
+                                       'entry_guards': deepcopy(source_rule.guards)},
+                        'remaining_source_prerequisites': source_rule.missing(facts)}
+                if path not in entry['context']['source_preparation_paths']:
+                    entry['context']['source_preparation_paths'].append(path)
+
     def add_nonwild_collection_groups(self, groups, facts):
-        """Add only currently executable non-wild edges from the solo DAG."""
+        """Add executable non-wild edges and their grounded preparation."""
         if not self.collects_dex or facts.get('dex') is None:
             return
         owned = self.validated_owned(facts)
@@ -2298,8 +2354,19 @@ class AutonomousStoryAgent(DualStoryAgent):
                             acquisitions = entry['context'].setdefault('party_space_acquisitions', [])
                             if evidence not in acquisitions:
                                 acquisitions.append(evidence)
+                source_rules = rules
                 rules = [rule for rule in rules if not rule.missing(facts)]
                 if not rules:
+                    if method['method'] == 'gift':
+                        capacity = self.acquisition_storage_capacity(facts)
+                        if capacity['native_delivery_destination'] is None:
+                            if capacity['current_box_space_available'] is False:
+                                self.add_box_capacity_group(groups, facts)
+                        else:
+                            # In particular, do not consume a finite fossil
+                            # while a subsequent native gift cannot be stored.
+                            self.add_acquisition_preparation(groups, facts, species, method,
+                                                             source_rules, context)
                     continue
                 if method['method'] in ('gift', 'prize'):
                     capacity = self.acquisition_storage_capacity(facts)

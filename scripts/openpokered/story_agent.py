@@ -279,16 +279,33 @@ class DualStoryAgent:
             if self.settle_special(state):
                 continue
             field_menu = state.get('field_menu')
-            if field_menu and field_menu.get('kind') == 'elevator':
-                options = field_menu['items']
-                signature = ('elevator', tuple(options))
+            if field_menu and field_menu.get('kind') in ('elevator', 'filter_bag'):
+                kind = field_menu['kind']
+                options = field_menu.get('items')
+                if kind == 'filter_bag' and (
+                        not isinstance(options, list)
+                        or any(not isinstance(item, str) or not item for item in options)
+                        or type(field_menu.get('cursor')) is not int
+                        or not (0 <= field_menu['cursor'] < len(options) if options
+                                else field_menu['cursor'] == 0)):
+                    raise StoryStopped('invalid_filter_bag_menu')
+                signature = (kind, tuple(options))
                 if menu_pick is None or menu_pick[0] != signature:
+                    candidates = {str(i): label for i, label in enumerate(options)}
+                    instruction = 'Which elevator floor advances the selected subgoal? Use the script confirmation option and destination.'
+                    if kind == 'filter_bag':
+                        candidates['cancel'] = 'CANCEL: press B without selecting or handing over an item'
+                        instruction = ('Which carried item advances the selected subgoal? Match the '
+                                       'script confirmation item and acquisition source. Only these '
+                                       'observed items can be selected; cancel uses B and consumes nothing. '
+                                       'Selecting an item is not proof of a later handover or Pokémon receipt.')
                     selected = self.choose('action', {
                         'subgoal': goal, 'script': rule.description() if rule else None,
-                        'menu': options}, {str(i): label for i, label in enumerate(options)},
-                        'Which elevator floor advances the selected subgoal? Use the script confirmation option and destination.')
-                    menu_pick = (signature, int(selected))
-                self.tap('a' if field_menu['cursor'] == menu_pick[1] else 'down')
+                        'menu_kind': kind, 'menu': options, 'dialogue': last_dialogue},
+                        candidates, instruction)
+                    menu_pick = (signature, 'cancel' if selected == 'cancel' else int(selected))
+                self.tap('b' if menu_pick[1] == 'cancel' else
+                         'a' if field_menu['cursor'] == menu_pick[1] else 'down')
                 continue
             if state['screen'] == 'battle':
                 self.record('battle_started', state=state)

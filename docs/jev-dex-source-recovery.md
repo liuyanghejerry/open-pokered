@@ -3904,3 +3904,58 @@ SRAM未改写，owned仍63，不连接当前游玩实例或填补游戏状态。
 核验，不是本轮重新通关、Jev收集新链或最终合法124。证明及receipt
 在持久checkpoint-safety目录party-pp系列；当前第29段仍运行原冻结
 策略，不热替换。Goal保持active，最终合法NEW GAME尚未开始。
+
+## 2026-10-04 化石动态菜单及多次访问准备链
+
+真实第28段仍持有DomeFossil，却没有化石送交候选。完整12目标
+只读续读诊断确认：filterBag赋值未展开，后续化石分支成为unknown；
+gift仅加入已经满足全部领取条件的规则，没有追溯送交／复活准备。
+再用独立副本复现原生filter-bag屏幕：普通get_state.field_menu与
+choice均为null。原存档与当前真实实例均未修改／连接。
+
+规划器现在保留每个字面菜单项的真实选择分支及hasItem前提；
+原生B取消的空字符串另作为CANCEL路径，不虚构菜单行、交付或
+可选物品。动态／畸形参数仍unknown，不把filterBag当袋中物品查询。
+普通原生状态仅在活跃FilterBag屏幕公开实际items／cursor；菜单
+不活跃或实例不存在仍null。执行层按观测光标真实方向输入＋A，
+取消用B，Jev仍负责物品和后续YES/NO判断，没有原生注入接口。
+
+gift新增有界、源绑定的准备回溯；未解决unknown的分支不认证，
+不得以另一化石的扣除来准备本目标。准备target保持真实item／flag
+effect，不是register；保留原领取规则、未满足条件、确切消耗及
+PC接收容量。消耗化石前要求当前原生接收空间，最终仍须真实领取。
+多个奖励路径共用同一准备动作，保留全部路径证据而不复制选项权重。
+
+同一b307源、全部12目标配对：普通facts严格相同、native帧627
+前后不变，44→47候选。原44个target／rule_ids／objectives全部
+保留，41个完整记录相同；三个饮料候选的script_unlocks合理新增
+CeladonMartRoof的真实filterBag赠送脚本（原7→8脚本、flag4→5／
+item4→6），不是宣称44条完整JSON全同。新增两项Kabuto送交准备
+和一项OldAmber领取准备，没有Omanyte准备或提前register。
+OldAmber路线仍明确不可达；Kabuto路线277步且需要真实Surf，不
+把规划路径当已经抵达。28.023→29.676秒，仅规划成本而非收集收益。
+
+新增前11项测试旧8FAIL，新通过；再加重复奖励路径合并共12PASS。
+完整Python discover949PASS（20.230秒）；原生观察测试旧v3为null
+断言失败、新PASS，app lib122PASS／binary121PASS，release通过。
+早期未启用debug-server的零测试、busy-screen存槽夹具错误日志均
+保留，不称为有效旧实现复现。diff --check通过。仅原生只读观察及
+规划／执行能力变化，无画面／scene／存档格式／原生玩法规则改变。
+
+冻结native SHA256
+`6d8e8d5f67f2cf80cd09873016cedc7971750659a8aec0365fcdbb7fa9af8633`。
+完整隔离夹具v4仅开始时warp到CinnabarIsland，然后正常入实验室、
+新执行层处理实际DOME菜单与YES、正常离开到Island、正常返回
+科学家领取。送交／离开均63种、Dome已扣除且等待标志在Island
+load实际清除；领取才64、Kabuto30在当前box2:index0、PC40→41，
+六只原队伍完全相同，原生完成标志清除。无模型调用、额外warp、
+资源／宝可梦注入、存档编辑或回退；原b307源与sidecar哈希未变。
+这是确定性原生回归，不是Jev新增登记或正式录像，真实链仍63。
+
+menu-only旧v2及完整新v4的evidence／commands／原生日志、全候选
+配对receipt、全部失败尝试在持久checkpoint-safety目录filter-bag／
+fossil系列。房间直接warp的v3缺少正常外部地图入门历史，跨图导航
+失败；v4改从Island正常入门，未改原生动态出口或真实链。未重新
+跑m49。修复通过后在第29段未来正常治疗边界合作封存、独立核验
+最新存档后才续读新能力；不热替换或回退至第28段测试源。
+Goal仍active；最终合法NEW GAME、124／完整MP4／大盘未完成。

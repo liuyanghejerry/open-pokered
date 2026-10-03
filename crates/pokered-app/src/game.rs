@@ -6362,6 +6362,9 @@ impl PokemonGame {
                 GameScreen::Elevator => self.elevator_screen.as_ref().map(|lift| serde_json::json!({
                     "kind": "elevator", "cursor": lift.selected_index(), "items": lift.floors(),
                 })),
+                GameScreen::FilterBag => self.elevator_screen.as_ref().map(|menu| serde_json::json!({
+                    "kind": "filter_bag", "cursor": menu.selected_index(), "items": menu.floors(),
+                })),
                 GameScreen::TownMap => Some(serde_json::json!({
                     "kind": "town_map", "cursor": self.town_map_screen.cursor(),
                     "mode": format!("{:?}", self.town_map_screen.mode()),
@@ -7963,6 +7966,35 @@ mod synchronous_input_tests {
         let finished = game.build_save_data();
         assert_eq!(finished.game_data.safari_steps, 0);
         assert_eq!(finished.game_data.num_safari_balls, 0);
+    }
+
+    #[test]
+    fn debug_snapshot_exposes_only_active_filter_bag_without_mutation() {
+        let mut game = PokemonGame::new_with_options(
+            GameVersion::Red, None, None, None, true, None, false, true, None,
+        );
+        game.elevator_screen = Some(ElevatorScreen::new(vec![
+            "DOME_FOSSIL".into(), "OLD_AMBER".into(),
+        ]));
+        // Agent slots deliberately reject busy menu screens. Compare the
+        // full native snapshot on the same supported screen on both sides.
+        game.state.screen = GameScreen::Overworld;
+        let before = game.agent_save_state_slot(0).unwrap();
+        let frame = game.frame_count;
+        game.state.screen = GameScreen::FilterBag;
+        let snapshot = game.debug_state_snapshot();
+        assert_eq!(snapshot["field_menu"], serde_json::json!({
+            "kind": "filter_bag", "cursor": 0, "items": ["DOME_FOSSIL", "OLD_AMBER"],
+        }));
+        assert_eq!(snapshot["choice"], serde_json::Value::Null);
+        assert_eq!(game.debug_state_snapshot(), snapshot);
+        assert_eq!(game.frame_count, frame);
+        game.state.screen = GameScreen::Overworld;
+        assert_eq!(game.agent_save_state_slot(1).unwrap(), before);
+        assert_eq!(game.debug_state_snapshot()["field_menu"], serde_json::Value::Null);
+        game.state.screen = GameScreen::FilterBag;
+        game.elevator_screen = None;
+        assert_eq!(game.debug_state_snapshot()["field_menu"], serde_json::Value::Null);
     }
 
     #[test]

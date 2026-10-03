@@ -404,6 +404,28 @@ def compile_story(story):
                                         arm['choices'].append(label)
                                         following.append(arm)
                                     continue
+                            if call['callee'].removeprefix('game.') == 'filterBag':
+                                options = (evaluate(call['args'][0], {})
+                                           if len(call['args']) == 1 else None)
+                                if (isinstance(options, list)
+                                        and all(isinstance(v, str) and v for v in options)):
+                                    # A menu result is not a query to guess from
+                                    # the bag. Preserve each actual input path,
+                                    # requiring that its chosen item is carried.
+                                    for item in dict.fromkeys(options):
+                                        arm = copy.deepcopy(ctx)
+                                        arm['variables'][data['name']] = literal(item)
+                                        arm['guards'].append(({'Call': {
+                                            'callee': 'hasItem', 'args': [literal(item)]}}, True))
+                                        arm['choices'].append(item)
+                                        following.append(arm)
+                                    # Native B returns an empty string; it is
+                                    # not a selectable row or a handed-over item.
+                                    arm = copy.deepcopy(ctx)
+                                    arm['variables'][data['name']] = literal('')
+                                    arm['choices'].append('CANCEL')
+                                    following.append(arm)
+                                    continue
                             command(call['callee'], call['args'], ctx)
                             if call['callee'].removeprefix('game.') in (
                                     'startBattle', 'startBattleSet', 'startWildBattle',
