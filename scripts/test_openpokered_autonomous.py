@@ -4887,6 +4887,65 @@ class AutonomousTests(unittest.TestCase):
         self.assertIsNone(option['affordable_after_sale'])
         self.assertFalse(option['sale_makes_affordable'])
 
+    def test_collection_funding_offers_owned_vitamins_with_their_opportunity_cost(self):
+        agent, facts = self.collection_funding_agent()
+        facts['bag'].update(CARBOS=2, RARECANDY=1, MOONSTONE=1, HM03=1, POKEBALL=5)
+        original = json.loads(json.dumps(facts))
+        groups = {'existing': {'target': ('item', 'HM01', True)}}
+        agent.add_collection_funding(groups, facts)
+        sales = {g['target'][1]: g for g in groups.values() if g['target'][0] == 'sale'}
+        self.assertEqual(set(sales), {'Nugget', 'Carbos'})
+        vitamin = sales['Carbos']['context']
+        self.assertTrue(vitamin['vitamin_sale'])
+        self.assertFalse(vitamin['treasure_sale'])
+        self.assertEqual(vitamin['quantity'], 2)
+        self.assertEqual(vitamin['expected_proceeds'], 9800)
+        self.assertEqual(vitamin['collection_funding_reference']['money_after_sale_reference'], 10210)
+        cost = vitamin['sale_opportunity_cost']
+        self.assertEqual(cost['quantity_relinquished'], 2)
+        self.assertEqual(cost['retained_item_effect']['type'], 'Vitamin')
+        self.assertEqual(cost['retained_item_effect']['params']['statIdx'], 3)
+        self.assertIn('not a surplus certificate', cost['scope'])
+        self.assertIn('not guaranteed', cost['scope'])
+        self.assertIn('existing', groups)
+        self.assertEqual(facts, original)
+
+    def test_collection_funding_preserves_original_treasure_evidence_when_adding_vitamins(self):
+        agent, facts = self.collection_funding_agent()
+        old = {}
+        agent.add_collection_funding(old, facts)
+        facts['bag']['CARBOS'] = 1
+        new = {}
+        agent.add_collection_funding(new, facts)
+        self.assertTrue(all(new[key] == value for key, value in old.items()))
+        self.assertEqual(len(new), len(old) + 1)
+
+    def test_vitamin_funding_requires_matching_effect_and_native_sale_guards(self):
+        from openpokered.autonomous_story import ITEM_CATALOG
+        base = ITEM_CATALOG['Carbos']
+        for changes in ({'sellable': False}, {'key_item': True}, {'price': 0},
+                        {'tags': []}, {'effect': {'type': 'HealHP'}}):
+            with self.subTest(changes=changes):
+                agent, facts = self.collection_funding_agent()
+                facts['bag'].update(NUGGET=0, CARBOS=1)
+                with patch.dict(ITEM_CATALOG, {'Carbos': {**base, **changes}}):
+                    groups = {}
+                    agent.add_collection_funding(groups, facts)
+                self.assertEqual(groups, {})
+
+    def test_vitamin_sale_records_its_actual_resource_kind_without_changing_treasure_logs(self):
+        for item, context, kind in (('Carbos', {'vitamin_sale': True}, 'sold_vitamin'),
+                                    ('Nugget', {'treasure_sale': True}, 'sold_treasure')):
+            with self.subTest(item=item):
+                agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+                agent.active = {'target': ('sale', item, False), 'context': context}
+                agent.client, agent.game, agent.record = Mock(), Mock(), Mock()
+                agent.client.state.return_value = {'money': 5353}
+                with patch('openpokered.autonomous_story.data.sell') as sell:
+                    self.assertTrue(agent.settle_special({'shop_phase': 'MainMenu', 'money': 453}))
+                sell.assert_called_once_with(agent.game, item)
+                agent.record.assert_called_once_with(kind, item=item, money_after=5353)
+
     def test_ball_spending_exposes_lost_stone_affordability_without_removing_batches(self):
         agent = self.stone_spending_agent()
         facts = {'bag': {}, 'money': 5000, 'map': 'ViridianCity',

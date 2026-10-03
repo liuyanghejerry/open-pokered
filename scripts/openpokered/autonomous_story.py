@@ -1199,12 +1199,17 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'not a joint registration yield. Prices are references, not proof of shop access, '
                 'and PC sources still require withdrawal. Compare this opportunity cost with the '
                 'capture benefit and other goals; it is not a fixed cash reserve or a ban on shopping.')
-            instruction += (' A treasure sale is optional collection funding, not only defeat recovery. '
+            instruction += (' A treasure or vitamin sale is optional collection funding, not only defeat recovery. '
                 'Compare collection_funding_reference with ball supplies and evolutions of actually '
                 'held party/PC sources. Sale proceeds and affordability are price references until '
                 'normal shop menus execute; independent purchases share the same money, so do not '
                 'treat all newly affordable alternatives as a joint registration yield. Compare '
                 'travel and other goals; selling is not a forced prerequisite.')
+            instruction += (' A vitamin is not a valueless treasure: compare sale_opportunity_cost '
+                'and its retained training effect with the new purchases. Offering a sale does not '
+                'certify the item is surplus; this candidate sells the observed stack, not a free '
+                'or reversible cash source. Retaining it for training remains possible by choosing '
+                'another goal. Neither training benefit nor future registration yield is guaranteed.')
         if layer == 'action' and 'local_state' in state and getattr(self, 'active', None):
             state = {**state, 'strategy_context': self.active.get('context', {})}
         context = state.get('strategy_context') or {}
@@ -2457,7 +2462,8 @@ class AutonomousStoryAgent(DualStoryAgent):
             data.sell(self.game, item)
             if self.client.state()['money'] <= money:
                 raise StoryStopped('sale_did_not_increase_money')
-            self.record('sold_treasure', item=item, money_after=self.client.state()['money'])
+            kind = 'sold_vitamin' if self.active.get('context', {}).get('vitamin_sale') else 'sold_treasure'
+            self.record(kind, item=item, money_after=self.client.state()['money'])
             return True
         if state.get('shop_phase') and self.active and self.active['target'][0] == 'supply':
             details = self.active['context']
@@ -3920,21 +3926,24 @@ class AutonomousStoryAgent(DualStoryAgent):
                          'No fixed cash reserve and no candidates are removed.'}
 
     def add_collection_funding(self, groups, facts):
-        """Offer owned treasure sales even when collection has caused no defeat.
+        """Offer owned treasure/vitamin sales, including the training tradeoff.
 
         Reuse real shop interactions and sale menus, never sell ordinary
         capture/evolution/quest resources or mutate money during planning.
         """
         if not self.collects_dex:
             return
-        treasures = []
+        sale_items = []
         for name, item in ITEM_CATALOG.items():
             quantity = facts['bag'].get(name.replace('_', '').upper(), 0)
             unit_price = (item.get('price') or 0) // 2
+            vitamin = ('vitamin' in item.get('tags', [])
+                       and (item.get('effect') or {}).get('type') == 'Vitamin')
             if (quantity > 0 and unit_price > 0 and item.get('sellable')
-                    and not item.get('key_item') and 'treasure' in item.get('tags', [])):
-                treasures.append((name, item, quantity, quantity * unit_price))
-        if not treasures:
+                    and not item.get('key_item')
+                    and ('treasure' in item.get('tags', []) or vitamin)):
+                sale_items.append((name, item, quantity, quantity * unit_price, vitamin))
+        if not sale_items:
             return
         shops = []
         for rule in self.index.rules:
@@ -3945,7 +3954,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                 shops.append((rule, len(route.get('legs', []))))
         if not shops:
             return
-        for name, item, quantity, proceeds in treasures:
+        for name, item, quantity, proceeds, vitamin in sale_items:
             money_after = facts['money'] + proceeds
             spending = self.item_evolution_spending_reference(facts, money_after)
             evolutions = [{
@@ -3977,11 +3986,26 @@ class AutonomousStoryAgent(DualStoryAgent):
                             'normal inputs. Stone prices do not prove an accessible seller; unknown prices '
                             'stay unknown. No money is credited by this preview.'}}
                 key = f'sell:{rule.id}:{name}'
+                if vitamin:
+                    context.update(treasure_sale=False, vitamin_sale=True,
+                        sale_opportunity_cost={
+                            'quantity_relinquished': quantity,
+                            'retained_item_effect': item['effect'],
+                            'retained_item_tags': item.get('tags', []),
+                            'scope': 'Offering this sale is not a surplus certificate. Selling the '
+                                'observed stack relinquishes its single-use training effects; retaining '
+                                'it remains possible by selecting another goal. This is not a treasure '
+                                'with no training value. Actual stat gain and survival benefit are not '
+                                'guaranteed and depend on the recipient and existing training. No stat '
+                                'benefit or registration yield is credited by this preview.'})
                 group = groups.setdefault(key, {'target': ('sale', name, False), 'rules': [rule],
                     'objectives': [], 'context': {}})
                 group['context'] = {**context, **group.get('context', {}),
                                    'collection_funding_reference': context['collection_funding_reference']}
                 objective = 'Sell an owned treasure through a known shop to fund capture balls or held-source evolutions'
+                if vitamin:
+                    objective = ('Optionally sell an owned vitamin through a known shop to fund capture '
+                                 'balls or held-source evolutions, relinquishing its training use')
                 if objective not in group['objectives']:
                     group['objectives'].append(objective)
 
