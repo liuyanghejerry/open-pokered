@@ -4567,7 +4567,7 @@ class AutonomousStoryAgent(DualStoryAgent):
             return {'result': 'blocked', 'detail': str(error), 'destination': name, **blocker_details}
 
     def discover_route_prerequisites(self, state, destination, points):
-        """Find causal terrain producers across a multi-obstacle route.
+        """Find causal terrain/NPC producers across a multi-obstacle route.
 
         Only planning copies change. This is not an executable route until
         its actual switches, doors, battles and field moves are completed.
@@ -4645,6 +4645,10 @@ class AutonomousStoryAgent(DualStoryAgent):
                 pt.MAPS[name]['blocks'] = blocks
         if not path:
             return []
+        observed_npcs = getattr(self.game, 'stationary_npcs', {})
+        toggles = getattr(self.index, 'npc_toggles', {})
+        if not isinstance(observed_npcs, dict) or not isinstance(toggles, dict):
+            observed_npcs, toggles = {}, {}
         for node, _ in path[1:]:
             name, x, y = node
             if node in guarded_tiles:
@@ -4652,6 +4656,19 @@ class AutonomousStoryAgent(DualStoryAgent):
             effect = changed.get((name, (y//2)*pt.MAPS[name]['width'] + x//2))
             if effect and self.index.frontier(effect, facts):
                 return [effect]
+            # The relaxed plan intentionally omits NPC collisions. A real,
+            # previously observed actor on that exact path can therefore be
+            # the next prerequisite even after an earlier trainer was beaten.
+            # Backchain its actual hide producer, not every pickup on a map.
+            # The resulting script still needs normal approach/execution;
+            # neither this path nor the predicted removal is a success proof.
+            for text_id, position in observed_npcs.get(name, {}).items():
+                toggle = toggles.get((name, int(text_id)))
+                if tuple(position) != (x, y) or not toggle:
+                    continue
+                target = ('visibility', toggle[0], False)
+                if self.index.frontier(target, facts):
+                    return [target]
             boulders = {(n['x'], n['y']) for n in self.maps[name].get('npcs', [])
                         if n.get('spriteName') == 'Boulder'}
             if (x, y) in boulders:

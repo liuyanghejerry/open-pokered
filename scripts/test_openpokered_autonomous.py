@@ -2912,6 +2912,61 @@ class AutonomousTests(unittest.TestCase):
         self.assertTrue(index.satisfied(target, facts))
         self.assertEqual(list(medicine_options([mon], {'Elixer': 1})), [])
 
+    def observed_pickup_route_fixture(self):
+        from types import SimpleNamespace
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        target = ('visibility', 'PICKUP', False)
+        pickup = Rule('pickup', 'Hall', 'Hall:pickup', ['npc:3'], [], ['YES'],
+                      target, [('item', 'FOSSIL', True)])
+        agent.index = SimpleNamespace(rules=[], npc_toggles={('Hall', 3): ('PICKUP', False)},
+            frontier=lambda goal, facts: [pickup] if goal == target
+                and not facts.get('flags', {}).get('__OBJ_HIDDEN_PICKUP') else [])
+        agent.game = SimpleNamespace(last_map='Town', script_navigation_barriers={},
+            stationary_npcs={'Hall': {2: (2, 2), 3: (3, 3)}},
+            navigation_excluded_maps=lambda: ())
+        agent.maps = {'Hall': {'npcs': []}, 'Town': {'npcs': []}}
+        agent.navigation_facts = {'flags': {}}
+        path = [(('Town', 1, 1), None), (('Hall', 2, 2), 'up'),
+                (('Hall', 3, 3), 'up'), (('Hall', 4, 4), 'up')]
+        return agent, target, path
+
+    def test_route_relaxation_backchains_a_removable_observed_npc_on_the_exact_path(self):
+        import playthrough as pt
+        agent, target, path = self.observed_pickup_route_fixture()
+        with patch.dict(pt.MAPS, {'Hall': {'width': 10}}), \
+                patch.object(pt, 'bfs_cross', return_value=path):
+            found = agent.discover_route_prerequisites(
+                {'map_name': 'Town', 'player_x': 1, 'player_y': 1}, 'Hall', [(4, 4)])
+        self.assertEqual(found, [target])
+        self.assertEqual(agent.game.stationary_npcs['Hall'][3], (3, 3))
+        self.assertEqual(agent.navigation_facts, {'flags': {}})
+
+    def test_route_relaxation_does_not_backchain_off_path_or_already_hidden_npcs(self):
+        import playthrough as pt
+        for hidden in (False, True):
+            with self.subTest(hidden=hidden):
+                agent, _, path = self.observed_pickup_route_fixture()
+                if hidden:
+                    agent.navigation_facts['flags']['__OBJ_HIDDEN_PICKUP'] = True
+                else:
+                    agent.game.stationary_npcs['Hall'][3] = (99, 99)
+                with patch.dict(pt.MAPS, {'Hall': {'width': 10}}), \
+                        patch.object(pt, 'bfs_cross', return_value=path):
+                    self.assertEqual(agent.discover_route_prerequisites(
+                        {'map_name': 'Town', 'player_x': 1, 'player_y': 1}, 'Hall', [(4, 4)]), [])
+
+    def test_route_relaxation_does_not_invent_npc_removal_without_a_real_producer_or_path(self):
+        import playthrough as pt
+        for no_path in (False, True):
+            with self.subTest(no_path=no_path):
+                agent, _, path = self.observed_pickup_route_fixture()
+                if not no_path:
+                    agent.index.frontier = lambda *_: []
+                with patch.dict(pt.MAPS, {'Hall': {'width': 10}}), \
+                        patch.object(pt, 'bfs_cross', return_value=None if no_path else path):
+                    self.assertEqual(agent.discover_route_prerequisites(
+                        {'map_name': 'Town', 'player_x': 1, 'player_y': 1}, 'Hall', [(4, 4)]), [])
+
     def test_route_relaxation_discovers_boulders_without_leaving_doors_open(self):
         from types import SimpleNamespace
         from openpokered.story_rules import MAPS_DIR
