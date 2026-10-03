@@ -2136,3 +2136,44 @@ frame2333／elapsed19.449秒实际交换登记Farfetchd至**27/124**，
 Ekans，已到13级并于136.492秒选择治疗，未继续PC循环。最新独立存档
 验证仍是26种；27种为后续在线原生登记，未冒充封口验收。控制器、私有
 native和FFmpeg继续在持久目录运行，没有热更新或停止以获取新计数。
+
+### 2026-10-03：正式阿柏怪28种；补齐Cut比较与真实延迟效果核验
+
+第六段frame175566／elapsed691.271秒，Ekans通过正常战斗训练到22级并
+实际进化登记Arbok，正式在线到28/124。Jev随后正常治疗、取出已持有的
+Oddish并选择Gloom训练，不再出现PC素材循环。最新独立封口存档仍是26种；
+本轮新增的Farfetchd／Arbok不是诊断副本取得，也尚未冒充新封口证明。
+
+继续检查同类可达性偏差：`skill:field`没有给Cut提供即时站位路径，树木
+前置一直是not_evaluated。现在检查当前路径、所学招式、原生徽章前置、
+面对目标树的方向及观察到的树木地形，提供`trigger_navigation`，不承诺
+树已经清除、后续地图可达、战斗胜利或新登记。保留全部候选，不替Jev选
+固定路线。两个新增单元测试有旧版6个失败子例，修复后通过。
+
+完整恢复同一26种副本历史的真实OpenRouter对照，旧版／修复版都选择先
+交换Farfetchd；因此不宣称这次信息补充提升了模型选路结果。差异是Route9
+Cut前置从not_evaluated变为173步可达，两组源存档都不变。
+隔离副本实际步行和菜单使用暴露更深的Cut效果收尾问题：旧执行返回
+`reached`时frame3239，原生树tile仍为61，文本已关闭；继续正常推进到
+3479后tile变为44。原生`overworld/update.rs`确认关闭文本只是排队，
+下一次update才提交砍树地图块，不是技能失败，也不能将到达站位报作成功。
+
+Cut执行现在最多观察60次、每次正常推进2帧，以只读原生地图块确认树已
+清除。只调用一次菜单，不重放操作、不直接改规划地形；未改变／离开原图
+明确返回blocked，不伪造cleared_terrain。两项回归旧版有三个失败子例，
+新版本通过。相同原生26种正常CONTINUE副本新执行于frame3241观察tile44，
+真实返回`tree_cleared`，仍26 owned且正式源SRAM不变。诊断不计入正式进度，
+也不是fresh m01–m49验收。证据分别在`cut-access-native-animation-before/`
+与`cut-access-native-effect-after/`；Python全套809项通过（17.682秒），
+播放器JavaScript与diff检查通过。改动只有Python决策／驱动，无引擎或可见
+渲染修改。正式训练暂不热更新，下一次自然治疗后的安全窗口才加载。
+
+四条最早`acquisition_method=null`的记录也单独找到了原始证据：Charmander
+有NEW GAME空图鉴、领取对话和starter旗标；Charmeleon有同一正常战斗的
+15→16级Charmander与随后16级Charmeleon观察；Zubat／Geodude有普通野战
+前后图鉴与持有数量各增加一、敌方存活、非幽灵、对应Red遭遇表，以及
+5／1颗球的真实消耗。来源trace SHA256
+`cf4c71156c55d953a48f44e5d6d3f9c82e942e26b3d8a738964fea9ddcad2b32`
+未变，每条原始行号与event SHA256保留在
+`legacy-source-evidence-20261003.json`。这只是四条证据，不是全物种合法
+审计；未覆写null、未重写原始日志／大盘、未默认将未知方式算成gift。

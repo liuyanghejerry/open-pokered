@@ -1261,6 +1261,27 @@ class AutonomousStoryAgent(DualStoryAgent):
                             routes.append({'map': facts['map'], 'tile_route_found': ready,
                                 'steps': 0 if ready else None, 'field_action': 'item_evolution',
                                 'scope': 'Use the carried evolution item on the actual party source through the inventory menu; consumes the item and changes that individual'})
+                    elif rule.storyline == 'skill:field':
+                        obstacle = group.get('context', {})
+                        stance, tree = obstacle.get('stance'), obstacle.get('tree')
+                        name, direction = obstacle.get('map'), obstacle.get('direction')
+                        if name and stance and tree and obstacle.get('move') == 'Cut':
+                            prerequisites = field_badge_prerequisites('Cut', facts.get('flags', {}))
+                            knows = any('Cut' in mon.get('moves', []) for mon in facts.get('party', []))
+                            path = pt.bfs_cross(facts['map'], (facts['x'], facts['y']), name, tuple(stance),
+                                last_map=self.game.last_map, allow_ledges=True, allow_spinners=True,
+                                blocked_maps=barriers, excluded_maps=excluded)
+                            delta = pt.DELTA.get(direction)
+                            aligned = bool(delta) and tuple(tree) == (
+                                stance[0] + delta[0], stance[1] + delta[1])
+                            present = pt.tile_at(name, *tree) == CUT_TILES.get(pt.MAPS[name]['tileset_name'])
+                            available = bool(path) and knows and not prerequisites and aligned and present
+                            routes.append({'map': name, 'stance': stance, 'field_action': 'Cut',
+                                'tile_route_found': available, 'steps': len(path)-1 if available else None,
+                                'unmet_native_field_prerequisites': prerequisites,
+                                'knows_required_move': knows, 'faces_observed_tree': aligned,
+                                'observed_tree_present': present,
+                                'scope': 'Walk to the observed Cut stance and use the party menu. This does not prove the tree is already cleared, onward access, battle victory or new registrations; trees regrow on map entry.'})
                     elif rule.storyline == 'skill:surf':
                         obstacle = group.get('context', {})
                         stance = obstacle.get('stance')
@@ -5184,10 +5205,25 @@ class AutonomousStoryAgent(DualStoryAgent):
                 if result['result'] == 'reached':
                     self.game.face(obstacle['direction'])
                     data.field_move(self.game, 'Cut', int(operation.split(':')[1]))
-                    self.game.st()
-                    if pt.tile_at(obstacle['map'], *obstacle['tree']) != CUT_TILES[pt.MAPS[obstacle['map']]['tileset_name']]:
-                        self.cleared_terrain.add(self.active['target'][1])
-                        result = {'result': 'tree_cleared', 'terrain': obstacle}
+                    # Closing the native textbox queues Cut; the map write
+                    # occurs on a subsequent update. A reached stance is not
+                    # the field action's success. Observe its actual effect
+                    # without replaying the menu or altering planning tiles.
+                    for _ in range(60):
+                        self.check_budget()
+                        state = self.game.st()
+                        if state['map_name'] != obstacle['map']:
+                            result = {'result': 'blocked', 'detail': 'Cut settlement left its source map',
+                                      'terrain': obstacle}
+                            break
+                        if pt.tile_at(obstacle['map'], *obstacle['tree']) != CUT_TILES[pt.MAPS[obstacle['map']]['tileset_name']]:
+                            self.cleared_terrain.add(self.active['target'][1])
+                            result = {'result': 'tree_cleared', 'terrain': obstacle}
+                            break
+                        self.client.step(2)
+                    else:
+                        result = {'result': 'blocked', 'detail': 'Cut did not clear the observed tree',
+                                  'terrain': obstacle}
             self.record('operation', operation=operation, result=result, script=rule.storyline)
             return result
         if operation.startswith('reach_training:'):

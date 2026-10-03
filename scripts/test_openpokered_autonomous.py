@@ -22,6 +22,120 @@ from openpokered.run_autonomous import observations_valid, checkpoint_field_requ
 
 
 class AutonomousTests(unittest.TestCase):
+    def test_cut_execution_waits_for_observed_deferred_map_change(self):
+        from openpokered.autonomous_story import CUT_TILES
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.game, agent.client = Mock(), Mock()
+        agent.max_actions, agent.actions = 3, 0
+        agent.record, agent.check_budget, agent.remember_travel_result = Mock(), Mock(), Mock()
+        agent.travel = Mock(return_value={'result': 'reached'})
+        agent.game.st.return_value = {'map_name': 'Route9', 'frame_count': 3239}
+        agent.cleared_terrain = set()
+        target = ('terrain', 'Route9,5,8', True)
+        rule = Rule('tree', 'Route9', 'skill:field', [], [], [], target, [])
+        agent.active = {'target': target, 'rules': [rule], 'context': {
+            'move': 'Cut', 'map': 'Route9', 'tree': [5, 8], 'stance': [4, 8], 'direction': 'right'}}
+        with patch('openpokered.autonomous_story.data.field_move') as menu, \
+                patch('openpokered.autonomous_story.pt.tile_at',
+                      side_effect=[CUT_TILES['Overworld'], CUT_TILES['Overworld'], 0]):
+            result = agent.execute('cut:0', rule)
+        self.assertEqual(result['result'], 'tree_cleared')
+        self.assertEqual(agent.cleared_terrain, {'Route9,5,8'})
+        self.assertEqual(agent.client.step.call_args_list, [unittest.mock.call(2), unittest.mock.call(2)])
+        menu.assert_called_once_with(agent.game, 'Cut', 0)
+
+    def test_cut_execution_reports_failed_or_interrupted_effect_without_replaying_menu(self):
+        from openpokered.autonomous_story import CUT_TILES
+        for map_name in ('Route9', 'CeruleanPokecenter'):
+            with self.subTest(map=map_name):
+                agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+                agent.game, agent.client = Mock(), Mock()
+                agent.max_actions, agent.actions = 3, 0
+                agent.record, agent.check_budget, agent.remember_travel_result = Mock(), Mock(), Mock()
+                agent.travel = Mock(return_value={'result': 'reached'})
+                agent.game.st.return_value = {'map_name': map_name}
+                agent.cleared_terrain = set()
+                target = ('terrain', 'Route9,5,8', True)
+                rule = Rule('tree', 'Route9', 'skill:field', [], [], [], target, [])
+                agent.active = {'target': target, 'rules': [rule], 'context': {
+                    'move': 'Cut', 'map': 'Route9', 'tree': [5, 8], 'stance': [4, 8], 'direction': 'right'}}
+                with patch('openpokered.autonomous_story.data.field_move') as menu, \
+                        patch('openpokered.autonomous_story.pt.tile_at', return_value=CUT_TILES['Overworld']):
+                    result = agent.execute('cut:0', rule)
+                self.assertEqual(result['result'], 'blocked')
+                self.assertFalse(agent.cleared_terrain)
+                menu.assert_called_once()
+                if map_name == 'Route9':
+                    self.assertEqual(agent.client.step.call_count, 60)
+                else:
+                    agent.client.step.assert_not_called()
+
+    def test_cut_access_checks_approach_facing_tree_and_native_prerequisites(self):
+        from openpokered.autonomous_story import CUT_TILES
+        scenarios = [
+            ('ready', True, True, True, True, True),
+            ('no_path', False, True, True, True, False),
+            ('no_badge', True, False, True, True, False),
+            ('no_move', True, True, False, True, False),
+            ('wrong_facing', True, True, True, False, False),
+        ]
+        for label, found, badge, knows, aligned, expected in scenarios:
+            with self.subTest(label=label):
+                agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+                agent.game = Mock(last_map='Route6')
+                agent.game.navigation_barriers.return_value = {'Route9': {(9, 9)}}
+                agent.game.live_npcs.return_value = {(3, 3)}
+                agent.game.navigation_excluded_maps.return_value = ('SaffronCity',)
+                agent.observed_navigation_barriers = Mock(return_value={})
+                current = {'map': 'CeruleanCity', 'x': 19, 'y': 27,
+                    'flags': {'EVENT_BEAT_MISTY': True} if badge else {},
+                    'party': [{'moves': ['Cut'] if knows else ['Scratch'], 'hp': 0}]}
+                target = ('terrain', 'Route9,5,8', True)
+                group = {'target': target,
+                    'rules': [Rule('tree', 'Route9', 'skill:field', [], [], [], target, [])],
+                    'context': {'move': 'Cut', 'map': 'Route9', 'tree': [5, 8],
+                                'stance': [5, 9], 'direction': 'up' if aligned else 'down'}}
+                path = [('CeruleanCity', 19, 27), (('Route9', 5, 9), 'up')] if found else None
+                with patch('openpokered.autonomous_story.pt.bfs_cross', return_value=path) as bfs, \
+                        patch('openpokered.autonomous_story.pt.tile_at',
+                              return_value=CUT_TILES['Overworld']):
+                    groups = {'tree': group}
+                    agent.annotate_navigation(groups, current, prune=False)
+                route = group['context']['trigger_navigation'][0]
+                self.assertEqual(route['tile_route_found'], expected)
+                self.assertEqual(route['steps'], 1 if expected else None)
+                self.assertEqual(route['stance'], [5, 9])
+                self.assertEqual(route['field_action'], 'Cut')
+                self.assertEqual(route['knows_required_move'], knows)
+                self.assertEqual(route['faces_observed_tree'], aligned)
+                self.assertEqual(bool(route['unmet_native_field_prerequisites']), not badge)
+                self.assertIn('not prove', route['scope'])
+                bfs.assert_called_once()
+                self.assertEqual(bfs.call_args.args[2:], ('Route9', (5, 9)))
+                self.assertEqual(set(groups), {'tree'})
+                agent.game.nav_to_map.assert_not_called()
+
+    def test_cut_access_does_not_certify_an_already_missing_tree(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.game = Mock(last_map=None)
+        agent.game.navigation_barriers.return_value = {}
+        agent.game.live_npcs.return_value = set()
+        agent.game.navigation_excluded_maps.return_value = set()
+        agent.observed_navigation_barriers = Mock(return_value={})
+        current = {'map': 'Route9', 'x': 5, 'y': 9,
+            'flags': {'EVENT_BEAT_MISTY': True}, 'party': [{'moves': ['Cut'], 'hp': 10}]}
+        target = ('terrain', 'Route9,5,8', True)
+        group = {'target': target,
+            'rules': [Rule('tree', 'Route9', 'skill:field', [], [], [], target, [])],
+            'context': {'move': 'Cut', 'map': 'Route9', 'tree': [5, 8],
+                        'stance': [5, 9], 'direction': 'up'}}
+        with patch('openpokered.autonomous_story.pt.bfs_cross', return_value=[('Route9', 5, 9)]), \
+                patch('openpokered.autonomous_story.pt.tile_at', return_value=0):
+            agent.annotate_navigation({'tree': group}, current, prune=False)
+        route = group['context']['trigger_navigation'][0]
+        self.assertFalse(route['observed_tree_present'])
+        self.assertFalse(route['tile_route_found'])
+
     def test_level_evolution_gets_fresh_access_to_actual_training_terrain(self):
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
         agent.game = Mock(last_map=None)
