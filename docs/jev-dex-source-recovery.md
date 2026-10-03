@@ -2504,3 +2504,38 @@ B4F）、Slowpoke（597.436／58609，同地图）和Staryu（694.560／77089，
 恢复证据的PP上限字段进一步明确为公开、未使用PP Up的参考值，而非
 原生个体实际最大PP观察；保持原技能阈值，避免把估算标为观察事实。
 该元数据版本全部Python842项再次通过（18.344秒），不增加测试计数。
+
+### 2026-10-03：57种安全封存、独立读档与持久续跑
+
+第十一段在elapsed881.575秒真实完成红莲岛护士治疗后合作式停止，
+`native_checkpoint_safe`及`final_observations_valid`均为true。独立新进程
+正常CONTINUE schema=3逐项比较图鉴、位置、队伍、PC、背包和旗标一致，
+57 owned／88 seen，源SRAM未改写，SHA256
+`158df86a0e5d618cfd021717b0d34f722eb3c0d2fc9155d6179f1673708d55ae`。
+终点CinnabarPokecenter `(3,3)`、资金1675、五徽章、队伍6只／PC36只，
+箱1；Charizard自然训练至64级，全队HP／PP真实补满，无异常状态。
+证明为`formal57-independent-continue.json`。此处验证持久性，不追认旧
+幽灵访问来源；六种新增与CONTINUE初始登记、诊断重放严格分开。
+
+该段MP4正常封口341.533333秒、20492帧、5863837字节，H.264／160×144／
+60fps。全部11个已封存正式分段的容器、时钟与登记守恒检查通过，合计
+11813.183331秒、218842条合并记录、57种唯一登记；十次CONTINUE起点
+新增列表均归一为空。报告`closed-formal57-lineage-clock-20261003.json`
+明确历史幽灵访问缺口未解决；这些检查不等于全链合法来源、全片视觉
+质量或最终MP4合片验收。
+
+最新57种存档、sidecar、summary、最终观察、manifest、独立读档／停止
+证明及测试／重放／时钟报告另存worktree外的正式持久目录，归档
+`verified57-evidence-20261003.tar.gz`（33338字节）。不打包API凭据或
+重复MP4／原始trace，不删除任何原件。
+
+第十二段`20261003-171901-seed42`从该最新存档正常CONTINUE，启动时
+worktree为干净`e67743a6`，实际策略SHA256
+`3d74fc36a4e6a1408a4dd15e45f61ab5bf3e583159ccc8b20793ff0240c5df56`，
+`autonomous_story.py` SHA256
+`2b5ece7f2b2a3d333a633e60781eaea5e3d416855dcf4305aa3628f9d83fdc5d`；
+私有native仍为`c5c3ac58`。真实Jev请求已携带未完成SECRET_KEY机关
+父目标，新恢复因子不热替换旧录制。Jev实际购买两颗GreatBall，随后
+选择发电厂Electrode；此时多次导航返回水路受阻，尚未实际到达或新增
+登记，不能以跨水返回标签代替目标抵达。继续保留失败证据并检查衔接。
+双层OpenRouter Jev与原生录像均在项目持久目录运行，不使用`/tmp`。
