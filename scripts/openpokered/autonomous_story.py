@@ -1348,7 +1348,8 @@ class AutonomousStoryAgent(DualStoryAgent):
                     routes.append(previews[key])
                 rule_routes[id(rule)] = previews[key]
             if routes:
-                group['context'] = {**group.get('context', {}), 'trigger_navigation': routes}
+                group['context'] = {**group.get('context', {}), 'trigger_navigation': routes,
+                    'trigger_navigation_origin': [facts['map'], facts['x'], facts['y']]}
         # Repeatedly selecting a route already disproved by real execution
         # adds no information while reachable prerequisites remain. Keep
         # untried regions available for exploration and retain all options
@@ -4344,8 +4345,10 @@ class AutonomousStoryAgent(DualStoryAgent):
                                           if row.get('map') == rule.map), None)
                     if trigger_route is not None:
                         description['trigger_navigation'] = trigger_route
+                        description['trigger_navigation_origin'] = self.active.get('context', {}).get('trigger_navigation_origin')
                         description['trigger_navigation_scope'] = (
-                            'Current strategy geometry for this trigger, not a guarantee of arrival; '
+                            'Geometry at strategy selection for this trigger, not a fresh route after movement '
+                            'or a guarantee of arrival; compare origin with local_state position. '
                             'Surf access is conditional on executing field actions and native guards. '
                             'Encounters or newly observed obstacles can interrupt travel.')
                     candidates[key] = json.dumps(description)

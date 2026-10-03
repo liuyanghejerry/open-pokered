@@ -886,7 +886,9 @@ class AutonomousTests(unittest.TestCase):
                    'requires_surf': True, 'unmet_native_field_prerequisites': []},
                   {'map': rules[1].map, 'tile_route_found': False, 'steps': None,
                    'requires_surf': False}]
-        agent.active = {'target': target, 'rules': rules, 'context': {'trigger_navigation': routes}}
+        origin = ['SeafoamIslandsB3F', 23, 9]
+        agent.active = {'target': target, 'rules': rules, 'context': {
+            'trigger_navigation': routes, 'trigger_navigation_origin': origin}}
         agent.visited = set()
         agent.client = Mock()
         agent.client.cmd.return_value = []
@@ -900,8 +902,10 @@ class AutonomousTests(unittest.TestCase):
         for i, route in enumerate(routes):
             value = json.loads(candidates[str(i)])
             self.assertEqual(value['trigger_navigation'], route)
+            self.assertEqual(value['trigger_navigation_origin'], origin)
             self.assertEqual(value['navigation']['map_hops'], 1)
             self.assertIn('conditional', value['trigger_navigation_scope'])
+            self.assertIn('not a fresh route after movement', value['trigger_navigation_scope'])
 
     def test_one_depleted_coverage_move_does_not_abort_ready_hunts(self):
         mon = {'species': 'Charizard', 'level': 57, 'hp': 193, 'max_hp': 193,

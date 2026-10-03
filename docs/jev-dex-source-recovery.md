@@ -2437,3 +2437,17 @@ FuchsiaPokecenter。记录中原Cinnabar治疗点并未被提供为行动候选�
 证明为`route-action-recorded-probe/report.json`，模型
 `typesafe/jev-1.13-20260917`；两次输入11696／12112 tokens，各输出98。
 新策略仅从下一安全检查点正常CONTINUE生效，不热替换当前冻结录制。
+
+第十段已在elapsed1067.097秒真实护士治疗完成后合作式停止，严格原生
+安全检查、最终观察均通过。独立新进程正常CONTINUE schema=3比对全部
+持久字段通过，51 owned／88 seen，源SRAM未改写，SHA256
+`eeb1610a3847dda882834c140ea43939c55f1e1a0195801ef32f41687e13b571`。
+终点CinnabarPokecenter `(3,3)`，资金880、五徽章、队伍6只、PC30只，箱1。
+Charizard自然训练至62级，全队HP／PP补满，Snorlax睡眠状态已实际恢复，
+保留Surf。证明为`formal51-independent-continue.json`；这验证51种存档
+持久性，不替代全链合法来源审核。
+
+第十段MP4正常封口364.533333秒、21872帧、6080991字节，仍仅分段容器
+检查，不是最终全程合片。额外标注路径计算的起点及“策略选择时的几何”，
+避免途中移动或战斗后把旧路径误当刚计算的路线；新版本完整Python838项
+再通过（17.863秒），不是新增重复测试数量。
