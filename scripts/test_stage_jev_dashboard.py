@@ -80,9 +80,10 @@ class PagesStagingTest(unittest.TestCase):
         snapshot = {'dex': {'owned': 124, 'owned_species': data['progress'][0]['owned_species']},
                     'state': {'box_counts': [0] * 12, 'current_box_index': 0,
                               'safari_game': {'active': False, 'balls_remaining': 0, 'steps_remaining': 0}},
-                    'party': [{'species': 'Mon1'}], 'stored_pokemon': [], 'bag': [], 'flags': {}}
+                    'party': [{'species': 'Mon1'}], 'party_pp': [[35, 0, 0, 0]],
+                    'stored_pokemon': [], 'bag': [], 'flags': {}}
         data['run']['collection_continue_verification'] = {
-            'schema': 3, 'verified': True, 'save_sha256': 'a' * 64, 'expected': snapshot, 'restored': snapshot}
+            'schema': 4, 'verified': True, 'save_sha256': 'a' * 64, 'expected': snapshot, 'restored': snapshot}
         self.write_dex_data(data)
         return video
 
@@ -111,6 +112,36 @@ class PagesStagingTest(unittest.TestCase):
             self.write_dex_data(data)
             with self.assertRaisesRegex(ValueError, 'CONTINUE evidence'):
                 stage(self.repo, self.site, 'abc123')
+
+    def test_completion_rejects_legacy_proof_without_explicit_party_pp_coverage(self):
+        self.prepare_dex()
+        data = json.loads((self.source / 'dex-run/jev-dex-dashboard.json').read_text())
+        data['run']['collection_continue_verification']['schema'] = 3
+        self.write_dex_data(data)
+        with self.assertRaisesRegex(ValueError, 'CONTINUE evidence'):
+            stage(self.repo, self.site, 'abc123')
+
+    def test_completion_rejects_missing_misaligned_or_invalid_party_pp(self):
+        import copy
+        self.prepare_dex()
+        original = json.loads((self.source / 'dex-run/jev-dex-dashboard.json').read_text())
+        target = self.site / 'jev-dashboard'
+        target.mkdir()
+        (target / 'index.html').write_text('previous dashboard')
+        for value in (None, [], [[35, 0, 0]], [[True, 0, 0, 0]], [[35.0, 0, 0, 0]],
+                      [['35', 0, 0, 0]], [[-1, 0, 0, 0]], [[256, 0, 0, 0]],
+                      [[35, 0, 0, 0], [35, 0, 0, 0]]):
+            data = copy.deepcopy(original)
+            proof = data['run']['collection_continue_verification']
+            for key in ('expected', 'restored'):
+                if value is None:
+                    proof[key].pop('party_pp')
+                else:
+                    proof[key]['party_pp'] = value
+            self.write_dex_data(data)
+            with self.subTest(pp=value), self.assertRaisesRegex(ValueError, 'CONTINUE evidence'):
+                stage(self.repo, self.site, 'abc123')
+            self.assertEqual((target / 'index.html').read_text(), 'previous dashboard')
 
     def test_template_alone_is_not_a_publishable_dashboard(self):
         template = self.source / DEX_REQUIRED[0]

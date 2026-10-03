@@ -68,8 +68,15 @@ def verify_dex_completion(data):
     snapshot = proof.get('restored') or {}
     saved_state = snapshot.get('state')
     safari = saved_state.get('safari_game') if isinstance(saved_state, dict) else None
-    if (proof.get('schema') != 3 or proof.get('verified') is not True
-            or not {'dex', 'state', 'party', 'bag', 'flags', 'stored_pokemon'} <= snapshot.keys()
+    party, pp = snapshot.get('party'), snapshot.get('party_pp')
+    party_pp_complete = (isinstance(party, list) and 1 <= len(party) <= 6
+                         and isinstance(pp, list) and len(pp) == len(party)
+                         and all(isinstance(row, list) and len(row) == 4
+                                 and all(type(value) is int and 0 <= value <= 255 for value in row)
+                                 for row in pp))
+    if (proof.get('schema') != 4 or proof.get('verified') is not True
+            or not {'dex', 'state', 'party', 'party_pp', 'bag', 'flags', 'stored_pokemon'} <= snapshot.keys()
+            or not party_pp_complete
             or not isinstance(snapshot.get('stored_pokemon'), list)
             or not isinstance(safari, dict) or type(safari.get('active')) is not bool
             or not all(type(safari.get(key)) is int and 0 <= safari[key] <= limit

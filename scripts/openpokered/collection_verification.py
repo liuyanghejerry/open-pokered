@@ -45,12 +45,36 @@ def collection_snapshot(observations):
         raise ValueError('Invalid stored Pokemon slots or box counts')
     if not valid_safari_snapshot(state.get('safari_game')):
         raise ValueError('Incomplete or invalid Safari session observation')
+    # get_party exposes persistent XP but no PP. Bind its slot-ordered roster
+    # to the ordinary get_state.party before using that observation's PP;
+    # evaluation telemetry is deliberately not a fallback.
+    party = observations['get_party']['data']
+    normal_party = state.get('party')
+    shared = {'species': 'species', 'level': 'level', 'hp': 'current_hp',
+              'max_hp': 'max_hp', 'status': 'status', 'moves': 'moves'}
+    if (not isinstance(party, list) or not isinstance(normal_party, list)
+            or len(party) != len(normal_party) or len(party) > 6):
+        raise ValueError('Incomplete or disagreeing party observation')
+    party_pp = []
+    for mon, persistent in zip(normal_party, party):
+        if (not isinstance(mon, dict) or not isinstance(persistent, dict)
+                or not shared.keys() <= mon.keys()
+                or not set(shared.values()) <= persistent.keys()
+                or any(mon[field] != persistent[other] for field, other in shared.items())):
+            raise ValueError('Incomplete or disagreeing party observation')
+        pp = mon.get('pp')
+        if (not isinstance(pp, list) or len(pp) != 4
+                or any(type(value) is not int or not 0 <= value <= 255 for value in pp)
+                or not isinstance(mon['moves'], list) or len(mon['moves']) != 4):
+            raise ValueError('Incomplete or invalid party PP observation')
+        party_pp.append(list(pp))
     return {
         'dex': {**dex, 'owned_species': sorted(owned), 'seen_species': sorted(seen)},
         'state': {key: state[key] for key in (
             'map_name', 'player_x', 'player_y', 'money', 'coins', 'badges',
             'current_box_index', 'box_counts', 'safari_game')},
-        'party': observations['get_party']['data'],
+        'party': party,
+        'party_pp': party_pp,
         # Counts alone cannot detect a replaced species, altered moves/HP,
         # or a different occupied slot. Compare every exposed stored field.
         'stored_pokemon': sorted(stored, key=lambda mon: (mon['box'], mon['index'])),
@@ -116,13 +140,17 @@ def verify_collection_continue(saved, binary, observations, script_flags=None):
             pt.resume_reentry(check)
             restored_observations = {cmd: check.d.cmd(cmd=cmd) for cmd in (
                 'get_state', 'get_party', 'get_bag', 'get_flags')}
-            restored = collection_snapshot(restored_observations)
+            try:
+                restored = collection_snapshot(restored_observations)
+            except ValueError as error:
+                raise ValueError('CONTINUE changed persisted collection facts: invalid restored observation: '
+                                 + str(error)) from error
             differences = [key for key in expected if expected[key] != restored[key]]
             if differences:
                 raise ValueError('CONTINUE changed persisted collection facts: ' + ', '.join(differences))
             if hashlib.sha256(saved.read_bytes()).hexdigest() != digest:
                 raise ValueError('Source SRAM changed during isolated verification')
-            return {'schema': 3, 'verified': True, 'save_sha256': digest,
+            return {'schema': 4, 'verified': True, 'save_sha256': digest,
                     'binary_sha256': hashlib.sha256(binary.read_bytes()).hexdigest(),
                     'separate_process_pid': check.proc.pid,
                     'verification_commands': dict(check.d.counts),

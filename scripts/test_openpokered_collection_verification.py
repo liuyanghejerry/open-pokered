@@ -29,19 +29,116 @@ def observations(count=124):
                'level': 10, 'hp': 30, 'max_hp': 30, 'status': 'None',
                'moves': ['Tackle', 'None', 'None', 'None'], 'pp': [35, 0, 0, 0]}
               for box, size in enumerate(counts) for index in range(size)]
+    party = [{'species': 'Charizard', 'level': 60, 'hp': 181, 'max_hp': 181,
+              'status': 'None', 'moves': ['Slash', 'Cut', 'Flamethrower', 'Dig'],
+              'pp': [18, 30, 15, 10]}]
     return {cmd: {'ok': True, 'data': value} for cmd, value in {
         'get_state': {'screen': 'overworld', 'pokedex': {'owned': count, 'seen': count,
             'owned_species': names, 'seen_species': names}, 'map_name': 'PalletTown',
             'player_x': 5, 'player_y': 6, 'money': 15441, 'coins': 0, 'badges': 15,
             'current_box_index': 1, 'box_counts': counts, 'stored_pokemon': stored,
+            'party': party,
             'safari_game': {'active': False, 'balls_remaining': 0, 'steps_remaining': 0}},
-        'get_party': [{'species': 'Charizard', 'hp': 181, 'pp': [18, 30, 15, 10]}],
+        # The actual native get_party reports XP/current_hp but has no PP.
+        'get_party': [{**{key: value for key, value in mon.items() if key not in ('hp', 'pp')},
+                       'current_hp': mon['hp'], 'experience': 216000} for mon in party],
         'get_bag': [{'item': 'PokeBall', 'qty': 12}],
         'get_flags': {'EVENT_GOT_POKEDEX': True},
     }.items()}
 
 
 class CollectionContinueTests(unittest.TestCase):
+    def test_party_pp_comes_from_normal_roster_not_get_party_or_evaluation(self):
+        expected = observations()
+        state = expected['get_state']['data']
+        state['evaluation'] = {'party': [{'pp': [0, 0, 0, 0]}]}
+        self.assertNotIn('pp', expected['get_party']['data'][0])
+        snapshot = collection_snapshot(expected)
+        self.assertEqual(snapshot['party_pp'], [[18, 30, 15, 10]])
+        self.assertEqual(snapshot['party'], expected['get_party']['data'])
+        self.assertEqual(snapshot['party'][0]['experience'], 216000)
+        self.assertNotIn('evaluation', snapshot)
+
+    def test_party_pp_observation_is_required_and_four_native_bytes(self):
+        for value in (None, [], [18, 30, 15], [18, 30, 15, 10, 1],
+                      [True, 30, 15, 10], [18.0, 30, 15, 10], ['18', 30, 15, 10],
+                      [-1, 30, 15, 10], [256, 30, 15, 10]):
+            invalid = observations()
+            invalid['get_state']['data']['party'][0]['pp'] = value
+            with self.subTest(value=value), self.assertRaisesRegex(ValueError, 'party PP observation'):
+                collection_snapshot(invalid)
+        invalid = observations()
+        state = invalid['get_state']['data']
+        state['evaluation'] = {'party': copy.deepcopy(state['party'])}
+        state['party'][0].pop('pp')
+        with self.assertRaisesRegex(ValueError, 'party PP observation'):
+            collection_snapshot(invalid)
+
+    def test_party_observations_must_agree_in_order_and_shared_fields(self):
+        for field, value in [('species', 'Muk'), ('level', 59), ('hp', 180),
+                             ('max_hp', 182), ('status', 'Paralysis'),
+                             ('moves', ['Growl', 'Cut', 'Flamethrower', 'Dig'])]:
+            invalid = observations()
+            invalid['get_state']['data']['party'][0][field] = value
+            with self.subTest(field=field), self.assertRaisesRegex(ValueError, 'party observation'):
+                collection_snapshot(invalid)
+        for invalid_roster in (None, {}, [], [None] * 7):
+            invalid = observations()
+            invalid['get_state']['data']['party'] = invalid_roster
+            with self.subTest(roster=invalid_roster), self.assertRaisesRegex(ValueError, 'party observation'):
+                collection_snapshot(invalid)
+        for command in ('get_state', 'get_party'):
+            invalid = observations()
+            if command == 'get_state':
+                invalid[command]['data']['party'][0].pop('species')
+            else:
+                invalid[command]['data'][0].pop('species')
+            with self.subTest(command=command), self.assertRaisesRegex(ValueError, 'party observation'):
+                collection_snapshot(invalid)
+
+    def test_party_pp_keeps_slot_order_for_matching_rosters(self):
+        expected = observations()
+        # Matching species/moves do not establish an individual identity:
+        # keep the native slot order rather than sorting/deduplicating by species.
+        expected['get_state']['data']['party'].append(copy.deepcopy(expected['get_state']['data']['party'][0]))
+        expected['get_state']['data']['party'][1]['pp'] = [17, 30, 15, 10]
+        expected['get_party']['data'].append(copy.deepcopy(expected['get_party']['data'][0]))
+        reversed_pp = copy.deepcopy(expected)
+        reversed_pp['get_state']['data']['party'].reverse()
+        before, after = collection_snapshot(expected), collection_snapshot(reversed_pp)
+        self.assertEqual(before['party'], after['party'])
+        self.assertNotEqual(before['party_pp'], after['party_pp'])
+        self.assertEqual(before['party_pp'], [[18, 30, 15, 10], [17, 30, 15, 10]])
+
+    def test_independent_continue_detects_pp_only_loss_and_invalid_restored_roster(self):
+        with tempfile.TemporaryDirectory() as folder:
+            folder = Path(folder)
+            saved, binary = folder / 'original.sav', folder / 'app'
+            saved.write_bytes(b'a' * 32768)
+            binary.write_bytes(b'test binary')
+            expected, game = observations(), Mock()
+            game.proc.pid = 123
+            raw = game.d
+            with patch('scripts.openpokered.collection_verification.pt.Game', return_value=game), \
+                    patch('scripts.openpokered.collection_verification.pt.resume_reentry'):
+                for mutation in ('pp_loss', 'missing_pp', 'mixed_roster'):
+                    restored = copy.deepcopy(expected)
+                    mon = restored['get_state']['data']['party'][0]
+                    if mutation == 'pp_loss':
+                        mon['pp'][0] -= 1
+                        message = 'CONTINUE changed.*party_pp'
+                    elif mutation == 'missing_pp':
+                        mon.pop('pp')
+                        message = 'CONTINUE changed.*party PP observation'
+                    else:
+                        mon['species'] = 'Muk'
+                        message = 'CONTINUE changed.*party observation'
+                    self.assertEqual(restored['get_party'], expected['get_party'])
+                    raw.cmd.side_effect = lambda **kw: restored[kw['cmd']]
+                    with self.subTest(mutation=mutation), self.assertRaisesRegex(ValueError, message):
+                        verify_collection_continue(saved, binary, expected)
+                    self.assertEqual(saved.read_bytes(), b'a' * 32768)
+
     def test_final_gate_rejects_partial_duplicate_and_unvalidated_collection(self):
         require_collection_completion(observations(), {})
         with self.assertRaisesRegex(ValueError, '124-species'):
@@ -117,7 +214,7 @@ class CollectionContinueTests(unittest.TestCase):
                     patch('scripts.openpokered.collection_verification.pt.resume_reentry') as resume:
                 proof = verify_collection_continue(saved, binary, expected, flags)
                 self.assertTrue(proof['verified'])
-                self.assertEqual(proof['schema'], 3)
+                self.assertEqual(proof['schema'], 4)
                 self.assertEqual(proof['expected'], proof['restored'])
                 self.assertNotEqual(create.call_args.kwargs['save_path'], saved)
                 self.assertNotEqual(create.call_args.kwargs['binary'], binary)

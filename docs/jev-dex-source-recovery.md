@@ -3865,3 +3865,42 @@ Cut、41.790秒实际清树；双层Jev1.13、同预算及原生4×录像继续�
 无指定路线／milestone调用／热替换／回退。起点63不计新增，未执行
 兑奖或鲤鱼王购买；仍prototype验证，尚未启动最终合法NEW GAME。
 Goal保持active，继续补策略及核验能力，最终124／MP4／大盘未交付。
+
+## 2026-10-04 独立续读补齐普通队伍PP核验
+
+落实上轮指出的证明范围缺口：原生get_party仅公开经验／current_hp／
+种族／等级／max_hp／状态／招式，没有PP。既有schema=3只比较
+该回复，普通get_state.party中的PP即使单独丢失也会被遗漏；PC逐槽
+原有PP检查不受影响。新增5项复现旧25个subtest FAIL／2ERROR，
+两项发布复现旧3FAIL（旧证明及缺PP仍发布，覆盖旧页面也被发现）；
+失败证据保留，不把所有子案例都称为已在旧实现完成执行。
+
+新snapshot先绑定两个普通原生队伍观察：数组长度／原生槽位顺序及
+种族、等级、HP、max_hp、状态、招式均一致，才取get_state.party的
+四槽PP。PP必须为原生byte范围0..255的整数，拒绝bool／float／
+字符串、缺失、越界及错槽数；不默认补满、不从evaluation或非原生
+get_party额外字段填补。保留完整get_party经验等原字段，新party_pp
+按实际队伍槽位单独比较，不按种族去重或声称识别同种个体身份。
+恢复观察缺失／不一致明确拒绝证明，并保留CONTINUE变化原因。
+
+新独立证明schema=4，最终大盘staging门槛要求4及完整party_pp，
+拒绝历史3、缺失／错位／非法PP或空最终队伍，在替换旧页面之前
+失败。payload整体schema仍3、现有玩家页／渲染不变；历史证明与
+原件不覆写，不将旧3自动升级或追认为PP已核验。
+
+27项核验／发布相关测试全过，完整Python discover937PASS
+（19.853秒），diff --check通过；本轮仅Python证明／工具逻辑，
+没有Rust／scene／画面变更，也未重跑m49。最新封存第28段源b307、
+同native2bdf独立正常CONTINUE schema=4通过，全部旧已核验section
+严格相同，仅新增party_pp，逐槽与原终点普通原生PP完全一致；源
+SRAM未改写，owned仍63，不连接当前游玩实例或填补游戏状态。
+
+再用上轮真正fresh m01–m49的native ending autosave独立CONTINUE
+进行新PP核验，schema=4通过，八徽章255、所有原公开持久字段及
+三只队伍PP一致；源通关存档SHA256
+`e8f52c30b85bc4601a8eb52b6968345eefba4caffaec6f384b80ec8dd06942be`。
+真实剩余PP为Zapdos[6,6,15,0]、Lapras[25,40,15,15]、Venusaur
+[10,22,30,10]，并非假定治疗补满。只是旧fresh回归产物的新独立
+核验，不是本轮重新通关、Jev收集新链或最终合法124。证明及receipt
+在持久checkpoint-safety目录party-pp系列；当前第29段仍运行原冻结
+策略，不热替换。Goal保持active，最终合法NEW GAME尚未开始。
