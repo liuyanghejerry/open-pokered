@@ -948,6 +948,8 @@ class AutonomousTests(unittest.TestCase):
         self.assertEqual([row['move'] for row in evidence['usable_attacks']],
                          ['Slash', 'Cut', 'Flamethrower'])
         self.assertEqual([row['move'] for row in evidence['low_pp_coverage_attacks']], ['Dig'])
+        self.assertEqual(evidence['low_pp_coverage_attacks'][0]['reference_full_pp'], 10)
+        self.assertNotIn('maximum_pp', evidence['low_pp_coverage_attacks'][0])
         self.assertFalse(evidence['health_or_status_warning'])
         self.assertIn('matchups', context['scope'])
         self.assertEqual(facts, before)

@@ -797,7 +797,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                     continue
                 move_data = data.move_data(move)
                 if move_data['power'] > 0:
-                    attacks.append({'move': move, 'pp': pp, 'maximum_pp': move_data['pp'],
+                    attacks.append({'move': move, 'pp': pp, 'reference_full_pp': move_data['pp'],
                                     'type': move_data['type'], 'power': move_data['power']})
         return {
             'urgently_needed': AutonomousStoryAgent.needs_healing(facts, preserve_coverage=False),
@@ -808,9 +808,10 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'health_or_status_warning': mon['hp'] < mon['max_hp'] * .7 or mon['status'] != 'None',
                 'remaining_attack_pp': sum(row['pp'] for row in attacks),
                 'usable_attacks': [row for row in attacks if row['pp'] > 0],
-                'low_pp_coverage_attacks': [row for row in attacks if row['pp'] <= row['maximum_pp'] * .25],
+                'low_pp_coverage_attacks': [row for row in attacks if row['pp'] <= row['reference_full_pp'] * .25],
             },
-            'scope': 'Observed leader HP/status/PP and public move data. Urgency is a resource heuristic, '
+            'scope': 'Observed leader HP/status/PP and public unboosted move PP/type/power data, '
+                'not an observed PP-Up-adjusted maximum. Urgency is a resource heuristic, '
                 'not guaranteed survival; compare remaining attacks with opponent matchups. '
                 'Other party members may still need optional recovery.',
         }
