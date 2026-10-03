@@ -2125,3 +2125,14 @@ missing从unknown变为[]，Arbok／Graveler／Hypno候选都有真实训练地�
 `pc-loop-access-restored-before/`、`pc-loop-access-restored-after/`及
 `tests-pc-loop-access-*.log`。124、最终来源审计、完整MP4和正式大盘尚未
 完成；下一段只允许从上述已验证26种检查点继续。
+
+正式第六段`20261003-143128-seed42`已从26种存档正常CONTINUE，实际加载
+`ccf59092`修复策略，SHA256
+`cb98f5df7792f1deea3e91e7bdd84310e84fb5ceffbacd5fc780729fe772479e`。
+Jev于elapsed15.460秒选择Farfetchd，正常走到VermilionTradeHouse；
+frame2333／elapsed19.449秒实际交换登记Farfetchd至**27/124**，
+紧接着outcome获得`EVENT_TRADED_FOR_DUX`。这是正式来源证据，不是对照
+副本的预测。elapsed28.775秒模型随后选择Arbok，正常进入Route6训练
+Ekans，已到13级并于136.492秒选择治疗，未继续PC循环。最新独立存档
+验证仍是26种；27种为后续在线原生登记，未冒充封口验收。控制器、私有
+native和FFmpeg继续在持久目录运行，没有热更新或停止以获取新计数。
