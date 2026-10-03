@@ -1760,6 +1760,13 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         self.rng = crate::rng::SeededRng::seed_from_u64(seed);
     }
 
+    /// Retain a pinned stream's current position when replacing the screen.
+    /// Reapplying the original seed would repeat rolls already consumed by
+    /// startup (for example, the trainer ID).
+    pub fn inherit_rng_from(&mut self, previous: &Self) {
+        self.rng = previous.rng.clone();
+    }
+
     pub fn set_script_flags(&mut self, flags: HashMap<String, bool>) {
         self.unified_flags.merge_from(&flags);
     }

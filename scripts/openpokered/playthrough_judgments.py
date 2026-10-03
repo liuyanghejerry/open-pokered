@@ -408,6 +408,10 @@ class ObservedProtocol:
         if name in self.ADVANCING:
             data = reply.get('data')
             frame = data.get('frame_count') if isinstance(data, dict) else None
+            if frame is None and isinstance(data, dict) and isinstance(data.get('state'), dict):
+                frame = data['state'].get('frame_count')
+            if not isinstance(frame, int) or isinstance(frame, bool) or frame < 0:
+                frame = None
             self.record('native_input', request=kwargs, ok=reply.get('ok') is True, frame=frame)
         return reply
 

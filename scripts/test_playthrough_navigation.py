@@ -8,6 +8,58 @@ from pathlib import Path
 
 import playthrough as nav
 from playthrough_late import damage_slot
+from debug_drive import DebugClient
+
+
+class AtomicDebugDriveRegression(unittest.TestCase):
+    def client(self, frames=7):
+        client = object.__new__(DebugClient)
+        reply = {'ok': True, 'data': {'advanced': True, 'queue_start_frame': 100,
+                                      'frame_count': 100 + frames}}
+        client.cmd = Mock(return_value=reply)
+        return client, reply
+
+    def test_tap_and_neutral_tail_advance_in_one_acknowledged_request(self):
+        client, reply = self.client()
+        self.assertIs(client.drive(['a'], frames=7), reply)
+        client.cmd.assert_called_once_with(cmd='press_timeline', advance=True,
+                                           buttons=['a'] + [None] * 6)
+
+    def test_default_length_preserves_explicit_neutral_frames(self):
+        client, reply = self.client(3)
+        self.assertIs(client.drive([None, 'a', None]), reply)
+        client.cmd.assert_called_once_with(cmd='press_timeline', advance=True,
+                                           buttons=[None, 'a', None])
+
+    def test_invalid_frame_budget_sends_no_input(self):
+        for frames in (0, -1, 1.5, True):
+            with self.subTest(frames=frames):
+                client, _ = self.client()
+                with self.assertRaises(ValueError):
+                    client.drive(['a'], frames=frames)
+                client.cmd.assert_not_called()
+
+    def test_empty_timeline_can_advance_only_neutral_frames(self):
+        client, reply = self.client(2)
+        self.assertIs(client.drive([], frames=2), reply)
+        client.cmd.assert_called_once_with(cmd='press_timeline', advance=True,
+                                           buttons=[None, None])
+
+    def test_error_or_missing_exact_advancement_acknowledgement_fails_closed(self):
+        for reply in ({'ok': False, 'error': 'unknown button'},
+                      {'ok': True}, {'ok': True, 'data': None},
+                      {'ok': True, 'data': {'advanced': False}},
+                      {'ok': True, 'data': {'advanced': True}},
+                      {'ok': True, 'data': {'advanced': True, 'queue_start_frame': 100,
+                                           'frame_count': 108}},
+                      {'ok': True, 'data': {'advanced': True, 'queue_start_frame': False,
+                                           'frame_count': 7}}):
+            with self.subTest(reply=reply):
+                client, _ = self.client()
+                client.cmd.return_value = reply
+                with self.assertRaises(RuntimeError):
+                    client.drive(['a'], frames=7)
+                self.assertEqual(client.cmd.call_count, 1)
 
 
 class SearchGeometryCacheRegression(unittest.TestCase):

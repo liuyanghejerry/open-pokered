@@ -324,6 +324,33 @@ class AutonomousTests(unittest.TestCase):
         record.assert_called_once_with('native_input', request={'cmd': 'move_to', 'x': 1, 'y': 2},
                                        ok=False, frame=None)
 
+    def test_native_input_log_retains_nested_wait_and_dialogue_frame_acknowledgements(self):
+        raw, record = Mock(), Mock()
+        protocol = ObservedProtocol(raw, record, time.monotonic()+60)
+        for command in ('wait_until', 'skip_dialogue'):
+            with self.subTest(command=command):
+                record.reset_mock()
+                raw.cmd.return_value = {'ok': True, 'data': {'stepped': 10,
+                                        'state': {'frame_count': 1234}}}
+                protocol.cmd(cmd=command)
+                record.assert_called_once_with('native_input', request={'cmd': command},
+                                               ok=True, frame=1234)
+
+    def test_native_input_frame_acknowledgement_does_not_invent_malformed_telemetry(self):
+        raw, record = Mock(), Mock()
+        protocol = ObservedProtocol(raw, record, time.monotonic()+60)
+        for data, expected in ((None, None), ({'state': None}, None),
+                               ({'frame_count': False}, None), ({'frame_count': -1}, None),
+                               ({'frame_count': '12'}, None),
+                               ({'frame_count': 10, 'state': {'frame_count': 9}}, 10),
+                               ({'frame_count': None, 'state': {'frame_count': 12}}, 12)):
+            with self.subTest(data=data):
+                record.reset_mock()
+                raw.cmd.return_value = {'ok': True, 'data': data}
+                protocol.cmd(cmd='step_frames', count=1)
+                record.assert_called_once_with('native_input', request={'cmd': 'step_frames', 'count': 1},
+                                               ok=True, frame=expected)
+
     def test_safari_ball_sequence_counts_capture_before_flee_and_budget(self):
         from openpokered.playthrough_judgments import safari_ball_sequence
         self.assertEqual(safari_ball_sequence(.2, .5, 0), (0, 0))

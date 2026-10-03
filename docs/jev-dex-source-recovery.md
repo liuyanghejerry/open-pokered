@@ -1795,7 +1795,7 @@ Magikarp倒下、仅Metapod存活，实际OpenRouter Jev选择槽位1，真实�
 
 正式新链为仓库内
 `.artifacts/jev-dex-recording-newgame-20261003/20261003-122902-seed42/`，
-manifest记录`mode=autonomous-new-game`、seed42、`resumed_from=null`、
+manifest记录`mode=autonomous-new-game`、seed42，没有resume来源字段；使用
 OpenRouter Jev双层决策；原生私有SRAM、日志及H.264 MP4均位于该轮持久目录。
 没有注入旧存档、队伍、物品或旗标，不回滚。默认240fps输入／60fps输出对应
 4倍速全时段录像，不声称保留每个原生帧。
@@ -1831,3 +1831,49 @@ Python全套780项通过（17.592秒），播放器JavaScript回归及diff检查
 `.artifacts/jev-dex-regression-20261003/fresh-m49-release/`；此时实际通过
 m01–m13，m14仍运行，不提前计为m49通过。最初启动错误只因驱动默认
 debug路径不存在；改为显式使用现有release二进制，没有额外重复构建。
+
+### 2026-10-03：新链14种，修复启动RNG继承与旧驱动的输入竞态
+
+正式新链继续使用冻结的`54c55e3e`控制器和私有原生二进制，未热更新、
+重启或回退。frame383636／elapsed1086.383秒由进化登记Pidgeotto，
+frame674384／elapsed2084.996秒由进化登记Fearow，达到14/124。
+旧83种不计入这条新链；最终124、独立来源验收和完整MP4／大盘仍未完成。
+
+隔离重放旧链输入时，完整开局观察一致，但首战同为frame3091，
+Charmander的max HP为原记录20、重放19。原生`--seed 42`确实在启动时设置，
+真实NEW GAME随后重建`OverworldScreen`却丢弃固定RNG；CONTINUE也有同类
+问题。赠送／初始宝可梦DV原本已从overworld流获取，不应改为注入指定DV。
+
+新增`inherit_rng_from`，只在存在显式seed时，重建overworld继承之前的
+RNG当前位置；不重启到seed起点，不改变未固定seed的默认路径，不重建
+普通菜单返回状态。CONTINUE继承的是该进程启动时固定的流，SRAM并不保存
+之前运行的RNG状态，因此这不是逐帧存档恢复。针对NEW GAME、CONTINUE和
+普通菜单返回的3项测试，修复前2失败／1通过，修复后全部通过。
+
+修复版native SHA256为
+`a28be59cc6ae0e7f20705c32086fdb83fe8a17c6ea05471b1a11a9a21a526984`。
+另起两个真正NEW GAME进程，从启动到首战重放176条输入；全部帧回执、
+完整开局观察和完整首战观察一致，首战frame3091。两份160×144 H.264、
+60fps、12.900秒MP4字节哈希也一致。这只证明新的首战前缀，不证明旧正式链
+已恢复、全程RNG哈希或124完成。证据在新worktree的
+`.artifacts/checkpoint-safety-20261003/fixed-seed-newgame-replay-e/`。
+
+补齐`native_input`的嵌套`data.state.frame_count`回执记录（wait／skip），
+不增加RPC或改变游戏推进；畸形帧保持未知。正式已加载控制器不会热更新日志。
+
+额外seed42／speed0故事回归在m05失败：旧`DebugClient.drive`先排队输入、
+再单独推进，driven-only循环可能在两次RPC之间消费输入。修复前的旧native
+也复现同一领取失败，不是RNG修复独有回归。驱动改为一次原子时间线，显式
+补齐neutral尾帧并核验推进回执；输入预算无效时不发送命令，错误或不完整
+回执不作成功。5项新增单元测试先失败后通过，真实NEW GAME已正常领取。
+
+Python完整发现787项通过（17.741秒），原生app单元116项通过，播放器
+JavaScript回归及diff检查通过。修复前native的独立fresh m01–m49已完整
+通过，含名人堂、片尾自动存档和独立CONTINUE：PalletTown `(5,6)`、八徽章
+255、殿堂1、资金32464；不是正式图鉴数量或新修复版的全链验收。
+
+新修复版seed42／speed0／原子输入的fresh实际通过m01–m15，m16船上战败后
+正常训练到29级，但原有400轮训练上限不足以到目标30级，明确失败为
+`ship preparation stalled`。未放宽预算、降低断言、注入等级或计作m49通过。
+失败状态、旧驱动m05对照和完整日志保留在持久的
+`.artifacts/jev-dex-regression-20261003/`，不会与正式图鉴或录像拼接。

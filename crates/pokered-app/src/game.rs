@@ -2349,6 +2349,9 @@ impl PokemonGame {
                             OverworldScreen::new(map_id, self.scripts_dir.clone(), PokemonRedData);
                         #[cfg(target_os = "none")]
                         let mut overworld = OverworldScreen::new(map_id, PokemonRedData);
+                        if self.seed.is_some() {
+                            overworld.inherit_rng_from(&self.overworld);
+                        }
                         overworld.restore_saved_last_map(self.save_data.game_data.last_map);
                         overworld.state.player.x = px;
                         overworld.state.player.y = py;
@@ -2430,6 +2433,9 @@ impl PokemonGame {
                                 self.scripts_dir.clone(),
                                 PokemonRedData,
                             );
+                            if self.seed.is_some() {
+                                overworld.inherit_rng_from(&self.overworld);
+                            }
                             overworld.state.player.x = px;
                             overworld.state.player.y = py;
                             // NEW GAME installs the freshly-reset save's
@@ -7846,6 +7852,68 @@ mod session_guard_tests {
 #[cfg(all(test, feature = "debug-server"))]
 mod synchronous_input_tests {
     use super::*;
+    use pokered_core::game_state::MainMenuChoice;
+
+    fn pinned_overworld_game(seed: u64) -> (PokemonGame, OverworldScreen<PokemonRedData>) {
+        let mut game = PokemonGame::new_with_options(
+            GameVersion::Red, None, None, None, false, None, false, true, None,
+        );
+        game.set_seed(seed);
+        let mut reference = OverworldScreen::new(MapId::RedsHouse2F, None, PokemonRedData);
+        reference.set_rng_seed(seed);
+        // Reconstruction must retain the stream, not restart at its initial seed.
+        for _ in 0..16 {
+            assert_eq!(game.overworld.next_rng_u8(), reference.next_rng_u8());
+        }
+        (game, reference)
+    }
+
+    #[test]
+    fn pinned_overworld_rng_survives_new_game_reconstruction() {
+        for seed in [0, 42] {
+            let (mut game, mut reference) = pinned_overworld_game(seed);
+            game.main_menu.last_choice = Some(MainMenuChoice::NewGame);
+            game.state.screen = GameScreen::MainMenu;
+            game.handle_transition(GameScreen::OakSpeech);
+            game.handle_transition(GameScreen::Overworld);
+            assert_eq!(game.seed, Some(seed));
+            for _ in 0..32 {
+                assert_eq!(
+                    game.overworld.next_rng_u8(),
+                    reference.next_rng_u8(),
+                    "NEW GAME lost pinned stream for seed {seed}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn pinned_overworld_rng_survives_continue_reconstruction() {
+        let (mut game, mut reference) = pinned_overworld_game(42);
+        game.main_menu.last_choice = Some(MainMenuChoice::Continue);
+        game.state.screen = GameScreen::MainMenu;
+        game.handle_transition(GameScreen::Overworld);
+        for _ in 0..32 {
+            assert_eq!(
+                game.overworld.next_rng_u8(),
+                reference.next_rng_u8(),
+                "CONTINUE lost pinned stream"
+            );
+        }
+    }
+
+    #[test]
+    fn pinned_overworld_rng_is_not_reset_by_an_ingame_menu_return() {
+        for choice in [MainMenuChoice::Continue, MainMenuChoice::NewGame] {
+            let (mut game, mut reference) = pinned_overworld_game(42);
+            game.main_menu.last_choice = Some(choice);
+            game.state.screen = GameScreen::PartyScreen;
+            game.handle_transition(GameScreen::Overworld);
+            for _ in 0..32 {
+                assert_eq!(game.overworld.next_rng_u8(), reference.next_rng_u8());
+            }
+        }
+    }
 
     #[test]
     fn save_sync_preserves_live_safari_allowance_and_clears_finished_session() {

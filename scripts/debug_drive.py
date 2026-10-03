@@ -98,9 +98,26 @@ class DebugClient:
         return self.cmd(cmd="step_frames", count=count)
 
     def drive(self, buttons, frames=None):
-        """Queue buttons then step exactly len(buttons) (or `frames`) frames."""
-        self.press_sequence(buttons)
-        return self.step(frames if frames is not None else len(buttons))
+        """Execute buttons and the neutral tail in one acknowledged timeline.
+
+        Queue-then-step can consume input between the two requests, especially
+        in driven-only mode. An atomic timeline preserves tap/release edges.
+        """
+        buttons = list(buttons)
+        frames = len(buttons) if frames is None else frames
+        if type(frames) is not int or frames < len(buttons):
+            raise ValueError('frame budget must be an integer covering the input timeline')
+        reply = self.cmd(cmd='press_timeline', advance=True,
+                         buttons=buttons + [None] * (frames - len(buttons)))
+        data = reply.get('data') if isinstance(reply, dict) else None
+        start = data.get('queue_start_frame') if isinstance(data, dict) else None
+        end = data.get('frame_count') if isinstance(data, dict) else None
+        if (not isinstance(reply, dict) or reply.get('ok') is not True
+                or not isinstance(data, dict) or data.get('advanced') is not True
+                or type(start) is not int or type(end) is not int
+                or start < 0 or end - start != frames):
+            raise RuntimeError(f'input timeline was not advanced atomically: {reply!r}')
+        return reply
 
     def state(self):
         return self.cmd(cmd="get_state")["data"]
