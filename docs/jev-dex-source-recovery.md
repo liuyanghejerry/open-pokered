@@ -2850,3 +2850,25 @@ schema=3全部持久字段一致，60 owned／96 seen，源SRAM未改写，SHA25
 证明`formal60-shared-training-ready-independent-continue.json`。两个新
 修正将在从此最新存档正常CONTINUE时载入，不回退或热替换；独立
 读档通过仍不消除旧幽灵访问的历史来源缺口。
+
+第十六段MP4封口279.983333秒、16799帧、4596091字节，H.264／160×144／
+60fps。全部16个封存段容器／时钟／登记守恒通过，合计13221.783330秒、
+243181条合并记录、60种唯一登记，15次续跑起点新增列表为空。报告
+`closed-formal60-strength-ready-lineage-clock-20261003.json`不替代
+完整合法来源、全片视觉或最终MP4合片；本轮只保留原生实录，未创建
+虚构补片或宣布完整录像交付。
+
+最新Strength就绪60种存档、独立证明、停止／时钟、867项测试、3组
+等价规划测量及原生遇敌地块绕行回归另备份到worktree外
+`verified60-strength-ready-evidence-20261003.tar.gz`（42570字节），
+归档条目已检查，不含凭据、不重复MP4／binary、全部原件保留。
+
+第十七段`20261003-185015-seed42`从该最新存档正常CONTINUE，启动时
+worktree干净`520c94d2`；正式策略SHA256
+`0230c458b0f324028bb511043dffd28583566ac8fb6406601ead010d809faff4`，
+策略源文件SHA256
+`704a2d925b97591bd4a0f4ae3dbbf1b15bf323dac5e64fe9747cb061d0ac8a16`，
+导航源仍d10、私有native仍c5、668份gfx仍21e0。训练共享搜索及遇敌
+分区导航回退已经载入；恢复FuchsiaPokecenter `(3,3)`、资金410、
+60 owned／96 seen、全队治疗及已学Strength。双层OpenRouter Jev与
+原生录像继续，不将起点60算新增、不回退／热替换，所有目录持久。
