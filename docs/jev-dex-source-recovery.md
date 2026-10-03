@@ -3986,3 +3986,19 @@ SHA256 `d2c3aafd9fd26cf31cee135997132b285d15dba16e05cc17137a5ee59f5ba96a`，
 逐项哈希核验，无凭据／MP4／binary／重复SRAM，全部原件保留。
 此归档基于已备份第28段，不包含随后封存第29段，范围在receipt
 明确；最新第29段及独立新证明仍在持久运行／safety目录。
+
+最新第29段再做独立完整归档到worktree外
+verified63-fossil-parent29-20261004.tar.gz：7594054字节／15项，
+SHA256 `0bbca69a08c84540694e9dd8bfc9797b99ce85ee40dd646b3eb80aad716354f4`，
+含原生SRAM／sidecar／完整trace／终点／manifest／新独立PP证明及
+时钟审计，逐项哈希全过，没有凭据、重复MP4或binary，原件保留。
+
+第30段20261004-025306-seed42已从最新第29段d5d4正常CONTINUE。
+启动时干净61a9ca5a，policy
+`5cc236efc07a8e8bb00a29c783e77404718e86693b5f7c54ccba8c60f1776f6e`，
+autonomous417164／story_agentdd8338／story_rulesf30e77，native6d8e／
+gfx21e0；同双层OpenRouter Jev1.13、原预算和原生4×录像，没有
+热替换／回退／固定milestone或化石路线。75.795秒Jev自主选择
+EVENT_GAVE_FOSSIL_TO_LAB准备，115.622秒选择Route20真实Surf
+通路并实际过水。此时仍63种，未送交或领取；不能以孤立夹具64
+或准备决策充作新增。最终合法NEW GAME尚未开始，Goal仍active。
