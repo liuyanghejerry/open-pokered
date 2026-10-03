@@ -5325,8 +5325,8 @@ class AutonomousTests(unittest.TestCase):
         groups = {'existing': {'target': ('item', 'HM01', True)}}
         agent.add_collection_funding(groups, facts)
         sales = [g for g in groups.values() if g['target'][0] == 'sale']
-        self.assertEqual(len(sales), 1)
-        sale = sales[0]
+        self.assertEqual({g['target'][1] for g in sales}, {'Nugget', 'RareCandy'})
+        sale = next(g for g in sales if g['target'][1] == 'Nugget')
         self.assertEqual(sale['target'], ('sale', 'Nugget', False))
         self.assertEqual(sale['context']['expected_proceeds'], 5000)
         reference = sale['context']['collection_funding_reference']
@@ -5411,7 +5411,7 @@ class AutonomousTests(unittest.TestCase):
         groups = {'existing': {'target': ('item', 'HM01', True)}}
         agent.add_collection_funding(groups, facts)
         sales = {g['target'][1]: g for g in groups.values() if g['target'][0] == 'sale'}
-        self.assertEqual(set(sales), {'Nugget', 'Carbos'})
+        self.assertEqual(set(sales), {'Nugget', 'Carbos', 'RareCandy'})
         vitamin = sales['Carbos']['context']
         self.assertTrue(vitamin['vitamin_sale'])
         self.assertFalse(vitamin['treasure_sale'])

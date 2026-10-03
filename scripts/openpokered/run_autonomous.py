@@ -103,6 +103,58 @@ def native_checkpoint_safe(observations):
                     ('active_script_effect', 'dialogue', 'choice', 'field_menu')))
 
 
+class NativeRuntimeWorkspace:
+    """Own one temporary durable directory, with explicit live-runtime retention."""
+    def __init__(self, folder):
+        self.folder, self.retained = Path(folder).resolve(), False
+
+    def __enter__(self):
+        self.path = Path(tempfile.mkdtemp(prefix='.runtime-', dir=self.folder))
+        return self
+
+    def __exit__(self, *_):
+        if not self.retained:
+            # Only this newly-created private runtime is disposable. Evidence
+            # files and historical runs are outside it and are never removed.
+            shutil.rmtree(self.path)
+
+
+def preserve_native_handoff(game, workspace, folder, result):
+    """Release the controller connection, not the native game or its recorder.
+
+    This is NOT a save or a battle snapshot. The only resumable authority is
+    the still-running native process, after exclusive identity-checked attach.
+    """
+    # Retain before doing any I/O: an export failure must not clean the files
+    # beneath a live process. Popen uses start_new_session, so it can outlive us.
+    workspace.retained = True
+    result.update(success=False, development_checkpoint=False, native_runtime_preserved=True)
+    if isinstance(result.get('recording'), dict):
+        result['recording']['finalized'] = False
+    raw = game.d.raw
+    evidence = folder / 'final-observations.json'
+    handoff = {
+        'schema': 1, 'status': 'native_live_requires_exclusive_reattachment',
+        'is_sram_checkpoint': False, 'controller_pid': os.getpid(),
+        'native_pid': game.proc.pid, 'debug_host': raw.host, 'debug_port': raw.port,
+        'runtime_root': str(workspace.path), 'binary': str(workspace.path / 'pokered-app'),
+        'native_run_dir': str(game.run_dir), 'native_save_path': str(game.save_path),
+        'binary_sha256': result['binary_sha256'], 'policy_sha256': result['policy_sha256'],
+        'final_observations_sha256': hashlib.sha256(evidence.read_bytes()).hexdigest() if evidence.is_file() else None,
+        'recording': result.get('recording'),
+        'scope': 'Unsaved native runtime retained, not serialized or independently verified. Do not resume the diagnostic SRAM or attach concurrently; first verify that the original controller has exited and this exact native PID/executable still lives.'}
+    result['native_handoff'] = handoff
+    try:
+        (folder / 'native-handoff.json').write_text(json.dumps(handoff, indent=2) + '\n')
+    finally:
+        # No shutdown/save/input command, terminate, wait, or runtime cleanup.
+        # Closing both TCP wrappers releases the native server for a successor.
+        try:
+            game.d.close()
+        finally:
+            game.log.close()
+
+
 def checkpoint_collection_audit(run):
     """Keep historical invalid acquisitions pending without rewriting native SRAM."""
     chain, seen = [], set()
@@ -420,8 +472,8 @@ def main(argv=None):
     # Formal saves and native logs must survive OS /tmp cleanup while running.
     # On an abnormal process loss this private directory remains inside the
     # durable evidence folder; normal shutdown exports evidence then cleans it.
-    with tempfile.TemporaryDirectory(prefix='.runtime-', dir=folder.resolve()) as private:
-        binary = Path(private) / 'pokered-app'
+    with NativeRuntimeWorkspace(folder) as workspace:
+        binary = workspace.path / 'pokered-app'
         shutil.copy2(args.binary, binary)
         saved = None
         parent = None
@@ -432,7 +484,7 @@ def main(argv=None):
             evidence = args.resume / 'final-observations.json'
             if not parent.get('development_checkpoint') or not native_checkpoint_safe(json.loads(evidence.read_text())):
                 parser.error('resume requires a settled overworld checkpoint; native SRAM does not restore battle or modal runtime')
-            saved = Path(private) / 'continuation.sav'
+            saved = workspace.path / 'continuation.sav'
             shutil.copy2(args.resume / 'game.sav', saved)
             extras = args.resume / 'game.script_flags.json'
             if extras.exists():
@@ -576,11 +628,15 @@ def main(argv=None):
                                     result.update(success=False, reason='invalid_checkpoint_acknowledgement')
                         if game.save_path.exists():
                             # Preserve stale/native SRAM as failure evidence only.
-                            name = 'game.sav' if valid and safe else 'nonresumable-native-save.sav'
+                            publishable = valid and safe and (args.goal != 'collect-dex'
+                                or result.get('development_checkpoint'))
+                            name = 'game.sav' if publishable else 'nonresumable-native-save.sav'
                             shutil.copy2(game.save_path, folder / name)
                         flags = binary.parent / 'pokered.script_flags.json'
                         if flags.exists():
-                            name = 'game.script_flags.json' if valid and safe else 'nonresumable-native-save.script_flags.json'
+                            publishable = valid and safe and (args.goal != 'collect-dex'
+                                or result.get('development_checkpoint'))
+                            name = 'game.script_flags.json' if publishable else 'nonresumable-native-save.script_flags.json'
                             shutil.copy2(flags, folder / name)
                         if completing_dex and valid and safe:
                             try:
@@ -597,11 +653,19 @@ def main(argv=None):
                         result['action_cache_hits'] = game.move_cache_hits
                         game.log.flush()
                         shutil.copy2(game.run_dir / 'game.log', folder / 'game.log')
+                    except Exception as error:
+                        result.update(success=False, reason=f'final_observation_or_export_failed: {error}')
+                        (folder / 'finalization-failure.txt').write_text(traceback.format_exc())
                     finally:
-                        game.close()
+                        if (args.goal == 'collect-dex' and not result.get('development_checkpoint')
+                                and game.proc.poll() is None):
+                            preserve_native_handoff(game, workspace, folder, result)
+                        else:
+                            game.close()
                         if video_path:
                             result['recording']['exists'] = video_path.is_file()
                             result['recording']['bytes'] = video_path.stat().st_size if video_path.is_file() else 0
+                            result['recording']['finalized'] = not result.get('native_runtime_preserved', False)
     (folder / 'summary.json').write_text(json.dumps(result, ensure_ascii=False, indent=2)+'\n')
     print(json.dumps({k: v for k, v in result.items() if k not in ('final_facts', 'commands', 'policy_files', 'first_clear_verification')}, ensure_ascii=False))
     print('Artifacts:', folder)

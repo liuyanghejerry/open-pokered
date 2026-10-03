@@ -1396,6 +1396,14 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'certify the item is surplus; this candidate sells the observed stack, not a free '
                 'or reversible cash source. Retaining it for training remains possible by choosing '
                 'another goal. Neither training benefit nor future registration yield is guaranteed.')
+            instruction += (' Rare Candy funding also relinquishes a finite useful item. Compare '
+                'sale_opportunity_cost.level_up_reference with the capture/stone purchases: '
+                'it describes one retained use per actually held recipient, the normal XP gap '
+                'and possible missing level evolutions, including overlevel sources that need '
+                'a new gain. These are alternatives sharing the same candies, not a joint '
+                'evolution yield. PC recipients still require withdrawal; unknown XP stays '
+                'bounded. Retaining the candy remains possible by choosing another goal, '
+                'and proceeds are not available before a real sale.')
         if layer == 'action' and 'local_state' in state and getattr(self, 'active', None):
             state = {**state, 'strategy_context': self.active.get('context', {})}
         context = state.get('strategy_context') or {}
@@ -2803,7 +2811,9 @@ class AutonomousStoryAgent(DualStoryAgent):
             data.sell(self.game, item)
             if self.client.state()['money'] <= money:
                 raise StoryStopped('sale_did_not_increase_money')
-            kind = 'sold_vitamin' if self.active.get('context', {}).get('vitamin_sale') else 'sold_treasure'
+            context = self.active.get('context', {})
+            kind = ('sold_level_item' if context.get('rare_candy_sale') else
+                    'sold_vitamin' if context.get('vitamin_sale') else 'sold_treasure')
             self.record(kind, item=item, money_after=self.client.state()['money'])
             return True
         if state.get('shop_phase') and self.active and self.active['target'][0] == 'supply':
@@ -4289,11 +4299,60 @@ class AutonomousStoryAgent(DualStoryAgent):
                          'a missing/nonpositive purchase price is unknown, not a free stone. '
                          'No fixed cash reserve and no candidates are removed.'}
 
-    def add_collection_funding(self, groups, facts):
-        """Offer owned treasure/vitamin sales, including the training tradeoff.
+    def rare_candy_retention_reference(self, facts, quantity):
+        """Compare one retained level use for each actually held recipient.
 
-        Reuse real shop interactions and sale menus, never sell ordinary
-        capture/evolution/quest resources or mutate money during planning.
+        These are alternatives sharing the observed candies, not executed
+        levels, guaranteed evolution receipts or a multi-recipient yield.
+        """
+        graph = self.complete_collection_graph()
+        owned = self.validated_owned(facts)
+        plan = solo_plan(graph, owned, infer_solo_choices(owned))
+        missing = set(plan['choice_reachable_species']) - owned
+        options, unknown_levels = [], []
+        for origin, mons in (('party', facts.get('party', [])), ('pc', facts.get('stored_pokemon', []))):
+            for index, mon in enumerate(mons):
+                location = {'origin': origin, 'index': index}
+                if origin == 'pc':
+                    location = {**location, **{key: mon[key] for key in ('box', 'index') if key in mon}}
+                level = mon.get('level')
+                if type(level) is not int or not 1 <= level <= 100:
+                    unknown_levels.append({**location, 'species': mon['species'], 'observed_level': level})
+                    continue
+                if level == 100:
+                    continue
+                evolutions = set()
+                for species in missing:
+                    for method in graph.get(species, []):
+                        if (method['method'] != 'evolution' or method.get('trigger') != 'level'
+                                or method.get('external_trade')
+                                or not self.same_species(mon['species'], method['from_species'])):
+                            continue
+                        group = method.get('exclusive_group')
+                        if group and method.get('choice') not in plan['optimal_choices'].get(group, ()):
+                            continue
+                        if type(method.get('level')) is int and method['level'] <= level + 1:
+                            evolutions.add(species)
+                options.append({**location, 'species': mon['species'], 'level_before': level,
+                    'level_after_one_candy': level + 1,
+                    'normal_training_cost_to_next_level': evolution_training_cost(mon, level + 1),
+                    'potential_unregistered_level_evolutions': sorted(evolutions)})
+        return {'candies_held': quantity, 'held_source_level_options': options,
+                'unresolved_recipient_levels': unknown_levels,
+                'scope': 'One retained candy on one observed recipient; independent alternatives '
+                    'sharing a finite inventory, not a joint registration yield or a promise that '
+                    'every listed option will execute. PC withdrawal, item/party menus and evolution '
+                    'confirmation still require normal inputs. Overlevel sources need a new level '
+                    'gain, not merely having passed a threshold. Only missing level evolutions are '
+                    'listed; stones and external trades are not supplied by a candy. XP is the '
+                    'normal-training gap, exact only when observed; this is not a measured stat '
+                    'gain, safe capture setup, refund or guaranteed new registration.'}
+
+    def add_collection_funding(self, groups, facts):
+        """Offer owned treasure/vitamin/level-item sales with retention costs.
+
+        Reuse real shop interactions and sale menus, never offer capture balls,
+        evolution stones or quest resources, or mutate money during planning.
         """
         if not self.collects_dex:
             return
@@ -4303,10 +4362,13 @@ class AutonomousStoryAgent(DualStoryAgent):
             unit_price = (item.get('price') or 0) // 2
             vitamin = ('vitamin' in item.get('tags', [])
                        and (item.get('effect') or {}).get('type') == 'Vitamin')
+            candy = (name == 'RareCandy' and 'level' in item.get('tags', [])
+                     and (item.get('effect') or {}).get('type') == 'RareCandy'
+                     and type(quantity) is int)
             if (quantity > 0 and unit_price > 0 and item.get('sellable')
                     and not item.get('key_item')
-                    and ('treasure' in item.get('tags', []) or vitamin)):
-                sale_items.append((name, item, quantity, quantity * unit_price, vitamin))
+                    and ('treasure' in item.get('tags', []) or vitamin or candy)):
+                sale_items.append((name, item, quantity, quantity * unit_price, vitamin, candy))
         if not sale_items:
             return
         shops = []
@@ -4318,7 +4380,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                 shops.append((rule, len(route.get('legs', []))))
         if not shops:
             return
-        for name, item, quantity, proceeds, vitamin in sale_items:
+        for name, item, quantity, proceeds, vitamin, candy in sale_items:
             money_after = facts['money'] + proceeds
             spending = self.item_evolution_spending_reference(facts, money_after)
             evolutions = [{
@@ -4329,6 +4391,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'sale_makes_affordable': option['affordable_before_purchase'] is False
                     and option['affordable_after_purchase'] is True,
             } for option in spending['held_source_options']]
+            retained_levels = self.rare_candy_retention_reference(facts, quantity) if candy else None
             for rule, hops in shops:
                 stock = {key.replace('_', '').upper() for key in rule.effect[1]}
                 balls = [{'ball': ball, 'quantity_held': facts['bag'].get(ball.replace('_', '').upper(), 0),
@@ -4362,6 +4425,19 @@ class AutonomousStoryAgent(DualStoryAgent):
                                 'with no training value. Actual stat gain and survival benefit are not '
                                 'guaranteed and depend on the recipient and existing training. No stat '
                                 'benefit or registration yield is credited by this preview.'})
+                if candy:
+                    context.update(treasure_sale=False, rare_candy_sale=True,
+                        sale_opportunity_cost={
+                            'quantity_relinquished': quantity,
+                            'retained_item_effect': item['effect'],
+                            'retained_item_tags': item.get('tags', []),
+                            'level_up_reference': retained_levels,
+                            'scope': 'Offering this sale is not a surplus certificate. Selling the '
+                                'observed finite stack irreversibly relinquishes its normal level-up '
+                                'uses. Compare retained recipient XP gaps and possible held-source '
+                                'level evolutions with capture/stone funding. Retaining the item is '
+                                'possible by choosing another goal; no training, evolution receipt '
+                                'or safety benefit is guaranteed by this preview.'})
                 group = groups.setdefault(key, {'target': ('sale', name, False), 'rules': [rule],
                     'objectives': [], 'context': {}})
                 group['context'] = {**context, **group.get('context', {}),
@@ -4370,6 +4446,9 @@ class AutonomousStoryAgent(DualStoryAgent):
                 if vitamin:
                     objective = ('Optionally sell an owned vitamin through a known shop to fund capture '
                                  'balls or held-source evolutions, relinquishing its training use')
+                if candy:
+                    objective = ('Optionally sell owned Rare Candy through a known shop to fund capture '
+                                 'balls or held-source stone evolutions, relinquishing its finite level-up uses')
                 if objective not in group['objectives']:
                     group['objectives'].append(objective)
 

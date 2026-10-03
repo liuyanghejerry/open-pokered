@@ -775,8 +775,36 @@ class JevGame(pt.Game):
                 (1-details['capture_probability_now']) ** bag[ball]
                 for ball, _, details in balls)
             judgment_state['inventory_failure_assumptions'] = 'All currently held balls thrown at fixed observed HP/status with independent rolls; excludes remaining party survival, enemy healing/status expiry and future damage.'
-        chosen = self.judgments.choose('action', judgment_state, candidates,
-                                       instruction + preference_suffix(self.judgments))
+        required_switch = (state.get('screen') == 'battle'
+            and state.get('battle_phase') == 'PlayerMenu'
+            and not live.get('is_safari') and not capturing
+            and 'fight' not in candidates
+            and any(key.startswith('switch:') for key in bindings))
+        if required_switch:
+            # This is a required turn inside an ongoing battle, not a fresh
+            # strategic choice. A registered opponent still has to be dealt
+            # with before healing or replanning in the overworld is possible.
+            # All choices remain grounded in conscious, effective teammates;
+            # Jev, rather than code, selects which legal continuation to use.
+            judgment_state['required_battle_continuation'] = {
+                'battle_phase': state['battle_phase'], 'active_party_index': active,
+                'reason': 'The active Pokemon has no usable effective damaging attack; a conscious teammate does.',
+                'legal_switch_indices': [value[1] for key, value in bindings.items()
+                                         if key.startswith('switch:')],
+                'scope': 'A legal continuation of the current turn only; switching consumes the turn and does not guarantee survival, victory, experience, or a new registration.'}
+            if isinstance(objective, dict):
+                judgment_state['current_subgoal'] = {
+                    'target': objective.get('target'), 'context': context}
+            instruction += (' This battle is still in PlayerMenu and the active Pokemon has no usable '
+                'effective attack. Select an offered legal continuation; overworld healing or strategic '
+                'replanning is unavailable until the battle ends. Even an already registered opponent '
+                'must be dealt with to resume the current subgoal. Switching spends this turn and does '
+                'not guarantee survival or victory. No species or experience is credited by this choice.')
+            chosen = self.judgments.choose('action', judgment_state, candidates,
+                instruction + preference_suffix(self.judgments), allow_abstain=False)
+        else:
+            chosen = self.judgments.choose('action', judgment_state, candidates,
+                instruction + preference_suffix(self.judgments))
         return bindings.get(chosen)
 
     def remember_npcs(self, map_name, npcs):

@@ -4254,3 +4254,116 @@ verified64-kabuto-20261004.tar.gz，SHA256
 逐项字节/哈希通过，原件保留，无凭据/重复MP4/binary。父30备份保持
 独立，不把其未保存控制器统计补成完整数值。receipt：verified64-
 kabuto-backup-receipt-20261004.json/log。
+
+## 2026-10-04：资金机会成本、必选战斗回合与未保存原生进度保全
+
+用户已明确允许保留旧链证据、另开合法 NEW GAME。旧链依然只用于
+策略验证：最新可独立续读的存档是第31段64种，不计入最终合法收集。
+第32段 `20261004-040036-seed42` 已终止，不能将其训练增量称为可续进度。
+
+### 第32段失败与不可恢复的训练增量
+
+干净7216192c／policy20287459、冻结native6d8e／gfx21e0，从第31段
+a21cec正常CONTINUE，同一双层OpenRouter Jev1.13.0与原预算。
+实际完成护士治疗、正常Surf及Exeggcute支援训练；589.281秒原生
+Mansion1F／battle PlayerMenu／frame90186，Gloom46的MegaDrain为0PP，
+四个有有效攻击且清醒的队友可以换入。最后训练目标是Exeggcute39，
+但旧battle_recovery_plan只传battle，不传当前目标／必选回合性质，
+仍允许None-of-the-candidates。Jev返回none55%，Muk24%、Charizard11%、
+Exeggcute6%、Snorlax4%；其余总质量45%不足以触发已有条件选择。
+因此 `action:no_selection` 退出；历史runner无条件关闭原生并清理
+runtime，即使最终观察有效、战斗不能序列化，也丢掉了未保存状态。
+
+最终观察仍64 owned／103 seen、资金14／零球；Exeggcute38 XP71081、
+Muk38 XP57559、Gloom46 XP90502、Charizard73 XP406632等训练增量
+只存在于观察及录像，不在可续读存档。85动作、策略53／动作220调用。
+`development_checkpoint=false`／`native_checkpoint_safe=false`，没有
+game.sav。诊断 `nonresumable-native-save.sav` 的SHA256精确等于旧31
+a21cec；不得回退到31冒充32接续，也不得用终点JSON注入／重造正式状态。
+控制器94037／native94051均已退出，原生运行目录已消失；没有执行回滚。
+第32段原始MP4保留：5807763字节／375.800秒／22548编码帧，全帧
+解码通过，SHA256
+`a6dfce6c7602bc64784bc01ae365a9e379ae5ae9f3fcb4a2426f93725975abcb`。
+
+### Rare Candy变现成为可选策略，而不是无价值宝物
+
+原生RareCandy售价4800／SELL返2400，sellable=true、非key item。
+此前资金候选只覆盖treasure／vitamin，漏掉源31真正持有的RareCandy1。
+现在在实际已知商店与原有条件／导航守卫通过时，额外提供可选整栈
+SALE，不默认出售，不修改预览资金／背包；其他球、石头、HM／TM、
+任务及化石资源没有扩大出售范围，旧treasure／vitamin完整上下文保持。
+
+新增sale_opportunity_cost比较实际队伍／PC中每个独立留用对象：
+一颗只升一级，原生增长曲线与实际XP给出正常训练缺口；未知XP保留
+边界，未知／非法等级不认证可用，100级排除。只列实际持有来源的
+缺失等级进化；已超过门槛仍需要新等级增长，不把道具／外部交换进化
+算作糖果效果。有限数量是共享的替代用法，不能合计成多只保证进化；
+PC取出、道具／队伍菜单、进化确认仍要真实输入，未预测实际属性增益、
+生存或登记。只计算一次留用参考供多个商店复用，不持久缓存旧观察。
+真实菜单执行后单独记录sold_level_item，不冒充无训练价值宝物。
+
+实际源31普通CONTINUE、全部12目标与真实祖先记忆，只读旧／新配对：
+facts完全一致，native627帧前后不动，34个旧候选完整JSON严格相同；
+只新增9个RareCandy商店候选，每个2400可选收入、47个实际留用对象。
+最终代码复测43候选／23.347秒，源save未改，零模型调用／后续输入。
+不能据此声称全规划加速、正式Jev已选出售或实际得到球／新登记。
+旧9项用例中的前8项先产生2FAIL／10ERROR，修复后9PASS；与原407项
+组合及完整discover通过。native SELL隔离副本v4只做一次FuchsiaMart
+诊断放置，随后既有真实柜台／SELL／数量确认：资金14→2414，
+RareCandy1消失，其他背包／队伍HP和PP／旗标／64种完全不变，正常退出。
+零模型调用，source31 SRAM／sidecar SHA均不变；不是正式收入。
+早期v1–v3因审计白名单漏列普通查询／输入而拒绝的失败日志原样保留。
+
+### Jev选择具体战斗延续，不再把必选回合当成可弃战略目标
+
+仅在实际battle／PlayerMenu、非Safari／非捕捉、FIGHT不可用且已有
+清醒有效队友可换入时，使用已有Choice的allow_abstain=false。
+新增required_battle_continuation、实际当前subgoal target/context，
+解释重复野怪也须先处理本回合才能回到大地图。候选仍来自实际HP、
+招式PP／免疫关系，保留可用恢复选项；代码不替Jev指定队友，不重试
+直到偏好答案，不声称胜利／XP／安全／登记。非法服务答案仍失败。
+捕捉中的放弃攻击、未观察到阶段及其他战略弃权保持原行为。
+
+7项针对性用例通过；其中原始5项旧1FAIL／1ERROR，新5PASS。
+真实DualStoryAgent的Choice闭集及非法none不被静默改写也有用例。
+失败32的frame90186原观察和最后所选Exeggcute39目标作一次独立
+OpenRouter Jev1.13.0离线问题：四个原候选描述严格一致，仅去掉none
+并补目标／必选上下文；实际回答Muk62%、Charizard21%、Exeggcute13%、
+Snorlax4%。源证据SHA不变，零原生连接／输入，一次模型调用。
+这是问题形状验证，不是原战斗的胜利对照，不恢复32训练，也无新登记。
+
+### 失败控制器释放连接，保留没有安全保存的原生会话
+
+collect-dex只要原生仍活着、development_checkpoint未确认成功，
+finalizer就保留本次专属持久runtime、原native／recorder，不发shutdown、
+save、输入或进程信号；关闭控制器TCP与日志句柄，允许独占后继接手。
+包括战斗／模态、观察无效／异常、安全大地图但未要求保存或保存失败。
+native-handoff.json明确记录PID、port、controller、实际路径、binary／
+policy SHA及终点观察SHA；它不是SRAM／战斗快照／可独立续读证明。
+录像标finalized=false；旧SRAM只能命名nonresumable。已确认安全保存
+或native已退出时继续原有关闭／本次临时目录清理；非collect-dex不变。
+观察／导出异常另留证据和失败summary，不以异常为由丢掉活runtime。
+
+7项新保全用例通过（2种无确认保存情形共用一个参数化用例）；旧版
+最初6项中3FAIL，新6PASS。最终全部Python discover **988PASS／19.661秒**，
+git diff --check通过；没有Rust／画面代码更改，不重新构建或虚报新m49。
+
+真实原生隔离验证native-unsafe-handoff-20261004-v1：source31副本
+普通CONTINUE、正常步行遇野战，无warp／注入／模型调用；真实runner
+在battle退出后，controller已退出，native7358及持久runtime仍活着。
+先核对独占、PID完整CLI／binary SHA才连接；frame1370及全部5类普通
+观察与退出前严格相等，包括battle、live PP／HP／背包／旗标／位置。
+后继使用原有正常RUN菜单脱战，安全overworld才save，save前后观察
+严格相等；另一进程schema4普通CONTINUE verified=true。原native
+graceful shutdown封口同一MP4，52600字节／364帧全部解码；无native
+信号、正式链连接／输入、回档或新种登记，source31两项SHA保持。
+
+worktree外增量备份failed32-and-native-retention-fixes-20261004.tar.gz：
+30项／2117828字节，SHA256
+`931353da4768cc606f210a1f168f1ef23f426d1dff685a6c5896b47fec6d0f48`。
+包含失败32原始证据与修复测试／隔离证明／policy，逐项字节和SHA通过。
+旧存档／trace／原生MP4均保留，无凭据、native binary或重复MP4，无删除。
+Goal保持active；下一阶段在独立持久目录合法NEW GAME，登记从0计，
+不继承旧链64种／旗标／资金／XP／审计结论。124／最终全程MP4及图鉴
+大盘仍未交付。当前证据入口为checkpoint-safety-20261003中各同名
+report／log／backup-receipt，旧active64快照只代表当时历史状态。
