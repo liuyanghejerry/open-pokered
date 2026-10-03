@@ -1,7 +1,7 @@
 """Filtered-item choices and source-bound, multi-visit gift preparation."""
 import io
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from openpokered.autonomous_story import AutonomousStoryAgent
 from openpokered.story_agent import DualStoryAgent, StoryStopped
@@ -127,6 +127,48 @@ class FilterMenuTests(unittest.TestCase):
 
 
 class GiftPreparationTests(unittest.TestCase):
+    def test_shared_cyclic_producers_are_evaluated_once_not_per_path(self):
+        agent, observed = fossil_fixture()
+        # Many producers of one flag refer back to that same flag. The
+        # ready external leaf must still be found, without enumerating every
+        # permutation of the cycle before deduplicating its repeated leaf.
+        missing = [(call('getFlag', 'LOOP'), True)]
+        reward = Rule('reward', 'Lab', 'Lab:doctor', [], missing, [], ('pokemon', 'KABUTO', 30), [])
+        loops = [Rule('loop' + str(i), 'Lab', 'Lab:loop', [], missing, [], ('flag', 'LOOP', True), [])
+                 for i in range(8)]
+        ready = Rule('ready', 'Island', 'Island:@load', ['load'], [], [], ('flag', 'LOOP', True), [])
+        agent.index.by_effect = {('flag', 'LOOP', True): loops + [ready]}
+        original, calls = Rule.alternatives, []
+        def counted(rule, facts):
+            calls.append(rule.id)
+            if len(calls) > 40:
+                self.fail('gift preparation enumerates repeated paths through cyclic shared producers')
+            return original(rule, facts)
+        groups = {}
+        with patch.object(Rule, 'alternatives', counted):
+            agent.add_acquisition_preparation(groups, observed, 'Kabuto', {'method': 'gift', 'item': 'DOME_FOSSIL'},
+                                             [reward], {'species': 'Kabuto'})
+        self.assertEqual(len(groups), 1)
+        self.assertEqual(next(iter(groups.values()))['rules'], [ready])
+        self.assertLessEqual(len(calls), 11)
+        self.assertEqual(len(calls), len(set(calls)) + 1)  # root's readiness + traversal
+
+    def test_preparation_depth_keeps_shortest_path_to_shared_leaf(self):
+        agent, observed = fossil_fixture()
+        flag = lambda i: ('flag', 'F' + str(i), True)
+        guard = lambda i: [(call('getFlag', 'F' + str(i)), True)]
+        reward = Rule('reward', 'Lab', 'Lab:doctor', [], guard(0), [], ('pokemon', 'KABUTO', 30), [])
+        chain = [Rule('deep' + str(i), 'Lab', 'Lab:deep', [], guard(i + 1), [], flag(i), [])
+                 for i in range(10)]
+        direct = Rule('direct', 'Island', 'Island:shortcut', [], guard(9), [], flag(0), [])
+        leaf = Rule('leaf', 'Island', 'Island:@load', ['load'], [], [], flag(10), [])
+        for rule in chain + [direct, leaf]:
+            agent.index.by_effect.setdefault(rule.effect, []).append(rule)
+        groups = {}
+        agent.add_acquisition_preparation(groups, observed, 'Kabuto', {'method': 'gift', 'item': 'DOME_FOSSIL'},
+                                         [reward], {'species': 'Kabuto'})
+        self.assertEqual([r.id for g in groups.values() for r in g['rules']], ['leaf'])
+
     def test_held_dome_creates_preparation_not_premature_registration(self):
         agent, observed = fossil_fixture()
         groups = {}

@@ -4050,3 +4050,42 @@ SRAM/sidecar/fulltrace哈希前后完全相同，没有游戏连接、输入、�
 调用、存档改写或新增图鉴。JSON/log：
 capture-blackout-source29-replay-20261004.{json,log}。
 这次是可回归的决策能力改善，不是最终合法124或视频交付。
+
+## 2026-10-04：修复送交化石后的循环前置搜索
+
+只读系统采样显示第30段控制器高CPU，原生进程空闲；未给live native
+开第二连接。独立正常CONTINUE第29段封存d5d4，原生627帧保持不变，
+读取真实编译规则后关闭隔离游戏；只在离线事实夹具施加已经原生
+观察到的送交化石flag/移除Dome/map delta（不是新的正式观察）。
+旧source-bound preparation搜索Kabuto20.0015秒超时，423928次
+Rule.alternatives仅18条不同规则；Aerodactyl20.0096秒超时，362325次／
+30条。独立faulthandler栈及cProfile明确在frontier递归循环，不是
+OpenRouter请求。20秒限时只中止隔离诊断，未给正式进程发超时信号。
+证据post-handover-preparation-before-20261004/{report,facts,groups,
+post-handover-preparation}.json及同名顶层.log；live系统采样
+fossil-planning-live30-sample-20261004.txt保留。
+
+根因：路径级seen虽然防止单条路径重复，却仍枚举共享循环图的所有
+不同排列，直到最后才去重ready leaf。固定事实下规则合法性与到达
+路径无关。改成单次广度优先遍历：每个source根只排队每个rule.id一次，
+保留原十条依赖边深度界限，最短路径优先防止深路径提前占用共用叶；
+无跨事实/跨回合缓存，无新增路线/规则/放宽unknown或其他化石扣款。
+source_missing本次复用，不再为每条leaf重复解析同一根guard。
+
+新增共享循环/短路径深度2项测试，旧14项中1FAIL，新14PASS；全量
+965PASS/19.879秒。日志fossil-graph-bound-{before,after}-20261004.log、
+fossil-graph-bound-python-discover-20261004.log。相同实际source规则的
+送交后夹具：Kabuto仅19次／18条，0.001154秒；Aerodactyl124次／
+33条（四个奖励根），0.007585秒，都正常完成。Kabuto只找到真实
+CinnabarIsland @load的WAITING=false前置，Aerodactyl另有OldAmber
+准备；不是领取或登记。旧超时没有完整叶集，不能宣称送交后的全部
+新旧叶集等同。相同正常CONTINUE事实下，全部原33候选JSON值严格
+一致、事实一致、帧627不变、源未改；普通完整规划30.866→31.222秒，
+不夸称全规划更快。post-handover-planning-comparison-20261004.json/log
+记录这两种验证边界。
+
+新代码不热替换已运行的第30段。下一步在已完成真实送交的命令边界
+合作请求退出，等待旧搜索返回；仅在最终原生安全检查和独立schema4
+CONTINUE通过后，从第30段最新存档加载。不能用第29段回退吞掉交付
+化石，不能强杀游戏、把离线修复当已部署或把准备当64种。最终合法
+NEW GAME尚未开始，Goal继续active。

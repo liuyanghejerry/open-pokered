@@ -2286,30 +2286,42 @@ class AutonomousStoryAgent(DualStoryAgent):
         item = method.get('item')
         normalized_item = item.replace('_', '').upper() if item else None
 
-        def frontier(rule, seen=(), depth=0):
-            if rule.id in seen or depth > 10:
-                return []
-            debits = [effect[1] for effect in [*rule.preceding, rule.effect]
-                      if effect[0] == 'item' and effect[2] is False]
-            if normalized_item and any(str(debit).replace('_', '').upper() != normalized_item
-                                       for debit in debits):
-                return []
-            alternatives = rule.alternatives(facts)
-            if [] in alternatives:
-                return [rule]
-            found = []
-            for missing in alternatives:
-                if any(target[0] == 'unknown' for target in missing):
+        def frontier(source_rule):
+            # Rule legality/readiness depends on these fixed facts, not the
+            # path that reached it. Enumerating every acyclic path through
+            # shared cyclic producers is factorial before leaf deduplication.
+            # Breadth-first visits preserve the existing ten-edge bound and
+            # find a shared rule by its shortest path (a deep path cannot
+            # suppress a later short path). No persistent/stale fact cache.
+            pending, queued, found = deque([(source_rule, 0)]), {source_rule.id}, []
+            while pending:
+                rule, depth = pending.popleft()
+                debits = [effect[1] for effect in [*rule.preceding, rule.effect]
+                          if effect[0] == 'item' and effect[2] is False]
+                if normalized_item and any(str(debit).replace('_', '').upper() != normalized_item
+                                           for debit in debits):
                     continue
-                for target in missing:
-                    if self.index.satisfied(target, facts):
+                alternatives = rule.alternatives(facts)
+                if [] in alternatives:
+                    found.append(rule)
+                    continue
+                if depth == 10:
+                    continue
+                for missing in alternatives:
+                    if any(target[0] == 'unknown' for target in missing):
                         continue
-                    for producer in self.index.by_effect.get(tuple(target), []):
-                        found.extend(frontier(producer, seen + (rule.id,), depth + 1))
+                    for target in missing:
+                        if self.index.satisfied(target, facts):
+                            continue
+                        for producer in self.index.by_effect.get(tuple(target), []):
+                            if producer.id not in queued:
+                                queued.add(producer.id)
+                                pending.append((producer, depth + 1))
             return found
 
         for source_rule in source_rules:
-            if not source_rule.missing(facts):
+            source_missing = source_rule.missing(facts)
+            if not source_missing:
                 continue
             for rule in {r.id: r for r in frontier(source_rule)}.values():
                 key = f'acquisition-prepare:{species}:{method["method"]}:{rule.id}'
@@ -2328,7 +2340,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                                  'require actual execution; a ready leaf does not certify the whole route.'}})
                 path = {'source_rule': {**source_rule.description(),
                                        'entry_guards': deepcopy(source_rule.guards)},
-                        'remaining_source_prerequisites': source_rule.missing(facts)}
+                        'remaining_source_prerequisites': source_missing}
                 if path not in entry['context']['source_preparation_paths']:
                     entry['context']['source_preparation_paths'].append(path)
 
