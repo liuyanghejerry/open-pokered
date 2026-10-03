@@ -3742,3 +3742,33 @@ register:Magikarp候选；当前实际资金553足够原500门槛，未扣款。
 没有模型调用、正常CONTINUE后游戏输入、寄存／购买／新增登记；
 不是当前63种现场或捕获率改善证据。getGameVersion奖品条件与资金／
 化石流程仍需继续核查，不能据此宣布所有单机策略已稳定。
+
+第27段在712.733秒正常Route20→Route19 Surf落地 `(4,9)`后，future
+watcher核对controller91909身份并合作式SIGINT；安全检查点和最终
+观察通过，31动作、策略145／动作57调用，success=false、development
+checkpoint=true／StoryStopped边界中断。此前290.643秒在Cinnabar
+中心通过正常菜单change_pc_box:2,0，实际当前box2空、box0／1各20。
+真实伊布仍在box1:index19、25级；队伍仍6／PC40，原XP持久，队伍
+实际顺序Charizard／Muk／Gloom／Exeggcute／Snorlax／Abra。未倒回
+满箱或训练前存档。独立正常CONTINUE schema=3核对图鉴、队伍经验
+等观察字段、PC逐槽、背包、位置与旗标一致，源SRAM未改写：
+`b113ad7121169af5bedb26aa029bb3d1ea6b05c5d3516aa5f207366500105fd4`。
+终点仍63 owned／102 seen、资金553／金币0、六徽章、Ultra5／Great18。
+
+第27段原生MP4封口120.650秒、7239帧、3165843字节；27段容器／
+时钟／登记守恒通过，总16467.199997秒、302685条记录、63唯一登记，
+26次续跑初始新增为空。最新SRAM、独立证明、停止／时钟、925测试、
+完整前后规划及冻结源另备份worktree外
+`verified63-scene-party-space-evidence-20261004.tar.gz`，2997276字节、
+42项、SHA256 `c2abf672f3ce9f4a448af58264760da090677d2e19d29ce91aa0208a44efee5d`。
+归档条目及SRAM哈希检查通过，不含凭据、不重复MP4／binary，原件
+保留。这些都不替代最终合法NEW GAME来源审计／全片视觉或最终合片。
+
+第28段 `20261004-015502-seed42` 从最新27段正常CONTINUE，启动
+时干净 `fb3708d2`、policy
+`f691b4222df5d6260771fc82bdcac0e03307825390c2600d3a577b2531710101`，
+autonomous6a6b／story_rulesc5fc／playthroughc844，native仍dade、
+gfx仍21e0。新场景队伍前置已载入；40.247秒Jev自主选择Fuchsia
+Cut、41.305秒实际清树。双层OpenRouter及原生4×录像继续，不热
+替换／回退／指定寄存、未执行鲤鱼王购买或新增登记，起点63不计新增。
+Goal保持active，最终合法124／MP4／图鉴大盘继续未完成。
