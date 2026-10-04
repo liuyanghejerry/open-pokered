@@ -5909,3 +5909,38 @@ frame717。前129/129、后129/130，当前HP仍129；每对只11像素不同，
 修正版两进程回归及完整schema4：`legal20-after-boxed-stat-fix-regression-20261004.json`。
 下一步是完成明确区分“旧缓存观测差异”和“原序列化记录”的原保存交接
 验证，再从原58种数据正常继续，不能回档到57或静默忽略旧失败。
+
+## 第20段原58种的显式盒子缓存交接（2026-10-04）
+
+已完成原保存交接，安全续跑基线为58种，旧严格失败仍保持false。
+新增只读 `boxed_stat_handover.py`：逐一核对12盒的计数／哨兵／盒银行及
+单盒checksum、全部43条33-byte记录的物种／等级／当前HP／状态／招式／
+PP，并以保存DVs／努力值和原版整数公式独立重算能力。仅允许盒中
+`max_hp`缓存差异；派生值不正确、回血或其他已暴露schema4字段变化
+均拒绝，不改变原 `verify_collection_continue` 或最终124精确集合门槛。
+保存XP／OT-ID／PP-up等隐藏旧字段绑定原字节，不声称其旧观测可比。
+
+实际唯一迁移为Hypno box0/index19 maxHP129→130，当前HP129不变。
+旧 `final-observations.json` 和严格失败报告hash不变；新baseline来自
+修正版真实普通CONTINUE，不是改写旧观测。再次启动独立进程，未修改的
+schema4 against该实际新baseline完整expected==restored。显式handover
+消费者会重查原字节／公式／失败记录和新strict proof，不能把新基线
+重放成功解释为历史129→130比较成功。
+
+原20策略46份文件逐项与已封存tar及对应git版本比较，仍为40c769d3；
+原生6d8e8d5f／新原生8dae11eb的升级边界明确。原父57种存档、原20
+SRAM／sidecar／trace／summary和控制器退出请求前缀守恒；唯一新增
+Paras Safari登记、Hypno经验、TM11出售和两次各500入场费用均保留。
+5400帧／90秒原MP4完整解码，整个真实0种NEW GAME的20段再次只读
+审计：58唯一登记、132600普通推进回执、20个唯一原生视频，恢复第5段
+前缀只计一次。四个旧无方法标签登记仍不自动补为赠送；穷尽producer／
+原版路线／fidelity、真实124及最终整片／大盘验收仍未完成。
+
+新增9项交接防护测试，全Python1114项通过；原生3852项旧汇总中的
+2620 core／122 app／5 debug协议结果仍保留（1114替代旧1105 Python）。
+交接检查本身只读、零新捕获、无编辑存档／退款／回退／强制模型选择。
+证据：`legal20-boxed-stat-cache-handover-20261004.json`、
+`legal20-independent-continue-20261004.json`、
+`legal20-checkpoint-proof-20261004.json` 和
+`legal58-cache-handover20-lineage-file-and-input-integrity-20261004.json`，
+均位于长期worktree的 `.artifacts/checkpoint-safety-20261003/`。
