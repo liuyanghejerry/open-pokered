@@ -5576,6 +5576,184 @@ class AutonomousTests(unittest.TestCase):
                               ).augment_strategy_state(story, facts)
         self.assertEqual(story, {})
 
+    def test_preparation_continuity_prices_already_held_sources_without_pc_steps(self):
+        from copy import deepcopy
+        agent, facts = self.storage_tradeoff_fixture()
+        facts['party'][1]['experience'] = level_experience('Pidgeotto', 28) + 10
+        original = deepcopy(facts)
+        value = agent.collection_preparation_continuity_reference(facts)
+        rows = value['current_party_followups']
+        self.assertEqual([row['party_index'] for row in rows], [1, 3, 4])
+        evolution = rows[0]['alternatives'][0]
+        self.assertFalse(evolution['requires_pc_withdrawal'])
+        self.assertNotIn('withdrawal_registers_target', evolution)
+        self.assertEqual(evolution['experience_trigger_level'], 36)
+        self.assertEqual(evolution['training_cost']['observed_experience'],
+                         facts['party'][1]['experience'])
+        stone = rows[1]['alternatives'][0]
+        self.assertEqual(stone['item_quantity_held'], 1)
+        self.assertFalse(stone['item_missing'])
+        self.assertEqual(stone['item_unit_price_reference'], 2100)
+        self.assertIsNone(rows[2]['alternatives'][0]['trade_already_completed'])
+        self.assertTrue(rows[2]['alternatives'][0]['party_count_requirement_met'])
+        self.assertEqual(facts, original)
+        rows[0]['source']['level'] = 99
+        self.assertEqual(facts, original)
+
+    def test_preparation_continuity_keeps_duplicate_levels_and_real_new_level_trigger(self):
+        agent, facts = self.storage_tradeoff_fixture()
+        facts['party'][5] = {**facts['party'][1], 'level': 40}
+        facts['party'].append({**facts['party'][1], 'level': 100})
+        rows = agent.collection_preparation_continuity_reference(facts)['current_party_followups']
+        sources = [row for row in rows if row['source']['species'] == 'Pidgeotto']
+        self.assertEqual([row['party_index'] for row in sources], [1, 5, 6])
+        self.assertEqual([row['alternatives'][0]['experience_trigger_level'] for row in sources],
+                         [36, 41, None])
+        self.assertFalse(sources[2]['alternatives'][0]['level_up_possible'])
+        self.assertNotIn('training_cost', sources[2]['alternatives'][0])
+
+    def test_preparation_continuity_preserves_owned_audit_and_external_trade_boundaries(self):
+        agent, facts = self.storage_tradeoff_fixture()
+        facts['dex']['owned_species'] += ['Pidgeot', 'Raichu']
+        agent.collection_audit_pending = {'Raichu': {'reason': 'unverified'}}
+        rows = agent.collection_preparation_continuity_reference(facts)['current_party_followups']
+        self.assertEqual([entry['species'] for row in rows for entry in row['alternatives']],
+                         ['Raichu', 'MrMime'])
+        del facts['dex']['owned_species']
+        value = agent.collection_preparation_continuity_reference(facts)
+        self.assertFalse(value['dex_ownership_known'])
+        self.assertIsNone(value['current_party_followups'])
+
+    def test_preparation_continuity_keeps_unknown_resources_and_levels_unknown(self):
+        agent, facts = self.storage_tradeoff_fixture()
+        del facts['party'][1]['level']
+        del facts['bag']
+        rows = agent.collection_preparation_continuity_reference(facts)['current_party_followups']
+        self.assertIsNone(rows[0]['alternatives'][0]['level_up_possible'])
+        self.assertNotIn('training_cost', rows[0]['alternatives'][0])
+        self.assertIsNone(rows[1]['alternatives'][0]['item_quantity_held'])
+        self.assertIsNone(rows[1]['alternatives'][0]['item_missing'])
+        facts['flags']['EVENT_TRADED_FOR_MARCEL'] = True
+        self.assertTrue(agent.collection_preparation_continuity_reference(facts)[
+            'current_party_followups'][2]['alternatives'][0]['trade_already_completed'])
+
+    def test_preparation_continuity_does_not_combine_one_source_alternatives(self):
+        agent, facts = self.storage_tradeoff_fixture()
+        facts['party'][3]['species'] = 'Eevee'
+        agent._complete_collection_graph['Jolteon'] = [{
+            'method': 'evolution', 'from_species': 'Eevee', 'trigger': 'item', 'item': 'ThunderStone'}]
+        agent._complete_collection_graph['Vaporeon'] = [{
+            'method': 'evolution', 'from_species': 'Eevee', 'trigger': 'item', 'item': 'WaterStone'}]
+        rows = agent.collection_preparation_continuity_reference(facts)['current_party_followups']
+        alternatives = next(row['alternatives'] for row in rows if row['party_index'] == 3)
+        self.assertEqual([row['species'] for row in alternatives], ['Jolteon', 'Vaporeon'])
+        self.assertNotIn('registration_yield', rows[1])
+        self.assertIn('not cumulative', agent.collection_preparation_continuity_reference(facts)['scope'])
+
+    def test_preparation_continuity_reports_completed_pc_history_not_failed_intent(self):
+        from copy import deepcopy
+        agent, facts = self.storage_tradeoff_fixture()
+        def outcome(species, result='withdrew_pokemon', satisfied=True):
+            return {'operation': 'retrieve_pc:2,9,2,0', 'result': result,
+                    'selected_subgoal': ['pokemon', species, None],
+                    'selected_subgoal_satisfied_after': satisfied}
+        agent.recent = [outcome('Pikachu'), outcome('Pidgeotto'), outcome('Pikachu'),
+                        outcome('Gloom', 'blocked'), outcome('Abra', satisfied=False),
+                        {'operation': 'deposit_pc:2,0', 'result': 'deposited_pokemon'},
+                        {'operation': 'train_encounter:Route7,5,18', 'result': 'trained'}]
+        original = deepcopy(agent.recent)
+        value = agent.collection_preparation_continuity_reference(facts)['retained_pc_outcomes']
+        self.assertEqual(value['completed_pc_operation_count'], 5)
+        self.assertEqual(value['satisfied_withdrawal_requests'], [
+            {'requested_species': 'Pidgeotto', 'count': 1, 'current_party_indices': [1]},
+            {'requested_species': 'Pikachu', 'count': 2, 'current_party_indices': [3]}])
+        self.assertEqual(len(value['latest_completed_pc_operations']), 4)
+        self.assertEqual(value['latest_completed_pc_operations'][-1]['operation'], 'deposit_pc:2,0')
+        self.assertEqual(agent.recent, original)
+        self.assertIn('not individual identity', value['scope'])
+        self.assertIn('not proof of no registration', value['scope'])
+
+    def test_preparation_continuity_empty_history_is_not_a_lineage_claim(self):
+        agent, facts = self.storage_tradeoff_fixture()
+        value = agent.collection_preparation_continuity_reference(facts)['retained_pc_outcomes']
+        self.assertEqual(value['completed_pc_operation_count'], 0)
+        self.assertEqual(value['satisfied_withdrawal_requests'], [])
+        self.assertIn('current controller', value['scope'])
+        self.assertIn('not proof an operation never happened', value['scope'])
+
+    def test_preparation_continuity_is_attached_without_changing_native_state(self):
+        from copy import deepcopy
+        agent = self.catch_goal_agent([{'id': 'collect-dex', 'agent_verified': True}])
+        facts = {'party': [], 'bag': {}, 'dex': {'owned_species': [], 'seen_species': []}}
+        state = {'world': facts, 'recent_outcomes': [{'result': 'sentinel'}]}
+        original = deepcopy(state)
+        agent.augment_strategy_state(state, facts)
+        self.assertIn('collection_preparation_continuity_reference', state)
+        self.assertEqual(state['world'], original['world'])
+        self.assertEqual(state['recent_outcomes'], original['recent_outcomes'])
+
+    def test_preparation_continuity_instruction_preserves_every_model_choice(self):
+        from copy import deepcopy
+        agent, facts = self.storage_tradeoff_fixture()
+        agent.active = None
+        agent.choose_bounded_strategy = Mock(return_value='retrieve')
+        candidates = {'retrieve': json.dumps({'establish': ['pokemon', 'Gloom', None]}, separators=(',', ':')),
+                      'evolve': json.dumps({'establish': ['held_species', 'Raichu', True]}, separators=(',', ':')),
+                      'none': 'No suitable choice'}
+        state = {'world': facts, 'collection_preparation_continuity_reference':
+                 agent.collection_preparation_continuity_reference(facts)}
+        original = deepcopy(state), deepcopy(candidates)
+        self.assertEqual(agent.choose('strategy', state, candidates, 'Compare'), 'retrieve')
+        passed, options, instruction = agent.choose_bounded_strategy.call_args.args
+        self.assertEqual(passed, original[0])
+        self.assertEqual(options, original[1])
+        self.assertEqual(list(options), list(candidates))
+        self.assertIn('collection_preparation_continuity_reference', instruction)
+        self.assertIn('not a forced itinerary', instruction)
+
+    def test_preparation_continuity_wire_round_trip_keeps_complete_world_and_history(self):
+        from openpokered.decision_wire import (compact_decision_field_wire,
+                                              restore_decision_field_wire)
+        agent, facts = self.storage_tradeoff_fixture()
+        state = {'world': facts, 'collection_preparation_continuity_reference':
+                 agent.collection_preparation_continuity_reference(facts)}
+        packed, criteria = compact_decision_field_wire(state, {'a': 'Keep every field'})
+        restored, restored_criteria = restore_decision_field_wire(packed, criteria)
+        self.assertEqual(restored, state)
+        self.assertEqual(restored_criteria, {'a': 'Keep every field'})
+
+    def test_preparation_continuity_unknown_party_is_not_observed_empty(self):
+        agent, facts = self.storage_tradeoff_fixture()
+        del facts['party']
+        value = agent.collection_preparation_continuity_reference(facts)
+        self.assertFalse(value['party_observation_known'])
+        self.assertIsNone(value['current_party_followups'])
+
+    def test_preparation_continuity_retains_the_entire_strategy_frontier_and_binding_order(self):
+        from copy import deepcopy
+        agent = self.catch_goal_agent([{'id': 'collect-dex', 'agent_verified': True,
+                                       'name': 'Complete solo collection'}])
+        agent.client.route.return_value = {'found': True, 'legs': []}
+        rule = Rule('pc', 'CeladonPokecenter', 'pc', [], [], [], ('pc', 'storage', True), [])
+        groups = {str(i): {'target': ('pokemon', f'Species{i}', None), 'rules': [rule],
+                           'objectives': [f'Objective{i}'], 'context': {'sentinel': i}}
+                  for i in range(100)}
+        agent.strategy_groups = Mock(side_effect=lambda facts: deepcopy(groups))
+        agent.choose = Mock(return_value='subgoal:73')
+        facts = {'map': 'CeladonPokecenter', 'x': 4, 'y': 3, 'party': [], 'bag': {},
+                 'flags': {}, 'badges': 0, 'dex': {'owned_species': [], 'seen_species': []}}
+        agent.select_strategy(facts)
+        after_state, after_candidates = deepcopy(agent.choose.call_args.args[1:3])
+        self.assertEqual(agent.active['target'], groups['73']['target'])
+        with patch.object(agent, 'collection_preparation_continuity_reference', return_value=None):
+            agent.select_strategy(facts)
+        before_state, before_candidates = agent.choose.call_args.args[1:3]
+        self.assertEqual(after_candidates, before_candidates)
+        self.assertEqual(list(after_candidates), [f'subgoal:{i}' for i in range(100)])
+        after_state.pop('collection_preparation_continuity_reference')
+        before_state.pop('collection_preparation_continuity_reference')
+        self.assertEqual(after_state, before_state)
+
     def test_strategy_assembly_asks_for_the_panel_before_judging(self):
         from openpokered.story_agent import DualStoryAgent
         agent = self.catch_goal_agent([{'id': 'collect-dex', 'agent_verified': True,

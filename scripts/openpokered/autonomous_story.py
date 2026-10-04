@@ -1455,6 +1455,8 @@ class AutonomousStoryAgent(DualStoryAgent):
             }
         if self.collects_dex:
             state['dex_progress'] = self.dex_progress(facts)
+            state['collection_preparation_continuity_reference'] = (
+                self.collection_preparation_continuity_reference(facts))
             state['safari_session_reference'] = safari_session_reference(facts)
             resource_guards = self.script_resource_guard_reference(facts)
             if resource_guards:
@@ -1492,6 +1494,84 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'preparation_changes_since_attempt': capture_preparation_improvements(
                     preparation, row['preparation'])}
                 for key, row in getattr(self, 'capture_blackouts', {}).items()]
+
+    def collection_preparation_continuity_reference(self, facts):
+        """Compare held opportunities and observed PC work, never select a goal."""
+        party_known = isinstance(facts.get('party'), list)
+        party = facts['party'] if party_known else []
+        known = isinstance((facts.get('dex') or {}).get('owned_species'), list)
+        owned = self.validated_owned(facts) if known else set()
+        followups = [] if known and party_known else None
+        graph = self.complete_collection_graph() if known else {}
+        for position, mon in enumerate(party):
+            alternatives = []
+            for target, methods in sorted(graph.items()):
+                if any(self.same_species(target, species) for species in owned):
+                    continue
+                for method in methods:
+                    if (method.get('method') not in ('evolution', 'npc_trade')
+                            or method.get('external_trade')
+                            or not self.same_species(method.get('from_species'), mon.get('species'))):
+                        continue
+                    level = mon.get('level')
+                    if (method.get('trigger') == 'level'
+                            and not (type(level) is int and 1 <= level <= 100)):
+                        preview = {'species': target, 'acquisition_method': method['method'],
+                                   'acquisition_contract': acquisition_contract(target, method),
+                                   'level_up_possible': None, 'experience_trigger_level': None}
+                    else:
+                        preview = self.post_withdrawal_acquisition(mon, target, method, facts)
+                        preview.pop('withdrawal_registers_target')
+                    preview['requires_pc_withdrawal'] = False
+                    if method.get('trigger') == 'item' and not isinstance(facts.get('bag'), dict):
+                        preview.update(item_quantity_held=None, item_missing=None)
+                    if method['method'] == 'npc_trade':
+                        preview.pop('party_count_requirement_after_withdrawal_met', None)
+                        preview['party_count_requirement_met'] = len(party) >= 2
+                        if method.get('completion_flag'):
+                            preview['trade_already_completed'] = (
+                                facts.get('flags') or {}).get(method['completion_flag'])
+                    alternatives.append(preview)
+            if alternatives:
+                followups.append({'party_index': position, 'source': deepcopy(mon),
+                                  'alternatives': alternatives})
+
+        # recent is the controller's retained ordinary outcomes, not the
+        # checkpoint lineage or proof of native individual identity.
+        completed, requests = [], Counter()
+        for row in getattr(self, 'recent', []):
+            operation = row.get('operation', '')
+            if not ((operation.startswith('retrieve_pc:') and row.get('result') == 'withdrew_pokemon')
+                    or (operation.startswith('deposit_pc:') and row.get('result') == 'deposited_pokemon')):
+                continue
+            completed.append({key: deepcopy(row[key]) for key in (
+                'operation', 'result', 'selected_subgoal', 'selected_subgoal_satisfied_after', 'map')
+                if key in row})
+            goal = row.get('selected_subgoal') or []
+            if (operation.startswith('retrieve_pc:') and row.get('selected_subgoal_satisfied_after') is True
+                    and len(goal) == 3 and goal[0] == 'pokemon' and isinstance(goal[1], str)):
+                requests[goal[1]] += 1
+        return {'dex_ownership_known': known, 'party_observation_known': party_known,
+                'current_party_followups': followups,
+                'retained_pc_outcomes': {
+                    'completed_pc_operation_count': len(completed),
+                    'satisfied_withdrawal_requests': [
+                        {'requested_species': species, 'count': count, 'current_party_indices': [
+                            i for i, mon in enumerate(party) if self.same_species(mon.get('species'), species)]}
+                        for species, count in sorted(requests.items())],
+                    'latest_completed_pc_operations': completed[-4:],
+                    'scope': 'All retained current controller PC outcomes counted; only the latest four '
+                        'completed PC operations are listed. Satisfied requests identify the requested '
+                        'species, not individual identity or causation. Empty history is not proof an '
+                        'operation never happened in this save or before CONTINUE. This is not proof '
+                        'of no registration between operations; native dex observations remain authoritative.'},
+                'scope': 'Current observed party slots already need no PC withdrawal for these catalogue '
+                    'follow-ups. They are alternatives for each individual, not cumulative rewards, ready '
+                    'actions, guaranteed registrations or exhaustive uses of the party. Level evolution '
+                    'requires a real new level gain; items, native trade guards, navigation and normal '
+                    'execution still apply. Price references do not prove shop access. PC preparation '
+                    'moves existing Pokemon, not new owned bits. Compare remaining acquisition work '
+                    'with further preparation and every offered alternative; no itinerary is forced.'}
 
     def dex_progress(self, facts):
         """Collection panel: what is missing, where, and what it unlocks."""
@@ -1710,6 +1790,15 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'steps, not just levels remaining. Hundreds of low-yield battles have an opportunity '
                 'cost: acquiring an HM or resolving a story blocker may open better collecting and '
                 'training grounds. Previously visited tables are examples, not proof of current access.')
+            instruction += (' Compare collection_preparation_continuity_reference: current party '
+                'follow-ups need no further withdrawal, but still need their stated acquisition work. '
+                'A satisfied PC possession subgoal is preparation, not a new Pokédex registration. '
+                'Compare completing the remaining training, stone use or NPC trade with the cost and '
+                'concrete purpose of another party change. Repeated preparation can be justified by '
+                'materially different needs; prior preparation spending is not a reason to continue '
+                'preparing. Retained PC outcomes cover only this controller, not an entire save history '
+                'or evidence that registrations did not occur. All other goals and PC changes remain '
+                'available; this is not a forced itinerary, party composition or target order.')
             instruction += (' Compare capture_retry_evidence with current preparation: an observed '
                 'retreat can show a status support fainted while the target remained healthy and unstatused. '
                 'More balls do not make that support survive the switch or act; healing restores its prior '
