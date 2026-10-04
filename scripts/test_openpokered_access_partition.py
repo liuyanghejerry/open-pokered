@@ -6,6 +6,7 @@ from unittest.mock import Mock, patch
 from openpokered.autonomous_story import AutonomousStoryAgent, scope_strategy_access_evidence
 from openpokered.story_agent import DualStoryAgent, StoryStopped
 from openpokered.typesafe import TypeSafeError
+from openpokered.decision_wire import expand_decision_evidence
 
 
 class AccessPartitionTests(unittest.TestCase):
@@ -106,6 +107,8 @@ class AccessPartitionTests(unittest.TestCase):
 
         def decide(layer, actual, candidates, instruction, *, allow_abstain):
             self.assertEqual(layer, 'strategy')
+            actual, restored_options = expand_decision_evidence(actual, candidates)
+            self.assertEqual(restored_options, candidates)
             self.assertEqual(actual['world'], state['world'])
             comparison = actual['immediate_access_comparison']
             sent_ids = {key for value in comparison.values() if isinstance(value, dict) for key in value}

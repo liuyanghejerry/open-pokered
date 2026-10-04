@@ -1,0 +1,71 @@
+{
+  "schema": 1,
+  "kind": "lossless_json_text_state_overflow_alternative",
+  "source_run": "20261005-044213-seed42",
+  "source_revision": "b18a88f7593af8f39f9988aa2fe5d8e89b756caf",
+  "safe_verified_owned": 75,
+  "safe_seen": 103,
+  "new_species_this_source_segment": [],
+  "actual_source_progress": {
+    "healing_completed": true,
+    "pc_withdrawals_completed": ["Psyduck", "Doduo", "Parasect"],
+    "cash": 171,
+    "stored_count": 53,
+    "retained_spore_parasect_level": 32,
+    "spore_learning_source": "20261005-040653-seed42, natural level30 offer; not newly learned in source43",
+    "setup_freshness_factor_reached_actual_jev": true,
+    "tm34_sale_selected_but_not_executed": true,
+    "terminal_cause": "HTTP400 max_tokens_exceeded, including a two-option leaf; not quota exhaustion"
+  },
+  "new_wire_contract": {
+    "reserved_root_header": "decision_json_text_state_v1:\n",
+    "trigger": "Explicit max_tokens_exceeded or same-model/provider/endpoint/path/layer runtime learning only.",
+    "state": "The complete previously eligible structured state as compact readable JSON text; all prior evidence/reference/table decoding instructions retained.",
+    "candidates": "Byte-exact criteria, IDs and order; no omission, ranking, forced action or fixed itinerary.",
+    "fail_closed": "Malformed/ambiguous older evidence, unsupported versions, duplicate keys, nonfinite values and non-JSON input cannot silently change facts. Exhausted one/two-option leaves still stop.",
+    "small_state": "Keep the original state when compact text plus its guidance does not beat a possible pretty-JSON spelling.",
+    "token_claim": "The provider's object-to-text rendering is unknown. The eligibility heuristic and HTTP byte sizes do not certify actual token reduction or capacity."
+  },
+  "readers": {
+    "dashboard": "Display facts match; request hashes use the original transmitted root type, not its decoded substitute.",
+    "legacy_navigation_history": "Streams the agent's own recorded obstacles across old and new wire formats; unknowns stay unknown and malformed reserved evidence fails closed."
+  },
+  "verification": {
+    "source_independent_continue_schema": 4,
+    "source_expected_equals_restored": true,
+    "source_trace_save_summary_movie_hashes_unchanged": true,
+    "actual_request_semantic_roundtrips": 153,
+    "eligible_json_text_states": 152,
+    "small_state_identity_fallbacks": 1,
+    "actual_accepted_strategy_display_projections_equal": 114,
+    "new_tests": 20,
+    "focused_tests_passed": 121,
+    "full_python_tests_passed": 1391,
+    "diagnostic_model_queries": 0,
+    "diagnostic_native_commands": 0,
+    "diagnostic_answers_reused": false,
+    "new_format_actual_runtime_adoption": false,
+    "actual_provider_token_reduction_verified": false,
+    "rust_rebuild": false
+  },
+  "last_actual_failed_leaf": {
+    "candidate_ids": ["subgoal:54", "subgoal:55"],
+    "original_transport_bytes": 86493,
+    "alternate_transport_bytes": 88181,
+    "possible_pretty_state_text_bytes": 134898,
+    "compact_state_text_bytes": 60700,
+    "additional_guidance_bytes": 309,
+    "scope": "Alternate HTTP bytes grow due to string escaping; this is not a transport-byte reduction claim or proof of the provider's token spelling."
+  },
+  "contract_sources": [
+    "https://docs.typesafe.ai/concepts/state.md",
+    "https://docs.typesafe.ai/api.md",
+    "https://docs.typesafe.ai/primitives/choice.md"
+  ],
+  "disk_policy": "Original tape/save/movie retained once; new policy/evidence use a small linked delta archive. No duplicate trace, old whole-body drafts, Rust rebuild or Python bytecode cache. At least25GiB free before launch; durable artifacts remain outside /tmp.",
+  "completed124": false,
+  "old_ghost_ancestor_legality_certified": false,
+  "final_legal_newgame_started": false,
+  "final_full_movie_and_collection_dashboard_completed": false,
+  "scope": "Local codec/reader correctness only. Fresh normal dual-Jev CONTINUE and actual collecting outcome remain pending."
+}

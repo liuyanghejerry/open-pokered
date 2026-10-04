@@ -256,7 +256,7 @@ class DecisionMappingTableTests(unittest.TestCase):
         def choose(layer, actual, offered, instruction, *, allow_abstain):
             self.assert_semantics(expand_decision_evidence(actual, offered), (state, options))
             self.assertTrue(allow_abstain)
-            if MAPPING_TABLE_SCHEMA in actual and FIELD_DICTIONARY not in actual:
+            if isinstance(actual, dict) and MAPPING_TABLE_SCHEMA in actual and FIELD_DICTIONARY not in actual:
                 readable_requests.append(actual)
             raise helper.overflow(layer)
         with patch.object(DualStoryAgent, 'choose', side_effect=choose):
@@ -627,10 +627,13 @@ class DecisionFieldWireTests(unittest.TestCase):
             with self.assertRaises(StoryStopped) as observed:
                 agent.choose_bounded_strategy(state, options, 'Pick')
         self.assertIs(observed.exception, failure)
-        # Its mixed records now admit the fifth, lossless segmented format.
-        # Still fail closed after that trial, with every option unchanged.
-        self.assertEqual(choose.call_count, 5)
-        self.assertEqual(choose.call_args_list[-1].args[1]['decision_sequence_table_schema'], 1)
+        # The fifth segmented format can also be sent as complete compact JSON
+        # text. Neither format drops an option; exhaustion still fails closed.
+        self.assertEqual(choose.call_count, 6)
+        from openpokered.decision_wire import restore_decision_json_text_state
+        self.assertIsInstance(choose.call_args_list[-1].args[1], str)
+        self.assertEqual(restore_decision_json_text_state(choose.call_args_list[-1].args[1])[
+            'decision_sequence_table_schema'], 1)
         for call in choose.call_args_list:
             self.assertEqual(list(call.args[2]), list(options))
             self.assertEqual(expand_decision_evidence(call.args[1], call.args[2])[0],

@@ -18,7 +18,8 @@ from openpokered.collection_planner import (  # noqa: E402
 )
 from openpokered.story_rules import MAPS_DIR  # noqa: E402
 from openpokered.decision_wire import (  # noqa: E402
-    FIELD_DICTIONARY, STRING_REFERENCE_PREFIX, MAPPING_TABLE_SCHEMA, SEQUENCE_TABLE_SCHEMA, expand_decision_evidence,
+    FIELD_DICTIONARY, STRING_REFERENCE_PREFIX, MAPPING_TABLE_SCHEMA, SEQUENCE_TABLE_SCHEMA,
+    expand_decision_evidence, restore_decision_json_text_state,
 )
 
 
@@ -51,7 +52,8 @@ def export_decision(event, descriptions):
     Complete displayed descriptions are interned once; unused world/library
     copies are not exported. The trace anchor and request hash retain provenance.
     """
-    answer, question, state = (event.get(key) or {} for key in ('answer', 'question', 'state'))
+    answer, question, recorded_state = (event.get(key) or {} for key in ('answer', 'question', 'state'))
+    state = restore_decision_json_text_state(recorded_state)
     criteria, probabilities = question.get('criteria') or {}, answer.get('probabilities') or {}
     keys = [key for key, _ in sorted(probabilities.items(), key=lambda item: -item[1])[:5]]
     choice = answer.get('choice')
@@ -63,7 +65,7 @@ def export_decision(event, descriptions):
     projection = {key: state[key] for key in (
         'dex_progress', 'shared_strategy_evidence', FIELD_DICTIONARY, STRING_REFERENCE_PREFIX,
         MAPPING_TABLE_SCHEMA, SEQUENCE_TABLE_SCHEMA)
-        if key in state}
+        if isinstance(state, dict) and key in state}
     restored, decoded = expand_decision_evidence(projection, offered)
     candidates = []
     for key in keys:
@@ -84,7 +86,7 @@ def export_decision(event, descriptions):
         descriptions[reference] = facts
         candidates.append({'id': key, 'label': title, 'probability': probabilities.get(key),
                            'description_ref': reference})
-    request = json.dumps({'state': state, 'question': question}, ensure_ascii=False,
+    request = json.dumps({'state': recorded_state, 'question': question}, ensure_ascii=False,
                          sort_keys=True, separators=(',', ':'))
     progress = restored.get('dex_progress')
     display_counts = ({key: progress[key] for key in ('owned', 'validated_owned') if key in progress}

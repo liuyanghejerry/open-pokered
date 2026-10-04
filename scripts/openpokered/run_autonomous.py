@@ -25,6 +25,7 @@ from openpokered.collection_verification import require_collection_completion, v
 from openpokered.judgment_agent import load_objectives
 from openpokered.playthrough_judgments import JevGame
 from openpokered.typesafe import TypeSafeClient
+from openpokered.decision_wire import expand_decision_evidence
 import playthrough as pt
 
 GOAL_OBJECTIVES = {
@@ -324,6 +325,35 @@ def checkpoint_capture_blackouts(run):
     return blackouts, totals
 
 
+def checkpoint_legacy_navigation_history(run):
+    """Recover only this agent's recorded obstacles across equivalent wire formats.
+
+    Stream the original trace, retaining unknown/missing history as unknown.
+    Never derive a route or obstacle from an earlier playthrough. Malformed
+    reserved evidence fails closed rather than being mistaken for observations.
+    """
+    trace = Path(run) / 'trace.jsonl'
+    history = {}
+    if not trace.is_file():
+        return history
+    with trace.open() as stream:
+        for line in stream:
+            try:
+                event = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            raw = event.get('state')
+            if not isinstance(raw, (dict, str)):
+                continue
+            state, _ = expand_decision_evidence(raw, {})
+            if not isinstance(state, dict):
+                continue
+            for blockage in state.get('known_navigation_failures', {}).values():
+                key = json.dumps([blockage['destination'], blockage['map']])
+                history[key] = blockage
+    return history
+
+
 def checkpoint_first_clear_verification(run, restored):
     """Carry a verified ending along this save's lineage, not transient flags.
 
@@ -590,15 +620,7 @@ def main(argv=None):
                     # per destination. Recover this agent's own observed
                     # obstacles from its trace, never from a playthrough route.
                     if not parent.get('navigation_history'):
-                        prior_trace = args.resume / 'trace.jsonl'
-                        for line in prior_trace.read_text().splitlines():
-                            try:
-                                event = json.loads(line)
-                            except json.JSONDecodeError:
-                                continue
-                            for blockage in event.get('state', {}).get('known_navigation_failures', {}).values():
-                                key = json.dumps([blockage['destination'], blockage['map']])
-                                agent.navigation_history[key] = blockage
+                        agent.navigation_history.update(checkpoint_legacy_navigation_history(args.resume))
                     agent.field_requirements.update(checkpoint_field_requirements(args.resume))
                     agent.field_route_goals.update(checkpoint_field_route_goals(args.resume))
                     agent.battle_requirements.update(parent.get('battle_requirements', {}))

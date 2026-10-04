@@ -29,11 +29,83 @@ SEQUENCE_TABLE_INSTRUCTION = (
     'then concatenate the segments in order to restore the exact original list. '
     'Record fields stay descriptive; missing fields are not filled with null. '
     'Every record, value, list position and candidate is retained.')
+JSON_TEXT_STATE_NAMESPACE = 'decision_json_text_state_v'
+JSON_TEXT_STATE_PREFIX = JSON_TEXT_STATE_NAMESPACE + '1:\n'
+JSON_TEXT_STATE_INSTRUCTION = (
+    ' Wire JSON-text state: state is the complete JSON object after the '
+    'decision_json_text_state_v1: header. Parse it as the full state, then apply '
+    'any other wire decoding rules. Canonical state paths retain their meanings. '
+    'Only JSON whitespace changes; every field, value, list position and '
+    'candidate is retained.')
 MAPPING_TABLE_INSTRUCTION = (
     ' Wire mapped record tables: when state.decision_mapping_table_schema is 1, '
     'each singleton $m is [keys,columns,rows]. Row i is the complete record for keys[i]; '
     'zip columns with every row to restore the exact original ordered mapping. '
     'Resolve evidence references transitively in keys, columns and cells. No facts or options are omitted.')
+
+
+def compact_decision_json_text_state(state, candidates):
+    """An explicit-overflow alternative to provider object-to-text rendering.
+
+    TypeSafe accepts string state. Send the same JSON object as readable compact
+    JSON text, not encoded/compressed bytes. Criteria remain byte-for-byte intact.
+    The eligibility guard compares this text plus its guidance with a *possible*
+    pretty-JSON object spelling. It does not assume that a provider uses that
+    spelling, reduce HTTP bytes, count tokens, or certify a context limit. Actual
+    requests must validate the hypothesis. Ordinary successful requests stay
+    structured, and all previous reference/table protocols are retained.
+    """
+    if not isinstance(state, dict):
+        return state, candidates
+
+    def validate(value):
+        if isinstance(value, dict):
+            if any(not isinstance(key, str) for key in value):
+                raise ValueError('Non-string key in JSON-text state')
+            for child in value.values():
+                validate(child)
+        elif isinstance(value, list):
+            for child in value:
+                validate(child)
+        elif type(value) not in (type(None), str, bool, int, float):
+            raise ValueError('Non-JSON value in JSON-text state')
+
+    validate(state)
+    # Do not bypass an ambiguous/malformed earlier evidence protocol simply
+    # because its JSON spelling can be serialized. This wire must be auditable
+    # through the same complete decoder as every existing alternate format.
+    expand_decision_evidence(state, candidates)
+    text = JSON_TEXT_STATE_PREFIX + json.dumps(state, separators=(',', ':'),
+        ensure_ascii=False, allow_nan=False)
+    possible_pretty_text = json.dumps(state, indent=2, ensure_ascii=False, allow_nan=False)
+    if len(text.encode()) + len(JSON_TEXT_STATE_INSTRUCTION.encode()) >= len(possible_pretty_text.encode()):
+        return state, candidates
+    return text, candidates
+
+
+def restore_decision_json_text_state(state):
+    """Unwrap the reserved root header only; nested literal strings stay literal."""
+    if not isinstance(state, str) or not state.startswith(JSON_TEXT_STATE_NAMESPACE):
+        return state
+    if not state.startswith(JSON_TEXT_STATE_PREFIX):
+        raise ValueError('Invalid JSON-text state version')
+
+    def object_pairs(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError('Duplicate key in JSON-text state')
+            result[key] = value
+        return result
+
+    def nonfinite(value):
+        raise ValueError('Nonfinite constant in JSON-text state')
+
+    original = json.loads(state[len(JSON_TEXT_STATE_PREFIX):],
+        object_pairs_hook=object_pairs, parse_constant=nonfinite)
+    if not isinstance(original, dict):
+        raise ValueError('JSON-text state root must be an object')
+    return original
 
 
 def compact_decision_sequence_tables(state, candidates):
@@ -351,6 +423,9 @@ def expand_decision_evidence(state, candidates):
     The root library is encoding metadata. Expand every reference reachable
     from the complete world and current candidates, without selecting facts.
     """
+    state = restore_decision_json_text_state(state)
+    if isinstance(state, str):
+        return state, candidates  # Ordinary root text has no tagged evidence library.
     state, candidates = restore_decision_string_references(state, candidates)
     state, candidates = restore_decision_field_wire(state, candidates)
     library = state.get('shared_strategy_evidence') or {}

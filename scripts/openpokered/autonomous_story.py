@@ -23,7 +23,8 @@ from .decision_wire import (FIELD_DICTIONARY_INSTRUCTION, compact_decision_field
                             expand_decision_evidence, STRING_REFERENCE_INSTRUCTION,
                             compact_decision_string_references, MAPPING_TABLE_INSTRUCTION,
                             compact_decision_mapping_tables, SEQUENCE_TABLE_INSTRUCTION,
-                            compact_decision_sequence_tables)
+                            compact_decision_sequence_tables, JSON_TEXT_STATE_INSTRUCTION,
+                            compact_decision_json_text_state)
 from .story_rules import Rule, requirements, evaluate, static_retreat_contract, spent_static_source
 from .playthrough_judgments import (ObservedProtocol, NavigationPause, NavigationGoalObserved, attack_profile, replacement_options,
                                     MEDICINES, BALLS, medicine_options, effective_attacks, ITEM_CATALOG,
@@ -2347,7 +2348,10 @@ class AutonomousStoryAgent(DualStoryAgent):
         coarse references and original field names provide equivalent overflow
         alternatives, each learned separately. Mixed record lists have an
         additional lossless segmented-table alternative with descriptive fields;
-        its learning is separate too. Exhausted leaves fail closed.
+        its learning is separate too. A final compact JSON-text state alternative
+        retains every field and candidate, testing a different possible provider
+        object-to-text spelling without assuming its actual tokens. Its learning
+        is separate too. Exhausted leaves fail closed.
         """
         if not candidates:
             return super().choose(layer, state, candidates, instruction,
@@ -2410,6 +2414,8 @@ class AutonomousStoryAgent(DualStoryAgent):
         readable_eligible, readable_computed = False, False
         sequence_scopes = getattr(self, '_sequence_mapped_field_scopes', set())
         sequence_eligible, sequence_computed = False, False
+        json_text_scopes = getattr(self, '_json_text_state_scopes', set())
+        json_text_eligible, json_text_computed = False, False
 
         def append_refactored_format():
             nonlocal field_eligible, field_computed
@@ -2456,6 +2462,8 @@ class AutonomousStoryAgent(DualStoryAgent):
                 append_readable_format()
             if len(formats) == before:
                 append_sequence_format()
+            if len(formats) == before:
+                append_json_text_format()
 
         def append_mapped_format():
             nonlocal mapped_eligible, mapped_computed
@@ -2532,21 +2540,40 @@ class AutonomousStoryAgent(DualStoryAgent):
                     + STRING_REFERENCE_INSTRUCTION + MAPPING_TABLE_INSTRUCTION
                     + SEQUENCE_TABLE_INSTRUCTION))
 
+        def append_json_text_format():
+            nonlocal json_text_eligible, json_text_computed
+            if json_text_computed:
+                return
+            json_text_computed = True
+            _, structured_state, structured_options, structured_guidance = formats[-1]
+            try:
+                wire, offered = compact_decision_json_text_state(structured_state, structured_options)
+            except ValueError:
+                return  # Never coerce an invalid source into different facts.
+            json_text_eligible = wire is not structured_state
+            if json_text_eligible:
+                formats.append(('compact_json_text_state', wire, offered,
+                    structured_guidance + JSON_TEXT_STATE_INSTRUCTION))
+
         # Do not re-factor a successful ordinary request. Enable this work
         # only after explicit overflow, or its same-endpoint runtime learning.
-        if scope in field_scopes or scope in string_scopes or scope in mapped_scopes or scope in coarse_scopes or scope in readable_scopes or scope in sequence_scopes:
+        if scope in field_scopes or scope in string_scopes or scope in mapped_scopes or scope in coarse_scopes or scope in readable_scopes or scope in sequence_scopes or scope in json_text_scopes:
             append_refactored_format()
-        if scope in string_scopes or scope in mapped_scopes or scope in coarse_scopes or scope in readable_scopes or scope in sequence_scopes:
+        if scope in string_scopes or scope in mapped_scopes or scope in coarse_scopes or scope in readable_scopes or scope in sequence_scopes or scope in json_text_scopes:
             append_string_format()
-        if scope in mapped_scopes or scope in coarse_scopes or scope in readable_scopes or scope in sequence_scopes:
+        if scope in mapped_scopes or scope in coarse_scopes or scope in readable_scopes or scope in sequence_scopes or scope in json_text_scopes:
             append_mapped_format()
-        if scope in coarse_scopes or scope in readable_scopes or scope in sequence_scopes:
+        if scope in coarse_scopes or scope in readable_scopes or scope in sequence_scopes or scope in json_text_scopes:
             append_coarse_format()
-        if scope in readable_scopes or scope in sequence_scopes:
+        if scope in readable_scopes or scope in sequence_scopes or scope in json_text_scopes:
             append_readable_format()
-        if scope in sequence_scopes:
+        if scope in sequence_scopes or scope in json_text_scopes:
             append_sequence_format()
-        if sequence_eligible and scope in sequence_scopes:
+        if scope in json_text_scopes:
+            append_json_text_format()
+        if json_text_eligible and scope in json_text_scopes:
+            first_format = len(formats) - 1
+        elif sequence_eligible and scope in sequence_scopes:
             first_format = len(formats) - 1
         elif readable_eligible and scope in readable_scopes:
             first_format = len(formats) - 1
@@ -2632,6 +2659,9 @@ class AutonomousStoryAgent(DualStoryAgent):
             elif next_encoding == 'segmented_record_readable_fields':
                 sequence_scopes.add(scope)
                 self._sequence_mapped_field_scopes = sequence_scopes
+            elif next_encoding == 'compact_json_text_state':
+                json_text_scopes.add(scope)
+                self._json_text_state_scopes = json_text_scopes
             else:
                 readable_scopes.add(scope)
                 self._readable_mapped_field_scopes = readable_scopes

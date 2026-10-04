@@ -9,6 +9,8 @@ from openpokered.autonomous_story import (AutonomousStoryAgent,
     SHORT_EVIDENCE_REFERENCE_INSTRUCTION, compact_evidence_reference_wire,
     restore_evidence_reference_wire)
 from openpokered.story_agent import DualStoryAgent, StoryStopped
+from openpokered.decision_wire import (restore_decision_json_text_state,
+    expand_decision_evidence, JSON_TEXT_STATE_INSTRUCTION)
 from openpokered.typesafe import ChoiceAnswer, SystemOneResult, TypeSafeClient, TypeSafeError
 
 
@@ -119,7 +121,7 @@ class ShortEvidenceWireTests(unittest.TestCase):
                     self.assertEqual({key[-1] for key in agent._choice_context_sizes
                         if len(key) == 6}, {'short_evidence_reference'})
 
-    def test_leaf_overflow_after_both_formats_is_terminal_not_recursive(self):
+    def test_leaf_overflow_after_all_formats_is_terminal_not_recursive(self):
         agent = self.agent()
         state, options = self.fixture()
         failure = StoryStopped('strategy:service_unavailable')
@@ -128,7 +130,11 @@ class ShortEvidenceWireTests(unittest.TestCase):
             with self.assertRaises(StoryStopped) as observed:
                 agent.choose_bounded_strategy(state, options, 'Pick')
         self.assertIs(observed.exception, failure)
-        self.assertEqual(calls.call_count, 2)
+        self.assertEqual(calls.call_count, 3)
+        self.assertIsInstance(calls.call_args.args[1], str)
+        for call in calls.call_args_list:
+            self.assertEqual(expand_decision_evidence(call.args[1], call.args[2]),
+                expand_decision_evidence(state, options))
         self.assertFalse(any(call.args[0] == 'strategy_partition' for call in agent.record.call_args_list))
 
     def test_actual_transport_keeps_none_and_conditional_probability_semantics(self):
@@ -218,8 +224,9 @@ class ShortEvidenceWireTests(unittest.TestCase):
         options = {str(i): small['a'] for i in range(16)}
         evaluated = set()
         def decide(layer, actual, offered, instruction, *, allow_abstain):
-            self.assertEqual(restore_evidence_reference_wire(actual), state)
+            self.assertEqual(restore_evidence_reference_wire(restore_decision_json_text_state(actual)), state)
             self.assertLessEqual(instruction.count(SHORT_EVIDENCE_REFERENCE_INSTRUCTION), 1)
+            self.assertLessEqual(instruction.count(JSON_TEXT_STATE_INSTRUCTION), 1)
             for value in offered.values():
                 self.assertEqual(restore_evidence_reference_wire(json.loads(value)), json.loads(small['a']))
             if len(offered) > 2:
@@ -232,7 +239,8 @@ class ShortEvidenceWireTests(unittest.TestCase):
         self.assertEqual(list(calls.call_args_list[1].args[2]), list(options))
         self.assertEqual(evaluated, set(options))
         self.assertTrue(calls.call_args.kwargs['allow_abstain'])
-        self.assertTrue(all(not call.kwargs['allow_abstain'] for call in calls.call_args_list[2:-1]))
+        for call in calls.call_args_list[:-1]:
+            self.assertEqual(call.kwargs['allow_abstain'], list(call.args[2]) == list(options))
 
 
 if __name__ == '__main__':
