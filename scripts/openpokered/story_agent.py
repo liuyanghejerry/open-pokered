@@ -6,6 +6,7 @@ menu option. Real input executes it; only observed game facts establish success.
 import json
 import time
 from collections import Counter
+from copy import deepcopy
 
 from . import skills
 from .story_rules import StoryIndex, normalize_bag
@@ -14,6 +15,23 @@ from .typesafe import Choice, TypeSafeError
 
 class StoryStopped(RuntimeError):
     pass
+
+
+def post_operation_effects(index, rule, selected_subgoal, facts):
+    """Separate the script condition from the selected goal's observed condition.
+
+    A full-party PC swap can satisfy a withdrawal goal without leaving a free
+    party slot (the underlying script rule). Neither observation is a causal
+    completion certificate; use the ordinary satisfaction checks, not receipts.
+    Missing/invalid goal shape is unknown, never presumed success or failure.
+    """
+    target = deepcopy(selected_subgoal)
+    return {'script_effect': deepcopy(list(rule.effect)),
+            'intended_effect_observed': index.satisfied(rule.effect, facts),
+            'selected_subgoal': target,
+            'selected_subgoal_satisfied_after': (
+                index.satisfied(target, facts)
+                if isinstance(target, (list, tuple)) and len(target) == 3 else None)}
 
 
 def progress_key(facts):
@@ -448,6 +466,9 @@ class DualStoryAgent:
                         'Several operations may be needed to finish it. Select a live trigger, '
                         'travel step, recovery or training operation using its described effects. '
                         'Script effects describe what will happen when the intended interaction completes. '
+                        'Recent intended_effect_observed checks script_effect; '
+                        'selected_subgoal_satisfied_after separately checks selected_subgoal at the '
+                        'observed boundary, not causation or final collection proof. '
                         'Travel or interaction can be interrupted by other trainers: if recent attempts '
                         'gained battle flags, retrying the intended NPC is valid progress.')
                 except StoryStopped as error:
@@ -455,6 +476,7 @@ class DualStoryAgent:
                         continue
                     raise
                 operation, rule = bindings[selection]
+                selected_subgoal = deepcopy(self.active['target'])
                 battles_before = self.resolved_battles
                 result = self.execute(operation, rule)
                 after = self.facts()
@@ -465,7 +487,7 @@ class DualStoryAgent:
                 delta = {'operation': operation, 'result': result.get('result'),
                          'flags_gained': sorted(k for k,v in after['flags'].items() if v and not facts['flags'].get(k)),
                          'bag_after': after['bag'], 'map': after['map'], 'story_state_changed': changed}
-                delta['intended_effect_observed'] = self.index.satisfied(rule.effect, after)
+                delta.update(post_operation_effects(self.index, rule, selected_subgoal, after))
                 if stochastic_attempt:
                     delta['completed_stochastic_attempt'] = True
                     delta['resolved_encounters'] = self.resolved_battles - battles_before

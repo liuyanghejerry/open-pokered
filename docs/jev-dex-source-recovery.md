@@ -5695,3 +5695,64 @@ worktree外独立48项/1518858字节备份
 113比较及其版本范围、最终1092测试、代码/文档/原生参考输入与父备份
 receipt。没有虚构failure.txt/start证明，MP4和native binary仅单份原件
 引用，原三个56备份及源hash再次保持，无凭据、删档或/tmp依赖。
+
+## 2026-10-04：第19段真实57、最终索引修复验证与操作反馈分离
+
+第19段 `20261004-111327-seed42` 仅从最新第18段56继续，干净HEAD
+47dea8be、policy63e5f896、原冻结native/gfx/双Jev/OpenRouter/seed42/
+无偏好/预算/原生4×录像保持。原owner47725/47736/47737/port50069
+在首轮前保存明确pending身份而非假成功；03:14:52 UTC被动正式启动
+审计通过，实际strategy38.649秒/action69.766秒成功，原源hash同。
+正式首轮完整113候选实际35API/6溢出/29成功，68.923秒自主选Route15
+捕捉，而非冷诊断Seel/Tm06。成功请求全当前候选/访问值和全展开世界
+事实严格同，最终none保留、scope说明最多一次；这次精确绑定最终
+单次说明版，弥补上一只读冷验证的版本范围限制，不复用其答案。
+
+真实237.005秒后自主取出Seel，238.212秒PC回执withdrew_pokemon；
+后续普通观察确认Seel30/XP27000加入满员party、Kadabra存入PC，未
+新增登记。原回执intended_effect_observed=false保持：它检查的是底层
+PC Rule的party_space，交换后party仍六只，而不是所选pokemon:Seel。
+这不是取出失败或数据回退，不覆盖旧trace解释成true。
+
+316.010秒/frame18729在Route15草地实际新增Pidgeotto，56→57/95。
+真实成功capture选择三轮从Charizard换Hypno，再选择PokeBall；最终
+敌28级/HP73/73/Sleep(3)，PokeBall36→35，未强制睡眠/投球或削血。
+新capture_weakening_reference暴露仍0，原native招式直接伤害/KO及
+已有睡眠证据不冒充新参考使用或因果捕获收益。原生PC新增Pidgeotto，
+最终PC42、current box1满，剩余box2仍可用；现金93/徽章mask31/
+五TM保持，Hypno38训练守恒，不退款或恢复源56重跑捕获。
+
+371.489秒自主Fuchsia护士完成，03:19:40 UTC合作守护仅向原controller
+SIGINT，原native/recorder正常退出。正式段success=false安全partial，
+后续独立新native普通CONTINUE schema4严格同，最新安全57源就是此段，
+FuchsiaPokecenter3,3/frame20678。SRAM SHA
+`460fccb887b4dc0a8f2e8e17d76657167cbcc3891ec933c9e1a6e10374180945`。
+原生MP4完整解码1381787字节/86.183333秒/5171帧，SHA
+`4e3865f4bbbf43dc3cbaef3a51946f5c93e6e9e7593289b4c4b532e7be02d647`。
+完整19段真零来源、57唯一登记、131047普通推进回执/19唯一原生视频
+及所有独立schema4和原文件hash再次核验；恢复5一次，四个历史null
+method保持，仍非全部producer/原作路线/fidelity终验。
+
+worktree外36项/3189641字节备份
+`verified57-checkpoint-and-current-access-scope-and-pidgeotto-capture-evidence-20261004.tar.gz`
+逐项字节/hash同，SHA
+`eb8f3d10a909698e1ff2eab12d1029ab4eac8bf8fd7a87308fcd31b6c154e057`。
+第18段独立备份及所有原件hash保持，视频/binary未重复打包，无凭据、
+删除或/tmp依赖。PR已推至47dea8be并发布首轮证据，远端正文精确读回，
+八张旧绝对raw截图同；其运行状态只代表当时快照，闭合结论以本节为准。
+
+闭合后新增纯观察反馈post_operation_effects：保留原脚本效果与其
+intended_effect_observed，另记录执行前快照selected_subgoal及执行后
+selected_subgoal_satisfied_after。缺失/坏shape为未知None，不推定true/
+false；仍使用原StoryIndex.satisfied，包括pending source保护。不改
+选项、输入、预算、重试键、主动重规划或最终验收；条件成立不是此步
+造成的证明、操作必已完成或新图鉴信用。近期反馈真实送入后续Jev时
+才可以声称模型接收，闭合19的新增字段仅独立离线计算，不改原请求。
+
+七项新增回归覆盖满员PC交换、错误物种、box/party条件分离、原护士
+语义、pending/未知、可变目标快照及run接线；完整Python1099/24.721秒
+通过。第一版新增集成fixture错误地在执行前已持有Seel，触发正常重规划
+而缺mock frontier；首次focused/full失败日志保留。修正测试为真实“无
+Seel→取出Seel”，78项focused/6.056秒与全套通过，没有为了测试改变
+native/生产选择或原成功条件。Goal active，安全57/124尚差67种；下一
+段只继承最新57，最终全流程合法性/完整合成MP4/图鉴大盘尚未完成。
