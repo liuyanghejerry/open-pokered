@@ -5255,6 +5255,22 @@ mod recharge_lifecycle_tests {
     /// turn 1 gathers (CHARGING_UP set, no damage), turn 2 the strike is FORCED
     /// (the menu is ignored) and lands. Retries around Fly's 95% strike accuracy.
     #[test]
+    fn battle_pages_keep_hard_rows_and_pixel_overflow() {
+        // BDF DWIDTH 5 is an independent oracle: 28 ASCII glyphs are
+        // 140px and fit, while 29 are 145px and exceed the 144px box.
+        assert_eq!(
+            paginate_battle_text("ABCDEFGHIJKLMNOPQRSTUVWXYZ12\nappeared!\nFinal row."),
+            vec!["ABCDEFGHIJKLMNOPQRSTUVWXYZ12\nappeared!", "Final row."]
+        );
+        let pages = paginate_battle_text("ABCDEFGHIJKLMNOPQRSTUVWXYZ123\nappeared!\nFinal row.");
+        assert_eq!(pages, vec!["ABCDEFGHIJKLMNOPQRSTUVWXYZ12\n3", "appeared!\nFinal row."]);
+        for row in pages.iter().flat_map(|page| page.split('\n')) {
+            assert!(row.is_ascii());
+            assert!(row.len() * 5 <= 144, "overflow: {row}");
+        }
+    }
+
+    #[test]
     fn fly_charge_strike_full_lifecycle() {
         let mk = |sp, lvl, moves: [MoveId; 4]| {
             create_pokemon_with_moves(sp, lvl, [0xFF, 0xFF], moves).unwrap()
