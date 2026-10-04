@@ -22,8 +22,10 @@ game_scene GameCorner {
   // ── Clerk 1 (npc 2) — coin exchange counter ─────────────────────────────
   // Original: buy 50 coins for ¥1000 (needs COIN CASE, room, money). Now fully
   // wired via the coin balance API: ¥1000 is deducted and 50 coins credited.
-  // The coin-case-full guard prevents paying ¥1000 for fewer than 50 coins at
-  // the 9999 cap (the coins credit would otherwise saturate).
+  // Original GameCornerClerk1Text calls Has9990Coins before charging. The
+  // final purchase may award fewer than 50 at the 9999 cap; it still costs
+  // ¥1000. Requiring room for all 50 wrongly makes Porygon unreachable by
+  // purchases alone from a zero balance (the player gets stuck at 9950).
   @storyline("talkClerk1") {
     @trigger(map = "GameCorner", npc = 2)
     @speaker("") {
@@ -33,7 +35,7 @@ game_scene GameCorner {
       @option(@t("YES", "是")) {
         @if (!hasItem("COIN_CASE")) {
           @speaker("") { @t("You don't have a COIN CASE!", "你没有代币盒！") }
-        } @else @if (getCoins() > 9949) {
+        } @else @if (getCoins() >= 9990) {
           @speaker("") { @t("Oops! Your COIN\nCASE is full.", "哎呀！你的代币盒满了！") }
         } @else {
           @if (hasMoney(1000)) {
