@@ -4,7 +4,6 @@ use pokered_data::types::PokemonType;
 
 use super::MoveChoiceLayer;
 use crate::battle::state::BattlerState;
-use crate::battle::types::get_type_effectiveness;
 
 const INITIAL_SCORE: u8 = 10;
 const DISABLED_PENALTY: u8 = 0x50;
@@ -118,11 +117,16 @@ pub fn apply_layer3(
             None => continue,
         };
 
-        let eff = get_type_effectiveness(data.move_type, def_mon.type1, def_mon.type2);
-
-        if eff.is_super_effective() {
+        // AIGetTypeEffectiveness stops at the first ROM table match. Its
+        // neutral sentinel is $10, while table entries are 0, 5 and 20.
+        let eff = pokered_data::type_chart::TYPE_CHART.iter()
+            .find(|pair| pair.attacker == data.move_type
+                && (pair.defender == def_mon.type1 || pair.defender == def_mon.type2))
+            .map(|pair| pair.effectiveness as u8)
+            .unwrap_or(0x10);
+        if eff > 0x10 {
             buffer[i] = buffer[i].saturating_sub(ENCOURAGE);
-        } else if eff.is_not_very_effective() || eff.is_no_effect() {
+        } else if eff < 0x10 {
             if has_better_move(enemy_moves, i, def_mon.type1, def_mon.type2) {
                 buffer[i] = buffer[i].saturating_add(DISCOURAGE);
             }
