@@ -30,6 +30,16 @@ class DecisionMappingTableTests(unittest.TestCase):
             compact_decision_mapping_tables)
         return MAPPING_TABLE_SCHEMA, MAPPING_TABLE_INSTRUCTION, compact_decision_mapping_tables
 
+    def readable_fixture(self):
+        state, options = self.fixture()
+        # Heterogeneous records cannot become one table; their repeated long
+        # field names exercise the alias overhead seen in real world facts.
+        state['mixed_records'] = [
+            {'still_unregistered_catchable_species_after_field_operation': i,
+             **({'nullable_evolution_opportunity_cost': None} if i % 2 else {})}
+            for i in range(60)]
+        return state, options
+
     def assert_semantics(self, actual, expected):
         self.assertEqual(actual[0], expected[0])
         self.assertEqual(list(actual[1]), list(expected[1]))
@@ -131,6 +141,129 @@ class DecisionMappingTableTests(unittest.TestCase):
         self.assertLess(len(coarse['shared_strategy_evidence']), len(dense['shared_strategy_evidence']))
         for key in ('none', 'scalar', 'zero'):
             self.assertEqual(offered[key], options[key])
+
+    def test_readable_mapped_fields_preserve_full_semantics_without_aliases(self):
+        from openpokered.autonomous_story import compact_mapped_decision_wire
+        state, options = self.readable_fixture()
+        untouched = deepcopy((state, options))
+        wire, offered = compact_mapped_decision_wire(state, options, min_chars=160, alias_fields=False)
+        self.assertNotIn(FIELD_DICTIONARY, wire)
+        self.assert_semantics(expand_decision_evidence(wire, offered), (state, options))
+        self.assertEqual((state, options), untouched)
+        for key in ('none', 'scalar', 'zero'):
+            self.assertEqual(offered[key], options[key])
+
+    def test_readable_fields_are_lazy_and_learned_after_explicit_coarse_overflow(self):
+        from openpokered.autonomous_story import compact_mapped_decision_wire
+        from openpokered.decision_wire import MAPPING_TABLE_SCHEMA
+        helper = DecisionFieldWireTests()
+        state, all_options = self.readable_fixture()
+        options = {key: all_options[key] for key in ('a', 'b')}
+        for layer in ('strategy', 'action'):
+            for abstain in (False, True):
+                agent = helper.agent()
+                def choose(actual_layer, actual, offered, instruction, *, allow_abstain):
+                    self.assertEqual(actual_layer, layer)
+                    self.assertEqual(allow_abstain, abstain)
+                    self.assert_semantics(expand_decision_evidence(actual, offered), (state, options))
+                    if MAPPING_TABLE_SCHEMA not in actual or FIELD_DICTIONARY in actual:
+                        raise helper.overflow(layer)
+                    return 'b'
+                with patch('openpokered.autonomous_story.compact_mapped_decision_wire',
+                        wraps=compact_mapped_decision_wire) as encode, \
+                        patch.object(DualStoryAgent, 'choose', side_effect=choose) as calls:
+                    self.assertEqual(agent.choose_bounded_choice(layer, state, options, 'Pick',
+                        allow_abstain=abstain), 'b')
+                    first = calls.call_count
+                    self.assertGreater(first, 1)
+                    self.assertTrue(any(call.kwargs.get('alias_fields') is False for call in encode.call_args_list))
+                    self.assertEqual(agent.choose_bounded_choice(layer, state, options, 'Pick',
+                        allow_abstain=abstain), 'b')
+                    self.assertEqual(calls.call_count, first + 1)
+                self.assertEqual(len(agent._readable_mapped_field_scopes), 1)
+                self.assertFalse(any(call.args[0] == layer + '_partition' for call in agent.record.call_args_list))
+
+    def test_readable_fields_do_not_compute_or_learn_on_normal_or_non_context_results(self):
+        from openpokered.autonomous_story import compact_mapped_decision_wire
+        helper = DecisionFieldWireTests()
+        state, options = self.readable_fixture()
+        for failure in (None, 'HTTP 401 unauthorized', 'HTTP 402 payment_required', 'HTTP 429 rate_limit'):
+            agent = helper.agent()
+            with patch('openpokered.autonomous_story.compact_mapped_decision_wire',
+                    wraps=compact_mapped_decision_wire) as encode, \
+                    patch.object(DualStoryAgent, 'choose', return_value='a',
+                        side_effect=helper.overflow(message=failure) if failure else None) as calls:
+                if failure:
+                    with self.assertRaises(StoryStopped):
+                        agent.choose_bounded_strategy(state, options, 'Pick')
+                else:
+                    self.assertEqual(agent.choose_bounded_strategy(state, options, 'Pick'), 'a')
+                calls.assert_called_once()
+                encode.assert_not_called()
+            self.assertFalse(hasattr(agent, '_readable_mapped_field_scopes'))
+
+    def test_readable_field_learning_is_endpoint_model_provider_path_and_layer_scoped(self):
+        from openpokered.decision_wire import MAPPING_TABLE_SCHEMA
+        helper, agent = DecisionFieldWireTests(), DecisionFieldWireTests().agent()
+        state, all_options = self.readable_fixture()
+        options = {key: all_options[key] for key in ('a', 'b')}
+        def choose(layer, actual, offered, instruction, *, allow_abstain):
+            if MAPPING_TABLE_SCHEMA not in actual or FIELD_DICTIONARY in actual:
+                raise helper.overflow(layer)
+            return 'a'
+        with patch.object(DualStoryAgent, 'choose', side_effect=choose) as calls:
+            agent.choose_bounded_strategy(state, options, 'Pick')
+            first = calls.call_count
+            agent.choose_bounded_strategy(state, options, 'Pick')
+            self.assertEqual(calls.call_count, first + 1)
+            agent.choose_bounded_choice('action', state, options, 'Pick')
+            agent.model_client.base_url = 'https://other-offline.invalid'
+            agent.choose_bounded_strategy(state, options, 'Pick')
+            agent.model = 'different-model'
+            agent.choose_bounded_strategy(state, options, 'Pick')
+            agent.model_client.system_one_path = '/other'
+            agent.choose_bounded_strategy(state, options, 'Pick')
+            agent.model_client.provider = 'typesafe'
+            agent.choose_bounded_strategy(state, options, 'Pick')
+        self.assertEqual(calls.call_count, first * 6 + 1)
+        self.assertEqual(len(agent._readable_mapped_field_scopes), 6)
+        self.assertFalse(hasattr(helper.agent(), '_readable_mapped_field_scopes'))
+
+    def test_duplicate_readable_format_is_not_an_extra_retry(self):
+        from openpokered.autonomous_story import compact_mapped_decision_wire
+        helper = DecisionFieldWireTests()
+        state, all_options = self.readable_fixture()
+        options = {key: all_options[key] for key in ('a', 'b')}
+        agent, requests = helper.agent(), []
+        def encode(actual, offered, **kwargs):
+            return compact_mapped_decision_wire(actual, offered)  # All alternates collide.
+        def choose(layer, actual, offered, instruction, *, allow_abstain):
+            requests.append(json.dumps([actual, offered]))
+            raise helper.overflow(layer)
+        with patch('openpokered.autonomous_story.compact_mapped_decision_wire', side_effect=encode), \
+                patch.object(DualStoryAgent, 'choose', side_effect=choose):
+            with self.assertRaises(StoryStopped):
+                agent.choose_bounded_strategy(state, options, 'Pick')
+        self.assertFalse(hasattr(agent, '_readable_mapped_field_scopes'))
+        self.assertEqual(len(requests), len(set(requests)))
+
+    def test_exhausted_readable_leaf_fails_closed_without_pruning_or_partition(self):
+        from openpokered.decision_wire import MAPPING_TABLE_SCHEMA
+        helper = DecisionFieldWireTests()
+        state, all_options = self.readable_fixture()
+        options = {key: all_options[key] for key in ('a', 'b')}
+        agent, readable_requests = helper.agent(), []
+        def choose(layer, actual, offered, instruction, *, allow_abstain):
+            self.assert_semantics(expand_decision_evidence(actual, offered), (state, options))
+            self.assertTrue(allow_abstain)
+            if MAPPING_TABLE_SCHEMA in actual and FIELD_DICTIONARY not in actual:
+                readable_requests.append(actual)
+            raise helper.overflow(layer)
+        with patch.object(DualStoryAgent, 'choose', side_effect=choose):
+            with self.assertRaises(StoryStopped):
+                agent.choose_bounded_strategy(state, options, 'Pick')
+        self.assertEqual(len(readable_requests), 1)
+        self.assertFalse(any(call.args[0] == 'strategy_partition' for call in agent.record.call_args_list))
 
     def test_coarse_density_is_lazy_and_learned_only_after_explicit_mapped_overflow(self):
         from openpokered.autonomous_story import compact_mapped_decision_wire

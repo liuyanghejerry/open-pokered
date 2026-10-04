@@ -5756,17 +5756,23 @@ mod recharge_lifecycle_tests {
         panic!("Pay Day never scattered coins across 6 tries");
     }
 
-    /// Teleport (a SwitchAndTeleport move) ends a WILD battle — the turn's next phase
-    /// is BattleOver{escaped}.
-    #[test]
-    fn teleport_flees_a_wild_battle() {
+    fn teleport_turn(seed: u64, is_wild: bool) -> BattleScreen {
         let mk = |sp, lvl, moves: [MoveId; 4]| {
             create_pokemon_with_moves(sp, lvl, [0xFF, 0xFF], moves).unwrap()
         };
         let player = vec![mk(Species::Abra, 30, [MoveId::Teleport, MoveId::None, MoveId::None, MoveId::None])];
         let enemy = vec![mk(Species::Snorlax, 50, [MoveId::Splash, MoveId::Splash, MoveId::Splash, MoveId::Splash])];
-        let mut screen = BattleScreen::from_parties(true, &player, &enemy, None); // is_wild = true
+        let mut screen = BattleScreen::from_parties(is_wild, &player, &enemy, None);
+        screen.rng = pokered_rules::runtime::StdBattleRng::from_seed(seed);
         screen.execute_turn_with_move(0);
+        screen
+    }
+
+    /// A CONNECTING Teleport ends a wild battle. Pin the battle stream rather
+    /// than assuming a 100%-accuracy move cannot take the Gen-1 1/256 miss.
+    #[test]
+    fn teleport_flees_a_wild_battle() {
+        let screen = teleport_turn(0, true);
         let escaped = match &screen.phase {
             BattlePhase::ShowingText { next_phase, .. } => {
                 matches!(**next_phase, BattlePhase::BattleOver { escaped: true, .. })
@@ -5774,7 +5780,34 @@ mod recharge_lifecycle_tests {
             BattlePhase::BattleOver { escaped: true, .. } => true,
             _ => false,
         };
-        assert!(escaped, "Teleport flees the wild battle (next phase is BattleOver escaped)");
+        assert!(escaped, "connecting Teleport flees the wild battle");
+        assert_eq!(screen.battle_state.as_ref().unwrap().player.active_mon().pp[0], 19);
+    }
+
+    /// Seed 4 draws 228 (AI), 166 (enemy selection), then 255 (Teleport
+    /// accuracy). Preserve that deliberate miss; it must not terminate combat.
+    #[test]
+    fn teleport_accuracy_miss_keeps_a_wild_battle_open() {
+        let screen = teleport_turn(4, true);
+        let BattlePhase::ShowingText { messages, next_phase, .. } = &screen.phase else {
+            panic!("Teleport miss must be narrated");
+        };
+        assert!(messages.iter().any(|m| m == "ABRA's attack\nmissed!"));
+        assert!(matches!(**next_phase, BattlePhase::PlayerMenu));
+        let state = screen.battle_state.as_ref().unwrap();
+        assert_eq!(state.player.active_mon().pp[0], 19, "a miss still spends PP");
+        assert_eq!(state.player.active_mon().hp, state.player.active_mon().max_hp);
+        assert_eq!(state.enemy.active_mon().hp, state.enemy.active_mon().max_hp);
+    }
+
+    #[test]
+    fn teleport_does_not_end_a_trainer_battle() {
+        let screen = teleport_turn(0, false);
+        let BattlePhase::ShowingText { next_phase, .. } = &screen.phase else {
+            panic!("trainer turn must be narrated");
+        };
+        assert!(matches!(**next_phase, BattlePhase::PlayerMenu));
+        assert_eq!(screen.battle_state.as_ref().unwrap().player.active_mon().pp[0], 19);
     }
 
     /// End-to-end Hyper Beam recharge across three live turns via the production
