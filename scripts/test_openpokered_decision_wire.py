@@ -122,6 +122,102 @@ class DecisionMappingTableTests(unittest.TestCase):
                         + STRING_REFERENCE_INSTRUCTION + guidance)
         self.assertLess(after + len(all_guidance.encode()), before)
 
+    def test_coarse_reference_density_preserves_full_semantics_and_plain_criteria(self):
+        from openpokered.autonomous_story import compact_mapped_decision_wire
+        state, options = self.fixture()
+        dense, _ = compact_mapped_decision_wire(state, options)
+        coarse, offered = compact_mapped_decision_wire(state, options, min_chars=160)
+        self.assert_semantics(expand_decision_evidence(coarse, offered), (state, options))
+        self.assertLess(len(coarse['shared_strategy_evidence']), len(dense['shared_strategy_evidence']))
+        for key in ('none', 'scalar', 'zero'):
+            self.assertEqual(offered[key], options[key])
+
+    def test_coarse_density_is_lazy_and_learned_only_after_explicit_mapped_overflow(self):
+        from openpokered.autonomous_story import compact_mapped_decision_wire
+        helper = DecisionFieldWireTests()
+        state, all_options = self.fixture()
+        options = {key: all_options[key] for key in ('a', 'b')}
+        coarse, _ = compact_mapped_decision_wire(state, options, min_chars=160)
+        expected_entries = len(coarse['shared_strategy_evidence'])
+        for layer in ('strategy', 'action'):
+            agent = helper.agent()
+            def choose(actual_layer, actual, offered, instruction, *, allow_abstain):
+                self.assertEqual(actual_layer, layer)
+                self.assert_semantics(expand_decision_evidence(actual, offered), (state, options))
+                if len(actual.get('shared_strategy_evidence', {})) != expected_entries:
+                    raise helper.overflow(layer)
+                return 'b'
+            with patch.object(DualStoryAgent, 'choose', side_effect=choose) as calls:
+                self.assertEqual(agent.choose_bounded_choice(layer, state, options, 'Pick'), 'b')
+                first = calls.call_count
+                self.assertGreater(first, 1)
+                self.assertEqual(agent.choose_bounded_choice(layer, state, options, 'Pick'), 'b')
+                self.assertEqual(calls.call_count, first + 1)
+            enabled = [call.kwargs['encoding'] for call in agent.record.call_args_list
+                       if call.args[0] == layer + '_wire_encoding_enabled']
+            self.assertIn('mapped_record_coarse_references', enabled)
+            self.assertEqual(len(agent._coarse_mapped_reference_scopes), 1)
+            self.assertFalse(any(call.args[0] == layer + '_partition' for call in agent.record.call_args_list))
+
+    def test_coarse_density_non_context_errors_and_new_runtime_do_not_learn(self):
+        helper = DecisionFieldWireTests()
+        state, all_options = self.fixture()
+        options = {key: all_options[key] for key in ('a', 'b')}
+        for message in ('HTTP 401 unauthorized', 'HTTP 402 payment_required', 'HTTP 429 rate_limit'):
+            agent = helper.agent()
+            with patch.object(DualStoryAgent, 'choose', side_effect=helper.overflow(message=message)) as calls:
+                with self.assertRaises(StoryStopped):
+                    agent.choose_bounded_strategy(state, options, 'Pick')
+            calls.assert_called_once()
+            self.assertFalse(hasattr(agent, '_coarse_mapped_reference_scopes'))
+        agent = helper.agent()
+        with patch.object(DualStoryAgent, 'choose', return_value='a') as calls:
+            agent.choose_bounded_strategy(state, options, 'Pick')
+        calls.assert_called_once()
+        self.assertFalse(hasattr(agent, '_coarse_mapped_reference_scopes'))
+
+    def test_coarse_density_learning_is_endpoint_model_provider_path_and_layer_scoped(self):
+        from openpokered.autonomous_story import compact_mapped_decision_wire
+        helper, agent = DecisionFieldWireTests(), DecisionFieldWireTests().agent()
+        state, all_options = self.fixture()
+        options = {key: all_options[key] for key in ('a', 'b')}
+        coarse, _ = compact_mapped_decision_wire(state, options, min_chars=160)
+        def choose(layer, actual, offered, instruction, *, allow_abstain):
+            if len(actual.get('shared_strategy_evidence', {})) != len(coarse['shared_strategy_evidence']):
+                raise helper.overflow(layer)
+            return 'a'
+        with patch.object(DualStoryAgent, 'choose', side_effect=choose) as calls:
+            agent.choose_bounded_strategy(state, options, 'Pick')
+            first = calls.call_count
+            agent.choose_bounded_strategy(state, options, 'Pick')
+            self.assertEqual(calls.call_count, first + 1)
+            agent.choose_bounded_choice('action', state, options, 'Pick')
+            agent.model_client.base_url = 'https://other-offline.invalid'
+            agent.choose_bounded_strategy(state, options, 'Pick')
+            agent.model = 'different-model'
+            agent.choose_bounded_strategy(state, options, 'Pick')
+            agent.model_client.system_one_path = '/other'
+            agent.choose_bounded_strategy(state, options, 'Pick')
+            agent.model_client.provider = 'typesafe'
+            agent.choose_bounded_strategy(state, options, 'Pick')
+        self.assertEqual(calls.call_count, first * 6 + 1)
+        self.assertEqual(len(agent._coarse_mapped_reference_scopes), 6)
+
+    def test_identical_coarse_format_does_not_repeat_a_failed_mapped_leaf(self):
+        from openpokered.autonomous_story import compact_mapped_decision_wire
+        helper = DecisionFieldWireTests()
+        state, all_options = self.fixture()
+        options = {key: all_options[key] for key in ('a', 'b')}
+        def same_density(actual, offered, **kwargs):
+            return compact_mapped_decision_wire(actual, offered)
+        agent = helper.agent()
+        with patch('openpokered.autonomous_story.compact_mapped_decision_wire', side_effect=same_density), \
+                patch.object(DualStoryAgent, 'choose', side_effect=helper.overflow()):
+            with self.assertRaises(StoryStopped):
+                agent.choose_bounded_strategy(state, options, 'Pick')
+        self.assertFalse(hasattr(agent, '_coarse_mapped_reference_scopes'))
+        self.assertFalse(any(call.args[0] == 'strategy_partition' for call in agent.record.call_args_list))
+
     def test_production_lazy_fallback_and_same_scope_learning_preserve_all_options(self):
         schema, guidance, _ = self.codec()
         helper = DecisionFieldWireTests()

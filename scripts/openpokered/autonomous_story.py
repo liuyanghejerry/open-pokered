@@ -1048,17 +1048,19 @@ def compact_string_decision_wire(state, candidates):
     return compact_refactored_decision_wire(state, candidates, min_chars=16, string_references=True)
 
 
-def compact_mapped_decision_wire(state, candidates):
+def compact_mapped_decision_wire(state, candidates, *, min_chars=16):
     """A lossless mapped-record fallback, composed before evidence factoring.
 
-    Mapping axes can themselves share evidence. Profitability includes the
-    complete decoding guidance; bytes are not a provider token-limit claim.
+    Mapping axes can themselves share evidence. Coarser factoring retains
+    more small values inline: fewer references can avoid a token overflow
+    despite using more bytes. Profitability includes the complete decoding
+    guidance; bytes are not a provider token-limit claim.
     """
     original, options = expand_decision_evidence(state, candidates)
     mapped, offered = compact_decision_mapping_tables(original, options)
     if mapped is original:
         return state, candidates
-    factored, offered = factor_strategy_evidence(mapped, offered, min_chars=16)
+    factored, offered = factor_strategy_evidence(mapped, offered, min_chars=min_chars)
     # Keep plain/scalar criteria byte exact through the factoring stage.
     for key, value in options.items():
         try:
@@ -1690,6 +1692,15 @@ class AutonomousStoryAgent(DualStoryAgent):
         return {'map': name, 'hops': hops, 'stock': stock}
 
     def choose(self, layer, state, candidates, instruction, *, allow_abstain=True):
+        if layer == 'action' and any('pc_access_reference' in value for value in candidates.values()):
+            instruction += (' Compare pc_access_reference for each PC operation from its current '
+                'origin, not an earlier strategy position. Offered PCs access the same save storage; '
+                'the stored box is not exclusive to a distant PC. A local menu operation can advance '
+                'the chosen storage goal without a new trip. Compare its deposit tradeoffs with '
+                'the approach steps, field prerequisites and encounters of travelling elsewhere. '
+                'A water-relaxed path still requires actual Surf execution; a missing preview is '
+                'unknown access. Geometry is not a completed menu, arrival or registration. '
+                'All offered PC operations remain available; no destination or deposit is prescribed.')
         if layer == 'action' and any('storage_deposit_tradeoff_reference' in value
                                      for value in candidates.values()):
             instruction += (' Compare storage_deposit_tradeoff_reference before choosing a PC deposit: '
@@ -2114,6 +2125,8 @@ class AutonomousStoryAgent(DualStoryAgent):
         string_eligible, string_computed = False, False
         mapped_scopes = getattr(self, '_mapped_record_table_scopes', set())
         mapped_eligible, mapped_computed = False, False
+        coarse_scopes = getattr(self, '_coarse_mapped_reference_scopes', set())
+        coarse_eligible, coarse_computed = False, False
 
         def append_refactored_format():
             nonlocal field_eligible, field_computed
@@ -2154,6 +2167,8 @@ class AutonomousStoryAgent(DualStoryAgent):
                 append_string_format()
             if len(formats) == before:
                 append_mapped_format()
+            if len(formats) == before:
+                append_coarse_format()
 
         def append_mapped_format():
             nonlocal mapped_eligible, mapped_computed
@@ -2171,15 +2186,39 @@ class AutonomousStoryAgent(DualStoryAgent):
                     REFACTORED_DECISION_EVIDENCE_INSTRUCTION + FIELD_DICTIONARY_INSTRUCTION
                     + STRING_REFERENCE_INSTRUCTION + MAPPING_TABLE_INSTRUCTION))
 
+        def append_coarse_format():
+            nonlocal coarse_eligible, coarse_computed
+            if coarse_computed:
+                return
+            coarse_computed = True
+            try:
+                wire, offered = compact_mapped_decision_wire(
+                    compact_base, short_candidates if eligible else candidates, min_chars=160)
+            except ValueError:
+                return
+            coarse_eligible = wire is not compact_base
+            if coarse_eligible and any(encoding == 'mapped_record_table'
+                    and wire == previous and offered == previous_options
+                    for encoding, previous, previous_options, _ in formats):
+                coarse_eligible = False  # Exactly the same request cannot be another capacity trial.
+            if coarse_eligible:
+                formats.append(('mapped_record_coarse_references', wire, offered,
+                    REFACTORED_DECISION_EVIDENCE_INSTRUCTION + FIELD_DICTIONARY_INSTRUCTION
+                    + STRING_REFERENCE_INSTRUCTION + MAPPING_TABLE_INSTRUCTION))
+
         # Do not re-factor a successful ordinary request. Enable this work
         # only after explicit overflow, or its same-endpoint runtime learning.
-        if scope in field_scopes or scope in string_scopes or scope in mapped_scopes:
+        if scope in field_scopes or scope in string_scopes or scope in mapped_scopes or scope in coarse_scopes:
             append_refactored_format()
-        if scope in string_scopes or scope in mapped_scopes:
+        if scope in string_scopes or scope in mapped_scopes or scope in coarse_scopes:
             append_string_format()
-        if scope in mapped_scopes:
+        if scope in mapped_scopes or scope in coarse_scopes:
             append_mapped_format()
-        if mapped_eligible and scope in mapped_scopes:
+        if scope in coarse_scopes:
+            append_coarse_format()
+        if coarse_eligible and scope in coarse_scopes:
+            first_format = len(formats) - 1
+        elif mapped_eligible and scope in mapped_scopes:
             first_format = len(formats) - 1
         elif string_eligible and scope in string_scopes:
             first_format = len(formats) - 1
@@ -2250,9 +2289,12 @@ class AutonomousStoryAgent(DualStoryAgent):
             elif next_encoding == 'string_evidence_reference':
                 string_scopes.add(scope)
                 self._string_evidence_reference_scopes = string_scopes
-            else:
+            elif next_encoding == 'mapped_record_table':
                 mapped_scopes.add(scope)
                 self._mapped_record_table_scopes = mapped_scopes
+            else:
+                coarse_scopes.add(scope)
+                self._coarse_mapped_reference_scopes = coarse_scopes
             self.record(f'{layer}_wire_encoding_enabled', encoding=next_encoding,
                 candidate_ids=list(candidates), reason=reason, reference_scope=list(scope),
                 world_facts_preserved=True, candidate_values_semantically_preserved=True,
@@ -5825,6 +5867,7 @@ class AutonomousStoryAgent(DualStoryAgent):
     def action_candidates(self, facts):
         candidates, bindings = self._action_candidates(facts)
         if getattr(self, 'collects_dex', False):
+            self.annotate_pc_operation_access(candidates, bindings, facts)
             self.add_transit_lead_candidates(candidates, bindings, facts)
             for key, (operation, _) in bindings.items():
                 if operation.startswith('retrieve_pc:'):
@@ -5840,6 +5883,42 @@ class AutonomousStoryAgent(DualStoryAgent):
                     'storage_deposit_tradeoff_reference': self.storage_deposit_tradeoff_reference(
                         facts, index, description.get('withdraw'))})
         return candidates, bindings
+
+    def annotate_pc_operation_access(self, candidates, bindings, facts):
+        """Fresh per-trigger PC access, including the specialised early returns.
+
+        This is evidence only: all operation IDs, deposits, withdrawal slots
+        and bindings survive unchanged. Do not overwrite the selected parent's
+        context, whose routes may have been observed before intervening travel.
+        """
+        operations = {key: (operation, rule) for key, (operation, rule) in bindings.items()
+            if rule.effect == ('pc', 'storage', True)
+            and operation.startswith(('travel_to:', 'retrieve_pc:', 'deposit_pc:', 'change_pc_box:'))}
+        if not operations:
+            return
+        rules = []
+        for _, rule in operations.values():
+            if not any(rule is other for other in rules):
+                rules.append(rule)
+        group = {'target': (getattr(self, 'active', None) or {}).get('target', rules[0].effect),
+                 'rules': rules, 'context': {}}
+        previews = self.annotate_navigation({'pc': group}, facts, prune=False)
+        origin = [facts['map'], facts['x'], facts['y']]
+        for key, (operation, rule) in operations.items():
+            region = rule.map, tuple(self.destination_points(rule.map, rule))
+            description = json.loads(candidates[key])
+            candidates[key] = json.dumps({**description, 'pc_access_reference': {
+                'origin': origin, 'trigger_navigation': previews.get(region),
+                'pc_menu_operation_available_here': operation.startswith(
+                    ('retrieve_pc:', 'deposit_pc:', 'change_pc_box:')),
+                'same_save_storage': True,
+                'scope': 'Fresh observed-position geometry to this exact offered PC trigger region, '
+                    'not a completed menu, arrival or registration. All offered PCs address the '
+                    'same save storage. Travel does not withdraw, deposit or change a box; '
+                    'a local menu operation still requires normal approach and interaction. '
+                    'Water-relaxed paths require actual Surf and native guards; missing previews '
+                    'are unknown. Encounters and newly observed obstacles may interrupt execution. '
+                    'No destination, deposit, stored slot or candidate is removed.'}})
 
     def storage_deposit_tradeoff_reference(self, facts, index, incoming=None):
         """Observed one-slot party costs only; never prune or simulate progress."""

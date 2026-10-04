@@ -968,6 +968,146 @@ class AutonomousTests(unittest.TestCase):
             self.assertIn('conditional', value['trigger_navigation_scope'])
             self.assertIn('not a fresh route after movement', value['trigger_navigation_scope'])
 
+    def pc_access_fixture(self):
+        from copy import deepcopy
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.collects_dex = True
+        target = ('pokemon', 'Hypno', None)
+        rules = [Rule(name, name, name + ':pcStorage', ['sign:1'], [], [],
+                      ('pc', 'storage', True), [])
+                 for name in ('CeruleanPokecenter', 'CinnabarPokecenter')]
+        agent.active = {'target': target, 'rules': rules, 'context': {
+            'storage_retrieval': True, 'trigger_navigation_origin': ['CeruleanCity', 5, 13],
+            'trigger_navigation': [{'map': rules[0].map, 'steps': 66}]}}
+        facts = {'map': rules[0].map, 'x': 12, 'y': 3, 'party': []}
+        routes = {(rule.map, ((1, 2),)): {
+            'map': rule.map, 'tile_route_found': True, 'steps': steps,
+            'requires_surf': wet, 'unmet_native_field_prerequisites': []}
+            for rule, steps, wet in zip(rules, (0, 990), (False, True))}
+        agent.destination_points = Mock(return_value=[(1, 2)])
+        agent.annotate_navigation = Mock(return_value=deepcopy(routes))
+        agent.add_transit_lead_candidates = Mock()
+        candidates = {'local': json.dumps({'operation': 'retrieve_pc:0,18,-1,0'}),
+                      'remote': json.dumps({'operation': 'travel_to:CinnabarPokecenter'}),
+                      'other': json.dumps({'operation': 'lead_with:Snorlax'})}
+        bindings = {'local': ('retrieve_pc:0,18,-1,0', rules[0]),
+                    'remote': ('travel_to:CinnabarPokecenter', rules[1]),
+                    'other': ('lead_with:Snorlax', rules[0])}
+        agent._action_candidates = Mock(side_effect=lambda _: (dict(candidates), dict(bindings)))
+        return agent, facts, candidates, bindings, routes
+
+    def test_pc_access_refreshes_current_origin_without_changing_choices_or_parent(self):
+        from copy import deepcopy
+        agent, facts, original, bindings, routes = self.pc_access_fixture()
+        before = deepcopy((facts, agent.active, original))
+        candidates, after = agent.action_candidates(facts)
+        self.assertEqual(after, bindings)
+        self.assertEqual(list(candidates), list(original))
+        self.assertEqual((facts, agent.active, original), before)
+        args, kwargs = agent.annotate_navigation.call_args
+        self.assertEqual(args[1], facts)
+        self.assertEqual(kwargs, {'prune': False})
+        self.assertEqual(args[0]['pc']['rules'], agent.active['rules'])
+        self.assertIsNot(args[0]['pc'], agent.active)
+        for key, available in (('local', True), ('remote', False)):
+            description = json.loads(candidates[key])
+            reference = description.pop('pc_access_reference')
+            self.assertEqual(description, json.loads(original[key]))
+            self.assertEqual(reference['origin'], ['CeruleanPokecenter', 12, 3])
+            rule = bindings[key][1]
+            self.assertEqual(reference['trigger_navigation'], routes[(rule.map, ((1, 2),))])
+            self.assertEqual(reference['pc_menu_operation_available_here'], available)
+            self.assertTrue(reference['same_save_storage'])
+            self.assertIn('not a completed menu', reference['scope'])
+        self.assertEqual(candidates['other'], original['other'])
+
+    def test_pc_access_keeps_missing_preview_unknown_and_all_options_available(self):
+        agent, facts, original, bindings, routes = self.pc_access_fixture()
+        agent.annotate_navigation.return_value = {}
+        candidates, after = agent.action_candidates(facts)
+        self.assertEqual(after, bindings)
+        self.assertEqual(list(candidates), list(original))
+        for key in ('local', 'remote'):
+            self.assertIsNone(json.loads(candidates[key])['pc_access_reference']['trigger_navigation'])
+        agent.collects_dex = False
+        agent.annotate_navigation.reset_mock()
+        self.assertEqual(agent.action_candidates(facts), (original, bindings))
+        agent.annotate_navigation.assert_not_called()
+
+    def test_pc_access_batches_fresh_geometry_and_retains_conditional_surf(self):
+        agent, facts, original, bindings, _ = self.pc_access_fixture()
+        del agent.annotate_navigation  # Exercise the production geometry annotator.
+        agent.game = Mock(last_map='CeruleanCity')
+        agent.game.navigation_barriers.return_value = {}
+        agent.game.live_npcs.return_value = {(8, 5)}
+        agent.game.navigation_excluded_maps.return_value = ()
+        agent.observed_navigation_barriers = Mock(return_value={})
+        facts['party'] = [{'moves': ['Surf']}]
+        local, remote = [rule.map for rule in agent.active['rules']]
+        local_key, remote_key = (local, ((1, 2),)), (remote, ((1, 2),))
+        start = ((local, 12, 3), None)
+        with patch('openpokered.autonomous_story.pt.bfs_cross_routes', side_effect=[
+                {local_key: [start], remote_key: None},
+                {remote_key: [start, ((remote, 1, 2), 'right')]}]) as bfs, \
+                patch('openpokered.autonomous_story.surf_path_prerequisites', return_value=[]):
+            candidates, after = agent.action_candidates(facts)
+        self.assertEqual(after, bindings)
+        self.assertEqual(bfs.call_count, 2)
+        for call in bfs.call_args_list:
+            self.assertEqual(call.args[:2], (local, (12, 3)))
+        self.assertEqual(bfs.call_args_list[1].args[2], {remote_key: {(remote, 1, 2)}})
+        self.assertEqual(bfs.call_args_list[0].kwargs['blocked_maps'], {local: {(8, 5)}})
+        self.assertEqual(json.loads(candidates['local'])['pc_access_reference'][
+            'trigger_navigation']['steps'], 0)
+        route = json.loads(candidates['remote'])['pc_access_reference']['trigger_navigation']
+        self.assertTrue(route['tile_route_found'])
+        self.assertTrue(route['requires_surf'])
+        self.assertEqual(route['steps'], 1)
+
+    def test_pc_access_annotates_deposit_box_change_and_free_slot_withdrawal(self):
+        agent, facts, original, bindings, _ = self.pc_access_fixture()
+        rule = bindings['local'][1]
+        candidates = {key: json.dumps({'operation': op}) for key, op in (
+            ('deposit', 'deposit_pc:1,0'), ('box', 'change_pc_box:2,0'),
+            ('free', 'retrieve_pc:0,18,-1,0'))}
+        bindings = {key: (json.loads(value)['operation'], rule) for key, value in candidates.items()}
+        agent.annotate_pc_operation_access(candidates, bindings, facts)
+        for value in candidates.values():
+            self.assertTrue(json.loads(value)['pc_access_reference']['pc_menu_operation_available_here'])
+
+    def test_pc_access_uses_exact_trigger_region_not_first_matching_map(self):
+        agent, facts, original, bindings, routes = self.pc_access_fixture()
+        rule = bindings['local'][1]
+        second = Rule('other-pc', rule.map, rule.storyline, ['sign:2'], [], [], rule.effect, [])
+        agent.destination_points.side_effect = lambda _, r: [(3, 4)] if r is second else [(1, 2)]
+        blocked = {**routes[(rule.map, ((1, 2),))], 'tile_route_found': False, 'steps': None}
+        agent.annotate_navigation.return_value[(rule.map, ((3, 4),))] = blocked
+        candidates = {**original, 'second': json.dumps({'operation': 'retrieve_pc:0,18,-1,1'})}
+        bindings['second'] = ('retrieve_pc:0,18,-1,1', second)
+        agent.annotate_pc_operation_access(candidates, bindings, facts)
+        self.assertFalse(json.loads(candidates['second'])['pc_access_reference'][
+            'trigger_navigation']['tile_route_found'])
+        self.assertTrue(json.loads(candidates['local'])['pc_access_reference'][
+            'trigger_navigation']['tile_route_found'])
+
+    def test_pc_access_guidance_preserves_action_abstention_and_wire_evidence(self):
+        from openpokered.decision_wire import expand_decision_evidence
+        agent, facts, _, _, _ = self.pc_access_fixture()
+        candidates, _ = agent.action_candidates(facts)
+        agent.completed_route_context = Mock(return_value=None)
+        agent.choose_bounded_choice = Mock(return_value='remote')
+        for allowed in (True, False):
+            self.assertEqual(agent.choose('action', {'local_state': facts}, candidates,
+                                         'Select next operation.', allow_abstain=allowed), 'remote')
+            args, kwargs = agent.choose_bounded_choice.call_args
+            _, restored = expand_decision_evidence(args[1], args[2])
+            self.assertEqual(list(restored), list(candidates))
+            self.assertEqual({k: json.loads(v) for k, v in restored.items()},
+                             {k: json.loads(v) for k, v in candidates.items()})
+            self.assertEqual(kwargs['allow_abstain'], allowed)
+            self.assertIn('same save storage', args[3])
+            self.assertIn('All offered PC operations remain available', args[3])
+
     def test_one_depleted_coverage_move_does_not_abort_ready_hunts(self):
         mon = {'species': 'Charizard', 'level': 57, 'hp': 193, 'max_hp': 193,
                'status': 'None', 'moves': ['Slash', 'Cut', 'Flamethrower', 'Dig'],
@@ -6698,6 +6838,8 @@ class AutonomousTests(unittest.TestCase):
 
     def test_stored_capture_support_binds_the_real_pc_slot_and_menu(self):
         agent, facts = self.capture_retrieval_fixture()
+        # This test isolates slot/menu binding; geometry has separate coverage.
+        agent.annotate_pc_operation_access = Mock()
         groups = {}
         agent.add_capture_support_retrieval(groups, facts)
         agent.active = groups['prepare:retrieve-capture-support:3:11']
