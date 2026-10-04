@@ -5474,3 +5474,23 @@ dex54／party／bag／PC／box数量及当前box严格守恒，原54及最新55�
 正式源仍55／资金93／当前box满，旧损失保留，后续只能从该55继续；
 新能力待真实执行验证。完整124／逐种producer及原作路线终验／最终
 全程MP4与图鉴大盘均未完成，Goal active，验收门槛保持。
+
+第16段 `20261004-100509-seed42` 仅从上述55源普通CONTINUE，干净启动
+5db15b04／policy63a6fb64，双层OpenRouter Jev1.13.0、seed42、原预算、
+冻结native／gfx和4×原生录像保持。2026-10-04 02:06:04 UTC被动启动
+审计：controller97470／native97480／recorder97481／port54886，真实
+strategy29.328秒与action32.815秒已成功；源七项关键资源／state相同，
+三个schema1 Cut目的按当前原生真值恢复并实际提供，非旧原型继承。
+首策略自主box_space:storage，32.922秒原生change_pc_box:2,0返回
+changed_box／box2，32.933秒outcome确认；不是外部指定箱号或新增登记。
+源资金93不补回、55初始快照不重复。新进程仍活、MP4未闭合、尚未
+独立验证其SRAM，唯一安全源仍55；future≥56且自主护士完成的合作式
+checkpoint守护与12×45秒被动观察已启用，仅原controller可以收到信号。
+代码／候选／费用／状态不热替换，后续按同一owner原始证据推进。
+
+额外43项原生对照／代码／单测／失败日志／当前55冷规划紧凑备份仅
+392166字节，位于worktree外
+`verified55-navigation-goal-handoff-regression-evidence-20261004.tar.gz`，
+SHA `c2bf58345fa9dd2ca89ef77189bf4302cf1f5c1094b529eddb92db755e498d00`。
+逐项hash通过，原55主备份和所有原件保持；不重复MP4、binary或凭据，
+无删除，约78GiB可用。此补充备份不是新存档或124合法性认证。
