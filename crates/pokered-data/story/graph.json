@@ -2347,6 +2347,11 @@
     },
     {
       "from": "script:CinnabarIsland:@load",
+      "to": "flag:EVENT_MANSION_SWITCH_ON",
+      "kind": "clears"
+    },
+    {
+      "from": "script:CinnabarIsland:@load",
       "to": "map:CinnabarIsland",
       "kind": "triggered_at"
     },
