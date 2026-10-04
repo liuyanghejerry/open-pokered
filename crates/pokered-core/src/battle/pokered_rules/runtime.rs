@@ -362,6 +362,13 @@ fn engine_active(party: &LegacyParty) -> EngineBattler<PokeredRules> {
     let mon = party.active_mon();
     let mut b = engine_from_pokemon(mon);
     b.status = legacy_status_opt(mon);
+    b.resources.set(super::RES_SELECTED_SLOT, party.selected_move_index as u16, 4);
+    b.resources.set(super::RES_DV0, mon.dv_bytes[0] as u16, 255);
+    b.resources.set(super::RES_DV1, mon.dv_bytes[1] as u16, 255);
+    let catch_rate = party.transform_catch_rate.unwrap_or_else(|| get_base_stats(mon.species).map_or(255, |b| b.catch_rate));
+    b.resources.set(super::RES_CATCH_RATE, catch_rate as u16, 255);
+    super::bind_types(&mut b, (party.conversion_type1.unwrap_or(mon.type1), party.conversion_type2.unwrap_or(mon.type2)));
+    for (slot, pp) in mon.pp.iter().enumerate() { b.resources.set(super::RES_PP_BASE + slot as u16, *pp as u16, 255); }
     let ss = &party.stat_stages;
     b.stat_stages.set(StatIndex::Attack, ss.attack);
     b.stat_stages.set(StatIndex::Defense, ss.defense);
@@ -378,7 +385,12 @@ fn build_volatiles(party: &LegacyParty, host: BattlerRef, out: &mut Vec<EffectSt
         out.push(EffectState { id: EffectId(*next), host, effect_order: *next as u64, kind });
         *next += 1;
     };
+    push(out, PokeVolatile::UsedMove { move_: party.last_move_used });
     if party.has_status2(status2::GETTING_PUMPED) { push(out, PokeVolatile::FocusEnergy); }
+    if party.has_status2(status2::USING_X_ACCURACY) { push(out, PokeVolatile::XAccuracy); }
+    if party.has_status1(status1::INVULNERABLE) && !party.has_status1(status1::CHARGING_UP) {
+        push(out, PokeVolatile::Invulnerable);
+    }
     if party.has_status2(status2::HAS_SUBSTITUTE_UP) { push(out, PokeVolatile::SubstituteHp { hp: party.substitute_hp as u16 }); }
     if party.has_status3(status3::HAS_LIGHT_SCREEN_UP) { push(out, PokeVolatile::LightScreen); }
     if party.has_status3(status3::HAS_REFLECT_UP) { push(out, PokeVolatile::Reflect); }
@@ -436,6 +448,8 @@ pub fn engine_state_from_legacy(
     ls: &LegacyBattleState,
 ) -> (EngineState<PokeredRules>, Vec<EffectState<PokeredRules>>) {
     let mut player_b = engine_active(&ls.player);
+    let original = ls.player.party_mon(ls.player.active_pokemon_index);
+    super::bind_critical_stats(&mut player_b, [original.attack,original.defense,original.speed,original.special]);
     // Badge stat boosts: the player battler's working stats are the boosted
     // `wBattleMon*` copy persisted on the legacy side (see badge_boosts), and
     // the badge context (bits + unmodified stats) rides the battler's resource
@@ -445,7 +459,7 @@ pub fn engine_state_from_legacy(
     }
     crate::battle::badge_boosts::seed_badge_context(
         &mut player_b,
-        ls.player_badges,
+        if ls.link_battle { 0 } else { ls.player_badges },
         [
             ls.player.unmodified_attack,
             ls.player.unmodified_defense,
@@ -453,15 +467,52 @@ pub fn engine_state_from_legacy(
             ls.player.unmodified_special,
         ],
     );
-    let state = EngineState::new(vec![player_b], vec![engine_active(&ls.enemy)]);
+    if let Some(working) = ls.player.staged_badge_stats {
+        crate::battle::badge_boosts::set_staged_stats(&mut player_b, working);
+    } else {
+        let stages = [ls.player.stat_stages.attack, ls.player.stat_stages.defense,
+            ls.player.stat_stages.speed, ls.player.stat_stages.special];
+        let mon = ls.player.active_mon();
+        let raw = [mon.attack, mon.defense, mon.speed, mon.special];
+        let badges = if ls.link_battle { 0 } else { ls.player_badges };
+        let working = crate::battle::badge_boosts::initial_working_stats(raw, stages,
+            ls.player.active_mon().status, badges);
+        crate::battle::badge_boosts::set_staged_stats(&mut player_b, working);
+    }
+    let mut enemy_b = engine_active(&ls.enemy);
+    let enemy_original = ls.enemy.party_mon(ls.enemy.active_pokemon_index);
+    let critical = if ls.link_battle || !ls.enemy.has_status3(status3::TRANSFORMED) {
+        [enemy_original.attack,enemy_original.defense,enemy_original.speed,enemy_original.special]
+    } else { super::enemy_critical_stats(&enemy_b) };
+    super::bind_critical_stats(&mut enemy_b, critical);
+    crate::battle::badge_boosts::set_unmodified_stats(&mut enemy_b,
+        [ls.enemy.unmodified_attack,ls.enemy.unmodified_defense,ls.enemy.unmodified_speed,ls.enemy.unmodified_special]);
+    if let Some(working) = ls.enemy.staged_badge_stats {
+        crate::battle::badge_boosts::set_staged_stats(&mut enemy_b, working);
+    } else {
+        let stages = [ls.enemy.stat_stages.attack, ls.enemy.stat_stages.defense,
+            ls.enemy.stat_stages.speed, ls.enemy.stat_stages.special];
+        let mon = ls.enemy.active_mon();
+        let raw = [mon.attack, mon.defense, mon.speed, mon.special];
+        let working = crate::battle::badge_boosts::initial_working_stats(raw, stages,
+            ls.enemy.active_mon().status, 0);
+        crate::battle::badge_boosts::set_staged_stats(&mut enemy_b, working);
+    }
+    enemy_b.resources.set(super::RES_FINITE_PP, ls.link_battle as u16, 1);
+    enemy_b.resources.set(super::RES_HELD_AT_ENTRY,
+        (ls.player.has_status1(status1::USING_TRAPPING_MOVE) && ls.player.num_attacks_left > 0) as u16, 1);
+    let state = EngineState::new(vec![player_b], vec![enemy_b]);
     let mut effects = Vec::new();
     let mut next = ADAPTER_ID_BASE;
     build_volatiles(&ls.player, BattlerRef::PLAYER, &mut effects, &mut next);
     build_volatiles(&ls.enemy, BattlerRef::OPPONENT, &mut effects, &mut next);
+    effects.push(EffectState { id: EffectId(next), host: BattlerRef::PLAYER,
+        effect_order: next as u64, kind: PokeVolatile::SharedDamage { amount: ls.damage } });
     (state, effects)
 }
 
 fn write_party(party: &mut LegacyParty, b: &EngineBattler<PokeredRules>, effects: &[EffectState<PokeredRules>], host: BattlerRef) {
+    party.staged_badge_stats = crate::battle::badge_boosts::staged_stats(b);
     {
         let mon = party.active_mon_mut();
         mon.hp = b.hp.min(mon.max_hp);
@@ -482,10 +533,11 @@ fn write_party(party: &mut LegacyParty, b: &EngineBattler<PokeredRules>, effects
     ss.evasion = g(StatIndex::Evasion);
     // Transform: persist the copied identity into the legacy Pokémon exactly ONCE
     // (the Transformed marker is present only on the Transform turn — it is never
-    // re-created by build_volatiles). Mirrors apply_transform: destructive, no
-    // switch-out restore. On later turns species/stats/moves/pp are left alone, so
-    // PP depletes normally and the copy sticks.
+    // re-created by build_volatiles). Keep the original party identity separately
+    // for switching, experience and settlement. On later turns the battle copy's
+    // moves/PP remain intact until the original party identity is restored.
     if effects.iter().any(|e| e.host == host && matches!(e.kind, PokeVolatile::Transformed)) {
+        party.preserve_original_identity();
         let (t1, t2) = get_base_stats(b.species)
             .map(|bs| (bs.type1, bs.type2))
             .unwrap_or((PokemonType::Normal, PokemonType::Normal));
@@ -495,6 +547,7 @@ fn write_party(party: &mut LegacyParty, b: &EngineBattler<PokeredRules>, effects
         }
         let mon = party.active_mon_mut();
         mon.species = b.species;
+        mon.dv_bytes = [b.resources.current(super::RES_DV0).unwrap_or(255) as u8, b.resources.current(super::RES_DV1).unwrap_or(255) as u8];
         mon.attack = b.stats.get(StatIndex::Attack).copied().unwrap_or(mon.attack);
         mon.defense = b.stats.get(StatIndex::Defense).copied().unwrap_or(mon.defense);
         mon.speed = b.stats.get(StatIndex::Speed).copied().unwrap_or(mon.speed);
@@ -502,12 +555,21 @@ fn write_party(party: &mut LegacyParty, b: &EngineBattler<PokeredRules>, effects
         mon.type1 = t1;
         mon.type2 = t2;
         mon.moves = moves4;
-        mon.pp = [5, 5, 5, 5];
+        mon.pp = core::array::from_fn(|i| if moves4[i] == MoveId::None { 0 } else { 5 });
+        let raw = crate::battle::badge_boosts::unmodified_stats(b);
+        party.unmodified_attack = raw[0]; party.unmodified_defense = raw[1];
+        party.unmodified_speed = raw[2]; party.unmodified_special = raw[3];
+        party.transform_catch_rate = b.resources.current(super::RES_CATCH_RATE).map(|v| v as u8);
         party.set_status3(status3::TRANSFORMED);
+    }
+    if effects.iter().any(|e| e.host == host && matches!(e.kind, PokeVolatile::Mimicked)) {
+        party.preserve_original_identity();
+        let mon = party.active_mon_mut();
+        for (slot, m) in b.moves.iter().take(4).enumerate() { mon.moves[slot] = *m; }
     }
     // Volatiles → flags: clear the adapter-managed flags, then re-derive from the arena.
     party.clear_status1(status1::CONFUSED | status1::FLINCHED | status1::CHARGING_UP | status1::INVULNERABLE | status1::THRASHING_ABOUT | status1::USING_TRAPPING_MOVE | status1::STORING_ENERGY);
-    party.clear_status2(status2::GETTING_PUMPED | status2::HAS_SUBSTITUTE_UP | status2::PROTECTED_BY_MIST | status2::SEEDED | status2::NEEDS_TO_RECHARGE | status2::USING_RAGE);
+    party.clear_status2(status2::USING_X_ACCURACY | status2::GETTING_PUMPED | status2::HAS_SUBSTITUTE_UP | status2::PROTECTED_BY_MIST | status2::SEEDED | status2::NEEDS_TO_RECHARGE | status2::USING_RAGE);
     party.clear_status3(status3::HAS_LIGHT_SCREEN_UP | status3::HAS_REFLECT_UP | status3::BADLY_POISONED);
     // Conversion + Disable ride scalar fields, not status bits, so clear them here and
     // re-derive from the arena below — a removed/expired volatile then clears its field.
@@ -517,7 +579,11 @@ fn write_party(party: &mut LegacyParty, b: &EngineBattler<PokeredRules>, effects
     party.disabled_turns_left = 0;
     for e in effects.iter().filter(|e| e.host == host) {
         match e.kind {
+            PokeVolatile::UsedMove { move_ } => party.last_move_used = move_,
+            PokeVolatile::CalledMove { resolved, .. } => party.selected_move = resolved,
             PokeVolatile::FocusEnergy => party.set_status2(status2::GETTING_PUMPED),
+            PokeVolatile::XAccuracy => party.set_status2(status2::USING_X_ACCURACY),
+            PokeVolatile::Invulnerable => party.set_status1(status1::INVULNERABLE),
             PokeVolatile::Substitute => party.set_status2(status2::HAS_SUBSTITUTE_UP),
             PokeVolatile::SubstituteHp { hp } => {
                 party.set_status2(status2::HAS_SUBSTITUTE_UP);
@@ -547,9 +613,15 @@ fn write_party(party: &mut LegacyParty, b: &EngineBattler<PokeredRules>, effects
                 party.set_status1(status1::THRASHING_ABOUT);
                 party.num_attacks_left = turns_left;
             }
+            PokeVolatile::LockEnded => party.num_attacks_left = 0,
+            PokeVolatile::BideEnded { .. } => {
+                party.num_attacks_left = 0;
+                party.bide_accumulated_damage = 0;
+            }
             PokeVolatile::Rage => party.set_status2(status2::USING_RAGE),
             PokeVolatile::Trapping { turns_left, .. } => {
-                party.set_status1(status1::USING_TRAPPING_MOVE);
+                // CheckNumAttacksLeft clears trapping after both actors finish.
+                if turns_left > 0 { party.set_status1(status1::USING_TRAPPING_MOVE); }
                 party.num_attacks_left = turns_left;
             }
             PokeVolatile::Bide { turns_left, accumulated } => {
@@ -579,6 +651,9 @@ pub fn apply_engine_to_legacy(
 ) {
     write_party(&mut ls.player, &state.player_battlers[0], effects, BattlerRef::PLAYER);
     write_party(&mut ls.enemy, &state.opponent_battlers[0], effects, BattlerRef::OPPONENT);
+    if let Some(amount) = effects.iter().find_map(|entry| match entry.kind {
+        PokeVolatile::SharedDamage { amount } => Some(amount), _ => None,
+    }) { ls.damage = amount; }
 }
 
 #[cfg(test)]
@@ -735,7 +810,7 @@ mod tests {
         }];
         apply_engine_to_legacy(&mut ls, &state, &effects);
         assert_eq!(ls.player.active_mon().species, Species::Tauros, "species copied");
-        assert_eq!(ls.player.active_mon().pp, [5, 5, 5, 5], "all PP set to 5");
+        assert_eq!(ls.player.active_mon().pp, [5, 0, 0, 0], "only copied known slots get 5 PP");
         assert!(ls.player.has_status3(status3::TRANSFORMED), "TRANSFORMED bit set");
 
         // Deplete a PP; a later turn WITHOUT the marker must NOT reset it or the copy.

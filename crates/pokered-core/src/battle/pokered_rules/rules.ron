@@ -261,9 +261,8 @@ Ruleset(
                 // Gen-1 SLEEP goes THROUGH a Substitute (the oracle `apply_sleep` has no
                 // sub check — "SleepEffect does NOT check Substitute"), unlike every other
                 // primary status. So NO `VetoIf(HasVolatile("Substitute"))` here.
-                Hook(on: "DamagingHit", do: [
-                    InflictStatus(status: "sleep", target: Target, amount: RngRange(lo: 1, hi: 7)),
-                ]),
+                // Native SleepEffect preserves rejection sampling and the
+                // Hyper Beam recharge override before the hit test.
             ]),
 
         // ── CONFUSION (ConfuseEffect): a guaranteed 2..5-turn confusion VOLATILE
@@ -507,7 +506,8 @@ Ruleset(
         // Psywave: rng·1.5·level/256 (ONE byte drawn at the ModifyDamage ordinal).
         Effect(id: "special.psywave", kind: Move, power: 0, type: "Psychic", accuracy: 80,
             hooks: [
-                Hook(on: "ModifyDamage", order: 2000, do: [ SetDamage(value: RngScaledLevel(num: 3, den: 2), of: Source) ]),
+                // Psywave's player/enemy rejection ranges live in pokered_damage.
+                Hook(on: "ModifyDamage", order: 2000, do: [ DealMoveDamage ]),
             ]),
         // Super Fang: half the target's CURRENT hp (min 1).
         Effect(id: "special.super_fang", kind: Move, power: 0, type: "Normal", accuracy: 90,
