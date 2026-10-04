@@ -1753,18 +1753,23 @@ class AutonomousStoryAgent(DualStoryAgent):
                     reason=reason, state_preserved=True,
                     request_bytes=request_bytes, context_size_reference=dict(reference),
                     reference_scope=list(scope), byte_reference_is_token_limit=False)
-        local_instruction = instruction + (
+        group_instruction = (
             f' This is one disjoint comparison group from a larger {layer} choice. '
             'Choose the best relative next step in this group using the full unchanged state. '
             'A separate final comparison will judge the group representatives; '
             'select one representative even if this group has no ideal option.')
+        # A recursive split keeps the same comparison role. Repeating this
+        # paragraph at every depth wastes context without adding information.
+        local_instruction = instruction if group_instruction in instruction else instruction + group_instruction
         winners = [self.choose_bounded_choice(layer, state, {key: candidates[key] for key in group},
                     local_instruction, allow_abstain=False) for group in partitions]
         self.record(f'{layer}_partition_finalists', candidate_ids=keys, finalists=winners)
+        finalists_instruction = (' These candidates are the model-selected representatives of '
+            'disjoint comparison groups. Compare them for the overall next step.')
+        final_instruction = (instruction if finalists_instruction in instruction
+                             else instruction + finalists_instruction)
         return self.choose_bounded_choice(layer, state, {key: candidates[key] for key in winners},
-            instruction + ' These candidates are the model-selected representatives of '
-            'disjoint comparison groups. Compare them for the overall next step.',
-            allow_abstain=allow_abstain)
+            final_instruction, allow_abstain=allow_abstain)
 
     def annotate_navigation(self, groups, facts, previews=None, *, prune=True):
         """A failed destination region does not block every NPC on its map."""

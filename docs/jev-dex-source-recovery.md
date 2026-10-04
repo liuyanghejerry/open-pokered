@@ -5944,3 +5944,41 @@ Paras Safari登记、Hypno经验、TM11出售和两次各500入场费用均保�
 `legal20-checkpoint-proof-20261004.json` 和
 `legal58-cache-handover20-lineage-file-and-input-integrity-20261004.json`，
 均位于长期worktree的 `.artifacts/checkpoint-safety-20261003/`。
+
+## 第21段真实准备、新严格检查点与容量失败（2026-10-04）
+
+从原20保存正常CONTINUE，第21段 `20261004-124256-seed42` 使用clean
+113c20b1、47文件policy0256bfc5、新native8dae11eb、原gfx；双Jev／
+jev-1.13.0／OpenRouter，无指定路线或答案。初始所有普通evaluation／
+party／PC／资源／位置等与显式handover的真实canonical baseline一致。
+首个strategy成功30.353秒，action62.063秒；首轮完整94候选34调用、
+23成功／11容量错误，全部世界事实／候选／当前access和最终none守恒。
+
+61.246秒Jev选择已观察水路目标，66.248秒真实Surf到CeruleanCity；
+118.628秒选择取出Paras，121.688秒原生PC取出22级／XP10648／HP47
+Paras、存入Geodude。199.506秒选择Parasect进化训练，203.800秒前往
+Route17被骑行门挡住；随后模型自主选择BICYCLE，280.596秒抵达BikeShop，
+281.530秒正常兑换BikeVoucher→Bicycle、获得EVENT_GOT_BICYCLE，钱包
+93不变。未获得新种类，未退款、回档或使用隔离回放信用。
+
+363.963秒控制器以`strategy:service_unavailable`自动安全结束。原始
+错误确切为HTTP400 `max_tokens_exceeded`，不能解释成额度不足或API
+暂时故障；实际策略202／动作10调用、6动作，最后仅2候选也溢出。
+final-observations有效，位于BikeShop4,2；新独立原生schema4严格
+expected==restored，无迁移例外。新检查点58种保留自行车、Paras及全部
+准备和资源变化。21段真实0种父链再次审计58唯一登记／133424普通推进
+回执／21唯一视频；末段95.05秒、5703帧、1726437字节MP4完整解码。
+这是自然服务失败准备检查点，不是护士／新增登记／零输入证明。
+
+还确认递归partition重复累加同一说明：最后出现5次，说明13318字符。
+修复仅让group／finalist角色说明各至多一次，分组、全部候选／事实、
+模型选择及最终none／强制无none语义不变。两项深递归防护覆盖双层与
+64完整候选，全Python1116项通过。对原始失败wire做一次真实只读诊断，
+不改state／criteria，仅删除重复说明，缩至12190字符；请求仍明确容量
+失败。因此此修复降低冗余，但没有解决本次最低两候选容量问题，不能
+盲目重启或声称模型收益；下一步需要继续无损优化证据表示或判断编排。
+原20历史失败、显式迁移与原21失败均保留；实际124和最终整片／大盘
+仍未完成。新严格证据：`legal21-checkpoint-proof-20261004.json`、
+`legal21-independent-continue-20261004.json`、
+`legal58-preparation21-lineage-file-and-input-integrity-20261004.json`；
+容量诊断：`legal21-terminal-partition-note-once-probe-20261004.json`。

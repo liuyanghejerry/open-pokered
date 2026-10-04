@@ -2020,6 +2020,45 @@ class AutonomousTests(unittest.TestCase):
         self.assertEqual(actual['local_state'], state['local_state'])
         self.assertEqual(actual['shared_strategy_evidence'], {'world': {'hp': 88}})
 
+    def test_nested_partition_role_instructions_do_not_accumulate_on_either_layer(self):
+        from copy import deepcopy
+        for layer in ('strategy', 'action'):
+            agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+            agent.record = Mock()
+            state = {'world': {'map': 'City', 'money': 93, 'party': ['Paras', 'Snorlax']}}
+            candidates = {str(i): f'Original option {i}' for i in range(64)}
+            original = deepcopy((state, candidates))
+            evaluated = set()
+            def decide(actual_layer, actual, options, instruction, *, allow_abstain):
+                self.assertEqual(actual_layer, layer)
+                self.assertEqual(actual, state)
+                self.assertTrue(instruction.startswith('Pick using actual facts.'))
+                self.assertLessEqual(instruction.count('This is one disjoint comparison group'), 1)
+                self.assertLessEqual(instruction.count('These candidates are the model-selected representatives'), 1)
+                self.assertEqual(options, {key: candidates[key] for key in options})
+                if len(options) > 2:
+                    raise StoryStopped(f'{layer}:service_unavailable') from TypeSafeError('max_tokens_exceeded')
+                evaluated.update(options)
+                return max(options, key=int)
+            with self.subTest(layer=layer), patch.object(DualStoryAgent, 'choose', side_effect=decide) as calls:
+                self.assertEqual(agent.choose_bounded_choice(layer, state, candidates,
+                    'Pick using actual facts.'), '63')
+                self.assertTrue(calls.call_args.kwargs['allow_abstain'])
+            self.assertEqual(evaluated, set(candidates))
+            self.assertEqual((state, candidates), original)
+
+    def test_nested_partition_still_preserves_mandatory_no_abstention(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.record = Mock()
+        def decide(layer, state, options, instruction, *, allow_abstain):
+            self.assertFalse(allow_abstain)
+            if len(options) > 2:
+                raise StoryStopped('action:service_unavailable') from TypeSafeError('max_tokens_exceeded')
+            return max(options, key=int)
+        with patch.object(DualStoryAgent, 'choose', side_effect=decide):
+            self.assertEqual(agent.choose_bounded_choice('action', {},
+                {str(i): f'Option {i}' for i in range(16)}, 'Pick', allow_abstain=False), '15')
+
     def test_strategy_overflow_partition_keeps_state_and_considers_every_option(self):
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
         agent.record = Mock()
