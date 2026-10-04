@@ -136,6 +136,7 @@ pub fn deserialize_game_data(reader: &mut SramReader) -> Result<GameData, SaveEr
 
     let gp_bytes = reader.read_bytes(GAME_PROGRESS_FLAGS_SIZE)?;
     data.game_progress_flags = gp_bytes.to_vec();
+    data.game_progress_tail = reader.read_bytes(GAME_PROGRESS_TAIL_SIZE)?.to_vec();
 
     reader.skip(56)?;
 
@@ -152,13 +153,13 @@ pub fn deserialize_game_data(reader: &mut SramReader) -> Result<GameData, SaveEr
 
     data.safari_steps = reader.read_u16_be()?;
     data.fossil_item = reader.read_u8()?;
-    data.fossil_mon = reader.read_u8()?;
+    data.fossil_mon = pokered_data::species::Species::from_rom_id(reader.read_u8()?) as u8;
     reader.skip(2)?;
     data.enemy_mon_or_trainer_class = reader.read_u8()?;
     let _jumping_y_index = reader.read_u8()?;
-    data.rival_starter = reader.read_u8()?;
+    data.rival_starter = pokered_data::species::Species::from_rom_id(reader.read_u8()?) as u8;
     reader.skip(1)?;
-    data.player_starter = reader.read_u8()?;
+    data.player_starter = pokered_data::species::Species::from_rom_id(reader.read_u8()?) as u8;
     let _boulder_sprite = reader.read_u8()?;
     data.last_blackout_map = reader.read_u8()?;
     data.destination_map = reader.read_u8()?;
@@ -188,7 +189,7 @@ pub fn deserialize_game_data(reader: &mut SramReader) -> Result<GameData, SaveEr
     reader.skip(1)?;
     data.status_flags[9] = reader.read_u8()?;
 
-    data.completed_in_game_trade_flags = reader.read_u16_be()?;
+    data.completed_in_game_trade_flags = u16::from_le_bytes([reader.read_u8()?, reader.read_u8()?]);
     reader.skip(2)?;
     data.warped_from_warp = reader.read_u8()?;
     data.warped_from_map = reader.read_u8()?;
@@ -210,9 +211,9 @@ pub fn deserialize_game_data(reader: &mut SramReader) -> Result<GameData, SaveEr
     data.water_rate = reader.read_u8()?;
     let water_data = reader.read_bytes(WILDDATA_LENGTH - 1)?;
     data.water_mons.copy_from_slice(water_data);
-    // The UNION's remaining bytes (425 − 48; link-battle branch, see
+    // The UNION's remaining bytes (425 − 50; link-battle branch, see
     // ser_game_data.rs) — skip to the original post-union offsets.
-    reader.skip(377)?;
+    reader.skip(375)?;
 
     data.trainer_header_ptr = reader.read_u16_be()?;
     reader.skip(6)?;
@@ -244,7 +245,7 @@ fn deserialize_daycare_box_struct(
     reader: &mut SramReader,
     dc: &mut DayCareMon,
 ) -> Result<(), SaveError> {
-    dc.species = reader.read_u8()?;
+    dc.species = pokered_data::species::Species::from_rom_id(reader.read_u8()?) as u8;
     dc.hp = reader.read_u16_be()?;
     dc.box_level = reader.read_u8()?;
     dc.status = reader.read_u8()?;
@@ -256,13 +257,11 @@ fn deserialize_daycare_box_struct(
     }
     dc.ot_id = reader.read_u16_be()?;
     dc.exp = reader.read_exp24()?;
-    // box_struct has no stat-exp fields — they never round-trip SRAM (the
-    // gameplay model zeroes them on withdraw; see daycare's EV wipe).
-    dc.hp_exp = 0;
-    dc.attack_exp = 0;
-    dc.defense_exp = 0;
-    dc.speed_exp = 0;
-    dc.special_exp = 0;
+    dc.hp_exp = reader.read_u16_be()?;
+    dc.attack_exp = reader.read_u16_be()?;
+    dc.defense_exp = reader.read_u16_be()?;
+    dc.speed_exp = reader.read_u16_be()?;
+    dc.special_exp = reader.read_u16_be()?;
     dc.dvs = reader.read_u16_be()?;
     for i in 0..4 {
         dc.pp[i] = reader.read_u8()?;

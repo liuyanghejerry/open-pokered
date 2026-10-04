@@ -215,6 +215,8 @@ pub struct PokemonGame {
     pending_evolve_move_replace: Option<(usize, pokered_data::moves::MoveId)>,
     /// FLY: the town map opens in destination-picker mode (pending_fly_map).
     pending_fly_map: bool,
+    pending_npc_trade: Option<(pokered_data::species::Species, pokered_data::species::Species, String)>,
+    pending_npc_trade_result: Option<bool>,
     pub pokedex_screen: PokedexScreenState,
     pub trainer_card_screen: TrainerCardScreenState,
     pub stats_screen: Option<StatsScreenState>,
@@ -403,6 +405,8 @@ impl PokemonGame {
             pending_softboiled_user: None,
             pending_evolve_move_replace: None,
             pending_fly_map: false,
+            pending_npc_trade: None,
+            pending_npc_trade_result: None,
             pokedex_screen: PokedexScreenState::new(
                 pokered_core::pokemon::pokedex::Pokedex::new(),
                 version,
@@ -502,6 +506,8 @@ impl PokemonGame {
             pending_softboiled_user: None,
             pending_evolve_move_replace: None,
             pending_fly_map: false,
+            pending_npc_trade: None,
+            pending_npc_trade_result: None,
             pokedex_screen: PokedexScreenState::new(
                 pokered_core::pokemon::pokedex::Pokedex::new(),
             ),
@@ -601,7 +607,8 @@ impl PokemonGame {
     /// Read the companion script-flags file (native sidecar for the
     /// runtime-only dynamic keys — e.g. `__OBJ_HIDDEN_*` — that have no bit
     /// in the fixed SRAM event-flags region). Named event flags in old
-    /// sidecars are harmless: `set_script_flags` routes them to the bitset.
+    /// Older sidecar aliases are reconciled by `restore_loaded_save_flags`;
+    /// canonical SRAM event/status bits retain authority.
     #[cfg(not(target_arch = "wasm32"))]
     fn read_companion_script_flags() -> Option<pokered_core::hash_compat::HashMap<String, bool>> {
         let flags_path = script_flags_file_path();
@@ -893,14 +900,10 @@ impl PokemonGame {
                         self.rival_name = pokered_data::charmap::decode_string(
                             &self.save_data.game_data.rival_name,
                         );
-                        // Seed the event-flag bitset from SRAM bytes, then
-                        // merge any runtime-only extras (companion sidecar)
-                        // on top.
-                        overworld.set_event_flags_bytes(&self.save_data.game_data.event_flags);
-                        overworld.restore_system_save_state(&self.save_data.game_data);
-                        if let Some(extras) = Self::read_companion_script_flags() {
-                            overworld.set_script_flags(extras);
-                        }
+                        overworld.restore_loaded_save_flags(
+                            &self.save_data,
+                            Self::read_companion_script_flags(),
+                        );
                         overworld.set_toggleable_object_flags(
                             self.save_data.game_data.toggleable_object_flags,
                         );
@@ -1597,6 +1600,9 @@ impl PokemonGame {
             return;
         }
 
+        if self.pending_npc_trade_result.is_some() && self.overworld.pending_dialogue.is_none() {
+            self.overworld.resume_script_after_trade(self.pending_npc_trade_result.take().unwrap());
+        }
         let action = match self.state.screen {
             GameScreen::GameFreakSplash => {
                 // PlayShootingStar (engine/movie/intro.asm:305-341): input
@@ -1780,7 +1786,44 @@ impl PokemonGame {
                 }
             }
             GameScreen::Overworld => {
-                if self.overworld.is_naming_screen_active() {
+                if self.overworld.is_party_select_active() {
+                    let psi = PartyScreenInput { up: input.is_just_pressed(GbButton::Up), down: input.is_just_pressed(GbButton::Down), a: input.is_just_pressed(GbButton::A), b: input.is_just_pressed(GbButton::B) };
+                    if self.pending_npc_trade.is_some() {
+                        use pokered_core::party_select::PartySelectResult;
+                        let picked = self.overworld.pending_party_select.as_mut().unwrap().update_frame(psi);
+                        if picked != PartySelectResult::Active {
+                            self.overworld.pending_party_select = None;
+                            let (give, receive, nickname) = self.pending_npc_trade.take().unwrap();
+                            let mut traded = false;
+                            self.overworld.set_flag_live("NPC_TRADE_CANCELLED", picked == PartySelectResult::Cancelled);
+                            if let PartySelectResult::Selected(idx) = picked {
+                                if let Some(offered) = self.save_data.party.get(idx) {
+                                    if offered.species == give {
+                                        let (dvs, ot) = pokered_core::trade::roll_npc_trade_randoms_thread();
+                                        if let Some(mon) = pokered_core::trade::assemble_npc_trade_mon(receive, offered.level, &nickname, dvs, ot, self.save_data.game_data.player_id) {
+                                            if self.save_data.party.remove_for_trade(idx).is_ok() && self.save_data.party.add(mon).is_ok() {
+                                                self.save_data.game_data.pokedex.set_seen(receive);
+                                                self.save_data.game_data.pokedex.set_owned(receive);
+                                                traded = true;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            self.overworld.party_count = self.save_data.party.count() as u8;
+                            self.overworld.party_lead_level = self.save_data.party.leader_level();
+                            if traded {
+                                self.overworld.mark_npc_trade_completed(&nickname);
+                                self.overworld.pending_dialogue=Some(pokered_core::overworld::BedroomDialogue::from_message(
+                                    if self.state.config.language==Lang::Zh { "好，请把通信线接上！" }
+                                    else { "Okay, connect the\ncable like so!" }));
+                            }
+                            if traded { self.pending_npc_trade_result=Some(true); }
+                            else { self.overworld.resume_script_after_trade(false); }
+                        }
+                    } else { self.overworld.update_party_select_input(psi); }
+                    ScreenAction::Continue
+                } else if self.overworld.is_naming_screen_active() {
                     let naming_input = NamingInput {
                         up: input.is_just_pressed(GbButton::Up),
                         down: input.is_just_pressed(GbButton::Down),
@@ -1960,59 +2003,14 @@ impl PokemonGame {
                                 received,
                                 nickname,
                             } => {
-                                use pokered_core::trade::{
-                                    assemble_npc_trade_mon, roll_npc_trade_randoms_thread,
-                                };
+                                self.overworld.set_flag_live("NPC_TRADE_CANCELLED", false);
                                 use pokered_data::species::Species;
-                                use pokered_data::trades::find_npc_trade;
-                                // No cutscene in the terminal frontend: the
-                                // mutation applies immediately and the
-                                // suspended script resumes with the outcome
-                                // (deferred until after the drain — borrow).
-                                let mut traded = false;
-                                if let (Some(off_sp), Some(rec_sp)) = (
-                                    Species::from_scene_name(&offered),
-                                    Species::from_scene_name(&received),
-                                ) {
-                                    if let Some(idx) = self.save_data.party.find_species(off_sp) {
-                                        if let Ok(removed) = self.save_data.party.remove(idx) {
-                                            // TradeMons-table nickname is
-                                            // authoritative; script arg is the
-                                            // fallback for non-table pairs.
-                                            let nick = find_npc_trade(off_sp, rec_sp)
-                                                .map(|t| t.nickname.to_string())
-                                                .unwrap_or(nickname);
-                                            let (dv_bytes, ot_id) = roll_npc_trade_randoms_thread();
-                                            let player_id = self.save_data.game_data.player_id;
-                                            if let Some(mon) = assemble_npc_trade_mon(
-                                                rec_sp,
-                                                removed.level,
-                                                &nick,
-                                                dv_bytes,
-                                                ot_id,
-                                                player_id,
-                                            ) {
-                                                let _ = self.save_data.party.add(mon);
-                                                // AddPartyMon sets the Pokédex
-                                                // seen+owned flags.
-                                                self.save_data
-                                                    .game_data
-                                                    .pokedex
-                                                    .set_seen(rec_sp);
-                                                self.save_data
-                                                    .game_data
-                                                    .pokedex
-                                                    .set_owned(rec_sp);
-                                                traded = true;
-                                            }
-                                        }
-                                    }
-                                }
-                                self.overworld.party_count = self.save_data.party.count() as u8;
-                                self.overworld.box_count = self.save_data.current_box.count() as u8;
-                                self.overworld.party_lead_level =
-                                    self.save_data.party.leader_level();
-                                trade_results.push(traded);
+                                if let (Some(off_sp), Some(rec_sp)) = (Species::from_scene_name(&offered), Species::from_scene_name(&received)) {
+                                    let nickname = pokered_data::trades::find_npc_trade(off_sp, rec_sp).map(|t| t.nickname.to_string()).unwrap_or(nickname);
+                                    self.pending_npc_trade = Some((off_sp, rec_sp, nickname));
+                                    self.overworld.begin_party_select(self.save_data.party.to_vec());
+                                } else { trade_results.push(false); }
+
                             }
                             OverworldGameDataRequest::GiveCoins { amount } => {
                                 self.save_data.game_data.give_coins(amount);
@@ -2152,6 +2150,8 @@ impl PokemonGame {
                             pending.level,
                             pokered_core::pokemon::stats::roll_random_dvs(),
                         ) {
+                            pokemon.ot_id = self.save_data.game_data.player_id;
+                            pokemon.ot_name = pokered_core::battle::state::encode_name(&self.player_name);
                             if let Some(nick) = pending.nickname {
                                 pokemon.set_nickname(&nick);
                             }
@@ -3157,6 +3157,8 @@ impl PokemonGame {
                         };
                         pc.update_frame(menu_input, &mut ctx)
                     };
+                    // Every mutation must refresh the live bank-1 box, not only CHANGE BOX.
+                    self.save_data.current_box = self.save_data.pc_storage.current_box().clone();
                     for sfx in pc.take_sfx() {
                         if let Some(ref audio) = self.audio {
                             let id = match sfx {
@@ -3408,7 +3410,11 @@ impl PokemonGame {
                 draw_oak_speech(&self.oak_speech, &mut self.resources, frame_buffer, self.state.config.language);
             }
             GameScreen::Overworld => {
-                draw_overworld(&mut self.overworld, &mut self.resources, frame_buffer);
+                if let Some(selector) = &self.overworld.pending_party_select {
+                    draw_party_screen(selector.screen(), None, 0, frame_buffer, self.state.config.language);
+                } else {
+                    draw_overworld(&mut self.overworld, &mut self.resources, frame_buffer);
+                }
             }
             GameScreen::Battle => {
                 // Capture the pre-battle overworld frame once, so the screen

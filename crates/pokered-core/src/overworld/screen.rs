@@ -2438,6 +2438,23 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         self.safari_game_active
     }
 
+    /// SRAM owns all mapped flags. Only an identified old native layout may
+    /// recover the system aliases it formerly kept solely in its companion.
+    pub fn restore_loaded_save_flags(&mut self, save: &crate::save::SaveData, extras: Option<HashMap<String, bool>>) {
+        self.set_event_flags_bytes(&save.game_data.event_flags);
+        self.restore_system_save_state(&save.game_data);
+        if let Some(mut extras)=extras {
+            extras.retain(|name,value| {
+                if pokered_data::event_flags::EventFlag::from_name(name).is_some() { return false; }
+                let system_alias=name.starts_with("EVENT_TRADED_FOR_")
+                    || name=="EVENT_GOT_LICKITUNG_FROM_TRADE"
+                    || matches!(name.as_str(),"EVENT_GOT_OLD_ROD"|"EVENT_GOT_GOOD_ROD"|"EVENT_GOT_SUPER_ROD");
+                !system_alias || ((save.imported_legacy_native || save.imported_legacy_json) && *value)
+            });
+            self.set_script_flags(extras);
+        }
+    }
+
     /// InGameTrade_DoTrade records success after species validation, before
     /// ConnectCableText and the trade movie.
     pub fn mark_npc_trade_completed(&mut self, nickname: &str) {
