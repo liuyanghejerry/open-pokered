@@ -18,9 +18,9 @@ STORY_GRAPH_PATH = ROOT / 'crates/pokered-data/story/graph.json'
 
 ENCOUNTER_SLOT_WEIGHTS = (51, 51, 39, 25, 25, 25, 13, 13, 11, 3)
 
-# pokered-data/src/wild_data.rs::super_rod_groups.  A successful Super Rod
-# bite picks uniformly from its group's entries; every cast first has a 50%
-# no-bite roll.
+# pokered-data/src/wild_data.rs::super_rod_groups. A successful bite picks
+# uniformly from its entries. Rejected entries redraw the no-bite check too:
+# under independent uniform bytes, n entries give n/(4+n) bites per cast.
 SUPER_ROD_GROUPS = (
     ((15, 'Tentacool'), (15, 'Poliwag')),
     ((15, 'Goldeen'), (15, 'Poliwag')),
@@ -90,14 +90,15 @@ def table_profile(table, owned_species=()):
 
 
 def fishing_profile(rod, map_name, owned_species=()):
-    """Per-cast yield for a rod on a map, including the no-bite roll."""
+    """Encounter-only cast yield, including every rejection-loop redraw."""
     if rod == 'OldRod':
         entries, bite_probability = OLD_ROD_MONS, 1.0
     elif rod == 'GoodRod':
-        entries, bite_probability = GOOD_ROD_MONS, .5
+        entries = GOOD_ROD_MONS
+        bite_probability = len(entries) / (4 + len(entries))
     elif rod == 'SuperRod' and map_name in SUPER_ROD_MAP_GROUP:
         entries = SUPER_ROD_GROUPS[SUPER_ROD_MAP_GROUP[map_name]]
-        bite_probability = .5
+        bite_probability = len(entries) / (4 + len(entries))
     else:
         return None
     owned = set(owned_species)
@@ -106,18 +107,27 @@ def fishing_profile(rod, map_name, owned_species=()):
         by_species[species].append(level)
     per_entry = bite_probability / len(entries)
     missing = sorted(species for species in by_species if species not in owned)
-    novel = per_entry * sum(len(by_species[species]) for species in missing)
+    missing_entries = sum(len(by_species[species]) for species in missing)
+    novel = per_entry * missing_entries
+    registered = per_entry * (len(entries) - missing_entries)
     return {
+        'scope': 'Independent uniform-byte encounter reference per eligible land-based rod cast, '
+            'including every rejection-loop redraw. No-bite is separate from already-registered '
+            'fish. Encounter shares are conditional on a bite; per-attempt rates include no bite. '
+            'This is not capture probability, catch time or guaranteed registration.',
         'rod': rod,
         'bite_probability_pct': round(bite_probability * 100, 1),
+        'no_bite_per_attempt_pct': round((1 - bite_probability) * 100, 1),
+        'registered_bite_per_attempt_pct': round(registered * 100, 1),
         'unregistered_species_count': len(missing),
-        'unregistered_encounter_share_pct': round(novel * 100, 1),
-        'duplicate_encounter_share_pct': round((1 - novel) * 100, 1),
+        'unregistered_encounter_share_pct': round(missing_entries / len(entries) * 100, 1),
+        'duplicate_encounter_share_pct': round((len(entries) - missing_entries) / len(entries) * 100, 1),
         'new_species_per_attempt_pct': round(novel * 100, 1),
         'expected_attempts_to_any_new_species': round(1 / novel, 1) if novel else None,
         'targets': [{
             'species': species,
             'levels': [min(by_species[species]), max(by_species[species])],
+            'encounter_share_pct': round(len(by_species[species]) / len(entries) * 100, 1),
             'per_attempt_pct': round(per_entry * len(by_species[species]) * 100, 1),
             'expected_attempts': round(1 / (per_entry * len(by_species[species])), 1),
         } for species in missing],
