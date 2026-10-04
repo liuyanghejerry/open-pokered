@@ -1,0 +1,182 @@
+{
+  "base": "deed3e23c1f360c499a1c3fe56f1482e66235e0b",
+  "capture": "actual TUI framebuffer, headless; matched state/frame; 160x144; Fusion Pixel unchanged",
+  "comparisons": [
+    {
+      "screen": "tui-bag-en",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-bag-zh",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-battle-en",
+      "changed_pixels": 310
+    },
+    {
+      "screen": "tui-battle-zh",
+      "changed_pixels": 371
+    },
+    {
+      "screen": "tui-copyright-en",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-copyright-zh",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-dex-caterpie-page-0",
+      "changed_pixels": 1936
+    },
+    {
+      "screen": "tui-fly-departure-0-en",
+      "changed_pixels": 15283
+    },
+    {
+      "screen": "tui-fly-departure-0-zh",
+      "changed_pixels": 15245
+    },
+    {
+      "screen": "tui-fly-departure-7-en",
+      "changed_pixels": 15283
+    },
+    {
+      "screen": "tui-fly-departure-7-zh",
+      "changed_pixels": 15245
+    },
+    {
+      "screen": "tui-fly-departure-8-en",
+      "changed_pixels": 6502
+    },
+    {
+      "screen": "tui-fly-departure-8-zh",
+      "changed_pixels": 6502
+    },
+    {
+      "screen": "tui-hof-rating-50",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-hof-stats-max",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-hof-stats-zero",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-intro-en",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-intro-zh",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-language-en",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-language-zh",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-main-menu-en",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-main-menu-zh",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-oak-input-frame-43",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-oak-name-choice",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-options-en",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-options-zh",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-overworld-en",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-overworld-zh",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-party-en",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-party-zh",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-pc-oak-rating-50",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-save-en",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-save-zh",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-splash-en",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-splash-zh",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-start-menu-en",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-start-menu-zh",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-starter-dex-overlay",
+      "changed_pixels": 1952
+    },
+    {
+      "screen": "tui-title-en",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-title-zh",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-town-map-en",
+      "changed_pixels": 192
+    },
+    {
+      "screen": "tui-town-map-zh",
+      "changed_pixels": 374
+    },
+    {
+      "screen": "tui-trainer-card-en",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-trainer-card-zh",
+      "changed_pixels": 0
+    }
+  ]
+}

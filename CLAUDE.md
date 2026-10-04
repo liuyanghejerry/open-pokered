@@ -31,8 +31,8 @@ crates/
 ├── pokered-renderer/      # 160×144 framebuffer rendering, battle anims, fonts
 ├── pokered-ui/            # UI engine + menus (pluggable Painter backends)
 ├── pokered-audio/         # Game Boy APU emulation (4 channels), sequencer, SFX
-├── pokered-app/           # ★ The native binary `pokered-app` + debug CLI
-├── pokered-tui/           # Terminal UI frontend (same pokered-ui code)
+├── pokered-app/           # ★ Shared PokemonGame runtime + native binary/debug CLI
+├── pokered-tui/           # Terminal host adapter over pokered-app::PokemonGame
 ├── pokered-ui-preview/    # WASM shim for pokered-editor WYSIWYG layout preview
 ├── pokered-layout-preview/# WASM layout preview for the editor (mock data + custom:hp_bar + DSL compile bridge)
 ├── pokered-web/           # Full game for WASM/browser (wgpu/pixels)
@@ -53,6 +53,8 @@ The game's graphics live at `gfx/` (PNG/2bpp asset dumps from the original game,
 ## Architecture notes
 
 Key invariants — preserve these when editing:
+
+- **Frontends share `pokered-app::PokemonGame` and its screen rendering.** TUI uses the library with `default-features = false`, enables framebuffer/resources and native audio, and only adapts terminal input/output. Keep game flow and rendering fixes in the shared runtime instead of adding frontend copies.
 
 - **`pokered-core` is pure logic with no I/O, no GPU, no platform calls.** Rendering, audio output, and windowing live in `pokered-renderer` / `pokered-audio` / `pokered-app`. Keep `core` deterministic and testable.
 - **Battles run on the generic effect-stack engine** (`dotzuki_engine::battle::stack::StackDriver`, consumed via the git dep); the production glue is `pokered-core/src/battle/pokered_rules/runtime.rs`. The legacy battle code remains only as a test-side parity oracle. Don't add new battle behavior to the legacy path.

@@ -3578,17 +3578,12 @@ dependencies = [
  "clap",
  "crossterm",
  "dotzuki-engine",
- "dotzuki-renderer",
  "dotzuki-tui",
- "log",
+ "pokered-app",
  "pokered-audio",
  "pokered-core",
  "pokered-data",
  "pokered-renderer",
- "pokered-ui",
- "ratatui",
- "serde",
- "serde_json",
 ]
 
 [[package]]

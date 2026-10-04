@@ -6118,3 +6118,71 @@ mod fidelity_flow_regressions {
         panic!("stuck in {:?}, visual state: {:#?}", game.battle.phase, game.battle_vfx);
     }
 }
+
+#[cfg(test)]
+mod zh_render_tests {
+    use super::*;
+    use pokered_core::game_state::Lang;
+    use pokered_renderer::resource::{AssetRoot, ResourceManager};
+
+    /// Offscreen zh-HUD regression: with `is_zh` the tile HUD name rows are
+    /// blanked, so dark pixels in those rows can only come from the
+    /// pixel-font overlay. Renders the same frame in zh and en, asserts both
+    /// carry name ink in the HUD rows, and (with
+    /// `POKERED_TUI_DEBUG_SHOTS=1`) drops both frames into `target/` as
+    /// PNGs for eyeballing.
+    #[test]
+    fn zh_battle_hud_overlays_cjk_names() {
+        let root = match AssetRoot::auto_detect() {
+            Ok(root) => root,
+            Err(e) => panic!("gfx assets unavailable for render test: {e}"),
+        };
+        let mut res = Some(ResourceManager::new(root));
+
+        let mut screen = BattleScreen::new(true);
+        // Stable phase: both HUDs visible plus the FIGHT/PKMN menu box.
+        screen.phase = BattlePhase::PlayerMenu;
+
+        let mut render = |lang: Lang| {
+            let mut fb = FrameBuffer::new(
+                dotzuki_engine::render_config::RenderConfig::new(160, 144),
+                Rgba::BLACK,
+            );
+            let mut effects = BattleVisualEffects::default();
+            draw_battle(&screen, &mut res, &mut fb, &mut effects, lang);
+            fb
+        };
+        let fb_zh = render(Lang::Zh);
+        let fb_en = render(Lang::En);
+
+        let band_has_ink = |fb: &FrameBuffer, x0: u32, x1: u32, y0: u32, y1: u32| {
+            (y0..y1).any(|y| (x0..x1).any(|x| fb.get_pixel(x, y).map_or(false, |p| p.r < 128)))
+        };
+        // Enemy name row (EnemyHud NAME at tile (1,0), left of the front
+        // sprite at tile 12): the zh overlay centers the CJK name there.
+        assert!(
+            band_has_ink(&fb_zh, 8, 88, 0, 8),
+            "zh enemy HUD name row must be drawn by the pixel-font overlay"
+        );
+        assert!(
+            band_has_ink(&fb_en, 8, 88, 0, 8),
+            "en enemy HUD name row must show the tiled species name"
+        );
+        // The two languages must produce visibly different frames
+        // (CJK overlay vs tiled ASCII names + ASCII message pages).
+        let differs = (0..160 * 144usize).any(|i| {
+            let (x, y) = ((i % 160) as u32, (i / 160) as u32);
+            fb_zh.get_pixel(x, y) != fb_en.get_pixel(x, y)
+        });
+        assert!(differs, "zh and en battle frames must differ");
+
+        if std::env::var("POKERED_TUI_DEBUG_SHOTS").as_deref() == Ok("1") {
+            let out = |name: &str| {
+                std::path::Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/../../target/"))
+                    .join(name)
+            };
+            let _ = fb_zh.save_png(&out("tui-battle-zh.png"));
+            let _ = fb_en.save_png(&out("tui-battle-en.png"));
+        }
+    }
+}

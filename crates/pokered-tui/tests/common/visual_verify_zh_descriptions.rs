@@ -1,7 +1,6 @@
 //! Capture the TUI's actual framebuffer without starting a terminal.
-use crate::game::PokemonGame;
 use dotzuki_engine::render_config::RenderConfig;
-use dotzuki_tui::InputState;
+use pokered_app::PokemonGame;
 use pokered_core::{
     game_state::{GameScreen, Lang},
     oak_speech::OakSpeechPhase,
@@ -9,6 +8,7 @@ use pokered_core::{
     pokemon::pokedex::Pokedex,
 };
 use pokered_data::{species::Species, wild_data::GameVersion};
+use pokered_renderer::input::InputState;
 use pokered_renderer::{input::GbButton, FrameBuffer, Rgba};
 
 #[test]
@@ -167,5 +167,79 @@ fn capture_tui_zh_hof_stats_limits() {
         let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
         game.draw(&mut fb);
         fb.save_png(&output.join(format!("{name}.png"))).unwrap();
+    }
+}
+
+/// Same state/frame on master and the shared-runtime branch.
+#[test]
+#[ignore = "writes matched TUI frames to PR_SCREENSHOTS"]
+fn capture_tui_shared_runtime_screens() {
+    let output = std::path::PathBuf::from(std::env::var("PR_SCREENSHOTS").unwrap());
+    std::fs::create_dir_all(&output).unwrap();
+    for (lang, suffix) in [(Lang::En, "en"), (Lang::Zh, "zh")] {
+        for (screen, name) in [
+            (GameScreen::CopyrightSplash, "copyright"),
+            (GameScreen::GameFreakSplash, "splash"),
+            (GameScreen::LanguageSelect, "language"),
+            (GameScreen::IntroScene, "intro"),
+            (GameScreen::TitleScreen, "title"),
+            (GameScreen::MainMenu, "main-menu"),
+            (GameScreen::Overworld, "overworld"),
+            (GameScreen::StartMenu, "start-menu"),
+            (GameScreen::OptionsMenu, "options"),
+            (GameScreen::SaveMenu, "save"),
+            (GameScreen::PartyScreen, "party"),
+            (GameScreen::Bag, "bag"),
+            (GameScreen::TownMap, "town-map"),
+            (GameScreen::TrainerCard, "trainer-card"),
+            (GameScreen::Battle, "battle"),
+        ] {
+            let mut game = PokemonGame::new(GameVersion::Red);
+            game.audio = None;
+            game.state.config.language = lang;
+            game.overworld.set_script_lang(suffix);
+            game.battle.is_zh = lang == Lang::Zh;
+            game.battle.phase = pokered_core::battle::BattlePhase::PlayerMenu;
+            game.frame_count = 180;
+            game.state.screen = screen;
+            let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+            game.draw(&mut fb);
+            fb.save_png(&output.join(format!("tui-{name}-{suffix}.png")))
+                .unwrap();
+        }
+    }
+}
+
+#[test]
+#[ignore = "writes matched FLY departure frames to PR_SCREENSHOTS"]
+fn capture_tui_fly_departure() {
+    use pokered_core::town_map_screen::TownMapScreenState;
+    use pokered_data::maps::MapId;
+    let output = std::path::PathBuf::from(std::env::var("PR_SCREENSHOTS").unwrap());
+    std::fs::create_dir_all(&output).unwrap();
+    for (lang, suffix) in [(Lang::En, "en"), (Lang::Zh, "zh")] {
+        let mut game = PokemonGame::new(GameVersion::Red);
+        game.audio = None;
+        game.state.config.language = lang;
+        game.overworld.set_script_lang(suffix);
+        game.overworld.state.player.x = 5;
+        game.overworld.state.player.y = 6;
+        game.town_map_screen =
+            TownMapScreenState::new_fly(MapId::PalletTown, vec![MapId::ViridianCity]);
+        game.state.screen = GameScreen::TownMap;
+        let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+        game.draw(&mut fb);
+        for frame in 0..=8 {
+            let mut input = InputState::new();
+            if frame == 0 {
+                input.press(GbButton::A);
+            }
+            game.update(&input);
+            game.draw(&mut fb);
+            if [0, 7, 8].contains(&frame) {
+                fb.save_png(&output.join(format!("tui-fly-departure-{frame}-{suffix}.png")))
+                    .unwrap();
+            }
+        }
     }
 }

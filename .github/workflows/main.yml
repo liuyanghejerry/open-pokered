@@ -86,6 +86,12 @@ jobs:
               - 'Cargo.lock'
               - 'Cargo.toml'
               - 'crates/pokered-tui/**'
+              - 'crates/pokered-app/**'
+              - 'crates/pokered-core/**'
+              - 'crates/pokered-data/**'
+              - 'crates/pokered-renderer/**'
+              - 'crates/pokered-audio/**'
+              - 'crates/pokered-ui/**'
             pokered-android:
               - 'Cargo.lock'
               - 'Cargo.toml'

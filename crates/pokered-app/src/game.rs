@@ -8390,3 +8390,7 @@ mod link_trade_movie_name_fidelity_tests {
         assert_eq!(anim.text_lines(), Some(("GREEN waves".to_string(), "farewell as".to_string())));
     }
 }
+
+#[cfg(test)]
+#[path = "game/shared_runtime_regressions.rs"]
+mod tui_runtime_regressions;
