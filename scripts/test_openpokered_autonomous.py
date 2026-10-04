@@ -5914,10 +5914,12 @@ class AutonomousTests(unittest.TestCase):
         changed = deepcopy(facts)
         changed['dex']['owned_species'].append('Clefairy')
         for operation, result in [('retrieve_pc:0,1,2,0', 'blocked'),
-                                  ('change_pc_box:1,0', 'changed_box'),
-                                  ('train_encounter:Route7,5,8', 'trained')]:
+                                  ('change_pc_box:1,0', 'changed_box')]:
             self.assertEqual(agent.operation_outcome_observations(operation,
                 {'result': result}, facts, changed), {})
+        self.assertNotIn('collection_pc_progress_observation',
+            agent.operation_outcome_observations('train_encounter:Route7,5,8',
+                {'result': 'trained'}, facts, changed))
         self.assertEqual(agent._last_completed_collection_pc, baseline)
         agent.collects_dex = False
         self.assertEqual(agent.operation_outcome_observations('deposit_pc:1,0',

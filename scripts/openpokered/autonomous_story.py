@@ -1494,6 +1494,7 @@ class AutonomousStoryAgent(DualStoryAgent):
             state['dex_progress'] = self.dex_progress(facts)
             state['collection_preparation_continuity_reference'] = (
                 self.collection_preparation_continuity_reference(facts))
+            state['collection_training_execution_reference'] = self.collection_training_execution_reference()
             state['safari_session_reference'] = safari_session_reference(facts)
             resource_guards = self.script_resource_guard_reference(facts)
             if resource_guards:
@@ -1581,9 +1582,23 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'party_species_observations': observations}
 
     def operation_outcome_observations(self, operation, result, before, after):
+        if not getattr(self, 'collects_dex', False):
+            return {}
+        if operation.startswith('train_encounter:') and result.get('result') == 'trained':
+            party = after.get('party')
+            conditions = None
+            if isinstance(party, list) and all(isinstance(mon, dict)
+                    and isinstance(mon.get('species'), str) for mon in party):
+                conditions = [{'party_index': i, **{key: deepcopy(mon.get(key))
+                    for key in ('species', 'hp', 'max_hp', 'status')}} for i, mon in enumerate(party)]
+            return {'collection_training_observation': {
+                'area': operation.split(':', 1)[1].split(',')[0],
+                'during_operation': self.compare_collection_progress(
+                    self.collection_progress_snapshot(before), self.collection_progress_snapshot(after)),
+                'party_condition_after': conditions}}
         completed_pc = ((operation.startswith('retrieve_pc:') and result.get('result') == 'withdrew_pokemon')
                         or (operation.startswith('deposit_pc:') and result.get('result') == 'deposited_pokemon'))
-        if not getattr(self, 'collects_dex', False) or not completed_pc:
+        if not completed_pc:
             return {}
         initial, final = (self.collection_progress_snapshot(facts) for facts in (before, after))
         observed = {'since_previous_completed_pc': self.compare_collection_progress(
@@ -1591,6 +1606,81 @@ class AutonomousStoryAgent(DualStoryAgent):
                     'during_completed_pc': self.compare_collection_progress(initial, final)}
         self._last_completed_collection_pc = final
         return {'collection_pc_progress_observation': observed}
+
+    def collection_training_execution_reference(self):
+        """Count retained observations, not victories, causal rewards or future costs."""
+        completed, areas = [], {}
+        recovery_count = 0
+        for row in getattr(self, 'recent', []):
+            goal = row.get('selected_subgoal')
+            if (goal and tuple(goal) == ('heal', 'party', True)
+                    and row.get('selected_subgoal_satisfied_after') is True):
+                recovery_count += 1
+            operation = row.get('operation', '')
+            if not operation.startswith('train_encounter:') or row.get('result') != 'trained':
+                continue
+            completed.append({key: deepcopy(row[key]) for key in (
+                'operation', 'result', 'selected_subgoal', 'map', 'collection_training_observation')
+                if key in row})
+            name = operation.split(':', 1)[1].split(',')[0]
+            area = areas.setdefault(name, {'area': name, 'completed_training_operation_count': 0,
+                'operations_with_boundary_observations': 0,
+                'operations_with_unknown_party_progress': 0, 'species_boundary_samples': {}})
+            area['completed_training_operation_count'] += 1
+            observed = row.get('collection_training_observation')
+            if not isinstance(observed, dict):
+                area['operations_with_unknown_party_progress'] += 1
+                continue
+            area['operations_with_boundary_observations'] += 1
+            progress = (observed.get('during_operation') or {}).get('party_species_observations')
+            if progress is None:
+                area['operations_with_unknown_party_progress'] += 1
+            conditions = observed.get('party_condition_after')
+            names = sorted({sample['species'] for sample in (progress or []) + (conditions or [])})
+            for species in names:
+                samples = area['species_boundary_samples'].setdefault(species, {
+                    'species': species, 'known_experience_difference_count': 0,
+                    'unknown_experience_difference_count': 0, 'known_experience_difference_sum': None,
+                    'known_condition_boundary_count': 0, 'unknown_condition_boundary_count': 0,
+                    'health_status_warning_boundary_count': 0})
+                xp_rows = [sample for sample in progress or [] if sample['species'] == species]
+                delta = xp_rows[0]['experience_change_if_single_sample_each'] if len(xp_rows) == 1 else None
+                if type(delta) is int:
+                    samples['known_experience_difference_count'] += 1
+                    previous_sum = samples['known_experience_difference_sum']
+                    samples['known_experience_difference_sum'] = (previous_sum if previous_sum is not None else 0) + delta
+                else:
+                    samples['unknown_experience_difference_count'] += 1
+                health = [sample for sample in conditions or [] if sample['species'] == species]
+                mon = health[0] if len(health) == 1 else None
+                known = (mon is not None and type(mon.get('hp')) is int
+                    and type(mon.get('max_hp')) is int and 0 <= mon['hp'] <= mon['max_hp']
+                    and mon['max_hp'] > 0 and isinstance(mon.get('status'), str) and bool(mon['status']))
+                if known:
+                    samples['known_condition_boundary_count'] += 1
+                    if mon['hp'] < mon['max_hp'] * .7 or mon['status'] != 'None':
+                        samples['health_status_warning_boundary_count'] += 1
+                else:
+                    samples['unknown_condition_boundary_count'] += 1
+        references = []
+        for name, area in sorted(areas.items()):
+            area['species_boundary_samples'] = [sample for _, sample in sorted(area['species_boundary_samples'].items())]
+            references.append(area)
+        return {'completed_training_operation_count': len(completed),
+            'training_operations_with_boundary_observations': sum(
+                row['operations_with_boundary_observations'] for row in references),
+            'satisfied_recovery_goal_outcome_count': recovery_count, 'areas': references,
+            'latest_training_operations': completed[-1:],
+            'scope': 'All retained current controller successful trained-operation outcomes, not before CONTINUE. '
+                'Only the latest training operation is listed. Counts are not battle counts; a trained '
+                'label does not prove a victory. XP sums include only known unique-species boundary differences, '
+                'including zero/negative observations; unknowns and duplicate species are not zero cost. '
+                'These are not individual identity or battle-caused rewards, nor future yield estimates. '
+                'Post-operation HP/status warning counts use the unchanged 70%/status recovery heuristic; '
+                'they do not prove training caused injury or that treatment is required. Satisfied recovery '
+                'goal outcomes are observed boundaries, not unique healing trips, not per-site recovery causation '
+                'or a treatment transaction count. Travel, combat turns, PP costs, model latency and unobserved '
+                'operations are not measured here. Native owned-bit changes do not certify lawful sources.'}
 
     def collection_preparation_continuity_reference(self, facts):
         """Compare held opportunities and observed PC work, never select a goal."""
@@ -1908,6 +1998,12 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'steps, not just levels remaining. Hundreds of low-yield battles have an opportunity '
                 'cost: acquiring an HM or resolving a story blocker may open better collecting and '
                 'training grounds. Previously visited tables are examples, not proof of current access.')
+            instruction += (' Compare collection_training_execution_reference with remaining training work '
+                'and all acquisition alternatives. Its observed XP boundary samples, post-training HP/status '
+                'warnings and recovery-goal outcomes can reveal preparation overhead that public encounter '
+                'XP estimates exclude. Heed missing samples, identity and causal limits; do not extrapolate '
+                'battle counts, healing rates or guaranteed future speed, skip safety recovery, or treat '
+                'past spending as a reason to persist. Training sites and all other offered goals remain available.')
             instruction += (' Compare collection_preparation_continuity_reference: current party '
                 'follow-ups need no further withdrawal, but still need their stated acquisition work. '
                 'A satisfied PC possession subgoal is preparation, not a new Pokédex registration. '
