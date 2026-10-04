@@ -616,6 +616,28 @@ impl BattleVisualEffects {
             && !self.fx.is_animating()
     }
 
+    pub fn frame_stability_blockers(&self) -> Vec<&'static str> {
+        let mut result = Vec::new();
+        if self.player_entry.is_some() { result.push("player_entry"); }
+        if self.enemy_entry.is_some() { result.push("enemy_entry"); }
+        if self.player_exit.is_some() { result.push("player_exit"); }
+        if self.enemy_exit.is_some() { result.push("enemy_exit"); }
+        if self.attack_lunge.is_some() { result.push("attack_lunge"); }
+        if self.move_mon_h.is_some() { result.push("move_mon_h"); }
+        if !self.anim_player.is_finished() { result.push("anim_player"); }
+        if self.anim_wait != 0 { result.push("anim_wait"); }
+        if !self.anim_layer.entries.is_empty() { result.push("anim_layer"); }
+        if self.pending_applying.is_some() { result.push("pending_applying"); }
+        if self.applying_motion.is_some() { result.push("applying_motion"); }
+        if self.anim_disabled_wait != 0 { result.push("anim_disabled_wait"); }
+        if self.pending_anim_start.is_some() { result.push("pending_anim_start"); }
+        if self.ball_choreo.is_some() { result.push("ball_choreo"); }
+        if self.transition_state.is_some() { result.push("transition_state"); }
+        if !matches!(self.intro_anim, IntroAnimState::None) { result.push("intro_anim"); }
+        if self.fx.is_animating() { result.push("framebuffer_effect"); }
+        result
+    }
+
     #[cfg(not(target_os = "none"))]
     pub fn render_transition(&self, source: &FrameBuffer, dest: &mut FrameBuffer) -> bool {
         if let Some(ref ts) = self.transition_state {
@@ -1002,6 +1024,12 @@ impl BattleVisualEffects {
         // frame counter would overflow after 255 ticks.
         if !matches!(phase, BattlePhase::Intro { .. }) {
             self.intro_anim = IntroAnimState::None;
+            // The core permits A/B to skip the input-gated reveal/send-out
+            // phases before a cosmetic wipe has exhausted its own counter.
+            // Once battle logic has left Intro, that wipe is no longer
+            // renderable and must not keep move presentation permanently
+            // non-stable.
+            self.transition_state = None;
         }
     }
 
@@ -2121,7 +2149,13 @@ impl BattleVisualEffects {
         // reaches Done. That wait must still count down before the core may
         // drain HP or start the next actor's move.
         if self.anim_player.is_finished() {
+            // `update` swaps the visible/pending OAM layers before reaching
+            // this branch. Clearing only the visible half leaves the same
+            // finished frame in `anim_layer_pending`; the following update
+            // swaps it back, so `is_frame_stable` never becomes true and the
+            // core remains parked on the first ShowingText page forever.
             self.anim_layer.clear();
+            self.anim_layer_pending.clear();
             self.anim_wait = self.anim_wait.saturating_sub(1);
             return;
         }
@@ -5857,6 +5891,20 @@ mod tests {
         assert!(!effects.is_frame_stable());
         effects.fx.tick();
         effects.fx.tick();
+        assert!(effects.is_frame_stable());
+    }
+
+    #[test]
+    fn leaving_intro_discards_a_skipped_transition_wipe() {
+        let mut effects = BattleVisualEffects::default();
+        effects.transition_state = Some(BattleTransitionState::new(
+            BattleTransitionKind::Spiral { outward: true }, 20, 18,
+        ));
+        assert!(!effects.is_frame_stable());
+
+        effects.on_phase_change(&BattlePhase::PlayerMenu);
+
+        assert!(effects.transition_state.is_none());
         assert!(effects.is_frame_stable());
     }
 

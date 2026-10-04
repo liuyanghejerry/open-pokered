@@ -203,7 +203,29 @@ fn capture_full_party_goes_to_box() {
     settle_battle_into_save(&mut battle, &mut save, &mut ow);
     assert_eq!(save.party.count(), 6, "party stays full");
     assert_eq!(save.current_box.count(), 1, "caught mon deposited to the PC box");
+    assert_eq!(save.pc_storage.current_box().count(), 1, "Bill's PC sees the catch");
+    assert_eq!(ow.box_count, 1, "overworld capacity reflects the catch");
+    let bytes = crate::save::sram_export::export_sram(&save);
+    let loaded = crate::save::sram_import::import_sram(&bytes).unwrap();
+    assert_eq!(loaded.pc_storage.current_box().get(0).unwrap().species, Species::Pidgey);
     assert!(save.game_data.pokedex.is_owned(Species::Pidgey));
+}
+
+#[test]
+fn capture_uses_selected_box_without_overwriting_other_boxes() {
+    let player: Vec<_> = (0..6).map(|_| mon(Species::Rattata, 5)).collect();
+    let mut battle = BattleScreen::from_parties(true, &player, &[mon(Species::Pidgey, 5)], None);
+    battle.captured_mon = Some(mon(Species::Pidgey, 5));
+    let mut save = SaveData::new();
+    save.pc_storage.deposit_to_current(mon(Species::Abra, 10)).unwrap();
+    save.pc_storage.change_box(3).unwrap();
+    save.game_data.current_box_num = 3 | 0x80;
+    save.current_box = save.pc_storage.current_box().clone();
+    let mut ow = overworld();
+    settle_battle_into_save(&mut battle, &mut save, &mut ow);
+    assert_eq!(save.pc_storage.get_box(0).unwrap().get(0).unwrap().species, Species::Abra);
+    assert_eq!(save.pc_storage.get_box(3).unwrap().get(0).unwrap().species, Species::Pidgey);
+    assert_eq!(save.current_box.count(), 1);
 }
 
 /// The mutated battle party (levels/HP/…) is written back to the save.

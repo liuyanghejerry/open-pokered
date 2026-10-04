@@ -2,6 +2,10 @@
 // no_std lib they import `crate::alloc_prelude` for Vec/String/vec!/format!;
 // mirror that module here from the std prelude so the same files build as
 // part of this std bin.
+// See `lib.rs`: this bin `mod`-includes the same `game.rs` snapshot macro,
+// so it needs the same raised expansion limit.
+#![recursion_limit = "256"]
+
 mod alloc_prelude {
     pub use std::prelude::rust_2021::*;
     // Items the lib's alloc_prelude provides beyond the std prelude.

@@ -17,6 +17,14 @@ import time
 
 
 class DebugClient:
+    # Exact allowlist: names alone (including a future get_* command) do not
+    # prove that a request leaves frames, input queues and persisted state alone.
+    RETRYABLE_OBSERVATIONS = frozenset({
+        'get_state', 'get_position', 'get_party', 'get_bag', 'get_flags',
+        'get_npcs', 'get_map', 'get_agent_state', 'get_nearby',
+        'get_world_graph', 'find_world_route', 'get_script_semantics',
+    })
+
     def __init__(self, port=9000, host="127.0.0.1", connect_timeout=15.0):
         self.host, self.port = host, port
         self.sock = None
@@ -44,21 +52,27 @@ class DebugClient:
         """Drop the (possibly wedged) connection and re-open one. The
         server reads requests one line at a time, so closing our side
         makes its reader hit EOF and accept the new connection fast."""
-        try:
-            if self.sock:
-                self.sock.close()
-        except OSError:
-            pass
+        # makefile() owns a reference to the socket too. Closing only sock
+        # leaves the old server-side reader waiting instead of seeing EOF.
+        for resource in (self.f, self.sock):
+            try:
+                if resource is not None:
+                    resource.close()
+            except OSError:
+                pass
         self._connect(60)
         self.sock.settimeout(120.0)
         self.f = self.sock.makefile("rw")
 
     def cmd(self, **kw):
         """Send one JSON-line command, return the parsed response.
-        Retries once on a transport stall (deadlocked round trip):
-        commands are effectively idempotent for a closed-loop driver —
-        a doubled queue entry or extra stepped frames self-correct."""
+        Retry only known observations, once. A lost acknowledgement does not
+        prove a mutation failed: replaying it can duplicate input or frames.
+        Such commands fail with an unknown outcome and are never resent here.
+        """
         line = json.dumps(kw) + "\n"
+        command = kw.get('cmd')
+        retryable = isinstance(command, str) and command in self.RETRYABLE_OBSERVATIONS
         for attempt in range(2):
             try:
                 self.f.write(line)
@@ -68,6 +82,8 @@ class DebugClient:
                     raise OSError("connection closed by peer")
                 return json.loads(resp)
             except OSError as e:
+                if not retryable:
+                    raise OSError(f'{command}: transport outcome unknown; command not replayed') from e
                 if attempt:
                     raise
                 print(f"[debug-drive] transport stall ({e!r}), "
@@ -98,9 +114,26 @@ class DebugClient:
         return self.cmd(cmd="step_frames", count=count)
 
     def drive(self, buttons, frames=None):
-        """Queue buttons then step exactly len(buttons) (or `frames`) frames."""
-        self.press_sequence(buttons)
-        return self.step(frames if frames is not None else len(buttons))
+        """Execute buttons and the neutral tail in one acknowledged timeline.
+
+        Queue-then-step can consume input between the two requests, especially
+        in driven-only mode. An atomic timeline preserves tap/release edges.
+        """
+        buttons = list(buttons)
+        frames = len(buttons) if frames is None else frames
+        if type(frames) is not int or frames < len(buttons):
+            raise ValueError('frame budget must be an integer covering the input timeline')
+        reply = self.cmd(cmd='press_timeline', advance=True,
+                         buttons=buttons + [None] * (frames - len(buttons)))
+        data = reply.get('data') if isinstance(reply, dict) else None
+        start = data.get('queue_start_frame') if isinstance(data, dict) else None
+        end = data.get('frame_count') if isinstance(data, dict) else None
+        if (not isinstance(reply, dict) or reply.get('ok') is not True
+                or not isinstance(data, dict) or data.get('advanced') is not True
+                or type(start) is not int or type(end) is not int
+                or start < 0 or end - start != frames):
+            raise RuntimeError(f'input timeline was not advanced atomically: {reply!r}')
+        return reply
 
     def state(self):
         return self.cmd(cmd="get_state")["data"]

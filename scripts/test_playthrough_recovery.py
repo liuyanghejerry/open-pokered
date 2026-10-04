@@ -116,6 +116,51 @@ class LeagueRecoveryTests(unittest.TestCase):
         state['battle_phase']='PlayerMenu'
         self.assertFalse(late.retry_elite_four(game,'m47',0))
 
+    def retry_with_supply_budget(self, money, stock=None):
+        game=Mock();state=self.state(hp=0,place='IndigoPlateau')
+        state.update(screen='overworld',battle_phase='TrainerVictory { player_won: false }',money=money)
+        stock=dict(stock or {});purchases=[]
+        game.st.return_value=state
+        game.d.cmd.side_effect=lambda **request:{'data':[
+            {'item':item,'qty':qty} for item,qty in stock.items()]}
+        def purchase(actual_game,item,slot,quantity):
+            self.assertIs(actual_game,game)
+            cost={'Revive':1500,'FullRestore':3000}[item]*quantity
+            self.assertGreater(quantity,0)
+            self.assertLessEqual(cost,state['money'])
+            state['money']-=cost
+            stock[item]=stock.get(item,0)+quantity
+            purchases.append((item,slot,quantity))
+        with patch.object(late,'buy',side_effect=purchase),patch.object(late,'lead_with'):
+            self.assertTrue(late.retry_elite_four(game,'m49',0))
+        return purchases,state['money'],stock
+
+    def test_blackout_reserves_revives_before_spending_on_hp_medicine(self):
+        purchases,money,stock=self.retry_with_supply_budget(12000)
+        self.assertEqual(purchases,[('Revive',5,4),('FullRestore',2,2)])
+        self.assertEqual(money,0)
+        self.assertEqual(stock,{'Revive':4,'FullRestore':2})
+
+    def test_blackout_buys_affordable_revive_when_cash_cannot_buy_full_restore(self):
+        purchases,money,stock=self.retry_with_supply_budget(2000)
+        self.assertEqual(purchases,[('Revive',5,1)])
+        self.assertEqual(money,500)
+        self.assertEqual(stock,{'Revive':1})
+
+    def test_blackout_tops_up_only_missing_stock_with_observed_remaining_money(self):
+        purchases,money,stock=self.retry_with_supply_budget(
+            6000,{'Revive':3,'FullRestore':15})
+        self.assertEqual(purchases,[('Revive',5,1),('FullRestore',2,1)])
+        self.assertEqual(money,1500)
+        self.assertEqual(stock,{'Revive':4,'FullRestore':16})
+
+    def test_blackout_does_not_overstock_existing_supplies(self):
+        purchases,money,stock=self.retry_with_supply_budget(
+            12000,{'Revive':5,'FullRestore':17})
+        self.assertEqual(purchases,[])
+        self.assertEqual(money,12000)
+        self.assertEqual(stock,{'Revive':5,'FullRestore':17})
+
     @patch.object(late,'use_item')
     def test_exhausted_inventory_does_not_invent_medicine(self,use):
         game=Mock();game.st.return_value={'party':[{'hp':0,'max_hp':10,'status':'None'}]}

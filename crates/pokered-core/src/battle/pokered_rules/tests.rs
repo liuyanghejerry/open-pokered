@@ -321,13 +321,13 @@ fn order_is_tie(s: &Scenario) -> bool {
 /// second mover is not exercised by the differential suite, so it is not modelled
 /// here (the direct gate tests drive those with explicit bytes).
 fn move_paralyzes_target(md: &MoveData, first_hit: bool, first_side_byte: u8, target_subbed: bool) -> bool {
-    if !first_hit || target_subbed {
-        return false; // a Substitute blocks the status ⇒ no paralysis ⇒ no gate byte
+    if !first_hit {
+        return false;
     }
     match md.effect {
         MoveEffect::ParalyzeEffect => true, // primary, 100% on hit (e.g. Thunder Wave)
-        MoveEffect::ParalyzeSideEffect1 => first_side_byte < 26,
-        MoveEffect::ParalyzeSideEffect2 => first_side_byte < 77,
+        MoveEffect::ParalyzeSideEffect1 => !target_subbed && first_side_byte < 26,
+        MoveEffect::ParalyzeSideEffect2 => !target_subbed && first_side_byte < 77,
         _ => false,
     }
 }
@@ -337,9 +337,9 @@ fn build_stream(s: &Scenario, first: FirstMover, tie: bool) -> Vec<u8> {
     build_stream_sub(s, first, tie, false)
 }
 
-/// Like [`build_stream`] but with whether the SECOND mover holds a Substitute (which
-/// blocks a first-mover-inflicted paralysis, suppressing the second mover's para
-/// gate byte). Only the P2 substitute scenarios pass `true`.
+/// Like [`build_stream`] but with whether the SECOND mover holds a Substitute
+/// (blocks damage-side paralysis, but not primary paralysis). Only the P2
+/// substitute scenarios pass `true`.
 fn build_stream_sub(s: &Scenario, first: FirstMover, tie: bool, second_subbed: bool) -> Vec<u8> {
     let md = real_move(s.move_id);
     let mut bytes = if tie { vec![s.order_byte] } else { Vec::new() };
@@ -3998,8 +3998,8 @@ fn p2_stack(s: &Scenario, setup: P2Setup) -> (EngineState<PokeredRules>, usize) 
     ];
     let first = first_mover(s);
     let tie = order_is_tie(s);
-    // A subbed second mover blocks a first-mover-inflicted paralysis ⇒ no para gate
-    // byte; thread the substitute flag so the predictor matches.
+    // A subbed second mover blocks damage-side paralysis, but not primary
+    // paralysis; thread the substitute flag so the gate-byte predictor matches.
     let bytes = build_stream_sub(s, first, tie, setup.substitute_both);
     let mut rng = ScriptedRng::new(bytes);
     StackDriver::execute_turn(&provider, &mut state, &mut effects, actions, &mut rng);
@@ -4074,19 +4074,17 @@ fn side_status_paralyze_30pct_fires_and_not() {
     assert_eq!(st2.opponent_battlers[0].status, None, "byte 77 ⇒ no paralysis");
 }
 
-/// The Substitute block: with a Substitute on BOTH movers, the status is vetoed.
-/// Uses a power-0 primary-status move (Thunder Wave) so there is no damage to
-/// redirect (Substitute damage absorption is P5/#28, not P2) — isolating the
-/// status block cleanly. Snorlax movers (Normal ⇒ no #23 on the Electric TW).
+/// Primary paralysis bypasses Substitute in Gen I. Damage-side paralysis still
+/// has its own Substitute guard; do not conflate those separate effect paths.
 #[test]
-fn side_status_blocked_by_substitute() {
-    let mut s = Scenario::base("Thunder Wave blocked by Substitute", MoveId::ThunderWave);
+fn primary_status_bypasses_substitute() {
+    let mut s = Scenario::base("Thunder Wave bypasses Substitute", MoveId::ThunderWave);
     s.player = Mon::new(Species::Snorlax, 300, 100);
     s.enemy = Mon::new(Species::Snorlax, 300, 50);
     p2_assert(&s, P2Setup::sub());
     let (stack, _c) = p2_stack(&s, P2Setup::sub());
-    assert_eq!(stack.opponent_battlers[0].status, None, "Substitute blocks the paralysis (enemy)");
-    assert_eq!(stack.player_battlers[0].status, None, "Substitute blocks the paralysis (player)");
+    assert_eq!(stack.opponent_battlers[0].status, Some(LegacyStatus::Paralysis), "primary paralysis bypasses Substitute (enemy)");
+    assert_eq!(stack.player_battlers[0].status, Some(LegacyStatus::Paralysis), "primary paralysis bypasses Substitute (player)");
     // Control: WITHOUT a Substitute, the same Thunder Wave DOES paralyze.
     let (open, _c2) = p2_stack(&s, P2Setup::none());
     assert_eq!(open.opponent_battlers[0].status, Some(LegacyStatus::Paralysis),
@@ -4151,8 +4149,8 @@ fn side_status_freeze_fires_defender_faints() {
 }
 
 /// PRIMARY status (Thunder Wave, ParalyzeEffect): guaranteed paralysis on a hit,
-/// no chance byte. Both Pikachu (Electric — not paralysis-#23-immune; TW is
-/// Electric so a Electric defender WOULD be #23-immune!). Use non-Electric movers.
+/// no chance byte. Same-type immunity applies only to damaging side effects;
+/// primary Electric-target and Substitute cases are covered separately below.
 #[test]
 fn primary_status_thunder_wave() {
     let mut s = Scenario::base("Thunder Wave paralyzes (primary)", MoveId::ThunderWave);
@@ -4162,6 +4160,45 @@ fn primary_status_thunder_wave() {
     let (stack, _c) = p2_stack(&s, P2Setup::none());
     assert_eq!(stack.opponent_battlers[0].status, Some(LegacyStatus::Paralysis), "TW paralyzes enemy");
     assert_eq!(stack.player_battlers[0].status, Some(LegacyStatus::Paralysis), "TW paralyzes player too");
+}
+
+/// pret/pokered engine/battle/move_effects/paralyze.asm checks Ground only
+/// for Electric moves; it has neither same-type nor Substitute immunity.
+/// Test the production stack directly: the legacy oracle had the same bug.
+#[test]
+fn primary_paralysis_follows_red_type_and_substitute_rules() {
+    for (move_id, species, paralyzes) in [
+        (MoveId::ThunderWave, Species::Zapdos, true),
+        (MoveId::ThunderWave, Species::Pikachu, true),
+        (MoveId::ThunderWave, Species::Onix, false),
+        (MoveId::ThunderWave, Species::Nidoking, false),
+        (MoveId::StunSpore, Species::Bulbasaur, true),
+        (MoveId::StunSpore, Species::Onix, true),
+        (MoveId::Glare, Species::Snorlax, true),
+        (MoveId::Glare, Species::Gastly, true),
+    ] {
+        for substitute in [false, true] {
+            install_canonical();
+            let mut state = EngineState::new(
+                vec![engine_battler(&Mon::new(Species::Pikachu, 300, 100), move_id)],
+                vec![engine_battler(&Mon::new(species, 300, 50), MoveId::Splash)],
+            );
+            let mut effects = if substitute {
+                vec![EffectState {
+                    id: EffectId(200), host: BattlerRef::OPPONENT, effect_order: 0,
+                    kind: PokeVolatile::Substitute,
+                }]
+            } else { vec![] };
+            let mut rng = ScriptedRng::new(vec![0; 16]); // hits; no future RNG inspected
+            StackDriver::execute_turn(&PokeredRules, &mut state, &mut effects, [
+                BattleAction::Fight { move_: move_id },
+                BattleAction::Fight { move_: MoveId::Splash },
+            ], &mut rng);
+            assert_eq!(state.opponent_battlers[0].status,
+                paralyzes.then_some(LegacyStatus::Paralysis),
+                "{move_id:?} vs {species:?}, substitute={substitute}");
+        }
+    }
 }
 
 /// PRIMARY poison (Poisonpowder, PoisonEffect plain branch): guaranteed poison on a

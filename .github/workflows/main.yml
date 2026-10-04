@@ -510,9 +510,12 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             target
-          key: ios-cargo-${{ hashFiles('Cargo.lock', 'Cargo.toml', 'crates/*/Cargo.toml') }}
+          # target/ contains host build scripts.  macos-latest may move
+          # between Intel and ARM runners, so sharing this cache across host
+          # architectures restores binaries that fail with exit status 126.
+          key: ios-cargo-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.lock', 'Cargo.toml', 'crates/*/Cargo.toml') }}
           restore-keys: |
-            ios-cargo-
+            ios-cargo-${{ runner.os }}-${{ runner.arch }}-
 
       - name: Build Rust library (device)
         run: cargo build -p pokered-mobile --target aarch64-apple-ios --release

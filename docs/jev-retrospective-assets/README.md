@@ -46,6 +46,46 @@ Pages 发布会恢复实际视频，并校验两条原片的 SHA-256；网站不
 
 ![完整通关并排大盘预览](full-run/full-comparison-preview.png)
 
+## 单机图鉴收集录像与大盘
+
+图鉴专用播放器模板位于
+[`dex-run/jev-dex-player.html`](dex-run/jev-dex-player.html)，生成器会把一次
+`--goal collect-dex` 运行的 MP4、逐帧图鉴登记、策略判断、来源统计和 151 种
+状态写入同一目录。页面把 124 种单存档可达上限与 27 种策略外目标分开显示，
+不会把蓝版限定、通信进化或未选择的互斥分支误报为失败。
+
+规划器会枚举御三家、化石、格斗道场和伊布进化的 36 种组合。未作选择时，
+所有仍能达到 124 上限的分支都会作为有限候选交给 Jev；游戏中完成选择后，
+已登记的分支会把计划收敛到唯一组合。每个非野生候选同时携带代码生成的
+地图、持有宝可梦、道具、硬币、消耗和不可逆选择契约，Jev 不负责猜测机制。
+
+```bash
+python3 scripts/openpokered/run_autonomous.py \
+  --goal collect-dex --strategy jev --action jev --checkpoint \
+  --jev-provider openrouter \
+  --record-video --output .artifacts/jev-dex-recording
+
+python3 docs/jev-retrospective-assets/build_jev_dex_dashboard.py \
+  .artifacts/jev-dex-recording/<run> \
+  --output docs/jev-retrospective-assets/dex-run
+```
+
+OpenRouter 路径读取 `OPENROUTER_API_KEY`，调用其原生
+`https://openrouter.ai/api/v1/systemone` 接口与 `typesafe/jev-1.13`；费用记入
+OpenRouter 账户。也可使用 `--jev-provider typesafe` 保留原直连方式，`auto`
+则在两个 key 都存在时优先 OpenRouter。
+
+录制器使用调试协议的优雅关机，让 ffmpeg 在游戏进程退出前关闭输入、刷新编码器
+并写完 MP4 索引。大盘时间使用绝对引擎帧除以录制倍率；网络等待只保留在墙钟
+统计中，不会伪造成游戏帧。
+
+图鉴运行若从开发检查点续跑，生成器支持 `--chain --video <已接续的完整录像>`。
+它只沿 `summary.resumed_from` 读取祖先，不混入无关尝试；每段偏移取原片实际
+时长，并校验合片总时长。重复加载的旧图鉴和里程碑不会算作新增，缺少来源的
+旧登记标为 `unknown`。旧操作日志没有帧号时记录前后已知帧的时间区间，不冒充
+逐帧精确定位。媒体索引保留各段路径、哈希、停止原因和续跑边界；旧日志未记录
+代码版本时留空，不把生成器版本当作当时游戏版本。该参数不负责拼接视频。
+
 两条完整录像均来自单次 NEW GAME 连续运行。不同失败尝试没有拼接进成功过程。脚本一侧标注“无模型参与”：相比早期版本，脚本含菜单兼容、森林败退后的训练时机、西尔佛及后续道馆重试、战斗用药及联盟重试等人工适配，详见主文档与[补丁](full-run/script-driver-adaptation.patch)。Jev 不调用 m01–m49 既有路线。
 
 完整原片的时钟是模拟帧时间，模型和网络等待另存日志。并排版通常按 32 倍加速，结局与独立读档按 2 倍；每章先结束的一边以章末最近的清晰帧定格等候，并标出其原片时间。五个解说节点同时暂停两侧各 8 秒。加速版抽取展示帧，逐帧证据以完整原片为准，成片时长不能作为墙钟竞速成绩。

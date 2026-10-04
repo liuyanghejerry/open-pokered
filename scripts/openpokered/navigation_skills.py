@@ -24,6 +24,54 @@ SPECIES_NAMES = {p.stem.replace('_', '').upper(): p.stem
                  for p in (pt.ROOT / 'crates/pokered-data/pokemon').glob('*.json')}
 
 
+@lru_cache(maxsize=1)
+def native_field_conditions():
+    """Read native Surf-current and badge guards; never encode a push route."""
+    root = pt.ROOT / 'crates/pokered-core/src/overworld'
+    hm = (root / 'hm_effects.rs').read_text()
+    field = (root / 'field_moves.rs').read_text()
+    guard = re.search(r'if current_map == MapId::(\w+)\s*&& !seafoam_b4f_boulders_done\s*'
+        r'&& player_x == (\w+)\s*&& player_y == (\w+)', hm)
+    coordinate = lambda name: int(re.search(rf'pub const {name}: u8 = (\d+)', hm)[1])
+    flags = re.findall(r'check\(EventFlag::(\w+)\)',
+        field.split('let seafoam_b4f_boulders_done =', 1)[1].split(';', 1)[0])
+    current = {'map': guard[1], 'stance': [coordinate(guard[2]), coordinate(guard[3])],
+               'flags': flags}
+    badges = dict(re.findall(r'move_id: MoveId::(\w+), badge_bit: Some\(BIT_(\w+)\)', hm))
+    producers = {}
+    for path in (pt.ROOT / 'crates/pokered-data/maps').glob('*/script.scene'):
+        for badge, flag in re.findall(r'giveBadge\("(\w+)"\)\s*setFlag\("(\w+)"\)', path.read_text()):
+            producers[badge] = flag
+    return current, {move: producers[badge] for move, badge in badges.items() if badge in producers}
+
+
+def surf_current_prerequisites(obstacle, flags):
+    current, _ = native_field_conditions()
+    if obstacle.get('map') != current['map'] or obstacle.get('stance') != current['stance']:
+        return []
+    return [('flag', flag, True) for flag in current['flags'] if not flags.get(flag)]
+
+
+def field_badge_prerequisites(move, flags):
+    _, badges = native_field_conditions()
+    flag = badges.get(move)
+    return [('flag', flag, True)] if flag and not flags.get(flag) else []
+
+
+def surf_path_prerequisites(path, flags):
+    """Legal embarkation is separate from water-relaxed geometric reachability."""
+    missing = []
+    previous = path[0]
+    for node, _ in path[1:]:
+        if water_tile(*node) and not water_tile(*previous):
+            for target in (field_badge_prerequisites('Surf', flags)
+                           + surf_current_prerequisites({'map': previous[0], 'stance': list(previous[1:])}, flags)):
+                if target not in missing:
+                    missing.append(target)
+        previous = node
+    return missing
+
+
 def hm_compatible(species, move):
     return machine_compatible(species, 50 + HM_MOVES.index(move))
 
@@ -67,7 +115,7 @@ def forced_bike_region():
 
 
 @contextmanager
-def water_planning():
+def water_planning(*, require_surf_embarkation=False):
     """Relax only the in-memory planner; restore even when search fails."""
     bike_region = forced_bike_region()
     walkable, edge, cross = pt.walkable, pt.walkable_edge, pt.cross_step
@@ -82,6 +130,15 @@ def water_planning():
         return edge(name, start, end)
     def crossing(name, x, y, direction):
         node = cross(name, x, y, direction)
+        if node and require_surf_embarkation:
+            automatic = pt.COORDINATE_WARPS.get(node[0], {}).get(node[1:])
+            if automatic and water_tile(*automatic):
+                # Finding a Surf action is a different query from general
+                # water reachability. A shorter falling-into-water route
+                # cannot supply a dry stance at which to use the field menu;
+                # search an alternative with an executable embarkation.
+                # Ordinary planning retains this automatic transition.
+                return None
         # The field-menu skill starts Surf at an adjacent tile of the
         # current map. A relaxed BFS must not prefer a land-to-water map
         # connection that has no executable embarkation, hiding a valid
@@ -101,7 +158,7 @@ def surf_requirement(state, destination, points, last_map, blocked_maps=None, ex
     """Find a useful water crossing with an already reachable embarkation."""
     if not points:
         return None
-    with water_planning():
+    with water_planning(require_surf_embarkation=True):
         path = pt.bfs_cross(state['map_name'], (state['player_x'], state['player_y']),
                             destination, points[0], last_map=last_map, allow_ledges=True, allow_spinners=True,
                             blocked_maps=blocked_maps, excluded_maps=excluded_maps,

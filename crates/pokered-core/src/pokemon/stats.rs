@@ -35,6 +35,21 @@ pub fn recalculate_stats(mon: &mut Pokemon) {
     }
 }
 
+/// Reconstruct stats omitted by a Gen-I box record, without changing current HP.
+/// Box STATS uses the recorded box level (status_screen.asm); withdrawal first
+/// derives the party level from XP (_MoveMon in add_mon.asm). Neither operation
+/// grants the HP delta used for a battle level-up.
+pub fn rebuild_derived_stats(mon: &mut Pokemon) {
+    if let Some(base) = get_base_stats(mon.species) {
+        let (hp, atk, def, spd, spc) = calc_all_stats(base, mon.dv_bytes, &mon.stat_exp, mon.level);
+        mon.max_hp = hp;
+        mon.attack = atk;
+        mon.defense = def;
+        mon.speed = spd;
+        mon.special = spc;
+    }
+}
+
 /// DV bytes for enemy trainer Pokémon — ATKDEFDV_TRAINER / SPDSPCDV_TRAINER
 /// (constants/battle_constants.asm:72-73, applied in add_mon.asm:78-79).
 pub const TRAINER_DV_BYTES: [u8; 2] = [0x98, 0x88];

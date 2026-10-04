@@ -10,11 +10,16 @@ import hashlib
 import json
 import re
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 
 MAPS_DIR = Path(__file__).resolve().parents[2] / 'crates/pokered-data/maps'
 UNKNOWN = None
 MAX_PATHS = 256
+# Canonical wObtainedBadges bit order, matching native_script::badge_bit_index.
+BADGE_BITS = {name: bit for bit, name in enumerate((
+    'BOULDERBADGE', 'CASCADEBADGE', 'THUNDERBADGE', 'RAINBOWBADGE',
+    'SOULBADGE', 'MARSHBADGE', 'VOLCANOBADGE', 'EARTHBADGE'))}
 
 
 def default_hidden_toggles():
@@ -35,6 +40,25 @@ def default_hidden_toggles():
 
 
 DEFAULT_HIDDEN = default_hidden_toggles()
+
+
+@lru_cache(maxsize=1)
+def native_ending_destination():
+    """Read the native post-credits CONTINUE location, not a route recipe.
+
+    Like native trainer outcomes, this consequence lives outside the scene
+    AST. Fail closed if the engine stops exposing the known simple contract.
+    Reaching it still requires the real ceremony, credits and saved CONTINUE.
+    """
+    source = (MAPS_DIR.parents[1] / 'pokered-app/src/game.rs').read_text()
+    body = source.split('fn finish_hof_ceremony(&mut self) {', 1)[1].split('\n    }', 1)[0]
+    name = re.search(r'self\.overworld\.state\.current_map = MapId::(\w+);', body)
+    x = re.search(r'self\.overworld\.state\.player\.x = (\d+);', body)
+    y = re.search(r'self\.overworld\.state\.player\.y = (\d+);', body)
+    if not (name and x and y and 'self.save_to_file();' in body
+            and 'self.handle_transition(GameScreen::TitleScreen);' in body):
+        raise ValueError('native ending no longer has a verified saved CONTINUE destination')
+    return name[1], int(x[1]), int(y[1])
 
 
 def trainer_victory_rules(maps_dir, configs, selected_maps):
@@ -121,9 +145,26 @@ def evaluate(expr, facts):
             return facts.get('bag', {}).get(args[0].replace('_', '').upper(), 0) > 0
         if name == 'getBadgeCount':
             return facts.get('badges', 0)
+        if name == 'hasBadge':
+            bit = BADGE_BITS.get(str(args[0]).upper()) if args else None
+            mask = facts.get('badge_bits')
+            return bool(mask & (1 << bit)) if bit is not None and isinstance(mask, int) else UNKNOWN
+        if name == 'getPokedexOwnedCount':
+            # Oak's aides gate rewards on this count; an unresolved call here
+            # would make every one of those branches an unknown guard.
+            return (facts.get('dex') or {}).get('owned')
+        if name == 'getPartyCount':
+            party = facts.get('party')
+            return (len(party) if not args and isinstance(party, (list, tuple))
+                    and len(party) <= 6 else UNKNOWN)
+        if name == 'getGameVersion':
+            version = facts.get('game_version')
+            return version if not args and type(version) is int and version in (0, 1) else UNKNOWN
         if name in ('hasMoney', 'hasCoins'):
             amount = facts.get('money' if name == 'hasMoney' else 'coins')
             return None if amount is None else amount >= args[0]
+        if name in ('getMoney', 'getCoins'):
+            return facts.get('money' if name == 'getMoney' else 'coins')
         if name == 'getPlayerX':
             return facts.get('x')
         if name == 'getPlayerY':
@@ -151,6 +192,29 @@ def substitute(expr, context):
     return {k: substitute(v, context) for k, v in expr.items()}
 
 
+def pokedex_count_goal(expr, wanted):
+    """The owned-count a `getPokedexOwnedCount()` comparison demands, if any.
+
+    Catching is the real producer for this count — the wild population, not a
+    script rule — so a shortfall is a pursuable goal instead of an unknown
+    guard the backchain drops on the floor.
+    """
+    if not wanted:
+        return None
+    binary = expr.get('BinaryOp') or {}
+    call = (binary.get('left') or {}).get('Call')
+    if not call or call['callee'].removeprefix('game.') != 'getPokedexOwnedCount':
+        return None
+    needed = (binary.get('right') or {}).get('NumberLit')
+    if isinstance(needed, bool) or not isinstance(needed, (int, float)):
+        return None
+    if binary['op'] == 'Gte':
+        return ('dex', 'count', int(needed))
+    if binary['op'] == 'Gt':
+        return ('dex', 'count', int(needed) + 1)
+    return None
+
+
 def requirements(expr, wanted, facts):
     """Alternative sets of missing predicates; None denotes an unknown guard."""
     value = evaluate(expr, facts)
@@ -168,11 +232,27 @@ def requirements(expr, wanted, facts):
         if conjunctive:
             return [x + y for x in a for y in b][:MAX_PATHS]
         return a + b
+    count_goal = pokedex_count_goal(expr, wanted)
+    if count_goal:
+        return [[count_goal]]
+    if binary and (binary['op'], (binary.get('right') or {}).get('NumberLit'), wanted) in (
+            ('Gte', 6, False), ('Lt', 6, True), ('Gt', 5, False), ('Lte', 5, True)):
+        query = (binary.get('left') or {}).get('Call')
+        if (query and query['callee'].removeprefix('game.') == 'getPartyCount'
+                and not query.get('args') and evaluate(binary['left'], facts) is not None):
+            # A scene can explicitly refuse a full party even though native
+            # givePokemon normally accepts a current-box slot. Preserve that
+            # real scene guard; only its exact free-slot threshold is mapped.
+            return [[('party_space', 'party', True)]]
     # Only defer the spatial predicate, preserving any AND/OR-linked
     # flag or item guard above. The trigger's actual landing verifies it.
     if any(name in json.dumps(expr) for name in ('getPlayerX', 'getPlayerY', 'getPlayerFacing')):
         return [[]]
     call = expr.get('Call')
+    if call and call['callee'].removeprefix('game.') == 'hasBadge':
+        key = evaluate(call['args'][0], facts) if call.get('args') else None
+        if isinstance(key, str) and key.upper() in BADGE_BITS:
+            return [[('badge', key.upper(), wanted)]]
     if call and call['callee'].removeprefix('game.') in ('getFlag', 'hasItem'):
         key = evaluate(call['args'][0], facts)
         if key is not None:
@@ -220,20 +300,40 @@ def compile_story(story):
         effect = None
         if name in ('setFlag', 'resetFlag') and values and isinstance(values[0], str):
             effect = ('flag', values[0], name == 'setFlag')
+        elif name == 'giveBadge' and values and isinstance(values[0], str) and values[0].upper() in BADGE_BITS:
+            effect = ('badge', values[0].upper(), True)
         elif name in ('giveItem', 'takeItem') and values and isinstance(values[0], str):
             effect = ('item', values[0], name == 'giveItem')
         elif name == 'givePokemon' and values:
             effect = ('pokemon', values[0], values[1] if len(values) > 1 else None)
         elif name.startswith('startBattle') or name == 'startWildBattle':
-            effect = ('battle', values[0] if values else name, True)
+            battle = values[0] if values else name
+            if name == 'startBattleSet':
+                # This is a zero-based rival triplet base, not the map NPC's
+                # one-based trainerSet. Keep it through downstream effects.
+                battle = (battle, values[1] if len(values) > 1 else None)
+            effect = ('battle', battle, True)
         elif name == 'heal':
             effect = ('heal', 'party', True)
         elif name == 'openShop' and values and isinstance(values[0], list):
             effect = ('shop', tuple(values[0]), True)
+        elif name == 'openPC':
+            effect = ('pc', 'storage', True)
+        elif name == 'giveCoins' and values and isinstance(values[0], (int, float)):
+            effect = ('coins', int(values[0]), True)
         elif (name == 'warpTo' and len(values) == 3 and isinstance(values[0], str)
               and all(isinstance(v, (int, float)) for v in values[1:])):
             effect = ('transport', (values[0], int(values[1]), int(values[2])), True)
+        elif name == 'enterHallOfFame':
+            ctx['effects'].append(('ending', 'hall_of_fame_and_credits', True))
+            effect = ('transport', native_ending_destination(), True)
         elif name in ('movePlayerRelative', 'movePlayer'):
+            effect = ('movement', name, True)
+        elif (name == 'followNpc' and len(values) == 3 and isinstance(values[0], str)
+              and all(type(value) in (int, float) for value in values[1:])):
+            # A coordinate-triggered escort can move the PLAYER away from a
+            # passage. Keep its real branch guard so observed failed travel
+            # can backchain the condition that disables this interception.
             effect = ('movement', name, True)
         elif name == 'replaceTileBlock' and len(values) == 3 and all(isinstance(v, (int, float)) for v in values):
             effect = ('block', f"{story['map']},{int(values[0])},{int(values[1])}", int(values[2]))
@@ -310,8 +410,36 @@ def compile_story(story):
                                         arm['choices'].append(label)
                                         following.append(arm)
                                     continue
+                            if call['callee'].removeprefix('game.') == 'filterBag':
+                                options = (evaluate(call['args'][0], {})
+                                           if len(call['args']) == 1 else None)
+                                if (isinstance(options, list)
+                                        and all(isinstance(v, str) and v for v in options)):
+                                    # A menu result is not a query to guess from
+                                    # the bag. Preserve each actual input path,
+                                    # requiring that its chosen item is carried.
+                                    for item in dict.fromkeys(options):
+                                        arm = copy.deepcopy(ctx)
+                                        arm['variables'][data['name']] = literal(item)
+                                        arm['guards'].append(({'Call': {
+                                            'callee': 'hasItem', 'args': [literal(item)]}}, True))
+                                        arm['choices'].append(item)
+                                        following.append(arm)
+                                    # Native B returns an empty string; it is
+                                    # not a selectable row or a handed-over item.
+                                    arm = copy.deepcopy(ctx)
+                                    arm['variables'][data['name']] = literal('')
+                                    arm['choices'].append('CANCEL')
+                                    following.append(arm)
+                                    continue
                             command(call['callee'], call['args'], ctx)
-                            if call['callee'].removeprefix('game.') in ('startBattle', 'startBattleSet', 'startWildBattle', 'giveItem'):
+                            if call['callee'].removeprefix('game.') in (
+                                    'startBattle', 'startBattleSet', 'startWildBattle',
+                                    'giveItem', 'tradePokemon'):
+                                # Awaited native outcomes are checked after
+                                # execution, not unknown facts to arrange before
+                                # approaching the script. Collection separately
+                                # requires the actual offered party species.
                                 expr = {'Result': expr}
                         ctx['variables'][data['name']] = expr
                     following.append(ctx)
@@ -324,7 +452,20 @@ def compile_story(story):
     if not story.get('program'):
         raise ValueError(f"missing planning AST: {story['id']}; rebuild the debug binary")
     walk(story['program'], [{'guards': [], 'choices': [], 'variables': {}, 'writes': {}, 'effects': []}])
-    return list({r.id: r for r in rules}.values())
+    # Visibility during a cutscene is not necessarily its settled result.
+    # A guide can hide while walking away and immediately reset/show itself.
+    # Only a later write to this SAME object on the SAME expanded guard/choice
+    # path supersedes the earlier candidate. Different branches/choices remain
+    # independent; unknown paths are not certified as permanent removals.
+    # Keep every actual intermediate effect in `preceding` for downstream
+    # battle/source contracts and ordered execution evidence.
+    def visibility_path(rule):
+        return json.dumps([rule.guards, rule.choices, rule.effect[1]], sort_keys=True)
+    last_visibility = {visibility_path(rule): rule for rule in rules
+                       if rule.effect[0] == 'visibility'}
+    settled = [rule for rule in rules if rule.effect[0] != 'visibility'
+               or last_visibility[visibility_path(rule)] is rule]
+    return list({r.id: r for r in settled}.values())
 
 
 def normalize_bag(bag):
@@ -332,6 +473,66 @@ def normalize_bag(bag):
         return {k.replace('_', '').upper(): v for k, v in bag.items()}
     return {str(b.get('item') or b.get('name')).replace('_', '').upper():
             b.get('qty', b.get('quantity', 1)) for b in bag or []}
+
+
+def static_retreat_contract(battle, rules):
+    """Prove menu-run leaves the compiled source's post-battle writes inactive.
+
+    Unknown result expressions or unconditional writes do not prove retryability.
+    Native settlement returns 'ran' for RUN ('fled' is the different Doll path).
+    """
+    def resolve(node):
+        if isinstance(node, list):
+            return [resolve(value) for value in node]
+        if not isinstance(node, dict):
+            return node
+        call = (node.get('Result') or {}).get('Call', {})
+        if (call.get('callee', '').removeprefix('game.') == 'startWildBattle'
+                and call.get('args') and evaluate(call['args'][0], {}) == battle.effect[1]):
+            return literal('ran')
+        return {key: resolve(value) for key, value in node.items()}
+
+    writes = [rule for rule in rules if rule.storyline == battle.storyline
+              and battle.effect in rule.preceding and rule.effect[0] != 'battle']
+    # A source can be consumed BEFORE the awaited battle, too. Do not certify
+    # re-entry when earlier persistent state/geometry writes have not been
+    # proven compatible with its entry guards (even if some are harmless).
+    earlier = [effect for effect in battle.preceding
+               if effect[0] in ('flag', 'visibility', 'block', 'item', 'pokemon', 'transport')]
+    retryable = not earlier and bool(writes) and all(any(
+        (value := evaluate(resolve(expr), {})) is not None and bool(value) != wanted
+        for expr, wanted in rule.guards) for rule in writes)
+    return {'menu_run_preserves_source': retryable,
+            'scope': 'Compiled source post-battle effects under native menu-run result ran; unknown paths are not certified',
+            'script': battle.storyline,
+            'uncertified_pre_battle_writes': earlier,
+            'post_battle_effects': [rule.effect for rule in writes]}
+
+
+def spent_static_source(battle, rules, facts):
+    """Prove a consumed battle's monotone completion flag blocks its entry.
+
+    Temporary visibility, route gates and unknown expressions are not proof.
+    A flag is monotone only within the indexed scripts; this is evidence of a
+    spent source, not a general proof that all unseen game mechanics are absent.
+    """
+    writes = {rule.effect[1] for rule in rules if rule.storyline == battle.storyline
+              and battle.effect in rule.preceding and rule.effect[0] == 'flag'
+              and rule.effect[2] is True}
+    cleared = {rule.effect[1] for rule in rules if rule.effect[0] == 'flag'
+               and rule.effect[2] is False}
+    evidence = []
+    for flag in sorted(writes - cleared):
+        if not facts.get('flags', {}).get(flag):
+            continue
+        without = {**facts, 'flags': {**facts.get('flags', {}), flag: False}}
+        if any(evaluate(expr, facts) is not None
+               and bool(evaluate(expr, facts)) != wanted
+               and evaluate(expr, without) is not None
+               and bool(evaluate(expr, without)) == wanted
+               for expr, wanted in battle.guards):
+            evidence.append(flag)
+    return evidence
 
 
 class StoryIndex:
@@ -349,6 +550,7 @@ class StoryIndex:
                             for name, config in self.configs.items()
                             for npc in config.get('npcs', []) if npc.get('toggleId')}
         self.visibility_defaults = dict(self.npc_toggles.values())
+        self._wild_cache = {}
         for name in client.script_semantics()['maps']:
             data = client.script_semantics(name)
             for story in data['storylines']:
@@ -400,14 +602,59 @@ class StoryIndex:
              'engine_boulder_guards': {r.id: r.guards for r in self.rules if r.id.startswith('boulder:')}},
             sort_keys=True).encode()).hexdigest()
 
+    def wild_species(self, name):
+        """Species for the exact method/rod target emitted by the collector.
+
+        Bare map names remain legacy grass targets. Water, Safari and fishing
+        keys must not be interpreted as a literal (nonexistent) map directory.
+        """
+        if name not in self._wild_cache:
+            parts = name.split(':')
+            method, rod, map_name = 'grass', None, name
+            if len(parts) == 2 and parts[0] in ('grass', 'water', 'safari'):
+                method, map_name = parts
+            elif len(parts) == 3 and parts[0] == 'fishing':
+                method, rod, map_name = parts
+            elif len(parts) != 1:
+                self._wild_cache[name] = set()
+                return self._wild_cache[name]
+            path = self.maps_dir / map_name / 'map.json'
+            species = set()
+            if path.exists() and method == 'fishing':
+                from .collection_planner import fishing_profile
+                profile = fishing_profile(rod, map_name) or {}
+                species = {mon['species'] for mon in profile.get('targets', [])}
+            elif path.exists():
+                red = ((json.loads(path.read_text()).get('wild') or {}).get('red') or {})
+                table = red.get('water' if method == 'water' else 'grass') or {}
+                species = {mon['species'] for mon in table.get('mons', [])}
+            self._wild_cache[name] = species
+        return self._wild_cache[name]
+
     def satisfied(self, target, facts):
         kind, name, wanted = target
         if kind == 'flag':
             return bool(facts['flags'].get(name)) == wanted
+        if kind == 'badge':
+            value = evaluate({'Call': {'callee': 'hasBadge', 'args': [literal(name)]}}, facts)
+            return value is not None and value == wanted
         if kind == 'item':
             return (facts['bag'].get(name.replace('_', '').upper(), 0) > 0) == wanted
         if kind == 'level':
-            return bool(facts['party']) and facts['party'][0]['level'] >= wanted
+            if name == 'leader':
+                return bool(facts['party']) and facts['party'][0]['level'] >= wanted
+            # Named trainees must not inherit the stronger leader's level.
+            # A normal level evolution also counts as actual training gain.
+            from playthrough_late import species_data
+            species = {name}
+            pending = [name]
+            while pending:
+                for evolution in species_data(pending.pop()).get('evolutions', []):
+                    if (evolution['method'] == 'level' and evolution['level'] <= wanted
+                            and evolution['species'] not in species):
+                        species.add(evolution['species'])
+                        pending.append(evolution['species'])
+            return any(mon['species'] in species and mon['level'] >= wanted for mon in facts['party'])
         if kind == 'heal':
             return facts.get('fully_recovered', False)
         if kind == 'bag_space':
@@ -431,12 +678,45 @@ class StoryIndex:
         if kind == 'pokemon':
             return any(mon['species'].replace('_', '').upper() == str(name).replace('_', '').upper()
                        and (wanted is None or mon['level'] >= wanted) for mon in facts['party'])
+        if kind == 'held_species':
+            held = [*facts.get('party', []), *facts.get('stored_pokemon', [])]
+            present = any(mon['species'].replace('_', '').upper() == str(name).replace('_', '').upper()
+                          for mon in held)
+            return present == wanted
         if kind in ('location', 'transport'):
             return [facts['map'], facts['x'], facts['y']] == list(name)
         if kind == 'block':
             return facts.get('block_values', {}).get(name) == wanted
         if kind == 'terrain':
             return (name in facts.get('cleared_terrain', [])) == wanted
+        if kind == 'dex':
+            owned = (facts.get('dex') or {}).get('owned')
+            return owned is not None and owned >= wanted
+        if kind == 'catch':
+            owned = set((facts.get('dex') or {}).get('owned_species', []))
+            owned -= set(facts.get('collection_audit_pending', []))
+            species = self.wild_species(str(name))
+            return (bool(species) and species <= owned) == wanted
+        if kind == 'register':
+            owned = set((facts.get('dex') or {}).get('owned_species', []))
+            # A historical invalid source may have set the native owned bit.
+            # Keep its real SRAM count, but do not satisfy a legitimate-source
+            # registration task until the collector observes remediation.
+            owned -= set(facts.get('collection_audit_pending', []))
+            return (str(name) in owned) == wanted
+        if kind == 'box_space':
+            counts = facts.get('box_counts', [])
+            current = facts.get('current_box_index', 0)
+            return (bool(counts) and counts[current] < 20) == wanted
+        if kind == 'party_space':
+            count = evaluate({'Call': {'callee': 'getPartyCount', 'args': []}}, facts)
+            return count is not None and (count < 6) == wanted
+        if kind == 'coin_supply':
+            return facts.get('coins', 0) >= wanted
+        if kind == 'explore':
+            # Reaching the map is the whole goal; the trigger tile only says
+            # which part of it to arrive in.
+            return (facts.get('map') == str(name)) == wanted
         return False
 
     def frontier(self, target, facts, seen=(), depth=0):

@@ -5,20 +5,505 @@ scene conditions; preparation candidates come from available encounters and the
 party. The existing driver contributes only parameterized navigation and combat.
 """
 import json
+import math
 import re
 import hashlib
 import time
-from collections import deque
+from collections import Counter, deque
+from copy import deepcopy
+from functools import lru_cache
 from pathlib import Path
 
 import playthrough as pt
 import playthrough_late as data
 
 from .story_agent import DualStoryAgent, StoryStopped, attempt_key
-from .story_rules import Rule, requirements, evaluate
-from .playthrough_judgments import ObservedProtocol, NavigationPause, attack_profile, replacement_options, MEDICINES, medicine_options, effective_attacks, ITEM_CATALOG
-from .navigation_skills import cut_requirement, surf_requirement, water_planning, hm_compatible, machine_compatible, HM_MOVES, TM_MOVES, CUT_TILES
+from .typesafe import Choice, TypeSafeClient, TypeSafeError
+from .story_rules import Rule, requirements, evaluate, static_retreat_contract, spent_static_source
+from .playthrough_judgments import (ObservedProtocol, NavigationPause, NavigationGoalObserved, attack_profile, replacement_options,
+                                    MEDICINES, BALLS, medicine_options, effective_attacks, ITEM_CATALOG,
+                                    PREFERENCE_INSTRUCTIONS)
+from .playthrough_judgments import capture_probability, capture_species, capture_status_options, capture_storage_full
+from .playthrough_judgments import safari_ball_sequence
+from .navigation_skills import (cut_requirement, surf_requirement, water_planning, water_tile,
+                                hm_compatible, machine_compatible, HM_MOVES, TM_MOVES, CUT_TILES)
+from .navigation_skills import surf_current_prerequisites, field_badge_prerequisites, surf_path_prerequisites
 from .boulder_skills import BOULDER_TARGETS, boulder_sources, plan_pushes
+from .collection_planner import (acquisition_contract, acquisition_graph, complete_acquisition_graph,
+                                 fishing_profile, infer_solo_choices, solo_plan,
+                                 table_profile, ENCOUNTER_SLOT_WEIGHTS)
+
+# The level bias asks for more training than the pending fight strictly needs.
+LEVEL_PREFERENCE_MARGIN = 2
+
+# Registered-species gates the first playthrough enforces (Oak's lab, the
+# Route 2 gate that hands over HM05, ...): the ladder a collector climbs.
+DEX_RUNGS = (2, 10, 30, 50, 150)
+
+# Catch rates a trip is compared against; a wild table is only worth
+# travelling to relative to how hard its members are to capture.
+CATCH_BANDS = ((200, 'easy'), (100, 'medium'))
+
+# Exact slot widths from pokered-core's ENCOUNTER_SLOT_THRESHOLDS.  Maps store
+# the ten species/level slots but not their probabilities, and treating the
+# slots as equally likely makes a 1.2% species look as valuable as a 19.9%
+# species to the strategy judge.
+# Qualitative names are easier for Jev to compare than Gen-I's non-monotonic
+# internal ball constants.  The game remains the authority for the actual
+# capture roll; these labels only describe strategic inventory quality.
+BALL_QUALITY = {
+    'PokeBall': 'basic',
+    'GreatBall': 'improved',
+    'UltraBall': 'strong',
+    'MasterBall': 'guaranteed',
+}
+
+
+def parse_native_tm_sale_catalog(source):
+    """Read finite TM prices from native definitions, not the ordinary JSON list.
+
+    Native enum names (Tm34) are the exact get_bag/sale-menu identities; TM34
+    is a display name. Unknown, key-item, nonpositive or mismatched rows do
+    not authorize funding. HMs never enter this finite-item catalogue.
+    """
+    definitions = source.split('pub const TMHM_DATA:', 1)
+    if len(definitions) != 2:
+        return {}
+    rows = re.findall(r'ItemData\s*\{\s*id:\s*ItemId::(Tm\d{2}),\s*name:\s*"(TM\d{2})",\s*'
+                      r'price:\s*(\d+),\s*is_key_item:\s*(true|false)\s*\}', definitions[1].split('];', 1)[0])
+    catalog = {}
+    for identity, display, price, key_item in rows:
+        index = int(identity[2:]) - 1
+        if (not 0 <= index < len(TM_MOVES) or display != identity.upper()
+                or key_item != 'false' or int(price) <= 0):
+            continue
+        if identity in catalog:
+            raise ValueError('Ambiguous native TM definition')
+        catalog[identity] = {'id': identity, 'name': display, 'price': int(price),
+            'sellable': True, 'key_item': False, 'tags': ['tm', 'finite_move_teaching'],
+            'effect': {'type': 'TM', 'params': {'move': TM_MOVES[index]}}}
+    return catalog
+
+
+@lru_cache(maxsize=1)
+def native_tm_sale_catalog():
+    return parse_native_tm_sale_catalog((data.DATA / 'src/item_data.rs').read_text())
+
+
+def cut_obstruction_identity(obstacle):
+    """Exact proposed tree identity; nearby or malformed trees are not evidence."""
+    if not isinstance(obstacle, dict) or obstacle.get('move') != 'Cut':
+        return None
+    name, tree = obstacle.get('map'), obstacle.get('tree')
+    if (not isinstance(name, str) or not name or not isinstance(tree, (tuple, list))
+            or len(tree) != 2 or any(type(value) is not int or value < 0 for value in tree)):
+        return None
+    return json.dumps([name, *tree])
+
+
+def cut_route_goal(obstacle, goal):
+    """Retain a real route purpose, never the same tree-clear goal as its parent."""
+    if (not cut_obstruction_identity(obstacle) or not isinstance(goal, (tuple, list)) or len(goal) != 3
+            or any(not isinstance(value, str) or not value for value in goal[:2])):
+        return None
+    self_goal = ['terrain', ','.join(map(str, [obstacle['map'], *obstacle['tree']])), True]
+    return list(goal) if list(goal[:2]) != self_goal[:2] else None
+
+
+def level_experience(species, level):
+    """Native growth curves; level alone gives bounds, not exact current XP."""
+    if level <= 1:
+        return 0
+    rate = data.species_data(species)['growthRate']
+    num, den, quad, linear, sub = {
+        'MediumFast': (1, 1, 0, 0, 0), 'MediumSlow': (6, 5, -15, 100, 140),
+        'Fast': (4, 5, 0, 0, 0), 'Slow': (5, 4, 0, 0, 0),
+        'SlightlyFast': (3, 4, 10, 0, 30), 'SlightlySlow': (3, 4, 20, 0, 70),
+    }[rate]
+    return max(0, num * level**3 // den + quad * level**2 + linear * level - sub)
+
+
+def valid_training_experience(mon):
+    """Accept native integer XP only when it agrees with the observed level."""
+    level, experience = mon.get('level'), mon.get('experience')
+    if (type(level) is not int or not 1 <= level <= 100
+            or type(experience) is not int):
+        return False
+    floor = level_experience(mon['species'], level)
+    ceiling = level_experience(mon['species'], level + 1) - 1 if level < 100 else floor
+    return floor <= experience <= ceiling
+
+
+def observed_party_experience(state, observation):
+    """Bind normal get_party XP to the same ordered field roster, never evaluation.
+
+    get_party reads persistent save data, so it must not supply a stale battle
+    roster. Identity/condition and level bounds also guard mismatched replies.
+    Missing XP remains unknown; it is not reconstructed from evaluation data.
+    """
+    party = state.get('party', [])
+    if (state.get('screen') != 'overworld' or not isinstance(party, list)
+            or not isinstance(observation, list) or len(party) != len(observation)):
+        return {}
+    fields = ('species', 'level', 'max_hp', 'status', 'moves')
+    for mon, observed in zip(party, observation):
+        if (not isinstance(mon, dict) or not isinstance(observed, dict)
+                or any(key not in mon or key not in observed or mon[key] != observed[key]
+                       for key in fields)
+                or 'hp' not in mon or 'current_hp' not in observed
+                or mon['hp'] != observed['current_hp']):
+            return {}
+    return {index: mon['experience'] for index, mon in enumerate(observation)
+            if valid_training_experience(mon)}
+
+
+def evolution_training_cost(mon, target_level):
+    target = level_experience(mon['species'], target_level)
+    if valid_training_experience(mon):
+        remaining = max(0, target - mon['experience'])
+        return {'levels_remaining': max(0, target_level - mon['level']),
+                'remaining_experience_min': remaining,
+                'remaining_experience_max': remaining,
+                'observed_experience': mon['experience'],
+                'scope': 'Exact XP gap from normal field get_party observation and native growth curve; '
+                         'future experience gains and victory count remain conditional'}
+    floor = level_experience(mon['species'], mon['level'])
+    next_floor = level_experience(mon['species'], min(100, mon['level'] + 1))
+    return {'levels_remaining': max(0, target_level - mon['level']),
+            'remaining_experience_min': max(0, target - max(floor, next_floor - 1)),
+            'remaining_experience_max': max(0, target - floor),
+            'scope': 'Bounds from observed level; exact accumulated experience is not controller telemetry'}
+
+
+def training_yield(table, participants=1):
+    """Slot-weighted wild victory XP, with explicit switch-training assumptions."""
+    mons = (table or {}).get('mons', [])
+    weighted = sum(weight * (data.species_data(mon['species'])['baseExp'] * mon['level'] // 7 // participants)
+                   for weight, mon in zip(ENCOUNTER_SLOT_WEIGHTS, mons))
+    total_weight = sum(ENCOUNTER_SLOT_WEIGHTS[:len(mons)])
+    experience = weighted / total_weight if total_weight else 0
+    rate = (table or {}).get('encounterRate', 0)
+    return {'expected_experience_per_victory': round(experience, 2),
+            'expected_encounter_attempts': round(256 / rate, 2) if rate else None,
+            'participants': participants,
+            'assumptions': 'Untraded conscious participants; wild victories only, no Exp All; healing and combat turns add cost'}
+
+
+def evolution_training_effort(mon, target_level, table, participants=1):
+    cost = evolution_training_cost(mon, target_level)
+    yield_info = training_yield(table, participants)
+    experience = yield_info['expected_experience_per_victory']
+    if experience <= 0:
+        return None
+    minimum = math.ceil(cost['remaining_experience_min'] / experience)
+    maximum = math.ceil(cost['remaining_experience_max'] / experience)
+    attempts = yield_info['expected_encounter_attempts']
+    return {**yield_info, 'estimated_victories_min': minimum,
+            'estimated_victories_max': maximum,
+            'estimated_encounter_steps_max': math.ceil(maximum * attempts) if attempts else None,
+            'scope': 'Expectation using the slot-weighted wild table, not a guaranteed battle count; excludes travel, combat turns and healing'}
+
+
+def capture_support_preparation_comparison(mon, failures):
+    """Compare current support facts with actual same-species failure observations.
+
+    The native protocol does not identify individuals. Differences between
+    these snapshots cannot prove training actions, survival or retry success.
+    """
+    def number(value, maximum):
+        return value if type(value) is int and 1 <= value <= maximum else None
+
+    current_level = number(mon.get('level'), 100)
+    current_hp = number(mon.get('max_hp'), 65535)
+    rows = []
+    for failure in failures:
+        observed = next((other for other in failure.get('observation', {}).get('party', [])
+                         if isinstance(other, dict) and other.get('species') == mon['species']), {})
+        old_level = number(observed.get('level'), 100)
+        old_hp = number(observed.get('max_hp'), 65535)
+        rows.append({'map': failure['map'], 'failed_capture_species': failure['species'],
+                     'observed_target_level': failure['level'],
+                     'support_species': mon['species'], 'current_support_level': current_level,
+                     'current_max_hp': current_hp, 'observed_same_species_level': old_level,
+                     'observed_same_species_max_hp': old_hp,
+                     'level_difference': current_level - old_level
+                         if current_level is not None and old_level is not None else None,
+                     'max_hp_difference': current_hp - old_hp
+                         if current_hp is not None and old_hp is not None else None,
+                     'scope': 'Same-species snapshots, not individual identity or measured training actions. '
+                              'Differences are observed comparisons, not a survival forecast or proof of '
+                              'capture readiness; missing values remain unknown.'})
+    return rows
+
+
+def catch_difficulty(species):
+    rate = data.species_data(species).get('catchRate', 0)
+    return {'species': species, 'catch_rate': rate,
+            'band': next((band for threshold, band in CATCH_BANDS if rate >= threshold), 'hard')}
+
+
+def capture_inventory_risk(species, balls):
+    """Reference scenarios, explicitly not a forecast of an unseen battle."""
+    rate = data.species_data(species)['catchRate']
+    scenarios = []
+    for hp, status in ((100, 'None'), (100, 'Sleep(2)'), (25, 'Sleep(2)')):
+        enemy = {'hp': hp, 'max_hp': 100, 'status': status, 'catch_rate': rate}
+        throws = [{'ball': row['ball'], 'quantity': row['quantity'],
+                   'per_throw_probability': capture_probability(row['ball'], enemy)}
+                  for row in balls if row['quantity'] > 0]
+        failure = math.prod((1 - row['per_throw_probability']) ** row['quantity'] for row in throws)
+        scenarios.append({'reference_hp_percent': hp, 'reference_status': status,
+                          'throws': throws, 'inventory_failure_probability': round(failure, 4)})
+    return {'scenarios': scenarios,
+            'assumptions': 'Reference max HP 100; all carried balls used at the stated fixed HP/status with independent rolls. Not actual battle odds: excludes HP rounding differences, status expiry, enemy recovery, party survival and travel ball spending.'}
+
+
+def capture_supply_reference(targets, carried, planned):
+    """Compare the same conditional scenarios before and after a purchase."""
+    inventory = lambda stock: [{'ball': name, 'quantity': qty} for name, qty in sorted(stock.items())]
+    rows = []
+    for target in targets:
+        before = capture_inventory_risk(target['species'], inventory(carried))
+        after = capture_inventory_risk(target['species'], inventory(planned))
+        rows.append({**target, 'scenarios': [
+            {'reference_hp_percent': old['reference_hp_percent'],
+             'reference_status': old['reference_status'],
+             'failure_before_purchase': old['inventory_failure_probability'],
+             'failure_after_purchase': new['inventory_failure_probability']}
+            for old, new in zip(before['scenarios'], after['scenarios'])]})
+    return {'targets': rows,
+            'scope': 'Conditional reference, not a guarantee: max HP 100, all carried balls used '
+                     'at fixed HP/status with independent rolls. Excludes actual HP rounding, '
+                     'status expiry, enemy recovery, party survival and balls spent en route. '
+                     'Each target uses the same inventory separately, not a budget sufficient '
+                     'for all targets together. Ready script guards do not prove navigation access.'}
+
+
+@lru_cache(maxsize=512)
+def safari_species_reference(species, level, balls):
+    """Bounds over legal wild HP/Speed DVs, never a predicted hidden individual.
+
+    stats.rs::calc_stat and extract_hp_iv: wild stat exp is zero, and HP DV
+    bit 1 is Speed DV bit 0. safari.rs::flee_roll uses the Speed low byte.
+    """
+    mon = data.species_data(species)
+    base = mon['baseStats']
+    catches, escapes, successes, spent = [], [], [], []
+    for speed_dv in range(16):
+        speed = min(999, (base['speed'] + speed_dv) * 2 * level // 100 + 5) & 255
+        flee = 1.0 if speed > 127 else speed * 2 / 256
+        for hp_dv in range(16):
+            if (hp_dv >> 1) & 1 != speed_dv & 1:
+                continue
+            hp = min(999, (base['hp'] + hp_dv) * 2 * level // 100 + level + 10)
+            chance = capture_probability('SafariBall', {
+                'hp': hp, 'max_hp': hp, 'catch_rate': mon['catchRate']}, digits=None)
+            success, used = safari_ball_sequence(chance, flee, balls)
+            catches.append(chance)
+            escapes.append(flee)
+            successes.append(success)
+            spent.append(used)
+    return tuple((min(values), max(values)) for values in (catches, escapes, successes, spent))
+
+
+def safari_capture_reference(table, owned_species=(), balls=30):
+    """Slot-weighted registration reference, separate from encounter-only yield."""
+    owned = set(owned_species)
+    slots = Counter()
+    for weight, mon in zip(ENCOUNTER_SLOT_WEIGHTS, (table or {}).get('mons', [])):
+        if mon['species'] not in owned:
+            slots[(mon['species'], mon['level'])] += weight
+    bounds, targets = [0.0, 0.0], []
+    rate = int((table or {}).get('encounterRate', 0)) / 256
+
+    def outward(values, digits=4):
+        scale = 10 ** digits
+        return [math.floor(values[0] * scale) / scale, math.ceil(values[1] * scale) / scale]
+
+    for (species, level), weight in sorted(slots.items()):
+        catch, flee, success, spent = safari_species_reference(species, level, balls)
+        for index in range(2):
+            bounds[index] += rate * weight / 256 * success[index]
+        targets.append({'species': species, 'level': level, 'slot_weight_per_256': weight,
+                        'per_ball_capture_probability_range': outward(catch),
+                        'flee_after_failed_ball_probability_range': outward(flee),
+                        'capture_before_flee_probability_range': outward(success),
+                        'expected_balls_spent_in_encounter_range': outward(spent, 2)})
+    return {'policy': 'ball_only_reference', 'ball_budget_per_encounter': balls,
+            'scope': 'Reference bounds, not a forecast: full HP, no status, no bait/rock, zero wild stat exp, all legal HP/Speed DVs and independent rolls. '
+                     'Ball budget is per encounter; admission supplies 30 shared balls, not 30 for every encounter. '
+                     'Eligible encounter checks only; excludes travel, entry cost, step limit, earlier ball spending and changing owned species. '
+                     'Stationary expectation with renewed budgets, not a guarantee within this visit.',
+            'targets': targets,
+            'new_registration_per_eligible_step_pct_range': outward([p * 100 for p in bounds]),
+            'expected_eligible_steps_to_registration_range': (
+                outward([1 / bounds[1], 1 / bounds[0]], 1) if bounds[0] > 0 else [None, None])}
+
+
+def capture_preparation(party, bag, observation=None):
+    ball_names = {name.replace('_', '').upper() for name in BALLS}
+    preparation = {'balls': {name.replace('_', '').upper(): qty for name, qty in bag.items()
+                      if qty > 0 and name.replace('_', '').upper() in ball_names},
+            'party': [{key: mon.get(key) for key in ('species', 'level', 'hp', 'status', 'moves', 'pp')}
+                      for mon in party]}
+    observation = observation or {}
+    counts = observation.get('box_counts') or []
+    index = observation.get('current_box_index', 0)
+    if (0 <= index < len(counts)
+            or (observation.get('battle_live') or {}).get('capture_blocked_reason') == 'storage_full'):
+        preparation['storage_full'] = capture_storage_full({**observation, 'party': party})
+    return preparation
+
+
+def accumulate_capture_retreat(totals, evidence):
+    """Count recorded escapes, measuring costs only across observed inventories."""
+    key = evidence['map'] + ':' + evidence['species']
+    total = totals.setdefault(key, {'recorded_retreats': 0,
+        'inventory_observed_retreats': 0, 'balls_spent': {}})
+    total['recorded_retreats'] += 1
+    start = evidence.get('preparation', {}).get('balls', {})
+    end = (evidence.get('retreat_observation') or {}).get('inventory')
+    # Legacy nonempty start stock is evidence; an absent/empty legacy field
+    # cannot establish that a full inventory was observed.
+    if not evidence.get('start_inventory_observed', bool(start)) or not isinstance(end, list):
+        return
+    total['inventory_observed_retreats'] += 1
+    remaining = capture_preparation([], {row['item']: row['qty'] for row in end})['balls']
+    for name, qty in start.items():
+        name = name.replace('_', '').upper()
+        spent = max(0, qty - remaining.get(name, 0))
+        if spent:
+            total['balls_spent'][name] = total['balls_spent'].get(name, 0) + spent
+
+
+def capture_inventory_observed(inventory):
+    """An absent/malformed inventory is not a measured zero-cost battle."""
+    return isinstance(inventory, list) and all(
+        isinstance(row, dict) and isinstance(row.get('item'), str)
+        and type(row.get('qty')) is int and row['qty'] >= 0 for row in inventory)
+
+
+def capture_blackout_evidence(before, after):
+    """Bind a static capture loss to two actual native battle observations.
+
+    The native persistent party can already be healed when BattleOver is
+    observed. Preparation is the initial battle party, never this auto-heal.
+    Money is measured here, not inferred from a blackout penalty formula.
+    """
+    live, result = before.get('battle_live') or {}, after.get('battle_live') or {}
+    enemy, result_enemy = live.get('enemy') or {}, result.get('enemy') or {}
+    phase, dex = after.get('battle_phase', ''), after.get('pokedex') or {}
+    party, battle_party = before.get('party'), live.get('player_party')
+    defeated = result.get('player_party')
+    species = capture_species(enemy) if enemy.get('species') else None
+    if (before.get('screen') != 'battle' or before.get('script_awaiting_battle') is not True
+            or live.get('is_wild') is not True or live.get('is_safari') or live.get('is_ghost')
+            or live.get('capture_blocked_reason') not in (None, 'storage_full')
+            or not isinstance(phase, str) or not phase.startswith('BattleOver {')
+            or 'won: false' not in phase or 'escaped: false' not in phase
+            or not species or not result_enemy.get('species')
+            or capture_species(result_enemy) != species
+            or not isinstance(before.get('map_name'), str)
+            or after.get('map_name') != before['map_name']
+            or not isinstance(dex.get('owned_species'), list)
+            or any(not isinstance(name, str) for name in dex['owned_species'])
+            or any(name.upper() == species.upper() for name in dex['owned_species'])
+            or not isinstance(party, list) or not party
+            or not isinstance(battle_party, list) or len(party) != len(battle_party)
+            or any(not isinstance(base, dict) or not isinstance(mon, dict)
+                   or base.get('species') != mon.get('species') for base, mon in zip(party, battle_party))
+            or not isinstance(defeated, list) or len(defeated) != len(party)
+            or any(not isinstance(mon, dict) or type(mon.get('hp')) is not int
+                   or mon['hp'] != 0 for mon in defeated)):
+        return None
+    inventory = before.get('battle_inventory')
+    observed = capture_inventory_observed(inventory)
+    row = {'map': before['map_name'], 'species': species,
+           'reason': 'native_blackout_without_registration',
+           'start_inventory_observed': observed,
+           'preparation': capture_preparation(
+               [{**base, **mon} for base, mon in zip(party, battle_party)],
+               {entry['item']: entry['qty'] for entry in inventory} if observed else {}, before),
+           'blackout_observation': {'enemy': result_enemy, 'party': defeated,
+               'inventory': after.get('battle_inventory'), 'screen': after.get('screen'),
+               'map': after.get('map_name'), 'battle_phase': phase,
+               'scope': 'Native terminal battle observations, before whiteout travel settles. '
+                        'All battle party HP is zero; persistent party may already be healed. '
+                        'Not a successful escape, damage forecast, proof of a remaining source '
+                        'or an attribution to one enemy move.'}}
+    if all(type(state.get('money')) is int and state['money'] >= 0 for state in (before, after)):
+        row.update(money_before=before['money'], money_after=after['money'])
+    return deepcopy(row)
+
+
+def accumulate_capture_blackout(totals, evidence):
+    """Separate recorded blackouts from menu escapes and unobserved costs."""
+    key = evidence['map'] + ':' + evidence['species']
+    total = totals.setdefault(key, {'recorded_blackouts': 0, 'inventory_observed_blackouts': 0,
+                                   'balls_spent': {}, 'cash_observed_blackouts': 0, 'cash_decrease': 0})
+    total['recorded_blackouts'] += 1
+    inventory = (evidence.get('blackout_observation') or {}).get('inventory')
+    if evidence.get('start_inventory_observed') is True and capture_inventory_observed(inventory):
+        total['inventory_observed_blackouts'] += 1
+        remaining = capture_preparation([], {row['item']: row['qty'] for row in inventory})['balls']
+        for name, qty in evidence['preparation']['balls'].items():
+            spent = max(0, qty - remaining.get(name, 0))
+            if spent:
+                total['balls_spent'][name] = total['balls_spent'].get(name, 0) + spent
+    if all(type(evidence.get(key)) is int and evidence[key] >= 0 for key in ('money_before', 'money_after')):
+        total['cash_observed_blackouts'] += 1
+        total['cash_decrease'] += max(0, evidence['money_before'] - evidence['money_after'])
+
+
+def capture_preparation_improvements(current, previous):
+    """Public improvements only: movement, damage and spending do not reopen a retry."""
+    changes = []
+    if previous.get('storage_full') is True and current.get('storage_full') is False:
+        changes.append('capture_storage_available')
+    for name, qty in current['balls'].items():
+        if qty > previous['balls'].get(name, 0):
+            changes.append('more_ball_stock:' + name)
+    for mon in current['party']:
+        if (mon.get('hp') or 0) <= 0:
+            continue
+        old = [row for row in previous['party'] if row['species'] == mon['species']]
+        if not old:
+            changes.append('new_conscious_teammate:' + mon['species'])
+            continue
+        if mon['level'] > max(row['level'] for row in old):
+            changes.append('higher_level:' + mon['species'])
+        if mon['hp'] > max(row.get('hp') or 0 for row in old):
+            changes.append('health_restored:' + mon['species'])
+        if mon.get('status', 'None') == 'None' and all(row.get('status', 'None') != 'None' for row in old):
+            changes.append('status_cured:' + mon['species'])
+        for move, pp in zip(mon.get('moves') or [], mon.get('pp') or []):
+            if move == 'None' or pp <= 0:
+                continue
+            previous_pp = max((p for row in old for m, p in zip(row.get('moves') or [], row.get('pp') or [])
+                               if m == move), default=0)
+            if pp > previous_pp:
+                changes.append('usable_move_improved:' + mon['species'] + ':' + move)
+    return changes
+
+
+def encounter_value(map_data, owned_species=()):
+    """Deterministic collection value of one grass table.
+
+    Keep arithmetic out of Jev: it should weigh travel, scarcity and resources,
+    not reconstruct encounter-slot probabilities from a ten-row table.
+    Percentages are rounded only at the presentation boundary.
+    """
+    wild = ((map_data.get('wild') or {}).get('red') or {}).get('grass') or {}
+    value = table_profile(wild, owned_species)
+    # Compatibility names retained for traces/tests written for grass-only
+    # collection; the unified planner uses the method-neutral names too.
+    value['new_species_per_step_pct'] = value['new_species_per_attempt_pct']
+    value['expected_steps_to_any_new_species'] = value['expected_attempts_to_any_new_species']
+    for target in value['targets']:
+        target.update(catch_difficulty(target['species']))
+        target['per_step_pct'] = target['per_attempt_pct']
+        target['expected_steps'] = target['expected_attempts']
+    return value
 
 
 def native_interaction_tiles():
@@ -42,6 +527,8 @@ _HEADERS = (data.DATA / 'src/tileset_data.rs').read_text().split(
     'pub const TILESET_HEADERS:', 1)[1].split('];', 1)[0]
 COUNTERS = [{int(v.strip(), 0) for v in values.split(',') if int(v.strip(), 0) >= 0}
             for values in re.findall(r'header\(([^,]+,[^,]+,[^,]+),', _HEADERS)]
+ENCOUNTER_GRASS_TILES = [int(value.strip(), 0)
+    for value in re.findall(r'header\([^,]+,[^,]+,[^,]+,([^,]+),', _HEADERS)]
 
 
 def trigger_position_matches(rule, point):
@@ -64,12 +551,19 @@ def counter_approaches(map_name, npc):
 
 
 def training_tile(name, x, y):
-    """Grass or ordinary cave floor; table availability is checked by the caller."""
+    """A native grass-table stance with a valid right-hand rate anchor."""
     m = pt.MAPS[name]
-    return pt.is_grass(name, x, y) or (
-        m['id'] >= FIRST_INDOOR_MAP and m['tileset_name'].lower() != 'forest'
-        and pt.walkable(name, x, y) and pt.tile_at(name, x, y) not in (0x14, 0x15)
-        and (x, y) not in pt.warp_tiles(name))
+    if not pt.walkable(name, x, y) or (x, y) in pt.warp_tiles(name):
+        return False
+    standing = pt.tile_at(name, x, y)
+    right = pt.tile_at(name, x+1, y) if x+1 < m['width']*2 else standing
+    grass = ENCOUNTER_GRASS_TILES[m['tileset_id']]
+    # Native determine_encounter_type explicitly excludes Forest from the
+    # indoor catch-all. Safari paths are not encounter terrain. Grass comes
+    # from the actual tileset header, not the Overworld-only legacy helper.
+    indoor = m['id'] >= FIRST_INDOOR_MAP and m['tileset_name'].lower() != 'forest'
+    return (standing == grass and right == grass) or (
+        indoor and standing not in (0x14, 0x15) and right != 0x14)
 
 
 def battle_readiness(party, bag):
@@ -79,6 +573,76 @@ def battle_readiness(party, bag):
                        'pp': m['pp'],
                        'status': m.get('status', 'None')} for m in party],
             'medicine': {name: qty for name, qty in bag.items() if name in medicine_names}}
+
+
+def training_battler(party):
+    """Return the strongest conscious member that can earn battle experience.
+
+    Collection catches can replace the lead slot with a low-level Pokemon.  A
+    story preparation threshold is about the party's capable battler, not that
+    incidental slot order.  Prefer a member with a usable damaging move, then
+    fall back to any conscious member so callers remain useful for sparse test
+    fixtures and unusual early-game parties.
+    """
+    conscious = [mon for mon in party if mon.get('hp', 1) > 0]
+    usable = [mon for mon in conscious if any(
+        name != 'None' and pp > 0 and data.move_data(name)['power'] > 0
+        for name, pp in zip(mon.get('moves', []), mon.get('pp', [])))]
+    candidates = usable or conscious or list(party)
+    return max(candidates, key=lambda mon: mon.get('level', 0)) if candidates else None
+
+
+def storage_deposit_indices(party):
+    """Preserve the main battler and sole carriers of required field moves."""
+    if not party:
+        return []
+    main = max(range(len(party)), key=lambda index: party[index]['level'])
+    protected = {main}
+    for move in ('Cut', 'Surf', 'Strength'):
+        carriers = [i for i, mon in enumerate(party) if move in mon.get('moves', [])]
+        if len(carriers) == 1:
+            protected.update(carriers)
+    return [i for i in range(len(party)) if i not in protected]
+
+
+def type_options(party, opponents):
+    """Super-effective party moves per opponent species, from public type data."""
+    chart = data.type_chart()
+    options = {}
+    for enemy in opponents:
+        species = enemy.get('species')
+        if not species or species in options:
+            continue
+        defenders = {data.species_data(species)[key] for key in ('type1', 'type2')}
+        effective = {}
+        for mon in party:
+            for name in mon['moves']:
+                if name == 'None' or name in effective:
+                    continue
+                move = data.move_data(name)
+                multiplier = 1
+                for typ in defenders:
+                    multiplier *= chart.get((move['type'], typ), 1)
+                if move['power'] > 0 and multiplier > 1:
+                    effective[name] = {'pokemon': mon['species'], 'type': move['type'],
+                                       'power': move['power'], 'effectiveness': multiplier}
+        options[species] = {'types': sorted(defenders), 'super_effective_moves': effective}
+    return options
+
+
+def tactical_options(party, opponents):
+    """Status and support moves the party can spend a battle turn on."""
+    options = {}
+    for mon in party:
+        for name in mon['moves']:
+            if name == 'None' or name in options:
+                continue
+            move = data.move_data(name)
+            if move['power'] == 0:
+                options[name] = {'pokemon': mon['species'], 'type': move['type'],
+                                 'effect': move['effect']}
+    return {'opponent_species': sorted({enemy['species'] for enemy in opponents}),
+            'status_moves': options}
 
 
 def reachable_grass(map_name, start, blocked=()):
@@ -100,11 +664,344 @@ def reachable_grass(map_name, start, blocked=()):
     return None
 
 
+@lru_cache(maxsize=None)
+def fishing_spots(map_name):
+    """Walkable stances facing a tile accepted by the engine's rod check."""
+    result = []
+    for x in range(pt.MAPS[map_name]['width'] * 2):
+        for y in range(pt.MAPS[map_name]['height'] * 2):
+            if not pt.walkable(map_name, x, y):
+                continue
+            for direction, (dx, dy) in pt.DELTA.items():
+                if water_tile(map_name, x + dx, y + dy):
+                    result.append(((x, y), direction))
+                    break
+    return result
+
+
+@lru_cache(maxsize=None)
+def surf_spots(map_name):
+    """Land stance, facing, and adjacent water tile for starting a water hunt."""
+    return [(stance, direction,
+             (stance[0] + pt.DELTA[direction][0], stance[1] + pt.DELTA[direction][1]))
+            for stance, direction in fishing_spots(map_name)]
+
+
+def compact_strategy_candidates(candidates):
+    """Factor repeated navigation prose without dropping goals or blockers."""
+    result = {}
+    for key, value in candidates.items():
+        try:
+            candidate = json.loads(value)
+        except (ValueError, TypeError):
+            result[key] = value
+            continue
+        context = candidate.get('context') if isinstance(candidate, dict) else None
+        if isinstance(context, dict):
+            routes = context.get('trigger_navigation') or []
+            if routes:
+                scopes = list(dict.fromkeys(route.get('scope') for route in routes if route.get('scope')))
+                if len(scopes) == 1:
+                    context['navigation_scope'] = scopes[0]
+                    routes = [{k: v for k, v in route.items() if k != 'scope'} for route in routes]
+                # Keep every reachable cost and every blocked map. False
+                # routes carry identical null costs, so a map list is lossless.
+                blocked = [route for route in routes if route.get('tile_route_found') is False
+                           and route.get('steps') is None and not route.get('requires_surf')
+                           and set(route) <= {'map', 'tile_route_found', 'steps', 'requires_surf'}]
+                if blocked:
+                    context['unreachable_trigger_maps'] = [route['map'] for route in blocked]
+                    routes = [route for route in routes if route not in blocked]
+                context['trigger_navigation'] = routes
+        result[key] = json.dumps(candidate, separators=(',', ':'), ensure_ascii=False)
+    return result
+
+
+def factor_strategy_evidence(state, candidates, min_chars=160):
+    """Losslessly share decision evidence on either layer; never shortlist options.
+
+    Retain the historical strategy-prefixed wire names for trace compatibility.
+    """
+    decoded = {}
+    for key, value in candidates.items():
+        try:
+            decoded[key] = json.loads(value)
+        except (ValueError, TypeError):
+            decoded[key] = value
+    counts, values = Counter(), {}
+
+    def fingerprint(value):
+        return json.dumps(value, sort_keys=True, separators=(',', ':'), ensure_ascii=False)
+
+    def collect(value):
+        if isinstance(value, (dict, list, str)):
+            serial = fingerprint(value)
+            if len(serial) >= min_chars:
+                counts[serial] += 1
+                values[serial] = value
+            for child in (value.values() if isinstance(value, dict) else
+                          value if isinstance(value, list) else []):
+                collect(child)
+    collect(state)
+    for value in decoded.values():
+        collect(value)
+    shared = {serial: f'e{index}' for index, serial in enumerate(
+        serial for serial, count in counts.items() if count > 1)}
+    if not shared:
+        return state, candidates
+
+    def encode(value, skip=None):
+        if isinstance(value, (dict, list, str)):
+            serial = fingerprint(value)
+            if serial in shared and serial != skip:
+                return {'shared_strategy_evidence_ref': shared[serial]}
+            if isinstance(value, str):
+                return value
+            if isinstance(value, dict):
+                return {key: encode(child) for key, child in value.items()}
+            # Encounter tables, party snapshots and route records repeat the
+            # same field names on every row. Keep all rows and all values, but
+            # transmit those names once. Sharing entire identical objects alone
+            # cannot compress tables whose species/levels differ on each row.
+            if (len(value) >= 3 and all(isinstance(row, dict) for row in value)
+                    and value[0] and all(set(row) == set(value[0]) for row in value)):
+                columns = list(value[0])
+                table = {'strategy_table': {'columns': columns,
+                         'rows': [[encode(row[column]) for column in columns] for row in value]}}
+                ordinary = [encode(child) for child in value]
+                if len(fingerprint(table)) < len(fingerprint(ordinary)):
+                    return table
+            return [encode(child) for child in value]
+        return value
+
+    library = {key: encode(values[serial], skip=serial) for serial, key in shared.items()}
+    factored_state = {key: encode(value) for key, value in state.items()}
+    factored_state['shared_strategy_evidence'] = library
+    factored_candidates = {key: json.dumps(encode(value), separators=(',', ':'), ensure_ascii=False)
+                           if not isinstance(value, str) else value
+                           for key, value in decoded.items()}
+    # Table encoding can bypass shared row objects. Do not send unreachable
+    # library entries: they are duplicate storage, not additional evidence.
+    used = set()
+
+    def mark(value):
+        if isinstance(value, dict):
+            if set(value) == {'shared_strategy_evidence_ref'}:
+                key = value['shared_strategy_evidence_ref']
+                if key not in used:
+                    used.add(key)
+                    mark(library[key])
+            else:
+                for child in value.values():
+                    mark(child)
+        elif isinstance(value, list):
+            for child in value:
+                mark(child)
+
+    for key, value in factored_state.items():
+        if key != 'shared_strategy_evidence':
+            mark(value)
+    for value in factored_candidates.values():
+        try:
+            mark(json.loads(value))
+        except (ValueError, TypeError):
+            pass
+    factored_state['shared_strategy_evidence'] = {key: value for key, value in library.items()
+                                                 if key in used}
+    return factored_state, factored_candidates
+
+
+def scope_shared_evidence(state, candidates):
+    """Keep the complete world and this round's transitive evidence closure.
+
+    A partition must not resend storage reachable only from OTHER partitions.
+    These are unreferenced library entries, not world facts or a shortlist.
+    Values, references and all current candidate descriptions remain unchanged.
+    """
+    library = state.get('shared_strategy_evidence')
+    if not isinstance(library, dict):
+        return state
+    used, visiting = set(), set()
+
+    def mark(value):
+        if isinstance(value, dict):
+            if set(value) == {'shared_strategy_evidence_ref'}:
+                key = value['shared_strategy_evidence_ref']
+                if not isinstance(key, str) or key not in library:
+                    raise ValueError('Missing shared evidence reference')
+                if key in visiting:
+                    raise ValueError('Cyclic shared evidence reference')
+                if key not in used:
+                    visiting.add(key)
+                    mark(library[key])
+                    visiting.remove(key)
+                    used.add(key)
+            else:
+                for child in value.values():
+                    mark(child)
+        elif isinstance(value, list):
+            for child in value:
+                mark(child)
+
+    for key, value in state.items():
+        if key != 'shared_strategy_evidence':
+            mark(value)
+    for value in candidates.values():
+        try:
+            decoded = json.loads(value)
+        except (ValueError, TypeError):
+            continue  # Plain criteria contain no encoded references.
+        mark(decoded)
+    if used == set(library):
+        return state
+    return {**state, 'shared_strategy_evidence': {
+        key: value for key, value in library.items() if key in used}}
+
+
+SHORT_EVIDENCE_REFERENCE_INSTRUCTION = (
+    ' Wire alias: each object containing only $e means exactly the same complete '
+    'shared_strategy_evidence_ref entry in state.shared_strategy_evidence; '
+    'resolve nested $e references too. Only the reference key spelling changed; '
+    'all facts, library entries, tables and candidates are unchanged.')
+
+
+def compact_evidence_reference_wire(state, candidates):
+    """Reversibly shorten reference keys, not their values or evidence.
+
+    Internal states and executor candidates keep the canonical encoding. Only
+    exact singleton reference objects change on the wire; ordinary strings,
+    mixed-key objects, tables, library IDs and every option remain intact.
+    Refuse a reserved-key collision rather than silently changing its meaning.
+    Return the original objects when no reference can benefit from this format.
+    """
+    if not isinstance(state.get('shared_strategy_evidence'), dict):
+        return state, candidates
+    references = 0
+
+    def encode(value):
+        nonlocal references
+        if isinstance(value, dict):
+            if '$e' in value:
+                raise ValueError('Reserved short evidence reference key collision')
+            if set(value) == {'shared_strategy_evidence_ref'}:
+                key = value['shared_strategy_evidence_ref']
+                if not isinstance(key, str) or key not in state['shared_strategy_evidence']:
+                    raise ValueError('Missing shared evidence reference')
+                references += 1
+                return {'$e': key}
+            return {key: encode(child) for key, child in value.items()}
+        if isinstance(value, list):
+            return [encode(child) for child in value]
+        return value
+
+    wire_state = encode(state)
+    wire_candidates = {}
+    for key, value in candidates.items():
+        try:
+            decoded = json.loads(value)
+        except (ValueError, TypeError):
+            wire_candidates[key] = value
+            continue
+        before = references
+        encoded = encode(decoded)
+        wire_candidates[key] = (json.dumps(encoded, separators=(',', ':'), ensure_ascii=False)
+                                if references != before else value)
+    if not references:
+        return state, candidates
+    return wire_state, wire_candidates
+
+
+def restore_evidence_reference_wire(value):
+    """Invert short keys in an already encoded payload for semantic audits."""
+    if isinstance(value, dict):
+        if set(value) == {'$e'}:
+            return {'shared_strategy_evidence_ref': value['$e']}
+        return {key: restore_evidence_reference_wire(child) for key, child in value.items()}
+    if isinstance(value, list):
+        return [restore_evidence_reference_wire(child) for child in value]
+    return value
+
+
+def strategy_access_evidence(candidates):
+    """Compare fresh trigger access without removing legal future goals."""
+    result = {key: {} for key in ('path_found', 'field_action_needed', 'no_path_found', 'not_evaluated')}
+    for key, value in candidates.items():
+        try:
+            row = json.loads(value)
+        except (ValueError, TypeError):
+            continue
+        if not isinstance(row, dict) or 'establish' not in row:
+            continue
+        context = row.get('context') or {}
+        routes = context.get('trigger_navigation') or []
+        if any(route.get('tile_route_found') is True and not route.get('requires_surf') for route in routes):
+            status = 'path_found'
+        elif any(route.get('tile_route_found') is True for route in routes):
+            status = 'field_action_needed'
+        elif (routes or context.get('unreachable_trigger_maps')) and all(
+                route.get('tile_route_found') is False for route in routes):
+            status = 'no_path_found'
+        else:
+            status = 'not_evaluated'
+        result[status][key] = row['establish']
+    result['scope'] = ('Current planning evidence to actual trigger regions, not a victory or legal-action '
+        'guarantee. No path found means access still needs resolving before the target can make progress; '
+        'field_action_needed has only a water-relaxed path: an actual Surf action must occur first. '
+        'it does not prove permanent impossibility. Not evaluated is unknown, not reachable. '
+        'All candidates remain available, including exploration of unproven access.')
+    return result
+
+
+def scope_strategy_access_evidence(state, candidates):
+    """Keep this round's ID-indexed access summary, never scope world facts.
+
+    Each omitted entry describes ONLY a candidate offered in another disjoint
+    round. Its original full evidence/access is compared there. Current entries,
+    all world/navigation/resource facts and candidate values are unchanged.
+    Unknown schema, ambiguous IDs or incomplete current coverage stay untouched.
+    """
+    comparison = state.get('immediate_access_comparison')
+    categories = ('path_found', 'field_action_needed', 'no_path_found', 'not_evaluated')
+    if (not candidates or not isinstance(comparison, dict)
+            or set(comparison) != {*categories, 'scope'}
+            or not isinstance(comparison['scope'], str)
+            or any(not isinstance(comparison[category], dict) for category in categories)):
+        return state
+    ids = [key for category in categories for key in comparison[category]]
+    if (any(not isinstance(key, str) for key in ids) or len(ids) != len(set(ids))
+            or not set(candidates) <= set(ids) or set(candidates) == set(ids)):
+        return state
+    return {**state, 'immediate_access_comparison': {
+        **{category: {key: value for key, value in comparison[category].items() if key in candidates}
+           for category in categories}, 'scope': comparison['scope']}}
+
+
+def navigation_failure_is_field_prerequisite(blockage):
+    """A terrain-planning failure is not evidence of a local scene displacement.
+
+    Retain two exact legacy Surf diagnostics whose structured obstacle was
+    dropped by older checkpoint memory. Unknown/other failures stay unknown.
+    This never removes the actual field requirement or a collection candidate.
+    """
+    obstacle = blockage.get('field_obstruction')
+    return (isinstance(obstacle, dict) and obstacle.get('move') in ('Cut', 'Surf')
+            or blockage.get('detail') in (
+                'The target region requires crossing water',
+                'Water separates a reachable frontier from the final goal'))
+
+
 class AutonomousStoryAgent(DualStoryAgent):
-    def __init__(self, *args, game, **kwargs):
+    def __init__(self, *args, game, preference='none', **kwargs):
         super().__init__(*args, **kwargs)
+        self.preference = preference
         self.game = game
+        # Boot input, judgments and native commands share one trace clock.
+        started = getattr(getattr(game, 'judgments', None), 'start_time', None)
+        if isinstance(started, (int, float)):
+            self.start_time = started
         game.judgments = self
+        if isinstance(game.d, ObservedProtocol):
+            game.d.record = self.record
         game.smart_moves = True
         self.maps = {p.parent.name: json.loads(p.read_text())
                      for p in data.DATA.glob('maps/*/map.json')}
@@ -112,6 +1009,12 @@ class AutonomousStoryAgent(DualStoryAgent):
                          for p in data.DATA.glob('trainers/*.json')}
         self.visited = {self.client.state()['map_name']}
         self.training_sites = {}
+        self.catch_navigation = {}
+        self.catch_areas = {}
+        goal_ids = {o.get('id') for o in self.objectives}
+        self.collects_dex = 'collect-dex' in goal_ids
+        self.maximizes_coverage = 'max-coverage' in goal_ids
+        self.avoids_optional_preparation = 'fast-clear' in goal_ids
         self.healing_rules = []
         self.hof_baseline = self.client.state().get('hall_of_fame_count', 0)
         self.first_clear_verification = None
@@ -120,21 +1023,44 @@ class AutonomousStoryAgent(DualStoryAgent):
         self.navigation_history = {}
         self.observed_barrier_maps = set()
         self.field_requirements = {}
+        self.field_route_goals = {}
         self.route_requirements = {}
         self.cleared_terrain = set()
         self.crossed_passages = set()
         self.battle_requirements = {}
         self.battle_defeats = []
+        self.capture_retreats = {}
+        self.capture_retreat_totals = {}
+        self.capture_blackouts = {}
+        self.capture_blackout_totals = {}
+        self.collection_audit_pending = {}
+        self._audit_party = None
         self.defeat_preparation = 0
         self.replan_after_defeat = False
         self.mechanism_goal = None
+        self._recorded_dex_species = None
 
     def facts(self):
         facts = super().facts()
         live = self.game.st()  # Refresh live geometry after field moves / map reloads.
+        party_state = self.client.state()
+        # Same native 0=Red / 1=Blue value used by scene queries. Older
+        # binaries or invalid observations remain unknown, never default Red.
+        facts['game_version'] = evaluate({'Call': {'callee': 'getGameVersion', 'args': []}}, party_state)
         facts['party'] = [{k: mon.get(k) for k in
                            ('species', 'level', 'hp', 'max_hp', 'status', 'moves', 'pp')}
-                          for mon in self.client.state().get('party', [])]
+                          for mon in party_state.get('party', [])]
+        if party_state.get('screen') == 'overworld':
+            for index, experience in observed_party_experience(party_state, self.client.party()).items():
+                facts['party'][index]['experience'] = experience
+        facts['stored_pokemon'] = [{k: mon.get(k) for k in
+                                    ('box', 'index', 'species', 'level', 'hp', 'max_hp',
+                                     'status', 'moves', 'pp')}
+                                   for mon in self.client.state().get('stored_pokemon', [])]
+        self.observe_audit_evolution(facts['party'], live.get('frame_count'))
+        facts['collection_audit_pending'] = sorted(getattr(self, 'collection_audit_pending', {}))
+        facts['current_box_index'] = self.client.state().get('current_box_index', 0)
+        facts['box_counts'] = list(self.client.state().get('box_counts', []))
         facts['fully_recovered'] = bool(facts['party']) and all(
             mon['hp'] == mon['max_hp'] and mon['status'] == 'None'
             and all(move == 'None' or pp >= data.move_data(move)['pp']
@@ -151,6 +1077,22 @@ class AutonomousStoryAgent(DualStoryAgent):
         facts['navigation_revision'] = len(self.visited) + len(self.crossed_passages)
         facts['block_values'] = {}
         facts['recent_battle_defeats'] = self.battle_defeats[-3:]
+        dex = facts.get('dex') or {}
+        owned_species = tuple(sorted(dex.get('owned_species', [])))
+        if self.collects_dex and owned_species != self._recorded_dex_species:
+            previous = set(self._recorded_dex_species or ())
+            active_context = (self.active or {}).get('context', {})
+            self.record('dex_progress', owned=dex.get('owned', len(owned_species)),
+                        seen=dex.get('seen', len(dex.get('seen_species', []))),
+                        acquired=sorted(set(owned_species) - previous),
+                        owned_species=list(owned_species), map=facts['map'],
+                        acquisition_method=active_context.get('acquisition_method'),
+                        active_target=(self.active or {}).get('target'),
+                        party_count=len(facts['party']),
+                        stored_count=len(facts['stored_pokemon']), frame=live['frame_count'])
+            self._recorded_dex_species = owned_species
+        if self.collects_dex:
+            self.require_static_sources(facts)
         if self.index:
             for rule in self.index.rules:
                 if (rule.effect[0] != 'block' or 'load' not in rule.triggers or rule.map == facts['map']
@@ -182,34 +1124,360 @@ class AutonomousStoryAgent(DualStoryAgent):
                 self.cleared_terrain.remove(key)
 
     @staticmethod
-    def needs_healing(facts):
+    def needs_healing(facts, preserve_coverage=True):
         if not facts['party']:
             return False
         mon = facts['party'][0]
         attack_pp = sum(pp for move, pp in zip(mon['moves'], mon['pp'])
                         if move != 'None' and data.move_data(move)['power'] > 0)
-        depleted_attack = any(pp <= data.move_data(move)['pp'] * .25
+        # Ordinary story/training preparation preserves each coverage move.
+        # A capture trip can continue with adequate remaining attacks; recovery
+        # is still offered while fully_recovered is false.
+        depletion = any if preserve_coverage else all
+        depleted_attack = depletion(pp <= data.move_data(move)['pp'] * .25
                               for move, pp in zip(mon['moves'], mon['pp'])
                               if move != 'None' and data.move_data(move)['power'] > 0)
         return (mon['hp'] < mon['max_hp'] * .7 or mon['status'] != 'None'
                 or attack_pp < 6 or depleted_attack)
 
+    @staticmethod
+    def needs_capture_recovery(facts):
+        return AutonomousStoryAgent.needs_healing(facts, preserve_coverage=False)
+
+    @staticmethod
+    def healing_context(facts):
+        """Separate a lost coverage move from observed survival resources.
+
+        This describes recovery, not a permission to skip it or a prediction
+        that the remaining attacks can beat every encountered opponent.
+        """
+        party = facts.get('party', [])
+        mon = party[0] if party else None
+        attacks = []
+        if mon:
+            for move, pp in zip(mon['moves'], mon['pp']):
+                if move == 'None':
+                    continue
+                move_data = data.move_data(move)
+                if move_data['power'] > 0:
+                    attacks.append({'move': move, 'pp': pp, 'reference_full_pp': move_data['pp'],
+                                    'type': move_data['type'], 'power': move_data['power']})
+        return {
+            'urgently_needed': AutonomousStoryAgent.needs_healing(facts, preserve_coverage=False),
+            'coverage_recovery_recommended': AutonomousStoryAgent.needs_healing(facts),
+            'lead_recovery_evidence': None if mon is None else {
+                'species': mon['species'], 'hp': mon['hp'], 'max_hp': mon['max_hp'],
+                'status': mon['status'],
+                'health_or_status_warning': mon['hp'] < mon['max_hp'] * .7 or mon['status'] != 'None',
+                'remaining_attack_pp': sum(row['pp'] for row in attacks),
+                'usable_attacks': [row for row in attacks if row['pp'] > 0],
+                'low_pp_coverage_attacks': [row for row in attacks if row['pp'] <= row['reference_full_pp'] * .25],
+            },
+            'scope': 'Observed leader HP/status/PP and public unboosted move PP/type/power data, '
+                'not an observed PP-Up-adjusted maximum. Urgency is a resource heuristic, '
+                'not guaranteed survival; compare remaining attacks with opponent matchups. '
+                'Other party members may still need optional recovery.',
+        }
+
     def should_replan(self, facts):
         if self.replan_after_defeat:
             return True
+        if (self.active and self.active['target'][0] in ('catch', 'held_species')
+                and getattr(self, '_completed_hunts_since_strategy', 0) >= self.CATCH_WINDOW):
+            return True  # Reassess a bounded hunt batch without blacklisting its valid terrain.
+        if self.capture_resources_missing(facts):
+            return True
+        if (self.active and self.active.get('context', {}).get('acquisition_method') == 'static'
+                and any(self.static_capture_deferred(self.active['context']['species'], rule.map, facts)
+                        for rule in self.active.get('rules', []))):
+            return True
+        if (self.active and self.active['target'][0] in ('catch', 'held_species')
+                and any(self.capture_area_blocked(rule.map, facts)
+                        for rule in self.active.get('rules', []))):
+            return True  # The just-observed encounter cannot satisfy this hunt.
+        context = (self.active or {}).get('context', {})
+        training = (self.active and (self.active['target'][0] == 'level'
+                    or context.get('acquisition_method') == 'evolution'
+                    and context.get('trigger') == 'level'))
+        if training and any(self.capture_area_blocked(rule.map, facts)
+                            for rule in self.active.get('rules', [])):
+            return True  # Unidentified wild ghosts cannot award knockout XP either.
         if (self.active and self.active['target'][0] == 'item' and self.active['target'][2]
                 and len(facts.get('bag', {})) >= 20
                 and not facts['bag'].get(self.active['target'][1].replace('_', '').upper())):
             return True
-        return self.active and self.active['target'][0] != 'heal' and self.needs_healing(facts)
+        party = facts.get('party', [])
+        main = max(party, key=lambda mon: mon['level']) if party else None
+        main_critical = bool(main and main.get('max_hp', 0) > 0
+                             and main['hp'] <= main['max_hp'] * .25)
+        return (self.active and self.active['target'][0] != 'heal'
+                and (main_critical or (self.needs_skill_recovery(facts)
+                     and getattr(self, '_selected_recovery_key', None) != self.recovery_replan_key(facts))))
+
+    def recovery_replan_key(self, facts):
+        """Exact recovery evidence accepted by the latest strategic choice.
+
+        Coordinates are not fatigue: arriving at a selected shop with unchanged
+        HP/PP must not cancel the purchase just because those PP were already
+        low when Jev selected it. New injury, PP/status/party or medicine changes
+        still re-open planning. Serialize to avoid aliasing mutable observations.
+        """
+        fields = ('species', 'level', 'hp', 'max_hp', 'status', 'moves', 'pp')
+        medicine_names = {name.replace('_', '').upper() for name in MEDICINES}
+        return json.dumps([
+            (self.active or {}).get('target'),
+            [{key: mon.get(key) for key in fields} for mon in facts.get('party', [])],
+            {name: qty for name, qty in facts.get('bag', {}).items() if name in medicine_names},
+        ], sort_keys=True)
+
+    def capture_resources_missing(self, facts, method=None):
+        """All captures need capacity; only Safari supplies its own balls."""
+        active = getattr(self, 'active', None) or {}
+        if method is None:
+            if (active.get('target', [None])[0] not in ('catch', 'held_species')
+                    and active.get('context', {}).get('acquisition_method') != 'static'):
+                return False
+            method = active.get('context', {}).get('acquisition_method', 'grass')
+        return (capture_storage_full(facts)
+                or method != 'safari' and 'bag' in facts and self.balls_held(facts) <= 0)
+
+    def needs_skill_recovery(self, facts):
+        """A status-only evolution trainee can share XP with a ready finisher."""
+        active = getattr(self, 'active', None) or {}
+        context = active.get('context', {})
+        if active.get('target', [None])[0] in ('catch', 'held_species'):
+            return self.needs_capture_recovery(facts)
+        party = facts.get('party', [])
+        if (party and (context.get('acquisition_method') == 'evolution'
+                       or context.get('capture_support_training'))
+                and context.get('trigger') == 'level'
+                and self.same_species(party[0]['species'], context.get('from_species', ''))):
+            trainee = party[0]
+            if trainee['hp'] < trainee['max_hp'] * .7 or trainee['status'] != 'None':
+                return True
+            finisher = training_battler(party)
+            if (finisher is not trainee and finisher and finisher['level'] > trainee['level']
+                    and not self.needs_healing({'party': [finisher]})):
+                return False
+        return self.needs_healing(facts)
 
     def select_strategy(self, facts):
         super().select_strategy(facts)
+        self._completed_hunts_since_strategy = 0
+        self._selected_recovery_key = self.recovery_replan_key(facts)
         self.replan_after_defeat = False
 
-    def choose(self, layer, state, candidates, instruction):
+    def completed_stochastic_attempt(self, operation, rule, result, resolved_battles):
+        # Reaching an actual encounter and returning empty-handed is normal
+        # for rare species. Do not mark the site unexecutable just because
+        # bag/party/position ended unchanged after an escape. A label alone
+        # is not enough: settle() must have observed a completed battle.
+        observed = (operation.startswith('catch_encounter:')
+            and rule.storyline == 'skill:catch_encounter'
+            and result.get('result') == 'hunted' and resolved_battles > 0)
+        if observed:
+            self._completed_hunts_since_strategy = getattr(self, '_completed_hunts_since_strategy', 0) + 1
+        return observed
+
+    def completed_route_context(self, facts):
+        continuation = getattr(self, 'route_continuation', None)
+        if continuation:
+            if (self.index.satisfied(continuation['goal'], facts)
+                    or facts.get('map') != continuation['landing'][0]):
+                self.route_continuation = None
+            else:
+                return continuation
+        return None
+
+    def augment_strategy_state(self, state, facts):
+        continuation = self.completed_route_context(facts)
+        if continuation:
+            state['completed_route_prerequisite'] = continuation
+        mechanism_parent = getattr(self, 'mechanism_goal', None)
+        if mechanism_parent and not self.index.satisfied(mechanism_parent, facts):
+            state['unfinished_mechanism_parent'] = {
+                'target': mechanism_parent,
+                'scope': 'Unfinished parent retained by the reversible mechanism planner. '
+                    'Compare its offered next steps from the observed position; leaving may '
+                    'change access even when switch flags persist. This is not a forced itinerary.',
+            }
+        if self.collects_dex:
+            state['dex_progress'] = self.dex_progress(facts)
+            resource_guards = self.script_resource_guard_reference(facts)
+            if resource_guards:
+                state['script_resource_guard_reference'] = resource_guards
+            navigation_guards = self.navigation_goal_resource_guard_reference(facts)
+            if navigation_guards:
+                state['navigation_goal_resource_guard_reference'] = navigation_guards
+            state['collection_audit_pending'] = getattr(self, 'collection_audit_pending', {})
+            state['capture_retreats_requiring_preparation'] = [row for key, row in
+                getattr(self, 'capture_retreats', {}).items()
+                if key not in getattr(self, 'capture_blackouts', {})
+                if self.static_capture_deferred(row['species'], row['map'], facts)]
+            # An improved stock/level reopens a legal attempt, not proof that
+            # the previous capture setup now survives. Keep its observed
+            # outcome visible even when it no longer blocks the retry.
+            preparation = capture_preparation(facts.get('party', []), facts.get('bag', {}), facts)
+            state['capture_retry_evidence'] = [{**row,
+                'source_evidence': self.capture_source_evidence(row['species'], row['map']),
+                'recorded_history': getattr(self, 'capture_retreat_totals', {}).get(key, {}),
+                'history_scope': 'Recorded menu escapes in this checkpoint lineage only; ball costs cover inventory_observed_retreats, not unobserved attempts. Not a prediction of retry success.',
+                'preparation_changes_since_attempt': capture_preparation_improvements(
+                    preparation, row['preparation'])}
+                for key, row in getattr(self, 'capture_retreats', {}).items()
+                if key not in getattr(self, 'capture_blackouts', {})]
+            state['capture_blackouts_requiring_preparation'] = [row for row in
+                getattr(self, 'capture_blackouts', {}).values()
+                if self.static_capture_deferred(row['species'], row['map'], facts)]
+            state['capture_blackout_retry_evidence'] = [{**row,
+                'source_evidence': self.capture_source_evidence(row['species'], row['map']),
+                'recorded_history': getattr(self, 'capture_blackout_totals', {}).get(key, {}),
+                'history_scope': 'Recorded static capture blackouts in this checkpoint lineage only. '
+                    'Ball costs cover inventory_observed_blackouts; cash costs cover cash_observed_blackouts. '
+                    'Not menu escapes, unobserved attempts, a penalty formula or a survival forecast. '
+                    'Automatic whiteout healing is compared with initial preparation, not fainted result HP.',
+                'preparation_changes_since_attempt': capture_preparation_improvements(
+                    preparation, row['preparation'])}
+                for key, row in getattr(self, 'capture_blackouts', {}).items()]
+
+    def dex_progress(self, facts):
+        """Collection panel: what is missing, where, and what it unlocks."""
+        dex = facts.get('dex') or {}
+        owned = self.validated_owned(facts)
+        seen = set(dex.get('seen_species', []))
+        wild_graph = self.collection_graph()
+        full_graph = self.complete_collection_graph()
+        plan = solo_plan(full_graph, owned,
+                         infer_solo_choices(owned, bag=facts.get('bag'), flags=facts.get('flags')))
+        targets = set(plan['reachable_species'])
+        choice_targets = set(plan['choice_reachable_species'])
+        # The 150-species diploma is not reachable under the solo/no-link
+        # contract. Keep reachable early thresholds and finish at this plan's
+        # actual ceiling; the final rung is completion, not an item reward.
+        rungs = sorted({value for value in DEX_RUNGS if value <= plan['ceiling']}
+                       | {plan['ceiling']})
+        rung = next((value for value in rungs if value > len(owned)), None)
+        missing = {}
+        yield_by_area = {}
+        for name in self.neighbourhood():
+            value = encounter_value(self.maps.get(name, {}), owned)
+            count = value['unregistered_species_count']
+            if count:
+                missing[name] = count
+                yield_by_area[name] = {
+                    key: value[key] for key in (
+                        'unregistered_species_count', 'unregistered_encounter_share_pct',
+                        'new_species_per_step_pct', 'expected_steps_to_any_new_species')}
+        missing_methods = {}
+        for species in sorted(choice_targets - owned):
+            missing_methods[species] = sorted({method['method'] for method in full_graph[species]
+                                               if not method.get('external_trade')})
+        return {'owned': dex.get('owned', len(owned)), 'validated_owned': len(owned),
+                'pending_source_validation': sorted(getattr(self, 'collection_audit_pending', {})),
+                'seen': dex.get('seen', len(seen)), 'total': 151,
+                'supported_wild_target_count': len(wild_graph),
+                'supported_wild_owned': len(set(wild_graph) & owned),
+                'supported_wild_remaining': len(set(wild_graph) - owned),
+                'solo_target_count': plan['ceiling'],
+                'solo_owned': len(targets & owned),
+                'solo_remaining': len(targets - owned),
+                'solo_choices': plan['choices'],
+                'solo_choice_options': plan['optimal_choices'],
+                'policy_unreachable_count': len(plan['unreachable_species']),
+                'policy_unreachable_species': plan['unreachable_species'],
+                'always_unreachable_count': len(plan['always_unreachable_species']),
+                'always_unreachable_species': plan['always_unreachable_species'],
+                'missing_acquisition_methods': missing_methods,
+                # Seen does not prove solo availability (trainers may show
+                # excluded species); retain that observation separately from
+                # missing_acquisition_methods and the bounded solo progress.
+                'seen_not_owned': sorted(seen - owned),
+                'next_rung': None if rung is None else {'rung': rung, 'needs': rung,
+                                                        'remaining': rung - len(owned)},
+                'unregistered_by_area': dict(sorted(missing.items(), key=lambda row: (-row[1], row[0]))),
+                'expected_yield_by_area': dict(sorted(yield_by_area.items())),
+                'balls_held': self.balls_held(facts),
+                'collection_resources': self.collection_resources(facts),
+                'nearest_ball_source': self.nearest_ball_source(facts.get('map'))}
+
+    def nearest_ball_source(self, origin):
+        """Closest reachable shop selling any ball, from `self.maps` alone.
+
+        The panel is assembled once per decision, so the distance comes from
+        the local map graph rather than a route query per candidate mart.
+        """
+        normalized = {name.replace('_', '').upper(): name for name in BALLS}
+        candidates = []
+        for rule in self.index.rules:
+            if rule.effect[0] != 'shop':
+                continue
+            stock = sorted({normalized[key.replace('_', '').upper()]
+                            for key in rule.effect[1]
+                            if key.replace('_', '').upper() in normalized})
+            if not stock:
+                continue
+            hops = self.map_hops(origin, rule.map)
+            if hops is not None:
+                candidates.append((hops, rule.map, rule.id, stock))
+        if not candidates:
+            return None
+        hops, name, _rule_id, stock = min(candidates)
+        return {'map': name, 'hops': hops, 'stock': stock}
+
+    def choose(self, layer, state, candidates, instruction, *, allow_abstain=True):
+        if layer == 'action' and 'local_state' in state:
+            continuation = self.completed_route_context(state['local_state'])
+            if continuation and list(state.get('subgoal') or []) == list(continuation['goal']):
+                # A shared goal (e.g. heal) can have many destination rules.
+                # Preserve the real crossing's intent without removing any
+                # alternative operation or overriding the model's choice.
+                state = {**state, 'completed_route_prerequisite': continuation}
+        if layer == 'strategy':
+            candidates = compact_strategy_candidates(candidates)
+            access = strategy_access_evidence(candidates)
+            if access['path_found'] or access['field_action_needed'] or access['no_path_found']:
+                state = {**state, 'immediate_access_comparison': access}
+                instruction += (' Use immediate_access_comparison to distinguish progress that can '
+                    'currently be approached from goals still needing access. Compare reachable '
+                    'prerequisites and local actions before repeating an inaccessible training, shopping '
+                    'or collection destination. A cheap future goal is not cheap immediate progress '
+                    'when its access remains unresolved; choosing it should have a concrete new access '
+                    'hypothesis rather than repeating the unchanged failed approach. '
+                    'field_action_needed is conditional access, not immediate walking access: compare '
+                    'the actual offered field-move prerequisite at its reachable embarkation stance.')
+            if any('downstream_context' in value for value in candidates.values()):
+                instruction += (' A route unlock is an intermediate step, not a Pokédex registration. '
+                    'Each route_unlocks entry carries its parent goal and downstream_context: '
+                    'compare the remaining acquisition effort, inventory risk, preparation and source '
+                    'constraints with the other goals before investing in this route. Opening access '
+                    'does not itself solve the downstream capture, training, purchase or capacity need. '
+                    'Reference capture scenarios are conditional estimates, not promised outcomes; '
+                    'a difficult parent can still be worthwhile when its durable benefit justifies the cost.')
+            if any('observed_battle_prerequisites' in value for value in candidates.values()):
+                instruction += (' observed_battle_prerequisites links an actual previous combat '
+                    'constraint to that same goal. A geometric walking path does not certify that '
+                    'the encounter can be resolved. Compare actual identification-item preparation '
+                    'or other goals before repeating an unchanged escape. The observation is not a '
+                    'mandatory route or a ban on other legal resolutions; acquiring the item alone '
+                    'does not guarantee navigation, victory or registration.')
+            if any('recorded_field_route_goals' in value for value in candidates.values()):
+                instruction += (' recorded_field_route_goals explains the actual earlier purpose '
+                    'of a proposed Cut preparation and whether that purpose is satisfied now. '
+                    'A regrown tree does not make an already completed parent goal new progress. '
+                    'Compare unfinished purposes or a concrete new use with other collection goals. '
+                    'This history neither proves Cut is the only route nor rules out other uses; '
+                    'no candidate or route is prescribed by it.')
+            if any('known_direct_collection_targets' in value for value in candidates.values()):
+                instruction += (' A held source may have been consumed or evolved after completing '
+                    'a registration. Its currently unsatisfied possession goal does not alone mean '
+                    'a collection objective remains unfinished: compare the known direct targets and '
+                    'their validated registrations. The catalogue does not rule out other uses, '
+                    'prove current feasibility or prescribe reacquisition or a route.')
         if layer == 'strategy' and any('route_resets_won_battles' in value for value in candidates.values()):
-            instruction += (' Compare recovery travel with its supplied story-reset cost. '
+            instruction += (' Compare every candidate travel route with its supplied story-reset cost. '
+                'Training, retrieving teammates, shopping and hunting can cross the same reset entry '
+                'as healing: their benefit must also outweigh replaying the already won battles. '
+                'This evidence describes a proposed route, not a ban on leaving or a fixed route to follow. '
                 'Depleted PP in one move does not require leaving when other usable attacks can handle '
                 'the remaining opponents. Prefer preserving completed battles when continuing or using '
                 'carried recovery is viable; retreat remains valid when the party cannot proceed.')
@@ -219,6 +1487,137 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'those resources are sufficient. The urgently_needed field is a heuristic warning, not a '
                 'requirement to refill each depleted move. A depleted attack can be replaced by another '
                 'effective attack with PP remaining. Retreat only when its benefit outweighs replaying all reset battles.')
+        if layer == 'strategy' and any('completion_resets_won_battles' in value for value in candidates.values()):
+            instruction += (' completion_resets_won_battles is different from route_resets_won_battles: '
+                'the former clears temporary flags while completing the selected ending and returning '
+                'to its saved destination; it does not require replaying those already won battles '
+                'to complete this exit. Remaining opponents and the ceremony still require real execution. '
+                'Compare the exit and any reachable preparations with goals whose trigger regions '
+                'currently have no walking path; remote training cannot grant experience before access is restored.')
+        if layer == 'strategy' and any('coverage_recovery_recommended' in value for value in candidates.values()):
+            instruction += (' Recovery distinguishes low PP in one coverage attack from poor health, '
+                'status or depleted total usable attacks. Compare lead_recovery_evidence with the '
+                'actual offered opponents and goals: missing one attack type does not alone mean '
+                'the party cannot proceed. Coverage restoration remains a valid optional choice. '
+                'If state.unfinished_mechanism_parent is present, compare continuing its reachable '
+                'next step with the travel and access cost of leaving for recovery; a preserved '
+                'switch flag is not the same as preserved positional progress. These are comparisons, '
+                'not a requirement to skip recovery or complete that parent before other goals.')
+        if layer == 'strategy' and getattr(self, 'maximizes_coverage', False):
+            instruction += (' The terminal goal is coverage: visiting a new map is progress in itself, so once the '
+                'current objective is satisfied prefer reaching an unexplored bordering area over optional '
+                'preparation.')
+        if layer == 'strategy' and getattr(self, 'avoids_optional_preparation', False):
+            instruction += (' The terminal goal is speed: skip optional preparation unless the party genuinely '
+                'cannot proceed, and prefer the shortest route to the objective.')
+        if layer == 'strategy' and getattr(self, 'collects_dex', False):
+            instruction += (' The terminal goal is the Pokédex, not the Hall of Fame: this run ends only when every '
+                'species reachable in one Pokémon Red save without external link trades is registered. The first '
+                'playthrough is the channel to more species — badges, HM moves and new routes open encounters, '
+                'gifts, static Pokémon, NPC trades and evolution resources. Treat the '
+                'story objectives as the way to reach new collecting grounds rather than as a finish line. '
+                'Collect locally when yield and preparation costs are competitive; progress the story when '
+                'new regions are more efficient than rare hunts or low-experience grinding, even if local '
+                'species remain. Never stop at the Champion while species remain. Compare '
+                'collection candidates using their supplied encounter probability, expected hunt steps, species '
+                'scarcity, travel cost, recent yield, ball quality and safe status support. A larger species list is '
+                'not automatically better when its missing species occupy rare slots or the current resources '
+                'cannot realistically catch them. Compare evolution training_cost with alternative_sources '
+                'and the value of unlocking new regions: a low-level trainee may require many victories, '
+                'while a later wild capture can register the evolved species directly. Potential alternative '
+                'sources are not guaranteed reachable; choose the prerequisites needed to reach them. '
+                'script_unlocks describes scene guards that obtaining an item or flag would satisfy; '
+                'weigh those durable opportunities against repeat preparation. It does not prove the '
+                'resulting rooms reachable or battles won, and is not a promised registration count. '
+                'Use training_effort_examples to compare the estimated number of victories and encounter '
+                'steps, not just levels remaining. Hundreds of low-yield battles have an opportunity '
+                'cost: acquiring an HM or resolving a story blocker may open better collecting and '
+                'training grounds. Previously visited tables are examples, not proof of current access.')
+            instruction += (' Compare capture_retry_evidence with current preparation: an observed '
+                'retreat can show a status support fainted while the target remained healthy and unstatused. '
+                'More balls do not make that support survive the switch or act; healing restores its prior '
+                'condition, not its combat strength. Consider viable alternatives or prerequisites, stronger '
+                'support, safer preparation, or a ball that needs no setup. A retry being offered means '
+                'preparation changed, not that capture is now safe or likely. Missing retreat_observation '
+                'fields mean unobserved, not zero HP or confirmed failure of a specific tactic. '
+                'Compare recorded_history across repeated retreats with the durable unlocks and new '
+                'registrations offered by other candidates. Replenishing balls or gaining one level '
+                'does not erase this history; prior spending is not a reason to keep spending. '
+                'Past failures also do not prove a materially different setup will fail.')
+            instruction += (' Compare finite_static_source_references on every offered goal, including '
+                'navigation, visibility and flag goals: the same native finite encounter can appear '
+                'under different target names. Its latest failure, recorded costs and actual preparation '
+                'changes still apply. Winning or hiding an unregistered static Pokémon is not registering '
+                'it and may spend that source. A certified menu-run preserves the source, not health, '
+                'balls or the likelihood of a better retry. These references apply only to the named '
+                'matching rules; compare their branch guards and all alternatives, without a forced '
+                'route, preparation step or duplicate capture of an already validated registration.')
+            instruction += (' Capture support training is a bounded experience step, not a complete '
+                'capture setup. Compare the remaining level gap and training_cost_to_observed_target_level '
+                'with alternate supports, ball capabilities and their acquisition prerequisites. Level '
+                'parity itself does not guarantee surviving an unfavorable matchup; a single gained '
+                'level should not erase the observed failure evidence.')
+            instruction += (' training_effort_to_observed_target_level_examples describes the whole '
+                'optional level-parity investment at each known training table, not just the next '
+                'cheap level. Parity is not a required level or a survival threshold: compare this '
+                'complete conditional cost with durable unlocks, other collecting grounds and '
+                'alternative capture preparations. preparation_comparison_to_failed_setups retains '
+                'the actual earlier same-species levels and max HP alongside current values. '
+                'Its differences are not measured training actions or individual identity, and are '
+                'not proof that another level makes switching safe. safe_status_moves means '
+                'non-damaging move effects only, not survival-safe switching or a guaranteed status.')
+            instruction += (' Compare item_evolution_spending_reference on ball purchases: '
+                'spending may remove the ability to buy a stone for an unregistered evolution '
+                'of a Pokémon actually held in the party or PC. An already carried stone needs '
+                'no repurchase; a registered but unheld source is not a ready evolution input. '
+                'These are independent alternatives sharing money, stones and source individuals, '
+                'not a joint registration yield. Prices are references, not proof of shop access, '
+                'and PC sources still require withdrawal. Compare this opportunity cost with the '
+                'capture benefit and other goals; it is not a fixed cash reserve or a ban on shopping.')
+            instruction += (' Compare script_resource_guard_reference and script_resource_spending_reference: '
+                'optional ball spending may change whether a cash-guarded transport can be attempted, '
+                'and observed_badge_count_barriers describes an active coordinate push-back, not a '
+                'broken door. The full expressions and other guards remain relevant; cash query '
+                'thresholds are not summed fees or proof of a charged payment. script_offered_badges '
+                'describes script rewards still requiring normal battles and interaction. Compare '
+                'these opportunities with all other goals; no cash reserve, badge order or route is forced.')
+            instruction += (' Compare navigation_goal_resource_guard_reference and '
+                'navigation_goal_resource_tradeoffs: resolving a local navigation obstruction '
+                'does not establish the requested destination goal or remove its separate native '
+                'entry guard. Recorded failures are historical, not proof the old local obstacle '
+                'still applies. Warp adjacency is a geometric association, not exhaustive access '
+                'proof. Compare currently ready other dialogue-choice effects before repeating '
+                'temporary flag changes. target_flag_only_guard_values projects that flag alone, '
+                'not the candidate script rewards, a paid trip or a whole-route outcome. '
+                'All alternative goals and normal choices remain available; no route is forced.')
+            instruction += (' A treasure or vitamin sale is optional collection funding, not only defeat recovery. '
+                'Compare collection_funding_reference with ball supplies and evolutions of actually '
+                'held party/PC sources. Sale proceeds and affordability are price references until '
+                'normal shop menus execute; independent purchases share the same money, so do not '
+                'treat all newly affordable alternatives as a joint registration yield. Compare '
+                'travel and other goals; selling is not a forced prerequisite.')
+            instruction += (' A vitamin is not a valueless treasure: compare sale_opportunity_cost '
+                'and its retained training effect with the new purchases. Offering a sale does not '
+                'certify the item is surplus; this candidate sells the observed stack, not a free '
+                'or reversible cash source. Retaining it for training remains possible by choosing '
+                'another goal. Neither training benefit nor future registration yield is guaranteed.')
+            instruction += (' Rare Candy funding also relinquishes a finite useful item. Compare '
+                'sale_opportunity_cost.level_up_reference with the capture/stone purchases: '
+                'it describes one retained use per actually held recipient, the normal XP gap '
+                'and possible missing level evolutions, including overlevel sources that need '
+                'a new gain. These are alternatives sharing the same candies, not a joint '
+                'evolution yield. PC recipients still require withdrawal; unknown XP stays '
+                'bounded. Retaining the candy remains possible by choosing another goal, '
+                'and proceeds are not available before a real sale.')
+            if any('"tm_sale"' in value for value in candidates.values()):
+                instruction += (' A finite TM sale also relinquishes normal move teaching. Compare '
+                    'sale_opportunity_cost.move_teaching_reference with the funding alternatives: '
+                    'native move data and compatibility describe actually held party/PC recipients, '
+                    'not guaranteed battle improvement or registration. Each copy teaches only one '
+                    'recipient; PC withdrawal and teaching/forgetting still require normal menus. '
+                    'Already knowing the move is not proof the TM is surplus for other recipients '
+                    'or future acquisitions. Retaining it remains possible by choosing another '
+                    'goal. HMs are not offered for sale, and money is not credited by a preview.')
         if layer == 'action' and 'local_state' in state and getattr(self, 'active', None):
             state = {**state, 'strategy_context': self.active.get('context', {})}
         context = state.get('strategy_context') or {}
@@ -246,8 +1645,235 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'and actual outcomes will return to strategy.')
         mechanism_grounded = mechanism and candidates and any(
             route.get('tile_route_found') for route in context.get('trigger_navigation', []))
-        return super().choose(layer, state, candidates, instruction,
-                              allow_abstain=not (grounded or mechanism_grounded))
+        battle = state.get('battle') or {}
+        # A forced trainer battle cannot be left to resume travel/healing.
+        # Ground this exception in live HP, PP and type matchups, not in
+        # candidate descriptions or a blanket ban on battle abstention.
+        trainer_switch_grounded = (layer == 'action' and battle.get('is_wild') is False
+            and bool((battle.get('enemy') or {}).get('species')) and any(
+                f'switch:{index}' in candidates and mon.get('hp', 0) > 0
+                and mon.get('species') != (battle.get('player') or {}).get('species')
+                and effective_attacks(mon, battle['enemy']['species'])
+                for index, mon in enumerate(battle.get('player_party') or [])))
+        if trainer_switch_grounded:
+            state = {**state, 'immediate_goal': 'Finish the forced trainer battle, then resume the overworld objective.'}
+            instruction += (' This is a trainer battle: neither running away nor capturing the opponent is legal. '
+                'Travel, healing at a nurse and collection must wait until this battle ends. '
+                'A conscious teammate with usable effective attacks is available among the offered switches. '
+                'Choose the best offered turn toward defeating the trainer while preserving the party; '
+                'switching to a capable finisher is progress even though it does not itself register a species '
+                'or reach the nurse. Compare effective attacks, level and health rather than continuing '
+                'to use an immune or depleted active battler.')
+        forced_replacement = (layer == 'action'
+            and str(state.get('battle_phase') or '').startswith('PlayerFaintSwitch')
+            and any(str(index) in candidates and mon.get('hp', 0) > 0
+                    for index, mon in enumerate(battle.get('player_party') or [])))
+        if forced_replacement:
+            state = {**state, 'immediate_goal': 'Replace the fainted active Pokémon to restore legal battle input.'}
+            instruction += (' The native battle is waiting for a mandatory replacement. '
+                'Choose an offered conscious member even if it has only status moves or is much weaker '
+                'than the opponent. Refusing cannot open RUN, BAG or FIGHT; those legal turns become '
+                'available only after replacement. This does not guarantee escape, victory or capture.')
+        if layer == 'action' and any('"transit_leader"' in value for value in candidates.values()):
+            instruction += (' Travel exposes the current party leader to incidental wild encounters before '
+                'the destination interaction. Changing the leader is a valid preparation step, even though '
+                'it does not move the player. Compare current_leader and transit_leader HP, level and moves '
+                'against route_encounters. A low-level capture status supporter can stay in the party '
+                'until the capture battle; it need not lead the entire trip. Prefer continuing travel '
+                'when the current leader is already suitable, rather than swapping repeatedly. '
+                'Encounter ranges are possibilities, not a forecast or a survival guarantee.')
+        # Appended after the rewrites above: the menu and training instructions
+        # replace the incoming text, and the bias must still reach the question.
+        bias = PREFERENCE_INSTRUCTIONS.get(getattr(self, 'preference', 'none'))
+        if bias and layer in ('strategy', 'action'):
+            instruction += f' {bias}'
+        if layer in ('strategy', 'action') and state.get('completed_route_prerequisite'):
+            instruction += (' The player just completed the crossing described in '
+                'state.completed_route_prerequisite for its recorded parent goal and destination. '
+                'Prefer continuing that goal, or a reachable prerequisite at that destination, '
+                'before choosing unrelated travel back across the same passage. This is not '
+                'proof the destination is unlocked: compare current trigger navigation and '
+                'native guards. Urgent healing, capture resources, a newly observed blocker, '
+                'or an unavailable parent can justify changing goals.')
+            if layer == 'action':
+                instruction += (' Compare each operation destination and script_effects.map with '
+                    'the recorded destination: pursuing the same shared subgoal at a different '
+                    'destination does not continue the same journey. Trigger routes requiring '
+                    'Surf are conditional, not immediately walkable; map hops alone do not '
+                    'measure current access. Preparation and alternative destinations remain valid '
+                    'when supported by their current evidence.')
+        if (layer == 'strategy' and any('"route_prerequisite_for"' in value
+                                        for value in candidates.values())):
+            instruction += (' A field action with route_prerequisite_for is an indirect step toward '
+                'that recorded unfinished goal, not unrelated exploration. In particular, urgent '
+                'healing may first require the offered Surf crossing: choosing a nurse destination '
+                'again does not execute that crossing. Compare the parent goal, observed blocker, '
+                'current stance access and native field guards before retrying a conditional route '
+                'or choosing a different destination. Completing the crossing still does not heal '
+                'the party or guarantee arrival; other goals and genuinely different routes remain valid.')
+        # Action choices can be larger than strategic ones (e.g. every legal
+        # inventory disposal/teaching operation). Keep their complete evidence
+        # and options under the same lossless request representation.
+        state, candidates = factor_strategy_evidence(state, candidates)
+        if 'shared_strategy_evidence' in state:
+            instruction += (' Repeated evidence is stored once in state.shared_strategy_evidence. '
+                'Each object containing only shared_strategy_evidence_ref means the complete '
+                'entry with that key in this library, including nested references. Resolve '
+                'those references when comparing candidates; no candidate or evidence was omitted.')
+        if ('"strategy_table"' in json.dumps(state)
+                or any('"strategy_table"' in value for value in candidates.values())):
+            instruction += (' An object containing only strategy_table represents a list of records: '
+                'columns names the fields, and each rows entry supplies their values in that order. '
+                'All original records and values are retained, including nested evidence references.')
+        if layer == 'strategy':
+            return self.choose_bounded_strategy(state, candidates, instruction,
+                allow_abstain=allow_abstain and not (grounded or mechanism_grounded))
+        return self.choose_bounded_choice(layer, state, candidates, instruction,
+            allow_abstain=allow_abstain and not (grounded or mechanism_grounded or trainer_switch_grounded or forced_replacement))
+
+    def choose_bounded_strategy(self, state, candidates, instruction, *, allow_abstain=True):
+        return self.choose_bounded_choice('strategy', state, candidates, instruction,
+                                          allow_abstain=allow_abstain)
+
+    def choose_bounded_choice(self, layer, state, candidates, instruction, *, allow_abstain=True):
+        """Compare every option, learning only from explicit context overflow.
+
+        No code-ranked shortlist: Jev chooses each disjoint group's representative
+        with the same full state, then judges those representatives together.
+        This is a tournament, not an identical full-set probability distribution.
+        A same-endpoint/model/layer runtime byte reference avoids retrying known
+        oversized rounds. Bytes are NOT tokens or a certified provider limit:
+        smaller requests still use the explicit-error fallback, and an observed
+        larger success disables an inconsistent reference. No global fixed cap,
+        persisted calibration, state omission or special collection preference.
+        After explicit overflow, try one reversible short-reference format on
+        the SAME option set, even for a one/two-option leaf, before splitting.
+        Its endpoint/layer learning and byte references are separate from the
+        canonical format. A second leaf overflow still fails closed.
+        """
+        if not candidates:
+            return super().choose(layer, state, candidates, instruction,
+                                  allow_abstain=allow_abstain)
+        if layer == 'strategy':
+            scoped_state = scope_strategy_access_evidence(state, candidates)
+            if scoped_state is not state:
+                self.record('strategy_access_scope', candidate_ids=list(candidates),
+                    access_entries_before=sum(len(value) for value in state['immediate_access_comparison'].values()
+                                              if isinstance(value, dict)),
+                    access_entries_sent=sum(len(value) for value in scoped_state['immediate_access_comparison'].values()
+                                            if isinstance(value, dict)),
+                    world_facts_preserved=True, current_candidate_access_preserved=True,
+                    candidate_values_preserved=True, other_disjoint_groups_still_compared=True)
+                state = scoped_state
+                scope_instruction = (' state.immediate_access_comparison contains only access metadata indexed by '
+                    'the candidates offered in this round; other disjoint groups are compared separately. '
+                    'World facts, all current candidate evidence and access status values remain unchanged.')
+                if scope_instruction not in instruction:
+                    instruction += scope_instruction
+        choice_state = scope_shared_evidence(state, candidates)
+        if choice_state is not state:
+            self.record(f'{layer}_evidence_scope', candidate_ids=list(candidates),
+                library_entries_before=len(state['shared_strategy_evidence']),
+                library_entries_sent=len(choice_state['shared_strategy_evidence']),
+                semantic_state_preserved=True, candidate_values_preserved=True)
+        client = getattr(self, 'model_client', None)
+        model = getattr(self, 'model', None)
+        if isinstance(client, TypeSafeClient):
+            model = client.request_model(model)
+        endpoint = tuple(value if isinstance(value, str) else None for value in
+                         (model, getattr(client, 'base_url', None),
+                          getattr(client, 'system_one_path', None), getattr(client, 'provider', None)))
+        scope = (layer, *endpoint)
+        sizes = getattr(self, '_choice_context_sizes', None)
+        if sizes is None:
+            self._choice_context_sizes = sizes = {}
+        short_scopes = getattr(self, '_short_evidence_reference_scopes', set())
+        # Compute at most once for this round. Collisions make this alternate
+        # format ineligible, not a reason to reinterpret an ordinary fact.
+        try:
+            short_state, short_candidates = compact_evidence_reference_wire(choice_state, candidates)
+        except ValueError:
+            short_state, short_candidates = choice_state, candidates
+        eligible = short_state is not choice_state
+        short = eligible and scope in short_scopes
+        for _ in range(2):  # At most one format change, never a blind retry.
+            wire_state, wire_candidates = ((short_state, short_candidates) if short
+                                           else (choice_state, candidates))
+            wire_instruction = instruction
+            if short and SHORT_EVIDENCE_REFERENCE_INSTRUCTION not in wire_instruction:
+                wire_instruction += SHORT_EVIDENCE_REFERENCE_INSTRUCTION
+            reference_scope = (*scope, 'short_evidence_reference') if short else scope
+            reference = sizes.setdefault(reference_scope,
+                {'smallest_overflow_bytes': None, 'largest_success_bytes': 0})
+            criteria = dict(wire_candidates)
+            if allow_abstain:
+                criteria['none'] = 'None of these candidates can advance the current goal.'
+            # Exact transport serialization, not a tokenizer or certified limit.
+            request_bytes = len(json.dumps({'state': wire_state, 'model': endpoint[0],
+                'questions': {layer: Choice(wire_instruction, criteria).to_json()}}).encode())
+            overflow_bytes = reference['smallest_overflow_bytes']
+            proactive = (len(candidates) > 2 and overflow_bytes is not None
+                         and overflow_bytes > reference['largest_success_bytes']
+                         and request_bytes >= overflow_bytes)
+            reason = 'observed_context_size_reference' if proactive else 'max_tokens_exceeded'
+            if not proactive:
+                if short:
+                    self.record(f'{layer}_wire_encoding', encoding='short_evidence_reference',
+                        candidate_ids=list(candidates), reference_scope=list(reference_scope),
+                        world_facts_preserved=True, candidate_values_semantically_preserved=True,
+                        library_entries_preserved=True, request_bytes=request_bytes,
+                        byte_reference_is_token_limit=False)
+                try:
+                    selected = super().choose(layer, wire_state, wire_candidates, wire_instruction,
+                                              allow_abstain=allow_abstain)
+                except StoryStopped as error:
+                    if (not isinstance(error.__cause__, TypeSafeError)
+                            or 'max_tokens_exceeded' not in str(error.__cause__)):
+                        raise
+                    reference['smallest_overflow_bytes'] = min(request_bytes,
+                        overflow_bytes if overflow_bytes is not None else request_bytes)
+                    if short or not eligible:
+                        if len(candidates) <= 2:
+                            raise
+                        break
+                else:
+                    reference['largest_success_bytes'] = max(reference['largest_success_bytes'], request_bytes)
+                    return selected
+            elif short or not eligible:
+                break
+            # Explicit overflow (or its same-scope runtime reference) permits
+            # one lossless format trial with all current candidates unchanged.
+            short = True
+            short_scopes.add(scope)
+            self._short_evidence_reference_scopes = short_scopes
+            self.record(f'{layer}_wire_encoding_enabled', encoding='short_evidence_reference',
+                candidate_ids=list(candidates), reason=reason, reference_scope=list(scope),
+                world_facts_preserved=True, candidate_values_semantically_preserved=True,
+                library_entries_preserved=True, no_diagnostic_answer_reused=True)
+        keys = list(candidates)
+        midpoint = len(keys) // 2
+        partitions = [keys[:midpoint], keys[midpoint:]]
+        self.record(f'{layer}_partition', candidate_ids=keys, partitions=partitions,
+                    reason=reason, state_preserved=True,
+                    request_bytes=request_bytes, context_size_reference=dict(reference),
+                    reference_scope=list(reference_scope), byte_reference_is_token_limit=False)
+        group_instruction = (
+            f' This is one disjoint comparison group from a larger {layer} choice. '
+            'Choose the best relative next step in this group using the full unchanged state. '
+            'A separate final comparison will judge the group representatives; '
+            'select one representative even if this group has no ideal option.')
+        # A recursive split keeps the same comparison role. Repeating this
+        # paragraph at every depth wastes context without adding information.
+        local_instruction = instruction if group_instruction in instruction else instruction + group_instruction
+        winners = [self.choose_bounded_choice(layer, state, {key: candidates[key] for key in group},
+                    local_instruction, allow_abstain=False) for group in partitions]
+        self.record(f'{layer}_partition_finalists', candidate_ids=keys, finalists=winners)
+        finalists_instruction = (' These candidates are the model-selected representatives of '
+            'disjoint comparison groups. Compare them for the overall next step.')
+        final_instruction = (instruction if finalists_instruction in instruction
+                             else instruction + finalists_instruction)
+        return self.choose_bounded_choice(layer, state, {key: candidates[key] for key in winners},
+            final_instruction, allow_abstain=allow_abstain)
 
     def annotate_navigation(self, groups, facts, previews=None, *, prune=True):
         """A failed destination region does not block every NPC on its map."""
@@ -257,6 +1883,36 @@ class AutonomousStoryAgent(DualStoryAgent):
         barriers[facts['map']] = barriers.get(facts['map'], set()) | self.game.live_npcs(facts['map'])
         excluded = self.game.navigation_excluded_maps()
         previews = {} if previews is None else previews
+        # Ordinary scene triggers use the same observed geometry and gates.
+        # Share traversal, not candidate selection: each region retains the
+        # exact path of an independent BFS, including NO_THROUGH permissions.
+        regions = {}
+        for group in groups.values():
+            for rule in group['rules']:
+                if rule.storyline.startswith('skill:'):
+                    continue
+                points = self.destination_points(rule.map, rule)
+                key = rule.map, tuple(points)
+                if key not in previews:
+                    regions[key] = {(rule.map, *point) for point in points}
+        options = dict(last_map=self.game.last_map, allow_ledges=True, allow_spinners=True,
+                       blocked_maps=barriers, excluded_maps=excluded)
+        paths = pt.bfs_cross_routes(facts['map'], (facts['x'], facts['y']), regions, **options)
+        wet_paths = {}
+        missing = {key: region for key, region in regions.items() if region and not paths[key]}
+        if missing and any('Surf' in mon['moves'] for mon in facts.get('party', [])):
+            with water_planning():
+                wet_paths = pt.bfs_cross_routes(facts['map'], (facts['x'], facts['y']), missing, **options)
+        for key in regions:
+            path = paths[key] or wet_paths.get(key)
+            requires_surf = bool(not paths[key] and path)
+            prerequisites = surf_path_prerequisites(path, facts.get('flags', {})) if requires_surf else []
+            previews[key] = {'map': key[0], 'tile_route_found': bool(path) and not prerequisites,
+                'steps': len(path)-1 if path and not prerequisites else None,
+                'requires_surf': requires_surf, 'unmet_native_field_prerequisites': prerequisites,
+                'scope': 'this trigger region, using known geometry and observed obstacles; available Surf can be used en route'}
+        rule_routes = {}
+        evolution_training_routes = None
         for group in groups.values():
             routes = []
             for rule in group['rules']:
@@ -266,31 +1922,84 @@ class AutonomousStoryAgent(DualStoryAgent):
                                        'scope': 'available through the current inventory menu; no travel needed'})
                     elif group['target'][0] == 'level' and rule.map in getattr(self, 'training_navigation', {}):
                         routes.append(self.training_navigation[rule.map])
+                    elif group['target'][0] == 'catch' and group['target'][1] in getattr(self, 'catch_navigation', {}):
+                        routes.append(self.catch_navigation[group['target'][1]])
+                    elif rule.storyline == 'skill:evolve':
+                        context = group.get('context', {})
+                        if context.get('trigger') == 'level':
+                            if evolution_training_routes is None:
+                                # This primitive needs a real encounter tile,
+                                # not its synthetic rule's current-map location.
+                                # Refresh once for this facts snapshot; old route
+                                # evidence must not make new training look ready.
+                                sites = self.find_training_sites(facts, shared_experience=True)
+                                evolution_training_routes = [
+                                    {**self.training_navigation[name],
+                                     'scope': 'Path to actual encounter terrain; ordinary battles must still earn experience and trigger evolution. Travel and healing may interrupt.'}
+                                    for name in sites if name in self.training_navigation]
+                            routes.extend(route for route in evolution_training_routes if route not in routes)
+                            for example in context.get('training_effort_examples', []):
+                                example['navigation'] = self.training_navigation.get(example['map'])
+                                example['access_scope'] = (
+                                    'Current tile-path preview when provided; estimated victories are not earned experience or guaranteed evolution')
+                        elif context.get('trigger') == 'item':
+                            item = context.get('item', '').replace('_', '').upper()
+                            ready = bool(facts.get('bag', {}).get(item, 0)) and any(
+                                self.same_species(mon.get('species'), context.get('from_species'))
+                                for mon in facts.get('party', []))
+                            routes.append({'map': facts['map'], 'tile_route_found': ready,
+                                'steps': 0 if ready else None, 'field_action': 'item_evolution',
+                                'scope': 'Use the carried evolution item on the actual party source through the inventory menu; consumes the item and changes that individual'})
+                    elif rule.storyline == 'skill:field':
+                        obstacle = group.get('context', {})
+                        stance, tree = obstacle.get('stance'), obstacle.get('tree')
+                        name, direction = obstacle.get('map'), obstacle.get('direction')
+                        if name and stance and tree and obstacle.get('move') == 'Cut':
+                            prerequisites = field_badge_prerequisites('Cut', facts.get('flags', {}))
+                            knows = any('Cut' in mon.get('moves', []) for mon in facts.get('party', []))
+                            path = pt.bfs_cross(facts['map'], (facts['x'], facts['y']), name, tuple(stance),
+                                last_map=self.game.last_map, allow_ledges=True, allow_spinners=True,
+                                blocked_maps=barriers, excluded_maps=excluded)
+                            delta = pt.DELTA.get(direction)
+                            aligned = bool(delta) and tuple(tree) == (
+                                stance[0] + delta[0], stance[1] + delta[1])
+                            present = pt.tile_at(name, *tree) == CUT_TILES.get(pt.MAPS[name]['tileset_name'])
+                            available = bool(path) and knows and not prerequisites and aligned and present
+                            routes.append({'map': name, 'stance': stance, 'field_action': 'Cut',
+                                'tile_route_found': available, 'steps': len(path)-1 if available else None,
+                                'unmet_native_field_prerequisites': prerequisites,
+                                'knows_required_move': knows, 'faces_observed_tree': aligned,
+                                'observed_tree_present': present,
+                                'scope': 'Walk to the observed Cut stance and use the party menu. This does not prove the tree is already cleared, onward access, battle victory or new registrations; trees regrow on map entry.'})
+                    elif rule.storyline == 'skill:surf':
+                        obstacle = group.get('context', {})
+                        stance = obstacle.get('stance')
+                        name = obstacle.get('map')
+                        if name and stance and obstacle.get('move') == 'Surf':
+                            prerequisites = (field_badge_prerequisites('Surf', facts.get('flags', {}))
+                                + surf_current_prerequisites(obstacle, facts.get('flags', {})))
+                            knows = any('Surf' in mon.get('moves', []) for mon in facts.get('party', []))
+                            # This candidate executes Surf. Its immediate
+                            # approach is the observed dry embarkation stance,
+                            # not the distant landing it has yet to reach.
+                            path = pt.bfs_cross(facts['map'], (facts['x'], facts['y']), name, tuple(stance),
+                                last_map=self.game.last_map, allow_ledges=True, allow_spinners=True,
+                                blocked_maps=barriers, excluded_maps=excluded)
+                            available = bool(path) and knows and not prerequisites
+                            routes.append({'map': name, 'stance': stance, 'field_action': 'Surf',
+                                'tile_route_found': available, 'steps': len(path)-1 if available else None,
+                                'unmet_native_field_prerequisites': prerequisites,
+                                'knows_required_move': knows,
+                                'scope': 'Walk to the observed dry embarkation stance, then execute Surf; landing and onward travel remain uncompleted'})
                     continue
                 points = self.destination_points(rule.map, rule)
                 key = rule.map, tuple(points)
-                if key not in previews:
-                    found = None
-                    requires_surf = False
-                    def search():
-                        return pt.bfs_cross(facts['map'], (facts['x'], facts['y']), rule.map, points[0],
-                            last_map=self.game.last_map, allow_ledges=True, allow_spinners=True,
-                            blocked_maps=barriers, excluded_maps=excluded,
-                            goal_nodes={(rule.map, *p) for p in points}) if points else None
-                    path = search()
-                    if not path and any('Surf' in m['moves'] for m in facts.get('party', [])):
-                        with water_planning():
-                            path = search()
-                        requires_surf = bool(path)
-                    if path:
-                        found = len(path)-1
-                    previews[key] = {'map': rule.map, 'tile_route_found': found is not None,
-                                     'steps': found, 'requires_surf': requires_surf,
-                                     'scope': 'this trigger region, using known geometry and observed obstacles; available Surf can be used en route'}
                 if previews[key] not in routes:
                     routes.append(previews[key])
+                rule_routes[id(rule)] = previews[key]
             if routes:
-                group['context'] = {**group.get('context', {}), 'trigger_navigation': routes}
+                group['context'] = {**group.get('context', {}), 'trigger_navigation': routes,
+                    'trigger_navigation_origin': [facts['map'], facts['x'], facts['y']]}
         # Repeatedly selecting a route already disproved by real execution
         # adds no information while reachable prerequisites remain. Keep
         # untried regions available for exploration and retain all options
@@ -299,10 +2008,52 @@ class AutonomousStoryAgent(DualStoryAgent):
                for route in group.get('context', {}).get('trigger_navigation', [])):
             for key, group in list(groups.items()):
                 routes = group.get('context', {}).get('trigger_navigation', [])
+                deferred = [rule for rule in group['rules']
+                            if rule.map in self.navigation_memory
+                            and rule_routes.get(id(rule), {}).get('tile_route_found') is False]
+                if deferred:
+                    group['rules'] = [rule for rule in group['rules'] if rule not in deferred]
+                    group.setdefault('context', {})['deferred_trigger_maps'] = sorted({rule.map for rule in deferred})
+                if not group['rules']:
+                    del groups[key]
+                    continue
                 if (routes and not any(route['tile_route_found'] for route in routes)
                         and all(rule.map in self.navigation_memory for rule in group['rules'])):
                     del groups[key]
+        self.annotate_observed_battle_requirements(groups, facts)
         return previews
+
+    def annotate_observed_battle_requirements(self, groups, facts):
+        """Attach actual goal-specific combat evidence, not a geometric veto."""
+        for group in groups.values():
+            evidence = []
+            for item, requirement in getattr(self, 'battle_requirements', {}).items():
+                if (requirement.get('attack_blocked') != 'unidentified_ghost'
+                        or requirement.get('required_item') != item):
+                    continue
+                goals = list(requirement.get('blocked_goals', []))
+                legacy = requirement.get('blocked_goal')
+                if legacy is not None:
+                    goals.append(legacy)
+                if not any(isinstance(goal, (tuple, list)) and list(goal) == list(group['target'])
+                           for goal in goals):
+                    continue
+                bag = facts.get('bag')
+                quantity = bag.get(item.replace('_', '').upper(), 0) if isinstance(bag, dict) else None
+                known = isinstance(quantity, int) and not isinstance(quantity, bool) and quantity >= 0
+                if known and quantity > 0:
+                    continue
+                evidence.append({'required_item': item, 'observed_map': requirement.get('observed_map'),
+                    'attack_blocked': requirement['attack_blocked'],
+                    'blocked_goal': list(group['target']), 'goal_was_observed_blocked': True,
+                    'current_item_quantity': quantity if known else None,
+                    'scope': 'Actual earlier unidentified ghost disabled ordinary attacks while pursuing this goal. Walking geometry alone does not certify completion. Identification enables ordinary attacks, not guaranteed victory, onward access or registration. Other legal resolutions are not ruled out.'})
+            context = group.get('context', {})
+            if evidence:
+                group['context'] = {**context, 'observed_battle_prerequisites': evidence}
+            elif 'observed_battle_prerequisites' in context:
+                group['context'] = {key: value for key, value in context.items()
+                                    if key != 'observed_battle_prerequisites'}
 
     def transport_frontiers(self, groups, facts):
         """Backchain menu transport when walking cannot reach a target region."""
@@ -323,6 +2074,21 @@ class AutonomousStoryAgent(DualStoryAgent):
         arrivals = {}
         sources = {}
         added = False
+        def can_approach(rule):
+            points = self.destination_points(rule.map, rule)
+            key = rule.map, tuple(points)
+            if key not in sources:
+                def search():
+                    return bool(points) and bool(pt.bfs_cross(
+                        facts['map'], (facts['x'], facts['y']), rule.map, points[0],
+                        last_map=self.game.last_map, allow_ledges=True, allow_spinners=True,
+                        blocked_maps=barriers, excluded_maps=excluded,
+                        goal_nodes={(rule.map, *p) for p in points}))
+                sources[key] = search()
+                if not sources[key] and any('Surf' in m['moves'] for m in facts.get('party', [])):
+                    with water_planning():
+                        sources[key] = search()
+            return sources[key]
         for transport in self.index.rules:
             if transport.effect[0] != 'transport':
                 continue
@@ -335,42 +2101,88 @@ class AutonomousStoryAgent(DualStoryAgent):
                 # special itinerary or assuming every transport is useful.
                 relevant_nodes = ({node for node in goal_nodes if node[0] == name}
                                   if transport.map in pt.ELEVATOR_MAPS else goal_nodes)
-                reachable = name in targets and not targets[name]
-                if not reachable and name in pt.MAPS and relevant_nodes:
+                reachable = {name} if name in targets and not targets[name] else set()
+                if name in pt.MAPS and relevant_nodes:
                     goal = next(iter(relevant_nodes))
-                    reachable = bool(pt.bfs_cross(
+                    reached_nodes = pt.bfs_cross(
                         name, (x, y), goal[0], goal[1:], last_map=self.game.last_map,
                         allow_ledges=True, allow_spinners=True,
-                        blocked_maps=barriers, excluded_maps=excluded, goal_nodes=relevant_nodes))
+                        blocked_maps=barriers, excluded_maps=excluded, goal_nodes=relevant_nodes,
+                        reachable_goals=True)
+                    reachable.update(node[0] for node in reached_nodes)
                 arrivals[arrival] = reachable
             if not arrivals[arrival]:
                 continue
-            if all(k in facts for k in ('map', 'x', 'y')):
-                if transport.storyline not in sources:
-                    points = self.destination_points(transport.map, transport)
-                    def can_approach():
-                        return bool(points) and bool(pt.bfs_cross(
-                            facts['map'], (facts['x'], facts['y']), transport.map, points[0],
-                            last_map=self.game.last_map, allow_ledges=True, allow_spinners=True,
-                            blocked_maps=barriers, excluded_maps=excluded,
-                            goal_nodes={(transport.map, *p) for p in points}))
-                    sources[transport.storyline] = can_approach()
-                    if not sources[transport.storyline] and any('Surf' in m['moves'] for m in facts.get('party', [])):
-                        with water_planning():
-                            sources[transport.storyline] = can_approach()
-                if not sources[transport.storyline]:
-                    continue  # A shortcut cannot help when its own entrance is behind the same wall.
-            for rule in self.index.frontier(transport.effect, facts):
+            entrance_prerequisites = []
+            if all(k in facts for k in ('map', 'x', 'y')) and not can_approach(transport):
+                entrance_prerequisites = self.discover_route_prerequisites(
+                    {'map_name': facts['map'], 'player_x': facts['x'], 'player_y': facts['y']},
+                    transport.map, self.destination_points(transport.map, transport))
+                # The destination benefit alone cannot make an inaccessible
+                # shortcut executable. Offer only a reachable causal producer
+                # of its entrance, never an assumed teleport or fixed route.
+                frontier = [rule for target in entrance_prerequisites
+                            for rule in self.index.frontier(target, facts) if can_approach(rule)]
+            else:
+                frontier = self.index.frontier(transport.effect, facts)
+            for rule in frontier:
                 key = json.dumps(rule.effect)
                 if key not in groups:
                     added = True
                     groups[key] = {'target': rule.effect, 'rules': [],
                                    'objectives': ['Enter a region with a walking path to an inaccessible story target'],
                                    'context': {'transport_script': transport.description(),
-                                               'blocked_destinations': sorted(targets)}}
+                                               'transport_entrance_prerequisites': entrance_prerequisites,
+                                               'blocked_destinations': sorted(arrivals[arrival]),
+                                               'reachability_scope': 'Only destinations with a verified walking path from this landing; not every blocked world goal'}}
                 if rule not in groups[key]['rules']:
                     groups[key]['rules'].append(rule)
         return added
+
+    def add_cut_route_frontiers(self, groups, facts):
+        """Keep the executable first tree when an old destination is deferred.
+
+        Walking previews cannot cross a tree. Pruning that destination before
+        calling travel used to also remove the only opportunity to discover
+        its Cut prerequisite, even with Cut already learned. Probe planning
+        geometry only; the skill still walks to the stance and uses the menu.
+        """
+        if (not any('Cut' in mon.get('moves', []) and mon.get('hp', 0) > 0
+                    for mon in facts.get('party', []))
+                or field_badge_prerequisites('Cut', facts.get('flags', {}))):
+            return
+        targets = {}
+        for group in groups.values():
+            unreachable = {route['map'] for route in
+                group.get('context', {}).get('trigger_navigation', [])
+                if not route['tile_route_found']}
+            for rule in group['rules']:
+                if (rule.map in unreachable and rule.map in self.navigation_memory
+                        and not rule.storyline.startswith('skill:')):
+                    points = tuple(self.destination_points(rule.map, rule))
+                    if points:
+                        targets.setdefault((rule.map, points), []).append(group['target'])
+        if not targets:
+            return
+        barriers = {name: set(tiles) for name, tiles in self.game.navigation_barriers().items()}
+        barriers.setdefault(facts['map'], set()).update(self.game.live_npcs(facts['map']))
+        state = {'map_name': facts['map'], 'player_x': facts['x'], 'player_y': facts['y']}
+        excluded = self.game.navigation_excluded_maps()
+        for (name, points), goals in targets.items():
+            obstacle = cut_requirement(state, name, points, self.game.last_map, barriers, excluded)
+            if not obstacle:
+                continue
+            key = ','.join(map(str, [obstacle['map'], *obstacle['tree']]))
+            target = ('terrain', key, True)
+            group = groups.setdefault('field:' + key, {'target': target,
+                'rules': [Rule('field:' + key, obstacle['map'], 'skill:field', [], [], [], target, [])],
+                'objectives': ['Clear a reachable tree on a route to a deferred goal'],
+                'context': {**obstacle,
+                    'scope': 'Planning identifies a reachable Cut stance; real navigation and the field menu remain required.'}})
+            prerequisites = group['context'].setdefault('prerequisite_for_goals', [])
+            for goal in goals:
+                if goal not in prerequisites:
+                    prerequisites.append(goal)
 
     def action_rejected(self, facts, reason):
         if reason not in ('action:no_selection', 'action:no_candidates'):
@@ -533,6 +2345,40 @@ class AutonomousStoryAgent(DualStoryAgent):
 
     def observe_battle_result(self, before, after):
         phase = after.get('battle_phase', '')
+        live = before.get('battle_live') or {}
+        enemy = live.get('enemy') or {}
+        captured_species = capture_species(enemy) if enemy else None
+        if (getattr(self, 'collects_dex', False) and before.get('script_awaiting_battle') and live.get('is_wild')
+                and 'escaped: true' in phase and captured_species not in
+                (after.get('pokedex') or {}).get('owned_species', [])):
+            party = [{**base, **mon} for base, mon in zip(before.get('party', []), live.get('player_party', []))]
+            preparation = capture_preparation(party, {row['item']: row['qty']
+                for row in before.get('battle_inventory', [])}, before)
+            key = before['map_name'] + ':' + captured_species
+            evidence = {'map': before['map_name'], 'species': captured_species,
+                        'preparation': preparation,
+                        'start_inventory_observed': isinstance(before.get('battle_inventory'), list),
+                        'reason': 'native_menu_escape_without_registration'}
+            result_live = after.get('battle_live') or {}
+            evidence['retreat_observation'] = {
+                'enemy': result_live.get('enemy'),
+                'party': result_live.get('player_party') or after.get('party'),
+                'inventory': after.get('battle_inventory'),
+                'scope': 'Native observations at successful menu escape; not a damage forecast or proof of which move caused a faint.'}
+            self.capture_retreats[key] = evidence
+            getattr(self, 'capture_blackouts', {}).pop(key, None)
+            if not hasattr(self, 'capture_retreat_totals'):
+                self.capture_retreat_totals = {}
+            accumulate_capture_retreat(self.capture_retreat_totals, evidence)
+            self.record('capture_retreat', **evidence)
+        blackout = capture_blackout_evidence(before, after) if getattr(self, 'collects_dex', False) else None
+        if blackout is not None:
+            if not hasattr(self, 'capture_blackouts'):
+                self.capture_blackouts, self.capture_blackout_totals = {}, {}
+            key = blackout['map'] + ':' + blackout['species']
+            self.capture_blackouts[key] = blackout
+            accumulate_capture_blackout(self.capture_blackout_totals, blackout)
+            self.record('capture_blackout', **blackout)
         opponents = (before.get('battle_live') or {}).get('enemy_party', [])
         signature = lambda team: [(m['species'], m.get('level')) for m in team]
         if 'player_won: true' in phase or 'won: true' in phase:
@@ -559,16 +2405,767 @@ class AutonomousStoryAgent(DualStoryAgent):
     def objective_satisfied(self, objective, facts):
         if objective['id'] == 'become-champion':
             return self.first_clear_verification is not None
+        if objective['id'] == 'collect-dex':
+            return self.dex_complete(facts)
+        if objective['id'] == 'max-coverage':
+            return self.coverage_complete(facts)
         return super().objective_satisfied(objective, facts)
 
+    def coverage_complete(self, facts):
+        """No map bordering the explored region is still unvisited."""
+        if not self.visited:
+            return False
+        bordering = set()
+        for name in self.visited:
+            map_data = self.maps.get(name, {})
+            bordering.update(c['targetMap'] for c in map_data.get('connections', {}).values())
+            bordering.update(w['destMap'] for w in map_data.get('warps', []) if w.get('destMap'))
+        return not (bordering - self.visited)
+
+    def validated_owned(self, facts):
+        return set((facts.get('dex') or {}).get('owned_species', [])) - set(
+            getattr(self, 'collection_audit_pending', {}))
+
+    def observe_audit_evolution(self, party, frame=None):
+        """Accept a native party species replacement, not an existing invalid copy.
+
+        Compare species multisets, not slots: battle switching can reorder the
+        party. Require one source replacement, the active evolution objective,
+        and a new target level not explained by an existing invalid copy.
+        """
+        current = [dict(mon) for mon in party]
+        previous = getattr(self, '_audit_party', None)
+        self._audit_party = current
+        if not previous or len(previous) != len(current):
+            return
+        context = (getattr(self, 'active', None) or {}).get('context', {})
+        if context.get('acquisition_method') != 'evolution':
+            return
+        normalize = lambda name: str(name).replace('_', '').upper()
+        source, target_name = normalize(context.get('from_species')), normalize(context.get('species'))
+        before_species = Counter(normalize(mon['species']) for mon in previous)
+        after_species = Counter(normalize(mon['species']) for mon in current)
+        if (before_species - after_species != Counter({source: 1})
+                or after_species - before_species != Counter({target_name: 1})):
+            return
+        before_levels = Counter((normalize(mon['species']), mon['level']) for mon in previous)
+        after_levels = Counter((normalize(mon['species']), mon['level']) for mon in current)
+        removed = [key for key, count in (before_levels - after_levels).items()
+                   for _ in range(count) if key[0] == source]
+        added = [key for key, count in (after_levels - before_levels).items()
+                 for _ in range(count) if key[0] == target_name]
+        if len(removed) != 1 or len(added) != 1:
+            return  # Ambiguous evidence cannot clear a pending source audit.
+        old = next(mon for mon in previous if (normalize(mon['species']), mon['level']) == removed[0])
+        new = next(mon for mon in current if (normalize(mon['species']), mon['level']) == added[0])
+        for target in list(getattr(self, 'collection_audit_pending', {})):
+            if not self.same_species(new['species'], target):
+                continue
+            for edge in self.complete_collection_graph().get(target, []):
+                if (edge['method'] == 'evolution' and edge.get('trigger') == 'level'
+                        and self.same_species(old['species'], edge['from_species'])
+                        and new['level'] > old['level']
+                        and new['level'] >= edge['level']):
+                    evidence = self.collection_audit_pending.pop(target)
+                    self.record('collection_audit_resolved', species=target,
+                        acquisition_method='evolution', before=old, after=new,
+                        invalid_acquisition=evidence, frame=frame)
+                    break
+
+    def dex_complete(self, facts):
+        """Every species reachable under the Red solo/no-link policy is registered.
+
+        Scoping this to already-explored areas made it vacuously true at spawn:
+        the starting room has no encounter table, so "nothing unregistered here"
+        held and the run reported success in six seconds without acting.
+        """
+        if getattr(self, 'index', None) is None:
+            return False
+        owned = self.validated_owned(facts)
+        if not owned:
+            return False
+        plan = solo_plan(self.complete_collection_graph(), owned,
+                         infer_solo_choices(owned, bag=facts.get('bag'), flags=facts.get('flags')))
+        return set(plan['reachable_species']) <= owned
+
+    def require_static_sources(self, facts):
+        """Stop promptly when every indexed source of a missing species is spent.
+
+        Keep 124 as the requested target; do not lower it to match lost sources.
+        Unknown/unindexed paths are not classified as permanently exhausted.
+        """
+        rules = getattr(getattr(self, 'index', None), 'rules', None)
+        if not isinstance(rules, list):
+            return
+        owned = self.validated_owned(facts)
+        losses = []
+        for species, methods in self.complete_collection_graph().items():
+            if species in owned:
+                continue
+            methods = [method for method in methods if not method.get('external_trade')
+                       and method['method'] != 'unavailable']
+            if not methods or any(method['method'] != 'static' for method in methods):
+                continue
+            sources = []
+            for method in methods:
+                candidates = [rule for rule in rules if rule.map == method['map']
+                    and rule.storyline == method['map'] + ':' + method['storyline']
+                    and rule.effect[0] == 'battle' and self.same_species(rule.effect[1], species)]
+                if not candidates:
+                    break  # Missing semantics never proves permanent loss.
+                flags = [spent_static_source(rule, rules, facts) for rule in candidates]
+                if not all(flags):
+                    break
+                sources.append({'map': method['map'], 'script': method['storyline'],
+                                'completion_flags': sorted({flag for row in flags for flag in row})})
+            else:
+                losses.append({'species': species, 'spent_sources': sources})
+        if losses:
+            self.record('finite_collection_source_lost', losses=losses,
+                        scope='All catalogued solo methods are static and blocked by observed monotone completion flags')
+            raise StoryStopped('finite_collection_source_lost:' + ','.join(row['species'] for row in losses))
+
+    def collection_graph(self):
+        graph = getattr(self, '_collection_graph', None)
+        if graph is None:
+            graph = acquisition_graph(self.maps, (name for name in self.maps if fishing_spots(name)))
+            self._collection_graph = graph
+        return graph
+
+    def complete_collection_graph(self):
+        graph = getattr(self, '_complete_collection_graph', None)
+        if graph is None:
+            graph = complete_acquisition_graph(
+                self.maps, (name for name in self.maps if fishing_spots(name)))
+            self._complete_collection_graph = graph
+        return graph
+
+    @staticmethod
+    def same_species(left, right):
+        return str(left).replace('_', '').upper() == str(right).replace('_', '').upper()
+
+    def capture_source_evidence(self, species, name):
+        """A historic battle is not evidence of a catchable producer.
+
+        Use the same public acquisition graph as collection planning. Unknown
+        maps stay unknown; an indexed source does not certify access, inventory,
+        source availability or capture success. Never discard the old history.
+        """
+        known = name in getattr(self, 'maps', {})
+        methods = []
+        if known:
+            for target, entries in self.complete_collection_graph().items():
+                if self.same_species(target, species):
+                    methods = [entry for entry in entries if entry.get('map') == name
+                               and entry['method'] in ('grass', 'water', 'safari', 'fishing', 'static')]
+                    break
+        return {'catchable_source_indexed': bool(methods) if known else None,
+                'methods': methods,
+                'scope': 'Public Red acquisition producers at the recorded map, not proof of '
+                         'current access, remaining source, resources or a successful retry. '
+                         'An unsupported battle cannot justify capture preparation here; '
+                         'other maps or evolution may still register the species. Unknown maps remain unknown.'}
+
+    def latest_capture_failures(self):
+        """Latest result per source; a newer blackout overrides an older escape.
+
+        A later native escape clears that source's latest blackout, without
+        clearing cumulative blackout costs. Frame clocks reset on CONTINUE,
+        so ordering comes from observed events/checkpoint lineage, not frames.
+        """
+        return {**getattr(self, 'capture_retreats', {}), **getattr(self, 'capture_blackouts', {})}
+
+    def static_capture_deferred(self, species, name, facts):
+        if self.capture_source_evidence(species, name)['catchable_source_indexed'] is False:
+            return False  # Do not defer a legal alternative for an uncatchable historic battle.
+        previous = next((row for row in self.latest_capture_failures().values()
+                         if row['map'] == name and self.same_species(row['species'], species)), None)
+        return bool(previous and not capture_preparation_improvements(
+            capture_preparation(facts.get('party', []), facts.get('bag', {}), facts), previous['preparation']))
+
+    def acquisition_story_rules(self, species, method):
+        """Resolve one graph edge back to the exact executable scene rules."""
+        if method['method'] == 'npc_trade':
+            return list(self.index.by_effect.get(
+                ('flag', method['completion_flag'], True), []))
+        expected = 'battle' if method['method'] == 'static' else 'pokemon'
+        suffix = ':' + method.get('storyline', '')
+        return [rule for rule in self.index.rules
+                if rule.map == method.get('map')
+                and (not suffix or rule.storyline.endswith(suffix))
+                and rule.effect[0] == expected
+                and self.same_species(rule.effect[1], species)
+                # A Red graph edge must not bind Blue's differently priced
+                # reward for the same species/vendor. Version guards still
+                # need the actual native observation; matching isn't access.
+                and (expected != 'pokemon' or method.get('level') is None
+                     or type(rule.effect[2]) in (int, float) and rule.effect[2] == method['level'])]
+
+    def add_evolution_item_source(self, groups, facts, item, species):
+        """Expose either a real pickup or shop purchase for a needed stone."""
+        key = item.replace('_', '').upper()
+        for effect in self.index.by_effect:
+            if effect[0] != 'item' or not effect[2] or effect[1].replace('_', '').upper() != key:
+                continue
+            rules = self.index.frontier(effect, facts)
+            if rules:
+                groups[f'evolution-item:{species}:{item}'] = {
+                    'target': effect, 'rules': rules,
+                    'objectives': [f'Obtain {item} to evolve a held Pokémon into {species}'],
+                    'context': {'acquisition_method': 'evolution', 'required_item': item,
+                                'evolution_target': species}}
+                return
+        canonical = next((name for name in ITEM_CATALOG if name.replace('_', '').upper() == key), item)
+        info = ITEM_CATALOG.get(canonical)
+        if not info or not info.get('price') or facts.get('money', 0) < info['price']:
+            return
+        for rule in self.index.rules:
+            if rule.effect[0] != 'shop' or rule.missing(facts):
+                continue
+            for stock_index, stock in enumerate(rule.effect[1]):
+                if stock.replace('_', '').upper() != key:
+                    continue
+                target = ('supply', canonical, 1)
+                groups[f'evolution-shop:{rule.id}:{species}'] = {
+                    'target': target, 'rules': [rule],
+                    'objectives': [f'Buy {canonical} to evolve a held Pokémon into {species}'],
+                    'context': {'stock_index': stock_index, 'item': info, 'quantity_to_buy': 1,
+                                'total_cost': info['price'], 'acquisition_method': 'evolution',
+                                'evolution_target': species}}
+
+    def add_acquisition_preparation(self, groups, facts, species, method, source_rules, context):
+        """Backchain one exact gift edge to real, source-bound preparation.
+
+        A shared flag is not permission to hand over another edge's item.
+        Unknown entry conditions remain unknown, and every offered leaf must
+        itself be executable. Its target is its real effect, not registration.
+        """
+        item = method.get('item')
+        normalized_item = item.replace('_', '').upper() if item else None
+
+        def frontier(source_rule):
+            # Rule legality/readiness depends on these fixed facts, not the
+            # path that reached it. Enumerating every acyclic path through
+            # shared cyclic producers is factorial before leaf deduplication.
+            # Breadth-first visits preserve the existing ten-edge bound and
+            # find a shared rule by its shortest path (a deep path cannot
+            # suppress a later short path). No persistent/stale fact cache.
+            pending, queued, found = deque([(source_rule, 0)]), {source_rule.id}, []
+            while pending:
+                rule, depth = pending.popleft()
+                debits = [effect[1] for effect in [*rule.preceding, rule.effect]
+                          if effect[0] == 'item' and effect[2] is False]
+                if normalized_item and any(str(debit).replace('_', '').upper() != normalized_item
+                                           for debit in debits):
+                    continue
+                alternatives = rule.alternatives(facts)
+                if [] in alternatives:
+                    found.append(rule)
+                    continue
+                if depth == 10:
+                    continue
+                for missing in alternatives:
+                    if any(target[0] == 'unknown' for target in missing):
+                        continue
+                    for target in missing:
+                        if self.index.satisfied(target, facts):
+                            continue
+                        for producer in self.index.by_effect.get(tuple(target), []):
+                            if producer.id not in queued:
+                                queued.add(producer.id)
+                                pending.append((producer, depth + 1))
+            return found
+
+        for source_rule in source_rules:
+            source_missing = source_rule.missing(facts)
+            if not source_missing:
+                continue
+            for rule in {r.id: r for r in frontier(source_rule)}.values():
+                key = f'acquisition-prepare:{species}:{method["method"]}:{rule.id}'
+                entry = groups.setdefault(key, {'target': rule.effect, 'rules': [rule],
+                    'objectives': [f'Prepare {species} acquisition through its actual scene prerequisites'],
+                    'context': {**deepcopy(context),
+                        'purpose': f'Prepare the source of {species}; this action is not registration',
+                        'registration_requires_receipt': True,
+                        'parent_acquisition_target': ('register', species, True),
+                        'source_preparation_paths': [],
+                        'preparation_effect': rule.effect,
+                        'acquisition_storage_capacity': self.acquisition_storage_capacity(facts),
+                        'scope': 'Only an observed Pokémon receipt establishes registration. '
+                                 'Preparation may consume the exact source item or require a later '
+                                 'normal map visit. Access, menu confirmation and final delivery still '
+                                 'require actual execution; a ready leaf does not certify the whole route.'}})
+                path = {'source_rule': {**source_rule.description(),
+                                       'entry_guards': deepcopy(source_rule.guards)},
+                        'remaining_source_prerequisites': source_missing}
+                if path not in entry['context']['source_preparation_paths']:
+                    entry['context']['source_preparation_paths'].append(path)
+
+    def add_nonwild_collection_groups(self, groups, facts):
+        """Add executable non-wild edges and their grounded preparation."""
+        if not self.collects_dex or facts.get('dex') is None:
+            return
+        owned = self.validated_owned(facts)
+        plan = solo_plan(self.complete_collection_graph(), owned,
+                         infer_solo_choices(owned, bag=facts.get('bag'), flags=facts.get('flags')))
+        reachable = set(plan['choice_reachable_species'])
+        party = facts.get('party', [])
+        held = [*party, *facts.get('stored_pokemon', [])]
+        missing_sources = {}
+        for species in sorted(reachable - owned):
+            for method in self.complete_collection_graph().get(species, []):
+                if method.get('external_trade') or method['method'] in (
+                        'unavailable', 'grass', 'water', 'safari', 'fishing', 'version_trade'):
+                    continue
+                group = method.get('exclusive_group')
+                if group and method.get('choice') not in plan['optimal_choices'].get(group, ()):
+                    continue
+                source = method.get('from_species')
+                source_party = [i for i, mon in enumerate(party)
+                                if source and self.same_species(mon.get('species'), source)]
+                source_held = any(source and self.same_species(mon.get('species'), source)
+                                  for mon in held)
+                context = {'purpose': f'Register {species} through a deterministic non-wild source',
+                           'species': species, 'acquisition_method': method['method'],
+                           'acquisition_contract': acquisition_contract(species, method), **method}
+                rules = []
+                if method['method'] == 'evolution':
+                    if not source_held:
+                        if source in owned:
+                            missing_sources.setdefault(source, set()).add(species)
+                        continue
+                    if not source_party:
+                        self.add_storage_retrieval(groups, facts, source, species, method)
+                        continue
+                    if method['trigger'] == 'item':
+                        item = method['item']
+                        if not facts['bag'].get(item.replace('_', '').upper(), 0):
+                            self.add_evolution_item_source(groups, facts, item, species)
+                            continue
+                    context['party_indices'] = source_party
+                    if method['trigger'] == 'level':
+                        trainee = party[source_party[0]]
+                        if trainee['level'] >= 100:
+                            continue  # Normal battle XP cannot trigger another level.
+                        trigger_level = max(method['level'], trainee['level'] + 1)
+                        context['experience_trigger_level'] = trigger_level
+                        context['evolution_trigger_scope'] = (
+                            'Level evolution is checked on a new level gain, not merely being above '
+                            'the natural threshold. An already overlevel wild capture still needs '
+                            'another real level-up; the threshold is not a zero-cost evolution action.')
+                        context['training_cost'] = evolution_training_cost(trainee, trigger_level)
+                        participants = 2 if any(mon.get('hp', 0) > 0 and mon['level'] > trainee['level']
+                                                for mon in party) else 1
+                        examples = []
+                        for name in getattr(self, 'visited', ()):
+                            if name.startswith('SafariZone'):
+                                continue  # Capture-only encounters are not training victories.
+                            table = ((getattr(self, 'maps', {}).get(name, {}).get('wild') or {})
+                                     .get('red') or {}).get('grass')
+                            effort = evolution_training_effort(trainee, trigger_level, table, participants)
+                            if effort:
+                                examples.append({'map': name, **effort,
+                                    'navigation': getattr(self, 'training_navigation', {}).get(name),
+                                    'access_scope': 'Previously visited table; a current tile route must still be verified'})
+                        context['training_effort_examples'] = sorted(examples,
+                            key=lambda example: example['estimated_victories_max'])[:3]
+                        context['alternative_sources'] = [
+                            {'method': alternative['method'], 'map': alternative.get('map'),
+                             'visited': alternative.get('map') in getattr(self, 'visited', ()),
+                             'scope': 'Potential source only; navigation and prerequisites still require verification'}
+                            for alternative in self.complete_collection_graph().get(species, [])
+                            if alternative['method'] in ('grass', 'water', 'fishing', 'safari')]
+                    rules = [Rule(f'evolve:{source}:{species}', facts['map'],
+                                  'skill:evolve', [], [], [],
+                                  ('register', species, True), [])]
+                elif method['method'] == 'npc_trade':
+                    if facts['flags'].get(method['completion_flag']):
+                        continue
+                    if not source_held:
+                        if source in owned:
+                            missing_sources.setdefault(source, set()).add(species)
+                        continue
+                    if len(party) < 2:
+                        continue
+                    if not source_party:
+                        self.add_storage_retrieval(groups, facts, source, species, method)
+                        continue
+                    rules = self.acquisition_story_rules(species, method)
+                elif method['method'] == 'prize':
+                    if facts.get('coins', 0) < method['coins']:
+                        self.add_coin_source(groups, facts, method['coins'], species)
+                        continue
+                    rules = self.acquisition_story_rules(species, method)
+                else:
+                    if method['method'] == 'static' and self.static_capture_deferred(species, method['map'], facts):
+                        continue  # Reopen after actual preparation improves, not map travel alone.
+                    if method['method'] == 'static' and self.capture_resources_missing(facts, 'static'):
+                        self.add_box_capacity_group(groups, facts)
+                        continue
+                    rules = self.acquisition_story_rules(species, method)
+                    if method['method'] == 'static':
+                        resources = self.collection_resources(facts)
+                        ready_sources = sorted({candidate.get('map') for candidate in
+                            self.complete_collection_graph().get(species, [])
+                            if candidate['method'] == 'static' and any(not rule.missing(facts)
+                                for rule in self.acquisition_story_rules(species, candidate))})
+                        context.update(
+                            purpose=f'Register {species} through a finite static encounter; capture is stochastic',
+                            collection_resources=resources,
+                            capture_inventory_risk=capture_inventory_risk(species, resources['ball_inventory']),
+                            ready_static_source_maps=ready_sources,
+                            last_currently_ready_static_source=len(ready_sources) == 1,
+                            retreat_contracts=[static_retreat_contract(rule, self.index.rules) for rule in rules],
+                            failure_warning='Running out of balls, fleeing or knocking out a static target can permanently spend this source. Preparation and extra supplies must be compared before triggering it; a ready script does not guarantee capture.')
+                if method['method'] in ('gift', 'prize'):
+                    party_rules = [rule for rule in rules
+                                   if rule.missing(facts) == [('party_space', 'party', True)]]
+                    if party_rules:
+                        # This is an explicit scene entry restriction, unlike
+                        # native gift delivery capacity. All other scene guards
+                        # must already hold before offering a normal PC deposit.
+                        self.add_party_space_group(groups, facts, species)
+                        entry = groups.get('storage:party_space')
+                        if entry:
+                            evidence = {**deepcopy(context),
+                                'source_rules': [{**rule.description(), 'entry_guards': deepcopy(rule.guards)}
+                                                 for rule in party_rules],
+                                'current_money': facts.get('money'),
+                                'scope': 'A normal deposit does not register this target; it prepares '
+                                         'the explicit scene party-room guard. Source navigation, '
+                                         'confirmation and payment still need actual execution. '
+                                         'Other guards hold in this snapshot, not a reservation.'}
+                            acquisitions = entry['context'].setdefault('party_space_acquisitions', [])
+                            if evidence not in acquisitions:
+                                acquisitions.append(evidence)
+                source_rules = rules
+                rules = [rule for rule in rules if not rule.missing(facts)]
+                if not rules:
+                    if method['method'] == 'gift':
+                        capacity = self.acquisition_storage_capacity(facts)
+                        if capacity['native_delivery_destination'] is None:
+                            if capacity['current_box_space_available'] is False:
+                                self.add_box_capacity_group(groups, facts)
+                        else:
+                            # In particular, do not consume a finite fossil
+                            # while a subsequent native gift cannot be stored.
+                            self.add_acquisition_preparation(groups, facts, species, method,
+                                                             source_rules, context)
+                    continue
+                if method['method'] in ('gift', 'prize'):
+                    capacity = self.acquisition_storage_capacity(facts)
+                    if capacity['native_delivery_destination'] is None:
+                        if capacity['current_box_space_available'] is False:
+                            self.add_box_capacity_group(groups, facts)
+                        elif self.acquisition_capacity_ready(facts, species, method):
+                            # Legacy observations without box telemetry retain
+                            # their conservative, explored-source deposit path.
+                            self.add_party_space_group(groups, facts, species)
+                        continue
+                    context['acquisition_storage_capacity'] = capacity
+                key = f"register:{species}:{method['method']}:{method.get('map', source or '')}"
+                groups[key] = {'target': ('register', species, True), 'rules': rules,
+                               'objectives': [f'Register {species} in the solo Pokédex'],
+                               'context': context}
+        self.add_source_reacquisition(groups, facts, missing_sources)
+
+    def add_source_reacquisition(self, groups, facts, missing_sources):
+        """Registered is not held: catch a replacement consumed by an edge."""
+        if not missing_sources:
+            return
+        counts = facts.get('box_counts', [])
+        if (len(facts.get('party', [])) >= 6 and counts
+                and counts[facts.get('current_box_index', 0)] >= 20):
+            return
+        areas = dict(getattr(self, 'catch_areas', {}))
+        navigation = dict(getattr(self, 'catch_navigation', {}))
+        for source, targets in sorted(missing_sources.items()):
+            found = self.find_catch_areas(facts, requested_species=(source,))
+            for old_key, area in found.items():
+                if area.get('method', 'grass') != 'safari' and not self.balls_held(facts):
+                    continue
+                key = f'source:{source}:{old_key}'
+                areas[key] = {**area, 'key': key}
+                navigation[key] = area.get('navigation') or self.catch_navigation.get(old_key)
+                target = ('held_species', source, True)
+                groups[key] = {'target': target,
+                    'rules': [Rule(key, area['map'], 'skill:catch_encounter', [], [], [], target, [])],
+                    'objectives': [f'Catch another {source} needed to register {name}' for name in sorted(targets)],
+                    'context': {'acquisition_method': area['method'], 'catch_area': key,
+                                'required_capture_species': source, 'required_for': sorted(targets),
+                                'already_registered_but_not_held': True,
+                                'balls_held': self.balls_held(facts),
+                                'encounter_value': area.get('encounter_value'),
+                                'trigger_navigation': [navigation[key]] if navigation[key] else []}}
+        self.catch_areas, self.catch_navigation = areas, navigation
+
+    @staticmethod
+    def acquisition_storage_capacity(facts):
+        """Native givePokemon uses party room OR the current box, not both.
+
+        Only the selected observed box counts; another box with room needs a
+        real PC box change. Missing/malformed telemetry remains unknown.
+        """
+        party_count = len(facts.get('party', []))
+        party_room = party_count < 6
+        counts, current = facts.get('box_counts'), facts.get('current_box_index')
+        valid_index = (isinstance(current, int) and not isinstance(current, bool)
+                       and current >= 0)
+        count = (counts[current] if valid_index and isinstance(counts, (list, tuple))
+                 and current < len(counts) else None)
+        if not (isinstance(count, int) and not isinstance(count, bool) and 0 <= count <= 20):
+            count = None
+        box_room = count < 20 if count is not None else None
+        destination = 'party' if party_room else 'current_pc_box' if box_room is True else None
+        return {'party_count': party_count, 'party_space_available': party_room,
+                'current_box_index': current if valid_index else None,
+                'current_box_count': count, 'current_box_space_available': box_room,
+                'native_delivery_destination': destination,
+                'requires_party_deposit': False if destination else None,
+                'scope': 'Observed capacity snapshot for native givePokemon delivery, not a '
+                         'reserved slot or guaranteed receipt. Alternatives share this space; '
+                         'travel captures can fill it before arrival. Script guards, payments, '
+                         'navigation and real menu execution still apply. A boxed receipt '
+                         'registers the species but needs normal withdrawal for party use.'}
+
+    def acquisition_capacity_ready(self, facts, species, method):
+        """Do not churn party slots for a pickup beyond the explored frontier."""
+        if method.get('map') not in {facts['map'], *getattr(self, 'visited', {})}:
+            return False
+        return any(not rule.missing(facts)
+                   for rule in self.acquisition_story_rules(species, method))
+
+    @staticmethod
+    def post_withdrawal_acquisition(stored, target, method, facts):
+        """Price the follow-up, not the PC action, using this actual box slot.
+
+        A retrieval prerequisite otherwise hides the difference between an
+        available stone, many real level gains, and giving away the source.
+        These are alternatives for one individual, never cumulative rewards.
+        """
+        preview = {'species': target, 'acquisition_method': method['method'],
+                   'withdrawal_registers_target': False,
+                   'acquisition_contract': acquisition_contract(target, method)}
+        if method['method'] == 'evolution':
+            if method['trigger'] == 'level':
+                can_level = stored['level'] < 100
+                trigger = max(method['level'], stored['level'] + 1) if can_level else None
+                preview.update(level_up_possible=can_level, experience_trigger_level=trigger)
+                if can_level:
+                    preview['training_cost'] = evolution_training_cost(stored, trigger)
+            elif method['trigger'] == 'item':
+                item = method['item']
+                key = item.replace('_', '').upper()
+                quantity = sum(count for name, count in facts.get('bag', {}).items()
+                               if name.replace('_', '').upper() == key)
+                info = next((info for name, info in ITEM_CATALOG.items()
+                             if name.replace('_', '').upper() == key), {})
+                preview.update(required_item=item, item_quantity_held=quantity,
+                               item_missing=quantity < 1,
+                               item_unit_price_reference=info.get('price') or None)
+        elif method['method'] == 'npc_trade':
+            if method.get('completion_flag'):
+                preview['trade_already_completed'] = bool(facts.get('flags', {}).get(method['completion_flag']))
+            preview['party_count_requirement_after_withdrawal_met'] = len(facts.get('party', [])) >= 1
+        return preview
+
+    def add_storage_retrieval(self, groups, facts, source, target, method=None):
+        stored = next((mon for mon in facts.get('stored_pokemon', [])
+                       if self.same_species(mon.get('species'), source)), None)
+        if not stored:
+            return
+        rules = [rule for rule in self.index.by_effect.get(('pc', 'storage', True), [])
+                 if not rule.missing(facts)]
+        if not rules:
+            return
+        key = f'retrieve:{source}'
+        entry = groups.setdefault(key, {
+            'target': ('pokemon', source, None), 'rules': rules,
+            'objectives': [],
+            'context': {'storage_retrieval': True, 'stored_pokemon': stored,
+                        'requires_party_deposit': len(facts.get('party', [])) >= 6,
+                        'stored_pokemon_not_fully_healthy': (
+                            stored.get('hp', 0) < stored.get('max_hp', 0)
+                            or stored.get('status', 'None') != 'None'),
+                        'required_for': []}})
+        objective = f'Withdraw {source} from storage so it can produce {target}'
+        if objective not in entry['objectives']:
+            entry['objectives'].append(objective)
+        if target not in entry['context']['required_for']:
+            entry['context']['required_for'].append(target)
+        if method is not None:
+            context = entry['context']
+            preview = self.post_withdrawal_acquisition(stored, target, method, facts)
+            options = context.setdefault('post_withdrawal_acquisitions', [])
+            if preview not in options:
+                options.append(preview)
+            context['post_withdrawal_options_share_one_individual'] = True
+            context['post_withdrawal_scope'] = (
+                'Possible follow-ups, not rewards of withdrawal or a guaranteed combined yield. '
+                'Evolution changes this individual; NPC trade gives it away. Travel, access, '
+                'any needed recovery and menu execution still need planning. Recovery is not '
+                'required by every alternative; item price does not prove an accessible seller.')
+
+    def add_stored_battler_retrieval(self, groups, facts):
+        """Recover an earned main battler rather than train a replacement."""
+        stored = facts.get('stored_pokemon', [])
+        if not stored or not facts.get('party'):
+            return
+        main = max(stored, key=lambda mon: mon.get('level', 0))
+        current_level = max(mon['level'] for mon in facts['party'])
+        if main.get('level', 0) < max(current_level + 5, current_level * 1.5):
+            return
+        self.add_storage_retrieval(groups, facts, main['species'], 'story battle readiness')
+        entry = groups.get(f'retrieve:{main["species"]}')
+        if entry:
+            entry['context']['restore_main_battler'] = True
+            entry['objectives'] = [f'Restore the already trained {main["species"]} to the party before further training or battles']
+
+    def add_stored_field_carrier_retrieval(self, groups, facts, move, obstacle):
+        """An owned PC carrier is a field prerequisite even with a full party.
+
+        Keep withdrawal distinct from teaching, badge/current gates and the
+        eventual crossing. Reuse real PC rules and the existing protected
+        deposit choices rather than treating box ownership as a usable HM.
+        """
+        if any(move in mon.get('moves', []) or hm_compatible(mon['species'], move)
+               for mon in facts.get('party', [])):
+            return
+        item = f'HM{HM_MOVES.index(move)+1:02d}'
+        prerequisites = field_badge_prerequisites(move, facts.get('flags', {}))
+        if move == 'Surf':
+            prerequisites += surf_current_prerequisites(obstacle, facts.get('flags', {}))
+        seen_species = set()
+        for mon in facts.get('stored_pokemon', []):
+            species = mon.get('species')
+            # add_storage_retrieval binds the first observed slot for a
+            # species. Do not attach a later duplicate's moves to that slot.
+            if not species or species in seen_species:
+                continue
+            seen_species.add(species)
+            compatible = hm_compatible(species, move)
+            known = move in mon.get('moves', [])
+            if not compatible and not known:
+                continue
+            purpose = f'{move} field access'
+            self.add_storage_retrieval(groups, facts, species, purpose)
+            entry = groups.get(f'retrieve:{species}')
+            if not entry:
+                continue  # No currently enabled PC rule, not an invented action.
+            requirement = {
+                'required_move': move, 'compatible': compatible,
+                'already_knows_move': known, 'required_machine': item,
+                'machine_held': bool(facts.get('bag', {}).get(item)),
+                'unmet_native_field_prerequisites': prerequisites,
+                'terrain_obstruction': obstacle,
+                'scope': 'Withdraw this observed owned slot first; teach the HM if unknown. '
+                         'Badge/current gates, any recovery and actual field execution remain '
+                         'separate prerequisites; not a completed crossing or new registration.'}
+            requirements = entry['context'].setdefault('field_move_requirements', [])
+            if requirement not in requirements:
+                requirements.append(requirement)
+            generic_objective = f'Withdraw {species} from storage so it can produce {purpose}'
+            entry['objectives'] = [text for text in entry['objectives'] if text != generic_objective]
+            objective = f'Withdraw the owned {species} to prepare {move} for the observed terrain'
+            if objective not in entry['objectives']:
+                entry['objectives'].append(objective)
+
+    def add_box_capacity_group(self, groups, facts):
+        counts = facts.get('box_counts', [])
+        current = facts.get('current_box_index', 0)
+        if not counts or counts[current] < 20:
+            return False
+        available = [index for index, count in enumerate(counts) if count < 20]
+        rules = [rule for rule in self.index.by_effect.get(('pc', 'storage', True), [])
+                 if not rule.missing(facts)]
+        if available and rules:
+            target = ('box_space', 'storage', True)
+            groups['storage:change_box'] = {
+                'target': target, 'rules': rules,
+                'objectives': ['Change to a PC box with room before catching more Pokémon'],
+                'context': {'storage_change_box': True, 'available_boxes': available,
+                            'box_counts': counts}}
+        return True
+
+    def add_party_space_group(self, groups, facts, species):
+        counts = facts.get('box_counts', [])
+        current = facts.get('current_box_index', 0)
+        if counts and counts[current] >= 20:
+            self.add_box_capacity_group(groups, facts)
+            return
+        rules = [rule for rule in self.index.by_effect.get(('pc', 'storage', True), [])
+                 if not rule.missing(facts)]
+        if not rules:
+            return
+        entry = groups.setdefault('storage:party_space', {
+            'target': ('party_space', 'party', True), 'rules': rules,
+            'objectives': [], 'context': {'storage_party_space': True, 'required_for': []}})
+        objective = f'Deposit one party member so the {species} acquisition can succeed'
+        if objective not in entry['objectives']:
+            entry['objectives'].append(objective)
+        if species not in entry['context']['required_for']:
+            entry['context']['required_for'].append(species)
+
+    def add_coin_source(self, groups, facts, required, species):
+        if not facts['bag'].get('COINCASE', 0):
+            for effect in self.index.by_effect:
+                if effect[0] != 'item' or not effect[2] or effect[1].replace('_', '').upper() != 'COINCASE':
+                    continue
+                rules = self.index.frontier(effect, facts)
+                if rules:
+                    groups['coins:case'] = {
+                        'target': effect, 'rules': rules,
+                        'objectives': [f'Obtain the Coin Case required to redeem {species}'],
+                        'context': {'acquisition_method': 'prize', 'required_coins': required,
+                                    'prize_species': species}}
+                    return
+        # The clerk is the deterministic, bounded source: ¥1000 -> 50 coins.
+        rules = [rule for rule in self.index.rules
+                 if rule.map == 'GameCorner' and rule.effect == ('coins', 50, True)
+                 and rule.storyline.endswith(':talkClerk1') and not rule.missing(facts)]
+        purchases = (required - facts.get('coins', 0) + 49) // 50
+        if not rules or facts.get('money', 0) < purchases * 1000:
+            return
+        target = ('coin_supply', 'coins', required)
+        key = f'coins:{required}'
+        entry = groups.setdefault(key, {'target': target, 'rules': rules, 'objectives': [],
+            'context': {'coin_purchase': True, 'required_coins': required,
+                        'current_coins': facts.get('coins', 0), 'purchases': purchases,
+                        'money_cost': purchases * 1000, 'prize_species': []}})
+        objective = f'Buy enough Game Corner coins to redeem {species}'
+        if objective not in entry['objectives']:
+            entry['objectives'].append(objective)
+        if species not in entry['context']['prize_species']:
+            entry['context']['prize_species'].append(species)
+
     def settle_special(self, state):
+        if (state.get('choice') and self.active
+                and self.active.get('context', {}).get('coin_purchase')):
+            menu = state['choice']
+            yes = next((index for index, label in enumerate(menu['options'])
+                        if str(label).lower() in ('yes', '是')), 0)
+            self.tap('a' if menu['selected'] == yes else 'down')
+            return True
+        if state.get('evolution_phase'):
+            # Evolution is the only cutscene where B can destroy progress.
+            # A advances its optional intro text and is harmless during the
+            # timed morph phases; never route this through skip_dialogue().
+            self.tap('a')
+            return True
+        if state.get('npc_trade_phase'):
+            self.client.step(10)
+            return True
         if state.get('shop_phase') and self.active and self.active['target'][0] == 'sale':
             item = self.active['target'][1]
             money = state['money']
             data.sell(self.game, item)
             if self.client.state()['money'] <= money:
                 raise StoryStopped('sale_did_not_increase_money')
-            self.record('sold_treasure', item=item, money_after=self.client.state()['money'])
+            context = self.active.get('context', {})
+            kind = ('sold_level_item' if context.get('rare_candy_sale') else
+                    'sold_vitamin' if context.get('vitamin_sale') else
+                    'sold_tm' if context.get('tm_sale') else 'sold_treasure')
+            self.record(kind, item=item, money_after=self.client.state()['money'])
             return True
         if state.get('shop_phase') and self.active and self.active['target'][0] == 'supply':
             details = self.active['context']
@@ -634,6 +3231,7 @@ class AutonomousStoryAgent(DualStoryAgent):
         finally:
             check.close()
         pt.resume_reentry(self.game)
+        self.hof_baseline = expected
         self.record('first_clear_verified', verification=self.first_clear_verification)
         return True
 
@@ -654,31 +3252,60 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'destination': destination, 'goal': self.active['target'], 'detail': result.get('detail'),
                 'blocking_trainers': result.get('blocking_trainers', []),
                 'blocking_npcs': result.get('blocking_npcs', [])}
+            if 'field_obstruction' in result:
+                # The player's observation position is not necessarily the
+                # terrain obstacle's position. Preserve both; do not replace
+                # the current map with a planner's unvisited remote stance.
+                self.navigation_blockage['field_obstruction'] = deepcopy(result['field_obstruction'])
             self.navigation_memory[destination] = dict(self.navigation_blockage)
             self.navigation_history[json.dumps([destination, blocked_map])] = dict(self.navigation_blockage)
             self.observed_barrier_maps.add(blocked_map)
         elif result['result'] == 'reached':
             self.navigation_memory.pop(destination, None)
 
-    def opponent_parties(self, rules):
+    def opponent_parties(self, rules, facts=None):
         parties = []
         seen = set()
+        starter = infer_solo_choices(((facts or {}).get('dex') or {}).get('owned_species', [])).get('starter')
         for rule in rules:
-            if not any(effect[0] == 'battle' for effect in rule.preceding):
-                continue
-            ids = {int(t.split(':')[1]) for t in rule.triggers if t.startswith('npc:')}
-            for npc in self.maps.get(rule.map, {}).get('npcs', []):
-                if ids and npc['textId'] not in ids:
+            for effect in rule.preceding:
+                if effect[0] != 'battle':
                     continue
-                key = (rule.map, npc['textId'])
-                if key in seen:
+                reference = effect[1]
+                base = 0
+                if isinstance(reference, (tuple, list)):
+                    reference, base = reference
+                if not isinstance(reference, str):
                     continue
-                seen.add(key)
-                trainer = self.trainers.get(npc.get('trainerClass'))
-                if trainer and npc.get('trainerSet'):
-                    index = npc['trainerSet'] - 1
-                    if index < len(trainer['parties']):
-                        parties.extend(trainer['parties'][index]['pokemon'])
+                selected = None
+                if reference.startswith('OPP_'):
+                    name = reference[4:]
+                    # Longest match keeps the digit in RIVAL1/2/3 part of the
+                    # class; an optional suffix is a one-based trainer set.
+                    for klass, trainer in sorted(self.trainers.items(),
+                            key=lambda item: -len(item[1].get('constName', item[0].upper()))):
+                        prefix = trainer.get('constName', klass.upper())
+                        suffix = name.removeprefix(prefix)
+                        if name.startswith(prefix) and (not suffix or suffix.isdigit()):
+                            selected = (klass, max(0, int(suffix or 1) - 1))
+                            break
+                    if selected and selected[0] in ('Rival1', 'Rival2', 'Rival3'):
+                        # Native starter-advantage selection uses the original
+                        # starter, not the current lead or NPC metadata.
+                        offset = {'Charmander': 0, 'Squirtle': 1, 'Bulbasaur': 2}.get(starter)
+                        if (offset is None or not isinstance(base, (int, float))
+                                or base < 0 or int(base) != base):
+                            continue  # Unknown inputs must not invent a roster.
+                        selected = (selected[0], int(base) + offset)
+                elif ':' in reference:
+                    klass, number = reference.rsplit(':', 1)
+                    if klass in self.trainers and number.isdigit() and int(number) > 0:
+                        selected = (klass, int(number) - 1)
+                if selected and selected not in seen:
+                    seen.add(selected)
+                    trainer = self.trainers[selected[0]]
+                    if selected[1] < len(trainer['parties']):
+                        parties.extend(trainer['parties'][selected[1]]['pokemon'])
         return parties
 
     def nearby_healers(self, facts):
@@ -708,30 +3335,83 @@ class AutonomousStoryAgent(DualStoryAgent):
         return available or [rule for _, rule in ranked[:3]]
 
     def healing_route_costs(self, healers, facts):
-        """Describe victories lost by entry scripts on a proposed healing route."""
-        won = {r.effect[1] for r in self.index.rules
+        """Compatibility wrapper; reset costs apply to more than healing."""
+        return self.route_battle_reset_costs(healers, facts)
+
+    def route_battle_reset_costs(self, rules, facts, *, completed_scripts=()):
+        """Current entry guards on map-level routes; not a reachability proof."""
+        script_rules = getattr(self.index, 'rules', None)
+        if not isinstance(script_rules, list):
+            return {}
+        won = {r.effect[1] for r in script_rules
                if r.effect[0] == 'flag' and r.effect[2]
-               and facts['flags'].get(r.effect[1]) and any(e[0] == 'battle' for e in r.preceding)}
-        resets = [r for r in self.index.rules if r.effect[0] == 'flag' and not r.effect[2]
+               and facts.get('flags', {}).get(r.effect[1]) and any(e[0] == 'battle' for e in r.preceding)}
+        resets = [r for r in script_rules if r.effect[0] == 'flag' and not r.effect[2]
                   and r.effect[1] in won and 'load' in r.triggers
+                  and r.storyline not in completed_scripts
                   and not any(e[0] == 'battle' for e in r.preceding)]
         if not resets:
             return {}
         costs = {}
-        for healer in healers:
-            route = self.client.route(facts['map'], healer.map)
+        # A decision may offer many interactions at the same PC/shop. Query
+        # each destination once, and do not persist costs across flag changes.
+        for destination in sorted({rule.map for rule in rules} - {facts['map']}):
+            route = self.client.route(facts['map'], destination)
             if not route.get('found'):
                 continue
             entered = {leg['to_map'] for leg in route.get('legs', [])}
             lost = sorted({r.effect[1] for r in resets if r.map in entered
                            and not r.missing({**facts, 'map': r.map})})
             if lost:
-                costs[healer.map] = lost
+                costs[destination] = lost
         return costs
 
-    def find_training_sites(self, facts):
+    def annotate_route_reset_costs(self, groups, facts):
+        costs = self.route_battle_reset_costs(
+            [rule for group in groups.values() for rule in group['rules']], facts)
+        for group in groups.values():
+            context = group.get('context', {})
+            for key in ('route_resets_won_battles', 'route_reset_scope',
+                        'completion_resets_won_battles', 'completion_reset_scope'):
+                context.pop(key, None)
+            applicable = costs
+            rules = group['rules']
+            if rules and all(rule.effect == group['target'] and 'load' in rule.triggers
+                    and ('ending', 'hall_of_fame_and_credits', True) in rule.preceding for rule in rules):
+                completion = {}
+                for rule in rules:
+                    cleared = {name for kind, name, wanted in rule.preceding
+                               if kind == 'flag' and not wanted}
+                    flags = sorted(cleared & set(costs.get(rule.map, [])))
+                    if flags:
+                        completion[rule.map] = flags
+                if completion:
+                    context['completion_resets_won_battles'] = completion
+                    context['completion_reset_scope'] = (
+                        'Temporary flags cleared by the selected completed ending, not a replay cost '
+                        'before this exit. Actual remaining battles, ceremony, credits and saved '
+                        'CONTINUE are still required. No flag is changed by this preview.')
+                    # Exclude these exact scripts, not their flag names: an
+                    # earlier lobby may clear the same flag as a real detour.
+                    applicable = self.route_battle_reset_costs(rules, facts,
+                        completed_scripts={rule.storyline for rule in rules})
+            relevant = {name: applicable[name] for name in sorted({rule.map for rule in rules})
+                        if name in applicable}
+            group['context'] = context
+            if relevant:
+                group['context'] = {**context, 'route_resets_won_battles': relevant,
+                    'route_reset_scope': 'Already won battle flags cleared by entry scripts on the proposed map-level route to each interaction or training site, using currently satisfied guards. Not a tile-path proof; alternate routes or changed guards may differ. Does not include effects after the destination interaction. No flag is changed by this preview.'}
+
+    def find_training_sites(self, facts, *, shared_experience=False):
         ranked = []
         level = facts['party'][0]['level']
+        active = getattr(self, 'active', None) or {}
+        context = active.get('context', {})
+        if (shared_experience or context.get('capture_support_training')
+                or (context.get('acquisition_method') == 'evolution' and context.get('trigger') == 'level')):
+            finisher = training_battler(facts['party'])
+            if finisher:
+                level = max(level, finisher['level'])
         barriers = self.game.navigation_barriers()
         barriers[facts['map']] = barriers.get(facts['map'], set()) | self.game.live_npcs(facts['map'])
         self.training_navigation = {}
@@ -741,7 +3421,12 @@ class AutonomousStoryAgent(DualStoryAgent):
         for name in self.visited:
             nearby.update(c['targetMap'] for c in self.maps.get(name, {}).get('connections', {}).values())
             nearby.update(w['destMap'] for w in self.maps.get(name, {}).get('warps', []) if w.get('destMap'))
+        eligible, regions = {}, {}
         for name in nearby:
+            if name.startswith('SafariZone'):
+                continue  # BALL/BAIT/ROCK/RUN cannot produce knockout XP.
+            if self.capture_area_blocked(name, facts):
+                continue  # Observed ghost identification also gates wild knockout XP.
             wild = ((self.maps.get(name, {}).get('wild') or {}).get('red') or {}).get('grass') or {}
             mons = wild.get('mons', [])
             if not mons or max(mon['level'] for mon in mons) > level + 2:
@@ -753,10 +3438,16 @@ class AutonomousStoryAgent(DualStoryAgent):
                      for y in range(pt.MAPS[name]['height']*2) if training_tile(name, x, y)]
             if not spots:
                 continue
-            paths = pt.bfs_cross(facts['map'], (facts['x'], facts['y']), name, spots[0],
-                last_map=self.game.last_map, allow_ledges=True, allow_spinners=True,
-                blocked_maps=barriers, excluded_maps=self.game.navigation_excluded_maps(),
-                goal_nodes={(name, *p) for p in spots})
+            eligible[name] = (route, spots, wild)
+            regions[name] = {(name, *p) for p in spots}
+        # Share traversal only among regions with the same through-map
+        # permissions. Each destination still gets its own shortest path to
+        # actual encounter terrain, with this call's current NPC barriers.
+        paths_by_map = pt.bfs_cross_routes(facts['map'], (facts['x'], facts['y']), regions,
+            last_map=self.game.last_map, allow_ledges=True, allow_spinners=True,
+            blocked_maps=barriers, excluded_maps=self.game.navigation_excluded_maps()) if regions else {}
+        for name, (route, spots, wild) in eligible.items():
+            paths = paths_by_map[name]
             if not paths and name in getattr(self, 'navigation_memory', {}):
                 continue  # Include live NPCs when rechecking a disproved route.
             self.training_navigation[name] = {'map': name, 'tile_route_found': bool(paths),
@@ -766,7 +3457,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                 endpoint = paths[-1][0] if len(paths) > 1 else paths[0]
                 spots = [tuple(endpoint[1:])]  # Use the reachable component.
             hops = len(route.get('legs', []))
-            experience = sum(data.species_data(mon['species'])['baseExp'] * mon['level'] / 7 for mon in mons) / len(mons)
+            experience = training_yield(wild)['expected_experience_per_victory']
             ranked.append((not bool(paths), -experience / (1 + .15*hops), hops, name, spots))
         ranked.sort(key=lambda item: item[:4])
         self.training_sites = {}
@@ -777,6 +3468,322 @@ class AutonomousStoryAgent(DualStoryAgent):
                 (self.maps[name].get('warps') or [{}])[0].get('y', 10))
             self.training_sites[name] = min(spots, key=lambda pos: abs(pos[0]-origin[0]) + abs(pos[1]-origin[1]))
         return self.training_sites
+
+    @staticmethod
+    def balls_held(facts):
+        normalized = {name.replace('_', '').upper() for name in BALLS}
+        return sum(qty for key, qty in facts.get('bag', {}).items() if key in normalized)
+
+    def collection_resources(self, facts):
+        """Grounded inventory and party tools that affect capture feasibility."""
+        normalized = {name.replace('_', '').upper(): name for name in BALLS}
+        balls = []
+        for key, quantity in facts.get('bag', {}).items():
+            if quantity > 0 and key in normalized:
+                name = normalized[key]
+                balls.append({'ball': name, 'quantity': quantity,
+                              'quality': BALL_QUALITY.get(name, 'special')})
+        status = []
+        useful_effects = {
+            'SleepEffect': ('strong', False),
+            'FreezeEffect': ('strong', False),
+            'ParalyzeEffect': ('moderate', False),
+            'PoisonEffect': ('moderate', True),
+            'BurnEffect': ('moderate', True),
+        }
+        for mon in facts.get('party', []):
+            if mon.get('hp', 1) <= 0:
+                continue
+            for move, pp in zip(mon.get('moves', []), mon.get('pp', [])):
+                if move == 'None' or pp <= 0:
+                    continue
+                details = data.move_data(move)
+                if details.get('power', 0) != 0 or details.get('effect') not in useful_effects:
+                    continue
+                bonus, damage_risk = useful_effects[details['effect']]
+                status.append({'pokemon': mon['species'], 'move': move, 'pp': pp,
+                               'accuracy': details.get('accuracy'),
+                               'capture_bonus': bonus,
+                               'residual_damage_risk': damage_risk})
+        return {'ball_inventory': sorted(balls, key=lambda row: row['ball']),
+                'total_balls': sum(row['quantity'] for row in balls),
+                'capture_status_moves': status,
+                'can_apply_safe_capture_status': any(not row['residual_damage_risk'] for row in status)}
+
+    def species_scarcity(self, species, current_map):
+        """Other acquisition methods for a target; scarcity is a route decision."""
+        areas = sorted({method['map'] for method in self.collection_graph().get(species, [])
+                        if method['map'] != current_map})
+        return {'other_known_area_count': len(areas), 'other_known_areas': areas[:6],
+                'unique_to_this_known_area': not areas}
+
+    def recent_catch_attempts(self, name):
+        """Hunts this area saw recently, and how many registered something new."""
+        attempts = [attempt for attempt in getattr(self, 'catch_attempts', []) if attempt['map'] == name]
+        return {'hunts': len(attempts),
+                'registered': sum(bool(attempt['registered']) for attempt in attempts)}
+
+    def method_value(self, method, name, owned, rod=None):
+        if method == 'fishing':
+            value = fishing_profile(rod, name, owned)
+        else:
+            table_name = 'water' if method == 'water' else 'grass'
+            table = (((self.maps.get(name, {}).get('wild') or {}).get('red') or {})
+                     .get(table_name) or {})
+            value = table_profile(table, owned)
+            if method == 'safari':
+                value['safari_registration_reference'] = safari_capture_reference(table, owned)
+        if value:
+            for target in value['targets']:
+                target.update(catch_difficulty(target['species']))
+        return value
+
+    @staticmethod
+    def grass_species(map_data):
+        """Wild grass species of one map, in a stable order."""
+        wild = ((map_data.get('wild') or {}).get('red') or {}).get('grass') or {}
+        return sorted({mon['species'] for mon in wild.get('mons', [])})
+
+    def neighbourhood(self, hops=1):
+        """Explored maps plus `hops` of connection/warp topology."""
+        nearby = set(self.visited)
+        for _ in range(max(1, hops)):
+            for name in list(nearby):
+                map_data = self.maps.get(name, {})
+                nearby.update(c['targetMap'] for c in map_data.get('connections', {}).values())
+                nearby.update(w['destMap'] for w in map_data.get('warps', []) if w.get('destMap'))
+        return nearby
+
+    def map_adjacency(self):
+        """Undirected map adjacency: connections and warps, both directions.
+
+        Door warps are listed on the street side only and exit mats may not
+        state their destination at all, so either side's listing must serve
+        as the crossing in both directions.
+        """
+        adjacency = getattr(self, '_map_adjacency', None)
+        if adjacency is None:
+            adjacency = {name: set() for name in self.maps}
+            for name, map_data in self.maps.items():
+                crossings = [c['targetMap'] for c in map_data.get('connections', {}).values()]
+                crossings += [w['destMap'] for w in map_data.get('warps', []) if w.get('destMap')]
+                for other in crossings:
+                    if other in adjacency:
+                        adjacency[name].add(other)
+                        adjacency[other].add(name)
+            self._map_adjacency = adjacency
+        return adjacency
+
+    def map_hops(self, origin, destination):
+        """Fewest map crossings between two maps, or None when disconnected."""
+        adjacency = self.map_adjacency()
+        if origin not in adjacency or destination not in adjacency:
+            return None
+        distances = {origin: 0}
+        queue = deque([origin])
+        while queue:
+            name = queue.popleft()
+            if name == destination:
+                return distances[name]
+            for other in adjacency[name]:
+                if other not in distances:
+                    distances[other] = distances[name] + 1
+                    queue.append(other)
+        return None
+
+    def capture_area_blocked(self, name, facts):
+        """Observed wild-ghost identification gates capture and knockout XP."""
+        return any(name in requirement.get('capture_blocked_maps', [])
+                   and not facts.get('bag', {}).get(item.replace('_', '').upper())
+                   for item, requirement in getattr(self, 'battle_requirements', {}).items())
+
+    def find_catch_areas(self, facts, requested_species=None):
+        """Executable grass, Safari, Surf, and fishing acquisition areas."""
+        owned = self.validated_owned(facts)
+        if requested_species is not None:
+            owned = set(self.complete_collection_graph()) - set(requested_species)
+        barriers = self.game.navigation_barriers()
+        barriers[facts['map']] = barriers.get(facts['map'], set()) | self.game.live_npcs(facts['map'])
+        ranked = []
+        previous = set()
+        for hops in (1, 2, 3, 4):
+            nearby = self.neighbourhood(hops)
+            if nearby == previous:
+                break
+            previous = nearby
+            self.catch_navigation = {}
+            ranked = self.rank_catch_areas(nearby, facts, owned, barriers)
+            if ranked:
+                break
+        ranked.sort(key=lambda item: item[:5])
+        self.catch_areas = {key: area for *_, key, area in ranked[:6]}
+        return self.catch_areas
+
+    def rank_catch_areas(self, nearby, facts, owned, barriers):
+        """Rank executable acquisition methods by expected travel + hunt effort."""
+        ranked = []
+        for name in nearby:
+            if self.capture_area_blocked(name, facts):
+                continue
+            route = self.client.route(facts['map'], name)
+            if not route.get('found'):
+                continue
+            red = ((self.maps.get(name, {}).get('wild') or {}).get('red') or {})
+            methods = []
+            grass = (red.get('grass') or {}).get('mons', [])
+            if grass:
+                methods.append(('safari' if name.startswith('SafariZone') else 'grass', None,
+                                [(x, y) for x in range(pt.MAPS[name]['width']*2)
+                                 for y in range(pt.MAPS[name]['height']*2)
+                                 if training_tile(name, x, y)], None))
+            water = (red.get('water') or {}).get('mons', [])
+            knows_surf = any('Surf' in mon['moves'] for mon in facts.get('party', []))
+            if water and knows_surf:
+                methods.append(('water', None, surf_spots(name), 'Surf'))
+            held = facts.get('bag', {})
+            for rod in ('OldRod', 'GoodRod', 'SuperRod'):
+                if held.get(rod.upper(), 0) and fishing_profile(rod, name) and fishing_spots(name):
+                    methods.append(('fishing', rod, fishing_spots(name), rod))
+            for method, rod, raw_spots, requirement in methods:
+                value = self.method_value(method, name, owned, rod)
+                if not value or not value['unregistered_species_count'] or not raw_spots:
+                    continue
+                species = [target['species'] for target in value['targets']]
+                stances = ([spot for spot, _ in raw_spots] if method == 'fishing'
+                           else [spot for spot, _, _ in raw_spots] if method == 'water'
+                           else raw_spots)
+                paths = pt.bfs_cross(facts['map'], (facts['x'], facts['y']), name, stances[0],
+                    last_map=self.game.last_map, allow_ledges=True, allow_spinners=True,
+                    blocked_maps=barriers, excluded_maps=self.game.navigation_excluded_maps(),
+                    goal_nodes={(name, *p) for p in stances})
+                if not paths and name in getattr(self, 'navigation_memory', {}):
+                    continue
+                endpoint = tuple((paths[-1][0] if len(paths) > 1 else paths[0])[1:]) if paths else stances[0]
+                chosen = (endpoint if method in ('grass', 'safari') and paths else
+                          next((spot for spot in raw_spots if spot[0] == endpoint), raw_spots[0]))
+                # Keep the long-standing map key for ordinary grass hunts;
+                # other modalities need a disambiguating method/rod prefix.
+                key = name if method == 'grass' else ':'.join(filter(None, (method, rod, name)))
+                navigation = {'map': name, 'tile_route_found': bool(paths),
+                    'steps': len(paths)-1 if paths else None, 'requires': requirement,
+                    'scope': 'path to the real stance/terrain, including current NPC collisions'}
+                self.catch_navigation[key] = navigation
+                attempts = self.recent_catch_attempts(key)
+                hunt_steps = value['expected_attempts_to_any_new_species'] or float('inf')
+                misses = attempts['hunts'] - attempts['registered']
+                travel_steps = len(paths)-1 if paths else float('inf')
+                estimated_effort = travel_steps + hunt_steps * (1 + misses)
+                area = {'key': key, 'map': name, 'method': method, 'rod': rod,
+                        'species': species, 'spot': chosen,
+                        'spots': [chosen] if method in ('grass', 'safari') else [],
+                        'reachable': bool(paths),
+                        'encounter_value': value, 'navigation': navigation}
+                ranked.append((not bool(paths), estimated_effort,
+                               -value['unregistered_encounter_share_pct'], -len(species), key, area))
+        return ranked
+
+    def add_coverage_groups(self, groups, facts):
+        """Offer bordering areas the first playthrough has not reached yet.
+
+        Coverage needs candidates of its own: once the plot's flag frontier is
+        exhausted the story groups stop, and without these the run would stall
+        with reachable areas still unvisited rather than exploring them.
+        """
+        bordering = set()
+        for name in self.visited:
+            map_data = self.maps.get(name, {})
+            bordering.update(c['targetMap'] for c in map_data.get('connections', {}).values())
+            bordering.update(w['destMap'] for w in map_data.get('warps', []) if w.get('destMap'))
+        for name in sorted(bordering - self.visited):
+            spot = self.entry_tile(name)
+            if spot is None or not self.client.route(facts['map'], name).get('found'):
+                continue
+            x, y = spot
+            target = ('explore', name, True)
+            groups.setdefault(f'explore:{name}', {
+                'target': target,
+                'rules': [Rule(f'explore:{name}', name, 'explore:new_area',
+                               [f'coord:({x},{y})'], [], [], target, [])],
+                'objectives': ['Reach a bordering area that has not been visited yet'],
+                'context': {'purpose': 'Coverage: no bordering area should stay unexplored'},
+            })
+
+    @staticmethod
+    def entry_tile(name):
+        """A tile of `name` a traveller can arrive at: a warp landing, else any walkable tile."""
+        map_data = pt.MAPS.get(name) or {}
+        for warp in map_data.get('warps', []):
+            if warp.get('x') is not None and warp.get('y') is not None:
+                return int(warp['x']), int(warp['y'])
+        for x in range(map_data.get('width', 0) * 2):
+            for y in range(map_data.get('height', 0) * 2):
+                if pt.walkable(name, x, y):
+                    return x, y
+        return None
+
+    def remembered_goal_reachable(self, blockage, groups, facts, cache):
+        """A fresh exact-trigger path supersedes an old route obstruction.
+
+        Returning from the ending can put us on the other side of an old
+        puzzle. Keep that history, but do not advertise its unlock as a
+        prerequisite when the requested location is now walkable without it.
+        A reusable goal (healing, PC retrieval, shopping) may also have a
+        different live producer: reaching that exact trigger does not require
+        reopening the failed route to an older provider of the same goal.
+        Unknown geometry remains unknown; an entrance is not a trigger proof.
+        """
+        goal = blockage['goal']
+        if goal[0] == 'catch':
+            # Capture skills have no script coordinates. Their fresh path
+            # ends at actual hunt terrain/rod stance, whereas falling back
+            # to a generic doorway would not establish useful access.
+            navigation = getattr(self, 'catch_navigation', {}).get(goal[1], {})
+            if (navigation.get('map') == blockage['destination']
+                    and navigation.get('tile_route_found') is True):
+                return True
+        if goal[0] == 'level':
+            # A level goal is satisfied at any usable training site. Its old
+            # failed region is not a prerequisite when a live alternative has
+            # a fresh path to actual grass (not just a map entrance).
+            for group in groups.values():
+                if list(group['target']) == list(goal) and any(
+                        getattr(self, 'training_navigation', {}).get(rule.map, {}).get('tile_route_found')
+                        for rule in group['rules'] if rule.storyline.startswith('skill:')):
+                    return True
+        if facts.get('map') not in pt.MAPS or 'x' not in facts or 'y' not in facts:
+            return False
+        ways = {}
+        if goal[0] == 'location':
+            ways[goal[1][0]] = []
+        else:
+            for group in groups.values():
+                if list(group['target']) != list(goal):
+                    continue
+                for rule in group['rules']:
+                    ways.setdefault(rule.map, []).append(rule)
+        # Check a local provider first; proving access to the PC beside us
+        # should not require exhaustively searching every distant hotel.
+        for destination in sorted(ways, key=lambda name: (
+                name != facts['map'], name != blockage['destination'], name)):
+            if destination not in pt.MAPS:
+                continue
+            points = ([tuple(goal[1][1:])] if goal[0] == 'location' else
+                      [point for rule in ways[destination] for point in
+                       self.destination_points(destination, rule, allow_entry_fallback=False)])
+            if not points:
+                continue
+            points = sorted(set(points))
+            key = destination, tuple(points)
+            if key not in cache:
+                cache[key] = bool(pt.bfs_cross(facts['map'], (facts['x'], facts['y']),
+                    destination, points[0], last_map=self.game.last_map,
+                    allow_ledges=True, allow_spinners=True,
+                    blocked_maps=self.game.navigation_barriers(),
+                    excluded_maps=self.game.navigation_excluded_maps(),
+                    goal_nodes={(destination, *point) for point in points}))
+            if cache[key]:
+                return True
+        return False
 
     def add_navigation_groups(self, groups, facts):
         blockages = dict(getattr(self, 'navigation_history', {}))
@@ -796,16 +3803,30 @@ class AutonomousStoryAgent(DualStoryAgent):
                         live_targets.append(['terrain', ','.join(map(str, [obstacle['map'], *obstacle['tree']])), True])
                     elif move == 'Surf' and obstacle.get('landing'):
                         live_targets.append(['location', obstacle['landing'], True])
-                ready = [b for b in pending if list(b['goal']) in live_targets or b['goal'][0] == 'level']
+                ready = [b for b in pending if list(b['goal']) in live_targets]
                 if not ready:
                     return
                 for blockage in ready:
                     pending.remove(blockage)
                     yield blockage
 
+        reachable = {}
         for blockage in relevant_blockages():
             if self.index.satisfied(blockage['goal'], facts):
                 continue
+            if self.remembered_goal_reachable(blockage, groups, facts, reachable):
+                continue
+            # Legacy failed paths sometimes recorded only collision tiles.
+            # A remembered visible stationary actor standing on the actual
+            # destination warp is causal evidence, not a map-wide NPC guess.
+            blocked_npcs = set(blockage.get('blocking_npcs', []))
+            entrances = {(warp['x'], warp['y']) for warp in pt.MAPS.get(blockage['map'], {}).get('warps', [])
+                         if warp.get('dest_map_name') == blockage['destination']}
+            for text_id, position in getattr(getattr(self, 'game', None), 'stationary_npcs', {}).get(blockage['map'], {}).items():
+                if tuple(position) in entrances:
+                    blocked_npcs.add(int(text_id))
+            if blocked_npcs:
+                blockage = {**blockage, 'blocking_npcs': sorted(blocked_npcs)}
             route = self.client.route(facts['map'], blockage['destination'])
             corridor = {facts['map'], blockage['destination'], *[leg['to_map'] for leg in route.get('legs', [])]}
             # The high-level graph joins outdoor regions directly and can
@@ -813,9 +3834,15 @@ class AutonomousStoryAgent(DualStoryAgent):
             # warp-connected rooms as part of the corridor.
             corridor.update(warp['dest_map_name'] for name in list(corridor)
                 for warp in pt.MAPS.get(name, {}).get('warps', []) if warp.get('dest_map_name'))
-            if route.get('found') and blockage['map'] not in corridor:
+            if (route.get('found') and blockage['map'] not in corridor
+                    and not blockage.get('blocking_npcs')
+                    and not blockage.get('blocking_trainers')):
                 # A resettable puzzle behind us is not a prerequisite for
-                # the remaining route. Keep the memory for a later return.
+                # the remaining route. But map topology can omit several
+                # interior rooms (e.g. a cave exit), so it cannot disprove an
+                # actually observed actor blocking the live goal. Fresh exact
+                # access and already-won trainer flags still supersede that
+                # memory above/below; no fixed route is imposed.
                 continue
             for text_id in blockage.get('blocking_trainers', []):
                 config = next((n for n in self.index.configs.get(blockage['map'], {}).get('npcs', [])
@@ -869,12 +3896,18 @@ class AutonomousStoryAgent(DualStoryAgent):
                 elif (local.effect[0] == 'visibility' and not local.effect[2]
                       and any(self.index.npc_toggles.get((blockage['map'], text_id), (None,))[0] == local.effect[1]
                               for text_id in blockage.get('blocking_npcs', []))):
-                    for missing in local.alternatives(facts):
-                        for prerequisite in missing:
-                            frontiers.extend(self.index.frontier(prerequisite, facts))
-                elif local.effect[0] == 'movement' and not local.missing(facts):
+                    # The hide producer itself can be a ready coordinate-
+                    # triggered battle. Backchain its whole effect, not only
+                    # missing guards (which are empty once battle-ready).
+                    frontiers.extend(self.index.frontier(local.effect, facts))
+                elif (local.effect[0] == 'movement'
+                      and not navigation_failure_is_field_prerequisite(blockage)
+                      and not local.missing(facts)
+                      and self.index.coordinates(local)):
                     # A currently enabled push-back can be avoided by
                     # changing one of its branch guards (e.g. acquiring a ticket).
+                    # An entry autowalk has no obstructing coordinate trigger;
+                    # completing it is not evidence of removing an exit guard.
                     for guard, wanted in local.guards:
                         for missing in requirements(guard, not wanted, facts):
                             for prerequisite in missing:
@@ -887,6 +3920,24 @@ class AutonomousStoryAgent(DualStoryAgent):
                                     'prerequisite_for': local.description()}})
                     if rule not in group['rules']:
                         group['rules'].append(rule)
+                    if local.effect[0] == 'movement':
+                        # The producer may already be a story candidate (for
+                        # example a gym victory). setdefault must not discard
+                        # its newly observed navigation purpose or overwrite
+                        # its opponent/resource costs with a generic detour.
+                        reference = {'destination': blockage['destination'],
+                            'requested_goal': blockage['goal'],
+                            'observed_blockage': deepcopy(blockage),
+                            'coordinate_script': local.description(),
+                            'coordinate_triggers': self.index.coordinates(local),
+                            'enabling_guards': [{'expression': deepcopy(expr),
+                                'required_value': wanted, 'observed_value': evaluate(expr, facts)}
+                                for expr, wanted in local.guards],
+                            'scope': 'A prerequisite derived by reversing an enabled coordinate movement guard on the observed blocked map; not a whole-route, victory, reward, or collection guarantee. Alternative access and other obstacles still require normal execution.'}
+                        references = group.setdefault('context', {}).setdefault(
+                            'observed_navigation_prerequisites', [])
+                        if reference not in references:
+                            references.append(reference)
             for (map_name, text_id), (toggle, _) in self.index.npc_toggles.items():
                 if map_name != blockage['map'] or toggle in pickups:
                     continue
@@ -901,11 +3952,195 @@ class AutonomousStoryAgent(DualStoryAgent):
                     if rule not in group['rules']:
                         group['rules'].append(rule)
 
+    def defer_unusable_boulders(self, groups, facts):
+        """Apply after ALL navigation frontiers, which can introduce new pushes."""
+        pending = [rule for group in groups.values() for rule in group['rules']
+                   if rule.id.startswith('boulder:')]
+        known = any('Strength' in mon.get('moves', []) for mon in facts['party'])
+        badges = field_badge_prerequisites('Strength', facts['flags'])
+        if not pending or known and not badges:
+            return
+        obstacle = {'move': 'Strength', 'map': pending[0].map,
+                    'puzzle_flags': sorted({rule.effect[1] for rule in pending})}
+        self.field_requirements['Strength'] = obstacle
+        for target in [('item', 'HM04', True), *badges]:
+            for rule in self.index.frontier(target, facts):
+                key = json.dumps(rule.effect)
+                group = groups.setdefault(key, {'target': rule.effect, 'rules': [],
+                    'objectives': ['Prepare Strength before attempting an engine-defined boulder puzzle'],
+                    'context': {'required_move': 'Strength', 'terrain_obstruction': obstacle}})
+                if rule not in group['rules']:
+                    group['rules'].append(rule)
+        if (facts['bag'].get('HM04') and not known
+                and any(hm_compatible(mon['species'], 'Strength') for mon in facts['party'])):
+            target = ('move', 'Strength', True)
+            groups['learn:Strength'] = {'target': target,
+                'rules': [Rule('learn:Strength', facts['map'], 'skill:learn', [], [], [], target, [])],
+                'objectives': ['Learn Strength before attempting the observed boulder puzzle'], 'context': obstacle}
+        self.add_stored_field_carrier_retrieval(groups, facts, 'Strength', obstacle)
+        for key, group in list(groups.items()):
+            group['rules'] = [rule for rule in group['rules'] if not rule.id.startswith('boulder:')]
+            if not group['rules']:
+                del groups[key]
+
+    def refresh_route_requirements(self, facts):
+        """Retain destinations, not stale alternatives to already-open gates."""
+        for name, requirement in list(getattr(self, 'route_requirements', {}).items()):
+            if self.index.satisfied(requirement['goal'], facts):
+                del self.route_requirements[name]
+                continue
+            points = requirement.get('trigger_points')
+            if points is None:
+                # Old in-memory records did not retain the exact trigger.
+                # Re-ground it in the scene index, never in a fixed itinerary.
+                points = [point for rule in self.index.rules
+                          if rule.map == name and tuple(rule.effect) == tuple(requirement['goal'])
+                          for point in self.destination_points(name, rule)]
+            prerequisites = self.discover_route_prerequisites(self.game.st(), name, points)
+            if prerequisites:
+                self.route_requirements[name] = {**requirement,
+                    'trigger_points': points, 'prerequisites': prerequisites}
+            else:
+                # No currently grounded blocker: do not re-offer a consumed
+                # drink simply because a later gym battle remains unfinished.
+                del self.route_requirements[name]
+
+    def collection_source_uses(self, source, facts):
+        """Current validated registration status, separate from source possession."""
+        owned = self.validated_owned(facts)
+        registered = lambda species: any(self.same_species(species, name) for name in owned)
+        targets = sorted(species for species, methods in self.complete_collection_graph().items()
+            if any(method.get('method') in ('evolution', 'npc_trade')
+                and not method.get('external_trade')
+                and self.same_species(method.get('from_species'), source) for method in methods))
+        return {'source_validated_registered': registered(source),
+            'known_direct_collection_targets': [
+                {'species': species, 'validated_registered': registered(species)} for species in targets],
+            'collection_use_scope': 'These are only catalogued evolution/NPC-trade source edges excluding external trades, not proof of current feasibility or an exhaustive list of purposes. Already validated registrations are not new Pokédex gains; source registration is not possession. This does not rule out other uses or prescribe reacquisition.'}
+
+    def field_prerequisite_context(self, obstacle, facts):
+        """Connect an observed field crossing to its unfinished requested goal.
+
+        The landing is only this action's effect. It must not hide why the
+        player requested the route (e.g. healing), or claim that goal is done.
+        No destination, crossing or model choice is selected here.
+        """
+        context = dict(obstacle)
+        key = cut_obstruction_identity(obstacle)
+        recorded = []
+        for goal in getattr(self, 'field_route_goals', {}).get(key, []):
+            if cut_route_goal(obstacle, goal) is not None:
+                recorded.append({'goal': deepcopy(goal),
+                    'currently_satisfied': self.index.satisfied(goal, facts),
+                    'scope': 'A previous failed route attempt proposed clearing this exact tree while pursuing this goal. Current goal status uses current facts, not a claim that the tree is cleared, Cut is necessary or sufficient, or other uses are impossible.'})
+                if getattr(self, 'collects_dex', False) and goal[0] == 'held_species':
+                    recorded[-1].update(self.collection_source_uses(goal[1], facts))
+        if recorded:
+            context['recorded_field_route_goals'] = recorded
+        destination = obstacle.get('destination')
+        parent = getattr(self, 'navigation_memory', {}).get(destination)
+        if (not isinstance(parent, dict) or not parent.get('goal')
+                or self.index.satisfied(parent['goal'], facts)):
+            return context
+        context['route_prerequisite_for'] = {
+            'goal': deepcopy(parent['goal']), 'destination': destination,
+            'observed_blockage': {key: deepcopy(parent[key])
+                for key in ('map', 'position', 'detail') if key in parent},
+            'execution_scope': 'Execute this field crossing toward the recorded unfinished goal; its landing is not arrival at the destination or completion of the parent interaction.'}
+        return context
+
+    def remember_field_route_goal(self, obstacle):
+        """Preserve the purpose of an observed failed approach, not a fixed itinerary."""
+        active = getattr(self, 'active', None)
+        goal = cut_route_goal(obstacle, active.get('target') if isinstance(active, dict) else None)
+        if goal is None:
+            return
+        if not hasattr(self, 'field_route_goals'):
+            self.field_route_goals = {}
+        goals = self.field_route_goals.setdefault(cut_obstruction_identity(obstacle), [])
+        if goal not in goals:
+            goals.append(deepcopy(goal))
+
+    def add_deferred_route_frontiers(self, groups, facts, previews):
+        """Recover causal unlocks for goals added after the story frontier.
+
+        Collection and supply sources are inserted late. Before pruning a
+        known blocked target, backchain its exact trigger region, not merely
+        its map. An alternative already reachable source needs no new door.
+        Relaxed geometry supplies evidence only; Jev still selects a real
+        script action and execution retains the actual collision checks.
+        """
+        explain = getattr(self.game, 'navigation_map_requirements', None)
+        region_requirements = explain() if callable(explain) else {}
+        if not isinstance(region_requirements, dict):
+            region_requirements = {}
+        excluded = self.game.navigation_excluded_maps() if region_requirements else ()
+        # A current, explained map exclusion is itself an observed blockage.
+        # A source need not have failed an additional walk to that same wall.
+        # For unattempted sources, accept only the exact exclusion cause found
+        # on their planning path, never other hypothetical doors or badges.
+        region_targets = {tuple(target) for name, targets in region_requirements.items()
+                          if name in excluded for target in targets}
+        pending = []
+        for group in list(groups.values()):
+            routes = group.get('context', {}).get('trigger_navigation', [])
+            if any(route.get('tile_route_found') for route in routes):
+                continue
+            for rule in group['rules']:
+                known_failure = rule.map in getattr(self, 'navigation_memory', {})
+                if not known_failure and not region_targets:
+                    continue
+                points = self.destination_points(rule.map, rule)
+                key = rule.map, tuple(points)
+                if previews.get(key, {}).get('tile_route_found') is False:
+                    pending.append((key, points, group, known_failure))
+        if not pending:
+            return
+        # Use the same observed position as the reachability previews; do
+        # not refresh geometry partway through a planning pass.
+        state = {'map_name': facts['map'], 'player_x': facts['x'], 'player_y': facts['y']}
+        discovered = {}
+        for (destination, points_key), points, parent, known_failure in pending:
+            key = destination, points_key
+            if key not in discovered:
+                discovered[key] = self.discover_route_prerequisites(state, destination, points)
+            for target in discovered[key]:
+                if not known_failure and tuple(target) not in region_targets:
+                    continue
+                for rule in self.index.frontier(target, facts):
+                    if rule.effect == parent['target']:
+                        continue
+                    group = groups.setdefault(json.dumps(rule.effect), {
+                        'target': rule.effect, 'rules': [],
+                        'objectives': ['Open a route to an otherwise deferred acquisition or story goal'],
+                        'context': {}})
+                    if rule not in group['rules']:
+                        group['rules'].append(rule)
+                    context = group.setdefault('context', {})
+                    goals = context.setdefault('prerequisite_for_goals', [])
+                    if parent['target'] not in goals:
+                        goals.append(parent['target'])
+                    evidence = context.setdefault('route_unlocks', [])
+                    requirement = {'destination': destination, 'goal': parent['target'],
+                        'trigger_points': points, 'objectives': parent.get('objectives', []),
+                        # Preserve the actual acquisition costs even after the
+                        # inaccessible parent is pruned. Navigation bookkeeping
+                        # belongs to the unlock, not to a recursively nested
+                        # parent route; unknown economic/risk fields stay intact.
+                        'downstream_context': deepcopy({key: value for key, value in
+                            parent.get('context', {}).items() if key not in {
+                                'trigger_navigation', 'deferred_trigger_maps', 'navigation_scope',
+                                'route_unlocks', 'prerequisite_for_goals'}}),
+                        'evidence': 'Causal blocker on a relaxed planning path; real execution and remaining obstacles still required'}
+                    if requirement not in evidence:
+                        evidence.append(requirement)
+
     def strategy_groups(self, facts):
         groups = super().strategy_groups(facts)
         self.navigation_facts = facts
         if getattr(self, 'navigation_memory', {}):
             self.game.script_navigation_barriers = self.observed_navigation_barriers(facts)
+        self.refresh_route_requirements(facts)
         # A known blocked goal needs a newly grounded prerequisite before
         # asking strategy to select it again. This also reconstructs geometric
         # dependencies after a checkpoint without replaying an old itinerary.
@@ -913,11 +4148,11 @@ class AutonomousStoryAgent(DualStoryAgent):
             for rule in group['rules']:
                 if rule.map not in getattr(self, 'navigation_memory', {}):
                     continue
-                prerequisites = self.discover_route_prerequisites(
-                    self.game.st(), rule.map, self.destination_points(rule.map, rule))
+                points = self.destination_points(rule.map, rule)
+                prerequisites = self.discover_route_prerequisites(self.game.st(), rule.map, points)
                 if prerequisites:
                     self.route_requirements[rule.map] = {'destination': rule.map, 'goal': group['target'],
-                        'prerequisites': prerequisites,
+                        'trigger_points': points, 'prerequisites': prerequisites,
                         'evidence': 'Planning with doors relaxed; each prerequisite requires real execution'}
         for requirement in getattr(self, 'route_requirements', {}).values():
             if self.index.satisfied(requirement['goal'], facts):
@@ -931,19 +4166,31 @@ class AutonomousStoryAgent(DualStoryAgent):
                     if rule not in group['rules']:
                         group['rules'].append(rule)
         for item, context in self.battle_requirements.items():
-            if context.get('blocked_goal') and self.index.satisfied(context['blocked_goal'], facts):
+            if (context.get('blocked_goal') and not context.get('capture_blocked_maps')
+                    and self.index.satisfied(context['blocked_goal'], facts)):
                 continue
             for rule in self.index.frontier(('item', item, True), facts):
                 key = json.dumps(rule.effect)
                 group = groups.setdefault(key, {'target': rule.effect, 'rules': [],
-                    'objectives': ['Prepare the item required by an observed blocked story battle'],
+                    'objectives': ['Prepare the item required by an observed blocked battle or wild capture'],
                     'context': context})
                 if rule not in group['rules']:
                     group['rules'].append(rule)
         self.add_navigation_groups(groups, facts)
+        surf_obstacle = self.field_requirements.get('Surf')
+        current_prerequisites = surf_current_prerequisites(surf_obstacle, facts['flags']) if surf_obstacle else []
+        for target in current_prerequisites:
+            for rule in self.index.frontier(target, facts):
+                key = json.dumps(rule.effect)
+                group = groups.setdefault(key, {'target': rule.effect, 'rules': [],
+                    'objectives': ['Stop the engine-gated current before embarking with Surf'],
+                    'context': {'terrain_obstruction': surf_obstacle, 'prerequisites': current_prerequisites}})
+                if rule not in group['rules']:
+                    group['rules'].append(rule)
         pending_boulders = [r for group in groups.values() for r in group['rules']
                            if r.id.startswith('boulder:')]
-        if pending_boulders and not any('Strength' in m['moves'] for m in facts['party']):
+        if pending_boulders and (not any('Strength' in m['moves'] for m in facts['party'])
+                                or field_badge_prerequisites('Strength', facts['flags'])):
             self.field_requirements['Strength'] = {'move': 'Strength',
                 'map': pending_boulders[0].map, 'puzzle_flags': [r.effect[1] for r in pending_boulders]}
             for key, group in list(groups.items()):
@@ -951,6 +4198,15 @@ class AutonomousStoryAgent(DualStoryAgent):
                 if not group['rules']:
                     del groups[key]
         for move, obstacle in self.field_requirements.items():
+            badge_prerequisites = field_badge_prerequisites(move, facts['flags'])
+            for target in badge_prerequisites:
+                for rule in self.index.frontier(target, facts):
+                    key = json.dumps(rule.effect)
+                    group = groups.setdefault(key, {'target': rule.effect, 'rules': [],
+                        'objectives': [f'Obtain the badge required to use {move} outside battle'],
+                        'context': {'required_move': move, 'terrain_obstruction': obstacle}})
+                    if rule not in group['rules']:
+                        group['rules'].append(rule)
             item = f'HM{HM_MOVES.index(move)+1:02d}'
             for rule in self.index.frontier(('item', item, True), facts):
                 key = json.dumps(rule.effect)
@@ -961,6 +4217,8 @@ class AutonomousStoryAgent(DualStoryAgent):
                     group['rules'].append(rule)
             known = any(move in mon['moves'] for mon in facts['party'])
             compatible = any(hm_compatible(mon['species'], move) for mon in facts['party'])
+            if not known and not compatible:
+                self.add_stored_field_carrier_retrieval(groups, facts, move, obstacle)
             if not compatible and len(facts['party']) < 6:
                 for effect in self.index.by_effect:
                     if effect[0] != 'pokemon' or not hm_compatible(effect[1], move):
@@ -979,6 +4237,8 @@ class AutonomousStoryAgent(DualStoryAgent):
                     'rules': [Rule('learn:' + move, facts['map'], 'skill:learn', [], [], [], target, [])],
                     'objectives': [f'Learn {move} to pass the terrain obstruction'], 'context': obstacle}
             if known:
+                if badge_prerequisites or move == 'Surf' and current_prerequisites:
+                    continue  # Known HM is not proof that the native field action is legal.
                 if move == 'Strength':
                     continue  # Engine puzzle rules provide the actual push goal.
                 if move == 'Surf':
@@ -986,24 +4246,35 @@ class AutonomousStoryAgent(DualStoryAgent):
                     key = json.dumps(target)
                     groups['surf:' + key] = {'target': target,
                         'rules': [Rule('surf:' + key, obstacle['map'], 'skill:surf', [], [], [], target, [])],
-                        'objectives': ['Cross the observed water passage'], 'context': obstacle}
+                        'objectives': ['Cross the observed water passage'],
+                        'context': self.field_prerequisite_context(obstacle, facts)}
                     continue
                 key = ','.join(map(str, [obstacle['map'], *obstacle['tree']]))
                 if key not in self.cleared_terrain:
                     target = ('terrain', key, True)
                     groups['field:' + key] = {'target': target,
                         'rules': [Rule('field:' + key, obstacle['map'], 'skill:field', [], [], [], target, [])],
-                        'objectives': [f'Use {move} to clear the terrain obstruction'], 'context': obstacle}
+                        'objectives': [f'Use {move} to clear the terrain obstruction'],
+                        'context': self.field_prerequisite_context(obstacle, facts)}
         self.add_navigation_groups(groups, facts)
         threats = []
+        preference = getattr(self, 'preference', 'none')
         for group in groups.values():
-            opponents = self.opponent_parties(group['rules'])
+            opponents = self.opponent_parties(group['rules'], facts)
             if opponents:
-                group['context'] = {**group.get('context', {}), 'opponent_parties': opponents,
-                                    'battle_is_not_guaranteed_by_script_preconditions': True}
+                context = {**group.get('context', {}), 'opponent_parties': opponents,
+                           'battle_is_not_guaranteed_by_script_preconditions': True}
+                # Each bias supplies the comparison data it asks the model to
+                # use, so the offered candidates differ with the preference.
+                if preference == 'type':
+                    context['type_options'] = type_options(facts.get('party', []), opponents)
+                elif preference == 'tactic':
+                    context['tactical_options'] = tactical_options(facts.get('party', []), opponents)
+                group['context'] = context
                 threats.append((max(mon['level'] for mon in opponents), group['objectives']))
         if not facts['party']:
             return groups
+        self.add_stored_battler_retrieval(groups, facts)
         self.add_recovery_groups(groups, facts)
         carried_healing = any(facts['bag'].get(name.replace('_', '').upper(), 0)
                               for name, item in MEDICINES.items() if 'hp' in item.get('tags', []))
@@ -1077,18 +4348,18 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'target': ('heal', 'party', True),
                 'objectives': ['Restore HP, status and move PP before continuing the story'],
                 'rules': self.healing_rules,
-                'context': {'urgently_needed': self.needs_healing(facts)},
+                'context': self.healing_context(facts),
             }
-            reset_costs = self.healing_route_costs(self.healing_rules, facts)
-            if reset_costs:
-                groups['prepare:heal']['context']['route_resets_won_battles'] = reset_costs
         if threats or self.defeat_preparation:
             target_level, objectives = (min(threats, key=lambda t: t[0]) if threats else
                                         (0, ['Prepare for an observed battle defeat']))
             target_level = max(target_level, self.defeat_preparation)
+            if preference == 'level':
+                target_level += LEVEL_PREFERENCE_MARGIN
             # The training skill stops at this same recovery threshold.
             # Offering it while recovery is needed creates a choose/exit loop.
-            if target_level > facts['party'][0]['level'] and not self.needs_healing(facts):
+            battler = training_battler(facts['party'])
+            if battler and target_level > battler['level'] and not self.needs_healing(facts):
                 sites = self.find_training_sites(facts)
                 rules = [Rule(f'train:{name}:{target_level}', name, 'skill:train_encounter',
                               [], [], [], ('level', 'leader', target_level), [])
@@ -1102,8 +4373,72 @@ class AutonomousStoryAgent(DualStoryAgent):
                                     'training_regions': {name: ((self.maps[name].get('wild') or {}).get('red') or {}).get('grass')
                                                          for name in sites},
                                     'observed_defeats': self.battle_defeats[-3:],
-                                    'upcoming_moves': data.species_data(facts['party'][0]['species']).get('learnset', [])},
+                                    'training_battler': battler,
+                                    'training_cost': evolution_training_cost(battler, target_level),
+                                    'training_effort_examples': [
+                                        {'map': name, **effort,
+                                         'navigation': getattr(self, 'training_navigation', {}).get(name),
+                                         'access_scope': 'Current encounter-terrain path preview when present, not proof of arrival or earned experience'}
+                                        for name in sites
+                                        if (effort := evolution_training_effort(battler, target_level,
+                                            ((self.maps[name].get('wild') or {}).get('red') or {}).get('grass')))],
+                                    'training_completion_scope': 'Target is a preparation proposal, not a required level or guaranteed victory. Recovery or travel can interrupt it before the target is reached; compare the observed XP gap with recovery and other attainable goals.',
+                                    'upcoming_moves': data.species_data(battler['species']).get('learnset', [])},
                     }
+        if self.collects_dex:
+            balls = self.balls_held(facts)
+            owned = self.validated_owned(facts)
+            resources = self.collection_resources(facts)
+            box_full = self.add_box_capacity_group(groups, facts)
+            catch_areas = {} if box_full and len(facts['party']) >= 6 else self.find_catch_areas(facts)
+            for key, area in catch_areas.items():
+                # Legacy/mocked tests and trace adapters may still provide the
+                # former {map: {species, spots, ...}} shape.
+                name = area.get('map', key)
+                method = area.get('method', 'grass')
+                all_method_species = {target['species'] for target in
+                    (self.method_value(method, name, set(), area.get('rod')) or {}).get('targets', [])}
+                area = {**area, 'map': name, 'method': method,
+                        'encounter_value': area.get('encounter_value') or encounter_value(
+                            self.maps[name], owned),
+                        'navigation': area.get('navigation') or self.catch_navigation.get(key)}
+                target = ('catch', key, True)
+                groups.setdefault(f'collect:{key}', {
+                    'target': target,
+                    'objectives': ['Register wild species that are not in the Pokédex yet'],
+                    'rules': [Rule(f'catch:{key}', name, 'skill:catch_encounter', [], [], [], target, [])],
+                    'context': {'purpose': 'Use an executable acquisition method to catch unregistered wild species',
+                                'acquisition_method': method, 'rod': area.get('rod'),
+                                # A catch needs a ball. Offering this target without
+                                # saying the bag is empty invites choosing a goal
+                                # that cannot possibly complete.
+                                'balls_held': balls,
+                                'prerequisite': (
+                                    'Safari admission supplies 30 Safari Balls; ordinary bag balls cannot be used'
+                                    if method == 'safari' else
+                                    'No balls are carried, so nothing found here can be caught until Poké Balls are bought or received'
+                                    if balls == 0 else f'Catching spends balls; {balls} carried'),
+                                'unregistered_species': [catch_difficulty(species) for species in area['species']],
+                                'encounter_value': area['encounter_value'],
+                                'species_scarcity': {species: self.species_scarcity(species, name)
+                                                     for species in area['species']},
+                                'collection_resources': resources,
+                                'already_registered_here': sorted(all_method_species & owned),
+                                'recent_attempts': self.recent_catch_attempts(key),
+                                'navigation': area['navigation'],
+                                'encounters': (((self.maps[name].get('wild') or {}).get('red') or {})
+                                               .get('water' if method == 'water' else 'grass'))},
+                })
+            self.add_nonwild_collection_groups(groups, facts)
+            self.add_capture_support_retrieval(groups, facts)
+            self.add_capture_support_training(groups, facts)
+            self.add_collection_funding(groups, facts)
+        if self.maximizes_coverage:
+            self.add_coverage_groups(groups, facts)
+        # Collection/support training is added late. Activate remembered
+        # dependencies only for these actual live goals, not every old level
+        # attempt irrespective of whether training is currently useful.
+        self.add_navigation_groups(groups, facts)
         # Keep the blocked goals until their entrances have been considered.
         readiness = battle_readiness(facts['party'], facts['bag'])
         failed_maps = {d['map'] for d in self.battle_defeats if not d.get('resolved_by_victory')
@@ -1112,12 +4447,855 @@ class AutonomousStoryAgent(DualStoryAgent):
             if group['target'][0] in ('flag', 'block', 'transport') and all(r.map in failed_maps for r in group['rules']):
                 del groups[key]  # Repeating the same failed preparation is not a new plan.
         previews = self.annotate_navigation(groups, facts, previews, prune=False)
+        self.add_deferred_route_frontiers(groups, facts, previews)
+        self.add_cut_route_frontiers(groups, facts)
         self.transport_frontiers(groups, facts)
         self.add_mechanism_groups(groups, facts)
+        self.defer_unusable_boulders(groups, facts)
         self.annotate_navigation(groups, facts, previews)
+        for key, group in list(groups.items()):
+            if (group['target'][0] in ('catch', 'held_species')
+                    and self.capture_resources_missing(facts, group.get('context', {}).get('acquisition_method', 'grass'))):
+                del groups[key]  # Retain supply, travel prerequisites and non-capture methods.
+        restore = {key: group for key, group in groups.items()
+                   if group.get('context', {}).get('restore_main_battler')
+                   and any(route.get('tile_route_found') for route in
+                           group['context'].get('trigger_navigation', []))}
+        if restore:
+            groups = restore
+        if self.avoids_optional_preparation:
+            for key, group in list(groups.items()):
+                if group.get('context', {}).get('optional_preparation'):
+                    del groups[key]  # Preparation the run can survive without only spends frames.
+        self.prioritize_critical_recovery(groups, facts)
+        if self.collects_dex:
+            self.annotate_script_unlocks(groups, facts)
+            self.annotate_script_resource_guards(groups, facts)
+            self.annotate_finite_static_sources(groups, facts)
+            self.annotate_navigation_goal_tradeoffs(groups, facts)
+        self.annotate_route_reset_costs(groups, facts)
         return groups
 
+    def annotate_finite_static_sources(self, groups, facts):
+        """Bind capture facts to native producers, not just register-goal names.
+
+        Match an actual catalogued static battle or its preceding effect on a
+        same-map/script rule. Merely sharing a script, species or destination
+        does not prove a candidate executes that battle. This adds context only.
+        """
+        native_rules = getattr(getattr(self, 'index', None), 'rules', None)
+        if not getattr(self, 'collects_dex', False) or not isinstance(native_rules, list):
+            return
+        offered_scripts = {(rule.map, rule.storyline)
+                           for group in groups.values() for rule in group.get('rules', [])}
+        preparation = capture_preparation(facts.get('party', []), facts.get('bag', {}), facts)
+        ball_inventory = [{'ball': name, 'quantity': preparation['balls'][name.replace('_', '').upper()]}
+                          for name in BALLS if name.replace('_', '').upper() in preparation['balls']]
+        owned = self.validated_owned(facts)
+        for species, methods in sorted(self.complete_collection_graph().items()):
+            for method in methods:
+                if method['method'] != 'static':
+                    continue
+                battles = [rule for rule in self.acquisition_story_rules(species, method)
+                           if (rule.map, rule.storyline) in offered_scripts]
+                for group in groups.values():
+                    matched = [(battle, rule) for battle in battles for rule in group.get('rules', [])
+                               if (rule.map, rule.storyline) == (battle.map, battle.storyline)
+                               and (rule.effect == battle.effect or battle.effect in rule.preceding)]
+                    if not matched:
+                        continue
+                    previous = next((row for row in self.latest_capture_failures().values()
+                                     if row['map'] == method['map']
+                                     and self.same_species(row['species'], species)), None)
+
+                    def history(totals):
+                        return [{'source_key': key, 'totals': deepcopy(total)}
+                                for key, total in sorted(totals.items())
+                                if key.partition(':')[0] == method['map']
+                                and self.same_species(key.partition(':')[2], species)]
+
+                    source_battles = {battle.id: battle for battle, _ in matched}
+                    reference = {
+                        'species': species, 'source_map': method['map'],
+                        'script': battles[0].storyline,
+                        'matching_group_rule_ids': sorted({rule.id for _, rule in matched}),
+                        'source_species_validated_registered': any(self.same_species(name, species) for name in owned),
+                        'battle_source_rules': [{**battle.description(), 'rule_id': battle.id,
+                                                'entry_guards': deepcopy(battle.guards)}
+                                               for battle in source_battles.values()],
+                        'retreat_contracts': [static_retreat_contract(battle, native_rules)
+                                             for battle in source_battles.values()],
+                        'capture_inventory_risk': capture_inventory_risk(species, ball_inventory),
+                        'latest_failure': deepcopy(previous),
+                        'preparation_changes_since_last_failure': capture_preparation_improvements(
+                            preparation, previous['preparation']) if previous else None,
+                        'direct_capture_retry_deferred': self.static_capture_deferred(species, method['map'], facts),
+                        'recorded_retreat_history': history(getattr(self, 'capture_retreat_totals', {})),
+                        'recorded_blackout_history': history(getattr(self, 'capture_blackout_totals', {})),
+                        'scope': 'Catalogued static source tied only to matching_group_rule_ids and native '
+                            'battle effects, not every route or rule in this candidate. Entry guards, choices '
+                            'and navigation still apply; not proof of access, a remaining source or survival. '
+                            'Winning/hiding is not registration and may spend an unregistered finite source. '
+                            'A different goal name does not improve preparation or erase earlier costs. '
+                            'direct_capture_retry_deferred reports the existing registration retry gate only; '
+                            'this reference does not filter candidates. Missing history is unobserved, not '
+                            'zero-cost attempts. Costs cover only their recorded inventory/cash observations, '
+                            'not a forecast; retreats and blackouts remain separate. Already validated '
+                            'registration does not require duplicate capture. No forced route or preparation.'}
+                    references = group.setdefault('context', {}).setdefault('finite_static_source_references', [])
+                    # Refresh this producer's snapshot without accumulating
+                    # stale preparation if a caller annotates a group again.
+                    references[:] = [row for row in references if
+                                     (row['species'], row['source_map'], row['script']) !=
+                                     (species, method['map'], reference['script'])]
+                    references.append(reference)
+
+    def script_resource_guard_reference(self, facts, *, money_after=None):
+        """Read native cash/badge guards, without producing or enforcing a route."""
+        rules = getattr(getattr(self, 'index', None), 'rules', None)
+        if not isinstance(rules, list):
+            return None
+        projected = facts if money_after is None else {**facts, 'money': money_after}
+
+        def queries(node):
+            if isinstance(node, list):
+                return [query for child in node for query in queries(child)]
+            if not isinstance(node, dict):
+                return []
+            call = node.get('Call') or {}
+            name = call.get('callee', '').removeprefix('game.')
+            if name in ('hasMoney', 'getBadgeCount'):
+                # A missing observation is unknown, not a zero badge count.
+                field = 'money' if name == 'hasMoney' else 'badges'
+                return [{'query': name, 'arguments': [evaluate(arg, facts) for arg in call.get('args', [])],
+                    'observed_value': evaluate(node, facts) if field in facts else None,
+                    'value_after_money_change': evaluate(node, projected) if field in projected else None}]
+            return [query for child in node.values() for query in queries(child)]
+
+        transports, barriers = [], []
+        for rule in rules:
+            transport = rule.effect[0] == 'transport'
+            barrier = (rule.effect[0] == 'movement'
+                and rule.map in getattr(self, 'observed_barrier_maps', set())
+                and not any(effect[0] == 'battle' for effect in rule.preceding)
+                and not rule.missing(facts) and bool(self.index.coordinates(rule)))
+            if not transport and not barrier:
+                continue
+            guards, other = [], []
+            for expression, wanted in rule.guards:
+                references = queries(expression)
+                observed = evaluate(expression, facts)
+                if references:
+                    guards.append({'expression': deepcopy(expression),
+                        'required_value': not wanted if barrier else wanted,
+                        'observed_value': observed if all(q['observed_value'] is not None for q in references) else None,
+                        'value_after_money_change': evaluate(expression, projected)
+                            if all(q['value_after_money_change'] is not None for q in references) else None,
+                        'queries': references})
+                else:
+                    other.append({'expression': deepcopy(expression), 'required_value': wanted,
+                                  'observed_value': observed})
+            if not guards or barrier and any(guard['observed_value'] is None for guard in guards):
+                continue
+            reference = {'rule_id': rule.id, 'script': rule.description(),
+                'resource_guards': guards, 'other_guards': other,
+                'missing_script_predicates': rule.missing(facts)}
+            if barrier:
+                reference['coordinate_triggers'] = self.index.coordinates(rule)
+                reference['scope'] = ('Currently enabled coordinate movement on an observed blocked map. '
+                    'Reversing any enabled branch guard can disable this branch; reversing all resource '
+                    'guards is not required. Other branches, navigation and battles still apply. '
+                    'Not proof that a specific candidate removes the whole-route obstruction.')
+                barriers.append(reference)
+            else:
+                transports.append(reference)
+        if not transports and not barriers:
+            return None
+        return {'money_before_reference': facts.get('money'),
+            'money_after_reference': projected.get('money'),
+            'resource_guarded_transports': transports, 'observed_coordinate_barriers': barriers,
+            'scope': 'Native scene predicates with full expressions, branch requirements and other guards. '
+                'A cash query threshold is not proof of a fee charged or an access guarantee; '
+                'compound alternatives are not summed costs. Money-change values are hypothetical, '
+                'not executed purchases. Alternatives share money; not a joint registration yield, '
+                'not a fixed cash reserve, badge order or route. Confirmations, payments, navigation '
+                'and battles still require ordinary execution.'}
+
+    def navigation_goal_resource_guard_reference(self, facts):
+        """Relate actual pending travel failures to native destination guards."""
+        history = (getattr(self, 'navigation_history', {})
+                   or getattr(self, 'navigation_memory', {}))
+        if not getattr(self, 'collects_dex', False) or not history:
+            return None
+        reference = self.script_resource_guard_reference(facts)
+        if not reference:
+            return None
+        pending = {}
+        for blockage in history.values():
+            goal, destination = blockage.get('goal'), blockage.get('destination')
+            if (not isinstance(destination, str) or not isinstance(goal, (list, tuple))
+                    or len(goal) != 3 or self.index.satisfied(goal, facts)):
+                continue
+            key = destination, json.dumps(goal)
+            failures = pending.setdefault(key, [])
+            if blockage not in failures:
+                failures.append(deepcopy(blockage))
+        goals = []
+        for (destination, goal), failures in sorted(pending.items()):
+            barriers = []
+            for barrier in reference['observed_coordinate_barriers']:
+                source_map = barrier['script']['map']
+                adjacent = [{'source_map': source_map, 'warp_tile': [warp['x'], warp['y']],
+                             'destination': destination, 'coordinate_tile': list(point)}
+                    for warp in pt.MAPS.get(source_map, {}).get('warps', [])
+                    if warp.get('dest_map_name') == destination
+                    for point in barrier['coordinate_triggers']
+                    if abs(point[0] - warp['x']) + abs(point[1] - warp['y']) <= 1]
+                if source_map == destination or adjacent:
+                    barriers.append({**deepcopy(barrier), 'warp_adjacency_reference': adjacent,
+                        'association': 'inside_requested_map' if source_map == destination
+                                       else 'coordinate_adjacent_to_destination_warp'})
+            if barriers:
+                goals.append({'destination': destination, 'requested_goal': json.loads(goal),
+                              'recorded_navigation_failures': failures,
+                              'destination_entry_barriers': barriers})
+        if not goals:
+            return None
+        return {'requested_goals': goals,
+            'scope': 'Actual recorded travel failures whose requested goals remain unsatisfied. '
+                'Native currently enabled resource guards are associated by their map or a coordinate '
+                'within one tile of a known warp into that destination. This is geometric association, '
+                'not proof of all entrances, an exhaustive blocker list or current local obstruction. '
+                'Local flag/choice resolution is not completion of the requested destination goal. '
+                'Guards and other choices remain conditional; no prescribed route or badge order.'}
+
+    def annotate_navigation_goal_tradeoffs(self, groups, facts):
+        reference = self.navigation_goal_resource_guard_reference(facts)
+        for group in groups.values():
+            context = group.get('context') or {}
+            context.pop('navigation_goal_resource_tradeoffs', None)
+            if not reference:
+                continue
+            blockages = [context.get('observed_navigation_blockage') or {}]
+            blockages.extend({'destination': row.get('destination'), 'goal': row.get('requested_goal')}
+                             for row in context.get('observed_navigation_prerequisites', []))
+            related = [row for row in reference['requested_goals']
+                if list(group['target']) == row['requested_goal']
+                or row['destination'] in context.get('blocked_destinations', [])
+                or any(blockage.get('destination') == row['destination']
+                       and list(blockage.get('goal') or []) == row['requested_goal'] for blockage in blockages)]
+            if not related:
+                continue
+            alternatives = {}
+            for local in context.get('observed_navigation_prerequisites', []):
+                description = local.get('coordinate_script') or {}
+                for rule in self.index.rules:
+                    if (rule.map == description.get('map') and rule.storyline == description.get('script')
+                            and rule.choices and rule.choices != description.get('confirmation_options')
+                            and not rule.missing(facts)
+                            and not any(effect[0] == 'battle' for effect in rule.preceding)):
+                        alternatives[rule.id] = {'rule_id': rule.id, 'script': rule.description(),
+                                                 'entry_guards': deepcopy(rule.guards)}
+            kind, name, wanted = group['target']
+            projected = {**facts, 'flags': {**facts.get('flags', {}), name: wanted}} if kind == 'flag' else None
+            group.setdefault('context', {})['navigation_goal_resource_tradeoffs'] = [{**deepcopy(row),
+                'local_other_choice_effects': deepcopy(list(alternatives.values())),
+                'target_flag_only_guard_values': [[evaluate(guard['expression'], projected)
+                    for guard in barrier['resource_guards']] for barrier in row['destination_entry_barriers']]
+                    if projected else None,
+                'scope': reference['scope'] + ' Other-choice effects are native ready branch alternatives, '
+                    'not proof they resolve this route; entry guards, confirmation and execution apply. '
+                    'Flag projection changes only the named flag, not other script rewards, resources '
+                    'or native progress. Candidate IDs, rules, targets and costs are unchanged.'}
+                for row in related]
+
+    def annotate_script_resource_guards(self, groups, facts):
+        reference = self.script_resource_guard_reference(facts)
+        if not reference:
+            return
+        barriers = [row for row in reference['observed_coordinate_barriers']
+            if any(query['query'] == 'getBadgeCount'
+                for guard in row['resource_guards'] for query in guard['queries'])]
+        if not barriers:
+            return
+        rewards = {}
+        for rule in self.index.rules:
+            if rule.effect[0] == 'badge' and rule.effect[2] is True:
+                rewards.setdefault(rule.storyline, set()).add(rule.effect[1])
+        for group in groups.values():
+            badges = sorted({badge for rule in group['rules'] for badge in rewards.get(rule.storyline, ())})
+            if badges:
+                context = group.setdefault('context', {})
+                context['script_offered_badges'] = badges
+                context['observed_badge_count_barriers'] = deepcopy(barriers)
+                context['script_badge_reward_scope'] = ('Potential rewards in the candidate script, '
+                    'not proof of satisfied guards, reachability, victory or a new badge. '
+                    'Already held badges do not add to the count; normal execution still applies.')
+
+    def annotate_script_unlocks(self, groups, facts):
+        """Expose immediate script dependencies without simulating game progress."""
+        rules = getattr(self.index, 'rules', None)
+        if not isinstance(rules, list):
+            return
+        blocked = [rule for rule in rules if rule.missing(facts)]
+        for group in groups.values():
+            kind, name, wanted = group['target']
+            if kind not in ('flag', 'item') or wanted is not True:
+                continue
+            hypothetical = {**facts, 'flags': dict(facts['flags']), 'bag': dict(facts['bag'])}
+            if kind == 'flag':
+                hypothetical['flags'][name] = True
+            else:
+                hypothetical['bag'][name.replace('_', '').upper()] = 1
+            unlocked = [rule for rule in blocked if not rule.missing(hypothetical)]
+            if not unlocked:
+                continue
+            # A single script may emit several flags alongside the same door
+            # opening. Count distinct effects and scripts, not duplicated paths.
+            effects = {(rule.map, json.dumps(rule.effect)): rule.effect for rule in unlocked}
+            group.setdefault('context', {})['script_unlocks'] = {
+                'scripts': len({(rule.map, rule.storyline) for rule in unlocked}),
+                'maps': sorted({rule.map for rule in unlocked}),
+                'effect_counts': dict(Counter(effect[0] for effect in effects.values())),
+                'potential_gift_species': sorted({effect[1] for effect in effects.values()
+                                                 if effect[0] == 'pokemon'}),
+                'scope': 'Only guards newly satisfied if this target is obtained; preceding effects, navigation and battles still require execution. Not guaranteed rewards.'}
+
+    @staticmethod
+    def prioritize_critical_recovery(groups, facts):
+        """Recover a critically hurt main battler when a nurse is executable.
+
+        Script preconditions do not mean a party can survive the next battle.
+        Keep recovery mandatory at <=25% HP, but only if an actual tile path
+        exists without an unexecuted Surf crossing; otherwise retain the
+        frontiers that can unlock that path. Knowing Surf is not using it.
+        """
+        party = facts.get('party', [])
+        if not party:
+            return
+        main = max(party, key=lambda mon: mon['level'])
+        if main.get('max_hp', 0) <= 0 or main['hp'] > main['max_hp'] * .25:
+            return
+        recovery = {}
+        for key, group in groups.items():
+            if group['target'][0] != 'heal':
+                continue
+            reachable = {route['map'] for route in
+                         group.get('context', {}).get('trigger_navigation', [])
+                         if route.get('tile_route_found') and not route.get('requires_surf')}
+            rules = [rule for rule in group['rules'] if rule.map in reachable]
+            if rules:
+                recovery[key] = {**group, 'rules': rules, 'context': {
+                    **group.get('context', {}), 'mandatory_recovery': True,
+                    'critical_battler': main,
+                    'reason': 'Main battler has at most 25% HP and a nurse has a confirmed tile path'}}
+        if recovery:
+            groups.clear()
+            groups.update(recovery)
+
+    # Collecting burns balls faster than the starting funds replace them, so a
+    # collector restocks well before the bag is empty.
+    BALL_RESERVE = 12
+
+    # How many of the newest hunts the judge compares an area on.
+    CATCH_WINDOW = 12
+
+    def add_capture_support_retrieval(self, groups, facts):
+        """Expose earned PC status users as preparation, not only evolution inputs.
+
+        Each actual box slot remains a separate choice: duplicate species may
+        have different levels/moves. Retrieval uses the existing real PC skill.
+        """
+        if not self.collects_dex:
+            return
+        owned = self.validated_owned(facts)
+        targets = []
+        for retreat in self.latest_capture_failures().values():
+            enemy = (retreat.get('blackout_observation') or retreat.get('retreat_observation') or {}).get('enemy') or {}
+            source = self.capture_source_evidence(retreat['species'], retreat['map'])
+            if (retreat['species'] not in owned and enemy.get('level')
+                    and source['catchable_source_indexed'] is not False):
+                targets.append({'species': retreat['species'], 'map': retreat['map'],
+                                'observed_level': enemy['level'], 'source_evidence': source})
+        if not targets:
+            return
+        rules = [rule for rule in self.index.by_effect.get(('pc', 'storage', True), [])
+                 if not rule.missing(facts)]
+        if not rules:
+            return
+        present = {mon['species'] for mon in facts.get('party', [])}
+        for mon in facts.get('stored_pokemon', []):
+            if mon['species'] in present:
+                continue  # The existing retrieval goal establishes party presence.
+            matchups = []
+            for target in targets:
+                # Compare known move effects/type immunity for a clean future
+                # encounter. Do not project yesterday's HP/DVs into the retry.
+                moves = capture_status_options(mon, {'species': target['species'],
+                                                      'status': 'None'}, {})
+                if moves:
+                    matchups.append({**target, 'non_damaging_status_moves': [
+                        {k: v for k, v in move.items() if k != 'capture_probability_if_status_lands'}
+                        for move in moves]})
+            if not matchups:
+                continue
+            key = f'prepare:retrieve-capture-support:{mon["box"]}:{mon["index"]}'
+            groups[key] = {
+                'target': ('pokemon', mon['species'], None), 'rules': rules,
+                'objectives': [f'Withdraw {mon["species"]} as capture status support'],
+                'context': {'optional_preparation': True, 'storage_retrieval': True,
+                            'capture_support_retrieval': True, 'stored_pokemon': mon,
+                            'required_for': sorted({row['species'] for row in matchups}),
+                            'capture_support_matchups': matchups,
+                            'requires_party_deposit': len(facts.get('party', [])) >= 6,
+                            'requires_healing': mon['hp'] < mon['max_hp'] or mon.get('status', 'None') != 'None',
+                            'current_party_capture_tools': self.collection_resources(facts),
+                            'scope': 'Owned stored Pokemon with observed non-damaging sleep/paralysis PP. '
+                                     'Normal PC withdrawal and any deposit/healing still required. '
+                                     'Move compatibility assumes a clean encounter, not status success: '
+                                     'compare level, HP, accuracy and matchup; switching consumes a turn '
+                                     'and the support may faint before acting. No survival guarantee.'}}
+
+    def add_capture_support_training(self, groups, facts):
+        """Offer bounded, real XP preparation after an observed failed setup.
+
+        A one-level step is not a claim that the next retry will be safe. Jev
+        compares its cost with other preparation and acquisition candidates.
+        """
+        if not self.collects_dex:
+            return
+        owned = self.validated_owned(facts)
+        failures = []
+        for retreat in self.latest_capture_failures().values():
+            observation = retreat.get('blackout_observation') or retreat.get('retreat_observation') or {}
+            enemy = observation.get('enemy') or {}
+            source = self.capture_source_evidence(retreat['species'], retreat['map'])
+            if (retreat['species'] not in owned and enemy.get('level')
+                    and source['catchable_source_indexed'] is not False
+                    and any(mon.get('hp') == 0 for mon in observation.get('party') or [])):
+                failures.append({'map': retreat['map'], 'species': retreat['species'],
+                                 'level': enemy['level'], 'observation': observation,
+                                 'result_kind': retreat.get('reason', 'legacy_recorded_capture_retreat'),
+                                 'source_evidence': source})
+        if not failures:
+            return
+        highest = max(row['level'] for row in failures)
+        trainees = {}
+        seen = set()
+        for mon in facts.get('party', []):
+            if mon['species'] in seen:
+                continue
+            seen.add(mon['species'])  # lead_with uses the first matching slot.
+            if mon['hp'] < mon['max_hp'] * .7 or mon.get('status', 'None') != 'None':
+                continue  # Heal through existing recovery first, then train.
+            moves = [move for move in mon.get('moves', []) if move != 'None'
+                     and data.move_data(move).get('power', 0) == 0
+                     and data.move_data(move).get('effect') in ('SleepEffect', 'ParalyzeEffect')]
+            if moves and mon['level'] < min(100, highest):
+                trainees.setdefault(mon['species'], (mon, moves))
+        if not trainees:
+            return
+        sites = self.find_training_sites(facts, shared_experience=True)
+        for source, (mon, moves) in sorted(trainees.items()):
+            target_level = mon['level'] + 1
+            target = ('level', source, target_level)
+            if self.index.satisfied(target, facts):
+                continue
+            rules = [Rule(f'train-support:{source}:{name}:{target_level}', name,
+                          'skill:train_encounter', [], [], [], target, []) for name in sites]
+            if not rules:
+                continue
+            participants = 2 if any(other['hp'] > 0 and other['level'] > mon['level']
+                                     for other in facts['party']) else 1
+            groups[f'prepare:capture-support:{source}'] = {
+                'target': target, 'rules': rules,
+                'objectives': ['Improve a capture status support through normal experience battles'],
+                'context': {'optional_preparation': True, 'capture_support_training': True,
+                            'trigger': 'level', 'from_species': source, 'level': target_level,
+                            'trainee': mon, 'safe_status_moves': moves,
+                            'status_move_scope': 'Non-damaging sleep/paralysis effects, not safe switching, '
+                                                 'survival or guaranteed status application.',
+                            'level_gap_to_highest_observed_target': highest - mon['level'],
+                            'observed_failed_capture_setups': failures,
+                            'training_cost': evolution_training_cost(mon, target_level),
+                            'training_cost_to_observed_target_level': evolution_training_cost(mon, highest),
+                            'preparation_comparison_to_failed_setups': capture_support_preparation_comparison(mon, failures),
+                            'training_effort_to_observed_target_level_examples': [
+                                {'map': name, **effort} for name in sites
+                                if (effort := evolution_training_effort(mon, highest,
+                                    ((self.maps[name].get('wild') or {}).get('red') or {}).get('grass'),
+                                    participants))],
+                            'training_effort_examples': [{'map': name, **effort} for name in sites
+                                if (effort := evolution_training_effort(mon, target_level,
+                                    ((self.maps[name].get('wild') or {}).get('red') or {}).get('grass'),
+                                    participants))],
+                            'scope': 'One real level gain, then reassess; not a survival guarantee. '
+                                     'Trainee must remain conscious to share victory experience; '
+                                     'healing and switching still require normal menus.'}}
+
+    def item_evolution_spending_reference(self, facts, money_after):
+        """Expose alternative held-source stone costs; never reserve cash or cut options."""
+        graph = self.complete_collection_graph()
+        owned = self.validated_owned(facts)
+        plan = solo_plan(graph, owned,
+                         infer_solo_choices(owned, bag=facts.get('bag'), flags=facts.get('flags')))
+        party, stored = facts.get('party', []), facts.get('stored_pokemon', [])
+        catalog = {name.replace('_', '').upper(): info for name, info in ITEM_CATALOG.items()}
+        bag = Counter()
+        for name, quantity in facts.get('bag', {}).items():
+            bag[name.replace('_', '').upper()] += quantity
+        options = []
+        for species in sorted(set(plan['choice_reachable_species']) - owned):
+            for method in graph.get(species, []):
+                if (method['method'] != 'evolution' or method.get('trigger') != 'item'
+                        or method.get('external_trade')):
+                    continue
+                group = method.get('exclusive_group')
+                if group and method.get('choice') not in plan['optimal_choices'].get(group, ()):
+                    continue
+                source = method['from_species']
+                party_count = sum(self.same_species(mon.get('species'), source) for mon in party)
+                stored_count = sum(self.same_species(mon.get('species'), source) for mon in stored)
+                if not party_count + stored_count:
+                    continue
+                item = method['item']
+                key = item.replace('_', '').upper()
+                price = catalog.get(key, {}).get('price') or 0
+                price = price if price > 0 else None
+                quantity = bag[key]
+                needed = 0 if quantity > 0 else price
+                before = facts['money'] >= needed if needed is not None else None
+                after = money_after >= needed if needed is not None else None
+                options.append({'species': species, 'from_species': source,
+                    'source_party_count': party_count, 'source_stored_count': stored_count,
+                    'required_item': item, 'item_quantity_held': quantity,
+                    'item_unit_price_reference': price, 'cash_needed_for_one_evolution': needed,
+                    'affordable_before_purchase': before, 'affordable_after_purchase': after,
+                    'purchase_removes_affordability': before is True and after is False})
+        return {'money_before_purchase': facts['money'], 'money_after_purchase': money_after,
+                'held_source_options': options,
+                'scope': 'Independent alternatives for observed party/PC sources, not a joint registration yield: '
+                         'money, carried stones and source individuals are shared. Carried stones need no '
+                         'repurchase; PC sources still require normal withdrawal. Positive catalog prices '
+                         'are references, not proof of shop access, bag space or an executed evolution; '
+                         'a missing/nonpositive purchase price is unknown, not a free stone. '
+                         'No fixed cash reserve and no candidates are removed.'}
+
+    def rare_candy_retention_reference(self, facts, quantity):
+        """Compare one retained level use for each actually held recipient.
+
+        These are alternatives sharing the observed candies, not executed
+        levels, guaranteed evolution receipts or a multi-recipient yield.
+        """
+        graph = self.complete_collection_graph()
+        owned = self.validated_owned(facts)
+        plan = solo_plan(graph, owned,
+                         infer_solo_choices(owned, bag=facts.get('bag'), flags=facts.get('flags')))
+        missing = set(plan['choice_reachable_species']) - owned
+        options, unknown_levels = [], []
+        for origin, mons in (('party', facts.get('party', [])), ('pc', facts.get('stored_pokemon', []))):
+            for index, mon in enumerate(mons):
+                location = {'origin': origin, 'index': index}
+                if origin == 'pc':
+                    location = {**location, **{key: mon[key] for key in ('box', 'index') if key in mon}}
+                level = mon.get('level')
+                if type(level) is not int or not 1 <= level <= 100:
+                    unknown_levels.append({**location, 'species': mon['species'], 'observed_level': level})
+                    continue
+                if level == 100:
+                    continue
+                evolutions = set()
+                for species in missing:
+                    for method in graph.get(species, []):
+                        if (method['method'] != 'evolution' or method.get('trigger') != 'level'
+                                or method.get('external_trade')
+                                or not self.same_species(mon['species'], method['from_species'])):
+                            continue
+                        group = method.get('exclusive_group')
+                        if group and method.get('choice') not in plan['optimal_choices'].get(group, ()):
+                            continue
+                        if type(method.get('level')) is int and method['level'] <= level + 1:
+                            evolutions.add(species)
+                options.append({**location, 'species': mon['species'], 'level_before': level,
+                    'level_after_one_candy': level + 1,
+                    'normal_training_cost_to_next_level': evolution_training_cost(mon, level + 1),
+                    'potential_unregistered_level_evolutions': sorted(evolutions)})
+        return {'candies_held': quantity, 'held_source_level_options': options,
+                'unresolved_recipient_levels': unknown_levels,
+                'scope': 'One retained candy on one observed recipient; independent alternatives '
+                    'sharing a finite inventory, not a joint registration yield or a promise that '
+                    'every listed option will execute. PC withdrawal, item/party menus and evolution '
+                    'confirmation still require normal inputs. Overlevel sources need a new level '
+                    'gain, not merely having passed a threshold. Only missing level evolutions are '
+                    'listed; stones and external trades are not supplied by a candy. XP is the '
+                    'normal-training gap, exact only when observed; this is not a measured stat '
+                    'gain, safe capture setup, refund or guaranteed new registration.'}
+
+    def tm_retention_reference(self, facts, item, quantity):
+        """Native move/compatibility for held recipients; one finite copy per use."""
+        move = item['effect']['params']['move']
+        bit = int(item['id'][2:]) - 1
+        recipients = []
+        for origin, mons in (('party', facts.get('party', [])), ('pc', facts.get('stored_pokemon', []))):
+            for index, mon in enumerate(mons):
+                if not machine_compatible(mon.get('species'), bit):
+                    continue
+                location = {'origin': origin, 'index': index}
+                if origin == 'pc':
+                    location.update({key: mon[key] for key in ('box', 'index') if key in mon})
+                moves = mon.get('moves')
+                known_moves = isinstance(moves, list) and all(isinstance(name, str) for name in moves)
+                hp = mon.get('hp')
+                recipients.append({**location, 'species': mon['species'], 'level': mon.get('level'),
+                    'compatible': True, 'observed_moves': list(moves) if known_moves else None,
+                    'already_knows_move': move in moves if known_moves else None,
+                    'conscious': hp > 0 if type(hp) is int else None,
+                    'withdrawal_required': origin == 'pc'})
+        return {'tm': item['id'], 'copies_held': quantity, 'learned_move': move,
+            'move_data': data.move_data(move), 'compatible_held_recipients': recipients,
+            'scope': 'Native TM-HM compatibility bits and move data for observed held recipients '
+                'only; not measured training, damage, survival or registration benefit. Each finite '
+                'copy can teach one recipient, so these are alternatives sharing the same copies, '
+                'not a joint moveset yield. Known compatibility does not certify a conscious party '
+                'recipient, a legal replacement, PC access or an executed teaching menu. Missing '
+                'moves/HP/levels remain unknown; an already-known move cannot be retaught to that '
+                'recipient. Normal PC withdrawal, item menus and move replacement still apply. '
+                'An empty held-recipient list does not rule out future acquisitions or prove surplus.'}
+
+    def add_collection_funding(self, groups, facts):
+        """Offer owned treasure/vitamin/level-item/finite-TM sales with retention costs.
+
+        Reuse real shop interactions and sale menus, never offer capture balls,
+        evolution stones or quest resources, or mutate money during planning.
+        """
+        if not self.collects_dex:
+            return
+        sale_items = []
+        for name, item in {**ITEM_CATALOG, **native_tm_sale_catalog()}.items():
+            quantity = facts['bag'].get(name.replace('_', '').upper(), 0)
+            if type(quantity) is not int:
+                continue
+            unit_price = (item.get('price') or 0) // 2
+            vitamin = ('vitamin' in item.get('tags', [])
+                       and (item.get('effect') or {}).get('type') == 'Vitamin')
+            candy = (name == 'RareCandy' and 'level' in item.get('tags', [])
+                     and (item.get('effect') or {}).get('type') == 'RareCandy'
+                     and type(quantity) is int)
+            tm = ('tm' in item.get('tags', [])
+                  and (item.get('effect') or {}).get('type') == 'TM')
+            if (quantity > 0 and unit_price > 0 and item.get('sellable')
+                    and not item.get('key_item')
+                    and ('treasure' in item.get('tags', []) or vitamin or candy or tm)):
+                sale_items.append((name, item, quantity, quantity * unit_price, vitamin, candy, tm))
+        if not sale_items:
+            return
+        shops = []
+        for rule in self.index.rules:
+            if rule.effect[0] != 'shop' or rule.map not in self.visited or rule.missing(facts):
+                continue
+            route = self.client.route(facts['map'], rule.map)
+            if route.get('found'):
+                shops.append((rule, len(route.get('legs', []))))
+        if not shops:
+            return
+        for name, item, quantity, proceeds, vitamin, candy, tm in sale_items:
+            money_after = facts['money'] + proceeds
+            spending = self.item_evolution_spending_reference(facts, money_after)
+            evolutions = [{
+                **{key: value for key, value in option.items() if key not in (
+                    'affordable_before_purchase', 'affordable_after_purchase', 'purchase_removes_affordability')},
+                'affordable_before_sale': option['affordable_before_purchase'],
+                'affordable_after_sale': option['affordable_after_purchase'],
+                'sale_makes_affordable': option['affordable_before_purchase'] is False
+                    and option['affordable_after_purchase'] is True,
+            } for option in spending['held_source_options']]
+            retained_levels = self.rare_candy_retention_reference(facts, quantity) if candy else None
+            retained_teaching = self.tm_retention_reference(facts, item, quantity) if tm else None
+            for rule, hops in shops:
+                stock = {key.replace('_', '').upper() for key in rule.effect[1]}
+                balls = [{'ball': ball, 'quantity_held': facts['bag'].get(ball.replace('_', '').upper(), 0),
+                    'item_unit_price_reference': info['price'],
+                    'max_quantity_affordable_before_sale': facts['money'] // info['price'],
+                    'max_quantity_affordable_after_sale': money_after // info['price']}
+                    for ball, info in sorted(BALLS.items())
+                    if ball.replace('_', '').upper() in stock and info['price'] > 0]
+                context = {'optional_preparation': True, 'collecting': True, 'treasure_sale': True,
+                    'item': item, 'quantity': quantity, 'expected_proceeds': proceeds,
+                    'map': rule.map, 'map_hops': hops,
+                    'collection_funding_reference': {'money_before_sale': facts['money'],
+                        'money_after_sale_reference': money_after,
+                        'ball_purchase_options_here': balls,
+                        'held_source_evolution_options': evolutions,
+                        'scope': 'Catalog sale prices and independent affordability references, not a joint '
+                            'registration yield. Money, stones and source individuals are shared. Actual '
+                            'sale, navigation, purchase quantities, bag space and PC withdrawal still require '
+                            'normal inputs. Stone prices do not prove an accessible seller; unknown prices '
+                            'stay unknown. No money is credited by this preview.'}}
+                key = f'sell:{rule.id}:{name}'
+                if vitamin:
+                    context.update(treasure_sale=False, vitamin_sale=True,
+                        sale_opportunity_cost={
+                            'quantity_relinquished': quantity,
+                            'retained_item_effect': item['effect'],
+                            'retained_item_tags': item.get('tags', []),
+                            'scope': 'Offering this sale is not a surplus certificate. Selling the '
+                                'observed stack relinquishes its single-use training effects; retaining '
+                                'it remains possible by selecting another goal. This is not a treasure '
+                                'with no training value. Actual stat gain and survival benefit are not '
+                                'guaranteed and depend on the recipient and existing training. No stat '
+                                'benefit or registration yield is credited by this preview.'})
+                if candy:
+                    context.update(treasure_sale=False, rare_candy_sale=True,
+                        sale_opportunity_cost={
+                            'quantity_relinquished': quantity,
+                            'retained_item_effect': item['effect'],
+                            'retained_item_tags': item.get('tags', []),
+                            'level_up_reference': retained_levels,
+                            'scope': 'Offering this sale is not a surplus certificate. Selling the '
+                                'observed finite stack irreversibly relinquishes its normal level-up '
+                                'uses. Compare retained recipient XP gaps and possible held-source '
+                                'level evolutions with capture/stone funding. Retaining the item is '
+                                'possible by choosing another goal; no training, evolution receipt '
+                                'or safety benefit is guaranteed by this preview.'})
+                if tm:
+                    context.update(treasure_sale=False, tm_sale=True,
+                        sale_opportunity_cost={
+                            'quantity_relinquished': quantity,
+                            'retained_item_effect': item['effect'],
+                            'retained_item_tags': item.get('tags', []),
+                            'move_teaching_reference': retained_teaching,
+                            'scope': 'Offering this sale is not a surplus certificate. Selling the '
+                                'observed finite stack irreversibly relinquishes its normal move '
+                                'teaching uses. Compare actual held-recipient compatibility and '
+                                'move effects with capture/stone funding; retaining the TM remains '
+                                'possible by choosing another goal. No free money, taught move, '
+                                'battle improvement or registration is credited by this preview.'})
+                group = groups.setdefault(key, {'target': ('sale', name, False), 'rules': [rule],
+                    'objectives': [], 'context': {}})
+                group['context'] = {**context, **group.get('context', {}),
+                                   'collection_funding_reference': context['collection_funding_reference']}
+                objective = 'Sell an owned treasure through a known shop to fund capture balls or held-source evolutions'
+                if vitamin:
+                    objective = ('Optionally sell an owned vitamin through a known shop to fund capture '
+                                 'balls or held-source evolutions, relinquishing its training use')
+                if candy:
+                    objective = ('Optionally sell owned Rare Candy through a known shop to fund capture '
+                                 'balls or held-source stone evolutions, relinquishing its finite level-up uses')
+                if tm:
+                    objective = ('Optionally sell an owned finite TM through a known shop to fund capture '
+                                 'balls or held-source evolutions, relinquishing its move-teaching uses')
+                if objective not in group['objectives']:
+                    group['objectives'].append(objective)
+
+    def add_ball_supply(self, groups, facts):
+        """Expose real scripted ball sources as well as normal shop restocking.
+
+        That restock is defeat-triggered: a collector at full health would never
+        be offered it and would simply stop catching once the bag ran dry.
+        """
+        if not self.collects_dex:
+            return
+        normalized = {name.replace('_', '').upper(): name for name in BALLS}
+        carried = {normalized[key]: qty for key, qty in facts['bag'].items() if key in normalized}
+        # A reserve of ordinary balls does not replace a different ball's
+        # capture capability. Keep unclaimed gifts/pickups available even at
+        # full reserve; frontier retains their real guards and prerequisites.
+        effects = dict.fromkeys(rule.effect for rule in self.index.rules
+            if rule.effect[0] == 'item' and rule.effect[2]
+            and rule.effect[1].replace('_', '').upper() in normalized)
+        for effect in effects:
+            name = normalized[effect[1].replace('_', '').upper()]
+            rules = self.index.frontier(effect, facts)
+            if not rules:
+                continue
+            groups[f'ball-source:{effect[1]}'] = {'target': effect, 'rules': rules,
+                'objectives': ['Acquire a scripted ball gift or pickup for future captures'],
+                'context': {'optional_preparation': True, 'collecting': True,
+                            'ball': name, 'item': BALLS[name],
+                            'capture_behavior': ('Guaranteed capture of a catchable wild target without '
+                                'weakening or status setup; consumed on use. Not usable on trainer Pokémon.'
+                                if name == 'MasterBall' else
+                                'Capture probability depends on the ball, species catch rate, HP and status; '
+                                'not a guaranteed capture.'),
+                            'source_kind': 'scripted_item',
+                            'source_maps': sorted({r.map for r in self.index.rules if r.effect == effect}),
+                            'occupied_bag_slots': len(facts['bag']), 'bag_capacity': 20,
+                            'scope': 'Unclaimed script source, not an owned ball. Normal navigation, '
+                                     'script guards and bag space still apply; one-time rewards cannot be replenished.'}}
+        owned = self.validated_owned(facts)
+        targets = []
+        for species, methods in self.complete_collection_graph().items():
+            if species in owned:
+                continue
+            ready = sorted({method['map'] for method in methods
+                            if method['method'] == 'static' and any(not rule.missing(facts)
+                                for rule in self.acquisition_story_rules(species, method))})
+            if ready:
+                targets.append({'species': species, 'catch_rate': data.species_data(species)['catchRate'],
+                                'ready_source_maps': ready})
+        held = sum(carried.values())
+        if held >= self.BALL_RESERVE and not targets:
+            return
+        nearest = {}
+        for rule in self.index.rules:
+            if rule.effect[0] != 'shop' or rule.missing(facts):
+                continue
+            route = self.client.route(facts['map'], rule.map)
+            if not route.get('found'):
+                continue
+            hops = len(route.get('legs', []))
+            for stock_index, key in enumerate(rule.effect[1]):
+                name = normalized.get(key.replace('_', '').upper())
+                if not name:
+                    continue
+                # The two nearest shops per ball kind. The nearest by map hops
+                # can still be tile-unreachable (a water crossing the map-level
+                # router ignores), and one blocked trip strikes that rule out
+                # after two failures — a runner-up keeps the supply line alive.
+                entry = (hops, rule.map, rule.id, stock_index, rule)
+                shops = nearest.setdefault(name, [])
+                if entry not in shops:
+                    shops.append(entry)
+                    shops.sort(key=lambda item: item[:3])
+                    del shops[2:]
+        for name, shops in sorted(nearest.items()):
+            info = BALLS[name]
+            if len(facts['bag']) >= 20 and name not in carried:
+                continue
+            current = carried.get(name, 0)
+            # The ordinary reserve is not a capture-sufficiency limit. Offer
+            # larger optional stocks for known unregistered static sources;
+            # Jev still compares money, setup and all other acquisition goals.
+            batches = [('reserve', self.BALL_RESERVE - held)]
+            if targets:
+                batches += [('extended', self.BALL_RESERVE * 3 - current), ('stack', 99 - current)]
+            offered = set()
+            for batch, desired in batches:
+                qty = min(desired, 99 - current, int(facts['money'] * .6) // max(1, info['price']))
+                if qty < 1 or qty in offered:
+                    continue
+                offered.add(qty)
+                total = current + qty
+                cost = qty * info['price']
+                reference = capture_supply_reference(targets, carried, {**carried, name: total}) if targets else None
+                spending = self.item_evolution_spending_reference(facts, facts['money'] - cost)
+                resource_spending = self.script_resource_guard_reference(facts, money_after=facts['money'] - cost)
+                for hops, map_name, _rule_id, stock_index, rule in shops:
+                    key = f'ball:{rule.id}:{name}' + (f':stock{total}' if batch != 'reserve' else '')
+                    groups[key] = {'target': ('supply', name, total), 'rules': [rule],
+                        'objectives': ['Buy balls to keep collecting unregistered species'],
+                        'context': {'optional_preparation': True, 'stock_index': stock_index,
+                                    'item': info, 'collecting': True, 'batch': batch,
+                                    'purchase_quantity': qty, 'target_quantity': total,
+                                    'total_cost': cost, 'money_after_purchase': facts['money'] - cost,
+                                    'capture_supply_reference': reference,
+                                    'item_evolution_spending_reference': spending,
+                                    'map': map_name, 'map_hops': hops}}
+                    if resource_spending:
+                        groups[key]['context']['script_resource_spending_reference'] = resource_spending
+
     def add_recovery_groups(self, groups, facts):
+        self.add_ball_supply(groups, facts)
         normalized = {name.replace('_', '').upper(): name for name in MEDICINES}
         bag = {normalized[key]: qty for key, qty in facts['bag'].items() if key in normalized}
         options = list(medicine_options(facts['party'], bag))
@@ -1215,6 +5393,254 @@ class AutonomousStoryAgent(DualStoryAgent):
         return options
 
     def action_candidates(self, facts):
+        candidates, bindings = self._action_candidates(facts)
+        if getattr(self, 'collects_dex', False):
+            self.add_transit_lead_candidates(candidates, bindings, facts)
+        return candidates, bindings
+
+    def add_transit_lead_candidates(self, candidates, bindings, facts):
+        """Expose ordinary party preparation beside travel, never select it."""
+        trips = [(operation, rule) for operation, rule in bindings.values()
+                 if operation.startswith(('travel_to:', 'reach_training:', 'surf:'))]
+        party = facts.get('party', [])
+        if not trips or len(party) < 2:
+            return
+        operations = {operation for operation, _ in bindings.values()}
+        if any(operation.startswith('train_encounter:') for operation in operations):
+            return  # Already at a training point: retain the trainee for experience.
+        context = (getattr(self, 'active', None) or {}).get('context', {})
+        trainee = (context.get('from_species') if context.get('capture_support_training')
+                   or (context.get('acquisition_method') == 'evolution'
+                       and context.get('trigger') == 'level') else None)
+        regions = {facts.get('map'), context.get('map'), context.get('destination')}
+        for key, (operation, _) in bindings.items():
+            if operation.startswith(('travel_to:', 'reach_training:')):
+                regions.add(operation.split(':', 1)[1].split(',')[0])
+                regions.update((json.loads(candidates[key]).get('navigation') or {}).get('via', []))
+        encounters = []
+        for name in sorted(regions - {None}):
+            for method, table in ((getattr(self, 'maps', {}).get(name, {}).get('wild') or {}).get('red') or {}).items():
+                mons = table.get('mons', []) if table else []
+                if not mons:
+                    continue
+                encounters.append({'map': name, 'terrain': method,
+                    'level_range': [min(mon['level'] for mon in mons), max(mon['level'] for mon in mons)],
+                    'species': sorted({mon['species'] for mon in mons})})
+        for key, (operation, _) in bindings.items():
+            if operation.startswith(('travel_to:', 'reach_training:', 'surf:')):
+                candidates[key] = json.dumps({**json.loads(candidates[key]),
+                    'current_leader': party[0], 'route_encounters': encounters,
+                    'encounter_scope': 'Public wild tables for known trip regions, not predicted battles or complete intermediate-route coverage'})
+        # lead_with names the first matching species. Do not describe a later
+        # duplicate's HP/moves while the menu skill would select the first.
+        offered = {party[0]['species']}
+        for mon in party[1:]:
+            if mon['species'] in offered:
+                continue
+            offered.add(mon['species'])
+            operation = f'lead_with:{mon["species"]}'
+            if mon['hp'] <= 0 or mon['species'] == trainee or operation in operations:
+                continue
+            key = f'action:{len(candidates)}'
+            while key in candidates:
+                key += ':lead'
+            candidates[key] = json.dumps({
+                'operation': operation, 'current_leader': party[0], 'transit_leader': mon,
+                'route_encounters': encounters,
+                'purpose': 'Optionally change the leader before normal travel or a water crossing; compare survival and escape capability against the current leader',
+                'scope': 'Party preparation only, not experience or a capture status turn. Other party members remain available; selecting a different leader does not guarantee safety.'})
+            bindings[key] = operation, trips[0][1]
+
+    def _action_candidates(self, facts):
+        preparing_training = self.active['target'][:2] == ('level', 'leader')
+        preparing_capture = (self.active['target'][0] in ('catch', 'held_species')
+                             and self.active.get('context', {}).get('acquisition_method') != 'safari')
+        if preparing_training or preparing_capture:
+            battler = training_battler(facts.get('party', []))
+            if battler and facts['party'][0] is not battler:
+                operation = f'lead_with:{battler["species"]}'
+                return {'action:0': json.dumps({
+                    'operation': operation,
+                    'purpose': ('Put the strongest battle-ready party member in front before training'
+                                if preparing_training else
+                                'Put a capable battler in front to survive capture attempts and clear duplicate encounters'),
+                    'target_level': self.active['target'][2] if preparing_training else None,
+                    'training_battler': battler,
+                })}, {'action:0': (operation, self.active['rules'][0])}
+        if self.active.get('context', {}).get('coin_purchase'):
+            candidates, bindings = {}, {}
+            npcs = self.client.cmd(cmd='get_npcs')
+            for rule in self.active['rules']:
+                if facts['map'] != rule.map:
+                    operation = f'travel_to:{rule.map}'
+                    key = f'action:{len(candidates)}'
+                    candidates[key] = json.dumps({'operation': operation,
+                        'purpose': 'Reach the Game Corner coin counter'})
+                    bindings[key] = operation, rule
+                    continue
+                ids = {int(trigger.split(':')[1]) for trigger in rule.triggers
+                       if trigger.startswith('npc:')}
+                for npc in npcs:
+                    if npc.get('visible', True) and npc.get('text_id') in ids:
+                        required = self.active['target'][2]
+                        approaches = list(counter_approaches(rule.map, npc))
+                        if approaches:
+                            for (x, y), direction in approaches:
+                                operation = (f'buy_coins:{required},{npc["npc_index"]},'
+                                             f'{x},{y},{direction}')
+                                key = f'action:{len(candidates)}'
+                                candidates[key] = json.dumps({'operation': operation,
+                                    'counter_approach': [x, y, direction], **self.active['context']})
+                                bindings[key] = operation, rule
+                        else:
+                            operation = f'buy_coins:{required},{npc["npc_index"]}'
+                            key = f'action:{len(candidates)}'
+                            candidates[key] = json.dumps({'operation': operation,
+                                **self.active['context']})
+                            bindings[key] = operation, rule
+            return candidates, bindings
+        if self.active.get('context', {}).get('storage_party_space'):
+            candidates, bindings = {}, {}
+            for rule in self.active['rules']:
+                if facts['map'] != rule.map:
+                    operation = f'travel_to:{rule.map}'
+                    key = f'action:{len(candidates)}'
+                    candidates[key] = json.dumps({'operation': operation,
+                        'purpose': 'Reach a PC to make one free party slot'})
+                    bindings[key] = operation, rule
+                    continue
+                sign_ids = {int(trigger.split(':')[1]) for trigger in rule.triggers
+                            if trigger.startswith('sign:')}
+                signs = json.loads((self.index.maps_dir / rule.map / 'map.json').read_text()).get('signs', [])
+                for sign_index, sign in enumerate(signs):
+                    if sign.get('textId') not in sign_ids:
+                        continue
+                    for deposit in storage_deposit_indices(facts['party']):
+                        mon = facts['party'][deposit]
+                        operation = f'deposit_pc:{deposit},{sign_index}'
+                        key = f'action:{len(candidates)}'
+                        candidates[key] = json.dumps({'operation': operation,
+                            'deposit': mon, 'required_for': self.active['context']['required_for']})
+                        bindings[key] = operation, rule
+            return candidates, bindings
+        if self.active.get('context', {}).get('storage_change_box'):
+            candidates, bindings = {}, {}
+            for rule in self.active['rules']:
+                if facts['map'] != rule.map:
+                    operation = f'travel_to:{rule.map}'
+                    key = f'action:{len(candidates)}'
+                    candidates[key] = json.dumps({'operation': operation,
+                        'purpose': 'Reach a PC to select a box with free capacity'})
+                    bindings[key] = operation, rule
+                    continue
+                sign_ids = {int(trigger.split(':')[1]) for trigger in rule.triggers
+                            if trigger.startswith('sign:')}
+                signs = json.loads((self.index.maps_dir / rule.map / 'map.json').read_text()).get('signs', [])
+                for sign_index, sign in enumerate(signs):
+                    if sign.get('textId') not in sign_ids:
+                        continue
+                    for box_index in self.active['context']['available_boxes']:
+                        operation = f'change_pc_box:{box_index},{sign_index}'
+                        key = f'action:{len(candidates)}'
+                        candidates[key] = json.dumps({'operation': operation,
+                            'new_box': box_index, 'box_counts': facts.get('box_counts', [])})
+                        bindings[key] = operation, rule
+            return candidates, bindings
+        if self.active.get('context', {}).get('storage_retrieval'):
+            candidates, bindings = {}, {}
+            stored = self.active['context']['stored_pokemon']
+            for rule in self.active['rules']:
+                if facts['map'] != rule.map:
+                    operation = f'travel_to:{rule.map}'
+                    key = f'action:{len(candidates)}'
+                    candidates[key] = json.dumps({
+                        'operation': operation,
+                        'purpose': f'Reach a PC to withdraw {stored["species"]}',
+                        'storage': stored})
+                    bindings[key] = operation, rule
+                    continue
+                sign_ids = {int(trigger.split(':')[1]) for trigger in rule.triggers
+                            if trigger.startswith('sign:')}
+                signs = json.loads((self.index.maps_dir / rule.map / 'map.json').read_text()).get('signs', [])
+                for sign_index, sign in enumerate(signs):
+                    if sign.get('textId') not in sign_ids:
+                        continue
+                    deposits = [-1] if len(facts['party']) < 6 else storage_deposit_indices(facts['party'])
+                    for deposit in deposits:
+                        operation = (f'retrieve_pc:{stored["box"]},{stored["index"]},'
+                                     f'{deposit},{sign_index}')
+                        key = f'action:{len(candidates)}'
+                        description = {
+                            'operation': operation, 'withdraw': stored,
+                            'purpose': 'Use the real PC menus to put the required stored Pokémon into the party'}
+                        if deposit >= 0:
+                            description['deposit_first'] = facts['party'][deposit]
+                        candidates[key] = json.dumps(description)
+                        bindings[key] = operation, rule
+            return candidates, bindings
+        if ((self.active['target'][0] == 'register'
+                and self.active.get('context', {}).get('acquisition_method') == 'evolution')
+                or self.active.get('context', {}).get('capture_support_training')):
+            context = self.active['context']
+            support_training = bool(context.get('capture_support_training'))
+            source = context['from_species']
+            indices = [i for i, mon in enumerate(facts['party'])
+                       if self.same_species(mon['species'], source)]
+            candidates, bindings = {}, {}
+            if not indices:
+                return candidates, bindings
+            rule = self.active['rules'][0]
+            index = indices[0]
+            if context['trigger'] == 'item':
+                item = context['item']
+                operation = f'use_item:{item},{index}'
+                candidates['action:0'] = json.dumps({
+                    'operation': operation, 'pokemon': facts['party'][index],
+                    'evolves_into': context['species'], 'item': item})
+                bindings['action:0'] = operation, rule
+                return candidates, bindings
+            sites = self.find_training_sites(facts)
+            position = (facts.get('map'), facts.get('x'), facts.get('y'))
+            at_training_point = any(position == (name, *point) for name, point in sites.items())
+            if index and at_training_point:
+                operation = f'lead_with:{source}'
+                candidates['action:0'] = json.dumps({
+                    'operation': operation,
+                    'purpose': f'Move {source} to the lead slot so it can participate and earn experience',
+                    'evolves_into': context.get('species') if not support_training else None})
+                bindings['action:0'] = operation, rule
+                return candidates, bindings
+            for name, (x, y) in sites.items():
+                if position != (name, x, y):
+                    operation = f'reach_training:{name},{x},{y}'
+                    key = f'action:{len(candidates)}'
+                    candidates[key] = json.dumps({
+                        'operation': operation,
+                        'purpose': f'Reach the training point before moving {source} to the lead; transit encounters give no experience when escaped',
+                        'trainee': facts['party'][index], 'current_transit_leader': facts['party'][0],
+                        'navigation': getattr(self, 'training_navigation', {}).get(name),
+                        'scope': 'Normal travel only; avoid incidental grass where possible. Battles and healing may interrupt. No party reorder or training until arrival.'})
+                    bindings[key] = operation, rule
+                    continue
+                operation = f'train_encounter:{name},{x},{y}'
+                key = f'action:{len(candidates)}'
+                candidates[key] = json.dumps({
+                    'operation': operation,
+                    'purpose': (f'Gain a level with {source} to improve capture status support'
+                                if support_training else f'Gain a level with {source} to evolve it into {context["species"]}'),
+                    'required_level': context.get('experience_trigger_level', context['level']),
+                    'natural_evolution_level': context['level'] if not support_training else None,
+                    'evolution_trigger_scope': context.get('evolution_trigger_scope'),
+                    'current_level': facts['party'][0]['level'],
+                    'training_cost': evolution_training_cost(facts['party'][0],
+                        context.get('experience_trigger_level', context['level'])),
+                    'encounter_yield': training_yield(
+                        ((getattr(self, 'maps', {}).get(name, {}).get('wild') or {}).get('red') or {}).get('grass'),
+                        2 if any(mon['hp'] > 0 and mon['level'] > facts['party'][0]['level']
+                                 for mon in facts['party'][1:]) else 1),
+                    'navigation': getattr(self, 'training_navigation', {}).get(name)})
+                bindings[key] = operation, rule
+            return candidates, bindings
         if self.active['target'][0] in ('health', 'pp_reserve'):
             names = {name.replace('_', '').upper(): name for name in MEDICINES}
             bag = {names[key]: qty for key, qty in facts['bag'].items() if key in names}
@@ -1266,6 +5692,32 @@ class AutonomousStoryAgent(DualStoryAgent):
                         'purpose': f"Approach and use {obstacle['move']} through the party menu to pass this terrain", 'terrain': obstacle})
                     bindings[key] = operation, self.active['rules'][0]
             return candidates, bindings
+        if self.active['target'][0] in ('catch', 'held_species'):
+            candidates, bindings = {}, {}
+            area_key = self.active.get('context', {}).get('catch_area', self.active['target'][1])
+            area = getattr(self, 'catch_areas', {}).get(area_key)
+            if area:
+                rule = self.active['rules'][0]
+                method, name = area.get('method', 'grass'), area.get('map', rule.map)
+                spot = area.get('spot') or (area.get('spots') or [None])[0]
+                if method == 'fishing':
+                    (x, y), direction = spot
+                    operation = f"catch_encounter:fishing,{name},{x},{y},{direction},{area['rod']}"
+                elif method == 'water':
+                    (x, y), direction, (wx, wy) = spot
+                    operation = f'catch_encounter:water,{name},{x},{y},{direction},{wx},{wy}'
+                else:
+                    x, y = spot
+                    operation = (f'catch_encounter:{name},{x},{y}' if method == 'grass'
+                                 else f'catch_encounter:{method},{name},{x},{y}')
+                key = 'action:0'
+                candidates[key] = json.dumps({'operation': operation,
+                    'purpose': f"Travel to {name} and use its {method} acquisition method until a wild battle starts; then decide whether to catch the observed species.",
+                    'navigation': area.get('navigation') or self.catch_navigation.get(area_key), 'acquisition_method': method,
+                    'rod': area.get('rod'), 'unregistered_species_here': area['species'],
+                    'encounter_value': area.get('encounter_value')})
+                bindings[key] = operation, rule
+            return candidates, bindings
         if self.active['target'][0] != 'level':
             candidates, bindings = super().action_candidates(facts)
             npcs = {n['npc_index']: n for n in self.client.cmd(cmd='get_npcs')}
@@ -1311,7 +5763,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                         del candidates[key], bindings[key]
                         continue
                     if not pt.bfs(facts['map'], (facts['x'], facts['y']), point,
-                                    blocked=blocked | pt.warp_tiles(facts['map']), allow_spinners=True):
+                                    blocked=blocked | (pt.warp_tiles(facts['map']) - {point}), allow_spinners=True):
                         operation = f'travel_to:{rule.map}'
                     bindings[key] = operation, rule
                     candidates[key] = json.dumps({'operation': operation, 'script_effects': rule.description()})
@@ -1356,7 +5808,28 @@ class AutonomousStoryAgent(DualStoryAgent):
                         'unvisited_maps': [name for name in via if name not in self.visited],
                         'caution': 'Travel can consume HP and PP in encounters; recovery should prefer a short known route.',
                     }
+                    trigger_route = next((row for row in self.active.get('context', {}).get('trigger_navigation', [])
+                                          if row.get('map') == rule.map), None)
+                    if trigger_route is not None:
+                        description['trigger_navigation'] = trigger_route
+                        description['trigger_navigation_origin'] = self.active.get('context', {}).get('trigger_navigation_origin')
+                        description['trigger_navigation_scope'] = (
+                            'Geometry at strategy selection for this trigger, not a fresh route after movement '
+                            'or a guarantee of arrival; compare origin with local_state position. '
+                            'Surf access is conditional on executing field actions and native guards. '
+                            'Encounters or newly observed obstacles can interrupt travel.')
                     candidates[key] = json.dumps(description)
+            # A door's OnStep coordinate can lie on its inaccessible side
+            # while its native A interaction is already reachable. The
+            # converted travel then selects our current approach tile and
+            # returns "reached" forever. Remove only that proven no-op, not
+            # cross-region travel or actual reachable step triggers.
+            interactable = {rule.id for operation, rule in bindings.values()
+                            if operation.startswith('interact_tile:')}
+            for key, (operation, rule) in list(bindings.items()):
+                if (operation == f'travel_to:{facts["map"]}' and rule.id in interactable
+                        and (facts['x'], facts['y']) in self.destination_points(rule.map, rule)):
+                    del candidates[key], bindings[key]
             return candidates, bindings
         candidates, bindings = {}, {}
         rules = self.active['rules']
@@ -1388,12 +5861,20 @@ class AutonomousStoryAgent(DualStoryAgent):
                 continue
             yield (x-dx, y-dy), direction
 
-    def destination_points(self, name, rule):
+    def destination_points(self, name, rule, *, allow_entry_fallback=True):
         """Ground a destination in its trigger geometry, never an itinerary."""
         points = []
         if rule.map == name:
             coordinates = [p for p in self.index.coordinates(rule) if trigger_position_matches(rule, p)]
-            points.extend(coordinates)
+            for point in coordinates:
+                if point in pt.COORDINATE_WARPS.get(name, {}):
+                    # Travel stops beside an automatic trigger. Its explicit
+                    # move_to action then performs the fall, not an impossible
+                    # stable standing position on the hole itself.
+                    points.extend((point[0]+dx, point[1]+dy) for dx, dy in pt.DELTA.values()
+                                  if pt.walkable_edge(name, (point[0]+dx, point[1]+dy), point))
+                else:
+                    points.append(point)
             if rule.id.startswith('boulder:'):
                 target = BOULDER_TARGETS[rule.effect[1]]
                 sources = boulder_sources(name, tuple(target['target']), str(self.index.maps_dir))
@@ -1413,7 +5894,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                 if npc['textId'] in ids:
                     points.extend(p for p, _ in counter_approaches(name, npc))
                     points.extend((npc['x']+dx, npc['y']+dy) for dx, dy in pt.DELTA.values())
-        if not points:
+        if not points and allow_entry_fallback:
             for warp in pt.MAPS[name]['warps']:
                 points.extend((warp['x']+dx, warp['y']+dy) for dx, dy in pt.DELTA.values())
         return [p for p in dict.fromkeys(points) if pt.walkable(name, *p)
@@ -1503,7 +5984,60 @@ class AutonomousStoryAgent(DualStoryAgent):
                         'blocking_npcs': [text_id], 'blocking_trainers': [text_id] if trainer else []}
         return None
 
-    def travel(self, name, rule, points=None):
+    def transit_grass_barriers(self, origin, name, barriers):
+        """Block encounter grass on every map a trip only passes through.
+
+        A collector walking to a catching ground keeps meeting the already
+        registered species of the routes in between. The destination's own
+        grass is the point of the trip and stays walkable.
+        """
+        legs = self.client.route(origin, name).get('legs') or []
+        if not legs:
+            return None  # Unknown topology: the ordinary search still runs.
+        overlay = {map_name: set(tiles) for map_name, tiles in barriers.items()}
+        stages = {origin, *(leg['to_map'] for leg in legs)}
+        for stage in sorted(stages - {name}):
+            if stage not in pt.MAPS:
+                continue
+            grass = pt.grass_tiles(stage)
+            if grass:
+                overlay.setdefault(stage, set()).update(grass)
+        return overlay
+
+    def navigate_trip(self, name, point, transit, **kwargs):
+        """Walk to the destination, detouring around transit grass.
+
+        The driver re-plans from every observation, so the detour has to reach
+        it as navigation barriers rather than as a one-off planned path. The
+        detour is a preference, never a lost trip: when a route a live NPC
+        sealed cannot be walked, the same trip is retried plainly.
+        """
+        error = None
+        for avoid_maps in ((transit, None) if transit else (None,)):
+            try:
+                return self.navigate_point(name, point, **kwargs,
+                                           **({'avoid_maps': avoid_maps} if avoid_maps else {}))
+            except pt.NavError as failure:
+                error = failure
+        raise error
+
+    def travel(self, name, rule, points=None, avoid_encounters=False):
+        previous = getattr(self.game, 'navigation_goal_target', None)
+        active = getattr(self, 'active', None)
+        target = active.get('target') if isinstance(active, dict) else None
+        self.game.navigation_goal_target = (deepcopy(target)
+            if isinstance(target, (tuple, list)) and len(target) == 3 else None)
+        try:
+            return self._travel(name, rule, points, avoid_encounters)
+        except NavigationGoalObserved as pause:
+            # The requested map/stance need not have been reached. Preserve
+            # the actual native location and distinguish goal handoff from
+            # both arrival and combat interruption; strategy reobserves it.
+            return pause.result(name)
+        finally:
+            self.game.navigation_goal_target = previous
+
+    def _travel(self, name, rule, points=None, avoid_encounters=False):
         self.navigation_intent = {'destination': name, 'target_script': rule.description()}
         state = self.game.st()
         excluded = self.game.navigation_excluded_maps()
@@ -1519,10 +6053,18 @@ class AutonomousStoryAgent(DualStoryAgent):
             barriers.setdefault(name, set()).update(puzzle_holes)
         paths = []
         points = points or self.destination_points(name, rule)
+        transit = self.transit_grass_barriers(state['map_name'], name, barriers) if avoid_encounters else None
         for point in points:
-            path = pt.bfs_cross(state['map_name'], (state['player_x'], state['player_y']),
-                                name, point, last_map=self.game.last_map, allow_ledges=True, allow_spinners=True,
-                                excluded_maps=excluded, blocked_maps=barriers)
+            path = (pt.bfs_cross(state['map_name'], (state['player_x'], state['player_y']),
+                                 name, point, last_map=self.game.last_map, allow_ledges=True, allow_spinners=True,
+                                 excluded_maps=excluded, blocked_maps=transit)
+                    if transit is not None else None)
+            if path is None:
+                # Extra blocked tiles can make a route infeasible; the
+                # ordinary search is the fallback, never a lost trip.
+                path = pt.bfs_cross(state['map_name'], (state['player_x'], state['player_y']),
+                                    name, point, last_map=self.game.last_map, allow_ledges=True, allow_spinners=True,
+                                    excluded_maps=excluded, blocked_maps=barriers)
             if path:
                 paths.append((len(path), point))
         if not paths:
@@ -1549,6 +6091,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                         break
             if obstruction:
                 self.field_requirements[obstruction['move']] = obstruction
+                self.remember_field_route_goal(obstruction)
                 return {**(npc_obstruction or {}), 'result': 'blocked', 'detail': 'An alternative route needs terrain clearance',
                         'field_obstruction': obstruction, 'destination': name}
             obstruction = surf_requirement(state, name, points, self.game.last_map, barriers, excluded)
@@ -1559,7 +6102,7 @@ class AutonomousStoryAgent(DualStoryAgent):
             prerequisites = self.discover_route_prerequisites(state, name, points)
             if prerequisites:
                 self.route_requirements[name] = {'destination': name, 'goal': self.active['target'],
-                    'prerequisites': prerequisites,
+                    'trigger_points': points, 'prerequisites': prerequisites,
                     'evidence': 'A planning path with doors relaxed and NPC collisions omitted; all proposed prerequisites still require real execution'}
                 return {'result': 'blocked', 'detail': 'The route crosses a closed mechanism',
                         'destination': name, 'prerequisites': prerequisites}
@@ -1586,6 +6129,10 @@ class AutonomousStoryAgent(DualStoryAgent):
                 # locked room farther ahead makes the full path impossible.
                 obstruction = surf_requirement(state, stage, stage_points, self.game.last_map, barriers, excluded)
                 if obstruction:
+                    # The water search targets this intermediate region;
+                    # preserve the requested destination for causal backchain
+                    # and post-crossing continuation, as Cut frontiers do.
+                    obstruction = {**obstruction, 'destination': name, 'frontier': stage}
                     self.field_requirements['Surf'] = obstruction
                     return {'result': 'blocked', 'detail': 'Water separates a reachable frontier from the final goal',
                             'field_obstruction': obstruction, 'destination': name, 'stage': stage}
@@ -1593,9 +6140,17 @@ class AutonomousStoryAgent(DualStoryAgent):
                 return npc_obstruction
             return {'result': 'blocked', 'detail': 'No tile route to the requested trigger region', 'destination': name}
         _, point = min(paths)
+        # The driver re-plans the walk from every observation, so the transit
+        # detour has to reach it as navigation barriers too. The map the trip
+        # starts on keeps its own preference: the driver already avoids grass
+        # on the map it is standing on.
+        walk_transit = ({map_name: tiles for map_name, tiles in transit.items()
+                         if map_name != state['map_name']} if transit else None)
         try:
-            self.navigate_point(name, point, **({'avoid_tiles': puzzle_holes} if puzzle_holes else {}))
-            return {'result': 'reached', 'destination': name, 'position': point}
+            position = self.navigate_trip(name, point, walk_transit,
+                               **({'goal_points': points} if len(points) > 1 else {}),
+                               **({'avoid_tiles': puzzle_holes} if puzzle_holes else {}))
+            return {'result': 'reached', 'destination': name, 'position': position}
         except NavigationPause as error:
             return {'result': 'paused_after_battle', 'detail': str(error), 'destination': name}
         except pt.NavError as error:
@@ -1624,13 +6179,14 @@ class AutonomousStoryAgent(DualStoryAgent):
             obstruction = cut_requirement(current, name, [point], self.game.last_map, blocked, excluded)
             if obstruction:
                 self.field_requirements[obstruction['move']] = obstruction
+                self.remember_field_route_goal(obstruction)
                 return {'result': 'blocked', 'detail': 'An alternative route needs terrain clearance',
                         'field_obstruction': obstruction, 'destination': name,
                         'navigation_error': str(error), **blocker_details}
             return {'result': 'blocked', 'detail': str(error), 'destination': name, **blocker_details}
 
     def discover_route_prerequisites(self, state, destination, points):
-        """Find causal terrain producers across a multi-obstacle route.
+        """Find causal terrain/NPC producers across a multi-obstacle route.
 
         Only planning copies change. This is not an executable route until
         its actual switches, doors, battles and field moves are completed.
@@ -1676,11 +6232,20 @@ class AutonomousStoryAgent(DualStoryAgent):
                 m['blocks'][offset] = rule.effect[2]
                 changed[name, offset] = rule.effect
             with water_planning():
-                def search(blocked):
+                excluded = self.game.navigation_excluded_maps()
+                explain = getattr(self.game, 'navigation_map_requirements', None)
+                region_requirements = explain() if callable(explain) else {}
+                if not isinstance(region_requirements, dict):
+                    region_requirements = {}
+                region_targets = {name: [target for target in targets
+                    if self.index.frontier(target, facts)]
+                    for name, targets in region_requirements.items() if name in excluded}
+                region_targets = {name: targets for name, targets in region_targets.items() if targets}
+                def search(blocked, excluded_maps=excluded):
                     return pt.bfs_cross(state['map_name'], (state['player_x'], state['player_y']),
                         destination, points[0], last_map=self.game.last_map,
                         allow_ledges=True, allow_spinners=True, blocked_maps=blocked,
-                        excluded_maps=self.game.navigation_excluded_maps(),
+                        excluded_maps=excluded_maps,
                         goal_nodes={(destination, *point) for point in points})
                 # A push-back tile may merely be a shortcut to some other
                 # destination. Prefer paths preserving those known walls;
@@ -1688,18 +6253,59 @@ class AutonomousStoryAgent(DualStoryAgent):
                 path = search(observed_barriers)
                 if not path and barriers != observed_barriers:
                     path = search(barriers)
+                if not path and excluded and (guarded_tiles or region_targets):
+                    # Execution correctly excludes a guarded region, but using
+                    # that same exclusion to discover its unlock hides the
+                    # guard's prerequisites forever. Relax only in this plan,
+                    # and accept it only when a known causal guard is crossed
+                    # BEFORE the first excluded region, or that region has
+                    # an explanation from the very same exclusion predicate.
+                    # Such an observed exclusion needs no failed tile walk.
+                    # Keep unexplained regions excluded unless the older
+                    # observed-guard proof applies. Never expose this relaxed
+                    # path as executable navigation.
+                    still_excluded = () if guarded_tiles else tuple(
+                        name for name in excluded if name not in region_targets)
+                    relaxed = search(barriers, still_excluded)
+                    for node, _ in (relaxed or [])[1:]:
+                        if node[0] in excluded:
+                            if node[0] in region_targets:
+                                path = relaxed
+                            break
+                        if node in guarded_tiles:
+                            path = relaxed
+                            break
         finally:
             for name, blocks in originals.items():
                 pt.MAPS[name]['blocks'] = blocks
         if not path:
             return []
+        observed_npcs = getattr(self.game, 'stationary_npcs', {})
+        toggles = getattr(self.index, 'npc_toggles', {})
+        if not isinstance(observed_npcs, dict) or not isinstance(toggles, dict):
+            observed_npcs, toggles = {}, {}
         for node, _ in path[1:]:
             name, x, y = node
+            if name in region_targets:
+                return list(dict.fromkeys(region_targets[name]))
             if node in guarded_tiles:
                 return list(dict.fromkeys(guarded_tiles[node]))
             effect = changed.get((name, (y//2)*pt.MAPS[name]['width'] + x//2))
             if effect and self.index.frontier(effect, facts):
                 return [effect]
+            # The relaxed plan intentionally omits NPC collisions. A real,
+            # previously observed actor on that exact path can therefore be
+            # the next prerequisite even after an earlier trainer was beaten.
+            # Backchain its actual hide producer, not every pickup on a map.
+            # The resulting script still needs normal approach/execution;
+            # neither this path nor the predicted removal is a success proof.
+            for text_id, position in observed_npcs.get(name, {}).items():
+                toggle = toggles.get((name, int(text_id)))
+                if tuple(position) != (x, y) or not toggle:
+                    continue
+                target = ('visibility', toggle[0], False)
+                if self.index.frontier(target, facts):
+                    return [target]
             boulders = {(n['x'], n['y']) for n in self.maps[name].get('npcs', [])
                         if n.get('spriteName') == 'Boulder'}
             if (x, y) in boulders:
@@ -1709,20 +6315,305 @@ class AutonomousStoryAgent(DualStoryAgent):
                     return targets
         return []
 
-    def navigate_point(self, name, point, tries=80, avoid_tiles=()):
+    def navigate_point(self, name, point, tries=80, avoid_tiles=(), avoid_maps=None, goal_points=None):
         previous = getattr(self.game, 'script_navigation_barriers', {})
-        if avoid_tiles:
+        if avoid_tiles or avoid_maps:
+            # `avoid_maps` supplies tiles the walk may not cross on the maps it
+            # only passes through; the destination map stays fully walkable.
             self.game.script_navigation_barriers = {**previous,
-                name: set(previous.get(name, ())) | set(avoid_tiles)}
+                name: set(previous.get(name, ())) | set(avoid_tiles),
+                **{map_name: set(previous.get(map_name, ())) | set(tiles)
+                   for map_name, tiles in (avoid_maps or {}).items()}}
         self.game.navigation_active = True
         try:
-            self.game.nav_to_map(*point, name, tries=tries)
+            return self.game.nav_to_map(*point, name, tries=tries,
+                **({'goal_points': goal_points} if goal_points is not None else {}))
         finally:
             self.game.navigation_active = False
-            if avoid_tiles:
+            if avoid_tiles or avoid_maps:
                 self.game.script_navigation_barriers = previous
 
+    def retrieve_from_pc(self, box_index, mon_index, deposit_index, sign_index):
+        """Drive Bill's PC with observed cursors; all mutations come from input."""
+        self.client.interact_with(f'sign:{sign_index}')
+
+        def move_cursor(current, target, count):
+            down = (target - current) % count
+            up = (current - target) % count
+            self.tap('down' if down <= up else 'up')
+
+        source = self.active['target'][1]
+        desired_box = box_index
+        for _ in range(500):
+            self.check_budget()
+            state = self.client.state()
+            pc = state.get('pc_state')
+            in_party = any(self.same_species(mon.get('species'), source)
+                           for mon in state.get('party', []))
+            if pc is None:
+                if in_party and state.get('screen') == 'overworld':
+                    return {'result': 'withdrew_pokemon', 'species': source,
+                            'box': box_index, 'deposited_party_index': deposit_index}
+                self.client.step(4)
+                continue
+            phase = pc['phase']
+            if phase == 'Message':
+                self.tap('a')
+            elif phase == 'MainMenu':
+                if in_party:
+                    self.tap('b')
+                elif pc['main_cursor'] == 0:
+                    self.tap('a')
+                else:
+                    move_cursor(pc['main_cursor'], 0, len(pc['main_items']))
+            elif phase == 'BillsMenu':
+                if in_party:
+                    self.tap('b')
+                    continue
+                current_box = state.get('current_box_index', 0)
+                desired_box = box_index
+                party_full = len(state.get('party', [])) >= 6
+                if party_full:
+                    counts = state.get('box_counts', [])
+                    available = [i for i, count in enumerate(counts) if count < 20]
+                    if not available:
+                        raise StoryStopped('pc_retrieval_no_deposit_capacity')
+                    # A full source box cannot receive the teammate who makes
+                    # room for a withdrawal. Deposit elsewhere first, then
+                    # return to the source box once the party has five slots.
+                    desired_box = (current_box if current_box in available else
+                                   box_index if box_index in available else available[0])
+                if current_box != desired_box:
+                    wanted = 3  # CHANGE BOX
+                elif party_full:
+                    wanted = 1  # DEPOSIT
+                else:
+                    wanted = 0  # WITHDRAW
+                if pc['bills_cursor'] == wanted:
+                    self.tap('a')
+                else:
+                    move_cursor(pc['bills_cursor'], wanted, 5)
+            elif phase == 'ChangeBoxConfirm':
+                self.tap('a' if pc['yes_selected'] else 'up')
+            elif phase == 'BoxList':
+                if pc['box_cursor'] == desired_box:
+                    self.tap('a')
+                else:
+                    move_cursor(pc['box_cursor'], desired_box, 12)
+            elif phase == 'MonList':
+                depositing = pc['mon_mode'] == 'Deposit'
+                if in_party or depositing and len(state.get('party', [])) < 6:
+                    self.tap('b')
+                    continue
+                wanted = deposit_index if depositing else mon_index
+                if pc['mon_cursor'] == wanted:
+                    self.tap('a')
+                else:
+                    count = len(state.get('party', [])) if depositing else max(mon_index + 1, 20)
+                    move_cursor(pc['mon_cursor'], wanted, count)
+            elif phase == 'MonAction':
+                if pc['mon_action_cursor'] == 0:
+                    self.tap('a')
+                else:
+                    self.tap('up')
+            else:
+                raise StoryStopped(f'unsupported_pc_phase:{phase}')
+        raise StoryStopped('pc_retrieval_did_not_finish')
+
+    def change_pc_box(self, box_index, sign_index):
+        """Select a non-full box through the same observed PC UI."""
+        self.client.interact_with(f'sign:{sign_index}')
+        for _ in range(300):
+            self.check_budget()
+            state = self.client.state()
+            pc = state.get('pc_state')
+            changed = state.get('current_box_index') == box_index
+            if pc is None:
+                if changed and state.get('screen') == 'overworld':
+                    return {'result': 'changed_box', 'box': box_index}
+                self.client.step(4)
+                continue
+            phase = pc['phase']
+            if phase == 'Message':
+                self.tap('a')
+            elif phase == 'MainMenu':
+                if changed:
+                    self.tap('b')
+                elif pc['main_cursor'] == 0:
+                    self.tap('a')
+                else:
+                    self.tap('up')
+            elif phase == 'BillsMenu':
+                if changed:
+                    self.tap('b')
+                elif pc['bills_cursor'] == 3:
+                    self.tap('a')
+                else:
+                    self.tap('down')
+            elif phase == 'ChangeBoxConfirm':
+                self.tap('a' if pc['yes_selected'] else 'up')
+            elif phase == 'BoxList':
+                if pc['box_cursor'] == box_index:
+                    self.tap('a')
+                else:
+                    self.tap('down')
+            else:
+                raise StoryStopped(f'unsupported_pc_change_phase:{phase}')
+        raise StoryStopped('pc_box_change_did_not_finish')
+
+    def deposit_to_pc(self, party_index, sign_index):
+        self.client.interact_with(f'sign:{sign_index}')
+        original_count = len(self.client.state().get('party', []))
+        for _ in range(300):
+            self.check_budget()
+            state = self.client.state()
+            pc = state.get('pc_state')
+            deposited = len(state.get('party', [])) < original_count
+            if pc is None:
+                if deposited and state.get('screen') == 'overworld':
+                    return {'result': 'deposited_pokemon', 'party_index': party_index}
+                self.client.step(4)
+                continue
+            phase = pc['phase']
+            if phase == 'Message':
+                self.tap('a')
+            elif phase == 'MainMenu':
+                if deposited:
+                    self.tap('b')
+                elif pc['main_cursor'] == 0:
+                    self.tap('a')
+                else:
+                    self.tap('up')
+            elif phase == 'BillsMenu':
+                if deposited:
+                    self.tap('b')
+                elif pc['bills_cursor'] == 1:
+                    self.tap('a')
+                else:
+                    self.tap('down')
+            elif phase == 'MonList':
+                if pc['mon_cursor'] == party_index:
+                    self.tap('a')
+                else:
+                    self.tap('down')
+            elif phase == 'MonAction':
+                self.tap('a' if pc['mon_action_cursor'] == 0 else 'up')
+            else:
+                raise StoryStopped(f'unsupported_pc_deposit_phase:{phase}')
+        raise StoryStopped('pc_deposit_did_not_finish')
+
+    def prepare_transit_lead(self, operation, rule):
+        """Ask about this selected journey, then apply only Jev's menu choice."""
+        facts = self.facts()
+        description = {'operation': operation}
+        if operation.startswith(('travel_to:', 'reach_training:')):
+            destination = operation.split(':', 1)[1].split(',')[0]
+            description['navigation'] = {'via': [leg['to_map'] for leg in
+                self.client.route(facts['map'], destination).get('legs', [])]}
+        candidates = {'trip': json.dumps(description)}
+        bindings = {'trip': (operation, rule)}
+        self.add_transit_lead_candidates(candidates, bindings, facts)
+        if len(bindings) == 1:
+            return operation
+        leaders = {'keep': json.dumps({'pokemon': facts['party'][0],
+            'effect': 'Keep the current leader and begin the selected journey'})}
+        for key, (candidate, _) in bindings.items():
+            if candidate.startswith('lead_with:'):
+                leaders[candidate] = json.dumps({'pokemon': json.loads(candidates[key])['transit_leader'],
+                    'effect': 'Move this party member to the lead through the normal party menu, then begin the selected journey'})
+        choice = super().choose('action', {'selected_journey': json.loads(candidates['trip']),
+            'party': facts['party'], 'subgoal': self.active['target'], 'stage': 'transit_preparation'},
+            leaders,
+            'Which party member should lead this selected journey through incidental wild encounters? '
+            'The journey itself has already been selected. Compare level, current HP and usable moves with '
+            'the possible route encounters to preserve the party and escape safely. A capture status supporter '
+            'can remain in the party for the destination battle without leading the trip. Keep the current '
+            'leader when already suitable to avoid unnecessary swapping. This is not selection of an attack '
+            'or training participant. Field moves may be used by a non-leading party member; the selected '
+            'field-move user is unchanged by this choice. Table ranges do not guarantee what will be encountered.',
+            allow_abstain=False)
+        if choice == 'keep':
+            return operation
+        # The selected field-move user is an individual party member, not a
+        # stable slot number. Reordering must not silently change that choice.
+        actor = facts['party'][int(operation.split(':')[1])] if operation.startswith('surf:') else None
+        self.execute(choice, rule)
+        if actor is not None:
+            party = self.facts()['party']
+            index = next(i for i, mon in enumerate(party) if mon == actor)
+            return f'surf:{index}'
+        return operation
+
     def execute(self, operation, rule):
+        if (getattr(self, 'collects_dex', False)
+                and operation.startswith(('travel_to:', 'reach_training:', 'surf:'))):
+            if self.actions >= self.max_actions:
+                raise StoryStopped('action_budget')
+            operation = self.prepare_transit_lead(operation, rule)
+        if operation.startswith('buy_coins:'):
+            if self.actions >= self.max_actions:
+                raise StoryStopped('action_budget')
+            self.actions += 1
+            values = operation.split(':', 1)[1].split(',')
+            required, npc_index = (int(value) for value in values[:2])
+            counter = ((int(values[2]), int(values[3])), values[4]) if len(values) == 5 else None
+            purchases = 0
+            while self.client.state().get('coins', 0) < required:
+                self.check_budget()
+                npc = next((row for row in self.client.cmd(cmd='get_npcs')
+                            if row['npc_index'] == npc_index and row.get('visible', True)), None)
+                if npc is None:
+                    raise StoryStopped('coin_clerk_not_visible')
+                before = self.client.state().get('coins', 0)
+                if counter:
+                    self.client.move_to(*counter[0])
+                    self.game.face(counter[1])
+                else:
+                    self.game.approach_object(npc['x'], npc['y'], rule.map)
+                self.tap('a')
+                self.settle(self.active['target'], rule)
+                after = self.client.state().get('coins', 0)
+                if after <= before:
+                    raise StoryStopped('coin_purchase_did_not_increase_balance')
+                purchases += 1
+            result = {'result': 'bought_coins', 'coins': self.client.state().get('coins', 0),
+                      'purchases': purchases}
+            self.record('operation', operation=operation, result=result, script=rule.storyline)
+            return result
+        if operation.startswith('deposit_pc:'):
+            if self.actions >= self.max_actions:
+                raise StoryStopped('action_budget')
+            self.actions += 1
+            party_index, sign_index = (int(value) for value in operation.split(':', 1)[1].split(','))
+            result = self.deposit_to_pc(party_index, sign_index)
+            self.record('operation', operation=operation, result=result, script=rule.storyline)
+            return result
+        if operation.startswith('change_pc_box:'):
+            if self.actions >= self.max_actions:
+                raise StoryStopped('action_budget')
+            self.actions += 1
+            box_index, sign_index = (int(value) for value in operation.split(':', 1)[1].split(','))
+            result = self.change_pc_box(box_index, sign_index)
+            self.record('operation', operation=operation, result=result, script=rule.storyline)
+            return result
+        if operation.startswith('retrieve_pc:'):
+            if self.actions >= self.max_actions:
+                raise StoryStopped('action_budget')
+            self.actions += 1
+            box_index, mon_index, deposit_index, sign_index = (
+                int(value) for value in operation.split(':', 1)[1].split(','))
+            result = self.retrieve_from_pc(box_index, mon_index, deposit_index, sign_index)
+            self.record('operation', operation=operation, result=result, script=rule.storyline)
+            return result
+        if operation.startswith('lead_with:'):
+            if self.actions >= self.max_actions:
+                raise StoryStopped('action_budget')
+            self.actions += 1
+            species = operation.split(':', 1)[1]
+            data.lead_with(self.game, species)
+            result = {'result': 'party_reordered', 'leader': species}
+            self.record('operation', operation=operation, result=result, script=rule.storyline)
+            return result
         if operation.startswith('teach_tm:'):
             if self.actions >= self.max_actions:
                 raise StoryStopped('action_budget')
@@ -1738,6 +6629,8 @@ class AutonomousStoryAgent(DualStoryAgent):
             self.actions += 1
             item, index = operation.split(':', 1)[1].split(',')
             self.game.use_consumable(item, int(index))
+            if self.active['target'][0] == 'register':
+                self.settle(self.active['target'], rule)
             result = {'result': 'used_item', 'item': item, 'party_index': int(index)}
             self.record('operation', operation=operation, result=result, script=rule.storyline)
             return result
@@ -1854,6 +6747,13 @@ class AutonomousStoryAgent(DualStoryAgent):
                 result = {'result': 'used_machine', 'move': move}
             elif operation.startswith('surf:'):
                 obstacle = self.active['context']
+                parent = getattr(self, 'navigation_memory', {}).get(obstacle.get('destination'))
+                prerequisites = surf_current_prerequisites(obstacle, self.client.flags())
+                if prerequisites and self.game.st().get('player_transport') != 'Surfing':
+                    result = {'result': 'blocked', 'detail': 'Native current blocks Surf until boulders fall',
+                              'terrain': obstacle, 'prerequisites': prerequisites}
+                    self.record('operation', operation=operation, result=result, script=rule.storyline)
+                    return result
                 if self.game.st().get('player_transport') != 'Surfing':
                     result = self.travel(obstacle['map'], rule, [tuple(obstacle['stance'])])
                     self.remember_travel_result(obstacle['map'], result)
@@ -1872,6 +6772,11 @@ class AutonomousStoryAgent(DualStoryAgent):
                         self.field_requirements.pop('Surf', None)
                         self.crossed_passages.add(json.dumps([obstacle['map'], obstacle['stance'], obstacle['landing']]))
                         result = {'result': 'crossed_water', 'landing': obstacle['landing']}
+                        if parent and parent.get('goal'):
+                            self.route_continuation = {
+                                'goal': parent['goal'], 'destination': obstacle['destination'],
+                                'landing': obstacle['landing'],
+                                'evidence': 'Real Surf crossing completed; parent trigger still requires execution'}
                     except NavigationPause as error:
                         result = {'result': 'paused_after_battle', 'detail': str(error)}
                     except pt.NavError as error:
@@ -1889,10 +6794,35 @@ class AutonomousStoryAgent(DualStoryAgent):
                 if result['result'] == 'reached':
                     self.game.face(obstacle['direction'])
                     data.field_move(self.game, 'Cut', int(operation.split(':')[1]))
-                    self.game.st()
-                    if pt.tile_at(obstacle['map'], *obstacle['tree']) != CUT_TILES[pt.MAPS[obstacle['map']]['tileset_name']]:
-                        self.cleared_terrain.add(self.active['target'][1])
-                        result = {'result': 'tree_cleared', 'terrain': obstacle}
+                    # Closing the native textbox queues Cut; the map write
+                    # occurs on a subsequent update. A reached stance is not
+                    # the field action's success. Observe its actual effect
+                    # without replaying the menu or altering planning tiles.
+                    for _ in range(60):
+                        self.check_budget()
+                        state = self.game.st()
+                        if state['map_name'] != obstacle['map']:
+                            result = {'result': 'blocked', 'detail': 'Cut settlement left its source map',
+                                      'terrain': obstacle}
+                            break
+                        if pt.tile_at(obstacle['map'], *obstacle['tree']) != CUT_TILES[pt.MAPS[obstacle['map']]['tileset_name']]:
+                            self.cleared_terrain.add(self.active['target'][1])
+                            result = {'result': 'tree_cleared', 'terrain': obstacle}
+                            break
+                        self.client.step(2)
+                    else:
+                        result = {'result': 'blocked', 'detail': 'Cut did not clear the observed tree',
+                                  'terrain': obstacle}
+            self.record('operation', operation=operation, result=result, script=rule.storyline)
+            return result
+        if operation.startswith('reach_training:'):
+            if self.actions >= self.max_actions:
+                raise StoryStopped('action_budget')
+            self.actions += 1
+            name, x, y = operation.split(':', 1)[1].split(',')
+            result = self.travel(name, rule, [(int(x), int(y))], avoid_encounters=True)
+            self.settle(self.active['target'], rule)
+            self.remember_travel_result(name, result)
             self.record('operation', operation=operation, result=result, script=rule.storyline)
             return result
         if operation.startswith('travel_to:'):
@@ -1919,17 +6849,50 @@ class AutonomousStoryAgent(DualStoryAgent):
                 result = {'result': 'interacted_across_counter', 'npc_index': int(index)}
             self.record('operation', operation=operation, result=result, script=rule.storyline)
             return result
-        if not operation.startswith('train_encounter:'):
+        if not operation.startswith(('train_encounter:', 'catch_encounter:')):
             result = super().execute(operation, rule)
             self.record_travel(result)
             return result
         if self.actions >= self.max_actions:
             raise StoryStopped('action_budget')
         self.actions += 1
-        name, x, y = operation.split(':', 1)[1].split(',')
+        catching = operation.startswith('catch_encounter:')
+        parts = operation.split(':', 1)[1].split(',')
+        if catching:
+            if len(parts) == 3:  # pre-unified grass operation
+                name, x, y = parts
+                method, method_args = 'grass', []
+            else:
+                method, name, x, y, *method_args = parts
+            area_key = self.active.get('context', {}).get('catch_area', self.active['target'][1])
+            if self.capture_resources_missing(self.facts(), method):
+                result = {'result': 'blocked', 'detail': 'Ordinary capture balls exhausted; replan supply',
+                          'required_capability': 'capture_balls'}
+                self.active = None
+                self.record('operation', operation=operation, result=result, script=rule.storyline)
+                return result
+        else:
+            name, x, y = parts
+            method, method_args, area_key = 'grass', [], name
+            if name.startswith('SafariZone'):
+                result = {'result': 'blocked', 'detail': 'Safari encounters provide no knockout experience',
+                          'required_capability': 'experience_awarding_battle'}
+                self.record('operation', operation=operation, result=result, script=rule.storyline)
+                return result
+            if (getattr(self, 'battle_requirements', {})
+                    and self.capture_area_blocked(name, self.facts())):
+                result = {'result': 'blocked',
+                          'detail': 'Observed unidentified wild ghosts cannot be defeated for experience',
+                          'required_capability': 'identifiable_wild_opponent'}
+                self.active = None
+                self.record('operation', operation=operation, result=result, script=rule.storyline)
+                return result
+        owned_before = self.client.state().get('pokedex', {}).get('owned')
         start_level = self.client.state()['party'][0]['level']
         if self.client.state()['map_name'] != name:
-            travel = self.travel(name, rule, [(int(x), int(y))])
+            # A catching trip is for this map's grass; the routes in between
+            # are duplicate encounters, so their grass may be walked around.
+            travel = self.travel(name, rule, [(int(x), int(y))], avoid_encounters=catching)
             self.record_travel(travel)
             self.settle(self.active['target'], rule)
             self.remember_travel_result(name, travel)
@@ -1937,14 +6900,79 @@ class AutonomousStoryAgent(DualStoryAgent):
                 self.record('operation', operation=operation, result=travel, script=rule.storyline)
                 return travel
         current = self.game.st()  # refresh live map blocks for component search
+        if catching and method == 'fishing':
+            direction, rod = method_args
+            self.game.face(direction)
+            for _ in range(80):
+                self.check_budget()
+                self.game.use_field_item(rod)
+                self.settle(self.active['target'], rule)
+                after = self.client.state().get('pokedex', {}).get('owned')
+                if (self.active and self.active['target'][0] == 'held_species'
+                        and self.index.satisfied(self.active['target'], self.client.state())):
+                    break
+                if after is not None and owned_before is not None and after > owned_before:
+                    break
+                facts = self.facts()
+                if self.capture_resources_missing(facts, method) or self.needs_capture_recovery(facts):
+                    self.active = None
+                    break
+            result = {'result': 'hunted', 'method': method, 'map': name,
+                      'owned_before': owned_before,
+                      'owned_after': self.client.state().get('pokedex', {}).get('owned')}
+            return self.finish_catch_operation(operation, rule, area_key, result)
+        if catching and method == 'water':
+            direction, wx, wy = method_args
+            if current.get('player_transport') != 'Surfing':
+                self.game.face(direction)
+                surfer = next((i for i, mon in enumerate(current['party']) if 'Surf' in mon['moves']), None)
+                if surfer is None:
+                    return {'result': 'blocked', 'detail': 'No party member knows Surf'}
+                data.field_move(self.game, 'Surf', surfer)
+            try:
+                with water_planning():
+                    self.navigate_point(name, (int(wx), int(wy)), tries=20)
+            except NavigationPause:
+                result = {'result': 'hunted', 'method': method, 'map': name,
+                          'owned_before': owned_before,
+                          'owned_after': self.client.state().get('pokedex', {}).get('owned')}
+                return self.finish_catch_operation(operation, rule, area_key, result)
+            current = self.game.st()
         blocked = {(n['x'], n['y']) for n in self.client.cmd(cmd='get_npcs') if n['visible']}
-        spot = reachable_grass(name, (current['player_x'], current['player_y']), blocked)
-        if spot is None:
-            return {'result': 'no_reachable_training_grass'}
-        moved = self.client.move_to(*spot)
-        self.settle(self.active['target'], rule)
-        if moved.get('result') not in ('reached', 'interrupted', 'entered_battle'):
-            return moved
+        if method in ('grass', 'safari'):
+            spot = reachable_grass(name, (current['player_x'], current['player_y']), blocked)
+            if spot is None:
+                # Some maps have disconnected land components connected via
+                # another map (e.g. the Safari gold-teeth corner). Keep the
+                # cheap local search first, then let ordinary closed-loop
+                # navigation prove the planner's chosen encounter stance.
+                chosen = (int(x), int(y))
+                if (chosen in blocked or not training_tile(name, *chosen)
+                        or not any((chosen[0]+dx, chosen[1]+dy) not in blocked
+                            and training_tile(name, chosen[0]+dx, chosen[1]+dy)
+                            and pt.walkable_edge(name, chosen, (chosen[0]+dx, chosen[1]+dy))
+                            for dx, dy in pt.DELTA.values())):
+                    return {'result': 'no_reachable_training_grass'}
+                spot = chosen
+            # A raw move_to can interrupt on a dialogue/script while still on
+            # the bridge, not on grass. Settling the dialogue does not make
+            # that partial arrival a usable encounter stance. Use the normal
+            # closed-loop navigator, which re-localizes after interactions and
+            # only returns when the actual destination tile is reached.
+            try:
+                self.navigate_point(name, spot, tries=50)
+            except NavigationPause as error:
+                self.settle(self.active['target'], rule)
+                result = {'result': 'paused_after_battle', 'detail': str(error),
+                          'destination': name}
+                self.record('operation', operation=operation, result=result, script=rule.storyline)
+                return result
+            except pt.NavError as error:
+                result = {'result': 'blocked', 'detail': str(error), 'destination': name}
+                self.remember_travel_result(name, result)
+                self.record('operation', operation=operation, result=result, script=rule.storyline)
+                return result
+            self.settle(self.active['target'], rule)
         for cycle in range(600):
             self.check_budget()
             state = self.client.state()
@@ -1953,21 +6981,46 @@ class AutonomousStoryAgent(DualStoryAgent):
                 break
             if state['map_name'] != name:
                 break
-            if self.needs_healing(self.facts()):
+            facts = self.facts()
+            if ((self.capture_resources_missing(facts, method) or self.needs_capture_recovery(facts))
+                    if catching else self.needs_skill_recovery(facts)):
                 self.active = None
                 break
             px, py = state['player_x'], state['player_y']
-            steps = [(direction, (px + dx, py + dy))
-                     for direction, (dx, dy) in pt.DELTA.items()
-                     if training_tile(name, px+dx, py+dy)
-                     and pt.walkable_edge(name, (px, py), (px+dx, py+dy))]
+            if method == 'water':
+                with water_planning():
+                    steps = [(direction, (px + dx, py + dy))
+                             for direction, (dx, dy) in pt.DELTA.items()
+                             if water_tile(name, px+dx, py+dy)
+                             and pt.walkable_edge(name, (px, py), (px+dx, py+dy))]
+            else:
+                steps = [(direction, (px + dx, py + dy))
+                         for direction, (dx, dy) in pt.DELTA.items()
+                         if training_tile(name, px+dx, py+dy)
+                         and pt.walkable_edge(name, (px, py), (px+dx, py+dy))]
             if not steps:
                 raise StoryStopped(f'no_training_step:{name}:{px},{py}')
             # Alternate legal grass steps; Jev chooses the encounter site,
             # deterministic navigation owns the individual held frames.
             direction, _ = steps[cycle % len(steps)]
             self.game.d.drive([direction] * 8, frames=12)
-        result = {'result': 'trained', 'level_before': start_level,
-                  'level_after': self.client.state()['party'][0]['level']}
+        result = ({'result': 'hunted', 'map': name, 'owned_before': owned_before,
+                   'owned_after': self.client.state().get('pokedex', {}).get('owned')} if catching else
+                  {'result': 'trained', 'level_before': start_level,
+                   'level_after': self.client.state()['party'][0]['level']})
+        if catching:
+            return self.finish_catch_operation(operation, rule, area_key, result)
+        self.record('operation', operation=operation, result=result, script=rule.storyline)
+        return result
+
+    def finish_catch_operation(self, operation, rule, area_key, result):
+        """Record a method-specific hunt without losing its Pokédex delta."""
+        history = getattr(self, 'catch_attempts', [])
+        history.append({'map': area_key,
+                        'registered': result['owned_after'] is not None
+                        and result['owned_before'] is not None
+                        and result['owned_after'] > result['owned_before']})
+        del history[:-self.CATCH_WINDOW]
+        self.catch_attempts = history
         self.record('operation', operation=operation, result=result, script=rule.storyline)
         return result

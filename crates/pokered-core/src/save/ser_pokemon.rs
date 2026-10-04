@@ -224,7 +224,7 @@ pub fn deserialize_box_mon(data: &[u8]) -> Result<Pokemon, SaveError> {
     ];
     let pp_ups = [data[29] >> 6, data[30] >> 6, data[31] >> 6, data[32] >> 6];
 
-    Ok(Pokemon {
+    let mut mon = Pokemon {
         species,
         nickname: [0x50; 11],
         level: box_level,
@@ -246,7 +246,18 @@ pub fn deserialize_box_mon(data: &[u8]) -> Result<Pokemon, SaveError> {
         is_traded: false,
         ot_id,
         ot_name: [0x50; 11],
-    })
+    };
+    restore_missing_derived_stats(&mut mon);
+    Ok(mon)
+}
+
+/// Box records omit derived stats. Rebuild them without healing the saved HP;
+/// also repairs party records written after withdrawing a box in older builds.
+fn restore_missing_derived_stats(mon: &mut Pokemon) {
+    if mon.attack != 0 && mon.defense != 0 && mon.speed != 0 && mon.special != 0 {
+        return;
+    }
+    crate::pokemon::stats::rebuild_derived_stats(mon);
 }
 
 pub fn deserialize_party_mon(data: &[u8]) -> Result<Pokemon, SaveError> {
@@ -261,6 +272,7 @@ pub fn deserialize_party_mon(data: &[u8]) -> Result<Pokemon, SaveError> {
     mon.defense = read_u16_be(data, off + 5);
     mon.speed = read_u16_be(data, off + 7);
     mon.special = read_u16_be(data, off + 9);
+    restore_missing_derived_stats(&mut mon);
     Ok(mon)
 }
 

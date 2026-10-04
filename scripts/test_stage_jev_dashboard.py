@@ -4,7 +4,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from scripts.stage_jev_dashboard import ASSETS, LFS_PREFIX, REQUIRED, stage
+from scripts.stage_jev_dashboard import ASSETS, DEX_REQUIRED, LFS_PREFIX, REQUIRED, stage
 
 
 class PagesStagingTest(unittest.TestCase):
@@ -56,6 +56,183 @@ class PagesStagingTest(unittest.TestCase):
     def test_rejects_corrupt_recording(self):
         self.recording.write_bytes(b'changed recording')
         with self.assertRaisesRegex(ValueError, 'checksum mismatch'):
+            stage(self.repo, self.site, 'abc123')
+
+    def prepare_dex(self):
+        for name in DEX_REQUIRED:
+            path = self.source / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text('dex fixture')
+        video = self.source / 'dex-run/jev-dex-full.mp4'
+        digest = hashlib.sha256(video.read_bytes()).hexdigest()
+        (self.source / 'dex-run/manifest.json').write_text(json.dumps({
+            'files': {'jev-dex-full.mp4': {'bytes': video.stat().st_size, 'sha256': digest}}}))
+        data = {'schema': 3, 'run': {'success': True, 'video_sha256': digest},
+            'target': {'solo_ceiling': 124, 'owned': 124, 'validated_owned': 124,
+                       'pending_source_validation': []},
+            'collection_audit': {'pending_species': []},
+            'species': [{'number': number, 'name': f'Mon{number}',
+                         'status': 'owned' if number <= 124 else 'unreachable'}
+                        for number in range(1, 152)],
+            'progress': [{'owned': 124, 'validated_owned': 124,
+                          'pending_source_validation': [],
+                          'owned_species': [f'Mon{number}' for number in range(1, 125)]}]}
+        snapshot = {'dex': {'owned': 124, 'owned_species': data['progress'][0]['owned_species']},
+                    'state': {'box_counts': [0] * 12, 'current_box_index': 0,
+                              'safari_game': {'active': False, 'balls_remaining': 0, 'steps_remaining': 0}},
+                    'party': [{'species': 'Mon1'}], 'party_pp': [[35, 0, 0, 0]],
+                    'stored_pokemon': [], 'bag': [], 'flags': {}}
+        data['run']['collection_continue_verification'] = {
+            'schema': 4, 'verified': True, 'save_sha256': 'a' * 64, 'expected': snapshot, 'restored': snapshot}
+        self.write_dex_data(data)
+        return video
+
+    def write_dex_data(self, data):
+        text = json.dumps(data)
+        (self.source / 'dex-run/jev-dex-dashboard.json').write_text(text)
+        (self.source / 'dex-run/jev-dex-dashboard-data.js').write_text(
+            'window.JEV_DEX_DASHBOARD=' + text + ';\n')
+
+    def test_stages_complete_dex_alongside_existing_players(self):
+        video = self.prepare_dex()
+        stage(self.repo, self.site, 'abc123')
+        target = self.site / 'jev-dashboard/dex-run'
+        self.assertEqual((target / video.name).read_bytes(), video.read_bytes())
+        self.assertTrue((target / 'jev-dex-player.html').is_file())
+        self.assertTrue((self.site / 'jev-dashboard/full-run/jev-player.html').is_file())
+
+    def test_completion_requires_independent_continue_proof(self):
+        import copy
+        self.prepare_dex()
+        original = json.loads((self.source / 'dex-run/jev-dex-dashboard.json').read_text())
+        for proof in (None, {'verified': False}, {'verified': True, 'save_sha256': 'a'*64,
+                      'expected': {'dex': {'owned': 124}}, 'restored': {'dex': {'owned': 123}}}):
+            data = copy.deepcopy(original)
+            data['run']['collection_continue_verification'] = proof
+            self.write_dex_data(data)
+            with self.assertRaisesRegex(ValueError, 'CONTINUE evidence'):
+                stage(self.repo, self.site, 'abc123')
+
+    def test_completion_rejects_legacy_proof_without_explicit_party_pp_coverage(self):
+        self.prepare_dex()
+        data = json.loads((self.source / 'dex-run/jev-dex-dashboard.json').read_text())
+        data['run']['collection_continue_verification']['schema'] = 3
+        self.write_dex_data(data)
+        with self.assertRaisesRegex(ValueError, 'CONTINUE evidence'):
+            stage(self.repo, self.site, 'abc123')
+
+    def test_completion_rejects_missing_misaligned_or_invalid_party_pp(self):
+        import copy
+        self.prepare_dex()
+        original = json.loads((self.source / 'dex-run/jev-dex-dashboard.json').read_text())
+        target = self.site / 'jev-dashboard'
+        target.mkdir()
+        (target / 'index.html').write_text('previous dashboard')
+        for value in (None, [], [[35, 0, 0]], [[True, 0, 0, 0]], [[35.0, 0, 0, 0]],
+                      [['35', 0, 0, 0]], [[-1, 0, 0, 0]], [[256, 0, 0, 0]],
+                      [[35, 0, 0, 0], [35, 0, 0, 0]]):
+            data = copy.deepcopy(original)
+            proof = data['run']['collection_continue_verification']
+            for key in ('expected', 'restored'):
+                if value is None:
+                    proof[key].pop('party_pp')
+                else:
+                    proof[key]['party_pp'] = value
+            self.write_dex_data(data)
+            with self.subTest(pp=value), self.assertRaisesRegex(ValueError, 'CONTINUE evidence'):
+                stage(self.repo, self.site, 'abc123')
+            self.assertEqual((target / 'index.html').read_text(), 'previous dashboard')
+
+    def test_template_alone_is_not_a_publishable_dashboard(self):
+        template = self.source / DEX_REQUIRED[0]
+        template.parent.mkdir()
+        template.write_text('template')
+        stage(self.repo, self.site, 'abc123')
+        self.assertFalse((self.site / 'jev-dashboard/dex-run').exists())
+
+    def test_completion_rejects_legacy_count_only_storage_proof(self):
+        import copy
+        self.prepare_dex()
+        original = json.loads((self.source / 'dex-run/jev-dex-dashboard.json').read_text())
+        for missing_schema in (True, False):
+            data = copy.deepcopy(original)
+            proof = data['run']['collection_continue_verification']
+            if missing_schema:
+                proof.pop('schema')
+            else:
+                proof['expected'].pop('stored_pokemon')
+                proof['restored'].pop('stored_pokemon')
+            self.write_dex_data(data)
+            with self.assertRaisesRegex(ValueError, 'CONTINUE evidence'):
+                stage(self.repo, self.site, 'abc123')
+
+    def test_completion_rejects_proof_without_safari_session_coverage(self):
+        import copy
+        self.prepare_dex()
+        original = json.loads((self.source / 'dex-run/jev-dex-dashboard.json').read_text())
+        for mutation in ('old_schema', 'missing_safari', 'malformed_safari'):
+            data = copy.deepcopy(original)
+            proof = data['run']['collection_continue_verification']
+            if mutation == 'old_schema':
+                proof['schema'] = 2
+            else:
+                for key in ('expected', 'restored'):
+                    if mutation == 'missing_safari':
+                        proof[key]['state'].pop('safari_game', None)
+                    else:
+                        proof[key]['state']['safari_game'] = {'active': True}
+            self.write_dex_data(data)
+            with self.subTest(mutation=mutation), self.assertRaisesRegex(ValueError, 'CONTINUE evidence'):
+                stage(self.repo, self.site, 'abc123')
+
+    def test_rejects_partial_dex_before_replacing_previous_dashboard(self):
+        self.prepare_dex()
+        (self.source / DEX_REQUIRED[1]).unlink()
+        target = self.site / 'jev-dashboard'
+        target.mkdir()
+        (target / 'index.html').write_text('previous dashboard')
+        with self.assertRaisesRegex(ValueError, 'Missing Pokédex'):
+            stage(self.repo, self.site, 'abc123')
+        self.assertEqual((target / 'index.html').read_text(), 'previous dashboard')
+
+    def test_rejects_corrupt_dex_recording(self):
+        self.prepare_dex().write_bytes(b'corrupt')
+        with self.assertRaisesRegex(ValueError, 'checksum mismatch'):
+            stage(self.repo, self.site, 'abc123')
+
+    def test_rejects_incomplete_or_unresolved_run_before_replacing_site(self):
+        import copy
+        self.prepare_dex()
+        original = json.loads((self.source / 'dex-run/jev-dex-dashboard.json').read_text())
+        cases = [('run', 'success', False), ('target', 'owned', 50),
+                 ('target', 'validated_owned', 123),
+                 ('target', 'pending_source_validation', ['Marowak']),
+                 ('collection_audit', 'pending_species', ['Marowak'])]
+        target = self.site / 'jev-dashboard'
+        target.mkdir()
+        (target / 'index.html').write_text('previous dashboard')
+        for field, key, value in cases:
+            with self.subTest(field=field, key=key):
+                changed = copy.deepcopy(original)
+                changed[field][key] = value
+                self.write_dex_data(changed)
+                with self.assertRaisesRegex(ValueError, '124-species completion'):
+                    stage(self.repo, self.site, 'abc123')
+                self.assertEqual((target / 'index.html').read_text(), 'previous dashboard')
+
+    def test_final_species_list_must_support_the_completion_count(self):
+        self.prepare_dex()
+        data = json.loads((self.source / 'dex-run/jev-dex-dashboard.json').read_text())
+        data['progress'][-1]['owned_species'][-1] = 'Mon1'
+        self.write_dex_data(data)
+        with self.assertRaisesRegex(ValueError, 'final progress evidence'):
+            stage(self.repo, self.site, 'abc123')
+
+    def test_browser_runtime_must_equal_the_audited_json(self):
+        self.prepare_dex()
+        path = self.source / 'dex-run/jev-dex-dashboard-data.js'
+        path.write_text('window.JEV_DEX_DASHBOARD={};')
+        with self.assertRaisesRegex(ValueError, 'runtime data disagrees'):
             stage(self.repo, self.site, 'abc123')
 
     def test_rejects_missing_runtime_dependency(self):

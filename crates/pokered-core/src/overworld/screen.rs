@@ -1779,6 +1779,13 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         self.rng = crate::rng::SeededRng::seed_from_u64(seed);
     }
 
+    /// Retain a pinned stream's current position when replacing the screen.
+    /// Reapplying the original seed would repeat rolls already consumed by
+    /// startup (for example, the trainer ID).
+    pub fn inherit_rng_from(&mut self, previous: &Self) {
+        self.rng = previous.rng.clone();
+    }
+
     pub fn set_script_flags(&mut self, flags: HashMap<String, bool>) {
         self.unified_flags.merge_from(&flags);
     }
@@ -2409,6 +2416,19 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         self.safari_game_active
     }
 
+    /// Restore a saved admission without issuing a new ball/step allowance.
+    /// Load the saved flags first. An expired admission remains active until
+    /// the normal step handler ejects it; legacy saves with missing counters
+    /// must not silently receive another free Safari game on CONTINUE.
+    pub fn restore_safari_game(&mut self, steps: u16, balls: u8) {
+        let in_facility = pokered_data::map_flags::is_safari_zone_map(self.state.current_map)
+            || self.state.current_map == MapId::SafariZoneGate;
+        self.safari_game_active = in_facility
+            && self.unified_flags.get_flag("EVENT_IN_SAFARI_ZONE");
+        self.safari_steps = if self.safari_game_active { steps } else { 0 };
+        self.safari_balls = if self.safari_game_active { balls } else { 0 };
+    }
+
     /// Begin a fresh Safari Zone game: full step + ball allowance.
     pub fn start_safari_game(&mut self) {
         self.safari_steps = SAFARI_ZONE_STEP_COUNT;
@@ -2446,6 +2466,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             self.state.player.movement_state = MovementState::Idle;
             self.state.walk_counter = 0;
             self.state.exiting_door = false;
+            self.state.standing_on_door = false;
             self.state.standing_on_warp = false;
 
             // EnterMap: ResetUsingStrengthOutOfBattleBit — STRENGTH wears off

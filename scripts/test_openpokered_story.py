@@ -34,6 +34,159 @@ def facts(**flags):
 
 
 class RulesTests(unittest.TestCase):
+    def test_game_version_uses_only_valid_explicit_native_observation(self):
+        for version in (0, 1):
+            for name in ('getGameVersion', 'game.getGameVersion'):
+                self.assertEqual(evaluate(call(name), {'game_version': version}), version)
+        for version in (None, False, True, -1, 2, 'Red', '0', 0.0, []):
+            self.assertIsNone(evaluate(call('getGameVersion'), {'game_version': version}))
+        self.assertIsNone(evaluate(call('getGameVersion'), {}))
+        self.assertIsNone(evaluate(call('getGameVersion', 0), {'game_version': 0}))
+
+    def test_prize_version_guard_keeps_red_blue_and_unknown_distinct(self):
+        expr = {'BinaryOp': {'op': 'Eq', 'left': call('getGameVersion'), 'right': literal(0)}}
+        self.assertEqual(requirements(expr, True, {'game_version': 0}), [[]])
+        self.assertEqual(requirements(expr, False, {'game_version': 1}), [[]])
+        for state, wanted in (({}, True), ({}, False), ({'game_version': 1}, True),
+                              ({'game_version': 0}, False)):
+            self.assertEqual(requirements(expr, wanted, state)[0][0][0], 'unknown')
+
+    def test_party_count_reads_the_observed_roster_without_assuming_an_empty_party(self):
+        for size in range(7):
+            for name in ('getPartyCount', 'game.getPartyCount'):
+                self.assertEqual(evaluate(call(name), {'party': [{}] * size}), size)
+        for state in ({}, {'party': None}, {'party': {}}, {'party': 'six'},
+                      {'party': [{}] * 7}):
+            self.assertIsNone(evaluate(call('getPartyCount'), state))
+        self.assertIsNone(evaluate(call('getPartyCount', 0), {'party': []}))
+
+    def test_scene_party_room_guard_becomes_a_real_deposit_prerequisite(self):
+        full = {'party': [{}] * 6}
+        room = {'party': [{}] * 5}
+        for op, bound, wanted in (('Gte', 6, False), ('Lt', 6, True),
+                                  ('Gt', 5, False), ('Lte', 5, True)):
+            expr = {'BinaryOp': {'op': op, 'left': call('game.getPartyCount'),
+                                 'right': literal(bound)}}
+            self.assertEqual(requirements(expr, wanted, full), [[('party_space', 'party', True)]])
+            self.assertEqual(requirements(expr, wanted, room), [[]])
+            self.assertEqual(requirements(expr, wanted, {})[0][0][0], 'unknown')
+        index = StoryIndex.__new__(StoryIndex)
+        self.assertTrue(index.satisfied(('party_space', 'party', True), room))
+        self.assertFalse(index.satisfied(('party_space', 'party', True), full))
+        self.assertFalse(index.satisfied(('party_space', 'party', True), {}))
+        self.assertFalse(index.satisfied(('party_space', 'party', False), {}))
+
+    def test_other_party_count_thresholds_are_not_replaced_by_a_free_slot(self):
+        # Daycare's minimum-party guard is not a gift-capacity prerequisite.
+        for op, bound, wanted in (('Lte', 1, False), ('Gte', 3, False),
+                                  ('Eq', 5, True), ('Gte', 6, True)):
+            expr = {'BinaryOp': {'op': op, 'left': call('getPartyCount'),
+                                 'right': literal(bound)}}
+            state = {'party': [{}] * (1 if op == 'Lte' else 5 if wanted and op == 'Gte' else 6)}
+            self.assertEqual(requirements(expr, wanted, state)[0][0][0], 'unknown')
+
+    def test_native_ending_transport_requires_the_real_ceremony_and_credits(self):
+        from openpokered.story_rules import native_ending_destination
+        self.assertEqual(native_ending_destination(), ('PalletTown', 5, 6))
+        rules = compile_story(story([command('resetFlag', 'ROUND_WON'), command('enterHallOfFame')]))
+        self.assertEqual(rules[-1].effect, ('transport', native_ending_destination(), True))
+        self.assertIn(('ending', 'hall_of_fame_and_credits', True), rules[-1].preceding)
+        self.assertIn(('flag', 'ROUND_WON', False), rules[-1].preceding)
+
+    def test_badge_queries_use_native_bits_not_count_or_story_flags(self):
+        from openpokered.story_rules import BADGE_BITS
+        for name, bit in BADGE_BITS.items():
+            query = call('game.hasBadge', name.lower())
+            self.assertTrue(evaluate(query, {**facts(), 'badges': 1, 'badge_bits': 1 << bit}))
+            self.assertFalse(evaluate(query, {**facts(EVENT_BEAT_ERIKA=True),
+                                             'badges': 7, 'badge_bits': 255 ^ (1 << bit)}))
+        self.assertIsNone(evaluate(call('hasBadge', 'RAINBOWBADGE'), facts(EVENT_BEAT_ERIKA=True)))
+        self.assertIsNone(evaluate(call('hasBadge', 'INVALID'), {'badge_bits': 255}))
+        self.assertEqual(requirements(call('hasBadge', 'RAINBOWBADGE'), True,
+                                     {**facts(), 'badge_bits': 0}),
+                         [[('badge', 'RAINBOWBADGE', True)]])
+
+    def test_badge_guard_backchains_real_give_badge_producer(self):
+        earned = compile_story(story([conditional(call('getFlag', 'WON_GYM'),
+            [command('giveBadge', 'RAINBOWBADGE')])]))
+        index = StoryIndex.__new__(StoryIndex)
+        index.by_effect = {('badge', 'RAINBOWBADGE', True): earned}
+        missing = {**facts(WON_GYM=True), 'badge_bits': 0}
+        self.assertEqual(index.frontier(('badge', 'RAINBOWBADGE', True), missing), earned)
+        owned = {**missing, 'badge_bits': 8}
+        self.assertTrue(index.satisfied(('badge', 'RAINBOWBADGE', True), owned))
+        self.assertEqual(index.frontier(('badge', 'RAINBOWBADGE', True), owned), [])
+        self.assertFalse(index.satisfied(('badge', 'RAINBOWBADGE', False), facts()))
+        guard = compile_story(story([conditional(call('hasBadge', 'RAINBOWBADGE'), [],
+            [command('movePlayerRelative', 'down')])]))[0]
+        self.assertEqual(guard.missing(missing), [])
+        self.assertNotEqual(guard.missing(owned), [])
+
+    def test_rival_triplet_base_survives_into_following_effect(self):
+        rules = compile_story(story([
+            command('startBattleSet', 'OPP_RIVAL2', 6), command('setFlag', 'RIVAL_BEATEN')]))
+        self.assertEqual(rules[-1].preceding, [('battle', ('OPP_RIVAL2', 6), True)])
+        ordinary = compile_story(story([
+            command('startBattle', 'OPP_ROCKET7'), command('setFlag', 'ROCKET_BEATEN')]))
+        self.assertEqual(ordinary[-1].preceding, [('battle', 'OPP_ROCKET7', True)])
+
+    def test_pokedex_count_gate_becomes_a_pursuable_goal(self):
+        from openpokered.story_rules import requirements, StoryIndex
+        expr = {'BinaryOp': {'op': 'Gte', 'left': call('getPokedexOwnedCount'),
+                             'right': {'NumberLit': 10.0}}}
+        self.assertEqual(requirements(expr, True, facts()), [[('dex', 'count', 10)]])
+        self.assertEqual(requirements(expr, True, {**facts(), 'dex': {'owned': 10}}), [[]])
+        index = StoryIndex.__new__(StoryIndex)
+        self.assertFalse(index.satisfied(('dex', 'count', 10), facts()))
+        self.assertTrue(index.satisfied(('dex', 'count', 10), {**facts(), 'dex': {'owned': 10}}))
+
+    def test_explore_target_is_satisfied_by_standing_on_the_map(self):
+        from openpokered.story_rules import StoryIndex
+        index = StoryIndex.__new__(StoryIndex)
+        self.assertTrue(index.satisfied(('explore', 'Route3', True), {**facts(), 'map': 'Route3'}))
+        self.assertFalse(index.satisfied(('explore', 'Route3', True), {**facts(), 'map': 'Route2'}))
+
+    def test_catch_target_tracks_the_owned_species_list(self):
+        from openpokered.story_rules import StoryIndex
+        index = StoryIndex.__new__(StoryIndex)
+        index._wild_cache = {'Route1': {'Pidgey', 'Rattata'}, 'IndigoPlateau': set()}
+        dex = {'owned': 2, 'owned_species': ['Pidgey', 'Rattata']}
+        self.assertTrue(index.satisfied(('catch', 'Route1', True), {**facts(), 'dex': dex}))
+        partial = {'owned': 1, 'owned_species': ['Pidgey']}
+        self.assertFalse(index.satisfied(('catch', 'Route1', True), {**facts(), 'dex': partial}))
+        self.assertFalse(index.satisfied(('catch', 'IndigoPlateau', True), {**facts(), 'dex': dex}))
+        self.assertFalse(index.satisfied(('catch', 'Route1', True), facts()))
+
+    def test_catch_completion_uses_exact_method_and_rod(self):
+        from openpokered.story_rules import StoryIndex, MAPS_DIR
+        index = StoryIndex.__new__(StoryIndex)
+        index.maps_dir, index._wild_cache = MAPS_DIR, {}
+        cases = {
+            'water:Route19': {'Tentacool'},
+            'fishing:OldRod:VermilionCity': {'Magikarp'},
+            'fishing:GoodRod:VermilionCity': {'Goldeen', 'Poliwag'},
+            'fishing:SuperRod:VermilionCity': {'Krabby', 'Shellder'},
+            'safari:SafariZoneCenter': index.wild_species('SafariZoneCenter'),
+            'grass:Route1': {'Pidgey', 'Rattata'},
+        }
+        for key, expected in cases.items():
+            with self.subTest(key=key):
+                self.assertTrue(expected)
+                self.assertEqual(index.wild_species(key), expected)
+                owned = {**facts(), 'dex': {'owned_species': sorted(expected)}}
+                self.assertTrue(index.satisfied(('catch', key, True), owned))
+                self.assertFalse(index.satisfied(('catch', key, True), facts()))
+                owned['collection_audit_pending'] = [next(iter(expected))]
+                self.assertFalse(index.satisfied(('catch', key, True), owned))
+        # A completed water target never borrows unrelated grass/rod species.
+        water = {**facts(), 'dex': {'owned_species': ['Tentacool']}}
+        self.assertTrue(index.satisfied(('catch', 'water:Route19', True), water))
+        self.assertFalse(index.satisfied(('catch', 'Route19', True), water))
+        for key in ('unknown:Route19', 'fishing:MissingRod:Route19',
+                    'fishing:OldRod:MissingMap', 'water:MissingMap'):
+            self.assertEqual(index.wild_species(key), set())
+            self.assertFalse(index.satisfied(('catch', key, True), water))
+
     def test_lower_floor_boulder_backchains_the_matching_stone_from_above(self):
         floors = [('SeafoamIslandsB1F', 'EVENT_SEAFOAM1_BOULDER1_DOWN_HOLE', 'SEAFOAM_ISLANDS_B1F_OBJ_1'),
                   ('SeafoamIslandsB2F', 'EVENT_SEAFOAM2_BOULDER1_DOWN_HOLE', 'SEAFOAM_ISLANDS_B2F_OBJ_1')]
@@ -215,6 +368,27 @@ class RulesTests(unittest.TestCase):
         rule=compile_story(story([conditional(call('futureUnknown'),[command('setFlag','DONE')])]))[0]
         self.assertEqual(rule.missing(facts())[0][0],'unknown')
 
+    def test_npc_trade_result_is_a_postcondition_not_an_unknown_entry_guard(self):
+        program = [conditional(call('getFlag', 'TRADED'), [], [
+            {'Choice': {'options': [{'label': literal('YES'), 'body': [
+                {'Assign': {'name': 'traded',
+                            'value': call('game.tradePokemon', 'ABRA', 'MR_MIME', 'MARCEL')}},
+                conditional({'Variable': 'traded'}, [command('setFlag', 'TRADED')])
+            ]}]}}
+        ])]
+        rule = compile_story(story(program))[0]
+        self.assertEqual(rule.missing(facts()), [])
+        self.assertEqual(rule.choices, ['YES'])
+        self.assertEqual(rule.missing(facts(TRADED=True)), [('flag', 'TRADED', False)])
+        self.assertIn('Result', json.dumps(rule.guards))
+
+    def test_unknown_assigned_call_remains_an_unknown_entry_guard(self):
+        rule = compile_story(story([
+            {'Assign': {'name': 'ready', 'value': call('futureUnknown')}},
+            conditional({'Variable': 'ready'}, [command('setFlag', 'DONE')])
+        ]))[0]
+        self.assertEqual(rule.missing(facts())[0][0], 'unknown')
+
     def test_bag_uses_runtime_names_without_underscores(self):
         f=facts();f['bag']={'OAKSPARCEL':1}
         self.assertTrue(evaluate(call('hasItem','OAKS_PARCEL'),f))
@@ -283,6 +457,44 @@ class DecisionTests(unittest.TestCase):
     def agent(self,model=None,**kwargs):
         return DualStoryAgent(Client(),model or FakeModel(),OBJECTIVES[:2],trace=io.StringIO(),**kwargs)
 
+    def test_completed_stochastic_hunts_do_not_blacklist_an_unchanged_site(self):
+        from openpokered.autonomous_story import AutonomousStoryAgent
+        from types import MethodType
+        for observed, result_kind, expected_selections in [(True, 'hunted', 1),
+                (False, 'hunted', 4), (True, 'blocked', 5)]:
+            with self.subTest(observed=observed, result_kind=result_kind):
+                agent = self.agent(FakeModel(choice='a'))
+                agent.completed_stochastic_attempt = MethodType(
+                    AutonomousStoryAgent.completed_stochastic_attempt, agent)
+                agent.objectives = agent.objectives[:1]
+                flag = agent.objectives[0]['satisfied_when']['flag']
+                current = {**facts(), 'map': 'Park', 'x': 5, 'y': 8}
+                agent.facts = lambda: {**current, 'flags': dict(current['flags'])}
+                target = ('catch', 'safari:Park', True)
+                rule = Rule('hunt', 'Park', 'skill:catch_encounter', [], [], [], target, [])
+                index = Mock(rules=[rule], errors=[], sha256='test')
+                index.satisfied.return_value = False
+                agent.settle = Mock()
+                agent.action_candidates = lambda f: ({'a': 'hunt'}, {'a': ('catch_encounter:safari,Park,5,8', rule)})
+                selections, executions = [], []
+                def select(f):
+                    selections.append(len(executions))
+                    agent.active = {'target': target, 'objectives': ['catch'], 'rules': [rule]}
+                agent.select_strategy = select
+                def execute(*args):
+                    executions.append(1)
+                    if observed:
+                        agent.resolved_battles += 1
+                    if len(executions) == 5:
+                        current['flags'][flag] = True
+                    return {'result': result_kind}
+                agent.execute = execute
+                with patch('openpokered.story_agent.StoryIndex', return_value=index):
+                    self.assertTrue(agent.run()['success'])
+                self.assertEqual(len(selections), expected_selections)
+                if observed and result_kind == 'hunted':
+                    self.assertFalse(any(agent.failures.values()))
+
     def test_refused_strategy_is_not_completion(self):
         with self.assertRaisesRegex(StoryStopped,'strategy:no_selection'):
             self.agent().choose('strategy',{}, {'a':'obtain key'},'pick a goal')
@@ -296,9 +508,15 @@ class DecisionTests(unittest.TestCase):
 
     def test_service_failure_is_separate_from_refusal(self):
         agent=self.agent(FakeModel(error=True))
+        agent.record = Mock()
         with self.assertRaisesRegex(StoryStopped,'service_unavailable'):
             agent.choose('action',{}, {'a':'talk'},'pick')
         self.assertEqual(agent.calls['action'],1)
+        event = agent.record.call_args
+        self.assertEqual(event.args, ('judgment_error',))
+        self.assertEqual(event.kwargs['state'], {})
+        self.assertEqual(event.kwargs['question']['criteria']['a'], 'talk')
+        self.assertIn('frame', event.kwargs)
 
     def test_both_layers_share_budget_but_keep_separate_accounting(self):
         agent=self.agent(FakeModel(choice='a'),max_calls=2)
@@ -317,6 +535,25 @@ class DecisionTests(unittest.TestCase):
     def test_invalid_objectives_are_rejected(self):
         with self.assertRaises(ValueError):DualStoryAgent(Client(),FakeModel(),[])
 
+    def test_agent_verified_objective_needs_no_completion_flag(self):
+        objectives = [{'id': 'collect-dex', 'agent_verified': True,
+                       'name': 'Register every wild species; clear the first playthrough to open the areas '
+                               'that hold the rest'}]
+        agent = DualStoryAgent(Client(), FakeModel(), objectives, trace=io.StringIO())
+        self.assertEqual([o['id'] for o in agent.objectives], ['collect-dex'])
+        # There is no flag for the frontier to backchain, so it contributes
+        # no story group; its candidates come from the catch skill instead.
+        self.assertIsNone(agent.index)
+        self.assertEqual(agent.strategy_groups(facts()), {})
+        # The milestone still records the decision the agent itself made.
+        agent.objective_satisfied = lambda objective, facts: True
+        agent.mark_milestones(facts())
+        self.assertEqual(agent.completed, ['collect-dex'])
+        self.assertIsNone(json.loads(agent.trace.getvalue())['flag'])
+
+    def test_objective_without_a_flag_needs_agent_verification(self):
+        with self.assertRaises(ValueError):DualStoryAgent(Client(),FakeModel(),OBJECTIVES[2:])
+
     def test_action_budget_stops_before_executing_an_extra_operation(self):
         agent=self.agent(max_actions=1)
         agent.actions=1
@@ -333,6 +570,30 @@ class DecisionTests(unittest.TestCase):
     def test_old_explorer_rejects_empty_objective_file(self):
         agent=JudgmentAgent(StubJudge(None),explore=True,objectives=[])
         self.assertEqual(agent.run(FakeEnv([OBS]),{'id':'explore'},999),(False,'invalid_objectives'))
+
+
+class FactsTests(unittest.TestCase):
+    def agent(self,state):
+        agent=DualStoryAgent.__new__(DualStoryAgent)
+        agent.client=Mock()
+        agent.client.state.return_value=state
+        agent.client.flags.return_value={}
+        agent.client.bag.return_value={}
+        agent.client.observe.return_value={'badges':{'count':0}}
+        return agent
+
+    def test_facts_carry_pokedex_progress_for_a_collecting_objective(self):
+        agent=self.agent({'map_name':'PalletTown','player_x':5,'player_y':6,'money':3000,'coins':0,
+                          'party':[],
+                          'pokedex':{'seen':9,'owned':3,'total':151,
+                                     'owned_numbers':[1,4,7],'seen_numbers':[1,4,7,10]}})
+        self.assertEqual(agent.facts()['dex']['owned'],3)
+        self.assertEqual(agent.facts()['dex']['owned_numbers'],[1,4,7])
+
+    def test_facts_tolerate_a_binary_without_pokedex_progress(self):
+        agent=self.agent({'map_name':'PalletTown','player_x':5,'player_y':6,'money':3000,'coins':0,
+                          'party':[]})
+        self.assertEqual(agent.facts()['dex'],{})
 
 
 if __name__=='__main__':unittest.main()

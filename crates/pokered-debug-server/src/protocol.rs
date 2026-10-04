@@ -13,6 +13,10 @@ pub use dotzuki_app::debug_server::{CoreDebugCommand, DebugResponse};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "cmd", rename_all = "snake_case")]
 pub enum GameDebugCommand {
+    /// Gracefully leave the native run loop after replying. This lets owned
+    /// resources such as the ffmpeg video pipe flush through their Drop
+    /// implementations instead of being truncated by SIGTERM.
+    Shutdown,
     /// Render the current screen to a PNG without advancing simulation.
     /// Native debug harness only; the parent directory must already exist.
     CaptureFrame { path: String },
@@ -435,6 +439,10 @@ mod tests {
         }))
         .unwrap();
         assert_eq!(json, r#"{"cmd":"press","button":"a"}"#);
+
+        let json = serde_json::to_string(&DebugCommand::Game(GameDebugCommand::Shutdown))
+            .unwrap();
+        assert_eq!(json, r#"{"cmd":"shutdown"}"#);
 
         let json = serde_json::to_string(&DebugCommand::Game(GameDebugCommand::GivePokemon {
             species: "Pikachu".into(),

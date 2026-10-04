@@ -13,8 +13,9 @@ Two call sites in this repo use it (see `semantics.py`):
   harmless reflow or wording changes.
 
 Stdlib only (`urllib`), matching the `llm_agent.ChatClient` idiom.
-Credentials resolve from `TYPESAFE_API_KEY`; `from_env` also reads a
-repo-root `.env` first, so a local key works without exporting it.
+Credentials resolve from `OPENROUTER_API_KEY` or `TYPESAFE_API_KEY`;
+`from_env` also reads a repo-root `.env` first, so a local key works without
+exporting it. OpenRouter is preferred in auto mode when both are present.
 `.env` is gitignored, never commit it.
 
 Every caller degrades to its previous deterministic behaviour when no key
@@ -30,8 +31,17 @@ from pathlib import Path
 API_KEY_ENV = "TYPESAFE_API_KEY"
 BASE_URL_ENV = "TYPESAFE_BASE_URL"
 MODEL_ENV = "TYPESAFE_DEFAULT_MODEL"
+OPENROUTER_API_KEY_ENV = "OPENROUTER_API_KEY"
+OPENROUTER_BASE_URL_ENV = "OPENROUTER_BASE_URL"
+OPENROUTER_MODEL_ENV = "OPENROUTER_JEV_MODEL"
+PROVIDER_ENV = "JEV_PROVIDER"
+# A gateway can serve the same System One contract on a different path, e.g.
+# OpenRouter's `/alpha/decisions` for the `typesafe/jev-*` decisions models.
+SYSTEM_ONE_PATH_ENV = "TYPESAFE_SYSTEM_ONE_PATH"
 DEFAULT_BASE_URL = "https://api.typesafe.ai"
 DEFAULT_MODEL = "jev-latest"
+DEFAULT_OPENROUTER_BASE_URL = "https://openrouter.ai/api"
+DEFAULT_OPENROUTER_MODEL = "typesafe/jev-1.13"
 SYSTEM_ONE_PATH = "/v1/systemone"
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -74,23 +84,34 @@ def load_env_file(path=None, env=None):
     return added
 
 
-def resolve_credentials(env=None):
+def resolve_credentials(env=None, provider=None):
     """(base_url, api_key, source) — the key is required, the rest default."""
     env = os.environ if env is None else env
-    key = env.get(API_KEY_ENV)
-    if not key:
-        raise CredentialError(
-            f"no TypeSafe credentials: set {API_KEY_ENV} (or put it in .env)")
-    base = env.get(BASE_URL_ENV) or DEFAULT_BASE_URL
-    return base.rstrip("/"), key, "typesafe"
+    provider = provider or env.get(PROVIDER_ENV) or "auto"
+    if provider not in ("auto", "openrouter", "typesafe"):
+        raise CredentialError(f"unknown Jev provider {provider!r}")
+    if provider in ("auto", "openrouter") and env.get(OPENROUTER_API_KEY_ENV):
+        base = env.get(OPENROUTER_BASE_URL_ENV) or DEFAULT_OPENROUTER_BASE_URL
+        return base.rstrip("/"), env[OPENROUTER_API_KEY_ENV], "openrouter"
+    if provider in ("auto", "typesafe") and env.get(API_KEY_ENV):
+        base = env.get(BASE_URL_ENV) or DEFAULT_BASE_URL
+        return base.rstrip("/"), env[API_KEY_ENV], "typesafe"
+    wanted = OPENROUTER_API_KEY_ENV if provider == "openrouter" else API_KEY_ENV
+    if provider == "auto":
+        wanted = f"{OPENROUTER_API_KEY_ENV} or {API_KEY_ENV}"
+    raise CredentialError(f"no Jev credentials: set {wanted} (or put it in .env)")
 
 
-def default_model(env=None):
+def default_model(env=None, provider=None):
     env = os.environ if env is None else env
+    provider = provider or env.get(PROVIDER_ENV) or (
+        "openrouter" if env.get(OPENROUTER_API_KEY_ENV) else "typesafe")
+    if provider == "openrouter":
+        return env.get(OPENROUTER_MODEL_ENV) or DEFAULT_OPENROUTER_MODEL
     return env.get(MODEL_ENV) or DEFAULT_MODEL
 
 
-def configured(env=None):
+def configured(env=None, provider=None):
     """True when a key is available, i.e. semantic calls can be made.
 
     `.env` is consulted only for the process environment. An explicitly
@@ -100,7 +121,12 @@ def configured(env=None):
     if env is None:
         env = os.environ
         load_env_file(env=env)
-    return bool(env.get(API_KEY_ENV))
+    provider = provider or env.get(PROVIDER_ENV) or "auto"
+    if provider == "openrouter":
+        return bool(env.get(OPENROUTER_API_KEY_ENV))
+    if provider == "typesafe":
+        return bool(env.get(API_KEY_ENV))
+    return bool(env.get(OPENROUTER_API_KEY_ENV) or env.get(API_KEY_ENV))
 
 
 # ── typed questions ───────────────────────────────────────────────────
@@ -236,21 +262,34 @@ class TypeSafeClient:
     RETRYABLE = (429, 529)
 
     def __init__(self, base_url, api_key, model, timeout=10.0,
-                 max_retries=2, opener=None):
+                 max_retries=2, opener=None, system_one_path=SYSTEM_ONE_PATH,
+                 provider="typesafe"):
         self.base_url = base_url.rstrip("/")
         self.api_key = api_key
         self.model = model
         self.timeout = timeout
         self.max_retries = max_retries
         self.opener = opener or urllib.request.urlopen
+        self.system_one_path = system_one_path
+        self.provider = provider
 
     @classmethod
-    def from_env(cls, env=None, **kw):
+    def from_env(cls, env=None, provider=None, **kw):
         if env is None:
             env = os.environ
             load_env_file(env=env)
-        base, key, _source = resolve_credentials(env)
-        return cls(base, key, default_model(env), **kw)
+        base, key, source = resolve_credentials(env, provider)
+        kw.setdefault("system_one_path", env.get(SYSTEM_ONE_PATH_ENV) or SYSTEM_ONE_PATH)
+        kw.setdefault("provider", source)
+        return cls(base, key, default_model(env, source), **kw)
+
+    def request_model(self, model=None):
+        """Translate historical TypeSafe names to OpenRouter's public slug."""
+        requested = model or self.model
+        if self.provider == "openrouter" and requested in (
+                "jev-latest", "jev-1.13", "jev-1.13.0"):
+            return DEFAULT_OPENROUTER_MODEL
+        return requested
 
     def system_one(self, state, questions, model=None):
         """Evaluate `state` against `questions`; one answer per id."""
@@ -258,11 +297,11 @@ class TypeSafeClient:
             raise ValueError("no questions asked")
         body = json.dumps({
             "state": state,
-            "model": model or self.model,
+            "model": self.request_model(model),
             "questions": {qid: q.to_json() for qid, q in questions.items()},
         }).encode()
         req = urllib.request.Request(
-            self.base_url + SYSTEM_ONE_PATH, data=body,
+            self.base_url + self.system_one_path, data=body,
             headers={"Authorization": f"Bearer {self.api_key}",
                      "Content-Type": "application/json"})
         last_err = None

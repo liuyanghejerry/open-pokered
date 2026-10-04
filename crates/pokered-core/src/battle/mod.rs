@@ -1030,6 +1030,9 @@ pub struct BattleScreen {
     /// its current battle state (HP/status/level/moves). The app layer moves it
     /// into the party (or a PC box if full) and registers it in the Pokédex.
     pub captured_mon: Option<state::Pokemon>,
+    /// Wild send-out identity/DVs, separate from Transform's mutable battler.
+    /// Equivalent to wEnemyMonSpecies2 / wTransformedEnemyMonOriginalDVs.
+    pub wild_encounter: Option<state::Pokemon>,
     /// True when the battle was escaped with a POKé DOLL (`wEscapedFromBattle`
     /// in the original, set ONLY by ItemUsePokeDoll). The original keeps
     /// `wBattleResult` at 0 for a Doll escape but writes $2 for a menu run
@@ -1312,6 +1315,7 @@ impl BattleScreen {
             trainer_npc_index: None,
             end_battle_text: None,
             captured_mon: None,
+            wild_encounter: None,
             escaped_via_poke_doll: false,
             pending_learn_moves: Vec::new(),
             map_id: 0,
@@ -1411,6 +1415,7 @@ impl BattleScreen {
             trainer_npc_index: None,
             end_battle_text: None,
             captured_mon: None,
+            wild_encounter: if is_wild { Some(*enemy) } else { None },
             escaped_via_poke_doll: false,
             pending_learn_moves: Vec::new(),
             map_id: 0,
@@ -3298,11 +3303,35 @@ learn {learn_name}!")];
         );
     }
 
+    pub fn wild_capture_species(&self) -> Option<Species> {
+        if !self.is_wild {
+            return None;
+        }
+        let bs = self.battle_state.as_ref()?;
+        // ItemUseBall deliberately assumes every transformed wild is Ditto
+        // (including the original Mirror Move bug). The battle form is not
+        // the species placed in the party/box or registered in the Pokédex.
+        Some(if bs.enemy.has_status3(state::status3::TRANSFORMED) {
+            Species::Ditto
+        } else {
+            self.wild_encounter.as_ref().unwrap_or(bs.enemy.active_mon()).species
+        })
+    }
+
+    pub fn wild_capture_rate(&self) -> Option<u8> {
+        if !self.is_wild {
+            return None;
+        }
+        let bs = self.battle_state.as_ref()?;
+        // Transform does not overwrite wEnemyMonActualCatchRate.
+        let original = self.wild_encounter.as_ref().unwrap_or(bs.enemy.active_mon());
+        pokered_data::pokemon_data::get_base_stats(original.species).map(|s| s.catch_rate)
+    }
+
     fn use_ball(&mut self, ball_id: ItemId) {
         use crate::battle::capture::{
             try_capture_with_rolls, CaptureContext, CaptureResult,
         };
-        use pokered_data::pokemon_data::get_base_stats;
         let ball_name = pokered_data::item_data::get_item_data(ball_id)
             .map(|d| d.name)
             .unwrap_or("POKé BALL");
@@ -3312,9 +3341,10 @@ learn {learn_name}!")];
             .unwrap_or_else(|| "RED".to_string())
             .to_uppercase();
         let used_msg = format!("{} used\n{}!", thrower, ball_name);
-        // A Pokémon-Tower GHOST (no Silph Scope) is uncatchable — the ball is dodged and
-        // NOT consumed (the mon is unidentified until the Scope reveals it).
-        if self.is_ghost {
+        // Both unidentified GHOSTs and the revealed RESTLESS_SOUL are uncatchable.
+        // Original ItemUseBall checks RESTLESS_SOUL before even the Master Ball
+        // shortcut. Identification permits fighting, never capturing this spirit.
+        if self.is_ghost || self.ghost_marowak_reveal {
             // wPokeBallAnimData = $10: toss only — the ghost dodges
             // (DoBallTossSpecialEffects slides it left for the last frames).
             self.pending_anim_events.push_back(BattleAnimEvent::Ball {
@@ -3345,17 +3375,25 @@ learn {learn_name}!")];
             );
             return;
         }
+        let catch_rate = self.wild_capture_rate().unwrap_or(255);
         if let Some(ref mut bs) = self.battle_state {
             let enemy = bs.enemy.active_mon();
-            let catch_rate = get_base_stats(enemy.species)
-                .map(|s| s.catch_rate)
-                .unwrap_or(255);
             // Snapshot the wild mon in its current (weakened) state before the
             // borrow of `bs` ends, so it can be handed to the party on a catch.
             // A freshly caught mon is the player's own: stamp it with the
             // player's OT ID/name (MON_OTID + the party OT-name table) so
             // obedience and the SRAM round-trip see it as self-caught.
             let mut caught_candidate = enemy.clone();
+            if bs.enemy.has_status3(state::status3::TRANSFORMED) {
+                // ItemUseBall reloads Ditto's natural stats/moves with its
+                // original DVs, then restores current HP and status. Do not
+                // persist the copied species, attacks or five-PP move set.
+                let dvs = self.wild_encounter.as_ref().unwrap_or(enemy).dv_bytes;
+                caught_candidate = crate::pokemon::stats::create_pokemon(
+                    Species::Ditto, enemy.level, dvs).expect("Ditto species data");
+                caught_candidate.hp = enemy.hp;
+                caught_candidate.status = enemy.status;
+            }
             caught_candidate.ot_id = self.player_id;
             if caught_candidate.ot_name == [0x50; 11] {
                 if let Some(name) = &self.player_name {
@@ -4255,6 +4293,17 @@ learn {learn_name}!")];
         {
             use crate::battle::state::{status1, status2};
             let bs = self.battle_state.as_mut().unwrap();
+            // Commit this turn's slot before spending PP. Previously this
+            // assignment happened only inside the stack block below, so the
+            // first turn (or a changed menu choice) charged the previous slot.
+            // Keep the forced-Struggle out-of-range sentinel intact.
+            bs.player.selected_move_index = if player_move_id == MoveId::Struggle
+                && bs.player.selected_move_index >= 4
+            {
+                4
+            } else {
+                move_index as u8
+            };
             let pp_spend = !player_call_failed
                 && !player_scared
                 && !player_disobeyed
@@ -4299,15 +4348,6 @@ learn {learn_name}!")];
                 pokered_rules::set_last_move_live(BattlerRef::PLAYER, disable_target_last_move(&bs.player));
                 pokered_rules::set_last_move_live(BattlerRef::OPPONENT, disable_target_last_move(&bs.enemy));
                 bs.player.selected_move = player_move_id;
-                // Preserve a forced-Struggle's out-of-range marker (slot 4);
-                // normal turns record the menu slot.
-                bs.player.selected_move_index = if player_move_id == MoveId::Struggle
-                    && bs.player.selected_move_index >= 4
-                {
-                    4
-                } else {
-                    move_index as u8
-                };
                 bs.enemy.selected_move = enemy_move_id;
                 bs.enemy.selected_move_index = enemy_move_idx;
                 // A mon that ENTERS the turn recharging (Hyper Beam) is forced to skip
@@ -6137,6 +6177,52 @@ mod trainer_ai_action_tests {
         assert!(hp > 100, "enemy-first: the heal (1 → 201) applied before the player's chip (hp={hp})");
     }
 }
+#[cfg(test)]
+mod transformed_capture_tests {
+    use super::*;
+    use crate::pokemon::stats::create_pokemon;
+
+    #[test]
+    fn transformed_wild_capture_restores_ditto_but_preserves_hp_status_and_dvs() {
+        let player = create_pokemon(Species::Gloom, 21, [0xFF, 0xFF]).unwrap();
+        let original = create_pokemon(Species::Ditto, 26, [0x97, 0xA5]).unwrap();
+        let mut screen = BattleScreen::from_parties(true, &[player], &[original], None);
+        let copied = create_pokemon(Species::Gloom, 26, [0xFF, 0xFF]).unwrap();
+        let bs = screen.battle_state.as_mut().unwrap();
+        *bs.enemy.active_mon_mut() = copied;
+        bs.enemy.active_mon_mut().hp = 7;
+        bs.enemy.active_mon_mut().status = StatusCondition::Paralysis;
+        bs.enemy.set_status3(state::status3::TRANSFORMED);
+        assert_eq!(screen.wild_capture_species(), Some(Species::Ditto));
+        assert_eq!(screen.wild_capture_rate(), Some(35));
+        screen.use_ball(ItemId::MasterBall);
+        let captured = screen.captured_mon.unwrap();
+        assert_eq!(captured.species, Species::Ditto);
+        assert_eq!(captured.moves, original.moves);
+        assert_eq!(captured.pp, original.pp);
+        assert_eq!(captured.dv_bytes, original.dv_bytes);
+        assert_eq!(captured.max_hp, original.max_hp);
+        assert_eq!((captured.attack, captured.defense, captured.speed, captured.special),
+                   (original.attack, original.defense, original.speed, original.special));
+        assert_eq!(captured.hp, 7);
+        assert_eq!(captured.status, StatusCondition::Paralysis);
+    }
+
+    #[test]
+    fn transform_does_not_replace_original_catch_rate_with_copied_form_rate() {
+        let player = create_pokemon(Species::Gloom, 21, [0xFF, 0xFF]).unwrap();
+        let original = create_pokemon(Species::Pidgey, 26, [0x97, 0xA5]).unwrap();
+        let mut screen = BattleScreen::from_parties(true, &[player], &[original], None);
+        let bs = screen.battle_state.as_mut().unwrap();
+        bs.enemy.active_mon_mut().species = Species::Gloom;
+        bs.enemy.set_status3(state::status3::TRANSFORMED);
+        // Preserve the original game's Mirror Move -> transformed Ditto bug,
+        // while retaining the original species' actual catch rate.
+        assert_eq!(screen.wild_capture_species(), Some(Species::Ditto));
+        assert_eq!(screen.wild_capture_rate(), Some(255));
+    }
+}
+
 /// Pokémon-Tower GHOST (no Silph Scope): an unidentified, uncatchable wild encounter.
 #[cfg(test)]
 mod ghost_tests {
@@ -6974,6 +7060,45 @@ mod badge_obedience_integration_tests {
         );
     }
 
+    #[test]
+    fn capture_preview_matches_first_action_after_initial_or_forced_send_out() {
+        use pokered_rules::preview::player_direct_hit;
+        for forced_switch in [false, true] {
+            for seed in 0..32 {
+                let player = mk(Species::Charizard, 74,
+                    [MoveId::Cut, MoveId::None, MoveId::None, MoveId::None]);
+                let mut enemy = mk(Species::Zapdos, 50,
+                    [MoveId::Splash, MoveId::None, MoveId::None, MoveId::None]);
+                enemy.hp = 1000;
+                enemy.max_hp = 1000;
+                let mut screen = BattleScreen::from_parties(true,
+                    &[player.clone(), player], &[enemy], None);
+                screen.rng = pokered_rules::runtime::StdBattleRng::from_seed(seed);
+                screen.player_badges = BOULDER | THUNDER;
+                if forced_switch {
+                    screen.sync_player_context();
+                    screen.force_switch_player(1);
+                }
+                let bs = screen.battle_state.as_ref().unwrap();
+                assert!(bs.player.badge_boosted_stats.is_none());
+                if !forced_switch {
+                    assert_eq!(bs.player_badges, 0, "frontend context not synchronized yet");
+                }
+                let before = serde_json::to_value(bs).unwrap();
+                let preview = player_direct_hit(bs, MoveId::Cut, screen.player_badges).unwrap();
+                assert_eq!(serde_json::to_value(bs).unwrap(), before);
+                screen.sync_player_context();
+                assert_eq!(preview, player_direct_hit(screen.battle_state.as_ref().unwrap(),
+                    MoveId::Cut, screen.player_badges).unwrap());
+                screen.execute_turn_with_move(0);
+                let damage = 1000 - screen.battle_state.as_ref().unwrap().enemy.active_mon().hp;
+                assert!(damage == 0 || (preview.normal_damage[0]..=preview.normal_damage[1]).contains(&damage)
+                    || (preview.critical_damage[0]..=preview.critical_damage[1]).contains(&damage),
+                    "switch={forced_switch} seed={seed} damage={damage} preview={preview:?}");
+            }
+        }
+    }
+
     /// The stat-up glitch, in-turn, through the stack engine: Swords Dance
     /// re-applies the badge boosts to ALL FOUR working stats (effects.asm:499),
     /// while Attack itself is first recomputed from its unmodified value.
@@ -7312,6 +7437,20 @@ mod hp_bar_anim_tests {
             screen.execute_turn_with_move(0);
             let pp1 = screen.battle_state.as_ref().unwrap().player.active_mon().pp[0];
             assert_eq!(pp0.saturating_sub(1), pp1, "Gust costs 1 PP");
+        }
+
+        #[test]
+        fn changed_menu_slots_spend_only_the_current_slots_pp() {
+            let player = vec![mk(Species::Pidgey, 20, [MoveId::Growl; 4])];
+            let enemy = vec![mk(Species::Snorlax, 100, [MoveId::Growl; 4])];
+            let mut screen = BattleScreen::from_parties(true, &player, &enemy, None);
+            let mut expected = screen.battle_state.as_ref().unwrap().player.active_mon().pp;
+            for slot in [3, 1, 2, 0] {
+                expected[slot] -= 1;
+                screen.execute_turn_with_move(slot);
+                assert_eq!(screen.battle_state.as_ref().unwrap().player.active_mon().pp,
+                           expected, "only the selected slot {slot} spends PP");
+            }
         }
 
         /// Thrash's continuation turns (THRASHING_ABOUT set on entry) spend no PP —

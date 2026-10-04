@@ -58,10 +58,13 @@ impl PcBox {
         self.mons.get_mut(index)
     }
 
-    pub fn deposit(&mut self, pokemon: Pokemon) -> Result<usize, BoxError> {
+    pub fn deposit(&mut self, mut pokemon: Pokemon) -> Result<usize, BoxError> {
         if self.is_full() {
             return Err(BoxError::BoxFull);
         }
+        // The SRAM box struct has no derived stats. Keep the in-memory view
+        // equivalent to a box STATS view / SRAM import, not a stale party cache.
+        super::stats::rebuild_derived_stats(&mut pokemon);
         let index = self.count;
         self.mons[index] = pokemon;
         self.count += 1;
@@ -129,8 +132,9 @@ impl<'de> Deserialize<'de> for PcBox {
         }
         let mut box_data = Self::new();
         for mon in mons {
-            box_data.mons[box_data.count] = mon;
-            box_data.count += 1;
+            box_data
+                .deposit(mon)
+                .map_err(|_| serde::de::Error::custom("box exceeds 20 members"))?;
         }
         Ok(box_data)
     }
@@ -194,7 +198,15 @@ impl PcStorage {
     }
 
     pub fn withdraw_from_current(&mut self, index: usize) -> Result<Pokemon, BoxError> {
-        self.boxes[self.current_box].withdraw(index)
+        let mut mon = self.boxes[self.current_box].withdraw(index)?;
+        // Original BOX_TO_PARTY _MoveMon computes the party level from XP,
+        // then CalcStats. Its copied current HP, status, moves and PP stay intact.
+        if let Some(base) = pokered_data::pokemon_data::get_base_stats(mon.species) {
+            mon.level =
+                crate::battle::experience::growth::level_from_exp(base.growth_rate, mon.total_exp);
+        }
+        super::stats::rebuild_derived_stats(&mut mon);
+        Ok(mon)
     }
 
     pub fn deposit_from_party(
@@ -221,7 +233,7 @@ impl PcStorage {
         if party.is_full() {
             return Err(BoxError::BoxFull);
         }
-        let pokemon = self.boxes[self.current_box].withdraw(box_index)?;
+        let pokemon = self.withdraw_from_current(box_index)?;
         let party_idx = party.add(pokemon).map_err(|e| match e {
             PartyError::PartyFull => BoxError::BoxFull,
             _ => BoxError::IndexOutOfBounds,
