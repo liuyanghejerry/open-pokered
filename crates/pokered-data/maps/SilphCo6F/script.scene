@@ -136,10 +136,14 @@ game_scene SilphCo6F {
   @storyline("itemHpUp") {
     @trigger(map = "SilphCo6F", npc = 9, toggle = "SILPH_CO_6F_OBJ_9")
     @if (!getFlag("EVENT_GOT_SILPH_CO_6F_HP_UP")) {
-      giveItem("HP_UP", 1)
-      setFlag("EVENT_GOT_SILPH_CO_6F_HP_UP")
-      hideObject("SILPH_CO_6F_OBJ_9")
-      @speaker("") { @t("<PLAYER> found HP UP!", "<PLAYER>找到了体力增强剂！") }
+      given = giveItem("HP_UP", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_SILPH_CO_6F_HP_UP")
+        hideObjectByName("SILPH_CO_6F_OBJ_9")
+        showItemDialogue(t("<PLAYER> found HP UP!", "<PLAYER>找到了体力增强剂！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 
@@ -147,10 +151,14 @@ game_scene SilphCo6F {
   @storyline("itemXAccuracy") {
     @trigger(map = "SilphCo6F", npc = 10, toggle = "SILPH_CO_6F_OBJ_10")
     @if (!getFlag("EVENT_GOT_SILPH_CO_6F_X_ACCURACY")) {
-      giveItem("X_ACCURACY", 1)
-      setFlag("EVENT_GOT_SILPH_CO_6F_X_ACCURACY")
-      hideObject("SILPH_CO_6F_OBJ_10")
-      @speaker("") { @t("<PLAYER> found X ACCURACY!", "<PLAYER>找到了特攻强化！") }
+      given = giveItem("X_ACCURACY", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_SILPH_CO_6F_X_ACCURACY")
+        hideObjectByName("SILPH_CO_6F_OBJ_10")
+        showItemDialogue(t("<PLAYER> found X ACCURACY!", "<PLAYER>找到了特攻强化！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 }

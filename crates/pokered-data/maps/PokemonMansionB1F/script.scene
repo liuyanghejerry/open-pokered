@@ -2,7 +2,7 @@
 // (scripts/PokemonMansionB1F.asm, text/PokemonMansionB1F.asm) to the real Game DSL
 // API surface. The Mansion B1F has: two sight-engaged trainers (Burglar and
 // Scientist, runtime-driven so their handlers are dialogue only), four ground
-// items in PokeBalls (RARE_CANDY, FULL_RESTORE, TM18/Blizzard, TM26/Solarbeam,
+// items in PokeBalls (RARE_CANDY, FULL_RESTORE, TM14/Blizzard, TM22/Solarbeam,
 // SECRET_KEY), a readable diary (Pokedex sprite), and two hidden secret switches
 // (coords [20,3] and [18,25], must face up) that toggle the gate door-blocks.
 // The secret switch's tile-replacement (MansionB1FCheckReplaceSwitchDoorBlocks
@@ -60,52 +60,60 @@ game_scene PokemonMansionB1F {
   // ── Ground item: RARE_CANDY (npc 3) ───────────────────────────────────────
   @storyline("talkPokeBall") {
     @trigger(map = "PokemonMansionB1F", npc = 3, toggle = "POKEMON_MANSION_B1F_OBJ_3")
-    @if (getFlag("EVENT_GOT_RARE_CANDY_MANSION_B1F")) {
-      @speaker("") { @t("The item ball is empty.", "道具球里空空如也。") }
-    } @else {
-      giveItem("RARE_CANDY", 1)
-      setFlag("EVENT_GOT_RARE_CANDY_MANSION_B1F")
-      hideObject("POKEMON_MANSION_B1F_OBJ_3")
-      @speaker("") { @t("<PLAYER> found RARE_CANDY!", "<PLAYER>找到了神奇糖果！") }
+    @if (!getFlag("EVENT_GOT_RARE_CANDY_MANSION_B1F")) {
+      given = giveItem("RARE_CANDY", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_RARE_CANDY_MANSION_B1F")
+        hideObjectByName("POKEMON_MANSION_B1F_OBJ_3")
+        showItemDialogue(t("<PLAYER> found RARE_CANDY!", "<PLAYER>找到了神奇糖果！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 
   // ── Ground item: FULL_RESTORE (npc 4) ─────────────────────────────────────
   @storyline("talkPokeBall1") {
     @trigger(map = "PokemonMansionB1F", npc = 4, toggle = "POKEMON_MANSION_B1F_OBJ_4")
-    @if (getFlag("EVENT_GOT_FULL_RESTORE_MANSION_B1F")) {
-      @speaker("") { @t("The item ball is empty.", "道具球里空空如也。") }
-    } @else {
-      giveItem("FULL_RESTORE", 1)
-      setFlag("EVENT_GOT_FULL_RESTORE_MANSION_B1F")
-      hideObject("POKEMON_MANSION_B1F_OBJ_4")
-      @speaker("") { @t("<PLAYER> found FULL_RESTORE!", "<PLAYER>找到了全复药！") }
+    @if (!getFlag("EVENT_GOT_FULL_RESTORE_MANSION_B1F")) {
+      given = giveItem("FULL_RESTORE", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_FULL_RESTORE_MANSION_B1F")
+        hideObjectByName("POKEMON_MANSION_B1F_OBJ_4")
+        showItemDialogue(t("<PLAYER> found FULL_RESTORE!", "<PLAYER>找到了全复药！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 
-  // ── Ground item: TM18 / BLIZZARD (npc 5) ──────────────────────────────────
+  // ── Ground item: TM14 / BLIZZARD (npc 5) ──────────────────────────────────
   @storyline("talkPokeBall2") {
     @trigger(map = "PokemonMansionB1F", npc = 5, toggle = "POKEMON_MANSION_B1F_OBJ_5")
-    @if (getFlag("EVENT_GOT_TM18_MANSION_B1F")) {
-      @speaker("") { @t("The item ball is empty.", "道具球里空空如也。") }
-    } @else {
-      giveItem("TM18", 1)
-      setFlag("EVENT_GOT_TM18_MANSION_B1F")
-      hideObject("POKEMON_MANSION_B1F_OBJ_5")
-      @speaker("") { @t("<PLAYER> found TM18!", "<PLAYER>找到了 TM18！") }
+    @if (!getFlag("EVENT_GOT_TM18_MANSION_B1F")) {
+      given = giveItem("TM14", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_TM18_MANSION_B1F")
+        hideObjectByName("POKEMON_MANSION_B1F_OBJ_5")
+        showItemDialogue(t("<PLAYER> found TM14!", "<PLAYER>找到了TM14！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 
-  // ── Ground item: TM26 / SOLARBEAM (npc 6) ─────────────────────────────────
+  // ── Ground item: TM22 / SOLARBEAM (npc 6) ─────────────────────────────────
   @storyline("talkPokeBall3") {
     @trigger(map = "PokemonMansionB1F", npc = 6, toggle = "POKEMON_MANSION_B1F_OBJ_6")
-    @if (getFlag("EVENT_GOT_TM26_MANSION_B1F")) {
-      @speaker("") { @t("The item ball is empty.", "道具球里空空如也。") }
-    } @else {
-      giveItem("TM26", 1)
-      setFlag("EVENT_GOT_TM26_MANSION_B1F")
-      hideObject("POKEMON_MANSION_B1F_OBJ_6")
-      @speaker("") { @t("<PLAYER> found TM26!", "<PLAYER>找到了 TM26！") }
+    @if (!getFlag("EVENT_GOT_TM26_MANSION_B1F")) {
+      given = giveItem("TM22", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_TM26_MANSION_B1F")
+        hideObjectByName("POKEMON_MANSION_B1F_OBJ_6")
+        showItemDialogue(t("<PLAYER> found TM22!", "<PLAYER>找到了TM22！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 
@@ -120,13 +128,15 @@ game_scene PokemonMansionB1F {
   // ── Ground item: SECRET_KEY (npc 8) ───────────────────────────────────────
   @storyline("talkPokeBall4") {
     @trigger(map = "PokemonMansionB1F", npc = 8, toggle = "POKEMON_MANSION_B1F_OBJ_8")
-    @if (getFlag("EVENT_GOT_SECRET_KEY_MANSION_B1F")) {
-      @speaker("") { @t("The item ball is empty.", "道具球里空空如也。") }
-    } @else {
-      giveItem("SECRET_KEY", 1)
-      setFlag("EVENT_GOT_SECRET_KEY_MANSION_B1F")
-      hideObject("POKEMON_MANSION_B1F_OBJ_8")
-      @speaker("") { @t("<PLAYER> found SECRET_KEY!", "<PLAYER>找到了秘密钥匙！") }
+    @if (!getFlag("EVENT_GOT_SECRET_KEY_MANSION_B1F")) {
+      given = giveItem("SECRET_KEY", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_SECRET_KEY_MANSION_B1F")
+        hideObjectByName("POKEMON_MANSION_B1F_OBJ_8")
+        showItemDialogue(t("<PLAYER> found SECRET_KEY!", "<PLAYER>找到了秘密钥匙！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 

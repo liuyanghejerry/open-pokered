@@ -101,10 +101,12 @@ game_scene FightingDojo {
       }
       @choice {
         @option(@t("YES", "是")) {
-          givePokemon("HITMONLEE", 30)
-          hideObjectByName("FIGHTINGDOJO_HITMONLEE_POKE_BALL")
-          setFlag("EVENT_GOT_HITMONLEE")
-          setFlag("EVENT_DEFEATED_FIGHTING_DOJO")
+          given = givePokemon("HITMONLEE", 30)
+          @if (given) {
+            hideObjectByName("FIGHTINGDOJO_HITMONLEE_POKE_BALL")
+            setFlag("EVENT_GOT_HITMONLEE")
+            setFlag("EVENT_DEFEATED_FIGHTING_DOJO")
+          }
         }
         @option(@t("NO", "否")) {
         }
@@ -124,10 +126,12 @@ game_scene FightingDojo {
       }
       @choice {
         @option(@t("YES", "是")) {
-          givePokemon("HITMONCHAN", 30)
-          hideObjectByName("FIGHTINGDOJO_HITMONCHAN_POKE_BALL")
-          setFlag("EVENT_GOT_HITMONCHAN")
-          setFlag("EVENT_DEFEATED_FIGHTING_DOJO")
+          given = givePokemon("HITMONCHAN", 30)
+          @if (given) {
+            hideObjectByName("FIGHTINGDOJO_HITMONCHAN_POKE_BALL")
+            setFlag("EVENT_GOT_HITMONCHAN")
+            setFlag("EVENT_DEFEATED_FIGHTING_DOJO")
+          }
         }
         @option(@t("NO", "否")) {
         }

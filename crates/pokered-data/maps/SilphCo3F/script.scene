@@ -91,13 +91,15 @@ game_scene SilphCo3F {
   // ── Ground item: HYPER POTION (npc 4) ───────────────────────────────────
   @storyline("itemHyperPotion") {
     @trigger(map = "SilphCo3F", npc = 4, toggle = "SILPH_CO_3F_OBJ_4")
-    @if (getFlag("EVENT_GOT_HYPER_POTION_SILPH_CO_3F")) {
-      @speaker("") { @t("The item ball is empty.", "这个道具球是空的。") }
-    } @else {
-      giveItem("HYPER_POTION", 1)
-      setFlag("EVENT_GOT_HYPER_POTION_SILPH_CO_3F")
-      hideObject("SILPH_CO_3F_OBJ_4")
-      @speaker("") { @t("<PLAYER> found HYPER_POTION!", "<PLAYER>找到了厉害伤药！") }
+    @if (!getFlag("EVENT_GOT_HYPER_POTION_SILPH_CO_3F")) {
+      given = giveItem("HYPER_POTION", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_HYPER_POTION_SILPH_CO_3F")
+        hideObjectByName("SILPH_CO_3F_OBJ_4")
+        showItemDialogue(t("<PLAYER> found HYPER_POTION!", "<PLAYER>找到了厉害伤药！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 }

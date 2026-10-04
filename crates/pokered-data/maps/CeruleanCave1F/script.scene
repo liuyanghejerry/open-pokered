@@ -10,39 +10,45 @@ game_scene CeruleanCave1F {
   // ── Ground item: FULL RESTORE (npc 1) ───────────────────────────────────
   @storyline("itemFullRestore") {
     @trigger(map = "CeruleanCave1F", npc = 1, toggle = "CERULEAN_CAVE_1F_OBJ_1")
-    @if (getFlag("EVENT_GOT_FULL_RESTORE_CERULEAN_CAVE_1F")) {
-      @speaker("") { @t("The item ball is empty.", "这个精灵球是空的。") }
-    } @else {
-      giveItem("FULL_RESTORE", 1)
-      setFlag("EVENT_GOT_FULL_RESTORE_CERULEAN_CAVE_1F")
-      hideObject("CERULEAN_CAVE_1F_OBJ_1")
-      @speaker("") { @t("<PLAYER> found FULL_RESTORE!", "<PLAYER>找到了全复药！") }
+    @if (!getFlag("EVENT_GOT_FULL_RESTORE_CERULEAN_CAVE_1F")) {
+      given = giveItem("FULL_RESTORE", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_FULL_RESTORE_CERULEAN_CAVE_1F")
+        hideObjectByName("CERULEAN_CAVE_1F_OBJ_1")
+        showItemDialogue(t("<PLAYER> found FULL_RESTORE!", "<PLAYER>找到了全复药！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 
   // ── Ground item: MAX ELIXER (npc 2) ─────────────────────────────────────
   @storyline("itemMaxElixer") {
     @trigger(map = "CeruleanCave1F", npc = 2, toggle = "CERULEAN_CAVE_1F_OBJ_2")
-    @if (getFlag("EVENT_GOT_MAX_ELIXER_CERULEAN_CAVE_1F")) {
-      @speaker("") { @t("The item ball is empty.", "这个精灵球是空的。") }
-    } @else {
-      giveItem("MAX_ELIXER", 1)
-      setFlag("EVENT_GOT_MAX_ELIXER_CERULEAN_CAVE_1F")
-      hideObject("CERULEAN_CAVE_1F_OBJ_2")
-      @speaker("") { @t("<PLAYER> found MAX_ELIXER!", "<PLAYER>找到了招式全补药！") }
+    @if (!getFlag("EVENT_GOT_MAX_ELIXER_CERULEAN_CAVE_1F")) {
+      given = giveItem("MAX_ELIXER", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_MAX_ELIXER_CERULEAN_CAVE_1F")
+        hideObjectByName("CERULEAN_CAVE_1F_OBJ_2")
+        showItemDialogue(t("<PLAYER> found MAX_ELIXER!", "<PLAYER>找到了招式全补药！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 
   // ── Ground item: NUGGET (npc 3) ─────────────────────────────────────────
   @storyline("itemNugget") {
     @trigger(map = "CeruleanCave1F", npc = 3, toggle = "CERULEAN_CAVE_1F_OBJ_3")
-    @if (getFlag("EVENT_GOT_NUGGET_CERULEAN_CAVE_1F")) {
-      @speaker("") { @t("The item ball is empty.", "这个精灵球是空的。") }
-    } @else {
-      giveItem("NUGGET", 1)
-      setFlag("EVENT_GOT_NUGGET_CERULEAN_CAVE_1F")
-      hideObject("CERULEAN_CAVE_1F_OBJ_3")
-      @speaker("") { @t("<PLAYER> found NUGGET!", "<PLAYER>找到了金珠！") }
+    @if (!getFlag("EVENT_GOT_NUGGET_CERULEAN_CAVE_1F")) {
+      given = giveItem("NUGGET", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_NUGGET_CERULEAN_CAVE_1F")
+        hideObjectByName("CERULEAN_CAVE_1F_OBJ_3")
+        showItemDialogue(t("<PLAYER> found NUGGET!", "<PLAYER>找到了金珠！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 }

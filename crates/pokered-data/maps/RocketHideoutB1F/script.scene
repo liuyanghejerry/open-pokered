@@ -89,16 +89,24 @@ game_scene RocketHideoutB1F {
   // ── Ground item: Poke Ball — ESCAPE ROPE (npc 6) ────────────────────────
   @storyline("itemEscapeRope") {
     @trigger(map = "RocketHideoutB1F", npc = 6, toggle = "ROCKET_HIDEOUT_B1F_OBJ_6")
-    giveItem("ESCAPE_ROPE", 1)
-    hideObjectByName("ROCKET_HIDEOUT_B1F_OBJ_6")
-    @speaker("") { @t("<PLAYER> found ESCAPE ROPE!", "<PLAYER>发现了逃脱绳！") }
+    given = giveItem("ESCAPE_ROPE", 1)
+    @if (given) {
+      hideObjectByName("ROCKET_HIDEOUT_B1F_OBJ_6")
+      showItemDialogue(t("<PLAYER> found ESCAPE ROPE!", "<PLAYER>发现了逃脱绳！"))
+    } @else {
+      @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+    }
   }
 
   // ── Ground item: Poke Ball — HYPER POTION (npc 7) ───────────────────────
   @storyline("itemHyperPotion") {
     @trigger(map = "RocketHideoutB1F", npc = 7, toggle = "ROCKET_HIDEOUT_B1F_OBJ_7")
-    giveItem("HYPER_POTION", 1)
-    hideObjectByName("ROCKET_HIDEOUT_B1F_OBJ_7")
-    @speaker("") { @t("<PLAYER> found HYPER POTION!", "<PLAYER>发现了厉害伤药！") }
+    given = giveItem("HYPER_POTION", 1)
+    @if (given) {
+      hideObjectByName("ROCKET_HIDEOUT_B1F_OBJ_7")
+      showItemDialogue(t("<PLAYER> found HYPER POTION!", "<PLAYER>发现了厉害伤药！"))
+    } @else {
+      @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+    }
   }
 }

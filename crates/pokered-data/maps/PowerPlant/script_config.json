@@ -46,6 +46,31 @@
       "id": 9,
       "talk": "talkZapdos",
       "toggleId": "POWER_PLANT_OBJ_9"
+    },
+    {
+      "id": 10,
+      "talk": "groundItem10",
+      "toggleId": "POWER_PLANT_OBJ_10"
+    },
+    {
+      "id": 11,
+      "talk": "groundItem11",
+      "toggleId": "POWER_PLANT_OBJ_11"
+    },
+    {
+      "id": 12,
+      "talk": "groundItem12",
+      "toggleId": "POWER_PLANT_OBJ_12"
+    },
+    {
+      "id": 13,
+      "talk": "groundItem13",
+      "toggleId": "POWER_PLANT_OBJ_13"
+    },
+    {
+      "id": 14,
+      "talk": "groundItem14",
+      "toggleId": "POWER_PLANT_OBJ_14"
     }
   ],
   "signs": [],

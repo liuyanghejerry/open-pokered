@@ -16,11 +16,15 @@ game_scene BikeShop {
         @speaker("") {
           @t("Oh, that's...\n\nA BIKE VOUCHER!\n\nOK! Here you go!", "哦，这是……\n\n自行车兑换券！\n\n好！给你！")
         }
-        giveItem("BICYCLE", 1)
-        takeItem("BIKE_VOUCHER", 1)
-        setFlag("EVENT_GOT_BICYCLE")
-        @speaker("") {
-          @t("<PLAYER> exchanged the BIKE\nVOUCHER for a BICYCLE.", "<PLAYER>用自行车兑换券换到了\n一辆自行车。")
+        given = giveItem("BICYCLE", 1)
+        @if (given) {
+          takeItem("BIKE_VOUCHER", 1)
+          setFlag("EVENT_GOT_BICYCLE")
+          @speaker("") {
+            @t("<PLAYER> exchanged the BIKE\nVOUCHER for a BICYCLE.", "<PLAYER>用自行车兑换券换到了\n一辆自行车。")
+          }
+        } @else {
+          @speaker("") { @t("You better make room for\nthis!", "你最好腾出地方来！") }
         }
       } @else {
         @speaker("") {

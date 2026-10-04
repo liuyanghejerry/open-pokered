@@ -6,7 +6,7 @@
 // `EnableAutoTextBoxDrawing`; there are no NPCs, trainers, or on-enter cutscenes.
 // The four PokeBall objects use the shared PickUpItemText (predef PickUpItem);
 // map.json itemIds 16/17/38/237 map to FULL_RESTORE / MAX_RESTORE / CARBOS /
-// TM39 (EGG BOMB). Each PokeBall is a runtime-hidden object once picked up via
+// TM37 (EGG BOMB). Each PokeBall is a runtime-hidden object once picked up via
 // its toggle, so the handler just hands over the item with the standard
 // found / too-much-stuff dialogue. The three signs are static text.
 //
@@ -21,13 +21,10 @@ game_scene SafariZoneEast {
     @trigger(map = "SafariZoneEast", npc = 1, toggle = "SAFARI_ZONE_EAST_OBJ_1")
     given = giveItem("FULL_RESTORE", 1)
     @if (given) {
-      @speaker("") {
-        @t("<PLAYER> found FULL_RESTORE!", "<PLAYER>发现了全复药！")
-      }
+      hideObjectByName("SAFARI_ZONE_EAST_OBJ_1")
+      showItemDialogue(t("<PLAYER> found FULL_RESTORE!", "<PLAYER>发现了全复药！"))
     } @else {
-      @speaker("") {
-        @t("You have too much stuff\nalready!", "你带的东西已经太多了！")
-      }
+      @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
     }
   }
 
@@ -38,13 +35,10 @@ game_scene SafariZoneEast {
     @trigger(map = "SafariZoneEast", npc = 2, toggle = "SAFARI_ZONE_EAST_OBJ_2")
     given = giveItem("MAX_POTION", 1)
     @if (given) {
-      @speaker("") {
-        @t("<PLAYER> found MAX POTION!", "<PLAYER>发现了全满药！")
-      }
+      hideObjectByName("SAFARI_ZONE_EAST_OBJ_2")
+      showItemDialogue(t("<PLAYER> found MAX POTION!", "<PLAYER>发现了全满药！"))
     } @else {
-      @speaker("") {
-        @t("You have too much stuff\nalready!", "你带的东西已经太多了！")
-      }
+      @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
     }
   }
 
@@ -53,28 +47,22 @@ game_scene SafariZoneEast {
     @trigger(map = "SafariZoneEast", npc = 3, toggle = "SAFARI_ZONE_EAST_OBJ_3")
     given = giveItem("CARBOS", 1)
     @if (given) {
-      @speaker("") {
-        @t("<PLAYER> found CARBOS!", "<PLAYER>发现了速度增强剂！")
-      }
+      hideObjectByName("SAFARI_ZONE_EAST_OBJ_3")
+      showItemDialogue(t("<PLAYER> found CARBOS!", "<PLAYER>发现了速度增强剂！"))
     } @else {
-      @speaker("") {
-        @t("You have too much stuff\nalready!", "你带的东西已经太多了！")
-      }
+      @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
     }
   }
 
-  // ── PokeBall ground item (npc 4) — TM39 (EGG BOMB) ──────────────────────
+  // ── PokeBall ground item (npc 4) — TM37 (EGG BOMB) ──────────────────────
   @storyline("talkPokeBall3") {
     @trigger(map = "SafariZoneEast", npc = 4, toggle = "SAFARI_ZONE_EAST_OBJ_4")
-    given = giveItem("TM39", 1)
+    given = giveItem("TM37", 1)
     @if (given) {
-      @speaker("") {
-        @t("<PLAYER> found TM39!", "<PLAYER>发现了 TM39！")
-      }
+      hideObjectByName("SAFARI_ZONE_EAST_OBJ_4")
+      showItemDialogue(t("<PLAYER> found TM37!", "<PLAYER>找到了TM37！"))
     } @else {
-      @speaker("") {
-        @t("You have too much stuff\nalready!", "你带的东西已经太多了！")
-      }
+      @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
     }
   }
 

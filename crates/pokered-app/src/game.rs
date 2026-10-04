@@ -1132,6 +1132,7 @@ impl PokemonGame {
             // Seed the event-flag bitset from SRAM bytes, then merge any
             // runtime-only extras (companion sidecar) on top.
             overworld.set_event_flags_bytes(&save_data.game_data.event_flags);
+            overworld.restore_system_save_state(&save_data.game_data);
             if let Some(extras) = Self::read_companion_script_flags() {
                 overworld.set_script_flags(extras);
             }
@@ -1920,6 +1921,7 @@ impl PokemonGame {
     // The event-flag bitset serializes directly into the original
     // 320-byte SRAM region (wEventFlags, NUM_EVENTS = $A00 bits).
     save.game_data.event_flags = overworld.unified_flags().as_bytes().to_vec();
+    overworld.write_system_save_state(&mut save.game_data);
 
     save.game_data.toggleable_object_flags = *overworld.toggleable_object_flags();
     save.game_data.obtained_hidden_items = *overworld.hidden_item_flags();
@@ -2350,6 +2352,7 @@ impl PokemonGame {
                         // merge any runtime-only extras (companion sidecar)
                         // on top.
                         overworld.set_event_flags_bytes(&self.save_data.game_data.event_flags);
+                        overworld.restore_system_save_state(&self.save_data.game_data);
                         #[cfg(not(target_os = "none"))]
                         if let Some(extras) = self.companion_flags() {
                             overworld.set_script_flags(extras);
@@ -3946,6 +3949,7 @@ impl PokemonGame {
                             .iter()
                             .map(|s| s.pascal_name())
                             .collect();
+                        self.overworld.seed_script_bag_quantities(&self.save_data.game_data.bag);
                         self.overworld.seed_script_query_state(
                             self.save_data.game_data.player_money,
                             &bag_names,
@@ -4011,6 +4015,8 @@ impl PokemonGame {
                         self.overworld.mix_script_rng();
                     }
 
+                    self.overworld.script_sfx_playing = self.audio.as_ref()
+                        .is_some_and(|audio| audio.is_sfx_playing() && !audio.low_health_alarm_active());
                     // wOptions text delay — pushed every frame so the dialogue
                     // typewriter honors the configured TEXT SPEED.
                     self.overworld
@@ -4039,6 +4045,9 @@ impl PokemonGame {
                             resources.clear_cache();
                         }
                     }
+                    // SSAnneCaptainsRoom.asm waits on music channel 1.
+                    self.overworld.script_music_playing = self.audio.as_ref()
+                        .is_some_and(|audio| audio.is_music_channel_playing(0));
                     let action = self.overworld.update_frame(ow_input);
 
                     self.apply_overworld_game_data_requests();
@@ -4158,6 +4167,8 @@ impl PokemonGame {
                                 self.overworld.next_rng_u8(),
                             ],
                         ) {
+                            pokemon.ot_id = self.save_data.game_data.player_id;
+                            pokemon.ot_name = pokered_core::battle::state::encode_name(&self.player_name);
                             if let Some(nick) = pending.nickname {
                                 pokemon.set_nickname(&nick);
                             }
@@ -7930,5 +7941,46 @@ mod wall_town_map_tests {
             game.overworld.pending_town_map,
             "wall map can be inspected again"
         );
+    }
+}
+
+#[cfg(test)]
+mod captain_music_wait_fidelity_tests {
+    use super::*;
+    #[test]
+    fn no_audio_frontend_resumes_wait_music_when_the_real_healed_channel_ends() {
+        let mut game = PokemonGame::new_with_options(GameVersion::Red, None, None, None,
+            false, None, false, true, #[cfg(feature = "debug-server")] None);
+        game.state.screen = GameScreen::Overworld;
+        game.overworld = OverworldScreen::new(MapId::SSAnneCaptainsRoom, None, PokemonRedData);
+        game.overworld.state.player.x = 4;
+        game.overworld.state.player.y = 3;
+        game.audio.as_ref().unwrap().play_music(MusicId::PKMNHEALED);
+        // Use the public scene-loading seam: the native VM must suspend on
+        // waitMusic and continue to the flag command after CHAN1 finishes.
+        game.overworld.reload_scene_with_config(
+            "SSAnneCaptainsRoom",
+            r#"game_scene SSAnneCaptainsRoom {
+  @storyline("captainMusicProbe") {
+    waitMusic()
+    setFlag("CAPTAIN_MUSIC_PROBE_DONE")
+  }
+}"#,
+            Some(r#"{"onLoad":"captainMusicProbe"}"#),
+        ).unwrap();
+        assert_eq!(game.overworld.active_script_effect_label().as_deref(), Some("WaitMusic"));
+        game.update(&InputState::new());
+        assert_eq!(game.overworld.active_script_effect_label().as_deref(), Some("WaitMusic"));
+        assert!(!game.overworld.unified_flags().get_flag("CAPTAIN_MUSIC_PROBE_DONE"));
+        for _ in 0..1024 {
+            game.update(&InputState::new());
+            if game.overworld.unified_flags().get_flag("CAPTAIN_MUSIC_PROBE_DONE") {
+                assert!(game.overworld.script_engine_idle());
+                assert_eq!(game.overworld.active_script_effect_label(), None);
+                assert!(!game.audio.as_ref().unwrap().is_music_channel_playing(0));
+                return;
+            }
+        }
+        panic!("no-audio WaitMusic remained blocked after the healed jingle");
     }
 }

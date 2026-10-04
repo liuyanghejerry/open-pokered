@@ -38,39 +38,45 @@ game_scene PokemonTower4F {
   // ── Ground item: ELIXER (npc 4) ─────────────────────────────────────────
   @storyline("itemElixer") {
     @trigger(map = "PokemonTower4F", npc = 4, toggle = "POKEMON_TOWER_4F_OBJ_4")
-    @if (getFlag("EVENT_GOT_ELIXER_POKEMON_TOWER_4F")) {
-      @speaker("") { @t("The item ball is empty.", "精灵球里是空的。") }
-    } @else {
-      giveItem("ELIXER", 1)
-      setFlag("EVENT_GOT_ELIXER_POKEMON_TOWER_4F")
-      hideObject("POKEMON_TOWER_4F_OBJ_4")
-      @speaker("") { @t("<PLAYER> found ELIXER!", "<PLAYER>发现了元气药片！") }
+    @if (!getFlag("EVENT_GOT_ELIXER_POKEMON_TOWER_4F")) {
+      given = giveItem("ELIXER", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_ELIXER_POKEMON_TOWER_4F")
+        hideObjectByName("POKEMON_TOWER_4F_OBJ_4")
+        showItemDialogue(t("<PLAYER> found ELIXER!", "<PLAYER>发现了元气药片！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 
   // ── Ground item: AWAKENING (npc 5) ──────────────────────────────────────
   @storyline("itemAwakening") {
     @trigger(map = "PokemonTower4F", npc = 5, toggle = "POKEMON_TOWER_4F_OBJ_5")
-    @if (getFlag("EVENT_GOT_AWAKENING_POKEMON_TOWER_4F")) {
-      @speaker("") { @t("The item ball is empty.", "精灵球里是空的。") }
-    } @else {
-      giveItem("AWAKENING", 1)
-      setFlag("EVENT_GOT_AWAKENING_POKEMON_TOWER_4F")
-      hideObject("POKEMON_TOWER_4F_OBJ_5")
-      @speaker("") { @t("<PLAYER> found AWAKENING!", "<PLAYER>发现了清醒药！") }
+    @if (!getFlag("EVENT_GOT_AWAKENING_POKEMON_TOWER_4F")) {
+      given = giveItem("AWAKENING", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_AWAKENING_POKEMON_TOWER_4F")
+        hideObjectByName("POKEMON_TOWER_4F_OBJ_5")
+        showItemDialogue(t("<PLAYER> found AWAKENING!", "<PLAYER>发现了清醒药！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 
   // ── Ground item: HP UP (npc 6) ──────────────────────────────────────────
   @storyline("itemHpUp") {
     @trigger(map = "PokemonTower4F", npc = 6, toggle = "POKEMON_TOWER_4F_OBJ_6")
-    @if (getFlag("EVENT_GOT_HP_UP_POKEMON_TOWER_4F")) {
-      @speaker("") { @t("The item ball is empty.", "精灵球里是空的。") }
-    } @else {
-      giveItem("HP_UP", 1)
-      setFlag("EVENT_GOT_HP_UP_POKEMON_TOWER_4F")
-      hideObject("POKEMON_TOWER_4F_OBJ_6")
-      @speaker("") { @t("<PLAYER> found HP_UP!", "<PLAYER>发现了体力增强剂！") }
+    @if (!getFlag("EVENT_GOT_HP_UP_POKEMON_TOWER_4F")) {
+      given = giveItem("HP_UP", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_HP_UP_POKEMON_TOWER_4F")
+        hideObjectByName("POKEMON_TOWER_4F_OBJ_6")
+        showItemDialogue(t("<PLAYER> found HP_UP!", "<PLAYER>发现了体力增强剂！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 }

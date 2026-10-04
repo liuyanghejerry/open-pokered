@@ -13,9 +13,38 @@ use pokered_data::npc_data::{NpcEntry, NpcFacing, NpcMovement};
 // Re-export engine NPC movement types and functions
 pub use dotzuki_engine::overworld::npc_movement::{
     direction_toward, get_npc_positions, is_scripted_move_done, npc_at_position,
-    npc_at_position_mut, npc_in_front_of_player, start_scripted_move, update_npc_movement,
-    NpcRuntimeState, NPC_MAX_DELAY, NPC_WALK_FRAMES,
+    npc_at_position_mut, npc_in_front_of_player, start_scripted_move, NpcRuntimeState,
+    NPC_MAX_DELAY, NPC_WALK_FRAMES,
 };
+
+/// Use the original four direction intervals, axis remapping and zero-delay
+/// wrap without changing the generic engine's default wandering policy.
+pub fn update_npc_movement<T: dotzuki_engine::tileset::TilesetTrait>(
+    npcs: &mut [NpcRuntimeState],
+    player_x: u16,
+    player_y: u16,
+    player_dest: Option<(u16, u16)>,
+    map_width_blocks: u8,
+    map_height_blocks: u8,
+    rng_value: u8,
+    blocks: &[u8],
+    tileset: T,
+    provider: &impl dotzuki_engine::overworld::CollisionProvider<T>,
+) {
+    dotzuki_engine::overworld::update_npc_movement_with_policy(
+        npcs,
+        player_x,
+        player_y,
+        player_dest,
+        map_width_blocks,
+        map_height_blocks,
+        rng_value,
+        blocks,
+        tileset,
+        provider,
+        dotzuki_engine::overworld::NpcWanderPolicy::Classic,
+    );
+}
 
 // ── Pokémon-Specific Conversions ───────────────────────────────────
 

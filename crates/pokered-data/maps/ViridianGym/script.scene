@@ -168,8 +168,8 @@ game_scene ViridianGym {
     }
   }
 
-  // NOTE: npc 11 is the Revive item ball (map.json itemId 53, isTrainer:false);
-  // the runtime handles item-ball pickup from map.json, so it needs no handler.
+  // NPC 11 is the original Revive item ball; groundItem11 handles pickup
+  // failure and persists its original TOGGLE_VIRIDIAN_GYM_REVIVE bit.
 
   // The arrow/spinner-tile maze is handled by the engine (spinner tiles force
   // continuous movement until the player slides off), so no scene logic is
@@ -192,6 +192,17 @@ game_scene ViridianGym {
       @speaker("") { @t("VIRIDIAN CITY\nPOKeMON GYM\nLEADER: GIOVANNI\n\nWINNING TRAINERS:\n<RIVAL>\n<PLAYER>", "常磐市宝可梦道馆\n馆主：坂木\n\n获胜训练家：\n劲敌\n玩家") }
     } @else {
       @speaker("") { @t("VIRIDIAN CITY\nPOKeMON GYM\nLEADER: GIOVANNI\n\nWINNING TRAINERS:\n<RIVAL>", "常磐市宝可梦道馆\n馆主：坂木\n\n获胜训练家：\n劲敌") }
+    }
+  }
+
+  @storyline("groundItem11") {
+    @trigger(map = "ViridianGym", npc = 11, toggle = "VIRIDIAN_GYM_OBJ_11")
+    given = giveItem("REVIVE", 1)
+    @if (given) {
+      hideObjectByName("VIRIDIAN_GYM_OBJ_11")
+      showItemDialogue(t("<PLAYER> found REVIVE!", "<PLAYER>找到了活力碎片！"))
+    } @else {
+      @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
     }
   }
 }

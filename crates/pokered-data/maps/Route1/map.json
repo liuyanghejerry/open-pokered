@@ -29,7 +29,7 @@
       "y": 24,
       "movement": "Wander",
       "facing": "Down",
-      "range": 2,
+      "range": 1,
       "textId": 1,
       "isTrainer": false
     },

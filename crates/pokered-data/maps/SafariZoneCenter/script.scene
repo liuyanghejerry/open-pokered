@@ -16,13 +16,10 @@ game_scene SafariZoneCenter {
     @trigger(map = "SafariZoneCenter", npc = 1, toggle = "SAFARI_ZONE_CENTER_OBJ_1")
     given = giveItem("NUGGET", 1)
     @if (given) {
-      @speaker("") {
-        @t("<PLAYER> found NUGGET!", "<PLAYER>找到了金珠！")
-      }
+      hideObjectByName("SAFARI_ZONE_CENTER_OBJ_1")
+      showItemDialogue(t("<PLAYER> found NUGGET!", "<PLAYER>找到了金珠！"))
     } @else {
-      @speaker("") {
-        @t("You have too much stuff\nalready!", "你带的东西太多了！")
-      }
+      @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
     }
   }
 
