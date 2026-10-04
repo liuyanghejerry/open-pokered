@@ -5982,3 +5982,35 @@ expected==restored，无迁移例外。新检查点58种保留自行车、Paras�
 `legal21-independent-continue-20261004.json`、
 `legal58-preparation21-lineage-file-and-input-integrity-20261004.json`；
 容量诊断：`legal21-terminal-partition-note-once-probe-20261004.json`。
+
+## 最低候选容量的无损引用回退（2026-10-04）
+
+以原21闭合检查点的同一份终止请求作只读诊断：保留两个候选、完整
+状态／共享库／全部表格，仅将精确单字段引用对象
+`{"shared_strategy_evidence_ref":"eN"}`无损改写为`{"$e":"eN"}`，并
+明确告知Jev别名含义。反向转换后state和逐个criteria完整相等，原
+SRAM／sidecar／trace／summary不变。state67798→64444字节，criteria
+2134→1952字节；真实OpenRouter Jev回答成功，实际input_tokens32554。
+这些数字不是已认证的模型限制，也不证明未来更大状态总能装下。
+
+生产回退仅在同layer／endpoint／model／provider的明确容量错误或
+相应运行期byte参考后启用，先用相同完整候选试一次短引用，再按原
+模型分组机制比较；最低1／2候选短格式再次溢出仍终止，非容量错误
+直接传播。新旧编码独立校准，不持久化阈值或强制路线。执行器保持
+原逻辑对象、ID和criteria；保留最终none／强制无none，递归别名说明
+不累加，遇`$e`普通字段碰撞不启用格式，不能静默改写其含义。
+
+再次直接走生产`choose_bounded_strategy`和真实typed transport：原格式
+明确失败，原两个候选短格式成功，无分组／native连接／按键／捕获
+信用，也不复用前次诊断答案。完整候选审计增加短引用展开，并逐一
+审计成功与失败请求的完整世界事实、criteria和access值语义守恒。
+新增12项回退测试覆盖双层、单／双候选、碰撞、末端终止、None概率
+语义、端点隔离与全部候选深层比较；原有断言保持语义等价检查。
+完整Python1128项通过（23.479秒），原生未变、不重计旧回归结果。
+
+证据：`legal21-short-evidence-reference-probe-20261004.json`、
+`legal21-production-bounded-short-reference-probe-20261004.json`；
+安全基线仍为原21严格58种，自行车、Paras、实际经验和费用不回退。
+后续需以新干净冻结policy正常CONTINUE的真实完整frontier／双层
+响应验证，不能把单对诊断当作正式全轮或新增图鉴收益；最终124、
+producer穷尽核对、完整原片和大盘仍未完成。

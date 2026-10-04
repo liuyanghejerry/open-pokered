@@ -4,7 +4,7 @@ import json
 import unittest
 from unittest.mock import Mock, patch
 
-from openpokered.autonomous_story import AutonomousStoryAgent
+from openpokered.autonomous_story import AutonomousStoryAgent, restore_evidence_reference_wire
 from openpokered.story_agent import DualStoryAgent, StoryStopped
 from openpokered.typesafe import Choice, TypeSafeClient, TypeSafeError
 
@@ -208,12 +208,14 @@ class ContextPartitionTests(unittest.TestCase):
             agent.choose_bounded_strategy(state, options, 'Pick')
         self.assertEqual(len(failures), first_errors)
         for _, actual, selected, _, _, _ in successes[first_successes:]:
+            actual = restore_evidence_reference_wire(actual)
             self.assertEqual(actual['world'], state['world'])
             self.assertEqual(actual['shared_strategy_evidence']['world'], library['world'])
             self.assertEqual(actual['shared_strategy_evidence']['nested'], library['nested'])
             self.assertNotIn('unused', actual['shared_strategy_evidence'])
             for key in selected:
-                self.assertEqual(selected[key], options[key])
+                self.assertEqual(restore_evidence_reference_wire(json.loads(selected[key])),
+                                 json.loads(options[key]))
                 self.assertEqual(actual['shared_strategy_evidence'][f'e{key}'], library[f'e{key}'])
         self.assertEqual({key for row in successes[first_successes:] for key in row[2]}, set(options))
         self.assertEqual((state, options), original)

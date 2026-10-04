@@ -858,6 +858,70 @@ def scope_shared_evidence(state, candidates):
         key: value for key, value in library.items() if key in used}}
 
 
+SHORT_EVIDENCE_REFERENCE_INSTRUCTION = (
+    ' Wire alias: each object containing only $e means exactly the same complete '
+    'shared_strategy_evidence_ref entry in state.shared_strategy_evidence; '
+    'resolve nested $e references too. Only the reference key spelling changed; '
+    'all facts, library entries, tables and candidates are unchanged.')
+
+
+def compact_evidence_reference_wire(state, candidates):
+    """Reversibly shorten reference keys, not their values or evidence.
+
+    Internal states and executor candidates keep the canonical encoding. Only
+    exact singleton reference objects change on the wire; ordinary strings,
+    mixed-key objects, tables, library IDs and every option remain intact.
+    Refuse a reserved-key collision rather than silently changing its meaning.
+    Return the original objects when no reference can benefit from this format.
+    """
+    if not isinstance(state.get('shared_strategy_evidence'), dict):
+        return state, candidates
+    references = 0
+
+    def encode(value):
+        nonlocal references
+        if isinstance(value, dict):
+            if '$e' in value:
+                raise ValueError('Reserved short evidence reference key collision')
+            if set(value) == {'shared_strategy_evidence_ref'}:
+                key = value['shared_strategy_evidence_ref']
+                if not isinstance(key, str) or key not in state['shared_strategy_evidence']:
+                    raise ValueError('Missing shared evidence reference')
+                references += 1
+                return {'$e': key}
+            return {key: encode(child) for key, child in value.items()}
+        if isinstance(value, list):
+            return [encode(child) for child in value]
+        return value
+
+    wire_state = encode(state)
+    wire_candidates = {}
+    for key, value in candidates.items():
+        try:
+            decoded = json.loads(value)
+        except (ValueError, TypeError):
+            wire_candidates[key] = value
+            continue
+        before = references
+        encoded = encode(decoded)
+        wire_candidates[key] = (json.dumps(encoded, separators=(',', ':'), ensure_ascii=False)
+                                if references != before else value)
+    if not references:
+        return state, candidates
+    return wire_state, wire_candidates
+
+
+def restore_evidence_reference_wire(value):
+    """Invert short keys in an already encoded payload for semantic audits."""
+    if isinstance(value, dict):
+        if set(value) == {'$e'}:
+            return {'shared_strategy_evidence_ref': value['$e']}
+        return {key: restore_evidence_reference_wire(child) for key, child in value.items()}
+    if isinstance(value, list):
+        return [restore_evidence_reference_wire(child) for child in value]
+    return value
+
+
 def strategy_access_evidence(candidates):
     """Compare fresh trigger access without removing legal future goals."""
     result = {key: {} for key in ('path_found', 'field_action_needed', 'no_path_found', 'not_evaluated')}
@@ -1682,6 +1746,10 @@ class AutonomousStoryAgent(DualStoryAgent):
         smaller requests still use the explicit-error fallback, and an observed
         larger success disables an inconsistent reference. No global fixed cap,
         persisted calibration, state omission or special collection preference.
+        After explicit overflow, try one reversible short-reference format on
+        the SAME option set, even for a one/two-option leaf, before splitting.
+        Its endpoint/layer learning and byte references are separate from the
+        canonical format. A second leaf overflow still fails closed.
         """
         if not candidates:
             return super().choose(layer, state, candidates, instruction,
@@ -1719,40 +1787,76 @@ class AutonomousStoryAgent(DualStoryAgent):
         sizes = getattr(self, '_choice_context_sizes', None)
         if sizes is None:
             self._choice_context_sizes = sizes = {}
-        reference = sizes.setdefault(scope, {'smallest_overflow_bytes': None, 'largest_success_bytes': 0})
-        criteria = dict(candidates)
-        if allow_abstain:
-            criteria['none'] = 'None of these candidates can advance the current goal.'
-        # Same serialization as TypeSafeClient.system_one, with no request,
-        # credential, state mutation or tokenizer/model-limit assumption.
-        request_bytes = len(json.dumps({'state': choice_state, 'model': endpoint[0],
-            'questions': {layer: Choice(instruction, criteria).to_json()}}).encode())
-        overflow_bytes = reference['smallest_overflow_bytes']
-        proactive = (len(candidates) > 2 and overflow_bytes is not None
-                     and overflow_bytes > reference['largest_success_bytes']
-                     and request_bytes >= overflow_bytes)
-        reason = 'observed_context_size_reference' if proactive else 'max_tokens_exceeded'
-        if not proactive:
-            try:
-                selected = super().choose(layer, choice_state, candidates, instruction,
-                                          allow_abstain=allow_abstain)
-            except StoryStopped as error:
-                if (not isinstance(error.__cause__, TypeSafeError)
-                        or 'max_tokens_exceeded' not in str(error.__cause__)
-                        or len(candidates) <= 2):
-                    raise
-                reference['smallest_overflow_bytes'] = min(request_bytes,
-                    overflow_bytes if overflow_bytes is not None else request_bytes)
-            else:
-                reference['largest_success_bytes'] = max(reference['largest_success_bytes'], request_bytes)
-                return selected
+        short_scopes = getattr(self, '_short_evidence_reference_scopes', set())
+        # Compute at most once for this round. Collisions make this alternate
+        # format ineligible, not a reason to reinterpret an ordinary fact.
+        try:
+            short_state, short_candidates = compact_evidence_reference_wire(choice_state, candidates)
+        except ValueError:
+            short_state, short_candidates = choice_state, candidates
+        eligible = short_state is not choice_state
+        short = eligible and scope in short_scopes
+        for _ in range(2):  # At most one format change, never a blind retry.
+            wire_state, wire_candidates = ((short_state, short_candidates) if short
+                                           else (choice_state, candidates))
+            wire_instruction = instruction
+            if short and SHORT_EVIDENCE_REFERENCE_INSTRUCTION not in wire_instruction:
+                wire_instruction += SHORT_EVIDENCE_REFERENCE_INSTRUCTION
+            reference_scope = (*scope, 'short_evidence_reference') if short else scope
+            reference = sizes.setdefault(reference_scope,
+                {'smallest_overflow_bytes': None, 'largest_success_bytes': 0})
+            criteria = dict(wire_candidates)
+            if allow_abstain:
+                criteria['none'] = 'None of these candidates can advance the current goal.'
+            # Exact transport serialization, not a tokenizer or certified limit.
+            request_bytes = len(json.dumps({'state': wire_state, 'model': endpoint[0],
+                'questions': {layer: Choice(wire_instruction, criteria).to_json()}}).encode())
+            overflow_bytes = reference['smallest_overflow_bytes']
+            proactive = (len(candidates) > 2 and overflow_bytes is not None
+                         and overflow_bytes > reference['largest_success_bytes']
+                         and request_bytes >= overflow_bytes)
+            reason = 'observed_context_size_reference' if proactive else 'max_tokens_exceeded'
+            if not proactive:
+                if short:
+                    self.record(f'{layer}_wire_encoding', encoding='short_evidence_reference',
+                        candidate_ids=list(candidates), reference_scope=list(reference_scope),
+                        world_facts_preserved=True, candidate_values_semantically_preserved=True,
+                        library_entries_preserved=True, request_bytes=request_bytes,
+                        byte_reference_is_token_limit=False)
+                try:
+                    selected = super().choose(layer, wire_state, wire_candidates, wire_instruction,
+                                              allow_abstain=allow_abstain)
+                except StoryStopped as error:
+                    if (not isinstance(error.__cause__, TypeSafeError)
+                            or 'max_tokens_exceeded' not in str(error.__cause__)):
+                        raise
+                    reference['smallest_overflow_bytes'] = min(request_bytes,
+                        overflow_bytes if overflow_bytes is not None else request_bytes)
+                    if short or not eligible:
+                        if len(candidates) <= 2:
+                            raise
+                        break
+                else:
+                    reference['largest_success_bytes'] = max(reference['largest_success_bytes'], request_bytes)
+                    return selected
+            elif short or not eligible:
+                break
+            # Explicit overflow (or its same-scope runtime reference) permits
+            # one lossless format trial with all current candidates unchanged.
+            short = True
+            short_scopes.add(scope)
+            self._short_evidence_reference_scopes = short_scopes
+            self.record(f'{layer}_wire_encoding_enabled', encoding='short_evidence_reference',
+                candidate_ids=list(candidates), reason=reason, reference_scope=list(scope),
+                world_facts_preserved=True, candidate_values_semantically_preserved=True,
+                library_entries_preserved=True, no_diagnostic_answer_reused=True)
         keys = list(candidates)
         midpoint = len(keys) // 2
         partitions = [keys[:midpoint], keys[midpoint:]]
         self.record(f'{layer}_partition', candidate_ids=keys, partitions=partitions,
                     reason=reason, state_preserved=True,
                     request_bytes=request_bytes, context_size_reference=dict(reference),
-                    reference_scope=list(scope), byte_reference_is_token_limit=False)
+                    reference_scope=list(reference_scope), byte_reference_is_token_limit=False)
         group_instruction = (
             f' This is one disjoint comparison group from a larger {layer} choice. '
             'Choose the best relative next step in this group using the full unchanged state. '

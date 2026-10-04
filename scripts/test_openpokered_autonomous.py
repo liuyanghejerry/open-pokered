@@ -13,6 +13,7 @@ from openpokered.autonomous_story import (AutonomousStoryAgent, counter_approach
                                           training_battler, storage_deposit_indices,
                                           level_experience, evolution_training_cost, training_yield)
 from openpokered.autonomous_story import compact_strategy_candidates, evolution_training_effort, factor_strategy_evidence, capture_inventory_risk
+from openpokered.autonomous_story import restore_evidence_reference_wire
 from openpokered.story_agent import DualStoryAgent
 from openpokered.typesafe import TypeSafeError
 from openpokered.story_agent import StoryStopped
@@ -1990,6 +1991,7 @@ class AutonomousTests(unittest.TestCase):
         original = deepcopy((state, candidates))
         evaluated = set()
         def decide(layer, actual, options, instruction, *, allow_abstain):
+            actual = restore_evidence_reference_wire(actual)
             self.assertEqual(layer, 'strategy')
             self.assertEqual(actual['world'], state['world'])
             self.assertEqual(actual['shared_strategy_evidence']['world'], library['world'])
@@ -2002,7 +2004,7 @@ class AutonomousTests(unittest.TestCase):
         with patch.object(DualStoryAgent, 'choose', side_effect=decide) as calls:
             self.assertEqual(agent.choose_bounded_strategy(state, candidates, 'Pick'), '7')
         self.assertEqual(evaluated, set(candidates))
-        self.assertEqual(calls.call_count, 4)  # Full-set attempt, two groups, finalists.
+        self.assertEqual(calls.call_count, 5)  # Full set, one format trial, two groups, finalists.
         self.assertTrue(calls.call_args.kwargs['allow_abstain'])
         self.assertEqual((state, candidates), original)
 
@@ -2068,7 +2070,7 @@ class AutonomousTests(unittest.TestCase):
         evaluated = set()
 
         def decide(_layer, actual_state, candidates, instruction, *, allow_abstain):
-            self.assertIs(actual_state, state)
+            self.assertEqual(restore_evidence_reference_wire(actual_state), state)
             if len(candidates) > 3:
                 raise StoryStopped('strategy:service_unavailable') from TypeSafeError(
                     'HTTP 400 max_tokens_exceeded')
