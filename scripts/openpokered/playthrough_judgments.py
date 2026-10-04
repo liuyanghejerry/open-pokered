@@ -150,6 +150,69 @@ def ball_options(live, bag, owned_species=()):
                            'already_owned': capture_species(enemy) in owned}
 
 
+def capture_weakening_reference(live, bag, slots=None):
+    """Conditional next-throw benefits, not attack selection or turn safety."""
+    enemy = live.get('enemy') or {}
+    hp = enemy.get('hp')
+    if (type(hp) is not int or hp <= 0 or (live.get('player') or {}).get('hp', 0) <= 0):
+        return None
+    slots = live.get('player_move_previews') if slots is None else slots
+    if not isinstance(slots, list):
+        return None
+    balls = list(ball_options(live, bag))
+    if not balls:
+        return None
+    capture_state = {**enemy, 'catch_rate': capture_catch_rate(enemy)}
+    hits = []
+    for slot in slots:
+        if (not isinstance(slot, dict) or slot.get('disabled') is not False
+                or type(slot.get('pp')) is not int or slot['pp'] <= 0
+                or not slot.get('move') or slot['move'] == 'None'
+                or type(slot.get('slot')) is not int or not 0 <= slot['slot'] < 4):
+            continue
+        preview = slot.get('direct_hit_preview')
+        if (not isinstance(preview, dict) or preview.get('target_hp') != hp
+                or preview.get('direct_hit_can_ko') is not False):
+            continue
+        ranges = [preview.get(key) for key in ('normal_damage', 'critical_damage')]
+        if not all(isinstance(bounds, list) and len(bounds) == 2
+                   and all(type(value) is int for value in bounds)
+                   and 0 <= bounds[0] <= bounds[1] < hp for bounds in ranges):
+            continue  # Unknown, stale or potentially lethal is not certified.
+        move = late.move_data(slot['move'])
+        row = {'slot': slot['slot'], 'move': slot['move'], 'pp': slot['pp'],
+               'nominal_accuracy': move['accuracy'], 'secondary_effect': move['effect'],
+               'residual_status_side_effect_possible': move['effect'].startswith(
+                   ('BurnSideEffect', 'PoisonSideEffect'))}
+        for branch, bounds in zip(('if_normal_hit', 'if_critical_hit'), ranges):
+            remaining = [hp - bounds[1], hp - bounds[0]]
+            # At fixed max HP, catch identity/rate and status, the native
+            # formula is monotone in current HP; quarter-HP steps are retained.
+            row[branch] = {'damage_range': list(bounds), 'target_hp_range': remaining,
+                'next_ball_capture_probability_range': {
+                    ball: [capture_probability(ball, {**capture_state, 'hp': endpoint})
+                           for endpoint in reversed(remaining)]
+                    for ball, _, _ in balls}}
+        hits.append(row)
+    if not hits:
+        return None
+    return {'capture_species': capture_species(enemy), 'target_hp': hp,
+            'target_status_assumed_unchanged': enemy.get('status', 'None'),
+            'balls': {ball: {'quantity': details['quantity'],
+                            'capture_probability_now': details['capture_probability_now']}
+                      for ball, _, details in balls},
+            'nonlethal_direct_hits': hits,
+            'scope': 'Current active battler and supported usable native single-hit previews only. '
+                'Normal and critical branches assume the hit lands at unchanged combat stats and '
+                'the target retains its observed status until a later ball. Each range is for '
+                'that next throw, not a probability of capturing from here. A move turn precedes '
+                'the future ball; surviving to act/throw, accuracy, enemy response/healing, '
+                'secondary/residual damage, recoil and status expiry are not certified. '
+                'Residual-status side effects are possible hazards, not known outcomes. '
+                'No unknown preview, incoming teammate, lethal hit, move choice or repeated-hit plan '
+                'is certified; omitted references do not remove any offered move.'}
+
+
 def collection_capture_value(state, active):
     """Registration yield and explicitly requested possession are different."""
     species = capture_species(state['battle_live']['enemy'])
@@ -542,6 +605,10 @@ def capture_move_question(state, menu):
     compact.update(goal='capture_without_knocking_out', enemy_state=live['enemy'],
                    available_balls=list(ball_options(live, bag)),
                    capture_threat=capture_threat(live['enemy']))
+    weakening = capture_weakening_reference(live, bag,
+        [{**slot, 'slot': index} for index, slot in enumerate(menu['moves'])])
+    if weakening:
+        compact['capture_weakening_reference'] = weakening
     return compact, choices
 
 
@@ -648,6 +715,9 @@ class JevGame(pt.Game):
             if isinstance(live.get('player_move_previews'), list):
                 fight['native_active_move_previews'] = live['player_move_previews']
                 fight['direct_hit_preview_scope'] = DIRECT_HIT_PREVIEW_SCOPE
+            weakening = capture_weakening_reference(live, bag)
+            if weakening:
+                fight['capture_weakening_reference'] = weakening
             candidates['fight'] = json.dumps(fight)
         if switch_training or capturing or not effective_attacks(party[active], live['enemy']['species']):
             for index, mon in enumerate(party):
@@ -734,6 +804,12 @@ class JevGame(pt.Game):
                     'single hit; it does not guarantee surviving to act, prevent residual damage, '
                     'or certify unsupported null previews as safe. These are not previews for '
                     'an incoming teammate, and no attack is selected by this evidence.')
+                instruction += (' When present, FIGHT.capture_weakening_reference relates each '
+                    'supported nonlethal direct hit to remaining HP and the conditional next-ball '
+                    'probability range, alongside throwing now. Compare this concrete benefit '
+                    'with the move turn, survival and secondary/residual hazards before choosing '
+                    'preparation, a ball, a switch or retreat. These are not probabilities of '
+                    'capture from here and do not require a status-support switch or an attack.')
             instruction += (' FIGHT describes the current active Pokemon and its capture_status_options, '
                 'not just an attack. Compare using those existing tools now with the offered switches: '
                 'switching spends this turn and does not apply the incoming teammate\'s status move. '
@@ -1114,7 +1190,12 @@ class JevGame(pt.Game):
                         'but secondary/residual damage and the opponent acting first still matter. '
                         'Without a preview, levels, base stats and power are only proxies, not damage '
                         'guarantees. Prefer safe non-damaging preparation or a suitably weak attack '
-                        'over a knockout; do not repeatedly try status that is already present.' if capturing else
+                        'over a knockout; do not repeatedly try status that is already present. '
+                        'When present, capture_weakening_reference gives the conditional next-ball '
+                        'benefit after each supported nonlethal direct hit. Compare its remaining '
+                        'HP/probability ranges, current ball odds and secondary/residual hazards; '
+                        'these do not certify surviving to act or throw. A stronger attacker can '
+                        'still have a nonlethal move; level or power alone is not a knockout proof.' if capturing else
                         'Which usable attack gives the best progress on this turn? '
                         'This does not require a guaranteed battle victory. If the only available '
                         'attack deals nonzero damage, use it even when weak or nearly depleted. '

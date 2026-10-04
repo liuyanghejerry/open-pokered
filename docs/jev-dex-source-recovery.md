@@ -5308,3 +5308,56 @@ worktree外55项／7177793字节备份
 唯一下一段恢复基线为54，不继续引用已退出owner。没有Rust／新m49／
 玩家画面变化，PR原八张绝对raw截图保持。Goal active，尚差70种；
 完整124、逐种合法性终验、全程MP4及完成图鉴大盘均尚未交付。
+
+### 2026-10-04：原生非致死单击与后续捕获收益参考
+
+上一轮为实质进展：53→54普通保存／独立schema4／14段原生录像全解码／
+worktree外备份及PR更新。本轮重新核对干净6dbd5f7d、第14段三owner已
+退出、54源SRAM／sidecar／trace／summary及外层archive hash严格同，
+不把历史进程或状态文件当存活任务，也不回退或另开NEW GAME。
+
+沿实际Zapdos失败证据补 `capture_weakening_reference`，遵循
+[TypeSafe State](https://docs.typesafe.ai/concepts/state)的具名相关事实组织：
+已知计算仍在代码，动作层只比较当下选择。仅使用有球、原生允许捕获、
+活着的当前出战者、正PP且未disabled的槽；preview必须与当前目标HP
+一致、normal／critical两个整数非负有序范围均严格不致死且原生KO标记
+false。null／陈旧／可能KO不认证，不猜未知伤害或换入队员预览。
+按两个命中分支计算剩余HP范围，复用已有Gen1捕获公式给出各持有球的
+下一球条件概率范围与现在的概率／数量；保留quarter-HP阶梯，标注招式
+名义accuracy／secondary effect及潜在burn／poison持续状态副作用。
+条件要求命中、战斗stats不变、后续球前目标状态不变；明确不预测存活、
+真实命中、敌方反应／治疗、次生／持续伤害、recoil或状态到期，不把
+下一球范围当从当前状态的捕获概率，也不认证重复命中方案。
+
+参考同时送入现有PlayerMenu FIGHT描述与真实MoveSelect状态，保留全部
+原候选／back／退却／换人／药品／球、绑定与执行逻辑；没有强制攻击、
+状态支援切换、图鉴目标或固定路线，也不增加API调用／更换provider。
+7项新增测试旧版先失败；初次新fixture借用了旧稀疏player，缺少HP的
+四项错误日志保留，补齐实际57级Charizard的HP／moves／PP后464项
+autonomous通过／6.748秒，全Python1059通过／19.933秒。覆盖两个
+分支逐HP穷举概率界、潜在持续伤害、KO／null／无PP／disabled／陈旧与
+畸形数据、无球／trainer／Safari／ghost／storage／倒下不认证、Transform
+捕获身份及状态／数量刷新、真正menu覆盖live槽、所有选择／绑定／输入
+守恒。没有Rust、画面改变或新m49，不以测试冒充正式捕获收益。
+
+另用第14段七次成功实际招式请求的原生资料做纯函数离线对照：旧版函数
+生成的wire JSON与原请求所有字段严格同；新函数只增加一个具名参考，
+其他字段／选项逐项相同。初次比较错把Python tuple与原JSON array直接
+比较，两个失败日志保留，按原wire序列化格式核对后v3通过，无移除字段
+或放宽状态值。旧back选择保留为历史，不是新的模型选择或RNG重放，
+没有API／native／输入／信号／存档写入。例：实际Cut普通命中后HP114–121，
+GreatBall条件范围0.0128–0.0138，相比满HP155时0.0102；暴击后HP77–89，
+范围0.0175–0.0199。收益仍有条件，不推断必能捕获或替代有效状态支持。
+
+当前54正常CONTINUE完整冷规划恢复全部记忆：52候选、frame627→627、
+源hash同、无Jev及后续输入，实际提供storage:change_box，以及PC内
+Gloom／Pikachu／Exeggcute／Jigglypuff支援和其他正常训练／剧情选择。
+启动审计同步按最新源的三个实际Cut记忆校验schema1及真正提供候选，
+不再假定源仍只有Vermilion树或强制恢复旧历史；所有原启动owner、
+资源守恒、实际双层成功和原生证据约束保持。
+
+新policy `357478e83126abf45fc2866a56d618556af5e4abfe047d98ac14023d3e61f4a8`
+只供从唯一最新54正常CONTINUE，保持双层OpenRouter Jev1.13.0、seed42、
+预算、冻结native6d8e／gfx21e0及4×原生录像。当前仍54／124；新参考、
+离线对照、冷规划均不算新增或实际新判断收益，Goal active，完整124／
+最终逐种合法性／全程MP4／完成大盘尚未交付。

@@ -7348,6 +7348,153 @@ class AutonomousTests(unittest.TestCase):
         new_compact, _ = capture_move_question(state, menu)
         self.assertNotEqual(old_key, json.dumps(new_compact, sort_keys=True))
 
+    def weakening_reference_state(self):
+        state = self.capture_support_state()
+        mon = {'species': 'Charizard', 'level': 57, 'hp': 192, 'max_hp': 192,
+               'status': 'None', 'moves': ['Slash', 'Cut', 'Flamethrower', 'Dig'],
+               'pp': [20, 30, 15, 10]}
+        state['party'][0] = dict(mon)
+        state['battle_live']['player_party'][0] = dict(mon)
+        state['battle_live']['player'] = dict(mon)
+        state['battle_live']['enemy'] = {'species': 'Zapdos', 'capture_species': 'Zapdos',
+            'level': 50, 'hp': 155, 'max_hp': 155, 'status': 'None', 'capture_catch_rate': 3}
+        state['battle_live']['player_move_previews'] = [
+            {'slot': 0, 'move': 'Slash', 'pp': 20, 'disabled': False,
+             'direct_hit_preview': {'normal_damage': [48, 57], 'critical_damage': [92, 109],
+                'critical_threshold': 255, 'target_hp': 155, 'direct_hit_can_ko': False}},
+            {'slot': 1, 'move': 'Cut', 'pp': 30, 'disabled': False,
+             'direct_hit_preview': {'normal_damage': [34, 41], 'critical_damage': [66, 78],
+                'critical_threshold': 50, 'target_hp': 155, 'direct_hit_can_ko': False}},
+            {'slot': 2, 'move': 'Flamethrower', 'pp': 15, 'disabled': False,
+             'direct_hit_preview': {'normal_damage': [59, 70], 'critical_damage': [114, 135],
+                'critical_threshold': 50, 'target_hp': 155, 'direct_hit_can_ko': False}},
+            {'slot': 3, 'move': 'Dig', 'pp': 10, 'disabled': False, 'direct_hit_preview': None}]
+        state['battle_inventory'] = [{'item': 'PokeBall', 'qty': 44},
+                                    {'item': 'GreatBall', 'qty': 25}, {'item': 'UltraBall', 'qty': 1}]
+        return state
+
+    def test_weakening_reference_exact_conditional_normal_and_critical_capture_odds(self):
+        from copy import deepcopy
+        from openpokered.playthrough_judgments import capture_weakening_reference, capture_probability
+        state = self.weakening_reference_state()
+        original = deepcopy(state)
+        live = state['battle_live']
+        reference = capture_weakening_reference(live, {'PokeBall': 44, 'GreatBall': 25, 'UltraBall': 1})
+        self.assertEqual([row['move'] for row in reference['nonlethal_direct_hits']],
+                         ['Slash', 'Cut', 'Flamethrower'])
+        slash, cut, flame = reference['nonlethal_direct_hits']
+        self.assertEqual(slash['if_critical_hit']['target_hp_range'], [46, 63])
+        self.assertEqual(cut['if_normal_hit']['target_hp_range'], [114, 121])
+        self.assertEqual(cut['if_critical_hit']['target_hp_range'], [77, 89])
+        self.assertFalse(cut['residual_status_side_effect_possible'])
+        self.assertTrue(flame['residual_status_side_effect_possible'])
+        enemy = {**live['enemy'], 'catch_rate': 3}
+        self.assertEqual(reference['balls']['GreatBall'], {'quantity': 25,
+            'capture_probability_now': capture_probability('GreatBall', enemy)})
+        for row in reference['nonlethal_direct_hits']:
+            for branch in ('if_normal_hit', 'if_critical_hit'):
+                lo, hi = row[branch]['target_hp_range']
+                for ball, probabilities in row[branch]['next_ball_capture_probability_range'].items():
+                    exhaustive = [capture_probability(ball, {**enemy, 'hp': hp})
+                                  for hp in range(lo, hi + 1)]
+                    self.assertEqual(probabilities, [min(exhaustive), max(exhaustive)])
+        self.assertIn('not a probability of capturing from here', reference['scope'])
+        self.assertIn('surviving', reference['scope'])
+        self.assertEqual(state, original)
+
+    def test_weakening_reference_does_not_certify_ko_unknown_or_unusable_previews(self):
+        from openpokered.playthrough_judgments import capture_weakening_reference
+        state = self.weakening_reference_state()
+        slots = state['battle_live']['player_move_previews']
+        slots[0]['direct_hit_preview']['direct_hit_can_ko'] = True
+        slots[1]['pp'] = 0
+        slots[2]['disabled'] = True
+        self.assertIsNone(capture_weakening_reference(state['battle_live'], {'PokeBall': 10}))
+        slots[1]['pp'] = 30
+        slots[1]['direct_hit_preview']['critical_damage'] = [100, 155]
+        self.assertIsNone(capture_weakening_reference(state['battle_live'], {'PokeBall': 10}))
+
+    def test_weakening_reference_rejects_stale_or_malformed_damage_without_guessing(self):
+        from copy import deepcopy
+        from openpokered.playthrough_judgments import capture_weakening_reference
+        live = self.weakening_reference_state()['battle_live']
+        slot = live['player_move_previews'][1]
+        for change in ({'target_hp': 154}, {'normal_damage': None},
+                       {'normal_damage': [-1, 4]}, {'critical_damage': [90, 78]},
+                       {'normal_damage': [True, 41]}, {'direct_hit_can_ko': None}):
+            altered = deepcopy(slot)
+            altered['direct_hit_preview'].update(change)
+            self.assertIsNone(capture_weakening_reference(live, {'GreatBall': 25}, [altered]))
+
+    def test_weakening_reference_requires_a_legal_ball_and_conscious_active_battler(self):
+        from copy import deepcopy
+        from openpokered.playthrough_judgments import capture_weakening_reference
+        live = self.weakening_reference_state()['battle_live']
+        for bag in ({}, {'PokeBall': 0}, {'Potion': 1}):
+            self.assertIsNone(capture_weakening_reference(live, bag))
+        for changes in ({'is_wild': False}, {'is_safari': True}, {'is_ghost': True},
+                        {'capture_blocked_reason': 'storage_full'}):
+            self.assertIsNone(capture_weakening_reference({**live, **changes}, {'PokeBall': 1}))
+        altered = deepcopy(live)
+        altered['player']['hp'] = 0
+        self.assertIsNone(capture_weakening_reference(altered, {'PokeBall': 1}))
+
+    def test_weakening_reference_refreshes_status_supply_and_capture_identity(self):
+        from copy import deepcopy
+        from openpokered.playthrough_judgments import capture_weakening_reference, capture_probability
+        live = self.weakening_reference_state()['battle_live']
+        old = capture_weakening_reference(live, {'PokeBall': 44})
+        altered = deepcopy(live)
+        altered['enemy'].update(species='Charizard', capture_species='Ditto',
+                                capture_catch_rate=35, status='Sleep(2)')
+        new = capture_weakening_reference(altered, {'PokeBall': 43})
+        self.assertEqual(new['capture_species'], 'Ditto')
+        self.assertEqual(new['target_status_assumed_unchanged'], 'Sleep(2)')
+        self.assertEqual(new['balls']['PokeBall']['quantity'], 43)
+        self.assertEqual(new['balls']['PokeBall']['capture_probability_now'],
+                         capture_probability('PokeBall', {**altered['enemy'], 'catch_rate': 35}))
+        self.assertNotEqual(new, old)
+
+    def test_capture_menu_weakening_reference_uses_observed_menu_not_other_live_slots(self):
+        from copy import deepcopy
+        from openpokered.playthrough_judgments import capture_move_question
+        state = self.weakening_reference_state()
+        slots = state['battle_live']['player_move_previews']
+        menu = {'moves': [deepcopy(slots[1]), deepcopy(slots[3])]}
+        compact, choices = capture_move_question(state, menu)
+        self.assertEqual(choices, {'0': 'Cut', '1': 'Dig'})
+        row, = compact['capture_weakening_reference']['nonlethal_direct_hits']
+        self.assertEqual((row['slot'], row['move']), (0, 'Cut'))
+        menu['moves'][0]['direct_hit_preview'] = None
+        compact, choices = capture_move_question(state, menu)
+        self.assertNotIn('capture_weakening_reference', compact)
+        self.assertEqual(choices, {'0': 'Cut', '1': 'Dig'})
+
+    def test_capture_turn_weakening_metadata_preserves_all_options_and_bindings(self):
+        from copy import deepcopy
+        state = self.weakening_reference_state()
+        original = deepcopy(state)
+        game = JevGame.__new__(JevGame)
+        game.judgments = Mock()
+        game.judgments.collects_dex = True
+        game.judgments.active = {'context': {'acquisition_method': 'static'}}
+        game.judgments.choose.return_value = 'fight'
+        with patch('openpokered.playthrough_judgments.capture_weakening_reference', return_value=None):
+            self.assertIsNone(game.battle_recovery_plan(state))
+        old = deepcopy(game.judgments.choose.call_args.args[2])
+        self.assertIsNone(game.battle_recovery_plan(state))
+        _, actual, new, instruction = game.judgments.choose.call_args.args
+        self.assertEqual(set(new), set(old))
+        fight = json.loads(new['fight'])
+        reference = fight.pop('capture_weakening_reference')
+        self.assertEqual(fight, json.loads(old['fight']))
+        self.assertEqual({key: value for key, value in new.items() if key != 'fight'},
+                         {key: value for key, value in old.items() if key != 'fight'})
+        self.assertEqual(actual['battle'], state['battle_live'])
+        self.assertEqual(len(reference['nonlethal_direct_hits']), 3)
+        self.assertIn('capture_weakening_reference', instruction)
+        self.assertEqual(state, original)
+
     def test_capture_turn_receives_native_hit_ranges_before_opening_fight(self):
         from copy import deepcopy
         state = self.capture_support_state()
