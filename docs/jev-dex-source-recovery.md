@@ -5361,3 +5361,69 @@ Gloom／Pikachu／Exeggcute／Jigglypuff支援和其他正常训练／剧情选�
 预算、冻结native6d8e／gfx21e0及4×原生录像。当前仍54／124；新参考、
 离线对照、冷规划均不算新增或实际新判断收益，Goal active，完整124／
 最终逐种合法性／全程MP4／完成大盘尚未交付。
+
+### 2026-10-04：第15段闭合，真实54→55与原始producer线索保全
+
+第15段 `20261004-092603-seed42` 仅从最新54普通CONTINUE，启动干净
+81386b95／policy357478e8，双层OpenRouter Jev1.13.0、seed42、预算、
+冻结native6d8e／gfx21e0、4×原生录像保持。Jev自主选择Drowzee普通
+经验训练，928.653秒／frame121015在Route18正常26级进化登记Hypno；
+本段唯一新增为Hypno，初始54快照不重复计数。后续支援训练至28级
+不再计新增，也不是新削血参考已经帮助捕获的因果证据。
+
+1101.062秒Jev自主Fuchsia护士完成后，守护于2026-10-04 01:44:25 UTC
+仅向原controller72351合作式SIGINT；native72363与recorder72364均正常
+退出，未向后二者发信号，未强制治疗或建立第二个native连接。本段
+135行动、strategy114／action353次实际请求、115场驱动战斗，正常安全
+存档／success=false／interrupted_at_command_boundary，不是124完成。
+
+55 owned／95 seen，FuchsiaPokecenter(3,3)，frame144346，资金93，徽章
+位掩码31。PokeBall42／GreatBall21／UltraBall1与前54相同，party6／PC40，
+box0及box1各20，当前box1仍满。Hypno28经验22756／HP95，四槽PP
+15,20,20,25；Charizard59经验205200／HP201，四槽PP20,30,15,10。
+独立新native schema4普通CONTINUE的dex／state／party／party_pp／
+stored_pokemon／bag／flags七项expected与restored严格同，前54四项
+源hash仍同；最新SRAM SHA
+`47faae0e4986c6b3cfcd57219ea95334835e49fdb3245a5e7f1959bf505dcce9`。
+55为唯一后续恢复基线，不能再使用旧owner或回退到54重新取得一次。
+
+本段MP4 9723960字节／601.466667秒／36088帧完整解码，SHA
+`c15d9e3a05c59a9b0961ce8ce1379c644f0535bc33c25283022619589d0dea04`。
+15段真零登记NEW GAME原生时钟8180.766668秒／55唯一登记，恢复5保留
+原失败前缀计一次，resume不重复，source audit无pending／history。额外
+全祖先文件与输入审计122063普通推进回执／15个唯一原生录像hash及其
+绑定schema4证明严格同。仍不等于完整逐种producer／原作路线终验。
+
+本段实际成功动作请求未出现capture_weakening_reference：终止后只读
+审计仍为0，不生成冒充暴露证据的receipt。新参考已有7条原始wire纯函数
+对照及全Python1059测试，但不能声称Jev实际接收、使用或提高捕获率；
+本段没有新的Zapdos捕获尝试、投球收益或空box切换证据。
+
+四个历史未标注method另立只读producer-witness报告，不改原trace／summary：
+Charmander实际Oak YES确认、赠送5级／经验135与starter flag；Charmeleon
+实际15→16经验2524→2548及原生IsEvolving；Charizard实际35→36经验
+39132→40046、Slash PP减少4对应4次攻击。保留原生MP4截帧，人工确认
+两次进化完成文字与画面；两次后续party其他个体原值保持。Snorlax原
+Route12静态野生30级、实际PokeBall49→48、PC18→19新增HP82个体与
+图鉴31→32相符。与此同时，冻结native捕获后仍显示returned-to-mountains
+对白，报告明确保留此观察差异，不假称原作caught分支已经完整认证；
+当前catalog只作参照，不替代编译native生产者审计。旧四个method仍null。
+
+新发现资源消耗循环：开头单次travel_to:SafariZoneGate，41.772–54.043秒
+实际9组付费入园／提前退出YES选择，随后两次余额不足仍YES。原始原生
+dialogue与请求逐行hash绑定，入口前4593→操作后93，9×500=4500，期间
+无战斗／新增登记；55.472秒最终返回repeated unchanged script displacement，
+SafariZoneGate(3,2)→(3,3)。这是同一次导航中的实际损失，不归因于后续
+训练花费，不补钱、退款或回退。已定位待修的付费transit循环，但本轮尚
+未证明具体实现根因或实现修复；后续优先处理再从55继续。
+
+worktree外67项／3962937字节紧凑备份
+`verified55-checkpoint-and-capture-weakening-and-producer-witness-evidence-20261004.tar.gz`
+逐项字节／hash通过，SHA
+`ffd31897ca4c9360147a4de22369b0e21f805e8df42b8d9eaf902f358461f0d9`。
+含本段safe/schema4／15段审计／新参考测试及原始失败日志／同源冷规划／
+旧请求严格对照／独立producer与Safari成本线索／原生进化截帧；原54
+archive及所有原件保持，无凭据／binary／重复MP4／删除，目录非tmp，
+当前约79GiB可用。无Rust／新m49／玩家画面改变，PR原八张绝对raw截图
+保持。Goal active，尚差69种，完整逐种合法性／124最终MP4／完成图鉴
+大盘未交付，未放宽staging验收，不能把局部producer线索当最终通过。
