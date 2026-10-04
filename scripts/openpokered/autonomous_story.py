@@ -241,6 +241,53 @@ def capture_support_preparation_comparison(mon, failures):
     return rows
 
 
+def capture_support_level_reference(mon, target_level, party, owned_species):
+    """Known marginal effects, not a projected survival/capture probability.
+
+    Native CaptureContext and accuracy_check do not take the support's level.
+    New moves/evolutions are offers; normal learning/evolution input still owns
+    the result. Current tools are observations, not safe-switch certificates.
+    """
+    catalog = data.species_data(mon['species'])
+    offers = []
+    for row in catalog.get('learnset', []):
+        if mon['level'] < row['level'] <= target_level:
+            move = data.move_data(row['moveId'])
+            offers.append({'level': row['level'], 'move': row['moveId'],
+                           'effect': move.get('effect'), 'power': move.get('power'),
+                           'base_accuracy': move.get('accuracy')})
+    owned = set(owned_species)
+    evolutions = [{'species': edge['species'], 'required_level': edge['level']}
+        for edge in catalog.get('evolutions', []) if edge['method'] == 'level'
+        and edge['level'] <= target_level and edge['species'] not in owned]
+    tools = []
+    for index, other in enumerate(party):
+        if other.get('hp', 0) <= 0:
+            continue
+        for name, pp in zip(other.get('moves', []), other.get('pp', [])):
+            if name == 'None' or pp <= 0:
+                continue
+            move = data.move_data(name)
+            if move.get('power') != 0 or move.get('effect') not in ('SleepEffect', 'ParalyzeEffect'):
+                continue
+            tools.append({'party_index': index, 'species': other['species'],
+                          'level': other['level'], 'hp': other['hp'], 'max_hp': other['max_hp'],
+                          'status': other.get('status'), 'move': name, 'pp': pp,
+                          'base_accuracy': move.get('accuracy')})
+    return {'from_level': mon['level'], 'target_level': target_level,
+            'direct_ball_roll_uses_support_level': False,
+            'existing_move_base_accuracy_changes_with_level': False,
+            'level_parity_required_for_sleep_or_paralysis': False,
+            'natural_move_offers': offers, 'unregistered_level_evolution_offers': evolutions,
+            'current_conscious_non_damaging_support_tools': tools,
+            'scope': 'For fixed wild HP/status, species catch rate and ball, support level '
+                'does not change the native capture roll. Existing move base accuracy is '
+                'unchanged; live accuracy/evasion stages and immunity still matter. Leveling '
+                'may change stats, turn order and survival, but no next-level stat, hit or '
+                'survival forecast is supplied. Move/evolution offers are not acquisitions; '
+                'current tools still require normal switching and compatible targets.'}
+
+
 def catch_difficulty(species):
     rate = data.species_data(species).get('catchRate', 0)
     return {'species': species, 'catch_rate': rate,
@@ -1120,11 +1167,14 @@ class AutonomousStoryAgent(DualStoryAgent):
         self._registration_evidence = RegistrationEvidence()
 
     def record(self, kind, **payload):
-        if kind in ('battle_started', 'battle_resolved') and getattr(self, 'collects_dex', False):
+        if kind in ('battle_started', 'battle_resolved', 'npc_trade_started') and getattr(self, 'collects_dex', False):
             evidence = getattr(self, '_registration_evidence', None)
             if evidence is None:
                 evidence = self._registration_evidence = RegistrationEvidence()
-            evidence.observe_battle(kind, payload.get('state'))
+            if kind == 'npc_trade_started':
+                evidence.observe_trade_phase(payload.get('state'))
+            else:
+                evidence.observe_battle(kind, payload.get('state'))
         super().record(kind, **payload)
 
     def facts(self):
@@ -1682,6 +1732,10 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'Its differences are not measured training actions or individual identity, and are '
                 'not proof that another level makes switching safe. safe_status_moves means '
                 'non-damaging move effects only, not survival-safe switching or a guaranteed status.')
+            instruction += (' capture_support_level_reference distinguishes next-level move/evolution '
+                'offers from a level-only stat investment. More levels do not directly improve a '
+                'fixed-HP/status ball roll or existing move base accuracy. Compare current usable '
+                'support tools and other registrations; neither level parity nor training is required.')
             instruction += (' Compare item_evolution_spending_reference on ball purchases: '
                 'spending may remove the ability to buy a stone for an unregistered evolution '
                 'of a Pokémon actually held in the party or PC. An already carried stone needs '
@@ -3333,6 +3387,8 @@ class AutonomousStoryAgent(DualStoryAgent):
             entry['context']['prize_species'].append(species)
 
     def settle_special(self, state):
+        if not state.get('npc_trade_phase'):
+            self._observing_npc_trade = False
         if (state.get('choice') and self.active
                 and self.active.get('context', {}).get('coin_purchase')):
             menu = state['choice']
@@ -3347,6 +3403,9 @@ class AutonomousStoryAgent(DualStoryAgent):
             self.tap('a')
             return True
         if state.get('npc_trade_phase'):
+            if getattr(self, 'collects_dex', False) and not getattr(self, '_observing_npc_trade', False):
+                self.record('npc_trade_started', state=state)
+                self._observing_npc_trade = True
             self.client.step(10)
             return True
         if state.get('shop_phase') and self.active and self.active['target'][0] == 'sale':
@@ -5128,6 +5187,8 @@ class AutonomousStoryAgent(DualStoryAgent):
                             'training_cost': evolution_training_cost(mon, target_level),
                             'training_cost_to_observed_target_level': evolution_training_cost(mon, highest),
                             'preparation_comparison_to_failed_setups': capture_support_preparation_comparison(mon, failures),
+                            'capture_support_level_reference': capture_support_level_reference(
+                                mon, target_level, facts['party'], owned),
                             'training_effort_to_observed_target_level_examples': [
                                 {'map': name, **effort} for name in sites
                                 if (effort := evolution_training_effort(mon, highest,

@@ -37,7 +37,164 @@ def capture_fixture():
     return before, after
 
 
+def trade_fixture():
+    before = state([mon('Venonat', 22), mon('Charizard', 65)], owned=['Venonat', 'Charizard'],
+                   map_name='CinnabarLabTradeRoom', flags={})
+    phase = {**deepcopy(before), 'frame_count': 20, 'npc_trade_phase': 'SlideInGiveMon'}
+    phase.pop('flags')  # Native get_state does not expose get_flags.
+    after = state([mon('Charizard', 65), mon('Tangela', 22)],
+                  owned=['Venonat', 'Charizard', 'Tangela'], frame=30,
+                  map_name='CinnabarLabTradeRoom', flags={'EVENT_TRADED_FOR_CRINKLES': True})
+    return before, phase, after
+
+
 class CollectionEventsTests(unittest.TestCase):
+    def test_npc_trade_requires_phase_roster_level_and_new_catalog_flag_without_goal(self):
+        before, phase, after = trade_fixture()
+        original = deepcopy((before, phase, after))
+        tracker = RegistrationEvidence()
+        tracker.registrations(before, {})
+        tracker.observe_trade_phase(phase)
+        witness = tracker.registrations(after, {})['Tangela']
+        self.assertEqual(witness['method'], 'npc_trade')
+        self.assertEqual(witness['before']['species'], 'Venonat')
+        self.assertEqual(witness['after']['level'], 22)
+        self.assertEqual(witness['catalog_trade']['completion_flag'], 'EVENT_TRADED_FOR_CRINKLES')
+        self.assertEqual(witness['native_phase'], 'SlideInGiveMon')
+        self.assertEqual((before, phase, after), original)
+        self.assertIn('not full original-route', witness['scope'])
+        self.assertEqual(tracker.registrations(after, {}), {})
+
+    def test_npc_trade_refusal_has_no_registration(self):
+        before, _, _ = trade_fixture()
+        tracker = RegistrationEvidence()
+        tracker.registrations(before, {})
+        self.assertEqual(tracker.registrations(before, {}), {})
+
+    def test_npc_trade_initial_continue_with_phase_is_not_acquisition(self):
+        _, phase, after = trade_fixture()
+        tracker = RegistrationEvidence()
+        tracker.observe_trade_phase(phase)
+        self.assertEqual(tracker.registrations(after, {}), {})
+
+    def test_npc_trade_receipt_alone_cannot_substitute_for_native_phase(self):
+        before, _, after = trade_fixture()
+        tracker = RegistrationEvidence()
+        tracker.registrations(before, {})
+        self.assertEqual(tracker.registrations(after, {})['Tangela']['method'], 'unknown')
+
+    def test_npc_trade_rejects_unknown_or_already_done_phase(self):
+        for value in (None, 'Done', 'IsEvolving', 'invented'):
+            with self.subTest(phase=value):
+                before, phase, after = trade_fixture()
+                phase['npc_trade_phase'] = value
+                tracker = RegistrationEvidence()
+                tracker.registrations(before, {})
+                tracker.observe_trade_phase(phase)
+                self.assertEqual(tracker.registrations(after, {})['Tangela']['method'], 'unknown')
+
+    def test_npc_trade_rejects_missing_old_or_wrong_catalog_receipt(self):
+        for change in ('missing', 'old', 'wrong', 'integer_true', 'malformed_old'):
+            with self.subTest(change=change):
+                before, phase, after = trade_fixture()
+                if change == 'old':
+                    before['flags']['EVENT_TRADED_FOR_CRINKLES'] = True
+                elif change == 'integer_true':
+                    after['flags']['EVENT_TRADED_FOR_CRINKLES'] = 1
+                elif change == 'malformed_old':
+                    before['flags'] = []
+                else:
+                    after['flags'] = {} if change == 'missing' else {'EVENT_TRADED_FOR_DORIS': True}
+                tracker = RegistrationEvidence()
+                tracker.registrations(before, {})
+                tracker.observe_trade_phase(phase)
+                self.assertEqual(tracker.registrations(after, {})['Tangela']['method'], 'unknown')
+
+    def test_npc_trade_rejects_bad_time_map_or_stale_owned_baseline(self):
+        for change in ('same_frame', 'earlier_phase', 'different_map', 'wrong_catalog_map', 'stale_owned'):
+            with self.subTest(change=change):
+                before, phase, after = trade_fixture()
+                if change == 'same_frame':
+                    after['frame_count'] = phase['frame_count']
+                elif change == 'earlier_phase':
+                    phase['frame_count'] = before['frame_count'] - 1
+                elif change == 'different_map':
+                    after['map_name'] = 'PalletTown'
+                elif change == 'wrong_catalog_map':
+                    for s in (before, phase, after):
+                        s['map_name'] = 'Route2TradeHouse'
+                else:
+                    before['pokedex'] = {'owned_species': ['Venonat'], 'owned': 1}
+                tracker = RegistrationEvidence()
+                tracker.registrations(before, {})
+                tracker.observe_trade_phase(phase)
+                self.assertEqual(tracker.registrations(after, {})['Tangela']['method'], 'unknown')
+
+    def test_npc_trade_rejects_inventory_flag_edit_or_wrong_level(self):
+        for change in ('missing_source', 'duplicate_source', 'extra_gain', 'wrong_level', 'stored_target'):
+            with self.subTest(change=change):
+                before, phase, after = trade_fixture()
+                if change == 'missing_source':
+                    phase['party'] = phase['party'][1:]
+                elif change == 'duplicate_source':
+                    phase['stored_pokemon'] = [mon('Venonat', 22)]
+                    after['stored_pokemon'] = [mon('Venonat', 22)]
+                elif change == 'extra_gain':
+                    after['party'].append(mon('Muk'))
+                elif change == 'wrong_level':
+                    after['party'][1]['level'] = 23
+                else:
+                    after['stored_pokemon'] = [after['party'].pop()]
+                tracker = RegistrationEvidence()
+                tracker.registrations(before, {})
+                tracker.observe_trade_phase(phase)
+                self.assertEqual(tracker.registrations(after, {})['Tangela']['method'], 'unknown')
+
+    def test_npc_trade_phase_is_bounded_and_not_reused_after_observation_or_battle(self):
+        before, phase, after = trade_fixture()
+        for boundary in ('observation', 'invalid', 'battle'):
+            with self.subTest(boundary=boundary):
+                tracker = RegistrationEvidence()
+                tracker.registrations(before, {})
+                tracker.observe_trade_phase(phase)
+                tracker.observe_trade_phase({**phase, 'frame_count': 21})
+                self.assertEqual(tracker.trade_phase['frame'], 20)
+                if boundary == 'observation':
+                    tracker.registrations(before, {})
+                elif boundary == 'invalid':
+                    tracker.registrations({}, {})
+                    tracker.registrations(before, {})
+                else:
+                    tracker.observe_battle('battle_started', before)
+                self.assertEqual(tracker.registrations(after, {})['Tangela']['method'], 'unknown')
+
+    def test_trade_settle_hook_logs_once_and_preserves_native_input_sequence(self):
+        before, phase, after = trade_fixture()
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.collects_dex, agent.start_time, agent.trace = True, time.monotonic(), io.StringIO()
+        agent.client, agent.active = Mock(), None
+        agent._registration_evidence = RegistrationEvidence()
+        agent._registration_evidence.registrations(before, {})
+        self.assertTrue(agent.settle_special(phase))
+        self.assertTrue(agent.settle_special({**phase, 'npc_trade_phase': 'TextWentTo'}))
+        self.assertEqual(agent.client.step.call_args_list, [unittest.mock.call(10)] * 2)
+        rows = [json.loads(line) for line in agent.trace.getvalue().splitlines()]
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]['kind'], 'npc_trade_started')
+        self.assertEqual(rows[0]['state'], phase)
+        self.assertEqual(agent._registration_evidence.registrations(after, {})['Tangela']['method'], 'npc_trade')
+        self.assertFalse(agent.settle_special({'npc_trade_phase': None}))
+        self.assertTrue(agent.settle_special(phase))
+        self.assertEqual(len(agent.trace.getvalue().splitlines()), 2)
+
+    def test_trade_settle_hook_does_not_change_non_collection_driver(self):
+        _, phase, _ = trade_fixture()
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.collects_dex, agent.client, agent.record = False, Mock(), Mock()
+        self.assertTrue(agent.settle_special(phase))
+        agent.client.step.assert_called_once_with(10)
+        agent.record.assert_not_called()
+
     def test_native_capture_matches_owned_bit_roster_enemy_and_real_cost(self):
         before, after = capture_fixture()
         original = deepcopy((before, after))

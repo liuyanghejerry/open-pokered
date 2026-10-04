@@ -5942,6 +5942,58 @@ class AutonomousTests(unittest.TestCase):
         facts['party'][0]['level'] = 25
         self.assertTrue(agent.index.satisfied(group['target'], facts))
 
+    def test_support_next_level_reference_does_not_claim_direct_capture_or_accuracy_bonus(self):
+        from openpokered.autonomous_story import capture_support_level_reference
+        from copy import deepcopy
+        mon = {'species': 'Hypno', 'level': 42, 'hp': 144, 'max_hp': 144, 'status': 'None',
+               'moves': ['Hypnosis', 'PsychicM', 'None', 'None'], 'pp': [20, 10, 0, 0]}
+        original = deepcopy(mon)
+        value = capture_support_level_reference(mon, 43, [mon], ['Hypno'])
+        self.assertFalse(value['direct_ball_roll_uses_support_level'])
+        self.assertFalse(value['existing_move_base_accuracy_changes_with_level'])
+        self.assertFalse(value['level_parity_required_for_sleep_or_paralysis'])
+        self.assertEqual(value['unregistered_level_evolution_offers'], [])
+        self.assertEqual(value['natural_move_offers'][0]['move'], 'Meditate')
+        self.assertEqual(value['current_conscious_non_damaging_support_tools'][0]['base_accuracy'], 60)
+        self.assertIn('no next-level stat, hit or survival forecast', value['scope'])
+        self.assertEqual(mon, original)
+
+    def test_support_reference_natural_offers_are_not_registered_or_external_trade_evolution(self):
+        from openpokered.autonomous_story import capture_support_level_reference
+        mon = {'species': 'Drowzee', 'level': 25, 'hp': 70, 'max_hp': 70,
+               'moves': ['Hypnosis'], 'pp': [0]}
+        value = capture_support_level_reference(mon, 26, [mon], ['Drowzee'])
+        self.assertEqual(value['unregistered_level_evolution_offers'], [{'species': 'Hypno', 'required_level': 26}])
+        self.assertEqual(value['current_conscious_non_damaging_support_tools'], [])
+        self.assertEqual(capture_support_level_reference(mon, 26, [mon], ['Hypno'])[
+                         'unregistered_level_evolution_offers'], [])
+        mon['species'] = 'Kadabra'
+        self.assertEqual(capture_support_level_reference(mon, 26, [mon], [])[ 'unregistered_level_evolution_offers'], [])
+
+    def test_support_reference_retains_current_tools_not_fainted_depleted_or_damaging_moves(self):
+        from openpokered.autonomous_story import capture_support_level_reference
+        agent, facts = self.support_training_agent()
+        source = facts['party'][1]
+        other = {**source, 'species': 'Hypno', 'moves': ['Hypnosis', 'PsychicM'], 'pp': [20, 10]}
+        party = [source, other, {**source, 'hp': 0}, {**source, 'pp': [0, 0, 0, 0]}]
+        value = capture_support_level_reference(source, 25, party, [])
+        tools = value['current_conscious_non_damaging_support_tools']
+        self.assertEqual([(row['species'], row['move'], row['base_accuracy']) for row in tools],
+                         [('Gloom', 'StunSpore', 75), ('Gloom', 'SleepPowder', 75), ('Hypno', 'Hypnosis', 60)])
+        self.assertEqual([row['party_index'] for row in tools], [0, 0, 1])
+        self.assertEqual(value['natural_move_offers'], [])
+
+    def test_support_reference_is_added_without_changing_existing_step_or_candidates(self):
+        agent, facts = self.support_training_agent()
+        groups = {}
+        agent.add_capture_support_training(groups, facts)
+        self.assertEqual(set(groups), {'prepare:capture-support:Gloom'})
+        context = groups['prepare:capture-support:Gloom']['context']
+        self.assertEqual(context['capture_support_level_reference']['from_level'], 24)
+        self.assertEqual(context['capture_support_level_reference']['target_level'], 25)
+        self.assertEqual(context['capture_support_level_reference']['unregistered_level_evolution_offers'], [])
+        self.assertEqual(groups['prepare:capture-support:Gloom']['target'], ('level', 'Gloom', 25))
+
     def test_support_training_exposes_full_parity_effort_without_changing_the_step(self):
         from copy import deepcopy
         agent, facts = self.support_training_agent()

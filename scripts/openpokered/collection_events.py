@@ -7,6 +7,16 @@ Unwitnessed gifts, trades, encounter modes and old saves remain unknown.
 from collections import Counter
 from copy import deepcopy
 
+from .collection_planner import NPC_TRADES
+
+
+# Native TradeAnimPhase values before apply_npc_trade mutates the party.
+# Done is deliberately excluded: by then the outgoing member may be gone.
+TRADE_PHASES = frozenset(('SlideInGiveMon', 'ShowGiveMon', 'GiveMonPoof',
+    'GiveMonBallDrop', 'BallEnterCable', 'SlideOut', 'TextWentTo',
+    'TextForSends', 'TextFarewell', 'SlideBack', 'ReceiveBallTilt',
+    'ReceiveMonPoof', 'ShowReceiveMon', 'TextTakeCare', 'SlideTextBoxOff'))
+
 
 def _name(value):
     return str(value).replace('_', '').upper()
@@ -27,6 +37,7 @@ def _snapshot(state):
            or type(mon.get('level')) is not int or not 1 <= mon['level'] <= 100 for mon in roster):
         return None
     return {'owned': set(owned), 'roster': deepcopy(roster),
+            'party': deepcopy(party), 'flags': deepcopy(state.get('flags', {})),
             'frame': state.get('frame_count', state.get('frame')),
             'map': state.get('map_name', state.get('map')),
             'bag': deepcopy(state.get('bag', {}))}
@@ -129,10 +140,54 @@ def _evolution_registration(old, new, graph, *, native_level_phase=False):
     return {}
 
 
+def _npc_trade_registration(previous, phase, current):
+    """A timed native phase, actual exchange and newly set NPC receipt flag.
+
+    get_state does not expose flags. Use the existing pre-operation facts for
+    the flag baseline, never a new RPC or the selected trade goal. Ambiguous
+    duplicate sources deliberately remain unknown.
+    """
+    if previous is None or phase is None or current is None:
+        return {}
+    if (previous['owned'] != phase['owned'] or not previous['owned'] <= current['owned']
+            or len(current['owned'] - previous['owned']) != 1
+            or previous['map'] != phase['map'] or phase['map'] != current['map']
+            or any(type(s['frame']) is not int for s in (previous, phase, current))
+            or not previous['frame'] <= phase['frame'] < current['frame']
+            or not isinstance(previous['flags'], dict) or not isinstance(current['flags'], dict)):
+        return {}
+    removed, added = _inventory(phase) - _inventory(current), _inventory(current) - _inventory(phase)
+    if sum(removed.values()) != 1 or sum(added.values()) != 1:
+        return {}
+    source, target = next(iter(removed)), next(iter(added))
+    species = next(iter(current['owned'] - previous['owned']))
+    before = [mon for mon in phase['party'] if _name(mon['species']) == source]
+    after = [mon for mon in current['party'] if _name(mon['species']) == target]
+    if (target != _name(species) or len(before) != 1 or len(after) != 1
+            or sum(_name(mon['species']) == source for mon in phase['roster']) != 1
+            or sum(_name(mon['species']) == target for mon in current['roster']) != 1
+            or before[0]['level'] != after[0]['level']):
+        return {}
+    for give, receive, map_name, flag in NPC_TRADES:
+        if (_name(give) != source or _name(receive) != target or map_name != current['map']
+                or previous['flags'].get(flag, False) is not False
+                or current['flags'].get(flag) is not True):
+            continue
+        return {species: {'method': 'npc_trade',
+            'basis': 'native_trade_phase_one_party_exchange_and_new_npc_receipt_flag',
+            'before_frame': phase['frame'], 'after_frame': current['frame'],
+            'flag_baseline_frame': previous['frame'], 'native_phase': phase['native_trade_phase'],
+            'map': map_name, 'before': deepcopy(before[0]), 'after': deepcopy(after[0]),
+            'catalog_trade': {'from_species': give, 'species': receive, 'completion_flag': flag},
+            'scope': 'Observed native NPC exchange and receipt; not full original-route or trade-stat fidelity certification.'}}
+    return {}
+
+
 class RegistrationEvidence:
     def __init__(self):
         self.battle_before = None
         self.level_phase = None
+        self.trade_phase = None
         self.previous = None
         self.pending = {}
 
@@ -140,6 +195,7 @@ class RegistrationEvidence:
         if kind == 'battle_started':
             self.battle_before = deepcopy(state) if isinstance(state, dict) else None
             self.level_phase = None
+            self.trade_phase = None
         elif kind == 'battle_resolved':
             if self.battle_before is not None and isinstance(state, dict):
                 self.pending.update(native_capture_registration(self.battle_before, state))
@@ -147,18 +203,27 @@ class RegistrationEvidence:
             self.level_phase = (_snapshot(state) if isinstance(state, dict)
                                 and state.get('evolution_phase') == 'IsEvolving' else None)
 
+    def observe_trade_phase(self, state):
+        if (not isinstance(state, dict) or state.get('npc_trade_phase') not in TRADE_PHASES
+                or self.trade_phase is not None):
+            return
+        snapshot = _snapshot(state)
+        if snapshot is not None:
+            self.trade_phase = {**snapshot, 'native_trade_phase': state['npc_trade_phase']}
+
     def registrations(self, facts, graph):
         current = _snapshot(facts)
         if current is None:
-            self.previous, self.level_phase, self.pending = None, None, {}
+            self.previous, self.level_phase, self.trade_phase, self.pending = None, None, None, {}
             return {}
         initial = self.previous is None
         gained = set() if initial else current['owned'] - self.previous['owned']
         evidence = _evolution_registration(self.level_phase, current, graph, native_level_phase=True)
         evidence.update(_evolution_registration(self.previous, current, graph))
+        evidence.update(_npc_trade_registration(self.previous, self.trade_phase, current))
         evidence.update(self.pending)
         result = {species: evidence.get(species, {'method': 'unknown',
             'basis': 'no_matched_native_producer_witness',
             'scope': 'Planned goal is not evidence of the actual acquisition method.'}) for species in gained}
-        self.previous, self.level_phase, self.pending = current, None, {}
+        self.previous, self.level_phase, self.trade_phase, self.pending = current, None, None, {}
         return result
