@@ -1408,6 +1408,14 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'registrations offered by other candidates. Replenishing balls or gaining one level '
                 'does not erase this history; prior spending is not a reason to keep spending. '
                 'Past failures also do not prove a materially different setup will fail.')
+            instruction += (' Compare finite_static_source_references on every offered goal, including '
+                'navigation, visibility and flag goals: the same native finite encounter can appear '
+                'under different target names. Its latest failure, recorded costs and actual preparation '
+                'changes still apply. Winning or hiding an unregistered static Pokémon is not registering '
+                'it and may spend that source. A certified menu-run preserves the source, not health, '
+                'balls or the likelihood of a better retry. These references apply only to the named '
+                'matching rules; compare their branch guards and all alternatives, without a forced '
+                'route, preparation step or duplicate capture of an already validated registration.')
             instruction += (' Capture support training is a bounded experience step, not a complete '
                 'capture setup. Compare the remaining level gap and training_cost_to_observed_target_level '
                 'with alternate supports, ball capabilities and their acquisition prerequisites. Level '
@@ -4200,8 +4208,83 @@ class AutonomousStoryAgent(DualStoryAgent):
         if self.collects_dex:
             self.annotate_script_unlocks(groups, facts)
             self.annotate_script_resource_guards(groups, facts)
+            self.annotate_finite_static_sources(groups, facts)
         self.annotate_route_reset_costs(groups, facts)
         return groups
+
+    def annotate_finite_static_sources(self, groups, facts):
+        """Bind capture facts to native producers, not just register-goal names.
+
+        Match an actual catalogued static battle or its preceding effect on a
+        same-map/script rule. Merely sharing a script, species or destination
+        does not prove a candidate executes that battle. This adds context only.
+        """
+        native_rules = getattr(getattr(self, 'index', None), 'rules', None)
+        if not getattr(self, 'collects_dex', False) or not isinstance(native_rules, list):
+            return
+        offered_scripts = {(rule.map, rule.storyline)
+                           for group in groups.values() for rule in group.get('rules', [])}
+        preparation = capture_preparation(facts.get('party', []), facts.get('bag', {}), facts)
+        ball_inventory = [{'ball': name, 'quantity': preparation['balls'][name.replace('_', '').upper()]}
+                          for name in BALLS if name.replace('_', '').upper() in preparation['balls']]
+        owned = self.validated_owned(facts)
+        for species, methods in sorted(self.complete_collection_graph().items()):
+            for method in methods:
+                if method['method'] != 'static':
+                    continue
+                battles = [rule for rule in self.acquisition_story_rules(species, method)
+                           if (rule.map, rule.storyline) in offered_scripts]
+                for group in groups.values():
+                    matched = [(battle, rule) for battle in battles for rule in group.get('rules', [])
+                               if (rule.map, rule.storyline) == (battle.map, battle.storyline)
+                               and (rule.effect == battle.effect or battle.effect in rule.preceding)]
+                    if not matched:
+                        continue
+                    previous = next((row for row in self.latest_capture_failures().values()
+                                     if row['map'] == method['map']
+                                     and self.same_species(row['species'], species)), None)
+
+                    def history(totals):
+                        return [{'source_key': key, 'totals': deepcopy(total)}
+                                for key, total in sorted(totals.items())
+                                if key.partition(':')[0] == method['map']
+                                and self.same_species(key.partition(':')[2], species)]
+
+                    source_battles = {battle.id: battle for battle, _ in matched}
+                    reference = {
+                        'species': species, 'source_map': method['map'],
+                        'script': battles[0].storyline,
+                        'matching_group_rule_ids': sorted({rule.id for _, rule in matched}),
+                        'source_species_validated_registered': any(self.same_species(name, species) for name in owned),
+                        'battle_source_rules': [{**battle.description(), 'rule_id': battle.id,
+                                                'entry_guards': deepcopy(battle.guards)}
+                                               for battle in source_battles.values()],
+                        'retreat_contracts': [static_retreat_contract(battle, native_rules)
+                                             for battle in source_battles.values()],
+                        'capture_inventory_risk': capture_inventory_risk(species, ball_inventory),
+                        'latest_failure': deepcopy(previous),
+                        'preparation_changes_since_last_failure': capture_preparation_improvements(
+                            preparation, previous['preparation']) if previous else None,
+                        'direct_capture_retry_deferred': self.static_capture_deferred(species, method['map'], facts),
+                        'recorded_retreat_history': history(getattr(self, 'capture_retreat_totals', {})),
+                        'recorded_blackout_history': history(getattr(self, 'capture_blackout_totals', {})),
+                        'scope': 'Catalogued static source tied only to matching_group_rule_ids and native '
+                            'battle effects, not every route or rule in this candidate. Entry guards, choices '
+                            'and navigation still apply; not proof of access, a remaining source or survival. '
+                            'Winning/hiding is not registration and may spend an unregistered finite source. '
+                            'A different goal name does not improve preparation or erase earlier costs. '
+                            'direct_capture_retry_deferred reports the existing registration retry gate only; '
+                            'this reference does not filter candidates. Missing history is unobserved, not '
+                            'zero-cost attempts. Costs cover only their recorded inventory/cash observations, '
+                            'not a forecast; retreats and blackouts remain separate. Already validated '
+                            'registration does not require duplicate capture. No forced route or preparation.'}
+                    references = group.setdefault('context', {}).setdefault('finite_static_source_references', [])
+                    # Refresh this producer's snapshot without accumulating
+                    # stale preparation if a caller annotates a group again.
+                    references[:] = [row for row in references if
+                                     (row['species'], row['source_map'], row['script']) !=
+                                     (species, method['map'], reference['script'])]
+                    references.append(reference)
 
     def script_resource_guard_reference(self, facts, *, money_after=None):
         """Read native cash/badge guards, without producing or enforcing a route."""

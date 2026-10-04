@@ -8693,6 +8693,154 @@ class AutonomousTests(unittest.TestCase):
         agent.augment_strategy_state(unrelated, facts)
         self.assertEqual(unrelated, {})
 
+    def static_source_context_agent(self):
+        from types import SimpleNamespace
+        from openpokered.autonomous_story import capture_preparation
+        from openpokered.story_rules import literal
+        battle = Rule('zapdos-battle', 'PowerPlant', 'PowerPlant:talkZapdos',
+                      ['npc:9'], [], [], ('battle', 'ZAPDOS', True), [])
+        result = {'Result': {'Call': {'callee': 'startWildBattle',
+                                     'args': [literal('ZAPDOS'), literal(50)]}}}
+        won = {'BinaryOp': {'op': 'Or', 'left': {'BinaryOp': {
+            'op': 'Eq', 'left': result, 'right': literal('win')}}, 'right': {
+            'BinaryOp': {'op': 'Eq', 'left': result, 'right': literal('caught')}}}}
+        hidden = Rule('zapdos-hidden', battle.map, battle.storyline, ['npc:9'],
+                      [(won, True)], [], ('visibility', 'POWER_PLANT_OBJ_9', False), [battle.effect])
+        flag = Rule('zapdos-flag', battle.map, battle.storyline, ['npc:9'],
+                    [(won, True)], [], ('flag', 'EVENT_BEAT_ZAPDOS', True), [battle.effect])
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.collects_dex = True
+        agent.index = SimpleNamespace(rules=[battle, hidden, flag])
+        agent._complete_collection_graph = {'Zapdos': [
+            {'method': 'static', 'map': battle.map, 'storyline': 'talkZapdos', 'level': 50}]}
+        agent.collection_audit_pending = {}
+        facts = {'map': 'PowerPlant', 'bag': {'POKEBALL': 46, 'GREATBALL': 25, 'ULTRABALL': 1},
+                 'party': [{'species': 'Charizard', 'level': 56, 'hp': 69, 'status': 'None',
+                            'moves': ['Cut'], 'pp': [9]}], 'dex': {'owned_species': []}}
+        agent.capture_retreats = {'PowerPlant:ZAPDOS': {
+            'map': 'PowerPlant', 'species': 'ZAPDOS',
+            'preparation': capture_preparation(facts['party'], facts['bag']),
+            'retreat_observation': {'enemy': {'hp': 159, 'max_hp': 159, 'status': 'None'}}}}
+        agent.capture_retreat_totals = {'PowerPlant:Zapdos': {
+            'recorded_retreats': 3, 'inventory_observed_retreats': 3, 'balls_spent': {'POKEBALL': 1}}}
+        agent.capture_blackouts, agent.capture_blackout_totals = {}, {}
+        return agent, facts, battle, hidden, flag
+
+    def test_static_source_context_binds_registration_and_navigation_aliases(self):
+        agent, facts, battle, hidden, flag = self.static_source_context_agent()
+        groups = {name: {'target': rule.effect, 'rules': [rule], 'context': {}}
+                  for name, rule in [('register', battle), ('navigation', hidden), ('flag', flag)]}
+        agent.annotate_finite_static_sources(groups, facts)
+        for name, rule in [('register', battle), ('navigation', hidden), ('flag', flag)]:
+            with self.subTest(goal=name):
+                row, = groups[name]['context']['finite_static_source_references']
+                self.assertEqual(row['species'], 'Zapdos')
+                self.assertEqual(row['source_map'], 'PowerPlant')
+                self.assertEqual(row['script'], 'PowerPlant:talkZapdos')
+                self.assertEqual(row['matching_group_rule_ids'], [rule.id])
+                self.assertFalse(row['source_species_validated_registered'])
+                self.assertTrue(row['direct_capture_retry_deferred'])
+                self.assertEqual(row['preparation_changes_since_last_failure'], [])
+                self.assertEqual(row['latest_failure']['retreat_observation']['enemy']['hp'], 159)
+                self.assertEqual(row['recorded_retreat_history'][0]['totals']['recorded_retreats'], 3)
+                self.assertEqual(row['recorded_retreat_history'][0]['totals']['balls_spent'], {'POKEBALL': 1})
+                self.assertTrue(row['retreat_contracts'][0]['menu_run_preserves_source'])
+                self.assertEqual(len(row['capture_inventory_risk']['scenarios']), 3)
+
+    def test_static_source_context_preserves_candidates_rules_navigation_and_inputs(self):
+        from copy import deepcopy
+        agent, facts, _, hidden, _ = self.static_source_context_agent()
+        groups = {'alias': {'target': hidden.effect, 'rules': [hidden], 'objectives': ['Navigate'],
+            'context': {'trigger_navigation': [{'steps': 0, 'tile_route_found': True}], 'opponent_cost': 3}},
+            'other': {'target': ('catch', 'Route15', True), 'rules': [], 'context': {'other': True}}}
+        original, original_facts, memory = deepcopy((groups, facts, agent.capture_retreats))
+        agent.annotate_finite_static_sources(groups, facts)
+        evidence = groups['alias']['context'].pop('finite_static_source_references')
+        self.assertEqual(groups, original)
+        self.assertEqual(facts, original_facts)
+        evidence[0]['latest_failure']['preparation']['balls'].clear()
+        evidence[0]['recorded_retreat_history'][0]['totals']['balls_spent'].clear()
+        self.assertEqual(agent.capture_retreats, memory)
+        self.assertEqual(agent.capture_retreat_totals['PowerPlant:Zapdos']['balls_spent'], {'POKEBALL': 1})
+
+    def test_static_source_context_improved_preparation_retains_retreat_costs(self):
+        agent, facts, _, hidden, _ = self.static_source_context_agent()
+        facts['party'][0]['hp'] = 189
+        groups = {'alias': {'rules': [hidden]}}
+        agent.annotate_finite_static_sources(groups, facts)
+        row, = groups['alias']['context']['finite_static_source_references']
+        self.assertFalse(row['direct_capture_retry_deferred'])
+        self.assertIn('health_restored:Charizard', row['preparation_changes_since_last_failure'])
+        self.assertEqual(row['recorded_retreat_history'][0]['totals']['recorded_retreats'], 3)
+
+    def test_static_source_context_latest_blackout_is_not_an_escape_or_zero_cost(self):
+        from copy import deepcopy
+        agent, facts, _, hidden, _ = self.static_source_context_agent()
+        blackout = deepcopy(agent.capture_retreats['PowerPlant:ZAPDOS'])
+        blackout.pop('retreat_observation')
+        blackout.update(reason='native_blackout_without_registration', money_before=2000, money_after=1000)
+        agent.capture_blackouts = {'PowerPlant:ZAPDOS': blackout}
+        agent.capture_blackout_totals = {'PowerPlant:zapdos': {
+            'recorded_blackouts': 1, 'cash_observed_blackouts': 1, 'cash_decrease': 1000}}
+        groups = {'alias': {'rules': [hidden]}}
+        agent.annotate_finite_static_sources(groups, facts)
+        row, = groups['alias']['context']['finite_static_source_references']
+        self.assertEqual(row['latest_failure'], blackout)
+        self.assertEqual(row['recorded_blackout_history'][0]['totals']['cash_decrease'], 1000)
+        self.assertEqual(row['recorded_retreat_history'][0]['totals']['recorded_retreats'], 3)
+        self.assertNotIn('retreat_observation', row['latest_failure'])
+
+    def test_static_source_context_registered_species_is_normalized_but_pending_is_not_credit(self):
+        agent, facts, _, hidden, _ = self.static_source_context_agent()
+        groups = {'alias': {'rules': [hidden]}}
+        facts['dex']['owned_species'] = ['ZAPDOS']
+        agent.annotate_finite_static_sources(groups, facts)
+        self.assertTrue(groups['alias']['context']['finite_static_source_references'][0][
+            'source_species_validated_registered'])
+        agent.collection_audit_pending = {'ZAPDOS': {'unvalidated': True}}
+        agent.annotate_finite_static_sources(groups, facts)
+        self.assertFalse(groups['alias']['context']['finite_static_source_references'][0][
+            'source_species_validated_registered'])
+
+    def test_static_source_context_does_not_bind_same_species_other_script_or_prebattle_effects(self):
+        agent, facts, battle, hidden, _ = self.static_source_context_agent()
+        rules = [Rule('other-map', 'Other', hidden.storyline, [], [], [], hidden.effect, [battle.effect]),
+                 Rule('other-script', hidden.map, 'PowerPlant:other', [], [], [], hidden.effect, [battle.effect]),
+                 Rule('before-battle', hidden.map, hidden.storyline, [], [], [], ('item', 'TM', True), []),
+                 Rule('other-battle', hidden.map, hidden.storyline, [], [], [], hidden.effect,
+                      [('battle', 'MAROWAK', True)])]
+        groups = {rule.id: {'rules': [rule], 'context': {'preserved': True}} for rule in rules}
+        agent.annotate_finite_static_sources(groups, facts)
+        self.assertTrue(all(group['context'] == {'preserved': True} for group in groups.values()))
+
+    def test_static_source_context_excludes_uncatalogued_ghost_and_nonstatic_producers(self):
+        agent, facts, battle, _, _ = self.static_source_context_agent()
+        agent._complete_collection_graph = {'Zapdos': [
+            {'method': 'grass', 'map': battle.map, 'storyline': 'talkZapdos'}]}
+        groups = {'ghost': {'rules': [battle], 'context': {}}}
+        agent.annotate_finite_static_sources(groups, facts)
+        self.assertEqual(groups['ghost']['context'], {})
+
+    def test_static_source_context_unobserved_history_stays_unknown(self):
+        agent, facts, _, hidden, _ = self.static_source_context_agent()
+        agent.capture_retreats, agent.capture_retreat_totals = {}, {}
+        groups = {'alias': {'rules': [hidden]}}
+        agent.annotate_finite_static_sources(groups, facts)
+        row, = groups['alias']['context']['finite_static_source_references']
+        self.assertIsNone(row['latest_failure'])
+        self.assertIsNone(row['preparation_changes_since_last_failure'])
+        self.assertEqual(row['recorded_retreat_history'], [])
+        self.assertFalse(row['direct_capture_retry_deferred'])
+
+    def test_static_source_context_is_dex_only_and_missing_native_index_is_not_evidence(self):
+        agent, facts, _, hidden, _ = self.static_source_context_agent()
+        for collect, index in [(False, agent.index), (True, None)]:
+            with self.subTest(collect=collect):
+                agent.collects_dex, agent.index = collect, index
+                groups = {'alias': {'rules': [hidden], 'context': {}}}
+                agent.annotate_finite_static_sources(groups, facts)
+                self.assertEqual(groups['alias']['context'], {})
+
     def test_depleted_attacks_require_recovery_even_at_full_hp(self):
         facts = {'party': [{'hp': 30, 'max_hp': 30, 'status': 'None',
                             'moves': ['Tackle', 'Growl'], 'pp': [0, 40]}]}

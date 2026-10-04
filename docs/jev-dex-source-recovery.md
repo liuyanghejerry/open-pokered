@@ -5096,3 +5096,46 @@ worktree外44项／3914237字节增量备份
 新构建／Rust／m49结果或玩家画面变化，已有PR截图保持。最新47是后继
 唯一恢复基线，距124仍77种；完整合成MP4与完成图鉴大盘尚未交付，
 Goal仍active，不回退／注入／重启NEW GAME。
+
+### 2026-10-04：静态生产者跨目标风险连续性（仅元信息）
+
+以最新独立核验47种源为唯一后继基线，旧12段controller／native／recorder
+均已退出，源SRAM／sidecar／trace／summary四项hash仍一致。原始成功
+策略请求667.991秒及选择667.992秒保留：目标是移除
+`POWER_PLANT_OBJ_9`，实际way为`PowerPlant:talkZapdos`，preceding含
+ZAPDOS战斗；该导航候选没有register候选的capture风险context。
+不是从已治疗的47源伪造重现当时未治疗的世界或失败原因。
+
+按 `typesafe-ai` 的事实State／有界Choice分工，在所有最终提供的候选上
+增加`finite_static_source_references`：仅公共Red static目录对应的原生
+map／script／battle或确实含该battle的preceding规则关联，不按目标名、
+同名物种、目的地图或仅共享脚本推断。具名matching rule IDs、原生
+battle entry guards／choices、源物种validated登记状态、真实menu-run
+contract、库存概率参考、最新退却／blackout、两类各自观测成本、当前
+准备变化及既有direct retry gate只作比较信息。unknown不是零成本，
+击败／隐藏不是登记，换目标不抹除失败史，治疗后重新提供不是成功保证。
+已有全局状态、候选ID／target／ways／导航／对手成本／执行器保持，
+不新增门槛／现金预留／固定路线／强制准备／重复捕获要求；幽灵与非static
+目录不借历史失败变成可捕捉生产者。[Choice](https://docs.typesafe.ai/primitives/choice)
+及[State](https://docs.typesafe.ai/concepts/state)作为结构化事实参考。
+
+旧版本新增测试先失败证据保留；9项新增定向测试、autonomous448通过，
+全Python discover1043通过／20.303秒。覆盖导航／flag／battle同源关联、
+输入与候选守恒、deepcopy历史保护、治疗后保留成本、latest blackout与
+退却区分、normalized validated／pending、他图／他脚本／前战斗不误配、
+幽灵／非static不误配、未知历史与非图鉴范围。
+
+完整同源冷启动对照PYTHONHASHSEED42、冻结native6d8e／gfx21e0、真实
+历史恢复及full story frontier：47→47候选，两个普通CONTINUE后的frame
+均627→627，无模型调用或后续输入。仅Articuno／Mewtwo／Moltres／Zapdos
+四个直接static候选增加一个context key；去掉后所有候选字段严格同，
+facts／原生party／routes／导出原生AST相同。真实47源护士已恢复Charizard
+HP／PP，Zapdos direct retry gate解除；三次退却及PokeBall1观测消耗仍
+保留，不把这个冷对照宣称为旧导航alias现场重放或实际捕捉效率提升。
+原始alias／最新源对照／失败测试／全回归日志均存持久目录。
+
+新policy `9ed4afde2cb385441341893f4899d30cee65c0c8fa68a4d81a729b415334eae6`
+仅用于下一次从最新47正常CONTINUE，原双层OpenRouter Jev1.13.0／seed42／
+预算／原生4×录像不变。不热替换，不回退或另开NEW GAME；没有Rust／
+新m49／玩家画面变化，PR原绝对raw前后截图保留。当前仍47／124，最终
+完整逐种合法性验收、全程MP4及完成图鉴大盘尚未交付，Goal active。
