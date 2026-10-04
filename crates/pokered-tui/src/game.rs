@@ -3404,7 +3404,11 @@ impl PokemonGame {
                 draw_oak_speech(&self.oak_speech, &mut self.resources, frame_buffer, self.state.config.language);
             }
             GameScreen::Overworld => {
-                draw_overworld(&mut self.overworld, &mut self.resources, frame_buffer);
+                if let Some(selector) = &self.overworld.pending_party_select {
+                    draw_party_screen(selector.screen(), None, 0, frame_buffer, self.state.config.language);
+                } else {
+                    draw_overworld(&mut self.overworld, &mut self.resources, frame_buffer);
+                }
             }
             GameScreen::Battle => {
                 // Capture the pre-battle overworld frame once, so the screen
@@ -3440,7 +3444,7 @@ impl PokemonGame {
                 draw_save_menu(&self.save_menu, frame_buffer, self.state.config.language);
             }
             GameScreen::PartyScreen => {
-                draw_party_screen(&self.party_screen, self.resources.as_mut(), self.frame_count, frame_buffer, self.state.config.language);
+                draw_party_screen(&self.party_screen, None, 0, frame_buffer, self.state.config.language);
             }
             GameScreen::PokemonStatsScreen(_) => {
                 if let Some(ref ss) = self.stats_screen {
