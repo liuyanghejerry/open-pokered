@@ -35,11 +35,11 @@ pub fn crit_chance(base_speed: u8, is_high_crit: bool, is_focus_energy: bool) ->
         // Gen-1: high-crit ratio is (base_speed / 2) * 8, not base_speed * 8
         // (both saturate at 255 for base_speed >= 64, so only slow high-crit
         // users like Slash/Razor Leaf/Crabhammer were affected).
-        let val = (base_speed as u16 / 2) * 8;
+        let half_speed = base_speed as u16 / 2;
         if is_focus_energy {
-            val / 4
+            (half_speed / 2) * 4
         } else {
-            val
+            half_speed * 8
         }
     } else {
         let val = base_speed as u16 / 2;
@@ -84,8 +84,10 @@ pub struct DamageResult {
 /// ASM bug: defense could become 0 causing a freeze — we prevent that here.
 fn scale_stats(attack: u16, defense: u16) -> (u16, u16) {
     if attack > 255 || defense > 255 {
-        let a = (attack >> 2).max(1);
-        let d = (defense >> 2).max(1);
+        // The assembly loads only L/C after the shifts. Screens can put
+        // defense above 1023, where that byte wraps around.
+        let a = (attack >> 2).max(1) as u8 as u16;
+        let d = (defense >> 2) as u8 as u16;
         (a, d)
     } else {
         (attack, defense)
@@ -141,13 +143,13 @@ pub fn calculate_damage(params: &DamageParams) -> DamageResult {
         defense = (defense / 2).max(1);
     }
 
-    if params.is_explode_effect {
-        defense = (defense / 2).max(1);
-    }
-
     let (attack_scaled, defense_scaled) = scale_stats(attack as u16, defense as u16);
     attack = attack_scaled as u32;
     defense = defense_scaled as u32;
+
+    if params.is_explode_effect {
+        defense = (defense / 2).max(1);
+    }
 
     let defense = defense.max(1);
 

@@ -293,3 +293,25 @@ fn draw_zh_info<P: Painter>(
         );
     }
 }
+
+/// Gen-1 Mimic's separate MoveSelectionMenu ($01): enemy techniques at
+/// hlcoord(0,7), without the normal TYPE/PP box (core.asm .mimicmenu).
+pub fn draw_mimic<P: Painter>(
+    state: &MoveMenuState,
+    ui: &mut Ui<P>,
+    lang: pokered_core::game_state::Lang,
+    render_data: &dyn RenderData<Move = MoveId, Item = pokered_data::items::ItemId, Species = pokered_data::species::Species>,
+) {
+    ui.text_box(TileRect::new(0, 12, 20, 6), InkColor::Black, true, |frame| {
+        frame.label(0, 1, if lang == pokered_core::game_state::Lang::Zh {
+            "模仿哪个招式？"
+        } else { "Which technique?" }, InkColor::Black);
+    });
+    ui.text_box(TileRect::new(0, 7, 16, 6), InkColor::Black, true, |frame| {
+        for (row, slot) in state.moves().iter().enumerate() {
+            let name: String = render_data.move_name(slot.move_id).chars().take(12).collect();
+            frame.label(1, row as u32, &name, InkColor::Black);
+        }
+        frame.cursor_glyph_at(0, state.cursor() as u32, '▶', InkColor::Black);
+    });
+}

@@ -37,6 +37,8 @@ pub fn accuracy_check(
     move_effect: MoveEffect,
     random_byte: u8,
 ) -> bool {
+    if !super::pokered_rules::move_rolls_accuracy(move_effect) { return true; }
+
     if move_effect == MoveEffect::SwiftEffect {
         return true;
     }
