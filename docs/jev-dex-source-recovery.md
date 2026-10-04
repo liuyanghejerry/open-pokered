@@ -6155,3 +6155,31 @@ target／rule／objective和其余事实均守恒，只增加Safari证据与稳�
 trace增量，并验证与旧archive字节拼接等于原trace hash；原视频、native、
 gfx和既冻结policy仅引用不复制。原内容无删除。下一段须从此最新安全
 60种新干净冻结策略续跑，不退回原58。最终124、完整整片与大盘仍未完成。
+
+## 第46段发现的 PC 后续交换访问信息缺口（2026-10-05）
+
+最新严格独立 CONTINUE 检查点为第45段76种（新增 Arcanine），第46段
+仍在原冻结101b14f9策略下正常收集与录像。旧链含早期幽灵通行问题，
+按用户授权只作策略验证；不能将其76种追认为最终合法 NEW GAME 验收。
+最终另开合法 NEW GAME 达到124种、完整MP4与收集大盘仍待完成。
+
+真实第46段候选把“取出 Abra 以交换 MrMime”的 PC 路径展示为可达，
+但 post_withdrawal_acquisitions 没有后续 NPC 地点的路径参考。已有 Abra
+时，独立 register:MrMime 候选对 Route2TradeHouse 的具体触发区域报告
+tile_route_found=false。本段两次正常取出 Abra 均是准备，不是新登记。
+这证明访问证据没有传递到取出候选，不证明每次取出错误或必然导致换队。
+
+新增 trade_source_scene 保留准确 map／completion_flag；仅对实际 PC
+取出候选的 NPC-trade 后续步骤，以现有 exact-region 路径规划附加
+downstream_trade_access_reference。共享相同交易来源的几何查询，不
+新增或删除候选，不更改 PC、deposit、真实 party／flags，也不由代码
+替 Jev 选目标。缺少 producer／路径保持 unknown；实际 source guard
+仍基于当前观察，不因“即将取出”而假定满足。路径从当前坐标／当前
+队伍出发，不是从未来所选 PC 或未来换队出发；移动、换队后必须刷新。
+Surf 几何路径也保留原生徽章／场地条件。可达不等于正常交易已执行。
+
+11项新增测试覆盖缺口、精确来源、阻塞／未知、刷新、来源 guards、
+Surf 条件、共享查询、非收集边界、候选／abstention 保留和完整 JSON-text
+往返。完整 Python 1410项通过；这是工具／策略回归，不是原生新增
+收集或修复后的行为成功率证据。当前第46段未热替换运行代码；新策略
+须在安全闭合后另行冻结并实跑验证。无新的原生构建缓存或完整 PR 正文副本。

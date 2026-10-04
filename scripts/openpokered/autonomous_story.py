@@ -2103,6 +2103,12 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'between preparation steps from the PC swap itself; heed their unknowns and identity '
                 'limits. A zero observed gain does not forbid a justified party change. All other goals and PC changes remain '
                 'available; this is not a forced itinerary, party composition or target order.')
+            instruction += (' A stored NPC-trade source can be cheap to withdraw while its exchange '
+                'destination is inaccessible. Compare downstream_trade_access_reference with the '
+                'PC approach and alternatives before investing in retrieval. Its paths start at '
+                'the current origin/party, not after a chosen PC swap; source guards and missing '
+                'previews remain conditional. A found route is not a completed trade, and a '
+                'blocked preview neither bans retrieval nor rules out a new access prerequisite.')
             instruction += (' Compare capture_retry_evidence with current preparation: an observed '
                 'retreat can show a status support fainted while the target remained healthy and unstatused. '
                 'More balls do not make that support survive the switch or act; healing restores its prior '
@@ -3795,6 +3801,8 @@ class AutonomousStoryAgent(DualStoryAgent):
                                item_missing=quantity < 1,
                                item_unit_price_reference=info.get('price') or None)
         elif method['method'] == 'npc_trade':
+            preview['trade_source_scene'] = {key: deepcopy(method.get(key))
+                                             for key in ('map', 'completion_flag')}
             if method.get('completion_flag'):
                 preview['trade_already_completed'] = bool(facts.get('flags', {}).get(method['completion_flag']))
             preview['party_count_requirement_after_withdrawal_met'] = len(facts.get('party', [])) >= 1
@@ -3836,6 +3844,56 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'Evolution changes this individual; NPC trade gives it away. Travel, access, '
                 'any needed recovery and menu execution still need planning. Recovery is not '
                 'required by every alternative; item price does not prove an accessible seller.')
+
+    def annotate_stored_trade_access(self, groups, facts, previews=None):
+        """Price a stored source's NPC destination without making it a new goal.
+
+        The real party is unchanged. A path starts at the current origin, not
+        at the eventually selected PC, and must be refreshed after a swap.
+        Shadow groups share the existing exact-region geometric traversal;
+        they are never added to the offered frontier or used to prune it.
+        """
+        if not getattr(self, 'collects_dex', False):
+            return
+        pending, shadows = [], {}
+        for group in groups.values():
+            context = group.get('context') or {}
+            if not context.get('storage_retrieval'):
+                continue
+            for option in context.get('post_withdrawal_acquisitions', []):
+                scene = option.get('trade_source_scene') or {}
+                if (option.get('acquisition_method') != 'npc_trade'
+                        or not isinstance(scene.get('map'), str) or not scene['map']
+                        or not isinstance(scene.get('completion_flag'), str)
+                        or not scene['completion_flag']):
+                    continue
+                key = scene['map'], scene['completion_flag']
+                rules = [rule for rule in self.index.by_effect.get(
+                    ('flag', scene['completion_flag'], True), []) if rule.map == scene['map']]
+                if rules and key not in shadows:
+                    shadows[key] = {'target': ('register', option['species'], True),
+                                    'rules': rules, 'context': {}}
+                pending.append((option, key, rules))
+        if shadows:
+            self.annotate_navigation(shadows, facts, previews, prune=False)
+        for option, key, rules in pending:
+            option['downstream_trade_access_reference'] = {
+                'origin': [facts['map'], facts['x'], facts['y']],
+                'source_scene': deepcopy(option['trade_source_scene']),
+                'source_rule_ids': sorted({rule.id for rule in rules}),
+                'source_script_preconditions': [{'rule_id': rule.id,
+                    'missing_alternatives': deepcopy(rule.alternatives(facts))} for rule in rules],
+                'trigger_navigation': deepcopy((shadows.get(key) or {}).get('context', {})
+                                                .get('trigger_navigation')),
+                'scope': 'Exact NPC-trigger geometry from the current origin and actual party '
+                    'before withdrawal, not the chosen PC or the future swapped party. '
+                    'Source guards are evaluated on current observations, not projected as met. '
+                    'No matching producer or preview is unknown, not a blocked or ready trade. '
+                    'A found path does not prove trade guards, source possession, normal menu '
+                    'execution or registration. Surf paths still require native field guards '
+                    'and real traversal. Refresh after travel/deposit/withdrawal because party '
+                    'moves and position can change. All goals, PCs and deposits remain available; '
+                    'there is no prescribed withdrawal, destination or itinerary.'}
 
     def add_stored_battler_retrieval(self, groups, facts):
         """Recover an earned main battler rather than train a replacement."""
@@ -5319,6 +5377,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                     del groups[key]  # Preparation the run can survive without only spends frames.
         self.prioritize_critical_recovery(groups, facts)
         if self.collects_dex:
+            self.annotate_stored_trade_access(groups, facts, previews)
             self.annotate_script_unlocks(groups, facts)
             self.annotate_script_resource_guards(groups, facts)
             self.annotate_finite_static_sources(groups, facts)
