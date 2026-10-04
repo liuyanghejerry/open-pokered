@@ -248,6 +248,12 @@ def field_move(g, name, party_index=0):
             g.tap("a", 12)
             if name != "Fly":
                 assert g.cutscene()
+                if name == "Cut":
+                    # Closing UsedCutText precedes the map mutation and
+                    # 18-frame animation. control_ready only covers dialogue
+                    # and scripts; advance those normal frames before BFS.
+                    g.step(24)
+                    g.st()  # Refresh the planner from the live block bytes.
             return
         g.tap("down", 8)
     raise RuntimeError(f"field move not selected: {name}")
@@ -563,13 +569,31 @@ def challenge_erika(g):
     g.evidence("m21")
 
 
+def finish_talk(g):
+    """Drain dialogue and its deferred trainer-battle handoff.
+
+    The last dialogue can close one frame before the overworld promotes
+    its parked trainer intro to a battle. `control_ready` alone therefore
+    does not establish that the interaction has finished.
+    """
+    for _ in range(4):
+        assert g.cutscene()
+        g.step(1)  # Let the normal post-dialogue update run before observing.
+        state = g.st()
+        if state["screen"] == "battle":
+            g.battle_loop()
+            continue
+        if (state.get("dialogue_state") is not None or state.get("script_running")
+                or state.get("active_script_effect") is not None):
+            continue
+        return
+    raise RuntimeError("NPC interaction did not finish")
+
+
 def talk_object(g, map_name, x, y):
     g.approach_object(x, y, map_name)
     g.tap("a", 16)
-    assert g.cutscene()
-    if g.st()["screen"] == "battle":
-        g.battle_loop()
-        assert g.cutscene()
+    finish_talk(g)
 
 
 def talk_npc(g, map_name, text_id, completion_flag=None):
@@ -586,11 +610,10 @@ def talk_npc(g, map_name, text_id, completion_flag=None):
         if (current["x"], current["y"]) != (npc["x"], npc["y"]):
             continue  # LOS battle moved the trainer during the approach.
         g.tap("a", 16)
-        assert g.cutscene()
-        if g.st()["screen"] == "battle":
-            g.battle_loop()
-            assert g.cutscene()
-        return
+        finish_talk(g)
+        if (not completion_flag or
+                g.d.cmd(cmd="get_flags")["data"].get(completion_flag)):
+            return
     raise RuntimeError(f"NPC {text_id} did not settle on {map_name}")
 
 
@@ -613,9 +636,11 @@ def m22_lift_key(g):
     g.nav_warp(23, 2, "RocketHideoutB1F", "RocketHideoutB2F")
     g.nav_warp(21, 8, "RocketHideoutB2F", "RocketHideoutB3F")
     g.nav_warp(19, 18, "RocketHideoutB3F", "RocketHideoutB4F")
-    talk_npc(g, "RocketHideoutB4F", 4)
+    talk_npc(g, "RocketHideoutB4F", 4,
+             completion_flag="EVENT_BEAT_ROCKET_HIDEOUT_4_TRAINER_2")
     require_flag(g, "EVENT_BEAT_ROCKET_HIDEOUT_4_TRAINER_2")
-    talk_npc(g, "RocketHideoutB4F", 4)  # post-battle admission drops the key
+    talk_npc(g, "RocketHideoutB4F", 4,
+             completion_flag="EVENT_ROCKET_DROPPED_LIFT_KEY")
     require_flag(g, "EVENT_ROCKET_DROPPED_LIFT_KEY")
     talk_object(g, "RocketHideoutB4F", 10, 2)
     bag = g.d.cmd(cmd="get_bag")["data"]
