@@ -912,6 +912,20 @@ def scope_strategy_access_evidence(state, candidates):
            for category in categories}, 'scope': comparison['scope']}}
 
 
+def navigation_failure_is_field_prerequisite(blockage):
+    """A terrain-planning failure is not evidence of a local scene displacement.
+
+    Retain two exact legacy Surf diagnostics whose structured obstacle was
+    dropped by older checkpoint memory. Unknown/other failures stay unknown.
+    This never removes the actual field requirement or a collection candidate.
+    """
+    obstacle = blockage.get('field_obstruction')
+    return (isinstance(obstacle, dict) and obstacle.get('move') in ('Cut', 'Surf')
+            or blockage.get('detail') in (
+                'The target region requires crossing water',
+                'Water separates a reachable frontier from the final goal'))
+
+
 class AutonomousStoryAgent(DualStoryAgent):
     def __init__(self, *args, game, preference='none', **kwargs):
         super().__init__(*args, **kwargs)
@@ -3129,6 +3143,11 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'destination': destination, 'goal': self.active['target'], 'detail': result.get('detail'),
                 'blocking_trainers': result.get('blocking_trainers', []),
                 'blocking_npcs': result.get('blocking_npcs', [])}
+            if 'field_obstruction' in result:
+                # The player's observation position is not necessarily the
+                # terrain obstacle's position. Preserve both; do not replace
+                # the current map with a planner's unvisited remote stance.
+                self.navigation_blockage['field_obstruction'] = deepcopy(result['field_obstruction'])
             self.navigation_memory[destination] = dict(self.navigation_blockage)
             self.navigation_history[json.dumps([destination, blocked_map])] = dict(self.navigation_blockage)
             self.observed_barrier_maps.add(blocked_map)
@@ -3772,7 +3791,9 @@ class AutonomousStoryAgent(DualStoryAgent):
                     # triggered battle. Backchain its whole effect, not only
                     # missing guards (which are empty once battle-ready).
                     frontiers.extend(self.index.frontier(local.effect, facts))
-                elif (local.effect[0] == 'movement' and not local.missing(facts)
+                elif (local.effect[0] == 'movement'
+                      and not navigation_failure_is_field_prerequisite(blockage)
+                      and not local.missing(facts)
                       and self.index.coordinates(local)):
                     # A currently enabled push-back can be avoided by
                     # changing one of its branch guards (e.g. acquiring a ticket).

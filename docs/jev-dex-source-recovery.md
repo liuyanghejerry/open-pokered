@@ -5779,3 +5779,74 @@ Rule。V2纠正报告另存，原archive/报告不改；满员slot测试仍是�
 script_effect=pc/storage/true，原false保留、所选pokemon:Psyduck满足
 为true。模型实际接收新近期反馈仍须原始成功请求另行核验；实时段
 不是新安全存档，最新独立安全仍57，视频开放，Goal active。
+
+## 2026-10-04：第20段Paras、付费误关联修正与严格PC读档差异
+
+第20段实际新反馈已在两层119个原始成功请求快照中核验，完整展开
+references/tables后等于此前真实outcome，不把暴露说成采纳或捕获收益。
+V2 PC Rule纠正和真实反馈快照另存21项/203809字节补充备份，SHA
+`f3f131e7d89b53545b5f86f4ca30dab77199a1431290b08b461312b7ddbddce6`。
+第20段运行期间只有c930f57c文档更正，原46份policy40c769d3一直未热改。
+
+915.648秒Jev真实选择出售Tm11，919.400秒普通Fuchsia柜台执行，后续
+钱包原始观察93→1093、仅该TM移除。1035.103/1278.782秒两次选择入园，
+钱包1093→593→93；两次候选均声称处理ViridianGym obstruction，但其
+history其实是“跨水”规划失败，记录位置只是当时角色所在SafariZoneGate。
+当地gateRow的可逆活动旗标被错误推为该远端目标的通行前提。原请求
+同时给出了5徽章/原生7徽章门槛及单独改变Safari旗标仍未解除目的地
+门槛的投影；这些事实不能保证Jev不选错，也不能把当地标记满足当作
+已移除远端障碍。两次实际答案、完整所选criteria和原row SHA已另审计。
+
+第二次入园后1355.383秒自主选Safari东区捕捉，1363.709秒/frame20856
+真实登记Paras，57→58/95、PC42→43；方法为safari，不消耗普通球。
+第一轮付费未带来登记，第二轮有Paras，不能说全部入园都无收集价值。
+实际Hypno38普通训练XP55402→59108；后来入库，其XP未由get_state
+stored_pokemon暴露，不能用普通PC观察声称已独立证明入库XP守恒。
+只读SRAM导出另确认其保存XP59108，不修改正式SRAM或把导出当成读档
+验收。Jev自然离园后又尝试取出Pikachu，普通路线被阻塞，未强制输入。
+
+为了保留新增收获并修复已定位的误关联，只向原controller64805合作
+SIGINT；不是自主护士边界，使用单独的诊断请求，不冒用原护士证明。
+请求绑定普通离园回执、无后续推进输入的strategy观察、full recovery、
+精确owner/source/policy/稳定trace；最终是否安全仍由原控制器检查。
+原native64819/recorder64820正常闭合，native_checkpoint_safe与普通
+SRAM导出成功，最终SafariZoneGate4,3/frame21592/现金93/徽章31。
+原生MP4完整解码2181689字节/90秒/5400帧，SHA
+`795dce6962642aa51cffacd93840e009a0cc7b77e31e01cba4ebd2847d5b42ef`。
+
+**然而独立schema4普通CONTINUE失败，当前不能认证安全58。** 精确
+唯一差异为box0/index19的Hypno最大HP129→130，当前HP均129，PC
+其余字段、slot/物种/招式/PP及其余snapshot严格同。独立新native再次
+复现同差异；原报告expected/restored都保留、verified=false。原SRAM
+只读导出显示38级/XP59108/HP129/maxHP130/stat_exp与DVs；原生
+box记录未保存派生能力值，读取路径会重建，但在确认原作与缓存语义
+之前不把该差异当成已修复、放宽条件或重新标为通过。保存失败辅助
+证明中初始CONTINUE roster仅是继承，不重复计入新登记；修正了这个
+辅助fixture后，仍由真正PC差异拒绝，并没有改变schema4或最终124门槛。
+
+最新独立安全仍为第19段57/124；20的原58收获、训练、损失及录像全部
+保留，没有退款、改档或恢复旧57丢弃本段。正式运行目前已闭合，只有
+隔离诊断，无第21段真实启动，Goal active不代表有原生采集进程在运行。
+修改生产policy前已独立归档68项/13836320字节，SHA
+`55b9af8ec4f1c6a594251d6aade0efc6de432d3a1918deda11c272dfd6c33a0f`。
+包括原20保存/trace/summary/失败、严格差异、原46份policy与源57证明，
+原MP4/binary不重复打包，无凭据、删除或/tmp正式证据依赖。
+
+闭合归档后修正纯Python导航记忆/依赖推导：保留field_obstruction深
+拷贝而不把远端规划stance冒作角色已观察位置；已明确的Cut/Surf规划
+失败及两种精确旧版跨水诊断不再用当地coordinate movement guard
+推导场景前提。未知失败不假定为field；真实脚本位移、NPC/训练师证据
+与既有合法收集/付费producer保留，不禁Safari，不硬定路线/答案。
+六项新回归，22项focused与完整1105项通过；生产未改native、输入、
+预算或存档/最终验收。首版新增fixture少了map而报错，补完整fixture，
+没有为救测试改变生产行为。
+
+对20原SRAM的两个独立普通CONTINUE只读冷前沿诊断（旧c930f57c完整
+模块/当前修正版、同冻结native/gfx/43条history、无API或boot后输入）
+世界事实严格同、frame627不变、全部94组ID/target/rule IDs/objectives
+保留。此时钱包93，不能冒充早先1093/593时的付费误关联重放或实际
+模型采纳/收益。四个进化组training_effort_examples跨进程不仅顺序，
+连第三个示例地图也有差别，因此不声称完整context/请求逐字节等价；
+确定性与示例覆盖是另一个待检查问题。后续优先解决PC能力缓存与
+原作存取语义、重新严格验证58保存，再从保留的新收获继续，而不是
+回档或把独立差异跳过。最终合法124/完整合成MP4/图鉴大盘仍未完成。
