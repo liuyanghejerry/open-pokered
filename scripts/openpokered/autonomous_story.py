@@ -2548,12 +2548,22 @@ class AutonomousStoryAgent(DualStoryAgent):
             _, structured_state, structured_options, structured_guidance = formats[-1]
             try:
                 wire, offered = compact_decision_json_text_state(structured_state, structured_options)
-            except ValueError:
+            except ValueError as error:
+                self.record(f'{layer}_wire_encoding_ineligible', encoding='compact_json_text_state',
+                    candidate_ids=list(candidates), reason=str(error), request_attempted=False,
+                    world_facts_preserved=True, candidate_values_preserved=True,
+                    byte_reference_is_token_limit=False)
                 return  # Never coerce an invalid source into different facts.
             json_text_eligible = wire is not structured_state
             if json_text_eligible:
                 formats.append(('compact_json_text_state', wire, offered,
                     structured_guidance + JSON_TEXT_STATE_INSTRUCTION))
+            else:
+                self.record(f'{layer}_wire_encoding_ineligible', encoding='compact_json_text_state',
+                    candidate_ids=list(candidates),
+                    reason='compact_text_plus_guidance_not_smaller_than_possible_pretty_json',
+                    request_attempted=False, world_facts_preserved=True, candidate_values_preserved=True,
+                    byte_reference_is_token_limit=False)
 
         # Do not re-factor a successful ordinary request. Enable this work
         # only after explicit overflow, or its same-endpoint runtime learning.

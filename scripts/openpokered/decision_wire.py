@@ -53,31 +53,45 @@ def compact_decision_json_text_state(state, candidates):
     pretty-JSON object spelling. It does not assume that a provider uses that
     spelling, reduce HTTP bytes, count tokens, or certify a context limit. Actual
     requests must validate the hypothesis. Ordinary successful requests stay
-    structured, and all previous reference/table protocols are retained.
+    structured, and all previous reference/table protocols are retained. Native
+    tuples use the existing HTTP JSON encoder's array semantics, without changing
+    the source container. Non-string keys remain invalid rather than being coerced.
     """
     if not isinstance(state, dict):
         return state, candidates
 
-    def validate(value):
+    ancestors = set()
+
+    def transport_value(value):
         if isinstance(value, dict):
             if any(not isinstance(key, str) for key in value):
                 raise ValueError('Non-string key in JSON-text state')
-            for child in value.values():
-                validate(child)
-        elif isinstance(value, list):
-            for child in value:
-                validate(child)
-        elif type(value) not in (type(None), str, bool, int, float):
-            raise ValueError('Non-JSON value in JSON-text state')
+        if isinstance(value, (dict, list, tuple)):
+            identity = id(value)
+            if identity in ancestors:
+                raise ValueError('Circular JSON-text state')
+            ancestors.add(identity)
+            try:
+                if isinstance(value, dict):
+                    return {key: transport_value(child) for key, child in value.items()}
+                # json.dumps already sends both lists and tuples as arrays.
+                # Validate their complete transmitted contents before decoding
+                # evidence, including tags hidden inside a native tuple.
+                return [transport_value(child) for child in value]
+            finally:
+                ancestors.remove(identity)
+        if type(value) not in (type(None), str, bool, int, float):
+            raise ValueError('Non-JSON value in JSON-text state: ' + type(value).__name__)
+        return value
 
-    validate(state)
+    normalized = transport_value(state)
     # Do not bypass an ambiguous/malformed earlier evidence protocol simply
     # because its JSON spelling can be serialized. This wire must be auditable
     # through the same complete decoder as every existing alternate format.
-    expand_decision_evidence(state, candidates)
-    text = JSON_TEXT_STATE_PREFIX + json.dumps(state, separators=(',', ':'),
+    expand_decision_evidence(normalized, candidates)
+    text = JSON_TEXT_STATE_PREFIX + json.dumps(normalized, separators=(',', ':'),
         ensure_ascii=False, allow_nan=False)
-    possible_pretty_text = json.dumps(state, indent=2, ensure_ascii=False, allow_nan=False)
+    possible_pretty_text = json.dumps(normalized, indent=2, ensure_ascii=False, allow_nan=False)
     if len(text.encode()) + len(JSON_TEXT_STATE_INSTRUCTION.encode()) >= len(possible_pretty_text.encode()):
         return state, candidates
     return text, candidates

@@ -170,7 +170,13 @@ class ContextPartitionTests(unittest.TestCase):
                         agent.choose_bounded_strategy({}, {str(i): 'X' * 800 for i in range(count)}, 'Pick')
                 self.assertIs(observed.exception, failure)
                 choose.assert_called_once()
-                agent.record.assert_not_called()
+                if 'max_tokens_exceeded' in detail:
+                    agent.record.assert_called_once()
+                    self.assertEqual(agent.record.call_args.args, ('strategy_wire_encoding_ineligible',))
+                    self.assertEqual(agent.record.call_args.kwargs['candidate_ids'], [str(i) for i in range(count)])
+                    self.assertFalse(agent.record.call_args.kwargs['request_attempted'])
+                else:
+                    agent.record.assert_not_called()
 
     def test_empty_candidates_keep_original_no_candidates_exception(self):
         agent = self.agent()

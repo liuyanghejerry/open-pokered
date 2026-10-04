@@ -5,12 +5,14 @@ import hashlib
 import json
 from pathlib import Path
 import tempfile
+from types import SimpleNamespace
 import unittest
 from unittest.mock import Mock, patch
 
 import openpokered.decision_wire as wire
-from openpokered.autonomous_story import compact_mapped_decision_wire
+from openpokered.autonomous_story import AutonomousStoryAgent, compact_mapped_decision_wire
 from openpokered.story_agent import DualStoryAgent, StoryStopped
+from openpokered.story_rules import Rule
 from openpokered.typesafe import ChoiceAnswer, SystemOneResult, TypeSafeError
 import test_openpokered_decision_wire as fixtures
 import test_openpokered_sequence_wire as sequence_fixtures
@@ -116,12 +118,150 @@ class JsonTextStateWireTests(unittest.TestCase):
             with self.subTest(payload=payload), self.assertRaises(ValueError):
                 wire.expand_decision_evidence(prefix + payload, {})
 
-    def test_non_json_source_types_fail_closed_instead_of_coercing_keys_or_tuples(self):
+    def test_non_json_source_types_fail_closed_instead_of_coercing_keys_or_bytes(self):
         encode, _, _ = self.codec()
-        for unsafe in ({1: 'integer key'}, {'nested': {False: 0}}, {'tuple': (1, 2)},
+        for unsafe in ({1: 'integer key'}, {'nested': {False: 0}},
             {'not_finite': float('nan')}, {'bytes': b'not JSON'}):
             with self.subTest(unsafe=unsafe), self.assertRaises(ValueError):
                 encode(unsafe, {'a': 'Literal'})
+
+    def native_rule_state(self):
+        state, options = self.fixture()
+        query = {'Call': {'callee': 'hasMoney', 'args': [{'NumberLit': 500.0}]}}
+        rule = Rule('617072a37ab0794d', 'SafariZoneGate',
+            'SafariZoneGate:talkSafariZoneWorker1', ['npc:0'], [(query, True)], ['YES'],
+            ('transport', ('SafariZoneCenter', 14, 25), True),
+            [('flag', 'EVENT_IN_SAFARI_ZONE', True), ('flag', 'EVENT_SAFARI_GAME_OVER', False)])
+        agent = SimpleNamespace(index=SimpleNamespace(rules=[rule]), observed_barrier_maps=set())
+        state['script_resource_guard_reference'] = AutonomousStoryAgent.script_resource_guard_reference(
+            agent, {'money': 171, 'badges': 6, 'flags': {}})
+        return state, options
+
+    def test_production_rule_reference_uses_existing_json_tuple_array_semantics(self):
+        encode, prefix, _ = self.codec()
+        state, options = self.native_rule_state()
+        original = deepcopy(state)
+        effect = state['script_resource_guard_reference']['resource_guarded_transports'][0]['script']['produces']
+        self.assertIsInstance(effect, tuple)
+        self.assertIsInstance(effect[1], tuple)
+        text, offered = encode(state, options)
+        self.assertIsInstance(text, str)
+        expected = json.loads(json.dumps(state, allow_nan=False))
+        self.assertEqual(json.loads(text[len(prefix):]), expected)
+        self.assert_semantics((text, offered), (expected, options))
+        self.assertEqual(state, original)
+        self.assertIsInstance(effect, tuple)
+        self.assertIs(offered, options)
+
+    def test_nested_tuple_library_fields_order_missingness_and_literals_survive(self):
+        encode, _, _ = self.codec()
+        state, options = self.fixture()
+        state['shared_strategy_evidence'] = {'e0': {
+            'position_and_guard': ('SafariZoneCenter', 14, 25, None, False),
+            'nested': ({'missing': {}, 'present': None}, ['decision_json_text_state_v1:\n{}'])}}
+        state['native_reference'] = {'shared_strategy_evidence_ref': 'e0'}
+        untouched = deepcopy(state)
+        text, offered = encode(state, options)
+        expected = wire.expand_decision_evidence(json.loads(json.dumps(state)), options)
+        self.assert_semantics((text, offered), expected)
+        self.assertEqual(state, untouched)
+
+    def test_production_tuple_reference_survives_all_older_record_formats(self):
+        encode, _, _ = self.codec()
+        state, options = self.native_rule_state()
+        expected = json.loads(json.dumps(state))
+        for kwargs in ({}, {'min_chars': 160}, {'min_chars': 160, 'alias_fields': False},
+            {'min_chars': 160, 'alias_fields': False, 'sequence_tables': True}):
+            with self.subTest(kwargs=kwargs):
+                packed, offered = compact_mapped_decision_wire(state, options, **kwargs)
+                text, same = encode(packed, offered)
+                self.assertIsInstance(text, str)
+                self.assert_semantics((text, same), (expected, options))
+
+    def test_real_http_client_serialization_seam_preserves_production_tuples_and_options(self):
+        import io
+        import urllib.error
+        from openpokered.typesafe import TypeSafeClient
+        self.codec()
+        state, options = self.native_rule_state()
+        expected = json.loads(json.dumps(state))
+        agent = fixtures.DecisionFieldWireTests().agent()
+        agent.layer_jev = {'strategy': True, 'action': True}
+        agent.max_calls, agent.calls, agent.tokens, agent.models = 100, Counter(), Counter(), set()
+        agent.check_budget, agent.client = Mock(), Mock()
+        requests = []
+        def opener(request, *, timeout):
+            payload = json.loads(request.data)
+            offered = payload['questions']['strategy']['criteria']
+            self.assertEqual(list(offered), ['a', 'b', 'none'])
+            self.assert_semantics((payload['state'], {key: offered[key] for key in ('a', 'b')}),
+                (expected, options))
+            requests.append(payload)
+            if not isinstance(payload['state'], str):
+                raise urllib.error.HTTPError(request.full_url, 400, 'context limit', {},
+                    io.BytesIO(b'{"error_type":"max_tokens_exceeded"}'))
+            return io.BytesIO(json.dumps({'model': 'offline-test-jev', 'answers': {'strategy': {
+                'type': 'choice', 'choice': 'b', 'confidence': .8,
+                'probabilities': {'a': .1, 'b': .8, 'none': .1}}},
+                'usage': {'input_tokens': 200, 'output_tokens': 20}}).encode())
+        agent.model_client = TypeSafeClient(api_key='offline-no-network', provider='openrouter',
+            model='jev-1.13.0', base_url='https://offline.invalid', opener=opener, max_retries=0)
+        untouched = deepcopy(state)
+        self.assertEqual(agent.choose_bounded_strategy(state, options, 'Pick'), 'b')
+        self.assertIsInstance(requests[-1]['state'], str)
+        self.assertEqual(agent.calls['strategy'], len(requests))
+        self.assertEqual(agent.tokens['strategy'], 200)
+        self.assertEqual(state, untouched)
+
+    def test_tuple_hidden_malformed_reference_still_fails_complete_decoder_validation(self):
+        encode, _, _ = self.codec()
+        state, options = self.fixture()
+        state['native_effect'] = ('transport', {'$e': 'missing'})
+        with self.assertRaisesRegex(ValueError, 'Missing or cyclic shared evidence reference'):
+            encode(state, options)
+
+    def test_invalid_text_alternative_records_reason_without_a_request_or_state_change(self):
+        self.codec()
+        helper, agent = fixtures.DecisionFieldWireTests(), fixtures.DecisionFieldWireTests().agent()
+        state, options = self.fixture()
+        original = deepcopy((state, options))
+        with patch.object(DualStoryAgent, 'choose', side_effect=helper.overflow()), \
+            patch('openpokered.autonomous_story.compact_decision_json_text_state',
+                side_effect=ValueError('Non-JSON value in JSON-text state: bytes')):
+            with self.assertRaises(StoryStopped):
+                agent.choose_bounded_strategy(state, options, 'Pick')
+        records = [call.kwargs for call in agent.record.call_args_list
+            if call.args[0] == 'strategy_wire_encoding_ineligible']
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0]['encoding'], 'compact_json_text_state')
+        self.assertIn('bytes', records[0]['reason'])
+        self.assertEqual(records[0]['candidate_ids'], list(options))
+        self.assertFalse(records[0]['request_attempted'])
+        self.assertEqual((state, options), original)
+
+    def test_unprofitable_text_alternative_records_heuristic_reason_without_retry(self):
+        self.codec()
+        helper, agent = fixtures.DecisionFieldWireTests(), fixtures.DecisionFieldWireTests().agent()
+        state, options = self.fixture()
+        with patch.object(DualStoryAgent, 'choose', side_effect=helper.overflow()), \
+            patch('openpokered.autonomous_story.compact_decision_json_text_state',
+                side_effect=lambda state, candidates: (state, candidates)):
+            with self.assertRaises(StoryStopped):
+                agent.choose_bounded_strategy(state, options, 'Pick')
+        records = [call.kwargs for call in agent.record.call_args_list
+            if call.args[0] == 'strategy_wire_encoding_ineligible']
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0]['reason'], 'compact_text_plus_guidance_not_smaller_than_possible_pretty_json')
+        self.assertFalse(records[0]['request_attempted'])
+        self.assertFalse(records[0]['byte_reference_is_token_limit'])
+
+    def test_cyclic_native_container_fails_closed_without_mutating_source(self):
+        encode, _, _ = self.codec()
+        state = {'native': []}
+        state['native'].append(state)
+        with self.assertRaisesRegex(ValueError, 'Circular JSON-text state'):
+            encode(state, {'a': 'Literal'})
+        self.assertIs(state['native'][0], state)
 
     def test_malformed_existing_protocol_cannot_be_bypassed_by_text_serialization(self):
         encode, _, _ = self.codec()

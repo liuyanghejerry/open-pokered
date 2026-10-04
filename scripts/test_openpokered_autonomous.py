@@ -2231,13 +2231,20 @@ class AutonomousTests(unittest.TestCase):
         agent.record = Mock()
         for detail, count in [('HTTP 401 unauthorized', 8), ('max_tokens_exceeded', 2)]:
             with self.subTest(detail=detail, count=count):
+                agent.record.reset_mock()
                 def fail(*args, **kwargs):
                     raise StoryStopped('strategy:service_unavailable') from TypeSafeError(detail)
                 with patch.object(DualStoryAgent, 'choose', side_effect=fail) as calls:
                     with self.assertRaises(StoryStopped):
                         agent.choose_bounded_strategy({}, {str(i): 'Choice' for i in range(count)}, 'Pick')
                 self.assertEqual(calls.call_count, 1)
-        agent.record.assert_not_called()
+                if 'max_tokens_exceeded' in detail:
+                    agent.record.assert_called_once()
+                    self.assertEqual(agent.record.call_args.args, ('strategy_wire_encoding_ineligible',))
+                    self.assertEqual(agent.record.call_args.kwargs['candidate_ids'], [str(i) for i in range(count)])
+                    self.assertFalse(agent.record.call_args.kwargs['request_attempted'])
+                else:
+                    agent.record.assert_not_called()
 
     def test_action_choice_shares_evidence_without_dropping_candidates(self):
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
