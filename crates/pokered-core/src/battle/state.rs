@@ -328,6 +328,18 @@ pub struct BattlerState {
     /// only. See [`super::badge_boosts`].
     #[serde(default)]
     pub badge_boosted_stats: Option<[u16; 4]>,
+    /// Actual battle working stats, including stages, badge reapplications and
+    /// each burn/paralysis penalty already applied by the original effect.
+    /// Kept apart from the raw carrier to preserve integer operation order.
+    #[serde(default)]
+    pub staged_badge_stats: Option<[u16; 4]>,
+    /// Original party identity while Transform/Mimic alter the battle copy.
+    /// The index belongs to the outgoing mon, even after active index changes.
+    #[serde(default)]
+    pub original_identity: Option<(usize, Pokemon)>,
+    /// Transform copies the target battle catch-rate byte (including prior Transform).
+    #[serde(default)]
+    pub transform_catch_rate: Option<u8>,
 }
 
 impl BattlerState {
@@ -376,6 +388,8 @@ impl BattlerState {
     }
 
     pub fn reset_volatile_status(&mut self) {
+        self.restore_original_identity();
+        self.transform_catch_rate = None;
         // Gen-1 Toxic side-quirk: switching out does NOT clear the side's
         // Toxic counter / BADLY_POISONED bit — `wPlayer/EnemyToxicCounter` is
         // only reset by Toxic's own re-application (effects.asm:137), the
@@ -405,6 +419,7 @@ impl BattlerState {
         // mon re-applies them from scratch at send-out (core.asm:1659), so the
         // accumulated stat-up-glitch rounds reset here.
         self.badge_boosted_stats = None;
+        self.staged_badge_stats = None;
 
         if badly_poisoned {
             self.toxic_counter = toxic_counter;
@@ -418,6 +433,43 @@ impl BattlerState {
         self.unmodified_defense = mon.defense;
         self.unmodified_speed = mon.speed;
         self.unmodified_special = mon.special;
+    }
+
+    pub fn preserve_original_identity(&mut self) {
+        if self.original_identity.is_none() {
+            self.original_identity = Some((self.active_pokemon_index, self.active_mon().clone()));
+        }
+    }
+
+    /// Party data for menus/EXP, while battle-only identity may be transformed.
+    pub fn party_mon(&self, index: usize) -> &Pokemon {
+        if let Some((original_index, original)) = &self.original_identity {
+            if *original_index == index { return original; }
+        }
+        &self.party[index]
+    }
+
+    pub fn persistent_party(&self) -> Vec<Pokemon> {
+        let mut party = self.party.clone();
+        if let Some((idx, original)) = &self.original_identity {
+            if let Some(mon) = party.get_mut(*idx) {
+                let mut restored = original.clone();
+                restored.hp = mon.hp;
+                restored.status = mon.status;
+                restored.level = mon.level;
+                restored.total_exp = mon.total_exp;
+                restored.stat_exp = mon.stat_exp;
+                *mon = restored;
+            }
+        }
+        party
+    }
+
+    pub fn restore_original_identity(&mut self) {
+        if self.original_identity.is_some() {
+            self.party = self.persistent_party();
+            self.original_identity = None;
+        }
     }
 }
 
@@ -539,6 +591,9 @@ pub fn new_battler_state(party: Vec<Pokemon>) -> BattlerState {
         conversion_type1: None,
         conversion_type2: None,
         badge_boosted_stats: None,
+        staged_badge_stats: None,
+        original_identity: None,
+        transform_catch_rate: None,
     }
 }
 

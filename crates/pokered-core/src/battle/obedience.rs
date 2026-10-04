@@ -79,10 +79,17 @@ pub fn obedience_threshold(badges: u8) -> u8 {
 /// against the player's ID. `ot_id == 0` is treated as OWN, not traded: saves
 /// written before OT IDs were tracked (and mons from code paths that never
 /// stamp one) carry 0, and flagging them all as traded would make every
-/// high-level legacy mon disobey. (Deviation: a genuine OT ID of 0x0000 —
-/// 1/65536 — would disobey on original hardware.)
+/// high-level legacy mon disobey. Production callers with OT metadata use
+/// `is_traded_for_with_name` to distinguish a genuine ID of 0x0000.
 pub fn is_traded_for(ot_id: u16, player_id: u16) -> bool {
     ot_id != 0 && ot_id != player_id
+}
+
+/// A recorded OT name makes ID 0 a real trainer identity. Only an unnamed
+/// ID-0 mon retains compatibility with old, unstamped native monsters.
+pub fn is_traded_for_with_name(ot_id: u16, player_id: u16, ot_name: &[u8]) -> bool {
+    let named = ot_name.first().is_some_and(|byte| *byte != 0 && *byte != 0x50);
+    (ot_id != 0 || named) && ot_id != player_id
 }
 
 /// What a disobedience roll produces. The do-nothing family differs only in
@@ -285,6 +292,18 @@ mod tests {
         assert!(!is_traded_for(0, 1234), "ot_id 0 = unknown → own (legacy saves)");
         assert!(!is_traded_for(1234, 1234), "matching IDs = own");
         assert!(is_traded_for(9999, 1234), "mismatched IDs = traded");
+    }
+
+    #[test]
+    fn named_zero_ot_id_is_real_identity_for_obedience() {
+        let name = crate::battle::state::encode_name("TRAINER");
+        assert!(is_traded_for_with_name(0, 1234, &name));
+        assert!(!is_traded_for_with_name(0, 0, &name));
+        assert!(!is_traded_for_with_name(0, 1234, &[0x50; 11]));
+        assert!(!is_traded_for_with_name(0, 1234, &[0; 11]));
+        let mut rng = scripted(vec![0x03, 0x03, 0x0a]);
+        let outcome = check_disobedience(100, 0, 0, &MOVES2, &[35, 35, 0, 0], false, &mut rng);
+        assert_ne!(outcome, DisobedienceOutcome::Obey);
     }
 
     #[test]

@@ -61,12 +61,12 @@ pub fn process_level_up(mon: &mut Pokemon) -> LevelUpResult {
 
     let mut learned = vec![];
     let mut blocked = vec![];
-    for lv in (old_level + 1)..=new_level {
-        match learn_move_at_level(mon, lv) {
-            LearnMoveAtLevel::Learned(move_id) => learned.push(move_id),
-            LearnMoveAtLevel::AlreadyKnown => {}
-            LearnMoveAtLevel::SlotsFull(move_id) => blocked.push(move_id),
-        }
+    // LearnMoveFromLevelUp compares each learnset entry with the final level.
+    // The original does not backfill moves from levels skipped by one award.
+    match learn_move_at_level(mon, new_level) {
+        LearnMoveAtLevel::Learned(move_id) => learned.push(move_id),
+        LearnMoveAtLevel::AlreadyKnown => {}
+        LearnMoveAtLevel::SlotsFull(move_id) => blocked.push(move_id),
     }
 
     LevelUpResult {
