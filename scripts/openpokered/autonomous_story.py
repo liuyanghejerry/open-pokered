@@ -20,7 +20,8 @@ import playthrough_late as data
 from .story_agent import DualStoryAgent, StoryStopped, attempt_key
 from .typesafe import Choice, TypeSafeClient, TypeSafeError
 from .decision_wire import (FIELD_DICTIONARY_INSTRUCTION, compact_decision_field_wire,
-                            expand_decision_evidence)
+                            expand_decision_evidence, STRING_REFERENCE_INSTRUCTION,
+                            compact_decision_string_references)
 from .story_rules import Rule, requirements, evaluate, static_retreat_contract, spent_static_source
 from .playthrough_judgments import (ObservedProtocol, NavigationPause, NavigationGoalObserved, attack_profile, replacement_options,
                                     MEDICINES, BALLS, medicine_options, effective_attacks, ITEM_CATALOG,
@@ -955,14 +956,14 @@ REFACTORED_DECISION_EVIDENCE_INSTRUCTION = (
     'were omitted.')
 
 
-def compact_refactored_decision_wire(state, candidates):
+def compact_refactored_decision_wire(state, candidates, *, min_chars=32, string_references=False):
     """Re-factor all semantic evidence, then alias profitable repeated fields.
 
     The sharing threshold is an encoding choice, never a model/token cap.
     Internal executor candidates retain their original canonical values.
     """
     original, options = expand_decision_evidence(state, candidates)
-    factored, offered = factor_strategy_evidence(original, options, min_chars=32)
+    factored, offered = factor_strategy_evidence(original, options, min_chars=min_chars)
     # Factoring JSON objects may normalize whitespace, but a scalar/plain
     # criterion is not an evidence record: keep its exact original bytes.
     for key, value in options.items():
@@ -974,14 +975,28 @@ def compact_refactored_decision_wire(state, candidates):
             offered[key] = value
     short, offered = compact_evidence_reference_wire(factored, offered)
     wire, offered = compact_decision_field_wire(short, offered)
-    if wire is short:
+    if wire is short and not string_references:
         return state, candidates
+    if string_references:
+        intermediate = wire
+        wire, offered = compact_decision_string_references(wire, offered)
+        if wire is intermediate:
+            return state, candidates
     before = len(json.dumps({'state': state, 'criteria': candidates}).encode())
     after = len(json.dumps({'state': wire, 'criteria': offered}).encode())
     guidance = FIELD_DICTIONARY_INSTRUCTION + REFACTORED_DECISION_EVIDENCE_INSTRUCTION
+    if string_references:
+        guidance += STRING_REFERENCE_INSTRUCTION
     if after + len(guidance.encode()) >= before:
         return state, candidates
     return wire, offered
+
+
+def compact_string_decision_wire(state, candidates):
+    """One additional lossless format for explicitly overflowing requests."""
+    # Judge profitability after the whole encoding pipeline, not an intermediate
+    # factoring stage that can grow before reference strings make it smaller.
+    return compact_refactored_decision_wire(state, candidates, min_chars=16, string_references=True)
 
 
 def strategy_access_evidence(candidates):
@@ -1830,7 +1845,9 @@ class AutonomousStoryAgent(DualStoryAgent):
         Its endpoint/layer learning and byte references are separate from the
         canonical format. After a second overflow, one profitable reversible
         field-dictionary refactoring retains the complete semantic state and
-        candidates. Its learning is separate too. Exhausted leaves fail closed.
+        candidates. Its learning is separate too. If that also overflows, one
+        profitable tagged-string reference refactoring is tried with its own
+        runtime scope. Exhausted leaves fail closed.
         """
         if not candidates:
             return super().choose(layer, state, candidates, instruction,
@@ -1883,6 +1900,8 @@ class AutonomousStoryAgent(DualStoryAgent):
         compact_base = short_state if eligible else choice_state
         field_scopes = getattr(self, '_refactored_field_dictionary_scopes', set())
         field_eligible, field_computed = False, False
+        string_scopes = getattr(self, '_string_evidence_reference_scopes', set())
+        string_eligible, string_computed = False, False
 
         def append_refactored_format():
             nonlocal field_eligible, field_computed
@@ -1899,12 +1918,42 @@ class AutonomousStoryAgent(DualStoryAgent):
                 formats.append(('refactored_field_dictionary', compact_state, compact_candidates,
                                 REFACTORED_DECISION_EVIDENCE_INSTRUCTION + FIELD_DICTIONARY_INSTRUCTION))
 
+        def append_string_format():
+            nonlocal string_eligible, string_computed
+            if string_computed:
+                return
+            string_computed = True
+            try:
+                wire, offered = compact_string_decision_wire(
+                    compact_base, short_candidates if eligible else candidates)
+            except ValueError:
+                return
+            string_eligible = wire is not compact_base
+            if string_eligible:
+                formats.append(('string_evidence_reference', wire, offered,
+                    REFACTORED_DECISION_EVIDENCE_INSTRUCTION + FIELD_DICTIONARY_INSTRUCTION
+                    + STRING_REFERENCE_INSTRUCTION))
+
+        def append_next_format():
+            before = len(formats)
+            if not field_computed:
+                append_refactored_format()
+            if len(formats) == before:
+                append_string_format()
+
         # Do not re-factor a successful ordinary request. Enable this work
         # only after explicit overflow, or its same-endpoint runtime learning.
-        if scope in field_scopes:
+        if scope in field_scopes or scope in string_scopes:
             append_refactored_format()
-        first_format = (len(formats) - 1 if field_eligible and scope in field_scopes else
-                        1 if eligible and scope in short_scopes else 0)
+        if scope in string_scopes:
+            append_string_format()
+        if string_eligible and scope in string_scopes:
+            first_format = len(formats) - 1
+        elif field_eligible and scope in field_scopes:
+            first_format = next(i for i, item in enumerate(formats)
+                                if item[0] == 'refactored_field_dictionary')
+        else:
+            first_format = 1 if eligible and scope in short_scopes else 0
         format_index = first_format
         while format_index < len(formats):
             encoding, wire_state, wire_candidates, guidance = formats[format_index]
@@ -1930,7 +1979,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                     self.record(f'{layer}_wire_encoding', encoding=encoding,
                         candidate_ids=list(candidates), reference_scope=list(reference_scope),
                         world_facts_preserved=True, candidate_values_semantically_preserved=True,
-                        library_entries_preserved=encoding != 'refactored_field_dictionary',
+                        library_entries_preserved=encoding in ('canonical', 'short_evidence_reference'),
                         library_evidence_semantics_preserved=True, request_bytes=request_bytes,
                         byte_reference_is_token_limit=False)
                 try:
@@ -1943,7 +1992,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                     reference['smallest_overflow_bytes'] = min(request_bytes,
                         overflow_bytes if overflow_bytes is not None else request_bytes)
                     if format_index == len(formats) - 1:
-                        append_refactored_format()
+                        append_next_format()
                     if format_index == len(formats) - 1:
                         if len(candidates) <= 2:
                             raise
@@ -1952,7 +2001,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                     reference['largest_success_bytes'] = max(reference['largest_success_bytes'], request_bytes)
                     return selected
             elif format_index == len(formats) - 1:
-                append_refactored_format()
+                append_next_format()
                 if format_index == len(formats) - 1:
                     break
             # Explicit overflow (or its same-scope runtime reference) permits
@@ -1961,13 +2010,16 @@ class AutonomousStoryAgent(DualStoryAgent):
             if next_encoding == 'short_evidence_reference':
                 short_scopes.add(scope)
                 self._short_evidence_reference_scopes = short_scopes
-            else:
+            elif next_encoding == 'refactored_field_dictionary':
                 field_scopes.add(scope)
                 self._refactored_field_dictionary_scopes = field_scopes
+            else:
+                string_scopes.add(scope)
+                self._string_evidence_reference_scopes = string_scopes
             self.record(f'{layer}_wire_encoding_enabled', encoding=next_encoding,
                 candidate_ids=list(candidates), reason=reason, reference_scope=list(scope),
                 world_facts_preserved=True, candidate_values_semantically_preserved=True,
-                library_entries_preserved=next_encoding != 'refactored_field_dictionary',
+                library_entries_preserved=next_encoding in ('canonical', 'short_evidence_reference'),
                 library_evidence_semantics_preserved=True, no_diagnostic_answer_reused=True)
             format_index += 1
         keys = list(candidates)

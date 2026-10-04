@@ -1,6 +1,7 @@
 """Reversible request-only field dictionary; never ranks or omits evidence."""
 from collections import Counter
 import json
+import re
 
 FIELD_DICTIONARY = 'decision_field_dictionary'
 FIELD_DICTIONARY_INSTRUCTION = (
@@ -10,6 +11,98 @@ FIELD_DICTIONARY_INSTRUCTION = (
     'records. Values, record membership, candidate IDs, evidence references '
     'and tables are unchanged; canonical paths in these instructions retain '
     'their original meanings. This is a reversible field-name spelling only.')
+STRING_REFERENCE_PREFIX = 'decision_string_reference_prefix'
+STRING_REFERENCE_INSTRUCTION = (
+    ' Wire string references: when state.decision_string_reference_prefix is @, '
+    'an entire string matching @e followed by decimal digits denotes the complete '
+    'entry with that eN ID in state.shared_strategy_evidence, exactly like a singleton '
+    '$e object. Resolve references transitively, including library entries and JSON '
+    'candidate descriptions. Restore original value types and record membership; '
+    'all other strings keep their literal meanings. No facts or candidates are omitted.')
+_STRING_REFERENCE = re.compile(r'@e[0-9]+\Z')
+
+
+def compact_decision_string_references(state, candidates):
+    """Reversibly spell exact reference objects as strings, after collisions fail.
+
+    Only profitable request representations change. This does not shorten source
+    text, rank candidates or reinterpret an ordinary literal as evidence.
+    """
+    library = state.get('shared_strategy_evidence')
+    if not isinstance(library, dict):
+        return state, candidates
+    references = 0
+
+    def encode(value):
+        nonlocal references
+        if isinstance(value, str) and _STRING_REFERENCE.fullmatch(value):
+            raise ValueError('Reserved string reference collision')
+        if isinstance(value, dict):
+            if STRING_REFERENCE_PREFIX in value:
+                raise ValueError('Reserved string reference metadata collision')
+            if set(value) == {'$e'}:
+                key = value['$e']
+                if not isinstance(key, str) or not re.fullmatch(r'e[0-9]+', key) or key not in library:
+                    raise ValueError('Invalid string reference target')
+                references += 1
+                return '@' + key
+            return {key: encode(child) for key, child in value.items()}
+        if isinstance(value, list):
+            return [encode(child) for child in value]
+        return value
+
+    wire = encode(state)
+    offered = {}
+    for key, value in candidates.items():
+        try:
+            payload = json.loads(value)
+        except (ValueError, TypeError):
+            payload = value
+        encoded = encode(payload)
+        offered[key] = (json.dumps(encoded, separators=(',', ':'), ensure_ascii=False)
+                        if encoded != payload else value)
+    if not references:
+        return state, candidates
+    wire[STRING_REFERENCE_PREFIX] = '@'
+    before = len(json.dumps({'state': state, 'criteria': candidates}).encode())
+    after = len(json.dumps({'state': wire, 'criteria': offered}).encode())
+    if after + len(STRING_REFERENCE_INSTRUCTION.encode()) >= before:
+        return state, candidates
+    return wire, offered
+
+
+def restore_decision_string_references(state, candidates):
+    """Restore tagged string references to exact singleton reference objects."""
+    if STRING_REFERENCE_PREFIX not in state:
+        return state, candidates
+    if state[STRING_REFERENCE_PREFIX] != '@' or not isinstance(state.get('shared_strategy_evidence'), dict):
+        raise ValueError('Invalid string reference metadata')
+    library = state['shared_strategy_evidence']
+
+    def decode(value):
+        if isinstance(value, str) and _STRING_REFERENCE.fullmatch(value):
+            key = value[1:]
+            if key not in library:
+                raise ValueError('Missing string reference target')
+            return {'$e': key}
+        if isinstance(value, dict):
+            return {key: decode(child) for key, child in value.items()}
+        if isinstance(value, list):
+            return [decode(child) for child in value]
+        return value
+
+    restored = decode({key: value for key, value in state.items() if key != STRING_REFERENCE_PREFIX})
+    options = {}
+    for key, value in candidates.items():
+        try:
+            payload = json.loads(value)
+        except (TypeError, ValueError):
+            options[key] = value
+            continue
+        original = decode(payload)
+        options[key] = (json.dumps(original, separators=(',', ':'), ensure_ascii=False)
+                        if original != payload else value)
+    return restored, options
 
 
 def compact_decision_field_wire(state, candidates):
@@ -22,7 +115,7 @@ def compact_decision_field_wire(state, candidates):
     """
     protected = set(state) | {
         'shared_strategy_evidence', 'shared_strategy_evidence_ref', '$e',
-        'strategy_table', 'columns', 'rows', FIELD_DICTIONARY}
+        'strategy_table', 'columns', 'rows', FIELD_DICTIONARY, STRING_REFERENCE_PREFIX}
     decoded = {}
     for key, value in candidates.items():
         try:
@@ -125,6 +218,7 @@ def expand_decision_evidence(state, candidates):
     The root library is encoding metadata. Expand every reference reachable
     from the complete world and current candidates, without selecting facts.
     """
+    state, candidates = restore_decision_string_references(state, candidates)
     state, candidates = restore_decision_field_wire(state, candidates)
     library = state.get('shared_strategy_evidence') or {}
 
