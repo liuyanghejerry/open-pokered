@@ -33,4 +33,25 @@ video.currentTime=1.5;el('#previous').onclick();assert.equal(video.currentTime,1
 el('#previous').onclick();assert.equal(video.currentTime,0);
 video.currentTime=2;el('#next').onclick();assert.equal(video.currentTime,2,'end must not loop backward');
 vm.runInContext('paint()',context);assert.match(el('#acquired-meta').textContent,/来源未记录/);
-console.log('Jev dex player: audit counts, source remediation, snapshot-safe history and navigation PASS');
+// Prospective native witnesses use wild_capture: terrain labels in old traces
+// remain separate, and absent producer evidence must still remain unknown.
+const wildElements=new Map();
+const wildEl=id=>{if(!wildElements.has(id))wildElements.set(id,{style:{setProperty(){}},textContent:'',innerHTML:''});return wildElements.get(id)};
+const wildVideo=wildEl('#video');Object.assign(wildVideo,{currentTime:0,duration:10,pause(){},addEventListener(){}});
+const wildData={target:{solo_ceiling:124},species:[{number:92,name:'Gastly',status:'owned'},{number:16,name:'Pidgey',status:'owned'}],decisions:[],progress:[
+ {source_s:0,owned:1,seen:1,owned_species:['Gastly'],acquired:['Gastly'],method:'wild_capture',map:'PokemonTower7F',method_counts:{wild_capture:1}},
+ {source_s:1,owned:2,seen:2,owned_species:['Gastly','Pidgey'],acquired:['Pidgey'],method:'unknown',map:'Route1',method_counts:{wild_capture:1,unknown:1}}]};
+const wildContext=vm.createContext({window:{JEV_DEX_DASHBOARD:wildData},document:{querySelector:wildEl}});
+vm.runInContext(script,wildContext);
+assert.match(wildEl('#acquired-meta').textContent,/野生捕获/);
+assert.match(wildEl('#methods').innerHTML,/<b>1<\/b>野生捕获/);
+for(const label of ['草丛','水面','钓鱼','狩猎','赠送','静态','NPC交换','进化','兑换','来源未记录']){
+ assert(wildEl('#methods').innerHTML.includes(label),`legacy source bucket ${label} must remain available`);
+}
+wildVideo.currentTime=1;vm.runInContext('paint()',wildContext);
+assert.match(wildEl('#acquired-meta').textContent,/来源未记录/);
+assert.match(wildEl('#methods').innerHTML,/<b>1<\/b>野生捕获/);
+assert.match(wildEl('#methods').innerHTML,/<b>1<\/b>来源未记录/);
+const sourceTotal=[...wildEl('#methods').innerHTML.matchAll(/<b>(\d+)<\/b>/g)].reduce((sum,match)=>sum+Number(match[1]),0);
+assert.equal(sourceTotal,2,'all displayed producer counts must include native wild_capture');
+console.log('Jev dex player: audit counts, native wild producer, unknown/legacy separation, snapshot-safe history and navigation PASS');

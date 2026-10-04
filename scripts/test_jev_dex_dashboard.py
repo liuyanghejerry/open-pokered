@@ -72,6 +72,12 @@ class DexDashboardTest(unittest.TestCase):
         self.assertEqual(dashboard.method(dex(1, ['Abra'])), 'unknown')
         self.assertEqual(dashboard.method(dex(1, ['Abra'], acquisition_method='grass')), 'grass')
 
+    def test_actual_wild_producer_is_not_overwritten_by_planned_terrain(self):
+        self.assertEqual(dashboard.method(dex(1, ['Gastly'],
+            acquisition_method='wild_capture', planned_acquisition_method='grass')), 'wild_capture')
+        self.assertEqual(dashboard.method(dex(1, ['Gastly'],
+            planned_acquisition_method='grass')), 'unknown')
+
     def test_checkpoint_lineage_missing_parent_and_cycle(self):
         with tempfile.TemporaryDirectory() as directory:
             run = Path(directory)

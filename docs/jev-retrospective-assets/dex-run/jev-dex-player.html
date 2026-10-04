@@ -13,7 +13,7 @@
 <footer><a href="../full-run/jev-player.html">完整通关大盘</a> · <a href="jev-dex-dashboard.json">图鉴运行数据</a> · <a href="manifest.json">录像哈希与时钟口径</a></footer>
 </main><script src="jev-dex-dashboard-data.js"></script><script>
 const D=window.JEV_DEX_DASHBOARD,V=document.querySelector('#video');
-const labels={grass:'草丛',water:'水面',fishing:'钓鱼',safari:'狩猎',gift:'赠送',static:'静态',npc_trade:'NPC交换',evolution:'进化',prize:'兑换',unknown:'来源未记录'};
+const labels={wild_capture:'野生捕获',grass:'草丛',water:'水面',fishing:'钓鱼',safari:'狩猎',gift:'赠送',static:'静态',npc_trade:'NPC交换',evolution:'进化',prize:'兑换',unknown:'来源未记录'};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const at=(rows,t)=>{let l=0,h=rows.length;while(l<h){const m=(l+h)>>1;if(rows[m].source_s<=t+.00001)l=m+1;else h=m}return l?rows[l-1]:null};
 const clock=s=>`${Math.floor(s/3600)}:${String(Math.floor(s%3600/60)).padStart(2,'0')}:${String(Math.floor(s%60)).padStart(2,'0')}`;
@@ -30,7 +30,7 @@ function paint(){
  const revalidated=latest?.source_revalidated?.length,names=revalidated?latest.source_revalidated:latest?.acquired;
  document.querySelector('#acquired').textContent=names?.length?names.join('、'):'尚无登记';
  document.querySelector('#acquired-meta').textContent=latest?[revalidated?'合法来源补证':labels[latest.method]||labels.unknown,latest.map,`原片 ${clock(latest.source_s)}`].filter(Boolean).join(' · '):'';
- const methods=['grass','water','fishing','safari','gift','static','npc_trade','evolution','prize','unknown'];
+ const methods=['wild_capture','grass','water','fishing','safari','gift','static','npc_trade','evolution','prize','unknown'];
  document.querySelector('#methods').innerHTML=methods.map(k=>`<div><b>${p.method_counts?.[k]||0}</b>${labels[k]}</div>`).join('');
  document.querySelector('#decision-title').textContent=d?.dex_progress?`以 ${d.dex_progress.validated_owned??d.dex_progress.owned}/${D.target.solo_ceiling} 为当前进度选择下一步`:'等待首次判断';
  document.querySelector('#candidates').innerHTML=(d?.candidates||[]).map(c=>`<div class="candidate"><span>${esc(c.label)}</span><b>${Math.round(c.probability*100)}%</b><div class="prob"><i style="width:${c.probability*100}%"></i></div></div>`).join('');
