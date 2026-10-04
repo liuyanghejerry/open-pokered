@@ -10,6 +10,7 @@ Ordinary text remains Fusion Pixel. No renderer duplication refactor is included
 - `cargo test -p pokered-app --lib --test cable_club_flow`: 122 library tests and 8 integration tests passed before the final external-await guard was added.
 - After that guard: `cargo test -p pokered-app --features debug-server --lib fidelity`: 12 passed; Cable Club integration: 8 passed.
 - `cargo check -p pokered-tui`: passed, including the NPC party-selector rendering path.
+- `cargo run -p pokered-agent --bin gen_event_graph`: refreshed the derived story graph from this split's 17 modified map scripts (3,219 edges; 248 maps and 1,339 storylines). The committed graph includes the six NPC-trade cancellation dependencies; generated `target/agent/world_semantics.json` remains an ignored runtime artifact.
 
 The external-await guard regression reproduces an NPC trade suspended in the VM, then confirms its connect dialogue advances without emitting a second trade request. Storage tests cover current-box capture writeback, PC effort recalculation, daycare move/PP preservation, money limits, atomic bag additions, all ROM species IDs and original SRAM boundaries.
 

@@ -1801,6 +1801,11 @@
     },
     {
       "from": "script:CeruleanTradeHouse:talkGambler",
+      "to": "flag:NPC_TRADE_CANCELLED",
+      "kind": "requires"
+    },
+    {
+      "from": "script:CeruleanTradeHouse:talkGambler",
       "to": "map:CeruleanTradeHouse",
       "kind": "triggered_at"
     },
@@ -2639,6 +2644,11 @@
     },
     {
       "from": "script:CinnabarLabTradeRoom:talkBeauty",
+      "to": "flag:NPC_TRADE_CANCELLED",
+      "kind": "requires"
+    },
+    {
+      "from": "script:CinnabarLabTradeRoom:talkBeauty",
       "to": "map:CinnabarLabTradeRoom",
       "kind": "triggered_at"
     },
@@ -2651,6 +2661,11 @@
       "from": "script:CinnabarLabTradeRoom:talkGramps",
       "to": "flag:EVENT_TRADED_FOR_DORIS",
       "kind": "sets"
+    },
+    {
+      "from": "script:CinnabarLabTradeRoom:talkGramps",
+      "to": "flag:NPC_TRADE_CANCELLED",
+      "kind": "requires"
     },
     {
       "from": "script:CinnabarLabTradeRoom:talkGramps",
@@ -9116,6 +9131,11 @@
     },
     {
       "from": "script:Route18Gate2F:talkYoungster",
+      "to": "flag:NPC_TRADE_CANCELLED",
+      "kind": "requires"
+    },
+    {
+      "from": "script:Route18Gate2F:talkYoungster",
       "to": "map:Route18Gate2F",
       "kind": "triggered_at"
     },
@@ -10260,6 +10280,11 @@
       "from": "script:Route2TradeHouse:talkGameboyKid",
       "to": "flag:EVENT_TRADED_FOR_MARCEL",
       "kind": "sets"
+    },
+    {
+      "from": "script:Route2TradeHouse:talkGameboyKid",
+      "to": "flag:NPC_TRADE_CANCELLED",
+      "kind": "requires"
     },
     {
       "from": "script:Route2TradeHouse:talkGameboyKid",
@@ -15207,6 +15232,11 @@
       "from": "script:VermilionTradeHouse:talkLittleGirl",
       "to": "flag:EVENT_TRADED_FOR_DUX",
       "kind": "sets"
+    },
+    {
+      "from": "script:VermilionTradeHouse:talkLittleGirl",
+      "to": "flag:NPC_TRADE_CANCELLED",
+      "kind": "requires"
     },
     {
       "from": "script:VermilionTradeHouse:talkLittleGirl",
