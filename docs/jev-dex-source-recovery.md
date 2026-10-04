@@ -5756,3 +5756,12 @@ false；仍使用原StoryIndex.satisfied，包括pending source保护。不改
 Seel→取出Seel”，78项focused/6.056秒与全套通过，没有为了测试改变
 native/生产选择或原成功条件。Goal active，安全57/124尚差67种；下一
 段只继承最新57，最终全流程合法性/完整合成MP4/图鉴大盘尚未完成。
+
+22项/328681字节的操作反馈回归补充备份
+`verified57-selected-subgoal-observation-regression-evidence-20261004.tar.gz`
+逐项字节/hash同，SHA
+`294c972ca583159b39cb00483070cbba4f617289a7af5a3b20667d1c630d68b1`，
+绑定3cf306fb最终代码及policy
+`40c769d33082c797ce2725808d376cfd0c11d51ce09f916863c7333ddb7c234c`。
+原57主备份/源文件/单份原生MP4保持；只增加代码、测试、离线观察
+证据和保留的失败日志，不重复核心trace/video/binary，不增加登记信用。
