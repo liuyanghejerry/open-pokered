@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "scope": "Level-training tactical intent and self-knockout cost; no native battle rule, candidate pruning, prescribed move, source legality or final completion change.",
+  "source_controller_revision": "e79ad8d754fa4b30ae7b961c07de02f127f20129",
+  "source_run": ".artifacts/jev-dex-legal-newgame-20261004/20261004-222608-seed42",
+  "source_observation": {
+    "owned": 74,
+    "seen": 103,
+    "money": 171,
+    "trainee": {"species": "Geodude", "level": 21, "experience": 6538},
+    "recorded_selfdestruct_attack_then_fainted_completion_pairs": 16,
+    "pair_scope": "Uncached attack rows and following native battle-completion HP only; not every turn or proof excluding enemy/status contributions.",
+    "finding": "The attack compact/cache did not contain the selected register-Graveler training goal. The attack prompt preferred effective damage; Selfdestruct was repeatedly followed by trainee HP0 and forfeited experience.",
+    "safe_checkpoint": true,
+    "independent_continue_schema": 4,
+    "full_persisted_facts_equal": true,
+    "original_segment_movie": {"fully_decoded": true, "duration_s": 380.2, "frames": 22812},
+    "old_ghost_ancestor_legality_certified": false
+  },
+  "change": {
+    "move_cost": "Expose native ExplodeEffect as self_knockout_effect without removing Selfdestruct/Explosion.",
+    "intent": "Carry actual evolution/capture-support/story level-training target, trainee species and observed battle-party HP/status into tactical selection and its cache key.",
+    "turn_choice": "Compare trainee self-KO cost with existing effective attacks and offered healthy finishers before opening FIGHT.",
+    "limits": "Species matching does not prove individual identity or participation. Conscious participation is required, not guaranteed; no XP amount, future RNG, survival, battle victory or registration is credited by a choice. Capture intent retains its separate move guidance."
+  },
+  "verification": {
+    "targeted_tests": 9,
+    "all_python_tests": 1317,
+    "candidate_preservation_and_cache_goal_invalidation": true,
+    "one_fresh_openrouter_diagnostic": {
+      "model": "typesafe/jev-1.13-20260917",
+      "request_bytes": 3362,
+      "request_sha256": "b8daefbd3129bf6a8069a4f586d1ebb978f5e4e4c2290d02cc208f6409a0baa1",
+      "input_tokens": 1288,
+      "output_tokens": 45,
+      "choice": "Tackle",
+      "native_commands": 0,
+      "answer_reused": false,
+      "scope": "One accepted diagnostic leaf with all recorded criteria including none preserved; not real gameplay, broad capacity proof or causal performance claim."
+    }
+  },
+  "production_adopted_at_this_evidence_snapshot": false,
+  "final_lawful_new_game_started": false,
+  "completed124": false
+}

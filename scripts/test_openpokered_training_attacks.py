@@ -1,0 +1,144 @@
+"""Training intent survives tactical selection/cache; self-KO is a cost, not a ban."""
+import copy
+import json
+import unittest
+from unittest.mock import Mock
+
+from openpokered.playthrough_judgments import JevGame, level_training_goal, move_question
+
+
+class TrainingAttackTests(unittest.TestCase):
+    def active(self):
+        return {'target': ['held_species', 'Graveler', True], 'context': {
+            'acquisition_method': 'evolution', 'trigger': 'level',
+            'from_species': 'Geodude', 'level': 25}}
+
+    def state(self):
+        trainee = {'species': 'Geodude', 'level': 21, 'hp': 55, 'max_hp': 55,
+            'status': 'None', 'moves': ['Tackle', 'Selfdestruct', 'RockThrow', 'DefenseCurl'],
+            'pp': [35, 5, 15, 40]}
+        finisher = {'species': 'Charizard', 'level': 66, 'hp': 227, 'max_hp': 227,
+            'status': 'None', 'moves': ['Slash', 'Flamethrower'], 'pp': [20, 15]}
+        return {'screen': 'battle', 'battle_phase': 'MoveSelect', 'party': [trainee, finisher],
+            'battle_inventory': [], 'battle_live': {'player': trainee,
+                'enemy': {'species': 'Pidgey', 'level': 20, 'hp': 50, 'max_hp': 50, 'status': 'None'},
+                'player_party': [trainee, finisher], 'is_wild': True},
+            'battle_moves': {'cursor': 0, 'moves': [
+                {'move': name, 'pp': pp, 'disabled': False}
+                for name, pp in zip(trainee['moves'], trainee['pp'])]}}
+
+    def game(self, state, active):
+        game = JevGame.__new__(JevGame)
+        game.judgments = Mock(collects_dex=False, active=active)
+        game.judgments.choose.return_value = '0'
+        game.st = Mock(return_value=state)
+        game.tap, game.step = Mock(), Mock()
+        game.move_cache, game.move_cache_hits, game.active_milestone = {}, 0, None
+        return game
+
+    def test_self_knockout_effect_is_reported_without_removing_moves(self):
+        state = self.state()
+        menu = {'moves': [{'move': name, 'pp': 1, 'disabled': False}
+            for name in ('Tackle', 'Selfdestruct', 'Explosion')]}
+        compact, choices = move_question(state, menu)
+        self.assertEqual(choices, {'0': 'Tackle', '1': 'Selfdestruct', '2': 'Explosion'})
+        self.assertFalse(compact['moves']['0']['self_knockout_effect'])
+        self.assertTrue(compact['moves']['1']['self_knockout_effect'])
+        self.assertTrue(compact['moves']['2']['self_knockout_effect'])
+        menu['moves'][1]['disabled'] = True
+        menu['moves'][2]['pp'] = 0
+        self.assertEqual(move_question(state, menu)[1], {'0': 'Tackle'})
+
+    def test_training_intent_reports_observations_without_mutating_source(self):
+        state, active = self.state(), self.active()
+        before = copy.deepcopy((state, active))
+        goal = level_training_goal(state, active)
+        self.assertEqual(goal['selected_target'], ['held_species', 'Graveler', True])
+        self.assertEqual(goal['target_level'], 25)
+        self.assertTrue(goal['active_species_matches_trainee'])
+        self.assertEqual(goal['observed_trainee_party_members'][0]['hp'], 55)
+        self.assertIn('not individual identity', goal['scope'])
+        self.assertEqual((state, active), before)
+        goal['selected_target'][1] = 'changed'
+        self.assertEqual(active['target'][1], 'Graveler')
+
+    def test_capture_support_and_story_level_training_share_goal_reference(self):
+        for active in ({'target': ('level', 'Geodude', 40), 'context': {
+                'capture_support_training': True, 'trigger': 'level', 'from_species': 'Geodude', 'level': 40}},
+                {'target': ('level', 'leader', 25), 'context': {
+                    'training_battler': {'species': 'Geodude'}, 'target_level': 25}}):
+            with self.subTest(active=active):
+                self.assertEqual(level_training_goal(self.state(), active)['trainee_species'], 'Geodude')
+
+    def test_unrelated_and_incomplete_goals_do_not_invent_training(self):
+        for active in (None, Mock(), {}, {'target': ['held_species', 'Graveler', True]},
+                {'target': ['item', 'MOON_STONE', True], 'context': {}},
+                {'target': ['held_species', 'Golem', True], 'context': {
+                    'acquisition_method': 'evolution', 'trigger': 'trade', 'from_species': 'Graveler'}},
+                {'target': ['level', 'leader', 25], 'context': {'training_battler': None}}):
+            with self.subTest(active=active):
+                self.assertIsNone(level_training_goal(self.state(), active))
+
+    def test_move_selector_receives_training_goal_and_preserves_selfdestruct_option(self):
+        state = self.state()
+        game = self.game(state, self.active())
+        game._select_move()
+        _layer, compact, choices, instruction = game.judgments.choose.call_args.args
+        self.assertEqual(compact['level_training_goal']['trainee_species'], 'Geodude')
+        self.assertEqual(choices, {'0': 'Tackle', '1': 'Selfdestruct', '2': 'RockThrow'})
+        self.assertIn('forfeits its experience', instruction)
+        self.assertIn('No attack choice guarantees', instruction)
+        game.tap.assert_called_once_with('a', 4)
+
+    def test_training_goal_and_target_invalidate_nontraining_attack_cache(self):
+        game = self.game(self.state(), {'target': ['flag', 'EVENT_BEAT_BROCK', True], 'context': {}})
+        game._select_move()
+        self.assertNotIn('level_training_goal', game.judgments.choose.call_args.args[1])
+        game.judgments.active = self.active()
+        game._select_move()
+        self.assertEqual(game.judgments.choose.call_count, 2)
+        game._select_move()
+        self.assertEqual(game.judgments.choose.call_count, 2)
+        self.assertEqual(game.move_cache_hits, 1)
+        game.judgments.active['target'] = ['level', 'Geodude', 30]
+        game.judgments.active['context']['level'] = 30
+        game._select_move()
+        self.assertEqual(game.judgments.choose.call_count, 3)
+
+    def test_finisher_does_not_invent_active_trainee_or_participation(self):
+        state = self.state()
+        state['battle_live']['player'] = state['party'][1]
+        goal = level_training_goal(state, self.active())
+        self.assertFalse(goal['active_species_matches_trainee'])
+        self.assertIn('participation proof', goal['scope'])
+        state['battle_live']['player_party'][0]['hp'] = 0
+        self.assertNotEqual(goal, level_training_goal(state, self.active()))
+        del state['battle_live']['player_party']
+        self.assertIsNone(level_training_goal(state, self.active())['observed_trainee_party_members'])
+
+    def test_main_menu_compares_self_ko_cost_with_offered_finisher(self):
+        state = self.state()
+        state['battle_phase'] = 'PlayerMenu'
+        game = self.game(state, self.active())
+        game.judgments.choose.return_value = 'switch:1'
+        self.assertEqual(game.battle_recovery_plan(state), ('switch', 1))
+        _layer, compact, choices, instruction = game.judgments.choose.call_args.args
+        self.assertEqual(compact['level_training_goal']['trainee_species'], 'Geodude')
+        fight = json.loads(choices['fight'])
+        self.assertEqual(fight['self_knockout_moves_with_pp'], ['Selfdestruct'])
+        self.assertIn('switch:1', choices)
+        self.assertIn('Maximum damage is not training progress', instruction)
+
+    def test_selfdestruct_is_still_driven_when_the_judgment_selects_it(self):
+        state = self.state()
+        state['battle_moves']['cursor'] = 1
+        game = self.game(state, self.active())
+        game.judgments.choose.return_value = '1'
+        game._select_move()
+        game.tap.assert_called_once_with('a', 4)
+        attack = next(call for call in game.judgments.record.call_args_list if call.args[0] == 'attack')
+        self.assertEqual(attack.kwargs['move'], 'Selfdestruct')
+
+
+if __name__ == '__main__':
+    unittest.main()

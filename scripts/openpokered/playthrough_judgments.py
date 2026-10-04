@@ -687,6 +687,7 @@ def move_question(state, menu):
             **attack_profile(live['player']['species'], live['player'].get('level', 50), slot['move']),
             'move': slot['move'], 'power': move['power'],
             'effect': move['effect'],
+            'self_knockout_effect': move['effect'] == 'ExplodeEffect',
             'accuracy': move['accuracy'], 'type': typ,
             'effectiveness': multiplier,
             'same_type_bonus': typ in {player['type1'], player['type2']},
@@ -706,6 +707,40 @@ def move_question(state, menu):
         'moves': details,
     }
     return compact, choices
+
+
+def level_training_goal(state, active):
+    """Selected training intent and native HP, not credited or predicted XP."""
+    if not isinstance(active, dict) or not isinstance(active.get('context'), dict):
+        return None
+    target, context = active.get('target'), active['context']
+    if not isinstance(target, (list, tuple)) or len(target) != 3:
+        return None
+    if (context.get('trigger') == 'level' and
+            (context.get('acquisition_method') == 'evolution' or context.get('capture_support_training') is True)):
+        species, level = context.get('from_species'), context.get('level')
+    elif target[:2] in (['level', 'leader'], ('level', 'leader')):
+        battler = context.get('training_battler')
+        species = battler.get('species') if isinstance(battler, dict) else None
+        level = context.get('target_level')
+    else:
+        return None
+    if not isinstance(species, str) or not species:
+        return None
+    live = state['battle_live']
+    party = live.get('player_party')
+    observed = [{key: mon[key] for key in ('species', 'level', 'hp', 'max_hp', 'status') if key in mon}
+                for mon in party if isinstance(mon, dict) and mon.get('species') == species] if isinstance(party, list) else None
+    return {'selected_target': deepcopy(list(target)), 'trainee_species': species,
+            'target_level': level if type(level) is int and 1 <= level <= 100 else None,
+            'active_species_matches_trainee': live['player']['species'] == species,
+            'observed_trainee_party_members': observed,
+            'experience_requires_conscious_participant': True,
+            'scope': 'Actual selected level-training intent and observed battle-party HP/status only. '
+                'Species matching is not individual identity or participation proof. A fainted '
+                'participant receives no victory experience; switching preserves eligibility only '
+                'if the trainee participated and remains conscious. No reward amount, survival, '
+                'future RNG or new registration is guaranteed or credited by an attack choice.'}
 
 
 def capture_move_question(state, menu):
@@ -818,6 +853,15 @@ class JevGame(pt.Game):
                             or context.get('capture_support_training'))
                            and context.get('trigger') == 'level'
                            and party[active]['species'] == context.get('from_species'))
+        training_goal = level_training_goal(state, objective)
+        if switch_training:
+            candidates['fight'] = json.dumps({'active_party_index': active,
+                'active_pokemon': party[active],
+                'usable_effective_attacks': effective_attacks(party[active], live['enemy']['species']),
+                'self_knockout_moves_with_pp': [name for name, pp in zip(party[active]['moves'], party[active]['pp'])
+                    if name != 'None' and pp > 0 and late.move_data(name)['effect'] == 'ExplodeEffect'],
+                'scope': 'Opening FIGHT does not select an attack. Self-knockout moves faint the user '
+                    'when executed; a fainted trainee cannot receive victory experience even if the opponent is defeated.'})
         capturing = capture_intent(state, self.judgments) and not capture_storage_full(state)
         seeking_source = capture_source_requested(state, self.judgments)
         retreat = capture_retreat(state, self.judgments) if seeking_source else None
@@ -900,6 +944,10 @@ class JevGame(pt.Game):
                 'Compare defeating this opponent directly with switching to a stronger teammate: prefer switching '
                 'when weak or resisted attacks would consume many turns or PP, or risk fainting. Do not spend '
                 'recovery supplies just to keep an inefficient trainee attacking when a healthy finisher is available.')
+            instruction += (' Compare FIGHT.self_knockout_moves_with_pp with the non-self-knockout attacks '
+                'and offered finishers. Maximum damage is not training progress if Selfdestruct or Explosion '
+                'faints the trainee before experience is awarded. A legal move remains an option, but '
+                'preserving a conscious participant matters for this selected experience goal.')
         if required_source and balls:
             instruction += (' This opponent is already registered but no longer held, and another copy is required '
                 'for the selected NPC trade or evolution. Capture it with a ball; defeating it does not satisfy '
@@ -955,6 +1003,8 @@ class JevGame(pt.Game):
                 'before the incoming teammate can use its move. Self-knockout selection references '
                 'are conditional illustrations, not known live odds or guarantees of survival.')
         judgment_state = {'battle': live}
+        if training_goal is not None:
+            judgment_state['level_training_goal'] = training_goal
         if balls and getattr(self.judgments, 'collects_dex', False):
             value = collection_capture_value(state, objective)
             judgment_state['collection_capture_value'] = value
@@ -1303,6 +1353,9 @@ class JevGame(pt.Game):
                 return
             compact, candidates = (capture_move_question(state, menu) if capturing
                                    else move_question(state, menu))
+            training_goal = None if capturing else level_training_goal(state, getattr(self.judgments, 'active', None))
+            if training_goal is not None:
+                compact['level_training_goal'] = training_goal
             if capturing and not candidates:
                 # A status-only support may have just landed sleep. Return to
                 # PlayerMenu for a ball rather than repeat a useless status.
@@ -1362,6 +1415,18 @@ class JevGame(pt.Game):
                     if capturing:
                         candidates['back'] = 'Cancel this move menu without spending a turn; return to compare balls, switches or verified retreat when no listed move safely prepares capture.'
                         instruction += ' Choose back when no offered move is suitable; do not attack merely because FIGHT was opened.'
+                    elif training_goal is not None:
+                        instruction = ('Which usable attack advances the selected level_training_goal? '
+                            'The trainee must remain a conscious participant to receive victory experience. '
+                            'When the active species matches the trainee, a self_knockout_effect such as '
+                            'Selfdestruct or Explosion forfeits its experience even if it defeats the opponent. '
+                            'Compare effective_expected_power, type matchup, accuracy, PP and healing with '
+                            'this self-knockout cost; damage alone is not progress toward the training goal. '
+                            'Prefer a viable non-self-knockout attack for the trainee. When a different '
+                            'finisher is active, do not assume its fainting also faints the switched-out '
+                            'trainee, or that every same-species member participated. No attack choice '
+                            'guarantees victory, survival, experience or registration. All usable attacks '
+                            'remain offered; do not count power bonuses twice.')
                     try:
                         chosen = self.judgments.choose('action', compact, candidates,
                                                        instruction + preference_suffix(self.judgments))
