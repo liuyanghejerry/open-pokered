@@ -6014,3 +6014,50 @@ SRAM／sidecar／trace／summary不变。state67798→64444字节，criteria
 后续需以新干净冻结policy正常CONTINUE的真实完整frontier／双层
 响应验证，不能把单对诊断当作正式全轮或新增图鉴收益；最终124、
 producer穷尽核对、完整原片和大盘仍未完成。
+
+## 第22段完整首轮通过与骑行菜单中性帧问题（2026-10-04）
+
+clean17eb76a2／47文件policy7e17608e4e1d／native8dae11eb从原21最新
+58种严格存档正常CONTINUE，`20261004-131119-seed42`。双Jev首次
+strategy成功43.317秒／action91.135秒，最终首个strategy90.106秒
+自主选择Parasect。完整104候选48调用／35成功／13明确容量错误；
+成功与失败请求均逐一展开核对完整world／当前criteria／native access，
+所有候选覆盖、最终root none保留。原格式二选溢出已在此完整真实
+新frontier获救，但不代表未来所有状态容量保证或新增捕获收益。
+
+真实训练到达17号道路并获得部分经验、训练家收益：Paras XP10648→
+11657，Charizard59→60／XP210604→215754、HP200/max205，Snorlax
+XP35061→36327、HP126/max137，现金93→3528。随后多轮普通请求
+记录到循环：到达Route17 `(15,19)` →选择Paras领队→菜单关闭后落到
+`(15,22)`→再去训练点。Paras经验不继续增长。实际`JevGame.tap`用
+`[None,btn,None]`和中性尾帧；Route17正常骑行的中性输入会下坡，
+现有导航移动／Game.step有B刹车，菜单／直接settle路径未统一处理。
+不能把这些“到达／领队”动作记为进化成功；该控制问题尚未修复。
+
+仅向原控制器46746在369.016秒真实reached操作边界发送一次协作
+SIGINT，无hot policy变化／第二连接／native或recorder信号。权威
+最终观察仍为Walking，所以原流程正确拒绝SRAM检查点并保留原生
+46765／录像46797，原summary／failure／非续跑SRAM保持失败，不改写。
+确认旧控制器已退出且端口仅LISTEN后独占重连同一native，完整五项
+原handover观测逐字相等；16帧普通B完成当前下坡步，位置15,19→15,20。
+除实际完成的坐标／帧外，所有collection事实、资源／XP／HP／PP／
+图鉴均未变；正常save与协议shutdown封口，不重启、回血、退款、回档。
+
+恢复目录`20261004-131941-native-recovery-seed42`复制原失败trace
+完整前缀，只增加一次普通B输入；原错误证据hash不变，原22唯一
+MP4仍在原目录。独立CONTINUE未修改schema4完整expected==restored，
+最新安全检查点58种、seen95，Route17 15,20；不是护士或新登记。
+原生原片355.75秒／21345帧／11617638字节完整解码。真实0种父链
+22段只计原22恢复前缀／视频一次，58唯一登记、138115普通推进
+回执、22唯一原生视频；两个既有native recovery均保留原错误前缀。
+原控制器frame／command计数快照保留，恢复16帧／一次press_timeline
+在追加回执及additional_recovery_command_counts单独记账。
+
+证据：`legal22-first-whole-frontier-request-audit-20261004.json`、
+`legal22-cycling-menu-loop-stop-request-20261004.json`、
+`legal22-checkpoint-proof-20261004.json`、
+`legal22-independent-continue-20261004.json`、
+`legal58-brake22-lineage-file-and-input-integrity-20261004.json`。
+目前正式controller／native／recorder均已闭合。下一步先回归骑行
+菜单和中性等待刹车，之后从此原22新安全检查点续跑，不回退原21。
+124、producer／原版fidelity穷尽核对、完整整片与大盘仍未完成。
