@@ -21,7 +21,8 @@ from .story_agent import DualStoryAgent, StoryStopped, attempt_key
 from .typesafe import Choice, TypeSafeClient, TypeSafeError
 from .decision_wire import (FIELD_DICTIONARY_INSTRUCTION, compact_decision_field_wire,
                             expand_decision_evidence, STRING_REFERENCE_INSTRUCTION,
-                            compact_decision_string_references)
+                            compact_decision_string_references, MAPPING_TABLE_INSTRUCTION,
+                            compact_decision_mapping_tables)
 from .story_rules import Rule, requirements, evaluate, static_retreat_contract, spent_static_source
 from .playthrough_judgments import (ObservedProtocol, NavigationPause, NavigationGoalObserved, attack_profile, replacement_options,
                                     MEDICINES, BALLS, medicine_options, effective_attacks, ITEM_CATALOG,
@@ -1047,6 +1048,37 @@ def compact_string_decision_wire(state, candidates):
     return compact_refactored_decision_wire(state, candidates, min_chars=16, string_references=True)
 
 
+def compact_mapped_decision_wire(state, candidates):
+    """A lossless mapped-record fallback, composed before evidence factoring.
+
+    Mapping axes can themselves share evidence. Profitability includes the
+    complete decoding guidance; bytes are not a provider token-limit claim.
+    """
+    original, options = expand_decision_evidence(state, candidates)
+    mapped, offered = compact_decision_mapping_tables(original, options)
+    if mapped is original:
+        return state, candidates
+    factored, offered = factor_strategy_evidence(mapped, offered, min_chars=16)
+    # Keep plain/scalar criteria byte exact through the factoring stage.
+    for key, value in options.items():
+        try:
+            payload = json.loads(value)
+        except (TypeError, ValueError):
+            payload = value
+        if not isinstance(payload, (dict, list)):
+            offered[key] = value
+    short, offered = compact_evidence_reference_wire(factored, offered)
+    wire, offered = compact_decision_field_wire(short, offered)
+    wire, offered = compact_decision_string_references(wire, offered)
+    before = len(json.dumps({'state': state, 'criteria': candidates}).encode())
+    after = len(json.dumps({'state': wire, 'criteria': offered}).encode())
+    guidance = (REFACTORED_DECISION_EVIDENCE_INSTRUCTION + FIELD_DICTIONARY_INSTRUCTION
+                + STRING_REFERENCE_INSTRUCTION + MAPPING_TABLE_INSTRUCTION)
+    if after + len(guidance.encode()) >= before:
+        return state, candidates
+    return wire, offered
+
+
 def strategy_access_evidence(candidates):
     """Compare fresh trigger access without removing legal future goals."""
     result = {key: {} for key in ('path_found', 'field_action_needed', 'no_path_found', 'not_evaluated')}
@@ -2023,7 +2055,9 @@ class AutonomousStoryAgent(DualStoryAgent):
         field-dictionary refactoring retains the complete semantic state and
         candidates. Its learning is separate too. If that also overflows, one
         profitable tagged-string reference refactoring is tried with its own
-        runtime scope. Exhausted leaves fail closed.
+        runtime scope. One final profitable keyed-record table format preserves
+        every mapping key and cell, with separate learning. Exhausted leaves
+        fail closed.
         """
         if not candidates:
             return super().choose(layer, state, candidates, instruction,
@@ -2078,6 +2112,8 @@ class AutonomousStoryAgent(DualStoryAgent):
         field_eligible, field_computed = False, False
         string_scopes = getattr(self, '_string_evidence_reference_scopes', set())
         string_eligible, string_computed = False, False
+        mapped_scopes = getattr(self, '_mapped_record_table_scopes', set())
+        mapped_eligible, mapped_computed = False, False
 
         def append_refactored_format():
             nonlocal field_eligible, field_computed
@@ -2116,14 +2152,36 @@ class AutonomousStoryAgent(DualStoryAgent):
                 append_refactored_format()
             if len(formats) == before:
                 append_string_format()
+            if len(formats) == before:
+                append_mapped_format()
+
+        def append_mapped_format():
+            nonlocal mapped_eligible, mapped_computed
+            if mapped_computed:
+                return
+            mapped_computed = True
+            try:
+                wire, offered = compact_mapped_decision_wire(
+                    compact_base, short_candidates if eligible else candidates)
+            except ValueError:
+                return
+            mapped_eligible = wire is not compact_base
+            if mapped_eligible:
+                formats.append(('mapped_record_table', wire, offered,
+                    REFACTORED_DECISION_EVIDENCE_INSTRUCTION + FIELD_DICTIONARY_INSTRUCTION
+                    + STRING_REFERENCE_INSTRUCTION + MAPPING_TABLE_INSTRUCTION))
 
         # Do not re-factor a successful ordinary request. Enable this work
         # only after explicit overflow, or its same-endpoint runtime learning.
-        if scope in field_scopes or scope in string_scopes:
+        if scope in field_scopes or scope in string_scopes or scope in mapped_scopes:
             append_refactored_format()
-        if scope in string_scopes:
+        if scope in string_scopes or scope in mapped_scopes:
             append_string_format()
-        if string_eligible and scope in string_scopes:
+        if scope in mapped_scopes:
+            append_mapped_format()
+        if mapped_eligible and scope in mapped_scopes:
+            first_format = len(formats) - 1
+        elif string_eligible and scope in string_scopes:
             first_format = len(formats) - 1
         elif field_eligible and scope in field_scopes:
             first_format = next(i for i, item in enumerate(formats)
@@ -2189,9 +2247,12 @@ class AutonomousStoryAgent(DualStoryAgent):
             elif next_encoding == 'refactored_field_dictionary':
                 field_scopes.add(scope)
                 self._refactored_field_dictionary_scopes = field_scopes
-            else:
+            elif next_encoding == 'string_evidence_reference':
                 string_scopes.add(scope)
                 self._string_evidence_reference_scopes = string_scopes
+            else:
+                mapped_scopes.add(scope)
+                self._mapped_record_table_scopes = mapped_scopes
             self.record(f'{layer}_wire_encoding_enabled', encoding=next_encoding,
                 candidate_ids=list(candidates), reason=reason, reference_scope=list(scope),
                 world_facts_preserved=True, candidate_values_semantically_preserved=True,

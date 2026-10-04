@@ -15,6 +15,247 @@ from openpokered.story_agent import DualStoryAgent, StoryStopped
 from openpokered.typesafe import TypeSafeClient, TypeSafeError, ChoiceAnswer, SystemOneResult
 
 
+class DecisionMappingTableTests(unittest.TestCase):
+    def fixture(self):
+        records = {f'area:{i}': {'unregistered_species_count': i,
+            'unregistered_encounter_share_pct': None if i % 3 == 0 else i / 10,
+            'topological_route_found': i % 2 == 0,
+            'nested': {'values': [0, False, None, f'路線{i}']}} for i in range(40)}
+        return {'world': {'areas': records}, 'recent': []}, {
+            'a': json.dumps({'areas': records}), 'b': '{ "goal": "advance" }',
+            'none': 'No matching action', 'scalar': '"literal JSON string"', 'zero': '0'}
+
+    def codec(self):
+        from openpokered.decision_wire import (MAPPING_TABLE_SCHEMA, MAPPING_TABLE_INSTRUCTION,
+            compact_decision_mapping_tables)
+        return MAPPING_TABLE_SCHEMA, MAPPING_TABLE_INSTRUCTION, compact_decision_mapping_tables
+
+    def assert_semantics(self, actual, expected):
+        self.assertEqual(actual[0], expected[0])
+        self.assertEqual(list(actual[1]), list(expected[1]))
+        for key in expected[1]:
+            try:
+                original = json.loads(expected[1][key])
+            except ValueError:
+                self.assertEqual(actual[1][key], expected[1][key])
+            else:
+                self.assertEqual(json.loads(actual[1][key]), original)
+
+    def test_roundtrip_keeps_all_mapping_keys_columns_types_and_order(self):
+        schema, _, encode = self.codec()
+        state, options = self.fixture()
+        untouched = deepcopy((state, options))
+        wire, offered = encode(state, options)
+        self.assertEqual(wire[schema], 1)
+        keys, columns, rows = wire['world']['areas']['$m']
+        self.assertEqual(keys, list(state['world']['areas']))
+        self.assertEqual(columns, list(state['world']['areas']['area:0']))
+        self.assertEqual(len(rows), 40)
+        self.assert_semantics(expand_decision_evidence(wire, offered), (state, options))
+        self.assertEqual((state, options), untouched)
+        for key in ('b', 'none', 'scalar', 'zero'):
+            self.assertEqual(offered[key], options[key])
+
+    def test_small_heterogeneous_or_differently_ordered_records_are_not_packed(self):
+        _, _, encode = self.codec()
+        for records in ({'a': {'v': 1}, 'b': {'v': 2}},
+                        {'a': {'v': 1}, 'b': {'w': 2}, 'c': {'v': 3}},
+                        {'a': {'v': 1, 'w': 2}, 'b': {'w': 2, 'v': 1}, 'c': {'v': 3, 'w': 4}}):
+            state, options = {'world': records}, {'a': 'Literal'}
+            wire, offered = encode(state, options)
+            self.assertIs(wire, state)
+            self.assertIs(offered, options)
+
+    def test_reserved_collisions_in_state_or_candidates_fail_closed(self):
+        schema, _, encode = self.codec()
+        for reserved in ('$m', schema):
+            for location in ('state', 'candidate'):
+                state, options = self.fixture()
+                if location == 'state':
+                    state['world'][reserved] = 'ordinary data'
+                else:
+                    options['collision'] = json.dumps({reserved: 'ordinary data'})
+                with self.subTest(reserved=reserved, location=location), self.assertRaisesRegex(ValueError, 'collision'):
+                    encode(state, options)
+
+    def test_malformed_schema_keys_columns_rows_and_mixed_tags_fail_closed(self):
+        schema, _, _ = self.codec()
+        good = [['a'], ['cost'], [[0]]]
+        for version in (True, '1', 2, None):
+            with self.subTest(version=version), self.assertRaises(ValueError):
+                expand_decision_evidence({schema: version, 'world': {'$m': good}}, {})
+        for table in ([], [['a'], ['cost']], [['a', 'a'], ['cost'], [[0], [1]]],
+                      [['a'], ['cost', 'cost'], [[0, 1]]], [[0], ['cost'], [[0]]],
+                      [['a'], [0], [[0]]], [['a'], ['cost'], []],
+                      [['a'], ['cost'], [[0, 1]]], [['a'], ['cost'], [False]],
+                      ['a', ['cost'], [[0]]], [['a'], [], [[]]]):
+            with self.subTest(table=table), self.assertRaises(ValueError):
+                expand_decision_evidence({schema: 1, 'world': {'$m': table}}, {})
+        with self.assertRaises(ValueError):
+            expand_decision_evidence({schema: 1, 'world': {'$m': good, 'extra': 1}}, {})
+
+    def test_untagged_literals_keep_their_meaning(self):
+        state = {'world': {'$m': [['a'], ['cost'], [[0]]]}}
+        options = {'a': json.dumps({'$m': 'literal'})}
+        self.assertEqual(expand_decision_evidence(state, options), (state, options))
+
+    def test_transitive_references_inside_table_axes_and_cells_expand_before_mapping(self):
+        schema, _, _ = self.codec()
+        state = {schema: 1, 'world': {'$e': 'e0'}, 'shared_strategy_evidence': {
+            'e0': {'$m': [{'$e': 'e1'}, {'$e': 'e2'}, [[{'$e': 'e3'}]]]},
+            'e1': ['area'], 'e2': ['cost'], 'e3': {'null': None, 'false': False, 'zero': 0}}}
+        restored, options = expand_decision_evidence(state, {'a': '{"record":{"$e":"e0"}}'})
+        self.assertEqual(restored, {'world': {'area': {'cost': {'null': None, 'false': False, 'zero': 0}}}})
+        self.assertEqual(json.loads(options['a'])['record'], restored['world'])
+
+    def test_full_refactoring_roundtrip_and_profit_includes_all_guidance(self):
+        from openpokered.autonomous_story import compact_mapped_decision_wire
+        schema, guidance, _ = self.codec()
+        state, options = self.fixture()
+        wire, offered = compact_mapped_decision_wire(state, options)
+        self.assertIn(schema, wire)
+        self.assert_semantics(expand_decision_evidence(wire, offered), (state, options))
+        before = len(json.dumps({'state': state, 'criteria': options}).encode())
+        after = len(json.dumps({'state': wire, 'criteria': offered}).encode())
+        from openpokered.decision_wire import FIELD_DICTIONARY_INSTRUCTION
+        all_guidance = (REFACTORED_DECISION_EVIDENCE_INSTRUCTION + FIELD_DICTIONARY_INSTRUCTION
+                        + STRING_REFERENCE_INSTRUCTION + guidance)
+        self.assertLess(after + len(all_guidance.encode()), before)
+
+    def test_production_lazy_fallback_and_same_scope_learning_preserve_all_options(self):
+        schema, guidance, _ = self.codec()
+        helper = DecisionFieldWireTests()
+        state, all_options = self.fixture()
+        options = {key: all_options[key] for key in ('a', 'b')}
+        for layer in ('strategy', 'action'):
+            for abstain in (False, True):
+                agent, calls = helper.agent(), []
+                expected = expand_decision_evidence(state, options)
+                def choose(actual_layer, actual, offered, instruction, *, allow_abstain):
+                    self.assertEqual(actual_layer, layer)
+                    self.assertEqual(allow_abstain, abstain)
+                    self.assertEqual(list(offered), list(options))
+                    self.assert_semantics(expand_decision_evidence(actual, offered), expected)
+                    calls.append(actual)
+                    if schema not in actual:
+                        raise helper.overflow(layer)
+                    self.assertEqual(instruction.count(guidance), 1)
+                    return 'b'
+                with patch.object(DualStoryAgent, 'choose', side_effect=choose):
+                    self.assertEqual(agent.choose_bounded_choice(layer, state, options, 'Pick',
+                        allow_abstain=abstain), 'b')
+                    first_calls = len(calls)
+                    self.assertGreater(first_calls, 1)
+                    self.assertEqual(agent.choose_bounded_choice(layer, state, options, 'Pick',
+                        allow_abstain=abstain), 'b')
+                    self.assertEqual(len(calls), first_calls + 1)
+                self.assertFalse(any(call.args[0] == f'{layer}_partition' for call in agent.record.call_args_list))
+                self.assertEqual(len(agent._mapped_record_table_scopes), 1)
+        agent = helper.agent()
+        with patch('openpokered.autonomous_story.compact_mapped_decision_wire', side_effect=AssertionError('not lazy')):
+            with patch.object(DualStoryAgent, 'choose', return_value='a'):
+                self.assertEqual(agent.choose_bounded_strategy(state, options, 'Pick'), 'a')
+
+    def test_exhausted_leaf_and_non_context_errors_do_not_choose_or_partition(self):
+        self.codec()
+        helper = DecisionFieldWireTests()
+        state, all_options = self.fixture()
+        options = {key: all_options[key] for key in ('a', 'b')}
+        agent = helper.agent()
+        with patch.object(DualStoryAgent, 'choose', side_effect=helper.overflow()) as calls:
+            with self.assertRaises(StoryStopped):
+                agent.choose_bounded_strategy(state, options, 'Pick')
+        self.assertGreater(calls.call_count, 1)
+        self.assertFalse(any(call.args[0] == 'strategy_partition' for call in agent.record.call_args_list))
+        for message in ('HTTP 401 unauthorized', 'HTTP 402 payment_required', 'HTTP 429 rate_limit'):
+            agent = helper.agent()
+            with patch.object(DualStoryAgent, 'choose', side_effect=helper.overflow(message=message)) as calls:
+                with self.assertRaises(StoryStopped):
+                    agent.choose_bounded_strategy(state, options, 'Pick')
+            self.assertEqual(calls.call_count, 1)
+            self.assertFalse(hasattr(agent, '_mapped_record_table_scopes'))
+
+    def test_mapping_learning_is_endpoint_model_provider_path_layer_and_runtime_scoped(self):
+        schema, _, _ = self.codec()
+        helper, agent = DecisionFieldWireTests(), DecisionFieldWireTests().agent()
+        state, all_options = self.fixture()
+        options = {key: all_options[key] for key in ('a', 'b')}
+        def choose(layer, actual, offered, instruction, *, allow_abstain):
+            if schema not in actual:
+                raise helper.overflow(layer)
+            return 'a'
+        with patch.object(DualStoryAgent, 'choose', side_effect=choose) as calls:
+            agent.choose_bounded_strategy(state, options, 'Pick')
+            first_calls = calls.call_count
+            agent.choose_bounded_strategy(state, options, 'Pick')
+            self.assertEqual(calls.call_count, first_calls + 1)
+            agent.choose_bounded_choice('action', state, options, 'Pick')
+            agent.model_client.base_url = 'https://other-offline.invalid'
+            agent.choose_bounded_strategy(state, options, 'Pick')
+            agent.model = 'different-model'
+            agent.choose_bounded_strategy(state, options, 'Pick')
+            agent.model_client.system_one_path = '/other'
+            agent.choose_bounded_strategy(state, options, 'Pick')
+            agent.model_client.provider = 'typesafe'
+            agent.choose_bounded_strategy(state, options, 'Pick')
+        self.assertEqual(calls.call_count, first_calls * 6 + 1)
+        self.assertEqual(len(agent._mapped_record_table_scopes), 6)
+        successor = helper.agent()
+        with patch.object(DualStoryAgent, 'choose', return_value='a') as calls:
+            successor.choose_bounded_strategy(state, options, 'Pick')
+        calls.assert_called_once()
+
+    def test_real_adapter_mapped_format_preserves_none_and_conditional_probabilities(self):
+        schema, _, _ = self.codec()
+        helper = DecisionFieldWireTests()
+        for probabilities, selected in (({'a': .35, 'b': .25, 'none': .4}, 'a'),
+                                        ({'a': .2, 'b': .1, 'none': .7}, None)):
+            agent = helper.agent()
+            agent.layer_jev = {'strategy': True, 'action': True}
+            agent.calls, agent.tokens, agent.models = Counter(), Counter(), set()
+            agent.max_calls, agent.check_budget, agent.client = 8, Mock(), Mock()
+            agent.client.state.return_value = {'frame_count': 0}
+            state, all_options = self.fixture()
+            options = {key: all_options[key] for key in ('a', 'b')}
+            response = SystemOneResult('offline', {'strategy': ChoiceAnswer('none', probabilities, .3)}, 1, 1)
+            def respond(actual, questions, **kwargs):
+                if schema not in actual:
+                    raise TypeSafeError('max_tokens_exceeded')
+                return response
+            with patch.object(agent.model_client, 'system_one', side_effect=respond) as transport:
+                if selected is None:
+                    with self.assertRaisesRegex(StoryStopped, 'strategy:no_selection'):
+                        agent.choose_bounded_strategy(state, options, 'Pick')
+                else:
+                    self.assertEqual(agent.choose_bounded_strategy(state, options, 'Pick'), selected)
+            self.assertGreater(transport.call_count, 1)
+            for call in transport.call_args_list:
+                criteria = call.args[1]['strategy'].criteria
+                self.assertEqual(list(criteria), ['a', 'b', 'none'])
+                self.assertEqual(criteria['none'], 'None of these candidates can advance the current goal.')
+            self.assertEqual(agent.calls['strategy'], transport.call_count)
+
+    def test_mapping_fallback_tournament_keeps_every_option_and_final_none(self):
+        self.codec()
+        helper, agent = DecisionFieldWireTests(), DecisionFieldWireTests().agent()
+        state, offered = self.fixture()
+        options = {str(i): offered['a'] for i in range(8)}
+        evaluated, abstentions = set(), []
+        expected_state = expand_decision_evidence(state, options)[0]
+        def choose(layer, actual, candidates, instruction, *, allow_abstain):
+            self.assertEqual(expand_decision_evidence(actual, candidates)[0], expected_state)
+            if len(candidates) > 2:
+                raise helper.overflow()
+            evaluated.update(candidates)
+            abstentions.append(allow_abstain)
+            return max(candidates, key=int)
+        with patch.object(DualStoryAgent, 'choose', side_effect=choose):
+            self.assertEqual(agent.choose_bounded_strategy(state, options, 'Pick'), '7')
+        self.assertEqual(evaluated, set(options))
+        self.assertTrue(abstentions[-1])
+        self.assertTrue(all(not value for value in abstentions[:-1]))
+
+
 class DecisionFieldWireTests(unittest.TestCase):
     def fixture(self):
         rows = [{'already_knows_move': i % 2 == 0, 'withdrawal_required': i % 3 == 0,

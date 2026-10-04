@@ -96,6 +96,24 @@ class DecisionExportTest(unittest.TestCase):
         self.assertTrue(first['choice_was_offered'])
         self.assertEqual(first['candidate_count'], 6)
 
+    def test_mapped_record_protocol_is_projected_but_not_displayed(self):
+        state = {'decision_mapping_table_schema': 1,
+                 'dex_progress': {'owned': 73}, 'shared_strategy_evidence': {
+                     'e0': {'$m': [['Route1', 'Route2'], ['count', 'reachable'],
+                                   [[0, False], [None, True]]]}}}
+        criterion = {'establish': ['catch', 'Route2', True], 'areas': {'$e': 'e0'}}
+        event = decision({'a': json.dumps(criterion), 'none': 'Do nothing'}, state)
+        original, descriptions = deepcopy(event), {}
+        exported = dashboard.export_decision(event, descriptions)
+        self.assertEqual(descriptions[exported['candidates'][0]['description_ref']],
+            {'establish': ['catch', 'Route2', True], 'areas': {
+                'Route1': {'count': 0, 'reachable': False},
+                'Route2': {'count': None, 'reachable': True}}})
+        self.assertEqual(event, original)
+        self.assertEqual(exported['dex_progress'], {'owned': 73})
+        self.assertEqual(exported['choice'], 'a')
+        self.assertNotIn('decision_mapping_table_schema', json.dumps(exported))
+
     def test_missing_selected_probability_is_not_invented(self):
         exported = dashboard.export_decision(decision({'a': 'Chosen', 'none': 'Wait'},
             probabilities={'none': .4}), {})

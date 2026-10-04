@@ -20,6 +20,62 @@ STRING_REFERENCE_INSTRUCTION = (
     'candidate descriptions. Restore original value types and record membership; '
     'all other strings keep their literal meanings. No facts or candidates are omitted.')
 _STRING_REFERENCE = re.compile(r'@e[0-9]+\Z')
+MAPPING_TABLE_SCHEMA = 'decision_mapping_table_schema'
+MAPPING_TABLE_INSTRUCTION = (
+    ' Wire mapped record tables: when state.decision_mapping_table_schema is 1, '
+    'each singleton $m is [keys,columns,rows]. Row i is the complete record for keys[i]; '
+    'zip columns with every row to restore the exact original ordered mapping. '
+    'Resolve evidence references transitively in keys, columns and cells. No facts or options are omitted.')
+
+
+def compact_decision_mapping_tables(state, candidates):
+    """Transpose homogeneous keyed records without losing keys, order or cells.
+
+    No candidate selection or domain-specific threshold: only profitable exact
+    representation changes. Reserved tags fail closed even in unselected data.
+    """
+    tables = 0
+
+    def encode(value):
+        nonlocal tables
+        if isinstance(value, list):
+            return [encode(child) for child in value]
+        if not isinstance(value, dict):
+            return value
+        if '$m' in value or MAPPING_TABLE_SCHEMA in value:
+            raise ValueError('Reserved mapped record table collision')
+        children = {key: encode(child) for key, child in value.items()}
+        records = list(children.values())
+        if len(records) < 3 or not all(isinstance(row, dict) and row for row in records):
+            return children
+        columns = list(records[0])
+        if not all(list(row) == columns for row in records):
+            return children
+        packed = {'$m': [list(children), columns,
+            [[row[column] for column in columns] for row in records]]}
+        if len(json.dumps(packed).encode()) >= len(json.dumps(children).encode()):
+            return children
+        tables += 1
+        return packed
+
+    wire = encode(state)
+    offered = {}
+    for key, value in candidates.items():
+        try:
+            payload = json.loads(value)
+        except (TypeError, ValueError):
+            payload = value
+        encoded = encode(payload)
+        offered[key] = (json.dumps(encoded, separators=(',', ':'), ensure_ascii=False)
+                        if encoded != payload else value)
+    if not tables:
+        return state, candidates
+    wire[MAPPING_TABLE_SCHEMA] = 1
+    before = len(json.dumps({'state': state, 'criteria': candidates}).encode())
+    after = len(json.dumps({'state': wire, 'criteria': offered}).encode())
+    if after + len(MAPPING_TABLE_INSTRUCTION.encode()) >= before:
+        return state, candidates
+    return wire, offered
 
 
 def compact_decision_string_references(state, candidates):
@@ -115,7 +171,8 @@ def compact_decision_field_wire(state, candidates):
     """
     protected = set(state) | {
         'shared_strategy_evidence', 'shared_strategy_evidence_ref', '$e',
-        'strategy_table', 'columns', 'rows', FIELD_DICTIONARY, STRING_REFERENCE_PREFIX}
+        'strategy_table', 'columns', 'rows', FIELD_DICTIONARY, STRING_REFERENCE_PREFIX,
+        MAPPING_TABLE_SCHEMA, '$m'}
     decoded = {}
     for key, value in candidates.items():
         try:
@@ -221,6 +278,9 @@ def expand_decision_evidence(state, candidates):
     state, candidates = restore_decision_string_references(state, candidates)
     state, candidates = restore_decision_field_wire(state, candidates)
     library = state.get('shared_strategy_evidence') or {}
+    mapped_tables = MAPPING_TABLE_SCHEMA in state
+    if mapped_tables and (type(state[MAPPING_TABLE_SCHEMA]) is not int or state[MAPPING_TABLE_SCHEMA] != 1):
+        raise ValueError('Invalid mapped record table schema')
 
     def expand(value, visiting=()):
         if isinstance(value, list):
@@ -232,6 +292,21 @@ def expand_decision_evidence(state, candidates):
             if not isinstance(key, str) or key not in library or key in visiting:
                 raise ValueError('Missing or cyclic shared evidence reference')
             return expand(library[key], (*visiting, key))
+        if mapped_tables and '$m' in value:
+            if set(value) != {'$m'}:
+                raise ValueError('Malformed mapped record table tag')
+            table = expand(value['$m'], visiting)
+            if (not isinstance(table, list) or len(table) != 3
+                    or any(not isinstance(axis, list) for axis in table)):
+                raise ValueError('Malformed mapped record table axes')
+            keys, columns, rows = table
+            if (not keys or not columns
+                    or any(not isinstance(key, str) for key in keys + columns)
+                    or len(set(keys)) != len(keys) or len(set(columns)) != len(columns)
+                    or len(rows) != len(keys)
+                    or any(not isinstance(row, list) or len(row) != len(columns) for row in rows)):
+                raise ValueError('Malformed mapped record table records')
+            return {key: dict(zip(columns, row)) for key, row in zip(keys, rows)}
         if set(value) == {'strategy_table'}:
             table = value['strategy_table']
             if (not isinstance(table, dict) or set(table) != {'columns', 'rows'}
@@ -245,7 +320,8 @@ def expand_decision_evidence(state, candidates):
                     for row in table['rows']]
         return {key: expand(child, visiting) for key, child in value.items()}
 
-    original_state = {key: expand(value) for key, value in state.items() if key != 'shared_strategy_evidence'}
+    original_state = expand({key: value for key, value in state.items()
+                            if key not in ('shared_strategy_evidence', MAPPING_TABLE_SCHEMA)})
     original_options = {}
     for key, value in candidates.items():
         try:
