@@ -29,13 +29,9 @@
 
 game_scene VermilionDock {
   @load {
-    // Only act once the player has HM01 (got from the SS Anne captain), and only
-    // when arriving from the ship. The original gates on wDestinationWarpID == 1
-    // (the ship warp); there is no source-warp API, so EVENT_LEFT_SS_ANNE_VIA_GANGPLANK
-    // makes the whole cutscene one-shot instead — without it, re-entering the dock
-    // from Vermilion City later (at the north (14,0) tile) would wrongly replay
-    // the walk-out.
-    @if (getFlag("EVENT_GOT_HM01") && !getFlag("EVENT_LEFT_SS_ANNE_VIA_GANGPLANK")) {
+    // Destination warp 1 arrives at (14,2); city entry arrives at (14,0).
+    // Original checks that ship destination before scheduling departure.
+    @if (getFlag("EVENT_GOT_HM01") && getPlayerX() == 14 && getPlayerY() == 2) {
       // ── SS Anne departure cutscene (plays exactly once) ─────────────────
       @if (!getFlag("EVENT_SS_ANNE_LEFT")) {
         // The original sets the flag first (SetEventForceReuseHL), then swaps
@@ -55,9 +51,10 @@ game_scene VermilionDock {
         // the warp tile (14,0) already fires the warp during scripted
         // movement, so two steps suffice to leave the map.
         // That fixed 3-step PAD_UP walk is what movePlayer implements below.
-        movePlayer([[14, 1], [14, 0]])
+        // The warp replaces this script, so latch completion before moving.
         setFlag("EVENT_WALKED_OUT_OF_DOCK")
         setFlag("EVENT_LEFT_SS_ANNE_VIA_GANGPLANK")
+        movePlayer([[14, 1], [14, 0]])
       }
     }
   }

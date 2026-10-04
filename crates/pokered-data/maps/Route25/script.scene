@@ -3,7 +3,7 @@
 // map: npcs 1-9 are sight-engaged trainers (map.json isTrainer = true), so the
 // runtime owns the battle and each .scene handler is DIALOGUE ONLY (before- vs
 // after-battle text, branched on EVENT_BEAT_ROUTE_25_TRAINER_n). NPC 10 is the
-// ground-item Poke Ball (TM39 SEISMIC TOSS); sign 1 is Bill's SEA COTTAGE sign.
+// ground-item Poke Ball (TM19 SEISMIC TOSS); sign 1 is Bill's SEA COTTAGE sign.
 
 game_scene Route25 {
   // ── On entry: toggle Bill's NPCs after the S.S.Ticket questline ──────────
@@ -110,16 +110,20 @@ game_scene Route25 {
     }
   }
 
-  // ── Ground item: Poke Ball with TM39 SEISMIC TOSS (npc 10) ──────────────
+  // ── Ground item: Poke Ball with TM19 SEISMIC TOSS (npc 10) ──────────────
   // Original PickUpItemText gives the item, sets the got-item event and clears
   // the ball object. Gate on EVENT_GOT_TM39 so it is only collected once.
   @storyline("itemTmSeismicToss") {
     @trigger(map = "Route25", npc = 10, toggle = "ROUTE_25_OBJ_10")
     @if (!getFlag("EVENT_GOT_TM39")) {
-      giveItem("TM39", 1)
-      setFlag("EVENT_GOT_TM39")
-      hideObjectByName("ROUTE_25_OBJ_10")
-      @speaker("") { @t("<PLAYER> found TM39!", "<PLAYER>找到了 TM39！") }
+      given = giveItem("TM19", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_TM39")
+        hideObjectByName("ROUTE_25_OBJ_10")
+        showItemDialogue(t("<PLAYER> found TM19!", "<PLAYER>找到了TM19！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 

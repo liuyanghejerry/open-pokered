@@ -12,10 +12,14 @@ game_scene SafariZoneNorth {
   @storyline("itemProtein") {
     @trigger(map = "SafariZoneNorth", npc = 1, toggle = "SAFARI_ZONE_NORTH_OBJ_1")
     @if (!getFlag("EVENT_GOT_PROTEIN_FROM_SAFARI_ZONE")) {
-      giveItem("PROTEIN", 1)
-      setFlag("EVENT_GOT_PROTEIN_FROM_SAFARI_ZONE")
-      hideObjectByName("SAFARI_ZONE_NORTH_OBJ_1")
-      @speaker("") { @t("<PLAYER> found PROTEIN!", "<PLAYER>发现了攻击增强剂！") }
+      given = giveItem("PROTEIN", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_PROTEIN_FROM_SAFARI_ZONE")
+        hideObjectByName("SAFARI_ZONE_NORTH_OBJ_1")
+        showItemDialogue(t("<PLAYER> found PROTEIN!", "<PLAYER>发现了攻击增强剂！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 
@@ -23,10 +27,14 @@ game_scene SafariZoneNorth {
   @storyline("itemTmSkullBash") {
     @trigger(map = "SafariZoneNorth", npc = 2, toggle = "SAFARI_ZONE_NORTH_OBJ_2")
     @if (!getFlag("EVENT_GOT_TM40_FROM_SAFARI_ZONE")) {
-      giveItem("TM40", 1)
-      setFlag("EVENT_GOT_TM40_FROM_SAFARI_ZONE")
-      hideObjectByName("SAFARI_ZONE_NORTH_OBJ_2")
-      @speaker("") { @t("<PLAYER> found TM40!", "<PLAYER>发现了 TM40！") }
+      given = giveItem("TM40", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_TM40_FROM_SAFARI_ZONE")
+        hideObjectByName("SAFARI_ZONE_NORTH_OBJ_2")
+        showItemDialogue(t("<PLAYER> found TM40!", "<PLAYER>发现了 TM40！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 

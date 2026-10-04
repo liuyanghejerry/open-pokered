@@ -15,9 +15,13 @@ game_scene CinnabarLabMetronomeRoom {
       @speaker("") {
         @t("Tch-tch-tch! I made a cool\nTM!\n\nIt can cause all kinds of\nfun!", "嗒-嗒-嗒！我做了个超棒的TM！\n\n它可以带来各种乐趣！")
       }
-      giveItem("TM_35", 1)
-      setFlag("EVENT_GOT_TM35")
-      @speaker("") { @t("<PLAYER> received TM35!", "<PLAYER>得到了 TM35！") }
+      given = giveItem("TM_35", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_TM35")
+        @speaker("") { @t("<PLAYER> received TM35!", "<PLAYER>得到了 TM35！") }
+      } @else {
+        @speaker("") { @t("Your pack is crammed full!", "你的背包装满了！") }
+      }
     }
   }
 

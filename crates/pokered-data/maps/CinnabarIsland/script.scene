@@ -11,6 +11,7 @@ game_scene CinnabarIsland {
   // every load: leaving the island to the Lab marks the fossil revive as done,
   // so the Lab scientist hands the revived POKeMON on the next visit.
   @load {
+    resetFlag("EVENT_MANSION_SWITCH_ON")
     resetFlag("EVENT_LAB_STILL_REVIVING_FOSSIL")
   }
 

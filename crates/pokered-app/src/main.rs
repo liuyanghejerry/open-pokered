@@ -48,7 +48,7 @@ use crate::tools::{cmd_dump_state, cmd_screenshot, cmd_screenshot_all};
 
 fn main() {
     let cli = Cli::parse();
-    let version = GameVersion::Red;
+    let version = cli.game_version.to_game_version();
 
     if let Some(ref modules) = cli.debug_modules {
         eprintln!("[Debug] CLI debug_modules = '{}'", modules);

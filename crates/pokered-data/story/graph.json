@@ -1387,6 +1387,11 @@
       "kind": "triggered_at"
     },
     {
+      "from": "script:CeruleanCave2F:talkPokeBall",
+      "to": "object:CERULEAN_CAVE_2F_OBJ_1",
+      "kind": "hides"
+    },
+    {
       "from": "script:CeruleanCave2F:talkPokeBall1",
       "to": "item:ULTRA_BALL",
       "kind": "gives",
@@ -1398,6 +1403,11 @@
       "kind": "triggered_at"
     },
     {
+      "from": "script:CeruleanCave2F:talkPokeBall1",
+      "to": "object:CERULEAN_CAVE_2F_OBJ_2",
+      "kind": "hides"
+    },
+    {
       "from": "script:CeruleanCave2F:talkPokeBall2",
       "to": "item:FULL_RESTORE",
       "kind": "gives",
@@ -1407,6 +1417,26 @@
       "from": "script:CeruleanCave2F:talkPokeBall2",
       "to": "map:CeruleanCave2F",
       "kind": "triggered_at"
+    },
+    {
+      "from": "script:CeruleanCave2F:talkPokeBall2",
+      "to": "object:CERULEAN_CAVE_2F_OBJ_3",
+      "kind": "hides"
+    },
+    {
+      "from": "script:CeruleanCaveB1F:@load",
+      "to": "flag:EVENT_BEAT_MEWTWO",
+      "kind": "requires"
+    },
+    {
+      "from": "script:CeruleanCaveB1F:@load",
+      "to": "map:CeruleanCaveB1F",
+      "kind": "triggered_at"
+    },
+    {
+      "from": "script:CeruleanCaveB1F:@load",
+      "to": "object:CERULEANCAVEB1F_MEWTWO",
+      "kind": "hides"
     },
     {
       "from": "script:CeruleanCaveB1F:talkMewtwo",
@@ -1422,6 +1452,11 @@
       "from": "script:CeruleanCaveB1F:talkMewtwo",
       "to": "map:CeruleanCaveB1F",
       "kind": "triggered_at"
+    },
+    {
+      "from": "script:CeruleanCaveB1F:talkMewtwo",
+      "to": "object:CERULEANCAVEB1F_MEWTWO",
+      "kind": "hides"
     },
     {
       "from": "script:CeruleanCaveB1F:talkMewtwo",
@@ -1441,6 +1476,11 @@
       "kind": "triggered_at"
     },
     {
+      "from": "script:CeruleanCaveB1F:talkPokeBall",
+      "to": "object:CERULEAN_CAVE_B1F_OBJ_2",
+      "kind": "hides"
+    },
+    {
       "from": "script:CeruleanCaveB1F:talkPokeBall1",
       "to": "item:MAX_REVIVE",
       "kind": "gives",
@@ -1450,6 +1490,11 @@
       "from": "script:CeruleanCaveB1F:talkPokeBall1",
       "to": "map:CeruleanCaveB1F",
       "kind": "triggered_at"
+    },
+    {
+      "from": "script:CeruleanCaveB1F:talkPokeBall1",
+      "to": "object:CERULEAN_CAVE_B1F_OBJ_3",
+      "kind": "hides"
     },
     {
       "from": "script:CeruleanCity:@load",
@@ -2352,6 +2397,11 @@
     },
     {
       "from": "script:CinnabarIsland:@load",
+      "to": "flag:EVENT_MANSION_SWITCH_ON",
+      "kind": "clears"
+    },
+    {
+      "from": "script:CinnabarIsland:@load",
       "to": "map:CinnabarIsland",
       "kind": "triggered_at"
     },
@@ -2585,6 +2635,11 @@
       "from": "script:CinnabarLabFossilRoom:talkScientist2",
       "to": "flag:EVENT_TRADED_FOR_SAILOR",
       "kind": "sets"
+    },
+    {
+      "from": "script:CinnabarLabFossilRoom:talkScientist2",
+      "to": "flag:NPC_TRADE_CANCELLED",
+      "kind": "requires"
     },
     {
       "from": "script:CinnabarLabFossilRoom:talkScientist2",
@@ -4044,6 +4099,11 @@
     },
     {
       "from": "script:LancesRoom:@load",
+      "to": "flag:EVENT_LANCES_ROOM_LOCK_DOOR",
+      "kind": "sets"
+    },
+    {
+      "from": "script:LancesRoom:@load",
       "to": "map:LancesRoom",
       "kind": "triggered_at"
     },
@@ -4061,11 +4121,6 @@
       "from": "script:LancesRoom:lanceStep",
       "to": "flag:EVENT_BEAT_LANCES_ROOM_TRAINER_0",
       "kind": "sets"
-    },
-    {
-      "from": "script:LancesRoom:lanceStep",
-      "to": "flag:EVENT_LANCES_ROOM_LOCK_DOOR",
-      "kind": "clears"
     },
     {
       "from": "script:LancesRoom:lanceStep",
@@ -4111,11 +4166,6 @@
       "from": "script:LancesRoom:talkLance",
       "to": "flag:EVENT_BEAT_LANCES_ROOM_TRAINER_0",
       "kind": "sets"
-    },
-    {
-      "from": "script:LancesRoom:talkLance",
-      "to": "flag:EVENT_LANCES_ROOM_LOCK_DOOR",
-      "kind": "clears"
     },
     {
       "from": "script:LancesRoom:talkLance",
@@ -4511,7 +4561,7 @@
     },
     {
       "from": "script:MtMoon1F:itemTmWaterGun",
-      "to": "item:TM34",
+      "to": "item:TM12",
       "kind": "gives",
       "detail": "x1"
     },
@@ -4704,8 +4754,13 @@
       "kind": "triggered_at"
     },
     {
+      "from": "script:MtMoonB2F:talkPokeBall1",
+      "to": "object:MT_MOON_B2F_OBJ_8",
+      "kind": "hides"
+    },
+    {
       "from": "script:MtMoonB2F:talkPokeBall2",
-      "to": "item:TM_01",
+      "to": "item:TM01",
       "kind": "gives",
       "detail": "x1"
     },
@@ -4713,6 +4768,11 @@
       "from": "script:MtMoonB2F:talkPokeBall2",
       "to": "map:MtMoonB2F",
       "kind": "triggered_at"
+    },
+    {
+      "from": "script:MtMoonB2F:talkPokeBall2",
+      "to": "object:MT_MOON_B2F_OBJ_9",
+      "kind": "hides"
     },
     {
       "from": "script:MtMoonB2F:talkRocket1",
@@ -5349,6 +5409,21 @@
     },
     {
       "from": "script:PalletTown:@load",
+      "to": "flag:EVENT_DAISY_WALKING",
+      "kind": "requires"
+    },
+    {
+      "from": "script:PalletTown:@load",
+      "to": "flag:EVENT_DAISY_WALKING",
+      "kind": "sets"
+    },
+    {
+      "from": "script:PalletTown:@load",
+      "to": "flag:EVENT_ENTERED_BLUES_HOUSE",
+      "kind": "requires"
+    },
+    {
+      "from": "script:PalletTown:@load",
       "to": "flag:EVENT_FOLLOWED_OAK_INTO_LAB",
       "kind": "requires"
     },
@@ -5364,13 +5439,33 @@
     },
     {
       "from": "script:PalletTown:@load",
+      "to": "flag:EVENT_GOT_TOWN_MAP",
+      "kind": "requires"
+    },
+    {
+      "from": "script:PalletTown:@load",
       "to": "flag:EVENT_PALLET_AFTER_GETTING_POKEBALLS",
+      "kind": "sets"
+    },
+    {
+      "from": "script:PalletTown:@load",
+      "to": "flag:EVENT_PALLET_AFTER_GETTING_POKEBALLS_2",
       "kind": "sets"
     },
     {
       "from": "script:PalletTown:@load",
       "to": "map:PalletTown",
       "kind": "triggered_at"
+    },
+    {
+      "from": "script:PalletTown:@load",
+      "to": "object:BLUESHOUSE_DAISY1",
+      "kind": "hides"
+    },
+    {
+      "from": "script:PalletTown:@load",
+      "to": "object:BLUESHOUSE_DAISY2",
+      "kind": "shows"
     },
     {
       "from": "script:PalletTown:@load",
@@ -6283,7 +6378,7 @@
     },
     {
       "from": "script:PokemonMansionB1F:talkPokeBall2",
-      "to": "item:TM18",
+      "to": "item:TM14",
       "kind": "gives",
       "detail": "x1"
     },
@@ -6309,7 +6404,7 @@
     },
     {
       "from": "script:PokemonMansionB1F:talkPokeBall3",
-      "to": "item:TM26",
+      "to": "item:TM22",
       "kind": "gives",
       "detail": "x1"
     },
@@ -6586,16 +6681,6 @@
     {
       "from": "script:PokemonTower4F:talkChanneler3",
       "to": "map:PokemonTower4F",
-      "kind": "triggered_at"
-    },
-    {
-      "from": "script:PokemonTower5F:@load",
-      "to": "flag:EVENT_IN_PURIFIED_ZONE",
-      "kind": "clears"
-    },
-    {
-      "from": "script:PokemonTower5F:@load",
-      "to": "map:PokemonTower5F",
       "kind": "triggered_at"
     },
     {
@@ -6995,6 +7080,86 @@
     {
       "from": "script:PowerPlant:@load",
       "to": "object:POWER_PLANT_OBJ_9",
+      "kind": "hides"
+    },
+    {
+      "from": "script:PowerPlant:groundItem10",
+      "to": "item:CARBOS",
+      "kind": "gives",
+      "detail": "x1"
+    },
+    {
+      "from": "script:PowerPlant:groundItem10",
+      "to": "map:PowerPlant",
+      "kind": "triggered_at"
+    },
+    {
+      "from": "script:PowerPlant:groundItem10",
+      "to": "object:POWER_PLANT_OBJ_10",
+      "kind": "hides"
+    },
+    {
+      "from": "script:PowerPlant:groundItem11",
+      "to": "item:HP_UP",
+      "kind": "gives",
+      "detail": "x1"
+    },
+    {
+      "from": "script:PowerPlant:groundItem11",
+      "to": "map:PowerPlant",
+      "kind": "triggered_at"
+    },
+    {
+      "from": "script:PowerPlant:groundItem11",
+      "to": "object:POWER_PLANT_OBJ_11",
+      "kind": "hides"
+    },
+    {
+      "from": "script:PowerPlant:groundItem12",
+      "to": "item:RARE_CANDY",
+      "kind": "gives",
+      "detail": "x1"
+    },
+    {
+      "from": "script:PowerPlant:groundItem12",
+      "to": "map:PowerPlant",
+      "kind": "triggered_at"
+    },
+    {
+      "from": "script:PowerPlant:groundItem12",
+      "to": "object:POWER_PLANT_OBJ_12",
+      "kind": "hides"
+    },
+    {
+      "from": "script:PowerPlant:groundItem13",
+      "to": "item:TM25",
+      "kind": "gives",
+      "detail": "x1"
+    },
+    {
+      "from": "script:PowerPlant:groundItem13",
+      "to": "map:PowerPlant",
+      "kind": "triggered_at"
+    },
+    {
+      "from": "script:PowerPlant:groundItem13",
+      "to": "object:POWER_PLANT_OBJ_13",
+      "kind": "hides"
+    },
+    {
+      "from": "script:PowerPlant:groundItem14",
+      "to": "item:TM33",
+      "kind": "gives",
+      "detail": "x1"
+    },
+    {
+      "from": "script:PowerPlant:groundItem14",
+      "to": "map:PowerPlant",
+      "kind": "triggered_at"
+    },
+    {
+      "from": "script:PowerPlant:groundItem14",
+      "to": "object:POWER_PLANT_OBJ_14",
       "kind": "hides"
     },
     {
@@ -7669,7 +7834,7 @@
     },
     {
       "from": "script:RocketHideoutB3F:talkPokeBall1",
-      "to": "item:TM44",
+      "to": "item:TM10",
       "kind": "gives",
       "detail": "x1"
     },
@@ -7677,6 +7842,11 @@
       "from": "script:RocketHideoutB3F:talkPokeBall1",
       "to": "map:RocketHideoutB3F",
       "kind": "triggered_at"
+    },
+    {
+      "from": "script:RocketHideoutB3F:talkPokeBall1",
+      "to": "object:ROCKET_HIDEOUT_B3F_OBJ_3",
+      "kind": "hides"
     },
     {
       "from": "script:RocketHideoutB3F:talkPokeBall2",
@@ -7688,6 +7858,11 @@
       "from": "script:RocketHideoutB3F:talkPokeBall2",
       "to": "map:RocketHideoutB3F",
       "kind": "triggered_at"
+    },
+    {
+      "from": "script:RocketHideoutB3F:talkPokeBall2",
+      "to": "object:ROCKET_HIDEOUT_B3F_OBJ_4",
+      "kind": "hides"
     },
     {
       "from": "script:RocketHideoutB3F:talkRocket1",
@@ -7776,8 +7951,13 @@
       "kind": "triggered_at"
     },
     {
+      "from": "script:RocketHideoutB4F:talkPokeBall",
+      "to": "object:ROCKET_HIDEOUT_B4F_OBJ_5",
+      "kind": "hides"
+    },
+    {
       "from": "script:RocketHideoutB4F:talkPokeBall1",
-      "to": "item:TM_02",
+      "to": "item:TM02",
       "kind": "gives",
       "detail": "x1"
     },
@@ -7785,6 +7965,11 @@
       "from": "script:RocketHideoutB4F:talkPokeBall1",
       "to": "map:RocketHideoutB4F",
       "kind": "triggered_at"
+    },
+    {
+      "from": "script:RocketHideoutB4F:talkPokeBall1",
+      "to": "object:ROCKET_HIDEOUT_B4F_OBJ_6",
+      "kind": "hides"
     },
     {
       "from": "script:RocketHideoutB4F:talkPokeBall2",
@@ -7798,6 +7983,11 @@
       "kind": "triggered_at"
     },
     {
+      "from": "script:RocketHideoutB4F:talkPokeBall2",
+      "to": "object:ROCKET_HIDEOUT_B4F_OBJ_7",
+      "kind": "hides"
+    },
+    {
       "from": "script:RocketHideoutB4F:talkPokeBall3",
       "to": "item:SILPH_SCOPE",
       "kind": "gives",
@@ -7809,6 +7999,11 @@
       "kind": "triggered_at"
     },
     {
+      "from": "script:RocketHideoutB4F:talkPokeBall3",
+      "to": "object:ROCKET_HIDEOUT_B4F_OBJ_8",
+      "kind": "hides"
+    },
+    {
       "from": "script:RocketHideoutB4F:talkPokeBall4",
       "to": "item:LIFT_KEY",
       "kind": "gives",
@@ -7818,6 +8013,11 @@
       "from": "script:RocketHideoutB4F:talkPokeBall4",
       "to": "map:RocketHideoutB4F",
       "kind": "triggered_at"
+    },
+    {
+      "from": "script:RocketHideoutB4F:talkPokeBall4",
+      "to": "object:ROCKET_HIDEOUT_B4F_OBJ_9",
+      "kind": "hides"
     },
     {
       "from": "script:RocketHideoutB4F:talkRocket",
@@ -8127,6 +8327,11 @@
     },
     {
       "from": "script:Route11Gate2F:talkYoungster",
+      "to": "flag:NPC_TRADE_CANCELLED",
+      "kind": "requires"
+    },
+    {
+      "from": "script:Route11Gate2F:talkYoungster",
       "to": "map:Route11Gate2F",
       "kind": "triggered_at"
     },
@@ -8274,6 +8479,11 @@
     },
     {
       "from": "script:Route12:talkSnorlax",
+      "to": "flag:EVENT_FIGHT_ROUTE12_SNORLAX",
+      "kind": "clears"
+    },
+    {
+      "from": "script:Route12:talkSnorlax",
       "to": "item:POKE_FLUTE",
       "kind": "requires"
     },
@@ -8341,8 +8551,13 @@
     },
     {
       "from": "script:Route12SuperRodHouse:talkFishingGuru",
-      "to": "item:SUPER_ROD",
+      "to": "flag:EVENT_GOT_SUPER_ROD",
       "kind": "requires"
+    },
+    {
+      "from": "script:Route12SuperRodHouse:talkFishingGuru",
+      "to": "flag:EVENT_GOT_SUPER_ROD",
+      "kind": "sets"
     },
     {
       "from": "script:Route12SuperRodHouse:talkFishingGuru",
@@ -8826,6 +9041,11 @@
       "from": "script:Route16:talkSnorlax",
       "to": "flag:EVENT_FIGHT_ROUTE16_SNORLAX",
       "kind": "sets"
+    },
+    {
+      "from": "script:Route16:talkSnorlax",
+      "to": "flag:EVENT_FIGHT_ROUTE16_SNORLAX",
+      "kind": "clears"
     },
     {
       "from": "script:Route16:talkSnorlax",
@@ -9942,7 +10162,7 @@
     },
     {
       "from": "script:Route24:itemTmThunderWave",
-      "to": "item:TM_45",
+      "to": "item:TM45",
       "kind": "gives",
       "detail": "x1"
     },
@@ -10074,7 +10294,7 @@
     },
     {
       "from": "script:Route25:itemTmSeismicToss",
-      "to": "item:TM39",
+      "to": "item:TM19",
       "kind": "gives",
       "detail": "x1"
     },
@@ -11146,7 +11366,7 @@
     },
     {
       "from": "script:SSAnne1FRooms:talkPokeBall",
-      "to": "item:TM_08",
+      "to": "item:TM08",
       "kind": "gives",
       "detail": "x1"
     },
@@ -11154,6 +11374,11 @@
       "from": "script:SSAnne1FRooms:talkPokeBall",
       "to": "map:SSAnne1FRooms",
       "kind": "triggered_at"
+    },
+    {
+      "from": "script:SSAnne1FRooms:talkPokeBall",
+      "to": "object:SS_ANNE_1F_ROOMS_OBJ_10",
+      "kind": "hides"
     },
     {
       "from": "script:SSAnne1FRooms:talkWigglytuff",
@@ -11384,6 +11609,11 @@
       "kind": "triggered_at"
     },
     {
+      "from": "script:SSAnneB1FRooms:talkPokeBallEther",
+      "to": "object:SS_ANNE_B1F_ROOMS_OBJ_9",
+      "kind": "hides"
+    },
+    {
       "from": "script:SSAnneB1FRooms:talkPokeBallMaxPotion",
       "to": "flag:EVENT_GOT_MAX_POTION_SS_ANNE_B1F_ROOMS",
       "kind": "requires"
@@ -11405,6 +11635,11 @@
       "kind": "triggered_at"
     },
     {
+      "from": "script:SSAnneB1FRooms:talkPokeBallMaxPotion",
+      "to": "object:SS_ANNE_B1F_ROOMS_OBJ_11",
+      "kind": "hides"
+    },
+    {
       "from": "script:SSAnneB1FRooms:talkPokeBallTmRest",
       "to": "flag:EVENT_GOT_TM44_SS_ANNE_B1F_ROOMS",
       "kind": "requires"
@@ -11416,7 +11651,7 @@
     },
     {
       "from": "script:SSAnneB1FRooms:talkPokeBallTmRest",
-      "to": "item:TM_44",
+      "to": "item:TM44",
       "kind": "gives",
       "detail": "x1"
     },
@@ -11424,6 +11659,11 @@
       "from": "script:SSAnneB1FRooms:talkPokeBallTmRest",
       "to": "map:SSAnneB1FRooms",
       "kind": "triggered_at"
+    },
+    {
+      "from": "script:SSAnneB1FRooms:talkPokeBallTmRest",
+      "to": "object:SS_ANNE_B1F_ROOMS_OBJ_10",
+      "kind": "hides"
     },
     {
       "from": "script:SSAnneB1FRooms:talkSailor1",
@@ -11603,6 +11843,11 @@
       "kind": "triggered_at"
     },
     {
+      "from": "script:SafariZoneCenter:talkPokeBall",
+      "to": "object:SAFARI_ZONE_CENTER_OBJ_1",
+      "kind": "hides"
+    },
+    {
       "from": "script:SafariZoneCenter:trainerTipsSign",
       "to": "map:SafariZoneCenter",
       "kind": "triggered_at"
@@ -11644,6 +11889,11 @@
       "kind": "triggered_at"
     },
     {
+      "from": "script:SafariZoneEast:talkPokeBall",
+      "to": "object:SAFARI_ZONE_EAST_OBJ_1",
+      "kind": "hides"
+    },
+    {
       "from": "script:SafariZoneEast:talkPokeBall1",
       "to": "item:MAX_POTION",
       "kind": "gives",
@@ -11653,6 +11903,11 @@
       "from": "script:SafariZoneEast:talkPokeBall1",
       "to": "map:SafariZoneEast",
       "kind": "triggered_at"
+    },
+    {
+      "from": "script:SafariZoneEast:talkPokeBall1",
+      "to": "object:SAFARI_ZONE_EAST_OBJ_2",
+      "kind": "hides"
     },
     {
       "from": "script:SafariZoneEast:talkPokeBall2",
@@ -11666,8 +11921,13 @@
       "kind": "triggered_at"
     },
     {
+      "from": "script:SafariZoneEast:talkPokeBall2",
+      "to": "object:SAFARI_ZONE_EAST_OBJ_3",
+      "kind": "hides"
+    },
+    {
       "from": "script:SafariZoneEast:talkPokeBall3",
-      "to": "item:TM39",
+      "to": "item:TM37",
       "kind": "gives",
       "detail": "x1"
     },
@@ -11675,6 +11935,11 @@
       "from": "script:SafariZoneEast:talkPokeBall3",
       "to": "map:SafariZoneEast",
       "kind": "triggered_at"
+    },
+    {
+      "from": "script:SafariZoneEast:talkPokeBall3",
+      "to": "object:SAFARI_ZONE_EAST_OBJ_4",
+      "kind": "hides"
     },
     {
       "from": "script:SafariZoneEastRestHouse:pcSign1",
@@ -11915,11 +12180,6 @@
     {
       "from": "script:SafariZoneSecretHouse:talkFishingGuru",
       "to": "item:HM03",
-      "kind": "requires"
-    },
-    {
-      "from": "script:SafariZoneSecretHouse:talkFishingGuru",
-      "to": "item:HM03",
       "kind": "gives",
       "detail": "x1"
     },
@@ -11960,8 +12220,13 @@
       "kind": "triggered_at"
     },
     {
+      "from": "script:SafariZoneWest:talkPokeBall",
+      "to": "object:SAFARI_ZONE_WEST_OBJ_1",
+      "kind": "hides"
+    },
+    {
       "from": "script:SafariZoneWest:talkPokeBall1",
-      "to": "item:TM49",
+      "to": "item:TM32",
       "kind": "gives",
       "detail": "x1"
     },
@@ -11969,6 +12234,11 @@
       "from": "script:SafariZoneWest:talkPokeBall1",
       "to": "map:SafariZoneWest",
       "kind": "triggered_at"
+    },
+    {
+      "from": "script:SafariZoneWest:talkPokeBall1",
+      "to": "object:SAFARI_ZONE_WEST_OBJ_2",
+      "kind": "hides"
     },
     {
       "from": "script:SafariZoneWest:talkPokeBall2",
@@ -11982,6 +12252,11 @@
       "kind": "triggered_at"
     },
     {
+      "from": "script:SafariZoneWest:talkPokeBall2",
+      "to": "object:SAFARI_ZONE_WEST_OBJ_3",
+      "kind": "hides"
+    },
+    {
       "from": "script:SafariZoneWest:talkPokeBall3",
       "to": "item:GOLD_TEETH",
       "kind": "gives",
@@ -11991,6 +12266,11 @@
       "from": "script:SafariZoneWest:talkPokeBall3",
       "to": "map:SafariZoneWest",
       "kind": "triggered_at"
+    },
+    {
+      "from": "script:SafariZoneWest:talkPokeBall3",
+      "to": "object:SAFARI_ZONE_WEST_OBJ_4",
+      "kind": "hides"
     },
     {
       "from": "script:SafariZoneWestRestHouse:pcSign1",
@@ -14723,6 +15003,11 @@
     },
     {
       "from": "script:UndergroundPathRoute5:talkLittleGirl",
+      "to": "flag:NPC_TRADE_CANCELLED",
+      "kind": "requires"
+    },
+    {
+      "from": "script:UndergroundPathRoute5:talkLittleGirl",
       "to": "map:UndergroundPathRoute5",
       "kind": "triggered_at"
     },
@@ -14969,11 +15254,6 @@
     {
       "from": "script:VermilionDock:@load",
       "to": "flag:EVENT_GOT_HM01",
-      "kind": "requires"
-    },
-    {
-      "from": "script:VermilionDock:@load",
-      "to": "flag:EVENT_LEFT_SS_ANNE_VIA_GANGPLANK",
       "kind": "requires"
     },
     {
@@ -15349,6 +15629,11 @@
       "from": "script:VictoryRoad2F:@load",
       "to": "flag:EVENT_BEAT_MOLTRES",
       "kind": "requires"
+    },
+    {
+      "from": "script:VictoryRoad2F:@load",
+      "to": "flag:EVENT_VICTORY_ROAD_1_BOULDER_ON_SWITCH",
+      "kind": "clears"
     },
     {
       "from": "script:VictoryRoad2F:@load",
@@ -15976,6 +16261,22 @@
       "from": "script:ViridianForestSouthGate:talkLittleGirl",
       "to": "map:ViridianForestSouthGate",
       "kind": "triggered_at"
+    },
+    {
+      "from": "script:ViridianGym:groundItem11",
+      "to": "item:REVIVE",
+      "kind": "gives",
+      "detail": "x1"
+    },
+    {
+      "from": "script:ViridianGym:groundItem11",
+      "to": "map:ViridianGym",
+      "kind": "triggered_at"
+    },
+    {
+      "from": "script:ViridianGym:groundItem11",
+      "to": "object:VIRIDIAN_GYM_OBJ_11",
+      "kind": "hides"
     },
     {
       "from": "script:ViridianGym:gymStatue1",

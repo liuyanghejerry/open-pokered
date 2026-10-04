@@ -28,6 +28,9 @@ game_scene CinnabarLabFossilRoom {
         // confirm, hand it over. Original Lab4Script_GetFossilsInBag filters the
         // bag to DOME/HELIX/OLD_AMBER; filterBag reproduces the dynamic menu.
         fossil = filterBag(["DOME_FOSSIL", "HELIX_FOSSIL", "OLD_AMBER"])
+        @if (fossil == "") {
+          @speaker("") { @t("Aiyah! You come\nagain!", "哎呀！下次再来吧！") }
+        }
         @if (fossil == "DOME_FOSSIL") {
           @speaker("") {
             @t("Oh! That is DOME FOSSIL!\n\nIt is fossil of KABUTO, a\nPOKeMON that is already\nextinct!\n\nMy Resurrection Machine will\nmake that POKeMON live\nagain!", "哦！这是甲壳化石！\n\n这是化石盔的化石，是已经灭绝\n的宝可梦！\n\n我的复活机器会让这只宝可梦复\n活！")
@@ -42,7 +45,7 @@ game_scene CinnabarLabFossilRoom {
               setFlag("EVENT_LAB_STILL_REVIVING_FOSSIL")
             }
             @option(@t("NO", "否")) {
-              @speaker("") { @t("Aiyah! You come again!", "哎呀！下次再来吧！") }
+              @speaker("") { @t("Aiyah! You come\nagain!", "哎呀！下次再来吧！") }
             }
           }
         }
@@ -60,7 +63,7 @@ game_scene CinnabarLabFossilRoom {
               setFlag("EVENT_LAB_STILL_REVIVING_FOSSIL")
             }
             @option(@t("NO", "否")) {
-              @speaker("") { @t("Aiyah! You come again!", "哎呀！下次再来吧！") }
+              @speaker("") { @t("Aiyah! You come\nagain!", "哎呀！下次再来吧！") }
             }
           }
         }
@@ -78,7 +81,7 @@ game_scene CinnabarLabFossilRoom {
               setFlag("EVENT_LAB_STILL_REVIVING_FOSSIL")
             }
             @option(@t("NO", "否")) {
-              @speaker("") { @t("Aiyah! You come again!", "哎呀！下次再来吧！") }
+              @speaker("") { @t("Aiyah! You come\nagain!", "哎呀！下次再来吧！") }
             }
           }
         }
@@ -100,27 +103,48 @@ game_scene CinnabarLabFossilRoom {
           @speaker("") {
             @t("Where were you?\n\nYour fossil is back to life!\n\nIt was KABUTO like I think!", "你去哪了？\n\n你的化石复活了！\n\n果然是化石盔，和我想的一样！")
           }
-          givePokemon("KABUTO", 30)
+          given = givePokemon("KABUTO", 30)
+          @if (given) {
+            // Revive consumed: reset so another fossil can be brought later.
+            resetFlag("EVENT_GAVE_FOSSIL_TO_LAB")
+            resetFlag("EVENT_LAB_STILL_REVIVING_FOSSIL")
+            resetFlag("EVENT_LAB_HANDING_OVER_FOSSIL_MON")
+            resetFlag("EVENT_REVIVING_KABUTO")
+            resetFlag("EVENT_REVIVING_OMANYTE")
+            resetFlag("EVENT_REVIVING_AERODACTYL")
+          }
         }
         @if (getFlag("EVENT_REVIVING_OMANYTE")) {
           @speaker("") {
             @t("Where were you?\n\nYour fossil is back to life!\n\nIt was OMANYTE like I think!", "你去哪了？\n\n你的化石复活了！\n\n果然是菊石兽，和我想的一样！")
           }
-          givePokemon("OMANYTE", 30)
+          given = givePokemon("OMANYTE", 30)
+          @if (given) {
+            // Revive consumed: reset so another fossil can be brought later.
+            resetFlag("EVENT_GAVE_FOSSIL_TO_LAB")
+            resetFlag("EVENT_LAB_STILL_REVIVING_FOSSIL")
+            resetFlag("EVENT_LAB_HANDING_OVER_FOSSIL_MON")
+            resetFlag("EVENT_REVIVING_KABUTO")
+            resetFlag("EVENT_REVIVING_OMANYTE")
+            resetFlag("EVENT_REVIVING_AERODACTYL")
+          }
         }
         @if (getFlag("EVENT_REVIVING_AERODACTYL")) {
           @speaker("") {
             @t("Where were you?\n\nYour fossil is back to life!\n\nIt was AERODACTYL like I\nthink!", "你去哪了？\n\n你的化石复活了！\n\n果然是化石翼龙，和我想的一\n样！")
           }
-          givePokemon("AERODACTYL", 30)
+          given = givePokemon("AERODACTYL", 30)
+          @if (given) {
+            // Revive consumed: reset so another fossil can be brought later.
+            resetFlag("EVENT_GAVE_FOSSIL_TO_LAB")
+            resetFlag("EVENT_LAB_STILL_REVIVING_FOSSIL")
+            resetFlag("EVENT_LAB_HANDING_OVER_FOSSIL_MON")
+            resetFlag("EVENT_REVIVING_KABUTO")
+            resetFlag("EVENT_REVIVING_OMANYTE")
+            resetFlag("EVENT_REVIVING_AERODACTYL")
+          }
         }
-        // Revive consumed: reset so another fossil can be brought later.
-        resetFlag("EVENT_GAVE_FOSSIL_TO_LAB")
-        resetFlag("EVENT_LAB_STILL_REVIVING_FOSSIL")
-        resetFlag("EVENT_LAB_HANDING_OVER_FOSSIL_MON")
-        resetFlag("EVENT_REVIVING_KABUTO")
-        resetFlag("EVENT_REVIVING_OMANYTE")
-        resetFlag("EVENT_REVIVING_AERODACTYL")
+
       }
     }
   }
@@ -145,7 +169,11 @@ game_scene CinnabarLabFossilRoom {
             @speaker("") { @t("Hey thanks!", "嘿，谢谢！") }
             @speaker("") { @t("<PLAYER> traded PONYTA for\nSEEL!", "<PLAYER>用小火马换来了小海\n狮！") }
           } @else {
-            @speaker("") { @t("What? That's not PONYTA!\n\nIf you get one, come back\nhere!", "什么？那不是小火马！\n\n如果你弄到了，再来找我吧！") }
+            @if (getFlag("NPC_TRADE_CANCELLED")) {
+              @speaker("") { @t("Awww! Oh well...", "哎呀！那就算了……") }
+            } @else {
+              @speaker("") { @t("What? That's not PONYTA!\n\nIf you get one, come back\nhere!", "什么？那不是小火马！\n\n如果你弄到了，再来找我吧！") }
+            }
           }
         }
         @option(@t("NO", "否")) {

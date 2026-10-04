@@ -2101,7 +2101,7 @@ fn draw_overworld_impl(
             } else {
                 format!("{}\n{}", d1, d2)
             };
-            let show_arrow = dlg.waiting_for_input() && (screen.frame_counter / 16) % 2 == 0;
+            let show_arrow = screen.dialogue_needs_button() && dlg.waiting_for_input() && (screen.frame_counter / 16) % 2 == 0;
             let mut painter = FrameBufferPainter::new(fb);
             let mut ui = Ui::new(&mut painter);
             menus::dialog::draw_paginated(

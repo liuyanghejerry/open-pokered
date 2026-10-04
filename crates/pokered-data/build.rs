@@ -1867,6 +1867,87 @@ fn write_route22_native_branches(
     );
 }
 
+/// The fossil doctor's entire interaction contains all three deposit menus
+/// and all three revived gifts. Decode only the entry and the continuation
+/// selected by the *returned* filtered-bag result, never by bag membership.
+fn write_fossil_lab_native_branches(
+    functions: &mut Vec<(String, String, PathBuf)>,
+    out_dir: &Path,
+    statements: &[dotzuki_engine_dsl::ast::StoryStmt],
+) {
+    use dotzuki_engine_dsl::ast::{BinOp, Expression, StoryStmt};
+    assert_eq!(statements.len(), 1, "fossil doctor outer body changed");
+    let StoryStmt::If { then_branch: entry, else_branch: given, .. } = &statements[0] else {
+        panic!("fossil doctor missing GAVE guard");
+    };
+    assert_eq!(entry.len(), 2, "fossil doctor entry changed");
+    let StoryStmt::If { then_branch: menu, .. } = &entry[1] else {
+        panic!("fossil doctor missing bag guard");
+    };
+    assert_eq!(menu.len(), 5, "fossil doctor selection branches changed");
+    assert!(matches!(&menu[0], StoryStmt::Assign {
+        name, value: Expression::Call { callee, .. }, ..
+    } if name == "fossil" && callee == "filterBag"), "fossil doctor missing real bag selection");
+    let mut small_entry = entry.clone();
+    if let StoryStmt::If { then_branch, .. } = &mut small_entry[1] {
+        // Suspend immediately after the actual menu command. The native
+        // bridge releases this frame and resumes the selected leaf later.
+        then_branch.truncate(1);
+    }
+    let mut emit = |suffix: &str, body: &[StoryStmt]| {
+        let name = format!("__native_talkScientist1_{suffix}");
+        write_scene_function(functions, out_dir, "CinnabarLabFossilRoom", &name, &name, body);
+    };
+    emit("entry", &small_entry);
+    let StoryStmt::If {
+        condition: Expression::BinaryOp { op: BinOp::Eq, left, right },
+        then_branch: canceled, else_branch, ..
+    } = &menu[1] else { panic!("fossil doctor missing cancellation text"); };
+    assert!(matches!(left.as_ref(), Expression::Variable(name) if name == "fossil"));
+    assert!(matches!(right.as_ref(), Expression::StringLit(value) if value.is_empty()));
+    assert!(else_branch.is_empty());
+    emit("cancel", canceled);
+    // Unknown/non-text debug responses match none of the source guards.
+    emit("noop", &[]);
+    for ((suffix, item), statement) in [
+        ("fossil_dome", "DOME_FOSSIL"),
+        ("fossil_helix", "HELIX_FOSSIL"),
+        ("fossil_amber", "OLD_AMBER"),
+    ].into_iter().zip(&menu[2..]) {
+        let StoryStmt::If {
+            condition: Expression::BinaryOp { op: BinOp::Eq, left, right },
+            then_branch, else_branch, ..
+        } = statement else { panic!("fossil doctor selection guard changed"); };
+        assert!(matches!(left.as_ref(), Expression::Variable(name) if name == "fossil"));
+        assert!(matches!(right.as_ref(), Expression::StringLit(value) if value == item));
+        assert!(else_branch.is_empty());
+        emit(suffix, then_branch);
+    }
+    assert_eq!(given.len(), 1, "fossil doctor given body changed");
+    let StoryStmt::If { then_branch: still, else_branch: ready, .. } = &given[0] else {
+        panic!("fossil doctor missing STILL guard");
+    };
+    emit("still", still);
+    assert_eq!(ready.len(), 4, "fossil doctor ready branches changed");
+    emit("ready_none", &ready[..1]);
+    for ((suffix, flag), statement) in [
+        ("ready_kabuto", "EVENT_REVIVING_KABUTO"),
+        ("ready_omanyte", "EVENT_REVIVING_OMANYTE"),
+        ("ready_aerodactyl", "EVENT_REVIVING_AERODACTYL"),
+    ].into_iter().zip(&ready[1..]) {
+        let StoryStmt::If {
+            condition: Expression::Call { callee, args },
+            then_branch, else_branch, ..
+        } = statement else { panic!("fossil doctor ready guard changed"); };
+        assert_eq!(callee, "getFlag");
+        assert!(matches!(args.as_slice(), [Expression::StringLit(value)] if value == flag));
+        assert!(else_branch.is_empty());
+        let mut body = ready[..1].to_vec();
+        body.extend_from_slice(then_branch);
+        emit(suffix, &body);
+    }
+}
+
 fn find_speaker_containing(
     statements: &[dotzuki_engine_dsl::ast::StoryStmt],
     needle: &str,
@@ -1942,21 +2023,43 @@ fn write_oaks_lab_native_branches(
         }) => (then_branch, else_branch),
         _ => panic!("talkOak1 missing rating branch"),
     };
-    for (name, body) in [("parcel", parcel), ("dex_other", other)] {
-        let mut body = body.clone();
-        if name == "dex_other" {
-            body.extend_from_slice(&dex[1..]);
+    // The parcel cutscene moves only the rival; the player's row remains
+    // fixed while input is locked. Specialize its arrival/departure paths so
+    // the GBA never expands all three rows' nested AST branches at once.
+    fn select_parcel_row(statements: &[StoryStmt], row: u8) -> Vec<StoryStmt> {
+        use dotzuki_engine_dsl::ast::{BinOp, Expression};
+        let mut selected = Vec::new();
+        for statement in statements {
+            match statement {
+                StoryStmt::If {
+                    condition: Expression::BinaryOp { op: BinOp::Eq, left, right },
+                    then_branch, else_branch, ..
+                } if matches!(left.as_ref(), Expression::Call { callee, args }
+                    if callee == "getPlayerY" && args.is_empty()) => {
+                    let Expression::NumberLit(expected) = right.as_ref() else {
+                        panic!("nonconstant Oak parcel row")
+                    };
+                    assert!(*expected == 1.0 || *expected == 3.0,
+                        "Oak parcel rows changed; update the native selector");
+                    selected.extend(select_parcel_row(
+                        if row as f64 == *expected { then_branch } else { else_branch }, row));
+                }
+                _ => selected.push(statement.clone()),
+            }
         }
-        body.extend_from_slice(&statements[1..]);
-        write_scene_function(
-            functions,
-            out_dir,
-            "OaksLab",
-            &format!("__native_talkOak1_{name}"),
-            &format!("OaksLab_talkOak1_{name}"),
-            &body,
-        );
+        selected
     }
+    for (name, row) in [("parcel", 2), ("parcel_y1", 1), ("parcel_y3", 3)] {
+        let mut body = select_parcel_row(parcel, row);
+        body.extend_from_slice(&statements[1..]);
+        write_scene_function(functions, out_dir, "OaksLab",
+            &format!("__native_talkOak1_{name}"), &format!("OaksLab_talkOak1_{name}"), &body);
+    }
+    let mut body = other.clone();
+    body.extend_from_slice(&dex[1..]);
+    body.extend_from_slice(&statements[1..]);
+    write_scene_function(functions, out_dir, "OaksLab", "__native_talkOak1_dex_other",
+        "OaksLab_talkOak1_dex_other", &body);
     // Specialize only the pure owned-count comparisons. Walk the entire
     // compiled tail: the compiler may emit more than one top-level If.
     // All commands, text and trailing statements stay in their exact order.
@@ -2171,6 +2274,11 @@ fn generate_scene_scripts(manifest_dir: &Path, out_dir: &str) {
                 }
                 if map_name == "Route22" && storyline.name == "coordRivalBattle" {
                     write_route22_native_branches(
+                        &mut functions, &function_out_dir, &storyline.statements,
+                    );
+                }
+                if map_name == "CinnabarLabFossilRoom" && storyline.name == "talkScientist1" {
+                    write_fossil_lab_native_branches(
                         &mut functions, &function_out_dir, &storyline.statements,
                     );
                 }

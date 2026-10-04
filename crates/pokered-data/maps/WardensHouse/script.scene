@@ -23,18 +23,26 @@ game_scene WardensHouse {
         @speaker("") {
           @t("WARDEN: Thanks, kid! No one\ncould understand a word that\nI said.\n\nI couldn't work that way.\nLet me give you something\nfor your trouble.", "园长：谢谢，孩子！没人能听懂\n我说的话。\n\n那样我无法工作。让我给你一点\n东西作为答谢。")
         }
-        giveItem("HM04", 1)
-        setFlag("EVENT_GOT_HM04")
-        @speaker("") { @t("<PLAYER> received HM04!", "<PLAYER>得到了 HM04！") }
+        given = giveItem("HM04", 1)
+        @if (given) {
+          setFlag("EVENT_GOT_HM04")
+          @speaker("") { @t("<PLAYER> received HM04!", "<PLAYER>得到了 HM04！") }
+        } @else {
+          @speaker("") { @t("Your pack is stuffed full!", "你的背包塞满了！") }
+        }
       } @else {
         @if (getFlag("EVENT_GAVE_GOLD_TEETH")) {
           // Already gave the teeth (e.g. bag was full last time) — give HM04 now.
           @speaker("") {
             @t("WARDEN: Thanks, kid! No one\ncould understand a word that\nI said.\n\nI couldn't work that way.\nLet me give you something\nfor your trouble.", "园长：谢谢，孩子！没人能听懂\n我说的话。\n\n那样我无法工作。让我给你一点\n东西作为答谢。")
           }
-          giveItem("HM04", 1)
-          setFlag("EVENT_GOT_HM04")
-          @speaker("") { @t("<PLAYER> received HM04!", "<PLAYER>得到了 HM04！") }
+          given = giveItem("HM04", 1)
+          @if (given) {
+            setFlag("EVENT_GOT_HM04")
+            @speaker("") { @t("<PLAYER> received HM04!", "<PLAYER>得到了 HM04！") }
+          } @else {
+            @speaker("") { @t("Your pack is stuffed full!", "你的背包塞满了！") }
+          }
         } @else {
           // No teeth: the WARDEN can only mumble.
           @speaker("") {
@@ -56,13 +64,15 @@ game_scene WardensHouse {
   // ── PokeBall (npc 2) — RARE_CANDY ground item ───────────────────────────
   @storyline("talkPokeBall") {
     @trigger(map = "WardensHouse", npc = 2, toggle = "WARDENS_HOUSE_OBJ_2")
-    @if (getFlag("EVENT_GOT_RARE_CANDY_WARDENS_HOUSE")) {
-      @speaker("") { @t("The item ball is empty.", "这个道具球是空的。") }
-    } @else {
-      giveItem("RARE_CANDY", 1)
-      setFlag("EVENT_GOT_RARE_CANDY_WARDENS_HOUSE")
-      hideObjectByName("WARDENS_HOUSE_OBJ_2")
-      @speaker("") { @t("<PLAYER> found RARE_CANDY!", "<PLAYER>找到了神奇糖果！") }
+    @if (!getFlag("EVENT_GOT_RARE_CANDY_WARDENS_HOUSE")) {
+      given = giveItem("RARE_CANDY", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_RARE_CANDY_WARDENS_HOUSE")
+        hideObjectByName("WARDENS_HOUSE_OBJ_2")
+        showItemDialogue(t("<PLAYER> found RARE_CANDY!", "<PLAYER>找到了神奇糖果！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 

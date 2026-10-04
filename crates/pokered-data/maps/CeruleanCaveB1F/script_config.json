@@ -4,7 +4,8 @@
   "npcs": [
     {
       "id": 1,
-      "talk": "talkMewtwo"
+      "talk": "talkMewtwo",
+      "toggleId": "CERULEANCAVEB1F_MEWTWO"
     },
     {
       "id": 2,
@@ -17,5 +18,6 @@
       "toggleId": "CERULEAN_CAVE_B1F_OBJ_3"
     }
   ],
-  "signs": []
+  "signs": [],
+  "onLoad": "CeruleanCaveB1FOnLoad"
 }
