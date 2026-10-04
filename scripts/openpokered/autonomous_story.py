@@ -32,6 +32,7 @@ from .boulder_skills import BOULDER_TARGETS, boulder_sources, plan_pushes
 from .collection_planner import (acquisition_contract, acquisition_graph, complete_acquisition_graph,
                                  fishing_profile, infer_solo_choices, solo_plan,
                                  table_profile, ENCOUNTER_SLOT_WEIGHTS)
+from .collection_verification import valid_safari_snapshot
 
 # The level bias asks for more training than the pending fight strictly needs.
 LEVEL_PREFERENCE_MARGIN = 2
@@ -338,6 +339,29 @@ def safari_capture_reference(table, owned_species=(), balls=30):
             'new_registration_per_eligible_step_pct_range': outward([p * 100 for p in bounds]),
             'expected_eligible_steps_to_registration_range': (
                 outward([1 / bounds[1], 1 / bounds[0]], 1) if bounds[0] > 0 else [None, None])}
+
+
+def safari_session_reference(facts):
+    """Normal session observation, separate from a hypothetical new admission."""
+    observed = facts.get('safari_game')
+    observed = deepcopy(observed) if valid_safari_snapshot(observed) else None
+    frame = facts.get('safari_observation_frame')
+    return {'observed_session': observed,
+            'native_observation_frame': frame if type(frame) is int and frame >= 0 else None,
+            'fresh_admission_reference': {'fee': 500, 'balls': 30, 'steps': 500,
+                'source': 'SafariZoneGate/script.scene and native Safari allowance constants'},
+            'bag_balls_usable_in_safari': False,
+            'party_status_moves_usable_in_safari': False,
+            'early_exit_forfeits_remaining_allowance': True,
+            'scope': 'Normal observed dedicated counters, not bag inventory or inferred from map/flags. '
+                'Null observation is unknown, not an inactive or full session. Remaining balls/steps '
+                'are shared by this whole visit and may be spent on the proposed route. A fresh paid '
+                'admission supplies a new allowance; this reference is not proof of payment, current '
+                'access or affordability. Confirming early exit returns remaining Safari Balls; '
+                're-entry requires another admission. Buying ordinary balls or retrieving a status '
+                'support does not replenish or improve a Safari encounter. Compare continuing, '
+                'other zones, leaving and preparation; no choice is prescribed and prior fees '
+                'are sunk costs, not a reason to spend more.'}
 
 
 def capture_preparation(party, bag, observation=None):
@@ -1044,6 +1068,9 @@ class AutonomousStoryAgent(DualStoryAgent):
         facts = super().facts()
         live = self.game.st()  # Refresh live geometry after field moves / map reloads.
         party_state = self.client.state()
+        facts['safari_game'] = (deepcopy(party_state['safari_game'])
+                                if valid_safari_snapshot(party_state.get('safari_game')) else None)
+        facts['safari_observation_frame'] = party_state.get('frame_count')
         # Same native 0=Red / 1=Blue value used by scene queries. Older
         # binaries or invalid observations remain unknown, never default Red.
         facts['game_version'] = evaluate({'Call': {'callee': 'getGameVersion', 'args': []}}, party_state)
@@ -1303,6 +1330,7 @@ class AutonomousStoryAgent(DualStoryAgent):
             }
         if self.collects_dex:
             state['dex_progress'] = self.dex_progress(facts)
+            state['safari_session_reference'] = safari_session_reference(facts)
             resource_guards = self.script_resource_guard_reference(facts)
             if resource_guards:
                 state['script_resource_guard_reference'] = resource_guards
@@ -1425,6 +1453,19 @@ class AutonomousStoryAgent(DualStoryAgent):
         return {'map': name, 'hops': hops, 'stock': stock}
 
     def choose(self, layer, state, candidates, instruction, *, allow_abstain=True):
+        if layer == 'action' and getattr(self, 'collects_dex', False):
+            local = state.get('local_state')
+            if isinstance(local, dict):
+                state = {**state, 'safari_session_reference': safari_session_reference(local)}
+            elif 'safari_game' in state:
+                state = {**state, 'safari_session_reference': safari_session_reference(state)}
+        if 'safari_session_reference' in state:
+            instruction += (' Compare the observed Safari session allowance with the selected '
+                'journey and available alternatives. Ordinary bag balls and party status moves '
+                'cannot be used in Safari battles. Ending a paid session forfeits its remaining '
+                'allowance; a later admission has its own fee. Fresh-admission estimates are '
+                'not current counters or a guaranteed catch. This evidence does not require '
+                'continuing a hunt or refusing an exit needed by the selected subgoal.')
         if layer == 'action' and 'local_state' in state:
             continuation = self.completed_route_context(state['local_state'])
             if continuation and list(state.get('subgoal') or []) == list(continuation['goal']):
@@ -2768,7 +2809,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                                     'navigation': getattr(self, 'training_navigation', {}).get(name),
                                     'access_scope': 'Previously visited table; a current tile route must still be verified'})
                         context['training_effort_examples'] = sorted(examples,
-                            key=lambda example: example['estimated_victories_max'])[:3]
+                            key=lambda example: (example['estimated_victories_max'], example['map']))[:3]
                         context['alternative_sources'] = [
                             {'method': alternative['method'], 'map': alternative.get('map'),
                              'visited': alternative.get('map') in getattr(self, 'visited', ()),
@@ -3523,7 +3564,7 @@ class AutonomousStoryAgent(DualStoryAgent):
         return {'hunts': len(attempts),
                 'registered': sum(bool(attempt['registered']) for attempt in attempts)}
 
-    def method_value(self, method, name, owned, rod=None):
+    def method_value(self, method, name, owned, rod=None, *, facts=None):
         if method == 'fishing':
             value = fishing_profile(rod, name, owned)
         else:
@@ -3532,7 +3573,19 @@ class AutonomousStoryAgent(DualStoryAgent):
                      .get(table_name) or {})
             value = table_profile(table, owned)
             if method == 'safari':
-                value['safari_registration_reference'] = safari_capture_reference(table, owned)
+                session = safari_session_reference(facts or {})
+                current = session['observed_session']
+                active = current is not None and current['active'] is True
+                budget = current['balls_remaining'] if active else 30
+                value['safari_registration_reference'] = {
+                    **safari_capture_reference(table, owned, budget),
+                    'ball_budget_source': ('observed_current_shared_allowance' if active
+                                          else 'fresh_admission_reference_not_current_observation'),
+                    'native_observation_frame': session['native_observation_frame'],
+                    'budget_scope': 'Conditional per-encounter reference using the current shared '
+                        'allowance when active, otherwise a hypothetical new admission. Travel and '
+                        'earlier captures can spend this budget; neither session-wide success nor '
+                        'arrival with unchanged counters is guaranteed.'}
         if value:
             for target in value['targets']:
                 target.update(catch_difficulty(target['species']))
@@ -3645,7 +3698,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                 if held.get(rod.upper(), 0) and fishing_profile(rod, name) and fishing_spots(name):
                     methods.append(('fishing', rod, fishing_spots(name), rod))
             for method, rod, raw_spots, requirement in methods:
-                value = self.method_value(method, name, owned, rod)
+                value = self.method_value(method, name, owned, rod, facts=facts)
                 if not value or not value['unregistered_species_count'] or not raw_spots:
                     continue
                 species = [target['species'] for target in value['targets']]
@@ -4423,6 +4476,8 @@ class AutonomousStoryAgent(DualStoryAgent):
                                 'species_scarcity': {species: self.species_scarcity(species, name)
                                                      for species in area['species']},
                                 'collection_resources': resources,
+                                **({'safari_session_reference': safari_session_reference(facts)}
+                                   if method == 'safari' else {}),
                                 'already_registered_here': sorted(all_method_species & owned),
                                 'recent_attempts': self.recent_catch_attempts(key),
                                 'navigation': area['navigation'],

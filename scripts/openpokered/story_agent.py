@@ -344,6 +344,11 @@ class DualStoryAgent:
                     selected = self.choose('action', {
                         'subgoal': goal, 'dialogue': last_dialogue,
                         'current_map': state.get('map_name'), 'travel_in_progress': navigation,
+                        **({'safari_game': state.get('safari_game'),
+                            'safari_observation_frame': state.get('frame_count'),
+                            'money': state.get('money')}
+                           if getattr(self, 'collects_dex', False)
+                           and state.get('map_name', '').startswith('SafariZone') else {}),
                         'script': rule.description() if rule else None,
                         'menu': options}, candidates,
                         'Which menu option advances the current subgoal? Use the dialogue and '

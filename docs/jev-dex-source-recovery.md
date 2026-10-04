@@ -6099,3 +6099,59 @@ deadline／错误ack／拒绝chunk／观察漂移／非法按钮先整体验证�
 策略／动作仍使用完整事实和完整候选的真实双Jev；该机械修复尚需新
 干净冻结policy从原22恢复检查点做正式推进验证。当前安全仍58/124，
 最终124、穷尽producer／原版fidelity、完整MP4与收集大盘未完成。
+
+## 第23段骑行修复实跑闭合：安全60种与狩猎区决策证据（2026-10-04）
+
+从严格原22恢复58种继续的第23段，在固定2617d8bb策略和同一个8dae
+原生实例中，173.341秒／14645帧由正常战斗与升级进化登记Parasect，
+1002.865秒／44765帧正常Safari捕获Scyther，实跑达到60/124、seen97。
+Paras领队菜单关闭后仍保持真实Route17训练位置，源XP11657经过正常
+战斗增长，登记进化并非隔离回归计数。Scyther进入真实PC；原先58种
+CONTINUE初始快照不计为新登记。1187.845秒自然选择的FuchsiaPokecenter
+护士操作完成后，仅向原controller发一次协作SIGINT，正常原生save／
+shutdown闭合；无第二原native连接、强制疗伤、状态编辑或回退。
+
+新的严格schema4独立普通CONTINUE验证expected==restored，包含全部
+真实party XP／HP／四槽PP、44只PC、bag／flags／dex和Safari计数。
+安全存档在FuchsiaPokecenter3,3／Idle，frame49606、cash353、5枚徽章；
+消费和换队原样保留。原第23段MP4共3715180字节、206.716667秒、
+12403帧，完整解码通过。23段原0种NEW GAME证据链重新核对60唯一登记、
+168959普通输入回执、23唯一视频；恢复5／22保留原失败前缀计入一次。
+原4项null acquisition_method未追改为成功注释；producer与原版fidelity
+穷尽合法性仍是独立待办，不能由此回执检查替代。
+
+第23段暴露一个真实决策信息缺口：正常battle_resolved在44739帧已报告
+Safari active、28球、447剩余步，但随后的完整战略world和提前离场菜单
+没有这些字段。1059.454秒Jev选普通UltraBall补给；这能定位缺失证据，
+并不能证明每次离场错误、旧战斗计数在后续选择时未变，或修复后一定
+改选。新增正常get_state的Safari专用计数与观察帧，无map／flag推断、
+evaluation回退或额外原生读取。策略、局部动作和收集器的Safari选项
+收到明确session reference：本轮余量共享、普通背包球／队伍状态招式
+不能用于Safari、提前离场交还余量、再次入场单独收费；500／30／500
+的新入场参考与实际观察分开，缺失／非法观察保持unknown。
+实际Safari概率参考在active时使用已观察的球余量，0球不能默默重置30；
+inactive／unknown时30球明确只是新入场假设，不证明支付、路线可达、
+到达时余量或本轮保证成功。原有目标、YES／NO、abstention和执行由Jev
+保留，不固定继续狩猎／拒绝离场／卖物资金路线。
+
+另修正非野生升级进化training_effort_examples的并列顺序：仍按预计
+最多胜场排序并保留原3示例预算，以map名稳定打破并列，不当作最优
+路线政策。准确原22 held-Paras离线fixture的7个Python hash seed原来
+有7种顺序、5组地点；修复后同fixture重启一致。两个依次隔离普通
+CONTINUE的原23安全60种副本在627帧后只读规划，完整93候选、全部
+target／rule／objective和其余事实均守恒，只增加Safari证据与稳定
+并列示例；并列新例仍由实际party XP与已访问原生草表核验。
+无模型调用、CONTINUE后输入或隔离测试图鉴计数。新增18项测试；
+最终全Python1166项通过（23.075秒）。
+
+证据：`legal23-checkpoint-proof-20261004.json`、
+`legal23-independent-continue-20261004.json`、
+`legal60-closed23-lineage-file-and-input-integrity-20261004.json`、
+`legal23-safari-session-evidence-gap-20261004.json`、
+`training-example-ties-safe22-after-fix-20261004.json`、
+`legal60-safari-planning-comparison-20261004.json`、
+`safari-session-context-final-all-python-regression-20261004.log`。
+安全60证据已另存11302185字节压缩包，仅保存第23段既有startup前缀后的
+trace增量，并验证与旧archive字节拼接等于原trace hash；原视频、native、
+gfx和既冻结policy仅引用不复制。原内容无删除。下一段须从此最新安全
+60种新干净冻结策略续跑，不退回原58。最终124、完整整片与大盘仍未完成。
