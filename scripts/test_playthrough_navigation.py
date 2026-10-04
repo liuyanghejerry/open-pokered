@@ -11,6 +11,37 @@ from playthrough_late import damage_slot
 
 
 class NavigationRegression(unittest.TestCase):
+    def test_plain_driver_observes_cut_geometry_and_tree_regrowth(self):
+        name = 'VermilionCity'
+        original = nav.MAPS[name]['blocks']
+        cut = list(original)
+        tree = 9 * nav.MAPS[name]['width'] + 7
+        self.assertEqual(cut[tree], 0x35)
+        cut[tree] = 0x4C  # Original CutTreeBlockSwaps, not a collision bypass.
+        game = nav.Game.__new__(nav.Game)
+        game.smart_moves = False
+        state = dict(screen='overworld', map_name=name, map_blocks=cut)
+        game.d = SimpleNamespace(cmd=lambda **_: {'data': state})
+        try:
+            self.assertIsNone(nav.bfs(name, (15, 17), (12, 20), nav.warp_tiles(name)))
+            game.st()
+            self.assertIsNotNone(nav.bfs(name, (15, 17), (12, 20), nav.warp_tiles(name)))
+            # A normal map re-entry restores the tree in both game and planner.
+            state['map_blocks'] = original
+            game.st()
+            self.assertIsNone(nav.bfs(name, (15, 17), (12, 20), nav.warp_tiles(name)))
+        finally:
+            nav.MAPS[name]['blocks'] = original
+
+    def test_battle_placeholder_map_does_not_replace_overworld_geometry(self):
+        name = 'PalletTown'
+        original = nav.MAPS[name]['blocks']
+        game = nav.Game.__new__(nav.Game)
+        state = dict(screen='battle', map_name=name, map_blocks=[0x4C])
+        game.d = SimpleNamespace(cmd=lambda **_: {'data': state})
+        game.st()
+        self.assertIs(nav.MAPS[name]['blocks'], original)
+
     def test_grass_detour_returning_to_current_map_uses_stable_fallback(self):
         game = nav.Game.__new__(nav.Game)
         state = {'screen': 'overworld', 'map_name': 'Route16', 'player_x': 15, 'player_y': 13}
