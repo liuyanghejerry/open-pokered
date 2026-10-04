@@ -75,7 +75,14 @@ pub fn draw_trainer_card(
         draw_text(ui_label(label, is_zh), 16, y, fg, fb);
         draw_text(&value, x, y, fg, fb);
     }
-    draw_text(ui_label("BADGES", is_zh), 56, 72, fg, fb);
+    // Fusion Pixel extends below the original eight-pixel heading row.
+    // Clear its full ink area so the frame texture cannot show through.
+    let heading = ui_label("BADGES", is_zh);
+    let width = pokered_renderer::embedded_font::measure_text(heading);
+    for y in 72..82 {
+        for x in 56..56 + width { fb.set_pixel(x, y, Rgba::WHITE); }
+    }
+    draw_text(heading, 56, 72, fg, fb);
 
     // Badge rows: number tile beside the 2×2 face (unowned) or badge (owned)
     // graphic (GymLeaderFaceAndBadgeTileGraphics layout: face i at

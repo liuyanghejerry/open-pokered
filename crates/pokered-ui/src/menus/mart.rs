@@ -136,17 +136,9 @@ pub fn draw_buy_items_with_money<P: Painter>(
             if row >= list_rect.th.saturating_sub(2) {
                 break;
             }
-            if let Some(data) = get_item_data(*item_id) {
+            if get_item_data(*item_id).is_some() {
                 let name = render_data.item_name(*item_id);
                 frame.label(1, row, name, InkColor::Black);
-                if lang != Lang::Zh {
-                    frame.label(
-                        6,
-                        row + 1,
-                        &format!("{:>7}", format!("${}", data.price)),
-                        InkColor::Black,
-                    );
-                }
             }
         }
         let cursor_row = layout.cursor.base_ty
@@ -158,16 +150,21 @@ pub fn draw_buy_items_with_money<P: Painter>(
                 });
         frame.cursor_at(layout.cursor.tx, cursor_row, layout.cursor.color);
     });
-    if lang == Lang::Zh {
-        for (i, item) in items.iter().skip(scroll_offset).take(3).enumerate() {
-            if let Some(data) = get_item_data(*item) {
-                ui.painter().draw_text_px(
-                    (list_rect.tx + 7) * 8,
-                    (list_rect.ty + 2 + i as u32 * 3) * 8 + 12,
-                    &format!("{:>7}", format!("${}", data.price)),
-                    InkColor::Black.into(),
-                );
-            }
+    for (i, item) in items.iter().skip(scroll_offset).enumerate() {
+        let row = 1 + i as u32 * if lang == Lang::Zh { 3 } else { 2 };
+        if row >= list_rect.th.saturating_sub(2) {
+            break;
+        }
+        if let Some(data) = get_item_data(*item) {
+            let price = format!("${}", data.price);
+            let painter = ui.painter();
+            let x = (list_rect.tx + list_rect.tw - 2) * 8 - painter.measure_text_px(&price);
+            painter.draw_text_px(
+                x,
+                (list_rect.ty + 1 + row) * 8,
+                &price,
+                InkColor::Black.into(),
+            );
         }
     }
     draw_money_box(

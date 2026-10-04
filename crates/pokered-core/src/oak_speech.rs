@@ -122,9 +122,16 @@ impl TextPage {
     }
 
     pub fn total_chars(&self, player_name: Option<&str>) -> usize {
-        let l1 = Self::replace_player(self.line1, player_name);
-        let l2 = Self::replace_player(self.line2, player_name);
-        l1.chars().count() + l2.chars().count()
+        // Called on every typewriter tick: count the substituted text without
+        // allocating two temporary strings on the GBA heap.
+        let name_len = player_name.unwrap_or("RED").chars().count();
+        let count = |text: &str| {
+            let mut parts = text.split("<PLAYER>");
+            let first = parts.next().unwrap_or("");
+            let chars = |part: &str| if part.is_ascii() { part.len() } else { part.chars().count() };
+            chars(first) + parts.map(|part| name_len + chars(part)).sum::<usize>()
+        };
+        count(self.line1) + count(self.line2)
     }
 
     fn replace_player(text: &str, player_name: Option<&str>) -> String {
@@ -834,6 +841,17 @@ impl Default for OakSpeechState {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn typewriter_length_matches_substituted_unicode_text() {
+        for page in [TextPage::new("Hello!", ""), TextPage::new("你好<PLAYER>", "<PLAYER>，你好！"), TextPage::new("<PLAYER><PLAYER>", "End.")] {
+            for name in [None, Some("RED"), Some("小智"), Some(""), Some("<PLAYER>")] {
+                let expected = page.line1.replace("<PLAYER>", name.unwrap_or("RED")).chars().count()
+                    + page.line2.replace("<PLAYER>", name.unwrap_or("RED")).chars().count();
+                assert_eq!(page.total_chars(name), expected);
+            }
+        }
+    }
 
     fn press_a() -> OakSpeechInput {
         OakSpeechInput {

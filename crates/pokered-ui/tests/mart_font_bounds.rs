@@ -32,7 +32,7 @@ fn height(_text: &str) -> u32 {
 }
 
 #[test]
-fn original_buy_name_price_rows_and_money_header_are_separate() {
+fn buy_prices_share_item_baselines_and_align_at_the_right_edge() {
     let mut rec = Recorder::default();
     mart::draw_buy_items_with_money(
         &[ItemId::ThunderStone, ItemId::UltraBall],
@@ -51,7 +51,10 @@ fn original_buy_name_price_rows_and_money_header_are_separate() {
     assert!(rec
         .texts
         .iter()
-        .any(|(x, y, t)| (*x, *y) == (88, 40) && t.trim() == "$2100"));
+        .any(|(x, y, t)| (*x, *y) == (119, 32) && t.trim() == "$2100"));
+    let prices: Vec<_> = rec.texts.iter().filter(|(_, y, t)| *y > 8 && t.starts_with('$')).collect();
+    assert_eq!(prices.len(), 2);
+    for (x, _, text) in prices { assert_eq!(x + rec.measure_text_px(text), 144); }
     assert!(rec.texts.contains(&(104, 0, "MONEY".into())));
     assert!(rec.texts.contains(&(96, 8, "$999999".into())));
     for (x, _, text) in &rec.texts {

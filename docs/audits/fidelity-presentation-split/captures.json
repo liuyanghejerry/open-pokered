@@ -95,10 +95,12 @@
     "gamefreak-244-before.png": "5d0d886a542cdce4a3a57a353da8cd240e363e999f14ca45ed1497ec27a805d2",
     "hof-488-after.png": "885722dcac41bfeb7bfc732944baf5d20c5585759715d5c47325cd00ff6b9b52",
     "hof-488-before.png": "0ef06ad72321bb90c24a83e1eb7a60e6d9468772639feb4d9be498bfe8da5aa6",
-    "mart-buy-En-after.png": "8680757bd0fd346bb5ec7dab491914d4aa0500086921d7f16409aadfaf43b07b",
+    "mart-buy-En-after.png": "2fc780487faabb776043ccb6de7cc391a83468e1e782c68c09b21386358f5182",
     "mart-buy-En-before.png": "053568a301092c5893ad3f4197f6b3fbb5478dfa62cc6bc1e337c16c4ce3516d",
-    "mart-buy-Zh-after.png": "5339c1667ac75842d8ce92b67358c553b70e7bdddfa4ba833e8843b2091aa720",
+    "mart-buy-En-review-before.png": "8680757bd0fd346bb5ec7dab491914d4aa0500086921d7f16409aadfaf43b07b",
+    "mart-buy-Zh-after.png": "c711e5c29df7b5df247347bc6ca2ed043e04982f57a9e0b510b2d380ff2365e6",
     "mart-buy-Zh-before.png": "844ce1c2d8048e6e577a5ae4b87053f784437cad6bdc997e4275ecd8a968971f",
+    "mart-buy-Zh-review-before.png": "5339c1667ac75842d8ce92b67358c553b70e7bdddfa4ba833e8843b2091aa720",
     "naming-player-5-after.png": "a234f18b3b920b879e9d73790e032e54d03033b0147196a8d32d10e0d289bedb",
     "naming-player-5-before.png": "8a36afa4871572bc2ac0fcb1f2a658eaa870949d736718887c7472bd6e61105d",
     "naming-pokemon-17-after.png": "d25d33ee5406bd83d56a611481db2a321f60823080add42b1163d62bf2fbc6ae",
@@ -147,8 +149,9 @@
     "town-map-Zh-before.png": "04d2ddf0da5c5d5013397622751af5545348d638bdf95c7067d2c5ccbbd337dc",
     "trade-40-after.png": "d54735f1790d39dffd6fb31c4ee377117579ccd8e310088e94de945d7fdc1396",
     "trade-40-before.png": "af8a797d59b5b960f7d178bbad237ed22dc9604ab6ac03d5fc9f05a7efb58860",
-    "trainer-card-after.png": "3c40e5cea323ce251e9d6fab8d284254e57b995b75e5e1a84e83a65df598e88b",
+    "trainer-card-after.png": "1e0594baf53825a86764786ccb82e30ba031c8d130b08f18eccdf4851ab32947",
     "trainer-card-before.png": "134ad45a46e235bcf7f711367890fe18109f6cf805cd3cdc92b53bf94eb6f225",
+    "trainer-card-review-before.png": "3c40e5cea323ce251e9d6fab8d284254e57b995b75e5e1a84e83a65df598e88b",
     "zh-battle-text-after.png": "447d6f89a6398b8a11f759c93602d406cc521ce2ddef587731f5d334805b4bcc",
     "zh-battle-text-before.png": "b8a662ddd0dcfa8da8b51d21b3ec24e42d4246161d64bbd6be111af18699aaf0",
     "zh-hof-rating-50-after.png": "a39fc249743df363043610360c02bbce136f4bb1d27f53ea889dfc9d08485f3c",
@@ -157,5 +160,6 @@
     "zh-oak-greeting-page-0-before.png": "ed863b62b9ca8faad4ea3d1f5f28ec5cd6075b549cd1d3518405b7b8e183272b",
     "zh-pc-oak-rating-50-after.png": "e883e51d47992db8d100aea2410640f3ef0e658c26a1a0a3e843691e1374203c",
     "zh-pc-oak-rating-50-before.png": "02699904021280fcd944fa8285e6edf5659c5c6f724a0494af055b3029c19df9"
-  }
+  },
+  "review_correction_base": "f5b9348"
 }
