@@ -5139,3 +5139,60 @@ HP／PP，Zapdos direct retry gate解除；三次退却及PokeBall1观测消耗�
 预算／原生4×录像不变。不热替换，不回退或另开NEW GAME；没有Rust／
 新m49／玩家画面变化，PR原绝对raw前后截图保留。当前仍47／124，最终
 完整逐种合法性验收、全程MP4及完成图鉴大盘尚未交付，Goal active。
+
+### 2026-10-04：合法53种闭合核验，真实静态context请求与狩猎区收集
+
+第13段`20261004-082936-seed42`只从最新47源正常CONTINUE，启动干净
+67103688／policy9ed4afde，原双层OpenRouter Jev1.13.0／seed42／预算／
+冻结native6d8e／gfx21e0／4×原生录像不变。精确controller41702／
+native41712／recorder41715、端口57790；初始全部位置／资源／HP／XP／
+四槽PP／PC守恒。strategy22.285秒／action32.275秒实际成功；9个成功
+初始策略请求经lossless refs／tables展开，四个真正static候选收到与
+同源冷快照一致的新生产者context，Zapdos三次退却／PokeBall1成本与
+护士后真实准备变化保留。这是实际receipt，不是旧未治疗visibility
+alias现场重放或效率归因。原有有界缩减从max_tokens_exceeded恢复，
+未改模型／provider／预算。第一次过早start审计的StopIteration日志
+保留，等真实双层成功后v2核验通过，无重复开局或重新连接当前native。
+
+Jev自主首选SafariZoneCenter，五次真实Safari登记：NidoranM46.630秒／
+frame18183、Exeggcute54.313／20723、Venonat56.699／21290、Rhyhorn
+60.778／22470、Nidorino65.341／23813；最后自主Route15普通grass
+捕获Gloom300.842秒／frame34036。初始47、重复捕获、准备／现金／
+PC和状态变化不计新增；没有把Nidorino／Gloom假记为此次进化。
+源静态Zapdos仍未登记，本段没有新增闪电鸟退却；三次退却历史保持。
+
+另保留89.965秒exit、117.410秒entry、143.572秒exit三个Safari flag
+目标（调查ViridianGym旅行受阻），以及169.835／227.731秒补GreatBall、
+254.838秒自主从PC取Drowzee作状态支持的原始请求与普通输入证据。
+当前只观察到狩猎区进出与资源消耗，未据此宣称引擎bug或强制下一路线；
+下一轮检查交通目标与最终目的地的原生徽章／现金门槛关联信息。
+
+321.178秒自主Fuchsia护士完成，2026-10-04 00:34:58 UTC守护仅向
+精确controller合作式SIGINT；无native／recorder信号、第二连接或
+强制治疗，三者正常退出。28动作，strategy102／action67调用；安全／
+最终观察／development checkpoint均true，success=false／
+interrupted_at_command_boundary。53 owned／91 seen、FuchsiaPokecenter
+frame35985、资金407、四徽章位掩码23、PokeBall43／GreatBall25／
+UltraBall1、party6／PC39（box20／19），Charizard57 XP180343、HP192、
+四槽PP20／30／15／10；Machop正常存PC，Drowzee13正常取入party。
+
+SRAM `f92d77524472a32a479b345df4fcf680752a2fa9dace8af0c7a84ce18765bc95`
+独立新native schema4普通CONTINUE expected／restored的dex／state／
+party／party_pp／PC／bag／flags严格同，47源与53源四项hash未改。
+本段MP4 2691043字节／149.966667秒／8998帧完整解码，SHA
+`479e4540956c185288a613202a20632f420c7e98795f39734c78a1026b8961a9`。
+13段真正NEW GAME祖先原生时钟7100.150001秒、53唯一登记、resume
+不重复／恢复5只计一次，source audit无pending／history。额外完整性
+审计105,356普通成功推进回执／13个原生录像hash及绑定schema4证明，
+仍不等于完整逐种producer／原作路线最终合法性验收；四个旧未标注
+method物种依旧unknown，不方便性补记gift。
+
+worktree外51项／2275098字节增量备份
+`verified53-checkpoint-and-static-source-context-and-safari-evidence-20261004.tar.gz`
+逐项字节与hash通过，SHA
+`de653247487b9ec5ed9c81788779bddf208237b1b52e1cbba63ecbe596d6226f`，
+包括实际请求／同源冷对照／失败测试／全部回归证据，原件与上一47
+archive均保留、无凭据／binary／重复MP4或删除。下一段唯一安全恢复
+基线为53；本段结束，不把历史owner称为仍在运行。无进一步热替换、
+Rust／新m49或玩家画面变化，PR原截图保持。Goal active，仍差71种；
+最终完整124／全程MP4／完成图鉴大盘尚未交付，不回退／注入／NEW GAME。
