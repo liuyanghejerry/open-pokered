@@ -40,7 +40,8 @@ fixture cb5d961d50eed2b3d6221f98542ea2f8788dc6600f40cc44e0cecedd52035aff
 
 当前独立验证的安全存档为第24段闭合的 60/124；本段只完成了实际 PC 换箱、
 购买一枚 Great Ball 和取出 Thunder Wave 支援 Pikachu，没有新增登记。
-第24段自然停止于两候选请求的 `max_tokens_exceeded`，容量修复尚未验证。
+第24段自然停止于两候选请求的 `max_tokens_exceeded`；当时容量修复尚未验证。
+后续容量修复及证据见 [决策请求报告](jev-dex-decision-wire-20261004.md)。
 24个原片和179779条普通推进回执的文件/输入完整性通过，不等于原版
 生产者、路线和全部机制的完整合法性认证。旧62/83及合成测试均不计入。
 

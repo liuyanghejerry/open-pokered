@@ -19,6 +19,8 @@ import playthrough_late as data
 
 from .story_agent import DualStoryAgent, StoryStopped, attempt_key
 from .typesafe import Choice, TypeSafeClient, TypeSafeError
+from .decision_wire import (FIELD_DICTIONARY_INSTRUCTION, compact_decision_field_wire,
+                            expand_decision_evidence)
 from .story_rules import Rule, requirements, evaluate, static_retreat_contract, spent_static_source
 from .playthrough_judgments import (ObservedProtocol, NavigationPause, NavigationGoalObserved, attack_profile, replacement_options,
                                     MEDICINES, BALLS, medicine_options, effective_attacks, ITEM_CATALOG,
@@ -946,6 +948,42 @@ def restore_evidence_reference_wire(value):
     return value
 
 
+REFACTORED_DECISION_EVIDENCE_INSTRUCTION = (
+    ' Equivalent evidence refactoring: resolve each singleton $e through '
+    'state.shared_strategy_evidence, transitively. Each singleton strategy_table '
+    'is the complete record list given by columns and rows. No facts or options '
+    'were omitted.')
+
+
+def compact_refactored_decision_wire(state, candidates):
+    """Re-factor all semantic evidence, then alias profitable repeated fields.
+
+    The sharing threshold is an encoding choice, never a model/token cap.
+    Internal executor candidates retain their original canonical values.
+    """
+    original, options = expand_decision_evidence(state, candidates)
+    factored, offered = factor_strategy_evidence(original, options, min_chars=32)
+    # Factoring JSON objects may normalize whitespace, but a scalar/plain
+    # criterion is not an evidence record: keep its exact original bytes.
+    for key, value in options.items():
+        try:
+            payload = json.loads(value)
+        except (ValueError, TypeError):
+            payload = value
+        if not isinstance(payload, (dict, list)):
+            offered[key] = value
+    short, offered = compact_evidence_reference_wire(factored, offered)
+    wire, offered = compact_decision_field_wire(short, offered)
+    if wire is short:
+        return state, candidates
+    before = len(json.dumps({'state': state, 'criteria': candidates}).encode())
+    after = len(json.dumps({'state': wire, 'criteria': offered}).encode())
+    guidance = FIELD_DICTIONARY_INSTRUCTION + REFACTORED_DECISION_EVIDENCE_INSTRUCTION
+    if after + len(guidance.encode()) >= before:
+        return state, candidates
+    return wire, offered
+
+
 def strategy_access_evidence(candidates):
     """Compare fresh trigger access without removing legal future goals."""
     result = {key: {} for key in ('path_found', 'field_action_needed', 'no_path_found', 'not_evaluated')}
@@ -1790,7 +1828,9 @@ class AutonomousStoryAgent(DualStoryAgent):
         After explicit overflow, try one reversible short-reference format on
         the SAME option set, even for a one/two-option leaf, before splitting.
         Its endpoint/layer learning and byte references are separate from the
-        canonical format. A second leaf overflow still fails closed.
+        canonical format. After a second overflow, one profitable reversible
+        field-dictionary refactoring retains the complete semantic state and
+        candidates. Its learning is separate too. Exhausted leaves fail closed.
         """
         if not candidates:
             return super().choose(layer, state, candidates, instruction,
@@ -1836,14 +1876,42 @@ class AutonomousStoryAgent(DualStoryAgent):
         except ValueError:
             short_state, short_candidates = choice_state, candidates
         eligible = short_state is not choice_state
-        short = eligible and scope in short_scopes
-        for _ in range(2):  # At most one format change, never a blind retry.
-            wire_state, wire_candidates = ((short_state, short_candidates) if short
-                                           else (choice_state, candidates))
+        formats = [('canonical', choice_state, candidates, '')]
+        if eligible:
+            formats.append(('short_evidence_reference', short_state, short_candidates,
+                            SHORT_EVIDENCE_REFERENCE_INSTRUCTION))
+        compact_base = short_state if eligible else choice_state
+        field_scopes = getattr(self, '_refactored_field_dictionary_scopes', set())
+        field_eligible, field_computed = False, False
+
+        def append_refactored_format():
+            nonlocal field_eligible, field_computed
+            if field_computed:
+                return
+            field_computed = True
+            try:
+                compact_state, compact_candidates = compact_refactored_decision_wire(
+                    compact_base, short_candidates if eligible else candidates)
+            except ValueError:
+                return  # Invalid alternate representation never changes canonical facts.
+            field_eligible = compact_state is not compact_base
+            if field_eligible:
+                formats.append(('refactored_field_dictionary', compact_state, compact_candidates,
+                                REFACTORED_DECISION_EVIDENCE_INSTRUCTION + FIELD_DICTIONARY_INSTRUCTION))
+
+        # Do not re-factor a successful ordinary request. Enable this work
+        # only after explicit overflow, or its same-endpoint runtime learning.
+        if scope in field_scopes:
+            append_refactored_format()
+        first_format = (len(formats) - 1 if field_eligible and scope in field_scopes else
+                        1 if eligible and scope in short_scopes else 0)
+        format_index = first_format
+        while format_index < len(formats):
+            encoding, wire_state, wire_candidates, guidance = formats[format_index]
             wire_instruction = instruction
-            if short and SHORT_EVIDENCE_REFERENCE_INSTRUCTION not in wire_instruction:
-                wire_instruction += SHORT_EVIDENCE_REFERENCE_INSTRUCTION
-            reference_scope = (*scope, 'short_evidence_reference') if short else scope
+            if guidance and guidance not in wire_instruction:
+                wire_instruction += guidance
+            reference_scope = (*scope, encoding) if encoding != 'canonical' else scope
             reference = sizes.setdefault(reference_scope,
                 {'smallest_overflow_bytes': None, 'largest_success_bytes': 0})
             criteria = dict(wire_candidates)
@@ -1858,11 +1926,12 @@ class AutonomousStoryAgent(DualStoryAgent):
                          and request_bytes >= overflow_bytes)
             reason = 'observed_context_size_reference' if proactive else 'max_tokens_exceeded'
             if not proactive:
-                if short:
-                    self.record(f'{layer}_wire_encoding', encoding='short_evidence_reference',
+                if encoding != 'canonical':
+                    self.record(f'{layer}_wire_encoding', encoding=encoding,
                         candidate_ids=list(candidates), reference_scope=list(reference_scope),
                         world_facts_preserved=True, candidate_values_semantically_preserved=True,
-                        library_entries_preserved=True, request_bytes=request_bytes,
+                        library_entries_preserved=encoding != 'refactored_field_dictionary',
+                        library_evidence_semantics_preserved=True, request_bytes=request_bytes,
                         byte_reference_is_token_limit=False)
                 try:
                     selected = super().choose(layer, wire_state, wire_candidates, wire_instruction,
@@ -1873,24 +1942,34 @@ class AutonomousStoryAgent(DualStoryAgent):
                         raise
                     reference['smallest_overflow_bytes'] = min(request_bytes,
                         overflow_bytes if overflow_bytes is not None else request_bytes)
-                    if short or not eligible:
+                    if format_index == len(formats) - 1:
+                        append_refactored_format()
+                    if format_index == len(formats) - 1:
                         if len(candidates) <= 2:
                             raise
                         break
                 else:
                     reference['largest_success_bytes'] = max(reference['largest_success_bytes'], request_bytes)
                     return selected
-            elif short or not eligible:
-                break
+            elif format_index == len(formats) - 1:
+                append_refactored_format()
+                if format_index == len(formats) - 1:
+                    break
             # Explicit overflow (or its same-scope runtime reference) permits
-            # one lossless format trial with all current candidates unchanged.
-            short = True
-            short_scopes.add(scope)
-            self._short_evidence_reference_scopes = short_scopes
-            self.record(f'{layer}_wire_encoding_enabled', encoding='short_evidence_reference',
+            # the next lossless format trial, never a repeat or chosen action.
+            next_encoding = formats[format_index + 1][0]
+            if next_encoding == 'short_evidence_reference':
+                short_scopes.add(scope)
+                self._short_evidence_reference_scopes = short_scopes
+            else:
+                field_scopes.add(scope)
+                self._refactored_field_dictionary_scopes = field_scopes
+            self.record(f'{layer}_wire_encoding_enabled', encoding=next_encoding,
                 candidate_ids=list(candidates), reason=reason, reference_scope=list(scope),
                 world_facts_preserved=True, candidate_values_semantically_preserved=True,
-                library_entries_preserved=True, no_diagnostic_answer_reused=True)
+                library_entries_preserved=next_encoding != 'refactored_field_dictionary',
+                library_evidence_semantics_preserved=True, no_diagnostic_answer_reused=True)
+            format_index += 1
         keys = list(candidates)
         midpoint = len(keys) // 2
         partitions = [keys[:midpoint], keys[midpoint:]]
