@@ -21,6 +21,66 @@ fn a_input() -> OverworldInput {
     OverworldInput::new(false, false, false, false, true, false, false, false)
 }
 
+/// Held LEFT can chain a second step on the frame we enter the ghost tile.
+/// The scripted battle owns that tile: a menu escape must push RIGHT, not
+/// finish the stale LEFT step onto the stairs during neutral settlement.
+#[test]
+fn tower_ghost_scripted_battle_discards_chained_player_step() {
+    use super::MovementState;
+    use pokered_data::species::Species;
+
+    for outcome in ["ran", "caught", "win", "fled"] {
+        let mut screen = OverworldScreen::new(MapId::PokemonTower6F, None, PokemonRedData);
+        screen.state.player.x = 11;
+        screen.state.player.y = 16;
+        screen.state.player.facing = Direction::Left;
+        screen.run_on_load();
+        for _ in 0..60 {
+            screen.update_frame(neutral_input());
+        }
+        let left = OverworldInput::new(false, false, true, false, false, false, false, false);
+        for _ in 0..40 {
+            screen.update_frame(left);
+            if screen.active_script_effect.is_some() {
+                break;
+            }
+        }
+        assert_eq!((screen.state.player.x, screen.state.player.y), (10, 16));
+        for frame in 0..300 {
+            if screen.script_awaiting_battle {
+                break;
+            }
+            if let Some(dialogue) = screen.pending_dialogue.as_mut() {
+                dialogue.skip_to_full_page();
+            }
+            screen.update_frame(if frame % 2 == 1 { a_input() } else { neutral_input() });
+        }
+        assert!(screen.script_awaiting_battle, "ghost battle must suspend its scene");
+        let encounter = screen.pending_wild_encounter.take().expect("real scene queues Marowak");
+        assert_eq!(encounter.species, Species::Marowak);
+        assert_eq!(encounter.level, 30);
+        assert_eq!(screen.state.player.movement_state, MovementState::Idle,
+            "{outcome}: no old directional step may survive scripted battle handoff");
+        assert_eq!(screen.state.walk_counter, 0);
+
+        screen.resume_script_after_battle(outcome);
+        for frame in 0..300 {
+            if let Some(dialogue) = screen.pending_dialogue.as_mut() {
+                dialogue.skip_to_full_page();
+            }
+            screen.update_frame(if frame % 2 == 1 { a_input() } else { neutral_input() });
+            assert_eq!(screen.state.current_map, MapId::PokemonTower6F,
+                "{outcome}: no neutral frame may carry the old step across the stairs");
+        }
+        let defeated = matches!(outcome, "win" | "fled");
+        assert_eq!(screen.unified_flags().get_flag("EVENT_BEAT_GHOST_MAROWAK"), defeated);
+        assert_eq!((screen.state.player.x, screen.state.player.y),
+            (if defeated { 10 } else { 11 }, 16), "{outcome}: actual scene outcome determines pushback");
+        assert_eq!(screen.state.player.movement_state, MovementState::Idle);
+        assert_eq!(screen.state.walk_counter, 0);
+    }
+}
+
 /// Elite Four entry autowalk: LoreleisRoom @load must move the player six
 /// tiles up from the entrance (4,11) to (4,5). This is the end-to-end
 /// check for the movePlayerRelative command (relative deltas resolved

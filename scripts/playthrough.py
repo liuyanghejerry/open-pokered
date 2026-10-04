@@ -25,6 +25,7 @@ import sys
 import tempfile
 import time
 from collections import deque
+from functools import cache, wraps
 from pathlib import Path
 
 # Late helpers import the driver's navigation primitives. When this file is
@@ -47,10 +48,14 @@ def movement_frames(state, direction=None):
     return 4 if state.get('player_transport') == 'Biking' and not uphill else FRAMES_PER_TILE
 
 
-def movement_buttons(state, direction, held, frames):
+def movement_buttons(state, direction, held, frames, *, landing_map=None):
     # The engine's cycling-road slope injects DOWN on neutral frames; B is
     # the real brake. Other maps retain their ordinary neutral tails.
-    return [direction] * held + (['b'] * (frames-held) if state.get('map_name') == 'Route17' else [])
+    # A connection can enter the slope during this very input timeline. Its
+    # neutral tail must brake too: otherwise navigation_state's control-ready
+    # settlement observes a downhill walk and can slide back over the border.
+    brake = state.get('map_name') == 'Route17' or landing_map == 'Route17'
+    return [direction] * held + (['b'] * (frames-held) if brake else [])
 TAP_GAP = 6          # idle frames after a 1-frame tap (edge-trigger safety)
 
 # ── static map data ─────────────────────────────────────────────────────
@@ -106,6 +111,74 @@ for _map, _body in re.findall(r'"(\w+)" => &\[(.*?)\n\s*\],', _spin_source, re.S
             _end_y += _dy * int(_length)
             _count += int(_length)
         SPINNERS.setdefault(_map, {})[(int(_x), int(_y))] = ((_end_x, _end_y), _count)
+
+# Coordinate scripts are not map.json stairs. Populate this planning cache
+# from the running binary's read-only AST, alongside the live MAPS cache.
+COORDINATE_WARPS = {}
+
+
+def coordinate_warp_destination(program, x, y):
+    """Prove a pure automatic warp, optionally branched on trigger position.
+
+    Do not turn dialogue, choices, battles, flag guards or arbitrary scripts
+    into free travel. Unsupported programs remain the story planner's job.
+    """
+    from openpokered.story_rules import evaluate
+    if not isinstance(program, list) or len(program) != 1:
+        return None
+    statement = program[0]
+    command = statement.get('Command', {})
+    if command.get('name', '').removeprefix('game.') == 'warpTo':
+        args = command.get('args', [])
+        if len(args) != 3 or any(set(arg) != {kind} for arg, kind in zip(
+                args, ('StringLit', 'NumberLit', 'NumberLit'))):
+            return None
+        name, tx, ty = (evaluate(arg, {}) for arg in args)
+        if (name in MAPS and all(isinstance(v, (int, float)) and not isinstance(v, bool)
+                                and v >= 0 and int(v) == v for v in (tx, ty))):
+            return name, int(tx), int(ty)
+        return None
+    branch = statement.get('If')
+    if branch:
+        def spatial_only(expr):
+            if isinstance(expr, list):
+                return all(spatial_only(value) for value in expr)
+            if not isinstance(expr, dict):
+                return True
+            if 'Call' in expr and expr['Call']['callee'].removeprefix('game.') not in (
+                    'getPlayerX', 'getPlayerY'):
+                return False
+            return all(spatial_only(value) for value in expr.values())
+        condition = branch['condition']
+        if spatial_only(condition):
+            value = evaluate(condition, {'x': x, 'y': y})
+            if value is not None:
+                return coordinate_warp_destination(
+                    branch['then_branch' if value else 'else_branch'], x, y)
+    return None
+
+
+def load_coordinate_warps(client, configs=None):
+    """Bind native programs to the same named coordinate events as the game."""
+    if configs is None:
+        configs = {p.parent.name: json.loads(p.read_text()) for p in
+                   (ROOT / 'crates/pokered-data/maps').glob('*/script_config.json')}
+    result = {}
+    for name, config in configs.items():
+        events = config.get('coordEvents', [])
+        if not events:
+            continue
+        response = client.cmd(cmd='get_script_semantics', map=name)
+        if not response.get('ok'):
+            raise NavError(f'cannot observe coordinate scripts for {name}: {response}')
+        programs = {story['id'].partition(':')[2]: story.get('program', [])
+                    for story in response['data']['storylines']}
+        for event in events:
+            position = tuple(event['position'])
+            destination = coordinate_warp_destination(programs.get(event['trigger'], []), *position)
+            if destination is not None:
+                result.setdefault(name, {})[position] = destination
+    return result
 
 
 def tile_at(map_name, x, y):
@@ -167,7 +240,8 @@ def find_grass(map_name, x0, y0, radius=12):
 def warp_tiles(map_name):
     """All warp tiles on a map — stepping onto any of them warps, so
     pathfinding treats them as walls unless explicitly targeted."""
-    return {(w["x"], w["y"]) for w in MAPS[map_name]["warps"]}
+    return ({(w["x"], w["y"]) for w in MAPS[map_name]["warps"]}
+            | set(COORDINATE_WARPS.get(map_name, {})))
 
 
 def grass_tiles(map_name):
@@ -175,6 +249,36 @@ def grass_tiles(map_name):
             for y in range(MAPS[map_name]["height"] * 2)
             for x in range(MAPS[map_name]["width"] * 2)
             if is_grass(map_name, x, y)}
+
+
+def grass_training_run(map_name, start, preferred, blocked=frozenset(), max_steps=4):
+    """Longest short, collision-safe grass run; stable preference breaks ties.
+
+    Reuse the observed planning map, NPC occupancy and forced-warp exclusions.
+    Require grass at both native anchors: the standing tile selects the
+    table, but the tile to its right supplies the outdoor encounter rate.
+    A four-tile vertical hold at a grass edge can spend most of its input
+    budget against a wall instead of earning encounters.
+    """
+    best = None
+    warps = warp_tiles(map_name)
+    for direction in [preferred] + [name for name in DELTA if name != preferred]:
+        dx, dy = DELTA[direction]
+        position = start
+        steps = 0
+        for _ in range(max_steps):
+            target = position[0] + dx, position[1] + dy
+            rate_x = target[0] + 1 if target[0] + 1 < MAPS[map_name]['width'] * 2 else target[0]
+            if (target in blocked or target in warps
+                    or not walkable_edge(map_name, position, target)
+                    or not is_grass(map_name, *target)
+                    or not is_grass(map_name, rate_x, target[1])):
+                break
+            position = target
+            steps += 1
+        if steps and (best is None or steps > best[1]):
+            best = direction, steps
+    return best
 
 
 def bfs(map_name, start, goal, blocked=frozenset(), allow_spinners=False):
@@ -190,6 +294,8 @@ def bfs(map_name, start, goal, blocked=frozenset(), allow_spinners=False):
             n = (cx + dx, cy + dy)
             if n in prev or n in blocked or not walkable_edge(map_name, (cx, cy), n):
                 continue
+            if n in COORDINATE_WARPS.get(map_name, {}) and n != goal:
+                continue  # A local walk cannot pass through a forced map change.
             how = d
             if allow_spinners and n in SPINNERS.get(map_name, {}):
                 n, count = SPINNERS[map_name][n]
@@ -396,24 +502,71 @@ def _path_of(prev, start, goal):
     return [start] + out[::-1]
 
 
+def _cache_search_geometry(search):
+    @wraps(search)
+    def cached(*args, **kwargs):
+        # The synchronous search never advances the game or edits geometry.
+        # Cache only within this call: live blocks, Cut, doors and coordinate
+        # warps may all change before the next query. Preserve any enclosing
+        # planner overrides and restore them even on early return/failure.
+        global tile_at, warp_tiles
+        original_tile, original_warps = tile_at, warp_tiles
+        tile_at, warp_tiles = cache(original_tile), cache(original_warps)
+        try:
+            return search(*args, **kwargs)
+        finally:
+            tile_at, warp_tiles = original_tile, original_warps
+    return cached
+
+
+@_cache_search_geometry
 def bfs_cross(map_name, start, goal_map, goal, blocked_maps=None,
               last_map=None, allow_ledges=False, excluded_maps=(), allow_spinners=False,
-              goal_nodes=None):
+              goal_nodes=None, reachable_goals=False, goal_regions=None):
     """BFS whose steps are plain directions. Stepping onto a warp tile
     takes the warp: the expansion replaces the landed tile with its warp
     destinations (doors fire immediately; bottom-edge exit mats fire via
     the extra edge-check). Exit mats resolve against `last_map` — the
     driver tracks it from real transitions, so the plan matches what the
     engine will actually do. Search nodes include the remembered outside
-    map; returned path nodes retain the public (map, x, y) shape."""
+    map; returned path nodes retain the public (map, x, y) shape.
+
+    With reachable_goals=True, return the set of reachable target nodes,
+    not just a path to the first target. This uses the same collision/warp
+    rules and does not relax water or script gates.
+
+    goal_regions is used by bfs_cross_routes to find a shortest path to each
+    region in one search. All regions must permit the same NO_THROUGH maps;
+    otherwise combining destinations would create new transit shortcuts."""
+    if goal_regions is not None:
+        if reachable_goals or goal_nodes is not None:
+            raise ValueError('goal_regions cannot be combined with other goal modes')
+        allowed = {frozenset(n[0] for n in region if n[0] in NO_THROUGH)
+                   for region in goal_regions.values() if region}
+        if len(allowed) > 1:
+            raise ValueError('Regions must have identical NO_THROUGH permissions')
+        requests = {}
+        routes = {key: None for key in goal_regions}
+        pending = {key for key, region in goal_regions.items() if region}
+        for key, region in goal_regions.items():
+            for node in region:
+                requests.setdefault(node, []).append(key)
     blocked_maps = blocked_maps or {}
     s = (map_name, *start)
     t = (goal_map, *goal)
-    targets = set(goal_nodes) if goal_nodes is not None else {t}
+    targets = (set(requests) if goal_regions is not None else
+               set(goal_nodes) if goal_nodes is not None else {t})
     target_maps = {node[0] for node in targets}
     if not targets:
-        return None
-    if s in targets:
+        return routes if goal_regions is not None else set() if reachable_goals else None
+    reached = {s} & targets
+    if goal_regions is not None:
+        for key in requests.get(s, []):
+            routes[key] = [s]
+            pending.discard(key)
+        if not pending:
+            return routes
+    elif s in targets and not reachable_goals:
         return [s]
     if MAPS[map_name]["tileset_name"].lower() in OUTSIDE_MAP_TILESETS:
         last_map = map_name
@@ -438,8 +591,10 @@ def bfs_cross(map_name, start, goal_map, goal, blocked_maps=None,
             key = (landed[1], landed[2])
             if key in blocked_maps.get(landed[0], ()):
                 continue
-            if key in warp_tiles(landed[0]):
-                mats = warps_at(*landed)
+            if key in COORDINATE_WARPS.get(landed[0], {}):
+                cands = [COORDINATE_WARPS[landed[0]][key]]
+                how = 'fall_' + d
+            elif key in warp_tiles(landed[0]):
                 # Exit mats (no dest_map) fire only when stepping TOWARD
                 # the map edge — sideways steps onto them are plain tiles,
                 # otherwise plans ping-pong on the mat (school house bug).
@@ -463,6 +618,29 @@ def bfs_cross(map_name, start, goal_map, goal, blocked_maps=None,
                     continue
                 prev[node] = (current, how)
                 if n in targets:
+                    if goal_regions is not None:
+                        selected = [key for key in requests[n] if key in pending]
+                        if selected:
+                            out = []
+                            cur = node
+                            while prev[cur] is not None:
+                                parent, step = prev[cur]
+                                out.append((cur[:3], step))
+                                cur = parent
+                            path = [s] + out[::-1]
+                            for key in selected:
+                                routes[key] = list(path)
+                                pending.remove(key)
+                            if not pending:
+                                return routes
+                        q.append(node)
+                        continue
+                    if reachable_goals:
+                        reached.add(n)
+                        if reached == targets:
+                            return reached
+                        q.append(node)
+                        continue
                     out = []
                     cur = node
                     while prev[cur] is not None:
@@ -471,7 +649,35 @@ def bfs_cross(map_name, start, goal_map, goal, blocked_maps=None,
                         cur = parent
                     return [s] + out[::-1]
                 q.append(node)
-    return None
+    return routes if goal_regions is not None else reached if reachable_goals else None
+
+
+def bfs_cross_routes(map_name, start, regions, **options):
+    """Exact single-query paths, sharing only searches with identical gates.
+
+    regions maps caller keys to sets of (map, x, y) target nodes. Empty and
+    unreachable regions return None. Geometry caches and predecessor trees
+    live only for this synchronous search, never across state observations.
+    """
+    if any(key in options for key in ('goal_nodes', 'reachable_goals', 'goal_regions')):
+        raise ValueError('Regions define the goal mode')
+    batches = {}
+    routes = {key: None for key in regions}
+    for key, region in regions.items():
+        if not region:
+            continue
+        permissions = frozenset(n[0] for n in region if n[0] in NO_THROUGH)
+        batches.setdefault(permissions, {})[key] = region
+    for batch in batches.values():
+        first = next(iter(next(iter(batch.values()))))
+        if len(batch) == 1:
+            key, region = next(iter(batch.items()))
+            routes[key] = bfs_cross(map_name, start, first[0], first[1:],
+                goal_nodes=region, **options)
+        else:
+            routes.update(bfs_cross(map_name, start, first[0], first[1:],
+                goal_regions=batch, **options))
+    return routes
 
 
 class NavError(RuntimeError):
@@ -480,11 +686,13 @@ class NavError(RuntimeError):
 
 class Game:
     def __init__(self, port=None, save_path=None, record_dir=None,
-                 record_video=None, snapshot=None, binary=None, seed=None,
-                 speed=None):
+                 record_video=None, record_video_fps=None, snapshot=None, binary=None, seed=None,
+                 speed=None, runtime_root=None):
         self.binary = Path(binary) if binary else BIN
         self.seed, self.speed = seed, speed
-        self.run_dir = Path(tempfile.mkdtemp(prefix="pokered-run-"))
+        # Autonomous collection supplies its durable per-run private root.
+        # Short-lived regression fixtures retain their historical default.
+        self.run_dir = Path(tempfile.mkdtemp(prefix="pokered-run-", dir=runtime_root))
         self.log = open(self.run_dir / "game.log", "w")
         # Persistent save ONLY for --resume (Game(..., save_path=...));
         # a plain run must boot clean or the main menu offers CONTINUE.
@@ -517,13 +725,18 @@ class Game:
             cmd += ["--record-frames", str(record_dir)]
         if record_video is not None:
             cmd += ["--record-video", str(record_video)]
+            if record_video_fps is not None:
+                cmd += ["--record-video-fps", str(record_video_fps)]
         self.proc = subprocess.Popen(
-            cmd, cwd=str(ROOT), stdout=subprocess.DEVNULL, stderr=self.log)
+            cmd, cwd=str(ROOT), stdout=subprocess.DEVNULL, stderr=self.log,
+            start_new_session=True)
         # A connect failure must not orphan the just-spawned game: the
         # first crash of this driver leaked a headless instance that kept
         # port 9020 busy and hijacked every later run's connection.
         try:
             self.d = DebugClient(port)
+            COORDINATE_WARPS.clear()
+            COORDINATE_WARPS.update(load_coordinate_warps(self.d))
         except BaseException:
             self.proc.terminate()
             try:
@@ -782,42 +995,102 @@ class Game:
             return
         raise NavError(f"object approach did not settle: {map_name} ({x},{y})")
 
-    def navigation_excluded_maps(self):
+    def navigation_map_requirements(self):
+        """Explain current region exclusions with real script producer goals.
+
+        Carrying a drink makes the ordinary gate walk retryable; the shared
+        guard flag is the persistent unlock. This is planning evidence, not
+        permission to cross an excluded map or proof the guard was satisfied.
+        """
         if getattr(self, "smart_moves", False):
             flags = self.d.cmd(cmd="get_flags")["data"]
             if not flags.get("EVENT_GAVE_SAFFRON_GUARDS_DRINK"):
                 bag = self.d.cmd(cmd="get_bag")["data"]
                 if not any(item['item'] in ('FreshWater', 'SodaPop', 'Lemonade')
                            and item.get('qty', 0) > 0 for item in bag):
-                    return ("SaffronCity",)
-        return ()
+                    return {"SaffronCity": (("flag", "EVENT_GAVE_SAFFRON_GUARDS_DRINK", True),)}
+        return {}
+
+    def navigation_excluded_maps(self):
+        return tuple(self.navigation_map_requirements())
 
     def navigation_barriers(self):
         """Observed script barriers supplied by a planner, keyed by map."""
         return getattr(self, 'script_navigation_barriers', {})
 
-    def nav_to_map(self, x, y, map_name, tries=150, avoid_grass=True):
+    def navigation_state(self):
+        """Observe the final landing before planning or sending another segment.
+
+        A fade may still show the source map; after arrival, PlayerStepOutFromDoor
+        can consume input and change position again. Wait on the native condition,
+        only for observed movement/warp ownership, not a blanket settling delay.
+        Dialogue/battle handoffs remain the caller's responsibility.
+        """
+        state = self.st()
+        if (state.get('screen') == 'overworld' and
+                (state.get('warp_fade', 'Idle') != 'Idle'
+                 or state.get('door_exit_pending', False)
+                 or state.get('player_movement_state', 'Idle') != 'Idle')):
+            self.wait('control_ready', max_frames=240, must=False)
+            state = self.st()  # Refresh live map geometry as well as position.
+        return state
+
+    def nav_to_map(self, x, y, map_name, tries=150, avoid_grass=True, goal_points=None):
         """Cross-map closed-loop walk (connections included). Prefers a
         route that avoids wild-encounter grass when one exists (wilds
         interrupt the walk — sometimes fatally at low HP); falls back
         to any walkable path. Wild encounters that still happen are run
-        from (or fought for trainers) and the walk re-localizes."""
+        from (or fought for trainers) and the walk re-localizes. When several
+        approach tiles can trigger the same interaction, keep all of them
+        available during live replanning. Return the actual reached tile."""
+        goals = {(map_name, *point) for point in goal_points} if goal_points is not None else {(map_name, x, y)}
+        if not goals:
+            raise NavError(f"no destination points for {map_name}")
+        search_goals = {'goal_nodes': goals} if goal_points is not None else {}
         self.last_pinch = None
         self.pinch_count = 0
+        script_displacements = {}
         excluded_maps = self.navigation_excluded_maps()
         for attempt in range(tries):
             # Single snapshot for battle + position, same race as nav_to.
-            s = self.st()
-            if (s["screen"] == "overworld" and s["map_name"] == map_name
-                    and (s["player_x"], s["player_y"]) == (x, y)):
-                return
+            s = self.navigation_state()
+            if (s["screen"] == "overworld" and
+                    (s["map_name"], s["player_x"], s["player_y"]) in goals):
+                return (s["player_x"], s["player_y"])
             # Sighted trainers now speak before opening the battle screen.
             # A direction-only navigator would keep walking into that dialogue
             # forever. Use the existing dialogue driver; choices still fail.
             if s["screen"] == "overworld" and s.get("dialogue_state") is not None:
+                dialogue_start = s
                 if not self.cutscene():
                     raise NavError("navigation dialogue did not finish")
                 s = self.st()
+                # A coordinate guard can repeatedly walk us back without
+                # changing the collision map. Replanning the same walk for
+                # the entire attempt budget cannot pass it. Report observed
+                # failure to the caller so it can learn the guard or choose
+                # another route; do not invent a bypass or mark the trip done.
+                start = (dialogue_start['player_x'], dialogue_start['player_y'])
+                end = (s['player_x'], s['player_y'])
+                if (s['screen'] == 'overworld' and s['map_name'] == dialogue_start['map_name']
+                        and start != end and not s.get('script_running')
+                        and not s.get('dialogue_state') and not s.get('choice')
+                        and not s.get('active_script_effect') and not s.get('door_exit_pending')
+                        and s.get('warp_fade', 'Idle') == 'Idle'
+                        and s.get('player_movement_state', 'Idle') == 'Idle'):
+                    # Repeated position alone is insufficient: story flags,
+                    # rewards, damage/XP and terrain changes can be progress.
+                    progress = {key: s.get(key) for key in (
+                        'party', 'evaluation', 'pokedex', 'money', 'coins', 'badges',
+                        'map_blocks', 'player_transport', 'box_counts', 'stored_pokemon',
+                        'current_box_index', 'safari_game', 'hall_of_fame_count')}
+                    progress['flags'] = self.d.cmd(cmd='get_flags')['data']
+                    progress['bag'] = self.d.cmd(cmd='get_bag')['data']
+                    signature = (s['map_name'], start, end, json.dumps(progress, sort_keys=True))
+                    script_displacements[signature] = script_displacements.get(signature, 0) + 1
+                    if script_displacements[signature] >= 3:
+                        raise NavError(f"repeated unchanged script displacement: "
+                                       f"{s['map_name']} {start} -> {end}")
             if s["screen"] == "battle":
                 prefer = ("fight" if s["script_awaiting_battle"]
                           else "run")
@@ -830,8 +1103,8 @@ class Game:
             if os.environ.get("PT_DEBUG") and attempt % 10 == 0:
                 print(f"   [nav {map_name}({x},{y}) try={attempt} "
                       f"at {cm}({cx},{cy}) last={self.last_map}]", flush=True)
-            if cm == map_name and (cx, cy) == (x, y):
-                return
+            if (cm, cx, cy) in goals:
+                return (cx, cy)
             blocked = {cm: self.npc_blocked(cm)}
             barriers = self.navigation_barriers()
             path = None
@@ -843,7 +1116,7 @@ class Game:
                                  last_map=self.last_map,
                                  allow_ledges=getattr(self, "smart_moves", False),
                                  allow_spinners=getattr(self, "smart_moves", False),
-                                 excluded_maps=excluded_maps)
+                                 excluded_maps=excluded_maps, **search_goals)
                 if path:
                     departed = False
                     for node, _ in path[1:]:
@@ -866,11 +1139,12 @@ class Game:
                                  last_map=self.last_map,
                                  allow_ledges=getattr(self, "smart_moves", False),
                                  allow_spinners=getattr(self, "smart_moves", False),
-                                 excluded_maps=excluded_maps)
+                                 excluded_maps=excluded_maps, **search_goals)
             if not path:
                 if self.navigation_snapshot_changed(s):
                     continue
-                if self.destination_blocked_by_live_npc(cm, map_name, x, y):
+                if any(self.destination_blocked_by_live_npc(cm, map_name, gx, gy)
+                       for _, gx, gy in goals):
                     self.step(200)
                     continue
                 raise NavError(f"no cross path: {cm}({cx},{cy}) "
@@ -902,6 +1176,11 @@ class Game:
             # re-localizes and re-plans either way)
             i = 0
             while i < len(steps):
+                if steps[i].startswith('fall_'):
+                    direction = steps[i].removeprefix('fall_')
+                    self.d.drive([direction] * movement_frames(s, direction),
+                                 frames=movement_frames(s, direction) + 32)
+                    break  # Let the coordinate script own the fall; re-observe.
                 if steps[i].startswith("spin_"):
                     _, direction, count = steps[i].split("_")
                     self.d.drive([direction] * FRAMES_PER_TILE,
@@ -951,9 +1230,10 @@ class Game:
                 if _os.environ.get("PT_DEBUG"):
                     print(f"   [seg] {cm}({px0},{py0}) {steps[i]}x{tiles} "
                           f"held={held}", flush=True)
-                self.d.drive(movement_buttons(s, steps[i], held, frames), frames=frames)
+                self.d.drive(movement_buttons(s, steps[i], held, frames,
+                                              landing_map=seg_end[0]), frames=frames)
                 i = j + 1
-                s = self.st()
+                s = self.navigation_state()
                 if (s["screen"] == "battle" or s["map_name"] != cm
                         or s.get("dialogue_state") is not None):
                     break
@@ -1453,10 +1733,20 @@ class Game:
                         self.step(300)
                         self.nav_to_map(x, y, map_name, tries=450)
                 continue
-            dy = 4 if cy <= y else -4
-            self.d.drive(["down" if dy > 0 else "up"] * 32, frames=36)
-            if self.st()["screen"] != "battle":
-                self.d.drive(["up" if dy > 0 else "down"] * 32, frames=36)
+            preferred = "down" if cy <= y else "up"
+            for _ in range(2):
+                observed = self.st()
+                if observed['screen'] == 'battle' or observed['map_name'] != map_name:
+                    break
+                start = observed['player_x'], observed['player_y']
+                run = grass_training_run(map_name, start, preferred,
+                                         self.npc_blocked(map_name))
+                # Preserve the old short shuttle when no adjacent grass run
+                # exists (e.g. a one-tile patch). Never add cycles or frames.
+                direction, steps = run or (preferred, 4)
+                self.d.drive([direction] * (steps * 8), frames=steps * 8 + 4)
+                preferred = {'up': 'down', 'down': 'up',
+                             'left': 'right', 'right': 'left'}[direction]
         return False
 
     # ── battle ──────────────────────────────────────────────────────────
@@ -1471,10 +1761,21 @@ class Game:
         dbg = os.environ.get("PT_DEBUG")
         for it in range(max_iters):
             s = self.st()
+            # Native move presentation temporarily rejects all battle input.
+            # Match the native resolver's handshake: spend bounded animation
+            # frames, not this driver's action budget, while input is blocked.
+            # A stuck renderer remains a failure, not an unbounded wait.
+            presentation_frames = 0
+            while s['screen'] == 'battle' and (s.get('battle_presentation') or {}).get('waiting'):
+                assert presentation_frames < 1800, (
+                    f"battle presentation did not finish in 1800 frames: {s['battle_presentation']}")
+                self.step(30)
+                presentation_frames += 30
+                s = self.st()
             if dbg:
                 print(f"   [battle it={it} fight={fight} mode_iters="
                       f"{iters_in_mode}] phase={s['battle_phase']!r} "
-                      f"msg={s['battle_message']!r}", flush=True)
+                      f"msg={s['battle_message']!r} presentation_frames={presentation_frames}", flush=True)
             # LOS trainer battles are not script-suspended, so the
             # caller's wild/run heuristic can't see them — detect the
             # trainer marker in the phase and commit to fighting.
@@ -1488,15 +1789,26 @@ class Game:
                 getattr(self, 'learn_move', lambda state: learn_move(self, state))(s)
             elif ph == "PlayerMenu":
                 if s["map_name"].startswith("SafariZone"):
-                    # Safari's menu has RUN at the same bottom-right corner.
-                    self.tap("down", 8)
-                    self.tap("right", 8)
+                    # Safari's 2x2 menu is BALL / BAIT / ROCK / RUN.  Generic
+                    # playthroughs retain the old safe RUN behavior; a smart
+                    # collector can choose an observed Safari action.
+                    action = getattr(self, "safari_battle_action", lambda _state: "run")(s)
+                    for button in {
+                        "ball": ("up", "left"), "bait": ("up", "right"),
+                        "rock": ("down", "left"), "run": ("down", "right"),
+                    }[action]:
+                        self.tap(button, 8)
                     self.tap("a", 8)
                     continue
                 if fight and getattr(self, "smart_moves", False):
                     from playthrough_late import battle_recovery_plan
                     recovery = getattr(self, 'battle_recovery_plan', battle_recovery_plan)(s)
                     if recovery:
+                        if recovery[0] == 'run':
+                            for button in ('down', 'right', 'a'):
+                                self.tap(button, 8)
+                            self.step(30)
+                            continue
                         if recovery[0] == 'switch':
                             self._switch_target = recovery[1]
                             self.tap('up', 8)
@@ -1564,14 +1876,25 @@ class Game:
 
     def close(self):
         try:
+            client = getattr(self.d, "raw", self.d)
+            if self.proc.poll() is None:
+                try:
+                    client.cmd(cmd="shutdown")
+                except (OSError, ValueError):
+                    # Older binaries do not have the graceful command. Retain the
+                    # termination fallback below for compatibility.
+                    pass
             self.d.close()
         finally:
-            self.proc.terminate()
             try:
                 self.proc.wait(timeout=10)
             except subprocess.TimeoutExpired:
-                self.proc.kill()
-                self.proc.wait(timeout=5)
+                self.proc.terminate()
+                try:
+                    self.proc.wait(timeout=10)
+                except subprocess.TimeoutExpired:
+                    self.proc.kill()
+                    self.proc.wait(timeout=5)
             self.log.close()
             shutil.rmtree(self.run_dir, ignore_errors=True)
 

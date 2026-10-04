@@ -1135,6 +1135,10 @@ impl PokemonGame {
             if let Some(extras) = Self::read_companion_script_flags() {
                 overworld.set_script_flags(extras);
             }
+            overworld.restore_safari_game(
+                save_data.game_data.safari_steps,
+                save_data.game_data.num_safari_balls,
+            );
             overworld.set_toggleable_object_flags(save_data.game_data.toggleable_object_flags);
             overworld.set_hidden_item_flags(save_data.game_data.obtained_hidden_items);
             overworld.set_hidden_coin_flags(save_data.game_data.obtained_hidden_coins);
@@ -1921,6 +1925,14 @@ impl PokemonGame {
     // 320-byte SRAM region (wEventFlags, NUM_EVENTS = $A00 bits).
     save.game_data.event_flags = overworld.unified_flags().as_bytes().to_vec();
 
+    // These SRAM fields mirror the live Safari session, not the last loaded
+    // SaveData. Omitting them makes CONTINUE lose the paid allowance while
+    // the admission flag and the player's in-zone position survive.
+    save.game_data.safari_steps = overworld.safari_steps_remaining();
+    save.game_data.num_safari_balls = overworld.safari_balls_remaining();
+    save.game_data.safari_zone_game_over =
+        u8::from(overworld.unified_flags().get_flag("EVENT_SAFARI_GAME_OVER"));
+
     save.game_data.toggleable_object_flags = *overworld.toggleable_object_flags();
     save.game_data.obtained_hidden_items = *overworld.hidden_item_flags();
     save.game_data.obtained_hidden_coins = *overworld.hidden_coin_flags();
@@ -2337,6 +2349,9 @@ impl PokemonGame {
                             OverworldScreen::new(map_id, self.scripts_dir.clone(), PokemonRedData);
                         #[cfg(target_os = "none")]
                         let mut overworld = OverworldScreen::new(map_id, PokemonRedData);
+                        if self.seed.is_some() {
+                            overworld.inherit_rng_from(&self.overworld);
+                        }
                         overworld.restore_saved_last_map(self.save_data.game_data.last_map);
                         overworld.state.player.x = px;
                         overworld.state.player.y = py;
@@ -2354,6 +2369,10 @@ impl PokemonGame {
                         if let Some(extras) = self.companion_flags() {
                             overworld.set_script_flags(extras);
                         }
+                        overworld.restore_safari_game(
+                            self.save_data.game_data.safari_steps,
+                            self.save_data.game_data.num_safari_balls,
+                        );
                         overworld.set_toggleable_object_flags(
                             self.save_data.game_data.toggleable_object_flags,
                         );
@@ -2414,6 +2433,9 @@ impl PokemonGame {
                                 self.scripts_dir.clone(),
                                 PokemonRedData,
                             );
+                            if self.seed.is_some() {
+                                overworld.inherit_rng_from(&self.overworld);
+                            }
                             overworld.state.player.x = px;
                             overworld.state.player.y = py;
                             // NEW GAME installs the freshly-reset save's
@@ -2928,8 +2950,9 @@ impl PokemonGame {
         // The scripted RESTLESS_SOUL battle (6F) fought WITH the scope: the original
         // checks `cp RESTLESS_SOUL` (constants/pokemon_constants.asm:209 —
         // `RESTLESS_SOUL EQU MAROWAK`) and runs the SILPH SCOPE unveil text +
-        // MarowakAnim, after which it's a normal Marowak fight.
-        self.battle.ghost_marowak_reveal = in_pokemon_tower
+        // MarowakAnim. It becomes attackable but remains an uncatchable spirit.
+        self.battle.ghost_marowak_reveal = self.overworld.state.current_map
+            == pokered_data::maps::MapId::PokemonTower6F
             && has_silph_scope
             && species == pokered_data::species::Species::Marowak;
         self.battle_vfx = BattleVisualEffects::default();
@@ -5389,6 +5412,11 @@ impl PokemonGame {
                             self.save_data.pc_storage.current_box().clone();
                         self.save_to_file();
                     }
+                    // DEPOSIT/WITHDRAW mutate PcStorage without requesting a
+                    // save. Battle capture checks and sCurBoxData must see the
+                    // active box after those operations too, not its last
+                    // CHANGE BOX snapshot (which may still be full).
+                    self.save_data.current_box = self.save_data.pc_storage.current_box().clone();
                     // Party membership may have changed (deposit/withdraw) — keep
                     // the overworld mirrors in sync (repel checks, scripts).
                     self.overworld.party_count = self.save_data.party.count() as u8;
@@ -6109,6 +6137,100 @@ impl PokemonGame {
             .pending_choice
             .as_ref()
             .map(|c| serde_json::json!({ "options": c.options, "selected": c.selected }));
+        // Live battle facts (simulation HP, wild/Safari state), computed
+        // outside the snapshot macro: the nested closures below push the
+        // outer `json!` past pokered-app's macro recursion limit.
+        let battle_live = self.battle.battle_state.as_ref().map(|bs| {
+            let player = bs.player.active_mon();
+            let enemy = bs.enemy.active_mon();
+            let safari = self.battle.safari.as_ref();
+            // A controller must decide FIGHT versus a ball BEFORE opening
+            // the move menu. Read the active battler, not a stale menu/save
+            // snapshot; previewing never selects a move or consumes RNG.
+            let player_move_previews = player.moves.iter().enumerate().map(|(slot, move_id)| {
+                serde_json::json!({
+                    "slot": slot,
+                    "move": format!("{:?}", move_id),
+                    "pp": player.pp[slot],
+                    "disabled": bs.player.disabled_move > 0
+                        && bs.player.disabled_move == slot as u8 + 1,
+                    "direct_hit_preview": pokered_core::battle::pokered_rules::preview::player_direct_hit(
+                        bs, *move_id, self.battle.player_badges),
+                })
+            }).collect::<Vec<_>>();
+            serde_json::json!({
+                "is_ghost": self.battle.is_ghost,
+                "capture_blocked_reason": if !self.battle.is_wild {
+                    Some("trainer_owned")
+                } else if self.battle.is_ghost {
+                    Some("unidentified_ghost")
+                } else if self.battle.ghost_marowak_reveal {
+                    Some("restless_soul")
+                } else if bs.player.party.len() >= 6 && self.battle.player_box_full {
+                    Some("storage_full")
+                } else {
+                    None
+                },
+                // A ball may only be thrown in a wild (or Safari) battle, and
+                // a Safari battle replaces FIGHT/PKMN/ITEM/RUN with
+                // BALL/BAIT/ROCK/RUN — so a Pokédex-collecting driver needs
+                // all three flags before it can plan a throw.
+                "is_wild": self.battle.is_wild,
+                "is_safari": self.battle.is_safari,
+                "safari": safari.map(|state| serde_json::json!({
+                    "base_catch_rate": state.base_catch_rate,
+                    "catch_rate": state.catch_rate,
+                    "bait_factor": state.bait_factor,
+                    "escape_factor": state.escape_factor,
+                    "balls": state.balls,
+                    "enemy_speed": enemy.speed,
+                })),
+                "player_party": bs.player.party.iter().map(|mon| serde_json::json!({
+                    "species": format!("{:?}", mon.species), "level": mon.level,
+                    "hp": mon.hp, "max_hp": mon.max_hp,
+                    // Persistent party PP is stale until the battle ends.
+                    // Controllers need the live moves/PP to choose a legal
+                    // finisher or recovery before opening the FIGHT menu.
+                    "status": format!("{:?}", mon.status), "pp": mon.pp,
+                    "moves": mon.moves.iter().map(|m| format!("{:?}", m)).collect::<Vec<_>>(),
+                })).collect::<Vec<_>>(),
+                "player": { "species": format!("{:?}", player.species), "level": player.level, "hp": player.hp,
+                    "max_hp": player.max_hp, "status": format!("{:?}", player.status) },
+                "player_move_previews": player_move_previews,
+                "enemy": { "species": format!("{:?}", enemy.species), "level": enemy.level, "hp": enemy.hp,
+                    "capture_species": self.battle.wild_capture_species().map(|sp| format!("{:?}", sp)),
+                    "capture_catch_rate": self.battle.wild_capture_rate(),
+                    "max_hp": enemy.max_hp, "status": format!("{:?}", enemy.status) },
+                "enemy_party": bs.enemy.party.iter().map(|mon| serde_json::json!({
+                    "species": format!("{:?}", mon.species), "level": mon.level, "hp": mon.hp,
+                })).collect::<Vec<_>>(),
+            })
+        });
+        let stored_pokemon = (0..self.save_data.pc_storage.box_count())
+            .flat_map(|box_index| {
+                self.save_data
+                    .pc_storage
+                    .get_box(box_index)
+                    .into_iter()
+                    .flat_map(move |box_data| {
+                        box_data.iter().enumerate().map(move |(index, mon)| {
+                            serde_json::json!({
+                                "box": box_index,
+                                "index": index,
+                                "species": format!("{:?}", mon.species),
+                                "level": mon.level,
+                                "hp": mon.hp,
+                                "max_hp": mon.max_hp,
+                                "status": format!("{:?}", mon.status),
+                                "moves": mon.moves.iter()
+                                    .map(|m| format!("{:?}", m))
+                                    .collect::<Vec<_>>(),
+                                "pp": mon.pp,
+                            })
+                        })
+                    })
+            })
+            .collect::<Vec<_>>();
         let mut snapshot = serde_json::json!({
             "screen": crate::cli::screen_name(&self.state.screen).to_string(),
             "map_id": map_id as u8,
@@ -6122,6 +6244,15 @@ impl PokemonGame {
             "player_name": self.player_name.clone(),
             "frame_count": self.frame_count,
             "party_count": self.overworld.party_count,
+            // Current PC box occupancy. Catching deposits into the box once
+            // the party is full, and a full box refuses the throw outright,
+            // so storage capacity is part of a Pokédex-collecting state.
+            "box_count": self.overworld.box_count,
+            "current_box_index": self.save_data.pc_storage.current_box_index(),
+            "box_counts": (0..self.save_data.pc_storage.box_count())
+                .map(|index| self.save_data.pc_storage.get_box(index).map(|box_data| box_data.count()).unwrap_or(0))
+                .collect::<Vec<_>>(),
+            "stored_pokemon": stored_pokemon,
             "badges": self.save_data.game_data.obtained_badges,
             "hall_of_fame_count": self.save_data.hall_of_fame.team_count(),
             "hof_phase": self.hof_ceremony.as_ref().map(|hof| format!("{:?}", hof.phase())),
@@ -6149,6 +6280,15 @@ impl PokemonGame {
                 .collect::<Vec<_>>(),
             "dialogue": dialogue,
             "dialogue_state": dialogue_state,
+            // Fishing remains an input-locked overworld presentation between
+            // its two dialogue boxes.  Agents must not mistake that gap for
+            // returned player control and open another menu mid-cast.
+            "fishing_active": self.overworld.fishing_anim.is_some(),
+            "safari_game": {
+                "active": self.overworld.is_safari_game_active(),
+                "steps_remaining": self.overworld.safari_steps_remaining(),
+                "balls_remaining": self.overworld.safari_balls_remaining(),
+            },
             "choice": choice,
             // Link (Cable Club) session and in-room flow phase. The flow's
             // modal boxes (Just a moment. / prompts / trade select) are not
@@ -6179,26 +6319,14 @@ impl PokemonGame {
             // Current battle phase (Debug form), e.g. "PlayerMenu",
             // "BagSelect", so a driver knows when a menu is ready.
             "battle_phase": format!("{:?}", self.battle.phase),
+            "battle_presentation": {
+                "waiting": self.battle.presentation.waiting,
+                "vfx_stable": self.battle_vfx.is_frame_stable(),
+                "vfx_blockers": self.battle_vfx.frame_stability_blockers(),
+            },
             "battle_party_cursor": self.battle.party_cursor,
             // Simulation HP, rather than the save snapshot or animated HUD.
-            "battle_live": self.battle.battle_state.as_ref().map(|bs| {
-                let player = bs.player.active_mon();
-                let enemy = bs.enemy.active_mon();
-                serde_json::json!({
-                    "is_ghost": self.battle.is_ghost,
-                    "player_party": bs.player.party.iter().map(|mon| serde_json::json!({
-                        "species": format!("{:?}", mon.species), "level": mon.level,
-                        "hp": mon.hp, "max_hp": mon.max_hp,
-                    })).collect::<Vec<_>>(),
-                    "player": { "species": format!("{:?}", player.species), "level": player.level, "hp": player.hp,
-                        "max_hp": player.max_hp, "status": format!("{:?}", player.status) },
-                    "enemy": { "species": format!("{:?}", enemy.species), "level": enemy.level, "hp": enemy.hp,
-                        "max_hp": enemy.max_hp, "status": format!("{:?}", enemy.status) },
-                    "enemy_party": bs.enemy.party.iter().map(|mon| serde_json::json!({
-                        "species": format!("{:?}", mon.species), "level": mon.level, "hp": mon.hp,
-                    })).collect::<Vec<_>>(),
-                })
-            }),
+            "battle_live": battle_live,
             "battle_bag": self.battle.bag_menu.as_ref().map(|bag| serde_json::json!({
                 "cursor": bag.cursor(),
                 "items": bag.items().iter().map(|(id, qty)| serde_json::json!({
@@ -6236,6 +6364,9 @@ impl PokemonGame {
                 GameScreen::Elevator => self.elevator_screen.as_ref().map(|lift| serde_json::json!({
                     "kind": "elevator", "cursor": lift.selected_index(), "items": lift.floors(),
                 })),
+                GameScreen::FilterBag => self.elevator_screen.as_ref().map(|menu| serde_json::json!({
+                    "kind": "filter_bag", "cursor": menu.selected_index(), "items": menu.floors(),
+                })),
                 GameScreen::TownMap => Some(serde_json::json!({
                     "kind": "town_map", "cursor": self.town_map_screen.cursor(),
                     "mode": format!("{:?}", self.town_map_screen.mode()),
@@ -6255,6 +6386,9 @@ impl PokemonGame {
                             "move": format!("{:?}", m.move_id),
                             "pp": m.current_pp,
                             "disabled": m.is_disabled,
+                            "direct_hit_preview": self.battle.battle_state.as_ref().and_then(|bs|
+                                pokered_core::battle::pokered_rules::preview::player_direct_hit(
+                                    bs, m.move_id, self.battle.player_badges)),
                         })
                     }).collect::<Vec<_>>(),
                 })
@@ -6267,6 +6401,26 @@ impl PokemonGame {
                 .pc_screen
                 .as_ref()
                 .map(|pc| format!("{:?}", pc.phase())),
+            "pc_state": self.pc_screen.as_ref().map(|pc| serde_json::json!({
+                "phase": format!("{:?}", pc.phase()),
+                "main_cursor": pc.main_menu().cursor(),
+                "main_items": pc.main_menu_labels(),
+                "bills_cursor": pc.bills_menu().cursor(),
+                "bills_action": format!("{:?}", pc.bills_menu().current_action()),
+                "mon_mode": format!("{:?}", pc.mon_mode()),
+                "mon_cursor": pc.mon_cursor(),
+                "mon_action_cursor": pc.mon_action_cursor(),
+                "box_cursor": pc.box_cursor(),
+                "yes_selected": pc.yes_selected(),
+            })),
+            "evolution_phase": self
+                .evolution_anim
+                .as_ref()
+                .map(|evolution| format!("{:?}", evolution.phase())),
+            "npc_trade_phase": self
+                .trade_anim
+                .as_ref()
+                .map(|trade| format!("{:?}", trade.phase())),
             // Script-effect currently being processed (e.g.
             // "ShowDialogue", "FollowNpc"), null when idle — lets a
             // driver follow cutscene progress deterministically.
@@ -6286,8 +6440,17 @@ impl PokemonGame {
             // Warp transition state ("Idle"/"FadingOut { .. }"/…), so a
             // driver knows when a warp is still settling.
             "warp_fade": format!("{:?}", self.overworld.warp_fade_state),
+            // The automatic door step owns input even after the fade is idle.
+            "door_exit_pending": self.overworld.state.standing_on_door
+                || self.overworld.state.exiting_door,
         });
         // Keep this separate from the large snapshot macro's recursion budget.
+        // This is the same configured value seeded into getGameVersion();
+        // expose it as ordinary read-only state, not evaluation telemetry.
+        snapshot["game_version"] = serde_json::json!(match self.state.config.version {
+            GameVersion::Red => 0u8,
+            GameVersion::Blue => 1u8,
+        });
         let live = self.battle.battle_state.as_ref()
             .filter(|_| matches!(self.state.screen, GameScreen::Battle));
         let party: Vec<_> = if let Some(bs) = live {
@@ -6295,6 +6458,29 @@ impl PokemonGame {
         } else {
             self.save_data.party.iter().collect()
         };
+        // Dex progress is a first-class observation, not telemetry: the
+        // benchmark harness strips `evaluation` from controller replies
+        // (`evaluation.controller_response`), which would hide dex progress
+        // from a planner whose objective *is* the Pokédex. `evaluation`
+        // keeps its copy so existing metrics readers stay unaffected.
+        let dex = &self.save_data.game_data.pokedex;
+        let species_at = |id: u8| pokered_data::species::Species::from_index_id(id);
+        let owned_numbers: Vec<u8> = (1u8..=151).filter(|id| dex.is_owned(species_at(*id))).collect();
+        let seen_numbers: Vec<u8> = (1u8..=151).filter(|id| dex.is_seen(species_at(*id))).collect();
+        let pokedex = serde_json::json!({
+            "seen": dex.seen_count(),
+            "owned": dex.owned_count(),
+            "total": pokered_core::pokemon::pokedex::NUM_POKEMON,
+            // Names as well as dex numbers: a planner deciding *what* to catch
+            // matches against the species names used by encounter tables, item
+            // and move data, and would otherwise have to reimplement the
+            // engine's numbering.
+            "owned_species": owned_numbers.iter().map(|id| format!("{:?}", species_at(*id))).collect::<Vec<_>>(),
+            "seen_species": seen_numbers.iter().map(|id| format!("{:?}", species_at(*id))).collect::<Vec<_>>(),
+            "owned_numbers": owned_numbers,
+            "seen_numbers": seen_numbers,
+        });
+        snapshot["pokedex"] = pokedex.clone();
         snapshot["evaluation"] = serde_json::json!({
             "party_source": if live.is_some() { "battle_live" } else { "save_data" },
             "party": party.iter().map(|mon| serde_json::json!({
@@ -6303,13 +6489,7 @@ impl PokemonGame {
                 "status": format!("{:?}", mon.status), "pp": mon.pp,
                 "moves": mon.moves.iter().map(|m| format!("{:?}", m)).collect::<Vec<_>>(),
             })).collect::<Vec<_>>(),
-            "pokedex": {
-                "seen": self.save_data.game_data.pokedex.seen_count(),
-                "owned": self.save_data.game_data.pokedex.owned_count(),
-                "total": pokered_core::pokemon::pokedex::NUM_POKEMON,
-                "owned_numbers": (1u8..=151).filter(|id| self.save_data.game_data.pokedex
-                    .is_owned(pokered_data::species::Species::from_index_id(*id))).collect::<Vec<_>>(),
-            },
+            "pokedex": pokedex,
         });
         snapshot
     }
@@ -6410,7 +6590,8 @@ impl PokemonGame {
             "not_battle" => self.state.screen != pokered_core::game_state::GameScreen::Battle,
             // Player control back after a cutscene: overworld, no dialogue /
             // choice / script effect, script engine idle, warp settled,
-            // and no battle suspended on the script.
+            // no arrival auto-step / unfinished walk, no trainer engagement
+            // or queued trainer battle, and no suspended scripted battle.
             "control_ready" => {
                 crate::cli::screen_name(&self.state.screen) == "overworld"
                     && self.overworld.pending_dialogue.is_none()
@@ -6423,6 +6604,12 @@ impl PokemonGame {
                         pokered_core::overworld::WarpFadeState::Idle
                     )
                     && !self.overworld.script_awaiting_battle
+                    && !self.overworld.trainer_encounter_pending()
+                    && self.overworld.pending_trainer_battle.is_none()
+                    && !self.overworld.state.standing_on_door
+                    && !self.overworld.state.exiting_door
+                    && self.overworld.state.player.movement_state
+                        == pokered_core::overworld::MovementState::Idle
             }
             other => {
                 if let Some(name) = other.strip_prefix("screen=") {
@@ -6468,6 +6655,10 @@ impl PokemonGame {
         };
 
         match cmd {
+            DebugCommand::Game(GameDebugCommand::Shutdown) => {
+                self.exit_requested = true;
+                DebugResponse::ok()
+            }
             DebugCommand::Core(CoreDebugCommand::GetState) => {
                 DebugResponse::ok_with_data(self.debug_state_snapshot())
             }
@@ -7690,6 +7881,326 @@ mod session_guard_tests {
 #[cfg(all(test, feature = "debug-server"))]
 mod synchronous_input_tests {
     use super::*;
+    use pokered_core::game_state::MainMenuChoice;
+
+    fn pinned_overworld_game(seed: u64) -> (PokemonGame, OverworldScreen<PokemonRedData>) {
+        let mut game = PokemonGame::new_with_options(
+            GameVersion::Red, None, None, None, false, None, false, true, None,
+        );
+        game.set_seed(seed);
+        let mut reference = OverworldScreen::new(MapId::RedsHouse2F, None, PokemonRedData);
+        reference.set_rng_seed(seed);
+        // Reconstruction must retain the stream, not restart at its initial seed.
+        for _ in 0..16 {
+            assert_eq!(game.overworld.next_rng_u8(), reference.next_rng_u8());
+        }
+        (game, reference)
+    }
+
+    #[test]
+    fn pinned_overworld_rng_survives_new_game_reconstruction() {
+        for seed in [0, 42] {
+            let (mut game, mut reference) = pinned_overworld_game(seed);
+            game.main_menu.last_choice = Some(MainMenuChoice::NewGame);
+            game.state.screen = GameScreen::MainMenu;
+            game.handle_transition(GameScreen::OakSpeech);
+            game.handle_transition(GameScreen::Overworld);
+            assert_eq!(game.seed, Some(seed));
+            for _ in 0..32 {
+                assert_eq!(
+                    game.overworld.next_rng_u8(),
+                    reference.next_rng_u8(),
+                    "NEW GAME lost pinned stream for seed {seed}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn pinned_overworld_rng_survives_continue_reconstruction() {
+        let (mut game, mut reference) = pinned_overworld_game(42);
+        game.main_menu.last_choice = Some(MainMenuChoice::Continue);
+        game.state.screen = GameScreen::MainMenu;
+        game.handle_transition(GameScreen::Overworld);
+        for _ in 0..32 {
+            assert_eq!(
+                game.overworld.next_rng_u8(),
+                reference.next_rng_u8(),
+                "CONTINUE lost pinned stream"
+            );
+        }
+    }
+
+    #[test]
+    fn pinned_overworld_rng_is_not_reset_by_an_ingame_menu_return() {
+        for choice in [MainMenuChoice::Continue, MainMenuChoice::NewGame] {
+            let (mut game, mut reference) = pinned_overworld_game(42);
+            game.main_menu.last_choice = Some(choice);
+            game.state.screen = GameScreen::PartyScreen;
+            game.handle_transition(GameScreen::Overworld);
+            for _ in 0..32 {
+                assert_eq!(game.overworld.next_rng_u8(), reference.next_rng_u8());
+            }
+        }
+    }
+
+    #[test]
+    fn save_sync_preserves_live_safari_allowance_and_clears_finished_session() {
+        let mut game = PokemonGame::new_with_options(
+            GameVersion::Red, None, None, None, false, None, false, true, None,
+        );
+        game.overworld = OverworldScreen::new(MapId::SafariZoneWest, None, PokemonRedData);
+        game.overworld.start_safari_game();
+        for _ in 0..7 {
+            game.overworld.use_safari_ball();
+        }
+        let saved = game.build_save_data();
+        assert_eq!(saved.game_data.safari_steps, 500);
+        assert_eq!(saved.game_data.num_safari_balls, 23);
+        assert_eq!(saved.game_data.safari_zone_game_over, 0);
+        // The serialized bytes, not merely the in-memory fields, carry them.
+        let restored = pokered_core::save::sram_import::import_sram(
+            &pokered_core::save::sram_export::export_sram(&saved),
+        ).unwrap();
+        assert_eq!(restored.game_data.safari_steps, 500);
+        assert_eq!(restored.game_data.num_safari_balls, 23);
+        game.overworld.end_safari_game();
+        let finished = game.build_save_data();
+        assert_eq!(finished.game_data.safari_steps, 0);
+        assert_eq!(finished.game_data.num_safari_balls, 0);
+    }
+
+    #[test]
+    fn debug_snapshot_exposes_only_active_filter_bag_without_mutation() {
+        let mut game = PokemonGame::new_with_options(
+            GameVersion::Red, None, None, None, true, None, false, true, None,
+        );
+        game.elevator_screen = Some(ElevatorScreen::new(vec![
+            "DOME_FOSSIL".into(), "OLD_AMBER".into(),
+        ]));
+        // Agent slots deliberately reject busy menu screens. Compare the
+        // full native snapshot on the same supported screen on both sides.
+        game.state.screen = GameScreen::Overworld;
+        let before = game.agent_save_state_slot(0).unwrap();
+        let frame = game.frame_count;
+        game.state.screen = GameScreen::FilterBag;
+        let snapshot = game.debug_state_snapshot();
+        assert_eq!(snapshot["field_menu"], serde_json::json!({
+            "kind": "filter_bag", "cursor": 0, "items": ["DOME_FOSSIL", "OLD_AMBER"],
+        }));
+        assert_eq!(snapshot["choice"], serde_json::Value::Null);
+        assert_eq!(game.debug_state_snapshot(), snapshot);
+        assert_eq!(game.frame_count, frame);
+        game.state.screen = GameScreen::Overworld;
+        assert_eq!(game.agent_save_state_slot(1).unwrap(), before);
+        assert_eq!(game.debug_state_snapshot()["field_menu"], serde_json::Value::Null);
+        game.state.screen = GameScreen::FilterBag;
+        game.elevator_screen = None;
+        assert_eq!(game.debug_state_snapshot()["field_menu"], serde_json::Value::Null);
+    }
+
+    #[test]
+    fn debug_snapshot_exposes_script_game_version_without_mutation() {
+        for (version, expected) in [(GameVersion::Red, 0), (GameVersion::Blue, 1)] {
+            let mut game = PokemonGame::new_with_options(
+                version, None, None, None, true, None, false, true, None,
+            );
+            let before = game.agent_save_state_slot(0).unwrap();
+            let frame = game.frame_count;
+            let command = serde_json::from_value(serde_json::json!({"cmd": "get_state"})).unwrap();
+            let response = serde_json::to_value(game.handle_debug_command(command)).unwrap();
+            assert_eq!(response["ok"], true);
+            let snapshot = game.debug_state_snapshot();
+            assert_eq!(snapshot["game_version"], expected);
+            assert_eq!(response["data"], snapshot);
+            assert_eq!(snapshot["game_version"], game.query_seed_snapshot().version);
+            assert_eq!(game.debug_state_snapshot(), snapshot);
+            assert_eq!(game.frame_count, frame);
+            assert_eq!(game.agent_save_state_slot(1).unwrap(), before);
+        }
+    }
+
+    #[test]
+    fn move_menu_exposes_read_only_conditional_damage_preview() {
+        use pokered_core::battle::{menu::{MoveMenuState, MoveSlot}, state::{new_battle_state, BattleType}};
+        use pokered_core::pokemon::stats::create_pokemon;
+        use pokered_data::{species::Species, moves::MoveId};
+        let mut game = PokemonGame::new_with_options(
+            GameVersion::Red, None, None, None, false, None, false, true, None,
+        );
+        game.battle.battle_state = Some(new_battle_state(BattleType::Wild,
+            vec![create_pokemon(Species::Charizard, 74, [0x88, 0x88]).unwrap()],
+            vec![create_pokemon(Species::Zapdos, 50, [0x88, 0x88]).unwrap()]));
+        game.battle.move_menu = Some(MoveMenuState::new(vec![MoveSlot {
+            move_id: MoveId::Cut, current_pp: 30, max_pp: 30, is_disabled: false,
+        }]));
+        let before = serde_json::to_value(&game.battle.battle_state).unwrap();
+        let frame = game.frame_count;
+        let first = game.debug_state_snapshot();
+        let second = game.debug_state_snapshot();
+        assert_eq!(first, second);
+        let preview = &first["battle_moves"]["moves"][0]["direct_hit_preview"];
+        assert!(preview["normal_damage"][0].as_u64().unwrap() > 0);
+        assert_eq!(preview["critical_threshold"], 50);
+        assert_eq!(preview["direct_hit_can_ko"], false);
+        assert_eq!(serde_json::to_value(&game.battle.battle_state).unwrap(), before);
+        assert_eq!(game.frame_count, frame);
+        // The frontend context is assigned after BattleState construction;
+        // before turn one its badges are newer than the lazy state copy.
+        game.battle.player_badges = 1;
+        let with_badge = game.debug_state_snapshot();
+        assert!(with_badge["battle_moves"]["moves"][0]["direct_hit_preview"]["critical_damage"][1]
+            .as_u64().unwrap() > preview["critical_damage"][1].as_u64().unwrap());
+        assert_eq!(serde_json::to_value(&game.battle.battle_state).unwrap(), before);
+        assert_eq!(game.frame_count, frame);
+    }
+
+    #[test]
+    fn player_menu_exposes_live_move_previews_without_opening_fight() {
+        use pokered_core::battle::state::{new_battle_state, BattleType};
+        use pokered_core::pokemon::stats::create_pokemon;
+        use pokered_data::{species::Species, moves::MoveId};
+        let mut game = PokemonGame::new_with_options(
+            GameVersion::Red, None, None, None, false, None, false, true, None,
+        );
+        let mut player = create_pokemon(Species::Charizard, 74, [0x88, 0x88]).unwrap();
+        player.moves = [MoveId::Cut, MoveId::Flamethrower, MoveId::Dig, MoveId::None];
+        player.pp = [2, 15, 9, 0];
+        let mut bs = new_battle_state(BattleType::Wild, vec![player],
+            vec![create_pokemon(Species::Zapdos, 50, [0x88, 0x88]).unwrap()]);
+        bs.player.disabled_move = 2;
+        game.battle.battle_state = Some(bs);
+        game.battle.player_badges = 1;
+        assert!(game.battle.move_menu.is_none());
+        let before = serde_json::to_value(&game.battle.battle_state).unwrap();
+        let frame = game.frame_count;
+        let first = game.debug_state_snapshot();
+        assert_eq!(game.debug_state_snapshot(), first);
+        let moves = first["battle_live"]["player_move_previews"].as_array().unwrap();
+        assert_eq!(moves.len(), 4);
+        assert_eq!(moves[0]["slot"], 0);
+        assert_eq!(moves[0]["move"], "Cut");
+        assert_eq!(moves[0]["pp"], 2);
+        assert_eq!(moves[0]["disabled"], false);
+        assert_eq!(moves[0]["direct_hit_preview"]["direct_hit_can_ko"], false);
+        assert_eq!(moves[1]["disabled"], true);
+        assert!(moves[1]["direct_hit_preview"]["normal_damage"][1].as_u64().unwrap()
+            < moves[1]["direct_hit_preview"]["target_hp"].as_u64().unwrap());
+        assert!(moves[1]["direct_hit_preview"]["critical_damage"][1].as_u64().unwrap()
+            >= moves[1]["direct_hit_preview"]["target_hp"].as_u64().unwrap());
+        assert_eq!(moves[1]["direct_hit_preview"]["direct_hit_can_ko"], true);
+        assert!(moves[2]["direct_hit_preview"].is_null()); // Dig's charged turn is unsupported.
+        assert_eq!(moves[3]["move"], "None");
+        assert_eq!(serde_json::to_value(&game.battle.battle_state).unwrap(), before);
+        assert_eq!(game.frame_count, frame);
+        assert!(game.battle.move_menu.is_none());
+    }
+
+    #[test]
+    fn player_menu_move_previews_refresh_hp_pp_disable_and_active_member() {
+        use pokered_core::battle::state::{new_battle_state, BattleType};
+        use pokered_core::pokemon::stats::create_pokemon;
+        use pokered_data::{species::Species, moves::MoveId};
+        let mut game = PokemonGame::new_with_options(
+            GameVersion::Red, None, None, None, false, None, false, true, None,
+        );
+        let mut player = create_pokemon(Species::Charizard, 74, [0x88, 0x88]).unwrap();
+        player.moves = [MoveId::Cut, MoveId::None, MoveId::None, MoveId::None];
+        player.pp = [30, 0, 0, 0];
+        game.battle.battle_state = Some(new_battle_state(BattleType::Wild,
+            vec![player], vec![create_pokemon(Species::Zapdos, 50, [0x88, 0x88]).unwrap()]));
+        let initial = game.debug_state_snapshot();
+        let bs = game.battle.battle_state.as_mut().unwrap();
+        bs.player.party[0].pp[0] = 0;
+        bs.player.disabled_move = 1;
+        bs.enemy.party[0].hp = 1;
+        let next = game.debug_state_snapshot();
+        let cut = &next["battle_live"]["player_move_previews"][0];
+        assert_eq!(cut["pp"], 0);
+        assert_eq!(cut["disabled"], true);
+        assert_eq!(cut["direct_hit_preview"]["target_hp"], 1);
+        assert_eq!(cut["direct_hit_preview"]["direct_hit_can_ko"], true);
+        assert_ne!(initial, next);
+        let mut support = create_pokemon(Species::Gloom, 25, [0x88, 0x88]).unwrap();
+        support.moves = [MoveId::SleepPowder, MoveId::None, MoveId::None, MoveId::None];
+        support.pp = [15, 0, 0, 0];
+        let bs = game.battle.battle_state.as_mut().unwrap();
+        bs.player.party.push(support);
+        bs.player.active_pokemon_index = 1;
+        bs.player.disabled_move = 0;
+        let switched = game.debug_state_snapshot();
+        let status = &switched["battle_live"]["player_move_previews"][0];
+        assert_eq!(status["move"], "SleepPowder");
+        assert_eq!(status["pp"], 15);
+        assert_eq!(status["disabled"], false);
+        assert!(status["direct_hit_preview"].is_null());
+        assert!(game.battle.move_menu.is_none());
+    }
+
+    #[test]
+    fn control_ready_waits_for_real_sighted_trainer_and_queued_battle() {
+        use pokered_core::overworld::{Direction, OverworldInput};
+        let mut game = PokemonGame::new_with_options(
+            GameVersion::Red, None, None, None, false, None, false, true, None,
+        );
+        game.state.screen = GameScreen::Overworld;
+        game.overworld = OverworldScreen::new(MapId::RocketHideoutB4F, None, PokemonRedData);
+        game.overworld.state.player.x = 11;
+        game.overworld.state.player.y = 3;
+        game.overworld.state.player.facing = Direction::Left;
+        game.overworld.update_frame(OverworldInput::new(
+            false, false, false, false, false, false, false, false,
+        ));
+        assert!(game.overworld.trainer_encounter_pending(), "real Lift Key trainer saw the player");
+        assert!(!game.debug_condition_met("control_ready"), "the engage intro still owns input");
+
+        // Close the real before-battle text with normal alternating A/release
+        // inputs, using only the overworld so the queued battle is observable.
+        for frame in 0..1800 {
+            game.overworld.update_frame(OverworldInput::new(
+                false, false, false, false, frame % 2 == 1, false, false, false,
+            ));
+            if game.overworld.pending_trainer_battle.is_some() {
+                break;
+            }
+        }
+        assert!(game.overworld.pending_trainer_battle.is_some(), "trainer battle was queued");
+        assert!(!game.overworld.trainer_encounter_pending(), "text handed off to battle");
+        assert!(!game.debug_condition_met("control_ready"), "a queued battle is not player control");
+    }
+
+    #[test]
+    fn control_ready_waits_for_door_exit_and_unfinished_movement() {
+        use pokered_core::overworld::{MovementState, WarpFadeState};
+        let mut game = PokemonGame::new_with_options(
+            GameVersion::Red, None, None, None, false, None, false, true, None,
+        );
+        game.state.screen = GameScreen::Overworld;
+        game.overworld = OverworldScreen::new(MapId::SilphCo5F, None, PokemonRedData);
+        game.overworld.state.player.x = 26;
+        game.overworld.state.player.y = 0;
+        assert!(game.debug_condition_met("control_ready"));
+        game.overworld.state.standing_on_door = true;
+        assert!(!game.debug_condition_met("control_ready"), "arrival auto-step has not started");
+        game.overworld.state.standing_on_door = false;
+        game.overworld.state.exiting_door = true;
+        assert!(!game.debug_condition_met("control_ready"), "arrival auto-step still owns input");
+        game.overworld.state.exiting_door = false;
+        game.overworld.state.player.movement_state = MovementState::Walking;
+        assert!(!game.debug_condition_met("control_ready"), "previous step is unfinished");
+        game.overworld.state.player.movement_state = MovementState::Idle;
+        game.overworld.state.standing_on_door = true;
+        game.overworld.warp_fade_state = WarpFadeState::FadingIn { frames_remaining: 2 };
+        let command = serde_json::from_value(serde_json::json!({
+            "cmd": "wait_until", "condition": "control_ready", "max_frames": 240,
+        })).unwrap();
+        let response = serde_json::to_value(game.handle_debug_command(command)).unwrap();
+        assert_eq!(response["data"]["reached"], true);
+        assert_eq!(response["data"]["state"]["player_y"], 1);
+        assert!(!game.overworld.state.standing_on_door);
+        assert!(!game.overworld.state.exiting_door);
+        assert_eq!(game.overworld.state.player.movement_state, MovementState::Idle);
+    }
 
     #[test]
     fn evaluation_telemetry_reads_dex_and_experience_without_advancing() {
@@ -7729,6 +8240,9 @@ mod synchronous_input_tests {
         assert_eq!(state["evaluation"]["party_source"], "battle_live");
         assert_eq!(state["evaluation"]["party"][0]["hp"], 1);
         assert_eq!(state["evaluation"]["party"][0]["pp"][0], 0);
+        assert_eq!(state["battle_live"]["player_party"][0]["pp"][0], 0);
+        assert_eq!(state["battle_live"]["player_party"][0]["moves"][0],
+                   state["party"][0]["moves"][0]);
         assert_eq!(state["evaluation"]["party"][0]["total_exp"], experience + 40);
         game.state.screen = GameScreen::Overworld;
         let state = game.debug_state_snapshot();

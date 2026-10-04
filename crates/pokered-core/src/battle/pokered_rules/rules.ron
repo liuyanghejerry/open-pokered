@@ -228,14 +228,20 @@ Ruleset(
                 ]),
             ]),
 
-        // ── PRIMARY status (power-0, guaranteed, after accuracy hit). The
-        //    no-status / type-immunity / Substitute guards mirror the side-status
-        //    ones. ParalyzeEffect (Thunder Wave): #23 + Substitute block.
-        Effect(id: "status.paralyze", kind: Move, power: 0, type: "Electric", accuracy: 100,
+        // ── PRIMARY paralysis: unlike damaging side-effects, Gen I permits
+        //    same-type targets and bypasses Substitute. Only ELECTRIC primary
+        //    paralysis (Thunder Wave) has Ground immunity. See pret/pokered
+        //    engine/battle/move_effects/paralyze.asm::ParalyzeEffect_.
+        Effect(id: "status.thunder_wave", kind: Move, power: 0, type: "Electric", accuracy: 100,
             hooks: [
                 Hook(on: "DamagingHit", do: [
-                    VetoIf(cond: MoveTypeIsDefenderType),
-                    VetoIf(cond: HasVolatile("Substitute")),
+                    VetoIf(cond: HasType("Ground")),
+                    InflictStatus(status: "paralysis", target: Target),
+                ]),
+            ]),
+        Effect(id: "status.paralyze", kind: Move, power: 0, type: "Normal", accuracy: 100,
+            hooks: [
+                Hook(on: "DamagingHit", do: [
                     InflictStatus(status: "paralysis", target: Target),
                 ]),
             ]),
@@ -252,15 +258,15 @@ Ruleset(
 
         // ── SLEEP (SleepEffect): guaranteed sleep with a 1..7-turn counter drawn
         //    by the ENGINE from the op's AmountSpec (the game only maps the
-        //    number → LegacyStatus::Sleep). No self-type immunity; the Substitute
-        //    + no-status guards apply. The already-wired sleep_gate (BeforeMove)
+        //    number → LegacyStatus::Sleep). No self-type or Substitute immunity;
+        //    the no-status guard applies. The already-wired sleep_gate (BeforeMove)
         //    ticks it down and wakes. Shared by Hypnosis/Sing/Sleep Powder/Lovely
         //    Kiss/Spore (each move's real accuracy comes from live MoveData).
         Effect(id: "status.sleep", kind: Move, power: 0, type: "Psychic", accuracy: 100,
             hooks: [
                 // Gen-1 SLEEP goes THROUGH a Substitute (the oracle `apply_sleep` has no
-                // sub check — "SleepEffect does NOT check Substitute"), unlike every other
-                // primary status. So NO `VetoIf(HasVolatile("Substitute"))` here.
+                // sub check — "SleepEffect does NOT check Substitute"), like primary
+                // paralysis. So NO `VetoIf(HasVolatile("Substitute"))` here.
                 Hook(on: "DamagingHit", do: [
                     InflictStatus(status: "sleep", target: Target, amount: RngRange(lo: 1, hi: 7)),
                 ]),

@@ -77,6 +77,16 @@ mod tests {
     }
 
     #[test]
+    fn calc_stat_exp_bonus_caps_like_original_eight_bit_sqrt_loop() {
+        // home/move_mon.asm CalcStat stops its root counter at $ff, before
+        // dividing by four. Values above 255^2 must not grant a 64th point.
+        for exp in [65024, 65025, 65026, 65535] {
+            assert_eq!(calc_stat(50, 8, exp, 100, false), 184);
+            assert_eq!(calc_stat(50, 8, exp, 100, true), 289);
+        }
+    }
+
+    #[test]
     fn calc_stat_caps_at_999() {
         // Massive values should cap at 999
         let result = calc_stat(255, 15, 65535, 100, true);

@@ -695,7 +695,7 @@ impl RuleBindings<PokeredRules> for PokeredBindings {
         absorbed
     }
 
-    /// `MoveTypeIsDefenderType` — the Gen-1 burn/freeze/paralyze self-type-immunity
+    /// `MoveTypeIsDefenderType` — the Gen-1 damaging burn/freeze/paralyze side-effect immunity
     /// quirk #23 (`status_effects.rs:85/110/135`): a defender whose own type matches
     /// the move's type cannot be afflicted. `move_type_index` is the record's `type:`
     /// interned index. Pure read.
@@ -922,7 +922,7 @@ fn record_id_for_move(m: MoveId) -> &'static str {
         MoveId::Thunderbolt | MoveId::Thundershock | MoveId::Thunderpunch => "side.paralyze_1",
         MoveId::Lick => "side.paralyze_2",
         // ── P2 primary-status moves (guaranteed, power-0) ──
-        MoveId::ThunderWave => "status.paralyze", // ParalyzeEffect
+        MoveId::ThunderWave => "status.thunder_wave", // Electric-only Ground immunity
         MoveId::StunSpore | MoveId::Glare => "status.paralyze",
         MoveId::Poisonpowder => "status.poison",  // PoisonEffect (plain branch)
         MoveId::PoisonGas => "status.poison",
@@ -1615,7 +1615,7 @@ fn pokered_damage(
     source: BattlerRef,
     _eff: EffectId,
 ) -> HandlerResult {
-    use crate::battle::damage::{calculate_damage, is_physical, DamageParams};
+    use crate::battle::damage::calculate_damage;
     let pm = current_move_for(source);
     // Two-turn charge moves: the GATHER turn installs the Charging volatile and deals
     // no damage; the STRIKE turn (forced by forced_action) consumes it and lands the
@@ -1684,11 +1684,33 @@ fn pokered_damage(
         }
         b.max(217)
     };
-    let is_crit = ctx.mv.is_critical;
-    let physical = is_physical(pm.move_type);
+    let params = formula_damage_params(
+        &pm, ctx.battler(source), ctx.battler(target), ctx.effects,
+        source, target, ctx.mv.is_critical, damage_roll,
+    );
+    let result = calculate_damage(&params);
+    ctx.mv.damage = if result.is_miss { 0 } else { result.damage };
+    if result.is_miss {
+        ctx.mv.move_missed = true;
+        return HandlerResult::Set(RelayVar::Bool(false)); // type-immunity → "miss"
+    }
+    HandlerResult::Unchanged
+}
 
-    let a = ctx.battler(source);
-    let d = ctx.battler(target);
+/// Shared, read-only parameter extraction for the live pipeline and conditional
+/// damage previews. No RNG, selected-move globals or battle state are changed.
+fn formula_damage_params(
+    pm: &MoveData,
+    a: &EngineBattler<PokeredRules>,
+    d: &EngineBattler<PokeredRules>,
+    effects: &[EffectState<PokeredRules>],
+    source: BattlerRef,
+    target: BattlerRef,
+    is_crit: bool,
+    damage_roll: u8,
+) -> crate::battle::damage::DamageParams {
+    use crate::battle::damage::{is_physical, DamageParams};
+    let physical = is_physical(pm.move_type);
     let (atk, def) = if physical {
         (a.stats.get(StatIndex::Attack).copied().unwrap_or(0),
          d.stats.get(StatIndex::Defense).copied().unwrap_or(1))
@@ -1706,12 +1728,12 @@ fn pokered_damage(
     let level = level_of(a);
     // STAB (attacker) + type effectiveness/immunity (defender) honour Conversion via
     // the arena TypeOverride (effective_types), falling back to the species types.
-    let (atype1, atype2) = effective_types(ctx, source);
-    let (dtype1, dtype2) = effective_types(ctx, target);
+    let (atype1, atype2) = battler_effective_types(a, effects, source);
+    let (dtype1, dtype2) = battler_effective_types(d, effects, target);
     // Reflect halves physical damage, Light Screen halves special — modelled as
     // doubling the relevant defence when the DEFENDER holds the matching screen
     // volatile (the setter is InflictVolatile on the screen records).
-    let has_screen = ctx.effects.iter().any(|e| {
+    let has_screen = effects.iter().any(|e| {
         e.host == target
             && match e.kind {
                 PokeVolatile::Reflect => physical,
@@ -1719,7 +1741,7 @@ fn pokered_damage(
                 _ => false,
             }
     });
-    let params = DamageParams {
+    DamageParams {
         attacker_level: level,
         move_power: pm.power,
         move_type: pm.move_type,
@@ -1739,14 +1761,7 @@ fn pokered_damage(
         // data op on the record).
         is_explode_effect: pm.effect == MoveEffect::ExplodeEffect,
         attacker_burned: a.status == Some(LegacyStatus::Burn),
-    };
-    let result = calculate_damage(&params);
-    ctx.mv.damage = if result.is_miss { 0 } else { result.damage };
-    if result.is_miss {
-        ctx.mv.move_missed = true;
-        return HandlerResult::Set(RelayVar::Bool(false)); // type-immunity → "miss"
     }
-    HandlerResult::Unchanged
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2916,13 +2931,21 @@ fn species_types(s: Species) -> (PokemonType, PokemonType) {
 /// (e.g. becoming Poison-type mid-battle to dodge a poison), an extremely narrow
 /// interaction; covering it would need an engine trait-signature change.
 fn effective_types(ctx: &BattleCtx<'_, PokeredRules>, who: BattlerRef) -> (PokemonType, PokemonType) {
-    if let Some((t1, t2)) = ctx.effects.iter().find_map(|e| match &e.kind {
+    battler_effective_types(ctx.battler(who), ctx.effects, who)
+}
+
+fn battler_effective_types(
+    battler: &EngineBattler<PokeredRules>,
+    effects: &[EffectState<PokeredRules>],
+    who: BattlerRef,
+) -> (PokemonType, PokemonType) {
+    if let Some((t1, t2)) = effects.iter().find_map(|e| match &e.kind {
         PokeVolatile::TypeOverride { type1, type2 } if e.host == who => Some((*type1, *type2)),
         _ => None,
     }) {
         return (t1, t2);
     }
-    species_types(ctx.battler(who).species)
+    species_types(battler.species)
 }
 
 /// Re-homes the `accuracy.rs` scaling chain (percentage→255, accuracy stage
@@ -2969,3 +2992,4 @@ mod p5_tests;
 /// P6 production runtime — drive a real battle through the stack (RNG, translator,
 /// legacy↔engine adapter). Production (NOT test-gated).
 pub mod runtime;
+pub mod preview;

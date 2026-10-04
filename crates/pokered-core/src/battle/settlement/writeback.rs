@@ -191,12 +191,14 @@ pub fn settle_battle_into_save(
         if save.party.count() < 6 {
             let _ = save.party.add(caught);
         } else {
-            let _ = save.current_box.deposit(caught);
+            let _ = save.pc_storage.deposit_to_current(caught);
+            save.current_box = save.pc_storage.current_box().clone();
         }
         save.game_data.pokedex.set_seen(species);
         save.game_data.pokedex.set_owned(species);
     }
     overworld.party_count = save.party.count() as u8;
+    overworld.box_count = save.current_box.count() as u8;
     overworld.party_lead_level = save.party.leader_level();
     overworld.set_post_battle_encounter_cooldown();
 

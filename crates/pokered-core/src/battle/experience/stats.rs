@@ -58,7 +58,9 @@ pub(crate) fn ceil_sqrt_u16(x: u16) -> u16 {
 }
 
 fn stat_exp_contribution(stat_exp: u16) -> u16 {
-    let s = ceil_sqrt_u16(stat_exp);
+    // Original CalcStat's 8-bit root loop stops at $ff (home/move_mon.asm).
+    // A mathematical root of 256 must not add a 64th EV contribution point.
+    let s = ceil_sqrt_u16(stat_exp).min(255);
     s / 4
 }
 

@@ -1051,6 +1051,92 @@ fn mansion_statues_offer_and_apply_switch_from_adjacent_floor() {
     }
 }
 
+#[test]
+fn cinnabar_entry_resets_mansion_switch_without_erasing_progress() {
+    use pokered_data::impl_traits::PokemonRedData;
+
+    for restored in [false, true] {
+        for switch_on in [true, false] {
+            let initial_map = if restored {
+                MapId::CinnabarIsland
+            } else {
+                MapId::PokemonMansion1F
+            };
+            let mut screen = OverworldScreen::new(initial_map, None, PokemonRedData);
+            screen.set_flag_live("EVENT_MANSION_SWITCH_ON", switch_on);
+            screen.set_flag_live("EVENT_LAB_STILL_REVIVING_FOSSIL", true);
+            screen.set_flag_live("EVENT_GOT_SECRET_KEY_MANSION_B1F", true);
+            screen.set_flag_live("EVENT_BEAT_BLAINE", true);
+            if restored {
+                screen.state.player.x = 10;
+                screen.state.player.y = 5;
+                screen.run_on_load();
+            } else {
+                screen.warp_to_map(MapId::CinnabarIsland, 10, 5);
+            }
+            for _ in 0..120 {
+                screen.update_frame(OverworldInput::new(
+                    false, false, false, false, false, false, false, false,
+                ));
+            }
+            let flags = screen.script_flags();
+            assert_eq!(
+                flags.get("EVENT_MANSION_SWITCH_ON").copied().unwrap_or(false),
+                false,
+                "island entry resets the switch: restored={restored}, switch_on={switch_on}"
+            );
+            assert!(!flags.get("EVENT_LAB_STILL_REVIVING_FOSSIL").copied().unwrap_or(false));
+            assert_eq!(flags.get("EVENT_GOT_SECRET_KEY_MANSION_B1F"), Some(&true));
+            assert_eq!(flags.get("EVENT_BEAT_BLAINE"), Some(&true));
+        }
+    }
+}
+
+#[test]
+fn mansion_floors_keep_switch_until_island_exit_then_reenter_off_layout() {
+    use pokered_data::impl_traits::PokemonRedData;
+
+    let mut screen = OverworldScreen::new(MapId::PalletTown, None, PokemonRedData);
+    screen.set_flag_live("EVENT_MANSION_SWITCH_ON", true);
+    let neutral = OverworldInput::new(
+        false, false, false, false, false, false, false, false,
+    );
+    for (map, x, y) in [
+        (MapId::PokemonMansion1F, 5, 26),
+        (MapId::PokemonMansion2F, 5, 10),
+        (MapId::PokemonMansion3F, 5, 10),
+        (MapId::PokemonMansionB1F, 18, 26),
+    ] {
+        screen.warp_to_map(map, x, y);
+        for _ in 0..120 {
+            screen.update_frame(neutral);
+        }
+        assert_eq!(
+            screen.script_flags().get("EVENT_MANSION_SWITCH_ON"),
+            Some(&true),
+            "moving between Mansion floors must preserve the switch on {map:?}"
+        );
+    }
+    screen.warp_to_map(MapId::CinnabarIsland, 10, 5);
+    for _ in 0..120 {
+        screen.update_frame(neutral);
+    }
+    assert!(!screen.script_flags().get("EVENT_MANSION_SWITCH_ON").copied().unwrap_or(false));
+
+    screen.warp_to_map(MapId::PokemonMansion1F, 5, 26);
+    for _ in 0..120 {
+        screen.update_frame(neutral);
+    }
+    let data = screen.map_data.as_ref().unwrap();
+    for (x, y, block) in [(12, 6, 14), (8, 3, 45), (10, 8, 45), (13, 13, 45)] {
+        assert_eq!(
+            data.blocks[y * data.width as usize + x],
+            block,
+            "returning from the island uses OFF geometry at ({x},{y})"
+        );
+    }
+}
+
 /// Regression: returning to the overworld from the START menu with the A
 /// button still held (the press that confirmed EXIT) used to re-fire as a
 /// fresh A press on the first frame back — instantly talking to the facing

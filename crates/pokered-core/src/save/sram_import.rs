@@ -141,6 +141,10 @@ fn finish_import(out: &mut SaveData) {
     let saved_box = (out.game_data.current_box_num & 0x7F) as usize;
     if saved_box < 12 {
         let _ = out.pc_storage.change_box(saved_box);
+        // Bank 1 is the live current-box buffer. Box-bank copies can lag
+        // behind it (as in the original game's SaveCurrentBox protocol).
+        // Preserve catches in old saves instead of showing a stale PC list.
+        *out.pc_storage.current_box_mut() = out.current_box.clone();
     }
     derive_traded_flags(out);
 }
@@ -398,7 +402,7 @@ pub fn import_sram_no_checksum(data: &[u8]) -> Result<SaveData, SaveError> {
         hall_of_fame,
         tile_animations,
     };
-    derive_traded_flags(&mut save);
+    finish_import(&mut save);
     Ok(save)
 }
 

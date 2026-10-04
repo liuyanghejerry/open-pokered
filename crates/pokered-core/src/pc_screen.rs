@@ -887,9 +887,8 @@ impl PcScreen {
                                 // Party filled up between the menu check and
                                 // here — leave the mon in the box.
                                 self.enter_bills_menu();
-                            } else if let Ok(mon) = ctx.pc_storage.current_box_mut().withdraw(idx)
+                            } else if ctx.pc_storage.withdraw_to_party(idx, ctx.party).is_ok()
                             {
-                                let _ = ctx.party.add(mon);
                                 self.sfx.push(PcSfx::WithdrawDeposit);
                                 // "{NAME} is taken out. Got {NAME}."
                                 // (_MonIsTakenOutText)
@@ -1662,6 +1661,36 @@ mod tests {
         assert_eq!(w.party.count(), 2);
         assert_eq!(w.pc_storage.current_box().count(), 0);
         assert_eq!(w.party.get(1).unwrap().species, Species::Bulbasaur);
+    }
+
+    #[test]
+    fn withdraw_menu_rebuilds_box_stats_at_xp_level_without_healing() {
+        let mut w = World::new();
+        w.party.add(mon(Species::Pikachu, 5)).unwrap();
+        let mut boxed =
+            crate::pokemon::stats::create_pokemon(Species::Hypno, 38, [147, 142]).unwrap();
+        boxed.total_exp = 59319; // Hypno's exact level-39 XP threshold.
+        boxed.stat_exp = [7864, 12837, 7647, 13972, 6908];
+        boxed.hp = 129;
+        boxed.max_hp = 129;
+        boxed.status = crate::battle::state::StatusCondition::Poison;
+        w.pc_storage.deposit_to_current(boxed).unwrap();
+        *w.pc_storage.current_box_mut().get_mut(0).unwrap() = boxed;
+        let mut s = PcScreen::new(PcEntry::PokemonCenter, &open_ctx());
+        open_bills_pc(&mut s, &mut w);
+        s.update_frame(A, &mut w.ctx()); // WITHDRAW list
+        s.update_frame(A, &mut w.ctx()); // choose HYPNO
+        s.update_frame(A, &mut w.ctx()); // WITHDRAW action
+        let withdrawn = w.party.get(1).unwrap();
+        assert_eq!(
+            (withdrawn.level, withdrawn.hp, withdrawn.max_hp),
+            (39, 129, 133)
+        );
+        assert_eq!(withdrawn.status, boxed.status);
+        assert_eq!(withdrawn.total_exp, boxed.total_exp);
+        assert_eq!(withdrawn.moves, boxed.moves);
+        assert_eq!(withdrawn.pp, boxed.pp);
+        assert!(w.pc_storage.current_box().is_empty());
     }
 
     #[test]

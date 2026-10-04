@@ -70,8 +70,22 @@ def battle_party_target(state):
     party = state["battle_live"]["player_party"]
     enemy = species_data(state["battle_live"]["enemy"]["species"])
     preferred = "Venusaur" if "Ground" in {enemy["type1"], enemy["type2"]} else "Zapdos"
-    return next((i for i, mon in enumerate(party) if mon["species"] == preferred and mon["hp"] > 0),
-                max((i for i, mon in enumerate(party) if mon["hp"] > 0), key=lambda i: party[i]["level"]))
+    conscious = [i for i, mon in enumerate(party) if mon['hp'] > 0]
+    capable = []
+    for i in conscious:
+        for name, pp in zip(party[i].get('moves', []), party[i].get('pp', [])):
+            move = move_data(name)
+            if (pp > 0 and move['power'] > 0
+                    and all(type_chart().get((move['type'], defense), 1) > 0
+                            for defense in {enemy['type1'], enemy['type2']})):
+                capable.append(i)
+                break
+    # An immune last move or exhausted attacks are not useful readiness.
+    # Keep the old preference among capable members; with none, preserve
+    # the conscious fallback rather than inventing PP or an attack.
+    candidates = capable or conscious
+    return next((i for i in candidates if party[i]['species'] == preferred),
+                max(candidates, key=lambda i: party[i]['level']))
 
 
 def recovery_hp_threshold(state):
@@ -147,11 +161,22 @@ def require_flag(g, name):
 
 
 def open_start(g, entry):
+    state = g.st()
+    if (state["screen"] == "overworld" and not state.get("field_menu")
+            and any(state.get(key) for key in
+                    ("dialogue_state", "choice", "script_running", "active_script_effect"))):
+        # A trainer can leave its post-battle script running after combat.
+        # START is ignored during dialogue; finish that handoff before trying
+        # to open a field menu. Jev's cutscene driver preserves typed choices.
+        g.cutscene()
     g.tap("start", 12)
     for _ in range(20):
         state = g.st()
         menu = state.get("field_menu")
         if menu is None and state["screen"] == "overworld":
+            if any(state.get(key) for key in
+                   ("dialogue_state", "choice", "script_running", "active_script_effect")):
+                g.cutscene()
             # A warp's final input lock can consume the first START tap.
             g.step(20)
             g.tap("start", 12)
@@ -232,6 +257,19 @@ def use_item(g, name, party_index=None, forget=None):
 
 
 def field_move(g, name, party_index=0):
+    before_cut = None
+    if name == 'Cut':
+        from playthrough import DELTA, MAPS, tile_at
+        before = g.st()
+        tree_tile = {'overworld': 0x3D, 'gym': 0x50}.get(
+            MAPS[before['map_name']]['tileset_name'].lower())
+        dx, dy = DELTA[before['player_facing'].lower()]
+        cut_target = before['player_x'] + dx, before['player_y'] + dy
+        # Fresh runs can revisit an already-cleared tree without a reload.
+        # Grass CUT also deliberately doesn't edit blocks in the native game.
+        # Only an observed tree makes a native map edit a required effect.
+        if tree_tile is not None and tile_at(before['map_name'], *cut_target) == tree_tile:
+            before_cut = before
     open_start(g, "Pokemon")
     for _ in range(8):
         menu = g.st()["field_menu"]
@@ -248,6 +286,20 @@ def field_move(g, name, party_index=0):
             g.tap("a", 12)
             if name != "Fly":
                 assert g.cutscene()
+            if before_cut is not None:
+                # Closing CUT's text only queues the native map edit. Wait
+                # for that edit before navigation reads the old tree as a
+                # wall; never replay the menu or change planning blocks here.
+                for _ in range(60):
+                    observed = g.st()
+                    if observed['map_name'] != before_cut['map_name']:
+                        raise RuntimeError('CUT left the original map before its effect was observed')
+                    if (observed['map_blocks'] != before_cut['map_blocks']
+                            and tile_at(observed['map_name'], *cut_target) != tree_tile):
+                        break
+                    g.step(2)
+                else:
+                    raise RuntimeError('CUT did not change the native map after its text closed')
             return
         g.tap("down", 8)
     raise RuntimeError(f"field move not selected: {name}")
@@ -1358,6 +1410,9 @@ def m41_victory_road_entrance(g):
 def push_boulder(g, map_name, text_id, destination, flag):
     from collections import deque
     from playthrough import bfs, DELTA, MAPS, walkable_edge, tile_at, warp_tiles
+    from openpokered.boulder_skills import BOULDER_TARGETS
+    holes = {tuple(row['target']) for row in BOULDER_TARGETS.values()
+             if row['map'] == map_name and row['falls']}
     # A switch push can finish on the same frame that a wild encounter hands
     # control back to the overworld. Resolve that hand-off before opening the
     # party menu for the next Strength use.
@@ -1404,7 +1459,10 @@ def push_boulder(g, map_name, text_id, destination, flag):
                     and (n["x"], n["y"]) != (-1, -1)}
         exit_mats = {(w["x"], w["y"]) for w in MAPS[map_name]["warps"]
                      if w["y"] == MAPS[map_name]["height"] * 2 - 1}
-        occupied |= warp_tiles(map_name) - exit_mats
+        # A player falls through a scripted hole, but a requested boulder
+        # drop must be allowed to enter it. Keep it forbidden for walking
+        # and for other boulders; ordinary stairs remain obstacles.
+        occupied |= warp_tiles(map_name) - exit_mats - ({destination} & holes)
         root = ((s["player_x"], s["player_y"]), boulders)
         queue, previous = deque([root]), {root: None}
         solved = None
@@ -1413,7 +1471,7 @@ def push_boulder(g, map_name, text_id, destination, flag):
             if positions[target_slot] == destination:
                 solved = node
                 break
-            blocked = occupied | set(positions)
+            blocked = occupied | set(positions) | holes
             # Prefer the requested boulder, then use the others only when a
             # valid solution requires clearing their route.
             slots = [target_slot] + [slot for slot in range(len(positions))
@@ -1424,9 +1482,10 @@ def push_boulder(g, map_name, text_id, destination, flag):
                     behind = (boulder[0] - dx, boulder[1] - dy)
                     ahead = (boulder[0] + dx, boulder[1] + dy)
                     if (ahead in occupied or ahead in positions
+                            or ahead in holes and slot != target_slot
                             or not walkable_edge(map_name, behind, ahead)
                             or tile_at(map_name, *ahead) == 0x15
-                            or behind in occupied or behind in positions):
+                            or behind in occupied or behind in positions or behind in holes):
                         continue
                     if not bfs(map_name, player, behind, blocked=blocked):
                         continue
@@ -1595,7 +1654,9 @@ def retry_elite_four(g, milestone, retries, max_retries=5):
     # there is no save reload, injected money or skip over the cleared trainers.
     bag = {v['item']: v['qty'] for v in g.d.cmd(cmd='get_bag')['data']}
     money = g.st()['money']
-    for item, price, wanted, slot in [('FullRestore', 3000, 16, 2), ('Revive', 1500, 4, 5)]:
+    # HP medicine cannot restore a fainted party member. Reserve the missing
+    # Revives first so a limited retry budget cannot buy only Full Restores.
+    for item, price, wanted, slot in [('Revive', 1500, 4, 5), ('FullRestore', 3000, 16, 2)]:
         quantity = min(max(0, wanted - bag.get(item, 0)), money // price)
         if quantity:
             g.nav_to(2, 5, 'IndigoPlateauLobby'); g.face('left'); g.tap('a', 16)

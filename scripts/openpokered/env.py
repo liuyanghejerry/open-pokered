@@ -93,7 +93,7 @@ class OpenPokeredEnv:
             spawn_env = dict(os.environ, POKERED_MAPS_DIR=str(self.maps_dir))
         self.proc = subprocess.Popen(
             cmd, cwd=str(ROOT), env=spawn_env, stdout=subprocess.DEVNULL,
-            stderr=open(self.run_dir / "game.log", "w"))
+            stderr=open(self.run_dir / "game.log", "w"), start_new_session=True)
         self.client = AgentClient(port)
         # Wait for the game to accept commands (skip-intro boot takes a moment).
         deadline = time.time() + self.launch_timeout

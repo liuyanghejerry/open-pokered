@@ -1,16 +1,19 @@
 // CinnabarIsland — translated from the original disassembly
 // (scripts/CinnabarIsland.asm, text/CinnabarIsland.asm) to the real Game DSL
 // API surface. This is a town/island map: two dialogue-only NPCs and five
-// signs. The only scripted logic is the locked CINNABAR GYM door — until the
+// signs. Island entry resets the Mansion switch and fossil-revival wait.
+// The locked CINNABAR GYM door remains locked until the
 // player has the SECRET KEY, walking up to the gym entrance shows
 // "The door is locked..." and pushes the player back south (the original
 // simulates a DOWN joypad press). Approximated here with movePlayer.
 
 game_scene CinnabarIsland {
-  // Original CinnabarIsland_Script resets EVENT_LAB_STILL_REVIVING_FOSSIL on
-  // every load: leaving the island to the Lab marks the fossil revive as done,
+  // Original CinnabarIsland_Script resets the shared Mansion switch on return
+  // to the island, not when moving between Mansion floors. It also resets
+  // EVENT_LAB_STILL_REVIVING_FOSSIL: leaving the island to the Lab marks it done,
   // so the Lab scientist hands the revived POKeMON on the next visit.
   @load {
+    resetFlag("EVENT_MANSION_SWITCH_ON")
     resetFlag("EVENT_LAB_STILL_REVIVING_FOSSIL")
   }
 

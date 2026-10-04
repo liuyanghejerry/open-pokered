@@ -6,6 +6,7 @@ menu option. Real input executes it; only observed game facts establish success.
 import json
 import time
 from collections import Counter
+from copy import deepcopy
 
 from . import skills
 from .story_rules import StoryIndex, normalize_bag
@@ -14,6 +15,23 @@ from .typesafe import Choice, TypeSafeError
 
 class StoryStopped(RuntimeError):
     pass
+
+
+def post_operation_effects(index, rule, selected_subgoal, facts):
+    """Separate the script condition from the selected goal's observed condition.
+
+    A full-party PC swap can satisfy a withdrawal goal without leaving a free
+    party slot (the underlying script rule). Neither observation is a causal
+    completion certificate; use the ordinary satisfaction checks, not receipts.
+    Missing/invalid goal shape is unknown, never presumed success or failure.
+    """
+    target = deepcopy(selected_subgoal)
+    return {'script_effect': deepcopy(list(rule.effect)),
+            'intended_effect_observed': index.satisfied(rule.effect, facts),
+            'selected_subgoal': target,
+            'selected_subgoal_satisfied_after': (
+                index.satisfied(target, facts)
+                if isinstance(target, (list, tuple)) and len(target) == 3 else None)}
 
 
 def progress_key(facts):
@@ -37,7 +55,8 @@ class DualStoryAgent:
                  strategy_jev=True, action_jev=True, max_calls=160,
                  max_actions=180, frame_budget=80000, wall_budget=600,
                  maps_dir=None, trace=None):
-        if not objectives or any(not o.get('satisfied_when', {}).get('flag') for o in objectives):
+        if not objectives or any(not o.get('satisfied_when', {}).get('flag') and not o.get('agent_verified')
+                                 for o in objectives):
             raise ValueError('nonempty objectives with explicit completion flags required')
         self.client = client
         self.model_client = model_client
@@ -81,8 +100,10 @@ class DualStoryAgent:
                 'party': [{k: m.get(k) for k in ('species', 'level', 'hp', 'max_hp', 'status')}
                           for m in state.get('party', [])],
                 'badges': self.client.observe().get('badges', {}).get('count', 0),
+                'badge_bits': state.get('badges'),
                 'map': state['map_name'], 'x': state['player_x'], 'y': state['player_y'],
-                'money': state.get('money'), 'coins': state.get('coins')}
+                'money': state.get('money'), 'coins': state.get('coins'),
+                'dex': state.get('pokedex') or {}}
 
     def choose(self, layer, state, candidates, instruction, *, allow_abstain=True):
         if not candidates:
@@ -92,6 +113,7 @@ class DualStoryAgent:
         if sum(self.calls.values()) >= self.max_calls:
             raise StoryStopped('judgment_cap')
         self.check_budget()
+        decision_frame = self.client.state().get('frame_count')
         criteria = dict(candidates)
         if allow_abstain:
             criteria['none'] = 'None of these candidates can advance the current goal.'
@@ -101,7 +123,9 @@ class DualStoryAgent:
         try:
             result = self.model_client.system_one(state, {layer: question}, model=self.model)
         except TypeSafeError as e:
-            self.record('judgment_error', layer=layer, error=str(e))
+            self.record('judgment_error', layer=layer, error=str(e), state=state,
+                        question=question.to_json(), frame=decision_frame,
+                        latency_s=round(time.monotonic() - started, 3))
             raise StoryStopped(f'{layer}:service_unavailable') from e
         answer = result.answers.get(layer)
         self.tokens[layer] += result.input_tokens
@@ -110,7 +134,7 @@ class DualStoryAgent:
         self.record('judgment', layer=layer, state=state, question=question.to_json(),
                     answer=vars(answer) if answer else None, model=result.model,
                     input_tokens=result.input_tokens, output_tokens=result.output_tokens,
-                    latency_s=round(time.monotonic() - started, 3))
+                    latency_s=round(time.monotonic() - started, 3), frame=decision_frame)
         if allow_abstain and answer and answer.choice == 'none':
             supported = {key: answer.probabilities.get(key, 0) for key in candidates}
             # Similar valid choices split their probability mass. Abstain
@@ -129,15 +153,21 @@ class DualStoryAgent:
         for objective in self.objectives:
             if self.objective_satisfied(objective, facts) and objective['id'] not in self.completed:
                 self.completed.append(objective['id'])
-                self.record('milestone', objective=objective['id'], flag=objective['satisfied_when']['flag'],
+                self.record('milestone', objective=objective['id'],
+                            flag=objective.get('satisfied_when', {}).get('flag'),
                             frame=self.client.state()['frame_count'])
 
     def objective_satisfied(self, objective, facts):
-        return bool(facts['flags'].get(objective['satisfied_when']['flag']))
+        flag = objective.get('satisfied_when', {}).get('flag')
+        return bool(flag and facts['flags'].get(flag))
 
     def strategy_groups(self, facts):
         groups = {}
         for objective in self.objectives:
+            if not objective.get('satisfied_when', {}).get('flag'):
+                # An agent-verified objective has no flag for the frontier to
+                # backchain; its candidates are produced by the skills instead.
+                continue
             target = ('flag', objective['satisfied_when']['flag'], True)
             if self.objective_satisfied(objective, facts):
                 continue
@@ -155,6 +185,9 @@ class DualStoryAgent:
                     group['rules'].append(rule)
         return groups
 
+    def augment_strategy_state(self, state, facts):
+        """Hook for subclass layers that supply goal-specific judgment state."""
+
     def select_strategy(self, facts):
         groups = self.strategy_groups(facts)
         candidates = {}
@@ -165,8 +198,14 @@ class DualStoryAgent:
                 continue
             key = f'subgoal:{n}'
             offered[key] = group
+            routes = {route['map']: route for route in
+                      group.get('context', {}).get('trigger_navigation', [])}
+            ways = sorted(group['rules'], key=lambda rule: (
+                routes.get(rule.map, {}).get('tile_route_found') is not True,
+                routes.get(rule.map, {}).get('steps') if
+                routes.get(rule.map, {}).get('steps') is not None else float('inf')))
             candidates[key] = json.dumps({'establish': group['target'], 'advances': group['objectives'],
-                                          'ways': [r.description() for r in group['rules'][:6]],
+                                          'ways': [r.description() for r in ways[:6]],
                                           'context': group.get('context')})
         navigation = {}
         for group in offered.values():
@@ -193,6 +232,7 @@ class DualStoryAgent:
                  'navigation': navigation,
                  'known_navigation_failures': failures,
                  'recent_outcomes': self.recent[-4:]}
+        self.augment_strategy_state(state, facts)
         selected = self.choose('strategy', state, candidates,
                                'Which attainable story or preparation subgoal should the player pursue next? '
                                'Healing, training and improving weak attacks are valid indirect progress toward later battles. '
@@ -257,16 +297,33 @@ class DualStoryAgent:
             if self.settle_special(state):
                 continue
             field_menu = state.get('field_menu')
-            if field_menu and field_menu.get('kind') == 'elevator':
-                options = field_menu['items']
-                signature = ('elevator', tuple(options))
+            if field_menu and field_menu.get('kind') in ('elevator', 'filter_bag'):
+                kind = field_menu['kind']
+                options = field_menu.get('items')
+                if kind == 'filter_bag' and (
+                        not isinstance(options, list)
+                        or any(not isinstance(item, str) or not item for item in options)
+                        or type(field_menu.get('cursor')) is not int
+                        or not (0 <= field_menu['cursor'] < len(options) if options
+                                else field_menu['cursor'] == 0)):
+                    raise StoryStopped('invalid_filter_bag_menu')
+                signature = (kind, tuple(options))
                 if menu_pick is None or menu_pick[0] != signature:
+                    candidates = {str(i): label for i, label in enumerate(options)}
+                    instruction = 'Which elevator floor advances the selected subgoal? Use the script confirmation option and destination.'
+                    if kind == 'filter_bag':
+                        candidates['cancel'] = 'CANCEL: press B without selecting or handing over an item'
+                        instruction = ('Which carried item advances the selected subgoal? Match the '
+                                       'script confirmation item and acquisition source. Only these '
+                                       'observed items can be selected; cancel uses B and consumes nothing. '
+                                       'Selecting an item is not proof of a later handover or Pokémon receipt.')
                     selected = self.choose('action', {
                         'subgoal': goal, 'script': rule.description() if rule else None,
-                        'menu': options}, {str(i): label for i, label in enumerate(options)},
-                        'Which elevator floor advances the selected subgoal? Use the script confirmation option and destination.')
-                    menu_pick = (signature, int(selected))
-                self.tap('a' if field_menu['cursor'] == menu_pick[1] else 'down')
+                        'menu_kind': kind, 'menu': options, 'dialogue': last_dialogue},
+                        candidates, instruction)
+                    menu_pick = (signature, 'cancel' if selected == 'cancel' else int(selected))
+                self.tap('b' if menu_pick[1] == 'cancel' else
+                         'a' if field_menu['cursor'] == menu_pick[1] else 'down')
                 continue
             if state['screen'] == 'battle':
                 self.record('battle_started', state=state)
@@ -287,6 +344,11 @@ class DualStoryAgent:
                     selected = self.choose('action', {
                         'subgoal': goal, 'dialogue': last_dialogue,
                         'current_map': state.get('map_name'), 'travel_in_progress': navigation,
+                        **({'safari_game': state.get('safari_game'),
+                            'safari_observation_frame': state.get('frame_count'),
+                            'money': state.get('money')}
+                           if getattr(self, 'collects_dex', False)
+                           and state.get('map_name', '').startswith('SafariZone') else {}),
                         'script': rule.description() if rule else None,
                         'menu': options}, candidates,
                         'Which menu option advances the current subgoal? Use the dialogue and '
@@ -311,8 +373,17 @@ class DualStoryAgent:
             if effect == 'ShowPokedexEntry':
                 self.tap('a')
                 continue
+            if state['screen'] == 'pokedex':
+                # A successful capture parks the dex-registration entry screen
+                # over the overworld with no script effect attached, so this
+                # loop would otherwise retry until `interaction_did_not_settle`
+                # and abort the run on the first catch. `update_entry` closes
+                # on B from any page (A only on the last page).
+                self.tap('b')
+                continue
             obs = self.client.observe()
-            if obs['mode'] == 'overworld' and not state.get('script_running') and not effect:
+            if (obs['mode'] == 'overworld' and not state.get('script_running') and not effect
+                    and not state.get('fishing_active')):
                 return
             self.client.step(10)
         self.record('unsettled', state=self.client.state())
@@ -332,6 +403,18 @@ class DualStoryAgent:
 
     def should_replan(self, facts):
         return False
+
+    def completed_stochastic_attempt(self, operation, rule, result, resolved_battles):
+        """Subclasses may distinguish observed trials from failed operations.
+
+        This never establishes the goal or changes the observed progress key.
+        The default preserves deterministic story-action failure accounting.
+        """
+        return False
+
+    def operation_outcome_observations(self, operation, result, before, after):
+        """Optional read-only evidence from the already observed action boundaries."""
+        return {}
 
     def action_rejected(self, facts, reason):
         return False
@@ -392,6 +475,9 @@ class DualStoryAgent:
                         'Several operations may be needed to finish it. Select a live trigger, '
                         'travel step, recovery or training operation using its described effects. '
                         'Script effects describe what will happen when the intended interaction completes. '
+                        'Recent intended_effect_observed checks script_effect; '
+                        'selected_subgoal_satisfied_after separately checks selected_subgoal at the '
+                        'observed boundary, not causation or final collection proof. '
                         'Travel or interaction can be interrupted by other trainers: if recent attempts '
                         'gained battle flags, retrying the intended NPC is valid progress.')
                 except StoryStopped as error:
@@ -399,14 +485,22 @@ class DualStoryAgent:
                         continue
                     raise
                 operation, rule = bindings[selection]
+                selected_subgoal = deepcopy(self.active['target'])
+                battles_before = self.resolved_battles
                 result = self.execute(operation, rule)
                 after = self.facts()
+                stochastic_attempt = self.completed_stochastic_attempt(
+                    operation, rule, result, self.resolved_battles - battles_before)
                 changed = progress_key(facts) != progress_key(after)
                 moved = tuple(facts[k] for k in ('map', 'x', 'y')) != tuple(after[k] for k in ('map', 'x', 'y'))
                 delta = {'operation': operation, 'result': result.get('result'),
                          'flags_gained': sorted(k for k,v in after['flags'].items() if v and not facts['flags'].get(k)),
                          'bag_after': after['bag'], 'map': after['map'], 'story_state_changed': changed}
-                delta['intended_effect_observed'] = self.index.satisfied(rule.effect, after)
+                delta.update(post_operation_effects(self.index, rule, selected_subgoal, after))
+                delta.update(self.operation_outcome_observations(operation, result, facts, after))
+                if stochastic_attempt:
+                    delta['completed_stochastic_attempt'] = True
+                    delta['resolved_encounters'] = self.resolved_battles - battles_before
                 self.recent.append(delta)
                 self.record('outcome', **delta)
                 blocked = result.get('result') == 'blocked'
@@ -414,7 +508,7 @@ class DualStoryAgent:
                     # Reaching a story barrier is new planning evidence even
                     # when the player walked there. Offer its prerequisites now.
                     self.active = None
-                if not changed and (not moved or blocked):
+                if not changed and (not moved or blocked) and not stochastic_attempt:
                     self.failures[attempt_key(rule, facts)] += 1
                     if self.failures[attempt_key(rule, facts)] >= 2:
                         self.active = None

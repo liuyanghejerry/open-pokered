@@ -192,6 +192,43 @@ fn test_deserialize_party_mon_roundtrip() {
 }
 
 #[test]
+fn box_roundtrip_rebuilds_battle_stats_without_healing() {
+    use crate::pokemon::stats::create_pokemon;
+    for saved_hp in [0, 17] {
+        let mut mon = create_pokemon(Species::Charizard, 36, [0x95, 0xAA]).unwrap();
+        mon.hp = saved_hp;
+        let mut buf = Vec::new();
+        serialize_box_mon(&mon, &mut buf);
+        let restored = deserialize_box_mon(&buf).unwrap();
+        assert_eq!(restored.hp, saved_hp);
+        assert_eq!(restored.max_hp, mon.max_hp);
+        assert_eq!(restored.attack, mon.attack);
+        assert_eq!(restored.defense, mon.defense);
+        assert_eq!(restored.speed, mon.speed);
+        assert_eq!(restored.special, mon.special);
+        assert_eq!(restored.total_exp, mon.total_exp);
+        assert_eq!(restored.pp, mon.pp);
+    }
+}
+
+#[test]
+fn party_import_repairs_zero_stats_from_legacy_box_withdrawal() {
+    use crate::pokemon::stats::create_pokemon;
+    let mut mon = create_pokemon(Species::Charizard, 36, [0x95, 0xAA]).unwrap();
+    mon.hp = 0;
+    mon.status = StatusCondition::Paralysis;
+    let expected = mon;
+    mon.attack = 0;
+    mon.defense = 0;
+    mon.speed = 0;
+    mon.special = 0;
+    let mut buf = Vec::new();
+    serialize_party_mon(&mon, &mut buf);
+    let restored = deserialize_party_mon(&buf).unwrap();
+    assert_eq!(restored, expected);
+}
+
+#[test]
 fn test_deserialize_box_mon_too_short() {
     let buf = [0u8; BOX_STRUCT_SIZE - 1];
     assert_eq!(deserialize_box_mon(&buf), Err(SaveError::DataTooShort));
@@ -799,6 +836,24 @@ mod current_box_roundtrip_tests {
             "the saved current box is restored on load"
         );
         assert_eq!(back.game_data.current_box_num & 0x7F, 4);
+    }
+
+    #[test]
+    fn live_box_buffer_restores_catches_when_box_bank_is_stale() {
+        use pokered_data::species::Species;
+        let mut save = SaveData::new();
+        save.pc_storage.change_box(4).unwrap();
+        save.game_data.current_box_num = 4 | 0x80;
+        let caught = super::make_test_pokemon(Species::Abra, 12);
+        save.current_box.deposit(caught).unwrap();
+        assert_eq!(save.pc_storage.current_box().count(), 0);
+        let bytes = export_sram(&save);
+        let back = import_sram(&bytes).unwrap();
+        assert_eq!(back.pc_storage.current_box().count(), 1);
+        assert_eq!(back.pc_storage.current_box().get(0).unwrap().species, Species::Abra);
+        let no_checksum = crate::save::sram_import::import_sram_no_checksum(&bytes).unwrap();
+        assert_eq!(no_checksum.pc_storage.current_box_index(), 4);
+        assert_eq!(no_checksum.pc_storage.current_box().count(), 1);
     }
 
     /// Legacy/damaged bytes (≥ 12 boxes) fall back to box 1 without panic.

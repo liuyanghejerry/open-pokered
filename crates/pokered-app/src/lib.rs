@@ -5,6 +5,12 @@
 //! (`target_os = "none"`) compile against core + alloc only — the CLI, link
 //! play, hot-reload, tooling and device audio are hosted-only there.
 
+// `game::debug_state_snapshot` builds one large `serde_json::json!` block whose
+// expansion depth tracks its top-level field count; it sits at the default
+// limit of 128, so adding a single field to it fails to compile. Large nested
+// values (`evaluation`, `battle_live`) are hoisted out of that macro, and the
+// ceiling is raised so the next field added does not break the build.
+#![recursion_limit = "256"]
 #![no_std]
 
 #[cfg(not(target_os = "none"))]

@@ -706,6 +706,56 @@ fn up_input() -> OverworldInput {
     OverworldInput::new(true, false, false, false, false, false, false, false)
 }
 
+#[test]
+fn door_arrival_auto_step_respects_walls_and_releases_control() {
+    use super::screen::PendingWarp;
+    use super::MovementState;
+    let neutral = OverworldInput::new(false, false, false, false, false, false, false, false);
+    for map in [MapId::CeladonMansion1F, MapId::CeladonMansion2F, MapId::CeladonMansion3F] {
+        let mut screen = OverworldScreen::new(map, None, PokemonRedData);
+        screen.pending_warp = Some(PendingWarp {
+            dest_map: map, dest_x: 2, dest_y: 1,
+            save_last_map: false, arrival_spin: false,
+        });
+        screen.commit_pending_warp();
+        assert!(screen.state.standing_on_door);
+        for _ in 0..24 { screen.update_frame(neutral); }
+        assert_eq!((screen.state.player.x, screen.state.player.y), (2, 1), "{map:?} wall below stairs");
+        assert_eq!(screen.state.player.movement_state, MovementState::Idle);
+        assert!(!screen.state.standing_on_door && !screen.state.exiting_door);
+        screen.update_frame(OverworldInput::new(false, false, false, true, false, false, false, false));
+        for _ in 0..12 { screen.update_frame(neutral); }
+        assert_eq!((screen.state.player.x, screen.state.player.y), (3, 1), "{map:?} control returned");
+    }
+}
+
+#[test]
+fn door_arrival_auto_step_preserves_clear_exit_and_npc_collision() {
+    use super::screen::PendingWarp;
+    let neutral = OverworldInput::new(false, false, false, false, false, false, false, false);
+    for blocked in [false, true] {
+        let mut screen = OverworldScreen::new(MapId::SilphCo5F, None, PokemonRedData);
+        screen.pending_warp = Some(PendingWarp {
+            dest_map: MapId::SilphCo5F, dest_x: 26, dest_y: 0,
+            save_last_map: false, arrival_spin: false,
+        });
+        screen.commit_pending_warp();
+        assert!(screen.state.standing_on_door);
+        for npc in &mut screen.npc_states { npc.visible = false; }
+        if blocked {
+            screen.npc_states[0].visible = true;
+            screen.npc_states[0].x = 26;
+            screen.npc_states[0].y = 1;
+        }
+        // The first frame decides the auto-step, before any NPC tick.
+        screen.update_frame(neutral);
+        if blocked { screen.npc_states[0].visible = false; }
+        for _ in 0..12 { screen.update_frame(neutral); }
+        assert_eq!(screen.state.player.y, if blocked { 0 } else { 1 });
+        assert!(!screen.state.standing_on_door && !screen.state.exiting_door);
+    }
+}
+
 /// Regression: holding DOWN on PalletTown's beach grass at (3,17) must NOT
 /// carry the player into Route21 (3,0) on foot — the seam is Route21's
 /// tree-lined top row, impassable without Surf (the original bumps).
