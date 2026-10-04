@@ -5043,3 +5043,56 @@ frame627固定、无模型调用或启动后推进：42→42候选，仅三个�
 仅供下一段从最新41源普通CONTINUE，不热替换存活运行。没有新Rust构建、
 新m49结果或玩家画面改变，已有PR截图保留。距124仍83种，最终完整MP4
 与完成图鉴大盘尚未交付，Goal仍active。
+
+### 2026-10-04：合法47种独立核验，正常化石与发电厂流程
+
+第12段 `20261004-075954-seed42` 仅从最新41源普通CONTINUE，干净
+7a69ff69／实际policyc5fc9775，冻结native6d8e／gfx21e0、原双层OpenRouter
+Jev1.13.0、seed42、预算与4×原生实录不变。真实首策略25.571秒／动作
+32.055秒成功，实际资源、经验／HP／四槽PP／PC与位置守恒。另一个
+被动原始请求核验确认5个成功初始策略请求确实收到cash500／actual217、
+badge<7／actual4及三个带原有对手成本的原生徽章候选；lossless引用与
+table展开核对。Jev自主先选Route15，没有被指定道馆／现金预留／路线，
+不能把本段新增数量归因于新因子。
+
+六次真实新增：65.391秒／frame9590 Route15 Ditto（grass）；正常逐次
+Surf抵达红莲岛，324.700秒提交HelixFossil并开始复活，离开研究室后
+365.712秒／frame41918正常返回领取Omanyte（gift）；再经普通Surf与
+沿途真实训练师战斗前往发电厂，548.652秒／frame78984 Electrode
+（static），573.248秒／frame79515 Pikachu、578.300秒／frame81278
+Magnemite、611.338秒／frame90135 Electabuzz（三次grass）。初始41、
+剧情旗标、物品、过水、治疗和重复捕获不计新增。
+
+闪电鸟三次普通菜单逃跑（642.777／672.297／675.875秒），仅消耗
+PokeBall1，未登记、未击败；最终EVENT_BEAT_ZAPDOS未置位，不宣称
+收集了闪电鸟。第二、三次通过同一talkZapdos脚本的visibility目标进入，
+该候选有导航用途但没有register候选的专用收集风险context；原始成功
+请求与退却证据保留，下一步检查同一有限生产者换目标后的信息连续性，
+不把单次重复目标推断为引擎bug或强制接管。
+
+759.553秒自主RockTunnel护士完成，2026-10-04 00:12:35 UTC仅向精确
+controller28174合作式SIGINT，native28187／recorder28190无信号或第二
+连接，三者正常退出。安全／最终观察／development checkpoint均true，
+success=false／interrupted_at_command_boundary；51动作、策略188／动作
+154调用。终点RockTunnelPokecenter，47 owned／91 seen、frame95881、
+四徽章位掩码23、资金1882、PokeBall46／GreatBall25／UltraBall1，party6／
+PC33，Charizard56 XP177884及全部真实资源保存。
+
+SRAM `a749dbccbf84e6f6dde3a85a6cb71ec209e4880f3dbab9f0fdb1a25890a70a5f`
+独立新进程schema4普通CONTINUE持久字段严格同，41源和本段hash未改。
+本段MP4 6968830字节／399.533333秒／23972帧全帧解码，SHA256
+`4f06fa30187ad70e488d4cc3dc8c6ddcddda71cf2147c845d5009e34ff54010e`。
+12段真正NEW GAME祖先原生录像共6950.183334秒／47唯一登记，resume
+快照不重复、恢复5只计一次，source audit无history／pending。完整性
+复查103,130条成功普通推进回执、12个独立原生录像hash及绑定schema4
+证明守恒；这不替代最终完整逐种来源／原作路线合法性验收。
+
+worktree外44项／3914237字节增量备份
+`verified47-checkpoint-and-fossil-and-power-plant-evidence-20261004.tar.gz`
+逐项字节／hash通过，SHA256
+`4ac44a2f78895cde81c126d57a1d9de014aae9efb98075385c017a0574394fc4`；
+包含真实请求／同源冷对照／回归测试证据，上一41备份未改，原件全部
+保留，无凭据、binary、重复MP4或删除。本段期间没有进一步策略热替换、
+新构建／Rust／m49结果或玩家画面变化，已有PR截图保持。最新47是后继
+唯一恢复基线，距124仍77种；完整合成MP4与完成图鉴大盘尚未交付，
+Goal仍active，不回退／注入／重启NEW GAME。
