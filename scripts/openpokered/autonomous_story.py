@@ -278,6 +278,11 @@ def capture_support_level_reference(mon, target_level, party, owned_species):
     evolutions = [{'species': edge['species'], 'required_level': edge['level']}
         for edge in catalog.get('evolutions', []) if edge['method'] == 'level'
         and edge['level'] <= target_level and edge['species'] not in owned]
+    status_offers = [offer for offer in offers if offer['move'] not in mon.get('moves', [])
+        and offer.get('power') == 0 and offer.get('effect') in ('SleepEffect', 'ParalyzeEffect')]
+    outcome_type = ('capture_status_move_offer_and_unregistered_evolution_offer'
+        if status_offers and evolutions else 'capture_status_move_offer' if status_offers
+        else 'unregistered_evolution_offer' if evolutions else 'stats_or_other_move_offers_only')
     tools = []
     for index, other in enumerate(party):
         if other.get('hp', 0) <= 0:
@@ -297,6 +302,8 @@ def capture_support_level_reference(mon, target_level, party, owned_species):
             'existing_move_base_accuracy_changes_with_level': False,
             'level_parity_required_for_sleep_or_paralysis': False,
             'natural_move_offers': offers, 'unregistered_level_evolution_offers': evolutions,
+            'selected_step_new_capture_status_move_offers': status_offers,
+            'selected_step_outcome_type': outcome_type,
             'next_capture_status_move_offers': future_status,
             'current_conscious_non_damaging_support_tools': tools,
             'scope': 'For fixed wild HP/status, species catch rate and ball, support level '
@@ -307,6 +314,61 @@ def capture_support_level_reference(mon, target_level, party, owned_species):
                 'current tools still require normal switching and compatible targets. Empty next '
                 'capture-status offers means no future unlearned natural sleep/paralysis offer '
                 'in the current species learnset, not that the teammate is useless.'}
+
+
+def capture_setup_history_reference(party, current_tools, failures):
+    """Compare observed rosters/tools, without inferring time or individual identity."""
+    current_pairs = {(tool['species'], tool['move']) for tool in current_tools}
+    current_counts = Counter(mon['species'] for mon in party)
+    rows = []
+    for failure in failures:
+        historical = failure.get('observation', {}).get('party')
+        known = isinstance(historical, list) and bool(historical)
+        complete_moves = known and all(isinstance(mon.get('moves'), list) for mon in historical)
+        tools, changes = [], []
+        if known:
+            for mon in historical:
+                moves, pp = mon.get('moves') or [], mon.get('pp') or []
+                for index, name in enumerate(moves):
+                    if name == 'None':
+                        continue
+                    move = data.move_data(name)
+                    if move.get('power') == 0 and move.get('effect') in ('SleepEffect', 'ParalyzeEffect'):
+                        tools.append({'species': mon['species'], 'level': mon.get('level'),
+                            'hp': mon.get('hp'), 'max_hp': mon.get('max_hp'),
+                            'status': mon.get('status'), 'move': name,
+                            'pp': pp[index] if index < len(pp) else None,
+                            'base_accuracy': move.get('accuracy')})
+            for index, mon in enumerate(party):
+                matches = [{'level': old.get('level'), 'max_hp': old.get('max_hp')}
+                    for old in historical if old['species'] == mon['species']]
+                old = matches[0] if len(matches) == current_counts[mon['species']] == 1 else {}
+                def difference(key):
+                    now, before = mon.get(key), old.get(key)
+                    maximum = 100 if key == 'level' else 65535
+                    return now - before if (type(now) is int and type(before) is int
+                        and 1 <= now <= maximum and 1 <= before <= maximum) else None
+                changes.append({'current_party_index': index, 'species': mon['species'],
+                    'current_level': mon.get('level'), 'current_max_hp': mon.get('max_hp'),
+                    'historical_same_species_observations': matches,
+                    'level_difference': difference('level'), 'max_hp_difference': difference('max_hp')})
+        historical_pairs = {(tool['species'], tool['move']) for tool in tools}
+        rows.append({'map': failure['map'], 'failed_capture_species': failure['species'],
+            'observed_target_level': failure['level'], 'historical_party_snapshot_available': known,
+            'historical_move_roster_complete': complete_moves,
+            'historical_status_tool_observations': tools if known else None,
+            'current_conscious_tool_pairs_not_in_failure_party': [
+                {'species': species, 'move': move} for species, move in sorted(current_pairs - historical_pairs)
+            ] if complete_moves else None,
+            'same_species_level_and_max_hp_changes': changes if known else None,
+            'scope': 'Historical observed attempt, not a current-setup failure or a forecast. '
+                'Tool-pair absence compares species plus move in the party, not newly learned moves '
+                'or necessarily absent storage options. Stat differences compare unique same-species '
+                'snapshots, not individual identity or causal training. Missing observations stay '
+                'unknown. Current tools still require HP/status/PP, normal switching, compatible '
+                'targets and an actual retry; changed resources do not erase the old failure, '
+                'guarantee survival/capture or force either a retry or more training.'})
+    return rows
 
 
 def catch_difficulty(species):
@@ -2085,6 +2147,15 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'credit as a future unlock. Offers require actual learning input and certify no '
                 'hit, surviving switch, capture or new registration. Do not require or keep training '
                 'toward level parity merely because an old failed opponent was higher-level.')
+            instruction += (' selected_step_outcome_type names the known offer from this step: '
+                'stats_or_other_move_offers_only unlocks no new natural capture-status move or '
+                'unregistered level evolution. capture_setup_history_reference compares the actual '
+                'failure-party tools and unique same-species levels/max HP with the current party. '
+                'A historical failure with an older roster is not a failed trial of newly held '
+                'tools. Compare trying a revised setup, other registrations and this marginal '
+                'training investment; do not treat a past defeat as proof that current tools need '
+                'another level. Retain the failure evidence, and do not infer safe switching, '
+                'readiness or guaranteed captures from these changes. All choices remain optional.')
             instruction += (' Compare item_evolution_spending_reference on ball purchases: '
                 'spending may remove the ability to buy a stone for an unregistered evolution '
                 'of a Pokémon actually held in the party or PC. An already carried stone needs '
@@ -5646,6 +5717,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                 continue
             participants = 2 if any(other['hp'] > 0 and other['level'] > mon['level']
                                      for other in facts['party']) else 1
+            level_reference = capture_support_level_reference(mon, target_level, facts['party'], owned)
             groups[f'prepare:capture-support:{source}'] = {
                 'target': target, 'rules': rules,
                 'objectives': ['Improve a capture status support through normal experience battles'],
@@ -5659,8 +5731,9 @@ class AutonomousStoryAgent(DualStoryAgent):
                             'training_cost': evolution_training_cost(mon, target_level),
                             'training_cost_to_observed_target_level': evolution_training_cost(mon, highest),
                             'preparation_comparison_to_failed_setups': capture_support_preparation_comparison(mon, failures),
-                            'capture_support_level_reference': capture_support_level_reference(
-                                mon, target_level, facts['party'], owned),
+                            'capture_support_level_reference': level_reference,
+                            'capture_setup_history_reference': capture_setup_history_reference(
+                                facts['party'], level_reference['current_conscious_non_damaging_support_tools'], failures),
                             'training_effort_to_observed_target_level_examples': [
                                 {'map': name, **effort} for name in sites
                                 if (effort := evolution_training_effort(mon, highest,
