@@ -1,0 +1,53 @@
+{
+  "verified": true,
+  "source_runtime_revision": "d191f161f453050e12b54024a124f2053a2e07a3",
+  "new_runtime_policy_sha256": "c091ce5a2f2ac7d9935fb8ab603d03bb8078523b015d4e4619e4dc111cb45b92",
+  "native_sha256_unchanged": "514a01da973e413686f738cb30af39be86f5c9e255867deaf178330c12f76cab",
+  "actual_source_case": {
+    "run": "20261005-015945-seed42",
+    "main_judgment_elapsed_s": 189.367,
+    "move_judgment_elapsed_s": 190.403,
+    "training_boundary_elapsed_s": 194.59,
+    "trainee": "Geodude",
+    "enemy": "Oddish",
+    "main_choice": "fight",
+    "chosen_move": "RockThrow",
+    "selfdestruct_chosen": false,
+    "normal_outgoing_direct_hit_damage": [22, 27],
+    "enemy_hp_before": 47,
+    "trainee_hp_before": 43,
+    "trainee_hp_after": 0,
+    "trainee_experience_before_and_after": 7519,
+    "trainee_experience_delta": 0,
+    "exact_enemy_move_damage_and_critical_outcome_not_observed": true
+  },
+  "new_factors": {
+    "natural_wild_moves_from_public_native_creation_rules": true,
+    "ordinary_powered_move_type_factors_for_active_and_party_slots": true,
+    "conditional_absorb_type_factor": {"Geodude": 4, "Snorlax": 1, "Charizard": 0.25},
+    "live_enemy_moves_pp_stats_stages_and_speed_not_invented": true,
+    "trainer_ghost_or_changed_combat_form_move_inference_is_null": true,
+    "status_fixed_damage_ohko_and_struggle_not_given_power_damage_multipliers": true,
+    "missing_roster_remains_null": true,
+    "native_player_move_preview_scope_available_in_training_main_menu": true,
+    "ordinary_enemy_response_can_forfeit_trainee_xp": true,
+    "incoming_teammate_response_opportunity_explicit": true,
+    "all_original_choices_and_none_preserved": true,
+    "no_switch_attack_route_or_reward_forced": true,
+    "nontraining_move_question_unchanged": true
+  },
+  "verification": {
+    "new_unit_tests": 7,
+    "focused_training_tests": 23,
+    "all_python_tests_passed": 1345,
+    "actual_case_new_payload_semantic_roundtrip_verified": true,
+    "source_trace_prefix_not_duplicated": true,
+    "native_commands_by_local_audit": 0,
+    "model_queries_by_local_audit": 0,
+    "native_rebuild_required": false,
+    "next_policy_actual_runtime_adopted_at_local_audit": false
+  },
+  "scope": "Local regression and an actual39 non-self-KO training-faint boundary, not a claim that a particular enemy move caused the faint or that the new model decision always improves. Type factors describe ordinary powered damage only; they are not live incoming damage, speed, survival, participation, XP or future RNG guarantees. The original39 controller stayed frozend191 during local work. Adoption requires a verified current boundary; never use an older pre-training save. Old ghost ancestry remains strategy validation only; final lawful NEW GAME124, whole-process final MP4 and collection dashboard remain unaccepted.",
+  "completed124": false,
+  "old_ghost_ancestor_legality_certified": false
+}

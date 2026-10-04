@@ -2,9 +2,10 @@
 import copy
 import json
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
-from openpokered.playthrough_judgments import JevGame, level_training_goal, move_question, training_move_question
+from openpokered.playthrough_judgments import (JevGame, level_training_goal, move_question,
+    training_move_question, training_threat_reference)
 from openpokered.story_agent import StoryStopped
 
 
@@ -229,6 +230,98 @@ class TrainingAttackTests(unittest.TestCase):
         state['battle_moves']['moves'][0]['direct_hit_preview'] = {'normal_damage': [1, 2]}
         game._select_move()
         self.assertEqual(game.judgments.choose.call_count, 3)
+
+    def test_wild_training_threat_exposes_fourfold_grass_risk_and_resistant_finisher(self):
+        state = self.state()
+        state['battle_live']['player']['hp'] = 43
+        state['battle_live']['enemy'] = {'species': 'Oddish', 'level': 19,
+            'hp': 47, 'max_hp': 47, 'status': 'None'}
+        before = copy.deepcopy(state)
+        reference = training_threat_reference(state)
+        self.assertEqual(reference['active_defensive_matchup']['hp'], 43)
+        self.assertEqual(reference['active_defensive_matchup']['inferred_powered_move_type_multipliers'],
+                         {'Absorb': 4})
+        self.assertEqual(reference['party_defensive_matchups'][1]['inferred_powered_move_type_multipliers'],
+                         {'Absorb': .25})
+        names = [row['move'] for row in reference['enemy_natural_move_reference']['inferred_natural_moves']]
+        self.assertIn('Absorb', names)
+        self.assertIn('SleepPowder', names)  # Status is retained, not given a damage multiplier.
+        self.assertIn('Not observed live enemy moves', reference['scope'])
+        self.assertIn('No survival', reference['scope'])
+        self.assertEqual(state, before)
+        reference['active_defensive_matchup']['hp'] = 0
+        reference['enemy_natural_move_reference']['inferred_natural_moves'][0]['power'] = 0
+        self.assertEqual(state, before)
+
+    def test_defensive_chart_deduplicates_monotype_species(self):
+        state = self.state()
+        state['battle_live']['enemy'].update(species='Oddish', level=19)
+        state['battle_live']['player'] = {**state['battle_live']['player'], 'species': 'Psyduck'}
+        reference = training_threat_reference(state)
+        self.assertEqual(reference['active_defensive_matchup']['species_types'], ['Water'])
+        self.assertEqual(reference['active_defensive_matchup']['inferred_powered_move_type_multipliers'],
+                         {'Absorb': 2})
+
+    def test_unobserved_wild_rules_and_changed_combat_form_do_not_infer_moves(self):
+        for update in ({'is_wild': False}, {'is_wild': None}, {'is_ghost': True},
+                       {'enemy': {'species': 'Pidgey', 'capture_species': 'Ditto', 'level': 20,
+                                  'hp': 50, 'max_hp': 50, 'status': 'None'}}):
+            with self.subTest(update=update):
+                state = self.state()
+                state['battle_live'].update(update)
+                reference = training_threat_reference(state)
+                self.assertIsNone(reference['enemy_natural_move_reference'])
+                self.assertIsNone(reference['active_defensive_matchup']['inferred_powered_move_type_multipliers'])
+                self.assertIn('null, not harmless', reference['scope'])
+
+    def test_status_fixed_and_ohko_moves_do_not_inherit_power_damage_multipliers(self):
+        from playthrough_late import move_data
+        moves = ['Absorb', 'Poisonpowder', 'SeismicToss', 'SuperFang', 'Fissure']
+        inferred = {'inferred_natural_moves': [{'move': move, **move_data(move)} for move in moves]}
+        with patch('openpokered.playthrough_judgments.capture_threat', return_value=inferred):
+            reference = training_threat_reference(self.state())
+        self.assertEqual(reference['active_defensive_matchup']['inferred_powered_move_type_multipliers'],
+                         {'Absorb': 4})
+        self.assertEqual([row['move'] for row in reference['enemy_natural_move_reference']['inferred_natural_moves']], moves)
+        self.assertIn('Struggle remain unpredicted', reference['scope'])
+
+    def test_missing_roster_does_not_invent_switch_safety_or_individual_identity(self):
+        state = self.state()
+        del state['battle_live']['player_party']
+        reference = training_threat_reference(state)
+        self.assertIsNone(reference['party_defensive_matchups'])
+        self.assertNotIn('party_index', reference['active_defensive_matchup'])
+        self.assertNotIn('active_party_index', reference)
+
+    def test_training_menu_and_attack_both_receive_threat_without_removing_choices(self):
+        state = self.state()
+        state['battle_live']['enemy'].update(species='Oddish', level=19)
+        game = self.game(state, self.active())
+        game.judgments.choose.return_value = 'switch:1'
+        self.assertEqual(game.battle_recovery_plan(state), ('switch', 1))
+        _, compact, choices, instructions = game.judgments.choose.call_args.args
+        self.assertIn('training_threat_reference', compact)
+        self.assertIn('direct_hit_preview_scope', compact)
+        self.assertIn('fight', choices)
+        self.assertIn('switch:1', choices)
+        self.assertIn('ordinary enemy response', instructions)
+        game.judgments.choose.return_value = '0'
+        game._select_move()
+        _, compact, choices, instructions = game.judgments.choose.call_args.args
+        self.assertIn('training_threat_reference', compact)
+        self.assertEqual(choices, {'0': 'Tackle', '1': 'Selfdestruct', '2': 'RockThrow',
+            'back': 'Cancel this move menu without spending a turn; return to compare recovery, switches and FIGHT if no listed attack is suitable for the training turn.'})
+        self.assertIn('not actual damage or speed', instructions)
+
+    def test_incoming_finisher_condition_changes_invalidate_training_attack_cache(self):
+        state = self.state()
+        game = self.game(state, self.active())
+        game._select_move()
+        state['battle_live']['player_party'][1]['hp'] -= 1
+        game._select_move()
+        self.assertEqual(game.judgments.choose.call_count, 2)
+        game._select_move()
+        self.assertEqual(game.judgments.choose.call_count, 2)
 
 
 if __name__ == '__main__':

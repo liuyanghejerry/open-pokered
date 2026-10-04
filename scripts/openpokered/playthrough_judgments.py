@@ -284,6 +284,48 @@ def capture_threat(enemy):
     return threat
 
 
+def training_threat_reference(state):
+    """Known wild creation moves and defensive chart factors, not live damage.
+
+    Inference is unavailable for trainers, ghosts and transformed opponents.
+    These factors support a judgment; they never filter actions or assert who
+    will move first, survive, participate or earn experience.
+    """
+    live = state['battle_live']
+    enemy = live['enemy']
+    natural = (capture_threat(enemy) if live.get('is_wild') is True
+               and not live.get('is_ghost')
+               and capture_species(enemy) == enemy['species'] else None)
+    # Power 0/1 entries include status, OHKO and fixed/special damage. Their
+    # actual damage is not obtained by multiplying ordinary typed power.
+    powered = ([row for row in natural['inferred_natural_moves'] if row['power'] > 1]
+               if natural is not None else None)
+
+    def defensive(mon):
+        data = late.species_data(mon['species'])
+        types = list(dict.fromkeys((data['type1'], data['type2'])))
+        return {'species': mon['species'], 'hp': mon.get('hp'),
+            'max_hp': mon.get('max_hp'), 'status': mon.get('status'), 'species_types': types,
+            'inferred_powered_move_type_multipliers': None if powered is None else {
+                row['move']: math.prod(late.type_chart().get((row['type'], target), 1)
+                                       for target in types) for row in powered}}
+
+    roster = live.get('player_party')
+    return {'enemy_natural_move_reference': natural,
+        'active_defensive_matchup': defensive(live['player']),
+        'party_defensive_matchups': ([{'party_index': index, **defensive(mon)}
+                                    for index, mon in enumerate(roster)]
+                                   if isinstance(roster, list) else None),
+        'scope': 'Public native wild creation learnset and species/type chart only. '
+            'Not observed live enemy moves, PP, current combat stats, stages, speed order '
+            'or damage ranges. Multipliers apply only to ordinary powered typed damage, '
+            'not status, fixed/special damage or OHKO; these and Struggle remain unpredicted. '
+            'Trainer/ghost/changed combat form move inference is null, not harmless. '
+            'Switching gives the enemy a response opportunity against the incoming teammate. '
+            'A normal attack can also expose the trainee to a response even if it deals damage. '
+            'No survival, individual participation, experience or future RNG is guaranteed.'}
+
+
 def capture_turn_economy():
     """Native wild-battle action order, not a prediction of enemy execution."""
     return {
@@ -784,6 +826,7 @@ def training_move_question(state, menu, active):
         'enemy': deepcopy(state['battle_live']['enemy']),
         'active_role': 'trainee_species' if goal['active_species_matches_trainee'] else 'other_species',
     }
+    compact['training_threat_reference'] = training_threat_reference(state)
     for index, slot in enumerate(menu['moves']):
         if str(index) in compact['moves']:
             compact['moves'][str(index)]['direct_hit_preview'] = deepcopy(slot.get('direct_hit_preview'))
@@ -1029,6 +1072,17 @@ class JevGame(pt.Game):
         judgment_state = {'battle': live}
         if training_goal is not None:
             judgment_state['level_training_goal'] = training_goal
+            judgment_state['training_threat_reference'] = training_threat_reference(state)
+            judgment_state['direct_hit_preview_scope'] = DIRECT_HIT_PREVIEW_SCOPE
+            instruction += (' Compare battle.player_move_previews with enemy HP under '
+                'direct_hit_preview_scope: normal and critical direct-hit ranges are not '
+                'whole-turn survival guarantees. Compare training_threat_reference active '
+                'and incoming-party defensive matchups with the inferred wild moves. '
+                'A trainee can lose all training experience to an ordinary enemy response, '
+                'not only Selfdestruct. Switching also exposes the incoming teammate, but '
+                'can preserve a conscious trainee. These public type factors are not live '
+                'enemy damage, speed order or guaranteed safety; null is unknown. '
+                'Choose among all offered operations without crediting unobserved rewards.')
             if getattr(self, '_training_declined_fight', None) == capture_turn_key(state):
                 judgment_state['training_move_menu_feedback'] = {
                     'result': 'No suitable attack selected; move menu cancelled without spending a turn',
@@ -1466,7 +1520,13 @@ class JevGame(pt.Game):
                             'reward or a one-turn evolution is not by itself a reason to reject every attack; '
                             'choose a viable turn toward battle victory, preserving training eligibility. '
                             'If no listed attack is suitable, choose back to reconsider recovery or switches '
-                            'at the main menu. No participation or experience is credited by this choice.')
+                            'at the main menu. No participation or experience is credited by this choice. '
+                            'Compare training_threat_reference with active HP: an ordinary enemy '
+                            'response can faint the trainee before it receives victory experience. '
+                            'Inferred powered-move type multipliers are not actual damage or speed '
+                            'order; critical hits, misses, enemy move choice and status can differ. '
+                            'When reconsidering a switch via back, the incoming teammate also '
+                            'faces a response opportunity. No known matchup certifies survival.')
                     try:
                         chosen = self.judgments.choose('action', compact, candidates,
                                                        instruction + preference_suffix(self.judgments))
