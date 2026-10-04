@@ -891,7 +891,9 @@ fn bank_stream_rejects_corrupt_banks_before_replacing_resident_save() {
     use crate::save::sram_import::import_sram_banks_into;
     use crate::save::sram_layout::{GAME_DATA_OFFSET, SRAM_BANK_SIZE_LAYOUT};
     for damaged in 1..=3 {
-        let mut data = export_sram(&SaveData::new());
+        let mut source = SaveData::new();
+        source.game_data.current_box_num = 0x80;
+        let mut data = export_sram(&source);
         data[damaged * SRAM_BANK_SIZE_LAYOUT + if damaged == 1 { GAME_DATA_OFFSET } else { 0 }] ^=
             1;
         let mut loaded = SaveData::new();

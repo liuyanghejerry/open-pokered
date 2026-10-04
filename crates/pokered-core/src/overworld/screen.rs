@@ -679,6 +679,8 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     pub pending_emotion_bubble: Option<EmotionBubbleState>,
     pub pending_healing_machine: Option<HealingMachineState>,
     pub last_map: Option<MapId>,
+    pub first_lock_trash_can: u8,
+    pub second_lock_trash_can: u8,
     /// Position on `last_map` where the player stepped onto the entrance warp —
     /// the tile just outside a dungeon/building. Recorded alongside `last_map`
     /// and used as the ESCAPE ROPE return point.
@@ -1127,6 +1129,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             pending_set_nickname: None,
             pending_emotion_bubble: None,
             pending_healing_machine: None,
+            first_lock_trash_can: 0,
+            second_lock_trash_can: 0,
             last_map: super::map_loading::scripted_last_map(start_map).or(Some(MapId::PalletTown)),
             last_map_entry: None,
             warp_fade_state: WarpFadeState::Idle,
@@ -2407,6 +2411,69 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     /// Whether a Safari Zone game is currently in progress.
     pub fn is_safari_game_active(&self) -> bool {
         self.safari_game_active
+    }
+
+    /// SRAM owns all mapped flags. Only an identified old native layout may
+    /// recover the system aliases it formerly kept solely in its companion.
+    pub fn restore_loaded_save_flags(&mut self, save: &crate::save::SaveData, extras: Option<HashMap<String, bool>>) {
+        self.set_event_flags_bytes(&save.game_data.event_flags);
+        self.restore_system_save_state(&save.game_data);
+        if let Some(mut extras)=extras {
+            extras.retain(|name,value| {
+                if pokered_data::event_flags::EventFlag::from_name(name).is_some() { return false; }
+                let system_alias=name.starts_with("EVENT_TRADED_FOR_")
+                    || name=="EVENT_GOT_LICKITUNG_FROM_TRADE"
+                    || matches!(name.as_str(),"EVENT_GOT_OLD_ROD"|"EVENT_GOT_GOOD_ROD"|"EVENT_GOT_SUPER_ROD");
+                !system_alias || ((save.imported_legacy_native || save.imported_legacy_json) && *value)
+            });
+            self.set_script_flags(extras);
+        }
+    }
+
+    /// InGameTrade_DoTrade records success after species validation, before
+    /// ConnectCableText and the trade movie.
+    pub fn mark_npc_trade_completed(&mut self, nickname: &str) {
+        if pokered_data::trades::NPC_TRADES.iter().any(|trade| trade.nickname == nickname) {
+            self.set_flag_live(&format!("EVENT_TRADED_FOR_{}", nickname), true);
+            if nickname == "MARC" {
+                self.set_flag_live("EVENT_GOT_LICKITUNG_FROM_TRADE", true);
+            }
+        }
+    }
+
+    /// Restore counters and status bytes that live outside the event bitset.
+    pub fn restore_system_save_state(&mut self, data: &crate::save::game_data::GameData) {
+        self.first_lock_trash_can = data.first_lock_trash_can;
+        self.second_lock_trash_can = data.second_lock_trash_can;
+        self.script_engine.set_gym_trash_indices(self.first_lock_trash_can, self.second_lock_trash_can);
+        for (index, name) in ["TERRY", "MARCEL", "CHIKUCHIKU", "SAILOR", "DUX", "MARC", "LOLA", "DORIS", "CRINKLES", "SPOT"].iter().enumerate() {
+            self.set_flag_live(&format!("EVENT_TRADED_FOR_{}", name), data.completed_in_game_trade_flags & (1 << index) != 0);
+        }
+        self.set_flag_live("EVENT_GOT_LICKITUNG_FROM_TRADE", data.completed_in_game_trade_flags & (1 << 5) != 0);
+        self.safari_steps = data.safari_steps;
+        self.safari_balls = data.num_safari_balls;
+        self.safari_game_active = self.unified_flags.get_flag("EVENT_IN_SAFARI_ZONE");
+        for (name, bit) in [("EVENT_GOT_OLD_ROD", 3), ("EVENT_GOT_GOOD_ROD", 4), ("EVENT_GOT_SUPER_ROD", 5)] {
+            self.set_flag_live(name, data.status_flags[0] & (1 << bit) != 0);
+        }
+    }
+
+    /// Persist Safari allowances and original status-byte script aliases.
+    pub fn write_system_save_state(&self, data: &mut crate::save::game_data::GameData) {
+        data.first_lock_trash_can = self.first_lock_trash_can;
+        data.second_lock_trash_can = self.second_lock_trash_can;
+        for (index, name) in ["TERRY", "MARCEL", "CHIKUCHIKU", "SAILOR", "DUX", "MARC", "LOLA", "DORIS", "CRINKLES", "SPOT"].iter().enumerate() {
+            let mask = 1 << index;
+            if self.unified_flags.get_flag(&format!("EVENT_TRADED_FOR_{}", name))
+                || (index == 5 && self.unified_flags.get_flag("EVENT_GOT_LICKITUNG_FROM_TRADE")) { data.completed_in_game_trade_flags |= mask; }
+            else { data.completed_in_game_trade_flags &= !mask; }
+        }
+        data.safari_steps = self.safari_steps;
+        data.num_safari_balls = self.safari_balls;
+        for (name, bit) in [("EVENT_GOT_OLD_ROD", 3), ("EVENT_GOT_GOOD_ROD", 4), ("EVENT_GOT_SUPER_ROD", 5)] {
+            if self.unified_flags.get_flag(name) { data.status_flags[0] |= 1 << bit; }
+            else { data.status_flags[0] &= !(1 << bit); }
+        }
     }
 
     /// Begin a fresh Safari Zone game: full step + ball allowance.

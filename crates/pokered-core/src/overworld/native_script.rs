@@ -843,6 +843,15 @@ impl NativeScriptEngine {
         self.state == InterpState::WaitingForCommand
     }
 
+    pub fn gym_trash_indices(&self) -> (u8, u8) {
+        (self.vgym.first as u8, self.vgym.second as u8)
+    }
+
+    pub fn set_gym_trash_indices(&mut self, first: u8, second: u8) {
+        self.vgym.first = first as i32;
+        self.vgym.second = second as i32;
+    }
+
     pub fn set_flag(&mut self, flag: &str, value: bool) {
         self.interp.host_mut().flags.insert(flag.to_string(), value);
     }
@@ -1244,6 +1253,20 @@ impl OverworldScriptEngine {
             #[cfg(feature = "script-boa")]
             OverworldScriptEngine::Boa(e) => e.is_waiting(),
             OverworldScriptEngine::Native(e) => e.is_waiting(),
+        }
+    }
+
+    pub fn gym_trash_indices(&self) -> (u8, u8) {
+        match self {
+            Self::Native(engine) => engine.gym_trash_indices(),
+            #[cfg(feature = "script-boa")]
+            Self::Boa(_) => (0, 0),
+        }
+    }
+
+    pub fn set_gym_trash_indices(&mut self, first: u8, second: u8) {
+        if let Self::Native(engine) = self {
+            engine.set_gym_trash_indices(first, second);
         }
     }
 

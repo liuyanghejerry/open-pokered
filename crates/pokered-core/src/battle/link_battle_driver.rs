@@ -49,8 +49,8 @@
 //! ```
 //!
 //! The driver owns the transport (injected, so core stays I/O-free), the
-//! local party (healed on construction — the original's `HealParty` at the
-//! cable-club table, cable_club.asm:292) and the battle screen. Poll it every
+//! current local party and the battle screen. The original heals only after
+//! InitOpponent returns (cable_club.asm:287); settlement owns that writeback. Poll it every
 //! frame, forward the app's battle input via [`LinkBattleDriver::update`], and
 //! react to the returned events. Once [`LinkBattleDriver::result`] is
 //! `Some`, the battle is over — show the result screen ("YOU WIN" / "YOU
@@ -134,8 +134,7 @@ pub enum LinkDriverEvent {
 pub struct LinkBattleDriver {
     transport: Box<dyn NetworkTransport<NetworkMessage>>,
     manager: LinkBattleManager,
-    /// The local party (healed at construction, mirroring the original's
-    /// cable-club `HealParty`). Mutated by the battle (HP/exp/level-ups) and
+    /// The current local party. Mutated by the battle (HP/exp/level-ups) and
     /// synced back when the battle ends.
     local_party: Party,
     local_trainer_name: String,
@@ -166,14 +165,12 @@ pub struct LinkBattleDriver {
 impl LinkBattleDriver {
     /// Create a driver for a link-battle session.
     ///
-    /// `local_party` is healed immediately (`HealParty` at the cable-club
-    /// table, cable_club.asm:292 — pass an already-healed party to skip).
+    /// Preserve current HP, status and PP for the party exchange.
     pub fn new(
         transport: Box<dyn NetworkTransport<NetworkMessage>>,
-        mut local_party: Party,
+        local_party: Party,
         local_trainer_name: String,
     ) -> Self {
-        local_party.heal_all();
         Self {
             transport,
             manager: LinkBattleManager::new(),
@@ -203,12 +200,10 @@ impl LinkBattleDriver {
     ///
     /// The driver is typically constructed when the connection comes up, but
     /// the exchanged party must be the party the player carries to the
-    /// cable-club TABLE (the original's `HealParty` runs there,
-    /// cable_club.asm:292). The app calls this when the gameboy is used (or
+    /// cable-club table. The app calls this when the gameboy is used (or
     /// when the peer's request arrives), before `request_battle` /
-    /// `accept_battle` send the party. Healed like at construction.
-    pub fn set_local_party(&mut self, mut party: Party) {
-        party.heal_all();
+    /// `accept_battle` send the party, preserving its battle condition.
+    pub fn set_local_party(&mut self, party: Party) {
         self.local_party = party;
     }
 
@@ -266,7 +261,7 @@ impl LinkBattleDriver {
             .map(|d| String::from_utf8_lossy(&d.trainer_name).into_owned())
     }
 
-    /// The local party (healed copy; synced from the battle when it ends).
+    /// The local party (current damage and PP; synced after battle).
     pub fn local_party(&self) -> &Party {
         &self.local_party
     }

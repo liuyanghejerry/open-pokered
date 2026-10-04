@@ -84,6 +84,8 @@ fn test_import_bad_bank1_checksum() {
 #[test]
 fn test_import_bad_bank2_checksum() {
     let mut sram = make_valid_sram();
+    sram[0x284c] = 0x80; // wCurrentBoxNum: CHANGE BOX has initialized banks.
+    write_bank1_checksum(&mut sram);
     let bank2_start = SRAM_BANK_SIZE_LAYOUT * 2;
     let boxes_total_size = BOXES_PER_BANK * BOX_DATA_SIZE;
     sram[bank2_start + boxes_total_size] ^= 0xFF;
@@ -93,6 +95,8 @@ fn test_import_bad_bank2_checksum() {
 #[test]
 fn test_import_bad_bank3_checksum() {
     let mut sram = make_valid_sram();
+    sram[0x284c] = 0x80;
+    write_bank1_checksum(&mut sram);
     let bank3_start = SRAM_BANK_SIZE_LAYOUT * 3;
     let boxes_total_size = BOXES_PER_BANK * BOX_DATA_SIZE;
     sram[bank3_start + boxes_total_size] ^= 0xFF;
@@ -175,7 +179,7 @@ fn test_import_hof_one_team() {
     assert_eq!(save.hall_of_fame.team_count(), 1);
     let team = save.hall_of_fame.get_team(0).unwrap();
     assert_eq!(team.mons().len(), 1);
-    assert_eq!(team.mons()[0].species, 0x54);
+    assert_eq!(team.mons()[0].species, pokered_data::species::Species::Pikachu as u8);
     assert_eq!(team.mons()[0].level, 25);
     assert_eq!(team.mons()[0].nickname_bytes(), &[0x8F, 0x88, 0x8A, 0x80]);
 }
@@ -222,7 +226,7 @@ mod legacy_layout_migration_tests {
 
     /// The canonical layout now matches the original .sav byte-for-byte:
     /// the UNION region occupies 425 bytes (link-data branch), the Day Care
-    /// box struct is 33 bytes (no stat exp), and the checksum sits directly
+    /// box struct is 33 bytes (including stat exp), and the checksum sits directly
     /// after sGameDataEnd (ram/sram.asm "Save Data").
     #[test]
     fn canonical_region_length_matches_original() {
@@ -232,6 +236,7 @@ mod legacy_layout_migration_tests {
         };
         let blank = crate::save::SaveData::new();
         let region = blank.serialize_checksummed_region();
+        assert_eq!(region.len(), 3979); // pret fbcf7d0 independent RGBDS symbols
         // region = name(11) + main + sprite + party + box + tile(1)
         let mut probe = Vec::new();
         crate::save::ser_game_data::serialize_game_data_into(&blank.game_data, &mut probe);
@@ -250,14 +255,14 @@ mod legacy_layout_migration_tests {
         assert!(GAME_DATA_OFFSET + region.len() < SRAM_BANK_SIZE_LAYOUT);
     }
 
-    /// A legacy-format file (48-byte union, 43-byte daycare, checksum at the
+    /// A legacy-format file (48-byte union, 33-byte daycare, checksum at the
     /// bank end) migrates transparently: data parses identically after the
     /// transform and re-exports in the canonical layout.
     #[test]
     fn legacy_file_migrates_to_canonical() {
         // Build a canonical export, then INVERT the migration transform to
-        // synthesize a legacy file: drop the 377-byte union pad and re-insert
-        // the 10 Day Care stat-exp bytes; move the checksum to the bank end.
+        // synthesize a historical native file: omit UNION and game-progress
+        // padding, but preserve its complete Day Care struct.
         let mut save = crate::save::SaveData::new();
         save.player_name = vec![0x91, 0x82, 0x50];
         let canonical = crate::save::sram_export::export_sram(&save);
@@ -275,7 +280,6 @@ mod legacy_layout_migration_tests {
                 .unwrap();
             at + NUM_EVENTS_BYTES + (WILDDATA_LENGTH + 8) + WILDDATA_LENGTH
         };
-        let daycare_exp = water_end + 377 + (2 + 6) + (1 + 1 + 7) + 5 + 2 + 1 + 11 + 11 + 18;
 
         let blank = crate::save::SaveData::new();
         let region_len = blank.serialize_checksummed_region().len();
@@ -287,20 +291,16 @@ mod legacy_layout_migration_tests {
         let mut bank1: Vec<u8> =
             canonical[bank1_start..bank1_start + SRAM_BANK_SIZE_LAYOUT].to_vec();
         let region_start = GAME_DATA_OFFSET;
-        // Insert the daycare stat-exp zeros first (later offset).
-        bank1.splice(
-            region_start + 11 + daycare_exp..region_start + 11 + daycare_exp,
-            core::iter::repeat(0u8).take(10),
-        );
-        // Then drop the union pad (earlier offset).
-        bank1.drain(region_start + 11 + water_end..region_start + 11 + water_end + 377);
+        // Remove the later UNION padding, then earlier game-progress ds78.
+        bank1.drain(region_start + 11 + water_end..region_start + 11 + water_end + 375);
+        bank1.drain(0x914..0x964);
         // Zero the shifted tail, pad the bank back to its full size, and
         // place the legacy checksum at the bank's last byte. (canonical_ck
         // is an ABSOLUTE file offset; the bank-local region end is
         // canonical_ck − bank1_start − 367.)
         bank1.resize(SRAM_BANK_SIZE_LAYOUT, 0);
         let legacy_ck = SRAM_BANK_SIZE_LAYOUT - 1;
-        let bank_local_end = canonical_ck - bank1_start - 367;
+        let bank_local_end = canonical_ck - bank1_start - 455;
         for b in bank1[bank_local_end..legacy_ck].iter_mut() {
             *b = 0;
         }

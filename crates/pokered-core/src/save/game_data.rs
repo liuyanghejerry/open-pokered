@@ -13,6 +13,8 @@ pub const MAX_OBJECT_EVENTS: usize = 16;
 pub const SPRITE_SET_LENGTH: usize = 11;
 pub const NUM_EVENTS_BYTES: usize = (0xA00 + 7) / 8;
 pub const GAME_PROGRESS_FLAGS_SIZE: usize = 0x78;
+pub const GAME_PROGRESS_TAIL_SIZE: usize = 80;
+fn default_game_progress_tail() -> Vec<u8> { vec![0; GAME_PROGRESS_TAIL_SIZE] }
 pub const HIDDEN_ITEMS_BYTES: usize = (112 + 7) / 8;
 pub const HIDDEN_COINS_BYTES: usize = (16 + 7) / 8;
 pub const CITY_VISITED_BYTES: usize = (11 + 7) / 8;
@@ -299,6 +301,10 @@ pub struct GameData {
     pub player_coins: u16,
     pub toggleable_object_flags: [u8; TOGGLEABLE_OBJECT_BYTES],
     pub game_progress_flags: Vec<u8>,
+    /// Last two original script bytes and its 78 reserved bytes. Older JSON
+    /// saves only had the first 120 bytes; preserve their shape and default tail.
+    #[serde(default = "default_game_progress_tail")]
+    pub game_progress_tail: Vec<u8>,
     pub obtained_hidden_items: [u8; HIDDEN_ITEMS_BYTES],
     pub obtained_hidden_coins: [u8; HIDDEN_COINS_BYTES],
     pub walk_bike_surf_state: u8,
@@ -426,6 +432,7 @@ impl GameData {
             // hidden until their scene shows them.
             toggleable_object_flags: pokered_data::toggleable_objects::initial_toggle_flags(),
             game_progress_flags: vec![0; GAME_PROGRESS_FLAGS_SIZE],
+            game_progress_tail: default_game_progress_tail(),
             obtained_hidden_items: [0; HIDDEN_ITEMS_BYTES],
             obtained_hidden_coins: [0; HIDDEN_COINS_BYTES],
             walk_bike_surf_state: 0,

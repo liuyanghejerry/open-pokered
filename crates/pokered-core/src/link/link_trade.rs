@@ -44,7 +44,7 @@
 use crate::alloc_prelude::*;
 use super::protocol::NetworkMessage;
 use super::transport::{NetworkTransport, TransportError};
-use crate::battle::obedience::is_traded_for;
+use crate::battle::obedience::is_traded_for_with_name;
 use crate::battle::settlement::evolution::check_trade_evolution;
 use crate::battle::state::Pokemon;
 use crate::evolution_screen::PendingEvolution;
@@ -897,7 +897,7 @@ impl LinkTradeDriver {
         // OT name/ID stay the remote trainer's (add_mon.asm:303-313); the
         // traded flag is recomputed against OUR ID — that is what drives
         // obedience and the 1.5x EXP bonus.
-        received.is_traded = is_traded_for(received.ot_id, self.player_id);
+        received.is_traded = is_traded_for_with_name(received.ot_id, self.player_id, &received.ot_name);
         let species = received.species;
         let index = self
             .party

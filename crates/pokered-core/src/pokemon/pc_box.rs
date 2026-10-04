@@ -72,7 +72,17 @@ impl PcBox {
         if index >= self.count {
             return Err(BoxError::IndexOutOfBounds);
         }
-        let mon = self.mons[index]; // Pokemon: Copy
+        let mut mon = self.mons[index]; // Pokemon: Copy
+        // _MoveMon BOX_TO_PARTY derives level from EXP and recalculates all
+        // stats with accumulated stat experience (the original box trick).
+        if let Some(base) = pokered_data::pokemon_data::get_base_stats(mon.species) {
+            mon.level = crate::battle::experience::growth::level_from_exp(base.growth_rate, mon.total_exp);
+        }
+        let stored_hp = mon.hp;
+        crate::pokemon::stats::recalculate_stats(&mut mon);
+        // _MoveMon recalculates MON_STATS while the copied current HP stays
+        // unchanged (Day Care performs its own separate HP=max operation).
+        mon.hp = stored_hp;
         for i in index..self.count - 1 {
             self.mons[i] = self.mons[i + 1];
         }

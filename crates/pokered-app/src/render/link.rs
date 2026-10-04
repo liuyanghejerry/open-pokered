@@ -27,9 +27,11 @@ use crate::link::cable_club::CableClubFlow;
 /// the player sees).
 fn zh_link_text(text: &str) -> String {
     match text {
+        "the link, we have\nto save the game." => "必须保存游戏。".to_string(),
         "Just a moment." => "请稍等。".to_string(),
         "Waiting...!" => "正在等待……！".to_string(),
         "PLEASE WAIT!" => "请稍候！".to_string(),
+        "OK, please wait\njust a moment." => "好的，请稍等\n片刻。".to_string(),
         "Trade completed!" => "交换完成！".to_string(),
         "Too bad! The trade\nwas canceled!" => "太可惜了！交换被取消了！".to_string(),
         "The link was\ncanceled." => "联机被取消了。".to_string(),
@@ -61,6 +63,16 @@ pub fn draw_link_flow(
     }
     if flow.party_select().is_some() {
         draw_trade_party_list(flow, fb, language, is_zh);
+    }
+
+    if let Some(selected) = flow.reception_menu() {
+        let mut painter = FrameBufferPainter::new(fb).with_lang(language);
+        painter.clear(Rgba::INK_WHITE);
+        for (i, text) in (if is_zh { ["交换中心", "竞技场", "取消"] } else { ["TRADE CENTER", "COLOSSEUM", "CANCEL"] }).iter().enumerate() {
+            painter.draw_text(TilePos::new(3, 5 + i as u32 * 2), text, Rgba::INK_BLACK);
+            if selected as usize == i { painter.draw_glyph(TilePos::new(2, 5 + i as u32 * 2), '▶', Rgba::INK_BLACK); }
+        }
+        return;
     }
 
     if let Some((title, selected)) = flow.prompt() {

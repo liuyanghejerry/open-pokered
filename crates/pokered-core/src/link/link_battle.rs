@@ -231,6 +231,13 @@ impl LinkBattleManager {
     /// Poll for incoming messages and advance the state machine.
     /// Call this in your game loop to process network events.
     pub fn poll(&mut self, transport: &mut dyn NetworkTransport<NetworkMessage>) -> LinkBattlePollResult {
+        // The peer can commit before the local player selects an action.
+        // Resolve that held pair on the next poll after our own send, even
+        // when no further packet arrives.
+        let ready = self.try_resolve_turn();
+        if !matches!(ready, LinkBattlePollResult::Pending) {
+            return ready;
+        }
         let msg = match transport.try_recv() {
             Ok(Some(msg)) => msg,
             Ok(None) => return LinkBattlePollResult::Pending,
@@ -250,6 +257,10 @@ impl LinkBattleManager {
 
     /// Poll using blocking recv (for synchronous usage / tests).
     pub fn poll_blocking(&mut self, transport: &mut dyn NetworkTransport<NetworkMessage>) -> LinkBattlePollResult {
+        let ready = self.try_resolve_turn();
+        if !matches!(ready, LinkBattlePollResult::Pending) {
+            return ready;
+        }
         let msg = match transport.recv() {
             Ok(msg) => msg,
             Err(TransportError::Disconnected) => {
@@ -378,9 +389,11 @@ impl LinkBattleManager {
     /// If both turn actions are present, return TurnReady and clear them.
     fn try_resolve_turn(&mut self) -> LinkBattlePollResult {
         if let (Some(local), Some(remote)) = (
-            self.pending_local_action.take(),
-            self.pending_remote_action.take(),
+            self.pending_local_action,
+            self.pending_remote_action,
         ) {
+            self.pending_local_action = None;
+            self.pending_remote_action = None;
             LinkBattlePollResult::TurnReady {
                 local_action: local,
                 remote_action: remote,
