@@ -54,4 +54,31 @@ assert.match(wildEl('#methods').innerHTML,/<b>1<\/b>野生捕获/);
 assert.match(wildEl('#methods').innerHTML,/<b>1<\/b>来源未记录/);
 const sourceTotal=[...wildEl('#methods').innerHTML.matchAll(/<b>(\d+)<\/b>/g)].reduce((sum,match)=>sum+Number(match[1]),0);
 assert.equal(sourceTotal,2,'all displayed producer counts must include native wild_capture');
-console.log('Jev dex player: audit counts, native wild producer, unknown/legacy separation, snapshot-safe history and navigation PASS');
+// Schema 4 uses deduplicated complete public descriptions; legacy rows still work.
+const decodedData={...wildData,candidate_descriptions:{facts:{establish:['catch','ViridianForest',true],note:'<script>unsafe</script>'}},decisions:[
+ {source_s:0,choice:'a',candidate_count:6,dex_progress:{owned:71},candidates:[
+  {id:'a',label:'["catch","ViridianForest",true]',probability:.7,description_ref:'facts'},
+  {id:'none',label:'Wait',probability:null}]},
+ {source_s:2,choice:'legacy',dex_progress:{owned:72},candidates:[{id:'legacy',label:'Legacy plain criterion',probability:.2}]}]};
+const decodedElements=new Map();
+const decodedEl=id=>{if(!decodedElements.has(id))decodedElements.set(id,{style:{setProperty(){}},textContent:'',innerHTML:''});return decodedElements.get(id)};
+const decodedVideo=decodedEl('#video');Object.assign(decodedVideo,{currentTime:0,duration:10,pause(){},addEventListener(){}});
+const decodedContext=vm.createContext({window:{JEV_DEX_DASHBOARD:decodedData},document:{querySelector:decodedEl}});
+vm.runInContext(script,decodedContext);
+assert.match(decodedEl('#decision-title').textContent,/71\/124/);
+assert.match(decodedEl('#decision-scope').textContent,/本次请求.*非捕获率.*6/);
+assert.match(decodedEl('#candidates').innerHTML,/✓.*ViridianForest/);
+assert.match(decodedEl('#candidates').innerHTML,/70%/);
+assert.match(decodedEl('#candidates').innerHTML,/未记录/);
+assert.match(decodedEl('#candidates').innerHTML,/公开候选事实/);
+assert.match(decodedEl('#candidates').innerHTML,/&lt;script&gt;unsafe&lt;\/script&gt;/);
+assert.doesNotMatch(decodedEl('#candidates').innerHTML,/<script>/);
+decodedEl('#candidates').innerHTML='OPEN_DETAILS_SENTINEL';
+vm.runInContext('paint()',decodedContext);
+assert.equal(decodedEl('#candidates').innerHTML,'OPEN_DETAILS_SENTINEL','clock repaint must not close expanded facts');
+decodedVideo.currentTime=2;vm.runInContext('paint()',decodedContext);
+assert.match(decodedEl('#candidates').innerHTML,/✓ Legacy plain criterion/);
+assert.match(decodedEl('#candidates').innerHTML,/20%/);
+decodedVideo.currentTime=0;vm.runInContext('paint()',decodedContext);
+assert.match(decodedEl('#candidates').innerHTML,/ViridianForest/);
+console.log('Jev dex player: source audit, wild/legacy buckets, decoded facts, escaping, request scope, stable details and seeking PASS');

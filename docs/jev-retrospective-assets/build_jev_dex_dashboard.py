@@ -17,6 +17,9 @@ from openpokered.collection_planner import (  # noqa: E402
     SUPER_ROD_MAP_GROUP, complete_acquisition_graph, infer_solo_choices, solo_plan,
 )
 from openpokered.story_rules import MAPS_DIR  # noqa: E402
+from openpokered.decision_wire import (  # noqa: E402
+    FIELD_DICTIONARY, STRING_REFERENCE_PREFIX, expand_decision_evidence,
+)
 
 
 def rows(path):
@@ -38,6 +41,60 @@ def method(event):
     # Legacy traces did not label every capture. Absence of evidence is not
     # evidence of a gift (and a resumed initial snapshot is not an acquisition).
     return 'unknown'
+
+
+def export_decision(event, descriptions):
+    """Decode the recorded display view, never rerank or requery the model.
+
+    The top five recorded probabilities and the actual choice are displayed.
+    This projection is not a whole-request validity audit or an AI shortlist.
+    Complete displayed descriptions are interned once; unused world/library
+    copies are not exported. The trace anchor and request hash retain provenance.
+    """
+    answer, question, state = (event.get(key) or {} for key in ('answer', 'question', 'state'))
+    criteria, probabilities = question.get('criteria') or {}, answer.get('probabilities') or {}
+    keys = [key for key, _ in sorted(probabilities.items(), key=lambda item: -item[1])[:5]]
+    choice = answer.get('choice')
+    if choice is not None and choice not in keys:
+        keys.append(choice)
+    offered = {key: (value if isinstance(value := criteria.get(key, key), str)
+                     else json.dumps(value, ensure_ascii=False, separators=(',', ':')))
+               for key in keys}
+    projection = {key: state[key] for key in (
+        'dex_progress', 'shared_strategy_evidence', FIELD_DICTIONARY, STRING_REFERENCE_PREFIX)
+        if key in state}
+    restored, decoded = expand_decision_evidence(projection, offered)
+    candidates = []
+    for key in keys:
+        text = decoded[key]
+        try:
+            facts = json.loads(text)
+        except (ValueError, TypeError):
+            facts = text
+        else:
+            text = json.dumps(facts, ensure_ascii=False, separators=(',', ':'))
+        title = (json.dumps(facts['establish'], ensure_ascii=False, separators=(',', ':'))
+                 if isinstance(facts, dict) and 'establish' in facts else
+                 facts if isinstance(facts, str) else key)
+        reference = hashlib.sha256(text.encode()).hexdigest()
+        if reference in descriptions and descriptions[reference] != facts:
+            raise ValueError('candidate description hash collision')
+        # Typed records avoid serializing JSON inside JSON a second time.
+        descriptions[reference] = facts
+        candidates.append({'id': key, 'label': title, 'probability': probabilities.get(key),
+                           'description_ref': reference})
+    request = json.dumps({'state': state, 'question': question}, ensure_ascii=False,
+                         sort_keys=True, separators=(',', ':'))
+    progress = restored.get('dex_progress')
+    display_counts = ({key: progress[key] for key in ('owned', 'validated_owned') if key in progress}
+                      if isinstance(progress, dict) else None)
+    return {**{key: event.get(key) for key in (
+                'source_s', 'segment', 'frame', 'timing_basis', 'source_interval_s', 'elapsed_s')},
+            'choice': choice, 'confidence': answer.get('confidence'), 'candidates': candidates,
+            'dex_progress': display_counts, 'candidate_count': len(criteria),
+            'choice_was_offered': choice in criteria,
+            'probability_scope': 'within_recorded_strategy_request',
+            'request_sha256': hashlib.sha256(request.encode()).hexdigest()}
 
 
 def load_chain(run, follow_parents=False):
@@ -219,6 +276,7 @@ def build(run, output, video=None, chain=False):
 
     stamp = lambda event: event['source_s']
     progress, decisions, operations, milestones = [], [], [], []
+    descriptions = {}
     counts = Counter()
     for event in trace:
         kind = event.get('kind')
@@ -246,19 +304,7 @@ def build(run, output, video=None, chain=False):
                 'source_revalidated': [event['species']], 'method': 'evolution',
                 'method_counts': dict(counts)})
         elif kind == 'judgment' and event.get('layer') == 'strategy':
-            answer = event.get('answer') or {}
-            probabilities = answer.get('probabilities') or {}
-            criteria = (event.get('question') or {}).get('criteria') or {}
-            decisions.append({
-                'source_s': stamp(event), 'choice': answer.get('choice'),
-                'confidence': answer.get('confidence'),
-                'candidates': [
-                    {'id': key, 'label': criteria.get(key, key), 'probability': value}
-                    for key, value in sorted(probabilities.items(), key=lambda item: -item[1])[:5]
-                ],
-                'dex_progress': (event.get('state') or {}).get('dex_progress'),
-                'shared_strategy_evidence': (event.get('state') or {}).get('shared_strategy_evidence', {}),
-            })
+            decisions.append(export_decision(event, descriptions))
         elif kind == 'operation':
             operations.append({'source_s': stamp(event), 'segment': event['segment'],
                                'timing_basis': event['timing_basis'],
@@ -270,7 +316,7 @@ def build(run, output, video=None, chain=False):
                                'flag': event.get('flag')})
 
     data = {
-        'schema': 3,
+        'schema': 4,
         'run': {
             'success': summary.get('success'), 'reason': summary.get('reason'),
             'collection_continue_verification': summary.get('collection_continue_verification'),
@@ -295,6 +341,7 @@ def build(run, output, video=None, chain=False):
                                'reachable' if name in plan['reachable_species'] else 'unreachable'}
                     for number, name in catalog],
         'progress': progress, 'decisions': decisions, 'operations': operations,
+        'candidate_descriptions': descriptions,
         'milestones': milestones,
         'resume_boundaries': boundaries,
         'collection_audit': audit,
