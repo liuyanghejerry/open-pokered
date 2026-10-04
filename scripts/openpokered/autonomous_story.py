@@ -252,12 +252,28 @@ def capture_support_level_reference(mon, target_level, party, owned_species):
     """
     catalog = data.species_data(mon['species'])
     offers = []
+    future_status = []
     for row in catalog.get('learnset', []):
+        if (row['level'] > mon['level'] and row['moveId'] not in mon.get('moves', [])):
+            move = data.move_data(row['moveId'])
+            if move.get('power') == 0 and move.get('effect') in ('SleepEffect', 'ParalyzeEffect'):
+                future_status.append({'level': row['level'], 'move': row['moveId'],
+                    'effect': move['effect'], 'power': 0, 'base_accuracy': move.get('accuracy'),
+                    'levels_remaining': row['level'] - mon['level'],
+                    'selected_target_reaches_offer': row['level'] <= target_level,
+                    'training_cost': evolution_training_cost(mon, row['level']),
+                    'scope': 'Next unlearned non-damaging sleep/paralysis offer from the current '
+                        'species natural learnset, not guaranteed to be learned. Normal move-learning '
+                        'input is still required. Base accuracy is not a hit or capture guarantee; '
+                        'turn order, disabling status, live stages, target compatibility and survival '
+                        'remain unpredicted. Evolution can change the future learnset.'})
         if mon['level'] < row['level'] <= target_level:
             move = data.move_data(row['moveId'])
             offers.append({'level': row['level'], 'move': row['moveId'],
                            'effect': move.get('effect'), 'power': move.get('power'),
                            'base_accuracy': move.get('accuracy')})
+    closest_status_level = min((offer['level'] for offer in future_status), default=None)
+    future_status = [offer for offer in future_status if offer['level'] == closest_status_level]
     owned = set(owned_species)
     evolutions = [{'species': edge['species'], 'required_level': edge['level']}
         for edge in catalog.get('evolutions', []) if edge['method'] == 'level'
@@ -281,13 +297,16 @@ def capture_support_level_reference(mon, target_level, party, owned_species):
             'existing_move_base_accuracy_changes_with_level': False,
             'level_parity_required_for_sleep_or_paralysis': False,
             'natural_move_offers': offers, 'unregistered_level_evolution_offers': evolutions,
+            'next_capture_status_move_offers': future_status,
             'current_conscious_non_damaging_support_tools': tools,
             'scope': 'For fixed wild HP/status, species catch rate and ball, support level '
                 'does not change the native capture roll. Existing move base accuracy is '
                 'unchanged; live accuracy/evasion stages and immunity still matter. Leveling '
                 'may change stats, turn order and survival, but no next-level stat, hit or '
                 'survival forecast is supplied. Move/evolution offers are not acquisitions; '
-                'current tools still require normal switching and compatible targets.'}
+                'current tools still require normal switching and compatible targets. Empty next '
+                'capture-status offers means no future unlearned natural sleep/paralysis offer '
+                'in the current species learnset, not that the teammate is useless.'}
 
 
 def catch_difficulty(species):
@@ -2058,6 +2077,14 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'offers from a level-only stat investment. More levels do not directly improve a '
                 'fixed-HP/status ball roll or existing move base accuracy. Compare current usable '
                 'support tools and other registrations; neither level parity nor training is required.')
+            instruction += (' Its next_capture_status_move_offers retains every such offer at the '
+                'nearest future natural level, even when the selected next-level step does not reach '
+                'it. Compare the whole observed/bounded remaining XP cost to that ability milestone '
+                'with tools already held and other collection opportunities. An intermediate level '
+                'is not a learned move, and a move already held with zero PP needs recovery, not '
+                'credit as a future unlock. Offers require actual learning input and certify no '
+                'hit, surviving switch, capture or new registration. Do not require or keep training '
+                'toward level parity merely because an old failed opponent was higher-level.')
             instruction += (' Compare item_evolution_spending_reference on ball purchases: '
                 'spending may remove the ability to buy a stone for an unregistered evolution '
                 'of a Pokémon actually held in the party or PC. An already carried stone needs '

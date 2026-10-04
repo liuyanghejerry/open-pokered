@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "verified_saved_owned": 75,
+  "source_run": "20261005-033511-seed42",
+  "source_runtime_revision": "701d23a1990bc4d136a47457f14a6f868e81c08c",
+  "new_species": "Graveler",
+  "registration_basis": "native evolving phase plus one roster species replacement; Geodude level25 to Graveler, XP11782",
+  "checkpoint": {"frame": 31405, "map": "Route7", "position": [12, 3], "cash": 171, "stored": 53, "seen": 103},
+  "strict_continue_schema": 4,
+  "full_party_xp_hp_pp_status_bag_pc_flags_safari_equal": true,
+  "actual_requests_semantic_roundtrips": 315,
+  "completed_battles": 24,
+  "parasect": {"level": 28, "experience": 23173, "hp": 70, "max_hp": 75, "pp": [22, 30, 10, 0]},
+  "original_movie": {"sha256": "4cb536113659cb7215dd44a1ba18c4c028372fdf4d3c8d85ace5527c4e595aee", "bytes": 1947727, "seconds": 130.883333, "frames": 7853, "fully_decoded": true, "native_checkpoint_frames": 31405, "final_recorder_game_frame_count_observed": false},
+  "original_log_limitation": "Runner exported game.log before graceful close, so recorder shutdown line is not in original log. Terminal owner checks, full decode/frame count and native-clock tolerance support sealed movie, not an invented exact recorder frame count.",
+  "new_factor": "All unlearned non-damaging sleep/paralysis offers at the nearest future natural level, even when the selected next-level step does not reach it. Show full remaining XP cost; preserve existing offers/tools and every goal/candidate.",
+  "actual_case": {"selected_prep_target": "Parasect29", "next_level_natural_offers": [], "next_status_offer": "Spore at30, base accuracy100", "remaining_levels": 2, "remaining_experience": 3827, "selected_step_reaches_offer": false},
+  "tests": {"new_focused": 6, "full_python": 1358, "passed": true},
+  "new_factor_actual_adoption": false,
+  "scope": "Saved75 verification is actual. New factor verification is local only, with no extra native/model queries. A future offer is not learned, a hit/capture guarantee or required training/level parity; known zero-PP tools need recovery, not credit as future unlocks. All closest same-level offers remain visible; missing XP stays bounded. No prescribed route, forced answer, rollback or final lawful NEW GAME124 claim. Old ghost ancestry remains validation only. Final lawful124, whole original movie and collection dashboard still pending."
+}
