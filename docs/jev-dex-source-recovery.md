@@ -5494,3 +5494,55 @@ checkpoint守护与12×45秒被动观察已启用，仅原controller可以收到
 SHA `c2bf58345fa9dd2ca89ef77189bf4302cf1f5c1094b529eddb92db755e498d00`。
 逐项hash通过，原55主备份和所有原件保持；不重复MP4、binary或凭据，
 无删除，约78GiB可用。此补充备份不是新存档或124合法性认证。
+
+### 2026-10-04：第16段真实55→56，空箱与催眠捕获完成独立核验
+
+第16段仅从最新55，85.787秒／frame4850在Route19原生water encounter
+登记Tentacool，是唯一新增。实际Jev先切箱，再以Charizard领队正常前往
+水边；77.157秒选择switch:5至Hypno，78.091选择fight，79.164的真实
+MoveSelect选slot1 Hypnosis（原状态PP20／power0／SleepEffect）。之后
+Sleep(6)→Sleep(1)、HP28/28保持，六次实际PokeBall选择、数量42→36。
+没有削血；完整扩展action请求及nested fight criteria审计确认新削血
+参考实际暴露0，不声称模型用过、该新参考或导航修复导致这次捕获。
+
+原change_pc_box outcome的intended_effect_observed=false保留，不改历史
+为True，也不把它当失败：独立schema4与final原生状态实际current box
+1→2，box_counts从20,20,0到20,20,1，其余box为0。旧40个PC个体逐项
+完全相同，新增box2/index0 Tentacool10／HP28／Sleep(1)，Acid／Supersonic
+四槽PP30,20,0,0，与野生捕获一致。原工具outcome评估底层Rule，容量
+另由明确native字段核验；当前箱剩19位，party6／PC41。钱仍93，徽章
+mask31，GreatBall21／UltraBall1及除PokeBall外所有bag条目严格同源。
+
+Jev自主回Fuchsia护士，133.270秒自然治疗完成后，守护2026-10-04
+02:07:23 UTC只合作式SIGINT controller97470；native97480／recorder97481
+正常退出。133.462秒StoryStopped interrupted_at_command_boundary，
+5行动／strategy27与action16请求、success=false，不是124。最终56
+owned／95 seen、FuchsiaPokecenter(3,3)／frame5959，独立新native普通
+CONTINUE schema4七项expected/restored严格同，原55四项hash保持。
+最新SRAM SHA
+`3befcef79bc3a9362c887435a88eabd20b0e74f6d3acfea794996bcff1dfcefd`。
+56是唯一下一段恢复源，不回退55重复取得Tentacool。
+
+本段MP4 383868字节／24.850000秒／1491帧完整解码，SHA
+`607b514f6b2ff7c5f65b238f7bf3c496bfd4b5d38fb4ff3190b81398e827e16a`。
+真零NEW GAME完整16段原生时钟8205.616668秒、56个唯一登记，初始
+resume不重复、恢复5原失败前缀计一次，source audit无pending／history。
+全祖先文件／绑定schema4／16唯一录像hash及122434普通推进回执再次
+核验；四个历史null method保持。当前水边捕获ledger不是完整逐种
+producer／原作路线终验，仍不能交付124终验或完成大盘。
+
+纯读容量／捕获检查器先误认为MoveSelect criteria是dict，再误当JSON
+字符串，两个失败日志保留；检查原wire后按实际纯名称Hypnosis及state
+对应slot/PP/effect严格核对，v3通过。第一次备份在读取尚不存在的该
+报告时退出、未创建archive，其失败日志保留，核验完成后v2成功。
+不改原请求、值、规则或trace，不把检查器修正当native bug／捕获收益。
+
+worktree外41项／636006字节紧凑备份
+`verified56-checkpoint-and-navigation-goal-handoff-and-native-sleep-capture-evidence-20261004.tar.gz`
+逐项字节及hash严格同，SHA
+`fb2f2dab337a3625c7e697148ba9579d418fb0d597b65f6ecc09806a464a219a`。
+含安全56、原生16段验证、真实捕获请求、容量ledger、原失败日志及
+通用导航对照／补充备份receipt；原55主archive与43项补充archive及
+所有原件保留，无凭据、binary、重复MP4或删除，非tmp。策略policy
+63a6fb64保持，未改Rust／画面／验收。Goal active，尚差68种，继续
+只从最新56正常CONTINUE；最终合法性／全程MP4／图鉴大盘尚未完成。
