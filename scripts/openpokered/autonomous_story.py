@@ -36,6 +36,7 @@ from .collection_planner import (acquisition_contract, acquisition_graph, comple
                                  fishing_profile, infer_solo_choices, solo_plan,
                                  table_profile, ENCOUNTER_SLOT_WEIGHTS)
 from .collection_verification import valid_safari_snapshot
+from .collection_events import RegistrationEvidence
 
 # The level bias asks for more training than the pending fight strictly needs.
 LEVEL_PREFERENCE_MARGIN = 2
@@ -1116,6 +1117,15 @@ class AutonomousStoryAgent(DualStoryAgent):
         self.replan_after_defeat = False
         self.mechanism_goal = None
         self._recorded_dex_species = None
+        self._registration_evidence = RegistrationEvidence()
+
+    def record(self, kind, **payload):
+        if kind in ('battle_started', 'battle_resolved') and getattr(self, 'collects_dex', False):
+            evidence = getattr(self, '_registration_evidence', None)
+            if evidence is None:
+                evidence = self._registration_evidence = RegistrationEvidence()
+            evidence.observe_battle(kind, payload.get('state'))
+        super().record(kind, **payload)
 
     def facts(self):
         facts = super().facts()
@@ -1159,14 +1169,26 @@ class AutonomousStoryAgent(DualStoryAgent):
         facts['recent_battle_defeats'] = self.battle_defeats[-3:]
         dex = facts.get('dex') or {}
         owned_species = tuple(sorted(dex.get('owned_species', [])))
+        registration_evidence = {}
+        if self.collects_dex:
+            evidence = getattr(self, '_registration_evidence', None)
+            if evidence is None:
+                evidence = self._registration_evidence = RegistrationEvidence()
+            registration_evidence = evidence.registrations(
+                {**facts, 'frame': live['frame_count']}, self.complete_collection_graph())
         if self.collects_dex and owned_species != self._recorded_dex_species:
             previous = set(self._recorded_dex_species or ())
             active_context = (self.active or {}).get('context', {})
+            acquired = sorted(set(owned_species) - previous)
+            methods = {registration_evidence.get(species, {}).get('method', 'unknown') for species in acquired}
             self.record('dex_progress', owned=dex.get('owned', len(owned_species)),
                         seen=dex.get('seen', len(dex.get('seen_species', []))),
-                        acquired=sorted(set(owned_species) - previous),
+                        acquired=acquired,
                         owned_species=list(owned_species), map=facts['map'],
-                        acquisition_method=active_context.get('acquisition_method'),
+                        acquisition_method=next(iter(methods)) if len(methods) == 1 else 'unknown',
+                        planned_acquisition_method=active_context.get('acquisition_method'),
+                        acquisition_evidence=registration_evidence,
+                        registration_scope='baseline_observation' if self._recorded_dex_species is None else 'new_registration',
                         active_target=(self.active or {}).get('target'),
                         party_count=len(facts['party']),
                         stored_count=len(facts['stored_pokemon']), frame=live['frame_count'])
