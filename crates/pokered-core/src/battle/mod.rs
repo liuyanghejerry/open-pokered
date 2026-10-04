@@ -2811,7 +2811,13 @@ learn {learn_name}!")];
                     };
                     return ScreenAction::Continue;
                 }
-                let outcome = if won {
+                // Ball catches share the terminal animation phase with a win,
+                // but must retain wBattleResult=$2 semantics: no post-victory
+                // evolution, and scripts resume with "caught", not "win".
+                // The tutorial deliberately keeps captured_mon=None.
+                let outcome = if won && self.captured_mon.is_some() {
+                    BattleOutcome::Captured
+                } else if won {
                     BattleOutcome::Win
                 } else if escaped {
                     BattleOutcome::Escaped
