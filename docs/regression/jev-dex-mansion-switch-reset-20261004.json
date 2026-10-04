@@ -1,0 +1,108 @@
+{
+  "schema": 1,
+  "verified": true,
+  "finding": "mansion_switch_reset_missing_on_island_return",
+  "primary_source": {
+    "url": "https://raw.githubusercontent.com/pret/pokered/d2704a63c26f9ba046ade877445216b3de0519a4/scripts/CinnabarIsland.asm",
+    "sha256": "2f64f0fdbe9cbc6fc06d93f4d0d703a619e8be2ae56d42163642f46dceb0480d",
+    "revision": "d2704a63c26f9ba046ade877445216b3de0519a4",
+    "symbol": "CinnabarIsland_Script",
+    "expected_reset": "EVENT_MANSION_SWITCH_ON"
+  },
+  "before_master_revision": "cb131bbde9168cb7486aeff0d220cc9b21849b30",
+  "before_binary_sha256": "bc45e16dc5e3c486795f4477eea4a6cf12fd4396d08e0bd3bfbfe49299798689",
+  "after_binary_sha256": "a795d997fc2fdd879d25632054d97c2ef1aa6f17593299e4abb56e9150e94e71",
+  "after_scene_sha256": "7b88ed85423b435991ab30b3ea2500607354a5b238dac639cea89464899676cb",
+  "independent_original_bug_trials": 2,
+  "independent_after_trials": 2,
+  "matched_capture": {
+    "map": "PokemonMansion1F",
+    "position": [
+      12,
+      8
+    ],
+    "facing": "Up",
+    "absolute_frame": 20000,
+    "size": [
+      160,
+      144
+    ],
+    "changed_pixels": 324,
+    "difference_bbox": [
+      136,
+      48,
+      160,
+      64
+    ],
+    "blocks_changed": [
+      {
+        "index": 53,
+        "x": 8,
+        "y": 3,
+        "before": 14,
+        "after": 45
+      },
+      {
+        "index": 102,
+        "x": 12,
+        "y": 6,
+        "before": 45,
+        "after": 14
+      },
+      {
+        "index": 130,
+        "x": 10,
+        "y": 8,
+        "before": 14,
+        "after": 45
+      },
+      {
+        "index": 208,
+        "x": 13,
+        "y": 13,
+        "before": 14,
+        "after": 45
+      }
+    ],
+    "before": "docs/screenshots/jev-mansion-reset-before-20261004.png",
+    "after": "docs/screenshots/jev-mansion-reset-after-20261004.png",
+    "before_sha256": "a429c42a9f0c02c77c07ca9193ae267c7cc2e9e370334c7523df25524447b7f0",
+    "after_sha256": "8db2956b6b2d2bf64c83de0c021c9ee81c1db23ed561aa80689943569b1c2101",
+    "before_master_native_dex_field_available": false,
+    "before_capture_is_dex_checkpoint_verdict": false
+  },
+  "core_lib_tests": {
+    "profile": "release",
+    "passed": 2624,
+    "failed": 0,
+    "before_positive_switch_regression_failed_as_expected": true,
+    "checks": [
+      "island warp and restored entry reset",
+      "Mansion floors retain switch",
+      "Secret Key/Blaine progress retained",
+      "re-entry uses all four OFF blocks"
+    ]
+  },
+  "fresh_m49": {
+    "passed": true,
+    "unique_milestones": 49,
+    "elapsed_s": 63.98140379200049,
+    "league_retries": 2,
+    "badges": 255,
+    "hall_of_fame_count": 1,
+    "ending_autosave_and_independent_continue": true,
+    "collection_credit": 0
+  },
+  "source_hashes": {
+    "game.sav": "5920c2946ff3f56c0c6262fe1191a63b6cc9f016d6f8892134b7fad0d5229e37",
+    "game.script_flags.json": "5f57f066d7d63abece4ecad443f6cfe9eaf5265aff774aaa550b80db6028f506",
+    "trace.jsonl": "29654da8808636d6be37f6a2243783ef5328f74d9ba9a6d8853945512e7414db",
+    "summary.json": "c9e254964851aabcb53033321e98bb04ae9c265e5bb700e0fe702f8e4f65cb58"
+  },
+  "source_unchanged": true,
+  "formal_owner_not_connected_or_signalled": true,
+  "production_fix_adopted_at_this_snapshot": false,
+  "complete_acquisition_legality_verified": false,
+  "completed124": false,
+  "scope": "Native fidelity fix, ordinary isolated CONTINUE/walk/PNG evidence plus fresh milestone regression. Only Mansion switch reset added to Island @load, preserving fossil reset and persistent progress. No formal save correction, capture credit, retroactive legalisation or final legal NEW GAME124/video/dashboard completion. Original resets each Island script tick; @load covers reachable ordinary entry states because the switch changes only inside the Mansion, not arbitrary debug-seeded states."
+}
