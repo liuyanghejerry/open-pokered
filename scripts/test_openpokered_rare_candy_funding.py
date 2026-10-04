@@ -129,7 +129,11 @@ class RareCandyFundingTests(unittest.TestCase):
         agent.add_collection_funding(old, without)
         agent.add_collection_funding(new, facts)
         self.assertTrue(all(new[key] == value for key, value in old.items()))
-        self.assertEqual({g['target'][1] for g in new.values()}, {'Nugget', 'Carbos', 'RareCandy'})
+        self.assertEqual({g['target'][1] for g in new.values()}, {'Nugget', 'Carbos', 'RareCandy', 'Tm34'})
+        tm = next(g for g in new.values() if g['target'][1] == 'Tm34')
+        self.assertTrue(tm['context']['tm_sale'])
+        self.assertFalse(tm['context']['treasure_sale'])
+        self.assertIn('move_teaching_reference', tm['context']['sale_opportunity_cost'])
         self.assertEqual(len(new), len(old) + 1)
 
     def test_actual_receipt_is_labeled_level_item_not_treasure(self):

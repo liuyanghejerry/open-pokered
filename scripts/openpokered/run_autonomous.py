@@ -513,7 +513,13 @@ def main(argv=None):
                                'container': 'mp4', 'assets': assets}
     policy_files = [*Path(__file__).parent.glob('*.py'),
                     pt.ROOT / 'scripts/playthrough.py', pt.ROOT / 'scripts/playthrough_late.py',
-                    pt.ROOT / 'scripts/debug_drive.py']
+                    pt.ROOT / 'scripts/debug_drive.py',
+                    # Native inputs used by finite-TM price/move/sale references.
+                    # These hashes bind the planner's references, not a claim
+                    # that arbitrary runtime overrides match a frozen binary.
+                    pt.ROOT / 'crates/pokered-data/src/item_data.rs',
+                    pt.ROOT / 'crates/pokered-data/src/items.rs',
+                    pt.ROOT / 'crates/pokered-core/src/items/shop.rs']
     result['policy_files'] = {str(p.relative_to(pt.ROOT)): hashlib.sha256(p.read_bytes()).hexdigest()
                               for p in sorted(policy_files)}
     result['policy_sha256'] = hashlib.sha256(json.dumps(result['policy_files'], sort_keys=True).encode()).hexdigest()

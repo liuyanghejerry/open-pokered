@@ -1,5 +1,6 @@
 """Failed collection controllers must not destroy unsaved native runtime."""
 import io
+import hashlib
 import json
 from pathlib import Path
 import tempfile
@@ -69,6 +70,14 @@ class NativeHandoffTests(unittest.TestCase):
             self.assertFalse(summary.get('native_runtime_preserved', False))
             self.assertFalse((folder / 'native-handoff.json').exists())
             self.assertEqual(list(folder.glob('.runtime-*')), [])
+
+    def test_finite_tm_reference_native_inputs_are_hash_bound_in_manifest(self):
+        with tempfile.TemporaryDirectory() as root:
+            _, _, summary = self.run_fixture(root, state={'screen': 'battle'}, live=False)
+        for name in ('crates/pokered-data/src/item_data.rs', 'crates/pokered-data/src/items.rs',
+                     'crates/pokered-core/src/items/shop.rs'):
+            expected = hashlib.sha256((run_autonomous.pt.ROOT / name).read_bytes()).hexdigest()
+            self.assertEqual(summary['policy_files'][name], expected)
 
     def test_safe_overworld_still_saves_and_closes_normally(self):
         state = {'screen': 'overworld', 'warp_fade': 'Idle', 'player_movement_state': 'Idle',

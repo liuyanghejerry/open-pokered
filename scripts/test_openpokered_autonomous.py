@@ -5504,7 +5504,7 @@ class AutonomousTests(unittest.TestCase):
     def collection_funding_agent(self):
         agent = self.stone_spending_agent()
         agent.visited = {'ViridianMart'}
-        facts = {'bag': {'NUGGET': 1, 'MASTERBALL': 1, 'TM34': 1}, 'money': 410,
+        facts = {'bag': {'NUGGET': 1, 'MASTERBALL': 1, 'HM01': 1}, 'money': 410,
                  'map': 'ViridianCity', 'flags': {},
                  'party': [{'species': 'Growlithe'}],
                  'stored_pokemon': [{'species': 'Pikachu', 'box': 0, 'index': 0}],

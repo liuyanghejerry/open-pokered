@@ -18,7 +18,7 @@ import playthrough as pt
 import playthrough_late as data
 
 from .story_agent import DualStoryAgent, StoryStopped, attempt_key
-from .typesafe import TypeSafeError
+from .typesafe import Choice, TypeSafeClient, TypeSafeError
 from .story_rules import Rule, requirements, evaluate, static_retreat_contract, spent_static_source
 from .playthrough_judgments import (ObservedProtocol, NavigationPause, NavigationGoalObserved, attack_profile, replacement_options,
                                     MEDICINES, BALLS, medicine_options, effective_attacks, ITEM_CATALOG,
@@ -57,6 +57,37 @@ BALL_QUALITY = {
     'UltraBall': 'strong',
     'MasterBall': 'guaranteed',
 }
+
+
+def parse_native_tm_sale_catalog(source):
+    """Read finite TM prices from native definitions, not the ordinary JSON list.
+
+    Native enum names (Tm34) are the exact get_bag/sale-menu identities; TM34
+    is a display name. Unknown, key-item, nonpositive or mismatched rows do
+    not authorize funding. HMs never enter this finite-item catalogue.
+    """
+    definitions = source.split('pub const TMHM_DATA:', 1)
+    if len(definitions) != 2:
+        return {}
+    rows = re.findall(r'ItemData\s*\{\s*id:\s*ItemId::(Tm\d{2}),\s*name:\s*"(TM\d{2})",\s*'
+                      r'price:\s*(\d+),\s*is_key_item:\s*(true|false)\s*\}', definitions[1].split('];', 1)[0])
+    catalog = {}
+    for identity, display, price, key_item in rows:
+        index = int(identity[2:]) - 1
+        if (not 0 <= index < len(TM_MOVES) or display != identity.upper()
+                or key_item != 'false' or int(price) <= 0):
+            continue
+        if identity in catalog:
+            raise ValueError('Ambiguous native TM definition')
+        catalog[identity] = {'id': identity, 'name': display, 'price': int(price),
+            'sellable': True, 'key_item': False, 'tags': ['tm', 'finite_move_teaching'],
+            'effect': {'type': 'TM', 'params': {'move': TM_MOVES[index]}}}
+    return catalog
+
+
+@lru_cache(maxsize=1)
+def native_tm_sale_catalog():
+    return parse_native_tm_sale_catalog((data.DATA / 'src/item_data.rs').read_text())
 
 
 def cut_obstruction_identity(obstacle):
@@ -1476,6 +1507,15 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'evolution yield. PC recipients still require withdrawal; unknown XP stays '
                 'bounded. Retaining the candy remains possible by choosing another goal, '
                 'and proceeds are not available before a real sale.')
+            if any('"tm_sale"' in value for value in candidates.values()):
+                instruction += (' A finite TM sale also relinquishes normal move teaching. Compare '
+                    'sale_opportunity_cost.move_teaching_reference with the funding alternatives: '
+                    'native move data and compatibility describe actually held party/PC recipients, '
+                    'not guaranteed battle improvement or registration. Each copy teaches only one '
+                    'recipient; PC withdrawal and teaching/forgetting still require normal menus. '
+                    'Already knowing the move is not proof the TM is surplus for other recipients '
+                    'or future acquisitions. Retaining it remains possible by choosing another '
+                    'goal. HMs are not offered for sale, and money is not credited by a preview.')
         if layer == 'action' and 'local_state' in state and getattr(self, 'active', None):
             state = {**state, 'strategy_context': self.active.get('context', {})}
         context = state.get('strategy_context') or {}
@@ -1594,31 +1634,71 @@ class AutonomousStoryAgent(DualStoryAgent):
                                           allow_abstain=allow_abstain)
 
     def choose_bounded_choice(self, layer, state, candidates, instruction, *, allow_abstain=True):
-        """On explicit context overflow, compare every option in bounded rounds.
+        """Compare every option, learning only from explicit context overflow.
 
         No code-ranked shortlist: Jev chooses each disjoint group's representative
         with the same full state, then judges those representatives together.
         This is a tournament, not an identical full-set probability distribution.
+        A same-endpoint/model/layer runtime byte reference avoids retrying known
+        oversized rounds. Bytes are NOT tokens or a certified provider limit:
+        smaller requests still use the explicit-error fallback, and an observed
+        larger success disables an inconsistent reference. No global fixed cap,
+        persisted calibration, state omission or special collection preference.
         """
+        if not candidates:
+            return super().choose(layer, state, candidates, instruction,
+                                  allow_abstain=allow_abstain)
         choice_state = scope_shared_evidence(state, candidates)
         if choice_state is not state:
             self.record(f'{layer}_evidence_scope', candidate_ids=list(candidates),
                 library_entries_before=len(state['shared_strategy_evidence']),
                 library_entries_sent=len(choice_state['shared_strategy_evidence']),
                 semantic_state_preserved=True, candidate_values_preserved=True)
-        try:
-            return super().choose(layer, choice_state, candidates, instruction,
-                                  allow_abstain=allow_abstain)
-        except StoryStopped as error:
-            if (not isinstance(error.__cause__, TypeSafeError)
-                    or 'max_tokens_exceeded' not in str(error.__cause__)
-                    or len(candidates) <= 2):
-                raise
+        client = getattr(self, 'model_client', None)
+        model = getattr(self, 'model', None)
+        if isinstance(client, TypeSafeClient):
+            model = client.request_model(model)
+        endpoint = tuple(value if isinstance(value, str) else None for value in
+                         (model, getattr(client, 'base_url', None),
+                          getattr(client, 'system_one_path', None), getattr(client, 'provider', None)))
+        scope = (layer, *endpoint)
+        sizes = getattr(self, '_choice_context_sizes', None)
+        if sizes is None:
+            self._choice_context_sizes = sizes = {}
+        reference = sizes.setdefault(scope, {'smallest_overflow_bytes': None, 'largest_success_bytes': 0})
+        criteria = dict(candidates)
+        if allow_abstain:
+            criteria['none'] = 'None of these candidates can advance the current goal.'
+        # Same serialization as TypeSafeClient.system_one, with no request,
+        # credential, state mutation or tokenizer/model-limit assumption.
+        request_bytes = len(json.dumps({'state': choice_state, 'model': endpoint[0],
+            'questions': {layer: Choice(instruction, criteria).to_json()}}).encode())
+        overflow_bytes = reference['smallest_overflow_bytes']
+        proactive = (len(candidates) > 2 and overflow_bytes is not None
+                     and overflow_bytes > reference['largest_success_bytes']
+                     and request_bytes >= overflow_bytes)
+        reason = 'observed_context_size_reference' if proactive else 'max_tokens_exceeded'
+        if not proactive:
+            try:
+                selected = super().choose(layer, choice_state, candidates, instruction,
+                                          allow_abstain=allow_abstain)
+            except StoryStopped as error:
+                if (not isinstance(error.__cause__, TypeSafeError)
+                        or 'max_tokens_exceeded' not in str(error.__cause__)
+                        or len(candidates) <= 2):
+                    raise
+                reference['smallest_overflow_bytes'] = min(request_bytes,
+                    overflow_bytes if overflow_bytes is not None else request_bytes)
+            else:
+                reference['largest_success_bytes'] = max(reference['largest_success_bytes'], request_bytes)
+                return selected
         keys = list(candidates)
         midpoint = len(keys) // 2
         partitions = [keys[:midpoint], keys[midpoint:]]
         self.record(f'{layer}_partition', candidate_ids=keys, partitions=partitions,
-                    reason='max_tokens_exceeded', state_preserved=True)
+                    reason=reason, state_preserved=True,
+                    request_bytes=request_bytes, context_size_reference=dict(reference),
+                    reference_scope=list(scope), byte_reference_is_token_limit=False)
         local_instruction = instruction + (
             f' This is one disjoint comparison group from a larger {layer} choice. '
             'Choose the best relative next step in this group using the full unchanged state. '
@@ -2920,7 +3000,8 @@ class AutonomousStoryAgent(DualStoryAgent):
                 raise StoryStopped('sale_did_not_increase_money')
             context = self.active.get('context', {})
             kind = ('sold_level_item' if context.get('rare_candy_sale') else
-                    'sold_vitamin' if context.get('vitamin_sale') else 'sold_treasure')
+                    'sold_vitamin' if context.get('vitamin_sale') else
+                    'sold_tm' if context.get('tm_sale') else 'sold_treasure')
             self.record(kind, item=item, money_after=self.client.state()['money'])
             return True
         if state.get('shop_phase') and self.active and self.active['target'][0] == 'supply':
@@ -4780,8 +4861,39 @@ class AutonomousStoryAgent(DualStoryAgent):
                     'normal-training gap, exact only when observed; this is not a measured stat '
                     'gain, safe capture setup, refund or guaranteed new registration.'}
 
+    def tm_retention_reference(self, facts, item, quantity):
+        """Native move/compatibility for held recipients; one finite copy per use."""
+        move = item['effect']['params']['move']
+        bit = int(item['id'][2:]) - 1
+        recipients = []
+        for origin, mons in (('party', facts.get('party', [])), ('pc', facts.get('stored_pokemon', []))):
+            for index, mon in enumerate(mons):
+                if not machine_compatible(mon.get('species'), bit):
+                    continue
+                location = {'origin': origin, 'index': index}
+                if origin == 'pc':
+                    location.update({key: mon[key] for key in ('box', 'index') if key in mon})
+                moves = mon.get('moves')
+                known_moves = isinstance(moves, list) and all(isinstance(name, str) for name in moves)
+                hp = mon.get('hp')
+                recipients.append({**location, 'species': mon['species'], 'level': mon.get('level'),
+                    'compatible': True, 'observed_moves': list(moves) if known_moves else None,
+                    'already_knows_move': move in moves if known_moves else None,
+                    'conscious': hp > 0 if type(hp) is int else None,
+                    'withdrawal_required': origin == 'pc'})
+        return {'tm': item['id'], 'copies_held': quantity, 'learned_move': move,
+            'move_data': data.move_data(move), 'compatible_held_recipients': recipients,
+            'scope': 'Native TM-HM compatibility bits and move data for observed held recipients '
+                'only; not measured training, damage, survival or registration benefit. Each finite '
+                'copy can teach one recipient, so these are alternatives sharing the same copies, '
+                'not a joint moveset yield. Known compatibility does not certify a conscious party '
+                'recipient, a legal replacement, PC access or an executed teaching menu. Missing '
+                'moves/HP/levels remain unknown; an already-known move cannot be retaught to that '
+                'recipient. Normal PC withdrawal, item menus and move replacement still apply. '
+                'An empty held-recipient list does not rule out future acquisitions or prove surplus.'}
+
     def add_collection_funding(self, groups, facts):
-        """Offer owned treasure/vitamin/level-item sales with retention costs.
+        """Offer owned treasure/vitamin/level-item/finite-TM sales with retention costs.
 
         Reuse real shop interactions and sale menus, never offer capture balls,
         evolution stones or quest resources, or mutate money during planning.
@@ -4789,18 +4901,22 @@ class AutonomousStoryAgent(DualStoryAgent):
         if not self.collects_dex:
             return
         sale_items = []
-        for name, item in ITEM_CATALOG.items():
+        for name, item in {**ITEM_CATALOG, **native_tm_sale_catalog()}.items():
             quantity = facts['bag'].get(name.replace('_', '').upper(), 0)
+            if type(quantity) is not int:
+                continue
             unit_price = (item.get('price') or 0) // 2
             vitamin = ('vitamin' in item.get('tags', [])
                        and (item.get('effect') or {}).get('type') == 'Vitamin')
             candy = (name == 'RareCandy' and 'level' in item.get('tags', [])
                      and (item.get('effect') or {}).get('type') == 'RareCandy'
                      and type(quantity) is int)
+            tm = ('tm' in item.get('tags', [])
+                  and (item.get('effect') or {}).get('type') == 'TM')
             if (quantity > 0 and unit_price > 0 and item.get('sellable')
                     and not item.get('key_item')
-                    and ('treasure' in item.get('tags', []) or vitamin or candy)):
-                sale_items.append((name, item, quantity, quantity * unit_price, vitamin, candy))
+                    and ('treasure' in item.get('tags', []) or vitamin or candy or tm)):
+                sale_items.append((name, item, quantity, quantity * unit_price, vitamin, candy, tm))
         if not sale_items:
             return
         shops = []
@@ -4812,7 +4928,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                 shops.append((rule, len(route.get('legs', []))))
         if not shops:
             return
-        for name, item, quantity, proceeds, vitamin, candy in sale_items:
+        for name, item, quantity, proceeds, vitamin, candy, tm in sale_items:
             money_after = facts['money'] + proceeds
             spending = self.item_evolution_spending_reference(facts, money_after)
             evolutions = [{
@@ -4824,6 +4940,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                     and option['affordable_after_purchase'] is True,
             } for option in spending['held_source_options']]
             retained_levels = self.rare_candy_retention_reference(facts, quantity) if candy else None
+            retained_teaching = self.tm_retention_reference(facts, item, quantity) if tm else None
             for rule, hops in shops:
                 stock = {key.replace('_', '').upper() for key in rule.effect[1]}
                 balls = [{'ball': ball, 'quantity_held': facts['bag'].get(ball.replace('_', '').upper(), 0),
@@ -4870,6 +4987,19 @@ class AutonomousStoryAgent(DualStoryAgent):
                                 'level evolutions with capture/stone funding. Retaining the item is '
                                 'possible by choosing another goal; no training, evolution receipt '
                                 'or safety benefit is guaranteed by this preview.'})
+                if tm:
+                    context.update(treasure_sale=False, tm_sale=True,
+                        sale_opportunity_cost={
+                            'quantity_relinquished': quantity,
+                            'retained_item_effect': item['effect'],
+                            'retained_item_tags': item.get('tags', []),
+                            'move_teaching_reference': retained_teaching,
+                            'scope': 'Offering this sale is not a surplus certificate. Selling the '
+                                'observed finite stack irreversibly relinquishes its normal move '
+                                'teaching uses. Compare actual held-recipient compatibility and '
+                                'move effects with capture/stone funding; retaining the TM remains '
+                                'possible by choosing another goal. No free money, taught move, '
+                                'battle improvement or registration is credited by this preview.'})
                 group = groups.setdefault(key, {'target': ('sale', name, False), 'rules': [rule],
                     'objectives': [], 'context': {}})
                 group['context'] = {**context, **group.get('context', {}),
@@ -4881,6 +5011,9 @@ class AutonomousStoryAgent(DualStoryAgent):
                 if candy:
                     objective = ('Optionally sell owned Rare Candy through a known shop to fund capture '
                                  'balls or held-source stone evolutions, relinquishing its finite level-up uses')
+                if tm:
+                    objective = ('Optionally sell an owned finite TM through a known shop to fund capture '
+                                 'balls or held-source evolutions, relinquishing its move-teaching uses')
                 if objective not in group['objectives']:
                     group['objectives'].append(objective)
 
