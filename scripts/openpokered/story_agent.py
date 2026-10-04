@@ -412,6 +412,10 @@ class DualStoryAgent:
         """
         return False
 
+    def operation_outcome_observations(self, operation, result, before, after):
+        """Optional read-only evidence from the already observed action boundaries."""
+        return {}
+
     def action_rejected(self, facts, reason):
         return False
 
@@ -493,6 +497,7 @@ class DualStoryAgent:
                          'flags_gained': sorted(k for k,v in after['flags'].items() if v and not facts['flags'].get(k)),
                          'bag_after': after['bag'], 'map': after['map'], 'story_state_changed': changed}
                 delta.update(post_operation_effects(self.index, rule, selected_subgoal, after))
+                delta.update(self.operation_outcome_observations(operation, result, facts, after))
                 if stochastic_attempt:
                     delta['completed_stochastic_attempt'] = True
                     delta['resolved_encounters'] = self.resolved_battles - battles_before

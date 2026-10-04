@@ -1532,6 +1532,66 @@ class AutonomousStoryAgent(DualStoryAgent):
                     preparation, row['preparation'])}
                 for key, row in getattr(self, 'capture_blackouts', {}).items()]
 
+    @staticmethod
+    def collection_progress_snapshot(facts):
+        """Retain observations, not PC receipts, forecasts or individual identity."""
+        owned = (facts.get('dex') or {}).get('owned_species')
+        owned = sorted(set(owned)) if isinstance(owned, list) and all(
+            isinstance(species, str) for species in owned) else None
+        party = facts.get('party')
+        if isinstance(party, list) and all(isinstance(mon, dict)
+                and isinstance(mon.get('species'), str) for mon in party):
+            party = [{'species': mon.get('species'),
+                      'level': mon.get('level') if type(mon.get('level')) is int
+                          and 1 <= mon['level'] <= 100 else None,
+                      'experience': mon.get('experience') if type(mon.get('experience')) is int
+                          and mon['experience'] >= 0 else None} for mon in party]
+        else:
+            party = None
+        return {'native_owned_species': owned, 'party': party}
+
+    @staticmethod
+    def compare_collection_progress(previous, current):
+        if previous is None:
+            return None
+        before_owned, after_owned = previous['native_owned_species'], current['native_owned_species']
+        known_owned = before_owned is not None and after_owned is not None
+        before_party, after_party = previous['party'], current['party']
+        observations = None
+        if before_party is not None and after_party is not None:
+            observations = []
+            species = sorted({mon['species'] for mon in before_party + after_party
+                              if isinstance(mon['species'], str)})
+            for name in species:
+                samples = [[{'party_index': i, 'level': mon['level'], 'experience': mon['experience']}
+                            for i, mon in enumerate(party) if mon['species'] == name]
+                           for party in (before_party, after_party)]
+                delta = None
+                if len(samples[0]) == len(samples[1]) == 1:
+                    before_xp, after_xp = samples[0][0]['experience'], samples[1][0]['experience']
+                    if before_xp is not None and after_xp is not None:
+                        delta = after_xp - before_xp
+                observations.append({'species': name, 'previous_party_samples': samples[0],
+                    'current_party_samples': samples[1],
+                    'experience_change_if_single_sample_each': delta})
+        return {'native_owned_count_before': len(before_owned) if before_owned is not None else None,
+                'native_owned_count_after': len(after_owned) if after_owned is not None else None,
+                'native_owned_species_added': sorted(set(after_owned) - set(before_owned)) if known_owned else None,
+                'native_owned_species_removed': sorted(set(before_owned) - set(after_owned)) if known_owned else None,
+                'party_species_observations': observations}
+
+    def operation_outcome_observations(self, operation, result, before, after):
+        completed_pc = ((operation.startswith('retrieve_pc:') and result.get('result') == 'withdrew_pokemon')
+                        or (operation.startswith('deposit_pc:') and result.get('result') == 'deposited_pokemon'))
+        if not getattr(self, 'collects_dex', False) or not completed_pc:
+            return {}
+        initial, final = (self.collection_progress_snapshot(facts) for facts in (before, after))
+        observed = {'since_previous_completed_pc': self.compare_collection_progress(
+                        getattr(self, '_last_completed_collection_pc', None), initial),
+                    'during_completed_pc': self.compare_collection_progress(initial, final)}
+        self._last_completed_collection_pc = final
+        return {'collection_pc_progress_observation': observed}
+
     def collection_preparation_continuity_reference(self, facts):
         """Compare held opportunities and observed PC work, never select a goal."""
         party_known = isinstance(facts.get('party'), list)
@@ -1582,7 +1642,8 @@ class AutonomousStoryAgent(DualStoryAgent):
                     or (operation.startswith('deposit_pc:') and row.get('result') == 'deposited_pokemon')):
                 continue
             completed.append({key: deepcopy(row[key]) for key in (
-                'operation', 'result', 'selected_subgoal', 'selected_subgoal_satisfied_after', 'map')
+                'operation', 'result', 'selected_subgoal', 'selected_subgoal_satisfied_after', 'map',
+                'collection_pc_progress_observation')
                 if key in row})
             goal = row.get('selected_subgoal') or []
             if (operation.startswith('retrieve_pc:') and row.get('selected_subgoal_satisfied_after') is True
@@ -1590,6 +1651,17 @@ class AutonomousStoryAgent(DualStoryAgent):
                 requests[goal[1]] += 1
         return {'dex_ownership_known': known, 'party_observation_known': party_known,
                 'current_party_followups': followups,
+                'progress_since_last_completed_pc': self.compare_collection_progress(
+                    getattr(self, '_last_completed_collection_pc', None),
+                    self.collection_progress_snapshot(facts)),
+                'pc_progress_observation_scope': 'Native owned bits and party level/XP samples at observed '
+                    'action boundaries only, not an independently saved checkpoint or source-legality '
+                    'certificate. Between-PC observations end before the next PC action; during-PC '
+                    'observations include its swap. XP differences compare a species represented once '
+                    'at each boundary, not individual identity or proof of battle-caused training. '
+                    'Duplicate-species XP changes, missing XP/party/dex and an absent prior boundary remain unknown. '
+                    'An empty owned-bit difference is a boundary comparison, not proof of every '
+                    'intermediate event. History starts in this controller, not before CONTINUE.',
                 'retained_pc_outcomes': {
                     'completed_pc_operation_count': len(completed),
                     'satisfied_withdrawal_requests': [
@@ -1843,7 +1915,10 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'concrete purpose of another party change. Repeated preparation can be justified by '
                 'materially different needs; prior preparation spending is not a reason to continue '
                 'preparing. Retained PC outcomes cover only this controller, not an entire save history '
-                'or evidence that registrations did not occur. All other goals and PC changes remain '
+                'or evidence that registrations did not occur. Use progress_since_last_completed_pc '
+                'and collection_pc_progress_observation to distinguish observed owned-bit/XP changes '
+                'between preparation steps from the PC swap itself; heed their unknowns and identity '
+                'limits. A zero observed gain does not forbid a justified party change. All other goals and PC changes remain '
                 'available; this is not a forced itinerary, party composition or target order.')
             instruction += (' Compare capture_retry_evidence with current preparation: an observed '
                 'retreat can show a status support fainted while the target remained healthy and unstatused. '

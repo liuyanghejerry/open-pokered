@@ -5821,6 +5821,177 @@ class AutonomousTests(unittest.TestCase):
         self.assertIn('current controller', value['scope'])
         self.assertIn('not proof an operation never happened', value['scope'])
 
+    def test_pc_progress_observes_zero_gain_between_completed_preparations(self):
+        from copy import deepcopy
+        agent, facts = self.storage_tradeoff_fixture()
+        agent.client, agent.game = Mock(), Mock()
+        for mon in facts['party']:
+            mon['experience'] = level_experience(mon['species'], mon['level'])
+        original = deepcopy(facts)
+        first = agent.operation_outcome_observations('retrieve_pc:0,1,2,0',
+            {'result': 'withdrew_pokemon'}, facts, facts)['collection_pc_progress_observation']
+        self.assertIsNone(first['since_previous_completed_pc'])
+        second = agent.operation_outcome_observations('deposit_pc:2,0',
+            {'result': 'deposited_pokemon'}, facts, facts)['collection_pc_progress_observation']
+        interval = second['since_previous_completed_pc']
+        self.assertEqual(interval['native_owned_species_added'], [])
+        self.assertEqual(interval['native_owned_species_removed'], [])
+        self.assertEqual([row['experience_change_if_single_sample_each']
+                          for row in interval['party_species_observations']], [0] * 6)
+        self.assertEqual(facts, original)
+        current = agent.collection_preparation_continuity_reference(facts)
+        self.assertEqual(current['progress_since_last_completed_pc'], interval)
+        self.assertIn('not individual identity', current['pc_progress_observation_scope'])
+        self.assertEqual(agent.client.mock_calls, [])
+        self.assertEqual(agent.game.mock_calls, [])
+
+    def test_pc_progress_separates_between_preparation_gains_from_pc_swap(self):
+        from copy import deepcopy
+        agent, before = self.storage_tradeoff_fixture()
+        before['party'][1]['experience'] = 1000
+        agent.operation_outcome_observations('retrieve_pc:0,1,2,0',
+            {'result': 'withdrew_pokemon'}, before, before)
+        trained = deepcopy(before)
+        trained['party'][1].update(experience=1123, level=29)
+        trained['dex']['owned_species'].append('Clefairy')
+        after = deepcopy(trained)
+        after['party'].pop(1)
+        result = agent.operation_outcome_observations('deposit_pc:1,0',
+            {'result': 'deposited_pokemon'}, trained, after)['collection_pc_progress_observation']
+        interval = result['since_previous_completed_pc']
+        self.assertEqual(interval['native_owned_species_added'], ['Clefairy'])
+        row = next(row for row in interval['party_species_observations']
+                   if row['species'] == 'Pidgeotto')
+        self.assertEqual(row['experience_change_if_single_sample_each'], 123)
+        during = result['during_completed_pc']
+        self.assertEqual(during['native_owned_species_added'], [])
+        removed = next(row for row in during['party_species_observations']
+                       if row['species'] == 'Pidgeotto')
+        self.assertEqual(removed['current_party_samples'], [])
+        self.assertIsNone(removed['experience_change_if_single_sample_each'])
+
+    def test_pc_progress_keeps_unknowns_duplicates_and_reordering_explicit(self):
+        from copy import deepcopy
+        agent, before = self.storage_tradeoff_fixture()
+        before['party'][1]['experience'] = 1000
+        before['party'][5] = {**before['party'][1], 'experience': 2000}
+        after = deepcopy(before)
+        after['party'].reverse()
+        after['party'][0]['experience'] += 10
+        value = agent.operation_outcome_observations('retrieve_pc:0,1,2,0',
+            {'result': 'withdrew_pokemon'}, before, after)['collection_pc_progress_observation']
+        duplicate = next(row for row in value['during_completed_pc']['party_species_observations']
+                         if row['species'] == 'Pidgeotto')
+        self.assertEqual(len(duplicate['previous_party_samples']), 2)
+        self.assertIsNone(duplicate['experience_change_if_single_sample_each'])
+        unknown = agent.operation_outcome_observations('deposit_pc:1,0',
+            {'result': 'deposited_pokemon'}, after, {})['collection_pc_progress_observation']
+        self.assertIsNone(unknown['during_completed_pc']['native_owned_species_added'])
+        self.assertIsNone(unknown['during_completed_pc']['party_species_observations'])
+
+    def test_pc_progress_tracks_native_bits_without_clearing_source_audit(self):
+        from copy import deepcopy
+        agent, before = self.storage_tradeoff_fixture()
+        agent.collection_audit_pending = {'Raichu': {'reason': 'unverified'}}
+        after = deepcopy(before)
+        after['dex']['owned_species'].append('Raichu')
+        observed = agent.operation_outcome_observations('retrieve_pc:0,1,2,0',
+            {'result': 'withdrew_pokemon'}, before, after)['collection_pc_progress_observation']
+        self.assertEqual(observed['during_completed_pc']['native_owned_species_added'], ['Raichu'])
+        self.assertNotIn('Raichu', agent.validated_owned(after))
+        self.assertEqual(agent.collection_audit_pending, {'Raichu': {'reason': 'unverified'}})
+
+    def test_pc_progress_failed_operations_and_other_goals_do_not_advance_baseline(self):
+        from copy import deepcopy
+        agent, facts = self.storage_tradeoff_fixture()
+        self.assertEqual(agent.operation_outcome_observations('retrieve_pc:0,1,2,0',
+            {'result': 'blocked'}, facts, facts), {})
+        self.assertIsNone(agent.collection_preparation_continuity_reference(facts)[
+            'progress_since_last_completed_pc'])
+        agent.operation_outcome_observations('deposit_pc:1,0',
+            {'result': 'deposited_pokemon'}, facts, facts)
+        baseline = deepcopy(agent._last_completed_collection_pc)
+        changed = deepcopy(facts)
+        changed['dex']['owned_species'].append('Clefairy')
+        for operation, result in [('retrieve_pc:0,1,2,0', 'blocked'),
+                                  ('change_pc_box:1,0', 'changed_box'),
+                                  ('train_encounter:Route7,5,8', 'trained')]:
+            self.assertEqual(agent.operation_outcome_observations(operation,
+                {'result': result}, facts, changed), {})
+        self.assertEqual(agent._last_completed_collection_pc, baseline)
+        agent.collects_dex = False
+        self.assertEqual(agent.operation_outcome_observations('deposit_pc:1,0',
+            {'result': 'deposited_pokemon'}, facts, changed), {})
+        self.assertEqual(agent._last_completed_collection_pc, baseline)
+
+    def test_pc_progress_snapshot_does_not_alias_and_survives_lossless_wire(self):
+        from copy import deepcopy
+        from openpokered.decision_wire import compact_decision_field_wire, restore_decision_field_wire
+        agent, facts = self.storage_tradeoff_fixture()
+        observation = agent.operation_outcome_observations('retrieve_pc:0,1,2,0',
+            {'result': 'withdrew_pokemon'}, facts, facts)
+        agent.recent = [{'operation': 'retrieve_pc:0,1,2,0', 'result': 'withdrew_pokemon',
+                         **deepcopy(observation)}]
+        facts['dex']['owned_species'].append('Clefairy')
+        state = {'world': facts, 'collection_preparation_continuity_reference':
+                 agent.collection_preparation_continuity_reference(facts)}
+        reference = state['collection_preparation_continuity_reference']
+        self.assertEqual(reference['progress_since_last_completed_pc']['native_owned_species_added'],
+                         ['Clefairy'])
+        self.assertEqual(reference['retained_pc_outcomes']['latest_completed_pc_operations'][0][
+            'collection_pc_progress_observation'], observation['collection_pc_progress_observation'])
+        packed, offered = compact_decision_field_wire(state, {'pc': 'Prepare', 'none': 'Abstain'})
+        decoded, criteria = restore_decision_field_wire(packed, offered)
+        self.assertEqual(decoded, state)
+        self.assertEqual(criteria, {'pc': 'Prepare', 'none': 'Abstain'})
+
+    def test_pc_progress_unique_species_samples_survive_reordering_not_identity_changes(self):
+        from copy import deepcopy
+        agent, before = self.storage_tradeoff_fixture()
+        before['party'][1]['experience'] = 1000
+        after = deepcopy(before)
+        after['party'].reverse()
+        after['party'][4]['experience'] = 900
+        value = agent.operation_outcome_observations('retrieve_pc:0,1,2,0',
+            {'result': 'withdrew_pokemon'}, before, after)['collection_pc_progress_observation']
+        row = next(row for row in value['during_completed_pc']['party_species_observations']
+                   if row['species'] == 'Pidgeotto')
+        self.assertEqual(row['previous_party_samples'][0]['party_index'], 1)
+        self.assertEqual(row['current_party_samples'][0]['party_index'], 4)
+        self.assertEqual(row['experience_change_if_single_sample_each'], -100)
+        self.assertIn('not individual identity or proof of battle-caused training',
+            agent.collection_preparation_continuity_reference(after)['pc_progress_observation_scope'])
+
+    def test_pc_progress_invalid_xp_is_unknown_but_observed_zero_is_zero(self):
+        from copy import deepcopy
+        agent, before = self.storage_tradeoff_fixture()
+        for mon in before['party']:
+            mon['experience'] = 0
+        after = deepcopy(before)
+        for i, xp in enumerate([0, None, True, -1, 1.5, '1000']):
+            after['party'][i]['experience'] = xp
+        value = agent.operation_outcome_observations('deposit_pc:1,0',
+            {'result': 'deposited_pokemon'}, before, after)['collection_pc_progress_observation']
+        rows = {row['species']: row for row in value['during_completed_pc']['party_species_observations']}
+        self.assertEqual(rows['Charizard']['experience_change_if_single_sample_each'], 0)
+        for mon in after['party'][1:]:
+            self.assertIsNone(rows[mon['species']]['experience_change_if_single_sample_each'])
+        after['party'][0].pop('species')
+        self.assertIsNone(agent.collection_progress_snapshot(after)['party'])
+
+    def test_pc_progress_records_owned_bit_removal_and_missing_native_list_as_unknown(self):
+        agent, facts = self.storage_tradeoff_fixture()
+        before = agent.collection_progress_snapshot(facts)
+        facts['dex']['owned_species'].remove('Gloom')
+        value = agent.compare_collection_progress(before, agent.collection_progress_snapshot(facts))
+        self.assertEqual(value['native_owned_species_removed'], ['Gloom'])
+        self.assertEqual(value['native_owned_count_after'], 5)
+        for unknown in ({}, {'owned_species': None}, {'owned_species': ['Gloom', None]}):
+            facts['dex'] = unknown
+            value = agent.compare_collection_progress(before, agent.collection_progress_snapshot(facts))
+            self.assertIsNone(value['native_owned_count_after'])
+            self.assertIsNone(value['native_owned_species_removed'])
+
     def test_preparation_continuity_is_attached_without_changing_native_state(self):
         from copy import deepcopy
         agent = self.catch_goal_agent([{'id': 'collect-dex', 'agent_verified': True}])

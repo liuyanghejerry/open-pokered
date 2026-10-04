@@ -93,6 +93,7 @@ class PostOperationEffectTests(unittest.TestCase):
             agent.active['target'][1] = 'Kadabra'
             return {'result': 'withdrew_pokemon'}
         agent.execute = Mock(side_effect=execute)
+        agent.operation_outcome_observations = Mock(return_value={'observed_progress': 'sentinel'})
         self.index.rules, self.index.errors, self.index.sha256 = [self.rule], [], 'mock'
         with patch('openpokered.story_agent.StoryIndex', return_value=self.index):
             result = agent.run()
@@ -103,7 +104,16 @@ class PostOperationEffectTests(unittest.TestCase):
         self.assertTrue(outcome['selected_subgoal_satisfied_after'])
         self.assertFalse(outcome['intended_effect_observed'])
         self.assertEqual(agent.recent[-1]['selected_subgoal'], ['pokemon', 'Seel', None])
+        agent.operation_outcome_observations.assert_called_once_with(
+            'retrieve_pc:1,1,1,0', {'result': 'withdrew_pokemon'}, before, after)
+        self.assertEqual(outcome['observed_progress'], 'sentinel')
+        self.assertEqual(agent.recent[-1]['observed_progress'], 'sentinel')
         self.assertIn('not causation or final collection proof', agent.choose.call_args.args[3])
+
+    def test_default_outcome_observer_preserves_noncollection_behavior(self):
+        agent = DualStoryAgent.__new__(DualStoryAgent)
+        self.assertEqual(agent.operation_outcome_observations('deposit_pc:1,0',
+            {'result': 'deposited_pokemon'}, self.facts, self.facts), {})
 
 
 if __name__ == '__main__':
