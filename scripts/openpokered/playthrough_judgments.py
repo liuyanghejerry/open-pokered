@@ -809,6 +809,35 @@ def capture_move_question(state, menu):
     return compact, choices
 
 
+def training_turn_commitment_reference(state):
+    """Menu time is not battle time; sleep counters change only at turn gates."""
+    status = state['battle_live']['player'].get('status')
+    match = re.fullmatch(r'Sleep\(([0-9]+)\)', status) if isinstance(status, str) else None
+    counter = int(match.group(1)) if match else None
+    gate = None if counter is None else {
+        'observed_counter': counter,
+        'counter_after_gate_if_reached': max(0, counter - 1),
+        'move_executes_at_sleep_gate': counter == 0,
+        'wake_up_tick_also_forfeits_attack': counter == 1,
+    }
+    return {'observed_active_status': status,
+        'commit_usable_move': {'advances_battle_turn': True, 'sleep_gate': gate},
+        'open_or_cancel_menu': {'advances_battle_turn': False, 'sleep_counter_change': 0},
+        'scope': 'Native sleep gate arithmetic if a legal committed move reaches that gate. '
+            'Menu frames and repeated menu cancellation are not battle turns, attacks or '
+            'recovery. A positive sleep counter prevents this attack even on the wake-up tick; '
+            'Sleep(0) is defensively cleared at the gate. This is not the status after the '
+            'whole turn: the enemy can inflict sleep again, and other gates or enemy actions '
+            'can prevent acting or survival. No damage, safe waking, reward or registration is '
+            'guaranteed. A null sleep gate is unknown/not applicable, not proof the move executes.'}
+
+
+def training_menu_state_key(state):
+    """Bind comparison feedback to resources and current native move previews."""
+    return json.dumps([capture_turn_key(state), state['battle_live'].get('player_move_previews')],
+                      sort_keys=True)
+
+
 def training_move_question(state, menu, active):
     """Training needs current native damage and HP, not only abstract power.
 
@@ -827,6 +856,7 @@ def training_move_question(state, menu, active):
         'active_role': 'trainee_species' if goal['active_species_matches_trainee'] else 'other_species',
     }
     compact['training_threat_reference'] = training_threat_reference(state)
+    compact['training_turn_commitment_reference'] = training_turn_commitment_reference(state)
     for index, slot in enumerate(menu['moves']):
         if str(index) in compact['moves']:
             compact['moves'][str(index)]['direct_hit_preview'] = deepcopy(slot.get('direct_hit_preview'))
@@ -1020,6 +1050,23 @@ class JevGame(pt.Game):
             candidates.pop('fight', None)
         if not bindings:
             return None
+        if training_goal is not None and not capturing and 'fight' in candidates:
+            try:
+                fight = json.loads(candidates['fight'])
+            except json.JSONDecodeError:
+                fight = {}
+            fight.update(active_party_index=active, active_pokemon=deepcopy(party[active]),
+                usable_effective_attacks=effective_attacks(party[active], live['enemy']['species']),
+                opening_menu_spends_turn=False,
+                training_turn_commitment_reference=training_turn_commitment_reference(state),
+                purpose='Open FIGHT to compare and commit a usable battle turn. With a positive '
+                    'sleep counter this advances the sleep gate rather than executing damage. '
+                    'Merely reopening or cancelling FIGHT does neither; all other offered '
+                    'operations remain available for comparison.')
+            if isinstance(live.get('player_move_previews'), list):
+                fight['native_active_move_previews'] = deepcopy(live['player_move_previews'])
+                fight['direct_hit_preview_scope'] = DIRECT_HIT_PREVIEW_SCOPE
+            candidates['fight'] = json.dumps(fight)
         instruction = ('Choose attack, an offered switch, one recovery item, or one ball for this turn. Switching, items and balls consume the turn and the enemy can attack. '
             'Keep the capable battler alive, cure disabling status, or revive a useful fainted teammate. '
             'Avoid healing loops when enemy damage exceeds recovery; use the strongest suitable medicine when needed. '
@@ -1122,14 +1169,26 @@ class JevGame(pt.Game):
                 'enemy damage, speed order or guaranteed safety; null is unknown. '
                 'Choose among all offered operations without crediting unobserved rewards.')
             if not capturing:
+                judgment_state['training_turn_commitment_reference'] = training_turn_commitment_reference(state)
+                instruction += (' Compare training_turn_commitment_reference: '
+                    'counter_after_gate_if_reached describes a committed sleep turn, not '
+                    'an attack or safe waking. FIGHT opens a menu; subsequently committing '
+                    'a usable move spends the turn, while reopening/cancelling spends none.')
                 instruction += TRAINING_SLEEP_TURN_SCOPE
-            if getattr(self, '_training_declined_fight', None) == capture_turn_key(state):
+            if (getattr(self, '_training_declined_fight', None) == capture_turn_key(state)
+                    and getattr(self, '_training_menu_cancellations', {}).get('state_key')
+                        == training_menu_state_key(state)):
+                count = getattr(self, '_training_menu_cancellations', {})
                 judgment_state['training_move_menu_feedback'] = {
                     'result': 'No suitable attack selected; move menu cancelled without spending a turn',
+                    'same_state_menu_cancellations': count.get('count', 0)
+                        if count.get('state_key') == training_menu_state_key(state) else 0,
+                    'battle_turns_spent_by_cancellation': 0,
                     'scope': 'Previous judgment at this unchanged battle state, not a failed attack or proof that victory is impossible.'}
                 instruction += (' The attack judgment declined the previous FIGHT menu at this '
                     'same battle state. Reassess the offered recovery/ball/switch/FIGHT operations; '
-                    'cancelling spent no turn and did not test an attack. FIGHT remains available.')
+                    'cancelling spent no turn and did not test an attack. Same-state repetition '
+                    'does not decrement sleep, test damage or advance training. FIGHT remains available.')
         if balls and getattr(self.judgments, 'collects_dex', False):
             value = collection_capture_value(state, objective)
             judgment_state['collection_capture_value'] = value
@@ -1176,6 +1235,14 @@ class JevGame(pt.Game):
         else:
             chosen = self.judgments.choose('action', judgment_state, candidates,
                 instruction + preference_suffix(self.judgments))
+        if training_goal is not None and not capturing:
+            self._training_main_menu_comparison = {
+                'state_key': training_menu_state_key(state),
+                'selected_operation': chosen, 'offered_operations': deepcopy(candidates),
+                'scope': 'Actual preceding main-menu comparison at matching battle resources '
+                    'and native previews only, not an instruction to override the current '
+                    'judgment or proof of a committed turn, participation, damage or reward. '
+                    'BACK returns to these operations but performs none of them.'}
         return bindings.get(chosen)
 
     def remember_npcs(self, map_name, npcs):
@@ -1479,8 +1546,19 @@ class JevGame(pt.Game):
             compact, candidates = (capture_move_question(state, menu) if capturing
                                    else training_move_question(state, menu, getattr(self.judgments, 'active', None)))
             training_goal = None if capturing else level_training_goal(state, getattr(self.judgments, 'active', None))
-            if training_goal is not None and getattr(self, '_training_declined_fight', None) == capture_turn_key(state):
+            if training_goal is not None:
+                comparison = getattr(self, '_training_main_menu_comparison', {})
+                if comparison.get('state_key') == training_menu_state_key(state):
+                    compact['training_main_menu_comparison'] = deepcopy({
+                        key: value for key, value in comparison.items() if key != 'state_key'})
+            if (training_goal is not None
+                    and getattr(self, '_training_declined_fight', None) == capture_turn_key(state)
+                    and getattr(self, '_training_menu_cancellations', {}).get('state_key')
+                        == training_menu_state_key(state)):
                 compact['prior_menu_abstention'] = 'At this same state no suitable attack was selected; menu cancellation spent no turn and did not execute or test a move.'
+                count = getattr(self, '_training_menu_cancellations', {})
+                compact['same_state_menu_cancellations'] = (count.get('count', 0)
+                    if count.get('state_key') == training_menu_state_key(state) else 0)
             if capturing and not candidates:
                 # A status-only support may have just landed sleep. Return to
                 # PlayerMenu for a ball rather than repeat a useless status.
@@ -1567,6 +1645,14 @@ class JevGame(pt.Game):
                             'order; critical hits, misses, enemy move choice and status can differ. '
                             'When reconsidering a switch via back, the incoming teammate also '
                             'faces a response opportunity. No known matchup certifies survival.')
+                        instruction += (' Compare training_turn_commitment_reference with '
+                            'training_main_menu_comparison when present: committing a usable '
+                            'move can advance the observed sleep counter without executing '
+                            'an attack. BACK spends no turn and does not itself switch, heal '
+                            'or cure sleep; repeated same-state cancellation has made no '
+                            'training progress. Compare that cost with the actual offered '
+                            'main-menu alternatives. The preceding FIGHT choice is context, '
+                            'not permission to ignore an unsuitable move or current evidence.')
                         instruction += TRAINING_SLEEP_TURN_SCOPE
                     try:
                         chosen = self.judgments.choose('action', compact, candidates,
@@ -1582,6 +1668,11 @@ class JevGame(pt.Game):
                         self._capture_declined_fight = capture_turn_key(state)
                     else:
                         self._training_declined_fight = capture_turn_key(state)
+                        key_state = training_menu_state_key(state)
+                        previous = getattr(self, '_training_menu_cancellations', {})
+                        self._training_menu_cancellations = {'state_key': key_state,
+                            'count': (previous.get('count', 0)
+                                if previous.get('state_key') == key_state else 0) + 1}
                     self.judgments.record('capture_menu_cancelled' if capturing else 'training_menu_cancelled', state=compact)
                     if not capturing:
                         self.move_cache.pop(key, None)  # Feedback must reach the next fresh comparison.

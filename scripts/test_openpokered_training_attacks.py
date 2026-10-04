@@ -4,6 +4,7 @@ import json
 import unittest
 from unittest.mock import Mock, patch
 
+from openpokered import playthrough_judgments as judgments
 from openpokered.playthrough_judgments import (JevGame, level_training_goal, move_question,
     training_move_question, training_threat_reference)
 from openpokered.story_agent import StoryStopped
@@ -282,6 +283,140 @@ class TrainingAttackTests(unittest.TestCase):
         self.assertIn('training_move_abstention', kinds)
         self.assertIn('training_menu_cancelled', kinds)
         self.assertNotIn('attack', kinds)
+
+    def test_sleep_turn_reference_distinguishes_committing_from_menu_cancellation(self):
+        state = self.sleeping_finisher_state()
+        state['battle_live']['player']['status'] = 'Sleep(6)'
+        original = copy.deepcopy(state)
+        reference = judgments.training_turn_commitment_reference(state)
+        gate = reference['commit_usable_move']['sleep_gate']
+        self.assertEqual(gate['observed_counter'], 6)
+        self.assertEqual(gate['counter_after_gate_if_reached'], 5)
+        self.assertFalse(gate['move_executes_at_sleep_gate'])
+        self.assertTrue(reference['commit_usable_move']['advances_battle_turn'])
+        self.assertEqual(reference['open_or_cancel_menu']['sleep_counter_change'], 0)
+        self.assertFalse(reference['open_or_cancel_menu']['advances_battle_turn'])
+        self.assertIn('enemy can inflict sleep again', reference['scope'])
+        self.assertEqual(state, original)
+
+    def test_sleep_wake_tick_is_not_an_attack_but_zero_counter_is_defensively_awake(self):
+        state = self.sleeping_finisher_state()
+        for counter, after, executes in ((1, 0, False), (0, 0, True)):
+            with self.subTest(counter=counter):
+                state['battle_live']['player']['status'] = f'Sleep({counter})'
+                gate = judgments.training_turn_commitment_reference(state)['commit_usable_move']['sleep_gate']
+                self.assertEqual(gate['counter_after_gate_if_reached'], after)
+                self.assertEqual(gate['move_executes_at_sleep_gate'], executes)
+
+    def test_non_sleep_status_does_not_manufacture_a_sleep_counter(self):
+        state = self.sleeping_finisher_state()
+        for status in ('None', 'Paralysis', 'Freeze', 'Sleep(?)'):
+            with self.subTest(status=status):
+                state['battle_live']['player']['status'] = status
+                reference = judgments.training_turn_commitment_reference(state)
+                self.assertIsNone(reference['commit_usable_move']['sleep_gate'])
+                self.assertEqual(reference['observed_active_status'], status)
+
+    def test_finisher_fight_describes_turn_commitment_not_an_immediate_sleeping_attack(self):
+        state = self.sleeping_finisher_state()
+        game = self.game(state, self.active())
+        game.judgments.choose.return_value = 'fight'
+        self.assertIsNone(game.battle_recovery_plan(state))
+        _, compact, choices, instructions = game.judgments.choose.call_args.args
+        fight = json.loads(choices['fight'])
+        self.assertEqual(fight['active_pokemon']['status'], 'Sleep(4)')
+        self.assertEqual(fight['training_turn_commitment_reference'], compact['training_turn_commitment_reference'])
+        self.assertFalse(fight['opening_menu_spends_turn'])
+        self.assertIn('switch:2', choices)
+        self.assertIn('ball:PokeBall', choices)
+        self.assertIn('counter_after_gate_if_reached', instructions)
+        self.assertNotIn('allow_abstain', game.judgments.choose.call_args.kwargs)
+
+    def test_attack_judgment_receives_actual_same_state_main_menu_comparison(self):
+        state = self.sleeping_finisher_state()
+        game = self.game(state, self.active())
+        game.judgments.choose.return_value = 'fight'
+        game.battle_recovery_plan(state)
+        main_options = copy.deepcopy(game.judgments.choose.call_args.args[2])
+        state['battle_phase'] = 'MoveSelect'
+        state['battle_moves'] = {'cursor': 0, 'moves': [
+            {'move': 'Slash', 'pp': 20, 'disabled': False}]}
+        game.judgments.choose.return_value = '0'
+        game._select_move()
+        _, compact, choices, _ = game.judgments.choose.call_args.args
+        comparison = compact['training_main_menu_comparison']
+        self.assertEqual(comparison['selected_operation'], 'fight')
+        self.assertEqual(comparison['offered_operations'], main_options)
+        self.assertIn('not an instruction to override', comparison['scope'])
+        self.assertEqual(choices['0'], 'Slash')
+        self.assertIn('back', choices)
+        game.tap.assert_called_once_with('a', 4)
+
+    def test_changed_battle_facts_invalidate_saved_main_menu_comparison(self):
+        state = self.sleeping_finisher_state()
+        game = self.game(state, self.active())
+        game.judgments.choose.return_value = 'fight'
+        game.battle_recovery_plan(state)
+        state['battle_live']['enemy']['hp'] -= 1
+        state['battle_phase'] = 'MoveSelect'
+        state['battle_moves'] = {'cursor': 0, 'moves': [
+            {'move': 'Slash', 'pp': 20, 'disabled': False}]}
+        game.judgments.choose.return_value = '0'
+        game._select_move()
+        self.assertNotIn('training_main_menu_comparison', game.judgments.choose.call_args.args[1])
+
+    def test_repeated_same_state_menu_cancellations_are_counted_without_banning_fight(self):
+        state = self.state()
+        game = self.game(state, self.active())
+        game.judgments.choose.return_value = 'back'
+        game._select_move()
+        game._select_move()
+        state['battle_phase'] = 'PlayerMenu'
+        game.judgments.choose.return_value = 'fight'
+        game.battle_recovery_plan(state)
+        _, compact, choices, _ = game.judgments.choose.call_args.args
+        feedback = compact['training_move_menu_feedback']
+        self.assertEqual(feedback['same_state_menu_cancellations'], 2)
+        self.assertEqual(feedback['battle_turns_spent_by_cancellation'], 0)
+        self.assertIn('fight', choices)
+        self.assertIn('switch:1', choices)
+        self.assertEqual(game.move_cache, {})
+        self.assertEqual([call.args[0] for call in game.tap.call_args_list], ['b', 'b'])
+
+    def test_changed_state_restarts_cancellation_count_and_does_not_credit_a_turn(self):
+        state = self.state()
+        game = self.game(state, self.active())
+        game.judgments.choose.return_value = 'back'
+        game._select_move()
+        state['battle_live']['enemy']['hp'] -= 1
+        game._select_move()
+        state['battle_phase'] = 'PlayerMenu'
+        game.judgments.choose.return_value = 'fight'
+        game.battle_recovery_plan(state)
+        feedback = game.judgments.choose.call_args.args[1]['training_move_menu_feedback']
+        self.assertEqual(feedback['same_state_menu_cancellations'], 1)
+
+    def test_capture_precedence_does_not_add_training_turn_commitment_or_saved_comparison(self):
+        state = self.sleeping_finisher_state()
+        state['pokedex'] = {'owned_species': ['Geodude']}
+        game = self.game(state, self.active())
+        game.judgments.collects_dex = True
+        game.judgments.choose.return_value = 'fight'
+        game.battle_recovery_plan(state)
+        self.assertNotIn('training_turn_commitment_reference', game.judgments.choose.call_args.args[1])
+        self.assertFalse(hasattr(game, '_training_main_menu_comparison'))
+
+    def test_native_preview_changes_invalidate_menu_feedback_even_if_hp_and_status_match(self):
+        state = self.state()
+        state['battle_live']['player_move_previews'] = [{'slot': 0, 'direct_hit_preview': None}]
+        game = self.game(state, self.active())
+        game.judgments.choose.return_value = 'back'
+        game._select_move()
+        state['battle_live']['player_move_previews'][0]['direct_hit_preview'] = {'normal_damage': [1, 2]}
+        state['battle_phase'] = 'PlayerMenu'
+        game.judgments.choose.return_value = 'fight'
+        game.battle_recovery_plan(state)
+        self.assertNotIn('training_move_menu_feedback', game.judgments.choose.call_args.args[1])
 
     def test_explicit_back_is_legal_and_next_question_receives_feedback(self):
         state = self.state()
