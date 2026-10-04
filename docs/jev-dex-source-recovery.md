@@ -5710,8 +5710,11 @@ receipt。没有虚构failure.txt/start证明，MP4和native binary仅单份原�
 
 真实237.005秒后自主取出Seel，238.212秒PC回执withdrew_pokemon；
 后续普通观察确认Seel30/XP27000加入满员party、Kadabra存入PC，未
-新增登记。原回执intended_effect_observed=false保持：它检查的是底层
-PC Rule的party_space，交换后party仍六只，而不是所选pokemon:Seel。
+新增登记。原回执intended_effect_observed=false保持：底层PC Rule实际
+是pc/storage/true，而不是所选pokemon:Seel。原satisfied未实现pc标记，
+默认false不代表原生PC失败。首次离线报告把该Rule假定为party_space，
+该具体解释由V2纠正：逐字原候选ways.produces绑定原operation.script，
+确认pc/storage/true；原报告、错误假设、原回执与所有源hash保留。
 这不是取出失败或数据回退，不覆盖旧trace解释成true。
 
 316.010秒/frame18729在Route15草地实际新增Pidgeotto，56→57/95。
@@ -5765,3 +5768,14 @@ native/生产选择或原成功条件。Goal active，安全57/124尚差67种；
 `40c769d33082c797ce2725808d376cfd0c11d51ce09f916863c7333ddb7c234c`。
 原57主备份/源文件/单份原生MP4保持；只增加代码、测试、离线观察
 证据和保留的失败日志，不重复核心trace/video/binary，不增加登记信用。
+
+上述补充备份绑定当时字节，不使首次离线party_space假设成为实际原生
+Rule。V2纠正报告另存，原archive/报告不改；满员slot测试仍是通用边界
+回归，不冒充本次真实PC Rule。第20段运行中只更正文档，没有热改
+冻结policy40c769d3或原生输入。03:30:25 UTC正式被动启动审计通过，
+从最新57源的103个当前候选完整比较28API/5溢出/23成功，最终none
+及全世界/候选/访问事实保持；候选数随真实持有物/完成条件变化，非
+新数量剪枝。Jev自主取出Psyduck准备Golduck，新的原生回执明确
+script_effect=pc/storage/true，原false保留、所选pokemon:Psyduck满足
+为true。模型实际接收新近期反馈仍须原始成功请求另行核验；实时段
+不是新安全存档，最新独立安全仍57，视频开放，Goal active。
