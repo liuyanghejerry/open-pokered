@@ -5245,3 +5245,66 @@ indexed trigger的失败日志保留，核对原生索引／config后v2通过。
 seed42／预算／原生4×录像不变。未换provider／模型，不新增Rust／m49
 或玩家画面变化，原PR绝对raw前后截图保持。当前仍53／124，不能把
 元信息和冷对照当捕获收益或最终完整合法性／全程MP4／大盘验收。
+
+### 2026-10-04：合法54种闭合核验与闪电鸟实际招式选择审计
+
+第14段 `20261004-084835-seed42` 从唯一最新53源普通CONTINUE，
+启动干净a0fb8c93／policy15bc5a8c；双层OpenRouter Jev1.13.0、seed42、
+预算、冻结native6d8e／gfx21e0及原生4×录像保持。strategy22.049秒、
+action24.844秒实际成功，三项初始成功策略请求展开lossless refs／tables，
+新导航目标关联与同源冷快照严格同；这是信息收到的证据，不是效率归因。
+初始53、准备、清路及徽章前置尝试不计新增，没有指定道馆或路线。
+
+唯一新增为Jev自主Route3普通grass捕获Jigglypuff，1002.361秒、
+frame92307。后续自主清Celadon树及道馆内树，实战击败Erika于
+1134.605秒／frame108376，增加真实第五徽章和TM21；早先Route23
+RAINBOW／MARSH／VOLCANO旅行受阻尝试不是提前获得徽章。Jev另获
+BIKEVOUCHER；准备和已登记Snorlax遭遇不冒充图鉴新增。
+
+1279.709秒自主Vermilion护士完成，守护2026-10-04 01:09:56 UTC
+仅向精确controller50950合作式SIGINT，native50962／recorder50965
+均正常退出。首次守护只监看，后来经精确PID核对停止那个守护工具，
+将备份阈值从59调整为未来新增54后的自然护士边界；第二守护v2日志
+记录实际请求，原日志保留。没有强制治疗、native／recorder信号、第二
+native连接、热替换、回退或新NEW GAME。75动作，strategy350／action184
+调用；success=false／interrupted_at_command_boundary，安全存档与
+最终观察有效。54 owned／95 seen、VermilionPokecenter frame114990、
+资金4593、徽章位掩码31、PokeBall42／GreatBall21／UltraBall1、party6／
+PC40，两个box各20，当前box1已满。Charizard58 XP190001、HP197、
+四槽PP20／30／15／10；其余队员与所有PC／物品真实状态完整保全。
+
+SRAM `0a176e315fcc1d08b72aeca6c8a454f9b560100ada806a372de9eed6df2f46f5`
+独立新native schema4普通CONTINUE，expected／restored七项严格同，
+包括XP／HP／全部四槽PP／PC／bag／flags／dex，前53源四项hash不变。
+本段MP4 8536741字节、479.150000秒、28749帧，全解码通过，SHA
+`031e089ab5e9606eaae8a8a24d7f957cf3dbdbcaf938299a83f0c07bb9aeffc6`。
+14段真正零登记NEW GAME祖先累计原生时钟7579.300001秒，54种唯一
+登记，resume初始不重复、恢复5计一次，source audit无pending／history。
+额外审计111932普通成功推进回执、14个原生录像hash及绑定独立证明；
+仍不是完整逐种producer／原作路线最终合法性验收，四个旧未标注method
+物种仍unknown，不便利性补记gift，未合并最终全程视频或交付完成大盘。
+
+本段175.953秒Zapdos真实正常RUN为第四次累计退却。目标50级HP155／
+155、无状态，PokeBall2／GreatBall3观测消耗；累计PokeBall3／GreatBall3，
+本段未登记，无capture blackout。Drowzee13与多个队员倒下，Hypnosis
+PP20未减，不能把护士恢复或更多球当状态支持已经有效。
+闭合后的只读请求审计进一步定位：156.269秒开战，157.036秒选择FIGHT，
+157.861秒真实招式判断选择back。Slash／Cut／Flamethrower候选及
+原生normal／critical范围均已送达，各直接单击最大伤害低于155；
+Dig为unsupported null而非零伤害。三次Charizard实际招式判断均back，
+159.818秒还有一次原有cache复用back；全遭遇七次招式判断、八次取消，
+无attack事件。故不是已经证明的攻击候选遗漏／引擎bug，不能把有条件
+不致死直接命中当生存、命中、次生／持续伤害安全或后续捕获保证。
+下一轮可研究把已知伤害范围对应的剩余HP／下一球条件概率收益，连同
+低等级支援风险更直接地提供比较；本轮尚未实现或宣称该改动获益。
+
+worktree外55项／7177793字节备份
+`verified54-checkpoint-and-navigation-goal-and-status-support-evidence-20261004.tar.gz`
+逐项字节与hash通过，SHA
+`2273ff12f6eb1aad89a56f4048e548d5d9fe052dbfc4ef63618110a59330feda`。
+包含新导航context冷对照／真实receipt／失败测试／1052项回归及两个守护
+原日志；后续招式审计独立保留在持久safety目录。53 archive hash及全部
+原件不变，无凭据、binary、重复MP4或删除；当前可用磁盘约79GiB。
+唯一下一段恢复基线为54，不继续引用已退出owner。没有Rust／新m49／
+玩家画面变化，PR原八张绝对raw截图保持。Goal active，尚差70种；
+完整124、逐种合法性终验、全程MP4及完成图鉴大盘均尚未交付。
