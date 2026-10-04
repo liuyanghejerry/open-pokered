@@ -1173,6 +1173,9 @@ class AutonomousStoryAgent(DualStoryAgent):
             resource_guards = self.script_resource_guard_reference(facts)
             if resource_guards:
                 state['script_resource_guard_reference'] = resource_guards
+            navigation_guards = self.navigation_goal_resource_guard_reference(facts)
+            if navigation_guards:
+                state['navigation_goal_resource_guard_reference'] = navigation_guards
             state['collection_audit_pending'] = getattr(self, 'collection_audit_pending', {})
             state['capture_retreats_requiring_preparation'] = [row for key, row in
                 getattr(self, 'capture_retreats', {}).items()
@@ -1445,6 +1448,15 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'thresholds are not summed fees or proof of a charged payment. script_offered_badges '
                 'describes script rewards still requiring normal battles and interaction. Compare '
                 'these opportunities with all other goals; no cash reserve, badge order or route is forced.')
+            instruction += (' Compare navigation_goal_resource_guard_reference and '
+                'navigation_goal_resource_tradeoffs: resolving a local navigation obstruction '
+                'does not establish the requested destination goal or remove its separate native '
+                'entry guard. Recorded failures are historical, not proof the old local obstacle '
+                'still applies. Warp adjacency is a geometric association, not exhaustive access '
+                'proof. Compare currently ready other dialogue-choice effects before repeating '
+                'temporary flag changes. target_flag_only_guard_values projects that flag alone, '
+                'not the candidate script rewards, a paid trip or a whole-route outcome. '
+                'All alternative goals and normal choices remain available; no route is forced.')
             instruction += (' A treasure or vitamin sale is optional collection funding, not only defeat recovery. '
                 'Compare collection_funding_reference with ball supplies and evolutions of actually '
                 'held party/PC sources. Sale proceeds and affordability are price references until '
@@ -4209,6 +4221,7 @@ class AutonomousStoryAgent(DualStoryAgent):
             self.annotate_script_unlocks(groups, facts)
             self.annotate_script_resource_guards(groups, facts)
             self.annotate_finite_static_sources(groups, facts)
+            self.annotate_navigation_goal_tradeoffs(groups, facts)
         self.annotate_route_reset_costs(groups, facts)
         return groups
 
@@ -4356,6 +4369,94 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'not executed purchases. Alternatives share money; not a joint registration yield, '
                 'not a fixed cash reserve, badge order or route. Confirmations, payments, navigation '
                 'and battles still require ordinary execution.'}
+
+    def navigation_goal_resource_guard_reference(self, facts):
+        """Relate actual pending travel failures to native destination guards."""
+        history = (getattr(self, 'navigation_history', {})
+                   or getattr(self, 'navigation_memory', {}))
+        if not getattr(self, 'collects_dex', False) or not history:
+            return None
+        reference = self.script_resource_guard_reference(facts)
+        if not reference:
+            return None
+        pending = {}
+        for blockage in history.values():
+            goal, destination = blockage.get('goal'), blockage.get('destination')
+            if (not isinstance(destination, str) or not isinstance(goal, (list, tuple))
+                    or len(goal) != 3 or self.index.satisfied(goal, facts)):
+                continue
+            key = destination, json.dumps(goal)
+            failures = pending.setdefault(key, [])
+            if blockage not in failures:
+                failures.append(deepcopy(blockage))
+        goals = []
+        for (destination, goal), failures in sorted(pending.items()):
+            barriers = []
+            for barrier in reference['observed_coordinate_barriers']:
+                source_map = barrier['script']['map']
+                adjacent = [{'source_map': source_map, 'warp_tile': [warp['x'], warp['y']],
+                             'destination': destination, 'coordinate_tile': list(point)}
+                    for warp in pt.MAPS.get(source_map, {}).get('warps', [])
+                    if warp.get('dest_map_name') == destination
+                    for point in barrier['coordinate_triggers']
+                    if abs(point[0] - warp['x']) + abs(point[1] - warp['y']) <= 1]
+                if source_map == destination or adjacent:
+                    barriers.append({**deepcopy(barrier), 'warp_adjacency_reference': adjacent,
+                        'association': 'inside_requested_map' if source_map == destination
+                                       else 'coordinate_adjacent_to_destination_warp'})
+            if barriers:
+                goals.append({'destination': destination, 'requested_goal': json.loads(goal),
+                              'recorded_navigation_failures': failures,
+                              'destination_entry_barriers': barriers})
+        if not goals:
+            return None
+        return {'requested_goals': goals,
+            'scope': 'Actual recorded travel failures whose requested goals remain unsatisfied. '
+                'Native currently enabled resource guards are associated by their map or a coordinate '
+                'within one tile of a known warp into that destination. This is geometric association, '
+                'not proof of all entrances, an exhaustive blocker list or current local obstruction. '
+                'Local flag/choice resolution is not completion of the requested destination goal. '
+                'Guards and other choices remain conditional; no prescribed route or badge order.'}
+
+    def annotate_navigation_goal_tradeoffs(self, groups, facts):
+        reference = self.navigation_goal_resource_guard_reference(facts)
+        for group in groups.values():
+            context = group.get('context') or {}
+            context.pop('navigation_goal_resource_tradeoffs', None)
+            if not reference:
+                continue
+            blockages = [context.get('observed_navigation_blockage') or {}]
+            blockages.extend({'destination': row.get('destination'), 'goal': row.get('requested_goal')}
+                             for row in context.get('observed_navigation_prerequisites', []))
+            related = [row for row in reference['requested_goals']
+                if list(group['target']) == row['requested_goal']
+                or row['destination'] in context.get('blocked_destinations', [])
+                or any(blockage.get('destination') == row['destination']
+                       and list(blockage.get('goal') or []) == row['requested_goal'] for blockage in blockages)]
+            if not related:
+                continue
+            alternatives = {}
+            for local in context.get('observed_navigation_prerequisites', []):
+                description = local.get('coordinate_script') or {}
+                for rule in self.index.rules:
+                    if (rule.map == description.get('map') and rule.storyline == description.get('script')
+                            and rule.choices and rule.choices != description.get('confirmation_options')
+                            and not rule.missing(facts)
+                            and not any(effect[0] == 'battle' for effect in rule.preceding)):
+                        alternatives[rule.id] = {'rule_id': rule.id, 'script': rule.description(),
+                                                 'entry_guards': deepcopy(rule.guards)}
+            kind, name, wanted = group['target']
+            projected = {**facts, 'flags': {**facts.get('flags', {}), name: wanted}} if kind == 'flag' else None
+            group.setdefault('context', {})['navigation_goal_resource_tradeoffs'] = [{**deepcopy(row),
+                'local_other_choice_effects': deepcopy(list(alternatives.values())),
+                'target_flag_only_guard_values': [[evaluate(guard['expression'], projected)
+                    for guard in barrier['resource_guards']] for barrier in row['destination_entry_barriers']]
+                    if projected else None,
+                'scope': reference['scope'] + ' Other-choice effects are native ready branch alternatives, '
+                    'not proof they resolve this route; entry guards, confirmation and execution apply. '
+                    'Flag projection changes only the named flag, not other script rewards, resources '
+                    'or native progress. Candidate IDs, rules, targets and costs are unchanged.'}
+                for row in related]
 
     def annotate_script_resource_guards(self, groups, facts):
         reference = self.script_resource_guard_reference(facts)

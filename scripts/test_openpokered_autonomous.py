@@ -8841,6 +8841,118 @@ class AutonomousTests(unittest.TestCase):
                 agent.annotate_finite_static_sources(groups, facts)
                 self.assertEqual(groups['alias']['context'], {})
 
+    def navigation_guard_context_agent(self):
+        agent, entrance, barrier, _ = self.resource_guard_agent()
+        agent.navigation_history = {
+            'Gym:Gate': {'map': 'Gate', 'position': [3, 3], 'destination': 'Gym',
+                         'goal': ['flag', 'GYM_WON', True], 'detail': 'An observed local obstacle'},
+            'Gym:City': {'map': 'City', 'position': [32, 9], 'destination': 'Gym',
+                         'goal': ['flag', 'GYM_WON', True], 'detail': 'Observed door push-back'}}
+        agent.index.satisfied = Mock(return_value=False)
+        local = Rule('decline', 'Gate', 'Gate:entry', ['coord:entry'], [], ['NO'],
+                     ('movement', 'movePlayerRelative', True), [])
+        agent.index.rules.append(local)
+        group = {'target': ('flag', 'INSIDE', True), 'rules': [entrance], 'objectives': ['Investigate'],
+            'context': {'observed_navigation_blockage': agent.navigation_history['Gym:Gate'],
+                'observed_navigation_prerequisites': [{'destination': 'Gym',
+                    'requested_goal': ['flag', 'GYM_WON', True], 'coordinate_script': local.description()}],
+                'trigger_navigation': [{'tile_route_found': True, 'steps': 1}], 'existing_cost': 500}}
+        maps = {'City': {'warps': [{'x': 32, 'y': 7, 'dest_map_name': 'Gym'}]}}
+        facts = {'money': 500, 'badges': 4, 'flags': {'INSIDE': False}}
+        return agent, facts, group, maps, barrier
+
+    def test_navigation_guard_reference_associates_local_failures_with_destination_entry(self):
+        agent, facts, _, maps, _ = self.navigation_guard_context_agent()
+        with patch('openpokered.autonomous_story.pt.MAPS', maps):
+            row, = agent.navigation_goal_resource_guard_reference(facts)['requested_goals']
+        self.assertEqual(row['destination'], 'Gym')
+        self.assertEqual(row['requested_goal'], ['flag', 'GYM_WON', True])
+        self.assertEqual({b['map'] for b in row['recorded_navigation_failures']}, {'Gate', 'City'})
+        door, = row['destination_entry_barriers']
+        self.assertEqual(door['script']['map'], 'City')
+        self.assertEqual(door['warp_adjacency_reference'][0]['warp_tile'], [32, 7])
+        query, = door['resource_guards'][0]['queries']
+        self.assertEqual(query['observed_value'], 4)
+        self.assertEqual(door['resource_guards'][0]['required_value'], False)
+
+    def test_navigation_guard_alias_context_preserves_all_candidates_and_costs(self):
+        from copy import deepcopy
+        agent, facts, group, maps, _ = self.navigation_guard_context_agent()
+        groups = {'alias': group, 'other': {'target': ('catch', 'Road', True), 'rules': [], 'context': {}}}
+        original, original_facts, history = deepcopy((groups, facts, agent.navigation_history))
+        with patch('openpokered.autonomous_story.pt.MAPS', maps):
+            agent.annotate_navigation_goal_tradeoffs(groups, facts)
+        tradeoff, = groups['alias']['context'].pop('navigation_goal_resource_tradeoffs')
+        self.assertEqual(groups, original)
+        self.assertEqual(facts, original_facts)
+        self.assertEqual(tradeoff['target_flag_only_guard_values'], [[True]])
+        alternative, = tradeoff['local_other_choice_effects']
+        self.assertEqual(alternative['script']['confirmation_options'], ['YES'])
+        self.assertEqual(alternative['script']['produces'], ('transport', ('Park', 14, 25), True))
+        tradeoff['recorded_navigation_failures'][0]['detail'] = 'mutated copy'
+        self.assertEqual(agent.navigation_history, history)
+
+    def test_navigation_guard_does_not_claim_unaffordable_other_choice_is_ready(self):
+        agent, facts, group, maps, _ = self.navigation_guard_context_agent()
+        facts['money'] = 407
+        with patch('openpokered.autonomous_story.pt.MAPS', maps):
+            agent.annotate_navigation_goal_tradeoffs({'alias': group}, facts)
+        self.assertEqual(group['context']['navigation_goal_resource_tradeoffs'][0]['local_other_choice_effects'], [])
+
+    def test_navigation_guard_warp_adjacency_does_not_bind_remote_doors(self):
+        agent, facts, _, maps, _ = self.navigation_guard_context_agent()
+        maps['City']['warps'][0]['x'] = 30
+        with patch('openpokered.autonomous_story.pt.MAPS', maps):
+            self.assertIsNone(agent.navigation_goal_resource_guard_reference(facts))
+
+    def test_navigation_guard_unknown_badges_and_completed_goals_do_not_certify_barrier(self):
+        agent, facts, _, maps, _ = self.navigation_guard_context_agent()
+        with patch('openpokered.autonomous_story.pt.MAPS', maps):
+            unknown = {k: v for k, v in facts.items() if k != 'badges'}
+            self.assertIsNone(agent.navigation_goal_resource_guard_reference(unknown))
+            agent.index.satisfied.return_value = True
+            self.assertIsNone(agent.navigation_goal_resource_guard_reference(facts))
+
+    def test_navigation_guard_refresh_removes_no_longer_enabled_barrier(self):
+        agent, facts, group, maps, _ = self.navigation_guard_context_agent()
+        with patch('openpokered.autonomous_story.pt.MAPS', maps):
+            agent.annotate_navigation_goal_tradeoffs({'alias': group}, facts)
+            facts['badges'] = 7
+            agent.annotate_navigation_goal_tradeoffs({'alias': group}, facts)
+        self.assertNotIn('navigation_goal_resource_tradeoffs', group['context'])
+
+    def test_navigation_guard_target_flag_projection_keeps_full_compound_expression(self):
+        from openpokered.story_rules import literal
+        agent, facts, group, maps, barrier = self.navigation_guard_context_agent()
+        barrier.guards[0] = ({'BinaryOp': {'op': 'And', 'left': barrier.guards[0][0],
+            'right': {'Call': {'callee': 'getFlag', 'args': [literal('LOCKED')]}}}}, True)
+        facts['flags']['LOCKED'] = True
+        group['target'] = ('flag', 'LOCKED', False)
+        with patch('openpokered.autonomous_story.pt.MAPS', maps):
+            agent.annotate_navigation_goal_tradeoffs({'alias': group}, facts)
+        row, = group['context']['navigation_goal_resource_tradeoffs']
+        self.assertEqual(row['target_flag_only_guard_values'], [[False]])
+        self.assertEqual(row['destination_entry_barriers'][0]['resource_guards'][0]['expression'], barrier.guards[0][0])
+
+    def test_navigation_guard_dex_state_hook_exposes_pending_destination_without_alias_candidate(self):
+        agent, facts, _, maps, _ = self.navigation_guard_context_agent()
+        agent.completed_route_context = Mock(return_value=None)
+        agent.dex_progress = Mock(return_value={'solo_owned': 53})
+        agent.latest_capture_failures = Mock(return_value={})
+        agent.capture_retreats = {}
+        state = {}
+        with patch('openpokered.autonomous_story.pt.MAPS', maps):
+            agent.augment_strategy_state(state, facts)
+        self.assertEqual(state['navigation_goal_resource_guard_reference']['requested_goals'][0]['destination'], 'Gym')
+
+    def test_navigation_guard_no_history_or_non_dex_does_not_create_evidence(self):
+        agent, facts, _, maps, _ = self.navigation_guard_context_agent()
+        with patch('openpokered.autonomous_story.pt.MAPS', maps):
+            agent.navigation_history = {}
+            self.assertIsNone(agent.navigation_goal_resource_guard_reference(facts))
+            agent.collects_dex = False
+            self.assertIsNone(agent.navigation_goal_resource_guard_reference(facts))
+
     def test_depleted_attacks_require_recovery_even_at_full_hp(self):
         facts = {'party': [{'hp': 30, 'max_hp': 30, 'status': 'None',
                             'moves': ['Tackle', 'Growl'], 'pp': [0, 40]}]}

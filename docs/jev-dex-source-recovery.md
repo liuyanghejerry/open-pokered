@@ -5196,3 +5196,52 @@ archive均保留、无凭据／binary／重复MP4或删除。下一段唯一安�
 基线为53；本段结束，不把历史owner称为仍在运行。无进一步热替换、
 Rust／新m49或玩家画面变化，PR原截图保持。Goal active，仍差71种；
 最终完整124／全程MP4／完成图鉴大盘尚未交付，不回退／注入／NEW GAME。
+
+### 2026-10-04：未完成导航目标与原生目的地门槛关联（元信息）
+
+上一轮为实质进展：47→53已正常保存／独立schema4核验／原生录像
+完整解码／worktree外备份／PR更新。新一轮重新确认干净6f284714，
+第13段三owner已退出、53源SRAM／sidecar／trace／summary四项hash一致，
+不把状态文件或旧观察计为仍存活任务，不回退至47或失效prototype。
+
+核对13段原始成功exit89.965、entry117.410、exit143.572三个选择及
+实际criteria：均为调查ViridianGym旅行受阻，局部记录在SafariZoneGate
+3,3，detail为需过水；候选反转gateRow YES／NO movement分支的旗标。
+世界状态已有resource guard catalog，问题不是完全缺少徽章事实，而是
+局部候选及历史旅行目的地没有具名关联。一次局部flag变化既不完成
+Giovanni目标，也不移除已观察的原生getBadgeCount<7门槛；原请求与
+正常输入保持，不因此宣称狩猎区进出必然错误或已证实引擎bug。
+
+按 `typesafe-ai` State／Choice分工，新增
+`navigation_goal_resource_guard_reference`：仅关联真实历史中尚未
+满足的requested goal，依据原生已启用resource coordinate guard及
+目的地图／相邻一格内真实warp；明确只是几何关联，不是全部入口、
+局部阻碍仍有效或完整路线证据。相关提供候选另有
+`navigation_goal_resource_tradeoffs`，保留目前可执行其他choice的
+真实effects／entry guards及仅目标flag的复合guard投影；不把部分
+投影当整个脚本奖励、收费旅行或胜利预测。未知徽章不认证barrier，
+历史目标满足／guard解除后更新移除信息，原ID／rules／targets／导航／
+成本与执行权限不改，无固定路线、道馆顺序、现金预留或强制准备。
+[State](https://docs.typesafe.ai/concepts/state)作为具名关系组织参考。
+
+9项新增定向测试旧版先失败，autonomous457通过／6.526秒，全Python
+discover1052通过／19.973秒，覆盖跨局部失败／目的地关联、候选与输入
+守恒／历史deepcopy、无钱的其他choice不认证、远距离warp不误配、
+未知徽章／已完成目标不认证、门槛解除刷新、完整复合flag投影、即使
+目前不提供alias也能传入全局事实、无历史／非图鉴范围。
+
+完整同源冷启动对照53源、PYTHONHASHSEED42、冻结native6d8e／gfx21e0、
+真实记忆恢复与full story frontier：39→39候选所有字段严格同，facts／
+原生party／routes／导出AST同，frame627→627，无模型或后续输入。
+新导出状态将ViridianGym未完成目标的五次真实历史失败，关联原生
+四徽章对七徽章guard及实际warp32,7、indexed coordinates32,7／32,8；
+不推断每个indexed坐标当前都实际触发。本源现金407且park flag已false，
+没有提供旧alias候选；冷对照不是旧117.409秒现金／旗标世界的重放，
+candidate alias路径另由定向测试覆盖。最初对照脚本错误假设只有一个
+indexed trigger的失败日志保留，核对原生索引／config后v2通过。
+
+新policy `15bc5a8c499574f930b720559155bd4bcceaf664a996b729a374ddf84feec1cd`
+只供从唯一最新53源正常CONTINUE，不热替换；双层OpenRouter Jev1.13.0／
+seed42／预算／原生4×录像不变。未换provider／模型，不新增Rust／m49
+或玩家画面变化，原PR绝对raw前后截图保持。当前仍53／124，不能把
+元信息和冷对照当捕获收益或最终完整合法性／全程MP4／大盘验收。
