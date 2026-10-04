@@ -473,12 +473,13 @@ class ObservedProtocol:
         'interact_with', 'travel_to',
     }
 
-    def __init__(self, raw, record, deadline):
+    def __init__(self, raw, record, deadline, *, brake_cycling_road=False):
         self.raw, self.record, self.deadline = raw, record, deadline
         self.counts = {}
         self.stop_requested = False
+        self.brake_cycling_road = brake_cycling_road
 
-    def cmd(self, **kwargs):
+    def _send(self, **kwargs):
         if self.stop_requested:
             raise StoryStopped('interrupted_at_command_boundary')
         name = kwargs['cmd']
@@ -500,11 +501,115 @@ class ObservedProtocol:
             self.record('native_input', request=kwargs, ok=reply.get('ok') is True, frame=frame)
         return reply
 
+    @staticmethod
+    def _overworld_input_ready(state):
+        # B is the original slope brake, not a menu-cancellation policy.
+        # Fail closed on missing phase observations; never cancel evolution,
+        # dialogue, a field menu or a script on behalf of the model.
+        return (state.get('screen') == 'overworld'
+                and state.get('warp_fade') == 'Idle'
+                and all(state.get(key) is False for key in (
+                    'script_running', 'script_awaiting_battle',
+                    'fishing_active', 'door_exit_pending'))
+                and all(key in state and state[key] is None for key in (
+                    'dialogue_state', 'field_menu', 'choice',
+                    'active_script_effect', 'evolution_phase', 'npc_trade_phase')))
+
+    @classmethod
+    def cycling_brake_ready(cls, state):
+        return state.get('map_name') == 'Route17' and cls._overworld_input_ready(state)
+
+    @classmethod
+    def _neutral_batch_ready(cls, state):
+        # An idle, input-free overworld outside the slope cannot walk over a
+        # connection or finish a modal/warp. Busy phases must be reobserved.
+        return (state.get('map_name') != 'Route17' and cls._overworld_input_ready(state)
+                and state.get('player_movement_state') == 'Idle')
+
+    def _input_state(self):
+        reply = self._send(cmd='get_state')
+        state = reply.get('data')
+        if (reply.get('ok') is not True or not isinstance(state, dict)
+                or type(state.get('frame_count')) is not int
+                or state['frame_count'] < 0
+                or not isinstance(state.get('map_name'), str)):
+            raise StoryStopped('cycling_input_state_unavailable')
+        return state
+
+    def cmd(self, **kwargs):
+        # A modal can close or CONTINUE/a connection can enter Route17
+        # halfway through a neutral tail. Inspect after explicit buttons,
+        # not just the map observed before the whole tap.
+        name = kwargs.get('cmd')
+        buttons = kwargs.get('buttons') if name == 'press_timeline' else None
+        count = kwargs.get('count') if name == 'step_frames' else None
+        neutral_timeline = (isinstance(buttons, list) and None in buttons
+            and all(button is None or isinstance(button, str) and button.lower() in
+                    {'a', 'b', 'start', 'select', 'up', 'down', 'left', 'right'}
+                    for button in buttons))
+        neutral_step = type(count) is int and count > 0
+        if self.brake_cycling_road and (neutral_timeline or neutral_step):
+            state = self._input_state()
+            if neutral_timeline or not self._neutral_batch_ready(state):
+                if kwargs.get('start_at_frame') is not None:
+                    raise StoryStopped('scheduled_cycling_input_requires_phase_observation')
+                return self._phase_checked_input(kwargs, buttons if neutral_timeline
+                                                 else [None] * count, state)
+        return self._send(**kwargs)
+
+    def _phase_checked_input(self, requested, buttons, state):
+        start = end = state['frame_count']
+        chunks = brakes = cursor = 0
+        while cursor < len(buttons):
+            button = buttons[cursor]
+            if button is None:
+                # Inspect each neutral frame, including the first frame after
+                # a menu closes. Explicit requested buttons are never changed.
+                state = self._input_state() if cursor else state
+                if state['frame_count'] != end:
+                    raise StoryStopped('cycling_input_state_frame_changed')
+                if self._neutral_batch_ready(state):
+                    stop = cursor + 1
+                    while stop < len(buttons) and buttons[stop] is None:
+                        stop += 1
+                    chunk = buttons[cursor:stop]
+                else:
+                    button = 'b' if self.cycling_brake_ready(state) else None
+                    chunk = [button]
+                    brakes += button == 'b'
+            else:
+                stop = cursor + 1
+                while stop < len(buttons) and buttons[stop] is not None:
+                    stop += 1
+                chunk = buttons[cursor:stop]
+            reply = self._send(cmd='press_timeline', buttons=chunk, advance=True)
+            if reply.get('ok') is not True:
+                return reply
+            data = reply.get('data') or {}
+            if (data.get('advanced') is not True or type(data.get('frame_count')) is not int
+                    or type(data.get('queue_start_frame')) is not int
+                    or data['queue_start_frame'] != end
+                    or data['frame_count'] - end != len(chunk)):
+                raise StoryStopped('cycling_input_chunk_not_advanced_atomically')
+            end = data['frame_count']
+            chunks += 1
+            cursor += len(chunk)
+        self.record('phase_checked_input', requested=requested, brake_frames=brakes,
+                    native_requests=chunks, start_frame=start, frame=end,
+                    execution='phase_checked_native_chunks', atomic=False)
+        # This is a checked aggregate, NOT a claim that the whole tap was one
+        # atomic RPC. Every actual chunk has its own native_input receipt.
+        return {'ok': True, 'data': {'advanced': True, 'atomic': False,
+            'execution': 'phase_checked_native_chunks', 'native_requests': chunks,
+            'queue_start_frame': start, 'start_frame': start, 'frame_count': end,
+            'end_frame': end - 1, 'frames': len(buttons), 'padding_frames': 0,
+            **({'stepped': len(buttons)} if requested['cmd'] == 'step_frames' else {})}}
+
     def drive(self, buttons, frames=None):
-        # Queue and execute in one request. The driven-only loop can drain a
-        # queued input between two RPCs, making queue-then-step overshoot.
+        # Each native timeline queues and advances atomically. Phase-checked
+        # mode may use several such chunks, never a queue-then-step pair.
         frames = len(buttons) if frames is None else frames
-        if frames < len(buttons):
+        if type(frames) is not int or frames < len(buttons):
             raise ValueError('input timeline exceeds requested frame count')
         result = self.cmd(cmd='press_timeline', buttons=list(buttons) + [None] * (frames-len(buttons)))
         if not result['ok']:
@@ -1051,7 +1156,7 @@ class JevGame(pt.Game):
         )
         self.judgments.start_frame = self.st()['frame_count']
         self.d = ObservedProtocol(self.d, self.judgments.record,
-                                  time.monotonic() + wall_budget)
+                                  time.monotonic() + wall_budget, brake_cycling_road=True)
         client.d = self.d
         self.move_cache = {}
         self.move_cache_hits = 0
@@ -1060,6 +1165,13 @@ class JevGame(pt.Game):
 
     def tap(self, btn, gap=pt.TAP_GAP):
         self.d.drive([None, btn, None], frames=gap + 3)
+
+    def step(self, frames):
+        if isinstance(self.d, ObservedProtocol) and self.d.brake_cycling_road:
+            # Do not use Game.step's blind held-B batch: scripts/menus can
+            # acquire input during a wait just as they can during a tap.
+            return self.d.step(frames)
+        return super().step(frames)
 
     def learn_machine(self, item, move, party_index, forget):
         """Follow observed machine boot, confirmation, target and replacement menus."""

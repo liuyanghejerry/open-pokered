@@ -114,8 +114,12 @@ class AgentClient:
         return self.cmd(cmd="step_frames", count=count)
 
     def drive(self, buttons, frames=None):
-        self.press_sequence(buttons)
-        return self.step(frames if frames is not None else len(buttons))
+        # Both native DebugClient and the audited protocol implement checked
+        # drive. Avoid leaving a queued button across a phase-aware idle RPC.
+        reply = self.d.drive(buttons, frames=frames)
+        if reply.get('ok') is not True:
+            raise AgentError(f'drive: {reply.get("error")}')
+        return reply.get('data')
 
     def wait_until(self, condition, max_frames=600):
         return self.cmd(cmd="wait_until", condition=condition, max_frames=max_frames)

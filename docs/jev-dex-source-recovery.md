@@ -6061,3 +6061,41 @@ MP4仍在原目录。独立CONTINUE未修改schema4完整expected==restored，
 目前正式controller／native／recorder均已闭合。下一步先回归骑行
 菜单和中性等待刹车，之后从此原22新安全检查点续跑，不回退原21。
 124、producer／原版fidelity穷尽核对、完整整片与大盘仍未完成。
+
+## 骑行菜单／CONTINUE中性帧刹车修复（2026-10-04）
+
+修复在输入执行层，不规定训练目标／领队、不移除Route17候选，也不改
+原生下坡物理。Jev运行的ObservedProtocol在实际overworld无modal／
+脚本／fade等占用时，以普通B替代Route17中性帧；请求的实际方向和
+按键保持原样。菜单内的release仍为None，菜单关闭／战斗结束／地图
+连接和CONTINUE返回Route17后的尾帧重新读取原生状态；新增B不能
+取消对话、选项、进化或交换动画。非坡道安静Idle等待保留原批量RPC。
+
+每个原生chunk仍是同步普通press_timeline，逐个记录真实native_input
+回执、检查连续帧和每chunk推进；整个tap的合计显式atomic=false，
+不把多RPC伪记为一个atomic输入。停止／deadline在每次请求边界检查，
+拒绝chunk／异常帧只保留实际前缀，不能追加成功合计。AgentClient.drive
+统一走已有checked drive，避免先queue按钮再交给中性等待；JevGame.step
+不再调用旧的盲B批次。独立CONTINUE验证器仍使用默认未启用的原协议，
+未放宽持久化验证条件。
+
+首个隔离回归把adapter错误地放在CONTINUE之后，断言失败并保留原
+helper／日志／fixture；它不是通过证据。随后按生产时序在普通CONTINUE
+前安装驱动，最终匹配测试使用严格原22安全58种的两个独立副本，无
+snapshot／warp／seeding／正式TCP。相同seed42、native8dae、相同627帧
+CONTINUE和780帧菜单结束：旧驱动开始／结束Walking并滑到Route17
+15,21；新驱动两端Idle、保持15,20、正常Paras领队，之后普通8方向／
+12总帧训练步触发真实野战且实际player为Paras。两个副本按正常协议
+关闭，源SRAM／sidecar／trace／summary和原native hash未变，测试不计
+新增图鉴／进化／经验或正式影片。隔离exe为硬链接，不复制原生大文件。
+
+20项新测试覆盖全部modal／缺失阶段、跨地图和CONTINUE尾帧、方向
+保持、释放edge、逐帧脚本接管／结束、准确回执与非atomic合计、停止／
+deadline／错误ack／拒绝chunk／观察漂移／非法按钮先整体验证。全Python
+1148项通过（22.710秒），不重计较早的1144／1146中间结果。
+证据：`cycling-input-safe22-final-native-regression-20261004.json`、
+`cycling-phase-input-final-all-python-regression-20261004.log`。
+
+策略／动作仍使用完整事实和完整候选的真实双Jev；该机械修复尚需新
+干净冻结policy从原22恢复检查点做正式推进验证。当前安全仍58/124，
+最终124、穷尽producer／原版fidelity、完整MP4与收集大盘未完成。
