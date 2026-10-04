@@ -5427,3 +5427,50 @@ archive及所有原件保持，无凭据／binary／重复MP4／删除，目录�
 当前约79GiB可用。无Rust／新m49／玩家画面改变，PR原八张绝对raw截图
 保持。Goal active，尚差69种，完整逐种合法性／124最终MP4／完成图鉴
 大盘未交付，未放宽staging验收，不能把局部producer线索当最终通过。
+
+### 2026-10-04：原生付费循环对照与通用目标达成导航交接
+
+根因是临时NPC导航点与真正子目标混用：Safari付费脚本已正常warp至
+SafariZoneCenter并设置EVENT_IN_SAFARI_ZONE，但旧travel仍追逐入口
+SafariZoneGate(3,2)，返回门卫、退出、再付费。每次资金变动均被一般
+script-displacement进度签名视作变化，直到无钱才触发unchanged保护。
+不改变native收费／脚本、原始Jev YES选择或已发生的4500损失。
+
+修复只在公开travel期间绑定当前具体三元子目标，cutscene先按原有逻辑
+settle；只有最新原生overworld、所有脚本／菜单／warp／运动控制明确
+空闲且既有StoryIndex.satisfied对新facts严格为True，才记录
+navigation_goal_observed并返回paused_after_goal。报告实际位置和frame，
+不冒充临时目的地已到达；未知／busy／目标变更／pending-source未确认
+均不暂停，正常成功／战斗暂停／其他失败恢复旧绑定。下一轮Jev照常
+重新观察／选择，无强制YES／NO、候选删减、额外API或native写入。
+遵循TypeSafe语义判断与确定性事实执行分工，已知目标是否达成不让模型
+猜测；没有共享playthrough导航或Rust／渲染改动。
+
+8条新单测覆盖上述绑定与安全边界；focused 613项／12.696秒、全Python
+1067项／20.026秒通过，diff-check通过。旧类缺失的失败回归日志保留。
+不把这些测试当新的原生m49或实际收集收益。
+
+隔离原生对照仅用未改旧54真实SRAM的普通CONTINUE副本，seed42与冻结
+native6d8e／同源资源／完整记忆保持，不是从54恢复正式进度。baseline
+单独进程恢复ee75d2ff两段原方法的精确AST，current使用本修复；原第15段
+首操作及原成功20次菜单state／criteria／instructions／YES逐项校验，
+无新API选择。两副本初始facts严格同，首菜单frame均7831；旧版重现
+9次付费／9次退出／2次余额不足，4593→93、blocked；新版仅一次付费，
+4593→4093，实际SafariZoneCenter(14,25)／frame7943，native active／
+balls_remaining30／steps_remaining500，安全空闲且目标交接。两副本
+dex54／party／bag／PC／box数量及当前box严格守恒，原54及最新55四项
+源hash全同；无warp、注入、补钱、退款、正式回退或新增登记。
+
+对照全部20个菜单的baseline frame均为原第15段frame+346，因此不是
+原始完整输入／RNG历史的逐帧重放，只证明同源独立副本的具体循环与
+修复行为。第一current检查器误读不存在的safari_game.balls字段，原生
+已正确停下；失败目录／日志保留，v2按实际balls_remaining及完整字典
+通过。独立只读comparison报告绑定12项原生证据hash及当前代码，所有
+推进回执成功且普通、无新模型judgment；不覆写原报告或消除时序差异。
+
+唯一最新55源正常CONTINUE完整冷规划恢复全部记忆，42候选、frame627
+→627、20.482秒、无Jev或后续输入、源SRAM hash保持。不是同源before
+候选数量对照，不与旧54的52直接比较或声称新策略已带来登记收益。
+正式源仍55／资金93／当前box满，旧损失保留，后续只能从该55继续；
+新能力待真实执行验证。完整124／逐种producer及原作路线终验／最终
+全程MP4与图鉴大盘均未完成，Goal active，验收门槛保持。

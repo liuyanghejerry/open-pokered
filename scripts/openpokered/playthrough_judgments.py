@@ -8,6 +8,7 @@ import json
 import math
 import re
 import time
+from copy import deepcopy
 
 import playthrough as pt
 import playthrough_late as late
@@ -441,6 +442,20 @@ def preference_suffix(judgments):
 
 class NavigationPause(RuntimeError):
     """Return to strategy after combat; local path retries must not swallow this."""
+
+
+class NavigationGoalObserved(RuntimeError):
+    """Retire a temporary travel destination after its real subgoal is observed."""
+    def __init__(self, target, state):
+        super().__init__('Current subgoal observed during travel; reassess before continuing the old walk')
+        self.target = deepcopy(list(target))
+        self.position = [state['map_name'], state['player_x'], state['player_y']]
+        self.frame = state['frame_count']
+
+    def result(self, destination):
+        return {'result': 'paused_after_goal', 'detail': str(self), 'destination': destination,
+                'observed_target': deepcopy(self.target), 'position': list(self.position),
+                'frame': self.frame}
 
 
 class ObservedProtocol:
@@ -939,6 +954,34 @@ class JevGame(pt.Game):
     def cutscene(self, max_rounds=300):
         agent = self.judgments
         agent.settle(agent.active['target'] if agent.active else 'Continue exploring')
+        target = getattr(self, 'navigation_goal_target', None)
+        active = getattr(agent, 'active', None)
+        index = getattr(agent, 'index', None)
+        if (getattr(self, 'navigation_active', False) and index is not None
+                and isinstance(target, (list, tuple)) and len(target) == 3
+                and isinstance(active, dict)
+                and isinstance(active.get('target'), (list, tuple))
+                and list(active['target']) == list(target)):
+            # A script can fulfil the chosen goal and warp away before the
+            # planned NPC stance is reached. Do not walk back, undo that goal
+            # or pay again merely to reach the obsolete temporary destination.
+            # Missing/busy control is not a settled fulfilment witness.
+            state = self.st()
+            idle = (state.get('screen') == 'overworld'
+                and state.get('warp_fade') == 'Idle'
+                and state.get('player_movement_state') == 'Idle'
+                and all(state.get(key) is False for key in (
+                    'script_running', 'script_awaiting_battle', 'door_exit_pending', 'fishing_active'))
+                and all(key in state and state[key] is None for key in (
+                    'active_script_effect', 'dialogue', 'choice', 'field_menu'))
+                and isinstance(state.get('map_name'), str) and bool(state['map_name'])
+                and all(type(state.get(key)) is int and state[key] >= 0
+                        for key in ('player_x', 'player_y', 'frame_count')))
+            if idle and index.satisfied(target, agent.facts()) is True:
+                pause = NavigationGoalObserved(target, state)
+                agent.record('navigation_goal_observed', target=pause.target,
+                             position=pause.position, frame=pause.frame)
+                raise pause
         return True
 
     def battle_loop(self, prefer='fight', max_iters=1200):

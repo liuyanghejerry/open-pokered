@@ -20,7 +20,7 @@ import playthrough_late as data
 from .story_agent import DualStoryAgent, StoryStopped, attempt_key
 from .typesafe import TypeSafeError
 from .story_rules import Rule, requirements, evaluate, static_retreat_contract, spent_static_source
-from .playthrough_judgments import (ObservedProtocol, NavigationPause, attack_profile, replacement_options,
+from .playthrough_judgments import (ObservedProtocol, NavigationPause, NavigationGoalObserved, attack_profile, replacement_options,
                                     MEDICINES, BALLS, medicine_options, effective_attacks, ITEM_CATALOG,
                                     PREFERENCE_INSTRUCTIONS)
 from .playthrough_judgments import capture_probability, capture_species, capture_status_options, capture_storage_full
@@ -5719,6 +5719,22 @@ class AutonomousStoryAgent(DualStoryAgent):
         raise error
 
     def travel(self, name, rule, points=None, avoid_encounters=False):
+        previous = getattr(self.game, 'navigation_goal_target', None)
+        active = getattr(self, 'active', None)
+        target = active.get('target') if isinstance(active, dict) else None
+        self.game.navigation_goal_target = (deepcopy(target)
+            if isinstance(target, (tuple, list)) and len(target) == 3 else None)
+        try:
+            return self._travel(name, rule, points, avoid_encounters)
+        except NavigationGoalObserved as pause:
+            # The requested map/stance need not have been reached. Preserve
+            # the actual native location and distinguish goal handoff from
+            # both arrival and combat interruption; strategy reobserves it.
+            return pause.result(name)
+        finally:
+            self.game.navigation_goal_target = previous
+
+    def _travel(self, name, rule, points=None, avoid_encounters=False):
         self.navigation_intent = {'destination': name, 'target_script': rule.description()}
         state = self.game.st()
         excluded = self.game.navigation_excluded_maps()
