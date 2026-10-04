@@ -888,6 +888,30 @@ def strategy_access_evidence(candidates):
     return result
 
 
+def scope_strategy_access_evidence(state, candidates):
+    """Keep this round's ID-indexed access summary, never scope world facts.
+
+    Each omitted entry describes ONLY a candidate offered in another disjoint
+    round. Its original full evidence/access is compared there. Current entries,
+    all world/navigation/resource facts and candidate values are unchanged.
+    Unknown schema, ambiguous IDs or incomplete current coverage stay untouched.
+    """
+    comparison = state.get('immediate_access_comparison')
+    categories = ('path_found', 'field_action_needed', 'no_path_found', 'not_evaluated')
+    if (not candidates or not isinstance(comparison, dict)
+            or set(comparison) != {*categories, 'scope'}
+            or not isinstance(comparison['scope'], str)
+            or any(not isinstance(comparison[category], dict) for category in categories)):
+        return state
+    ids = [key for category in categories for key in comparison[category]]
+    if (any(not isinstance(key, str) for key in ids) or len(ids) != len(set(ids))
+            or not set(candidates) <= set(ids) or set(candidates) == set(ids)):
+        return state
+    return {**state, 'immediate_access_comparison': {
+        **{category: {key: value for key, value in comparison[category].items() if key in candidates}
+           for category in categories}, 'scope': comparison['scope']}}
+
+
 class AutonomousStoryAgent(DualStoryAgent):
     def __init__(self, *args, game, preference='none', **kwargs):
         super().__init__(*args, **kwargs)
@@ -1648,6 +1672,22 @@ class AutonomousStoryAgent(DualStoryAgent):
         if not candidates:
             return super().choose(layer, state, candidates, instruction,
                                   allow_abstain=allow_abstain)
+        if layer == 'strategy':
+            scoped_state = scope_strategy_access_evidence(state, candidates)
+            if scoped_state is not state:
+                self.record('strategy_access_scope', candidate_ids=list(candidates),
+                    access_entries_before=sum(len(value) for value in state['immediate_access_comparison'].values()
+                                              if isinstance(value, dict)),
+                    access_entries_sent=sum(len(value) for value in scoped_state['immediate_access_comparison'].values()
+                                            if isinstance(value, dict)),
+                    world_facts_preserved=True, current_candidate_access_preserved=True,
+                    candidate_values_preserved=True, other_disjoint_groups_still_compared=True)
+                state = scoped_state
+                scope_instruction = (' state.immediate_access_comparison contains only access metadata indexed by '
+                    'the candidates offered in this round; other disjoint groups are compared separately. '
+                    'World facts, all current candidate evidence and access status values remain unchanged.')
+                if scope_instruction not in instruction:
+                    instruction += scope_instruction
         choice_state = scope_shared_evidence(state, candidates)
         if choice_state is not state:
             self.record(f'{layer}_evidence_scope', candidate_ids=list(candidates),
