@@ -5479,7 +5479,7 @@ dex54／party／bag／PC／box数量及当前box严格守恒，原54及最新55�
 5db15b04／policy63a6fb64，双层OpenRouter Jev1.13.0、seed42、原预算、
 冻结native／gfx和4×原生录像保持。2026-10-04 02:06:04 UTC被动启动
 审计：controller97470／native97480／recorder97481／port54886，真实
-strategy29.328秒与action32.815秒已成功；源七项关键资源／state相同，
+strategy29.328秒与action32.815秒已成功；源get_state的审计字段守恒，
 三个schema1 Cut目的按当前原生真值恢复并实际提供，非旧原型继承。
 首策略自主box_space:storage，32.922秒原生change_pc_box:2,0返回
 changed_box／box2，32.933秒outcome确认；不是外部指定箱号或新增登记。
