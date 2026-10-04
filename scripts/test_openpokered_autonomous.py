@@ -2932,6 +2932,153 @@ class AutonomousTests(unittest.TestCase):
                  {'species': 'Rattata', 'level': 3, 'moves': ['Tackle']}]
         self.assertEqual(storage_deposit_indices(party), [1, 5])
 
+    def storage_tradeoff_fixture(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.collects_dex = True
+        agent._complete_collection_graph = {
+            'Pidgeot': [{'method': 'evolution', 'from_species': 'Pidgeotto', 'trigger': 'level', 'level': 36}],
+            'MrMime': [{'method': 'npc_trade', 'from_species': 'Abra', 'map': 'Route2TradeHouse',
+                        'completion_flag': 'EVENT_TRADED_FOR_MARCEL'}],
+            'Alakazam': [{'method': 'version_trade', 'from_species': 'Kadabra', 'external_trade': True}],
+            'Raichu': [{'method': 'evolution', 'from_species': 'Pikachu', 'trigger': 'item', 'item': 'ThunderStone'}]}
+        facts = {'party': [
+            {'species': 'Charizard', 'level': 65, 'hp': 223, 'max_hp': 223, 'moves': ['Surf', 'Slash'], 'pp': [15, 20]},
+            {'species': 'Pidgeotto', 'level': 28, 'hp': 73, 'max_hp': 73, 'moves': ['Fly', 'Gust'], 'pp': [15, 30]},
+            {'species': 'Gloom', 'level': 32, 'hp': 83, 'max_hp': 83, 'moves': ['SleepPowder'], 'pp': [15]},
+            {'species': 'Pikachu', 'level': 20, 'hp': 47, 'max_hp': 47, 'moves': ['ThunderWave'], 'pp': [20]},
+            {'species': 'Abra', 'level': 8, 'hp': 23, 'max_hp': 23, 'moves': ['Teleport'], 'pp': [20]},
+            {'species': 'Kadabra', 'level': 18, 'hp': 50, 'max_hp': 50, 'moves': ['Confusion'], 'pp': [25]}],
+                 'dex': {'owned_species': ['Charizard', 'Pidgeotto', 'Gloom', 'Pikachu', 'Abra', 'Kadabra']},
+                 'flags': {}, 'bag': {'THUNDERSTONE': 1}}
+        return agent, facts
+
+    def test_storage_tradeoff_exposes_unregistered_evolution_and_sole_fly_loss(self):
+        from copy import deepcopy
+        agent, facts = self.storage_tradeoff_fixture()
+        original = deepcopy(facts)
+        value = agent.storage_deposit_tradeoff_reference(facts, 1)
+        self.assertEqual(facts, original)
+        output = value['unregistered_catalogued_outputs'][0]
+        self.assertEqual(output['species'], 'Pidgeot')
+        self.assertEqual(output['level'], 36)
+        self.assertEqual(output['levels_to_trigger_from_deposited_mon'], 8)
+        self.assertEqual(output['same_species_party_indices_after_exchange'], [])
+        self.assertEqual(value['field_moves_on_deposited_mon'],
+                         [{'move': 'Fly', 'party_indices_after_exchange': []}])
+        self.assertTrue(value['stored_not_released'])
+        self.assertIn('not a registration', value['scope'])
+
+    def test_storage_tradeoff_keeps_duplicate_and_incoming_sources_distinct(self):
+        agent, facts = self.storage_tradeoff_fixture()
+        facts['party'][5] = {**facts['party'][1], 'level': 12}
+        incoming = {**facts['party'][1], 'level': 5, 'box': 2, 'index': 4}
+        value = agent.storage_deposit_tradeoff_reference(facts, 1, incoming)
+        self.assertEqual(value['unregistered_catalogued_outputs'][0][
+            'same_species_party_indices_after_exchange'], [4, 5])
+        self.assertEqual(value['field_moves_on_deposited_mon'][0]['party_indices_after_exchange'], [4, 5])
+        self.assertEqual(value['conditional_party_source_levels'],
+                         [{'party_index': 4, 'species': 'Pidgeotto', 'level': 12},
+                          {'party_index': 5, 'species': 'Pidgeotto', 'level': 5}])
+
+    def test_storage_tradeoff_reports_usable_remaining_capture_tools_not_survival(self):
+        agent, facts = self.storage_tradeoff_fixture()
+        value = agent.storage_deposit_tradeoff_reference(facts, 2)
+        self.assertEqual(value['removed_conscious_non_damaging_capture_tools'][0]['move'], 'SleepPowder')
+        self.assertEqual(value['removed_conscious_non_damaging_capture_tools'][0]['base_accuracy'], 75)
+        self.assertEqual(value['remaining_conscious_non_damaging_capture_tools'][0]['move'], 'ThunderWave')
+        for change in ({'hp': 0}, {'pp': [0]}):
+            facts['party'][3].update(change)
+            self.assertEqual(agent.storage_deposit_tradeoff_reference(facts, 2)[
+                'remaining_conscious_non_damaging_capture_tools'], [])
+        self.assertIn('survival', value['scope'])
+
+    def test_storage_tradeoff_preserves_trade_flag_unknown_and_carried_stone(self):
+        agent, facts = self.storage_tradeoff_fixture()
+        value = agent.storage_deposit_tradeoff_reference(facts, 4)
+        output = value['unregistered_catalogued_outputs'][0]
+        self.assertEqual(output['species'], 'MrMime')
+        self.assertIsNone(output['recorded_completion_flag'])
+        facts['flags']['EVENT_TRADED_FOR_MARCEL'] = True
+        self.assertTrue(agent.storage_deposit_tradeoff_reference(facts, 4)[
+            'unregistered_catalogued_outputs'][0]['recorded_completion_flag'])
+        stone = agent.storage_deposit_tradeoff_reference(facts, 3)['unregistered_catalogued_outputs'][0]
+        self.assertEqual(stone['observed_evolution_item_quantity'], 1)
+        self.assertEqual(agent.storage_deposit_tradeoff_reference(facts, 5)['unregistered_catalogued_outputs'], [])
+        facts['dex']['owned_species'].append('Raichu')
+        self.assertEqual(agent.storage_deposit_tradeoff_reference(facts, 3)['unregistered_catalogued_outputs'], [])
+
+    def test_storage_action_annotation_changes_facts_only_not_candidates_or_bindings(self):
+        from copy import deepcopy
+        agent, facts = self.storage_tradeoff_fixture()
+        rule = Mock()
+        incoming = {'species': 'Cubone', 'level': 22, 'hp': 54, 'moves': ['BoneClub'], 'pp': [20]}
+        original = {'retrieve': json.dumps({'operation': 'retrieve_pc:0,14,1,0',
+                       'withdraw': incoming, 'deposit_first': facts['party'][1]}),
+                    'deposit': json.dumps({'operation': 'deposit_pc:2,0'}),
+                    'travel': json.dumps({'operation': 'travel_to:CeladonPokecenter'})}
+        bindings = {'retrieve': ('retrieve_pc:0,14,1,0', rule),
+                    'deposit': ('deposit_pc:2,0', rule), 'travel': ('travel_to:CeladonPokecenter', rule)}
+        baseline = deepcopy(original)
+        agent._action_candidates = Mock(side_effect=lambda _facts: (dict(original), dict(bindings)))
+        agent.add_transit_lead_candidates = Mock()
+        candidates, after = agent.action_candidates(facts)
+        self.assertEqual(after, bindings)
+        self.assertEqual(list(candidates), list(original))
+        self.assertEqual(original, baseline)
+        self.assertEqual(candidates['travel'], original['travel'])
+        for key in ('retrieve', 'deposit'):
+            record = json.loads(candidates[key])
+            value = record.pop('storage_deposit_tradeoff_reference')
+            self.assertEqual(record, json.loads(original[key]))
+            self.assertEqual(value['deposit_party_index'], 1 if key == 'retrieve' else 2)
+        agent.collects_dex = False
+        self.assertEqual(agent.action_candidates(facts)[0], original)
+
+    def test_storage_free_slot_retrieval_needs_no_deposit_tradeoff(self):
+        agent, facts = self.storage_tradeoff_fixture()
+        original = {'free': json.dumps({'operation': 'retrieve_pc:0,14,-1,0',
+                                       'withdraw': facts['party'].pop()})}
+        bindings = {'free': ('retrieve_pc:0,14,-1,0', Mock())}
+        agent._action_candidates = Mock(return_value=(original, bindings))
+        agent.add_transit_lead_candidates = Mock()
+        self.assertEqual(agent.action_candidates(facts), (original, bindings))
+
+    def test_storage_tradeoff_retains_unknown_ownership_pending_audit_and_level_trigger(self):
+        agent, facts = self.storage_tradeoff_fixture()
+        facts['dex']['owned_species'].append('Pidgeot')
+        agent.collection_audit_pending = {'Pidgeot': {'reason': 'not_verified'}}
+        for level in (36, 100):
+            facts['party'][1]['level'] = level
+            output = agent.storage_deposit_tradeoff_reference(facts, 1)['unregistered_catalogued_outputs'][0]
+            self.assertEqual(output['levels_to_trigger_from_deposited_mon'], 0)
+            self.assertTrue(output['level_trigger_requires_new_level_gain'])
+            self.assertEqual(output['source_can_gain_another_level'], level < 100)
+        facts['dex'].pop('owned_species')
+        facts['party'][1]['hp'] = 0
+        value = agent.storage_deposit_tradeoff_reference(facts, 1)
+        self.assertFalse(value['dex_ownership_known'])
+        self.assertEqual(value['unregistered_catalogued_outputs'], [])
+        self.assertEqual(value['removed_conscious_non_damaging_capture_tools'], [])
+        self.assertEqual(value['field_moves_on_deposited_mon'][0]['move'], 'Fly')
+
+    def test_storage_tradeoff_guidance_keeps_action_abstention_and_all_options(self):
+        from openpokered.decision_wire import expand_decision_evidence
+        agent, facts = self.storage_tradeoff_fixture()
+        value = agent.storage_deposit_tradeoff_reference(facts, 1)
+        candidates = {'deposit': json.dumps({'operation': 'deposit_pc:1,0',
+                      'storage_deposit_tradeoff_reference': value})}
+        agent.completed_route_context = Mock(return_value=None)
+        agent.choose_bounded_choice = Mock(return_value='deposit')
+        for allowed in (True, False):
+            self.assertEqual(agent.choose('action', {'local_state': facts}, candidates,
+                                         'Select the next operation.', allow_abstain=allowed), 'deposit')
+            positional, keywords = agent.choose_bounded_choice.call_args
+            _, restored = expand_decision_evidence(positional[1], positional[2])
+            self.assertEqual(list(restored), list(candidates))
+            self.assertEqual(json.loads(restored['deposit']), json.loads(candidates['deposit']))
+            self.assertIn('All offered deposits remain available', positional[3])
+            self.assertEqual(keywords['allow_abstain'], allowed)
+
     def test_stored_main_is_retrieved_instead_of_training_low_level_replacement(self):
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
         rule = Mock()

@@ -1578,6 +1578,17 @@ class AutonomousStoryAgent(DualStoryAgent):
         return {'map': name, 'hops': hops, 'stock': stock}
 
     def choose(self, layer, state, candidates, instruction, *, allow_abstain=True):
+        if layer == 'action' and any('storage_deposit_tradeoff_reference' in value
+                                     for value in candidates.values()):
+            instruction += (' Compare storage_deposit_tradeoff_reference before choosing a PC deposit: '
+                'moving a held evolution or NPC-trade input into storage can require withdrawing '
+                'it again before that unregistered target can be attempted. Other party copies '
+                'and the incoming Pokemon can retain that role at different observed levels. '
+                'Compare remaining conscious capture status tools and HM carriers as well. '
+                'These are conditional party changes, not lost Pokédex bits, releases, completed '
+                'exchanges or capture/survival forecasts. Catalogued outputs still require their '
+                'native guards, travel, resources and normal execution. All offered deposits remain '
+                'available; no party composition or next registration is prescribed.')
         if layer == 'action' and getattr(self, 'collects_dex', False):
             local = state.get('local_state')
             if isinstance(local, dict):
@@ -5665,7 +5676,94 @@ class AutonomousStoryAgent(DualStoryAgent):
         candidates, bindings = self._action_candidates(facts)
         if getattr(self, 'collects_dex', False):
             self.add_transit_lead_candidates(candidates, bindings, facts)
+            for key, (operation, _) in bindings.items():
+                if operation.startswith('retrieve_pc:'):
+                    index = int(operation.split(':', 1)[1].split(',')[2])
+                elif operation.startswith('deposit_pc:'):
+                    index = int(operation.split(':', 1)[1].split(',')[0])
+                else:
+                    continue
+                if index < 0:
+                    continue  # Withdrawal into an already free slot loses no member.
+                description = json.loads(candidates[key])
+                candidates[key] = json.dumps({**description,
+                    'storage_deposit_tradeoff_reference': self.storage_deposit_tradeoff_reference(
+                        facts, index, description.get('withdraw'))})
         return candidates, bindings
+
+    def storage_deposit_tradeoff_reference(self, facts, index, incoming=None):
+        """Observed one-slot party costs only; never prune or simulate progress."""
+        party = facts['party']
+        deposited = party[index]
+        remaining = [mon for i, mon in enumerate(party) if i != index]
+        if incoming is not None:
+            remaining.append(incoming)  # Native withdrawal appends after deposit.
+        source_indices = [i for i, mon in enumerate(remaining)
+                          if self.same_species(mon.get('species'), deposited['species'])]
+        known = isinstance((facts.get('dex') or {}).get('owned_species'), list)
+        owned = self.validated_owned(facts) if known else set()
+        outputs = []
+        if known:
+            for species, methods in sorted(self.complete_collection_graph().items()):
+                if any(self.same_species(species, name) for name in owned):
+                    continue
+                for edge in methods:
+                    if (edge.get('method') not in ('evolution', 'npc_trade') or edge.get('external_trade')
+                            or not self.same_species(edge.get('from_species'), deposited['species'])):
+                        continue
+                    row = {'species': species, **deepcopy(edge),
+                           'same_species_party_indices_after_exchange': source_indices}
+                    if edge.get('trigger') == 'level':
+                        level, threshold = deposited.get('level'), edge.get('level')
+                        row['levels_to_trigger_from_deposited_mon'] = (
+                            max(0, threshold - level) if type(level) is int and type(threshold) is int else None)
+                        row['level_trigger_requires_new_level_gain'] = True
+                        row['source_can_gain_another_level'] = level < 100 if type(level) is int else None
+                    if edge.get('trigger') == 'item':
+                        bag = facts.get('bag')
+                        row['observed_evolution_item_quantity'] = (
+                            bag.get(edge['item'].replace('_', '').upper(), 0) if isinstance(bag, dict) else None)
+                    if edge.get('completion_flag'):
+                        row['recorded_completion_flag'] = (facts.get('flags') or {}).get(edge['completion_flag'])
+                    outputs.append(row)
+
+        def tools(mons):
+            result = []
+            for position, mon in enumerate(mons):
+                if mon.get('hp', 0) <= 0:
+                    continue
+                for name, pp in zip(mon.get('moves', []), mon.get('pp', [])):
+                    if name == 'None' or pp <= 0:
+                        continue
+                    move = data.move_data(name)
+                    if move.get('power') == 0 and move.get('effect') in ('SleepEffect', 'ParalyzeEffect'):
+                        result.append({'party_index': position, 'species': mon['species'],
+                                       'move': name, 'pp': pp, 'base_accuracy': move.get('accuracy')})
+            return result
+
+        removed_tools = tools([deposited])
+        for row in removed_tools:
+            row['party_index'] = index
+        return {'deposit_party_index': index, 'dex_ownership_known': known,
+                'unregistered_catalogued_outputs': outputs,
+                'conditional_party_source_levels': [
+                    {'party_index': i, 'species': remaining[i]['species'], 'level': remaining[i].get('level')}
+                    for i in source_indices],
+                'removed_conscious_non_damaging_capture_tools': removed_tools,
+                'remaining_conscious_non_damaging_capture_tools': tools(remaining),
+                'field_moves_on_deposited_mon': [
+                    {'move': name, 'party_indices_after_exchange': [
+                        i for i, mon in enumerate(remaining) if name in mon.get('moves', [])]}
+                    for name in ('Cut', 'Fly', 'Surf', 'Strength', 'Flash')
+                    if name in deposited.get('moves', [])],
+                'stored_not_released': True,
+                'scope': 'Conditional deposit and optional withdrawal from observed slots, not a registration, '
+                    'release, loss of owned bits or completed PC operation. Indices describe the conditional '
+                    'after-party; existing observations do not predict withdrawal stat/PP changes. '
+                    'Catalogued outputs are unregistered requirements, not ready, reachable or guaranteed '
+                    'acquisitions; duplicate source levels may differ. HM carriers do not prove badges or '
+                    'usable routes. Conscious non-damaging sleep/paralysis PP is not compatible-target, '
+                    'status-success or survival proof. No model choice or candidate is removed.'}
 
     def add_transit_lead_candidates(self, candidates, bindings, facts):
         """Expose ordinary party preparation beside travel, never select it."""
