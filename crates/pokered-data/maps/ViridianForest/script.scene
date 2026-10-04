@@ -56,7 +56,7 @@ game_scene ViridianForest {
       @if (given) {
         setFlag("EVENT_GOT_VIRIDIAN_FOREST_ANTIDOTE")
         hideObjectByName("VIRIDIAN_FOREST_OBJ_5")
-        @speaker("") { @t("<PLAYER> found ANTIDOTE!", "<PLAYER>发现了解毒药！") }
+        showItemDialogue(t("<PLAYER> found ANTIDOTE!", "<PLAYER>发现了解毒药！"))
       } @else {
         @speaker("") { @t("No more room for\nitems!", "背包没有空间\n放道具了！") }
       }
@@ -71,7 +71,7 @@ game_scene ViridianForest {
       @if (given) {
         setFlag("EVENT_GOT_VIRIDIAN_FOREST_POTION")
         hideObjectByName("VIRIDIAN_FOREST_OBJ_6")
-        @speaker("") { @t("<PLAYER> found POTION!", "<PLAYER>发现了伤药！") }
+        showItemDialogue(t("<PLAYER> found POTION!", "<PLAYER>发现了伤药！"))
       } @else {
         @speaker("") { @t("No more room for\nitems!", "背包没有空间\n放道具了！") }
       }
@@ -86,7 +86,7 @@ game_scene ViridianForest {
       @if (given) {
         setFlag("EVENT_GOT_VIRIDIAN_FOREST_POKE_BALL")
         hideObjectByName("VIRIDIAN_FOREST_OBJ_7")
-        @speaker("") { @t("<PLAYER> found POKe BALL!", "<PLAYER>发现了精灵球！") }
+        showItemDialogue(t("<PLAYER> found POKe BALL!", "<PLAYER>发现了精灵球！"))
       } @else {
         @speaker("") { @t("No more room for\nitems!", "背包没有空间\n放道具了！") }
       }

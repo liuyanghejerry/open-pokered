@@ -42,11 +42,15 @@ game_scene CeladonMartRoof {
                 @t("Yay!\n\nFRESH WATER!\n\nThank you!\n\nYou can have this from me!", "太好了！\n\n新鲜水！\n\n谢谢你！\n\n这个就送给你吧！")
               }
               takeItem("FRESH_WATER", 1)
-              giveItem("TM13", 1)
-              setFlag("EVENT_GOT_TM13")
-              @speaker("") { @t("<PLAYER> received TM13!", "<PLAYER>得到了 TM13！") }
-              @speaker("") {
-                @t("TM13 contains ICE BEAM!\n\nIt can freeze the target\nsometimes!", "TM13里有冰冻光束！\n\n有时能让对手冻住！")
+              given = giveItem("TM13", 1)
+              @if (given) {
+                setFlag("EVENT_GOT_TM13")
+                @speaker("") { @t("<PLAYER> received TM13!", "<PLAYER>得到了 TM13！") }
+                @speaker("") {
+                  @t("TM13 contains ICE BEAM!\n\nIt can freeze the target\nsometimes!", "TM13里有冰冻光束！\n\n有时能让对手冻住！")
+                }
+              } @else {
+                @speaker("") { @t("You don't have space for\nthis!", "你没有地方放这个！") }
               }
             } @else {
               @speaker("") {
@@ -60,11 +64,15 @@ game_scene CeladonMartRoof {
                 @t("Yay!\n\nSODA POP!\n\nThank you!\n\nYou can have this from me!", "太好了！\n\n汽水！\n\n谢谢你！\n\n这个就送给你吧！")
               }
               takeItem("SODA_POP", 1)
-              giveItem("TM48", 1)
-              setFlag("EVENT_GOT_TM48")
-              @speaker("") { @t("<PLAYER> received TM48!", "<PLAYER>得到了 TM48！") }
-              @speaker("") {
-                @t("TM48 contains ROCK SLIDE!\n\nIt can spook the target\nsometimes!", "TM48里有岩崩！\n\n有时会吓到对手！")
+              given = giveItem("TM48", 1)
+              @if (given) {
+                setFlag("EVENT_GOT_TM48")
+                @speaker("") { @t("<PLAYER> received TM48!", "<PLAYER>得到了 TM48！") }
+                @speaker("") {
+                  @t("TM48 contains ROCK SLIDE!\n\nIt can spook the target\nsometimes!", "TM48里有岩崩！\n\n有时会吓到对手！")
+                }
+              } @else {
+                @speaker("") { @t("You don't have space for\nthis!", "你没有地方放这个！") }
               }
             } @else {
               @speaker("") {
@@ -78,11 +86,15 @@ game_scene CeladonMartRoof {
                 @t("Yay!\n\nLEMONADE!\n\nThank you!\n\nYou can have this from me!", "太好了！\n\n柠檬水！\n\n谢谢你！\n\n这个就送给你吧！")
               }
               takeItem("LEMONADE", 1)
-              giveItem("TM49", 1)
-              setFlag("EVENT_GOT_TM49")
-              @speaker("") { @t("<PLAYER> received TM49!", "<PLAYER>得到了 TM49！") }
-              @speaker("") {
-                @t("TM49 contains TRI ATTACK!", "TM49里有三重攻击！")
+              given = giveItem("TM49", 1)
+              @if (given) {
+                setFlag("EVENT_GOT_TM49")
+                @speaker("") { @t("<PLAYER> received TM49!", "<PLAYER>得到了 TM49！") }
+                @speaker("") {
+                  @t("TM49 contains TRI ATTACK!", "TM49里有三重攻击！")
+                }
+              } @else {
+                @speaker("") { @t("You don't have space for\nthis!", "你没有地方放这个！") }
               }
             } @else {
               @speaker("") {

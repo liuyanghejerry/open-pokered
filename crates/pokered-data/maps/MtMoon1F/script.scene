@@ -80,78 +80,90 @@ game_scene MtMoon1F {
   // ── Ground item: POTION (npc 8) ─────────────────────────────────────────
   @storyline("itemPotion1") {
     @trigger(map = "MtMoon1F", npc = 8, toggle = "MT_MOON_1F_OBJ_8")
-    @if (getFlag("EVENT_GOT_POTION_MT_MOON_1F_A")) {
-      @speaker("") { @t("The item ball is empty.", "精灵球里面是空的。") }
-    } @else {
-      giveItem("POTION", 1)
-      setFlag("EVENT_GOT_POTION_MT_MOON_1F_A")
-      hideObject("MT_MOON_1F_OBJ_8")
-      @speaker("") { @t("<PLAYER> found POTION!", "<PLAYER>找到了伤药！") }
+    @if (!getFlag("EVENT_GOT_POTION_MT_MOON_1F_A")) {
+      given = giveItem("POTION", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_POTION_MT_MOON_1F_A")
+        hideObjectByName("MT_MOON_1F_OBJ_8")
+        showItemDialogue(t("<PLAYER> found POTION!", "<PLAYER>找到了伤药！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 
   // ── Ground item: MOON STONE (npc 9) ─────────────────────────────────────
   @storyline("itemMoonStone") {
     @trigger(map = "MtMoon1F", npc = 9, toggle = "MT_MOON_1F_OBJ_9")
-    @if (getFlag("EVENT_GOT_MOON_STONE_MT_MOON_1F")) {
-      @speaker("") { @t("The item ball is empty.", "精灵球里面是空的。") }
-    } @else {
-      giveItem("MOON_STONE", 1)
-      setFlag("EVENT_GOT_MOON_STONE_MT_MOON_1F")
-      hideObject("MT_MOON_1F_OBJ_9")
-      @speaker("") { @t("<PLAYER> found MOON_STONE!", "<PLAYER>找到了月之石！") }
+    @if (!getFlag("EVENT_GOT_MOON_STONE_MT_MOON_1F")) {
+      given = giveItem("MOON_STONE", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_MOON_STONE_MT_MOON_1F")
+        hideObjectByName("MT_MOON_1F_OBJ_9")
+        showItemDialogue(t("<PLAYER> found MOON_STONE!", "<PLAYER>找到了月之石！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 
   // ── Ground item: RARE CANDY (npc 10) ────────────────────────────────────
   @storyline("itemRareCandy") {
     @trigger(map = "MtMoon1F", npc = 10, toggle = "MT_MOON_1F_OBJ_10")
-    @if (getFlag("EVENT_GOT_RARE_CANDY_MT_MOON_1F")) {
-      @speaker("") { @t("The item ball is empty.", "精灵球里面是空的。") }
-    } @else {
-      giveItem("RARE_CANDY", 1)
-      setFlag("EVENT_GOT_RARE_CANDY_MT_MOON_1F")
-      hideObject("MT_MOON_1F_OBJ_10")
-      @speaker("") { @t("<PLAYER> found RARE_CANDY!", "<PLAYER>找到了神奇糖果！") }
+    @if (!getFlag("EVENT_GOT_RARE_CANDY_MT_MOON_1F")) {
+      given = giveItem("RARE_CANDY", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_RARE_CANDY_MT_MOON_1F")
+        hideObjectByName("MT_MOON_1F_OBJ_10")
+        showItemDialogue(t("<PLAYER> found RARE_CANDY!", "<PLAYER>找到了神奇糖果！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 
   // ── Ground item: ESCAPE ROPE (npc 11) ───────────────────────────────────
   @storyline("itemEscapeRope") {
     @trigger(map = "MtMoon1F", npc = 11, toggle = "MT_MOON_1F_OBJ_11")
-    @if (getFlag("EVENT_GOT_ESCAPE_ROPE_MT_MOON_1F")) {
-      @speaker("") { @t("The item ball is empty.", "精灵球里面是空的。") }
-    } @else {
-      giveItem("ESCAPE_ROPE", 1)
-      setFlag("EVENT_GOT_ESCAPE_ROPE_MT_MOON_1F")
-      hideObject("MT_MOON_1F_OBJ_11")
-      @speaker("") { @t("<PLAYER> found ESCAPE_ROPE!", "<PLAYER>找到了逃脱绳！") }
+    @if (!getFlag("EVENT_GOT_ESCAPE_ROPE_MT_MOON_1F")) {
+      given = giveItem("ESCAPE_ROPE", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_ESCAPE_ROPE_MT_MOON_1F")
+        hideObjectByName("MT_MOON_1F_OBJ_11")
+        showItemDialogue(t("<PLAYER> found ESCAPE_ROPE!", "<PLAYER>找到了逃脱绳！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 
   // ── Ground item: POTION (npc 12) ────────────────────────────────────────
   @storyline("itemPotion2") {
     @trigger(map = "MtMoon1F", npc = 12, toggle = "MT_MOON_1F_OBJ_12")
-    @if (getFlag("EVENT_GOT_POTION_MT_MOON_1F_B")) {
-      @speaker("") { @t("The item ball is empty.", "精灵球里面是空的。") }
-    } @else {
-      giveItem("POTION", 1)
-      setFlag("EVENT_GOT_POTION_MT_MOON_1F_B")
-      hideObject("MT_MOON_1F_OBJ_12")
-      @speaker("") { @t("<PLAYER> found POTION!", "<PLAYER>找到了伤药！") }
+    @if (!getFlag("EVENT_GOT_POTION_MT_MOON_1F_B")) {
+      given = giveItem("POTION", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_POTION_MT_MOON_1F_B")
+        hideObjectByName("MT_MOON_1F_OBJ_12")
+        showItemDialogue(t("<PLAYER> found POTION!", "<PLAYER>找到了伤药！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 
-  // ── Ground item: TM34 / WATER GUN (npc 13) ──────────────────────────────
+  // ── Ground item: TM12 / WATER GUN (npc 13) ──────────────────────────────
   @storyline("itemTmWaterGun") {
     @trigger(map = "MtMoon1F", npc = 13, toggle = "MT_MOON_1F_OBJ_13")
-    @if (getFlag("EVENT_GOT_TM34_MT_MOON_1F")) {
-      @speaker("") { @t("The item ball is empty.", "精灵球里面是空的。") }
-    } @else {
-      giveItem("TM34", 1)
-      setFlag("EVENT_GOT_TM34_MT_MOON_1F")
-      hideObject("MT_MOON_1F_OBJ_13")
-      @speaker("") { @t("<PLAYER> found TM34!", "<PLAYER>找到了 TM34！") }
+    @if (!getFlag("EVENT_GOT_TM34_MT_MOON_1F")) {
+      given = giveItem("TM12", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_TM34_MT_MOON_1F")
+        hideObjectByName("MT_MOON_1F_OBJ_13")
+        showItemDialogue(t("<PLAYER> found TM12!", "<PLAYER>找到了TM12！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 

@@ -139,7 +139,8 @@ game_scene MtMoonB2F {
           }
           setFlag("EVENT_GOT_DOME_FOSSIL")
           hideObjectByName("MTMOONB2F_DOME_FOSSIL")
-          // The Super Nerd grabs the other (Helix) fossil for himself.
+          // Original: walk RIGHT then UP to the other fossil before taking it.
+          moveNpc("1", [[13, 8], [13, 7]])
           @speaker("") {
             @t("All right. Then this is\nmine!", "好吧。那这个归我了！")
           }
@@ -173,7 +174,8 @@ game_scene MtMoonB2F {
           }
           setFlag("EVENT_GOT_HELIX_FOSSIL")
           hideObjectByName("MTMOONB2F_HELIX_FOSSIL")
-          // The Super Nerd grabs the other (Dome) fossil for himself.
+          // Original: walk UP to the other fossil before taking it.
+          moveNpc("1", [[12, 7]])
           @speaker("") {
             @t("All right. Then this is\nmine!", "好吧。那这个归我了！")
           }
@@ -194,28 +196,22 @@ game_scene MtMoonB2F {
     @trigger(map = "MtMoonB2F", npc = 8, toggle = "MT_MOON_B2F_OBJ_8")
     given = giveItem("HP_UP", 1)
     @if (given) {
-      @speaker("") {
-        @t("<PLAYER> found HP_UP!", "<PLAYER>找到了体力增强剂！")
-      }
+      hideObjectByName("MT_MOON_B2F_OBJ_8")
+      showItemDialogue(t("<PLAYER> found HP_UP!", "<PLAYER>找到了体力增强剂！"))
     } @else {
-      @speaker("") {
-        @t("You have too much stuff\nalready!", "你身上的东西太多了！")
-      }
+      @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
     }
   }
 
   // ── PokeBall ground item (npc 9) — TM_01 (MEGA PUNCH) ────────────────────
   @storyline("talkPokeBall2") {
     @trigger(map = "MtMoonB2F", npc = 9, toggle = "MT_MOON_B2F_OBJ_9")
-    given = giveItem("TM_01", 1)
+    given = giveItem("TM01", 1)
     @if (given) {
-      @speaker("") {
-        @t("<PLAYER> found TM_01!", "<PLAYER>找到了 TM_01！")
-      }
+      hideObjectByName("MT_MOON_B2F_OBJ_9")
+      showItemDialogue(t("<PLAYER> found TM_01!", "<PLAYER>找到了 TM_01！"))
     } @else {
-      @speaker("") {
-        @t("You have too much stuff\nalready!", "你身上的东西太多了！")
-      }
+      @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
     }
   }
 

@@ -416,6 +416,7 @@ pub fn toggle_id_to_bit_index(toggle_id: &str) -> Option<u16> {
         "SILPH_CO_1F_OBJ_1" => Some(0x4C), // TOGGLE_SILPH_CO_1F_RECEPTIONIST
 
         // VIRIDIAN_GYM
+        "VIRIDIAN_GYM_OBJ_11" => Some(0x33), // TOGGLE_VIRIDIAN_GYM_ITEM (REVIVE)
         "VIRIDIANGYM_GIOVANNI" | "VIRIDIAN_GYM_GIOVANNI" => {
             Some(ToggleableObject::VIRIDIAN_GYM_GIOVANNI.bit_index())
         }
@@ -432,6 +433,11 @@ pub fn toggle_id_to_bit_index(toggle_id: &str) -> Option<u16> {
         "VICTORY_ROAD_2F_OBJ_13" => Some(0x60),
         "VICTORY_ROAD_3F_OBJ_10" => Some(0x7A),
         // POWER_PLANT
+        "POWER_PLANT_OBJ_10" => Some(0x56), // CARBOS
+        "POWER_PLANT_OBJ_11" => Some(0x57), // HP_UP
+        "POWER_PLANT_OBJ_12" => Some(0x58), // RARE_CANDY
+        "POWER_PLANT_OBJ_13" => Some(0x59), // TM_THUNDER
+        "POWER_PLANT_OBJ_14" => Some(0x5A), // TM_REFLECT
         "POWER_PLANT_OBJ_9" | "POWERPLANT_ZAPDOS" | "ZAPDOS" => Some(ToggleableObject::ZAPDOS.bit_index()),
 
         // VICTORY_ROAD_2F

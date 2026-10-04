@@ -147,6 +147,7 @@ pub fn try_learn_move(mon: &mut Pokemon, move_id: MoveId) -> LearnMoveResult {
         if mon.moves[i] == MoveId::None {
             mon.moves[i] = move_id;
             mon.pp[i] = get_move_max_pp(move_id);
+            mon.pp_ups[i] = 0;
             return LearnMoveResult::Learned { slot: i };
         }
     }
@@ -158,6 +159,7 @@ pub fn replace_move(mon: &mut Pokemon, slot: usize, new_move: MoveId) {
     if slot < NUM_MOVES {
         mon.moves[slot] = new_move;
         mon.pp[slot] = get_move_max_pp(new_move);
+        mon.pp_ups[slot] = 0;
     }
 }
 
@@ -238,6 +240,26 @@ pub fn forget_move(mon: &mut Pokemon, move_id: MoveId) -> ForgetMoveResult {
     }
 
     ForgetMoveResult::MoveNotKnown
+}
+
+/// WriteMonMoves with wLearningMovesFromDayCare set: new level-up moves
+/// replace the oldest move automatically, shifting its packed PP/PP Ups too.
+pub fn learn_daycare_moves(mon: &mut Pokemon, old_level: u8, new_level: u8) {
+    for level in old_level.saturating_add(1)..=new_level {
+        for move_id in moves_at_level(mon.species, level) {
+            if mon.moves.contains(&move_id) { continue; }
+            let slot = match mon.moves.iter().position(|m| *m == MoveId::None) {
+                Some(slot) => slot,
+                None => {
+                    mon.moves.copy_within(1..4, 0);
+                    mon.pp.copy_within(1..4, 0);
+                    mon.pp_ups.copy_within(1..4, 0);
+                    3
+                }
+            };
+            replace_move(mon, slot, move_id);
+        }
+    }
 }
 
 pub fn process_level_up_moves(

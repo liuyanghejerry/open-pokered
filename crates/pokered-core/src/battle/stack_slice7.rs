@@ -408,8 +408,8 @@ use crate::alloc_prelude::*;
         // the player's Burn survives (haze.asm .cureStatuses).
         assert_eq!(
             stack.player_battlers[0].status,
-            Some(S::Burn),
-            "the Haze USER keeps its status"
+            None,
+            "the second Haze cures the first user too"
         );
         assert_eq!(stack.opponent_battlers[0].status, None, "enemy status cured");
     }
@@ -417,7 +417,7 @@ use crate::alloc_prelude::*;
     /// Haze MISS does nothing (power-0 miss → no effect), like the legacy power-0
     /// branch returning `Missed` before `apply_move_effect`. Parity.
     #[test]
-    fn haze_miss_does_nothing_parity() {
+    fn haze_bypasses_accuracy_parity() {
         let mv = MoveData {
             id: MoveId::Haze,
             effect: MoveEffect::HazeEffect,
@@ -434,8 +434,8 @@ use crate::alloc_prelude::*;
         run_scenario_secondary(&s);
         let (stack, _c, _f, _e) = stack_run_secondary(&s);
         // Stages survive (no Haze landed) — diffed vs legacy by run_scenario_secondary.
-        assert_eq!(stack_spc_stage(&stack, BattlerRef::PLAYER), 3, "no reset on miss");
-        assert_eq!(stack_spc_stage(&stack, BattlerRef::OPPONENT), -2, "no reset on miss");
+        assert_eq!(stack_spc_stage(&stack, BattlerRef::PLAYER), 0, "Haze bypasses accuracy");
+        assert_eq!(stack_spc_stage(&stack, BattlerRef::OPPONENT), 0, "Haze bypasses accuracy");
     }
 
     // ════════════════════════ matrix + determinism fuzz ════════════════════════

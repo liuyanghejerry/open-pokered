@@ -22,6 +22,21 @@ game_scene PalletTown {
     @if (getFlag("EVENT_GOT_POKEBALLS_FROM_OAK")) {
       setFlag("EVENT_PALLET_AFTER_GETTING_POKEBALLS")
     }
+    // Inlined palletTownDaisy
+    // The original toggles Daisy's two BluesHouse sprites (sitting → walking)
+    // via TOGGLE_DAISY_SITTING / TOGGLE_DAISY_WALKING. Those bits live in the
+    // global toggleable_object_flags and are picked up when BluesHouse loads —
+    // the PalletTown Girl/Fisher NPCs must NOT be touched.
+    @if (!getFlag("EVENT_DAISY_WALKING")) {
+      @if (getFlag("EVENT_GOT_TOWN_MAP") && getFlag("EVENT_ENTERED_BLUES_HOUSE")) {
+        setFlag("EVENT_DAISY_WALKING")
+        hideObject("BLUESHOUSE_DAISY1")
+        showObject("BLUESHOUSE_DAISY2")
+      }
+    }
+    @if (getFlag("EVENT_GOT_POKEBALLS_FROM_OAK")) {
+      setFlag("EVENT_PALLET_AFTER_GETTING_POKEBALLS_2")
+    }
   }
 
   @storyline("coordNorthExit") {
@@ -40,6 +55,7 @@ game_scene PalletTown {
         @t("OAK: Hey! Wait! Don't go\nout!", "大木博士：嘿！等等！别出去！")
       }
       delay(10)
+      showEmotionBubble("player", "exclamation")
       facePlayer("down")
       setJoyIgnore(0x0F | 0xF0)
       showObject("PALLET_TOWN_OBJ_1")
@@ -76,6 +92,7 @@ game_scene PalletTown {
       // would refuse it.
       movePlayer([[12, 11]])
     }
+
     // Inlined palletTownDaisy
     // The original toggles Daisy's two BluesHouse sprites (sitting → walking)
     // via TOGGLE_DAISY_SITTING / TOGGLE_DAISY_WALKING. Those bits live in the

@@ -254,7 +254,7 @@ pub fn try_sell(
         }
         Err(_) => return SellResult::NotInBag,
     }
-    *money = money.saturating_add(value);
+    *money = money.saturating_add(value).min(999_999);
     SellResult::Success { total_value: value }
 }
 

@@ -45,8 +45,9 @@ fighting fit!", "感谢您的耐心等待。\n\n你的宝可梦已完全治愈�
   @storyline("talkLinkReceptionist") {
     @trigger(map = "CeladonPokecenter", npc = 4)
     @speaker("") {
-      @t("Welcome to the CABLE CLUB!", "欢迎来到联机俱乐部！")
+      @t("Welcome to the\nCable Club!", "欢迎来到联机俱乐部！")
     }
+    linkStart()
   }
 
   @storyline("talkGentleman") {

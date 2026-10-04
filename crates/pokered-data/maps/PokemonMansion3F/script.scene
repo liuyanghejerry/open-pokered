@@ -85,10 +85,14 @@ game_scene PokemonMansion3F {
   @storyline("itemMaxPotion") {
     @trigger(map = "PokemonMansion3F", npc = 3, toggle = "POKEMON_MANSION_3F_OBJ_3")
     @if (!getFlag("EVENT_GOT_MANSION_3F_MAX_POTION")) {
-      giveItem("MAX_POTION", 1)
-      setFlag("EVENT_GOT_MANSION_3F_MAX_POTION")
-      hideObjectByName("POKEMON_MANSION_3F_OBJ_3")
-      @speaker("") { @t("<PLAYER> found MAX POTION!", "<PLAYER>找到了厉害伤药！") }
+      given = giveItem("MAX_POTION", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_MANSION_3F_MAX_POTION")
+        hideObjectByName("POKEMON_MANSION_3F_OBJ_3")
+        showItemDialogue(t("<PLAYER> found MAX POTION!", "<PLAYER>找到了厉害伤药！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 
@@ -96,10 +100,14 @@ game_scene PokemonMansion3F {
   @storyline("itemIron") {
     @trigger(map = "PokemonMansion3F", npc = 4, toggle = "POKEMON_MANSION_3F_OBJ_4")
     @if (!getFlag("EVENT_GOT_MANSION_3F_IRON")) {
-      giveItem("IRON", 1)
-      setFlag("EVENT_GOT_MANSION_3F_IRON")
-      hideObjectByName("POKEMON_MANSION_3F_OBJ_4")
-      @speaker("") { @t("<PLAYER> found IRON!", "<PLAYER>找到了防御增强剂！") }
+      given = giveItem("IRON", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_MANSION_3F_IRON")
+        hideObjectByName("POKEMON_MANSION_3F_OBJ_4")
+        showItemDialogue(t("<PLAYER> found IRON!", "<PLAYER>找到了防御增强剂！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 

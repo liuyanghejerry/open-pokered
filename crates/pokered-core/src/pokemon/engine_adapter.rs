@@ -15,15 +15,16 @@
 //! queries delegate directly to the existing Gen-1 functions, so those numbers
 //! match the legacy code.
 //!
-//! The engine's `MonsterInstance::gain_exp` leveling path is now a true Gen-1
-//! **drop-in** for `process_level_up`: [`PokeredMonsters`] overrides the engine's
+//! [`PokeredMonsters`] overrides the generic engine's
 //! defaulted `ExpProvider::levelup_current_hp` hook to grow current HP by the
 //! max-HP delta (`hp += new_max_hp - old_max_hp`) and the
 //! `ExpProvider::learn_moves_on_levelup` hook to learn moves from the species
-//! learnset — matching `battle::experience::level_up`. The differential test
+//! learnset. The differential test
 //! `gain_exp_matches_process_level_up` drives a damaged, leveling Pokemon
 //! through both paths and asserts identical HP, max HP, level, move slots, and
-//! learned-move set. Production leveling still flows through `process_level_up`
+//! learned-move set for a single-level gain. The generic engine learns at each
+//! traversed level; original battle EXP learns only at the final level.
+//! Production leveling still flows through `process_level_up`
 //! (the `Pokemon`-struct re-point is staged); see
 //! `docs/engine-gap-analysis/05-p0-migration-report.md` (party section).
 
@@ -515,16 +516,19 @@ mod tests {
     /// engine `gain_exp` path (with pokered's HP-delta + move-learning hooks) and
     /// the legacy `process_level_up` path must end with identical current HP, max
     /// HP, level, move slots, PP, and learned-move set. This replaces the old
-    /// tautological `gain_exp_via_engine_levels_up` test and is what proves the
-    /// engine path is now a true Gen-1 drop-in.
+    /// tautological `gain_exp_via_engine_levels_up` test. Multi-level learning has
+    /// a different generic-engine policy and is checked on the production path.
     #[test]
     fn gain_exp_matches_process_level_up() {
         let provider = PokeredMonsters;
         let base = get_base_stats(TEST_SPECIES).unwrap();
 
-        // EXP needed to climb from level 6 to level 9 (crosses LeechSeed@7).
+        // EXP needed to climb from level 6 to level 7 (learns LeechSeed@7).
         let start = damaged_levelable();
-        let target_level = 9u8;
+        // The generic engine learns on each traversed level. Production
+        // battle EXP uses process_level_up's ROM final-level policy; this
+        // adapter contract covers a single-level gain only.
+        let target_level = 7u8;
         let target_exp = exp_for_level(base.growth_rate, target_level);
         let delta = target_exp.saturating_sub(start.total_exp);
         assert!(delta > 0, "test must actually level up");

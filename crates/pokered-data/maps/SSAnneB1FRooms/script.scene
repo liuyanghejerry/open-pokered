@@ -111,15 +111,14 @@ game_scene SSAnneB1FRooms {
   // ── PokeBall ground item (npc 9) — ETHER ────────────────────────────────
   @storyline("talkPokeBallEther") {
     @trigger(map = "SSAnneB1FRooms", npc = 9, toggle = "SS_ANNE_B1F_ROOMS_OBJ_9")
-    @if (getFlag("EVENT_GOT_ETHER_SS_ANNE_B1F_ROOMS")) {
-      @speaker("") {
-        @t("It's empty.", "是空的。")
-      }
-    } @else {
-      giveItem("ETHER", 1)
-      setFlag("EVENT_GOT_ETHER_SS_ANNE_B1F_ROOMS")
-      @speaker("") {
-        @t("<PLAYER> found ETHER!", "<PLAYER>发现了元气药片！")
+    @if (!getFlag("EVENT_GOT_ETHER_SS_ANNE_B1F_ROOMS")) {
+      given = giveItem("ETHER", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_ETHER_SS_ANNE_B1F_ROOMS")
+        hideObjectByName("SS_ANNE_B1F_ROOMS_OBJ_9")
+        showItemDialogue(t("<PLAYER> found ETHER!", "<PLAYER>发现了元气药片！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
       }
     }
   }
@@ -127,15 +126,14 @@ game_scene SSAnneB1FRooms {
   // ── PokeBall ground item (npc 10) — TM44 (REST) ─────────────────────────
   @storyline("talkPokeBallTmRest") {
     @trigger(map = "SSAnneB1FRooms", npc = 10, toggle = "SS_ANNE_B1F_ROOMS_OBJ_10")
-    @if (getFlag("EVENT_GOT_TM44_SS_ANNE_B1F_ROOMS")) {
-      @speaker("") {
-        @t("It's empty.", "是空的。")
-      }
-    } @else {
-      giveItem("TM_44", 1)
-      setFlag("EVENT_GOT_TM44_SS_ANNE_B1F_ROOMS")
-      @speaker("") {
-        @t("<PLAYER> found TM44!", "<PLAYER>发现了招式机44！")
+    @if (!getFlag("EVENT_GOT_TM44_SS_ANNE_B1F_ROOMS")) {
+      given = giveItem("TM44", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_TM44_SS_ANNE_B1F_ROOMS")
+        hideObjectByName("SS_ANNE_B1F_ROOMS_OBJ_10")
+        showItemDialogue(t("<PLAYER> found TM44!", "<PLAYER>发现了招式机44！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
       }
     }
   }
@@ -143,15 +141,14 @@ game_scene SSAnneB1FRooms {
   // ── PokeBall ground item (npc 11) — MAX_POTION ──────────────────────────
   @storyline("talkPokeBallMaxPotion") {
     @trigger(map = "SSAnneB1FRooms", npc = 11, toggle = "SS_ANNE_B1F_ROOMS_OBJ_11")
-    @if (getFlag("EVENT_GOT_MAX_POTION_SS_ANNE_B1F_ROOMS")) {
-      @speaker("") {
-        @t("It's empty.", "是空的。")
-      }
-    } @else {
-      giveItem("MAX_POTION", 1)
-      setFlag("EVENT_GOT_MAX_POTION_SS_ANNE_B1F_ROOMS")
-      @speaker("") {
-        @t("<PLAYER> found MAX POTION!", "<PLAYER>发现了全满药！")
+    @if (!getFlag("EVENT_GOT_MAX_POTION_SS_ANNE_B1F_ROOMS")) {
+      given = giveItem("MAX_POTION", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_MAX_POTION_SS_ANNE_B1F_ROOMS")
+        hideObjectByName("SS_ANNE_B1F_ROOMS_OBJ_11")
+        showItemDialogue(t("<PLAYER> found MAX POTION!", "<PLAYER>发现了全满药！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
       }
     }
   }

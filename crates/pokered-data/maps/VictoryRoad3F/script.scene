@@ -72,17 +72,25 @@ game_scene VictoryRoad3F {
   // ── Ground item: MAX REVIVE (npc 5) ─────────────────────────────────────
   @storyline("itemMaxRevive") {
     @trigger(map = "VictoryRoad3F", npc = 5, toggle = "VICTORY_ROAD_3F_OBJ_5")
-    giveItem("MAX_REVIVE", 1)
-    hideObjectByName("VICTORY_ROAD_3F_OBJ_5")
-    @speaker("") { @t("<PLAYER> found MAX REVIVE!", "<PLAYER>找到了活力块！") }
+    given = giveItem("MAX_REVIVE", 1)
+    @if (given) {
+      hideObjectByName("VICTORY_ROAD_3F_OBJ_5")
+      showItemDialogue(t("<PLAYER> found MAX REVIVE!", "<PLAYER>找到了活力块！"))
+    } @else {
+      @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+    }
   }
 
   // ── Ground item: TM47 EXPLOSION (npc 6) ─────────────────────────────────
   @storyline("itemTmExplosion") {
     @trigger(map = "VictoryRoad3F", npc = 6, toggle = "VICTORY_ROAD_3F_OBJ_6")
-    giveItem("TM47", 1)
-    hideObjectByName("VICTORY_ROAD_3F_OBJ_6")
-    @speaker("") { @t("<PLAYER> found TM47!", "<PLAYER>找到了 TM47！") }
+    given = giveItem("TM47", 1)
+    @if (given) {
+      hideObjectByName("VICTORY_ROAD_3F_OBJ_6")
+      showItemDialogue(t("<PLAYER> found TM47!", "<PLAYER>找到了 TM47！"))
+    } @else {
+      @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+    }
   }
 
   // ── Strength boulders (npcs 7-10) ───────────────────────────────────────

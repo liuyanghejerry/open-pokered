@@ -15,12 +15,12 @@ game_scene SafariZoneSecretHouse {
       @speaker("") {
         @t("Ah! Finally!\n\nYou're the first person to\nreach the SECRET HOUSE!\n\nI was getting worried that\nno one would win our\ncampaign prize.\n\nCongratulations! You have\nwon!", "啊！终于！\n\n你是第一个到达秘密小屋的人！\n\n我还担心没有人能赢得这次活动\n的奖品呢。\n\n恭喜你！你获胜了！")
       }
-      @if (hasItem("HM03")) {
-        @speaker("") { @t("You don't have room for this\nfabulous prize!", "你没有地方放这个超棒的奖品！") }
-      } @else {
-        giveItem("HM03", 1)
+      given = giveItem("HM03", 1)
+      @if (given) {
         setFlag("EVENT_GOT_HM03")
         @speaker("") { @t("<PLAYER> received HM03!", "<PLAYER>得到了 HM03！") }
+      } @else {
+        @speaker("") { @t("You don't have room for this\nfabulous prize!", "你没有地方放这个超棒的奖品！") }
       }
     }
   }

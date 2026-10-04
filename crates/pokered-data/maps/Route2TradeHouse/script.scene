@@ -40,7 +40,6 @@ game_scene Route2TradeHouse {
           // ConnectCableText -> real in-game trade (removes ABRA, adds
           // MR.MIME nicknamed MARCEL). tradePokemon returns false if the player
           // doesn't actually carry ABRA -> wrong-mon (dialogset CASUAL).
-          @speaker("") { @t("Okay, connect the cable like\nso!", "好，请把通信线接上！") }
           traded = tradePokemon("ABRA", "MR_MIME", "MARCEL")
           @if (traded) {
             setFlag("EVENT_TRADED_FOR_MARCEL")
@@ -49,7 +48,11 @@ game_scene Route2TradeHouse {
               @t("<PLAYER> traded ABRA for\nMR.MIME!", "<PLAYER>用凯西换到了魔墙人\n偶！")
             }
           } @else {
-            @speaker("") { @t("What? That's not ABRA!\n\nIf you get one, come back\nhere!", "什么？那不是凯西！\n\n如果你弄到一只，就回来找我\n吧！") }
+            @if (getFlag("NPC_TRADE_CANCELLED")) {
+              @speaker("") { @t("Awww! Oh well...", "唉！那就算了吧……") }
+            } @else {
+              @speaker("") { @t("What? That's not ABRA!\n\nIf you get one, come back\nhere!", "什么？那不是凯西！\n\n如果你弄到一只，就回来找我\n吧！") }
+            }
           }
         }
         @option(@t("NO", "否")) {

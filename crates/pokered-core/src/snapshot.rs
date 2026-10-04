@@ -68,6 +68,8 @@ use crate::overworld::native_script::NativeScriptEngineSnapshot;
 /// Everything on [`OverworldScreen`] that influences future frames.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OverworldSnapshot {
+    #[serde(default)]
+    pub wild_data_state: crate::overworld::wild_encounters::WildDataState,
     pub frame_counter: u32,
     pub state: OverworldState,
     pub map_data: Option<MapData>,
@@ -114,6 +116,10 @@ pub struct OverworldSnapshot {
     pub cutscene_manager: CutsceneManager,
     pub trigger_manager: TriggerManager,
     pub active_script_effect: Option<ScriptEffect>,
+    #[serde(default)]
+    pub script_sfx_playing: bool,
+    #[serde(default)]
+    pub script_music_playing: bool,
     pub joy_ignore_mask: u8,
     pub scripted_player_path: VecDeque<(u16, u16)>,
     pub script_awaiting_battle: bool,
@@ -204,6 +210,7 @@ impl OverworldSnapshot {
         screen: &OverworldScreen<G>,
     ) -> Self {
         let mut snap = Self {
+            wild_data_state: screen.wild_data_state.clone(),
             script_engine: None,
             frame_counter: 0,
             state: screen.state.clone(),
@@ -251,6 +258,8 @@ impl OverworldSnapshot {
             cutscene_manager: CutsceneManager::new(),
             trigger_manager: TriggerManager::new(),
             active_script_effect: None,
+            script_sfx_playing: false,
+            script_music_playing: false,
             joy_ignore_mask: 0,
             scripted_player_path: VecDeque::new(),
             script_awaiting_battle: false,
@@ -321,7 +330,7 @@ impl OverworldSnapshot {
             field_move_restore, pending_cut, cut_anim, cut_retained_dialogue, player_name,
             rival_name, text_delay_frames, prev_a_pressed, prev_movement_state, prev_b_pressed,
             prev_up_pressed, prev_down_pressed, cutscene_manager, trigger_manager,
-            active_script_effect, joy_ignore_mask, scripted_player_path, script_awaiting_battle,
+            active_script_effect, script_sfx_playing, script_music_playing, joy_ignore_mask, scripted_player_path, script_awaiting_battle,
             script_awaiting_elevator, script_awaiting_filter_bag, script_awaiting_trade,
             player_starter, pending_shop, pending_slots, active_sign_text_id,
             lucky_slot_machine_sign, pending_elevator, pending_filter_bag, pending_diploma,
@@ -349,6 +358,7 @@ impl OverworldSnapshot {
     ) {
         screen.load_map_script_ex(self.state.current_map, false);
         snapshot_fields!(restore screen, self,
+            wild_data_state,
             frame_counter, state, map_data, npc_states, npc_pokemon_data, pending_dialogue,
             pending_choice, pending_pokedex_entry, pending_naming_screen, naming_flash_frames,
             pending_party_select, party_select_requested, pending_set_nickname,
@@ -360,7 +370,7 @@ impl OverworldSnapshot {
             field_move_restore, pending_cut, cut_anim, cut_retained_dialogue, player_name,
             rival_name, text_delay_frames, prev_a_pressed, prev_movement_state, prev_b_pressed,
             prev_up_pressed, prev_down_pressed, cutscene_manager, trigger_manager,
-            active_script_effect, joy_ignore_mask, scripted_player_path, script_awaiting_battle,
+            active_script_effect, script_sfx_playing, script_music_playing, joy_ignore_mask, scripted_player_path, script_awaiting_battle,
             script_awaiting_elevator, script_awaiting_filter_bag, script_awaiting_trade,
             player_starter, pending_shop, pending_slots, active_sign_text_id,
             lucky_slot_machine_sign, pending_elevator, pending_filter_bag, pending_diploma,
@@ -423,6 +433,8 @@ pub struct BattleSnapshot {
     pub show_enemy_pokeballs: bool,
     pub battle_state: Option<BattleState>,
     pub move_menu: Option<MoveMenuState>,
+    #[serde(default)]
+    pub mimic_choice: Option<(usize, Option<usize>)>,
     pub current_message: Option<String>,
     pub party_cursor: usize,
     pub settlement: Option<BattleSettlement>,
@@ -488,6 +500,7 @@ impl BattleSnapshot {
             show_enemy_pokeballs: screen.show_enemy_pokeballs,
             battle_state: screen.battle_state.clone(),
             move_menu: screen.move_menu.clone(),
+            mimic_choice: screen.mimic_choice,
             current_message: screen.current_message.clone(),
             party_cursor: screen.party_cursor,
             settlement: screen.settlement.clone(),
@@ -538,7 +551,7 @@ impl BattleSnapshot {
             player_bag, enemy_species, enemy_level, enemy_hp, enemy_max_hp, last_switch_in_enemy_hp, enemy_status,
             player_species, player_level, player_hp, player_max_hp, player_status,
             player_party_size, enemy_party_size, player_pokeball_status, enemy_pokeball_status,
-            show_player_pokeballs, show_enemy_pokeballs, battle_state, move_menu,
+            show_player_pokeballs, show_enemy_pokeballs, battle_state, move_menu, mimic_choice,
             current_message, party_cursor, settlement, player_money, trainer_npc_index,
             end_battle_text, captured_mon, escaped_via_poke_doll, map_id, battle_transition,
             enemy_ai_count, is_ghost, ghost_marowak_reveal, ghost_marowak_unveiled, is_safari,

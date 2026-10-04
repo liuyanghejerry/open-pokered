@@ -50,6 +50,11 @@ pub enum ScriptEffect {
     ShowDialogue {
         text: String,
     },
+    /// Original FoundItemText: print, then play/wait GET_ITEM_1, no A prompt.
+    ShowItemDialogue {
+        text: String,
+        sound_started: bool,
+    },
     ShowChoice {
         options: Vec<String>,
         started: bool,
@@ -129,6 +134,8 @@ pub enum ScriptEffect {
     PlaySound {
         sound_id: String,
     },
+    /// Block until the frontend sequencer reports the current jingle ended.
+    WaitMusic,
     StopMusic,
     FadeOutMusic,
     StartBattle {
@@ -334,6 +341,9 @@ impl ScriptEffect {
             ScriptEffect::ShowDiploma => json!({ "effect": "ShowDiploma" }),
             ScriptEffect::LinkStart => json!({ "effect": "LinkStart" }),
             ScriptEffect::HallOfFameCeremony => json!({ "effect": "HallOfFameCeremony" }),
+            ScriptEffect::ShowItemDialogue { text, sound_started } => {
+                json!({ "effect": "ShowItemDialogue", "text": text, "sound_started": sound_started })
+            }
             ScriptEffect::ShowDialogue { text } => {
                 json!({ "effect": "ShowDialogue", "text": text })
             }
@@ -422,6 +432,7 @@ impl ScriptEffect {
             ScriptEffect::PlayMusic { music_id } => {
                 json!({ "effect": "PlayMusic", "music_id": music_id })
             }
+            ScriptEffect::WaitMusic => json!({ "effect": "WaitMusic" }),
             ScriptEffect::PlaySound { sound_id } => {
                 json!({ "effect": "PlaySound", "sound_id": sound_id })
             }
@@ -741,7 +752,13 @@ pub fn dispatch_command_with_names(
         // Game-defined commands: formerly dedicated engine variants, now
         // `ScriptCommand::Custom` dispatched by JS verb name (registered in
         // `pokered-data::script_api`).
-        ScriptCommand::Custom { name, args } => dispatch_custom(name, args),
+        ScriptCommand::Custom { name, args } => {
+            let mut effect = dispatch_custom(name, args);
+            if let ScriptEffect::ShowItemDialogue { text, .. } = &mut effect {
+                *text = resolve_placeholders(text, player_name, rival_name, starter_name);
+            }
+            effect
+        },
         ScriptCommand::Delay { frames } => ScriptEffect::Delay {
             frames: *frames,
             frames_remaining: *frames,
@@ -817,6 +834,7 @@ fn dispatch_custom(name: &str, args: &[Value]) -> ScriptEffect {
         Err(error) => return unsupported_with_reason(name, error),
     };
     match command {
+        PokemonScriptCommand::ShowItemDialogue { text } => ScriptEffect::ShowItemDialogue { text, sound_started: false },
         PokemonScriptCommand::OldManTutorial => ScriptEffect::OldManTutorial,
         PokemonScriptCommand::TradePokemon { offered, received, nickname } => {
             ScriptEffect::TradePokemon { offered, received, nickname }
@@ -872,6 +890,7 @@ fn dispatch_custom(name: &str, args: &[Value]) -> ScriptEffect {
         },
         PokemonScriptCommand::PlayShipDeparture => ScriptEffect::PlayShipDeparture { started: false },
         PokemonScriptCommand::EnterHallOfFame => ScriptEffect::HallOfFameCeremony,
+        PokemonScriptCommand::WaitMusic => ScriptEffect::WaitMusic,
     }
 }
 

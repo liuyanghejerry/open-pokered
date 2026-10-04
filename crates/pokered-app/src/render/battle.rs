@@ -4749,6 +4749,9 @@ pub fn draw_battle(
                     | BattlePhase::LearnMoveChoose { .. }
             ) {
                 if let Some(ref mm) = screen.move_menu {
+                    if screen.mimic_choice.is_some() {
+                        menus::battle_move::draw_mimic(mm, &mut ui, language, &rd);
+                    } else {
                     menus::battle_move::draw(
                         mm,
                         &BATTLE_MOVE_DEFAULT_LAYOUT,
@@ -4756,6 +4759,7 @@ pub fn draw_battle(
                         language,
                         &rd,
                     );
+                    }
                 }
             } else if matches!(screen.phase, BattlePhase::BagSelect) {
                 if let Some(ref bm) = screen.bag_menu {
@@ -4770,7 +4774,7 @@ pub fn draw_battle(
             ) {
                 if let Some(ref bs) = screen.battle_state {
                     menus::battle_party::draw(
-                        &bs.player.party,
+                        &bs.player.persistent_party(),
                         screen.party_cursor,
                         &BATTLE_PARTY_DEFAULT_LAYOUT,
                         &mut ui,
@@ -6077,5 +6081,40 @@ mod tests {
         assert!(!BattleVisualEffects::is_charge_message(
             "CHARMANDER used FLY!"
         ));
+    }
+}
+
+#[cfg(test)]
+mod fidelity_flow_regressions {
+    use super::*;
+    use crate::PokemonGame;
+    use dotzuki_app::InputState;
+    use pokered_renderer::input::GbButton;
+    use pokered_core::{data::wild_data::GameVersion, game_state::GameScreen,
+        pokemon::stats::create_pokemon_with_moves, battle::pokered_rules::runtime::StdBattleRng};
+    use pokered_data::species::Species;
+
+    #[test]
+    fn forest_string_shot_turn_finishes_after_real_trainer_intro() {
+        let mut game = PokemonGame::new(GameVersion::Red);
+        game.audio = None;
+        let mut player = create_pokemon_with_moves(Species::Bulbasaur, 5, [0xff; 2],
+            [MoveId::Tackle, MoveId::Growl, MoveId::None, MoveId::None]).unwrap();
+        player.speed = 1;
+        let enemy = create_pokemon_with_moves(Species::Weedle, 9, [0xff; 2],
+            [MoveId::StringShot, MoveId::None, MoveId::None, MoveId::None]).unwrap();
+        game.battle = BattleScreen::from_parties(false, &[player], &[enemy],
+            Some(pokered_data::trainer_data::TrainerClass::BugCatcher));
+        game.battle.rng = StdBattleRng::from_seed(42);
+        game.state.screen = GameScreen::Battle;
+        let mut began = false;
+        for frame in 0..5000 {
+            let mut input = InputState::new();
+            if frame % 2 == 0 { input.press(GbButton::A); }
+            game.update(&input);
+            began |= matches!(game.battle.phase, BattlePhase::ShowingText { .. });
+            if began && matches!(game.battle.phase, BattlePhase::PlayerMenu) { return; }
+        }
+        panic!("stuck in {:?}, visual state: {:#?}", game.battle.phase, game.battle_vfx);
     }
 }

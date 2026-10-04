@@ -3294,7 +3294,7 @@ fn draw_bag_menu(buf: &mut ScreenTileBuffer, screen: &BattleScreen) {
 
 fn draw_party_menu(buf: &mut ScreenTileBuffer, screen: &BattleScreen) {
     if let Some(ref bs) = screen.battle_state {
-        for (i, mon) in bs.player.party.iter().enumerate() {
+        for (i, mon) in bs.player.persistent_party().iter().enumerate() {
             let name = format!("{}", mon.species).to_uppercase();
             let line = if mon.hp == 0 {
                 format!("{} FNT", name)
@@ -4108,7 +4108,7 @@ pub fn draw_battle(
                 draw_text("否", 2 * TILE_SIZE, 11 * TILE_SIZE, text_color, fb);
             }
         }
-        if is_zh
+        if (is_zh || screen.mimic_choice.is_some())
             && matches!(
                 screen.phase,
                 BattlePhase::MoveSelect | BattlePhase::ItemMoveSelect { .. }
@@ -4118,6 +4118,10 @@ pub fn draw_battle(
                 let mut painter = pokered_ui::backends::framebuffer::FrameBufferPainter::new(fb)
                     .with_lang(language);
                 let mut ui = pokered_ui::Ui::new(&mut painter);
+                let rd = pokered_data::impl_traits::PokemonRenderData::new(is_zh);
+                if screen.mimic_choice.is_some() {
+                    pokered_ui::menus::battle_move::draw_mimic(mm, &mut ui, language, &rd);
+                } else {
                 pokered_ui::menus::battle_move::draw(
                     mm,
                     &pokered_data::ui_layout::schema::BATTLE_MOVE_DEFAULT_LAYOUT,
@@ -4125,6 +4129,7 @@ pub fn draw_battle(
                     language,
                     &pokered_data::impl_traits::PokemonRenderData::new(true),
                 );
+                }
             }
         }
         if let Some((text, arrow)) = zh_dialog {

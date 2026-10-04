@@ -78,6 +78,33 @@ fn loss_triggers_blackout() {
     );
 }
 
+#[test]
+fn colosseum_loss_heals_without_queueing_city_blackout() {
+    use crate::battle::state::StatusCondition;
+    let mut fainted = mon(Species::Rattata, 5);
+    fainted.hp = 0;
+    fainted.pp[0] = 1;
+    fainted.status = StatusCondition::Burn;
+    let player = vec![fainted];
+    let enemy = vec![mon(Species::Blastoise, 100)];
+    let mut battle = BattleScreen::from_parties(false, &player, &enemy, Some(TrainerClass::Rival1));
+    battle.map_id = MapId::Colosseum as u8;
+    battle.link_mode = true;
+    battle.settlement = Some(settlement(BattleOutcome::Loss, 0, 0));
+    let mut save = SaveData::new();
+    save.game_data.player_money = 3000;
+    let mut ow = OverworldScreen::new(MapId::Colosseum, None, PokemonRedData);
+    assert_eq!(settle_battle_into_save(&mut battle, &mut save, &mut ow).outcome, Some("lose"));
+    assert!(ow.pending_warp.is_none(), "link loser remains in the Cable Club");
+    assert!(!ow.heal_requested, "post-link healing is immediate, not a blackout request");
+    assert_eq!(ow.warp_fade_state, crate::overworld::WarpFadeState::Idle);
+    assert_eq!(save.game_data.player_money, 3000);
+    let mon = save.party.get(0).unwrap();
+    assert_eq!(mon.hp, mon.max_hp);
+    assert_eq!(mon.status, StatusCondition::None);
+    assert_eq!(mon.pp[0], 35);
+}
+
 /// The blackout warp lands at `wLastBlackoutMap`'s FLY point — outside the
 /// Pokémon Center of the last city healed at (special_warps.asm:66-81).
 #[test]

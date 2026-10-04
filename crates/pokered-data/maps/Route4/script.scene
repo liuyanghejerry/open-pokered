@@ -28,10 +28,14 @@ game_scene Route4 {
   @storyline("itemTmWhirlwind") {
     @trigger(map = "Route4", npc = 3, toggle = "ROUTE_4_OBJ_3")
     @if (!getFlag("EVENT_GOT_TM04")) {
-      giveItem("TM04", 1)
-      setFlag("EVENT_GOT_TM04")
-      hideObjectByName("ROUTE_4_OBJ_3")
-      @speaker("") { @t("<PLAYER> found TM04!", "<PLAYER>找到了 TM04！") }
+      given = giveItem("TM04", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_TM04")
+        hideObjectByName("ROUTE_4_OBJ_3")
+        showItemDialogue(t("<PLAYER> found TM04!", "<PLAYER>找到了 TM04！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 

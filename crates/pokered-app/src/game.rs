@@ -16,10 +16,7 @@ use crate::alloc_prelude::*;
 
 // Link play, save files and the recorders are hosted-only (std fs/net/time).
 #[cfg(not(target_os = "none"))]
-use std::path::PathBuf;
-
-#[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
 use crate::link::LinkServer;
@@ -181,6 +178,22 @@ fn save_file_path() -> std::path::PathBuf {
 }
 
 #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
+fn companion_path_for_save(path: &Path) -> PathBuf {
+    path.with_extension("script_flags.json")
+}
+
+#[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
+fn companion_lookup_paths(path: Option<&Path>, legacy_native: bool) -> Vec<PathBuf> {
+    let old=script_flags_file_path();
+    let own=path.map(companion_path_for_save).unwrap_or_else(||old.clone());
+    let mut paths=vec![own.clone()];
+    // Old --save files shared the executable's sidecar. Only the positively
+    // identified old layout can recover that unbound file, once on migration.
+    if legacy_native && own!=old { paths.push(old); }
+    paths
+}
+
+#[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
 fn script_flags_file_path() -> std::path::PathBuf {
     save_dir().join(SCRIPT_FLAGS_FILE_NAME)
 }
@@ -205,6 +218,21 @@ fn web_local_storage() -> Option<web_sys::Storage> {
     web_sys::window().and_then(|w| w.local_storage().ok().flatten())
 }
 
+/// Inspect the original JSON before serde defaults fill its progress tail.
+/// Only the real browser save reader grants companion-alias migration;
+/// debug snapshots continue to deserialize without import provenance.
+#[cfg(any(target_arch = "wasm32", test))]
+fn decode_web_save(raw: &str) -> Result<SaveData, serde_json::Error> {
+    let value: serde_json::Value = serde_json::from_str(raw)?;
+    let legacy = value.get("game_data").and_then(serde_json::Value::as_object)
+        .is_some_and(|data| !data.contains_key("game_progress_tail"));
+    let mut save: SaveData = serde_json::from_value(value)?;
+    save.imported_legacy_json = legacy;
+    // Older browser JSON may contain the former OT-ID-0 derived flag.
+    pokered_core::save::sram_import::derive_traded_flags(&mut save);
+    Ok(save)
+}
+
 /// Attempts to load a previously persisted [`SaveData`] from the
 /// browser's `localStorage`. The save is stored as a JSON serialization
 /// of [`SaveData`] (whose `game_data.event_flags` carries the event-flag
@@ -227,7 +255,7 @@ fn try_load_save_from_local_storage() -> (SaveData, Option<SaveFileSummary>) {
             return (SaveData::new(), None);
         }
     };
-    match serde_json::from_str::<SaveData>(&raw) {
+    match decode_web_save(&raw) {
         Ok(save) => {
             let summary = save_summary_from_data(&save);
             log::info!(
@@ -302,6 +330,8 @@ fn script_string_to_music_id(s: &str) -> Option<MusicId> {
 /// An in-game NPC trade whose cutscene is playing; the party mutation is
 /// applied when the animation completes (`apply_npc_trade`).
 struct PendingTrade {
+    party_index: usize,
+    ready_to_animate: bool,
     give: pokered_data::species::Species,
     receive: pokered_data::species::Species,
     /// Table-authoritative nickname (pokered_data::trades), script arg as
@@ -1131,10 +1161,7 @@ impl PokemonGame {
             overworld.rival_name = rival_name.clone();
             // Seed the event-flag bitset from SRAM bytes, then merge any
             // runtime-only extras (companion sidecar) on top.
-            overworld.set_event_flags_bytes(&save_data.game_data.event_flags);
-            if let Some(extras) = Self::read_companion_script_flags() {
-                overworld.set_script_flags(extras);
-            }
+            overworld.restore_loaded_save_flags(&save_data, Self::read_companion_script_flags(save_path.as_deref(), save_data.imported_legacy_native));
             overworld.set_toggleable_object_flags(save_data.game_data.toggleable_object_flags);
             overworld.set_hidden_item_flags(save_data.game_data.obtained_hidden_items);
             overworld.set_hidden_coin_flags(save_data.game_data.obtained_hidden_coins);
@@ -1672,7 +1699,7 @@ impl PokemonGame {
         if self.external_saves {
             Some(self.mobile_flags.clone())
         } else {
-            Self::read_companion_script_flags()
+            Self::read_companion_script_flags(self.save_path.as_deref(), self.save_data.imported_legacy_native)
         }
     }
 
@@ -1746,9 +1773,9 @@ impl PokemonGame {
     /// in the fixed SRAM event-flags region). Named event flags in old
     /// sidecars are harmless: `set_script_flags` routes them to the bitset.
     #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
-    fn read_companion_script_flags() -> Option<pokered_core::hash_compat::HashMap<String, bool>> {
-        let flags_path = script_flags_file_path();
-        let data = std::fs::read(&flags_path).ok()?;
+    fn read_companion_script_flags(save_path: Option<&Path>, legacy_native: bool) -> Option<pokered_core::hash_compat::HashMap<String, bool>> {
+        let paths=companion_lookup_paths(save_path,legacy_native);
+        let (flags_path,data)=paths.into_iter().find_map(|path|std::fs::read(&path).ok().map(|data|(path,data)))?;
         match serde_json::from_slice::<pokered_core::hash_compat::HashMap<String, bool>>(&data) {
             Ok(flags) => Some(flags),
             Err(e) => {
@@ -1765,7 +1792,7 @@ impl PokemonGame {
     /// Same companion store on web: the runtime-only extras live in a
     /// separate `localStorage` key next to the SaveData JSON.
     #[cfg(target_arch = "wasm32")]
-    fn read_companion_script_flags() -> Option<pokered_core::hash_compat::HashMap<String, bool>> {
+    fn read_companion_script_flags(_save_path: Option<&Path>, _legacy_native: bool) -> Option<pokered_core::hash_compat::HashMap<String, bool>> {
         let storage = web_local_storage()?;
         let data = storage.get_item(WEB_SCRIPT_FLAGS_STORAGE_KEY).ok()??;
         match serde_json::from_str::<pokered_core::hash_compat::HashMap<String, bool>>(&data) {
@@ -1781,9 +1808,9 @@ impl PokemonGame {
     /// remove a stale sidecar when none do, so a previous save's extras
     /// can't re-merge onto a different save on next load.
     #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
-    fn save_companion_script_flags(overworld: &OverworldScreen<PokemonRedData>) {
+    fn save_companion_script_flags(overworld: &OverworldScreen<PokemonRedData>, save_path: &Path) {
         let extras = overworld.unified_flags().extras();
-        let flags_path = script_flags_file_path();
+        let flags_path = companion_path_for_save(save_path);
         if extras.is_empty() {
             if let Err(e) = std::fs::remove_file(&flags_path) {
                 if e.kind() != std::io::ErrorKind::NotFound {
@@ -1920,6 +1947,7 @@ impl PokemonGame {
     // The event-flag bitset serializes directly into the original
     // 320-byte SRAM region (wEventFlags, NUM_EVENTS = $A00 bits).
     save.game_data.event_flags = overworld.unified_flags().as_bytes().to_vec();
+    overworld.write_system_save_state(&mut save.game_data);
 
     save.game_data.toggleable_object_flags = *overworld.toggleable_object_flags();
     save.game_data.obtained_hidden_items = *overworld.hidden_item_flags();
@@ -1929,6 +1957,8 @@ impl PokemonGame {
 
     fn build_save_data(&self) -> SaveData {
         let mut save = self.save_data.clone();
+        save.imported_legacy_native=false;
+        save.imported_legacy_json=false;
         Self::apply_live_state_to_save(&mut save, &self.overworld, &self.player_name, &self.rival_name);
         save
     }
@@ -2029,7 +2059,7 @@ impl PokemonGame {
                 dbg_eprintln!("Error: failed to write save file: {}", e);
             }
         }
-        Self::save_companion_script_flags(&self.overworld);
+        Self::save_companion_script_flags(&self.overworld, &path);
     }
 
     /// Bare metal: persist the 32 KiB SRAM image directly onto the cartridge
@@ -2349,11 +2379,10 @@ impl PokemonGame {
                         // Seed the event-flag bitset from SRAM bytes, then
                         // merge any runtime-only extras (companion sidecar)
                         // on top.
-                        overworld.set_event_flags_bytes(&self.save_data.game_data.event_flags);
                         #[cfg(not(target_os = "none"))]
-                        if let Some(extras) = self.companion_flags() {
-                            overworld.set_script_flags(extras);
-                        }
+                        overworld.restore_loaded_save_flags(&self.save_data, self.companion_flags());
+                        #[cfg(target_os = "none")]
+                        overworld.restore_loaded_save_flags(&self.save_data, None);
                         overworld.set_toggleable_object_flags(
                             self.save_data.game_data.toggleable_object_flags,
                         );
@@ -3415,6 +3444,16 @@ impl PokemonGame {
             return;
         }
 
+        // DisplayPartyMenu precedes ConnectCableText, then the animation.
+        // Keep the scene suspended until the selected mon has been exchanged.
+        if self.pending_trade.as_ref().is_some_and(|trade| trade.ready_to_animate)
+            && self.overworld.pending_dialogue.is_none() {
+            let trade=self.pending_trade.as_mut().unwrap();
+            trade.ready_to_animate=false;
+            self.trade_anim=Some(pokered_core::trade::TradeAnim::new(trade.give,trade.receive,
+                self.player_name.clone(),self.state.config.language==pokered_core::game_state::Lang::Zh));
+        }
+
         // In-game NPC trade cutscene (engine/movie/trade.asm): takes over the
         // frame while active. The party mutation is applied only when the
         // animation completes (original order: InternalClockTradeAnim →
@@ -3439,8 +3478,9 @@ impl PokemonGame {
             };
             if done {
                 self.trade_anim = None;
+                let mut npc_ok = true;
                 if let Some(trade) = self.pending_trade.take() {
-                    self.apply_npc_trade(trade);
+                    npc_ok = self.apply_npc_trade(trade);
                 }
                 #[cfg(not(target_os = "none"))]
                 if self.link_cable.phase() == &CableClubPhase::TradeAnim {
@@ -3450,7 +3490,7 @@ impl PokemonGame {
                     // returns to the selection screen.
                     self.apply_link_trade();
                 }
-                self.overworld.resume_script_after_trade(true);
+                self.overworld.resume_script_after_trade(npc_ok);
             }
             return;
         }
@@ -3820,6 +3860,9 @@ impl PokemonGame {
                         None
                     };
                     self.link_cable.note_presence(linked, in_cable_room);
+                    if self.link_cable.phase()==&CableClubPhase::ReceptionText && self.overworld.pending_dialogue.is_none() {
+                        self.link_cable.on_reception_text_done();
+                    }
 
                     // The gameboy on the table: the map scene calls
                     // `game.linkStart()`; the flow starts the room's request
@@ -3827,9 +3870,19 @@ impl PokemonGame {
                     // Center — the original's CableClubLeftGameboy/
                     // CableClubRightGameboy, engine/pokemon/bills_pc.asm).
                     if self.overworld.take_link_start_request() {
-                        if linked {
-                            let need = self.link_cable.on_gameboy_used(current_map);
-                            self.handle_flow_need(need);
+                        if !in_cable_room && !self.overworld.unified_flags().get_flag("EVENT_GOT_POKEDEX") {
+                            self.overworld.pending_dialogue = Some(pokered_core::overworld::BedroomDialogue::from_message(
+                                &self.localize_dialogue("We're making\npreparations.\nPlease wait.")));
+                        } else if linked {
+                            if in_cable_room {
+                                let need = self.link_cable.on_gameboy_used(current_map);
+                                self.handle_flow_need(need);
+                            } else {
+                                self.link_cable.on_receptionist_used();
+                                self.overworld.pending_dialogue=Some(pokered_core::overworld::BedroomDialogue::from_message(
+                                    if self.state.config.language==pokered_core::game_state::Lang::Zh { "请在这里申请。\n\n开启联机前，\n必须保存游戏。" }
+                                    else { "Please apply here.\n\nBefore opening\nthe link, we have\nto save the game." }));
+                            }
                         } else {
                             // Offline (no link session): the original's
                             // "Just a moment." (JustAMomentText) and nothing
@@ -3837,7 +3890,7 @@ impl PokemonGame {
                             self.overworld.pending_dialogue =
                                 Some(pokered_core::overworld::BedroomDialogue::from_message(
                                     &self.localize_dialogue(
-                                        crate::link::cable_club::TEXT_JUST_A_MOMENT,
+                                        if in_cable_room { crate::link::cable_club::TEXT_JUST_A_MOMENT } else { "This area is\nreserved for 2\nfriends who are\nlinked by cable." },
                                     ),
                                 ));
                         }
@@ -3901,7 +3954,39 @@ impl PokemonGame {
                         a: input.is_just_pressed(GbButton::A),
                         b: input.is_just_pressed(GbButton::B),
                     };
-                    self.overworld.update_party_select_input(psi);
+                    if self.pending_trade.is_some() {
+                        use pokered_core::party_select::PartySelectResult;
+                        let result = self.overworld.pending_party_select.as_mut().unwrap().update_frame(psi);
+                        match result {
+                            PartySelectResult::Active => {}
+                            PartySelectResult::Cancelled => {
+                                self.overworld.pending_party_select = None;
+                                self.pending_trade = None;
+                                self.overworld.set_flag_live("NPC_TRADE_CANCELLED", true);
+                                self.overworld.resume_script_after_trade(false);
+                            }
+                            PartySelectResult::Selected(idx) => {
+                                self.overworld.pending_party_select = None;
+                                let trade = self.pending_trade.as_mut().unwrap();
+                                if self.save_data.party.get(idx).is_some_and(|m| m.species == trade.give) {
+                                    trade.party_index = idx;
+                                    trade.ready_to_animate = true;
+                                    // InGameTrade_DoTrade sets the completed bit after
+                                    // a valid pick, before ConnectCableText/animation.
+                                    self.overworld.mark_npc_trade_completed(&trade.nickname);
+                                    self.overworld.pending_dialogue=Some(pokered_core::overworld::BedroomDialogue::from_message(
+                                        if self.state.config.language==pokered_core::game_state::Lang::Zh {
+                                            "好，请把通信线接上！"
+                                        } else { "Okay, connect the\ncable like so!" }));
+                                } else {
+                                    self.pending_trade = None;
+                                    self.overworld.resume_script_after_trade(false);
+                                }
+                            }
+                        }
+                    } else {
+                        self.overworld.update_party_select_input(psi);
+                    }
                     ScreenAction::Continue
                 } else if self.overworld.is_naming_screen_active() {
                     let naming_input = NamingInput {
@@ -3963,6 +4048,7 @@ impl PokemonGame {
                             .iter()
                             .map(|s| s.pascal_name())
                             .collect();
+                        self.overworld.seed_script_bag_quantities(&self.save_data.game_data.bag);
                         self.overworld.seed_script_query_state(
                             self.save_data.game_data.player_money,
                             &bag_names,
@@ -4028,6 +4114,8 @@ impl PokemonGame {
                         self.overworld.mix_script_rng();
                     }
 
+                    self.overworld.script_sfx_playing = self.audio.as_ref()
+                        .is_some_and(|audio| audio.is_sfx_playing() && !audio.low_health_alarm_active());
                     // wOptions text delay — pushed every frame so the dialogue
                     // typewriter honors the configured TEXT SPEED.
                     self.overworld
@@ -4056,6 +4144,9 @@ impl PokemonGame {
                             resources.clear_cache();
                         }
                     }
+                    // SSAnneCaptainsRoom.asm waits on music channel 1.
+                    self.overworld.script_music_playing = self.audio.as_ref()
+                        .is_some_and(|audio| audio.is_music_channel_playing(0));
                     let action = self.overworld.update_frame(ow_input);
 
                     self.apply_overworld_game_data_requests();
@@ -4175,6 +4266,8 @@ impl PokemonGame {
                                 self.overworld.next_rng_u8(),
                             ],
                         ) {
+                            pokemon.ot_id = self.save_data.game_data.player_id;
+                            pokemon.ot_name = pokered_core::battle::state::encode_name(&self.player_name);
                             if let Some(nick) = pending.nickname {
                                 pokemon.set_nickname(&nick);
                             }
@@ -4345,9 +4438,14 @@ impl PokemonGame {
                         //    advances through the end-of-battle text below,
                         //    so it must not be re-cloned over that progress.
                         let result = driver.result();
-                        if result.is_none() {
+                        // Copy the terminal canonical screen once as well:
+                        // a KO can set the result while our previous mirror
+                        // is still LinkWaiting. The mirror's result marks that
+                        // final copy, so later frames keep its narration progress.
+                        if result.is_none() || self.battle.link_result.is_none() {
                             if let Some(screen) = driver.screen() {
                                 self.battle = screen.clone();
+                                self.battle.link_result = result;
                             }
                         }
                         // 5. The link dropped mid-battle: settle what we
@@ -5376,6 +5474,8 @@ impl PokemonGame {
                         };
                         pc.update_frame(menu_input, &mut ctx)
                     };
+                    // Every mutation must refresh the live bank-1 box, not only CHANGE BOX.
+                    self.save_data.current_box = self.save_data.pc_storage.current_box().clone();
                     for sfx in pc.take_sfx() {
                         if let Some(ref audio) = self.audio {
                             let id = match sfx {
@@ -5668,6 +5768,29 @@ impl PokemonGame {
     fn handle_flow_need(&mut self, need: FlowNeed) {
         let result = match &need {
             FlowNeed::None => return,
+            FlowNeed::CancelReception => {
+                self.overworld.pending_dialogue=Some(pokered_core::overworld::BedroomDialogue::from_message(
+                    if self.state.config.language==pokered_core::game_state::Lang::Zh { "欢迎下次再来！" } else { "Please come again!" }));
+                return;
+            }
+            FlowNeed::CancelRoomSelection => {
+                self.overworld.pending_dialogue = Some(pokered_core::overworld::BedroomDialogue::from_message(
+                    if self.state.config.language == pokered_core::game_state::Lang::Zh {
+                        "联机被\n取消了。"
+                    } else {
+                        "The link was\ncanceled."
+                    }));
+                return;
+            }
+            FlowNeed::SaveReception => {
+                self.save_to_file();
+                if let Some(audio) = &self.audio { audio.play_sfx(SfxId::Save); }
+                return;
+            }
+            FlowNeed::EnterRoom(kind) => {
+                self.warp_to_cable_room(match kind { LinkKind::Trade => MapId::TradeCenter, LinkKind::Battle => MapId::Colosseum });
+                return;
+            }
             FlowNeed::RequestLink(kind) => {
                 let Some(session) = self.link_session.as_mut() else {
                     return;
@@ -5677,11 +5800,8 @@ impl PokemonGame {
                         let Some(driver) = self.link_battle.as_mut() else {
                             return;
                         };
-                        // The party exchange happens at the cable-club table;
-                        // the original heals the local party there (`predef
-                        // HealParty`, engine/link/cable_club.asm:292 — the
-                        // driver heals), so the wire copy is the CURRENT
-                        // save party, healed. The save itself is untouched.
+                        // Exchange the current party. Original HealParty runs
+                        // after the link battle, not before the exchange.
                         driver.set_local_party(self.save_data.party.clone());
                         driver.request_battle()
                     }
@@ -5862,15 +5982,14 @@ impl PokemonGame {
             .received_mon()
             .map(|m| m.species)
             .unwrap_or(pokered_data::species::Species::Pikachu);
-        // The remote trainer's name is not on the wire for trades (protocol
-        // gap — `PartyExchangeData.trainer_name` is battle-only), so the
-        // cutscene uses the default partner line. Documented deviation.
+        // TradeParty carries the same peer name displayed by the party
+        // selection screen (wLinkEnemyTrainerName in the original movie).
         self.trade_anim = Some(TradeAnim::new(
             give,
             receive,
             self.player_name.clone(),
             is_zh,
-        ));
+        ).with_partner_name(driver.remote_name().to_string()));
         self.link_cable.on_trade_anim_started();
     }
 
@@ -5932,6 +6051,9 @@ impl PokemonGame {
             // Cable Club entry: plain fade-in, no EnterMapAnim spin.
             arrival_spin: false,
         });
+        self.overworld.warp_fade_state=pokered_core::overworld::WarpFadeState::FadingOut {
+            frames_remaining:pokered_core::overworld::WARP_FADE_OUT_FRAMES,
+        };
     }
 
     /// Drain script-requested bag/money mutations and apply them to the
@@ -6003,6 +6125,7 @@ impl PokemonGame {
                                 received,
                                 nickname,
                             } => {
+                                self.overworld.set_flag_live("NPC_TRADE_CANCELLED", false);
                                 use pokered_data::species::Species;
                                 use pokered_data::trades::find_npc_trade;
                                 let pair = (
@@ -6012,8 +6135,7 @@ impl PokemonGame {
                                 // The script is suspended on this await; it
                                 // resumes via resume_script_after_trade.
                                 let ok = if let (Some(off_sp), Some(rec_sp)) = pair {
-                                    self.save_data.party.find_species(off_sp).is_some()
-                                        && self.trade_anim.is_none()
+                                    self.trade_anim.is_none()
                                         && {
                                             // Nickname: the TradeMons table is
                                             // authoritative (the original stores
@@ -6022,25 +6144,14 @@ impl PokemonGame {
                                             let nick = find_npc_trade(off_sp, rec_sp)
                                                 .map(|t| t.nickname.to_string())
                                                 .unwrap_or(nickname);
-                                            let is_zh = matches!(
-                                                self.state.config.language,
-                                                pokered_core::game_state::Lang::Zh
-                                            );
-                                            // Start the trade cutscene
-                                            // (engine/movie/trade.asm); the party
-                                            // mutation lands when it completes.
-                                            self.trade_anim =
-                                                Some(pokered_core::trade::TradeAnim::new(
-                                                    off_sp,
-                                                    rec_sp,
-                                                    self.player_name.clone(),
-                                                    is_zh,
-                                                ));
                                             self.pending_trade = Some(PendingTrade {
+                                                party_index: 0,
+                                                ready_to_animate: false,
                                                 give: off_sp,
                                                 receive: rec_sp,
                                                 nickname: nick,
                                             });
+                                            self.overworld.begin_party_select(self.save_data.party.to_vec());
                                             true
                                         }
                                 } else {
@@ -7145,29 +7256,21 @@ impl PokemonGame {
     /// random OT ID + DVs, and the given mon's level; it then enters the
     /// Pokédex as seen+owned (AddPartyMon sets both flags for player-party
     /// adds).
-    fn apply_npc_trade(&mut self, trade: PendingTrade) {
+    fn apply_npc_trade(&mut self, trade: PendingTrade) -> bool {
         use pokered_core::trade::{assemble_npc_trade_mon, roll_npc_trade_randoms_thread};
-        if let Some(idx) = self.save_data.party.find_species(trade.give) {
-            if let Ok(removed) = self.save_data.party.remove(idx) {
-                let (dv_bytes, ot_id) = roll_npc_trade_randoms_thread();
-                let player_id = self.save_data.game_data.player_id;
-                if let Some(mon) = assemble_npc_trade_mon(
-                    trade.receive,
-                    removed.level,
-                    &trade.nickname,
-                    dv_bytes,
-                    ot_id,
-                    player_id,
-                ) {
-                    let _ = self.save_data.party.add(mon);
-                    self.save_data.game_data.pokedex.set_seen(trade.receive);
-                    self.save_data.game_data.pokedex.set_owned(trade.receive);
-                }
-            }
-        }
+        let Some(offered) = self.save_data.party.get(trade.party_index) else { return false; };
+        if offered.species != trade.give { return false; }
+        let (dv_bytes, ot_id) = roll_npc_trade_randoms_thread();
+        let Some(mon) = assemble_npc_trade_mon(trade.receive, offered.level, &trade.nickname,
+            dv_bytes, ot_id, self.save_data.game_data.player_id) else { return false; };
+        // Construct first: every failure leaves the original party intact.
+        if self.save_data.party.remove_for_trade(trade.party_index).is_err() { return false; }
+        if self.save_data.party.add(mon).is_err() { return false; }
+        self.save_data.game_data.pokedex.set_seen(trade.receive);
+        self.save_data.game_data.pokedex.set_owned(trade.receive);
         self.overworld.party_count = self.save_data.party.count() as u8;
-        self.overworld.box_count = self.save_data.current_box.count() as u8;
         self.overworld.party_lead_level = self.save_data.party.leader_level();
+        true
     }
 
     /// Queue the evolution cutscene for a batch of detected evolutions
@@ -7810,6 +7913,102 @@ mod synchronous_input_tests {
 }
 
 #[cfg(test)]
+mod fidelity_systems_npc_tests {
+    use super::*;
+    use pokered_core::pokemon::stats::create_pokemon;
+    use pokered_data::species::Species;
+
+    fn game() -> PokemonGame {
+        PokemonGame::new_with_options(GameVersion::Red, None, None, None, false, None,
+            false, true, #[cfg(feature = "debug-server")] None)
+    }
+
+    #[test]
+    #[cfg(not(target_arch="wasm32"))]
+    fn fidelity_companions_are_bound_to_save_path_with_legacy_only_fallback() {
+        let first=Path::new("/tmp/fidelity/slot-one.sav");
+        let second=Path::new("/tmp/fidelity/slot-two.sav");
+        assert_eq!(companion_path_for_save(first),Path::new("/tmp/fidelity/slot-one.script_flags.json"));
+        assert_ne!(companion_path_for_save(first),companion_path_for_save(second));
+        assert_eq!(companion_lookup_paths(Some(first),false),vec![companion_path_for_save(first)]);
+        assert_eq!(companion_lookup_paths(Some(first),true),vec![companion_path_for_save(first),script_flags_file_path()]);
+        assert_eq!(companion_lookup_paths(None,true),vec![script_flags_file_path()]);
+        assert_eq!(companion_path_for_save(&save_file_path()),script_flags_file_path());
+    }
+
+    #[test]
+    fn fidelity_cable_room_selection_completes_actual_warp() {
+        for (kind,map) in [(LinkKind::Trade,MapId::TradeCenter),(LinkKind::Battle,MapId::Colosseum)] {
+            let mut game=game();
+            game.state.screen=GameScreen::Overworld;
+            game.overworld=OverworldScreen::new(MapId::CeruleanPokecenter,None,PokemonRedData);
+            game.handle_flow_need(FlowNeed::EnterRoom(kind));
+            assert!(matches!(game.overworld.warp_fade_state,pokered_core::overworld::WarpFadeState::FadingOut { .. }));
+            for _ in 0..90 { game.update(&InputState::new()); }
+            assert_eq!(game.overworld.state.current_map,map);
+        }
+    }
+
+    #[test]
+    fn fidelity_npc_trade_accepts_last_mon_and_selected_duplicate() {
+        for (count, selected) in [(1,0), (2,1), (6,5)] {
+            let mut game=game();
+            for index in 0..count {
+                game.save_data.party.add(create_pokemon(Species::Abra,15+index as u8,[0x99,0x88]).unwrap()).unwrap();
+            }
+            assert!(game.apply_npc_trade(PendingTrade { party_index:selected, ready_to_animate:false, give:Species::Abra,
+                receive:Species::MrMime,nickname:"MARCEL".to_string() }));
+            assert_eq!(game.save_data.party.count(),count);
+            let received=game.save_data.party.get(count-1).unwrap();
+            assert_eq!(received.species,Species::MrMime);
+            assert_eq!(received.level,15+selected as u8);
+            assert!(game.save_data.game_data.pokedex.is_owned(Species::MrMime));
+            assert_eq!(game.save_data.party.iter().filter(|m|m.species==Species::Abra).count(),count-1);
+        }
+    }
+
+    #[test]
+    fn fidelity_npc_wrong_selection_preserves_party_and_pokedex() {
+        let mut game=game();let mon=create_pokemon(Species::Pikachu,15,[0x99,0x88]).unwrap();
+        game.save_data.party.add(mon).unwrap();
+        for index in [0,1] {
+            assert!(!game.apply_npc_trade(PendingTrade { party_index:index, ready_to_animate:false, give:Species::Abra,
+                receive:Species::MrMime,nickname:"MARCEL".to_string() }));
+            assert_eq!(*game.save_data.party.get(0).unwrap(),mon);
+            assert!(!game.save_data.game_data.pokedex.is_owned(Species::MrMime));
+        }
+    }
+
+    #[test]
+    fn fidelity_npc_completed_flag_precedes_connect_text_only_for_valid_pick() {
+        for (offered, button, completed) in [
+            (Species::Abra, GbButton::A, true),
+            (Species::Abra, GbButton::B, false),
+            (Species::Pikachu, GbButton::A, false),
+        ] {
+            let mut game = game();
+            game.state.screen = GameScreen::Overworld;
+            game.overworld = OverworldScreen::new(MapId::Route2TradeHouse, None, PokemonRedData);
+            game.save_data.party.clear();
+            game.save_data.party.add(create_pokemon(offered, 15, [0x99, 0x88]).unwrap()).unwrap();
+            game.pending_trade = Some(PendingTrade { party_index: 0, ready_to_animate: false,
+                give: Species::Abra, receive: Species::MrMime, nickname: "MARCEL".to_string() });
+            game.overworld.begin_party_select(game.save_data.party.to_vec());
+            let mut input = InputState::new();
+            input.press(button);
+            game.update(&input);
+            assert_eq!(game.overworld.unified_flags().get_flag("EVENT_TRADED_FOR_MARCEL"), completed);
+            assert_eq!(game.save_data.party.get(0).unwrap().species, offered);
+            assert!(game.trade_anim.is_none());
+            if completed {
+                assert!(game.overworld.pending_dialogue.is_some());
+                assert!(game.pending_trade.as_ref().unwrap().ready_to_animate);
+            }
+        }
+    }
+}
+
+#[cfg(test)]
 mod save_overwrite_tests {
     use super::*;
     use pokered_core::game_state::SaveFileSummary;
@@ -7961,5 +8160,233 @@ mod wall_town_map_tests {
             game.overworld.pending_town_map,
             "wall map can be inspected again"
         );
+    }
+}
+
+#[cfg(test)]
+mod captain_music_wait_fidelity_tests {
+    use super::*;
+    #[test]
+    fn no_audio_frontend_resumes_wait_music_when_the_real_healed_channel_ends() {
+        let mut game = PokemonGame::new_with_options(GameVersion::Red, None, None, None,
+            false, None, false, true, #[cfg(feature = "debug-server")] None);
+        game.state.screen = GameScreen::Overworld;
+        game.overworld = OverworldScreen::new(MapId::SSAnneCaptainsRoom, None, PokemonRedData);
+        game.overworld.state.player.x = 4;
+        game.overworld.state.player.y = 3;
+        game.audio.as_ref().unwrap().play_music(MusicId::PKMNHEALED);
+        // Use the public scene-loading seam: the native VM must suspend on
+        // waitMusic and continue to the flag command after CHAN1 finishes.
+        game.overworld.reload_scene_with_config(
+            "SSAnneCaptainsRoom",
+            r#"game_scene SSAnneCaptainsRoom {
+  @storyline("captainMusicProbe") {
+    waitMusic()
+    setFlag("CAPTAIN_MUSIC_PROBE_DONE")
+  }
+}"#,
+            Some(r#"{"onLoad":"captainMusicProbe"}"#),
+        ).unwrap();
+        assert_eq!(game.overworld.active_script_effect_label().as_deref(), Some("WaitMusic"));
+        game.update(&InputState::new());
+        assert_eq!(game.overworld.active_script_effect_label().as_deref(), Some("WaitMusic"));
+        assert!(!game.overworld.unified_flags().get_flag("CAPTAIN_MUSIC_PROBE_DONE"));
+        for _ in 0..1024 {
+            game.update(&InputState::new());
+            if game.overworld.unified_flags().get_flag("CAPTAIN_MUSIC_PROBE_DONE") {
+                assert!(game.overworld.script_engine_idle());
+                assert_eq!(game.overworld.active_script_effect_label(), None);
+                assert!(!game.audio.as_ref().unwrap().is_music_channel_playing(0));
+                return;
+            }
+        }
+        panic!("no-audio WaitMusic remained blocked after the healed jingle");
+    }
+}
+
+#[cfg(test)]
+mod web_legacy_save_fidelity_tests {
+    use super::*;
+    #[test]
+    fn web_reader_migrates_same_slot_extras_only_for_original_json_without_tail() {
+        let aliases = ["EVENT_TRADED_FOR_MARCEL", "EVENT_GOT_OLD_ROD", "EVENT_GOT_GOOD_ROD", "EVENT_GOT_SUPER_ROD"];
+        for old in [false, true] {
+            let mut value = serde_json::to_value(SaveData::new()).unwrap();
+            if old { value["game_data"].as_object_mut().unwrap().remove("game_progress_tail"); }
+            let raw = serde_json::to_string(&value).unwrap();
+            let save = decode_web_save(&raw).unwrap();
+            assert_eq!(save.imported_legacy_json, old);
+            let extras = aliases.into_iter().map(|name| (name.to_string(), true)).collect();
+            let mut overworld = OverworldScreen::new(MapId::ViridianCity, None, PokemonRedData);
+            overworld.restore_loaded_save_flags(&save, Some(extras));
+            for name in aliases { assert_eq!(overworld.unified_flags().get_flag(name), old, "{name}"); }
+            // The debug snapshot parser must not acquire the real-reader provenance.
+            let snapshot: SaveData = serde_json::from_str(&raw).unwrap();
+            assert!(!snapshot.imported_legacy_json);
+        }
+    }
+    #[test]
+    fn invalid_web_json_does_not_grant_legacy_import() {
+        for raw in ["not json", "{}", r#"{"game_data":{"game_progress_tail":null}}"#] {
+            assert!(decode_web_save(raw).is_err());
+        }
+    }
+
+    #[test]
+    fn web_reader_recomputes_named_zero_ot_trade_identity() {
+        for (owner, expected) in [(1234, true), (0, false)] {
+            let mut save = SaveData::new();
+            save.game_data.player_id = owner;
+            let mut mon = pokered_core::trade::assemble_npc_trade_mon(
+                pokered_data::species::Species::MrMime, 15, "MARCEL", [0x99, 0x88], 0, owner,
+            ).unwrap();
+            mon.is_traded = !expected; // stale derived flag from prior JSON
+            save.party.add(mon).unwrap();
+            let raw = serde_json::to_string(&save).unwrap();
+            assert_eq!(decode_web_save(&raw).unwrap().party.get(0).unwrap().is_traded, expected);
+        }
+    }
+}
+
+#[cfg(all(test, not(target_os = "none")))]
+mod asynchronous_colosseum_fidelity_tests {
+    use super::*;
+    use pokered_core::battle::state::StatusCondition;
+    use pokered_core::battle::BattlePhase;
+    use pokered_core::link::transport::ChannelTransport;
+    use pokered_core::pokemon::stats::create_pokemon_with_moves;
+    use pokered_data::{moves::MoveId, species::Species};
+
+    fn game(species: Species, level: u8, attack: MoveId, hp: u16) -> PokemonGame {
+        let mut game = PokemonGame::new_with_options(GameVersion::Red, None, None, None,
+            false, None, false, true, #[cfg(feature = "debug-server")] None);
+        let mut mon = create_pokemon_with_moves(species, level, [0x99, 0x88],
+            [attack, MoveId::None, MoveId::None, MoveId::None]).unwrap();
+        mon.hp = hp;
+        mon.status = StatusCondition::Burn;
+        mon.pp[0] = 2;
+        let mut backup = create_pokemon_with_moves(Species::Pikachu, 10, [0x99, 0x88],
+            [MoveId::Thundershock, MoveId::None, MoveId::None, MoveId::None]).unwrap();
+        backup.hp = 0;
+        backup.status = StatusCondition::Poison;
+        backup.pp[0] = 0;
+        game.save_data.party = pokered_core::pokemon::party::Party::from(vec![mon, backup]);
+        game.state.screen = GameScreen::Overworld;
+        game.main_menu.last_choice = Some(pokered_core::game_state::MainMenuChoice::Continue);
+        game.overworld = OverworldScreen::new(MapId::Colosseum, None, PokemonRedData);
+        game
+    }
+
+    #[test]
+    fn actual_frontend_asynchronous_ko_returns_both_sides_to_room_and_heals_all() {
+        let mut host = game(Species::Blastoise, 100, MoveId::Surf, 100);
+        let mut peer = game(Species::Rattata, 5, MoveId::Tackle, 1);
+        let (ta, tb) = ChannelTransport::new_pair();
+        host.attach_link_transport(Box::new(ta), LinkRole::Host);
+        peer.attach_link_transport(Box::new(tb), LinkRole::Guest);
+        let idle = InputState::new();
+        let mut a = InputState::new(); a.press(GbButton::A);
+        for _ in 0..20 { host.update(&idle); peer.update(&idle); }
+        let request = host.link_cable.on_gameboy_used(MapId::Colosseum);
+        host.handle_flow_need(request);
+        for _ in 0..20 { host.update(&idle); peer.update(&idle); }
+        assert!(matches!(peer.link_cable.phase(), CableClubPhase::PeerPrompt { .. }));
+        peer.update(&a);
+        for frame in 0..1200 {
+            for g in [&mut host, &mut peer] {
+                let ready = matches!(g.state.screen, GameScreen::Battle)
+                    && g.battle.phase == BattlePhase::PlayerMenu;
+                g.update(if !ready && frame % 2 == 0 { &a } else { &idle });
+            }
+            if host.battle.phase == BattlePhase::PlayerMenu && peer.battle.phase == BattlePhase::PlayerMenu { break; }
+        }
+        for g in [&mut host, &mut peer] {
+            assert_eq!(g.state.screen, GameScreen::Battle);
+            assert_eq!(g.battle.phase, BattlePhase::PlayerMenu);
+            let party = &g.battle.battle_state.as_ref().unwrap().player.party;
+            assert_eq!(party[0].status, StatusCondition::Burn);
+            assert_eq!(party[0].pp[0], 2, "no prebattle PP heal");
+            assert_eq!(party[1].hp, 0, "no prebattle revival");
+            g.update(&a); // FIGHT -> move menu
+        }
+        host.update(&a); // Host commits, guest still choosing.
+        for _ in 0..100 { host.update(&idle); peer.update(&idle); }
+        assert_eq!(host.battle.phase, BattlePhase::LinkWaiting);
+        assert_eq!(peer.battle.phase, BattlePhase::MoveSelect);
+        peer.update(&a);
+        for frame in 0..2400 {
+            for g in [&mut host, &mut peer] {
+                g.update(if matches!(g.state.screen, GameScreen::Battle) && frame % 2 == 0 { &a } else { &idle });
+            }
+            if host.state.screen == GameScreen::Overworld && peer.state.screen == GameScreen::Overworld { break; }
+        }
+        // A queued ordinary blackout can leave the room only AFTER the
+        // Battle -> Overworld transition. Let the real fade/warp loop run.
+        for _ in 0..120 { host.update(&idle); peer.update(&idle); }
+        for g in [&host, &peer] {
+            assert_eq!(g.state.screen, GameScreen::Overworld, "terminal mirror must leave LinkWaiting");
+            assert_eq!(g.overworld.state.current_map, MapId::Colosseum);
+            assert_eq!(g.link_cable.phase(), &CableClubPhase::InRoom);
+            assert!(g.overworld.pending_warp.is_none());
+            for mon in g.save_data.party.iter() {
+                assert_eq!(mon.hp, mon.max_hp);
+                assert_eq!(mon.status, StatusCondition::None);
+                assert_eq!(mon.pp[0], pokered_core::pokemon::move_learning::get_move_max_pp(mon.moves[0]));
+            }
+        }
+    }
+}
+
+
+#[cfg(all(test, not(target_os = "none"), not(target_arch = "wasm32")))]
+mod link_trade_movie_name_fidelity_tests {
+    use super::*;
+    use pokered_core::link::link_trade::{LinkTradeDriver, LinkTradePollResult};
+    use pokered_core::link::protocol::NetworkMessage;
+    use pokered_core::link::transport::ChannelTransport;
+    use pokered_core::pokemon::party::Party;
+    use pokered_core::trade::TradeAnimPhase;
+    use pokered_data::species::Species;
+
+    #[test]
+    fn completed_channel_trade_movie_uses_the_received_peer_name() {
+        let (mut local_wire, mut remote_wire) = ChannelTransport::<NetworkMessage>::new_pair();
+        let pikachu = pokered_core::pokemon::stats::create_pokemon(Species::Pikachu, 20, [0x99, 0x88]).unwrap();
+        let charmander = pokered_core::pokemon::stats::create_pokemon(Species::Charmander, 20, [0x99, 0x88]).unwrap();
+        let mut local = LinkTradeDriver::new(Party::from(vec![pikachu]), 1)
+            .with_trainer_name("RED".to_string());
+        let mut remote = LinkTradeDriver::new(Party::from(vec![charmander]), 2)
+            .with_trainer_name("GREEN".to_string());
+        local.request_trade(&mut local_wire).unwrap();
+        assert_eq!(remote.poll(&mut remote_wire), LinkTradePollResult::TradeRequested);
+        remote.accept_trade(&mut remote_wire).unwrap();
+        assert_eq!(local.poll(&mut local_wire), LinkTradePollResult::TradeAccepted);
+        assert_eq!(local.remote_name(), "GREEN");
+        local.select_mon(&mut local_wire, 0).unwrap();
+        assert_eq!(remote.poll(&mut remote_wire), LinkTradePollResult::PeerSelectedMon(0));
+        remote.select_mon(&mut remote_wire, 0).unwrap();
+        assert!(matches!(local.poll(&mut local_wire), LinkTradePollResult::BothSelected { .. }));
+        local.confirm_trade(&mut local_wire).unwrap();
+        assert_eq!(remote.poll(&mut remote_wire), LinkTradePollResult::PeerConfirmed);
+        remote.confirm_trade(&mut remote_wire).unwrap();
+        assert!(matches!(remote.poll(&mut remote_wire), LinkTradePollResult::TradeExecute { .. }));
+        assert_eq!(local.poll(&mut local_wire), LinkTradePollResult::PeerConfirmed);
+        assert!(matches!(local.poll(&mut local_wire), LinkTradePollResult::TradeExecute { .. }));
+
+        let mut game = PokemonGame::new(GameVersion::Red);
+        game.audio = None;
+        game.state.config.language = pokered_core::game_state::Lang::En;
+        game.player_name = "RED".to_string();
+        game.link_trade = Some(local);
+        game.start_link_trade_anim();
+        let anim = game.trade_anim.as_mut().unwrap();
+        assert_eq!((anim.give, anim.receive), (Species::Pikachu, Species::Charmander));
+        while anim.phase() != TradeAnimPhase::TextWentTo { anim.tick(); }
+        assert_eq!(anim.text_lines(), Some(("PIKACHU went".to_string(), "to GREEN.".to_string())));
+        while anim.phase() != TradeAnimPhase::TextForSends { anim.tick(); }
+        for _ in 0..80 { anim.tick(); }
+        assert_eq!(anim.text_lines(), Some(("GREEN sends".to_string(), "CHARMANDER.".to_string())));
+        while anim.phase() != TradeAnimPhase::TextFarewell { anim.tick(); }
+        assert_eq!(anim.text_lines(), Some(("GREEN waves".to_string(), "farewell as".to_string())));
     }
 }
