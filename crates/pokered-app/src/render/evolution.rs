@@ -2,25 +2,19 @@
 //! (`pokered_core::evolution_screen::EvolutionScreenState`).
 //!
 //! Port of `EvolveMon` (engine/movie/evolution.asm): the mon's front pic is
-//! shown in its palette, then the whole screen goes black (`PAL_BLACK`,
-//! evolution.asm:49-50) while the pic flickers between the old and new
-//! species (`Evolution_BackAndForthAnim`), and finally the evolved (or, on a
-//! B-cancel, the original) species is revealed. The texts play in the
-//! standard dialogue box. On the GB the flicker swaps tile IDs in place; here
-//! we redraw the alternating pics on a black background, with the pic itself
-//! drawn in an inverted "silhouette" palette to read as the original flash.
+//! swapped between old and new species using the original padded 7×7 pic.
+//! `PAL_BLACK` is an SGB command; ordinary Game Boy keeps the normal BGP.
 
 use crate::alloc_prelude::*;
 use pokered_core::evolution_screen::{EvolutionPhase, EvolutionScreenState};
 use pokered_core::game_state::Lang;
 use pokered_data::ui_layout::schema::DIALOG_DEFAULT_LAYOUT;
-use pokered_renderer::palette::{Palette, GRAYSCALE_SPRITE_PALETTE};
 use pokered_renderer::resource::ResourceManager;
-use pokered_renderer::{FrameBuffer, Rgba, TILE_SIZE};
+use pokered_renderer::{FrameBuffer, Rgba};
 use pokered_ui::backends::FrameBufferPainter;
 use pokered_ui::{menus, Ui};
 
-use super::{blit_tileset, species_to_sprite_name};
+use super::species_to_sprite_name;
 
 /// Compact description of every value consumed by [`draw_evolution`].
 ///
@@ -64,17 +58,6 @@ pub fn evolution_visual_key(anim: &EvolutionScreenState) -> EvolutionVisualKey {
         ),
         is_zh: anim.is_zh,
     }
-}
-
-/// Inverted palette for the black-screen morph flash (approximates the
-/// original's PAL_BLACK whole-screen palette during the flicker): the
-/// silhouette renders light-on-black.
-fn morph_flash_palette() -> Palette {
-    let mut p = GRAYSCALE_SPRITE_PALETTE;
-    p.colors[1] = Rgba::rgb(0xAA, 0xAA, 0xAA);
-    p.colors[2] = Rgba::rgb(0x55, 0x55, 0x55);
-    p.colors[3] = Rgba::WHITE;
-    p
 }
 
 /// Draw the active evolution cutscene to the 160x144 framebuffer.
@@ -122,25 +105,14 @@ pub fn draw_evolution(
 
 fn draw_mon_pic(
     species: pokered_data::species::Species,
-    morph_flash: bool,
+    _morph_flash: bool,
     resources: &mut Option<ResourceManager>,
     fb: &mut FrameBuffer,
 ) {
     if let Some(rm) = resources.as_mut() {
         let sprite = species_to_sprite_name(&format!("{}", species));
         if let Ok(cached) = rm.load_pokemon_front(&sprite) {
-            let ts = &cached.tileset;
-            let w_tiles = cached.source_size.0 / TILE_SIZE;
-            let w_px = cached.source_size.0;
-            let x = (fb.width().saturating_sub(w_px)) / 2;
-            let pal;
-            let pal = if morph_flash {
-                pal = morph_flash_palette();
-                &pal
-            } else {
-                &GRAYSCALE_SPRITE_PALETTE
-            };
-            blit_tileset(fb, ts, x, 8, w_tiles, pal);
+            super::blit_front_pic(fb, cached, 56, 16, true);
         }
     }
 }

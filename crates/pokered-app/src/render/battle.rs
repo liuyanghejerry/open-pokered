@@ -4973,46 +4973,21 @@ pub fn redraw_battle_party_menu_cursor(
 pub fn redraw_battle_party_menu_viewport(
     party: &[pokered_core::battle::state::Pokemon],
     cursor: usize,
-    previous_start: usize,
-    current_start: usize,
+    _previous_start: usize,
+    _current_start: usize,
     fb: &mut FrameBuffer,
     language: pokered_core::game_state::Lang,
 ) {
-    let rect = BATTLE_PARTY_DEFAULT_LAYOUT.box_0.rect;
-    let label_x = (rect.tx + 2) * 8;
-    let band_y = ((rect.ty + 1) * 8).saturating_sub(1);
-    let label_width = rect.tw.saturating_sub(3) * 8;
-    let band_height = rect.th.saturating_sub(2) * 8 + 6;
-    let shift = current_start.abs_diff(previous_start) as u32 * 8;
-    if shift < band_height {
-        if current_start > previous_start {
-            fb.copy_rect_within(
-                label_x,
-                band_y + shift,
-                label_width,
-                band_height - shift,
-                label_x,
-                band_y,
-            );
-        } else {
-            fb.copy_rect_within(
-                label_x,
-                band_y,
-                label_width,
-                band_height - shift,
-                label_x,
-                band_y + shift,
-            );
-        }
-    }
-
+    // The old copy band included the original bottom border and copied its
+    // ink into a retained label row. Redraw this small popup when it scrolls;
+    // the surrounding battle scene remains untouched.
     let mut painter = FrameBufferPainter::new(fb).with_lang(language);
-    menus::battle_party::redraw_viewport_edges(
+    let mut ui = Ui::new(&mut painter);
+    menus::battle_party::draw(
         party,
         cursor,
-        previous_start,
         &BATTLE_PARTY_DEFAULT_LAYOUT,
-        &mut painter,
+        &mut ui,
         language == Lang::Zh,
     );
 }

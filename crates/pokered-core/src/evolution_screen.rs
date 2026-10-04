@@ -47,8 +47,8 @@
 //! cancelled mon's eligibility permanently) — the evolution is re-attempted
 //! on the next level-up, exactly like the original.
 
-use pokered_data::species::Species;
 use crate::alloc_prelude::*;
+use pokered_data::species::Species;
 
 /// `DelayFrames(50)` after "What? X is evolving!" (evos_moves.asm:122-123).
 pub const IS_EVOLVING_FRAMES: u16 = 50;
@@ -254,10 +254,13 @@ impl EvolutionScreenState {
         !force && self.morph_frame < Self::cancel_window_frames(self.morph_iter)
     }
 
-    /// The screen palette: the original switches to `PAL_BLACK` for the whole
-    /// morph (evolution.asm:49-50) and restores the mon palette afterwards
-    /// (evolution.asm:75-76).
+    /// Ordinary GB never executes the SGB whole-screen palette command.
     pub fn black_palette(&self) -> bool {
+        false
+    }
+
+    /// SGB-only request (`RunPaletteCommand` returns immediately on plain GB).
+    pub fn sgb_black_palette_requested(&self) -> bool {
         self.phase == EvolutionPhase::Morph
     }
 
@@ -556,7 +559,8 @@ mod tests {
         assert!(!s.black_palette());
         tick_n(&mut s, MORPH_MUSIC_FRAMES);
         assert_eq!(s.phase(), EvolutionPhase::Morph);
-        assert!(s.black_palette(), "PAL_BLACK during the morph");
+        assert!(!s.black_palette(), "ordinary GB palette stays unchanged");
+        assert!(s.sgb_black_palette_requested());
         // Run the whole morph: sum over k of (16-2k) + 6(k+1) frames.
         let morph_frames: u16 = (0..MORPH_ITERATIONS)
             .map(EvolutionScreenState::iteration_frames)

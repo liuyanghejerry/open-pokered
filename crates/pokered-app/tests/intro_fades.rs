@@ -60,18 +60,28 @@ fn intro_fades_gengar_nidorino_and_bars_to_white() {
 }
 
 #[test]
-fn title_fades_pokemon_copyright_and_logo_to_white() {
+fn title_white_out_covers_pokemon_copyright_and_logo_for_three_frames() {
     let mut res = resources();
     let mut state = TitleScreenState::new(GameVersion::Red);
     state.skip_to_waiting_for_input();
     let mut normal = framebuffer();
     draw_title_screen(&state, false, &mut res, &mut normal);
     let mut faded = framebuffer();
+    // title.asm:240-243 calls WaitForSoundToFinish, then
+    // GBPalWhiteOutWithDelay3 (home/palettes.asm:11-18): instant all-white
+    // registers for three frames, rather than GBFadeOutToWhite's ramp.
+    assert!((0..normal.height()).any(|y| (0..normal.width()).any(|x|
+        normal.get_pixel(x,y) != Some(Rgba::WHITE))));
     state.phase = TitlePhase::FadeOut;
-    for (frame, step) in [(0, 1), (5, 1), (6, 2), (10, 2), (11, 3), (15, 3)] {
+    for frame in 0..3 {
         state.frame_counter = frame;
         draw_title_screen(&state, false, &mut res, &mut faded);
-        assert_fade(&normal, &faded, step);
+        for y in 0..144 {
+            for x in 0..160 {
+                assert_eq!(faded.get_pixel(x,y), Some(Rgba::WHITE),
+                    "instant white-out frame {frame}, pixel ({x},{y})");
+            }
+        }
     }
     state.skip_to_waiting_for_input();
     draw_title_screen(&state, false, &mut res, &mut faded);

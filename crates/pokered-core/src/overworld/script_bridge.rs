@@ -925,30 +925,7 @@ pub fn text_to_dialogue_with_names(text: &str, names: &[&str]) -> BedroomDialogu
     if pokered_data::dialogue_layout::contains_chinese(text) {
         return BedroomDialogue::from_pages(crate::text::zh_dialogue::paginate(text, names));
     }
-    let lines: Vec<&str> = text.lines().collect();
-    let mut pages = Vec::new();
-
-    if lines.is_empty() {
-        pages.push(DialoguePage {
-            line1: text.into(),
-            line2: "".into(),
-        });
-    } else {
-        let mut i = 0;
-        while i < lines.len() {
-            let line1: Box<str> = lines[i].into();
-            let line2: Box<str> = if i + 1 < lines.len() {
-                i += 1;
-                lines[i].into()
-            } else {
-                "".into()
-            };
-            pages.push(DialoguePage { line1, line2 });
-            i += 1;
-        }
-    }
-
-    BedroomDialogue::from_pages(pages)
+    BedroomDialogue::from_message(text)
 }
 
 pub fn map_id_to_script_key(map_id: MapId) -> String {

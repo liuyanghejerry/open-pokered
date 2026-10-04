@@ -8,12 +8,12 @@ mod evolution;
 mod gamefreak_splash;
 mod hof_ceremony;
 mod intro;
-mod opening;
 #[cfg(not(target_os = "none"))]
 #[cfg(not(target_os = "none"))]
 mod link;
 mod menu;
 mod oak;
+mod opening;
 mod overworld;
 mod pc;
 mod pokedex;
@@ -34,8 +34,8 @@ pub use battle_i18n::{trainer_class_zh, zh_battle_dialog};
 pub use credits::draw_credits;
 pub use credits::{credits_visual_key, CreditsVisualKey};
 pub use diploma::draw_diploma;
-pub use elevator::{draw_elevator, draw_filter_bag};
 pub use elevator::redraw_elevator_cursor;
+pub use elevator::{draw_elevator, draw_filter_bag};
 pub use evolution::draw_evolution;
 pub use evolution::{evolution_visual_key, EvolutionVisualKey};
 pub use gamefreak_splash::draw_gamefreak_splash;
@@ -52,14 +52,14 @@ pub use oak::{draw_naming_screen, draw_oak_speech};
 pub use overworld::draw_overworld;
 pub use overworld::{FrameDamageRect, OverworldBackgroundCache};
 pub mod session;
+pub use menu::redraw_mart_cursor;
 pub use menu::{
     options_menu_cursor_position, options_menu_cursor_spec, redraw_main_menu_cursor, redraw_options_menu_cursor,
     redraw_save_menu_cursor, redraw_start_menu_cursor, redraw_top_level_bag_action_cursor,
-    redraw_top_level_bag_cursor, redraw_top_level_bag_quantity, top_level_bag_cursor_position,
-    top_level_bag_viewport_offset, redraw_top_level_party_icon,
+    redraw_top_level_bag_cursor, redraw_top_level_bag_quantity, redraw_top_level_party_icon,
     redraw_top_level_party_overlay_cursor, redraw_top_level_party_selection,
-};
-pub use menu::redraw_mart_cursor;
+top_level_bag_cursor_position,
+    top_level_bag_viewport_offset, };
 pub use pc::draw_pc;
 pub use pc::redraw_pc_cursor;
 pub use pokedex::draw_pokedex_screen;
@@ -209,9 +209,41 @@ pub fn draw_centered_sprite(
     pal: &Palette,
 ) {
     let tiles_per_row = sprite_w / TILE_SIZE;
-    let sx = (fb.width().saturating_sub(sprite_w)) / 2;
+    let sx = 6 * TILE_SIZE;
     let sy = 32_u32;
     blit_tileset(fb, tileset, sx, sy, tiles_per_row, pal);
+}
+
+/// LoadMonFrontSprite pads a tight picture into a 7×7 tile buffer: horizontal
+/// placement rounds up to a whole tile, and the last row always rests at row 7.
+/// LoadFlippedFrontSprite mirrors that *whole buffer*, including its padding.
+pub(super) fn blit_front_pic(
+    fb: &mut FrameBuffer,
+    cached: &pokered_renderer::resource::CachedTileSet,
+    x: i32,
+    y: i32,
+    flipped: bool,
+) {
+    let (width, height) = (
+        cached.source_size.0 / TILE_SIZE,
+        cached.source_size.1 / TILE_SIZE,
+    );
+    let pad_x = (8 - width) / 2;
+    let pad_x = if flipped { 7 - width - pad_x } else { pad_x };
+    let pad_y = 7 - height;
+    for index in 0..cached.tileset.len() {
+        let column = index as u32 % width;
+        let row = index as u32 / width;
+        let column = if flipped { width - 1 - column } else { column };
+        fb.blit_gb_tile_indices(
+            x + ((pad_x + column) * TILE_SIZE) as i32,
+            y + ((pad_y + row) * TILE_SIZE) as i32,
+            cached.tileset.get(index),
+            false,
+            flipped,
+            false,
+        );
+    }
 }
 
 pub fn blit_single_tile(
@@ -275,5 +307,75 @@ mod tests {
         assert_eq!(species_to_sprite_name("NidoranF"), "nidoranf");
         assert_eq!(species_to_sprite_name("Farfetchd"), "farfetchd");
         assert_eq!(species_to_sprite_name("Bulbasaur"), "bulbasaur");
+    }
+}
+/// TrainerInfoTextBoxTileGraphics, also used by the diploma and Cable Club.
+pub(super) fn draw_trainer_info_box(
+    fb: &mut FrameBuffer,
+    tiles: &TileSet,
+    x: u32,
+    y: u32,
+    width: u32,
+    height: u32,
+) {
+    use pokered_renderer::palette::GRAYSCALE_PALETTE;
+    let tile = |fb: &mut FrameBuffer, id, tx, ty| {
+        blit_single_tile(
+            fb,
+            tiles,
+            id,
+            (x + tx) * TILE_SIZE,
+            (y + ty) * TILE_SIZE,
+            &GRAYSCALE_PALETTE,
+        );
+    };
+    tile(fb, 2, 0, 0);
+    tile(fb, 4, width + 1, 0);
+    tile(fb, 6, 0, height + 1);
+    tile(fb, 7, width + 1, height + 1);
+    for tx in 1..=width {
+        tile(fb, 3, tx, 0);
+        tile(fb, 0, tx, height + 1);
+    }
+    for ty in 1..=height {
+        tile(fb, 5, 0, ty);
+        tile(fb, 1, width + 1, ty);
+    }
+}
+
+#[cfg(test)]
+mod front_pic_fidelity_tests {
+    use super::*;
+    use dotzuki_engine::render_config::RenderConfig;
+    use pokered_renderer::{resource::CachedTileSet, tile::Tile};
+    #[test]
+    fn full_seven_column_buffer_mirrors_padding_and_bottom_aligns() {
+        // Exact results of home/pics.asm alignment and CopyUncompressedPicToHL.
+        for (size, normal_x, flipped_x, top) in [(5, 8, 8, 16), (6, 8, 0, 8), (7, 0, 0, 0)] {
+            let mut tiles = TileSet::blank((size * size) as usize);
+            let mut black = Tile::blank();
+            black.pixels = [[3; 8]; 8];
+            for i in 0..tiles.len() {
+                tiles.set(i, black.clone());
+            }
+            let cached = CachedTileSet {
+                tileset: tiles,
+                source_size: (size * 8, size * 8),
+                tile_count: (size * size) as usize,
+            };
+            for (flip, left) in [(false, normal_x), (true, flipped_x)] {
+                let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+                blit_front_pic(&mut fb, &cached, 16, 16, flip);
+                assert_eq!(fb.get_pixel(16 + left, 16 + top), Some(Rgba::BLACK));
+                assert_eq!(
+                    fb.get_pixel(16 + left + size * 8 - 1, 71),
+                    Some(Rgba::BLACK)
+                );
+                assert_eq!(fb.get_pixel(16 + left + size * 8, 71), Some(Rgba::WHITE));
+                if left > 0 {
+                    assert_eq!(fb.get_pixel(16 + left - 1, 71), Some(Rgba::WHITE));
+                }
+            }
+        }
     }
 }

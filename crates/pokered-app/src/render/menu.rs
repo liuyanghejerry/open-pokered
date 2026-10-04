@@ -1,24 +1,25 @@
 use crate::alloc_prelude::*;
+use pokered_core::bag_screen::{BagPhase, BagScreenState};
 use pokered_core::game_state::Lang;
-use pokered_core::items::{BuyMenuState, BuyResult, MartPhase, MartState, SellMenuState, SellResult};
+use pokered_core::items::{BuyMenuState, BuyResult, MartPhase, MartState, SellMenuState, SellResult,
+};
 use pokered_core::main_menu::MainMenuState;
 use pokered_core::options_menu::OptionsMenuState;
 use pokered_core::party_screen::{PartyScreenPhase, PartyScreenState};
 use pokered_core::save_menu::{SaveMenuState, YesNoChoice};
 use pokered_core::start_menu::StartMenuState;
 use pokered_core::stats_screen::{StatsPage, StatsScreenState};
-use pokered_data::mon_party_icons::{icon_for_species, IconKind};
 use pokered_data::impl_traits::PokemonRenderData;
 use pokered_data::lang_data;
-use pokered_data::ui_layout::schema::{MART_CONFIRM_LAYOUT, MART_MAIN_MENU_LAYOUT, MART_QUANTITY_LAYOUT, MART_RESULT_DIALOG_LAYOUT, MAIN_DEFAULT_LAYOUT, START_DEFAULT_LAYOUT, OPTIONS_DEFAULT_LAYOUT, SAVE_DEFAULT_LAYOUT, SAVE_ASK_PROMPT_LAYOUT, PARTY_DEFAULT_LAYOUT, PARTY_ENTRY_LAYOUT, STATS_PAGE1_LAYOUT, STATS_PAGE2_LAYOUT, BAG_DEFAULT_LAYOUT};
-use pokered_renderer::mon_icon::{draw_mon_icon, load_mon_icon_tiles, IconFrame};
+use pokered_data::mon_party_icons::{icon_for_species, IconKind};
+use pokered_data::ui_layout::schema::{BAG_DEFAULT_LAYOUT, MAIN_DEFAULT_LAYOUT, MART_CONFIRM_LAYOUT, MART_MAIN_MENU_LAYOUT, MART_QUANTITY_LAYOUT, MART_RESULT_DIALOG_LAYOUT, OPTIONS_DEFAULT_LAYOUT, PARTY_DEFAULT_LAYOUT, PARTY_ENTRY_LAYOUT, SAVE_ASK_PROMPT_LAYOUT, SAVE_DEFAULT_LAYOUT, START_DEFAULT_LAYOUT, STATS_PAGE1_LAYOUT, STATS_PAGE2_LAYOUT, };
+use pokered_renderer::mon_icon::{draw_mon_icon, icon_y_offset, load_mon_icon_tiles, party_icon_frame, IconFrame};
 use pokered_renderer::palette::GRAYSCALE_SPRITE_PALETTE;
 use pokered_renderer::party_hp_bar::draw_party_hp_bar;
 use pokered_renderer::resource::ResourceManager;
 use pokered_renderer::{FrameBuffer, TILE_SIZE};
 use pokered_ui::backends::FrameBufferPainter;
 use pokered_ui::{menus, InkColor, Painter, TilePos, TileRect, Ui};
-use pokered_core::bag_screen::{BagPhase, BagScreenState};
 
 use super::{blit_tileset, species_to_sprite_name};
 
@@ -151,13 +152,13 @@ pub fn draw_party_screen(
         for (i, pokemon) in state.party().iter().enumerate() {
             let kind = icon_for_species(pokemon.species);
             let frame = if i == cursor {
-                IconFrame::from_counter(frame_counter, 16)
+                party_icon_frame(frame_counter, pokemon.hp, pokemon.max_hp)
             } else {
                 IconFrame::Frame1
             };
             match load_mon_icon_tiles(rm, kind, frame) {
                 Ok(tiles) => {
-                    let y = (i as u32) * row_height;
+                    let y = (i as u32) * row_height+ icon_y_offset(kind, frame);
                     draw_mon_icon(fb, tiles, ICON_X_PX, y, &GRAYSCALE_SPRITE_PALETTE);
                 }
                 Err(e) => {
@@ -189,6 +190,14 @@ pub fn draw_party_screen(
     let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
     menus::party::draw_overlay(state, &mut Ui::new(&mut painter), lang);
 }
+fn selected_party_icon_frame(state: &PartyScreenState, counter: u64) -> IconFrame {
+    state
+        .party_member(state.cursor())
+        .map_or(IconFrame::Frame1, |pokemon| {
+            party_icon_frame(counter, pokemon.hp, pokemon.max_hp)
+        })
+}
+
 
 fn clear_top_level_party_icon_at(party_index: usize, fb: &mut FrameBuffer) {
     const ICON_X_PX: u32 = 8;
@@ -199,7 +208,7 @@ fn clear_top_level_party_icon_at(party_index: usize, fb: &mut FrameBuffer) {
         ICON_X_PX,
         icon_y,
         ICON_SIZE_PX,
-        ICON_SIZE_PX,
+        ICON_SIZE_PX + 1,
         pokered_renderer::Rgba::WHITE,
     );
 }
@@ -223,7 +232,7 @@ fn draw_top_level_party_icon_at(
             fb,
             tiles,
             ICON_X_PX,
-            icon_y,
+            icon_y+ icon_y_offset(kind, frame),
             &GRAYSCALE_SPRITE_PALETTE,
         );
     }
@@ -241,7 +250,7 @@ pub fn redraw_top_level_party_icon(
     draw_top_level_party_icon_at(
         state,
         state.cursor(),
-        IconFrame::from_counter(frame_counter, 16),
+        selected_party_icon_frame(state, frame_counter),
         resources,
         fb,
     );
@@ -317,7 +326,7 @@ pub fn redraw_top_level_party_selection(
     draw_top_level_party_icon_at(
         state,
         current_cursor,
-        IconFrame::from_counter(frame_counter, 16),
+        selected_party_icon_frame(state, frame_counter),
         resources,
         fb,
     );
@@ -410,16 +419,34 @@ pub fn draw_stats_screen(
     }
 }
 
+pub(super) fn mart_list_scroll(cursor: usize, count: usize, lang: Lang) -> usize {
+    let list_visible = if lang == Lang::Zh { 3 } else { 4 };
+    cursor.saturating_sub(list_visible - 1).min(count.saturating_sub(list_visible))
+}
+
+pub(super) fn mart_main_cursor_position(index: usize) -> (u32, u32) {
+    let rect = MART_MAIN_MENU_LAYOUT.menu_box.rect;
+    let cursor = &MART_MAIN_MENU_LAYOUT.cursor;
+    (rect.tx + 1 + cursor.tx, rect.ty + 1 + cursor.base_ty + index as u32 * cursor.row_step)
+}
+
+pub(super) fn mart_list_cursor_position(index: usize, scroll: usize, lang: Lang, sell: bool) -> (u32, u32) {
+    use pokered_data::ui_layout::schema::{MART_BUY_ITEMS_WITH_MONEY_LAYOUT, MART_SELL_ITEMS_WITH_MONEY_LAYOUT};
+    let (rect, cursor) = if sell {
+        (MART_SELL_ITEMS_WITH_MONEY_LAYOUT.list_box.rect, &MART_SELL_ITEMS_WITH_MONEY_LAYOUT.cursor)
+    } else {
+        (MART_BUY_ITEMS_WITH_MONEY_LAYOUT.list_box.rect, &MART_BUY_ITEMS_WITH_MONEY_LAYOUT.cursor)
+    };
+    let extra_row = if lang == Lang::Zh { 1 } else { 0 };
+    let row_step = if lang == Lang::Zh { 3 } else { cursor.row_step };
+    (rect.tx + 1 + cursor.tx, rect.ty + extra_row + 1 + cursor.base_ty + (index - scroll) as u32 * row_step)
+}
+
 pub fn draw_mart(state: &MartState, player_money: u32, bag_items: &[(pokered_data::items::ItemId, u32)], fb: &mut FrameBuffer, lang: Lang) {
     let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
     let mut ui = Ui::new(&mut painter);
-    // The buy/sell list boxes show 5 entries at the 2-row CJK pitch
-    // (interior rows 1/3/5/7/9 of a 12-tall box). The core tracks a bare
-    // cursor, so window the scroll offset here to keep it on-screen.
-    const LIST_VISIBLE: usize = 5;
-    let list_scroll = |cursor: usize, count: usize| -> usize {
-        cursor.saturating_sub(LIST_VISIBLE - 1).min(count.saturating_sub(LIST_VISIBLE))
-    };
+    // Names and prices occupy separate rows: four English or three Chinese
+    // entries fit. RenderSession uses these same viewport/cursor helpers.
     match &state.phase {
         MartPhase::MainMenu { cursor } => {
             menus::mart::draw_main_with_money(cursor.position(), player_money, &MART_MAIN_MENU_LAYOUT, &mut ui, lang);
@@ -429,7 +456,7 @@ pub fn draw_mart(state: &MartState, player_money: u32, bag_items: &[(pokered_dat
                 menus::mart::draw_buy_items_with_money(
                     state.inventory.items(),
                     *cursor,
-                    list_scroll(*cursor, state.inventory.items().len()),
+                    mart_list_scroll(*cursor, state.inventory.items().len(), lang),
                     player_money,
                     &pokered_data::ui_layout::schema::MART_BUY_ITEMS_WITH_MONEY_LAYOUT,
                     &mut ui,
@@ -460,9 +487,9 @@ pub fn draw_mart(state: &MartState, player_money: u32, bag_items: &[(pokered_dat
                             data.name
                         };
                         let msg = if lang == Lang::Zh {
-                            format!("{} ×{} ${}.00\n总共${}.00。可以吗？", item_name, quantity, total, total)
+                            format!("{}？\n总共${}。\n可以吗？", item_name, total)
                         } else {
-                            format!("{} ×{} ${}.00\nThat'll be ${}.00. OK?", item_name, quantity, total, total)
+                            format!("{}?\nThat will be\n${}. OK?", item_name, total)
                         };
                         let choice = match selected {
                             pokered_core::items::ConfirmChoice::Yes => menus::mart::ConfirmChoice::Yes,
@@ -484,7 +511,7 @@ pub fn draw_mart(state: &MartState, player_money: u32, bag_items: &[(pokered_dat
                 menus::mart::draw_sell_items_with_money(
                     bag_items,
                     *cursor,
-                    list_scroll(*cursor, entries),
+                    mart_list_scroll(*cursor, entries, lang),
                     player_money,
                     &pokered_data::ui_layout::schema::MART_SELL_ITEMS_WITH_MONEY_LAYOUT,
                     &mut ui,
@@ -512,15 +539,10 @@ pub fn draw_mart(state: &MartState, player_money: u32, bag_items: &[(pokered_dat
                     if let Some(data) = pokered_data::item_data::get_item_data(*item_id) {
                         let price = (data.price as u32) / 2;
                         let total = price * *quantity as u32;
-                        let item_name = if lang == Lang::Zh {
-                            pokered_data::lang_data::item_name(*item_id, true)
-                        } else {
-                            data.name
-                        };
                         let msg = if lang == Lang::Zh {
-                            format!("{} ×{} ${}.00\n我可以支付${}.00。\n可以吗？", item_name, quantity, total, total)
+                            format!("我可以支付\n${}。\n可以吗？", total)
                         } else {
-                            format!("{} ×{} ${}.00\nI can pay ${}.00.\nOK?", data.name, quantity, total, total)
+                            format!("I can pay you\n${} for that.", total)
                         };
                         let choice = match selected {
                             pokered_core::items::ConfirmChoice::Yes => menus::mart::ConfirmChoice::Yes,
@@ -1199,6 +1221,20 @@ mod tests {
     }
 
     #[test]
+    fn mart_cursor_geometry_uses_the_drawn_original_boxes() {
+        assert_eq!(mart_main_cursor_position(0), (1, 1));
+        assert_eq!(mart_main_cursor_position(2), (1, 5));
+        for sell in [false, true] {
+            assert_eq!(mart_list_cursor_position(0, 0, Lang::En, sell), (5, 4));
+            assert_eq!(mart_list_cursor_position(3, 0, Lang::En, sell), (5, 10));
+            assert_eq!(mart_list_cursor_position(0, 0, Lang::Zh, sell), (5, 5));
+            assert_eq!(mart_list_cursor_position(2, 0, Lang::Zh, sell), (5, 11));
+        }
+        assert_eq!(mart_list_scroll(4, 5, Lang::En), 1);
+        assert_eq!(mart_list_scroll(3, 5, Lang::Zh), 1);
+    }
+
+    #[test]
     fn mart_cursor_repaint_matches_fresh_draws_for_all_local_transitions() {
         use pokered_core::items::shop::{ConfirmChoice, MartTopChoice, ShopInventory};
 
@@ -1239,8 +1275,8 @@ mod tests {
                                 cursor: *current_choice,
                             },
                         ),
-                        (1, 2 + previous_cursor as u32 * 2),
-                        (1, 2 + current_cursor as u32 * 2),
+                        mart_main_cursor_position(previous_cursor),
+                        mart_main_cursor_position(current_cursor),
                         &bag,
                         language,
                     );
@@ -1250,6 +1286,12 @@ mod tests {
             for previous_cursor in 0..stock.len() {
                 for current_cursor in 0..stock.len() {
                     if previous_cursor == current_cursor {
+                        continue;
+                    }
+                    let previous_scroll = mart_list_scroll(previous_cursor, stock.len(), language);
+                    let current_scroll = mart_list_scroll(current_cursor, stock.len(), language);
+                    // A changed viewport is a full popup redraw in RenderSession.
+                    if previous_scroll != current_scroll {
                         continue;
                     }
                     assert_mart_cursor_repaint(
@@ -1265,8 +1307,8 @@ mod tests {
                                 cursor: current_cursor,
                             }),
                         ),
-                        (2, 4 + previous_cursor as u32 * 2),
-                        (2, 4 + current_cursor as u32 * 2),
+                        mart_list_cursor_position(previous_cursor, previous_scroll, language, false),
+                        mart_list_cursor_position(current_cursor, current_scroll, language, false),
                         &bag,
                         language,
                     );
@@ -1279,6 +1321,11 @@ mod tests {
                     if previous_cursor == current_cursor {
                         continue;
                     }
+                    let previous_scroll = mart_list_scroll(previous_cursor, bag.len() + 1, language);
+                    let current_scroll = mart_list_scroll(current_cursor, bag.len() + 1, language);
+                    if previous_scroll != current_scroll {
+                        continue;
+                    }
                     assert_mart_cursor_repaint(
                         mart_state(
                             &stock,
@@ -1292,8 +1339,8 @@ mod tests {
                                 cursor: current_cursor,
                             }),
                         ),
-                        (2, 4 + previous_cursor as u32 * 2),
-                        (2, 4 + current_cursor as u32 * 2),
+                        mart_list_cursor_position(previous_cursor, previous_scroll, language, true),
+                        mart_list_cursor_position(current_cursor, current_scroll, language, true),
                         &bag,
                         language,
                     );

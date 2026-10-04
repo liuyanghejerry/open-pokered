@@ -23,11 +23,21 @@
 use crate::alloc_prelude::*;
 
 #[cfg(not(target_os = "none"))]
-pub use dotzuki_renderer::mon_icon::{IconFrame, draw_mon_icon};
+pub use dotzuki_renderer::mon_icon::IconFrame;
+#[cfg(not(target_os = "none"))]
+pub fn draw_mon_icon(
+    fb: &mut impl dotzuki_renderer::FbSurface,
+    tiles: &TileSet,
+    x: u32,
+    y: u32,
+    palette: &dotzuki_renderer::palette::Palette,
+) {
+    dotzuki_renderer::mon_icon::draw_mon_icon(fb, tiles, x, y, palette);
+}
+use crate::hash_compat::HashMap;
+use crate::sync_compat::Mutex;
 #[cfg(not(target_os = "none"))]
 use dotzuki_renderer::asset_provider::ResourceProvider;
-use crate::sync_compat::Mutex;
-use crate::hash_compat::HashMap;
 
 use dotzuki_renderer::icon::IconKind;
 use dotzuki_renderer::tile::TileSet;
@@ -42,28 +52,28 @@ struct IconAsset {
 
 fn asset_for(kind: IconKind, frame: IconFrame) -> IconAsset {
     match (kind, frame) {
-        (IconKind::Mon, _) => IconAsset {
+        (IconKind::Mon, frame) => IconAsset {
             category: "sprites",
             filename: "monster.png",
-            start_tile: 12,
+            start_tile: if frame == IconFrame::Frame1 { 12 } else { 0 },
             tile_count: 4,
         },
-        (IconKind::Fairy, _) => IconAsset {
+        (IconKind::Fairy, frame) => IconAsset {
             category: "sprites",
             filename: "fairy.png",
-            start_tile: 12,
+            start_tile: if frame == IconFrame::Frame1 { 12 } else { 0 },
             tile_count: 4,
         },
-        (IconKind::Bird, _) => IconAsset {
+        (IconKind::Bird, frame) => IconAsset {
             category: "sprites",
             filename: "bird.png",
-            start_tile: 12,
+            start_tile: if frame == IconFrame::Frame1 { 12 } else { 0 },
             tile_count: 4,
         },
-        (IconKind::Water, _) => IconAsset {
+        (IconKind::Water, frame) => IconAsset {
             category: "sprites",
             filename: "seel.png",
-            start_tile: 12,
+            start_tile: if frame == IconFrame::Frame1 { 0 } else { 12 },
             tile_count: 4,
         },
         (IconKind::Ball, _) => IconAsset {
@@ -79,13 +89,13 @@ fn asset_for(kind: IconKind, frame: IconFrame) -> IconAsset {
             tile_count: 4,
         },
         (IconKind::Bug, IconFrame::Frame1) => icon_asset("bug.png", 2),
-        (IconKind::Bug, IconFrame::Frame2) => icon_asset("bug.png", 4),
+        (IconKind::Bug, IconFrame::Frame2) => icon_asset("bug.png", 0),
         (IconKind::Grass, IconFrame::Frame1) => icon_asset("plant.png", 2),
-        (IconKind::Grass, IconFrame::Frame2) => icon_asset("plant.png", 4),
-        (IconKind::Snake, IconFrame::Frame1) => icon_asset("snake.png", 2),
-        (IconKind::Snake, IconFrame::Frame2) => icon_asset("snake.png", 4),
-        (IconKind::Quadruped, IconFrame::Frame1) => icon_asset("quadruped.png", 2),
-        (IconKind::Quadruped, IconFrame::Frame2) => icon_asset("quadruped.png", 4),
+        (IconKind::Grass, IconFrame::Frame2) => icon_asset("plant.png", 0),
+        (IconKind::Snake, IconFrame::Frame1) => icon_asset("snake.png", 0),
+        (IconKind::Snake, IconFrame::Frame2) => icon_asset("snake.png", 2),
+        (IconKind::Quadruped, IconFrame::Frame1) => icon_asset("quadruped.png", 0),
+        (IconKind::Quadruped, IconFrame::Frame2) => icon_asset("quadruped.png", 2),
     }
 }
 
@@ -96,6 +106,39 @@ const fn icon_asset(filename: &'static str, start_tile: usize) -> IconAsset {
         start_tile,
         tile_count: 2,
     }
+}
+
+/// Original AnimatePartyMon converts HP to a 48-pixel bar and adds one
+/// ordinary-GB frame to the 5/16/32 SGB delay counters.
+pub fn party_icon_period(hp: u16, max_hp: u16, on_sgb: bool) -> u64 {
+    let bar = if max_hp == 0 || hp == 0 {
+        0
+    } else {
+        ((hp as u32 * 48 / max_hp as u32).clamp(1, 48)) as u16
+    };
+    (if bar >= 27 {
+        5
+    } else if bar >= 10 {
+        16
+    } else {
+        32
+    }) + u64::from(!on_sgb)
+}
+pub fn party_icon_frame(counter: u64, hp: u16, max_hp: u16) -> IconFrame {
+    IconFrame::from_counter(counter, party_icon_period(hp, max_hp, false))
+}
+pub fn icon_y_offset(kind: IconKind, frame: IconFrame) -> u32 {
+    u32::from(matches!(kind, IconKind::Ball | IconKind::Helix) && frame == IconFrame::Frame2)
+}
+fn extract_symmetric_16wide(source: &TileSet, start: usize) -> TileSet {
+    let top = source.get(start).clone();
+    let bottom = source.get(start + 2).clone();
+    let mut ts = TileSet::blank(4);
+    ts.set(0, top.clone());
+    ts.set(1, bottom.clone());
+    ts.set(2, top.flip_x());
+    ts.set(3, bottom.flip_x());
+    ts
 }
 
 // Cache key includes both the icon kind and which frame, since the two
@@ -171,7 +214,11 @@ pub fn load_mon_icon_tiles(
     let icon_tiles = if asset.tile_count == 2 {
         extract_8wide(source, asset.start_tile)
     } else {
-        extract_16wide(source, asset.start_tile)
+        if kind == IconKind::Helix {
+            extract_16wide(source, asset.start_tile)
+        } else {
+            extract_symmetric_16wide(source, asset.start_tile)
+        }
     };
 
     let leaked: &'static TileSet = Box::leak(Box::new(icon_tiles));
@@ -195,12 +242,12 @@ mod gba {
     use crate::alloc_prelude::*;
     use crate::hash_compat::HashMap;
 
-    use dotzuki_renderer::FbSurface;
     use dotzuki_renderer::icon::IconKind;
     use dotzuki_renderer::palette::{GbColor, Palette};
     use dotzuki_renderer::tile::{TileSet, TILE_PIXELS};
+    use dotzuki_renderer::FbSurface;
 
-    use super::{asset_for, extract_16wide, extract_8wide};
+    use super::{asset_for, extract_16wide, extract_8wide, extract_symmetric_16wide};
     use crate::sync_compat::Mutex;
 
     /// Animation frame for the party-screen mon icon (engine twin).
@@ -263,16 +310,28 @@ mod gba {
         let icon_tiles = if asset.tile_count == 2 {
             extract_8wide(&source, asset.start_tile)
         } else {
-            extract_16wide(&source, asset.start_tile)
+            if kind == IconKind::Helix {
+                extract_16wide(&source, asset.start_tile)
+            } else {
+                extract_symmetric_16wide(&source, asset.start_tile)
+            }
         };
         let leaked: &'static TileSet = Box::leak(Box::new(icon_tiles));
         let mut guard = CACHE.lock().unwrap();
-        guard.get_or_insert_with(HashMap::default).insert(key, leaked);
+        guard
+            .get_or_insert_with(HashMap::default)
+            .insert(key, leaked);
         Ok(leaked)
     }
 
     /// 2×2-tile icon blit (engine twin: color 0 transparent).
-    pub fn draw_mon_icon(fb: &mut impl FbSurface, tiles: &TileSet, x: u32, y: u32, palette: &Palette) {
+    pub fn draw_mon_icon(
+        fb: &mut impl FbSurface,
+        tiles: &TileSet,
+        x: u32,
+        y: u32,
+        palette: &Palette,
+    ) {
         let fb_h = fb.height();
         let fb_w = fb.width();
         let positions = [(0u32, 0u32), (0, 1), (1, 0), (1, 1)];
@@ -307,3 +366,43 @@ mod gba {
 
 #[cfg(target_os = "none")]
 pub use gba::{draw_mon_icon, load_mon_icon_tiles, IconFrame};
+
+#[cfg(test)]
+mod fidelity_tests {
+    use super::*;
+    #[test]
+    fn hp_thresholds_and_gb_delay_are_original() {
+        for (bar, gb, sgb) in [
+            (27, 6, 5),
+            (26, 17, 16),
+            (10, 17, 16),
+            (9, 33, 32),
+            (0, 33, 32),
+        ] {
+            assert_eq!(party_icon_period(bar, 48, false), gb);
+            assert_eq!(party_icon_period(bar, 48, true), sgb);
+        }
+    }
+    #[test]
+    fn animated_frames_use_distinct_valid_source_tiles() {
+        for kind in [
+            IconKind::Mon,
+            IconKind::Fairy,
+            IconKind::Bird,
+            IconKind::Water,
+            IconKind::Bug,
+            IconKind::Grass,
+            IconKind::Snake,
+            IconKind::Quadruped,
+        ] {
+            assert_ne!(
+                asset_for(kind, IconFrame::Frame1).start_tile,
+                asset_for(kind, IconFrame::Frame2).start_tile
+            );
+        }
+        for kind in [IconKind::Ball, IconKind::Helix] {
+            assert_eq!(icon_y_offset(kind, IconFrame::Frame1), 0);
+            assert_eq!(icon_y_offset(kind, IconFrame::Frame2), 1);
+        }
+    }
+}

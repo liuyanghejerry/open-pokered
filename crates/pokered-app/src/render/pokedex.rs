@@ -21,7 +21,7 @@ use pokered_renderer::{FrameBuffer, Rgba, TILE_SIZE};
 use pokered_ui::backends::FrameBufferPainter;
 use pokered_ui::Ui;
 
-use super::{blit_single_tile, blit_single_tile_flipped, draw_text_box, species_to_sprite_name};
+use super::{blit_single_tile, draw_text_box, species_to_sprite_name};
 
 /// Draw the full Pokédex screen (list, side menu, entry or area, per the
 /// state machine). `current_map` is the player's location — the AREA page
@@ -344,30 +344,13 @@ pub fn draw_entry_for_species(
     if let Some(ref mut rm) = res {
         let sprite_name = species_to_sprite_name(&sp.pascal_name());
         if let Ok(cached) = rm.load_pokemon_front(&sprite_name) {
-            let ts = cached.tileset.clone();
-            let sprite_w = cached.source_size.0;
-            let sprite_h = cached.source_size.1;
-            let tiles_w = sprite_w / t;
-            let tiles_h = sprite_h / t;
-            let area_x = t;
-            let area_y = t;
-            let x_offset = ((7 - tiles_w + 1) / 2) * t;
-            let y_offset = (7 - tiles_h) * t;
-            for idx in 0..ts.len() {
-                let tx = (idx as u32) % tiles_w;
-                let ty = (idx as u32) / tiles_w;
-                let flipped_tx = tiles_w - 1 - tx;
-                blit_single_tile_flipped(
+            super::blit_front_pic(
                     fb,
-                    &ts,
-                    idx,
-                    area_x + x_offset + flipped_tx * t,
-                    area_y + y_offset + ty * t,
-                    pal,
-                    true,
-                );
+                    cached,
+                    8,
+                    8,
+                    true);
             }
-        }
     }
 
     total_pages

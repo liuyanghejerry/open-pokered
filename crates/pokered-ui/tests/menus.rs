@@ -681,27 +681,28 @@ fn naming_player_screen_renders_title_box_underscores_and_keyboard() {
         Op::Box(r, _) => Some(*r),
         _ => None,
     }).collect();
-    // Box is 20×13 (rows 5..=17): tall enough to also contain the zh pinyin
-    // buffer/candidate lines, matching naming.gui.
-    assert_eq!(boxes, vec![TileRect::new(0, 5, 20, 13)]);
+    // Original TextBoxBorder at (0,4), b=9/c=18, adds its border:
+    // naming_screen.asm:96-99. Chinese keeps the separate taller IME box.
+    assert_eq!(boxes, vec![TileRect::new(0, 4, 20, 12)]);
 
     let texts = collect_texts(&rec.ops);
-    // Title and name box are centered on the 20-column screen.
-    assert!(texts.contains(&(5, 1, "YOUR NAME?".into())));
-    assert!(texts.contains(&(6, 3, "".into())));
+    // PrintNamingText (453-483), PrintNicknameAndUnderscores (373-379),
+    // and PrintAlphabet (346-362) use authored GB tile coordinates.
+    assert!(texts.contains(&(0, 1, "YOUR NAME?".into())));
+    assert!(texts.contains(&(10, 2, "".into())));
     assert!(texts.contains(&(2, 16, "lower case".into())));
 
     let tiles = collect_gb_tiles(&rec.ops);
-    let underscore_tiles: Vec<_> = tiles.iter().filter(|(_, ty, _, _)| *ty == 4).collect();
-    assert_eq!(underscore_tiles.len(), 7, "Player name max_len = 7 underscores at row ty=4");
+    let underscore_tiles: Vec<_> = tiles.iter().filter(|(_, ty, _, _)| *ty == 3).collect();
+    assert_eq!(underscore_tiles.len(), 7, "Player name max_len = 7 underscores at row ty=3");
     let raised_count = underscore_tiles.iter().filter(|(_, _, id, _)| *id == naming_tiles::RAISED_UNDERSCORE).count();
     assert_eq!(raised_count, 1, "Empty name → first slot is raised underscore");
 
-    // Alphabet rows are spaced 2 rows apart (6,8,10,12,14) in alphabet mode.
-    let keyboard_tiles: Vec<_> = tiles.iter().filter(|(_, ty, _, _)| *ty >= 6 && *ty <= 14 && *ty % 2 == 0).collect();
+    // Alphabet rows are spaced 2 rows apart (5,7,9,11,13) in alphabet mode.
+    let keyboard_tiles: Vec<_> = tiles.iter().filter(|(_, ty, _, _)| *ty >= 5 && *ty <= 13 && *ty % 2 == 1).collect();
     let cursor_tiles: Vec<_> = keyboard_tiles.iter().filter(|(_, _, id, _)| *id == naming_tiles::CURSOR_ARROW).collect();
     assert_eq!(cursor_tiles.len(), 1);
-    assert_eq!((cursor_tiles[0].0, cursor_tiles[0].1), (1, 6), "Initial cursor at (1,6) = KEYBOARD_X-1, KEYBOARD_Y");
+    assert_eq!((cursor_tiles[0].0, cursor_tiles[0].1), (1, 5), "Initial cursor at (1,5) = KEYBOARD_X-1, KEYBOARD_Y");
 }
 
 #[test]
@@ -767,16 +768,18 @@ fn naming_rival_screen_uses_rival_title() {
     let mut rec = Recorder::default();
     menus::naming::draw(&state, &NAMING_DEFAULT_LAYOUT, &mut Ui::new(&mut rec), false);
     let texts = collect_texts(&rec.ops);
-    assert!(texts.contains(&(3, 1, "RIVAL's NAME?".into())));
+    assert!(texts.contains(&(0, 1, "RIVAL's NAME?".into())));
 }
 
 #[test]
 fn naming_pokemon_screen_uses_nickname_title() {
-    let state = NamingScreenState::new(NamingScreenType::Pokemon);
+    let mut state = NamingScreenState::new(NamingScreenType::Pokemon);
+    state.species = Some(Species::Lapras);
     let mut rec = Recorder::default();
     menus::naming::draw(&state, &NAMING_DEFAULT_LAYOUT, &mut Ui::new(&mut rec), false);
     let texts = collect_texts(&rec.ops);
-    assert!(texts.contains(&(5, 1, "NICKNAME?".into())));
+    assert!(texts.contains(&(1, 3, "NICKNAME?".into())));
+    assert!(texts.contains(&(4, 1, "LAPRAS".into())));
 }
 
 #[test]
@@ -789,10 +792,10 @@ fn naming_lowercase_toggle_shows_upper_case_label_when_in_lowercase() {
     let mut rec = Recorder::default();
     menus::naming::draw(&state, &NAMING_DEFAULT_LAYOUT, &mut Ui::new(&mut rec), false);
     let texts = collect_texts(&rec.ops);
+    assert!(state.is_lowercase());
     let case_label = texts.iter().find(|(tx, ty, _)| *tx == 2 && *ty == 16);
     assert!(case_label.is_some());
-    assert!(case_label.unwrap().2 == "UPPER CASE" || case_label.unwrap().2 == "lower case",
-        "case row label must toggle between cases, got {:?}", case_label);
+    assert_eq!(case_label.unwrap().2, "UPPER CASE");
 }
 
 #[test]
@@ -812,30 +815,31 @@ fn naming_cursor_on_case_row_renders_arrow_at_keyboard_x_minus_one() {
 
 #[test]
 fn naming_name_text_is_drawn_after_underscores() {
-    // Regression: the Fusion Pixel glyphs are 10px tall — one 8px tile row
-    // plus a couple of pixels below — so the name bleeds into the underscore
-    // row. If the underscore slots were drawn after the name, their background
-    // fill would clip the bottom of the name. `draw()` must emit the name text
-    // op AFTER the underscore tile ops so the name renders on top.
+    // Keep the same draw-order contract in both layout variants. English
+    // uses the project font at name row2/underscore row3; the Chinese
+    // extension retains 10px CJK glyphs at row3/row4, where underscore fills
+    // must precede text to preserve the glyph's bottom pixels.
     let mut state = NamingScreenState::new(NamingScreenType::Player);
     state.update_frame(NamingInput { a: true, ..NamingInput::none() }, false); // 'A'
     state.update_frame(NamingInput { right: true, ..NamingInput::none() }, false);
     state.update_frame(NamingInput { a: true, ..NamingInput::none() }, false); // 'B'
     assert_eq!(state.name(), "AB");
 
-    let mut rec = Recorder::default();
-    menus::naming::draw(&state, &NAMING_DEFAULT_LAYOUT, &mut Ui::new(&mut rec), false);
+    for (is_zh, name_ty, underscore_ty) in [(false, 2, 3), (true, 3, 4)] {
+        let mut rec = Recorder::default();
+        menus::naming::draw(&state, &NAMING_DEFAULT_LAYOUT, &mut Ui::new(&mut rec), is_zh);
 
-    let name_text_index = rec.ops.iter().position(|op| {
-        matches!(op, Op::Text(pos, s, _) if pos.ty == 3 && s == "AB")
-    }).expect("name text op at row 3");
-    let last_underscore_index = rec.ops.iter().rposition(|op| {
-        matches!(op, Op::GbTile(pos, id, _, _)
-            if pos.ty == 4 && (*id == naming_tiles::UNDERSCORE || *id == naming_tiles::RAISED_UNDERSCORE))
-    }).expect("underscore tile op at row 4");
+        let name_text_index = rec.ops.iter().position(|op| {
+            matches!(op, Op::Text(pos, s, _) if pos.ty == name_ty && s == "AB")
+        }).expect("name text op in the language's name row");
+        let last_underscore_index = rec.ops.iter().rposition(|op| {
+            matches!(op, Op::GbTile(pos, id, _, _)
+                if pos.ty == underscore_ty && (*id == naming_tiles::UNDERSCORE || *id == naming_tiles::RAISED_UNDERSCORE))
+        }).expect("underscore tile op in the language's underscore row");
 
-    assert!(name_text_index > last_underscore_index,
-        "name text (op {name_text_index}) must be drawn after the underscores (op {last_underscore_index}) so the underscore fill does not clip the glyph bottoms");
+        assert!(name_text_index > last_underscore_index,
+            "is_zh={is_zh}: name op {name_text_index} must follow underscore op {last_underscore_index}");
+    }
 }
 
 // ── Battle menu tests ──
@@ -1020,9 +1024,11 @@ fn battle_bag_renders_items_with_quantity_and_cancel() {
     assert_eq!(collect_boxes(&rec.ops), vec![TileRect::new(4, 10, 16, 7)]);
 
     assert_eq!(collect_texts(&rec.ops), vec![
-        (7, 12, "POTION \u{00D7}3".into()),
-        (7, 13, "ANTIDOTE \u{00D7}1".into()),
+        (7, 12, "POTION".into()),
+        (7, 13, "ANTIDOTE".into()),
         (7, 14, "CANCEL".into()),
+        (16, 12, "× 3".into()),
+        (16, 13, "× 1".into()),
     ]);
 
     assert_eq!(collect_glyphs(&rec.ops), vec![(6, 12, '\u{25B6}')]);
@@ -1078,8 +1084,12 @@ fn battle_party_single_pokemon_renders_name_and_hp() {
     assert_eq!(collect_boxes(&rec.ops), vec![TileRect::new(1, 12, 18, 6)]);
 
     let texts = collect_texts(&rec.ops);
-    assert!(texts.contains(&(3, 13, "CHARIZARD 150/200".into())),
-        "expected CHARIZARD 150/200, got {:?}", texts);
+    assert_eq!(texts.len(), 1);
+    let (x, y, label) = &texts[0];
+    assert_eq!((*x, *y), (3, 13));
+    assert!(label.starts_with("CHARIZARD"), "the project font should fit the name: {label}");
+    assert!(label.ends_with(" 150/200"), "preserve both complete health values: {label}");
+    assert!(pokered_data::text_layout::measure_text(label) <= 120, "keep the right border clear: {label}");
 
     assert_eq!(collect_glyphs(&rec.ops), vec![(2, 13, '\u{25B6}')]);
 }
@@ -1126,7 +1136,14 @@ fn battle_party_scrolls_when_more_than_four_pokemon() {
     battle_party::draw(&party, 5, &BATTLE_PARTY_DEFAULT_LAYOUT, &mut ui, false);
 
     let texts = collect_texts(&rec.ops);
-    assert!(texts.contains(&(3, 13, "VENUSAUR 100/200".into())));
+    assert_eq!(texts.len(), 4, "only the four visible party rows are drawn");
+    let first = texts.iter().find(|(x, y, _)| (*x, *y) == (3, 13)).unwrap();
+    assert!(first.2.starts_with("VENUSAUR"));
+    assert!(first.2.ends_with(" 100/200"));
+    for (_, _, label) in &texts {
+        assert!(label.ends_with(" 100/200"), "preserve complete health after scrolling: {label}");
+        assert!(pokered_data::text_layout::measure_text(label) <= 120, "keep the right border clear: {label}");
+    }
     assert!(texts.contains(&(3, 14, "PIKACHU 100/200".into())));
     assert!(texts.contains(&(3, 15, "SNORLAX 100/200".into())));
     assert!(texts.contains(&(3, 16, "MEWTWO 100/200".into())));
@@ -1147,7 +1164,7 @@ fn battle_party_empty_party_draws_nothing() {
 // -- battle_text --
 
 #[test]
-fn battle_text_wraps_long_text_to_two_lines() {
+fn battle_text_wraps_overlong_input_without_dropping_lines() {
     let mut rec = Recorder::default();
     let mut ui = Ui::new(&mut rec);
     battle_text::draw("What will CHARIZARD do with its last move?", false, &BATTLE_TEXT_DEFAULT_LAYOUT, &mut ui, Lang::En);
@@ -1157,7 +1174,8 @@ fn battle_text_wraps_long_text_to_two_lines() {
 
     // Native dialog renders text at screen (1,14)/(1,16). text_box adds +1,+1 padding,
     // so frame.label(0,1)/(0,3) → absolute (1,14)/(1,16). Lines wrap at the 144px
-    // interior width (28 Latin chars), not the old 18-char cap.
+    // interior pixel width using the project font. Core paginates these rows
+    // before passing two-line pages to the renderer.
     assert_eq!(collect_texts(&rec.ops), vec![
         (1, 14, "What will CHARIZARD do with".into()),
         (1, 16, "its last move?".into()),
@@ -1226,17 +1244,17 @@ fn draw_main_with_money_shows_buy_sell_quit_and_money_box() {
 
     let boxes = collect_boxes(&rec.ops);
     assert_eq!(boxes, vec![
-        TileRect::new(0, 0, 7, 8),
-        TileRect::new(6, 0, 14, 3),
+        TileRect::new(0, 0, 11, 7),
+        TileRect::new(11, 0, 9, 3),
     ]);
 
     let texts = collect_texts(&rec.ops);
-    assert!(texts.contains(&(2, 2, "BUY".into())));
-    assert!(texts.contains(&(2, 4, "SELL".into())));
-    assert!(texts.contains(&(2, 6, "QUIT".into())));
-    assert!(texts.contains(&(7, 1, "MONEY $3500".into())));
+    assert!(texts.contains(&(2, 1, "BUY".into())));
+    assert!(texts.contains(&(2, 3, "SELL".into())));
+    assert!(texts.contains(&(2, 5, "QUIT".into())));
+    assert!(texts.contains(&(13, 0, "MONEY".into())));
 
-    assert_eq!(collect_glyphs(&rec.ops), vec![(1, 2, '\u{25B6}')]);
+    assert_eq!(collect_glyphs(&rec.ops), vec![(1, 1, '\u{25B6}')]);
 }
 
 #[test]
@@ -1245,7 +1263,7 @@ fn draw_main_with_money_cursor_follows_selection() {
     let mut ui = Ui::new(&mut rec);
     mart::draw_main_with_money(2, 1000, &MART_MAIN_MENU_LAYOUT, &mut ui, Lang::En);
 
-    assert_eq!(collect_glyphs(&rec.ops), vec![(1, 6, '\u{25B6}')]);
+    assert_eq!(collect_glyphs(&rec.ops), vec![(1, 5, '\u{25B6}')]);
 }
 
 #[test]
@@ -1257,14 +1275,14 @@ fn draw_quantity_shows_item_name_qty_cost_and_money() {
     let boxes = collect_boxes(&rec.ops);
     assert_eq!(boxes, vec![
         TileRect::new(0, 3, 20, 6),
-        TileRect::new(6, 0, 14, 3),
+        TileRect::new(11, 0, 9, 3),
     ]);
 
     let texts = collect_texts(&rec.ops);
     assert!(texts.contains(&(2, 5, "POTION".into())));
     assert!(texts.contains(&(2, 7, "× 5".into())));
     assert!(texts.contains(&(11, 7, "$1500".into())));
-    assert!(texts.contains(&(7, 1, "MONEY $5000".into())));
+    assert!(texts.contains(&(12, 1, "  $5000".into())));
 }
 
 #[test]
@@ -1277,7 +1295,7 @@ fn draw_confirm_box_rect_is_exact() {
     // borderless region reads as stray glyphs on the scene), then the
     // yes/no box.
     let boxes = collect_boxes(&rec.ops);
-    assert_eq!(boxes, vec![TileRect::new(0, 0, 18, 8), TileRect::new(14, 7, 6, 5)]);
+    assert_eq!(boxes, vec![TileRect::new(0, 0, 20, 8), TileRect::new(14, 7, 6, 5)]);
 }
 
 #[test]
@@ -1310,7 +1328,7 @@ fn draw_confirm_message_rendered_above_box() {
 
     let texts = collect_texts(&rec.ops);
     // Framed message box: interior origin (1,1) + label (1,0) → (2,1).
-    assert!(texts.contains(&(2, 1, "Buy for $300?".into())));
+    assert!(texts.contains(&(1, 1, "Buy for $300?".into())));
 }
 
 #[test]
@@ -1334,7 +1352,7 @@ fn draw_result_dialog_single_line() {
     mart::draw_result_dialog(&["You don't have enough money."], &MART_RESULT_DIALOG_LAYOUT, &mut ui);
 
     let texts = collect_texts(&rec.ops);
-    assert_eq!(texts, vec![(2, 14, "You don't have enough money.".into())]);
+    assert_eq!(texts, vec![(2, 14, "You don't have enough".into()), (2, 16, "money.".into())]);
 }
 
 #[test]
@@ -1351,12 +1369,12 @@ fn draw_main_menu_uses_layout_static() {
     // - Labels BUY/SELL/QUIT at relative positions (1,1), (1,3), (1,5)
     // - Cursor glyph at (1, 2) since cursor.tx=0 and cursor starts at 0
     let boxes = collect_boxes(&rec.ops);
-    assert_eq!(boxes, vec![TileRect::new(0, 0, 7, 8)]);
+    assert_eq!(boxes, vec![TileRect::new(0, 0, 11, 7)]);
 
     let texts = collect_texts(&rec.ops);
-    assert!(texts.contains(&(2, 2, "BUY".into())));   // origin +1 + label.tx=1
-    assert!(texts.contains(&(2, 4, "SELL".into())));
-    assert!(texts.contains(&(2, 6, "QUIT".into())));
+    assert!(texts.contains(&(2, 1, "BUY".into())));   // origin +1 + label.tx=1
+    assert!(texts.contains(&(2, 3, "SELL".into())));
+    assert!(texts.contains(&(2, 5, "QUIT".into())));
 
-    assert_eq!(collect_glyphs(&rec.ops), vec![(1, 2, '\u{25B6}')]); // origin +1 + cursor.tx=0
+    assert_eq!(collect_glyphs(&rec.ops), vec![(1, 1, '\u{25B6}')]); // origin +1 + cursor.tx=0
 }

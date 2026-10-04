@@ -66,9 +66,9 @@ pub fn draw_town_map(
         }
     }
 
-    // 4. Highlighted landmark's name, in a box along the bottom three rows.
-    draw_text_box(fb, 0, 15 * TILE_SIZE, 18, 1, Rgba::BLACK);
+    // 4. Reserve 16px inside the box for the project's 10px font.
+    draw_text_box(fb, 0, 14 * TILE_SIZE, 18, 2, Rgba::BLACK);
     if let Some((_, _, name)) = town_map_position(state.selected_map()) {
-        draw_text(map_name_str(name), TILE_SIZE, 16 * TILE_SIZE, Rgba::BLACK, fb);
+        draw_text(map_name_str(name), TILE_SIZE, 15 * TILE_SIZE, Rgba::BLACK, fb);
     }
 }

@@ -1,16 +1,13 @@
 //! Elevator floor-selection menu screen.
 //!
-//! A pure-logic, I/O-free state machine: a vertical list of floor labels the
-//! player scrolls with Up/Down and confirms with A (B cancels). The chosen
-//! floor index is delivered back to the caller, which resumes the suspended
-//! overworld script via `OverworldScreen::resume_script_after_elevator`.
-//!
-//! Like the other screen state machines (`slots_screen`, `options_menu`), this
-//! crate is deterministic and I/O-free; rendering lives in the app layer.
-
-/// Per-frame input for the elevator screen (edge-triggered by the caller).
+//! The original list keeps three selectable rows and a fourth preview row.
+//! Up/Down move within the list without wrapping; A selects a floor or the final
+//! CANCEL entry, and B cancels. The caller resumes the suspended map script.
+//! Filtered-bag callers use a separate constructor to retain their list policy.
 
 use crate::alloc_prelude::*;
+
+/// Per-frame input, edge-triggered by the caller.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct ElevatorInput {
     pub up: bool,
@@ -25,24 +22,21 @@ impl ElevatorInput {
     }
 }
 
-/// Result of a single frame update.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ElevatorAction {
-    /// Stay on the elevator screen.
     Continue,
-    /// The player confirmed floor `selected`; the caller should resume the
-    /// script with that index (0-based).
+    /// Zero-based floor index, excluding the CANCEL entry.
     Select(usize),
-    /// The player cancelled (B); resume the script with -1.
+    /// B or A on CANCEL; the caller resumes the script with -1.
     Cancel,
 }
 
-/// Elevator floor-menu screen state.
 #[derive(Debug, Clone)]
 pub struct ElevatorScreen {
     floors: Vec<String>,
     selected: usize,
-    /// Kept for potential blink/scroll effects; currently unused by logic.
+    scroll: usize,
+    floor_menu: bool,
     frame_counter: u32,
 }
 
@@ -51,28 +45,55 @@ impl ElevatorScreen {
         Self {
             floors,
             selected: 0,
+            scroll: 0,
+            floor_menu: true,
             frame_counter: 0,
         }
     }
 
+    /// The drink filter reuses this screen but supplies item entries, not floors.
+    pub fn new_filtered(items: Vec<String>) -> Self {
+        Self {
+            floor_menu: false,
+            ..Self::new(items)
+        }
+    }
+
+    /// Real destinations only; indices passed back to the script stay unchanged.
     pub fn floors(&self) -> &[String] {
         &self.floors
+    }
+
+    /// Display entries, including the elevator's final CANCEL sentinel.
+    pub fn menu_entries(&self) -> impl Iterator<Item = &str> + '_ {
+        self.floors
+            .iter()
+            .map(String::as_str)
+            .chain(core::iter::once("CANCEL").filter(move |_| self.floor_menu))
     }
 
     pub fn selected_index(&self) -> usize {
         self.selected
     }
 
-    /// First list index of the visible scroll window when at most
-    /// `max_visible` rows fit on screen. The window follows the selection so
-    /// the selected row is always visible; lists that fit entirely return 0.
+    /// First displayed entry. The elevator keeps its list window stationary
+    /// until the cursor crosses row 0 or row 2 (home/list_menu.asm:177-195).
+    /// Filtered-bag menus retain their centered window.
     pub fn scroll_offset(&self, max_visible: usize) -> usize {
-        if max_visible == 0 || self.floors.len() <= max_visible {
+        let count = self.floors.len() + usize::from(self.floor_menu);
+        if max_visible == 0 || count <= max_visible {
             return 0;
         }
-        self.selected
-            .saturating_sub(max_visible / 2)
-            .min(self.floors.len() - max_visible)
+        let max_offset = count - max_visible;
+        if self.floor_menu {
+            self.scroll
+                .max(self.selected.saturating_sub(max_visible - 1))
+                .min(max_offset)
+        } else {
+            self.selected
+                .saturating_sub(max_visible / 2)
+                .min(max_offset)
+        }
     }
 
     pub fn update_frame(&mut self, input: ElevatorInput) -> ElevatorAction {
@@ -80,14 +101,32 @@ impl ElevatorScreen {
         if self.floors.is_empty() {
             return ElevatorAction::Cancel;
         }
-        if input.up {
-            self.selected = (self.selected + self.floors.len() - 1) % self.floors.len();
-        }
-        if input.down {
-            self.selected = (self.selected + 1) % self.floors.len();
+        if self.floor_menu {
+            if input.up && self.selected > 0 {
+                self.selected -= 1;
+                if self.selected < self.scroll {
+                    self.scroll = self.selected;
+                }
+            } else if input.down && self.selected < self.floors.len() {
+                self.selected += 1;
+                if self.selected > self.scroll + 2 {
+                    self.scroll = self.selected - 2;
+                }
+            }
+        } else {
+            if input.up {
+                self.selected = (self.selected + self.floors.len() - 1) % self.floors.len();
+            }
+            if input.down {
+                self.selected = (self.selected + 1) % self.floors.len();
+            }
         }
         if input.a {
-            return ElevatorAction::Select(self.selected);
+            return if self.floor_menu && self.selected == self.floors.len() {
+                ElevatorAction::Cancel
+            } else {
+                ElevatorAction::Select(self.selected)
+            };
         }
         if input.b {
             return ElevatorAction::Cancel;
@@ -98,107 +137,157 @@ impl ElevatorScreen {
 
 #[cfg(test)]
 mod tests {
-use crate::alloc_prelude::*;
     use super::*;
 
-    fn floors() -> Vec<String> {
-        vec!["1F".into(), "2F".into(), "3F".into()]
+    fn floors(count: usize) -> Vec<String> {
+        (1..=count).map(|i| format!("{i}F")).collect()
     }
-
-    #[test]
-    fn starts_at_first_floor() {
-        let mut s = ElevatorScreen::new(floors());
-        assert_eq!(s.selected_index(), 0);
-        assert_eq!(s.floors(), &["1F", "2F", "3F"]);
-    }
-
-    #[test]
-    fn down_wraps_and_selects() {
-        let mut s = ElevatorScreen::new(floors());
-        s.update_frame(ElevatorInput {
+    fn down(menu: &mut ElevatorScreen) {
+        menu.update_frame(ElevatorInput {
             down: true,
             ..ElevatorInput::none()
         });
-        s.update_frame(ElevatorInput {
-            down: true,
-            ..ElevatorInput::none()
-        });
-        assert_eq!(s.selected_index(), 2);
-        let action = s.update_frame(ElevatorInput {
-            a: true,
-            ..ElevatorInput::none()
-        });
-        assert_eq!(action, ElevatorAction::Select(2));
     }
-
-    #[test]
-    fn up_wraps() {
-        let mut s = ElevatorScreen::new(floors());
-        let action = s.update_frame(ElevatorInput {
+    fn up(menu: &mut ElevatorScreen) {
+        menu.update_frame(ElevatorInput {
             up: true,
             ..ElevatorInput::none()
         });
-        assert_eq!(action, ElevatorAction::Continue);
-        assert_eq!(s.selected_index(), 2);
     }
-
-    #[test]
-    fn b_cancels() {
-        let mut s = ElevatorScreen::new(floors());
-        let action = s.update_frame(ElevatorInput {
-            b: true,
+    fn confirm(menu: &mut ElevatorScreen) -> ElevatorAction {
+        menu.update_frame(ElevatorInput {
+            a: true,
             ..ElevatorInput::none()
-        });
-        assert_eq!(action, ElevatorAction::Cancel);
+        })
     }
 
     #[test]
-    fn empty_floors_cancels_immediately() {
-        let mut s = ElevatorScreen::new(Vec::new());
-        let action = s.update_frame(ElevatorInput::none());
-        assert_eq!(action, ElevatorAction::Cancel);
-    }
-
-    fn eleven_floors() -> Vec<String> {
-        (1..=11).map(|i| format!("{i}F")).collect()
-    }
-
-    #[test]
-    fn scroll_offset_zero_for_short_lists() {
-        let s = ElevatorScreen::new(floors());
-        assert_eq!(s.scroll_offset(7), 0);
+    fn floor_destinations_exclude_cancel_but_display_entries_include_it() {
+        let menu = ElevatorScreen::new(floors(3));
+        assert_eq!(menu.floors(), &["1F", "2F", "3F"]);
+        assert_eq!(
+            menu.menu_entries().collect::<Vec<_>>(),
+            ["1F", "2F", "3F", "CANCEL"]
+        );
+        assert_eq!(menu.selected_index(), 0);
     }
 
     #[test]
-    fn scroll_offset_follows_selection() {
-        let mut s = ElevatorScreen::new(eleven_floors());
-        // Selection at the top: no scrolling.
-        assert_eq!(s.scroll_offset(7), 0);
-        // Walk to the middle: the window centers on the selection.
-        for _ in 0..5 {
-            s.update_frame(ElevatorInput {
-                down: true,
-                ..ElevatorInput::none()
-            });
+    fn every_real_floor_preserves_its_script_index() {
+        let mut menu = ElevatorScreen::new(floors(11));
+        for floor in 0..11 {
+            assert_eq!(confirm(&mut menu), ElevatorAction::Select(floor));
+            down(&mut menu);
         }
-        assert_eq!(s.selected_index(), 5);
-        assert_eq!(s.scroll_offset(7), 2);
-        // Walk to the last floor: the window clamps at the end so the
-        // selection stays visible.
-        for _ in 0..5 {
-            s.update_frame(ElevatorInput {
-                down: true,
-                ..ElevatorInput::none()
-            });
+        assert_eq!(confirm(&mut menu), ElevatorAction::Cancel);
+    }
+
+    #[test]
+    fn endpoints_do_not_wrap_and_cancel_is_selectable() {
+        let mut menu = ElevatorScreen::new(floors(5));
+        up(&mut menu);
+        assert_eq!(menu.selected_index(), 0);
+        for _ in 0..8 {
+            down(&mut menu);
         }
-        assert_eq!(s.selected_index(), 10);
-        assert_eq!(s.scroll_offset(7), 4);
-        // Wrapping back to the first floor snaps the window to the top.
-        s.update_frame(ElevatorInput {
-            down: true,
-            ..ElevatorInput::none()
-        });
-        assert_eq!(s.selected_index(), 0);
-        assert_eq!(s.scroll_offset(7), 0);
+        assert_eq!(menu.selected_index(), 5);
+        assert_eq!(confirm(&mut menu), ElevatorAction::Cancel);
+        assert_eq!(menu.scroll_offset(3), 3);
+    }
+
+    #[test]
+    fn b_cancels_from_a_floor_or_cancel() {
+        let mut menu = ElevatorScreen::new(floors(1));
+        for selected in 0..=1 {
+            assert_eq!(menu.selected_index(), selected);
+            assert_eq!(
+                menu.update_frame(ElevatorInput {
+                    b: true,
+                    ..ElevatorInput::none()
+                }),
+                ElevatorAction::Cancel
+            );
+            down(&mut menu);
+        }
+    }
+
+    #[test]
+    fn single_floor_shows_cancel_without_scrolling() {
+        let mut menu = ElevatorScreen::new(floors(1));
+        down(&mut menu);
+        assert_eq!(menu.selected_index(), 1);
+        assert_eq!(menu.scroll_offset(3), 0);
+        assert_eq!(confirm(&mut menu), ElevatorAction::Cancel);
+    }
+
+    #[test]
+    fn fourth_entry_is_a_preview_until_the_window_scrolls() {
+        let mut menu = ElevatorScreen::new(floors(11));
+        down(&mut menu);
+        down(&mut menu);
+        assert_eq!(menu.selected_index(), 2);
+        assert_eq!(menu.scroll_offset(3), 0);
+        assert_eq!(
+            menu.menu_entries()
+                .skip(menu.scroll_offset(3))
+                .take(4)
+                .collect::<Vec<_>>(),
+            ["1F", "2F", "3F", "4F"]
+        );
+        down(&mut menu);
+        assert_eq!(menu.selected_index(), 3);
+        assert_eq!(menu.scroll_offset(3), 1);
+    }
+
+    #[test]
+    fn scroll_window_keeps_its_position_when_moving_back_up_within_it() {
+        let mut menu = ElevatorScreen::new(floors(11));
+        for _ in 0..5 {
+            down(&mut menu);
+        }
+        assert_eq!((menu.selected_index(), menu.scroll_offset(3)), (5, 3));
+        up(&mut menu);
+        up(&mut menu);
+        assert_eq!((menu.selected_index(), menu.scroll_offset(3)), (3, 3));
+        up(&mut menu);
+        assert_eq!((menu.selected_index(), menu.scroll_offset(3)), (2, 2));
+    }
+
+    #[test]
+    fn all_long_list_positions_fit_the_three_cursor_rows_in_both_directions() {
+        let mut menu = ElevatorScreen::new(floors(11));
+        for expected in 0..=11 {
+            assert_eq!(menu.selected_index(), expected);
+            assert!(menu.selected_index() - menu.scroll_offset(3) < 3);
+            down(&mut menu);
+        }
+        for expected in (0..=11).rev() {
+            assert_eq!(menu.selected_index(), expected);
+            assert!(menu.selected_index() - menu.scroll_offset(3) < 3);
+            up(&mut menu);
+        }
+        assert_eq!(menu.scroll_offset(3), 0);
+    }
+
+    #[test]
+    fn filtered_bag_keeps_its_existing_entries_and_input_policy() {
+        let mut menu = ElevatorScreen::new_filtered(floors(11));
+        assert_eq!(menu.menu_entries().count(), 11);
+        up(&mut menu);
+        assert_eq!(menu.selected_index(), 10);
+        assert_eq!(menu.scroll_offset(7), 4);
+        assert_eq!(confirm(&mut menu), ElevatorAction::Select(10));
+        down(&mut menu);
+        assert_eq!(menu.selected_index(), 0);
+    }
+
+    #[test]
+    fn empty_floors_cancel_immediately() {
+        let mut menu = ElevatorScreen::new(Vec::new());
+        assert_eq!(
+            menu.update_frame(ElevatorInput::none()),
+            ElevatorAction::Cancel
+        );
+        assert_eq!(menu.scroll_offset(0), 0);
     }
 }

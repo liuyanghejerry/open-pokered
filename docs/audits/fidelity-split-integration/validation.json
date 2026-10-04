@@ -1,0 +1,49 @@
+{
+  "scope": "local integration only; not independent PR validation",
+  "base": "cb131bbde9168cb7486aeff0d220cc9b21849b30",
+  "source": "0e6c00562b7348e044c2580e5ecb3b61e0b10d83",
+  "branches": {
+    "battle": "b840febd85ad60caad09741946a55adf4fdc91ce",
+    "story": "340eacbb0443bde8d82fdea9c50216ae090dfbf5",
+    "save-link": "fbf6d86ba36fcc4905e14787a095d3b177100231",
+    "presentation": "f02e4cb8bce4f81e8a8d140ef3a3ee4c18b9dc4f",
+    "navigation": "bb129d6baaf2d98ef147b1f7e47d9be6523085a7"
+  },
+  "cargo": {
+    "core": {
+      "passed": 3076,
+      "failed": 0,
+      "ignored": 1
+    },
+    "app": {
+      "passed": 361,
+      "failed": 0,
+      "ignored": 10
+    },
+    "ui": {
+      "passed": 102,
+      "failed": 0,
+      "ignored": 0
+    },
+    "renderer": {
+      "passed": 395,
+      "failed": 0,
+      "ignored": 0
+    }
+  },
+  "tui_check": "passed",
+  "navigation_unit_tests": 36,
+  "graph": {
+    "edges": 3278,
+    "maps": 248,
+    "storylines": 1345,
+    "regeneration_changed_tracked_graph": false,
+    "matches_combined_source_graph": true
+  },
+  "post_suite_added_test": {
+    "command": "cargo test -p pokered-core battle_pages_keep_hard_rows_and_pixel_overflow --lib",
+    "passed": 1,
+    "failed": 0,
+    "note": "After final presentation update; production unchanged, only test and capture docs added."
+  }
+}

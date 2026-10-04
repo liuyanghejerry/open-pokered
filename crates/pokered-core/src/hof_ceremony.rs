@@ -33,9 +33,8 @@
 use crate::alloc_prelude::*;
 use pokered_data::species::Species;
 
-/// Frames for the initial/final `GBFadeOutToWhite` (approximation of the
-/// palette sweep).
-pub const FADE_FRAMES: u16 = 16;
+/// Three GBFadeOutToWhite palette writes, each followed by eight frames.
+pub const FADE_FRAMES: u16 = 24;
 /// Post-clear delay before the music starts (`ld c, 100`, hall_of_fame.asm:39).
 pub const OPENING_FRAMES: u16 = 100;
 /// Back-pic scroll: hSCX 192 → 160 at +4 px/frame, 56 frames
@@ -158,6 +157,11 @@ impl HofCeremonyState {
 
     pub fn phase(&self) -> HofPhase {
         self.phase
+    }
+
+    /// GBFadeOutToWhite writes FadePal6/7/8, each followed by 8 frames.
+    pub fn fade_step(&self) -> u8 {
+        (self.frame / 8).min(2) as u8
     }
 
     /// Frames elapsed in the current phase.

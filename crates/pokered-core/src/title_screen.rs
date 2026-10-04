@@ -69,10 +69,14 @@ pub enum TitlePhase {
     LogoPause,
     /// Game version text scrolls in from the right.
     VersionScroll,
+    /// Delay3, then wait for the intro whoosh before starting title music.
+    VersionWait,
     /// Title music plays, Pokémon sprites cycle. Waiting for user input.
     WaitingForInput,
     /// Current mon is scrolling out to the left.
     ScrollOut,
+    /// The ten-frame Poké Ball toss after a starter leaves.
+    BallToss,
     /// New mon is scrolling in from the right.
     ScrollIn,
     /// User pressed a button — playing the current mon's cry.
@@ -142,7 +146,8 @@ pub const LOGO_BOUNCE_TOTAL_FRAMES: u32 = {
 pub const LOGO_PAUSE_FRAMES: u32 = 36;
 
 /// Frames for the version text scroll animation.
-pub const VERSION_SCROLL_FRAMES: u32 = 36;
+pub const VERSION_SCROLL_FRAMES: u32 = 28;
+pub const VERSION_WAIT_FRAMES: u32 = 3;
 
 /// Frames between Pokémon switches on the title screen.
 /// In the original: `ld c, 200 / call CheckForUserInterruption`.
@@ -152,7 +157,7 @@ pub const MON_DISPLAY_FRAMES: u32 = 200;
 pub const CRY_PLAY_FRAMES: u32 = 60;
 
 /// Frames for the fade-out effect.
-pub const FADE_OUT_FRAMES: u32 = 16;
+pub const FADE_OUT_FRAMES: u32 = 3;
 
 /// Frames to display the copyright splash before transitioning to title screen.
 /// The original game shows copyright during the boot sequence.
@@ -360,6 +365,15 @@ impl TitleScreenState {
                     self.version_scroll_progress = 1.0;
                 }
                 if self.frame_counter >= VERSION_SCROLL_FRAMES {
+                    self.phase = TitlePhase::VersionWait;
+                    self.frame_counter = 0;
+                }
+                ScreenAction::Continue
+            }
+
+            TitlePhase::VersionWait => {
+                self.frame_counter += 1;
+                if self.frame_counter >= VERSION_WAIT_FRAMES {
                     self.phase = TitlePhase::WaitingForInput;
                     self.frame_counter = 0;
                 }
@@ -391,6 +405,23 @@ impl TitleScreenState {
                 // direction = -1: offset goes negative (sprite moves left)
                 let done = self.advance_scroll(SCROLL_OUT_TABLE, -1);
                 if done {
+                    if matches!(
+                        self.current_mon,
+                        Species::Charmander | Species::Squirtle | Species::Bulbasaur
+                    ) {
+                        self.phase = TitlePhase::BallToss;
+                        self.frame_counter = 0;
+                    } else {
+                        self.begin_scroll_in();
+                    }
+                }
+                ScreenAction::Continue
+            }
+
+            TitlePhase::BallToss => {
+                // _TitleScroll does not poll input while the ball animates.
+                self.frame_counter += 1;
+                if self.frame_counter >= 10 {
                     self.begin_scroll_in();
                 }
                 ScreenAction::Continue
@@ -433,6 +464,40 @@ impl TitleScreenState {
             }
 
             TitlePhase::Done => ScreenAction::Transition(GameScreen::MainMenu),
+        }
+    }
+
+    /// Update using the real sound completion signal, when audio is available.
+    pub fn update_frame_with_sound(
+        &mut self,
+        any_button_pressed: bool,
+        sound_playing: bool,
+    ) -> ScreenAction {
+        if self.phase == TitlePhase::PlayingCry {
+            if !sound_playing {
+                self.phase = TitlePhase::FadeOut;
+                self.frame_counter = 0;
+            }
+            return ScreenAction::Continue;
+        }
+        if self.phase == TitlePhase::VersionWait {
+            self.frame_counter += 1;
+            if self.frame_counter >= VERSION_WAIT_FRAMES && !sound_playing {
+                self.phase = TitlePhase::WaitingForInput;
+                self.frame_counter = 0;
+            }
+            return ScreenAction::Continue;
+        }
+        self.update_frame(any_button_pressed)
+    }
+
+    /// Title OBJ 10 starts at Y=$74; the ball table changes only that OBJ.
+    pub fn ball_y_offset(&self) -> i32 {
+        const Y: [i32; 10] = [0x71, 0x6f, 0x6e, 0x6d, 0x6c, 0x6d, 0x6e, 0x6f, 0x71, 0x74];
+        if self.phase == TitlePhase::BallToss {
+            Y[self.frame_counter.min(9) as usize] - 0x74
+        } else {
+            0
         }
     }
 

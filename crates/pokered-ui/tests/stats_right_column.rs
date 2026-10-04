@@ -45,7 +45,7 @@ impl Painter for Recorder {
 }
 
 /// Stands in for the framebuffer painter's pixel path: proportional metrics
-/// (5 px ASCII / 10 px CJK), so an anchor computed from tile counts (8 px per
+/// (project Fusion Pixel glyph widths), so an anchor computed from tile counts (8 px per
 /// char) fails the flush-edge assertion.
 #[derive(Default)]
 struct PxRecorder {
@@ -63,9 +63,7 @@ impl Painter for PxRecorder {
         true
     }
     fn measure_text_px(&self, text: &str) -> u32 {
-        text.chars()
-            .map(|c| if c.is_ascii() { 5 } else { 10 })
-            .sum()
+        pokered_renderer::embedded_font::measure_text(text)
     }
     fn draw_text_px(&mut self, px: u32, py: u32, text: &str, _color: Rgba) {
         self.placed.push((px, py, text.to_string()));

@@ -2790,6 +2790,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     let mut ns = crate::naming_screen::NamingScreenState::new(
                         crate::naming_screen::NamingScreenType::Pokemon,
                     );
+                    ns.species = pokered_data::species::Species::from_scene_name(species);
                     *naming_state = Some(ns.clone());
                     *pending_naming_screen = Some(ns);
                     *started = true;

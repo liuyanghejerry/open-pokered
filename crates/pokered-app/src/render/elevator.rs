@@ -19,27 +19,27 @@ const FG: Rgba = Rgba::BLACK;
 /// Draw the elevator floor menu to the 160x144 framebuffer.
 pub fn draw_elevator(elevator: &ElevatorScreen, fb: &mut FrameBuffer, lang: Lang) {
     let is_zh = lang == Lang::Zh;
-    fb.clear(BG);
+    // DisplayElevatorFloorMenu leaves the map behind the usual list menu.
+    super::draw_text_box(fb, 0, 12 * 8, 18, 4, FG);
 
-    draw_text(lang_data::ui_label("WHICH FLOOR?", is_zh), 40, 10, FG, fb);
+    draw_text(
+        lang_data::ui_label("WHICH FLOOR?", is_zh),
+        8,
+        14 * 8,
+        FG,
+        fb,
+    );
+    super::draw_text_box(fb, 4 * 8, 2 * 8, 14, 9, FG);
 
-    let floors = elevator.floors();
-    let sel = elevator.selected_index();
-    let start_y = 30;
-    let row_h = 14;
-    // Rows between the prompt (y=10) and the footer (y=128): 7 fit on screen.
-    // Long floor lists (e.g. Silph Co's 11) scroll with the selection cursor.
-    let max_visible = 7;
-    let offset = elevator.scroll_offset(max_visible);
-    for (row, (i, floor)) in floors.iter().enumerate().skip(offset).take(max_visible).enumerate() {
-        let y = start_y + row as u32 * row_h;
-        let marker = if i == sel { ">" } else { " " };
-        // Floor labels ("1F"/"B1F" etc.) are option values — kept as-is.
-        draw_text(&format!("{} {}", marker, floor), 60, y, FG, fb);
+    let floors = elevator.menu_entries();
+    let selected = elevator.selected_index();
+    let offset = elevator.scroll_offset(3);
+    // A fourth unselectable entry is visible below the three cursor rows.
+    for (row, floor) in floors.skip(offset).take(4).enumerate() {
+        draw_text(floor, 6 * 8, (4 + row as u32 * 2) * 8, FG, fb);
     }
 
-    draw_text(lang_data::ui_label("A SELECT", is_zh), 28, 128, FG, fb);
-    draw_text(lang_data::ui_label("B BACK", is_zh), 88, 128, FG, fb);
+    draw_text("▶", 5 * 8, (4 + (selected - offset) as u32 * 2) * 8, FG, fb);
 }
 
 /// Label for one filter-bag row. The drink flow passes internal item
@@ -68,7 +68,13 @@ pub fn draw_filter_bag(filter: &ElevatorScreen, fb: &mut FrameBuffer, lang: Lang
     // Same scroll window as the elevator menu (see draw_elevator).
     let max_visible = 7;
     let offset = filter.scroll_offset(max_visible);
-    for (row, (i, item)) in items.iter().enumerate().skip(offset).take(max_visible).enumerate() {
+    for (row, (i, item)) in items
+        .iter()
+        .enumerate()
+        .skip(offset)
+        .take(max_visible)
+        .enumerate()
+    {
         let y = start_y + row as u32 * row_h;
         let marker = if i == sel { ">" } else { " " };
         let label = filter_label(item, is_zh);
@@ -80,19 +86,16 @@ pub fn draw_filter_bag(filter: &ElevatorScreen, fb: &mut FrameBuffer, lang: Lang
 }
 
 /// Repaint only the `>` marker shared by elevator and filtered-bag menus.
-pub fn redraw_elevator_cursor(
-    previous: (u32, u32),
-    current: (u32, u32),
-    fb: &mut FrameBuffer,
-) {
+pub fn redraw_elevator_cursor(previous: (u32, u32), current: (u32, u32), fb: &mut FrameBuffer) {
+    let glyph = if current.0 == 40 { "▶" } else { ">" };
     for (x, y) in [previous, current] {
         for py in y..(y + 10).min(fb.height()) {
-            for px in x..(x + measure_text(">")).min(fb.width()) {
+            for px in x..(x + if x == 40 { 8 } else { measure_text(glyph) }).min(fb.width()) {
                 fb.set_pixel(px, py, BG);
             }
         }
     }
-    draw_text(">", current.0, current.1, FG, fb);
+    draw_text(glyph, current.0, current.1, FG, fb);
 }
 
 #[cfg(test)]
@@ -145,10 +148,12 @@ mod filter_label_tests {
     ) {
         let previous_menu = menu_at(entries, previous);
         let current_menu = menu_at(entries, current);
-        let offset = previous_menu.scroll_offset(7);
-        assert_eq!(offset, current_menu.scroll_offset(7));
-        let x = if filter { 44 } else { 60 };
-        let position = |selected| (x, 30 + (selected - offset) as u32 * 14);
+        let rows = if filter { 7 } else { 3 };
+        let offset = previous_menu.scroll_offset(rows);
+        assert_eq!(offset, current_menu.scroll_offset(rows));
+        let x = if filter { 44 } else { 40 };
+        let (y, step) = if filter { (30, 14) } else { (32, 16) };
+        let position = |selected| (x, y + (selected - offset) as u32 * step);
 
         let mut actual = render_menu(&previous_menu, filter, lang);
         redraw_elevator_cursor(position(previous), position(current), &mut actual);
@@ -177,9 +182,7 @@ mod filter_label_tests {
                 for previous in 0..entries.len() {
                     for current in 0..entries.len() {
                         if previous != current {
-                            assert_cursor_repaint(
-                                entries, previous, current, filter, language,
-                            );
+                            assert_cursor_repaint(entries, previous, current, filter, language);
                         }
                     }
                 }
@@ -196,12 +199,10 @@ mod filter_label_tests {
             for previous in 0..entries.len() {
                 for current in 0..entries.len() {
                     if previous != current
-                        && menu_at(entries, previous).scroll_offset(7)
-                            == menu_at(entries, current).scroll_offset(7)
+                        && menu_at(entries, previous).scroll_offset(3)
+                            == menu_at(entries, current).scroll_offset(3)
                     {
-                        assert_cursor_repaint(
-                            entries, previous, current, false, language,
-                        );
+                        assert_cursor_repaint(entries, previous, current, false, language);
                     }
                 }
             }

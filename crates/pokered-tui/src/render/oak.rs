@@ -1,40 +1,42 @@
-use pokered_core::naming_screen::{NamingScreenState, GRID_ROWS};
+use dotzuki_renderer::transition::{FadePalette, FADE_PALETTES};
+use pokered_core::game_state::Lang;
+use pokered_core::naming_screen::NamingScreenState;
 use pokered_core::oak_speech::{
     entrance_frames, entrance_slide_offset, slide_pic_x, OakSpeechPhase, OakSpeechState,
-    PicSlideSubject, DEFAULT_PLAYER_NAMES, DEFAULT_RIVAL_NAMES, INTRO_FADE_PALETTES,
-    INTRO_PIC_SLID_X, SHRINK_BEAT_CLEARED_END, SHRINK_BEAT_PIC1_END, SHRINK_BEAT_PIC2_END,
-    SHRINK_BEAT_RED_END,
+    PicSlideSubject, DEFAULT_PLAYER_NAMES, DEFAULT_RIVAL_NAMES, INTRODUCE_PLAYER_TEXT_PAGES,
+    INTRODUCE_PLAYER_TEXT_PAGES_ZH, INTRODUCE_RIVAL_TEXT_PAGES, INTRODUCE_RIVAL_TEXT_PAGES_ZH,
+    INTRO_FADE_PALETTES, INTRO_PIC_SLID_X, SHRINK_BEAT_CLEARED_END, SHRINK_BEAT_PIC1_END,
+    SHRINK_BEAT_PIC2_END, SHRINK_BEAT_RED_END,
+};
+use pokered_data::ui_layout::schema::{
+    NAMING_DEFAULT_LAYOUT, OAK_SPEECH_NAME_CHOICE_LAYOUT, OAK_SPEECH_TEXT_PHASE_LAYOUT,
 };
 use pokered_renderer::embedded_font::draw_text;
-use pokered_renderer::palette::GRAYSCALE_PALETTE;
+use pokered_renderer::palette::GRAYSCALE_SPRITE_PALETTE;
 use pokered_renderer::resource::{AssetCategory, ResourceManager};
 use pokered_renderer::{FrameBuffer, Rgba, TILE_SIZE};
-use dotzuki_renderer::transition::{FadePalette, FADE_PALETTES};
+use pokered_ui::backends::FrameBufferPainter;
+use pokered_ui::{menus, Ui};
 
-use super::{apply_gb_palette, blit_tileset, draw_centered_sprite, draw_text_box};
-
-const TEXT_BOX_X: u32 = 0;
-const TEXT_BOX_Y: u32 = 12 * 8;
-const TEXT_BOX_W: u32 = 18;
-const TEXT_BOX_H: u32 = 4;
+use super::{apply_gb_palette, blit_front_pic, blit_tileset, draw_centered_sprite};
 
 pub fn draw_oak_speech(
     state: &OakSpeechState,
     res: &mut Option<ResourceManager>,
     fb: &mut FrameBuffer,
-    language: pokered_core::game_state::Lang,
+    language: Lang,
 ) {
     fb.clear(Rgba::WHITE);
-    let pal = &GRAYSCALE_PALETTE;
-    let is_zh = language == pokered_core::game_state::Lang::Zh;
+    let sprite_pal = &GRAYSCALE_SPRITE_PALETTE;
 
-    // Naming screen open/submit white flash (GBPalWhiteOutWithDelay3).
+    // Naming screen open/submit white flash (GBPalWhiteOutWithDelay3,
+    // naming_screen.asm:88/163).
     if state.is_flashing() {
         return;
     }
 
     if let Some(naming) = &state.naming_screen {
-        draw_naming_screen(naming, fb);
+        draw_naming_screen(naming, res, fb, language);
         return;
     }
 
@@ -42,6 +44,9 @@ pub fn draw_oak_speech(
     let entrance = entrance_frames(phase);
     let entering = state.phase_frame < entrance;
 
+    // Pic drawn at an explicit left-edge x (tilemap position) rather than
+    // centered: the name-choice rest position (hlcoord 12,4) and the SlidePic
+    // animation both place it directly.
     let sprite: Option<(&str, &str)> = match phase {
         OakSpeechPhase::Greeting { .. }
         | OakSpeechPhase::Explanation { .. }
@@ -59,21 +64,23 @@ pub fn draw_oak_speech(
         OakSpeechPhase::ShrinkPlayer { frame } => {
             let f = *frame;
             let shrink_name = if f < SHRINK_BEAT_RED_END {
+                // SFX_SHRINK plays while RedPicFront is still shown.
                 "red"
             } else if f < SHRINK_BEAT_PIC1_END {
                 "shrink1"
             } else if f < SHRINK_BEAT_PIC2_END {
                 "shrink2"
             } else {
+                // 7×7 area at (6,5) cleared (oak_speech.asm:156-159).
                 ""
             };
             if !shrink_name.is_empty() {
                 if let Some(ref mut rm) = res {
                     if let Ok(cached) = rm.load(AssetCategory::Player, shrink_name) {
-                        let ts = cached.tileset.clone();
+                        let ts = &cached.tileset;
                         let w = cached.source_size.0;
                         let h = cached.source_size.1;
-                        draw_centered_sprite(fb, &ts, w, h, pal);
+                        draw_centered_sprite(fb, &ts, w, h, sprite_pal);
                     }
                 }
             }
@@ -109,11 +116,11 @@ pub fn draw_oak_speech(
                 None
             };
             if let Some(cached) = result {
-                let ts = cached.tileset.clone();
+                let ts = &cached.tileset;
                 let w = cached.source_size.0;
                 let tiles_per_row = w / TILE_SIZE;
                 if let Some(x) = explicit_x {
-                    blit_tileset(fb, &ts, x, 4 * TILE_SIZE, tiles_per_row, pal);
+                    blit_tileset(fb, &ts, x, 4 * TILE_SIZE, tiles_per_row, sprite_pal);
                 } else {
                     // MovePicLeft entrance: the pic slides in from the right.
                     let offset = if entering
@@ -126,8 +133,12 @@ pub fn draw_oak_speech(
                     } else {
                         0
                     };
-                    let sx = (fb.width().saturating_sub(w)) / 2 + offset;
-                    blit_tileset(fb, &ts, sx, 32, tiles_per_row, pal);
+                    let sx = 6 * TILE_SIZE + offset;
+                    if category == "pokemon_front" {
+                        blit_front_pic(fb, cached, sx as i32, 32, true);
+                    } else {
+                        blit_tileset(fb, &ts, sx, 32, tiles_per_row, sprite_pal);
+                    }
                 }
             }
         }
@@ -135,131 +146,86 @@ pub fn draw_oak_speech(
 
     match phase {
         OakSpeechPhase::PlayerNameChoice { cursor } => {
-            draw_text_box(fb, 0, 0, 9, if is_zh { 8 } else { 10 }, Rgba::BLACK);
-            draw_text(if is_zh { "姓名" } else { "NAME" }, 3 * TILE_SIZE, TILE_SIZE, Rgba::BLACK, fb);
-            for (i, name) in DEFAULT_PLAYER_NAMES.iter().enumerate() {
-                if i == *cursor {
-                    draw_text("▶", TILE_SIZE, (2 + i as u32 * 2) * TILE_SIZE, Rgba::BLACK, fb);
-                }
-                draw_text(
-                    name,
-                    2 * TILE_SIZE,
-                    (2 + i as u32 * 2) * TILE_SIZE,
-                    Rgba::BLACK,
-                    fb,
-                );
-            }
-            draw_text_box(
-                fb,
-                TEXT_BOX_X,
-                TEXT_BOX_Y,
-                TEXT_BOX_W,
-                TEXT_BOX_H,
-                Rgba::BLACK,
-            );
-            draw_text(
-                if is_zh { "你的名字？" } else { "Your name?" },
-                TILE_SIZE,
-                TEXT_BOX_Y + TILE_SIZE,
-                Rgba::BLACK,
-                fb,
+            let mut painter = FrameBufferPainter::new(fb).with_lang(language);
+            let mut ui = Ui::new(&mut painter);
+            let prompt = if language == Lang::Zh {
+                "你的名字？"
+            } else {
+                "Your name?"
+            };
+            menus::oak_speech::draw_name_choice(
+                &DEFAULT_PLAYER_NAMES,
+                *cursor,
+                prompt,
+                &OAK_SPEECH_NAME_CHOICE_LAYOUT,
+                &mut ui,
             );
         }
         OakSpeechPhase::RivalNameChoice { cursor } => {
-            draw_text_box(fb, 0, 0, 9, if is_zh { 8 } else { 10 }, Rgba::BLACK);
-            draw_text(if is_zh { "姓名" } else { "NAME" }, 3 * TILE_SIZE, TILE_SIZE, Rgba::BLACK, fb);
-            for (i, name) in DEFAULT_RIVAL_NAMES.iter().enumerate() {
-                if i == *cursor {
-                    draw_text("▶", TILE_SIZE, (2 + i as u32 * 2) * TILE_SIZE, Rgba::BLACK, fb);
-                }
-                draw_text(
-                    name,
-                    2 * TILE_SIZE,
-                    (2 + i as u32 * 2) * TILE_SIZE,
-                    Rgba::BLACK,
-                    fb,
-                );
-            }
-            draw_text_box(
-                fb,
-                TEXT_BOX_X,
-                TEXT_BOX_Y,
-                TEXT_BOX_W,
-                TEXT_BOX_H,
-                Rgba::BLACK,
-            );
-            draw_text(
-                if is_zh { "他的名字？" } else { "His name?" },
-                TILE_SIZE,
-                TEXT_BOX_Y + TILE_SIZE,
-                Rgba::BLACK,
-                fb,
+            let mut painter = FrameBufferPainter::new(fb).with_lang(language);
+            let mut ui = Ui::new(&mut painter);
+            let prompt = if language == Lang::Zh {
+                "他的名字？"
+            } else {
+                "His name?"
+            };
+            menus::oak_speech::draw_name_choice(
+                &DEFAULT_RIVAL_NAMES,
+                *cursor,
+                prompt,
+                &OAK_SPEECH_NAME_CHOICE_LAYOUT,
+                &mut ui,
             );
         }
         OakSpeechPhase::Done => {
             draw_text("...", 70, 70, Rgba::BLACK, fb);
         }
         OakSpeechPhase::ShrinkPlayer { .. } => {}
-        // While the pic entrance animation plays the text has not started
-        // printing yet; during the menu slide the intro text stays visible.
+        // During the slide the intro text box stays on screen (the menu only
+        // appears once the slide finishes, oak_speech2.asm:2-5); while the
+        // pic entrance animation plays the text has not started printing yet.
         OakSpeechPhase::SlidePic { subject, .. } => {
-            let pages: &[pokered_core::oak_speech::TextPage] = match subject {
-                PicSlideSubject::Player if is_zh => pokered_core::oak_speech::INTRODUCE_PLAYER_TEXT_PAGES_ZH,
-                PicSlideSubject::Player => pokered_core::oak_speech::INTRODUCE_PLAYER_TEXT_PAGES,
-                PicSlideSubject::Rival if is_zh => pokered_core::oak_speech::INTRODUCE_RIVAL_TEXT_PAGES_ZH,
-                PicSlideSubject::Rival => pokered_core::oak_speech::INTRODUCE_RIVAL_TEXT_PAGES,
+            let pages: &[pokered_core::oak_speech::TextPage] = match (subject, language) {
+                (PicSlideSubject::Player, Lang::Zh) => INTRODUCE_PLAYER_TEXT_PAGES_ZH,
+                (PicSlideSubject::Player, _) => INTRODUCE_PLAYER_TEXT_PAGES,
+                (PicSlideSubject::Rival, Lang::Zh) => INTRODUCE_RIVAL_TEXT_PAGES_ZH,
+                (PicSlideSubject::Rival, _) => INTRODUCE_RIVAL_TEXT_PAGES,
             };
-            draw_text_box(
-                fb,
-                TEXT_BOX_X,
-                TEXT_BOX_Y,
-                TEXT_BOX_W,
-                TEXT_BOX_H,
-                Rgba::BLACK,
-            );
             if let Some(page) = pages.last() {
                 let (line1, line2) = page.get_display_text(state.player_name.as_deref(), u16::MAX);
-                draw_text(&line1, TILE_SIZE, TEXT_BOX_Y + TILE_SIZE, Rgba::BLACK, fb);
-                draw_text(
+                let mut painter = FrameBufferPainter::new(fb).with_lang(language);
+                let mut ui = Ui::new(&mut painter);
+                menus::oak_speech::draw_text_phase_localized(
+                    &line1,
                     &line2,
-                    TILE_SIZE,
-                    TEXT_BOX_Y + TILE_SIZE * 3,
-                    Rgba::BLACK,
-                    fb,
+                    false,
+                    &OAK_SPEECH_TEXT_PHASE_LAYOUT,
+                    &mut ui,
+                    language,
                 );
             }
         }
         _ => {
             if !entering {
-                draw_text_box(
-                    fb,
-                    TEXT_BOX_X,
-                    TEXT_BOX_Y,
-                    TEXT_BOX_W,
-                    TEXT_BOX_H,
-                    Rgba::BLACK,
-                );
-
-                if let Some(page) = pokered_core::oak_speech::text_pages_for_lang(phase, language) {
+                let (line1, line2) = if let Some(page) =
+                    pokered_core::oak_speech::text_pages_for_lang(phase, language)
+                {
                     let char_index = state.current_char_index();
-                    let (line1, line2) =
-                        page.get_display_text(state.player_name.as_deref(), char_index);
-
-                    draw_text(&line1, TILE_SIZE, TEXT_BOX_Y + TILE_SIZE, Rgba::BLACK, fb);
-                    draw_text(
-                        &line2,
-                        TILE_SIZE,
-                        TEXT_BOX_Y + TILE_SIZE * 3,
-                        Rgba::BLACK,
-                        fb,
-                    );
-                }
-
-                if state.is_waiting_for_input() {
-                    let arrow_x = 18 * TILE_SIZE;
-                    let arrow_y = 15 * TILE_SIZE;
-                    draw_text("▼", arrow_x, arrow_y, Rgba::BLACK, fb);
-                }
+                    page.get_display_text(state.player_name.as_deref(), char_index)
+                } else {
+                    (String::new(), String::new())
+                };
+                let show_arrow = state.is_waiting_for_input();
+                let mut painter = FrameBufferPainter::new(fb).with_lang(language);
+                let mut ui = Ui::new(&mut painter);
+                menus::oak_speech::draw_text_phase_localized(
+                    &line1,
+                    &line2,
+                    show_arrow,
+                    &OAK_SPEECH_TEXT_PHASE_LAYOUT,
+                    &mut ui,
+                    language,
+                );
             }
         }
     }
@@ -283,99 +249,34 @@ pub fn draw_oak_speech(
     }
 }
 
-const NAME_BOX_Y: u32 = 3;
-const KEYBOARD_X: u32 = 2;
-const KEYBOARD_Y: u32 = 6;
-/// Letter rows are spaced 2 rows (6,8,10,12,14) so the panel interior is
-/// filled edge to edge; the case label sits on the last interior row (16).
-const ROW_STEP: u32 = 2;
-const CASE_ROW_GAP: u32 = 2;
-
 pub fn draw_naming_screen(
     naming: &NamingScreenState,
+    res: &mut Option<ResourceManager>,
     fb: &mut FrameBuffer,
+    language: Lang,
 ) {
-    fb.clear(Rgba::WHITE);
-
-    // 20×13 tile box: border on rows 5 and 17, interior rows 6..=16.
-    draw_text_box(fb, 0, 5 * TILE_SIZE, 18, 11, Rgba::BLACK);
-
-    let title = match naming.screen_type() {
-        pokered_core::naming_screen::NamingScreenType::Player => "YOUR NAME?",
-        pokered_core::naming_screen::NamingScreenType::Rival => "RIVAL's NAME?",
-        pokered_core::naming_screen::NamingScreenType::Pokemon => "NICKNAME?",
-    };
-    let title_x = (20 - title.chars().count() as u32) / 2;
-    draw_text(title, title_x * TILE_SIZE, TILE_SIZE, Rgba::BLACK, fb);
-
-    let name = naming.name();
-    let max_len = naming.max_length();
-
-    let name_box_x = (20 - max_len as u32) / 2;
-    draw_text(
-        name,
-        name_box_x * TILE_SIZE,
-        NAME_BOX_Y * TILE_SIZE,
-        Rgba::BLACK,
-        fb,
+    let mut painter = FrameBufferPainter::new(fb).with_lang(language);
+    let mut ui = Ui::new(&mut painter);
+    menus::naming::draw(
+        naming,
+        &NAMING_DEFAULT_LAYOUT,
+        &mut ui,
+        language == Lang::Zh,
     );
-
-    let underscore_y = (NAME_BOX_Y + 1) * TILE_SIZE;
-    let name_len = name.len() as u32;
-
-    for i in 0..max_len as u32 {
-        let is_filled = i < name_len;
-        let is_current = i == name_len;
-
-        // Draw a crisp full-width underline: the BDF '_' glyph sits below the
-        // 8×8 tile grid (10px cell, y_off -1) and would land on the row below.
-        // 0x76 = normal slot, 0x77 = raised (current editing slot).
-        let line_y = if is_current && !is_filled {
-            underscore_y + 4
-        } else {
-            underscore_y + 6
+    if let (Some(species), Some(rm)) = (naming.species, res.as_mut()) {
+        use pokered_renderer::mon_icon::{
+            draw_mon_icon, icon_y_offset, load_mon_icon_tiles, IconFrame,
         };
-        fb.fill_rect((name_box_x + i) * TILE_SIZE, line_y, TILE_SIZE, 1, Rgba::BLACK);
-    }
-
-    let alphabet = naming.current_alphabet();
-    let cursor_row = naming.cursor_row();
-    let cursor_col = naming.cursor_col();
-
-    for (row_i, row) in alphabet.iter().enumerate() {
-        let y = (KEYBOARD_Y + row_i as u32 * ROW_STEP) * TILE_SIZE;
-        for (col_i, &tile_id) in row.iter().enumerate() {
-            let x = (KEYBOARD_X + col_i as u32 * 2) * TILE_SIZE;
-
-            if row_i == cursor_row && col_i == cursor_col {
-                draw_text("▶", x - TILE_SIZE, y, Rgba::BLACK, fb);
-            }
-
-            let display_str = pokered_data::charmap::decode_char(tile_id).unwrap_or("?");
-            draw_text(display_str, x, y, Rgba::BLACK, fb);
+        let kind = pokered_data::mon_party_icons::icon_for_species(species);
+        let frame = IconFrame::from_counter(naming.animation_frame, 17);
+        if let Ok(tiles) = load_mon_icon_tiles(rm, kind, frame) {
+            draw_mon_icon(
+                fb,
+                tiles,
+                8,
+                icon_y_offset(kind, frame),
+                &pokered_renderer::palette::GRAYSCALE_SPRITE_PALETTE,
+            );
         }
     }
-
-    let case_row_y = (KEYBOARD_Y + (GRID_ROWS as u32 - 1) * ROW_STEP + CASE_ROW_GAP) * TILE_SIZE;
-    if cursor_row == GRID_ROWS {
-        draw_text(
-            "▶",
-            KEYBOARD_X * TILE_SIZE - TILE_SIZE,
-            case_row_y,
-            Rgba::BLACK,
-            fb,
-        );
-    }
-    let case_text = if naming.is_lowercase() {
-        "UPPER CASE"
-    } else {
-        "lower case"
-    };
-    draw_text(
-        case_text,
-        KEYBOARD_X * TILE_SIZE,
-        case_row_y,
-        Rgba::BLACK,
-        fb,
-    );
 }
