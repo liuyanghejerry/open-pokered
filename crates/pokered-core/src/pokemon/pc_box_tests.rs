@@ -295,3 +295,140 @@ fn storage_get_box_mut() {
     storage.get_box_mut(7).unwrap().get_mut(0).unwrap().level = 5;
     assert_eq!(storage.get_box(7).unwrap().get(0).unwrap().level, 5);
 }
+
+// The real legal-run Hypno gained stat EXP without gaining a level. Its party
+// cache was still 129 HP; the Gen-I box record reconstructs a 130-HP maximum.
+fn trained_hypno() -> Pokemon {
+    let mut mon = super::stats::create_pokemon(Species::Hypno, 38, [147, 142]).unwrap();
+    mon.total_exp = 59108;
+    mon.stat_exp = [7864, 12837, 7647, 13972, 6908];
+    mon.hp = 129;
+    mon.max_hp = 129;
+    mon.moves = [
+        MoveId::Headbutt, MoveId::Hypnosis, MoveId::Disable, MoveId::PsychicM,
+    ];
+    mon.pp = [15, 20, 20, 10];
+    mon.ot_id = 25506;
+    mon.ot_name[..4].copy_from_slice(&[0x91, 0x84, 0x83, 0x50]); // RED
+    mon
+}
+
+#[test]
+fn deposit_rebuilds_box_stats_without_healing_or_changing_the_record() {
+    use crate::save::ser_pokemon::{deserialize_box_mon, serialize_box_mon};
+    let mon = trained_hypno();
+    let mut original_record = Vec::new();
+    serialize_box_mon(&mon, &mut original_record);
+    let mut b = PcBox::new();
+    b.deposit(mon).unwrap();
+    let stored = *b.get(0).unwrap();
+    assert_eq!((stored.hp, stored.max_hp), (129, 130));
+    assert_eq!(
+        (stored.attack, stored.defense, stored.speed, stored.special),
+        (77, 68, 73, 111)
+    );
+    let mut stored_record = Vec::new();
+    serialize_box_mon(&stored, &mut stored_record);
+    assert_eq!(stored_record, original_record);
+    let mut restored = deserialize_box_mon(&stored_record).unwrap();
+    restored.nickname = stored.nickname;
+    restored.ot_name = stored.ot_name;
+    assert_eq!(restored, stored);
+}
+
+#[test]
+fn legacy_json_box_rebuilds_stats_without_changing_hp_or_box_level() {
+    let mon = trained_hypno();
+    let json = serde_json::to_string(&vec![mon]).unwrap();
+    let b: PcBox = serde_json::from_str(&json).unwrap();
+    let mut expected = mon;
+    expected.max_hp = 130;
+    expected.attack = 77;
+    expected.defense = 68;
+    expected.speed = 73;
+    expected.special = 111;
+    assert_eq!(b.get(0), Some(&expected));
+}
+
+#[test]
+fn withdraw_recomputes_level_from_exp_and_stats_without_healing() {
+    use crate::battle::experience::growth::exp_for_level;
+    use pokered_data::pokemon_data::get_base_stats;
+    let mut mon = trained_hypno();
+    let base = get_base_stats(mon.species).unwrap();
+    mon.total_exp = exp_for_level(base.growth_rate, 39);
+    mon.status = StatusCondition::Sleep(3);
+    mon.pp_ups = [1, 2, 3, 0];
+    let mut storage = PcStorage::new();
+    storage.deposit_to_current(mon).unwrap();
+    // A box STATS view uses the stored box level, not the XP-derived level.
+    assert_eq!(storage.current_box().get(0).unwrap().level, 38);
+    let mut party = Party::new();
+    storage.withdraw_to_party(0, &mut party).unwrap();
+    let restored = *party.get(0).unwrap();
+    let mut expected = mon;
+    expected.level = 39;
+    let (hp, atk, def, spd, spc) = crate::battle::experience::stats::calc_all_stats(
+        base, mon.dv_bytes, &mon.stat_exp, 39,
+    );
+    expected.max_hp = hp;
+    expected.attack = atk;
+    expected.defense = def;
+    expected.speed = spd;
+    expected.special = spc;
+    assert_eq!(restored, expected);
+    assert_eq!(restored.hp, 129);
+}
+
+#[test]
+fn withdraw_from_current_rebuilds_stats_and_does_not_revive() {
+    let mut mon = trained_hypno();
+    mon.hp = 0;
+    mon.status = StatusCondition::Poison;
+    let mut storage = PcStorage::new();
+    storage.deposit_to_current(mon).unwrap();
+    // Model an older in-memory box, including a stale derived-stat cache.
+    *storage.current_box_mut().get_mut(0).unwrap() = mon;
+    let restored = storage.withdraw_from_current(0).unwrap();
+    assert_eq!((restored.hp, restored.max_hp), (0, 130));
+    assert_eq!(restored.status, StatusCondition::Poison);
+    assert_eq!(restored.total_exp, mon.total_exp);
+    assert_eq!(restored.dv_bytes, mon.dv_bytes);
+    assert_eq!(restored.stat_exp, mon.stat_exp);
+    assert_eq!(restored.moves, mon.moves);
+    assert_eq!(restored.pp, mon.pp);
+    assert_eq!(restored.ot_name, mon.ot_name);
+}
+
+#[test]
+fn box_stat_rebuild_preserves_fainting_status_pp_and_identity_at_level_limits() {
+    use crate::save::ser_pokemon::{deserialize_box_mon, serialize_box_mon};
+    for level in [1, 5, 38, 99, 100] {
+        for hp in [0, 1] {
+            let mut mon = super::stats::create_pokemon(Species::Hypno, level, [147, 142]).unwrap();
+            mon.stat_exp = [7864, 12837, 7647, 13972, 6908];
+            mon.hp = hp;
+            mon.status = StatusCondition::Paralysis;
+            mon.pp = [1, 0, 2, 3];
+            mon.pp_ups = [1, 2, 3, 0];
+            mon.ot_id = 25506;
+            mon.is_traded = true;
+            mon.nickname[..4].copy_from_slice(&[0x80, 0x81, 0x82, 0x50]);
+            let mut record = Vec::new();
+            serialize_box_mon(&mon, &mut record);
+            let expected_stats = deserialize_box_mon(&record).unwrap();
+            let mut b = PcBox::new();
+            b.deposit(mon).unwrap();
+            let stored = *b.get(0).unwrap();
+            let mut regenerated = Vec::new();
+            serialize_box_mon(&stored, &mut regenerated);
+            assert_eq!(regenerated, record);
+            assert_eq!(stored.max_hp, expected_stats.max_hp);
+            assert_eq!(stored.nickname, mon.nickname);
+            assert_eq!(stored.is_traded, mon.is_traded);
+            let mut storage = PcStorage::new();
+            storage.deposit_to_current(mon).unwrap();
+            assert_eq!(storage.withdraw_from_current(0).unwrap(), stored);
+        }
+    }
+}

@@ -257,16 +257,7 @@ fn restore_missing_derived_stats(mon: &mut Pokemon) {
     if mon.attack != 0 && mon.defense != 0 && mon.speed != 0 && mon.special != 0 {
         return;
     }
-    if let Some(base) = pokered_data::pokemon_data::get_base_stats(mon.species) {
-        let (hp, atk, def, spd, spc) = crate::battle::experience::stats::calc_all_stats(
-            base, mon.dv_bytes, &mon.stat_exp, mon.level,
-        );
-        mon.max_hp = hp;
-        mon.attack = atk;
-        mon.defense = def;
-        mon.speed = spd;
-        mon.special = spc;
-    }
+    crate::pokemon::stats::rebuild_derived_stats(mon);
 }
 
 pub fn deserialize_party_mon(data: &[u8]) -> Result<Pokemon, SaveError> {

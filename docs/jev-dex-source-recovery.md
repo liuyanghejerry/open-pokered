@@ -5850,3 +5850,62 @@ box记录未保存派生能力值，读取路径会重建，但在确认原作�
 确定性与示例覆盖是另一个待检查问题。后续优先解决PC能力缓存与
 原作存取语义、重新严格验证58保存，再从保留的新收获继续，而不是
 回档或把独立差异跳过。最终合法124/完整合成MP4/图鉴大盘仍未完成。
+
+## 2026-10-04：按原版修正盒子能力缓存与取出语义
+
+已定位第20段Hypno最大HP差异的原因，并修复原生引擎，**尚未把原第20段
+重新标为安全58，也没有启动第21段**。第19段57/124的独立安全基线、
+第20段58/95的原SRAM／训练／Tm11出售／两次付费及全部原录像继续保留。
+原schema4失败报告及其expected/restored均未改写；最终124门槛也未放宽。
+
+原作固定到pret/pokered的`d2704a63c26f9ba046ade877445216b3de0519a4`：
+[StatusScreen](https://github.com/pret/pokered/blob/d2704a63c26f9ba046ade877445216b3de0519a4/engine/pokemon/status_screen.asm)
+在盒子查看时按box level调用CalcStats；
+[_MoveMon](https://github.com/pret/pokered/blob/d2704a63c26f9ba046ade877445216b3de0519a4/engine/pokemon/add_mon.asm)
+取出时从经验重算party level及能力值，复制的当前HP／状态／招式／PP不变。
+[战斗经验](https://github.com/pret/pokered/blob/d2704a63c26f9ba046ade877445216b3de0519a4/engine/battle/experience.asm)
+在获得努力值但未升级时跳过能力值更新，因此Hypno在party中保留129的
+缓存是合理的；错误是直接把它当作盒子查看和取出后的能力值。
+
+新增`rebuild_derived_stats`只重建五项派生能力，不执行升级回血。
+PcBox存入与旧JSON读入使内存盒子缓存等同于SRAM读入／盒子STATS视图，
+不改变33字节box记录或box level；PC取出统一经PcStorage，按XP重算
+等级和能力值，原HP／状态／招式／PP／经验／DVs／努力值／名字／OT保留。
+没有通过全队重新计算、治疗、强制取出或改正式存档来修复现场。
+
+核对[CalcStat](https://github.com/pret/pokered/blob/d2704a63c26f9ba046ade877445216b3de0519a4/home/move_mon.asm)
+另发现原努力值平方根循环最多255，而此前数学ceil-sqrt可到256，导致
+努力值超过65025时多算1点；现保留整数sqrt实现，只在贡献项按原作限255。
+七项新增原生回归含真实Hypno数值、盒子33字节无损往返、旧JSON、
+真实PC菜单取出、XP等级重算、状态／濒死／PP-up／身份保持、等级边界和
+65024／65025／65026／65535边界。旧版本先复现失败；修复后2620项核心、
+122项应用、1105项Python及5项debug协议测试全部通过。
+
+按PR规范，在独立master `0f94a6fa`与修正版使用同一构造快照、同一gfx、
+同一真实菜单输入捕获：盒子STATS均frame345，取出后party STATS均
+frame717。前129/129、后129/130，当前HP仍129；每对只11像素不同，
+差异范围在HP条／HP数字。四张原生PNG置于`docs/screenshots/jev-dex-box-stat-*`。
+快照只为重建旧缓存边界，部分派生能力来自只读SRAM导出，并不声称
+重现了旧现场所有未暴露能力值；这些构造场景不计真实收集或合法存档。
+
+新native冻结副本为独立构建的`pc-box-native-fix/pokered-app-after`，SHA
+`8dae11ebdcc620a15558eba935dfccf921a5e92388f71daec10ffecc5fd95f8f`。
+旧冻结6d8e及全部源收据仍保留。master缺gfx的首次构建失败已留日志；
+复用现有只读gfx后成功。跨worktree共用release缓存时旧debug协议导致
+一次编译失败，修正版改用独立target并完整构建成功，没有改源码绕过。
+未删除旧产物，未在/tmp放正式数据，也未复制gfx或凭据。
+
+对第20段原SRAM／sidecar的字节相同副本，用新native两次普通CONTINUE：
+持久化快照与此前保留的真实读档结果逐字段相同；以这次真实加载观察为
+新基线的独立重放通过原schema4，expected==restored，原源hash不变。
+这只是原保存的修正版读档兼容／重放回归，不冒充旧129→130比较通过。
+另独立解析全部43个原生保存box记录，核对物种／level／当前HP／状态／
+招式／PP／PP-up／OT-ID／XP／DVs／努力值，再用整数原作公式核对派生
+能力与普通读档maxHP。Hypno为XP59108、HP129、派生130/77/68/73/111，
+证明保存数据与原作派生值一致，但不能用未暴露的旧PC数据声称全历史
+隐藏字段都独立可比。原作五份ASM按固定commit另存本地hash收据。
+
+汇总证据：`.artifacts/checkpoint-safety-20261003/boxed-stat-native-repair-audit-20261004.json`；
+修正版两进程回归及完整schema4：`legal20-after-boxed-stat-fix-regression-20261004.json`。
+下一步是完成明确区分“旧缓存观测差异”和“原序列化记录”的原保存交接
+验证，再从原58种数据正常继续，不能回档到57或静默忽略旧失败。
