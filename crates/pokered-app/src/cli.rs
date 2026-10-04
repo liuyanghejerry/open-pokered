@@ -9,6 +9,10 @@ pub struct Cli {
     #[command(subcommand)]
     pub command: Option<Commands>,
 
+    /// Original game version for gameplay (Red by default).
+    #[arg(long, global = true, value_enum, default_value = "red")]
+    pub game_version: CliGameVersion,
+
     /// Enable debug logging for specific modules (comma-separated).
     /// Available modules: save, overworld, battle, menu, audio, warp, event, render, all.
     /// Example: --debug-modules save,overworld
@@ -45,6 +49,21 @@ pub struct Cli {
     /// Join a link-play game as the client: "host:port" (e.g. 127.0.0.1:5000).
     #[arg(long, global = true, conflicts_with = "link_listen")]
     pub link_connect: Option<String>,
+}
+
+#[derive(Clone, Copy, Debug, ValueEnum)]
+pub enum CliGameVersion {
+    Red,
+    Blue,
+}
+
+impl CliGameVersion {
+    pub fn to_game_version(self) -> pokered_core::data::wild_data::GameVersion {
+        match self {
+            Self::Red => pokered_core::data::wild_data::GameVersion::Red,
+            Self::Blue => pokered_core::data::wild_data::GameVersion::Blue,
+        }
+    }
 }
 
 /// Language selector for the capture commands (screenshots/battle). Maps to

@@ -20,6 +20,8 @@ game_scene VictoryRoad2F {
   //   SWITCH2 -> ld a,$1d (block 29); lb bc, 7, 11 => replaceTileBlock(X=11, Y=7,  29)
   // (asm lb bc, B, C = Y,X; our API is replaceTileBlock(X, Y, id) X-first.)
   @load {
+    // Original VictoryRoad2FResetBoulderEventScript clears only the 1F switch.
+    resetFlag("EVENT_VICTORY_ROAD_1_BOULDER_ON_SWITCH")
     @if (getFlag("EVENT_VICTORY_ROAD_3_BOULDER_ON_SWITCH2")) {
       showObject("VICTORY_ROAD_2F_OBJ_13")
     }
@@ -118,7 +120,7 @@ game_scene VictoryRoad2F {
       }
       // Static wild Lv50 MOLTRES battle (catchable); flag set only on win/catch.
       result = startWildBattle("MOLTRES", 50)
-      @if (result == "win" || result == "caught") {
+      @if (result == "win" || result == "caught" || result == "ran" || result == "fled") {
         setFlag("EVENT_BEAT_MOLTRES")
         hideObjectByName("VICTORY_ROAD_2F_OBJ_6")
       }
@@ -128,52 +130,60 @@ game_scene VictoryRoad2F {
   // ── Ground item: TM17 SUBMISSION (npc 7) ──────────────────────────────────
   @storyline("itemTmSubmission") {
     @trigger(map = "VictoryRoad2F", npc = 7, toggle = "VICTORY_ROAD_2F_OBJ_7")
-    @if (getFlag("EVENT_GOT_TM17")) {
-      @speaker("") { @t("The item ball is empty.", "这个道具球是空的。") }
-    } @else {
-      giveItem("TM17", 1)
-      setFlag("EVENT_GOT_TM17")
-      hideObject("VICTORY_ROAD_2F_OBJ_7")
-      @speaker("") { @t("<PLAYER> found TM17!", "<PLAYER>找到了 TM17！") }
+    @if (!getFlag("EVENT_GOT_TM17")) {
+      given = giveItem("TM17", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_TM17")
+        hideObjectByName("VICTORY_ROAD_2F_OBJ_7")
+        showItemDialogue(t("<PLAYER> found TM17!", "<PLAYER>找到了 TM17！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 
   // ── Ground item: FULL HEAL (npc 8) ────────────────────────────────────────
   @storyline("itemFullHeal") {
     @trigger(map = "VictoryRoad2F", npc = 8, toggle = "VICTORY_ROAD_2F_OBJ_8")
-    @if (getFlag("EVENT_GOT_FULL_HEAL_VICTORY_ROAD_2F")) {
-      @speaker("") { @t("The item ball is empty.", "这个道具球是空的。") }
-    } @else {
-      giveItem("FULL_HEAL", 1)
-      setFlag("EVENT_GOT_FULL_HEAL_VICTORY_ROAD_2F")
-      hideObject("VICTORY_ROAD_2F_OBJ_8")
-      @speaker("") { @t("<PLAYER> found FULL_HEAL!", "<PLAYER>找到了万灵药！") }
+    @if (!getFlag("EVENT_GOT_FULL_HEAL_VICTORY_ROAD_2F")) {
+      given = giveItem("FULL_HEAL", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_FULL_HEAL_VICTORY_ROAD_2F")
+        hideObjectByName("VICTORY_ROAD_2F_OBJ_8")
+        showItemDialogue(t("<PLAYER> found FULL_HEAL!", "<PLAYER>找到了万灵药！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 
   // ── Ground item: TM05 MEGA KICK (npc 9) ───────────────────────────────────
   @storyline("itemTmMegaKick") {
     @trigger(map = "VictoryRoad2F", npc = 9, toggle = "VICTORY_ROAD_2F_OBJ_9")
-    @if (getFlag("EVENT_GOT_TM05")) {
-      @speaker("") { @t("The item ball is empty.", "这个道具球是空的。") }
-    } @else {
-      giveItem("TM05", 1)
-      setFlag("EVENT_GOT_TM05")
-      hideObject("VICTORY_ROAD_2F_OBJ_9")
-      @speaker("") { @t("<PLAYER> found TM05!", "<PLAYER>找到了 TM05！") }
+    @if (!getFlag("EVENT_GOT_TM05")) {
+      given = giveItem("TM05", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_TM05")
+        hideObjectByName("VICTORY_ROAD_2F_OBJ_9")
+        showItemDialogue(t("<PLAYER> found TM05!", "<PLAYER>找到了 TM05！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 
   // ── Ground item: GUARD SPEC. (npc 10) ─────────────────────────────────────
   @storyline("itemGuardSpec") {
     @trigger(map = "VictoryRoad2F", npc = 10, toggle = "VICTORY_ROAD_2F_OBJ_10")
-    @if (getFlag("EVENT_GOT_GUARD_SPEC_VICTORY_ROAD_2F")) {
-      @speaker("") { @t("The item ball is empty.", "这个道具球是空的。") }
-    } @else {
-      giveItem("GUARD_SPEC", 1)
-      setFlag("EVENT_GOT_GUARD_SPEC_VICTORY_ROAD_2F")
-      hideObject("VICTORY_ROAD_2F_OBJ_10")
-      @speaker("") { @t("<PLAYER> found GUARD_SPEC!", "<PLAYER>找到了特殊防御！") }
+    @if (!getFlag("EVENT_GOT_GUARD_SPEC_VICTORY_ROAD_2F")) {
+      given = giveItem("GUARD_SPEC", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_GUARD_SPEC_VICTORY_ROAD_2F")
+        hideObjectByName("VICTORY_ROAD_2F_OBJ_10")
+        showItemDialogue(t("<PLAYER> found GUARD_SPEC!", "<PLAYER>找到了特殊防御！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 

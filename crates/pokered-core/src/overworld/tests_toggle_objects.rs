@@ -150,3 +150,32 @@ fn town_map_pickup_hides_table_map() {
         "TOWN MAP must stay hidden when BluesHouse is reloaded"
     );
 }
+
+#[test]
+fn daisy_sprite_swap_runs_before_an_immediate_house_reentry() {
+    let mut screen = OverworldScreen::new(MapId::PalletTown, None, PokemonRedData);
+    screen.set_flag_live("EVENT_FOLLOWED_OAK_INTO_LAB", true);
+    screen.set_flag_live("EVENT_GOT_TOWN_MAP", true);
+    screen.set_flag_live("EVENT_ENTERED_BLUES_HOUSE", true);
+    screen.state.player.x = 7;
+    screen.state.player.y = 6;
+    screen.load_map_script(MapId::PalletTown);
+    for _ in 0..30 { screen.update_frame(neutral_input()); }
+    assert!(flag_set(&screen, "EVENT_DAISY_WALKING"));
+    let sitting = toggle_id_to_bit_index("BLUESHOUSE_DAISY1").unwrap();
+    let walking = toggle_id_to_bit_index("BLUESHOUSE_DAISY2").unwrap();
+    assert!(is_object_hidden(&screen.toggleable_object_flags, sitting));
+    assert!(!is_object_hidden(&screen.toggleable_object_flags, walking));
+}
+
+#[test]
+fn script_music_wait_obeys_sequencer_completion_without_a_fixed_delay() {
+    let mut screen = OverworldScreen::new(MapId::Route1, None, PokemonRedData);
+    screen.active_script_effect = Some(super::script_bridge::ScriptEffect::WaitMusic);
+    screen.script_music_playing = true;
+    for _ in 0..180 { screen.update_frame(neutral_input()); }
+    assert!(matches!(screen.active_script_effect, Some(super::script_bridge::ScriptEffect::WaitMusic)));
+    screen.script_music_playing = false;
+    screen.update_frame(neutral_input());
+    assert!(screen.active_script_effect.is_none());
+}

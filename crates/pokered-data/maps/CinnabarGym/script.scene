@@ -64,12 +64,15 @@ game_scene CinnabarGym {
     @if (getFlag("EVENT_BEAT_BLAINE")) {
       @if (!getFlag("EVENT_GOT_TM38")) {
         // Beat Blaine previously but had no room for the TM — try again.
-        @speaker("") { @t("Make room for my gift!", "腾个地方收下礼物！") }
-        giveItem("TM_38", 1)
-        setFlag("EVENT_GOT_TM38")
-        @speaker("") { @t("<PLAYER> received TM38!", "<PLAYER>得到了 TM38！") }
-        @speaker("") {
-          @t("TM38 contains FIRE BLAST!\n\nTeach it to fire- type\nPOKeMON!\n\nCHARMELEON or PONYTA would\nbe good bets!", "TM38里有大字爆炎！\n\n教给火系的宝可梦吧！\n\n火恐龙或小火马是不错的选择！")
+        given = giveItem("TM_38", 1)
+        @if (given) {
+          setFlag("EVENT_GOT_TM38")
+          @speaker("") { @t("<PLAYER> received TM38!", "<PLAYER>得到了 TM38！") }
+          @speaker("") {
+            @t("TM38 contains FIRE BLAST!\n\nTeach it to fire- type\nPOKeMON!\n\nCHARMELEON or PONYTA would\nbe good bets!", "TM38里有大字爆炎！\n\n教给火系的宝可梦吧！\n\n火恐龙或小火马是不错的选择！")
+          }
+        } @else {
+          @speaker("") { @t("Make room for my gift!", "腾个地方收下礼物！") }
         }
       } @else {
         @speaker("") {
@@ -90,11 +93,15 @@ game_scene CinnabarGym {
         @speaker("") {
           @t("Hah!\n\nThe VOLCANOBADGE heightens\nthe SPECIAL abilities of\nyour POKeMON!\n\nHere, you can have this too!", "哈哈！\n\n深红徽章能提高你的宝可梦的特\n殊能力！\n\n来，这个也给你！")
         }
-        giveItem("TM_38", 1)
-        setFlag("EVENT_GOT_TM38")
-        @speaker("") { @t("<PLAYER> received TM38!", "<PLAYER>得到了 TM38！") }
-        @speaker("") {
-          @t("TM38 contains FIRE BLAST!\n\nTeach it to fire- type\nPOKeMON!\n\nCHARMELEON or PONYTA would\nbe good bets!", "TM38里有大字爆炎！\n\n教给火系的宝可梦吧！\n\n火恐龙或小火马是不错的选择！")
+        given = giveItem("TM_38", 1)
+        @if (given) {
+          setFlag("EVENT_GOT_TM38")
+          @speaker("") { @t("<PLAYER> received TM38!", "<PLAYER>得到了 TM38！") }
+          @speaker("") {
+            @t("TM38 contains FIRE BLAST!\n\nTeach it to fire- type\nPOKeMON!\n\nCHARMELEON or PONYTA would\nbe good bets!", "TM38里有大字爆炎！\n\n教给火系的宝可梦吧！\n\n火恐龙或小火马是不错的选择！")
+          }
+        } @else {
+          @speaker("") { @t("Make room for my gift!", "腾个地方收下礼物！") }
         }
         // Deactivate the gym trainers (original SetEventRange TRAINER_0..6).
         setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_0")
@@ -104,6 +111,7 @@ game_scene CinnabarGym {
         setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_4")
         setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_5")
         setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_6")
+
       }
     }
   }

@@ -194,6 +194,9 @@ fn command_effect(name: &str, args: &[Expression]) -> StateEffect {
 /// Listed explicitly so unknown typos still surface as unknown.
 const NO_STATE_COMMANDS: &[&str] = &[
     "showText",
+    // The found-item text and jingle only present a completed pickup;
+    // giveItem / setFlag / hideObject carry its inventory/event effects.
+    "showItemDialogue",
     "showRandomText",
     "showChoice",
     "delay",
@@ -201,6 +204,8 @@ const NO_STATE_COMMANDS: &[&str] = &[
     "faceNpc",
     "setNpcFrame",
     "playMusic",
+    // Suspends the scene until CHAN1 finishes; no event-graph state changes.
+    "waitMusic",
     "playSound",
     "playCry",
     "stopMusic",
@@ -810,6 +815,59 @@ mod tests {
             "{:?}",
             oak.effects
         );
+    }
+
+    #[test]
+    fn native_item_dialogue_preserves_the_actual_pickup_effects() {
+        let scene = pokered_data::embedded_scenes::get_scene_ast("CeruleanCave1F").unwrap();
+        let mut coverage = CoverageAccum::default();
+        let map = extract_map_with_coverage(&scene, &mut coverage);
+        assert!(coverage.unknown.is_empty(), "{:?}", coverage.unknown);
+        let item = map
+            .storylines
+            .iter()
+            .find(|s| s.storyline == "itemFullRestore")
+            .unwrap();
+        assert!(item.reads.contains(&StatePredicate::FlagRead {
+            flag: "EVENT_GOT_FULL_RESTORE_CERULEAN_CAVE_1F".into(),
+        }));
+        assert!(item.effects.contains(&StateEffect::ItemGiven {
+            item: "FULL_RESTORE".into(),
+            qty: Some(1),
+        }));
+        assert!(item.effects.contains(&StateEffect::FlagSet {
+            flag: "EVENT_GOT_FULL_RESTORE_CERULEAN_CAVE_1F".into(),
+        }));
+        assert!(item.effects.contains(&StateEffect::ObjectHidden {
+            toggle_id: "CERULEAN_CAVE_1F_OBJ_1".into(),
+        }));
+        assert_eq!(
+            item.effects.len(),
+            3,
+            "dialogue must not invent a second item/event effect"
+        );
+    }
+
+    #[test]
+    fn captain_music_wait_preserves_the_actual_gift_and_event_effects() {
+        let scene = pokered_data::embedded_scenes::get_scene_ast("SSAnneCaptainsRoom").unwrap();
+        let mut coverage = CoverageAccum::default();
+        let map = extract_map_with_coverage(&scene, &mut coverage);
+        assert!(coverage.unknown.is_empty(), "{:?}", coverage.unknown);
+        let captain = map
+            .storylines
+            .iter()
+            .find(|s| s.storyline == "talkCaptain")
+            .unwrap();
+        assert!(captain.effects.contains(&StateEffect::ItemGiven {
+            item: "HM01".into(),
+            qty: Some(1),
+        }));
+        for flag in ["EVENT_RUBBED_CAPTAINS_BACK", "EVENT_GOT_HM01"] {
+            assert!(captain
+                .effects
+                .contains(&StateEffect::FlagSet { flag: flag.into() }));
+        }
     }
 
     #[test]

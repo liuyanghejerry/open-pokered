@@ -5,7 +5,7 @@
 // Content type: ground-items + signs only. The original script is just
 // `EnableAutoTextBoxDrawing`; there are no NPCs, trainers, or on-enter cutscenes.
 // The four PokeBall objects use the shared PickUpItemText (predef PickUpItem);
-// map.json itemIds 17/232/54/64 map to MAX_POTION / TM49 (DOUBLE TEAM,
+// map.json itemIds 17/232/54/64 map to MAX_POTION / TM32 (DOUBLE TEAM,
 // TM_DOUBLE_TEAM) / MAX_REVIVE / GOLD_TEETH. Each PokeBall is a runtime-hidden
 // object once picked up via its toggle, so the handler just hands over the item
 // with the standard found / too-much-stuff dialogue. The four signs are static
@@ -23,28 +23,22 @@ game_scene SafariZoneWest {
     @trigger(map = "SafariZoneWest", npc = 1, toggle = "SAFARI_ZONE_WEST_OBJ_1")
     given = giveItem("MAX_POTION", 1)
     @if (given) {
-      @speaker("") {
-        @t("<PLAYER> found MAX_POTION!", "<PLAYER>发现了全满药！")
-      }
+      hideObjectByName("SAFARI_ZONE_WEST_OBJ_1")
+      showItemDialogue(t("<PLAYER> found MAX_POTION!", "<PLAYER>发现了全满药！"))
     } @else {
-      @speaker("") {
-        @t("You have too much stuff\nalready!", "你身上东西太多了！")
-      }
+      @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
     }
   }
 
-  // ── PokeBall ground item (npc 2) — TM49 (DOUBLE TEAM) ───────────────────
+  // ── PokeBall ground item (npc 2) — TM32 (DOUBLE TEAM) ───────────────────
   @storyline("talkPokeBall1") {
     @trigger(map = "SafariZoneWest", npc = 2, toggle = "SAFARI_ZONE_WEST_OBJ_2")
-    given = giveItem("TM49", 1)
+    given = giveItem("TM32", 1)
     @if (given) {
-      @speaker("") {
-        @t("<PLAYER> found TM49!", "<PLAYER>发现了 TM49！")
-      }
+      hideObjectByName("SAFARI_ZONE_WEST_OBJ_2")
+      showItemDialogue(t("<PLAYER> found TM32!", "<PLAYER>找到了TM32！"))
     } @else {
-      @speaker("") {
-        @t("You have too much stuff\nalready!", "你身上东西太多了！")
-      }
+      @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
     }
   }
 
@@ -53,13 +47,10 @@ game_scene SafariZoneWest {
     @trigger(map = "SafariZoneWest", npc = 3, toggle = "SAFARI_ZONE_WEST_OBJ_3")
     given = giveItem("MAX_REVIVE", 1)
     @if (given) {
-      @speaker("") {
-        @t("<PLAYER> found MAX_REVIVE!", "<PLAYER>发现了活力块！")
-      }
+      hideObjectByName("SAFARI_ZONE_WEST_OBJ_3")
+      showItemDialogue(t("<PLAYER> found MAX_REVIVE!", "<PLAYER>发现了活力块！"))
     } @else {
-      @speaker("") {
-        @t("You have too much stuff\nalready!", "你身上东西太多了！")
-      }
+      @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
     }
   }
 
@@ -68,13 +59,10 @@ game_scene SafariZoneWest {
     @trigger(map = "SafariZoneWest", npc = 4, toggle = "SAFARI_ZONE_WEST_OBJ_4")
     given = giveItem("GOLD_TEETH", 1)
     @if (given) {
-      @speaker("") {
-        @t("<PLAYER> found GOLD_TEETH!", "<PLAYER>发现了金假牙！")
-      }
+      hideObjectByName("SAFARI_ZONE_WEST_OBJ_4")
+      showItemDialogue(t("<PLAYER> found GOLD_TEETH!", "<PLAYER>发现了金假牙！"))
     } @else {
-      @speaker("") {
-        @t("You have too much stuff\nalready!", "你身上东西太多了！")
-      }
+      @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
     }
   }
 

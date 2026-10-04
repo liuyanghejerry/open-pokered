@@ -44,26 +44,30 @@ game_scene VictoryRoad1F {
   // ── Ground item: TM43 / SKY ATTACK (npc 3) ──────────────────────────────
   @storyline("itemTmSkyAttack") {
     @trigger(map = "VictoryRoad1F", npc = 3, toggle = "VICTORY_ROAD_1F_OBJ_3")
-    @if (getFlag("EVENT_GOT_TM43_VICTORY_ROAD_1F")) {
-      @speaker("") { @t("The item ball is empty.", "精灵球里是空的。") }
-    } @else {
-      giveItem("TM43", 1)
-      setFlag("EVENT_GOT_TM43_VICTORY_ROAD_1F")
-      hideObject("VICTORY_ROAD_1F_OBJ_3")
-      @speaker("") { @t("<PLAYER> found TM43!", "<PLAYER>发现了 TM43！") }
+    @if (!getFlag("EVENT_GOT_TM43_VICTORY_ROAD_1F")) {
+      given = giveItem("TM43", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_TM43_VICTORY_ROAD_1F")
+        hideObjectByName("VICTORY_ROAD_1F_OBJ_3")
+        showItemDialogue(t("<PLAYER> found TM43!", "<PLAYER>发现了 TM43！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 
   // ── Ground item: RARE CANDY (npc 4) ─────────────────────────────────────
   @storyline("itemRareCandy") {
     @trigger(map = "VictoryRoad1F", npc = 4, toggle = "VICTORY_ROAD_1F_OBJ_4")
-    @if (getFlag("EVENT_GOT_RARE_CANDY_VICTORY_ROAD_1F")) {
-      @speaker("") { @t("The item ball is empty.", "精灵球里是空的。") }
-    } @else {
-      giveItem("RARE_CANDY", 1)
-      setFlag("EVENT_GOT_RARE_CANDY_VICTORY_ROAD_1F")
-      hideObject("VICTORY_ROAD_1F_OBJ_4")
-      @speaker("") { @t("<PLAYER> found RARE_CANDY!", "<PLAYER>发现了神奇糖果！") }
+    @if (!getFlag("EVENT_GOT_RARE_CANDY_VICTORY_ROAD_1F")) {
+      given = giveItem("RARE_CANDY", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_RARE_CANDY_VICTORY_ROAD_1F")
+        hideObjectByName("VICTORY_ROAD_1F_OBJ_4")
+        showItemDialogue(t("<PLAYER> found RARE_CANDY!", "<PLAYER>发现了神奇糖果！"))
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+      }
     }
   }
 

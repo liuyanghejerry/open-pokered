@@ -722,6 +722,7 @@ impl PokemonGame {
         // The event-flag bitset serializes directly into the original
         // 320-byte SRAM region (wEventFlags, NUM_EVENTS = $A00 bits).
         save.game_data.event_flags = self.overworld.unified_flags().as_bytes().to_vec();
+        self.overworld.write_system_save_state(&mut save.game_data);
 
         // SRAM writebacks for runtime-mutated overworld state (mirrors the
         // app): the toggleable object bits and the itemfinder hidden-item
@@ -896,6 +897,7 @@ impl PokemonGame {
                         // merge any runtime-only extras (companion sidecar)
                         // on top.
                         overworld.set_event_flags_bytes(&self.save_data.game_data.event_flags);
+                        overworld.restore_system_save_state(&self.save_data.game_data);
                         if let Some(extras) = Self::read_companion_script_flags() {
                             overworld.set_script_flags(extras);
                         }
@@ -1827,6 +1829,7 @@ impl PokemonGame {
                         .iter()
                         .map(|s| s.pascal_name())
                         .collect();
+                    self.overworld.seed_script_bag_quantities(&self.save_data.game_data.bag);
                     self.overworld.seed_script_query_state(
                         self.save_data.game_data.player_money,
                         &bag_names,
@@ -1886,6 +1889,11 @@ impl PokemonGame {
                         );
                     }
 
+                    // SSAnneCaptainsRoom.asm waits on music channel 1.
+                    self.overworld.script_music_playing = self.audio.as_ref()
+                        .is_some_and(|audio| audio.is_music_channel_playing(0));
+                    self.overworld.script_sfx_playing = self.audio.as_ref()
+                        .is_some_and(|audio| audio.is_sfx_playing() && !audio.low_health_alarm_active());
                     // wOptions text delay — pushed every frame so the dialogue
                     // typewriter honors the configured TEXT SPEED.
                     self.overworld

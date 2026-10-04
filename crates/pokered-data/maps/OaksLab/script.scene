@@ -163,7 +163,12 @@ game_scene OaksLab {
           // rival walks down to row 5 and around, so he never crosses the
           // player standing at the table. The challenge battle happens
           // later, when the player walks down to leave (coordDontGoAway, y=6).
-          moveNpc("OAKS_LAB_OBJ_1", [[4, 4], [4, 5], [5, 5], [6, 5], [7, 5], [7, 4]])
+          @if (getPlayerY() == 4) {
+            moveNpc("OAKS_LAB_OBJ_1", [[4, 4], [4, 5], [5, 5], [6, 5], [7, 5], [7, 4]])
+          } @else {
+            moveNpc("OAKS_LAB_OBJ_1", [[4, 4], [5, 4], [6, 4], [7, 4]])
+          }
+          faceNpc("OAKS_LAB_OBJ_1", "up")
           @speaker("") {
             @t("<RIVAL>: I'll take this one,\nthen!", "<RIVAL>：那我就要这只了！")
           }
@@ -212,7 +217,12 @@ game_scene OaksLab {
           // rival walks down to row 5 and around, so he never crosses the
           // player standing at the table. The challenge battle happens
           // later, when the player walks down to leave (coordDontGoAway, y=6).
-          moveNpc("OAKS_LAB_OBJ_1", [[4, 4], [4, 5], [5, 5], [6, 5], [7, 5], [8, 5], [8, 4]])
+          @if (getPlayerY() == 4) {
+            moveNpc("OAKS_LAB_OBJ_1", [[4, 4], [4, 5], [5, 5], [6, 5], [7, 5], [8, 5], [8, 4]])
+          } @else {
+            moveNpc("OAKS_LAB_OBJ_1", [[4, 4], [5, 4], [6, 4], [7, 4], [8, 4]])
+          }
+          faceNpc("OAKS_LAB_OBJ_1", "up")
           @speaker("") {
             @t("<RIVAL>: I'll take this one,\nthen!", "<RIVAL>：那我就要这只了！")
           }
@@ -260,7 +270,14 @@ game_scene OaksLab {
           // Orig OaksLabChoseStarterScript: the rival walks below the ball he
           // takes, then speaks. The challenge battle happens later, when the
           // player walks down to leave (coordDontGoAway, y=6).
-          moveNpc("OAKS_LAB_OBJ_1", [[4, 4], [5, 4], [6, 4]])
+          @if (getPlayerX() == 9) {
+            // Original internal map (9,8) includes the four-tile border.
+            setNpcPosition("OAKS_LAB_OBJ_1", 5, 4)
+            moveNpc("OAKS_LAB_OBJ_1", [[6, 4]])
+          } @else {
+            moveNpc("OAKS_LAB_OBJ_1", [[4, 4], [5, 4], [6, 4]])
+          }
+          faceNpc("OAKS_LAB_OBJ_1", "up")
           @speaker("") {
             @t("<RIVAL>: I'll take this one,\nthen!", "<RIVAL>：那我就要这只了！")
           }
@@ -390,12 +407,24 @@ game_scene OaksLab {
       @speaker("") {
         @t("<RIVAL>: Gramps!", "<RIVAL>：爷爷！")
       }
-      // The rival re-enters. The original teleports him near the door
-      // and walks him up to his spot (4,3); we have no teleport API, and
-      // the map reload between the lab battle and the parcel delivery
-      // already resets him to his (4,3) spawn — so just show him there.
+      // Original OaksLabRivalArrives: spawn near the door, then walk up.
+      @if (getPlayerY() == 3) {
+        setNpcPosition("OAKS_LAB_OBJ_1", 4, 7)
+      } @else @if (getPlayerY() == 1) {
+        setNpcPosition("OAKS_LAB_OBJ_1", 4, 5)
+      } @else {
+        setNpcPosition("OAKS_LAB_OBJ_1", 4, 6)
+      }
       showObjectByName("OAKS_LAB_OBJ_1")
+      @if (getPlayerY() == 3) {
+        moveNpc("OAKS_LAB_OBJ_1", [[4, 6], [4, 5], [4, 4], [4, 3]])
+      } @else @if (getPlayerY() == 1) {
+        moveNpc("OAKS_LAB_OBJ_1", [[4, 4], [4, 3]])
+      } @else {
+        moveNpc("OAKS_LAB_OBJ_1", [[4, 5], [4, 4], [4, 3]])
+      }
       faceNpc("OAKS_LAB_OBJ_1", "up")
+      playMusic("MUSIC_OAKS_LAB")
       @speaker("") {
         @t("<RIVAL>: What did you call\nme for?", "<RIVAL>：叫我来干什么？")
       }

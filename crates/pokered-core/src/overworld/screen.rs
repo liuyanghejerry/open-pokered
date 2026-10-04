@@ -644,6 +644,7 @@ pub(crate) struct PendingCut {
 use crate::overworld::collision;
 
 pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedData> {
+    pub(crate) wild_data_state: super::wild_encounters::WildDataState,
     pub(crate) game_data: G,
     pub state: OverworldState,
     pub map_data: Option<MapData<G::Tileset>>,
@@ -677,8 +678,12 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     /// drained + applied by the app layer (which owns the party).
     pub pending_set_nickname: Option<(u8, String)>,
     pub pending_emotion_bubble: Option<EmotionBubbleState>,
+    /// Frontend sequencer status for blocking script jingles.
+    pub script_music_playing: bool,
     pub pending_healing_machine: Option<HealingMachineState>,
     pub last_map: Option<MapId>,
+    pub first_lock_trash_can: u8,
+    pub second_lock_trash_can: u8,
     /// Position on `last_map` where the player stepped onto the entrance warp —
     /// the tile just outside a dungeon/building. Recorded alongside `last_map`
     /// and used as the ESCAPE ROPE return point.
@@ -743,6 +748,8 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     pub(crate) cutscene_manager: CutsceneManager,
     pub(crate) trigger_manager: TriggerManager,
     pub(crate) active_script_effect: Option<crate::overworld::script_bridge::ScriptEffect>,
+    /// Frontend sequencer status, sampled before each overworld update.
+    pub script_sfx_playing: bool,
     pub(crate) joy_ignore_mask: u8,
     #[cfg(not(target_os = "none"))]
     pub(crate) scripts_dir: Option<std::path::PathBuf>,
@@ -764,6 +771,7 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     pub(crate) script_bag_names: Vec<String>,
     /// Party/daycare display names, protected from Chinese dialogue wrapping.
     pub(crate) script_dialogue_names: Vec<String>,
+    pub(crate) script_bag_snapshot: Option<crate::items::inventory::Inventory<{crate::items::inventory::BAG_ITEM_CAPACITY}>>,
     /// The app's input fingerprint cannot detect a replaced interpreter.
     /// New maps and restored snapshots must populate its query host again.
     pub(crate) script_queries_need_seed: bool,
@@ -1110,6 +1118,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
 
         log::info!("gba:ow building struct");
         let mut screen = Self {
+            wild_data_state: super::wild_encounters::WildDataState::default(),
             game_data,
             state: OverworldState::new(start_map),
             map_data,
@@ -1126,7 +1135,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             link_opponent: None,
             pending_set_nickname: None,
             pending_emotion_bubble: None,
+            script_music_playing: false,
             pending_healing_machine: None,
+            first_lock_trash_can: 0,
+            second_lock_trash_can: 0,
             last_map: super::map_loading::scripted_last_map(start_map).or(Some(MapId::PalletTown)),
             last_map_entry: None,
             warp_fade_state: WarpFadeState::Idle,
@@ -1165,6 +1177,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             cutscene_manager: CutsceneManager::new(),
             trigger_manager: TriggerManager::new(),
             active_script_effect: None,
+            script_sfx_playing: false,
             joy_ignore_mask: 0,
             #[cfg(not(target_os = "none"))]
             scripts_dir,
@@ -1178,6 +1191,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             script_awaiting_trade: false,
             script_bag_names: Vec::new(),
             script_dialogue_names: Vec::new(),
+            script_bag_snapshot: None,
             script_queries_need_seed: true,
             script_party_species: Vec::new(),
             player_starter: 0,
@@ -1235,6 +1249,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         };
         // EnterMap: CheckForceBikeOrSurf runs for the start map too — mount/
         // lock the bike if the screen starts on a Cycling Road tile.
+        screen.wild_data_state.load_map(start_map);
         screen.apply_map_entry_transport(start_map, screen.state.player.x, screen.state.player.y);
         screen
     }
@@ -1368,8 +1383,13 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             .or_else(|| pokered_data::embedded_scenes::get_scene_ast("shared/pokecenter"))
     }
 
-    /// Push the configured text speed (frames between revealed characters —
-    /// 1/3/5) into any active dialogue. Called by the frontend every frame.
+    /// FoundItemText has no ManualTextScroll prompt while its jingle plays.
+    pub fn dialogue_needs_button(&self) -> bool {
+        !matches!(self.active_script_effect,
+            Some(super::script_bridge::ScriptEffect::ShowItemDialogue { .. }))
+    }
+
+    /// Set the configured dialogue delay (1/3/5 frames per character).
     pub fn set_text_delay_frames(&mut self, frames: u16) {
         self.text_delay_frames = frames.max(1);
     }
@@ -1414,6 +1434,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         self.script_engine.seed_number("money", money as f64);
         self.script_engine.seed_number("coins", coins as f64);
         self.script_engine.seed_number("gameVersion", game_version as f64);
+        self.wild_data_state.set_version(
+            if game_version == 1 { pokered_data::wild_data::GameVersion::Blue } else { pokered_data::wild_data::GameVersion::Red },
+            self.state.current_map,
+        );
         self.player_coins = coins;
         self.script_engine.seed_set("bag", bag_const_names);
         self.script_bag_names = bag_const_names.to_vec();
@@ -1433,6 +1457,11 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             .seed_number("obtainedBadges", obtained_badges as f64);
         self.script_queries_need_seed = false;
         self.mix_script_rng();
+    }
+
+    /// Supply quantities as well as names for transactional gift checks.
+    pub fn seed_script_bag_quantities(&mut self, bag: &crate::items::inventory::Inventory<{crate::items::inventory::BAG_ITEM_CAPACITY}>) {
+        self.script_bag_snapshot = Some(bag.clone());
     }
 
     /// Feed real entropy from the overworld RNG into the script-side RNG so
@@ -2407,6 +2436,52 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     /// Whether a Safari Zone game is currently in progress.
     pub fn is_safari_game_active(&self) -> bool {
         self.safari_game_active
+    }
+
+    /// InGameTrade_DoTrade records success after species validation, before
+    /// ConnectCableText and the trade movie.
+    pub fn mark_npc_trade_completed(&mut self, nickname: &str) {
+        if pokered_data::trades::NPC_TRADES.iter().any(|trade| trade.nickname == nickname) {
+            self.set_flag_live(&format!("EVENT_TRADED_FOR_{}", nickname), true);
+            if nickname == "MARC" {
+                self.set_flag_live("EVENT_GOT_LICKITUNG_FROM_TRADE", true);
+            }
+        }
+    }
+
+    /// Restore counters and status bytes that live outside the event bitset.
+    pub fn restore_system_save_state(&mut self, data: &crate::save::game_data::GameData) {
+        self.first_lock_trash_can = data.first_lock_trash_can;
+        self.second_lock_trash_can = data.second_lock_trash_can;
+        self.script_engine.set_gym_trash_indices(self.first_lock_trash_can, self.second_lock_trash_can);
+        for (index, name) in ["TERRY", "MARCEL", "CHIKUCHIKU", "SAILOR", "DUX", "MARC", "LOLA", "DORIS", "CRINKLES", "SPOT"].iter().enumerate() {
+            self.set_flag_live(&format!("EVENT_TRADED_FOR_{}", name), data.completed_in_game_trade_flags & (1 << index) != 0);
+        }
+        self.set_flag_live("EVENT_GOT_LICKITUNG_FROM_TRADE", data.completed_in_game_trade_flags & (1 << 5) != 0);
+        self.safari_steps = data.safari_steps;
+        self.safari_balls = data.num_safari_balls;
+        self.safari_game_active = self.unified_flags.get_flag("EVENT_IN_SAFARI_ZONE");
+        for (name, bit) in [("EVENT_GOT_OLD_ROD", 3), ("EVENT_GOT_GOOD_ROD", 4), ("EVENT_GOT_SUPER_ROD", 5)] {
+            self.set_flag_live(name, data.status_flags[0] & (1 << bit) != 0);
+        }
+    }
+
+    /// Persist Safari allowances and original status-byte script aliases.
+    pub fn write_system_save_state(&self, data: &mut crate::save::game_data::GameData) {
+        data.first_lock_trash_can = self.first_lock_trash_can;
+        data.second_lock_trash_can = self.second_lock_trash_can;
+        for (index, name) in ["TERRY", "MARCEL", "CHIKUCHIKU", "SAILOR", "DUX", "MARC", "LOLA", "DORIS", "CRINKLES", "SPOT"].iter().enumerate() {
+            let mask = 1 << index;
+            if self.unified_flags.get_flag(&format!("EVENT_TRADED_FOR_{}", name))
+                || (index == 5 && self.unified_flags.get_flag("EVENT_GOT_LICKITUNG_FROM_TRADE")) { data.completed_in_game_trade_flags |= mask; }
+            else { data.completed_in_game_trade_flags &= !mask; }
+        }
+        data.safari_steps = self.safari_steps;
+        data.num_safari_balls = self.safari_balls;
+        for (name, bit) in [("EVENT_GOT_OLD_ROD", 3), ("EVENT_GOT_GOOD_ROD", 4), ("EVENT_GOT_SUPER_ROD", 5)] {
+            if self.unified_flags.get_flag(name) { data.status_flags[0] |= 1 << bit; }
+            else { data.status_flags[0] &= !(1 << bit); }
+        }
     }
 
     /// Begin a fresh Safari Zone game: full step + ball allowance.

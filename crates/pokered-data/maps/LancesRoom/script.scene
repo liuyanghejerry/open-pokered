@@ -4,8 +4,8 @@
 // false) so the script owns the battle and sets EVENT_BEAT_LANCE on victory.
 //
 // Entrance-lock door wired via replaceTileBlock (see LanceShowOrHideEntranceBlocks).
-// The forced-walk down the hallway (DecodeRLEList / SimulatedJoypad) still has no
-// API and stays approximated; faithful dialogue is preserved.
+// WalkToLance consumes its RLE list in reverse order, from the entrance
+// (24,16) to (6,11), then closes the entrance behind the player.
 
 game_scene LancesRoom {
   // ── Entrance-lock door (LanceShowOrHideEntranceBlocks / ReplaceTileBlock) ─
@@ -22,14 +22,14 @@ game_scene LancesRoom {
       replaceTileBlock(2, 6, 49)
       replaceTileBlock(3, 6, 50)
     }
-    // Entrance nudge (original WalkToLance, 12-frame RLE chunks: PAD_UP x12 /
-    // PAD_LEFT x12 / PAD_DOWN x7 / PAD_LEFT x6 — the room's maze walls bump the
-    // simulated walk short; the live port of the same sequence from the (24,16)
-    // arrival ends ~(22,15)). Reproduced as an explicit short path; anything
-    // longer would need the wall-bumping walk semantics. Runs every entry
-    // before Lance is beaten — the original gate is CheckEvent EVENT_BEAT_LANCE.
-    @if (!getFlag("EVENT_BEAT_LANCE")) {
-      movePlayerRelative([[0, -1], [-1, 0], [-1, 0]])
+    // DecodeRLEList writes the sequence backwards; SimulatedJoypad reads
+    // LEFT 6, DOWN 7, LEFT 12, UP 12. Only the entrance coordinate starts it.
+    @if (!getFlag("EVENT_BEAT_LANCE") && getPlayerX() == 24 && getPlayerY() == 16) {
+      movePlayerRelative([[-1, 0], [-1, 0], [-1, 0], [-1, 0], [-1, 0], [-1, 0], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [-1, 0], [-1, 0], [-1, 0], [-1, 0], [-1, 0], [-1, 0], [-1, 0], [-1, 0], [-1, 0], [-1, 0], [-1, 0], [-1, 0], [0, -1], [0, -1], [0, -1], [0, -1], [0, -1], [0, -1], [0, -1], [0, -1], [0, -1], [0, -1], [0, -1], [0, -1]])
+      setFlag("EVENT_LANCES_ROOM_LOCK_DOOR")
+      playSound("SFX_GO_INSIDE")
+      replaceTileBlock(2, 6, 114)
+      replaceTileBlock(3, 6, 115)
     }
   }
 
@@ -70,10 +70,7 @@ game_scene LancesRoom {
         }
         setFlag("EVENT_BEAT_LANCE")
         setFlag("EVENT_BEAT_LANCES_ROOM_TRAINER_0")
-        // Unlock the entrance once Lance is beaten (same as the talk handler).
-        resetFlag("EVENT_LANCES_ROOM_LOCK_DOOR")
-        replaceTileBlock(2, 6, 49)
-        replaceTileBlock(3, 6, 50)
+        // The entrance remains locked until the League challenge ends.
       }
     }
   }
@@ -100,14 +97,7 @@ game_scene LancesRoom {
         }
         setFlag("EVENT_BEAT_LANCE")
         setFlag("EVENT_BEAT_LANCES_ROOM_TRAINER_0")
-        // Unlock the entrance once Lance is beaten: clear the lock flag and
-        // re-apply the OPEN blocks ($31=49 at X=2,Y=6, $32=50 at X=3,Y=6) so the
-        // staircase swaps open without a map re-entry. (note: the original leaves
-        // the lock flag as-is and routes the player up to ChampionsRoom; reopening
-        // is the faithful player-facing result — they may freely leave once won.)
-        resetFlag("EVENT_LANCES_ROOM_LOCK_DOOR")
-        replaceTileBlock(2, 6, 49)
-        replaceTileBlock(3, 6, 50)
+        // The entrance remains locked until the League challenge ends.
       }
     }
   }

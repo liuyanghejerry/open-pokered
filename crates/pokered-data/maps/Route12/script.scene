@@ -30,19 +30,17 @@ game_scene Route12 {
       }
       playCry("SNORLAX")
       @speaker("") { @t("SNORLAX woke up!\n\nIt attacked in a grumpy\nrage!", "卡比兽醒来了！\n\n它怒气冲冲地发起了攻击！") }
-      // Static wild Lv30 SNORLAX battle (catchable). On win/catch it is cleared;
-      // on flee/lose it stays woken (EVENT_FIGHT set) and re-fights on next talk.
+      // Route12DefaultScript resets FIGHT and hides the sprite before battle.
+      resetFlag("EVENT_FIGHT_ROUTE12_SNORLAX")
+      hideObjectByName("ROUTE_12_OBJ_1")
       result = startWildBattle("SNORLAX", 30)
-      // Caught (wBattleResult == 2, scripts/Route12.asm:50): the original
-      // SKIPS the "returned to the mountains" line — the Snorlax joined the
-      // party. Only a defeated Snorlax returns to the mountains.
-      @if (result == "caught") {
+      // RUN and capture both leave wBattleResult == 2; Poké Doll follows the
+      // calmed-down path. A blackout leaves the sprite hidden without BEAT.
+      @if (result == "win" || result == "caught" || result == "ran" || result == "fled") {
+        @if (result == "win" || result == "fled") {
+          @speaker("") { @t("SNORLAX calmed down! With a\nbig yawn, it returned to the\nmountains!", "卡比兽安静下来了！它打了个大\n哈欠，然后回到了山里！") }
+        }
         setFlag("EVENT_BEAT_ROUTE12_SNORLAX")
-        hideObjectByName("ROUTE_12_OBJ_1")
-      } @else @if (result == "win") {
-        @speaker("") { @t("SNORLAX calmed down! With a\nbig yawn, it returned to the\nmountains!", "卡比兽安静下来了！它打了个大\n哈欠，然后回到了山里！") }
-        setFlag("EVENT_BEAT_ROUTE12_SNORLAX")
-        hideObjectByName("ROUTE_12_OBJ_1")
       }
     } @else {
       @speaker("") { @t("A sleeping POKeMON blocks\nthe way!", "一只睡着的宝可梦挡住了去路！") }
@@ -127,7 +125,7 @@ game_scene Route12 {
       @if (given) {
         setFlag("EVENT_GOT_ROUTE_12_TM_PAY_DAY")
         hideObjectByName("ROUTE_12_OBJ_9")
-        @speaker("") { @t("<PLAYER> found TM16!", "<PLAYER>找到了 TM16！") }
+        showItemDialogue(t("<PLAYER> found TM16!", "<PLAYER>找到了 TM16！"))
       } @else {
         @speaker("") { @t("You have too much stuff\nalready!", "你身上的东西太多了！") }
       }
@@ -142,7 +140,7 @@ game_scene Route12 {
       @if (given) {
         setFlag("EVENT_GOT_ROUTE_12_IRON")
         hideObjectByName("ROUTE_12_OBJ_10")
-        @speaker("") { @t("<PLAYER> found IRON!", "<PLAYER>找到了防御增强剂！") }
+        showItemDialogue(t("<PLAYER> found IRON!", "<PLAYER>找到了防御增强剂！"))
       } @else {
         @speaker("") { @t("You have too much stuff\nalready!", "你身上的东西太多了！") }
       }

@@ -40,7 +40,6 @@ game_scene UndergroundPathRoute5 {
           // ConnectCableText -> real in-game trade (removes NIDORAN_M, adds
           // NIDORAN_F nicknamed SPOT). tradePokemon returns false if the player
           // doesn't actually carry NIDORAN_M -> wrong-mon (dialogset HAPPY).
-          @speaker("") { @t("Okay, connect the cable like\nso!", "好的，请像这样连接线路！") }
           traded = tradePokemon("NIDORAN_M", "NIDORAN_F", "SPOT")
           @if (traded) {
             setFlag("EVENT_TRADED_FOR_SPOT")
@@ -49,7 +48,11 @@ game_scene UndergroundPathRoute5 {
               @t("<PLAYER> traded NIDORAN for\nNIDORAN!", "<PLAYER>用尼多朗换到了尼多\n兰！")
             }
           } @else {
-            @speaker("") { @t("Hmmm? This isn't NIDORAN.\n\nThink of me when you get\none.", "嗯？这不是尼多朗。\n\n等你抓到一只，记得想到我。") }
+            @if (getFlag("NPC_TRADE_CANCELLED")) {
+              @speaker("") { @t("That's too bad.", "那太可惜了。") }
+            } @else {
+              @speaker("") { @t("Hmmm? This isn't NIDORAN.\n\nThink of me when you get\none.", "嗯？这不是尼多朗。\n\n等你抓到一只，记得想到我。") }
+            }
           }
         }
         @option(@t("NO", "否")) {
