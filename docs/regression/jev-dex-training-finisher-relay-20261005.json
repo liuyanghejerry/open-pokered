@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "verification": "candidate construction and full Python regression; live adoption pending",
+  "source_run": "20261005-030110-seed42",
+  "source_policy_revision": "31b04abf6aa9fcc2ad2f9b180d15033a5098a89c",
+  "retained_native_frame": 14925,
+  "failure": "action:no_selection",
+  "selected_goal": "register Graveler through Geodude level 25",
+  "trainee": {"species": "Geodude", "level": 24, "experience": 11563, "hp": 50, "status": "Sleep(1)"},
+  "active_finisher": {"species": "Charizard", "level": 66, "hp": 227, "status": "Sleep(4)"},
+  "enemy": {"species": "Oddish", "level": 19, "hp": 21},
+  "old_options": ["fight", "ball:PokeBall", "ball:GreatBall", "none"],
+  "new_options": ["fight", "switch:1", "switch:3", "switch:4", "switch:5", "ball:PokeBall", "ball:GreatBall", "none"],
+  "change": "Offer alternate conscious finishers after the trainee switches out; do not use the active finisher's level as an availability gate. Preserve old exhausted-active fallback, capture precedence, usable attacks and abstention.",
+  "sleep_reference": "Native sleep_gate decrements Sleep(n>0) on an attempted ordinary move, forfeiting even the wake-up tick. Opening/cancelling menus spends no turn. Damage previews do not bypass status; incoming enemy responses and renewed status remain possible.",
+  "sleep_source": "crates/pokered-core/src/battle/pokered_rules/p5_native.rs::sleep_gate",
+  "tests": {"focused": 30, "full_python": 1352, "passed": true},
+  "audit": {"source_snapshot_sha256": "c41cc0d4855f7ebbe273dd0b0d1f405fc4d23b8a1ef42dba211393f755a4f0a5", "native_commands": 0, "model_queries": 0, "original_choices_preserved": true},
+  "disk": "No Rust rebuild or new native binary, no full trace/movie duplication; recovery must use the same retained native and recorder.",
+  "scope": "Live battle-party HP/status/PP, not stale prebattle get_party status. No forced teammate/move, fabricated participation, predicted XP, rollback or diagnostic answer reuse. Safe owned remains 74; old validation ancestry is not final lawful NEW GAME124. This local audit is not actual live adoption or a general improvement claim."
+}

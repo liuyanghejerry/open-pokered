@@ -834,6 +834,16 @@ def training_move_question(state, menu, active):
     return compact, choices
 
 
+TRAINING_SLEEP_TURN_SCOPE = (
+    ' For observed Sleep(n), committing a usable attack advances an ordinary battle turn. '
+    'When the native sleep gate is reached with n>0, it decrements the counter instead of '
+    'executing the move; the wake-up tick still forfeits the attack. Opening or cancelling '
+    'a menu spends no turn and does not advance sleep. Compare these exposed turns with '
+    'recovery or an offered conscious teammate; an enemy response can damage, faint or '
+    'inflict status again. A direct-hit preview does not bypass sleep, and this rule '
+    'guarantees neither waking safely nor acting on the next turn.')
+
+
 class JevGame(pt.Game):
     """Existing navigation/recovery skills with independently judged attacks."""
     def battle_party_target(self, state):
@@ -933,6 +943,8 @@ class JevGame(pt.Game):
         seeking_source = capture_source_requested(state, self.judgments)
         retreat = capture_retreat(state, self.judgments) if seeking_source else None
         capturing = capturing or retreat is not None
+        finisher_relay = (training_goal is not None and not capturing
+                          and not training_goal['active_species_matches_trainee'])
         if retreat:
             candidates['run'] = json.dumps(retreat)
             bindings['run'] = 'run', None
@@ -950,12 +962,18 @@ class JevGame(pt.Game):
             if weakening:
                 fight['capture_weakening_reference'] = weakening
             candidates['fight'] = json.dumps(fight)
-        if switch_training or capturing or not effective_attacks(party[active], live['enemy']['species']):
+        if switch_training or finisher_relay or capturing or not effective_attacks(party[active], live['enemy']['species']):
             for index, mon in enumerate(party):
                 statuses = capture_status_options(mon, live['enemy'], bag) if capturing else []
                 attacks = effective_attacks(mon, live['enemy']['species'])
                 if index != active and mon['hp'] > 0 and (attacks or statuses):
                     if switch_training and mon['level'] <= party[active]['level']:
+                        continue
+                    if (finisher_relay and mon['species'] == training_goal['trainee_species']
+                            and effective_attacks(party[active], live['enemy']['species'])):
+                        # Do not add trainee switches to the new relay. Preserve
+                        # the existing all-conscious fallback if the active has
+                        # no usable damaging attack at all.
                         continue
                     key = f'switch:{index}'
                     candidates[key] = json.dumps({'switch_to': mon,
@@ -965,6 +983,8 @@ class JevGame(pt.Game):
                                    if switch_training else
                                    'Prepare capture using non-damaging status or weaker attacks; switching consumes a turn and does not guarantee survival'
                                    if capturing else
+                                   'Another conscious teammate can finish this training encounter if the trainee participated and remains conscious; switching costs an enemy response, and level alone does not establish capability or safety'
+                                   if finisher_relay else
                                    'The active battler has no usable attack that damages this opponent')})
                     bindings[key] = 'switch', index
         for item, index, details in options:
@@ -1070,6 +1090,24 @@ class JevGame(pt.Game):
                 'before the incoming teammate can use its move. Self-knockout selection references '
                 'are conditional illustrations, not known live odds or guarantees of survival.')
         judgment_state = {'battle': live}
+        if finisher_relay:
+            judgment_state['training_finisher_continuation'] = {
+                'active_species': live['player']['species'],
+                'active_status': live['player'].get('status'),
+                'trainee_species': training_goal['trainee_species'],
+                'offered_finisher_switch_indices': [value[1] for key, value in bindings.items()
+                                                    if key.startswith('switch:')],
+                'scope': 'Observed active non-trainee species/status and legal conscious '
+                    'switch candidates only, not individual identity or participation proof. No '
+                    'incoming attack preview, guaranteed survival, reward or registration.'}
+            instruction += (' The active battler is not the selected trainee species. Compare '
+                'its current HP/status and usable attacks with all offered alternate finishers. '
+                'A lower-level teammate can still be suitable; level alone is not availability '
+                'or safety proof. Switching spends a turn before the incoming teammate can act. '
+                'Avoid back-and-forth switches when the active teammate can already finish '
+                'efficiently, but reconsider a disabling status rather than dropping all '
+                'alternate finishers. Protect a conscious trainee that actually participated; '
+                'do not infer participation from species matching.')
         if training_goal is not None:
             judgment_state['level_training_goal'] = training_goal
             judgment_state['training_threat_reference'] = training_threat_reference(state)
@@ -1083,6 +1121,8 @@ class JevGame(pt.Game):
                 'can preserve a conscious trainee. These public type factors are not live '
                 'enemy damage, speed order or guaranteed safety; null is unknown. '
                 'Choose among all offered operations without crediting unobserved rewards.')
+            if not capturing:
+                instruction += TRAINING_SLEEP_TURN_SCOPE
             if getattr(self, '_training_declined_fight', None) == capture_turn_key(state):
                 judgment_state['training_move_menu_feedback'] = {
                     'result': 'No suitable attack selected; move menu cancelled without spending a turn',
@@ -1527,6 +1567,7 @@ class JevGame(pt.Game):
                             'order; critical hits, misses, enemy move choice and status can differ. '
                             'When reconsidering a switch via back, the incoming teammate also '
                             'faces a response opportunity. No known matchup certifies survival.')
+                        instruction += TRAINING_SLEEP_TURN_SCOPE
                     try:
                         chosen = self.judgments.choose('action', compact, candidates,
                                                        instruction + preference_suffix(self.judgments))

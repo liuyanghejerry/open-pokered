@@ -133,6 +133,106 @@ class TrainingAttackTests(unittest.TestCase):
         self.assertIn('switch:1', choices)
         self.assertIn('Maximum damage is not training progress', instruction)
 
+    def sleeping_finisher_state(self):
+        state = self.state()
+        state['battle_phase'] = 'PlayerMenu'
+        state['battle_live']['player'] = state['party'][1]
+        state['battle_live']['player']['status'] = 'Sleep(4)'
+        snorlax = {'species': 'Snorlax', 'level': 31, 'hp': 142, 'max_hp': 142,
+            'status': 'None', 'moves': ['Headbutt', 'Surf'], 'pp': [15, 15]}
+        state['party'].append(snorlax)
+        state['battle_live']['player_party'].append(snorlax)
+        state['battle_inventory'] = [{'item': 'PokeBall', 'qty': 2}]
+        return state
+
+    def test_sleeping_finisher_can_relay_to_lower_level_awake_nontrainee(self):
+        state = self.sleeping_finisher_state()
+        original = copy.deepcopy(state)
+        game = self.game(state, self.active())
+        game.judgments.choose.return_value = 'switch:2'
+        self.assertEqual(game.battle_recovery_plan(state), ('switch', 2))
+        _, compact, choices, instructions = game.judgments.choose.call_args.args
+        self.assertIn('switch:2', choices)
+        self.assertIn('fight', choices)
+        self.assertIn('ball:PokeBall', choices)
+        self.assertNotIn('switch:0', choices)  # Do not re-expose the switched-out trainee.
+        self.assertNotIn('switch:1', choices)  # Current battler is not a switch target.
+        relay = compact['training_finisher_continuation']
+        self.assertEqual(relay['active_status'], 'Sleep(4)')
+        self.assertEqual(relay['offered_finisher_switch_indices'], [2])
+        self.assertIn('participation', relay['scope'])
+        self.assertIn('wake-up tick', instructions)
+        self.assertNotIn('allow_abstain', game.judgments.choose.call_args.kwargs)
+        self.assertEqual(state, original)
+
+    def test_training_relay_does_not_infer_lower_level_teammate_is_useless(self):
+        state = self.sleeping_finisher_state()
+        state['party'][2]['level'] = 15  # Even below the trainee; level alone is not legal availability.
+        state['party'][1]['status'] = 'None'
+        game = self.game(state, self.active())
+        game.judgments.choose.return_value = 'switch:2'
+        self.assertEqual(game.battle_recovery_plan(state), ('switch', 2))
+        self.assertEqual(json.loads(game.judgments.choose.call_args.args[2]['switch:2'])[
+            'switch_to']['level'], 15)
+
+    def test_sleeping_training_move_remains_legal_with_turn_gate_explained(self):
+        state = self.sleeping_finisher_state()
+        state['battle_phase'] = 'MoveSelect'
+        state['battle_moves'] = {'cursor': 0, 'moves': [
+            {'move': 'Slash', 'pp': 20, 'disabled': False}]}
+        game = self.game(state, self.active())
+        game._select_move()
+        _, compact, choices, instructions = game.judgments.choose.call_args.args
+        self.assertEqual(compact['training_battle_state']['active']['status'], 'Sleep(4)')
+        self.assertEqual(choices['0'], 'Slash')
+        self.assertIn('back', choices)
+        self.assertIn('wake-up tick still forfeits the attack', instructions)
+        self.assertIn('does not advance sleep', instructions)
+        game.tap.assert_called_once_with('a', 4)
+
+    def test_relay_excludes_fainted_or_pp_exhausted_alternatives(self):
+        for changes in ({'hp': 0}, {'pp': [0, 0]}):
+            with self.subTest(changes=changes):
+                state = self.sleeping_finisher_state()
+                state['party'][2].update(changes)
+                game = self.game(state, self.active())
+                game.judgments.choose.return_value = 'fight'
+                self.assertIsNone(game.battle_recovery_plan(state))
+                self.assertNotIn('switch:2', game.judgments.choose.call_args.args[2])
+
+    def test_capture_support_training_can_relay_after_finisher_status_changes(self):
+        active = {'target': ['level', 'Geodude', 40], 'context': {
+            'capture_support_training': True, 'trigger': 'level', 'from_species': 'Geodude', 'level': 40}}
+        state = self.sleeping_finisher_state()
+        state['party'][1]['status'] = 'Paralysis'
+        game = self.game(state, active)
+        game.judgments.choose.return_value = 'switch:2'
+        self.assertEqual(game.battle_recovery_plan(state), ('switch', 2))
+        self.assertEqual(game.judgments.choose.call_args.args[1]['training_finisher_continuation'][
+            'active_status'], 'Paralysis')
+
+    def test_nontraining_sleep_does_not_receive_training_relay_semantics(self):
+        state = self.sleeping_finisher_state()
+        game = self.game(state, {'target': ['flag', 'EVENT_BEAT_BROCK', True], 'context': {}})
+        game.judgments.choose.return_value = 'fight'
+        game.battle_recovery_plan(state)
+        _, compact, choices, _ = game.judgments.choose.call_args.args
+        self.assertNotIn('switch:2', choices)
+        self.assertNotIn('training_finisher_continuation', compact)
+
+    def test_capture_precedence_keeps_original_switch_choices_and_no_training_relay(self):
+        state = self.sleeping_finisher_state()
+        state['pokedex'] = {'owned_species': ['Geodude']}
+        game = self.game(state, self.active())
+        game.judgments.collects_dex = True
+        game.judgments.choose.return_value = 'switch:0'
+        self.assertEqual(game.battle_recovery_plan(state), ('switch', 0))
+        _, compact, choices, instructions = game.judgments.choose.call_args.args
+        self.assertIn('switch:0', choices)  # Existing weak capture attacker, not training-only exclusion.
+        self.assertIn('switch:2', choices)
+        self.assertNotIn('training_finisher_continuation', compact)
+        self.assertIn('defeating it spends the encounter', instructions)
+
     def test_selfdestruct_is_still_driven_when_the_judgment_selects_it(self):
         state = self.state()
         state['battle_moves']['cursor'] = 1
