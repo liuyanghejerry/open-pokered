@@ -1,0 +1,91 @@
+{
+  "verified": true,
+  "runtime_revision": "a901f0741c156ee0f1b7783e68926fa88120ae89",
+  "source_runtime_revision": "418521c0b0789433e3be2d1d1e2495ca55cc6053",
+  "native_source_revision": "27955f054cffe4a12c97e323fbeec7d4d7d91c9d",
+  "native_sha256": "514a01da973e413686f738cb30af39be86f5c9e255867deaf178330c12f76cab",
+  "controller_change": {
+    "training_only": true,
+    "new_observed_factors": [
+      "Exact active and enemy HP/status from battle_live",
+      "Native normal and critical direct-hit damage ranges for each offered move",
+      "Conditional preview scope; unavailable remains unknown"
+    ],
+    "all_usable_attacks_and_none_retained": true,
+    "training_menu_back_available": true,
+    "training_move_abstention_cancels_without_attack": true,
+    "next_comparison_fresh_and_feedback_aware": true,
+    "service_errors_and_nontraining_abstention_still_fail_closed": true,
+    "no_individual_participation_or_reward_invented": true
+  },
+  "local_regression": {
+    "new_tests": 7,
+    "all_python_tests": 1338,
+    "all_python_tests_passed": true,
+    "native_rebuild_required": false
+  },
+  "actual_runtime_witness": {
+    "original_run": "20261005-010401-seed42",
+    "first_exclusive_successor": "20261005-013225-native-recovery-seed42",
+    "latest_verified_checkpoint": "20261005-013603-native-recovery-seed42",
+    "same_native_and_original_recorder": true,
+    "reattach_observations_exactly_equal": true,
+    "native_pause_frame": 3797,
+    "fresh_jev_decisions": 1,
+    "selected_move": "Headbutt",
+    "selected_probability": 0.91,
+    "conditional_headbutt_normal_damage": [84, 99],
+    "conditional_surf_normal_damage": [17, 20],
+    "enemy_hp": 46,
+    "native_battle_won": true,
+    "geodude_xp_before": 6643,
+    "geodude_xp_after": 6748,
+    "snorlax_xp_before": 38746,
+    "snorlax_xp_after": 38851,
+    "geodude_hp_after": 21,
+    "snorlax_hp_after": 134,
+    "snorlax_status_after": "Poison",
+    "normal_postbattle_fade_frames": 13,
+    "safe_saved_native_frame": 4004,
+    "independent_continue_schema": 4,
+    "independent_continue_full_snapshot_equal": true,
+    "owned": 74,
+    "seen": 103,
+    "stored_pokemon": 53,
+    "cash": 171,
+    "new_unique_species": [],
+    "source_checkpoint_and_original_failure_evidence_unchanged": true,
+    "diagnostic_answers_reused": false,
+    "state_injection_or_rollback": false
+  },
+  "actual_lossless_wire_adoption": {
+    "accepted_segmented_strategy_requests": 19,
+    "maximum_accepted_segmented_input_tokens": 32358,
+    "larger_segmented_capacity_rejections": 6,
+    "existing_recursive_fallback_retains_all_candidates": true,
+    "all_actual_requests_including_errors_semantically_roundtripped": 69,
+    "future_capacity_guaranteed": false
+  },
+  "original_recording": {
+    "path_relative_to_legal_runs": "20261005-010401-seed42/jev-dex-full.mp4",
+    "sha256": "6497703cc9586902fbbfbf4a97d7dd7809cba863bfe0e50312a3ffd0cae1b3c3",
+    "bytes": 265079,
+    "encoded_frames": 1003,
+    "native_rendered_frames": 4004,
+    "duration_seconds": 16.716667,
+    "graceful_finalization_and_full_decode_verified": true,
+    "replacement_video_or_downtime_frames_invented": false
+  },
+  "disk_upkeep": {
+    "rebuildable_debug_cache_bytes_removed": 3063840768,
+    "unique_debug_native_retained": true,
+    "closed_original38_native_duplicate_bytes_released": 22233088,
+    "identical_original_binary_path_retained_as_hardlink": true,
+    "all_83_previous_archives_and_protected_evidence_hashes_unchanged": true,
+    "new_backup_policy": "One original38 trace plus only its two successor suffixes; one original MP4. Link previous source, native/GFX and older archive bytes instead of copying them again."
+  },
+  "scope": "Single actual recovery and full local Python regression, not universal causal policy improvement. Native direct-hit ranges are conditional on landing and do not guarantee a safe turn, earned XP or evolution. The old chain has ghost-pass ancestry and is strategy validation only. Final lawful NEW GAME124, whole-process final MP4 and collection dashboard remain unaccepted.",
+  "completed124": false,
+  "old_ghost_ancestor_legality_certified": false,
+  "final_legal_newgame_started": false
+}
