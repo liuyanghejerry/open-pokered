@@ -21,11 +21,87 @@ STRING_REFERENCE_INSTRUCTION = (
     'all other strings keep their literal meanings. No facts or candidates are omitted.')
 _STRING_REFERENCE = re.compile(r'@e[0-9]+\Z')
 MAPPING_TABLE_SCHEMA = 'decision_mapping_table_schema'
+SEQUENCE_TABLE_SCHEMA = 'decision_sequence_table_schema'
+SEQUENCE_TABLE_INSTRUCTION = (
+    ' Wire segmented record lists: when state.decision_sequence_table_schema is 1, '
+    'each singleton $s is an ordered list of segments. Expand each segment as a '
+    'complete list (including strategy_table and transitive evidence references), '
+    'then concatenate the segments in order to restore the exact original list. '
+    'Record fields stay descriptive; missing fields are not filled with null. '
+    'Every record, value, list position and candidate is retained.')
 MAPPING_TABLE_INSTRUCTION = (
     ' Wire mapped record tables: when state.decision_mapping_table_schema is 1, '
     'each singleton $m is [keys,columns,rows]. Row i is the complete record for keys[i]; '
     'zip columns with every row to restore the exact original ordered mapping. '
     'Resolve evidence references transitively in keys, columns and cells. No facts or options are omitted.')
+
+
+def compact_decision_sequence_tables(state, candidates):
+    """Pack contiguous same-shape runs in mixed lists, without a missing-value sentinel.
+
+    Uniform lists already have the historical strategy_table encoding. Mixed
+    party/PC records cannot share its columns, but their ordered runs can. Only
+    profitable exact encodings are emitted; scalar/plain criteria stay literal.
+    """
+    tables = 0
+
+    def encode(value):
+        nonlocal tables
+        if isinstance(value, dict):
+            if '$s' in value or SEQUENCE_TABLE_SCHEMA in value:
+                raise ValueError('Reserved segmented record list collision')
+            return {key: encode(child) for key, child in value.items()}
+        if not isinstance(value, list):
+            return value
+        children = [encode(child) for child in value]
+
+        def shape(row):
+            # Protocol wrappers encode other value types, not ordinary records.
+            return (tuple(row) if isinstance(row, dict) and row and not
+                set(row).intersection(('$s', '$m', '$e', 'shared_strategy_evidence_ref', 'strategy_table')) else None)
+
+        segments, packed_runs, index = [], 0, 0
+        while index < len(children):
+            columns = shape(children[index])
+            end = index + 1
+            while end < len(children) and shape(children[end]) == columns:
+                end += 1
+            ordinary = children[index:end]
+            packed = ({'strategy_table': {'columns': list(columns),
+                'rows': [[row[column] for column in columns] for row in ordinary]}}
+                if columns and len(ordinary) >= 3 else None)
+            if packed and len(json.dumps(packed).encode()) < len(json.dumps(ordinary).encode()):
+                segments.append(packed)
+                packed_runs += 1
+            elif segments and isinstance(segments[-1], list):
+                segments[-1].extend(ordinary)
+            else:
+                segments.append(ordinary)
+            index = end
+        tagged = {'$s': segments}
+        if (packed_runs and len(segments) > 1
+                and len(json.dumps(tagged).encode()) < len(json.dumps(children).encode())):
+            tables += 1
+            return tagged
+        return children
+
+    wire, offered = encode(state), {}
+    for key, value in candidates.items():
+        try:
+            payload = json.loads(value)
+        except (TypeError, ValueError):
+            payload = value
+        encoded = encode(payload)
+        offered[key] = (json.dumps(encoded, separators=(',', ':'), ensure_ascii=False)
+                        if encoded != payload else value)
+    if not tables:
+        return state, candidates
+    wire[SEQUENCE_TABLE_SCHEMA] = 1
+    before = len(json.dumps({'state': state, 'criteria': candidates}).encode())
+    after = len(json.dumps({'state': wire, 'criteria': offered}).encode())
+    if after + len(SEQUENCE_TABLE_INSTRUCTION.encode()) >= before:
+        return state, candidates
+    return wire, offered
 
 
 def compact_decision_mapping_tables(state, candidates):
@@ -172,7 +248,7 @@ def compact_decision_field_wire(state, candidates):
     protected = set(state) | {
         'shared_strategy_evidence', 'shared_strategy_evidence_ref', '$e',
         'strategy_table', 'columns', 'rows', FIELD_DICTIONARY, STRING_REFERENCE_PREFIX,
-        MAPPING_TABLE_SCHEMA, '$m'}
+        MAPPING_TABLE_SCHEMA, '$m', SEQUENCE_TABLE_SCHEMA, '$s'}
     decoded = {}
     for key, value in candidates.items():
         try:
@@ -281,6 +357,9 @@ def expand_decision_evidence(state, candidates):
     mapped_tables = MAPPING_TABLE_SCHEMA in state
     if mapped_tables and (type(state[MAPPING_TABLE_SCHEMA]) is not int or state[MAPPING_TABLE_SCHEMA] != 1):
         raise ValueError('Invalid mapped record table schema')
+    sequence_tables = SEQUENCE_TABLE_SCHEMA in state
+    if sequence_tables and (type(state[SEQUENCE_TABLE_SCHEMA]) is not int or state[SEQUENCE_TABLE_SCHEMA] != 1):
+        raise ValueError('Invalid segmented record list schema')
 
     def expand(value, visiting=()):
         if isinstance(value, list):
@@ -292,6 +371,14 @@ def expand_decision_evidence(state, candidates):
             if not isinstance(key, str) or key not in library or key in visiting:
                 raise ValueError('Missing or cyclic shared evidence reference')
             return expand(library[key], (*visiting, key))
+        if sequence_tables and '$s' in value:
+            if set(value) != {'$s'}:
+                raise ValueError('Malformed segmented record list tag')
+            segments = expand(value['$s'], visiting)
+            if (not isinstance(segments, list) or not segments
+                    or any(not isinstance(segment, list) for segment in segments)):
+                raise ValueError('Malformed segmented record list segment')
+            return [child for segment in segments for child in segment]
         if mapped_tables and '$m' in value:
             if set(value) != {'$m'}:
                 raise ValueError('Malformed mapped record table tag')
@@ -306,9 +393,9 @@ def expand_decision_evidence(state, candidates):
                     or len(rows) != len(keys)
                     or any(not isinstance(row, list) or len(row) != len(columns) for row in rows)):
                 raise ValueError('Malformed mapped record table records')
-            return {key: dict(zip(columns, row)) for key, row in zip(keys, rows)}
+            return {key: expand(dict(zip(columns, row)), visiting) for key, row in zip(keys, rows)}
         if set(value) == {'strategy_table'}:
-            table = value['strategy_table']
+            table = expand(value['strategy_table'], visiting)
             if (not isinstance(table, dict) or set(table) != {'columns', 'rows'}
                     or not isinstance(table['columns'], list) or not isinstance(table['rows'], list)
                     or any(not isinstance(key, str) for key in table['columns'])
@@ -316,12 +403,12 @@ def expand_decision_evidence(state, candidates):
                     or any(not isinstance(row, list) or len(row) != len(table['columns'])
                            for row in table['rows'])):
                 raise ValueError('Malformed shared evidence record table')
-            return [{key: expand(child, visiting) for key, child in zip(table['columns'], row)}
+            return [expand(dict(zip(table['columns'], row)), visiting)
                     for row in table['rows']]
         return {key: expand(child, visiting) for key, child in value.items()}
 
     original_state = expand({key: value for key, value in state.items()
-                            if key not in ('shared_strategy_evidence', MAPPING_TABLE_SCHEMA)})
+                            if key not in ('shared_strategy_evidence', MAPPING_TABLE_SCHEMA, SEQUENCE_TABLE_SCHEMA)})
     original_options = {}
     for key, value in candidates.items():
         try:

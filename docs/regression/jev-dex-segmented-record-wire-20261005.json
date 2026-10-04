@@ -1,0 +1,58 @@
+{
+  "schema": 1,
+  "verified": true,
+  "change": "Overflow-only lossless segmented tables for mixed same-shape record runs, with descriptive fields",
+  "actual_source_run": ".artifacts/jev-dex-legal-newgame-20261004/20261005-001122-seed42",
+  "source_trace_sha256": "82c71d69218e99fa8b607095767c7ed1c90fd3a9e59c8401db2aaa090a302646",
+  "actual_failure": {
+    "layer": "strategy",
+    "elapsed_s": 143.27,
+    "provider_error": "max_tokens_exceeded",
+    "candidate_ids": ["subgoal:55", "subgoal:56"],
+    "scope": "Recorded disjoint tournament leaf, not the full candidate set or final abstention comparison. Its party/PC TM-recipient lists have different field shapes."
+  },
+  "whole_trace_semantic_audit": {
+    "requests": 72,
+    "strategy_requests": 63,
+    "action_requests": 9,
+    "maximum_candidates_including_none": 86,
+    "segmented_representations": 26,
+    "complete_states_and_all_offered_criteria_preserved": true,
+    "original_none_entries_preserved": true,
+    "source_inputs_unchanged": true
+  },
+  "fresh_non_gameplay_provider_probe": {
+    "provider_accepted": true,
+    "model": "typesafe/jev-1.13-20260917",
+    "original_request_bytes": 85350,
+    "proposed_request_bytes": 78307,
+    "input_tokens": 30172,
+    "output_tokens": 46,
+    "request_sha256": "9173547134b91ec8a3172a2f7fc665add63d190fa24c4c524951543b2d47d8f1",
+    "diagnostic_answer_reused": false,
+    "native_commands": 0,
+    "scope": "One actual failed leaf with unchanged full semantic world, criteria and question plus decoding guidance. Acceptance is not a universal future capacity or performance guarantee."
+  },
+  "local_history_stress": {
+    "retained_outcomes": 4,
+    "synthetic_differing_xp_and_hp": true,
+    "full_roundtrip_verified": true,
+    "state_and_criteria_bytes": 65520,
+    "provider_acceptance_tested": false,
+    "scope": "Codec-only synthetic history at the existing recent_outcomes[-4:] bound; no native experience, collection or future token-limit claim."
+  },
+  "verification": {
+    "new_codec_and_runtime_tests": 13,
+    "new_dashboard_projection_tests": 1,
+    "all_python_tests_passed": 1331,
+    "all_python_test_elapsed_seconds": 18.904,
+    "checks": ["ordered records and nested types", "missing versus null", "reserved-key collisions", "malformed/cyclic references", "lazy explicit-overflow enablement", "separate endpoint/model/provider/path/layer learning", "full distribution and none", "exhausted leaves fail closed", "dashboard typed-fact projection"]
+  },
+  "runtime_adoption_proven_by_this_report": false,
+  "saved_validation_owned": 74,
+  "saved_geodude_experience": 6643,
+  "old_ghost_ancestor_legality_certified": false,
+  "final_legal_newgame_started": false,
+  "completed124": false,
+  "scope": "Request encoding and export tooling only: no model replacement, shortlist, goal preference, history omission, native mechanics, framebuffer/layout, source editing, rollback or diagnostic answer reuse. Actual live adoption and final lawful NEW GAME124/full movie/dashboard require separate evidence."
+}

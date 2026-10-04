@@ -22,7 +22,8 @@ from .typesafe import Choice, TypeSafeClient, TypeSafeError
 from .decision_wire import (FIELD_DICTIONARY_INSTRUCTION, compact_decision_field_wire,
                             expand_decision_evidence, STRING_REFERENCE_INSTRUCTION,
                             compact_decision_string_references, MAPPING_TABLE_INSTRUCTION,
-                            compact_decision_mapping_tables)
+                            compact_decision_mapping_tables, SEQUENCE_TABLE_INSTRUCTION,
+                            compact_decision_sequence_tables)
 from .story_rules import Rule, requirements, evaluate, static_retreat_contract, spent_static_source
 from .playthrough_judgments import (ObservedProtocol, NavigationPause, NavigationGoalObserved, attack_profile, replacement_options,
                                     MEDICINES, BALLS, medicine_options, effective_attacks, ITEM_CATALOG,
@@ -1048,7 +1049,7 @@ def compact_string_decision_wire(state, candidates):
     return compact_refactored_decision_wire(state, candidates, min_chars=16, string_references=True)
 
 
-def compact_mapped_decision_wire(state, candidates, *, min_chars=16, alias_fields=True):
+def compact_mapped_decision_wire(state, candidates, *, min_chars=16, alias_fields=True, sequence_tables=False):
     """A lossless mapped-record fallback, composed before evidence factoring.
 
     Mapping axes can themselves share evidence. Coarser factoring retains
@@ -1059,7 +1060,9 @@ def compact_mapped_decision_wire(state, candidates, *, min_chars=16, alias_field
     worse. This switch does not change the mapping/reference protocols.
     """
     original, options = expand_decision_evidence(state, candidates)
-    mapped, offered = compact_decision_mapping_tables(original, options)
+    base, options = (compact_decision_sequence_tables(original, options)
+                     if sequence_tables else (original, options))
+    mapped, offered = compact_decision_mapping_tables(base, options)
     if mapped is original:
         return state, candidates
     factored, offered = factor_strategy_evidence(mapped, offered, min_chars=min_chars)
@@ -1079,6 +1082,8 @@ def compact_mapped_decision_wire(state, candidates, *, min_chars=16, alias_field
     after = len(json.dumps({'state': wire, 'criteria': offered}).encode())
     guidance = (REFACTORED_DECISION_EVIDENCE_INSTRUCTION + FIELD_DICTIONARY_INSTRUCTION
                 + STRING_REFERENCE_INSTRUCTION + MAPPING_TABLE_INSTRUCTION)
+    if sequence_tables:
+        guidance += SEQUENCE_TABLE_INSTRUCTION
     if after + len(guidance.encode()) >= before:
         return state, candidates
     return wire, offered
@@ -2242,7 +2247,9 @@ class AutonomousStoryAgent(DualStoryAgent):
         profitable tagged-string reference refactoring is tried with its own
         runtime scope. Keyed-record tables preserve every mapping key and cell;
         coarse references and original field names provide equivalent overflow
-        alternatives, each learned separately. Exhausted leaves fail closed.
+        alternatives, each learned separately. Mixed record lists have an
+        additional lossless segmented-table alternative with descriptive fields;
+        its learning is separate too. Exhausted leaves fail closed.
         """
         if not candidates:
             return super().choose(layer, state, candidates, instruction,
@@ -2303,6 +2310,8 @@ class AutonomousStoryAgent(DualStoryAgent):
         coarse_eligible, coarse_computed = False, False
         readable_scopes = getattr(self, '_readable_mapped_field_scopes', set())
         readable_eligible, readable_computed = False, False
+        sequence_scopes = getattr(self, '_sequence_mapped_field_scopes', set())
+        sequence_eligible, sequence_computed = False, False
 
         def append_refactored_format():
             nonlocal field_eligible, field_computed
@@ -2347,6 +2356,8 @@ class AutonomousStoryAgent(DualStoryAgent):
                 append_coarse_format()
             if len(formats) == before:
                 append_readable_format()
+            if len(formats) == before:
+                append_sequence_format()
 
         def append_mapped_format():
             nonlocal mapped_eligible, mapped_computed
@@ -2403,19 +2414,43 @@ class AutonomousStoryAgent(DualStoryAgent):
                     REFACTORED_DECISION_EVIDENCE_INSTRUCTION + FIELD_DICTIONARY_INSTRUCTION
                     + STRING_REFERENCE_INSTRUCTION + MAPPING_TABLE_INSTRUCTION))
 
+        def append_sequence_format():
+            nonlocal sequence_eligible, sequence_computed
+            if sequence_computed:
+                return
+            sequence_computed = True
+            try:
+                wire, offered = compact_mapped_decision_wire(
+                    compact_base, short_candidates if eligible else candidates,
+                    min_chars=160, alias_fields=False, sequence_tables=True)
+            except ValueError:
+                return
+            sequence_eligible = wire is not compact_base and not any(
+                wire == previous and offered == previous_options
+                for _, previous, previous_options, _ in formats)
+            if sequence_eligible:
+                formats.append(('segmented_record_readable_fields', wire, offered,
+                    REFACTORED_DECISION_EVIDENCE_INSTRUCTION + FIELD_DICTIONARY_INSTRUCTION
+                    + STRING_REFERENCE_INSTRUCTION + MAPPING_TABLE_INSTRUCTION
+                    + SEQUENCE_TABLE_INSTRUCTION))
+
         # Do not re-factor a successful ordinary request. Enable this work
         # only after explicit overflow, or its same-endpoint runtime learning.
-        if scope in field_scopes or scope in string_scopes or scope in mapped_scopes or scope in coarse_scopes or scope in readable_scopes:
+        if scope in field_scopes or scope in string_scopes or scope in mapped_scopes or scope in coarse_scopes or scope in readable_scopes or scope in sequence_scopes:
             append_refactored_format()
-        if scope in string_scopes or scope in mapped_scopes or scope in coarse_scopes or scope in readable_scopes:
+        if scope in string_scopes or scope in mapped_scopes or scope in coarse_scopes or scope in readable_scopes or scope in sequence_scopes:
             append_string_format()
-        if scope in mapped_scopes or scope in coarse_scopes or scope in readable_scopes:
+        if scope in mapped_scopes or scope in coarse_scopes or scope in readable_scopes or scope in sequence_scopes:
             append_mapped_format()
-        if scope in coarse_scopes or scope in readable_scopes:
+        if scope in coarse_scopes or scope in readable_scopes or scope in sequence_scopes:
             append_coarse_format()
-        if scope in readable_scopes:
+        if scope in readable_scopes or scope in sequence_scopes:
             append_readable_format()
-        if readable_eligible and scope in readable_scopes:
+        if scope in sequence_scopes:
+            append_sequence_format()
+        if sequence_eligible and scope in sequence_scopes:
+            first_format = len(formats) - 1
+        elif readable_eligible and scope in readable_scopes:
             first_format = len(formats) - 1
         elif coarse_eligible and scope in coarse_scopes:
             first_format = len(formats) - 1
@@ -2496,6 +2531,9 @@ class AutonomousStoryAgent(DualStoryAgent):
             elif next_encoding == 'mapped_record_coarse_references':
                 coarse_scopes.add(scope)
                 self._coarse_mapped_reference_scopes = coarse_scopes
+            elif next_encoding == 'segmented_record_readable_fields':
+                sequence_scopes.add(scope)
+                self._sequence_mapped_field_scopes = sequence_scopes
             else:
                 readable_scopes.add(scope)
                 self._readable_mapped_field_scopes = readable_scopes

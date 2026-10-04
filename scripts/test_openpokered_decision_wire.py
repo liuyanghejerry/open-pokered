@@ -619,7 +619,7 @@ class DecisionFieldWireTests(unittest.TestCase):
         choose.assert_called_once_with('strategy', state, options, 'Pick', allow_abstain=True)
         self.assertFalse(hasattr(agent, '_refactored_field_dictionary_scopes'))
 
-    def test_all_four_leaf_overflows_fail_closed_without_partition(self):
+    def test_all_profitable_leaf_formats_fail_closed_without_partition(self):
         agent = self.agent()
         state, options = self.production_fixture()
         failure = self.overflow()
@@ -627,7 +627,14 @@ class DecisionFieldWireTests(unittest.TestCase):
             with self.assertRaises(StoryStopped) as observed:
                 agent.choose_bounded_strategy(state, options, 'Pick')
         self.assertIs(observed.exception, failure)
-        self.assertEqual(choose.call_count, 4)
+        # Its mixed records now admit the fifth, lossless segmented format.
+        # Still fail closed after that trial, with every option unchanged.
+        self.assertEqual(choose.call_count, 5)
+        self.assertEqual(choose.call_args_list[-1].args[1]['decision_sequence_table_schema'], 1)
+        for call in choose.call_args_list:
+            self.assertEqual(list(call.args[2]), list(options))
+            self.assertEqual(expand_decision_evidence(call.args[1], call.args[2])[0],
+                             expand_decision_evidence(state, options)[0])
         self.assertFalse(any(call.args[0] == 'strategy_partition' for call in agent.record.call_args_list))
 
     def test_non_context_error_never_enables_any_fallback(self):

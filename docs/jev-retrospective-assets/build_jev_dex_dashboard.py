@@ -18,7 +18,7 @@ from openpokered.collection_planner import (  # noqa: E402
 )
 from openpokered.story_rules import MAPS_DIR  # noqa: E402
 from openpokered.decision_wire import (  # noqa: E402
-    FIELD_DICTIONARY, STRING_REFERENCE_PREFIX, MAPPING_TABLE_SCHEMA, expand_decision_evidence,
+    FIELD_DICTIONARY, STRING_REFERENCE_PREFIX, MAPPING_TABLE_SCHEMA, SEQUENCE_TABLE_SCHEMA, expand_decision_evidence,
 )
 
 
@@ -62,7 +62,7 @@ def export_decision(event, descriptions):
                for key in keys}
     projection = {key: state[key] for key in (
         'dex_progress', 'shared_strategy_evidence', FIELD_DICTIONARY, STRING_REFERENCE_PREFIX,
-        MAPPING_TABLE_SCHEMA)
+        MAPPING_TABLE_SCHEMA, SEQUENCE_TABLE_SCHEMA)
         if key in state}
     restored, decoded = expand_decision_evidence(projection, offered)
     candidates = []

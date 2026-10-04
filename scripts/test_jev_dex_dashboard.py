@@ -119,7 +119,24 @@ class DecisionExportTest(unittest.TestCase):
             probabilities={'none': .4}), {})
         self.assertEqual(exported['candidates'][-1],
                          {'id': 'a', 'label': 'Chosen', 'probability': None,
-                          'description_ref': exported['candidates'][-1]['description_ref']})
+                         'description_ref': exported['candidates'][-1]['description_ref']})
+
+    def test_segmented_party_pc_records_project_complete_typed_facts(self):
+        state = {'decision_sequence_table_schema': 1, 'dex_progress': {'owned': 74},
+            'shared_strategy_evidence': {'e0': {'$s': [
+                {'strategy_table': {'columns': ['species', 'index'], 'rows': [['Geodude', 0]]}},
+                {'strategy_table': {'columns': ['species', 'index', 'box'], 'rows': [['Abra', 1, None]]}}]}}}
+        event = decision({'a': '{"establish":["sale","Tm34",false],"recipients":{"$e":"e0"}}',
+            'none': 'Nothing fits'}, state)
+        original, descriptions = deepcopy(event), {}
+        exported = dashboard.export_decision(event, descriptions)
+        self.assertEqual(event, original)
+        self.assertEqual(descriptions[exported['candidates'][0]['description_ref']], {
+            'establish': ['sale', 'Tm34', False],
+            'recipients': [{'species': 'Geodude', 'index': 0}, {'species': 'Abra', 'index': 1, 'box': None}]})
+        self.assertEqual(exported['dex_progress'], {'owned': 74})
+        self.assertEqual(exported['choice'], 'a')
+        self.assertNotIn('decision_sequence_table_schema', json.dumps(exported))
 
     def test_bad_displayed_reference_or_table_fails_without_mutation(self):
         libraries = ({'e0': {'$e': 'missing'}}, {'e0': {'$e': 'e0'}},
