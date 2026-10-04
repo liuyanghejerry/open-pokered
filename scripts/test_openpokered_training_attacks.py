@@ -4,7 +4,8 @@ import json
 import unittest
 from unittest.mock import Mock
 
-from openpokered.playthrough_judgments import JevGame, level_training_goal, move_question
+from openpokered.playthrough_judgments import JevGame, level_training_goal, move_question, training_move_question
+from openpokered.story_agent import StoryStopped
 
 
 class TrainingAttackTests(unittest.TestCase):
@@ -85,7 +86,9 @@ class TrainingAttackTests(unittest.TestCase):
         game._select_move()
         _layer, compact, choices, instruction = game.judgments.choose.call_args.args
         self.assertEqual(compact['level_training_goal']['trainee_species'], 'Geodude')
-        self.assertEqual(choices, {'0': 'Tackle', '1': 'Selfdestruct', '2': 'RockThrow'})
+        self.assertEqual({key: value for key, value in choices.items() if key != 'back'},
+                         {'0': 'Tackle', '1': 'Selfdestruct', '2': 'RockThrow'})
+        self.assertIn('back', choices)
         self.assertIn('forfeits its experience', instruction)
         self.assertIn('No attack choice guarantees', instruction)
         game.tap.assert_called_once_with('a', 4)
@@ -138,6 +141,94 @@ class TrainingAttackTests(unittest.TestCase):
         game.tap.assert_called_once_with('a', 4)
         attack = next(call for call in game.judgments.record.call_args_list if call.args[0] == 'attack')
         self.assertEqual(attack.kwargs['move'], 'Selfdestruct')
+
+    def test_finisher_receives_exact_hp_status_and_native_damage_without_crediting_participation(self):
+        state = self.state()
+        state['battle_live']['player'] = state['party'][1]
+        state['battle_live']['player']['status'] = 'Poison'
+        state['battle_moves']['moves'] = [{'move': 'Slash', 'pp': 20, 'disabled': False,
+            'direct_hit_preview': {'normal_damage': [84, 99], 'critical_damage': [154, 181],
+                                   'target_hp': 50, 'direct_hit_can_ko': True, 'critical_threshold': 15}}]
+        original = copy.deepcopy(state)
+        compact, choices = training_move_question(state, state['battle_moves'], self.active())
+        self.assertEqual(choices, {'0': 'Slash'})
+        self.assertEqual(compact['training_battle_state']['active_role'], 'other_species')
+        self.assertEqual(compact['training_battle_state']['active']['status'], 'Poison')
+        self.assertEqual(compact['training_battle_state']['enemy']['hp'], 50)
+        self.assertEqual(compact['moves']['0']['direct_hit_preview']['normal_damage'], [84, 99])
+        self.assertIn('NOT zero damage', compact['direct_hit_preview_scope'])
+        self.assertNotIn('participated', compact['level_training_goal'])
+        compact['moves']['0']['direct_hit_preview']['normal_damage'][0] = 0
+        compact['training_battle_state']['active']['hp'] = 0
+        self.assertEqual(state, original)
+
+    def test_missing_preview_remains_unknown_and_nontraining_question_unchanged(self):
+        state = self.state()
+        compact, _ = training_move_question(state, state['battle_moves'], self.active())
+        self.assertIsNone(compact['moves']['0']['direct_hit_preview'])
+        self.assertEqual(training_move_question(state, state['battle_moves'], None),
+                         move_question(state, state['battle_moves']))
+
+    def test_training_abstention_cancels_menu_without_executing_an_attack(self):
+        state = self.state()
+        game = self.game(state, self.active())
+        game.judgments.choose.side_effect = StoryStopped('action:no_selection')
+        game._select_move()
+        game.tap.assert_called_once_with('b', 4)
+        game.step.assert_called_once_with(10)
+        self.assertEqual(game.move_cache, {})
+        kinds = [call.args[0] for call in game.judgments.record.call_args_list]
+        self.assertIn('training_move_abstention', kinds)
+        self.assertIn('training_menu_cancelled', kinds)
+        self.assertNotIn('attack', kinds)
+
+    def test_explicit_back_is_legal_and_next_question_receives_feedback(self):
+        state = self.state()
+        game = self.game(state, self.active())
+        game.judgments.choose.return_value = 'back'
+        game._select_move()
+        self.assertEqual(game.move_cache, {})
+        game.judgments.choose.return_value = '0'
+        game._select_move()
+        self.assertIn('prior_menu_abstention', game.judgments.choose.call_args.args[1])
+        self.assertEqual([call.args[0] for call in game.tap.call_args_list], ['b', 'a'])
+
+    def test_cancel_feedback_reaches_main_menu_without_removing_fight_or_switches(self):
+        state = self.state()
+        game = self.game(state, self.active())
+        game.judgments.choose.return_value = 'back'
+        game._select_move()
+        state['battle_phase'] = 'PlayerMenu'
+        game.judgments.choose.return_value = 'switch:1'
+        self.assertEqual(game.battle_recovery_plan(state), ('switch', 1))
+        _, compact, choices, _ = game.judgments.choose.call_args.args
+        self.assertIn('training_move_menu_feedback', compact)
+        self.assertIn('fight', choices)
+        self.assertIn('switch:1', choices)
+        state['battle_live']['enemy']['hp'] -= 1
+        game.battle_recovery_plan(state)
+        self.assertNotIn('training_move_menu_feedback', game.judgments.choose.call_args.args[1])
+
+    def test_training_service_errors_and_nontraining_abstention_remain_fail_closed(self):
+        for active, reason in ((self.active(), 'action:service_unavailable'),
+                               (None, 'action:no_selection')):
+            with self.subTest(reason=reason):
+                game = self.game(self.state(), active)
+                game.judgments.choose.side_effect = StoryStopped(reason)
+                with self.assertRaisesRegex(StoryStopped, reason):
+                    game._select_move()
+                game.tap.assert_not_called()
+
+    def test_exact_training_hp_and_preview_changes_invalidate_attack_cache(self):
+        state = self.state()
+        game = self.game(state, self.active())
+        game._select_move()
+        state['battle_live']['enemy']['hp'] -= 1  # Still in the same healthy band.
+        game._select_move()
+        self.assertEqual(game.judgments.choose.call_count, 2)
+        state['battle_moves']['moves'][0]['direct_hit_preview'] = {'normal_damage': [1, 2]}
+        game._select_move()
+        self.assertEqual(game.judgments.choose.call_count, 3)
 
 
 if __name__ == '__main__':

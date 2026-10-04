@@ -767,6 +767,30 @@ def capture_move_question(state, menu):
     return compact, choices
 
 
+def training_move_question(state, menu, active):
+    """Training needs current native damage and HP, not only abstract power.
+
+    This deliberately does not invent individual participation or award XP.
+    A different active species can finish the encounter while the observed
+    trainee remains conscious; actual experience is checked after battle.
+    """
+    compact, choices = move_question(state, menu)
+    goal = level_training_goal(state, active)
+    if goal is None:
+        return compact, choices
+    compact['level_training_goal'] = goal
+    compact['training_battle_state'] = {
+        'active': deepcopy(state['battle_live']['player']),
+        'enemy': deepcopy(state['battle_live']['enemy']),
+        'active_role': 'trainee_species' if goal['active_species_matches_trainee'] else 'other_species',
+    }
+    for index, slot in enumerate(menu['moves']):
+        if str(index) in compact['moves']:
+            compact['moves'][str(index)]['direct_hit_preview'] = deepcopy(slot.get('direct_hit_preview'))
+    compact['direct_hit_preview_scope'] = DIRECT_HIT_PREVIEW_SCOPE
+    return compact, choices
+
+
 class JevGame(pt.Game):
     """Existing navigation/recovery skills with independently judged attacks."""
     def battle_party_target(self, state):
@@ -1005,6 +1029,13 @@ class JevGame(pt.Game):
         judgment_state = {'battle': live}
         if training_goal is not None:
             judgment_state['level_training_goal'] = training_goal
+            if getattr(self, '_training_declined_fight', None) == capture_turn_key(state):
+                judgment_state['training_move_menu_feedback'] = {
+                    'result': 'No suitable attack selected; move menu cancelled without spending a turn',
+                    'scope': 'Previous judgment at this unchanged battle state, not a failed attack or proof that victory is impossible.'}
+                instruction += (' The attack judgment declined the previous FIGHT menu at this '
+                    'same battle state. Reassess the offered recovery/ball/switch/FIGHT operations; '
+                    'cancelling spent no turn and did not test an attack. FIGHT remains available.')
         if balls and getattr(self.judgments, 'collects_dex', False):
             value = collection_capture_value(state, objective)
             judgment_state['collection_capture_value'] = value
@@ -1352,10 +1383,10 @@ class JevGame(pt.Game):
                                       reason='retryable_source_without_capture_capacity')
                 return
             compact, candidates = (capture_move_question(state, menu) if capturing
-                                   else move_question(state, menu))
+                                   else training_move_question(state, menu, getattr(self.judgments, 'active', None)))
             training_goal = None if capturing else level_training_goal(state, getattr(self.judgments, 'active', None))
-            if training_goal is not None:
-                compact['level_training_goal'] = training_goal
+            if training_goal is not None and getattr(self, '_training_declined_fight', None) == capture_turn_key(state):
+                compact['prior_menu_abstention'] = 'At this same state no suitable attack was selected; menu cancellation spent no turn and did not execute or test a move.'
             if capturing and not candidates:
                 # A status-only support may have just landed sleep. Return to
                 # PlayerMenu for a ball rather than repeat a useless status.
@@ -1416,7 +1447,8 @@ class JevGame(pt.Game):
                         candidates['back'] = 'Cancel this move menu without spending a turn; return to compare balls, switches or verified retreat when no listed move safely prepares capture.'
                         instruction += ' Choose back when no offered move is suitable; do not attack merely because FIGHT was opened.'
                     elif training_goal is not None:
-                        instruction = ('Which usable attack advances the selected level_training_goal? '
+                        candidates['back'] = 'Cancel this move menu without spending a turn; return to compare recovery, switches and FIGHT if no listed attack is suitable for the training turn.'
+                        instruction = ('Which usable attack best advances this training battle turn? '
                             'The trainee must remain a conscious participant to receive victory experience. '
                             'When the active species matches the trainee, a self_knockout_effect such as '
                             'Selfdestruct or Explosion forfeits its experience even if it defeats the opponent. '
@@ -1426,19 +1458,32 @@ class JevGame(pt.Game):
                             'finisher is active, do not assume its fainting also faints the switched-out '
                             'trainee, or that every same-species member participated. No attack choice '
                             'guarantees victory, survival, experience or registration. All usable attacks '
-                            'remain offered; do not count power bonuses twice.')
+                            'remain offered; do not count power bonuses twice. '
+                            'Compare current training_battle_state HP/status and direct_hit_preview normal '
+                            'and critical ranges with target HP under direct_hit_preview_scope. Null is unknown, '
+                            'not zero damage. An effective attack by another active teammate can finish the '
+                            'opponent while the switched-out trainee remains conscious. Lack of a guaranteed '
+                            'reward or a one-turn evolution is not by itself a reason to reject every attack; '
+                            'choose a viable turn toward battle victory, preserving training eligibility. '
+                            'If no listed attack is suitable, choose back to reconsider recovery or switches '
+                            'at the main menu. No participation or experience is credited by this choice.')
                     try:
                         chosen = self.judgments.choose('action', compact, candidates,
                                                        instruction + preference_suffix(self.judgments))
                     except StoryStopped as error:
-                        if not capturing or str(error) != 'action:no_selection':
+                        if (not capturing and training_goal is None) or str(error) != 'action:no_selection':
                             raise
                         chosen = 'back'
-                        self.judgments.record('capture_move_abstention', state=compact)
+                        self.judgments.record('capture_move_abstention' if capturing else 'training_move_abstention', state=compact)
                     self.move_cache[key] = chosen
                 if chosen == 'back':
-                    self._capture_declined_fight = capture_turn_key(state)
-                    self.judgments.record('capture_menu_cancelled', state=compact)
+                    if capturing:
+                        self._capture_declined_fight = capture_turn_key(state)
+                    else:
+                        self._training_declined_fight = capture_turn_key(state)
+                    self.judgments.record('capture_menu_cancelled' if capturing else 'training_menu_cancelled', state=compact)
+                    if not capturing:
+                        self.move_cache.pop(key, None)  # Feedback must reach the next fresh comparison.
                     self.tap('b', 4)
                     self.step(10)
                     return
