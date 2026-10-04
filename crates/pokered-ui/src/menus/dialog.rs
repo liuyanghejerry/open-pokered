@@ -1,60 +1,19 @@
-// Dialog widget — thin wrapper around dotzuki-ui generic dialog.
-//
-// Keeps the pokered-specific public API (taking DialogDefaultLayout)
-// while delegating the actual rendering to dotzuki_ui::widgets::dialog.
-//
-// The wrap width is derived from the box interior (in pixels, for the
-// proportional Fusion Pixel font) rather than a per-language character
-// count: with Latin at 5px and CJK at 10px advance, an 18-tile interior
-// fits ~28 Latin / 14 CJK characters, and dotzuki-ui's wrap_lines re-flows
-// short authored lines so they fill the box.
+//! Hard dialogue rows measured with the project's original Fusion Pixel font.
 
-use dotzuki_engine::menu::{CursorStyle, MenuConfig};
+use crate::alloc_prelude::*;
+use crate::engine::{InkColor, Painter, TilePos, Ui};
 use dotzuki_engine::render::TileRect;
 use pokered_core::game_state::Lang;
+use pokered_data::text_layout::wrap_hard_lines;
 use pokered_data::ui_layout::schema::DialogDefaultLayout;
 
-use crate::engine::{Painter, Ui};
-use dotzuki_ui::widgets::dialog;
-
-/// Draw a prepared overworld page without reflowing Chinese typewriter text.
-/// English retains the generic dialog's existing wrapping behavior.
-pub fn draw_paginated<P: Painter>(
+/// Draw one already-paginated dialogue page, preserving its hard row breaks.
+fn draw_rows<P: Painter>(
     text: &str,
     show_arrow: bool,
     layout: &DialogDefaultLayout,
     ui: &mut Ui<P>,
-    lang: Lang,
-) {
-    if lang == Lang::Zh {
-        // Chinese overworld pages are already laid out before revealing text.
-        // Reflowing a partially typed page moves words and can discard row 3.
-        ui.text_box(layout.box_0.rect, layout.box_0.color, true, |frame| {
-            for (row, line) in text.split('\n').enumerate() {
-                frame.label(0, row as u32 * 2, line, crate::InkColor::Black);
-            }
-            if show_arrow && !text.is_empty() {
-                let content = layout.box_0.rect;
-                frame.cursor_glyph_at(
-                    content.tw.saturating_sub(3),
-                    content.th.saturating_sub(3),
-                    '▼',
-                    crate::InkColor::Black,
-                );
-            }
-        });
-        return;
-    }
-    draw(text, show_arrow, layout, ui, lang);
-}
-
-/// Draw ordinary dialog text with the generic engine's wrapping behavior.
-pub fn draw<P: Painter>(
-    text: &str,
-    show_arrow: bool,
-    layout: &DialogDefaultLayout,
-    ui: &mut Ui<P>,
-    _lang: Lang,
+    preserve_rows: bool,
 ) {
     let area = TileRect::new(
         layout.box_0.rect.tx,
@@ -62,18 +21,47 @@ pub fn draw<P: Painter>(
         layout.box_0.rect.tw,
         layout.box_0.rect.th,
     );
-    let content = TileRect::new(
-        area.tx + 1,
-        area.ty + 1,
-        area.tw.saturating_sub(2),
-        area.th.saturating_sub(2),
-    );
-    let cursor = if show_arrow {
-        CursorStyle::new(Some(223), Default::default())
-    } else {
-        CursorStyle::new(None, Default::default())
-    };
-    let config = MenuConfig::new(area, None, content, cursor);
+    let interior_width = area.tw.saturating_sub(2);
+    let interior_height = area.th.saturating_sub(2);
+    let max_lines = (interior_height / 2).max(1) as usize;
+    let lines = if preserve_rows { text.split('\n').map(str::to_owned).collect() } else { wrap_hard_lines(text, interior_width as usize * 8) };
+    let proportional = ui.painter().supports_proportional();
+    ui.text_box(layout.box_0.rect, layout.box_0.color, true, |frame| {
+        for (i, line) in lines.iter().take(max_lines).enumerate() {
+            if !proportional {
+                frame.label(0, if preserve_rows { i as u32 * 2 } else { 1 + i as u32 * 2 }, line, InkColor::Black);
+            }
+        }
+        if !proportional && show_arrow && !text.is_empty() {
+            frame.cursor_glyph_at(
+                interior_width.saturating_sub(1),
+                interior_height.saturating_sub(1),
+                '▼',
+                InkColor::Black,
+            );
+        }
+    });
+    if proportional {
+        let painter = ui.painter();
+        for (i, line) in lines.iter().take(max_lines).enumerate() {
+            // Ten-pixel glyphs need a two-pixel gap. The second row ends
+            // above the original border instead of joining it at y=138.
+            painter.draw_text_px((area.tx + 1) * 8, (area.ty + if preserve_rows { 1 } else { 2 }) * 8 + i as u32 * 12,
+                line, InkColor::Black.into());
+        }
+        if show_arrow && !text.is_empty() {
+            painter.draw_glyph(TilePos::new(area.tx + interior_width,
+                area.ty + interior_height), '▼', InkColor::Black.into());
+        }
+    }
+}
 
-    dialog::draw_dialog(text, &[config], ui.painter());
+/// Draw ordinary dialogue, wrapping complete text inside the box.
+pub fn draw<P: Painter>(text: &str, show_arrow: bool, layout: &DialogDefaultLayout, ui: &mut Ui<P>, _lang: Lang) {
+    draw_rows(text, show_arrow, layout, ui, false);
+}
+
+/// Render the Chinese page prepared before typewriter reveal without reflow.
+pub fn draw_paginated<P: Painter>(text: &str, show_arrow: bool, layout: &DialogDefaultLayout, ui: &mut Ui<P>, lang: Lang) {
+    draw_rows(text, show_arrow, layout, ui, lang == Lang::Zh);
 }

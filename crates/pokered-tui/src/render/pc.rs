@@ -10,13 +10,15 @@ use pokered_core::game_state::Lang;
 use pokered_core::pc_screen::{ItemListMode, MonListMode, PcPhase, PcScreen, PC_LIST_VISIBLE_ROWS};
 use pokered_core::save::SaveData;
 use pokered_data::lang_data;
+use pokered_data::text_layout::{wrap_hard_lines, DIALOGUE_LINE_WIDTH_PX};
+use pokered_ui::backends::FrameBufferPainter;
+use pokered_ui::{Painter, TilePos};
 use pokered_data::ui_text::{zh_main_menu_label, zh_pc_line};
-use pokered_renderer::embedded_font::draw_text;
-use pokered_renderer::palette::GRAYSCALE_SPRITE_PALETTE;
+use pokered_renderer::embedded_font::{draw_glyph, draw_text, measure_text, pkmn_tile_glyph};
 use pokered_renderer::resource::ResourceManager;
 use pokered_renderer::{FrameBuffer, Rgba, TILE_SIZE};
 
-use super::{blit_tileset, draw_text_box, species_to_sprite_name};
+use super::{blit_front_pic, draw_text_box, species_to_sprite_name};
 
 const BG: Rgba = Rgba::WHITE;
 const FG: Rgba = Rgba::BLACK;
@@ -41,18 +43,36 @@ fn mon_row(mon: &Pokemon) -> String {
 /// Bottom text box holding up to `lines` lines (max 5), plus the current
 /// message page of the Message phase.
 fn draw_message(lines: &[String], fb: &mut FrameBuffer, is_zh: bool) {
-    let shown: Vec<String> = lines.iter().take(5).flat_map(|line| {
-        if is_zh {
-            pokered_core::text::zh_dialogue::wrap_lines(&zh_pc_line(line), 144, &[])
-        } else { vec![line.clone()] }
-    }).collect();
+    let shown: Vec<String> = lines.iter().take(5)
+        .flat_map(|line| {
+            let text = if is_zh { zh_pc_line(line) } else { line.clone() };
+            if is_zh { pokered_core::text::zh_dialogue::wrap_lines(&text, DIALOGUE_LINE_WIDTH_PX, &[]) } else { wrap_message(&text) }
+        }).collect();
     let pitch = if is_zh { 12 } else { T };
-    let bh = if is_zh { (shown.len().max(1) as u32 * pitch).div_ceil(T) }
-        else { shown.len().max(1) as u32 + 1 };
-    let by = 144 - (bh + 2) * T;
-    draw_text_box(fb, 0, by, 18, bh, FG);
+    let height = if is_zh {
+        (shown.len().max(1) as u32 * pitch).div_ceil(T)
+    } else { shown.len().max(1) as u32 + 1 };
+    let by = 144u32.saturating_sub((height + 2) * T);
+    draw_text_box(fb, 0, by, 18, height, FG);
     for (i, line) in shown.iter().enumerate() {
         draw_text(line, T, by + T + i as u32 * pitch, FG, fb);
+    }
+}
+
+fn wrap_message(text: &str) -> Vec<String> {
+    pokered_core::text::zh_dialogue::wrap_lines(text, DIALOGUE_LINE_WIDTH_PX, &[])
+}
+
+/// The ROM's <PKMN> is two glyph tiles, not the four-letter #MON placeholder.
+fn draw_pc_label(text: &str, x: u32, y: u32, fb: &mut FrameBuffer) {
+    if let Some((before, after)) = text.split_once("#MON") {
+        draw_text(before, x, y, FG, fb);
+        let ligature_x = x + measure_text(before);
+        draw_glyph(pkmn_tile_glyph(0xE1).unwrap(), ligature_x, y, FG, BG, fb);
+        draw_glyph(pkmn_tile_glyph(0xE2).unwrap(), ligature_x + T, y, FG, BG, fb);
+        draw_text(after, ligature_x + 2 * T, y, FG, fb);
+    } else {
+        draw_text(text, x, y, FG, fb);
     }
 }
 
@@ -157,7 +177,8 @@ fn draw_menu(bx: u32, by: u32, bw: u32, labels: &[String], cursor: usize, fb: &m
     for (i, label) in labels.iter().enumerate() {
         let y = by + (1 + i as u32 * 2) * T;
         let marker = if i == cursor { ">" } else { " " };
-        draw_text(&format!("{} {}", marker, label), bx + T, y, FG, fb);
+        draw_text(marker, bx + T, y, FG, fb);
+        draw_pc_label(label, bx + 2 * T, y, fb);
     }
 }
 
@@ -165,7 +186,7 @@ fn draw_menu(bx: u32, by: u32, bw: u32, labels: &[String], cursor: usize, fb: &m
 fn draw_box_no(save: &SaveData, fb: &mut FrameBuffer, is_zh: bool) {
     let bx = 9 * T;
     let by = 14 * T;
-    draw_text_box(fb, bx, by, 8, 1, FG);
+    draw_text_box(fb, bx, by, 9, 1, FG);
     let n = save.pc_storage.current_box_index() + 1;
     let text = if is_zh {
         format!("盒子{}号", n)
@@ -202,7 +223,7 @@ pub fn draw_pc(
                 .iter()
                 .map(|s| if is_zh { zh_main_menu_label(s) } else { s.clone() })
                 .collect();
-            draw_menu(0, 0, 13, &labels, pc.main_menu().cursor(), fb);
+            draw_menu(0, 0, 14, &labels, pc.main_menu().cursor(), fb);
         }
         PcPhase::BillsMenu => {
             let labels: Vec<String> = BILLS_LABELS
@@ -296,7 +317,7 @@ pub fn draw_pc(
             };
             draw_text(h1, T, T, FG, fb);
             if !h2.is_empty() {
-                draw_text(h2, T, 3 * T, FG, fb);
+                draw_pc_label(h2, T, 3 * T, fb);
             }
             let bx = 11 * T;
             draw_text_box(fb, bx, 0, 7, 12, FG);
@@ -329,7 +350,7 @@ pub fn draw_pc(
                 .iter()
                 .map(|s| lang_data::ui_label(s, is_zh).to_string())
                 .collect();
-            draw_menu(0, 0, 13, &labels, pc.players_menu().cursor(), fb);
+            draw_menu(0, 0, 14, &labels, pc.players_menu().cursor(), fb);
         }
         PcPhase::ItemList | PcPhase::ItemQuantity | PcPhase::TossConfirm => {
             let rows = item_rows(pc, save, is_zh);
@@ -408,9 +429,7 @@ fn draw_league_hof(
     if let Some(rm) = resources.as_mut() {
         let sprite = species_to_sprite_name(&format!("{}", view.species));
         if let Ok(cached) = rm.load_pokemon_front(&sprite) {
-            let ts = cached.tileset.clone();
-            let w_tiles = cached.source_size.0 / TILE_SIZE;
-            blit_tileset(fb, &ts, 12 * T, 5 * T, w_tiles, &GRAYSCALE_SPRITE_PALETTE);
+            blit_front_pic(fb, cached, 96, 40, false);
         }
     }
     let hof_no = if is_zh {
@@ -419,32 +438,27 @@ fn draw_league_hof(
         format!("HALL OF FAME No.{:>3}", team_no)
     };
     draw_text(&hof_no, T, 15 * T, FG, fb);
-    draw_text(&view.nickname, T, T, FG, fb);
-    draw_text(&format!("{} :L{}", lang_data::ui_label("LEVEL/", is_zh), view.level), T, 3 * T, FG, fb);
+    // HoFDisplayMonInfo (engine/movie/hall_of_fame.asm:159-183) keeps
+    // labels and values on separate rows, to the left of the front picture.
+    draw_text_box(fb, 0, 2 * T, 10, if is_zh { 11 } else { 9 }, FG);
+    draw_text(&view.nickname, T, if is_zh { 3 * T } else { 4 * T }, FG, fb);
+    let (level_label_y, level_y, type1_label_y, type1_y, type2_label_y, type2_y) =
+        if is_zh { (40, 52, 64, 76, 88, 100) }
+        else { (6 * T, 7 * T, 8 * T, 9 * T, 10 * T, 11 * T) };
+    draw_text(lang_data::ui_label("LEVEL/", is_zh), 2 * T, level_label_y, FG, fb);
+    if view.level < 100 && !is_zh {
+        let mut painter = FrameBufferPainter::new(fb);
+        painter.draw_gb_tile(TilePos::new(8, 7), 0x6E, "L", FG);
+        draw_text(&format!("{:02}", view.level), 9 * T, level_y, FG, fb);
+    } else {
+        draw_text(&format!("{}", view.level), 8 * T, level_y, FG, fb);
+    }
     if let Some(stats) = pokered_data::pokemon_data::get_base_stats(view.species) {
-        draw_text(
-            &format!(
-                "{} {}",
-                lang_data::ui_label("TYPE1/", is_zh),
-                lang_data::type_name(stats.type1, is_zh)
-            ),
-            T,
-            5 * T,
-            FG,
-            fb,
-        );
+        draw_text(lang_data::ui_label("TYPE1/", is_zh), 2 * T, type1_label_y, FG, fb);
+        draw_text(lang_data::type_name(stats.type1, is_zh), 3 * T, type1_y, FG, fb);
+        draw_text(lang_data::ui_label("TYPE2/", is_zh), 2 * T, type2_label_y, FG, fb);
         if stats.type1 != stats.type2 {
-            draw_text(
-                &format!(
-                    "{} {}",
-                    lang_data::ui_label("TYPE2/", is_zh),
-                    lang_data::type_name(stats.type2, is_zh)
-                ),
-                T,
-                7 * T,
-                FG,
-                fb,
-            );
+            draw_text(lang_data::type_name(stats.type2, is_zh), 3 * T, type2_y, FG, fb);
         }
     }
 }

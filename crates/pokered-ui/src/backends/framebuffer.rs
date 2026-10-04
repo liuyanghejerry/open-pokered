@@ -40,77 +40,32 @@ impl<'fb> Painter for FrameBufferPainter<'fb> {
             return;
         }
         let bg = Rgba::WHITE;
-        let ink = color;
         let t = TILE_SIZE_PX;
-        let bx = rect.tx * t;
-        let by = rect.ty * t;
-        let inner_w = rect.tw - 2;
-        let inner_h = rect.th - 2;
-        let right_x = bx + (rect.tw - 1) * t;
-        let bot_y = by + (rect.th - 1) * t;
-        let inner_px_w = inner_w * t;
-        let inner_px_h = inner_h * t;
-
-        draw_box_tile(
-            &box_tiles::TOP_LEFT,
-            &box_tiles::outside::TOP_LEFT,
-            bx,
-            by,
-            ink,
-            bg,
-            self.fb,
-        );
-        // The repeated edge tiles are solid horizontal/vertical runs. Batch
-        // those runs while retaining the four transparent corner masks.
-        if inner_w > 0 {
-            self.fb.fill_rect(bx + t, by + 1, inner_px_w, 2, ink);
-            self.fb.fill_rect(bx + t, by + 3, inner_px_w, 5, bg);
+        let (x, y) = (rect.tx * t, rect.ty * t);
+        let (right, bottom) = (x + (rect.tw - 1) * t, y + (rect.th - 1) * t);
+        let (inner_w, inner_h) = ((rect.tw - 2) * t, (rect.th - 2) * t);
+        // TextBoxBorder writes opaque white tiles. Quantize/fill that paper
+        // once, then batch the repeated original $7A/$7C ink runs instead of
+        // quantizing every pixel of every empty interior tile on the GBA.
+        self.fb.fill_rect(x, y, rect.tw * t, rect.th * t, bg);
+        // $7A = [00,00,FF,00,FF,FF,00,00] on BOTH horizontal edges.
+        for edge_y in [y, bottom] {
+            self.fb.fill_rect(x + t, edge_y + 2, inner_w, 1, color);
+            self.fb.fill_rect(x + t, edge_y + 4, inner_w, 2, color);
         }
-        draw_box_tile(
-            &box_tiles::TOP_RIGHT,
-            &box_tiles::outside::TOP_RIGHT,
-            right_x,
-            by,
-            ink,
-            bg,
-            self.fb,
-        );
-
-        if inner_w > 0 && inner_h > 0 {
-            self.fb
-                .fill_rect(bx + t, by + t, inner_w * t, inner_h * t, bg);
+        // $7C = [28;8] on BOTH vertical edges (columns 2 and 4).
+        for edge_x in [x, right] {
+            self.fb.fill_rect(edge_x + 2, y + t, 1, inner_h, color);
+            self.fb.fill_rect(edge_x + 4, y + t, 1, inner_h, color);
         }
-        if inner_h > 0 {
-            self.fb.fill_rect(bx + 1, by + t, 2, inner_px_h, ink);
-            self.fb.fill_rect(bx + 3, by + t, 5, inner_px_h, bg);
-            self.fb.fill_rect(right_x, by + t, 5, inner_px_h, bg);
-            self.fb
-                .fill_rect(right_x + 5, by + t, 2, inner_px_h, ink);
+        for (glyph, px, py) in [
+            (&box_tiles::TOP_LEFT, x, y),
+            (&box_tiles::TOP_RIGHT, right, y),
+            (&box_tiles::BOTTOM_LEFT, x, bottom),
+            (&box_tiles::BOTTOM_RIGHT, right, bottom),
+        ] {
+            embedded_font::draw_glyph(glyph, px, py, color, bg, self.fb);
         }
-
-        draw_box_tile(
-            &box_tiles::BOTTOM_LEFT,
-            &box_tiles::outside::BOTTOM_LEFT,
-            bx,
-            bot_y,
-            ink,
-            bg,
-            self.fb,
-        );
-        if inner_w > 0 {
-            self.fb.fill_rect(bx + t, bot_y, inner_px_w, 5, bg);
-            self.fb
-                .fill_rect(bx + t, bot_y + 5, inner_px_w, 2, ink);
-        }
-        draw_box_tile(
-            &box_tiles::BOTTOM_RIGHT,
-            &box_tiles::outside::BOTTOM_RIGHT,
-            right_x,
-            bot_y,
-            ink,
-            bg,
-            self.fb,
-        );
     }
 
     fn draw_text(&mut self, pos: TilePos, text: &str, color: EngineRgba) {
@@ -121,7 +76,7 @@ impl<'fb> Painter for FrameBufferPainter<'fb> {
         draw_text(text, px, py, color, self.fb);
     }
 
-    // Pixel-precise text: proportional ASCII glyphs (5 px advance) cannot
+    // Pixel-precise text: mixed 5-pixel Latin and 10-pixel Chinese glyphs cannot
     // share a flush right edge when snapped to the 8 px tile grid, so callers
     // that need exact alignment (e.g. the CONTINUE info values) draw through
     // this path. Layouts must also opt in through their theme; ordinary
@@ -149,8 +104,7 @@ impl<'fb> Painter for FrameBufferPainter<'fb> {
             py = py.saturating_sub(1);
         }
         if glyph == '▷' {
-            // Option-value marker: the font's triangle is not the GB cursor.
-            // Same 8x9 ink cell as the filled selection arrow.
+            // Preserve the project's dedicated 8x9 option-value marker.
             for (y, bits) in [0u8, 0, 0x40, 0x60, 0x50, 0x48, 0x50, 0x60, 0x40]
                 .iter()
                 .enumerate()
@@ -176,8 +130,8 @@ impl<'fb> Painter for FrameBufferPainter<'fb> {
         let (px, py) = pos.to_pixels();
         let ink = color;
         let bg = Rgba::INK_WHITE;
-        // Map common Game Boy tile IDs to Fusion Pixel glyphs.
-        // Matches the mapping in dotzuki-ui/src/lib.rs.
+        // The generic widget cursor IDs use the project font's arrows.
+        // Only the explicit UI graphics below draw dedicated source tiles.
         match tile_id {
             // Menu cursor ▶
             223 => {
@@ -190,8 +144,7 @@ impl<'fb> Painter for FrameBufferPainter<'fb> {
             // Battle-menu "PKMN" ligature pair (0xE1 = Pk, 0xE2 = Mn). The v1
             // menu drew these as "PK"/"MN" text; the v2 tile element only knows
             // the tile id, so map them here to keep the framebuffer rendering.
-            0xE1 => draw_text("PK", px, py, ink, self.fb),
-            0xE2 => draw_text("MN", px, py, ink, self.fb),
+            0xE1 | 0xE2 => embedded_font::draw_glyph(embedded_font::pkmn_tile_glyph(tile_id).unwrap(), px, py, ink, bg, self.fb),
             // Default box-border tile set (0x79–0x7F)
             0x79 => draw_box_tile(&box_tiles::TOP_LEFT, &box_tiles::outside::TOP_LEFT, px, py, ink, bg, self.fb),
             0x7A => draw_box_tile(&box_tiles::HORIZONTAL, &box_tiles::outside::HORIZONTAL, px, py, ink, bg, self.fb),
@@ -200,17 +153,146 @@ impl<'fb> Painter for FrameBufferPainter<'fb> {
             0x7D => draw_box_tile(&box_tiles::BOTTOM_LEFT, &box_tiles::outside::BOTTOM_LEFT, px, py, ink, bg, self.fb),
             0x7E => draw_box_tile(&box_tiles::BOTTOM_RIGHT, &box_tiles::outside::BOTTOM_RIGHT, px, py, ink, bg, self.fb),
             0x7F => fill_tile(px, py, bg, self.fb),
-            // Naming-screen underscore tiles. The BDF fallback glyph for '_'
-            // is drawn below the 8×8 tile grid (10px cell, y_off -1), so it
-            // would land on the row below; draw a crisp full-width underline
-            // instead. 0x76 = normal slot, 0x77 = raised (current editing slot).
-            0x76 | 0x77 => {
-                fill_tile(px, py, bg, self.fb);
-                let line_y = if tile_id == 0x77 { py + 4 } else { py + 6 };
-                self.fb.fill_rect(px, line_y, TILE_SIZE_PX, 1, ink);
-            }
+            // Naming has loaded HpBarAndStatusGraphics: $76/$77 are its
+            // seven-pixel, two-scanline normal/raised underscores.
+            0x76 | 0x77 => embedded_font::draw_glyph(embedded_font::naming_underscore_glyph(tile_id == 0x77), px, py, ink, bg, self.fb),
             // Unknown tile id — fall back to the placeholder text glyph.
             _ => draw_text(fallback, px, py, ink, self.fb),
+        }
+    }
+}
+
+#[cfg(test)]
+mod project_font_pixel_tests {
+    use super::*;
+    use dotzuki_engine::render_config::RenderConfig;
+    use dotzuki_renderer::embedded_font as fusion;
+
+    fn assert_same_pixels(actual: &FrameBuffer, expected: &FrameBuffer) {
+        for y in 0..32 {
+            for x in 0..96 {
+                assert_eq!(actual.get_pixel(x, y), expected.get_pixel(x, y), "pixel({x},{y})");
+            }
+        }
+    }
+
+    #[test]
+    fn production_text_paths_keep_project_font_for_both_languages() {
+        for lang in [Lang::En, Lang::Zh] {
+            for text in ["POKéMON 123!?", "中文皮卡丘", "Pikachu等级10"] {
+                for pixel_position in [false, true] {
+                    let mut actual = FrameBuffer::new(RenderConfig::new(96, 32), Rgba::WHITE);
+                    let mut expected = actual.clone();
+                    let mut painter = FrameBufferPainter::new(&mut actual).with_lang(lang);
+                    assert_eq!(painter.measure_text_px("A中1"), 20);
+                    if pixel_position {
+                        painter.draw_text_px(8, 8, text, Rgba::BLACK);
+                    } else {
+                        painter.draw_text(TilePos::new(1, 1), text, Rgba::BLACK);
+                    }
+                    fusion::draw_text(text, 8, if lang == Lang::Zh { 7 } else { 8 }, Rgba::BLACK, &mut expected);
+                    assert_same_pixels(&actual, &expected);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn ordinary_gb_tile_ids_use_fallback_text_instead_of_original_alphabet() {
+        for (tile, fallback) in [(0x80, "Z"), (0xF6, "9"), (0x74, "中")] {
+            let mut actual = FrameBuffer::new(RenderConfig::new(96, 32), Rgba::WHITE);
+            let mut expected = actual.clone();
+            FrameBufferPainter::new(&mut actual).draw_gb_tile(TilePos::new(1, 1), tile, fallback, Rgba::BLACK);
+            fusion::draw_text(fallback, 8, 8, Rgba::BLACK, &mut expected);
+            assert_same_pixels(&actual, &expected);
+        }
+    }
+}
+
+#[cfg(test)]
+mod performance_pixel_tests {
+    use super::*;
+    use dotzuki_engine::render_config::RenderConfig;
+
+    /// The pre-optimization TextBoxBorder renderer writes the source tile at
+    /// every cell, including opaque white interior/corner pixels.
+    fn original_tile_box(fb: &mut FrameBuffer, rect: TileRect, ink: Rgba) {
+        if rect.tw < 2 || rect.th < 2 {
+            return;
+        }
+        for row in 0..rect.th {
+            for col in 0..rect.tw {
+                let glyph = match (row, col) {
+                    (0, 0) => &box_tiles::TOP_LEFT,
+                    (0, c) if c + 1 == rect.tw => &box_tiles::TOP_RIGHT,
+                    (r, 0) if r + 1 == rect.th => &box_tiles::BOTTOM_LEFT,
+                    (r, c) if r + 1 == rect.th && c + 1 == rect.tw => &box_tiles::BOTTOM_RIGHT,
+                    (0, _) => &box_tiles::HORIZONTAL,
+                    (r, _) if r + 1 == rect.th => &box_tiles::HORIZONTAL,
+                    (_, 0) => &box_tiles::VERTICAL_LEFT,
+                    (_, c) if c + 1 == rect.tw => &box_tiles::VERTICAL_LEFT,
+                    _ => &[0; 8],
+                };
+                dotzuki_renderer::embedded_font::draw_glyph(
+                    glyph,
+                    (rect.tx + col) * 8,
+                    (rect.ty + row) * 8,
+                    ink,
+                    Rgba::WHITE,
+                    fb,
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn batched_original_textbox_matches_tile_renderer_at_every_pixel() {
+        assert_eq!(box_tiles::HORIZONTAL, [0, 0, 255, 0, 255, 255, 0, 0]);
+        assert_eq!(box_tiles::VERTICAL_LEFT, [40; 8]);
+        let sizes = [
+            (0, 0),
+            (1, 6),
+            (2, 1),
+            (2, 2),
+            (3, 2),
+            (2, 3),
+            (3, 3),
+            (12, 6),
+            (20, 6),
+            (20, 18),
+            (23, 21),
+        ];
+        let origins = [(0, 0), (1, 1), (8, 12), (19, 17), (20, 18)];
+        let inks = [
+            Rgba::BLACK,
+            Rgba::INK_DARK_GRAY,
+            Rgba::WHITE,
+            Rgba::rgb(17, 119, 201),
+        ];
+        for (width, height) in [(160, 144), (17, 13)] {
+            for (tw, th) in sizes {
+                for (tx, ty) in origins {
+                    for ink in inks {
+                        let rect = TileRect::new(tx, ty, tw, th);
+                        let mut expected = FrameBuffer::new(
+                            RenderConfig::new(width, height),
+                            Rgba::INK_LIGHT_GRAY,
+                        );
+                        let mut actual = expected.clone();
+                        original_tile_box(&mut expected, rect, ink);
+                        FrameBufferPainter::new(&mut actual).draw_text_box(rect, ink);
+                        for y in 0..height {
+                            for x in 0..width {
+                                assert_eq!(
+                                    actual.get_pixel(x, y),
+                                    expected.get_pixel(x, y),
+                                    "{width}x{height}, {rect:?}, {ink:?}, pixel({x},{y})"
+                                );
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

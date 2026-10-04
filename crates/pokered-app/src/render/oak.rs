@@ -1,4 +1,6 @@
 use crate::alloc_prelude::*;
+use dotzuki_renderer::transition::{FadePalette, FADE_PALETTES};
+use pokered_core::game_state::Lang;
 use pokered_core::naming_screen::NamingScreenState;
 use pokered_core::oak_speech::{
     entrance_frames, entrance_slide_offset, slide_pic_x, OakSpeechPhase, OakSpeechState,
@@ -8,20 +10,16 @@ use pokered_core::oak_speech::{
     SHRINK_BEAT_PIC2_END, SHRINK_BEAT_RED_END,
 };
 use pokered_data::ui_layout::schema::{
-    NAMING_DEFAULT_LAYOUT,
-    OAK_SPEECH_NAME_CHOICE_LAYOUT,
-    OAK_SPEECH_TEXT_PHASE_LAYOUT,
+    NAMING_DEFAULT_LAYOUT, OAK_SPEECH_NAME_CHOICE_LAYOUT, OAK_SPEECH_TEXT_PHASE_LAYOUT,
 };
 use pokered_renderer::embedded_font::draw_text;
 use pokered_renderer::palette::GRAYSCALE_SPRITE_PALETTE;
 use pokered_renderer::resource::{AssetCategory, ResourceManager};
 use pokered_renderer::{FrameBuffer, Rgba, TILE_SIZE};
-use pokered_core::game_state::Lang;
 use pokered_ui::backends::FrameBufferPainter;
 use pokered_ui::{menus, Ui};
-use dotzuki_renderer::transition::{FadePalette, FADE_PALETTES};
 
-use super::{apply_gb_palette, blit_tileset, draw_centered_sprite};
+use super::{apply_gb_palette, blit_front_pic, blit_tileset, draw_centered_sprite};
 
 pub fn draw_oak_speech(
     state: &OakSpeechState,
@@ -39,7 +37,7 @@ pub fn draw_oak_speech(
     }
 
     if let Some(naming) = &state.naming_screen {
-        draw_naming_screen(naming, fb, language);
+        draw_naming_screen(naming, res, fb, language);
         return;
     }
 
@@ -136,8 +134,12 @@ pub fn draw_oak_speech(
                     } else {
                         0
                     };
-                    let sx = (fb.width().saturating_sub(w)) / 2 + offset;
-                    blit_tileset(fb, &ts, sx, 32, tiles_per_row, sprite_pal);
+                    let sx = 6 * TILE_SIZE + offset;
+                    if category == "pokemon_front" {
+                        blit_front_pic(fb, cached, sx as i32, 32, true);
+                    } else {
+                        blit_tileset(fb, &ts, sx, 32, tiles_per_row, sprite_pal);
+                    }
                 }
             }
         }
@@ -147,7 +149,11 @@ pub fn draw_oak_speech(
         OakSpeechPhase::PlayerNameChoice { cursor } => {
             let mut painter = FrameBufferPainter::new(fb).with_lang(language);
             let mut ui = Ui::new(&mut painter);
-            let prompt = if language == Lang::Zh { "你的名字？" } else { "Your name?" };
+            let prompt = if language == Lang::Zh {
+                "你的名字？"
+            } else {
+                "Your name?"
+            };
             menus::oak_speech::draw_name_choice(
                 &DEFAULT_PLAYER_NAMES,
                 *cursor,
@@ -159,7 +165,11 @@ pub fn draw_oak_speech(
         OakSpeechPhase::RivalNameChoice { cursor } => {
             let mut painter = FrameBufferPainter::new(fb).with_lang(language);
             let mut ui = Ui::new(&mut painter);
-            let prompt = if language == Lang::Zh { "他的名字？" } else { "His name?" };
+            let prompt = if language == Lang::Zh {
+                "他的名字？"
+            } else {
+                "His name?"
+            };
             menus::oak_speech::draw_name_choice(
                 &DEFAULT_RIVAL_NAMES,
                 *cursor,
@@ -198,7 +208,9 @@ pub fn draw_oak_speech(
         }
         _ => {
             if !entering {
-                let (line1, line2) = if let Some(page) = pokered_core::oak_speech::text_pages_for_lang(phase, language) {
+                let (line1, line2) = if let Some(page) =
+                    pokered_core::oak_speech::text_pages_for_lang(phase, language)
+                {
                     let char_index = state.current_char_index();
                     page.get_display_text(state.player_name.as_deref(), char_index)
                 } else {
@@ -233,12 +245,34 @@ pub fn draw_oak_speech(
 
 pub fn draw_naming_screen(
     naming: &NamingScreenState,
+    res: &mut Option<ResourceManager>,
     fb: &mut FrameBuffer,
     language: Lang,
 ) {
-    let mut painter = FrameBufferPainter::new(fb);
+    let mut painter = FrameBufferPainter::new(fb).with_lang(language);
     let mut ui = Ui::new(&mut painter);
-    menus::naming::draw(naming, &NAMING_DEFAULT_LAYOUT, &mut ui, language == Lang::Zh);
+    menus::naming::draw(
+        naming,
+        &NAMING_DEFAULT_LAYOUT,
+        &mut ui,
+        language == Lang::Zh,
+    );
+    if let (Some(species), Some(rm)) = (naming.species, res.as_mut()) {
+        use pokered_renderer::mon_icon::{
+            draw_mon_icon, icon_y_offset, load_mon_icon_tiles, IconFrame,
+        };
+        let kind = pokered_data::mon_party_icons::icon_for_species(species);
+        let frame = IconFrame::from_counter(naming.animation_frame, 17);
+        if let Ok(tiles) = load_mon_icon_tiles(rm, kind, frame) {
+            draw_mon_icon(
+                fb,
+                tiles,
+                8,
+                icon_y_offset(kind, frame),
+                &pokered_renderer::palette::GRAYSCALE_SPRITE_PALETTE,
+            );
+        }
+    }
 }
 
 #[cfg(test)]

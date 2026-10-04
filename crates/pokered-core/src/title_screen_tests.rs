@@ -85,7 +85,7 @@ fn version_scroll_updates_progress() {
     ts.update_frame(false);
     assert!(ts.version_scroll_progress > 0.0);
 
-    for _ in 0..VERSION_SCROLL_FRAMES {
+    for _ in 0..(VERSION_SCROLL_FRAMES + VERSION_WAIT_FRAMES) {
         ts.update_frame(false);
     }
     assert_eq!(ts.phase, TitlePhase::WaitingForInput);
@@ -230,7 +230,7 @@ fn advance_to_waiting(ts: &mut TitleScreenState) {
     for _ in 0..LOGO_PAUSE_FRAMES {
         ts.update_frame(false);
     }
-    for _ in 0..VERSION_SCROLL_FRAMES {
+    for _ in 0..(VERSION_SCROLL_FRAMES + VERSION_WAIT_FRAMES) {
         ts.update_frame(false);
     }
     assert_eq!(ts.phase, TitlePhase::WaitingForInput);
@@ -338,4 +338,45 @@ fn button_during_scroll_in_snaps_to_cry() {
 fn scroll_total_pixels_match_tables() {
     assert_eq!(SCROLL_OUT_TOTAL_PIXELS, 93);
     assert_eq!(SCROLL_IN_TOTAL_PIXELS, 120);
+}
+#[test]
+fn title_waits_for_sound_and_whites_out_for_three_frames() {
+    let mut title = TitleScreenState::new(GameVersion::Red);
+    title.skip_to_waiting_for_input();
+    title.update_frame_with_sound(true, false);
+    assert_eq!(title.phase, TitlePhase::PlayingCry);
+    for _ in 0..100 {
+        title.update_frame_with_sound(false, true);
+    }
+    assert_eq!(title.phase, TitlePhase::PlayingCry);
+    title.update_frame_with_sound(false, false);
+    assert_eq!(title.phase, TitlePhase::FadeOut);
+    for _ in 0..2 {
+        assert_eq!(
+            title.update_frame_with_sound(false, false),
+            ScreenAction::Continue
+        );
+    }
+    assert_eq!(
+        title.update_frame_with_sound(false, false),
+        ScreenAction::Transition(GameScreen::MainMenu)
+    );
+}
+
+#[test]
+fn starter_ball_toss_has_original_ten_positions() {
+    let mut title = TitleScreenState::new(GameVersion::Red);
+    title.skip_to_waiting_for_input();
+    for _ in 0..MON_DISPLAY_FRAMES {
+        title.update_frame(false);
+    }
+    while title.phase == TitlePhase::ScrollOut {
+        title.update_frame(false);
+    }
+    assert_eq!(title.phase, TitlePhase::BallToss);
+    for offset in [-3, -5, -6, -7, -8, -7, -6, -5, -3, 0] {
+        assert_eq!(title.ball_y_offset(), offset);
+        title.update_frame(false);
+    }
+    assert_eq!(title.phase, TitlePhase::ScrollIn);
 }

@@ -526,101 +526,8 @@ impl BattleInput {
 
 use status_checks::CannotMoveReason;
 
-const BATTLE_TEXT_LINE_WIDTH: usize = 18;
 const BATTLE_TEXT_LINES_PER_PAGE: usize = 2;
 const BATTLE_TEXT_PAGE_WAIT_FRAMES: u16 = 10;
-
-/// Display width of a char in half-width tiles: CJK glyphs render full-width
-/// (2 tiles) in the Fusion Pixel font, everything else 1. Range-based mirror of
-/// the renderer's glyph-table classification (`embedded_font::is_cjk`) — core
-/// must not depend on the renderer. Unknown chars are counted wide (over-estimating
-/// width only wraps a line earlier; under-estimating would overflow the box).
-fn char_tile_width(c: char) -> usize {
-    let cp = c as u32;
-    let wide = (0x1100..=0x115F).contains(&cp)
-        || (0x2010..=0x2027).contains(&cp) // …, quotes, dashes as full-width punct
-        || (0x2E80..=0xA4CF).contains(&cp) // CJK radicals, punct, kana, CJK unified
-        || (0xAC00..=0xD7A3).contains(&cp) // Hangul
-        || (0xF900..=0xFAFF).contains(&cp) // CJK compat ideographs
-        || (0xFE30..=0xFE4F).contains(&cp) // CJK compat forms
-        || (0xFF00..=0xFF60).contains(&cp) // full-width forms
-        || (0xFFE0..=0xFFE6).contains(&cp)
-        || (0x20000..=0x3FFFD).contains(&cp);
-    if wide {
-        2
-    } else {
-        1
-    }
-}
-
-fn hard_wrap_word(word: &str, width: usize) -> Vec<String> {
-    if width == 0 {
-        return vec![];
-    }
-    let chars: Vec<char> = word.chars().collect();
-    if chars.is_empty() {
-        return vec![String::new()];
-    }
-
-    let mut out = Vec::new();
-    let mut start = 0;
-    let mut acc = 0usize;
-    for (i, c) in chars.iter().enumerate() {
-        if acc >= width && i > start {
-            out.push(chars[start..i].iter().collect());
-            start = i;
-            acc = 0;
-        }
-        acc += char_tile_width(*c);
-    }
-    out.push(chars[start..].iter().collect());
-    out
-}
-
-fn wrap_battle_text_lines(text: &str, width: usize) -> Vec<String> {
-    let mut out = Vec::new();
-
-    for raw_line in text.split('\n') {
-        if raw_line.trim().is_empty() {
-            out.push(String::new());
-            continue;
-        }
-
-        let mut current = String::new();
-        let mut current_width = 0usize;
-        for word in raw_line.split_whitespace() {
-            let parts = hard_wrap_word(word, width);
-            for part in parts {
-                let part_width: usize = part.chars().map(char_tile_width).sum();
-                if current.is_empty() {
-                    current.push_str(&part);
-                    current_width = part_width;
-                    continue;
-                }
-
-                if current_width + 1 + part_width <= width {
-                    current.push(' ');
-                    current.push_str(&part);
-                    current_width += 1 + part_width;
-                } else {
-                    out.push(current);
-                    current = part;
-                    current_width = part_width;
-                }
-            }
-        }
-
-        if !current.is_empty() {
-            out.push(current);
-        }
-    }
-
-    if out.is_empty() {
-        out.push(String::new());
-    }
-
-    out
-}
 
 fn paginate_battle_text(text: &str) -> Vec<String> {
     if pokered_data::dialogue_layout::contains_chinese(text) {
@@ -630,7 +537,7 @@ fn paginate_battle_text(text: &str) -> Vec<String> {
                 else { format!("{}\n{}", page.line1, page.line2) }
             }).collect();
     }
-    let lines = wrap_battle_text_lines(text, BATTLE_TEXT_LINE_WIDTH);
+    let lines = pokered_data::text_layout::wrap_hard_lines(text, pokered_data::text_layout::DIALOGUE_LINE_WIDTH_PX);
     let mut pages = Vec::new();
 
     for chunk in lines.chunks(BATTLE_TEXT_LINES_PER_PAGE) {
@@ -7427,7 +7334,7 @@ mod i18n_tests {
         );
         assert_eq!(
             s.current_message.as_deref(),
-            Some("It's super\neffective!")
+            Some("It's super effective!")
         );
     }
 

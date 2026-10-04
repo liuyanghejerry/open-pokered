@@ -204,6 +204,11 @@ pub enum NamingScreenResult {
 /// The naming screen state machine.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct NamingScreenState {
+    /// Species shown beside the nickname prompt, when naming a Pokémon.
+    #[serde(default)]
+    pub species: Option<pokered_data::species::Species>,
+    #[serde(default)]
+    pub animation_frame: u64,
     screen_type: NamingScreenType,
     name: String,
     lowercase: bool,
@@ -224,6 +229,8 @@ pub struct NamingScreenState {
 impl NamingScreenState {
     pub fn new(screen_type: NamingScreenType) -> Self {
         Self {
+            species: None,
+            animation_frame: 0,
             screen_type,
             name: String::new(),
             lowercase: false,
@@ -278,6 +285,7 @@ impl NamingScreenState {
 
     /// Process one frame of input. Returns the result.
     pub fn update_frame(&mut self, input: NamingInput, is_zh: bool) -> NamingScreenResult {
+        self.animation_frame = self.animation_frame.wrapping_add(1);
         if self.submitted {
             return self.submit_result();
         }

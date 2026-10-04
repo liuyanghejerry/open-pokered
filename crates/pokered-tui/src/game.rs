@@ -1543,7 +1543,15 @@ impl PokemonGame {
         if self.hof_ceremony.is_some() {
             let done = {
                 let hof = self.hof_ceremony.as_mut().unwrap();
-                let done = hof.update_frame();
+                let cry_playing = hof.phase() == pokered_core::hof_ceremony::HofPhase::MonInfo
+                    && self
+                        .audio
+                        .as_ref()
+                        .is_some_and(|audio| audio.is_sfx_playing());
+                let done = if cry_playing {
+                    false
+                } else {
+                    hof.update_frame()};
                 for sfx in hof.take_sfx() {
                     if let Some(ref audio) = self.audio {
                         let pokered_core::hof_ceremony::HofSfx::Cry(species) = sfx;
@@ -1566,15 +1574,10 @@ impl PokemonGame {
             };
             if done {
                 self.hof_ceremony = None;
-                self.credits = Some(pokered_core::credits::CreditsState::new(
+                self.credits = Some(pokered_core::credits::CreditsState::new_with_opening(
                     self.state.config.version,
                 ));
-                // HallOfFamePC (credits.asm:24-33).
-                if let Some(ref audio) = self.audio {
-                    audio.stop_music();
-                    audio.play_music(MusicId::CREDITS);
                 }
-            }
             return;
         }
 
@@ -1583,10 +1586,18 @@ impl PokemonGame {
         if self.credits.is_some() {
             let done = {
                 let roll = self.credits.as_mut().unwrap();
-                roll.update_frame(pokered_core::credits::CreditsInput {
+                let done = roll.update_frame(pokered_core::credits::CreditsInput {
                     a: input.is_just_pressed(GbButton::A),
                     b: input.is_just_pressed(GbButton::B),
                 })
+            ;
+                if roll.take_music_pending() {
+                    if let Some(ref audio) = self.audio {
+                        audio.stop_music();
+                        audio.play_music(MusicId::CREDITS);
+                    }
+                }
+                done
             };
             if done {
                 self.credits = None;
@@ -1669,20 +1680,25 @@ impl PokemonGame {
             GameScreen::TitleScreen => {
                 let prev_phase = self.title_screen.phase;
                 let any_pressed = input.any_just_pressed();
-                let action = self.title_screen.update_frame(any_pressed);
+                let action = if let Some(ref audio) = self.audio {
+                    self.title_screen.update_frame_with_sound(any_pressed, audio.is_sfx_playing())
+                } else {
+                    self.title_screen.update_frame(any_pressed)};
                 let new_phase = self.title_screen.phase;
 
+                if new_phase == TitlePhase::LogoBounce && self.title_screen.frame_counter == 20 {
+                    if let Some(ref audio) = self.audio {
+                        audio.play_sfx(SfxId::IntroCrash);
+                    }
+                }
                 if prev_phase != new_phase {
                     if let Some(ref audio) = self.audio {
                         match new_phase {
-                            TitlePhase::LogoBounce => {
-                                audio.play_sfx(SfxId::IntroCrash);
-                            }
-                            TitlePhase::LogoPause => {
+                            TitlePhase::VersionScroll => {
                                 audio.play_sfx(SfxId::IntroWhoosh);
                             }
                             TitlePhase::WaitingForInput
-                                if prev_phase == TitlePhase::VersionScroll =>
+                                if prev_phase == TitlePhase::VersionWait =>
                             {
                                 audio.play_music(MusicId::TITLE_SCREEN);
                             }
@@ -2194,7 +2210,7 @@ impl PokemonGame {
                             .into_iter()
                             .filter(|name| self.save_data.game_data.bag.has_item_const(name))
                             .collect();
-                        self.elevator_screen = Some(ElevatorScreen::new(carried));
+                        self.elevator_screen = Some(ElevatorScreen::new_filtered(carried));
                         ScreenAction::Transition(GameScreen::FilterBag)
                     } else if self.overworld.pending_diploma {
                         self.overworld.pending_diploma = false;
@@ -3367,6 +3383,9 @@ impl PokemonGame {
         // The Hall of Fame roll call and the end credits take over the whole
         // screen while they play.
         if let Some(ref hof) = self.hof_ceremony {
+            if hof.phase() == pokered_core::hof_ceremony::HofPhase::FadeOut {
+                draw_overworld(&mut self.overworld, &mut self.resources, frame_buffer);
+            }
             draw_hof_ceremony(hof, &mut self.resources, frame_buffer, self.state.config.language);
             return;
         }
@@ -3436,7 +3455,7 @@ impl PokemonGame {
                 draw_save_menu(&self.save_menu, frame_buffer, self.state.config.language);
             }
             GameScreen::PartyScreen => {
-                draw_party_screen(&self.party_screen, None, 0, frame_buffer, self.state.config.language);
+                draw_party_screen(&self.party_screen, self.resources.as_mut(), self.frame_count, frame_buffer, self.state.config.language);
             }
             GameScreen::PokemonStatsScreen(_) => {
                 if let Some(ref ss) = self.stats_screen {
@@ -3471,6 +3490,7 @@ impl PokemonGame {
             }
             GameScreen::Elevator => {
                 if let Some(ref elevator) = self.elevator_screen {
+                    draw_overworld(&mut self.overworld, &mut self.resources, frame_buffer);
                     draw_elevator(elevator, frame_buffer, self.state.config.language);
                 }
             }
@@ -3480,7 +3500,7 @@ impl PokemonGame {
                 }
             }
             GameScreen::Diploma => {
-                draw_diploma(&self.player_name, frame_buffer);
+                draw_diploma(&self.player_name, &mut self.resources, frame_buffer, self.state.config.language);
             }
             GameScreen::Pokedex => {
                 draw_pokedex_screen(
@@ -3500,7 +3520,9 @@ impl PokemonGame {
                     self.save_data.game_data.play_time.hours,
                     self.save_data.game_data.play_time.minutes,
                     self.save_data.game_data.obtained_badges,
+                    &mut self.resources,
                     frame_buffer,
+                    self.state.config.language,
                 );
             }
         }

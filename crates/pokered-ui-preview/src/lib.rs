@@ -1938,22 +1938,31 @@ mod tests {
     // NOTE: all cursor-bearing screens re-recorded after the dotzuki-renderer
     // v0.5.6 bump — the ▶ fallback bitmap moved to the text ink center
     // (dotzuki#57). dialog/pokedex/oak_speech have no ▶ and are unchanged.
-    const GOLDEN_MAIN: u64                 = 0x6d264a1f2185a9e4;
-    const GOLDEN_START: u64                = 0x14141abf1066dced;
-    const GOLDEN_DIALOG: u64               = 0x70fcd165c797e06c;
-    const GOLDEN_BATTLE_MOVE: u64          = 0xe4fd67084d932d0c;
-    const GOLDEN_BAG: u64                  = 0xbc4c4e5e4871a905;
-    const GOLDEN_BATTLE_BAG: u64           = 0x4faac6aa8e169e94;
-    const GOLDEN_POKEDEX: u64              = 0xa57ba6970d36f9ed;
-    const GOLDEN_YES_NO: u64               = 0x8d281b17ab10370d;
-    const GOLDEN_OAK_SPEECH: u64           = 0x7a144f18ff89940c;
+    // NOTE: all 14 re-recorded with the project's Fusion Pixel font preserved.
+    // The border/cursor/underscore fixes and English naming coordinates remain;
+    // the keyboard box leaves room for the existing font's taller punctuation.
+    // Every current preview was dumped and visually reviewed. battle_bag still
+    // reserves quantity columns before measuring names, so SUPER POTION keeps
+    // its count inside the border.
+    // Dialogue uses 12px proportional row spacing so the retained font's
+    // descenders clear the bottom border. All 14 were reviewed again; only
+    // DIALOG changed, while tile-coordinate mocks keep their existing rows.
+    const GOLDEN_MAIN: u64                 = 0x6c27fb19c19b24f4;
+    const GOLDEN_START: u64                = 0x878c3a9d37d5e4bd;
+    const GOLDEN_DIALOG: u64               = 0x599168bcd2b2e67c;
+    const GOLDEN_BATTLE_MOVE: u64          = 0x918d8ffb023a916c;
+    const GOLDEN_BAG: u64                  = 0x566b67e173e9659d;
+    const GOLDEN_BATTLE_BAG: u64           = 0xff875ed399b72f4c;
+    const GOLDEN_POKEDEX: u64              = 0x9bc214819f25be1d;
+    const GOLDEN_YES_NO: u64               = 0x6b0545ef95ec081d;
+    const GOLDEN_OAK_SPEECH: u64           = 0x258b99ca20094fcc;
     // Save: full-width v2 information card with integrated confirmation.
-    const GOLDEN_SAVE: u64                 = 0x0af4f280dd3dd6dc;
+    const GOLDEN_SAVE: u64                 = 0xfd9edd817f77cb5c;
     // Original-style hollow markers remain visible on inactive option rows.
-    const GOLDEN_OPTIONS: u64              = 0x7faba4442db6b8e4;
-    const GOLDEN_NAMING: u64               = 0x685ded37c5a7bd5d;
-    const GOLDEN_BATTLE_MAIN: u64          = 0x321da02cc038553d;
-    const GOLDEN_BATTLE_PARTY: u64         = 0x957e7c99f7c6b3bc;
+    const GOLDEN_OPTIONS: u64              = 0x0c7d4dc94a2675f4;
+    const GOLDEN_NAMING: u64               = 0x32fcae69d767c7fd;
+    const GOLDEN_BATTLE_MAIN: u64          = 0x1b46f003e4ea076c;
+    const GOLDEN_BATTLE_PARTY: u64         = 0x30daba56c999130c;
 
     macro_rules! assert_golden {
         ($name:expr, $mock:expr, $golden:ident) => {
@@ -2121,14 +2130,16 @@ mod tests {
     }
 
     #[test]
-    fn pixel_naming_text_change_differs() {
+    fn pixel_naming_region_tx_shift_differs() {
         let canonical = pokered_data::ui_layout::schema::get_layout_json("naming").unwrap();
         let mut json_val: serde_json::Value = serde_json::from_str(&canonical).unwrap();
-        json_val["variants"]["default"]["children"][0]["rect"]["tx"] = serde_json::Value::Number(8.into());
+        // English fixes the outer keyboard box to the original (0,4,20,11)
+        // rectangle. The editable region still controls text placement.
+        json_val["variants"]["default"]["children"][1]["rect"]["tx"] = serde_json::Value::Number(1.into());
         let a = render_layout("naming", "", 0, 0);
         let b = render_layout("naming", &serde_json::to_string(&json_val).unwrap(), 0, 0);
-        assert_valid_framebuffer(&b, "naming tx=8");
-        assert_ne!(framebuffer_hash(&a), framebuffer_hash(&b), "box tx shift must change pixels");
+        assert_valid_framebuffer(&b, "naming region tx=1");
+        assert_ne!(framebuffer_hash(&a), framebuffer_hash(&b), "text region tx shift must change pixels");
     }
 
     #[test]

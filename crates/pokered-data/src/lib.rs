@@ -66,6 +66,7 @@ pub mod sprite_facing;
 pub mod sprite_set_data;
 pub mod sprite_state_constants;
 pub mod sprites;
+pub mod text_layout;
 pub mod text_commands;
 pub mod text_scripts;
 pub mod tileset_data;

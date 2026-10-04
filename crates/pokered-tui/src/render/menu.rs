@@ -1,16 +1,24 @@
+use pokered_core::bag_screen::{BagPhase, BagScreenState};
 use pokered_core::game_state::Lang;
-use pokered_core::items::{BuyMenuState, BuyResult, MartPhase, MartState, SellMenuState, SellResult};
+use pokered_core::items::{BuyMenuState, BuyResult, MartPhase, MartState, SellMenuState, SellResult,
+};
 use pokered_core::main_menu::MainMenuState;
 use pokered_core::options_menu::OptionsMenuState;
 use pokered_core::party_screen::PartyScreenState;
 use pokered_core::save_menu::SaveMenuState;
 use pokered_core::start_menu::StartMenuState;
 use pokered_core::stats_screen::StatsScreenState;
-use pokered_core::bag_screen::{BagPhase, BagScreenState};
 use pokered_data::impl_traits::PokemonRenderData;
-use pokered_data::ui_layout::schema::{MART_CONFIRM_LAYOUT, MART_MAIN_MENU_LAYOUT, MART_QUANTITY_LAYOUT, MART_RESULT_DIALOG_LAYOUT, MAIN_DEFAULT_LAYOUT, START_DEFAULT_LAYOUT, OPTIONS_DEFAULT_LAYOUT, SAVE_DEFAULT_LAYOUT, SAVE_ASK_PROMPT_LAYOUT, PARTY_DEFAULT_LAYOUT, STATS_PAGE1_LAYOUT, STATS_PAGE2_LAYOUT, BAG_DEFAULT_LAYOUT};
+use pokered_data::mon_party_icons::icon_for_species;
+use pokered_data::ui_layout::schema::{BAG_DEFAULT_LAYOUT, MAIN_DEFAULT_LAYOUT, MART_CONFIRM_LAYOUT, MART_MAIN_MENU_LAYOUT, MART_QUANTITY_LAYOUT, MART_RESULT_DIALOG_LAYOUT, OPTIONS_DEFAULT_LAYOUT, PARTY_DEFAULT_LAYOUT, SAVE_ASK_PROMPT_LAYOUT, SAVE_DEFAULT_LAYOUT, START_DEFAULT_LAYOUT, STATS_PAGE1_LAYOUT, STATS_PAGE2_LAYOUT, };
+use pokered_renderer::mon_icon::{
+    draw_mon_icon, icon_y_offset, load_mon_icon_tiles, party_icon_frame, IconFrame,
+};
+use pokered_renderer::palette::GRAYSCALE_SPRITE_PALETTE;
+use pokered_renderer::party_hp_bar::draw_party_hp_bar;
 use pokered_renderer::resource::ResourceManager;
 use pokered_renderer::FrameBuffer;
+use pokered_renderer::TILE_SIZE;
 use pokered_ui::backends::framebuffer::FrameBufferPainter;
 use pokered_ui::{menus, InkColor, TileRect, Ui};
 
@@ -31,22 +39,75 @@ pub fn draw_options_menu(state: &OptionsMenuState, fb: &mut FrameBuffer, lang: L
 
 pub fn draw_save_menu(state: &SaveMenuState, fb: &mut FrameBuffer, lang: Lang) {
     let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
-    menus::save::draw(state, &SAVE_DEFAULT_LAYOUT, &SAVE_ASK_PROMPT_LAYOUT, &mut Ui::new(&mut painter), lang);
+    menus::save::draw(state, &SAVE_DEFAULT_LAYOUT, &SAVE_ASK_PROMPT_LAYOUT, &mut Ui::new(&mut painter), lang,
+    );
 }
 
-/// TUI variant of the party screen: same signature as the app version but
-/// `_resources` and `_frame_counter` are intentionally unused — the
-/// terminal backend has no GPU surface to composite Pokémon icons onto
-/// and therefore no need for animation frame selection.
 pub fn draw_party_screen(
     state: &PartyScreenState,
-    _resources: Option<&mut ResourceManager>,
-    _frame_counter: u64,
+    resources: Option<&mut ResourceManager>,
+    frame_counter: u64,
     fb: &mut FrameBuffer,
     lang: Lang,
 ) {
+    {
+        let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
+    let mut ui = Ui::new(&mut painter);
+        menus::party::draw_entries(state, &PARTY_DEFAULT_LAYOUT, &mut ui, lang);
+    }
+
+    if let Some(rm) = resources {
+        let cursor = state.cursor();
+        const ICON_X_PX: u32 = 8;
+        let layout = &pokered_data::ui_layout::schema::PARTY_ENTRY_LAYOUT;
+        let row_height = layout.cursors[0].row_step * TILE_SIZE;
+        let hp_bar = layout
+            .dynamic_labels
+            .iter()
+            .find(|(key, _)| *key == "hp_bar")
+            .map(|(_, label)| label)
+            .expect("party layout has an HP bar anchor");
+
+        for (i, pokemon) in state.party().iter().enumerate() {
+            let kind = icon_for_species(pokemon.species);
+            let frame = if i == cursor {
+                party_icon_frame(frame_counter, pokemon.hp, pokemon.max_hp)
+            } else {
+                IconFrame::Frame1
+            };
+            match load_mon_icon_tiles(rm, kind, frame) {
+                Ok(tiles) => {
+                    let y = (i as u32) * row_height + icon_y_offset(kind, frame);
+                    draw_mon_icon(fb, tiles, ICON_X_PX, y, &GRAYSCALE_SPRITE_PALETTE);
+                }
+                Err(e) => {
+                    log::warn!(
+                        "party screen: failed to load icon for {:?}: {}",
+                        pokemon.species,
+                        e
+                    );
+                }
+            }
+
+            let hp_bar_y = (i as u32) * row_height + hp_bar.ty * TILE_SIZE + 4;
+            if let Err(e) = draw_party_hp_bar(
+                fb,
+                rm,
+                hp_bar.tx * TILE_SIZE,
+                hp_bar_y,
+                pokemon.hp,
+                pokemon.max_hp,
+            ) {
+                log::warn!(
+                    "party screen: failed to draw HP bar for {:?}: {}",
+                    pokemon.species,
+                    e
+                );
+            }
+        }
+    }
     let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
-    menus::party::draw(state, &PARTY_DEFAULT_LAYOUT, &mut Ui::new(&mut painter), lang);
+    menus::party::draw_overlay(state, &mut Ui::new(&mut painter), lang);
 }
 
 pub fn draw_stats_screen(state: &StatsScreenState, fb: &mut FrameBuffer, lang: Lang) {
@@ -102,8 +163,10 @@ pub fn draw_mart(state: &MartState, player_money: u32, bag_items: &[(pokered_dat
                             format!("{} ×{} ${}.00\nThat'll be ${}.00. OK?", item_name, quantity, total, total)
                         };
                         let choice = match selected {
-                            pokered_core::items::ConfirmChoice::Yes => menus::mart::ConfirmChoice::Yes,
-                            pokered_core::items::ConfirmChoice::No => menus::mart::ConfirmChoice::No,
+                            pokered_core::items::ConfirmChoice::Yes => {
+                                menus::mart::ConfirmChoice::Yes}
+                            pokered_core::items::ConfirmChoice::No => {
+                                menus::mart::ConfirmChoice::No}
                         };
                         menus::mart::draw_confirm(lang, &msg, choice, &MART_CONFIRM_LAYOUT, &mut ui);
                     }
@@ -172,8 +235,10 @@ pub fn draw_mart(state: &MartState, player_money: u32, bag_items: &[(pokered_dat
                             format!("{} ×{} ${}.00\nI can pay ${}.00.\nOK?", item_name, quantity, total, total)
                         };
                         let choice = match selected {
-                            pokered_core::items::ConfirmChoice::Yes => menus::mart::ConfirmChoice::Yes,
-                            pokered_core::items::ConfirmChoice::No => menus::mart::ConfirmChoice::No,
+                            pokered_core::items::ConfirmChoice::Yes => {
+                                menus::mart::ConfirmChoice::Yes}
+                            pokered_core::items::ConfirmChoice::No => {
+                                menus::mart::ConfirmChoice::No}
                         };
                         menus::mart::draw_confirm(lang, &msg, choice, &MART_CONFIRM_LAYOUT, &mut ui);
                     }
