@@ -96,7 +96,7 @@
     },
     {
       "screen": "tui-oak-name-choice",
-      "changed_pixels": 0
+      "changed_pixels": 520
     },
     {
       "screen": "tui-options-en",
@@ -172,11 +172,11 @@
     },
     {
       "screen": "tui-trainer-card-en",
-      "changed_pixels": 0
+      "changed_pixels": 187
     },
     {
       "screen": "tui-trainer-card-zh",
-      "changed_pixels": 0
+      "changed_pixels": 164
     }
   ]
 }
