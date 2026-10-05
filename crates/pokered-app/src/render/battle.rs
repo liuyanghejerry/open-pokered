@@ -4688,16 +4688,6 @@ pub fn draw_battle(
             if matches!(screen.phase, BattlePhase::PlayerMenu) {
                 if screen.is_safari {
                     menus::battle_safari::draw(&screen.safari_menu, &mut ui, language);
-                    // SAFARI BALL count after "BALL": the original prints
-                    // wNumSafariBalls as a 2-digit number (core.asm:2077-2081,
-                    // PrintNumber — "BALL×NN"; aligned to the menu's first text row.
-                    draw_text(
-                        &format!("×{}", screen.safari_menu.safari_balls_remaining),
-                        112,
-                        104,
-                        Rgba::new(0, 0, 0, 255),
-                        fb,
-                    );
                 } else {
                     menus::battle_main::draw(
                         &screen.battle_menu,

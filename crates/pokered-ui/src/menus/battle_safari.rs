@@ -1,3 +1,4 @@
+use crate::alloc_prelude::format;
 use pokered_core::battle::menu::SafariBattleMenuState;
 use pokered_core::game_state::Lang;
 #[cfg(not(target_os = "none"))]
@@ -27,10 +28,12 @@ fn draw_v2<P: Painter>(state: &SafariBattleMenuState, ui: &mut Ui<P>, lang: Lang
     let Some(json) = get_screen_v2_json("battle_safari") else {
         return;
     };
-    let Some(layout) = v2::parse_screen(json) else {
+    let Some(mut layout) = v2::parse_screen(json) else {
         return;
     };
 
+    // Use the open font's actual advances so BALL and its count fit one column.
+    layout.theme.text_mode = dotzuki_renderer::layout_engine::types::TextMode::Proportional;
     let ctx = bindings(state, lang).dynamic();
 
     v2::render_screen_overlay(&layout, &ctx, ui.painter());
@@ -44,6 +47,8 @@ fn bindings(
     ctx.set("bcol", state.col() as i64);
     ctx.set("brow", state.row() as i64);
     ctx.set("__lang", v2::lang_code(lang));
+    let label = if lang == Lang::Zh { "球" } else { "BALL" };
+    ctx.set("ball_label", format!("{label}×{}", state.safari_balls_remaining));
 
     ctx
 }
@@ -53,7 +58,7 @@ fn draw_compiled<P: Painter>(state: &SafariBattleMenuState, painter: &mut P, lan
     pokered_data::ui_layout::schema::BATTLE_SAFARI_STATIC_LAYOUT.render(
         &bindings(state, lang),
         painter,
-        false,
+        true,
         false,
     );
 }
@@ -77,7 +82,9 @@ fn cursor_spec(row: usize, col: usize) -> (TilePos, char) {
 }
 
 fn draw_cursor<P: Painter>(painter: &mut P, cursor: (TilePos, char)) {
-    painter.draw_glyph(cursor.0, cursor.1, Rgba::INK_BLACK);
+    dotzuki_renderer::layout_engine::elements::cursor::draw_cursor_glyph(
+        cursor.0, cursor.1, Rgba::INK_BLACK, painter.supports_proportional(), painter,
+    );
 }
 
 /// Repaint only the changed cursor cells of an already-rendered Safari menu.
@@ -101,6 +108,7 @@ mod tests {
     enum Op {
         Box(TileRect, Rgba),
         Glyph(TilePos, char, Rgba),
+        TextPx(u32, u32, crate::alloc_prelude::String, Rgba),
     }
 
     #[derive(Default)]
@@ -121,6 +129,12 @@ mod tests {
 
         fn draw_pixel_rect(&mut self, _px: u32, _py: u32, _pw: u32, _ph: u32, _color: Rgba) {}
 
+        fn draw_text_px(&mut self, x: u32, y: u32, text: &str, color: Rgba) {
+            self.0.push(Op::TextPx(x, y, text.into(), color));
+        }
+
+        fn supports_proportional(&self) -> bool { true }
+
         fn draw_gb_tile(&mut self, _pos: TilePos, _tile_id: u8, _fallback: &str, _color: Rgba) {}
     }
 
@@ -132,6 +146,34 @@ mod tests {
             ..BattleMenuInput::none()
         });
         state
+    }
+
+    #[test]
+    fn safari_ball_label_and_count_use_actual_font_advances() {
+        use crate::backends::framebuffer::FrameBufferPainter;
+        use dotzuki_engine::render_config::RenderConfig;
+        use pokered_renderer::{embedded_font, FrameBuffer};
+
+        for lang in [Lang::En, Lang::Zh] {
+            for balls in [0, 1, 9, 10, 30] {
+                let state = SafariBattleMenuState::new(balls);
+                let mut actual = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+                let mut painter = FrameBufferPainter::new(&mut actual).with_lang(lang);
+                draw_v2(&state, &mut Ui::new(&mut painter), lang);
+                let label = format!("{}×{balls}", if lang == Lang::Zh { "球" } else { "BALL" });
+                assert!(embedded_font::measure_text(&label) <= 40,
+                    "ball label must fit before the right-column cursor");
+                let mut expected = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+                let y = if lang == Lang::Zh { 103 } else { 104 };
+                embedded_font::draw_text(&label, 80, y, Rgba::INK_BLACK, &mut expected);
+                for y in 104..116 {
+                    for x in 80..120 {
+                        assert_eq!(actual.get_pixel(x, y), expected.get_pixel(x, y),
+                            "{lang:?}, balls={balls}, ({x},{y})");
+                    }
+                }
+            }
+        }
     }
 
     #[test]
