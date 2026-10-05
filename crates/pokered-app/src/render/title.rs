@@ -95,54 +95,11 @@ pub fn draw_title_screen(
     }
 }
 
-fn draw_version(state: &TitleScreenState, rm: &mut ResourceManager, fb: &mut FrameBuffer) {
-    if !state.version_text_visible {
-        return;
-    }
-    let asset = match state.version {
-        GameVersion::Red => "red_version",
-        GameVersion::Blue => "blue_version",
-    };
-    if let Ok(cached) = rm.load_title(asset) {
-        let x = if state.phase == TitlePhase::VersionScroll {
-            168 - state.frame_counter as i32 * 4
-        } else {
-            56
-        };
-        let indices: [Option<usize>; 8] = match state.version {
-            GameVersion::Red => [
-                Some(0),
-                Some(1),
-                None,
-                Some(5),
-                Some(6),
-                Some(7),
-                Some(8),
-                Some(9),
-            ],
-            GameVersion::Blue => [
-                Some(0),
-                Some(1),
-                Some(2),
-                Some(3),
-                Some(4),
-                Some(5),
-                Some(6),
-                Some(7),
-            ],
-        };
-        for (column, index) in indices.into_iter().enumerate() {
-            if let Some(index) = index {
-                super::opening::blit(
-                    fb,
-                    x + column as i32 * 8,
-                    64,
-                    cached.tileset.get(index),
-                    true,
-                );
-            }
-        }
-    }
+fn draw_version(state: &TitleScreenState, _rm: &mut ResourceManager, fb: &mut FrameBuffer) {
+    if !state.version_text_visible { return; }
+    let text = match state.version { GameVersion::Red => "RED VERSION", GameVersion::Blue => "BLUE VERSION" };
+    let x = if state.phase == TitlePhase::VersionScroll { 168 - state.frame_counter as i32 * 4 } else { 56 };
+    if x >= 0 { draw_text(text, x as u32, 64, Rgba::BLACK, fb); }
 }
 
 /// The version banner occupies its own sixteen-pixel strip below the logo and

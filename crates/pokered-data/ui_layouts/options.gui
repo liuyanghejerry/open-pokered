@@ -1,6 +1,6 @@
 screen Options {
   panel {
-    rect = {tx: 0, ty: 0, tw: 20, th: 5}
+    rect = {tx: 0, ty: 0, tw: 20, th: 6}
     style = "default"
   }
   text(@t("TEXT SPEED", "文字速度")) {
@@ -23,7 +23,7 @@ screen Options {
     visible = "{is_zh}"
   }
   panel {
-    rect = {tx: 0, ty: 5, tw: 20, th: 5}
+    rect = {tx: 0, ty: 5, tw: 20, th: 6}
     style = "default"
   }
   text(@t("BATTLE ANIMATION", "战斗动画")) {
@@ -42,7 +42,7 @@ screen Options {
     visible = "{is_zh}"
   }
   panel {
-    rect = {tx: 0, ty: 10, tw: 20, th: 5}
+    rect = {tx: 0, ty: 10, tw: 20, th: 6}
     style = "default"
   }
   text(@t("BATTLE STYLE", "战斗模式")) {

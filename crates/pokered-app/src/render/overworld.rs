@@ -3212,3 +3212,115 @@ mod elevator_edge_tests {
         );
     }
 }
+
+#[cfg(test)]
+mod fly_arrival_tests {
+    use super::*;
+    use pokered_core::game_state::Lang;
+    use pokered_core::overworld::presentation::EnterMapFlyState;
+    use pokered_data::impl_traits::PokemonRedData;
+    use pokered_renderer::resource::AssetRoot;
+
+    #[test]
+    fn fly_arrival_draws_original_bird_frames_and_restores_red() {
+        use pokered_core::overworld::presentation::{FLY_ANIM_COORDS, FLY_ANIM_FRAMES};
+        let mut screen = OverworldScreen::new(MapId::PalletTown, None, PokemonRedData);
+        screen.state.player.x = 5;
+        screen.state.player.y = 6;
+        let mut resources = Some(ResourceManager::new(AssetRoot::auto_detect().unwrap()));
+        let mut fb = FrameBuffer::new(
+            dotzuki_engine::render_config::RenderConfig::new(160, 144),
+            Rgba::WHITE,
+        );
+        // Background with the player hidden, before the bird arrives.
+        screen.pending_fly_arrival = true;
+        draw_overworld(&mut screen, &mut resources, &mut fb, Lang::En);
+        let background = fb.clone();
+        screen.pending_fly_arrival = false;
+        let bird = resources
+            .as_mut()
+            .unwrap()
+            .load_sprite("bird")
+            .unwrap()
+            .tileset
+            .clone();
+        let palette = Palette::new(&[
+            Rgba::TRANSPARENT,
+            GRAYSCALE_PALETTE.colors[1],
+            GRAYSCALE_PALETTE.colors[2],
+            GRAYSCALE_PALETTE.colors[3],
+        ]);
+        for frame in 0..FLY_ANIM_FRAMES {
+            screen.enter_map_fly_anim = Some(EnterMapFlyState { frame });
+            draw_overworld(&mut screen, &mut resources, &mut fb, Lang::En);
+            let step = (frame / 3).min(11) as usize;
+            let (y, x) = FLY_ANIM_COORDS[step];
+            // The original ($40,$3c) sprite-state anchor is the player's
+            // screen location (9,8) tiles, without a second OAM bias.
+            let bx = 9 * 8 + i32::from(x) - 0x40;
+            let by = 8 * 8 + i32::from(y) - 0x3c;
+            let image = if step % 2 == 0 { 2 } else { 5 };
+            let mut changed = 0;
+            for py in 0..144 {
+                for px in 0..160 {
+                    let mut expected = background.get_pixel(px, py).unwrap();
+                    let dx = px as i32 - bx;
+                    let dy = py as i32 - by;
+                    if (0..16).contains(&dx) && (0..16).contains(&dy) {
+                        let tile = image * 4 + (dy as usize / 8) * 2 + dx as usize / 8;
+                        let color =
+                            bird.get(tile).render_row(dy as usize % 8, &palette)[dx as usize % 8];
+                        if color != Rgba::TRANSPARENT {
+                            expected = color;
+                        }
+                    }
+                    assert_eq!(
+                        fb.get_pixel(px, py).unwrap(),
+                        expected,
+                        "FLY frame {frame} pixel ({px},{py})"
+                    );
+                    changed += usize::from(expected != background.get_pixel(px, py).unwrap());
+                }
+            }
+            if frame >= 3 {
+                assert!(
+                    changed > 0,
+                    "bird must be visible after entering at frame {frame}"
+                );
+            }
+        }
+        screen.enter_map_fly_anim = Some(EnterMapFlyState {
+            frame: FLY_ANIM_FRAMES,
+        });
+        draw_overworld(&mut screen, &mut resources, &mut fb, Lang::En);
+        let restored = fb.clone();
+        screen.enter_map_fly_anim = None;
+        draw_overworld(&mut screen, &mut resources, &mut fb, Lang::En);
+        for y in 0..144 {
+            for x in 0..160 {
+                assert_eq!(restored.get_pixel(x, y), fb.get_pixel(x, y));
+            }
+        }
+    }
+
+    #[test]
+    #[ignore = "writes matched TUI framebuffer screenshots to PR_SCREENSHOTS"]
+    fn capture_fly_arrival() {
+        let output = std::path::PathBuf::from(std::env::var("PR_SCREENSHOTS").unwrap());
+        std::fs::create_dir_all(&output).unwrap();
+        let mut screen = OverworldScreen::new(MapId::PalletTown, None, PokemonRedData);
+        screen.state.player.x = 5;
+        screen.state.player.y = 6;
+        let mut resources = Some(ResourceManager::new(AssetRoot::auto_detect().unwrap()));
+        let mut fb = FrameBuffer::new(
+            dotzuki_engine::render_config::RenderConfig::new(160, 144),
+            Rgba::WHITE,
+        );
+        for frame in [0, 15, 18, 33, 47] {
+            screen.enter_map_fly_anim = Some(EnterMapFlyState { frame });
+            draw_overworld(&mut screen, &mut resources, &mut fb, Lang::En);
+            fb.save_png(&output.join(format!("fly-{frame:02}.png")))
+                .unwrap();
+        }
+    }
+}

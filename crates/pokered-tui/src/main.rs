@@ -1,6 +1,4 @@
-mod audio;
 mod game;
-mod render;
 
 #[cfg(test)]
 #[path = "../tests/common/visual_verify_zh_descriptions.rs"]
@@ -10,34 +8,11 @@ use core::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
 use clap::Parser;
-use crossterm::event::{KeyCode, KeyEventKind};
-use pokered_core::data::wild_data::GameVersion;
+use crossterm::event::{KeyCode, KeyEvent, KeyEventKind};
+use pokered_data::wild_data::GameVersion;
 use pokered_renderer::input::GbButton;
 
-use crate::game::PokemonGame;
-
-/// Wraps a PokemonGame with a quit flag so Esc exits the TUI loop.
-struct QuittableGame {
-    game: PokemonGame,
-    quit: Arc<AtomicBool>,
-}
-
-impl dotzuki_tui::TuiGame for QuittableGame {
-    type Button = GbButton;
-    type Fb = pokered_renderer::FrameBuffer;
-
-    fn update(&mut self, input: &dotzuki_tui::InputState<Self::Button>) {
-        self.game.update(input);
-    }
-
-    fn draw(&mut self, fb: &mut Self::Fb) {
-        self.game.draw(fb);
-    }
-
-    fn exit_requested(&self) -> bool {
-        self.quit.load(Ordering::Relaxed)
-    }
-}
+use crate::game::TerminalGame;
 
 #[derive(Parser)]
 #[command(name = "pokered-tui", about = "Pokémon Red/Blue — Terminal UI")]
@@ -57,27 +32,13 @@ fn main() -> anyhow::Result<()> {
 
     let quit = Arc::new(AtomicBool::new(false));
 
-    let mut wrapped = QuittableGame {
-        game: PokemonGame::new(GameVersion::Red),
-        quit: Arc::clone(&quit),
-    };
+    let mut wrapped = TerminalGame::new(GameVersion::Red, Arc::clone(&quit));
 
     dotzuki_tui::run(
         &mut wrapped,
         {
             let q = Arc::clone(&quit);
-            move |ev| {
-                if ev.kind == KeyEventKind::Press && ev.code == KeyCode::Esc {
-                    q.store(true, Ordering::Relaxed);
-                    None
-                } else if ev.kind == KeyEventKind::Press
-                    || ev.kind == KeyEventKind::Repeat
-                {
-                    keycode_to_gb_button(ev.code)
-                } else {
-                    None
-                }
-            }
+            move |ev| terminal_button(ev, &q)
         },
         cli.scale,
         cli.cell_ratio,
@@ -86,6 +47,17 @@ fn main() -> anyhow::Result<()> {
     )?;
 
     Ok(())
+}
+
+fn terminal_button(ev: KeyEvent, quit: &AtomicBool) -> Option<GbButton> {
+    if ev.kind == KeyEventKind::Press && ev.code == KeyCode::Esc {
+        quit.store(true, Ordering::Relaxed);
+        None
+    } else if ev.kind == KeyEventKind::Press || ev.kind == KeyEventKind::Repeat {
+        keycode_to_gb_button(ev.code)
+    } else {
+        None
+    }
 }
 
 fn keycode_to_gb_button(keycode: KeyCode) -> Option<GbButton> {
@@ -99,5 +71,48 @@ fn keycode_to_gb_button(keycode: KeyCode) -> Option<GbButton> {
         KeyCode::Enter | KeyCode::Char(' ') => Some(GbButton::Start),
         KeyCode::Backspace => Some(GbButton::Select),
         _ => None,
+    }
+}
+
+#[cfg(test)]
+mod input_tests {
+    use super::*;
+    use crossterm::event::KeyModifiers;
+
+    #[test]
+    fn terminal_bindings_keep_all_existing_keys() {
+        for (code, button) in [
+            (KeyCode::Up, GbButton::Up),
+            (KeyCode::Down, GbButton::Down),
+            (KeyCode::Left, GbButton::Left),
+            (KeyCode::Right, GbButton::Right),
+            (KeyCode::Char('z'), GbButton::A),
+            (KeyCode::Char('Z'), GbButton::A),
+            (KeyCode::Char('x'), GbButton::B),
+            (KeyCode::Char('X'), GbButton::B),
+            (KeyCode::Enter, GbButton::Start),
+            (KeyCode::Char(' '), GbButton::Start),
+            (KeyCode::Backspace, GbButton::Select),
+        ] {
+            assert_eq!(keycode_to_gb_button(code), Some(button));
+        }
+        assert_eq!(keycode_to_gb_button(KeyCode::Char('q')), None);
+    }
+
+    #[test]
+    fn key_events_accept_repeats_ignore_releases_and_escape_quits() {
+        let quit = AtomicBool::new(false);
+        for (kind, expected) in [
+            (KeyEventKind::Press, Some(GbButton::A)),
+            (KeyEventKind::Repeat, Some(GbButton::A)),
+            (KeyEventKind::Release, None),
+        ] {
+            let event = KeyEvent::new_with_kind(KeyCode::Char('z'), KeyModifiers::NONE, kind);
+            assert_eq!(terminal_button(event, &quit), expected);
+            assert!(!quit.load(Ordering::Relaxed));
+        }
+        let escape = KeyEvent::new(KeyCode::Esc, KeyModifiers::NONE);
+        assert_eq!(terminal_button(escape, &quit), None);
+        assert!(quit.load(Ordering::Relaxed));
     }
 }

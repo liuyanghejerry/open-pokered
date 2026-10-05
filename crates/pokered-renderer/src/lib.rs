@@ -59,6 +59,9 @@ pub(crate) mod alloc_prelude {
 pub mod embedded;
 // Keep the project font while adding dedicated Pokémon UI graphics.
 pub mod embedded_font;
+pub mod battle_text_tiles;
+#[cfg(any(feature = "resource", all(target_os = "none", feature = "framebuffer")))]
+pub mod party_hp_bar;
 pub mod hash_compat;
 pub mod gen1_battle_anim;
 mod gen1_wavy_schedule;

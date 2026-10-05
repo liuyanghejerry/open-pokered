@@ -141,10 +141,9 @@ impl<'fb> Painter for FrameBufferPainter<'fb> {
             31 => {
                 embedded_font::draw_char('\u{25BC}', px, py, ink, self.fb);
             }
-            // Battle-menu "PKMN" ligature pair (0xE1 = Pk, 0xE2 = Mn). The v1
-            // menu drew these as "PK"/"MN" text; the v2 tile element only knows
-            // the tile id, so map them here to keep the framebuffer rendering.
-            0xE1 | 0xE2 => embedded_font::draw_glyph(embedded_font::pkmn_tile_glyph(tile_id).unwrap(), px, py, ink, bg, self.fb),
+            // The legacy pair is text, not an original-game ligature.
+            0xE1 => draw_text("PK", px, py, ink, self.fb),
+            0xE2 => draw_text("MN", px + embedded_font::measure_text("PK") - TILE_SIZE_PX, py, ink, self.fb),
             // Default box-border tile set (0x79–0x7F)
             0x79 => draw_box_tile(&box_tiles::TOP_LEFT, &box_tiles::outside::TOP_LEFT, px, py, ink, bg, self.fb),
             0x7A => draw_box_tile(&box_tiles::HORIZONTAL, &box_tiles::outside::HORIZONTAL, px, py, ink, bg, self.fb),
@@ -153,9 +152,8 @@ impl<'fb> Painter for FrameBufferPainter<'fb> {
             0x7D => draw_box_tile(&box_tiles::BOTTOM_LEFT, &box_tiles::outside::BOTTOM_LEFT, px, py, ink, bg, self.fb),
             0x7E => draw_box_tile(&box_tiles::BOTTOM_RIGHT, &box_tiles::outside::BOTTOM_RIGHT, px, py, ink, bg, self.fb),
             0x7F => fill_tile(px, py, bg, self.fb),
-            // Naming has loaded HpBarAndStatusGraphics: $76/$77 are its
-            // seven-pixel, two-scanline normal/raised underscores.
-            0x76 | 0x77 => embedded_font::draw_glyph(embedded_font::naming_underscore_glyph(tile_id == 0x77), px, py, ink, bg, self.fb),
+            // Naming slots use the open font's underscore in both poses.
+            0x76 | 0x77 => draw_text("_", px, py.saturating_sub(if tile_id == 0x77 { 6 } else { 4 }), ink, self.fb),
             // Unknown tile id — fall back to the placeholder text glyph.
             _ => draw_text(fallback, px, py, ink, self.fb),
         }
@@ -195,6 +193,21 @@ mod project_font_pixel_tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn pkmn_and_naming_slots_use_fusion_pixel() {
+        let mut actual = FrameBuffer::new(RenderConfig::new(96, 32), Rgba::WHITE);
+        let mut expected = actual.clone();
+        let mut painter = FrameBufferPainter::new(&mut actual);
+        painter.draw_gb_tile(TilePos::new(1, 1), 0xE1, "PK", Rgba::BLACK);
+        painter.draw_gb_tile(TilePos::new(2, 1), 0xE2, "MN", Rgba::BLACK);
+        painter.draw_gb_tile(TilePos::new(5, 1), 0x76, "_", Rgba::BLACK);
+        painter.draw_gb_tile(TilePos::new(7, 1), 0x77, "_", Rgba::BLACK);
+        fusion::draw_text("PKMN", 8, 8, Rgba::BLACK, &mut expected);
+        fusion::draw_text("_", 40, 4, Rgba::BLACK, &mut expected);
+        fusion::draw_text("_", 56, 2, Rgba::BLACK, &mut expected);
+        assert_same_pixels(&actual, &expected);
     }
 
     #[test]

@@ -1,8 +1,7 @@
 //! The project's Fusion Pixel font, plus dedicated Game Boy UI graphics.
 //!
 //! Ordinary English, Chinese and mixed text keeps the engine's original
-//! glyphs and metrics. The opaque tile helpers below serve only box borders,
-//! the battle menu's PK/MN graphic and naming-slot underscores.
+//! glyphs and metrics. The opaque tile helpers below serve only box borders.
 
 use crate::FbSurface;
 use dotzuki_engine::render::Rgba;
@@ -14,26 +13,6 @@ pub use fusion::{
 };
 
 const BOX_TILES: &[u8; 48] = include_bytes!("../fonts/pokered-box-tiles.bin");
-const PKMN_TILES: &[u8; 16] = include_bytes!("../fonts/pokered-pkmn-tiles.bin");
-const NAMING_UNDERSCORES: &[u8; 16] = include_bytes!("../fonts/pokered-naming-underscores.bin");
-
-/// Dedicated PK/MN menu graphics. This cannot resolve ordinary font tiles.
-pub fn pkmn_tile_glyph(tile: u8) -> Option<&'static [u8; 8]> {
-    let offset = match tile {
-        0xE1 => 0,
-        0xE2 => 8,
-        _ => return None,
-    };
-    PKMN_TILES[offset..offset + 8].try_into().ok()
-}
-
-/// Naming loads HpBarAndStatusGraphics at $62. Its underscores replace the
-/// regular extra tiles at $76/$77 (naming_screen.asm:93).
-pub fn naming_underscore_glyph(raised: bool) -> &'static [u8; 8] {
-    let offset = if raised { 8 } else { 0 };
-    NAMING_UNDERSCORES[offset..offset + 8].try_into().unwrap()
-}
-
 /// Draw an opaque UI tile. Fill its paper once to avoid per-pixel color
 /// quantization for all white pixels of corners, symbols and blank tiles.
 pub fn draw_glyph(glyph: &[u8; 8], x: u32, y: u32, color: Rgba, bg: Rgba, fb: &mut impl FbSurface) {
@@ -42,6 +21,9 @@ pub fn draw_glyph(glyph: &[u8; 8], x: u32, y: u32, color: Rgba, bg: Rgba, fb: &m
     }
     fb.fill_rect(x, y, 8.min(fb.width() - x), 8.min(fb.height() - y), bg);
     for (row, bits) in glyph.iter().enumerate() {
+        if *bits == 0 {
+            continue;
+        }
         for col in 0..8 {
             if bits & (0x80 >> col) != 0 {
                 fb.set_pixel(x.saturating_add(col), y.saturating_add(row as u32), color);
@@ -94,8 +76,6 @@ mod tests {
         let graphics = [
             box_tiles::TOP_LEFT, box_tiles::HORIZONTAL, box_tiles::TOP_RIGHT,
             box_tiles::VERTICAL_LEFT, box_tiles::BOTTOM_LEFT, box_tiles::BOTTOM_RIGHT,
-            *pkmn_tile_glyph(0xE1).unwrap(), *pkmn_tile_glyph(0xE2).unwrap(),
-            *naming_underscore_glyph(false), *naming_underscore_glyph(true),
             [0; 8], [0xAA, 0x55, 0x81, 0x42, 0x24, 0x18, 0xFF, 0],
         ];
         for (tile, glyph) in graphics.iter().enumerate() {
@@ -124,8 +104,6 @@ mod tests {
         assert_eq!(char_advance('中'), 10);
         assert_eq!(measure_text("A中1"), 20);
         assert_eq!(measure_text_scaled("A中1", 2), 40);
-        assert!(pkmn_tile_glyph(0x80).is_none());
-        assert!(pkmn_tile_glyph(0xF6).is_none());
     }
 
     #[test]

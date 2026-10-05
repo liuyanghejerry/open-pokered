@@ -1,3 +1,5 @@
+#[path = "src/battle_text_tiles.rs"]
+mod battle_text_tiles;
 use std::env;
 use std::fs::{self, File};
 use std::io::{BufWriter, Write};
@@ -122,7 +124,6 @@ fn generate_preconverted_assets(manifest_dir: &str, out_dir: &str) {
         }
         count
     };
-    put("font", "font", 0x80, 128);
     put("font", "font_extra", 0x60, 32);
     put("font", "font_battle_extra", 0x62, 256 - 0x62);
     put("battle", "battle_hud_1", 0x6d, 256 - 0x6d);
@@ -134,6 +135,14 @@ fn generate_preconverted_assets(manifest_dir: &str, out_dir: &str) {
         256 - 0x73 - hud2_count,
     );
     put("battle", "balls", 0x31, 5);
+    for id in 0..256 {
+        for y in 0..8 {
+            for x in 0..8 {
+                if battle_text_tiles::is_text_pixel(id, x) { battle_pixels[id * 64 + y * 8 + x] = 0; }
+            }
+        }
+    }
+
     fs::write(
         Path::new(out_dir).join("battle_tile_pixels.bin"),
         battle_pixels,

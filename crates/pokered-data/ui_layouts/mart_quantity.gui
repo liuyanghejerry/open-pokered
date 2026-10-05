@@ -1,6 +1,6 @@
 screen MartQuantity {
   panel {
-    rect = {tx: 0, ty: 3, tw: 20, th: 6}
+    rect = {tx: 0, ty: 3, tw: 20, th: 7}
     style = "default"
   }
   text("{item_name}") {

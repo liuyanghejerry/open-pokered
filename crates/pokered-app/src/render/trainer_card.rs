@@ -64,34 +64,36 @@ pub fn draw_trainer_card(
     }
     let is_zh = lang == Lang::Zh;
     for (label, value, x, y) in [
-        ("NAME/", player_name.to_uppercase(), 56, 16),
-        ("MONEY/", format!("${:06}", money), 64, 32),
+        ("NAME/", player_name.to_uppercase(), 56, 12),
+        ("MONEY/", format!("${:06}", money), 64, 26),
         (
             "TIME/",
             format!("{}:{:02}", play_time_hours, play_time_minutes),
             72,
-            48,
+            40,
         ),
     ] {
         draw_text(ui_label(label, is_zh), 16, y, fg, fb);
         draw_text(&value, x, y, fg, fb);
     }
-    // Fusion Pixel extends below the original eight-pixel heading row.
-    // Clear its full ink area so the frame texture cannot show through.
+    // Center the project font between the circles. CJK ink extends two
+    // pixels below the ten-pixel Latin row; both must end before y=80.
     let heading = ui_label("BADGES", is_zh);
     let width = pokered_renderer::embedded_font::measure_text(heading);
-    for y in 72..82 {
-        for x in 56..56 + width { fb.set_pixel(x, y, Rgba::WHITE); }
+    let heading_x = (fb.width().saturating_sub(width)) / 2;
+    let heading_height = if is_zh { 12 } else { 10 };
+    let heading_y = 80 - heading_height;
+    for y in heading_y..80 {
+        for x in heading_x..heading_x + width {
+            fb.set_pixel(x, y, Rgba::WHITE);
+        }
     }
-    draw_text(heading, 56, 72, fg, fb);
+    draw_text(heading, heading_x, heading_y, fg, fb);
 
     // Badge rows: number tile beside the 2×2 face (unowned) or badge (owned)
     // graphic (GymLeaderFaceAndBadgeTileGraphics layout: face i at
     // tile i*8, its badge at +4).
     if let Some(ref mut rm) = res {
-        let numbers = rm
-            .load_asset(AssetCategory::TrainerCard, "badge_numbers.png")
-            .map(|c| c.tileset.clone());
         let faces = rm
             .load_asset(AssetCategory::TrainerCard, "badges.png")
             .map(|c| c.tileset.clone());
@@ -100,9 +102,7 @@ pub fn draw_trainer_card(
             let col = (i % 4) as usize;
             let x = BADGE_ROW_X[col];
             let y = BADGE_ROW_Y[row];
-            if let Ok(ref ts) = numbers {
-                blit_tile(fb, ts, i as usize, x, y, pal);
-            }
+            draw_text(&(i + 1).to_string(), x, y.saturating_sub(2), fg, fb);
             if let Ok(ref ts) = faces {
                 let owned = obtained_badges & (1 << i) != 0;
                 let base = i * 8 + if owned { 4 } else { 0 };
@@ -135,6 +135,50 @@ fn blit_tile(
             let c = rgba_row[col as usize];
             if c != Rgba::TRANSPARENT && x + col < fb.width() && y + row < fb.height() {
                 fb.set_pixel(x + col, y + row, c);
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use dotzuki_engine::render_config::RenderConfig;
+    use pokered_renderer::resource::AssetRoot;
+
+    #[test]
+    fn badge_heading_is_centered_and_leaves_the_top_frame_intact() {
+        let mut resources = Some(ResourceManager::new(AssetRoot::auto_detect().unwrap()));
+        let tiles = resources
+            .as_mut()
+            .unwrap()
+            .load_asset(AssetCategory::TrainerCard, "trainer_info.png")
+            .unwrap()
+            .tileset
+            .clone();
+        let mut border = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+        super::super::draw_trainer_info_box(&mut border, &tiles, 1, 10, 16, 6);
+        for lang in [Lang::En, Lang::Zh] {
+            let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+            draw_trainer_card("RED", 3000, 0, 0, 0, &mut resources, &mut fb, lang);
+            let ink: Vec<_> = (64..80)
+                .flat_map(|y| (56..104).map(move |x| (x, y)))
+                .filter(|&(x, y)| fb.get_pixel(x, y) == Some(Rgba::BLACK))
+                .collect();
+            let left = ink.iter().map(|p| p.0).min().expect("heading ink");
+            let right = ink.iter().map(|p| p.0).max().unwrap();
+            assert!(
+                (left as i32 + right as i32 - 159).abs() <= 4,
+                "{lang:?} heading must be centered between the circles"
+            );
+            for y in 80..88 {
+                for x in 56..104 {
+                    assert_eq!(
+                        fb.get_pixel(x, y),
+                        border.get_pixel(x, y),
+                        "{lang:?} heading must not erase or overlap the frame at ({x},{y})"
+                    );
+                }
             }
         }
     }

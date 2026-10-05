@@ -195,6 +195,44 @@ mod tests {
     }
 
     #[test]
+    fn battle_action_menus_leave_blank_pixels_above_bottom_border() {
+        use crate::backends::framebuffer::FrameBufferPainter;
+        use pokered_core::battle::menu::SafariBattleMenuState;
+        use pokered_renderer::FrameBuffer;
+        use dotzuki_engine::render_config::RenderConfig;
+
+        for lang in [Lang::En, Lang::Zh] {
+            for row in 0..2 {
+                for col in 0..2 {
+                    let input = BattleMenuInput {
+                        down: row == 1, right: col == 1, ..BattleMenuInput::none()
+                    };
+                    let mut normal = BattleMenuState::new();
+                    normal.update_frame(input);
+                    let mut safari = SafariBattleMenuState::new(30);
+                    safari.update_frame(input);
+                    for is_safari in [false, true] {
+                        let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::INK_WHITE);
+                        let mut painter = FrameBufferPainter::new(&mut fb).with_lang(lang);
+                        let mut ui = Ui::new(&mut painter);
+                        if is_safari {
+                            crate::menus::battle_safari::draw(&safari, &mut ui, lang);
+                        } else {
+                            draw_v2(&normal, &mut ui, lang);
+                        }
+                        for y in 132..138 {
+                            for x in 72..152 {
+                                assert_eq!(fb.get_pixel(x, y), Some(Rgba::WHITE),
+                                    "{lang:?}, safari={is_safari}, cursor=({row},{col}), ({x},{y})");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
     fn compiled_gba_layout_matches_v2_for_all_cursor_positions_and_languages() {
         for lang in [Lang::En, Lang::Zh] {
             let mut state = BattleMenuState::new();

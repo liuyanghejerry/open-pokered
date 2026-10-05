@@ -7,10 +7,11 @@ use pokered_ui::{menus, Painter, Rgba, TilePos, TileRect, Ui};
 #[derive(Default)]
 struct Recorder {
     text: Vec<(TilePos, String)>,
+    boxes: Vec<TileRect>,
 }
 impl Painter for Recorder {
     fn clear(&mut self, _: Rgba) {}
-    fn draw_text_box(&mut self, _: TileRect, _: Rgba) {}
+    fn draw_text_box(&mut self, rect: TileRect, _: Rgba) { self.boxes.push(rect); }
     fn draw_text(&mut self, pos: TilePos, text: &str, _: Rgba) {
         self.text.push((pos, text.into()));
     }
@@ -95,5 +96,20 @@ fn every_chinese_machine_prompt_has_nonoverlapping_readable_rows() {
             assert!(pos.tx * 8 + pokered_data::dialogue_layout::measure_text(text) <= 152);
             assert!(pos.ty * 8 + 12 <= 136);
         }
+    }
+}
+
+#[test]
+fn new_name_leaves_clearance_above_the_bottom_frame() {
+    use pokered_core::oak_speech::{DEFAULT_PLAYER_NAMES, DEFAULT_RIVAL_NAMES};
+    for names in [&DEFAULT_PLAYER_NAMES, &DEFAULT_RIVAL_NAMES] {
+        let mut p = Recorder::default();
+        menus::oak_speech::draw_name_choice(names, 3, "你的名字？",
+            &OAK_SPEECH_NAME_CHOICE_LAYOUT, &mut Ui::new(&mut p));
+        let (pos, _) = p.text.iter().find(|(_, text)| text == "NEW NAME").unwrap();
+        let rect = p.boxes[0];
+        let border_y = (rect.ty + rect.th - 1) * 8;
+        assert!(pos.ty * 8 + pokered_renderer::embedded_font::GLYPH_SIZE + 2 <= border_y,
+            "NEW NAME needs a full font row and padding above the bottom border");
     }
 }

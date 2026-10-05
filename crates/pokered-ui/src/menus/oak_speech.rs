@@ -1,6 +1,4 @@
-use pokered_data::ui_layout::schema::{
-    OakSpeechNameChoiceLayout, OakSpeechTextPhaseLayout,
-};
+use pokered_data::ui_layout::schema::{OakSpeechNameChoiceLayout, OakSpeechTextPhaseLayout};
 
 use crate::engine::{InkColor, Painter, Ui};
 
@@ -19,7 +17,14 @@ pub fn draw_text_phase<P: Painter>(
     layout: &OakSpeechTextPhaseLayout,
     ui: &mut Ui<P>,
 ) {
-    draw_text_phase_localized(line1, line2, show_arrow, layout, ui, pokered_core::game_state::Lang::En);
+    draw_text_phase_localized(
+        line1,
+        line2,
+        show_arrow,
+        layout,
+        ui,
+        pokered_core::game_state::Lang::En,
+    );
 }
 
 /// Chinese glyphs need twelve pixels of height inside the four-tile box.
@@ -31,25 +36,39 @@ pub fn draw_text_phase_localized<P: Painter>(
     ui: &mut Ui<P>,
     language: pokered_core::game_state::Lang,
 ) {
-    let offset = if language == pokered_core::game_state::Lang::Zh { 0 } else { 1 };
-    ui.text_box(layout.dialog_box.rect, layout.dialog_box.color, true, |frame| {
-        if !line1.is_empty() {
-            frame.label(offset, offset, line1, InkColor::Black);
+    let offset = if language == pokered_core::game_state::Lang::Zh {
+        0
+    } else {
+        1
+    };
+    let proportional = ui.painter().supports_proportional();
+    ui.text_box(
+        layout.dialog_box.rect,
+        layout.dialog_box.color,
+        true,
+        |frame| {
+            if !proportional && !line1.is_empty() {
+                frame.label(offset, offset, line1, InkColor::Black);
+            }
+            if !proportional && !line2.is_empty() {
+                frame.label(offset, offset + 2, line2, InkColor::Black);
+            }
+            if show_arrow {
+                let cursor = &layout.cursor;
+                let rel_tx = cursor.tx.saturating_sub(layout.dialog_box.rect.tx + 1);
+                let rel_ty = cursor.base_ty.saturating_sub(layout.dialog_box.rect.ty + 1);
+                frame.cursor_glyph_at(rel_tx, rel_ty, cursor.glyph, cursor.color);
+            }
+        },
+    );
+    if proportional {
+        let x = (layout.dialog_box.rect.tx + 1 + offset) * 8;
+        let y = (layout.dialog_box.rect.ty + 1 + offset) * 8;
+        for (i, line) in [line1, line2].iter().enumerate() {
+            ui.painter()
+                .draw_text_px(x, y + i as u32 * 12, line, InkColor::Black.into());
         }
-        if !line2.is_empty() {
-            frame.label(offset, offset + 2, line2, InkColor::Black);
-        }
-        if show_arrow {
-            let cursor = &layout.cursor;
-            let rel_tx = cursor
-                .tx
-                .saturating_sub(layout.dialog_box.rect.tx + 1);
-            let rel_ty = cursor
-                .base_ty
-                .saturating_sub(layout.dialog_box.rect.ty + 1);
-            frame.cursor_glyph_at(rel_tx, rel_ty, cursor.glyph, cursor.color);
-        }
-    });
+    }
 }
 
 /// Draws the name-selection screen used by [`OakSpeechPhase::PlayerNameChoice`]
@@ -68,30 +87,42 @@ pub fn draw_name_choice<P: Painter>(
 ) {
     let cursor = &layout.cursor;
 
-    ui.text_box(layout.name_list.rect, layout.name_list.color, true, |frame| {
-        for label in layout.name_list.labels.iter() {
-            // JSON label coords are absolute tiles; convert to box-interior.
-            let rel_tx = label.tx.saturating_sub(layout.name_list.rect.tx + 1);
-            let rel_ty = label.ty.saturating_sub(layout.name_list.rect.ty + 1);
-            frame.label(rel_tx, rel_ty, &label.text, label.color);
-        }
-        for (i, name) in names.iter().enumerate() {
-            // Names are at JSON-absolute (2, 2+i*2); interior origin is (1, 1)
-            // so interior coords are (1, 1+i*2).
-            let row_ty = 1 + (i as u32) * 2;
-            frame.label(1, row_ty, name, InkColor::Black);
-            if i == cursor_index {
-                // Cursor JSON tx=1 is absolute → interior tx=0.
-                let rel_tx = cursor
-                    .tx
-                    .saturating_sub(layout.name_list.rect.tx + 1);
-                frame.cursor_glyph_at(rel_tx, row_ty, cursor.glyph, cursor.color);
+    ui.text_box(
+        layout.name_list.rect,
+        layout.name_list.color,
+        true,
+        |frame| {
+            for label in layout.name_list.labels.iter() {
+                // JSON label coords are absolute tiles; convert to box-interior.
+                let rel_tx = label.tx.saturating_sub(layout.name_list.rect.tx + 1);
+                let rel_ty = label.ty.saturating_sub(layout.name_list.rect.ty + 1);
+                frame.label(rel_tx, rel_ty, &label.text, label.color);
             }
-        }
-    });
+            for (i, name) in names.iter().enumerate() {
+                // Names are at JSON-absolute (2, 2+i*2); interior origin is (1, 1)
+                // so interior coords are (1, 1+i*2).
+                let row_ty = 1 + (i as u32) * 2;
+                frame.label(1, row_ty, name, InkColor::Black);
+                if i == cursor_index {
+                    // Cursor JSON tx=1 is absolute → interior tx=0.
+                    let rel_tx = cursor.tx.saturating_sub(layout.name_list.rect.tx + 1);
+                    frame.cursor_glyph_at(rel_tx, row_ty, cursor.glyph, cursor.color);
+                }
+            }
+        },
+    );
 
-    ui.text_box(layout.prompt_box.rect, layout.prompt_box.color, true, |frame| {
-        let offset = if pokered_data::dialogue_layout::contains_chinese(prompt) { 0 } else { 1 };
-        frame.label(offset, offset, prompt, InkColor::Black);
-    });
+    ui.text_box(
+        layout.prompt_box.rect,
+        layout.prompt_box.color,
+        true,
+        |frame| {
+            let offset = if pokered_data::dialogue_layout::contains_chinese(prompt) {
+                0
+            } else {
+                1
+            };
+            frame.label(offset, offset, prompt, InkColor::Black);
+        },
+    );
 }

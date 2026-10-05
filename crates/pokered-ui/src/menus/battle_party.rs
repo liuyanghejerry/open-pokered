@@ -25,19 +25,35 @@ mod tests {
 
     #[test]
     fn labels_preserve_health_and_fit_before_the_right_border() {
-        let width = pokered_data::ui_layout::schema::BATTLE_PARTY_DEFAULT_LAYOUT.box_0.rect.tw.saturating_sub(3) * 8;
-        for species in [Species::Charmander, Species::Victreebel, Species::Lickitung, Species::Snorlax] {
+        let width = pokered_data::ui_layout::schema::BATTLE_PARTY_DEFAULT_LAYOUT
+            .box_0
+            .rect
+            .tw
+            .saturating_sub(3)
+            * 8;
+        for species in [
+            Species::Charmander,
+            Species::Victreebel,
+            Species::Lickitung,
+            Species::Snorlax,
+        ] {
             for level in [25, 100] {
                 for is_zh in [false, true] {
                     let mon = create_pokemon(species, level, [0xff; 2]).unwrap();
                     let label = party_label(&mon, is_zh, width);
                     assert!(label.ends_with(&format!(" {}/{}", mon.hp, mon.max_hp)));
-                    assert!(pokered_data::text_layout::measure_text(&label) <= width, "{label}");
+                    assert!(
+                        pokered_data::text_layout::measure_text(&label) <= width,
+                        "{label}"
+                    );
                     let mut fainted = mon;
                     fainted.hp = 0;
                     let label = party_label(&fainted, is_zh, width);
                     assert!(label.ends_with(if is_zh { " 倒下" } else { " FNT" }));
-                    assert!(pokered_data::text_layout::measure_text(&label) <= width, "{label}");
+                    assert!(
+                        pokered_data::text_layout::measure_text(&label) <= width,
+                        "{label}"
+                    );
                 }
             }
         }
@@ -82,7 +98,13 @@ pub fn cursor_visual_row(party_len: usize, cursor: usize) -> Option<usize> {
     (cursor < party_len).then(|| cursor - viewport_start(party_len, cursor))
 }
 
-pub fn draw<P: Painter>(party: &[Pokemon], cursor: usize, layout: &BattlePartyDefaultLayout, ui: &mut Ui<P>, is_zh: bool) {
+pub fn draw<P: Painter>(
+    party: &[Pokemon],
+    cursor: usize,
+    layout: &BattlePartyDefaultLayout,
+    ui: &mut Ui<P>,
+    is_zh: bool,
+) {
     let party_len = party.len();
     if party_len == 0 {
         return;
@@ -90,7 +112,13 @@ pub fn draw<P: Painter>(party: &[Pokemon], cursor: usize, layout: &BattlePartyDe
 
     let visible_start = viewport_start(party_len, cursor);
 
-    ui.text_box(layout.box_0.rect, layout.box_0.color, true, |frame| {
+    let proportional = ui.painter().supports_proportional();
+    let mut rect = layout.box_0.rect;
+    if proportional {
+        rect.ty = rect.ty.saturating_sub(2);
+        rect.th += 2;
+    }
+    ui.text_box(rect, layout.box_0.color, true, |frame| {
         let cursor_def = &layout.cursor;
         for i in 0..MAX_VISIBLE {
             let party_idx = visible_start + i;
@@ -101,14 +129,38 @@ pub fn draw<P: Painter>(party: &[Pokemon], cursor: usize, layout: &BattlePartyDe
             let row = i as u32;
 
             let label = party_label(mon, is_zh, layout.box_0.rect.tw.saturating_sub(3) * 8);
-            frame.label(1, row, &label, InkColor::Black);
+            if !proportional {
+                frame.label(1, row, &label, InkColor::Black);
+            }
 
-            if party_idx == cursor {
+            if !proportional && party_idx == cursor {
                 let cursor_row = cursor_def.base_ty + i as u32 * cursor_def.row_step;
-                frame.cursor_glyph_at(cursor_def.tx, cursor_row, cursor_def.glyph, cursor_def.color);
+                frame.cursor_glyph_at(
+                    cursor_def.tx,
+                    cursor_row,
+                    cursor_def.glyph,
+                    cursor_def.color,
+                );
             }
         }
     });
+    if proportional {
+        for (row, mon) in party
+            .iter()
+            .skip(visible_start)
+            .take(MAX_VISIBLE)
+            .enumerate()
+        {
+            let label = party_label(mon, is_zh, layout.box_0.rect.tw.saturating_sub(3) * 8);
+            ui.painter().draw_text_px(
+                (layout.box_0.rect.tx + 2) * 8,
+                (layout.box_0.rect.ty + 1) * 8 - 16 + row as u32 * 12,
+                &label,
+                Rgba::INK_BLACK,
+            );
+        }
+        draw_pixel_cursor(cursor - visible_start, layout, ui.painter());
+    }
 }
 
 /// Repaint only the changed cursor cells when the party viewport did not
@@ -127,21 +179,40 @@ pub fn redraw_cursor<P: Painter>(
         )
     };
     let old = position(previous_row);
-    painter.draw_pixel_rect(old.tx * 8, old.ty * 8, 8, 9, Rgba::INK_WHITE);
-    painter.draw_glyph(
-        position(current_row),
-        cursor.glyph,
-        cursor.color.into(),
+    if painter.supports_proportional() {
+        let (x, y) = pixel_cursor_position(previous_row, layout);
+        painter.draw_pixel_rect(x, y, 8, 10, Rgba::INK_WHITE);
+        draw_pixel_cursor(current_row, layout, painter);
+    } else {
+        let old = position(previous_row);
+        painter.draw_pixel_rect(old.tx * 8, old.ty * 8, 8, 9, Rgba::INK_WHITE);
+        painter.draw_glyph(position(current_row), cursor.glyph, cursor.color.into());
+    }
+}
+
+fn pixel_cursor_position(row: usize, layout: &BattlePartyDefaultLayout) -> (u32, u32) {
+    let c = &layout.cursor;
+    (
+        (layout.box_0.rect.tx + 1 + c.tx) * 8,
+        (layout.box_0.rect.ty + 1 + c.base_ty) * 8 - 16 + row as u32 * 12,
+    )
+}
+
+fn draw_pixel_cursor<P: Painter>(row: usize, layout: &BattlePartyDefaultLayout, painter: &mut P) {
+    let (x, y) = pixel_cursor_position(row, layout);
+    let mut buf = [0u8; 4];
+    painter.draw_text_px(
+        x,
+        y,
+        layout.cursor.glyph.encode_utf8(&mut buf),
+        layout.cursor.color.into(),
     );
 }
 
 /// Cursor ink region for a viewport-relative party row.
 pub fn cursor_damage(row: usize, layout: &BattlePartyDefaultLayout) -> crate::DamageRect {
-    let cursor = &layout.cursor;
-    crate::DamageRect::cursor(TilePos::new(
-        layout.box_0.rect.tx + 1 + cursor.tx,
-        layout.box_0.rect.ty + 1 + cursor.base_ty + row as u32 * cursor.row_step,
-    ))
+    let (x, y) = pixel_cursor_position(row, layout);
+    crate::DamageRect::new(x, y, 8, 10)
 }
 
 /// Label/cursor band changed when the four-entry viewport scrolls.
@@ -149,9 +220,9 @@ pub fn viewport_damage(layout: &BattlePartyDefaultLayout) -> crate::DamageRect {
     let rect = layout.box_0.rect;
     crate::DamageRect::new(
         rect.tx * 8,
-        rect.ty * 8,
+        rect.ty.saturating_sub(2) * 8,
         rect.tw * 8,
-        rect.th * 8,
+        (rect.th + 2) * 8,
     )
 }
 
@@ -166,6 +237,11 @@ pub fn redraw_viewport_edges<P: Painter>(
     is_zh: bool,
 ) {
     if party.is_empty() {
+        return;
+    }
+
+    if painter.supports_proportional() {
+        draw(party, cursor, layout, &mut Ui::new(painter), is_zh);
         return;
     }
 
@@ -215,13 +291,7 @@ pub fn redraw_viewport_edges<P: Painter>(
         6,
         Rgba::INK_WHITE,
     );
-    painter.draw_pixel_rect(
-        (rect.tx + 1) * 8,
-        band_y,
-        8,
-        band_height,
-        Rgba::INK_WHITE,
-    );
+    painter.draw_pixel_rect((rect.tx + 1) * 8, band_y, 8, band_height, Rgba::INK_WHITE);
 
     for row in rows.chain(core::iter::once(overlap_row)) {
         let Some(mon) = party.get(current_start + row) else {

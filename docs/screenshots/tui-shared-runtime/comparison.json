@@ -1,0 +1,478 @@
+{
+  "base": "deed3e23c1f360c499a1c3fe56f1482e66235e0b",
+  "capture": "matched master/PR framebuffer; 160x144; TUI, UI preview and PC seeded scenarios; all PR text Fusion Pixel",
+  "comparisons": [
+    {
+      "screen": "pc-bills-en",
+      "changed_pixels": 819
+    },
+    {
+      "screen": "pc-bills-zh",
+      "changed_pixels": 563
+    },
+    {
+      "screen": "pc-box-list-en",
+      "changed_pixels": 1901
+    },
+    {
+      "screen": "pc-box-list-zh",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "pc-list-en",
+      "changed_pixels": 1814
+    },
+    {
+      "screen": "pc-list-zh",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "pc-message-en",
+      "changed_pixels": 122
+    },
+    {
+      "screen": "pc-message-zh",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "pc-quantity-en",
+      "changed_pixels": 1322
+    },
+    {
+      "screen": "pc-quantity-zh",
+      "changed_pixels": 236
+    },
+    {
+      "screen": "tui-bag-en",
+      "changed_pixels": 1004
+    },
+    {
+      "screen": "tui-bag-zh",
+      "changed_pixels": 1004
+    },
+    {
+      "screen": "tui-battle-en",
+      "changed_pixels": 1631
+    },
+    {
+      "screen": "tui-battle-zh",
+      "changed_pixels": 1342
+    },
+    {
+      "screen": "tui-copyright-en",
+      "changed_pixels": 1437
+    },
+    {
+      "screen": "tui-copyright-zh",
+      "changed_pixels": 1437
+    },
+    {
+      "screen": "tui-dex-caterpie-page-0",
+      "changed_pixels": 1936
+    },
+    {
+      "screen": "tui-fly-departure-0-en",
+      "changed_pixels": 15283
+    },
+    {
+      "screen": "tui-fly-departure-0-zh",
+      "changed_pixels": 15245
+    },
+    {
+      "screen": "tui-fly-departure-7-en",
+      "changed_pixels": 15283
+    },
+    {
+      "screen": "tui-fly-departure-7-zh",
+      "changed_pixels": 15245
+    },
+    {
+      "screen": "tui-fly-departure-8-en",
+      "changed_pixels": 6502
+    },
+    {
+      "screen": "tui-fly-departure-8-zh",
+      "changed_pixels": 6502
+    },
+    {
+      "screen": "tui-font-battle-status-en",
+      "changed_pixels": 1692
+    },
+    {
+      "screen": "tui-font-battle-status-zh",
+      "changed_pixels": 1405
+    },
+    {
+      "screen": "tui-font-gamefreak",
+      "changed_pixels": 322
+    },
+    {
+      "screen": "tui-font-naming",
+      "changed_pixels": 126
+    },
+    {
+      "screen": "tui-font-party-en",
+      "changed_pixels": 103
+    },
+    {
+      "screen": "tui-font-party-zh",
+      "changed_pixels": 103
+    },
+    {
+      "screen": "tui-font-pc",
+      "changed_pixels": 819
+    },
+    {
+      "screen": "tui-font-title-Blue",
+      "changed_pixels": 647
+    },
+    {
+      "screen": "tui-font-title-Red",
+      "changed_pixels": 644
+    },
+    {
+      "screen": "tui-hof-rating-50",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-hof-stats-max",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-hof-stats-zero",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-intro-en",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-intro-zh",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-language-en",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-language-zh",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-main-menu-en",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-main-menu-zh",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-oak-input-frame-43",
+      "changed_pixels": 618
+    },
+    {
+      "screen": "tui-oak-name-choice",
+      "changed_pixels": 520
+    },
+    {
+      "screen": "tui-options-en",
+      "changed_pixels": 1904
+    },
+    {
+      "screen": "tui-options-zh",
+      "changed_pixels": 1904
+    },
+    {
+      "screen": "tui-overworld-en",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-overworld-zh",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-party-en",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-party-zh",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-pc-oak-rating-50",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-safari-menu-en",
+      "changed_pixels": 1704
+    },
+    {
+      "screen": "tui-safari-menu-zh",
+      "changed_pixels": 1352
+    },
+    {
+      "screen": "tui-save-en",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-save-zh",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-splash-en",
+      "changed_pixels": 1437
+    },
+    {
+      "screen": "tui-splash-zh",
+      "changed_pixels": 1437
+    },
+    {
+      "screen": "tui-start-menu-en",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-start-menu-zh",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "tui-starter-dex-overlay",
+      "changed_pixels": 1952
+    },
+    {
+      "screen": "tui-title-en",
+      "changed_pixels": 449
+    },
+    {
+      "screen": "tui-title-zh",
+      "changed_pixels": 449
+    },
+    {
+      "screen": "tui-town-map-en",
+      "changed_pixels": 192
+    },
+    {
+      "screen": "tui-town-map-zh",
+      "changed_pixels": 374
+    },
+    {
+      "screen": "tui-trainer-card-en",
+      "changed_pixels": 1272
+    },
+    {
+      "screen": "tui-trainer-card-zh",
+      "changed_pixels": 1217
+    },
+    {
+      "screen": "ui-bag-0",
+      "changed_pixels": 1004
+    },
+    {
+      "screen": "ui-bag-1",
+      "changed_pixels": 1004
+    },
+    {
+      "screen": "ui-bag-2",
+      "changed_pixels": 1956
+    },
+    {
+      "screen": "ui-battle_bag-0",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-battle_bag-1",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-battle_bag-2",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-battle_main-0",
+      "changed_pixels": 481
+    },
+    {
+      "screen": "ui-battle_main-1",
+      "changed_pixels": 481
+    },
+    {
+      "screen": "ui-battle_main-2",
+      "changed_pixels": 481
+    },
+    {
+      "screen": "ui-battle_move-0",
+      "changed_pixels": 721
+    },
+    {
+      "screen": "ui-battle_move-1",
+      "changed_pixels": 513
+    },
+    {
+      "screen": "ui-battle_move-2",
+      "changed_pixels": 477
+    },
+    {
+      "screen": "ui-battle_party-0",
+      "changed_pixels": 1736
+    },
+    {
+      "screen": "ui-battle_party-1",
+      "changed_pixels": 2045
+    },
+    {
+      "screen": "ui-battle_party-2",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-dialog-0",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-dialog-1",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-dialog-2",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-main-0",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-main-1",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-main-2",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-mart-0",
+      "changed_pixels": 989
+    },
+    {
+      "screen": "ui-mart-1",
+      "changed_pixels": 983
+    },
+    {
+      "screen": "ui-mart-2",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-mart-3",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-mart-4",
+      "changed_pixels": 1252
+    },
+    {
+      "screen": "ui-mart-5",
+      "changed_pixels": 475
+    },
+    {
+      "screen": "ui-mart-6",
+      "changed_pixels": 475
+    },
+    {
+      "screen": "ui-mimic-en",
+      "changed_pixels": 1804
+    },
+    {
+      "screen": "ui-mimic-zh",
+      "changed_pixels": 1741
+    },
+    {
+      "screen": "ui-move-localized-en",
+      "changed_pixels": 1968
+    },
+    {
+      "screen": "ui-move-localized-zh",
+      "changed_pixels": 1873
+    },
+    {
+      "screen": "ui-naming-0",
+      "changed_pixels": 126
+    },
+    {
+      "screen": "ui-naming-1",
+      "changed_pixels": 180
+    },
+    {
+      "screen": "ui-naming-2",
+      "changed_pixels": 126
+    },
+    {
+      "screen": "ui-oak_speech-0",
+      "changed_pixels": 210
+    },
+    {
+      "screen": "ui-oak_speech-1",
+      "changed_pixels": 150
+    },
+    {
+      "screen": "ui-oak_speech-2",
+      "changed_pixels": 520
+    },
+    {
+      "screen": "ui-options-0",
+      "changed_pixels": 1904
+    },
+    {
+      "screen": "ui-options-1",
+      "changed_pixels": 1904
+    },
+    {
+      "screen": "ui-options-2",
+      "changed_pixels": 1904
+    },
+    {
+      "screen": "ui-pokedex-0",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-pokedex-1",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-pokedex-2",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-save-0",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-save-1",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-save-2",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-start-0",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-start-1",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-start-2",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-yes_no-0",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-yes_no-1",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-yes_no-2",
+      "changed_pixels": 0
+    }
+  ]
+}
