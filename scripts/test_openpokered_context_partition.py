@@ -141,7 +141,7 @@ class ContextPartitionTests(unittest.TestCase):
             self.assertGreater(len(failures), old_count)
         self.assertEqual(len(agent._choice_context_sizes), 4)
 
-    def test_larger_observed_success_disables_inconsistent_byte_reference(self):
+    def test_larger_observed_success_keeps_requests_below_it_eligible(self):
         agent = self.agent()
         state, options = {}, {str(i): 'X' * 800 for i in range(8)}
         decide, failures, _ = self.bounded_service(agent)
@@ -156,6 +156,56 @@ class ContextPartitionTests(unittest.TestCase):
         self.assertEqual(choose.call_args.args[2], options)
         reference = next(iter(agent._choice_context_sizes.values()))
         self.assertGreater(reference['largest_success_bytes'], reference['smallest_overflow_bytes'])
+
+    def test_overlapping_byte_observations_still_partition_larger_requests_losslessly(self):
+        for layer in ('strategy', 'action'):
+            with self.subTest(layer=layer):
+                agent = self.agent()
+                state = {'world': {'map': 'Route7', 'money': 181,
+                                   'party': ['Magikarp', 'Charizard']}}
+                options = {str(i): 'Original evidence ' + 'X' * 350 for i in range(8)}
+                original = deepcopy((state, options))
+                scope = (layer, agent.model_client.request_model(agent.model),
+                         agent.model_client.base_url, agent.model_client.system_one_path,
+                         agent.model_client.provider)
+                # A byte reference is not a token limit: different textures
+                # really can yield success above an earlier overflow size.
+                agent._choice_context_sizes = {scope: {
+                    'smallest_overflow_bytes': 1400, 'largest_success_bytes': 2500}}
+                decide, failures, successes = self.bounded_service(agent, limit=2500)
+                with patch.object(DualStoryAgent, 'choose', side_effect=decide):
+                    self.assertEqual(agent.choose_bounded_choice(layer, state, options, 'Pick'), '7')
+                self.assertFalse(failures)  # Don't send the larger full-set request first.
+                self.assertGreater(len(successes), 1)
+                self.assertEqual({key for row in successes for key in row[2]}, set(options))
+                self.assertTrue(all(row[1] is state for row in successes))
+                self.assertTrue(all(row[2] == {key: options[key] for key in row[2]}
+                                    for row in successes))
+                self.assertTrue(successes[-1][4])
+                self.assertTrue(all(not row[4] for row in successes[:-1]))
+                self.assertEqual((state, options), original)
+                proactive = [call.kwargs for call in agent.record.call_args_list
+                    if call.args[0] == f'{layer}_partition'
+                    and call.kwargs['reason'] == 'observed_context_size_reference']
+                self.assertTrue(proactive)
+                self.assertTrue(all(row['byte_reference_is_token_limit'] is False for row in proactive))
+
+    def test_overlapping_reference_does_not_hide_new_error_below_success_ceiling(self):
+        agent = self.agent()
+        scope = ('strategy', agent.model_client.request_model(agent.model),
+                 agent.model_client.base_url, agent.model_client.system_one_path,
+                 agent.model_client.provider)
+        agent._choice_context_sizes = {scope: {
+            'smallest_overflow_bytes': 400, 'largest_success_bytes': 5000}}
+        failure = StoryStopped('strategy:service_unavailable')
+        failure.__cause__ = TypeSafeError('HTTP 401 unauthorized')
+        options = {str(i): f'Choice {i}' for i in range(8)}
+        with patch.object(DualStoryAgent, 'choose', side_effect=failure) as choose:
+            with self.assertRaises(StoryStopped) as observed:
+                agent.choose_bounded_strategy({}, options, 'Pick')
+        self.assertIs(observed.exception, failure)
+        choose.assert_called_once_with('strategy', {}, options, 'Pick', allow_abstain=True)
+        agent.record.assert_not_called()
 
     def test_context_reference_does_not_hide_other_errors_or_binary_overflow(self):
         for detail, count in [('HTTP 401 unauthorized', 8), ('HTTP 402 payment_required', 8),

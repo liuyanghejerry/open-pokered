@@ -2620,9 +2620,15 @@ class AutonomousStoryAgent(DualStoryAgent):
             request_bytes = len(json.dumps({'state': wire_state, 'model': endpoint[0],
                 'questions': {layer: Choice(wire_instruction, criteria).to_json()}}).encode())
             overflow_bytes = reference['smallest_overflow_bytes']
-            proactive = (len(candidates) > 2 and overflow_bytes is not None
-                         and overflow_bytes > reference['largest_success_bytes']
-                         and request_bytes >= overflow_bytes)
+            # Different token textures can produce a larger success after a
+            # smaller overflow. Keep those successful sizes eligible, without
+            # disabling preflight for every still-larger request. This is an
+            # empirical format/partition reference, never a certified token
+            # limit or permission to remove options/evidence.
+            preflight_bytes = (max(overflow_bytes, reference['largest_success_bytes'] + 1)
+                               if overflow_bytes is not None else None)
+            proactive = (len(candidates) > 2 and preflight_bytes is not None
+                         and request_bytes >= preflight_bytes)
             reason = 'observed_context_size_reference' if proactive else 'max_tokens_exceeded'
             if not proactive:
                 if encoding != 'canonical':
@@ -2693,6 +2699,7 @@ class AutonomousStoryAgent(DualStoryAgent):
         self.record(f'{layer}_partition', candidate_ids=keys, partitions=partitions,
                     reason=reason, state_preserved=True,
                     request_bytes=request_bytes, context_size_reference=dict(reference),
+                    preflight_size_reference_bytes=preflight_bytes,
                     reference_scope=list(reference_scope), byte_reference_is_token_limit=False)
         group_instruction = (
             f' This is one disjoint comparison group from a larger {layer} choice. '
