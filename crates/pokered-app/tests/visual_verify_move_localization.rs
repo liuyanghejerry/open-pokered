@@ -62,7 +62,7 @@ fn capture_move_localization() {
             lang,
         );
         if lang == Lang::Zh {
-            assert_move_ink(&fb, 16, 95, "百万吨重拳");
+            assert_move_ink(&fb, 16, 94, "百万吨重拳");
         }
         if let Some(out) = &out {
             fb.save_png(&out.join(format!("battle-{suffix}.png")))

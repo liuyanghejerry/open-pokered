@@ -383,6 +383,14 @@
       "changed_pixels": 1741
     },
     {
+      "screen": "ui-move-localized-en",
+      "changed_pixels": 1968
+    },
+    {
+      "screen": "ui-move-localized-zh",
+      "changed_pixels": 1873
+    },
+    {
       "screen": "ui-naming-0",
       "changed_pixels": 126
     },

@@ -2,7 +2,7 @@
 
 基线：`deed3e23c1f360c499a1c3fe56f1482e66235e0b`。在 master 上先截旧 TUI，再在本 PR 上截相同屏幕和帧。记录的是终端半块字符转换前的实际 framebuffer。
 
-共 116 组；45 组逐像素一致。终端显示参数保持原方案，所有文字统一使用开源 Fusion Pixel。
+共 118 组；45 组逐像素一致。终端显示参数保持原方案，所有文字统一使用开源 Fusion Pixel。
 
 采用共享渲染后，战斗菜单和城镇地图使用中文；图鉴采用共享边框、分隔线及文本布局，FLY 采用共享运行时已有的八帧离场时序。徽章标题按字体宽度居中并上移，命名列表框增加底部留白。
 
@@ -82,7 +82,7 @@ PR_SCREENSHOTS=/tmp/tui-frames cargo test -p pokered-tui capture_tui_ -- --ignor
 
 ## 全面文字边距审查
 
-追加 61 组同状态 master / PR 对照：15 类菜单的多种状态（含空/满列表、金额及数量框），中英文 Mimic 与 PC 箱号、12 箱列表、数量、八行列表和两行消息。PC 样本通过真实状态机输入进入；UI preview 使用共享生产菜单绘制函数。修复箱号、PC 列表、背包标题与满列表、商店金额/数量、选项分隔框、训练师卡 TIME、Oak 两行文本、四招式列表及战斗队伍的底边留白；扩展队伍/Mimic 框以容纳 12px 行距。`pc-box-number-padding-bug.png` 记录修复前 PR 画面。
+追加 63 组同状态 master / PR 对照：15 类菜单的多种状态（含空/满列表、金额及数量框），中英文 Mimic 与 PC 箱号、12 箱列表、数量、八行列表和两行消息。PC 样本通过真实状态机输入进入；UI preview 使用共享生产菜单绘制函数。修复箱号、PC 列表、背包标题与满列表、商店金额/数量、选项分隔框、训练师卡 TIME、Oak 两行文本、四招式列表及战斗队伍的底边留白；扩展队伍/Mimic 框以容纳 12px 行距。`pc-box-number-padding-bug.png` 记录修复前 PR 画面。
 
 ```bash
 PR_SCREENSHOTS=/tmp/ui-audit cargo test -p pokered-ui-preview capture_ui_padding_audit -- --ignored
@@ -152,3 +152,10 @@ PR_SCREENSHOTS=/tmp/pc-audit cargo test -p pokered-app --lib capture_pc_padding_
 | ui-yes_no-0 | ![前](https://raw.githubusercontent.com/liuyanghejerry/open-pokered/refactor/tui-shared-runtime/docs/screenshots/tui-shared-runtime/ui-yes_no-0-before.png) | ![后](https://raw.githubusercontent.com/liuyanghejerry/open-pokered/refactor/tui-shared-runtime/docs/screenshots/tui-shared-runtime/ui-yes_no-0-after.png) |
 | ui-yes_no-1 | ![前](https://raw.githubusercontent.com/liuyanghejerry/open-pokered/refactor/tui-shared-runtime/docs/screenshots/tui-shared-runtime/ui-yes_no-1-before.png) | ![后](https://raw.githubusercontent.com/liuyanghejerry/open-pokered/refactor/tui-shared-runtime/docs/screenshots/tui-shared-runtime/ui-yes_no-1-after.png) |
 | ui-yes_no-2 | ![前](https://raw.githubusercontent.com/liuyanghejerry/open-pokered/refactor/tui-shared-runtime/docs/screenshots/tui-shared-runtime/ui-yes_no-2-before.png) | ![后](https://raw.githubusercontent.com/liuyanghejerry/open-pokered/refactor/tui-shared-runtime/docs/screenshots/tui-shared-runtime/ui-yes_no-2-after.png) |
+
+补充招式本地化真实战斗绘制场景；中文招式基线保留距顶边的空白，并同步像素校验坐标。
+
+| 场景 | 前 | 后 |
+|---|---|---|
+| ui-move-localized-en | ![前](https://raw.githubusercontent.com/liuyanghejerry/open-pokered/refactor/tui-shared-runtime/docs/screenshots/tui-shared-runtime/ui-move-localized-en-before.png) | ![后](https://raw.githubusercontent.com/liuyanghejerry/open-pokered/refactor/tui-shared-runtime/docs/screenshots/tui-shared-runtime/ui-move-localized-en-after.png) |
+| ui-move-localized-zh | ![前](https://raw.githubusercontent.com/liuyanghejerry/open-pokered/refactor/tui-shared-runtime/docs/screenshots/tui-shared-runtime/ui-move-localized-zh-before.png) | ![后](https://raw.githubusercontent.com/liuyanghejerry/open-pokered/refactor/tui-shared-runtime/docs/screenshots/tui-shared-runtime/ui-move-localized-zh-after.png) |

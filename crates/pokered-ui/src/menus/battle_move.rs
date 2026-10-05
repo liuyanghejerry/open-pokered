@@ -88,7 +88,7 @@ pub fn redraw_selection<P: Painter>(
     >,
 ) {
     if lang == pokered_core::game_state::Lang::Zh {
-        let old_y = 94 + previous_cursor as u32 * 10;
+        let old_y = 95 + previous_cursor as u32 * 10;
         ui.painter()
             .draw_pixel_rect(8, old_y, 8, 9, Rgba::INK_WHITE);
         draw_zh_cursor(state.cursor(), ui.painter());
@@ -121,7 +121,7 @@ pub fn selection_damage(
 ) -> [crate::DamageRect; 3] {
     let (cursor_x, cursor_y, cursor_step, info_y, info_height) =
         if lang == pokered_core::game_state::Lang::Zh {
-            (8, 94, 10, 72, 16)
+            (8, 95, 10, 72, 16)
         } else {
             (5 * 8, 13 * 8 - 2, 8, 72, 26)
         };
@@ -320,7 +320,7 @@ fn draw_zh<P: Painter>(
     ui.text_box(TileRect::new(0, 11, 20, 7), InkColor::Black, true, |_| {});
     let painter = ui.painter();
     for (i, slot) in state.moves().iter().enumerate() {
-        let y = 94 + i as u32 * 10;
+        let y = 95 + i as u32 * 10;
         painter.draw_text_px(16, y, data.move_name(slot.move_id), InkColor::Black.into());
         painter.draw_text_px(
             104,
@@ -339,7 +339,7 @@ fn draw_zh<P: Painter>(
 }
 
 fn draw_zh_cursor<P: Painter>(selected: usize, painter: &mut P) {
-    painter.draw_text_px(8, 94 + selected as u32 * 10, "▶", InkColor::Black.into());
+    painter.draw_text_px(8, 95 + selected as u32 * 10, "▶", InkColor::Black.into());
 }
 
 fn draw_zh_info<P: Painter>(
