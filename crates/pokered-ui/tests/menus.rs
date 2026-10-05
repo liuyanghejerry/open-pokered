@@ -165,9 +165,9 @@ fn options_menu_three_setting_boxes_and_cancel_outside() {
         _ => None,
     }).collect();
     assert_eq!(boxes, vec![
-        TileRect::new(0, 0, 20, 5),
-        TileRect::new(0, 5, 20, 5),
-        TileRect::new(0, 10, 20, 5),
+        TileRect::new(0, 0, 20, 6),
+        TileRect::new(0, 5, 20, 6),
+        TileRect::new(0, 10, 20, 6),
     ]);
 
     let texts = collect_text_runs(&rec.ops);
@@ -1239,8 +1239,8 @@ fn draw_main_with_money_shows_buy_sell_quit_and_money_box() {
 
     let boxes = collect_boxes(&rec.ops);
     assert_eq!(boxes, vec![
-        TileRect::new(0, 0, 11, 7),
-        TileRect::new(11, 0, 9, 3),
+        TileRect::new(0, 0, 11, 8),
+        TileRect::new(11, 0, 9, 4),
     ]);
 
     let texts = collect_texts(&rec.ops);
@@ -1269,8 +1269,8 @@ fn draw_quantity_shows_item_name_qty_cost_and_money() {
 
     let boxes = collect_boxes(&rec.ops);
     assert_eq!(boxes, vec![
-        TileRect::new(0, 3, 20, 6),
-        TileRect::new(11, 0, 9, 3),
+        TileRect::new(0, 3, 20, 7),
+        TileRect::new(11, 0, 9, 4),
     ]);
 
     let texts = collect_texts(&rec.ops);
@@ -1364,7 +1364,7 @@ fn draw_main_menu_uses_layout_static() {
     // - Labels BUY/SELL/QUIT at relative positions (1,1), (1,3), (1,5)
     // - Cursor glyph at (1, 2) since cursor.tx=0 and cursor starts at 0
     let boxes = collect_boxes(&rec.ops);
-    assert_eq!(boxes, vec![TileRect::new(0, 0, 11, 7)]);
+    assert_eq!(boxes, vec![TileRect::new(0, 0, 11, 8)]);
 
     let texts = collect_texts(&rec.ops);
     assert!(texts.contains(&(2, 1, "BUY".into())));   // origin +1 + label.tx=1

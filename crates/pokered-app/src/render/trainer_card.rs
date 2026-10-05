@@ -64,13 +64,13 @@ pub fn draw_trainer_card(
     }
     let is_zh = lang == Lang::Zh;
     for (label, value, x, y) in [
-        ("NAME/", player_name.to_uppercase(), 56, 16),
-        ("MONEY/", format!("${:06}", money), 64, 32),
+        ("NAME/", player_name.to_uppercase(), 56, 12),
+        ("MONEY/", format!("${:06}", money), 64, 26),
         (
             "TIME/",
             format!("{}:{:02}", play_time_hours, play_time_minutes),
             72,
-            48,
+            40,
         ),
     ] {
         draw_text(ui_label(label, is_zh), 16, y, fg, fb);

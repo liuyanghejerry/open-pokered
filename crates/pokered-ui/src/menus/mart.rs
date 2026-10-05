@@ -32,9 +32,7 @@ fn draw_main_menu_box<P: Painter>(
 ) {
     let m = &layout.menu_box;
     let mut rect = m.rect;
-    if is_zh {
-        rect.th = rect.th.max(8);
-    }
+    rect.th = rect.th.max(8);
     ui.text_box(rect, m.color, true, |frame| {
         for label in m.labels.iter() {
             frame.label(
@@ -86,9 +84,7 @@ fn draw_money_box<P: Painter>(
     ui: &mut Ui<P>,
     lang: Lang,
 ) {
-    if lang == Lang::Zh {
-        rect.th = 4;
-    }
+    rect.th = rect.th.max(4);
     let balance = format!("{:>7}", format!("${}", money.min(999999)));
     ui.text_box(rect, color, true, |_| {});
     let painter = ui.painter();
@@ -104,7 +100,7 @@ fn draw_money_box<P: Painter>(
     painter.draw_text(TilePos::new(rect.tx + 2, rect.ty), label, color.into());
     painter.draw_text_px(
         (rect.tx + 1) * 8,
-        rect.ty * 8 + if lang == Lang::Zh { 12 } else { 8 },
+        rect.ty * 8 + 12,
         &balance,
         color.into(),
     );

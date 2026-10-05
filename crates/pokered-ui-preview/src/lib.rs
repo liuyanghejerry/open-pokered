@@ -1912,6 +1912,31 @@ mod tests {
         }
     }
 
+    #[test]
+    #[ignore = "writes UI audit frames to PR_SCREENSHOTS"]
+    fn capture_ui_padding_audit() {
+        use pokered_renderer::{FrameBuffer, Rgba};
+        let out = std::path::PathBuf::from(std::env::var("PR_SCREENSHOTS").unwrap());
+        std::fs::create_dir_all(&out).unwrap();
+        for lang in [Lang::En, Lang::Zh] {
+            let moves = MoveMenuState::new([MoveId::Tackle, MoveId::Growl, MoveId::LeechSeed, MoveId::VineWhip].into_iter().map(|move_id| MoveSlot { move_id, current_pp: 35, max_pp: 35, is_disabled: false }).collect());
+            let bytes = render_with(|ui| pokered_ui::menus::battle_move::draw_mimic(&moves, ui, lang, &PokemonRenderData::new(lang == Lang::Zh)), lang);
+            let mut fb = FrameBuffer::new(RenderConfig::new(160,144), Rgba::WHITE);
+            for (i,pixel) in bytes.chunks_exact(4).enumerate() { fb.set_pixel(i as u32 % 160, i as u32 / 160, Rgba::new(pixel[0],pixel[1],pixel[2],pixel[3])); }
+            fb.save_png(&out.join(format!("ui-mimic-{}.png", if lang == Lang::Zh { "zh" } else { "en" }))).unwrap();
+        }
+        for menu in ["main", "start", "dialog", "battle_move", "bag", "battle_bag", "pokedex", "yes_no", "oak_speech", "save", "options", "naming", "battle_main", "battle_party", "mart"] {
+            for mock in 0..if menu == "mart" { 7 } else { 3 } {
+                let bytes = render_layout(menu, "", mock, 0);
+                let mut fb = FrameBuffer::new(RenderConfig::new(160,144), Rgba::WHITE);
+                for (i, pixel) in bytes.chunks_exact(4).enumerate() {
+                    fb.set_pixel(i as u32 % 160, i as u32 / 160, Rgba::new(pixel[0], pixel[1], pixel[2], pixel[3]));
+                }
+                fb.save_png(&out.join(format!("ui-{menu}-{mock}.png"))).unwrap();
+            }
+        }
+    }
+
     // ── Layer 3: golden snapshot tests ────────────────────────────────
     // These hashes lock the rendered output. If a refactor changes visual
     // output, the test fails — confirm the change is intentional, then
@@ -1947,22 +1972,24 @@ mod tests {
     // Dialogue uses 12px proportional row spacing so the retained font's
     // descenders clear the bottom border. All 14 were reviewed again; only
     // DIALOG changed, while tile-coordinate mocks keep their existing rows.
+    // Reviewed full/empty lists and all audit frames after the open-font
+    // border-padding fixes; regenerate only after reviewing visual changes.
     const GOLDEN_MAIN: u64                 = 0x6c27fb19c19b24f4;
     const GOLDEN_START: u64                = 0x878c3a9d37d5e4bd;
     const GOLDEN_DIALOG: u64               = 0x599168bcd2b2e67c;
-    const GOLDEN_BATTLE_MOVE: u64          = 0x918d8ffb023a916c;
-    const GOLDEN_BAG: u64                  = 0x566b67e173e9659d;
+    const GOLDEN_BATTLE_MOVE: u64          = 0xf716f215e53f260d;
+    const GOLDEN_BAG: u64                  = 0x46e5630cb3266fed;
     const GOLDEN_BATTLE_BAG: u64           = 0xff875ed399b72f4c;
     const GOLDEN_POKEDEX: u64              = 0x9bc214819f25be1d;
     const GOLDEN_YES_NO: u64               = 0x6b0545ef95ec081d;
-    const GOLDEN_OAK_SPEECH: u64           = 0x258b99ca20094fcc;
+    const GOLDEN_OAK_SPEECH: u64           = 0x7159971727fc28ac;
     // Save: full-width v2 information card with integrated confirmation.
     const GOLDEN_SAVE: u64                 = 0xfd9edd817f77cb5c;
     // Original-style hollow markers remain visible on inactive option rows.
-    const GOLDEN_OPTIONS: u64              = 0x0c7d4dc94a2675f4;
-    const GOLDEN_NAMING: u64               = 0x32fcae69d767c7fd;
-    const GOLDEN_BATTLE_MAIN: u64          = 0x1b46f003e4ea076c;
-    const GOLDEN_BATTLE_PARTY: u64         = 0x30daba56c999130c;
+    const GOLDEN_OPTIONS: u64              = 0xb6fa3e9af9219674;
+    const GOLDEN_NAMING: u64               = 0x2e246519c518e28d;
+    const GOLDEN_BATTLE_MAIN: u64          = 0x08d7484caa78ccbd;
+    const GOLDEN_BATTLE_PARTY: u64         = 0xb85e4bfe60b02f4c;
 
     macro_rules! assert_golden {
         ($name:expr, $mock:expr, $golden:ident) => {

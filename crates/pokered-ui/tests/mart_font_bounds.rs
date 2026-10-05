@@ -52,11 +52,11 @@ fn buy_prices_share_item_baselines_and_align_at_the_right_edge() {
         .texts
         .iter()
         .any(|(x, y, t)| (*x, *y) == (119, 32) && t.trim() == "$2100"));
-    let prices: Vec<_> = rec.texts.iter().filter(|(_, y, t)| *y > 8 && t.starts_with('$')).collect();
+    let prices: Vec<_> = rec.texts.iter().filter(|(_, y, t)| *y > 12 && t.starts_with('$')).collect();
     assert_eq!(prices.len(), 2);
     for (x, _, text) in prices { assert_eq!(x + rec.measure_text_px(text), 144); }
     assert!(rec.texts.contains(&(104, 0, "MONEY".into())));
-    assert!(rec.texts.contains(&(96, 8, "$999999".into())));
+    assert!(rec.texts.contains(&(96, 12, "$999999".into())));
     for (x, _, text) in &rec.texts {
         assert!(
             x + rec.measure_text_px(text) <= 152,

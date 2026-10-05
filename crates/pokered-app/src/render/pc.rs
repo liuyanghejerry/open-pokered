@@ -72,10 +72,8 @@ fn draw_message(lines: &[String], fb: &mut FrameBuffer, is_zh: bool) {
             let text = if is_zh { zh_pc_line(line) } else { line.clone() };
             wrap_message(&text)
         }).collect();
-    let pitch = if is_zh { 12 } else { T };
-    let height = if is_zh {
-        (shown.len().max(1) as u32 * pitch).div_ceil(T)
-    } else { shown.len().max(1) as u32 + 1 };
+    let pitch = 12;
+    let height = (shown.len().max(1) as u32 * pitch).div_ceil(T);
     let by = 144u32.saturating_sub((height + 2) * T);
     draw_text_box(fb, 0, by, 18, height, FG);
     for (i, line) in shown.iter().enumerate() {
@@ -118,8 +116,8 @@ fn draw_list(
     is_zh: bool,
     fb: &mut FrameBuffer,
 ) {
-    let pitch = if is_zh { 12 } else { T };
-    let bh = if is_zh { (visible as u32 * pitch).div_ceil(T) } else { visible as u32 + 1 };
+    let pitch = 12;
+    let bh = (visible as u32 * pitch).div_ceil(T);
     draw_text_box(fb, bx, by, bw, bh, FG);
     for (row, (i, label)) in rows
         .iter()
@@ -209,14 +207,14 @@ fn draw_menu(bx: u32, by: u32, bw: u32, labels: &[String], cursor: usize, fb: &m
 fn draw_box_no(save: &SaveData, fb: &mut FrameBuffer, is_zh: bool) {
     let bx = 9 * T;
     let by = 14 * T;
-    draw_text_box(fb, bx, by, 9, 1, FG);
+    draw_text_box(fb, bx, by, 9, 2, FG);
     let n = save.pc_storage.current_box_index() + 1;
     let text = if is_zh {
         format!("盒子{}号", n)
     } else {
         format!("BOX No.{}", n)
     };
-    draw_text(&text, bx + T, by + T, FG, fb);
+    draw_text(&text, bx + T, by + T + 4, FG, fb);
 }
 
 pub fn draw_pc(
@@ -330,7 +328,7 @@ pub fn draw_pc(
             // "Choose a #MON BOX." header + the 12 box names; a filled
             // marker stands in for the original's pokeball tile next to
             // non-empty boxes (save.asm DisplayChangeBoxMenu:487-498).
-            draw_text_box(fb, 0, 0, 9, 3, FG);
+            draw_text_box(fb, 0, 0, 9, if is_zh { 3 } else { 4 }, FG);
             let (h1, h2) = if is_zh {
                 ("选择盒子。", "")
             } else {
@@ -345,12 +343,12 @@ pub fn draw_pc(
                     draw_text_box(fb, col * 10 * T, 4 * T, 8, 12, FG);
                 }
             } else {
-                draw_text_box(fb, 11 * T, 0, 7, 12, FG);
+                draw_text_box(fb, 11 * T, 0, 7, 16, FG);
             }
             for i in 0..12usize {
                 let (bx, y) = if is_zh {
                     ((i / 6) as u32 * 10 * T, (5 + (i % 6) as u32 * 2) * T)
-                } else { (11 * T, (1 + i as u32) * T) };
+                } else { (11 * T, T + i as u32 * 10) };
                 let marker = if i == pc.box_cursor() { ">" } else { " " };
                 let name = if is_zh { format!("盒子{:>2}", i + 1) }
                     else { format!("BOX{:>2}", i + 1) };
@@ -385,8 +383,8 @@ pub fn draw_pc(
                     draw_message(&[prompt.to_string()], fb, is_zh);
                     let bx = 12 * T;
                     let by = 10 * T;
-                    draw_text_box(fb, bx, by, 6, 1, FG);
-                    draw_text(&format!("x{:02}", pc.item_qty()), bx + T, by + T, FG, fb);
+                    draw_text_box(fb, bx, by, 6, 2, FG);
+                    draw_text(&format!("x{:02}", pc.item_qty()), bx + T, by + T + 4, FG, fb);
                     let _ = name;
                 }
                 PcPhase::TossConfirm => {
@@ -584,6 +582,53 @@ mod layout_tests {
     }
 
     #[test]
+    fn box_number_leaves_a_two_pixel_gutter_above_bottom_border() {
+        let mut save = SaveData::new();
+        save.pc_storage.change_box(11).unwrap();
+        for is_zh in [false,true] {
+            let mut fb=FrameBuffer::new(RenderConfig::new(160,144),BG);
+            draw_box_no(&save,&mut fb,is_zh);
+            for y in 136..138 { for x in 80..152 {
+                assert_eq!(fb.get_pixel(x,y),Some(BG),"box number entered bottom gutter ({x},{y})");
+            }}
+        }
+    }
+
+    #[test]
+    #[ignore = "writes PC font-padding audit frames to PR_SCREENSHOTS"]
+    fn capture_pc_padding_audit() {
+        let out = std::path::PathBuf::from(std::env::var("PR_SCREENSHOTS").unwrap());
+        std::fs::create_dir_all(&out).unwrap();
+        for (language, tag) in [(Lang::En,"en"),(Lang::Zh,"zh")] {
+            let mut save = SaveData::new();
+            let mut pc = PcScreen::new(PcEntry::BillsPc, &open_context(false));
+            skip_message(&mut pc, &mut save);
+            render_pc_state(&pc,&save,language).save_png(&out.join(format!("pc-bills-{tag}.png"))).unwrap();
+            for _ in 0..3 { update_pc(&mut pc,&mut save,DOWN); }
+            update_pc(&mut pc,&mut save,A);
+            skip_message(&mut pc,&mut save);
+            update_pc(&mut pc,&mut save,UP);
+            update_pc(&mut pc,&mut save,A);
+            assert_eq!(pc.phase(),PcPhase::BoxList);
+            render_pc_state(&pc,&save,language).save_png(&out.join(format!("pc-box-list-{tag}.png"))).unwrap();
+            save.game_data.pc_items.add_item(ItemId::Potion,99).unwrap();
+            let mut pc = PcScreen::new(PcEntry::PlayersPc,&open_context(false));
+            skip_message(&mut pc,&mut save);
+            update_pc(&mut pc,&mut save,A);
+            update_pc(&mut pc,&mut save,A);
+            assert_eq!(pc.phase(),PcPhase::ItemQuantity);
+            render_pc_state(&pc,&save,language).save_png(&out.join(format!("pc-quantity-{tag}.png"))).unwrap();
+            let mut fb=FrameBuffer::new(RenderConfig::new(160,144),BG);
+            let rows=(0..8).map(|i| format!("POTION x{}",i+1)).collect::<Vec<_>>();
+            draw_list(0,0,18,8,&rows,7,0,language==Lang::Zh,&mut fb);
+            fb.save_png(&out.join(format!("pc-list-{tag}.png"))).unwrap();
+            fb.clear(BG);
+            draw_message(&["Withdrew THUNDERSTONE from storage.".into()],&mut fb,language==Lang::Zh);
+            fb.save_png(&out.join(format!("pc-message-{tag}.png"))).unwrap();
+        }
+    }
+
+    #[test]
     fn pkmn_label_uses_fusion_text_at_exact_pixel_coordinates() {
         let mut actual = FrameBuffer::new(RenderConfig::new(160, 144), BG);
         draw_pc_label("Withdraw #MON!", 8, 11, &mut actual);
@@ -637,7 +682,7 @@ mod layout_tests {
         let mut actual = FrameBuffer::new(RenderConfig::new(160, 144), BG);
         draw_box_no(&save, &mut actual, false);
         let mut border = FrameBuffer::new(RenderConfig::new(160, 144), BG);
-        draw_text_box(&mut border, 9 * T, 14 * T, 9, 1, FG);
+        draw_text_box(&mut border, 9 * T, 14 * T, 9, 2, FG);
         for y in 15 * T..16 * T {
             for x in 19 * T..20 * T {
                 assert_eq!(actual.get_pixel(x, y), border.get_pixel(x, y));
@@ -769,7 +814,7 @@ mod layout_tests {
     #[test]
     fn pc_list_and_overlay_cursor_repaint_matches_full_redraw() {
         for language in [Lang::En, Lang::Zh] {
-            let pitch = if language == Lang::Zh { 12 } else { T };
+            let pitch = 12;
 
             let mut mon_save = SaveData::new();
             let mon = create_pokemon(Species::Bulbasaur, 9, [0x9a, 0x78]).unwrap();
@@ -900,7 +945,7 @@ mod layout_tests {
                         (5 + (cursor % 6) as u32 * 2) * T,
                     )
                 } else {
-                    (12 * T, (1 + cursor as u32) * T)
+                    (12 * T, T + cursor as u32 * 10)
                 }
             };
             for previous_cursor in 0..12 {

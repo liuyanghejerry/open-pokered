@@ -1,14 +1,54 @@
 {
   "base": "deed3e23c1f360c499a1c3fe56f1482e66235e0b",
-  "capture": "actual TUI framebuffer; matched state/frame; 160x144; all text uses Fusion Pixel on PR",
+  "capture": "matched master/PR framebuffer; 160x144; TUI, UI preview and PC seeded scenarios; all PR text Fusion Pixel",
   "comparisons": [
     {
-      "screen": "tui-bag-en",
+      "screen": "pc-bills-en",
+      "changed_pixels": 819
+    },
+    {
+      "screen": "pc-bills-zh",
+      "changed_pixels": 563
+    },
+    {
+      "screen": "pc-box-list-en",
+      "changed_pixels": 1901
+    },
+    {
+      "screen": "pc-box-list-zh",
       "changed_pixels": 0
     },
     {
-      "screen": "tui-bag-zh",
+      "screen": "pc-list-en",
+      "changed_pixels": 1814
+    },
+    {
+      "screen": "pc-list-zh",
       "changed_pixels": 0
+    },
+    {
+      "screen": "pc-message-en",
+      "changed_pixels": 122
+    },
+    {
+      "screen": "pc-message-zh",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "pc-quantity-en",
+      "changed_pixels": 1322
+    },
+    {
+      "screen": "pc-quantity-zh",
+      "changed_pixels": 236
+    },
+    {
+      "screen": "tui-bag-en",
+      "changed_pixels": 1004
+    },
+    {
+      "screen": "tui-bag-zh",
+      "changed_pixels": 1004
     },
     {
       "screen": "tui-battle-en",
@@ -80,7 +120,7 @@
     },
     {
       "screen": "tui-font-pc",
-      "changed_pixels": 255
+      "changed_pixels": 819
     },
     {
       "screen": "tui-font-title-Blue",
@@ -128,7 +168,7 @@
     },
     {
       "screen": "tui-oak-input-frame-43",
-      "changed_pixels": 0
+      "changed_pixels": 618
     },
     {
       "screen": "tui-oak-name-choice",
@@ -136,11 +176,11 @@
     },
     {
       "screen": "tui-options-en",
-      "changed_pixels": 0
+      "changed_pixels": 1904
     },
     {
       "screen": "tui-options-zh",
-      "changed_pixels": 0
+      "changed_pixels": 1904
     },
     {
       "screen": "tui-overworld-en",
@@ -216,11 +256,215 @@
     },
     {
       "screen": "tui-trainer-card-en",
-      "changed_pixels": 528
+      "changed_pixels": 1272
     },
     {
       "screen": "tui-trainer-card-zh",
-      "changed_pixels": 505
+      "changed_pixels": 1217
+    },
+    {
+      "screen": "ui-bag-0",
+      "changed_pixels": 1004
+    },
+    {
+      "screen": "ui-bag-1",
+      "changed_pixels": 1004
+    },
+    {
+      "screen": "ui-bag-2",
+      "changed_pixels": 1956
+    },
+    {
+      "screen": "ui-battle_bag-0",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-battle_bag-1",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-battle_bag-2",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-battle_main-0",
+      "changed_pixels": 481
+    },
+    {
+      "screen": "ui-battle_main-1",
+      "changed_pixels": 481
+    },
+    {
+      "screen": "ui-battle_main-2",
+      "changed_pixels": 481
+    },
+    {
+      "screen": "ui-battle_move-0",
+      "changed_pixels": 721
+    },
+    {
+      "screen": "ui-battle_move-1",
+      "changed_pixels": 513
+    },
+    {
+      "screen": "ui-battle_move-2",
+      "changed_pixels": 477
+    },
+    {
+      "screen": "ui-battle_party-0",
+      "changed_pixels": 1736
+    },
+    {
+      "screen": "ui-battle_party-1",
+      "changed_pixels": 2045
+    },
+    {
+      "screen": "ui-battle_party-2",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-dialog-0",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-dialog-1",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-dialog-2",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-main-0",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-main-1",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-main-2",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-mart-0",
+      "changed_pixels": 989
+    },
+    {
+      "screen": "ui-mart-1",
+      "changed_pixels": 983
+    },
+    {
+      "screen": "ui-mart-2",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-mart-3",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-mart-4",
+      "changed_pixels": 1252
+    },
+    {
+      "screen": "ui-mart-5",
+      "changed_pixels": 475
+    },
+    {
+      "screen": "ui-mart-6",
+      "changed_pixels": 475
+    },
+    {
+      "screen": "ui-mimic-en",
+      "changed_pixels": 1804
+    },
+    {
+      "screen": "ui-mimic-zh",
+      "changed_pixels": 1741
+    },
+    {
+      "screen": "ui-naming-0",
+      "changed_pixels": 126
+    },
+    {
+      "screen": "ui-naming-1",
+      "changed_pixels": 180
+    },
+    {
+      "screen": "ui-naming-2",
+      "changed_pixels": 126
+    },
+    {
+      "screen": "ui-oak_speech-0",
+      "changed_pixels": 210
+    },
+    {
+      "screen": "ui-oak_speech-1",
+      "changed_pixels": 150
+    },
+    {
+      "screen": "ui-oak_speech-2",
+      "changed_pixels": 520
+    },
+    {
+      "screen": "ui-options-0",
+      "changed_pixels": 1904
+    },
+    {
+      "screen": "ui-options-1",
+      "changed_pixels": 1904
+    },
+    {
+      "screen": "ui-options-2",
+      "changed_pixels": 1904
+    },
+    {
+      "screen": "ui-pokedex-0",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-pokedex-1",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-pokedex-2",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-save-0",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-save-1",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-save-2",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-start-0",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-start-1",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-start-2",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-yes_no-0",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-yes_no-1",
+      "changed_pixels": 0
+    },
+    {
+      "screen": "ui-yes_no-2",
+      "changed_pixels": 0
     }
   ]
 }

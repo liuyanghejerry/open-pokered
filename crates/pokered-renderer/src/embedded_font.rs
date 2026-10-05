@@ -1,8 +1,7 @@
 //! The project's Fusion Pixel font, plus dedicated Game Boy UI graphics.
 //!
 //! Ordinary English, Chinese and mixed text keeps the engine's original
-//! glyphs and metrics. The opaque tile helpers below serve only box borders,
-//! the battle menu's PK/MN graphic and naming-slot underscores.
+//! glyphs and metrics. The opaque tile helpers below serve only box borders.
 
 use crate::FbSurface;
 use dotzuki_engine::render::Rgba;
@@ -22,6 +21,9 @@ pub fn draw_glyph(glyph: &[u8; 8], x: u32, y: u32, color: Rgba, bg: Rgba, fb: &m
     }
     fb.fill_rect(x, y, 8.min(fb.width() - x), 8.min(fb.height() - y), bg);
     for (row, bits) in glyph.iter().enumerate() {
+        if *bits == 0 {
+            continue;
+        }
         for col in 0..8 {
             if bits & (0x80 >> col) != 0 {
                 fb.set_pixel(x.saturating_add(col), y.saturating_add(row as u32), color);

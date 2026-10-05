@@ -1277,9 +1277,9 @@ fn pc_follow_scroll(cursor: usize, rows: usize) -> usize {
     }
 }
 
-fn pc_list_cursor_position(cursor: usize, rows: usize, language: Lang) -> (u32, u32) {
+fn pc_list_cursor_position(cursor: usize, rows: usize, _language: Lang) -> (u32, u32) {
     let scroll = pc_follow_scroll(cursor, rows);
-    let pitch = if language == Lang::Zh { 12 } else { 8 };
+    let pitch = 12;
     (8, 8 + (cursor - scroll) as u32 * pitch)
 }
 
@@ -1295,7 +1295,7 @@ fn pc_box_cursor_position(cursor: usize, language: Lang) -> (u32, u32) {
             (5 + (cursor % 6) as u32 * 2) * 8,
         )
     } else {
-        (12 * 8, (1 + cursor as u32) * 8)
+        (12 * 8, 8 + cursor as u32 * 10)
     }
 }
 
