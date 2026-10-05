@@ -243,3 +243,81 @@ fn capture_tui_fly_departure() {
         }
     }
 }
+
+#[test]
+#[ignore = "writes matched font-source frames to PR_SCREENSHOTS"]
+fn capture_tui_font_sources() {
+    use pokered_core::title_screen::TitlePhase;
+    let output = std::path::PathBuf::from(std::env::var("PR_SCREENSHOTS").unwrap());
+    std::fs::create_dir_all(&output).unwrap();
+    for version in [GameVersion::Red, GameVersion::Blue] {
+        let mut game = PokemonGame::new(version);
+        game.audio = None;
+        game.state.screen = GameScreen::TitleScreen;
+        game.title_screen.phase = TitlePhase::WaitingForInput;
+        game.title_screen.version_text_visible = true;
+        game.title_screen.logo_visible = true;
+        game.title_screen.scroll_y = 0;
+        let mut fb = FrameBuffer::new(RenderConfig::new(160,144), Rgba::WHITE);
+        game.draw(&mut fb);
+        fb.save_png(&output.join(format!("tui-font-title-{version:?}.png"))).unwrap();
+    }
+    let mut splash = PokemonGame::new(GameVersion::Red);
+    splash.audio = None;
+    splash.state.screen = GameScreen::GameFreakSplash;
+    splash.gamefreak_splash.phase = pokered_core::gamefreak_splash::SplashPhase::PostDelay;
+    let mut fb = FrameBuffer::new(RenderConfig::new(160,144), Rgba::WHITE);
+    splash.draw(&mut fb);
+    fb.save_png(&output.join("tui-font-gamefreak.png")).unwrap();
+    for (lang, label) in [(Lang::En, "en"), (Lang::Zh, "zh")] {
+        let mut game = PokemonGame::new(GameVersion::Red);
+        game.audio = None;
+        game.state.config.language = lang;
+        game.battle.is_zh = lang == Lang::Zh;
+        game.battle.phase = pokered_core::battle::BattlePhase::PlayerMenu;
+        game.battle.player_level = 100;
+        game.battle.player_hp = 703;
+        game.battle.player_max_hp = 703;
+        game.battle.player_status = pokered_core::battle::state::StatusCondition::Poison;
+        game.state.screen = GameScreen::Battle;
+        let mut fb = FrameBuffer::new(RenderConfig::new(160,144), Rgba::WHITE);
+        game.draw(&mut fb);
+        fb.save_png(&output.join(format!("tui-font-battle-status-{label}.png"))).unwrap();
+        game.state.screen = GameScreen::Overworld;
+        game.save_data.party.add(pokered_core::pokemon::stats::create_pokemon(Species::Chansey, 100, [255,255]).unwrap()).unwrap();
+        game.party_screen = pokered_core::party_screen::PartyScreenState::new(game.save_data.party.to_vec());
+        game.state.screen = GameScreen::PartyScreen;
+        game.draw(&mut fb);
+        fb.save_png(&output.join(format!("tui-font-party-{label}.png"))).unwrap();
+    }
+    let mut game = PokemonGame::new(GameVersion::Red);
+    game.audio = None;
+    game.state.screen = GameScreen::OakSpeech;
+    game.oak_speech.phase = OakSpeechPhase::PlayerNameChoice { cursor: 3 };
+    let mut input = InputState::new(); input.press(GbButton::A);
+    game.update(&input);
+    for _ in 0..10 { game.update(&InputState::new()); }
+    let mut fb = FrameBuffer::new(RenderConfig::new(160,144), Rgba::WHITE);
+    game.draw(&mut fb);
+    fb.save_png(&output.join("tui-font-naming.png")).unwrap();
+    game.state.screen = GameScreen::Overworld;
+    game.overworld.pending_pc = Some("pokemon".into());
+    game.update(&InputState::new());
+    use pokered_core::pc_screen::{PcContext, PcPhase};
+    let pc = game.pc_screen.as_mut().unwrap();
+    let mut ctx = PcContext { party: &mut game.save_data.party, pc_storage: &mut game.save_data.pc_storage,
+        bag: &mut game.save_data.game_data.bag, pc_items: &mut game.save_data.game_data.pc_items,
+        pokedex: &game.save_data.game_data.pokedex };
+    for _ in 0..30 {
+        if pc.phase() != PcPhase::Message { break; }
+        pc.update_frame(pokered_core::main_menu::MenuInput { a:true, ..pokered_core::main_menu::MenuInput::none() }, &mut ctx);
+    }
+    pc.update_frame(pokered_core::main_menu::MenuInput { a:true, ..pokered_core::main_menu::MenuInput::none() }, &mut ctx);
+    for _ in 0..30 {
+        if pc.phase() != PcPhase::Message { break; }
+        pc.update_frame(pokered_core::main_menu::MenuInput { a:true, ..pokered_core::main_menu::MenuInput::none() }, &mut ctx);
+    }
+    assert_eq!(pc.phase(), PcPhase::BillsMenu);
+    game.draw(&mut fb);
+    fb.save_png(&output.join("tui-font-pc.png")).unwrap();
+}

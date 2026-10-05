@@ -21,7 +21,7 @@ use pokered_renderer::battle_anim::{
     AnimEffect, AnimationType, BattleEffects, MonRect, MonSide, ANIM_BASE_TILE_ID,
 };
 use pokered_renderer::battle_scene::{
-    BallIndicators, BallStatus, EnemyHud, PlayerHud, StatusCondition,
+    BallIndicators, BallStatus, EnemyHud, PlayerHud,
 };
 use pokered_renderer::battle_transition::{BattleTransitionKind, BattleTransitionState};
 #[cfg(not(target_os = "none"))]
@@ -36,7 +36,7 @@ use pokered_renderer::gen1_battle_anim::{
 use pokered_renderer::palette::{GRAYSCALE_PALETTE, GRAYSCALE_SPRITE_PALETTE};
 use pokered_renderer::resource::{AssetCategory, ResourceManager};
 use pokered_renderer::sprite::SpriteLayer;
-use pokered_renderer::text_renderer::{write_tiles_at, ScreenTileBuffer};
+use pokered_renderer::text_renderer::ScreenTileBuffer;
 use pokered_renderer::textbox::TextBoxFrame;
 use pokered_renderer::tile::{Tile, TileSet, TILE_PIXELS};
 use pokered_renderer::{FrameBuffer, Rgba, TILE_SIZE};
@@ -3454,45 +3454,40 @@ fn downscale_mon_tiles(src: &TileSet, src_tiles: usize, dst_tiles: usize) -> Til
 }
 
 // ---------------------------------------------------------------------------
-// ASCII → Pokémon charmap conversion
+// Open-font HUD text
 // ---------------------------------------------------------------------------
 
-/// Convert an ASCII string to a vector of Pokémon Red tile IDs.
-///
-/// Matches the charmap in constants/charmap.asm:
-///   'A'-'Z' → $80-$99, 'a'-'z' → $A0-$B9,
-///   '0'-'9' → $F6-$FF, ' ' → $7F, ':' → $9C, '/' → $F3, etc.
-fn ascii_to_tiles(s: &str) -> Vec<u8> {
-    s.chars()
-        .map(|c| match c {
-            'A'..='Z' => 0x80 + (c as u8 - b'A'),
-            'a'..='z' => 0xA0 + (c as u8 - b'a'),
-            '0'..='9' => 0xF6 + (c as u8 - b'0'),
-            ' ' => 0x7F,
-            ':' => 0x9C,
-            '/' => 0xF3,
-            '(' => 0x9A,
-            ')' => 0x9B,
-            '-' => 0xE3,
-            '.' => 0xE8,
-            '\'' => 0xE0,
-            '!' => 0xE7,
-            '?' => 0xE6,
-            '>' => 0xED, // used as cursor arrow
-            _ => 0x7F,   // space for unknown
-        })
-        .collect()
+fn draw_project_hud_text(fb: &mut FrameBuffer, name: &str, level: u8, status: &CoreStatus,
+    hp: u16, max_hp: u16, player: bool) {
+    use pokered_renderer::embedded_font::measure_text;
+    let condition = match status { CoreStatus::None => None, CoreStatus::Sleep(_) => Some("SLP"),
+        CoreStatus::Poison => Some("PSN"), CoreStatus::Burn => Some("BRN"),
+        CoreStatus::Freeze => Some("FRZ"), CoreStatus::Paralysis => Some("PAR") };
+    let level_text = condition.map(Cow::Borrowed).unwrap_or_else(|| Cow::Owned(format!("L{level}")));
+    let (name_x, name_y, right) = if player { (72, 56, 144) } else { (8, 0, 88) };
+    let level_y = if player { 68 } else { 0 };
+    let level_x = right - measure_text(&level_text);
+    let name_width = if player { right - name_x } else { level_x.saturating_sub(name_x + 4) };
+    let name = fit_hud_name(name, name_width);
+    draw_text(&name, name_x, name_y, Rgba::BLACK, fb);
+    draw_text(&level_text, level_x, level_y, Rgba::BLACK, fb);
+    if player {
+        draw_text(&format!("HP{hp}/{max_hp}"), 72, 68, Rgba::BLACK, fb);
+    } else {
+        draw_text("HP", 16, 12, Rgba::BLACK, fb);
+    }
 }
 
-fn core_status_to_tiles(status: &CoreStatus) -> Option<StatusCondition> {
-    match status {
-        CoreStatus::None => None,
-        CoreStatus::Sleep(_) => Some(StatusCondition::Sleep),
-        CoreStatus::Poison => Some(StatusCondition::Poison),
-        CoreStatus::Burn => Some(StatusCondition::Burn),
-        CoreStatus::Freeze => Some(StatusCondition::Freeze),
-        CoreStatus::Paralysis => Some(StatusCondition::Paralysis),
+fn fit_hud_name(name: &str, width: u32) -> Cow<'_, str> {
+    use pokered_renderer::embedded_font::measure_text;
+    if measure_text(name) <= width { return Cow::Borrowed(name); }
+    let mut result = String::new();
+    for ch in name.chars() {
+        if measure_text(&result) + pokered_renderer::embedded_font::char_advance(ch) + measure_text("...") > width { break; }
+        result.push(ch);
     }
+    result.push_str("...");
+    Cow::Owned(result)
 }
 
 fn slot_status_to_pokeball(slot: pokered_core::battle::PokeballSlotStatus) -> BallStatus {
@@ -3513,21 +3508,13 @@ fn slot_status_to_pokeball(slot: pokered_core::battle::PokeballSlotStatus) -> Ba
 /// VRAM layout during battle.
 ///
 /// Tile ID mapping (from home/load_font.asm):
-///   $80-$FF: font.png (1bpp, 128 tiles) — A-Z, a-z, digits, punctuation
+///   $80-$FF: empty; alphabet, numbers and punctuation use Fusion Pixel
 ///   $60-$7F: font_extra.png (2bpp, 32 tiles) — textbox borders, then
 ///   $62-$7F: font_battle_extra.png (2bpp, 30 tiles) — HP bar tiles (OVERWRITES $62+)
 ///   $6D+: battle_hud_1.png (1bpp, 3 tiles) — end cap, Lv, triangle
 ///   $73+: battle_hud_2.png + battle_hud_3.png (1bpp, 3+3=6 tiles) — HUD borders
 fn build_battle_tileset(rm: &mut ResourceManager) -> TileSet {
     let mut ts = TileSet::blank(256);
-
-    // 1. Font tiles at $80-$FF (128 tiles from font.png, loaded as 1bpp)
-    if let Ok(cached) = rm.load_font("font") {
-        let font_ts = &cached.tileset;
-        for i in 0..font_ts.len().min(128) {
-            ts.set(0x80 + i, font_ts.get(i).clone());
-        }
-    }
 
     // 2. TextBox tiles at $60-$7F (from font_extra.png, 2bpp)
     //    Must load as 2bpp — can't use load_font() which forces 1bpp.
@@ -3582,6 +3569,16 @@ fn build_battle_tileset(rm: &mut ResourceManager) -> TileSet {
         for i in 0..balls_ts.len().min(5) {
             ts.set(0x31 + i, balls_ts.get(i).clone());
         }
+    }
+
+    for id in 0..256 {
+        let mut tile = ts.get(id).clone();
+        for row in &mut tile.pixels {
+            for (x, pixel) in row.iter_mut().enumerate() {
+                if pokered_renderer::battle_text_tiles::is_text_pixel(id, x) { *pixel = 0; }
+            }
+        }
+        ts.set(id, tile);
     }
 
     ts
@@ -3974,40 +3971,37 @@ pub fn draw_battle(
         );
 
         if !hide_enemy_hud {
-            // The tile HUD only renders charmap glyphs; CJK names are blanked
-            // here and drawn with the pixel font after the tilemap blit.
-            let enemy_name_tiles = if is_zh {
-                Vec::new()
-            } else {
-                ascii_to_tiles(&enemy_name)
-            };
-            let enemy_status_tiles = core_status_to_tiles(&screen.enemy_status).map(|s| s.tiles());
+            // The tile layer only supplies graphics. Every name, level,
+            // status and HP number is drawn by the project font below.
+            let enemy_name_tiles = Vec::new();
             let _enemy_hp_color = EnemyHud::draw(
                 &mut tile_buf,
                 &enemy_name_tiles,
                 screen.enemy_level,
-                enemy_status_tiles.as_ref().map(|t| t.as_slice()),
+                None,
                 screen.enemy_hp,
                 screen.enemy_max_hp,
             );
         }
 
         if !hide_player_hud {
-            let player_name_tiles = if is_zh {
-                Vec::new()
-            } else {
-                ascii_to_tiles(&player_name)
-            };
-            let player_status_tiles =
-                core_status_to_tiles(&screen.player_status).map(|s| s.tiles());
+            let player_name_tiles = Vec::new();
             let _player_hp_color = PlayerHud::draw(
                 &mut tile_buf,
                 &player_name_tiles,
                 screen.player_level,
-                player_status_tiles.as_ref().map(|t| t.as_slice()),
+                None,
                 screen.player_hp,
                 screen.player_max_hp,
             );
+        }
+
+        if !hide_player_hud {
+            for x in PlayerHud::HP_BAR_X..=PlayerHud::HP_BAR_X + 8 {
+                let graphic = tile_buf.get(x, PlayerHud::HP_BAR_Y);
+                tile_buf.set(x, PlayerHud::HP_BAR_Y + 1, graphic);
+                tile_buf.set(x, PlayerHud::HP_BAR_Y, 0x7f);
+            }
         }
 
         let wild_reveal_balls = matches!(
@@ -4182,8 +4176,7 @@ pub fn draw_battle(
         // Bag/Party variants are unified so the editor preview and in-game
         // render share the same code path. ItemTargetSelect reuses the party
         // list view (same data, target-pick semantics).
-        let use_unified_ui = !effects.move_animation_capture_scene
-            && (matches!(
+        let use_unified_ui = matches!(
                 screen.phase,
                 BattlePhase::PlayerMenu
                     | BattlePhase::MoveSelect
@@ -4194,31 +4187,23 @@ pub fn draw_battle(
                     | BattlePhase::PartySelect
                     | BattlePhase::ShiftSwitchSelect
                     | BattlePhase::PlayerFaintSwitch
-            ) || dialog_text.is_some());
+            ) || dialog_text.is_some();
 
         // ── Bottom area (text box + menu) ───────────────────────────
-        // Palette animations transform the complete framebuffer. Keep the
-        // recorder's static scene pixel-identical to the retail ROM by using
-        // the native 8x8 battle font instead of the proportional frontend UI.
-        if effects.move_animation_capture_scene {
-            let frame = TextBoxFrame::standard_dialog();
-            frame.draw_frame(&mut tile_buf);
-            if let Some(text) = dialog_text.as_deref() {
-                let mut lines = text.split('\n');
-                if let Some(line) = lines.next() {
-                    write_tiles_at(&mut tile_buf, 1, 14, &ascii_to_tiles(line));
-                }
-                if let Some(line) = lines.next() {
-                    write_tiles_at(&mut tile_buf, 1, 16, &ascii_to_tiles(line));
-                }
-            }
-        }
-
         // ── Render tile buffer to framebuffer ────────────────────────
         #[cfg(target_os = "none")]
         render_packed_battle_tile_buffer(fb, &tile_buf);
         #[cfg(not(target_os = "none"))]
         render_battle_tile_buffer(fb, &tile_buf, &battle_ts);
+
+        if !hide_enemy_hud {
+            draw_project_hud_text(fb, &enemy_name, screen.enemy_level, &screen.enemy_status,
+                screen.enemy_hp, screen.enemy_max_hp, false);
+        }
+        if !hide_player_hud {
+            draw_project_hud_text(fb, &player_name, screen.player_level, &screen.player_status,
+                screen.player_hp, screen.player_max_hp, true);
+        }
 
         // AnimationShakeEnemyHUD: SCX-shake the enemy HUD strip. Applied
         // before the mon sprites are drawn — the original protects the
@@ -4691,27 +4676,6 @@ pub fn draw_battle(
             render_packed_battle_tile_region(fb, &tile_buf, 0, 12, 20, 6);
             #[cfg(not(target_os = "none"))]
             tile_buf.render_region(fb, &battle_ts, pal, 0, 12, 20, 6);
-        }
-
-        // Chinese HUD names: the tile-based HUD cannot render CJK glyphs, so
-        // the names are drawn with the pixel font here, after the tilemap and
-        // sprite/panel re-blits. Left-aligned at the HUD name origin — centering
-        // pushes 3+ char names right onto the "Lv" column below (CJK glyphs are
-        // 10px tall and their lower edge grazes the level row).
-        if is_zh {
-            let text_color = Rgba::new(0, 0, 0, 255);
-            if !hide_enemy_hud {
-                draw_text(&enemy_name, EnemyHud::NAME_X * TILE_SIZE, 0, text_color, fb);
-            }
-            if !hide_player_hud {
-                draw_text(
-                    &player_name,
-                    PlayerHud::NAME_X * TILE_SIZE,
-                    PlayerHud::NAME_Y * TILE_SIZE,
-                    text_color,
-                    fb,
-                );
-            }
         }
 
         // Unified UI render: draw battle dialog/menus directly to framebuffer
@@ -5901,20 +5865,16 @@ mod tests {
 
     #[cfg(not(target_os = "none"))]
     #[test]
-    fn loaded_battle_space_tile_is_blank() {
+    fn loaded_battle_text_tiles_are_blank() {
         use pokered_renderer::resource::AssetRoot;
-
         let mut resources = ResourceManager::new(AssetRoot::auto_detect().unwrap());
         let tileset = build_battle_tileset(&mut resources);
-        assert!(
-            tileset
-                .get(0x7F)
-                .pixels
-                .iter()
-                .flatten()
-                .all(|&pixel| pixel == 0),
-            "tile $7F must remain the white battle-space tile",
-        );
+        for id in [0x6E, 0x71, 0x7F].into_iter().chain(0x80..256) {
+            assert!(tileset.get(id).pixels.iter().flatten().all(|&pixel| pixel == 0),
+                "original text tile ${id:02X} must never enter the battle font bank");
+        }
+        assert!(tileset.get(0x63).pixels.iter().flatten().any(|&pixel| pixel != 0),
+            "HP bar graphics must remain available");
     }
 
     #[test]

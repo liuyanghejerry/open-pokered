@@ -1,5 +1,5 @@
 //! Native-index blits for the fixed grayscale opening artwork.
-use pokered_renderer::{tile::Tile, FrameBuffer};
+use pokered_renderer::{tile::Tile, FrameBuffer, Rgba};
 
 /// Clip once per tile; copy opaque rows directly and skip OBJ colour zero.
 #[inline(never)]
@@ -138,60 +138,22 @@ pub(super) fn blit_image(
         }
     }
 }
-/// CopyrightTextString uses custom tiles, with `next` advancing two tile rows.
+/// Copyright lines use the same open font as the rest of the UI.
 pub(super) fn draw_copyright(
-    resources: &mut pokered_renderer::resource::ResourceManager,
+    _resources: &mut pokered_renderer::resource::ResourceManager,
     fb: &mut FrameBuffer,
 ) {
-    let copyright = resources
-        .load_splash("copyright")
-        .ok()
-        .map(|c| c.tileset.clone());
-    let gamefreak = resources
-        .load_title("gamefreak_inc")
-        .ok()
-        .map(|c| c.tileset.clone());
-    let (Some(copyright), Some(gamefreak)) = (copyright, gamefreak) else {
-        return;
-    };
-    for (line, suffix) in [(0, 5..11), (1, 11..19), (2, 19..28)] {
-        let prefix = [0, 1, 2, 1, 3, 1, 4, usize::MAX];
-        for (column, id) in prefix.into_iter().chain(suffix).enumerate() {
-            let tile = if id < 19 {
-                Some(copyright.get(id))
-            } else if id < 28 {
-                Some(gamefreak.get(id - 19))
-            } else {
-                None
-            };
-            if let Some(tile) = tile {
-                blit(fb, 16 + column as i32 * 8, 56 + line * 16, tile, false);
-            }
-        }
+    use pokered_renderer::embedded_font::{draw_text, measure_text};
+    for (row, text) in ["©'95,'96,'98 Nintendo", "©'95,'96,'98 Creatures inc.", "©'95,'96,'98 GAME FREAK inc."].iter().enumerate() {
+        draw_text(text, (fb.width() - measure_text(text)) / 2, 56 + row as u32 * 16, Rgba::BLACK, fb);
     }
 }
 
-/// Title bottom line uses seven copyright prefix tiles and nine GAME FREAK
-/// tiles, not the whole Nintendo/Creatures copyright sheet (title.asm:117).
 pub(super) fn draw_title_copyright(
-    resources: &mut pokered_renderer::resource::ResourceManager,
+    _resources: &mut pokered_renderer::resource::ResourceManager,
     fb: &mut FrameBuffer,
 ) {
-    let copyright = resources
-        .load_splash("copyright")
-        .ok()
-        .map(|c| c.tileset.clone());
-    let gamefreak = resources
-        .load_title("gamefreak_inc")
-        .ok()
-        .map(|c| c.tileset.clone());
-    let (Some(copyright), Some(gamefreak)) = (copyright, gamefreak) else {
-        return;
-    };
-    for (column, index) in [0, 1, 2, 1, 3, 1, 4].into_iter().enumerate() {
-        blit(fb, 16 + column as i32 * 8, 136, copyright.get(index), false);
-    }
-    for index in 0..9 {
-        blit(fb, 72 + index as i32 * 8, 136, gamefreak.get(index), false);
-    }
+    use pokered_renderer::embedded_font::{draw_text, measure_text};
+    let text = "©'95,'96,'98 GAME FREAK inc.";
+    draw_text(text, (fb.width() - measure_text(text)) / 2, 132, Rgba::BLACK, fb);
 }

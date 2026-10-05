@@ -94,9 +94,6 @@ pub fn draw_trainer_card(
     // graphic (GymLeaderFaceAndBadgeTileGraphics layout: face i at
     // tile i*8, its badge at +4).
     if let Some(ref mut rm) = res {
-        let numbers = rm
-            .load_asset(AssetCategory::TrainerCard, "badge_numbers.png")
-            .map(|c| c.tileset.clone());
         let faces = rm
             .load_asset(AssetCategory::TrainerCard, "badges.png")
             .map(|c| c.tileset.clone());
@@ -105,9 +102,7 @@ pub fn draw_trainer_card(
             let col = (i % 4) as usize;
             let x = BADGE_ROW_X[col];
             let y = BADGE_ROW_Y[row];
-            if let Ok(ref ts) = numbers {
-                blit_tile(fb, ts, i as usize, x, y, pal);
-            }
+            draw_text(&(i + 1).to_string(), x, y.saturating_sub(2), fg, fb);
             if let Ok(ref ts) = faces {
                 let owned = obtained_badges & (1 << i) != 0;
                 let base = i * 8 + if owned { 4 } else { 0 };

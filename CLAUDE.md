@@ -54,6 +54,8 @@ The game's graphics live at `gfx/` (PNG/2bpp asset dumps from the original game,
 
 Key invariants — preserve these when editing:
 
+- **All text uses open-source Fusion Pixel fonts.** Do not draw original-game font tiles, letter/number sheets, PK/MN ligatures or naming underscores as text. This applies to every frontend, including GBA, and diagnostic captures. Keep font metrics in layout calculations. Non-text borders, HP bars, icons, sprites and logo artwork are graphics; see `crates/pokered-renderer/fonts/POKERED.md` and `NOTICE.md`.
+
 - **Frontends share `pokered-app::PokemonGame` and its screen rendering.** TUI uses the library with `default-features = false`, enables framebuffer/resources and native audio, and only adapts terminal input/output. Keep game flow and rendering fixes in the shared runtime instead of adding frontend copies.
 
 - **`pokered-core` is pure logic with no I/O, no GPU, no platform calls.** Rendering, audio output, and windowing live in `pokered-renderer` / `pokered-audio` / `pokered-app`. Keep `core` deterministic and testable.

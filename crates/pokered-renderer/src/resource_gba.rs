@@ -112,13 +112,21 @@ mod cache_tests {
             }
             count
         };
-        put("font", "font", 0x80, 128);
         put("font", "font_extra", 0x60, 32);
         put("font", "font_battle_extra", 0x62, 256 - 0x62);
         put("battle", "battle_hud_1", 0x6d, 256 - 0x6d);
         let hud2 = put("battle", "battle_hud_2", 0x73, 256 - 0x73);
         put("battle", "battle_hud_3", 0x73 + hud2, 256 - 0x73 - hud2);
         put("battle", "balls", 0x31, 5);
+        for id in 0..256 {
+            let mut tile = expected.get(id).clone();
+            for row in &mut tile.pixels {
+                for (x, pixel) in row.iter_mut().enumerate() {
+                    if crate::battle_text_tiles::is_text_pixel(id, x) { *pixel = 0; }
+                }
+            }
+            expected.set(id, tile);
+        }
         for index in 0..256 {
             assert_eq!(
                 &BATTLE_TILE_PIXELS.0[index * 64..(index + 1) * 64],

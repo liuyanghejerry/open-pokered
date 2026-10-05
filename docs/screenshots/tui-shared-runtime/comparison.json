@@ -1,6 +1,6 @@
 {
   "base": "deed3e23c1f360c499a1c3fe56f1482e66235e0b",
-  "capture": "actual TUI framebuffer, headless; matched state/frame; 160x144; Fusion Pixel unchanged",
+  "capture": "actual TUI framebuffer; matched state/frame; 160x144; all text uses Fusion Pixel on PR",
   "comparisons": [
     {
       "screen": "tui-bag-en",
@@ -12,19 +12,19 @@
     },
     {
       "screen": "tui-battle-en",
-      "changed_pixels": 310
+      "changed_pixels": 1545
     },
     {
       "screen": "tui-battle-zh",
-      "changed_pixels": 371
+      "changed_pixels": 1254
     },
     {
       "screen": "tui-copyright-en",
-      "changed_pixels": 0
+      "changed_pixels": 1437
     },
     {
       "screen": "tui-copyright-zh",
-      "changed_pixels": 0
+      "changed_pixels": 1437
     },
     {
       "screen": "tui-dex-caterpie-page-0",
@@ -53,6 +53,42 @@
     {
       "screen": "tui-fly-departure-8-zh",
       "changed_pixels": 6502
+    },
+    {
+      "screen": "tui-font-battle-status-en",
+      "changed_pixels": 1606
+    },
+    {
+      "screen": "tui-font-battle-status-zh",
+      "changed_pixels": 1317
+    },
+    {
+      "screen": "tui-font-gamefreak",
+      "changed_pixels": 322
+    },
+    {
+      "screen": "tui-font-naming",
+      "changed_pixels": 126
+    },
+    {
+      "screen": "tui-font-party-en",
+      "changed_pixels": 103
+    },
+    {
+      "screen": "tui-font-party-zh",
+      "changed_pixels": 103
+    },
+    {
+      "screen": "tui-font-pc",
+      "changed_pixels": 255
+    },
+    {
+      "screen": "tui-font-title-Blue",
+      "changed_pixels": 647
+    },
+    {
+      "screen": "tui-font-title-Red",
+      "changed_pixels": 644
     },
     {
       "screen": "tui-hof-rating-50",
@@ -136,11 +172,11 @@
     },
     {
       "screen": "tui-splash-en",
-      "changed_pixels": 0
+      "changed_pixels": 1437
     },
     {
       "screen": "tui-splash-zh",
-      "changed_pixels": 0
+      "changed_pixels": 1437
     },
     {
       "screen": "tui-start-menu-en",
@@ -156,11 +192,11 @@
     },
     {
       "screen": "tui-title-en",
-      "changed_pixels": 0
+      "changed_pixels": 449
     },
     {
       "screen": "tui-title-zh",
-      "changed_pixels": 0
+      "changed_pixels": 449
     },
     {
       "screen": "tui-town-map-en",
@@ -172,11 +208,11 @@
     },
     {
       "screen": "tui-trainer-card-en",
-      "changed_pixels": 187
+      "changed_pixels": 528
     },
     {
       "screen": "tui-trainer-card-zh",
-      "changed_pixels": 164
+      "changed_pixels": 505
     }
   ]
 }

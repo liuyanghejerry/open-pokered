@@ -14,7 +14,7 @@ use pokered_data::lang_data;
 use pokered_data::text_layout::{wrap_hard_lines, DIALOGUE_LINE_WIDTH_PX};
 use pokered_ui::backends::FrameBufferPainter;
 use pokered_ui::{Painter, TilePos};
-use pokered_renderer::embedded_font::{draw_glyph, draw_text, measure_text, pkmn_tile_glyph};
+use pokered_renderer::embedded_font::{draw_text, measure_text};
 use pokered_renderer::palette::GRAYSCALE_SPRITE_PALETTE;
 use pokered_renderer::resource::ResourceManager;
 use pokered_renderer::{FrameBuffer, Rgba, TILE_SIZE};
@@ -89,17 +89,9 @@ fn wrap_message(text: &str) -> Vec<String> {
     } else { wrap_hard_lines(text, DIALOGUE_LINE_WIDTH_PX) }
 }
 
-/// The ROM's <PKMN> is two glyph tiles, not the four-letter #MON placeholder.
+/// Render the legacy placeholder as text with the same open font as its label.
 fn draw_pc_label(text: &str, x: u32, y: u32, fb: &mut FrameBuffer) {
-    if let Some((before, after)) = text.split_once("#MON") {
-        draw_text(before, x, y, FG, fb);
-        let ligature_x = x + measure_text(before);
-        draw_glyph(pkmn_tile_glyph(0xE1).unwrap(), ligature_x, y, FG, BG, fb);
-        draw_glyph(pkmn_tile_glyph(0xE2).unwrap(), ligature_x + T, y, FG, BG, fb);
-        draw_text(after, ligature_x + 2 * T, y, FG, fb);
-    } else {
-        draw_text(text, x, y, FG, fb);
-    }
+    draw_text(&text.replace("#MON", "PKMN"), x, y, FG, fb);
 }
 
 /// YES/NO popup on the right side (original: TWO_OPTION_MENU at hlcoord 14,7).
@@ -592,22 +584,11 @@ mod layout_tests {
     }
 
     #[test]
-    fn pkmn_menu_graphic_follows_fusion_text_at_exact_pixel_coordinates() {
+    fn pkmn_label_uses_fusion_text_at_exact_pixel_coordinates() {
         let mut actual = FrameBuffer::new(RenderConfig::new(160, 144), BG);
         draw_pc_label("Withdraw #MON!", 8, 11, &mut actual);
         let mut expected = FrameBuffer::new(RenderConfig::new(160, 144), BG);
-        dotzuki_renderer::embedded_font::draw_text("Withdraw ", 8, 11, FG, &mut expected);
-        // Nine half-width characters occupy 45px: PK starts at 8 + 45,
-        // even though neither the x=53 nor y=11 origin is tile-aligned.
-        dotzuki_renderer::embedded_font::draw_glyph(
-            &[224, 160, 224, 138, 138, 12, 10, 10], 53, 11, FG, BG, &mut expected,
-        );
-        dotzuki_renderer::embedded_font::draw_glyph(
-            &[216, 168, 136, 136, 146, 26, 22, 18], 61, 11, FG, BG, &mut expected,
-        );
-        dotzuki_renderer::embedded_font::draw_text("!", 69, 11, FG, &mut expected);
-        assert_eq!(actual.get_pixel(53, 11), Some(FG));
-        assert_eq!(actual.get_pixel(61, 11), Some(FG));
+        dotzuki_renderer::embedded_font::draw_text("Withdraw PKMN!", 8, 11, FG, &mut expected);
         assert_framebuffers_equal(&actual, &expected);
     }
 
