@@ -867,27 +867,22 @@ fn battle_main_default_grid_labels_and_cursor() {
         vec![TileRect::new(0, 12, 20, 6), TileRect::new(8, 12, 12, 6)]
     );
 
-    // Canonical positions per the original game's draw_battle_menu_tiles
-    // (crates/pokered-app/src/render/battle.rs:1571-1578): FIGHT at (10, 14),
-    // PKMN composite tiles 0xE1/0xE2 at (16, 14) / (17, 14), ITEM at (10, 16),
-    // RUN at (16, 16). The v2 text element draws labels one glyph per tile;
-    // collect_text_runs re-assembles them. PKMN is 2 gb_tile draws whose
-    // generic "[id]" fallbacks are unused — the framebuffer painter maps
-    // 0xE1/0xE2 to "PK"/"MN".
+    // Both text rows and the cursor leave room for Fusion Pixel's height.
+    // Legacy PK/MN tile IDs are rendered as open-font text by the painter.
     let texts = collect_text_runs(&rec.ops);
     assert_eq!(texts, vec![
-        (10, 14, "FIGHT".into()),
-        (10, 16, "ITEM".into()),
-        (16, 16, "RUN".into()),
+        (10, 13, "FIGHT".into()),
+        (10, 15, "ITEM".into()),
+        (16, 15, "RUN".into()),
     ]);
 
     let gb_tiles = collect_gb_tiles(&rec.ops);
     assert_eq!(gb_tiles, vec![
-        (16, 14, 0xE1, "[225]".into()),
-        (17, 14, 0xE2, "[226]".into()),
+        (16, 13, 0xE1, "[225]".into()),
+        (17, 13, 0xE2, "[226]".into()),
     ]);
 
-    assert_eq!(collect_cursor_glyphs(&rec.ops), vec![(9, 14, '\u{25B6}')]);
+    assert_eq!(collect_cursor_glyphs(&rec.ops), vec![(9, 13, '\u{25B6}')]);
 }
 
 #[test]
@@ -898,7 +893,7 @@ fn battle_main_cursor_tracks_row_and_col() {
 
     let mut rec = Recorder::default();
     battle_main::draw(&state, &BATTLE_MAIN_DEFAULT_LAYOUT, &mut Ui::new(&mut rec), Lang::default());
-    assert_eq!(collect_cursor_glyphs(&rec.ops), vec![(9, 16, '\u{25B6}')]);
+    assert_eq!(collect_cursor_glyphs(&rec.ops), vec![(9, 15, '\u{25B6}')]);
 
     // Up wraps back to row 0
     let mut state2 = BattleMenuState::new();
@@ -908,18 +903,18 @@ fn battle_main_cursor_tracks_row_and_col() {
 
     let mut rec2 = Recorder::default();
     battle_main::draw(&state2, &BATTLE_MAIN_DEFAULT_LAYOUT, &mut Ui::new(&mut rec2), Lang::default());
-    assert_eq!(collect_cursor_glyphs(&rec2.ops), vec![(9, 14, '\u{25B6}')]);
+    assert_eq!(collect_cursor_glyphs(&rec2.ops), vec![(9, 13, '\u{25B6}')]);
 
-    // Right moves to col 1 → cursor at canonical (15, 14)
+    // Right moves to col 1 → cursor at canonical (15, 13)
     let mut state3 = BattleMenuState::new();
     state3.update_frame(BattleMenuInput { right: true, ..BattleMenuInput::none() });
     assert_eq!((state3.row(), state3.col()), (0, 1));
 
     let mut rec3 = Recorder::default();
     battle_main::draw(&state3, &BATTLE_MAIN_DEFAULT_LAYOUT, &mut Ui::new(&mut rec3), Lang::En);
-    assert_eq!(collect_cursor_glyphs(&rec3.ops), vec![(15, 14, '\u{25B6}')]);
+    assert_eq!(collect_cursor_glyphs(&rec3.ops), vec![(15, 13, '\u{25B6}')]);
 
-    // Down + Right to (1, 1) → canonical (15, 16)
+    // Down + Right to (1, 1) → canonical (15, 15)
     let mut state4 = BattleMenuState::new();
     state4.update_frame(BattleMenuInput { down: true, ..BattleMenuInput::none() });
     state4.update_frame(BattleMenuInput { right: true, ..BattleMenuInput::none() });
@@ -927,7 +922,7 @@ fn battle_main_cursor_tracks_row_and_col() {
 
     let mut rec4 = Recorder::default();
     battle_main::draw(&state4, &BATTLE_MAIN_DEFAULT_LAYOUT, &mut Ui::new(&mut rec4), Lang::En);
-    assert_eq!(collect_cursor_glyphs(&rec4.ops), vec![(15, 16, '\u{25B6}')]);
+    assert_eq!(collect_cursor_glyphs(&rec4.ops), vec![(15, 15, '\u{25B6}')]);
 }
 
 // -- battle_move --

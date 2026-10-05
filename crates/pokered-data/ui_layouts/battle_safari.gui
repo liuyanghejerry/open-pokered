@@ -10,21 +10,21 @@ screen BattleSafari {
     style = "default"
   }
   text(@t("BALL", "球")) {
-    rect = {tx: 10, ty: 14, tw: 4, th: 1}
+    rect = {tx: 10, ty: 13, tw: 4, th: 1}
   }
   text(@t("BAIT", "饵")) {
-    rect = {tx: 16, ty: 14, tw: 4, th: 1}
+    rect = {tx: 16, ty: 13, tw: 4, th: 1}
   }
   text(@t("ROCK", "石")) {
-    rect = {tx: 10, ty: 16, tw: 4, th: 1}
+    rect = {tx: 10, ty: 15, tw: 4, th: 1}
   }
   text(@t("RUN", "逃跑")) {
-    rect = {tx: 16, ty: 16, tw: 3, th: 1}
+    rect = {tx: 16, ty: 15, tw: 3, th: 1}
   }
   // 2×2 grid cursor: same geometry as battle_main. {bcol}/{brow} come from
   // SafariBattleMenuState (Ball/Bait top row, Rock/Run bottom row).
   cursor {
-    rect = {tx: 9, ty: 14, tw: 1, th: 1}
+    rect = {tx: 9, ty: 13, tw: 1, th: 1}
     col_step = 6
     row_step = 2
     col = "{bcol}"

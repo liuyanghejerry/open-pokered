@@ -12,11 +12,11 @@
     },
     {
       "screen": "tui-battle-en",
-      "changed_pixels": 1545
+      "changed_pixels": 1631
     },
     {
       "screen": "tui-battle-zh",
-      "changed_pixels": 1254
+      "changed_pixels": 1342
     },
     {
       "screen": "tui-copyright-en",
@@ -56,11 +56,11 @@
     },
     {
       "screen": "tui-font-battle-status-en",
-      "changed_pixels": 1606
+      "changed_pixels": 1692
     },
     {
       "screen": "tui-font-battle-status-zh",
-      "changed_pixels": 1317
+      "changed_pixels": 1405
     },
     {
       "screen": "tui-font-gamefreak",
@@ -161,6 +161,14 @@
     {
       "screen": "tui-pc-oak-rating-50",
       "changed_pixels": 0
+    },
+    {
+      "screen": "tui-safari-menu-en",
+      "changed_pixels": 1687
+    },
+    {
+      "screen": "tui-safari-menu-zh",
+      "changed_pixels": 1342
     },
     {
       "screen": "tui-save-en",

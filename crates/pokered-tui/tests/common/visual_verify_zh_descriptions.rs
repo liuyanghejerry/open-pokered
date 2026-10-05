@@ -321,3 +321,23 @@ fn capture_tui_font_sources() {
     game.draw(&mut fb);
     fb.save_png(&output.join("tui-font-pc.png")).unwrap();
 }
+
+#[test]
+#[ignore = "writes matched Safari action-menu frames to PR_SCREENSHOTS"]
+fn capture_tui_safari_menu_padding() {
+    let output = std::path::PathBuf::from(std::env::var("PR_SCREENSHOTS").unwrap());
+    std::fs::create_dir_all(&output).unwrap();
+    for (lang, label) in [(Lang::En, "en"), (Lang::Zh, "zh")] {
+        let mut game = PokemonGame::new(GameVersion::Red);
+        game.audio = None;
+        game.state.config.language = lang;
+        game.battle.is_zh = lang == Lang::Zh;
+        game.battle.is_safari = true;
+        game.battle.safari_menu = pokered_core::battle::menu::SafariBattleMenuState::new(30);
+        game.battle.phase = pokered_core::battle::BattlePhase::PlayerMenu;
+        game.state.screen = GameScreen::Battle;
+        let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+        game.draw(&mut fb);
+        fb.save_png(&output.join(format!("tui-safari-menu-{label}.png"))).unwrap();
+    }
+}
