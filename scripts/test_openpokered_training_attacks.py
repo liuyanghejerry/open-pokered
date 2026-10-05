@@ -429,6 +429,166 @@ class TrainingAttackTests(unittest.TestCase):
         self.assertIn('prior_menu_abstention', game.judgments.choose.call_args.args[1])
         self.assertEqual([call.args[0] for call in game.tap.call_args_list], ['b', 'a'])
 
+    def atomic_state(self):
+        state = self.state()
+        state['battle_phase'] = 'PlayerMenu'
+        state['battle_live']['player_move_previews'] = [
+            {'slot': index, **copy.deepcopy(slot), 'direct_hit_preview': None}
+            for index, slot in enumerate(state['battle_moves']['moves'])]
+        return state
+
+    def test_atomic_training_expands_fight_into_all_observed_usable_native_slots(self):
+        state = self.atomic_state()
+        original = copy.deepcopy(state)
+        game = self.game(state, self.active())
+        game.judgments.choose.return_value = 'move:0'
+        self.assertIsNone(game.battle_recovery_plan(state))
+        _, compact, choices, instructions = game.judgments.choose.call_args.args
+        self.assertNotIn('fight', choices)
+        self.assertEqual({key for key in choices if key.startswith('move:')},
+                         {'move:0', 'move:1', 'move:2', 'move:3'})
+        self.assertIn('switch:1', choices)
+        self.assertTrue(json.loads(choices['move:1'])['self_knockout_effect'])
+        self.assertEqual(json.loads(choices['move:3'])['power'], 0)
+        self.assertEqual(compact['training_turn_selection']['native_usable_move_slots'], [0, 1, 2, 3])
+        self.assertNotIn('allow_abstain', game.judgments.choose.call_args.kwargs)
+        self.assertIn('abstention remain available', instructions)
+        self.assertEqual(state, original)
+
+    def test_atomic_training_excludes_only_native_unusable_slots(self):
+        state = self.atomic_state()
+        previews = state['battle_live']['player_move_previews']
+        previews[1]['disabled'] = True
+        previews[2]['pp'] = 0
+        previews[3].update(move='None', pp=0)
+        options = judgments.training_turn_move_options(state)
+        self.assertEqual(list(options), ['move:0'])
+
+    def test_atomic_unknown_availability_keeps_legacy_menu_instead_of_inventing_slots(self):
+        for change in ('partial', 'slot', 'boolean_pp', 'unknown_disabled'):
+            with self.subTest(change=change):
+                state = self.atomic_state()
+                previews = state['battle_live']['player_move_previews']
+                if change == 'partial':
+                    previews.pop()
+                elif change == 'slot':
+                    previews[2]['slot'] = 0
+                elif change == 'boolean_pp':
+                    previews[2]['pp'] = True
+                else:
+                    previews[2]['disabled'] = None
+                self.assertIsNone(judgments.training_turn_move_options(state))
+                game = self.game(state, self.active())
+                game.judgments.choose.return_value = 'fight'
+                game.battle_recovery_plan(state)
+                self.assertIn('fight', game.judgments.choose.call_args.args[2])
+                self.assertNotIn('training_turn_selection', game.judgments.choose.call_args.args[1])
+
+    def test_atomic_move_execution_has_one_judgment_and_revalidates_native_slot(self):
+        state = self.atomic_state()
+        game = self.game(state, self.active())
+        game.judgments.choose.return_value = 'move:0'
+        game.battle_recovery_plan(state)
+        state['battle_phase'] = 'MoveSelect'
+        game._select_move()
+        self.assertEqual(game.judgments.choose.call_count, 1)
+        game.tap.assert_called_once_with('a', 4)
+        self.assertIsNone(game._training_selected_turn)
+        binding = next(call for call in game.judgments.record.call_args_list
+                       if call.args[0] == 'training_turn_binding')
+        self.assertFalse(binding.kwargs['second_model_query'])
+
+    def test_atomic_sleeping_turn_is_committed_without_requiring_an_immediate_attack(self):
+        state = self.atomic_state()
+        state['battle_live']['player']['status'] = 'Sleep(6)'
+        game = self.game(state, self.active())
+        game.judgments.choose.return_value = 'move:0'
+        game.battle_recovery_plan(state)
+        choice = json.loads(game.judgments.choose.call_args.args[2]['move:0'])
+        self.assertEqual(choice['training_turn_commitment_reference']['commit_usable_move'][
+            'sleep_gate']['counter_after_gate_if_reached'], 5)
+        state['battle_phase'] = 'MoveSelect'
+        game._select_move()
+        self.assertEqual(game.judgments.choose.call_count, 1)
+        game.tap.assert_called_once_with('a', 4)
+
+    def test_atomic_status_move_is_not_replaced_by_the_damage_only_fallback(self):
+        state = self.atomic_state()
+        game = self.game(state, self.active())
+        game.judgments.choose.return_value = 'move:3'
+        game.battle_recovery_plan(state)
+        state['battle_phase'], state['battle_moves']['cursor'] = 'MoveSelect', 3
+        game._select_move()
+        self.assertEqual(game.judgments.choose.call_count, 1)
+        game.tap.assert_called_once_with('a', 4)
+        attack = next(call for call in game.judgments.record.call_args_list if call.args[0] == 'attack')
+        self.assertEqual(attack.kwargs['move'], 'DefenseCurl')
+
+    def test_atomic_self_knockout_is_still_executed_only_when_jev_selects_it(self):
+        state = self.atomic_state()
+        game = self.game(state, self.active())
+        game.judgments.choose.return_value = 'move:1'
+        game.battle_recovery_plan(state)
+        state['battle_phase'], state['battle_moves']['cursor'] = 'MoveSelect', 1
+        game._select_move()
+        game.tap.assert_called_once_with('a', 4)
+        self.assertEqual(game.judgments.choose.call_count, 1)
+
+    def test_atomic_changed_resources_cancel_and_require_fresh_whole_turn_comparison(self):
+        state = self.atomic_state()
+        game = self.game(state, self.active())
+        game.judgments.choose.return_value = 'move:0'
+        game.battle_recovery_plan(state)
+        state['battle_phase'] = 'MoveSelect'
+        state['battle_live']['enemy']['hp'] -= 1
+        game._select_move()
+        game.tap.assert_called_once_with('b', 4)
+        self.assertEqual(game.judgments.choose.call_count, 1)
+        self.assertIsNone(game._training_selected_turn)
+        self.assertFalse(any(call.args[0] == 'attack' for call in game.judgments.record.call_args_list))
+
+    def test_atomic_current_move_menu_can_reject_a_newly_disabled_slot(self):
+        state = self.atomic_state()
+        game = self.game(state, self.active())
+        game.judgments.choose.return_value = 'move:0'
+        game.battle_recovery_plan(state)
+        state['battle_phase'] = 'MoveSelect'
+        state['battle_moves']['moves'][0]['disabled'] = True
+        game._select_move()
+        game.tap.assert_called_once_with('b', 4)
+        self.assertEqual(game.judgments.choose.call_count, 1)
+
+    def test_atomic_single_trainee_has_a_whole_turn_choice_without_other_bindings(self):
+        state = self.atomic_state()
+        state['party'] = state['party'][:1]
+        state['battle_live']['player_party'] = state['party']
+        game = self.game(state, self.active())
+        game.judgments.choose.return_value = 'move:0'
+        game.battle_recovery_plan(state)
+        game.judgments.choose.assert_called_once()
+        self.assertEqual(set(game.judgments.choose.call_args.args[2]),
+                         {'move:0', 'move:1', 'move:2', 'move:3'})
+
+    def test_atomic_capture_precedence_keeps_capture_setup_and_balls(self):
+        state = self.atomic_state()
+        state['pokedex'] = {'owned_species': ['Geodude']}
+        state['battle_inventory'] = [{'item': 'PokeBall', 'qty': 2}]
+        game = self.game(state, self.active())
+        game.judgments.collects_dex = True
+        game.judgments.choose.return_value = 'fight'
+        game.battle_recovery_plan(state)
+        _, compact, choices, _ = game.judgments.choose.call_args.args
+        self.assertIn('fight', choices)
+        self.assertIn('ball:PokeBall', choices)
+        self.assertNotIn('training_turn_selection', compact)
+        self.assertFalse(any(key.startswith('move:') for key in choices))
+
+    def test_atomic_empty_pp_keeps_native_struggle_path_without_a_fake_move(self):
+        state = self.atomic_state()
+        for slot in state['battle_live']['player_move_previews']:
+            slot['pp'] = 0
+        self.assertEqual(judgments.training_turn_move_options(state), {})
+
     def test_cancel_feedback_reaches_main_menu_without_removing_fight_or_switches(self):
         state = self.state()
         game = self.game(state, self.active())

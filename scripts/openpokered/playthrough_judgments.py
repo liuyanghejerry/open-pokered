@@ -838,6 +838,41 @@ def training_menu_state_key(state):
                       sort_keys=True)
 
 
+def training_turn_move_options(state):
+    """Expand a fully observed native FIGHT menu into ordinary turn operations.
+
+    Missing/incomplete slot availability is unknown, not permission to invent
+    a turn. Conditional damage may be null without making the slot unusable.
+    """
+    previews = state['battle_live'].get('player_move_previews')
+    if (not isinstance(previews, list) or len(previews) != 4
+            or any(not isinstance(slot, dict) or type(slot.get('slot')) is not int
+                or slot['slot'] != index or not isinstance(slot.get('move'), str)
+                or type(slot.get('pp')) is not int or slot['pp'] < 0
+                or type(slot.get('disabled')) is not bool
+                for index, slot in enumerate(previews))):
+        return None
+    options = {}
+    for slot in previews:
+        if slot['move'] == 'None' or slot['pp'] == 0 or slot['disabled']:
+            continue
+        move = late.move_data(slot['move'])
+        options[f'move:{slot["slot"]}'] = {
+            'operation': 'commit_usable_move', 'native_slot': slot['slot'],
+            'move': slot['move'], 'pp': slot['pp'], 'power': move['power'],
+            'effect': move['effect'], 'accuracy': move['accuracy'], 'type': move['type'],
+            'self_knockout_effect': move['effect'] == 'ExplodeEffect',
+            'direct_hit_preview': deepcopy(slot.get('direct_hit_preview')),
+            'direct_hit_preview_scope': DIRECT_HIT_PREVIEW_SCOPE,
+            'training_turn_commitment_reference': training_turn_commitment_reference(state),
+            'scope': 'One usable native slot, selected for an ordinary battle turn, not '
+                'merely opening FIGHT. A positive sleep gate advances its counter instead '
+                'of executing this move. A status move is still a legal turn, not a '
+                'damage claim. Native availability is checked again before confirmation; '
+                'no surviving, executing damage, experience or registration is guaranteed.'}
+    return options
+
+
 def training_move_question(state, menu, active):
     """Training needs current native damage and HP, not only abstract power.
 
@@ -950,6 +985,7 @@ class JevGame(pt.Game):
         party = [{**base, **mon} for base, mon in zip(state['party'], live['player_party'])]
         active = next(i for i, mon in enumerate(party) if mon['species'] == live['player']['species'])
         self._switch_target = None
+        self._training_selected_turn = None
         bag = {v['item']: v['qty'] for v in state['battle_inventory']}
         options = list(medicine_options(party, bag))
         candidates = {'fight': 'Attack this turn; preserve recovery supplies'}
@@ -1048,7 +1084,11 @@ class JevGame(pt.Game):
             # only fallback cannot finish this opponent, so do not advertise
             # it as an attack while a conscious, effective finisher exists.
             candidates.pop('fight', None)
-        if not bindings:
+        atomic_moves = (training_turn_move_options(state)
+            if training_goal is not None and not capturing
+                and state.get('screen') == 'battle' and state.get('battle_phase') == 'PlayerMenu'
+                and 'fight' in candidates else None)
+        if not bindings and not atomic_moves:
             return None
         if training_goal is not None and not capturing and 'fight' in candidates:
             try:
@@ -1067,6 +1107,13 @@ class JevGame(pt.Game):
                 fight['native_active_move_previews'] = deepcopy(live['player_move_previews'])
                 fight['direct_hit_preview_scope'] = DIRECT_HIT_PREVIEW_SCOPE
             candidates['fight'] = json.dumps(fight)
+        if atomic_moves:
+            # FIGHT was a menu-opening intention, not an executed turn. Keep
+            # every observed usable slot (including status/self-KO/unsupported
+            # damage) and compare it with the same recovery/switch/ball set.
+            # Jev selects the turn once; code only binds it through the menu.
+            candidates.pop('fight')
+            candidates.update({key: json.dumps(value) for key, value in atomic_moves.items()})
         instruction = ('Choose attack, an offered switch, one recovery item, or one ball for this turn. Switching, items and balls consume the turn and the enemy can attack. '
             'Keep the capable battler alive, cure disabling status, or revive a useful fainted teammate. '
             'Avoid healing loops when enemy damage exceeds recovery; use the strongest suitable medicine when needed. '
@@ -1189,6 +1236,22 @@ class JevGame(pt.Game):
                     'same battle state. Reassess the offered recovery/ball/switch/FIGHT operations; '
                     'cancelling spent no turn and did not test an attack. Same-state repetition '
                     'does not decrement sleep, test damage or advance training. FIGHT remains available.')
+        if atomic_moves:
+            judgment_state['training_turn_selection'] = {
+                'native_usable_move_slots': [row['native_slot'] for row in atomic_moves.values()],
+                'menu_navigation_is_not_a_turn': True,
+                'scope': 'FIGHT is expanded into every currently observed usable native '
+                    'slot. Select one ordinary turn operation together with the offered '
+                    'switches, medicine and balls; no second attack judgment will veto a '
+                    'still-valid selected slot. No slot or survival is chosen by code.'}
+            instruction += (' For training_turn_selection, choose a single ordinary turn '
+                'operation. Each move:<slot> commits that usable move, including advancing '
+                'a positive sleep counter when its gate is reached. All usable status and '
+                'self-knockout moves remain offered; compare their actual training utility '
+                'and costs. Menu-only FIGHT/BACK are not additional turn operations in this '
+                'comparison. The earlier FIGHT feedback refers to menu navigation, not '
+                'a requirement to reopen or cancel it. All other offered operations and '
+                'abstention remain available; no guaranteed attack or reward is required.')
         if balls and getattr(self.judgments, 'collects_dex', False):
             value = collection_capture_value(state, objective)
             judgment_state['collection_capture_value'] = value
@@ -1209,6 +1272,7 @@ class JevGame(pt.Game):
             and state.get('battle_phase') == 'PlayerMenu'
             and not live.get('is_safari') and not capturing
             and 'fight' not in candidates
+            and not atomic_moves
             and any(key.startswith('switch:') for key in bindings))
         if required_switch:
             # This is a required turn inside an ongoing battle, not a fresh
@@ -1243,6 +1307,14 @@ class JevGame(pt.Game):
                     'and native previews only, not an instruction to override the current '
                     'judgment or proof of a committed turn, participation, damage or reward. '
                     'BACK returns to these operations but performs none of them.'}
+            if atomic_moves and chosen in atomic_moves:
+                self._training_selected_turn = {
+                    'state_key': training_menu_state_key(state),
+                    'slot': atomic_moves[chosen]['native_slot'],
+                    'move': atomic_moves[chosen]['move']}
+                self.judgments.record('training_turn_selected', choice=chosen,
+                    slot=self._training_selected_turn['slot'], move=self._training_selected_turn['move'],
+                    frame=state.get('frame_count'), selected_by='fresh_main_menu_judgment')
         return bindings.get(chosen)
 
     def remember_npcs(self, map_name, npcs):
@@ -1525,6 +1597,7 @@ class JevGame(pt.Game):
 
     def _select_move(self):
         chosen = None
+        bound_recorded = False
         for _ in range(24):
             state = self.st()
             if state['screen'] != 'battle' or state['battle_phase'] != 'MoveSelect':
@@ -1546,6 +1619,34 @@ class JevGame(pt.Game):
             compact, candidates = (capture_move_question(state, menu) if capturing
                                    else training_move_question(state, menu, getattr(self.judgments, 'active', None)))
             training_goal = None if capturing else level_training_goal(state, getattr(self.judgments, 'active', None))
+            intent = getattr(self, '_training_selected_turn', None)
+            if training_goal is None:
+                self._training_selected_turn = intent = None
+            if training_goal is not None and intent:
+                slot = intent['slot']
+                valid = (intent['state_key'] == training_menu_state_key(state)
+                    and type(slot) is int and 0 <= slot < len(menu['moves'])
+                    and menu['moves'][slot]['move'] == intent['move']
+                    and menu['moves'][slot]['pp'] > 0 and not menu['moves'][slot]['disabled'])
+                if not valid:
+                    self._training_selected_turn = None
+                    self.judgments.record('training_turn_invalidated',
+                        reason='Native battle facts or slot availability changed before confirmation')
+                    self.tap('b', 4)
+                    self.step(10)
+                    return  # Recompare all turn operations, never substitute a move.
+                # Status moves need not exist in the old damage-only move
+                # question. They were explicitly selected as a legal turn.
+                chosen = str(slot)
+                candidates[chosen] = intent['move']
+                if not bound_recorded:
+                    self.judgments.record('training_turn_binding', choice=chosen,
+                        move=intent['move'], frame=state.get('frame_count'),
+                        actual_native_slot_revalidated=True, second_model_query=False)
+                    self.judgments.record('attack', milestone=self.active_milestone,
+                        choice=chosen, move=intent['move'], state=compact,
+                        selected_by='fresh_main_menu_training_turn')
+                    bound_recorded = True
             if training_goal is not None:
                 comparison = getattr(self, '_training_main_menu_comparison', {})
                 if comparison.get('state_key') == training_menu_state_key(state):
@@ -1565,7 +1666,7 @@ class JevGame(pt.Game):
                 self.tap('b', 4)
                 self.step(10)
                 return
-            if candidates and not any(m['effectiveness'] > 0 for m in compact['moves'].values()):
+            if not intent and candidates and not any(m['effectiveness'] > 0 for m in compact['moves'].values()):
                 # The PlayerMenu hook already considered conscious teammates.
                 # Resolve an unavoidable loss through ordinary legal turns,
                 # instead of abandoning the process in the middle of combat.
@@ -1691,6 +1792,7 @@ class JevGame(pt.Game):
                     self.tap('up' if up else 'down', 8)
                 continue
             self.tap('a', 4)
+            self._training_selected_turn = None
             self.step(10)
             return
         raise StoryStopped('move_menu_did_not_settle')
