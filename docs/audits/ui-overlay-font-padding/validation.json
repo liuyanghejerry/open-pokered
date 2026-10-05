@@ -1,0 +1,26 @@
+{
+  "tests": {
+    "command": "cargo test --locked -p pokered-app -p pokered-ui",
+    "passed": 512,
+    "failed": 0,
+    "ignored": 14,
+    "test_suites": 48
+  },
+  "checks": {
+    "command": "cargo check --locked -p pokered-tui -p pokered-ui-preview",
+    "result": "passed"
+  },
+  "screenshots": {
+    "matched_pairs": 28,
+    "languages": [
+      "English",
+      "Chinese"
+    ],
+    "dimensions": [
+      160,
+      144
+    ],
+    "visual_review": "passed"
+  },
+  "diff_check": "passed"
+}

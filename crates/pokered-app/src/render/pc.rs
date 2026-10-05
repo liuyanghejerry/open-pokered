@@ -12,8 +12,6 @@ use pokered_core::pc_screen::{ItemListMode, MonListMode, PcPhase, PcScreen, PC_L
 use pokered_core::save::SaveData;
 use pokered_data::lang_data;
 use pokered_data::text_layout::{wrap_hard_lines, DIALOGUE_LINE_WIDTH_PX};
-use pokered_ui::backends::FrameBufferPainter;
-use pokered_ui::{Painter, TilePos};
 use pokered_renderer::embedded_font::{draw_text, measure_text};
 use pokered_renderer::palette::GRAYSCALE_SPRITE_PALETTE;
 use pokered_renderer::resource::ResourceManager;
@@ -450,29 +448,9 @@ fn draw_league_hof(pc: &PcScreen, resources: &mut Option<ResourceManager>, fb: &
         format!("HALL OF FAME No.{:>3}", team_no)
     };
     draw_text(&hof_no, T, 15 * T, FG, fb);
-    // HoFDisplayMonInfo (engine/movie/hall_of_fame.asm:159-183) keeps
-    // labels and values on separate rows, to the left of the front picture.
-    draw_text_box(fb, 0, 2 * T, 10, if is_zh { 11 } else { 9 }, FG);
-    draw_text(&view.nickname, T, if is_zh { 3 * T } else { 4 * T }, FG, fb);
-    let (level_label_y, level_y, type1_label_y, type1_y, type2_label_y, type2_y) =
-        if is_zh { (40, 52, 64, 76, 88, 100) }
-        else { (6 * T, 7 * T, 8 * T, 9 * T, 10 * T, 11 * T) };
-    draw_text(lang_data::ui_label("LEVEL/", is_zh), 2 * T, level_label_y, FG, fb);
-    if view.level < 100 && !is_zh {
-        let mut painter = FrameBufferPainter::new(fb);
-        painter.draw_gb_tile(TilePos::new(8, 7), 0x6E, "L", FG);
-        draw_text(&format!("{:02}", view.level), 9 * T, level_y, FG, fb);
-    } else {
-        draw_text(&format!("{}", view.level), 8 * T, level_y, FG, fb);
-    }
-    if let Some(stats) = pokered_data::pokemon_data::get_base_stats(view.species) {
-        draw_text(lang_data::ui_label("TYPE1/", is_zh), 2 * T, type1_label_y, FG, fb);
-        draw_text(lang_data::type_name(stats.type1, is_zh), 3 * T, type1_y, FG, fb);
-        draw_text(lang_data::ui_label("TYPE2/", is_zh), 2 * T, type2_label_y, FG, fb);
-        if stats.type1 != stats.type2 {
-            draw_text(lang_data::type_name(stats.type2, is_zh), 3 * T, type2_y, FG, fb);
-        }
-    }
+    super::hof_ceremony::draw_hof_mon_info(
+        view.species, view.level, &view.nickname, fb, is_zh,
+    );
 }
 
 // The exact `PC_LINE_ZH` table and `zh_pc_line` moved to `pokered_data::ui_text`
