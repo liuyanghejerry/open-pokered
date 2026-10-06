@@ -199,4 +199,35 @@ class TownChallengeTests(unittest.TestCase):
         retry.assert_called_once()
 
 
+class ScarceMovePpTests(unittest.TestCase):
+    def pick(self, enemy, tackle_pp=35, tackle_disabled=False):
+        moves = [
+            {"move": "VineWhip", "pp": 10, "disabled": False},
+            {"move": "Tackle", "pp": tackle_pp, "disabled": tackle_disabled},
+        ]
+        state = {"battle_live": {
+            "player": {"species": "Ivysaur", "hp": 70, "max_hp": 70},
+            "enemy": {"species": enemy},
+        }}
+        return late.damage_slot(moves, state)
+
+    def test_nidoran_and_rattata_do_not_spend_the_hikers_grass_pp(self):
+        for enemy in ["NidoranF", "Rattata", "Machop"]:
+            with self.subTest(enemy=enemy):
+                self.assertEqual(self.pick(enemy), 1)
+
+    def test_geodude_and_water_opponents_still_use_vine_whip(self):
+        for enemy in ["Geodude", "Onix", "Staryu"]:
+            with self.subTest(enemy=enemy):
+                self.assertEqual(self.pick(enemy), 0)
+
+    def test_koffing_physical_defense_still_allows_grass(self):
+        self.assertEqual(self.pick("Koffing"), 0)
+
+    def test_immunity_unavailable_pp_and_disable_never_force_tackle(self):
+        self.assertEqual(self.pick("Gastly"), 0)
+        self.assertEqual(self.pick("NidoranF", tackle_pp=0), 0)
+        self.assertEqual(self.pick("NidoranF", tackle_disabled=True), 0)
+
+
 if __name__=='__main__':unittest.main()
