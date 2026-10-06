@@ -1467,9 +1467,9 @@ struct SlotsVisualKey {
 
 fn slots_bet_cursor_position(bet: u8) -> Option<(u32, u32)> {
     match bet {
-        3 => Some((120, 96)),
-        2 => Some((120, 112)),
-        1 => Some((120, 128)),
+        3 => Some((120, 88)),
+        2 => Some((120, 104)),
+        1 => Some((120, 120)),
         _ => None,
     }
 }
@@ -2614,6 +2614,45 @@ mod session_tests {
     use dotzuki_engine::render_config::RenderConfig;
     use pokered_core::options_menu::OptionsRow;
     use pokered_renderer::Rgba;
+
+    #[test]
+    fn slots_retained_cursor_frames_match_full_draw_for_every_bet() {
+        use pokered_core::slots_screen::SlotsScreen;
+
+        for language in [Lang::En, Lang::Zh] {
+            for previous in 1..=3 {
+                for current in 1..=3 {
+                    if previous == current {
+                        continue;
+                    }
+                    let mut game = PokemonGame::new(GameVersion::Red);
+                    game.audio = None;
+                    game.state.screen = GameScreen::Slots;
+                    game.state.config.language = language;
+                    let mut slots = SlotsScreen::new(false, 100, 42);
+                    slots.bet = previous;
+                    game.slots_screen = Some(slots);
+                    let mut session = RenderSession::new();
+                    let mut retained = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+                    let mut full = retained.clone();
+                    let mut scroll = |_: &mut [u8], _: usize, _: usize, _: i32, _: i32, _: u8| {};
+                    session.render(&mut game, &mut retained, &mut scroll);
+                    game.slots_screen.as_mut().unwrap().bet = current;
+                    assert!(matches!(
+                        session.render(&mut game, &mut retained, &mut scroll),
+                        FrameUpdate::Damage(_)
+                    ));
+                    game.draw(&mut full);
+                    for y in 0..144 {
+                        for x in 0..160 {
+                            assert_eq!(retained.get_pixel(x, y), full.get_pixel(x, y),
+                                "{language:?} bet {previous}->{current} at ({x},{y})");
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     #[test]
     fn mart_retained_frames_match_full_draw_across_cursor_and_viewport_changes() {

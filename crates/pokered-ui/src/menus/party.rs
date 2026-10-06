@@ -121,25 +121,39 @@ pub fn draw_overlay<P: Painter>(state: &PartyScreenState, ui: &mut Ui<P>, lang: 
             draw_move_choice(ui, state, move_cursor, is_zh);
         }
         PartyScreenPhase::MoveChoiceNotice => {
-            ui.text_box(TileRect::new(0, 12, 20, 6), InkColor::Black, true, |frame| {
-                for (row, line) in state
-                    .move_choice_notice()
-                    .unwrap_or("")
-                    .lines()
-                    .take(4)
-                    .enumerate()
-                {
-                    frame.label(1, 1 + row as u32, line, InkColor::Black);
-                }
-            });
+            draw_notice(ui, state.move_choice_notice().unwrap_or(""))
         }
         PartyScreenPhase::ItemHpRestore => {}
         PartyScreenPhase::ItemUseNotice { .. } => {
-            ui.text_box(TileRect::new(0, 12, 20, 6), InkColor::Black, true, |frame| {
-                for (row, line) in state.item_use_notice().unwrap_or("").lines().take(4).enumerate() {
-                    frame.label(1, 1 + row as u32, line, InkColor::Black);
-                }
-            });
+            draw_notice(ui, state.item_use_notice().unwrap_or(""))
+        }
+    }
+}
+
+fn draw_notice<P: Painter>(ui: &mut Ui<P>, text: &str) {
+    let lines: Vec<_> = text.lines().take(4).collect();
+    let proportional = ui.painter().supports_proportional();
+    let height = if proportional {
+        6.max(2 + (lines.len() as u32 * 12 + 7) / 8)
+    } else {
+        6
+    };
+    let rect = TileRect::new(0, 18 - height, 20, height);
+    ui.text_box(rect, InkColor::Black, true, |frame| {
+        if !proportional {
+            for (row, line) in lines.iter().enumerate() {
+                frame.label(1, 1 + row as u32, line, InkColor::Black);
+            }
+        }
+    });
+    if proportional {
+        for (row, line) in lines.iter().enumerate() {
+            ui.painter().draw_text_px(
+                16,
+                (rect.ty + 1) * 8 + row as u32 * 12,
+                line,
+                InkColor::Black.into(),
+            );
         }
     }
 }
@@ -262,11 +276,29 @@ fn draw_action_menu<P: Painter>(ui: &mut Ui<P>, state: &PartyScreenState, menu_c
 
 fn draw_switch_hint<P: Painter>(ui: &mut Ui<P>, is_zh: bool) {
     let box_def = &PARTY_SWITCH_HINT_LAYOUT.box_0;
+    let proportional = ui.painter().supports_proportional();
     ui.text_box(box_def.rect, box_def.color, true, |frame| {
-        for label in box_def.labels.iter() {
-            frame.label(label.tx, label.ty, lang_data::ui_label(&label.text, is_zh), label.color);
+        if !proportional {
+            for label in box_def.labels.iter() {
+                frame.label(
+                    label.tx,
+                    label.ty,
+                    lang_data::ui_label(&label.text, is_zh),
+                    label.color,
+                );
+            }
         }
     });
+    if proportional {
+        for (row, label) in box_def.labels.iter().enumerate() {
+            ui.painter().draw_text_px(
+                (box_def.rect.tx + 1 + label.tx) * 8,
+                (box_def.rect.ty + 1) * 8 + row as u32 * 12,
+                lang_data::ui_label(&label.text, is_zh),
+                label.color.into(),
+            );
+        }
+    }
 }
 
 /// "Which move should be forgotten?" — the selected mon's known moves plus a

@@ -176,7 +176,7 @@ pub fn draw_dex_area(
             // (1,7), 2 rows × 15 cols; text at (2,9).
             draw_text_box(fb, t, 7 * t, 15, 2, fg);
             let label = ui_label("AREA UNKNOWN", is_zh);
-            draw_text(&format!(" {label}"), 2 * t, 9 * t, fg, fb);
+            draw_text(&format!(" {label}"), 2 * t, 8 * t + 4, fg, fb);
         } else {
             // 2. Nest icons on every habitat (MonNestIcon sprite, 8×8).
             if let Ok(nest) = rm.load_town_map("mon_nest_icon") {

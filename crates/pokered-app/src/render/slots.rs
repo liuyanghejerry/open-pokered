@@ -225,7 +225,7 @@ pub fn draw_slots(slots: &SlotsScreen, fb: &mut FrameBuffer, lang: Lang) {
         }
     }
 
-    draw_text_box(fb, 0, 96, 18, 4, fg);
+    draw_text_box(fb, 0, 88, 18, 5, fg);
     let is_zh = lang == Lang::Zh;
     let text = zh_slots_message(&slots.message, is_zh);
     let width = if slots.phase == SlotsPhase::BetSelect {
@@ -233,8 +233,16 @@ pub fn draw_slots(slots: &SlotsScreen, fb: &mut FrameBuffer, lang: Lang) {
     } else {
         144
     };
-    for (i, line) in message_lines(&text, width).iter().take(3).enumerate() {
-        draw_text(line, 8, 104 + i as u32 * 10, fg, fb);
+    for (i, line) in message_lines(&text, width)
+        .iter()
+        .take(if slots.phase == SlotsPhase::Result {
+            2
+        } else {
+            3
+        })
+        .enumerate()
+    {
+        draw_text(line, 8, 96 + i as u32 * 12, fg, fb);
     }
     if slots.phase == SlotsPhase::Result && slots.coins > 0 {
         draw_text(
@@ -244,15 +252,15 @@ pub fn draw_slots(slots: &SlotsScreen, fb: &mut FrameBuffer, lang: Lang) {
                 "A: YES  B: NO"
             },
             8,
-            124,
+            120,
             fg,
             fb,
         );
     }
     if slots.phase == SlotsPhase::BetSelect {
-        draw_text_box(fb, 112, 88, 4, 5, fg);
+        draw_text_box(fb, 112, 80, 4, 6, fg);
         for (i, bet) in [3, 2, 1].iter().enumerate() {
-            let y = 96 + i as u32 * 16;
+            let y = 88 + i as u32 * 16;
             draw_text(&format!("×{bet}"), 128, y, fg, fb);
             if slots.bet == *bet {
                 draw_text(">", 120, y, fg, fb);
@@ -390,7 +398,7 @@ mod tests {
 
     #[test]
     fn bet_cursor_repaint_matches_full_redraw_for_every_transition() {
-        let position = |bet| (120, 96 + (3 - bet as u32) * 16);
+        let position = |bet| (120, 88 + (3 - bet as u32) * 16);
         for language in [Lang::En, Lang::Zh] {
             for previous_bet in 1..=3 {
                 for current_bet in 1..=3 {

@@ -1040,6 +1040,51 @@ mod tests {
         }
     }
 
+    #[test]
+    fn bag_overlays_leave_clear_pixels_above_the_bottom_border() {
+        for lang in [Lang::En, Lang::Zh] {
+            let mut state = bag_at(0);
+            state.update_frame(BagScreenInput {
+                a: true,
+                ..BagScreenInput::none()
+            });
+            let mut fb = FrameBuffer::new(
+                dotzuki_engine::render_config::RenderConfig::new(160, 144),
+                Rgba::WHITE,
+            );
+            draw_bag(&state, &mut fb, lang);
+            for y in 136..138 {
+                for x in 104..152 {
+                    assert_eq!(
+                        fb.get_pixel(x, y),
+                        Some(Rgba::WHITE),
+                        "action menu gutter ({x},{y})"
+                    );
+                }
+            }
+            // The longest English machine name stresses both width and row spacing.
+            for machine in 0xc4..=0xfa {
+                fb.clear(Rgba::WHITE);
+                let mut painter = FrameBufferPainter::new(&mut fb).with_lang(lang);
+                menus::bag::draw_machine_prompt(
+                    ItemId::from_id(machine),
+                    Some(1),
+                    &mut Ui::new(&mut painter),
+                    lang,
+                );
+                for y in 136..138 {
+                    for x in 16..152 {
+                        assert_eq!(
+                            fb.get_pixel(x, y),
+                            Some(Rgba::WHITE),
+                            "machine {machine} gutter ({x},{y})"
+                        );
+                    }
+                }
+            }
+        }
+    }
+
     fn bag_at(cursor: usize) -> BagScreenState {
         let mut state = BagScreenState::new(vec![
             (ItemId::Potion, 5),
@@ -1419,7 +1464,7 @@ pub fn draw_bag(state: &BagScreenState, fb: &mut FrameBuffer, lang: Lang) {
             );
         }
         BagPhase::ActionMenu { cursor } => {
-            ui.text_box(TileRect::new(11, 10, 9, 8), InkColor::Black, true, |frame| {
+            ui.text_box(TileRect::new(11, 9, 9, 9), InkColor::Black, true, |frame| {
                 let is_zh = lang == Lang::Zh;
                 for (i, opt) in ["USE", "TOSS", "CANCEL"].iter().enumerate() {
                     frame.label(2, 1 + i as u32 * 2, lang_data::ui_label(opt, is_zh), InkColor::Black);
@@ -1473,7 +1518,7 @@ pub fn redraw_top_level_bag_action_cursor(
     lang: Lang,
 ) {
     let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
-    let position = |cursor| TilePos::new(13, 12 + cursor as u32 * 2);
+    let position = |cursor| TilePos::new(13, 11 + cursor as u32 * 2);
     let old = position(previous);
     painter.draw_pixel_rect(old.tx * 8, old.ty * 8, 8, 9, pokered_ui::Rgba::INK_WHITE);
     painter.draw_glyph(position(current), '▶', pokered_ui::Rgba::INK_BLACK);

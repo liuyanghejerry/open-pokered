@@ -15,7 +15,7 @@ use crate::alloc_prelude::*;
 use pokered_core::game_state::Lang;
 use pokered_core::hof_ceremony::{HofCeremonyState, HofPhase, HofScrollStage};
 use pokered_data::lang_data;
-use pokered_renderer::embedded_font::draw_text;
+use pokered_renderer::embedded_font::{draw_text, measure_text};
 use pokered_renderer::palette::GRAYSCALE_SPRITE_PALETTE;
 use pokered_renderer::resource::{AssetCategory, ResourceManager};
 use pokered_renderer::{FrameBuffer, Rgba, TILE_SIZE};
@@ -171,12 +171,13 @@ pub fn draw_hof_ceremony(
                 draw_mon_front(entry.species, FRONT_REST_X, FRONT_REST_Y, resources, fb);
                 draw_mon_info(entry, fb, is_zh);
                 if matches!(hof.phase(), HofPhase::MonText | HofPhase::MonFade) {
-                    // hlcoord 2, 13 / "HALL OF FAME" (hall_of_fame.asm:96-99).
-                    draw_text_box(fb, 2 * T, 13 * T, 14, 2, FG);
+                    // Two interior tiles fit the 10 px font with padding;
+                    // keep the title below the information card.
+                    draw_text_box(fb, 2 * T, 14 * T, 14, 2, FG);
                     draw_text(
                         lang_data::ui_label("HALL OF FAME", is_zh),
                         4 * T,
-                        14 * T,
+                        15 * T + 2,
                         FG,
                         fb,
                     );
@@ -314,30 +315,41 @@ fn blit_scaled(
 /// `HoFMonInfoText` box (hall_of_fame.asm:178-200): nickname, LEVEL/, TYPE1/,
 /// TYPE2/.
 fn draw_mon_info(entry: &pokered_core::hof_ceremony::HofEntry, fb: &mut FrameBuffer, is_zh: bool) {
-    // Inner height 9 (hall_of_fame.asm:159-176): TYPE2's value sits on the
-    // last interior row — height 8 pushed it onto the bottom border.
-    draw_text_box(fb, 0, 2 * T, 10, 9, FG);
-    draw_text(&entry.nickname, T, 4 * T, FG, fb);
-    draw_text(lang_data::ui_label("LEVEL/", is_zh), 2 * T, 6 * T, FG, fb);
-    draw_text(&format!(":L{}", entry.level), 8 * T, 7 * T, FG, fb);
-    draw_text(lang_data::ui_label("TYPE1/", is_zh), 2 * T, 8 * T, FG, fb);
-    if let Some(stats) = pokered_data::pokemon_data::get_base_stats(entry.species) {
-        draw_text(
-            pokered_data::lang_data::type_name(stats.type1, is_zh),
-            3 * T,
-            9 * T,
-            FG,
-            fb,
+    draw_hof_mon_info(entry.species, entry.level, &entry.nickname, fb, is_zh);
+}
+
+/// Shared ceremony / League PC card with padded, aligned label/value rows.
+pub(super) fn draw_hof_mon_info(
+    species: pokered_data::species::Species,
+    level: u8,
+    nickname: &str,
+    fb: &mut FrameBuffer,
+    is_zh: bool,
+) {
+    draw_text_box(fb, 0, 2 * T, 10, 10, FG);
+    let left = 12;
+    let right = 84;
+    draw_text(nickname, left, 30, FG, fb);
+    let mut draw_row = |label: &str, value: &str, y| {
+        draw_text(label.trim_end_matches('/'), left, y, FG, fb);
+        draw_text(value, right - measure_text(value), y, FG, fb);
+    };
+    draw_row(
+        lang_data::ui_label("LEVEL/", is_zh),
+        &format!("L{}", level),
+        50,
+    );
+    if let Some(stats) = pokered_data::pokemon_data::get_base_stats(species) {
+        draw_row(
+            lang_data::ui_label("TYPE1/", is_zh),
+            lang_data::type_name(stats.type1, is_zh),
+            70,
         );
-        // The original only prints TYPE2 when it differs (PrintMonType).
         if stats.type1 != stats.type2 {
-            draw_text(lang_data::ui_label("TYPE2/", is_zh), 2 * T, 10 * T, FG, fb);
-            draw_text(
-                pokered_data::lang_data::type_name(stats.type2, is_zh),
-                3 * T,
-                11 * T,
-                FG,
-                fb,
+            draw_row(
+                lang_data::ui_label("TYPE2/", is_zh),
+                lang_data::type_name(stats.type2, is_zh),
+                90,
             );
         }
     }
@@ -349,33 +361,39 @@ fn draw_player_stats(hof: &HofCeremonyState, fb: &mut FrameBuffer, is_zh: bool) 
     let stats = hof.stats();
     // Name box (hlcoord 5,0) + stats box (hlcoord 0,4).
     draw_text_box(fb, 5 * T, 0, 9, 2, FG);
-    draw_text(&stats.name, 7 * T, if is_zh { T } else { 2 * T }, FG, fb);
+    draw_text(&stats.name, 7 * T, 12, FG, fb);
     draw_text_box(fb, 0, 4 * T, 10, 6, FG);
-    // Chinese labels and values share a baseline and value column. The 4px
-    // gap after 游戏时间 still leaves room for 255:59 and $999999 in the box.
+    // Align values to the interior's right edge so the longest time and money
+    // values fit beside either language's label.
     draw_text(lang_data::ui_label("PLAY TIME", is_zh), T, 6 * T, FG, fb);
+    let play_time = format!("{}:{:02}", stats.play_time_hours, stats.play_time_minutes);
     draw_text(
-        &format!("{}:{:02}", stats.play_time_hours, stats.play_time_minutes),
-        if is_zh { 6 * T + 4 } else { 5 * T },
-        if is_zh { 6 * T } else { 7 * T },
+        &play_time,
+        11 * T - measure_text(&play_time),
+        6 * T,
         FG,
         fb,
     );
     draw_text(lang_data::ui_label("MONEY", is_zh), T, 9 * T, FG, fb);
-    draw_text(
-        &format!("${}", stats.money),
-        if is_zh { 6 * T + 4 } else { 4 * T },
-        if is_zh { 9 * T } else { 10 * T },
-        FG,
-        fb,
-    );
+    let money = format!("${}", stats.money);
+    draw_text(&money, 11 * T - measure_text(&money), 9 * T, FG, fb);
     // DexSeenOwnedText / DexRatingText equivalents.
     if is_zh {
-        draw_text(&format!("图鉴：已见{}，拥有{}", stats.dex_seen, stats.dex_owned), T, 12 * T, FG, fb);
-        let lines = pokered_core::pc_screen::chinese_message_lines(
-            &stats.rating.lines().map(str::to_owned).collect::<Vec<_>>(), &[],
+        draw_text(
+            &format!("图鉴：已见{}，拥有{}", stats.dex_seen, stats.dex_owned),
+            T,
+            12 * T,
+            FG,
+            fb,
         );
-        assert!(lines.len() <= 3, "Chinese Hall of Fame rating exceeds three rows");
+        let lines = pokered_core::pc_screen::chinese_message_lines(
+            &stats.rating.lines().map(str::to_owned).collect::<Vec<_>>(),
+            &[],
+        );
+        assert!(
+            lines.len() <= 3,
+            "Chinese Hall of Fame rating exceeds three rows"
+        );
         for (i, line) in lines.iter().enumerate() {
             draw_text(line, T, 108 + i as u32 * 12, FG, fb);
         }
@@ -384,9 +402,9 @@ fn draw_player_stats(hof: &HofCeremonyState, fb: &mut FrameBuffer, is_zh: bool) 
     let seen = format!("#DEX SEEN {:>3}", stats.dex_seen);
     draw_text(&seen, T, 12 * T, FG, fb);
     let owned = format!("     OWNED {:>3}", stats.dex_owned);
-    draw_text(&owned, T, 13 * T, FG, fb);
+    draw_text(&owned, T, 108, FG, fb);
     for (i, line) in stats.rating.split('\n').take(2).enumerate() {
-        draw_text(line, T, (14 + i as u32) * T, FG, fb);
+        draw_text(line, T, 120 + i as u32 * 12, FG, fb);
     }
 }
 
@@ -449,6 +467,54 @@ mod tests {
                 rating: "Great! Keep catching Pokemon!",
             },
         )
+    }
+
+    #[test]
+    fn ceremony_title_preserves_the_second_type_text() {
+        for lang in [Lang::En, Lang::Zh] {
+            let mut hof = ceremony();
+            while hof.phase() != HofPhase::MonInfo {
+                hof.update_frame();
+            }
+            let mut resources = test_resources();
+            let mut info = new_fb();
+            draw_hof_ceremony(&hof, &mut resources, &mut info, lang);
+            while hof.phase() != HofPhase::MonText {
+                hof.update_frame();
+            }
+            let mut title = new_fb();
+            draw_hof_ceremony(&hof, &mut resources, &mut title, lang);
+            assert!((90..100).any(|y| (48..84).any(|x| info.get_pixel(x, y) == Some(FG))),
+                "second type must have visible ink");
+            for y in 90..112 {
+                for x in 8..88 {
+                    assert_eq!(info.get_pixel(x, y), title.get_pixel(x, y),
+                        "{lang:?} title erased the second type at ({x},{y})");
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn ceremony_title_has_clear_space_above_and_below_both_languages() {
+        for lang in [Lang::En, Lang::Zh] {
+            let mut hof = ceremony();
+            while hof.phase() != HofPhase::MonText {
+                hof.update_frame();
+            }
+            let mut fb = new_fb();
+            draw_hof_ceremony(&hof, &mut test_resources(), &mut fb, lang);
+            // Require three clear rows on each side of the title's ink,
+            // across the full interior rather than just between glyphs.
+            for y in (120..123).chain(133..136) {
+                for x in 24..136 {
+                    assert_eq!(fb.get_pixel(x, y), Some(Rgba::WHITE),
+                        "{lang:?} title touches its border at ({x},{y})");
+                }
+            }
+            assert!((123..133).any(|y| (32..128).any(|x| fb.get_pixel(x, y) == Some(FG))),
+                "{lang:?} title must remain visible");
+        }
     }
 
     #[test]

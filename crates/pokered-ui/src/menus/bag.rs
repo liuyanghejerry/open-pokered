@@ -127,7 +127,7 @@ pub fn cursor_damage(position: crate::engine::TilePos) -> crate::DamageRect {
 
 /// Ink region changed by the USE/TOSS/CANCEL cursor.
 pub fn action_cursor_damage(cursor: u8) -> crate::DamageRect {
-    crate::DamageRect::cursor(crate::engine::TilePos::new(13, 12 + cursor as u32 * 2))
+    crate::DamageRect::cursor(crate::engine::TilePos::new(13, 11 + cursor as u32 * 2))
 }
 
 /// Union of the old/new `xNN` value ink regions in the toss prompt.
@@ -170,16 +170,25 @@ pub fn draw_machine_prompt<P: Painter>(
     };
     let is_zh = lang == Lang::Zh;
     if choice_cursor.is_none() {
-        ui.text_box(TileRect::new(0, 12, 20, 6), InkColor::Black, true, |frame| {
-            let text = if is_zh {
-                if machine.is_tm() { "启动了招式学习器！" } else { "启动了秘传学习器！" }
-            } else if machine.is_tm() {
-                "Booted up a TM!"
-            } else {
-                "Booted up an HM!"
-            };
-            frame.label(1, 2, text, InkColor::Black);
-        });
+        ui.text_box(
+            TileRect::new(0, 12, 20, 6),
+            InkColor::Black,
+            true,
+            |frame| {
+                let text = if is_zh {
+                    if machine.is_tm() {
+                        "启动了招式学习器！"
+                    } else {
+                        "启动了秘传学习器！"
+                    }
+                } else if machine.is_tm() {
+                    "Booted up a TM!"
+                } else {
+                    "Booted up an HM!"
+                };
+                frame.label(1, 2, text, InkColor::Black);
+            },
+        );
         return;
     }
 
@@ -187,24 +196,58 @@ pub fn draw_machine_prompt<P: Painter>(
         .move_id()
         .map(|m| pokered_data::lang_data::move_name(m, is_zh))
         .unwrap_or("???");
-    ui.text_box(TileRect::new(0, 10, 20, 8), InkColor::Black, true, |frame| {
-        if is_zh {
-            frame.label(1, 0, &format!("里面是{}！", move_name), InkColor::Black);
-            frame.label(1, 2, "让宝可梦学会", InkColor::Black);
-            frame.label(1, 4, &format!("{}吗？", move_name), InkColor::Black);
+    let proportional = ui.painter().supports_proportional();
+    ui.text_box(
+        TileRect::new(0, 10, 20, 8),
+        InkColor::Black,
+        true,
+        |frame| {
+            if !proportional {
+                if is_zh {
+                    frame.label(1, 0, &format!("里面是{}！", move_name), InkColor::Black);
+                    frame.label(1, 2, "让宝可梦学会", InkColor::Black);
+                    frame.label(1, 4, &format!("{}吗？", move_name), InkColor::Black);
+                } else {
+                    frame.label(1, 1, "It contained", InkColor::Black);
+                    frame.label(1, 2, &format!("{}!", move_name), InkColor::Black);
+                    frame.label(1, 4, &format!("Teach {}", move_name), InkColor::Black);
+                    frame.label(1, 5, "to a POKeMON?", InkColor::Black);
+                }
+            }
+        },
+    );
+    if proportional {
+        let lines = if is_zh {
+            vec![
+                format!("里面是{}！", move_name),
+                "让宝可梦学会".to_string(),
+                format!("{}吗？", move_name),
+            ]
         } else {
-            frame.label(1, 1, "It contained", InkColor::Black);
-            frame.label(1, 2, &format!("{}!", move_name), InkColor::Black);
-            frame.label(1, 4, &format!("Teach {}", move_name), InkColor::Black);
-            frame.label(1, 5, "to a POKeMON?", InkColor::Black);
+            vec![
+                "It contained".to_string(),
+                format!("{}!", move_name),
+                format!("Teach {}", move_name),
+                "to a POKeMON?".to_string(),
+            ]
+        };
+        for (row, line) in lines.iter().enumerate() {
+            ui.painter()
+                .draw_text_px(16, 88 + row as u32 * 12, line, InkColor::Black.into());
         }
-    });
-    ui.text_box(TileRect::new(14, 4, 6, 6), InkColor::Black, true, |frame| {
+    }
+
+    ui.text_box(TileRect::new(14, 3, 6, 7), InkColor::Black, true, |frame| {
         let yes = if is_zh { "是" } else { "YES" };
         let no = if is_zh { "否" } else { "NO" };
         frame.label(2, 1, yes, InkColor::Black);
         frame.label(2, 3, no, InkColor::Black);
-        frame.cursor_glyph_at(1, 1 + choice_cursor.unwrap_or(0) as u32 * 2, '▶', InkColor::Black);
+        frame.cursor_glyph_at(
+            1,
+            1 + choice_cursor.unwrap_or(0) as u32 * 2,
+            '▶',
+            InkColor::Black,
+        );
     });
 }
 

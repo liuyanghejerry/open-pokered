@@ -1,0 +1,257 @@
+{
+  "base_commit": "6a452f766edf9af7f9b133f693492a7338185df9",
+  "branch": "fix/ui-overlay-font-padding",
+  "fixture_sha256": "27dfe503f1491b59ee69305d9edb65b674c954defdd26f69ae7709a96db69452",
+  "screenshots": [
+    {
+      "scenario": "bag-action-en",
+      "width": 160,
+      "height": 144,
+      "before_sha256": "750b7488d931eac37c452e9eccf4d776e99822a336b72af46c208e2e5dc8f03b",
+      "after_sha256": "535e61a8b175c544014cf718ca9f80c0f543b97cdbd3d92fd9a099eb3211a9c8",
+      "changed_pixels": 810
+    },
+    {
+      "scenario": "bag-action-zh",
+      "width": 160,
+      "height": 144,
+      "before_sha256": "b6c125d0b8a701979d266d604d96dc78452fd9c4d6d8e3896214ffd8a5d2380d",
+      "after_sha256": "d6341044660275913e8b1d1d48cee9c28ca20fad2eedd23da707ac10ed63fb4e",
+      "changed_pixels": 906
+    },
+    {
+      "scenario": "bag-machine-en",
+      "width": 160,
+      "height": 144,
+      "before_sha256": "1a28260e02951718a277f9543dc542398567d6a73015fad21bb96cd7e91d6d1c",
+      "after_sha256": "5b474dda4d0eb93339a551a894dc8a90909c415a62350a7d747b3f2fe2836225",
+      "changed_pixels": 1468
+    },
+    {
+      "scenario": "bag-machine-zh",
+      "width": 160,
+      "height": 144,
+      "before_sha256": "f69a2bd92cd90cbe2372d01a17fabe64d81d17b4bc148472866f35606ec05491",
+      "after_sha256": "92c90e585d5524cf0d9a6efa7cbd497432ddf5a947b4cd15d7840dbdbe81ef5a",
+      "changed_pixels": 1218
+    },
+    {
+      "scenario": "dex-area-unknown-en",
+      "width": 160,
+      "height": 144,
+      "before_sha256": "f51ee8ff0927e57a65fcbe11c2bc019190710b9ca018d65966f40eb1400febce",
+      "after_sha256": "d2c9702ceae85513a4cd19bb5b6214375e581177db2cfdefdec73666c1fa1fe6",
+      "changed_pixels": 244
+    },
+    {
+      "scenario": "dex-area-unknown-zh",
+      "width": 160,
+      "height": 144,
+      "before_sha256": "71ace8edac70ac1a1f72aa0de1b49f254dc6c289abdfa279d15ca71f615d1464",
+      "after_sha256": "fae5e166849e337d9c15d3669b0dbba06800309a2b5db10373675d0d725abd15",
+      "changed_pixels": 193
+    },
+    {
+      "scenario": "hof-Lapras-en",
+      "width": 160,
+      "height": 144,
+      "before_sha256": "853ef69bddf3ec9127a02e15f9cb29eb0ea76fb75d07372f0b540662fefb3d24",
+      "after_sha256": "565f13a9b60f994444ea8003f6ef98b002769fd8686149323339f7aea1a9133c",
+      "changed_pixels": 2637,
+      "review_before_sha256": "bf4561e85a7e761063dc57659c7ba9e6dbb359c69968bea771eb1e2553e6744c",
+      "review_changed_pixels": 1771,
+      "title_review_before_sha256": "46780b7d113ea6aab0005e99228630a8ce14bff99478b0c7df6f4402eada54a9",
+      "title_review_changed_pixels": 1320
+    },
+    {
+      "scenario": "hof-Lapras-zh",
+      "width": 160,
+      "height": 144,
+      "before_sha256": "02706a62740bb09264a4ade0b8621c4f835938b49026eaa921c66c12346aa6d3",
+      "after_sha256": "6adb13b82063feef9c071b3df6b2eda43d279916aff643f6afafdf2adf5bfabb",
+      "changed_pixels": 2458,
+      "review_before_sha256": "d96e06196e7881fa11ace4b85f41ec6a33d94dd5a36ff7b9681903da42661877",
+      "review_changed_pixels": 1743,
+      "title_review_before_sha256": "3b671390fcac3b2013d131cd6068213becb409531ee78bd5d7ab79730e0083de",
+      "title_review_changed_pixels": 1288
+    },
+    {
+      "scenario": "hof-Pikachu-en",
+      "width": 160,
+      "height": 144,
+      "before_sha256": "cb6188a877278cef0b7d5fba0844aa35d2a9f720829915b4fb55e0ed8e866060",
+      "after_sha256": "cdbaf93048b3028aba119b10215ee1f4d5031a6e41e8ba0bfd4b58b680fff46f",
+      "changed_pixels": 2512,
+      "review_before_sha256": "41b2a08efbb85630d1e1b328b53580f9ab849fd1a5550affa1fc09d58ca8731f",
+      "review_changed_pixels": 1670,
+      "title_review_before_sha256": "63415faf34dd0c477c990fcb7dbc4ca577fb201d408d8aa325b6f1475663ba9e",
+      "title_review_changed_pixels": 1206
+    },
+    {
+      "scenario": "hof-Pikachu-zh",
+      "width": 160,
+      "height": 144,
+      "before_sha256": "bd189f6fe6e504645c85a08d9be201aca4ff85128e3882800c35cc5361ac2f23",
+      "after_sha256": "16507be6803e3ba53cb0a9ba684a1904d172294663e8091b479be2e98103edf6",
+      "changed_pixels": 2328,
+      "review_before_sha256": "2dff7eb61737c7ede410127d3954d071fb92e08a240eebf2c4003a371e96b2c7",
+      "review_changed_pixels": 1626,
+      "title_review_before_sha256": "2723f053b06491799905c961a287e51ddaad57df0ddbf91b3125e86eee683ded",
+      "title_review_changed_pixels": 1118
+    },
+    {
+      "scenario": "hof-player-en",
+      "width": 160,
+      "height": 144,
+      "before_sha256": "21aeb1c5fd49f1c30fdcde4ca910da27bbdc64b43433c2a88f958954d23c94be",
+      "after_sha256": "d1ff63b9011062e3d33523359a3fd26f89e28c05809285331ec2826efaea8728",
+      "changed_pixels": 853
+    },
+    {
+      "scenario": "hof-player-zh",
+      "width": 160,
+      "height": 144,
+      "before_sha256": "541964a9d777dcdfb556df97ca26e7e066f479c350b0e0b41f5a679622095782",
+      "after_sha256": "f3e93159a31bbdf5bcacd1e79916efaa201a6b4f38355e17cceab9199881d3c7",
+      "changed_pixels": 312
+    },
+    {
+      "scenario": "league-pc-en",
+      "width": 160,
+      "height": 144,
+      "before_sha256": "fb2e53ea8f445a11f98afb6c3625e81704555ed23bebcfafdd083c59f223ebf6",
+      "after_sha256": "47c5cf63ef76a2ce63d6b2998ea9c097cc606c00cfafc29b587bd0c9145931cb",
+      "changed_pixels": 1341,
+      "review_before_sha256": "6b418ec98d8461c9ee0bb73440e11e9b3ef27d606079e79da27817ca1d57a2c3",
+      "review_changed_pixels": 1335,
+      "title_review_before_sha256": "933ce8cb1dd144f63b737aa1ce12537de85a2f3cd3bb74757456fcd7bad29ed8",
+      "title_review_changed_pixels": 884
+    },
+    {
+      "scenario": "league-pc-zh",
+      "width": 160,
+      "height": 144,
+      "before_sha256": "00bf45245e8caebdfd7118ed31a68d154a52d7f48356cdd9787866c9caa3ba94",
+      "after_sha256": "3221cd008444fe30ccc77f20c47282eead442a16d410b0e9b27ccee908fa535f",
+      "changed_pixels": 1335,
+      "review_before_sha256": "8bc23a17cab7198677a31bc40126b72bc7c8cddb6dc1646b7fc74b848d5e3a40",
+      "review_changed_pixels": 1319,
+      "title_review_before_sha256": "0fd89c1330a16a09fc797f13b2530ac95133734e99a9dfc0205bb5b3213ff2d0",
+      "title_review_changed_pixels": 864
+    },
+    {
+      "scenario": "oak-name-prompt-en",
+      "width": 160,
+      "height": 144,
+      "before_sha256": "9fc7b1c0c59ca69f1016e3a9fd09efb32b013171cc75e1f216a4e9385e3ac93b",
+      "after_sha256": "e160a9ef55846bfada7f10506091f0cb0f11b8d94b8bbda8cfc0aeedb6ace33a",
+      "changed_pixels": 856
+    },
+    {
+      "scenario": "oak-name-prompt-zh",
+      "width": 160,
+      "height": 144,
+      "before_sha256": "6fe74f1e6d8fd1f0dbcf298d7144537a5baf53dfb47d8291129b609e7435c657",
+      "after_sha256": "f81edd0c9958dfc1c68205bf3caecdfa7b8554039c66f27025aaebee4bac859d",
+      "changed_pixels": 856
+    },
+    {
+      "scenario": "party-action-en",
+      "width": 160,
+      "height": 144,
+      "before_sha256": "c7214f3e68580b2001d702e02447af4a27423df076a103ce0c67e7defc9fcf21",
+      "after_sha256": "b7b29622702cafdc96d7d51ae82a25a31d1ff6fe25a19e35ea47d2c6108f7704",
+      "changed_pixels": 906
+    },
+    {
+      "scenario": "party-action-zh",
+      "width": 160,
+      "height": 144,
+      "before_sha256": "605f71888a19bf27b1a154ed83bb8b83fe34e8e8ab5310a38100c3bd439e0dba",
+      "after_sha256": "a77205c2bd90f8f0ff1e6af1d295272e29cdf22a44dfb9daf266d971299a7ffe",
+      "changed_pixels": 825
+    },
+    {
+      "scenario": "party-item-notice-en",
+      "width": 160,
+      "height": 144,
+      "before_sha256": "1bd8e2b3d72059a289a3ad03762c158e69b39d09a0359ee4e2769691503a4939",
+      "after_sha256": "a5850dbd467bc76e842d470872151f6bab433ecf81eccc5f9cbae3fb3dc420c5",
+      "changed_pixels": 490
+    },
+    {
+      "scenario": "party-item-notice-zh",
+      "width": 160,
+      "height": 144,
+      "before_sha256": "486dacfe23bd55ece7e12a2381c8b31abb6f809c51f61199a716cbc11033eece",
+      "after_sha256": "c69fb769e771a4f78c506e40dd7ec797b6e9a4295f36ebd523a869f744e3ac27",
+      "changed_pixels": 508
+    },
+    {
+      "scenario": "party-move-notice-en",
+      "width": 160,
+      "height": 144,
+      "before_sha256": "59423e2b9081b2abdcb73f7a7254e50f283338e15c862a81480d0a1572bb7058",
+      "after_sha256": "879fb73d0fdee5435e7c77042090e050e4430c2547fbdfde51a75e83a483cfe9",
+      "changed_pixels": 2104
+    },
+    {
+      "scenario": "party-move-notice-zh",
+      "width": 160,
+      "height": 144,
+      "before_sha256": "4c9a21989eb5d3559bad551775230c2d5c2ffd3cd66cde26ec94a006ce1f9a19",
+      "after_sha256": "6f9b8676fd2675a18aa2ac60e05c51a6ead8702feb3353a34459a476cc15adc4",
+      "changed_pixels": 2505
+    },
+    {
+      "scenario": "party-switch-en",
+      "width": 160,
+      "height": 144,
+      "before_sha256": "b125cc3143a6769dca7875741e56d6cbbc3941ac05a087b00dbe793b80bd444b",
+      "after_sha256": "66fc8f8c057ed8a7842e198f51d852ffe6f823cac8f1b88f3d42a6e021226a80",
+      "changed_pixels": 2824
+    },
+    {
+      "scenario": "party-switch-zh",
+      "width": 160,
+      "height": 144,
+      "before_sha256": "e7b2868a19d46bd81a7b8b848ee9b8842f527cabb179d303096f1ac9f59964ea",
+      "after_sha256": "82efaec8136f4a07b379bc1b6ddcbd6759dc4b9ce3f1e6f1e606acd3a83f8e4f",
+      "changed_pixels": 2776
+    },
+    {
+      "scenario": "slots-bet-en",
+      "width": 160,
+      "height": 144,
+      "before_sha256": "65aaa6bd2fca5ca9290aa7c655a1fc6df002f9b771c8ef95f866799ac7c2e770",
+      "after_sha256": "3b8e76dec5a62f3da919889a4a482419ee3a9d5dfa7febd78bd8c13363084ed5",
+      "changed_pixels": 2035
+    },
+    {
+      "scenario": "slots-bet-zh",
+      "width": 160,
+      "height": 144,
+      "before_sha256": "ead6b4cbeb0e07e011effdf161bfab3b37b088b00c38fc92c85289ea7fb22ac1",
+      "after_sha256": "0b765d50d481cc87218ccb0b5e944831ee013977a7f23cac6281298f76dee4a3",
+      "changed_pixels": 1907
+    },
+    {
+      "scenario": "slots-result-en",
+      "width": 160,
+      "height": 144,
+      "before_sha256": "eb3d2a0043c1794e9fb14cadd954a5ceed9e6feb9c0f8c0d23fa111ba59d5751",
+      "after_sha256": "c5d5a1d471f2050987199a76a0ec5e34e27a86ceee6d631635fa3853ac4c1010",
+      "changed_pixels": 1901
+    },
+    {
+      "scenario": "slots-result-zh",
+      "width": 160,
+      "height": 144,
+      "before_sha256": "7161f38f4f04ed54e713e2267dd68be8fc5aa6b19b0155a371b57db1318c0572",
+      "after_sha256": "2da6225ff6a3fb672560f9a9fd06768c3f87fc7738f3128cb15a3628a4ddac74",
+      "changed_pixels": 2039
+    }
+  ],
+  "review_base_commit": "6192f80618d9f12a6699455456aa2e736f3e9190",
+  "title_review_base_commit": "12f276c12e850890f8be0bffc100b8525c39061d"
+}
