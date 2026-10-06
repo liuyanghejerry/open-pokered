@@ -21,8 +21,7 @@ game_scene CeladonMansionRoofHouse {
   // when the party is full) → HideObject via TOGGLE_CELADON_MANSION_EEVEE_GIFT;
   // false (BOX also full) → the engine prints _BoxIsFullText and the ball
   // stays. Contract: givePokemon returns true when the POKeMON was handed
-  // over, false when party AND BOX are both full. (Until the engine lands the
-  // return value it resolves undefined=falsy — an expected intermediate state.)
+  // over after its receipt/nickname flow, false when party AND BOX are both full.
   @storyline("talkPokeBall") {
     @trigger(map = "CeladonMansionRoofHouse", npc = 2, toggle = "CELADON_MANSION_ROOF_HOUSE_OBJ_2")
     @if (!getFlag("EVENT_GOT_EEVEE")) {
