@@ -471,7 +471,8 @@ def m17_surge(g):
 def leave_ss_anne(g):
     # The dock's @load script plays the departure and walks us into the
     # city. It is a transient map, not a place to await restored control.
-    g.nav_to_map(18, 30, "VermilionCity")
+    destination = g.nav_warp(27, 0, "SSAnne1F", approach="up")
+    assert destination == "VermilionCity", f"unexpected ship departure target {destination}"
     for flag in ["EVENT_SS_ANNE_LEFT", "EVENT_WALKED_OUT_OF_DOCK",
                  "EVENT_LEFT_SS_ANNE_VIA_GANGPLANK"]:
         require_flag(g, flag)

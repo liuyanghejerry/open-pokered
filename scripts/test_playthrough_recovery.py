@@ -236,15 +236,23 @@ class ShipDepartureTests(unittest.TestCase):
 
     def test_city_handoff_requires_all_departure_and_walkout_events(self):
         game = Mock()
+        game.nav_warp.return_value = "VermilionCity"
         game.d.cmd.return_value = {"data": dict.fromkeys(self.flags, True)}
         late.leave_ss_anne(game)
-        game.nav_to_map.assert_called_once_with(18, 30, "VermilionCity")
-        game.nav_warp.assert_not_called()
+        game.nav_warp.assert_called_once_with(27, 0, "SSAnne1F", approach="up")
+
+    def test_unrelated_final_map_is_rejected_even_with_departure_flags(self):
+        game = Mock()
+        game.nav_warp.return_value = "PalletTown"
+        game.d.cmd.return_value = {"data": dict.fromkeys(self.flags, True)}
+        with self.assertRaisesRegex(AssertionError, "unexpected ship departure target"):
+            late.leave_ss_anne(game)
 
     def test_arriving_in_city_without_departure_is_not_success(self):
         for missing in self.flags:
             with self.subTest(missing=missing):
                 game = Mock()
+                game.nav_warp.return_value = "VermilionCity"
                 events = dict.fromkeys(self.flags, True)
                 events[missing] = False
                 game.d.cmd.return_value = {"data": events}
