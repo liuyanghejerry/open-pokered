@@ -1148,9 +1148,9 @@ class Game:
         script hands off into battle (startBattle suspends the script, so
         control_ready never fires; that's a successful hand-off, not a
         stall). wait_until burns through non-dialogue effects; dialogue
-        pages collapse via skip_dialogue. An open choice menu is NOT
-        answered here — it needs a deliberate decision, so we fail
-        loudly instead of spinning forever."""
+        pages collapse via skip_dialogue. Gift nickname prompts choose NO
+        to keep the route's canonical species names. Other open choices
+        need a deliberate decision and fail loudly."""
         for _ in range(max_rounds):
             r = self.d.cmd(cmd="wait_until", condition="control_ready",
                            max_frames=240)
@@ -1160,6 +1160,10 @@ class Game:
             if state["screen"] == "battle":
                 return True
             if state["choice"] is not None:
+                if (state.get("active_script_effect") == "GivePokemon"
+                        and state["choice"]["options"] == ["YES", "NO"]):
+                    self.choose("NO")
+                    continue
                 raise NavError(f"cutscene blocked on choice "
                                f"{state['choice']['options']} "
                                f"(cursor {state['choice']['selected']})")
@@ -1685,6 +1689,12 @@ def m05_take_starter(g, which="bulbasaur"):
     ch = g.dialogue_then_choice()            # pages → "Do you want X?"
     assert ch["options"] == ["YES", "NO"], ch
     g.choose("YES")
+    # AddPartyMon asks for a nickname after the receipt jingle. Keep the
+    # canonical species name used by later route assertions.
+    ch = g.dialogue_then_choice()
+    assert g.st()["active_script_effect"] == "GivePokemon", g.st()
+    assert ch["options"] == ["YES", "NO"], ch
+    g.choose("NO")
     assert g.cutscene(), "starter cutscene never finished"
     s = g.evidence("m05")
     assert s["party_count"] == 1, s

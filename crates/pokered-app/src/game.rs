@@ -3550,6 +3550,7 @@ impl PokemonGame {
                 }
                 self.overworld.party_count = self.save_data.party.count() as u8;
                 self.overworld.box_count = self.save_data.current_box.count() as u8;
+                self.overworld.gift_box_number = self.save_data.pc_storage.current_box_index() as u8 + 1;
                 self.overworld.party_lead_level = self.save_data.party.leader_level();
                 // A full-moveset level-up move couldn't be learned: open the
                 // party screen's forget-a-move prompt, exactly where the
@@ -4049,6 +4050,7 @@ impl PokemonGame {
                             .map(|s| s.pascal_name())
                             .collect();
                         self.overworld.seed_script_bag_quantities(&self.save_data.game_data.bag);
+                        self.overworld.gift_box_number = self.save_data.pc_storage.current_box_index() as u8 + 1;
                         self.overworld.seed_script_query_state(
                             self.save_data.game_data.player_money,
                             &bag_names,
@@ -4150,6 +4152,11 @@ impl PokemonGame {
                     let action = self.overworld.update_frame(ow_input);
 
                     self.apply_overworld_game_data_requests();
+                    // The money box follows the committed balance, including
+                    // mutations queued just before the next script query.
+                    if self.overworld.script_money_box.is_some() {
+                        self.overworld.script_money_box = Some(self.save_data.game_data.player_money);
+                    }
 
                     if let Some(ref audio) = self.audio {
                         match self.overworld.sfx_event {
@@ -4286,6 +4293,7 @@ impl PokemonGame {
                             self.save_data.game_data.pokedex.set_owned(pending.species);
                             self.overworld.party_count = self.save_data.party.count() as u8;
                             self.overworld.box_count = self.save_data.current_box.count() as u8;
+                            self.overworld.gift_box_number = self.save_data.pc_storage.current_box_index() as u8 + 1;
                             self.overworld.party_lead_level = self.save_data.party.leader_level();
                         }
                     }
@@ -5510,6 +5518,7 @@ impl PokemonGame {
                     // the overworld mirrors in sync (repel checks, scripts).
                     self.overworld.party_count = self.save_data.party.count() as u8;
                     self.overworld.box_count = self.save_data.current_box.count() as u8;
+                    self.overworld.gift_box_number = self.save_data.pc_storage.current_box_index() as u8 + 1;
                     self.overworld.party_lead_level = self.save_data.party.leader_level();
                     match pc_action {
                         PcScreenAction::Continue => ScreenAction::Continue,
@@ -6889,7 +6898,12 @@ impl PokemonGame {
                 // First frame is a release so the very first tap is a
                 // rising edge regardless of the preceding frame.
                 let mut release = true;
-                while self.overworld.pending_dialogue.is_some() && stepped < MAX_SKIP_FRAMES {
+                // A question may remain visible below a choice menu. Stop
+                // when it opens: skip_dialogue must never answer it for us.
+                while self.overworld.pending_dialogue.is_some()
+                    && self.overworld.pending_choice.is_none()
+                    && stepped < MAX_SKIP_FRAMES
+                {
                     let mut input = InputState::new();
                     if !release {
                         input.press(GbButton::A);
@@ -8394,3 +8408,58 @@ mod link_trade_movie_name_fidelity_tests {
 #[cfg(test)]
 #[path = "game/shared_runtime_regressions.rs"]
 mod tui_runtime_regressions;
+
+#[cfg(all(test, feature = "debug-server"))]
+mod gift_dialogue_debug_tests {
+    use super::*;
+    #[test]
+    fn skip_dialogue_stops_at_gift_question_without_selecting_yes() {
+        let mut game = PokemonGame::new_with_options(
+            GameVersion::Red,
+            None,
+            None,
+            None,
+            false,
+            None,
+            false,
+            true,
+            None,
+        );
+        game.state.screen = GameScreen::Overworld;
+        game.save_data = SaveData::new();
+        game.overworld = OverworldScreen::new(
+            pokered_data::maps::MapId::CeladonMansionRoofHouse,
+            None,
+            pokered_data::impl_traits::PokemonRedData,
+        );
+        game.overworld.state.player.x = 4;
+        game.overworld.state.player.y = 4;
+        game.overworld.state.player.facing = pokered_core::overworld::Direction::Up;
+        game.update(&InputState::new());
+        let mut a = InputState::new();
+        a.press(GbButton::A);
+        game.update(&a);
+        for _ in 0..10 {
+            for _ in 0..8 {
+                game.update(&InputState::new());
+            }
+            let response = game.handle_debug_command(pokered_debug_server::DebugCommand::Game(
+                pokered_debug_server::GameDebugCommand::SkipDialogue,
+            ));
+            assert!(response.ok);
+            if game.overworld.pending_choice.is_some() {
+                break;
+            }
+        }
+        assert_eq!(
+            game.overworld
+                .pending_choice
+                .as_ref()
+                .expect("nickname prompt")
+                .options,
+            ["YES", "NO"]
+        );
+        assert!(!game.overworld.is_naming_screen_active());
+        assert!(game.save_data.party.is_empty());
+    }
+}

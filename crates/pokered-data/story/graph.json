@@ -1009,124 +1009,6 @@
       "detail": "350"
     },
     {
-      "from": "script:CeladonMartRoof:sign2",
-      "to": "item:FRESH_WATER",
-      "kind": "gives",
-      "detail": "x1"
-    },
-    {
-      "from": "script:CeladonMartRoof:sign2",
-      "to": "item:LEMONADE",
-      "kind": "gives",
-      "detail": "x1"
-    },
-    {
-      "from": "script:CeladonMartRoof:sign2",
-      "to": "item:SODA_POP",
-      "kind": "gives",
-      "detail": "x1"
-    },
-    {
-      "from": "script:CeladonMartRoof:sign2",
-      "to": "map:CeladonMartRoof",
-      "kind": "triggered_at"
-    },
-    {
-      "from": "script:CeladonMartRoof:sign2",
-      "to": "resource:money",
-      "kind": "requires",
-      "detail": ">=200"
-    },
-    {
-      "from": "script:CeladonMartRoof:sign2",
-      "to": "resource:money",
-      "kind": "requires",
-      "detail": ">=300"
-    },
-    {
-      "from": "script:CeladonMartRoof:sign2",
-      "to": "resource:money",
-      "kind": "requires",
-      "detail": ">=350"
-    },
-    {
-      "from": "script:CeladonMartRoof:sign2",
-      "to": "resource:money",
-      "kind": "takes",
-      "detail": "200"
-    },
-    {
-      "from": "script:CeladonMartRoof:sign2",
-      "to": "resource:money",
-      "kind": "takes",
-      "detail": "300"
-    },
-    {
-      "from": "script:CeladonMartRoof:sign2",
-      "to": "resource:money",
-      "kind": "takes",
-      "detail": "350"
-    },
-    {
-      "from": "script:CeladonMartRoof:sign3",
-      "to": "item:FRESH_WATER",
-      "kind": "gives",
-      "detail": "x1"
-    },
-    {
-      "from": "script:CeladonMartRoof:sign3",
-      "to": "item:LEMONADE",
-      "kind": "gives",
-      "detail": "x1"
-    },
-    {
-      "from": "script:CeladonMartRoof:sign3",
-      "to": "item:SODA_POP",
-      "kind": "gives",
-      "detail": "x1"
-    },
-    {
-      "from": "script:CeladonMartRoof:sign3",
-      "to": "map:CeladonMartRoof",
-      "kind": "triggered_at"
-    },
-    {
-      "from": "script:CeladonMartRoof:sign3",
-      "to": "resource:money",
-      "kind": "requires",
-      "detail": ">=200"
-    },
-    {
-      "from": "script:CeladonMartRoof:sign3",
-      "to": "resource:money",
-      "kind": "requires",
-      "detail": ">=300"
-    },
-    {
-      "from": "script:CeladonMartRoof:sign3",
-      "to": "resource:money",
-      "kind": "requires",
-      "detail": ">=350"
-    },
-    {
-      "from": "script:CeladonMartRoof:sign3",
-      "to": "resource:money",
-      "kind": "takes",
-      "detail": "200"
-    },
-    {
-      "from": "script:CeladonMartRoof:sign3",
-      "to": "resource:money",
-      "kind": "takes",
-      "detail": "300"
-    },
-    {
-      "from": "script:CeladonMartRoof:sign3",
-      "to": "resource:money",
-      "kind": "takes",
-      "detail": "350"
-    },
-    {
       "from": "script:CeladonMartRoof:sign4",
       "to": "map:CeladonMartRoof",
       "kind": "triggered_at"
@@ -4910,11 +4792,6 @@
     {
       "from": "script:MtMoonPokecenter:talkYoungster",
       "to": "map:MtMoonPokecenter",
-      "kind": "triggered_at"
-    },
-    {
-      "from": "script:Museum1F:behindCounter",
-      "to": "map:Museum1F",
       "kind": "triggered_at"
     },
     {

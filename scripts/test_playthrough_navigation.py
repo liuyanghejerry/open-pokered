@@ -11,6 +11,24 @@ from playthrough_late import damage_slot
 
 
 class NavigationRegression(unittest.TestCase):
+    def test_cutscene_declines_only_the_script_gift_nickname_prompt(self):
+        for effect in ["GivePokemon", "ShowChoice"]:
+            game = nav.Game.__new__(nav.Game)
+            state = {"screen": "overworld", "choice": {"options": ["YES", "NO"], "selected": 0},
+                     "active_script_effect": effect}
+            responses = iter([{"data": {"reached": False, "state": state}},
+                              {"data": {"reached": True}}])
+            game.d = SimpleNamespace(cmd=lambda **_: next(responses))
+            decisions = []
+            game.choose = decisions.append
+            if effect == "GivePokemon":
+                self.assertTrue(game.cutscene())
+                self.assertEqual(decisions, ["NO"])
+            else:
+                with self.assertRaises(nav.NavError):
+                    game.cutscene()
+                self.assertEqual(decisions, [])
+
     def test_plain_driver_observes_cut_geometry_and_tree_regrowth(self):
         name = 'VermilionCity'
         original = nav.MAPS[name]['blocks']

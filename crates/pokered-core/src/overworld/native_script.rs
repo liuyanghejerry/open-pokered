@@ -412,6 +412,19 @@ impl ScriptHost for NativeHost {
             "withdrawDaycare" => Ok(pokemon(PokemonScriptCommand::WithdrawDaycare)),
 
             "waitMusic" => Ok(pokemon(PokemonScriptCommand::WaitMusic)),
+            "vendingDelivery" => Ok(pokemon(PokemonScriptCommand::VendingDelivery)),
+            "showMoneyBox" => {
+                let amount = args::number(v.first().ok_or("showMoneyBox: missing amount")?, "showMoneyBox")? as i64;
+                Ok(pokemon(PokemonScriptCommand::ShowMoneyBox { amount }))
+            }
+            "readingMenu" => {
+                let options = args::string_array(v.first().ok_or("readingMenu: missing options")?, "readingMenu")?;
+                let texts = args::string_array(v.get(1).ok_or("readingMenu: missing texts")?, "readingMenu")?;
+                if options.len() != texts.len() + 1 || texts.is_empty() {
+                    return Err("readingMenu: one text per heading plus a final exit option required".to_string());
+                }
+                Ok(pokemon(PokemonScriptCommand::ReadingMenu { options, texts }))
+            }
             "playShipDeparture" => Ok(pokemon(PokemonScriptCommand::PlayShipDeparture)),
             "animateHealingMachine" => Ok(pokemon(PokemonScriptCommand::AnimateHealingMachine)),
             "openNamingScreen" => {

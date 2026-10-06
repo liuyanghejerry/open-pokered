@@ -612,6 +612,11 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         );
         if let Some(ref mut effect) = self.active_script_effect {
             let naming_was_open = self.pending_naming_screen.is_some();
+            if let script_bridge::ScriptEffect::GivePokemon { species, flow, .. } = effect {
+                if flow.is_none() {
+                    *flow = Some(super::script_interactions::GiftPokemonFlow::new(species, &self.player_name, self.party_count, self.box_count, self.gift_box_number, self.script_engine.script_lang() == Some("zh")));
+                }
+            }
             // Only allocate the protected-name view when a page is created.
             let dialogue_names: Vec<&str> = if self.pending_dialogue.is_none()
                 && matches!(effect, script_bridge::ScriptEffect::ShowDialogue { .. })
@@ -2407,6 +2412,119 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         script_sfx_playing: bool,
     ) -> bool {
         match effect {
+            script_bridge::ScriptEffect::GivePokemon {
+                species,
+                nickname,
+                flow: Some(flow),
+                ..
+            } => {
+                let child = flow.child.as_mut();
+                if Self::tick_active_effect(
+                    child,
+                    a_just_pressed,
+                    b_just_pressed,
+                    a_pressed,
+                    up_pressed,
+                    down_pressed,
+                    pending_dialogue,
+                    pending_choice,
+                    pending_pokedex_entry,
+                    pending_naming_screen,
+                    party_select_requested,
+                    pending_emotion_bubble,
+                    pending_healing_machine,
+                    npc_states,
+                    player_state,
+                    scripted_player_path,
+                    map_data,
+                    map_script_config,
+                    party_count,
+                    audio_requests,
+                    current_map,
+                    sfx_event,
+                    ship_departure,
+                    dialogue_names,
+                    script_music_playing,
+                    script_sfx_playing,
+                ) {
+                    let prompt = match flow.child.as_ref() {
+                        script_bridge::ScriptEffect::ShowDialogue { text } => Some(text.clone()),
+                        _ => None,
+                    };
+                    let was_choice = matches!(
+                        flow.child.as_ref(),
+                        script_bridge::ScriptEffect::ShowChoice { .. }
+                    );
+                    let finished = flow.advance(species, nickname);
+                    if !finished
+                        && matches!(
+                            flow.child.as_ref(),
+                            script_bridge::ScriptEffect::ShowChoice { .. }
+                        )
+                    {
+                        // AskName leaves the question visible underneath YES/NO.
+                        if let Some(text) = prompt {
+                            let mut dialogue = BedroomDialogue::from_message(&text);
+                            while dialogue.has_more_pages() {
+                                dialogue.advance();
+                            }
+                            dialogue.skip_to_full_page();
+                            *pending_dialogue = Some(dialogue);
+                        }
+                    } else if was_choice {
+                        *pending_dialogue = None;
+                    }
+                    finished
+                } else {
+                    false
+                }
+            }
+            script_bridge::ScriptEffect::ReadingMenu { menu } => {
+                let child = menu.child.as_mut();
+                if Self::tick_active_effect(
+                    child,
+                    a_just_pressed,
+                    b_just_pressed,
+                    a_pressed,
+                    up_pressed,
+                    down_pressed,
+                    pending_dialogue,
+                    pending_choice,
+                    pending_pokedex_entry,
+                    pending_naming_screen,
+                    party_select_requested,
+                    pending_emotion_bubble,
+                    pending_healing_machine,
+                    npc_states,
+                    player_state,
+                    scripted_player_path,
+                    map_data,
+                    map_script_config,
+                    party_count,
+                    audio_requests,
+                    current_map,
+                    sfx_event,
+                    ship_departure,
+                    dialogue_names,
+                    script_music_playing,
+                    script_sfx_playing,
+                ) {
+                    menu.advance()
+                } else {
+                    false
+                }
+            }
+            script_bridge::ScriptEffect::VendingDelivery { frames_elapsed } => {
+                // VendingMachineMenu: DelayFrames(2), PlaySound, repeated 60 times.
+                *frames_elapsed += 1;
+                if *frames_elapsed % 2 == 0 {
+                    audio_requests.push(OverworldAudioRequest::PlaySound {
+                        sound_id: "SFX_PUSH_BOULDER".to_string(),
+                    });
+                }
+                *frames_elapsed == 120
+            }
+
             script_bridge::ScriptEffect::ShowItemDialogue { text, sound_started } => {
                 if *sound_started {
                     // Keep the complete found text visible until the sequencer
@@ -2483,7 +2601,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 selected,
             } => {
                 if !*started {
-                    *pending_choice = Some(script_bridge::PendingChoice::new(options.clone()));
+                    let mut choice = script_bridge::PendingChoice::new(options.clone());
+                    choice.selected = (*selected).min(options.len().saturating_sub(1) as u32);
+                    *pending_choice = Some(choice);
                     *started = true;
                     false
                 } else if let Some(ref mut choice) = pending_choice {
@@ -3112,6 +3232,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     fn apply_finished_effect(&mut self, effect: Option<script_bridge::ScriptEffect>) {
         if let Some(eff) = effect {
             match eff {
+                script_bridge::ScriptEffect::ShowMoneyBox { amount } => {
+                    self.script_money_box = if amount < 0 { None } else { Some(amount as u32) };
+                }
                 script_bridge::ScriptEffect::UnsupportedCommand { name, reason } => {
                     if let Some(reason) = reason {
                         log::error!(target: "pokered::overworld", "[Script] unsupported host command {name}: {reason}");
@@ -3302,6 +3425,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     species,
                     nickname,
                     level,
+                    flow
                 } => {
                     let normalized = species
                         .chars()
@@ -3309,7 +3433,11 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         .map(|(i, c)| if i == 0 { c.to_ascii_uppercase() } else { c.to_ascii_lowercase() })
                         .collect::<String>();
                     if self.party_count >= 6 && self.box_count as usize >= crate::pokemon::pc_box::MONS_PER_BOX {
-                        self.pending_dialogue = Some(BedroomDialogue::from_message(&self.localize_message("Oops! This Box is\nfull of POKeMON.")));
+                        if flow.is_none() {
+                            // Defensive direct dispatch; a completed flow has
+                            // already displayed BoxIsFullText.
+                            self.pending_dialogue = Some(BedroomDialogue::from_message(&self.localize_message("Oops! This Box is\nfull of POKeMON.")));
+                        }
                     } else if let Ok(sp) = normalized.parse::<pokered_data::species::Species>() {
                         self.pending_give_pokemon = Some(screen::PendingGivePokemon {
                             species: sp,
@@ -3492,6 +3620,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         self.script_queries_need_seed = true;
         self.script_engine.set_lang(&script_lang);
         self.active_script_effect = None;
+        self.script_money_box = None;
         self.map_script_config = MapScriptConfig::default();
 
         #[cfg(feature = "script-boa")]
@@ -4568,7 +4697,41 @@ mod fidelity_systems_healing_tests {
     fn failed_full_box_gift_never_queues_pokemon() {
         let mut ow=OverworldScreen::new(MapId::CeladonMansionRoofHouse,None,PokemonRedData);
         ow.party_count=6;ow.box_count=20;
-        ow.apply_finished_effect(Some(script_bridge::ScriptEffect::GivePokemon { species:"Eevee".to_string(), nickname:None,level:25 }));
+        ow.apply_finished_effect(Some(script_bridge::ScriptEffect::GivePokemon { species:"Eevee".to_string(), nickname:None,level:25, flow:None }));
         assert!(ow.pending_give_pokemon.is_none());assert!(ow.pending_dialogue.is_some());
+    }
+}
+
+#[cfg(test)]
+mod vending_delivery_fidelity_tests {
+    use super::*;
+    use pokered_data::impl_traits::PokemonRedData;
+    #[test]
+    fn delivery_restarts_push_boulder_sound_sixty_times_two_frames_apart() {
+        let mut ow = OverworldScreen::new(MapId::CeladonMartRoof, None, PokemonRedData);
+        ow.active_script_effect =
+            Some(script_bridge::ScriptEffect::VendingDelivery { frames_elapsed: 0 });
+        let neutral = OverworldInput::new(false, false, false, false, false, false, false, false);
+        ow.audio_requests.clear();
+        let mut total = 0;
+        for frame in 1..=120 {
+            ow.update_frame(neutral);
+            let count = ow
+                .audio_requests
+                .iter()
+                .filter(|request| {
+                    matches!(request,
+                OverworldAudioRequest::PlaySound { sound_id } if sound_id == "SFX_PUSH_BOULDER")
+                })
+                .count();
+            assert_eq!(
+                count,
+                usize::from(frame % 2 == 0),
+                "delivery sound at frame {frame}"
+            );
+            total += count;
+            assert_eq!(ow.active_script_effect.is_none(), frame == 120);
+        }
+        assert_eq!(total, 60);
     }
 }

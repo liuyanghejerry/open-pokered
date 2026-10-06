@@ -838,6 +838,8 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     /// `party_count`. `givePokemon` reports success while either the party or
     /// this box has room (the original's _GivePokemon carry flag).
     pub box_count: u8,
+    pub gift_box_number: u8,
+    pub script_money_box: Option<u32>,
     /// Completed-step counter for the out-of-battle poison tick
     /// (`wStepCounter & 3` in ApplyOutOfBattlePoisonDamage — damage every
     /// fourth step).
@@ -1212,6 +1214,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             heal_requested: false,
             party_count: 0,
             box_count: 0,
+            gift_box_number: 1,
+            script_money_box: None,
             poison_step_counter: 0,
             party_lead_level: 0,
             unified_flags: event_flags::EventFlags::new(),
@@ -1389,8 +1393,11 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
 
     /// FoundItemText has no ManualTextScroll prompt while its jingle plays.
     pub fn dialogue_needs_button(&self) -> bool {
-        !matches!(self.active_script_effect,
-            Some(super::script_bridge::ScriptEffect::ShowItemDialogue { .. }))
+        let effect = match self.active_script_effect.as_ref() {
+            Some(super::script_bridge::ScriptEffect::GivePokemon { flow: Some(flow), .. }) => Some(flow.child.as_ref()),
+            other => other,
+        };
+        !matches!(effect, Some(super::script_bridge::ScriptEffect::ShowItemDialogue { .. }))
     }
 
     /// Set the configured dialogue delay (1/3/5 frames per character).
@@ -2755,10 +2762,17 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         }
     }
 
+    pub fn is_reading_menu_active(&self) -> bool {
+        matches!(self.active_script_effect, Some(super::script_bridge::ScriptEffect::ReadingMenu { .. }))
+    }
+
     pub fn update_naming_input(&mut self, input: crate::naming_screen::NamingInput, is_zh: bool) {
         // The opening white flash (GBPalWhiteOutWithDelay3) plays before the
         // naming screen accepts input.
         if self.naming_flash_frames > 0 {
+            // While naming is modal the app routes frames here, not through
+            // update_frame; this path must advance its own opening flash.
+            self.naming_flash_frames -= 1;
             return;
         }
         if let Some(ref mut ns) = self.pending_naming_screen {
@@ -2766,6 +2780,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 crate::naming_screen::NamingScreenResult::Editing => {}
                 crate::naming_screen::NamingScreenResult::Submitted(name) => {
                     if let Some(ref mut effect) = self.active_script_effect {
+                        let effect = match effect {
+                            crate::overworld::script_bridge::ScriptEffect::GivePokemon { flow: Some(flow), .. } => flow.child.as_mut(),
+                            other => other,
+                        };
                         if let crate::overworld::script_bridge::ScriptEffect::NamingScreen {
                             result_name,
                             naming_state,
