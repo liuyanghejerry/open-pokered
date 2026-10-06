@@ -171,13 +171,13 @@ pub fn draw_hof_ceremony(
                 draw_mon_front(entry.species, FRONT_REST_X, FRONT_REST_Y, resources, fb);
                 draw_mon_info(entry, fb, is_zh);
                 if matches!(hof.phase(), HofPhase::MonText | HofPhase::MonFade) {
-                    // Keep the title below the taller information card so
-                    // its opaque box does not erase the second type.
-                    draw_text_box(fb, 2 * T, 15 * T, 14, 1, FG);
+                    // Two interior tiles fit the 10 px font with padding;
+                    // keep the title below the information card.
+                    draw_text_box(fb, 2 * T, 14 * T, 14, 2, FG);
                     draw_text(
                         lang_data::ui_label("HALL OF FAME", is_zh),
                         4 * T,
-                        15 * T + 4,
+                        15 * T + 2,
                         FG,
                         fb,
                     );
@@ -326,7 +326,7 @@ pub(super) fn draw_hof_mon_info(
     fb: &mut FrameBuffer,
     is_zh: bool,
 ) {
-    draw_text_box(fb, 0, 2 * T, 10, 11, FG);
+    draw_text_box(fb, 0, 2 * T, 10, 10, FG);
     let left = 12;
     let right = 84;
     draw_text(nickname, left, 30, FG, fb);
@@ -343,13 +343,13 @@ pub(super) fn draw_hof_mon_info(
         draw_row(
             lang_data::ui_label("TYPE1/", is_zh),
             lang_data::type_name(stats.type1, is_zh),
-            72,
+            70,
         );
         if stats.type1 != stats.type2 {
             draw_row(
                 lang_data::ui_label("TYPE2/", is_zh),
                 lang_data::type_name(stats.type2, is_zh),
-                94,
+                90,
             );
         }
     }
@@ -484,7 +484,7 @@ mod tests {
             }
             let mut title = new_fb();
             draw_hof_ceremony(&hof, &mut resources, &mut title, lang);
-            assert!((94..104).any(|y| (48..84).any(|x| info.get_pixel(x, y) == Some(FG))),
+            assert!((90..100).any(|y| (48..84).any(|x| info.get_pixel(x, y) == Some(FG))),
                 "second type must have visible ink");
             for y in 90..112 {
                 for x in 8..88 {
@@ -492,6 +492,28 @@ mod tests {
                         "{lang:?} title erased the second type at ({x},{y})");
                 }
             }
+        }
+    }
+
+    #[test]
+    fn ceremony_title_has_clear_space_above_and_below_both_languages() {
+        for lang in [Lang::En, Lang::Zh] {
+            let mut hof = ceremony();
+            while hof.phase() != HofPhase::MonText {
+                hof.update_frame();
+            }
+            let mut fb = new_fb();
+            draw_hof_ceremony(&hof, &mut test_resources(), &mut fb, lang);
+            // Require three clear rows on each side of the title's ink,
+            // across the full interior rather than just between glyphs.
+            for y in (120..123).chain(133..136) {
+                for x in 24..136 {
+                    assert_eq!(fb.get_pixel(x, y), Some(Rgba::WHITE),
+                        "{lang:?} title touches its border at ({x},{y})");
+                }
+            }
+            assert!((123..133).any(|y| (32..128).any(|x| fb.get_pixel(x, y) == Some(FG))),
+                "{lang:?} title must remain visible");
         }
     }
 
