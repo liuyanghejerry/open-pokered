@@ -1500,8 +1500,18 @@ class Game:
         iters_in_mode = 0
         import os
         dbg = os.environ.get("PT_DEBUG")
-        for it in range(max_iters):
+        # Keep a bounded allowance for terminal text after the combat budget.
+        # A long fight can reach its final KO on the last iteration; waiting
+        # without buttons then leaves ShowingText / TrainerVictory blocked.
+        for it in range(max_iters + 120):
             s = self.st()
+            if it >= max_iters and s["screen"] == "battle":
+                live = s.get("battle_live") or {}
+                enemies = live.get("enemy_party") or [live.get("enemy", {})]
+                players = live.get("player_party") or [live.get("player", {})]
+                defeated = lambda team: bool(team) and all(mon.get("hp") == 0 for mon in team)
+                if not (defeated(enemies) or defeated(players)):
+                    break
             if dbg:
                 print(f"   [battle it={it} fight={fight} mode_iters="
                       f"{iters_in_mode}] phase={s['battle_phase']!r} "

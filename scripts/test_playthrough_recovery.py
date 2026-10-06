@@ -261,3 +261,33 @@ class ShipDepartureTests(unittest.TestCase):
 
 
 if __name__=='__main__':unittest.main()
+
+
+class BattleCompletionBudgetTests(unittest.TestCase):
+    def state(self, enemy_hp=0, reserves=()):
+        return {"screen":"battle", "battle_phase":"ShowingText { next_phase: TrainerVictory }",
+                "battle_live":{"enemy":{"hp":enemy_hp},
+                               "enemy_party":[{"hp":enemy_hp}]+[{"hp":v} for v in reserves],
+                               "player_party":[{"hp":62}]}}
+
+    def test_final_ko_text_is_advanced_after_combat_budget(self):
+        game=Mock()
+        state=self.state()
+        game.st.side_effect=[state,state,state,{"screen":"overworld","battle_phase":""}]
+        pt.Game.battle_loop(game,max_iters=1)
+        self.assertEqual(game.tap.call_count,3)
+        game.wait.assert_called_once_with("not_battle",1800)
+
+    def test_live_opponent_or_reserve_does_not_extend_combat_budget(self):
+        for state in (self.state(10),self.state(0,(20,))):
+            with self.subTest(state=state):
+                game=Mock();game.st.return_value=state
+                game.wait.side_effect=AssertionError("battle still active")
+                with self.assertRaises(AssertionError):pt.Game.battle_loop(game,max_iters=1)
+                self.assertEqual(game.tap.call_count,1)
+
+    def test_terminal_text_allowance_is_bounded(self):
+        game=Mock();game.st.return_value=self.state()
+        game.wait.side_effect=AssertionError("terminal text stuck")
+        with self.assertRaises(AssertionError):pt.Game.battle_loop(game,max_iters=1)
+        self.assertEqual(game.tap.call_count,121)
