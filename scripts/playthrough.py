@@ -1045,8 +1045,10 @@ class Game:
                                 tries=tries)
                 except NavError:
                     if to_map is not None and self.pos()[0] == to_map:
-                        assert self.cutscene(), f"{to_map} on-enter cutscene stalled"
-                        return to_map
+                        destination = self._wait_for_warp(from_map, to_map)
+                        if destination is not None:
+                            return destination
+                        raise
                     if self.pos()[0] != from_map:
                         raise
                     # One map can contain disconnected rooms. Reach the
@@ -1069,8 +1071,10 @@ class Game:
                 # never reinterpret a blackout/unexpected map as success.
                 current_map = self.pos()[0]
                 if to_map is not None and current_map == to_map:
-                    assert self.cutscene(), f"{to_map} on-enter cutscene stalled"
-                    return to_map
+                    destination = self._wait_for_warp(from_map, to_map)
+                    if destination is not None:
+                        return destination
+                    raise
                 if current_map != from_map:
                     raise
                 # An inward neighbor may be in another disconnected room
@@ -1085,13 +1089,19 @@ class Game:
                         break
                 else:
                     raise
-            # Landing on a warp tile fires only while a step completes
-            # with the direction held (extra_warp_check); retry with a
-            # long hold toward the map edge.
-            for d, (dx, dy) in DELTA.items():
-                if outward_dir(from_map, x, y, d):
-                    self.d.drive([d] * 40, frames=48)
-                    break
+            # Exit carpets may need another outward hold. Stair/cave tiles
+            # trigger on the completed step: holding through their fade can
+            # retrigger the arrival warp (RedsHouse2F -> 1F -> 2F).
+            state = self.st()
+            automatic = tile_at(from_map, x, y) in WARP_SURFACES.get(
+                MAPS[from_map]['tileset_name'], set())
+            if (not automatic and state['screen'] == 'overworld'
+                    and state['map_name'] == from_map
+                    and state.get('warp_fade') == 'Idle'):
+                for d in DELTA:
+                    if outward_dir(from_map, x, y, d):
+                        self.d.drive([d] * 40, frames=48)
+                        break
         destination = self._wait_for_warp(from_map, to_map)
         if destination is not None:
             return destination
@@ -1118,6 +1128,16 @@ class Game:
                 # Arrival may kick off an @load cutscene (e.g. the Mart
                 # parcel hand-off) — settle it before returning control.
                 assert self.cutscene(), f"{cm} on-enter cutscene stalled"
+                # Settling can complete another warp or open a battle. Never
+                # return a destination observed before that hand-off finished.
+                settled = self.st()
+                if settled['screen'] != 'overworld':
+                    return None
+                cm = settled['map_name']
+                if cm == from_map:
+                    return None
+                if to_map is not None:
+                    assert cm == to_map, f"unexpected settled warp target {cm}"
                 return cm
             self.step(10)
         return None
