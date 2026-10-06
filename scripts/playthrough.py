@@ -1491,7 +1491,7 @@ class Game:
         return False
 
     # ── battle ──────────────────────────────────────────────────────────
-    def battle_loop(self, prefer="fight", max_iters=400):
+    def battle_loop(self, prefer="fight", max_iters=1600):
         """Generic battle driver. prefer="run" picks RUN from the menu
         (wild encounters); falls back to FIGHT if escape keeps failing.
         The 2x2 menu clamps cursor movement, so up+left always lands on
