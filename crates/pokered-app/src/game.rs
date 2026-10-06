@@ -6547,7 +6547,7 @@ impl PokemonGame {
             "not_battle" => self.state.screen != pokered_core::game_state::GameScreen::Battle,
             // Player control back after a cutscene: overworld, no dialogue /
             // choice / script effect, script engine idle, warp settled,
-            // and no battle suspended on the script.
+            // no pending automatic door step, and no battle suspended on the script.
             "control_ready" => {
                 crate::cli::screen_name(&self.state.screen) == "overworld"
                     && self.overworld.pending_dialogue.is_none()
@@ -6559,6 +6559,8 @@ impl PokemonGame {
                         self.overworld.warp_fade_state,
                         pokered_core::overworld::WarpFadeState::Idle
                     )
+                    && !self.overworld.state.standing_on_door
+                    && !self.overworld.state.exiting_door
                     && !self.overworld.script_awaiting_battle
             }
             other => {
@@ -8412,6 +8414,31 @@ mod tui_runtime_regressions;
 #[cfg(all(test, feature = "debug-server"))]
 mod gift_dialogue_debug_tests {
     use super::*;
+    #[test]
+    fn control_ready_waits_for_the_entire_arrival_door_step() {
+        let mut game = PokemonGame::new_with_options(
+            GameVersion::Red, None, None, None, false, None, false, true, None,
+        );
+        game.state.screen = GameScreen::Overworld;
+        game.overworld = OverworldScreen::new(
+            pokered_data::maps::MapId::RocketHideoutB3F,
+            None,
+            pokered_data::impl_traits::PokemonRedData,
+        );
+        game.overworld.state.player.x = 19;
+        game.overworld.state.player.y = 18;
+        game.overworld.state.standing_on_door = true;
+        assert!(!game.debug_condition_met("control_ready"));
+        game.update(&InputState::new());
+        assert!(game.overworld.state.exiting_door);
+        assert!(!game.debug_condition_met("control_ready"));
+        for _ in 0..32 {
+            game.update(&InputState::new());
+        }
+        assert_eq!((game.overworld.state.player.x, game.overworld.state.player.y), (19, 19));
+        assert!(game.debug_condition_met("control_ready"));
+    }
+
     #[test]
     fn skip_dialogue_stops_at_gift_question_without_selecting_yes() {
         let mut game = PokemonGame::new_with_options(
