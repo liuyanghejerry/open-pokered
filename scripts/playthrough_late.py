@@ -906,7 +906,7 @@ def m30_saffron(g):
     g.face("up")
     g.tap("a", 16)
     g.dialogue_then_choice()
-    g.choose("FRESH WATER")
+    g.choose("FRESH WATER ¥200")
     assert g.cutscene()
     assert any(v["item"] == "FreshWater" for v in g.d.cmd(cmd="get_bag")["data"])
     g.nav_warp(15, 2, "CeladonMartRoof", "CeladonMart5F")
