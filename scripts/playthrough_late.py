@@ -339,6 +339,11 @@ def m13_misty(g):
 
 
 def m14_bill(g):
+    # The bridge plus Route25's hikers can exhaust VineWhip before the
+    # final multi-Geodude team. Restore PP through the real nurse flow
+    # between the two trainer groups, rather than grinding resisted Tackle.
+    g.nav_to_map(3, 4, "Route25")
+    g.heal_pokecenter((19, 17), "CeruleanCity", "CeruleanPokecenter")
     g.nav_to_map(45, 4, "Route25")
     g.nav_warp(45, 3, "Route25", "BillsHouse")
     g.nav_to(6, 6, "BillsHouse")
