@@ -1,6 +1,6 @@
 """Regression cases exposed by real post-Brock playthroughs (stdlib unittest)."""
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 from types import SimpleNamespace
 import subprocess
 import sys
@@ -440,3 +440,27 @@ assert importlib.import_module('playthrough').MAPS is driver['MAPS']
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class WarpBattleHandoffTests(unittest.TestCase):
+    def state(self, screen="overworld", place="ChampionsRoom", awaiting=False):
+        return {"screen":screen,"map_name":place,"dialogue_state":None,
+                "script_awaiting_battle":awaiting}
+
+    def test_on_entry_battle_after_cutscene_returns_expected_room_without_fighting(self):
+        game=Mock()
+        game.st.side_effect=[self.state(),self.state("battle",awaiting=True)]
+        self.assertEqual(nav.Game._wait_for_warp(game,"LancesRoom","ChampionsRoom"),"ChampionsRoom")
+        game.battle_loop.assert_not_called()
+
+    def test_already_started_expected_script_battle_is_left_to_the_caller(self):
+        game=Mock();game.st.return_value=self.state("battle",awaiting=True)
+        self.assertEqual(nav.Game._wait_for_warp(game,"LancesRoom","ChampionsRoom"),"ChampionsRoom")
+        game.battle_loop.assert_not_called()
+
+    def test_script_battle_in_an_unexpected_settled_room_is_rejected(self):
+        game=Mock()
+        game.st.side_effect=[self.state(),self.state("battle","PalletTown",True)]
+        with self.assertRaisesRegex(AssertionError,"unexpected settled warp target PalletTown"):
+            nav.Game._wait_for_warp(game,"LancesRoom","ChampionsRoom")
+        game.battle_loop.assert_not_called()

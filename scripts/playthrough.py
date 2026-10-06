@@ -1113,6 +1113,10 @@ class Game:
             state = self.st()
             cm = state["map_name"]
             if state["screen"] == "battle":
+                # An expected destination may start its @load battle before
+                # our first poll. Leave that scripted handoff to the caller.
+                if to_map is not None and cm == to_map and state.get("script_awaiting_battle"):
+                    return cm
                 prefer = ("fight" if state["script_awaiting_battle"]
                           else "run")
                 self.battle_loop(prefer=prefer)
@@ -1131,7 +1135,8 @@ class Game:
                 # Settling can complete another warp or open a battle. Never
                 # return a destination observed before that hand-off finished.
                 settled = self.st()
-                if settled['screen'] != 'overworld':
+                scripted_battle = settled['screen'] == 'battle' and settled.get('script_awaiting_battle')
+                if settled['screen'] != 'overworld' and not scripted_battle:
                     return None
                 cm = settled['map_name']
                 if cm == from_map:
