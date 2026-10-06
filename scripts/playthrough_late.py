@@ -978,7 +978,9 @@ def challenge_silph_rival(g, max_attempts=4):
             g.nav_to(3, 3, "SilphCo7F")
             assert g.cutscene()
             if g.st()["screen"] == "battle":
-                g.battle_loop()
+                # Five opponents plus medicine/status turns can exceed the
+                # short wild-battle budget while both sides are still alive.
+                g.battle_loop(max_iters=1600)
                 assert g.cutscene()
             require_flag(g, "EVENT_BEAT_SILPH_CO_RIVAL")
             return
