@@ -56,32 +56,40 @@
       "width": 160,
       "height": 144,
       "before_sha256": "853ef69bddf3ec9127a02e15f9cb29eb0ea76fb75d07372f0b540662fefb3d24",
-      "after_sha256": "bf4561e85a7e761063dc57659c7ba9e6dbb359c69968bea771eb1e2553e6744c",
-      "changed_pixels": 2832
+      "after_sha256": "46780b7d113ea6aab0005e99228630a8ce14bff99478b0c7df6f4402eada54a9",
+      "changed_pixels": 2949,
+      "review_before_sha256": "bf4561e85a7e761063dc57659c7ba9e6dbb359c69968bea771eb1e2553e6744c",
+      "review_changed_pixels": 813
     },
     {
       "scenario": "hof-Lapras-zh",
       "width": 160,
       "height": 144,
       "before_sha256": "02706a62740bb09264a4ade0b8621c4f835938b49026eaa921c66c12346aa6d3",
-      "after_sha256": "d96e06196e7881fa11ace4b85f41ec6a33d94dd5a36ff7b9681903da42661877",
-      "changed_pixels": 2789
+      "after_sha256": "3b671390fcac3b2013d131cd6068213becb409531ee78bd5d7ab79730e0083de",
+      "changed_pixels": 2890,
+      "review_before_sha256": "d96e06196e7881fa11ace4b85f41ec6a33d94dd5a36ff7b9681903da42661877",
+      "review_changed_pixels": 815
     },
     {
       "scenario": "hof-Pikachu-en",
       "width": 160,
       "height": 144,
       "before_sha256": "cb6188a877278cef0b7d5fba0844aa35d2a9f720829915b4fb55e0ed8e866060",
-      "after_sha256": "41b2a08efbb85630d1e1b328b53580f9ab849fd1a5550affa1fc09d58ca8731f",
-      "changed_pixels": 2798
+      "after_sha256": "63415faf34dd0c477c990fcb7dbc4ca577fb201d408d8aa325b6f1475663ba9e",
+      "changed_pixels": 2828,
+      "review_before_sha256": "41b2a08efbb85630d1e1b328b53580f9ab849fd1a5550affa1fc09d58ca8731f",
+      "review_changed_pixels": 674
     },
     {
       "scenario": "hof-Pikachu-zh",
       "width": 160,
       "height": 144,
       "before_sha256": "bd189f6fe6e504645c85a08d9be201aca4ff85128e3882800c35cc5361ac2f23",
-      "after_sha256": "2dff7eb61737c7ede410127d3954d071fb92e08a240eebf2c4003a371e96b2c7",
-      "changed_pixels": 2682
+      "after_sha256": "2723f053b06491799905c961a287e51ddaad57df0ddbf91b3125e86eee683ded",
+      "changed_pixels": 2796,
+      "review_before_sha256": "2dff7eb61737c7ede410127d3954d071fb92e08a240eebf2c4003a371e96b2c7",
+      "review_changed_pixels": 648
     },
     {
       "scenario": "hof-player-en",
@@ -104,16 +112,20 @@
       "width": 160,
       "height": 144,
       "before_sha256": "fb2e53ea8f445a11f98afb6c3625e81704555ed23bebcfafdd083c59f223ebf6",
-      "after_sha256": "6b418ec98d8461c9ee0bb73440e11e9b3ef27d606079e79da27817ca1d57a2c3",
-      "changed_pixels": 1244
+      "after_sha256": "933ce8cb1dd144f63b737aa1ce12537de85a2f3cd3bb74757456fcd7bad29ed8",
+      "changed_pixels": 1323,
+      "review_before_sha256": "6b418ec98d8461c9ee0bb73440e11e9b3ef27d606079e79da27817ca1d57a2c3",
+      "review_changed_pixels": 813
     },
     {
       "scenario": "league-pc-zh",
       "width": 160,
       "height": 144,
       "before_sha256": "00bf45245e8caebdfd7118ed31a68d154a52d7f48356cdd9787866c9caa3ba94",
-      "after_sha256": "8bc23a17cab7198677a31bc40126b72bc7c8cddb6dc1646b7fc74b848d5e3a40",
-      "changed_pixels": 48
+      "after_sha256": "0fd89c1330a16a09fc797f13b2530ac95133734e99a9dfc0205bb5b3213ff2d0",
+      "changed_pixels": 831,
+      "review_before_sha256": "8bc23a17cab7198677a31bc40126b72bc7c8cddb6dc1646b7fc74b848d5e3a40",
+      "review_changed_pixels": 815
     },
     {
       "scenario": "oak-name-prompt-en",
@@ -227,5 +239,6 @@
       "after_sha256": "2da6225ff6a3fb672560f9a9fd06768c3f87fc7738f3128cb15a3628a4ddac74",
       "changed_pixels": 2039
     }
-  ]
+  ],
+  "review_base_commit": "6192f80618d9f12a6699455456aa2e736f3e9190"
 }

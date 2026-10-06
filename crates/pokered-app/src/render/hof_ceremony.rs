@@ -318,7 +318,7 @@ fn draw_mon_info(entry: &pokered_core::hof_ceremony::HofEntry, fb: &mut FrameBuf
     draw_hof_mon_info(entry.species, entry.level, &entry.nickname, fb, is_zh);
 }
 
-/// Shared ceremony / League PC information card with twelve-pixel rows.
+/// Shared ceremony / League PC card with padded, aligned label/value rows.
 pub(super) fn draw_hof_mon_info(
     species: pokered_data::species::Species,
     level: u8,
@@ -327,15 +327,30 @@ pub(super) fn draw_hof_mon_info(
     is_zh: bool,
 ) {
     draw_text_box(fb, 0, 2 * T, 10, 11, FG);
-    draw_text(nickname, T, 24, FG, fb);
-    draw_text(lang_data::ui_label("LEVEL/", is_zh), 2 * T, 40, FG, fb);
-    draw_text(&format!("L{}", level), 8 * T, 52, FG, fb);
+    let left = 12;
+    let right = 84;
+    draw_text(nickname, left, 30, FG, fb);
+    let mut draw_row = |label: &str, value: &str, y| {
+        draw_text(label.trim_end_matches('/'), left, y, FG, fb);
+        draw_text(value, right - measure_text(value), y, FG, fb);
+    };
+    draw_row(
+        lang_data::ui_label("LEVEL/", is_zh),
+        &format!("L{}", level),
+        50,
+    );
     if let Some(stats) = pokered_data::pokemon_data::get_base_stats(species) {
-        draw_text(lang_data::ui_label("TYPE1/", is_zh), 2 * T, 64, FG, fb);
-        draw_text(lang_data::type_name(stats.type1, is_zh), 3 * T, 76, FG, fb);
+        draw_row(
+            lang_data::ui_label("TYPE1/", is_zh),
+            lang_data::type_name(stats.type1, is_zh),
+            72,
+        );
         if stats.type1 != stats.type2 {
-            draw_text(lang_data::ui_label("TYPE2/", is_zh), 2 * T, 88, FG, fb);
-            draw_text(lang_data::type_name(stats.type2, is_zh), 3 * T, 100, FG, fb);
+            draw_row(
+                lang_data::ui_label("TYPE2/", is_zh),
+                lang_data::type_name(stats.type2, is_zh),
+                94,
+            );
         }
     }
 }
@@ -469,9 +484,9 @@ mod tests {
             }
             let mut title = new_fb();
             draw_hof_ceremony(&hof, &mut resources, &mut title, lang);
-            assert!((100..110).any(|y| (24..80).any(|x| info.get_pixel(x, y) == Some(FG))),
+            assert!((94..104).any(|y| (48..84).any(|x| info.get_pixel(x, y) == Some(FG))),
                 "second type must have visible ink");
-            for y in 96..112 {
+            for y in 90..112 {
                 for x in 8..88 {
                     assert_eq!(info.get_pixel(x, y), title.get_pixel(x, y),
                         "{lang:?} title erased the second type at ({x},{y})");
