@@ -279,6 +279,84 @@ class NavigationRegression(unittest.TestCase):
         self.assertEqual(result, "Route10")
         self.assertEqual(approaches, [(15, 32), (15, 32)])
 
+    def test_stair_warp_never_holds_outward_through_arrival(self):
+        for fade in ('Idle', 'FadingOut { frames_remaining: 9 }'):
+            with self.subTest(fade=fade):
+                game = nav.Game.__new__(nav.Game)
+                game.nav_to = unittest.mock.Mock()
+                game.st = lambda: dict(screen='overworld', map_name='RedsHouse2F',
+                                       warp_fade=fade)
+                game.d = SimpleNamespace(drive=unittest.mock.Mock())
+                game._wait_for_warp = unittest.mock.Mock(return_value='RedsHouse1F')
+
+                self.assertEqual(game.nav_warp(7, 1, 'RedsHouse2F', 'RedsHouse1F'),
+                                 'RedsHouse1F')
+                game.d.drive.assert_not_called()
+
+    def test_exit_carpet_still_holds_outward_when_no_warp_has_started(self):
+        game = nav.Game.__new__(nav.Game)
+        game.nav_to = unittest.mock.Mock()
+        game.st = lambda: dict(screen='overworld', map_name='RedsHouse1F', warp_fade='Idle')
+        game.d = SimpleNamespace(drive=unittest.mock.Mock())
+        game._wait_for_warp = unittest.mock.Mock(return_value='PalletTown')
+
+        self.assertEqual(game.nav_warp(3, 7, 'RedsHouse1F', 'PalletTown'), 'PalletTown')
+        game.d.drive.assert_called_once_with(['down'] * 40, frames=48)
+
+    def test_exit_carpet_does_not_hold_during_fade_or_after_map_change(self):
+        for name, fade in [('RedsHouse1F', 'FadingOut { frames_remaining: 9 }'),
+                           ('PalletTown', 'Idle')]:
+            with self.subTest(map=name, fade=fade):
+                game = nav.Game.__new__(nav.Game)
+                game.nav_to = unittest.mock.Mock()
+                game.st = lambda: dict(screen='overworld', map_name=name, warp_fade=fade)
+                game.d = SimpleNamespace(drive=unittest.mock.Mock())
+                game._wait_for_warp = unittest.mock.Mock(return_value='PalletTown')
+
+                self.assertEqual(game.nav_warp(3, 7, 'RedsHouse1F', 'PalletTown'),
+                                 'PalletTown')
+                game.d.drive.assert_not_called()
+
+    def test_warp_wait_rechecks_destination_after_control_returns(self):
+        for settled in ['RedsHouse1F', 'RedsHouse2F', 'PalletTown']:
+            with self.subTest(settled=settled):
+                game = nav.Game.__new__(nav.Game)
+                states = iter([dict(screen='overworld', map_name='RedsHouse1F'),
+                               dict(screen='overworld', map_name=settled)])
+                game.st = lambda: next(states)
+                game.cutscene = lambda: True
+
+                if settled == 'PalletTown':
+                    with self.assertRaisesRegex(AssertionError, 'unexpected settled warp target'):
+                        game._wait_for_warp('RedsHouse2F', 'RedsHouse1F')
+                else:
+                    expected = 'RedsHouse1F' if settled == 'RedsHouse1F' else None
+                    self.assertEqual(game._wait_for_warp('RedsHouse2F', 'RedsHouse1F'),
+                                     expected)
+
+    def test_warp_arrival_battle_cannot_return_its_placeholder_map(self):
+        game = nav.Game.__new__(nav.Game)
+        states = iter([dict(screen='overworld', map_name='RedsHouse1F'),
+                       dict(screen='battle', map_name='PalletTown')])
+        game.st = lambda: next(states)
+        game.cutscene = lambda: True
+
+        self.assertIsNone(game._wait_for_warp('RedsHouse2F', 'RedsHouse1F'))
+
+    def test_warp_exception_success_path_also_rejects_bounced_arrival(self):
+        for approach in ['walk', 'down']:
+            with self.subTest(approach=approach):
+                game = nav.Game.__new__(nav.Game)
+                game.nav_to = unittest.mock.Mock(side_effect=nav.NavError('map changed'))
+                game.pos = lambda: ('RedsHouse1F', 7, 1)
+                states = iter([dict(screen='overworld', map_name='RedsHouse1F'),
+                               dict(screen='overworld', map_name='RedsHouse2F')])
+                game.st = lambda: next(states)
+                game.cutscene = lambda: True
+
+                with self.assertRaisesRegex(nav.NavError, 'map changed'):
+                    game.nav_warp(7, 1, 'RedsHouse2F', 'RedsHouse1F', approach=approach)
+
     def test_warp_wait_handles_battle_before_its_placeholder_map(self):
         game = nav.Game.__new__(nav.Game)
         game.st = lambda: {

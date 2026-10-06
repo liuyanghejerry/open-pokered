@@ -1,0 +1,83 @@
+{
+  "date": "2026-10-06",
+  "baseline_commit": "481b19e5f1458ac605ff4a8d5abd66e64c088bda",
+  "scope": "Python playthrough navigation; both real-input runs use the same master debug-server game binary",
+  "unit_tests": {
+    "navigation": 37,
+    "python_suite": 447,
+    "new_cases_fail_against_base": 9
+  },
+  "before": {
+    "error": "NavError: warped out of RedsHouse1F -> RedsHouse2F",
+    "state": {
+      "frame_count": 2318,
+      "screen": "overworld",
+      "map_name": "RedsHouse2F",
+      "player_x": 7,
+      "player_y": 1,
+      "player_facing": "Up",
+      "player_movement_state": "Idle",
+      "warp_fade": "Idle",
+      "party_count": 0,
+      "money": 3000,
+      "script_running": false
+    },
+    "observed_transition": [
+      {
+        "frame_count": 2146,
+        "map_name": "RedsHouse2F",
+        "player_x": 7,
+        "player_y": 1,
+        "player_facing": "Right",
+        "player_movement_state": "Idle",
+        "warp_fade": "FadingOut { frames_remaining: 23 }"
+      },
+      {
+        "frame_count": 2160,
+        "map_name": "RedsHouse2F",
+        "player_x": 7,
+        "player_y": 1,
+        "player_facing": "Right",
+        "player_movement_state": "Idle",
+        "warp_fade": "FadingOut { frames_remaining: 9 }"
+      },
+      {
+        "frame_count": 2217,
+        "map_name": "RedsHouse1F",
+        "player_x": 7,
+        "player_y": 1,
+        "player_facing": "Right",
+        "player_movement_state": "Idle",
+        "warp_fade": "FadingOut { frames_remaining: 10 }"
+      },
+      {
+        "frame_count": 2253,
+        "map_name": "RedsHouse2F",
+        "player_x": 7,
+        "player_y": 1,
+        "player_facing": "Up",
+        "player_movement_state": "Idle",
+        "warp_fade": "Idle"
+      }
+    ]
+  },
+  "after": {
+    "command": "python3 scripts/playthrough.py --until m03 --artifacts DIR",
+    "fresh_power_on": true,
+    "seeded_state": false,
+    "result": "PLAYTHROUGH REACHED REQUESTED MILESTONE",
+    "state": {
+      "frame_count": 2484,
+      "screen": "overworld",
+      "map_name": "PalletTown",
+      "player_x": 5,
+      "player_y": 6,
+      "player_facing": "Down",
+      "player_movement_state": "Idle",
+      "warp_fade": "Idle",
+      "party_count": 0,
+      "money": 3000,
+      "script_running": false
+    }
+  }
+}
