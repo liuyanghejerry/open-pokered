@@ -230,4 +230,26 @@ class ScarceMovePpTests(unittest.TestCase):
         self.assertEqual(self.pick("NidoranF", tackle_disabled=True), 0)
 
 
+class ShipDepartureTests(unittest.TestCase):
+    flags = ["EVENT_SS_ANNE_LEFT", "EVENT_WALKED_OUT_OF_DOCK",
+             "EVENT_LEFT_SS_ANNE_VIA_GANGPLANK"]
+
+    def test_city_handoff_requires_all_departure_and_walkout_events(self):
+        game = Mock()
+        game.d.cmd.return_value = {"data": dict.fromkeys(self.flags, True)}
+        late.leave_ss_anne(game)
+        game.nav_to_map.assert_called_once_with(18, 30, "VermilionCity")
+        game.nav_warp.assert_not_called()
+
+    def test_arriving_in_city_without_departure_is_not_success(self):
+        for missing in self.flags:
+            with self.subTest(missing=missing):
+                game = Mock()
+                events = dict.fromkeys(self.flags, True)
+                events[missing] = False
+                game.d.cmd.return_value = {"data": events}
+                with self.assertRaisesRegex(AssertionError, missing):
+                    late.leave_ss_anne(game)
+
+
 if __name__=='__main__':unittest.main()

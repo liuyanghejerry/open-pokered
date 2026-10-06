@@ -457,8 +457,7 @@ def m17_surge(g):
             g.nav_warp(19, 3, "SSAnne3F", "SSAnne2F")
     else:
         raise RuntimeError("could not descend from S.S. Anne 2F")
-    g.nav_warp(27, 0, "SSAnne1F", "VermilionDock", approach="up")
-    g.nav_warp(14, 0, "VermilionDock", "VermilionCity", approach="up")
+    leave_ss_anne(g)
     g.heal_pokecenter((11, 3), "VermilionCity", "VermilionPokecenter")
     g.nav_to(15, 17, "VermilionCity")
     g.face("down")
@@ -467,6 +466,15 @@ def m17_surge(g):
     solve_surge_switches(g)
     challenge(g, "VermilionGym", 5, 2, "up", "EVENT_BEAT_LT_SURGE")
     g.evidence("m17")
+
+
+def leave_ss_anne(g):
+    # The dock's @load script plays the departure and walks us into the
+    # city. It is a transient map, not a place to await restored control.
+    g.nav_to_map(18, 30, "VermilionCity")
+    for flag in ["EVENT_SS_ANNE_LEFT", "EVENT_WALKED_OUT_OF_DOCK",
+                 "EVENT_LEFT_SS_ANNE_VIA_GANGPLANK"]:
+        require_flag(g, flag)
 
 
 def inspect_can(g, index):
