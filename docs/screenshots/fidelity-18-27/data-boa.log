@@ -1,0 +1,3 @@
+     Running unittests src/lib.rs (/home/jerry/develop/open-pokered/.task-tmp/fidelity-18-27/target/debug/deps/pokered_data-abbcf49cd2d6f37a)
+test script_api::tests::fidelity_menus_and_reward_sound_suspend_with_typed_commands_in_boa ... ok
+test result: ok. 273 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s

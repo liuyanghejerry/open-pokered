@@ -8,8 +8,7 @@
 game_scene Route15Gate2F {
   // ── Oak's Aide / Scientist (npc 1) — gives EXP.ALL at 50 kinds owned ─────
   // requirement = 50, reward = EXP_ALL, completion flag = EVENT_GOT_EXP_ALL.
-  // The OaksAide @-decimal tokens substitute to fixed values here (50 / EXP.ALL),
-  // and the owned-count phrase is approximated with getPokedexOwnedCount().
+  // Report the actual owned count, as hOaksAideNumMonsOwned does.
   @storyline("talkOaksAide") {
     @trigger(map = "Route15Gate2F", npc = 1)
     @if (getFlag("EVENT_GOT_EXP_ALL")) {
@@ -26,13 +25,11 @@ game_scene Route15Gate2F {
         @option(@t("YES", "是")) {
           @if (getPokedexOwnedCount() >= 50) {
             // OaksAideHereYouGoText -> give item -> OaksAideGotItemText
-            @speaker("") {
-              @t("Great! You have caught 50\nkinds of POKeMON!\nCongratulations!\n\nHere you go!", "太棒了！你已经抓到了50种宝可\n梦！恭喜你！\n\n这个给你！")
-            }
+            showText(@t("Great! You have caught ", "太好了！你已经抓到了") + getPokedexOwnedCount() + @t(" kinds of POKeMON!\nCongratulations!\n\nHere you go!", "种宝可梦！\n恭喜你！\n\n给你！"))
             given = giveItem("EXP_ALL", 1)
             @if (given) {
               setFlag("EVENT_GOT_EXP_ALL")
-              @speaker("") { @t("<PLAYER> got the EXP.ALL!", "<PLAYER>得到了 EXP.ALL！") }
+              showItemDialogue(@t("<PLAYER> got the EXP.ALL!", "<PLAYER>得到了 EXP.ALL！"))
               // ExpAllText follows in the original once the item is received.
               @speaker("") {
                 @t("EXP.ALL gives EXP points to\nall the POKeMON with you,\neven if they don't fight.\n\nIt does, however, reduce the\namount of EXP for each\nPOKeMON.\n\nIf you don't need it, you\nshould store it via PC.", "EXP.ALL会把经验值分给同行的\n所有宝可梦，即使它们没有参\n战。\n\n但是，它减少了每只宝可梦获得\n的经验值的数量。\n\n如果不需要，可以通过电脑存放\n起来。")
@@ -42,9 +39,7 @@ game_scene Route15Gate2F {
             }
           } @else {
             // OaksAideUhOhText (not enough kinds owned)
-            @speaker("") {
-              @t("Let's see... Uh-oh! You have\ncaught only a few kinds of\nPOKeMON!\n\nYou need 50 kinds if you\nwant the EXP.ALL.", "让我看看……哎呀！你只抓到很\n少种类的宝可梦！\n\n要得到EXP.ALL，你需要抓到 50\n种。")
-            }
+            showText(@t("Let's see... Uh-oh! You have\ncaught only ", "让我看看……哎呀！你只抓到了") + getPokedexOwnedCount() + @t(" kinds of\nPOKeMON!\n\nYou need 50 kinds if you\nwant the EXP.ALL.", "种宝可梦！\n\n要得到EXP.ALL，需要抓到50种。"))
           }
         }
         @option(@t("NO", "否")) {

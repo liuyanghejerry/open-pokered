@@ -22,9 +22,7 @@ game_scene Route12SuperRodHouse {
           given = giveItem("SUPER_ROD", 1)
           @if (given) {
             setFlag("EVENT_GOT_SUPER_ROD")
-            @speaker("") {
-              @t("Grand! I like your style!\n\nTake this and fish, young\none!\n\n<PLAYER> received a SUPER\nROD!", "很好！我喜欢你的风格！\n\n拿上这个，去钓鱼吧，少年！\n\n<PLAYER>得到了厉害钓竿！")
-            }
+            showItemDialogue(@t("Grand! I like your style!\n\nTake this and fish, young\none!\n\n<PLAYER> received a SUPER\nROD!", "很好！我喜欢你的风格！\n\n拿上这个，去钓鱼吧，少年！\n\n<PLAYER>得到了厉害钓竿！"))
             @speaker("") {
               @t("Fishing is a way of life!\n\nFrom the seas to rivers, go\nout and land the big one!", "钓鱼是一种生活方式！\n\n从大海到河流，去钓上一条大家\n伙吧！")
             }

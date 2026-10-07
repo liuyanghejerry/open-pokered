@@ -200,6 +200,7 @@ const NO_STATE_COMMANDS: &[&str] = &[
     "showRandomText",
     "showChoice",
     // Blocking presentation only; giveItem / takeMoney own vending state.
+    "pokemonMenu",
     "readingMenu",
     "showMoneyBox",
     "vendingDelivery",
@@ -219,6 +220,7 @@ const NO_STATE_COMMANDS: &[&str] = &[
     "clearJoyIgnore",
     "heal",
     "animateHealingMachine",
+    "badgeMenu",
     "openShop",
     "openSlots",
     "elevatorMenu",

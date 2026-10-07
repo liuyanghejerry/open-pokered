@@ -1,0 +1,16 @@
+test game::asynchronous_colosseum_fidelity_tests::actual_frontend_asynchronous_ko_returns_both_sides_to_room_and_heals_all ... ok
+test game::captain_music_wait_fidelity_tests::no_audio_frontend_resumes_wait_music_when_the_real_healed_channel_ends ... ok
+test game::fidelity_systems_npc_tests::fidelity_cable_room_selection_completes_actual_warp ... ok
+test game::fidelity_systems_npc_tests::fidelity_companions_are_bound_to_save_path_with_legacy_only_fallback ... ok
+test game::fidelity_systems_npc_tests::fidelity_npc_completed_flag_precedes_connect_text_only_for_valid_pick ... ok
+test game::fidelity_systems_npc_tests::fidelity_npc_trade_accepts_last_mon_and_selected_duplicate ... ok
+test game::fidelity_systems_npc_tests::fidelity_npc_wrong_selection_preserves_party_and_pokedex ... ok
+test game::link_trade_movie_name_fidelity_tests::completed_channel_trade_movie_uses_the_received_peer_name ... ok
+test game::web_legacy_save_fidelity_tests::invalid_web_json_does_not_grant_legacy_import ... ok
+test game::web_legacy_save_fidelity_tests::web_reader_migrates_same_slot_extras_only_for_original_json_without_tail ... ok
+test game::web_legacy_save_fidelity_tests::web_reader_recomputes_named_zero_ot_trade_identity ... ok
+test link::cable_club::receptionist_fidelity_tests::receptionist_can_cancel_or_choose_colosseum ... ok
+test link::cable_club::receptionist_fidelity_tests::receptionist_requires_save_consent_then_room_selection ... ok
+test render::battle::fidelity_flow_regressions::forest_string_shot_turn_finishes_after_real_trainer_intro ... ok
+test render::front_pic_fidelity_tests::full_seven_column_buffer_mirrors_padding_and_bottom_aligns ... ok
+test result: ok. 160 passed; 0 failed; 2 ignored; 0 measured; 1 filtered out; finished in 6.77s

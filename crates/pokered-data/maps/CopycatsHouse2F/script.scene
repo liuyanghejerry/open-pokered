@@ -23,7 +23,7 @@ game_scene CopycatsHouse2F {
         @if (given) {
           takeItem("POKE_DOLL", 1)
           setFlag("EVENT_GOT_TM31")
-          @speaker("") { @t("<PLAYER> received TM31!", "<PLAYER>得到了 TM31！") }
+          showItemDialogue(@t("<PLAYER> received TM31!", "<PLAYER>得到了 TM31！"))
           @speaker("") {
             @t("TM31 contains my favorite,\nMIMIC!\n\nUse it on a good POKeMON!", "TM31里有我最喜欢的招式模仿！\n\n用在优秀的宝可梦身上！")
           }

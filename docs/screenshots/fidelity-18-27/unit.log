@@ -1,0 +1,56 @@
+     Running unittests src/lib.rs (/home/jerry/develop/open-pokered/.task-tmp/fidelity-18-27/target/debug/deps/pokered_agent-0a693a7174b9bd05)
+test result: ok. 53 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.14s
+     Running unittests src/lib.rs (/home/jerry/develop/open-pokered/.task-tmp/fidelity-18-27/target/debug/deps/pokered_core-4b5e866e139c3656)
+test battle::fidelity_blackout_tests::early_rival_loss_boasts_then_prints_both_blackout_lines ... ok
+test battle::item_fidelity_tests::capped_x_stat_still_consumes_and_queues_the_original_animation ... ok
+test battle::item_fidelity_tests::elixir_in_battle_restores_all_moves_without_move_menu ... ok
+test battle::item_fidelity_tests::ether_in_battle_can_target_zero_pp_move ... ok
+test battle::item_fidelity_tests::ether_in_battle_restores_selected_move ... ok
+test battle::item_fidelity_tests::ether_move_menu_b_returns_to_party_select ... ok
+test battle::item_fidelity_tests::ether_no_effect_on_full_pp_keeps_item ... ok
+test battle::item_fidelity_tests::full_box_alone_does_not_block_ball ... ok
+test battle::item_fidelity_tests::full_party_and_box_refuses_ball_without_consuming ... ok
+test battle::item_fidelity_tests::learn_move_chain_replaces_a_chosen_move ... ok
+test battle::item_fidelity_tests::poke_doll_flees_wild_battle ... ok
+test battle::item_fidelity_tests::potion_from_filtered_battle_bag_preserves_key_items ... ok
+test battle::item_fidelity_tests::poke_doll_refused_in_trainer_battle ... ok
+test battle::item_fidelity_tests::repeated_x_accuracy_is_consumed_without_x_stat_animation ... ok
+test battle::item_fidelity_tests::successful_medicine_spends_the_player_turn_and_requests_heal_sfx ... ok
+test battle::item_fidelity_tests::safari_ball_refused_when_party_and_box_full ... ok
+test battle::item_fidelity_tests::trainer_ball_is_blocked_consumes_ball_and_animates ... ok
+test battle::link_battle_driver_tests::fidelity_link_exchange_preserves_damage_status_and_pp ... ok
+test battle::mimic_replay_rng_fidelity_tests::traded_mimic_choice_replays_the_obedience_roll_that_opened_the_menu ... ok
+test credits::fidelity_timing_tests::credits_opening_clears_for_one_hundred_frames_then_waits_128_with_music ... ok
+test overworld::native_script::tests::fidelity_cinnabar_entry_resets_mansion_switch_and_finishes_fossils ... ok
+test overworld::native_script::tests::fidelity_fly_explanation_only_on_repeat_and_bike_menu_displays_price ... ok
+test overworld::native_script::tests::fidelity_fishing_bag_full_does_not_promise_or_sound_a_gift ... ok
+test overworld::native_script::tests::fidelity_indigo_reception_has_only_welcome_before_link_flow ... ok
+test overworld::native_script::tests::fidelity_lance_walks_reverse_rle_and_keeps_the_exit_locked_after_victory ... ok
+test overworld::native_script::tests::fidelity_bill_followup_toggles_cross_map_objects_only_after_ticket_and_return ... ok
+test overworld::native_script::tests::fidelity_vermilion_departure_callback_walks_twice_only_once_without_dialogue ... ok
+test overworld::native_script::tests::fidelity_game_corner_rocket_walks_around_player_before_hiding ... ok
+test overworld::native_script::tests::fidelity_safari_admission_is_walk_only_and_cleans_up_money_box ... ok
+test overworld::native_script::tests::fidelity_fossils_remain_ready_after_a_full_box_and_can_be_retried ... ok
+test overworld::native_script::tests::fidelity_gifts_commit_choice_and_lapras_only_after_delivery ... ok
+test overworld::native_script::tests::fidelity_aides_report_actual_owned_count_in_both_languages ... ok
+test overworld::native_script::tests::fidelity_snorlax_is_hidden_before_battle_even_after_blackout ... ok
+test overworld::native_script::tests::fidelity_reward_receipts_use_original_fanfare_only_on_success ... ok
+test overworld::native_script::tests::fidelity_tm_prizes_require_confirmation_and_success_before_payment ... ok
+test overworld::native_script::tests::fidelity_game_corner_coin_thresholds_preserve_unclaimed_gifts ... ok
+test overworld::script_interactions::fidelity_menu_tests::pokemon_entries_reopen_menu_at_previous_cursor_including_after_snapshot ... ok
+test overworld::native_script::tests::fidelity_pokemon_prizes_require_confirmation_and_charge_only_after_delivery ... ok
+test overworld::native_script::tests::fidelity_badge_house_filters_every_ownership_mask_and_keeps_descriptions_aligned ... ok
+test overworld::native_script::tests::fidelity_static_monsters_are_consumed_by_run_and_poke_doll ... ok
+test overworld::update::fidelity_systems_healing_tests::failed_full_box_gift_never_queues_pokemon ... ok
+test overworld::update::fidelity_systems_healing_tests::suspended_npc_trade_keeps_connect_text_advancing_without_reemitting_trade ... ok
+test overworld::update::late_fidelity_tests::fidelity_lance_intro_reaches_the_original_coordinate_and_closes_door ... ok
+test overworld::update::late_fidelity_tests::fidelity_purified_heal_fades_to_white_holds_six_frames_and_keeps_music ... ok
+test overworld::update::late_fidelity_tests::fidelity_purified_zone_rearms_without_consuming_repel_or_encounter_rng ... ok
+test overworld::update::ground_pickup_fidelity_tests::found_text_prints_before_sound_waits_for_completion_and_closes_without_a ... ok
+test overworld::update::vending_delivery_fidelity_tests::delivery_restarts_push_boulder_sound_sixty_times_two_frames_apart ... ok
+test overworld::update::ground_pickup_fidelity_tests::item_pickup_a_button_path_handles_full_bag_wrong_tm_and_missing_handlers ... ok
+test overworld::update::fidelity_systems_healing_tests::nurses_alone_record_blackout_destination ... ok
+test overworld::update::ground_pickup_fidelity_tests::every_original_ground_ball_preserves_failure_and_persists_success ... ok
+test result: ok. 2683 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.64s
+     Running unittests src/lib.rs (/home/jerry/develop/open-pokered/.task-tmp/fidelity-18-27/target/debug/deps/pokered_data-2da9f13e207be1ef)
+test result: ok. 262 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s

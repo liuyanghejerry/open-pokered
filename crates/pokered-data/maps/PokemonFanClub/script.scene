@@ -84,9 +84,8 @@ game_scene PokemonFanClub {
           given = giveItem("BIKE_VOUCHER", 1)
           @if (given) {
             setFlag("EVENT_GOT_BIKE_VOUCHER")
-            @speaker("") {
-              @t("<PLAYER> received a BIKE\nVOUCHER!\n\nExchange that for a BICYCLE!\n\nDon't worry, my FEAROW will\nFLY me anywhere!\n\nSo, I don't need a BICYCLE!\n\nI hope you like cycling!", "<PLAYER>得到了自行车兑换券！\n\n用它去换自行车吧！\n\n别担心，我的大嘴雀会带我飞往\n任何地方！\n\n所以，我不需要自行车！\n\n希望你喜欢骑自行车！")
-            }
+            showItemDialogue(@t("<PLAYER> received a BIKE\nVOUCHER!", "<PLAYER>得到了自行车兑换券！"), "SFX_GET_KEY_ITEM")
+            @speaker("") { @t("Exchange that for a BICYCLE!\n\nDon't worry, my FEAROW will\nFLY me anywhere!\n\nSo, I don't need a BICYCLE!\n\nI hope you like cycling!", "用它去换自行车吧！\n\n别担心，我的大嘴雀会带我飞往任何地方！\n\n所以我不需要自行车！\n\n希望你喜欢骑自行车！") }
           } @else {
             @speaker("") {
               @t("Make room for this!", "请给这个腾点地方！")

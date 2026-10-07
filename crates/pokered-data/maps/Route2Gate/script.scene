@@ -7,8 +7,7 @@
 game_scene Route2Gate {
   // ── Oak's Aide / Scientist (npc 1) — gives HM05 FLASH at 10 kinds owned ───
   // requirement = 10, reward = HM_FLASH (HM05), completion flag = EVENT_GOT_HM05.
-  // The OaksAide @-decimal tokens substitute to fixed values here (10 / FLASH),
-  // and the owned-count phrase is approximated with getPokedexOwnedCount().
+  // Report the actual owned count, as hOaksAideNumMonsOwned does.
   // In the original, the FlashExplanationText prints after the OaksAideScript
   // runs, whether the item was just given or already held.
   @storyline("talkOaksAide") {
@@ -27,13 +26,11 @@ game_scene Route2Gate {
         @option(@t("YES", "是")) {
           @if (getPokedexOwnedCount() >= 10) {
             // OaksAideHereYouGoText -> give item -> OaksAideGotItemText
-            @speaker("") {
-              @t("Great! You have caught 10\nkinds of POKeMON!\nCongratulations!\n\nHere you go!", "太好了！你抓到了 10种宝可\n梦！恭喜你！\n\n给你！")
-            }
+            showText(@t("Great! You have caught ", "太好了！你已经抓到了") + getPokedexOwnedCount() + @t(" kinds of POKeMON!\nCongratulations!\n\nHere you go!", "种宝可梦！\n恭喜你！\n\n给你！"))
             given = giveItem("HM05", 1)
             @if (given) {
               setFlag("EVENT_GOT_HM05")
-              @speaker("") { @t("<PLAYER> got HM05!", "<PLAYER>得到了HM05！") }
+              showItemDialogue(@t("<PLAYER> got HM05!", "<PLAYER>得到了HM05！"))
               // FlashExplanationText follows once the item is received.
               @speaker("") {
                 @t("The HM FLASH lights even the\ndarkest dungeons.", "秘传招式闪光能照亮最黑暗的洞\n窟。")
@@ -43,9 +40,7 @@ game_scene Route2Gate {
             }
           } @else {
             // OaksAideUhOhText (not enough kinds owned)
-            @speaker("") {
-              @t("Let's see... Uh-oh! You have\ncaught only a few kinds of\nPOKeMON!\n\nYou need 10 kinds if you\nwant the HM05.", "让我看看……哎呀！你抓到的宝\n可梦种类很少！\n\n想要HM05的话，需要抓到 10种\n才行。")
-            }
+            showText(@t("Let's see... Uh-oh! You have\ncaught only ", "让我看看……哎呀！你只抓到了") + getPokedexOwnedCount() + @t(" kinds of\nPOKeMON!\n\nYou need 10 kinds if you\nwant the HM05.", "种宝可梦！\n\n要得到HM05，需要抓到10种。"))
           }
         }
         @option(@t("NO", "否")) {

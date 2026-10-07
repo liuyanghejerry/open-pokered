@@ -304,7 +304,8 @@ impl ScriptHost for NativeHost {
             // ── async commands: build a ScriptCommand for the driver ──────
             "showItemDialogue" => {
                 let text = args::text(v.first().ok_or("showItemDialogue: missing text")?, "showItemDialogue")?;
-                Ok(pokemon(PokemonScriptCommand::ShowItemDialogue { text }))
+                let sound_id = v.get(1).map(|value| args::text(value, "showItemDialogue sound")).transpose()?;
+                Ok(pokemon(PokemonScriptCommand::ShowItemDialogue { text, sound_id }))
             }
             "giveItem" => {
                 let item_id = args::text(v.first().ok_or("giveItem: missing item")?, "giveItem")?;
@@ -423,10 +424,23 @@ impl ScriptHost for NativeHost {
                 let amount = args::number(v.first().ok_or("showMoneyBox: missing amount")?, "showMoneyBox")? as i64;
                 Ok(pokemon(PokemonScriptCommand::ShowMoneyBox { amount }))
             }
+            "badgeMenu" | "pokemonMenu" => {
+                let options = args::string_array(v.first().ok_or("menu: missing options")?, "menu")?;
+                let contents = args::string_array(v.get(1).ok_or("menu: missing contents")?, "menu")?;
+                let mut values = vec![serde_json::json!(options), serde_json::json!(contents)];
+                if name == "badgeMenu" {
+                    let Value::Array(bits) = v.get(2).ok_or("badgeMenu: missing ownership")? else { return Err("badgeMenu: ownership array required".into()); };
+                    let owned = bits.iter().map(|bit| match bit {
+                        Value::Bool(value) => Ok(*value), _ => Err("badgeMenu: boolean required"),
+                    }).collect::<Result<Vec<_>, _>>()?;
+                    values.push(serde_json::json!(owned));
+                }
+                Ok(pokemon(PokemonScriptCommand::from_custom(name, &values)?))
+            }
             "readingMenu" => {
                 let options = args::string_array(v.first().ok_or("readingMenu: missing options")?, "readingMenu")?;
                 let texts = args::string_array(v.get(1).ok_or("readingMenu: missing texts")?, "readingMenu")?;
-                if options.len() != texts.len() + 1 || texts.is_empty() {
+                if options.len() != texts.len() + 1 {
                     return Err("readingMenu: one text per heading plus a final exit option required".to_string());
                 }
                 Ok(pokemon(PokemonScriptCommand::ReadingMenu { options, texts }))
@@ -2570,6 +2584,199 @@ mod tests {
             engine.functions.get("talkNurse").is_some(),
             "shared bare binding must be restored"
         );
+    }
+    #[test]
+    fn fidelity_aides_report_actual_owned_count_in_both_languages() {
+        for (map, threshold, flag) in [
+            ("Route2Gate", 10, "EVENT_GOT_HM05"),
+            ("Route11Gate2F", 30, "EVENT_GOT_ITEMFINDER"),
+            ("Route15Gate2F", 50, "EVENT_GOT_EXP_ALL"),
+        ] {
+            let scene = pokered_data::embedded_scenes::get_scene_ast(map).unwrap();
+            for owned in [0, threshold - 1, threshold, threshold + 1, 151] {
+                for lang in ["en", "zh"] {
+                    let mut e = NativeScriptEngine::new();
+                    e.load_map(map, &scene);
+                    e.seed_number("pokedexOwned", owned as f64);
+                    e.set_lang(lang);
+                    let commands = drive_fidelity_scene(&mut e, "talkOaksAide", true, "", &[0]);
+                    let evaluation = commands.iter().filter_map(|c| match c {
+                        ScriptCommand::ShowText { text } => Some(text), _ => None,
+                    }).nth(1).unwrap();
+                    assert!(evaluation.contains(&owned.to_string()), "{map}, {owned}, {lang}: {evaluation}");
+                    assert_eq!(e.get_flag(flag), owned >= threshold);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn fidelity_fishing_bag_full_does_not_promise_or_sound_a_gift() {
+        for map in ["VermilionOldRodHouse", "FuchsiaGoodRodHouse"] {
+            let scene = pokered_data::embedded_scenes::get_scene_ast(map).unwrap();
+            for room in [true, false] {
+                let mut e = NativeScriptEngine::new();
+                e.load_map(map, &scene);
+                let commands = drive_fidelity_scene(&mut e, "talkFishingGuru", room, "", &[0]);
+                let give_at = commands.iter().position(|c| matches!(c, ScriptCommand::GiveItem { .. })).unwrap();
+                let promise = commands.iter().position(|c| matches!(c, ScriptCommand::ShowText { text } if text.starts_with("Grand!")));
+                assert_eq!(promise.is_some(), room);
+                if let Some(at) = promise { assert!(give_at < at); }
+                assert_eq!(commands.iter().any(|c| matches!(c, ScriptCommand::Custom { name, .. } if name == "showItemDialogue")), room);
+            }
+        }
+    }
+
+    #[test]
+    fn fidelity_reward_receipts_use_original_fanfare_only_on_success() {
+        for (map, handler, bag, sound) in [
+            ("BillsHouse", "talkBill", "", "SFX_GET_KEY_ITEM"),
+            ("CeladonDiner", "talkGymGuide", "", "SFX_GET_KEY_ITEM"),
+            ("BikeShop", "talkBikeShopClerk", "BIKE_VOUCHER", "SFX_GET_KEY_ITEM"),
+            ("PokemonFanClub", "talkChairman", "", "SFX_GET_KEY_ITEM"),
+            ("Route16FlyHouse", "talkBrunetteGirl", "", "SFX_GET_KEY_ITEM"),
+            ("CopycatsHouse2F", "talkCopycat", "POKE_DOLL", "SFX_GET_ITEM_1"),
+            ("SafariZoneSecretHouse", "talkFishingGuru", "", "SFX_GET_ITEM_1"),
+            ("Route12SuperRodHouse", "talkFishingGuru", "", "SFX_GET_ITEM_1"),
+            ("CeladonMart3F", "talkClerk", "", "SFX_GET_ITEM_1"),
+            ("Route2Gate", "talkOaksAide", "", "SFX_GET_ITEM_1"),
+            ("Route11Gate2F", "talkOaksAide", "", "SFX_GET_ITEM_1"),
+            ("Route15Gate2F", "talkOaksAide", "", "SFX_GET_ITEM_1"),
+        ] {
+            let scene = pokered_data::embedded_scenes::get_scene_ast(map).unwrap();
+            for room in [true, false] {
+                let mut e = NativeScriptEngine::new();
+                e.load_map(map, &scene);
+                e.seed_number("pokedexOwned", 80.0);
+                e.seed_set("bag", &[bag.into()]);
+                let commands = drive_fidelity_scene(&mut e, handler, room, "", &[0]);
+                let receipts: Vec<_> = commands.iter().filter_map(|c| {
+                    let ScriptCommand::Custom { name, args } = c else { return None };
+                    if name != "showItemDialogue" { return None }
+                    match pokered_data::script_command::PokemonScriptCommand::from_custom(name, args).unwrap() {
+                        pokered_data::script_command::PokemonScriptCommand::ShowItemDialogue { sound_id, .. } => Some(sound_id),
+                        _ => unreachable!(),
+                    }
+                }).collect();
+                assert_eq!(receipts.len(), usize::from(room), "{map}, room={room}");
+                if room { assert_eq!(receipts[0].as_deref().unwrap_or("SFX_GET_ITEM_1"), sound, "{map}"); }
+            }
+        }
+    }
+
+    #[test]
+    fn fidelity_fly_explanation_only_on_repeat_and_bike_menu_displays_price() {
+        let scene = pokered_data::embedded_scenes::get_scene_ast("Route16FlyHouse").unwrap();
+        let mut e = NativeScriptEngine::new();
+        e.load_map("Route16FlyHouse", &scene);
+        let first = drive_fidelity_scene(&mut e, "talkBrunetteGirl", true, "", &[]);
+        assert!(!first.iter().any(|c| matches!(c, ScriptCommand::ShowText { text } if text.starts_with("HM02 is FLY"))));
+        let repeat = drive_fidelity_scene(&mut e, "talkBrunetteGirl", true, "", &[]);
+        assert!(matches!(&repeat[0], ScriptCommand::ShowText { text } if text.starts_with("HM02 is FLY")));
+        let scene = pokered_data::embedded_scenes::get_scene_ast("BikeShop").unwrap();
+        for choice in [0, 1] {
+            e = NativeScriptEngine::new();
+            e.load_map("BikeShop", &scene);
+            let cmds = drive_fidelity_scene(&mut e, "talkBikeShopClerk", false, "", &[choice]);
+            assert!(cmds.iter().any(|c| matches!(c, ScriptCommand::ShowChoice { options } if options == &["BICYCLE ¥1000000", "CANCEL"])));
+            assert!(!cmds.iter().any(|c| matches!(c, ScriptCommand::GiveItem { .. } | ScriptCommand::TakeMoney { .. })));
+        }
+    }
+
+    #[test]
+    fn fidelity_safari_admission_is_walk_only_and_cleans_up_money_box() {
+        let scene = pokered_data::embedded_scenes::get_scene_ast("SafariZoneGate").unwrap();
+        let mut e = NativeScriptEngine::new();
+        e.load_map("SafariZoneGate", &scene);
+        let talk = drive_fidelity_scene(&mut e, "talkSafariZoneWorker1", true, "", &[]);
+        assert_eq!(talk.len(), 1);
+        assert!(matches!(&talk[0], ScriptCommand::ShowText { text } if text.starts_with("Welcome")));
+        for (money, choice, admitted) in [(1000.0, 0, true), (499.0, 0, false), (1000.0, 1, false)] {
+            e = NativeScriptEngine::new();
+            e.load_map("SafariZoneGate", &scene);
+            e.set_player_position(3, 2);
+            e.seed_number("money", money);
+            let cmds = drive_fidelity_scene(&mut e, "gateRow", true, "", &[choice]);
+            assert_eq!(e.get_flag("EVENT_IN_SAFARI_ZONE"), admitted);
+            assert!(!cmds.iter().any(|c| matches!(c, ScriptCommand::WarpTo { .. })));
+            assert!(cmds.iter().any(|c| matches!(c, ScriptCommand::Custom { name, args } if name == "showMoneyBox" && args == &vec![serde_json::json!(-1)])));
+            let paths: Vec<_> = cmds.iter().filter_map(|c| match c { ScriptCommand::MovePlayerRelative { steps } => Some(steps.clone()), _ => None }).collect();
+            assert_eq!(paths[0], vec![(1, 0)]);
+            assert_eq!(paths[1], if admitted { vec![(0, -1); 3] } else { vec![(0, 1)] });
+        }
+        for choice in [0, 1] {
+            e = NativeScriptEngine::new();
+            e.load_map("SafariZoneGate", &scene);
+            e.set_player_position(4, 0);
+            e.set_flag("EVENT_IN_SAFARI_ZONE", true);
+            let cmds = drive_fidelity_scene(&mut e, "SafariZoneGateOnLoad", true, "", &[choice]);
+            let paths: Vec<_> = cmds.iter().filter_map(|c| match c { ScriptCommand::MovePlayerRelative { steps } => Some(steps.clone()), _ => None }).collect();
+            assert_eq!(paths[0], vec![(0, 1)]);
+            assert_eq!(paths[1], if choice == 0 { vec![(0, 1); 3] } else { vec![(0, -1)] });
+            assert_eq!(e.get_flag("EVENT_IN_SAFARI_ZONE"), choice != 0);
+        }
+    }
+    #[test]
+    fn fidelity_bill_followup_toggles_cross_map_objects_only_after_ticket_and_return() {
+        let scene = pokered_data::embedded_scenes::get_scene_ast("Route25").unwrap();
+        for (met, ticket, completed) in [(false, false, false), (true, false, false), (true, true, false), (true, true, true)] {
+            let mut e = NativeScriptEngine::new();
+            e.load_map("Route25", &scene);
+            e.set_flag("EVENT_MET_BILL_2", met);
+            e.set_flag("EVENT_GOT_SS_TICKET", ticket);
+            e.set_flag("EVENT_LEFT_BILLS_HOUSE_AFTER_HELPING", completed);
+            let cmds = drive_fidelity_scene(&mut e, "Route25OnLoad", true, "", &[]);
+            let swaps = met && ticket && !completed;
+            assert_eq!(e.get_flag("EVENT_LEFT_BILLS_HOUSE_AFTER_HELPING"), completed || swaps);
+            assert_eq!(cmds.iter().any(|c| matches!(c, ScriptCommand::HideObjectByName { toggle_id } if toggle_id == "ROUTE_24_OBJ_1")), swaps);
+            assert_eq!(cmds.iter().any(|c| matches!(c, ScriptCommand::ShowObjectByName { toggle_id } if toggle_id == "BILLS_HOUSE_OBJ_3")), swaps);
+        }
+        let scene = pokered_data::embedded_scenes::get_scene_ast("BillsHouse").unwrap();
+        for returned in [false, true] {
+            let mut e = NativeScriptEngine::new();
+            e.load_map("BillsHouse", &scene);
+            e.set_flag("EVENT_USED_CELL_SEPARATOR_ON_BILL", true);
+            e.set_flag("EVENT_LEFT_BILLS_HOUSE_AFTER_HELPING", returned);
+            let cmds = drive_fidelity_scene(&mut e, "pcMachine", true, "", &[]);
+            assert!(!cmds.iter().any(|c| matches!(c, ScriptCommand::Custom { name, .. } if name == "openBillsPC")));
+            assert_eq!(cmds.iter().any(|c| matches!(c, ScriptCommand::Custom { name, .. } if name == "pokemonMenu")), returned);
+        }
+    }
+
+    #[test]
+    fn fidelity_vermilion_departure_callback_walks_twice_only_once_without_dialogue() {
+        let scene = pokered_data::embedded_scenes::get_scene_ast("VermilionCity").unwrap();
+        let mut e = NativeScriptEngine::new();
+        e.load_map("VermilionCity", &scene);
+        assert!(drive_fidelity_scene(&mut e, "VermilionCityOnLoad", true, "", &[]).is_empty());
+        e.set_flag("EVENT_SS_ANNE_LEFT", true);
+        let cmds = drive_fidelity_scene(&mut e, "VermilionCityOnLoad", true, "", &[]);
+        assert!(!cmds.iter().any(|c| matches!(c, ScriptCommand::ShowText { .. })));
+        assert!(cmds.iter().any(|c| matches!(c, ScriptCommand::MovePlayerRelative { steps } if steps == &vec![(0, -1), (0, -1)])));
+        assert!(drive_fidelity_scene(&mut e, "VermilionCityOnLoad", true, "", &[]).is_empty());
+    }
+
+    #[test]
+    fn fidelity_badge_house_filters_every_ownership_mask_and_keeps_descriptions_aligned() {
+        let scene = pokered_data::embedded_scenes::get_scene_ast("CeruleanBadgeHouse").unwrap();
+        let badges = ["BOULDERBADGE", "CASCADEBADGE", "THUNDERBADGE", "RAINBOWBADGE", "SOULBADGE", "MARSHBADGE", "VOLCANOBADGE", "EARTHBADGE"];
+        for mask in 0u16..=255 {
+            let mut e = NativeScriptEngine::new();
+            e.load_map("CeruleanBadgeHouse", &scene);
+            e.seed_number("obtainedBadges", mask as f64);
+            let cmds = drive_fidelity_scene(&mut e, "talkMiddleAgedMan", true, "", &[]);
+            let menu = cmds.iter().find_map(|c| match c {
+                ScriptCommand::Custom { name, args } if name == "readingMenu" => Some(pokered_data::script_command::PokemonScriptCommand::from_custom(name, args).unwrap()), _ => None,
+            }).unwrap();
+            let pokered_data::script_command::PokemonScriptCommand::ReadingMenu { options, texts } = menu else { unreachable!() };
+            let expected: Vec<_> = badges.iter().enumerate().filter(|(i, _)| mask & (1 << i) != 0).map(|(_, s)| (*s).to_string()).chain(core::iter::once("CANCEL".to_string())).collect();
+            assert_eq!(options, expected);
+            assert_eq!(texts.len(), mask.count_ones() as usize);
+            for (option, description) in options.iter().zip(&texts) {
+                let marker = match option.as_str() { "BOULDERBADGE" => "ATTACK", "CASCADEBADGE" => "L30", "THUNDERBADGE" => "SPEED", "RAINBOWBADGE" => "L50", "SOULBADGE" => "DEFENSE", "MARSHBADGE" => "L70", "VOLCANOBADGE" => "SPECIAL", "EARTHBADGE" => "All POKeMON", _ => unreachable!() };
+                assert!(description.contains(marker));
+            }
+        }
     }
     // Drive real embedded map handlers, including command-return values, rather
     // than asserting their source spelling. The caller chooses menu responses.

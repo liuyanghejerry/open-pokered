@@ -1,0 +1,13 @@
+{
+  "base_commit": "4ba17701dfa5561e3e5a73d8b169fd6f95e339a8",
+  "binary_sha256": {
+    "base": "f39d3c61353e0548d7249753a588cd95f93aaa5052c18309167077c38338be69",
+    "head": "19faa471cb69d01f65ef7c3d4e65cfdef33a5c65674428d1b195db05f4204a78"
+  },
+  "transport": "test-only stdio; production debug command handlers",
+  "fresh_playthrough": "m01–m49, unseeded; separate-process CONTINUE",
+  "capture_scenarios": 10,
+  "matched_sampling_frames": true,
+  "pokedex_seen_persistence": true,
+  "legal_fixture_positions": true
+}

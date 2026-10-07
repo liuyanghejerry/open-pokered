@@ -53,6 +53,8 @@ pub enum ScriptEffect {
     /// Original FoundItemText: print, then play/wait GET_ITEM_1, no A prompt.
     ShowItemDialogue {
         text: String,
+        #[serde(default)]
+        sound_id: Option<String>,
         sound_started: bool,
     },
     ShowChoice {
@@ -346,8 +348,8 @@ impl ScriptEffect {
             ScriptEffect::ShowDiploma => json!({ "effect": "ShowDiploma" }),
             ScriptEffect::LinkStart => json!({ "effect": "LinkStart" }),
             ScriptEffect::HallOfFameCeremony => json!({ "effect": "HallOfFameCeremony" }),
-            ScriptEffect::ShowItemDialogue { text, sound_started } => {
-                json!({ "effect": "ShowItemDialogue", "text": text, "sound_started": sound_started })
+            ScriptEffect::ShowItemDialogue { text, sound_id, sound_started } => {
+                json!({ "effect": "ShowItemDialogue", "text": text, "sound_id": sound_id, "sound_started": sound_started })
             }
             ScriptEffect::ShowDialogue { text } => {
                 json!({ "effect": "ShowDialogue", "text": text })
@@ -845,7 +847,10 @@ fn dispatch_custom(name: &str, args: &[Value]) -> ScriptEffect {
         Err(error) => return unsupported_with_reason(name, error),
     };
     match command {
-        PokemonScriptCommand::ShowItemDialogue { text } => ScriptEffect::ShowItemDialogue { text, sound_started: false },
+        PokemonScriptCommand::ShowItemDialogue { text, sound_id } => ScriptEffect::ShowItemDialogue { text, sound_id, sound_started: false },
+        PokemonScriptCommand::PokemonMenu { options, species } => ScriptEffect::ReadingMenu {
+            menu: super::script_interactions::ReadingMenu::pokemon(options, species),
+        },
         PokemonScriptCommand::ReadingMenu { options, texts } => ScriptEffect::ReadingMenu { menu: super::script_interactions::ReadingMenu::new(options, texts) },
         PokemonScriptCommand::ShowMoneyBox { amount } => ScriptEffect::ShowMoneyBox { amount },
         PokemonScriptCommand::VendingDelivery => ScriptEffect::VendingDelivery { frames_elapsed: 0 },

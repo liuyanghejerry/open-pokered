@@ -1373,6 +1373,30 @@ impl BattleScreen {
         }
     }
 
+    /// HandlePlayerBlackOut: RIVAL1 boasts before the blackout text, except
+    /// OaksLab where the map script owns his quip and there is no blackout.
+    fn trainer_blackout_messages(&self) -> Vec<String> {
+        let mut messages = Vec::new();
+        if self.trainer_class == Some(TrainerClass::Rival1) {
+            if self.map_id == pokered_data::maps::MapId::OaksLab as u8 {
+                return messages;
+            }
+            let rival = self.trainer_name.as_deref().filter(|name| !name.is_empty()).unwrap_or("BLUE");
+            messages.push(if self.is_zh {
+                format!("{rival}：耶！我是不是很厉害？")
+            } else {
+                format!("{rival}: Yeah! Am I great or what?")
+            });
+        }
+        let player = self.player_name.as_deref().filter(|name| !name.is_empty()).unwrap_or("RED");
+        messages.push(if self.is_zh {
+            format!("{player}没有能战斗的宝可梦了！\n\n{player}眼前一黑！")
+        } else {
+            format!("{player} is out of useable POKeMON!\n\n{player} blacked out!")
+        });
+        messages
+    }
+
     pub fn set_map_id(&mut self, map_id: u8) {
         self.map_id = map_id;
         self.battle_transition = BattleTransition::select(
@@ -2723,7 +2747,7 @@ learn {learn_name}!")];
                                 );
                             } else {
                                 self.show_text_then(
-                                    vec!["Player blacked out!".to_string()],
+                                    self.trainer_blackout_messages(),
                                     BattlePhase::TrainerVictory {
                                         phase: EndBattleText,
                                         wait_frames: 0,
@@ -7450,5 +7474,31 @@ mod mimic_replay_rng_fidelity_tests {
             }
         }
         panic!("no obeying Mimic found in the deterministic seed range");
+    }
+}
+
+#[cfg(test)]
+mod fidelity_blackout_tests {
+    use super::*;
+    #[test]
+    fn early_rival_loss_boasts_then_prints_both_blackout_lines() {
+        for map in [pokered_data::maps::MapId::Route22, pokered_data::maps::MapId::CeruleanCity] {
+            let mut b = BattleScreen::new(false);
+            b.trainer_class = Some(TrainerClass::Rival1);
+            b.trainer_name = Some("GREEN".into());
+            b.player_name = Some("ASH".into());
+            b.map_id = map as u8;
+            let messages = b.trainer_blackout_messages();
+            assert_eq!(messages[0], "GREEN: Yeah! Am I great or what?");
+            assert_eq!(messages[1], "ASH is out of useable POKeMON!\n\nASH blacked out!");
+            b.is_zh = true;
+            assert!(b.trainer_blackout_messages()[0].contains("GREEN"));
+            b.is_zh = false;
+            b.trainer_class = Some(TrainerClass::Rival3);
+            assert_eq!(b.trainer_blackout_messages().len(), 1);
+            b.trainer_class = Some(TrainerClass::Rival1);
+            b.map_id = pokered_data::maps::MapId::OaksLab as u8;
+            assert!(b.trainer_blackout_messages().is_empty());
+        }
     }
 }

@@ -18,7 +18,7 @@ game_scene SafariZoneSecretHouse {
       given = giveItem("HM03", 1)
       @if (given) {
         setFlag("EVENT_GOT_HM03")
-        @speaker("") { @t("<PLAYER> received HM03!", "<PLAYER>得到了 HM03！") }
+        showItemDialogue(@t("<PLAYER> received HM03!", "<PLAYER>得到了 HM03！"))
       } @else {
         @speaker("") { @t("You don't have room for this\nfabulous prize!", "你没有地方放这个超棒的奖品！") }
       }

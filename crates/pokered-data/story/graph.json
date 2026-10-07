@@ -89,7 +89,7 @@
     },
     {
       "from": "script:BillsHouse:pcMachine",
-      "to": "flag:EVENT_MET_BILL",
+      "to": "flag:EVENT_LEFT_BILLS_HOUSE_AFTER_HELPING",
       "kind": "requires"
     },
     {
@@ -10156,8 +10156,53 @@
     },
     {
       "from": "script:Route25:@load",
+      "to": "flag:EVENT_BILL_SAID_USE_CELL_SEPARATOR",
+      "kind": "clears"
+    },
+    {
+      "from": "script:Route25:@load",
+      "to": "flag:EVENT_GOT_SS_TICKET",
+      "kind": "requires"
+    },
+    {
+      "from": "script:Route25:@load",
+      "to": "flag:EVENT_LEFT_BILLS_HOUSE_AFTER_HELPING",
+      "kind": "requires"
+    },
+    {
+      "from": "script:Route25:@load",
+      "to": "flag:EVENT_LEFT_BILLS_HOUSE_AFTER_HELPING",
+      "kind": "sets"
+    },
+    {
+      "from": "script:Route25:@load",
+      "to": "flag:EVENT_MET_BILL_2",
+      "kind": "requires"
+    },
+    {
+      "from": "script:Route25:@load",
       "to": "map:Route25",
       "kind": "triggered_at"
+    },
+    {
+      "from": "script:Route25:@load",
+      "to": "object:BILLS_HOUSE_OBJ_1",
+      "kind": "shows"
+    },
+    {
+      "from": "script:Route25:@load",
+      "to": "object:BILLS_HOUSE_OBJ_2",
+      "kind": "hides"
+    },
+    {
+      "from": "script:Route25:@load",
+      "to": "object:BILLS_HOUSE_OBJ_3",
+      "kind": "shows"
+    },
+    {
+      "from": "script:Route25:@load",
+      "to": "object:ROUTE_24_OBJ_1",
+      "kind": "hides"
     },
     {
       "from": "script:Route25:itemTmSeismicToss",
@@ -11841,6 +11886,11 @@
     {
       "from": "script:SafariZoneGate:@load",
       "to": "flag:EVENT_IN_SAFARI_ZONE",
+      "kind": "requires"
+    },
+    {
+      "from": "script:SafariZoneGate:@load",
+      "to": "flag:EVENT_IN_SAFARI_ZONE",
       "kind": "clears"
     },
     {
@@ -11880,11 +11930,6 @@
     },
     {
       "from": "script:SafariZoneGate:gateRow",
-      "to": "map:SafariZoneCenter",
-      "kind": "warps_to"
-    },
-    {
-      "from": "script:SafariZoneGate:gateRow",
       "to": "map:SafariZoneGate",
       "kind": "triggered_at"
     },
@@ -11902,45 +11947,8 @@
     },
     {
       "from": "script:SafariZoneGate:talkSafariZoneWorker1",
-      "to": "flag:EVENT_IN_SAFARI_ZONE",
-      "kind": "requires"
-    },
-    {
-      "from": "script:SafariZoneGate:talkSafariZoneWorker1",
-      "to": "flag:EVENT_IN_SAFARI_ZONE",
-      "kind": "sets"
-    },
-    {
-      "from": "script:SafariZoneGate:talkSafariZoneWorker1",
-      "to": "flag:EVENT_IN_SAFARI_ZONE",
-      "kind": "clears"
-    },
-    {
-      "from": "script:SafariZoneGate:talkSafariZoneWorker1",
-      "to": "flag:EVENT_SAFARI_GAME_OVER",
-      "kind": "clears"
-    },
-    {
-      "from": "script:SafariZoneGate:talkSafariZoneWorker1",
-      "to": "map:SafariZoneCenter",
-      "kind": "warps_to"
-    },
-    {
-      "from": "script:SafariZoneGate:talkSafariZoneWorker1",
       "to": "map:SafariZoneGate",
       "kind": "triggered_at"
-    },
-    {
-      "from": "script:SafariZoneGate:talkSafariZoneWorker1",
-      "to": "resource:money",
-      "kind": "requires",
-      "detail": ">=500"
-    },
-    {
-      "from": "script:SafariZoneGate:talkSafariZoneWorker1",
-      "to": "resource:money",
-      "kind": "takes",
-      "detail": "500"
     },
     {
       "from": "script:SafariZoneGate:talkSafariZoneWorker2",
@@ -15031,6 +15039,26 @@
     {
       "from": "script:UnusedMapF4:UnusedMapF4_obj2",
       "to": "map:UnusedMapF4",
+      "kind": "triggered_at"
+    },
+    {
+      "from": "script:VermilionCity:@load",
+      "to": "flag:EVENT_SS_ANNE_LEFT",
+      "kind": "requires"
+    },
+    {
+      "from": "script:VermilionCity:@load",
+      "to": "flag:EVENT_WALKED_PAST_GUARD_AFTER_SS_ANNE_LEFT",
+      "kind": "requires"
+    },
+    {
+      "from": "script:VermilionCity:@load",
+      "to": "flag:EVENT_WALKED_PAST_GUARD_AFTER_SS_ANNE_LEFT",
+      "kind": "sets"
+    },
+    {
+      "from": "script:VermilionCity:@load",
+      "to": "map:VermilionCity",
       "kind": "triggered_at"
     },
     {
