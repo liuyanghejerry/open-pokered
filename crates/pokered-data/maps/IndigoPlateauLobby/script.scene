@@ -85,19 +85,10 @@ POKeMON.", "好的，请把宝可梦交给我。")
     openShop(["ULTRA_BALL", "GREAT_BALL", "FULL_RESTORE", "MAX_POTION", "FULL_HEAL", "REVIVE", "MAX_REPEL"])
   }
 
-  // ── Link Receptionist (npc 5) — script_cable_club_receptionist ───────────
-  // Cable-club link play has no engine API. Reproduce the welcome line and
-  // the "making preparations" fallback the original shows offline.
+  // Standard Cable Club reception; linkStart owns offline/connected responses.
   @storyline("talkLinkReceptionist") {
     @trigger(map = "IndigoPlateauLobby", npc = 5)
-    @speaker("") {
-      @t("Welcome to the Cable Club!", "欢迎来到通信俱乐部！")
-    }
-    // Cable-club link battle/trade needs a link API; offline this shows the
-    // original's "making preparations" message as a local placeholder.
-    @speaker("") {
-      @t("Cable Club: This is for\ntrading and battling with\nfriends. We're making final\npreparations. Please wait.", "通信俱乐部：这里是用来和朋友\n进行交换和对战的。我们正在做\n最后的准备。请稍候。")
-    }
+    @speaker("") { @t("Welcome to the\nCable Club!", "欢迎来到通信俱乐部！") }
     linkStart()
   }
 

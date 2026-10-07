@@ -40,6 +40,7 @@ pub const POKERED_SCRIPT_FUNCTIONS: &[&str] = &[
     "openNamingScreen",
     "openPC",
     "openSlots",
+    "partyMonCanRename",
     "partyMonKnowsHm",
     "playCry",
     "playShipDeparture",

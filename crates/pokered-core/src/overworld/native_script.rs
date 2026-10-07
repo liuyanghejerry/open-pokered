@@ -262,6 +262,12 @@ impl ScriptHost for NativeHost {
                         .unwrap_or_default(),
                 )))
             }
+            "partyMonCanRename" => {
+                let idx = args::u32(v.first().ok_or("partyMonCanRename: missing index")?, "partyMonCanRename")?;
+                Ok(HostCall::Value(Value::Bool(
+                    self.numbers.get(&format!("partyCanRename{idx}")).copied().unwrap_or(0.0) != 0.0,
+                )))
+            }
             "partyMonKnowsHm" => {
                 let idx = args::u32(v.first().ok_or("partyMonKnowsHm: missing index")?, "partyMonKnowsHm")?;
                 Ok(HostCall::Value(Value::Bool(
@@ -2815,6 +2821,118 @@ mod tests {
             }
           }
         }
+    }
+
+    #[test]
+    fn fidelity_game_corner_coin_thresholds_preserve_unclaimed_gifts() {
+        let scene = pokered_data::embedded_scenes::get_scene_ast("GameCorner").unwrap();
+        for coins in [0, 9949, 9950, 9989, 9990, 9991, 9999] {
+            for (handler, flag, threshold) in [
+                ("talkFishingGuru", "EVENT_GOT_10_COINS", coins >= 9990),
+                ("talkClerk2", "EVENT_GOT_20_COINS_2", coins >= 9990),
+                ("talkGentleman", "EVENT_GOT_20_COINS", coins == 9990),
+            ] {
+                for has_case in [false, true] {
+                    let mut engine = NativeScriptEngine::new();
+                    engine.load_map("GameCorner", &scene);
+                    if has_case {
+                        engine.seed_set("bag", &["COIN_CASE".into()]);
+                    }
+                    engine.seed_number("coins", coins as f64);
+                    let commands = drive_fidelity_scene(&mut engine, handler, false, "", &[]);
+                    let received = has_case && !threshold;
+                    assert_eq!(
+                        engine.get_flag(flag),
+                        received,
+                        "{handler}: {coins}, case={has_case}"
+                    );
+                    assert_eq!(commands.iter().any(|c| matches!(c, ScriptCommand::Custom { name, .. } if name == "giveCoins")), received);
+                    if !received && has_case {
+                        engine.seed_number("coins", 0.0);
+                        drive_fidelity_scene(&mut engine, handler, false, "", &[]);
+                        assert!(
+                            engine.get_flag(flag),
+                            "refusal must leave the gift available"
+                        );
+                    }
+                }
+            }
+            for (has_case, money, answer) in [
+                (true, 1000, 0),
+                (true, 999, 0),
+                (false, 1000, 0),
+                (true, 1000, 1),
+            ] {
+                let mut engine = NativeScriptEngine::new();
+                engine.load_map("GameCorner", &scene);
+                if has_case {
+                    engine.seed_set("bag", &["COIN_CASE".into()]);
+                }
+                engine.seed_number("coins", coins as f64);
+                engine.seed_number("money", money as f64);
+                let commands =
+                    drive_fidelity_scene(&mut engine, "talkClerk1", false, "", &[answer]);
+                let bought = has_case && money >= 1000 && answer == 0 && coins < 9990;
+                for name in ["giveCoins", "takeMoney"] {
+                    assert_eq!(
+                        commands.iter().any(|c| match c {
+                            ScriptCommand::Custom { name: n, .. } => n == name,
+                            ScriptCommand::TakeMoney { .. } => name == "takeMoney",
+                            _ => false,
+                        }),
+                        bought,
+                        "{name}: {coins}"
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn fidelity_game_corner_rocket_walks_around_player_before_hiding() {
+        let scene = pokered_data::embedded_scenes::get_scene_ast("GameCorner").unwrap();
+        for (x, y, length, end) in [(9, 6, 5, (14, 5)), (8, 5, 5, (14, 5)), (10, 5, 8, (15, 5))] {
+            let mut engine = NativeScriptEngine::new();
+            engine.load_map("GameCorner", &scene);
+            engine.set_player_position(x, y);
+            let commands = drive_fidelity_scene(&mut engine, "talkRocket", false, "win", &[]);
+            let move_at = commands
+                .iter()
+                .position(|c| matches!(c, ScriptCommand::MoveNpc { .. }))
+                .unwrap();
+            let hide_at = commands
+                .iter()
+                .position(|c| matches!(c, ScriptCommand::HideObjectByName { .. }))
+                .unwrap();
+            assert!(move_at < hide_at);
+            if let ScriptCommand::MoveNpc { path, .. } = &commands[move_at] {
+                assert_eq!(path.len(), length);
+                assert_eq!(path.last(), Some(&end));
+                assert!(!path.contains(&(x, y)));
+            }
+            assert!(engine.get_flag("EVENT_BEAT_GAME_CORNER_ROCKET"));
+        }
+        let mut engine = NativeScriptEngine::new();
+        engine.load_map("GameCorner", &scene);
+        let commands = drive_fidelity_scene(&mut engine, "talkRocket", false, "lose", &[]);
+        assert!(!commands.iter().any(|c| matches!(
+            c,
+            ScriptCommand::MoveNpc { .. } | ScriptCommand::HideObjectByName { .. }
+        )));
+        assert!(!engine.get_flag("EVENT_BEAT_GAME_CORNER_ROCKET"));
+    }
+
+    #[test]
+    fn fidelity_indigo_reception_has_only_welcome_before_link_flow() {
+        let scene = pokered_data::embedded_scenes::get_scene_ast("IndigoPlateauLobby").unwrap();
+        let mut engine = NativeScriptEngine::new();
+        engine.load_map("IndigoPlateauLobby", &scene);
+        let commands = drive_fidelity_scene(&mut engine, "talkLinkReceptionist", false, "", &[]);
+        assert_eq!(commands.len(), 2);
+        assert!(
+            matches!(&commands[0], ScriptCommand::ShowText { text } if text == "Welcome to the\nCable Club!")
+        );
+        assert!(matches!(&commands[1], ScriptCommand::Custom { name, .. } if name == "linkStart"));
     }
 
     #[test]

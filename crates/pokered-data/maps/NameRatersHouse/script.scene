@@ -4,8 +4,7 @@
 // POKeMON's nickname. Talk -> YES -> pick a party POKeMON via the party menu
 // (choosePartyPokemon) -> YES -> open the naming screen (openNamingScreen) ->
 // write the chosen nickname back to that party slot (setPartyNickname).
-// The OT-match check (traded mons are "impeccable" and can't be renamed) is
-// not modelled; every party member can be renamed here.
+// The original OT name + ID check protects nicknames belonging to another trainer.
 
 game_scene NameRatersHouse {
   // ── NAME RATER (npc 1) ────────────────────────────────────────────────
@@ -22,20 +21,24 @@ game_scene NameRatersHouse {
         @speaker("") { @t("Which POKeMON should I look\nat?", "你想让我看哪只宝可梦？") }
         slot = choosePartyPokemon()
         @if (slot >= 0) {
-          @speaker("") {
-            @t("That is a decent nickname!\n\nBut, would you like me to\ngive it a nicer name?\n\nHow about it?", "这个名字还不错！\n\n但是，要不要我给它起一个更好\n的名字？\n\n你觉得怎么样？")
-          }
-          @choice {
-            @option(@t("YES", "是")) {
-              @speaker("") { @t("Fine! What should we name\nit?", "好！你想给它起什么名字？") }
-              newName = openNamingScreen("")
-              setPartyNickname(slot, newName)
-              @speaker("") {
-                @t("OK! This POKeMON has been\nrenamed!\n\nThat's a better name than\nbefore!", "OK！这只宝可梦已经改名了！\n\n比原来的名字好多了！")
-              }
+          @if (!partyMonCanRename(slot)) {
+            showText(getPartyMonName(slot) + @t(", is it?\nThat is a truly\nimpeccable name!\n\nTake good care of\n", "，是吗？\n这真是无可挑剔的名字！\n\n请好好照顾") + getPartyMonName(slot) + "!")
+          } @else {
+            @speaker("") {
+              @t("That is a decent nickname!\n\nBut, would you like me to\ngive it a nicer name?\n\nHow about it?", "这个名字还不错！\n\n但是，要不要我给它起一个更好\n的名字？\n\n你觉得怎么样？")
             }
-            @option(@t("NO", "否")) {
-              @speaker("") { @t("Fine! Come any time you\nlike!", "好！随时欢迎再来！") }
+            @choice {
+              @option(@t("YES", "是")) {
+                @speaker("") { @t("Fine! What should we name\nit?", "好！你想给它起什么名字？") }
+                newName = openNamingScreen("")
+                setPartyNickname(slot, newName)
+                @speaker("") {
+                  @t("OK! This POKeMON has been\nrenamed!\n\nThat's a better name than\nbefore!", "OK！这只宝可梦已经改名了！\n\n比原来的名字好多了！")
+                }
+              }
+              @option(@t("NO", "否")) {
+                @speaker("") { @t("Fine! Come any time you\nlike!", "好！随时欢迎再来！") }
+              }
             }
           }
         }

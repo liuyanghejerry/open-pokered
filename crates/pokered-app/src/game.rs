@@ -886,8 +886,12 @@ impl PokemonGame {
         snap.bag_h = h;
 
         let mut h = FNV_OFFSET;
+        fnv_mix(&mut h, &gd.player_id.to_le_bytes());
+        fnv_mix(&mut h, &self.save_data.player_name);
         let mut name_buf = [0u8; pokered_core::battle::state::NAME_TEXT_BUF];
         for mon in self.save_data.party.iter() {
+            fnv_mix(&mut h, &mon.ot_id.to_le_bytes());
+            fnv_mix(&mut h, &mon.ot_name);
             QuerySeedSnapshot::hash_u8(&mut h, mon.species as u8);
             QuerySeedSnapshot::hash_u8(&mut h, mon.level);
             for mv in &mon.moves {
@@ -4101,6 +4105,10 @@ impl PokemonGame {
                                 .iter()
                                 .map(|m| m.moves.iter().any(|mv| is_hm_move(*mv)))
                                 .collect();
+                            let can_rename: Vec<bool> = (0..self.save_data.party.count())
+                                .map(|i| self.save_data.party_mon_can_rename(i))
+                                .collect();
+                            self.overworld.seed_party_rename_query_state(&can_rename);
                             self.overworld.seed_daycare_query_state(
                                 dc.in_use,
                                 &dc_name,
