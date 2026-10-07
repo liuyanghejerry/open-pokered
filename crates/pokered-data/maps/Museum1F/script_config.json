@@ -16,22 +16,6 @@
         4
       ],
       "trigger": "ticketGate"
-    },
-    {
-      "name": "behindCounter1",
-      "position": [
-        13,
-        4
-      ],
-      "trigger": "behindCounter"
-    },
-    {
-      "name": "behindCounter2",
-      "position": [
-        12,
-        3
-      ],
-      "trigger": "behindCounter"
     }
   ],
   "npcs": [

@@ -119,121 +119,19 @@ game_scene CeladonMartRoof {
   // "brrrrr" delivery sound.
   @storyline("sign1") {
     @trigger(map = "CeladonMartRoof", sign = 1)
-    @speaker("") { @t("A vending machine! Here's\nthe menu!", "是自动售货机！菜单如下！") }
-    @choice {
-      @option(@t("FRESH WATER", "新鲜水")) {
-        @if (hasMoney(200)) {
-          given = giveItem("FRESH_WATER", 1)
-          @if (given) {
-            takeMoney(200)
-            playSound("SFX_PUSH_BOULDER")
-            @speaker("") { @t("FRESH WATER popped out!", "新鲜水出来了！") }
-          } @else {
-            @speaker("") { @t("There's no more room for\nstuff!", "没有多余的空间了！") }
-          }
-        } @else {
-          @speaker("") { @t("Oops, not enough money!", "哎呀，钱不够！") }
-        }
-      }
-      @option(@t("SODA POP", "汽水")) {
-        @if (hasMoney(300)) {
-          given = giveItem("SODA_POP", 1)
-          @if (given) {
-            takeMoney(300)
-            playSound("SFX_PUSH_BOULDER")
-            @speaker("") { @t("SODA POP popped out!", "汽水出来了！") }
-          } @else {
-            @speaker("") { @t("There's no more room for\nstuff!", "没有多余的空间了！") }
-          }
-        } @else {
-          @speaker("") { @t("Oops, not enough money!", "哎呀，钱不够！") }
-        }
-      }
-      @option(@t("LEMONADE", "柠檬水")) {
-        @if (hasMoney(350)) {
-          given = giveItem("LEMONADE", 1)
-          @if (given) {
-            takeMoney(350)
-            playSound("SFX_PUSH_BOULDER")
-            @speaker("") { @t("LEMONADE popped out!", "柠檬水出来了！") }
-          } @else {
-            @speaker("") { @t("There's no more room for\nstuff!", "没有多余的空间了！") }
-          }
-        } @else {
-          @speaker("") { @t("Oops, not enough money!", "哎呀，钱不够！") }
-        }
-      }
-      @option(@t("CANCEL", "取消")) {
-        @speaker("") { @t("Not thirsty!", "不想喝！") }
-      }
-    }
-  }
-
-  // ── Vending machine (sign 2) ───────────────────────────────────────────
-  @storyline("sign2") {
     @trigger(map = "CeladonMartRoof", sign = 2)
-    @speaker("") { @t("A vending machine! Here's\nthe menu!", "是自动售货机！菜单如下！") }
-    @choice {
-      @option(@t("FRESH WATER", "新鲜水")) {
-        @if (hasMoney(200)) {
-          given = giveItem("FRESH_WATER", 1)
-          @if (given) {
-            takeMoney(200)
-            playSound("SFX_PUSH_BOULDER")
-            @speaker("") { @t("FRESH WATER popped out!", "新鲜水出来了！") }
-          } @else {
-            @speaker("") { @t("There's no more room for\nstuff!", "没有多余的空间了！") }
-          }
-        } @else {
-          @speaker("") { @t("Oops, not enough money!", "哎呀，钱不够！") }
-        }
-      }
-      @option(@t("SODA POP", "汽水")) {
-        @if (hasMoney(300)) {
-          given = giveItem("SODA_POP", 1)
-          @if (given) {
-            takeMoney(300)
-            playSound("SFX_PUSH_BOULDER")
-            @speaker("") { @t("SODA POP popped out!", "汽水出来了！") }
-          } @else {
-            @speaker("") { @t("There's no more room for\nstuff!", "没有多余的空间了！") }
-          }
-        } @else {
-          @speaker("") { @t("Oops, not enough money!", "哎呀，钱不够！") }
-        }
-      }
-      @option(@t("LEMONADE", "柠檬水")) {
-        @if (hasMoney(350)) {
-          given = giveItem("LEMONADE", 1)
-          @if (given) {
-            takeMoney(350)
-            playSound("SFX_PUSH_BOULDER")
-            @speaker("") { @t("LEMONADE popped out!", "柠檬水出来了！") }
-          } @else {
-            @speaker("") { @t("There's no more room for\nstuff!", "没有多余的空间了！") }
-          }
-        } @else {
-          @speaker("") { @t("Oops, not enough money!", "哎呀，钱不够！") }
-        }
-      }
-      @option(@t("CANCEL", "取消")) {
-        @speaker("") { @t("Not thirsty!", "不想喝！") }
-      }
-    }
-  }
-
-  // ── Vending machine (sign 3) ───────────────────────────────────────────
-  @storyline("sign3") {
     @trigger(map = "CeladonMartRoof", sign = 3)
     @speaker("") { @t("A vending machine! Here's\nthe menu!", "是自动售货机！菜单如下！") }
+    showMoneyBox(getMoney())
     @choice {
-      @option(@t("FRESH WATER", "新鲜水")) {
+      @option(@t("FRESH WATER ¥200", "新鲜水 ¥200")) {
         @if (hasMoney(200)) {
           given = giveItem("FRESH_WATER", 1)
           @if (given) {
-            takeMoney(200)
-            playSound("SFX_PUSH_BOULDER")
+            vendingDelivery()
             @speaker("") { @t("FRESH WATER popped out!", "新鲜水出来了！") }
+            takeMoney(200)
+            showMoneyBox(getMoney())
           } @else {
             @speaker("") { @t("There's no more room for\nstuff!", "没有多余的空间了！") }
           }
@@ -241,13 +139,14 @@ game_scene CeladonMartRoof {
           @speaker("") { @t("Oops, not enough money!", "哎呀，钱不够！") }
         }
       }
-      @option(@t("SODA POP", "汽水")) {
+      @option(@t("SODA POP ¥300", "汽水 ¥300")) {
         @if (hasMoney(300)) {
           given = giveItem("SODA_POP", 1)
           @if (given) {
-            takeMoney(300)
-            playSound("SFX_PUSH_BOULDER")
+            vendingDelivery()
             @speaker("") { @t("SODA POP popped out!", "汽水出来了！") }
+            takeMoney(300)
+            showMoneyBox(getMoney())
           } @else {
             @speaker("") { @t("There's no more room for\nstuff!", "没有多余的空间了！") }
           }
@@ -255,13 +154,14 @@ game_scene CeladonMartRoof {
           @speaker("") { @t("Oops, not enough money!", "哎呀，钱不够！") }
         }
       }
-      @option(@t("LEMONADE", "柠檬水")) {
+      @option(@t("LEMONADE ¥350", "柠檬水 ¥350")) {
         @if (hasMoney(350)) {
           given = giveItem("LEMONADE", 1)
           @if (given) {
-            takeMoney(350)
-            playSound("SFX_PUSH_BOULDER")
+            vendingDelivery()
             @speaker("") { @t("LEMONADE popped out!", "柠檬水出来了！") }
+            takeMoney(350)
+            showMoneyBox(getMoney())
           } @else {
             @speaker("") { @t("There's no more room for\nstuff!", "没有多余的空间了！") }
           }
@@ -273,6 +173,7 @@ game_scene CeladonMartRoof {
         @speaker("") { @t("Not thirsty!", "不想喝！") }
       }
     }
+    showMoneyBox(-1)
   }
 
   // ── Current floor sign (sign 4) ────────────────────────────────────────

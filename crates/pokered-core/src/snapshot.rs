@@ -77,6 +77,10 @@ pub struct OverworldSnapshot {
     pub npc_pokemon_data: Vec<PokemonNpcData>,
     pub pending_dialogue: Option<BedroomDialogue>,
     pub pending_choice: Option<PendingChoice>,
+    #[serde(default)]
+    pub script_money_box: Option<u32>,
+    #[serde(default)]
+    pub gift_box_number: u8,
     pub pending_pokedex_entry: Option<PokedexEntryState>,
     pub pending_naming_screen: Option<crate::naming_screen::NamingScreenState>,
     pub naming_flash_frames: u8,
@@ -219,6 +223,8 @@ impl OverworldSnapshot {
             npc_pokemon_data: Vec::new(),
             pending_dialogue: None,
             pending_choice: None,
+            script_money_box: None,
+            gift_box_number: 1,
             pending_pokedex_entry: None,
             pending_naming_screen: None,
             naming_flash_frames: 0,
@@ -320,7 +326,7 @@ impl OverworldSnapshot {
         };
         snapshot_fields!(restore &mut snap, screen,
             frame_counter, state, map_data, npc_states, npc_pokemon_data, pending_dialogue,
-            pending_choice, pending_pokedex_entry, pending_naming_screen, naming_flash_frames,
+            pending_choice, script_money_box, gift_box_number, pending_pokedex_entry, pending_naming_screen, naming_flash_frames,
             pending_party_select, party_select_requested, pending_set_nickname,
             pending_emotion_bubble, pending_healing_machine, last_map, last_map_entry,
             warp_fade_state, pending_warp, pending_connection, connection_npc_preview,
@@ -360,7 +366,7 @@ impl OverworldSnapshot {
         snapshot_fields!(restore screen, self,
             wild_data_state,
             frame_counter, state, map_data, npc_states, npc_pokemon_data, pending_dialogue,
-            pending_choice, pending_pokedex_entry, pending_naming_screen, naming_flash_frames,
+            pending_choice, script_money_box, gift_box_number, pending_pokedex_entry, pending_naming_screen, naming_flash_frames,
             pending_party_select, party_select_requested, pending_set_nickname,
             pending_emotion_bubble, pending_healing_machine, last_map, last_map_entry,
             warp_fade_state, pending_warp, pending_connection, connection_npc_preview,

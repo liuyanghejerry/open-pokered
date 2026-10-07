@@ -199,4 +199,95 @@ class TownChallengeTests(unittest.TestCase):
         retry.assert_called_once()
 
 
+class ScarceMovePpTests(unittest.TestCase):
+    def pick(self, enemy, tackle_pp=35, tackle_disabled=False):
+        moves = [
+            {"move": "VineWhip", "pp": 10, "disabled": False},
+            {"move": "Tackle", "pp": tackle_pp, "disabled": tackle_disabled},
+        ]
+        state = {"battle_live": {
+            "player": {"species": "Ivysaur", "hp": 70, "max_hp": 70},
+            "enemy": {"species": enemy},
+        }}
+        return late.damage_slot(moves, state)
+
+    def test_nidoran_and_rattata_do_not_spend_the_hikers_grass_pp(self):
+        for enemy in ["NidoranF", "Rattata", "Machop"]:
+            with self.subTest(enemy=enemy):
+                self.assertEqual(self.pick(enemy), 1)
+
+    def test_geodude_and_water_opponents_still_use_vine_whip(self):
+        for enemy in ["Geodude", "Onix", "Staryu"]:
+            with self.subTest(enemy=enemy):
+                self.assertEqual(self.pick(enemy), 0)
+
+    def test_koffing_physical_defense_still_allows_grass(self):
+        self.assertEqual(self.pick("Koffing"), 0)
+
+    def test_immunity_unavailable_pp_and_disable_never_force_tackle(self):
+        self.assertEqual(self.pick("Gastly"), 0)
+        self.assertEqual(self.pick("NidoranF", tackle_pp=0), 0)
+        self.assertEqual(self.pick("NidoranF", tackle_disabled=True), 0)
+
+
+class ShipDepartureTests(unittest.TestCase):
+    flags = ["EVENT_SS_ANNE_LEFT", "EVENT_WALKED_OUT_OF_DOCK",
+             "EVENT_LEFT_SS_ANNE_VIA_GANGPLANK"]
+
+    def test_city_handoff_requires_all_departure_and_walkout_events(self):
+        game = Mock()
+        game.nav_warp.return_value = "VermilionCity"
+        game.d.cmd.return_value = {"data": dict.fromkeys(self.flags, True)}
+        late.leave_ss_anne(game)
+        game.nav_warp.assert_called_once_with(27, 0, "SSAnne1F", approach="up")
+
+    def test_unrelated_final_map_is_rejected_even_with_departure_flags(self):
+        game = Mock()
+        game.nav_warp.return_value = "PalletTown"
+        game.d.cmd.return_value = {"data": dict.fromkeys(self.flags, True)}
+        with self.assertRaisesRegex(AssertionError, "unexpected ship departure target"):
+            late.leave_ss_anne(game)
+
+    def test_arriving_in_city_without_departure_is_not_success(self):
+        for missing in self.flags:
+            with self.subTest(missing=missing):
+                game = Mock()
+                game.nav_warp.return_value = "VermilionCity"
+                events = dict.fromkeys(self.flags, True)
+                events[missing] = False
+                game.d.cmd.return_value = {"data": events}
+                with self.assertRaisesRegex(AssertionError, missing):
+                    late.leave_ss_anne(game)
+
+
 if __name__=='__main__':unittest.main()
+
+
+class BattleCompletionBudgetTests(unittest.TestCase):
+    def state(self, enemy_hp=0, reserves=()):
+        return {"screen":"battle", "battle_phase":"ShowingText { next_phase: TrainerVictory }",
+                "battle_live":{"enemy":{"hp":enemy_hp},
+                               "enemy_party":[{"hp":enemy_hp}]+[{"hp":v} for v in reserves],
+                               "player_party":[{"hp":62}]}}
+
+    def test_final_ko_text_is_advanced_after_combat_budget(self):
+        game=Mock()
+        state=self.state()
+        game.st.side_effect=[state,state,state,{"screen":"overworld","battle_phase":""}]
+        pt.Game.battle_loop(game,max_iters=1)
+        self.assertEqual(game.tap.call_count,3)
+        game.wait.assert_called_once_with("not_battle",1800)
+
+    def test_live_opponent_or_reserve_does_not_extend_combat_budget(self):
+        for state in (self.state(10),self.state(0,(20,))):
+            with self.subTest(state=state):
+                game=Mock();game.st.return_value=state
+                game.wait.side_effect=AssertionError("battle still active")
+                with self.assertRaises(AssertionError):pt.Game.battle_loop(game,max_iters=1)
+                self.assertEqual(game.tap.call_count,1)
+
+    def test_terminal_text_allowance_is_bounded(self):
+        game=Mock();game.st.return_value=self.state()
+        game.wait.side_effect=AssertionError("terminal text stuck")
+        with self.assertRaises(AssertionError):pt.Game.battle_loop(game,max_iters=1)
+        self.assertEqual(game.tap.call_count,121)

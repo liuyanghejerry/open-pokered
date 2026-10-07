@@ -1113,6 +1113,10 @@ class Game:
             state = self.st()
             cm = state["map_name"]
             if state["screen"] == "battle":
+                # An expected destination may start its @load battle before
+                # our first poll. Leave that scripted handoff to the caller.
+                if to_map is not None and cm == to_map and state.get("script_awaiting_battle"):
+                    return cm
                 prefer = ("fight" if state["script_awaiting_battle"]
                           else "run")
                 self.battle_loop(prefer=prefer)
@@ -1131,7 +1135,8 @@ class Game:
                 # Settling can complete another warp or open a battle. Never
                 # return a destination observed before that hand-off finished.
                 settled = self.st()
-                if settled['screen'] != 'overworld':
+                scripted_battle = settled['screen'] == 'battle' and settled.get('script_awaiting_battle')
+                if settled['screen'] != 'overworld' and not scripted_battle:
                     return None
                 cm = settled['map_name']
                 if cm == from_map:
@@ -1148,9 +1153,9 @@ class Game:
         script hands off into battle (startBattle suspends the script, so
         control_ready never fires; that's a successful hand-off, not a
         stall). wait_until burns through non-dialogue effects; dialogue
-        pages collapse via skip_dialogue. An open choice menu is NOT
-        answered here — it needs a deliberate decision, so we fail
-        loudly instead of spinning forever."""
+        pages collapse via skip_dialogue. Gift nickname prompts choose NO
+        to keep the route's canonical species names. Other open choices
+        need a deliberate decision and fail loudly."""
         for _ in range(max_rounds):
             r = self.d.cmd(cmd="wait_until", condition="control_ready",
                            max_frames=240)
@@ -1160,6 +1165,10 @@ class Game:
             if state["screen"] == "battle":
                 return True
             if state["choice"] is not None:
+                if (state.get("active_script_effect") == "GivePokemon"
+                        and state["choice"]["options"] == ["YES", "NO"]):
+                    self.choose("NO")
+                    continue
                 raise NavError(f"cutscene blocked on choice "
                                f"{state['choice']['options']} "
                                f"(cursor {state['choice']['selected']})")
@@ -1487,7 +1496,7 @@ class Game:
         return False
 
     # ── battle ──────────────────────────────────────────────────────────
-    def battle_loop(self, prefer="fight", max_iters=400):
+    def battle_loop(self, prefer="fight", max_iters=1600):
         """Generic battle driver. prefer="run" picks RUN from the menu
         (wild encounters); falls back to FIGHT if escape keeps failing.
         The 2x2 menu clamps cursor movement, so up+left always lands on
@@ -1496,8 +1505,18 @@ class Game:
         iters_in_mode = 0
         import os
         dbg = os.environ.get("PT_DEBUG")
-        for it in range(max_iters):
+        # Keep a bounded allowance for terminal text after the combat budget.
+        # A long fight can reach its final KO on the last iteration; waiting
+        # without buttons then leaves ShowingText / TrainerVictory blocked.
+        for it in range(max_iters + 120):
             s = self.st()
+            if it >= max_iters and s["screen"] == "battle":
+                live = s.get("battle_live") or {}
+                enemies = live.get("enemy_party") or [live.get("enemy", {})]
+                players = live.get("player_party") or [live.get("player", {})]
+                defeated = lambda team: bool(team) and all(mon.get("hp") == 0 for mon in team)
+                if not (defeated(enemies) or defeated(players)):
+                    break
             if dbg:
                 print(f"   [battle it={it} fight={fight} mode_iters="
                       f"{iters_in_mode}] phase={s['battle_phase']!r} "
@@ -1685,6 +1704,12 @@ def m05_take_starter(g, which="bulbasaur"):
     ch = g.dialogue_then_choice()            # pages → "Do you want X?"
     assert ch["options"] == ["YES", "NO"], ch
     g.choose("YES")
+    # AddPartyMon asks for a nickname after the receipt jingle. Keep the
+    # canonical species name used by later route assertions.
+    ch = g.dialogue_then_choice()
+    assert g.st()["active_script_effect"] == "GivePokemon", g.st()
+    assert ch["options"] == ["YES", "NO"], ch
+    g.choose("NO")
     assert g.cutscene(), "starter cutscene never finished"
     s = g.evidence("m05")
     assert s["party_count"] == 1, s

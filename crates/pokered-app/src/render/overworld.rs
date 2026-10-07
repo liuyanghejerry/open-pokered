@@ -30,6 +30,54 @@ use pokered_ui::{menus, Ui};
 use super::apply_gb_palette;
 use super::blit_single_tile_flipped;
 
+// Script reading/vending menus need more room than the two-entry YES/NO box.
+fn draw_script_choice(
+    screen: &OverworldScreen,
+    choice: &pokered_core::overworld::script_bridge::PendingChoice,
+    fb: &mut FrameBuffer,
+) {
+    let mut painter = FrameBufferPainter::new(fb);
+    if screen.script_money_box.is_none() && !screen.is_reading_menu_active() {
+        let mut ui = Ui::new(&mut painter);
+        menus::yes_no::draw(
+            &choice.options,
+            choice.selected,
+            &YES_NO_DEFAULT_LAYOUT,
+            &mut ui,
+        );
+        return;
+    }
+    use dotzuki_engine::menu::{CursorStyle, MenuConfig};
+    use dotzuki_engine::render::TileRect;
+    let ty = if screen.script_money_box.is_some() {
+        5
+    } else {
+        0
+    };
+    let area = TileRect::new(0, ty, 20, choice.options.len() as u32 * 2 + 2);
+    let content = TileRect::new(1, ty + 1, 18, area.th - 2);
+    let config = MenuConfig::new(
+        area,
+        None,
+        content,
+        CursorStyle::new(Some(223), Default::default()),
+    );
+    pokered_ui::menus::yes_no::draw_with_config(
+        &choice.options,
+        choice.selected as usize,
+        &[config],
+        &mut painter,
+    );
+}
+
+fn draw_script_money(screen: &OverworldScreen, fb: &mut FrameBuffer, is_zh: bool) {
+    if let Some(money) = screen.script_money_box {
+        super::draw_text_box(fb, 80, 0, 8, 3, Rgba::BLACK);
+        draw_text(if is_zh { "金钱" } else { "MONEY" }, 88, 6, Rgba::BLACK, fb);
+        draw_text(&format!("¥{money}"), 88, 20, Rgba::BLACK, fb);
+    }
+}
+
 fn blit_tile_clipped(
     fb: &mut FrameBuffer,
     tileset: &TileSet,
@@ -669,6 +717,7 @@ pub(super) fn can_reuse_composited_frame(screen: &OverworldScreen) -> bool {
         && screen.pending_dialogue.is_none()
         && screen.cut_retained_dialogue.is_none()
         && screen.pending_choice.is_none()
+        && screen.script_money_box.is_none()
         && screen.pending_emotion_bubble.is_none()
         && screen.pending_healing_machine.is_none()
         && screen.ledge_jump.is_none()
@@ -2091,30 +2140,20 @@ fn draw_overworld_impl(
         }
 
         if let Some(ref choice) = screen.pending_choice {
-            let mut painter = FrameBufferPainter::new(fb);
-            let mut ui = Ui::new(&mut painter);
-            menus::yes_no::draw(
-                &choice.options,
-                choice.selected,
-                &YES_NO_DEFAULT_LAYOUT,
-                &mut ui,
-            );
+            draw_script_choice(screen, choice, fb);
         }
 
+        draw_script_money(screen, fb, language == pokered_core::game_state::Lang::Zh);
         return;
     }
 
     if let Some(ref choice) = screen.pending_choice {
-        let mut painter = FrameBufferPainter::new(fb);
-        let mut ui = Ui::new(&mut painter);
-        menus::yes_no::draw(
-            &choice.options,
-            choice.selected,
-            &YES_NO_DEFAULT_LAYOUT,
-            &mut ui,
-        );
+        draw_script_choice(screen, choice, fb);
+        draw_script_money(screen, fb, language == pokered_core::game_state::Lang::Zh);
         return;
     }
+
+    draw_script_money(screen, fb, language == pokered_core::game_state::Lang::Zh);
 
     // ── GB palette effects (home/fade.asm) ─────────────────────────
     // Priority: FLASH white-out > dark cave (LoadGBPal with wMapPalOffset=6)

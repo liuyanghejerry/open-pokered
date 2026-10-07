@@ -64,3 +64,8 @@ pub fn cursor_damage(selected: usize, layout: &YesNoDefaultLayout) -> crate::Dam
         layout.box_0.rect.ty + 1 + selected as u32 * 2,
     ))
 }
+
+/// Draw a script menu with a roomier, caller-authored area using the shared widget.
+pub fn draw_with_config<P: Painter>(options: &[String], selected: usize, configs: &[MenuConfig], painter: &mut P) {
+    yes_no::draw_yes_no(options, selected, configs, painter);
+}

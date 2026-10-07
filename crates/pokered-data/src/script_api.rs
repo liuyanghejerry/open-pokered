@@ -475,6 +475,20 @@ impl ScriptApiRegistrar for PokemonScriptApi {
             },
         );
 
+        engine.register_async_fn("showMoneyBox", |args: &[JsValue], ctx: &mut Context| {
+            Ok(PokemonScriptCommand::ShowMoneyBox { amount: args.get_or_undefined(0).to_number(ctx)? as i64 }.into_script_command())
+        });
+        engine.register_async_fn("vendingDelivery", |_: &[JsValue], _: &mut Context| {
+            Ok(PokemonScriptCommand::VendingDelivery.into_script_command())
+        });
+        engine.register_async_fn("readingMenu", |args: &[JsValue], ctx: &mut Context| {
+            let options = args.get_or_undefined(0).to_json(ctx)?;
+            let texts = args.get_or_undefined(1).to_json(ctx)?;
+            let command = PokemonScriptCommand::from_custom("readingMenu", &[options, texts])
+                .map_err(|error| boa_engine::JsNativeError::typ().with_message(error))?;
+            Ok(command.into_script_command())
+        });
+
         // game.getMoney() -> number
         engine.register_sync_fn(
             "getMoney",
@@ -908,6 +922,27 @@ mod tests {
             }),
             "resuming with floor 2 must take the floor==2 branch -> showText(\"3F\")",
         );
+    }
+
+    #[test]
+    fn reading_and_vending_apis_suspend_the_boa_fallback() {
+        let mut engine = ScriptEngine::with_api(&PokemonScriptApi);
+        engine.load_script(r#"
+            export async function f() {
+                await game.readingMenu(["SLP", "QUIT"], ["Sleep information"]);
+                await game.showMoneyBox(3000);
+                await game.vendingDelivery();
+                await game.showMoneyBox(-1);
+            }
+        "#).unwrap();
+        let mut next = engine.call_function("f", &[]).unwrap();
+        for expected in ["readingMenu", "showMoneyBox", "vendingDelivery", "showMoneyBox"] {
+            let Some(ScriptCommand::Custom { name, .. }) = &next else { panic!("missing {expected}: {next:?}"); };
+            assert_eq!(name, expected);
+            assert_eq!(engine.tick(), next, "await must stay parked until completion");
+            next = engine.signal_done(CommandResult::Void).unwrap();
+        }
+        assert!(next.is_none());
     }
 
     /// filterBag yields a `filterBag` custom command, suspends until the app

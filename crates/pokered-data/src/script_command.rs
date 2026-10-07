@@ -61,6 +61,9 @@ pub enum PokemonScriptCommand {
     PlayShipDeparture,
     EnterHallOfFame,
     WaitMusic,
+    ReadingMenu { options: Vec<String>, texts: Vec<String> },
+    ShowMoneyBox { amount: i64 },
+    VendingDelivery,
 }
 
 impl PokemonScriptCommand {
@@ -91,6 +94,9 @@ impl PokemonScriptCommand {
             Self::PlayShipDeparture => "playShipDeparture",
             Self::EnterHallOfFame => "enterHallOfFame",
             Self::WaitMusic => "waitMusic",
+            Self::ReadingMenu { .. } => "readingMenu",
+            Self::ShowMoneyBox { .. } => "showMoneyBox",
+            Self::VendingDelivery => "vendingDelivery",
         }
     }
 
@@ -98,6 +104,8 @@ impl PokemonScriptCommand {
         let name = self.name().to_string();
         let args = match self {
             Self::ShowItemDialogue { text } => vec![json!(text)],
+            Self::ReadingMenu { options, texts } => vec![json!(options), json!(texts)],
+            Self::ShowMoneyBox { amount } => vec![json!(amount)],
             Self::TradePokemon {
                 offered,
                 received,
@@ -132,7 +140,8 @@ impl PokemonScriptCommand {
             | Self::WithdrawDaycare
             | Self::PlayShipDeparture
             | Self::EnterHallOfFame
-            | Self::WaitMusic => vec![],
+            | Self::WaitMusic
+            | Self::VendingDelivery => vec![],
         };
         ScriptCommand::Custom { name, args }
     }
@@ -172,6 +181,16 @@ impl PokemonScriptCommand {
         };
         Ok(match name {
             "waitMusic" => Self::WaitMusic,
+            "vendingDelivery" => Self::VendingDelivery,
+            "showMoneyBox" => Self::ShowMoneyBox { amount: args.first().and_then(Value::as_i64).ok_or_else(|| format!("{name}: amount must be an integer"))? },
+            "readingMenu" => {
+                let options = strings(0)?;
+                let texts = strings(1)?;
+                if options.len() != texts.len() + 1 || texts.is_empty() {
+                    return Err("readingMenu: one text per heading plus a final exit option required".to_string());
+                }
+                Self::ReadingMenu { options, texts }
+            },
             "showItemDialogue" => Self::ShowItemDialogue { text: string(0)? },
             "oldManTutorial" => Self::OldManTutorial,
             "tradePokemon" => Self::TradePokemon {

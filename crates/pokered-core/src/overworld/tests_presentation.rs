@@ -91,13 +91,14 @@ fn naming_screen_open_and_submit_flash_white() {
         false,
     );
     assert_eq!(screen.pending_naming_screen.as_ref().unwrap().name(), "");
-
-    // Gameplay freezes while the flash ticks down (blocking Delay3).
-    let input = idle_input();
-    screen.update_frame(input);
     assert_eq!(screen.naming_flash_frames, 2);
-    screen.update_frame(input);
-    screen.update_frame(input);
+
+    // The app routes modal frames through update_naming_input, so that
+    // path must finish the entry flash without an overworld update.
+    let input = idle_input();
+    screen.update_naming_input(crate::naming_screen::NamingInput::none(), false);
+    assert_eq!(screen.naming_flash_frames, 1);
+    screen.update_naming_input(crate::naming_screen::NamingInput::none(), false);
     assert_eq!(screen.naming_flash_frames, 0);
 
     // Input reaches the naming screen after the flash.

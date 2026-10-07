@@ -199,6 +199,10 @@ const NO_STATE_COMMANDS: &[&str] = &[
     "showItemDialogue",
     "showRandomText",
     "showChoice",
+    // Blocking presentation only; giveItem / takeMoney own vending state.
+    "readingMenu",
+    "showMoneyBox",
+    "vendingDelivery",
     "delay",
     "facePlayer",
     "faceNpc",

@@ -42,6 +42,17 @@ def damage_slot(moves, state):
     enemy = species_data(live["enemy"]["species"])
     ranked = []
     special = {"Fire", "Water", "Grass", "Electric", "Psychic", "Ice", "Dragon"}
+    # VineWhip has only 10 PP. A marginal score advantage against ordinary
+    # targets (notably NidoranF) spends the starter's only effective attacks
+    # before the hikers. Save it when an unresisted Tackle is available.
+    tackle_available = any(slot["move"] == "Tackle" and slot["pp"] > 0
+                           and not slot["disabled"] for slot in moves)
+    enemy_types = {enemy["type1"], enemy["type2"]}
+    normal_factor = 1
+    grass_factor = 1
+    for typ in enemy_types:
+        normal_factor *= type_chart().get(("Normal", typ), 1)
+        grass_factor *= type_chart().get(("Grass", typ), 1)
     for i, slot in enumerate(moves):
         if slot["pp"] <= 0 or slot["disabled"]:
             continue
@@ -63,6 +74,13 @@ def damage_slot(moves, state):
         defense = "special" if typ in special else "defense"
         score *= player["baseStats"][attack] / enemy["baseStats"][defense]
         ranked.append((score, slot["pp"], -i))
+    if tackle_available and normal_factor >= 1 and grass_factor <= 1:
+        tackle = next((v for v in ranked if moves[-v[2]]["move"] == "Tackle"), None)
+        vine = next((v for v in ranked if moves[-v[2]]["move"] == "VineWhip"), None)
+        # Keep Grass for bulky physical walls such as Mt Moon's Koffing;
+        # otherwise conserve the scarce PP against neutral/ordinary targets.
+        if tackle and vine and (grass_factor == 1 or vine[0] <= tackle[0] * 1.5):
+            ranked.remove(vine)
     return -max(ranked)[2] if ranked else None
 
 
@@ -339,6 +357,11 @@ def m13_misty(g):
 
 
 def m14_bill(g):
+    # The bridge plus Route25's hikers can exhaust VineWhip before the
+    # final multi-Geodude team. Restore PP through the real nurse flow
+    # between the two trainer groups, rather than grinding resisted Tackle.
+    g.nav_to_map(3, 4, "Route25")
+    g.heal_pokecenter((19, 17), "CeruleanCity", "CeruleanPokecenter")
     g.nav_to_map(45, 4, "Route25")
     g.nav_warp(45, 3, "Route25", "BillsHouse")
     g.nav_to(6, 6, "BillsHouse")
@@ -434,8 +457,7 @@ def m17_surge(g):
             g.nav_warp(19, 3, "SSAnne3F", "SSAnne2F")
     else:
         raise RuntimeError("could not descend from S.S. Anne 2F")
-    g.nav_warp(27, 0, "SSAnne1F", "VermilionDock", approach="up")
-    g.nav_warp(14, 0, "VermilionDock", "VermilionCity", approach="up")
+    leave_ss_anne(g)
     g.heal_pokecenter((11, 3), "VermilionCity", "VermilionPokecenter")
     g.nav_to(15, 17, "VermilionCity")
     g.face("down")
@@ -444,6 +466,16 @@ def m17_surge(g):
     solve_surge_switches(g)
     challenge(g, "VermilionGym", 5, 2, "up", "EVENT_BEAT_LT_SURGE")
     g.evidence("m17")
+
+
+def leave_ss_anne(g):
+    # The dock's @load script plays the departure and walks us into the
+    # city. It is a transient map, not a place to await restored control.
+    destination = g.nav_warp(27, 0, "SSAnne1F", approach="up")
+    assert destination == "VermilionCity", f"unexpected ship departure target {destination}"
+    for flag in ["EVENT_SS_ANNE_LEFT", "EVENT_WALKED_OUT_OF_DOCK",
+                 "EVENT_LEFT_SS_ANNE_VIA_GANGPLANK"]:
+        require_flag(g, flag)
 
 
 def inspect_can(g, index):
@@ -874,7 +906,7 @@ def m30_saffron(g):
     g.face("up")
     g.tap("a", 16)
     g.dialogue_then_choice()
-    g.choose("FRESH WATER")
+    g.choose("FRESH WATER ¥200")
     assert g.cutscene()
     assert any(v["item"] == "FreshWater" for v in g.d.cmd(cmd="get_bag")["data"])
     g.nav_warp(15, 2, "CeladonMartRoof", "CeladonMart5F")
@@ -946,7 +978,9 @@ def challenge_silph_rival(g, max_attempts=4):
             g.nav_to(3, 3, "SilphCo7F")
             assert g.cutscene()
             if g.st()["screen"] == "battle":
-                g.battle_loop()
+                # Five opponents plus medicine/status turns can exceed the
+                # short wild-battle budget while both sides are still alive.
+                g.battle_loop(max_iters=1600)
                 assert g.cutscene()
             require_flag(g, "EVENT_BEAT_SILPH_CO_RIVAL")
             return

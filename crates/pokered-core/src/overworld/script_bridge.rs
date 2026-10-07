@@ -72,7 +72,12 @@ pub enum ScriptEffect {
         species: String,
         nickname: Option<String>,
         level: u8,
+        #[serde(default)]
+        flow: Option<super::script_interactions::GiftPokemonFlow>,
     },
+    ReadingMenu { menu: super::script_interactions::ReadingMenu },
+    ShowMoneyBox { amount: i64 },
+    VendingDelivery { frames_elapsed: u8 },
     ShowObject {
         object_index: u8,
     },
@@ -363,15 +368,20 @@ impl ScriptEffect {
             ScriptEffect::TakeItem { item_id, quantity } => {
                 json!({ "effect": "TakeItem", "item_id": item_id, "quantity": quantity })
             }
+            ScriptEffect::ReadingMenu { menu } => serde_json::json!({ "effect": "ReadingMenu", "child": menu.child.to_debug_json() }),
+            ScriptEffect::ShowMoneyBox { amount } => serde_json::json!({ "effect": "ShowMoneyBox", "amount": amount }),
+            ScriptEffect::VendingDelivery { frames_elapsed } => serde_json::json!({ "effect": "VendingDelivery", "frames_elapsed": frames_elapsed }),
             ScriptEffect::GivePokemon {
                 species,
                 nickname,
                 level,
+                flow
             } => json!({
                 "effect": "GivePokemon",
                 "species": species,
                 "nickname": nickname,
                 "level": level,
+                "child": flow.as_ref().map(|flow| flow.child.to_debug_json()),
             }),
             ScriptEffect::ShowObject { object_index } => {
                 json!({ "effect": "ShowObject", "object_index": object_index })
@@ -677,6 +687,7 @@ pub fn dispatch_command_with_names(
             species: species.clone(),
             nickname: None,
             level: *level,
+            flow: None,
         },
         ScriptCommand::ShowObject { object_index } => ScriptEffect::ShowObject {
             object_index: *object_index,
@@ -835,6 +846,9 @@ fn dispatch_custom(name: &str, args: &[Value]) -> ScriptEffect {
     };
     match command {
         PokemonScriptCommand::ShowItemDialogue { text } => ScriptEffect::ShowItemDialogue { text, sound_started: false },
+        PokemonScriptCommand::ReadingMenu { options, texts } => ScriptEffect::ReadingMenu { menu: super::script_interactions::ReadingMenu::new(options, texts) },
+        PokemonScriptCommand::ShowMoneyBox { amount } => ScriptEffect::ShowMoneyBox { amount },
+        PokemonScriptCommand::VendingDelivery => ScriptEffect::VendingDelivery { frames_elapsed: 0 },
         PokemonScriptCommand::OldManTutorial => ScriptEffect::OldManTutorial,
         PokemonScriptCommand::TradePokemon { offered, received, nickname } => {
             ScriptEffect::TradePokemon { offered, received, nickname }

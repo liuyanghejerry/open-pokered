@@ -219,10 +219,12 @@ mod tests {
             );
             let statements: Vec<dotzuki_engine_dsl::ast::StoryStmt> =
                 serde_json::from_slice(bytes).unwrap();
-            // Rating comparisons are gone; the original trailing early-game
-            // conditional remains so this is identical to the compiled scene.
-            assert!(statements.len() >= 4);
-            for statement in &statements[2..statements.len() - 2] {
+            // Greeting, counts, and exactly one rating. The corrected scene
+            // cannot fall through to an earlier story branch.
+            assert_eq!(statements.len(), 3);
+            assert!(matches!(&statements[1],
+                dotzuki_engine_dsl::ast::StoryStmt::Command { name, .. } if name == "showText"));
+            for statement in [&statements[0], &statements[2]] {
                 assert!(matches!(
                     statement,
                     dotzuki_engine_dsl::ast::StoryStmt::Speaker { .. }

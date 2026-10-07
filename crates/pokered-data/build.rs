@@ -2060,9 +2060,8 @@ fn write_oaks_lab_native_branches(
     body.extend_from_slice(&statements[1..]);
     write_scene_function(functions, out_dir, "OaksLab", "__native_talkOak1_dex_other",
         "OaksLab_talkOak1_dex_other", &body);
-    // Specialize only the pure owned-count comparisons. Walk the entire
-    // compiled tail: the compiler may emit more than one top-level If.
-    // All commands, text and trailing statements stay in their exact order.
+    // Specialize the explicitly nested, mutually exclusive owned-count
+    // comparisons. Preserve the single selected rating's text in order.
     fn select_rating(statements: &[StoryStmt], owned: f64) -> Vec<StoryStmt> {
         use dotzuki_engine_dsl::ast::{BinOp, Expression};
         let mut selected = Vec::new();
