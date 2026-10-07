@@ -138,10 +138,15 @@ with tempfile.TemporaryDirectory(prefix="fidelity-sidequests-") as tmp:
     finally:
         g.close()
 
-    builder = sb.SaveBuilder().party_add("Mewtwo", 100, ["PsychicM"]).position("GameCorner", 9, 4)
-    builder.data["game_data"]["player_direction"] = 0
+    builder = sb.SaveBuilder().party_add("Mewtwo", 100, ["PsychicM"]).position("GameCorner", 10, 6)
+    builder.data["game_data"]["player_direction"] = 4
     g = boot(builder, "rocket-exit")
     try:
+        # Walk through real collision from the floor; never seed onto the
+        # poster at (9,4), which is a solid wall cell.
+        g.nav_to(10, 5, "GameCorner")
+        g.face("left")
+        assert (g.st()["player_x"], g.st()["player_y"]) == (10, 5)
         g.tap("a", 1)
         wait(g, lambda s: s["screen"] == "battle", True)
         g.battle_loop()

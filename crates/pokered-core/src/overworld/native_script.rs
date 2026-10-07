@@ -2891,7 +2891,7 @@ mod tests {
     #[test]
     fn fidelity_game_corner_rocket_walks_around_player_before_hiding() {
         let scene = pokered_data::embedded_scenes::get_scene_ast("GameCorner").unwrap();
-        for (x, y, length, end) in [(9, 6, 5, (14, 5)), (8, 5, 5, (14, 5)), (9, 4, 8, (15, 5))] {
+        for (x, y, length, end) in [(9, 6, 5, (14, 5)), (8, 5, 5, (14, 5)), (10, 5, 8, (15, 5))] {
             let mut engine = NativeScriptEngine::new();
             engine.load_map("GameCorner", &scene);
             engine.set_player_position(x, y);
