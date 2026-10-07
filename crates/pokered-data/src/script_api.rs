@@ -646,6 +646,14 @@ impl ScriptApiRegistrar for PokemonScriptApi {
             },
         );
 
+        engine.register_sync_fn(
+            "partyMonCanRename",
+            |args: &[JsValue], ctx: &mut Context, view: &BridgeView| -> JsResult<JsValue> {
+                let idx = args.get_or_undefined(0).to_u32(ctx)?;
+                Ok(JsValue::from(view.number(&format!("partyCanRename{idx}")) != 0.0))
+            },
+        );
+
         // game.partyMonKnowsHm(index: number) -> boolean
         engine.register_sync_fn(
             "partyMonKnowsHm",

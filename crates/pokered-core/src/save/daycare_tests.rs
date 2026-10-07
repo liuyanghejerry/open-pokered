@@ -149,3 +149,22 @@ fn withdraw_wipes_stat_exp() {
     assert_eq!(back.stat_exp, [0, 0, 0, 0, 0], "stat exp is wiped by the box_struct round-trip");
     assert!(back.total_exp > 0, "level/exp growth is kept");
 }
+
+#[test]
+fn name_rater_requires_both_ot_name_and_id_including_zero_id() {
+    let mut save = SaveData::new();
+    save.player_name = pokered_data::charmap::encode_string("RED").unwrap();
+    save.game_data.player_id = 42;
+    let mut pokemon = mon(Species::MrMime, 20);
+    pokemon.ot_id = 42;
+    pokemon.ot_name.fill(0x50);
+    pokemon.ot_name[..3].copy_from_slice(&save.player_name[..3]);
+    save.party.add(pokemon).unwrap();
+    assert!(save.party_mon_can_rename(0));
+    save.party.get_mut(0).unwrap().ot_id = 0;
+    assert!(!save.party_mon_can_rename(0));
+    save.party.get_mut(0).unwrap().ot_id = 42;
+    save.party.get_mut(0).unwrap().ot_name[0] ^= 1;
+    assert!(!save.party_mon_can_rename(0));
+    assert!(!save.party_mon_can_rename(6));
+}

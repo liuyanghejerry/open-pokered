@@ -1,0 +1,1083 @@
+{
+  "base": "38c1e80",
+  "original_reference": "pret/pokered@fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "binary_sha256": "9f3ac234c4bf5beb26697ed23c072024cafb436bc9f70ff50a20bc7237445671",
+  "scope": "fidelity items 13–17; seeded branch tests and matched screenshots plus fresh power-on first-clear playthrough",
+  "checks": {
+    "core": {
+      "passed": 2673,
+      "failed": 0,
+      "ignored": 0,
+      "suite_results": [
+        [
+          "ok",
+          "2673",
+          "0",
+          "0"
+        ]
+      ]
+    },
+    "app_lib_and_integrations": {
+      "passed": 171,
+      "failed": 0,
+      "ignored": 2,
+      "suite_results": [
+        [
+          "ok",
+          "156",
+          "0",
+          "2"
+        ],
+        [
+          "ok",
+          "2",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "9",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "4",
+          "0",
+          "0"
+        ]
+      ]
+    },
+    "data_boa": {
+      "passed": 438,
+      "failed": 0,
+      "ignored": 1,
+      "suite_results": [
+        [
+          "ok",
+          "272",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "2",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "3",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "11",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "12",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "21",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "9",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "9",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "1",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "19",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "15",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "30",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "9",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "10",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "3",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "11",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "1",
+          "0",
+          "1"
+        ]
+      ]
+    },
+    "agent": {
+      "passed": 53,
+      "failed": 0,
+      "ignored": 0,
+      "suite_results": [
+        [
+          "ok",
+          "53",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "0",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "0",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "0",
+          "0",
+          "0"
+        ]
+      ]
+    }
+  },
+  "fresh_playthrough": {
+    "seed": 0,
+    "speed": 0,
+    "runner_source": "import sys,socket\nfrom pathlib import Path\nsys.path.insert(0,'/home/jerry/develop/open-pokered/scripts')\nimport playthrough as pt\nfrom debug_drive import DebugClient\npt.BIN=Path('/tmp/pokered-13-17')\noriginal_init=pt.Game.__init__\ndef init(self,*args,**kwargs):\n kwargs.setdefault('seed',0);kwargs.setdefault('speed',0)\n original_init(self,*args,**kwargs)\npt.Game.__init__=init\nimport json\n# Disable delayed ACK after flushing each request, so a response's trailing\n# newline does not wait for the server's Nagle timer.\ndef cmd(self,**kw):\n line=json.dumps(kw)+'\\n'\n for attempt in range(2):\n  try:\n   self.f.write(line);self.f.flush()\n   self.sock.setsockopt(socket.IPPROTO_TCP,socket.TCP_QUICKACK,1)\n   response=self.f.readline()\n   if not response:raise OSError('connection closed by peer')\n   return json.loads(response)\n  except OSError:\n   if attempt:raise\n   self._reconnect()\nDebugClient.cmd=cmd\ndef drive(self,buttons,frames=None):\n buttons=list(buttons)\n count=len(buttons) if frames is None else frames\n assert count>=len(buttons),(count,len(buttons))\n # Reproduce the legacy driven-only queue drain followed by its neutral step burst.\n total=len(buttons)+count\n result=self.cmd(cmd='press_timeline',buttons=buttons+[None]*count,advance=True)\n assert result['ok'],result\n assert result['data']['advanced'] and result['data']['frames']==total,result\n return result\nDebugClient.drive=drive\npt.main()\n",
+    "ending_verified_in_independent_continue": true,
+    "milestones": [
+      {
+        "milestone": "m01",
+        "frame_count": 859,
+        "screen": "oak",
+        "map_name": "PalletTown",
+        "player_x": 0,
+        "player_y": 0,
+        "party_count": 0,
+        "money": 3000,
+        "badges": 0,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m02",
+        "frame_count": 1819,
+        "screen": "overworld",
+        "map_name": "RedsHouse2F",
+        "player_x": 3,
+        "player_y": 6,
+        "party_count": 0,
+        "money": 3000,
+        "badges": 0,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m03",
+        "frame_count": 2281,
+        "screen": "overworld",
+        "map_name": "PalletTown",
+        "player_x": 5,
+        "player_y": 6,
+        "party_count": 0,
+        "money": 3000,
+        "badges": 0,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m04",
+        "frame_count": 4218,
+        "screen": "overworld",
+        "map_name": "OaksLab",
+        "player_x": 5,
+        "player_y": 3,
+        "party_count": 0,
+        "money": 3000,
+        "badges": 0,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m05",
+        "frame_count": 5069,
+        "screen": "overworld",
+        "map_name": "OaksLab",
+        "player_x": 8,
+        "player_y": 4,
+        "party_count": 1,
+        "money": 3000,
+        "badges": 0,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m06",
+        "frame_count": 8659,
+        "screen": "overworld",
+        "map_name": "OaksLab",
+        "player_x": 5,
+        "player_y": 6,
+        "party_count": 1,
+        "money": 3175,
+        "badges": 0,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m07",
+        "frame_count": 12378,
+        "screen": "overworld",
+        "map_name": "ViridianCity",
+        "player_x": 29,
+        "player_y": 20,
+        "party_count": 1,
+        "money": 3175,
+        "badges": 0,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m08",
+        "frame_count": 18038,
+        "screen": "overworld",
+        "map_name": "OaksLab",
+        "player_x": 5,
+        "player_y": 3,
+        "party_count": 1,
+        "money": 3175,
+        "badges": 0,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m09",
+        "frame_count": 32865,
+        "screen": "overworld",
+        "map_name": "PewterCity",
+        "player_x": 16,
+        "player_y": 29,
+        "party_count": 1,
+        "money": 3265,
+        "badges": 0,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m10",
+        "frame_count": 128413,
+        "screen": "overworld",
+        "map_name": "PewterGym",
+        "player_x": 4,
+        "player_y": 2,
+        "party_count": 1,
+        "money": 5001,
+        "badges": 1,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m11",
+        "frame_count": 153895,
+        "screen": "overworld",
+        "map_name": "Route4",
+        "player_x": 11,
+        "player_y": 6,
+        "party_count": 1,
+        "money": 3018,
+        "badges": 1,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m12",
+        "frame_count": 176741,
+        "screen": "overworld",
+        "map_name": "CeruleanCity",
+        "player_x": 19,
+        "player_y": 18,
+        "party_count": 1,
+        "money": 3873,
+        "badges": 1,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m13",
+        "frame_count": 185758,
+        "screen": "overworld",
+        "map_name": "CeruleanCity",
+        "player_x": 19,
+        "player_y": 18,
+        "party_count": 1,
+        "money": 6412,
+        "badges": 3,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m14",
+        "frame_count": 240797,
+        "screen": "overworld",
+        "map_name": "BillsHouse",
+        "player_x": 4,
+        "player_y": 5,
+        "party_count": 1,
+        "money": 4694,
+        "badges": 3,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m15",
+        "frame_count": 283002,
+        "screen": "overworld",
+        "map_name": "VermilionCity",
+        "player_x": 11,
+        "player_y": 4,
+        "party_count": 1,
+        "money": 1098,
+        "badges": 3,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m16",
+        "frame_count": 319771,
+        "screen": "overworld",
+        "map_name": "SSAnneCaptainsRoom",
+        "player_x": 4,
+        "player_y": 3,
+        "party_count": 1,
+        "money": 1849,
+        "badges": 3,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m17",
+        "frame_count": 347803,
+        "screen": "overworld",
+        "map_name": "VermilionGym",
+        "player_x": 5,
+        "player_y": 2,
+        "party_count": 1,
+        "money": 6965,
+        "badges": 7,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m18",
+        "frame_count": 369323,
+        "screen": "overworld",
+        "map_name": "Route10",
+        "player_x": 11,
+        "player_y": 20,
+        "party_count": 1,
+        "money": 7985,
+        "badges": 7,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m19",
+        "frame_count": 405140,
+        "screen": "overworld",
+        "map_name": "LavenderTown",
+        "player_x": 3,
+        "player_y": 6,
+        "party_count": 1,
+        "money": 16240,
+        "badges": 7,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m20",
+        "frame_count": 411491,
+        "screen": "overworld",
+        "map_name": "CeladonCity",
+        "player_x": 41,
+        "player_y": 10,
+        "party_count": 1,
+        "money": 16570,
+        "badges": 7,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m21",
+        "frame_count": 425144,
+        "screen": "overworld",
+        "map_name": "CeladonGym",
+        "player_x": 4,
+        "player_y": 4,
+        "party_count": 1,
+        "money": 20626,
+        "badges": 15,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m22",
+        "frame_count": 436507,
+        "screen": "overworld",
+        "map_name": "RocketHideoutB4F",
+        "player_x": 10,
+        "player_y": 3,
+        "party_count": 1,
+        "money": 21856,
+        "badges": 15,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m23",
+        "frame_count": 448011,
+        "screen": "overworld",
+        "map_name": "RocketHideoutB4F",
+        "player_x": 24,
+        "player_y": 2,
+        "party_count": 1,
+        "money": 26107,
+        "badges": 15,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m24",
+        "frame_count": 481511,
+        "screen": "overworld",
+        "map_name": "PokemonTower5F",
+        "player_x": 10,
+        "player_y": 8,
+        "party_count": 1,
+        "money": 15674,
+        "badges": 15,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m25",
+        "frame_count": 496283,
+        "screen": "overworld",
+        "map_name": "MrFujisHouse",
+        "player_x": 2,
+        "player_y": 1,
+        "party_count": 1,
+        "money": 19334,
+        "badges": 15,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m26",
+        "frame_count": 535354,
+        "screen": "overworld",
+        "map_name": "FuchsiaCity",
+        "player_x": 19,
+        "player_y": 28,
+        "party_count": 1,
+        "money": 28084,
+        "badges": 15,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m27",
+        "frame_count": 549917,
+        "screen": "overworld",
+        "map_name": "FuchsiaGym",
+        "player_x": 3,
+        "player_y": 10,
+        "party_count": 1,
+        "money": 35946,
+        "badges": 31,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m28",
+        "frame_count": 562196,
+        "screen": "overworld",
+        "map_name": "SafariZoneSecretHouse",
+        "player_x": 2,
+        "player_y": 3,
+        "party_count": 1,
+        "money": 35446,
+        "badges": 31,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m29",
+        "frame_count": 573298,
+        "screen": "overworld",
+        "map_name": "FuchsiaCity",
+        "player_x": 19,
+        "player_y": 28,
+        "party_count": 1,
+        "money": 35446,
+        "badges": 31,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m30",
+        "frame_count": 604801,
+        "screen": "overworld",
+        "map_name": "SaffronCity",
+        "player_x": 9,
+        "player_y": 29,
+        "party_count": 1,
+        "money": 38101,
+        "badges": 31,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m31",
+        "frame_count": 609132,
+        "screen": "overworld",
+        "map_name": "SilphCo5F",
+        "player_x": 20,
+        "player_y": 16,
+        "party_count": 1,
+        "money": 39091,
+        "badges": 31,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m32",
+        "frame_count": 633736,
+        "screen": "overworld",
+        "map_name": "SilphCo7F",
+        "player_x": 1,
+        "player_y": 4,
+        "party_count": 2,
+        "money": 31831,
+        "badges": 31,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m33",
+        "frame_count": 641945,
+        "screen": "overworld",
+        "map_name": "SilphCo11F",
+        "player_x": 6,
+        "player_y": 5,
+        "party_count": 2,
+        "money": 36850,
+        "badges": 31,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m34",
+        "frame_count": 655492,
+        "screen": "overworld",
+        "map_name": "SaffronGym",
+        "player_x": 9,
+        "player_y": 9,
+        "party_count": 2,
+        "money": 36607,
+        "badges": 63,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m35",
+        "frame_count": 664008,
+        "screen": "overworld",
+        "map_name": "Route16FlyHouse",
+        "player_x": 2,
+        "player_y": 4,
+        "party_count": 2,
+        "money": 36607,
+        "badges": 63,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m36",
+        "frame_count": 682469,
+        "screen": "overworld",
+        "map_name": "PowerPlant",
+        "player_x": 4,
+        "player_y": 8,
+        "party_count": 3,
+        "money": 38107,
+        "badges": 63,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m37",
+        "frame_count": 690581,
+        "screen": "overworld",
+        "map_name": "CinnabarIsland",
+        "player_x": 11,
+        "player_y": 12,
+        "party_count": 3,
+        "money": 38107,
+        "badges": 63,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m38",
+        "frame_count": 699926,
+        "screen": "overworld",
+        "map_name": "PokemonMansionB1F",
+        "player_x": 5,
+        "player_y": 12,
+        "party_count": 3,
+        "money": 39557,
+        "badges": 63,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m39",
+        "frame_count": 717586,
+        "screen": "overworld",
+        "map_name": "CinnabarGym",
+        "player_x": 3,
+        "player_y": 4,
+        "party_count": 3,
+        "money": 44210,
+        "badges": 127,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m40",
+        "frame_count": 731933,
+        "screen": "overworld",
+        "map_name": "ViridianGym",
+        "player_x": 2,
+        "player_y": 2,
+        "party_count": 3,
+        "money": 51615,
+        "badges": 255,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m41",
+        "frame_count": 748850,
+        "screen": "overworld",
+        "map_name": "VictoryRoad1F",
+        "player_x": 8,
+        "player_y": 17,
+        "party_count": 3,
+        "money": 55060,
+        "badges": 255,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m42",
+        "frame_count": 757847,
+        "screen": "overworld",
+        "map_name": "VictoryRoad2F",
+        "player_x": 2,
+        "player_y": 16,
+        "party_count": 3,
+        "money": 56530,
+        "badges": 255,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m43",
+        "frame_count": 774297,
+        "screen": "overworld",
+        "map_name": "VictoryRoad2F",
+        "player_x": 10,
+        "player_y": 16,
+        "party_count": 3,
+        "money": 56530,
+        "badges": 255,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m44",
+        "frame_count": 778742,
+        "screen": "overworld",
+        "map_name": "IndigoPlateauLobby",
+        "player_x": 2,
+        "player_y": 5,
+        "party_count": 3,
+        "money": 9530,
+        "badges": 255,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m45",
+        "frame_count": 782855,
+        "screen": "overworld",
+        "map_name": "LoreleisRoom",
+        "player_x": 4,
+        "player_y": 2,
+        "party_count": 3,
+        "money": 15074,
+        "badges": 255,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m46",
+        "frame_count": 788647,
+        "screen": "overworld",
+        "map_name": "BrunosRoom",
+        "player_x": 4,
+        "player_y": 2,
+        "party_count": 3,
+        "money": 20816,
+        "badges": 255,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m47",
+        "frame_count": 792608,
+        "screen": "overworld",
+        "map_name": "AgathasRoom",
+        "player_x": 4,
+        "player_y": 2,
+        "party_count": 3,
+        "money": 26756,
+        "badges": 255,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m48",
+        "frame_count": 799948,
+        "screen": "overworld",
+        "map_name": "LancesRoom",
+        "player_x": 6,
+        "player_y": 2,
+        "party_count": 3,
+        "money": 32894,
+        "badges": 255,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null
+      },
+      {
+        "milestone": "m49",
+        "frame_count": 816302,
+        "screen": "overworld",
+        "map_name": "PalletTown",
+        "player_x": 5,
+        "player_y": 6,
+        "party_count": 3,
+        "money": 39329,
+        "badges": 255,
+        "hall_of_fame_count": 1,
+        "active_script_effect": null
+      }
+    ],
+    "transient_failure_before_clean_retry": {
+      "milestone": "m11",
+      "error": "warp at (11,5) never fired (Route4)",
+      "code_changes_before_retry": false,
+      "retry": "fresh m01–m49 passed; ending save + independent CONTINUE verified",
+      "traceback": " (most recent call last):\n  File \"/tmp/run_fidelity_13_17.py\", line 39, in <module>\n    pt.main()\n    ~~~~~~~^^\n  File \"/home/jerry/develop/open-pokered/scripts/playthrough.py\", line 2032, in main\n    fn(g)\n    ~~^^^\n  File \"/home/jerry/develop/open-pokered/scripts/playthrough_late.py\", line 284, in m11_mt_moon_entrance\n    g.heal_pokecenter((11, 5), \"Route4\", \"MtMoonPokecenter\")\n    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/jerry/develop/open-pokered/scripts/playthrough.py\", line 1236, in heal_pokecenter\n    self.nav_warp(dx, dy, city, pc)\n    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^\n  File \"/home/jerry/develop/open-pokered/scripts/playthrough.py\", line 1108, in nav_warp\n    raise NavError(f\"warp at ({x},{y}) never fired ({from_map})\")\nplaythrough.NavError: warp at (11,5) never fired (Route4)\n"
+    }
+  },
+  "screenshots": {
+    "before": {
+      "name-rater": {
+        "frame_count": 949,
+        "screen": "overworld",
+        "map_name": "NameRatersHouse",
+        "player_x": 5,
+        "player_y": 4,
+        "party_count": 1,
+        "money": 3000,
+        "badges": 0,
+        "hall_of_fame_count": 0,
+        "active_script_effect": "ShowDialogue",
+        "coins": 0,
+        "dialogue": "That is a decent nickname!",
+        "script_effect": {
+          "effect": "ShowDialogue",
+          "text": "That is a decent nickname!\n\nBut, would you like me to\ngive it a nicer name?\n\nHow about it?"
+        }
+      },
+      "coin-gift": {
+        "frame_count": 928,
+        "screen": "overworld",
+        "map_name": "GameCorner",
+        "player_x": 14,
+        "player_y": 12,
+        "party_count": 1,
+        "money": 5000,
+        "badges": 0,
+        "hall_of_fame_count": 0,
+        "active_script_effect": "ShowDialogue",
+        "coins": 9999,
+        "dialogue": "RED received 20 coins!",
+        "script_effect": {
+          "effect": "ShowDialogue",
+          "text": "RED received 20 coins!"
+        }
+      },
+      "coin-purchase": {
+        "frame_count": 1000,
+        "screen": "overworld",
+        "map_name": "GameCorner",
+        "player_x": 5,
+        "player_y": 7,
+        "party_count": 1,
+        "money": 5000,
+        "badges": 0,
+        "hall_of_fame_count": 0,
+        "active_script_effect": "ShowDialogue",
+        "coins": 9950,
+        "dialogue": "Oops! Your COIN CASE is full.",
+        "script_effect": {
+          "effect": "ShowDialogue",
+          "text": "Oops! Your COIN\nCASE is full."
+        }
+      },
+      "link-reception": {
+        "frame_count": 928,
+        "screen": "overworld",
+        "map_name": "IndigoPlateauLobby",
+        "player_x": 13,
+        "player_y": 7,
+        "party_count": 1,
+        "money": 3000,
+        "badges": 0,
+        "hall_of_fame_count": 0,
+        "active_script_effect": "ShowDialogue",
+        "coins": 0,
+        "dialogue": "Cable Club: This is for trading and battling with",
+        "script_effect": {
+          "effect": "ShowDialogue",
+          "text": "Cable Club: This is for\ntrading and battling with\nfriends. We're making final\npreparations. Please wait."
+        }
+      },
+      "rocket-exit": {
+        "frame_count": 1816,
+        "screen": "overworld",
+        "map_name": "GameCorner",
+        "player_x": 9,
+        "player_y": 4,
+        "party_count": 1,
+        "money": 3600,
+        "badges": 0,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null,
+        "coins": 0,
+        "dialogue": null,
+        "script_effect": null
+      }
+    },
+    "after": {
+      "name-rater": {
+        "frame_count": 949,
+        "screen": "overworld",
+        "map_name": "NameRatersHouse",
+        "player_x": 5,
+        "player_y": 4,
+        "party_count": 1,
+        "money": 3000,
+        "badges": 0,
+        "hall_of_fame_count": 0,
+        "active_script_effect": "ShowDialogue",
+        "coins": 0,
+        "dialogue": "MR.MIME, is it? That is a truly",
+        "script_effect": {
+          "effect": "ShowDialogue",
+          "text": "MR.MIME, is it?\nThat is a truly\nimpeccable name!\n\nTake good care of\nMR.MIME!"
+        }
+      },
+      "coin-gift": {
+        "frame_count": 928,
+        "screen": "overworld",
+        "map_name": "GameCorner",
+        "player_x": 14,
+        "player_y": 12,
+        "party_count": 1,
+        "money": 5000,
+        "badges": 0,
+        "hall_of_fame_count": 0,
+        "active_script_effect": "ShowDialogue",
+        "coins": 9990,
+        "dialogue": "You have lots of coins!",
+        "script_effect": {
+          "effect": "ShowDialogue",
+          "text": "You have lots of\ncoins!"
+        }
+      },
+      "coin-purchase": {
+        "frame_count": 1000,
+        "screen": "overworld",
+        "map_name": "GameCorner",
+        "player_x": 5,
+        "player_y": 7,
+        "party_count": 1,
+        "money": 4000,
+        "badges": 0,
+        "hall_of_fame_count": 0,
+        "active_script_effect": "ShowDialogue",
+        "coins": 9999,
+        "dialogue": "Thanks! Here are your 50 coins!",
+        "script_effect": {
+          "effect": "ShowDialogue",
+          "text": "Thanks! Here are your 50\ncoins!"
+        }
+      },
+      "link-reception": {
+        "frame_count": 928,
+        "screen": "overworld",
+        "map_name": "IndigoPlateauLobby",
+        "player_x": 13,
+        "player_y": 7,
+        "party_count": 1,
+        "money": 3000,
+        "badges": 0,
+        "hall_of_fame_count": 0,
+        "active_script_effect": null,
+        "coins": 0,
+        "dialogue": "This area is reserved for 2",
+        "script_effect": null
+      },
+      "rocket-exit": {
+        "frame_count": 1816,
+        "screen": "overworld",
+        "map_name": "GameCorner",
+        "player_x": 9,
+        "player_y": 4,
+        "party_count": 1,
+        "money": 3600,
+        "badges": 0,
+        "hall_of_fame_count": 0,
+        "active_script_effect": "MoveNpc",
+        "coins": 0,
+        "dialogue": null,
+        "script_effect": {
+          "effect": "MoveNpc",
+          "npc_id": "GAME_CORNER_OBJ_11",
+          "path": [
+            [
+              9,
+              6
+            ],
+            [
+              10,
+              6
+            ],
+            [
+              11,
+              6
+            ],
+            [
+              11,
+              5
+            ],
+            [
+              12,
+              5
+            ],
+            [
+              13,
+              5
+            ],
+            [
+              14,
+              5
+            ],
+            [
+              15,
+              5
+            ]
+          ],
+          "started": true
+        }
+      }
+    }
+  },
+  "implementation_source_sha256": {
+    "crates/pokered-app/src/game.rs": "c2f252439a33047102197bcad8ae62b261f23abefe510b90419f590eec2bfe13",
+    "crates/pokered-core/src/overworld/native_script.rs": "56f6b554b8601c0493eef61968ba7443da60e6291287f1b4b0de28020952d9de",
+    "crates/pokered-core/src/overworld/screen.rs": "b55e0e6055f64a32bfe8f087013bcb9666c07c9d790ee6a21cc6f23bc36f1385",
+    "crates/pokered-core/src/save/mod.rs": "8388da42697220712f707c208de54075a20bd794d633fa975491241eedb2f03f",
+    "crates/pokered-data/maps/NameRatersHouse/script.scene": "17c8872c00bac0f7bfeaba957286e7515246e27c40547a1beaab9c48b65d03b2",
+    "crates/pokered-data/maps/GameCorner/script.scene": "4c64e228929e5448dd54b2e1ac3c02092b3b2ab0090ac4b7b943a320f4c1029f",
+    "crates/pokered-data/maps/IndigoPlateauLobby/script.scene": "b4e585e961d8e0b05cc59f416d260622d62bbbfb64c4da8cda64d036be0a1c6e",
+    "crates/pokered-data/src/script_api.rs": "1551c3509b963436ff70ad0e89377da99d41a669f55fa9b7d155bc91c95c3545",
+    "crates/pokered-data/src/script_function_catalog.rs": "976c3c1a3bfe83e56fc59db7b0e95770ffc9042763d6969a3a6b0f50251efd76",
+    "crates/pokered-agent/src/semantics/extract.rs": "9ab1f3fb230caf1335f6ef3b58d8ec6011e9c91f36d6527a0ef251b271774587"
+  },
+  "original_reference_files": [
+    "scripts/NameRatersHouse.asm",
+    "scripts/GameCorner.asm",
+    "scripts/IndigoPlateauLobby.asm",
+    "home/compare.asm",
+    "engine/math/bcd.asm"
+  ],
+  "notes": [
+    "Clerk gift refuses at coins >=9990; Gentleman gift refuses only at coins ==9990 (jr z).",
+    "AddBCD saturates carry to 9999; no new coin arithmetic was introduced.",
+    "Captured seeded subsystem states are not fresh playthrough evidence."
+  ]
+}

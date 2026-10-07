@@ -314,6 +314,7 @@ const KNOWN_QUERIES: &[&str] = &[
     "getDaycareCost",
     "getPartyCount",
     "getPartyMonName",
+    "partyMonCanRename",
     "partyMonKnowsHm",
     "getPlayerX",
     "getPlayerY",

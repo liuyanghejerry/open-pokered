@@ -61,6 +61,18 @@ impl SaveData {
         }
     }
 
+    /// NameRatersHouseCheckMonOTScript compares BOTH the padded OT name and ID.
+    /// Unlike traded EXP/obedience compatibility, unknown OT ID 0 gets no exemption.
+    pub fn party_mon_can_rename(&self, index: usize) -> bool {
+        let Some(mon) = self.party.get(index) else {
+            return false;
+        };
+        let mut name = [0x50; 11];
+        let len = self.player_name.len().min(10);
+        name[..len].copy_from_slice(&self.player_name[..len]);
+        mon.ot_id == self.game_data.player_id && mon.ot_name == name
+    }
+
     /// Keep the bank-1 live box and the storage menu's current slot together.
     /// `current_box` is authoritative at save/load/capture boundaries, just
     /// like the original's wBoxData (inactive SRAM boxes may be stale).

@@ -1497,6 +1497,20 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         self.script_party_species.first().cloned().unwrap_or_default()
     }
 
+    /// Seed the strict Name Rater OT match for all six slots, clearing stale entries.
+    pub fn seed_party_rename_query_state(&mut self, can_rename: &[bool]) {
+        for i in 0..6 {
+            self.script_engine.seed_number(
+                &format!("partyCanRename{i}"),
+                if can_rename.get(i).copied().unwrap_or(false) {
+                    1.0
+                } else {
+                    0.0
+                },
+            );
+        }
+    }
+
     /// Seed the Day Care + per-party query state consumed by the Day Care
     /// scene (`isDaycareInUse`, `getDaycareMonName`, `getDaycareLevelsGrown`,
     /// `getDaycareCost`, `getPartyCount`, `getPartyMonName`,
