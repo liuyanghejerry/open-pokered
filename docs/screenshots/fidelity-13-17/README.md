@@ -14,7 +14,7 @@ headless debug-server 二进制、seed 0、speed 0 和相同的构造存档/输�
 | coin-gift | 9990 代币，与赠送 20 代币的店员交谈 | 928 |
 | coin-purchase | 9950 代币、¥5000，确认购买后停留文本 | 1000 |
 | link-reception | 已获得图鉴、未联机，关闭联盟柜台欢迎文本后 | 928 |
-| rocket-exit | Mewtwo L100 实际击败守卫，位于 (9,4)，关闭逃走台词后 8 帧 | 1816 |
+| rocket-exit | Mewtwo L100 实际击败守卫，从可行走地面 (10,6) 实际走至守卫右侧 (10,5)，关闭逃走台词后 8 帧 | 1858 |
 
 `states-before.json` / `states-after.json` 保存截图同帧的完整调试状态。
 `capture.py` 可重放上述场景：

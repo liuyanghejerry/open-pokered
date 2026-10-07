@@ -916,11 +916,11 @@
         }
       },
       "rocket-exit": {
-        "frame_count": 1816,
+        "frame_count": 1858,
         "screen": "overworld",
         "map_name": "GameCorner",
-        "player_x": 9,
-        "player_y": 4,
+        "player_x": 10,
+        "player_y": 5,
         "party_count": 1,
         "money": 3600,
         "badges": 0,
@@ -1002,11 +1002,11 @@
         "script_effect": null
       },
       "rocket-exit": {
-        "frame_count": 1816,
+        "frame_count": 1858,
         "screen": "overworld",
         "map_name": "GameCorner",
-        "player_x": 9,
-        "player_y": 4,
+        "player_x": 10,
+        "player_y": 5,
         "party_count": 1,
         "money": 3600,
         "badges": 0,
@@ -1058,7 +1058,7 @@
   },
   "implementation_source_sha256": {
     "crates/pokered-app/src/game.rs": "c2f252439a33047102197bcad8ae62b261f23abefe510b90419f590eec2bfe13",
-    "crates/pokered-core/src/overworld/native_script.rs": "56f6b554b8601c0493eef61968ba7443da60e6291287f1b4b0de28020952d9de",
+    "crates/pokered-core/src/overworld/native_script.rs": "c3199edd986ab564aca94c0d38b0965d57d593bf20c80c6c5963b9dbf452ae3d",
     "crates/pokered-core/src/overworld/screen.rs": "b55e0e6055f64a32bfe8f087013bcb9666c07c9d790ee6a21cc6f23bc36f1385",
     "crates/pokered-core/src/save/mod.rs": "8388da42697220712f707c208de54075a20bd794d633fa975491241eedb2f03f",
     "crates/pokered-data/maps/NameRatersHouse/script.scene": "17c8872c00bac0f7bfeaba957286e7515246e27c40547a1beaab9c48b65d03b2",
