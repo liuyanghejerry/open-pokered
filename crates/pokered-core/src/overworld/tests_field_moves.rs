@@ -1247,3 +1247,25 @@ fn boulder_map_script_arms_on_idle_and_uses_the_previous_field_sample() {
     screen.update_frame(idle);screen.update_frame(idle);
     assert_eq!(boulder_pos(&screen),(5,7),"TryWalking commits two hardware frames after MoveSprite");
 }
+
+#[test]
+fn menu_joypad_replaces_stale_direction_before_boulder_script_runs() {
+    use crate::game_state::{ScreenAction,GameScreen};
+    let mut screen=screen_on(MapId::PalletTown);fill_map_with_passable_block(&mut screen);
+    screen.state.player.x=5;screen.state.player.y=5;screen.state.player.facing=Direction::Down;
+    screen.player_last_stop_direction=4;screen.strength_active=true;
+    screen.npc_states.push(make_boulder(5,6));
+    let idle=OverworldInput::new(false,false,false,false,false,false,false,false);
+    let down_start=OverworldInput::new(false,true,false,false,false,false,true,false);
+    let menu_a=OverworldInput::new(false,false,false,false,true,false,false,false);
+    screen.update_frame(idle);screen.update_frame(idle);
+    assert!(screen.tried_push_boulder);
+    assert_eq!(screen.update_frame(down_start),ScreenAction::Transition(GameScreen::StartMenu));
+    // EXIT read A after the user released d-pad: the original menu Joypad
+    // replaced hJoyHeld. Neither the old direction nor its START may survive.
+    screen.synchronize_player_input(menu_a);
+    screen.update_frame(menu_a);screen.update_frame(menu_a);
+    assert!(screen.boulder_push.is_none(),"menu close must not reuse the pre-menu Down");
+    assert_eq!(boulder_pos(&screen),(5,6));
+    assert!(screen.pending_dialogue.is_none(),"held menu confirmation is not a new field A");
+}

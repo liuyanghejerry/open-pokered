@@ -2527,6 +2527,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         self.sampled_player_input.start = start;
     }
 
+    /// Menu Joypad calls replace the entire field sample, including d-pad.
+    /// RunMapScript consumes that sample before the next field Joypad call.
+    pub fn synchronize_player_input(&mut self, input: dotzuki_engine::overworld::OverworldInput) {
+        self.sampled_player_input = input;
+    }
+
     /// Restore counters and status bytes that live outside the event bitset.
     pub fn restore_system_save_state(&mut self, data: &crate::save::game_data::GameData) {
         self.player_last_stop_direction = data.player_last_stop_direction;

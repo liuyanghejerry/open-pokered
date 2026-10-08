@@ -4075,9 +4075,12 @@ impl PokemonGame {
                     if ow_gapped_last_frame {
                         let previously_held = |b| input.is_just_released(b)
                             || (input.is_held(b) && !input.is_just_pressed(b));
-                        self.overworld.synchronize_player_buttons(
-                            previously_held(GbButton::A), previously_held(GbButton::Start),
-                        );
+                        self.overworld.synchronize_player_input(OverworldInput::new(
+                            previously_held(GbButton::Up), previously_held(GbButton::Down),
+                            previously_held(GbButton::Left), previously_held(GbButton::Right),
+                            previously_held(GbButton::A), previously_held(GbButton::B),
+                            previously_held(GbButton::Start), previously_held(GbButton::Select),
+                        ));
                     }
                     let ow_input = OverworldInput::new(
                         input.is_held(GbButton::Up),
@@ -10200,7 +10203,10 @@ mod link_stats_cry_fidelity_tests {
             }
             // Controlled no-encounter fixture matches original BIT_NO_BATTLES.
             g.overworld.state.encounter_cooldown=255;g.overworld.set_rng_seed(0);
-            g.update(&button(GbButton::Start));g.update(&idle);
+            // Keep START through one field sample; a one-frame pulse can
+            // fall entirely inside DelayFrame after the controlled map warp.
+            let mut start_input=button(GbButton::Start);
+            g.update(&start_input);start_input.begin_frame();g.update(&start_input);
             assert_eq!(g.state.screen,GameScreen::StartMenu);
             for _ in 0..7 {
                 if g.start_menu.current_item()==pokered_core::start_menu::StartMenuItem::Pokemon {break;}
@@ -10257,9 +10263,20 @@ mod link_stats_cry_fidelity_tests {
             }
             for _ in 0..120 {g.update(&idle);}
             assert!(!g.overworld.boulder_dust.is_active());
+            let menu_return_probe=std::env::var("FIDELITY_DUST_MENU_RETURN").is_ok();
+            if menu_return_probe {
+                let mut open=button(GbButton::Start);open.press(GbButton::Down);
+                g.update(&open);open.begin_frame();g.update(&open);
+                assert_eq!(g.state.screen,GameScreen::StartMenu);
+                for _ in 0..60 {g.update(&idle);}
+                let mut close=button(GbButton::B);
+                g.update(&close);close.begin_frame();g.update(&close);
+                for _ in 0..6 {g.update(&idle);}
+                assert_eq!(g.state.screen,GameScreen::Overworld);
+            }
             let mut input=InputState::new();let mut rows=Vec::new();
             for t in -1i32..200 {
-                if t>=0 {input.begin_frame();if t==0 {input.press(trigger);}if t==16 {input.release(trigger);}g.update(&input);}
+                if t>=0 {input.begin_frame();if t==0 && !menu_return_probe {input.press(trigger);}if t==16 {input.release(trigger);}g.update(&input);}
                 let mut fb=FrameBuffer::new(RenderConfig::new(160,144),Rgba::WHITE);
                 g.draw(&mut fb);fb.save_png(&dir.join(format!("frame-{:04}.png",t+1))).unwrap();
                 let recorded_save=g.build_save_data();
@@ -10280,7 +10297,7 @@ mod link_stats_cry_fidelity_tests {
                     row["boulder_visible"]=serde_json::json!(g.overworld.npc_states.iter().find(|n|n.npc_index==npc).unwrap().visible);
                 }
             }
-            assert!(rows.iter().any(|r|r["dust_active"]==true));
+            if !menu_return_probe {assert!(rows.iter().any(|r|r["dust_active"]==true));}
             std::fs::write(dir.join("frames.json"),serde_json::to_string_pretty(&rows).unwrap()).unwrap();
         });
     }
