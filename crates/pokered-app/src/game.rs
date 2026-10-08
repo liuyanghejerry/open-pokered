@@ -9712,6 +9712,76 @@ mod link_stats_cry_fidelity_tests {
         });
     }
 
+    fn saved_reference_pc_stats_80(from_box: bool, dir: &std::path::Path) -> PokemonGame {
+        use pokered_core::pc_screen::PcPhase;
+        let path=dir.join("fixture.sav");
+        std::fs::write(&path,std::fs::read(std::env::var("FIDELITY_PC_REFERENCE_SRAM").unwrap()).unwrap()).unwrap();
+        let mut g=PokemonGame::new_with_options(GameVersion::Red,Some(path),None,None,true,None,false,true,
+            #[cfg(feature="debug-server")] None);
+        let idle=InputState::new();
+        for frame in 0..2000 {
+            if g.state.screen==GameScreen::Overworld {break;}
+            let advance=button(GbButton::A);g.update(if frame%20==19 {&advance} else {&idle});
+        }
+        assert_eq!(g.state.screen,GameScreen::Overworld);
+        assert_eq!(g.overworld.state.current_map,MapId::ViridianPokecenter);
+        assert_eq!((g.overworld.state.player.x,g.overworld.state.player.y),(13,4));
+        std::fs::write(dir.join("continue.json"),serde_json::to_string_pretty(&serde_json::json!({
+            "frame":g.frame_count,"facing":format!("{:?}",g.overworld.state.player.facing),
+            "saved_direction":g.save_data.game_data.player_direction,"party":g.save_data.party})).unwrap()).unwrap();
+        g.overworld.set_rng_seed(0);
+        // Original Continue also requires facing the actual PC before A.
+        g.update(&button(GbButton::Up));for _ in 0..120 {g.update(&idle);}
+        g.update(&button(GbButton::A));
+        for frame in 0..2000 {
+            if g.pc_screen.as_ref().is_some_and(|p| p.phase()==PcPhase::MainMenu) {break;}
+            let advance=button(GbButton::A);g.update(if frame%20==19 {&advance} else {&idle});
+        }
+        assert_eq!(g.pc_screen.as_ref().unwrap().phase(),PcPhase::MainMenu);
+        g.update(&button(GbButton::A));
+        for frame in 0..1000 {
+            if g.pc_screen.as_ref().unwrap().phase()==PcPhase::BillsMenu {break;}
+            let advance=button(GbButton::A);g.update(if frame%20==19 {&advance} else {&idle});
+        }
+        assert_eq!(g.pc_screen.as_ref().unwrap().phase(),PcPhase::BillsMenu);
+        if !from_box {g.update(&button(GbButton::Down));g.update(&idle);}
+        g.update(&button(GbButton::A));for _ in 0..120 {g.update(&idle);}
+        assert_eq!(g.pc_screen.as_ref().unwrap().phase(),PcPhase::MonList);
+        g.update(&button(GbButton::A));for _ in 0..120 {g.update(&idle);}
+        assert_eq!(g.pc_screen.as_ref().unwrap().phase(),PcPhase::MonAction);
+        g.update(&button(GbButton::Down));g.update(&idle);
+        g
+    }
+
+    #[test]
+    #[ignore]
+    fn capture_stats_transitions_raw_80_82() {
+        run_link_save_fixture(|| {
+            let root=std::path::PathBuf::from(std::env::var("FIDELITY_STATS_TRANSITIONS").unwrap());
+            for from_box in [false,true] {
+                let dir=root.join(if from_box {"box"} else {"party"});std::fs::create_dir_all(&dir).unwrap();
+                let mut g=saved_reference_pc_stats_80(from_box,&dir);
+                for (window,key,frames) in [("entry",GbButton::A,240),("page2",GbButton::B,80),("exit",GbButton::B,100)] {
+                    let folder=dir.join(window);std::fs::create_dir_all(&folder).unwrap();
+                    let mut input=InputState::new();let mut records=Vec::new();
+                    for t in -1i32..frames {
+                        if t>=0 {
+                            input.begin_frame();if t==0 {input.press(key);}if t==2 {input.release(key);}g.update(&input);
+                        }
+                        let mut fb=FrameBuffer::new(RenderConfig::new(160,144),Rgba::WHITE);g.draw(&mut fb);
+                        fb.save_png(&folder.join(format!("frame-{:04}.png",t+1))).unwrap();
+                        records.push(serde_json::json!({"t":t,"frame":g.frame_count,"input_bits":input.raw_current(),
+                            "screen":format!("{:?}",g.state.screen),"page":g.stats_screen.as_ref().map(|s|format!("{:?}",s.page())),
+                            "nr50":g.audio.as_ref().unwrap().manager.lock().unwrap().apu.read_register(0xff24),
+                            "sfx_active":g.audio.as_ref().unwrap().is_sfx_playing(),"party":g.save_data.party}));
+                    }
+                    std::fs::write(folder.join("frames.json"),serde_json::to_string_pretty(&records).unwrap()).unwrap();
+                }
+                assert_eq!(g.state.screen,GameScreen::PC);
+            }
+        });
+    }
+
     fn wait_stats_cry(game: &mut PokemonGame) {
         for _ in 0..120 {
             game.update(&InputState::new());
