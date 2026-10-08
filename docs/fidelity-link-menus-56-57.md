@@ -27,6 +27,8 @@
 - 同输入截图捕获入口 `capture_own_mon_menu_and_stats`：构造存档、seed、输入均固定；
   菜单帧 363、查看状态帧 365、不同长度队伍切换后的光标帧 366。
   设置 `FIDELITY_LINK_CAPTURES` 后单独运行该忽略测试输出 PNG 和 frames.json。
-  基线前后截图尚待音频 PR 合入 master 后归档；不能以只有后图代替 PR 比较图。
+  基线为合入音频 PR 后的 master `4540e68`，只加入相同的只读捕获入口；运行时代码未修改。
+  三组前后图及同输入源码 SHA、帧记录归档于 `docs/screenshots/fidelity-56-57/`。
+  基线实际光标测试失败为 Some(0) 而非 Some(1)，匹配旧版跳到第一只的截图。
 
 CANCEL 列表项、列表边界输入及其按键音仍在长期审计中，尚未由本批修复覆盖。

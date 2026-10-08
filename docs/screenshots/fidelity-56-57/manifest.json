@@ -1,0 +1,49 @@
+{
+  "base": "4540e6809fdccfe11735fb6900338efd79ce8d1d",
+  "same_fixture_and_input_source_sha256": {
+    "fixture": "48b42ee727a256c37bb5764f98ece8568e60bfe6ffe1b53346b8a799f9a55ac0",
+    "button": "a2f490119c84e28e5d334374741e755e82e79a3a32e69235b5d43f1bf64ea094",
+    "paired_trade_room": "a7a67a88d77e4a909579ef983d27c5dfac5715928f0dafca273bd6dbd3808303",
+    "linked_trade_room": "7ef7f7a58f34cfb257a7182b07e558149b987e52eba3de14ef690afef249a19f",
+    "unequal_party_pair": "a1f39d8dcab605f80fc9ad84cacc2b95c7cd94f8c4b7a137acb89a3b2adc633d",
+    "capture_own_mon_menu_and_stats": "60a222d5003512b56811f31400a4ff609a3a541c27f4a0c8db8eeb244b3d685e"
+  },
+  "before": [
+    {
+      "frame": 363,
+      "phase": "TradeWaitingPeer",
+      "stage": "own-menu",
+      "stats": null
+    },
+    {
+      "frame": 365,
+      "phase": "TradeWaitingPeer",
+      "stage": "own-stats",
+      "stats": null
+    },
+    {
+      "frame": 366,
+      "peer_cursor": 0,
+      "stage": "side-cursor"
+    }
+  ],
+  "after": [
+    {
+      "frame": 363,
+      "phase": "TradeSelect",
+      "stage": "own-menu",
+      "stats": null
+    },
+    {
+      "frame": 365,
+      "phase": "TradeSelect",
+      "stage": "own-stats",
+      "stats": "Bulbasaur"
+    },
+    {
+      "frame": 366,
+      "peer_cursor": 1,
+      "stage": "side-cursor"
+    }
+  ]
+}
