@@ -897,9 +897,11 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     pub(crate) boulder_dust_frames: u8,
     /// The boulder-push smoke puff (`AnimateBoulderDust`, dust_smoke.asm) —
     /// a frame-stepped 2×2 smoke-tile block anchored to the push spot. The
-    /// renderer draws it while [`BoulderDustState::is_active`]; `update.rs`
-    /// ticks it every frame.
+    /// renderer presents its OAM one frame later during the blocking push.
+    /// Logical palette changes apply immediately.
     pub boulder_dust: presentation::BoulderDustState,
+    /// Blocking scripted boulder slide, smoke, and graphics restoration.
+    pub boulder_push: Option<presentation::BoulderPushState>,
     /// Dark-cave palette state (wMapPalOffset): set on entering Rock Tunnel,
     /// cleared by FLASH or by leaving. The darkened *rendering* is a
     /// renderer-side follow-up; this tracks the logic state.
@@ -1243,6 +1245,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             tried_push_boulder: false,
             boulder_dust_frames: 0,
             boulder_dust: presentation::BoulderDustState::inactive(),
+            boulder_push: None,
             dark_cave,
             forced_bike: forced_bike::ForcedBikeState::default(),
             flash_lit_frames: 0,
@@ -2599,6 +2602,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             self.tried_push_boulder = false;
             self.boulder_dust_frames = 0;
             self.boulder_dust = presentation::BoulderDustState::inactive();
+            self.boulder_push = None;
             // A mid-cutscene map change (e.g. the departure's walk-out warp)
             // must not carry the animation into the next map.
             self.ship_departure = None;

@@ -145,6 +145,26 @@ fn blit_tile_clipped_flipped(
     );
 }
 
+/// DMG sprite priority: smaller raw X wins, then earlier OAM slot.
+/// Actor slots precede smoke36..39, so an equal X also hides smoke.
+fn mask_smoke_with_actor(
+    smoke: &mut Option<Vec<(usize,u8,Rgba)>>, fb: &FrameBuffer,
+    tile: &Tile, x: i32, y: i32, palette: &Palette, flip_h: bool,
+) {
+    let Some(pixels)=smoke.as_mut() else {return;};
+    let raw_x=(x+8) as u8;
+    for row in 0..8 {
+        let colors=tile.render_row(row,palette);
+        for col in 0..8 {
+            let px=x+col as i32;let py=y+row as i32;
+            if px<0 || py<0 || px>=fb.width() as i32 || py>=fb.height() as i32 {continue;}
+            if colors[if flip_h {7-col} else {col}]==Rgba::TRANSPARENT {continue;}
+            let offset=py as usize*fb.width() as usize+px as usize;
+            pixels.retain(|&(index,smoke_x,_)|index!=offset || raw_x>smoke_x);
+        }
+    }
+}
+
 #[inline]
 fn blit_priority_bg_tile(fb: &mut FrameBuffer, tile: &Tile, x: i32, y: i32) {
     fb.blit_gb_tile_indices(x, y, tile, true, false, false);
@@ -750,6 +770,7 @@ pub(super) fn can_reuse_composited_frame(screen: &OverworldScreen) -> bool {
         && screen.fishing_anim.is_none()
         && screen.ship_departure.is_none()
         && screen.flash_lit_frames == 0
+        && screen.boulder_push.is_none()
         && !screen.boulder_dust.is_active()
 }
 
@@ -1266,6 +1287,55 @@ fn draw_overworld_impl(
             }
             fb.clear(Rgba::WHITE);
         }
+        // Keep smoke candidates until actor opacity and raw X are known.
+        // DMG priority is X first, OAM order only when X ties.
+        let mut smoke_pixels: Option<Vec<(usize,u8,Rgba)>> = None;
+        let visible_dust=screen.boulder_push.map(|p|p.visible_dust())
+            .unwrap_or_else(||screen.boulder_dust.is_active().then_some(screen.boulder_dust));
+        if let Some(dust)=visible_dust {
+            smoke_pixels=Some(Vec::with_capacity(256));
+            let (ax,ay)=dust.anchor();
+            let anchor_x=(ax as i32*2-view_origin_tx)*TILE_SIZE as i32-view_sub_x;
+            let anchor_y=(ay as i32*2-view_origin_ty)*TILE_SIZE as i32-view_sub_y+ACTOR_CELL_Y_OFFSET;
+            if let Ok(cached)=rm.load_asset(AssetCategory::Overworld,"smoke.png") {
+                if cached.tileset.len() > 0 {
+                    // OBP1=$e4, XOR $64 gives $80. OBP0 remains $d0.
+                    let normal=Palette::new(&[Rgba::TRANSPARENT,Rgba::rgb(170,170,170),Rgba::rgb(85,85,85),Rgba::BLACK]);
+                    let flash=Palette::new(&[Rgba::TRANSPARENT,Rgba::WHITE,Rgba::WHITE,Rgba::rgb(85,85,85)]);
+                    // Palette writes take effect immediately; OAM positions
+                    // wait for the next DMA. Do not delay both together.
+                    let normal_palette=screen.boulder_push.map_or_else(||dust.palette_flipped(),|p| {
+                        ((p.frame.saturating_sub(45)/3).min(7))%2==1
+                    });
+                    let obp1=if normal_palette {&normal} else {&flash};
+                    for entry in pokered_core::overworld::presentation::boulder_dust_oam(&dust,anchor_x,anchor_y) {
+                        let x=i32::from(entry.x)-8;let y=i32::from(entry.y)-16;
+                        let palette=if entry.attributes&0x10!=0 {obp1} else {&sprite_pal};
+                        let tile=cached.tileset.get(0);
+                        for row in 0..8 {
+                            let source_y=if entry.attributes&0x40!=0 {7-row} else {row};
+                            let colors=tile.render_row(source_y,palette);
+                            for col in 0..8 {
+                                let px=x+col as i32;let py=y+row as i32;
+                                if px<0 || py<0 || px>=fb.width() as i32 || py>=fb.height() as i32 {continue;}
+                                let source_x=if entry.attributes&0x20!=0 {7-col} else {col};
+                                let color=colors[source_x];
+                                if color==Rgba::TRANSPARENT {continue;}
+                                // Original downward clipping corrupts the upper
+                                // right entry to $a0: behind BG, X-flipped, OBP0.
+                                if entry.attributes&0x80!=0 && fb.get_pixel(px as u32,py as u32)!=Some(Rgba::WHITE) {continue;}
+                                let offset=py as usize*fb.width() as usize+px as usize;
+                                let pixels=smoke_pixels.as_mut().unwrap();
+                                if let Some(pixel)=pixels.iter_mut().find(|p|p.0==offset) {
+                                    if entry.x<pixel.1 {*pixel=(offset,entry.x,color);}
+                                } else {pixels.push((offset,entry.x,color));}
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         // Player sprite: 16×96 sheet = 6 frames of 16×16
         // Frame layout: DownStand=0, UpStand=1, LeftStand=2, DownWalk=3, UpWalk=4, LeftWalk=5
         // Right uses Left frames with horizontal flip
@@ -1469,6 +1539,8 @@ fn draw_overworld_impl(
                             continue;
                         }
 
+                        mask_smoke_with_actor(&mut smoke_pixels,fb,tile_ts.get(tile_idx),
+                            (draw_x+col*TILE_SIZE) as i32,(draw_y+row*TILE_SIZE) as i32,&sprite_pal,flip_h);
                         blit_single_tile_flipped(
                             fb,
                             tile_ts,
@@ -1523,7 +1595,7 @@ fn draw_overworld_impl(
                 }
             }
         }
-        for npc in &screen.npc_states {
+        for (npc_slot,npc) in screen.npc_states.iter().enumerate() {
             if screen.field_move_restore.is_some() {
                 break;
             }
@@ -1598,14 +1670,16 @@ fn draw_overworld_impl(
                 let base_tile = frame * 4;
                 let tpr = cached.source_size.0 / TILE_SIZE;
 
-                let npc_screen_tx = npc.x as i32 * 2 - view_origin_tx;
-                let npc_screen_ty = npc.y as i32 * 2 - view_origin_ty;
+                let push=screen.boulder_push.filter(|p|p.npc_index==npc_slot);
+                let (npc_x,npc_y)=push.map_or((npc.x,npc.y),|p|p.origin);
+                let npc_screen_tx = npc_x as i32 * 2 - view_origin_tx;
+                let npc_screen_ty = npc_y as i32 * 2 - view_origin_ty;
 
                 // Smooth pixel interpolation during movement. Classic GB
                 // walkers advance 1px/frame over their 16-frame step
                 // (16px/tile) — unlike the player's 2px/frame over 8.
-                let (walk_dx, walk_dy) = if npc.walk_counter > 0 {
-                    let px = npc_walk_pixel_offset(npc.walk_counter);
+                let (walk_dx, walk_dy) = if push.is_some() || npc.walk_counter > 0 {
+                    let px = push.map_or_else(||npc_walk_pixel_offset(npc.walk_counter),|p|i32::from(p.visible_slide_pixels()));
                     match npc.facing {
                         Direction::Down => (0i32, px),
                         Direction::Up => (0, -px),
@@ -1650,6 +1724,7 @@ fn draw_overworld_impl(
 
                         let tx = npc_px_x + (col * TILE_SIZE) as i32;
                         let ty = npc_px_y + (row * TILE_SIZE) as i32;
+                        mask_smoke_with_actor(&mut smoke_pixels,fb,ts.get(tile_idx),tx,ty,&sprite_pal,flip_h);
                         blit_tile_clipped_flipped(fb, ts, tile_idx, tx, ty, &sprite_pal, flip_h);
                     }
                 }
@@ -1705,10 +1780,18 @@ fn draw_overworld_impl(
                             }
                             let tx = npc_px_x + (col * TILE_SIZE) as i32;
                             let ty = npc_px_y + (row * TILE_SIZE) as i32;
+                            mask_smoke_with_actor(&mut smoke_pixels,fb,ts.get(tile_idx),tx,ty,&sprite_pal,false);
                             blit_tile_clipped_flipped(fb, ts, tile_idx, tx, ty, &sprite_pal, false);
                         }
                     }
                 }
+            }
+        }
+
+        if let Some(pixels)=smoke_pixels {
+            let width=fb.width() as usize;
+            for (i,_,color) in pixels {
+                fb.set_pixel((i%width) as u32,(i/width) as u32,color);
             }
         }
 
@@ -1936,54 +2019,6 @@ fn draw_overworld_impl(
                             flip,
                         );
                     }
-                }
-            }
-        }
-
-        // Boulder push dust — AnimateBoulderDust (engine/overworld/
-        // dust_smoke.asm): a 2×2 OAM block of 8×8 smoke tiles
-        // (gfx/overworld/smoke.2bpp) kicked up at the boulder's base.
-        // Positioned from the player sprite's top-left + per-facing
-        // BoulderDustAnimationOffsets (cut.asm:170-176), anchored to the
-        // player's tile at push time. Each of the 8 steps (3 frames each)
-        // drifts the block 1px against the push direction and flashes the
-        // smoke palette (rOBP1 XOR %01100100).
-        if screen.boulder_dust.is_active() {
-            let dust = screen.boulder_dust;
-            let (ax, ay) = dust.anchor();
-            let anchor_px_x = (ax as i32 * 2 - view_origin_tx) * TILE_SIZE as i32;
-            let anchor_px_y = (ay as i32 * 2 - view_origin_ty) * TILE_SIZE as i32 + ACTOR_CELL_Y_OFFSET;
-            let (bx, by) = dust.base_offset();
-            let step = dust.step() as i32;
-            if let Ok(cached) = rm.load_asset(AssetCategory::Overworld, "smoke.png") {
-                let ts = &cached.tileset;
-                // rOBP1=%11100100: idx 0→transparent, 1→white, 2→light gray,
-                // 3→dark gray; the step flash XORs %01100100, swapping idx 2/3.
-                let obp1_pal = Palette::new(&[
-                    Rgba::TRANSPARENT,
-                    Rgba::rgb(0xFF, 0xFF, 0xFF),
-                    Rgba::rgb(0xAA, 0xAA, 0xAA),
-                    Rgba::rgb(0x55, 0x55, 0x55),
-                ]);
-                let obp1_flash = Palette::new(&[
-                    Rgba::TRANSPARENT,
-                    Rgba::rgb(0xFF, 0xFF, 0xFF),
-                    Rgba::rgb(0x55, 0x55, 0x55),
-                    Rgba::rgb(0xAA, 0xAA, 0xAA),
-                ]);
-                let dust_pal = if dust.palette_flipped() {
-                    &obp1_flash
-                } else {
-                    &obp1_pal
-                };
-                let drifts = dust.tile_drifts();
-                for i in 0..4 {
-                    let col = (i % 2) as i32;
-                    let row = (i / 2) as i32;
-                    let (ddx, ddy) = drifts[i];
-                    let tx = anchor_px_x + bx + col * TILE_SIZE as i32 + ddx * step;
-                    let ty = anchor_px_y + by + row * TILE_SIZE as i32 + ddy * step;
-                    blit_tile_clipped(fb, ts, 0, tx, ty, dust_pal);
                 }
             }
         }
@@ -3194,14 +3229,15 @@ mod elevator_edge_tests {
         );
         s.update_frame(hold_down);
         s.update_frame(hold_down);
-        assert!(s.boulder_dust.is_active(), "push started the dust");
+        assert!(!s.boulder_dust.is_active(), "stone slides before smoke appears");
+        for _ in 0..46 {s.update_frame(pokered_core::overworld::OverworldInput::new(false,false,false,false,false,false,false,false));}
+        assert!(s.boulder_dust.is_active(), "dust appears after the slide");
 
         let after = render_screen(&mut s);
-        // This presence test samples the dust's right column outside the
-        // boulder sprite. Exact raw-OAM conversion for dust is a separate
-        // audit; this only verifies the push starts drawing the smoke asset.
+        // Original OAM sprite36 is (Y=111,X=72), or LCD (64,95),
+        // at the first stage. This checks smoke outside the landed stone.
         let dust_area_changed =
-            (80..88).any(|x| (112..128).any(|y| before.get_pixel(x, y) != after.get_pixel(x, y)));
+            (64..80).any(|x| (94..103).any(|y| before.get_pixel(x, y) != after.get_pixel(x, y)));
         assert!(
             dust_area_changed,
             "dust pixels appear at the boulder's base during the push"
