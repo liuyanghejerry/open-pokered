@@ -44,3 +44,15 @@ master 检出仅加入与修复版字节相同的只读录制函数，没有生�
 ## native 复现
 
 `cargo test -p pokered-app --features debug-server --lib --no-run`，对生成的测试执行文件运行 `capture_actual_boulder_dust_raw_93 --ignored`。设置 `FIDELITY_DUST_SRAM` 指向夹具，`FIDELITY_DUST_CAPTURE` 指向空输出目录，`FIDELITY_DUST_DIRECTION` 为 down/up/left/right。确认实际执行1项测试；仅看到0 tests不能作为录制证据。
+
+## 3F 完成门槛的追加修复
+
+原作 VictoryRoad3FDefaultScript 在检查机关或洞之前等待 BIT_PUSHED_BOULDER；该位由完整滑动/烟尘动画结束设置。因此3F落洞及机关效果延后到第75帧，核心回归确认第1至74帧石头仍可见、落洞旗标未设置，第75帧隐藏并设置旗标。
+
+通过实际 Continue →受控正常地图加载至3F(21,15)→实际队伍 Strength→向右输入，master `31b1eda` 与修复各录制201帧，两遍 PNG 和状态记录逐字节重复。下图均取输入后第54帧。它们证明修复前后行为变化；此3F场景尚未与原作连续图像比对，不能算 RGB PASS。
+
+![前](https://raw.githubusercontent.com/liuyanghejerry/open-pokered/fix/fidelity-boulder-dust-93/docs/screenshots/fidelity-93-95/victory-3f-hole-before-frame54.png)
+
+![后](https://raw.githubusercontent.com/liuyanghejerry/open-pokered/fix/fidelity-boulder-dust-93/docs/screenshots/fidelity-93-95/victory-3f-hole-after-frame54.png)
+
+1F/2F 另有直接坐标检查，仍待追加修复。1F受控原作测试（正常地图加载流程、手动指定玩家/石块位置，非实际旅行）两次都记录到逻辑坐标在第4帧移动，旗标在第6帧设置，第8帧进入 ReplaceTileBlock，地砖更新暂停滑动后在第17帧恢复。它与不触发机关的隔离推石时间轴不同；不得沿用四方向的 RGB PASS 判定。无效 BFS/目的坐标准备及提前推石尝试均保留为拒绝的记录。

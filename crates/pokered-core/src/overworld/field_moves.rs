@@ -514,7 +514,11 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         } else if self.npc_states[push.npc_index].walk_counter != 0 {
             let npc = &mut self.npc_states[push.npc_index];
             npc.x = push.destination.0; npc.y = push.destination.1; npc.walk_counter = 0;
-            self.commit_boulder_landing(push.npc_index);
+            // 3F checks BIT_PUSHED_BOULDER, set only after the dust.
+            // 1F/2F check coordinates directly (audited separately).
+            if self.state.current_map != MapId::VictoryRoad3F {
+                self.commit_boulder_landing(push.npc_index);
+            }
         }
         if push.frame == presentation::BoulderPushState::DUST_FIRST_FRAME {
             self.boulder_dust = presentation::BoulderDustState::new(push.direction, push.anchor.0, push.anchor.1);
@@ -526,6 +530,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         }
         if push.frame == presentation::BoulderPushState::LAST_FRAME {
             self.commit_seafoam_boulder_hole(push.npc_index);
+            if self.state.current_map == MapId::VictoryRoad3F {
+                self.commit_boulder_landing(push.npc_index);
+            }
             self.tried_push_boulder = false;
             self.boulder_dust_frames = 0;
             self.boulder_push = None;

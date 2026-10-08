@@ -10047,6 +10047,7 @@ mod link_stats_cry_fidelity_tests {
             let mut g=PokemonGame::new_with_options(GameVersion::Red,Some(path),None,None,false,None,false,true,
                 #[cfg(feature="debug-server")] None);
             let idle=InputState::new(); let mut saw_menu=false;
+            let victory_hole=std::env::var("FIDELITY_DUST_SCENARIO").is_ok_and(|s|s=="victory-hole");
             for frame in 0..2000 {
                 saw_menu |= g.state.screen==GameScreen::MainMenu;
                 if g.state.screen==GameScreen::Overworld {break;}
@@ -10054,6 +10055,14 @@ mod link_stats_cry_fidelity_tests {
             }
             assert!(saw_menu);assert_eq!(g.overworld.state.current_map,MapId::SeafoamIslands1F);
             assert_eq!((g.overworld.state.player.x,g.overworld.state.player.y),(18,9));
+            // The extra hole fixture uses the normal map-load/debug warp
+            // before the actual Strength menu, preserving a valid tile view.
+            if victory_hole {
+                g.overworld.warp_to_map(MapId::VictoryRoad3F,21,15);
+                for _ in 0..120 {g.update(&idle);}
+                assert_eq!(g.overworld.state.current_map,MapId::VictoryRoad3F);
+                assert_eq!((g.overworld.state.player.x,g.overworld.state.player.y),(21,15));
+            }
             // Controlled no-encounter fixture matches original BIT_NO_BATTLES.
             g.overworld.state.encounter_cooldown=255;g.overworld.set_rng_seed(0);
             g.update(&button(GbButton::Start));g.update(&idle);
@@ -10078,14 +10087,16 @@ mod link_stats_cry_fidelity_tests {
             }
             assert_eq!(g.state.screen,GameScreen::Overworld);assert!(g.overworld.strength_active);
             assert!(g.overworld.pending_dialogue.is_none());
-            let direction=std::env::var("FIDELITY_DUST_DIRECTION").unwrap_or_else(|_|"down".into());
-            let (preparation,trigger,expected)=match direction.as_str() {
+            let direction=if victory_hole {"right".into()} else {std::env::var("FIDELITY_DUST_DIRECTION").unwrap_or_else(|_|"down".into())};
+            let (preparation,trigger,expected)=if victory_hole {
+                (vec![],GbButton::Right,(21,15))
+            } else {match direction.as_str() {
                 "down" => (vec![],GbButton::Down,(18,9)),
                 "up" => (vec![GbButton::Right,GbButton::Down,GbButton::Down,GbButton::Left],GbButton::Up,(18,11)),
                 "left" => (vec![GbButton::Right,GbButton::Down],GbButton::Left,(19,10)),
                 "right" => (vec![GbButton::Left,GbButton::Down],GbButton::Right,(17,10)),
                 _ => panic!("unknown boulder direction"),
-            };
+            }};
             for b in preparation {
                 g.update(&button(b));g.update(&button(b));
                 for _ in 0..30 {g.update(&idle);}
