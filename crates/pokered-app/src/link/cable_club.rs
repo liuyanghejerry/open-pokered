@@ -748,16 +748,21 @@ impl CableClubFlow {
                 remote_index,
                 mut selected,
             } => {
-                if input.up || input.down {
-                    selected = 1 - selected;
-                    self.phase = CableClubPhase::TradeConfirm {
-                        local_index,
-                        remote_index,
-                        selected,
-                    };
-                    FlowNeed::None
-                } else if input.a || input.b {
-                    let confirm = input.a && selected == 0;
+                // DisplayTwoOptionMenu uses HandleMenuInput: clamp the
+                // vertical cursor first, then return watched A/B. B always
+                // chooses the second item, including simultaneous A+B.
+                if input.up {
+                    selected = 0;
+                } else if input.down {
+                    selected = 1;
+                }
+                self.phase = CableClubPhase::TradeConfirm {
+                    local_index,
+                    remote_index,
+                    selected,
+                };
+                if input.a || input.b {
+                    let confirm = !input.b && input.a && selected == 0;
                     self.phase = CableClubPhase::TradeWaitingConfirm;
                     if confirm {
                         if self.peer_confirmation == Some(false) { self.start_rejection_delay(false); }

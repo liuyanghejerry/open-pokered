@@ -9300,6 +9300,68 @@ mod link_stats_cry_fidelity_tests {
     }
 
     #[test]
+    fn actual_trade_confirmation_clamps_vertical_cursor() {
+        run_link_save_fixture(|| {
+            let (mut host, _peer) = both_selected_pair();
+            host.update(&button(GbButton::Up));
+            assert!(matches!(host.link_cable.phase(), CableClubPhase::TradeConfirm { selected: 0, .. }),
+                "HandleMenuInput UP at first choice does not wrap to CANCEL");
+            host.update(&button(GbButton::Down));
+            host.update(&InputState::new());
+            host.update(&button(GbButton::Down));
+            assert!(matches!(host.link_cable.phase(), CableClubPhase::TradeConfirm { selected: 1, .. }),
+                "DOWN at last choice does not wrap to TRADE");
+        });
+    }
+
+    #[test]
+    fn actual_trade_confirmation_vertical_and_ab_choose_updated_item() {
+        run_link_save_fixture(|| {
+            let (mut host, mut peer) = both_selected_pair();
+            let mut down_a = button(GbButton::Down); down_a.press(GbButton::A);
+            host.update(&down_a);
+            assert_eq!(host.link_cable.phase(), &CableClubPhase::TradeWaitingConfirm,
+                "HandleMenuInput moves DOWN then returns A in the same input");
+            assert_eq!(host.link_cable.text_box().as_deref(), Some(crate::link::cable_club::TEXT_TRADE_CANCELED));
+            peer.update(&button(GbButton::B));
+            for _ in 0..120 { host.update(&InputState::new()); peer.update(&InputState::new()); }
+            assert_eq!(host.link_cable.phase(), &CableClubPhase::TradeSelect);
+            let (mut host, _peer) = both_selected_pair();
+            let mut a_b = button(GbButton::A); a_b.press(GbButton::B);
+            host.update(&a_b);
+            assert_eq!(host.link_cable.text_box().as_deref(), Some(crate::link::cable_club::TEXT_TRADE_CANCELED),
+                "DisplayTwoOptionMenu B chooses CANCEL even with A");
+        });
+    }
+
+    #[test]
+    fn actual_trade_confirmation_up_and_a_confirms_after_moving() {
+        run_link_save_fixture(|| {
+            let (mut host, mut peer) = both_selected_pair();
+            host.update(&button(GbButton::Down));
+            let mut up_a = button(GbButton::Up); up_a.press(GbButton::A);
+            host.update(&up_a);
+            assert_eq!(host.link_cable.phase(), &CableClubPhase::TradeWaitingConfirm);
+            assert_eq!(host.link_cable.text_box().as_deref(), Some(crate::link::cable_club::TEXT_WAITING));
+            peer.update(&button(GbButton::A));
+            for _ in 0..120 { host.update(&InputState::new()); peer.update(&InputState::new()); }
+            assert_eq!(host.link_cable.phase(), &CableClubPhase::TradeAnim,
+                "both real confirmations start the exchange");
+        });
+    }
+
+    #[test]
+    fn actual_trade_confirmation_b_overrides_simultaneous_a() {
+        run_link_save_fixture(|| {
+            let (mut host, _peer) = both_selected_pair();
+            let mut a_b = button(GbButton::A); a_b.press(GbButton::B);
+            host.update(&a_b);
+            assert_eq!(host.link_cable.text_box().as_deref(), Some(crate::link::cable_club::TEXT_TRADE_CANCELED),
+                "DisplayTwoOptionMenu B chooses CANCEL even with A");
+        });
+    }
+
+    #[test]
     fn actual_confirmation_no_is_not_a_list_cancel() {
         let (mut host, mut peer) = both_selected_pair();
         let host_party = serde_json::to_value(&host.save_data.party).unwrap();
@@ -9493,6 +9555,34 @@ mod link_stats_cry_fidelity_tests {
         assert_eq!(peer.link_cable.peer_cursor(), Some(2));
         peer.update(&button(GbButton::Left));
         assert_eq!(peer.link_cable.party_select().unwrap().cursor(), 1);
+    }
+
+    #[test]
+    #[ignore = "writes matched confirmation captures to FIDELITY_LINK_CAPTURES"]
+    fn capture_trade_confirmation_keys() {
+        run_link_save_fixture(|| {
+            let dir = PathBuf::from(std::env::var("FIDELITY_LINK_CAPTURES").unwrap());
+            std::fs::create_dir_all(&dir).unwrap();
+            let mut records = Vec::new();
+            for (stage, keys) in [
+                ("confirm-up-edge", vec![GbButton::Up]),
+                ("confirm-down-a", vec![GbButton::Down, GbButton::A]),
+                ("confirm-a-b", vec![GbButton::A, GbButton::B]),
+            ] {
+                let (mut host, _peer) = both_selected_pair();
+                let mut input = InputState::new();
+                for key in keys { input.press(key); }
+                host.update(&input);
+                let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+                host.draw(&mut fb);
+                fb.save_png(&dir.join(format!("{stage}.png"))).unwrap();
+                records.push(serde_json::json!({"stage":stage,"frame":host.frame_count,
+                    "phase":format!("{:?}",host.link_cable.phase()),
+                    "party":serde_json::to_value(&host.save_data.party).unwrap(),
+                    "text":host.link_cable.text_box()}));
+            }
+            std::fs::write(dir.join("frames.json"), serde_json::to_string_pretty(&records).unwrap()).unwrap();
+        });
     }
 
     #[test]
