@@ -6,7 +6,7 @@ use serde_json::{json, Value};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum PokemonScriptCommand {
-    ShowItemDialogue { text: String },
+    ShowItemDialogue { text: String, sound_id: Option<String> },
     OldManTutorial,
     TradePokemon {
         offered: String,
@@ -62,6 +62,7 @@ pub enum PokemonScriptCommand {
     EnterHallOfFame,
     WaitMusic,
     ReadingMenu { options: Vec<String>, texts: Vec<String> },
+    PokemonMenu { options: Vec<String>, species: Vec<String> },
     ShowMoneyBox { amount: i64 },
     VendingDelivery,
 }
@@ -95,6 +96,7 @@ impl PokemonScriptCommand {
             Self::EnterHallOfFame => "enterHallOfFame",
             Self::WaitMusic => "waitMusic",
             Self::ReadingMenu { .. } => "readingMenu",
+            Self::PokemonMenu { .. } => "pokemonMenu",
             Self::ShowMoneyBox { .. } => "showMoneyBox",
             Self::VendingDelivery => "vendingDelivery",
         }
@@ -103,8 +105,13 @@ impl PokemonScriptCommand {
     pub fn into_script_command(self) -> ScriptCommand {
         let name = self.name().to_string();
         let args = match self {
-            Self::ShowItemDialogue { text } => vec![json!(text)],
+            Self::ShowItemDialogue { text, sound_id } => {
+                let mut args = vec![json!(text)];
+                if let Some(sound) = sound_id { args.push(json!(sound)); }
+                args
+            },
             Self::ReadingMenu { options, texts } => vec![json!(options), json!(texts)],
+            Self::PokemonMenu { options, species } => vec![json!(options), json!(species)],
             Self::ShowMoneyBox { amount } => vec![json!(amount)],
             Self::TradePokemon {
                 offered,
@@ -183,15 +190,46 @@ impl PokemonScriptCommand {
             "waitMusic" => Self::WaitMusic,
             "vendingDelivery" => Self::VendingDelivery,
             "showMoneyBox" => Self::ShowMoneyBox { amount: args.first().and_then(Value::as_i64).ok_or_else(|| format!("{name}: amount must be an integer"))? },
+            "badgeMenu" => {
+                let options = strings(0)?;
+                let texts = strings(1)?;
+                let owned = args.get(2).and_then(Value::as_array).ok_or("badgeMenu: ownership array required")?;
+                if options.len() != 9 || texts.len() != 8 || owned.len() != 8 {
+                    return Err("badgeMenu: eight badge names, descriptions and ownership bits plus CANCEL required".into());
+                }
+                let mut filtered_options = Vec::new();
+                let mut filtered_texts = Vec::new();
+                for (i, bit) in owned.iter().enumerate() {
+                    if bit.as_bool().ok_or("badgeMenu: ownership bits must be booleans")? {
+                        filtered_options.push(options[i].clone());
+                        filtered_texts.push(texts[i].clone());
+                    }
+                }
+                filtered_options.push(options[8].clone());
+                Self::ReadingMenu { options: filtered_options, texts: filtered_texts }
+            },
+            "pokemonMenu" => {
+                let options = strings(0)?;
+                let species = strings(1)?;
+                if options.len() != species.len() + 1 || species.is_empty() {
+                    return Err("pokemonMenu: one species per heading plus CANCEL required".into());
+                }
+                for name in &species {
+                    if name.parse::<crate::species::Species>().is_err() {
+                        return Err(format!("pokemonMenu: unknown species {name}"));
+                    }
+                }
+                Self::PokemonMenu { options, species }
+            },
             "readingMenu" => {
                 let options = strings(0)?;
                 let texts = strings(1)?;
-                if options.len() != texts.len() + 1 || texts.is_empty() {
+                if options.len() != texts.len() + 1 {
                     return Err("readingMenu: one text per heading plus a final exit option required".to_string());
                 }
                 Self::ReadingMenu { options, texts }
             },
-            "showItemDialogue" => Self::ShowItemDialogue { text: string(0)? },
+            "showItemDialogue" => Self::ShowItemDialogue { text: string(0)?, sound_id: if args.len() > 1 { Some(string(1)?) } else { None } },
             "oldManTutorial" => Self::OldManTutorial,
             "tradePokemon" => Self::TradePokemon {
                 offered: string(0)?,

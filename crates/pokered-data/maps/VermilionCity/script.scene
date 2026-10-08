@@ -5,6 +5,14 @@
 // S.S.TICKET gate dialogue.
 
 game_scene VermilionCity {
+  @load {
+    @if (getFlag("EVENT_SS_ANNE_LEFT") && !getFlag("EVENT_WALKED_PAST_GUARD_AFTER_SS_ANNE_LEFT")) {
+      setFlag("EVENT_WALKED_PAST_GUARD_AFTER_SS_ANNE_LEFT")
+      setJoyIgnore(0xFF)
+      movePlayerRelative(["up", "up"])
+      clearJoyIgnore()
+    }
+  }
   // ── Beauty (npc 1) ─────────────────────────────────────────────────────
   @storyline("talkBeauty") {
     @trigger(map = "VermilionCity", npc = 1)

@@ -14,6 +14,8 @@ pub fn choice(options: Vec<String>) -> ScriptEffect {
 pub struct ReadingMenu {
     pub options: Vec<String>,
     pub texts: Vec<String>,
+    #[serde(default)]
+    pub species: Option<Vec<String>>,
     pub selected: u32,
     pub child: Box<ScriptEffect>,
 }
@@ -24,13 +26,26 @@ impl ReadingMenu {
             child: Box::new(choice(options.clone())),
             options,
             texts,
+            species: None,
             selected: 0,
         }
+    }
+
+    pub fn pokemon(options: Vec<String>, species: Vec<String>) -> Self {
+        let mut menu = Self::new(options, Vec::new());
+        menu.species = Some(species);
+        menu
     }
 
     /// Return true only when the exit heading (or B) was selected.
     pub fn advance(&mut self) -> bool {
         if let ScriptEffect::ShowChoice { selected, .. } = self.child.as_ref() {
+            if let Some(species) = &self.species {
+                let Some(name) = species.get(*selected as usize) else { return true; };
+                self.selected = *selected;
+                self.child = Box::new(ScriptEffect::ShowPokedexEntry { species: name.clone(), started: false });
+                return false;
+            }
             let Some(text) = self.texts.get(*selected as usize) else {
                 return true;
             };
@@ -96,6 +111,7 @@ impl GiftPokemonFlow {
         } else {
             ScriptEffect::ShowItemDialogue {
                 text,
+                sound_id: None,
                 sound_started: false,
             }
         };
@@ -180,5 +196,27 @@ impl GiftPokemonFlow {
         self.phase = GiftPhase::SentToBox;
         self.child = Box::new(ScriptEffect::ShowDialogue { text });
         false
+    }
+}
+
+#[cfg(test)]
+mod fidelity_menu_tests {
+    use super::*;
+    #[test]
+    fn pokemon_entries_reopen_menu_at_previous_cursor_including_after_snapshot() {
+        let species = ["Eevee", "Flareon", "Jolteon", "Vaporeon"];
+        let mut options: Vec<_> = species.iter().map(|s| s.to_string()).collect();
+        options.push("CANCEL".into());
+        let mut menu = ReadingMenu::pokemon(options, species.iter().map(|s| s.to_string()).collect());
+        for (i, name) in species.iter().enumerate() {
+            if let ScriptEffect::ShowChoice { selected, .. } = menu.child.as_mut() { *selected = i as u32; }
+            assert!(!menu.advance());
+            assert!(matches!(menu.child.as_ref(), ScriptEffect::ShowPokedexEntry { species, .. } if species == name));
+            menu = serde_json::from_str(&serde_json::to_string(&menu).unwrap()).unwrap();
+            assert!(!menu.advance());
+            assert!(matches!(menu.child.as_ref(), ScriptEffect::ShowChoice { selected, .. } if *selected == i as u32));
+        }
+        if let ScriptEffect::ShowChoice { selected, .. } = menu.child.as_mut() { *selected = 4; }
+        assert!(menu.advance());
     }
 }

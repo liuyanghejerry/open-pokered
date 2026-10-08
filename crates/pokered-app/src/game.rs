@@ -4157,7 +4157,15 @@ impl PokemonGame {
                     // SSAnneCaptainsRoom.asm waits on music channel 1.
                     self.overworld.script_music_playing = self.audio.as_ref()
                         .is_some_and(|audio| audio.is_music_channel_playing(0));
+                    // Original DisplayPokedex records the species as seen after viewing.
+                    let viewed_species = self.overworld.pending_pokedex_entry.as_ref()
+                        .and_then(|entry| pokered_data::species::Species::from_scene_name(&entry.species));
                     let action = self.overworld.update_frame(ow_input);
+                    if self.overworld.pending_pokedex_entry.is_none() {
+                        if let Some(species) = viewed_species {
+                            self.save_data.game_data.pokedex.set_seen(species);
+                        }
+                    }
 
                     self.apply_overworld_game_data_requests();
                     // The money box follows the committed balance, including
@@ -8498,3 +8506,7 @@ mod gift_dialogue_debug_tests {
         assert!(game.save_data.party.is_empty());
     }
 }
+
+#[cfg(all(test, feature = "debug-server"))]
+#[path = "fidelity_stdio.rs"]
+mod fidelity_stdio;

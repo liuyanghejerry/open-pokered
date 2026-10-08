@@ -53,7 +53,10 @@ impl ScriptApiRegistrar for PokemonScriptApi {
             "showItemDialogue",
             |args: &[JsValue], ctx: &mut Context| -> JsResult<ScriptCommand> {
                 let text = args.get_or_undefined(0).to_string(ctx)?.to_std_string_lossy();
-                Ok(PokemonScriptCommand::ShowItemDialogue { text }.into_script_command())
+                let sound_id = if args.len() > 1 {
+                    Some(args.get_or_undefined(1).to_string(ctx)?.to_std_string_lossy())
+                } else { None };
+                Ok(PokemonScriptCommand::ShowItemDialogue { text, sound_id }.into_script_command())
             },
         );
 
@@ -481,6 +484,15 @@ impl ScriptApiRegistrar for PokemonScriptApi {
         engine.register_async_fn("vendingDelivery", |_: &[JsValue], _: &mut Context| {
             Ok(PokemonScriptCommand::VendingDelivery.into_script_command())
         });
+        for name in ["badgeMenu", "pokemonMenu"] {
+            engine.register_async_fn(name, move |args: &[JsValue], ctx: &mut Context| {
+                let mut values = vec![args.get_or_undefined(0).to_json(ctx)?, args.get_or_undefined(1).to_json(ctx)?];
+                if name == "badgeMenu" { values.push(args.get_or_undefined(2).to_json(ctx)?); }
+                let command = PokemonScriptCommand::from_custom(name, &values)
+                    .map_err(|error| boa_engine::JsNativeError::typ().with_message(error))?;
+                Ok(command.into_script_command())
+            });
+        }
         engine.register_async_fn("readingMenu", |args: &[JsValue], ctx: &mut Context| {
             let options = args.get_or_undefined(0).to_json(ctx)?;
             let texts = args.get_or_undefined(1).to_json(ctx)?;
@@ -671,6 +683,34 @@ mod tests {
     use crate::script_function_catalog::POKERED_SCRIPT_FUNCTIONS;
     use super::PokemonScriptApi;
     use dotzuki_engine_script::{CommandResult, ScriptCommand, ScriptEngine};
+
+    #[test]
+    fn fidelity_menus_and_reward_sound_suspend_with_typed_commands_in_boa() {
+        use crate::script_command::PokemonScriptCommand;
+        let mut engine = ScriptEngine::with_api(&PokemonScriptApi);
+        engine.load_script(r#"
+            export async function verifyFidelity() {
+                await game.badgeMenu(["B", "C", "T", "R", "S", "M", "V", "E", "CANCEL"],
+                    ["b", "c", "t", "r", "s", "m", "v", "e"],
+                    [true, false, true, false, false, false, false, false]);
+                await game.pokemonMenu(["EEVEE", "CANCEL"], ["Eevee"]);
+                await game.showItemDialogue("received", "SFX_GET_KEY_ITEM");
+            }
+        "#).unwrap();
+        let expected = [
+            PokemonScriptCommand::ReadingMenu { options: vec!["B".into(), "T".into(), "CANCEL".into()], texts: vec!["b".into(), "t".into()] },
+            PokemonScriptCommand::PokemonMenu { options: vec!["EEVEE".into(), "CANCEL".into()], species: vec!["Eevee".into()] },
+            PokemonScriptCommand::ShowItemDialogue { text: "received".into(), sound_id: Some("SFX_GET_KEY_ITEM".into()) },
+        ];
+        let mut next = engine.call_function("verifyFidelity", &[]).unwrap();
+        for expected in expected {
+            let Some(ScriptCommand::Custom { name, args }) = &next else { panic!("missing command: {next:?}"); };
+            assert_eq!(PokemonScriptCommand::from_custom(name, args).unwrap(), expected);
+            assert_eq!(engine.tick(), next);
+            next = engine.signal_done(CommandResult::Void).unwrap();
+        }
+        assert!(next.is_none());
+    }
 
     #[test]
     fn boa_registrar_implements_every_cataloged_capability() {

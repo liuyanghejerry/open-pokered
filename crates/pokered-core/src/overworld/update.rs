@@ -2525,7 +2525,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 *frames_elapsed == 120
             }
 
-            script_bridge::ScriptEffect::ShowItemDialogue { text, sound_started } => {
+            script_bridge::ScriptEffect::ShowItemDialogue { text, sound_id, sound_started } => {
                 if *sound_started {
                     // Keep the complete found text visible until the sequencer
                     // has finished. A/B cannot close the box during the jingle.
@@ -2547,11 +2547,13 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 }
                 if dialogue.waiting_for_input() {
                     if dialogue.has_more_pages() {
-                        dialogue.advance();
+                        if a_just_pressed || b_just_pressed {
+                            dialogue.advance();
+                        }
                     } else {
                         // sound_get_item_1 follows text_far in FoundItemText.
                         audio_requests.push(OverworldAudioRequest::PlaySound {
-                            sound_id: "SFX_GET_ITEM_1".to_string(),
+                            sound_id: sound_id.as_deref().unwrap_or("SFX_GET_ITEM_1").to_string(),
                         });
                         *sound_started = true;
                     }

@@ -94,21 +94,147 @@ fn billshouse_pc_shows_monitor_before_bill_is_saved() {
 }
 
 #[test]
-fn billshouse_pc_opens_bills_pc_after_bill_is_saved() {
-    // After the Cell Separation System flow (EVENT_MET_BILL), the same PC
-    // opens the direct BillsPc entry ("Switch on!" + Bill's #MON storage,
-    // scripts/BillsHouse.asm BillsHousePCScript -> script_bills_pc).
+fn billshouse_pc_keeps_monitor_after_separation_until_player_returns() {
+    // BillsHousePC checks EVENT_LEFT_BILLS_HOUSE_AFTER_HELPING, rather than
+    // EVENT_MET_BILL or merely receiving the ticket, before showing the list.
+    for ticket in [false, true] {
+        let mut screen = bills_house_pc();
+        screen.set_flag_live("EVENT_MET_BILL", true);
+        screen.set_flag_live("EVENT_USED_CELL_SEPARATOR_ON_BILL", true);
+        screen.set_flag_live("EVENT_GOT_SS_TICKET", ticket);
+        screen.update_frame(press_a());
+        for _ in 0..60 {
+            screen.update_frame(none());
+            if screen.pending_dialogue.is_some() {
+                break;
+            }
+        }
+        assert!(screen.pending_pc.is_none());
+        assert!(screen.pending_choice.is_none());
+        let dialogue = screen
+            .pending_dialogue
+            .as_ref()
+            .expect("teleporter monitor");
+        let text = dialogue
+            .pages()
+            .iter()
+            .flat_map(|p| [p.line1.as_ref(), p.line2.as_ref()])
+            .collect::<Vec<_>>()
+            .join(" ");
+        assert!(
+            text.contains("TELEPORTER") && text.contains("monitor"),
+            "{text}"
+        );
+    }
+}
+
+fn bills_house_pc() -> OverworldScreen {
     let mut screen = OverworldScreen::new(MapId::BillsHouse, None, PokemonRedData);
-    screen.set_flag_live("EVENT_MET_BILL", true);
     screen.state.player.x = 1;
     screen.state.player.y = 5;
     screen.state.player.facing = Direction::Up;
+    screen
+}
+
+fn tap(screen: &mut OverworldScreen, input: OverworldInput) {
+    screen.update_frame(none());
+    screen.update_frame(input);
+    screen.update_frame(none());
+}
+
+#[test]
+fn billshouse_pc_after_return_browses_all_four_entries_and_retains_cursor() {
+    let mut screen = bills_house_pc();
+    for flag in [
+        "EVENT_MET_BILL",
+        "EVENT_USED_CELL_SEPARATOR_ON_BILL",
+        "EVENT_GOT_SS_TICKET",
+        "EVENT_LEFT_BILLS_HOUSE_AFTER_HELPING",
+    ] {
+        screen.set_flag_live(flag, true);
+    }
     screen.update_frame(press_a());
-    for _ in 0..60 {
-        screen.update_frame(none());
-        if screen.pending_pc.is_some() {
+    // Advance the introductory text with input, through the real hidden-event
+    // binding, rather than invoking the scene handler directly.
+    for frame in 0..200 {
+        assert!(
+            screen.pending_pc.is_none(),
+            "Bill's list must not open storage"
+        );
+        if screen.pending_choice.is_some() {
             break;
         }
+        if let Some(dialogue) = screen.pending_dialogue.as_mut() {
+            dialogue.skip_to_full_page();
+        }
+        screen.update_frame(if frame % 2 == 0 { press_a() } else { none() });
     }
-    assert_eq!(screen.pending_pc.take().as_deref(), Some("bills"));
+    assert_eq!(
+        screen
+            .pending_choice
+            .as_ref()
+            .expect("Eevee family list")
+            .options,
+        ["EEVEE", "FLAREON", "JOLTEON", "VAPOREON", "CANCEL"]
+    );
+    for (index, species) in ["Eevee", "Flareon", "Jolteon", "Vaporeon"]
+        .iter()
+        .enumerate()
+    {
+        if index != 0 {
+            tap(
+                &mut screen,
+                OverworldInput::new(false, true, false, false, false, false, false, false),
+            );
+        }
+        assert_eq!(
+            screen.pending_choice.as_ref().unwrap().selected,
+            index as u32
+        );
+        tap(&mut screen, press_a());
+        for _ in 0..20 {
+            screen.update_frame(none());
+            if screen.pending_pokedex_entry.is_some() {
+                break;
+            }
+        }
+        assert_eq!(
+            screen
+                .pending_pokedex_entry
+                .as_ref()
+                .expect("dex entry")
+                .species,
+            *species
+        );
+        tap(
+            &mut screen,
+            OverworldInput::new(false, false, false, false, false, true, false, false),
+        );
+        for _ in 0..20 {
+            screen.update_frame(none());
+            if screen.pending_choice.is_some() {
+                break;
+            }
+        }
+        assert!(screen.pending_pokedex_entry.is_none());
+        assert_eq!(
+            screen
+                .pending_choice
+                .as_ref()
+                .expect("return to list")
+                .selected,
+            index as u32
+        );
+        assert!(screen.pending_pc.is_none());
+    }
+    tap(
+        &mut screen,
+        OverworldInput::new(false, false, false, false, false, true, false, false),
+    );
+    for _ in 0..20 {
+        screen.update_frame(none());
+    }
+    assert!(screen.pending_choice.is_none());
+    assert!(screen.pending_pokedex_entry.is_none());
+    assert!(screen.pending_pc.is_none());
 }

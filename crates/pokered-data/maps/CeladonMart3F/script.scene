@@ -18,7 +18,7 @@ game_scene CeladonMart3F {
       given = giveItem("TM18", 1)
       @if (given) {
         setFlag("EVENT_GOT_TM18")
-        @speaker("") { @t("<PLAYER> received TM18!", "<PLAYER>获得了 TM18！") }
+        showItemDialogue(@t("<PLAYER> received TM18!", "<PLAYER>获得了 TM18！"))
       } @else {
         @speaker("") { @t("Your pack is full of items!", "你的背包装满了道具！") }
       }

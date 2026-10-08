@@ -47,7 +47,8 @@ game_scene BillsHouse {
   //   - help agreed, separation not run: run it — human Bill appears inside
   //     the machine and walks out (BillsHouseBillExitsMachineScript), then
   //     EVENT_MET_BILL_2 / EVENT_MET_BILL;
-  //   - Bill restored (EVENT_USED_CELL_SEPARATOR_ON_BILL): his PC;
+  //   - ticket obtained and returned to Route25: Eevee-family dex list;
+  //   - restored but not yet returned to Route25: teleporter monitor;
   //   - otherwise: the teleporter monitor text.
   @storyline("pcMachine") {
     @trigger(map = "BillsHouse", sign = 2)
@@ -64,10 +65,18 @@ game_scene BillsHouse {
       moveNpc("BILLS_HOUSE_OBJ_2", [[1, 3], [2, 3], [3, 3], [4, 3], [4, 4]])
       setFlag("EVENT_MET_BILL_2")
       setFlag("EVENT_MET_BILL")
-    } @else @if (getFlag("EVENT_USED_CELL_SEPARATOR_ON_BILL") || getFlag("EVENT_MET_BILL")) {
-      openBillsPC()
     } @else {
-      @speaker("") { @t("TELEPORTER is displayed on\nthe PC monitor.", "传送机显示在电脑显示器上。") }
+      @if (getFlag("EVENT_LEFT_BILLS_HOUSE_AFTER_HELPING")) {
+        @speaker("") { @t("BILL's favorite\nPOKeMON list!", "正辉喜爱的\n宝可梦列表！") }
+        @speaker("") { @t("Which POKeMON do\nyou want to see?", "你想看哪只\n宝可梦？") }
+        pokemonMenu([
+          @t("EEVEE", "伊布"), @t("FLAREON", "火伊布"),
+          @t("JOLTEON", "雷伊布"), @t("VAPOREON", "水伊布"),
+          @t("CANCEL", "取消")
+        ], ["Eevee", "Flareon", "Jolteon", "Vaporeon"])
+      } @else {
+        @speaker("") { @t("TELEPORTER is displayed on\nthe PC monitor.", "传送机显示在电脑显示器上。") }
+      }
     }
   }
 
@@ -81,7 +90,7 @@ game_scene BillsHouse {
       given = giveItem("SS_TICKET", 1)
       @if (given) {
         setFlag("EVENT_GOT_SS_TICKET")
-        @speaker("") { @t("<PLAYER> received an\nS.S.TICKET!", "<PLAYER>获得了圣安奴号船票！") }
+        showItemDialogue(@t("<PLAYER> received an\nS.S.TICKET!", "<PLAYER>获得了圣安奴号船票！"), "SFX_GET_KEY_ITEM")
         // Original BillsHouse.asm (TOGGLE_CERULEAN_GUARD_1 Show /
         // TOGGLE_CERULEAN_GUARD_2 Hide): swap the Cerulean City bridge guards
         // now that the S.S.TICKET lets the player through. The toggle persists

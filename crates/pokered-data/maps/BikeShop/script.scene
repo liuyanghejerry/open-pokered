@@ -20,9 +20,7 @@ game_scene BikeShop {
         @if (given) {
           takeItem("BIKE_VOUCHER", 1)
           setFlag("EVENT_GOT_BICYCLE")
-          @speaker("") {
-            @t("<PLAYER> exchanged the BIKE\nVOUCHER for a BICYCLE.", "<PLAYER>用自行车兑换券换到了\n一辆自行车。")
-          }
+          showItemDialogue(@t("<PLAYER> exchanged the BIKE\nVOUCHER for a BICYCLE.", "<PLAYER>用自行车兑换券换到了\n一辆自行车。"), "SFX_GET_KEY_ITEM")
         } @else {
           @speaker("") { @t("You better make room for\nthis!", "你最好腾出地方来！") }
         }
@@ -36,12 +34,12 @@ game_scene BikeShop {
           @t("It's a cool BIKE! Do you\nwant it?", "这自行车很酷吧！你想要吗？")
         }
         @choice {
-          @option(@t("YES", "是")) {
+          @option(@t("BICYCLE ¥1000000", "自行车 ¥1000000")) {
             @speaker("") {
               @t("Sorry! You can't afford it!", "抱歉！你买不起它！")
             }
           }
-          @option(@t("NO", "否")) {
+          @option(@t("CANCEL", "取消")) {
           }
         }
         @speaker("") {

@@ -6,18 +6,20 @@
 // ground-item Poke Ball (TM19 SEISMIC TOSS); sign 1 is Bill's SEA COTTAGE sign.
 
 game_scene Route25 {
-  // ── On entry: toggle Bill's NPCs after the S.S.Ticket questline ──────────
-  // Original Route25ToggleBillsScript swaps the Nugget Bridge guy / Bill object
-  // visibility based on EVENT_MET_BILL_2 / EVENT_GOT_SS_TICKET. The primitives
-  // (showObjectByName/hideObjectByName with toggle_id) exist, but this map's
-  // Bill / Nugget-Bridge-guy NPC objects are not modeled in map.json — a
-  // content gap (see docs/pokered-gap-completion-plan.md Phase 4); the
-  // trainers, item and sign below are fully faithful.
   @load {
-    // Content gap: TOGGLE_BILL_POKEMON / NUGGET_BRIDGE_GUY / BILL_1 / BILL_2
-    // have no matching NPCs in Route25's map.json. Once modeled, gate here on
-    // EVENT_MET_BILL_2 / EVENT_GOT_SS_TICKET and toggle them (see
-    // Route25ToggleBillsScript in the original asm).
+    @if (!getFlag("EVENT_LEFT_BILLS_HOUSE_AFTER_HELPING")) {
+      @if (!getFlag("EVENT_MET_BILL_2")) {
+        resetFlag("EVENT_BILL_SAID_USE_CELL_SEPARATOR")
+        showObjectByName("BILLS_HOUSE_OBJ_1")
+      } @else {
+        @if (getFlag("EVENT_GOT_SS_TICKET")) {
+          setFlag("EVENT_LEFT_BILLS_HOUSE_AFTER_HELPING")
+          hideObjectByName("ROUTE_24_OBJ_1")
+          hideObjectByName("BILLS_HOUSE_OBJ_2")
+          showObjectByName("BILLS_HOUSE_OBJ_3")
+        }
+      }
+    }
   }
 
   // ── Youngster (npc 1) — Route25TrainerHeader0 ───────────────────────────

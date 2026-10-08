@@ -1,0 +1,366 @@
+== m01: boot to NEW GAME / Oak speech
+   done (0.0s wall)
+== m02: Oak speech + default names → bedroom
+[m02] frame=1819 screen=overworld map=RedsHouse2F pos=(3,6) party=0 money=3000 effect=None
+   done (0.0s wall)
+== m03: leave home → Pallet Town
+[m03] frame=2281 screen=overworld map=PalletTown pos=(5,6) party=0 money=3000 effect=None
+   done (0.0s wall)
+== m04: Oak interception → OaksLab
+[m04] frame=4218 screen=overworld map=OaksLab pos=(5,3) party=0 money=3000 effect=None
+   done (0.0s wall)
+== m05: take starter (bulbasaur)
+[m05] frame=5069 screen=overworld map=OaksLab pos=(8,4) party=1 money=3000 effect=None
+   done (0.0s wall)
+== m06: first rival battle
+[m06] frame=8963 screen=overworld map=OaksLab pos=(5,6) party=1 money=3175 effect=None
+   done (0.0s wall)
+== m07: Route 1 → Viridian Mart parcel
+[m07-in-mart] frame=12897 screen=overworld map=ViridianMart pos=(3,5) party=1 money=3175 effect=None
+[m07-back-outside] frame=13049 screen=overworld map=ViridianCity pos=(29,20) party=1 money=3175 effect=None
+   done (0.1s wall)
+== m08: deliver parcel → POKéDEX
+[m08-southlane] frame=13465 screen=overworld map=ViridianCity pos=(20,32) party=1 money=3175 effect=None
+[m08-back-home] frame=15894 screen=overworld map=PalletTown pos=(12,12) party=1 money=3175 effect=None
+[m08-delivered] frame=18498 screen=overworld map=OaksLab pos=(5,3) party=1 money=3175 effect=None
+[m08] oak-after-delivery: POKeMON around the world wait for you, RED!
+   done (0.1s wall)
+== m09: Viridian Forest → Pewter City
+   [ntoPINCH] at ViridianForest(1,19)
+[m09] frame=32498 screen=overworld map=PewterCity pos=(16,29) party=1 money=3265 effect=None
+   done (0.2s wall)
+== m10: train + Boulder Badge (Brock)
+[m10-arrived] frame=32498 screen=overworld map=PewterCity pos=(16,29) party=1 money=3265 effect=None
+[train] grass spot Route1 (12,7), target L13
+[train] cyc=0 battles=0 L7 hp=23/23 (0s)
+[train] hp 14/25 -> heal
+[train] hp 13/27 -> heal
+[train] cyc=25 battles=5 L9 hp=27/27 (0s)
+[train] hp 12/27 -> heal
+[train] hp 12/29 -> heal
+[train] hp 17/32 -> heal
+[train] hp 19/32 -> heal
+[train] cyc=100 battles=25 L11 hp=26/32 (0s)
+[train] hp 20/34 -> heal
+[train] cyc=125 battles=32 L12 hp=20/34 (0s)
+[train] hp 20/34 -> heal
+[train] hp 19/34 -> heal
+[train] cyc=150 battles=39 L13 hp=32/36 (1s)
+[train] level 13 reached (1s, 39 battles)
+[m10-trained] frame=110780 screen=overworld map=Route1 pos=(12,9) party=1 money=3265 effect=None
+   [ntoPINCH] at PewterGym(4,2)
+[m10] frame=127341 screen=overworld map=PewterGym pos=(4,2) party=1 money=4871 effect=None
+   done (0.8s wall)
+== m11: Route 3 trainers → Mt Moon entrance
+[m11] frame=152571 screen=overworld map=Route4 pos=(11,6) party=1 money=2953 effect=None
+   done (0.6s wall)
+== m12: Mt Moon fossil → Cerulean City
+   [ntoPINCH] at MtMoonB2F(10,16)
+   [ntoPINCH] at MtMoonB2F(10,16)
+   [ntoPINCH] at MtMoonB2F(10,16)
+   [ntoPINCH] at MtMoonB2F(10,16)
+   [ntoPINCH] at MtMoonB2F(10,16)
+[m12] blackout 1: healed at Mt Moon, retrying
+[m12] frame=185613 screen=overworld map=CeruleanCity pos=(19,18) party=1 money=2324 effect=None
+   done (0.4s wall)
+== m13: Cascade Badge (Misty)
+[m13] frame=192692 screen=overworld map=CeruleanGym pos=(5,2) party=1 money=4863 effect=None
+   done (0.1s wall)
+== m14: Nugget Bridge → Bill → S.S. Ticket
+[m14] frame=243372 screen=overworld map=BillsHouse pos=(4,5) party=1 money=2063 effect=None
+   done (1.0s wall)
+== m15: Cerulean thief → Underground Path → Vermilion
+[m15] frame=290489 screen=overworld map=VermilionCity pos=(11,4) party=1 money=741 effect=None
+   done (2.0s wall)
+== m16: S.S. Anne rival + captain → HM01
+   [ntoPINCH] at VermilionCity(23,27)
+   [ntoPINCH] at VermilionCity(23,27)
+   [ntoPINCH] at VermilionCity(23,27)
+   [ntoPINCH] at VermilionCity(22,27)
+   [ntoPINCH] at VermilionCity(20,26)
+[m16] rival blackout 1: boarding again
+[train] grass spot Route6 (10,23), target L30
+[train] cyc=0 battles=0 L28 hp=77/77 (0s)
+[train] cyc=25 battles=2 L28 hp=75/77 (0s)
+[train] cyc=50 battles=5 L28 hp=63/77 (0s)
+[train] cyc=75 battles=8 L28 hp=52/77 (0s)
+[train] cyc=100 battles=10 L29 hp=45/80 (0s)
+[train] hp 45/80 -> heal
+[train] cyc=125 battles=12 L29 hp=75/80 (1s)
+[train] cyc=150 battles=15 L29 hp=67/80 (1s)
+[train] cyc=175 battles=18 L29 hp=67/80 (1s)
+[train] cyc=200 battles=19 L29 hp=57/80 (1s)
+[train] hp 45/80 -> heal
+[train] cyc=225 battles=21 L29 hp=80/80 (1s)
+[train] cyc=250 battles=25 L29 hp=80/80 (1s)
+[train] level 30 reached (1s, 27 battles)
+[m16] frame=368936 screen=overworld map=SSAnneCaptainsRoom pos=(4,3) party=1 money=1671 effect=None
+   done (1.6s wall)
+== m17: CUT + trash switches → Thunder Badge
+[m17] both switches found on search 1
+[m17] frame=391540 screen=overworld map=VermilionGym pos=(5,2) party=1 money=6787 effect=None
+   done (0.2s wall)
+== m18: Route 9 CUT → Rock Tunnel entrance
+[m18] frame=412250 screen=overworld map=Route10 pos=(11,20) party=1 money=7807 effect=None
+   done (0.4s wall)
+== m19: Rock Tunnel → Lavender Town
+   [ntoPINCH] at RockTunnelB1F(17,24)
+   [ntoPINCH] at RockTunnel1F(26,28)
+   [ntoPINCH] at RockTunnel1F(26,28)
+   [ntoPINCH] at RockTunnel1F(26,28)
+   [ntoPINCH] at RockTunnel1F(26,31)
+   [ntoPINCH] at RockTunnel1F(26,31)
+   [ntoPINCH] at RockTunnel1F(26,31)
+[m19] frame=450263 screen=overworld map=LavenderTown pos=(3,6) party=1 money=16102 effect=None
+   done (0.6s wall)
+== m20: Lavender → Underground Path → Celadon
+[m20] frame=456614 screen=overworld map=CeladonCity pos=(41,10) party=1 money=16432 effect=None
+   done (0.1s wall)
+== m21: Rainbow Badge (Erika)
+[m21] frame=470427 screen=overworld map=CeladonGym pos=(4,4) party=1 money=20488 effect=None
+   done (0.2s wall)
+== m22: Game Corner poster → Rocket Hideout Lift Key
+[m22] frame=481790 screen=overworld map=RocketHideoutB4F pos=(10,3) party=1 money=21718 effect=None
+   done (0.1s wall)
+== m23: Rocket elevator + Giovanni → Silph Scope
+   [ntoPINCH] at RocketHideoutB4F(25,15)
+   [ntoPINCH] at RocketHideoutB4F(25,15)
+   [ntoPINCH] at RocketHideoutB4F(25,15)
+   [ntoPINCH] at RocketHideoutB4F(25,15)
+[m23] frame=492787 screen=overworld map=RocketHideoutB4F pos=(24,2) party=1 money=25969 effect=None
+   done (0.1s wall)
+== m24: Pokemon Tower → purified healing zone
+   [ntoPINCH] at RocketHideoutB1F(25,19)
+   [ntoPINCH] at RocketHideoutB1F(25,19)
+   [ntoPINCH] at RocketHideoutB1F(25,19)
+   [ntoPINCH] at RocketHideoutB1F(25,14)
+   [ntoPINCH] at PokemonTower3F(16,13)
+   [ntoPINCH] at PokemonTower3F(16,13)
+   [ntoPINCH] at PokemonTower4F(11,8)
+   [ntoPINCH] at PokemonTower5F(11,9)
+[m24] frame=522809 screen=overworld map=PokemonTower5F pos=(10,8) party=1 money=30519 effect=None
+   done (0.4s wall)
+== m25: Marowak + Fuji rescue → Poke Flute
+[m25] blackout 1: returning to the tower
+   [ntoPINCH] at PokemonTower5F(14,7)
+   [ntoPINCH] at PokemonTower5F(11,9)
+[m25] frame=548186 screen=overworld map=MrFujisHouse pos=(2,1) party=1 money=17825 effect=None
+   done (0.3s wall)
+== m26: Poke Flute + Route 12 Snorlax → Fuchsia
+[m26] frame=586344 screen=overworld map=FuchsiaCity pos=(19,28) party=1 money=26575 effect=None
+   done (2.2s wall)
+== m27: Invisible wall maze → Soul Badge
+   [ntoPINCH] at FuchsiaGym(9,1)
+   [ntoPINCH] at FuchsiaGym(1,10)
+   [ntoPINCH] at FuchsiaGym(1,10)
+[m27] frame=600730 screen=overworld map=FuchsiaGym pos=(3,10) party=1 money=34437 effect=None
+   done (0.2s wall)
+== m28: Safari Zone fee + Gold Teeth + HM03
+   [ntoPINCH] at SafariZoneEast(21,22)
+   [ntoPINCH] at SafariZoneNorth(15,5)
+   [ntoPINCH] at SafariZoneNorth(15,5)
+   [ntoPINCH] at SafariZoneNorth(15,5)
+   [ntoPINCH] at SafariZoneNorth(15,5)
+   [ntoPINCH] at SafariZoneNorth(15,5)
+   [ntoPINCH] at SafariZoneNorth(15,5)
+   [ntoPINCH] at SafariZoneNorth(12,5)
+   [ntoPINCH] at SafariZoneNorth(12,5)
+   [ntoPINCH] at SafariZoneNorth(12,5)
+   [ntoPINCH] at SafariZoneNorth(12,5)
+   [ntoPINCH] at SafariZoneNorth(12,5)
+   [ntoPINCH] at SafariZoneNorth(12,9)
+   [ntoPINCH] at SafariZoneNorth(11,3)
+   [ntoPINCH] at SafariZoneNorth(11,3)
+[m28] frame=618433 screen=overworld map=SafariZoneSecretHouse pos=(2,3) party=1 money=33937 effect=None
+   done (0.2s wall)
+== m29: Safari timeout + Warden → HM04 Strength
+[m29] frame=628079 screen=overworld map=FuchsiaCity pos=(19,28) party=1 money=33937 effect=None
+   done (0.1s wall)
+== m30: Celadon roof drink → Saffron guards
+[m20] frame=655621 screen=overworld map=CeladonCity pos=(41,10) party=1 money=37312 effect=None
+[m30] frame=662707 screen=overworld map=SaffronCity pos=(9,29) party=1 money=37112 effect=None
+   done (0.9s wall)
+== m31: Silph Co fifth floor → Card Key
+[m31] frame=667281 screen=overworld map=SilphCo5F pos=(20,16) party=1 money=38102 effect=None
+   done (0.1s wall)
+== m32: Silph rival + Lapras gift + Surf
+[m32] frame=695413 screen=overworld map=SilphCo7F pos=(1,4) party=2 money=30842 effect=None
+   done (0.4s wall)
+== m33: Silph Giovanni + president → Master Ball
+[m33] frame=704105 screen=overworld map=SilphCo11F pos=(6,5) party=2 money=35861 effect=None
+   done (0.1s wall)
+== m34: Saffron teleport maze → Marsh Badge
+   [ntoPINCH] at SaffronCity(19,30)
+   [ntoPINCH] at SaffronCity(19,30)
+   [ntoPINCH] at SaffronCity(20,30)
+   [ntoPINCH] at SaffronCity(22,30)
+   [ntoPINCH] at SaffronCity(22,30)
+   [ntoPINCH] at SaffronCity(22,30)
+   [ntoPINCH] at SaffronCity(22,30)
+   [ntoPINCH] at SaffronCity(22,30)
+   [ntoPINCH] at SaffronCity(22,30)
+   [ntoPINCH] at SaffronCity(22,30)
+   [ntoPINCH] at SaffronCity(22,30)
+   [ntoPINCH] at SaffronCity(23,30)
+   [ntoPINCH] at SaffronCity(19,30)
+   [ntoPINCH] at SaffronCity(23,31)
+   [ntoPINCH] at SaffronCity(38,5)
+   [ntoPINCH] at SaffronCity(38,5)
+[m34] blackout 1: healed, retrying
+   [ntoPINCH] at SaffronCity(17,31)
+   [ntoPINCH] at SaffronCity(38,5)
+   [ntoPINCH] at SaffronCity(38,5)
+[m34] blackout 2: healed, retrying
+   [ntoPINCH] at SaffronCity(17,30)
+   [ntoPINCH] at SaffronCity(17,30)
+   [ntoPINCH] at SaffronCity(18,30)
+   [ntoPINCH] at SaffronCity(19,30)
+   [ntoPINCH] at SaffronCity(20,30)
+   [ntoPINCH] at SaffronCity(20,30)
+   [ntoPINCH] at SaffronCity(20,30)
+   [ntoPINCH] at SaffronCity(20,30)
+   [ntoPINCH] at SaffronCity(20,30)
+   [ntoPINCH] at SaffronCity(20,30)
+   [ntoPINCH] at SaffronCity(20,30)
+   [ntoPINCH] at SaffronCity(20,30)
+   [ntoPINCH] at SaffronCity(21,30)
+   [ntoPINCH] at SaffronCity(17,30)
+[m34] frame=737280 screen=overworld map=SaffronGym pos=(9,9) party=2 money=10223 effect=None
+   done (0.5s wall)
+== m35: Route 16 CUT + hidden house → HM02
+[m35] frame=744904 screen=overworld map=Route16FlyHouse pos=(2,4) party=2 money=10223 effect=None
+   done (0.2s wall)
+== m36: Surf to Power Plant + Master Ball Zapdos
+   [ntoPINCH] at Route10(9,40)
+[m36] frame=761506 screen=overworld map=PowerPlant pos=(4,8) party=3 money=11723 effect=None
+   done (0.6s wall)
+== m37: Fly to Pallet + Route 21 Surf → Cinnabar
+   [ntoPINCH] at ViridianCity(23,26)
+[m37] frame=769959 screen=overworld map=CinnabarIsland pos=(11,12) party=3 money=11723 effect=None
+   done (0.2s wall)
+== m38: Mansion statues + floor hole → Secret Key
+[m38] frame=783067 screen=overworld map=PokemonMansionB1F pos=(5,12) party=3 money=14873 effect=None
+   done (0.2s wall)
+== m39: Cinnabar quiz machines → Volcano Badge
+[m39] frame=798985 screen=overworld map=CinnabarGym pos=(3,4) party=3 money=19526 effect=None
+   done (0.2s wall)
+== m40: Viridian spinner gym → eighth badge
+   [ntoPINCH] at ViridianCity(19,6)
+   [ntoPINCH] at ViridianCity(19,6)
+   [ntoPINCH] at ViridianCity(19,6)
+   [ntoPINCH] at ViridianCity(19,6)
+   [ntoPINCH] at ViridianCity(19,6)
+   [ntoPINCH] at ViridianCity(19,6)
+   [ntoPINCH] at ViridianCity(19,6)
+   [ntoPINCH] at ViridianGym(14,7)
+   [ntoPINCH] at ViridianGym(14,7)
+   [ntoPINCH] at ViridianGym(15,7)
+   [ntoPINCH] at ViridianGym(16,7)
+[m40] frame=814571 screen=overworld map=ViridianGym pos=(2,2) party=3 money=26931 effect=None
+   done (0.2s wall)
+== m41: Route 22 rival + eight badge gates → Victory Road
+[m41] frame=831445 screen=overworld map=VictoryRoad1F pos=(8,17) party=3 money=30376 effect=None
+   done (0.7s wall)
+== m42: Victory Road Strength → first two switches
+[boulder] VictoryRoad1F (5, 15) → (17, 13): 18 pushes
+[boulder] VictoryRoad1F (5, 16) → (17, 13): 17 pushes
+[boulder] VictoryRoad1F (6, 16) → (17, 13): 16 pushes
+[boulder] VictoryRoad1F (7, 16) → (17, 13): 15 pushes
+[boulder] VictoryRoad1F (8, 16) → (17, 13): 14 pushes
+[boulder] VictoryRoad1F (8, 15) → (17, 13): 13 pushes
+[boulder] VictoryRoad1F (9, 15) → (17, 13): 12 pushes
+[boulder] VictoryRoad1F (9, 14) → (17, 13): 11 pushes
+[boulder] VictoryRoad1F (10, 14) → (17, 13): 10 pushes
+[boulder] VictoryRoad1F (11, 14) → (17, 13): 9 pushes
+[boulder] VictoryRoad1F (12, 14) → (17, 13): 8 pushes
+[boulder] VictoryRoad1F (13, 14) → (17, 13): 7 pushes
+[boulder] VictoryRoad1F (14, 14) → (17, 13): 6 pushes
+[boulder] VictoryRoad1F (15, 14) → (17, 13): 5 pushes
+[boulder] VictoryRoad1F (15, 14) → (17, 13): 5 pushes
+[boulder] VictoryRoad1F (16, 14) → (17, 13): 4 pushes
+[boulder] VictoryRoad1F (16, 13) → (17, 13): 3 pushes
+[boulder] VictoryRoad1F (16, 12) → (17, 13): 2 pushes
+   [ntoPINCH] at VictoryRoad1F(13,14)
+[boulder] VictoryRoad1F (17, 12) → (17, 13): 1 pushes
+[boulder] VictoryRoad2F (4, 14) → (1, 16): 5 pushes
+[boulder] VictoryRoad2F (4, 15) → (1, 16): 4 pushes
+[boulder] VictoryRoad2F (3, 15) → (1, 16): 3 pushes
+[boulder] VictoryRoad2F (3, 16) → (1, 16): 2 pushes
+[boulder] VictoryRoad2F (2, 16) → (1, 16): 1 pushes
+[m42] frame=839367 screen=overworld map=VictoryRoad2F pos=(2,16) party=3 money=31846 effect=None
+   done (0.4s wall)
+== m43: Victory Road upper switch + boulder hole
+   [ntoPINCH] at VictoryRoad2F(14,14)
+[boulder] VictoryRoad3F (22, 3) → (3, 5): 27 pushes
+[boulder] VictoryRoad3F (22, 2) → (3, 5): 26 pushes
+[boulder] VictoryRoad3F (22, 1) → (3, 5): 25 pushes
+[boulder] VictoryRoad3F (21, 1) → (3, 5): 24 pushes
+[boulder] VictoryRoad3F (20, 1) → (3, 5): 23 pushes
+[boulder] VictoryRoad3F (19, 1) → (3, 5): 22 pushes
+[boulder] VictoryRoad3F (18, 1) → (3, 5): 21 pushes
+[boulder] VictoryRoad3F (17, 1) → (3, 5): 20 pushes
+[boulder] VictoryRoad3F (16, 1) → (3, 5): 19 pushes
+[boulder] VictoryRoad3F (15, 1) → (3, 5): 18 pushes
+[boulder] VictoryRoad3F (14, 1) → (3, 5): 17 pushes
+[boulder] VictoryRoad3F (13, 1) → (3, 5): 16 pushes
+[boulder] VictoryRoad3F (12, 1) → (3, 5): 15 pushes
+[boulder] VictoryRoad3F (11, 1) → (3, 5): 14 pushes
+[boulder] VictoryRoad3F (10, 1) → (3, 5): 13 pushes
+[boulder] VictoryRoad3F (10, 1) → (3, 5): 13 pushes
+[boulder] VictoryRoad3F (9, 1) → (3, 5): 12 pushes
+[boulder] VictoryRoad3F (8, 1) → (3, 5): 11 pushes
+[boulder] VictoryRoad3F (7, 1) → (3, 5): 10 pushes
+[boulder] VictoryRoad3F (6, 1) → (3, 5): 9 pushes
+[boulder] VictoryRoad3F (6, 2) → (3, 5): 8 pushes
+[boulder] VictoryRoad3F (5, 2) → (3, 5): 7 pushes
+[boulder] VictoryRoad3F (4, 2) → (3, 5): 6 pushes
+[boulder] VictoryRoad3F (3, 2) → (3, 5): 5 pushes
+[boulder] VictoryRoad3F (2, 2) → (3, 5): 4 pushes
+[boulder] VictoryRoad3F (2, 3) → (3, 5): 3 pushes
+[boulder] VictoryRoad3F (2, 3) → (3, 5): 3 pushes
+[boulder] VictoryRoad3F (2, 4) → (3, 5): 2 pushes
+[boulder] VictoryRoad3F (2, 5) → (3, 5): 1 pushes
+[boulder] VictoryRoad3F (22, 15) → (23, 15): 1 pushes
+   [ntoPINCH] at VictoryRoad3F(17,5)
+   [ntoPINCH] at VictoryRoad3F(17,5)
+   [ntoPINCH] at VictoryRoad3F(17,5)
+   [ntoPINCH] at VictoryRoad3F(17,7)
+   [ntoPINCH] at VictoryRoad3F(12,6)
+   [ntoPINCH] at VictoryRoad3F(12,6)
+[boulder] VictoryRoad2F (23, 16) → (9, 16): 14 pushes
+[boulder] VictoryRoad2F (22, 16) → (9, 16): 13 pushes
+[boulder] VictoryRoad2F (21, 16) → (9, 16): 12 pushes
+[boulder] VictoryRoad2F (20, 16) → (9, 16): 11 pushes
+[boulder] VictoryRoad2F (19, 16) → (9, 16): 10 pushes
+[boulder] VictoryRoad2F (18, 16) → (9, 16): 9 pushes
+[boulder] VictoryRoad2F (17, 16) → (9, 16): 8 pushes
+[boulder] VictoryRoad2F (16, 16) → (9, 16): 7 pushes
+[boulder] VictoryRoad2F (15, 16) → (9, 16): 6 pushes
+[boulder] VictoryRoad2F (14, 16) → (9, 16): 5 pushes
+[boulder] VictoryRoad2F (13, 16) → (9, 16): 4 pushes
+[boulder] VictoryRoad2F (12, 16) → (9, 16): 3 pushes
+[boulder] VictoryRoad2F (11, 16) → (9, 16): 2 pushes
+[boulder] VictoryRoad2F (10, 16) → (9, 16): 1 pushes
+[m43] frame=850934 screen=overworld map=VictoryRoad2F pos=(10,16) party=3 money=31846 effect=None
+   done (2.9s wall)
+== m44: Victory Road exit + Indigo healing and supplies
+[m44] frame=855319 screen=overworld map=IndigoPlateauLobby pos=(2,5) party=3 money=2846 effect=None
+   done (0.1s wall)
+== m45: Elite Four: Lorelei
+[m45] frame=859165 screen=overworld map=LoreleisRoom pos=(4,2) party=3 money=8390 effect=None
+   done (0.0s wall)
+== m46: Elite Four: Bruno
+[m46] frame=863726 screen=overworld map=BrunosRoom pos=(4,2) party=3 money=14132 effect=None
+   done (0.1s wall)
+== m47: Elite Four: Agatha
+[m47] frame=867639 screen=overworld map=AgathasRoom pos=(4,2) party=3 money=20072 effect=None
+   done (0.1s wall)
+== m48: Elite Four: Lance
+[m48] frame=873066 screen=overworld map=LancesRoom pos=(6,2) party=3 money=26210 effect=None
+   done (0.1s wall)
+== m49: Champion → Hall of Fame → credits → saved Continue
+[resume-reentry] frame=608 screen=overworld map=PalletTown pos=(5,6) party=3 money=32645 effect=None
+[resume-reentry] frame=886850 screen=overworld map=PalletTown pos=(5,6) party=3 money=32645 effect=None
+[m49] frame=886850 screen=overworld map=PalletTown pos=(5,6) party=3 money=32645 effect=None
+   done (0.1s wall)
+PLAYTHROUGH REACHED REQUESTED MILESTONE

@@ -18,10 +18,7 @@ game_scene Route16FlyHouse {
       given = giveItem("HM02", 1)
       @if (given) {
         setFlag("EVENT_GOT_HM02")
-        @speaker("") { @t("<PLAYER> received HM02!", "<PLAYER>得到了 HM02！") }
-        @speaker("") {
-          @t("HM02 is FLY. It will take\nyou back to any town.\n\nPut it to good use!", "HM02是飞翔。它能带你回到任何\n城镇。\n\n请好好善用它吧！")
-        }
+        showItemDialogue(@t("<PLAYER> received HM02!", "<PLAYER>得到了 HM02！"), "SFX_GET_KEY_ITEM")
       } @else {
         @speaker("") { @t("You don't have any room for\nthis.", "你身上没有放它的空间。") }
       }

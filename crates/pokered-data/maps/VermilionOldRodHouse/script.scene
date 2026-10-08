@@ -22,16 +22,14 @@ game_scene VermilionOldRodHouse {
       @choice {
         @option(@t("YES", "是")) {
           // .TakeThisText + GiveItem OLD_ROD + .FishingIsAWayOfLifeText.
-          @speaker("") {
-            @t("Grand! I like your style!\n\nTake this and fish, young\none!", "太棒了！我喜欢你的风格！\n\n拿上这个去钓鱼吧，年轻人！")
-          }
           given = giveItem("OLD_ROD", 1)
           @if (given) {
-            playSound("SFX_GET_ITEM_1")
-            setFlag("EVENT_GOT_OLD_ROD")
             @speaker("") {
-              @t("<PLAYER> received an OLD\nROD!", "<PLAYER>获得了破旧钓竿！")
+              @t("Grand! I like your style!\n\nTake this and fish, young\none!", "太棒了！我喜欢你的风格！\n\n拿上这个去钓鱼吧，年轻人！")
             }
+
+            setFlag("EVENT_GOT_OLD_ROD")
+            showItemDialogue(@t("<PLAYER> received an OLD\nROD!", "<PLAYER>获得了破旧钓竿！"))
             @speaker("") {
               @t("Fishing is a way of life!\n\nFrom the seas to rivers, go\nout and land the big one,\nyoung one!", "钓鱼是一种生活方式！\n\n从大海到河流，出去钓上一条大\n家伙吧，年轻人！")
             }

@@ -37,7 +37,11 @@ fn draw_script_choice(
     fb: &mut FrameBuffer,
 ) {
     let mut painter = FrameBufferPainter::new(fb);
-    if screen.script_money_box.is_none() && !screen.is_reading_menu_active() {
+    let compact_width = YES_NO_DEFAULT_LAYOUT.box_0.rect.tw.saturating_sub(3) * 8;
+    let fits_compact = choice.options.iter().all(|option| {
+        pokered_renderer::embedded_font::measure_text(option) as u32 <= compact_width
+    });
+    if screen.script_money_box.is_none() && !screen.is_reading_menu_active() && fits_compact {
         let mut ui = Ui::new(&mut painter);
         menus::yes_no::draw(
             &choice.options,

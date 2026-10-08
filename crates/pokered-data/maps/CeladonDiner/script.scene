@@ -51,9 +51,7 @@ game_scene CeladonDiner {
       given = giveItem("COIN_CASE", 1)
       @if (given) {
         setFlag("EVENT_GOT_COIN_CASE")
-        @speaker("") {
-          @t("<PLAYER> received a COIN\nCASE!", "<PLAYER>得到了代币盒！")
-        }
+        showItemDialogue(@t("<PLAYER> received a COIN\nCASE!", "<PLAYER>得到了代币盒！"), "SFX_GET_KEY_ITEM")
       } @else {
         @speaker("") { @t("Make room for this!", "给这个腾出地方来！") }
       }
