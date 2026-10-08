@@ -1925,9 +1925,7 @@ impl PokemonGame {
         pokered_core::overworld::Direction::Right => 1u8,
     };
     save.game_data.player_direction = facing;
-    save.game_data.player_last_stop_direction = facing;
-    save.game_data.player_moving_direction =
-        if player.movement_state == pokered_core::overworld::MovementState::Idle { 0 } else { facing };
+    // Movement history is exported by write_system_save_state below.
 
     pokered_core::log_save!(
         "build_save_data: map_id={}, x={}, y={}, dir={}, player.x={}, player.y={}",
@@ -9781,6 +9779,8 @@ mod link_stats_cry_fidelity_tests {
                 save.game_data.position.map_id = MapId::ViridianPokecenter as u8;
                 save.game_data.position.x = 13; save.game_data.position.y = 4;
                 save.game_data.player_direction = direction;
+                save.game_data.player_last_stop_direction = 2;
+                save.game_data.player_moving_direction = 0;
                 let path = dir.join(format!("direction-{direction}.sav"));
                 std::fs::write(&path, export_sram(&save)).unwrap();
                 let mut g = PokemonGame::new_with_options(
@@ -9801,6 +9801,13 @@ mod link_stats_cry_fidelity_tests {
                 assert_eq!((g.overworld.state.player.x, g.overworld.state.player.y), (13,4));
                 assert_eq!(g.overworld.state.player.facing, Direction::Down, "saved byte {direction}");
                 assert_eq!(g.save_data.game_data.player_direction, direction, "Continue must not rewrite SRAM data");
+                for _ in 0..120 {g.update(&idle);}
+                assert_eq!(g.overworld.player_last_stop_direction,2,"idle Continue preserves previous Left stop despite facing Down");
+                assert_eq!(g.overworld.player_moving_direction,0);
+                let exported=g.build_save_data();
+                assert_eq!(exported.game_data.player_direction,4);
+                assert_eq!(exported.game_data.player_last_stop_direction,2);
+                assert_eq!(exported.game_data.player_moving_direction,0);
                 assert_eq!(g.main_menu.last_choice, Some(pokered_core::game_state::MainMenuChoice::Continue));
             }
             std::fs::remove_dir_all(dir).unwrap();
@@ -10083,6 +10090,7 @@ mod link_stats_cry_fidelity_tests {
                     "x":g.overworld.state.player.x,"y":g.overworld.state.player.y,
                     "facing":format!("{:?}",g.overworld.state.player.facing),
                     "movement":format!("{:?}",g.overworld.state.player.movement_state),
+                    "last_stop":g.overworld.player_last_stop_direction,"moving_direction":g.overworld.player_moving_direction,
                     "walk_counter":g.overworld.state.walk_counter,"transport":format!("{:?}",g.overworld.state.player.transport),"party":g.save_data.party}));
             }
             std::fs::write(dir.join("frames.json"),serde_json::to_string_pretty(&records).unwrap()).unwrap();

@@ -651,6 +651,9 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     pub(crate) wild_data_state: super::wild_encounters::WildDataState,
     pub(crate) game_data: G,
     pub state: OverworldState,
+    /// Original PLAYER_DIR_* masks, independent of the sprite's facing.
+    pub player_last_stop_direction: u8,
+    pub player_moving_direction: u8,
     pub map_data: Option<MapData<G::Tileset>>,
     pub npc_states: Vec<crate::overworld::npc_movement::NpcRuntimeState>,
     pub npc_pokemon_data: Vec<PokemonNpcData>,
@@ -1173,6 +1176,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             text_delay_frames: DEFAULT_TEXT_DELAY_FRAMES,
             prev_a_pressed: false,
             prev_movement_state: MovementState::Idle,
+            player_last_stop_direction: 0,
+            player_moving_direction: 0,
             prev_b_pressed: false,
             prev_up_pressed: false,
             prev_down_pressed: false,
@@ -2503,6 +2508,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
 
     /// Restore counters and status bytes that live outside the event bitset.
     pub fn restore_system_save_state(&mut self, data: &crate::save::game_data::GameData) {
+        self.player_last_stop_direction = data.player_last_stop_direction;
+        self.player_moving_direction = data.player_moving_direction;
         self.first_lock_trash_can = data.first_lock_trash_can;
         self.second_lock_trash_can = data.second_lock_trash_can;
         self.script_engine.set_gym_trash_indices(self.first_lock_trash_can, self.second_lock_trash_can);
@@ -2520,6 +2527,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
 
     /// Persist Safari allowances and original status-byte script aliases.
     pub fn write_system_save_state(&self, data: &mut crate::save::game_data::GameData) {
+        data.player_last_stop_direction = self.player_last_stop_direction;
+        data.player_moving_direction = self.player_moving_direction;
         data.first_lock_trash_can = self.first_lock_trash_can;
         data.second_lock_trash_can = self.second_lock_trash_can;
         for (index, name) in ["TERRY", "MARCEL", "CHIKUCHIKU", "SAILOR", "DUX", "MARC", "LOLA", "DORIS", "CRINKLES", "SPOT"].iter().enumerate() {

@@ -1623,6 +1623,20 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             select: input.select && !intro_holding_input,
         };
 
+        // OverworldLoop samples direction only after the current step.
+        // Releasing it records the last moving direction, not sprite facing.
+        if self.state.player.movement_state == MovementState::Idle {
+            if let Some(direction) = movement_input.direction_pressed() {
+                self.player_moving_direction = match direction {
+                    Direction::Right => 1, Direction::Left => 2,
+                    Direction::Down => 4, Direction::Up => 8,
+                };
+            } else if self.player_moving_direction != 0 {
+                self.player_last_stop_direction = self.player_moving_direction;
+                self.player_moving_direction = 0;
+            }
+        }
+
         let get_tile_id_at_position =
             |blocks: &[u8], width: u8, tileset: G::Tileset, x: u16, y: u16| -> u8 {
                 let block_x = (x / 2) as usize;
