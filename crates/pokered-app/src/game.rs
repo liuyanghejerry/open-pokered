@@ -9596,21 +9596,38 @@ mod link_stats_cry_fidelity_tests {
             for _ in 0..4 { g.update(&button(GbButton::Down)); for _ in 0..60 {g.update(&idle);} }
             let mut records = Vec::new();
             let start_frame = g.frame_count;
-            let trigger = button(GbButton::A);
+            let mut trigger = InputState::new();
             for t in -1i32..240 {
-                if t >= 0 { g.update(if t == 0 { &trigger } else { &idle }); }
+                if t >= 0 {
+                    trigger.begin_frame();
+                    if t == 0 { trigger.press(GbButton::A); }
+                    if t == 2 { trigger.release(GbButton::A); }
+                    g.update(&trigger);
+                }
                 let mut fb = FrameBuffer::new(RenderConfig::new(160,144), Rgba::WHITE);
                 g.draw(&mut fb); fb.save_png(&dir.join(format!("frame-{:04}.png", t+1))).unwrap();
                 let audio = g.audio.as_ref().unwrap();
                 let regs = {let m=audio.manager.lock().unwrap(); (0xff10..=0xff26).map(|r|m.apu.read_register(r)).collect::<Vec<_>>()};
                 let mut pcm=vec![0f32;1470]; audio.render_pcm(&mut pcm);
                 std::fs::write(dir.join(format!("pcm-{:04}.f32",t+1)),pcm.iter().flat_map(|v|v.to_le_bytes()).collect::<Vec<_>>()).unwrap();
-                records.push(serde_json::json!({"t":t,"frame":g.frame_count,"trigger_frame":start_frame+1,
+                records.push(serde_json::json!({"t":t,"frame":g.frame_count,"trigger_frame":start_frame+1,"input_bits":trigger.raw_current(),
                     "screen":format!("{:?}",g.state.screen),"page":g.stats_screen.as_ref().map(|s|format!("{:?}",s.page())),
                     "sfx_active":audio.is_sfx_playing(),"apu_registers":regs,"party":g.save_data.party}));
             }
             assert!(matches!(g.state.screen,GameScreen::PokemonStatsScreen(0)));
             std::fs::write(dir.join("frames.json"),serde_json::to_string_pretty(&records).unwrap()).unwrap();
+            trigger.begin_frame(); trigger.press(GbButton::A);
+            for t in 0..20 {
+                if t > 0 { trigger.begin_frame(); }
+                if t == 2 { trigger.release(GbButton::A); }
+                g.update(&trigger);
+            }
+            assert_eq!(g.stats_screen.as_ref().unwrap().page(),pokered_core::stats_screen::StatsPage::Moves);
+            let mut fb=FrameBuffer::new(RenderConfig::new(160,144),Rgba::WHITE);
+            g.draw(&mut fb);fb.save_png(&dir.join("moves-page.png")).unwrap();
+            std::fs::write(dir.join("moves-page.json"),serde_json::to_string_pretty(&serde_json::json!({
+                "frame":g.frame_count,"page":"Moves","party":g.save_data.party,
+                "input":"after raw t239, A held two frames, release at third, capture after20updates"})).unwrap()).unwrap();
         });
     }
 
