@@ -3772,7 +3772,6 @@ learn {learn_name}!")];
 
         self.sync_display_from_state();
         let next = if escape_battle && self.is_wild {
-            msgs.push("Got away safely!".to_string());
             BattlePhase::BattleOver { won: false, escaped: true, wait_frames: 30 }
         } else {
             self.check_faint_after_turn()
@@ -4576,7 +4575,6 @@ learn {learn_name}!")];
             // A connecting Whirlwind/Roar/Teleport ends a WILD battle (escape); vs a
             // trainer it does nothing (falls through to the normal faint check).
             let next = if escape_battle && self.is_wild {
-                msgs.push("Got away safely!".to_string());
                 BattlePhase::BattleOver { won: false, escaped: true, wait_frames: 30 }
             } else {
                 self.check_faint_after_turn()
@@ -5724,7 +5722,7 @@ mod recharge_lifecycle_tests {
         let mk = |sp, lvl, moves: [MoveId; 4]| {
             create_pokemon_with_moves(sp, lvl, [0xFF, 0xFF], moves).unwrap()
         };
-        let player = vec![mk(Species::Abra, 30, [MoveId::Teleport, MoveId::None, MoveId::None, MoveId::None])];
+        let player = vec![mk(Species::Abra, 50, [MoveId::Teleport, MoveId::None, MoveId::None, MoveId::None])];
         let enemy = vec![mk(Species::Snorlax, 50, [MoveId::Splash, MoveId::Splash, MoveId::Splash, MoveId::Splash])];
         let mut screen = BattleScreen::from_parties(true, &player, &enemy, None); // is_wild = true
         screen.execute_turn_with_move(0);

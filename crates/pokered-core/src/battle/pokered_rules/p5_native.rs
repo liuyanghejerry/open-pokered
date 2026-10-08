@@ -544,6 +544,7 @@ fn toxic_residual(
     _source: BattlerRef,
     _eff: EffectId,
 ) -> HandlerResult {
+    if super::escape_succeeded(ctx.effects) { return HandlerResult::Unchanged; }
     // core.asm checks the move's KO before HandlePoisonBurnLeechSeed.
     // In particular, a fainted seeder must never be healed back into battle.
     if ctx.battler(target).hp == 0 || ctx.battler(opposing(target)).hp == 0 {
@@ -605,6 +606,7 @@ fn leech_residual(
     _source: BattlerRef,
     _eff: EffectId,
 ) -> HandlerResult {
+    if super::escape_succeeded(ctx.effects) { return HandlerResult::Unchanged; }
     // core.asm checks the move's KO before HandlePoisonBurnLeechSeed.
     // In particular, a fainted seeder must never be healed back into battle.
     if ctx.battler(target).hp == 0 || ctx.battler(opposing(target)).hp == 0 {
@@ -651,6 +653,7 @@ fn burn_residual(
     _source: BattlerRef,
     _eff: EffectId,
 ) -> HandlerResult {
+    if super::escape_succeeded(ctx.effects) { return HandlerResult::Unchanged; }
     // core.asm checks the move's KO before HandlePoisonBurnLeechSeed.
     // In particular, a fainted seeder must never be healed back into battle.
     if ctx.battler(target).hp == 0 || ctx.battler(opposing(target)).hp == 0 {
@@ -681,6 +684,7 @@ fn poison_residual(
     _source: BattlerRef,
     _eff: EffectId,
 ) -> HandlerResult {
+    if super::escape_succeeded(ctx.effects) { return HandlerResult::Unchanged; }
     // core.asm checks the move's KO before HandlePoisonBurnLeechSeed.
     // In particular, a fainted seeder must never be healed back into battle.
     if ctx.battler(target).hp == 0 || ctx.battler(opposing(target)).hp == 0 {
