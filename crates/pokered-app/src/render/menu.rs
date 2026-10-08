@@ -19,9 +19,9 @@ use pokered_renderer::party_hp_bar::draw_party_hp_bar;
 use pokered_renderer::resource::ResourceManager;
 use pokered_renderer::{FrameBuffer, TILE_SIZE};
 use pokered_ui::backends::FrameBufferPainter;
-use pokered_ui::{menus, InkColor, Painter, TilePos, TileRect, Ui};
+use pokered_ui::{menus, InkColor, Rgba, Painter, TilePos, TileRect, Ui};
 
-use super::{blit_tileset, species_to_sprite_name};
+use super::{blit_front_pic, species_to_sprite_name};
 
 pub fn draw_main_menu(state: &MainMenuState, fb: &mut FrameBuffer, lang: Lang) {
     let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
@@ -372,12 +372,22 @@ pub fn draw_stats_screen(
     fb: &mut FrameBuffer,
     lang: Lang,
 ) {
+    if state.entry_frame().is_some_and(|f| (1..18).contains(&f)) {
+        fb.clear(Rgba::WHITE);
+        return;
+    }
     {
         let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
         let mut ui = Ui::new(&mut painter);
         menus::stats::draw(state, &STATS_PAGE1_LAYOUT, &STATS_PAGE2_LAYOUT, &mut ui, lang, &PokemonRenderData::new(lang == Lang::Zh));
     }
 
+    if let Some(frame) = state.entry_frame() {
+        if frame == 18 {
+            for y in 0..24 { for x in 0..160 { fb.set_pixel(x,y,Rgba::WHITE); } }
+        }
+        if frame <= state.entry_cry_frame() { return; }
+    }
     let Some(rm) = resources else {
         return;
     };
@@ -387,25 +397,9 @@ pub fn draw_stats_screen(
     let species_display = format!("{}", pokemon.species);
     let sprite_name = species_to_sprite_name(&species_display);
     let drew_front = if let Ok(cached) = rm.load_pokemon_front(&sprite_name) {
-        let w_tiles = cached.source_size.0 / TILE_SIZE;
-        let max_w = 7u32;
-        let x_off = ((max_w.saturating_sub(w_tiles)) / 2) * TILE_SIZE;
-        let px = TILE_SIZE + x_off;
-        // A full-size front sprite is 56 px tall. Start it at y=0 so it
-        // stays above the dex-number row (y=56); the old 4 px offset
-        // let its bottom tiles overwrite the number drawn by the UI.
-        let py = match state.page() {
-            StatsPage::Stats => 0,
-            StatsPage::Moves => TILE_SIZE / 2,
-        };
-        blit_tileset(
-            fb,
-            &cached.tileset,
-            px,
-            py,
-            w_tiles,
-            &GRAYSCALE_SPRITE_PALETTE,
-        );
+        // StatusScreen uses LoadFlippedFrontSpriteByMonIndex; StatusScreen2
+        // retains that same 7x7 buffer, including its bottom/side padding.
+        blit_front_pic(fb, cached, 8, 0, true);
         true
     } else {
         false
@@ -417,6 +411,14 @@ pub fn draw_stats_screen(
             draw_mon_icon(fb, tiles, 8, 0, &GRAYSCALE_SPRITE_PALETTE);
         }
     }
+    let parts = state.entry_picture_parts();
+    if parts != 3 {
+        for y in 0..56 {
+            let visible = if y < 48 { parts & 1 != 0 } else { parts & 2 != 0 };
+            if !visible { for x in 8..64 { fb.set_pixel(x,y,Rgba::WHITE); } }
+        }
+    }
+
 }
 
 pub(super) fn mart_list_scroll(cursor: usize, count: usize, lang: Lang) -> usize {

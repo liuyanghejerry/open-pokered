@@ -1025,6 +1025,7 @@ impl PartyVisualKey {
 #[derive(Clone, Copy, PartialEq, Eq)]
 struct StatsVisualKey {
     page: StatsPage,
+    entry_frame: Option<u16>,
     pokemon_hash: u32,
     language: Lang,
 }
@@ -1074,6 +1075,7 @@ impl StatsVisualKey {
         }
         Some(Self {
             page: state.page(),
+            entry_frame: state.entry_frame(),
             pokemon_hash,
             language: game.state.config.language,
         })

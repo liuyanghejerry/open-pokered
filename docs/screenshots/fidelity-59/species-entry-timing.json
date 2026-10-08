@@ -1,0 +1,4839 @@
+{
+  "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+  "state_sha256": "d61b69d21368db0fae6fe31c24b22d9030642815e6c5f23f35785897d025ce39",
+  "input": "A at t0, release at t2; one emulator tick per observation",
+  "species": [
+    {
+      "species": "RHYDON",
+      "id": 1,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 70,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 132,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "KANGASKHAN",
+      "id": 2,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 71,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 125,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "species": "NIDORAN_M",
+      "id": 3,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 46,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 78,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "CLEFAIRY",
+      "id": 4,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 46,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 67,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "SPEAROW",
+      "id": 5,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 46,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 105,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "VOLTORB",
+      "id": 6,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 46,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 118,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "NIDOKING",
+      "id": 7,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 73,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 143,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "SLOWBRO",
+      "id": 8,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 73,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 112,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "IVYSAUR",
+      "id": 9,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 57,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 105,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "EXEGGUTOR",
+      "id": 10,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 71,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 162,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "species": "LICKITUNG",
+      "id": 11,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 68,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 113,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "species": "EXEGGCUTE",
+      "id": 12,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 71,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 127,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "species": "GRIMER",
+      "id": 13,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 50,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 81,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "species": "GENGAR",
+      "id": 14,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 54,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 100,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "NIDORAN_F",
+      "id": 15,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 44,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 75,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "species": "NIDOQUEEN",
+      "id": 16,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 70,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 124,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "CUBONE",
+      "id": 17,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 46,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 87,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "RHYHORN",
+      "id": 18,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 71,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 127,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "species": "LAPRAS",
+      "id": 19,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 69,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 112,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "ARCANINE",
+      "id": 20,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 66,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 116,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "MEW",
+      "id": 21,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 46,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 140,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "GYARADOS",
+      "id": 22,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 67,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 125,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "SHELLDER",
+      "id": 23,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 49,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 94,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "TENTACOOL",
+      "id": 24,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 46,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 92,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "species": "GASTLY",
+      "id": 25,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 71,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 138,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "species": "SCYTHER",
+      "id": 26,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 66,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 105,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "STARYU",
+      "id": 27,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 52,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 111,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "BLASTOISE",
+      "id": 28,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 71,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 127,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "species": "PINSIR",
+      "id": 29,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 64,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 101,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "TANGELA",
+      "id": 30,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 56,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 100,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "species": "GROWLITHE",
+      "id": 33,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 49,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 88,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "ONIX",
+      "id": 34,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 63,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 135,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "FEAROW",
+      "id": 35,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 63,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 113,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "PIDGEY",
+      "id": 36,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 47,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 63,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "species": "SLOWPOKE",
+      "id": 37,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 50,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 72,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "species": "KADABRA",
+      "id": 38,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 55,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 135,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "GRAVELER",
+      "id": 39,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 60,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 140,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "CHANSEY",
+      "id": 40,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 55,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 101,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "MACHOKE",
+      "id": 41,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 69,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 108,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "MR_MIME",
+      "id": 42,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 54,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 108,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "HITMONLEE",
+      "id": 43,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 68,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 123,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "species": "HITMONCHAN",
+      "id": 44,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 59,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 115,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "species": "ARBOK",
+      "id": 45,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 72,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 127,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "PARASECT",
+      "id": 46,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 70,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 164,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "PSYDUCK",
+      "id": 47,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 50,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 88,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "species": "DROWZEE",
+      "id": 48,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 58,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 141,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "GOLEM",
+      "id": 49,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 59,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 100,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "species": "MAGMAR",
+      "id": 51,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 58,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 103,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "ELECTABUZZ",
+      "id": 53,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 59,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 164,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "species": "MAGNETON",
+      "id": 54,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 56,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 136,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "species": "KOFFING",
+      "id": 55,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 57,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 116,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "MANKEY",
+      "id": 57,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 46,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 94,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "SEEL",
+      "id": 58,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 54,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 110,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "DIGLETT",
+      "id": 59,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 48,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 104,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "TAUROS",
+      "id": 60,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 69,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 122,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "FARFETCHD",
+      "id": 64,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 61,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 91,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "VENONAT",
+      "id": 65,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 46,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 91,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "DRAGONITE",
+      "id": 66,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 69,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 126,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "DODUO",
+      "id": 70,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 46,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 102,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "POLIWAG",
+      "id": 71,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 45,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 79,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "JYNX",
+      "id": 72,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 56,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 191,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "species": "MOLTRES",
+      "id": 73,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 67,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 135,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "ARTICUNO",
+      "id": 74,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 66,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 134,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "ZAPDOS",
+      "id": 75,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 64,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 109,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "DITTO",
+      "id": 76,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 47,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 81,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "species": "MEOWTH",
+      "id": 77,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 47,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 70,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "species": "KRABBY",
+      "id": 78,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 47,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 118,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "species": "VULPIX",
+      "id": 82,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 59,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 127,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "species": "NINETALES",
+      "id": 83,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 65,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 135,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "species": "PIKACHU",
+      "id": 84,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 47,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 95,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "species": "RAICHU",
+      "id": 85,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 64,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 132,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "DRATINI",
+      "id": 88,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 46,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 94,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "DRAGONAIR",
+      "id": 89,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 58,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 106,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "KABUTO",
+      "id": 90,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 48,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 84,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "KABUTOPS",
+      "id": 91,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 60,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 100,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "HORSEA",
+      "id": 92,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 47,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 70,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "species": "SEADRA",
+      "id": 93,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 54,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 75,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "SANDSHREW",
+      "id": 96,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 47,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 76,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "species": "SANDSLASH",
+      "id": 97,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 56,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 103,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "species": "OMANYTE",
+      "id": 98,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 48,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 87,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "OMASTAR",
+      "id": 99,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 60,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 99,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "JIGGLYPUFF",
+      "id": 100,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 46,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 62,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "WIGGLYTUFF",
+      "id": 101,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 59,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 79,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "species": "EEVEE",
+      "id": 102,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 49,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 94,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "FLAREON",
+      "id": 103,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 59,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 104,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "species": "JOLTEON",
+      "id": 104,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 55,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 101,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "VAPOREON",
+      "id": 105,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 54,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 122,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "MACHOP",
+      "id": 106,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 49,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 88,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "ZUBAT",
+      "id": 107,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 49,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 105,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "EKANS",
+      "id": 108,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 46,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 101,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "PARAS",
+      "id": 109,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 45,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 131,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "POLIWHIRL",
+      "id": 110,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 55,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 75,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "POLIWRATH",
+      "id": 111,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 62,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 96,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "species": "WEEDLE",
+      "id": 112,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 44,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 91,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "species": "KAKUNA",
+      "id": 113,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 45,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 98,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "BEEDRILL",
+      "id": 114,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 65,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 121,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "species": "DODRIO",
+      "id": 116,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 63,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 119,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "PRIMEAPE",
+      "id": 117,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 64,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 112,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "DUGTRIO",
+      "id": 118,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 60,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 116,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "VENOMOTH",
+      "id": 119,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 68,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 114,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "species": "DEWGONG",
+      "id": 120,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 54,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 121,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "CATERPIE",
+      "id": 123,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 44,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 80,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "species": "METAPOD",
+      "id": 124,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 44,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 111,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "species": "BUTTERFREE",
+      "id": 125,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 64,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 100,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "MACHAMP",
+      "id": 126,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 70,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 118,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "GOLDUCK",
+      "id": 128,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 69,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 102,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "HYPNO",
+      "id": 129,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 70,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 153,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "GOLBAT",
+      "id": 130,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 66,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 122,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "MEWTWO",
+      "id": 131,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 65,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 159,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "species": "SNORLAX",
+      "id": 132,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 69,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 85,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "MAGIKARP",
+      "id": 133,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 59,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 114,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "species": "MUK",
+      "id": 136,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 71,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 117,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "species": "KINGLER",
+      "id": 138,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 70,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 141,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "CLOYSTER",
+      "id": 139,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 66,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 127,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "ELECTRODE",
+      "id": 141,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 48,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 123,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "CLEFABLE",
+      "id": 142,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 53,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 79,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "species": "WEEZING",
+      "id": 143,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 71,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 136,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "species": "PERSIAN",
+      "id": 144,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 64,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 125,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "MAROWAK",
+      "id": 145,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 55,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 97,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "HAUNTER",
+      "id": 147,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 57,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 124,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "ABRA",
+      "id": 148,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 49,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 116,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "ALAKAZAM",
+      "id": 149,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 71,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 166,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "species": "PIDGEOTTO",
+      "id": 150,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 58,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 104,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "PIDGEOT",
+      "id": 151,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 69,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 124,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "STARMIE",
+      "id": 152,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 59,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 122,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "species": "BULBASAUR",
+      "id": 153,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 48,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 96,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "VENUSAUR",
+      "id": 154,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 72,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 129,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "TENTACRUEL",
+      "id": 155,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 59,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 127,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "species": "GOLDEEN",
+      "id": 157,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 53,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 89,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "species": "SEAKING",
+      "id": 158,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 70,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 128,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "PONYTA",
+      "id": 163,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 54,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 98,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "RAPIDASH",
+      "id": 164,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 66,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 121,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "RATTATA",
+      "id": 165,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 45,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 68,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "RATICATE",
+      "id": 166,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 55,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 89,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "NIDORINO",
+      "id": 167,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 55,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 95,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "NIDORINA",
+      "id": 168,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 54,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 92,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "GEODUDE",
+      "id": 169,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 48,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 116,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "PORYGON",
+      "id": 170,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 58,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 123,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "AERODACTYL",
+      "id": 171,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 69,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 142,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "MAGNEMITE",
+      "id": 173,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 44,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 111,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "species": "CHARMANDER",
+      "id": 176,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 49,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 94,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "SQUIRTLE",
+      "id": 177,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 48,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 101,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "CHARMELEON",
+      "id": 178,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 58,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 103,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "WARTORTLE",
+      "id": 179,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 54,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 107,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "CHARIZARD",
+      "id": 180,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 70,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 126,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "ODDISH",
+      "id": 185,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 44,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 86,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "species": "GLOOM",
+      "id": 186,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 54,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 96,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "VILEPLUME",
+      "id": 187,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 67,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 143,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "BELLSPROUT",
+      "id": 188,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 45,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 67,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "species": "WEEPINBELL",
+      "id": 189,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 58,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 101,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        1,
+        3,
+        3
+      ]
+    },
+    {
+      "species": "VICTREEBEL",
+      "id": 190,
+      "events": [
+        {
+          "t": 0,
+          "routine": "StatusScreen"
+        },
+        {
+          "t": 18,
+          "routine": "GBPalNormal"
+        },
+        {
+          "t": 18,
+          "routine": "LoadFlippedFrontSpriteByMonIndex"
+        },
+        {
+          "t": 69,
+          "routine": "PlayCry"
+        },
+        {
+          "t": 126,
+          "routine": "WaitForTextScrollButtonPress"
+        }
+      ],
+      "picture_parts": [
+        0,
+        0,
+        1,
+        3
+      ]
+    }
+  ]
+}

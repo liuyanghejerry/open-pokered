@@ -65,7 +65,8 @@ pub fn draw_link_flow(
         FrameBufferPainter::new(fb).clear(Rgba::INK_WHITE);
     }
     if let Some(stats) = flow.stats() {
-        super::draw_stats_screen(stats, resources, fb, language);
+        if stats.entry_frame() == Some(0) { draw_trade_party_list(flow, fb, language, is_zh); }
+        else { super::draw_stats_screen(stats, resources, fb, language); }
         return;
     }
     if !post_trade_clear && flow.party_select().is_some() {

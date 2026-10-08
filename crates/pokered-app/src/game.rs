@@ -2695,8 +2695,10 @@ impl PokemonGame {
                 }
             }
             GameScreen::PokemonStatsScreen(_) => {
-                if let (Some(audio), Some(stats)) = (&self.audio, &self.stats_screen) {
-                    play_species_cry(audio, stats.pokemon().species);
+                if let Some(stats) = &mut self.stats_screen { stats.start_entry(); }
+                if let Some(audio) = &self.audio {
+                    audio.play_sfx(SfxId::PressAB);
+                    audio.set_master_volume(3, 3);
                 }
             }
             GameScreen::LanguageSelect => {}
@@ -3954,7 +3956,6 @@ impl PokemonGame {
                                 a: !gameboy_started_this_frame && !cry_holds_input && input.is_just_pressed(GbButton::A),
                                 b: !gameboy_started_this_frame && !cry_holds_input && input.is_just_pressed(GbButton::B),
                             };
-                            let was_viewing_stats = self.link_cable.stats().is_some();
                             if self.link_cable.menu_button_sound(
                                 psi,
                                 input.is_just_pressed(GbButton::Left),
@@ -3964,19 +3965,23 @@ impl PokemonGame {
                                     audio.play_sfx(SfxId::PressAB);
                                 }
                             }
+                            let was_viewing_stats = self.link_cable.stats().is_some();
                             let need = self.link_cable.update_with_horizontal_navigation(
                                 psi,
                                 &self.save_data.party.to_vec(),
                                 input.is_just_pressed(GbButton::Left),
                                 input.is_just_pressed(GbButton::Right),
                             );
-                            // TradeCenter_DisplayStats calls StatusScreen, whose
-                            // PlayCry is also required by this modal overlay.
-                            if !was_viewing_stats {
-                                if let (Some(stats), Some(audio)) =
-                                    (self.link_cable.stats(), self.audio.as_ref())
-                                {
-                                    play_species_cry(audio, stats.pokemon().species);
+                            if let Some(species) = self.link_cable.take_stats_entry_cry() {
+                                if let Some(audio) = self.audio.as_ref() { play_species_cry(audio, species); }
+                            }
+                            if let Some(audio) = self.audio.as_ref() {
+                                if let Some(stats) = self.link_cable.stats() {
+                                    let volume = if !stats.entry_blocks_input() && audio.is_sfx_playing()
+                                        || stats.entry_frame() == Some(stats.entry_cry_frame()) { 7 } else { 3 };
+                                    audio.set_master_volume(volume, volume);
+                                } else if was_viewing_stats {
+                                    audio.set_master_volume(7, 7);
                                 }
                             }
                             self.handle_flow_need(need);
@@ -4852,6 +4857,7 @@ impl PokemonGame {
                     a: input.is_just_pressed(GbButton::A),
                     b: input.is_just_pressed(GbButton::B),
                 };
+                let prior_menu = party_input.a.then(|| self.party_screen.clone());
                 let action = self.party_screen.update_frame(party_input);
 
                 // Mirror any in-screen swap back into the canonical save data.
@@ -4890,6 +4896,7 @@ impl PokemonGame {
                         self.stats_screen = Some(StatsScreenState::new(
                             self.party_screen.party_member(idx).cloned().unwrap(),
                         ));
+                        if let Some(prior_menu) = prior_menu { self.party_screen = prior_menu; }
                         ScreenAction::Transition(GameScreen::PokemonStatsScreen(idx))
                     }
                     PartyScreenAction::ApplyItem { party_index } => {
@@ -5394,9 +5401,19 @@ impl PokemonGame {
                         a: !cry_holds_input && input.is_just_pressed(GbButton::A),
                         b: !cry_holds_input && input.is_just_pressed(GbButton::B),
                     };
-                    match ss.update(input) {
+                    let action = ss.update(input);
+                    if ss.take_entry_cry() {
+                        if let Some(audio) = &self.audio { play_species_cry(audio, ss.pokemon().species); }
+                    }
+                    if let Some(audio) = &self.audio {
+                        let volume = if !ss.entry_blocks_input() && audio.is_sfx_playing()
+                            || ss.entry_frame() == Some(ss.entry_cry_frame()) { 7 } else { 3 };
+                        audio.set_master_volume(volume, volume);
+                    }
+                    match action {
                         StatsScreenAction::Continue => ScreenAction::Continue,
                         StatsScreenAction::BackToParty => {
+                            if let Some(audio) = &self.audio { audio.set_master_volume(7, 7); }
                             self.stats_screen = None;
                             // STATS opened from the PC's mon list returns to
                             // the PC (its state is still in `pc_screen`).
@@ -7750,7 +7767,13 @@ impl PokemonGame {
                 );
             }
             GameScreen::PokemonStatsScreen(_) => {
-                if let Some(ref ss) = self.stats_screen {
+                if self.stats_screen.as_ref().is_some_and(|s| s.entry_frame() == Some(0)) {
+                    if let Some(pc) = self.pc_screen.as_ref() {
+                        draw_pc(pc, &self.save_data, &mut self.resources, frame_buffer, self.state.config.language);
+                    } else {
+                        draw_party_screen(&self.party_screen, self.resources.as_mut(), self.frame_count, frame_buffer, self.state.config.language);
+                    }
+                } else if let Some(ref ss) = self.stats_screen {
                     draw_stats_screen(
                         ss,
                         self.resources.as_mut(),
@@ -9015,6 +9038,12 @@ mod link_stats_cry_fidelity_tests {
             host.link_cable.stats().unwrap().pokemon().species,
             Species::Pikachu
         );
+        assert_eq!(host.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.current_sfx_id, SfxId::PressAB as u8);
+        for frame in 1..=47 {
+            host.update(&idle);
+            if frame < 47 { assert_ne!(host.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.current_sfx_id,
+                pokered_data::cries::cry_data(Species::Pikachu).sfx, "cry must follow picture loading"); }
+        }
         host.update(&idle);
         let expected = AudioOutput::new_pcm();
         play_species_cry(&expected, Species::Pikachu);
@@ -9100,7 +9129,8 @@ mod link_stats_cry_fidelity_tests {
             host.link_cable.stats().unwrap().pokemon().species,
             Species::Bulbasaur
         );
-        host.update(&idle);
+        assert_eq!(host.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.current_sfx_id, SfxId::PressAB as u8);
+        for _ in 0..49 { host.update(&idle); }
         assert_eq!(channels(&host), vec![true, true, false, true]);
         for _ in 0..120 {
             host.update(&idle);
@@ -9536,6 +9566,149 @@ mod link_stats_cry_fidelity_tests {
             assert_eq!(host.link_cable.stats().unwrap().page(), pokered_core::stats_screen::StatsPage::Moves);
             host.update(&button(GbButton::A));
             assert!(host.link_cable.stats().is_none());
+        });
+    }
+
+    #[test]
+    #[ignore]
+    fn capture_stats_entry_raw_59() {
+        run_link_save_fixture(|| {
+            use pokered_core::overworld::Direction;
+            use pokered_core::save::sram_import::import_sram;
+            let dir = std::path::PathBuf::from(std::env::var("FIDELITY_STATS_CAPTURE").unwrap());
+            std::fs::create_dir_all(&dir).unwrap();
+            let mut g = fixture(Species::Exeggutor, 7, Direction::Down);
+            g.save_data = import_sram(&std::fs::read(std::env::var("FIDELITY_STATS_SRAM").unwrap()).unwrap()).unwrap();
+            g.state.screen = GameScreen::Overworld;
+            g.state.config.language = pokered_core::game_state::Lang::En;
+            g.overworld = OverworldScreen::new(MapId::PalletTown, None, PokemonRedData);
+            for flag in [pokered_data::event_flags::EventFlag::EVENT_GOT_POKEDEX,
+                         pokered_data::event_flags::EventFlag::EVENT_GOT_STARTER] { g.overworld.set_event_flag_live(flag); }
+            g.overworld.state.player.x = 5; g.overworld.state.player.y = 6;
+            g.overworld.run_on_load();
+            let idle = InputState::new();
+            for _ in 0..120 { g.update(&idle); }
+            g.update(&button(GbButton::Start)); for _ in 0..120 { g.update(&idle); }
+            g.update(&button(GbButton::Down)); for _ in 0..120 { g.update(&idle); }
+            g.update(&button(GbButton::A)); for _ in 0..120 { g.update(&idle); }
+            assert_eq!(g.state.screen, GameScreen::PartyScreen);
+            g.update(&button(GbButton::A)); for _ in 0..120 { g.update(&idle); }
+            for _ in 0..4 { g.update(&button(GbButton::Down)); for _ in 0..60 {g.update(&idle);} }
+            let mut records = Vec::new();
+            let start_frame = g.frame_count;
+            let mut trigger = InputState::new();
+            for t in -1i32..240 {
+                if t >= 0 {
+                    trigger.begin_frame();
+                    if t == 0 { trigger.press(GbButton::A); }
+                    if t == 2 { trigger.release(GbButton::A); }
+                    g.update(&trigger);
+                }
+                let mut fb = FrameBuffer::new(RenderConfig::new(160,144), Rgba::WHITE);
+                g.draw(&mut fb); fb.save_png(&dir.join(format!("frame-{:04}.png", t+1))).unwrap();
+                let audio = g.audio.as_ref().unwrap();
+                let regs = {let m=audio.manager.lock().unwrap(); (0xff10..=0xff26).map(|r|m.apu.read_register(r)).collect::<Vec<_>>()};
+                let mut pcm=vec![0f32;1470]; audio.render_pcm(&mut pcm);
+                std::fs::write(dir.join(format!("pcm-{:04}.f32",t+1)),pcm.iter().flat_map(|v|v.to_le_bytes()).collect::<Vec<_>>()).unwrap();
+                records.push(serde_json::json!({"t":t,"frame":g.frame_count,"trigger_frame":start_frame+1,"input_bits":trigger.raw_current(),
+                    "screen":format!("{:?}",g.state.screen),"page":g.stats_screen.as_ref().map(|s|format!("{:?}",s.page())),
+                    "sfx_active":audio.is_sfx_playing(),"apu_registers":regs,"party":g.save_data.party}));
+            }
+            assert!(matches!(g.state.screen,GameScreen::PokemonStatsScreen(0)));
+            std::fs::write(dir.join("frames.json"),serde_json::to_string_pretty(&records).unwrap()).unwrap();
+            trigger.begin_frame(); trigger.press(GbButton::A);
+            for t in 0..20 {
+                if t > 0 { trigger.begin_frame(); }
+                if t == 2 { trigger.release(GbButton::A); }
+                g.update(&trigger);
+            }
+            assert_eq!(g.stats_screen.as_ref().unwrap().page(),pokered_core::stats_screen::StatsPage::Moves);
+            let mut fb=FrameBuffer::new(RenderConfig::new(160,144),Rgba::WHITE);
+            g.draw(&mut fb);fb.save_png(&dir.join("moves-page.png")).unwrap();
+            std::fs::write(dir.join("moves-page.json"),serde_json::to_string_pretty(&serde_json::json!({
+                "frame":g.frame_count,"page":"Moves","party":g.save_data.party,
+                "input":"after raw t239, A held two frames, release at third, capture after20updates"})).unwrap()).unwrap();
+        });
+    }
+
+    fn actual_pc_stats_59(from_box: bool) -> PokemonGame {
+        use pokered_core::overworld::Direction;
+        use pokered_core::pc_screen::PcPhase;
+        let mut g = fixture(Species::Exeggutor, 13, Direction::Up);
+        let second = create_pokemon_with_moves(Species::Bulbasaur, 25, [0x99,0x88],
+            [MoveId::Tackle,MoveId::None,MoveId::None,MoveId::None]).unwrap();
+        g.save_data.party.add(second).unwrap();
+        let mon = g.save_data.party.get(0).unwrap().clone();
+        g.save_data.pc_storage.current_box_mut().deposit(mon).unwrap();
+        g.overworld = OverworldScreen::new(MapId::ViridianPokecenter, None, PokemonRedData);
+        g.overworld.run_on_load();
+        g.overworld.state.player.x=13;g.overworld.state.player.y=4;g.overworld.state.player.facing=Direction::Up;
+        let idle=InputState::new();
+        for _ in 0..120 {g.update(&idle);}
+        g.update(&button(GbButton::A));
+        for frame in 0..2000 {
+            if g.pc_screen.as_ref().is_some_and(|p| p.phase()==PcPhase::MainMenu) {break;}
+            let advance=button(GbButton::A); g.update(if frame%20==19 {&advance} else {&idle});
+        }
+        assert_eq!(g.state.screen,GameScreen::PC,"actual hidden-event PC activation");
+        assert_eq!(g.pc_screen.as_ref().unwrap().phase(),PcPhase::MainMenu);
+        g.update(&button(GbButton::A));
+        for frame in 0..1000 {
+            if g.pc_screen.as_ref().unwrap().phase()==PcPhase::BillsMenu {break;}
+            let advance=button(GbButton::A); g.update(if frame%20==19 {&advance} else {&idle});
+        }
+        assert_eq!(g.pc_screen.as_ref().unwrap().phase(),PcPhase::BillsMenu);
+        if !from_box {g.update(&button(GbButton::Down));g.update(&idle);}
+        g.update(&button(GbButton::A));for _ in 0..120 {g.update(&idle);}
+        assert_eq!(g.pc_screen.as_ref().unwrap().phase(),PcPhase::MonList);
+        g.update(&button(GbButton::A));for _ in 0..120 {g.update(&idle);}
+        assert_eq!(g.pc_screen.as_ref().unwrap().phase(),PcPhase::MonAction);
+        g.update(&button(GbButton::Down));g.update(&idle);g.update(&button(GbButton::A));
+        assert_eq!(g.state.screen,GameScreen::PokemonStatsScreen(0));
+        g
+    }
+
+    #[test]
+    fn actual_pc_stats_59_party_and_box_keep_loading_and_cry_input_locked() {
+        run_link_save_fixture(|| {
+            for from_box in [false,true] {
+                let mut g=actual_pc_stats_59(from_box);
+                let idle=InputState::new();
+                assert_eq!(g.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.current_sfx_id,SfxId::PressAB as u8);
+                for t in 1..162 {
+                    let early=button(GbButton::B); g.update(if [1,10,20,60,71,100,150,161].contains(&t) {&early} else {&idle});
+                    assert_eq!(g.stats_screen.as_ref().unwrap().page(),pokered_core::stats_screen::StatsPage::Stats,"box={from_box} t={t}");
+                    assert_eq!(g.audio.as_ref().unwrap().manager.lock().unwrap().apu.read_register(0xff24),
+                        if t < 71 { 0x33 } else { 0x77 }, "original StatusScreen/Cry volume t={t}");
+                    if t==71 {assert_eq!(g.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.current_sfx_id,pokered_data::cries::cry_data(Species::Exeggutor).sfx);}
+                }
+                g.update(&button(GbButton::A));
+                assert_eq!(g.stats_screen.as_ref().unwrap().page(),pokered_core::stats_screen::StatsPage::Moves);
+                g.update(&idle);g.update(&button(GbButton::B));
+                assert_eq!(g.state.screen,GameScreen::PC);
+                assert_eq!(g.audio.as_ref().unwrap().manager.lock().unwrap().apu.read_register(0xff24),0x77);
+                assert_eq!(g.pc_screen.as_ref().unwrap().phase(),pokered_core::pc_screen::PcPhase::MonAction);
+                assert_eq!(g.save_data.party.count(),2);assert_eq!(g.save_data.pc_storage.current_box().count(),1);
+            }
+        });
+    }
+
+    #[test]
+    fn actual_stats_loading_retained_frames_match_full_draw() {
+        run_link_save_fixture(|| {
+            let mut g = ordinary_muted_party_stats();
+            let mut session = crate::render::session::RenderSession::new();
+            let mut retained = FrameBuffer::new(RenderConfig::new(160,144), Rgba::WHITE);
+            let mut scroll = |_: &mut [u8], _: usize, _: usize, _: i32, _: i32, _: u8| panic!("stats must not scroll");
+            for frame in 0..150 {
+                session.render(&mut g, &mut retained, &mut scroll);
+                let mut full = FrameBuffer::new(RenderConfig::new(160,144), Rgba::WHITE);
+                g.draw(&mut full);
+                for y in 0..144 { for x in 0..160 {
+                    assert_eq!(retained.get_pixel(x,y),full.get_pixel(x,y),"stats frame {frame} at {x},{y}");
+                }}
+                g.update(&InputState::new());
+            }
         });
     }
 
