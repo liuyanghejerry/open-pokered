@@ -759,10 +759,18 @@ class Game:
         """Face an object from a reachable adjacent tile (trainers may
         occupy one side after walking up to challenge the player)."""
         for _ in range(4):
+            state = self.st()
+            if state["screen"] == "battle":
+                self.battle_loop(prefer="fight" if state["script_awaiting_battle"] else "run")
+                self.cutscene()
+            elif state.get("dialogue_state") is not None:
+                self.cutscene()
             cm, cx, cy = self.pos()
             if cm != map_name:
                 raise NavError(f"object approach left {map_name} -> {cm}")
-            blocked = self.live_npcs(cm) | warp_tiles(cm) | {(x, y)}
+            live = self.live_npcs(cm)
+            was_live_npc = (x, y) in live
+            blocked = live | warp_tiles(cm) | {(x, y)}
             candidates = []
             for direction, (dx, dy) in DELTA.items():
                 target = (x - dx, y - dy)
@@ -780,7 +788,19 @@ class Game:
             except NavError:
                 continue
             self.face(direction)
-            return
+            # Facing can itself start a wild encounter or trainer dialogue.
+            # Return only while the requested interaction is still reachable.
+            state = self.st()
+            if (state["screen"] == "overworld" and state["map_name"] == map_name
+                    and was_live_npc and (x, y) not in self.live_npcs(map_name)):
+                # An on-step battle may move/hide the NPC. The caller verifies
+                # its completion flag or re-observes the NPC's actual position.
+                return
+            if (state["screen"] == "overworld" and state["map_name"] == map_name
+                    and (state["player_x"], state["player_y"]) == target
+                    and state["player_facing"].lower() == direction
+                    and state.get("dialogue_state") is None):
+                return
         raise NavError(f"object approach did not settle: {map_name} ({x},{y})")
 
     def navigation_excluded_maps(self):
@@ -1456,7 +1476,7 @@ class Game:
             if cm != map_name:
                 # Lost the map (blackout or a battle drift): stage the
                 # return from wherever we are, same drift-proof pattern.
-                if cm == "PewterCity":
+                if cm == "PewterCity" and map_name == "Route2":
                     self.nav_to(18, 34, map_name="PewterCity")
                     self.d.drive(["down"] * 24, frames=28)
                     self.step(8)
@@ -1473,7 +1493,7 @@ class Game:
                     self.nav_warp(4, 7, "ViridianForestSouthGate",
                                   "Route2", approach="down")
                     self.nav_to(x, y, map_name, tries=120)
-                elif cm == "ViridianCity":
+                elif cm == "ViridianCity" and map_name == "Route2":
                     self.nav_to(20, 32, map_name="ViridianCity")
                     self.nav_to(18, 1, map_name="ViridianCity")
                     self.d.drive(["up"] * 24, frames=28)

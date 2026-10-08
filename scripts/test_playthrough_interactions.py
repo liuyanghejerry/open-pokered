@@ -99,6 +99,38 @@ class InteractionRegression(unittest.TestCase):
         self.assertEqual(g.battles, 0)
         self.assertNotIn("BEAT_ROCKET", g.flags)
 
+class ApproachInterruptionRegression(unittest.TestCase):
+    def test_wild_encounter_during_facing_requires_another_approach(self):
+        import playthrough as pt
+        from unittest.mock import patch
+        class Game(pt.Game):
+            def __init__(self):
+                self.state = {'screen':'overworld','map_name':'PokemonTower6F',
+                              'player_x':6,'player_y':7,'player_facing':'Down',
+                              'dialogue_state':None,'script_awaiting_battle':False}
+                self.faces = 0
+                self.battles = []
+            def st(self): return dict(self.state)
+            def live_npcs(self, name): return {(6,8)}
+            def nav_to(self, x, y, name):
+                self.state.update(player_x=x,player_y=y)
+            def face(self, direction):
+                self.faces += 1
+                self.state.update(player_facing=direction.title())
+                if self.faces == 1:self.state['screen']='battle'
+            def battle_loop(self, prefer):
+                self.battles.append(prefer);self.state['screen']='overworld'
+            def cutscene(self): return True
+        g = Game()
+        # Only the object-adjacent tile is reachable in this corridor.
+        def path(name,start,goal,*args,**kwargs):
+            return [(start,None)] if goal==(6,7) else None
+        with patch.object(pt,'bfs',side_effect=path),patch.object(pt,'warp_tiles',return_value=set()):
+            g.approach_object(6,8,'PokemonTower6F')
+        self.assertEqual(g.battles,['run'])
+        self.assertEqual(g.faces,2)
+        self.assertEqual(g.state['screen'],'overworld')
+
 
 if __name__ == "__main__":
     unittest.main()
