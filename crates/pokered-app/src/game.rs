@@ -2671,6 +2671,7 @@ impl PokemonGame {
                 // Post-evolution full-moveset learn → straight into the
                 // "which move should be forgotten?" phase for that member.
                 // SOFTBOILED chosen in the action menu → target-pick mode.
+                let saved_cursor = self.party_screen.cursor();
                 self.party_screen = match (
                     self.pending_bag_item,
                     self.pending_evolve_move_replace,
@@ -2689,6 +2690,9 @@ impl PokemonGame {
                     ),
                     (None, None, None) => PartyScreenState::new(self.save_data.party.to_vec()),
                 };
+                if self.pending_evolve_move_replace.is_none() {
+                    self.party_screen.set_cursor(saved_cursor);
+                }
             }
             GameScreen::PokemonStatsScreen(_) => {
                 if let (Some(audio), Some(stats)) = (&self.audio, &self.stats_screen) {
@@ -2901,6 +2905,8 @@ impl PokemonGame {
     }
 
     fn start_wild_battle(&mut self, species: pokered_data::species::Species, level: u8) {
+        // InitBattleVariables clears wPartyAndBillsPCSavedMenuItem.
+        self.party_screen.set_cursor(0);
         use pokered_core::pokemon::stats::create_pokemon;
 
         self.prepare_gba_battle_allocation();
@@ -3171,6 +3177,7 @@ impl PokemonGame {
     }
 
     fn start_trainer_battle(&mut self, trainer_id: &str, rival_triplet_base: Option<u8>) {
+        self.party_screen.set_cursor(0);
         use pokered_core::pokemon::stats::create_pokemon;
 
         self.prepare_gba_battle_allocation();
@@ -4709,10 +4716,7 @@ impl PokemonGame {
                         ScreenAction::Transition(GameScreen::OptionsMenu)
                     }
                     StartMenuAction::OpenSave => ScreenAction::Transition(GameScreen::SaveMenu),
-                    StartMenuAction::OpenPokemon => {
-                        self.party_screen = PartyScreenState::new(self.save_data.party.to_vec());
-                        ScreenAction::Transition(GameScreen::PartyScreen)
-                    }
+                    StartMenuAction::OpenPokemon => ScreenAction::Transition(GameScreen::PartyScreen),
                     StartMenuAction::OpenItem => {
                         let items: Vec<(pokered_data::items::ItemId, u32)> =
                             self.save_data.game_data.bag.items().to_vec();
@@ -5524,6 +5528,10 @@ impl PokemonGame {
                             };
                             audio.play_sfx(id);
                         }
+                    }
+                    if pc.phase() == pokered_core::pc_screen::PcPhase::BillsMenu {
+                        // BillsPCMenu also clears the shared party selection.
+                        self.party_screen.set_cursor(0);
                     }
                     if pc.take_save_request() {
                         // CHANGE BOX saves the game (save.asm ChangeBox →

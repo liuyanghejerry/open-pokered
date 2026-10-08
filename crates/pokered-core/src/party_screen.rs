@@ -174,6 +174,11 @@ impl PartyScreenState {
         self.cursor
     }
 
+    /// Restore the volatile party/PC selection, clamped after party changes.
+    pub fn set_cursor(&mut self, cursor: usize) {
+        self.cursor = cursor.min(self.party.len().saturating_sub(1));
+    }
+
     pub fn phase(&self) -> PartyScreenPhase {
         self.phase
     }
@@ -381,10 +386,12 @@ impl PartyScreenState {
 
         let count = self.party.len();
 
-        if input.up && self.cursor > 0 {
-            self.cursor -= 1;
-        } else if input.down && self.cursor < count.saturating_sub(1) {
-            self.cursor += 1;
+        if count > 0 {
+            if input.up {
+                self.cursor = (self.cursor + count - 1) % count;
+            } else if input.down {
+                self.cursor = (self.cursor + 1) % count;
+            }
         }
 
         if input.a {
@@ -505,13 +512,17 @@ impl PartyScreenState {
                     return PartyScreenAction::ShowStats(self.cursor);
                 }
                 1 => {
+                    if self.party.len() < 2 {
+                        self.phase = PartyScreenPhase::Browsing;
+                        return PartyScreenAction::Active;
+                    }
                     self.phase =
                         PartyScreenPhase::SwitchTarget { source_index: self.cursor };
                     return PartyScreenAction::Active;
                 }
                 2 => {
                     self.phase = PartyScreenPhase::Browsing;
-                    return PartyScreenAction::Active;
+                    return PartyScreenAction::Cancelled;
                 }
                 _ => unreachable!(),
             }
@@ -535,10 +546,12 @@ impl PartyScreenState {
     ) -> PartyScreenAction {
         let count = self.party.len();
 
-        if input.up && self.cursor > 0 {
-            self.cursor -= 1;
-        } else if input.down && self.cursor < count.saturating_sub(1) {
-            self.cursor += 1;
+        if count > 0 {
+            if input.up {
+                self.cursor = (self.cursor + count - 1) % count;
+            } else if input.down {
+                self.cursor = (self.cursor + 1) % count;
+            }
         }
 
         if input.a {
@@ -581,6 +594,40 @@ pub(crate) mod tests {
             .take(n)
             .map(|&s| make_test_pokemon(s))
             .collect()
+    }
+
+    #[test]
+    fn restored_cursor_clamps_for_shrunken_and_empty_parties() {
+        for count in [0, 1, 3] {
+            let mut screen = PartyScreenState::new(party_of(count));
+            screen.set_cursor(5);
+            assert_eq!(screen.cursor(), count.saturating_sub(1));
+        }
+    }
+
+    #[test]
+    fn party_and_swap_selection_wrap_but_do_not_mutate_until_confirmed() {
+        for phase in [PartyScreenPhase::Browsing, PartyScreenPhase::SwitchTarget { source_index: 0 }] {
+            let original = party_of(3);
+            let mut screen = PartyScreenState::new(original.clone());
+            screen.phase = phase;
+            screen.update_frame(PartyScreenInput { up: true, ..PartyScreenInput::none() });
+            assert_eq!(screen.cursor(), 2);
+            screen.update_frame(PartyScreenInput { down: true, ..PartyScreenInput::none() });
+            assert_eq!(screen.cursor(), 0);
+            assert_eq!(screen.party(), original);
+            assert!(screen.take_pending_swap().is_none());
+        }
+    }
+
+    #[test]
+    fn switch_with_one_member_returns_to_browsing_without_prompt() {
+        let mut screen = PartyScreenState::new(party_of(1));
+        screen.update_frame(PartyScreenInput { a: true, ..PartyScreenInput::none() });
+        screen.update_frame(PartyScreenInput { down: true, ..PartyScreenInput::none() });
+        assert_eq!(screen.update_frame(PartyScreenInput { a: true, ..PartyScreenInput::none() }), PartyScreenAction::Active);
+        assert_eq!(screen.phase(), PartyScreenPhase::Browsing);
+        assert!(screen.take_pending_swap().is_none());
     }
 
     #[test]
@@ -635,13 +682,13 @@ pub(crate) mod tests {
             down: true,
             ..PartyScreenInput::none()
         });
-        assert_eq!(screen.cursor(), 2);
+        assert_eq!(screen.cursor(), 0);
 
         screen.update_frame(PartyScreenInput {
             up: true,
             ..PartyScreenInput::none()
         });
-        assert_eq!(screen.cursor(), 1);
+        assert_eq!(screen.cursor(), 2);
     }
 
     #[test]
@@ -740,7 +787,7 @@ pub(crate) mod tests {
     }
 
     #[test]
-    fn select_cancel_from_action_menu_returns_to_browsing() {
+    fn select_cancel_from_action_menu_exits_party() {
         let party = party_of(2);
         let mut screen = PartyScreenState::new(party);
         screen.update_frame(PartyScreenInput {
@@ -760,7 +807,7 @@ pub(crate) mod tests {
                 a: true,
                 ..PartyScreenInput::none()
             });
-        assert_eq!(result, PartyScreenAction::Active);
+        assert_eq!(result, PartyScreenAction::Cancelled);
         assert_eq!(screen.phase(), PartyScreenPhase::Browsing);
         assert_eq!(screen.cursor(), 0);
     }

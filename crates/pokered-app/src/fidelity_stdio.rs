@@ -29,7 +29,7 @@ fn driver() {
             }
             "stats_state" => {
                 let stats = game.as_ref().unwrap().stats_screen.as_ref().unwrap();
-                serde_json::json!({ "ok": true, "pokemon": stats.pokemon() })
+                serde_json::json!({ "ok": true, "pokemon": stats.pokemon(), "page": format!("{:?}", stats.page()) })
             }
             "audio_state" => {
                 let audio = game.as_ref().unwrap().audio.as_ref().unwrap();

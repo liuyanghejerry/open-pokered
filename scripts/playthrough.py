@@ -745,9 +745,15 @@ class Game:
                         or s2.get("dialogue_state") is not None
                         or s2.get('player_transport') != s.get('player_transport')):
                     break
-                if (s2["player_x"], s2["player_y"]) == (px0, py0):
-                    print(f"   [ntoPINCH] at {cm}({px0},{py0})", flush=True)
-                    self.step(60)
+                actual = (s2["player_x"], s2["player_y"])
+                if actual != path[j + 1][0]:
+                    if actual == (px0, py0):
+                        print(f"   [ntoPINCH] at {cm}({px0},{py0})", flush=True)
+                        self.step(60)
+                    # Collision/turn timing can leave us short of the planned
+                    # endpoint. Never send the remaining turns from that stale
+                    # path: they can now point into a different ladder/door.
+                    break
             self.step(8)
         raise NavError(f"nav_to({x},{y}) did not converge")
 
@@ -2082,6 +2088,10 @@ def main():
                     json.dumps(g.st(), ensure_ascii=False, indent=2))
                 (args.artifacts / "failure-npcs.json").write_text(
                     json.dumps(g.d.cmd(cmd="get_npcs"), ensure_ascii=False, indent=2))
+                (args.artifacts / "failure-flags.json").write_text(
+                    json.dumps(g.d.cmd(cmd="get_flags"), ensure_ascii=False, indent=2))
+                (args.artifacts / "failure-fixture.json").write_text(
+                    json.dumps(g.d.cmd(cmd="export_fixture")["data"], ensure_ascii=False, indent=2))
             except Exception:
                 pass  # The game may have crashed; keep the original exception.
         raise

@@ -55,6 +55,23 @@ class SilphRecoveryTests(unittest.TestCase):
         self.assertEqual(game.nav_warp.call_count,8)
 
     @patch.object(late,'talk_object')
+    def test_first_unlock_survives_blackout_and_is_not_interacted_again(self,talk):
+        game=self.game(1)
+        opened=False
+        def flags(**request):
+            return {'data':{'EVENT_SILPH_CO_3_UNLOCKED_DOOR2':opened,
+                            'EVENT_BEAT_SILPH_CO_RIVAL':game.attempt>1}}
+        def unlock(*args):
+            nonlocal opened
+            opened=True
+        game.d.cmd.side_effect=flags
+        talk.side_effect=unlock
+        late.challenge_silph_rival(game)
+        talk.assert_called_once_with(game,'SilphCo3F',17,9)
+        self.assertEqual(game.attempt,2)
+        self.assertEqual(game.nav_warp.call_count,8)
+
+    @patch.object(late,'talk_object')
     def test_repeated_losses_are_bounded(self,_):
         game=self.game(99)
         with self.assertRaisesRegex(AssertionError,'EVENT_BEAT_SILPH_CO_RIVAL'):

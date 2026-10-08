@@ -11,6 +11,31 @@ from playthrough_late import damage_slot
 
 
 class NavigationRegression(unittest.TestCase):
+    def test_collision_replans_before_a_stale_turn_can_enter_another_warp(self):
+        game = nav.Game.__new__(nav.Game)
+        state = dict(screen='overworld',map_name='PalletTown',player_x=5,player_y=5)
+        game.st = lambda: state.copy()
+        game.npc_blocked = game.live_npcs = lambda _: set()
+        game.step = lambda _: None
+        calls=[]
+        def drive(buttons,frames):
+            direction=buttons[0];calls.append(direction)
+            if len(calls)==1:return  # a transient collision stops RIGHT
+            if len(calls)==2 and direction=='down':
+                state['map_name']='UnexpectedMap'
+                return
+            dx,dy=nav.DELTA[direction]
+            tiles=len(buttons)//nav.FRAMES_PER_TILE
+            state['player_x']+=dx*tiles;state['player_y']+=dy*tiles
+        game.d=SimpleNamespace(drive=drive)
+        paths=[ [((5,5),None),((6,5),'right'),((6,6),'down')],
+                [((5,5),None),((5,4),'up'),((6,4),'right'),((6,5),'down'),((6,6),'down')] ]
+        with patch.object(nav,'bfs',side_effect=paths) as search, patch.object(nav,'warp_tiles',return_value={(5,6)}):
+            game.nav_to(6,6,'PalletTown')
+        self.assertEqual(search.call_count,2)
+        self.assertEqual(calls,['right','up','right','down'])
+        self.assertEqual((state['player_x'],state['player_y']),(6,6))
+
     def test_cutscene_declines_only_the_script_gift_nickname_prompt(self):
         for effect in ["GivePokemon", "ShowChoice"]:
             game = nav.Game.__new__(nav.Game)
