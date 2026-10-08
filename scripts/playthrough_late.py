@@ -779,7 +779,8 @@ def rescue_fuji(g):
     g.nav_warp(18, 9, "PokemonTower5F", "PokemonTower6F")
     # The Rare Candy ball occupies the one-tile passage into the west half.
     if not g.d.cmd(cmd="get_flags")["data"].get("EVENT_GOT_RARE_CANDY_POKEMON_TOWER_6F"):
-        talk_npc(g, "PokemonTower6F", 4)
+        talk_npc(g, "PokemonTower6F", 4,
+                 completion_flag="EVENT_GOT_RARE_CANDY_POKEMON_TOWER_6F")
     g.nav_to(10, 16, "PokemonTower6F")
     assert g.cutscene()
     if g.st()["screen"] == "battle":

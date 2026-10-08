@@ -125,8 +125,8 @@ fn ghost_ball_throw_queues_dodged_event() {
             .iter()
             .find(|(id, _)| *id == ItemId::PokeBall)
             .map(|(_, q)| *q),
-        Some(1),
-        "the ghost-dodged ball is not consumed"
+        None,
+        "the ghost-dodged ball is consumed"
     );
     assert!(battle.captured_mon.is_none());
 }
@@ -166,4 +166,28 @@ fn empty_bag_yields_no_capture() {
     battle.update_frame(input(false, true));
 
     assert!(battle.captured_mon.is_none());
+}
+
+#[test]
+fn revealed_restless_soul_dodges_master_ball_but_regular_marowak_is_catchable() {
+    for tower in [true, false] {
+        let player = vec![create_pokemon(Species::Rattata, 30, [0x9A, 0x78]).unwrap()];
+        let enemy = vec![create_pokemon(Species::Marowak, 30, [0x9A, 0x78]).unwrap()];
+        let mut battle = BattleScreen::from_parties(true, &player, &enemy, None);
+        battle.map_id = if tower { pokered_data::maps::MapId::PokemonTower6F as u8 }
+            else { pokered_data::maps::MapId::Route10 as u8 };
+        battle.player_bag.add_item(ItemId::MasterBall, 2).unwrap();
+        battle.phase = BattlePhase::PlayerMenu;
+        battle.update_frame(input(true, false));
+        battle.update_frame(input(false, true));
+        battle.update_frame(input(false, true));
+        assert_eq!(battle.captured_mon.is_none(), tower);
+        if tower {
+            assert!(matches!(battle.take_anim_event(), Some(BattleAnimEvent::Ball {
+                outcome: BallAnimOutcome::Dodged, .. })));
+            assert!(matches!(&battle.phase, BattlePhase::ShowingText { next_phase, .. }
+                if **next_phase == BattlePhase::EnemyFreeTurnAfterItem));
+        }
+        assert_eq!(battle.player_bag.items(), &[(ItemId::MasterBall, 1)]);
+    }
 }

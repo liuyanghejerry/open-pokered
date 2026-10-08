@@ -74,7 +74,7 @@ fn text_resumes_with_enemy_item_turn(battle: &BattleScreen) -> bool {
 }
 
 #[test]
-fn potion_from_filtered_battle_bag_preserves_key_items() {
+fn potion_from_complete_battle_bag_preserves_key_items() {
     for is_wild in [false, true] {
         let mut mon = create_pokemon(Species::Bulbasaur, 20, [0x9A, 0x78]).unwrap();
         mon.hp -= 10;
@@ -85,7 +85,11 @@ fn potion_from_filtered_battle_bag_preserves_key_items() {
         battle.player_bag.add_item(ItemId::Hm01, 1).unwrap();
         battle.player_bag.add_item(ItemId::Potion, 2).unwrap();
         battle.phase = BattlePhase::PlayerMenu;
-        use_first_bag_item(&mut battle);
+        battle.update_frame(input(true, false));
+        battle.update_frame(input(false, true));
+        battle.update_frame(input(true, false));
+        battle.update_frame(input(true, false));
+        battle.update_frame(input(false, true));
         assert!(matches!(battle.phase, BattlePhase::ItemTargetSelect { item_id: ItemId::Potion }));
         battle.update_frame(input(false, true));
         assert_eq!(bag_quantity(&battle, ItemId::HelixFossil), 1);
@@ -173,7 +177,10 @@ fn trainer_ball_is_blocked_consumes_ball_and_animates() {
     battle.player_bag.add_item(ItemId::PokeBall, 2).unwrap();
     battle.phase = BattlePhase::PlayerMenu;
 
-    use_first_bag_item(&mut battle);
+    battle.update_frame(input(true, false));
+    battle.update_frame(input(false, true));
+    battle.update_frame(input(true, false));
+    battle.update_frame(input(false, true));
 
     // The ball is spent: 2 → 1.
     assert_eq!(bag_quantity(&battle, ItemId::PokeBall), 1);
@@ -416,7 +423,7 @@ fn ether_move_menu_b_returns_to_party_select() {
     );
     assert_eq!(bag_quantity(&battle, ItemId::Ether), 1, "item untouched");
     press_b(&mut battle);
-    assert_eq!(battle.phase, BattlePhase::PlayerMenu);
+    assert_eq!(battle.phase, BattlePhase::BagSelect);
 }
 
 // ── ItemUsePokeDoll (item_effects.asm:1597-1602) ───────────────────────────
@@ -477,10 +484,11 @@ fn poke_doll_refused_in_trainer_battle() {
     // Dismiss the refusal with B (A would re-engage the main menu); play then
     // returns to the menu with the doll intact.
     for _ in 0..20 {
+        if battle.phase == BattlePhase::BagSelect { break; }
         press_b(&mut battle);
         battle.update_frame(BattleInput::none());
     }
-    assert_eq!(battle.phase, BattlePhase::PlayerMenu);
+    assert_eq!(battle.phase, BattlePhase::BagSelect);
 }
 /// wrap_learn_prompt turns a queued blocked move into the TryingToLearn text +
 /// a LearnMoveAsk phase; YES → the forget list; A on slot 0 replaces it and
@@ -553,5 +561,43 @@ fn learn_move_chain_replaces_a_chosen_move() {
         }
         battle.update_frame(super::BattleInput::none());
     }
-    assert_eq!(battle.phase, BattlePhase::PlayerMenu);
+    assert_eq!(battle.phase, BattlePhase::BagSelect);
+}
+
+/// DisplayPlayerBag preserves order and all entries; rejected use/cancel
+/// returns to that same inventory without spending a turn or changing it.
+#[test]
+fn complete_battle_bag_refuses_unusable_item_and_keeps_cursor() {
+    for wild in [false, true] {
+        let player = vec![create_pokemon(Species::Bulbasaur, 20, [0x9A, 0x78]).unwrap()];
+        let enemy = vec![create_pokemon(Species::Rattata, 5, [0x9A, 0x78]).unwrap()];
+        let mut battle = BattleScreen::from_parties(wild, &player, &enemy, None);
+        battle.player_name = Some("ASH".to_string());
+        battle.player_bag.add_item(ItemId::HelixFossil, 1).unwrap();
+        battle.player_bag.add_item(ItemId::Potion, 2).unwrap();
+        battle.phase = BattlePhase::PlayerMenu;
+        use_first_bag_item(&mut battle);
+        assert!(current_message(&battle).contains("OAK: ASH!"));
+        assert!(matches!(&battle.phase, BattlePhase::ShowingText { next_phase, .. }
+            if **next_phase == BattlePhase::BagSelect));
+        for _ in 0..40 {
+            if battle.phase == BattlePhase::BagSelect { break; }
+            press_b(&mut battle); battle.update_frame(BattleInput::none());
+        }
+        assert_eq!(battle.phase, BattlePhase::BagSelect);
+        assert_eq!(battle.bag_menu.as_ref().unwrap().items(),
+            &[(ItemId::HelixFossil, 1), (ItemId::Potion, 2)]);
+        assert_eq!(battle.bag_menu.as_ref().unwrap().cursor(), 0);
+        battle.update_frame(input(true, false));
+        battle.update_frame(input(false, true));
+        assert!(matches!(battle.phase, BattlePhase::ItemTargetSelect { .. }));
+        press_b(&mut battle);
+        assert_eq!(battle.phase, BattlePhase::BagSelect);
+        assert_eq!(battle.bag_menu.as_ref().unwrap().cursor(), 1);
+        battle.update_frame(input(false, true));
+        battle.update_frame(input(false, true));
+        assert!(matches!(&battle.phase, BattlePhase::ShowingText { next_phase, .. }
+            if **next_phase == BattlePhase::BagSelect));
+        assert_eq!(bag_quantity(&battle, ItemId::Potion), 2);
+    }
 }

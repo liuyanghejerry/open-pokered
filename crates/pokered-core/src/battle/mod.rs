@@ -2001,20 +2001,10 @@ impl BattleScreen {
                                 );
                                 return ScreenAction::Continue;
                             }
-                            let usable_items: Vec<(ItemId, u8)> = self
-                                .player_bag
-                                .items()
-                                .iter()
-                                .filter(|(id, _)| {
-                                    let cat = ItemCategory::from_item(*id);
-                                    if self.is_wild {
-                                        cat.is_usable_in_battle()
-                                    } else {
-                                        cat.is_usable_in_trainer_battle()
-                                    }
-                                })
-                                .map(|&(id, q)| (id, q as u8))
-                                .collect();
+                            // DisplayPlayerBag lists the complete inventory; an
+                            // unusable selection prints OAK's refusal in UseItem.
+                            let usable_items: Vec<(ItemId, u8)> = self.player_bag.items()
+                                .iter().map(|&(id, q)| (id, q as u8)).collect();
                             if usable_items.is_empty() {
                                 self.show_text_then(
                                     vec!["No items!".to_string()],
@@ -2117,9 +2107,7 @@ impl BattleScreen {
             }
             BattlePhase::ItemTargetSelect { item_id } => {
                 if input.b {
-                    self.bag_menu = None;
-                    self.battle_menu = BattleMenuState::new();
-                    self.phase = BattlePhase::PlayerMenu;
+                    self.phase = BattlePhase::BagSelect;
                     return ScreenAction::Continue;
                 }
                 if let Some(ref bs) = self.battle_state {
@@ -2895,7 +2883,7 @@ learn {learn_name}!")];
                             .unwrap_or_else(|| "RED".to_string());
                         self.show_text_then(
                             vec![format!("OAK: {player}! This isn't\nthe time to use that!")],
-                            BattlePhase::PlayerMenu,
+                            BattlePhase::BagSelect,
                         );
                     } else {
                         self.use_poke_doll();
@@ -2904,15 +2892,15 @@ learn {learn_name}!")];
                     self.use_poke_flute();
                 } else {
                     self.show_text_then(
-                        vec!["Can't use that here!".to_string()],
-                        BattlePhase::PlayerMenu,
+                        vec![format!("OAK: {}! This isn't\nthe time to use that!", self.player_name.as_deref().unwrap_or("RED"))],
+                        BattlePhase::BagSelect,
                     );
                 }
             }
             ItemCategory::NotUsableInBattle => {
                 self.show_text_then(
-                    vec!["Can't use that here!".to_string()],
-                    BattlePhase::PlayerMenu,
+                    vec![format!("OAK: {}! This isn't\nthe time to use that!", self.player_name.as_deref().unwrap_or("RED"))],
+                    BattlePhase::BagSelect,
                 );
             }
         }
@@ -2929,7 +2917,7 @@ learn {learn_name}!")];
         {
             let active_hp = self.player_hp;
             if active_hp == 0 && item_id != ItemId::Revive && item_id != ItemId::MaxRevive {
-                self.show_text_then(vec!["No effect!".to_string()], BattlePhase::PlayerMenu);
+                self.show_text_then(vec!["It won't have any effect.".to_string()], BattlePhase::BagSelect);
                 return;
             }
         }
@@ -2977,9 +2965,9 @@ learn {learn_name}!")];
                             self.consume_selected_item();
                             (format!("Revived! HP restored by {}!", hp_restored), true)
                         }
-                        HealResult::AlreadyFullHp => ("Already at full HP!".to_string(), false),
-                        HealResult::NotFainted => ("Not fainted!".to_string(), false),
-                        HealResult::NotApplicable => ("No effect!".to_string(), false),
+                        HealResult::AlreadyFullHp => ("It won't have any effect.".to_string(), false),
+                        HealResult::NotFainted => ("It won't have any effect.".to_string(), false),
+                        HealResult::NotApplicable => ("It won't have any effect.".to_string(), false),
                     }
                 }
                 ItemCategory::StatusCure => {
@@ -2989,8 +2977,8 @@ learn {learn_name}!")];
                             self.consume_selected_item();
                             ("Status cured!".to_string(), true)
                         }
-                        StatusCureResult::NoEffect => ("No status to cure!".to_string(), false),
-                        StatusCureResult::NotApplicable => ("No effect!".to_string(), false),
+                        StatusCureResult::NoEffect => ("It won't have any effect.".to_string(), false),
+                        StatusCureResult::NotApplicable => ("It won't have any effect.".to_string(), false),
                     }
                 }
                 ItemCategory::Revive => {
@@ -3003,10 +2991,10 @@ learn {learn_name}!")];
                         _ => ("Can't revive that!".to_string(), false),
                     }
                 }
-                _ => ("No effect!".to_string(), false),
+                _ => ("It won't have any effect.".to_string(), false),
             }
         } else {
-            ("No effect!".to_string(), false)
+            ("It won't have any effect.".to_string(), false)
         };
 
         if item_used && reset_working_on_cure {
@@ -3015,8 +3003,8 @@ learn {learn_name}!")];
             }
         }
         self.sync_display_from_state();
-        self.bag_menu = None;
         if item_used {
+            self.bag_menu = None;
             self.pending_item_sfx = Some(match category {
                 ItemCategory::StatusCure => BattleItemSfx::HealAilment,
                 _ => BattleItemSfx::HealHp,
@@ -3027,7 +3015,7 @@ learn {learn_name}!")];
             if item_used {
                 BattlePhase::EnemyFreeTurnAfterItem
             } else {
-                BattlePhase::PlayerMenu
+                BattlePhase::BagSelect
             },
         );
     }
@@ -3064,9 +3052,9 @@ learn {learn_name}!")];
             _ => ("It won't have any effect.".to_string(), false),
         };
         self.move_menu = None;
-        self.bag_menu = None;
         self.sync_display_from_state();
         if item_used {
+            self.bag_menu = None;
             self.pending_item_sfx = Some(BattleItemSfx::HealAilment);
         }
         self.show_text_then(
@@ -3074,31 +3062,18 @@ learn {learn_name}!")];
             if item_used {
                 BattlePhase::EnemyFreeTurnAfterItem
             } else {
-                BattlePhase::PlayerMenu
+                BattlePhase::BagSelect
             },
         );
     }
 
     fn consume_selected_item(&mut self) {
         if let Some(ref bm) = self.bag_menu {
-            // The battle menu excludes unusable bag entries. Its cursor is
-            // therefore not an index into the complete inventory.
+            // Remove by item identity; deleting a row shifts later entries.
             let Some(&(item_id, _)) = bm.items().get(bm.cursor()) else { return };
             if self.player_bag.remove_item(item_id, 1).is_ok() {
-                let remaining_items: Vec<(ItemId, u8)> = self
-                    .player_bag
-                    .items()
-                    .iter()
-                    .filter(|(id, _)| {
-                        let cat = ItemCategory::from_item(*id);
-                        if self.is_wild {
-                            cat.is_usable_in_battle()
-                        } else {
-                            cat.is_usable_in_trainer_battle()
-                        }
-                    })
-                    .map(|&(id, q)| (id, q as u8))
-                    .collect();
+                let remaining_items: Vec<(ItemId, u8)> = self.player_bag.items()
+                    .iter().map(|&(id, q)| (id, q as u8)).collect();
                 if remaining_items.is_empty() {
                     self.bag_menu = None;
                 } else {
@@ -3294,22 +3269,6 @@ learn {learn_name}!")];
             .unwrap_or_else(|| "RED".to_string())
             .to_uppercase();
         let used_msg = format!("{} used\n{}!", thrower, ball_name);
-        // A Pokémon-Tower GHOST (no Silph Scope) is uncatchable — the ball is dodged and
-        // NOT consumed (the mon is unidentified until the Scope reveals it).
-        if self.is_ghost {
-            // wPokeBallAnimData = $10: toss only — the ghost dodges
-            // (DoBallTossSpecialEffects slides it left for the last frames).
-            self.pending_anim_events.push_back(BattleAnimEvent::Ball {
-                ball: ball_id,
-                shakes: 0,
-                outcome: BallAnimOutcome::Dodged,
-            });
-            self.show_text_then(
-                vec![used_msg, "The GHOST is dodging\nyour POKé BALLs!".to_string()],
-                BattlePhase::PlayerMenu,
-            );
-            return;
-        }
         // BoxFullCannotThrowBall (item_effects.asm:118-137): with a FULL party
         // AND a full box the throw is refused before anything is consumed
         // ("The #MON BOX is full! Can't use that item!"). The old-man demo
@@ -3323,7 +3282,29 @@ learn {learn_name}!")];
         if party_full && self.player_box_full {
             self.show_text_then(
                 vec!["The #MON BOX\nis full! Can't\nuse that item!".to_string()],
-                BattlePhase::PlayerMenu,
+                BattlePhase::BagSelect,
+            );
+            return;
+        }
+        // ItemUseBall: both an unidentified GHOST and RESTLESS_SOUL on
+        // Tower 6F dodge even MASTER BALL. The normal-battle .done tail
+        // still removes a ball and spends the player's turn.
+        let restless_soul = self.map_id == pokered_data::maps::MapId::PokemonTower6F as u8
+            && self.battle_state.as_ref().is_some_and(|bs|
+                bs.enemy.active_mon().species == Species::Marowak);
+        if self.is_ghost || restless_soul {
+            // wPokeBallAnimData = $10: toss only — the ghost dodges
+            // (DoBallTossSpecialEffects slides it left for the last frames).
+            self.pending_anim_events.push_back(BattleAnimEvent::Ball {
+                ball: ball_id,
+                shakes: 0,
+                outcome: BallAnimOutcome::Dodged,
+            });
+            self.consume_selected_item();
+            self.bag_menu = None;
+            self.show_text_then(
+                vec![used_msg, "The GHOST is dodging\nyour POKé BALLs!".to_string()],
+                BattlePhase::EnemyFreeTurnAfterItem,
             );
             return;
         }
