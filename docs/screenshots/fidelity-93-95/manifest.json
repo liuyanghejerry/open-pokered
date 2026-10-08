@@ -4200,9 +4200,9 @@
   "before_archive_sha256": "600793c79d24ed4c655f4de3afadc55f894ed6b3489b0fb84a0794595e91243a",
   "after_archive_sha256": "cb248704c68a6e3c6a30e68eac392ea833427cf131c0caf78ae6973e6f92fcfd",
   "fixture_sha256": "218d53bcf1bb3ae61a88f998c7ba549be6faa58b7ea1013e5b4333f755b532a2",
-  "final_capture_driver_sha256": "df2e482ff88f3e4d058edb3040c8f545c3e700234ce317bb0cb718bc4866ad45",
+  "final_capture_driver_sha256": "4109027ae45a949d4aadfe113bf0f9164e8df85a50a54ab8119f0f62bd4766c4",
   "production_and_test_source_sha256": {
-    "crates/pokered-app/src/game.rs": "cf1aa5f23c4f49332b1ff5fab4ea1b3b1ba00d0d4aa52bd403544e5bf0112003",
+    "crates/pokered-app/src/game.rs": "fbf5e62f614846c386dba740a81bb4b369bd93faa6f5643be20120c85a75ab8a",
     "crates/pokered-app/src/agent_nav.rs": "1259e99e27b7fd6a97ac03e11f79fb677b8b6d05d36e909b143a4b626d83a82e",
     "crates/pokered-app/src/render/overworld.rs": "1cbe90efd7cd29f2dfc22c561df3e1c2488b16f0e12c2444c600d9fa0d13e11d",
     "crates/pokered-core/src/overworld/field_moves.rs": "e2dba40012cd2bb1e8f2599ca0ee5aae2768554f07fc993ce4bfb03cb07ea3b8",
@@ -4212,5 +4212,6 @@
     "crates/pokered-core/src/overworld/tests_npc.rs": "66c9e80936122deae24e0ec83f3c13df60a3f67990388d38a1bb6736a44d0863",
     "crates/pokered-core/src/overworld/update.rs": "6e5b80fb2c18f5c32f57420a7c975cbd8a8155d8c8f4ae0065748e3a16cec672"
   },
-  "final_sparse_candidate_recapture": "all directions repeated twice; all PNG/JSON bytes equal archived after series"
+  "final_sparse_candidate_recapture": "all directions repeated twice; all PNG/JSON bytes equal archived after series",
+  "final_control_ready_recapture": "all four directions twice; all201PNG andJSON byteidentical to archived after"
 }

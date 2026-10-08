@@ -6749,6 +6749,7 @@ impl PokemonGame {
                     && self.overworld.pending_choice.is_none()
                     && self.overworld.active_script_effect_value().is_none()
                     && self.overworld.script_engine_idle()
+                    && self.overworld.boulder_push.is_none()
                     && self.overworld.pending_warp.is_none()
                     && matches!(
                         self.overworld.warp_fade_state,
@@ -8627,6 +8628,33 @@ mod tui_runtime_regressions;
 #[cfg(all(test, feature = "debug-server"))]
 mod gift_dialogue_debug_tests {
     use super::*;
+    #[test]
+    fn control_ready_waits_for_boulder_slide_dust_and_graphics_restore() {
+        use pokered_core::overworld::{Direction,OverworldScreen};
+        use pokered_data::impl_traits::PokemonRedData;
+        let mut game=PokemonGame::new_with_options(
+            GameVersion::Red,None,None,None,false,None,false,true,None,
+        );
+        game.state.screen=GameScreen::Overworld;
+        game.overworld=OverworldScreen::new(MapId::SeafoamIslands1F,None,PokemonRedData);
+        game.overworld.run_on_load();
+        let idle=InputState::new();
+        for _ in 0..120 {game.update(&idle);}
+        game.overworld.state.player.x=18;game.overworld.state.player.y=9;
+        game.overworld.state.player.facing=Direction::Down;
+        game.overworld.strength_active=true;
+        let mut down=InputState::new();down.press(GbButton::Down);
+        game.update(&down);game.update(&down);
+        assert!(game.overworld.boulder_push.is_some());
+        let mut elapsed=0;
+        while game.overworld.boulder_push.is_some() {
+            assert!(!game.debug_condition_met("control_ready"));
+            game.update(&idle);elapsed+=1;assert!(elapsed<=75);
+        }
+        assert!(elapsed>=74);
+        assert!(game.debug_condition_met("control_ready"));
+    }
+
     #[test]
     fn control_ready_waits_for_the_entire_arrival_door_step() {
         let mut game = PokemonGame::new_with_options(
