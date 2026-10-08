@@ -49,7 +49,7 @@ game_scene CinnabarLabTradeRoom {
             @if (getFlag("NPC_TRADE_CANCELLED")) {
               @speaker("") { @t("Well, if you don't want\nto...", "好吧，如果你不想的话……") }
             } @else {
-              @speaker("") { @t("...This is no RAICHU.\n\nIf you get one, trade it\nwith me!", "……这不是雷丘。\n\n如果你弄到一只，来跟我换吧！") }
+              @speaker("") { @t("Hmmm? This isn't RAICHU.\n\nThink of me when you get\none.", "……这不是雷丘。\n\n如果你弄到一只，来跟我换吧！") }
             }
           }
         }
@@ -88,7 +88,7 @@ game_scene CinnabarLabTradeRoom {
             @if (getFlag("NPC_TRADE_CANCELLED")) {
               @speaker("") { @t("That's too bad.", "那太可惜了。") }
             } @else {
-              @speaker("") { @t("Hmmm? This isn't VENONAT.\n\nThink of me when you get\none.", "嗯？这不是毛球。\n\n等你弄到一只，要记得我哦。") }
+              @speaker("") { @t("...This is no VENONAT.\n\nIf you get one, trade it\nwith me!", "嗯？这不是毛球。\n\n等你弄到一只，要记得我哦。") }
             }
           }
         }

@@ -166,8 +166,8 @@ game_scene CinnabarLabFossilRoom {
           traded = tradePokemon("PONYTA", "SEEL", "SAILOR")
           @if (traded) {
             setFlag("EVENT_TRADED_FOR_SAILOR")
-            @speaker("") { @t("Hey thanks!", "嘿，谢谢！") }
             @speaker("") { @t("<PLAYER> traded PONYTA for\nSEEL!", "<PLAYER>用小火马换来了小海\n狮！") }
+            @speaker("") { @t("Hey thanks!", "嘿，谢谢！") }
           } @else {
             @if (getFlag("NPC_TRADE_CANCELLED")) {
               @speaker("") { @t("Awww! Oh well...", "哎呀！那就算了……") }
