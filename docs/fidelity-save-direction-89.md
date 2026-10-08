@@ -16,3 +16,5 @@
 194 项 debug 应用测试通过。此检查覆盖普通移动后停车的真实保存；没有宣告全部 native SRAM 可由原作 ROM 完整游玩，也未覆盖转向中或脚本移动时的最后停止方向历史。转向暂停及完整移动时序另作审计。
 
 纯存档逻辑、schema 注释和技能说明修改，不改变屏幕输出，按 AGENTS.md 无需前后截图。复现：`cargo test -p pokered-app --features debug-server --lib actual_save_menu_writes_original_direction_masks_89`。
+
+未优化应用全目标回归：484 项、48 套通过（库与二进制各执行保存回归）。
