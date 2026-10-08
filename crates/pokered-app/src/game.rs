@@ -3941,12 +3941,22 @@ impl PokemonGame {
                                 a: input.is_just_pressed(GbButton::A),
                                 b: input.is_just_pressed(GbButton::B),
                             };
+                            let was_viewing_stats = self.link_cable.stats().is_some();
                             let need = self.link_cable.update_with_navigation(
                                 psi,
                                 &self.save_data.party.to_vec(),
                                 input.is_just_pressed(GbButton::Left)
                                     || input.is_just_pressed(GbButton::Right),
                             );
+                            // TradeCenter_DisplayStats calls StatusScreen, whose
+                            // PlayCry is also required by this modal overlay.
+                            if !was_viewing_stats {
+                                if let (Some(stats), Some(audio)) =
+                                    (self.link_cable.stats(), self.audio.as_ref())
+                                {
+                                    play_species_cry(audio, stats.pokemon().species);
+                                }
+                            }
                             self.handle_flow_need(need);
                         }
                         if self.link_cable.phase() == &CableClubPhase::BattleSetup {
@@ -5499,7 +5509,9 @@ impl PokemonGame {
                     ScreenAction::Transition(GameScreen::Overworld)
                 } else {
                     let pc = self.pc_screen.as_mut().unwrap();
-                    if menu_input.a && !pc.waiting_for_sound() {
+                    // PCMainMenu / PlayerPCMenu set BIT_NO_MENU_BUTTON_SOUND.
+                    // The standalone BillsPc entry retains its ordinary key sound.
+                    if menu_input.a && pc.entry() == PcEntry::BillsPc && !pc.waiting_for_sound() {
                         if let Some(ref audio) = self.audio { audio.play_sfx(SfxId::PressAB); }
                     }
                     let pc_action = {
@@ -8534,3 +8546,167 @@ mod gift_dialogue_debug_tests {
 #[cfg(all(test, feature = "debug-server"))]
 #[path = "fidelity_stdio.rs"]
 mod fidelity_stdio;
+
+#[cfg(all(test, not(target_os = "none"), not(target_arch = "wasm32")))]
+mod link_stats_cry_fidelity_tests {
+    use super::*;
+    use pokered_core::link::transport::ChannelTransport;
+    use pokered_core::pokemon::stats::create_pokemon_with_moves;
+    use pokered_data::{moves::MoveId, species::Species};
+
+    fn fixture(
+        species: Species,
+        x: u16,
+        facing: pokered_core::overworld::Direction,
+    ) -> PokemonGame {
+        let mut g = PokemonGame::new_with_options(
+            GameVersion::Red,
+            None,
+            None,
+            None,
+            false,
+            None,
+            false,
+            true,
+            #[cfg(feature = "debug-server")]
+            None,
+        );
+        g.audio = Some(AudioOutput::new_pcm());
+        let mon = create_pokemon_with_moves(
+            species,
+            25,
+            [0x99, 0x88],
+            [MoveId::Tackle, MoveId::None, MoveId::None, MoveId::None],
+        )
+        .unwrap();
+        g.save_data.party = pokered_core::pokemon::party::Party::from(vec![mon]);
+        g.state.screen = GameScreen::Overworld;
+        g.main_menu.last_choice = Some(pokered_core::game_state::MainMenuChoice::Continue);
+        g.overworld = OverworldScreen::new(MapId::TradeCenter, None, PokemonRedData);
+        g.overworld.run_on_load();
+        g.overworld.set_rng_seed(0);
+        g.overworld.state.player.x = x;
+        g.overworld.state.player.y = 4;
+        g.overworld.state.player.facing = facing;
+        g
+    }
+    fn button(b: GbButton) -> InputState {
+        let mut input = InputState::new();
+        input.press(b);
+        input
+    }
+    fn channels(g: &PokemonGame) -> Vec<bool> {
+        let m = g.audio.as_ref().unwrap().manager.lock().unwrap();
+        (0..4)
+            .map(|ch| m.sequencer.is_sfx_channel_active(ch))
+            .collect()
+    }
+
+    #[test]
+    fn actual_trade_room_peer_stats_plays_selected_species_cry_once() {
+        use pokered_core::overworld::Direction;
+        let mut host = fixture(Species::Bulbasaur, 3, Direction::Right);
+        let mut peer = fixture(Species::Pikachu, 6, Direction::Left);
+        let (a, b) = ChannelTransport::new_pair();
+        host.attach_link_transport(Box::new(a), LinkRole::Host);
+        peer.attach_link_transport(Box::new(b), LinkRole::Guest);
+        let idle = InputState::new();
+        for _ in 0..120 {
+            host.update(&idle);
+            peer.update(&idle);
+        }
+        assert_eq!(host.link_cable.phase(), &CableClubPhase::InRoom);
+        host.update(&button(GbButton::A)); // Actual table/sign interaction, not on_gameboy_used.
+        for _ in 0..120 {
+            host.update(&idle);
+            peer.update(&idle);
+        }
+        assert!(
+            matches!(
+                peer.link_cable.phase(),
+                CableClubPhase::PeerPrompt {
+                    kind: LinkKind::Trade,
+                    ..
+                }
+            ),
+            "{:?}",
+            peer.link_cable.phase()
+        );
+        peer.update(&button(GbButton::A));
+        for _ in 0..120 {
+            host.update(&idle);
+            peer.update(&idle);
+        }
+        assert_eq!(host.link_cable.phase(), &CableClubPhase::TradeSelect);
+        assert_eq!(peer.link_cable.phase(), &CableClubPhase::TradeSelect);
+        host.update(&button(GbButton::Right));
+        host.update(&idle);
+        assert_eq!(host.link_cable.peer_cursor(), Some(0));
+        assert_eq!(channels(&host), vec![false; 4]);
+        host.update(&button(GbButton::A));
+        assert_eq!(
+            host.link_cable.stats().unwrap().pokemon().species,
+            Species::Pikachu
+        );
+        host.update(&idle);
+        let expected = AudioOutput::new_pcm();
+        play_species_cry(&expected, Species::Pikachu);
+        expected.update_frame();
+        let expected_channels = {
+            let m = expected.manager.lock().unwrap();
+            (0..4)
+                .map(|ch| m.sequencer.is_sfx_channel_active(ch))
+                .collect::<Vec<_>>()
+        };
+        println!(
+            "link stats first tick actual={:?}, expected={:?}",
+            channels(&host),
+            expected_channels
+        );
+        assert_eq!(channels(&host), expected_channels);
+        // Compare cry channels' APU registers, excluding the background wave
+        // channel. The selected species controls both pitch and duration.
+        for address in (0xFF10..=0xFF19).chain(0xFF20..=0xFF23) {
+            let actual = host
+                .audio
+                .as_ref()
+                .unwrap()
+                .manager
+                .lock()
+                .unwrap()
+                .apu
+                .read_register(address);
+            let reference = expected.manager.lock().unwrap().apu.read_register(address);
+            assert_eq!(actual, reference, "APU {address:#x}");
+        }
+        let mut actual_ticks = 1;
+        while host.audio.as_ref().unwrap().is_sfx_playing() && actual_ticks < 600 {
+            host.update(&idle);
+            peer.update(&idle);
+            actual_ticks += 1;
+        }
+        let mut expected_ticks = 1;
+        while expected.is_sfx_playing() && expected_ticks < 600 {
+            expected.update_frame();
+            expected_ticks += 1;
+        }
+        assert_eq!(actual_ticks, expected_ticks);
+        println!("selected Pikachu cry ticks={actual_ticks}");
+        assert_eq!(channels(&host), vec![false; 4]);
+        host.update(&button(GbButton::B));
+        assert_eq!(
+            host.link_cable.stats().unwrap().page(),
+            pokered_core::stats_screen::StatsPage::Moves
+        );
+        host.update(&idle);
+        assert_eq!(
+            channels(&host),
+            vec![false; 4],
+            "page advance must not repeat cry"
+        );
+        host.update(&button(GbButton::A));
+        assert!(host.link_cable.stats().is_none());
+        assert_eq!(host.link_cable.peer_cursor(), Some(0));
+        assert_eq!(channels(&host), vec![false; 4], "exit must not repeat cry");
+    }
+}
