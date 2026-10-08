@@ -114,6 +114,16 @@ def item_id(name):
     return got
 
 
+@lru_cache(maxsize=1)
+def item_variants():
+    """Canonical serde variants, including HMs/TMs outside item_list.json."""
+    with (DATA / "data" / "items" / "item_list.json").open() as source:
+        names = json.load(source)["items"]
+    names += [f"Hm{i:02d}" for i in range(1, 6)]
+    names += [f"Tm{i:02d}" for i in range(1, 51)]
+    return {name.upper(): name for name in names}
+
+
 # ── the champion preset ─────────────────────────────────────────────────
 # Story-completion flags for a finished first playthrough. Sources: every
 # `@if (!getFlag(...))` gate across maps/*/script.scene (a negated gate is
@@ -396,8 +406,11 @@ class SaveBuilder:
 
     def give_item(self, item, qty):
         """`item` is the Debug name (PokeBall) or the const (POKE_BALL)."""
-        name = "".join(w.capitalize()
-                       for w in item.strip().upper().replace(" ", "_").split("_"))
+        key = item.strip().upper().replace(" ", "").replace("_", "")
+        try:
+            name = item_variants()[key]
+        except KeyError:
+            raise KeyError(f"unknown item {item!r}") from None
         items = self.data["game_data"]["bag"]["items"]
         for entry in items:
             if entry[0] == name:
