@@ -1,0 +1,116 @@
+{
+  "baseline": "0c5d8c9adf32c9054ef48e4cb0d3c002bea93b18",
+  "implementation": "065a48b18673df1cf6fb26b139a1a863d98576d5",
+  "reference_source": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+  "sram_sha256": "2fd1896882a94f37ac035ccc8bde8629d792772d896c5d186da2b50f8cc89b8f",
+  "fixture": "actual retail Red SAVE after depositing Exeggutor90 at Viridian center13,4; Mew5 leads five-member party; Continue through title menu, Up then actual Bill PC, STATS",
+  "input": "each entry/page2/exit key held at t0,t1; released t2. One update/tick and PNG per frame. No time resampling. English, 160x144; explicit DMG palette 255/170/85/0",
+  "binary_sha256": {
+    "before": "bb0812471d06e1da51b1e8b9f0ae06500f3311143caf8f8f0c6093f6a416db14",
+    "after": "ad7399b40a5f5d9a5ecf6f616f0a6e590f8b6d985418d2f4173061c58ae94b3d"
+  },
+  "repeat_checks": [
+    {
+      "case": "party",
+      "implementation": "reference",
+      "identical_files": 102
+    },
+    {
+      "case": "party",
+      "implementation": "before",
+      "identical_files": 104
+    },
+    {
+      "case": "party",
+      "implementation": "after",
+      "identical_files": 104
+    },
+    {
+      "case": "box",
+      "implementation": "reference",
+      "identical_files": 102
+    },
+    {
+      "case": "box",
+      "implementation": "before",
+      "identical_files": 104
+    },
+    {
+      "case": "box",
+      "implementation": "after",
+      "identical_files": 104
+    }
+  ],
+  "cases": {
+    "party": {
+      "white_exact_frames": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "nr50_exact_frames": [
+        -1,
+        99
+      ],
+      "menu_input_hook_frame": 6,
+      "continue_capture_frame": 570,
+      "exit_trigger_native_frame": 1320,
+      "before_facing": "Left",
+      "after_facing": "Down"
+    },
+    "box": {
+      "white_exact_frames": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "nr50_exact_frames": [
+        -1,
+        99
+      ],
+      "menu_input_hook_frame": 6,
+      "continue_capture_frame": 570,
+      "exit_trigger_native_frame": 1318,
+      "before_facing": "Left",
+      "after_facing": "Down"
+    }
+  },
+  "scope": "PC return white frames1..6 and input resume6; Continue facing. Whole stats entry/page2/return animation PARTIAL; fonts and dialogue layout excluded.",
+  "capture_helper_sha256": "e63727e2ba14d85c06ade4972b78361407adb0edd81f6364b823d679d9f9905c",
+  "reference_continue": {
+    "state_sha256": "fe8b7971e8c5b2b0b7e406035d75b2aca70dfd5d10918291c2b47640d2aae61a",
+    "state": {
+      "wCurMap": 41,
+      "wXCoord": 13,
+      "wYCoord": 4,
+      "wPlayerDirection": 4,
+      "wSpritePlayerStateData1FacingDirection": 0
+    },
+    "setup": "retail actual Continue; capture before any directional input; former pc-saved-continued.state was after Up and is invalid for this comparison"
+  },
+  "test_results": {
+    "debug_app": 193,
+    "debug_ignored": 14,
+    "unoptimized_all_app_targets": 482,
+    "all_app_suites": 48
+  },
+  "known_residuals": [
+    "exit t0 original retains a species/scanline-dependent top fragment; current uses full-frame white",
+    "normal party-list stats exit delay remains immediate",
+    "box first-page loader and PC party Mew cry start need further measurements",
+    "moves-page construction and input delay varies by move IDs/level/growth; current remains immediate",
+    "possible overworld camera8px translation under investigation"
+  ],
+  "rejected_probes": [
+    "skip-intro constructor bypassed actual Continue; rejected for Continue behavior conclusions",
+    "pc-saved-continued.state is after Up; rejected for Continue facing. Fresh retail run captured pre-direction input",
+    "earlier page2 matrix changed loadedMoves only while GetMaxPP reads party/boxMoves; rejected for general timing prediction"
+  ]
+}
