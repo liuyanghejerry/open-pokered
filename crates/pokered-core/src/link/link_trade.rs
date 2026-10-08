@@ -110,6 +110,8 @@ pub struct LinkTradeManager {
     role: Option<crate::link::LinkRole>,
     remote_party: Option<Party>,
     remote_name: String,
+    local_presentation_ready: bool,
+    remote_presentation_ready: bool,
 }
 
 impl LinkTradeManager {
@@ -127,6 +129,8 @@ impl LinkTradeManager {
             role: None,
             remote_party: None,
             remote_name: String::new(),
+            local_presentation_ready: false,
+            remote_presentation_ready: false,
         }
     }
 
@@ -386,6 +390,10 @@ impl LinkTradeManager {
             }
         }
         match (&self.state, msg) {
+            (LinkTradeState::Completed, NetworkMessage::TradePresentationReady) => {
+                self.remote_presentation_ready = true;
+                LinkTradePollResult::Pending
+            }
             (
                 LinkTradeState::Idle
                 | LinkTradeState::WaitingForTradeResponse
@@ -605,6 +613,8 @@ impl LinkTradeManager {
         self.remote_confirmed = false;
         self.pending_remote_mon = None;
         self.pending_local_mon = None;
+        self.local_presentation_ready = false;
+        self.remote_presentation_ready = false;
     }
 
     pub fn reset_for_new_trade(&mut self) {
@@ -784,6 +794,20 @@ impl LinkTradeDriver {
         self.manager.reset_selection();
         self.manager.remote_party = None;
         self.manager.state = LinkTradeState::Idle;
+    }
+
+    /// Serial_PrintWaitingTextAndSyncAndExchangeNybble runs only after the
+    /// movie, forced evolution and move learning have all returned.
+    pub fn finish_presentation(&mut self, transport: &mut dyn NetworkTransport<NetworkMessage>) -> Result<(), LinkTradeError> {
+        if self.manager.state == LinkTradeState::Completed && !self.manager.local_presentation_ready {
+            transport.send(NetworkMessage::TradePresentationReady)?;
+            self.manager.local_presentation_ready = true;
+        }
+        Ok(())
+    }
+
+    pub fn both_presentations_ready(&self) -> bool {
+        self.manager.local_presentation_ready && self.manager.remote_presentation_ready
     }
 
     /// Continue at the selection screen with the post-evolution party.

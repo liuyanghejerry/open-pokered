@@ -57,6 +57,12 @@ pub fn draw_link_flow(
 ) {
     let language = if is_zh { Lang::Zh } else { Lang::En };
 
+    if matches!(flow.phase(), crate::link::cable_club::CableClubPhase::TradeSync
+        | crate::link::cable_club::CableClubPhase::TradeSyncDelay { .. }
+        | crate::link::cable_club::CableClubPhase::TradeCompletionDelay { .. }
+        | crate::link::cable_club::CableClubPhase::TradeCompleted) {
+        FrameBufferPainter::new(fb).clear(Rgba::INK_WHITE);
+    }
     if let Some(stats) = flow.stats() {
         super::draw_stats_screen(stats, resources, fb, language);
         return;
