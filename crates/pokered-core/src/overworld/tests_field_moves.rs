@@ -1039,3 +1039,30 @@ fn softboiled_truncates_the_fifth_like_gen1_divide() {
     assert_eq!(user.hp, 99 - 19);
     assert_eq!(target.hp, 1 + 19);
 }
+
+#[test]
+fn seafoam_hole_waits_for_dust_and_keeps_the_lower_floor_event() {
+    use pokered_data::event_flags::EventFlag;
+    let mut screen=screen_on(MapId::SeafoamIslands1F);
+    screen.npc_states.clear();
+    screen.npc_states.push(make_boulder(17,5));
+    screen.npc_states[0].walk_counter=16;
+    screen.boulder_push=Some(presentation::BoulderPushState {
+        npc_index:0,direction:Direction::Down,anchor:(17,4),
+        origin:(17,5),destination:(17,6),frame:0,
+    });
+    let flag=EventFlag::EVENT_SEAFOAM1_BOULDER1_DOWN_HOLE;
+    for frame in 1..=75 {
+        screen.advance_boulder_push();
+        assert_eq!(screen.npc_states[0].visible,frame<75);
+        assert_eq!(screen.unified_flags.check(flag),frame==75);
+    }
+    assert_eq!((screen.npc_states[0].x,screen.npc_states[0].y),(17,6));
+    assert!(screen.boulder_push.is_none());
+    let saved=screen.unified_flags.to_event_bytes();
+    let mut lower=screen_on(MapId::SeafoamIslandsB1F);
+    lower.set_event_flags_bytes(&saved);
+    lower.run_on_load();
+    for _ in 0..120 {lower.update_frame(OverworldInput::new(false,false,false,false,false,false,false,false));}
+    assert!(lower.npc_states.iter().any(|n|n.visible && n.sprite_id==pokered_data::sprites::SpriteId::Boulder as u8));
+}

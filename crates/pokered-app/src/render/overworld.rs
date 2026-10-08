@@ -145,6 +145,26 @@ fn blit_tile_clipped_flipped(
     );
 }
 
+/// DMG sprite priority: smaller raw X wins, then earlier OAM slot.
+/// Actor slots precede smoke36..39, so an equal X also hides smoke.
+fn mask_smoke_with_actor(
+    smoke: &mut Option<Vec<(usize,u8,Rgba)>>, fb: &FrameBuffer,
+    tile: &Tile, x: i32, y: i32, palette: &Palette, flip_h: bool,
+) {
+    let Some(pixels)=smoke.as_mut() else {return;};
+    let raw_x=(x+8) as u8;
+    for row in 0..8 {
+        let colors=tile.render_row(row,palette);
+        for col in 0..8 {
+            let px=x+col as i32;let py=y+row as i32;
+            if px<0 || py<0 || px>=fb.width() as i32 || py>=fb.height() as i32 {continue;}
+            if colors[if flip_h {7-col} else {col}]==Rgba::TRANSPARENT {continue;}
+            let offset=py as usize*fb.width() as usize+px as usize;
+            pixels.retain(|&(index,smoke_x,_)|index!=offset || raw_x>smoke_x);
+        }
+    }
+}
+
 #[inline]
 fn blit_priority_bg_tile(fb: &mut FrameBuffer, tile: &Tile, x: i32, y: i32) {
     fb.blit_gb_tile_indices(x, y, tile, true, false, false);
@@ -1267,11 +1287,13 @@ fn draw_overworld_impl(
             }
             fb.clear(Rgba::WHITE);
         }
-        // OAM slots 36..39 have lower sprite priority than player/NPC OAM.
-        // Compose smoke on the map first, then let actor sprites cover it.
+        // Keep smoke candidates until actor opacity and raw X are known.
+        // DMG priority is X first, OAM order only when X ties.
+        let mut smoke_pixels: Option<Vec<(usize,u8,Rgba)>> = None;
         let visible_dust=screen.boulder_push.map(|p|p.visible_dust())
             .unwrap_or_else(||screen.boulder_dust.is_active().then_some(screen.boulder_dust));
         if let Some(dust)=visible_dust {
+            smoke_pixels=Some(Vec::with_capacity(256));
             let (ax,ay)=dust.anchor();
             let anchor_x=(ax as i32*2-view_origin_tx)*TILE_SIZE as i32-view_sub_x;
             let anchor_y=(ay as i32*2-view_origin_ty)*TILE_SIZE as i32-view_sub_y+ACTOR_CELL_Y_OFFSET;
@@ -1302,7 +1324,11 @@ fn draw_overworld_impl(
                                 // Original downward clipping corrupts the upper
                                 // right entry to $a0: behind BG, X-flipped, OBP0.
                                 if entry.attributes&0x80!=0 && fb.get_pixel(px as u32,py as u32)!=Some(Rgba::WHITE) {continue;}
-                                fb.set_pixel(px as u32,py as u32,color);
+                                let offset=py as usize*fb.width() as usize+px as usize;
+                                let pixels=smoke_pixels.as_mut().unwrap();
+                                if let Some(pixel)=pixels.iter_mut().find(|p|p.0==offset) {
+                                    if entry.x<pixel.1 {*pixel=(offset,entry.x,color);}
+                                } else {pixels.push((offset,entry.x,color));}
                             }
                         }
                     }
@@ -1513,6 +1539,8 @@ fn draw_overworld_impl(
                             continue;
                         }
 
+                        mask_smoke_with_actor(&mut smoke_pixels,fb,tile_ts.get(tile_idx),
+                            (draw_x+col*TILE_SIZE) as i32,(draw_y+row*TILE_SIZE) as i32,&sprite_pal,flip_h);
                         blit_single_tile_flipped(
                             fb,
                             tile_ts,
@@ -1696,6 +1724,7 @@ fn draw_overworld_impl(
 
                         let tx = npc_px_x + (col * TILE_SIZE) as i32;
                         let ty = npc_px_y + (row * TILE_SIZE) as i32;
+                        mask_smoke_with_actor(&mut smoke_pixels,fb,ts.get(tile_idx),tx,ty,&sprite_pal,flip_h);
                         blit_tile_clipped_flipped(fb, ts, tile_idx, tx, ty, &sprite_pal, flip_h);
                     }
                 }
@@ -1751,10 +1780,18 @@ fn draw_overworld_impl(
                             }
                             let tx = npc_px_x + (col * TILE_SIZE) as i32;
                             let ty = npc_px_y + (row * TILE_SIZE) as i32;
+                            mask_smoke_with_actor(&mut smoke_pixels,fb,ts.get(tile_idx),tx,ty,&sprite_pal,false);
                             blit_tile_clipped_flipped(fb, ts, tile_idx, tx, ty, &sprite_pal, false);
                         }
                     }
                 }
+            }
+        }
+
+        if let Some(pixels)=smoke_pixels {
+            let width=fb.width() as usize;
+            for (i,_,color) in pixels {
+                fb.set_pixel((i%width) as u32,(i/width) as u32,color);
             }
         }
 
@@ -3193,7 +3230,7 @@ mod elevator_edge_tests {
         s.update_frame(hold_down);
         s.update_frame(hold_down);
         assert!(!s.boulder_dust.is_active(), "stone slides before smoke appears");
-        for _ in 0..46 {s.update_frame(pokered_core::overworld::OverworldInput::default());}
+        for _ in 0..46 {s.update_frame(pokered_core::overworld::OverworldInput::new(false,false,false,false,false,false,false,false));}
         assert!(s.boulder_dust.is_active(), "dust appears after the slide");
 
         let after = render_screen(&mut s);

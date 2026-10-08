@@ -525,6 +525,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             self.boulder_dust = presentation::BoulderDustState::inactive();
         }
         if push.frame == presentation::BoulderPushState::LAST_FRAME {
+            self.commit_seafoam_boulder_hole(push.npc_index);
             self.tried_push_boulder = false;
             self.boulder_dust_frames = 0;
             self.boulder_push = None;
@@ -536,19 +537,6 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
 
     fn commit_boulder_landing(&mut self, npc_index: usize) {
         let (x,y) = (self.npc_states[npc_index].x,self.npc_states[npc_index].y);
-                // Seafoam Islands boulder-into-hole: pushing a boulder onto one
-                // of the floor's hole tiles drops it through (the original hides
-                // the object and sets the per-boulder DOWN_HOLE event; the lower
-                // floor reveals its twin via those events).
-                if let Some(flag_name) = seafoam_hole_flag_for(self.state.current_map, x, y)
-                {
-                    self.npc_states[npc_index].visible = false;
-                    if let Some(flag) =
-                        pokered_data::event_flags::EventFlag::from_name(flag_name)
-                    {
-                        self.unified_flags.set(flag);
-                    }
-                }
                 if self.state.current_map == MapId::VictoryRoad3F && (x, y) == (23, 15) {
                     self.npc_states[npc_index].visible = false;
                     self.unified_flags.set(pokered_data::event_flags::EventFlag::EVENT_VICTORY_ROAD_3_BOULDER_ON_SWITCH2);
@@ -570,6 +558,25 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     }
                     if let Some(map) = self.map_data.as_mut() {
                         map.set_block(block_x, block_y, open_block);
+                    }
+                }
+    }
+
+    /// Seafoam scripts test BIT_PUSHED_BOULDER, set only after dust and
+    /// graphics restoration. A stone remains visible throughout its slide.
+    fn commit_seafoam_boulder_hole(&mut self, npc_index: usize) {
+        let (x,y)=(self.npc_states[npc_index].x,self.npc_states[npc_index].y);
+                // Seafoam Islands boulder-into-hole: pushing a boulder onto one
+                // of the floor's hole tiles drops it through (the original hides
+                // the object and sets the per-boulder DOWN_HOLE event; the lower
+                // floor reveals its twin via those events).
+                if let Some(flag_name) = seafoam_hole_flag_for(self.state.current_map, x, y)
+                {
+                    self.npc_states[npc_index].visible = false;
+                    if let Some(flag) =
+                        pokered_data::event_flags::EventFlag::from_name(flag_name)
+                    {
+                        self.unified_flags.set(flag);
                     }
                 }
     }

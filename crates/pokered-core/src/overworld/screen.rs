@@ -893,8 +893,8 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     pub(crate) boulder_dust_frames: u8,
     /// The boulder-push smoke puff (`AnimateBoulderDust`, dust_smoke.asm) —
     /// a frame-stepped 2×2 smoke-tile block anchored to the push spot. The
-    /// renderer draws it while [`BoulderDustState::is_active`]; `update.rs`
-    /// ticks it every frame.
+    /// renderer presents its OAM one frame later during the blocking push.
+    /// Logical palette changes apply immediately.
     pub boulder_dust: presentation::BoulderDustState,
     /// Blocking scripted boulder slide, smoke, and graphics restoration.
     pub boulder_push: Option<presentation::BoulderPushState>,
