@@ -34,6 +34,15 @@ impl StatsScreenState {
         }
     }
 
+    /// StatusScreen recalculates MON_STATS for BOX_DATA at the stored box
+    /// level, without changing the saved current HP or the box itself.
+    pub fn from_box(mut pokemon: Pokemon) -> Self {
+        let stored_hp = pokemon.hp;
+        crate::pokemon::stats::recalculate_stats(&mut pokemon);
+        pokemon.hp = stored_hp;
+        Self::new(pokemon)
+    }
+
     pub fn pokemon(&self) -> &Pokemon {
         &self.pokemon
     }
@@ -69,6 +78,24 @@ impl StatsScreenState {
 mod tests {
     use super::*;
     use pokered_data::species::Species;
+
+    #[test]
+    fn box_stats_restore_derived_values_from_sram_without_healing() {
+        use crate::save::ser_pokemon::{serialize_box_mon, deserialize_box_mon};
+        let mut mon = crate::pokemon::stats::create_pokemon(Species::Pikachu, 12, [0x9a, 0x78]).unwrap();
+        mon.hp = 7;
+        mon.stat_exp = [10000, 20000, 30000, 40000, 50000];
+        crate::pokemon::stats::recalculate_stats(&mut mon);
+        let mut bytes = alloc::vec::Vec::new();
+        serialize_box_mon(&mon, &mut bytes);
+        let restored = deserialize_box_mon(&bytes).unwrap();
+        assert_eq!(restored.attack, 0);
+        let displayed = StatsScreenState::from_box(restored).pokemon;
+        assert_eq!((displayed.max_hp, displayed.attack, displayed.defense, displayed.speed, displayed.special),
+            (mon.max_hp, mon.attack, mon.defense, mon.speed, mon.special));
+        assert_eq!(displayed.hp, mon.hp);
+        assert_eq!(restored.attack, 0);
+    }
 
     fn make_test_pokemon(species: Species) -> Pokemon {
         crate::pokemon::stats::create_pokemon(species, 5, [0xFF, 0xFF]).unwrap()

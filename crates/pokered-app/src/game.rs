@@ -2690,7 +2690,11 @@ impl PokemonGame {
                     (None, None, None) => PartyScreenState::new(self.save_data.party.to_vec()),
                 };
             }
-            GameScreen::PokemonStatsScreen(_) => {}
+            GameScreen::PokemonStatsScreen(_) => {
+                if let (Some(audio), Some(stats)) = (&self.audio, &self.stats_screen) {
+                    play_species_cry(audio, stats.pokemon().species);
+                }
+            }
             GameScreen::LanguageSelect => {}
             GameScreen::GameFreakSplash => {
                 self.gamefreak_splash.reset();
@@ -5491,6 +5495,9 @@ impl PokemonGame {
                     ScreenAction::Transition(GameScreen::Overworld)
                 } else {
                     let pc = self.pc_screen.as_mut().unwrap();
+                    if menu_input.a && !pc.waiting_for_sound() {
+                        if let Some(ref audio) = self.audio { audio.play_sfx(SfxId::PressAB); }
+                    }
                     let pc_action = {
                         let mut ctx = PcContext {
                             party: &mut self.save_data.party,
@@ -5499,7 +5506,9 @@ impl PokemonGame {
                             pc_items: &mut self.save_data.game_data.pc_items,
                             pokedex: &self.save_data.game_data.pokedex,
                         };
-                        pc.update_frame(menu_input, &mut ctx)
+                        if let Some(ref audio) = self.audio {
+                            pc.update_frame_with_sound(menu_input, &mut ctx, audio.is_sfx_playing())
+                        } else { pc.update_frame(menu_input, &mut ctx) }
                     };
                     // Every mutation must refresh the live bank-1 box, not only CHANGE BOX.
                     self.save_data.current_box = self.save_data.pc_storage.current_box().clone();
@@ -5511,13 +5520,9 @@ impl PokemonGame {
                                 PcSfx::Enter => SfxId::EnterPC,
                                 PcSfx::WithdrawDeposit => SfxId::WithdrawDeposit,
                                 PcSfx::Save => SfxId::Save,
+                                PcSfx::Cry(species) => { play_species_cry(audio, species); continue; }
                             };
                             audio.play_sfx(id);
-                        }
-                    }
-                    if menu_input.a {
-                        if let Some(ref audio) = self.audio {
-                            audio.play_sfx(SfxId::PressAB);
                         }
                     }
                     if pc.take_save_request() {
@@ -5553,7 +5558,9 @@ impl PokemonGame {
                             };
                             match mon {
                                 Some(mon) => {
-                                    self.stats_screen = Some(StatsScreenState::new(mon));
+                                    self.stats_screen = Some(if from_box {
+                                        StatsScreenState::from_box(mon)
+                                    } else { StatsScreenState::new(mon) });
                                     ScreenAction::Transition(GameScreen::PokemonStatsScreen(index))
                                 }
                                 None => ScreenAction::Continue,

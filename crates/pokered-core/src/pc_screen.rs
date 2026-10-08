@@ -96,6 +96,8 @@ pub enum PcSfx {
     Enter,
     /// SFX_WITHDRAW_DEPOSIT — mon/item moved (bills_pc.asm:133, players_pc.asm:133,188).
     WithdrawDeposit,
+    /// The selected Pokémon's cry (BillsPCDeposit/Withdraw/Release).
+    Cry(pokered_data::species::Species),
     /// SFX_SAVE — box changed, game saved (save.asm:399).
     Save,
 }
@@ -277,6 +279,8 @@ pub struct PcScreen {
 
     // Side effects for the app.
     sfx: Vec<PcSfx>,
+    waiting_for_cry: bool,
+    finishing_cry: bool,
     save_requested: bool,
     dex_seen: u32,
     dex_owned: u32,
@@ -317,6 +321,8 @@ impl PcScreen {
             item_list_scroll: 0,
             item_qty: 1,
             sfx: Vec::new(),
+            waiting_for_cry: false,
+            finishing_cry: false,
             save_requested: false,
             dex_seen: 0,
             dex_owned: 0,
@@ -523,6 +529,7 @@ impl PcScreen {
                     self.league_team = 0;
                     self.league_mon = 0;
                     self.phase = PcPhase::LeagueHoF;
+                    self.queue_league_mon_cry();
                 }
             }
             AfterMessage::Exit => {
@@ -567,7 +574,37 @@ impl PcScreen {
 
     // ── Frame update ──────────────────────────────────────────────────────
 
+    /// No-audio hosts complete the cry boundary immediately.
     pub fn update_frame(&mut self, input: MenuInput, ctx: &mut PcContext) -> PcScreenAction {
+        let action = self.update_frame_with_sound(input, ctx, false);
+        if self.waiting_for_cry {
+            self.update_frame_with_sound(MenuInput { up: false, down: false, a: false, b: false }, ctx, false)
+        } else { action }
+    }
+
+    pub fn waiting_for_sound(&self) -> bool { self.waiting_for_cry }
+
+    fn start_mon_cry(&mut self, species: pokered_data::species::Species) -> bool {
+        if self.finishing_cry { return false; }
+        self.sfx.push(PcSfx::Cry(species));
+        self.waiting_for_cry = true;
+        true
+    }
+
+    pub fn update_frame_with_sound(&mut self, input: MenuInput, ctx: &mut PcContext, sound_playing: bool) -> PcScreenAction {
+        if self.waiting_for_cry {
+            if sound_playing { return PcScreenAction::Continue; }
+            self.waiting_for_cry = false;
+            self.finishing_cry = true;
+            let confirm = MenuInput { up: false, down: false, a: true, b: false };
+            let action = match self.phase {
+                PcPhase::MonAction => self.update_mon_action(confirm, ctx),
+                PcPhase::ReleaseConfirm => self.update_release_confirm(confirm, ctx),
+                _ => PcScreenAction::Continue,
+            };
+            self.finishing_cry = false;
+            return action;
+        }
         match self.phase {
             PcPhase::Message => {
                 if input.a || input.b {
@@ -606,7 +643,6 @@ impl PcScreen {
             return PcScreenAction::Continue;
         }
         if input.a {
-            self.sfx.push(PcSfx::Enter);
             self.league_mon += 1;
             if self.league_mon >= self.hof_teams[self.league_team].mons.len() {
                 self.league_mon = 0;
@@ -615,8 +651,15 @@ impl PcScreen {
                     self.enter_main_menu();
                 }
             }
+            self.queue_league_mon_cry();
         }
         PcScreenAction::Continue
+    }
+
+    fn queue_league_mon_cry(&mut self) {
+        if let Some((_, mon)) = self.league_hof_mon() {
+            self.sfx.push(PcSfx::Cry(mon.species));
+        }
     }
 
     fn update_main_menu(&mut self, input: MenuInput) -> PcScreenAction {
@@ -853,6 +896,9 @@ impl PcScreen {
                     let idx = self.mon_cursor;
                     match self.mon_mode {
                         MonListMode::Deposit => {
+                            if let Some(mon) = ctx.party.get(idx) {
+                                if self.start_mon_cry(mon.species) { return PcScreenAction::Continue; }
+                            }
                             let mut name_buf = [0u8; crate::battle::state::NAME_TEXT_BUF];
                             let name = ctx
                                 .party
@@ -861,7 +907,6 @@ impl PcScreen {
                                 .unwrap_or("");
                             if let Ok(mon) = ctx.party.remove(idx) {
                                 let _ = ctx.pc_storage.current_box_mut().deposit(mon);
-                                self.sfx.push(PcSfx::WithdrawDeposit);
                                 // "{NAME} was stored in Box {N}." (_MonWasStoredText)
                                 let box_no = ctx.pc_storage.current_box_index() + 1;
                                 self.set_message(
@@ -876,6 +921,11 @@ impl PcScreen {
                             }
                         }
                         MonListMode::Withdraw => {
+                            if !ctx.party.is_full() {
+                                if let Some(mon) = ctx.pc_storage.current_box().get(idx) {
+                                    if self.start_mon_cry(mon.species) { return PcScreenAction::Continue; }
+                                }
+                            }
                             let mut name_buf = [0u8; crate::battle::state::NAME_TEXT_BUF];
                             let name = ctx
                                 .pc_storage
@@ -890,7 +940,6 @@ impl PcScreen {
                             } else if let Ok(mon) = ctx.pc_storage.current_box_mut().withdraw(idx)
                             {
                                 let _ = ctx.party.add(mon);
-                                self.sfx.push(PcSfx::WithdrawDeposit);
                                 // "{NAME} is taken out. Got {NAME}."
                                 // (_MonIsTakenOutText)
                                 self.set_message(
@@ -937,6 +986,7 @@ impl PcScreen {
         if input.a {
             if self.yes_selected {
                 let idx = self.mon_cursor;
+                let species = ctx.pc_storage.current_box().get(idx).map(|mon| mon.species);
                 let mut name_buf = [0u8; crate::battle::state::NAME_TEXT_BUF];
                 let name = ctx
                     .pc_storage
@@ -945,6 +995,8 @@ impl PcScreen {
                     .map(|m| m.display_name(&mut name_buf))
                     .unwrap_or("");
                 if ctx.pc_storage.current_box_mut().release(idx).is_ok() {
+                    // BillsPCRelease prints its receipt while PlayCry is playing.
+                    if let Some(species) = species { self.sfx.push(PcSfx::Cry(species)); }
                     // "{NAME} was released outside. Bye {NAME}!"
                     // (_MonWasReleasedText)
                     self.set_message(
@@ -1585,7 +1637,7 @@ mod tests {
                 "stored in Box 1.".to_string()
             ]
         );
-        assert_eq!(s.take_sfx(), vec![PcSfx::WithdrawDeposit]);
+        assert_eq!(s.take_sfx(), vec![PcSfx::Cry(Species::Pikachu)]);
         skip_message(&mut s, &mut w);
         assert_eq!(w.party.count(), 1);
         assert_eq!(w.pc_storage.current_box().count(), 1);
@@ -2297,4 +2349,79 @@ mod tests {
         let labels = s.main_menu_labels();
         assert!(!labels.iter().any(|l| l == "#MON LEAGUE"));
     }
+    #[test]
+    fn pokemon_storage_cries_wait_before_receipt_and_ignore_input() {
+        for mode in [MonListMode::Deposit, MonListMode::Withdraw] {
+            let mut w = World::new();
+            w.party.add(mon(Species::Pikachu, 12)).unwrap();
+            w.party.add(mon(Species::Bulbasaur, 7)).unwrap();
+            w.pc_storage.current_box_mut().deposit(mon(Species::Abra, 10)).unwrap();
+            let mut s = PcScreen::new(PcEntry::BillsPc, &open_ctx());
+            s.take_sfx();
+            s.mon_mode = mode;
+            s.mon_cursor = 0;
+            s.mon_action_cursor = 0;
+            s.yes_selected = true;
+            s.phase = if mode == MonListMode::Release { PcPhase::ReleaseConfirm } else { PcPhase::MonAction };
+            let before = (w.party.count(), w.pc_storage.current_box().count());
+            s.update_frame_with_sound(A, &mut w.ctx(), false);
+            let species = if mode == MonListMode::Deposit { Species::Pikachu } else { Species::Abra };
+            assert_eq!(s.take_sfx(), vec![PcSfx::Cry(species)]);
+            assert!(s.waiting_for_sound());
+            for input in [A, B, DOWN] {
+                s.update_frame_with_sound(input, &mut w.ctx(), true);
+                assert_eq!((w.party.count(),w.pc_storage.current_box().count()), before);
+                assert_ne!(s.phase(), PcPhase::Message);
+                assert!(s.take_sfx().is_empty());
+            }
+            s.update_frame_with_sound(B, &mut w.ctx(), false);
+            assert!(!s.waiting_for_sound());
+            assert_eq!(s.phase(), PcPhase::Message);
+            assert!(s.take_sfx().is_empty());
+            let after = match mode {
+                MonListMode::Deposit => (1,2),
+                MonListMode::Withdraw => (3,0),
+                MonListMode::Release => (2,0),
+            };
+            assert_eq!((w.party.count(),w.pc_storage.current_box().count()), after);
+        }
+    }
+
+    #[test]
+    fn release_removes_mon_and_shows_receipt_while_cry_plays() {
+        let mut w = World::new();
+        w.pc_storage.current_box_mut().deposit(mon(Species::Abra, 10)).unwrap();
+        let mut s = PcScreen::new(PcEntry::BillsPc, &open_ctx());
+        s.take_sfx();
+        s.phase = PcPhase::ReleaseConfirm;
+        s.yes_selected = true;
+        s.update_frame_with_sound(A, &mut w.ctx(), false);
+        assert_eq!(w.pc_storage.current_box().count(), 0);
+        assert_eq!(s.phase(), PcPhase::Message);
+        assert!(!s.waiting_for_sound());
+        assert_eq!(s.take_sfx(), vec![PcSfx::Cry(Species::Abra)]);
+    }
+
+    #[test]
+    fn league_viewer_cries_for_each_displayed_species_and_not_after_exit() {
+        let mut w = World::new();
+        let mut s = PcScreen::new(PcEntry::PokemonCenter, &hof_open_ctx());
+        open_pokemon_center(&mut s, &mut w);
+        s.update_frame(DOWN, &mut w.ctx());
+        s.update_frame(DOWN, &mut w.ctx());
+        s.update_frame(A, &mut w.ctx());
+        skip_message(&mut s, &mut w);
+        let mut viewed = 0;
+        while s.phase() == PcPhase::LeagueHoF {
+            let species = s.league_hof_mon().unwrap().1.species;
+            let cries: Vec<_> = s.take_sfx().into_iter().filter(|sfx| matches!(sfx, PcSfx::Cry(_))).collect();
+            assert_eq!(cries, vec![PcSfx::Cry(species)]);
+            viewed += 1;
+            s.update_frame(A, &mut w.ctx());
+        }
+        assert_eq!(viewed, 3);
+        assert_eq!(s.phase(), PcPhase::MainMenu);
+        assert!(s.take_sfx().is_empty());
+    }
+
 }
