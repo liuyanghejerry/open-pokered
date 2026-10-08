@@ -3921,9 +3921,12 @@ impl PokemonGame {
                         if self
                             .link_trade
                             .as_ref()
-                            .is_some_and(|d| d.received_mon().is_some())
+                            .is_some_and(|d| d.has_pending_exchange())
                         {
                             self.start_link_trade_anim();
+                        } else if self.pending_evolve_move_replace.is_none() {
+                            self.finish_link_trade();
+                            return;
                         }
                     }
 
@@ -6068,11 +6071,10 @@ impl PokemonGame {
     /// `AddEnemyMonToPlayerParty`, engine/link/cable_club.asm:800-817), the
     /// traded/obedience flag against our ID, Pokédex owned+seen, and the
     /// forced trade evolution detection (`TryEvolvingMon`, cable_club.asm:
-    /// 851 — applied via the cutscene below, cancellable like the app's
-    /// other post-battle evolutions).
+    /// 851 — preserves wForceEvolution, so B cannot cancel this cutscene).
     #[cfg(not(target_os = "none"))]
     fn apply_link_trade(&mut self) {
-        use pokered_core::battle::settlement::EvolutionEvent;
+        use pokered_core::evolution_screen::EvolutionScreenState;
 
         // Driver calls first (they borrow disjoint fields of `self`); the
         // pending evolution and the exchanged party come out owned.
@@ -6090,14 +6092,10 @@ impl PokemonGame {
             (pending, driver.party().clone())
         };
         if let Some(p) = pending {
-            self.queue_evolution_cutscene(
-                vec![EvolutionEvent {
-                    party_index: p.party_index,
-                    old_species: p.from,
-                    new_species: p.to,
-                }],
-                None,
-            );
+            // Keep the driver's received-mon name and force flag. Rebuilding
+            // a level-up event reads the old party and enables B cancellation.
+            let is_zh = matches!(self.state.config.language, pokered_core::game_state::Lang::Zh);
+            self.evolution_anim = Some(EvolutionScreenState::new(vec![p], None, is_zh));
         }
         // The driver's working party IS the save's new party (it was
         // snapshotted at the table and mutated by the exchange).
@@ -6105,7 +6103,71 @@ impl PokemonGame {
         self.overworld.party_count = self.save_data.party.count() as u8;
         self.overworld.box_count = self.save_data.current_box.count() as u8;
         self.overworld.party_lead_level = self.save_data.party.leader_level();
+        if self.evolution_anim.is_none() {
+            self.finish_link_trade();
+        }
+    }
+
+    /// SavePartyAndDexData runs after the movie, evolution and move learning.
+    /// It preserves the receptionist's committed Pokemon Center position.
+    #[cfg(not(target_os = "none"))]
+    fn finish_link_trade(&mut self) {
+        self.save_link_party_and_dex();
         self.link_cable.on_trade_anim_done();
+    }
+
+    #[cfg(not(target_os = "none"))]
+    fn save_link_party_and_dex(&mut self) {
+        if self.external_saves {
+            let Some(raw) = self.committed_save.as_deref() else { return; };
+            let Ok(mut saved) = serde_json::from_str::<MobileSave>(raw) else { return; };
+            saved.data.party = self.save_data.party.clone();
+            saved.data.game_data.pokedex = self.save_data.game_data.pokedex.clone();
+            if let Ok(raw) = serde_json::to_string(&saved) {
+                self.committed_save = Some(raw);
+            }
+            return;
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            use pokered_core::save::{sram_layout::*, ser_pokemon::serialize_party_into};
+            let path = self.save_path.clone().unwrap_or_else(save_file_path);
+            let Ok(mut sram) = std::fs::read(&path) else { return; };
+            let Ok(previous) = import_sram(&sram) else { return; };
+            // Reception performs a canonical full save before room entry.
+            if previous.imported_legacy_native { return; }
+            let mut main_data = Vec::new();
+            self.save_data.game_data.serialize_into(&mut main_data);
+            let party_at = SRAM_BANK_SIZE_LAYOUT + MAIN_DATA_OFFSET + main_data.len() + SPRITE_DATA_REGION_SIZE;
+            let dex_at = SRAM_BANK_SIZE_LAYOUT + MAIN_DATA_OFFSET;
+            let owned = self.save_data.game_data.pokedex.owned_flags();
+            let seen = self.save_data.game_data.pokedex.seen_flags();
+            let mut party = Vec::new();
+            serialize_party_into(&self.save_data.party, &mut party);
+            let game_at = SRAM_BANK_SIZE_LAYOUT + GAME_DATA_OFFSET;
+            let checksum_at = game_at + self.save_data.serialize_checksummed_region().len();
+            if sram.len() <= checksum_at || party_at + party.len() > checksum_at { return; }
+            sram[dex_at..dex_at + owned.len()].copy_from_slice(owned);
+            sram[dex_at + owned.len()..dex_at + owned.len() + seen.len()].copy_from_slice(seen);
+            sram[party_at..party_at + party.len()].copy_from_slice(&party);
+            sram[checksum_at] = pokered_core::save_menu::calc_checksum(&sram[game_at..checksum_at]);
+            if let Err(error) = std::fs::write(&path, &sram) {
+                log::error!("failed to save traded party: {}", error);
+            }
+        }
+        #[cfg(target_arch = "wasm32")]
+        {
+            let Some(storage) = web_local_storage() else { return; };
+            let Ok(Some(raw)) = storage.get_item(WEB_SAVE_STORAGE_KEY) else { return; };
+            let Ok(mut saved) = decode_web_save(&raw) else { return; };
+            saved.party = self.save_data.party.clone();
+            saved.game_data.pokedex = self.save_data.game_data.pokedex.clone();
+            if let Ok(raw) = serde_json::to_string(&saved) {
+                if let Err(error) = storage.set_item(WEB_SAVE_STORAGE_KEY, &raw) {
+                    log::error!("failed to save traded party: {:?}", error);
+                }
+            }
+        }
     }
 
     /// Warp the player into a Cable Club room (used by the link CLI after a
@@ -8604,6 +8666,14 @@ mod link_stats_cry_fidelity_tests {
         g.overworld.set_event_flag_live(pokered_data::event_flags::EventFlag::EVENT_GOT_POKEDEX);
         g.save_data.game_data.event_flags = g.overworld.unified_flags().as_bytes().to_vec();
         g.overworld.set_rng_seed(0);
+        g.external_saves = true;
+        let mut committed = g.save_data.clone();
+        committed.game_data.position.map_id = MapId::ViridianPokecenter as u8;
+        committed.game_data.position.x = 11;
+        committed.game_data.position.y = 3;
+        g.committed_save = Some(serde_json::to_string(&MobileSave {
+            version: 1, data: committed, flags: g.overworld.script_flags()
+        }).unwrap());
         g.overworld.state.player.x = x;
         g.overworld.state.player.y = 4;
         g.overworld.state.player.facing = facing;
@@ -8842,6 +8912,190 @@ mod link_stats_cry_fidelity_tests {
     }
 
     #[test]
+    fn actual_link_trade_evolution_ignores_b_during_morph() {
+        use pokered_core::evolution_screen::EvolutionPhase;
+        use pokered_core::overworld::Direction;
+        let host = fixture(Species::Bulbasaur, 3, Direction::Right);
+        let mut peer = fixture(Species::Pikachu, 6, Direction::Left);
+        peer.save_data.party = pokered_core::pokemon::party::Party::from(vec![
+            create_pokemon_with_moves(Species::Kadabra, 25, [0x99, 0x88],
+                [MoveId::Confusion, MoveId::None, MoveId::None, MoveId::None]).unwrap()
+        ]);
+        let (mut host, mut peer) = linked_trade_room(host, peer);
+        choose_actual_trade(&mut host); choose_actual_trade(&mut peer);
+        let idle = InputState::new();
+        for _ in 0..20 { host.update(&idle); peer.update(&idle); }
+        assert!(matches!(host.link_cable.phase(), CableClubPhase::TradeConfirm { .. }));
+        assert!(matches!(peer.link_cable.phase(), CableClubPhase::TradeConfirm { .. }));
+        host.update(&button(GbButton::A)); peer.update(&button(GbButton::A));
+        let mut saw_morph = false;
+        for _ in 0..12000 {
+            let phase = host.evolution_anim.as_ref().map(|a| a.phase());
+            if phase == Some(EvolutionPhase::Morph) {
+                saw_morph = true;
+                let event = host.evolution_anim.as_ref().unwrap().current().unwrap();
+                assert_eq!(event.name, "KADABRA", "use received mon's name");
+                assert!(event.force, "preserve original wForceEvolution");
+                host.update(&button(GbButton::B));
+            } else { host.update(&idle); }
+            peer.update(&idle);
+            assert_ne!(host.evolution_anim.as_ref().map(|a| a.phase()),
+                Some(EvolutionPhase::StoppedText), "original trade evolution ignores B");
+            if saw_morph && host.evolution_anim.is_none() { break; }
+        }
+        assert!(saw_morph, "real exchange must reach evolution cutscene");
+        assert!(host.evolution_anim.is_none(), "cutscene must finish");
+        assert_eq!(host.save_data.party.get(0).unwrap().species, Species::Alakazam);
+        assert_eq!(peer.save_data.party.get(0).unwrap().species, Species::Bulbasaur);
+        assert!(host.save_data.game_data.pokedex.is_owned(Species::Alakazam));
+        for _ in 0..2 { host.update(&idle); peer.update(&idle); }
+        let persisted: MobileSave = serde_json::from_str(&host.export_mobile_save().unwrap()).unwrap();
+        assert_eq!(persisted.data.party.get(0).unwrap().species, Species::Alakazam,
+            "save occurs after forced evolution, not before: screen={:?}, phase={:?}, move={:?}",
+            host.state.screen, host.link_cable.phase(), host.pending_evolve_move_replace);
+        assert!(persisted.data.game_data.pokedex.is_owned(Species::Alakazam));
+    }
+
+    #[test]
+    fn actual_trade_rejection_waits_for_both_choices_then_100_frames() {
+        let (mut host, mut peer) = both_selected_pair();
+        let host_party = serde_json::to_value(&host.save_data.party).unwrap();
+        let peer_party = serde_json::to_value(&peer.save_data.party).unwrap();
+        let idle = InputState::new();
+        host.update(&button(GbButton::B));
+        for _ in 0..120 { host.update(&idle); peer.update(&idle); }
+        assert_eq!(host.link_cable.phase(), &CableClubPhase::TradeWaitingConfirm,
+            "NO must synchronize with peer's confirmation choice");
+        assert!(matches!(peer.link_cable.phase(), CableClubPhase::TradeConfirm { .. }),
+            "received NO must not dismiss an unanswered confirmation menu");
+        peer.update(&button(GbButton::A));
+        host.update(&idle);
+        // The confirmed rejection text is a timed delay, not an A/B prompt.
+        for _ in 0..10 { host.update(&button(GbButton::A)); peer.update(&button(GbButton::B)); }
+        assert_eq!(host.link_cable.text_box(), Some(crate::link::cable_club::TEXT_TRADE_CANCELED.to_string()));
+        for _ in 0..89 { host.update(&idle); peer.update(&idle); }
+        assert_eq!(host.link_cable.text_box(), Some(crate::link::cable_club::TEXT_TRADE_CANCELED.to_string()),
+            "rejection still shows after 99 frames");
+        host.update(&idle); peer.update(&idle);
+        for g in [&host, &peer] {
+            assert_eq!(g.link_cable.phase(), &CableClubPhase::TradeSelect);
+            assert_eq!(g.link_cable.text_box(), None, "original DelayFrames100 returns automatically");
+        }
+        assert_eq!(serde_json::to_value(&host.save_data.party).unwrap(), host_party);
+        assert_eq!(serde_json::to_value(&peer.save_data.party).unwrap(), peer_party);
+    }
+
+    fn completed_actual_trade() -> (PokemonGame, PokemonGame, String) {
+        let (mut host, mut peer) = both_selected_pair();
+        // Reception saved in the Pokemon Center before room entry. This
+        // fixture retains that committed snapshot while live gameplay trades.
+        let mut saved = host.save_data.clone();
+        saved.game_data.position.map_id = MapId::ViridianPokecenter as u8;
+        saved.game_data.position.x = 11; saved.game_data.position.y = 3;
+        let envelope = MobileSave { version: 1, data: saved, flags: host.overworld.script_flags() };
+        let before = serde_json::to_string(&envelope).unwrap();
+        host.external_saves = true; host.committed_save = Some(before.clone());
+        peer.external_saves = true;
+        peer.committed_save = Some(serde_json::to_string(&MobileSave {
+            version: 1, data: peer.save_data.clone(), flags: peer.overworld.script_flags()
+        }).unwrap());
+        host.update(&button(GbButton::A)); peer.update(&button(GbButton::A));
+        let idle = InputState::new();
+        for _ in 0..12000 {
+            host.update(&idle); peer.update(&idle);
+            if host.link_cable.phase() == &CableClubPhase::TradeCompleted { return (host, peer, before); }
+        }
+        panic!("actual successful exchange must finish its movie");
+    }
+
+    #[test]
+    fn actual_trade_post_completed_returns_after_50_frames_without_button() {
+        let (mut host, mut peer, _) = completed_actual_trade();
+        let idle = InputState::new();
+        assert_eq!(host.save_data.party.get(0).unwrap().species, Species::Pikachu);
+        for _ in 0..49 { host.update(&idle); peer.update(&idle); }
+        assert_eq!(host.link_cable.phase(), &CableClubPhase::TradeCompleted);
+        host.update(&idle); peer.update(&idle);
+        assert_eq!(host.link_cable.phase(), &CableClubPhase::TradeSelect,
+            "original DelayFrames50 returns without A/B");
+    }
+
+    #[test]
+    fn actual_trade_post_saves_party_and_dex_without_room_position() {
+        let (host, _peer, before) = completed_actual_trade();
+        let persisted: MobileSave = serde_json::from_str(&host.export_mobile_save().unwrap()).unwrap();
+        let prior: MobileSave = serde_json::from_str(&before).unwrap();
+        assert_eq!(persisted.data.party.get(0).unwrap().species, Species::Pikachu,
+            "SavePartyAndDexData persists received Pokemon");
+        assert!(persisted.data.game_data.pokedex.is_owned(Species::Pikachu));
+        assert_eq!(persisted.data.game_data.position, prior.data.game_data.position,
+            "reset must load the Pokemon Center save, not the live trade room");
+        let mut expected = serde_json::to_value(&prior).unwrap();
+        expected["data"]["party"] = serde_json::to_value(&host.save_data.party).unwrap();
+        expected["data"]["game_data"]["pokedex"] = serde_json::to_value(&host.save_data.game_data.pokedex).unwrap();
+        assert_eq!(serde_json::to_value(&persisted).unwrap(), expected,
+            "party and dex only: preserve other saved data and script flags");
+    }
+
+    #[test]
+    fn actual_trade_post_desktop_sram_preserves_every_unrelated_byte() {
+        use pokered_core::save::sram_layout::*;
+        let (mut host, mut peer) = both_selected_pair();
+        let unique = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
+        let dir = std::env::temp_dir().join(format!("fidelity-link-save-{}-{unique}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("before-room.sav");
+        let mut baseline = host.save_data.clone();
+        baseline.game_data.position.map_id = MapId::ViridianPokecenter as u8;
+        baseline.game_data.position.x = 11; baseline.game_data.position.y = 3;
+        baseline.game_data.player_money = 1234;
+        let mut original = export_sram(&baseline);
+        // Sentinel bytes in original sprite SRAM and bank-1 padding are
+        // unmodelled data that a full export would erase.
+        original[37] = 0xab; original[SRAM_BANK_SIZE_LAYOUT + 17] = 0xcd;
+        std::fs::write(&path, &original).unwrap();
+        host.external_saves = false; host.save_path = Some(path.clone());
+        host.update(&button(GbButton::A)); peer.update(&button(GbButton::A));
+        let idle = InputState::new();
+        for _ in 0..12000 {
+            host.update(&idle); peer.update(&idle);
+            if host.link_cable.phase() == &CableClubPhase::TradeCompleted { break; }
+        }
+        assert_eq!(host.link_cable.phase(), &CableClubPhase::TradeCompleted);
+        let after = std::fs::read(&path).unwrap();
+        let loaded = import_sram(&after).unwrap();
+        assert_eq!(loaded.party.get(0).unwrap().species, Species::Pikachu);
+        assert!(loaded.game_data.pokedex.is_owned(Species::Pikachu));
+        assert_eq!(loaded.game_data.position, baseline.game_data.position);
+        assert_eq!(loaded.game_data.player_money, 1234);
+        let mut main_data = Vec::new(); baseline.game_data.serialize_into(&mut main_data);
+        let dex = SRAM_BANK_SIZE_LAYOUT + MAIN_DATA_OFFSET;
+        let dex_end = dex + baseline.game_data.pokedex.owned_flags().len() + baseline.game_data.pokedex.seen_flags().len();
+        let party = dex + main_data.len() + SPRITE_DATA_REGION_SIZE;
+        let checksum = SRAM_BANK_SIZE_LAYOUT + GAME_DATA_OFFSET + baseline.serialize_checksummed_region().len();
+        assert_eq!(after.len(), original.len());
+        for (i, (&a, &b)) in original.iter().zip(&after).enumerate() {
+            if !(dex..dex_end).contains(&i) && !(party..party + PARTY_DATA_SIZE).contains(&i) && i != checksum {
+                assert_eq!(a, b, "partial trade save changed unrelated SRAM byte {i:x}");
+            }
+        }
+        assert!(dir.read_dir().unwrap().all(|e| e.unwrap().path() == path), "no rewritten companion flags");
+        let mut resumed = PokemonGame::new_with_options(
+            GameVersion::Red, Some(path.clone()), None, None, true, None, false, true,
+            #[cfg(feature = "debug-server")] None,
+        );
+        for _ in 0..2000 {
+            if resumed.state.screen == GameScreen::Overworld { break; }
+            resumed.update(&button(GbButton::A));
+        }
+        assert_eq!(resumed.state.screen, GameScreen::Overworld, "actual boot and Continue must finish");
+        assert_eq!(resumed.overworld.state.current_map, MapId::ViridianPokecenter);
+        assert_eq!((resumed.overworld.state.player.x, resumed.overworld.state.player.y), (11, 3));
+        assert_eq!(resumed.save_data.party.get(0).unwrap().species, Species::Pikachu);
+        std::fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
     fn actual_confirmation_no_is_not_a_list_cancel() {
         let (mut host, mut peer) = both_selected_pair();
         let host_party = serde_json::to_value(&host.save_data.party).unwrap();
@@ -8849,10 +9103,11 @@ mod link_stats_cry_fidelity_tests {
         let idle = InputState::new();
         host.update(&button(GbButton::B));
         peer.update(&idle);
+        peer.update(&button(GbButton::B));
+        for _ in 0..120 { host.update(&idle); peer.update(&idle); }
         for g in [&mut host, &mut peer] {
             assert_eq!(g.link_cable.phase(), &CableClubPhase::TradeSelect);
-            assert_eq!(g.link_cable.text_box(), Some(crate::link::cable_club::TEXT_TRADE_CANCELED.to_string()));
-            g.update(&button(GbButton::A)); g.update(&idle);
+            assert_eq!(g.link_cable.text_box(), None);
         }
         peer.update(&button(GbButton::Down)); peer.update(&button(GbButton::A));
         host.update(&idle);
@@ -8901,7 +9156,7 @@ mod link_stats_cry_fidelity_tests {
         let idle = InputState::new();
         peer.update(&button(GbButton::A)); // YES first; our NO follows while its messages arrive.
         host.update(&button(GbButton::B));
-        for _ in 0..20 { host.update(&idle); peer.update(&idle); }
+        for _ in 0..120 { host.update(&idle); peer.update(&idle); }
         assert_eq!(host.link_cable.phase(), &CableClubPhase::TradeSelect);
         assert_eq!(peer.link_cable.phase(), &CableClubPhase::TradeSelect);
         assert_eq!(serde_json::to_value(&host.save_data.party).unwrap(), host_party);
@@ -9032,6 +9287,62 @@ mod link_stats_cry_fidelity_tests {
         assert_eq!(peer.link_cable.peer_cursor(), Some(2));
         peer.update(&button(GbButton::Left));
         assert_eq!(peer.link_cable.party_select().unwrap().cursor(), 1);
+    }
+
+    #[test]
+    #[ignore = "writes matched post-trade captures to FIDELITY_LINK_CAPTURES"]
+    fn capture_post_trade_fidelity() {
+        use pokered_core::evolution_screen::EvolutionPhase;
+        use pokered_core::overworld::Direction;
+        let dir = PathBuf::from(std::env::var("FIDELITY_LINK_CAPTURES").unwrap());
+        std::fs::create_dir_all(&dir).unwrap();
+        let idle = InputState::new();
+        let mut records = Vec::new();
+        let mut capture = |stage: &str, g: &mut PokemonGame| {
+            let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+            g.draw(&mut fb);
+            fb.save_png(&dir.join(format!("{stage}.png"))).unwrap();
+            records.push(serde_json::json!({"stage":stage,"frame":g.frame_count,
+                "phase":format!("{:?}",g.link_cable.phase()),
+                "evolution":g.evolution_anim.as_ref().map(|a|format!("{:?}",a.phase())),
+                "party":serde_json::to_value(&g.save_data.party).unwrap(),
+                "committed":g.export_mobile_save()}));
+        };
+        let (mut host, mut peer) = both_selected_pair();
+        host.update(&button(GbButton::B));
+        for _ in 0..120 { host.update(&idle); peer.update(&idle); }
+        capture("reject-unanswered", &mut peer);
+        peer.update(&button(GbButton::B));
+        for _ in 0..110 { host.update(&idle); peer.update(&idle); }
+        capture("reject-auto-return", &mut host);
+        let (mut host, mut peer, _) = completed_actual_trade();
+        for _ in 0..50 { host.update(&idle); peer.update(&idle); }
+        capture("trade-auto-return", &mut host);
+        let host = fixture(Species::Bulbasaur, 3, Direction::Right);
+        let mut peer = fixture(Species::Pikachu, 6, Direction::Left);
+        peer.save_data.party = pokered_core::pokemon::party::Party::from(vec![
+            create_pokemon_with_moves(Species::Kadabra, 25, [0x99, 0x88],
+                [MoveId::Confusion, MoveId::None, MoveId::None, MoveId::None]).unwrap()
+        ]);
+        let (mut host, mut peer) = linked_trade_room(host, peer);
+        choose_actual_trade(&mut host); choose_actual_trade(&mut peer);
+        for _ in 0..20 { host.update(&idle); peer.update(&idle); }
+        host.update(&button(GbButton::A)); peer.update(&button(GbButton::A));
+        for _ in 0..12000 {
+            host.update(&idle); peer.update(&idle);
+            if host.evolution_anim.is_some() { break; }
+        }
+        assert!(host.evolution_anim.is_some());
+        capture("trade-evolution-name", &mut host);
+        for _ in 0..12000 {
+            if host.evolution_anim.as_ref().map(|a|a.phase()) == Some(EvolutionPhase::Morph) { break; }
+            host.update(&idle); peer.update(&idle);
+        }
+        assert_eq!(host.evolution_anim.as_ref().map(|a|a.phase()), Some(EvolutionPhase::Morph));
+        host.update(&button(GbButton::B)); peer.update(&idle);
+        for _ in 0..20 { host.update(&idle); peer.update(&idle); }
+        capture("trade-forced-evolution", &mut host);
+        std::fs::write(dir.join("frames.json"), serde_json::to_string_pretty(&records).unwrap()).unwrap();
     }
 
     #[test]
