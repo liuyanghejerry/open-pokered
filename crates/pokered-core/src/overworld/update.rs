@@ -367,6 +367,15 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         // (vblank-driven in the original).
         self.tile_anim.tick();
 
+        // MoveSprite ignores controls while the boulder slides. Dust then
+        // blocks inside Delay3, followed by LoadPlayerSpriteGraphics. Read
+        // physical A/B edges above so a held key cannot become a fresh press
+        // when the operation finishes. Player steps, scripts and menus wait.
+        if self.boulder_push.is_some() {
+            self.advance_boulder_push();
+            return ScreenAction::Continue;
+        }
+
         // ITEMFINDER: PlaySoundWaitForCurrent blocks for the exact lifetime of
         // each HEALING_MACHINE/PURCHASE track, four alternating pairs. The
         // result text is printed only after the eighth track has ended.
@@ -1552,6 +1561,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     self.strength_active = false;
                     self.tried_push_boulder = false;
                     self.boulder_dust_frames = 0;
+                    self.boulder_push = None;
                     self.dark_cave.enter_map(new_map);
                     if pokered_data::map_flags::is_city_map(new_map) {
                         self.game_data_requests
@@ -2162,6 +2172,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         // Runs in the normal gameplay path only (dialogue/scripts return
         // earlier), matching the original's RunMapScript call site.
         self.tick_boulder_push(movement_input.direction_pressed());
+        if self.boulder_push.is_some() {
+            return ScreenAction::Continue;
+        }
 
         // Advance NPC movement every frame (DoMovementForAllSprites).
         // In the original game, NPC movement is frozen while a text box is displayed
