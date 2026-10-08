@@ -80,6 +80,8 @@ pub enum FlowNeed {
     /// Confirm the trade; payload waits until both players choose YES.
     ConfirmTrade,
     ContinueTrade,
+    /// SavePartyAndDexData, after the synchronized completion delay.
+    CompleteTrade,
     LeaveTrade,
 }
 
@@ -147,9 +149,13 @@ pub enum CableClubPhase {
     TradeWaitingConfirm,
     /// The trade cutscene is playing (the game loop's `trade_anim`).
     TradeAnim,
-    /// Post-trade "Trade completed!" box — A returns to the selection
-    /// screen (the original loops via `CableClub_DoBattleOrTradeAgain`,
-    /// engine/link/cable_club.asm:870).
+    /// Serial_PrintWaitingTextAndSyncAndExchangeNybble waits for the peer.
+    TradeSync,
+    /// Original serial stabilization: two ten-frame exchange loops.
+    TradeSyncDelay { frames_left: u8 },
+    /// ClearScreen remains visible for DelayFrames40 before the result.
+    TradeCompletionDelay { frames_left: u8 },
+    /// Post-trade result and partial save, held for DelayFrames50.
     TradeCompleted,
     /// Error / disconnect box — A returns to `Inactive`.
     Error {
@@ -176,6 +182,9 @@ impl CableClubPhase {
                 | CableClubPhase::TradeWaitingPeer
                 | CableClubPhase::TradeConfirm { .. }
                 | CableClubPhase::TradeWaitingConfirm
+                | CableClubPhase::TradeSync
+                | CableClubPhase::TradeSyncDelay { .. }
+                | CableClubPhase::TradeCompletionDelay { .. }
                 | CableClubPhase::TradeCompleted
                 | CableClubPhase::Error { .. }
         )
@@ -280,6 +289,9 @@ impl CableClubFlow {
             | CableClubPhase::TradeConfirm { .. }
             | CableClubPhase::TradeWaitingConfirm
             | CableClubPhase::TradeAnim
+            | CableClubPhase::TradeSync
+            | CableClubPhase::TradeSyncDelay { .. }
+            | CableClubPhase::TradeCompletionDelay { .. }
             | CableClubPhase::TradeCompleted => Some(LinkKind::Trade),
             CableClubPhase::ReceptionText
             | CableClubPhase::Inactive
@@ -304,6 +316,7 @@ impl CableClubFlow {
             CableClubPhase::TradeWaitingPeer | CableClubPhase::TradeWaitingConfirm => {
                 self.transient_text.clone().or_else(|| Some(TEXT_WAITING.to_string()))
             }
+            CableClubPhase::TradeSync | CableClubPhase::TradeSyncDelay { .. } => Some(TEXT_PLEASE_WAIT.to_string()),
             CableClubPhase::TradeCompleted => Some(TEXT_TRADE_COMPLETED.to_string()),
             CableClubPhase::Error { text } => Some(text.clone()),
             // The transient box ("The link was canceled." / "Too bad! The
@@ -750,6 +763,23 @@ impl CableClubFlow {
                     FlowNeed::None
                 }
             }
+            CableClubPhase::TradeSyncDelay { frames_left } => {
+                let left = frames_left.saturating_sub(1);
+                self.phase = if left == 0 { CableClubPhase::TradeCompletionDelay { frames_left: 40 } }
+                    else { CableClubPhase::TradeSyncDelay { frames_left: left } };
+                FlowNeed::None
+            }
+            CableClubPhase::TradeCompletionDelay { frames_left } => {
+                let left = frames_left.saturating_sub(1);
+                if left == 0 {
+                    self.completed_frames = 50;
+                    self.phase = CableClubPhase::TradeCompleted;
+                    FlowNeed::CompleteTrade
+                } else {
+                    self.phase = CableClubPhase::TradeCompletionDelay { frames_left: left };
+                    FlowNeed::None
+                }
+            }
             CableClubPhase::TradeCompleted => {
                 self.completed_frames = self.completed_frames.saturating_sub(1);
                 if self.completed_frames == 0 {
@@ -831,12 +861,16 @@ impl CableClubFlow {
         self.phase = CableClubPhase::TradeAnim;
     }
 
-    /// The trade cutscene finished; the exchange was applied and the box
-    /// shows "Trade completed!" for 50 frames before returning automatically
-    /// (`CableClub_DoBattleOrTradeAgain`).
+    /// Local movie, evolution and move learning finished. Wait for the
+    /// remote presentation before serial stabilization and DelayFrames40.
     pub fn on_trade_anim_done(&mut self) {
-        self.completed_frames = 50;
-        self.phase = CableClubPhase::TradeCompleted;
+        self.phase = CableClubPhase::TradeSync;
+    }
+
+    pub fn on_trade_presentations_ready(&mut self) {
+        if self.phase == CableClubPhase::TradeSync {
+            self.phase = CableClubPhase::TradeSyncDelay { frames_left: 20 };
+        }
     }
 
     /// Route a battle driver event (from

@@ -57,11 +57,18 @@ pub fn draw_link_flow(
 ) {
     let language = if is_zh { Lang::Zh } else { Lang::En };
 
+    let post_trade_clear = matches!(flow.phase(), crate::link::cable_club::CableClubPhase::TradeSync
+        | crate::link::cable_club::CableClubPhase::TradeSyncDelay { .. }
+        | crate::link::cable_club::CableClubPhase::TradeCompletionDelay { .. }
+        | crate::link::cable_club::CableClubPhase::TradeCompleted);
+    if post_trade_clear {
+        FrameBufferPainter::new(fb).clear(Rgba::INK_WHITE);
+    }
     if let Some(stats) = flow.stats() {
         super::draw_stats_screen(stats, resources, fb, language);
         return;
     }
-    if flow.party_select().is_some() {
+    if !post_trade_clear && flow.party_select().is_some() {
         draw_trade_party_list(flow, fb, language, is_zh);
     }
 

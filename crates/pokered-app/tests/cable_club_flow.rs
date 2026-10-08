@@ -229,6 +229,7 @@ fn execute(
             .map_err(trade_err_to_transport),
         FlowNeed::SelectMonAgainstCancel(idx) => trade.select_mon_against_cancel(&mut *session.trade_transport(), *idx).map_err(trade_err_to_transport),
         FlowNeed::ResumeSelection => { trade.resume_selection(); Ok(()) },
+        FlowNeed::CompleteTrade => Ok(()), // App performs the partial SRAM save.
         FlowNeed::RejectTrade => trade.reject_trade(&mut *session.trade_transport()).map_err(trade_err_to_transport),
         FlowNeed::CancelTradeAndLeave => {
             trade.cancel_trade(&mut *session.trade_transport()).map_err(trade_err_to_transport).unwrap();
@@ -531,6 +532,27 @@ fn trade_flow_select_confirm_execute() {
     p.host_flow.on_trade_anim_done();
     p.guest_flow.on_trade_anim_done();
     let local = p.host_trade.party().to_vec();
+    p.host_trade.finish_presentation(&mut *p.host_session.trade_transport()).unwrap();
+    pump_trade(&mut p.guest_session, &mut p.guest_trade, &mut p.guest_flow);
+    assert!(!p.guest_trade.both_presentations_ready(), "peer readiness cannot replace local presentation completion");
+    p.guest_trade.finish_presentation(&mut *p.guest_session.trade_transport()).unwrap();
+    pump_trade(&mut p.host_session, &mut p.host_trade, &mut p.host_flow);
+    assert!(p.host_trade.both_presentations_ready());
+    assert!(p.guest_trade.both_presentations_ready());
+    p.host_flow.on_trade_presentations_ready();
+    p.guest_flow.on_trade_presentations_ready();
+    let guest_local = p.guest_trade.party().to_vec();
+    for _ in 0..20 {
+        assert_eq!(p.host_flow.update(a_input(), &local), FlowNeed::None);
+        assert_eq!(p.guest_flow.update(no_input(), &guest_local), FlowNeed::None);
+    }
+    assert_eq!(*p.host_flow.phase(), CableClubPhase::TradeCompletionDelay { frames_left: 40 });
+    for _ in 0..39 {
+        assert_eq!(p.host_flow.update(a_input(), &local), FlowNeed::None);
+        assert_eq!(p.guest_flow.update(no_input(), &guest_local), FlowNeed::None);
+    }
+    assert_eq!(p.host_flow.update(no_input(), &local), FlowNeed::CompleteTrade);
+    assert_eq!(p.guest_flow.update(no_input(), &guest_local), FlowNeed::CompleteTrade);
     for _ in 0..49 {
         assert_eq!(p.host_flow.update(a_input(), &local), FlowNeed::None,
             "A cannot shorten the original completed-text delay");
@@ -546,7 +568,7 @@ fn trade_flow_select_confirm_execute() {
         need,
     );
     assert_eq!(*p.host_flow.phase(), CableClubPhase::TradeSelect);
-    // The slower peer may still be watching the previous cutscene.
+    // Both presentations finished; the peer may still be in its result delay.
     assert_eq!(p.host_flow.update(a_input(), &local), FlowNeed::None);
     pump_trade(&mut p.guest_session, &mut p.guest_trade, &mut p.guest_flow);
     for _ in 0..49 {

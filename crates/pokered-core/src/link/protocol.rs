@@ -71,6 +71,8 @@ pub enum NetworkMessage {
     /// NO in TRADE_CANCEL_MENU, distinct from the list's CANCEL ($f).
     RejectTrade,
     TradeComplete(Pokemon),
+    /// Movie, forced evolution and move learning finished on this peer.
+    TradePresentationReady,
 
     Disconnect,
     /// Party snapshot exchanged before selecting or confirming a trade.
@@ -92,8 +94,8 @@ pub enum LinkBattleResult {
 }
 
 impl NetworkMessage {
-    /// Version 4 distinguishes selection cancellation from confirmation rejection.
-    pub const PROTOCOL_VERSION: u8 = 4;
+    /// Version 5 synchronizes both post-trade presentations before saving.
+    pub const PROTOCOL_VERSION: u8 = 5;
 
     pub fn is_compatible_version(version: u8) -> bool {
         version == Self::PROTOCOL_VERSION

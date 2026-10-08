@@ -1007,3 +1007,31 @@ fn confirmed_mon_must_match_the_preview() {
     assert!(host.received_mon().is_none());
     assert_eq!(host.party().get(0).unwrap().species, Species::Pikachu);
 }
+
+#[test]
+fn presentation_sync_requires_both_peers_and_resets_for_next_trade() {
+    let (mut a, mut b) = ChannelTransport::new_pair();
+    let (mut host, mut peer) = driver_pair(&mut a, &mut b,
+        Party::from(vec![trade_mon(Species::Pikachu, 25, 0x1111, None)]),
+        Party::from(vec![trade_mon(Species::Kadabra, 25, 0x2222, None)]));
+    for _ in 0..2 {
+        run_to_trade_execute(&mut host, &mut peer, &mut a, &mut b, 0, 0);
+        host.apply_exchange(&mut Pokedex::new()).unwrap();
+        peer.apply_exchange(&mut Pokedex::new()).unwrap();
+        assert!(!host.both_presentations_ready());
+        assert!(!peer.both_presentations_ready());
+        peer.finish_presentation(&mut b).unwrap();
+        assert_eq!(host.poll(&mut a), LinkTradePollResult::Pending);
+        assert!(!host.both_presentations_ready(), "remote readiness must wait for our own evolution");
+        host.finish_presentation(&mut a).unwrap();
+        assert!(host.both_presentations_ready());
+        assert_eq!(peer.poll(&mut b), LinkTradePollResult::Pending);
+        assert!(peer.both_presentations_ready());
+        host.continue_trade(&mut a).unwrap();
+        peer.continue_trade(&mut b).unwrap();
+        assert_eq!(host.poll(&mut a), LinkTradePollResult::Pending);
+        assert_eq!(peer.poll(&mut b), LinkTradePollResult::Pending);
+        assert!(!host.both_presentations_ready());
+        assert!(!peer.both_presentations_ready());
+    }
+}
