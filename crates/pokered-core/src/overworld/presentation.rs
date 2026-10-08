@@ -813,19 +813,20 @@ pub struct BoulderPushState {
     pub anchor: (u16, u16),
     pub origin: (u16, u16),
     pub destination: (u16, u16),
+    /// Hardware frames since MoveSprite started; excludes the preceding field loops.
     pub frame: u8,
     pub switch_block: Option<(u8, u8, u8)>,
     pub redraw_remaining: u8,
 }
 impl BoulderPushState {
-    pub const DUST_FIRST_FRAME: u8 = 45;
-    pub const DUST_LAST_FRAME: u8 = 69;
-    pub const LAST_FRAME: u8 = 75;
+    pub const DUST_FIRST_FRAME: u8 = 42;
+    pub const DUST_LAST_FRAME: u8 = 66;
+    pub const LAST_FRAME: u8 = 72;
     pub fn slide_pixels(&self) -> u8 {
         Self::slide_pixels_at(self.frame)
     }
     fn slide_pixels_at(frame: u8) -> u8 {
-        if frame < 8 { 0 } else { ((frame - 8) / 2 + 1).min(16) }
+        if frame < 5 { 0 } else { ((frame - 5) / 2 + 1).min(16) }
     }
     /// OAM positions appear in the following LCD frame. Palette register
     /// writes apply immediately and are handled separately by the renderer.

@@ -1327,6 +1327,19 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             self.field_loop_wait = 1;
         }
 
+        // JoypadOverworld runs RunMapScript BEFORE reading Joypad. The
+        // boulder script therefore sees the preceding field button sample,
+        // including idle calls that arm BIT_TRIED_PUSH_BOULDER without d-pad.
+        if ordinary_field_loop && self.state.player.movement_state == MovementState::Idle
+            && self.state.walk_counter == 0
+        {
+            let old=self.sampled_player_input;
+            let direction=if old.down {Some(Direction::Down)} else if old.up {Some(Direction::Up)}
+                else if old.left {Some(Direction::Left)} else if old.right {Some(Direction::Right)} else {None};
+            self.tick_boulder_push(direction);
+            if self.boulder_push.is_some() {return ScreenAction::Continue;}
+        }
+
         // JoypadOverworld is not sampled while a step is in progress.
         // A short START pulse during the step is discarded; a held START
         // becomes a fresh press at the next idle sample. START precedes A.
@@ -2268,7 +2281,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         // the player holds the d-pad toward a boulder, slide it one tile.
         // Runs in the normal gameplay path only (dialogue/scripts return
         // earlier), matching the original's RunMapScript call site.
-        if !turning_in_place { self.tick_boulder_push(movement_input.direction_pressed()); }
+        if !ordinary_field_loop && !turning_in_place { self.tick_boulder_push(movement_input.direction_pressed()); }
         if self.boulder_push.is_some() {
             return ScreenAction::Continue;
         }

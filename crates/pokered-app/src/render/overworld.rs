@@ -1305,7 +1305,7 @@ fn draw_overworld_impl(
                     // Palette writes take effect immediately; OAM positions
                     // wait for the next DMA. Do not delay both together.
                     let normal_palette=screen.boulder_push.map_or_else(||dust.palette_flipped(),|p| {
-                        ((p.frame.saturating_sub(45)/3).min(7))%2==1
+                        ((p.frame.saturating_sub(pokered_core::overworld::presentation::BoulderPushState::DUST_FIRST_FRAME)/3).min(7))%2==1
                     });
                     let obp1=if normal_palette {&normal} else {&flash};
                     for entry in pokered_core::overworld::presentation::boulder_dust_oam(&dust,anchor_x,anchor_y) {

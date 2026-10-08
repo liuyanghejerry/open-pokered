@@ -8652,9 +8652,9 @@ mod gift_dialogue_debug_tests {
         let mut elapsed=0;
         while game.overworld.boulder_push.is_some() {
             assert!(!game.debug_condition_met("control_ready"));
-            game.update(&idle);elapsed+=1;assert!(elapsed<=75);
+            game.update(&idle);elapsed+=1;assert!(elapsed<=72);
         }
-        assert!(elapsed>=74);
+        assert!(elapsed>=71);
         assert!(game.debug_condition_met("control_ready"));
     }
 
@@ -10235,13 +10235,26 @@ mod link_stats_cry_fidelity_tests {
                 _ => panic!("unknown boulder direction"),
             }};
             for b in preparation {
-                g.update(&button(b));g.update(&button(b));
+                let (x,y)=(g.overworld.state.player.x,g.overworld.state.player.y);
+                let target=match b {
+                    GbButton::Up=>(x,y-1),GbButton::Down=>(x,y+1),
+                    GbButton::Left=>(x-1,y),GbButton::Right=>(x+1,y),_=>unreachable!(),
+                };
+                let mut walking=button(b);
+                for t in 0..64 {
+                    if t>0 {walking.begin_frame();}
+                    g.update(&walking);
+                    if (g.overworld.state.player.x,g.overworld.state.player.y)==target {break;}
+                }
+                assert_eq!((g.overworld.state.player.x,g.overworld.state.player.y),target);
                 for _ in 0..30 {g.update(&idle);}
             }
             assert_eq!((g.overworld.state.player.x,g.overworld.state.player.y),expected);
             // Turn toward the boulder without a second contact. Ordinary turn
             // timing is a separate open audit; trigger recordings start after idle.
-            if direction!="down" {g.update(&button(trigger));g.update(&idle);}
+            if direction!="down" {
+                let mut turn=button(trigger);g.update(&turn);turn.begin_frame();g.update(&turn);
+            }
             for _ in 0..120 {g.update(&idle);}
             assert!(!g.overworld.boulder_dust.is_active());
             let mut input=InputState::new();let mut rows=Vec::new();
@@ -10249,7 +10262,11 @@ mod link_stats_cry_fidelity_tests {
                 if t>=0 {input.begin_frame();if t==0 {input.press(trigger);}if t==16 {input.release(trigger);}g.update(&input);}
                 let mut fb=FrameBuffer::new(RenderConfig::new(160,144),Rgba::WHITE);
                 g.draw(&mut fb);fb.save_png(&dir.join(format!("frame-{:04}.png",t+1))).unwrap();
+                let recorded_save=g.build_save_data();
                 rows.push(serde_json::json!({"t":t,"frame":g.frame_count,"input_bits":input.raw_current(),
+                    "last_stop":recorded_save.game_data.player_last_stop_direction,
+                    "moving_direction":recorded_save.game_data.player_moving_direction,
+                    "push_frame":g.overworld.boulder_push.map(|p|p.frame),
                     "screen":format!("{:?}",g.state.screen),"x":g.overworld.state.player.x,"y":g.overworld.state.player.y,
                     "movement":format!("{:?}",g.overworld.state.player.movement_state),"walk_counter":g.overworld.state.walk_counter,
                     "dust_active":g.overworld.boulder_dust.is_active(),"dust_step":g.overworld.boulder_dust.step(),

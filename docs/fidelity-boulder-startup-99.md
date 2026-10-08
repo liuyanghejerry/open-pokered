@@ -1,0 +1,15 @@
+# Boulder startup and ordinary field loop integration
+
+Reference: pret/pokered fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c. In `home/overworld.asm`, JoypadOverworld calls RunMapScript before Joypad. `engine/overworld/push_boulder.asm` arms BIT_TRIED_PUSH_BOULDER even with no directional button; on the next eligible script call it consumes the preceding hJoyHeld direction and starts MoveSprite. Source hooks on the actual Strength fixtures show MoveSprite at t3, TryWalking / destination at t5, dust routine at t41. All four source recordings and their repeats retain the same201PNG as the previous validated originals.
+
+The former custom phase counted three frames before MoveSprite, while the repaired ordinary loop already accounted for them. Phase zero now means MoveSprite: destination commits at2, switch flag at4, switch map block at6; first logical slide offset at5; smoke42..66; end/graphics restoration/CUT at72. Visible OAM waits one hardware frame; palette writes use the same DUST_FIRST_FRAME constant immediately. Boulder script dispatch now precedes the new field input sample. The ordinary loop and blocking slide clock stay separate.
+
+## Evidence
+
+All four directions:201 full RGB frames compare equal to the original, without shifting. Native repeats match201PNG and frames.json byte-for-byte. Their MoveSprite phase zero occurs at t3 in every case. Capture uses actual Title/Continue from the source Seafoam SRAM, actual party/Strength use, actual preparatory walks and an actual two-frame turn where needed, then120 idle frames. Preparatory walks now hold until one coordinate change rather than assuming the former two-frame native pulse walks. A spurious extra idle after the preparatory turn was removed to match the source2-frame turn+120-idle input. Recordings hold the push direction16frames, then release through frame199.
+
+Archive/manifest: `screenshots/fidelity-boulder-startup-99/`. The Down before shot is actualmaster31b1eda, using the same SRAM, Strength input, no directional preparation and trigger/frame54 as the new after shot. The archive retains both before repeats, source hooks, current repeats, native/source drivers and hash. Prior53-frame integration failure,17-frame palette failure and60-frame failures in the three other directions are retained in task artifacts.
+
+**Not complete:** Victory Road switches/holes, Seafoam holes, ordinary player pose/scroll, menu entry delay and scripted/NPC/connection clocks still require source comparison. Previous isolated gate evidence must not be reused as current integrated proof. Fresh complete story regression and latest22 CI remain required before merge.
+
+Core regression tests cover previous-sample dispatch and MoveSprite-relative destination/dust/restoration. Existing field and actor assertions remain; direct phase tests were normalized to the actual MoveSprite origin. Current core suite:2717 passed. Current debug-server app suite:195 passed,17 ignored. The native driver archive hash pins the production implementation captured and tested; fresh story/gate/CI proof is still pending.

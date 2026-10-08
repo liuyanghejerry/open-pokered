@@ -514,16 +514,16 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         }
         push.frame = push.frame.saturating_add(1);
         // TryWalking commits map coordinates before the first sprite pixel.
-        if push.frame == 5 {
+        if push.frame == 2 {
             self.npc_states[push.npc_index].x = push.destination.0;
             self.npc_states[push.npc_index].y = push.destination.1;
         }
         // 1F/2F check the destination on the next map-script iteration.
         // Their block replacement runs one iteration after setting the flag.
-        if push.frame == 7 && matches!(self.state.current_map, MapId::VictoryRoad1F | MapId::VictoryRoad2F) {
+        if push.frame == 4 && matches!(self.state.current_map, MapId::VictoryRoad1F | MapId::VictoryRoad2F) {
             push.switch_block = self.activate_victory_road_switch(push.destination.0, push.destination.1);
         }
-        if push.frame == 9 {
+        if push.frame == 6 {
             if let Some((x, y, block)) = push.switch_block.take() {
                 if let Some(map) = self.map_data.as_mut() { map.set_block(x, y, block); }
                 if self.boulder_switch_needs_redraw(x, y) { push.redraw_remaining = 9; }

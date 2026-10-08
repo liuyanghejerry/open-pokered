@@ -546,7 +546,7 @@ fn boulder_push_starts_the_dust_at_the_push_spot() {
     screen.tick_boulder_push(Some(Direction::Down)); // arms the flag
     screen.tick_boulder_push(Some(Direction::Down)); // push
     assert!(!screen.boulder_dust.is_active(), "MoveSprite finishes before smoke is loaded");
-    for _ in 0..45 {screen.tick_boulder_push(None);}
+    for _ in 0..42 {screen.tick_boulder_push(None);}
     assert!(screen.boulder_dust.is_active(), "smoke follows the scripted slide and graphics copy");
     assert_eq!(screen.boulder_dust.facing(), Direction::Down);
     // Anchored to the player's tile at push time (the original writes the
@@ -561,17 +561,17 @@ fn boulder_push_blocks_player_and_inputs_through_slide_dust_and_restore() {
     screen.state.player.x=5;screen.state.player.y=5;screen.state.player.facing=Direction::Down;
     screen.npc_states.push(make_boulder(5,6));screen.strength_active=true;
     screen.tick_boulder_push(Some(Direction::Down));screen.tick_boulder_push(Some(Direction::Down));
-    for frame in 1..=75 {
+    for frame in 1..=72 {
         // Physical controls during the blocking routine must neither move
         // the player nor open a menu/dialogue or start another push.
         let noisy=super::OverworldInput::new(true,true,true,true,true,true,true,true);
         assert_eq!(screen.update_frame(noisy),ScreenAction::Continue);
         assert_eq!((screen.state.player.x,screen.state.player.y),(5,5),"player waits at {frame}");
         assert!(screen.pending_dialogue.is_none());
-        assert_eq!(screen.boulder_dust.is_active(),(45..=69).contains(&frame),"logical smoke stage {frame}");
+        assert_eq!(screen.boulder_dust.is_active(),(42..=66).contains(&frame),"logical smoke stage {frame}");
         // Source TryWalking updates MapY/MapX before any visible slide.
-        assert_eq!(boulder_pos(&screen),if frame<5 {(5,6)} else {(5,7)});
-        assert_eq!(screen.boulder_push.is_some(),frame<75);
+        assert_eq!(boulder_pos(&screen),if frame<2 {(5,6)} else {(5,7)});
+        assert_eq!(screen.boulder_push.is_some(),frame<72);
     }
     assert_eq!(screen.boulder_dust_frames,0);
     // A released/new direction after the routine can move normally.
@@ -609,9 +609,9 @@ fn boulder_dust_completion_plays_sfx_cut_once() {
     screen.tick_boulder_push(Some(Direction::Down)); // arms
     screen.tick_boulder_push(Some(Direction::Down)); // push (SFX_PUSH_BOULDER)
     assert!(!screen.boulder_dust.is_active(),"no smoke before the slide");
-    for frame in 1..=75 {
+    for frame in 1..=72 {
         screen.tick_boulder_push(None);
-        assert_eq!(cut_requests(&screen),usize::from(frame==75),"SFX_CUT after graphics restoration at {frame}");
+        assert_eq!(cut_requests(&screen),usize::from(frame==72),"SFX_CUT after graphics restoration at {frame}");
     }
     assert!(!screen.boulder_dust.is_active());
     for _ in 0..10 {screen.tick_boulder_push(None);}
@@ -635,7 +635,7 @@ fn boulder_dust_restarts_on_a_new_push() {
     screen.state.player.y=6;
     screen.tick_boulder_push(Some(Direction::Down));screen.tick_boulder_push(Some(Direction::Down));
     assert!(!screen.boulder_dust.is_active(),"a new push starts with a slide");
-    for _ in 0..45 {screen.tick_boulder_push(None);}
+    for _ in 0..42 {screen.tick_boulder_push(None);}
     assert_eq!(screen.boulder_dust.step(),0);
     assert_eq!(screen.boulder_dust.anchor(),(5,6));
 }
@@ -1136,10 +1136,10 @@ fn seafoam_hole_waits_for_dust_and_keeps_the_lower_floor_event() {
         origin:(17,5),destination:(17,6),frame:0,switch_block:None,redraw_remaining:0,
     });
     let flag=EventFlag::EVENT_SEAFOAM1_BOULDER1_DOWN_HOLE;
-    for frame in 1..=75 {
+    for frame in 1..=72 {
         screen.advance_boulder_push();
-        assert_eq!(screen.npc_states[0].visible,frame<75);
-        assert_eq!(screen.unified_flags.check(flag),frame==75);
+        assert_eq!(screen.npc_states[0].visible,frame<72);
+        assert_eq!(screen.unified_flags.check(flag),frame==72);
     }
     assert_eq!((screen.npc_states[0].x,screen.npc_states[0].y),(17,6));
     assert!(screen.boulder_push.is_none());
@@ -1169,14 +1169,14 @@ fn victory_road_switch_commits_during_slide_and_redraw_depends_on_view_address()
             npc_index:0,direction:Direction::Down,anchor:(x,y),origin:(x,y+1),
             destination:(x,y+2),frame:0,switch_block:None,redraw_remaining:0,
         });
-        for elapsed in 1..=75+pause {
+        for elapsed in 1..=72+pause {
             screen.advance_boulder_push();
-            assert_eq!(screen.unified_flags.check(flag),elapsed>=7,"{map:?} elapsed {elapsed}");
-            assert_eq!(screen.npc_states[0].y,if elapsed<5 {y+1} else {y+2});
+            assert_eq!(screen.unified_flags.check(flag),elapsed>=4,"{map:?} elapsed {elapsed}");
+            assert_eq!(screen.npc_states[0].y,if elapsed<2 {y+1} else {y+2});
             let m=screen.map_data.as_ref().unwrap();
-            assert_eq!(m.blocks[by as usize*m.width as usize+bx as usize],if elapsed<9 {old} else {block});
-            if (9..=9+pause).contains(&elapsed) {assert_eq!(screen.boulder_push.unwrap().frame,9);}
-            assert_eq!(screen.boulder_push.is_none(),elapsed==75+pause);
+            assert_eq!(m.blocks[by as usize*m.width as usize+bx as usize],if elapsed<6 {old} else {block});
+            if (6..=6+pause).contains(&elapsed) {assert_eq!(screen.boulder_push.unwrap().frame,6);}
+            assert_eq!(screen.boulder_push.is_none(),elapsed==72+pause);
         }
         assert_eq!(screen.npc_states[0].walk_counter,0);
     }
@@ -1226,4 +1226,24 @@ fn ordinary_turn_wait_uses_last_stop_instead_of_visible_facing() {
     assert_eq!(screen.player_last_stop_direction,4);
     screen.update_frame(down);screen.update_frame(down);
     assert_eq!(screen.state.walk_counter,7,"matching stopped direction now walks");
+}
+
+#[test]
+fn boulder_map_script_arms_on_idle_and_uses_the_previous_field_sample() {
+    let mut screen=screen_on(MapId::PalletTown);fill_map_with_passable_block(&mut screen);
+    screen.state.player.x=5;screen.state.player.y=5;screen.state.player.facing=Direction::Down;
+    screen.player_last_stop_direction=4;screen.strength_active=true;
+    screen.npc_states.push(make_boulder(5,6));
+    let idle=OverworldInput::new(false,false,false,false,false,false,false,false);
+    let down=OverworldInput::new(false,true,false,false,false,false,false,false);
+    screen.update_frame(idle);screen.update_frame(idle);
+    assert!(screen.tried_push_boulder,"RunMapScript arms even with hJoyHeld=0");
+    screen.update_frame(down);
+    assert!(screen.boulder_push.is_none(),"script precedes the new Joypad sample");
+    screen.update_frame(idle);
+    screen.update_frame(idle);
+    assert!(screen.boulder_push.is_some(),"next script sees the previous held direction even after physical release");
+    assert_eq!(screen.boulder_push.unwrap().frame,0,"MoveSprite is the phase origin");
+    screen.update_frame(idle);screen.update_frame(idle);
+    assert_eq!(boulder_pos(&screen),(5,7),"TryWalking commits two hardware frames after MoveSprite");
 }
