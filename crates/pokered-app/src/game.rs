@@ -10047,7 +10047,14 @@ mod link_stats_cry_fidelity_tests {
             let mut g=PokemonGame::new_with_options(GameVersion::Red,Some(path),None,None,false,None,false,true,
                 #[cfg(feature="debug-server")] None);
             let idle=InputState::new(); let mut saw_menu=false;
-            let victory_hole=std::env::var("FIDELITY_DUST_SCENARIO").is_ok_and(|s|s=="victory-hole");
+            let scenario=std::env::var("FIDELITY_DUST_SCENARIO").unwrap_or_default();
+            let victory_hole=scenario=="victory-hole";
+            let victory_switch=match scenario.as_str() {
+                "victory-switch1f" => Some((MapId::VictoryRoad1F,17,11,4,"EVENT_VICTORY_ROAD_1_BOULDER_ON_SWITCH",4,6)),
+                "victory-switch2f1" => Some((MapId::VictoryRoad2F,1,14,10,"EVENT_VICTORY_ROAD_2_BOULDER_ON_SWITCH1",3,4)),
+                "victory-switch2f2" => Some((MapId::VictoryRoad2F,9,14,10,"EVENT_VICTORY_ROAD_2_BOULDER_ON_SWITCH2",11,7)),
+                _ => None,
+            };
             for frame in 0..2000 {
                 saw_menu |= g.state.screen==GameScreen::MainMenu;
                 if g.state.screen==GameScreen::Overworld {break;}
@@ -10062,6 +10069,13 @@ mod link_stats_cry_fidelity_tests {
                 for _ in 0..120 {g.update(&idle);}
                 assert_eq!(g.overworld.state.current_map,MapId::VictoryRoad3F);
                 assert_eq!((g.overworld.state.player.x,g.overworld.state.player.y),(21,15));
+            }
+            if let Some((map,x,y,npc,_,_,_))=victory_switch {
+                g.overworld.warp_to_map(map,x,y);
+                for _ in 0..120 {g.update(&idle);}
+                let n=g.overworld.npc_states.iter_mut().find(|n|n.npc_index==npc).unwrap();
+                n.x=u16::from(x);n.y=u16::from(y)+1;n.walk_counter=0;
+                g.overworld.state.player.facing=pokered_core::overworld::Direction::Down;
             }
             // Controlled no-encounter fixture matches original BIT_NO_BATTLES.
             g.overworld.state.encounter_cooldown=255;g.overworld.set_rng_seed(0);
@@ -10090,6 +10104,8 @@ mod link_stats_cry_fidelity_tests {
             let direction=if victory_hole {"right".into()} else {std::env::var("FIDELITY_DUST_DIRECTION").unwrap_or_else(|_|"down".into())};
             let (preparation,trigger,expected)=if victory_hole {
                 (vec![],GbButton::Right,(21,15))
+            } else if let Some((_,x,y,_,_,_,_))=victory_switch {
+                (vec![],GbButton::Down,(u16::from(x),u16::from(y)))
             } else {match direction.as_str() {
                 "down" => (vec![],GbButton::Down,(18,9)),
                 "up" => (vec![GbButton::Right,GbButton::Down,GbButton::Down,GbButton::Left],GbButton::Up,(18,11)),
@@ -10118,6 +10134,13 @@ mod link_stats_cry_fidelity_tests {
                     "dust_active":g.overworld.boulder_dust.is_active(),"dust_step":g.overworld.boulder_dust.step(),
                     "dust_flash":g.overworld.boulder_dust.palette_flipped(),"dust_anchor":g.overworld.boulder_dust.anchor(),
                     "npcs":g.overworld.npc_states.iter().map(|n|serde_json::json!({"id":n.npc_index,"x":n.x,"y":n.y,"walk_counter":n.walk_counter})).collect::<Vec<_>>() }));
+                if let Some((_,_,_,npc,flag,bx,by))=victory_switch {
+                    let row=rows.last_mut().unwrap();
+                    row["switch"]=serde_json::json!(g.overworld.unified_flags().get_flag(flag));
+                    let map=g.overworld.map_data.as_ref().unwrap();
+                    row["block"]=serde_json::json!(map.blocks[by as usize*map.width as usize+bx as usize]);
+                    row["boulder_visible"]=serde_json::json!(g.overworld.npc_states.iter().find(|n|n.npc_index==npc).unwrap().visible);
+                }
             }
             assert!(rows.iter().any(|r|r["dust_active"]==true));
             std::fs::write(dir.join("frames.json"),serde_json::to_string_pretty(&rows).unwrap()).unwrap();

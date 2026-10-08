@@ -859,10 +859,7 @@
           "frame-0199.png": "8bcead154748d53f58faba322d87b4a60b4aa687b9fa8a55f3baab9a2bb8cd3f",
           "frame-0200.png": "8bcead154748d53f58faba322d87b4a60b4aa687b9fa8a55f3baab9a2bb8cd3f"
         },
-        "frames_json_sha256": [
-          "9ba6d3abbefe1f753e6d6e9ed7382b6af0034a6b6e813de62805fc7103de0efd",
-          "9ba6d3abbefe1f753e6d6e9ed7382b6af0034a6b6e813de62805fc7103de0efd"
-        ],
+        "frames_json_sha256": "6a85e4231b5162d0be5eccf092b51c6c0168282d3189cf66a44cac1a18dbb10f",
         "differing_RGB_pixels_vs_reference_by_t": [
           0,
           0,
@@ -1901,10 +1898,7 @@
           "frame-0199.png": "5ac30abb4abb33f2ba154d010f7b303a9cf689e049fa87ae99452f0b2a7a10f6",
           "frame-0200.png": "5ac30abb4abb33f2ba154d010f7b303a9cf689e049fa87ae99452f0b2a7a10f6"
         },
-        "frames_json_sha256": [
-          "27bba7bc651d352ebbec1545431c501a868e5cb6908e6ef4ac2fe159b97e3297",
-          "27bba7bc651d352ebbec1545431c501a868e5cb6908e6ef4ac2fe159b97e3297"
-        ],
+        "frames_json_sha256": "15121f97fad28d96e16360950b69f9ed35f8d0a95899826642b3703d579327dd",
         "differing_RGB_pixels_vs_reference_by_t": [
           0,
           0,
@@ -2943,10 +2937,7 @@
           "frame-0199.png": "56fed82e3c6ad74e4e5caf13b73e5b147919fe000732f73a439c90c9564c6dfd",
           "frame-0200.png": "56fed82e3c6ad74e4e5caf13b73e5b147919fe000732f73a439c90c9564c6dfd"
         },
-        "frames_json_sha256": [
-          "1b7a4cfafe2142364f95ebba6b28d519e2747572339b7aec5bd8ae71eef433de",
-          "1b7a4cfafe2142364f95ebba6b28d519e2747572339b7aec5bd8ae71eef433de"
-        ],
+        "frames_json_sha256": "281b9945145b1183dbf0c1c6a33980ab1d3d3164eecbeeee49398376545bf6db",
         "differing_RGB_pixels_vs_reference_by_t": [
           0,
           0,
@@ -3985,10 +3976,7 @@
           "frame-0199.png": "44878f7be4a3cb58fb7521fa732dfaba88ad864396ee348a9d946a233bcf01a3",
           "frame-0200.png": "44878f7be4a3cb58fb7521fa732dfaba88ad864396ee348a9d946a233bcf01a3"
         },
-        "frames_json_sha256": [
-          "d84f57fdefbb864d412e236645afaceeb8658566fed3510ecbc54ad9fe497260",
-          "d84f57fdefbb864d412e236645afaceeb8658566fed3510ecbc54ad9fe497260"
-        ],
+        "frames_json_sha256": "69534bb7ba39a5dee02de76988416daf188902cbe138aaeae4fd7588c25ac664",
         "differing_RGB_pixels_vs_reference_by_t": [
           0,
           0,
@@ -4198,20 +4186,30 @@
   },
   "reference_archive_sha256": "f87b6d78d7cf4c9026fe05f409221a8ee9212d2a31f767159399da66e5cc5b22",
   "before_archive_sha256": "600793c79d24ed4c655f4de3afadc55f894ed6b3489b0fb84a0794595e91243a",
-  "after_archive_sha256": "cb248704c68a6e3c6a30e68eac392ea833427cf131c0caf78ae6973e6f92fcfd",
+  "after_archive_sha256": "7713ae0e5494d0bde31b5b684205059a03d95188d63c7c0631c9631f6f891703",
   "fixture_sha256": "218d53bcf1bb3ae61a88f998c7ba549be6faa58b7ea1013e5b4333f755b532a2",
-  "final_capture_driver_sha256": "4109027ae45a949d4aadfe113bf0f9164e8df85a50a54ab8119f0f62bd4766c4",
+  "final_capture_driver_sha256": "5e9bae508cf0a42a7791a2c727700535657c58f45499fcc19c58064fab599522",
   "production_and_test_source_sha256": {
-    "crates/pokered-app/src/game.rs": "fbf5e62f614846c386dba740a81bb4b369bd93faa6f5643be20120c85a75ab8a",
+    "crates/pokered-app/src/game.rs": "87dc771f59b015cdb92ac39bdcb8f048ec28e634c60ffa4c7499f9d01d18da97",
     "crates/pokered-app/src/agent_nav.rs": "1259e99e27b7fd6a97ac03e11f79fb677b8b6d05d36e909b143a4b626d83a82e",
     "crates/pokered-app/src/render/overworld.rs": "1cbe90efd7cd29f2dfc22c561df3e1c2488b16f0e12c2444c600d9fa0d13e11d",
-    "crates/pokered-core/src/overworld/field_moves.rs": "e2dba40012cd2bb1e8f2599ca0ee5aae2768554f07fc993ce4bfb03cb07ea3b8",
-    "crates/pokered-core/src/overworld/presentation.rs": "fae8a0e11e39efe93b1834644f4a0055edb24739f8829f41832a23c3d1abcc7f",
+    "crates/pokered-core/src/overworld/field_moves.rs": "4db73f5a745524d957bcb9a92dac26be9fa7ec3b5c450af8effa133c614eb4f6",
+    "crates/pokered-core/src/overworld/presentation.rs": "49e65264b39f03b891d6629efbdb930e5a68a3493098410f8217a4c1d5c0f91f",
     "crates/pokered-core/src/overworld/screen.rs": "5060f6d5faa28ca95acb5aee3dd891d98708169c674e99296feb70f9ef678758",
-    "crates/pokered-core/src/overworld/tests_field_moves.rs": "3d52dc8ea75afd65d8c0574db4cef62132280be646f846bd104a572ae692ffdf",
-    "crates/pokered-core/src/overworld/tests_npc.rs": "66c9e80936122deae24e0ec83f3c13df60a3f67990388d38a1bb6736a44d0863",
+    "crates/pokered-core/src/overworld/tests_field_moves.rs": "db24be501359a9d263b926ea24f9d1533efac9e38f700c67f4e798211b067535",
+    "crates/pokered-core/src/overworld/tests_npc.rs": "9351280ad6c9a3ee9233b3b3730ee2ea76c9bdabcd7923e98b0e46059c4798c5",
     "crates/pokered-core/src/overworld/update.rs": "6e5b80fb2c18f5c32f57420a7c975cbd8a8155d8c8f4ae0065748e3a16cec672"
   },
-  "final_sparse_candidate_recapture": "all directions repeated twice; all PNG/JSON bytes equal archived after series",
-  "final_control_ready_recapture": "all four directions twice; all201PNG andJSON byteidentical to archived after"
+  "historical_recaptures_before_early_coordinate_fix": {
+    "sparse": "all directions repeated twice; all PNG/JSON bytes equal archived after series",
+    "control_ready": "all four directions twice; all201PNG andJSON byteidentical to archived after"
+  },
+  "final_early_switch_recapture": "8 recordings; every201PNG byteidentical to previous source-verified series; currentJSON repeatedexactly butlogicalNPCcoordinatesnowupdate5 ratherthan38",
+  "victory_gates_archive_sha256": "2fa8f041c67a035ca7638a886b0734f152445e98eba401350f5cfc999bffe9b5",
+  "victory_gate_verdicts": {
+    "1f": "isolated201RGB0PASS, inputidlephasevariantsstillPARTIAL",
+    "2f1": "isolated201RGB0PASS, inputidlephasevariantsstillPARTIAL",
+    "2f2": "FAIL27frames, oneframewholepush offset; pretriggerRGB0; preserveuntilcausalclockfixed",
+    "allcases": "ordinarylogic/inputphase not yetfixed; do notmerge"
+  }
 }

@@ -569,7 +569,8 @@ fn boulder_push_blocks_player_and_inputs_through_slide_dust_and_restore() {
         assert_eq!((screen.state.player.x,screen.state.player.y),(5,5),"player waits at {frame}");
         assert!(screen.pending_dialogue.is_none());
         assert_eq!(screen.boulder_dust.is_active(),(45..=69).contains(&frame),"logical smoke stage {frame}");
-        assert_eq!(boulder_pos(&screen),if frame<38 {(5,6)} else {(5,7)});
+        // Source TryWalking updates MapY/MapX before any visible slide.
+        assert_eq!(boulder_pos(&screen),if frame<5 {(5,6)} else {(5,7)});
         assert_eq!(screen.boulder_push.is_some(),frame<75);
     }
     assert_eq!(screen.boulder_dust_frames,0);
@@ -1049,7 +1050,7 @@ fn seafoam_hole_waits_for_dust_and_keeps_the_lower_floor_event() {
     screen.npc_states[0].walk_counter=16;
     screen.boulder_push=Some(presentation::BoulderPushState {
         npc_index:0,direction:Direction::Down,anchor:(17,4),
-        origin:(17,5),destination:(17,6),frame:0,
+        origin:(17,5),destination:(17,6),frame:0,switch_block:None,redraw_remaining:0,
     });
     let flag=EventFlag::EVENT_SEAFOAM1_BOULDER1_DOWN_HOLE;
     for frame in 1..=75 {
@@ -1065,4 +1066,35 @@ fn seafoam_hole_waits_for_dust_and_keeps_the_lower_floor_event() {
     lower.run_on_load();
     for _ in 0..120 {lower.update_frame(OverworldInput::new(false,false,false,false,false,false,false,false));}
     assert!(lower.npc_states.iter().any(|n|n.visible && n.sprite_id==pokered_data::sprites::SpriteId::Boulder as u8));
+}
+
+#[test]
+fn victory_road_switch_commits_during_slide_and_redraw_depends_on_view_address() {
+    use pokered_data::event_flags::EventFlag;
+    for (map, x, y, flag, bx, by, block, pause) in [
+        (MapId::VictoryRoad1F,17,11,EventFlag::EVENT_VICTORY_ROAD_1_BOULDER_ON_SWITCH,4,6,29,9),
+        (MapId::VictoryRoad2F,1,14,EventFlag::EVENT_VICTORY_ROAD_2_BOULDER_ON_SWITCH1,3,4,21,0),
+        (MapId::VictoryRoad2F,9,14,EventFlag::EVENT_VICTORY_ROAD_2_BOULDER_ON_SWITCH2,11,7,29,9),
+    ] {
+        let mut screen=screen_on(map);
+        screen.state.player.x=x;screen.state.player.y=y;
+        screen.npc_states.clear();screen.npc_states.push(make_boulder(x,y+1));
+        screen.npc_states[0].walk_counter=16;
+        let old=screen.map_data.as_ref().unwrap().blocks[by as usize*screen.map_data.as_ref().unwrap().width as usize+bx as usize];
+        assert_ne!(old,block);
+        screen.boulder_push=Some(presentation::BoulderPushState {
+            npc_index:0,direction:Direction::Down,anchor:(x,y),origin:(x,y+1),
+            destination:(x,y+2),frame:0,switch_block:None,redraw_remaining:0,
+        });
+        for elapsed in 1..=75+pause {
+            screen.advance_boulder_push();
+            assert_eq!(screen.unified_flags.check(flag),elapsed>=7,"{map:?} elapsed {elapsed}");
+            assert_eq!(screen.npc_states[0].y,if elapsed<5 {y+1} else {y+2});
+            let m=screen.map_data.as_ref().unwrap();
+            assert_eq!(m.blocks[by as usize*m.width as usize+bx as usize],if elapsed<9 {old} else {block});
+            if (9..=9+pause).contains(&elapsed) {assert_eq!(screen.boulder_push.unwrap().frame,9);}
+            assert_eq!(screen.boulder_push.is_none(),elapsed==75+pause);
+        }
+        assert_eq!(screen.npc_states[0].walk_counter,0);
+    }
 }

@@ -479,6 +479,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 self.boulder_push = Some(presentation::BoulderPushState {
                     npc_index, direction, destination, origin: (npc.x,npc.y),
                     anchor: (self.state.player.x, self.state.player.y), frame: 0,
+                    switch_block: None, redraw_remaining: 0,
                 });
                 self.audio_requests.push(OverworldAudioRequest::PlaySound {
                     sound_id: "SFX_PUSH_BOULDER".to_string(),
@@ -506,7 +507,28 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     /// and not an elevation change from the player's tile.
     pub(crate) fn advance_boulder_push(&mut self) {
         let Some(mut push) = self.boulder_push else { return; };
+        if push.redraw_remaining != 0 {
+            push.redraw_remaining -= 1;
+            self.boulder_push = Some(push);
+            return;
+        }
         push.frame = push.frame.saturating_add(1);
+        // TryWalking commits map coordinates before the first sprite pixel.
+        if push.frame == 5 {
+            self.npc_states[push.npc_index].x = push.destination.0;
+            self.npc_states[push.npc_index].y = push.destination.1;
+        }
+        // 1F/2F check the destination on the next map-script iteration.
+        // Their block replacement runs one iteration after setting the flag.
+        if push.frame == 7 && matches!(self.state.current_map, MapId::VictoryRoad1F | MapId::VictoryRoad2F) {
+            push.switch_block = self.activate_victory_road_switch(push.destination.0, push.destination.1);
+        }
+        if push.frame == 9 {
+            if let Some((x, y, block)) = push.switch_block.take() {
+                if let Some(map) = self.map_data.as_mut() { map.set_block(x, y, block); }
+                if self.boulder_switch_needs_redraw(x, y) { push.redraw_remaining = 9; }
+            }
+        }
         self.boulder_dust_frames = BOULDER_DUST_FRAMES.saturating_sub(push.frame);
         let pixels = push.slide_pixels();
         if pixels < 16 {
@@ -514,11 +536,6 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         } else if self.npc_states[push.npc_index].walk_counter != 0 {
             let npc = &mut self.npc_states[push.npc_index];
             npc.x = push.destination.0; npc.y = push.destination.1; npc.walk_counter = 0;
-            // 3F checks BIT_PUSHED_BOULDER, set only after the dust.
-            // 1F/2F check coordinates directly (audited separately).
-            if self.state.current_map != MapId::VictoryRoad3F {
-                self.commit_boulder_landing(push.npc_index);
-            }
         }
         if push.frame == presentation::BoulderPushState::DUST_FIRST_FRAME {
             self.boulder_dust = presentation::BoulderDustState::new(push.direction, push.anchor.0, push.anchor.1);
@@ -540,6 +557,25 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         } else {
             self.boulder_push = Some(push);
         }
+    }
+
+    fn activate_victory_road_switch(&mut self, x: u16, y: u16) -> Option<(u8, u8, u8)> {
+        let (name, bx, by, block) = victory_road_switch_for(self.state.current_map, x, y)?;
+        let flag = pokered_data::event_flags::EventFlag::from_name(name)?;
+        if self.unified_flags.check(flag) { return None; }
+        self.unified_flags.set(flag);
+        Some((bx, by, block))
+    }
+
+    /// ReplaceTileBlock uses a linear WRAM address interval, including the
+    /// padded connection columns, rather than a rectangular viewport test.
+    fn boulder_switch_needs_redraw(&self, x: u8, y: u8) -> bool {
+        let Some(map) = self.map_data.as_ref() else { return false; };
+        let stride = i32::from(map.width) + 6;
+        let top = (i32::from(self.state.player.y) - 4).div_euclid(2) * stride
+            + (i32::from(self.state.player.x) - 4).div_euclid(2);
+        let address = i32::from(y) * stride + i32::from(x);
+        (top..=top + 4 * stride + 6).contains(&address)
     }
 
     fn commit_boulder_landing(&mut self, npc_index: usize) {

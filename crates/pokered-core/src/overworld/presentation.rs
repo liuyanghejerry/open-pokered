@@ -814,6 +814,8 @@ pub struct BoulderPushState {
     pub origin: (u16, u16),
     pub destination: (u16, u16),
     pub frame: u8,
+    pub switch_block: Option<(u8, u8, u8)>,
+    pub redraw_remaining: u8,
 }
 impl BoulderPushState {
     pub const DUST_FIRST_FRAME: u8 = 45;
