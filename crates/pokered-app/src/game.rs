@@ -2698,7 +2698,7 @@ impl PokemonGame {
                 if let Some(stats) = &mut self.stats_screen { stats.start_entry(); }
                 if let Some(audio) = &self.audio {
                     audio.play_sfx(SfxId::PressAB);
-                    audio.manager.lock().unwrap().set_master_volume(3, 3);
+                    audio.set_master_volume(3, 3);
                 }
             }
             GameScreen::LanguageSelect => {}
@@ -3979,9 +3979,9 @@ impl PokemonGame {
                                 if let Some(stats) = self.link_cable.stats() {
                                     let volume = if !stats.entry_blocks_input() && audio.is_sfx_playing()
                                         || stats.entry_frame() == Some(stats.entry_cry_frame()) { 7 } else { 3 };
-                                    audio.manager.lock().unwrap().set_master_volume(volume, volume);
+                                    audio.set_master_volume(volume, volume);
                                 } else if was_viewing_stats {
-                                    audio.manager.lock().unwrap().set_master_volume(7, 7);
+                                    audio.set_master_volume(7, 7);
                                 }
                             }
                             self.handle_flow_need(need);
@@ -5408,12 +5408,12 @@ impl PokemonGame {
                     if let Some(audio) = &self.audio {
                         let volume = if !ss.entry_blocks_input() && audio.is_sfx_playing()
                             || ss.entry_frame() == Some(ss.entry_cry_frame()) { 7 } else { 3 };
-                        audio.manager.lock().unwrap().set_master_volume(volume, volume);
+                        audio.set_master_volume(volume, volume);
                     }
                     match action {
                         StatsScreenAction::Continue => ScreenAction::Continue,
                         StatsScreenAction::BackToParty => {
-                            if let Some(audio) = &self.audio { audio.manager.lock().unwrap().set_master_volume(7, 7); }
+                            if let Some(audio) = &self.audio { audio.set_master_volume(7, 7); }
                             self.stats_screen = None;
                             // STATS opened from the PC's mon list returns to
                             // the PC (its state is still in `pc_screen`).

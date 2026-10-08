@@ -79,6 +79,11 @@ impl AudioOutput {
         dotzuki_audio::output::render_apu_stereo(&mut manager.apu, output, 44100);
     }
 
+    /// Set the logical per-side NR50 level on every output backend.
+    pub fn set_master_volume(&self, left: u8, right: u8) {
+        self.manager.lock().unwrap().set_master_volume(left, right);
+    }
+
     pub fn play_music(&self, id: MusicId) {
         self.try_resume();
         if let Ok(mut mgr) = self.manager.lock() {

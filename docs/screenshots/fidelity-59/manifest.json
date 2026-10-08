@@ -18,7 +18,7 @@
   "native_sram_sha256": "7398552f62828d52ee6d26d75c9f380b6876d0bb495cd8701e2400dd3e5a367f",
   "test_module_sha256": "93e49bd2de899e6654751bd277a4633031e088e63830b5954178efad4e4ff66b",
   "native_before_binary_sha256": "811b77978e5a63d29603af626b6d353d7e1a03aff52e269eeb9bc591675b28de",
-  "native_after_binary_sha256": "60a5aeb75cf667d519319021bdaef93fc524f9d95f0012bd0d38f5605dff169d",
+  "native_after_binary_sha256": "fe37cf3a66b6013dc24298375a3003670a8d0b30d9f50c767ed492aa52e0a6ba",
   "start": {
     "map": "PalletTown",
     "x": 5,

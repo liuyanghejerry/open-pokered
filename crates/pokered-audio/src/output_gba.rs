@@ -43,6 +43,11 @@ impl AudioOutput {
             manager: RefCell::new(manager),
         })
     }
+    /// Set the same NR50 level as the hosted PCM backend.
+    pub fn set_master_volume(&self, left: u8, right: u8) {
+        self.manager.borrow_mut().set_master_volume(left, right);
+    }
+
     pub fn play_music(&self, id: MusicId) {
         self.manager.borrow_mut().play_music(id)
     }
