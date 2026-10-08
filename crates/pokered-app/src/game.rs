@@ -10007,6 +10007,84 @@ mod link_stats_cry_fidelity_tests {
         });
     }
 
+    #[test]
+    #[ignore = "actual Continue/Strength/boulder input continuous capture"]
+    fn capture_actual_boulder_dust_raw_93() {
+        run_link_save_fixture(|| {
+            use pokered_core::party_screen::PartyScreenPhase;
+            let dir=std::path::PathBuf::from(std::env::var("FIDELITY_DUST_CAPTURE").unwrap());
+            std::fs::create_dir_all(&dir).unwrap();
+            let path=dir.join("fixture.sav");
+            std::fs::write(&path,std::fs::read(std::env::var("FIDELITY_DUST_SRAM").unwrap()).unwrap()).unwrap();
+            let mut g=PokemonGame::new_with_options(GameVersion::Red,Some(path),None,None,false,None,false,true,
+                #[cfg(feature="debug-server")] None);
+            let idle=InputState::new(); let mut saw_menu=false;
+            for frame in 0..2000 {
+                saw_menu |= g.state.screen==GameScreen::MainMenu;
+                if g.state.screen==GameScreen::Overworld {break;}
+                let advance=button(GbButton::A);g.update(if frame%20==19 {&advance} else {&idle});
+            }
+            assert!(saw_menu);assert_eq!(g.overworld.state.current_map,MapId::SeafoamIslands1F);
+            assert_eq!((g.overworld.state.player.x,g.overworld.state.player.y),(18,9));
+            // Controlled no-encounter fixture matches original BIT_NO_BATTLES.
+            g.overworld.state.encounter_cooldown=255;g.overworld.set_rng_seed(0);
+            g.update(&button(GbButton::Start));g.update(&idle);
+            assert_eq!(g.state.screen,GameScreen::StartMenu);
+            for _ in 0..7 {
+                if g.start_menu.current_item()==pokered_core::start_menu::StartMenuItem::Pokemon {break;}
+                g.update(&button(GbButton::Down));g.update(&idle);
+            }
+            g.update(&button(GbButton::A));g.update(&idle);
+            assert_eq!(g.state.screen,GameScreen::PartyScreen);
+            for _ in 0..6 {
+                if g.party_screen.cursor()==0 {break;}
+                g.update(&button(GbButton::Up));g.update(&idle);
+            }
+            g.update(&button(GbButton::A));g.update(&idle);
+            for _ in 0..3 {g.update(&button(GbButton::Down));g.update(&idle);}
+            assert_eq!(g.party_screen.phase(),PartyScreenPhase::ActionMenu {cursor:3});
+            g.update(&button(GbButton::A));g.update(&idle);
+            for t in 0..1000 {
+                if g.state.screen==GameScreen::Overworld && g.overworld.strength_active && g.overworld.pending_dialogue.is_none() {break;}
+                let advance=button(GbButton::A);g.update(if t%20==19 {&advance} else {&idle});
+            }
+            assert_eq!(g.state.screen,GameScreen::Overworld);assert!(g.overworld.strength_active);
+            assert!(g.overworld.pending_dialogue.is_none());
+            let direction=std::env::var("FIDELITY_DUST_DIRECTION").unwrap_or_else(|_|"down".into());
+            let (preparation,trigger,expected)=match direction.as_str() {
+                "down" => (vec![],GbButton::Down,(18,9)),
+                "up" => (vec![GbButton::Right,GbButton::Down,GbButton::Down,GbButton::Left],GbButton::Up,(18,11)),
+                "left" => (vec![GbButton::Right,GbButton::Down],GbButton::Left,(19,10)),
+                "right" => (vec![GbButton::Left,GbButton::Down],GbButton::Right,(17,10)),
+                _ => panic!("unknown boulder direction"),
+            };
+            for b in preparation {
+                g.update(&button(b));g.update(&button(b));
+                for _ in 0..30 {g.update(&idle);}
+            }
+            assert_eq!((g.overworld.state.player.x,g.overworld.state.player.y),expected);
+            // Turn toward the boulder without a second contact. Ordinary turn
+            // timing is a separate open audit; trigger recordings start after idle.
+            if direction!="down" {g.update(&button(trigger));g.update(&idle);}
+            for _ in 0..120 {g.update(&idle);}
+            assert!(!g.overworld.boulder_dust.is_active());
+            let mut input=InputState::new();let mut rows=Vec::new();
+            for t in -1i32..200 {
+                if t>=0 {input.begin_frame();if t==0 {input.press(trigger);}if t==16 {input.release(trigger);}g.update(&input);}
+                let mut fb=FrameBuffer::new(RenderConfig::new(160,144),Rgba::WHITE);
+                g.draw(&mut fb);fb.save_png(&dir.join(format!("frame-{:04}.png",t+1))).unwrap();
+                rows.push(serde_json::json!({"t":t,"frame":g.frame_count,"input_bits":input.raw_current(),
+                    "screen":format!("{:?}",g.state.screen),"x":g.overworld.state.player.x,"y":g.overworld.state.player.y,
+                    "movement":format!("{:?}",g.overworld.state.player.movement_state),"walk_counter":g.overworld.state.walk_counter,
+                    "dust_active":g.overworld.boulder_dust.is_active(),"dust_step":g.overworld.boulder_dust.step(),
+                    "dust_flash":g.overworld.boulder_dust.palette_flipped(),"dust_anchor":g.overworld.boulder_dust.anchor(),
+                    "npcs":g.overworld.npc_states.iter().map(|n|serde_json::json!({"id":n.npc_index,"x":n.x,"y":n.y,"walk_counter":n.walk_counter})).collect::<Vec<_>>() }));
+            }
+            assert!(rows.iter().any(|r|r["dust_active"]==true));
+            std::fs::write(dir.join("frames.json"),serde_json::to_string_pretty(&rows).unwrap()).unwrap();
+        });
+    }
+
     fn wait_stats_cry(game: &mut PokemonGame) {
         for _ in 0..120 {
             game.update(&InputState::new());

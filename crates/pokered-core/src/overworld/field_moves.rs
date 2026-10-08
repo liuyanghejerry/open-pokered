@@ -424,23 +424,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     /// Per-frame boulder-push check. `held_direction` is the d-pad direction
     /// currently held (hJoyHeld), if any.
     pub(crate) fn tick_boulder_push(&mut self, held_direction: Option<Direction>) {
-        // The dust puff runs its own frame-stepped timeline (8 steps × 3
-        // frames, `AnimateBoulderDust`) — independent of the lockout below.
-        let dust_was_active = self.boulder_dust.is_active();
-        self.boulder_dust.tick();
-        // DoBoulderDustAnimation (engine/overworld/push_boulder.asm:89-103):
-        // when the dust animation finishes, the original plays SFX_CUT once
-        // (the boulder has reached its new tile); BIT_BOULDER_DUST is cleared
-        // in the same routine, so the sound fires exactly once.
-        if dust_was_active && !self.boulder_dust.is_active() {
-            self.audio_requests
-                .push(OverworldAudioRequest::PlaySound {
-                    sound_id: "SFX_CUT".to_string(),
-                });
-        }
-        // BIT_BOULDER_DUST: pushing is locked while the dust animation plays.
-        if self.boulder_dust_frames > 0 {
-            self.boulder_dust_frames -= 1;
+        if self.boulder_push.is_some() {
+            self.advance_boulder_push();
             return;
         }
         if !self.strength_active {
@@ -482,62 +467,23 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             boulder_blocked,
         ) {
             BoulderPushResult::Pushed { direction } => {
-                // MoveSprite: the boulder slides one tile in the push
-                // direction, then the dust lockout (BIT_BOULDER_DUST).
                 let (ddx, ddy) = player_movement::direction_delta(direction);
                 let npc = &mut self.npc_states[npc_index];
-                npc.x = (npc.x as i32 + ddx as i32).max(0) as u16;
-                npc.y = (npc.y as i32 + ddy as i32).max(0) as u16;
+                let destination = ((npc.x as i32 + ddx as i32).max(0) as u16,
+                    (npc.y as i32 + ddy as i32).max(0) as u16);
+                npc.facing = direction;
+                npc.walk_counter = 16;
                 self.tried_push_boulder = false;
                 self.boulder_dust_frames = BOULDER_DUST_FRAMES;
-                // AnimateBoulderDust: the 2×2 smoke-puff block spawns at the
-                // boulder's base (anchored to the player's tile — the same
-                // spot the original computes the OAM block from).
-                self.boulder_dust = presentation::BoulderDustState::new(
-                    direction,
-                    self.state.player.x,
-                    self.state.player.y,
-                );
-                self.audio_requests
-                    .push(OverworldAudioRequest::PlaySound {
-                        sound_id: "SFX_PUSH_BOULDER".to_string(),
-                    });
-                // Seafoam Islands boulder-into-hole: pushing a boulder onto one
-                // of the floor's hole tiles drops it through (the original hides
-                // the object and sets the per-boulder DOWN_HOLE event; the lower
-                // floor reveals its twin via those events).
-                if let Some(flag_name) = seafoam_hole_flag_for(self.state.current_map, npc.x, npc.y)
-                {
-                    npc.visible = false;
-                    if let Some(flag) =
-                        pokered_data::event_flags::EventFlag::from_name(flag_name)
-                    {
-                        self.unified_flags.set(flag);
-                    }
-                }
-                if self.state.current_map == MapId::VictoryRoad3F && (npc.x, npc.y) == (23, 15) {
-                    npc.visible = false;
-                    self.unified_flags.set(pokered_data::event_flags::EventFlag::EVENT_VICTORY_ROAD_3_BOULDER_ON_SWITCH2);
-                    pokered_data::toggleable_objects::set_object_hidden(&mut self.toggleable_object_flags, 0x7A);
-                    pokered_data::toggleable_objects::set_object_shown(&mut self.toggleable_object_flags, 0x60);
-                }
-                // VictoryRoad boulder-on-switch detection (CheckBoulderCoords +
-                // SetEvent in VictoryRoad1F/2F/3F DefaultScript): a boulder
-                // pushed onto the floor switch sets the floor's ON_SWITCH event
-                // and opens the path block (ReplaceTileBlock) — the audit's
-                // talk/step approximations bypassed this check.
-                if let Some((flag_name, block_x, block_y, open_block)) =
-                    victory_road_switch_for(self.state.current_map, npc.x, npc.y)
-                {
-                    if let Some(flag) =
-                        pokered_data::event_flags::EventFlag::from_name(flag_name)
-                    {
-                        self.unified_flags.set(flag);
-                    }
-                    if let Some(map) = self.map_data.as_mut() {
-                        map.set_block(block_x, block_y, open_block);
-                    }
-                }
+                self.boulder_dust = presentation::BoulderDustState::inactive();
+                self.boulder_push = Some(presentation::BoulderPushState {
+                    npc_index, direction, destination, origin: (npc.x,npc.y),
+                    anchor: (self.state.player.x, self.state.player.y), frame: 0,
+                });
+                self.audio_requests.push(OverworldAudioRequest::PlaySound {
+                    sound_id: "SFX_PUSH_BOULDER".to_string(),
+                });
+
             }
             BoulderPushResult::NeedPushAgain => {
                 // First contact — set BIT_TRIED_PUSH_BOULDER; the next frame
@@ -558,6 +504,76 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     /// CheckForCollisionWhenPushingBoulder: the tile beyond the boulder at
     /// (`bx`, `by`) must be passable, free of sprites, not a stairs tile,
     /// and not an elevation change from the player's tile.
+    pub(crate) fn advance_boulder_push(&mut self) {
+        let Some(mut push) = self.boulder_push else { return; };
+        push.frame = push.frame.saturating_add(1);
+        self.boulder_dust_frames = BOULDER_DUST_FRAMES.saturating_sub(push.frame);
+        let pixels = push.slide_pixels();
+        if pixels < 16 {
+            self.npc_states[push.npc_index].walk_counter = 16 - pixels;
+        } else if self.npc_states[push.npc_index].walk_counter != 0 {
+            let npc = &mut self.npc_states[push.npc_index];
+            npc.x = push.destination.0; npc.y = push.destination.1; npc.walk_counter = 0;
+            self.commit_boulder_landing(push.npc_index);
+        }
+        if push.frame == presentation::BoulderPushState::DUST_FIRST_FRAME {
+            self.boulder_dust = presentation::BoulderDustState::new(push.direction, push.anchor.0, push.anchor.1);
+        } else if push.frame > presentation::BoulderPushState::DUST_FIRST_FRAME
+            && push.frame < presentation::BoulderPushState::DUST_LAST_FRAME {
+            self.boulder_dust.tick();
+        } else if push.frame > presentation::BoulderPushState::DUST_LAST_FRAME {
+            self.boulder_dust = presentation::BoulderDustState::inactive();
+        }
+        if push.frame == presentation::BoulderPushState::LAST_FRAME {
+            self.tried_push_boulder = false;
+            self.boulder_dust_frames = 0;
+            self.boulder_push = None;
+            self.audio_requests.push(OverworldAudioRequest::PlaySound { sound_id: "SFX_CUT".to_string() });
+        } else {
+            self.boulder_push = Some(push);
+        }
+    }
+
+    fn commit_boulder_landing(&mut self, npc_index: usize) {
+        let (x,y) = (self.npc_states[npc_index].x,self.npc_states[npc_index].y);
+                // Seafoam Islands boulder-into-hole: pushing a boulder onto one
+                // of the floor's hole tiles drops it through (the original hides
+                // the object and sets the per-boulder DOWN_HOLE event; the lower
+                // floor reveals its twin via those events).
+                if let Some(flag_name) = seafoam_hole_flag_for(self.state.current_map, x, y)
+                {
+                    self.npc_states[npc_index].visible = false;
+                    if let Some(flag) =
+                        pokered_data::event_flags::EventFlag::from_name(flag_name)
+                    {
+                        self.unified_flags.set(flag);
+                    }
+                }
+                if self.state.current_map == MapId::VictoryRoad3F && (x, y) == (23, 15) {
+                    self.npc_states[npc_index].visible = false;
+                    self.unified_flags.set(pokered_data::event_flags::EventFlag::EVENT_VICTORY_ROAD_3_BOULDER_ON_SWITCH2);
+                    pokered_data::toggleable_objects::set_object_hidden(&mut self.toggleable_object_flags, 0x7A);
+                    pokered_data::toggleable_objects::set_object_shown(&mut self.toggleable_object_flags, 0x60);
+                }
+                // VictoryRoad boulder-on-switch detection (CheckBoulderCoords +
+                // SetEvent in VictoryRoad1F/2F/3F DefaultScript): a boulder
+                // pushed onto the floor switch sets the floor's ON_SWITCH event
+                // and opens the path block (ReplaceTileBlock) — the audit's
+                // talk/step approximations bypassed this check.
+                if let Some((flag_name, block_x, block_y, open_block)) =
+                    victory_road_switch_for(self.state.current_map, x, y)
+                {
+                    if let Some(flag) =
+                        pokered_data::event_flags::EventFlag::from_name(flag_name)
+                    {
+                        self.unified_flags.set(flag);
+                    }
+                    if let Some(map) = self.map_data.as_mut() {
+                        map.set_block(block_x, block_y, open_block);
+                    }
+                }
+    }
+
     fn boulder_push_blocked(&self, bx: u16, by: u16) -> bool {
         let Some(map) = self.map_data.as_ref() else {
             return true;
@@ -601,7 +617,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
 
 /// Frames of boulder-dust lockout after a successful push — the boulder's
 /// one-tile slide plus the dust puff (BIT_BOULDER_DUST).
-pub(crate) const BOULDER_DUST_FRAMES: u8 = 16;
+pub(crate) const BOULDER_DUST_FRAMES: u8 = presentation::BoulderPushState::LAST_FRAME + 1;
 
 /// Map a boulder's resting tile in the Seafoam Islands to the original
 /// EVENT_SEAFOAM{n}_BOULDER{m}_DOWN_HOLE flag, if that tile is one of the
