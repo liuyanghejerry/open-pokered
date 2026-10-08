@@ -6193,6 +6193,7 @@ impl PokemonGame {
     /// Warp the player into a Cable Club room (used by the link CLI after a
     /// connection is established; the original warps into the room via
     /// `SpecialEnterMap` after the receptionist handshake).
+    #[cfg(not(target_os = "none"))]
     pub fn warp_to_cable_room(&mut self, map: MapId) {
         let (x, y) = pokered_core::link::cable_room_entry(self.link_role);
         self.overworld.pending_warp = Some(pokered_core::overworld::PendingWarp {
