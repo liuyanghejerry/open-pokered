@@ -77,6 +77,7 @@ pub fn link_activity(msg: &NetworkMessage) -> Activity {
         | NetworkMessage::SelectMon(_)
         | NetworkMessage::ConfirmTrade
         | NetworkMessage::CancelTrade
+        | NetworkMessage::RejectTrade
         | NetworkMessage::TradeComplete(_)
         | NetworkMessage::TradeParty { .. } => Activity::Trade,
         NetworkMessage::Disconnect => Activity::Both,

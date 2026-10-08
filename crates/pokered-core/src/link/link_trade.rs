@@ -85,6 +85,7 @@ pub enum LinkTradePollResult {
         received_pokemon: Pokemon,
     },
     PeerCancelled,
+    PeerRejectedTrade,
     Disconnected,
     Error(String),
 }
@@ -96,12 +97,11 @@ pub struct LinkTradeManager {
     remote_selection: Option<u8>,
     local_confirmed: bool,
     remote_confirmed: bool,
-    /// The peer's mon arrived before our local confirm (the sender emits
-    /// `ConfirmTrade` + `TradeComplete` back-to-back, so on a real
-    /// transport the mon regularly reaches a side that has not confirmed
-    /// yet). Stashed here; `poll` emits the exchange once the local
-    /// confirm lands.
+    /// Legacy peers can emit a payload before both confirmations. Retain
+    /// their early packet until our local YES, or discard it on rejection.
     pending_remote_mon: Option<Pokemon>,
+    /// Local payload is held until both TRADE_CANCEL_MENU choices are YES.
+    pending_local_mon: Option<Pokemon>,
     /// Cable Club clock role, set by the session once the connection is up.
     /// Used to break the both-pressed-the-gameboy tie (see the
     /// `WaitingForTradeResponse` × `RequestTrade` arm).
@@ -119,6 +119,7 @@ impl LinkTradeManager {
             local_confirmed: false,
             remote_confirmed: false,
             pending_remote_mon: None,
+            pending_local_mon: None,
             role: None,
             remote_party: None,
             remote_name: String::new(),
@@ -225,10 +226,11 @@ impl LinkTradeManager {
             }
         };
         transport.send(NetworkMessage::ConfirmTrade)?;
-        transport.send(NetworkMessage::TradeComplete(pokemon))?;
+        self.pending_local_mon = Some(pokemon);
         self.local_confirmed = true;
 
         if self.remote_confirmed {
+            self.send_confirmed_mon(transport)?;
             self.state = LinkTradeState::Trading {
                 local_index: local_idx,
                 remote_index: remote_idx,
@@ -247,6 +249,22 @@ impl LinkTradeManager {
         transport: &mut dyn NetworkTransport<NetworkMessage>,
     ) -> Result<(), TransportError> {
         transport.send(NetworkMessage::CancelTrade)?;
+        self.reset_selection();
+        self.state = LinkTradeState::SelectingMon;
+        Ok(())
+    }
+
+    fn send_confirmed_mon(&mut self, transport: &mut dyn NetworkTransport<NetworkMessage>) -> Result<(), TransportError> {
+        if let Some(mon) = self.pending_local_mon.take() {
+            transport.send(NetworkMessage::TradeComplete(mon))?;
+        }
+        Ok(())
+    }
+
+    pub fn reject_trade(
+        &mut self, transport: &mut dyn NetworkTransport<NetworkMessage>,
+    ) -> Result<(), TransportError> {
+        transport.send(NetworkMessage::RejectTrade)?;
         self.reset_selection();
         self.state = LinkTradeState::SelectingMon;
         Ok(())
@@ -436,6 +454,11 @@ impl LinkTradeManager {
                 self.remote_confirmed = true;
                 let (li, ri) = (*local_index, *remote_index);
                 if self.local_confirmed {
+                    if let Err(error) = self.send_confirmed_mon(transport) {
+                        let error = error.to_string();
+                        self.state = LinkTradeState::Error(error.clone());
+                        return LinkTradePollResult::Error(error);
+                    }
                     self.state = LinkTradeState::Trading {
                         local_index: li,
                         remote_index: ri,
@@ -458,6 +481,11 @@ impl LinkTradeManager {
             ) => {
                 self.remote_confirmed = true;
                 let (li, ri) = (*local_index, *remote_index);
+                if let Err(error) = self.send_confirmed_mon(transport) {
+                    let error = error.to_string();
+                    self.state = LinkTradeState::Error(error.clone());
+                    return LinkTradePollResult::Error(error);
+                }
                 self.state = LinkTradeState::Trading {
                     local_index: li,
                     remote_index: ri,
@@ -495,6 +523,11 @@ impl LinkTradeManager {
                 LinkTradePollResult::Pending
             }
 
+            (_, NetworkMessage::RejectTrade) => {
+                self.reset_selection();
+                self.state = LinkTradeState::SelectingMon;
+                LinkTradePollResult::PeerRejectedTrade
+            }
             (_, NetworkMessage::CancelTrade) => {
                 self.reset_selection();
                 self.state = LinkTradeState::SelectingMon;
@@ -531,6 +564,7 @@ impl LinkTradeManager {
         self.local_confirmed = false;
         self.remote_confirmed = false;
         self.pending_remote_mon = None;
+        self.pending_local_mon = None;
     }
 
     pub fn reset_for_new_trade(&mut self) {
@@ -855,6 +889,30 @@ impl LinkTradeDriver {
         Ok(())
     }
 
+    /// The current selection exchanged against the peer's CANCEL: send our
+    /// index, then return to selection without retaining either stale index.
+    pub fn select_mon_against_cancel(
+        &mut self, transport: &mut dyn NetworkTransport<NetworkMessage>, index: u8,
+    ) -> Result<(), LinkTradeError> {
+        self.select_mon(transport, index)?;
+        self.resume_selection();
+        Ok(())
+    }
+
+    pub fn resume_selection(&mut self) {
+        self.manager.reset_selection();
+        self.manager.state = LinkTradeState::SelectingMon;
+        self.clear_pending_trade();
+    }
+
+    pub fn reject_trade(
+        &mut self, transport: &mut dyn NetworkTransport<NetworkMessage>,
+    ) -> Result<(), LinkTradeError> {
+        self.manager.reject_trade(transport)?;
+        self.clear_pending_trade();
+        Ok(())
+    }
+
     pub fn poll(&mut self, transport: &mut dyn NetworkTransport<NetworkMessage>) -> LinkTradePollResult {
         let result = self.manager.poll(transport);
         self.observe(&result);
@@ -960,7 +1018,8 @@ impl LinkTradeDriver {
                 self.received_mon = Some(received_pokemon.clone());
             }
             // The selection is void again: both sides are back to picking.
-            LinkTradePollResult::PeerCancelled | LinkTradePollResult::Disconnected => {
+            LinkTradePollResult::PeerCancelled | LinkTradePollResult::PeerRejectedTrade
+            | LinkTradePollResult::Disconnected => {
                 self.clear_pending_trade();
             }
             _ => {}

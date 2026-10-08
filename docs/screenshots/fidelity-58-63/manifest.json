@@ -1,0 +1,648 @@
+{
+  "base": "63f4a52ccd241733b8c413dac37134f5c8f1ea8a",
+  "fixture_and_inputs_sha256": {
+    "before": [
+      "ab26550099234c60a959191552a7107a9579b75d6e72608371b8e29971eaee75",
+      "647e34895648f3ddd7b5e753c772d89c6fe0a31a22f4e01811e88191ebe0f83c",
+      "d44ae69e369161fa47f102da16ff4cc73b87458c696e604edcff946a6dd323ec",
+      "3c987192f1807e910b952e8a8a6a5d1fc544806df705bff8d9467913205a8f2a"
+    ],
+    "after": [
+      "ab26550099234c60a959191552a7107a9579b75d6e72608371b8e29971eaee75",
+      "647e34895648f3ddd7b5e753c772d89c6fe0a31a22f4e01811e88191ebe0f83c",
+      "d44ae69e369161fa47f102da16ff4cc73b87458c696e604edcff946a6dd323ec",
+      "3c987192f1807e910b952e8a8a6a5d1fc544806df705bff8d9467913205a8f2a"
+    ]
+  },
+  "records": {
+    "before": [
+      {
+        "frame": 363,
+        "party": [
+          {
+            "attack": 34,
+            "defense": 34,
+            "dv_bytes": [
+              153,
+              136
+            ],
+            "hp": 63,
+            "is_traded": false,
+            "level": 25,
+            "max_hp": 63,
+            "moves": [
+              "Tackle",
+              "None",
+              "None",
+              "None"
+            ],
+            "nickname": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "ot_id": 0,
+            "ot_name": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "pp": [
+              35,
+              0,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "special": 41,
+            "species": "Bulbasaur",
+            "speed": 31,
+            "stat_exp": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "total_exp": 11735,
+            "type1": "Grass",
+            "type2": "Poison"
+          }
+        ],
+        "phase": "TradeSelect",
+        "stage": "cancel-row"
+      },
+      {
+        "frame": 365,
+        "party": [
+          {
+            "attack": 34,
+            "defense": 34,
+            "dv_bytes": [
+              153,
+              136
+            ],
+            "hp": 63,
+            "is_traded": false,
+            "level": 25,
+            "max_hp": 63,
+            "moves": [
+              "Tackle",
+              "None",
+              "None",
+              "None"
+            ],
+            "nickname": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "ot_id": 0,
+            "ot_name": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "pp": [
+              35,
+              0,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "special": 41,
+            "species": "Bulbasaur",
+            "speed": 31,
+            "stat_exp": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "total_exp": 11735,
+            "type1": "Grass",
+            "type2": "Poison"
+          }
+        ],
+        "phase": "TradeSelect",
+        "stage": "cancel-wait"
+      },
+      {
+        "frame": 386,
+        "party": [
+          {
+            "attack": 37,
+            "defense": 24,
+            "dv_bytes": [
+              153,
+              136
+            ],
+            "hp": 58,
+            "is_traded": false,
+            "level": 25,
+            "max_hp": 58,
+            "moves": [
+              "Thundershock",
+              "None",
+              "None",
+              "None"
+            ],
+            "nickname": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "ot_id": 0,
+            "ot_name": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "pp": [
+              30,
+              0,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "special": 34,
+            "species": "Pikachu",
+            "speed": 54,
+            "stat_exp": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "total_exp": 15625,
+            "type1": "Electric",
+            "type2": "Electric"
+          }
+        ],
+        "phase": "TradeSelect",
+        "stage": "sequential-exit"
+      },
+      {
+        "frame": 405,
+        "party": [
+          {
+            "attack": 34,
+            "defense": 34,
+            "dv_bytes": [
+              153,
+              136
+            ],
+            "hp": 63,
+            "is_traded": false,
+            "level": 25,
+            "max_hp": 63,
+            "moves": [
+              "Tackle",
+              "None",
+              "None",
+              "None"
+            ],
+            "nickname": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "ot_id": 0,
+            "ot_name": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "pp": [
+              35,
+              0,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "special": 41,
+            "species": "Bulbasaur",
+            "speed": 31,
+            "stat_exp": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "total_exp": 11735,
+            "type1": "Grass",
+            "type2": "Poison"
+          }
+        ],
+        "phase": "Error { text: \"link error: peer Pokemon differs from trade preview\" }",
+        "stage": "yes-no"
+      }
+    ],
+    "after": [
+      {
+        "frame": 363,
+        "party": [
+          {
+            "attack": 34,
+            "defense": 34,
+            "dv_bytes": [
+              153,
+              136
+            ],
+            "hp": 63,
+            "is_traded": false,
+            "level": 25,
+            "max_hp": 63,
+            "moves": [
+              "Tackle",
+              "None",
+              "None",
+              "None"
+            ],
+            "nickname": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "ot_id": 0,
+            "ot_name": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "pp": [
+              35,
+              0,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "special": 41,
+            "species": "Bulbasaur",
+            "speed": 31,
+            "stat_exp": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "total_exp": 11735,
+            "type1": "Grass",
+            "type2": "Poison"
+          }
+        ],
+        "phase": "TradeSelect",
+        "stage": "cancel-row"
+      },
+      {
+        "frame": 365,
+        "party": [
+          {
+            "attack": 34,
+            "defense": 34,
+            "dv_bytes": [
+              153,
+              136
+            ],
+            "hp": 63,
+            "is_traded": false,
+            "level": 25,
+            "max_hp": 63,
+            "moves": [
+              "Tackle",
+              "None",
+              "None",
+              "None"
+            ],
+            "nickname": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "ot_id": 0,
+            "ot_name": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "pp": [
+              35,
+              0,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "special": 41,
+            "species": "Bulbasaur",
+            "speed": 31,
+            "stat_exp": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "total_exp": 11735,
+            "type1": "Grass",
+            "type2": "Poison"
+          }
+        ],
+        "phase": "TradeWaitingPeer",
+        "stage": "cancel-wait"
+      },
+      {
+        "frame": 386,
+        "party": [
+          {
+            "attack": 37,
+            "defense": 24,
+            "dv_bytes": [
+              153,
+              136
+            ],
+            "hp": 58,
+            "is_traded": false,
+            "level": 25,
+            "max_hp": 58,
+            "moves": [
+              "Thundershock",
+              "None",
+              "None",
+              "None"
+            ],
+            "nickname": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "ot_id": 0,
+            "ot_name": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "pp": [
+              30,
+              0,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "special": 34,
+            "species": "Pikachu",
+            "speed": 54,
+            "stat_exp": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "total_exp": 15625,
+            "type1": "Electric",
+            "type2": "Electric"
+          }
+        ],
+        "phase": "InRoom",
+        "stage": "sequential-exit"
+      },
+      {
+        "frame": 405,
+        "party": [
+          {
+            "attack": 34,
+            "defense": 34,
+            "dv_bytes": [
+              153,
+              136
+            ],
+            "hp": 63,
+            "is_traded": false,
+            "level": 25,
+            "max_hp": 63,
+            "moves": [
+              "Tackle",
+              "None",
+              "None",
+              "None"
+            ],
+            "nickname": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "ot_id": 0,
+            "ot_name": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "pp": [
+              35,
+              0,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "special": 41,
+            "species": "Bulbasaur",
+            "speed": 31,
+            "stat_exp": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "total_exp": 11735,
+            "type1": "Grass",
+            "type2": "Poison"
+          }
+        ],
+        "phase": "TradeSelect",
+        "stage": "yes-no"
+      }
+    ]
+  },
+  "method": "Actual two PokemonGame instances: A at table, ChannelTransport handshake, shared fixture and buttons; baseline production unchanged, read-only capture test and fixture correction only."
+}

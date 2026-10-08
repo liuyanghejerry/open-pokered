@@ -67,9 +67,17 @@ pub enum FlowNeed {
     },
     /// The trade party-selector picked this 0-based index.
     SelectMon(u8),
-    /// The player cancelled the trade selection (or the confirm box).
+    /// Send the original party-list CANCEL choice.
     CancelTrade,
-    /// Confirm the trade — the driver sends the selected mon's data.
+    /// Both parties selected CANCEL: send our choice before leaving.
+    CancelTradeAndLeave,
+    /// Send NO from the trade confirmation menu.
+    RejectTrade,
+    /// Send our mon choice against a previously received CANCEL.
+    SelectMonAgainstCancel(u8),
+    /// Discard exchanged indices and resume the current selection menu.
+    ResumeSelection,
+    /// Confirm the trade; payload waits until both players choose YES.
     ConfirmTrade,
     ContinueTrade,
     LeaveTrade,
@@ -192,6 +200,8 @@ pub struct CableClubFlow {
     stats: Option<pokered_core::stats_screen::StatsScreenState>,
     /// Original chosePlayerMon opens STATS / TRADE before sending a selection.
     local_action: Option<(usize, bool)>, // mon index, TRADE selected
+    cancel_selected: bool,
+    peer_cancel_pending: bool,
     /// The peer's selection index (trade), for the confirm box.
     remote_selection: Option<u8>,
     /// A transient one-line box shown while `InRoom` (e.g. "The link was
@@ -227,6 +237,8 @@ impl CableClubFlow {
             browsing_peer: false,
             stats: None,
             local_action: None,
+            cancel_selected: false,
+            peer_cancel_pending: false,
             remote_selection: None,
             transient_text: None,
             pending_our_cancel: false,
@@ -373,8 +385,10 @@ impl CableClubFlow {
         &self.remote_party
     }
     pub fn peer_cursor(&self) -> Option<usize> {
-        self.browsing_peer.then_some(self.peer_cursor)
+        (self.browsing_peer && !self.cancel_selected).then_some(self.peer_cursor)
     }
+    pub fn cancel_selected(&self) -> bool { self.cancel_selected }
+
     pub fn local_action(&self) -> Option<(usize, bool)> {
         self.local_action
     }
@@ -483,6 +497,10 @@ impl CableClubFlow {
             } else if input.a {
                 self.local_action = None;
                 if trade_selected {
+                    if self.peer_cancel_pending {
+                        self.restart_selection();
+                        return FlowNeed::SelectMonAgainstCancel(index as u8);
+                    }
                     self.phase = CableClubPhase::TradeWaitingPeer;
                     return FlowNeed::SelectMon(index as u8);
                 }
@@ -628,6 +646,27 @@ impl CableClubFlow {
                     // was dropped on the way back here.
                     self.selector = Some(PartySelectState::new(party.to_vec()));
                 }
+                // The shared bottom CANCEL item watches only A and UP.
+                // UP always returns to the last member of the player's list.
+                if self.cancel_selected {
+                    if input.a {
+                        if self.peer_cancel_pending {
+                            self.phase = CableClubPhase::InRoom;
+                            self.clear_selection();
+                            return FlowNeed::CancelTradeAndLeave;
+                        }
+                        self.pending_our_cancel = true;
+                        self.phase = CableClubPhase::TradeWaitingPeer;
+                        return FlowNeed::CancelTrade;
+                    } else if input.up {
+                        self.cancel_selected = false;
+                        self.browsing_peer = false;
+                        if let Some(sel) = self.selector.as_mut() {
+                            sel.set_cursor(sel.party().len().saturating_sub(1));
+                        }
+                    }
+                    return FlowNeed::None;
+                }
                 if left && self.browsing_peer {
                     if let Some(sel) = self.selector.as_mut() {
                         sel.set_cursor(self.peer_cursor);
@@ -643,16 +682,18 @@ impl CableClubFlow {
                 }
                 if self.browsing_peer {
                     let len = self.remote_party.len();
-                    if input.b {
-                        self.browsing_peer = false;
-                    } else if len > 0 {
+                    if len > 0 {
                         if input.up {
-                            self.peer_cursor = (self.peer_cursor + len - 1) % len;
-                        }
-                        if input.down {
-                            self.peer_cursor = (self.peer_cursor + 1) % len;
+                            self.peer_cursor = self.peer_cursor.saturating_sub(1);
+                        } else if input.down {
+                            if self.peer_cursor + 1 >= len {
+                                self.cancel_selected = true;
+                            } else {
+                                self.peer_cursor += 1;
+                            }
                         }
                         if input.a {
+                            self.cancel_selected = false;
                             self.stats = Some(pokered_core::stats_screen::StatsScreenState::new(
                                 self.remote_party[self.peer_cursor].clone(),
                             ));
@@ -663,21 +704,26 @@ impl CableClubFlow {
                 if input.a && self.remote_party.is_empty() {
                     return FlowNeed::None;
                 }
-                if let Some(ref mut sel) = self.selector {
-                    match sel.update_frame(input) {
-                        pokered_core::party_select::PartySelectResult::Selected(idx) => {
-                            self.local_action = Some((idx, false));
-                            FlowNeed::None
+                if let Some(sel) = self.selector.as_mut() {
+                    let cursor = sel.cursor();
+                    if input.up {
+                        sel.set_cursor(cursor.saturating_sub(1));
+                    } else if input.down {
+                        if cursor + 1 >= sel.party().len() {
+                            self.cancel_selected = true;
+                        } else {
+                            sel.set_cursor(cursor + 1);
                         }
-                        pokered_core::party_select::PartySelectResult::Cancelled => {
-                            self.pending_our_cancel = true;
-                            FlowNeed::CancelTrade
-                        }
-                        pokered_core::party_select::PartySelectResult::Active => FlowNeed::None,
                     }
-                } else {
-                    FlowNeed::None
+                    if input.a {
+                        // A on a just-reached bottom row uses the final mon;
+                        // only the separate CANCEL loop sends cancellation.
+                        self.cancel_selected = false;
+                        self.local_action = Some((sel.cursor(), false));
+                    }
                 }
+                // B is not watched by either party list in TradeCenter_SelectMon.
+                FlowNeed::None
             }
             CableClubPhase::TradeConfirm {
                 local_index,
@@ -698,10 +744,9 @@ impl CableClubFlow {
                         self.phase = CableClubPhase::TradeWaitingConfirm;
                         FlowNeed::ConfirmTrade
                     } else {
-                        self.phase = CableClubPhase::TradeSelect;
+                        self.restart_selection();
                         self.transient_text = Some(TEXT_TRADE_CANCELED.to_string());
-                        self.pending_our_cancel = true;
-                        FlowNeed::CancelTrade
+                        FlowNeed::RejectTrade
                     }
                 } else {
                     FlowNeed::None
@@ -712,6 +757,7 @@ impl CableClubFlow {
                     self.selector = Some(PartySelectState::new(party.to_vec()));
                     self.remote_selection = None;
                     self.browsing_peer = false;
+                    self.cancel_selected = false;
                     self.phase = CableClubPhase::TradeSelect;
                     return FlowNeed::ContinueTrade;
                 }
@@ -862,6 +908,15 @@ impl CableClubFlow {
                 FlowNeed::None
             }
             PeerSelectedMon(idx) => {
+                if self.pending_our_cancel {
+                    // Our CANCEL exchanged against the peer's mon: the
+                    // original resumes the CANCEL item instead of leaving.
+                    self.pending_our_cancel = false;
+                    self.remote_selection = None;
+                    self.phase = CableClubPhase::TradeSelect;
+                    self.cancel_selected = true;
+                    return FlowNeed::ResumeSelection;
+                }
                 self.remote_selection = Some(*idx);
                 FlowNeed::None
             }
@@ -884,31 +939,29 @@ impl CableClubFlow {
                 self.phase = CableClubPhase::TradeAnim;
                 FlowNeed::None
             }
+            PeerRejectedTrade => {
+                self.restart_selection();
+                self.transient_text = Some(TEXT_TRADE_CANCELED.to_string());
+                FlowNeed::None
+            }
             PeerCancelled => {
                 self.remote_selection = None;
-                self.stats = None;
-                self.local_action = None;
                 if self.pending_our_cancel {
-                    // We cancelled too — BOTH sides backed out: return to the
-                    // room (original's ReturnToCableClubRoom after the
-                    // both-cancel nybble, engine/link/cable_club.asm:571-580).
-                    self.pending_our_cancel = false;
                     self.phase = CableClubPhase::InRoom;
-                    self.transient_text = None;
                     self.clear_selection();
                     return FlowNeed::LeaveTrade;
-                } else if matches!(
-                    self.phase,
-                    CableClubPhase::TradeSelect
-                        | CableClubPhase::TradeWaitingPeer
-                        | CableClubPhase::TradeConfirm { .. }
-                        | CableClubPhase::TradeWaitingConfirm
-                ) {
-                    // The peer cancelled unilaterally: "Too bad! The trade
-                    // was canceled!" then back to selection
-                    // (engine/link/cable_club.asm:871-876).
-                    self.phase = CableClubPhase::TradeSelect;
+                }
+                if matches!(self.phase, CableClubPhase::TradeConfirm { .. } | CableClubPhase::TradeWaitingConfirm) {
+                    // Legacy clients used the same message for confirmation NO.
+                    self.restart_selection();
                     self.transient_text = Some(TEXT_TRADE_CANCELED.to_string());
+                } else if self.phase == CableClubPhase::TradeWaitingPeer {
+                    // We sent a mon against $f: redraw the original fresh list.
+                    self.restart_selection();
+                } else if self.phase == CableClubPhase::TradeSelect {
+                    // Serial $f waits until our own choice. Do not interrupt
+                    // browsing, an action menu, or either status page.
+                    self.peer_cancel_pending = true;
                 }
                 FlowNeed::None
             }
@@ -943,11 +996,26 @@ impl CableClubFlow {
         self.clear_selection();
     }
 
+    fn restart_selection(&mut self) {
+        self.selector = None;
+        self.stats = None;
+        self.local_action = None;
+        self.cancel_selected = false;
+        self.peer_cancel_pending = false;
+        self.browsing_peer = false;
+        self.remote_selection = None;
+        self.transient_text = None;
+        self.pending_our_cancel = false;
+        self.phase = CableClubPhase::TradeSelect;
+    }
+
     fn clear_selection(&mut self) {
         self.selector = None;
         self.remote_party.clear();
         self.stats = None;
         self.local_action = None;
+        self.cancel_selected = false;
+        self.peer_cancel_pending = false;
         self.browsing_peer = false;
         self.remote_selection = None;
         self.transient_text = None;
