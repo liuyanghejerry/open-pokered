@@ -18,3 +18,5 @@
 纯存档逻辑、schema 注释和技能说明修改，不改变屏幕输出，按 AGENTS.md 无需前后截图。复现：`cargo test -p pokered-app --features debug-server --lib actual_save_menu_writes_original_direction_masks_89`。
 
 未优化应用全目标回归：484 项、48 套通过（库与二进制各执行保存回归）。
+
+PR #141 合入后重新从 master `1ed2f06b33ae71de049527a6f77f2e2eb9f7790d` 变基验证：194 项 debug 应用测试、485 项未优化应用全目标测试（48 套）通过；新增的治疗布局回归也包含在内。
