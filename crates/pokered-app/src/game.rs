@@ -9216,6 +9216,14 @@ mod link_stats_cry_fidelity_tests {
             for _ in 0..12000 {
                 host.update(&idle); peer.update(&idle);
                 if host.evolution_anim.is_some() {
+                    if !saw_evolution {
+                        let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+                        peer.draw(&mut fb);
+                        for y in 0..80 { for x in 0..160 {
+                            assert_eq!(fb.get_pixel(x,y), Some(Rgba::WHITE),
+                                "ClearScreen after the movie must not repaint stale party rows");
+                        }}
+                    }
                     saw_evolution = true;
                     assert!(!matches!(peer.link_cable.phase(), CableClubPhase::TradeCompleted | CableClubPhase::TradeSelect),
                         "serial completion barrier must hold the non-evolving peer: host evolution={:?}, peer={:?}",
@@ -9757,6 +9765,52 @@ mod link_stats_cry_fidelity_tests {
         assert_eq!(peer.link_cable.peer_cursor(), Some(2));
         peer.update(&button(GbButton::Left));
         assert_eq!(peer.link_cable.party_select().unwrap().cursor(), 1);
+    }
+
+    #[test]
+    #[ignore = "writes matched post-trade serial captures to FIDELITY_LINK_CAPTURES"]
+    fn capture_post_trade_serial_sync() {
+        run_link_save_fixture(|| {
+            use pokered_core::overworld::Direction;
+            let dir = PathBuf::from(std::env::var("FIDELITY_LINK_CAPTURES").unwrap());
+            std::fs::create_dir_all(&dir).unwrap();
+            let mut records = Vec::new();
+            let mut capture = |stage: &str, g: &mut PokemonGame| {
+                let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+                g.draw(&mut fb); fb.save_png(&dir.join(format!("{stage}.png"))).unwrap();
+                records.push(serde_json::json!({"stage":stage,"frame":g.frame_count,
+                    "phase":format!("{:?}",g.link_cable.phase()),
+                    "party":serde_json::to_value(&g.save_data.party).unwrap(),
+                    "committed_party":serde_json::to_value(&serde_json::from_str::<MobileSave>(&g.export_mobile_save().unwrap()).unwrap().data.party).unwrap()}));
+            };
+            let host = fixture(Species::Bulbasaur, 3, Direction::Right);
+            let peer = fixture(Species::Kadabra, 6, Direction::Left);
+            let (mut host, mut peer) = linked_trade_room(host, peer);
+            choose_actual_trade(&mut host); choose_actual_trade(&mut peer);
+            let idle = InputState::new();
+            for _ in 0..20 { host.update(&idle); peer.update(&idle); }
+            host.update(&button(GbButton::A)); peer.update(&button(GbButton::A));
+            let mut saw_evolution = false;
+            let mut captured = false;
+            let mut finished = false;
+            for _ in 0..12000 {
+                host.update(&idle); peer.update(&idle);
+                if host.evolution_anim.is_some() {
+                    saw_evolution = true;
+                    if !captured && peer.trade_anim.is_none() {
+                        capture("peer-during-evolution", &mut peer);
+                        captured = true;
+                    }
+                }
+                if saw_evolution && host.evolution_anim.is_none() { finished = true; break; }
+            }
+            assert!(captured && finished);
+            for _ in 0..30 { host.update(&idle); peer.update(&idle); }
+            capture("completion-delay", &mut host);
+            for _ in 0..31 { host.update(&idle); peer.update(&idle); }
+            capture("trade-result", &mut host);
+            std::fs::write(dir.join("frames.json"), serde_json::to_string_pretty(&records).unwrap()).unwrap();
+        });
     }
 
     #[test]

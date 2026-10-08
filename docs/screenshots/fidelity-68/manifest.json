@@ -1,0 +1,915 @@
+{
+  "base": "fa6b8b0e4f7745ceec5c10f9f05caed628ecddeb",
+  "capture_sha256": "1d8cc893d3f41f6a4b21a1090e34befca2b134fa7e50219a25992d3c48cfff75",
+  "before": [
+    {
+      "committed_party": [
+        {
+          "attack": 34,
+          "defense": 34,
+          "dv_bytes": [
+            153,
+            136
+          ],
+          "hp": 63,
+          "is_traded": false,
+          "level": 25,
+          "max_hp": 63,
+          "moves": [
+            "Tackle",
+            "None",
+            "None",
+            "None"
+          ],
+          "nickname": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "ot_id": 0,
+          "ot_name": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "pp": [
+            35,
+            0,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "special": 41,
+          "species": "Bulbasaur",
+          "speed": 31,
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "total_exp": 11735,
+          "type1": "Grass",
+          "type2": "Poison"
+        }
+      ],
+      "frame": 1960,
+      "party": [
+        {
+          "attack": 34,
+          "defense": 34,
+          "dv_bytes": [
+            153,
+            136
+          ],
+          "hp": 63,
+          "is_traded": false,
+          "level": 25,
+          "max_hp": 63,
+          "moves": [
+            "Tackle",
+            "None",
+            "None",
+            "None"
+          ],
+          "nickname": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "ot_id": 0,
+          "ot_name": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "pp": [
+            35,
+            0,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "special": 41,
+          "species": "Bulbasaur",
+          "speed": 31,
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "total_exp": 11735,
+          "type1": "Grass",
+          "type2": "Poison"
+        }
+      ],
+      "phase": "TradeCompleted",
+      "stage": "peer-during-evolution"
+    },
+    {
+      "committed_party": [
+        {
+          "attack": 34,
+          "defense": 32,
+          "dv_bytes": [
+            153,
+            136
+          ],
+          "hp": 68,
+          "is_traded": false,
+          "level": 25,
+          "max_hp": 68,
+          "moves": [
+            "Tackle",
+            "None",
+            "None",
+            "None"
+          ],
+          "nickname": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "ot_id": 0,
+          "ot_name": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "pp": [
+            35,
+            0,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "special": 76,
+          "species": "Alakazam",
+          "speed": 69,
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "total_exp": 11735,
+          "type1": "Psychic",
+          "type2": "Psychic"
+        }
+      ],
+      "frame": 2806,
+      "party": [
+        {
+          "attack": 34,
+          "defense": 32,
+          "dv_bytes": [
+            153,
+            136
+          ],
+          "hp": 68,
+          "is_traded": false,
+          "level": 25,
+          "max_hp": 68,
+          "moves": [
+            "Tackle",
+            "None",
+            "None",
+            "None"
+          ],
+          "nickname": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "ot_id": 0,
+          "ot_name": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "pp": [
+            35,
+            0,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "special": 76,
+          "species": "Alakazam",
+          "speed": 69,
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "total_exp": 11735,
+          "type1": "Psychic",
+          "type2": "Psychic"
+        }
+      ],
+      "phase": "TradeCompleted",
+      "stage": "completion-delay"
+    },
+    {
+      "committed_party": [
+        {
+          "attack": 34,
+          "defense": 32,
+          "dv_bytes": [
+            153,
+            136
+          ],
+          "hp": 68,
+          "is_traded": false,
+          "level": 25,
+          "max_hp": 68,
+          "moves": [
+            "Tackle",
+            "None",
+            "None",
+            "None"
+          ],
+          "nickname": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "ot_id": 0,
+          "ot_name": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "pp": [
+            35,
+            0,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "special": 76,
+          "species": "Alakazam",
+          "speed": 69,
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "total_exp": 11735,
+          "type1": "Psychic",
+          "type2": "Psychic"
+        }
+      ],
+      "frame": 2837,
+      "party": [
+        {
+          "attack": 34,
+          "defense": 32,
+          "dv_bytes": [
+            153,
+            136
+          ],
+          "hp": 68,
+          "is_traded": false,
+          "level": 25,
+          "max_hp": 68,
+          "moves": [
+            "Tackle",
+            "None",
+            "None",
+            "None"
+          ],
+          "nickname": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "ot_id": 0,
+          "ot_name": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "pp": [
+            35,
+            0,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "special": 76,
+          "species": "Alakazam",
+          "speed": 69,
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "total_exp": 11735,
+          "type1": "Psychic",
+          "type2": "Psychic"
+        }
+      ],
+      "phase": "TradeSelect",
+      "stage": "trade-result"
+    }
+  ],
+  "after": [
+    {
+      "committed_party": [
+        {
+          "attack": 27,
+          "defense": 24,
+          "dv_bytes": [
+            153,
+            136
+          ],
+          "hp": 61,
+          "is_traded": false,
+          "level": 25,
+          "max_hp": 61,
+          "moves": [
+            "Tackle",
+            "None",
+            "None",
+            "None"
+          ],
+          "nickname": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "ot_id": 0,
+          "ot_name": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "pp": [
+            35,
+            0,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "special": 69,
+          "species": "Kadabra",
+          "speed": 61,
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "total_exp": 11735,
+          "type1": "Psychic",
+          "type2": "Psychic"
+        }
+      ],
+      "frame": 1960,
+      "party": [
+        {
+          "attack": 34,
+          "defense": 34,
+          "dv_bytes": [
+            153,
+            136
+          ],
+          "hp": 63,
+          "is_traded": false,
+          "level": 25,
+          "max_hp": 63,
+          "moves": [
+            "Tackle",
+            "None",
+            "None",
+            "None"
+          ],
+          "nickname": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "ot_id": 0,
+          "ot_name": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "pp": [
+            35,
+            0,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "special": 41,
+          "species": "Bulbasaur",
+          "speed": 31,
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "total_exp": 11735,
+          "type1": "Grass",
+          "type2": "Poison"
+        }
+      ],
+      "phase": "TradeSync",
+      "stage": "peer-during-evolution"
+    },
+    {
+      "committed_party": [
+        {
+          "attack": 34,
+          "defense": 34,
+          "dv_bytes": [
+            153,
+            136
+          ],
+          "hp": 63,
+          "is_traded": false,
+          "level": 25,
+          "max_hp": 63,
+          "moves": [
+            "Tackle",
+            "None",
+            "None",
+            "None"
+          ],
+          "nickname": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "ot_id": 0,
+          "ot_name": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "pp": [
+            35,
+            0,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "special": 41,
+          "species": "Bulbasaur",
+          "speed": 31,
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "total_exp": 11735,
+          "type1": "Grass",
+          "type2": "Poison"
+        }
+      ],
+      "frame": 2806,
+      "party": [
+        {
+          "attack": 34,
+          "defense": 32,
+          "dv_bytes": [
+            153,
+            136
+          ],
+          "hp": 68,
+          "is_traded": false,
+          "level": 25,
+          "max_hp": 68,
+          "moves": [
+            "Tackle",
+            "None",
+            "None",
+            "None"
+          ],
+          "nickname": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "ot_id": 0,
+          "ot_name": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "pp": [
+            35,
+            0,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "special": 76,
+          "species": "Alakazam",
+          "speed": 69,
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "total_exp": 11735,
+          "type1": "Psychic",
+          "type2": "Psychic"
+        }
+      ],
+      "phase": "TradeCompletionDelay { frames_left: 31 }",
+      "stage": "completion-delay"
+    },
+    {
+      "committed_party": [
+        {
+          "attack": 34,
+          "defense": 32,
+          "dv_bytes": [
+            153,
+            136
+          ],
+          "hp": 68,
+          "is_traded": false,
+          "level": 25,
+          "max_hp": 68,
+          "moves": [
+            "Tackle",
+            "None",
+            "None",
+            "None"
+          ],
+          "nickname": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "ot_id": 0,
+          "ot_name": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "pp": [
+            35,
+            0,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "special": 76,
+          "species": "Alakazam",
+          "speed": 69,
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "total_exp": 11735,
+          "type1": "Psychic",
+          "type2": "Psychic"
+        }
+      ],
+      "frame": 2837,
+      "party": [
+        {
+          "attack": 34,
+          "defense": 32,
+          "dv_bytes": [
+            153,
+            136
+          ],
+          "hp": 68,
+          "is_traded": false,
+          "level": 25,
+          "max_hp": 68,
+          "moves": [
+            "Tackle",
+            "None",
+            "None",
+            "None"
+          ],
+          "nickname": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "ot_id": 0,
+          "ot_name": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "pp": [
+            35,
+            0,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "special": 76,
+          "species": "Alakazam",
+          "speed": 69,
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "total_exp": 11735,
+          "type1": "Psychic",
+          "type2": "Psychic"
+        }
+      ],
+      "phase": "TradeCompleted",
+      "stage": "trade-result"
+    }
+  ],
+  "method": "Same capture function, fixture, real table/party/confirmation inputs, frame counts and live parties; saved party intentionally differs until original completion/save timing."
+}
