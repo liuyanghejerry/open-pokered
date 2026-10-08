@@ -215,8 +215,8 @@ fn flash_white_out_freezes_movement_for_three_frames() {
     );
     assert_eq!(screen.flash_lit_frames, 0, "3 frames elapsed");
 
-    // Movement resumes once the white-out clears.
-    screen.update_frame(up);
+    // NoDirection previously armed a turn wait; resume through that loop.
+    for _ in 0..4 { screen.update_frame(up); }
     assert_eq!(
         screen.state.player.movement_state,
         MovementState::Walking,

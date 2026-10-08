@@ -577,7 +577,7 @@ fn boulder_push_blocks_player_and_inputs_through_slide_dust_and_restore() {
     // A released/new direction after the routine can move normally.
     let idle=super::OverworldInput::new(false,false,false,false,false,false,false,false);
     screen.update_frame(idle);
-    screen.update_frame(super::OverworldInput::new(false,true,false,false,false,false,false,false));
+    for _ in 0..4 { screen.update_frame(super::OverworldInput::new(false,true,false,false,false,false,false,false)); }
     assert_eq!(screen.state.player.movement_state,super::MovementState::Walking);
 }
 
@@ -1088,6 +1088,7 @@ fn player_start_pulse_is_discarded_midstep_but_held_start_opens_after_landing() 
             }
             assert_eq!(screen.state.player.movement_state,MovementState::Idle);
             assert_eq!((screen.state.player.x,screen.state.player.y),(5,6));
+            screen.update_frame(pending); // first DelayFrame after landing
             assert_eq!(screen.update_frame(pending),if held {
                 ScreenAction::Transition(GameScreen::StartMenu)
             } else {ScreenAction::Continue});
@@ -1116,10 +1117,10 @@ fn held_a_is_sampled_only_after_step() {
     let held=OverworldInput::new(false,false,false,false,true,false,false,false);
     assert_eq!(screen.update_frame(held),ScreenAction::Continue);
     assert!(screen.pending_pc.is_none());assert!(screen.pending_dialogue.is_none());
-    screen.update_frame(held);
+    screen.update_frame(held);screen.update_frame(held);
     assert_eq!((screen.state.player.x,screen.state.player.y),(13,4));
     assert!(screen.pending_pc.is_none());assert!(screen.pending_dialogue.is_none());
-    screen.update_frame(held);
+    screen.update_frame(held);screen.update_frame(held);
     assert!(screen.pending_pc.is_some() || screen.pending_dialogue.is_some() || screen.active_script_effect.is_some(),"held A interacts after landing");
 }
 
@@ -1179,4 +1180,50 @@ fn victory_road_switch_commits_during_slide_and_redraw_depends_on_view_address()
         }
         assert_eq!(screen.npc_states[0].walk_counter,0);
     }
+}
+
+#[test]
+fn ordinary_steps_match_original_counter_trace_and_sample_after_landing() {
+    use crate::game_state::{ScreenAction, GameScreen};
+    use super::MovementState;
+    // Original AdvancePlayerSprite with an already matching stopped direction:
+    // the first redraw holds counter 7 across one extra hardware frame.
+    for (transport, trace, landing) in [
+        (TransportMode::Walking, vec![7,7,7,6,6,5,5,4,4,3,3,2,2,1,1,0],15),
+        (TransportMode::Biking, vec![7,6,6,4,4,2,2,0],7),
+    ] {
+        let mut screen=screen_on(MapId::PalletTown);fill_map_with_passable_block(&mut screen);
+        screen.state.player.x=5;screen.state.player.y=5;screen.state.player.facing=Direction::Down;
+        screen.state.player.transport=transport;
+        screen.player_last_stop_direction=4;screen.check_player_turn=true;
+        let down=OverworldInput::new(false,true,false,false,false,false,false,false);
+        let start=OverworldInput::new(false,true,false,false,false,false,true,false);
+        for (t, counter) in trace.into_iter().enumerate() {
+            assert_eq!(screen.update_frame(if t>=5 {start} else {down}),ScreenAction::Continue);
+            assert_eq!(screen.state.walk_counter,counter,"{transport:?}, t{t}");
+            assert_eq!(screen.state.player.y,if t<landing {5} else {6});
+        }
+        assert_eq!(screen.state.player.movement_state,MovementState::Idle);
+        assert_eq!(screen.update_frame(start),ScreenAction::Continue,"first wait after landing");
+        assert_eq!(screen.update_frame(start),ScreenAction::Transition(GameScreen::StartMenu));
+    }
+}
+
+#[test]
+fn ordinary_turn_wait_uses_last_stop_instead_of_visible_facing() {
+    use super::MovementState;
+    let idle=OverworldInput::new(false,false,false,false,false,false,false,false);
+    let down=OverworldInput::new(false,true,false,false,false,false,false,false);
+    let mut screen=screen_on(MapId::PalletTown);fill_map_with_passable_block(&mut screen);
+    screen.state.player.x=5;screen.state.player.y=5;screen.state.player.facing=Direction::Down;
+    screen.player_last_stop_direction=2;screen.check_player_turn=true;
+    // Same visible facing still needs the turn delay after Continue reset it.
+    screen.update_frame(down);
+    assert_eq!(screen.state.player.movement_state,MovementState::Idle);
+    assert_eq!(screen.player_moving_direction,4);
+    screen.update_frame(idle);screen.update_frame(idle);
+    assert_eq!((screen.state.player.x,screen.state.player.y),(5,5),"short turn pulse does not walk");
+    assert_eq!(screen.player_last_stop_direction,4);
+    screen.update_frame(down);screen.update_frame(down);
+    assert_eq!(screen.state.walk_counter,7,"matching stopped direction now walks");
 }

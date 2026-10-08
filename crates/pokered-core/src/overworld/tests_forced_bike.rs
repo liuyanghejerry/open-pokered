@@ -254,8 +254,8 @@ fn surf_refused_with_cycling_is_fun_while_forced() {
 // ── Route 17 slope (JoypadOverworld PAD_DOWN + DoBikeSpeedup) ────────
 
 /// Tick `update_frame` until the player's tile position changes; returns the
-/// number of step-duration frames (the walk-initiation frame does not
-/// decrement the counter, exactly like Gen-1's `TryWalking`).
+/// number of hardware frames after initiation. The original advances to
+/// counter 7 immediately, crosses the first map redraw, then loops at 2f.
 fn frames_to_step(screen: &mut OverworldScreen<PokemonRedData>, input: &OverworldInput) -> u32 {
     let start = (screen.state.player.x, screen.state.player.y);
     let mut guard = 0;
@@ -285,7 +285,7 @@ fn route17_slope_auto_walks_down_when_idle() {
     screen.state.player.y = 8;
     let no_input = OverworldInput::new(false, false, false, false, false, false, false, false);
     let frames = frames_to_step(&mut screen, &no_input);
-    assert_eq!(frames, 8, "forced-down walks at walking speed");
+    assert_eq!(frames, 15, "forced-down walks at walking speed");
     assert_eq!(
         (screen.state.player.x, screen.state.player.y),
         (8, 9),
@@ -319,7 +319,7 @@ fn route17_slope_real_direction_wins_over_the_simulation() {
     screen.state.player.y = 8;
     let up = OverworldInput::new(true, false, false, false, false, false, false, false);
     let frames = frames_to_step(&mut screen, &up);
-    assert_eq!(frames, 8);
+    assert_eq!(frames, 15);
     assert_eq!(
         (screen.state.player.x, screen.state.player.y),
         (8, 7),
@@ -331,27 +331,27 @@ fn route17_slope_real_direction_wins_over_the_simulation() {
 fn route17_bike_speed_cancelled_while_going_uphill() {
     // DoBikeSpeedup (home/overworld.asm:377-388): on Route 17 the double
     // speed is skipped while UP/LEFT/RIGHT is held — the bike takes the
-    // full walking duration (8 frames) per step.
+    // full walking duration (15 hardware frames after initiation) per step.
     let mut screen = screen_on(MapId::Route17);
     screen.state.player.x = 8;
     screen.state.player.y = 12;
     screen.state.player.transport = TransportMode::Biking;
     let up = OverworldInput::new(true, false, false, false, false, false, false, false);
     let frames = frames_to_step(&mut screen, &up);
-    assert_eq!(frames, 8, "bike at walking speed uphill on the slope");
+    assert_eq!(frames, 15, "bike at walking speed uphill on the slope");
     assert_eq!((screen.state.player.x, screen.state.player.y), (8, 11));
 }
 
 #[test]
 fn route17_bike_double_speed_downhill() {
-    // DOWN held (or idle): the speedup applies — 4 frames per step.
+    // DOWN held (or idle): the speedup applies — 7 hardware frames after initiation.
     let mut screen = screen_on(MapId::Route17);
     screen.state.player.x = 8;
     screen.state.player.y = 12;
     screen.state.player.transport = TransportMode::Biking;
     let down = OverworldInput::new(false, true, false, false, false, false, false, false);
     let frames = frames_to_step(&mut screen, &down);
-    assert_eq!(frames, 4, "bike at double speed downhill on the slope");
+    assert_eq!(frames, 7, "bike at double speed downhill on the slope");
     assert_eq!((screen.state.player.x, screen.state.player.y), (8, 13));
 }
 
@@ -365,7 +365,7 @@ fn off_slope_bike_keeps_double_speed() {
     screen.state.player.transport = TransportMode::Biking;
     let up = OverworldInput::new(true, false, false, false, false, false, false, false);
     let frames = frames_to_step(&mut screen, &up);
-    assert_eq!(frames, 4, "bike speedup stays on other maps");
+    assert_eq!(frames, 7, "bike speedup stays on other maps");
     assert_eq!((screen.state.player.x, screen.state.player.y), (10, 1));
 }
 

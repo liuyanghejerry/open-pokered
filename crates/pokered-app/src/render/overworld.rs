@@ -3223,12 +3223,16 @@ mod elevator_edge_tests {
         let before = render_screen(&mut s);
         assert!(!s.boulder_dust.is_active(), "no dust before the push");
 
-        // Hold DOWN: frame 1 arms BIT_TRIED_PUSH_BOULDER, frame 2 pushes.
+        // Two logical collision attempts arm then push; DelayFrame falls
+        // between them, so keep holding until the blocking routine starts.
         let hold_down = pokered_core::overworld::OverworldInput::new(
             false, true, false, false, false, false, false, false,
         );
-        s.update_frame(hold_down);
-        s.update_frame(hold_down);
+        for _ in 0..10 {
+            s.update_frame(hold_down);
+            if s.boulder_push.is_some() {break;}
+        }
+        assert!(s.boulder_push.is_some());
         assert!(!s.boulder_dust.is_active(), "stone slides before smoke appears");
         for _ in 0..46 {s.update_frame(pokered_core::overworld::OverworldInput::new(false,false,false,false,false,false,false,false));}
         assert!(s.boulder_dust.is_active(), "dust appears after the slide");

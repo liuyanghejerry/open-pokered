@@ -744,6 +744,12 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     pub text_delay_frames: u16,
     pub(crate) prev_a_pressed: bool,
     pub(crate) sampled_player_input: dotzuki_engine::overworld::OverworldInput,
+    /// Remaining hardware frames in OverworldLoop's DelayFrame pair.
+    pub(crate) field_loop_wait: u8,
+    /// First AdvancePlayerSprite redraw finishes before the second bike advance.
+    pub(crate) bike_redraw_advance: bool,
+    /// NoDirection arms the original turn-in-place check until it is consumed.
+    pub(crate) check_player_turn: bool,
     pub(crate) prev_movement_state: MovementState,
     pub(crate) prev_b_pressed: bool,
     pub(crate) prev_up_pressed: bool,
@@ -1179,6 +1185,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             text_delay_frames: DEFAULT_TEXT_DELAY_FRAMES,
             prev_a_pressed: false,
             sampled_player_input: dotzuki_engine::overworld::OverworldInput::new(false,false,false,false,false,false,false,false),
+            field_loop_wait: 0,
+            bike_redraw_advance: false,
+            check_player_turn: false,
             prev_movement_state: MovementState::Idle,
             player_last_stop_direction: 0,
             player_moving_direction: 0,

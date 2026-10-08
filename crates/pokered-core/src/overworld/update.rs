@@ -1303,6 +1303,30 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             }
         }
 
+        // OverworldLoop has two hardware-frame waits, independent of the
+        // vblank tile animation and physical dialogue edges above. Blocking
+        // field animations and scripted movement have their own clocks.
+        let ordinary_field_loop = self.active_script_effect.is_none()
+            && self.scripted_player_path.is_empty()
+            && !self.cutscene_manager.is_blocking()
+            && self.pending_connection.is_none()
+            && self.ledge_jump.is_none();
+        if ordinary_field_loop {
+            if self.bike_redraw_advance {
+                // LoadCurrentMapView crosses vblank between the two initial
+                // bike advances. No controls or NPCs are processed here.
+                self.bike_redraw_advance = false;
+                self.state.walk_counter = self.state.walk_counter.saturating_sub(1);
+                self.field_loop_wait = 1;
+                return ScreenAction::Continue;
+            }
+            if self.field_loop_wait != 0 {
+                self.field_loop_wait -= 1;
+                return ScreenAction::Continue;
+            }
+            self.field_loop_wait = 1;
+        }
+
         // JoypadOverworld is not sampled while a step is in progress.
         // A short START pulse during the step is discarded; a held START
         // becomes a fresh press at the next idle sample. START precedes A.
@@ -1646,6 +1670,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             select: player_input.select && !intro_holding_input,
         };
 
+        let mut turning_in_place = false;
+
         // OverworldLoop samples direction only after the current step.
         // Releasing it records the last moving direction, not sprite facing.
         if self.state.player.movement_state == MovementState::Idle {
@@ -1654,9 +1680,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     Direction::Right => 1, Direction::Left => 2,
                     Direction::Down => 4, Direction::Up => 8,
                 };
-            } else if self.player_moving_direction != 0 {
-                self.player_last_stop_direction = self.player_moving_direction;
-                self.player_moving_direction = 0;
+            } else {
+                self.check_player_turn = true;
+                if self.player_moving_direction != 0 {
+                    self.player_last_stop_direction = self.player_moving_direction;
+                    self.player_moving_direction = 0;
+                }
             }
         }
 
@@ -1834,7 +1863,25 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 movement_input
             };
 
-            let result = if let Some(ref mut jump) = self.ledge_jump {
+            if ordinary_field_loop && movement_before == MovementState::Idle {
+                if let Some(direction) = movement_input.direction_pressed() {
+                    let direction_mask = match direction {
+                        Direction::Right => 1, Direction::Left => 2,
+                        Direction::Down => 4, Direction::Up => 8,
+                    };
+                    turning_in_place = self.check_player_turn
+                        && direction_mask != self.player_last_stop_direction;
+                    if turning_in_place { self.check_player_turn = false; }
+                    self.player_moving_direction = direction_mask;
+                    // UpdateSprites gets the new direction before collision;
+                    // the engine's old-facing collision heuristic is not the
+                    // original check against the last stopped direction.
+                    self.state.player.facing = direction;
+                }
+            }
+            let result = if turning_in_place {
+                MoveResult::TurnedOnly
+            } else if let Some(ref mut jump) = self.ledge_jump {
                 let done = jump.tick();
                 let (x, y) = jump.player_position();
                 self.state.player.x = x;
@@ -1873,6 +1920,15 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     &collision_provider,
                 )
             };
+
+            if ordinary_field_loop && matches!(result, MoveResult::Walking) {
+                // noCollision initializes eight and immediately advances once.
+                // The initial map redraw adds one hardware frame to this loop.
+                self.state.walk_counter = player_movement::WALK_COUNTER_INIT - 1;
+                self.field_loop_wait = 2;
+                self.bike_redraw_advance = self.state.player.transport == TransportMode::Biking
+                    && self.state.player.bike_speedup_active;
+            }
 
             // Surf dismount (CollisionCheckOnWater .stopSurfing): the engine
             // flipped the transport back to Walking after stepping ashore —
@@ -2212,7 +2268,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         // the player holds the d-pad toward a boulder, slide it one tile.
         // Runs in the normal gameplay path only (dialogue/scripts return
         // earlier), matching the original's RunMapScript call site.
-        self.tick_boulder_push(movement_input.direction_pressed());
+        if !turning_in_place { self.tick_boulder_push(movement_input.direction_pressed()); }
         if self.boulder_push.is_some() {
             return ScreenAction::Continue;
         }
@@ -2221,7 +2277,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         // In the original game, NPC movement is frozen while a text box is displayed
         // (wFontLoaded / BIT_FONT_LOADED check in UpdateNPCSprite).
         // run_npc_movement_tick() gates on is_text_ui_active() internally.
-        self.run_npc_movement_tick();
+        if !turning_in_place { self.run_npc_movement_tick(); }
 
         ScreenAction::Continue
     }
@@ -4582,6 +4638,8 @@ mod ground_pickup_fidelity_tests {
         // Free one bag slot and retry the same ball, then verify its byte item.
         ow.seed_script_query_state(0, &bag[..19], 0, 0, 0, 0, &[], 0, 0, 0);
         if press_a {
+            // Let JoypadOverworld observe the release after the full-bag text.
+            for _ in 0..2 { ow.update_frame(input(false)); }
             ow.update_frame(input(true));
         } else {
             assert!(ow.try_call_script_npc_talk(data.text_id));

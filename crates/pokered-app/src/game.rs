@@ -8335,7 +8335,7 @@ mod wall_town_map_tests {
         for _ in 0..40 {
             game.update(&idle);
         }
-        game.update(&a);
+        for _ in 0..2 { game.update(&a); }
         assert!(game.overworld.pending_town_map);
         assert!(game.overworld.pending_dialogue.is_some());
         assert_eq!(game.state.screen, GameScreen::Overworld);
@@ -8382,7 +8382,7 @@ mod wall_town_map_tests {
             (3, 1)
         );
         assert_eq!(game.overworld.state.player.facing, Direction::Up);
-        game.update(&a);
+        for _ in 0..2 { game.update(&a); }
         assert!(
             game.overworld.pending_town_map,
             "wall map can be inspected again"
@@ -8644,7 +8644,10 @@ mod gift_dialogue_debug_tests {
         game.overworld.state.player.facing=Direction::Down;
         game.overworld.strength_active=true;
         let mut down=InputState::new();down.press(GbButton::Down);
-        game.update(&down);game.update(&down);
+        for _ in 0..10 {
+            game.update(&down);
+            if game.overworld.boulder_push.is_some() {break;}
+        }
         assert!(game.overworld.boulder_push.is_some());
         let mut elapsed=0;
         while game.overworld.boulder_push.is_some() {
@@ -8706,7 +8709,7 @@ mod gift_dialogue_debug_tests {
         game.update(&InputState::new());
         let mut a = InputState::new();
         a.press(GbButton::A);
-        game.update(&a);
+        for _ in 0..2 { game.update(&a); }
         for _ in 0..10 {
             for _ in 0..8 {
                 game.update(&InputState::new());
@@ -8895,10 +8898,14 @@ mod link_stats_cry_fidelity_tests {
                 assert_eq!((peer.overworld.state.player.x, peer.overworld.state.player.y), target,
                     "incoming request must leave real walking input available");
             }
-            peer.update(&button(GbButton::Left));
+            for _ in 0..2 { peer.update(&button(GbButton::Left)); host.update(&idle); }
             for _ in 0..20 { peer.update(&idle); host.update(&idle); }
             assert_eq!((peer.overworld.state.player.x, peer.overworld.state.player.y), (6, 4));
-            peer.update(&button(GbButton::A));
+            assert_eq!(peer.overworld.state.player.facing,pokered_core::overworld::Direction::Left);
+            let mut held_a=button(GbButton::A);
+            peer.update(&held_a);host.update(&idle);
+            held_a.begin_frame();
+            peer.update(&held_a);host.update(&idle);
             for _ in 0..2 { peer.update(&idle); host.update(&idle); }
             assert!(matches!(peer.link_cable.phase(), CableClubPhase::JustAMoment { .. }));
             peer.update(&button(GbButton::A)); host.update(&idle);
