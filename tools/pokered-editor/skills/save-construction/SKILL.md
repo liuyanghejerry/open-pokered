@@ -33,7 +33,7 @@ cargo run --release --bin pokered-app -- run --snapshot snapshot.json --skip-int
 
 Key fields:
 
-- **`game_data.position`** — `{map_id, x, y, x_block, y_block}`; **`player_direction`** 0=Down 4=Up 8=Left 12=Right.
+- **`game_data.position`** — `{map_id, x, y, x_block, y_block}`; **`player_direction`** 4=Down 8=Up 2=Left 1=Right (original PLAYER_DIR bitmask, not sprite facing).
 - **`game_data.obtained_badges`** — u8 bitfield, bit0=Boulder … bit7=Earth. (Badges are NOT event flags.)
 - **`game_data.player_money`** (≤999999), **`player_coins`**, **`game_data.bag.items`** as `[[itemId, qty], …]` where `itemId` is the ItemId **name string** (`"MasterBall"`, `"RareCandy"`, … — the same ids as `crates/pokered-data/data/items/*.json`; the numeric byte order in `data/items/item_list.json` is 1=MasterBall, 2=UltraBall, 6=Bicycle, 40=RareCandy, with TMs at 0xC9+ and HMs at 0xC4+).
 - **`party`** — up to 6 full Pokémon records: `species` (PascalCase), `level`, `hp`/`max_hp`/`attack`/`defense`/`speed`/`special`, `type1`/`type2`, `moves` (4 MoveId names — empty slots are `"None"`), `pp[4]`, `dv_bytes[2]` (Atk/Spd high nybbles, Def/Spc low), `stat_exp[5]`, `total_exp`, `status`, `ot_id` (0 = own), plus charmap-encoded `nickname`/`ot_name` byte arrays (`0x50` = padding; see `pokered_data::charmap`).

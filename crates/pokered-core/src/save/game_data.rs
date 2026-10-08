@@ -286,8 +286,11 @@ pub struct GameData {
     pub map_sprite_extra_data: [(u8, u8); MAX_OBJECT_EVENTS],
     pub current_map_height2: u8,
     pub current_map_width2: u8,
+    /// Original PLAYER_DIR_* mask (right=1, left=2, down=4, up=8), or 0 when stopped.
     pub player_moving_direction: u8,
+    /// Original PLAYER_DIR_* mask; not the sprite-facing byte (0/4/8/12).
     pub player_last_stop_direction: u8,
+    /// Original PLAYER_DIR_* mask (right=1, left=2, down=4, up=8).
     pub player_direction: u8,
     pub tileset_bank: u8,
     pub tileset_blocks_ptr: u16,

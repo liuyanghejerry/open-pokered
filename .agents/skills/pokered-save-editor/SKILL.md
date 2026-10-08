@@ -81,7 +81,7 @@ Array of u8 bytes in the game's custom charmap encoding. Use `pokered_data::char
 | Field | Type | Description |
 |-------|------|-------------|
 | `position` | `{map_id, x, y, x_block, y_block}` | Player's map and coordinates |
-| `player_direction` | u8 | 0=Down, 4=Up, 8=Left, 12=Right |
+| `player_direction` | u8 | 4=Down, 8=Up, 2=Left, 1=Right (original PLAYER_DIR bitmask; not sprite facing) |
 | `play_time` | `{hours, minutes, seconds, frames, maxed}` | Game play time |
 | `obtained_badges` | u8 | Bitfield: bit0=Boulder, bit1=Cascade, ..., bit7=Earth |
 | `player_money` | u32 | Player money (max 999,999) |
