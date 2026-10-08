@@ -3938,13 +3938,27 @@ impl PokemonGame {
                         || self.link_cable.phase() == &CableClubPhase::BattleSetup
                     {
                         if self.link_cable.is_modal() {
+                            // StatusScreen calls the blocking PlayCry before waiting
+                            // for footer input. Keep the logical audio clock in
+                            // this path even when sound output is muted.
+                            let cry_holds_input = self.link_cable.stats().is_some()
+                                && self.audio.as_ref().is_some_and(|audio| audio.is_sfx_playing());
                             let psi = PartyScreenInput {
                                 up: input.is_just_pressed(GbButton::Up),
                                 down: input.is_just_pressed(GbButton::Down),
-                                a: input.is_just_pressed(GbButton::A),
-                                b: input.is_just_pressed(GbButton::B),
+                                a: !cry_holds_input && input.is_just_pressed(GbButton::A),
+                                b: !cry_holds_input && input.is_just_pressed(GbButton::B),
                             };
                             let was_viewing_stats = self.link_cable.stats().is_some();
+                            if self.link_cable.menu_button_sound(
+                                psi,
+                                input.is_just_pressed(GbButton::Left),
+                                input.is_just_pressed(GbButton::Right),
+                            ) {
+                                if let Some(audio) = self.audio.as_ref() {
+                                    audio.play_sfx(SfxId::PressAB);
+                                }
+                            }
                             let need = self.link_cable.update_with_horizontal_navigation(
                                 psi,
                                 &self.save_data.party.to_vec(),
@@ -5366,11 +5380,14 @@ impl PokemonGame {
                     }
                 }
             }
+            // PlayCry waits for the sound to finish before either stats
+            // page accepts input (party and PC share this screen).
             GameScreen::PokemonStatsScreen(_idx) => {
+                let cry_holds_input = self.audio.as_ref().is_some_and(|audio| audio.is_sfx_playing());
                 if let Some(ref mut ss) = self.stats_screen {
                     let input = StatsScreenInput {
-                        a: input.is_just_pressed(GbButton::A),
-                        b: input.is_just_pressed(GbButton::B),
+                        a: !cry_holds_input && input.is_just_pressed(GbButton::A),
+                        b: !cry_holds_input && input.is_just_pressed(GbButton::B),
                     };
                     match ss.update(input) {
                         StatsScreenAction::Continue => ScreenAction::Continue,
@@ -9119,6 +9136,170 @@ mod link_stats_cry_fidelity_tests {
     }
 
     #[test]
+    fn actual_link_simultaneous_menu_keys_follow_original_branch_priority() {
+        run_link_save_fixture(|| {
+            let (mut host, _peer) = paired_trade_room();
+            let mut right_a = button(GbButton::Right); right_a.press(GbButton::A);
+            let mut left_a = button(GbButton::Left); left_a.press(GbButton::A);
+            let mut right_b = button(GbButton::Right); right_b.press(GbButton::B);
+            let mut left_b = button(GbButton::Left); left_b.press(GbButton::B);
+            host.update(&right_a);
+            assert_eq!(host.link_cable.local_action(), Some((0, false)),
+                "original party list handles A before RIGHT");
+            assert_eq!(host.link_cable.peer_cursor(), None);
+            host.update(&button(GbButton::B)); host.update(&button(GbButton::Right));
+            host.update(&left_a);
+            assert_eq!(host.link_cable.stats().unwrap().pokemon().species, Species::Pikachu,
+                "original peer list handles A before LEFT");
+            assert_eq!(host.link_cable.peer_cursor(), Some(0));
+            wait_stats_cry(&mut host);
+            host.update(&button(GbButton::B)); host.update(&button(GbButton::A));
+            host.update(&button(GbButton::Left)); host.update(&button(GbButton::A));
+            host.update(&right_a);
+            assert_eq!(host.link_cable.local_action(), Some((0, true)),
+                "STATS watched RIGHT precedes A; do not send a trade");
+            assert_eq!(host.link_cable.phase(), &CableClubPhase::TradeSelect);
+            host.update(&left_a);
+            assert_eq!(host.link_cable.local_action(), Some((0, false)),
+                "TRADE watched LEFT precedes A; do not open stats");
+            assert!(host.link_cable.stats().is_none());
+            host.update(&right_b);
+            assert_eq!(host.link_cable.local_action(), Some((0, true)), "RIGHT precedes B");
+            host.update(&left_b);
+            assert_eq!(host.link_cable.local_action(), Some((0, false)), "LEFT precedes B");
+            let mut a_b = button(GbButton::A); a_b.press(GbButton::B);
+            host.update(&a_b);
+            assert_eq!(host.link_cable.local_action(), None, "action B precedes A");
+            });
+    }
+
+    #[test]
+    fn actual_link_vertical_and_horizontal_keys_copy_updated_party_cursor() {
+        run_link_save_fixture(|| {
+            let (mut host, _peer) = unequal_party_pair();
+            let mut down_right = button(GbButton::Down); down_right.press(GbButton::Right);
+            host.update(&down_right);
+            assert_eq!(host.link_cable.peer_cursor(), Some(1),
+                "HandleMenuInput moves DOWN before returning watched RIGHT");
+            let mut up_left = button(GbButton::Up); up_left.press(GbButton::Left);
+            host.update(&up_left);
+            assert_eq!(host.link_cable.peer_cursor(), None);
+            assert_eq!(host.link_cable.party_select().unwrap().cursor(), 0,
+                "HandleMenuInput moves UP before returning watched LEFT");
+            });
+    }
+
+    #[test]
+    fn actual_link_local_menu_a_and_b_emit_press_ab_pcm() {
+        run_link_save_fixture(|| {
+            let (mut host, _peer) = paired_trade_room();
+            let idle = InputState::new();
+            let audio = host.audio.as_ref().unwrap();
+            audio.stop_all();
+            let mut silent = vec![0.0f32; 2048]; audio.render_pcm(&mut silent);
+            assert!(silent.iter().all(|s| s.abs() < 0.00001));
+            host.update(&button(GbButton::A));
+            assert_eq!(host.link_cable.local_action(), Some((0, false)));
+            host.update(&idle);
+            assert_eq!(host.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.current_sfx_id,
+                SfxId::PressAB as u8, "HandleMenuInput plays PRESS_AB on party A");
+            let mut pcm = vec![0.0f32; 2048]; host.audio.as_ref().unwrap().render_pcm(&mut pcm);
+            assert!(pcm.iter().any(|s| s.abs() > 0.00001), "real A button emits audible PCM");
+            for _ in 0..120 { host.update(&idle); }
+            host.audio.as_ref().unwrap().stop_all();
+            host.update(&button(GbButton::B));
+            assert_eq!(host.link_cable.local_action(), None);
+            host.update(&idle);
+            assert_eq!(host.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.current_sfx_id,
+                SfxId::PressAB as u8, "HandleMenuInput plays PRESS_AB on action B");
+            let mut pcm = vec![0.0f32; 2048]; host.audio.as_ref().unwrap().render_pcm(&mut pcm);
+            assert!(pcm.iter().any(|s| s.abs() > 0.00001), "real B button emits audible PCM");
+            for _ in 0..120 { host.update(&idle); }
+            host.audio.as_ref().unwrap().stop_all();
+            host.update(&button(GbButton::B)); host.update(&idle);
+            assert_eq!(channels(&host), vec![false; 4], "ignored party B stays silent");
+            host.update(&button(GbButton::Down));
+            assert!(host.link_cable.cancel_selected());
+            host.update(&button(GbButton::A)); host.update(&idle);
+            assert_eq!(channels(&host), vec![false; 4], "CANCEL uses raw Joypad, not HandleMenuInput sound");
+            });
+    }
+
+    #[test]
+    fn actual_link_stats_waits_for_cry_before_accepting_b() {
+        run_link_save_fixture(|| {
+            let (mut host, mut peer) = paired_trade_room();
+            let idle = InputState::new();
+            host.update(&button(GbButton::Right)); host.update(&button(GbButton::A));
+            assert_eq!(host.link_cable.stats().unwrap().page(), pokered_core::stats_screen::StatsPage::Stats);
+            assert!(host.audio.as_ref().unwrap().is_sfx_playing());
+            host.update(&button(GbButton::B));
+            assert_eq!(host.link_cable.stats().unwrap().page(), pokered_core::stats_screen::StatsPage::Stats,
+                "StatusScreen PlayCry blocks before WaitForTextScrollButtonPress");
+            for _ in 0..120 { host.update(&idle); peer.update(&idle); }
+            assert!(!host.audio.as_ref().unwrap().is_sfx_playing());
+            host.update(&button(GbButton::B));
+            assert_eq!(host.link_cable.stats().unwrap().page(), pokered_core::stats_screen::StatsPage::Moves);
+            host.update(&button(GbButton::A));
+            assert!(host.link_cable.stats().is_none());
+        });
+    }
+
+    fn wait_stats_cry(game: &mut PokemonGame) {
+        for _ in 0..120 {
+            game.update(&InputState::new());
+        }
+        assert!(!game.audio.as_ref().unwrap().is_sfx_playing());
+    }
+
+    fn ordinary_muted_party_stats() -> PokemonGame {
+        use pokered_core::overworld::Direction;
+        let template = fixture(Species::Bulbasaur, 7, Direction::Down);
+        let mut game = PokemonGame::new_with_options(
+            GameVersion::Red, None, None, None, false, None, false, true,
+            #[cfg(feature = "debug-server")] None,
+        );
+        game.save_data = template.save_data;
+        game.state.screen = GameScreen::Overworld;
+        game.main_menu.last_choice = Some(pokered_core::game_state::MainMenuChoice::Continue);
+        // Retain the production --no-audio logical PCM sequencer.
+        game.overworld = OverworldScreen::new(MapId::PalletTown, None, PokemonRedData);
+        game.overworld.set_event_flag_live(pokered_data::event_flags::EventFlag::EVENT_GOT_POKEDEX);
+        game.overworld.set_event_flag_live(pokered_data::event_flags::EventFlag::EVENT_GOT_STARTER);
+        game.overworld.state.player.x = 7; game.overworld.state.player.y = 7;
+        game.overworld.run_on_load();
+        let idle = InputState::new();
+        for _ in 0..60 { game.update(&idle); }
+        game.update(&button(GbButton::Start));
+        for _ in 0..4 { game.update(&idle); }
+        assert_eq!(game.state.screen, GameScreen::StartMenu);
+        game.update(&button(GbButton::Down)); game.update(&button(GbButton::A));
+        for _ in 0..4 { game.update(&idle); }
+        assert_eq!(game.state.screen, GameScreen::PartyScreen);
+        game.update(&button(GbButton::A));
+        game.update(&button(GbButton::A));
+        assert!(matches!(game.state.screen, GameScreen::PokemonStatsScreen(_)));
+        game
+    }
+
+    #[test]
+    fn actual_party_stats_no_audio_waits_for_cry_before_accepting_b() {
+        run_link_save_fixture(|| {
+            let mut game = ordinary_muted_party_stats();
+            let idle = InputState::new();
+            assert!(game.audio.as_ref().unwrap().is_sfx_playing());
+            game.update(&button(GbButton::B));
+            assert_eq!(game.stats_screen.as_ref().unwrap().page(), pokered_core::stats_screen::StatsPage::Stats,
+                "ordinary muted party stats also waits for the logical cry");
+            for _ in 0..120 { game.update(&idle); }
+            game.update(&button(GbButton::B));
+            assert_eq!(game.stats_screen.as_ref().unwrap().page(), pokered_core::stats_screen::StatsPage::Moves);
+            game.update(&button(GbButton::A));
+            assert_eq!(game.state.screen, GameScreen::PartyScreen);
+        });
+    }
+
+    #[test]
     fn actual_confirmation_no_is_not_a_list_cancel() {
         let (mut host, mut peer) = both_selected_pair();
         let host_party = serde_json::to_value(&host.save_data.party).unwrap();
@@ -9155,6 +9336,7 @@ mod link_stats_cry_fidelity_tests {
         peer.update(&idle);
         assert!(peer.link_cable.stats().is_some(), "serial cancel waits for our choice");
         assert!(peer.link_cable.text_box().is_none());
+        wait_stats_cry(&mut peer);
         peer.update(&button(GbButton::B)); peer.update(&button(GbButton::A)); peer.update(&idle);
         choose_actual_trade(&mut peer);
         host.update(&idle);
@@ -9241,6 +9423,7 @@ mod link_stats_cry_fidelity_tests {
         host.update(&down_a);
         assert_eq!(host.link_cable.stats().unwrap().pokemon().species, Species::Pikachu);
         assert!(!host.link_cable.cancel_selected());
+        wait_stats_cry(&mut host);
         host.update(&button(GbButton::B));
         host.update(&button(GbButton::A));
         host.update(&button(GbButton::Down));
@@ -9310,6 +9493,49 @@ mod link_stats_cry_fidelity_tests {
         assert_eq!(peer.link_cable.peer_cursor(), Some(2));
         peer.update(&button(GbButton::Left));
         assert_eq!(peer.link_cable.party_select().unwrap().cursor(), 1);
+    }
+
+    #[test]
+    #[ignore = "writes matched input/cry captures to FIDELITY_LINK_CAPTURES"]
+    fn capture_menu_input_and_cry_fidelity() {
+        run_link_save_fixture(|| {
+            let dir = PathBuf::from(std::env::var("FIDELITY_LINK_CAPTURES").unwrap());
+            std::fs::create_dir_all(&dir).unwrap();
+            let mut records = Vec::new();
+            let mut capture = |stage: &str, g: &mut PokemonGame| {
+                let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+                g.draw(&mut fb);
+                fb.save_png(&dir.join(format!("{stage}.png"))).unwrap();
+                records.push(serde_json::json!({"stage":stage,"frame":g.frame_count,
+                    "phase":format!("{:?}",g.link_cable.phase()),
+                    "screen":format!("{:?}",g.state.screen),
+                    "party":serde_json::to_value(&g.save_data.party).unwrap(),
+                    "local_action":g.link_cable.local_action(),
+                    "peer_cursor":g.link_cable.peer_cursor(),
+                    "stats_page":g.link_cable.stats().map(|s|format!("{:?}",s.page())),
+                    "ordinary_stats_page":g.stats_screen.as_ref().map(|s|format!("{:?}",s.page()))}));
+            };
+            let (mut host, _peer) = paired_trade_room();
+            let mut right_a = button(GbButton::Right); right_a.press(GbButton::A);
+            host.update(&right_a);
+            capture("party-right-a", &mut host);
+            let (mut host, _peer) = paired_trade_room();
+            host.update(&button(GbButton::A));
+            host.update(&right_a);
+            capture("action-right-a", &mut host);
+            let (mut host, _peer) = unequal_party_pair();
+            let mut down_right = button(GbButton::Down); down_right.press(GbButton::Right);
+            host.update(&down_right);
+            capture("party-down-right", &mut host);
+            let (mut host, _peer) = paired_trade_room();
+            host.update(&button(GbButton::Right)); host.update(&button(GbButton::A));
+            host.update(&button(GbButton::B));
+            capture("link-stats-early-b", &mut host);
+            let mut game = ordinary_muted_party_stats();
+            game.update(&button(GbButton::B));
+            capture("party-stats-early-b", &mut game);
+            std::fs::write(dir.join("frames.json"), serde_json::to_string_pretty(&records).unwrap()).unwrap();
+        });
     }
 
     #[test]

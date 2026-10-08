@@ -457,6 +457,22 @@ impl CableClubFlow {
         }
     }
 
+    /// HandleMenuInput plays PRESS_AB only when a watched key exits the
+    /// menu. The shared CANCEL row polls Joypad directly and stays silent.
+    pub fn menu_button_sound(&self, input: PartyScreenInput, left: bool, right: bool) -> bool {
+        if !(input.a || input.b) || self.stats.is_some() || self.rejection_frames.is_some() {
+            return false;
+        }
+        match self.phase {
+            CableClubPhase::TradeSelect if !self.cancel_selected => {
+                if self.local_action.is_some() { return true; }
+                input.a || input.down || (self.browsing_peer && left) || (!self.browsing_peer && right)
+            }
+            CableClubPhase::TradeConfirm { .. } => true,
+            _ => false,
+        }
+    }
+
     /// Drive one frame of modal input (only while `is_modal()`). `party` is
     /// the save's current party (used to (re)build the trade selector).
     pub fn update(&mut self, input: PartyScreenInput, party: &[Pokemon]) -> FlowNeed {
@@ -504,10 +520,13 @@ impl CableClubFlow {
             }
             return FlowNeed::None;
         }
-        if let Some((index, mut trade_selected)) = self.local_action {
-            if left { trade_selected = false; }
-            if right { trade_selected = true; }
-            self.local_action = Some((index, trade_selected));
+        if let Some((index, trade_selected)) = self.local_action {
+            // Only the watched direction exits HandleMenuInput, and that
+            // branch precedes A/B in the original STATS / TRADE loops.
+            if (!trade_selected && right) || (trade_selected && left) {
+                self.local_action = Some((index, !trade_selected));
+                return FlowNeed::None;
+            }
             if input.b {
                 self.local_action = None;
             } else if input.a {
@@ -683,60 +702,43 @@ impl CableClubFlow {
                     }
                     return FlowNeed::None;
                 }
-                if left && self.browsing_peer {
-                    if let Some(sel) = self.selector.as_mut() {
-                        sel.set_cursor(self.peer_cursor);
-                    }
-                    self.browsing_peer = false;
-                    return FlowNeed::None;
-                }
-                if right && !self.browsing_peer {
-                    let local_cursor = self.selector.as_ref().map_or(0, |sel| sel.cursor());
-                    self.peer_cursor = local_cursor.min(self.remote_party.len().saturating_sub(1));
-                    self.browsing_peer = true;
-                    return FlowNeed::None;
-                }
+                // HandleMenuInput updates the vertical cursor before
+                // returning watched A/LEFT/RIGHT. A then precedes a side swap.
+                let (cursor, count) = if self.browsing_peer {
+                    (self.peer_cursor, self.remote_party.len())
+                } else {
+                    let sel = self.selector.as_ref().unwrap();
+                    (sel.cursor(), sel.party().len())
+                };
+                if count == 0 { return FlowNeed::None; }
+                let next = if input.up { cursor.saturating_sub(1) }
+                    else if input.down { (cursor + 1).min(count) }
+                    else { cursor };
+                self.cancel_selected = next == count;
                 if self.browsing_peer {
-                    let len = self.remote_party.len();
-                    if len > 0 {
-                        if input.up {
-                            self.peer_cursor = self.peer_cursor.saturating_sub(1);
-                        } else if input.down {
-                            if self.peer_cursor + 1 >= len {
-                                self.cancel_selected = true;
-                            } else {
-                                self.peer_cursor += 1;
-                            }
-                        }
-                        if input.a {
-                            self.cancel_selected = false;
-                            self.stats = Some(pokered_core::stats_screen::StatsScreenState::new(
-                                self.remote_party[self.peer_cursor].clone(),
-                            ));
-                        }
+                    self.peer_cursor = next.min(count - 1);
+                } else if let Some(sel) = self.selector.as_mut() {
+                    sel.set_cursor(next.min(count - 1));
+                }
+                if input.a {
+                    self.cancel_selected = false;
+                    if self.browsing_peer {
+                        self.stats = Some(pokered_core::stats_screen::StatsScreenState::new(
+                            self.remote_party[self.peer_cursor].clone(),
+                        ));
+                    } else if !self.remote_party.is_empty() {
+                        self.local_action = Some((next.min(count - 1), false));
                     }
                     return FlowNeed::None;
                 }
-                if input.a && self.remote_party.is_empty() {
-                    return FlowNeed::None;
-                }
-                if let Some(sel) = self.selector.as_mut() {
-                    let cursor = sel.cursor();
-                    if input.up {
-                        sel.set_cursor(cursor.saturating_sub(1));
-                    } else if input.down {
-                        if cursor + 1 >= sel.party().len() {
-                            self.cancel_selected = true;
-                        } else {
-                            sel.set_cursor(cursor + 1);
-                        }
-                    }
-                    if input.a {
-                        // A on a just-reached bottom row uses the final mon;
-                        // only the separate CANCEL loop sends cancellation.
-                        self.cancel_selected = false;
-                        self.local_action = Some((sel.cursor(), false));
-                    }
+                if left && self.browsing_peer {
+                    if let Some(sel) = self.selector.as_mut() { sel.set_cursor(next); }
+                    self.cancel_selected = false;
+                    self.browsing_peer = false;
+                } else if right && !self.browsing_peer {
+                    self.peer_cursor = next.min(self.remote_party.len().saturating_sub(1));
+                    self.cancel_selected = false;
+                    self.browsing_peer = true;
                 }
                 // B is not watched by either party list in TradeCenter_SelectMon.
                 FlowNeed::None
