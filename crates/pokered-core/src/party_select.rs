@@ -43,6 +43,11 @@ impl PartySelectState {
         self.inner.cursor()
     }
 
+    /// Restore a caller's menu index, clamped to this party's valid members.
+    pub fn set_cursor(&mut self, index: usize) {
+        self.inner.set_cursor(index);
+    }
+
     pub fn party(&self) -> &[Pokemon] {
         self.inner.party()
     }

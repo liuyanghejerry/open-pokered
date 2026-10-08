@@ -358,6 +358,22 @@ fn battle_declined_shows_link_canceled() {
 
 // ── Trade flow ─────────────────────────────────────────────────────
 
+// Original own-party A opens STATS / TRADE; only choosing TRADE sends a mon.
+fn choose_trade(
+    flow: &mut CableClubFlow,
+    party: &[pokered_core::battle::state::Pokemon],
+) -> FlowNeed {
+    assert_eq!(flow.update(a_input(), party), FlowNeed::None);
+    assert!(matches!(flow.local_action(), Some((_, false))));
+    assert_eq!(
+        flow.update_with_horizontal_navigation(no_input(), party, false, true),
+        FlowNeed::None
+    );
+    assert!(matches!(flow.local_action(), Some((_, true))));
+    flow.update(a_input(), party)
+}
+
+
 #[test]
 fn trade_flow_select_confirm_execute() {
     let mut p = pair();
@@ -429,7 +445,7 @@ fn trade_flow_select_confirm_execute() {
     let need = p.host_flow.update(no_input(), &party2()); // builds the selector
     assert_eq!(need, FlowNeed::None);
     assert!(p.host_flow.party_select().is_some());
-    let need = p.host_flow.update(a_input(), &party2());
+    let need = choose_trade(&mut p.host_flow, &party2());
     assert_eq!(need, FlowNeed::SelectMon(0));
     execute(&mut p.host_session, &mut p.host_flow, &mut p.host_battle, &mut p.host_trade, need);
 
@@ -437,7 +453,7 @@ fn trade_flow_select_confirm_execute() {
     pump_trade(&mut p.guest_session, &mut p.guest_trade, &mut p.guest_flow);
     assert_eq!(*p.guest_flow.phase(), CableClubPhase::TradeSelect);
     let _ = p.guest_flow.update(no_input(), &party2());
-    let need = p.guest_flow.update(a_input(), &party2());
+    let need = choose_trade(&mut p.guest_flow, &party2());
     assert_eq!(need, FlowNeed::SelectMon(0));
     execute(&mut p.guest_session, &mut p.guest_flow, &mut p.guest_battle, &mut p.guest_trade, need);
 
@@ -532,7 +548,7 @@ fn trade_flow_select_confirm_execute() {
         need,
     );
     pump_trade(&mut p.host_session, &mut p.host_trade, &mut p.host_flow);
-    let need = p.host_flow.update(a_input(), &local);
+    let need = choose_trade(&mut p.host_flow, &local);
     assert_eq!(need, FlowNeed::SelectMon(0));
     execute(
         &mut p.host_session,
@@ -542,9 +558,8 @@ fn trade_flow_select_confirm_execute() {
         need,
     );
     pump_trade(&mut p.guest_session, &mut p.guest_trade, &mut p.guest_flow);
-    let need = p
-        .guest_flow
-        .update(a_input(), &p.guest_trade.party().to_vec());
+    let need = choose_trade(&mut p.guest_flow, &p.guest_trade.party().to_vec());
+    assert_eq!(need, FlowNeed::SelectMon(0));
     execute(
         &mut p.guest_session,
         &mut p.guest_flow,
@@ -580,7 +595,7 @@ fn trade_cancel_shows_canceled_text() {
     // Host picks a mon; the guest cancels → host sees the canceled text and
     // returns to selection.
     let _ = p.host_flow.update(no_input(), &party2());
-    let need = p.host_flow.update(a_input(), &party2());
+    let need = choose_trade(&mut p.host_flow, &party2());
     assert_eq!(need, FlowNeed::SelectMon(0));
     execute(&mut p.host_session, &mut p.host_flow, &mut p.host_battle, &mut p.host_trade, need);
 

@@ -3942,11 +3942,11 @@ impl PokemonGame {
                                 b: input.is_just_pressed(GbButton::B),
                             };
                             let was_viewing_stats = self.link_cable.stats().is_some();
-                            let need = self.link_cable.update_with_navigation(
+                            let need = self.link_cable.update_with_horizontal_navigation(
                                 psi,
                                 &self.save_data.party.to_vec(),
-                                input.is_just_pressed(GbButton::Left)
-                                    || input.is_just_pressed(GbButton::Right),
+                                input.is_just_pressed(GbButton::Left),
+                                input.is_just_pressed(GbButton::Right),
                             );
                             // TradeCenter_DisplayStats calls StatusScreen, whose
                             // PlayCry is also required by this modal overlay.
@@ -8584,6 +8584,9 @@ mod link_stats_cry_fidelity_tests {
         g.main_menu.last_choice = Some(pokered_core::game_state::MainMenuChoice::Continue);
         g.overworld = OverworldScreen::new(MapId::TradeCenter, None, PokemonRedData);
         g.overworld.run_on_load();
+        // Room fixtures satisfy the receptionist's Pokédex prerequisite.
+        g.overworld.set_event_flag_live(pokered_data::event_flags::EventFlag::EVENT_GOT_POKEDEX);
+        g.save_data.game_data.event_flags = g.overworld.unified_flags().as_bytes().to_vec();
         g.overworld.set_rng_seed(0);
         g.overworld.state.player.x = x;
         g.overworld.state.player.y = 4;
@@ -8602,11 +8605,18 @@ mod link_stats_cry_fidelity_tests {
             .collect()
     }
 
-    #[test]
-    fn actual_trade_room_peer_stats_plays_selected_species_cry_once() {
+    fn paired_trade_room() -> (PokemonGame, PokemonGame) {
         use pokered_core::overworld::Direction;
-        let mut host = fixture(Species::Bulbasaur, 3, Direction::Right);
-        let mut peer = fixture(Species::Pikachu, 6, Direction::Left);
+        linked_trade_room(
+            fixture(Species::Bulbasaur, 3, Direction::Right),
+            fixture(Species::Pikachu, 6, Direction::Left),
+        )
+    }
+
+    fn linked_trade_room(
+        mut host: PokemonGame,
+        mut peer: PokemonGame,
+    ) -> (PokemonGame, PokemonGame) {
         let (a, b) = ChannelTransport::new_pair();
         host.attach_link_transport(Box::new(a), LinkRole::Host);
         peer.attach_link_transport(Box::new(b), LinkRole::Guest);
@@ -8639,6 +8649,13 @@ mod link_stats_cry_fidelity_tests {
         }
         assert_eq!(host.link_cable.phase(), &CableClubPhase::TradeSelect);
         assert_eq!(peer.link_cable.phase(), &CableClubPhase::TradeSelect);
+        (host, peer)
+    }
+
+    #[test]
+    fn actual_trade_room_peer_stats_plays_selected_species_cry_once() {
+        let (mut host, mut peer) = paired_trade_room();
+        let idle = InputState::new();
         host.update(&button(GbButton::Right));
         host.update(&idle);
         assert_eq!(host.link_cable.peer_cursor(), Some(0));
@@ -8708,5 +8725,187 @@ mod link_stats_cry_fidelity_tests {
         assert!(host.link_cable.stats().is_none());
         assert_eq!(host.link_cable.peer_cursor(), Some(0));
         assert_eq!(channels(&host), vec![false; 4], "exit must not repeat cry");
+    }
+
+    #[test]
+    fn actual_own_mon_menu_views_cancels_and_only_trade_sends_selection() {
+        let (mut host, mut peer) = paired_trade_room();
+        let idle = InputState::new();
+        host.update(&button(GbButton::A));
+        assert_eq!(host.link_cable.local_action(), Some((0, false)));
+        assert_eq!(host.link_cable.phase(), &CableClubPhase::TradeSelect);
+        // LEFT on STATS stays on STATS; B cancels only this action menu.
+        host.update(&button(GbButton::Left));
+        assert_eq!(host.link_cable.local_action(), Some((0, false)));
+        host.update(&button(GbButton::B));
+        assert_eq!(host.link_cable.local_action(), None);
+        peer.update(&idle);
+        assert_eq!(peer.link_cable.phase(), &CableClubPhase::TradeSelect);
+        host.update(&idle);
+        host.update(&button(GbButton::A));
+        host.update(&idle);
+        host.update(&button(GbButton::A));
+        assert_eq!(host.link_cable.local_action(), None);
+        assert_eq!(
+            host.link_cable.stats().unwrap().pokemon().species,
+            Species::Bulbasaur
+        );
+        host.update(&idle);
+        assert_eq!(channels(&host), vec![true, true, false, true]);
+        for _ in 0..120 {
+            host.update(&idle);
+            peer.update(&idle);
+        }
+        host.update(&button(GbButton::B));
+        assert_eq!(
+            host.link_cable.stats().unwrap().page(),
+            pokered_core::stats_screen::StatsPage::Moves
+        );
+        host.update(&button(GbButton::A));
+        assert!(host.link_cable.stats().is_none());
+        assert_eq!(host.link_cable.peer_cursor(), None);
+        assert_eq!(host.link_cable.party_select().unwrap().cursor(), 0);
+        host.update(&idle);
+        host.update(&button(GbButton::A));
+        host.update(&button(GbButton::Right));
+        assert_eq!(host.link_cable.local_action(), Some((0, true)));
+        host.update(&idle);
+        host.update(&button(GbButton::Right));
+        assert_eq!(
+            host.link_cable.local_action(),
+            Some((0, true)),
+            "RIGHT is idempotent"
+        );
+        host.update(&button(GbButton::Left));
+        assert_eq!(host.link_cable.local_action(), Some((0, false)));
+        host.update(&button(GbButton::Right));
+        host.update(&button(GbButton::A));
+        assert_eq!(host.link_cable.phase(), &CableClubPhase::TradeWaitingPeer);
+        peer.update(&idle);
+        assert_eq!(peer.link_cable.phase(), &CableClubPhase::TradeSelect);
+        peer.update(&button(GbButton::A));
+        assert_eq!(peer.link_cable.local_action(), Some((0, false)));
+        peer.update(&button(GbButton::Right));
+        peer.update(&button(GbButton::A));
+        for _ in 0..20 {
+            host.update(&idle);
+            peer.update(&idle);
+        }
+        assert!(matches!(
+            host.link_cable.phase(),
+            CableClubPhase::TradeConfirm {
+                local_index: 0,
+                remote_index: 0,
+                ..
+            }
+        ));
+        assert!(matches!(
+            peer.link_cable.phase(),
+            CableClubPhase::TradeConfirm {
+                local_index: 0,
+                remote_index: 0,
+                ..
+            }
+        ));
+    }
+
+    fn unequal_party_pair() -> (PokemonGame, PokemonGame) {
+        use pokered_core::overworld::Direction;
+        let mut host = fixture(Species::Bulbasaur, 3, Direction::Right);
+        let mut peer = fixture(Species::Pikachu, 6, Direction::Left);
+        for species in [Species::Pidgey, Species::Rattata] {
+            host.save_data
+                .party
+                .add(
+                    create_pokemon_with_moves(
+                        species,
+                        25,
+                        [0x99, 0x88],
+                        [MoveId::Tackle, MoveId::None, MoveId::None, MoveId::None],
+                    )
+                    .unwrap(),
+                )
+                .unwrap();
+        }
+        peer.save_data
+            .party
+            .add(
+                create_pokemon_with_moves(
+                    Species::Squirtle,
+                    25,
+                    [0x99, 0x88],
+                    [MoveId::Tackle, MoveId::None, MoveId::None, MoveId::None],
+                )
+                .unwrap(),
+            )
+            .unwrap();
+        linked_trade_room(host, peer)
+    }
+
+    #[test]
+    fn actual_side_switch_copies_cursor_and_clamps_to_other_party() {
+        let (mut host, mut peer) = unequal_party_pair();
+        let idle = InputState::new();
+        host.update(&button(GbButton::Down));
+        host.update(&idle);
+        host.update(&button(GbButton::Down));
+        assert_eq!(host.link_cable.party_select().unwrap().cursor(), 2);
+        host.update(&button(GbButton::Right));
+        assert_eq!(host.link_cable.peer_cursor(), Some(1));
+        host.update(&button(GbButton::Left));
+        assert_eq!(host.link_cable.peer_cursor(), None);
+        assert_eq!(host.link_cable.party_select().unwrap().cursor(), 1);
+        host.update(&button(GbButton::Right));
+        host.update(&button(GbButton::Up));
+        assert_eq!(host.link_cable.peer_cursor(), Some(0));
+        host.update(&button(GbButton::Left));
+        assert_eq!(host.link_cable.party_select().unwrap().cursor(), 0);
+        peer.update(&button(GbButton::Down));
+        peer.update(&button(GbButton::Right));
+        assert_eq!(peer.link_cable.peer_cursor(), Some(1));
+        peer.update(&button(GbButton::Down));
+        assert_eq!(peer.link_cable.peer_cursor(), Some(2));
+        peer.update(&button(GbButton::Left));
+        assert_eq!(peer.link_cable.party_select().unwrap().cursor(), 1);
+    }
+
+    #[test]
+    #[ignore = "writes same-input linked-game captures to FIDELITY_LINK_CAPTURES"]
+    fn capture_own_mon_menu_and_stats() {
+        let dir = PathBuf::from(std::env::var("FIDELITY_LINK_CAPTURES").unwrap());
+        std::fs::create_dir_all(&dir).unwrap();
+        let (mut host, mut peer) = paired_trade_room();
+        let idle = InputState::new();
+        let mut records = Vec::new();
+        for stage in ["own-menu", "own-stats"] {
+            host.update(&button(GbButton::A));
+            host.update(&idle);
+            peer.update(&idle);
+            let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+            host.draw(&mut fb);
+            fb.save_png(&dir.join(format!("{stage}.png"))).unwrap();
+            records.push(serde_json::json!({"stage": stage,"frame":host.frame_count,
+                "phase":format!("{:?}",host.link_cable.phase()),
+                "stats":host.link_cable.stats().map(|s|format!("{:?}",s.pokemon().species))}));
+        }
+        let (mut host, mut peer) = unequal_party_pair();
+        host.update(&button(GbButton::Down));
+        host.update(&idle);
+        host.update(&button(GbButton::Down));
+        host.update(&button(GbButton::Right));
+        host.update(&idle);
+        peer.update(&idle);
+        let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+        host.draw(&mut fb);
+        fb.save_png(&dir.join("side-cursor.png")).unwrap();
+        records.push(
+            serde_json::json!({"stage":"side-cursor", "frame":host.frame_count,
+            "peer_cursor":host.link_cable.peer_cursor()}),
+        );
+        std::fs::write(
+            dir.join("frames.json"),
+            serde_json::to_string_pretty(&records).unwrap(),
+        )
+        .unwrap();
     }
 }

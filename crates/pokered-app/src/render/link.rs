@@ -152,6 +152,13 @@ fn draw_trade_party_list(flow: &CableClubFlow, fb: &mut FrameBuffer, language: L
             }
         }
     }
+    if let Some((_, trade_selected)) = flow.local_action() {
+        painter.draw_text_box(pokered_ui::TileRect::new(0, 14, 20, 4), Rgba::INK_BLACK);
+        painter.draw_text(TilePos::new(2, 16), if is_zh { "状态" } else { "STATS" }, Rgba::INK_BLACK);
+        painter.draw_text(TilePos::new(12, 16), if is_zh { "交换" } else { "TRADE" }, Rgba::INK_BLACK);
+        painter.draw_glyph(TilePos::new(if trade_selected { 11 } else { 1 }, 16), '▶', Rgba::INK_BLACK);
+        return;
+    }
     painter.draw_text(
         TilePos::new(1, 16),
         if is_zh {
