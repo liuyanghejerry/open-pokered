@@ -9906,6 +9906,54 @@ mod link_stats_cry_fidelity_tests {
         });
     }
 
+    #[test]
+    #[ignore]
+    fn capture_actual_field_origin_raw_90() {
+        run_link_save_fixture(|| {
+            let dir = std::path::PathBuf::from(std::env::var("FIDELITY_FIELD_CAPTURE").unwrap());
+            std::fs::create_dir_all(&dir).unwrap();
+            let path = dir.join("fixture.sav");
+            std::fs::write(&path, std::fs::read(std::env::var("FIDELITY_FIELD_SRAM").unwrap()).unwrap()).unwrap();
+            let mut g = PokemonGame::new_with_options(
+                GameVersion::Red, Some(path), None, None, false, None, false, true,
+                #[cfg(feature="debug-server")] None,
+            );
+            let idle = InputState::new();
+            let mut saw_main_menu = false;
+            for frame in 0..2000 {
+                saw_main_menu |= g.state.screen == GameScreen::MainMenu;
+                if g.state.screen == GameScreen::Overworld { break; }
+                let advance = button(GbButton::A);
+                g.update(if frame % 20 == 19 { &advance } else { &idle });
+            }
+            assert!(saw_main_menu);
+            assert_eq!(g.state.screen, GameScreen::Overworld);
+            assert_eq!((g.overworld.state.player.x,g.overworld.state.player.y), (13,4));
+            assert_eq!(g.overworld.state.player.facing,pokered_core::overworld::Direction::Down);
+            g.overworld.set_rng_seed(0);
+            for _ in 0..120 { g.update(&idle); }
+            let mut input = InputState::new();
+            let mut records = Vec::new();
+            for t in -1i32..100 {
+                if t >= 0 {
+                    input.begin_frame();
+                    if t == 0 { input.press(GbButton::Left); }
+                    if t == 16 { input.release(GbButton::Left); }
+                    g.update(&input);
+                }
+                let mut fb = FrameBuffer::new(RenderConfig::new(160,144), Rgba::WHITE);
+                g.draw(&mut fb); fb.save_png(&dir.join(format!("frame-{:04}.png", t+1))).unwrap();
+                records.push(serde_json::json!({"t":t,"frame":g.frame_count,"input_bits":input.raw_current(),
+                    "screen":format!("{:?}",g.state.screen),"map":g.overworld.state.current_map as u8,
+                    "x":g.overworld.state.player.x,"y":g.overworld.state.player.y,
+                    "facing":format!("{:?}",g.overworld.state.player.facing),
+                    "movement":format!("{:?}",g.overworld.state.player.movement_state),
+                    "walk_counter":g.overworld.state.walk_counter,"party":g.save_data.party}));
+            }
+            std::fs::write(dir.join("frames.json"),serde_json::to_string_pretty(&records).unwrap()).unwrap();
+        });
+    }
+
     fn wait_stats_cry(game: &mut PokemonGame) {
         for _ in 0..120 {
             game.update(&InputState::new());
