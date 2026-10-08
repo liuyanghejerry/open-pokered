@@ -19,10 +19,7 @@ game_scene SilphCo2F {
       given = giveItem("TM36", 1)
       @if (given) {
         setFlag("EVENT_GOT_TM36")
-        @speaker("") { @t("<PLAYER> got TM36!", "<PLAYER>获得了 TM36！") }
-        @speaker("") {
-          @t("TM36 is SELFDESTRUCT!\n\nIt's powerful, but the\nPOKeMON that uses it faints!\nBe careful.", "TM36是自爆！\n\n威力强大，但使用它的宝可梦会\n晕倒！要小心。")
-        }
+        showItemDialogue(@t("<PLAYER> got TM36!", "<PLAYER>获得了 TM36！"), "SFX_GET_ITEM_1")
       } @else {
         @speaker("") { @t("You don't have any\nroom for this.", "你的背包没有\n空间放这个。") }
       }

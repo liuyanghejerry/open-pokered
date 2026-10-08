@@ -112,6 +112,13 @@ impl AudioOutput {
         }
     }
 
+    pub fn play_badge_bank_quirk(&self) {
+        self.try_resume();
+        if let Ok(mut mgr) = self.manager.lock() {
+            mgr.play_badge_bank_quirk();
+        }
+    }
+
     /// Play a species cry with pitch/length modifiers (`PlayCry`).
     pub fn play_cry(&self, id: SfxId, pitch_mod: u8, tempo_mod: u8) {
         self.try_resume();

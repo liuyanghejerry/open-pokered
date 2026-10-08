@@ -3253,6 +3253,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 script_bridge::ScriptEffect::ShowMoneyBox { amount } => {
                     self.script_money_box = if amount < 0 { None } else { Some(amount as u32) };
                 }
+                script_bridge::ScriptEffect::ShowCoinBox { amount } => {
+                    self.script_coin_box = if amount < 0 { None } else { Some(amount.clamp(0, 9999) as u16) };
+                }
                 script_bridge::ScriptEffect::UnsupportedCommand { name, reason } => {
                     if let Some(reason) = reason {
                         log::error!(target: "pokered::overworld", "[Script] unsupported host command {name}: {reason}");
@@ -3639,6 +3642,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         self.script_engine.set_lang(&script_lang);
         self.active_script_effect = None;
         self.script_money_box = None;
+        self.script_coin_box = None;
         self.map_script_config = MapScriptConfig::default();
 
         #[cfg(feature = "script-boa")]

@@ -26,7 +26,7 @@ game_scene FuchsiaGym {
         given = giveItem("TM06", 1)
         @if (given) {
           setFlag("EVENT_GOT_TM06")
-          @speaker("") { @t("<PLAYER> received TM06!", "<PLAYER>得到了 TM06！") }
+          showItemDialogue(@t("<PLAYER> received TM06!", "<PLAYER>得到了 TM06！"), "SFX_GET_KEY_ITEM")
           @speaker("") {
             @t("TM06 contains TOXIC!\n\nIt is a secret technique\nover 400 years old!", "TM06是剧毒！\n\n这是流传了 400多年的秘传招\n式！")
           }
@@ -55,7 +55,7 @@ game_scene FuchsiaGym {
         given = giveItem("TM06", 1)
         @if (given) {
           setFlag("EVENT_GOT_TM06")
-          @speaker("") { @t("<PLAYER> received TM06!", "<PLAYER>得到了 TM06！") }
+          showItemDialogue(@t("<PLAYER> received TM06!", "<PLAYER>得到了 TM06！"), "SFX_GET_KEY_ITEM")
           @speaker("") {
             @t("TM06 contains TOXIC!\n\nIt is a secret technique\nover 400 years old!", "TM06是剧毒！\n\n这是流传了 400多年的秘传招\n式！")
           }

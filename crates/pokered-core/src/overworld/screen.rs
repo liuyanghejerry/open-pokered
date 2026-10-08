@@ -840,6 +840,7 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     pub box_count: u8,
     pub gift_box_number: u8,
     pub script_money_box: Option<u32>,
+    pub script_coin_box: Option<u16>,
     /// Completed-step counter for the out-of-battle poison tick
     /// (`wStepCounter & 3` in ApplyOutOfBattlePoisonDamage — damage every
     /// fourth step).
@@ -1216,6 +1217,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             box_count: 0,
             gift_box_number: 1,
             script_money_box: None,
+            script_coin_box: None,
             poison_step_counter: 0,
             party_lead_level: 0,
             unified_flags: event_flags::EventFlags::new(),
@@ -1453,6 +1455,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         self.script_engine.seed_set("bag", bag_const_names);
         self.script_bag_names = bag_const_names.to_vec();
         self.script_engine.seed_set("party", party_species);
+        for (i, species) in party_species.iter().enumerate() {
+            self.script_engine.seed_text(&format!("partySpecies{i}"), species);
+        }
         self.script_party_species = party_species.to_vec();
         self.script_engine
             .seed_number("pokedexOwned", dex_owned as f64);
@@ -1509,6 +1514,11 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 },
             );
         }
+    }
+
+    /// Species identity for PlayCry, independent of the stored nickname.
+    pub fn seed_daycare_species(&mut self, species: &str) {
+        self.script_engine.seed_text("daycareMonSpecies", species);
     }
 
     /// Seed the Day Care + per-party query state consumed by the Day Care

@@ -122,9 +122,7 @@ game_scene CeruleanCity {
         }
         given = giveItem("TM_28", 1)
         @if (given) {
-          @speaker("") {
-            @t("<PLAYER> recovered TM28!", "<PLAYER>找回了 TM28！")
-          }
+          showItemDialogue(@t("<PLAYER> recovered TM28!", "<PLAYER>找回了 TM28！"), "SFX_GET_ITEM_1")
           @speaker("") {
             @t("I better get moving! Bye!", "我最好赶快离开！再见！")
           }
@@ -140,9 +138,7 @@ game_scene CeruleanCity {
       }
       given = giveItem("TM_28", 1)
       @if (given) {
-        @speaker("") {
-          @t("<PLAYER> recovered TM28!", "<PLAYER>找回了 TM28！")
-        }
+        showItemDialogue(@t("<PLAYER> recovered TM28!", "<PLAYER>找回了 TM28！"), "SFX_GET_ITEM_1")
         hideObjectByName("CERULEAN_ROCKET")
       } @else {
         @speaker("") { @t("Make room for this!\n\nI can't run until I give it\nto you!", "腾出地方来！\n\n不把它给你，我可不能跑！") }
@@ -173,9 +169,7 @@ game_scene CeruleanCity {
         }
         given = giveItem("TM_28", 1)
         @if (given) {
-          @speaker("") {
-            @t("<PLAYER> recovered TM28!", "<PLAYER>找回了 TM28！")
-          }
+          showItemDialogue(@t("<PLAYER> recovered TM28!", "<PLAYER>找回了 TM28！"), "SFX_GET_ITEM_1")
           @speaker("") {
             @t("I better get moving! Bye!", "我最好赶快离开！再见！")
           }

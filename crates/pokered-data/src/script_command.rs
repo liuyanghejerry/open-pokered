@@ -64,6 +64,7 @@ pub enum PokemonScriptCommand {
     ReadingMenu { options: Vec<String>, texts: Vec<String> },
     PokemonMenu { options: Vec<String>, species: Vec<String> },
     ShowMoneyBox { amount: i64 },
+    ShowCoinBox { amount: i64 },
     VendingDelivery,
 }
 
@@ -98,6 +99,7 @@ impl PokemonScriptCommand {
             Self::ReadingMenu { .. } => "readingMenu",
             Self::PokemonMenu { .. } => "pokemonMenu",
             Self::ShowMoneyBox { .. } => "showMoneyBox",
+            Self::ShowCoinBox { .. } => "showCoinBox",
             Self::VendingDelivery => "vendingDelivery",
         }
     }
@@ -113,6 +115,7 @@ impl PokemonScriptCommand {
             Self::ReadingMenu { options, texts } => vec![json!(options), json!(texts)],
             Self::PokemonMenu { options, species } => vec![json!(options), json!(species)],
             Self::ShowMoneyBox { amount } => vec![json!(amount)],
+            Self::ShowCoinBox { amount } => vec![json!(amount)],
             Self::TradePokemon {
                 offered,
                 received,
@@ -190,6 +193,7 @@ impl PokemonScriptCommand {
             "waitMusic" => Self::WaitMusic,
             "vendingDelivery" => Self::VendingDelivery,
             "showMoneyBox" => Self::ShowMoneyBox { amount: args.first().and_then(Value::as_i64).ok_or_else(|| format!("{name}: amount must be an integer"))? },
+            "showCoinBox" => Self::ShowCoinBox { amount: args.first().and_then(Value::as_i64).ok_or_else(|| format!("{name}: amount must be an integer"))? },
             "badgeMenu" => {
                 let options = strings(0)?;
                 let texts = strings(1)?;

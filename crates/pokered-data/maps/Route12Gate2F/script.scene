@@ -19,7 +19,7 @@ game_scene Route12Gate2F {
       given = giveItem("TM39", 1)
       @if (given) {
         setFlag("EVENT_GOT_TM39")
-        @speaker("") { @t("<PLAYER> received TM39!", "<PLAYER>得到了 TM39！") }
+        showItemDialogue(@t("<PLAYER> received TM39!", "<PLAYER>得到了 TM39！"), "SFX_GET_ITEM_1")
       } @else {
         @speaker("") { @t("You don't have room for\nthis.", "你没有地方放这个。") }
       }

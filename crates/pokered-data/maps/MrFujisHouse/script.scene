@@ -60,7 +60,7 @@ game_scene MrFujisHouse {
       given = giveItem("POKE_FLUTE", 1)
       @if (given) {
         setFlag("EVENT_GOT_POKE_FLUTE")
-        @speaker("") { @t("<PLAYER> received a POKe\nFLUTE!", "<PLAYER>获得了宝可梦之笛！") }
+        showItemDialogue(@t("<PLAYER> received a POKe\nFLUTE!", "<PLAYER>获得了宝可梦之笛！"), "SFX_GET_KEY_ITEM")
         @speaker("") {
           @t("Upon hearing POKe FLUTE,\nsleeping POKeMON will spring\nawake.\n\nIt works on all sleeping\nPOKeMON.", "听到宝可梦之笛，睡着的宝可梦\n会立刻苏醒。\n\n它对所有睡着的宝可梦都有效。")
         }

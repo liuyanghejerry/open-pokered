@@ -16,7 +16,7 @@ game_scene ViridianGym {
         given = giveItem("TM27", 1)
         @if (given) {
           setFlag("EVENT_GOT_TM27")
-          @speaker("") { @t("<PLAYER> received TM27!", "<PLAYER>收到了 TM27！") }
+          showItemDialogue(@t("<PLAYER> received TM27!", "<PLAYER>收到了 TM27！"), "SFX_GET_ITEM_1")
           @speaker("") {
             @t("TM27 is FISSURE! It will\ntake out POKeMON with just\none hit!\n\nI made it when I ran the GYM\nhere, too long ago...", "TM27是地裂！一击就能打倒宝可\n梦！\n\n这是我很久以前在这里担任道馆\n馆主时制作的……")
           }
@@ -36,9 +36,7 @@ game_scene ViridianGym {
       }
       result = startBattle("OPP_GIOVANNI3")
       @if (result == "win") {
-        @speaker("") {
-          @t("Ha! That was a truly intense\nfight! You have won! As\nproof, here is the\nEARTHBADGE!", "哈！真是一场激烈的战斗！你赢\n了！作为证明，这是绿色徽章！")
-        }
+        showItemDialogue(@t("Ha! That was a truly intense\nfight! You have won! As\nproof, here is the\nEARTHBADGE!", "哈！真是一场激烈的战斗！你赢\n了！作为证明，这是绿色徽章！"), "SFX_LEVEL_UP")
         giveBadge("EARTHBADGE")
         setFlag("EVENT_BEAT_VIRIDIAN_GYM_GIOVANNI")
         @speaker("") {
@@ -47,7 +45,7 @@ game_scene ViridianGym {
         given = giveItem("TM27", 1)
         @if (given) {
           setFlag("EVENT_GOT_TM27")
-          @speaker("") { @t("<PLAYER> received TM27!", "<PLAYER>收到了 TM27！") }
+          showItemDialogue(@t("<PLAYER> received TM27!", "<PLAYER>收到了 TM27！"), "SFX_GET_ITEM_1")
           @speaker("") {
             @t("TM27 is FISSURE! It will\ntake out POKeMON with just\none hit!\n\nI made it when I ran the GYM\nhere, too long ago...", "TM27是地裂！一击就能打倒宝可\n梦！\n\n这是我很久以前在这里担任道馆\n馆主时制作的……")
           }

@@ -241,6 +241,13 @@ impl ScriptHost for NativeHost {
             "isDaycareInUse" => Ok(HostCall::Value(Value::Bool(
                 self.numbers.get("daycareInUse").copied().unwrap_or(0.0) != 0.0,
             ))),
+            "getDaycareMonSpecies" => Ok(HostCall::Value(Value::Text(
+                self.texts.get("daycareMonSpecies").cloned().unwrap_or_default(),
+            ))),
+            "getPartyMonSpecies" => {
+                let idx = args::u32(v.first().ok_or("getPartyMonSpecies: missing index")?, "getPartyMonSpecies")?;
+                Ok(HostCall::Value(Value::Text(self.texts.get(&format!("partySpecies{idx}")).cloned().unwrap_or_default())))
+            }
             "getDaycareMonName" => Ok(HostCall::Value(Value::Text(
                 self.texts.get("daycareMonName").cloned().unwrap_or_default(),
             ))),
@@ -423,6 +430,10 @@ impl ScriptHost for NativeHost {
             "showMoneyBox" => {
                 let amount = args::number(v.first().ok_or("showMoneyBox: missing amount")?, "showMoneyBox")? as i64;
                 Ok(pokemon(PokemonScriptCommand::ShowMoneyBox { amount }))
+            }
+            "showCoinBox" => {
+                let amount = args::number(v.first().ok_or("showCoinBox: missing amount")?, "showCoinBox")? as i64;
+                Ok(pokemon(PokemonScriptCommand::ShowCoinBox { amount }))
             }
             "badgeMenu" | "pokemonMenu" => {
                 let options = args::string_array(v.first().ok_or("menu: missing options")?, "menu")?;
@@ -2782,6 +2793,105 @@ mod tests {
     }
     // Drive real embedded map handlers, including command-return values, rather
     // than asserting their source spelling. The caller chooses menu responses.
+    #[test]
+    fn fidelity_tm36_description_is_repeat_only_and_receipt_has_fanfare() {
+        let scene = pokered_data::embedded_scenes::get_scene_ast("SilphCo2F").unwrap();
+        let mut e = NativeScriptEngine::new(); e.load_map("SilphCo2F", &scene);
+        let first = drive_fidelity_scene(&mut e, "talkSilphWorkerF", true, "", &[]);
+        assert!(!first.iter().any(|c| matches!(c, ScriptCommand::ShowText {text} if text.contains("SELFDESTRUCT"))));
+        assert!(first.iter().any(|c| matches!(c, ScriptCommand::Custom {name,args} if name == "showItemDialogue" && args[1] == "SFX_GET_ITEM_1")));
+        let repeat = drive_fidelity_scene(&mut e, "talkSilphWorkerF", true, "", &[]);
+        assert!(matches!(&repeat[0], ScriptCommand::ShowText {text} if text.contains("SELFDESTRUCT")));
+        assert_eq!(repeat.len(), 1);
+    }
+
+    #[test]
+    fn fidelity_payment_huds_close_on_accept_decline_and_insufficient_money() {
+        for (map, handler) in [("Museum1F", "ticketGate"), ("Museum1F", "talkScientist"), ("MtMoonPokecenter", "talkMagikarpSalesman"), ("Daycare", "talkGentleman"), ("GameCorner", "talkClerk1")] {
+            for (money, choice) in [(3000.0, 0), (0.0, 0), (3000.0, 1)] {
+                let mut e = NativeScriptEngine::new();
+                e.load_map(map, &pokered_data::embedded_scenes::get_scene_ast(map).unwrap());
+                e.set_player_position(9, 4); e.seed_number("money", money);
+                e.seed_number("partyCount", 2.0); e.seed_number("daycareInUse", 1.0); e.seed_number("daycareCost", 100.0);
+                e.seed_set("bag", &["COIN_CASE".into()]);
+                let cmds = drive_fidelity_scene(&mut e, handler, true, "", &[choice]);
+                let api = if map == "GameCorner" {"showCoinBox"} else {"showMoneyBox"};
+                let hud: Vec<_> = cmds.iter().filter_map(|c| match c {ScriptCommand::Custom {name,args} if name == api => Some(args[0].clone()), _ => None}).collect();
+                assert!(hud.len() >= 2, "{map}/{handler}: {cmds:?}");
+                assert_eq!(hud.last(), Some(&serde_json::json!(-1)));
+                let open = cmds.iter().position(|c| matches!(c,ScriptCommand::Custom {name,..} if name == api)).unwrap();
+                let menu = cmds.iter().position(|c| matches!(c,ScriptCommand::ShowChoice {..})).unwrap();
+                assert!(open < menu);
+            }
+        }
+    }
+
+    #[test]
+    fn fidelity_daycare_party_cancel_says_goodbye_without_deposit_or_cry() {
+        let mut e = NativeScriptEngine::new();
+        e.load_map("Daycare", &pokered_data::embedded_scenes::get_scene_ast("Daycare").unwrap());
+        e.seed_number("partyCount", 2.0);
+        let mut next = e.call_function_no_args("talkGentleman").unwrap();
+        let mut texts = Vec::new();
+        while let Some(cmd) = next {
+            let result = match cmd {
+                ScriptCommand::ShowText {text} => { texts.push(text); CommandResult::Void },
+                ScriptCommand::ShowChoice {..} => CommandResult::Number(0.0),
+                ScriptCommand::Custom {name,..} if name == "choosePartyPokemon" => CommandResult::Number(-1.0),
+                other => panic!("unexpected cancellation effect: {other:?}"),
+            };
+            next = e.signal_done(result).unwrap();
+        }
+        assert_eq!(texts.last().unwrap(), "All right then, come again.");
+    }
+
+    #[test]
+    fn fidelity_gym_receipts_preserve_original_sound_banks() {
+        for (map, handler, badge_sound, tm_sound) in [
+            ("PewterGym", "talkBrock", "SFX_LEVEL_UP", "SFX_GET_ITEM_1"),
+            ("CeruleanGym", "talkMisty", "SFX_BADGE_BANK_QUIRK", "SFX_GET_ITEM_1"),
+            ("VermilionGym", "talkLtSurge", "", "SFX_GET_KEY_ITEM"),
+            ("CeladonGym", "talkErika", "", "SFX_GET_ITEM_1"),
+            ("FuchsiaGym", "talkKoga", "", "SFX_GET_KEY_ITEM"),
+            ("SaffronGym", "talkSabrina", "SFX_BADGE_BANK_QUIRK", "SFX_GET_ITEM_1"),
+            ("CinnabarGym", "talkBlaine", "SFX_BADGE_BANK_QUIRK", "SFX_GET_ITEM_1"),
+            ("ViridianGym", "talkGiovanni", "SFX_LEVEL_UP", "SFX_GET_ITEM_1"),
+        ] {
+            let mut e = NativeScriptEngine::new();
+            e.load_map(map, &pokered_data::embedded_scenes::get_scene_ast(map).unwrap());
+            let cmds = drive_fidelity_scene(&mut e, handler, true, "win", &[]);
+            let sounds: Vec<_> = cmds.iter().filter_map(|c| match c { ScriptCommand::Custom {name,args} if name == "showItemDialogue" => Some(args[1].as_str().unwrap()), _ => None }).collect();
+            let expected = if badge_sound.is_empty() { vec![tm_sound] } else { vec![badge_sound, tm_sound] };
+            assert_eq!(sounds, expected, "{map}");
+        }
+    }
+
+    #[test]
+    fn fidelity_daycare_plays_species_cry_on_deposit_and_withdrawal() {
+        for occupied in [false, true] {
+            let mut e = NativeScriptEngine::new();
+            e.load_map("Daycare", &pokered_data::embedded_scenes::get_scene_ast("Daycare").unwrap());
+            e.seed_number("partyCount", 2.0); e.seed_number("money", 3000.0);
+            e.seed_number("daycareInUse", if occupied {1.0} else {0.0}); e.seed_number("daycareCost", 100.0);
+            e.seed_text("partyName0", "SPROUT"); e.seed_text("daycareMonName", "SPROUT");
+            e.seed_text("partySpecies0", "Bulbasaur"); e.seed_text("daycareMonSpecies", "Bulbasaur");
+            let mut next = e.call_function_no_args("talkGentleman").unwrap();
+            let mut cries = Vec::new(); let mut sounds = Vec::new();
+            while let Some(cmd) = next {
+                let result = match &cmd {
+                    ScriptCommand::ShowChoice {..} => CommandResult::Number(0.0),
+                    ScriptCommand::Custom {name,..} if name == "choosePartyPokemon" => CommandResult::Number(0.0),
+                    ScriptCommand::PlayCry {species} => {cries.push(species.clone()); CommandResult::Void},
+                    ScriptCommand::PlaySound {sound_id} => {sounds.push(sound_id.clone()); CommandResult::Void},
+                    _ => CommandResult::Void,
+                };
+                next = e.signal_done(result).unwrap();
+            }
+            assert_eq!(cries, vec!["Bulbasaur"]);
+            assert_eq!(sounds, if occupied {vec!["SFX_PURCHASE"]} else {vec![]});
+        }
+    }
+
     fn drive_fidelity_scene(
         engine: &mut NativeScriptEngine,
         handler: &str,

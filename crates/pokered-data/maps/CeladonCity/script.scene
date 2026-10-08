@@ -55,7 +55,7 @@ game_scene CeladonCity {
       }
       given = giveItem("TM41", 1)
       @if (given) {
-        @speaker("") { @t("<PLAYER> received TM41!", "<PLAYER>获得了招式机41！") }
+        showItemDialogue(@t("<PLAYER> received TM41!", "<PLAYER>获得了招式机41！"), "SFX_GET_ITEM_1")
         setFlag("EVENT_GOT_TM41")
       } @else {
         @speaker("") { @t("Oh, your pack is full of\nitems!", "哎呀，你的背包已经满了！") }

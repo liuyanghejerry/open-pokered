@@ -14,7 +14,7 @@ game_scene CeruleanGym {
         given = giveItem("TM11", 1)
         @if (given) {
           setFlag("EVENT_GOT_TM11")
-          @speaker("") { @t("<PLAYER> received TM11!", "<PLAYER>得到了 TM11！") }
+          showItemDialogue(@t("<PLAYER> received TM11!", "<PLAYER>得到了 TM11！"), "SFX_GET_ITEM_1")
           @speaker("") {
             @t("TM11 teaches BUBBLEBEAM!\n\nUse it on an aquatic\nPOKeMON!", "TM11能学会泡沫光线！\n\n把它用在水系宝可梦身上！")
           }
@@ -32,9 +32,7 @@ game_scene CeruleanGym {
       }
       result = startBattle("OPP_MISTY1")
       @if (result == "win") {
-        @speaker("") {
-          @t("Wow! You're too much!\n\nAll right!\n\nYou can have the\nCASCADEBADGE to show you\nbeat me!", "哇！你真厉害！\n\n好吧！\n\n我把蓝色徽章给你，证明你打败\n了我！")
-        }
+        showItemDialogue(@t("Wow! You're too much!\n\nAll right!\n\nYou can have the\nCASCADEBADGE to show you\nbeat me!", "哇！你真厉害！\n\n好吧！\n\n我把蓝色徽章给你，证明你打败\n了我！"), "SFX_BADGE_BANK_QUIRK")
         giveBadge("CASCADEBADGE")
         setFlag("EVENT_BEAT_MISTY")
         @speaker("") {
@@ -43,7 +41,7 @@ game_scene CeruleanGym {
         given = giveItem("TM11", 1)
         @if (given) {
           setFlag("EVENT_GOT_TM11")
-          @speaker("") { @t("<PLAYER> received TM11!", "<PLAYER>得到了 TM11！") }
+          showItemDialogue(@t("<PLAYER> received TM11!", "<PLAYER>得到了 TM11！"), "SFX_GET_ITEM_1")
           @speaker("") {
             @t("TM11 teaches BUBBLEBEAM!\n\nUse it on an aquatic\nPOKeMON!", "TM11能学会泡沫光线！\n\n把它用在水系宝可梦身上！")
           }

@@ -23,7 +23,7 @@ game_scene SaffronGym {
         given = giveItem("TM46", 1)
         @if (given) {
           setFlag("EVENT_GOT_TM46")
-          @speaker("") { @t("<PLAYER> received TM46!", "<PLAYER>收到了 TM46！") }
+          showItemDialogue(@t("<PLAYER> received TM46!", "<PLAYER>收到了 TM46！"), "SFX_GET_ITEM_1")
           @speaker("") {
             @t("TM46 is PSYWAVE! It uses\npowerful psychic waves to\ninflict damage!", "TM46是精神波！用强大的精神波\n动来给予伤害！")
           }
@@ -41,9 +41,7 @@ game_scene SaffronGym {
       }
       result = startBattle("OPP_SABRINA1")
       @if (result == "win") {
-        @speaker("") {
-          @t("I'm shocked! But, a loss is\na loss.\n\nI admit I didn't work hard\nenough to win!\n\nYou earned the MARSHBADGE!", "我太震惊了！但输了就是输了。\n\n我承认自己不够努力没能取胜！\n\n你赢得了粉色徽章！")
-        }
+        showItemDialogue(@t("I'm shocked! But, a loss is\na loss.\n\nI admit I didn't work hard\nenough to win!\n\nYou earned the MARSHBADGE!", "我太震惊了！但输了就是输了。\n\n我承认自己不够努力没能取胜！\n\n你赢得了粉色徽章！"), "SFX_BADGE_BANK_QUIRK")
         giveBadge("MARSHBADGE")
         setFlag("EVENT_BEAT_SABRINA")
         @speaker("") {
@@ -52,7 +50,7 @@ game_scene SaffronGym {
         given = giveItem("TM46", 1)
         @if (given) {
           setFlag("EVENT_GOT_TM46")
-          @speaker("") { @t("<PLAYER> received TM46!", "<PLAYER>收到了 TM46！") }
+          showItemDialogue(@t("<PLAYER> received TM46!", "<PLAYER>收到了 TM46！"), "SFX_GET_ITEM_1")
           @speaker("") {
             @t("TM46 is PSYWAVE! It uses\npowerful psychic waves to\ninflict damage!", "TM46是精神波！用强大的精神波\n动来给予伤害！")
           }

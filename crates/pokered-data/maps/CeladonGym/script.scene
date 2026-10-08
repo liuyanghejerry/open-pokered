@@ -17,7 +17,7 @@ game_scene CeladonGym {
         given = giveItem("TM21", 1)
         @if (given) {
           setFlag("EVENT_GOT_TM21")
-          @speaker("") { @t("<PLAYER> received TM21!", "<PLAYER>获得了 TM21！") }
+          showItemDialogue(@t("<PLAYER> received TM21!", "<PLAYER>获得了 TM21！"), "SFX_GET_ITEM_1")
           @speaker("") {
             @t("TM21 contains MEGA DRAIN.\n\nHalf the damage it inflicts\nis drained to heal your\nPOKeMON!", "TM21里是超级吸取。\n\n它造成的伤害一半会被吸收来治\n愈你的宝可梦！")
           }
@@ -46,7 +46,7 @@ game_scene CeladonGym {
         given = giveItem("TM21", 1)
         @if (given) {
           setFlag("EVENT_GOT_TM21")
-          @speaker("") { @t("<PLAYER> received TM21!", "<PLAYER>获得了 TM21！") }
+          showItemDialogue(@t("<PLAYER> received TM21!", "<PLAYER>获得了 TM21！"), "SFX_GET_ITEM_1")
           @speaker("") {
             @t("TM21 contains MEGA DRAIN.\n\nHalf the damage it inflicts\nis drained to heal your\nPOKeMON!", "TM21里是超级吸取。\n\n它造成的伤害一半会被吸收来治\n愈你的宝可梦！")
           }

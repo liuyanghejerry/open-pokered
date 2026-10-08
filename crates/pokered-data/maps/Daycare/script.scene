@@ -33,14 +33,19 @@ game_scene Daycare {
         @speaker("") { @t("You have no room for this\nPOKeMON!", "你没有地方放这只宝可梦！") }
       } @else {
         showText(@t("You owe me ¥", "你要付我¥") + getDaycareCost() + @t(" for the return of this\nPOKeMON.", "才能领回这只宝可梦。"))
+        showMoneyBox(getMoney())
         @choice {
           @option(@t("YES", "是")) {
             @if (hasMoney(getDaycareCost())) {
               takeMoney(getDaycareCost())
+              playSound("SFX_PURCHASE")
+              showMoneyBox(getMoney())
               // Capture the name before withdrawal clears the day-care box.
               name = getDaycareMonName()
-              withdrawDaycare()
+              species = getDaycareMonSpecies()
               @speaker("") { @t("Thank you! Here's your\nPOKeMON!", "谢谢你！这是你的宝可梦！") }
+              withdrawDaycare()
+              playCry(species)
               showText(@t("<PLAYER> got ", "<PLAYER>把") + name + @t(" back!", "领回来了！"))
             } @else {
               @speaker("") { @t("Hey, you don't have enough\n¥!", "喂，你带的钱不够啊！") }
@@ -50,6 +55,7 @@ game_scene Daycare {
             @speaker("") { @t("All right then, come again.", "那好吧，下次再来吧。") }
           }
         }
+        showMoneyBox(-1)
       }
     } @else {
       // Nothing deposited yet: offer to raise one of the player's POKeMON.
@@ -70,9 +76,13 @@ game_scene Daycare {
                 @speaker("") { @t("I can't accept a POKeMON\nthat knows an HM move.", "我不能收会秘传招式的宝可梦。") }
               } @else {
                 showText(@t("Fine, I'll look after ", "好的，我会帮你照顾") + getPartyMonName(slot) + @t(" for a while.", "一段时间。"))
+                species = getPartyMonSpecies(slot)
                 depositDaycare(slot)
+                playCry(species)
                 @speaker("") { @t("Come see me in a while.", "过一会儿再来看我。") }
               }
+            } @else {
+              @speaker("") { @t("All right then, come again.", "那好吧，下次再来吧。") }
             }
           }
         }

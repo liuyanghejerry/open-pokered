@@ -80,6 +80,8 @@ pub struct OverworldSnapshot {
     #[serde(default)]
     pub script_money_box: Option<u32>,
     #[serde(default)]
+    pub script_coin_box: Option<u16>,
+    #[serde(default)]
     pub gift_box_number: u8,
     pub pending_pokedex_entry: Option<PokedexEntryState>,
     pub pending_naming_screen: Option<crate::naming_screen::NamingScreenState>,
@@ -224,6 +226,7 @@ impl OverworldSnapshot {
             pending_dialogue: None,
             pending_choice: None,
             script_money_box: None,
+            script_coin_box: None,
             gift_box_number: 1,
             pending_pokedex_entry: None,
             pending_naming_screen: None,
@@ -326,7 +329,7 @@ impl OverworldSnapshot {
         };
         snapshot_fields!(restore &mut snap, screen,
             frame_counter, state, map_data, npc_states, npc_pokemon_data, pending_dialogue,
-            pending_choice, script_money_box, gift_box_number, pending_pokedex_entry, pending_naming_screen, naming_flash_frames,
+            pending_choice, script_money_box, script_coin_box, gift_box_number, pending_pokedex_entry, pending_naming_screen, naming_flash_frames,
             pending_party_select, party_select_requested, pending_set_nickname,
             pending_emotion_bubble, pending_healing_machine, last_map, last_map_entry,
             warp_fade_state, pending_warp, pending_connection, connection_npc_preview,
@@ -366,7 +369,7 @@ impl OverworldSnapshot {
         snapshot_fields!(restore screen, self,
             wild_data_state,
             frame_counter, state, map_data, npc_states, npc_pokemon_data, pending_dialogue,
-            pending_choice, script_money_box, gift_box_number, pending_pokedex_entry, pending_naming_screen, naming_flash_frames,
+            pending_choice, script_money_box, script_coin_box, gift_box_number, pending_pokedex_entry, pending_naming_screen, naming_flash_frames,
             pending_party_select, party_select_requested, pending_set_nickname,
             pending_emotion_bubble, pending_healing_machine, last_map, last_map_entry,
             warp_fade_state, pending_warp, pending_connection, connection_npc_preview,
@@ -567,5 +570,23 @@ impl BattleSnapshot {
             player_badges, player_id, rng,
         );
         screen
+    }
+}
+
+#[cfg(test)]
+mod balance_snapshot_tests {
+    use super::*;
+    #[test]
+    fn script_balances_survive_frame_snapshot_restore() {
+        let mut screen = OverworldScreen::new(pokered_data::maps::MapId::GameCorner, None, pokered_data::impl_traits::PokemonRedData);
+        screen.script_money_box = Some(2500);
+        screen.script_coin_box = Some(50);
+        let snapshot = OverworldSnapshot::capture(&screen);
+        let encoded = serde_json::to_string(&snapshot).unwrap();
+        let decoded: OverworldSnapshot = serde_json::from_str(&encoded).unwrap();
+        let mut restored = OverworldScreen::new(pokered_data::maps::MapId::GameCorner, None, pokered_data::impl_traits::PokemonRedData);
+        decoded.restore_into(&mut restored);
+        assert_eq!(restored.script_money_box, Some(2500));
+        assert_eq!(restored.script_coin_box, Some(50));
     }
 }

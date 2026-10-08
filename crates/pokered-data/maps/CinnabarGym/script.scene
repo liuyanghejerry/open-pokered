@@ -67,7 +67,7 @@ game_scene CinnabarGym {
         given = giveItem("TM_38", 1)
         @if (given) {
           setFlag("EVENT_GOT_TM38")
-          @speaker("") { @t("<PLAYER> received TM38!", "<PLAYER>得到了 TM38！") }
+          showItemDialogue(@t("<PLAYER> received TM38!", "<PLAYER>得到了 TM38！"), "SFX_GET_ITEM_1")
           @speaker("") {
             @t("TM38 contains FIRE BLAST!\n\nTeach it to fire- type\nPOKeMON!\n\nCHARMELEON or PONYTA would\nbe good bets!", "TM38里有大字爆炎！\n\n教给火系的宝可梦吧！\n\n火恐龙或小火马是不错的选择！")
           }
@@ -85,9 +85,7 @@ game_scene CinnabarGym {
       }
       result = startBattle("OPP_BLAINE1")
       @if (result == "win") {
-        @speaker("") {
-          @t("I have burnt out!\n\nYou have earned the\nVOLCANOBADGE!", "我已经烧尽了！\n\n你获得了深红徽章！")
-        }
+        showItemDialogue(@t("I have burnt out!\n\nYou have earned the\nVOLCANOBADGE!", "我已经烧尽了！\n\n你获得了深红徽章！"), "SFX_BADGE_BANK_QUIRK")
         giveBadge("VOLCANOBADGE")
         setFlag("EVENT_BEAT_BLAINE")
         @speaker("") {
@@ -96,7 +94,7 @@ game_scene CinnabarGym {
         given = giveItem("TM_38", 1)
         @if (given) {
           setFlag("EVENT_GOT_TM38")
-          @speaker("") { @t("<PLAYER> received TM38!", "<PLAYER>得到了 TM38！") }
+          showItemDialogue(@t("<PLAYER> received TM38!", "<PLAYER>得到了 TM38！"), "SFX_GET_ITEM_1")
           @speaker("") {
             @t("TM38 contains FIRE BLAST!\n\nTeach it to fire- type\nPOKeMON!\n\nCHARMELEON or PONYTA would\nbe good bets!", "TM38里有大字爆炎！\n\n教给火系的宝可梦吧！\n\n火恐龙或小火马是不错的选择！")
           }

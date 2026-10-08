@@ -60,6 +60,9 @@ impl AudioOutput {
     pub fn play_sfx(&self, id: SfxId) {
         self.manager.borrow_mut().play_sfx(id)
     }
+    pub fn play_badge_bank_quirk(&self) {
+        self.manager.borrow_mut().play_badge_bank_quirk()
+    }
     pub fn play_cry(&self, id: SfxId, pitch_mod: u8, tempo_mod: u8) {
         self.manager.borrow_mut().play_cry(id, pitch_mod, tempo_mod)
     }

@@ -41,7 +41,7 @@ fn draw_script_choice(
     let fits_compact = choice.options.iter().all(|option| {
         pokered_renderer::embedded_font::measure_text(option) as u32 <= compact_width
     });
-    if screen.script_money_box.is_none() && !screen.is_reading_menu_active() && fits_compact {
+    if (screen.script_money_box.is_none() && screen.script_coin_box.is_none()) && !screen.is_reading_menu_active() && fits_compact {
         let mut ui = Ui::new(&mut painter);
         menus::yes_no::draw(
             &choice.options,
@@ -53,7 +53,7 @@ fn draw_script_choice(
     }
     use dotzuki_engine::menu::{CursorStyle, MenuConfig};
     use dotzuki_engine::render::TileRect;
-    let ty = if screen.script_money_box.is_some() {
+    let ty = if screen.script_money_box.is_some() || screen.script_coin_box.is_some() {
         5
     } else {
         0
@@ -75,6 +75,11 @@ fn draw_script_choice(
 }
 
 fn draw_script_money(screen: &OverworldScreen, fb: &mut FrameBuffer, is_zh: bool) {
+    if let Some(coins) = screen.script_coin_box {
+        super::draw_text_box(fb, 80, 0, 8, 3, Rgba::BLACK);
+        draw_text(if is_zh { "代币" } else { "COINS" }, 88, 6, Rgba::BLACK, fb);
+        draw_text(&format!("{coins}"), 88, 20, Rgba::BLACK, fb);
+    }
     if let Some(money) = screen.script_money_box {
         super::draw_text_box(fb, 80, 0, 8, 3, Rgba::BLACK);
         draw_text(if is_zh { "金钱" } else { "MONEY" }, 88, 6, Rgba::BLACK, fb);
@@ -721,7 +726,7 @@ pub(super) fn can_reuse_composited_frame(screen: &OverworldScreen) -> bool {
         && screen.pending_dialogue.is_none()
         && screen.cut_retained_dialogue.is_none()
         && screen.pending_choice.is_none()
-        && screen.script_money_box.is_none()
+        && (screen.script_money_box.is_none() && screen.script_coin_box.is_none())
         && screen.pending_emotion_bubble.is_none()
         && screen.pending_healing_machine.is_none()
         && screen.ledge_jump.is_none()

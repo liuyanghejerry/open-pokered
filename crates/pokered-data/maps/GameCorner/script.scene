@@ -25,6 +25,7 @@ game_scene GameCorner {
   // Original Has9990Coins threshold; AddBCD clamps overflow to 9999.
   @storyline("talkClerk1") {
     @trigger(map = "GameCorner", npc = 2)
+    showCoinBox(getCoins())
     @speaker("") {
       @t("Welcome to ROCKET GAME\nCORNER!\n\nDo you need some game coins?\n\nIt's ¥1000 for 50 coins.\nWould you like some?", "欢迎来到火箭游戏中心！\n\n你需要一些游戏代币吗？\n\n1000日元换 50枚代币，想要\n吗？")
     }
@@ -39,6 +40,7 @@ game_scene GameCorner {
             @if (hasMoney(1000)) {
               takeMoney(1000)
               giveCoins(50)
+              showCoinBox(getCoins())
               @speaker("") { @t("Thanks! Here are your 50\ncoins!", "谢谢！这是你的50枚代币！") }
             } @else {
               @speaker("") { @t("You can't afford the coins!", "你买不起这些代币！") }
@@ -50,6 +52,7 @@ game_scene GameCorner {
         @speaker("") { @t("No? Please come play\nsometime!", "不要吗？那下次再来玩吧！") }
       }
     }
+    showCoinBox(-1)
   }
 
   // ── Middle-aged man (npc 3) ─────────────────────────────────────────────
@@ -98,7 +101,7 @@ game_scene GameCorner {
         } @else {
           giveCoins(10)
           setFlag("EVENT_GOT_10_COINS")
-          @speaker("") { @t("<PLAYER> received 10 coins!", "<PLAYER>获得了 10枚代币！") }
+          showItemDialogue(@t("<PLAYER> received 10 coins!", "<PLAYER>获得了 10枚代币！"), "SFX_GET_ITEM_1")
         }
       }
     }
@@ -150,7 +153,7 @@ game_scene GameCorner {
         } @else {
           giveCoins(20)
           setFlag("EVENT_GOT_20_COINS_2")
-          @speaker("") { @t("<PLAYER> received 20 coins!", "<PLAYER>获得了 20枚代币！") }
+          showItemDialogue(@t("<PLAYER> received 20 coins!", "<PLAYER>获得了 20枚代币！"), "SFX_GET_ITEM_1")
         }
       }
     }
@@ -174,7 +177,7 @@ game_scene GameCorner {
         } @else {
           giveCoins(20)
           setFlag("EVENT_GOT_20_COINS")
-          @speaker("") { @t("<PLAYER> received 20 coins!", "<PLAYER>获得了 20枚代币！") }
+          showItemDialogue(@t("<PLAYER> received 20 coins!", "<PLAYER>获得了 20枚代币！"), "SFX_GET_ITEM_1")
         }
       }
     }
