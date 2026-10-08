@@ -22,10 +22,9 @@ fn main() {
         mon.ot_id = 65535;
         mon.ot_name = pokered_core::battle::state::encode_name("ABCDEFG");
         for page in [StatsPage::Stats, StatsPage::Moves] {
-            game.stats_screen = Some(StatsScreenState {
-                pokemon: mon.clone(),
-                page,
-            });
+            let mut stats = StatsScreenState::new(mon.clone());
+            stats.page = page;
+            game.stats_screen = Some(stats);
             let fb = capture_screen(&mut game, GameScreen::PokemonStatsScreen(0), 10);
             fb.save_png(std::path::Path::new(&format!(
                 "{dir}/{lang:?}-{page:?}.png"

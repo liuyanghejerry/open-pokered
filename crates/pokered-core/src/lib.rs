@@ -35,6 +35,7 @@ pub mod party_select;
 pub mod pokedex_screen;
 pub mod rng;
 pub mod hash_compat;
+mod stats_entry_timing;
 pub mod stats_screen;
 pub mod pokemon;
 pub mod save;

@@ -404,6 +404,11 @@ impl CableClubFlow {
         self.local_action
     }
 
+    pub fn take_stats_entry_cry(&mut self) -> Option<pokered_data::species::Species> {
+        let stats = self.stats.as_mut()?;
+        stats.take_entry_cry().then(|| stats.pokemon().species)
+    }
+
     pub fn stats(&self) -> Option<&pokered_core::stats_screen::StatsScreenState> {
         self.stats.as_ref()
     }
@@ -535,7 +540,7 @@ impl CableClubFlow {
                     return FlowNeed::SelectMon(index as u8);
                 }
                 if let Some(mon) = self.selector.as_ref().and_then(|sel| sel.party().get(index)) {
-                    self.stats = Some(pokered_core::stats_screen::StatsScreenState::new(mon.clone()));
+                    self.stats = Some(pokered_core::stats_screen::StatsScreenState::new(mon.clone()).with_entry());
                 }
             }
             return FlowNeed::None;
@@ -711,7 +716,7 @@ impl CableClubFlow {
                     if self.browsing_peer {
                         self.stats = Some(pokered_core::stats_screen::StatsScreenState::new(
                             self.remote_party[self.peer_cursor].clone(),
-                        ));
+                        ).with_entry());
                     } else if !self.remote_party.is_empty() {
                         self.local_action = Some((next.min(count - 1), false));
                     }
