@@ -1915,15 +1915,19 @@ impl PokemonGame {
         save.game_data.last_map = last_map as u8;
     }
 
+    // These SRAM fields store PLAYER_DIR_* bitmasks, not the sprite-facing
+    // values (0/4/8/12). Original sprite_data_constants.asm: right/left/down/up
+    // are bits 0/1/2/3. OverworldLoop clears moving direction while stopped.
     let facing = match player.facing {
-        pokered_core::overworld::Direction::Down => 0u8,
-        pokered_core::overworld::Direction::Up => 4u8,
-        pokered_core::overworld::Direction::Left => 8u8,
-        pokered_core::overworld::Direction::Right => 12u8,
+        pokered_core::overworld::Direction::Down => 4u8,
+        pokered_core::overworld::Direction::Up => 8u8,
+        pokered_core::overworld::Direction::Left => 2u8,
+        pokered_core::overworld::Direction::Right => 1u8,
     };
     save.game_data.player_direction = facing;
     save.game_data.player_last_stop_direction = facing;
-    save.game_data.player_moving_direction = facing;
+    save.game_data.player_moving_direction =
+        if player.movement_state == pokered_core::overworld::MovementState::Idle { 0 } else { facing };
 
     pokered_core::log_save!(
         "build_save_data: map_id={}, x={}, y={}, dir={}, player.x={}, player.y={}",
@@ -9399,6 +9403,55 @@ mod link_stats_cry_fidelity_tests {
             assert_eq!(host.link_cable.phase(), &CableClubPhase::TradeSelect,
                 "original DelayFrames50 returns without A/B");
             });
+    }
+
+    #[test]
+    fn actual_save_menu_writes_original_direction_masks_89() {
+        run_link_save_fixture(|| {
+            use pokered_core::overworld::Direction;
+            use pokered_core::start_menu::StartMenuItem;
+            for (facing,key,mask) in [(Direction::Down,GbButton::Down,4u8),
+                (Direction::Up,GbButton::Up,8),(Direction::Left,GbButton::Left,2),
+                (Direction::Right,GbButton::Right,1)] {
+                let dir=std::env::temp_dir().join(format!("pokered-direction-89-{}-{mask}",std::process::id()));
+                std::fs::create_dir_all(&dir).unwrap();
+                let path=dir.join("fixture.sav");
+                let mut g=fixture(Species::Pikachu,10,Direction::Down);
+                g.audio=None; g.external_saves=false; g.save_path=Some(path.clone());
+                g.overworld=OverworldScreen::new(MapId::PalletTown,None,PokemonRedData);
+                g.overworld.run_on_load(); g.overworld.state.player.x=10;g.overworld.state.player.y=10;
+                let idle=InputState::new();
+                for _ in 0..20 {g.update(&button(key));}
+                for _ in 0..64 {g.update(&idle);}
+                assert_eq!(g.overworld.state.player.facing,facing);
+                assert_eq!(g.overworld.state.player.movement_state,pokered_core::overworld::MovementState::Idle);
+                let position=(g.overworld.state.player.x,g.overworld.state.player.y);
+                g.update(&button(GbButton::Start));g.update(&idle);
+                assert_eq!(g.state.screen,GameScreen::StartMenu);
+                for _ in 0..7 {
+                    if g.start_menu.current_item()==StartMenuItem::Save {break;}
+                    g.update(&button(GbButton::Down));g.update(&idle);
+                }
+                assert_eq!(g.start_menu.current_item(),StartMenuItem::Save);
+                g.update(&button(GbButton::A));g.update(&idle);
+                assert_eq!(g.state.screen,GameScreen::SaveMenu);
+                for t in 0..1000 {
+                    if g.state.screen!=GameScreen::SaveMenu {break;}
+                    let advance=button(GbButton::A); g.update(if t%20==0 {&advance} else {&idle});
+                }
+                assert_eq!(g.state.screen,GameScreen::StartMenu);
+                let bytes=std::fs::read(&path).unwrap();
+                // Independent original symbols: bank1 sMainData=$a5a3,
+                // wMainDataStart=$d2f7; moving/last-stop/current=$d528/29/2a.
+                assert_eq!(bytes[0x27d6],mask,"{facing:?} saved wPlayerDirection");
+                assert_eq!(bytes[0x27d5],mask,"{facing:?} saved wPlayerLastStopDirection");
+                assert_eq!(bytes[0x27d4],0,"idle must save no moving direction");
+                let saved=import_sram(&bytes).unwrap();
+                assert_eq!((u16::from(saved.game_data.position.x),u16::from(saved.game_data.position.y)),position);
+                assert_eq!(saved.party,g.save_data.party);
+                std::fs::remove_dir_all(dir).unwrap();
+            }
+        });
     }
 
     #[test]
