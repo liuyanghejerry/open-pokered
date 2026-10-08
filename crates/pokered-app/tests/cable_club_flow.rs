@@ -5,7 +5,7 @@
 //! `FlowNeed`).
 //!
 //! Covers: the gameboy request flow (battle + trade), the peer yes/no
-//! prompt, the simultaneous-gameboy tie-break (host wins), the party
+//! independent gameboy activation, the simultaneous-gameboy tie-break (host wins), the party
 //! exchange into `BattleSetup`, the trade selection → confirm → exchange,
 //! and the disconnect error screen.
 
@@ -254,6 +254,17 @@ fn execute(
 
 // ── Battle flow ────────────────────────────────────────────────────
 
+fn use_gameboy(flow: &mut CableClubFlow, map: MapId) -> FlowNeed {
+    assert_eq!(flow.on_gameboy_used(map), FlowNeed::None);
+    assert_eq!(flow.text_box().as_deref(), Some("Just a moment."));
+    assert_eq!(flow.update(a_input(), &party2()), FlowNeed::None);
+    for _ in 0..79 { assert_eq!(flow.update(no_input(), &party2()), FlowNeed::None); }
+    assert!(matches!(flow.phase(), CableClubPhase::GameboyDelay { frames_left: 1, .. }));
+    let need = flow.update(no_input(), &party2());
+    assert_eq!(flow.text_box().as_deref(), Some("PLEASE WAIT!"));
+    need
+}
+
 #[test]
 fn battle_flow_gameboy_to_battle_setup() {
     let mut p = pair();
@@ -261,30 +272,21 @@ fn battle_flow_gameboy_to_battle_setup() {
     p.guest_flow.note_presence(true, true);
 
     // Host uses the gameboy in the Colosseum → LINK BATTLE request.
-    let need = p.host_flow.on_gameboy_used(MapId::Colosseum);
+    let need = use_gameboy(&mut p.host_flow, MapId::Colosseum);
     assert_eq!(need, FlowNeed::RequestLink(LinkKind::Battle));
     execute(&mut p.host_session, &mut p.host_flow, &mut p.host_battle, &mut p.host_trade, need);
-    assert_eq!(p.host_flow.text_box().as_deref(), Some("Just a moment."));
+    assert_eq!(p.host_flow.text_box().as_deref(), Some("PLEASE WAIT!"));
 
-    // Host dismisses the box; the guest gets the request prompt.
+    // A pending request leaves the guest free to use its own gameboy.
     let need = p.host_flow.update(a_input(), &party2());
     assert_eq!(need, FlowNeed::None);
     pump_battle(&mut p.guest_session, &mut p.guest_battle, &mut p.guest_flow);
-    assert_eq!(
-        *p.guest_flow.phase(),
-        CableClubPhase::PeerPrompt {
-            kind: LinkKind::Battle,
-            selected: 0
-        }
-    );
-    assert_eq!(
-        p.guest_flow.prompt().map(|(t, _)| t),
-        Some("Start a link\nbattle?".to_string())
-    );
+    assert_eq!(*p.guest_flow.phase(), CableClubPhase::InRoom);
+    assert_eq!(p.guest_flow.prompt(), None);
 
     // Guest accepts → the driver sends both AcceptBattle AND its party data
     // → both sides exchange → BattleSetup.
-    let need = p.guest_flow.update(a_input(), &party2());
+    let need = use_gameboy(&mut p.guest_flow, MapId::Colosseum);
     assert_eq!(
         need,
         FlowNeed::ReplyRequest {
@@ -312,8 +314,8 @@ fn simultaneous_gameboy_host_wins() {
     p.host_flow.note_presence(true, true);
     p.guest_flow.note_presence(true, true);
 
-    let need_host = p.host_flow.on_gameboy_used(MapId::Colosseum);
-    let need_guest = p.guest_flow.on_gameboy_used(MapId::Colosseum);
+    let need_host = use_gameboy(&mut p.host_flow, MapId::Colosseum);
+    let need_guest = use_gameboy(&mut p.guest_flow, MapId::Colosseum);
     assert_eq!(need_host, FlowNeed::RequestLink(LinkKind::Battle));
     assert_eq!(need_guest, FlowNeed::RequestLink(LinkKind::Battle));
     execute(&mut p.host_session, &mut p.host_flow, &mut p.host_battle, &mut p.host_trade, need_host);
@@ -340,20 +342,15 @@ fn battle_declined_shows_link_canceled() {
     p.host_flow.note_presence(true, true);
     p.guest_flow.note_presence(true, true);
 
-    let need = p.host_flow.on_gameboy_used(MapId::Colosseum);
+    let need = use_gameboy(&mut p.host_flow, MapId::Colosseum);
     execute(&mut p.host_session, &mut p.host_flow, &mut p.host_battle, &mut p.host_trade, need);
     let _ = p.host_flow.update(a_input(), &party2());
     pump_battle(&mut p.guest_session, &mut p.guest_battle, &mut p.guest_flow);
-    // Guest declines (B).
-    let need = p.guest_flow.update(b_input(), &party2());
-    assert_eq!(
-        need,
-        FlowNeed::ReplyRequest {
-            kind: LinkKind::Battle,
-            accept: false
-        }
-    );
-    execute(&mut p.guest_session, &mut p.guest_flow, &mut p.guest_battle, &mut p.guest_trade, need);
+    // A remote protocol rejection remains handled; no player-facing
+    // yes/no prompt is presented to a player walking in the room.
+    assert_eq!(p.guest_flow.update(b_input(), &party2()), FlowNeed::None);
+    assert_eq!(*p.guest_flow.phase(), CableClubPhase::InRoom);
+    p.guest_battle.decline_battle().unwrap();
     pump_battle(&mut p.host_session, &mut p.host_battle, &mut p.host_flow);
     assert_eq!(*p.host_flow.phase(), CableClubPhase::InRoom);
     assert_eq!(p.host_flow.text_box().as_deref(), Some(TEXT_LINK_CANCELED));
@@ -398,20 +395,14 @@ fn trade_flow_select_confirm_execute() {
     p.guest_flow.note_presence(true, true);
 
     // Host uses the gameboy in the Trade Center → LINK TRADE request.
-    let need = p.host_flow.on_gameboy_used(MapId::TradeCenter);
+    let need = use_gameboy(&mut p.host_flow, MapId::TradeCenter);
     assert_eq!(need, FlowNeed::RequestLink(LinkKind::Trade));
     execute(&mut p.host_session, &mut p.host_flow, &mut p.host_battle, &mut p.host_trade, need);
     let _ = p.host_flow.update(a_input(), &party2()); // dismiss "Just a moment."
 
     pump_trade(&mut p.guest_session, &mut p.guest_trade, &mut p.guest_flow);
-    assert_eq!(
-        *p.guest_flow.phase(),
-        CableClubPhase::PeerPrompt {
-            kind: LinkKind::Trade,
-            selected: 0
-        }
-    );
-    let need = p.guest_flow.update(a_input(), &party2());
+    assert_eq!(*p.guest_flow.phase(), CableClubPhase::InRoom);
+    let need = use_gameboy(&mut p.guest_flow, MapId::TradeCenter);
     assert_eq!(
         need,
         FlowNeed::ReplyRequest {
@@ -608,11 +599,11 @@ fn selection_cancel_redraws_without_confirmation_rejection_text() {
     p.host_flow.note_presence(true, true);
     p.guest_flow.note_presence(true, true);
 
-    let need = p.host_flow.on_gameboy_used(MapId::TradeCenter);
+    let need = use_gameboy(&mut p.host_flow, MapId::TradeCenter);
     execute(&mut p.host_session, &mut p.host_flow, &mut p.host_battle, &mut p.host_trade, need);
     let _ = p.host_flow.update(a_input(), &party2());
     pump_trade(&mut p.guest_session, &mut p.guest_trade, &mut p.guest_flow);
-    let need = p.guest_flow.update(a_input(), &party2());
+    let need = use_gameboy(&mut p.guest_flow, MapId::TradeCenter);
     execute(&mut p.guest_session, &mut p.guest_flow, &mut p.guest_battle, &mut p.guest_trade, need);
     pump_trade(&mut p.host_session, &mut p.host_trade, &mut p.host_flow);
     assert_eq!(*p.host_flow.phase(), CableClubPhase::TradeSelect);
@@ -642,7 +633,7 @@ fn disconnect_mid_trade_shows_error_then_inactive() {
     let mut p = pair();
     p.host_flow.note_presence(true, true);
 
-    let need = p.host_flow.on_gameboy_used(MapId::TradeCenter);
+    let need = use_gameboy(&mut p.host_flow, MapId::TradeCenter);
     execute(&mut p.host_session, &mut p.host_flow, &mut p.host_battle, &mut p.host_trade, need);
     let _ = p.host_flow.update(a_input(), &party2());
 
@@ -682,11 +673,11 @@ fn both_cancel_returns_to_room() {
     p.host_flow.note_presence(true, true);
     p.guest_flow.note_presence(true, true);
 
-    let need = p.host_flow.on_gameboy_used(MapId::TradeCenter);
+    let need = use_gameboy(&mut p.host_flow, MapId::TradeCenter);
     execute(&mut p.host_session, &mut p.host_flow, &mut p.host_battle, &mut p.host_trade, need);
     let _ = p.host_flow.update(a_input(), &party2());
     pump_trade(&mut p.guest_session, &mut p.guest_trade, &mut p.guest_flow);
-    let need = p.guest_flow.update(a_input(), &party2());
+    let need = use_gameboy(&mut p.guest_flow, MapId::TradeCenter);
     execute(&mut p.guest_session, &mut p.guest_flow, &mut p.guest_battle, &mut p.guest_trade, need);
     pump_trade(&mut p.host_session, &mut p.host_trade, &mut p.host_flow);
     assert_eq!(*p.host_flow.phase(), CableClubPhase::TradeSelect);
