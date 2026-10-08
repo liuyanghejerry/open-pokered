@@ -8352,17 +8352,7 @@
     {
       "from": "script:Route12:talkSnorlax",
       "to": "flag:EVENT_FIGHT_ROUTE12_SNORLAX",
-      "kind": "sets"
-    },
-    {
-      "from": "script:Route12:talkSnorlax",
-      "to": "flag:EVENT_FIGHT_ROUTE12_SNORLAX",
       "kind": "clears"
-    },
-    {
-      "from": "script:Route12:talkSnorlax",
-      "to": "item:POKE_FLUTE",
-      "kind": "requires"
     },
     {
       "from": "script:Route12:talkSnorlax",
@@ -8917,17 +8907,7 @@
     {
       "from": "script:Route16:talkSnorlax",
       "to": "flag:EVENT_FIGHT_ROUTE16_SNORLAX",
-      "kind": "sets"
-    },
-    {
-      "from": "script:Route16:talkSnorlax",
-      "to": "flag:EVENT_FIGHT_ROUTE16_SNORLAX",
       "kind": "clears"
-    },
-    {
-      "from": "script:Route16:talkSnorlax",
-      "to": "item:POKE_FLUTE",
-      "kind": "requires"
     },
     {
       "from": "script:Route16:talkSnorlax",

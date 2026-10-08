@@ -803,7 +803,8 @@ def m26_fuchsia(g):
     g.nav_warp(4, 7, "Route12Gate1F", "Route12", approach="down")
     g.approach_object(10, 62, "Route12")
     use_item(g, "PokeFlute")
-    talk_npc(g, "Route12", 1)
+    # Original DefaultScript starts the encounter after USE, with no second talk.
+    finish_talk(g)
     require_flag(g, "EVENT_BEAT_ROUTE12_SNORLAX")
     # The grass-free search otherwise takes a long northern detour.
     g.nav_to_map(19, 28, "FuchsiaCity", avoid_grass=False)

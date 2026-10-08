@@ -305,3 +305,29 @@ fn repel_wears_off_after_final_step_with_message() {
         "'REPEL's effect wore off.' shows on the final step"
     );
 }
+
+#[test]
+fn poke_flute_starts_snorlax_after_text_without_another_interaction() {
+    for (map, x, y, flag) in [
+        (MapId::Route12, 9, 62, "EVENT_FIGHT_ROUTE12_SNORLAX"),
+        (MapId::Route16, 25, 10, "EVENT_FIGHT_ROUTE16_SNORLAX"),
+    ] {
+        let mut screen = screen_on(map);
+        screen.state.player.x = x;
+        screen.state.player.y = y;
+        // Face away: USE is position-based, unlike talking to an NPC.
+        screen.state.player.facing = Direction::Left;
+        screen.run_on_load();
+        let input = |a| OverworldInput::new(false, false, false, false, a, false, false, false);
+        for _ in 0..100 { screen.update_frame(input(false)); }
+        screen.use_field_item(ItemId::PokeFlute, MapId::PalletTown);
+        for frame in 0..400 {
+            if screen.pending_wild_encounter.is_some() { break; }
+            let a = screen.pending_dialogue.is_some() && frame % 2 == 1;
+            if let Some(text) = screen.pending_dialogue.as_mut() { text.skip_to_full_page(); }
+            screen.update_frame(input(a));
+        }
+        assert!(screen.pending_wild_encounter.is_some(), "{map:?}");
+        assert!(!flag_set(&screen, flag));
+    }
+}

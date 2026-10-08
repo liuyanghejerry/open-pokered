@@ -18,7 +18,7 @@ game_scene CinnabarLabMetronomeRoom {
       given = giveItem("TM_35", 1)
       @if (given) {
         setFlag("EVENT_GOT_TM35")
-        @speaker("") { @t("<PLAYER> received TM35!", "<PLAYER>得到了 TM35！") }
+        showItemDialogue(t("<PLAYER> received TM35!", "<PLAYER>得到了 TM35！"))
       } @else {
         @speaker("") { @t("Your pack is crammed full!", "你的背包装满了！") }
       }

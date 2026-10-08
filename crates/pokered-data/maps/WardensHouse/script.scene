@@ -17,7 +17,8 @@ game_scene WardensHouse {
     } @else {
       @if (hasItem("GOLD_TEETH")) {
         // Hand over the GOLD TEETH, then reward HM04.
-        @speaker("") { @t("<PLAYER> gave the GOLD TEETH\nto the WARDEN!", "<PLAYER>把金牙交给了园长！") }
+        showItemDialogue(t("<PLAYER> gave the GOLD TEETH\nto the WARDEN!", "<PLAYER>把金牙交给了园长！"))
+        @speaker("") { @t("The WARDEN popped\nin his teeth!", "园长装上了牙齿！") }
         takeItem("GOLD_TEETH", 1)
         setFlag("EVENT_GAVE_GOLD_TEETH")
         @speaker("") {
@@ -26,7 +27,7 @@ game_scene WardensHouse {
         given = giveItem("HM04", 1)
         @if (given) {
           setFlag("EVENT_GOT_HM04")
-          @speaker("") { @t("<PLAYER> received HM04!", "<PLAYER>得到了 HM04！") }
+          showItemDialogue(t("<PLAYER> received HM04!", "<PLAYER>得到了 HM04！"))
         } @else {
           @speaker("") { @t("Your pack is stuffed full!", "你的背包塞满了！") }
         }
@@ -39,7 +40,7 @@ game_scene WardensHouse {
           given = giveItem("HM04", 1)
           @if (given) {
             setFlag("EVENT_GOT_HM04")
-            @speaker("") { @t("<PLAYER> received HM04!", "<PLAYER>得到了 HM04！") }
+            showItemDialogue(t("<PLAYER> received HM04!", "<PLAYER>得到了 HM04！"))
           } @else {
             @speaker("") { @t("Your pack is stuffed full!", "你的背包塞满了！") }
           }

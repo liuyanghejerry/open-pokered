@@ -1568,6 +1568,7 @@ fn route12_snorlax_caught_skips_mountain_dialogue() {
             screen.update_frame(input(false));
         }
         screen.seed_script_query_state(0, &["POKE_FLUTE".to_string()], 0, 0, 0, 0, &[], 0, 0, 0);
+        screen.use_field_item(pokered_data::items::ItemId::PokeFlute, MapId::PalletTown);
         screen.state.player.facing = Direction::Up;
         screen.update_frame(input(true));
         for frame in 0..300 {

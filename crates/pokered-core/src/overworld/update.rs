@@ -1277,6 +1277,22 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             return ScreenAction::Continue;
         }
 
+        // Route12/16 DefaultScript starts the encounter after the flute's
+        // field-use text closes, without a second A press or facing requirement.
+        let snorlax = match self.state.current_map {
+            MapId::Route12 => Some(("EVENT_FIGHT_ROUTE12_SNORLAX", 1)),
+            MapId::Route16 => Some(("EVENT_FIGHT_ROUTE16_SNORLAX", 7)),
+            _ => None,
+        };
+        if let Some((flag, text_id)) = snorlax {
+            if self.state.player.movement_state == MovementState::Idle
+                && self.script_flags().get(flag) == Some(&true)
+                && self.try_call_script_npc_talk(text_id)
+            {
+                return ScreenAction::Continue;
+            }
+        }
+
         // A-button: check signs first, then NPCs (matches original game priority).
         // Held during a trainer engage intro (wJoyIgnore).
         if a_just_pressed
