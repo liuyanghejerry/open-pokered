@@ -1,0 +1,549 @@
+{
+  "base": "51e586f3534c47db2c42ec15517b1a9d2ed76444",
+  "test_module_sha256": "1c5821e3829b8a447ba2404bc93e8a817cc7a19152b2e6d2176e3fc2b010c1a2",
+  "before": [
+    {
+      "frame": 141,
+      "npcs": [
+        {
+          "facing": "Left",
+          "id": 1,
+          "x": 3,
+          "y": 2
+        }
+      ],
+      "party": [
+        {
+          "attack": 34,
+          "defense": 34,
+          "dv_bytes": [
+            153,
+            136
+          ],
+          "hp": 63,
+          "is_traded": false,
+          "level": 25,
+          "max_hp": 63,
+          "moves": [
+            "Tackle",
+            "None",
+            "None",
+            "None"
+          ],
+          "nickname": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "ot_id": 0,
+          "ot_name": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "pp": [
+            35,
+            0,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "special": 41,
+          "species": "Bulbasaur",
+          "speed": 31,
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "total_exp": 11735,
+          "type1": "Grass",
+          "type2": "Poison"
+        }
+      ],
+      "phase": "JustAMoment { kind: Trade }",
+      "position": [
+        4,
+        5
+      ],
+      "stage": "wrong-facing"
+    },
+    {
+      "frame": 549,
+      "npcs": [
+        {
+          "facing": "Left",
+          "id": 1,
+          "x": 3,
+          "y": 2
+        }
+      ],
+      "party": [
+        {
+          "attack": 34,
+          "defense": 34,
+          "dv_bytes": [
+            153,
+            136
+          ],
+          "hp": 63,
+          "is_traded": false,
+          "level": 25,
+          "max_hp": 63,
+          "moves": [
+            "Tackle",
+            "None",
+            "None",
+            "None"
+          ],
+          "nickname": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "ot_id": 0,
+          "ot_name": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "pp": [
+            35,
+            0,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "special": 41,
+          "species": "Bulbasaur",
+          "speed": 31,
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "total_exp": 11735,
+          "type1": "Grass",
+          "type2": "Poison"
+        }
+      ],
+      "phase": "InRoom",
+      "position": [
+        2,
+        3
+      ],
+      "stage": "room-host"
+    },
+    {
+      "frame": 549,
+      "npcs": [
+        {
+          "facing": "Right",
+          "id": 1,
+          "x": 1,
+          "y": 2
+        }
+      ],
+      "party": [
+        {
+          "attack": 34,
+          "defense": 34,
+          "dv_bytes": [
+            153,
+            136
+          ],
+          "hp": 63,
+          "is_traded": false,
+          "level": 25,
+          "max_hp": 63,
+          "moves": [
+            "Tackle",
+            "None",
+            "None",
+            "None"
+          ],
+          "nickname": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "ot_id": 0,
+          "ot_name": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "pp": [
+            35,
+            0,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "special": 41,
+          "species": "Bulbasaur",
+          "speed": 31,
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "total_exp": 11735,
+          "type1": "Grass",
+          "type2": "Poison"
+        }
+      ],
+      "phase": "InRoom",
+      "position": [
+        2,
+        3
+      ],
+      "stage": "room-guest"
+    }
+  ],
+  "after": [
+    {
+      "frame": 141,
+      "npcs": [
+        {
+          "facing": "Left",
+          "id": 1,
+          "x": 6,
+          "y": 4
+        }
+      ],
+      "party": [
+        {
+          "attack": 34,
+          "defense": 34,
+          "dv_bytes": [
+            153,
+            136
+          ],
+          "hp": 63,
+          "is_traded": false,
+          "level": 25,
+          "max_hp": 63,
+          "moves": [
+            "Tackle",
+            "None",
+            "None",
+            "None"
+          ],
+          "nickname": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "ot_id": 0,
+          "ot_name": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "pp": [
+            35,
+            0,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "special": 41,
+          "species": "Bulbasaur",
+          "speed": 31,
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "total_exp": 11735,
+          "type1": "Grass",
+          "type2": "Poison"
+        }
+      ],
+      "phase": "InRoom",
+      "position": [
+        4,
+        5
+      ],
+      "stage": "wrong-facing"
+    },
+    {
+      "frame": 549,
+      "npcs": [
+        {
+          "facing": "Left",
+          "id": 1,
+          "x": 6,
+          "y": 4
+        }
+      ],
+      "party": [
+        {
+          "attack": 34,
+          "defense": 34,
+          "dv_bytes": [
+            153,
+            136
+          ],
+          "hp": 63,
+          "is_traded": false,
+          "level": 25,
+          "max_hp": 63,
+          "moves": [
+            "Tackle",
+            "None",
+            "None",
+            "None"
+          ],
+          "nickname": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "ot_id": 0,
+          "ot_name": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "pp": [
+            35,
+            0,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "special": 41,
+          "species": "Bulbasaur",
+          "speed": 31,
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "total_exp": 11735,
+          "type1": "Grass",
+          "type2": "Poison"
+        }
+      ],
+      "phase": "InRoom",
+      "position": [
+        3,
+        4
+      ],
+      "stage": "room-host"
+    },
+    {
+      "frame": 549,
+      "npcs": [
+        {
+          "facing": "Right",
+          "id": 1,
+          "x": 3,
+          "y": 4
+        }
+      ],
+      "party": [
+        {
+          "attack": 34,
+          "defense": 34,
+          "dv_bytes": [
+            153,
+            136
+          ],
+          "hp": 63,
+          "is_traded": false,
+          "level": 25,
+          "max_hp": 63,
+          "moves": [
+            "Tackle",
+            "None",
+            "None",
+            "None"
+          ],
+          "nickname": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "ot_id": 0,
+          "ot_name": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "pp": [
+            35,
+            0,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "special": 41,
+          "species": "Bulbasaur",
+          "speed": 31,
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "total_exp": 11735,
+          "type1": "Grass",
+          "type2": "Poison"
+        }
+      ],
+      "phase": "InRoom",
+      "position": [
+        6,
+        4
+      ],
+      "stage": "room-guest"
+    }
+  ],
+  "method": "Same read-only capture module, fixtures and production inputs; room entry follows real receptionist/save/menu/warp path. Matching frame and party asserted; changed room positions are expected."
+}
