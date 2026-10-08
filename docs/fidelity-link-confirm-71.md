@@ -12,4 +12,6 @@
 
 验证：debug-server 全部应用单元回归 182 通过；未优化、带调试信息的完整应用测试目标共 460 通过。新增的四个原生测试使用 16 MiB 工作者栈，避免大型双游戏夹具耗尽默认测试栈，断言及生产流程不变。
 
-截图实际 master 基线为 `a77efa20f5118cc31693fb2a394b942104a5f6e5`。三组捕获均为第 385 帧，前后 fixture 模块哈希、队伍数据和帧数一致，详见 `docs/screenshots/fidelity-71/manifest.json`。
+截图实际 master 基线为 `a284a95ccf626e1a4b6573622fff76433f5ff0d9`。三组捕获均为第 385 帧，前后 fixture 模块哈希、队伍数据和帧数一致，详见 `docs/screenshots/fidelity-71/manifest.json`。
+
+PR #133 合入后重新从 master 捕获基线，三张图与原基线逐字节一致；本次菜单差异与此前按键声和状态页修复无关。

@@ -1,5 +1,5 @@
 {
-  "base": "a77efa20f5118cc31693fb2a394b942104a5f6e5",
+  "base": "a284a95ccf626e1a4b6573622fff76433f5ff0d9",
   "fixture_module_sha256": "d2e7fd8a47ba3f186fa170f5d01f8f4e19849a859c47ace537cc552b1efc3735",
   "before": [
     {
@@ -478,5 +478,6 @@
       "stage": "confirm-a-b",
       "text": "Too bad! The trade\nwas canceled!"
     }
-  ]
+  ],
+  "recaptured_against_merged_master": true
 }
