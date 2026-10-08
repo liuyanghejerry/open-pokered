@@ -4088,6 +4088,7 @@ impl PokemonGame {
                             } else {
                                 (0, 0)
                             };
+                            self.overworld.seed_daycare_species(&Species::from_index_id(dc.species).pascal_name());
                             let dc_name = pokered_data::charmap::decode_string(
                                 &self.save_data.game_data.daycare_mon_name,
                             );
@@ -4201,6 +4202,8 @@ impl PokemonGame {
                                 OverworldAudioRequest::PlaySound { sound_id } => {
                                     if sound_id == "SFX_STOP_ALL_MUSIC" {
                                         audio.stop_all();
+                                    } else if sound_id == "SFX_BADGE_BANK_QUIRK" {
+                                        audio.play_badge_bank_quirk();
                                     } else if let Some(sfx) = parse_sfx_id(&sound_id) {
                                         audio.play_sfx(sfx);
                                     } else {
@@ -6192,9 +6195,15 @@ impl PokemonGame {
                             }
                             OverworldGameDataRequest::GiveCoins { amount } => {
                                 self.save_data.game_data.give_coins(amount);
+                                if self.overworld.script_coin_box.is_some() {
+                                    self.overworld.script_coin_box = Some(self.save_data.game_data.player_coins);
+                                }
                             }
                             OverworldGameDataRequest::TakeCoins { amount } => {
                                 self.save_data.game_data.take_coins(amount);
+                                if self.overworld.script_coin_box.is_some() {
+                                    self.overworld.script_coin_box = Some(self.save_data.game_data.player_coins);
+                                }
                             }
                             OverworldGameDataRequest::TickDaycareExp => {
                                 self.save_data.game_data.tick_daycare_exp();

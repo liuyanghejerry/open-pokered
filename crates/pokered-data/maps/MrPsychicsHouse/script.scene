@@ -17,7 +17,7 @@ game_scene MrPsychicsHouse {
       given = giveItem("TM29", 1)
       @if (given) {
         setFlag("EVENT_GOT_TM29")
-        @speaker("") { @t("<PLAYER> received TM29!", "<PLAYER>得到了 TM29！") }
+        showItemDialogue(@t("<PLAYER> received TM29!", "<PLAYER>得到了 TM29！"), "SFX_GET_ITEM_1")
       } @else {
         @speaker("") { @t("Where do you plan to put\nthis?", "你打算把它放在哪里？") }
       }

@@ -137,7 +137,7 @@ game_scene VermilionGym {
         given = giveItem("TM24", 1)
         @if (given) {
           setFlag("EVENT_GOT_TM24")
-          @speaker("") { @t("<PLAYER> received TM24!", "<PLAYER>得到了 TM24！") }
+          showItemDialogue(@t("<PLAYER> received TM24!", "<PLAYER>得到了 TM24！"), "SFX_GET_KEY_ITEM")
           @speaker("") {
             @t("TM24 contains THUNDERBOLT!\n\nTeach it to an electric\nPOKeMON!", "TM24 里含有十万伏特！\n\n教给电系宝可梦吧！")
           }
@@ -170,7 +170,7 @@ game_scene VermilionGym {
         given = giveItem("TM24", 1)
         @if (given) {
           setFlag("EVENT_GOT_TM24")
-          @speaker("") { @t("<PLAYER> received TM24!", "<PLAYER>得到了 TM24！") }
+          showItemDialogue(@t("<PLAYER> received TM24!", "<PLAYER>得到了 TM24！"), "SFX_GET_KEY_ITEM")
           @speaker("") {
             @t("TM24 contains THUNDERBOLT!\n\nTeach it to an electric\nPOKeMON!", "TM24 里含有十万伏特！\n\n教给电系宝可梦吧！")
           }

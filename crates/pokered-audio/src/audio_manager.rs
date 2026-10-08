@@ -113,6 +113,14 @@ impl AudioManager {
         self.engine.play_sfx(id);
     }
 
+    /// Cerulean/Saffron/Cinnabar badge text selects GET_KEY_ITEM in bank 2,
+    /// which resolves to only BALL_POOF's second (noise) channel in Red.
+    pub fn play_badge_bank_quirk(&mut self) {
+        let noise = sfx_data::get_sfx_track(SfxId::BallPoof).channels[3].unwrap();
+        self.sequencer.frequency_modifier = 0;
+        self.sequencer.play_sfx(SfxId::BallPoof as u8, &[noise.to_vec()], 3, 0x0100);
+    }
+
     /// Play a cry with the original engine's cry modifiers
     /// (`wFrequencyModifier`/`wTempoModifier`, home/pokemon.asm `GetCryData`).
     ///

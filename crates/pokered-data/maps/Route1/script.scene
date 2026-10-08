@@ -22,7 +22,7 @@ game_scene Route1 {
       // before the GiveItem attempt, so this offer never re-arms even on a full bag.
       given = giveItem("POTION", 1)
       @if (given) {
-        @speaker("") { @t("<PLAYER> got a POTION!", "<PLAYER>得到了一瓶伤药！") }
+        showItemDialogue(@t("<PLAYER> got a POTION!", "<PLAYER>得到了一瓶伤药！"), "SFX_GET_ITEM_1")
       } @else {
         @speaker("") { @t("You have too much stuff with\nyou!", "你带的东西太多了！") }
       }

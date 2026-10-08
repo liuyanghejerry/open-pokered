@@ -79,6 +79,7 @@ pub enum ScriptEffect {
     },
     ReadingMenu { menu: super::script_interactions::ReadingMenu },
     ShowMoneyBox { amount: i64 },
+    ShowCoinBox { amount: i64 },
     VendingDelivery { frames_elapsed: u8 },
     ShowObject {
         object_index: u8,
@@ -372,6 +373,7 @@ impl ScriptEffect {
             }
             ScriptEffect::ReadingMenu { menu } => serde_json::json!({ "effect": "ReadingMenu", "child": menu.child.to_debug_json() }),
             ScriptEffect::ShowMoneyBox { amount } => serde_json::json!({ "effect": "ShowMoneyBox", "amount": amount }),
+            ScriptEffect::ShowCoinBox { amount } => serde_json::json!({ "effect": "ShowCoinBox", "amount": amount }),
             ScriptEffect::VendingDelivery { frames_elapsed } => serde_json::json!({ "effect": "VendingDelivery", "frames_elapsed": frames_elapsed }),
             ScriptEffect::GivePokemon {
                 species,
@@ -853,6 +855,7 @@ fn dispatch_custom(name: &str, args: &[Value]) -> ScriptEffect {
         },
         PokemonScriptCommand::ReadingMenu { options, texts } => ScriptEffect::ReadingMenu { menu: super::script_interactions::ReadingMenu::new(options, texts) },
         PokemonScriptCommand::ShowMoneyBox { amount } => ScriptEffect::ShowMoneyBox { amount },
+        PokemonScriptCommand::ShowCoinBox { amount } => ScriptEffect::ShowCoinBox { amount },
         PokemonScriptCommand::VendingDelivery => ScriptEffect::VendingDelivery { frames_elapsed: 0 },
         PokemonScriptCommand::OldManTutorial => ScriptEffect::OldManTutorial,
         PokemonScriptCommand::TradePokemon { offered, received, nickname } => {

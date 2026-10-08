@@ -58,6 +58,7 @@ fighting fit!", "谢谢你等候。\n\n你的宝可梦已经全部痊愈！")
       @speaker("") {
         @t("MAN: Hello, there!\n\nHave I got a deal just for\nyou!\n\nI'll let you have a swell\nMAGIKARP for just ¥500!\n\nWhat do you say?", "男子：你好呀！\n\n我有个好买卖只为你准备！\n\n可以让你拥有一条不错的鲤鱼王\n只需500日元！\n\n你觉得怎么样？")
       }
+      showMoneyBox(getMoney())
       @choice {
         @option(@t("YES", "是")) {
           @if (!hasMoney(500)) {
@@ -68,6 +69,7 @@ fighting fit!", "谢谢你等候。\n\n你的宝可梦已经全部痊愈！")
             given = givePokemon("MAGIKARP", 5)
             @if (given) {
               takeMoney(500)
+              showMoneyBox(getMoney())
               setFlag("EVENT_BOUGHT_MAGIKARP")
             }
           }
@@ -76,6 +78,7 @@ fighting fit!", "谢谢你等候。\n\n你的宝可梦已经全部痊愈！")
           @speaker("") { @t("No? I'm only doing this as a\nfavor to you!", "不吗？我只是当作是在帮你忙而\n已！") }
         }
       }
+      showMoneyBox(-1)
     }
   }
 

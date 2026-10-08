@@ -14,10 +14,12 @@ game_scene Museum1F {
       @speaker("") {
         @t("It's ¥50 for a child's\nticket.\n\nWould you like to come in?", "儿童票是 50日元。\n\n你想进来看看吗？")
       }
+      showMoneyBox(getMoney())
       @choice {
         @option(@t("YES", "是")) {
           @if (hasMoney(50)) {
             takeMoney(50)
+            showMoneyBox(getMoney())
             setFlag("EVENT_BOUGHT_MUSEUM_TICKET")
             playSound("SFX_PURCHASE")
             @speaker("") { @t("Right, ¥50! Thank you!", "好的，50日元！谢谢！") }
@@ -32,6 +34,7 @@ game_scene Museum1F {
           movePlayerRelative(["down"])
         }
       }
+      showMoneyBox(-1)
     }
   }
 
@@ -70,10 +73,12 @@ game_scene Museum1F {
         @speaker("") {
           @t("It's ¥50 for a child's\nticket.\n\nWould you like to come in?", "儿童票是 50日元。\n\n你想进来看看吗？")
         }
+        showMoneyBox(getMoney())
         @choice {
           @option(@t("YES", "是")) {
             @if (hasMoney(50)) {
               takeMoney(50)
+              showMoneyBox(getMoney())
               setFlag("EVENT_BOUGHT_MUSEUM_TICKET")
               playSound("SFX_PURCHASE")
               @speaker("") { @t("Right, ¥50! Thank you!", "好的，50日元！谢谢！") }
@@ -88,6 +93,7 @@ game_scene Museum1F {
             movePlayerRelative(["down"])
           }
         }
+        showMoneyBox(-1)
       }
     } @else {
       // Anywhere else: send the player around to the ticket counter unless
@@ -120,7 +126,7 @@ game_scene Museum1F {
       given = giveItem("OLD_AMBER", 1)
       @if (given) {
         setFlag("EVENT_GOT_OLD_AMBER")
-        @speaker("") { @t("<PLAYER> received OLD AMBER!", "<PLAYER>获得了古老的琥珀！") }
+        showItemDialogue(@t("<PLAYER> received OLD AMBER!", "<PLAYER>获得了古老的琥珀！"), "SFX_GET_ITEM_1")
       } @else {
         @speaker("") { @t("You don't have space for\nthis!", "你的背包没有空间了！") }
       }

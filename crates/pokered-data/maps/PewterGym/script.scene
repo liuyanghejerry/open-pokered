@@ -15,7 +15,7 @@ game_scene PewterGym {
         given = giveItem("TM34", 1)
         @if (given) {
           setFlag("EVENT_GOT_TM34")
-          @speaker("") { @t("<PLAYER> received TM34!", "<PLAYER>获得了 TM34！") }
+          showItemDialogue(@t("<PLAYER> received TM34!", "<PLAYER>获得了 TM34！"), "SFX_GET_ITEM_1")
           @speaker("") {
             @t("A TM contains a technique\nthat can be taught to\nPOKeMON!\n\nA TM is good only once! So\nwhen you use one to teach a\nnew technique, pick the\nPOKeMON carefully!\n\nTM34 contains BIDE!\n\nYour POKeMON will absorb\ndamage in battle then pay it\nback double!", "TM中记载着可以传授给宝可梦的\n招式！\n\nTM只能用一次！所以教宝可梦新\n招式时，要仔细挑选宝可梦！\n\nTM34是忍耐！\n\n你的宝可梦会在战斗中承受伤\n害，之后以双倍威力还击！")
           }
@@ -33,9 +33,7 @@ game_scene PewterGym {
       }
       result = startBattle("OPP_BROCK1")
       @if (result == "win") {
-        @speaker("") {
-          @t("I took you for granted.\n\nAs proof of your victory,\nhere's the BOULDERBADGE!\n\n<PLAYER> received the\nBOULDERBADGE!", "是我小看你了。\n\n作为你获胜的证明，收下灰色徽\n章吧！\n\n<PLAYER>获得了灰色徽章！")
-        }
+        showItemDialogue(@t("I took you for granted.\n\nAs proof of your victory,\nhere's the BOULDERBADGE!\n\n<PLAYER> received the\nBOULDERBADGE!", "是我小看你了。\n\n作为你获胜的证明，收下灰色徽\n章吧！\n\n<PLAYER>获得了灰色徽章！"), "SFX_LEVEL_UP")
         giveBadge("BOULDERBADGE")
         setFlag("EVENT_BEAT_BROCK")
         // The optional Route22 encounter expires with the first badge.
@@ -49,7 +47,7 @@ game_scene PewterGym {
         given = giveItem("TM34", 1)
         @if (given) {
           setFlag("EVENT_GOT_TM34")
-          @speaker("") { @t("<PLAYER> received TM34!", "<PLAYER>获得了 TM34！") }
+          showItemDialogue(@t("<PLAYER> received TM34!", "<PLAYER>获得了 TM34！"), "SFX_GET_ITEM_1")
           @speaker("") {
             @t("A TM contains a technique\nthat can be taught to\nPOKeMON!\n\nA TM is good only once! So\nwhen you use one to teach a\nnew technique, pick the\nPOKeMON carefully!\n\nTM34 contains BIDE!\n\nYour POKeMON will absorb\ndamage in battle then pay it\nback double!", "TM中记载着可以传授给宝可梦的\n招式！\n\nTM只能用一次！所以教宝可梦新\n招式时，要仔细挑选宝可梦！\n\nTM34是忍耐！\n\n你的宝可梦会在战斗中承受伤\n害，之后以双倍威力还击！")
           }

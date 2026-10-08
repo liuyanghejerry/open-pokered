@@ -481,6 +481,9 @@ impl ScriptApiRegistrar for PokemonScriptApi {
         engine.register_async_fn("showMoneyBox", |args: &[JsValue], ctx: &mut Context| {
             Ok(PokemonScriptCommand::ShowMoneyBox { amount: args.get_or_undefined(0).to_number(ctx)? as i64 }.into_script_command())
         });
+        engine.register_async_fn("showCoinBox", |args: &[JsValue], ctx: &mut Context| {
+            Ok(PokemonScriptCommand::ShowCoinBox { amount: args.get_or_undefined(0).to_number(ctx)? as i64 }.into_script_command())
+        });
         engine.register_async_fn("vendingDelivery", |_: &[JsValue], _: &mut Context| {
             Ok(PokemonScriptCommand::VendingDelivery.into_script_command())
         });
@@ -612,6 +615,14 @@ impl ScriptApiRegistrar for PokemonScriptApi {
                 Ok(JsValue::from(view.number("daycareInUse") != 0.0))
             },
         );
+
+        engine.register_sync_fn("getDaycareMonSpecies", |_args: &[JsValue], _ctx: &mut Context, view: &BridgeView| -> JsResult<JsValue> {
+            Ok(JsValue::from(boa_engine::js_string!(view.text("daycareMonSpecies"))))
+        });
+        engine.register_sync_fn("getPartyMonSpecies", |args: &[JsValue], ctx: &mut Context, view: &BridgeView| -> JsResult<JsValue> {
+            let idx = args.get_or_undefined(0).to_u32(ctx)?;
+            Ok(JsValue::from(boa_engine::js_string!(view.text(&format!("partySpecies{idx}")))))
+        });
 
         // game.getDaycareMonName() -> string  (nickname/species of the deposited mon)
         engine.register_sync_fn(
@@ -981,10 +992,12 @@ mod tests {
                 await game.showMoneyBox(3000);
                 await game.vendingDelivery();
                 await game.showMoneyBox(-1);
+                await game.showCoinBox(50);
+                await game.showCoinBox(-1);
             }
         "#).unwrap();
         let mut next = engine.call_function("f", &[]).unwrap();
-        for expected in ["readingMenu", "showMoneyBox", "vendingDelivery", "showMoneyBox"] {
+        for expected in ["readingMenu", "showMoneyBox", "vendingDelivery", "showMoneyBox", "showCoinBox", "showCoinBox"] {
             let Some(ScriptCommand::Custom { name, .. }) = &next else { panic!("missing {expected}: {next:?}"); };
             assert_eq!(name, expected);
             assert_eq!(engine.tick(), next, "await must stay parked until completion");

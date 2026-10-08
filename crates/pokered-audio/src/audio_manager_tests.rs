@@ -724,3 +724,14 @@ fn healed_jingle_first_music_channel_reports_natural_completion() {
     }
     panic!("finite healed jingle never ended its first music channel");
 }
+
+#[test]
+fn badge_wrong_bank_plays_only_ball_poof_noise_and_finishes() {
+    let mut mgr = AudioManager::new();
+    mgr.play_badge_bank_quirk();
+    for ch in 0..4 {
+        assert_eq!(mgr.sequencer.is_sfx_channel_active(ch), ch == 3);
+    }
+    for _ in 0..120 { mgr.update_frame(); }
+    assert!(!mgr.is_sfx_playing());
+}
