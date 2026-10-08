@@ -3197,14 +3197,11 @@ mod elevator_edge_tests {
         assert!(s.boulder_dust.is_active(), "push started the dust");
 
         let after = render_screen(&mut s);
-        // The dust block for a DOWN push sits at the boulder's base: player
-        // screen top-left (72,64) + BoulderDustAnimationOffsets (8,52) →
-        // (80,116), a 16×16 block of 8×8 smoke tiles (dust_smoke.asm).
-        // Sample the RIGHT column (88..96): the boulder sprite (16×16,
-        // x 72..88) never covers it before or after the slide, so any pixel
-        // change there must come from the dust.
+        // This presence test samples the dust's right column outside the
+        // boulder sprite. Exact raw-OAM conversion for dust is a separate
+        // audit; this only verifies the push starts drawing the smoke asset.
         let dust_area_changed =
-            (88..96).any(|x| (116..132).any(|y| before.get_pixel(x, y) != after.get_pixel(x, y)));
+            (80..88).any(|x| (112..128).any(|y| before.get_pixel(x, y) != after.get_pixel(x, y)));
         assert!(
             dust_area_changed,
             "dust pixels appear at the boulder's base during the push"
@@ -3240,13 +3237,13 @@ mod elevator_edge_tests {
         let walk_fb = render_screen(&mut walking);
         let bike_fb = render_screen(&mut biking);
 
-        // Player sprite rect: screen center (72,64), 16×16. Compare the top
-        // half (y 64..72) only — the bottom half can be redrawn by the grass
+        // Original player sprite top-left (64,60), 16×16. Compare the top
+        // half (y 60..68) only — the bottom half can be redrawn by the grass
         // overlay, the top half is sheet pixels alone.
         let top_half = |fb: &FrameBuffer| {
             (0..8)
                 .flat_map(|dy| (0..16).map(move |dx| (dy, dx)))
-                .map(|(dy, dx)| fb.get_pixel(72 + dx as u32, 64 + dy as u32))
+                .map(|(dy, dx)| fb.get_pixel(64 + dx as u32, 60 + dy as u32))
                 .collect::<Vec<_>>()
         };
         let walk_top = top_half(&walk_fb);
@@ -3309,10 +3306,10 @@ mod fly_arrival_tests {
             draw_overworld(&mut screen, &mut resources, &mut fb, Lang::En);
             let step = (frame / 3).min(11) as usize;
             let (y, x) = FLY_ANIM_COORDS[step];
-            // The original ($40,$3c) sprite-state anchor is the player's
-            // screen location (9,8) tiles, without a second OAM bias.
-            let bx = 9 * 8 + i32::from(x) - 0x40;
-            let by = 8 * 8 + i32::from(y) - 0x3c;
+            // DoFlyAnimation writes raw sprite screen pixels; PrepareOAMData
+            // adds hardware offsets which the LCD cancels again.
+            let bx = i32::from(x);
+            let by = i32::from(y);
             let image = if step % 2 == 0 { 2 } else { 5 };
             let mut changed = 0;
             for py in 0..144 {

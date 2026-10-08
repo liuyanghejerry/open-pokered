@@ -146,14 +146,15 @@ fn assert_frame_eq(actual: &FrameBuffer, expected: &FrameBuffer, context: &str) 
 fn fly_uses_side_wings_and_lands_at_the_player() {
     use pokered_renderer::palette::{Palette, GRAYSCALE_PALETTE};
     let mut screen = fly_screen();
-    screen.enter_map_fly_anim = Some(EnterMapFlyState { frame: 0 });
-    // The first coordinate is entirely beyond the right edge after anchoring
-    // to our viewport. It supplies the unobstructed background for compositing.
-    let background = render(&mut screen);
     screen.enter_map_fly_anim = None;
+    // Hide the player before the bird exists. The first original bird pose
+    // is partially visible at x=152, so it cannot supply an empty background.
+    screen.pending_fly_arrival = true;
+    let background = render(&mut screen);
+    screen.pending_fly_arrival = false;
     let landed = render(&mut screen);
     assert!(
-        (64..80).any(|y| (72..88).any(|x| background.get_pixel(x, y) != landed.get_pixel(x, y))),
+        (60..76).any(|y| (64..80).any(|x| background.get_pixel(x, y) != landed.get_pixel(x, y))),
         "the player must be hidden before the bird arrives"
     );
 
@@ -166,8 +167,8 @@ fn fly_uses_side_wings_and_lands_at_the_player() {
         GRAYSCALE_PALETTE.colors[3],
     ]);
     // Independent expected poses/positions: original indexes $8/$9 select
-    // sheet frames 2/5; ($40,$3c) must land exactly at viewport (72,64).
-    for (frame, bx, by, sheet_frame) in [(15, 120, 49, 5), (18, 112, 54, 2), (33, 72, 64, 5)] {
+    // sheet frames 2/5; ($40,$3c) are actual LCD screen pixels (64,60).
+    for (frame, bx, by, sheet_frame) in [(15, 112, 45, 5), (18, 104, 50, 2), (33, 64, 60, 5)] {
         let mut expected = background.clone();
         for y in 0..16u32 {
             for x in 0..16u32 {
