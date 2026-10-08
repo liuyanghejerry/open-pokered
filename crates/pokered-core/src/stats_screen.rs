@@ -52,7 +52,7 @@ impl StatsScreenState {
     }
 
     pub fn update(&mut self, input: StatsScreenInput) -> StatsScreenAction {
-        // Both original callers display StatusScreen then StatusScreen2,
+        // Original callers display StatusScreen then StatusScreen2,
         // each returning on A or B (WaitForTextScrollButtonPress).
         if input.a || input.b {
             match self.page {
