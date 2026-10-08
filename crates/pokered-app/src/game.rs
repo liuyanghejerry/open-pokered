@@ -5936,16 +5936,31 @@ impl PokemonGame {
                     .select_mon(&mut *session.trade_transport(), *idx)
                     .map_err(link_trade_err_to_transport)
             }
-            FlowNeed::CancelTrade => {
+            FlowNeed::ResumeSelection => {
+                if let Some(driver) = self.link_trade.as_mut() { driver.resume_selection(); }
+                Ok(())
+            }
+            FlowNeed::SelectMonAgainstCancel(idx) => {
+                let Some(session) = self.link_session.as_mut() else { return; };
+                let Some(driver) = self.link_trade.as_mut() else { return; };
+                driver.select_mon_against_cancel(&mut *session.trade_transport(), *idx)
+                    .map_err(link_trade_err_to_transport)
+            }
+            FlowNeed::RejectTrade => {
+                let Some(session) = self.link_session.as_mut() else { return; };
+                let Some(driver) = self.link_trade.as_mut() else { return; };
+                driver.reject_trade(&mut *session.trade_transport()).map_err(link_trade_err_to_transport)
+            }
+            FlowNeed::CancelTrade | FlowNeed::CancelTradeAndLeave => {
                 let Some(session) = self.link_session.as_mut() else {
                     return;
                 };
                 let Some(driver) = self.link_trade.as_mut() else {
                     return;
                 };
-                driver
-                    .cancel_trade(&mut *session.trade_transport())
-                    .map_err(link_trade_err_to_transport)
+                let result = driver.cancel_trade(&mut *session.trade_transport()).map_err(link_trade_err_to_transport);
+                if result.is_ok() && need == FlowNeed::CancelTradeAndLeave { driver.leave_trade(); }
+                result
             }
             FlowNeed::ConfirmTrade => {
                 let Some(session) = self.link_session.as_mut() else {
@@ -8437,8 +8452,8 @@ mod link_trade_movie_name_fidelity_tests {
         local.confirm_trade(&mut local_wire).unwrap();
         assert_eq!(remote.poll(&mut remote_wire), LinkTradePollResult::PeerConfirmed);
         remote.confirm_trade(&mut remote_wire).unwrap();
-        assert!(matches!(remote.poll(&mut remote_wire), LinkTradePollResult::TradeExecute { .. }));
         assert_eq!(local.poll(&mut local_wire), LinkTradePollResult::PeerConfirmed);
+        assert!(matches!(remote.poll(&mut remote_wire), LinkTradePollResult::TradeExecute { .. }));
         assert!(matches!(local.poll(&mut local_wire), LinkTradePollResult::TradeExecute { .. }));
 
         let mut game = PokemonGame::new(GameVersion::Red);
@@ -8572,11 +8587,12 @@ mod link_stats_cry_fidelity_tests {
             None,
         );
         g.audio = Some(AudioOutput::new_pcm());
+        let first_move = if species == Species::Pikachu { MoveId::Thundershock } else { MoveId::Tackle };
         let mon = create_pokemon_with_moves(
             species,
             25,
             [0x99, 0x88],
-            [MoveId::Tackle, MoveId::None, MoveId::None, MoveId::None],
+            [first_move, MoveId::None, MoveId::None, MoveId::None],
         )
         .unwrap();
         g.save_data.party = pokered_core::pokemon::party::Party::from(vec![mon]);
@@ -8809,6 +8825,155 @@ mod link_stats_cry_fidelity_tests {
         ));
     }
 
+    fn choose_actual_trade(g: &mut PokemonGame) {
+        g.update(&button(GbButton::A));
+        g.update(&button(GbButton::Right));
+        g.update(&button(GbButton::A));
+    }
+
+    fn both_selected_pair() -> (PokemonGame, PokemonGame) {
+        let (mut host, mut peer) = paired_trade_room();
+        choose_actual_trade(&mut host); choose_actual_trade(&mut peer);
+        let idle = InputState::new();
+        for _ in 0..20 { host.update(&idle); peer.update(&idle); }
+        assert!(matches!(host.link_cable.phase(), CableClubPhase::TradeConfirm { .. }));
+        assert!(matches!(peer.link_cable.phase(), CableClubPhase::TradeConfirm { .. }));
+        (host, peer)
+    }
+
+    #[test]
+    fn actual_confirmation_no_is_not_a_list_cancel() {
+        let (mut host, mut peer) = both_selected_pair();
+        let host_party = serde_json::to_value(&host.save_data.party).unwrap();
+        let peer_party = serde_json::to_value(&peer.save_data.party).unwrap();
+        let idle = InputState::new();
+        host.update(&button(GbButton::B));
+        peer.update(&idle);
+        for g in [&mut host, &mut peer] {
+            assert_eq!(g.link_cable.phase(), &CableClubPhase::TradeSelect);
+            assert_eq!(g.link_cable.text_box(), Some(crate::link::cable_club::TEXT_TRADE_CANCELED.to_string()));
+            g.update(&button(GbButton::A)); g.update(&idle);
+        }
+        peer.update(&button(GbButton::Down)); peer.update(&button(GbButton::A));
+        host.update(&idle);
+        assert_eq!(host.link_cable.phase(), &CableClubPhase::TradeSelect, "earlier NO must not count as own list CANCEL");
+        assert_eq!(peer.link_cable.phase(), &CableClubPhase::TradeWaitingPeer);
+        assert_eq!(serde_json::to_value(&host.save_data.party).unwrap(), host_party);
+        assert_eq!(serde_json::to_value(&peer.save_data.party).unwrap(), peer_party);
+        host.update(&button(GbButton::Down)); host.update(&button(GbButton::A));
+        for _ in 0..20 { host.update(&idle); peer.update(&idle); }
+        assert_eq!(host.link_cable.phase(), &CableClubPhase::InRoom);
+        assert_eq!(peer.link_cable.phase(), &CableClubPhase::InRoom);
+    }
+
+    #[test]
+    fn actual_peer_cancel_does_not_interrupt_stats_and_voids_both_indices() {
+        let (mut host, mut peer) = paired_trade_room();
+        let idle = InputState::new();
+        peer.update(&button(GbButton::A)); peer.update(&idle);
+        peer.update(&button(GbButton::A));
+        assert!(peer.link_cable.stats().is_some());
+        host.update(&button(GbButton::Down)); host.update(&button(GbButton::A));
+        peer.update(&idle);
+        assert!(peer.link_cable.stats().is_some(), "serial cancel waits for our choice");
+        assert!(peer.link_cable.text_box().is_none());
+        peer.update(&button(GbButton::B)); peer.update(&button(GbButton::A)); peer.update(&idle);
+        choose_actual_trade(&mut peer);
+        host.update(&idle);
+        assert_eq!(host.link_cable.phase(), &CableClubPhase::TradeSelect);
+        assert!(host.link_cable.cancel_selected());
+        assert_eq!(peer.link_cable.phase(), &CableClubPhase::TradeSelect);
+        assert!(peer.link_cable.text_box().is_none());
+        host.update(&button(GbButton::Up)); choose_actual_trade(&mut host);
+        peer.update(&idle);
+        assert_eq!(peer.link_cable.phase(), &CableClubPhase::TradeSelect, "voided old index must not confirm a new round");
+        choose_actual_trade(&mut peer);
+        for _ in 0..20 { host.update(&idle); peer.update(&idle); }
+        assert!(matches!(host.link_cable.phase(), CableClubPhase::TradeConfirm { .. }));
+        assert!(matches!(peer.link_cable.phase(), CableClubPhase::TradeConfirm { .. }));
+    }
+
+    #[test]
+    fn actual_yes_then_no_rejects_without_payload_error_or_party_change() {
+        let (mut host, mut peer) = both_selected_pair();
+        let host_party = serde_json::to_value(&host.save_data.party).unwrap();
+        let peer_party = serde_json::to_value(&peer.save_data.party).unwrap();
+        let idle = InputState::new();
+        peer.update(&button(GbButton::A)); // YES first; our NO follows while its messages arrive.
+        host.update(&button(GbButton::B));
+        for _ in 0..20 { host.update(&idle); peer.update(&idle); }
+        assert_eq!(host.link_cable.phase(), &CableClubPhase::TradeSelect);
+        assert_eq!(peer.link_cable.phase(), &CableClubPhase::TradeSelect);
+        assert_eq!(serde_json::to_value(&host.save_data.party).unwrap(), host_party);
+        assert_eq!(serde_json::to_value(&peer.save_data.party).unwrap(), peer_party);
+    }
+
+    #[test]
+    fn actual_trade_lists_clamp_and_watch_cancel_a_and_up_only() {
+        let (mut host, mut peer) = paired_trade_room();
+        let idle = InputState::new();
+        host.update(&button(GbButton::Up));
+        assert_eq!(host.link_cable.party_select().unwrap().cursor(), 0);
+        host.update(&button(GbButton::B));
+        assert_eq!(host.link_cable.phase(), &CableClubPhase::TradeSelect);
+        host.update(&button(GbButton::Down));
+        assert!(host.link_cable.cancel_selected());
+        for key in [GbButton::Down, GbButton::B, GbButton::Left, GbButton::Right] {
+            host.update(&button(key)); host.update(&idle);
+            assert!(host.link_cable.cancel_selected());
+            assert_eq!(host.link_cable.phase(), &CableClubPhase::TradeSelect);
+        }
+        host.update(&button(GbButton::Up));
+        assert!(!host.link_cable.cancel_selected());
+        assert_eq!(host.link_cable.peer_cursor(), None);
+        host.update(&button(GbButton::Right));
+        host.update(&button(GbButton::B));
+        assert_eq!(host.link_cable.peer_cursor(), Some(0), "B not watched by peer list");
+        host.update(&button(GbButton::Down));
+        assert!(host.link_cable.cancel_selected());
+        host.update(&button(GbButton::Up));
+        assert_eq!(host.link_cable.peer_cursor(), None, "CANCEL UP returns own list");
+        assert_eq!(host.link_cable.party_select().unwrap().cursor(), 0);
+        host.update(&button(GbButton::Down));
+        host.update(&button(GbButton::A));
+        assert_eq!(host.link_cable.phase(), &CableClubPhase::TradeWaitingPeer);
+        // Receiving $f does not print confirmation-rejection text or consume
+        // an extra A; our own CANCEL must acknowledge it and leave too.
+        peer.update(&idle);
+        assert!(peer.link_cable.text_box().is_none());
+        peer.update(&button(GbButton::Down));
+        assert!(peer.link_cable.cancel_selected());
+        peer.update(&button(GbButton::A));
+        for _ in 0..20 { host.update(&idle); peer.update(&idle); }
+        assert_eq!(host.link_cable.phase(), &CableClubPhase::InRoom);
+        assert_eq!(peer.link_cable.phase(), &CableClubPhase::InRoom);
+        assert_eq!(host.overworld.state.current_map, MapId::TradeCenter);
+        assert_eq!(peer.overworld.state.current_map, MapId::TradeCenter);
+    }
+
+    #[test]
+    fn actual_trade_list_simultaneous_keys_keep_original_priority() {
+        let (mut host, _peer) = paired_trade_room();
+        let mut down_a = InputState::new(); down_a.press(GbButton::Down); down_a.press(GbButton::A);
+        host.update(&down_a);
+        assert_eq!(host.link_cable.local_action(), Some((0, false)));
+        assert!(!host.link_cable.cancel_selected());
+        host.update(&button(GbButton::B));
+        host.update(&button(GbButton::Right));
+        host.update(&down_a);
+        assert_eq!(host.link_cable.stats().unwrap().pokemon().species, Species::Pikachu);
+        assert!(!host.link_cable.cancel_selected());
+        host.update(&button(GbButton::B));
+        host.update(&button(GbButton::A));
+        host.update(&button(GbButton::Down));
+        assert!(host.link_cable.cancel_selected());
+        let mut up_a = InputState::new();
+        up_a.press(GbButton::Up); up_a.press(GbButton::A);
+        host.update(&up_a);
+        assert_eq!(host.link_cable.phase(), &CableClubPhase::TradeWaitingPeer,
+            "CANCEL watches A before UP");
+    }
+
     fn unequal_party_pair() -> (PokemonGame, PokemonGame) {
         use pokered_core::overworld::Direction;
         let mut host = fixture(Species::Bulbasaur, 3, Direction::Right);
@@ -8867,6 +9032,37 @@ mod link_stats_cry_fidelity_tests {
         assert_eq!(peer.link_cable.peer_cursor(), Some(2));
         peer.update(&button(GbButton::Left));
         assert_eq!(peer.link_cable.party_select().unwrap().cursor(), 1);
+    }
+
+    #[test]
+    #[ignore = "writes matched cancel and rejection captures to FIDELITY_LINK_CAPTURES"]
+    fn capture_cancel_and_rejection() {
+        let dir = PathBuf::from(std::env::var("FIDELITY_LINK_CAPTURES").unwrap());
+        std::fs::create_dir_all(&dir).unwrap();
+        let idle = InputState::new();
+        let mut records = Vec::new();
+        let mut capture = |stage: &str, g: &mut PokemonGame| {
+            let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+            g.draw(&mut fb);
+            fb.save_png(&dir.join(format!("{stage}.png"))).unwrap();
+            records.push(serde_json::json!({"stage":stage,"frame":g.frame_count,
+                "phase":format!("{:?}",g.link_cable.phase()),
+                "party":serde_json::to_value(&g.save_data.party).unwrap()}));
+        };
+        let (mut host, mut peer) = paired_trade_room();
+        host.update(&button(GbButton::Down)); host.update(&idle);
+        capture("cancel-row", &mut host);
+        host.update(&button(GbButton::A)); host.update(&idle); peer.update(&idle);
+        capture("cancel-wait", &mut host);
+        peer.update(&button(GbButton::Down)); peer.update(&idle);
+        peer.update(&button(GbButton::A)); peer.update(&idle); host.update(&idle);
+        for _ in 0..20 { host.update(&idle); peer.update(&idle); }
+        capture("sequential-exit", &mut peer);
+        let (mut host, mut peer) = both_selected_pair();
+        peer.update(&button(GbButton::A)); host.update(&button(GbButton::B));
+        for _ in 0..20 { host.update(&idle); peer.update(&idle); }
+        capture("yes-no", &mut host);
+        std::fs::write(dir.join("frames.json"), serde_json::to_string_pretty(&records).unwrap()).unwrap();
     }
 
     #[test]

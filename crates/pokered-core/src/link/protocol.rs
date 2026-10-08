@@ -68,6 +68,8 @@ pub enum NetworkMessage {
     SelectMon(u8),
     ConfirmTrade,
     CancelTrade,
+    /// NO in TRADE_CANCEL_MENU, distinct from the list's CANCEL ($f).
+    RejectTrade,
     TradeComplete(Pokemon),
 
     Disconnect,
@@ -90,8 +92,8 @@ pub enum LinkBattleResult {
 }
 
 impl NetworkMessage {
-    /// Version 3 requires party previews before trade confirmation.
-    pub const PROTOCOL_VERSION: u8 = 3;
+    /// Version 4 distinguishes selection cancellation from confirmation rejection.
+    pub const PROTOCOL_VERSION: u8 = 4;
 
     pub fn is_compatible_version(version: u8) -> bool {
         version == Self::PROTOCOL_VERSION

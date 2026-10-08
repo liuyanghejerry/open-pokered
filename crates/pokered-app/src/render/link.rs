@@ -123,7 +123,7 @@ fn draw_trade_party_list(flow: &CableClubFlow, fb: &mut FrameBuffer, language: L
             } else {
                 "YOUR PARTY"
             },
-            flow.peer_cursor().is_none().then_some(sel.cursor()),
+            (flow.peer_cursor().is_none() && !flow.cancel_selected()).then_some(sel.cursor()),
         ),
         (
             flow.remote_party(),
@@ -159,13 +159,9 @@ fn draw_trade_party_list(flow: &CableClubFlow, fb: &mut FrameBuffer, language: L
         painter.draw_glyph(TilePos::new(if trade_selected { 11 } else { 1 }, 16), '▶', Rgba::INK_BLACK);
         return;
     }
-    painter.draw_text(
-        TilePos::new(1, 16),
-        if is_zh {
-            "左右切换 A选择 B取消"
-        } else {
-            "L/R:SIDE  A:OK  B:BACK"
-        },
-        Rgba::INK_BLACK,
-    );
+    painter.draw_text_box(pokered_ui::TileRect::new(0, 15, 11, 3), Rgba::INK_BLACK);
+    painter.draw_text(TilePos::new(2, 16), if is_zh { "取消" } else { "CANCEL" }, Rgba::INK_BLACK);
+    if flow.cancel_selected() {
+        painter.draw_glyph(TilePos::new(1, 16), '▶', Rgba::INK_BLACK);
+    }
 }

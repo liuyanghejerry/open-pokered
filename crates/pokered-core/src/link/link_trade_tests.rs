@@ -212,6 +212,10 @@ fn test_full_trade_execute() {
     mgr_b.confirm_trade(&mut t_b, pokemon_b.clone()).unwrap();
     assert!(matches!(mgr_b.state(), LinkTradeState::Trading { .. }));
 
+    // A must consume B's YES before emitting its own Pokemon payload.
+    let result_a = mgr_a.poll_blocking(&mut t_a);
+    assert_eq!(result_a, LinkTradePollResult::PeerConfirmed);
+
     let result_b = mgr_b.poll_blocking(&mut t_b);
     assert!(matches!(
         result_b,
@@ -222,9 +226,6 @@ fn test_full_trade_execute() {
         }
     ));
     assert_eq!(*mgr_b.state(), LinkTradeState::Completed);
-
-    let result_a = mgr_a.poll_blocking(&mut t_a);
-    assert_eq!(result_a, LinkTradePollResult::PeerConfirmed);
 
     let result_a = mgr_a.poll_blocking(&mut t_a);
     assert!(matches!(
@@ -257,10 +258,10 @@ fn test_peer_confirm_and_mon_arrive_before_local_confirm() {
     let pokemon_a = make_test_pokemon(Species::Pikachu, 25);
     let pokemon_b = make_test_pokemon(Species::Charizard, 36);
 
-    // A confirms; B's poll consumes BOTH of A's messages back-to-back
-    // (ConfirmTrade, then TradeComplete) without confirming in between —
-    // exactly the real-game frame order.
-    mgr_a.confirm_trade(&mut t_a, pokemon_a).unwrap();
+    // Preserve the early-payload regression by explicitly simulating a legacy
+    // sender. Current clients emit only ConfirmTrade until both sides say YES.
+    mgr_a.confirm_trade(&mut t_a, pokemon_a.clone()).unwrap();
+    t_a.send(NetworkMessage::TradeComplete(pokemon_a)).unwrap();
     assert_eq!(
         mgr_b.poll_blocking(&mut t_b),
         LinkTradePollResult::PeerConfirmed
@@ -379,6 +380,7 @@ fn test_reset_for_new_trade() {
     mgr_a.confirm_trade(&mut t_a, pokemon_a).unwrap();
     mgr_b.poll_blocking(&mut t_b);
     mgr_b.confirm_trade(&mut t_b, pokemon_b).unwrap();
+    assert_eq!(mgr_a.poll_blocking(&mut t_a), LinkTradePollResult::PeerConfirmed);
     mgr_b.poll_blocking(&mut t_b);
     assert_eq!(*mgr_b.state(), LinkTradeState::Completed);
 
@@ -491,9 +493,9 @@ fn run_to_trade_execute(
     d_a.confirm_trade(t_a).unwrap();
     assert_eq!(d_b.poll_blocking(t_b), LinkTradePollResult::PeerConfirmed);
     d_b.confirm_trade(t_b).unwrap();
+    assert_eq!(d_a.poll_blocking(t_a), LinkTradePollResult::PeerConfirmed);
     let r_b = d_b.poll_blocking(t_b);
     assert!(matches!(r_b, LinkTradePollResult::TradeExecute { .. }));
-    assert_eq!(d_a.poll_blocking(t_a), LinkTradePollResult::PeerConfirmed);
     let r_a = d_a.poll_blocking(t_a);
     assert!(matches!(r_a, LinkTradePollResult::TradeExecute { .. }));
     (r_a, r_b)
@@ -925,9 +927,9 @@ fn driver_reset_and_trade_again() {
     d_a.confirm_trade(&mut t_a).unwrap();
     d_b.poll_blocking(&mut t_b);
     d_b.confirm_trade(&mut t_b).unwrap();
-    d_b.poll_blocking(&mut t_b);
-    d_a.poll_blocking(&mut t_a);
-    d_a.poll_blocking(&mut t_a);
+    assert_eq!(d_a.poll_blocking(&mut t_a), LinkTradePollResult::PeerConfirmed);
+    assert!(matches!(d_b.poll_blocking(&mut t_b), LinkTradePollResult::TradeExecute { .. }));
+    assert!(matches!(d_a.poll_blocking(&mut t_a), LinkTradePollResult::TradeExecute { .. }));
     let mut dex2 = Pokedex::new();
     d_a.apply_exchange(&mut dex2).unwrap();
     d_b.apply_exchange(&mut dex2).unwrap();

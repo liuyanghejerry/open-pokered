@@ -227,6 +227,13 @@ fn execute(
         FlowNeed::SelectMon(idx) => trade
             .select_mon(&mut *session.trade_transport(), *idx)
             .map_err(trade_err_to_transport),
+        FlowNeed::SelectMonAgainstCancel(idx) => trade.select_mon_against_cancel(&mut *session.trade_transport(), *idx).map_err(trade_err_to_transport),
+        FlowNeed::ResumeSelection => { trade.resume_selection(); Ok(()) },
+        FlowNeed::RejectTrade => trade.reject_trade(&mut *session.trade_transport()).map_err(trade_err_to_transport),
+        FlowNeed::CancelTradeAndLeave => {
+            trade.cancel_trade(&mut *session.trade_transport()).map_err(trade_err_to_transport).unwrap();
+            trade.leave_trade(); Ok(())
+        },
         FlowNeed::CancelTrade => trade
             .cancel_trade(&mut *session.trade_transport())
             .map_err(trade_err_to_transport),
@@ -357,6 +364,16 @@ fn battle_declined_shows_link_canceled() {
 }
 
 // ── Trade flow ─────────────────────────────────────────────────────
+
+fn choose_list_cancel(flow: &mut CableClubFlow, party: &[pokered_core::battle::state::Pokemon]) -> FlowNeed {
+    assert_eq!(flow.update(no_input(), party), FlowNeed::None);
+    let cursor = flow.party_select().unwrap().cursor();
+    for _ in cursor..party.len() {
+        assert_eq!(flow.update(pokered_core::party_screen::PartyScreenInput { down: true, ..no_input() }, party), FlowNeed::None);
+    }
+    assert!(flow.cancel_selected());
+    flow.update(a_input(), party)
+}
 
 // Original own-party A opens STATS / TRADE; only choosing TRADE sends a mon.
 fn choose_trade(
@@ -500,10 +517,9 @@ fn trade_flow_select_confirm_execute() {
     assert_eq!(need, FlowNeed::ConfirmTrade);
     execute(&mut p.host_session, &mut p.host_flow, &mut p.host_battle, &mut p.host_trade, need);
 
-    // Both sides receive the exchanged mon → cutscene pending on each side.
-    // (The confirm + the mon arrive as two wire messages, so each side may
-    // need two polls — the game loop polls every frame.)
-    pump_trade(&mut p.host_session, &mut p.host_trade, &mut p.host_flow);
+    // Guest consumes the host's YES before sending its Pokemon payload.
+    // The actual game loop polls both actors each frame; preserve that order.
+    pump_trade(&mut p.guest_session, &mut p.guest_trade, &mut p.guest_flow);
     pump_trade(&mut p.host_session, &mut p.host_trade, &mut p.host_flow);
     assert_eq!(*p.host_flow.phase(), CableClubPhase::TradeAnim);
     assert_eq!(
@@ -575,10 +591,10 @@ fn trade_flow_select_confirm_execute() {
     assert!(p.host_flow.prompt().unwrap().0.contains("CHARIZARD"));
 }
 
-/// Cancelling the trade selection returns both sides to selection with the
-/// original's "Too bad! The trade was canceled!" text.
+/// A selected mon exchanged against CANCEL redraws the list silently;
+/// TradeCanceled belongs to the later confirmation menu.
 #[test]
-fn trade_cancel_shows_canceled_text() {
+fn selection_cancel_redraws_without_confirmation_rejection_text() {
     let mut p = pair();
     p.host_flow.note_presence(true, true);
     p.guest_flow.note_presence(true, true);
@@ -592,25 +608,22 @@ fn trade_cancel_shows_canceled_text() {
     pump_trade(&mut p.host_session, &mut p.host_trade, &mut p.host_flow);
     assert_eq!(*p.host_flow.phase(), CableClubPhase::TradeSelect);
 
-    // Host picks a mon; the guest cancels → host sees the canceled text and
-    // returns to selection.
+    // Original choseTrade receives $f and redraws the list without the
+    // confirmation-stage TradeCanceled message.
     let _ = p.host_flow.update(no_input(), &party2());
     let need = choose_trade(&mut p.host_flow, &party2());
     assert_eq!(need, FlowNeed::SelectMon(0));
     execute(&mut p.host_session, &mut p.host_flow, &mut p.host_battle, &mut p.host_trade, need);
 
     pump_trade(&mut p.guest_session, &mut p.guest_trade, &mut p.guest_flow);
-    // Guest backs out of the confirm with B.
-    let need = p.guest_flow.update(b_input(), &party2());
+    // Guest chooses the bottom CANCEL item before selecting a mon.
+    let need = choose_list_cancel(&mut p.guest_flow, &party2());
     assert_eq!(need, FlowNeed::CancelTrade);
     execute(&mut p.guest_session, &mut p.guest_flow, &mut p.guest_battle, &mut p.guest_trade, need);
 
     pump_trade(&mut p.host_session, &mut p.host_trade, &mut p.host_flow);
     assert_eq!(*p.host_flow.phase(), CableClubPhase::TradeSelect);
-    assert_eq!(
-        p.host_flow.text_box().as_deref(),
-        Some(TEXT_TRADE_CANCELED)
-    );
+    assert_eq!(p.host_flow.text_box(), None);
 }
 
 // ── Disconnect ─────────────────────────────────────────────────────
@@ -671,11 +684,11 @@ fn both_cancel_returns_to_room() {
 
     // Both sides cancel from the selection screen.
     let _ = p.host_flow.update(no_input(), &party2());
-    let need = p.host_flow.update(b_input(), &party2());
+    let need = choose_list_cancel(&mut p.host_flow, &party2());
     assert_eq!(need, FlowNeed::CancelTrade);
     execute(&mut p.host_session, &mut p.host_flow, &mut p.host_battle, &mut p.host_trade, need);
     let _ = p.guest_flow.update(no_input(), &party2());
-    let need = p.guest_flow.update(b_input(), &party2());
+    let need = choose_list_cancel(&mut p.guest_flow, &party2());
     assert_eq!(need, FlowNeed::CancelTrade);
     execute(&mut p.guest_session, &mut p.guest_flow, &mut p.guest_battle, &mut p.guest_trade, need);
 

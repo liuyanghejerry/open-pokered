@@ -610,14 +610,14 @@ fn screen_frozen_after_result_for_frontend_handoff() {
     assert_eq!(a.phase(), &LinkDriverPhase::Finished);
 }
 
-/// Both activities share the handshake: reject peers that cannot exchange
-/// the party previews required by the current trade protocol.
+/// Both activities share the handshake: reject older protocols without
+/// current trade semantics and unknown future protocols.
 #[test]
-fn handshake_rejects_peers_without_trade_previews() {
+fn handshake_rejects_incompatible_trade_protocols() {
     use crate::link::link_battle::{LinkBattleManager, LinkBattlePollResult};
     use crate::link::protocol::NetworkMessage;
     use crate::link::transport::{ChannelTransport, NetworkTransport};
-    for version in [1, 2, 4] {
+    for version in [1, 2, 3, NetworkMessage::PROTOCOL_VERSION + 1] {
         let (mut a, mut b) = ChannelTransport::new_pair();
         let mut manager = LinkBattleManager::new();
         b.send(NetworkMessage::Hello { version }).unwrap();
