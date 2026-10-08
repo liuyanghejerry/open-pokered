@@ -9,6 +9,8 @@
 | `surf-entry` | `PalletTown (5,13)`，面向前方水面（通常为水 tile `0x14`） | 使用 SURF；停止在上水文字完成并可移动 | 文字首帧、运输状态切换帧、玩家/冲浪 sprite bbox、推进轨迹 | 确认文字、玩家推进到水面、冲浪精灵/运输状态、后续水面移动 |
 | `cut-tree` | `VermilionCity (15,17)`，面向有效 CUT 树（前方 tile `0x3d`） | 使用 CUT；停止在砍树文字完成、地图稳定 | whiteout/fade 时长、CUT OAM bbox/帧序列、树块变化帧、文字首帧 | 白屏/重载时序、树块替换、CUT OAM/覆盖层、音效与文字顺序 |
 | `ledge-down` | `Route1 (10,4)`，面向下方台阶/ledge | 按住下方向直到 `(10,6)`；单独截取第一跳 | trigger→stable 时长、player Y、背景累计 Y、最大单帧背景位移、落点提交帧 | 角色弧线和背景滚动必须组合一致；已知 reference 窗口为 37 帧，背景分 16 次 × 2px 平滑滚动，不能在落地时一次跳 32px |
+| `overworld-origin` | 同一原作实机 SAVE，`ViridianPokecenter (13,4)`，实际标题菜单 Continue；方向输入前朝下，先空走时钟 120 帧 | 左方向按住 16 帧，第 16 帧释放；录制 `t=-1..99` 至站稳 | 连续 PNG、玩家 OAM / 背景、坐标提交与 walk_counter、实际输入、两轮重现；几何和行走时序分开量化 | 玩家 sprite-state `(64,60)`；背景地面格 `(64,64)`；硬件 OAM `+8/+16` 在 LCD 抵消。普通 OverworldLoop 两次 DelayFrame，不能把八次推进误称八个硬件帧。 |
+| `stats-pc-transition` | `docs/screenshots/fidelity-82-85/fixture.sav`，实际 Continue→面向上→PC→Bill PC→DEPOSIT / WITHDRAW→STATS | 各按键按住 2 帧，第三帧释放；分别连续记录进入、翻页、退出至稳定操作菜单 | palette/NR50、画面阶段、species/level/moves/数据来源、鸣叫起止、输入边界、两轮重现 | 源码 `StatusScreen` / `StatusScreen2` / `GetMaxPP`。不能仅改 loadedMoves 推算耗时：GetMaxPP 读取队伍/箱子实际招式。箱子需 CalcStats；此特定 PC 夹具返回完整清屏帧 1..6、菜单输入帧 6。 |
 
 ## 原版实现锚点
 

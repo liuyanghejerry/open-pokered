@@ -11,7 +11,7 @@
 
 use pokered_app::render::draw_overworld;
 use pokered_core::game_state::Lang;
-use pokered_core::overworld::{HealingMachinePhase, HealingMachineState, OverworldScreen};
+use pokered_core::overworld::{Direction, HealingMachinePhase, HealingMachineState, OverworldScreen};
 use pokered_data::maps::MapId;
 use dotzuki_engine::render_config::RenderConfig;
 use pokered_renderer::{resource::ResourceManager, FrameBuffer, Rgba};
@@ -30,7 +30,7 @@ fn render_frame(
     fb: &mut FrameBuffer,
 ) {
     fb.clear(Rgba::WHITE);
-    draw_overworld(screen, rm, fb, Lang::default());
+    draw_overworld(screen, rm, fb, Lang::En);
 }
 
 #[test]
@@ -41,8 +41,9 @@ fn render_healing_machine_full_sequence() {
     // Create an OverworldScreen for Viridian Pokemon Center.
     let mut screen = OverworldScreen::new(MapId::ViridianPokecenter, None, pokered_core::data::impl_traits::PokemonRedData);
     // Position the player near the nurse counter.
-    screen.state.player.x = 4;
+    screen.state.player.x = 3;
     screen.state.player.y = 3;
+    screen.state.player.facing = Direction::Up;
 
     let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
 
@@ -50,7 +51,7 @@ fn render_healing_machine_full_sequence() {
     screen.pending_healing_machine = Some(HealingMachineState {
         phase: HealingMachinePhase::HealPartyMember {
             member_index: 0,
-            total_members: 0,
+            total_members: 6,
         },
         frames_remaining: 0,
         pokeballs_visible: 0,
@@ -116,4 +117,56 @@ fn save_frame(fb: &FrameBuffer, filename: &str) {
     }
     img.save(filename).expect("Failed to save PNG");
     eprintln!("  Saved: {}", filename);
+}
+
+/// Original dbsprite coordinates are raw OAM: subtract X=8, Y=16.
+/// Keep this oracle independent of renderer offsets and viewport constants.
+#[test]
+fn canonical_healing_overlay_matches_original_oam_and_palette() {
+    use pokered_renderer::palette::Palette;
+    use pokered_renderer::resource::AssetCategory;
+    let mut screen = OverworldScreen::new(MapId::ViridianPokecenter, None, pokered_core::data::impl_traits::PokemonRedData);
+    screen.state.player.x = 3; screen.state.player.y = 3; screen.state.player.facing = Direction::Up;
+    let mut resources = Some(create_resource_manager());
+    let tiles = resources.as_mut().unwrap().load_asset(AssetCategory::Overworld, "heal_machine.png").unwrap().tileset.clone();
+    let mut background = FrameBuffer::new(RenderConfig::new(160,144), Rgba::WHITE);
+    render_frame(&mut screen, &mut resources, &mut background);
+    for flash in [false, true] {
+        let colors = if flash { [Rgba::TRANSPARENT, Rgba::rgb(85,85,85), Rgba::WHITE, Rgba::BLACK] }
+            else { [Rgba::TRANSPARENT, Rgba::WHITE, Rgba::rgb(85,85,85), Rgba::BLACK] };
+        let palette = Palette::new(&colors);
+        let mut expected = background.clone();
+        for (x,y,tile,flip) in [(44,20,0,false),(40,27,1,false),(48,27,1,true),
+            (40,32,1,false),(48,32,1,true),(40,37,1,false),(48,37,1,true)] {
+            for dy in 0..8u32 { for dx in 0..8u32 {
+                let source_x = if flip { 7-dx } else { dx };
+                let color = tiles.get(tile).render_row(dy as usize, &palette)[source_x as usize];
+                if color != Rgba::TRANSPARENT { expected.set_pixel(x+dx,y+dy,color); }
+            } }
+        }
+        screen.pending_healing_machine = Some(HealingMachineState {
+            phase: HealingMachinePhase::HealPartyMember { member_index: 6, total_members: 6 },
+            frames_remaining: 10, pokeballs_visible: 6, flash_active: flash,
+        });
+        let mut actual = FrameBuffer::new(RenderConfig::new(160,144), Rgba::WHITE);
+        render_frame(&mut screen, &mut resources, &mut actual);
+        for y in 0..144 { for x in 0..160 {
+            assert_eq!(actual.get_pixel(x,y),expected.get_pixel(x,y), "healing flash={flash} at {x},{y}");
+        } }
+    }
+}
+
+#[test]
+#[ignore = "matched canonical healing-frame screenshot; not an animation recording"]
+fn capture_healing_origin_90() {
+    let output = std::path::PathBuf::from(std::env::var("FIDELITY_HEAL_ORIGIN_CAPTURE").unwrap());
+    let mut screen = OverworldScreen::new(MapId::ViridianPokecenter, None, pokered_core::data::impl_traits::PokemonRedData);
+    screen.state.player.x = 3; screen.state.player.y = 3; screen.state.player.facing = Direction::Up;
+    screen.pending_healing_machine = Some(HealingMachineState {
+        phase: HealingMachinePhase::HealPartyMember { member_index: 6, total_members: 6 },
+        frames_remaining: 10, pokeballs_visible: 6, flash_active: false,
+    });
+    let mut fb = FrameBuffer::new(RenderConfig::new(160,144), Rgba::WHITE);
+    render_frame(&mut screen, &mut Some(create_resource_manager()), &mut fb);
+    fb.save_png(&output).unwrap();
 }

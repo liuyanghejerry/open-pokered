@@ -30,6 +30,13 @@ use pokered_ui::{menus, Ui};
 use super::apply_gb_palette;
 use super::blit_single_tile_flipped;
 
+// ResetPlayerSpriteData stores screen X=$40, Y=$3c. PrepareOAMData adds
+// hardware OAM offsets (+8,+16), which the LCD subtracts again. Background
+// cells align at (64,64): actors extend four pixels above their ground cell.
+const PLAYER_SCREEN_X: i32 = 0x40;
+const PLAYER_SCREEN_Y: i32 = 0x3c;
+const ACTOR_CELL_Y_OFFSET: i32 = -4;
+
 // Script reading/vending menus need more room than the two-entry YES/NO box.
 fn draw_script_choice(
     screen: &OverworldScreen,
@@ -1028,8 +1035,8 @@ fn draw_overworld_impl(
 
     let player_tx = screen.state.player.x as i32 * 2;
     let player_ty = screen.state.player.y as i32 * 2;
-    let screen_center_tx = 9_i32;
-    let screen_center_ty = 8_i32;
+    let screen_center_tx = PLAYER_SCREEN_X / TILE_SIZE as i32;
+    let screen_center_ty = (PLAYER_SCREEN_Y - ACTOR_CELL_Y_OFFSET) / TILE_SIZE as i32;
     let view_origin_tx = player_tx - screen_center_tx;
     let view_origin_ty = player_ty - screen_center_ty;
 
@@ -1394,8 +1401,8 @@ fn draw_overworld_impl(
             let base_tile = frame * 4;
             let tpr = cached.source_size.0 / TILE_SIZE;
 
-            let player_px_x = screen_center_tx as u32 * TILE_SIZE;
-            let player_px_y = screen_center_ty as u32 * TILE_SIZE;
+            let player_px_x = PLAYER_SCREEN_X as u32;
+            let player_px_y = PLAYER_SCREEN_Y as u32;
 
             // The player stays centered while the camera traverses both tiles;
             // only the original PlayerJumpingYScreenCoords arc moves the sprite.
@@ -1610,7 +1617,7 @@ fn draw_overworld_impl(
                 };
 
                 let npc_px_x = npc_screen_tx * TILE_SIZE as i32 + walk_dx - view_sub_x;
-                let npc_px_y = npc_screen_ty * TILE_SIZE as i32 + walk_dy - view_sub_y;
+                let npc_px_y = npc_screen_ty * TILE_SIZE as i32 + ACTOR_CELL_Y_OFFSET + walk_dy - view_sub_y;
 
                 let sprite_size = (TILE_SIZE * 2) as i32;
                 if npc_px_x <= -sprite_size
@@ -1667,7 +1674,7 @@ fn draw_overworld_impl(
                     let npc_screen_tx = (npc.x as i32 + preview.step_offset_x) * 2 - view_origin_tx;
                     let npc_screen_ty = (npc.y as i32 + preview.step_offset_y) * 2 - view_origin_ty;
                     let npc_px_x = npc_screen_tx * TILE_SIZE as i32 - view_sub_x;
-                    let npc_px_y = npc_screen_ty * TILE_SIZE as i32 - view_sub_y;
+                    let npc_px_y = npc_screen_ty * TILE_SIZE as i32 + ACTOR_CELL_Y_OFFSET - view_sub_y;
 
                     let sprite_size = (TILE_SIZE * 2) as i32;
                     if npc_px_x <= -sprite_size
@@ -1735,8 +1742,8 @@ fn draw_overworld_impl(
                     GRAYSCALE_PALETTE.colors[2],
                     GRAYSCALE_PALETTE.colors[3],
                 ]);
-                let bx = screen_center_tx * TILE_SIZE as i32 + ox as i32 - 0x40;
-                let by = screen_center_ty * TILE_SIZE as i32 + oy as i32 - 0x3c;
+                let bx = PLAYER_SCREEN_X + ox as i32 - 0x40;
+                let by = PLAYER_SCREEN_Y + oy as i32 - 0x3c;
                 let base_tile = [2, 5][flap as usize] * 4;
                 for r in 0..2u32 {
                     for c in 0..2u32 {
@@ -1767,8 +1774,7 @@ fn draw_overworld_impl(
                 let ts = &cached.tileset;
                 let tpr = cached.source_size.0 / TILE_SIZE;
                 let anchor = if bubble.npc_id == "player" {
-                    Some((screen_center_tx as i32 * TILE_SIZE as i32,
-                          screen_center_ty as i32 * TILE_SIZE as i32))
+                    Some((PLAYER_SCREEN_X, PLAYER_SCREEN_Y))
                 } else {
                     screen.npc_states.iter()
                         .find(|npc| npc.visible && format!("{}", npc.npc_index) == bubble.npc_id)
@@ -1781,7 +1787,7 @@ fn draw_overworld_impl(
                                 }
                             } else { (0, 0) };
                             ((npc.x as i32 * 2 - view_origin_tx) * TILE_SIZE as i32 + walk_dx - view_sub_x,
-                             (npc.y as i32 * 2 - view_origin_ty) * TILE_SIZE as i32 + walk_dy - view_sub_y)
+                             (npc.y as i32 * 2 - view_origin_ty) * TILE_SIZE as i32 + ACTOR_CELL_Y_OFFSET + walk_dy - view_sub_y)
                         })
                 };
                 if let Some((emote_x, anchor_y)) = anchor {
@@ -1805,8 +1811,8 @@ fn draw_overworld_impl(
         // 8×8 sprite from the 8×24 fishing_rod sheet. `rod_piece` returns the
         // FishingRodOAM offsets (player_animations.asm:471-476) relative to
         // the player sprite's top-left (the original's absolute OAM coords,
-        // authored for its bottom-anchored player, re-anchored to this port's
-        // centered player at screen (72,64)). Drawn on top of the player/NPCs
+        // converted to offsets from the original screen anchor (64,60)).
+        // Drawn on top of the player/NPCs
         // like OAM sprite 39.
         if let Some(anim) = screen.fishing_anim.as_ref() {
             if anim.rod_visible() {
@@ -1814,8 +1820,8 @@ fn draw_overworld_impl(
                     pokered_core::overworld::presentation::FishingAnimState::rod_piece(
                         anim.facing(),
                     );
-                let rod_x = screen_center_tx as i32 * TILE_SIZE as i32 + rod_dx;
-                let rod_y = screen_center_ty as i32 * TILE_SIZE as i32 + rod_dy;
+                let rod_x = PLAYER_SCREEN_X + rod_dx;
+                let rod_y = PLAYER_SCREEN_Y + rod_dy;
                 // The bite shake toggles the rod's OAM Y too
                 // (.ShakePlayerSprite, player_animations.asm:413-416).
                 let rod_y = rod_y + anim.player_shake_offset();
@@ -1843,8 +1849,8 @@ fn draw_overworld_impl(
                 if let Ok(cached) = rm.load_emote("shock") {
                     let ts = &cached.tileset;
                     let tpr = cached.source_size.0 / TILE_SIZE;
-                    let emote_x = screen_center_tx as i32 * TILE_SIZE as i32;
-                    let emote_y = screen_center_ty as i32 * TILE_SIZE as i32 - TILE_SIZE as i32 * 2;
+                    let emote_x = PLAYER_SCREEN_X;
+                    let emote_y = PLAYER_SCREEN_Y - TILE_SIZE as i32 * 2;
                     for row in 0..2_u32 {
                         for col in 0..2_u32 {
                             let tile_idx = row as usize * tpr as usize + col as usize;
@@ -1884,11 +1890,11 @@ fn draw_overworld_impl(
                     &obp1_pal
                 };
 
-                // PokeCenterOAMData offsets relative to nurse sprite top-left.
-                // Nurse renders at map pos (3,1) as a 16×16 NPC sprite.
-                // Original OAM screen positions (player at (3,3), nurse screen=(72,32)):
-                //   monitor: (44,20) → delta (-28,-12)
-                //   balls: (40,27)(48,27)(40,32)(48,32)(40,37)(48,37)
+                // dbsprite stores raw OAM Y/X, without the hardware offsets.
+                // For healing at player (3,3), nurse (3,1): ground-cell origin
+                // (64,32), sprite top-left (64,28). The overlay uses the ground
+                // cell, so these offsets retain monitor Y=20, balls Y=27/32/37.
+                // LCD monitor=(44,20), balls=(40,27)(48,27)(40,32)(48,32)(40,37)(48,37).
                 const MONITOR_DX: i32 = -20;
                 const MONITOR_DY: i32 = -12;
                 const BALL_OAM: [(i32, i32, bool); 6] = [
@@ -1946,7 +1952,7 @@ fn draw_overworld_impl(
             let dust = screen.boulder_dust;
             let (ax, ay) = dust.anchor();
             let anchor_px_x = (ax as i32 * 2 - view_origin_tx) * TILE_SIZE as i32;
-            let anchor_px_y = (ay as i32 * 2 - view_origin_ty) * TILE_SIZE as i32;
+            let anchor_px_y = (ay as i32 * 2 - view_origin_ty) * TILE_SIZE as i32 + ACTOR_CELL_Y_OFFSET;
             let (bx, by) = dust.base_offset();
             let step = dust.step() as i32;
             if let Ok(cached) = rm.load_asset(AssetCategory::Overworld, "smoke.png") {
@@ -1986,8 +1992,8 @@ fn draw_overworld_impl(
         // been replaced; this 2×2 OAM copy of the tree holds the old shape,
         // then separates its rows horizontally one pixel per update.
         if let Some(cut) = screen.cut_anim {
-            let player_x = screen_center_tx * TILE_SIZE as i32;
-            let player_y = screen_center_ty * TILE_SIZE as i32;
+            let player_x = PLAYER_SCREEN_X;
+            let player_y = PLAYER_SCREEN_Y;
             let (base_x, base_y) = cut.base_offset();
             let spread = cut.tree_spread_px();
             let normal = Palette::new(&[
@@ -3191,14 +3197,11 @@ mod elevator_edge_tests {
         assert!(s.boulder_dust.is_active(), "push started the dust");
 
         let after = render_screen(&mut s);
-        // The dust block for a DOWN push sits at the boulder's base: player
-        // screen top-left (72,64) + BoulderDustAnimationOffsets (8,52) →
-        // (80,116), a 16×16 block of 8×8 smoke tiles (dust_smoke.asm).
-        // Sample the RIGHT column (88..96): the boulder sprite (16×16,
-        // x 72..88) never covers it before or after the slide, so any pixel
-        // change there must come from the dust.
+        // This presence test samples the dust's right column outside the
+        // boulder sprite. Exact raw-OAM conversion for dust is a separate
+        // audit; this only verifies the push starts drawing the smoke asset.
         let dust_area_changed =
-            (88..96).any(|x| (116..132).any(|y| before.get_pixel(x, y) != after.get_pixel(x, y)));
+            (80..88).any(|x| (112..128).any(|y| before.get_pixel(x, y) != after.get_pixel(x, y)));
         assert!(
             dust_area_changed,
             "dust pixels appear at the boulder's base during the push"
@@ -3234,13 +3237,13 @@ mod elevator_edge_tests {
         let walk_fb = render_screen(&mut walking);
         let bike_fb = render_screen(&mut biking);
 
-        // Player sprite rect: screen center (72,64), 16×16. Compare the top
-        // half (y 64..72) only — the bottom half can be redrawn by the grass
+        // Original player sprite top-left (64,60), 16×16. Compare the top
+        // half (y 60..68) only — the bottom half can be redrawn by the grass
         // overlay, the top half is sheet pixels alone.
         let top_half = |fb: &FrameBuffer| {
             (0..8)
                 .flat_map(|dy| (0..16).map(move |dx| (dy, dx)))
-                .map(|(dy, dx)| fb.get_pixel(72 + dx as u32, 64 + dy as u32))
+                .map(|(dy, dx)| fb.get_pixel(64 + dx as u32, 60 + dy as u32))
                 .collect::<Vec<_>>()
         };
         let walk_top = top_half(&walk_fb);
@@ -3303,10 +3306,10 @@ mod fly_arrival_tests {
             draw_overworld(&mut screen, &mut resources, &mut fb, Lang::En);
             let step = (frame / 3).min(11) as usize;
             let (y, x) = FLY_ANIM_COORDS[step];
-            // The original ($40,$3c) sprite-state anchor is the player's
-            // screen location (9,8) tiles, without a second OAM bias.
-            let bx = 9 * 8 + i32::from(x) - 0x40;
-            let by = 8 * 8 + i32::from(y) - 0x3c;
+            // DoFlyAnimation writes raw sprite screen pixels; PrepareOAMData
+            // adds hardware offsets which the LCD cancels again.
+            let bx = i32::from(x);
+            let by = i32::from(y);
             let image = if step % 2 == 0 { 2 } else { 5 };
             let mut changed = 0;
             for py in 0..144 {

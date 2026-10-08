@@ -78,7 +78,7 @@ fn assert_sprite(fb: &FrameBuffer, asset: &str, frame: usize, flip: bool) {
             if c != Rgba::TRANSPARENT {
                 ink += 1;
                 assert_eq!(
-                    fb.get_pixel(72 + x, 64 + y),
+                    fb.get_pixel(64 + x, 60 + y),
                     Some(c),
                     "{asset} frame={frame} flip={flip} at ({x},{y})"
                 );
@@ -120,7 +120,7 @@ fn leaving_surf_restores_red_and_biking_keeps_its_sprite() {
     s.state.player.transport = TransportMode::Surfing;
     let surfing = render(&mut s);
     assert!(
-        (64..80).any(|y| (72..88).any(|x| walking.get_pixel(x, y) != surfing.get_pixel(x, y))),
+        (60..76).any(|y| (64..80).any(|x| walking.get_pixel(x, y) != surfing.get_pixel(x, y))),
         "surf must replace RedSprite"
     );
     assert_sprite(&surfing, "seel", 0, false);

@@ -3,118 +3,75 @@ name: visual-verify
 description: Verify Pokemon Center healing machine rendering with the visual test harness, expected layout, and OAM-to-screen coordinate reference. Use when diagnosing healing overlay placement or animation rendering.
 ---
 
-# Visual Verification Skill — workspace Healing Machine
+# Visual verification — healing machine
 
-Use this skill to verify the Pokemon Center healing machine animation rendering
-in the workspace project. This skill provides:
-1. A test harness to render the healing machine overlay and save a PNG
-2. Coordinate system reference for OAM → screen-space mapping
-3. Expected visual layout documentation
-
-## Quick Start
-
-To verify the healing machine rendering, run the visual verification test:
+Use the shared renderer harness for layout checks. For animation or timing
+claims, also use `key-animation-differential`: a manually seeded healing frame
+is not a recording of the real nurse interaction.
 
 ```bash
-cd workspace
 cargo test -p pokered-app --test visual_verify_heal_machine -- --nocapture
 ```
 
-The test outputs `heal_machine_frame.png` in the current directory.
+The test writes four frames in the crate working directory. Run from the
+workspace with `gfx/` fetched. For PR comparisons, check out master and the PR
+branch and render the same state; commit screenshots and embed absolute raw
+branch URLs as required by AGENTS.md.
 
-## Coordinate System
+## Original coordinates
 
-### OAM → Screen Mapping
+Primary source: pret/pokered `fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c`,
+`macros/gfx.asm`, `engine/overworld/healing_machine.asm`,
+`home/reset_player_sprite.asm`, and `engine/gfx/sprite_oam.asm`.
 
-The healing machine uses dbsprite OAM coordinates from the original Game Boy.
-The mapping in the Rust renderer is:
+`dbsprite x_tile, y_tile, x_pixel, y_pixel, tile, attributes` emits **raw OAM**:
 
-| dbsprite value | Meaning | Screen pixel formula |
-|---|---|---|
-| `y` (first param) | OAM Y in 8px units | `y * 8` = screen Y |
-| `x` (second param) | OAM X in 8px units | `x * 8` = screen X |
-| sub_y (third param) | sub-pixel Y offset | added directly to screen Y |
-| sub_x (fourth param) | sub-pixel X offset | added directly to screen X |
+- OAM X = `x_tile * 8 + x_pixel`.
+- OAM Y = `y_tile * 8 + y_pixel`.
+- LCD X = OAM X − 8; LCD Y = OAM Y − 16.
 
-**Key rules:**
-- No viewport offset (`view_origin_tx/ty`) — healing machine is a screen overlay
-- No `* 2` metatile multiplier — dbsprite values are OAM units, not map tiles
-- No sub-pixel scroll (`view_sub_x/y`) — fixed position on screen
+The first macro parameter is X, not Y. Do not swap them or confuse the raw
+OAM coordinates with sprite-state screen pixels. `PrepareOAMData` adds hardware
+offsets to character sprite-state coordinates; the LCD subtracts them again.
+`ResetPlayerSpriteData` stores player screen `(64,60)`, while the background
+cell origin under the player is `(64,64)`.
 
-### heal_machine.png Tileset Layout
+The canonical actual healing interaction is player `(3,3)` facing Up toward
+nurse `(3,1)`. The nurse sprite screen top-left is `(64,28)`; its ground-cell
+origin is `(64,32)`. The engine's renderer projects the machine relative to
+that ground cell, so it stays on the machine if a diagnostic fixture moves the
+camera. Do not subtract the character's extra four-pixel Y offset a second
+time from the machine overlay.
 
-The asset is **8×16 pixels** = 2 tiles (1 wide × 2 tall):
+| Sprite | Original dbsprite parameters (X,Y,sub-X,sub-Y) | LCD top-left (X,Y) |
+| --- | --- | --- |
+| Monitor | 6,4,4,4 | 44,20 |
+| Ball 1 | 6,5,0,3 | 40,27 |
+| Ball 2 | 7,5,0,3 | 48,27 |
+| Ball 3 | 6,6,0,0 | 40,32 |
+| Ball 4 | 7,6,0,0 | 48,32 |
+| Ball 5 | 6,6,0,5 | 40,37 |
+| Ball 6 | 7,6,0,5 | 48,37 |
 
-```
-┌─────────────┐
-│  Tile 0     │  ← Monitor tile (8×8 px)
-│  monitor    │
-├─────────────┤
-│  Tile 1     │  ← Pokeball tile (8×8 px)
-│  pokeball   │
-└─────────────┘
-```
+Balls 2/4/6 have `OAM_XFLIP`. Each entry is **one 8×8 sprite**, not a repeated
+16×16 or 32×32 grid. The 8×16 `heal_machine.png` contains monitor tile 0 above
+ball tile 1; the original copy length of three tiles is a documented source
+error (`should be 2`), not an instruction to enlarge the drawing.
 
-- Monitor sprite: **4×4 tile grid** (32×32 px), using tile 0 repeated
-- Pokeball sprites: **2×2 tile grid** (16×16 px) each, using tile 1 repeated
+## Palette and timing
 
-### Expected Sprite Positions (160×144 native resolution)
+`AnimateHealingMachine` writes OBP1 `$e0`:
+`[transparent, white, #555555, black]`. `FlashSprite8Times` XORs `$28`, giving
+`$c8`: `[transparent, #555555, white, black]`. The original swaps white and
+dark gray here, not light gray and dark gray. It adds one ball per party member
+with 30-frame waits, then eight 10-frame flash intervals; verify the real
+sound/fade/fanfare boundaries before declaring an entire sequence aligned.
 
-| Sprite | Screen pixel (x, y) | dbsprite source |
-|---|---|---|
-| Monitor | (32, 48) | `dbsprite 6, 4, 4, 4, $7c, OAM_PAL1` |
-| Ball 1 | (40, 48+3=51) | `dbsprite 6, 5, 0, 3, $7d, OAM_PAL1` |
-| Ball 2 | (40, 56+3=59) | `dbsprite 7, 5, 0, 3, $7d, OAM_PAL1\|OAM_XFLIP` |
-| Ball 3 | (48, 48+0=48) | `dbsprite 6, 6, 0, 0, $7d, OAM_PAL1` |
-| Ball 4 | (48, 56+0=56) | `dbsprite 7, 6, 0, 0, $7d, OAM_PAL1\|OAM_XFLIP` |
-| Ball 5 | (48, 48+5=53) | `dbsprite 6, 6, 0, 5, $7d, OAM_PAL1` |
-| Ball 6 | (48, 56+5=61) | `dbsprite 7, 6, 0, 5, $7d, OAM_PAL1\|OAM_XFLIP` |
+## Checks
 
-Ball layout:
-```
-         (40,51)[B1] (48,48)[B3]
-Monitor:       [B2-flip]    [B4-flip]
-(32,48)        (40,59)      (48,56)
-               [B5]         (48,53)
-               [B6-flip]    (48,61)
-```
-
-### Flash Effect
-
-The flash effect swaps the sprite palette's light-gray and dark-gray colors:
-
-```
-Normal palette:    [transparent, #AAAAAA, #555555, #000000]
-Flash palette:     [transparent, #555555, #AAAAAA, #000000]
-```
-
-Both monitor and pokeball sprites use the same palette — when `flash_active` is true,
-all healing machine sprites flash simultaneously (matching original rOBP1 XOR behavior).
-
-## Debugging Rendering Issues
-
-### Check tile indices
-The tile index formulas in `pokered-app/src/render/overworld.rs`:
-```
-Monitor:  tile 0 repeated 4×4 (32×32 px sprite)
-Pokeball: tile 1 repeated 2×2 (16×16 px sprite)
-```
-
-### Check position formulas
-```
-monitor_x = 4 * TILE_SIZE          (= 32)
-monitor_y = 6 * TILE_SIZE          (= 48)
-ball_x    = px * TILE_SIZE          (px = dbsprite_x)
-ball_y    = py * TILE_SIZE + y_off  (py = dbsprite_y)
-```
-
-If images appear at wrong positions, verify:
-- No `view_origin_*` subtraction
-- No `* 2` multiplier on dbsprite values
-- No `view_sub_*` subtraction
-
-### Expected visual output
-The PNG output should show:
-- A monitor sprite at the top-left area (pixels 32-47, 48-63)
-- 6 pokeball sprites arranged in 2 columns × 3 vertical positions
-- If `flash_active`: sprites use light↔dark swapped palette
+Render the actual nurse interaction for behavioral claims; use the seeded
+harness to inspect monitor/ball geometry and palette. Check tile 0/1 selection,
+horizontal flips, transparent color zero, and the table above at the canonical
+player/nurse positions. Include captured background and actor coordinates in
+the report so camera or sprite-origin changes cannot be mistaken for machine
+placement changes.
