@@ -3885,12 +3885,14 @@ impl PokemonGame {
                     // (LINK BATTLE in the Colosseum, LINK TRADE in the Trade
                     // Center — the original's CableClubLeftGameboy/
                     // CableClubRightGameboy, engine/pokemon/bills_pc.asm).
+                    let mut gameboy_started_this_frame = false;
                     if self.overworld.take_link_start_request() {
                         if !in_cable_room && !self.overworld.unified_flags().get_flag("EVENT_GOT_POKEDEX") {
                             self.overworld.pending_dialogue = Some(pokered_core::overworld::BedroomDialogue::from_message(
                                 &self.localize_dialogue("We're making\npreparations.\nPlease wait.")));
                         } else if linked {
                             if in_cable_room {
+                                gameboy_started_this_frame = true;
                                 let need = self.link_cable.on_gameboy_used(current_map);
                                 self.handle_flow_need(need);
                             } else {
@@ -3946,8 +3948,8 @@ impl PokemonGame {
                             let psi = PartyScreenInput {
                                 up: input.is_just_pressed(GbButton::Up),
                                 down: input.is_just_pressed(GbButton::Down),
-                                a: !cry_holds_input && input.is_just_pressed(GbButton::A),
-                                b: !cry_holds_input && input.is_just_pressed(GbButton::B),
+                                a: !gameboy_started_this_frame && !cry_holds_input && input.is_just_pressed(GbButton::A),
+                                b: !gameboy_started_this_frame && !cry_holds_input && input.is_just_pressed(GbButton::B),
                             };
                             let was_viewing_stats = self.link_cable.stats().is_some();
                             if self.link_cable.menu_button_sound(
@@ -5898,9 +5900,8 @@ impl PokemonGame {
                 };
                 match (kind, accept) {
                     (LinkKind::Battle, true) => {
-                        let Some(driver) = self.link_battle.as_mut() else {
-                            return;
-                        };
+                        let Some(driver) = self.link_battle.as_mut() else { return; };
+                        driver.set_local_party(self.save_data.party.clone());
                         driver.accept_battle()
                     }
                     (LinkKind::Battle, false) => {
@@ -5910,9 +5911,8 @@ impl PokemonGame {
                         driver.decline_battle()
                     }
                     (LinkKind::Trade, true) => {
-                        let Some(driver) = self.link_trade.as_mut() else {
-                            return;
-                        };
+                        let Some(driver) = self.link_trade.as_mut() else { return; };
+                        driver.set_party(self.save_data.party.clone());
                         driver
                             .accept_trade(&mut *session.trade_transport())
                             .map_err(link_trade_err_to_transport)
@@ -8451,8 +8451,11 @@ mod asynchronous_colosseum_fidelity_tests {
         for _ in 0..20 { host.update(&idle); peer.update(&idle); }
         let request = host.link_cable.on_gameboy_used(MapId::Colosseum);
         host.handle_flow_need(request);
-        for _ in 0..20 { host.update(&idle); peer.update(&idle); }
-        assert!(matches!(peer.link_cable.phase(), CableClubPhase::PeerPrompt { .. }));
+        host.update(&a);
+        for _ in 0..100 { host.update(&idle); peer.update(&idle); }
+        assert_eq!(peer.link_cable.phase(), &CableClubPhase::InRoom);
+        let request = peer.link_cable.on_gameboy_used(MapId::Colosseum);
+        peer.handle_flow_need(request);
         peer.update(&a);
         for frame in 0..1200 {
             for g in [&mut host, &mut peer] {
@@ -8742,30 +8745,80 @@ mod link_stats_cry_fidelity_tests {
             peer.update(&idle);
         }
         assert_eq!(host.link_cable.phase(), &CableClubPhase::InRoom);
-        host.update(&button(GbButton::A)); // Actual table/sign interaction, not on_gameboy_used.
-        for _ in 0..120 {
-            host.update(&idle);
-            peer.update(&idle);
-        }
-        assert!(
-            matches!(
-                peer.link_cable.phase(),
-                CableClubPhase::PeerPrompt {
-                    kind: LinkKind::Trade,
-                    ..
-                }
-            ),
-            "{:?}",
-            peer.link_cable.phase()
-        );
+        host.update(&button(GbButton::A)); // Actual table/sign interaction.
+        host.update(&idle); host.update(&idle);
+        assert!(matches!(host.link_cable.phase(), CableClubPhase::JustAMoment { .. }));
+        host.update(&button(GbButton::A)); // Close Just a moment.
+        for _ in 0..120 { host.update(&idle); peer.update(&idle); }
+        assert_eq!(peer.link_cable.phase(), &CableClubPhase::InRoom);
+        peer.update(&button(GbButton::A)); // The guest's own gameboy.
+        peer.update(&idle); peer.update(&idle); // Drain the real scene's linkStart.
+        assert!(matches!(peer.link_cable.phase(), CableClubPhase::JustAMoment { .. }),
+            "phase={:?}, position=({},{}), facing={:?}, dialogue={}, choice={}, request={}",
+            peer.link_cable.phase(), peer.overworld.state.player.x, peer.overworld.state.player.y,
+            peer.overworld.state.player.facing, peer.overworld.pending_dialogue.is_some(),
+            peer.overworld.pending_choice.is_some(), peer.overworld.link_start_requested);
         peer.update(&button(GbButton::A));
-        for _ in 0..120 {
-            host.update(&idle);
-            peer.update(&idle);
-        }
+        for _ in 0..120 { host.update(&idle); peer.update(&idle); }
         assert_eq!(host.link_cable.phase(), &CableClubPhase::TradeSelect);
         assert_eq!(peer.link_cable.phase(), &CableClubPhase::TradeSelect);
         (host, peer)
+    }
+
+    #[test]
+    fn actual_trade_peer_request_does_not_open_menu_away_from_gameboy() {
+        run_link_save_fixture(|| {
+            use pokered_core::overworld::Direction;
+            let mut host = fixture(Species::Bulbasaur, 3, Direction::Right);
+            let mut peer = fixture(Species::Pikachu, 7, Direction::Down);
+            peer.overworld.state.player.y = 6;
+            let (a, b) = ChannelTransport::new_pair();
+            host.attach_link_transport(Box::new(a), LinkRole::Host);
+            peer.attach_link_transport(Box::new(b), LinkRole::Guest);
+            let idle = InputState::new();
+            for _ in 0..120 { host.update(&idle); peer.update(&idle); }
+            assert_eq!(peer.link_cable.phase(), &CableClubPhase::InRoom);
+            host.update(&button(GbButton::A));
+            host.update(&idle); host.update(&idle); host.update(&button(GbButton::A));
+            for _ in 0..120 { host.update(&idle); peer.update(&idle); }
+            assert_eq!(host.link_cable.phase(), &CableClubPhase::WaitingResponse { kind: crate::link::cable_club::LinkKind::Trade });
+            assert_eq!(peer.link_cable.phase(), &CableClubPhase::InRoom,
+                "original waits for each player to use their gameboy; peer request cannot seize overworld input");
+            assert_eq!(peer.link_cable.text_box(), None);
+            assert_eq!(peer.link_trade.as_ref().unwrap().state(), &pokered_core::link::link_trade::LinkTradeState::PeerRequestedTrade,
+                "request really arrived; absence of a prompt is not a missing network message");
+            peer.update(&button(GbButton::A));
+            for _ in 0..3 { peer.update(&idle); host.update(&idle); }
+            assert_eq!(peer.link_cable.phase(), &CableClubPhase::InRoom,
+                "A away from the gameboy cannot accept the pending request");
+            for (key, target) in [(GbButton::Left, (6, 6)), (GbButton::Up, (6, 4))] {
+                for _ in 0..80 {
+                    let moving = peer.overworld.state.player.movement_state != dotzuki_engine::overworld::MovementState::Idle;
+                    let walk_input = button(key);
+                    peer.update(if moving { &idle } else { &walk_input }); host.update(&idle);
+                    if (peer.overworld.state.player.x, peer.overworld.state.player.y) == target
+                        && peer.overworld.state.player.movement_state == dotzuki_engine::overworld::MovementState::Idle { break; }
+                }
+                for _ in 0..20 { peer.update(&idle); host.update(&idle); }
+                assert_eq!((peer.overworld.state.player.x, peer.overworld.state.player.y), target,
+                    "incoming request must leave real walking input available");
+            }
+            peer.update(&button(GbButton::Left));
+            for _ in 0..20 { peer.update(&idle); host.update(&idle); }
+            assert_eq!((peer.overworld.state.player.x, peer.overworld.state.player.y), (6, 4));
+            peer.update(&button(GbButton::A));
+            for _ in 0..2 { peer.update(&idle); host.update(&idle); }
+            assert!(matches!(peer.link_cable.phase(), CableClubPhase::JustAMoment { .. }));
+            peer.update(&button(GbButton::A)); host.update(&idle);
+            for _ in 0..79 { peer.update(&idle); host.update(&idle); }
+            assert!(matches!(peer.link_cable.phase(), CableClubPhase::GameboyDelay { frames_left: 1, .. }),
+                "serial exchange must not start before the original 80-frame wait");
+            assert_eq!(peer.link_trade.as_ref().unwrap().state(), &pokered_core::link::link_trade::LinkTradeState::PeerRequestedTrade);
+            peer.update(&idle); host.update(&idle);
+            for _ in 0..20 { peer.update(&idle); host.update(&idle); }
+            assert_eq!(peer.link_cable.phase(), &CableClubPhase::TradeSelect);
+            assert_eq!(host.link_cable.phase(), &CableClubPhase::TradeSelect);
+        });
     }
 
     #[test]
@@ -9624,6 +9677,45 @@ mod link_stats_cry_fidelity_tests {
             let mut game = ordinary_muted_party_stats();
             game.update(&button(GbButton::B));
             capture("party-stats-early-b", &mut game);
+            std::fs::write(dir.join("frames.json"), serde_json::to_string_pretty(&records).unwrap()).unwrap();
+        });
+    }
+
+    #[test]
+    #[ignore = "writes matched gameboy startup captures to FIDELITY_LINK_CAPTURES"]
+    fn capture_gameboy_startup_fidelity() {
+        run_link_save_fixture(|| {
+            use pokered_core::overworld::Direction;
+            let dir = PathBuf::from(std::env::var("FIDELITY_LINK_CAPTURES").unwrap());
+            std::fs::create_dir_all(&dir).unwrap();
+            let mut host = fixture(Species::Bulbasaur, 3, Direction::Right);
+            let mut peer = fixture(Species::Pikachu, 7, Direction::Down);
+            peer.overworld.state.player.y = 6;
+            let (a, b) = ChannelTransport::new_pair();
+            host.attach_link_transport(Box::new(a), LinkRole::Host);
+            peer.attach_link_transport(Box::new(b), LinkRole::Guest);
+            let idle = InputState::new();
+            for _ in 0..120 { host.update(&idle); peer.update(&idle); }
+            host.update(&button(GbButton::A)); peer.update(&idle);
+            for _ in 0..2 { host.update(&idle); peer.update(&idle); }
+            host.update(&button(GbButton::A)); peer.update(&idle);
+            let mut records = Vec::new();
+            let mut capture = |stage: &str, g: &mut PokemonGame| {
+                let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+                g.draw(&mut fb);
+                fb.save_png(&dir.join(format!("{stage}.png"))).unwrap();
+                records.push(serde_json::json!({"stage":stage,"frame":g.frame_count,
+                    "phase":format!("{:?}",g.link_cable.phase()),
+                    "party":serde_json::to_value(&g.save_data.party).unwrap(),
+                    "position":[g.overworld.state.player.x,g.overworld.state.player.y],
+                    "text":g.link_cable.text_box()}));
+            };
+            for _ in 0..79 { host.update(&idle); peer.update(&idle); }
+            capture("before-serial-frame79", &mut host);
+            host.update(&idle); peer.update(&idle);
+            capture("serial-frame80", &mut host);
+            for _ in 0..40 { host.update(&idle); peer.update(&idle); }
+            capture("peer-request-away", &mut peer);
             std::fs::write(dir.join("frames.json"), serde_json::to_string_pretty(&records).unwrap()).unwrap();
         });
     }

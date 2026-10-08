@@ -114,19 +114,15 @@ pub enum CableClubPhase {
     /// Connected and inside Colosseum/TradeCenter: the remote player's
     /// avatar is present; the gameboy on the table is live.
     InRoom,
-    /// The player used the gameboy: "Just a moment." box; the request was
-    /// already sent.
+    /// The player used their gameboy: "Just a moment." before serial work.
     JustAMoment {
         kind: LinkKind,
     },
-    /// Our request is in flight — modal "Waiting...!" box.
+    /// CableClub_DoBattleOrTrade waits 80 frames after the text closes.
+    GameboyDelay { kind: LinkKind, frames_left: u8 },
+    /// Our serial exchange is in flight — modal "PLEASE WAIT!" box.
     WaitingResponse {
         kind: LinkKind,
-    },
-    /// The peer requested — yes/no prompt ("Start a link battle/trade?").
-    PeerPrompt {
-        kind: LinkKind,
-        selected: u8,
     },
     /// Battle party exchange in progress — modal "PLEASE WAIT!" box.
     Exchanging,
@@ -173,8 +169,8 @@ impl CableClubPhase {
                 | CableClubPhase::ReceptionWarpDelay { .. }
                 | CableClubPhase::ReceptionCancelDelay { .. }
                 | CableClubPhase::JustAMoment { .. }
+                | CableClubPhase::GameboyDelay { .. }
                 | CableClubPhase::WaitingResponse { .. }
-                | CableClubPhase::PeerPrompt { .. }
                 | CableClubPhase::Exchanging
                 | CableClubPhase::TradeSelect
                 | CableClubPhase::TradeWaitingPeer
@@ -190,6 +186,7 @@ impl CableClubPhase {
 #[derive(Debug)]
 pub struct CableClubFlow {
     phase: CableClubPhase,
+    pending_peer_request: Option<LinkKind>,
     /// Trade party selector (created when the trade menu opens).
     selector: Option<PartySelectState>,
     remote_party: Vec<Pokemon>,
@@ -226,13 +223,12 @@ pub const TEXT_RECEPTION_WAIT: &str = "OK, please wait\njust a moment.";
 pub const TEXT_TRADE_COMPLETED: &str = "Trade completed!";
 pub const TEXT_TRADE_CANCELED: &str = "Too bad! The trade\nwas canceled!";
 pub const TEXT_LINK_CANCELED: &str = "The link was\ncanceled.";
-pub const TEXT_PROMPT_BATTLE: &str = "Start a link\nbattle?";
-pub const TEXT_PROMPT_TRADE: &str = "Start a link\ntrade?";
 
 impl CableClubFlow {
     pub fn new() -> Self {
         CableClubFlow {
             phase: CableClubPhase::Inactive,
+            pending_peer_request: None,
             selector: None,
             remote_party: Vec::new(),
             local_name: String::new(),
@@ -273,8 +269,9 @@ impl CableClubFlow {
             CableClubPhase::JustAMoment { kind }
             | CableClubPhase::ReceptionWait { kind, .. }
             | CableClubPhase::ReceptionWarpDelay { kind, .. }
+            | CableClubPhase::GameboyDelay { kind, .. }
             | CableClubPhase::WaitingResponse { kind }
-            | CableClubPhase::PeerPrompt { kind, .. } => Some(*kind),
+            => Some(*kind),
             CableClubPhase::Exchanging | CableClubPhase::BattleSetup | CableClubPhase::Battle => {
                 Some(LinkKind::Battle)
             }
@@ -302,7 +299,7 @@ impl CableClubFlow {
                 Some(TEXT_RECEPTION_WAIT.to_string())
             }
             CableClubPhase::JustAMoment { .. } => Some(TEXT_JUST_A_MOMENT.to_string()),
-            CableClubPhase::WaitingResponse { .. } => Some(TEXT_WAITING.to_string()),
+            CableClubPhase::WaitingResponse { .. } => Some(TEXT_PLEASE_WAIT.to_string()),
             CableClubPhase::Exchanging => Some(TEXT_PLEASE_WAIT.to_string()),
             CableClubPhase::TradeWaitingPeer | CableClubPhase::TradeWaitingConfirm => {
                 self.transient_text.clone().or_else(|| Some(TEXT_WAITING.to_string()))
@@ -324,13 +321,6 @@ impl CableClubFlow {
                 "the link, we have\nto save the game.".to_string(),
                 *selected,
             )),
-            CableClubPhase::PeerPrompt { kind, selected } => {
-                let title = match kind {
-                    LinkKind::Battle => TEXT_PROMPT_BATTLE,
-                    LinkKind::Trade => TEXT_PROMPT_TRADE,
-                };
-                Some((title.to_string(), *selected))
-            }
             CableClubPhase::TradeConfirm { selected, .. } => {
                 let local_name = self
                     .selector
@@ -417,6 +407,7 @@ impl CableClubFlow {
             CableClubPhase::Inactive | CableClubPhase::InRoom
         ) {
             self.phase = CableClubPhase::Inactive;
+            self.pending_peer_request = None;
         }
     }
 
@@ -441,20 +432,11 @@ impl CableClubFlow {
     }
 
     pub fn on_gameboy_used(&mut self, map: MapId) -> FlowNeed {
-        let kind = link_kind_for_room(map);
-        match self.phase {
-            CableClubPhase::InRoom | CableClubPhase::Inactive => {
-                self.phase = CableClubPhase::JustAMoment { kind };
-                self.transient_text = None;
-                FlowNeed::RequestLink(kind)
-            }
-            // Already mid-flow (e.g. the peer requested while the player was
-            // at the table): pressing A again answers the pending request.
-            CableClubPhase::PeerPrompt { kind, .. } => {
-                FlowNeed::ReplyRequest { kind, accept: true }
-            }
-            _ => FlowNeed::None,
+        if matches!(self.phase, CableClubPhase::InRoom | CableClubPhase::Inactive) {
+            self.phase = CableClubPhase::JustAMoment { kind: link_kind_for_room(map) };
+            self.transient_text = None;
         }
+        FlowNeed::None
     }
 
     /// HandleMenuInput plays PRESS_AB only when a watched key exits the
@@ -640,32 +622,23 @@ impl CableClubFlow {
                 }
             }
             CableClubPhase::JustAMoment { kind } => {
-                if input.a {
-                    self.phase = CableClubPhase::WaitingResponse { kind };
+                if input.a || input.b {
+                    self.phase = CableClubPhase::GameboyDelay { kind, frames_left: 80 };
                 }
                 FlowNeed::None
             }
-            CableClubPhase::PeerPrompt { kind, mut selected } => {
-                if input.up {
-                    selected = 0;
-                    self.phase = CableClubPhase::PeerPrompt { kind, selected };
-                } else if input.down {
-                    selected = 1;
-                    self.phase = CableClubPhase::PeerPrompt { kind, selected };
-                } else if input.a || input.b {
-                    let accept = input.a && selected == 0;
-                    let need = FlowNeed::ReplyRequest { kind, accept };
-                    self.phase = match (kind, accept) {
-                        (LinkKind::Battle, true) => CableClubPhase::Exchanging,
-                        (LinkKind::Trade, true) => CableClubPhase::TradeSelect,
-                        _ => CableClubPhase::InRoom,
-                    };
-                    if !accept {
-                        self.transient_text = Some(TEXT_LINK_CANCELED.to_string());
+            CableClubPhase::GameboyDelay { kind, frames_left } => {
+                if frames_left > 1 {
+                    self.phase = CableClubPhase::GameboyDelay { kind, frames_left: frames_left - 1 };
+                    FlowNeed::None
+                } else {
+                    self.phase = CableClubPhase::WaitingResponse { kind };
+                    if self.pending_peer_request.take() == Some(kind) {
+                        FlowNeed::ReplyRequest { kind, accept: true }
+                    } else {
+                        FlowNeed::RequestLink(kind)
                     }
-                    return need;
                 }
-                FlowNeed::None
             }
             CableClubPhase::TradeSelect => {
                 if self.transient_text.is_some() && (input.a || input.b) {
@@ -823,9 +796,13 @@ impl CableClubFlow {
             FlowNeed::ConfirmTrade => {
                 self.remote_selection = None;
             }
-            FlowNeed::ReplyRequest { accept, .. } => {
+            FlowNeed::ReplyRequest { kind, accept } => {
                 if *accept {
                     self.transient_text = None;
+                    self.phase = match kind {
+                        LinkKind::Trade => CableClubPhase::TradeSelect,
+                        LinkKind::Battle => CableClubPhase::Exchanging,
+                    };
                 }
             }
             _ => {}
@@ -868,16 +845,15 @@ impl CableClubFlow {
         use LinkDriverEvent::*;
         match ev {
             Connected => FlowNeed::None,
-            BattleRequested => match self.phase {
-                CableClubPhase::InRoom | CableClubPhase::Inactive => {
-                    self.phase = CableClubPhase::PeerPrompt {
-                        kind: LinkKind::Battle,
-                        selected: 0,
-                    };
-                    FlowNeed::None
+            BattleRequested => {
+                // Incoming serial readiness cannot interrupt walking or our
+                // own gameboy text/delay. Each player starts at their table.
+                if matches!(self.phase, CableClubPhase::InRoom | CableClubPhase::Inactive
+                    | CableClubPhase::JustAMoment { .. } | CableClubPhase::GameboyDelay { .. }) {
+                    self.pending_peer_request = Some(LinkKind::Battle);
                 }
-                _ => FlowNeed::None,
-            },
+                FlowNeed::None
+            }
             BattleAccepted => {
                 // Reached via: our request accepted, or (guest role) the
                 // simultaneous-gameboy auto-accept. The driver already sent
@@ -912,16 +888,15 @@ impl CableClubFlow {
         use LinkTradePollResult::*;
         match ev {
             Pending => FlowNeed::None,
-            TradeRequested => match self.phase {
-                CableClubPhase::InRoom | CableClubPhase::Inactive => {
-                    self.phase = CableClubPhase::PeerPrompt {
-                        kind: LinkKind::Trade,
-                        selected: 0,
-                    };
-                    FlowNeed::None
+            TradeRequested => {
+                // Incoming serial readiness cannot interrupt walking or our
+                // own gameboy text/delay. Each player starts at their table.
+                if matches!(self.phase, CableClubPhase::InRoom | CableClubPhase::Inactive
+                    | CableClubPhase::JustAMoment { .. } | CableClubPhase::GameboyDelay { .. }) {
+                    self.pending_peer_request = Some(LinkKind::Trade);
                 }
-                _ => FlowNeed::None,
-            },
+                FlowNeed::None
+            }
             TradeAccepted => {
                 self.phase = CableClubPhase::TradeSelect;
                 FlowNeed::None
@@ -1012,6 +987,7 @@ impl CableClubFlow {
     /// "The link was canceled."). Shared by both drivers' `Disconnected`
     /// events.
     fn on_disconnected(&mut self) {
+        self.pending_peer_request = None;
         let text = match self.phase {
             CableClubPhase::TradeSelect
             | CableClubPhase::TradeWaitingPeer
@@ -1064,6 +1040,7 @@ impl CableClubFlow {
     }
 
     fn reset(&mut self) {
+        self.pending_peer_request = None;
         self.phase = CableClubPhase::Inactive;
         self.clear_selection();
     }
