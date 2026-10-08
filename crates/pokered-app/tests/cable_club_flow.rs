@@ -409,8 +409,19 @@ fn trade_flow_select_confirm_execute() {
         pokered_core::stats_screen::StatsPage::Moves
     );
     p.host_flow.update(b_input(), &party2());
-    p.host_flow.update(b_input(), &party2());
     assert!(p.host_flow.stats().is_none());
+    assert_eq!(p.host_flow.peer_cursor(), Some(0));
+    // Original TradeCenter_DisplayStats also runs StatusScreen then
+    // StatusScreen2: B advances the first page and A exits the second.
+    assert_eq!(p.host_flow.update(a_input(), &party2()), FlowNeed::None);
+    p.host_flow.update(b_input(), &party2());
+    assert_eq!(
+        p.host_flow.stats().unwrap().page(),
+        pokered_core::stats_screen::StatsPage::Moves
+    );
+    p.host_flow.update(a_input(), &party2());
+    assert!(p.host_flow.stats().is_none());
+    assert_eq!(p.host_flow.peer_cursor(), Some(0));
     p.host_flow
         .update_with_navigation(no_input(), &party2(), true);
 

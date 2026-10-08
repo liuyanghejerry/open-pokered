@@ -52,21 +52,12 @@ impl StatsScreenState {
     }
 
     pub fn update(&mut self, input: StatsScreenInput) -> StatsScreenAction {
-        if input.a {
-            self.page = match self.page {
-                StatsPage::Stats => StatsPage::Moves,
-                StatsPage::Moves => StatsPage::Stats,
-            };
-            return StatsScreenAction::Continue;
-        }
-
-        if input.b {
+        // Original callers display StatusScreen then StatusScreen2,
+        // each returning on A or B (WaitForTextScrollButtonPress).
+        if input.a || input.b {
             match self.page {
-                StatsPage::Stats => return StatsScreenAction::BackToParty,
-                StatsPage::Moves => {
-                    self.page = StatsPage::Stats;
-                    return StatsScreenAction::Continue;
-                }
+                StatsPage::Stats => self.page = StatsPage::Moves,
+                StatsPage::Moves => return StatsScreenAction::BackToParty,
             }
         }
 
@@ -109,45 +100,15 @@ mod tests {
     }
 
     #[test]
-    fn test_a_toggles_to_moves_and_back() {
-        let pokemon = make_test_pokemon(Species::Bulbasaur);
-        let mut screen = StatsScreenState::new(pokemon);
-
-        // A → Moves
-        let action = screen.update(StatsScreenInput { a: true, b: false });
-        assert_eq!(action, StatsScreenAction::Continue);
-        assert_eq!(screen.page(), StatsPage::Moves);
-
-        // A → Stats
-        let action = screen.update(StatsScreenInput { a: true, b: false });
-        assert_eq!(action, StatsScreenAction::Continue);
-        assert_eq!(screen.page(), StatsPage::Stats);
-    }
-
-    #[test]
-    fn test_b_on_moves_returns_to_stats_page() {
-        let pokemon = make_test_pokemon(Species::Bulbasaur);
-        let mut screen = StatsScreenState::new(pokemon);
-
-        // Go to Moves page
-        screen.update(StatsScreenInput { a: true, b: false });
-        assert_eq!(screen.page(), StatsPage::Moves);
-
-        // B on Moves → back to Stats
-        let action = screen.update(StatsScreenInput { a: false, b: true });
-        assert_eq!(action, StatsScreenAction::Continue);
-        assert_eq!(screen.page(), StatsPage::Stats);
-    }
-
-    #[test]
-    fn test_b_on_stats_returns_back_to_party() {
-        let pokemon = make_test_pokemon(Species::Bulbasaur);
-        let mut screen = StatsScreenState::new(pokemon);
-
-        // B on Stats → BackToParty
-        let action = screen.update(StatsScreenInput { a: false, b: true });
-        assert_eq!(action, StatsScreenAction::BackToParty);
-        assert_eq!(screen.page(), StatsPage::Stats);
+    fn either_button_advances_both_original_status_screens_then_returns() {
+        for first in [StatsScreenInput { a: true, b: false }, StatsScreenInput { a: false, b: true }] {
+            for second in [StatsScreenInput { a: true, b: false }, StatsScreenInput { a: false, b: true }] {
+                let mut screen = StatsScreenState::new(make_test_pokemon(Species::Bulbasaur));
+                assert_eq!(screen.update(first), StatsScreenAction::Continue);
+                assert_eq!(screen.page(), StatsPage::Moves);
+                assert_eq!(screen.update(second), StatsScreenAction::BackToParty);
+            }
+        }
     }
 
     #[test]

@@ -961,6 +961,14 @@ def m32_lapras(g):
     g.evidence("m32")
 
 
+def unlock_card_door(g, map_name, x, y, flag):
+    # A blackout keeps the opened door. It is now walkable floor, so trying
+    # to face it again can walk through it instead of starting a dialogue.
+    if not g.d.cmd(cmd="get_flags")["data"].get(flag):
+        talk_object(g, map_name, x, y)
+    require_flag(g, flag)
+
+
 def challenge_silph_rival(g, max_attempts=4):
     """Retry observed blackouts from Saffron; preserve genuine driver errors.
 
@@ -974,8 +982,7 @@ def challenge_silph_rival(g, max_attempts=4):
             g.nav_warp(18, 21, "SaffronCity", "SilphCo1F")
             g.nav_warp(26, 0, "SilphCo1F", "SilphCo2F")
             g.nav_warp(26, 0, "SilphCo2F", "SilphCo3F")
-            talk_object(g, "SilphCo3F", 17, 9)
-            require_flag(g, "EVENT_SILPH_CO_3_UNLOCKED_DOOR2")
+            unlock_card_door(g, "SilphCo3F", 17, 9, "EVENT_SILPH_CO_3_UNLOCKED_DOOR2")
             g.nav_warp(11, 11, "SilphCo3F", "SilphCo7F")
             g.nav_to(3, 3, "SilphCo7F")
             assert g.cutscene()
@@ -1306,8 +1313,9 @@ def mansion_switch(g, map_name, x, y):
 
 def m38_secret_key(g):
     from playthrough import NavError
-    # Avoid the locked gym's automatic shove at (18,4) while walking west.
-    g.nav_to(10, 5, "CinnabarIsland")
+    # Avoid the gym's shove at (18,4) and the girl's horizontal band on y=5.
+    # Waiting at (11,5) for her to leave (10,5) blocks her only way back.
+    g.nav_to(10, 6, "CinnabarIsland")
     g.nav_warp(6, 3, "CinnabarIsland", "PokemonMansion1F")
     g.nav_warp(5, 10, "PokemonMansion1F", "PokemonMansion2F")
     g.nav_warp(6, 1, "PokemonMansion2F", "PokemonMansion3F")
