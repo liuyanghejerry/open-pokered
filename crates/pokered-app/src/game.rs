@@ -9898,6 +9898,62 @@ mod link_stats_cry_fidelity_tests {
     }
 
     #[test]
+    #[ignore = "writes matched NPC trade dialogue captures to FIDELITY_NPC_TRADE_CAPTURES"]
+    fn capture_npc_trade_dialogue() {
+        run_link_save_fixture(|| {
+            use pokered_core::overworld::Direction;
+            let dir = PathBuf::from(std::env::var("FIDELITY_NPC_TRADE_CAPTURES").unwrap());
+            std::fs::create_dir_all(&dir).unwrap();
+            let idle = InputState::new();
+            let setup = |map, x, y, species| {
+                let mut g = fixture(species,x,Direction::Up);
+                g.audio = None;
+                g.overworld = OverworldScreen::new(map,None,PokemonRedData);
+                g.overworld.state.player.x=x; g.overworld.state.player.y=y;
+                g.overworld.state.player.facing=Direction::Up;
+                g.overworld.run_on_load();
+                for npc in &mut g.overworld.npc_states { npc.movement_type=pokered_core::overworld::NpcMovementType::Stationary; }
+                for _ in 0..120 { g.update(&idle); }
+                g.update(&button(GbButton::A));
+                g
+            };
+            let mut records = Vec::new();
+            let mut capture = |stage: &str, g: &mut PokemonGame| {
+                let mut fb = FrameBuffer::new(RenderConfig::new(160,144),Rgba::WHITE);
+                g.draw(&mut fb); fb.save_png(&dir.join(format!("{stage}.png"))).unwrap();
+                records.push(serde_json::json!({"stage":stage,"frame":g.frame_count,
+                    "map":format!("{:?}",g.overworld.state.current_map),
+                    "position":[g.overworld.state.player.x,g.overworld.state.player.y],
+                    "party":g.save_data.party.iter().map(|m|serde_json::json!({"species":format!("{:?}",m.species),"level":m.level,"moves":m.moves})).collect::<Vec<_>>(),
+                    "dialogue":g.overworld.pending_dialogue.as_ref().map(|d|d.pages().iter().map(|p|format!("{} {}",p.line1,p.line2)).collect::<Vec<_>>())}));
+            };
+            let mut g=setup(MapId::Route2TradeHouse,4,2,Species::Abra);
+            let mut saw_movie=false;
+            let mut done=false;
+            for n in 0..12000 {
+                let input=if n%20==0 {button(GbButton::A)} else {InputState::new()};
+                g.update(&input);
+                saw_movie |= g.trade_anim.is_some();
+                if saw_movie && g.trade_anim.is_none() && g.pending_trade.is_none() { done=true; break; }
+            }
+            assert!(done);for _ in 0..180 {g.update(&idle);}
+            capture("summary-order",&mut g);
+            let mut g=setup(MapId::CeruleanTradeHouse,1,3,Species::Poliwhirl);
+            for _ in 0..180 {g.update(&idle);}
+            capture("cerulean-offer",&mut g);
+            let mut g=setup(MapId::CinnabarLabTradeRoom,1,5,Species::Bulbasaur);
+            let mut wrong=false;
+            for n in 0..12000 {
+                let input=if n%20==0 {button(GbButton::A)} else {InputState::new()};g.update(&input);
+                if g.overworld.pending_dialogue.as_ref().is_some_and(|d|d.pages().iter().any(|p|p.line1.contains("Hmmm?") || p.line1.contains("...This"))) {wrong=true;break;}
+            }
+            assert!(wrong);for _ in 0..180 {g.update(&idle);}
+            capture("wrong-raichu",&mut g);
+            std::fs::write(dir.join("frames.json"),serde_json::to_string_pretty(&records).unwrap()).unwrap();
+        });
+    }
+
+    #[test]
     #[ignore = "writes matched confirmation captures to FIDELITY_LINK_CAPTURES"]
     fn capture_trade_confirmation_keys() {
         run_link_save_fixture(|| {
