@@ -34,15 +34,15 @@ game_scene VermilionTradeHouse {
           traded = tradePokemon("SPEAROW", "FARFETCHD", "DUX")
           @if (traded) {
             setFlag("EVENT_TRADED_FOR_DUX")
-            @speaker("") { @t("Thanks pal!", "谢啦，朋友！") }
             @speaker("") {
               @t("<PLAYER> traded SPEAROW for\nFARFETCH'D!", "<PLAYER>用烈雀换到了大葱鸭！")
             }
+            @speaker("") { @t("Thanks pal!", "谢啦，朋友！") }
           } @else {
             @if (getFlag("NPC_TRADE_CANCELLED")) {
               @speaker("") { @t("That's too bad.", "那太可惜了。") }
             } @else {
-              @speaker("") { @t("Hmmm? This isn't SPEAROW.\n\nThink of me when you get\none.", "嗯？这不是烈雀。\n\n等你抓到一只，记得想到我。") }
+              @speaker("") { @t("...This is no SPEAROW.\n\nIf you get one, trade it\nwith me!", "嗯？这不是烈雀。\n\n等你抓到一只，记得想到我。") }
             }
           }
         }

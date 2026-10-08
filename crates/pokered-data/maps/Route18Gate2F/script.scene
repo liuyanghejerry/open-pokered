@@ -21,14 +21,14 @@ game_scene Route18Gate2F {
           // Real in-game trade (removes SLOWBRO, adds LICKITUNG nicknamed
           // MARC). tradePokemon returns false if the player doesn't actually
           // carry SLOWBRO -> wrong-mon (dialogset CASUAL).
-          // _Thanks1Text + _TradedForText
+          // _TradedForText + _Thanks1Text
           traded = tradePokemon("SLOWBRO", "LICKITUNG", "MARC")
           @if (traded) {
             setFlag("EVENT_GOT_LICKITUNG_FROM_TRADE")
-            @speaker("") { @t("Hey thanks!", "嘿，谢谢！") }
             @speaker("") {
               @t("<PLAYER> traded SLOWBRO for\nLICKITUNG!", "<PLAYER>用呆壳兽换到了大舌\n头！")
             }
+            @speaker("") { @t("Hey thanks!", "嘿，谢谢！") }
           } @else {
             @if (getFlag("NPC_TRADE_CANCELLED")) {
               @speaker("") { @t("Awww! Oh well...", "唉！那就算了吧……") }

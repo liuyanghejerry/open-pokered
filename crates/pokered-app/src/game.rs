@@ -8837,6 +8837,90 @@ mod link_stats_cry_fidelity_tests {
         });
     }
 
+    fn actual_npc_trade_messages(map: MapId, x: u16, y: u16, species: Species, done_flag: Option<&str>, refuse: bool) -> (Vec<String>, Species) {
+        use pokered_core::overworld::Direction;
+        let mut game = fixture(species, x, Direction::Up);
+        game.audio = None;
+        game.overworld = OverworldScreen::new(map, None, PokemonRedData);
+        game.overworld.state.player.x = x;
+        game.overworld.state.player.y = y;
+        game.overworld.state.player.facing = Direction::Up;
+        game.overworld.run_on_load();
+        for npc in &mut game.overworld.npc_states {
+            npc.movement_type = pokered_core::overworld::NpcMovementType::Stationary;
+        }
+        if let Some(flag) = done_flag { game.overworld.set_flag_live(flag, true); }
+        let idle = InputState::new();
+        for _ in 0..120 { game.update(&idle); }
+        game.update(&button(GbButton::A));
+        let mut messages = Vec::new();
+        let mut last = None;
+        let mut started = false;
+        for frame in 0..16000 {
+            if let Some(dialogue) = &game.overworld.pending_dialogue {
+                started = true;
+                let text = dialogue.pages().iter().map(|p|format!("{} {}",p.line1,p.line2)).collect::<Vec<_>>().join(" ");
+                if last.as_ref() != Some(&text) { messages.push(text.clone()); last = Some(text); }
+            } else { last = None; }
+            if started && game.overworld.script_engine_idle() && game.overworld.pending_dialogue.is_none()
+                && game.overworld.pending_choice.is_none() && game.pending_trade.is_none() && game.trade_anim.is_none() {
+                return (messages, game.save_data.party.get(0).unwrap().species);
+            }
+            let input = if frame % 20 == 0 { button(if refuse && game.overworld.pending_choice.is_some() { GbButton::B } else { GbButton::A }) } else { InputState::new() };
+            game.update(&input);
+        }
+        panic!("actual NPC trade did not finish: {messages:?}");
+    }
+
+    #[test]
+    fn actual_npc_trade_summary_precedes_npc_thanks() {
+        run_link_save_fixture(|| {
+            let (messages, received) = actual_npc_trade_messages(MapId::Route2TradeHouse, 4, 2, Species::Abra, None, false);
+            assert_eq!(received, Species::MrMime, "trade completes through the real party selector and movie");
+            let summary = messages.iter().position(|m|m.contains("traded ABRA")).unwrap();
+            let thanks = messages.iter().position(|m|m.contains("Hey thanks!")).unwrap();
+            assert!(summary < thanks, "DoInGameTradeDialogue prints TradedForText then TRADETEXT_THANKS: {messages:?}");
+        });
+    }
+
+    #[test]
+    fn actual_all_npc_trade_branches_match_original_dialog_sets() {
+        run_link_save_fixture(|| {
+            let mut results = Vec::new();
+            for (map,x,y,give,receive,style,flag) in [
+                (MapId::Route11Gate2F,4,3,Species::Nidorino,Species::Nidorina,1,"EVENT_TRADED_FOR_TERRY"),
+                (MapId::Route2TradeHouse,4,2,Species::Abra,Species::MrMime,1,"EVENT_TRADED_FOR_MARCEL"),
+                (MapId::CinnabarLabFossilRoom,7,7,Species::Ponyta,Species::Seel,1,"EVENT_TRADED_FOR_SAILOR"),
+                (MapId::VermilionTradeHouse,3,6,Species::Spearow,Species::Farfetchd,3,"EVENT_TRADED_FOR_DUX"),
+                (MapId::Route18Gate2F,4,3,Species::Slowbro,Species::Lickitung,1,"EVENT_GOT_LICKITUNG_FROM_TRADE"),
+                (MapId::CeruleanTradeHouse,1,3,Species::Poliwhirl,Species::Jynx,2,"EVENT_TRADED_FOR_LOLA"),
+                (MapId::CinnabarLabTradeRoom,1,5,Species::Raichu,Species::Electrode,2,"EVENT_TRADED_FOR_DORIS"),
+                (MapId::CinnabarLabTradeRoom,5,6,Species::Venonat,Species::Tangela,3,"EVENT_TRADED_FOR_CRINKLES"),
+                (MapId::UndergroundPathRoute5,2,4,Species::NidoranM,Species::NidoranF,3,"EVENT_TRADED_FOR_SPOT"),
+            ] {
+                let (intro,thanks,no,wrong,after) = match style {
+                    1 => ("I'm looking for", "Hey thanks!", "Awww!", "What? That's not", "Isn't my old"),
+                    2 => ("Hello there!", "Thanks!", "Well, if you don't want", "Hmmm? This isn't", "went and evolved!"),
+                    _ => ("Hi! Do you have", "Thanks pal!", "That's too bad.", "...This is no", "How is my old"),
+                };
+                let (success,received) = actual_npc_trade_messages(map,x,y,give,None,false);
+                let summary = success.iter().position(|m|m.contains(" traded "));
+                let gratitude = success.iter().position(|m|m.contains(thanks));
+                let (bad,unchanged) = actual_npc_trade_messages(map,x,y,Species::Bulbasaur,None,false);
+                let (declined,untraded) = actual_npc_trade_messages(map,x,y,give,None,true);
+                let (later,_) = actual_npc_trade_messages(map,x,y,give,Some(flag),false);
+                let ok = received == receive && success[0].contains(intro)
+                    && summary.zip(gratitude).is_some_and(|(a,b)|a<b)
+                    && unchanged == Species::Bulbasaur && bad.iter().any(|m|m.contains(wrong))
+                    && untraded == give && declined.iter().any(|m|m.contains(no))
+                    && later.iter().any(|m|m.contains(after)) && !later.iter().any(|m|m.contains(intro))
+                    && (give != Species::NidoranM || (success[0].contains("NIDORAN♂") && success[0].contains("NIDORAN♀")));
+                results.push((map,give,ok,success,bad,declined,later));
+            }
+            assert!(results.iter().all(|r|r.2), "original nine trade dialog sets / input branches: {results:?}");
+        });
+    }
+
     #[test]
     fn actual_gameboy_rejects_wrong_role_and_vertical_facing() {
         run_link_save_fixture(|| {
@@ -9810,6 +9894,62 @@ mod link_stats_cry_fidelity_tests {
             for _ in 0..31 { host.update(&idle); peer.update(&idle); }
             capture("trade-result", &mut host);
             std::fs::write(dir.join("frames.json"), serde_json::to_string_pretty(&records).unwrap()).unwrap();
+        });
+    }
+
+    #[test]
+    #[ignore = "writes matched NPC trade dialogue captures to FIDELITY_NPC_TRADE_CAPTURES"]
+    fn capture_npc_trade_dialogue() {
+        run_link_save_fixture(|| {
+            use pokered_core::overworld::Direction;
+            let dir = PathBuf::from(std::env::var("FIDELITY_NPC_TRADE_CAPTURES").unwrap());
+            std::fs::create_dir_all(&dir).unwrap();
+            let idle = InputState::new();
+            let setup = |map, x, y, species| {
+                let mut g = fixture(species,x,Direction::Up);
+                g.audio = None;
+                g.overworld = OverworldScreen::new(map,None,PokemonRedData);
+                g.overworld.state.player.x=x; g.overworld.state.player.y=y;
+                g.overworld.state.player.facing=Direction::Up;
+                g.overworld.run_on_load();
+                for npc in &mut g.overworld.npc_states { npc.movement_type=pokered_core::overworld::NpcMovementType::Stationary; }
+                for _ in 0..120 { g.update(&idle); }
+                g.update(&button(GbButton::A));
+                g
+            };
+            let mut records = Vec::new();
+            let mut capture = |stage: &str, g: &mut PokemonGame| {
+                let mut fb = FrameBuffer::new(RenderConfig::new(160,144),Rgba::WHITE);
+                g.draw(&mut fb); fb.save_png(&dir.join(format!("{stage}.png"))).unwrap();
+                records.push(serde_json::json!({"stage":stage,"frame":g.frame_count,
+                    "map":format!("{:?}",g.overworld.state.current_map),
+                    "position":[g.overworld.state.player.x,g.overworld.state.player.y],
+                    "party":g.save_data.party.iter().map(|m|serde_json::json!({"species":format!("{:?}",m.species),"level":m.level,"moves":m.moves})).collect::<Vec<_>>(),
+                    "dialogue":g.overworld.pending_dialogue.as_ref().map(|d|d.pages().iter().map(|p|format!("{} {}",p.line1,p.line2)).collect::<Vec<_>>())}));
+            };
+            let mut g=setup(MapId::Route2TradeHouse,4,2,Species::Abra);
+            let mut saw_movie=false;
+            let mut done=false;
+            for n in 0..12000 {
+                let input=if n%20==0 {button(GbButton::A)} else {InputState::new()};
+                g.update(&input);
+                saw_movie |= g.trade_anim.is_some();
+                if saw_movie && g.trade_anim.is_none() && g.pending_trade.is_none() { done=true; break; }
+            }
+            assert!(done);for _ in 0..180 {g.update(&idle);}
+            capture("summary-order",&mut g);
+            let mut g=setup(MapId::CeruleanTradeHouse,1,3,Species::Poliwhirl);
+            for _ in 0..180 {g.update(&idle);}
+            capture("cerulean-offer",&mut g);
+            let mut g=setup(MapId::CinnabarLabTradeRoom,1,5,Species::Bulbasaur);
+            let mut wrong=false;
+            for n in 0..12000 {
+                let input=if n%20==0 {button(GbButton::A)} else {InputState::new()};g.update(&input);
+                if g.overworld.pending_dialogue.as_ref().is_some_and(|d|d.pages().iter().any(|p|p.line1.contains("Hmmm?") || p.line1.contains("...This"))) {wrong=true;break;}
+            }
+            assert!(wrong);for _ in 0..180 {g.update(&idle);}
+            capture("wrong-raichu",&mut g);
+            std::fs::write(dir.join("frames.json"),serde_json::to_string_pretty(&records).unwrap()).unwrap();
         });
     }
 

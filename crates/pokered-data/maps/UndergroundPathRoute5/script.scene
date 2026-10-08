@@ -28,12 +28,12 @@ game_scene UndergroundPathRoute5 {
     @if (getFlag("EVENT_TRADED_FOR_SPOT")) {
       // AfterTrade3Text (dialogset HAPPY)
       @speaker("") {
-        @t("How is my old NIDORAN?\n\nMy NIDORAN is doing great!", "我以前的小尼多兰还好吗？\n\n我的尼多朗过得很好！")
+        @t("How is my old NIDORAN♀?\n\nMy NIDORAN♂ is doing great!", "我以前的小尼多兰还好吗？\n\n我的尼多朗过得很好！")
       }
     } @else {
       // WannaTrade3Text (dialogset HAPPY)
       @speaker("") {
-        @t("Hi! Do you have NIDORAN?\n\nWant to trade it for\nNIDORAN?", "嗨！你有尼多朗吗？\n\n想把它换成尼多兰吗？")
+        @t("Hi! Do you have NIDORAN♂?\n\nWant to trade it for\nNIDORAN♀?", "嗨！你有尼多朗吗？\n\n想把它换成尼多兰吗？")
       }
       @choice {
         @option(@t("YES", "是")) {
@@ -43,15 +43,15 @@ game_scene UndergroundPathRoute5 {
           traded = tradePokemon("NIDORAN_M", "NIDORAN_F", "SPOT")
           @if (traded) {
             setFlag("EVENT_TRADED_FOR_SPOT")
-            @speaker("") { @t("Thanks pal!", "谢啦，朋友！") }
             @speaker("") {
-              @t("<PLAYER> traded NIDORAN for\nNIDORAN!", "<PLAYER>用尼多朗换到了尼多\n兰！")
+              @t("<PLAYER> traded NIDORAN♂ for\nNIDORAN♀!", "<PLAYER>用尼多朗换到了尼多\n兰！")
             }
+            @speaker("") { @t("Thanks pal!", "谢啦，朋友！") }
           } @else {
             @if (getFlag("NPC_TRADE_CANCELLED")) {
               @speaker("") { @t("That's too bad.", "那太可惜了。") }
             } @else {
-              @speaker("") { @t("Hmmm? This isn't NIDORAN.\n\nThink of me when you get\none.", "嗯？这不是尼多朗。\n\n等你抓到一只，记得想到我。") }
+              @speaker("") { @t("...This is no NIDORAN♂.\n\nIf you get one, trade it\nwith me!", "嗯？这不是尼多朗。\n\n等你抓到一只，记得想到我。") }
             }
           }
         }

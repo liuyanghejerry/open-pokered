@@ -1,0 +1,157 @@
+{
+  "base": "7a526981bb3699f838f058c6683f509d2ee1c1ed",
+  "test_module_sha256": "f90403d5f36ab064e60ab2d62cc245550556e9b62e759cdb90841d20817033e2",
+  "before": [
+    {
+      "dialogue": [
+        "Hey thanks! "
+      ],
+      "frame": 2033,
+      "map": "Route2TradeHouse",
+      "party": [
+        {
+          "level": 25,
+          "moves": [
+            "Confusion",
+            "Barrier",
+            "LightScreen",
+            "None"
+          ],
+          "species": "MrMime"
+        }
+      ],
+      "position": [
+        4,
+        2
+      ],
+      "stage": "summary-order"
+    },
+    {
+      "dialogue": [
+        "Hi! Do you have POLIWHIRL? ",
+        "Want to trade it for JYNX? "
+      ],
+      "frame": 301,
+      "map": "CeruleanTradeHouse",
+      "party": [
+        {
+          "level": 25,
+          "moves": [
+            "Tackle",
+            "None",
+            "None",
+            "None"
+          ],
+          "species": "Poliwhirl"
+        }
+      ],
+      "position": [
+        1,
+        3
+      ],
+      "stage": "cerulean-offer"
+    },
+    {
+      "dialogue": [
+        "...This is no RAICHU. ",
+        "If you get one, trade it with me!"
+      ],
+      "frame": 423,
+      "map": "CinnabarLabTradeRoom",
+      "party": [
+        {
+          "level": 25,
+          "moves": [
+            "Tackle",
+            "None",
+            "None",
+            "None"
+          ],
+          "species": "Bulbasaur"
+        }
+      ],
+      "position": [
+        1,
+        5
+      ],
+      "stage": "wrong-raichu"
+    }
+  ],
+  "after": [
+    {
+      "dialogue": [
+        "RED traded ABRA for MR.MIME!"
+      ],
+      "frame": 2033,
+      "map": "Route2TradeHouse",
+      "party": [
+        {
+          "level": 25,
+          "moves": [
+            "Confusion",
+            "Barrier",
+            "LightScreen",
+            "None"
+          ],
+          "species": "MrMime"
+        }
+      ],
+      "position": [
+        4,
+        2
+      ],
+      "stage": "summary-order"
+    },
+    {
+      "dialogue": [
+        "Hello there! Do you want to trade",
+        " your POLIWHIRL for JYNX?"
+      ],
+      "frame": 301,
+      "map": "CeruleanTradeHouse",
+      "party": [
+        {
+          "level": 25,
+          "moves": [
+            "Tackle",
+            "None",
+            "None",
+            "None"
+          ],
+          "species": "Poliwhirl"
+        }
+      ],
+      "position": [
+        1,
+        3
+      ],
+      "stage": "cerulean-offer"
+    },
+    {
+      "dialogue": [
+        "Hmmm? This isn't RAICHU. ",
+        "Think of me when you get one."
+      ],
+      "frame": 423,
+      "map": "CinnabarLabTradeRoom",
+      "party": [
+        {
+          "level": 25,
+          "moves": [
+            "Tackle",
+            "None",
+            "None",
+            "None"
+          ],
+          "species": "Bulbasaur"
+        }
+      ],
+      "position": [
+        1,
+        5
+      ],
+      "stage": "wrong-raichu"
+    }
+  ],
+  "method": "Same read-only module, fixtures and production inputs. NPC wandering paused in both fixtures. Matching frames, map, position, species, level and moves asserted. Received NPC trade DV/OT random fields are not displayed or used for the comparison; production RNG unchanged."
+}

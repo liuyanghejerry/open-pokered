@@ -24,36 +24,36 @@ game_scene CeruleanTradeHouse {
   @storyline("talkGambler") {
     @trigger(map = "CeruleanTradeHouse", npc = 2)
     @if (getFlag("EVENT_TRADED_FOR_LOLA")) {
-      // AfterTrade3Text (dialogset EVOLUTION)
+      // AfterTrade2Text (dialogset EVOLUTION)
       @speaker("") {
-        @t("How is my old JYNX?\n\nMy POLIWHIRL is doing great!", "我以前的迷唇姐还好吗？\n\n我的蚊香君过得很好！")
+        @t("The POLIWHIRL you traded to\nme\n\nwent and evolved!", "我以前的迷唇姐还好吗？\n\n我的蚊香君过得很好！")
       }
     } @else {
-      // WannaTrade3Text (dialogset EVOLUTION)
+      // WannaTrade2Text (dialogset EVOLUTION)
       @speaker("") {
-        @t("Hi! Do you have POLIWHIRL?\n\nWant to trade it for JYNX?", "嗨！你有蚊香君吗？\n\n想把它换成迷唇姐吗？")
+        @t("Hello there! Do you want to\ntrade\n\nyour POLIWHIRL for JYNX?", "嗨！你有蚊香君吗？\n\n想把它换成迷唇姐吗？")
       }
       @choice {
         @option(@t("YES", "是")) {
           // ConnectCableText -> real in-game trade (removes POLIWHIRL, adds
           // JYNX nicknamed LOLA). tradePokemon returns false if the player
-          // doesn't actually carry POLIWHIRL -> WrongMon3 (dialogset EVOLUTION).
+          // doesn't actually carry POLIWHIRL -> WrongMon2 (dialogset EVOLUTION).
           traded = tradePokemon("POLIWHIRL", "JYNX", "LOLA")
           @if (traded) {
             setFlag("EVENT_TRADED_FOR_LOLA")
             @speaker("") { @t("<PLAYER> traded POLIWHIRL\nfor JYNX!", "<PLAYER>用蚊香君换到了迷唇\n姐！") }
-            @speaker("") { @t("Thanks pal!", "谢啦，朋友！") }
+            @speaker("") { @t("Thanks!", "谢啦，朋友！") }
           } @else {
             @if (getFlag("NPC_TRADE_CANCELLED")) {
-              @speaker("") { @t("That's too bad.", "那太可惜了。") }
+              @speaker("") { @t("Well, if you don't want\nto...", "那太可惜了。") }
             } @else {
-              @speaker("") { @t("...This is no POLIWHIRL.\n\nIf you get one, trade it\nwith me!", "……这不是蚊香君。\n\n如果你弄到一只，就来和我交换\n吧！") }
+              @speaker("") { @t("Hmmm? This isn't POLIWHIRL.\n\nThink of me when you get\none.", "……这不是蚊香君。\n\n如果你弄到一只，就来和我交换\n吧！") }
             }
           }
         }
         @option(@t("NO", "否")) {
-          // NoTrade3Text
-          @speaker("") { @t("That's too bad.", "那太可惜了。") }
+          // NoTrade2Text
+          @speaker("") { @t("Well, if you don't want\nto...", "那太可惜了。") }
         }
       }
     }
