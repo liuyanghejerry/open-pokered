@@ -200,6 +200,10 @@ pub struct CableClubFlow {
     stats: Option<pokered_core::stats_screen::StatsScreenState>,
     /// Original chosePlayerMon opens STATS / TRADE before sending a selection.
     local_action: Option<(usize, bool)>, // mon index, TRADE selected
+    peer_confirmation: Option<bool>,
+    local_rejected: bool,
+    rejection_frames: Option<u16>,
+    completed_frames: u16,
     cancel_selected: bool,
     peer_cancel_pending: bool,
     /// The peer's selection index (trade), for the confirm box.
@@ -237,6 +241,10 @@ impl CableClubFlow {
             browsing_peer: false,
             stats: None,
             local_action: None,
+            peer_confirmation: None,
+            local_rejected: false,
+            rejection_frames: None,
+            completed_frames: 0,
             cancel_selected: false,
             peer_cancel_pending: false,
             remote_selection: None,
@@ -297,7 +305,7 @@ impl CableClubFlow {
             CableClubPhase::WaitingResponse { .. } => Some(TEXT_WAITING.to_string()),
             CableClubPhase::Exchanging => Some(TEXT_PLEASE_WAIT.to_string()),
             CableClubPhase::TradeWaitingPeer | CableClubPhase::TradeWaitingConfirm => {
-                Some(TEXT_WAITING.to_string())
+                self.transient_text.clone().or_else(|| Some(TEXT_WAITING.to_string()))
             }
             CableClubPhase::TradeCompleted => Some(TEXT_TRADE_COMPLETED.to_string()),
             CableClubPhase::Error { text } => Some(text.clone()),
@@ -477,6 +485,14 @@ impl CableClubFlow {
         left: bool,
         right: bool,
     ) -> FlowNeed {
+        if let Some(remaining) = self.rejection_frames.as_mut() {
+            *remaining = remaining.saturating_sub(1);
+            if *remaining == 0 {
+                self.restart_selection();
+                return FlowNeed::ContinueTrade;
+            }
+            return FlowNeed::None;
+        }
         if let Some(stats) = &mut self.stats {
             use pokered_core::stats_screen::{StatsScreenAction, StatsScreenInput};
             if stats.update(StatsScreenInput {
@@ -740,12 +756,14 @@ impl CableClubFlow {
                     FlowNeed::None
                 } else if input.a || input.b {
                     let confirm = input.a && selected == 0;
+                    self.phase = CableClubPhase::TradeWaitingConfirm;
                     if confirm {
-                        self.phase = CableClubPhase::TradeWaitingConfirm;
+                        if self.peer_confirmation == Some(false) { self.start_rejection_delay(false); }
                         FlowNeed::ConfirmTrade
                     } else {
-                        self.restart_selection();
+                        self.local_rejected = true;
                         self.transient_text = Some(TEXT_TRADE_CANCELED.to_string());
+                        if self.peer_confirmation.is_some() { self.start_rejection_delay(false); }
                         FlowNeed::RejectTrade
                     }
                 } else {
@@ -753,12 +771,10 @@ impl CableClubFlow {
                 }
             }
             CableClubPhase::TradeCompleted => {
-                if input.a || input.b {
+                self.completed_frames = self.completed_frames.saturating_sub(1);
+                if self.completed_frames == 0 {
+                    self.restart_selection();
                     self.selector = Some(PartySelectState::new(party.to_vec()));
-                    self.remote_selection = None;
-                    self.browsing_peer = false;
-                    self.cancel_selected = false;
-                    self.phase = CableClubPhase::TradeSelect;
                     return FlowNeed::ContinueTrade;
                 }
                 FlowNeed::None
@@ -832,9 +848,10 @@ impl CableClubFlow {
     }
 
     /// The trade cutscene finished; the exchange was applied and the box
-    /// shows "Trade completed!" — A returns to the selection screen (the
-    /// original loops via `CableClub_DoBattleOrTradeAgain`).
+    /// shows "Trade completed!" for 50 frames before returning automatically
+    /// (`CableClub_DoBattleOrTradeAgain`).
     pub fn on_trade_anim_done(&mut self) {
+        self.completed_frames = 50;
         self.phase = CableClubPhase::TradeCompleted;
     }
 
@@ -932,7 +949,11 @@ impl CableClubFlow {
                 };
                 FlowNeed::None
             }
-            PeerConfirmed => FlowNeed::None,
+            PeerConfirmed => {
+                self.peer_confirmation = Some(true);
+                if self.local_rejected { self.start_rejection_delay(true); }
+                FlowNeed::None
+            },
             TradeExecute { .. } => {
                 // The exchange is in the driver (`received_mon`); the game
                 // loop starts the cutscene from there.
@@ -940,8 +961,8 @@ impl CableClubFlow {
                 FlowNeed::None
             }
             PeerRejectedTrade => {
-                self.restart_selection();
-                self.transient_text = Some(TEXT_TRADE_CANCELED.to_string());
+                self.peer_confirmation = Some(false);
+                if self.phase == CableClubPhase::TradeWaitingConfirm { self.start_rejection_delay(true); }
                 FlowNeed::None
             }
             PeerCancelled => {
@@ -996,12 +1017,22 @@ impl CableClubFlow {
         self.clear_selection();
     }
 
+    fn start_rejection_delay(&mut self, before_frame_update: bool) {
+        // Network events are delivered before this frame's modal update;
+        // local choices are delivered inside it, after the timer tick.
+        self.rejection_frames = Some(100 + u16::from(before_frame_update));
+        self.transient_text = Some(TEXT_TRADE_CANCELED.to_string());
+    }
+
     fn restart_selection(&mut self) {
         self.selector = None;
         self.stats = None;
         self.local_action = None;
         self.cancel_selected = false;
         self.peer_cancel_pending = false;
+        self.peer_confirmation = None;
+        self.local_rejected = false;
+        self.rejection_frames = None;
         self.browsing_peer = false;
         self.remote_selection = None;
         self.transient_text = None;
@@ -1016,6 +1047,9 @@ impl CableClubFlow {
         self.local_action = None;
         self.cancel_selected = false;
         self.peer_cancel_pending = false;
+        self.peer_confirmation = None;
+        self.local_rejected = false;
+        self.rejection_frames = None;
         self.browsing_peer = false;
         self.remote_selection = None;
         self.transient_text = None;

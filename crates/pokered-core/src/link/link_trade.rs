@@ -95,6 +95,8 @@ pub struct LinkTradeManager {
     state: LinkTradeState,
     local_selection: Option<u8>,
     remote_selection: Option<u8>,
+    local_rejected: bool,
+    remote_rejected: bool,
     local_confirmed: bool,
     remote_confirmed: bool,
     /// Legacy peers can emit a payload before both confirmations. Retain
@@ -116,6 +118,8 @@ impl LinkTradeManager {
             state: LinkTradeState::Idle,
             local_selection: None,
             remote_selection: None,
+            local_rejected: false,
+            remote_rejected: false,
             local_confirmed: false,
             remote_confirmed: false,
             pending_remote_mon: None,
@@ -201,6 +205,8 @@ impl LinkTradeManager {
         }
         transport.send(NetworkMessage::SelectMon(party_index))?;
         self.local_selection = Some(party_index);
+        self.local_rejected = false;
+        self.remote_rejected = false;
         self.local_confirmed = false;
         self.remote_confirmed = false;
         self.try_transition_to_both_selected();
@@ -226,6 +232,11 @@ impl LinkTradeManager {
             }
         };
         transport.send(NetworkMessage::ConfirmTrade)?;
+        if self.remote_rejected {
+            self.reset_selection();
+            self.state = LinkTradeState::SelectingMon;
+            return Ok(());
+        }
         self.pending_local_mon = Some(pokemon);
         self.local_confirmed = true;
 
@@ -264,9 +275,21 @@ impl LinkTradeManager {
     pub fn reject_trade(
         &mut self, transport: &mut dyn NetworkTransport<NetworkMessage>,
     ) -> Result<(), TransportError> {
+        let (local_index, remote_index) = match self.state {
+            LinkTradeState::BothSelected { local_index, remote_index }
+            | LinkTradeState::PeerConfirmedWaitingLocal { local_index, remote_index } => (local_index, remote_index),
+            _ => return Err(TransportError::IoError("not in confirm state".into())),
+        };
         transport.send(NetworkMessage::RejectTrade)?;
-        self.reset_selection();
-        self.state = LinkTradeState::SelectingMon;
+        if self.remote_confirmed || self.remote_rejected {
+            self.reset_selection();
+            self.state = LinkTradeState::SelectingMon;
+        } else {
+            self.local_rejected = true;
+            self.pending_local_mon = None;
+            self.pending_remote_mon = None;
+            self.state = LinkTradeState::WaitingForPeerConfirm { local_index, remote_index };
+        }
         Ok(())
     }
 
@@ -444,6 +467,13 @@ impl LinkTradeManager {
                 }
             }
 
+            (LinkTradeState::WaitingForPeerConfirm { .. }, NetworkMessage::ConfirmTrade)
+                if self.local_rejected => {
+                self.reset_selection();
+                self.state = LinkTradeState::SelectingMon;
+                LinkTradePollResult::PeerConfirmed
+            }
+
             (
                 LinkTradeState::BothSelected {
                     local_index,
@@ -524,8 +554,16 @@ impl LinkTradeManager {
             }
 
             (_, NetworkMessage::RejectTrade) => {
-                self.reset_selection();
-                self.state = LinkTradeState::SelectingMon;
+                if self.local_confirmed || self.local_rejected {
+                    self.reset_selection();
+                    self.state = LinkTradeState::SelectingMon;
+                } else {
+                    // Keep the local confirmation menu and selection alive
+                    // until its own answer synchronizes with the peer's NO.
+                    self.remote_rejected = true;
+                    self.remote_confirmed = false;
+                    self.pending_remote_mon = None;
+                }
                 LinkTradePollResult::PeerRejectedTrade
             }
             (_, NetworkMessage::CancelTrade) => {
@@ -561,6 +599,8 @@ impl LinkTradeManager {
     fn reset_selection(&mut self) {
         self.local_selection = None;
         self.remote_selection = None;
+        self.local_rejected = false;
+        self.remote_rejected = false;
         self.local_confirmed = false;
         self.remote_confirmed = false;
         self.pending_remote_mon = None;
@@ -775,6 +815,12 @@ impl LinkTradeDriver {
     /// `apply_exchange` removes it).
     pub fn given_mon(&self) -> Option<&Pokemon> {
         self.given_mon.as_ref()
+    }
+
+    /// Whether a wire exchange still needs applying to the local party.
+    /// `received_mon()` also exposes the applied party member for the movie.
+    pub fn has_pending_exchange(&self) -> bool {
+        self.received_mon.is_some()
     }
 
     /// The mon received from the peer. Before `apply_exchange` it is the
@@ -1018,8 +1064,11 @@ impl LinkTradeDriver {
                 self.received_mon = Some(received_pokemon.clone());
             }
             // The selection is void again: both sides are back to picking.
-            LinkTradePollResult::PeerCancelled | LinkTradePollResult::PeerRejectedTrade
-            | LinkTradePollResult::Disconnected => {
+            LinkTradePollResult::PeerRejectedTrade => {
+                self.received_mon = None;
+                self.given_mon = None;
+            }
+            LinkTradePollResult::PeerCancelled | LinkTradePollResult::Disconnected => {
                 self.clear_pending_trade();
             }
             _ => {}

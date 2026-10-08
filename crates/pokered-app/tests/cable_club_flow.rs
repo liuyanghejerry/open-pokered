@@ -540,7 +540,12 @@ fn trade_flow_select_confirm_execute() {
     p.host_flow.on_trade_anim_done();
     p.guest_flow.on_trade_anim_done();
     let local = p.host_trade.party().to_vec();
-    let need = p.host_flow.update(a_input(), &local);
+    for _ in 0..49 {
+        assert_eq!(p.host_flow.update(a_input(), &local), FlowNeed::None,
+            "A cannot shorten the original completed-text delay");
+        assert_eq!(*p.host_flow.phase(), CableClubPhase::TradeCompleted);
+    }
+    let need = p.host_flow.update(no_input(), &local);
     assert_eq!(need, FlowNeed::ContinueTrade);
     execute(
         &mut p.host_session,
@@ -553,9 +558,13 @@ fn trade_flow_select_confirm_execute() {
     // The slower peer may still be watching the previous cutscene.
     assert_eq!(p.host_flow.update(a_input(), &local), FlowNeed::None);
     pump_trade(&mut p.guest_session, &mut p.guest_trade, &mut p.guest_flow);
+    for _ in 0..49 {
+        assert_eq!(p.guest_flow.update(no_input(), &p.guest_trade.party().to_vec()), FlowNeed::None);
+    }
     let need = p
         .guest_flow
-        .update(a_input(), &p.guest_trade.party().to_vec());
+        .update(no_input(), &p.guest_trade.party().to_vec());
+    assert_eq!(need, FlowNeed::ContinueTrade);
     execute(
         &mut p.guest_session,
         &mut p.guest_flow,
