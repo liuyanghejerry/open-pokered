@@ -31,3 +31,17 @@ same game binary. No restored milestone save was used.
 
 The headless transport verifies receipt effects and sound IDs, not audible
 speaker output. Audio-only receipts require no additional comparison frame.
+
+## Final verification scope
+
+The retained successful full playthrough used repair commit `a11fb0e`.
+The subsequent `80aad7f` changes only the per-frame Snorlax flag lookup from a
+copied map to direct event bits. Its complete core/app tests, target runtime
+checks and identical screenshot replay passed again. Two additional full
+playthrough attempts stopped in the navigation driver at MtMoonB2F → Route4
+and a PokemonTower6F path lookup, before reaching the changed Snorlax/Silph
+scenes. These later full attempts did not complete; do not interpret the
+retained successful log as a fresh full run of `80aad7f`.
+A control run of unchanged master completed m01–m25. Navigation failures in
+later reruns remain a verification limitation, without a reproduced causal
+connection to these four fixes.
