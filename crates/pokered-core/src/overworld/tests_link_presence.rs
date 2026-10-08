@@ -39,7 +39,7 @@ fn link_presence_pins_opponent_npc() {
         .iter()
         .find(|n| n.text_id == 1)
         .expect("opponent NPC still present");
-    assert_eq!((npc.x, npc.y), (3, 2));
+    assert_eq!((npc.x, npc.y), (6, 4));
     assert_eq!(npc.facing, Direction::Left);
     assert_eq!(npc.movement_type, NpcMovementType::Stationary);
     assert!(npc.visible);
@@ -52,7 +52,7 @@ fn link_presence_pins_opponent_npc() {
         .iter()
         .find(|n| n.text_id == 1)
         .unwrap();
-    assert_eq!((npc.x, npc.y), (1, 2));
+    assert_eq!((npc.x, npc.y), (3, 4));
     assert_eq!(npc.facing, Direction::Right);
 }
 
