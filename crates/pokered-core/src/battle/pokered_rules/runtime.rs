@@ -241,7 +241,22 @@ pub fn translate_turn(
                     .any(|event| matches!(event, TurnEvent::Damaged { target, cause: None, .. } if *target == opp_ref(actor)));
                 let eff = if move_is_immune(state,effects,actor,*move_) { Effectiveness::NoEffect }
                     else if dealt_damage { effectiveness_category(md.move_type, d1, d2) } else { Effectiveness::Normal };
-                msgs.extend(move_announcement(&display_name(state, actor), move_name(*move_, false), crit, missed, eff, None));
+                if md.effect == pokered_data::moves::MoveEffect::SwitchAndTeleportEffect {
+                    msgs.push(format!("{} used {}!", display_name(state, actor), move_name(*move_, false)));
+                    let target_name = display_name(state, opp_ref(actor));
+                    if missed {
+                        msgs.push(if *move_ == MoveId::Teleport { "But it failed!".to_string() }
+                            else { format!("{target_name} is unaffected!") });
+                    } else {
+                        msgs.push(match *move_ {
+                            MoveId::Teleport => format!("{} ran from battle!", display_name(state, actor)),
+                            MoveId::Roar => format!("{target_name} ran away scared!"),
+                            _ => format!("{target_name} was blown away!"),
+                        });
+                    }
+                } else {
+                    msgs.extend(move_announcement(&display_name(state, actor), move_name(*move_, false), crit, missed, eff, None));
+                }
                 // HazeEffect (haze.asm:1-49): a landed Haze narrates ONLY
                 // StatusChangesEliminatedText ("All STATUS changes are
                 // eliminated!", text_3.asm:269-271) — no per-stat or
@@ -448,6 +463,8 @@ pub fn engine_state_from_legacy(
     ls: &LegacyBattleState,
 ) -> (EngineState<PokeredRules>, Vec<EffectState<PokeredRules>>) {
     let mut player_b = engine_active(&ls.player);
+    player_b.resources.set(super::RES_WILD_BATTLE,
+        (ls.battle_type == crate::battle::state::BattleType::Wild) as u16, 1);
     let original = ls.player.party_mon(ls.player.active_pokemon_index);
     super::bind_critical_stats(&mut player_b, [original.attack,original.defense,original.speed,original.special]);
     // Badge stat boosts: the player battler's working stats are the boosted
@@ -649,6 +666,7 @@ pub fn apply_engine_to_legacy(
     state: &EngineState<PokeredRules>,
     effects: &[EffectState<PokeredRules>],
 ) {
+    ls.escaped = super::escape_succeeded(effects);
     write_party(&mut ls.player, &state.player_battlers[0], effects, BattlerRef::PLAYER);
     write_party(&mut ls.enemy, &state.opponent_battlers[0], effects, BattlerRef::OPPONENT);
     if let Some(amount) = effects.iter().find_map(|entry| match entry.kind {

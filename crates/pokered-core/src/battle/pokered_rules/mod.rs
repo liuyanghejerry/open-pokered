@@ -141,6 +141,8 @@ pub enum PokeVolatile {
     /// Per-turn scratch: a trainer item/switch replaces ExecuteEnemyMove.
     /// Its existing multi-turn flags survive without executing or ticking.
     TurnSuppressed,
+    /// A successful wild flee move ends actions and residual ticks immediately.
+    Escaped { actor: BattlerRef, move_: MoveId },
     /// Original wPlayerUsedMove/wEnemyUsedMove, updated when move text prints.
     UsedMove { move_: MoveId },
     /// Per-turn call narration; the resolved move executes after status gates.
@@ -448,6 +450,9 @@ impl EffectProvider for PokeredRules {
         actor: BattlerRef,
         chosen: &BattleAction<Self>,
     ) -> Option<BattleAction<Self>> {
+        if escape_succeeded(effects) {
+            return Some(BattleAction::Nothing);
+        }
         if effects
             .iter()
             .any(|e| e.host == actor && matches!(e.kind, PokeVolatile::TurnSuppressed))
@@ -1563,6 +1568,10 @@ fn current_move_for(source: BattlerRef) -> MoveData {
         .unwrap_or_else(active_move)
 }
 
+pub(super) fn escape_succeeded(effects: &[EffectState<PokeredRules>]) -> bool {
+    effects.iter().any(|entry| matches!(entry.kind, PokeVolatile::Escaped { .. }))
+}
+
 // Resource ids are provider-private; the engine treats these as opaque values.
 pub(super) const RES_TYPE1: u16 = 0xff00;
 pub(super) const RES_TYPE2: u16 = 0xff01;
@@ -1570,6 +1579,7 @@ pub(super) const RES_PP_BASE: u16 = 0xff10;
 pub(super) const RES_FINITE_PP: u16 = 0xff14;
 pub(super) const RES_SELECTED_SLOT: u16 = 0xff15;
 pub(super) const RES_HELD_AT_ENTRY: u16 = 0xff42;
+pub(super) const RES_WILD_BATTLE: u16 = 0xff43;
 pub(super) const RES_DV0: u16 = 0xff20;
 pub(super) const RES_DV1: u16 = 0xff21;
 pub(super) const RES_CATCH_RATE: u16 = 0xff22;
@@ -1703,6 +1713,31 @@ fn pokered_accuracy(
     if (pm.effect == MoveEffect::ConversionEffect && invulnerable(target))
         || (pm.effect == MoveEffect::TransformEffect && source.side == 0 && invulnerable(source)) {
         return HandlerResult::Set(RelayVar::Bool(false));
+    }
+    if pm.effect == MoveEffect::SwitchAndTeleportEffect {
+        // effects.asm SwitchAndTeleportEffect: no accuracy/evasion roll, and
+        // no escape from trainer battles. A weaker user samples uniformly by
+        // rejecting bytes outside [0, user level + target level].
+        if ctx.battler(BattlerRef::PLAYER).resources.current(RES_WILD_BATTLE).unwrap_or(0) == 0 {
+            return HandlerResult::Set(RelayVar::Bool(false));
+        }
+        let user_level = ctx.battler(source).level;
+        let target_level = ctx.battler(target).level;
+        if user_level < target_level {
+            let range = user_level as u16 + target_level as u16 + 1;
+            let sampled = loop {
+                let byte = ctx.rng.next_u8();
+                if (byte as u16) < range { break byte; }
+            };
+            if sampled < target_level / 4 {
+                return HandlerResult::Set(RelayVar::Bool(false));
+            }
+        }
+        ctx.effects.push(EffectState {
+            id: EffectId(0x50_ff1), host: source, effect_order: 0,
+            kind: PokeVolatile::Escaped { actor: source, move_: pm.id },
+        });
+        return HandlerResult::Unchanged;
     }
     if !move_rolls_accuracy(pm.effect) {
         if pm.effect == MoveEffect::HealEffect && recovery_fails(ctx.battler(source)) {
@@ -3272,3 +3307,6 @@ mod p5_tests;
 /// P6 production runtime — drive a real battle through the stack (RNG, translator,
 /// legacy↔engine adapter). Production (NOT test-gated).
 pub mod runtime;
+
+#[cfg(test)]
+mod escape_tests;
