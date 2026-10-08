@@ -301,6 +301,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     /// never re-fire in another.
     pub fn sync_prev_input(&mut self, a: bool, b: bool, up: bool, down: bool) {
         self.prev_a_pressed = a;
+        self.sampled_player_input.a = a;
         self.prev_b_pressed = b;
         self.prev_up_pressed = up;
         self.prev_down_pressed = down;
@@ -1293,9 +1294,28 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             }
         }
 
+        // JoypadOverworld is not sampled while a step is in progress.
+        // A short START pulse during the step is discarded; a held START
+        // becomes a fresh press at the next idle sample. START precedes A.
+        let mut control_a_just_pressed = false;
+        if self.state.player.movement_state == MovementState::Idle
+            && self.state.walk_counter == 0
+            && self.pending_connection.is_none()
+            && !self.cutscene_manager.is_blocking()
+            && self.trainer_encounter_intro.is_none()
+            && self.trainer_intro_text_pending.is_none()
+        {
+            let start_pressed = input.start && !self.sampled_player_input.start;
+            control_a_just_pressed = input.a && !self.sampled_player_input.a;
+            self.sampled_player_input = input;
+            if start_pressed {
+                return ScreenAction::Transition(GameScreen::StartMenu);
+            }
+        }
+
         // A-button: check signs first, then NPCs (matches original game priority).
         // Held during a trainer engage intro (wJoyIgnore).
-        if a_just_pressed
+        if control_a_just_pressed
             && self.state.player.movement_state == MovementState::Idle
             && self.trainer_encounter_intro.is_none()
             && self.trainer_intro_text_pending.is_none()
@@ -1600,27 +1620,20 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             return ScreenAction::Continue;
         }
 
-        // Start menu is held during a trainer engage intro (wJoyIgnore).
-        if input.start
-            && self.trainer_encounter_intro.is_none()
-            && self.trainer_intro_text_pending.is_none()
-        {
-            return ScreenAction::Transition(GameScreen::StartMenu);
-        }
-
         // wJoyIgnore during a trainer engage intro: d-pad/A/B ignored while
         // the "!" bubble shows and the trainer walks up.
         let intro_holding_input =
             self.trainer_encounter_intro.is_some() || self.trainer_intro_text_pending.is_some();
+        let player_input = self.sampled_player_input;
         let movement_input = MovementInput {
-            up: input.up && !intro_holding_input,
-            down: input.down && !intro_holding_input,
-            left: input.left && !intro_holding_input,
-            right: input.right && !intro_holding_input,
-            a_button: input.a && !intro_holding_input,
-            b_button: input.b && !intro_holding_input,
-            start: input.start && !intro_holding_input,
-            select: input.select && !intro_holding_input,
+            up: player_input.up && !intro_holding_input,
+            down: player_input.down && !intro_holding_input,
+            left: player_input.left && !intro_holding_input,
+            right: player_input.right && !intro_holding_input,
+            a_button: player_input.a && !intro_holding_input,
+            b_button: player_input.b && !intro_holding_input,
+            start: player_input.start && !intro_holding_input,
+            select: player_input.select && !intro_holding_input,
         };
 
         // OverworldLoop samples direction only after the current step.
@@ -1825,6 +1838,20 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 } else {
                     MoveResult::StillMoving
                 }
+            } else if movement_before != MovementState::Idle {
+                // Original AdvancePlayerSprite finishes the step, checks
+                // warps, then returns to OverworldLoop. It does not consume
+                // new physical input or start the next step in this call.
+                if player_movement::advance_step(&mut self.state) {
+                    let tile = collision_provider.get_tile_at_position(
+                        map.tileset, &map.blocks, map.width,
+                        self.state.player.x, self.state.player.y,
+                    );
+                    if let Some(warp_index) = player_movement::check_warps_no_collision(
+                        &mut self.state, map, tile,
+                        self.player_moving_direction != 0, &collision_provider,
+                    ) { MoveResult::Warped { warp_index } } else { MoveResult::StillMoving }
+                } else { MoveResult::StillMoving }
             } else {
                 player_movement::process_frame(
                     &mut self.state,
@@ -2320,6 +2347,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 direction_toward_player(self.state.player.x, self.state.player.y, tx, ty)
             {
                 self.state.player.facing = dir;
+                self.player_moving_direction = match dir {
+                    Direction::Right => 1, Direction::Left => 2,
+                    Direction::Down => 4, Direction::Up => 8,
+                };
                 self.state.player.movement_state = MovementState::Walking;
                 self.state.walk_counter = player_movement::WALK_COUNTER_INIT;
             }
@@ -2870,7 +2901,16 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         {
                             let (nx, ny, npc_done) = {
                                 let npc = &npc_states[idx];
-                                (npc.x, npc.y, npc_movement::is_scripted_move_done(npc))
+                                // Original TryWalking commits NPC MapX/MapY
+                                // at the start of a stride. The engine stores
+                                // its origin until the end, so expose the
+                                // logical destination to the follow script.
+                                let (dx,dy)=player_movement::direction_delta(npc.facing);
+                                let (x,y)=if npc.walk_counter>0 {
+                                    ((npc.x as i32+dx as i32).max(0) as u16,
+                                     (npc.y as i32+dy as i32).max(0) as u16)
+                                } else {(npc.x,npc.y)};
+                                (x, y, npc_movement::is_scripted_move_done(npc))
                             };
 
                             if nx != *last_npc_x || ny != *last_npc_y {

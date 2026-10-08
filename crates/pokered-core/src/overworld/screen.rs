@@ -743,6 +743,7 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     /// `pending_dialogue` at the top of `update_frame`.
     pub text_delay_frames: u16,
     pub(crate) prev_a_pressed: bool,
+    pub(crate) sampled_player_input: dotzuki_engine::overworld::OverworldInput,
     pub(crate) prev_movement_state: MovementState,
     pub(crate) prev_b_pressed: bool,
     pub(crate) prev_up_pressed: bool,
@@ -1175,6 +1176,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             frame_counter: 0,
             text_delay_frames: DEFAULT_TEXT_DELAY_FRAMES,
             prev_a_pressed: false,
+            sampled_player_input: dotzuki_engine::overworld::OverworldInput::new(false,false,false,false,false,false,false,false),
             prev_movement_state: MovementState::Idle,
             player_last_stop_direction: 0,
             player_moving_direction: 0,
@@ -2504,6 +2506,13 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 self.set_flag_live("EVENT_GOT_LICKITUNG_FROM_TRADE", true);
             }
         }
+    }
+
+    /// Menus also read the joypad. Preserve their last button sample when
+    /// returning to the field so a held menu confirmation is not a new A.
+    pub fn synchronize_player_buttons(&mut self, a: bool, start: bool) {
+        self.sampled_player_input.a = a;
+        self.sampled_player_input.start = start;
     }
 
     /// Restore counters and status bytes that live outside the event bitset.

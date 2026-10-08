@@ -2803,22 +2803,17 @@ impl PokemonGame {
         let _ = next;
     }
 
-    /// Re-baseline the overworld's button edge detectors against the buttons
-    /// currently held. Called by the update loop before the first
-    /// `overworld.update_frame` after any frame that skipped it (sub-screens,
-    /// naming screen, cutscenes…): the press that drove whatever ran in
-    /// between may still be down, and without the re-baseline the overworld's
-    /// own edge detection (`update.rs a_just_pressed`) re-detects it as a
-    /// fresh press on the first frame back — instantly talking to a facing
-    /// NPC. The original is immune: home/joypad.asm recomputes hJoyPressed
-    /// against hJoyReleased every frame, so a press consumed by one loop can
-    /// never re-fire in another.
+    /// Restore the previous physical sample after a menu/cutscene gap.
+    /// A held confirmation must not become a fresh field press; a genuinely
+    /// new press on the first returning frame must remain detectable.
     fn sync_overworld_input_edges(&mut self, input: &InputState) {
+        let previously_held = |b| input.is_just_released(b)
+            || (input.is_held(b) && !input.is_just_pressed(b));
         self.overworld.sync_prev_input(
-            input.is_held(GbButton::A),
-            input.is_held(GbButton::B),
-            input.is_held(GbButton::Up),
-            input.is_held(GbButton::Down),
+            previously_held(GbButton::A),
+            previously_held(GbButton::B),
+            previously_held(GbButton::Up),
+            previously_held(GbButton::Down),
         );
     }
 
@@ -4077,6 +4072,13 @@ impl PokemonGame {
                         && input.is_held(GbButton::B)
                         && input.is_held(GbButton::Start)
                         && input.is_held(GbButton::Select);
+                    if ow_gapped_last_frame {
+                        let previously_held = |b| input.is_just_released(b)
+                            || (input.is_held(b) && !input.is_just_pressed(b));
+                        self.overworld.synchronize_player_buttons(
+                            previously_held(GbButton::A), previously_held(GbButton::Start),
+                        );
+                    }
                     let ow_input = OverworldInput::new(
                         input.is_held(GbButton::Up),
                         input.is_held(GbButton::Down),
@@ -4084,7 +4086,7 @@ impl PokemonGame {
                         input.is_held(GbButton::Right),
                         input.is_held(GbButton::A),
                         input.is_held(GbButton::B),
-                        input.is_just_pressed(GbButton::Start) && !soft_reset_combo_held,
+                        input.is_held(GbButton::Start) && !soft_reset_combo_held,
                         input.is_held(GbButton::Select),
                     );
                     // Seed synchronous script-query state from persistent game
@@ -10040,6 +10042,20 @@ mod link_stats_cry_fidelity_tests {
             let start_y=std::env::var("FIDELITY_MOVEMENT_Y").unwrap_or_else(|_|"29".into()).parse::<u16>().unwrap();
             assert_eq!((g.overworld.state.player.x,g.overworld.state.player.y), (start_x,start_y));
             assert_eq!(g.overworld.state.player.facing,pokered_core::overworld::Direction::Down);
+            let pc_case=std::env::var("FIDELITY_INPUT_PC_CASE").ok();
+            if pc_case.is_some() {
+                g.overworld.warp_to_map(MapId::ViridianPokecenter,13,4);
+                for _ in 0..120 {g.update(&idle);}
+                g.update(&button(GbButton::Down));g.update(&button(GbButton::Down));
+                for _ in 0..120 {g.update(&idle);}
+                assert_eq!((g.overworld.state.player.x,g.overworld.state.player.y),(13,5));
+                // Original preparation turns Up without walking; native turn
+                // timing remains a separate open audit, so stage this facing.
+                g.overworld.state.player.facing=pokered_core::overworld::Direction::Up;
+                let mut controlled=g.save_data.game_data.clone();
+                controlled.player_last_stop_direction=8;controlled.player_moving_direction=0;
+                g.overworld.restore_system_save_state(&controlled);
+            }
             let bike=std::env::var("FIDELITY_MOVEMENT_BIKE").is_ok_and(|s|s=="true");
             if bike {
                 g.update(&button(GbButton::Start));g.update(&idle);
@@ -10063,9 +10079,9 @@ mod link_stats_cry_fidelity_tests {
                 }
                 assert_eq!(g.overworld.state.player.transport,dotzuki_engine::overworld::types::TransportMode::Biking);
             }
-            let trigger=match std::env::var("FIDELITY_MOVEMENT_DIRECTION").unwrap_or_else(|_|"left".into()).as_str() {
+            let trigger=if pc_case.is_some() {GbButton::Up} else {match std::env::var("FIDELITY_MOVEMENT_DIRECTION").unwrap_or_else(|_|"left".into()).as_str() {
                 "left"=>GbButton::Left,"down"=>GbButton::Down,_=>panic!("unsupported direction"),
-            };
+            }};
             g.overworld.set_rng_seed(0);
             for _ in 0..120 { g.update(&idle); }
             let duration=std::env::var("FIDELITY_MOVEMENT_HOLD").unwrap_or_else(|_|"16".into()).parse::<i32>().unwrap();
@@ -10081,8 +10097,14 @@ mod link_stats_cry_fidelity_tests {
                         if t==5 {input.press(GbButton::Start);}
                         if t==5+hold {input.release(GbButton::Start);}
                     }
+                    if let Some(case)=pc_case.as_deref() {
+                        let hold=if case=="a-short" {1} else {40};
+                        if t==5 {input.press(GbButton::A);if case=="a-start-held" {input.press(GbButton::Start);}}
+                        if t==5+hold {input.release(GbButton::A);if case=="a-start-held" {input.release(GbButton::Start);}}
+                    }
                     g.update(&input);
                 }
+                let saved=g.build_save_data();
                 let mut fb = FrameBuffer::new(RenderConfig::new(160,144), Rgba::WHITE);
                 g.draw(&mut fb); fb.save_png(&dir.join(format!("frame-{:04}.png", t+1))).unwrap();
                 records.push(serde_json::json!({"t":t,"frame":g.frame_count,"input_bits":input.raw_current(),
@@ -10090,7 +10112,9 @@ mod link_stats_cry_fidelity_tests {
                     "x":g.overworld.state.player.x,"y":g.overworld.state.player.y,
                     "facing":format!("{:?}",g.overworld.state.player.facing),
                     "movement":format!("{:?}",g.overworld.state.player.movement_state),
-                    "last_stop":g.overworld.player_last_stop_direction,"moving_direction":g.overworld.player_moving_direction,
+                    "last_stop":saved.game_data.player_last_stop_direction,"moving_direction":saved.game_data.player_moving_direction,
+                    "pc_phase":g.pc_screen.as_ref().map(|p|format!("{:?}",p.phase())),
+                    "pending_pc":g.overworld.pending_pc.is_some(),
                     "walk_counter":g.overworld.state.walk_counter,"transport":format!("{:?}",g.overworld.state.player.transport),"party":g.save_data.party}));
             }
             std::fs::write(dir.join("frames.json"),serde_json::to_string_pretty(&records).unwrap()).unwrap();
