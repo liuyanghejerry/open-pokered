@@ -43,25 +43,38 @@ impl LinkOpponentPresence {
     pub fn for_role(role: LinkRole) -> Self {
         match role {
             LinkRole::Host => LinkOpponentPresence {
-                x: 3,
-                y: 2,
+                x: 6,
+                y: 4,
                 facing: dotzuki_engine::overworld::Direction::Left,
             },
             LinkRole::Guest => LinkOpponentPresence {
-                x: 1,
-                y: 2,
+                x: 3,
+                y: 4,
                 facing: dotzuki_engine::overworld::Direction::Right,
             },
         }
     }
 }
 
-/// Entry spot for a player warping into a Cable Club room. The original
-/// warps (x=3,y=4)/(x=6,y=4) just below the map's bottom edge
-/// (`TradeCenterPlayerWarp`/`TradeCenterFriendWarp`,
-/// data/maps/special_warps.asm:49-56); our rooms have no border spawn, so
-/// both roles enter at the passable bottom-center floor block.
-pub const CABLE_ROOM_ENTRY: (u16, u16) = (2, 3);
+/// Special room warps use tile coordinates (data/maps/special_warps.asm).
+/// Sprite map bytes include the object_event +4 offset: the opponent's
+/// (10,8)/(7,8) bytes in TradeCenter_Script are tiles (6,4)/(3,4).
+pub const fn cable_room_entry(role: LinkRole) -> (u16, u16) {
+    match role {
+        LinkRole::Host => (3, 4),
+        LinkRole::Guest => (6, 4),
+    }
+}
+
+/// CableClubLeft/RightGameboy require the corresponding clocking role
+/// and direction. Hidden-event coordinates are in front of the player.
+pub fn can_use_gameboy(role: LinkRole, x: u16, y: u16, facing: dotzuki_engine::overworld::Direction) -> bool {
+    let expected_facing = match role {
+        LinkRole::Host => dotzuki_engine::overworld::Direction::Right,
+        LinkRole::Guest => dotzuki_engine::overworld::Direction::Left,
+    };
+    (x, y) == cable_room_entry(role) && facing == expected_facing
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LinkState {

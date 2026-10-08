@@ -3892,9 +3892,12 @@ impl PokemonGame {
                                 &self.localize_dialogue("We're making\npreparations.\nPlease wait.")));
                         } else if linked {
                             if in_cable_room {
-                                gameboy_started_this_frame = true;
-                                let need = self.link_cable.on_gameboy_used(current_map);
-                                self.handle_flow_need(need);
+                                let player = &self.overworld.state.player;
+                                if pokered_core::link::can_use_gameboy(self.link_role, player.x, player.y, player.facing) {
+                                    gameboy_started_this_frame = true;
+                                    let need = self.link_cable.on_gameboy_used(current_map);
+                                    self.handle_flow_need(need);
+                                }
                             } else {
                                 self.link_cable.on_receptionist_used();
                                 self.overworld.pending_dialogue=Some(pokered_core::overworld::BedroomDialogue::from_message(
@@ -6191,7 +6194,7 @@ impl PokemonGame {
     /// connection is established; the original warps into the room via
     /// `SpecialEnterMap` after the receptionist handshake).
     pub fn warp_to_cable_room(&mut self, map: MapId) {
-        let (x, y) = pokered_core::link::CABLE_ROOM_ENTRY;
+        let (x, y) = pokered_core::link::cable_room_entry(self.link_role);
         self.overworld.pending_warp = Some(pokered_core::overworld::PendingWarp {
             dest_map: map,
             dest_x: x as u8,
@@ -8822,6 +8825,87 @@ mod link_stats_cry_fidelity_tests {
     }
 
     #[test]
+    fn actual_gameboy_rejects_wrong_role_and_vertical_facing() {
+        run_link_save_fixture(|| {
+            use pokered_core::overworld::Direction;
+            let mut observed = Vec::new();
+            for (role, x, y, facing) in [
+                (LinkRole::Host, 6, 4, Direction::Left),
+                (LinkRole::Guest, 3, 4, Direction::Right),
+                (LinkRole::Host, 4, 5, Direction::Up),
+                (LinkRole::Guest, 5, 5, Direction::Up),
+            ] {
+                let mut local = fixture(Species::Bulbasaur, x, facing);
+                local.overworld.state.player.y = y;
+                let mut peer = fixture(Species::Pikachu, 7, Direction::Down);
+                peer.overworld.state.player.y = 6;
+                let (a, b) = ChannelTransport::new_pair();
+                local.attach_link_transport(Box::new(a), role);
+                peer.attach_link_transport(Box::new(b), if role == LinkRole::Host { LinkRole::Guest } else { LinkRole::Host });
+                let idle = InputState::new();
+                for _ in 0..120 { local.update(&idle); peer.update(&idle); }
+                local.update(&button(GbButton::A));
+                for _ in 0..20 { local.update(&idle); peer.update(&idle); }
+                observed.push((role, x, y, facing, local.link_cable.phase().clone(),
+                    peer.link_cable.phase().clone(), local.link_cable.text_box()));
+            }
+            assert!(observed.iter().all(|r| r.4 == CableClubPhase::InRoom && r.5 == CableClubPhase::InRoom && r.6.is_none()),
+                "wrong gameboy/facing results: {observed:?}");
+        });
+    }
+
+    #[test]
+    fn actual_receptionist_enters_role_specific_room_coordinates() {
+        run_link_save_fixture(|| {
+            use pokered_core::overworld::Direction;
+            for role in [LinkRole::Host, LinkRole::Guest] {
+                let mut local = fixture(Species::Bulbasaur, 11, Direction::Up);
+                let mut peer = fixture(Species::Pikachu, 11, Direction::Up);
+                for g in [&mut local, &mut peer] {
+                    g.overworld = OverworldScreen::new(MapId::ViridianPokecenter, None, PokemonRedData);
+                    g.overworld.set_event_flag_live(pokered_data::event_flags::EventFlag::EVENT_GOT_POKEDEX);
+                    g.overworld.state.player.x = 11; g.overworld.state.player.y = 3;
+                    g.overworld.state.player.facing = Direction::Up;
+                    g.overworld.run_on_load();
+                }
+                let (a,b) = ChannelTransport::new_pair();
+                local.attach_link_transport(Box::new(a), role);
+                peer.attach_link_transport(Box::new(b), if role == LinkRole::Host { LinkRole::Guest } else { LinkRole::Host });
+                let idle = InputState::new();
+                for _ in 0..120 { local.update(&idle); peer.update(&idle); }
+                local.update(&button(GbButton::A)); peer.update(&idle);
+                for frame in 0..2000 {
+                    if matches!(local.link_cable.phase(), CableClubPhase::ReceptionSave { .. }) { break; }
+                    let advance = button(GbButton::A);
+                    local.update(if frame % 20 == 19 { &advance } else { &idle });
+                    peer.update(&idle);
+                }
+                assert!(matches!(local.link_cable.phase(), CableClubPhase::ReceptionSave { .. }), "real receptionist save prompt");
+                local.update(&button(GbButton::A)); peer.update(&idle);
+                assert!(matches!(local.link_cable.phase(), CableClubPhase::ReceptionMenu { selected: 0 }));
+                local.update(&idle); local.update(&button(GbButton::A)); peer.update(&idle);
+                for _ in 0..1000 {
+                    local.update(&idle); peer.update(&idle);
+                    if local.overworld.state.current_map == MapId::TradeCenter { break; }
+                }
+                assert_eq!(local.overworld.state.current_map, MapId::TradeCenter);
+                for _ in 0..120 { local.update(&idle); peer.update(&idle); }
+                let expected = if role == LinkRole::Host { (3,4) } else { (6,4) };
+                assert_eq!((local.overworld.state.player.x, local.overworld.state.player.y), expected,
+                    "special_warps.asm assigns each clocking role its own table end");
+                let committed: MobileSave = serde_json::from_str(&local.export_mobile_save().unwrap()).unwrap();
+                assert_eq!(committed.data.game_data.position.map_id, MapId::ViridianPokecenter as u8);
+                assert_eq!((committed.data.game_data.position.x, committed.data.game_data.position.y), (11, 3),
+                    "room entry preserves the receptionist's committed save position");
+                let npc = local.overworld.npc_states.iter().find(|n| n.text_id == 1).unwrap();
+                let opposite = if role == LinkRole::Host { (6,4) } else { (3,4) };
+                assert_eq!((npc.x,npc.y), opposite, "TradeCenter_Script NPC bytes subtract the object +4 offset");
+            }
+
+        });
+    }
+
+    #[test]
     fn actual_trade_room_peer_stats_plays_selected_species_cry_once() {
         let (mut host, mut peer) = paired_trade_room();
         let idle = InputState::new();
@@ -9633,6 +9717,69 @@ mod link_stats_cry_fidelity_tests {
                     "phase":format!("{:?}",host.link_cable.phase()),
                     "party":serde_json::to_value(&host.save_data.party).unwrap(),
                     "text":host.link_cable.text_box()}));
+            }
+            std::fs::write(dir.join("frames.json"), serde_json::to_string_pretty(&records).unwrap()).unwrap();
+        });
+    }
+
+    #[test]
+    #[ignore = "writes matched gameboy role and room captures to FIDELITY_LINK_CAPTURES"]
+    fn capture_gameboy_roles_and_room_entry() {
+        run_link_save_fixture(|| {
+            use pokered_core::overworld::Direction;
+            let dir = PathBuf::from(std::env::var("FIDELITY_LINK_CAPTURES").unwrap());
+            std::fs::create_dir_all(&dir).unwrap();
+            let mut records = Vec::new();
+            let mut capture = |stage: &str, g: &mut PokemonGame| {
+                let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+                g.draw(&mut fb); fb.save_png(&dir.join(format!("{stage}.png"))).unwrap();
+                records.push(serde_json::json!({"stage":stage,"frame":g.frame_count,
+                    "phase":format!("{:?}",g.link_cable.phase()),
+                    "party":serde_json::to_value(&g.save_data.party).unwrap(),
+                    "position":[g.overworld.state.player.x,g.overworld.state.player.y],
+                    "npcs":g.overworld.npc_states.iter().map(|n|serde_json::json!({"id":n.text_id,"x":n.x,"y":n.y,"facing":format!("{:?}",n.facing)})).collect::<Vec<_>>()}));
+            };
+            let idle = InputState::new();
+            let mut local = fixture(Species::Bulbasaur, 4, Direction::Up);
+            local.overworld.state.player.y = 5;
+            let mut peer = fixture(Species::Pikachu, 7, Direction::Down);
+            peer.overworld.state.player.y = 6;
+            let (a,b) = ChannelTransport::new_pair();
+            local.attach_link_transport(Box::new(a), LinkRole::Host);
+            peer.attach_link_transport(Box::new(b), LinkRole::Guest);
+            for _ in 0..120 { local.update(&idle); peer.update(&idle); }
+            local.update(&button(GbButton::A)); peer.update(&idle);
+            for _ in 0..20 { local.update(&idle); peer.update(&idle); }
+            capture("wrong-facing", &mut local);
+            for role in [LinkRole::Host, LinkRole::Guest] {
+                let mut local = fixture(Species::Bulbasaur, 11, Direction::Up);
+                let mut peer = fixture(Species::Pikachu, 11, Direction::Up);
+                for g in [&mut local, &mut peer] {
+                    g.overworld = OverworldScreen::new(MapId::ViridianPokecenter, None, PokemonRedData);
+                    g.overworld.set_event_flag_live(pokered_data::event_flags::EventFlag::EVENT_GOT_POKEDEX);
+                    g.overworld.state.player.x = 11; g.overworld.state.player.y = 3;
+                    g.overworld.state.player.facing = Direction::Up; g.overworld.run_on_load();
+                }
+                let (a,b) = ChannelTransport::new_pair();
+                local.attach_link_transport(Box::new(a), role);
+                peer.attach_link_transport(Box::new(b), if role == LinkRole::Host { LinkRole::Guest } else { LinkRole::Host });
+                for _ in 0..120 { local.update(&idle); peer.update(&idle); }
+                local.update(&button(GbButton::A)); peer.update(&idle);
+                for frame in 0..2000 {
+                    if matches!(local.link_cable.phase(), CableClubPhase::ReceptionSave { .. }) { break; }
+                    let advance = button(GbButton::A);
+                    local.update(if frame % 20 == 19 { &advance } else { &idle }); peer.update(&idle);
+                }
+                assert!(matches!(local.link_cable.phase(), CableClubPhase::ReceptionSave { .. }));
+                local.update(&button(GbButton::A)); peer.update(&idle);
+                local.update(&idle); local.update(&button(GbButton::A)); peer.update(&idle);
+                for _ in 0..1000 {
+                    local.update(&idle); peer.update(&idle);
+                    if local.overworld.state.current_map == MapId::TradeCenter { break; }
+                }
+                assert_eq!(local.overworld.state.current_map, MapId::TradeCenter);
+                for _ in 0..120 { local.update(&idle); peer.update(&idle); }
+                capture(if role == LinkRole::Host { "room-host" } else { "room-guest" }, &mut local);
             }
             std::fs::write(dir.join("frames.json"), serde_json::to_string_pretty(&records).unwrap()).unwrap();
         });
