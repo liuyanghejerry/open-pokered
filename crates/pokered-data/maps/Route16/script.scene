@@ -77,16 +77,8 @@ game_scene Route16 {
     @if (getFlag("EVENT_BEAT_ROUTE16_SNORLAX")) {
       // Already dealt with — Snorlax has returned to the mountains.
       hideObjectByName("ROUTE_16_OBJ_7")
-    } @else @if (hasItem("POKE_FLUTE") || getFlag("EVENT_FIGHT_ROUTE16_SNORLAX")) {
-      // No overworld bag/use-item screen exists yet, so the POKe FLUTE is "used"
-      // by talking to the sleeping SNORLAX while carrying it — approximating the
-      // original ItemUsePokeFlute path that sets EVENT_FIGHT_ROUTE16_SNORLAX.
-      @if (!getFlag("EVENT_FIGHT_ROUTE16_SNORLAX")) {
-        @speaker("") { @t("<PLAYER> played the POKe\nFLUTE!", "<PLAYER>吹响了宝可梦之笛！") }
-        // PlayedFluteHadEffectText (engine/items/item_effects.asm:1801-1806)
-        playSound("SFX_POKEFLUTE")
-        setFlag("EVENT_FIGHT_ROUTE16_SNORLAX")
-      }
+    } @else @if (getFlag("EVENT_FIGHT_ROUTE16_SNORLAX")) {
+      // Only USE from the bag wakes Snorlax; carrying the flute is insufficient.
       playCry("SNORLAX")
       @speaker("") { @t("SNORLAX woke up!\n\nIt attacked in a grumpy\nrage!", "卡比兽醒过来了！\n\n它气呼呼地发起了攻击！") }
       // Route16DefaultScript resets FIGHT and hides the sprite before battle.

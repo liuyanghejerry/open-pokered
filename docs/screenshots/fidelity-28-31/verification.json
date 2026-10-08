@@ -1,0 +1,28 @@
+{
+  "core": {
+    "passed": 3100,
+    "ignored": 1
+  },
+  "app": {
+    "passed": 160,
+    "ignored": 3
+  },
+  "data-boa": {
+    "passed": 439,
+    "ignored": 1
+  },
+  "playthrough": {
+    "fresh": "m01-m49 passed, champion/Hall of Fame/credits/autosave/separate-process CONTINUE",
+    "retry": "First fresh attempt stopped at VictoryRoad3F -> VictoryRoad2F navigation; second fresh run passed without navigation changes.",
+    "successful_production_revision": "a11fb0e",
+    "final_revision_attempts": [
+      "MtMoonB2F -> Route4 navigation stop",
+      "PokemonTower6F no path (6,7)->(10,16)"
+    ],
+    "control": "Unchanged master m01-m25 passed"
+  },
+  "runtime": "Actual bag use on both Snorlax routes, both Giovanni entry coordinates, all three roof drinks passed.",
+  "base": "65d98240470e8013a9d130e8bda67cd0f7c17d8c",
+  "screenshots": "Identical input; absolute frames snorlax=835, warden=1300, giovanni=701.",
+  "final_production_revision": "80aad7f12052e57c9e9476a8e5687a1a3bcb2d72"
+}

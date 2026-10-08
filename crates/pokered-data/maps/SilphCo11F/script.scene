@@ -7,14 +7,8 @@
 //    original tries GiveItem and falls back to a "no room" line if the bag is
 //    full.
 //  - Secretary / Beauty (npc 2): dialogue only (thank-you).
-//  - Giovanni (npc 3): the Silph Co. boss battle. In the original this is a
-//    coord-triggered scripted state machine (player steps onto 6,13 / 7,12,
-//    Giovanni walks down 3 tiles, talks, battles). We translate it to the
-//    talk-driven scripted-boss pattern (map.json isTrainer=false so the script
-//    owns the battle->reward flow), which reproduces the dialogue and the
-//    OPP_GIOVANNI2 battle faithfully within the DSL surface. On victory we set
-//    EVENT_BEAT_SILPH_CO_GIOVANNI and hide Giovanni and the two Rocket guards
-//    (the original's "Team Rocket leaves SILPH" sequence).
+//  - Giovanni (npc 3): coord interception, dialogue, three downward steps,
+//    facing adjustment and boss battle; direct interaction also starts battle.
 //  - Rocket guards (npc 4, 5): sight-engaged trainers; handlers are dialogue
 //    only (the runtime drives the battle).
 
@@ -50,18 +44,23 @@ game_scene SilphCo11F {
   }
 
   // ── On-step Giovanni interception (coords (6,13)/(7,12)) ────────────────
-  // Original SilphCo11FDefaultScript: while EVENT_BEAT_SILPH_CO_GIOVANNI is
-  // unset, stepping onto either tile runs Giovanni's talk handler (his text +
-  // scripted battle, same as pressing A on him; Giovanni also walks down three
-  // tiles in the original — the player stays put, only the sprite movement is
-  // omitted). Post-beat the DefaultScript returns early, so this is gated on
-  // !EVENT_BEAT_SILPH_CO_GIOVANNI.
+  // Original SilphCo11FDefaultScript: text, DOWN x3, reciprocal facing,
+  // Delay3, battle. Defeated Giovanni no longer intercepts either tile.
   @storyline("giovanniStep") {
     @trigger(map = "SilphCo11F", name = "giovanniStep1", coords = [[6, 13], [7, 12]])
     @if (!getFlag("EVENT_BEAT_SILPH_CO_GIOVANNI")) {
       @speaker("") {
         @t("Ah <PLAYER>! So we meet\nagain!\n\nThe PRESIDENT and I are\ndiscussing a vital business\nproposition.\n\nKeep your nose out of\ngrown-up matters...\n\nOr, experience a world of\npain!", "啊，<PLAYER>！我们又见面了！\n\n我和社长正在商讨一个重要的商\n业提案。\n\n大人的事情小孩子不要插手……\n\n否则的话，让你尝尝苦头！")
       }
+      moveNpc("SILPH_CO_11F_OBJ_3", [[6, 10], [6, 11], [6, 12]])
+      @if (getPlayerY() == 13) {
+        facePlayer("up")
+        faceNpc("3", "down")
+      } @else {
+        facePlayer("left")
+        faceNpc("3", "right")
+      }
+      delay(3)
       result = startBattle("OPP_GIOVANNI2")
       @if (result == "win") {
         @speaker("") {
@@ -110,7 +109,7 @@ game_scene SilphCo11F {
       given = giveItem("MASTER_BALL", 1)
       @if (given) {
         setFlag("EVENT_GOT_MASTER_BALL")
-        @speaker("") { @t("<PLAYER> got a MASTER BALL!", "<PLAYER>获得了大师球！") }
+        showItemDialogue(t("<PLAYER> got a MASTER BALL!", "<PLAYER>获得了大师球！"), "SFX_GET_KEY_ITEM")
       } @else {
         @speaker("") { @t("You have no room for this.", "你没有空间放这个了！") }
       }

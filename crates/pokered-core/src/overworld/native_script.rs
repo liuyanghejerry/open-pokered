@@ -2630,6 +2630,8 @@ mod tests {
     #[test]
     fn fidelity_reward_receipts_use_original_fanfare_only_on_success() {
         for (map, handler, bag, sound) in [
+            ("CinnabarLabMetronomeRoom", "talkScientist1", "", "SFX_GET_ITEM_1"),
+            ("SilphCo11F", "talkSilphPresident", "", "SFX_GET_KEY_ITEM"),
             ("BillsHouse", "talkBill", "", "SFX_GET_KEY_ITEM"),
             ("CeladonDiner", "talkGymGuide", "", "SFX_GET_KEY_ITEM"),
             ("BikeShop", "talkBikeShopClerk", "BIKE_VOUCHER", "SFX_GET_KEY_ITEM"),
@@ -3205,13 +3207,88 @@ mod tests {
     }
 
     #[test]
+    fn fidelity_snorlax_talk_with_flute_does_not_wake_it() {
+        for map in ["Route12", "Route16"] {
+            let mut engine = NativeScriptEngine::new();
+            engine.load_map(map, &pokered_data::embedded_scenes::get_scene_ast(map).unwrap());
+            engine.seed_set("bag", &["POKE_FLUTE".into()]);
+            let commands = drive_fidelity_scene(&mut engine, "talkSnorlax", false, "", &[]);
+            assert_eq!(commands.len(), 1);
+            assert!(matches!(&commands[0], ScriptCommand::ShowText { text } if text.contains("sleeping")));
+        }
+    }
+
+    #[test]
+    fn fidelity_silph_giovanni_walks_and_faces_before_battle() {
+        for (x, y, player, npc) in [(6, 13, "up", "down"), (7, 12, "left", "right")] {
+            let mut engine = NativeScriptEngine::new();
+            engine.load_map("SilphCo11F", &pokered_data::embedded_scenes::get_scene_ast("SilphCo11F").unwrap());
+            engine.set_player_position(x, y);
+            let commands = drive_fidelity_scene(&mut engine, "giovanniStep", false, "lose", &[]);
+            let walk = commands.iter().position(|c| matches!(c, ScriptCommand::MoveNpc { path, .. } if path == &vec![(6,10),(6,11),(6,12)])).unwrap();
+            let fight = commands.iter().position(|c| matches!(c, ScriptCommand::StartBattle { .. })).unwrap();
+            assert!(walk < fight);
+            assert!(commands[walk+1..fight].contains(&ScriptCommand::FacePlayer { direction: player.into() }));
+            assert!(commands[walk+1..fight].contains(&ScriptCommand::FaceNpc { npc_id: "3".into(), direction: npc.into() }));
+            assert!(!engine.get_flag("EVENT_BEAT_SILPH_CO_GIOVANNI"));
+        }
+    }
+
+    #[test]
+    fn fidelity_roof_drink_rewards_sound_only_when_delivered() {
+        for (drink, flag) in [("FRESH_WATER", "EVENT_GOT_TM13"), ("SODA_POP", "EVENT_GOT_TM48"), ("LEMONADE", "EVENT_GOT_TM49")] {
+            for (room, repeat) in [(true, false), (false, false), (true, true)] {
+                let mut engine = NativeScriptEngine::new();
+                engine.load_map("CeladonMartRoof", &pokered_data::embedded_scenes::get_scene_ast("CeladonMartRoof").unwrap());
+                engine.seed_set("bag", &[drink.into()]);
+                engine.set_flag(flag, repeat);
+                let mut next = engine.call_function_no_args("talkLittleGirl").unwrap();
+                let mut receipts = 0;
+                for _ in 0..80 {
+                    let Some(c) = next else { break };
+                    let result = match &c {
+                        ScriptCommand::Custom { name, .. } if name == "filterBag" => CommandResult::Text(drink.into()),
+                        ScriptCommand::Custom { name, .. } if name == "showItemDialogue" => {
+                            receipts += 1;
+                            CommandResult::Void
+                        },
+                        ScriptCommand::ShowChoice { .. } => CommandResult::Number(0.0),
+                        ScriptCommand::GiveItem { .. } => CommandResult::Bool(room),
+                        _ => CommandResult::Void,
+                    };
+                    next = engine.signal_done(result).unwrap();
+                }
+                assert!(engine.is_idle());
+                assert_eq!(receipts, usize::from(room && !repeat), "{drink}: {room}, {repeat}");
+                assert_eq!(engine.get_flag(flag), room || repeat);
+            }
+        }
+    }
+
+    #[test]
+    fn fidelity_warden_teeth_text_and_hm04_fanfare_order() {
+        for room in [false, true] {
+            let mut engine = NativeScriptEngine::new();
+            engine.load_map("WardensHouse", &pokered_data::embedded_scenes::get_scene_ast("WardensHouse").unwrap());
+            engine.seed_set("bag", &["GOLD_TEETH".into()]);
+            let commands = drive_fidelity_scene(&mut engine, "talkWarden", room, "", &[]);
+            let receipt_count = commands.iter().filter(|c| matches!(c, ScriptCommand::Custom { name, .. } if name == "showItemDialogue")).count();
+            assert_eq!(receipt_count, 1 + usize::from(room));
+            let teeth = commands.iter().position(|c| matches!(c, ScriptCommand::ShowText { text } if text.contains("popped"))).unwrap();
+            let thanks = commands.iter().position(|c| matches!(c, ScriptCommand::ShowText { text } if text.contains("Thanks, kid"))).unwrap();
+            assert!(teeth < thanks);
+            assert_eq!(engine.get_flag("EVENT_GOT_HM04"), room);
+        }
+    }
+
+    #[test]
     fn fidelity_snorlax_is_hidden_before_battle_even_after_blackout() {
         for map in ["Route12", "Route16"] {
             for outcome in ["win", "caught", "ran", "fled", "lose"] {
                 let scene = pokered_data::embedded_scenes::get_scene_ast(map).unwrap();
                 let mut engine = NativeScriptEngine::new();
                 engine.load_map(map, &scene);
-                engine.seed_set("bag", &["POKE_FLUTE".into()]);
+                engine.set_flag(&format!("EVENT_FIGHT_{}_SNORLAX", map.to_uppercase()), true);
                 let commands = drive_fidelity_scene(&mut engine, "talkSnorlax", false, outcome, &[]);
                 let hide = commands.iter().position(|c| matches!(c, ScriptCommand::HideObjectByName { .. })).unwrap();
                 let battle = commands.iter().position(|c| matches!(c, ScriptCommand::StartWildBattle { .. })).unwrap();
