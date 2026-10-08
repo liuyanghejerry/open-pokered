@@ -10029,7 +10029,9 @@ mod link_stats_cry_fidelity_tests {
             }
             assert!(saw_main_menu);
             assert_eq!(g.state.screen, GameScreen::Overworld);
-            assert_eq!((g.overworld.state.player.x,g.overworld.state.player.y), (23,29));
+            let start_x=std::env::var("FIDELITY_MOVEMENT_X").unwrap_or_else(|_|"23".into()).parse::<u16>().unwrap();
+            let start_y=std::env::var("FIDELITY_MOVEMENT_Y").unwrap_or_else(|_|"29".into()).parse::<u16>().unwrap();
+            assert_eq!((g.overworld.state.player.x,g.overworld.state.player.y), (start_x,start_y));
             assert_eq!(g.overworld.state.player.facing,pokered_core::overworld::Direction::Down);
             let bike=std::env::var("FIDELITY_MOVEMENT_BIKE").is_ok_and(|s|s=="true");
             if bike {
@@ -10059,13 +10061,19 @@ mod link_stats_cry_fidelity_tests {
             };
             g.overworld.set_rng_seed(0);
             for _ in 0..120 { g.update(&idle); }
+            let duration=std::env::var("FIDELITY_MOVEMENT_HOLD").unwrap_or_else(|_|"16".into()).parse::<i32>().unwrap();
+            let start_hold=std::env::var("FIDELITY_MOVEMENT_START_HOLD").ok().map(|s|s.parse::<i32>().unwrap());
             let mut input = InputState::new();
             let mut records = Vec::new();
             for t in -1i32..100 {
                 if t >= 0 {
                     input.begin_frame();
                     if t == 0 { input.press(trigger); }
-                    if t == 16 { input.release(trigger); }
+                    if t == duration { input.release(trigger); }
+                    if let Some(hold)=start_hold {
+                        if t==5 {input.press(GbButton::Start);}
+                        if t==5+hold {input.release(GbButton::Start);}
+                    }
                     g.update(&input);
                 }
                 let mut fb = FrameBuffer::new(RenderConfig::new(160,144), Rgba::WHITE);
