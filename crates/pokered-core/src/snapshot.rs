@@ -84,6 +84,10 @@ pub struct OverworldSnapshot {
     pub state: OverworldState,
     pub map_data: Option<MapData>,
     pub npc_states: Vec<NpcRuntimeState>,
+    #[serde(default)]
+    pub npc_sprite_states: Vec<crate::overworld::presentation::NpcSpriteState>,
+    #[serde(default)]
+    pub field_text_restore: Option<crate::overworld::presentation::FieldTextRestoreState>,
     pub npc_pokemon_data: Vec<PokemonNpcData>,
     pub pending_dialogue: Option<BedroomDialogue>,
     pub pending_choice: Option<PendingChoice>,
@@ -255,6 +259,8 @@ impl OverworldSnapshot {
             state: screen.state.clone(),
             map_data: None,
             npc_states: Vec::new(),
+            npc_sprite_states: Vec::new(),
+            field_text_restore: None,
             npc_pokemon_data: Vec::new(),
             pending_dialogue: None,
             pending_choice: None,
@@ -372,7 +378,7 @@ impl OverworldSnapshot {
             ship_departure: None,
         };
         snapshot_fields!(restore &mut snap, screen,
-            frame_counter, state, map_data, npc_states, npc_pokemon_data, pending_dialogue,
+            frame_counter, state, map_data, npc_states, npc_sprite_states, field_text_restore, npc_pokemon_data, pending_dialogue,
             pending_choice, script_money_box, script_coin_box, gift_box_number, pending_pokedex_entry, pending_naming_screen, naming_flash_frames,
             pending_party_select, party_select_requested, pending_set_nickname,
             pending_emotion_bubble, pending_healing_machine, last_map, last_map_entry,
@@ -416,7 +422,7 @@ impl OverworldSnapshot {
         screen.load_map_script_ex(self.state.current_map, false);
         snapshot_fields!(restore screen, self,
             wild_data_state,
-            frame_counter, state, map_data, npc_states, npc_pokemon_data, pending_dialogue,
+            frame_counter, state, map_data, npc_states, npc_sprite_states, field_text_restore, npc_pokemon_data, pending_dialogue,
             pending_choice, script_money_box, script_coin_box, gift_box_number, pending_pokedex_entry, pending_naming_screen, naming_flash_frames,
             pending_party_select, party_select_requested, pending_set_nickname,
             pending_emotion_bubble, pending_healing_machine, last_map, last_map_entry,
@@ -653,12 +659,14 @@ mod field_clock_compatibility_tests {
             pokered_data::impl_traits::PokemonRedData);
         let mut old = serde_json::to_value(OverworldSnapshot::capture(&screen)).unwrap();
         for field in ["player_last_stop_direction", "player_moving_direction", "sampled_player_input",
-            "field_loop_wait", "player_sprite_state", "player_camera_state", "bg_transfer_portion", "bike_redraw_advance", "check_player_turn", "boulder_push", "boulder_resume_input"] {
+            "field_loop_wait", "npc_sprite_states", "field_text_restore", "player_sprite_state", "player_camera_state", "bg_transfer_portion", "bike_redraw_advance", "check_player_turn", "boulder_push", "boulder_resume_input"] {
             assert!(old.as_object_mut().unwrap().remove(field).is_some());
         }
         let decoded: OverworldSnapshot = serde_json::from_value(old).unwrap();
         assert_eq!(decoded.sampled_player_input, [false; 8]);
         assert_eq!(decoded.field_loop_wait, 0);
+        assert!(decoded.npc_sprite_states.is_empty());
+        assert!(decoded.field_text_restore.is_none());
         assert!(decoded.boulder_push.is_none());
         assert!(decoded.boulder_resume_input.is_none());
         let mut restored = OverworldScreen::new(MapId::PalletTown, None,

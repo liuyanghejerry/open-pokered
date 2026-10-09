@@ -313,7 +313,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         // Do this after script/interaction dispatch, including early returns,
         // so a newly opened textbox starts the OAM pipeline this frame.
         if self.pending_dialogue.is_some() && self.state.walk_counter == 0 {
-            self.player_sprite_state.load_font();
+            self.prepare_field_textbox_sprite();
         }
         action
     }
@@ -321,6 +321,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     fn update_frame_inner(&mut self, input: OverworldInput) -> ScreenAction {
         self.frame_counter = self.frame_counter.wrapping_add(1);
         self.player_sprite_state.hardware_frame(self.state.player.facing);
+        self.sync_npc_sprite_states();
+        for sprite in &mut self.npc_sprite_states { sprite.hardware_frame(); }
         self.latch_player_camera();
         self.sfx_event = OverworldSfxEvent::None;
         if self.preserve_audio_requests_next_frame {
@@ -1381,6 +1383,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             control_a_just_pressed = input.a && !self.sampled_player_input.a;
             self.sampled_player_input = input;
             if start_pressed {
+                // OverworldLoop .displayDialogue updates sprites once
+                // before DisplayTextIDInit sets BIT_FONT_LOADED.
+                self.run_npc_movement_tick();
                 return ScreenAction::Transition(GameScreen::StartMenu);
             }
         }
@@ -1665,6 +1670,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     self.audio_requests
                         .push(OverworldAudioRequest::PlayMapMusic { map: new_map });
                     let hidden_npc_ids = self.map_script_config.hidden_npc_ids();
+                    self.npc_sprite_states.clear();
+                    self.field_text_restore = None;
                     self.npc_states = self
                         .map_data
                         .as_ref()
@@ -2344,6 +2351,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         if self.is_text_ui_active() {
             return;
         }
+        if self.npc_sprite_states.len() != self.npc_states.len() {
+            self.sync_npc_sprite_states();
+        }
         if let Some(ref map) = self.map_data {
             let rng_value = (self
                 .frame_counter
@@ -2391,6 +2401,15 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     }
                 }
             }
+            let mut offscreen_slots = Vec::new();
+            if !frozen {
+                for slot in 0..self.npc_states.len() {
+                    if self.npc_states[slot].visible && !self.npc_in_field_viewport(slot) {
+                        self.npc_states[slot].visible = false;
+                        offscreen_slots.push(slot);
+                    }
+                }
+            }
             npc_movement::update_npc_movement(
                 &mut self.npc_states,
                 self.state.player.x,
@@ -2403,10 +2422,19 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 map.tileset,
                 &collision::PokemonCollisionProvider::new(self.state.current_map, map.tileset),
             );
+            for i in offscreen_slots { self.npc_states[i].visible = true; }
             for &i in &frozen_slots {
                 self.npc_states[i].movement_type = NpcMovementType::Wander;
             }
             self.hasten_followed_npc();
+            let player_walking = self.state.walk_counter != 0;
+            for slot in 0..self.npc_states.len() {
+                if !frozen && (!self.npc_states[slot].visible || !self.npc_in_field_viewport(slot)) {
+                    self.npc_sprite_states[slot].hide();
+                } else {
+                    self.npc_sprite_states[slot].update_sprite(&self.npc_states[slot], player_walking);
+                }
+            }
         }
     }
 
@@ -4931,5 +4959,19 @@ mod vending_delivery_fidelity_tests {
             assert_eq!(ow.active_script_effect.is_none(), frame == 120);
         }
         assert_eq!(total, 60);
+    }
+}
+
+impl<G: GameData<Tileset = pokered_data::tilesets::TilesetId>> OverworldScreen<G> {
+    pub fn tick_field_text_restore(&mut self) -> bool {
+        let Some(restore) = &mut self.field_text_restore else { return false; };
+        restore.elapsed = restore.elapsed.saturating_add(1);
+        if !restore.finished() { return false; }
+        self.field_text_restore = None;
+        // CloseTextDisplay returns through UpdateSprites before the field
+        // DelayFrame pair. Its sprite result still drains through OAM.
+        self.run_npc_movement_tick();
+        self.field_loop_wait = 2;
+        true
     }
 }

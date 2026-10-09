@@ -73,16 +73,19 @@ fn assert_column_walkable(screen: &OverworldScreen, tiles: &[(u16, u16)]) {
     }
 }
 
-/// Steering sanity: with the player far away and idle, the steered frame
+/// Steering sanity: with the player visible but two cells away and idle, the steered frame
 /// really does start the Fisher walking LEFT (proves the rng steering and
 /// that the target tile is enterable — the overlap tests are only
 /// meaningful if the roll they gate would otherwise move).
 #[test]
 fn wander_roll_steering_moves_fisher_left() {
     let mut screen = screen_with_fisher_at(12, 14);
-    assert_column_walkable(&screen, &[(11, 14), (12, 14)]);
-    screen.state.player.x = 5;
-    screen.state.player.y = 5;
+    assert_column_walkable(&screen, &[(11, 12), (11, 14), (12, 14)]);
+    // Original CheckSpriteAvailability freezes offscreen sprites. Keep the
+    // Fisher visible without blocking (11,14), using the same player origin
+    // as the ledge-landing regression below.
+    screen.state.player.x = 11;
+    screen.state.player.y = 12;
     screen.frame_counter = frame_rolling_direction(2, 2); // Left
     screen.update_frame(neutral());
 

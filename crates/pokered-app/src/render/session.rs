@@ -645,7 +645,12 @@ impl OverworldVisualKey {
         // current pixels. Hash only the NPC fields consumed by the renderer.
         let mut npc_hash = 0x811c_9dc5;
         hash_u16(&mut npc_hash, screen.npc_states.len() as u16);
-        for npc in &screen.npc_states {
+        for (slot, npc) in screen.npc_states.iter().enumerate() {
+            if let Some(pose) = screen.ordinary_npc_sprite_pose(slot) {
+                hash_u16(&mut npc_hash, pose.x as u16);
+                hash_u16(&mut npc_hash, pose.y as u16);
+                hash_byte(&mut npc_hash, pose.image);
+            }
             hash_byte(&mut npc_hash, npc.npc_index);
             hash_byte(&mut npc_hash, npc.sprite_id);
             hash_u16(&mut npc_hash, npc.x);
@@ -717,7 +722,7 @@ impl StartMenuVisualKey {
         }
         Some(Self {
             cursor: game.start_menu.cursor(),
-            text_portions: game.start_menu.visible_text_portions(),
+            text_portions: if game.overworld.field_text_window_visible() { game.start_menu.visible_text_portions() } else { None },
             item_count: game.start_menu.item_count(),
             items_hash,
             player_name_hash,

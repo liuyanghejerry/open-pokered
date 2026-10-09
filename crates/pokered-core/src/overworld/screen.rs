@@ -747,6 +747,8 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     /// Remaining hardware frames in OverworldLoop's DelayFrame pair.
     pub(crate) field_loop_wait: u8,
     pub(crate) player_sprite_state: presentation::PlayerSpriteState,
+    pub(crate) npc_sprite_states: Vec<presentation::NpcSpriteState>,
+    pub field_text_restore: Option<presentation::FieldTextRestoreState>,
     pub(crate) player_camera_state: Option<presentation::PlayerCameraState>,
     pub bg_transfer_portion: u8,
     /// First AdvancePlayerSprite redraw finishes before the second bike advance.
@@ -1192,6 +1194,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             sampled_player_input: dotzuki_engine::overworld::OverworldInput::new(false,false,false,false,false,false,false,false),
             field_loop_wait: 0,
             player_sprite_state: presentation::PlayerSpriteState::default(),
+            npc_sprite_states: Vec::new(),
+            field_text_restore: None,
             player_camera_state: None,
             bg_transfer_portion: 0,
             bike_redraw_advance: false,
@@ -2549,6 +2553,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     /// Restore counters and status bytes that live outside the event bitset.
     pub fn restore_system_save_state(&mut self, data: &crate::save::game_data::GameData) {
         self.player_sprite_state = presentation::PlayerSpriteState::default();
+        self.npc_sprite_states.clear();
+        self.field_text_restore = None;
         self.player_camera_state = None;
         self.player_last_stop_direction = data.player_last_stop_direction;
         self.player_moving_direction = data.player_moving_direction;
@@ -2698,6 +2704,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     .push(OverworldAudioRequest::PlayMapMusic { map: warp.dest_map });
             }
             let hidden_npc_ids = self.map_script_config.hidden_npc_ids();
+            self.npc_sprite_states.clear();
+            self.field_text_restore = None;
             self.npc_states = self
                 .map_data
                 .as_ref()
@@ -3204,10 +3212,35 @@ impl<G: GameData> OverworldScreen<G> {
 
 impl<G: GameData> OverworldScreen<G> {
     pub fn prepare_field_textbox_sprite(&mut self) {
+        self.prepare_field_sprite_font((0, 12, 20, 6));
+    }
+
+    pub fn prepare_start_menu_sprite(&mut self, has_pokedex: bool) {
+        self.prepare_field_sprite_font((10, 0, 10, if has_pokedex { 16 } else { 14 }));
+    }
+
+    fn prepare_field_sprite_font(&mut self, (x, y, width, height): (i32, i32, i32, i32)) {
         self.player_sprite_state.load_font();
+        self.sync_npc_sprite_states();
+        let px = i32::from(self.state.player.x) * 16;
+        let py = i32::from(self.state.player.y) * 16;
+        for slot in 0..self.npc_states.len() {
+            let npc = &self.npc_states[slot];
+            if !npc.visible { continue; }
+            let offscreen = !self.npc_in_field_viewport(slot);
+            let sprite = &mut self.npc_sprite_states[slot];
+            // GetTileSpriteStandsOn samples the two lower tiles and the
+            // two tiles above, after aligning Y+4 to a 16-pixel cell.
+            let tx = (sprite.pending[1].x - px + 64).div_euclid(8);
+            let ty = (sprite.pending[1].y - py + 64).div_euclid(16) * 2;
+            let font_footprint = tx < x + width && tx + 2 > x
+                && ty < y + height && ty + 2 > y;
+            sprite.load_font(npc, offscreen || font_footprint);
+        }
     }
 
     pub fn tick_player_presentation_during_ui(&mut self) {
+        for sprite in &mut self.npc_sprite_states { sprite.hardware_frame(); }
         if self.player_sprite_state.initialized {
             self.player_sprite_state.hardware_frame(self.state.player.facing);
         }
@@ -3217,5 +3250,91 @@ impl<G: GameData> OverworldScreen<G> {
 impl<G: GameData> OverworldScreen<G> {
     pub fn tick_ui_background_transfer(&mut self) {
         self.bg_transfer_portion = if self.bg_transfer_portion >= 2 { 0 } else { self.bg_transfer_portion + 1 };
+    }
+}
+
+impl<G: GameData> OverworldScreen<G> {
+    pub(crate) fn sync_npc_sprite_states(&mut self) {
+        self.npc_sprite_states.truncate(self.npc_states.len());
+        for (slot, npc) in self.npc_states.iter().enumerate() {
+            if let Some(sprite) = self.npc_sprite_states.get_mut(slot) {
+                if !sprite.matches(npc) { *sprite = presentation::NpcSpriteState::from_npc(npc); }
+            } else {
+                self.npc_sprite_states.push(presentation::NpcSpriteState::from_npc(npc));
+            }
+        }
+    }
+
+    pub fn ordinary_npc_sprite_pose(&self, slot: usize) -> Option<presentation::NpcSpritePose> {
+        let npc = self.npc_states.get(slot)?;
+        if npc.scripted_frame.is_some() || self.active_script_effect.is_some()
+            || !self.scripted_player_path.is_empty() || self.cutscene_manager.is_blocking()
+            || self.boulder_push.is_some_and(|push| push.npc_index == slot) { return None; }
+        self.npc_sprite_states.get(slot).filter(|sprite| sprite.matches(npc)).map(|sprite| sprite.visible)
+    }
+}
+
+impl<G: GameData> OverworldScreen<G> {
+    pub fn field_text_window_visible(&self) -> bool {
+        self.field_text_restore.as_ref().is_none_or(|restore| restore.window_visible())
+    }
+
+    pub fn begin_start_menu_restore(&mut self) {
+        use pokered_data::sprite_set_data::{MapSpriteSetRef, SplitDirection, SpriteSetId,
+            MAP_SPRITE_SETS, SPLIT_MAP_SPRITE_SETS};
+        let map = self.state.current_map;
+        let (x, y) = (self.state.player.x, self.state.player.y);
+        let set = MAP_SPRITE_SETS.get(map as usize).map(|entry| match *entry {
+            MapSpriteSetRef::Direct(set) => set,
+            MapSpriteSetRef::Split(index) => {
+                // Original GetSplitMapSpriteSetID's Route20 coastline split.
+                if map == MapId::Route20 {
+                    if x < 43 { SpriteSetId::PalletViridian }
+                    else if x >= 62 || y < if x >= 55 { 8 } else { 13 } { SpriteSetId::Fuchsia }
+                    else { SpriteSetId::PalletViridian }
+                } else {
+                    let split = &SPLIT_MAP_SPRITE_SETS[index as usize];
+                    let coord = match split.direction { SplitDirection::NorthSouth => y, SplitDirection::EastWest => x };
+                    if coord < u16::from(split.coordinate) { split.set_north_or_west } else { split.set_south_or_east }
+                }
+            }
+        });
+        let mut seen = [false; 256];
+        let mut frames = 0;
+        let mut add = |sprite: pokered_data::sprites::SpriteId| {
+            let id = sprite as usize;
+            if !seen[id] && !sprite.is_still() {
+                seen[id] = true;
+                frames += 2; // CopyVideoData: 12 tiles, 8 then 4.
+            }
+        };
+        if let Some(set) = set {
+            for &sprite in set.sprites() { add(sprite); }
+        } else {
+            // LoadMapSpriteTilePatterns includes hidden slots and deduplicates
+            // picture IDs; four-tile still sprites have no upper block.
+            for npc in &self.npc_states {
+                if let Some(sprite) = pokered_data::sprites::SpriteId::from_u8(npc.sprite_id) { add(sprite); }
+            }
+        }
+        self.field_text_restore = Some(presentation::FieldTextRestoreState {
+            elapsed: 0, npc_transfer_frames: frames,
+        });
+    }
+}
+
+impl<G: GameData> OverworldScreen<G> {
+    pub(crate) fn npc_in_field_viewport(&self, slot: usize) -> bool {
+        let npc = &self.npc_states[slot];
+        if !npc.scripted_path.is_empty() || npc.movement_type == dotzuki_engine::overworld::NpcMovementType::FixedPath {
+            return true; // CheckSpriteAvailability skips these coordinate tests for scripted paths.
+        }
+        let (dx, dy) = if npc.walk_counter != 0 { match npc.facing {
+            Direction::Down => (0, 1), Direction::Up => (0, -1),
+            Direction::Left => (-1, 0), Direction::Right => (1, 0),
+        }} else { (0, 0) };
+        let (x, y) = (i32::from(npc.x) + dx + 4, i32::from(npc.y) + dy + 4);
+        let (px, py) = (i32::from(self.state.player.x), i32::from(self.state.player.y));
+        x >= px && x <= px + 9 && y >= py && y <= py + 8
     }
 }

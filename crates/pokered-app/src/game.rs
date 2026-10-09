@@ -2627,7 +2627,7 @@ impl PokemonGame {
                 };
                 if self.state.screen == GameScreen::Overworld {
                     let previous=self.overworld.sampled_player_input();
-                    self.overworld.prepare_field_textbox_sprite();
+                    self.overworld.prepare_start_menu_sprite(has_pokedex);
                     self.start_menu.begin_field_initialization_with_portion(StartMenuInput {
                         up:previous.up,down:previous.down,a:previous.a,b:previous.b,start:previous.start,
                     }, self.overworld.bg_transfer_portion);
@@ -3360,7 +3360,8 @@ impl PokemonGame {
             self.overworld.tick_player_presentation_during_ui();
             // Window transfers are suspended during DisplayTextIDInit's
             // font copy; other UI frames keep cycling the retained third.
-            if !matches!(self.state.screen, GameScreen::StartMenu) || self.start_menu.field_presentation_stage() >= 19 {
+            if (!matches!(self.state.screen, GameScreen::StartMenu) || self.start_menu.field_presentation_stage() >= 19)
+                && self.overworld.field_text_restore.as_ref().is_none_or(|restore| restore.bg_transfer_enabled()) {
                 self.overworld.tick_ui_background_transfer();
             }
         }
@@ -4776,6 +4777,11 @@ impl PokemonGame {
                 }
             }
             GameScreen::StartMenu => {
+                if self.overworld.field_text_restore.is_some() {
+                    if self.overworld.tick_field_text_restore() {
+                        ScreenAction::Transition(GameScreen::Overworld)
+                    } else { ScreenAction::Continue }
+                } else {
                 let sm_input = StartMenuInput {
                     up: input.is_just_pressed(GbButton::Up),
                     down: input.is_just_pressed(GbButton::Down),
@@ -4814,7 +4820,10 @@ impl PokemonGame {
                         // on an empty party, with the usual three-frame redraw.
                         ScreenAction::Transition(GameScreen::StartMenu)
                     }
-                    StartMenuAction::Close => ScreenAction::Transition(GameScreen::Overworld),
+                    StartMenuAction::Close => {
+                        self.overworld.begin_start_menu_restore();
+                        ScreenAction::Continue
+                    },
                     StartMenuAction::OpenOption => {
                         ScreenAction::Transition(GameScreen::OptionsMenu)
                     }
@@ -4831,6 +4840,7 @@ impl PokemonGame {
                         ScreenAction::Transition(GameScreen::TrainerCard)
                     }
                     _ => ScreenAction::Continue,
+                }
                 }
             }
             GameScreen::OptionsMenu => {
@@ -7821,12 +7831,12 @@ impl PokemonGame {
                     frame_buffer,
                     self.state.config.language,
                 );
-                draw_start_menu(
+                if self.overworld.field_text_window_visible() { draw_start_menu(
                     &self.start_menu,
                     &self.player_name,
                     frame_buffer,
                     self.state.config.language,
-                );
+                ); }
             }
             GameScreen::OptionsMenu => {
                 draw_options_menu(&self.options_menu, frame_buffer, self.state.config.language);
@@ -9529,8 +9539,98 @@ mod link_stats_cry_fidelity_tests {
             g.audio = Some(AudioOutput::new_pcm());
             let previous = g.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.current_sfx_id;
             g.update(&button(GbButton::Start));
-            assert_eq!(g.state.screen, GameScreen::Overworld);
+            assert_eq!(g.state.screen, GameScreen::StartMenu);
+            assert!(g.overworld.field_text_restore.is_some());
+            for frame in 1..=12 {
+                g.update(&idle);
+                assert_eq!(g.state.screen, if frame < 12 { GameScreen::StartMenu } else { GameScreen::Overworld });
+            }
             assert_eq!(g.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.current_sfx_id, previous);
+        });
+    }
+
+    #[test]
+    fn npc_field_font_and_start_close_match_original_ram_and_lcd_frames() {
+        use pokered_core::overworld::Direction;
+        use pokered_core::snapshot::OverworldSnapshot;
+        run_link_save_fixture(|| {
+          for (x, fixture_json) in [
+            (19, include_str!("../tests/fixtures/npc-field-font-outside-127.json")),
+            (22, include_str!("../tests/fixtures/npc-field-font-boxed-127.json")),
+            (27, include_str!("../tests/fixtures/npc-field-font-offscreen-127.json")),
+          ] {
+            let oracle: serde_json::Value = serde_json::from_str(fixture_json).unwrap();
+            let mut g = fixture(Species::Bulbasaur, 3, Direction::Down);
+            g.overworld.warp_to_map(MapId::ViridianCity, 20, 30);
+            let idle = InputState::new();
+            for _ in 0..120 { g.update(&idle); }
+            let mut snapshot = OverworldSnapshot::capture(&g.overworld);
+            snapshot.field_loop_wait = 0;
+            snapshot.player_last_stop_direction = 2;
+            snapshot.player_moving_direction = 0;
+            snapshot.restore_into(&mut g.overworld);
+            let npc = &mut g.overworld.npc_states[0];
+            assert_eq!(npc.sprite_id, 4);
+            npc.x = x;
+            npc.y = 29;
+            npc.facing = Direction::Down;
+            npc.walk_counter = 12;
+            // Native wandering preloads the next idle delay when a step starts;
+            // the original chooses this same 54-tick delay at step completion.
+            npc.delay_counter = oracle["future_delay"].as_u64().unwrap() as u16;
+            npc.visible = true;
+            for _ in 0..4 { g.update(&idle); }
+            let mut input = InputState::new();
+            for row in oracle["frames"].as_array().unwrap() {
+                let t = row["t"].as_i64().unwrap();
+                if t >= 0 {
+                    input.begin_frame();
+                    if t == 0 { input.press(GbButton::Start); }
+                    if t == 40 { input.release(GbButton::Start); }
+                    if t == 50 { input.press(GbButton::B); }
+                    if t == 52 { input.release(GbButton::B); }
+                    g.update(&input);
+                }
+                let snap = OverworldSnapshot::capture(&g.overworld);
+                let sprite = &snap.npc_sprite_states[0];
+                assert_eq!(u64::from(g.overworld.npc_states[0].walk_counter), row["remaining"].as_u64().unwrap(), "counter t={t}");
+                assert_eq!(u64::from(sprite.phase), row["phase"].as_u64().unwrap(), "phase t={t}");
+                assert_eq!(u64::from(sprite.intra_frame), row["intra"].as_u64().unwrap(), "intra t={t}");
+                assert_eq!(u64::from(sprite.pending[1].image), row["raw_image"].as_u64().unwrap(), "image t={t}");
+                let pose = g.overworld.ordinary_npc_sprite_pose(0).unwrap();
+                assert_eq!(pose.image != 0xff, row["lcd_visible"].as_bool().unwrap(), "LCD visibility x={x} t={t}");
+                if pose.image != 0xff {
+                    assert_eq!(i64::from(pose.y - 420), row["lcd_y"].as_i64().unwrap(), "LCD y x={x} t={t}");
+                    assert_eq!(pose.rendered_frame(), (row["lcd_frame"].as_u64().unwrap() as usize, row["lcd_flip"].as_bool().unwrap()), "LCD pose x={x} t={t}");
+                }
+                if t >= 0 {
+                    assert_eq!(g.state.screen, if t < 78 { GameScreen::StartMenu } else { GameScreen::Overworld }, "restore t={t}");
+                    if (50..78).contains(&t) { assert_eq!(g.overworld.field_text_window_visible(), t < 56, "WY t={t}"); }
+                }
+                if t == 60 {
+                    // Mid-restore JSON must retain independent NPC phase,
+                    // intra-frame progress and both pending OAM images.
+                    let decoded: OverworldSnapshot = serde_json::from_str(&serde_json::to_string(&snap).unwrap()).unwrap();
+                    let mut live = pokered_core::overworld::screen::OverworldScreen::new(MapId::ViridianCity, None, pokered_data::impl_traits::PokemonRedData);
+                    let mut restored = pokered_core::overworld::screen::OverworldScreen::new(MapId::ViridianCity, None, pokered_data::impl_traits::PokemonRedData);
+                    snap.restore_into(&mut live);
+                    decoded.restore_into(&mut restored);
+                    for _ in 0..100 {
+                        for screen in [&mut live, &mut restored] {
+                            if screen.field_text_restore.is_some() {
+                                screen.tick_player_presentation_during_ui();
+                                screen.tick_field_text_restore();
+                            } else { screen.update_frame(dotzuki_engine::overworld::OverworldInput::new(false, false, false, false, false, false, false, false)); }
+                        }
+                        let a = OverworldSnapshot::capture(&live);
+                        let b = OverworldSnapshot::capture(&restored);
+                        assert_eq!(serde_json::to_value(a.npc_sprite_states).unwrap(), serde_json::to_value(b.npc_sprite_states).unwrap());
+                        assert_eq!(serde_json::to_value(a.npc_states).unwrap(), serde_json::to_value(b.npc_states).unwrap());
+                        assert_eq!(serde_json::to_value(a.field_text_restore).unwrap(), serde_json::to_value(b.field_text_restore).unwrap());
+                    }
+                }
+            }
+          }
         });
     }
 
@@ -9646,12 +9746,19 @@ mod link_stats_cry_fidelity_tests {
                 if frame==11 || frame==15 {input.press(GbButton::B);}
                 if frame==12 {input.release(GbButton::B);}
                 g.update(&input);
-                assert_eq!(g.state.screen,if frame<23 {GameScreen::StartMenu} else {GameScreen::Overworld},
-                    "short pulse is ignored; held B becomes new at the first menu Joypad");
+                assert_eq!(g.state.screen, GameScreen::StartMenu,
+                    "held B starts the blocking graphic reload at the first menu Joypad");
+                assert_eq!(g.overworld.field_text_restore.is_some(), frame == 23);
                 let id=g.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.current_sfx_id;
                 if frame==19 {assert_ne!(id,SfxId::StartMenu as u8);}
                 if frame==20 {assert_eq!(id,SfxId::StartMenu as u8);}
                 if frame==23 {assert_eq!(id,SfxId::PressAB as u8);}
+            }
+            for frame in 1..=12 {
+                input.begin_frame();
+                g.update(&input);
+                assert_eq!(g.state.screen, if frame < 12 { GameScreen::StartMenu } else { GameScreen::Overworld },
+                    "held closing B cannot shortcut the original graphic reload");
             }
         });
     }
@@ -10448,6 +10555,21 @@ mod link_stats_cry_fidelity_tests {
             if let Ok(portion) = std::env::var("FIDELITY_MENU_BG_PORTION") {
                 g.overworld.bg_transfer_portion = portion.parse().unwrap();
             }
+            let npc_font_case = std::env::var_os("FIDELITY_NPC_FONT_CASE").is_some();
+            if npc_font_case {
+                assert_eq!(g.overworld.state.current_map, MapId::ViridianCity);
+                let npc = &mut g.overworld.npc_states[0];
+                assert_eq!(npc.sprite_id, 4);
+                npc.x = if std::env::var_os("FIDELITY_NPC_OFFSCREEN").is_some() { start_x + 7 } else if std::env::var_os("FIDELITY_NPC_BOXED").is_some() { start_x + 2 } else { start_x - 1 };
+                npc.y = start_y - 1;
+                npc.facing = pokered_core::overworld::Direction::Down;
+                npc.walk_counter = 12;
+                npc.delay_counter = if std::env::var_os("FIDELITY_NPC_BOXED").is_some() { 27 } else { 54 };
+                npc.visible = true;
+                // Match the original controlled counter12 setup and four
+                // real hardware frames that prime its OAM/LCD pipeline.
+                for _ in 0..4 { g.update(&idle); }
+            }
             let duration=std::env::var("FIDELITY_MOVEMENT_HOLD").unwrap_or_else(|_|"16".into()).parse::<i32>().unwrap();
             let start_hold=std::env::var("FIDELITY_MOVEMENT_START_HOLD").ok().map(|s|s.parse::<i32>().unwrap());
             let mut input = InputState::new();
@@ -10457,11 +10579,16 @@ mod link_stats_cry_fidelity_tests {
             for t in -1i32..100 {
                 if t >= 0 {
                     input.begin_frame();
-                    if t == 0 { input.press(trigger); }
+                    if t == 0 && !npc_font_case { input.press(trigger); }
                     if t == duration { input.release(trigger); }
                     if let Some(hold)=start_hold {
-                        if t==5 {input.press(GbButton::Start);}
-                        if t==5+hold {input.release(GbButton::Start);}
+                        let opening = if npc_font_case { 0 } else { 5 };
+                        if t==opening {input.press(GbButton::Start);}
+                        if t==opening+hold {input.release(GbButton::Start);}
+                    }
+                    if npc_font_case && std::env::var("FIDELITY_NPC_FONT_CASE").is_ok_and(|s|s=="close") {
+                        if t==50 {input.press(GbButton::B);}
+                        if t==52 {input.release(GbButton::B);}
                     }
                     if let Some(case)=pc_case.as_deref() {
                         let hold=if case=="a-short" {1} else {40};
@@ -10481,6 +10608,9 @@ mod link_stats_cry_fidelity_tests {
                 }
                 records.push(serde_json::json!({"t":t,"frame":g.frame_count,"input_bits":input.raw_current(),
                     "screen":format!("{:?}",g.state.screen),"map":g.overworld.state.current_map as u8,
+                    "npc_states":if npc_font_case {Some(&g.overworld.npc_states)} else {None},
+                    "npc_sprite_states":if npc_font_case {Some(pokered_core::snapshot::OverworldSnapshot::capture(&g.overworld).npc_sprite_states)} else {None},
+                    "field_text_restore":g.overworld.field_text_restore,
                     "x":g.overworld.state.player.x,"y":g.overworld.state.player.y,
                     "facing":format!("{:?}",g.overworld.state.player.facing),
                     "movement":format!("{:?}",g.overworld.state.player.movement_state),

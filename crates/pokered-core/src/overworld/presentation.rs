@@ -971,6 +971,110 @@ impl PlayerSpriteState {
     }
 }
 
+/// An NPC's animation counters survive loading a field textbox. The image
+/// is chosen before the walking tick advances the phase (movement.asm), and
+/// PrepareOAMData reaches the LCD through the following two VBlanks.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct NpcSpritePose {
+    pub x: i32,
+    pub y: i32,
+    pub image: u8,
+}
+
+impl NpcSpritePose {
+    pub fn rendered_frame(self) -> (usize, bool) {
+        let facing = self.image >> 2;
+        let phase = self.image & 3;
+        let frame = match facing { 0 => 0, 1 => 1, _ => 2 }
+            + if phase & 1 != 0 { 3 } else { 0 };
+        (frame, facing == 3 || (facing < 2 && phase == 3))
+    }
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct NpcSpriteState {
+    pub intra_frame: u8,
+    pub phase: u8,
+    pub visible: NpcSpritePose,
+    pub pending: [NpcSpritePose; 2],
+    last: (u8, u8, u16, u16, u8, u8),
+}
+
+impl NpcSpriteState {
+    fn identity(npc: &dotzuki_engine::overworld::npc_movement::NpcRuntimeState)
+        -> (u8, u8, u16, u16, u8, u8)
+    {
+        (npc.npc_index, npc.sprite_id, npc.x, npc.y, npc.facing as u8, npc.walk_counter)
+    }
+
+    pub fn matches(&self, npc: &dotzuki_engine::overworld::npc_movement::NpcRuntimeState) -> bool {
+        self.last == Self::identity(npc)
+    }
+
+    fn pose(npc: &dotzuki_engine::overworld::npc_movement::NpcRuntimeState, phase: u8) -> NpcSpritePose {
+        let pixels = npc_walk_pixel_offset(npc.walk_counter);
+        let (dx, dy) = match npc.facing {
+            Direction::Down => (0, pixels), Direction::Up => (0, -pixels),
+            Direction::Left => (-pixels, 0), Direction::Right => (pixels, 0),
+        };
+        NpcSpritePose { x: i32::from(npc.x) * 16 + dx, y: i32::from(npc.y) * 16 + dy,
+            image: (PlayerSpriteState::facing_index(npc.facing) << 2) | phase }
+    }
+
+    /// Bootstrap older JSON snapshots and externally edited NPC state. New
+    /// map sprites start at phase zero; legacy mid-step state has no saved
+    /// phase, so infer it once rather than re-deriving it after every tick.
+    pub fn from_npc(npc: &dotzuki_engine::overworld::npc_movement::NpcRuntimeState) -> Self {
+        let progress = if npc.walk_counter == 0 { 0 }
+            else { NPC_WALK_FRAMES.saturating_sub(npc.walk_counter) };
+        let phase = (progress / 4) & 3;
+        let pose = Self::pose(npc, phase);
+        Self { intra_frame: progress % 4, phase, visible: pose,
+            pending: [pose; 2], last: Self::identity(npc) }
+    }
+
+    pub fn hardware_frame(&mut self) {
+        self.visible = self.pending[0];
+        self.pending[0] = self.pending[1];
+    }
+
+    pub fn update_sprite(&mut self, npc: &dotzuki_engine::overworld::npc_movement::NpcRuntimeState,
+        player_walking: bool)
+    {
+        let was_walking = self.last.5 != 0;
+        // CheckSpriteAvailability updates the image before advancing the
+        // NPC's counters, except while the player's walk counter is nonzero.
+        let image_phase = if !was_walking && npc.walk_counter == 0 { 0 }
+            else if player_walking { self.pending[1].image & 3 } else { self.phase };
+        if was_walking && npc.walk_counter < self.last.5 {
+            self.intra_frame += 1;
+            if self.intra_frame == 4 {
+                self.intra_frame = 0;
+                self.phase = (self.phase + 1) & 3;
+            }
+        } else if !was_walking && npc.walk_counter == 0 {
+            self.phase = 0;
+        }
+        let previous_image = self.pending[1].image;
+        self.pending[1] = Self::pose(npc, image_phase);
+        if player_walking { self.pending[1].image = previous_image; }
+        self.last = Self::identity(npc);
+    }
+
+    pub fn hide(&mut self) { self.pending[1].image = 0xff; }
+
+    pub fn load_font(&mut self, npc: &dotzuki_engine::overworld::npc_movement::NpcRuntimeState, masked: bool) {
+        // CheckSpriteAvailability returns before NotYetMoving when its
+        // footprint contains a font tile. The stand-still loop skips $ff.
+        if masked { self.hide(); } else {
+            self.phase = 0;
+            self.pending[1].image = PlayerSpriteState::facing_index(npc.facing) << 2;
+        }
+        self.last = Self::identity(npc);
+    }
+
+}
+
 /// Background viewport latched by vblank, independently of logical movement.
 #[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize)]
 pub struct PlayerCameraState {
@@ -979,4 +1083,20 @@ pub struct PlayerCameraState {
     pub y: u16,
     pub sub_x: i16,
     pub sub_y: i16,
+}
+
+/// CloseStartMenu reloads 32 textbox tiles, hides WY for one VBlank, then
+/// restores each unique walking sprite's 12 upper tiles and the player's
+/// two 12-tile blocks. CopyVideoData waits for a final zero-sized transfer
+/// when the count is divisible by eight (copy2.asm), so 32 tiles take five.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct FieldTextRestoreState {
+    pub elapsed: u8,
+    pub npc_transfer_frames: u8,
+}
+
+impl FieldTextRestoreState {
+    pub fn window_visible(&self) -> bool { self.elapsed < 6 }
+    pub fn finished(&self) -> bool { self.elapsed >= 6 + self.npc_transfer_frames + 4 }
+    pub fn bg_transfer_enabled(&self) -> bool { self.elapsed == 5 || self.finished() }
 }

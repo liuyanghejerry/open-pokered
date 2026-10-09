@@ -1637,8 +1637,12 @@ fn draw_overworld_impl(
                 let num_frames = (cached.source_size.1 / TILE_SIZE) as usize;
 
                 let npc_facing = npc.facing;
+                let presented = screen.ordinary_npc_sprite_pose(npc_slot);
+                if presented.is_some_and(|pose| pose.image == 0xff) { continue; }
 
-                let (frame, flip_h) = if let Some(sf) = npc.scripted_frame {
+                let (frame, flip_h) = if let Some(pose) = presented.filter(|_| num_frames >= 6) {
+                    pose.rendered_frame()
+                } else if let Some(sf) = npc.scripted_frame {
                     (sf as usize, false)
                 } else if num_frames >= 6 {
                     // AnimFrame 0-3: 0/2=stand, 1=walk, 3=walk+flip — phases
@@ -1713,8 +1717,13 @@ fn draw_overworld_impl(
                     (0, 0)
                 };
 
-                let npc_px_x = npc_screen_tx * TILE_SIZE as i32 + walk_dx - view_sub_x;
-                let npc_px_y = npc_screen_ty * TILE_SIZE as i32 + ACTOR_CELL_Y_OFFSET + walk_dy - view_sub_y;
+                let (npc_px_x, npc_px_y) = if let Some(pose) = presented {
+                    (pose.x - view_origin_tx * TILE_SIZE as i32 - view_sub_x,
+                        pose.y - view_origin_ty * TILE_SIZE as i32 + ACTOR_CELL_Y_OFFSET - view_sub_y)
+                } else {
+                    (npc_screen_tx * TILE_SIZE as i32 + walk_dx - view_sub_x,
+                        npc_screen_ty * TILE_SIZE as i32 + ACTOR_CELL_Y_OFFSET + walk_dy - view_sub_y)
+                };
 
                 let sprite_size = (TILE_SIZE * 2) as i32;
                 if npc_px_x <= -sprite_size
