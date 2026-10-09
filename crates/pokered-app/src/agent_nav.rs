@@ -102,7 +102,8 @@ impl PokemonGame {
                 || self.overworld.pending_choice.is_some()
                 || self.overworld.trainer_encounter_pending(),
             self.overworld.active_script_effect_label().is_some()
-                || self.overworld.boulder_push.is_some()
+                // The last LCD image outlives logical control restoration.
+                || self.overworld.boulder_blocks_control()
                 || !self.overworld.script_engine_idle(),
         )
     }

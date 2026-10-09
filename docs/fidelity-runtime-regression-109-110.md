@@ -31,3 +31,13 @@ a3 的失败证据保留。它不是最新整合提交的完整通关证明；�
 完整测试先后暴露快照、工具交互、博物馆夹具以及推石专项夹具问题。各次失败日志都保留在工作区 `.task-tmp/fidelity-39-plus/`：`pr-144-app-all-tests.log`、`snapshot-109-app-all-tests.log`、`agent-interact-110-app-all-tests.log`、`ci-museum-app-all-tests.log`。专项通过日志为 `snapshot-109-agent-complete-replay.log`、`snapshot-109-core-all-tests.log`、`agent-interact-110-tests.log`、`ci-museum-field-input-tests.log`、`ci-boulder-control-seeded-tests.log`、`snapshot-109-facing-driver-tests.log`。
 
 最新完整应用全目标测试通过：39 个测试结果组，504 项通过、52 项显式忽略，零失败；日志 `ci-boulder-seeded-app-all-tests.log`。菜单方向后的 Delay3、普通玩家/OAM 呈现相位、胜利之路 2F 第二开关启动及脚本/连接移动时钟仍在审计清单。合入前必须验证最新提交的全套 CI，不能用旧提交的绿色检查替代。
+
+## 工具导航恢复边界（111）
+
+导航中断判断曾把整个 `boulder_push` 存在期都当作不可操作期，晚于核心和只读 `control_ready` 已验证的逻辑恢复边界。现在复用核心 `boulder_blocks_control()`，保留最后 LCD 画面的同时允许逻辑上已经恢复的输入。没有修改图像、推石计时或普通玩家输入。
+
+新的真实输入回归在 Seafoam 1F 用 Down 启动推石，分别在 push.frame 69 和 70 请求导航到相邻地块：69 必须报告 Interrupted、零推进帧且坐标不变；70 必须报告 Reached，并经实际按键走到目的地。修复前在 70 确实报告 Interrupted，修复后两种边界都通过。9 项导航测试及完整应用测试通过（39 个结果组，507 项通过、54 项专项采集显式忽略）。
+
+本次测试夹具最初错误地假定烟尘期间玩家已走进巨石原格；实际玩家仍站在 18,9。修正前置坐标为实际状态后，才得到上述有效失败。两份修复前日志均保留：`agent-control-111-before-tests.log` 和 `agent-control-111-before-corrected-fixture.log`；通过日志为 `agent-control-111-after-tests.log`、`agent-control-111-app-all-tests.log`。
+
+此项是工具交互判断修正，属于 AGENTS.md 的 tooling 豁免；此前推石视觉前后截图仍保留在 PR。正在运行的 immutable 5c07770 新游戏回归不含此项工具修正；它完成后仍须据最终提交的改动范围核对回归覆盖。
