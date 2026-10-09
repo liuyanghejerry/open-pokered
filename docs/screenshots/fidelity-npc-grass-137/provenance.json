@@ -1,0 +1,18 @@
+{
+  "original": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "master": "31b1eda3112514d6bc803af559ec7f7c9e20374f",
+  "isolated_before": "2e03e6b production plus ignored fixture helper",
+  "setup": "Source actual City->Route1 walk, Repel200 and leadLv50 only prevent wild battles; native unit fixture warp12,22. No BG/map/ROM edits. Actor0 at14,22 Down idle127 or actor1 origin15,22 target16,22 Right remaining12 phase1 intra0. Prime4. Idle or playerDown0..15. Same setup/input/HW for actual master before and branch after; the full PR changes field cadence and resulting master prime counter.",
+  "future_wait": "Native preloads source chosen16/127; unused before completion; no general PRNG alignment claim.",
+  "source_rule": "CheckSpriteAvailability retains top-right footprint tile inA/C. Xfloor8/Yfloor16 before NPC advance; frozen while old player counter nonzero; priority included in two-HW OAM queue.",
+  "superseded": "x16,22 GP0 was ordinary ground, excluded. Initial bottom-left/whole-cell sampling superseded after original walking oracle. Native phase0 counter fixture was one HW early, replaced with source-derived phase1; no post-capture frame offset. Master helper first build ran root without helper, corrected actual WT builda2 before capture.",
+  "hashes": {
+    "crates/pokered-core/src/overworld/presentation.rs": "0c076714557d678481bfd15d54bc7b5cbc02adff8dce9b151c2a6b0e70ed07bd",
+    "crates/pokered-core/src/overworld/update.rs": "a779b05332ca9aab011e6f9c7fa6aecc95a1b45ce775cd9e681f56b3b5b6b2e6",
+    "crates/pokered-core/src/overworld/screen.rs": "9c19118c63da4e3420c35737dcb1e861056e61e74cd1ea11c4340fac16bf282c",
+    "crates/pokered-app/src/render/overworld.rs": "2522445134302ed787c5624784115b690fe36c883c9f0bd4583ab0cf2ded7c94",
+    "crates/pokered-app/src/render/session.rs": "51590c6c07f6be930367880041ef416410d526410e3fbb20dd21f7c32b2178da",
+    "crates/pokered-app/src/game.rs": "08a07bdb4797acd2406f7f50287779e4a21a989438b8cad4c15af5374af5f38c",
+    "crates/pokered-app/tests/fixtures/npc-grass-137.json": "bd60ca5fd455bfae136145d37c466e1e3e0c8d771d8a8fdcfcd3c94ceb6142c5"
+  }
+}

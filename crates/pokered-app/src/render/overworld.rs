@@ -170,6 +170,24 @@ fn blit_priority_bg_tile(fb: &mut FrameBuffer, tile: &Tile, x: i32, y: i32) {
     fb.blit_gb_tile_indices(x, y, tile, true, false, false);
 }
 
+fn npc_draw_position(screen: &OverworldScreen, slot: usize, view_tx: i32, view_ty: i32,
+    sub_x: i32, sub_y: i32) -> Option<(i32,i32)> {
+    let npc = screen.npc_states.get(slot)?;
+    if let Some(pose) = screen.ordinary_npc_sprite_pose(slot) {
+        return Some((pose.x - view_tx * 8 - sub_x,
+            pose.y - view_ty * 8 + ACTOR_CELL_Y_OFFSET - sub_y));
+    }
+    let push = screen.boulder_push.filter(|p|p.npc_index==slot);
+    let (x,y) = push.map_or((npc.x,npc.y),|p|p.origin);
+    let pixels = push.map_or_else(||npc_walk_pixel_offset(npc.walk_counter),|p|i32::from(p.visible_slide_pixels()));
+    let (dx,dy) = match npc.facing {
+        Direction::Down => (0,pixels), Direction::Up => (0,-pixels),
+        Direction::Left => (-pixels,0), Direction::Right => (pixels,0),
+    };
+    Some((i32::from(x)*16-view_tx*8+dx-sub_x,
+        i32::from(y)*16-view_ty*8+ACTOR_CELL_Y_OFFSET+dy-sub_y))
+}
+
 /// Script-driven entry overlay (`showPokedexEntry`): resolve the scene species
 /// token and draw the real dex data (`pokered_data::pokedex`, ported from
 /// `data/pokemon/dex_entries.asm`) via the shared entry renderer. Previews
@@ -1290,6 +1308,26 @@ fn draw_overworld_impl(
             }
             fb.clear(Rgba::WHITE);
         }
+        // Read the actual background before any actor/dust is painted. Only
+        // priority actors need the 16x8 underlay; animated tiles and scrolling
+        // are already reflected here. The mask never extends beyond the actor.
+        let mut npc_priority_underlays = Vec::new();
+        for (slot, npc) in screen.npc_states.iter().enumerate() {
+            if !npc.visible || !screen.npc_sprite_grass_priority(slot) { continue; }
+            if let Some((x,y)) = npc_draw_position(screen, slot, view_origin_tx, view_origin_ty, view_sub_x, view_sub_y) {
+                let mut pixels = [Rgba::WHITE; 128];
+                for py in 0..8usize {
+                    for px in 0..16usize {
+                        let sx = x + px as i32;
+                        let sy = y + 8 + py as i32;
+                        if sx >= 0 && sy >= 0 {
+                            pixels[py*16+px] = fb.get_pixel(sx as u32,sy as u32).unwrap_or(Rgba::WHITE);
+                        }
+                    }
+                }
+                npc_priority_underlays.push((slot,pixels));
+            }
+        }
         // Keep smoke candidates until actor opacity and raw X are known.
         // DMG priority is X first, OAM order only when X ties.
         let mut smoke_pixels: Option<Vec<(usize,u8,Rgba)>> = None;
@@ -1697,33 +1735,8 @@ fn draw_overworld_impl(
                 let base_tile = frame * 4;
                 let tpr = cached.source_size.0 / TILE_SIZE;
 
-                let push=screen.boulder_push.filter(|p|p.npc_index==npc_slot);
-                let (npc_x,npc_y)=push.map_or((npc.x,npc.y),|p|p.origin);
-                let npc_screen_tx = npc_x as i32 * 2 - view_origin_tx;
-                let npc_screen_ty = npc_y as i32 * 2 - view_origin_ty;
-
-                // Smooth pixel interpolation during movement. Classic GB
-                // walkers advance 1px/frame over their 16-frame step
-                // (16px/tile) — unlike the player's 2px/frame over 8.
-                let (walk_dx, walk_dy) = if push.is_some() || npc.walk_counter > 0 {
-                    let px = push.map_or_else(||npc_walk_pixel_offset(npc.walk_counter),|p|i32::from(p.visible_slide_pixels()));
-                    match npc.facing {
-                        Direction::Down => (0i32, px),
-                        Direction::Up => (0, -px),
-                        Direction::Left => (-px, 0),
-                        Direction::Right => (px, 0),
-                    }
-                } else {
-                    (0, 0)
-                };
-
-                let (npc_px_x, npc_px_y) = if let Some(pose) = presented {
-                    (pose.x - view_origin_tx * TILE_SIZE as i32 - view_sub_x,
-                        pose.y - view_origin_ty * TILE_SIZE as i32 + ACTOR_CELL_Y_OFFSET - view_sub_y)
-                } else {
-                    (npc_screen_tx * TILE_SIZE as i32 + walk_dx - view_sub_x,
-                        npc_screen_ty * TILE_SIZE as i32 + ACTOR_CELL_Y_OFFSET + walk_dy - view_sub_y)
-                };
+                let Some((npc_px_x,npc_px_y)) = npc_draw_position(screen, npc_slot,
+                    view_origin_tx, view_origin_ty, view_sub_x, view_sub_y) else { continue; };
 
                 let sprite_size = (TILE_SIZE * 2) as i32;
                 if npc_px_x <= -sprite_size
@@ -1758,6 +1771,22 @@ fn draw_overworld_impl(
                         let ty = npc_px_y + (row * TILE_SIZE) as i32;
                         mask_smoke_with_actor(&mut smoke_pixels,fb,ts.get(tile_idx),tx,ty,&sprite_pal,flip_h);
                         blit_tile_clipped_flipped(fb, ts, tile_idx, tx, ty, &sprite_pal, flip_h);
+                        if row == 1 {
+                            if let Some((_,underlay)) = npc_priority_underlays.iter().find(|(slot,_)|*slot==npc_slot) {
+                                for py in 0..8usize {
+                                    let actor = ts.get(tile_idx).render_row(py, &sprite_pal);
+                                    for px in 0..8usize {
+                                        if actor[if flip_h {7-px} else {px}] == Rgba::TRANSPARENT { continue; }
+                                        let color = underlay[py*16+col as usize*8+px];
+                                        let sx = tx + px as i32;
+                                        let sy = ty + py as i32;
+                                        if color != Rgba::WHITE && sx >= 0 && sy >= 0 {
+                                            fb.set_pixel(sx as u32,sy as u32,color);
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }

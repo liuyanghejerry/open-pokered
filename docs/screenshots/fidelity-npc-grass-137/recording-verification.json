@@ -1,0 +1,41 @@
+{
+  "source_oracle_frames": 83,
+  "source_pixel_strips": "exact: 21 standing +31 NPC walking +31 player/NPC walking",
+  "cached_full_frames": "all pixels exact on83 oracle +12 prime frames",
+  "snapshot_replay": "30HW x3 cases exact; legacy nested grass_priority fields deserialize false",
+  "before": "53 wrong pixels in lower8 rows on all21 frames",
+  "repeats": {
+    "npc-136-grass-source": {
+      "frames": 21,
+      "RAM_and_PNG_repeats": "exact"
+    },
+    "npc-137-grass-walk-source": {
+      "frames": 81,
+      "RAM_and_PNG_repeats": "exact"
+    },
+    "npc-137-grass-player-walk-source": {
+      "frames": 31,
+      "RAM_and_PNG_repeats": "exact"
+    },
+    "npc-137-grass-stand-final-master": {
+      "frames": 21,
+      "RAM_and_PNG_repeats": "exact"
+    },
+    "npc-137-grass-stand-final-after": {
+      "frames": 21,
+      "RAM_and_PNG_repeats": "exact"
+    },
+    "npc-137-grass-walk-final-after": {
+      "frames": 31,
+      "RAM_and_PNG_repeats": "exact"
+    },
+    "npc-137-grass-player-final-after": {
+      "frames": 31,
+      "RAM_and_PNG_repeats": "exact"
+    },
+    "npc-136-grass-native-before": {
+      "frames": 21,
+      "RAM_and_PNG_repeats": "exact"
+    }
+  }
+}

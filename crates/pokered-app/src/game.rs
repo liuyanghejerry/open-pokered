@@ -10799,6 +10799,151 @@ mod link_stats_cry_fidelity_tests {
         });
     }
 
+    fn npc_grass_fixture_137(walking: bool, future_delay: u16) -> (PokemonGame, usize) {
+        use pokered_core::overworld::Direction;
+        use pokered_core::snapshot::OverworldSnapshot;
+        use dotzuki_engine::overworld::collision::CollisionProvider as _;
+            let mut g = fixture(Species::Bulbasaur, 3, Direction::Down);
+            g.overworld.warp_to_map(MapId::Route1, 12, 22);
+            let idle = InputState::new();
+            g.overworld.state.player.facing = Direction::Left;
+            for _ in 0..120 { g.update(&idle); }
+            let map = g.overworld.map_data.as_ref().unwrap();
+            let provider = pokered_core::overworld::collision::PokemonCollisionProvider::new(MapId::Route1, map.tileset);
+            let tile = provider.get_tile_at_position(map.tileset, &map.blocks, map.width, 14, 22);
+            assert_eq!(Some(tile), pokered_data::tileset_data::get_grass_tile(map.tileset));
+            let mut saved = OverworldSnapshot::capture(&g.overworld);
+            saved.field_loop_wait = 1;
+            saved.player_last_stop_direction = 2;
+            saved.player_moving_direction = 0;
+            saved.check_player_turn = true;
+            let slot = if walking {1} else {0};
+            saved.npc_states[slot].x = if walking {15} else {14};
+            saved.npc_states[slot].y = 22;
+            saved.npc_states[slot].facing = if walking {Direction::Right} else {Direction::Down};
+            saved.npc_states[slot].walk_counter = if walking {12} else {0};
+            saved.npc_states[slot].delay_counter = future_delay;
+            saved.npc_states[slot].visible = true;
+            saved.npc_sprite_states.clear();
+            saved.restore_into(&mut g.overworld);
+        g.overworld.state.encounter_cooldown = 255;
+        (g, slot)
+    }
+
+    #[test]
+    fn npc_grass_priority_matches_original_pixels_and_half_tile_boundaries() {
+        use pokered_core::snapshot::OverworldSnapshot;
+        run_link_save_fixture(|| {
+            let reference: serde_json::Value = serde_json::from_str(include_str!("../tests/fixtures/npc-grass-137.json")).unwrap();
+            for case in ["stand", "walk", "player"] {
+                let oracle = &reference["cases"][case];
+                let (mut g, slot) = npc_grass_fixture_137(case != "stand", oracle["future_delay"].as_u64().unwrap() as u16);
+                let idle = InputState::new();
+                let mut cached = FrameBuffer::new(RenderConfig::new(160,144), Rgba::WHITE);
+                let mut session = crate::render::session::RenderSession::new();
+                session.render(&mut g, &mut cached, &mut |_,_,_,_,_,_| {});
+                // Prime while rendering, so priority changes without actor
+                // movement must invalidate a previously composited frame.
+                for _ in 0..4 {
+                    g.update(&idle);
+                    session.render(&mut g, &mut cached, &mut |_,_,_,_,_,_| {});
+                    let mut full = FrameBuffer::new(RenderConfig::new(160,144), Rgba::WHITE);
+                    g.draw(&mut full);
+                    for y in 0..144 { for x in 0..160 { assert_eq!(cached.get_pixel(x,y),full.get_pixel(x,y),"prime {case} {x},{y}"); } }
+                }
+                let mut input = InputState::new();
+                for row in oracle["frames"].as_array().unwrap() {
+                    let t = row["t"].as_i64().unwrap();
+                    if t >= 0 {
+                        input.begin_frame();
+                        if case == "player" && t == 0 { input.press(GbButton::Down); }
+                        if case == "player" && t == 16 { input.release(GbButton::Down); }
+                        g.update(&input);
+                    }
+                    let snap = OverworldSnapshot::capture(&g.overworld);
+                    let npc = &snap.npc_states[slot];
+                    let sprite = &snap.npc_sprite_states[slot];
+                    assert_eq!(u64::from(g.overworld.state.walk_counter),row["player_counter"].as_u64().unwrap(),"player {case} t={t}");
+                    assert_eq!(u64::from(npc.walk_counter),row["remaining"].as_u64().unwrap(),"NPC {case} t={t}");
+                    assert_eq!(u64::from(sprite.phase),row["phase"].as_u64().unwrap(),"phase {case} t={t}");
+                    assert_eq!(u64::from(sprite.intra_frame),row["intra"].as_u64().unwrap(),"intra {case} t={t}");
+                    assert_eq!(u64::from(sprite.pending[1].image),row["image"].as_u64().unwrap(),"image {case} t={t}");
+                    assert_eq!(sprite.pending[1].grass_priority,row["priority"].as_bool().unwrap(),"priority {case} t={t}");
+                    if npc.walk_counter == 0 { assert_eq!(u64::from(npc.delay_counter),row["delay"].as_u64().unwrap(),"delay {case} t={t}"); }
+                    let mut full = FrameBuffer::new(RenderConfig::new(160,144),Rgba::WHITE);
+                    g.draw(&mut full);
+                    session.render(&mut g, &mut cached, &mut |_,_,_,_,_,_| {});
+                    for y in 0..144 { for x in 0..160 { assert_eq!(cached.get_pixel(x,y),full.get_pixel(x,y),"cached {case} t={t} {x},{y}"); } }
+                    let region = oracle["region"].as_array().unwrap();
+                    let x = region[0].as_u64().unwrap() as u32;
+                    let y = region[1].as_u64().unwrap() as u32;
+                    let width = region[2].as_u64().unwrap() as u32;
+                    let height = region[3].as_u64().unwrap() as u32;
+                    let packed: Vec<u8> = row["pixels"].as_str().unwrap().as_bytes().chunks_exact(2)
+                        .map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(),16).unwrap()).collect();
+                    let colors = [Rgba::WHITE,Rgba::rgb(170,170,170),Rgba::rgb(85,85,85),Rgba::BLACK];
+                    for py in 0..height { for px in 0..width {
+                        let i = (py*width+px) as usize;
+                        let index = (packed[i/4] >> (6-2*(i%4))) & 3;
+                        assert_eq!(full.get_pixel(x+px,y+py),Some(colors[index as usize]),"source {case} t={t} {px},{py}");
+                    } }
+                    if t == 10 {
+                        let decoded: OverworldSnapshot = serde_json::from_str(&serde_json::to_string(&snap).unwrap()).unwrap();
+                        let mut live = OverworldScreen::new(MapId::Route1,None,PokemonRedData);
+                        let mut restored = OverworldScreen::new(MapId::Route1,None,PokemonRedData);
+                        snap.restore_into(&mut live); decoded.restore_into(&mut restored);
+                        for frame in 0..30 {
+                            for screen in [&mut live,&mut restored] { screen.update_frame(dotzuki_engine::overworld::OverworldInput::new(false,false,false,false,false,false,false,false)); }
+                            assert_eq!(serde_json::to_value(OverworldSnapshot::capture(&live).npc_sprite_states).unwrap(),serde_json::to_value(OverworldSnapshot::capture(&restored).npc_sprite_states).unwrap(),"snapshot {case} frame{frame}");
+                        }
+                        let mut legacy = serde_json::to_value(&snap).unwrap();
+                        for sprite in legacy["npc_sprite_states"].as_array_mut().unwrap() {
+                            sprite["visible"].as_object_mut().unwrap().remove("grass_priority").unwrap();
+                            for pose in sprite["pending"].as_array_mut().unwrap() { pose.as_object_mut().unwrap().remove("grass_priority").unwrap(); }
+                        }
+                        let old: OverworldSnapshot = serde_json::from_value(legacy).unwrap();
+                        assert!(old.npc_sprite_states.iter().all(|sprite|!sprite.visible.grass_priority && sprite.pending.iter().all(|pose|!pose.grass_priority)));
+                    }
+                }
+            }
+        });
+    }
+
+    #[test]
+    #[ignore = "controlled valid Route1 NPC grass-priority capture"]
+    fn capture_npc_grass_raw_136() {
+        use pokered_core::overworld::Direction;
+        use pokered_core::snapshot::OverworldSnapshot;
+        use dotzuki_engine::overworld::collision::CollisionProvider as _;
+        run_link_save_fixture(|| {
+            let dir = std::path::PathBuf::from(std::env::var("FIDELITY_NPC_GRASS_CAPTURE").unwrap());
+            std::fs::create_dir_all(&dir).unwrap();
+            let walking = std::env::var_os("FIDELITY_NPC_GRASS_WALK").is_some();
+            let player_walk = std::env::var_os("FIDELITY_NPC_GRASS_PLAYER_WALK").is_some();
+            let delay = std::env::var("FIDELITY_NPC_GRASS_FUTURE_DELAY").ok().map(|v|v.parse().unwrap()).unwrap_or(if walking {16} else {127});
+            let (mut g, slot) = npc_grass_fixture_137(walking, delay);
+            let idle = InputState::new();
+            for _ in 0..4 { g.update(&idle); }
+            let mut records = Vec::new();
+            let mut input = InputState::new();
+            g.overworld.state.encounter_cooldown = 255;
+            for t in -1i32..if walking {30} else {20} {
+                if t >= 0 {
+                    input.begin_frame();
+                    if player_walk && t == 0 { input.press(GbButton::Down); }
+                    if player_walk && t == 16 { input.release(GbButton::Down); }
+                    g.update(&input);
+                }
+                let mut fb = FrameBuffer::new(RenderConfig::new(160,144), Rgba::WHITE);
+                g.draw(&mut fb);
+                fb.save_png(&dir.join(format!("frame-{:04}.png",t+1))).unwrap();
+                let state = OverworldSnapshot::capture(&g.overworld);
+                records.push(serde_json::json!({"t":t,"map":g.overworld.state.current_map as u8,"player":g.overworld.state.player,"npc":state.npc_states[slot],"sprite":state.npc_sprite_states[slot]}));
+            }
+            std::fs::write(dir.join("frames.json"),serde_json::to_string_pretty(&records).unwrap()).unwrap();
+        });
+    }
+
     #[test]
     #[ignore = "actual Continue/Strength/boulder input continuous capture"]
     fn capture_actual_boulder_dust_raw_93() {

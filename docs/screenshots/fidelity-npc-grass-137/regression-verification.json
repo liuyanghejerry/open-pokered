@@ -1,0 +1,8 @@
+{
+  "command": "cargo test -p pokered-core -p pokered-app --features pokered-app/debug-server --offline -j4",
+  "groups": 80,
+  "passed": 3660,
+  "failed": 0,
+  "ignored": 57,
+  "log_sha256": "4ee4b235752fc16142441d40a63e431512e1355e973d47f3dea328ba905f0ca5"
+}

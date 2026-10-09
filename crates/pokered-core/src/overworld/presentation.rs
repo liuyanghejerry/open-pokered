@@ -979,6 +979,8 @@ pub struct NpcSpritePose {
     pub x: i32,
     pub y: i32,
     pub image: u8,
+    #[serde(default)]
+    pub grass_priority: bool,
 }
 
 impl NpcSpritePose {
@@ -1020,7 +1022,7 @@ impl NpcSpriteState {
             Direction::Left => (-pixels, 0), Direction::Right => (pixels, 0),
         };
         NpcSpritePose { x: i32::from(npc.x) * 16 + dx, y: i32::from(npc.y) * 16 + dy,
-            image: (PlayerSpriteState::facing_index(npc.facing) << 2) | phase }
+            image: (PlayerSpriteState::facing_index(npc.facing) << 2) | phase, grass_priority: false }
     }
 
     /// Bootstrap older JSON snapshots and externally edited NPC state. New
@@ -1038,6 +1040,18 @@ impl NpcSpriteState {
 
     pub(crate) fn restore_legacy_delay_counter(&mut self, npc: &dotzuki_engine::overworld::npc_movement::NpcRuntimeState) {
         self.last_delay_counter.get_or_insert(npc.delay_counter);
+    }
+
+    pub(crate) fn priority_background_tile(npc: &dotzuki_engine::overworld::npc_movement::NpcRuntimeState) -> (i32, i32) {
+        let pose = Self::pose(npc, 0);
+        // CheckSpriteAvailability retains the top-right footprint tile
+        // after checking all four tiles. GetTileSpriteStandsOn snaps Y
+        // to a 16px cell; X remains aligned to an 8px background tile.
+        (pose.x.div_euclid(8) + 1, pose.y.div_euclid(16) * 2)
+    }
+
+    pub(crate) fn set_grass_priority(&mut self, priority: bool) {
+        self.pending[1].grass_priority = priority;
     }
 
     pub fn hardware_frame(&mut self) {
@@ -1068,7 +1082,9 @@ impl NpcSpriteState {
             self.phase = 0;
         }
         let previous_image = self.pending[1].image;
+        let grass_priority = self.pending[1].grass_priority;
         self.pending[1] = Self::pose(npc, image_phase);
+        self.pending[1].grass_priority = grass_priority;
         if player_walking && !was_delaying { self.pending[1].image = previous_image; }
         self.last = Self::identity(npc);
         self.last_delay_counter = Some(npc.delay_counter);

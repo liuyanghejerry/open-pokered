@@ -3270,6 +3270,11 @@ impl<G: GameData> OverworldScreen<G> {
         }
     }
 
+    pub fn npc_sprite_grass_priority(&self, slot: usize) -> bool {
+        self.npc_states.get(slot).zip(self.npc_sprite_states.get(slot))
+            .is_some_and(|(npc, sprite)| sprite.matches(npc) && sprite.visible.grass_priority)
+    }
+
     pub fn ordinary_npc_sprite_pose(&self, slot: usize) -> Option<presentation::NpcSpritePose> {
         let npc = self.npc_states.get(slot)?;
         if npc.scripted_frame.is_some() || self.active_script_effect.is_some()

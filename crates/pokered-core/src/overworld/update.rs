@@ -2368,6 +2368,25 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             self.sync_npc_sprite_states();
         }
         if let Some(ref map) = self.map_data {
+            // CheckSpriteAvailability samples the tile under the old raw
+            // sprite position before advancing NPC movement. Grass priority
+            // stays latched while the player's old walk counter is nonzero.
+            if !player_walking {
+                let grass = pokered_data::tileset_data::get_grass_tile(map.tileset);
+                let blockset = pokered_data::blockset_data::blockset_for_tileset(map.tileset);
+                for slot in 0..self.npc_states.len() {
+                    let npc = &self.npc_states[slot];
+                    if !npc.visible || !self.npc_in_field_viewport(slot) { continue; }
+                    let (x,y) = presentation::NpcSpriteState::priority_background_tile(npc);
+                    let priority = grass.is_some_and(|grass| {
+                        if x < 0 || y < 0 || x >= i32::from(map.width) * 4 || y >= i32::from(map.height) * 4 { return false; }
+                        let block = map.blocks.get((y / 4) as usize * usize::from(map.width) + (x / 4) as usize);
+                        block.and_then(|block| blockset.get(usize::from(*block) * 16
+                            + (y % 4) as usize * 4 + (x % 4) as usize)).copied() == Some(grass)
+                    });
+                    self.npc_sprite_states[slot].set_grass_priority(priority);
+                }
+            }
             let rng_value = (self
                 .frame_counter
                 .wrapping_mul(1103515245)

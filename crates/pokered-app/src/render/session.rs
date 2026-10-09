@@ -659,6 +659,7 @@ impl OverworldVisualKey {
             hash_byte(&mut npc_hash, npc.scripted_frame.unwrap_or(u8::MAX));
             hash_byte(&mut npc_hash, npc.walk_counter);
             hash_byte(&mut npc_hash, npc.visible as u8);
+            hash_byte(&mut npc_hash, screen.npc_sprite_grass_priority(slot) as u8);
         }
 
         let player_pose = screen.ordinary_player_sprite_frame();
