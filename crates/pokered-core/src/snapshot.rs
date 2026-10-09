@@ -42,7 +42,7 @@ use crate::overworld::fishing::PendingFishing;
 use crate::overworld::forced_bike::ForcedBikeState;
 use crate::overworld::npc_movement::NpcRuntimeState;
 use crate::overworld::presentation::{
-    BoulderDustState, CutAnimState, EnterMapFlyState, EnterMapSpinState, FieldMoveRestoreState,
+    BoulderDustState, BoulderPushState, CutAnimState, EnterMapFlyState, EnterMapSpinState, FieldMoveRestoreState,
     FieldMoveStepState, FishingAnimState, LedgeJumpState, LeaveMapFlyState, TeleportSpinState,
     TileAnimState,
 };
@@ -64,6 +64,16 @@ use pokered_data::species::Species;
 use pokered_data::trainer_data::TrainerClass;
 
 use crate::overworld::native_script::NativeScriptEngineSnapshot;
+
+fn snapshot_buttons(input: dotzuki_engine::overworld::OverworldInput) -> [bool; 8] {
+    [input.up, input.down, input.left, input.right, input.a, input.b, input.start, input.select]
+}
+
+fn restore_buttons(input: [bool; 8]) -> dotzuki_engine::overworld::OverworldInput {
+    dotzuki_engine::overworld::OverworldInput::new(
+        input[0], input[1], input[2], input[3], input[4], input[5], input[6], input[7],
+    )
+}
 
 /// Everything on [`OverworldScreen`] that influences future frames.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -114,6 +124,19 @@ pub struct OverworldSnapshot {
     pub player_name: String,
     pub rival_name: String,
     pub text_delay_frames: u16,
+    #[serde(default)]
+    pub player_last_stop_direction: u8,
+    #[serde(default)]
+    pub player_moving_direction: u8,
+    /// Previous field/UI Joypad sample, in OverworldInput::new order.
+    #[serde(default)]
+    pub sampled_player_input: [bool; 8],
+    #[serde(default)]
+    pub field_loop_wait: u8,
+    #[serde(default)]
+    pub bike_redraw_advance: bool,
+    #[serde(default)]
+    pub check_player_turn: bool,
     pub prev_a_pressed: bool,
     pub prev_movement_state: MovementState,
     pub prev_b_pressed: bool,
@@ -164,6 +187,10 @@ pub struct OverworldSnapshot {
     pub tried_push_boulder: bool,
     pub boulder_dust_frames: u8,
     pub boulder_dust: BoulderDustState,
+    #[serde(default)]
+    pub boulder_push: Option<BoulderPushState>,
+    #[serde(default)]
+    pub boulder_resume_input: Option<[bool; 8]>,
     pub dark_cave: DarkCaveState,
     pub forced_bike: ForcedBikeState,
     pub flash_lit_frames: u8,
@@ -259,6 +286,12 @@ impl OverworldSnapshot {
             player_name: String::new(),
             rival_name: String::new(),
             text_delay_frames: 0,
+            player_last_stop_direction: 0,
+            player_moving_direction: 0,
+            sampled_player_input: [false; 8],
+            field_loop_wait: 0,
+            bike_redraw_advance: false,
+            check_player_turn: false,
             prev_a_pressed: false,
             prev_movement_state: MovementState::Idle,
             prev_b_pressed: false,
@@ -306,6 +339,8 @@ impl OverworldSnapshot {
             tried_push_boulder: false,
             boulder_dust_frames: 0,
             boulder_dust: screen.boulder_dust,
+            boulder_push: None,
+            boulder_resume_input: None,
             dark_cave: screen.dark_cave.clone(),
             forced_bike: screen.forced_bike,
             flash_lit_frames: 0,
@@ -337,7 +372,9 @@ impl OverworldSnapshot {
             trainer_intro_text_pending, pending_give_pokemon, bump_anim_counter, ledge_jump,
             field_move_step, pending_field_move_step, field_move_step_needs_restore,
             field_move_restore, pending_cut, cut_anim, cut_retained_dialogue, player_name,
-            rival_name, text_delay_frames, prev_a_pressed, prev_movement_state, prev_b_pressed,
+            rival_name, text_delay_frames, player_last_stop_direction, player_moving_direction,
+            field_loop_wait, bike_redraw_advance, check_player_turn,
+            prev_a_pressed, prev_movement_state, prev_b_pressed,
             prev_up_pressed, prev_down_pressed, cutscene_manager, trigger_manager,
             active_script_effect, script_sfx_playing, script_music_playing, joy_ignore_mask, scripted_player_path, script_awaiting_battle,
             script_awaiting_elevator, script_awaiting_filter_bag, script_awaiting_trade,
@@ -348,12 +385,14 @@ impl OverworldSnapshot {
             toggleable_object_flags, hidden_item_flags, hidden_coin_flags, player_coins,
             itemfinder_dings, rng, safari_steps, safari_balls, safari_game_active,
             safari_eject_pending, strength_active, tried_push_boulder, boulder_dust_frames,
-            boulder_dust, dark_cave, forced_bike, flash_lit_frames, flash_pending_white,
+            boulder_dust, boulder_push, dark_cave, forced_bike, flash_lit_frames, flash_pending_white,
             warp_fade_to_white, teleport_spin, fly_departure, enter_map_anim,
             enter_map_fly_anim, pending_fly_arrival, fly_arrival_delay_frames, elevator_shake,
             elevator_shake_pending, fishing_cast_delay, tile_anim, post_dialogue_warp,
             post_dialogue_battle, fishing_anim, pending_fishing, ship_departure,
         );
+        snap.sampled_player_input = snapshot_buttons(screen.sampled_player_input);
+        snap.boulder_resume_input = screen.boulder_resume_input.map(snapshot_buttons);
         snap.script_engine = screen.script_engine.snapshot();
         snap
     }
@@ -377,7 +416,9 @@ impl OverworldSnapshot {
             trainer_intro_text_pending, pending_give_pokemon, bump_anim_counter, ledge_jump,
             field_move_step, pending_field_move_step, field_move_step_needs_restore,
             field_move_restore, pending_cut, cut_anim, cut_retained_dialogue, player_name,
-            rival_name, text_delay_frames, prev_a_pressed, prev_movement_state, prev_b_pressed,
+            rival_name, text_delay_frames, player_last_stop_direction, player_moving_direction,
+            field_loop_wait, bike_redraw_advance, check_player_turn,
+            prev_a_pressed, prev_movement_state, prev_b_pressed,
             prev_up_pressed, prev_down_pressed, cutscene_manager, trigger_manager,
             active_script_effect, script_sfx_playing, script_music_playing, joy_ignore_mask, scripted_player_path, script_awaiting_battle,
             script_awaiting_elevator, script_awaiting_filter_bag, script_awaiting_trade,
@@ -388,12 +429,14 @@ impl OverworldSnapshot {
             toggleable_object_flags, hidden_item_flags, hidden_coin_flags, player_coins,
             itemfinder_dings, rng, safari_steps, safari_balls, safari_game_active,
             safari_eject_pending, strength_active, tried_push_boulder, boulder_dust_frames,
-            boulder_dust, dark_cave, forced_bike, flash_lit_frames, flash_pending_white,
+            boulder_dust, boulder_push, dark_cave, forced_bike, flash_lit_frames, flash_pending_white,
             warp_fade_to_white, teleport_spin, fly_departure, enter_map_anim,
             enter_map_fly_anim, pending_fly_arrival, fly_arrival_delay_frames, elevator_shake,
             elevator_shake_pending, fishing_cast_delay, tile_anim, post_dialogue_warp,
             post_dialogue_battle, fishing_anim, pending_fishing, ship_departure,
         );
+        screen.sampled_player_input = restore_buttons(self.sampled_player_input);
+        screen.boulder_resume_input = self.boulder_resume_input.map(restore_buttons);
         if let Some(engine) = &self.script_engine {
             screen.script_engine.restore_snapshot(engine);
         }
@@ -588,5 +631,32 @@ mod balance_snapshot_tests {
         decoded.restore_into(&mut restored);
         assert_eq!(restored.script_money_box, Some(2500));
         assert_eq!(restored.script_coin_box, Some(50));
+    }
+}
+
+#[cfg(test)]
+mod field_clock_compatibility_tests {
+    use super::*;
+
+    #[test]
+    fn older_snapshots_without_field_clock_bytes_still_decode() {
+        let screen = OverworldScreen::new(MapId::PalletTown, None,
+            pokered_data::impl_traits::PokemonRedData);
+        let mut old = serde_json::to_value(OverworldSnapshot::capture(&screen)).unwrap();
+        for field in ["player_last_stop_direction", "player_moving_direction", "sampled_player_input",
+            "field_loop_wait", "bike_redraw_advance", "check_player_turn", "boulder_push", "boulder_resume_input"] {
+            assert!(old.as_object_mut().unwrap().remove(field).is_some());
+        }
+        let decoded: OverworldSnapshot = serde_json::from_value(old).unwrap();
+        assert_eq!(decoded.sampled_player_input, [false; 8]);
+        assert_eq!(decoded.field_loop_wait, 0);
+        assert!(decoded.boulder_push.is_none());
+        assert!(decoded.boulder_resume_input.is_none());
+        let mut restored = OverworldScreen::new(MapId::PalletTown, None,
+            pokered_data::impl_traits::PokemonRedData);
+        decoded.restore_into(&mut restored);
+        assert_eq!(snapshot_buttons(restored.sampled_player_input), [false; 8]);
+        assert_eq!(restored.player_last_stop_direction, 0);
+        assert_eq!(restored.player_moving_direction, 0);
     }
 }

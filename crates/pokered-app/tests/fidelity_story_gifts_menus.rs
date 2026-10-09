@@ -44,6 +44,16 @@ fn tap(g: &mut PokemonGame, button: GbButton) {
     let mut input = InputState::new();
     input.press(button);
     g.update(&input);
+    if g.state.screen == GameScreen::Overworld
+        && g.overworld.pending_dialogue.is_none()
+        && g.overworld.pending_choice.is_none()
+        && g.overworld.active_script_effect_value().is_none()
+    {
+        // The field polls buttons every two hardware frames. Keep a real
+        // continuous press across either sampling phase; UI taps stay one frame.
+        input.begin_frame();
+        g.update(&input);
+    }
     idle(g, 1);
 }
 fn until(g: &mut PokemonGame, predicate: impl Fn(&PokemonGame) -> bool) {

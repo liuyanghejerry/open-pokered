@@ -771,6 +771,14 @@ class Game:
         self.d.drive([direction] * 2, frames=2 + 12)
         state = self.st()
         if state["player_facing"].lower() != direction:
+            # A trainer can promote its dialogue/battle during the turn.
+            # approach_object observes and drains this interruption before
+            # checking the interaction's facing and story completion again.
+            if (state["screen"] != "overworld"
+                    or state.get("dialogue_state") is not None
+                    or state.get("choice") is not None
+                    or state.get("active_script_effect") is not None):
+                return
             raise NavError(f"face({direction}) failed: {state['player_facing']}")
 
     def approach_object(self, x, y, map_name):

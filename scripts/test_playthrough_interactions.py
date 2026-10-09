@@ -132,6 +132,26 @@ class ApproachInterruptionRegression(unittest.TestCase):
         self.assertEqual(g.state['screen'],'overworld')
 
 
+class FacingInterruptionRegression(unittest.TestCase):
+    def test_dialogue_promoted_during_turn_is_left_for_approach_to_drain(self):
+        from playthrough import Game, NavError
+        game = Game.__new__(Game)
+        state = {"screen":"overworld", "player_facing":"Left",
+                 "dialogue_state":None, "choice":None, "active_script_effect":None}
+        game.st = lambda: dict(state)
+        def interrupted(buttons, frames):
+            state["dialogue_state"] = {"page":1, "text":"The elevator..."}
+            state["active_script_effect"] = "ShowDialogue"
+        game.d = SimpleNamespace(drive=interrupted)
+        game.face("up")
+        self.assertEqual(state["player_facing"],"Left")
+        self.assertIsNotNone(state["dialogue_state"])
+        state["dialogue_state"] = state["active_script_effect"] = None
+        game.d = SimpleNamespace(drive=lambda buttons, frames: None)
+        with self.assertRaises(NavError):
+            game.face("up")  # An unblocked wrong facing still fails.
+
+
 class StartMenuReadinessRegression(unittest.TestCase):
     def test_saved_target_cursor_waits_for_first_menu_joypad_before_a(self):
         from playthrough_late import open_start

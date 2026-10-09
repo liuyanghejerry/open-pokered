@@ -36,11 +36,13 @@ fn celadon_elevator_to_1f_lands_on_elevator_tile() {
         screen.update_frame(neutral());
     }
 
-    // Open the panel: alternate press/release so the "Which floor?" dialogue
-    // page advances, then `elevatorMenu` suspends the script.
+    // Open the panel: hold/release across the two-hardware-frame field
+    // Joypad cadence; a one-frame alternation can always miss its sample.
+    // Physical dialogue edges still advance "Which floor?", then
+    // `elevatorMenu` suspends the script.
     let mut opened = false;
     for i in 0..240 {
-        screen.update_frame(if i % 2 == 0 { a_press() } else { neutral() });
+        screen.update_frame(if i % 4 < 2 { a_press() } else { neutral() });
         if screen.script_awaiting_elevator {
             opened = true;
             break;

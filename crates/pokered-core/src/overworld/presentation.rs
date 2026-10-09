@@ -806,7 +806,7 @@ mod fly_tests {
 /// Pokémon-specific MoveSprite → AnimateBoulderDust → graphics reload.
 /// NPC movement advances once per two hardware frames; copying smoke and
 /// restoring the player graphics block the main loop as well.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct BoulderPushState {
     pub npc_index: usize,
     pub direction: Direction,

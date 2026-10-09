@@ -109,6 +109,34 @@ fn save_restore_replays_identically() {
 }
 
 #[test]
+fn mid_boulder_snapshot_replays_completion_and_control_identically() {
+    let mut game = game_at_pallet(42, 18, 9);
+    game.overworld = OverworldScreen::new(MapId::SeafoamIslands1F, None, PokemonRedData);
+    game.overworld.state.player.x = 18;
+    game.overworld.state.player.y = 9;
+    game.overworld.state.player.facing = Direction::Down;
+    game.overworld.strength_active = true;
+    game.overworld.state.encounter_cooldown = 255;
+    game.set_seed(42);
+    for _ in 0..80 {
+        drive(&mut game, &[Some(GbButton::Down)]);
+        if game.overworld.boulder_push.is_some_and(|push| push.frame >= 20) { break; }
+    }
+    assert!(game.overworld.boulder_push.is_some(), "real push must be active at the fork");
+    game.agent_save_state_slot(0).unwrap();
+    let idle = vec![None; 100];
+    drive(&mut game, &idle);
+    assert!(game.overworld.boulder_push.is_none(), "push completes after the fork");
+    let expected = game.agent_save_state_slot(1).unwrap();
+    game.agent_restore_state_slot(0).unwrap();
+    assert!(game.overworld.boulder_push.is_some(), "restore preserves the blocking push");
+    drive(&mut game, &idle);
+    assert!(game.overworld.boulder_push.is_none());
+    assert_eq!(expected, game.agent_save_state_slot(1).unwrap(),
+        "restored push completion and resumed input must match the uninterrupted fork");
+}
+
+#[test]
 fn fork_diverges_with_different_inputs() {
     let mut game = game_at_pallet(42, 10, 6);
     game.agent_save_state_slot(0).unwrap();

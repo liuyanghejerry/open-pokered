@@ -8688,6 +8688,11 @@ mod gift_dialogue_debug_tests {
         game.overworld.state.player.x=18;game.overworld.state.player.y=9;
         game.overworld.state.player.facing=Direction::Down;
         game.overworld.strength_active=true;
+        // This fixture tests push/control timing, not the cave's random
+        // encounter roll during a turn. Keep it encounter-free, as in the
+        // original-ROM boulder timing probe, without bypassing the push.
+        game.overworld.state.encounter_cooldown=255;
+        game.overworld.set_rng_seed(0);
         let mut down=InputState::new();down.press(GbButton::Down);
         for _ in 0..10 {
             game.update(&down);
