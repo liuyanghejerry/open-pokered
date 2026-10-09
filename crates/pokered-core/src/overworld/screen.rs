@@ -908,6 +908,8 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     pub boulder_dust: presentation::BoulderDustState,
     /// Blocking scripted boulder slide, smoke, and graphics restoration.
     pub boulder_push: Option<presentation::BoulderPushState>,
+    /// Joypad read on completion, processed after the next hardware boundary.
+    pub(crate) boulder_resume_input: Option<dotzuki_engine::overworld::OverworldInput>,
     /// Dark-cave palette state (wMapPalOffset): set on entering Rock Tunnel,
     /// cleared by FLASH or by leaving. The darkened *rendering* is a
     /// renderer-side follow-up; this tracks the logic state.
@@ -1255,6 +1257,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             boulder_dust_frames: 0,
             boulder_dust: presentation::BoulderDustState::inactive(),
             boulder_push: None,
+            boulder_resume_input: None,
             dark_cave,
             forced_bike: forced_bike::ForcedBikeState::default(),
             flash_lit_frames: 0,
@@ -2618,6 +2621,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             self.boulder_dust_frames = 0;
             self.boulder_dust = presentation::BoulderDustState::inactive();
             self.boulder_push = None;
+            self.boulder_resume_input = None;
             // A mid-cutscene map change (e.g. the departure's walk-out warp)
             // must not carry the animation into the next map.
             self.ship_departure = None;

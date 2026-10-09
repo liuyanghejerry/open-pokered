@@ -555,13 +555,13 @@ fn boulder_push_starts_the_dust_at_the_push_spot() {
 }
 
 #[test]
-fn boulder_push_blocks_player_and_inputs_through_slide_dust_and_restore() {
+fn boulder_push_blocks_player_and_inputs_until_graphics_restore() {
     use crate::game_state::ScreenAction;
     let mut screen=screen_on(MapId::PalletTown);fill_map_with_passable_block(&mut screen);
     screen.state.player.x=5;screen.state.player.y=5;screen.state.player.facing=Direction::Down;
     screen.npc_states.push(make_boulder(5,6));screen.strength_active=true;
     screen.tick_boulder_push(Some(Direction::Down));screen.tick_boulder_push(Some(Direction::Down));
-    for frame in 1..=72 {
+    for frame in 1..=69 {
         // Physical controls during the blocking routine must neither move
         // the player nor open a menu/dialogue or start another push.
         let noisy=super::OverworldInput::new(true,true,true,true,true,true,true,true);
@@ -573,6 +573,8 @@ fn boulder_push_blocks_player_and_inputs_through_slide_dust_and_restore() {
         assert_eq!(boulder_pos(&screen),if frame<2 {(5,6)} else {(5,7)});
         assert_eq!(screen.boulder_push.is_some(),frame<72);
     }
+    let idle=super::OverworldInput::new(false,false,false,false,false,false,false,false);
+    screen.update_frame(idle);screen.update_frame(idle);screen.update_frame(idle);
     assert_eq!(screen.boulder_dust_frames,0);
     // A released/new direction after the routine can move normally.
     let idle=super::OverworldInput::new(false,false,false,false,false,false,false,false);
@@ -1288,4 +1290,26 @@ fn victory_road_hole_event_precedes_final_oam_image() {
         assert_eq!(screen.npc_states[0].visible,frame<70);
         assert_eq!(screen.boulder_push.is_some(),frame<72);
     }
+}
+
+#[test]
+fn boulder_completion_samples_start_before_the_last_lcd_image() {
+    use crate::game_state::{ScreenAction,GameScreen};
+    let mut screen=screen_on(MapId::VictoryRoad3F);
+    screen.npc_states.clear();screen.npc_states.push(make_boulder(22,15));
+    screen.state.player.x=21;screen.state.player.y=15;screen.state.player.facing=Direction::Right;
+    screen.boulder_push=Some(presentation::BoulderPushState {
+        npc_index:0,direction:Direction::Right,anchor:(21,15),origin:(22,15),destination:(23,15),frame:69,switch_block:None,redraw_remaining:0,
+    });
+    let start=OverworldInput::new(false,false,false,false,false,false,true,false);
+    let idle=OverworldInput::new(false,false,false,false,false,false,false,false);
+    assert_eq!(screen.update_frame(start),ScreenAction::Continue);
+    assert_eq!(screen.boulder_push.unwrap().frame,70);
+    assert!(!screen.boulder_blocks_control());
+    // A single physical pulse on original Joypad t73 survives processing t74,
+    // while OAM still contains the boulder. It need not remain held until75.
+    assert_eq!(screen.update_frame(idle),ScreenAction::Transition(GameScreen::StartMenu));
+    assert_eq!(screen.boulder_push.unwrap().frame,71);
+    screen.tick_boulder_presentation_during_ui();
+    assert!(screen.boulder_push.is_none(),"opening START cannot freeze the hidden stone's LCD image");
 }

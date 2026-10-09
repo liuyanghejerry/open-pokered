@@ -3345,6 +3345,9 @@ impl PokemonGame {
     fn update_inner(&mut self, input: &InputState) {
         use pokered_core::game_state::Lang;
         self.frame_count += 1;
+        if self.state.screen != GameScreen::Overworld {
+            self.overworld.tick_boulder_presentation_during_ui();
+        }
         if let Some(frame) = self.pc_stats_return_frame {
             self.pc_stats_return_frame = (frame < 8).then_some(frame + 1);
         }
@@ -6752,7 +6755,7 @@ impl PokemonGame {
                     && self.overworld.pending_choice.is_none()
                     && self.overworld.active_script_effect_value().is_none()
                     && self.overworld.script_engine_idle()
-                    && self.overworld.boulder_push.is_none()
+                    && !self.overworld.boulder_blocks_control()
                     && self.overworld.pending_warp.is_none()
                     && matches!(
                         self.overworld.warp_fade_state,
@@ -8654,7 +8657,10 @@ mod gift_dialogue_debug_tests {
         assert!(game.overworld.boulder_push.is_some());
         let mut elapsed=0;
         while game.overworld.boulder_push.is_some() {
-            assert!(!game.debug_condition_met("control_ready"));
+            let completed=game.overworld.boulder_push.unwrap().frame>=
+                pokered_core::overworld::presentation::BoulderPushState::COMPLETION_FRAME;
+            assert_eq!(game.debug_condition_met("control_ready"),completed,
+                "logical control resumes before the last LCD image");
             game.update(&idle);elapsed+=1;assert!(elapsed<=72);
         }
         assert!(elapsed>=71);
@@ -10274,9 +10280,18 @@ mod link_stats_cry_fidelity_tests {
                 for _ in 0..6 {g.update(&idle);}
                 assert_eq!(g.state.screen,GameScreen::Overworld);
             }
+            let start_at=std::env::var("FIDELITY_DUST_START_AT").ok().map(|s|s.parse::<i32>().unwrap());
+            let start_frames=std::env::var("FIDELITY_DUST_START_FRAMES").ok().map(|s|s.parse::<i32>().unwrap()).unwrap_or(40);
             let mut input=InputState::new();let mut rows=Vec::new();
             for t in -1i32..200 {
-                if t>=0 {input.begin_frame();if t==0 && !menu_return_probe {input.press(trigger);}if t==16 {input.release(trigger);}g.update(&input);}
+                if t>=0 {
+                    input.begin_frame();
+                    if t==0 && !menu_return_probe {input.press(trigger);}
+                    if t==16 {input.release(trigger);}
+                    if start_at==Some(t) {input.press(GbButton::Start);}
+                    if start_at.map(|v|v+start_frames)==Some(t) {input.release(GbButton::Start);}
+                    g.update(&input);
+                }
                 let mut fb=FrameBuffer::new(RenderConfig::new(160,144),Rgba::WHITE);
                 g.draw(&mut fb);fb.save_png(&dir.join(format!("frame-{:04}.png",t+1))).unwrap();
                 let recorded_save=g.build_save_data();

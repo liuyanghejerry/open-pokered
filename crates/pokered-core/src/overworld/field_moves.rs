@@ -502,6 +502,18 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         }
     }
 
+    pub fn boulder_blocks_control(&self) -> bool {
+        self.boulder_push.is_some_and(|p|p.frame<presentation::BoulderPushState::COMPLETION_FRAME)
+    }
+
+    /// Finish the retained LCD image even when START has taken over the UI.
+    /// This never advances a blocking push or consumes player input.
+    pub fn tick_boulder_presentation_during_ui(&mut self) {
+        if self.boulder_push.is_some_and(|p|p.frame>=presentation::BoulderPushState::COMPLETION_FRAME) {
+            self.advance_boulder_push();
+        }
+    }
+
     /// CheckForCollisionWhenPushingBoulder: the tile beyond the boulder at
     /// (`bx`, `by`) must be passable, free of sprites, not a stairs tile,
     /// and not an elevation change from the player's tile.
@@ -546,6 +558,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             self.boulder_dust = presentation::BoulderDustState::inactive();
         }
         if push.frame == presentation::BoulderPushState::COMPLETION_FRAME {
+            // DiscardButtonPresses clears hJoyHeld before resumed Joypad.
+            self.sampled_player_input=dotzuki_engine::overworld::OverworldInput::new(false,false,false,false,false,false,false,false);
             self.commit_seafoam_boulder_hole(push.npc_index);
             if self.state.current_map == MapId::VictoryRoad3F {
                 self.commit_boulder_landing(push.npc_index);

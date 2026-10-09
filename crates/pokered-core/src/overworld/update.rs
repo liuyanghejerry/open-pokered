@@ -374,8 +374,21 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         // when the operation finishes. Player steps, scripts and menus wait.
         if self.boulder_push.is_some() {
             self.advance_boulder_push();
-            return ScreenAction::Continue;
+            if let Some(push)=self.boulder_push {
+                if push.frame < presentation::BoulderPushState::COMPLETION_FRAME {
+                    return ScreenAction::Continue;
+                }
+                if push.frame == presentation::BoulderPushState::COMPLETION_FRAME {
+                    // Joypad resumes with the completion script. The following
+                    // CPU work reaches the next LCD frame before handling it.
+                    self.boulder_resume_input=Some(input);
+                    self.field_loop_wait=0;
+                    return ScreenAction::Continue;
+                }
+            }
         }
+        let resumed_boulder=self.boulder_resume_input.take();
+        let input=resumed_boulder.unwrap_or(input);
 
         // ITEMFINDER: PlaySoundWaitForCurrent blocks for the exact lifetime of
         // each HEALING_MACHINE/PURCHASE track, four alternating pairs. The
@@ -1324,13 +1337,13 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 self.field_loop_wait -= 1;
                 return ScreenAction::Continue;
             }
-            self.field_loop_wait = 1;
+            self.field_loop_wait = if resumed_boulder.is_some() {0} else {1};
         }
 
         // JoypadOverworld runs RunMapScript BEFORE reading Joypad. The
         // boulder script therefore sees the preceding field button sample,
         // including idle calls that arm BIT_TRIED_PUSH_BOULDER without d-pad.
-        if ordinary_field_loop && self.state.player.movement_state == MovementState::Idle
+        if ordinary_field_loop && self.boulder_push.is_none() && self.state.player.movement_state == MovementState::Idle
             && self.state.walk_counter == 0
         {
             let old=self.sampled_player_input;
@@ -1619,6 +1632,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     self.tried_push_boulder = false;
                     self.boulder_dust_frames = 0;
                     self.boulder_push = None;
+                    self.boulder_resume_input = None;
                     self.dark_cave.enter_map(new_map);
                     if pokered_data::map_flags::is_city_map(new_map) {
                         self.game_data_requests

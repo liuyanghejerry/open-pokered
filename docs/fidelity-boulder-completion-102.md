@@ -9,3 +9,5 @@ Core regressions check both event/visibility boundaries and the single completio
 This is a staged correction. Player control is still blocked until the end of the retained image; original Joypad resumes at73 and DisplayTextID at74 for held START. The 2F startup discrepancy and ordinary player sprite presentation also remain open. No full fidelity verdict or merge is authorized by these narrow results.
 
 Evidence paths: docs/screenshots/fidelity-boulder-completion-102/manifest.json and raw-captures.zip , with the original primary sound/control hooks retained. Current validation: core2719 passed; app195 passed,17 ignored. Four directions and3F hole each201RGB frames match original in both repeats; all PNG/JSON repeat-identical. Metadata-enabled actual runtime records first event and logical hide at73; frames73/74 retain the source LCD image and75 hides it. Overall combined-PR before/after remains the actual master31b1eda comparison under fidelity-boulder-startup-99.
+
+Subsequent [fidelity103](fidelity-boulder-control-103.md) addresses completion-time Joypad and START processing. Menu initialization latency remains open.
