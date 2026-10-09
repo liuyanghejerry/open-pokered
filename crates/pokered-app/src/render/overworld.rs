@@ -1599,7 +1599,10 @@ fn draw_overworld_impl(
             if screen.field_move_restore.is_some() {
                 break;
             }
-            if !npc.visible {
+            // HideObject changes logical visibility before the last LCD
+            // image from the blocking boulder routine has been replaced.
+            let retained_boulder=screen.boulder_push.is_some_and(|p|p.npc_index==npc_slot);
+            if !npc.visible && !retained_boulder {
                 continue;
             }
 

@@ -545,15 +545,17 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         } else if push.frame > presentation::BoulderPushState::DUST_LAST_FRAME {
             self.boulder_dust = presentation::BoulderDustState::inactive();
         }
-        if push.frame == presentation::BoulderPushState::LAST_FRAME {
+        if push.frame == presentation::BoulderPushState::COMPLETION_FRAME {
             self.commit_seafoam_boulder_hole(push.npc_index);
             if self.state.current_map == MapId::VictoryRoad3F {
                 self.commit_boulder_landing(push.npc_index);
             }
             self.tried_push_boulder = false;
+            self.audio_requests.push(OverworldAudioRequest::PlaySound { sound_id: "SFX_CUT".to_string() });
+        }
+        if push.frame == presentation::BoulderPushState::LAST_FRAME {
             self.boulder_dust_frames = 0;
             self.boulder_push = None;
-            self.audio_requests.push(OverworldAudioRequest::PlaySound { sound_id: "SFX_CUT".to_string() });
         } else {
             self.boulder_push = Some(push);
         }

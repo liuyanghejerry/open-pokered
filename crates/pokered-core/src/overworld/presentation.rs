@@ -821,6 +821,9 @@ pub struct BoulderPushState {
 impl BoulderPushState {
     pub const DUST_FIRST_FRAME: u8 = 42;
     pub const DUST_LAST_FRAME: u8 = 66;
+    /// Return from LoadPlayerSpriteGraphics: logical events and SFX_CUT.
+    pub const COMPLETION_FRAME: u8 = 70;
+    /// The preceding OAM image remains on LCD for two additional frames.
     pub const LAST_FRAME: u8 = 72;
     pub fn slide_pixels(&self) -> u8 {
         Self::slide_pixels_at(self.frame)

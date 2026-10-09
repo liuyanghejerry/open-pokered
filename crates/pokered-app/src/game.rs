@@ -10289,6 +10289,11 @@ mod link_stats_cry_fidelity_tests {
                     "dust_active":g.overworld.boulder_dust.is_active(),"dust_step":g.overworld.boulder_dust.step(),
                     "dust_flash":g.overworld.boulder_dust.palette_flipped(),"dust_anchor":g.overworld.boulder_dust.anchor(),
                     "npcs":g.overworld.npc_states.iter().map(|n|serde_json::json!({"id":n.npc_index,"x":n.x,"y":n.y,"walk_counter":n.walk_counter})).collect::<Vec<_>>() }));
+                if victory_hole {
+                    let row=rows.last_mut().unwrap();
+                    row["hole_event"]=serde_json::json!(g.overworld.unified_flags().get_flag("EVENT_VICTORY_ROAD_3_BOULDER_ON_SWITCH2"));
+                    row["boulder_visible"]=serde_json::json!(g.overworld.npc_states.iter().find(|n|n.text_id==10).unwrap().visible);
+                }
                 if let Some((_,_,_,npc,flag,bx,by))=victory_switch {
                     let row=rows.last_mut().unwrap();
                     row["switch"]=serde_json::json!(g.overworld.unified_flags().get_flag(flag));

@@ -611,7 +611,7 @@ fn boulder_dust_completion_plays_sfx_cut_once() {
     assert!(!screen.boulder_dust.is_active(),"no smoke before the slide");
     for frame in 1..=72 {
         screen.tick_boulder_push(None);
-        assert_eq!(cut_requests(&screen),usize::from(frame==72),"SFX_CUT after graphics restoration at {frame}");
+        assert_eq!(cut_requests(&screen),usize::from(frame>=70),"SFX_CUT after graphics restoration at {frame}");
     }
     assert!(!screen.boulder_dust.is_active());
     for _ in 0..10 {screen.tick_boulder_push(None);}
@@ -1138,8 +1138,8 @@ fn seafoam_hole_waits_for_dust_and_keeps_the_lower_floor_event() {
     let flag=EventFlag::EVENT_SEAFOAM1_BOULDER1_DOWN_HOLE;
     for frame in 1..=72 {
         screen.advance_boulder_push();
-        assert_eq!(screen.npc_states[0].visible,frame<72);
-        assert_eq!(screen.unified_flags.check(flag),frame==72);
+        assert_eq!(screen.npc_states[0].visible,frame<70);
+        assert_eq!(screen.unified_flags.check(flag),frame>=70);
     }
     assert_eq!((screen.npc_states[0].x,screen.npc_states[0].y),(17,6));
     assert!(screen.boulder_push.is_none());
@@ -1268,4 +1268,24 @@ fn menu_joypad_replaces_stale_direction_before_boulder_script_runs() {
     assert!(screen.boulder_push.is_none(),"menu close must not reuse the pre-menu Down");
     assert_eq!(boulder_pos(&screen),(5,6));
     assert!(screen.pending_dialogue.is_none(),"held menu confirmation is not a new field A");
+}
+
+#[test]
+fn victory_road_hole_event_precedes_final_oam_image() {
+    use pokered_data::event_flags::EventFlag;
+    let mut screen=screen_on(MapId::VictoryRoad3F);
+    screen.npc_states.clear();
+    screen.npc_states.push(make_boulder(22,15));
+    screen.boulder_push=Some(presentation::BoulderPushState {
+        npc_index:0,direction:Direction::Right,anchor:(21,15),
+        origin:(22,15),destination:(23,15),frame:0,switch_block:None,redraw_remaining:0,
+    });
+    // Original MoveSprite at t3, HideObject/ShowObject/SFX_CUT at t73.
+    // The final displayed boulder persists until t75; no time shift.
+    for frame in 1..=72 {
+        screen.advance_boulder_push();
+        assert_eq!(screen.unified_flags.check(EventFlag::EVENT_VICTORY_ROAD_3_BOULDER_ON_SWITCH2),frame>=70);
+        assert_eq!(screen.npc_states[0].visible,frame<70);
+        assert_eq!(screen.boulder_push.is_some(),frame<72);
+    }
 }

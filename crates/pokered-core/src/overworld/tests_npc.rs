@@ -1915,7 +1915,7 @@ fn victory_road_boulder_drops_and_reappears_downstairs() {
     screen.tick_boulder_push(Some(Direction::Right));
     screen.tick_boulder_push(Some(Direction::Right));
     assert!(screen.npc_states.iter().find(|n|n.text_id==10).unwrap().visible,"stone starts sliding toward the hole");
-    for frame in 1..=71 {
+    for frame in 1..=69 {
         screen.tick_boulder_push(None);
         assert!(screen.npc_states.iter().find(|n|n.text_id==10).unwrap().visible,"stone remains through slide/dust frame {frame}");
         assert!(!screen.unified_flags().check(pokered_data::event_flags::EventFlag::EVENT_VICTORY_ROAD_3_BOULDER_ON_SWITCH2));
