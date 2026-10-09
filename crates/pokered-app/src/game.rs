@@ -2630,8 +2630,12 @@ impl PokemonGame {
                     self.start_menu.begin_field_initialization(StartMenuInput {
                         up:previous.up,down:previous.down,a:previous.a,b:previous.b,start:previous.start,
                     });
-                } else if let Some(ref audio) = self.audio {
-                    audio.play_sfx(SfxId::StartMenu);
+                } else {
+                    let previous = self.overworld.sampled_player_input();
+                    self.start_menu.begin_redisplay_initialization(StartMenuInput {
+                        up: previous.up, down: previous.down, a: previous.a,
+                        b: previous.b, start: previous.start,
+                    });
                 }
             }
             GameScreen::OptionsMenu => {
@@ -5698,6 +5702,16 @@ impl PokemonGame {
         };
 
         if let ScreenAction::Transition(new_screen) = action {
+            // RedisplayStartMenu compares its first Joypad with the sample
+            // which closed the submenu, including a still-held return B.
+            if new_screen == GameScreen::StartMenu && self.state.screen != GameScreen::Overworld {
+                self.overworld.synchronize_player_input(OverworldInput::new(
+                    input.is_held(GbButton::Up), input.is_held(GbButton::Down),
+                    input.is_held(GbButton::Left), input.is_held(GbButton::Right),
+                    input.is_held(GbButton::A), input.is_held(GbButton::B),
+                    input.is_held(GbButton::Start), input.is_held(GbButton::Select),
+                ));
+            }
             use pokered_core::game_state::MainMenuChoice;
             let needs_black_screen = new_screen == GameScreen::Overworld
                 && self.state.screen == GameScreen::MainMenu
@@ -9468,6 +9482,36 @@ mod link_stats_cry_fidelity_tests {
     }
 
     #[test]
+    fn party_return_redraw_discards_short_pulse_without_replaying_start_sound() {
+        use pokered_core::start_menu::StartMenuItem;
+        run_link_save_fixture(|| {
+            for held_down in [false, true] {
+                let mut g = fixture(Species::Bulbasaur, 3, pokered_core::overworld::Direction::Down);
+                let idle = InputState::new();
+                g.handle_transition(GameScreen::StartMenu);
+                for _ in 0..23 { g.update(&idle); }
+                g.update(&button(GbButton::Down));
+                assert_eq!(g.start_menu.current_item(), StartMenuItem::Pokemon);
+                g.update(&button(GbButton::A));
+                assert_eq!(g.state.screen, GameScreen::PartyScreen);
+                let mut input = button(GbButton::B);
+                g.update(&input);
+                assert_eq!(g.state.screen, GameScreen::StartMenu);
+                assert_ne!(g.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.current_sfx_id, SfxId::StartMenu as u8);
+                for frame in 1..=3 {
+                    input.begin_frame();
+                    if frame == 1 { input.press(GbButton::Down); }
+                    if frame == 2 && !held_down { input.release(GbButton::Down); }
+                    g.update(&input);
+                    assert_eq!(g.state.screen, GameScreen::StartMenu, "held closing B is not replayed");
+                    assert_eq!(g.start_menu.current_item(),
+                        if held_down && frame == 3 {StartMenuItem::Item} else {StartMenuItem::Pokemon});
+                }
+            }
+        });
+    }
+
+    #[test]
     fn field_menu_wait_discards_pulse_then_reads_held_b_and_plays_source_sounds() {
         run_link_save_fixture(|| {
             let mut g=fixture(Species::Bulbasaur,3,pokered_core::overworld::Direction::Down);
@@ -9485,6 +9529,44 @@ mod link_stats_cry_fidelity_tests {
                 if frame==20 {assert_eq!(id,SfxId::StartMenu as u8);}
                 if frame==23 {assert_eq!(id,SfxId::PressAB as u8);}
             }
+        });
+    }
+
+
+    #[test]
+    #[ignore = "START submenu return comparison capture"]
+    fn capture_party_return_menu_105() {
+        use pokered_core::start_menu::StartMenuItem;
+        run_link_save_fixture(|| {
+            let dir = std::path::PathBuf::from(std::env::var("FIDELITY_MENU_RETURN_CAPTURE").unwrap());
+            std::fs::create_dir_all(&dir).unwrap();
+            let mut g = fixture(Species::Bulbasaur, 3, pokered_core::overworld::Direction::Down);
+            let idle = InputState::new();
+            g.handle_transition(GameScreen::StartMenu);
+            for _ in 0..23 { g.update(&idle); }
+            g.update(&button(GbButton::Down));
+            assert_eq!(g.start_menu.current_item(), StartMenuItem::Pokemon);
+            g.update(&button(GbButton::A));
+            assert_eq!(g.state.screen, GameScreen::PartyScreen);
+            let mut input = button(GbButton::B);
+            g.update(&input);
+            assert_eq!(g.state.screen, GameScreen::StartMenu);
+            let mut rows = Vec::new();
+            for t in -1i32..8 {
+                if t >= 0 {
+                    input.begin_frame();
+                    if t == 0 { input.press(GbButton::Down); }
+                    if t == 1 { input.release(GbButton::Down); }
+                    g.update(&input);
+                }
+                let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+                g.draw(&mut fb);
+                fb.save_png(&dir.join(format!("frame-{:04}.png", t + 1))).unwrap();
+                rows.push(serde_json::json!({"t":t,"input_bits":input.raw_current(),
+                    "screen":format!("{:?}",g.state.screen),"item":format!("{:?}",g.start_menu.current_item()),
+                    "sfx_id":g.audio.as_ref().map(|a|a.manager.lock().unwrap().sequencer.current_sfx_id)}));
+            }
+            std::fs::write(dir.join("frames.json"),serde_json::to_string_pretty(&rows).unwrap()).unwrap();
         });
     }
 

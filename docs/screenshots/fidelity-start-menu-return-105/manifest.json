@@ -1,0 +1,218 @@
+{
+  "base": "31b1eda3112514d6bc803af559ec7f7c9e20374f",
+  "reference": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "scope": "DrawStartMenu to first Joypad on submenu return, not total Party restoration duration",
+  "source": "PartyA120,B170,Redisplay205,firstJoy208, no START SFX; all14boundarycases repeatedexact",
+  "before_after": {
+    "master": {
+      "png_repeat_exact": true,
+      "json_repeat_exact": true,
+      "rows": [
+        {
+          "input_bits": 2,
+          "item": "Pokemon",
+          "screen": "StartMenu",
+          "sfx_id": 62,
+          "t": -1
+        },
+        {
+          "input_bits": 130,
+          "item": "Item",
+          "screen": "StartMenu",
+          "sfx_id": 62,
+          "t": 0
+        },
+        {
+          "input_bits": 2,
+          "item": "Item",
+          "screen": "StartMenu",
+          "sfx_id": 62,
+          "t": 1
+        },
+        {
+          "input_bits": 2,
+          "item": "Item",
+          "screen": "StartMenu",
+          "sfx_id": 62,
+          "t": 2
+        },
+        {
+          "input_bits": 2,
+          "item": "Item",
+          "screen": "StartMenu",
+          "sfx_id": 62,
+          "t": 3
+        },
+        {
+          "input_bits": 2,
+          "item": "Item",
+          "screen": "StartMenu",
+          "sfx_id": 62,
+          "t": 4
+        },
+        {
+          "input_bits": 2,
+          "item": "Item",
+          "screen": "StartMenu",
+          "sfx_id": 62,
+          "t": 5
+        },
+        {
+          "input_bits": 2,
+          "item": "Item",
+          "screen": "StartMenu",
+          "sfx_id": 62,
+          "t": 6
+        },
+        {
+          "input_bits": 2,
+          "item": "Item",
+          "screen": "StartMenu",
+          "sfx_id": 62,
+          "t": 7
+        }
+      ]
+    },
+    "after": {
+      "png_repeat_exact": true,
+      "json_repeat_exact": true,
+      "rows": [
+        {
+          "input_bits": 2,
+          "item": "Pokemon",
+          "screen": "StartMenu",
+          "sfx_id": 63,
+          "t": -1
+        },
+        {
+          "input_bits": 130,
+          "item": "Pokemon",
+          "screen": "StartMenu",
+          "sfx_id": 63,
+          "t": 0
+        },
+        {
+          "input_bits": 2,
+          "item": "Pokemon",
+          "screen": "StartMenu",
+          "sfx_id": 63,
+          "t": 1
+        },
+        {
+          "input_bits": 2,
+          "item": "Pokemon",
+          "screen": "StartMenu",
+          "sfx_id": 63,
+          "t": 2
+        },
+        {
+          "input_bits": 2,
+          "item": "Pokemon",
+          "screen": "StartMenu",
+          "sfx_id": 63,
+          "t": 3
+        },
+        {
+          "input_bits": 2,
+          "item": "Pokemon",
+          "screen": "StartMenu",
+          "sfx_id": 63,
+          "t": 4
+        },
+        {
+          "input_bits": 2,
+          "item": "Pokemon",
+          "screen": "StartMenu",
+          "sfx_id": 63,
+          "t": 5
+        },
+        {
+          "input_bits": 2,
+          "item": "Pokemon",
+          "screen": "StartMenu",
+          "sfx_id": 63,
+          "t": 6
+        },
+        {
+          "input_bits": 2,
+          "item": "Pokemon",
+          "screen": "StartMenu",
+          "sfx_id": 63,
+          "t": 7
+        }
+      ]
+    },
+    "pre_RGB_identical": true,
+    "input_identical": true
+  },
+  "tests": {
+    "core": "2723 passed",
+    "app": "197 passed17ignored"
+  },
+  "limitations": [
+    "Native Party closing restoration total35HW not verified/aligned; this fixes the following3HW redraw only",
+    "First app test build failed missing local StartMenuItem import; fixed import then fullsuitePASS; logs retained",
+    "Initial boundary probe generator syntaxerror retained separately; correctedprobe succeeded",
+    "Fresh a3 usesimmutable104pre105binary; full49latesthead remains unverified"
+  ],
+  "sha256": {
+    "menu-105-after-1/frame-0000.png": "5a9a49d3feff06b35979e14e5bd2162394e7c494967a69e3a10de3e870d95f71",
+    "menu-105-after-1/frame-0001.png": "5a9a49d3feff06b35979e14e5bd2162394e7c494967a69e3a10de3e870d95f71",
+    "menu-105-after-1/frame-0002.png": "5a9a49d3feff06b35979e14e5bd2162394e7c494967a69e3a10de3e870d95f71",
+    "menu-105-after-1/frame-0003.png": "5a9a49d3feff06b35979e14e5bd2162394e7c494967a69e3a10de3e870d95f71",
+    "menu-105-after-1/frame-0004.png": "5a9a49d3feff06b35979e14e5bd2162394e7c494967a69e3a10de3e870d95f71",
+    "menu-105-after-1/frame-0005.png": "5a9a49d3feff06b35979e14e5bd2162394e7c494967a69e3a10de3e870d95f71",
+    "menu-105-after-1/frame-0006.png": "5a9a49d3feff06b35979e14e5bd2162394e7c494967a69e3a10de3e870d95f71",
+    "menu-105-after-1/frame-0007.png": "5a9a49d3feff06b35979e14e5bd2162394e7c494967a69e3a10de3e870d95f71",
+    "menu-105-after-1/frame-0008.png": "5a9a49d3feff06b35979e14e5bd2162394e7c494967a69e3a10de3e870d95f71",
+    "menu-105-after-1/frames.json": "a92fbe28bed59631d3092de45ba7cb14af7d6bcdb3c23454f4030e530216d339",
+    "menu-105-after-1.log": "b0597977cb2bc334d9f3752ab9be1c6237114eae2ecdc5821ba5eed2c136fb99",
+    "menu-105-after-2/frame-0000.png": "5a9a49d3feff06b35979e14e5bd2162394e7c494967a69e3a10de3e870d95f71",
+    "menu-105-after-2/frame-0001.png": "5a9a49d3feff06b35979e14e5bd2162394e7c494967a69e3a10de3e870d95f71",
+    "menu-105-after-2/frame-0002.png": "5a9a49d3feff06b35979e14e5bd2162394e7c494967a69e3a10de3e870d95f71",
+    "menu-105-after-2/frame-0003.png": "5a9a49d3feff06b35979e14e5bd2162394e7c494967a69e3a10de3e870d95f71",
+    "menu-105-after-2/frame-0004.png": "5a9a49d3feff06b35979e14e5bd2162394e7c494967a69e3a10de3e870d95f71",
+    "menu-105-after-2/frame-0005.png": "5a9a49d3feff06b35979e14e5bd2162394e7c494967a69e3a10de3e870d95f71",
+    "menu-105-after-2/frame-0006.png": "5a9a49d3feff06b35979e14e5bd2162394e7c494967a69e3a10de3e870d95f71",
+    "menu-105-after-2/frame-0007.png": "5a9a49d3feff06b35979e14e5bd2162394e7c494967a69e3a10de3e870d95f71",
+    "menu-105-after-2/frame-0008.png": "5a9a49d3feff06b35979e14e5bd2162394e7c494967a69e3a10de3e870d95f71",
+    "menu-105-after-2/frames.json": "a92fbe28bed59631d3092de45ba7cb14af7d6bcdb3c23454f4030e530216d339",
+    "menu-105-after-2.log": "b0597977cb2bc334d9f3752ab9be1c6237114eae2ecdc5821ba5eed2c136fb99",
+    "menu-105-after-helper-build.log": "3b87b7a5945c32072ccb4a11d7a3a005c0be3e81c17df7d0fafd9b339bf2076d",
+    "menu-105-app-fixed-import.log": "8970d621113f540f767ff274104fd173dd1bbdf6293797400ec6d1298d627ed1",
+    "menu-105-app.log": "5c3286a4f148fa799d1c96d49e0246808b4db97fcdf76b72115dad32a04b95b9",
+    "menu-105-before-after-summary.json": "3d57d80174c0615c00e72683ec79a23642564bd8582ee05beb1bf0cfdbe89450",
+    "menu-105-core.log": "ac0d23323f17ae1276281adce2f02b74c7c64d54248540694552e0574e869e04",
+    "menu-105-master-1/frame-0000.png": "5a9a49d3feff06b35979e14e5bd2162394e7c494967a69e3a10de3e870d95f71",
+    "menu-105-master-1/frame-0001.png": "f948e482ccb25923b20e5cade7bd4b6661de4b7827a1016403682570c8c9a8c2",
+    "menu-105-master-1/frame-0002.png": "f948e482ccb25923b20e5cade7bd4b6661de4b7827a1016403682570c8c9a8c2",
+    "menu-105-master-1/frame-0003.png": "f948e482ccb25923b20e5cade7bd4b6661de4b7827a1016403682570c8c9a8c2",
+    "menu-105-master-1/frame-0004.png": "f948e482ccb25923b20e5cade7bd4b6661de4b7827a1016403682570c8c9a8c2",
+    "menu-105-master-1/frame-0005.png": "f948e482ccb25923b20e5cade7bd4b6661de4b7827a1016403682570c8c9a8c2",
+    "menu-105-master-1/frame-0006.png": "f948e482ccb25923b20e5cade7bd4b6661de4b7827a1016403682570c8c9a8c2",
+    "menu-105-master-1/frame-0007.png": "f948e482ccb25923b20e5cade7bd4b6661de4b7827a1016403682570c8c9a8c2",
+    "menu-105-master-1/frame-0008.png": "f948e482ccb25923b20e5cade7bd4b6661de4b7827a1016403682570c8c9a8c2",
+    "menu-105-master-1/frames.json": "d81f876861dcf5002c62c0542f8783e52cae964fb19cbf94a92c4fa406c38d9d",
+    "menu-105-master-1.log": "5627a6b93744b1a66ac84407f8d2957f6d978f619c2438c56079765858a6c272",
+    "menu-105-master-2/frame-0000.png": "5a9a49d3feff06b35979e14e5bd2162394e7c494967a69e3a10de3e870d95f71",
+    "menu-105-master-2/frame-0001.png": "f948e482ccb25923b20e5cade7bd4b6661de4b7827a1016403682570c8c9a8c2",
+    "menu-105-master-2/frame-0002.png": "f948e482ccb25923b20e5cade7bd4b6661de4b7827a1016403682570c8c9a8c2",
+    "menu-105-master-2/frame-0003.png": "f948e482ccb25923b20e5cade7bd4b6661de4b7827a1016403682570c8c9a8c2",
+    "menu-105-master-2/frame-0004.png": "f948e482ccb25923b20e5cade7bd4b6661de4b7827a1016403682570c8c9a8c2",
+    "menu-105-master-2/frame-0005.png": "f948e482ccb25923b20e5cade7bd4b6661de4b7827a1016403682570c8c9a8c2",
+    "menu-105-master-2/frame-0006.png": "f948e482ccb25923b20e5cade7bd4b6661de4b7827a1016403682570c8c9a8c2",
+    "menu-105-master-2/frame-0007.png": "f948e482ccb25923b20e5cade7bd4b6661de4b7827a1016403682570c8c9a8c2",
+    "menu-105-master-2/frame-0008.png": "f948e482ccb25923b20e5cade7bd4b6661de4b7827a1016403682570c8c9a8c2",
+    "menu-105-master-2/frames.json": "d81f876861dcf5002c62c0542f8783e52cae964fb19cbf94a92c4fa406c38d9d",
+    "menu-105-master-2.log": "ba27b9e2092f6052b1e4662132a5378253b560c7781e2e8ef668bb17e99c857a",
+    "menu-105-master-helper-build.log": "e98e37b4fc6d350618e100c665f73efa7eea4b931b9670935cb9669455ecbd97",
+    "menu-105-readonly-capture-helper.txt": "84deb66ffb4ad7770e3e568e7c68e00a64ca16ed1184e7ea2a97165759aab613",
+    "menu-105-source-boundary-fixed.log": "ea7181aca4d33fb2b631a530945f0059ef70d9a4639fd5ab4b3238912c53cf04",
+    "menu-105-source-boundary.json": "162a4fa3d80ea281773f5dd552c2969c9f592b83d6583de04bf3815594199341",
+    "menu-105-source-boundary.log": "34317ac4beada395c3fc762b1811a1e1aa509cdd2d76aac303fb1413c18dc237",
+    "menu-105-source-return.json": "19cd007708212fa683651b0992212e74317d52977f36a73526a9fb354b1750b1",
+    "menu-105-source-return.log": "37372dfb728e58253c1c80087555ba04c088204d882740297e2bd8e04ddbdaa9",
+    "stats-59-tools/probe_menu_return_105.py": "9c7d1689c54a66e8f8d9727b75139821ff9a3bb7667eb04b80b3b61309da3e5a",
+    "stats-59-tools/probe_menu_return_boundary_105.py": "b028aa0219183b1b2f4bc4ecc66a04c9573fa9f92a4e948495eaaafc0c35a57c"
+  }
+}

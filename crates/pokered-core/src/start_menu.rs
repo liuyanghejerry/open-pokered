@@ -152,6 +152,12 @@ impl StartMenuState {
         self.field_initialization = Some((23, previous));
     }
 
+    /// RedisplayStartMenu redraws without DisplayTextIDInit or START SFX.
+    /// Its first Joypad is three hardware frames after DrawStartMenu.
+    pub fn begin_redisplay_initialization(&mut self, previous: StartMenuInput) {
+        self.field_initialization = Some((3, previous));
+    }
+
     pub fn field_initialization_active(&self) -> bool {
         self.field_initialization.is_some()
     }
@@ -348,5 +354,30 @@ mod field_initialization_tests {
         menu.begin_field_initialization(opening);
         menu.open(false,true,false);
         assert!(!menu.field_initialization_active());
+    }
+}
+
+#[cfg(test)]
+mod redisplay_initialization_tests {
+    use super::*;
+
+    #[test]
+    fn redisplay_discards_early_pulse_and_suppresses_held_return_b() {
+        for held_down in [false, true] {
+            let mut menu = StartMenuState::new(false, true, false);
+            menu.begin_redisplay_initialization(StartMenuInput { b: true, ..StartMenuInput::none() });
+            for frame in 1..=2 {
+                assert!(!menu.field_initialization_sound_due());
+                assert!(menu.sample_field_initialization(StartMenuInput {
+                    b: true, down: held_down || frame == 1, ..StartMenuInput::none()
+                }).is_none());
+            }
+            let first = menu.sample_field_initialization(StartMenuInput {
+                b: true, down: held_down, ..StartMenuInput::none()
+            }).unwrap();
+            assert!(!first.b, "closing B remains held and is not a new press");
+            assert_eq!(menu.update_frame(first), StartMenuAction::Redisplay);
+            assert_eq!(menu.current_item(), if held_down { StartMenuItem::Item } else { StartMenuItem::Pokemon });
+        }
     }
 }
