@@ -1127,10 +1127,84 @@ pub struct PlayerCameraState {
 pub struct FieldTextRestoreState {
     pub elapsed: u8,
     pub npc_transfer_frames: u8,
+    /// Full map-sprite/font reload used by StartMenu_Pokemon.exitMenu.
+    /// Older snapshots represent CloseTextDisplay and have no such reload.
+    #[serde(default)]
+    pub submenu_reload: Option<SubmenuReloadWork>,
+}
+
+/// The CPU work occurs with the LCD off; the other waits are original
+/// Delay3 and CopyVideoData transfers, not NPC-dependent padding.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct SubmenuReloadWork {
+    pub cpu_cycles: u32,
+    pub cpu_phase: u32,
+}
+
+impl SubmenuReloadWork {
+    pub const CYCLES_PER_FRAME: u32 = 70224;
+
+    pub fn palette_restore_frame(&self) -> u8 {
+        // White palette Delay3, LCD shutdown/reload entry at +4; after
+        // EnableLCD: two 12-tile player transfers (4), font (17), textbox
+        // (5), buffered background Delay3 (3), and the resume frame (1).
+        let cpu_frames = self.cpu_phase.saturating_add(self.cpu_cycles) / Self::CYCLES_PER_FRAME;
+        (4 + cpu_frames + 4 + 17 + 5 + 3 + 1).min(u32::from(u8::MAX)) as u8
+    }
 }
 
 impl FieldTextRestoreState {
-    pub fn window_visible(&self) -> bool { self.elapsed < 6 }
-    pub fn finished(&self) -> bool { self.elapsed >= 6 + self.npc_transfer_frames + 4 }
-    pub fn bg_transfer_enabled(&self) -> bool { self.elapsed == 5 || self.finished() }
+    pub fn window_visible(&self) -> bool { self.submenu_reload.is_none() && self.elapsed < 6 }
+    pub fn finished(&self) -> bool {
+        self.elapsed >= self.submenu_reload.as_ref().map_or(
+            6 + self.npc_transfer_frames + 4, SubmenuReloadWork::palette_restore_frame)
+    }
+    pub fn bg_transfer_enabled(&self) -> bool {
+        if let Some(work) = &self.submenu_reload {
+            // LoadScreenTilesFromBuffer2 enables background transfer after
+            // the player/font copies; Delay3 drains all three portions.
+            self.elapsed.saturating_add(8) >= work.palette_restore_frame()
+        } else { self.elapsed == 5 || self.finished() }
+    }
+}
+
+
+#[cfg(test)]
+mod submenu_reload_work_tests {
+    use super::*;
+
+    #[test]
+    fn original_entry_phase_and_work_reproduce_all_five_palette_restore_frames() {
+        // Recorded InitMapSprites entry CPU phases and actual palette restore
+        // frames. Passing these phases proves the lifecycle model, not that the
+        // frontend currently maintains the original global CPU/PPU clock.
+        for (cycles, phase, visible_frame) in [
+            (219336, 47820, 37), (56940, 57024, 35),
+            (106304, 26444, 35), (59316, 64004, 35), (1184, 12048, 34),
+        ] {
+            let mut restore = FieldTextRestoreState {
+                elapsed: 0, npc_transfer_frames: 0,
+                submenu_reload: Some(SubmenuReloadWork { cpu_cycles: cycles, cpu_phase: phase }),
+            };
+            for elapsed in 0..=visible_frame {
+                restore.elapsed = elapsed;
+                assert_eq!(restore.finished(), elapsed == visible_frame);
+                assert!(!restore.window_visible());
+                let json = serde_json::to_string(&restore).unwrap();
+                let decoded: FieldTextRestoreState = serde_json::from_str(&json).unwrap();
+                assert_eq!(decoded.finished(), restore.finished());
+                assert_eq!(decoded.bg_transfer_enabled(), restore.bg_transfer_enabled());
+            }
+        }
+    }
+
+    #[test]
+    fn old_close_display_snapshot_keeps_the_original_upper_sprite_transfer() {
+        let restore: FieldTextRestoreState = serde_json::from_str(
+            r#"{"elapsed":5,"npc_transfer_frames":18}"#).unwrap();
+        assert!(restore.submenu_reload.is_none());
+        assert!(restore.window_visible());
+        assert!(restore.bg_transfer_enabled());
+        assert!(!restore.finished());
+    }
 }

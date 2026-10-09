@@ -2632,6 +2632,13 @@ impl PokemonGame {
                         up:previous.up,down:previous.down,a:previous.a,b:previous.b,start:previous.start,
                     }, self.overworld.bg_transfer_portion);
                 } else {
+                    if self.state.screen == GameScreen::PartyScreen {
+                        // This lifecycle now blocks the short DOWN/A pulses
+                        // while sprites/font/background are restored. The
+                        // global CPU/PPU carry is not tracked yet: a zero work
+                        // phase remains provisional and is audited separately.
+                        self.overworld.begin_party_menu_restore(0);
+                    }
                     let previous = self.overworld.sampled_player_input();
                     self.start_menu.begin_redisplay_initialization(StartMenuInput {
                         up: previous.up, down: previous.down, a: previous.a,
@@ -4778,7 +4785,9 @@ impl PokemonGame {
             }
             GameScreen::StartMenu => {
                 if self.overworld.field_text_restore.is_some() {
-                    if self.overworld.tick_field_text_restore() {
+                    let return_to_menu = self.overworld.field_text_restore.as_ref()
+                        .is_some_and(|restore| restore.submenu_reload.is_some());
+                    if self.overworld.tick_field_text_restore() && !return_to_menu {
                         ScreenAction::Transition(GameScreen::Overworld)
                     } else { ScreenAction::Continue }
                 } else {
@@ -7825,6 +7834,13 @@ impl PokemonGame {
                 );
             }
             GameScreen::StartMenu => {
+                if self.overworld.field_text_restore.as_ref()
+                    .is_some_and(|restore| restore.submenu_reload.is_some()) {
+                    // GBPalWhiteOut persists throughout map/font reload.
+                    // The initiating scanline still needs the shared PPU phase.
+                    frame_buffer.clear(Rgba::WHITE);
+                    return;
+                }
                 draw_overworld(
                     &mut self.overworld,
                     &mut self.resources,
@@ -9873,32 +9889,80 @@ mod link_stats_cry_fidelity_tests {
     }
 
     #[test]
-    fn party_return_redraw_discards_short_pulse_without_replaying_start_sound() {
+    fn party_restore_discards_original_short_down_a_probe_and_accepts_held_down() {
         use pokered_core::start_menu::StartMenuItem;
         run_link_save_fixture(|| {
             for held_down in [false, true] {
-                let mut g = fixture(Species::Bulbasaur, 3, pokered_core::overworld::Direction::Down);
+                let path = std::env::temp_dir().join(format!(
+                    "pokered-party-restore-144-{}-{held_down}.sav", std::process::id()));
+                std::fs::write(&path, include_bytes!("../tests/fixtures/party-restore-road-140.sav")).unwrap();
+                let mut g = PokemonGame::new_with_options(GameVersion::Red, Some(path.clone()), None, None,
+                    false, None, false, true, #[cfg(feature = "debug-server")] None);
+                g.audio = Some(AudioOutput::new_pcm());
                 let idle = InputState::new();
-                g.handle_transition(GameScreen::StartMenu);
-                for _ in 0..23 { g.update(&idle); }
-                g.update(&button(GbButton::Down));
-                for _ in 0..3 { g.update(&idle); }
-                assert_eq!(g.start_menu.current_item(), StartMenuItem::Pokemon);
-                g.update(&button(GbButton::A));
-                assert_eq!(g.state.screen, GameScreen::PartyScreen);
-                let mut input = button(GbButton::B);
-                g.update(&input);
-                assert_eq!(g.state.screen, GameScreen::StartMenu);
-                assert_ne!(g.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.current_sfx_id, SfxId::StartMenu as u8);
-                for frame in 1..=3 {
-                    input.begin_frame();
-                    if frame == 1 { input.press(GbButton::Down); }
-                    if frame == 2 && !held_down { input.release(GbButton::Down); }
-                    g.update(&input);
-                    assert_eq!(g.state.screen, GameScreen::StartMenu, "held closing B is not replayed");
-                    assert_eq!(g.start_menu.current_item(),
-                        if held_down && frame == 3 {StartMenuItem::Item} else {StartMenuItem::Pokemon});
+                let mut saw_continue = false;
+                for t in 0..2000 {
+                    saw_continue |= g.state.screen == GameScreen::MainMenu;
+                    if g.state.screen == GameScreen::Overworld { break; }
+                    let a = button(GbButton::A);
+                    g.update(if t % 20 == 19 { &a } else { &idle });
                 }
+                assert!(saw_continue);
+                assert_eq!(g.overworld.state.current_map, MapId::ViridianCity);
+                assert_eq!((g.overworld.state.player.x, g.overworld.state.player.y), (20, 30));
+                for _ in 0..120 { g.update(&idle); }
+                let mut input = button(GbButton::Start);
+                for _ in 0..40 { g.update(&input); input.begin_frame(); }
+                for _ in 0..120 { g.update(&idle); }
+                for _ in 0..8 {
+                    if g.start_menu.current_item() == StartMenuItem::Pokemon { break; }
+                    g.update(&button(GbButton::Up));
+                    for _ in 0..121 { g.update(&idle); }
+                }
+                assert_eq!(g.start_menu.current_item(), StartMenuItem::Pokemon);
+                input = button(GbButton::A);
+                for _ in 0..2 { g.update(&input); input.begin_frame(); }
+                for _ in 0..120 { g.update(&idle); }
+                assert_eq!(g.state.screen, GameScreen::PartyScreen);
+                // Actual original probe: B 0..1, DOWN 10..11, A 16..17.
+                // Short pulses disappear; DOWN held from 10 reaches first
+                // Joypad at 40. Closing B must never close START again.
+                let mut session = crate::render::session::RenderSession::new();
+                let mut retained = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+                let mut full = retained.clone();
+                let mut scroll = |_: &mut [u8], _: usize, _: usize, _: i32, _: i32, _: u8| {};
+                session.render(&mut g, &mut retained, &mut scroll);
+                let mut reused = 0;
+                input = InputState::new();
+                for t in 0..=40 {
+                    input.begin_frame();
+                    if t == 0 { input.press(GbButton::B); }
+                    if t == 2 { input.release(GbButton::B); }
+                    if t == 10 { input.press(GbButton::Down); }
+                    if t == 12 && !held_down { input.release(GbButton::Down); }
+                    if t == 16 { input.press(GbButton::A); }
+                    if t == 18 { input.release(GbButton::A); }
+                    g.update(&input);
+                    assert_eq!(g.state.screen, GameScreen::StartMenu, "t={t}");
+                    assert_eq!(g.overworld.field_text_restore.is_some(), t < 37, "t={t}");
+                    assert_eq!(g.start_menu.field_initialization_active(), t < 40 || held_down,
+                        "held DOWN starts MenuJoypad's next Delay3 at t={t}");
+                    assert_eq!(g.start_menu.current_item(),
+                        if held_down && t == 40 { StartMenuItem::Item } else { StartMenuItem::Pokemon }, "t={t}");
+                    reused += usize::from(matches!(session.render(&mut g, &mut retained, &mut scroll),
+                        crate::render::session::FrameUpdate::Reuse));
+                    g.draw(&mut full);
+                    for y in 0..144 { for x in 0..160 {
+                        assert_eq!(retained.get_pixel(x,y), full.get_pixel(x,y),
+                            "cached restore: held_down={held_down} t={t} x={x} y={y}");
+                    }}
+                    assert_eq!(retained.display_palette(), full.display_palette());
+                    assert_ne!(g.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.current_sfx_id,
+                        SfxId::StartMenu as u8, "return must not replay START sound: t={t}");
+                }
+                assert!(reused > 0, "exercise white-frame cache reuse");
+                drop(g);
+                std::fs::remove_file(path).unwrap();
             }
         });
     }
@@ -11908,4 +11972,72 @@ mod link_stats_cry_fidelity_tests {
         )
         .unwrap();
     }
+    #[test]
+    #[ignore = "actual SRAM Continue and party-cancel restoration recording"]
+    fn capture_actual_party_restore_140() {
+        run_link_save_fixture(|| {
+            let dir = std::path::PathBuf::from(std::env::var("FIDELITY_PARTY_RESTORE_CAPTURE").unwrap());
+            std::fs::create_dir_all(&dir).unwrap();
+            let save_path = dir.join("fixture.sav");
+            std::fs::copy(std::env::var("FIDELITY_PARTY_RESTORE_SRAM").unwrap(), &save_path).unwrap();
+            let mut g = PokemonGame::new_with_options(GameVersion::Red, Some(save_path), None, None,
+                false, None, false, true, #[cfg(feature = "debug-server")] None);
+            g.audio = Some(AudioOutput::new_pcm());
+            g.state.config.language = pokered_core::game_state::Lang::En;
+            let idle = InputState::new();
+            let mut saw_menu = false;
+            for t in 0..2000 {
+                saw_menu |= g.state.screen == GameScreen::MainMenu;
+                if g.state.screen == GameScreen::Overworld { break; }
+                let a = button(GbButton::A);
+                g.update(if t % 20 == 19 { &a } else { &idle });
+            }
+            assert!(saw_menu);
+            assert_eq!(g.overworld.state.current_map, MapId::ViridianCity);
+            assert_eq!((g.overworld.state.player.x, g.overworld.state.player.y), (20, 30));
+            for _ in 0..120 { g.update(&idle); }
+            let mut start = button(GbButton::Start);
+            for _ in 0..40 { g.update(&start); start.begin_frame(); }
+            for _ in 0..120 { g.update(&idle); }
+            assert_eq!(g.state.screen, GameScreen::StartMenu);
+            for _ in 0..8 {
+                if g.start_menu.current_item() == pokered_core::start_menu::StartMenuItem::Pokemon { break; }
+                g.update(&button(GbButton::Up));
+                for _ in 0..121 { g.update(&idle); }
+            }
+            assert_eq!(g.start_menu.current_item(), pokered_core::start_menu::StartMenuItem::Pokemon);
+            let mut a = button(GbButton::A);
+            for _ in 0..2 { g.update(&a); a.begin_frame(); }
+            for _ in 0..120 { g.update(&idle); }
+            assert_eq!(g.state.screen, GameScreen::PartyScreen);
+            assert_eq!(g.save_data.party.count(), 5);
+            let probe = std::env::var("FIDELITY_PARTY_RESTORE_PROBE").is_ok();
+            let mut rows = Vec::new();
+            let mut input = InputState::new();
+            for t in -1i32..80 {
+                if t >= 0 {
+                    input.begin_frame();
+                    if t == 0 { input.press(GbButton::B); }
+                    if t == 2 { input.release(GbButton::B); }
+                    if probe {
+                        if t == 10 { input.press(GbButton::Down); }
+                        if t == 12 { input.release(GbButton::Down); }
+                        if t == 16 { input.press(GbButton::A); }
+                        if t == 18 { input.release(GbButton::A); }
+                    }
+                    g.update(&input);
+                }
+                let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+                g.draw(&mut fb);
+                fb.save_png(&dir.join(format!("frame-{:04}.png", t + 1))).unwrap();
+                rows.push(serde_json::json!({"t":t,"input_bits":input.raw_current(),
+                    "screen":format!("{:?}",g.state.screen),"item":format!("{:?}",g.start_menu.current_item()),
+                    "party_phase":format!("{:?}",g.party_screen.phase()),
+                    "start_initializing":g.start_menu.field_initialization_active(),
+                    "overworld":pokered_core::snapshot::OverworldSnapshot::capture(&g.overworld)}));
+            }
+            std::fs::write(dir.join("frames.json"), serde_json::to_string_pretty(&rows).unwrap()).unwrap();
+        });
+    }
+
 }

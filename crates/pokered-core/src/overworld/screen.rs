@@ -3300,6 +3300,29 @@ impl<G: GameData> OverworldScreen<G> {
         self.field_text_restore.as_ref().is_none_or(|restore| restore.window_visible())
     }
 
+    /// Full restoration for a party menu opened from START. `cpu_phase`
+    /// belongs to the LCD-off work clock, not a map-specific frame delay.
+    pub fn begin_party_menu_restore(&mut self, cpu_phase: u32) -> bool {
+        let count = self.npc_states.len();
+        if count > 15 { return false; }
+        let mut pictures = [0u8; 16];
+        pictures[0] = 1;
+        for (slot, npc) in self.npc_states.iter().enumerate() {
+            pictures[slot + 1] = npc.sprite_id;
+        }
+        let Some(cpu_cycles) = super::sprite_reload_work::sprite_reload_cycles(
+            self.state.current_map as u8, self.state.player.x as u8,
+            self.state.player.y as u8, &pictures, count as u8)
+        else { return false; };
+        self.field_text_restore = Some(presentation::FieldTextRestoreState {
+            elapsed: 0, npc_transfer_frames: 0,
+            submenu_reload: Some(presentation::SubmenuReloadWork {
+                cpu_cycles, cpu_phase: cpu_phase % presentation::SubmenuReloadWork::CYCLES_PER_FRAME,
+            }),
+        });
+        true
+    }
+
     pub fn begin_start_menu_restore(&mut self) {
         use pokered_data::sprite_set_data::{MapSpriteSetRef, SplitDirection, SpriteSetId,
             MAP_SPRITE_SETS, SPLIT_MAP_SPRITE_SETS};
@@ -3339,7 +3362,7 @@ impl<G: GameData> OverworldScreen<G> {
             }
         }
         self.field_text_restore = Some(presentation::FieldTextRestoreState {
-            elapsed: 0, npc_transfer_frames: frames,
+            elapsed: 0, npc_transfer_frames: frames, submenu_reload: None,
         });
     }
 }

@@ -5002,11 +5002,12 @@ impl<G: GameData<Tileset = pokered_data::tilesets::TilesetId>> OverworldScreen<G
         let Some(restore) = &mut self.field_text_restore else { return false; };
         restore.elapsed = restore.elapsed.saturating_add(1);
         if !restore.finished() { return false; }
+        let submenu_reload = restore.submenu_reload.is_some();
         self.field_text_restore = None;
         // CloseTextDisplay returns through UpdateSprites before the field
         // DelayFrame pair. Its sprite result still drains through OAM.
         self.run_npc_movement_tick();
-        self.field_loop_wait = 2;
+        if !submenu_reload { self.field_loop_wait = 2; }
         true
     }
 }
