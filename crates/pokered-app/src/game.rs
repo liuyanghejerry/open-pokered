@@ -3355,12 +3355,12 @@ impl PokemonGame {
     fn update_inner(&mut self, input: &InputState) {
         use pokered_core::game_state::Lang;
         self.frame_count += 1;
-        if self.state.screen != GameScreen::Overworld {
+        if !matches!(self.state.screen, GameScreen::Overworld) {
             self.overworld.tick_boulder_presentation_during_ui();
             self.overworld.tick_player_presentation_during_ui();
             // Window transfers are suspended during DisplayTextIDInit's
             // font copy; other UI frames keep cycling the retained third.
-            if self.state.screen != GameScreen::StartMenu || self.start_menu.field_presentation_stage() >= 19 {
+            if !matches!(self.state.screen, GameScreen::StartMenu) || self.start_menu.field_presentation_stage() >= 19 {
                 self.overworld.tick_ui_background_transfer();
             }
         }

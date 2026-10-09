@@ -656,18 +656,30 @@ impl OverworldVisualKey {
             hash_byte(&mut npc_hash, npc.visible as u8);
         }
 
+        let player_pose = screen.ordinary_player_sprite_frame();
+        let camera = screen.ordinary_player_camera();
+        // In the ordinary renderer these latched values own the pixels.
+        // Logical movement can change one frame before the LCD image; it
+        // must not cause a second submission of the same stored picture.
+        // Keep raw fields for special paths and missing-resource text.
+        let presented = game.resources.is_some() && screen.map_data.is_some()
+            && player_pose.is_some() && camera.is_some();
+        let movement = screen.state.player.movement_state;
+        let normal_movement = matches!(movement,
+            dotzuki_engine::overworld::MovementState::Idle
+                | dotzuki_engine::overworld::MovementState::Walking);
         Some(Self {
             language: game.state.config.language,
             map: screen.state.current_map as u8,
-            player_x: screen.state.player.x,
-            player_y: screen.state.player.y,
-            player_facing: screen.state.player.facing as u8,
-            player_movement: screen.state.player.movement_state as u8,
+            player_x: if presented { camera.unwrap().x } else { screen.state.player.x },
+            player_y: if presented { camera.unwrap().y } else { screen.state.player.y },
+            player_facing: if presented { 0 } else { screen.state.player.facing as u8 },
+            player_movement: if presented && normal_movement { 0 } else { movement as u8 },
             player_transport: screen.state.player.transport as u8,
-            walk_counter: screen.state.walk_counter,
-            player_pose: screen.ordinary_player_sprite_frame(),
-            player_camera: screen.ordinary_player_camera().map(|v| (v.x,v.y,v.sub_x,v.sub_y)),
-            bump_counter: screen.bump_anim_counter,
+            walk_counter: if presented { 0 } else { screen.state.walk_counter },
+            player_pose,
+            player_camera: camera.map(|v| (v.x,v.y,v.sub_x,v.sub_y)),
+            bump_counter: if presented { 0 } else { screen.bump_anim_counter },
             tile_kind: screen.tile_anim.kind() as u8,
             water_shift: screen.tile_anim.water_shift(),
             flower_frame: screen.tile_anim.flower_frame(),
