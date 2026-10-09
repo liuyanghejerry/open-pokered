@@ -746,6 +746,8 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     pub(crate) sampled_player_input: dotzuki_engine::overworld::OverworldInput,
     /// Remaining hardware frames in OverworldLoop's DelayFrame pair.
     pub(crate) field_loop_wait: u8,
+    pub(crate) player_sprite_state: presentation::PlayerSpriteState,
+    pub(crate) player_camera_state: Option<presentation::PlayerCameraState>,
     /// First AdvancePlayerSprite redraw finishes before the second bike advance.
     pub(crate) bike_redraw_advance: bool,
     /// NoDirection arms the original turn-in-place check until it is consumed.
@@ -1188,6 +1190,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             prev_a_pressed: false,
             sampled_player_input: dotzuki_engine::overworld::OverworldInput::new(false,false,false,false,false,false,false,false),
             field_loop_wait: 0,
+            player_sprite_state: presentation::PlayerSpriteState::default(),
+            player_camera_state: None,
             bike_redraw_advance: false,
             check_player_turn: false,
             prev_movement_state: MovementState::Idle,
@@ -2542,6 +2546,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
 
     /// Restore counters and status bytes that live outside the event bitset.
     pub fn restore_system_save_state(&mut self, data: &crate::save::game_data::GameData) {
+        self.player_sprite_state = presentation::PlayerSpriteState::default();
+        self.player_camera_state = None;
         self.player_last_stop_direction = data.player_last_stop_direction;
         self.player_moving_direction = data.player_moving_direction;
         self.first_lock_trash_can = data.first_lock_trash_can;
@@ -3145,5 +3151,63 @@ mod dialogue_localization_tests {
             screen.localize_message("No! A new BADGE\nis required."),
             "不行！需要新的\n徽章。"
         );
+    }
+}
+
+impl<G: GameData> OverworldScreen<G> {
+    /// Ordinary field sprites retain their phase across steps. Other field
+    /// animations supply their own sprite poses through the existing renderer.
+    pub fn ordinary_player_sprite_frame(&self) -> Option<(usize, bool)> {
+        if self.player_sprite_state.initialized && self.active_script_effect.is_none()
+            && self.scripted_player_path.is_empty() && !self.cutscene_manager.is_blocking()
+            && self.pending_connection.is_none() && self.ledge_jump.is_none()
+            && self.boulder_push.is_none() && self.field_move_step.is_none()
+            && self.pending_dialogue.is_none()
+            && self.warp_fade_state == WarpFadeState::Idle
+            && self.teleport_spin.is_none() && self.enter_map_anim.is_none()
+            && self.fly_departure.is_none() && self.enter_map_fly_anim.is_none()
+            && !self.pending_fly_arrival && self.fly_arrival_delay_frames == 0
+            && self.fishing_anim.is_none() && self.elevator_shake.is_none()
+            && self.ship_departure.is_none() && self.cut_anim.is_none()
+            && self.field_move_restore.is_none()
+        {Some(self.player_sprite_state.rendered_frame())} else {None}
+    }
+}
+
+impl<G: GameData> OverworldScreen<G> {
+    pub fn ordinary_player_camera(&self) -> Option<&presentation::PlayerCameraState> {
+        if self.ordinary_player_sprite_frame().is_some() {
+            self.player_camera_state.as_ref().filter(|view| view.map == self.state.current_map as u8)
+        } else {None}
+    }
+
+    pub(crate) fn latch_player_camera(&mut self) {
+        if self.ordinary_player_sprite_frame().is_none() {return;}
+        // LoadCurrentMapView crosses vblank after a newly initialized step.
+        // The first scroll update is visible one extra frame later; ordinary
+        // AdvancePlayerSprite updates latch at the following vblank.
+        if self.field_loop_wait == 2 {return;}
+        let px = if self.state.player.movement_state == dotzuki_engine::overworld::MovementState::Walking {
+            i16::from(8u8.saturating_sub(self.state.walk_counter)) * 2
+        } else {0};
+        let (sub_x,sub_y) = match self.state.player.facing {
+            Direction::Down => (0,px), Direction::Up => (0,-px),
+            Direction::Left => (-px,0), Direction::Right => (px,0),
+        };
+        self.player_camera_state = Some(presentation::PlayerCameraState {
+            map:self.state.current_map as u8, x:self.state.player.x, y:self.state.player.y, sub_x,sub_y,
+        });
+    }
+}
+
+impl<G: GameData> OverworldScreen<G> {
+    pub fn prepare_field_textbox_sprite(&mut self) {
+        self.player_sprite_state.load_font();
+    }
+
+    pub fn tick_player_presentation_during_ui(&mut self) {
+        if self.player_sprite_state.initialized {
+            self.player_sprite_state.hardware_frame(self.state.player.facing);
+        }
     }
 }

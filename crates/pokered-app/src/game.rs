@@ -2627,6 +2627,7 @@ impl PokemonGame {
                 };
                 if self.state.screen == GameScreen::Overworld {
                     let previous=self.overworld.sampled_player_input();
+                    self.overworld.prepare_field_textbox_sprite();
                     self.start_menu.begin_field_initialization(StartMenuInput {
                         up:previous.up,down:previous.down,a:previous.a,b:previous.b,start:previous.start,
                     });
@@ -3356,6 +3357,7 @@ impl PokemonGame {
         self.frame_count += 1;
         if self.state.screen != GameScreen::Overworld {
             self.overworld.tick_boulder_presentation_during_ui();
+            self.overworld.tick_player_presentation_during_ui();
         }
         if let Some(frame) = self.pc_stats_return_frame {
             self.pc_stats_return_frame = (frame < 8).then_some(frame + 1);
@@ -9528,6 +9530,48 @@ mod link_stats_cry_fidelity_tests {
     }
 
     #[test]
+    fn walking_and_bicycle_start_menu_drain_sprite_before_standing() {
+        use pokered_core::overworld::Direction;
+        use pokered_core::snapshot::OverworldSnapshot;
+        use dotzuki_engine::overworld::types::TransportMode;
+        run_link_save_fixture(|| {
+            for bike in [false,true] {
+                let mut g=fixture(Species::Bulbasaur,3,Direction::Down);
+                g.overworld.warp_to_map(MapId::Route1,20,30);
+                let idle=InputState::new();
+                for _ in 0..120 {g.update(&idle);}
+                g.overworld.state.player.transport=if bike {TransportMode::Biking} else {TransportMode::Walking};
+                g.overworld.state.encounter_cooldown=255;
+                // Match the original Continue / actual Bicycle preparation
+                // field phase; input below is real hardware-frame input.
+                let mut snapshot=OverworldSnapshot::capture(&g.overworld);
+                snapshot.field_loop_wait=if bike {1} else {0};
+                snapshot.player_last_stop_direction=2;
+                snapshot.player_moving_direction=0;
+                snapshot.check_player_turn=true;
+                snapshot.restore_into(&mut g.overworld);
+                let mut input=InputState::new();
+                let first_menu=if bike {12} else {19};
+                for t in 0..100 {
+                    input.begin_frame();
+                    if t==0 {input.press(GbButton::Down);}
+                    if t==5 {input.press(GbButton::Start);}
+                    if t==if bike {16} else {32} {input.release(GbButton::Down);}
+                    if t==45 {input.release(GbButton::Start);}
+                    g.update(&input);
+                    assert_eq!(g.state.screen,if t<first_menu {GameScreen::Overworld} else {GameScreen::StartMenu},"bike={bike} t{t}");
+                    if t>=first_menu {
+                        // Original opaque sprite capture: odd bicycle step
+                        // remains visible for two LCD frames, then stands.
+                        let frame=if bike && t<first_menu+2 {3} else {0};
+                        assert_eq!(g.overworld.ordinary_player_sprite_frame(),Some((frame,false)),"bike={bike} t{t}");
+                    }
+                }
+            }
+        });
+    }
+
+    #[test]
     fn empty_party_pokemon_selection_redraws_without_opening_party_or_replaying_start() {
         run_link_save_fixture(|| {
             let mut g = fixture(Species::Bulbasaur, 3, pokered_core::overworld::Direction::Down);
@@ -10361,11 +10405,13 @@ mod link_stats_cry_fidelity_tests {
             }
             let bike=std::env::var("FIDELITY_MOVEMENT_BIKE").is_ok_and(|s|s=="true");
             if bike {
-                g.update(&button(GbButton::Start));g.update(&idle);
+                let mut held_start=button(GbButton::Start);
+                g.update(&held_start);held_start.begin_frame();g.update(&held_start);
+                for _ in 0..23 {g.update(&idle);}
                 assert_eq!(g.state.screen,GameScreen::StartMenu);
                 for _ in 0..7 {
                     if g.start_menu.current_item()==pokered_core::start_menu::StartMenuItem::Item {break;}
-                    g.update(&button(GbButton::Down));g.update(&idle);
+                    g.update(&button(GbButton::Down));for _ in 0..3 {g.update(&idle);}
                 }
                 g.update(&button(GbButton::A));g.update(&idle);
                 assert_eq!(g.state.screen,GameScreen::Bag);
@@ -10383,7 +10429,8 @@ mod link_stats_cry_fidelity_tests {
                 assert_eq!(g.overworld.state.player.transport,dotzuki_engine::overworld::types::TransportMode::Biking);
             }
             let trigger=if pc_case.is_some() {GbButton::Up} else {match std::env::var("FIDELITY_MOVEMENT_DIRECTION").unwrap_or_else(|_|"left".into()).as_str() {
-                "left"=>GbButton::Left,"down"=>GbButton::Down,_=>panic!("unsupported direction"),
+                "left"=>GbButton::Left,"right"=>GbButton::Right,
+                "up"=>GbButton::Up,"down"=>GbButton::Down,_=>panic!("unsupported direction"),
             }};
             g.overworld.set_rng_seed(0);
             for _ in 0..120 { g.update(&idle); }
@@ -10478,7 +10525,7 @@ mod link_stats_cry_fidelity_tests {
             for _ in 0..23 {g.update(&idle);}
             for _ in 0..7 {
                 if g.start_menu.current_item()==pokered_core::start_menu::StartMenuItem::Pokemon {break;}
-                g.update(&button(GbButton::Down));g.update(&idle);
+                g.update(&button(GbButton::Down));for _ in 0..3 {g.update(&idle);}
             }
             g.update(&button(GbButton::A));g.update(&idle);
             assert_eq!(g.state.screen,GameScreen::PartyScreen);

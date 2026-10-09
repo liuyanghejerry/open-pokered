@@ -308,7 +308,20 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     }
 
     pub fn update_frame(&mut self, input: OverworldInput) -> ScreenAction {
+        let action = self.update_frame_inner(input);
+        // Field text uses the same BIT_FONT_LOADED sprite reset as START.
+        // Do this after script/interaction dispatch, including early returns,
+        // so a newly opened textbox starts the OAM pipeline this frame.
+        if self.pending_dialogue.is_some() && self.state.walk_counter == 0 {
+            self.player_sprite_state.load_font();
+        }
+        action
+    }
+
+    fn update_frame_inner(&mut self, input: OverworldInput) -> ScreenAction {
         self.frame_counter = self.frame_counter.wrapping_add(1);
+        self.player_sprite_state.hardware_frame(self.state.player.facing);
+        self.latch_player_camera();
         self.sfx_event = OverworldSfxEvent::None;
         if self.preserve_audio_requests_next_frame {
             self.preserve_audio_requests_next_frame = false;
@@ -1708,6 +1721,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     Direction::Down => 4, Direction::Up => 8,
                 };
             } else {
+                if ordinary_field_loop {
+                    self.player_sprite_state.update_sprite(self.state.walk_counter, self.player_moving_direction);
+                }
                 self.check_player_turn = true;
                 if self.player_moving_direction != 0 {
                     self.player_last_stop_direction = self.player_moving_direction;
@@ -1905,6 +1921,14 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     // original check against the last stopped direction.
                     self.state.player.facing = direction;
                 }
+            }
+            // .noDirectionChange and .moveAhead call UpdateSprites before
+            // initializing/advancing wWalkCounter. Turning-in-place returns
+            // before that call, while NoDirection was handled above.
+            if ordinary_field_loop && !turning_in_place
+                && (movement_before != MovementState::Idle || movement_input.direction_pressed().is_some())
+            {
+                self.player_sprite_state.update_sprite(self.state.walk_counter, self.player_moving_direction);
             }
             let result = if turning_in_place {
                 MoveResult::TurnedOnly

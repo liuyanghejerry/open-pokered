@@ -1054,8 +1054,9 @@ fn draw_overworld_impl(
 
     let sprite_pal = pokered_renderer::overworld_palette::normal_sprite_palette();
 
-    let player_tx = screen.state.player.x as i32 * 2;
-    let player_ty = screen.state.player.y as i32 * 2;
+    let camera = screen.ordinary_player_camera();
+    let player_tx = camera.map_or(screen.state.player.x, |view| view.x) as i32 * 2;
+    let player_ty = camera.map_or(screen.state.player.y, |view| view.y) as i32 * 2;
     let screen_center_tx = PLAYER_SCREEN_X / TILE_SIZE as i32;
     let screen_center_ty = (PLAYER_SCREEN_Y - ACTOR_CELL_Y_OFFSET) / TILE_SIZE as i32;
     let view_origin_tx = player_tx - screen_center_tx;
@@ -1063,7 +1064,9 @@ fn draw_overworld_impl(
 
     // Sub-pixel viewport offset: scrolls the world smoothly during player walking.
     // Original GB uses SCX/SCY registers to scroll the background 2px/frame.
-    let (view_sub_x, view_sub_y) = if let Some(jump) = screen.ledge_jump {
+    let (view_sub_x, view_sub_y) = if let Some(view) = camera {
+        (i32::from(view.sub_x), i32::from(view.sub_y))
+    } else if let Some(jump) = screen.ledge_jump {
         jump.camera_residual_px()
     } else if let Some(step) = screen.field_move_step {
         step.camera_residual_px()
@@ -1401,7 +1404,12 @@ fn draw_overworld_impl(
             let player_visible =
                 player_visible && fly_player_visible && screen.field_move_restore.is_none();
 
-            let (frame, flip_h) = if screen.state.player.movement_state == MovementState::Walking
+            let ordinary_pose = if spin.is_none() && enter.is_none() && fishing.is_none()
+                && screen.enter_map_fly_anim.is_none() && screen.fly_departure.is_none()
+            {screen.ordinary_player_sprite_frame()} else {None};
+            let (frame, flip_h) = if let Some(pose) = ordinary_pose {
+                pose
+            } else if screen.state.player.movement_state == MovementState::Walking
                 || screen.state.player.movement_state == MovementState::Jumping
             {
                 // 4-frame walk cycle (facings.asm:3-18 + movement.asm:298-320):

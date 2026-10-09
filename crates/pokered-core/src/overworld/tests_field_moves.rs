@@ -1313,3 +1313,69 @@ fn boulder_completion_samples_start_before_the_last_lcd_image() {
     screen.tick_boulder_presentation_during_ui();
     assert!(screen.boulder_push.is_none(),"opening START cannot freeze the hidden stone's LCD image");
 }
+
+
+#[test]
+fn ordinary_player_pose_and_camera_match_original_hardware_frames() {
+    // Independent golden transitions from original Red actual SRAM Continue,
+    // road (20,30), 32-frame foot / 16-frame bicycle inputs. Each reference
+    // was recorded twice. Camera registers are latched into the next LCD frame;
+    // sprite poses were classified from opaque original gfx pixels.
+    type PoseTrace = &'static [(i32, usize, bool)];
+    type CameraTrace = &'static [(i32, i16, i16)];
+    let cases: &[(bool, Direction, PoseTrace, CameraTrace)] = &[
+        (false, Direction::Left, &[(-1, 0, false), (2, 2, false), (9, 5, false), (17, 2, false), (26, 5, false), (34, 2, false)], &[(0, 0, 0), (2, -2, 0), (4, -4, 0), (6, -6, 0), (8, -8, 0), (10, -10, 0), (12, -12, 0), (14, -14, 0), (16, -16, 0), (19, -18, 0), (21, -20, 0), (23, -22, 0), (25, -24, 0), (27, -26, 0), (29, -28, 0), (31, -30, 0), (33, -32, 0)]),
+        (false, Direction::Right, &[(-1, 0, false), (4, 2, true), (11, 5, true), (19, 2, true), (28, 5, true), (36, 2, true)], &[(0, 0, 0), (4, 2, 0), (6, 4, 0), (8, 6, 0), (10, 8, 0), (12, 10, 0), (14, 12, 0), (16, 14, 0), (18, 16, 0), (21, 18, 0), (23, 20, 0), (25, 22, 0), (27, 24, 0), (29, 26, 0), (31, 28, 0), (33, 30, 0), (35, 32, 0)]),
+        (false, Direction::Up, &[(-1, 0, false), (4, 1, false), (11, 4, false), (19, 1, false), (28, 4, true), (36, 1, false)], &[(0, 0, 0), (4, 0, -2), (6, 0, -4), (8, 0, -6), (10, 0, -8), (12, 0, -10), (14, 0, -12), (16, 0, -14), (18, 0, -16), (21, 0, -18), (23, 0, -20), (25, 0, -22), (27, 0, -24), (29, 0, -26), (31, 0, -28), (33, 0, -30), (35, 0, -32)]),
+        (false, Direction::Down, &[(-1, 0, false), (11, 3, false), (19, 0, false), (28, 3, true), (36, 0, false)], &[(0, 0, 0), (4, 0, 2), (6, 0, 4), (8, 0, 6), (10, 0, 8), (12, 0, 10), (14, 0, 12), (16, 0, 14), (18, 0, 16), (21, 0, 18), (23, 0, 20), (25, 0, 22), (27, 0, 24), (29, 0, 26), (31, 0, 28), (33, 0, 30), (35, 0, 32)]),
+        (true, Direction::Left, &[(-1, 0, false), (3, 2, false), (10, 5, false), (19, 2, false)], &[(0, 0, 0), (3, -4, 0), (5, -8, 0), (7, -12, 0), (9, -16, 0), (12, -20, 0), (14, -24, 0), (16, -28, 0), (18, -32, 0)]),
+        (true, Direction::Right, &[(-1, 0, false), (5, 2, true), (12, 5, true), (21, 2, true)], &[(0, 0, 0), (5, 4, 0), (7, 8, 0), (9, 12, 0), (11, 16, 0), (14, 20, 0), (16, 24, 0), (18, 28, 0), (20, 32, 0)]),
+        (true, Direction::Up, &[(-1, 0, false), (5, 1, false), (12, 4, false), (21, 1, false)], &[(0, 0, 0), (5, 0, -4), (7, 0, -8), (9, 0, -12), (11, 0, -16), (14, 0, -20), (16, 0, -24), (18, 0, -28), (20, 0, -32)]),
+        (true, Direction::Down, &[(-1, 0, false), (12, 3, false), (21, 0, false)], &[(0, 0, 0), (5, 0, 4), (7, 0, 8), (9, 0, 12), (11, 0, 16), (14, 0, 20), (16, 0, 24), (18, 0, 28), (20, 0, 32)]),
+    ];
+    let idle = OverworldInput::new(false,false,false,false,false,false,false,false);
+    for &(bike,direction,poses,cameras) in cases {
+        let mut screen=screen_on(MapId::PalletTown);fill_map_with_passable_block(&mut screen);
+        screen.state.player.x=5;screen.state.player.y=5;screen.state.player.facing=Direction::Down;
+        screen.state.player.transport=if bike {TransportMode::Biking} else {TransportMode::Walking};
+        screen.player_last_stop_direction=2;screen.check_player_turn=true;
+        screen.field_loop_wait=if bike {1} else {0};
+        let held=OverworldInput::new(direction==Direction::Up,direction==Direction::Down,
+            direction==Direction::Left,direction==Direction::Right,false,false,false,false);
+        for t in 0..100 {
+            screen.update_frame(if t < if bike {16} else {32} {held} else {idle});
+            let &(_,frame,flip)=poses.iter().rev().find(|&&(start,_,_)| start<=t).unwrap();
+            assert_eq!(screen.ordinary_player_sprite_frame(),Some((frame,flip)),"{bike}/{direction:?} pose t{t}");
+            let &(_,x,y)=cameras.iter().rev().find(|&&(start,_,_)| start<=t).unwrap();
+            let view=screen.ordinary_player_camera().unwrap();
+            assert_eq!(((view.x as i16-5)*16+view.sub_x,(view.y as i16-5)*16+view.sub_y),
+                (x,y),"{bike}/{direction:?} camera t{t}");
+        }
+    }
+}
+
+
+#[test]
+fn mid_step_snapshot_replays_pending_player_presentation() {
+    use crate::snapshot::OverworldSnapshot;
+    let idle=OverworldInput::new(false,false,false,false,false,false,false,false);
+    let down=OverworldInput::new(false,true,false,false,false,false,false,false);
+    for bike in [false,true] {
+        let mut original=screen_on(MapId::PalletTown);fill_map_with_passable_block(&mut original);
+        original.state.player.x=5;original.state.player.y=5;
+        original.state.player.transport=if bike {TransportMode::Biking} else {TransportMode::Walking};
+        original.player_last_stop_direction=2;original.check_player_turn=true;
+        original.field_loop_wait=if bike {1} else {0};
+        for _ in 0..10 {original.update_frame(down);}
+        // This boundary includes an in-flight OAM pose and a latched viewport.
+        let encoded=serde_json::to_string(&OverworldSnapshot::capture(&original)).unwrap();
+        let snapshot: OverworldSnapshot=serde_json::from_str(&encoded).unwrap();
+        let mut restored=screen_on(MapId::PalletTown);snapshot.restore_into(&mut restored);
+        for t in 10..100 {
+            let input=if t < if bike {16} else {32} {down} else {idle};
+            original.update_frame(input);restored.update_frame(input);
+            assert_eq!(serde_json::to_string(&OverworldSnapshot::capture(&original)).unwrap(),
+                serde_json::to_string(&OverworldSnapshot::capture(&restored)).unwrap(),"{bike} t{t}");
+        }
+    }
+}

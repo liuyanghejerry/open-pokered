@@ -134,6 +134,10 @@ pub struct OverworldSnapshot {
     #[serde(default)]
     pub field_loop_wait: u8,
     #[serde(default)]
+    pub player_sprite_state: crate::overworld::presentation::PlayerSpriteState,
+    #[serde(default)]
+    pub player_camera_state: Option<crate::overworld::presentation::PlayerCameraState>,
+    #[serde(default)]
     pub bike_redraw_advance: bool,
     #[serde(default)]
     pub check_player_turn: bool,
@@ -290,6 +294,8 @@ impl OverworldSnapshot {
             player_moving_direction: 0,
             sampled_player_input: [false; 8],
             field_loop_wait: 0,
+            player_sprite_state: crate::overworld::presentation::PlayerSpriteState::default(),
+            player_camera_state: None,
             bike_redraw_advance: false,
             check_player_turn: false,
             prev_a_pressed: false,
@@ -373,7 +379,7 @@ impl OverworldSnapshot {
             field_move_step, pending_field_move_step, field_move_step_needs_restore,
             field_move_restore, pending_cut, cut_anim, cut_retained_dialogue, player_name,
             rival_name, text_delay_frames, player_last_stop_direction, player_moving_direction,
-            field_loop_wait, bike_redraw_advance, check_player_turn,
+            field_loop_wait, player_sprite_state, player_camera_state, bike_redraw_advance, check_player_turn,
             prev_a_pressed, prev_movement_state, prev_b_pressed,
             prev_up_pressed, prev_down_pressed, cutscene_manager, trigger_manager,
             active_script_effect, script_sfx_playing, script_music_playing, joy_ignore_mask, scripted_player_path, script_awaiting_battle,
@@ -417,7 +423,7 @@ impl OverworldSnapshot {
             field_move_step, pending_field_move_step, field_move_step_needs_restore,
             field_move_restore, pending_cut, cut_anim, cut_retained_dialogue, player_name,
             rival_name, text_delay_frames, player_last_stop_direction, player_moving_direction,
-            field_loop_wait, bike_redraw_advance, check_player_turn,
+            field_loop_wait, player_sprite_state, player_camera_state, bike_redraw_advance, check_player_turn,
             prev_a_pressed, prev_movement_state, prev_b_pressed,
             prev_up_pressed, prev_down_pressed, cutscene_manager, trigger_manager,
             active_script_effect, script_sfx_playing, script_music_playing, joy_ignore_mask, scripted_player_path, script_awaiting_battle,
@@ -644,7 +650,7 @@ mod field_clock_compatibility_tests {
             pokered_data::impl_traits::PokemonRedData);
         let mut old = serde_json::to_value(OverworldSnapshot::capture(&screen)).unwrap();
         for field in ["player_last_stop_direction", "player_moving_direction", "sampled_player_input",
-            "field_loop_wait", "bike_redraw_advance", "check_player_turn", "boulder_push", "boulder_resume_input"] {
+            "field_loop_wait", "player_sprite_state", "player_camera_state", "bike_redraw_advance", "check_player_turn", "boulder_push", "boulder_resume_input"] {
             assert!(old.as_object_mut().unwrap().remove(field).is_some());
         }
         let decoded: OverworldSnapshot = serde_json::from_value(old).unwrap();

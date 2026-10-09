@@ -903,3 +903,80 @@ mod boulder_oam_reference_tests {
         }
     }
 }
+
+/// UpdatePlayerSprite's persistent counters, followed by the OAM/LCD pipeline.
+/// The animation advances every four sprite updates, not four phases per tile.
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize)]
+pub struct PlayerSpriteState {
+    pub initialized: bool,
+    pub facing: u8,
+    pub intra_frame: u8,
+    pub phase: u8,
+    pub visible: u8,
+    pub pending: [u8; 2],
+}
+
+impl PlayerSpriteState {
+    pub fn hardware_frame(&mut self, facing: Direction) {
+        if !self.initialized {
+            self.initialized = true;
+            self.facing = Self::facing_index(facing);
+            self.visible = self.facing << 2;
+            self.pending = [self.visible; 2];
+        }
+        self.visible = self.pending[0];
+        self.pending[0] = self.pending[1];
+    }
+
+    fn facing_index(facing: Direction) -> u8 {
+        match facing {
+            Direction::Down => 0, Direction::Up => 1,
+            Direction::Left => 2, Direction::Right => 3,
+        }
+    }
+
+    pub fn update_sprite(&mut self, walk_counter: u8, moving_direction: u8) {
+        if walk_counter == 0 && moving_direction == 0 {
+            self.intra_frame = 0;
+            self.phase = 0;
+        } else {
+            if walk_counter == 0 {
+                self.facing = if moving_direction & 4 != 0 {0}
+                    else if moving_direction & 8 != 0 {1}
+                    else if moving_direction & 2 != 0 {2} else {3};
+            }
+            self.intra_frame += 1;
+            if self.intra_frame == 4 {
+                self.intra_frame = 0;
+                self.phase = (self.phase + 1) & 3;
+            }
+        }
+        self.pending[1] = (self.facing << 2) | self.phase;
+    }
+
+    /// DisplayTextIDInit updates the sprite with BIT_FONT_LOADED, clearing
+    /// both counters while retaining its facing. The LCD still drains OAM.
+    pub fn load_font(&mut self) {
+        self.intra_frame = 0;
+        self.phase = 0;
+        self.pending[1] = self.facing << 2;
+    }
+
+    pub fn rendered_frame(&self) -> (usize, bool) {
+        let facing = self.visible >> 2;
+        let phase = self.visible & 3;
+        let stepping = phase & 1 != 0;
+        let frame = match facing {0 => 0, 1 => 1, _ => 2} + if stepping {3} else {0};
+        (frame, facing == 3 || (facing < 2 && phase == 3))
+    }
+}
+
+/// Background viewport latched by vblank, independently of logical movement.
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize)]
+pub struct PlayerCameraState {
+    pub map: u8,
+    pub x: u16,
+    pub y: u16,
+    pub sub_x: i16,
+    pub sub_y: i16,
+}
