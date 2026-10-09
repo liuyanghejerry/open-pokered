@@ -9542,7 +9542,10 @@ mod link_stats_cry_fidelity_tests {
         run_link_save_fixture(|| {
             for bike in [false,true] {
                 let mut g=fixture(Species::Bulbasaur,3,Direction::Down);
-                g.overworld.warp_to_map(MapId::Route1,20,30);
+                g.overworld.warp_to_map(MapId::Route1,12,22);
+                // Original Route1 is 20 x 36 walk cells; (12,22..24) is grass.
+                let (width, height) = MapId::Route1.dimensions();
+                assert!(12 < u16::from(width) * 2 && 24 < u16::from(height) * 2);
                 let idle=InputState::new();
                 for _ in 0..120 {g.update(&idle);}
                 g.overworld.state.player.transport=if bike {TransportMode::Biking} else {TransportMode::Walking};
@@ -9564,6 +9567,9 @@ mod link_stats_cry_fidelity_tests {
                     if t==if bike {16} else {32} {input.release(GbButton::Down);}
                     if t==45 {input.release(GbButton::Start);}
                     g.update(&input);
+                    assert_eq!(g.overworld.state.current_map, MapId::Route1);
+                    assert!(g.overworld.state.player.x < u16::from(width) * 2);
+                    assert!(g.overworld.state.player.y < u16::from(height) * 2);
                     assert_eq!(g.state.screen,if t<first_menu {GameScreen::Overworld} else {GameScreen::StartMenu},"bike={bike} t{t}");
                     if t>=first_menu {
                         // Original opaque sprite capture: odd bicycle step

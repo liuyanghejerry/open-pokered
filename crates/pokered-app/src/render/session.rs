@@ -2650,7 +2650,10 @@ mod session_tests {
                     game.audio = None;
                     game.state.config.language = language;
                     game.state.screen = GameScreen::Overworld;
-                    game.overworld.warp_to_map(MapId::Route1, 20, 30);
+                    game.overworld.warp_to_map(MapId::Route1, 12, 22);
+                    // Original Route1 is 20 x 36 walk cells; (12,22..24) is grass.
+                    let (width, height) = MapId::Route1.dimensions();
+                    assert!(12 < u16::from(width) * 2 && 24 < u16::from(height) * 2);
                     let idle = InputState::new();
                     for _ in 0..120 { game.update(&idle); }
                     game.overworld.state.player.transport = if bike { TransportMode::Biking } else { TransportMode::Walking };
@@ -2675,6 +2678,9 @@ mod session_tests {
                         if open_menu && t == 5 { input.press(GbButton::Start); }
                         if open_menu && t == 45 { input.release(GbButton::Start); }
                         game.update(&input);
+                        assert_eq!(game.overworld.state.current_map, MapId::Route1);
+                        assert!(game.overworld.state.player.x < u16::from(width) * 2);
+                        assert!(game.overworld.state.player.y < u16::from(height) * 2);
                         if game.state.screen == GameScreen::Overworld {
                             assert!(OverworldVisualKey::new(&game).is_some(), "exercise the overworld cache");
                         }

@@ -1,0 +1,27 @@
+
+running 2 tests
+Asset root found: "/home/jerry/develop/open-pokered/.task-tmp/fidelity-91-plus-checkout/crates/pokered-renderer/../../gfx"
+Asset root found: "/home/jerry/develop/open-pokered/.task-tmp/fidelity-91-plus-checkout/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
+Asset root found: "/home/jerry/develop/open-pokered/.task-tmp/fidelity-91-plus-checkout/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
+test game::link_stats_cry_fidelity_tests::walking_and_bicycle_start_menu_drain_sprite_before_standing ... ok
+Audio output initialized (cpal 44100 Hz stereo)
+Asset root found: "/home/jerry/develop/open-pokered/.task-tmp/fidelity-91-plus-checkout/crates/pokered-renderer/../../gfx"
+Audio output initialized (cpal 44100 Hz stereo)
+Asset root found: "/home/jerry/develop/open-pokered/.task-tmp/fidelity-91-plus-checkout/crates/pokered-renderer/../../gfx"
+Audio output initialized (cpal 44100 Hz stereo)
+Asset root found: "/home/jerry/develop/open-pokered/.task-tmp/fidelity-91-plus-checkout/crates/pokered-renderer/../../gfx"
+Audio output initialized (cpal 44100 Hz stereo)
+Asset root found: "/home/jerry/develop/open-pokered/.task-tmp/fidelity-91-plus-checkout/crates/pokered-renderer/../../gfx"
+Audio output initialized (cpal 44100 Hz stereo)
+Asset root found: "/home/jerry/develop/open-pokered/.task-tmp/fidelity-91-plus-checkout/crates/pokered-renderer/../../gfx"
+Audio output initialized (cpal 44100 Hz stereo)
+Asset root found: "/home/jerry/develop/open-pokered/.task-tmp/fidelity-91-plus-checkout/crates/pokered-renderer/../../gfx"
+Audio output initialized (cpal 44100 Hz stereo)
+Asset root found: "/home/jerry/develop/open-pokered/.task-tmp/fidelity-91-plus-checkout/crates/pokered-renderer/../../gfx"
+Audio output initialized (cpal 44100 Hz stereo)
+test render::session::session_tests::walking_and_bicycle_retained_frames_match_full_draw_through_start_transfers ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 221 filtered out; finished in 0.42s
+
