@@ -1,0 +1,31 @@
+{
+  "baseline_commit": "360fd25411bd6d606db5ad34cd7ebc904f08b9b3",
+  "scope": "Actual cached rendering PNGs before/after optimization; source archive remains historical360fd25 evidence. Existing PR before/after images unchanged in new captures.",
+  "comparisons": [
+    {
+      "bike": false,
+      "trial": 1,
+      "frames": 101,
+      "changed_pngs": []
+    },
+    {
+      "bike": false,
+      "trial": 2,
+      "frames": 101,
+      "changed_pngs": []
+    },
+    {
+      "bike": true,
+      "trial": 1,
+      "frames": 101,
+      "changed_pngs": []
+    },
+    {
+      "bike": true,
+      "trial": 2,
+      "frames": 101,
+      "changed_pngs": []
+    }
+  ],
+  "retained_full_pixels": "800frames8combinations PASS; menu-114-cache-116-performance-pixels-test.log"
+}

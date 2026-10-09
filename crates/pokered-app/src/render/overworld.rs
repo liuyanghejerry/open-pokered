@@ -1571,16 +1571,7 @@ fn draw_overworld_impl(
                     let bg_ts = &bg_cached.tileset;
                     let overlay_x = screen_center_tx as u32 * TILE_SIZE;
                     let overlay_y = screen_center_ty as u32 * TILE_SIZE + TILE_SIZE;
-                    // The grass priority tile extends four pixels below the
-                    // player's 16px sprite patch. Restore that whole tile
-                    // before scrolling; otherwise its old lower rows become
-                    // stale foreground pixels underneath the next sprite.
-                    if let Some(cache) = background_cache.as_deref_mut() {
-                        if cache.output_key.is_some() || cache.partial_present {
-                            cache.save_foreground_rect(fb, overlay_x as i32,
-                                overlay_y as i32, TILE_SIZE * 2, TILE_SIZE);
-                        }
-                    }
+                    let mut priority_underlay_saved = false;
                     for col_off in 0..2i32 {
                         let world_tx = player_tx + col_off;
                         let world_ty = player_ty + 1;
@@ -1605,6 +1596,17 @@ fn draw_overworld_impl(
                             .unwrap_or(0)
                             .min(bg_ts.len().saturating_sub(1));
                         if bg_tile_idx == grass_id as usize {
+                            // Only priority tiles write beyond the player
+                            // patch. Ordinary ground needs no extra damage.
+                            if !priority_underlay_saved {
+                                if let Some(cache) = background_cache.as_deref_mut() {
+                                    if cache.output_key.is_some() || cache.partial_present {
+                                        cache.save_foreground_rect(fb, overlay_x as i32,
+                                            overlay_y as i32, TILE_SIZE * 2, TILE_SIZE);
+                                    }
+                                }
+                                priority_underlay_saved = true;
+                            }
                             let tile = bg_ts.get(bg_tile_idx);
                             let gx = overlay_x as i32 + col_off * TILE_SIZE as i32;
                             blit_priority_bg_tile(fb, tile, gx, overlay_y as i32);

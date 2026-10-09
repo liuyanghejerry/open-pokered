@@ -2681,5 +2681,7 @@
     "menu-114-hook-source-2/frames.json": "d872435fa91690e68f6788e8b126509761e84336f4caa7ecff73bfb1d3461bc4",
     "menu-114-hook-source-2/verification.json": "a3a303562b4f9dab491d34e13802b20ba7c158d044b1e877598a0a79c1995328"
   },
-  "archive_sha256": "b5fb71035003f9c3755d7d86784028f3902c8ab64e76da68c8d1bc0b953eb663"
+  "archive_sha256": "b5fb71035003f9c3755d7d86784028f3902c8ab64e76da68c8d1bc0b953eb663",
+  "native_capture_commit": "360fd25411bd6d606db5ad34cd7ebc904f08b9b3",
+  "later_optimization": "See performance-117-pixel-verification.json; all404new cached PNGs byte-identical. Source hashes in this manifest describe360fd25 capture, not later optimized source."
 }

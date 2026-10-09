@@ -3216,6 +3216,6 @@ impl<G: GameData> OverworldScreen<G> {
 
 impl<G: GameData> OverworldScreen<G> {
     pub fn tick_ui_background_transfer(&mut self) {
-        self.bg_transfer_portion = (self.bg_transfer_portion + 1) % 3;
+        self.bg_transfer_portion = if self.bg_transfer_portion >= 2 { 0 } else { self.bg_transfer_portion + 1 };
     }
 }

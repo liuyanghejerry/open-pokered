@@ -41,3 +41,7 @@ Safari 范围保护加入前的 core/app debug-server 回归：3652通过，80�
 ![前](screenshots/fidelity-start-menu-transfer-114/walk-before.png)
 
 ![后](screenshots/fidelity-start-menu-transfer-114/walk-after.png)
+
+## 性能复核（117）
+
+360fd25的GBA性能门禁有两个指标越线：oak-dialogue-v1更新193ticks，限192.1；overworld-movement-v1提交103ticks，限102。保留原基线和门槛。此后仅对实际草地优先级图块保存额外补丁；菜单缓存按可见文字部分区分，空框等待期间复用已有画面；三部分循环避免取模。800帧完整/缓存像素回归仍通过；实际四组101帧优化前后PNG逐字节相同，见同目录performance-117-pixel-verification.json。新提交的GBA性能与完整CI结果仍需核对，不能把这些局部证明当作门禁通过。
