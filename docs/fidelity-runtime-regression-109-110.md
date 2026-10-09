@@ -41,3 +41,9 @@ a3 的失败证据保留。它不是最新整合提交的完整通关证明；�
 本次测试夹具最初错误地假定烟尘期间玩家已走进巨石原格；实际玩家仍站在 18,9。修正前置坐标为实际状态后，才得到上述有效失败。两份修复前日志均保留：`agent-control-111-before-tests.log` 和 `agent-control-111-before-corrected-fixture.log`；通过日志为 `agent-control-111-after-tests.log`、`agent-control-111-app-all-tests.log`。
 
 此项是工具交互判断修正，属于 AGENTS.md 的 tooling 豁免；此前推石视觉前后截图仍保留在 PR。正在运行的 immutable 5c07770 新游戏回归不含此项工具修正；它完成后仍须据最终提交的改动范围核对回归覆盖。
+
+## 编辑器预览测试边界（112）
+
+CI 的 Coverage 作业在 `pixel_start_width_auto_vs_fixed_differs` 和 `pixel_start_min_height_clamps` 失败。空队伍仍显示 POKEMON 后，无图鉴菜单已有六行：自然高度为 15 格，旧的 14 格下限不会生效；自动宽度和旧固定宽度 16 的右边框都在屏幕之外，因此像素相同。
+
+将固定宽度夹具改为屏幕内的 8 格，将高度下限改为自然高度以上且仍在屏幕内的 16 格；两项像素变化断言均保留。没有改变预览或游戏渲染逻辑。`cargo test -p pokered-ui-preview` 完整通过：58 项通过、1 项显式忽略，日志 `ci-preview-112-tests.log`。本项只改测试及说明，无需新增视觉截图。最新提交仍须等待整套 CI，不能用此前 20 成功、1 失败、1 跳过的结果作为合入依据。
