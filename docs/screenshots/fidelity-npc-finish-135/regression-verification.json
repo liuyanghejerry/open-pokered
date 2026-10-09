@@ -1,0 +1,9 @@
+{
+  "command": "cargo test -p pokered-core -p pokered-app --features pokered-app/debug-server --offline -j4",
+  "groups": 80,
+  "passed": 3658,
+  "failed": 0,
+  "ignored": 55,
+  "log_sha256": "e89fb4a21fa8c4f0980e7dcd1858d284b2017010795071cbccc410d2dfa30a01",
+  "legacy_snapshots": "remove last_delay_counter; seed delays13 and1; compare30HW after JSONrestore including first 1->0 image update"
+}

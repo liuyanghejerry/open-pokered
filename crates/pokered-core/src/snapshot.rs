@@ -453,6 +453,11 @@ impl OverworldSnapshot {
             elevator_shake_pending, fishing_cast_delay, tile_anim, post_dialogue_warp,
             post_dialogue_battle, fishing_anim, pending_fishing, ship_departure,
         );
+        // Older snapshots lack the pre-update NPC delay cache. Seed it
+        // before the first tick, including the final 1 -> 0 delay boundary.
+        for (sprite, npc) in screen.npc_sprite_states.iter_mut().zip(&screen.npc_states) {
+            sprite.restore_legacy_delay_counter(npc);
+        }
         screen.sampled_player_input = restore_buttons(self.sampled_player_input);
         screen.boulder_resume_input = self.boulder_resume_input.map(restore_buttons);
         if let Some(engine) = &self.script_engine {

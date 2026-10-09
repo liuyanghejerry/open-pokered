@@ -1,0 +1,22 @@
+
+running 1 test
+test game::link_stats_cry_fidelity_tests::npc_finished_step_restores_standing_image_while_player_keeps_walking ... Asset root found: "/home/jerry/develop/open-pokered/.task-tmp/fidelity-91-plus-checkout/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
+
+thread 'linked-game-save-regression' (2515559) panicked at crates/pokered-app/src/game.rs:9685:17:
+assertion `left == right` failed: image t=11
+  left: 3
+ right: 0
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+thread 'game::link_stats_cry_fidelity_tests::npc_finished_step_restores_standing_image_while_player_keeps_walking' (2515558) panicked at crates/pokered-app/src/game.rs:8840:14:
+called `Result::unwrap()` on an `Err` value: Any { .. }
+FAILED
+
+failures:
+
+failures:
+    game::link_stats_cry_fidelity_tests::npc_finished_step_restores_standing_image_while_player_keeps_walking
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 225 filtered out; finished in 0.01s
+

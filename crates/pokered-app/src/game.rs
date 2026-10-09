@@ -9640,6 +9640,83 @@ mod link_stats_cry_fidelity_tests {
     }
 
     #[test]
+    fn npc_finished_step_restores_standing_image_while_player_keeps_walking() {
+        use pokered_core::overworld::Direction;
+        use pokered_core::snapshot::OverworldSnapshot;
+        run_link_save_fixture(|| {
+            let oracle: serde_json::Value = serde_json::from_str(
+                include_str!("../tests/fixtures/npc-finishing-walk-135.json")).unwrap();
+            let mut g = fixture(Species::Bulbasaur, 3, Direction::Down);
+            g.overworld.warp_to_map(MapId::ViridianCity, 20, 30);
+            let idle = InputState::new();
+            for _ in 0..120 { g.update(&idle); }
+            let mut phase = OverworldSnapshot::capture(&g.overworld);
+            phase.field_loop_wait = 0;
+            phase.check_player_turn = true;
+            phase.player_last_stop_direction = 2;
+            phase.player_moving_direction = 0;
+            phase.restore_into(&mut g.overworld);
+            let npc = &mut g.overworld.npc_states[0];
+            assert_eq!(npc.sprite_id, 4);
+            npc.x = 19; npc.y = 29; npc.facing = Direction::Down;
+            npc.walk_counter = 6;
+            // The original chooses 13 after completion; native preloads it.
+            npc.delay_counter = 13;
+            npc.visible = true;
+            for _ in 0..4 { g.update(&idle); }
+            let mut input = InputState::new();
+            for row in oracle["frames"].as_array().unwrap() {
+                let t = row["t"].as_i64().unwrap();
+                if t >= 0 {
+                    input.begin_frame();
+                    if t == 0 { input.press(GbButton::Down); }
+                    if t == 16 { input.release(GbButton::Down); }
+                    g.update(&input);
+                }
+                let snap = OverworldSnapshot::capture(&g.overworld);
+                let npc = &snap.npc_states[0];
+                let sprite = &snap.npc_sprite_states[0];
+                assert_eq!(u64::from(g.overworld.state.walk_counter), row["player_counter"].as_u64().unwrap(), "player t={t}");
+                assert_eq!(u64::from(npc.walk_counter), row["remaining"].as_u64().unwrap(), "NPC t={t}");
+                assert_eq!((npc.x,npc.y), (19,if t < 9 {29} else {30}), "position t={t}");
+                if t >= 9 { assert_eq!(u64::from(npc.delay_counter), row["delay"].as_u64().unwrap(), "delay t={t}"); }
+                assert_eq!(u64::from(sprite.phase), row["phase"].as_u64().unwrap(), "phase t={t}");
+                assert_eq!(u64::from(sprite.intra_frame), row["intra"].as_u64().unwrap(), "intra t={t}");
+                assert_eq!(u64::from(sprite.pending[1].image), row["raw_image"].as_u64().unwrap(), "image t={t}");
+                if t == 10 {
+                    for final_delay in [13, 1] {
+                        let mut saved = snap.clone();
+                        saved.npc_states[0].delay_counter = final_delay;
+                        // Bootstrap the controlled idle delay so its cache
+                        // describes the state before the following update.
+                        saved.npc_sprite_states[0] = pokered_core::overworld::presentation::NpcSpriteState::from_npc(&saved.npc_states[0]);
+                        saved.npc_sprite_states[0].pending[1].image = 3;
+                        let mut old = serde_json::to_value(&saved).unwrap();
+                        for sprite in old["npc_sprite_states"].as_array_mut().unwrap() {
+                            assert!(sprite.as_object_mut().unwrap().remove("last_delay_counter").is_some());
+                        }
+                        let legacy: OverworldSnapshot = serde_json::from_value(old).unwrap();
+                        let mut live = OverworldScreen::new(MapId::ViridianCity, None, PokemonRedData);
+                        let mut restored = OverworldScreen::new(MapId::ViridianCity, None, PokemonRedData);
+                        saved.restore_into(&mut live);
+                        legacy.restore_into(&mut restored);
+                        for frame in 0..30 {
+                            for screen in [&mut live, &mut restored] {
+                                screen.update_frame(dotzuki_engine::overworld::OverworldInput::new(false,false,false,false,false,false,false,false));
+                            }
+                            let current = OverworldSnapshot::capture(&live);
+                            let decoded = OverworldSnapshot::capture(&restored);
+                            assert_eq!(serde_json::to_value(&current.npc_sprite_states).unwrap(), serde_json::to_value(&decoded.npc_sprite_states).unwrap(), "legacy delay={final_delay} frame={frame}");
+                            assert_eq!(serde_json::to_value(&current.npc_states).unwrap(), serde_json::to_value(&decoded.npc_states).unwrap());
+                            if frame == 0 { assert_eq!(current.npc_sprite_states[0].pending[1].image, 0); }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    #[test]
     fn npc_field_font_and_start_close_match_original_ram_and_lcd_frames() {
         use pokered_core::overworld::Direction;
         use pokered_core::snapshot::OverworldSnapshot;
@@ -10662,8 +10739,8 @@ mod link_stats_cry_fidelity_tests {
                 npc.x = if std::env::var_os("FIDELITY_NPC_OFFSCREEN").is_some() { start_x + 7 } else if std::env::var_os("FIDELITY_NPC_BOXED").is_some() { start_x + 2 } else { start_x - 1 };
                 npc.y = start_y - 1;
                 npc.facing = pokered_core::overworld::Direction::Down;
-                npc.walk_counter = if npc_ready_walk && !npc_already_moving { 0 } else { 12 };
-                npc.delay_counter = if npc_ready_walk && !npc_already_moving {3} else if std::env::var_os("FIDELITY_NPC_BOXED").is_some() { 27 } else { 54 };
+                npc.walk_counter = std::env::var("FIDELITY_NPC_INITIAL_REMAINING").ok().map(|value|value.parse().unwrap()).unwrap_or(if npc_ready_walk && !npc_already_moving { 0 } else { 12 });
+                npc.delay_counter = std::env::var("FIDELITY_NPC_INITIAL_DELAY").ok().map(|value|value.parse().unwrap()).unwrap_or(if npc_ready_walk && !npc_already_moving {3} else if std::env::var_os("FIDELITY_NPC_BOXED").is_some() { 27 } else { 54 });
                 npc.visible = true;
                 // Match the original controlled counter12 setup and four
                 // real hardware frames that prime its OAM/LCD pipeline.

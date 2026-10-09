@@ -1,0 +1,14 @@
+{
+  "original": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "master": "31b1eda3112514d6bc803af559ec7f7c9e20374f",
+  "isolated_before": "5d324034f10831d542e89f0fd46cde420c562b39 production; ignored capture helper accepts explicit counter/delay",
+  "input": "Continue road SRAM, warp City player20,30,120 idle, controlled NPC0 sprite4 world19,29 Down remaining6 and nativepreloadeddelay13, four real priming HW frames, Down0..15 thenrelease",
+  "source_fixture": "original targetMap23,34 rawX48 rawY54, phase2intra2remaining6, unuseddelay0; source choosesdelay13 at completion t9. Native controls preloaded13 only for this fixture, not general PRNG equivalence. Standingimage must return at t11 despite playercounter3.",
+  "visual": "actual master and after hardwaret13; previous-head isolatesimagefailure. FullPR changes cadence so equal priming input yields different master counters, no frame offset.",
+  "sources": {
+    "crates/pokered-core/src/overworld/presentation.rs": "a667a53157130fc28edc86c422944b9b9de4accbe005c24bd94c980b7d7a736b",
+    "crates/pokered-core/src/snapshot.rs": "e2537770dcb361ea02f4daeff8a912b0218b90d5be7ca31c24b6a789d95f9053",
+    "crates/pokered-app/src/game.rs": "11cdcfd22dfc69cc2956c5bd5f223832e26ef146a6660f4dea002311b453227d",
+    "crates/pokered-app/tests/fixtures/npc-finishing-walk-135.json": "362c97bbc87ce87942e39e5d8e8b29a3b68e927e1a49dd61a297a5dac745872e"
+  }
+}

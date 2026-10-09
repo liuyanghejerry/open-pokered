@@ -1,0 +1,186 @@
+{
+  "reference": "pret/pokered fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "scope": "NPC down origin19,29 target23,34, remaining6 phase2 intra2 rawY54, four idle primes, player20,30 Down0..15; source chooses idle13 at t9. Native preload13 controlled only to align chosen wait; unused before t9. No general PRNG alignment claim.",
+  "frames": [
+    {
+      "t": -1,
+      "player_counter": 0,
+      "remaining": 4,
+      "phase": 3,
+      "intra": 0,
+      "raw_image": 2,
+      "delay": 0
+    },
+    {
+      "t": 0,
+      "player_counter": 0,
+      "remaining": 4,
+      "phase": 3,
+      "intra": 0,
+      "raw_image": 2,
+      "delay": 0
+    },
+    {
+      "t": 1,
+      "player_counter": 0,
+      "remaining": 4,
+      "phase": 3,
+      "intra": 0,
+      "raw_image": 2,
+      "delay": 0
+    },
+    {
+      "t": 2,
+      "player_counter": 7,
+      "remaining": 3,
+      "phase": 3,
+      "intra": 1,
+      "raw_image": 3,
+      "delay": 0
+    },
+    {
+      "t": 3,
+      "player_counter": 7,
+      "remaining": 3,
+      "phase": 3,
+      "intra": 1,
+      "raw_image": 3,
+      "delay": 0
+    },
+    {
+      "t": 4,
+      "player_counter": 7,
+      "remaining": 3,
+      "phase": 3,
+      "intra": 1,
+      "raw_image": 3,
+      "delay": 0
+    },
+    {
+      "t": 5,
+      "player_counter": 6,
+      "remaining": 2,
+      "phase": 3,
+      "intra": 2,
+      "raw_image": 3,
+      "delay": 0
+    },
+    {
+      "t": 6,
+      "player_counter": 6,
+      "remaining": 2,
+      "phase": 3,
+      "intra": 2,
+      "raw_image": 3,
+      "delay": 0
+    },
+    {
+      "t": 7,
+      "player_counter": 5,
+      "remaining": 1,
+      "phase": 3,
+      "intra": 3,
+      "raw_image": 3,
+      "delay": 0
+    },
+    {
+      "t": 8,
+      "player_counter": 5,
+      "remaining": 1,
+      "phase": 3,
+      "intra": 3,
+      "raw_image": 3,
+      "delay": 0
+    },
+    {
+      "t": 9,
+      "player_counter": 4,
+      "remaining": 0,
+      "phase": 0,
+      "intra": 0,
+      "raw_image": 3,
+      "delay": 13
+    },
+    {
+      "t": 10,
+      "player_counter": 4,
+      "remaining": 0,
+      "phase": 0,
+      "intra": 0,
+      "raw_image": 3,
+      "delay": 13
+    },
+    {
+      "t": 11,
+      "player_counter": 3,
+      "remaining": 0,
+      "phase": 0,
+      "intra": 0,
+      "raw_image": 0,
+      "delay": 12
+    },
+    {
+      "t": 12,
+      "player_counter": 3,
+      "remaining": 0,
+      "phase": 0,
+      "intra": 0,
+      "raw_image": 0,
+      "delay": 12
+    },
+    {
+      "t": 13,
+      "player_counter": 2,
+      "remaining": 0,
+      "phase": 0,
+      "intra": 0,
+      "raw_image": 0,
+      "delay": 11
+    },
+    {
+      "t": 14,
+      "player_counter": 2,
+      "remaining": 0,
+      "phase": 0,
+      "intra": 0,
+      "raw_image": 0,
+      "delay": 11
+    },
+    {
+      "t": 15,
+      "player_counter": 1,
+      "remaining": 0,
+      "phase": 0,
+      "intra": 0,
+      "raw_image": 0,
+      "delay": 10
+    },
+    {
+      "t": 16,
+      "player_counter": 1,
+      "remaining": 0,
+      "phase": 0,
+      "intra": 0,
+      "raw_image": 0,
+      "delay": 10
+    },
+    {
+      "t": 17,
+      "player_counter": 0,
+      "remaining": 0,
+      "phase": 0,
+      "intra": 0,
+      "raw_image": 0,
+      "delay": 9
+    },
+    {
+      "t": 18,
+      "player_counter": 0,
+      "remaining": 0,
+      "phase": 0,
+      "intra": 0,
+      "raw_image": 0,
+      "delay": 9
+    }
+  ]
+}

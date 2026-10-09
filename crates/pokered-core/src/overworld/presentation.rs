@@ -998,6 +998,8 @@ pub struct NpcSpriteState {
     pub visible: NpcSpritePose,
     pub pending: [NpcSpritePose; 2],
     last: (u8, u8, u16, u16, u8, u8),
+    #[serde(default)]
+    last_delay_counter: Option<u16>,
 }
 
 impl NpcSpriteState {
@@ -1030,7 +1032,12 @@ impl NpcSpriteState {
         let phase = (progress / 4) & 3;
         let pose = Self::pose(npc, phase);
         Self { intra_frame: progress % 4, phase, visible: pose,
-            pending: [pose; 2], last: Self::identity(npc) }
+            pending: [pose; 2], last: Self::identity(npc),
+            last_delay_counter: Some(npc.delay_counter) }
+    }
+
+    pub(crate) fn restore_legacy_delay_counter(&mut self, npc: &dotzuki_engine::overworld::npc_movement::NpcRuntimeState) {
+        self.last_delay_counter.get_or_insert(npc.delay_counter);
     }
 
     pub fn hardware_frame(&mut self) {
@@ -1042,9 +1049,14 @@ impl NpcSpriteState {
         player_walking: bool)
     {
         let was_walking = self.last.5 != 0;
+        // UpdateSpriteMovementDelay falls through NotYetMoving, which
+        // updates the standing image even while the player walks. The
+        // counter belongs to before this tick, including its final 1 -> 0.
+        let was_delaying = !was_walking
+            && self.last_delay_counter.unwrap_or(npc.delay_counter) != 0;
         // CheckSpriteAvailability updates the image before advancing the
         // NPC's counters, except while the player's walk counter is nonzero.
-        let image_phase = if !was_walking && npc.walk_counter == 0 { 0 }
+        let image_phase = if was_delaying || (!was_walking && npc.walk_counter == 0) { 0 }
             else if player_walking { self.pending[1].image & 3 } else { self.phase };
         if was_walking && npc.walk_counter < self.last.5 {
             self.intra_frame += 1;
@@ -1057,8 +1069,9 @@ impl NpcSpriteState {
         }
         let previous_image = self.pending[1].image;
         self.pending[1] = Self::pose(npc, image_phase);
-        if player_walking { self.pending[1].image = previous_image; }
+        if player_walking && !was_delaying { self.pending[1].image = previous_image; }
         self.last = Self::identity(npc);
+        self.last_delay_counter = Some(npc.delay_counter);
     }
 
     pub fn hide(&mut self) { self.pending[1].image = 0xff; }
@@ -1071,6 +1084,7 @@ impl NpcSpriteState {
             self.pending[1].image = PlayerSpriteState::facing_index(npc.facing) << 2;
         }
         self.last = Self::identity(npc);
+        self.last_delay_counter = Some(npc.delay_counter);
     }
 
 }
