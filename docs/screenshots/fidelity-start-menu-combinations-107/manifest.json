@@ -1,0 +1,215 @@
+{
+  "base": "31b1eda3112514d6bc803af559ec7f7c9e20374f",
+  "reference": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "source": "7combinationsx2 directionwins including up+down; ABsound144 fordirection+AB, noneforSTART; 60HWheldUp/Down noautorepeat hJoy7=0,hJoy6=0, Startaloneclose silent",
+  "before_after": {
+    "master": {
+      "PNG_repeat_exact": true,
+      "JSON_repeat_exact": true,
+      "rows": [
+        {
+          "input_bits": 0,
+          "item": "Pokemon",
+          "screen": "StartMenu",
+          "sfx_id": 0,
+          "t": -1
+        },
+        {
+          "input_bits": 130,
+          "item": "Pokemon",
+          "screen": "Overworld",
+          "sfx_id": 0,
+          "t": 0
+        },
+        {
+          "input_bits": 130,
+          "item": "Pokemon",
+          "screen": "Overworld",
+          "sfx_id": 0,
+          "t": 1
+        },
+        {
+          "input_bits": 0,
+          "item": "Pokemon",
+          "screen": "Overworld",
+          "sfx_id": 0,
+          "t": 2
+        },
+        {
+          "input_bits": 0,
+          "item": "Pokemon",
+          "screen": "Overworld",
+          "sfx_id": 0,
+          "t": 3
+        },
+        {
+          "input_bits": 0,
+          "item": "Pokemon",
+          "screen": "Overworld",
+          "sfx_id": 0,
+          "t": 4
+        },
+        {
+          "input_bits": 0,
+          "item": "Pokemon",
+          "screen": "Overworld",
+          "sfx_id": 0,
+          "t": 5
+        },
+        {
+          "input_bits": 0,
+          "item": "Pokemon",
+          "screen": "Overworld",
+          "sfx_id": 0,
+          "t": 6
+        },
+        {
+          "input_bits": 0,
+          "item": "Pokemon",
+          "screen": "Overworld",
+          "sfx_id": 0,
+          "t": 7
+        }
+      ]
+    },
+    "after": {
+      "PNG_repeat_exact": true,
+      "JSON_repeat_exact": true,
+      "rows": [
+        {
+          "input_bits": 0,
+          "item": "Pokemon",
+          "screen": "StartMenu",
+          "sfx_id": 62,
+          "t": -1
+        },
+        {
+          "input_bits": 130,
+          "item": "Item",
+          "screen": "StartMenu",
+          "sfx_id": 63,
+          "t": 0
+        },
+        {
+          "input_bits": 130,
+          "item": "Item",
+          "screen": "StartMenu",
+          "sfx_id": 63,
+          "t": 1
+        },
+        {
+          "input_bits": 0,
+          "item": "Item",
+          "screen": "StartMenu",
+          "sfx_id": 63,
+          "t": 2
+        },
+        {
+          "input_bits": 0,
+          "item": "Item",
+          "screen": "StartMenu",
+          "sfx_id": 63,
+          "t": 3
+        },
+        {
+          "input_bits": 0,
+          "item": "Item",
+          "screen": "StartMenu",
+          "sfx_id": 63,
+          "t": 4
+        },
+        {
+          "input_bits": 0,
+          "item": "Item",
+          "screen": "StartMenu",
+          "sfx_id": 63,
+          "t": 5
+        },
+        {
+          "input_bits": 0,
+          "item": "Item",
+          "screen": "StartMenu",
+          "sfx_id": 63,
+          "t": 6
+        },
+        {
+          "input_bits": 0,
+          "item": "Item",
+          "screen": "StartMenu",
+          "sfx_id": 63,
+          "t": 7
+        }
+      ]
+    },
+    "pre_RGB_identical": true,
+    "raw_inputs_identical": true
+  },
+  "tests": {
+    "core": "2725 passed",
+    "app": "199 passed20ignored",
+    "driver_interactions": "7 passed"
+  },
+  "limits": [
+    "Only action priority and Start closing audio: no fullmenuRGB equivalence claim",
+    "Next menu Joypad after a direction owns Delay3; native still polls following UI frames; independent boundary audit/fix pending",
+    "Fresha3uses104immutablebinary andolderdriver; cannotprove105-107latestfull49"
+  ],
+  "sha256": {
+    "menu-107-after-1/frame-0000.png": "5a9a49d3feff06b35979e14e5bd2162394e7c494967a69e3a10de3e870d95f71",
+    "menu-107-after-1/frame-0001.png": "f948e482ccb25923b20e5cade7bd4b6661de4b7827a1016403682570c8c9a8c2",
+    "menu-107-after-1/frame-0002.png": "f948e482ccb25923b20e5cade7bd4b6661de4b7827a1016403682570c8c9a8c2",
+    "menu-107-after-1/frame-0003.png": "f948e482ccb25923b20e5cade7bd4b6661de4b7827a1016403682570c8c9a8c2",
+    "menu-107-after-1/frame-0004.png": "f948e482ccb25923b20e5cade7bd4b6661de4b7827a1016403682570c8c9a8c2",
+    "menu-107-after-1/frame-0005.png": "f948e482ccb25923b20e5cade7bd4b6661de4b7827a1016403682570c8c9a8c2",
+    "menu-107-after-1/frame-0006.png": "f948e482ccb25923b20e5cade7bd4b6661de4b7827a1016403682570c8c9a8c2",
+    "menu-107-after-1/frame-0007.png": "f948e482ccb25923b20e5cade7bd4b6661de4b7827a1016403682570c8c9a8c2",
+    "menu-107-after-1/frame-0008.png": "f948e482ccb25923b20e5cade7bd4b6661de4b7827a1016403682570c8c9a8c2",
+    "menu-107-after-1/frames.json": "0022516cd3ec6af59014ab5ef8f55cb69b849f330ae76d35b8ba73aad6136019",
+    "menu-107-after-1.log": "4fb040359733335fe98b45d0fc5ed78c51fa9e39590c28319c562705b97b3a9f",
+    "menu-107-after-2/frame-0000.png": "5a9a49d3feff06b35979e14e5bd2162394e7c494967a69e3a10de3e870d95f71",
+    "menu-107-after-2/frame-0001.png": "f948e482ccb25923b20e5cade7bd4b6661de4b7827a1016403682570c8c9a8c2",
+    "menu-107-after-2/frame-0002.png": "f948e482ccb25923b20e5cade7bd4b6661de4b7827a1016403682570c8c9a8c2",
+    "menu-107-after-2/frame-0003.png": "f948e482ccb25923b20e5cade7bd4b6661de4b7827a1016403682570c8c9a8c2",
+    "menu-107-after-2/frame-0004.png": "f948e482ccb25923b20e5cade7bd4b6661de4b7827a1016403682570c8c9a8c2",
+    "menu-107-after-2/frame-0005.png": "f948e482ccb25923b20e5cade7bd4b6661de4b7827a1016403682570c8c9a8c2",
+    "menu-107-after-2/frame-0006.png": "f948e482ccb25923b20e5cade7bd4b6661de4b7827a1016403682570c8c9a8c2",
+    "menu-107-after-2/frame-0007.png": "f948e482ccb25923b20e5cade7bd4b6661de4b7827a1016403682570c8c9a8c2",
+    "menu-107-after-2/frame-0008.png": "f948e482ccb25923b20e5cade7bd4b6661de4b7827a1016403682570c8c9a8c2",
+    "menu-107-after-2/frames.json": "0022516cd3ec6af59014ab5ef8f55cb69b849f330ae76d35b8ba73aad6136019",
+    "menu-107-after-2.log": "4fb040359733335fe98b45d0fc5ed78c51fa9e39590c28319c562705b97b3a9f",
+    "menu-107-app.log": "dd8e79e3200138c55d212bd196ca8e0e3c8c68a7ffefb047b0c01433caa55225",
+    "menu-107-before-after-summary.json": "91c992a4113880a8d58a0b387e82b9777a3124bd33632d6b55fde997ea9f9291",
+    "menu-107-core.log": "4903cb8fb5d7a4d4275a798e97b901e0962c0423a9a95a5c0ab847eab677315f",
+    "menu-107-driver-interactions.log": "e6a669b1746010f975a2c7c29a354f28a1aa9d825b55eccb36c3ecc681e7fcb6",
+    "menu-107-master-1/frame-0000.png": "5a9a49d3feff06b35979e14e5bd2162394e7c494967a69e3a10de3e870d95f71",
+    "menu-107-master-1/frame-0001.png": "8002f951c5fa2e1ef984d204f95ff7b41c957cf20ad9296ab7332755ba04d818",
+    "menu-107-master-1/frame-0002.png": "8002f951c5fa2e1ef984d204f95ff7b41c957cf20ad9296ab7332755ba04d818",
+    "menu-107-master-1/frame-0003.png": "8857b38b17ffc5ffbef3d64ece4627c1cd39174a1771b7df73b4f0197f53cf84",
+    "menu-107-master-1/frame-0004.png": "144277b4ed5fb7465a62e897fd800ba9556f179902032e00dbaf0744a86cfe72",
+    "menu-107-master-1/frame-0005.png": "9b611137da8d9b5ac7efabed074a09bf808677cdc84f3da93b4554b26c2c559c",
+    "menu-107-master-1/frame-0006.png": "d929a27ca9171dc65edf1e33cd061e524fc685157400913243440c827c050c6f",
+    "menu-107-master-1/frame-0007.png": "f566acd455859235c3772fa6cb257fe72c5e532c3e260dd0830f3854548e5613",
+    "menu-107-master-1/frame-0008.png": "caba5df426896ef6e59e832d05d17bce7f76786d121a75d94bd5bd991359ebf2",
+    "menu-107-master-1/frames.json": "4ac016a235932824a0b0a5a0f0186f2e9f0f41fe295be872643ced7cfbda83b8",
+    "menu-107-master-1.log": "35b57c6e7067fb956be91aeecc8d81a20503220614b250cb812928f6935c52d9",
+    "menu-107-master-2/frame-0000.png": "5a9a49d3feff06b35979e14e5bd2162394e7c494967a69e3a10de3e870d95f71",
+    "menu-107-master-2/frame-0001.png": "8002f951c5fa2e1ef984d204f95ff7b41c957cf20ad9296ab7332755ba04d818",
+    "menu-107-master-2/frame-0002.png": "8002f951c5fa2e1ef984d204f95ff7b41c957cf20ad9296ab7332755ba04d818",
+    "menu-107-master-2/frame-0003.png": "8857b38b17ffc5ffbef3d64ece4627c1cd39174a1771b7df73b4f0197f53cf84",
+    "menu-107-master-2/frame-0004.png": "144277b4ed5fb7465a62e897fd800ba9556f179902032e00dbaf0744a86cfe72",
+    "menu-107-master-2/frame-0005.png": "9b611137da8d9b5ac7efabed074a09bf808677cdc84f3da93b4554b26c2c559c",
+    "menu-107-master-2/frame-0006.png": "d929a27ca9171dc65edf1e33cd061e524fc685157400913243440c827c050c6f",
+    "menu-107-master-2/frame-0007.png": "f566acd455859235c3772fa6cb257fe72c5e532c3e260dd0830f3854548e5613",
+    "menu-107-master-2/frame-0008.png": "caba5df426896ef6e59e832d05d17bce7f76786d121a75d94bd5bd991359ebf2",
+    "menu-107-master-2/frames.json": "4ac016a235932824a0b0a5a0f0186f2e9f0f41fe295be872643ced7cfbda83b8",
+    "menu-107-master-2.log": "17d0c7d079daeb6529f7b9502e5c6c0a1984712970345469eef235fa3d00e9bb",
+    "menu-107-master-helper-build.log": "d3b5b2f37baa27f6a1e682152af114adf81644a0b4f9e4bceb151355b3d53e82",
+    "menu-107-readonly-capture-helper.txt": "a4e3d884eb4152cd147a9b44dd0965cda92f90d45cdd0463bd120ba4c8f385ed",
+    "menu-107-source-combinations.json": "a4edab51a28829381baf5bb7661d73eee5ba3cf797ca08d2363a61224b0d2c65",
+    "menu-107-source-combinations.log": "04df6b2217c5a74c0f6895af3a186a5cdfdcd1bc4dd1071d4c838fbd4527f2b0",
+    "menu-107-source-held.json": "0fb14c6a41962a962248aaed3cf0a69920bbcd6a8e1836afe36d3c1dc046ea52",
+    "menu-107-source-held.log": "67f0e5131e76584f76e8a623f9273f475ad2719ccbc66f7038edf42647ecc1fa",
+    "stats-59-tools/probe_menu_combinations_107.py": "2a162889ec0d8813a95204957b5c558ebcd69153ed80f3d222d2bab70eef38a7",
+    "stats-59-tools/probe_menu_held_107.py": "da1dc7ee31eed60535f9f9cffe8b197d998885b7cd07a4628406cec80adc4bef"
+  }
+}

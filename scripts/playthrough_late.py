@@ -175,6 +175,11 @@ def open_start(g, entry):
             g.tap("start", 12)
             continue
         assert menu and menu["kind"] == "start", menu
+        # DisplayTextIDInit/DrawStartMenu can still own the input lock
+        # after the screen changes; wait for its observed first Joypad.
+        if not menu.get("input_ready", True):
+            g.step(1)
+            continue
         if menu["items"][menu["cursor"]] == entry:
             g.tap("a", 12)
             return

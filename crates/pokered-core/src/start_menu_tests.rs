@@ -282,3 +282,15 @@ fn empty_party_keeps_pokemon_entry_and_redisplays_when_selected() {
         assert_eq!(menu.update_frame(input_a()), StartMenuAction::OpenPokemon);
     }
 }
+
+#[test]
+fn direction_wins_over_confirm_cancel_start_and_opposite_direction() {
+    for (up, down, a, b, start) in [(true,false,true,false,false), (false,true,true,false,false),
+        (true,false,false,true,false), (false,true,false,true,false),
+        (true,false,false,false,true), (false,true,false,false,true), (true,true,false,false,false)] {
+        let mut menu = StartMenuState::new(true,true,false);
+        menu.update_frame(input_down());
+        assert_eq!(menu.update_frame(StartMenuInput {up,down,a,b,start}), StartMenuAction::Redisplay);
+        assert_eq!(menu.current_item(), if up {StartMenuItem::Pokedex} else {StartMenuItem::Item});
+    }
+}

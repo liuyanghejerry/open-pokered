@@ -4785,7 +4785,7 @@ impl PokemonGame {
                         a:input.is_held(GbButton::A),b:input.is_held(GbButton::B),start:input.is_held(GbButton::Start),
                     })
                 } else {Some(sm_input)};
-                if sampled.is_some_and(|input|input.a || input.b || input.start) {
+                if sampled.is_some_and(|input|input.a || input.b) {
                     if let Some(ref audio)=self.audio {audio.play_sfx(SfxId::PressAB);}
                 }
                 match sampled.map(|input|self.start_menu.update_frame(input)).unwrap_or(StartMenuAction::Redisplay) {
@@ -9489,6 +9489,29 @@ mod link_stats_cry_fidelity_tests {
     }
 
     #[test]
+    fn start_close_is_silent_and_direction_with_b_only_moves_cursor() {
+        run_link_save_fixture(|| {
+            let mut g = fixture(Species::Bulbasaur, 3, pokered_core::overworld::Direction::Down);
+            let idle = InputState::new();
+            g.handle_transition(GameScreen::StartMenu);
+            for _ in 0..23 { g.update(&idle); }
+            g.update(&button(GbButton::Down));
+            let mut combined = button(GbButton::Down); combined.press(GbButton::B);
+            // Release the preceding Down so both buttons are fresh.
+            g.update(&idle); g.update(&combined);
+            assert_eq!(g.state.screen, GameScreen::StartMenu);
+            assert_eq!(g.start_menu.current_item(), pokered_core::start_menu::StartMenuItem::Item);
+            assert_eq!(g.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.current_sfx_id, SfxId::PressAB as u8);
+            g.update(&idle);
+            g.audio = Some(AudioOutput::new_pcm());
+            let previous = g.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.current_sfx_id;
+            g.update(&button(GbButton::Start));
+            assert_eq!(g.state.screen, GameScreen::Overworld);
+            assert_eq!(g.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.current_sfx_id, previous);
+        });
+    }
+
+    #[test]
     fn empty_party_pokemon_selection_redraws_without_opening_party_or_replaying_start() {
         run_link_save_fixture(|| {
             let mut g = fixture(Species::Bulbasaur, 3, pokered_core::overworld::Direction::Down);
@@ -9627,6 +9650,36 @@ mod link_stats_cry_fidelity_tests {
                 rows.push(serde_json::json!({"t":t,"input_bits":input.raw_current(),"party_count":g.save_data.party.count(),
                     "screen":format!("{:?}",g.state.screen),"item":format!("{:?}",g.start_menu.current_item()),
                     "items":g.start_menu.items().iter().map(|i|format!("{:?}",i)).collect::<Vec<_>>(),
+                    "sfx_id":g.audio.as_ref().map(|a|a.manager.lock().unwrap().sequencer.current_sfx_id)}));
+            }
+            std::fs::write(dir.join("frames.json"),serde_json::to_string_pretty(&rows).unwrap()).unwrap();
+        });
+    }
+
+
+    #[test]
+    #[ignore = "START direction plus B comparison capture"]
+    fn capture_combined_menu_input_107() {
+        run_link_save_fixture(|| {
+            let dir = std::path::PathBuf::from(std::env::var("FIDELITY_COMBINED_MENU_CAPTURE").unwrap());
+            std::fs::create_dir_all(&dir).unwrap();
+            let mut g = fixture(Species::Bulbasaur, 3, pokered_core::overworld::Direction::Down);
+            let idle = InputState::new();
+            g.handle_transition(GameScreen::StartMenu);
+            for _ in 0..23 { g.update(&idle); }
+            g.update(&button(GbButton::Down)); g.update(&idle);
+            let mut input = InputState::new(); let mut rows = Vec::new();
+            for t in -1i32..8 {
+                if t >= 0 {
+                    input.begin_frame();
+                    if t == 0 { input.press(GbButton::Down); input.press(GbButton::B); }
+                    if t == 2 { input.release(GbButton::Down); input.release(GbButton::B); }
+                    g.update(&input);
+                }
+                let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+                g.draw(&mut fb); fb.save_png(&dir.join(format!("frame-{:04}.png",t+1))).unwrap();
+                rows.push(serde_json::json!({"t":t,"input_bits":input.raw_current(),
+                    "screen":format!("{:?}",g.state.screen),"item":format!("{:?}",g.start_menu.current_item()),
                     "sfx_id":g.audio.as_ref().map(|a|a.manager.lock().unwrap().sequencer.current_sfx_id)}));
             }
             std::fs::write(dir.join("frames.json"),serde_json::to_string_pretty(&rows).unwrap()).unwrap();

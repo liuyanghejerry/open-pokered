@@ -132,5 +132,30 @@ class ApproachInterruptionRegression(unittest.TestCase):
         self.assertEqual(g.state['screen'],'overworld')
 
 
+class StartMenuReadinessRegression(unittest.TestCase):
+    def test_saved_target_cursor_waits_for_first_menu_joypad_before_a(self):
+        from playthrough_late import open_start
+        class MenuGame:
+            def __init__(self):
+                self.remaining = 9  # Opening tap advances 14 of 23 hardware frames.
+                self.presses = []
+                self.steps = 0
+            def st(self):
+                return {"screen":"start_menu", "field_menu":{"kind":"start",
+                    "items":["Pokedex","Pokemon","Item"], "cursor":1,
+                    "input_ready":self.remaining == 0}}
+            def tap(self, button, gap):
+                self.presses.append(button)
+                if button != "start":
+                    assert self.remaining == 0, "early confirmation would be discarded"
+            def step(self, frames):
+                self.remaining = max(0, self.remaining - frames)
+                self.steps += frames
+        g = MenuGame()
+        open_start(g,"Pokemon")
+        self.assertEqual(g.presses,["start","a"])
+        self.assertEqual(g.steps,9)
+
+
 if __name__ == "__main__":
     unittest.main()
