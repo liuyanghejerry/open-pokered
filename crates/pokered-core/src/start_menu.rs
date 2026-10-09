@@ -80,6 +80,7 @@ pub struct StartMenuState {
     items: Vec<StartMenuItem>,
     cursor: usize,
     has_pokedex: bool,
+    has_pokemon: bool,
     is_link_connected: bool,
     /// `wBattleAndStartSavedMenuItem` — persists cursor position across menu opens.
     saved_cursor: usize,
@@ -102,11 +103,12 @@ pub struct SafariZoneInfo {
 
 impl StartMenuState {
     pub fn new(has_pokedex: bool, has_pokemon: bool, is_link_connected: bool) -> Self {
-        let items = Self::build_items(has_pokedex, has_pokemon, is_link_connected);
+        let items = Self::build_items(has_pokedex, is_link_connected);
         Self {
             items,
             cursor: 0,
             has_pokedex,
+            has_pokemon,
             is_link_connected,
             saved_cursor: 0,
             safari_info: None,
@@ -116,16 +118,14 @@ impl StartMenuState {
 
     fn build_items(
         has_pokedex: bool,
-        has_pokemon: bool,
         is_link_connected: bool,
     ) -> Vec<StartMenuItem> {
         let mut items = Vec::with_capacity(7);
         if has_pokedex {
             items.push(StartMenuItem::Pokedex);
         }
-        if has_pokemon {
-            items.push(StartMenuItem::Pokemon);
-        }
+        // DrawStartMenu always prints POKEMON, even before a starter exists.
+        items.push(StartMenuItem::Pokemon);
         items.push(StartMenuItem::Item);
         items.push(StartMenuItem::TrainerInfo);
         if is_link_connected {
@@ -141,8 +141,9 @@ impl StartMenuState {
     pub fn open(&mut self, has_pokedex: bool, has_pokemon: bool, is_link_connected: bool) {
         self.field_initialization = None;
         self.has_pokedex = has_pokedex;
+        self.has_pokemon = has_pokemon;
         self.is_link_connected = is_link_connected;
-        self.items = Self::build_items(has_pokedex, has_pokemon, is_link_connected);
+        self.items = Self::build_items(has_pokedex, is_link_connected);
         self.cursor = self.saved_cursor.min(self.items.len().saturating_sub(1));
     }
 
@@ -227,6 +228,7 @@ impl StartMenuState {
     fn select_current_item(&self) -> StartMenuAction {
         match self.items[self.cursor] {
             StartMenuItem::Pokedex => StartMenuAction::OpenPokedex,
+            StartMenuItem::Pokemon if !self.has_pokemon => StartMenuAction::Redisplay,
             StartMenuItem::Pokemon => StartMenuAction::OpenPokemon,
             StartMenuItem::Item => StartMenuAction::OpenItem,
             StartMenuItem::TrainerInfo => StartMenuAction::OpenTrainerInfo,

@@ -4789,6 +4789,13 @@ impl PokemonGame {
                     if let Some(ref audio)=self.audio {audio.play_sfx(SfxId::PressAB);}
                 }
                 match sampled.map(|input|self.start_menu.update_frame(input)).unwrap_or(StartMenuAction::Redisplay) {
+                    StartMenuAction::Redisplay if sampled.is_some_and(|i| i.a)
+                        && self.start_menu.current_item() == pokered_core::start_menu::StartMenuItem::Pokemon
+                        && self.save_data.party.count() == 0 => {
+                        // StartMenu_Pokemon jumps directly to RedisplayStartMenu
+                        // on an empty party, with the usual three-frame redraw.
+                        ScreenAction::Transition(GameScreen::StartMenu)
+                    }
                     StartMenuAction::Close => ScreenAction::Transition(GameScreen::Overworld),
                     StartMenuAction::OpenOption => {
                         ScreenAction::Transition(GameScreen::OptionsMenu)
@@ -9482,6 +9489,27 @@ mod link_stats_cry_fidelity_tests {
     }
 
     #[test]
+    fn empty_party_pokemon_selection_redraws_without_opening_party_or_replaying_start() {
+        run_link_save_fixture(|| {
+            let mut g = fixture(Species::Bulbasaur, 3, pokered_core::overworld::Direction::Down);
+            g.save_data.party = pokered_core::pokemon::party::Party::default();
+            let idle = InputState::new();
+            g.handle_transition(GameScreen::StartMenu);
+            for _ in 0..23 { g.update(&idle); }
+            g.update(&button(GbButton::Down));
+            assert_eq!(g.start_menu.current_item(), pokered_core::start_menu::StartMenuItem::Pokemon);
+            let mut input = button(GbButton::A);
+            g.update(&input);
+            assert_eq!(g.state.screen, GameScreen::StartMenu);
+            assert!(g.start_menu.field_initialization_active());
+            assert_eq!(g.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.current_sfx_id, SfxId::PressAB as u8);
+            for _ in 0..3 { input.begin_frame(); g.update(&input); }
+            assert_eq!(g.state.screen, GameScreen::StartMenu);
+            assert!(!g.start_menu.field_initialization_active(), "held selecting A must not restart redraw");
+        });
+    }
+
+    #[test]
     fn party_return_redraw_discards_short_pulse_without_replaying_start_sound() {
         use pokered_core::start_menu::StartMenuItem;
         run_link_save_fixture(|| {
@@ -9564,6 +9592,41 @@ mod link_stats_cry_fidelity_tests {
                 fb.save_png(&dir.join(format!("frame-{:04}.png", t + 1))).unwrap();
                 rows.push(serde_json::json!({"t":t,"input_bits":input.raw_current(),
                     "screen":format!("{:?}",g.state.screen),"item":format!("{:?}",g.start_menu.current_item()),
+                    "sfx_id":g.audio.as_ref().map(|a|a.manager.lock().unwrap().sequencer.current_sfx_id)}));
+            }
+            std::fs::write(dir.join("frames.json"),serde_json::to_string_pretty(&rows).unwrap()).unwrap();
+        });
+    }
+
+
+    #[test]
+    #[ignore = "empty-party START menu comparison capture"]
+    fn capture_empty_party_menu_106() {
+        run_link_save_fixture(|| {
+            let dir = std::path::PathBuf::from(std::env::var("FIDELITY_EMPTY_MENU_CAPTURE").unwrap());
+            std::fs::create_dir_all(&dir).unwrap();
+            let mut g = fixture(Species::Bulbasaur, 3, pokered_core::overworld::Direction::Down);
+            g.save_data.party = pokered_core::pokemon::party::Party::default();
+            g.overworld.set_flag_live("EVENT_GOT_POKEDEX", false);
+            let mut field = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+            g.draw(&mut field); field.save_png(&dir.join("field-before-menu.png")).unwrap();
+            let idle = InputState::new();
+            g.handle_transition(GameScreen::StartMenu);
+            for _ in 0..23 { g.update(&idle); }
+            let mut input = InputState::new();
+            let mut rows = Vec::new();
+            for t in -1i32..6 {
+                if t >= 0 {
+                    input.begin_frame();
+                    if t == 0 { input.press(GbButton::A); }
+                    if t == 1 { input.release(GbButton::A); }
+                    g.update(&input);
+                }
+                let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+                g.draw(&mut fb); fb.save_png(&dir.join(format!("frame-{:04}.png",t+1))).unwrap();
+                rows.push(serde_json::json!({"t":t,"input_bits":input.raw_current(),"party_count":g.save_data.party.count(),
+                    "screen":format!("{:?}",g.state.screen),"item":format!("{:?}",g.start_menu.current_item()),
+                    "items":g.start_menu.items().iter().map(|i|format!("{:?}",i)).collect::<Vec<_>>(),
                     "sfx_id":g.audio.as_ref().map(|a|a.manager.lock().unwrap().sequencer.current_sfx_id)}));
             }
             std::fs::write(dir.join("frames.json"),serde_json::to_string_pretty(&rows).unwrap()).unwrap();

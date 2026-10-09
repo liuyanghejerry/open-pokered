@@ -1,0 +1,307 @@
+{
+  "base": "31b1eda3112514d6bc803af559ec7f7c9e20374f",
+  "reference": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "source": "Controlled PartyCount0, dex false/true, savedcursorPokemon; originalDrawStartMenu alwaysPokemon6/7items; A60 redisplays, firstJoy63; noDisplayPartyMenu",
+  "before_after": {
+    "master": {
+      "PNG_repeat_exact": true,
+      "JSON_repeat_exact": true,
+      "rows": [
+        {
+          "input_bits": 0,
+          "item": "Item",
+          "items": [
+            "Item",
+            "TrainerInfo",
+            "Save",
+            "Option",
+            "Exit"
+          ],
+          "party_count": 0,
+          "screen": "StartMenu",
+          "sfx_id": 0,
+          "t": -1
+        },
+        {
+          "input_bits": 1,
+          "item": "Item",
+          "items": [
+            "Item",
+            "TrainerInfo",
+            "Save",
+            "Option",
+            "Exit"
+          ],
+          "party_count": 0,
+          "screen": "Bag",
+          "sfx_id": 0,
+          "t": 0
+        },
+        {
+          "input_bits": 0,
+          "item": "Item",
+          "items": [
+            "Item",
+            "TrainerInfo",
+            "Save",
+            "Option",
+            "Exit"
+          ],
+          "party_count": 0,
+          "screen": "Bag",
+          "sfx_id": 0,
+          "t": 1
+        },
+        {
+          "input_bits": 0,
+          "item": "Item",
+          "items": [
+            "Item",
+            "TrainerInfo",
+            "Save",
+            "Option",
+            "Exit"
+          ],
+          "party_count": 0,
+          "screen": "Bag",
+          "sfx_id": 0,
+          "t": 2
+        },
+        {
+          "input_bits": 0,
+          "item": "Item",
+          "items": [
+            "Item",
+            "TrainerInfo",
+            "Save",
+            "Option",
+            "Exit"
+          ],
+          "party_count": 0,
+          "screen": "Bag",
+          "sfx_id": 0,
+          "t": 3
+        },
+        {
+          "input_bits": 0,
+          "item": "Item",
+          "items": [
+            "Item",
+            "TrainerInfo",
+            "Save",
+            "Option",
+            "Exit"
+          ],
+          "party_count": 0,
+          "screen": "Bag",
+          "sfx_id": 0,
+          "t": 4
+        },
+        {
+          "input_bits": 0,
+          "item": "Item",
+          "items": [
+            "Item",
+            "TrainerInfo",
+            "Save",
+            "Option",
+            "Exit"
+          ],
+          "party_count": 0,
+          "screen": "Bag",
+          "sfx_id": 0,
+          "t": 5
+        }
+      ]
+    },
+    "after": {
+      "PNG_repeat_exact": true,
+      "JSON_repeat_exact": true,
+      "rows": [
+        {
+          "input_bits": 0,
+          "item": "Pokemon",
+          "items": [
+            "Pokemon",
+            "Item",
+            "TrainerInfo",
+            "Save",
+            "Option",
+            "Exit"
+          ],
+          "party_count": 0,
+          "screen": "StartMenu",
+          "sfx_id": 62,
+          "t": -1
+        },
+        {
+          "input_bits": 1,
+          "item": "Pokemon",
+          "items": [
+            "Pokemon",
+            "Item",
+            "TrainerInfo",
+            "Save",
+            "Option",
+            "Exit"
+          ],
+          "party_count": 0,
+          "screen": "StartMenu",
+          "sfx_id": 63,
+          "t": 0
+        },
+        {
+          "input_bits": 0,
+          "item": "Pokemon",
+          "items": [
+            "Pokemon",
+            "Item",
+            "TrainerInfo",
+            "Save",
+            "Option",
+            "Exit"
+          ],
+          "party_count": 0,
+          "screen": "StartMenu",
+          "sfx_id": 63,
+          "t": 1
+        },
+        {
+          "input_bits": 0,
+          "item": "Pokemon",
+          "items": [
+            "Pokemon",
+            "Item",
+            "TrainerInfo",
+            "Save",
+            "Option",
+            "Exit"
+          ],
+          "party_count": 0,
+          "screen": "StartMenu",
+          "sfx_id": 63,
+          "t": 2
+        },
+        {
+          "input_bits": 0,
+          "item": "Pokemon",
+          "items": [
+            "Pokemon",
+            "Item",
+            "TrainerInfo",
+            "Save",
+            "Option",
+            "Exit"
+          ],
+          "party_count": 0,
+          "screen": "StartMenu",
+          "sfx_id": 63,
+          "t": 3
+        },
+        {
+          "input_bits": 0,
+          "item": "Pokemon",
+          "items": [
+            "Pokemon",
+            "Item",
+            "TrainerInfo",
+            "Save",
+            "Option",
+            "Exit"
+          ],
+          "party_count": 0,
+          "screen": "StartMenu",
+          "sfx_id": 63,
+          "t": 4
+        },
+        {
+          "input_bits": 0,
+          "item": "Pokemon",
+          "items": [
+            "Pokemon",
+            "Item",
+            "TrainerInfo",
+            "Save",
+            "Option",
+            "Exit"
+          ],
+          "party_count": 0,
+          "screen": "StartMenu",
+          "sfx_id": 63,
+          "t": 5
+        }
+      ]
+    },
+    "field_pre_RGB_identical": true,
+    "raw_inputs_identical": true
+  },
+  "tests": {
+    "core": "2724 passed",
+    "app": "198 passed19ignored"
+  },
+  "rejected": "Firstcore2721pass3fail oldtestsencodedhiddenPokemon, updated completeitemlists andAredisplay/secondItemopening assertions fromsource; failurelog retained",
+  "scope": "Empty-party menu inclusion and A dispatch; sourcefont not rendered bynative; no fullmenuRGB alignment claim",
+  "sha256": {
+    "menu-106-after-1/field-before-menu.png": "8002f951c5fa2e1ef984d204f95ff7b41c957cf20ad9296ab7332755ba04d818",
+    "menu-106-after-1/frame-0000.png": "f26a4967741506ad20ccfcb5e58092ae45ed00a25b58f6f702dadb9a31bcab42",
+    "menu-106-after-1/frame-0001.png": "f26a4967741506ad20ccfcb5e58092ae45ed00a25b58f6f702dadb9a31bcab42",
+    "menu-106-after-1/frame-0002.png": "f26a4967741506ad20ccfcb5e58092ae45ed00a25b58f6f702dadb9a31bcab42",
+    "menu-106-after-1/frame-0003.png": "f26a4967741506ad20ccfcb5e58092ae45ed00a25b58f6f702dadb9a31bcab42",
+    "menu-106-after-1/frame-0004.png": "f26a4967741506ad20ccfcb5e58092ae45ed00a25b58f6f702dadb9a31bcab42",
+    "menu-106-after-1/frame-0005.png": "f26a4967741506ad20ccfcb5e58092ae45ed00a25b58f6f702dadb9a31bcab42",
+    "menu-106-after-1/frame-0006.png": "f26a4967741506ad20ccfcb5e58092ae45ed00a25b58f6f702dadb9a31bcab42",
+    "menu-106-after-1/frames.json": "e9c9eddac4e5c0b56c37e5b86ee616531a300b0a4e26b64ff37924f71bfdb5ce",
+    "menu-106-after-1.log": "cfb560c511b134b197816e6c54e087bd50442ebf587be535adcd349fc8bd43a7",
+    "menu-106-after-2/field-before-menu.png": "8002f951c5fa2e1ef984d204f95ff7b41c957cf20ad9296ab7332755ba04d818",
+    "menu-106-after-2/frame-0000.png": "f26a4967741506ad20ccfcb5e58092ae45ed00a25b58f6f702dadb9a31bcab42",
+    "menu-106-after-2/frame-0001.png": "f26a4967741506ad20ccfcb5e58092ae45ed00a25b58f6f702dadb9a31bcab42",
+    "menu-106-after-2/frame-0002.png": "f26a4967741506ad20ccfcb5e58092ae45ed00a25b58f6f702dadb9a31bcab42",
+    "menu-106-after-2/frame-0003.png": "f26a4967741506ad20ccfcb5e58092ae45ed00a25b58f6f702dadb9a31bcab42",
+    "menu-106-after-2/frame-0004.png": "f26a4967741506ad20ccfcb5e58092ae45ed00a25b58f6f702dadb9a31bcab42",
+    "menu-106-after-2/frame-0005.png": "f26a4967741506ad20ccfcb5e58092ae45ed00a25b58f6f702dadb9a31bcab42",
+    "menu-106-after-2/frame-0006.png": "f26a4967741506ad20ccfcb5e58092ae45ed00a25b58f6f702dadb9a31bcab42",
+    "menu-106-after-2/frames.json": "e9c9eddac4e5c0b56c37e5b86ee616531a300b0a4e26b64ff37924f71bfdb5ce",
+    "menu-106-after-2.log": "cfb560c511b134b197816e6c54e087bd50442ebf587be535adcd349fc8bd43a7",
+    "menu-106-app.log": "0030849846cf3bca645482c9615f842bddf40223548a9dae11376626e0ece7fd",
+    "menu-106-before-after-summary.json": "214ff238115b2adb6f37fbaaeaf9b10ca0eaeb3f4633fb831c505a9cc13c374c",
+    "menu-106-core-original-menu.log": "abfc1427ccb09085a9e09a26e8b618f1c36d530083e51f90801448817967240f",
+    "menu-106-core.log": "263d92e45efad817c02b38c6aa8214cb3f0351edcd13f279444e6ee189b7db26",
+    "menu-106-master-1/field-before-menu.png": "8002f951c5fa2e1ef984d204f95ff7b41c957cf20ad9296ab7332755ba04d818",
+    "menu-106-master-1/frame-0000.png": "b9e030cf62ae6fd3452a52e589ac1f8d30b90f505d52fdc6d81cfadd240d59b6",
+    "menu-106-master-1/frame-0001.png": "ba4727ec1f817d862b56d651a54a53d4e257f0d5512ebbe1fea705436ba3ce7c",
+    "menu-106-master-1/frame-0002.png": "ba4727ec1f817d862b56d651a54a53d4e257f0d5512ebbe1fea705436ba3ce7c",
+    "menu-106-master-1/frame-0003.png": "ba4727ec1f817d862b56d651a54a53d4e257f0d5512ebbe1fea705436ba3ce7c",
+    "menu-106-master-1/frame-0004.png": "ba4727ec1f817d862b56d651a54a53d4e257f0d5512ebbe1fea705436ba3ce7c",
+    "menu-106-master-1/frame-0005.png": "ba4727ec1f817d862b56d651a54a53d4e257f0d5512ebbe1fea705436ba3ce7c",
+    "menu-106-master-1/frame-0006.png": "ba4727ec1f817d862b56d651a54a53d4e257f0d5512ebbe1fea705436ba3ce7c",
+    "menu-106-master-1/frames.json": "8564e03700c16f5acf2c731b927ebc1a0cf3bbdeab1e60382aabec72660b48e2",
+    "menu-106-master-1.log": "e6bd16c1fbddc2d661a7fd2c90bb3233531c01fcacc98ef8c88cf5c46dc8cdfe",
+    "menu-106-master-2/field-before-menu.png": "8002f951c5fa2e1ef984d204f95ff7b41c957cf20ad9296ab7332755ba04d818",
+    "menu-106-master-2/frame-0000.png": "b9e030cf62ae6fd3452a52e589ac1f8d30b90f505d52fdc6d81cfadd240d59b6",
+    "menu-106-master-2/frame-0001.png": "ba4727ec1f817d862b56d651a54a53d4e257f0d5512ebbe1fea705436ba3ce7c",
+    "menu-106-master-2/frame-0002.png": "ba4727ec1f817d862b56d651a54a53d4e257f0d5512ebbe1fea705436ba3ce7c",
+    "menu-106-master-2/frame-0003.png": "ba4727ec1f817d862b56d651a54a53d4e257f0d5512ebbe1fea705436ba3ce7c",
+    "menu-106-master-2/frame-0004.png": "ba4727ec1f817d862b56d651a54a53d4e257f0d5512ebbe1fea705436ba3ce7c",
+    "menu-106-master-2/frame-0005.png": "ba4727ec1f817d862b56d651a54a53d4e257f0d5512ebbe1fea705436ba3ce7c",
+    "menu-106-master-2/frame-0006.png": "ba4727ec1f817d862b56d651a54a53d4e257f0d5512ebbe1fea705436ba3ce7c",
+    "menu-106-master-2/frames.json": "8564e03700c16f5acf2c731b927ebc1a0cf3bbdeab1e60382aabec72660b48e2",
+    "menu-106-master-2.log": "e20211466bc74e48e379ba1ba604e7df264df0497a5be7b39c56517685c760fc",
+    "menu-106-master-helper-build.log": "a6919be09eb7b1e154824e87c2de6b9b67b84487d8d0f03288c62a93127be5db",
+    "menu-106-readonly-capture-helper.txt": "58fa087a44fdd24579b2bce36f6de13d0800ef035ccff0cf9f5f0648a077e28f",
+    "menu-106-source-0-1/frame-0050.png": "ce4f858a49fa460e05cdf36e1f0604453c6061cd642f08f4c79d6677e00d10fd",
+    "menu-106-source-0-1/frame-0061.png": "ce4f858a49fa460e05cdf36e1f0604453c6061cd642f08f4c79d6677e00d10fd",
+    "menu-106-source-0-1/frame-0065.png": "ce4f858a49fa460e05cdf36e1f0604453c6061cd642f08f4c79d6677e00d10fd",
+    "menu-106-source-0-2/frame-0050.png": "ce4f858a49fa460e05cdf36e1f0604453c6061cd642f08f4c79d6677e00d10fd",
+    "menu-106-source-0-2/frame-0061.png": "ce4f858a49fa460e05cdf36e1f0604453c6061cd642f08f4c79d6677e00d10fd",
+    "menu-106-source-0-2/frame-0065.png": "ce4f858a49fa460e05cdf36e1f0604453c6061cd642f08f4c79d6677e00d10fd",
+    "menu-106-source-1-1/frame-0050.png": "9b00730d1a5d8f983a3f07bb2ad3c923029c0e9e8d03af6d27fe7d98334ac3ca",
+    "menu-106-source-1-1/frame-0061.png": "9b00730d1a5d8f983a3f07bb2ad3c923029c0e9e8d03af6d27fe7d98334ac3ca",
+    "menu-106-source-1-1/frame-0065.png": "9b00730d1a5d8f983a3f07bb2ad3c923029c0e9e8d03af6d27fe7d98334ac3ca",
+    "menu-106-source-1-2/frame-0050.png": "9b00730d1a5d8f983a3f07bb2ad3c923029c0e9e8d03af6d27fe7d98334ac3ca",
+    "menu-106-source-1-2/frame-0061.png": "9b00730d1a5d8f983a3f07bb2ad3c923029c0e9e8d03af6d27fe7d98334ac3ca",
+    "menu-106-source-1-2/frame-0065.png": "9b00730d1a5d8f983a3f07bb2ad3c923029c0e9e8d03af6d27fe7d98334ac3ca",
+    "menu-106-source-empty-party.json": "97ce7b0310049829438140bac485a2669e3fc3623b91d58739c93cde89520892",
+    "menu-106-source-empty-party.log": "bce63303fce6904b22b46043a340768054cdef5a87746e636181dc78ac2b8dc2",
+    "stats-59-tools/probe_menu_empty_106.py": "a2c995d7ad6348463cf613ec4ec91b99b68ca7b7d78747cf85d155045e28622d"
+  }
+}
