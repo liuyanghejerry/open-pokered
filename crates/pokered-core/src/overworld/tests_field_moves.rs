@@ -1135,7 +1135,7 @@ fn seafoam_hole_waits_for_dust_and_keeps_the_lower_floor_event() {
     screen.npc_states[0].walk_counter=16;
     screen.boulder_push=Some(presentation::BoulderPushState {
         npc_index:0,direction:Direction::Down,anchor:(17,4),
-        origin:(17,5),destination:(17,6),frame:0,switch_block:None,redraw_remaining:0,
+        origin:(17,5),destination:(17,6),frame:0,switch_block:None,redraw_remaining:0,walk_wait:0,
     });
     let flag=EventFlag::EVENT_SEAFOAM1_BOULDER1_DOWN_HOLE;
     for frame in 1..=72 {
@@ -1169,7 +1169,7 @@ fn victory_road_switch_commits_during_slide_and_redraw_depends_on_view_address()
         assert_ne!(old,block);
         screen.boulder_push=Some(presentation::BoulderPushState {
             npc_index:0,direction:Direction::Down,anchor:(x,y),origin:(x,y+1),
-            destination:(x,y+2),frame:0,switch_block:None,redraw_remaining:0,
+            destination:(x,y+2),frame:0,switch_block:None,redraw_remaining:0,walk_wait:0,
         });
         for elapsed in 1..=72+pause {
             screen.advance_boulder_push();
@@ -1280,7 +1280,7 @@ fn victory_road_hole_event_precedes_final_oam_image() {
     screen.npc_states.push(make_boulder(22,15));
     screen.boulder_push=Some(presentation::BoulderPushState {
         npc_index:0,direction:Direction::Right,anchor:(21,15),
-        origin:(22,15),destination:(23,15),frame:0,switch_block:None,redraw_remaining:0,
+        origin:(22,15),destination:(23,15),frame:0,switch_block:None,redraw_remaining:0,walk_wait:0,
     });
     // Original MoveSprite at t3, HideObject/ShowObject/SFX_CUT at t73.
     // The final displayed boulder persists until t75; no time shift.
@@ -1299,7 +1299,7 @@ fn boulder_completion_samples_start_before_the_last_lcd_image() {
     screen.npc_states.clear();screen.npc_states.push(make_boulder(22,15));
     screen.state.player.x=21;screen.state.player.y=15;screen.state.player.facing=Direction::Right;
     screen.boulder_push=Some(presentation::BoulderPushState {
-        npc_index:0,direction:Direction::Right,anchor:(21,15),origin:(22,15),destination:(23,15),frame:69,switch_block:None,redraw_remaining:0,
+        npc_index:0,direction:Direction::Right,anchor:(21,15),origin:(22,15),destination:(23,15),frame:69,switch_block:None,redraw_remaining:0,walk_wait:0,
     });
     let start=OverworldInput::new(false,false,false,false,false,false,true,false);
     let idle=OverworldInput::new(false,false,false,false,false,false,false,false);
@@ -1376,6 +1376,60 @@ fn mid_step_snapshot_replays_pending_player_presentation() {
             original.update_frame(input);restored.update_frame(input);
             assert_eq!(serde_json::to_string(&OverworldSnapshot::capture(&original)).unwrap(),
                 serde_json::to_string(&OverworldSnapshot::capture(&restored)).unwrap(),"{bike} t{t}");
+        }
+    }
+}
+
+#[test]
+fn boulder_logical_counter_matches_original_during_map_redraw() {
+    use pokered_data::event_flags::EventFlag;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(
+        "../../tests/fixtures/boulder-counter-139.json"
+    )).unwrap();
+    for case in fixture["cases"].as_array().unwrap() {
+        let (map, x, y, flag) = match case["case"].as_str().unwrap() {
+            "1f" => (MapId::VictoryRoad1F, 17, 11, EventFlag::EVENT_VICTORY_ROAD_1_BOULDER_ON_SWITCH),
+            "2f1" => (MapId::VictoryRoad2F, 1, 14, EventFlag::EVENT_VICTORY_ROAD_2_BOULDER_ON_SWITCH1),
+            _ => unreachable!(),
+        };
+        let mut screen = screen_on(map);
+        screen.state.player.x = x;
+        screen.state.player.y = y;
+        screen.state.player.facing = Direction::Down;
+        screen.strength_active = true;
+        screen.npc_states.clear();
+        screen.npc_states.push(make_boulder(x, y + 1));
+        // The actual native Continue/Strength capture starts MoveSprite at
+        // hardware t3. Original2F1 starts t2 but its actor update crosses
+        // VBlank; both logical TryWalking updates land at t5. These primary
+        // counter traces do not prove the unmodelled CPU/OAM initialization.
+        for row in case["trace"].as_array().unwrap() {
+            let values = row.as_array().unwrap();
+            let t = values[0].as_i64().unwrap();
+            if t == 3 {
+                screen.tick_boulder_push(Some(Direction::Down));
+                screen.tick_boulder_push(Some(Direction::Down));
+                assert!(screen.boulder_push.is_some());
+            } else if t > 3 {
+                screen.advance_boulder_push();
+            }
+            let npc = &screen.npc_states[0];
+            assert_eq!(
+                [u64::from(npc.x), u64::from(npc.y), u64::from(npc.walk_counter),
+                    u64::from(screen.unified_flags.check(flag))],
+                [values[1].as_u64().unwrap(), values[2].as_u64().unwrap(),
+                    values[3].as_u64().unwrap(), values[4].as_u64().unwrap()],
+                "{map:?} hardware t{t}"
+            );
+            if let Some(push) = screen.boulder_push {
+                let encoded = serde_json::to_value(push).unwrap();
+                let restored: presentation::BoulderPushState = serde_json::from_value(encoded.clone()).unwrap();
+                assert_eq!(restored, push, "walking update phase survives JSON at t{t}");
+                let mut legacy = encoded;
+                legacy.as_object_mut().unwrap().remove("walk_wait");
+                let restored: presentation::BoulderPushState = serde_json::from_value(legacy).unwrap();
+                assert_eq!(restored.walk_wait, u8::MAX, "legacy phase is derived on resume");
+            }
         }
     }
 }

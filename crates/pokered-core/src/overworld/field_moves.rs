@@ -472,14 +472,16 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 let destination = ((npc.x as i32 + ddx as i32).max(0) as u16,
                     (npc.y as i32 + ddy as i32).max(0) as u16);
                 npc.facing = direction;
-                npc.walk_counter = 16;
+                // MoveSprite only queues directions. TryWalking starts the
+                // counter when UpdateNPCSprite next processes this actor.
+                npc.walk_counter = 0;
                 self.tried_push_boulder = false;
                 self.boulder_dust_frames = BOULDER_DUST_FRAMES;
                 self.boulder_dust = presentation::BoulderDustState::inactive();
                 self.boulder_push = Some(presentation::BoulderPushState {
                     npc_index, direction, destination, origin: (npc.x,npc.y),
                     anchor: (self.state.player.x, self.state.player.y), frame: 0,
-                    switch_block: None, redraw_remaining: 0,
+                    switch_block: None, redraw_remaining: 0, walk_wait: 0,
                 });
                 self.audio_requests.push(OverworldAudioRequest::PlaySound {
                     sound_id: "SFX_PUSH_BOULDER".to_string(),
@@ -519,8 +521,18 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     /// and not an elevation change from the player's tile.
     pub(crate) fn advance_boulder_push(&mut self) {
         let Some(mut push) = self.boulder_push else { return; };
+        if push.walk_wait == u8::MAX {
+            // Old debug snapshots contain the preceding presentation-based
+            // counter. Preserve its next update phase when resuming it.
+            push.walk_wait = u8::from(push.frame >= 5 && push.frame % 2 == 1);
+        }
         if push.redraw_remaining != 0 {
             push.redraw_remaining -= 1;
+            if push.redraw_remaining == 0 {
+                // RedrawMapView's last DelayFrame returns into the same
+                // OverworldLoop iteration, which updates NPCs before waiting.
+                self.advance_boulder_walk(&mut push);
+            }
             self.boulder_push = Some(push);
             return;
         }
@@ -529,6 +541,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         if push.frame == 2 {
             self.npc_states[push.npc_index].x = push.destination.0;
             self.npc_states[push.npc_index].y = push.destination.1;
+            self.npc_states[push.npc_index].walk_counter = 16;
+            push.walk_wait = 1;
         }
         // 1F/2F check the destination on the next map-script iteration.
         // Their block replacement runs one iteration after setting the flag.
@@ -542,12 +556,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             }
         }
         self.boulder_dust_frames = BOULDER_DUST_FRAMES.saturating_sub(push.frame);
-        let pixels = push.slide_pixels();
-        if pixels < 16 {
-            self.npc_states[push.npc_index].walk_counter = 16 - pixels;
-        } else if self.npc_states[push.npc_index].walk_counter != 0 {
-            let npc = &mut self.npc_states[push.npc_index];
-            npc.x = push.destination.0; npc.y = push.destination.1; npc.walk_counter = 0;
+        if push.frame > 2 && push.redraw_remaining == 0 {
+            self.advance_boulder_walk(&mut push);
         }
         if push.frame == presentation::BoulderPushState::DUST_FIRST_FRAME {
             self.boulder_dust = presentation::BoulderDustState::new(push.direction, push.anchor.0, push.anchor.1);
@@ -572,6 +582,15 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             self.boulder_push = None;
         } else {
             self.boulder_push = Some(push);
+        }
+    }
+
+    fn advance_boulder_walk(&mut self, push: &mut presentation::BoulderPushState) {
+        if push.walk_wait != 0 {
+            push.walk_wait -= 1;
+        } else if self.npc_states[push.npc_index].walk_counter != 0 {
+            self.npc_states[push.npc_index].walk_counter -= 1;
+            push.walk_wait = 1;
         }
     }
 

@@ -1,0 +1,13 @@
+{
+  "groups": 80,
+  "passed": 3661,
+  "failed": 0,
+  "ignored": 57,
+  "command": "cargo test -p pokered-core -p pokered-app --features pokered-app/debug-server (offline -j4 optimized2)",
+  "source_counter_frames": 402,
+  "actual_native_frames": 603,
+  "native_repetitions": 2,
+  "unchanged_png_frames": 603,
+  "gba_metrics": 31,
+  "gba_scenarios": 7
+}

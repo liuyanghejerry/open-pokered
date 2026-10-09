@@ -817,7 +817,11 @@ pub struct BoulderPushState {
     pub frame: u8,
     pub switch_block: Option<(u8, u8, u8)>,
     pub redraw_remaining: u8,
+    /// DelayFrame between NPC walking updates, independent of graphics waits.
+    #[serde(default = "legacy_boulder_walk_wait")]
+    pub walk_wait: u8,
 }
+fn legacy_boulder_walk_wait() -> u8 { u8::MAX }
 impl BoulderPushState {
     pub const DUST_FIRST_FRAME: u8 = 42;
     pub const DUST_LAST_FRAME: u8 = 66;
