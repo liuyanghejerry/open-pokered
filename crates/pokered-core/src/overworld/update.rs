@@ -323,6 +323,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         self.player_sprite_state.hardware_frame(self.state.player.facing);
         self.sync_npc_sprite_states();
         for sprite in &mut self.npc_sprite_states { sprite.hardware_frame(); }
+        self.npc_camera_state = self.player_camera_state.clone();
         self.latch_player_camera();
         self.sfx_event = OverworldSfxEvent::None;
         if self.preserve_audio_requests_next_frame {
@@ -1671,6 +1672,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         .push(OverworldAudioRequest::PlayMapMusic { map: new_map });
                     let hidden_npc_ids = self.map_script_config.hidden_npc_ids();
                     self.npc_sprite_states.clear();
+                    self.npc_camera_state = None;
                     self.field_text_restore = None;
                     self.npc_states = self
                         .map_data
@@ -1705,6 +1707,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         // the "!" bubble shows and the trainer walks up.
         let intro_holding_input =
             self.trainer_encounter_intro.is_some() || self.trainer_intro_text_pending.is_some();
+        // UpdateSprites sees the player's counter before AdvancePlayerSprite
+        // decrements it. Keep the final step's nonzero counter for the NPC
+        // ready-to-walk and sprite-image gates below.
+        let player_walking_before_advance = self.state.walk_counter != 0;
         let player_input = self.sampled_player_input;
         let movement_input = MovementInput {
             up: player_input.up && !intro_holding_input,
@@ -2335,7 +2341,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         // In the original game, NPC movement is frozen while a text box is displayed
         // (wFontLoaded / BIT_FONT_LOADED check in UpdateNPCSprite).
         // run_npc_movement_tick() gates on is_text_ui_active() internally.
-        if !turning_in_place { self.run_npc_movement_tick(); }
+        if !turning_in_place {
+            self.run_npc_movement_tick_with_player_walking(
+                player_walking_before_advance);
+        }
 
         ScreenAction::Continue
     }
@@ -2348,6 +2357,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     }
 
     fn run_npc_movement_tick(&mut self) {
+        self.run_npc_movement_tick_with_player_walking(self.state.walk_counter != 0);
+    }
+
+    fn run_npc_movement_tick_with_player_walking(&mut self, player_walking: bool) {
         if self.is_text_ui_active() {
             return;
         }
@@ -2393,12 +2406,16 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 || self.trainer_encounter_intro.is_some()
                 || self.trainer_intro_text_pending.is_some();
             let mut frozen_slots: Vec<usize> = Vec::new();
-            if frozen {
-                for (i, n) in self.npc_states.iter_mut().enumerate() {
-                    if n.movement_type == NpcMovementType::Wander {
-                        n.movement_type = NpcMovementType::Stationary;
-                        frozen_slots.push(i);
-                    }
+            for (i, n) in self.npc_states.iter_mut().enumerate() {
+                // UpdateNPCSprite checks wWalkCounter only after handling
+                // walking sprites and movement-delay countdowns. A ready
+                // random walker must not choose a new step while the player
+                // walks, but a running step or idle delay still advances.
+                let waiting_for_player = player_walking && n.walk_counter == 0
+                    && n.delay_counter == 0 && n.scripted_path.is_empty();
+                if n.movement_type == NpcMovementType::Wander && (frozen || waiting_for_player) {
+                    n.movement_type = NpcMovementType::Stationary;
+                    frozen_slots.push(i);
                 }
             }
             let mut offscreen_slots = Vec::new();
@@ -2427,7 +2444,6 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 self.npc_states[i].movement_type = NpcMovementType::Wander;
             }
             self.hasten_followed_npc();
-            let player_walking = self.state.walk_counter != 0;
             for slot in 0..self.npc_states.len() {
                 if !frozen && (!self.npc_states[slot].visible || !self.npc_in_field_viewport(slot)) {
                     self.npc_sprite_states[slot].hide();

@@ -750,6 +750,7 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     pub(crate) npc_sprite_states: Vec<presentation::NpcSpriteState>,
     pub field_text_restore: Option<presentation::FieldTextRestoreState>,
     pub(crate) player_camera_state: Option<presentation::PlayerCameraState>,
+    pub(crate) npc_camera_state: Option<presentation::PlayerCameraState>,
     pub bg_transfer_portion: u8,
     /// First AdvancePlayerSprite redraw finishes before the second bike advance.
     pub(crate) bike_redraw_advance: bool,
@@ -1197,6 +1198,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             npc_sprite_states: Vec::new(),
             field_text_restore: None,
             player_camera_state: None,
+            npc_camera_state: None,
             bg_transfer_portion: 0,
             bike_redraw_advance: false,
             check_player_turn: false,
@@ -2556,6 +2558,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         self.npc_sprite_states.clear();
         self.field_text_restore = None;
         self.player_camera_state = None;
+        self.npc_camera_state = None;
         self.player_last_stop_direction = data.player_last_stop_direction;
         self.player_moving_direction = data.player_moving_direction;
         self.first_lock_trash_can = data.first_lock_trash_can;
@@ -2705,6 +2708,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             }
             let hidden_npc_ids = self.map_script_config.hidden_npc_ids();
             self.npc_sprite_states.clear();
+            self.npc_camera_state = None;
             self.field_text_restore = None;
             self.npc_states = self
                 .map_data
@@ -3240,6 +3244,7 @@ impl<G: GameData> OverworldScreen<G> {
     }
 
     pub fn tick_player_presentation_during_ui(&mut self) {
+        self.npc_camera_state = self.player_camera_state.clone();
         for sprite in &mut self.npc_sprite_states { sprite.hardware_frame(); }
         if self.player_sprite_state.initialized {
             self.player_sprite_state.hardware_frame(self.state.player.facing);
@@ -3270,7 +3275,18 @@ impl<G: GameData> OverworldScreen<G> {
         if npc.scripted_frame.is_some() || self.active_script_effect.is_some()
             || !self.scripted_player_path.is_empty() || self.cutscene_manager.is_blocking()
             || self.boulder_push.is_some_and(|push| push.npc_index == slot) { return None; }
-        self.npc_sprite_states.get(slot).filter(|sprite| sprite.matches(npc)).map(|sprite| sprite.visible)
+        let mut pose = self.npc_sprite_states.get(slot).filter(|sprite| sprite.matches(npc))?.visible;
+        // SCX/SCY latch before PrepareOAMData's coordinates are copied by
+        // the next DMA. NPCs therefore use the previous background viewport.
+        if let (Some(bg), Some(sprite_view)) = (self.ordinary_player_camera(), self.npc_camera_state.as_ref()) {
+            if bg.map == sprite_view.map {
+                pose.x += (i32::from(bg.x) - i32::from(sprite_view.x)) * 16
+                    + i32::from(bg.sub_x) - i32::from(sprite_view.sub_x);
+                pose.y += (i32::from(bg.y) - i32::from(sprite_view.y)) * 16
+                    + i32::from(bg.sub_y) - i32::from(sprite_view.sub_y);
+            }
+        }
+        Some(pose)
     }
 }
 

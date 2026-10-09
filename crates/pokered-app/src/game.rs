@@ -9550,6 +9550,96 @@ mod link_stats_cry_fidelity_tests {
     }
 
     #[test]
+    fn player_walk_defers_ready_random_npcs_but_advances_delay_and_running_steps() {
+        use pokered_core::overworld::Direction;
+        use pokered_core::snapshot::OverworldSnapshot;
+        run_link_save_fixture(|| {
+            let oracle: serde_json::Value = serde_json::from_str(
+                include_str!("../tests/fixtures/npc-player-walk-132.json")).unwrap();
+            for (case, moving, initial_delay) in [("ready", false, 3), ("moving", true, 54), ("ready_zero", false, 2)] {
+                let mut g = fixture(Species::Bulbasaur, 3, Direction::Down);
+                g.overworld.warp_to_map(MapId::ViridianCity, 20, 30);
+                let idle = InputState::new();
+                for _ in 0..120 { g.update(&idle); }
+                let mut controlled = g.save_data.game_data.clone();
+                controlled.player_last_stop_direction = 2;
+                controlled.player_moving_direction = 0;
+                g.overworld.restore_system_save_state(&controlled);
+                // Stage the original pretrigger field-loop phase and turn
+                // flag; this room-derived unit fixture has no CPU phase.
+                let mut phase = OverworldSnapshot::capture(&g.overworld);
+                phase.field_loop_wait = 0;
+                phase.check_player_turn = true;
+                phase.restore_into(&mut g.overworld);
+                let npc = &mut g.overworld.npc_states[0];
+                assert_eq!(npc.sprite_id, 4);
+                npc.x = 19; npc.y = 29; npc.facing = Direction::Down;
+                npc.walk_counter = if moving { 12 } else { 0 };
+                // The running-step fixture includes the native preloaded
+                // future idle wait. It is unused throughout this first walk.
+                npc.delay_counter = initial_delay;
+                npc.visible = true;
+                if case == "ready_zero" {
+                    use dotzuki_engine::overworld::collision::CollisionProvider as _;
+                    let map = g.overworld.map_data.as_ref().unwrap();
+                    let provider = pokered_core::overworld::collision::PokemonCollisionProvider::new(MapId::ViridianCity, map.tileset);
+                    for (x,y) in [(18,29),(20,29),(19,28),(19,30)] {
+                        let tile = provider.get_tile_at_position(map.tileset, &map.blocks, map.width, x, y);
+                        assert!(pokered_data::collision::is_tile_passable(map.tileset, tile));
+                        assert!(!g.overworld.npc_states.iter().any(|n|n.visible && (n.x,n.y)==(x,y)));
+                    }
+                }
+                for _ in 0..4 { g.update(&idle); }
+                let mut input = InputState::new();
+                for row in oracle["cases"][case].as_array().unwrap() {
+                    let t = row["t"].as_i64().unwrap();
+                    if t >= 0 {
+                        input.begin_frame();
+                        if t == 0 { input.press(GbButton::Down); }
+                        if t == 16 { input.release(GbButton::Down); }
+                        g.update(&input);
+                    }
+                    let snap = OverworldSnapshot::capture(&g.overworld);
+                    let npc = &snap.npc_states[0];
+                    let sprite = &snap.npc_sprite_states[0];
+                    assert_eq!(u64::from(g.overworld.state.walk_counter), row["player_counter"].as_u64().unwrap(), "player moving={moving} t={t}");
+                    assert_eq!(u64::from(npc.walk_counter), row["remaining"].as_u64().unwrap(), "NPC moving={moving} t={t}");
+                    // ready_zero permits a random first-step direction.
+                    // This test compares gates/counters, not the PRNG stream.
+                    if case != "ready_zero" || t < 2 {
+                        assert_eq!(npc.facing, Direction::Down, "facing case={case} t={t}");
+                    }
+                    assert_eq!((npc.x, npc.y), (19, 29), "origin moving={moving} t={t}");
+                    if case == "ready" { assert_eq!(u64::from(npc.delay_counter), row["delay"].as_u64().unwrap(), "delay t={t}"); }
+                    assert_eq!(u64::from(sprite.phase), row["phase"].as_u64().unwrap(), "phase moving={moving} t={t}");
+                    assert_eq!(u64::from(sprite.intra_frame), row["intra"].as_u64().unwrap(), "intra moving={moving} t={t}");
+                    if case != "ready_zero" || t < 2 {
+                        assert_eq!(u64::from(sprite.pending[1].image), row["raw_image"].as_u64().unwrap(), "image case={case} t={t}");
+                    }
+                    if t == 10 {
+                        // Snapshot the frame where BG has just advanced but
+                        // NPC OAM still uses its previous viewport.
+                        let decoded: OverworldSnapshot = serde_json::from_str(&serde_json::to_string(&snap).unwrap()).unwrap();
+                        let mut live = OverworldScreen::new(MapId::ViridianCity, None, PokemonRedData);
+                        let mut restored = OverworldScreen::new(MapId::ViridianCity, None, PokemonRedData);
+                        snap.restore_into(&mut live);
+                        decoded.restore_into(&mut restored);
+                        assert_eq!(restored.ordinary_npc_sprite_pose(0), g.overworld.ordinary_npc_sprite_pose(0));
+                        for _ in 0..30 {
+                            for screen in [&mut live, &mut restored] {
+                                screen.update_frame(dotzuki_engine::overworld::OverworldInput::new(false,false,false,false,false,false,false,false));
+                            }
+                            assert_eq!(live.ordinary_npc_sprite_pose(0), restored.ordinary_npc_sprite_pose(0));
+                            assert_eq!(serde_json::to_value(OverworldSnapshot::capture(&live).npc_camera_state).unwrap(),
+                                serde_json::to_value(OverworldSnapshot::capture(&restored).npc_camera_state).unwrap());
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    #[test]
     fn npc_field_font_and_start_close_match_original_ram_and_lcd_frames() {
         use pokered_core::overworld::Direction;
         use pokered_core::snapshot::OverworldSnapshot;
@@ -9627,6 +9717,7 @@ mod link_stats_cry_fidelity_tests {
                         assert_eq!(serde_json::to_value(a.npc_sprite_states).unwrap(), serde_json::to_value(b.npc_sprite_states).unwrap());
                         assert_eq!(serde_json::to_value(a.npc_states).unwrap(), serde_json::to_value(b.npc_states).unwrap());
                         assert_eq!(serde_json::to_value(a.field_text_restore).unwrap(), serde_json::to_value(b.field_text_restore).unwrap());
+                        assert_eq!(serde_json::to_value(a.npc_camera_state).unwrap(), serde_json::to_value(b.npc_camera_state).unwrap());
                     }
                 }
             }
@@ -10555,16 +10646,24 @@ mod link_stats_cry_fidelity_tests {
             if let Ok(portion) = std::env::var("FIDELITY_MENU_BG_PORTION") {
                 g.overworld.bg_transfer_portion = portion.parse().unwrap();
             }
+            let npc_ready_walk = std::env::var_os("FIDELITY_NPC_READY_WALK").is_some();
+            let npc_already_moving = npc_ready_walk && std::env::var_os("FIDELITY_NPC_ALREADY_MOVING").is_some();
             let npc_font_case = std::env::var_os("FIDELITY_NPC_FONT_CASE").is_some();
-            if npc_font_case {
+            if npc_font_case || npc_ready_walk {
+                if npc_ready_walk {
+                    let mut controlled = g.save_data.game_data.clone();
+                    controlled.player_last_stop_direction = 2;
+                    controlled.player_moving_direction = 0;
+                    g.overworld.restore_system_save_state(&controlled);
+                }
                 assert_eq!(g.overworld.state.current_map, MapId::ViridianCity);
                 let npc = &mut g.overworld.npc_states[0];
                 assert_eq!(npc.sprite_id, 4);
                 npc.x = if std::env::var_os("FIDELITY_NPC_OFFSCREEN").is_some() { start_x + 7 } else if std::env::var_os("FIDELITY_NPC_BOXED").is_some() { start_x + 2 } else { start_x - 1 };
                 npc.y = start_y - 1;
                 npc.facing = pokered_core::overworld::Direction::Down;
-                npc.walk_counter = 12;
-                npc.delay_counter = if std::env::var_os("FIDELITY_NPC_BOXED").is_some() { 27 } else { 54 };
+                npc.walk_counter = if npc_ready_walk && !npc_already_moving { 0 } else { 12 };
+                npc.delay_counter = if npc_ready_walk && !npc_already_moving {3} else if std::env::var_os("FIDELITY_NPC_BOXED").is_some() { 27 } else { 54 };
                 npc.visible = true;
                 // Match the original controlled counter12 setup and four
                 // real hardware frames that prime its OAM/LCD pipeline.
@@ -10608,8 +10707,8 @@ mod link_stats_cry_fidelity_tests {
                 }
                 records.push(serde_json::json!({"t":t,"frame":g.frame_count,"input_bits":input.raw_current(),
                     "screen":format!("{:?}",g.state.screen),"map":g.overworld.state.current_map as u8,
-                    "npc_states":if npc_font_case {Some(&g.overworld.npc_states)} else {None},
-                    "npc_sprite_states":if npc_font_case {Some(pokered_core::snapshot::OverworldSnapshot::capture(&g.overworld).npc_sprite_states)} else {None},
+                    "npc_states":if npc_font_case || npc_ready_walk {Some(&g.overworld.npc_states)} else {None},
+                    "npc_sprite_states":if npc_font_case || npc_ready_walk {Some(pokered_core::snapshot::OverworldSnapshot::capture(&g.overworld).npc_sprite_states)} else {None},
                     "field_text_restore":g.overworld.field_text_restore,
                     "x":g.overworld.state.player.x,"y":g.overworld.state.player.y,
                     "facing":format!("{:?}",g.overworld.state.player.facing),
