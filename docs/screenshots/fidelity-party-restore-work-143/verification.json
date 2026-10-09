@@ -1,0 +1,16 @@
+{
+  "base_head": "479d70fd9d69cfd2b6b56acd3de3b087f2ce2ce9",
+  "reference": "pret/pokered fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "actual_entry_cases": 5,
+  "diagnostic_original_emulator_cases": 496,
+  "rust_cases": 501,
+  "rust_tests_passed": 2,
+  "no_std_check": true,
+  "player_runtime_changed": false,
+  "remaining": "Wire shared restoration lifecycle, CPU/PPU phase, palette/raster transfer phases, input gate/debounce, NPC reload and snapshot/cache behavior; original-city short Down/A pulses still enter Bag on current runtime.",
+  "native_failure_a1": "Diagnostic generator incorrectly included ID73 past the original 72-entry sprite table. Preserved failure logs; narrowed to original valid range, regenerated all 501 cases and verified in original emulator.",
+  "files": {
+    "crates/pokered-core/src/overworld/sprite_reload_work.rs": "cb4b676103f2d8cf0eadef886a1def09979b89578d3afd722f2c2bb2e78f06fa",
+    "crates/pokered-core/tests/fixtures/sprite-reload-work-143.json": "35bf8f589531d72ae52832529579514c6b7dde88822209b324ef38c8a976f84c"
+  }
+}

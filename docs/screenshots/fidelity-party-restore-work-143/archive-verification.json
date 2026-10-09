@@ -1,0 +1,10 @@
+{
+  "paths": 870,
+  "objects": 64,
+  "source_unique_frames": 405,
+  "each_repeated_twice": true,
+  "diagnostic_work_cases": 496,
+  "actual_entry_work_cases": 5,
+  "archive_sha256": "910c602f0c7ab0435d88dc04b22e384b79aa74edf9ac6b0ab964b144755a9a47",
+  "scope": "501 Rust work-model matches: five actual captures plus 496 original-emulator controlled diagnostic work measurements. Instruction-work model, not a native runtime restoration fix. Diagnostic original routine executions do not establish ordinary gameplay. No measured elapsed duration used to predict cycles."
+}
