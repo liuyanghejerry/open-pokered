@@ -2625,7 +2625,12 @@ impl PokemonGame {
                 } else {
                     None
                 };
-                if let Some(ref audio) = self.audio {
+                if self.state.screen == GameScreen::Overworld {
+                    let previous=self.overworld.sampled_player_input();
+                    self.start_menu.begin_field_initialization(StartMenuInput {
+                        up:previous.up,down:previous.down,a:previous.a,b:previous.b,start:previous.start,
+                    });
+                } else if let Some(ref audio) = self.audio {
                     audio.play_sfx(SfxId::StartMenu);
                 }
             }
@@ -4767,7 +4772,19 @@ impl PokemonGame {
                     b: input.is_just_pressed(GbButton::B),
                     start: input.is_just_pressed(GbButton::Start),
                 };
-                match self.start_menu.update_frame(sm_input) {
+                let sampled=if self.start_menu.field_initialization_active() {
+                    if self.start_menu.field_initialization_sound_due() {
+                        if let Some(ref audio)=self.audio {audio.play_sfx(SfxId::StartMenu);}
+                    }
+                    self.start_menu.sample_field_initialization(StartMenuInput {
+                        up:input.is_held(GbButton::Up),down:input.is_held(GbButton::Down),
+                        a:input.is_held(GbButton::A),b:input.is_held(GbButton::B),start:input.is_held(GbButton::Start),
+                    })
+                } else {Some(sm_input)};
+                if sampled.is_some_and(|input|input.a || input.b || input.start) {
+                    if let Some(ref audio)=self.audio {audio.play_sfx(SfxId::PressAB);}
+                }
+                match sampled.map(|input|self.start_menu.update_frame(input)).unwrap_or(StartMenuAction::Redisplay) {
                     StartMenuAction::Close => ScreenAction::Transition(GameScreen::Overworld),
                     StartMenuAction::OpenOption => {
                         ScreenAction::Transition(GameScreen::OptionsMenu)
@@ -6555,6 +6572,7 @@ impl PokemonGame {
             "field_menu": match &self.state.screen {
                 GameScreen::StartMenu => Some(serde_json::json!({
                     "kind": "start", "cursor": self.start_menu.cursor(),
+                    "input_ready": !self.start_menu.field_initialization_active(),
                     "items": self.start_menu.items().iter().map(|item| format!("{:?}", item)).collect::<Vec<_>>(),
                 })),
                 GameScreen::Bag => Some(serde_json::json!({
@@ -9450,6 +9468,27 @@ mod link_stats_cry_fidelity_tests {
     }
 
     #[test]
+    fn field_menu_wait_discards_pulse_then_reads_held_b_and_plays_source_sounds() {
+        run_link_save_fixture(|| {
+            let mut g=fixture(Species::Bulbasaur,3,pokered_core::overworld::Direction::Down);
+            g.handle_transition(GameScreen::StartMenu);
+            let mut input=InputState::new();
+            for frame in 1..=23 {
+                input.begin_frame();
+                if frame==11 || frame==15 {input.press(GbButton::B);}
+                if frame==12 {input.release(GbButton::B);}
+                g.update(&input);
+                assert_eq!(g.state.screen,if frame<23 {GameScreen::StartMenu} else {GameScreen::Overworld},
+                    "short pulse is ignored; held B becomes new at the first menu Joypad");
+                let id=g.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.current_sfx_id;
+                if frame==19 {assert_ne!(id,SfxId::StartMenu as u8);}
+                if frame==20 {assert_eq!(id,SfxId::StartMenu as u8);}
+                if frame==23 {assert_eq!(id,SfxId::PressAB as u8);}
+            }
+        });
+    }
+
+    #[test]
     fn actual_save_menu_writes_original_direction_masks_89() {
         run_link_save_fixture(|| {
             use pokered_core::overworld::Direction;
@@ -9472,6 +9511,7 @@ mod link_stats_cry_fidelity_tests {
                 let position=(g.overworld.state.player.x,g.overworld.state.player.y);
                 g.update(&button(GbButton::Start));g.update(&idle);
                 assert_eq!(g.state.screen,GameScreen::StartMenu);
+                for _ in 0..23 {g.update(&idle);}
                 for _ in 0..7 {
                     if g.start_menu.current_item()==StartMenuItem::Save {break;}
                     g.update(&button(GbButton::Down));g.update(&idle);
@@ -10214,6 +10254,9 @@ mod link_stats_cry_fidelity_tests {
             let mut start_input=button(GbButton::Start);
             g.update(&start_input);start_input.begin_frame();g.update(&start_input);
             assert_eq!(g.state.screen,GameScreen::StartMenu);
+            // The source completes DisplayTextIDInit/DrawStartMenu before
+            // reading party-selection input; wait its first menu Joypad.
+            for _ in 0..23 {g.update(&idle);}
             for _ in 0..7 {
                 if g.start_menu.current_item()==pokered_core::start_menu::StartMenuItem::Pokemon {break;}
                 g.update(&button(GbButton::Down));g.update(&idle);
@@ -10280,16 +10323,25 @@ mod link_stats_cry_fidelity_tests {
                 for _ in 0..6 {g.update(&idle);}
                 assert_eq!(g.state.screen,GameScreen::Overworld);
             }
+            if std::env::var("FIDELITY_DUST_LOGICAL_AUDIO").is_ok() {g.audio=Some(AudioOutput::new_pcm());}
             let start_at=std::env::var("FIDELITY_DUST_START_AT").ok().map(|s|s.parse::<i32>().unwrap());
+            let menu_only=std::env::var("FIDELITY_DUST_MENU_ONLY").is_ok();
+            let menu_key=match std::env::var("FIDELITY_DUST_MENU_KEY").as_deref() {
+                Ok("a")=>GbButton::A,Ok("b")=>GbButton::B,Ok("up")=>GbButton::Up,_=>GbButton::Down,
+            };
+            let menu_down_frames=std::env::var("FIDELITY_DUST_MENU_DOWN_FRAMES").ok().map(|s|s.parse::<i32>().unwrap()).unwrap_or(1);
+            let menu_down_at=std::env::var("FIDELITY_DUST_MENU_DOWN_AT").ok().map(|s|s.parse::<i32>().unwrap());
             let start_frames=std::env::var("FIDELITY_DUST_START_FRAMES").ok().map(|s|s.parse::<i32>().unwrap()).unwrap_or(40);
             let mut input=InputState::new();let mut rows=Vec::new();
             for t in -1i32..200 {
                 if t>=0 {
                     input.begin_frame();
-                    if t==0 && !menu_return_probe {input.press(trigger);}
+                    if t==0 && !menu_return_probe && !menu_only {input.press(trigger);}
                     if t==16 {input.release(trigger);}
                     if start_at==Some(t) {input.press(GbButton::Start);}
                     if start_at.map(|v|v+start_frames)==Some(t) {input.release(GbButton::Start);}
+                    if menu_down_at==Some(t) {input.press(menu_key);}
+                    if menu_down_at.map(|v|v+menu_down_frames)==Some(t) {input.release(menu_key);}
                     g.update(&input);
                 }
                 let mut fb=FrameBuffer::new(RenderConfig::new(160,144),Rgba::WHITE);
@@ -10299,6 +10351,10 @@ mod link_stats_cry_fidelity_tests {
                     "last_stop":recorded_save.game_data.player_last_stop_direction,
                     "moving_direction":recorded_save.game_data.player_moving_direction,
                     "push_frame":g.overworld.boulder_push.map(|p|p.frame),
+                    "start_item":format!("{:?}",g.start_menu.current_item()),
+                    "start_initializing":g.start_menu.field_initialization_active(),
+                    "sfx_playing":g.audio.as_ref().map(|a|a.is_sfx_playing()),
+                    "sfx_id":g.audio.as_ref().map(|a|a.manager.lock().unwrap().sequencer.current_sfx_id),
                     "screen":format!("{:?}",g.state.screen),"x":g.overworld.state.player.x,"y":g.overworld.state.player.y,
                     "movement":format!("{:?}",g.overworld.state.player.movement_state),"walk_counter":g.overworld.state.walk_counter,
                     "dust_active":g.overworld.boulder_dust.is_active(),"dust_step":g.overworld.boulder_dust.step(),
@@ -10317,7 +10373,7 @@ mod link_stats_cry_fidelity_tests {
                     row["boulder_visible"]=serde_json::json!(g.overworld.npc_states.iter().find(|n|n.npc_index==npc).unwrap().visible);
                 }
             }
-            if !menu_return_probe {assert!(rows.iter().any(|r|r["dust_active"]==true));}
+            if !menu_return_probe && !menu_only {assert!(rows.iter().any(|r|r["dust_active"]==true));}
             std::fs::write(dir.join("frames.json"),serde_json::to_string_pretty(&rows).unwrap()).unwrap();
         });
     }
@@ -10348,7 +10404,7 @@ mod link_stats_cry_fidelity_tests {
         let idle = InputState::new();
         for _ in 0..60 { game.update(&idle); }
         game.update(&button(GbButton::Start));
-        for _ in 0..4 { game.update(&idle); }
+        for _ in 0..24 { game.update(&idle); }
         assert_eq!(game.state.screen, GameScreen::StartMenu);
         game.update(&button(GbButton::Down)); game.update(&button(GbButton::A));
         for _ in 0..4 { game.update(&idle); }

@@ -2536,6 +2536,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         self.sampled_player_input = input;
     }
 
+    pub fn sampled_player_input(&self) -> dotzuki_engine::overworld::OverworldInput {
+        self.sampled_player_input
+    }
+
     /// Restore counters and status bytes that live outside the event bitset.
     pub fn restore_system_save_state(&mut self, data: &crate::save::game_data::GameData) {
         self.player_last_stop_direction = data.player_last_stop_direction;

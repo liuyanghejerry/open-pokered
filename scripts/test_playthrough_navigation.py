@@ -112,9 +112,9 @@ class NavigationRegression(unittest.TestCase):
 
     def test_slope_brakes_idle_frames_and_respects_uphill_bike_speed(self):
         state = {'map_name': 'Route17', 'player_transport': 'Biking'}
-        self.assertEqual(nav.movement_frames(state, 'down'), 4)
-        self.assertEqual(nav.movement_frames(state, 'left'), 8)
-        self.assertEqual(nav.movement_buttons(state, 'left', 8, 12), ['left']*8 + ['b']*4)
+        self.assertEqual(nav.movement_frames(state, 'down'), 8)
+        self.assertEqual(nav.movement_frames(state, 'left'), 16)
+        self.assertEqual(nav.movement_buttons(state, 'left', 16, 20), ['left']*16 + ['b']*4)
         game = nav.Game.__new__(nav.Game)
         game.smart_moves = True
         game.st = lambda: {**state, 'screen': 'overworld', 'script_running': False}
@@ -134,11 +134,11 @@ class NavigationRegression(unittest.TestCase):
         def drive(buttons, frames):
             holds.append(len(buttons))
             dx, dy = nav.DELTA[buttons[0]]
-            state['player_x'] += dx * (len(buttons)//4)
-            state['player_y'] += dy * (len(buttons)//4)
+            state['player_x'] += dx * (len(buttons)//8)
+            state['player_y'] += dy * (len(buttons)//8)
         game.d = SimpleNamespace(drive=drive, step=lambda _: None)
         game.nav_to_map(15, 12, 'Route16', tries=2, avoid_grass=False)
-        self.assertEqual(holds, [4])
+        self.assertEqual(holds, [8])
 
     def test_cross_map_planner_searches_alternative_goals_in_one_pass(self):
         goals = {('PalletTown', 10, 10), ('PalletTown', 10, 12)}

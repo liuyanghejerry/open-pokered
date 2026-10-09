@@ -88,6 +88,7 @@ pub struct StartMenuState {
     /// with the "NNN/500" steps + "BALL×× NN" info box in the top-left.
     /// None = not in the Safari Zone.
     pub safari_info: Option<SafariZoneInfo>,
+    field_initialization: Option<(u8, StartMenuInput)>,
 }
 
 /// The Safari Zone START-menu info box contents.
@@ -109,6 +110,7 @@ impl StartMenuState {
             is_link_connected,
             saved_cursor: 0,
             safari_info: None,
+            field_initialization: None,
         }
     }
 
@@ -137,10 +139,44 @@ impl StartMenuState {
     }
 
     pub fn open(&mut self, has_pokedex: bool, has_pokemon: bool, is_link_connected: bool) {
+        self.field_initialization = None;
         self.has_pokedex = has_pokedex;
         self.is_link_connected = is_link_connected;
         self.items = Self::build_items(has_pokedex, has_pokemon, is_link_connected);
         self.cursor = self.saved_cursor.min(self.items.len().saturating_sub(1));
+    }
+
+    /// DisplayTextIDInit's transfers precede DrawStartMenu and its first
+    /// Joypad poll. Only field entry owns this wait; submenu returns do not.
+    pub fn begin_field_initialization(&mut self, previous: StartMenuInput) {
+        self.field_initialization = Some((23, previous));
+    }
+
+    pub fn field_initialization_active(&self) -> bool {
+        self.field_initialization.is_some()
+    }
+
+    /// START sound occurs at DrawStartMenu, three frames before its Joypad.
+    pub fn field_initialization_sound_due(&self) -> bool {
+        self.field_initialization.is_some_and(|(remaining, _)| remaining == 4)
+    }
+
+    /// Ignored pulses are discarded. A button held across initialization
+    /// is compared with the preceding FIELD Joypad sample, not UI frames.
+    pub fn sample_field_initialization(&mut self, held: StartMenuInput) -> Option<StartMenuInput> {
+        let (remaining, previous) = self.field_initialization?;
+        if remaining > 1 {
+            self.field_initialization = Some((remaining - 1, previous));
+            return None;
+        }
+        self.field_initialization = None;
+        Some(StartMenuInput {
+            up: held.up && !previous.up,
+            down: held.down && !previous.down,
+            a: held.a && !previous.a,
+            b: held.b && !previous.b,
+            start: held.start && !previous.start,
+        })
     }
 
     pub fn update_frame(&mut self, input: StartMenuInput) -> StartMenuAction {
@@ -278,5 +314,39 @@ mod safari_info_tests {
         let info = m.safari_info.unwrap();
         assert_eq!(info.steps, 427);
         assert_eq!(info.balls, 17);
+    }
+}
+
+#[cfg(test)]
+mod field_initialization_tests {
+    use super::*;
+    #[test]
+    fn initialization_discards_short_pulses_but_reads_new_held_keys_at_first_joypad() {
+        let opening=StartMenuInput {start:true,..StartMenuInput::none()};
+        for held_down in [false,true] {
+            let mut menu=StartMenuState::new(false,true,false);
+            menu.begin_field_initialization(opening);
+            for frame in 1..=22 {
+                assert_eq!(menu.field_initialization_sound_due(),frame==20);
+                let input=StartMenuInput {start:true,down:frame>=11 && (held_down || frame==11),..StartMenuInput::none()};
+                assert!(menu.sample_field_initialization(input).is_none());
+                assert_eq!(menu.current_item(),StartMenuItem::Pokemon);
+            }
+            let first=menu.sample_field_initialization(StartMenuInput {start:true,down:held_down,..StartMenuInput::none()}).unwrap();
+            assert!(!first.start,"opening START is still held, not a new close");
+            menu.update_frame(first);
+            assert_eq!(menu.current_item(),if held_down {StartMenuItem::Item} else {StartMenuItem::Pokemon});
+        }
+    }
+    #[test]
+    fn opening_held_direction_is_not_replayed_and_submenu_return_has_no_field_wait() {
+        let opening=StartMenuInput {start:true,down:true,..StartMenuInput::none()};
+        let mut menu=StartMenuState::new(false,true,false);
+        menu.begin_field_initialization(opening);
+        for _ in 0..22 {assert!(menu.sample_field_initialization(opening).is_none());}
+        assert_eq!(menu.sample_field_initialization(opening),Some(StartMenuInput::none()));
+        menu.begin_field_initialization(opening);
+        menu.open(false,true,false);
+        assert!(!menu.field_initialization_active());
     }
 }
