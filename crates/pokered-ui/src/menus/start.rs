@@ -7,9 +7,10 @@ use pokered_data::ui_layout::schema::{Justify, SizeMode, StartDefaultLayout};
 use crate::engine::{InkColor, Painter, Rgba, TilePos, TileRect, Ui};
 
 pub fn draw<P: Painter>(state: &StartMenuState, player_name: &str, layout: &StartDefaultLayout, ui: &mut Ui<P>, lang: Lang) {
+    let Some(visible_portions) = state.visible_text_portions() else {return;};
     // PrintSafariZoneSteps (player_state.asm:219-255): inside the Safari Zone
     // a small box at (0,0) shows "NNN/500" and "BALL×× NN" before the menu.
-    if let Some(info) = state.safari_info {
+    if let Some(info) = state.safari_info.filter(|_| visible_portions & 1 != 0) {
         // Interior 7×3 plus its borders (player_state.asm:225): the labels
         // land at screen (1,1) and (1,3). The earlier 7×4 TOTAL box had only
         // two interior rows, pushing the ball row onto the bottom border.
@@ -64,11 +65,15 @@ pub fn draw<P: Painter>(state: &StartMenuState, player_name: &str, layout: &Star
     ui.text_box(rect, flex.color, true, |frame| {
         for (i, label) in localized.iter().enumerate() {
             let y = start_y + i as u32 * (1 + flex.gap);
-            frame.label(1, y, label, InkColor::Black);
+            if visible_portions & (1 << ((rect.ty + 1 + y) / 6).min(2)) != 0 {
+                frame.label(1, y, label, InkColor::Black);
+            }
         }
         if let Some(cursor) = &flex.cursor {
             let cur_y = start_y + state.cursor() as u32 * (1 + flex.gap);
-            frame.cursor_glyph_at(0, cur_y, cursor.glyph, cursor.color);
+            if visible_portions & (1 << ((rect.ty + 1 + cur_y) / 6).min(2)) != 0 {
+                frame.cursor_glyph_at(0, cur_y, cursor.glyph, cursor.color);
+            }
         }
     });
 }

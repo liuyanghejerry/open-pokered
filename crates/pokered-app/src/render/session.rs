@@ -574,6 +574,8 @@ struct OverworldVisualKey {
     player_movement: u8,
     player_transport: u8,
     walk_counter: u8,
+    player_pose: Option<(usize, bool)>,
+    player_camera: Option<(u16, u16, i16, i16)>,
     bump_counter: u8,
     tile_kind: u8,
     water_shift: i8,
@@ -663,6 +665,8 @@ impl OverworldVisualKey {
             player_movement: screen.state.player.movement_state as u8,
             player_transport: screen.state.player.transport as u8,
             walk_counter: screen.state.walk_counter,
+            player_pose: screen.ordinary_player_sprite_frame(),
+            player_camera: screen.ordinary_player_camera().map(|v| (v.x,v.y,v.sub_x,v.sub_y)),
             bump_counter: screen.bump_anim_counter,
             tile_kind: screen.tile_anim.kind() as u8,
             water_shift: screen.tile_anim.water_shift(),
@@ -680,6 +684,7 @@ impl OverworldVisualKey {
 #[derive(Clone, Copy, PartialEq, Eq)]
 struct StartMenuVisualKey {
     cursor: usize,
+    presentation_stage: u8,
     item_count: usize,
     items_hash: u32,
     player_name_hash: u32,
@@ -700,6 +705,7 @@ impl StartMenuVisualKey {
         }
         Some(Self {
             cursor: game.start_menu.cursor(),
+            presentation_stage: game.start_menu.field_presentation_stage(),
             item_count: game.start_menu.item_count(),
             items_hash,
             player_name_hash,
@@ -2617,6 +2623,63 @@ mod session_tests {
     use dotzuki_engine::render_config::RenderConfig;
     use pokered_core::options_menu::OptionsRow;
     use pokered_renderer::Rgba;
+
+    #[test]
+    fn walking_and_bicycle_retained_frames_match_full_draw_through_start_transfers() {
+        use dotzuki_app::{GbButton, InputState};
+        use dotzuki_engine::overworld::types::TransportMode;
+        use pokered_core::snapshot::OverworldSnapshot;
+        use pokered_data::maps::MapId;
+
+        for language in [Lang::En, Lang::Zh] {
+            for bike in [false, true] {
+                for open_menu in [false, true] {
+                    let mut game = PokemonGame::new(GameVersion::Red);
+                    game.audio = None;
+                    game.state.config.language = language;
+                    game.state.screen = GameScreen::Overworld;
+                    game.overworld.warp_to_map(MapId::Route1, 20, 30);
+                    let idle = InputState::new();
+                    for _ in 0..120 { game.update(&idle); }
+                    game.overworld.state.player.transport = if bike { TransportMode::Biking } else { TransportMode::Walking };
+                    game.overworld.state.encounter_cooldown = 255;
+                    let mut snapshot = OverworldSnapshot::capture(&game.overworld);
+                    snapshot.field_loop_wait = if bike { 1 } else { 0 };
+                    snapshot.player_last_stop_direction = 2;
+                    snapshot.player_moving_direction = 0;
+                    snapshot.check_player_turn = true;
+                    snapshot.bg_transfer_portion = if bike { 0 } else { 2 };
+                    snapshot.restore_into(&mut game.overworld);
+                    let mut session = RenderSession::new();
+                    let mut retained = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+                    let mut full = retained.clone();
+                    let mut scroll = |_: &mut [u8], _: usize, _: usize, _: i32, _: i32, _: u8| {};
+                    let mut input = InputState::new();
+                    let mut reused = 0;
+                    for t in 0..100 {
+                        input.begin_frame();
+                        if t == 0 { input.press(GbButton::Down); }
+                        if t == if bike { 16 } else { 32 } { input.release(GbButton::Down); }
+                        if open_menu && t == 5 { input.press(GbButton::Start); }
+                        if open_menu && t == 45 { input.release(GbButton::Start); }
+                        game.update(&input);
+                        if game.state.screen == GameScreen::Overworld {
+                            assert!(OverworldVisualKey::new(&game).is_some(), "exercise the overworld cache");
+                        }
+                        reused += usize::from(matches!(session.render(&mut game, &mut retained, &mut scroll), FrameUpdate::Reuse));
+                        game.draw(&mut full);
+                        for y in 0..144 { for x in 0..160 {
+                            assert_eq!(retained.get_pixel(x, y), full.get_pixel(x, y),
+                                "language={language:?} bike={bike} menu={open_menu} t={t} x={x} y={y}");
+                        } }
+                        assert_eq!(retained.display_palette(), full.display_palette());
+                    }
+                    assert!(reused > 0, "exercise actual frame reuse");
+                    assert_eq!(game.state.screen, if open_menu { GameScreen::StartMenu } else { GameScreen::Overworld });
+                }
+            }
+        }
+    }
 
     #[test]
     fn slots_retained_cursor_frames_match_full_draw_for_every_bet() {

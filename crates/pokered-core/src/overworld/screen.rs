@@ -748,6 +748,7 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     pub(crate) field_loop_wait: u8,
     pub(crate) player_sprite_state: presentation::PlayerSpriteState,
     pub(crate) player_camera_state: Option<presentation::PlayerCameraState>,
+    pub bg_transfer_portion: u8,
     /// First AdvancePlayerSprite redraw finishes before the second bike advance.
     pub(crate) bike_redraw_advance: bool,
     /// NoDirection arms the original turn-in-place check until it is consumed.
@@ -1192,6 +1193,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             field_loop_wait: 0,
             player_sprite_state: presentation::PlayerSpriteState::default(),
             player_camera_state: None,
+            bg_transfer_portion: 0,
             bike_redraw_advance: false,
             check_player_turn: false,
             prev_movement_state: MovementState::Idle,
@@ -3209,5 +3211,11 @@ impl<G: GameData> OverworldScreen<G> {
         if self.player_sprite_state.initialized {
             self.player_sprite_state.hardware_frame(self.state.player.facing);
         }
+    }
+}
+
+impl<G: GameData> OverworldScreen<G> {
+    pub fn tick_ui_background_transfer(&mut self) {
+        self.bg_transfer_portion = (self.bg_transfer_portion + 1) % 3;
     }
 }

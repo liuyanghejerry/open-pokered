@@ -2628,9 +2628,9 @@ impl PokemonGame {
                 if self.state.screen == GameScreen::Overworld {
                     let previous=self.overworld.sampled_player_input();
                     self.overworld.prepare_field_textbox_sprite();
-                    self.start_menu.begin_field_initialization(StartMenuInput {
+                    self.start_menu.begin_field_initialization_with_portion(StartMenuInput {
                         up:previous.up,down:previous.down,a:previous.a,b:previous.b,start:previous.start,
-                    });
+                    }, self.overworld.bg_transfer_portion);
                 } else {
                     let previous = self.overworld.sampled_player_input();
                     self.start_menu.begin_redisplay_initialization(StartMenuInput {
@@ -3358,6 +3358,11 @@ impl PokemonGame {
         if self.state.screen != GameScreen::Overworld {
             self.overworld.tick_boulder_presentation_during_ui();
             self.overworld.tick_player_presentation_during_ui();
+            // Window transfers are suspended during DisplayTextIDInit's
+            // font copy; other UI frames keep cycling the retained third.
+            if self.state.screen != GameScreen::StartMenu || self.start_menu.field_presentation_stage() >= 19 {
+                self.overworld.tick_ui_background_transfer();
+            }
         }
         if let Some(frame) = self.pc_stats_return_frame {
             self.pc_stats_return_frame = (frame < 8).then_some(frame + 1);
@@ -10434,9 +10439,14 @@ mod link_stats_cry_fidelity_tests {
             }};
             g.overworld.set_rng_seed(0);
             for _ in 0..120 { g.update(&idle); }
+            if let Ok(portion) = std::env::var("FIDELITY_MENU_BG_PORTION") {
+                g.overworld.bg_transfer_portion = portion.parse().unwrap();
+            }
             let duration=std::env::var("FIDELITY_MOVEMENT_HOLD").unwrap_or_else(|_|"16".into()).parse::<i32>().unwrap();
             let start_hold=std::env::var("FIDELITY_MOVEMENT_START_HOLD").ok().map(|s|s.parse::<i32>().unwrap());
             let mut input = InputState::new();
+            let mut retained_session = crate::render::session::RenderSession::new();
+            let mut retained_fb = FrameBuffer::new(RenderConfig::new(160,144),Rgba::WHITE);
             let mut records = Vec::new();
             for t in -1i32..100 {
                 if t >= 0 {
@@ -10456,7 +10466,13 @@ mod link_stats_cry_fidelity_tests {
                 }
                 let saved=g.build_save_data();
                 let mut fb = FrameBuffer::new(RenderConfig::new(160,144), Rgba::WHITE);
-                g.draw(&mut fb); fb.save_png(&dir.join(format!("frame-{:04}.png", t+1))).unwrap();
+                if std::env::var_os("FIDELITY_RETAINED_CAPTURE").is_some() {
+                    retained_session.render(&mut g, &mut retained_fb,
+                        &mut |_,_,_,_,_,_| {});
+                    retained_fb.save_png(&dir.join(format!("frame-{:04}.png",t+1))).unwrap();
+                } else {
+                    g.draw(&mut fb); fb.save_png(&dir.join(format!("frame-{:04}.png", t+1))).unwrap();
+                }
                 records.push(serde_json::json!({"t":t,"frame":g.frame_count,"input_bits":input.raw_current(),
                     "screen":format!("{:?}",g.state.screen),"map":g.overworld.state.current_map as u8,
                     "x":g.overworld.state.player.x,"y":g.overworld.state.player.y,

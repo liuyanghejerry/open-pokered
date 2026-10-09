@@ -90,6 +90,9 @@ pub struct StartMenuState {
     /// None = not in the Safari Zone.
     pub safari_info: Option<SafariZoneInfo>,
     field_initialization: Option<(u8, StartMenuInput)>,
+    /// Field window/font transfers; direction delays keep existing pixels.
+    field_presentation_elapsed: Option<u8>,
+    first_transfer_portion: u8,
 }
 
 /// The Safari Zone START-menu info box contents.
@@ -113,6 +116,8 @@ impl StartMenuState {
             saved_cursor: 0,
             safari_info: None,
             field_initialization: None,
+            field_presentation_elapsed: None,
+            first_transfer_portion: 0,
         }
     }
 
@@ -140,6 +145,7 @@ impl StartMenuState {
 
     pub fn open(&mut self, has_pokedex: bool, has_pokemon: bool, is_link_connected: bool) {
         self.field_initialization = None;
+        self.field_presentation_elapsed = None;
         self.has_pokedex = has_pokedex;
         self.has_pokemon = has_pokemon;
         self.is_link_connected = is_link_connected;
@@ -151,6 +157,15 @@ impl StartMenuState {
     /// Joypad poll. Only field entry owns this wait; submenu returns do not.
     pub fn begin_field_initialization(&mut self, previous: StartMenuInput) {
         self.field_initialization = Some((23, previous));
+        self.field_presentation_elapsed = Some(0);
+        self.first_transfer_portion = 0;
+    }
+
+    /// AutoBgMapTransfer retains its current third while disabled in the
+    /// field/font loader. Copy order depends on UI history, not transport.
+    pub fn begin_field_initialization_with_portion(&mut self, previous: StartMenuInput, portion: u8) {
+        self.begin_field_initialization(previous);
+        self.first_transfer_portion = portion % 3;
     }
 
     /// RedisplayStartMenu redraws without DisplayTextIDInit or START SFX.
@@ -166,6 +181,33 @@ impl StartMenuState {
         self.field_initialization = Some((3, previous));
     }
 
+    /// CopyScreenTileBufferToVRAM reveals the window after three waits plus
+    /// the LCD frame. Font loading finishes at 20; AutoBgMapTransfer then
+    /// exposes six tile rows per vblank before the first Joypad at 23.
+    pub fn field_presentation_stage(&self) -> u8 {
+        self.field_presentation_elapsed.unwrap_or(23)
+    }
+
+    /// None retains the map; zero draws the empty border; other values are
+    /// a bitmask of the three six-row portions containing transferred text.
+    pub fn visible_text_portions(&self) -> Option<u8> {
+        // Safari prints its extra window before DisplayTextIDInit. Preserve
+        // that path until its distinct window-copy sequence is captured.
+        if self.safari_info.is_some() { return Some(7); }
+        let transferred = match self.field_presentation_stage() {
+            0..=3 => return None,
+            4..=20 => 0,
+            21 => 1,
+            22 => 2,
+            _ => 3,
+        };
+        let mut mask = 0;
+        for step in 0..transferred {
+            mask |= 1 << ((self.first_transfer_portion + step) % 3);
+        }
+        Some(mask)
+    }
+
     pub fn field_initialization_active(&self) -> bool {
         self.field_initialization.is_some()
     }
@@ -179,11 +221,15 @@ impl StartMenuState {
     /// is compared with the preceding FIELD Joypad sample, not UI frames.
     pub fn sample_field_initialization(&mut self, held: StartMenuInput) -> Option<StartMenuInput> {
         let (remaining, previous) = self.field_initialization?;
+        if let Some(elapsed) = &mut self.field_presentation_elapsed {
+            *elapsed = elapsed.saturating_add(1);
+        }
         if remaining > 1 {
             self.field_initialization = Some((remaining - 1, previous));
             return None;
         }
         self.field_initialization = None;
+        self.field_presentation_elapsed = None;
         Some(StartMenuInput {
             up: held.up && !previous.up,
             down: held.down && !previous.down,
@@ -339,6 +385,33 @@ mod safari_info_tests {
 #[cfg(test)]
 mod field_initialization_tests {
     use super::*;
+    #[test]
+    fn field_window_transfer_keeps_source_six_row_order_without_hiding_direction_delays() {
+        // Original LCD captures: empty border at +4, first text at +21,
+        // and the following two vblanks complete the other six-row portions.
+        for (portion, masks) in [(0, [1, 3, 7]), (1, [2, 6, 7]), (2, [4, 5, 7])] {
+            let mut menu = StartMenuState::new(false, true, false);
+            menu.begin_field_initialization_with_portion(StartMenuInput::none(), portion);
+            for elapsed in 0..=23 {
+                let expected = match elapsed {
+                    0..=3 => None,
+                    4..=20 => Some(0),
+                    _ => Some(masks[elapsed - 21]),
+                };
+                assert_eq!(menu.visible_text_portions(), expected, "portion={portion} elapsed={elapsed}");
+                if elapsed < 23 { menu.sample_field_initialization(StartMenuInput::none()); }
+            }
+            for redisplay in [false, true] {
+                if redisplay { menu.begin_redisplay_initialization(StartMenuInput::none()); }
+                else { menu.begin_direction_delay(StartMenuInput::none()); }
+                for _ in 0..3 {
+                    assert_eq!(menu.visible_text_portions(), Some(7));
+                    menu.sample_field_initialization(StartMenuInput::none());
+                }
+            }
+        }
+    }
+
     #[test]
     fn initialization_discards_short_pulses_but_reads_new_held_keys_at_first_joypad() {
         let opening=StartMenuInput {start:true,..StartMenuInput::none()};
