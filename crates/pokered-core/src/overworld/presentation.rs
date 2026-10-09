@@ -1139,7 +1139,14 @@ pub struct FieldTextRestoreState {
 pub struct SubmenuReloadWork {
     pub cpu_cycles: u32,
     pub cpu_phase: u32,
+    /// GBPalWhiteOut changes palettes partway through the initiating frame.
+    /// The frontend currently supplies the measured city boundary; shared
+    /// PPU phase must eventually supply each scene's boundary instead.
+    #[serde(default = "default_party_white_start_line")]
+    pub white_start_line: u8,
 }
+
+fn default_party_white_start_line() -> u8 { 16 }
 
 impl SubmenuReloadWork {
     pub const CYCLES_PER_FRAME: u32 = 70224;
@@ -1184,7 +1191,7 @@ mod submenu_reload_work_tests {
         ] {
             let mut restore = FieldTextRestoreState {
                 elapsed: 0, npc_transfer_frames: 0,
-                submenu_reload: Some(SubmenuReloadWork { cpu_cycles: cycles, cpu_phase: phase }),
+                submenu_reload: Some(SubmenuReloadWork { cpu_cycles: cycles, cpu_phase: phase, white_start_line: 16 }),
             };
             for elapsed in 0..=visible_frame {
                 restore.elapsed = elapsed;

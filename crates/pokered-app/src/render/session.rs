@@ -704,6 +704,7 @@ struct StartMenuVisualKey {
     cursor: usize,
     text_portions: Option<u8>,
     submenu_white: bool,
+    submenu_prefix: Option<u8>,
     item_count: usize,
     items_hash: u32,
     player_name_hash: u32,
@@ -727,6 +728,9 @@ impl StartMenuVisualKey {
             text_portions: if game.overworld.field_text_window_visible() { game.start_menu.visible_text_portions() } else { None },
             submenu_white: game.overworld.field_text_restore.as_ref()
                 .is_some_and(|restore| restore.submenu_reload.is_some()),
+            submenu_prefix: game.overworld.field_text_restore.as_ref().and_then(|restore|
+                (restore.elapsed == 0).then_some(restore.submenu_reload.as_ref())
+                    .flatten().map(|work| work.white_start_line)),
             item_count: game.start_menu.item_count(),
             items_hash,
             player_name_hash,

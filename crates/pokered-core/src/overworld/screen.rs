@@ -3302,7 +3302,7 @@ impl<G: GameData> OverworldScreen<G> {
 
     /// Full restoration for a party menu opened from START. `cpu_phase`
     /// belongs to the LCD-off work clock, not a map-specific frame delay.
-    pub fn begin_party_menu_restore(&mut self, cpu_phase: u32) -> bool {
+    pub fn begin_party_menu_restore(&mut self, cpu_phase: u32, white_start_line: u8) -> bool {
         let count = self.npc_states.len();
         if count > 15 { return false; }
         let mut pictures = [0u8; 16];
@@ -3318,6 +3318,7 @@ impl<G: GameData> OverworldScreen<G> {
             elapsed: 0, npc_transfer_frames: 0,
             submenu_reload: Some(presentation::SubmenuReloadWork {
                 cpu_cycles, cpu_phase: cpu_phase % presentation::SubmenuReloadWork::CYCLES_PER_FRAME,
+                white_start_line: white_start_line.min(144),
             }),
         });
         true

@@ -2637,7 +2637,7 @@ impl PokemonGame {
                         // while sprites/font/background are restored. The
                         // global CPU/PPU carry is not tracked yet: a zero work
                         // phase remains provisional and is audited separately.
-                        self.overworld.begin_party_menu_restore(0);
+                        self.overworld.begin_party_menu_restore(0, 16);
                     }
                     let previous = self.overworld.sampled_player_input();
                     self.start_menu.begin_redisplay_initialization(StartMenuInput {
@@ -7834,11 +7834,21 @@ impl PokemonGame {
                 );
             }
             GameScreen::StartMenu => {
-                if self.overworld.field_text_restore.as_ref()
-                    .is_some_and(|restore| restore.submenu_reload.is_some()) {
-                    // GBPalWhiteOut persists throughout map/font reload.
-                    // The initiating scanline still needs the shared PPU phase.
-                    frame_buffer.clear(Rgba::WHITE);
+                if let Some(restore) = self.overworld.field_text_restore.as_ref()
+                    .filter(|restore| restore.submenu_reload.is_some()) {
+                    if restore.elapsed == 0 {
+                        let first_white_line = restore.submenu_reload.as_ref().unwrap().white_start_line;
+                        // Palette writes happen during the current frame. Party
+                        // sprites have already advanced, so render this frame's
+                        // party pose rather than freezing the previous image.
+                        draw_party_screen(&self.party_screen, self.resources.as_mut(),
+                            self.frame_count, frame_buffer, self.state.config.language);
+                        for y in u32::from(first_white_line)..144 {
+                            for x in 0..160 { frame_buffer.set_pixel(x, y, Rgba::WHITE); }
+                        }
+                    } else {
+                        frame_buffer.clear(Rgba::WHITE);
+                    }
                     return;
                 }
                 draw_overworld(
@@ -9957,6 +9967,15 @@ mod link_stats_cry_fidelity_tests {
                             "cached restore: held_down={held_down} t={t} x={x} y={y}");
                     }}
                     assert_eq!(retained.display_palette(), full.display_palette());
+                    if t <= 1 {
+                        let mut prefix_visible = false;
+                        for y in 0..144 { for x in 0..160 {
+                            let pixel = full.get_pixel(x,y).unwrap();
+                            if t == 0 && y < 16 { prefix_visible |= pixel != Rgba::WHITE; }
+                            else { assert_eq!(pixel, Rgba::WHITE, "palette boundary t={t} x={x} y={y}"); }
+                        }}
+                        if t == 0 { assert!(prefix_visible, "retain initiating frame's party prefix"); }
+                    }
                     assert_ne!(g.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.current_sfx_id,
                         SfxId::StartMenu as u8, "return must not replay START sound: t={t}");
                 }

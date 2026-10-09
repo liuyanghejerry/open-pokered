@@ -1,0 +1,17 @@
+{
+  "committed_base": "0ce1bc8fd9d86646beef025b63df4f197d9e8302",
+  "sources": {
+    "crates/pokered-core/src/overworld/presentation.rs": "46b142440f2dbc02ff05d75536ec62a2e1b60a0274c3893ea502147699128f6f",
+    "crates/pokered-core/src/overworld/screen.rs": "9b555d54f54b7f81c327d9968c1af812345c6ccfa1be45b7dc6ce32a038e4838",
+    "crates/pokered-core/src/overworld/update.rs": "d8851b9ba9944b1f85f8a4d7e0e0f9ed416a527764eb983a0604434ca76a9a00",
+    "crates/pokered-core/src/overworld/field_moves.rs": "162384478610831fc7f2e751aadfa6cc2a27bb789f61e9d0651e4556ffc3cba1",
+    "crates/pokered-core/src/overworld/sprite_reload_work.rs": "cb4b676103f2d8cf0eadef886a1def09979b89578d3afd722f2c2bb2e78f06fa",
+    "crates/pokered-core/src/overworld/mod.rs": "7fddcc4bd8dc93ad43b7f356a114becb76469417dfa40e31edcb759313366499",
+    "crates/pokered-core/src/start_menu.rs": "ab213e322753ef89c0d44adf00433b0212e05c2e989f44ee8c62a78f6ad44786",
+    "crates/pokered-app/src/game.rs": "c214c20d198e3963bf664d01ee3201bb06fbb3904e90d848080566d95f4c2d9d",
+    "crates/pokered-app/src/render/overworld.rs": "2522445134302ed787c5624784115b690fe36c883c9f0bd4583ab0cf2ded7c94",
+    "crates/pokered-app/src/render/session.rs": "9233b9adbe2a5ff1501b9c4c28051ced36b1d0c5d937228b3a90c8ce1b70e47a"
+  },
+  "elf_sha256": "53dbfbd94f5f50cac623516c42ca16373a80e7a77ca9fd2f14e331e30c44b7e4",
+  "performance_pass": 31
+}
