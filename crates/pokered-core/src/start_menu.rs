@@ -159,6 +159,13 @@ impl StartMenuState {
         self.field_initialization = Some((3, previous));
     }
 
+    /// MenuJoypad invokes Delay3 after HandleMenuInput accepts a direction.
+    /// Compare the next poll with that complete sample, ignoring short pulses
+    /// inside the delay and suppressing a direction that stayed held.
+    pub fn begin_direction_delay(&mut self, previous: StartMenuInput) {
+        self.field_initialization = Some((3, previous));
+    }
+
     pub fn field_initialization_active(&self) -> bool {
         self.field_initialization.is_some()
     }

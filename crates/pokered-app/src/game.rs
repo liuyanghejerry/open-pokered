@@ -4788,8 +4788,19 @@ impl PokemonGame {
                 if sampled.is_some_and(|input|input.a || input.b) {
                     if let Some(ref audio)=self.audio {audio.play_sfx(SfxId::PressAB);}
                 }
-                match sampled.map(|input|self.start_menu.update_frame(input)).unwrap_or(StartMenuAction::Redisplay) {
-                    StartMenuAction::Redisplay if sampled.is_some_and(|i| i.a)
+                let action = sampled.map(|input| self.start_menu.update_frame(input))
+                    .unwrap_or(StartMenuAction::Redisplay);
+                if sampled.is_some_and(|i| i.up || i.down) {
+                    self.start_menu.begin_direction_delay(StartMenuInput {
+                        up: input.is_held(GbButton::Up),
+                        down: input.is_held(GbButton::Down),
+                        a: input.is_held(GbButton::A),
+                        b: input.is_held(GbButton::B),
+                        start: input.is_held(GbButton::Start),
+                    });
+                }
+                match action {
+                    StartMenuAction::Redisplay if sampled.is_some_and(|i| i.a && !i.up && !i.down)
                         && self.start_menu.current_item() == pokered_core::start_menu::StartMenuItem::Pokemon
                         && self.save_data.party.count() == 0 => {
                         // StartMenu_Pokemon jumps directly to RedisplayStartMenu
@@ -9503,11 +9514,11 @@ mod link_stats_cry_fidelity_tests {
             g.update(&button(GbButton::Down));
             let mut combined = button(GbButton::Down); combined.press(GbButton::B);
             // Release the preceding Down so both buttons are fresh.
-            g.update(&idle); g.update(&combined);
+            for _ in 0..3 { g.update(&idle); } g.update(&combined);
             assert_eq!(g.state.screen, GameScreen::StartMenu);
             assert_eq!(g.start_menu.current_item(), pokered_core::start_menu::StartMenuItem::Item);
             assert_eq!(g.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.current_sfx_id, SfxId::PressAB as u8);
-            g.update(&idle);
+            for _ in 0..3 { g.update(&idle); }
             g.audio = Some(AudioOutput::new_pcm());
             let previous = g.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.current_sfx_id;
             g.update(&button(GbButton::Start));
@@ -9525,6 +9536,7 @@ mod link_stats_cry_fidelity_tests {
             g.handle_transition(GameScreen::StartMenu);
             for _ in 0..23 { g.update(&idle); }
             g.update(&button(GbButton::Down));
+            for _ in 0..3 { g.update(&idle); }
             assert_eq!(g.start_menu.current_item(), pokered_core::start_menu::StartMenuItem::Pokemon);
             let mut input = button(GbButton::A);
             g.update(&input);
@@ -9547,6 +9559,7 @@ mod link_stats_cry_fidelity_tests {
                 g.handle_transition(GameScreen::StartMenu);
                 for _ in 0..23 { g.update(&idle); }
                 g.update(&button(GbButton::Down));
+                for _ in 0..3 { g.update(&idle); }
                 assert_eq!(g.start_menu.current_item(), StartMenuItem::Pokemon);
                 g.update(&button(GbButton::A));
                 assert_eq!(g.state.screen, GameScreen::PartyScreen);
@@ -9601,6 +9614,7 @@ mod link_stats_cry_fidelity_tests {
             g.handle_transition(GameScreen::StartMenu);
             for _ in 0..23 { g.update(&idle); }
             g.update(&button(GbButton::Down));
+            for _ in 0..3 { g.update(&idle); }
             assert_eq!(g.start_menu.current_item(), StartMenuItem::Pokemon);
             g.update(&button(GbButton::A));
             assert_eq!(g.state.screen, GameScreen::PartyScreen);
@@ -9672,7 +9686,8 @@ mod link_stats_cry_fidelity_tests {
             let idle = InputState::new();
             g.handle_transition(GameScreen::StartMenu);
             for _ in 0..23 { g.update(&idle); }
-            g.update(&button(GbButton::Down)); g.update(&idle);
+            g.update(&button(GbButton::Down));
+            for _ in 0..3 { g.update(&idle); }
             let mut input = InputState::new(); let mut rows = Vec::new();
             for t in -1i32..8 {
                 if t >= 0 {
@@ -9717,7 +9732,8 @@ mod link_stats_cry_fidelity_tests {
                 for _ in 0..23 {g.update(&idle);}
                 for _ in 0..7 {
                     if g.start_menu.current_item()==StartMenuItem::Save {break;}
-                    g.update(&button(GbButton::Down));g.update(&idle);
+                    g.update(&button(GbButton::Down));
+                    for _ in 0..3 { g.update(&idle); }
                 }
                 assert_eq!(g.start_menu.current_item(),StartMenuItem::Save);
                 g.update(&button(GbButton::A));g.update(&idle);
@@ -10581,6 +10597,82 @@ mod link_stats_cry_fidelity_tests {
         });
     }
 
+    #[test]
+    fn menu_direction_delay_matches_original_short_and_held_pulses_108() {
+        run_link_save_fixture(|| {
+            // Original-ROM repeated probes: Down at 120, Up at 121/122 is
+            // missed; 123/124/125 is accepted; Up held from 121 is read at 123.
+            for (at, duration, first_up) in [
+                (1, 1, None), (2, 1, None), (3, 1, Some(3)),
+                (4, 1, Some(4)), (5, 1, Some(5)), (1, 8, Some(3)),
+            ] {
+                let mut g = fixture(Species::Bulbasaur, 3, pokered_core::overworld::Direction::Down);
+                let idle = InputState::new();
+                g.handle_transition(GameScreen::StartMenu);
+                for _ in 0..23 { g.update(&idle); }
+                g.update(&button(GbButton::Down));
+                for _ in 0..27 { g.update(&idle); }
+                assert_eq!(g.start_menu.current_item(), pokered_core::start_menu::StartMenuItem::Pokemon);
+                let mut input = InputState::new();
+                for t in 0..25 {
+                    input.begin_frame();
+                    if t == 0 { input.press(GbButton::Down); }
+                    if t == 1 { input.release(GbButton::Down); }
+                    if t == at { input.press(GbButton::Up); }
+                    if t == at + duration { input.release(GbButton::Up); }
+                    g.update(&input);
+                    assert_eq!(g.state.screen, GameScreen::StartMenu);
+                    let expected = if first_up.is_some_and(|first| t >= first) {
+                        pokered_core::start_menu::StartMenuItem::Pokemon
+                    } else { pokered_core::start_menu::StartMenuItem::Item };
+                    assert_eq!(g.start_menu.current_item(), expected, "Up at {at} for {duration}, frame {t}");
+                }
+            }
+        });
+    }
+
+    #[test]
+    #[ignore = "START direction Delay3 matched-input comparison capture"]
+    fn capture_menu_direction_boundary_108() {
+        run_link_save_fixture(|| {
+            let root = std::path::PathBuf::from(std::env::var("FIDELITY_MENU_DIRECTION_CAPTURE").unwrap());
+            for (at, duration) in [(1, 1), (2, 1), (3, 1), (4, 1), (5, 1), (1, 8)] {
+                for trial in 1..=2 {
+                    let dir = root.join(format!("up-{at}-{duration}-{trial}"));
+                    std::fs::create_dir_all(&dir).unwrap();
+                    let mut g = fixture(Species::Bulbasaur, 3, pokered_core::overworld::Direction::Down);
+                    let idle = InputState::new();
+                    g.handle_transition(GameScreen::StartMenu);
+                    for _ in 0..23 { g.update(&idle); }
+                    g.update(&button(GbButton::Down));
+                    for _ in 0..27 { g.update(&idle); }
+                    assert_eq!(g.state.screen, GameScreen::StartMenu);
+                    assert_eq!(g.start_menu.current_item(), pokered_core::start_menu::StartMenuItem::Pokemon);
+                    let mut input = InputState::new();
+                    let mut rows = Vec::new();
+                    for t in -1i32..25 {
+                        if t >= 0 {
+                            input.begin_frame();
+                            if t == 0 { input.press(GbButton::Down); }
+                            if t == 1 { input.release(GbButton::Down); }
+                            if t == at { input.press(GbButton::Up); }
+                            if t == at + duration { input.release(GbButton::Up); }
+                            g.update(&input);
+                        }
+                        let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+                        g.draw(&mut fb);
+                        fb.save_png(&dir.join(format!("frame-{:04}.png", t + 1))).unwrap();
+                        rows.push(serde_json::json!({"t": t, "input_bits": input.raw_current(),
+                            "screen": format!("{:?}", g.state.screen),
+                            "item": format!("{:?}", g.start_menu.current_item()),
+                            "sfx_id": g.audio.as_ref().map(|a| a.manager.lock().unwrap().sequencer.current_sfx_id)}));
+                    }
+                    std::fs::write(dir.join("frames.json"), serde_json::to_string_pretty(&rows).unwrap()).unwrap();
+                }
+            }
+        });
+    }
+
     fn wait_stats_cry(game: &mut PokemonGame) {
         for _ in 0..120 {
             game.update(&InputState::new());
@@ -10609,7 +10701,9 @@ mod link_stats_cry_fidelity_tests {
         game.update(&button(GbButton::Start));
         for _ in 0..24 { game.update(&idle); }
         assert_eq!(game.state.screen, GameScreen::StartMenu);
-        game.update(&button(GbButton::Down)); game.update(&button(GbButton::A));
+        game.update(&button(GbButton::Down));
+        for _ in 0..3 { game.update(&idle); }
+        game.update(&button(GbButton::A));
         for _ in 0..4 { game.update(&idle); }
         assert_eq!(game.state.screen, GameScreen::PartyScreen);
         game.update(&button(GbButton::A));

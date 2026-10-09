@@ -1,0 +1,230 @@
+{
+  "scope": "START direction sampling/selection only, no original-vs-native font/layout/pixel claim",
+  "source": "pret/pokered fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c, normal Red",
+  "actual_master": "31b1eda3112514d6bc803af559ec7f7c9e20374f with read-only capture helper",
+  "parent_head": "97a0d1c4fb1ccaa0b0884a92734c096452338076 plus108 pending runtime repair",
+  "cases": [
+    {
+      "case": "up-1-1-1",
+      "source_window": [
+        119,
+        144
+      ],
+      "native_window": [
+        -1,
+        24
+      ],
+      "frames": 26,
+      "selection_mismatches": [],
+      "first_up": null,
+      "actual_master_first_up": 1,
+      "identical_preframe": true,
+      "identical_native_physical_inputs": true
+    },
+    {
+      "case": "up-1-1-2",
+      "source_window": [
+        119,
+        144
+      ],
+      "native_window": [
+        -1,
+        24
+      ],
+      "frames": 26,
+      "selection_mismatches": [],
+      "first_up": null,
+      "actual_master_first_up": 1,
+      "identical_preframe": true,
+      "identical_native_physical_inputs": true
+    },
+    {
+      "case": "up-2-1-1",
+      "source_window": [
+        119,
+        144
+      ],
+      "native_window": [
+        -1,
+        24
+      ],
+      "frames": 26,
+      "selection_mismatches": [],
+      "first_up": null,
+      "actual_master_first_up": 2,
+      "identical_preframe": true,
+      "identical_native_physical_inputs": true
+    },
+    {
+      "case": "up-2-1-2",
+      "source_window": [
+        119,
+        144
+      ],
+      "native_window": [
+        -1,
+        24
+      ],
+      "frames": 26,
+      "selection_mismatches": [],
+      "first_up": null,
+      "actual_master_first_up": 2,
+      "identical_preframe": true,
+      "identical_native_physical_inputs": true
+    },
+    {
+      "case": "up-3-1-1",
+      "source_window": [
+        119,
+        144
+      ],
+      "native_window": [
+        -1,
+        24
+      ],
+      "frames": 26,
+      "selection_mismatches": [],
+      "first_up": 3,
+      "actual_master_first_up": 3,
+      "identical_preframe": true,
+      "identical_native_physical_inputs": true
+    },
+    {
+      "case": "up-3-1-2",
+      "source_window": [
+        119,
+        144
+      ],
+      "native_window": [
+        -1,
+        24
+      ],
+      "frames": 26,
+      "selection_mismatches": [],
+      "first_up": 3,
+      "actual_master_first_up": 3,
+      "identical_preframe": true,
+      "identical_native_physical_inputs": true
+    },
+    {
+      "case": "up-4-1-1",
+      "source_window": [
+        119,
+        144
+      ],
+      "native_window": [
+        -1,
+        24
+      ],
+      "frames": 26,
+      "selection_mismatches": [],
+      "first_up": 4,
+      "actual_master_first_up": 4,
+      "identical_preframe": true,
+      "identical_native_physical_inputs": true
+    },
+    {
+      "case": "up-4-1-2",
+      "source_window": [
+        119,
+        144
+      ],
+      "native_window": [
+        -1,
+        24
+      ],
+      "frames": 26,
+      "selection_mismatches": [],
+      "first_up": 4,
+      "actual_master_first_up": 4,
+      "identical_preframe": true,
+      "identical_native_physical_inputs": true
+    },
+    {
+      "case": "up-5-1-1",
+      "source_window": [
+        119,
+        144
+      ],
+      "native_window": [
+        -1,
+        24
+      ],
+      "frames": 26,
+      "selection_mismatches": [],
+      "first_up": 5,
+      "actual_master_first_up": 5,
+      "identical_preframe": true,
+      "identical_native_physical_inputs": true
+    },
+    {
+      "case": "up-5-1-2",
+      "source_window": [
+        119,
+        144
+      ],
+      "native_window": [
+        -1,
+        24
+      ],
+      "frames": 26,
+      "selection_mismatches": [],
+      "first_up": 5,
+      "actual_master_first_up": 5,
+      "identical_preframe": true,
+      "identical_native_physical_inputs": true
+    },
+    {
+      "case": "up-1-8-1",
+      "source_window": [
+        119,
+        144
+      ],
+      "native_window": [
+        -1,
+        24
+      ],
+      "frames": 26,
+      "selection_mismatches": [],
+      "first_up": 3,
+      "actual_master_first_up": 1,
+      "identical_preframe": true,
+      "identical_native_physical_inputs": true
+    },
+    {
+      "case": "up-1-8-2",
+      "source_window": [
+        119,
+        144
+      ],
+      "native_window": [
+        -1,
+        24
+      ],
+      "frames": 26,
+      "selection_mismatches": [],
+      "first_up": 3,
+      "actual_master_first_up": 1,
+      "identical_preframe": true,
+      "identical_native_physical_inputs": true
+    }
+  ],
+  "capture_test": "game::link_stats_cry_fidelity_tests::capture_menu_direction_boundary_108",
+  "prefix": "actual master and repair: direct normal StartMenu transition, 23 idle hardware frames, Down one hardware frame to Pokemon, 27 idle frames; then common raw inputs",
+  "verdict": "PASS for complete 26-frame START direction sampling/selection windows; original versus native pixels/fonts/layout unjudged",
+  "source_input": "source Right0..15, START71..110, Down120, Up at case.at for case.duration; comparison window119..144; native Down0, Up at case.at-120, comparison-1..24; both Pokemon at preframe",
+  "before_after_frame": "native t1, Up one-frame pulse immediately after Down; absolute inputs and prefix identical, before from actual master",
+  "known_limit": "semantic START boundary differs only in timing, not menu arrangement; reference and native background/field prefix are different, so original-versus-native RGB is not claimed",
+  "screenshots": [
+    "direction-delay-before.png",
+    "direction-delay-after.png"
+  ],
+  "artifact_sha256": {
+    "direction-delay-before.png": "5a9a49d3feff06b35979e14e5bd2162394e7c494967a69e3a10de3e870d95f71",
+    "direction-delay-after.png": "f948e482ccb25923b20e5cade7bd4b6661de4b7827a1016403682570c8c9a8c2",
+    "matched-input-evidence.zip": "2ff64257065f887c33ebfa5ac151f54168f0eb41e41ab88733c665204161b310",
+    "ready-menu-recheck.zip": "b7fe54cc17b98332f862bcbbf5c5701e842410aeefa96f207b6d356ceac3332a"
+  },
+  "source_rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+  "latest_recheck": "Latest compiled108 helper produces identical bytes for all original12cases/26frames; new105/107 prefixes wait3 after initial Down, both actualmaster/latest repair use exact same input and preframe. Existing PR screenshots remain byte-identical at their original shown frame."
+}
