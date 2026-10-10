@@ -2684,6 +2684,89 @@ mod session_tests {
     use pokered_core::options_menu::OptionsRow;
     use pokered_renderer::Rgba;
 
+    fn quantity_pc_197(mode: u8, capture: Option<&std::path::Path>) {
+        use dotzuki_app::{GbButton, InputState};
+        use pokered_core::pc_screen::{PcEntry, PcOpenContext, PcScreen};
+        use pokered_data::items::ItemId;
+        let mut game = PokemonGame::new(GameVersion::Red);
+        game.set_seed(42);
+        game.audio = None;
+        game.state.screen = GameScreen::PC;
+        game.state.config.language = Lang::En;
+        game.save_data.game_data.bag = pokered_core::items::inventory::Inventory::new_bag();
+        game.save_data.game_data.bag.add_item(ItemId::Potion, 4).unwrap();
+        game.save_data.game_data.pc_items = pokered_core::items::inventory::Inventory::new_pc();
+        game.save_data.game_data.pc_items.add_item(ItemId::Potion, 4).unwrap();
+        game.pc_screen = Some(PcScreen::new(PcEntry::PlayersPc, &PcOpenContext {
+            met_bill: true, has_pokedex: true, beaten_league: false,
+            player_name: "RED".into(), hof_teams: Vec::new(),
+        }));
+        let mut moves_left = mode;
+        for frame in 0..160 {
+            let phase = game.pc_screen.as_ref().unwrap().phase();
+            if phase == PcPhase::ItemQuantity { break; }
+            let key = if frame % 8 == 0 {
+                match phase {
+                    PcPhase::Message | PcPhase::ItemList => Some(GbButton::A),
+                    PcPhase::ItemMenu if moves_left > 0 => { moves_left -= 1; Some(GbButton::Down) },
+                    PcPhase::ItemMenu => Some(GbButton::A),
+                    _ => None,
+                }
+            } else { None };
+            let mut input = InputState::new();
+            if let Some(button) = key { input.press(button); }
+            game.update(&input);
+        }
+        assert_eq!(game.pc_screen.as_ref().unwrap().phase(), PcPhase::ItemQuantity);
+        let mut retained = FrameBuffer::new(RenderConfig::new(160,144), Rgba::WHITE);
+        let mut session = RenderSession::new();
+        let mut scroll = |_: &mut [u8], _: usize, _: usize, _: i32, _: i32, _: u8| {};
+        let mut rows = Vec::new();
+        for frame in 0..40 {
+            let key = match frame { 1 | 17 => Some(GbButton::Down), 9 => Some(GbButton::Up),
+                25 => Some(GbButton::B), _ => None };
+            let mut input = InputState::new();
+            if let Some(button) = key { input.press(button); }
+            game.update(&input);
+            session.render(&mut game, &mut retained, &mut scroll);
+            let mut full = FrameBuffer::new(RenderConfig::new(160,144), Rgba::WHITE);
+            game.draw(&mut full);
+            for y in 0..144 { for x in 0..160 {
+                assert_eq!(retained.get_pixel(x,y), full.get_pixel(x,y),
+                    "PC quantity mode{mode} frame{frame} pixel({x},{y})");
+            }}
+            let pc = game.pc_screen.as_ref().unwrap();
+            assert_eq!(game.save_data.game_data.bag.item_quantity(ItemId::Potion), 4);
+            assert_eq!(game.save_data.game_data.pc_items.item_quantity(ItemId::Potion), 4);
+            if capture.is_none() {
+                if frame == 1 || frame == 17 { assert_eq!(pc.item_qty(), 4); }
+                if frame == 9 { assert_eq!(pc.item_qty(), 1); }
+            }
+            if frame >= 25 { assert_eq!(pc.phase(), PcPhase::ItemList); }
+            if let Some(path) = capture {
+                std::fs::create_dir_all(path).unwrap();
+                full.save_png(&path.join(format!("frame-{frame:04}.png"))).unwrap();
+                rows.push(serde_json::json!({"frame":frame,"input_bits":input.raw_current(),
+                    "phase":format!("{:?}",pc.phase()),"quantity":pc.item_qty(),"bag":4,"pc":4}));
+            }
+        }
+        if let Some(path)=capture {
+            std::fs::write(path.join("frames.json"),serde_json::to_string_pretty(&rows).unwrap()).unwrap();
+        }
+    }
+
+    #[test]
+    fn pc_quantity_wrap_retained_frames_match_full_draw() {
+        for mode in 0..3 { quantity_pc_197(mode,None); }
+    }
+
+    #[test]
+    #[ignore = "controlled PC quantity before/after capture"]
+    fn capture_pc_quantity_197() {
+        let path = std::path::PathBuf::from(std::env::var("QUANTITY_CAPTURE_197").unwrap());
+        for mode in 0..3 { quantity_pc_197(mode,Some(&path.join(format!("mode-{mode}")))); }
+    }
+
     #[test]
     fn pc_item_questions_retained_frames_match_full_draw() {
         use dotzuki_app::{GbButton, InputState};
