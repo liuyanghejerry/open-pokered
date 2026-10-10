@@ -1466,13 +1466,13 @@ pub fn draw_bag(state: &BagScreenState, fb: &mut FrameBuffer, lang: Lang) {
             );
         }
         BagPhase::ActionMenu { cursor } => {
-            ui.text_box(TileRect::new(11, 9, 9, 9), InkColor::Black, true, |frame| {
+            ui.text_box(TileRect::new(13, 10, 7, 5), InkColor::Black, true, |frame| {
                 let is_zh = lang == Lang::Zh;
-                for (i, opt) in ["USE", "TOSS", "CANCEL"].iter().enumerate() {
-                    frame.label(2, 1 + i as u32 * 2, lang_data::ui_label(opt, is_zh), InkColor::Black);
+                for (i, opt) in ["USE", "TOSS"].iter().enumerate() {
+                    frame.label(1, i as u32 * 2, lang_data::ui_label(opt, is_zh), InkColor::Black);
                 }
                 if let Some(c) = &BAG_DEFAULT_LAYOUT.list.cursor {
-                    frame.cursor_glyph_at(1, 1 + cursor as u32 * 2, c.glyph, c.color);
+                    frame.cursor_glyph_at(0, cursor as u32 * 2, c.glyph, c.color);
                 }
             });
         }
@@ -1520,7 +1520,7 @@ pub fn redraw_top_level_bag_action_cursor(
     lang: Lang,
 ) {
     let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
-    let position = |cursor| TilePos::new(13, 11 + cursor as u32 * 2);
+    let position = |cursor| TilePos::new(14, 11 + cursor as u32 * 2);
     let old = position(previous);
     painter.draw_pixel_rect(old.tx * 8, old.ty * 8, 8, 9, pokered_ui::Rgba::INK_WHITE);
     painter.draw_glyph(position(current), '▶', pokered_ui::Rgba::INK_BLACK);

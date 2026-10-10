@@ -225,9 +225,11 @@ impl BagScreenState {
     }
 
     fn update_action_menu(&mut self, input: BagScreenInput, mut cursor: u8) -> BagScreenAction {
-        if input.up && cursor > 0 {
-            cursor -= 1;
-        } else if input.down && cursor < 2 {
+        // HandleMenuInput checks UP first, even when already at the top.
+        // USE/TOSS has wMaxMenuItem=1 and no wrapping/cancel entry.
+        if input.up {
+            cursor = cursor.saturating_sub(1);
+        } else if input.down && cursor < 1 {
             cursor += 1;
         }
         self.phase = BagPhase::ActionMenu { cursor };
