@@ -4529,6 +4529,10 @@ mod safari_timer_tests {
         assert!(!ow.unified_flags.get_flag("EVENT_IN_SAFARI_ZONE"));
         let warp = ow.safari_eject_pending.take().expect("eject queued");
         assert_eq!(warp.dest_map, MapId::SafariZoneGate);
+        let (gate, _) = crate::overworld::map_data_loading::load_full_map_data_concrete(MapId::SafariZoneGate);
+        let arrival = &gate.warps[3];
+        assert_eq!((warp.dest_x, warp.dest_y), (arrival.x, arrival.y),
+            "SafariZoneGameOver uses the fourth original gate warp");
         ow.pending_warp = Some(warp);
         ow.commit_pending_warp();
         assert!(ow.active_script_effect.is_some(), "gate starts the farewell");

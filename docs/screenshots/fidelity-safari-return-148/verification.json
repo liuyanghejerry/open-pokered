@@ -1,0 +1,113 @@
+{
+  "frames_per_recording": 702,
+  "png_count": 8424,
+  "repeat": {
+    "source-timeout": "702 states and PNGs match; native/master exclude only two unused initial RNG seeds",
+    "source-empty-balls": "702 states and PNGs match; native/master exclude only two unused initial RNG seeds",
+    "native-timeout": "702 states and PNGs match; native/master exclude only two unused initial RNG seeds",
+    "native-empty-balls": "702 states and PNGs match; native/master exclude only two unused initial RNG seeds",
+    "master-timeout": "702 states and PNGs match; native/master exclude only two unused initial RNG seeds",
+    "master-empty-balls": "702 states and PNGs match; native/master exclude only two unused initial RNG seeds"
+  },
+  "endpoints": {
+    "source-timeout": {
+      "t": 700,
+      "state": {
+        "wCurMap": 156,
+        "wXCoord": 4,
+        "wYCoord": 3,
+        "wWalkCounter": 0,
+        "wNumSafariBalls": 0,
+        "wSafariSteps": 0,
+        "wSafariSteps+1": 0,
+        "wSafariZoneGameOver": 0,
+        "wSafariZoneGateCurScript": 0,
+        "wPlayerMovingDirection": 0,
+        "wPlayerDirection": 4,
+        "wSpritePlayerStateData1FacingDirection": 0,
+        "wJoyIgnore": 0
+      },
+      "event_game_over": false,
+      "event_in_safari": false
+    },
+    "source-empty-balls": {
+      "t": 700,
+      "state": {
+        "wCurMap": 156,
+        "wXCoord": 4,
+        "wYCoord": 3,
+        "wWalkCounter": 0,
+        "wNumSafariBalls": 0,
+        "wSafariSteps": 0,
+        "wSafariSteps+1": 1,
+        "wSafariZoneGameOver": 0,
+        "wSafariZoneGateCurScript": 0,
+        "wPlayerMovingDirection": 0,
+        "wPlayerDirection": 4,
+        "wSpritePlayerStateData1FacingDirection": 0,
+        "wJoyIgnore": 0
+      },
+      "event_game_over": false,
+      "event_in_safari": false
+    },
+    "native-timeout": {
+      "active": false,
+      "balls": 0,
+      "dialogue": null,
+      "facing": "Down",
+      "input_bits": 1,
+      "map": "SafariZoneGate",
+      "screen": "Overworld",
+      "steps": 0,
+      "t": 700,
+      "x": 4,
+      "y": 3
+    },
+    "native-empty-balls": {
+      "active": false,
+      "balls": 0,
+      "dialogue": null,
+      "facing": "Down",
+      "input_bits": 1,
+      "map": "SafariZoneGate",
+      "screen": "Overworld",
+      "steps": 0,
+      "t": 700,
+      "x": 4,
+      "y": 3
+    },
+    "master-timeout": {
+      "active": false,
+      "balls": 0,
+      "dialogue": null,
+      "facing": "Down",
+      "input_bits": 1,
+      "map": "SafariZoneGate",
+      "screen": "Overworld",
+      "steps": 0,
+      "t": 700,
+      "x": 3,
+      "y": 4
+    },
+    "master-empty-balls": {
+      "active": true,
+      "balls": 0,
+      "dialogue": null,
+      "facing": "Down",
+      "input_bits": 1,
+      "map": "SafariZoneCenter",
+      "screen": "Overworld",
+      "steps": 1,
+      "t": 700,
+      "x": 14,
+      "y": 25
+    }
+  },
+  "pending": "scripted movement 17 original HW frames per tile versus 8 native; announcement and text timing remain different",
+  "archive": {
+    "paths": 8479,
+    "objects": 448,
+    "sha256": "1122bdac240d334b4938e0cb16cbf51406d3398888db540ff76fe35333d694a8",
+    "all_objects_verified": true
+  }
+}
