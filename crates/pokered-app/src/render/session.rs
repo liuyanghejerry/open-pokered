@@ -2722,7 +2722,13 @@ mod session_tests {
                 else if stage == 2 && phase == PcPhase::ItemQuantity {
                     // This is the next update after the chooser first rendered.
                     assert_eq!(frame - selection.unwrap(), 49);
-                    stage = 3; Some(GbButton::B)
+                    stage = 3; Some(GbButton::Down)
+                } else if stage == 3 && phase == PcPhase::ItemQuantity {
+                    assert_eq!(pc.item_qty(), 4);
+                    stage = 4; Some(GbButton::Up)
+                } else if stage == 4 && phase == PcPhase::ItemQuantity {
+                    assert_eq!(pc.item_qty(), 1);
+                    stage = 5; Some(GbButton::B)
                 } else { None };
             let mut input = InputState::new();
             if let Some(button) = key { input.press(button); }
@@ -2735,7 +2741,7 @@ mod session_tests {
                 assert_eq!(retained.get_pixel(x,y), full.get_pixel(x,y), "item question stage{stage} frame{frame} pixel({x},{y})");
             }}
             let pc = game.pc_screen.as_ref().unwrap();
-            if stage == 3 && pc.phase() == PcPhase::ItemList {
+            if stage == 5 && pc.phase() == PcPhase::ItemList {
                 assert_eq!(pc.message_lines(), &["What do you want".to_string(), "to withdraw?".to_string()]);
                 assert_eq!(game.save_data.game_data.pc_items.item_quantity(pokered_data::items::ItemId::Potion), 4);
                 assert_eq!(game.save_data.game_data.bag.item_quantity(pokered_data::items::ItemId::Potion), 0);
