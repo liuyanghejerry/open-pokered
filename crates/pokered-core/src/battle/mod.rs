@@ -5577,10 +5577,10 @@ mod recharge_lifecycle_tests {
         assert_eq!(disable_target_last_move(&b), MoveId::None, "no last move → None");
     }
 
-    /// Mimic copies the foe's prior last-used move into the Mimic slot (PP→5), and it
-    /// is then selectable + fires. Turn 1 Mimic fails (foe has no last move yet);
-    /// turn 2 copies the foe's Swift; turn 3 the copied Swift deals damage. Swift is
-    /// used so the copied move connects deterministically (it never misses).
+    /// Gen-1 Mimic opens a selection of the foe's known moves on turn one,
+    /// retains the Mimic slot's remaining PP, and the chosen Swift then fires.
+    /// Seed Mimic's ordinary accuracy roll so its rare miss cannot randomly
+    /// replace this successful-selection scenario; Swift itself never misses.
     #[test]
     fn mimic_copies_and_fires_foe_last_move() {
         let mk = |sp, lvl, moves: [MoveId; 4]| {
@@ -5593,6 +5593,7 @@ mod recharge_lifecycle_tests {
         // (~2% per run) whenever damage rolls ran high.
         let enemy = vec![mk(Species::Snorlax, 5, [MoveId::Swift, MoveId::Swift, MoveId::Swift, MoveId::Swift])];
         let mut screen = BattleScreen::from_parties(true, &player, &enemy, None);
+        screen.rng = pokered_rules::runtime::StdBattleRng::from_seed(42);
         let enemy_hp = |s: &BattleScreen| s.battle_state.as_ref().unwrap().enemy.active_mon().hp;
 
         let original_pp = screen.battle_state.as_ref().unwrap().player.active_mon().pp[0];
@@ -5604,7 +5605,7 @@ mod recharge_lifecycle_tests {
         assert_eq!(mon.moves[0], MoveId::Swift, "Mimic chooses a known move on turn one");
         assert_eq!(mon.pp[0], original_pp - 1, "Mimic retains its remaining PP");
 
-        // Turn 3 — the copied Swift is selectable in slot 0 and (never missing) hits.
+        // Next turn — the copied Swift is selectable in slot 0 and never misses.
         let before = enemy_hp(&screen);
         screen.execute_turn_with_move(0);
         let after = enemy_hp(&screen);
