@@ -11,10 +11,8 @@ game_scene Museum1F {
   @storyline("ticketGate") {
     @trigger(map = "Museum1F", coords = [[9, 4], [10, 4]], name = "ticketGate1")
     @if (!getFlag("EVENT_BOUGHT_MUSEUM_TICKET")) {
-      @speaker("") {
-        @t("It's ¥50 for a child's\nticket.\n\nWould you like to come in?", "儿童票是 50日元。\n\n你想进来看看吗？")
-      }
       showMoneyBox(getMoney())
+      printFieldText(@t("It's ¥50 for a child's\nticket.\n\nWould you like to come in?", "儿童票是 50日元。\n\n你想进来看看吗？"))
       @choice {
         @option(@t("YES", "是")) {
           @if (hasMoney(50)) {
@@ -49,9 +47,7 @@ game_scene Museum1F {
     @if ((getPlayerY() == 4 && getPlayerX() == 13) || (getPlayerY() == 3 && getPlayerX() == 12)) {
       // Behind the counter: the back-counter AMBER chat
       // (the original text handler serves both entry paths).
-      @speaker("") {
-        @t("You can't sneak in the back\nway!\n\nOh, whatever! Do you know\nwhat AMBER is?", "你不能从后门溜进来！\n\n算了，算了！你知道琥珀是什么\n吗？")
-      }
+      printFieldText(@t("You can't sneak in the back\nway!\n\nOh, whatever! Do you know\nwhat AMBER is?", "你不能从后门溜进来！\n\n算了，算了！你知道琥珀是什么\n吗？"))
       @choice {
         @option(@t("YES", "是")) {
           @speaker("") {
@@ -70,10 +66,8 @@ game_scene Museum1F {
       @if (getFlag("EVENT_BOUGHT_MUSEUM_TICKET")) {
         @speaker("") { @t("Take plenty of time to look!", "请慢慢欣赏吧！") }
       } @else {
-        @speaker("") {
-          @t("It's ¥50 for a child's\nticket.\n\nWould you like to come in?", "儿童票是 50日元。\n\n你想进来看看吗？")
-        }
         showMoneyBox(getMoney())
+        printFieldText(@t("It's ¥50 for a child's\nticket.\n\nWould you like to come in?", "儿童票是 50日元。\n\n你想进来看看吗？"))
         @choice {
           @option(@t("YES", "是")) {
             @if (hasMoney(50)) {
