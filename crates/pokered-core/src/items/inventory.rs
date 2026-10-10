@@ -189,6 +189,20 @@ impl<const N: usize> Inventory<N> {
         self.remove_item_at(index, quantity)
     }
 
+    /// Commit the exact physical slots after a Bag reorder/merge. Unlike
+    /// add_item, this preserves the order and separate same-kind slots.
+    /// Validation is atomic: invalid input leaves the current inventory intact.
+    pub fn replace_item_slots(&mut self, items: &[(ItemId, u32)]) -> Result<(), InventoryError> {
+        let mut replacement = Self::new();
+        for &(id, quantity) in items {
+            if quantity == 0 { return Err(InventoryError::ZeroQuantity); }
+            if quantity > MAX_ITEM_QUANTITY as u32 { return Err(InventoryError::QuantityOverflow); }
+            replacement.inner.push_slot(id, quantity).map_err(|_| InventoryError::InventoryFull)?;
+        }
+        self.inner = replacement.inner;
+        Ok(())
+    }
+
     /// Swap the two slots at indices `a` and `b`.
     pub fn swap(&mut self, a: usize, b: usize) -> Result<(), InventoryError> {
         if a == b {
@@ -303,5 +317,25 @@ impl<'de, const N: usize> Deserialize<'de> for Inventory<N> {
                 .map_err(|_| serde::de::Error::custom("inventory has more items than capacity"))?;
         }
         Ok(Inventory { inner })
+    }
+}
+
+#[cfg(test)]
+mod physical_slot_commit_221 {
+    use super::*;
+    #[test]
+    fn physical_order_duplicates_and_invalid_commit_are_preserved_atomically() {
+        let mut bag = Inventory::<3>::new();
+        let slots = [(ItemId::Potion, 41), (ItemId::Antidote, 4), (ItemId::Potion, 99)];
+        bag.replace_item_slots(&slots).unwrap();
+        assert_eq!(bag.items(), slots);
+        for (bad, error) in [
+            (vec![(ItemId::Potion, 0)], InventoryError::ZeroQuantity),
+            (vec![(ItemId::Potion, 100)], InventoryError::QuantityOverflow),
+            (vec![(ItemId::Potion, 1); 4], InventoryError::InventoryFull),
+        ] {
+            assert_eq!(bag.replace_item_slots(&bad), Err(error));
+            assert_eq!(bag.items(), slots);
+        }
     }
 }

@@ -47,7 +47,7 @@ pub enum BagPhase {
     /// An item which returns to ItemMenuLoop; removal waits for its PROMPT.
     FieldMessage { item: ItemId, consumed: bool },
     /// SELECT-swap mode (swap_items.asm): the marked row waits for a second
-    /// SELECT on another row to swap/merge. B cancels the mark.
+    /// SELECT on another row to swap/merge. B exits the list.
     SwapFrom { row: usize },
     /// ItemUseTMHM's first blocking text: "Booted up a TM/HM!".
     MachineBoot { item: ItemId },
@@ -59,6 +59,8 @@ pub enum BagPhase {
 pub enum BagScreenAction {
     /// Still open.
     Active,
+    /// A protected SELECT-swap completed; commit the physical item slots.
+    ItemsReordered,
     /// Player backed out of the whole bag (return to the start menu / overworld).
     Cancelled,
     /// USE the item at `index`. The caller dispatches the field effect and is
@@ -89,6 +91,8 @@ pub struct BagScreenState {
     toss_dialogue: Option<BedroomDialogue>,
     toss_frames: u32,
     press_sound: bool,
+    swap_wait_frames: u8,
+    pending_swap_target: Option<usize>,
 }
 
 impl BagScreenState {
@@ -102,6 +106,8 @@ impl BagScreenState {
             toss_dialogue: None,
             toss_frames: 0,
             press_sound: false,
+            swap_wait_frames: 0,
+            pending_swap_target: None,
         }
     }
 
@@ -114,6 +120,8 @@ impl BagScreenState {
         self.clamp_scroll();
         self.phase = BagPhase::Browsing;
         self.toss_dialogue = None;
+        self.swap_wait_frames = 0;
+        self.pending_swap_target = None;
     }
 
     /// The inventory is committed after YES's protected wait. Keep its result
@@ -188,6 +196,19 @@ impl BagScreenState {
     pub fn update_frame_with_text(&mut self, input: BagScreenInput, fast_held: bool, lang: Lang, delay: u16) -> BagScreenAction {
         self.press_sound = false;
         self.toss_frames = self.toss_frames.wrapping_add(1);
+        // HandleItemListSwapping waits20 frames after marking and before swapping.
+        // All input, including cancel, is ignored during either protected wait.
+        if self.swap_wait_frames > 0 {
+            self.swap_wait_frames -= 1;
+            if self.swap_wait_frames == 0 {
+                if let Some(target) = self.pending_swap_target.take() {
+                    if let BagPhase::SwapFrom { row } = self.phase {
+                        return self.complete_swap(row, target);
+                    }
+                }
+            }
+            return BagScreenAction::Active;
+        }
         match self.phase {
             BagPhase::Browsing => self.update_browsing(input),
             BagPhase::ActionMenu { cursor } => self.update_action_menu(input, cursor, lang, delay),
@@ -244,14 +265,15 @@ impl BagScreenState {
         // only item rows, never CANCEL.
         if input.select && !self.on_cancel_row() && !self.items.is_empty() {
             self.phase = BagPhase::SwapFrom { row: self.cursor };
+            self.swap_wait_frames = 20;
         }
         BagScreenAction::Active
     }
 
     /// SELECT-swap completion (swap_items.asm): the second SELECT on another
     /// row either SWAPS the two entries, or — for same-kind entries whose
-    /// combined count fits one slot (≤99) — MERGES them into the first and
-    /// drops the second; a merge that would overflow leaves the second filled
+    /// combined count fits one slot (≤99) — MERGES them into the second and
+    /// drops the first; a merge that would overflow leaves the second filled
     /// to 99 with the remainder staying in the first. B exits the list; A selects normally.
     fn update_swap(&mut self, input: BagScreenInput, row: usize) -> BagScreenAction {
         if input.up {
@@ -277,31 +299,38 @@ impl BagScreenState {
             if target == row || target >= self.items.len() || row >= self.items.len() {
                 return BagScreenAction::Active;
             }
-            if target != row && target < self.items.len() && row < self.items.len() {
-                let (a_item, a_qty) = self.items[row];
-                let (b_item, b_qty) = self.items[target];
-                if a_item == b_item {
-                    // Merge: combined ≤99 all into the first; otherwise the
-                    // second fills to 99, remainder stays in the first.
-                    let total = a_qty + b_qty;
-                    if total <= 99 {
-                        self.items[row] = (a_item, total);
-                        self.items.remove(target);
-                    } else {
-                        self.items[target] = (b_item, 99);
-                        self.items[row] = (a_item, total - 99);
-                    }
-                } else {
-                    self.items.swap(row, target);
-                }
-                if self.cursor >= self.row_count() {
-                    self.cursor = self.row_count() - 1;
-                }
-                self.clamp_scroll();
-            }
-            self.phase = BagPhase::Browsing;
+            self.pending_swap_target = Some(target);
+            self.swap_wait_frames = 20;
         }
         BagScreenAction::Active
+    }
+
+    fn complete_swap(&mut self, row: usize, target: usize) -> BagScreenAction {
+        if row >= self.items.len() || target >= self.items.len() || row == target {
+            return BagScreenAction::Active;
+        }
+        let (a_item, a_qty) = self.items[row];
+        let (b_item, b_qty) = self.items[target];
+        if a_item == b_item {
+            let total = a_qty + b_qty;
+            if total <= 99 {
+                // Original combines into the SECOND slot, erases the FIRST,
+                // then resets the current row and scroll offset to zero.
+                self.items[target] = (b_item, total);
+                self.items.remove(row);
+                self.cursor = 0;
+                self.scroll = 0;
+            } else {
+                self.items[target] = (b_item, 99);
+                self.items[row] = (a_item, total - 99);
+            }
+        } else {
+            self.items.swap(row, target);
+        }
+        self.cursor = self.cursor.min(self.row_count().saturating_sub(1));
+        self.clamp_scroll();
+        self.phase = BagPhase::Browsing;
+        BagScreenAction::ItemsReordered
     }
 
     fn update_action_menu(&mut self, input: BagScreenInput, mut cursor: u8, lang: Lang, delay: u16) -> BagScreenAction {
@@ -665,6 +694,10 @@ mod tests {
 mod swap_tests {
     use super::*;
 
+    fn finish_wait(s: &mut BagScreenState) {
+        for _ in 0..20 { s.update_frame(BagScreenInput::none()); }
+    }
+
     fn sel() -> BagScreenInput {
         BagScreenInput { select: true, ..BagScreenInput::none() }
     }
@@ -673,9 +706,9 @@ mod swap_tests {
     #[test]
     fn select_swaps_two_rows() {
         let mut s = BagScreenState::new(vec![(ItemId::Potion, 3), (ItemId::Antidote, 1), (ItemId::PokeBall, 5)]);
-        s.update_frame(sel()); // mark row 0
+        s.update_frame(sel()); finish_wait(&mut s); // mark row 0
         s.cursor = 2;
-        s.update_frame(sel()); // swap with row 2
+        s.update_frame(sel()); finish_wait(&mut s); // swap with row 2
         let items = s.items();
         assert_eq!(items[0], (ItemId::PokeBall, 5));
         assert_eq!(items[2], (ItemId::Potion, 3));
@@ -685,20 +718,21 @@ mod swap_tests {
     #[test]
     fn select_merges_same_item_rows() {
         let mut s = BagScreenState::new(vec![(ItemId::Potion, 3), (ItemId::PokeBall, 5), (ItemId::Potion, 4)]);
-        s.update_frame(sel()); // mark row 0
+        s.update_frame(sel()); finish_wait(&mut s); // mark row 0
         s.cursor = 2;
-        s.update_frame(sel()); // merge 3+4=7 into row 0, row 2 dropped
+        s.update_frame(sel()); finish_wait(&mut s); // second slot receives7; first is deleted; row/scroll reset0
         let items = s.items();
         assert_eq!(items.len(), 2, "the merged row disappears");
-        assert_eq!(items[0], (ItemId::Potion, 7));
+        assert_eq!(items, &[(ItemId::PokeBall, 5), (ItemId::Potion, 7)]);
+        assert_eq!((s.cursor(), s.scroll()), (0, 0));
     }
 
     #[test]
     fn select_merge_overflow_caps_second_at_99() {
         let mut s = BagScreenState::new(vec![(ItemId::Potion, 60), (ItemId::PokeBall, 5), (ItemId::Potion, 80)]);
-        s.update_frame(sel());
+        s.update_frame(sel()); finish_wait(&mut s);
         s.cursor = 2;
-        s.update_frame(sel()); // 60+80=140 > 99: second→99, first keeps 41
+        s.update_frame(sel()); finish_wait(&mut s); // 60+80=140 > 99: second→99, first keeps 41
         let items = s.items();
         assert_eq!(items[2], (ItemId::Potion, 99));
         assert_eq!(items[0], (ItemId::Potion, 41));
@@ -707,9 +741,35 @@ mod swap_tests {
     #[test]
     fn select_cancel_with_b() {
         let mut s = BagScreenState::new(vec![(ItemId::Potion, 3), (ItemId::Antidote, 1)]);
-        s.update_frame(sel()); // mark
+        s.update_frame(sel()); finish_wait(&mut s); // mark
         assert_eq!(s.update_frame(BagScreenInput { b: true, ..BagScreenInput::none() }), BagScreenAction::Cancelled);
         assert_eq!(s.phase(), BagPhase::Browsing);
         assert_eq!(s.items()[0], (ItemId::Potion, 3), "nothing moved");
+    }
+}
+
+#[cfg(test)]
+mod protected_swap_wait_221 {
+    use super::*;
+    #[test]
+    fn mark_and_swap_ignore_input_and_commit_once_after_twenty_frames() {
+        let original = vec![(ItemId::Potion, 3), (ItemId::Antidote, 4)];
+        let mut s = BagScreenState::new(original.clone());
+        s.update_frame(BagScreenInput { select: true, ..Default::default() });
+        let interference = BagScreenInput { up: true, down: true, a: true, b: true, select: true, ..Default::default() };
+        for _ in 0..20 {
+            assert_eq!(s.update_frame(interference), BagScreenAction::Active);
+            assert_eq!(s.cursor(), 0);
+            assert_eq!(s.phase(), BagPhase::SwapFrom { row: 0 });
+        }
+        s.update_frame(BagScreenInput { down: true, ..Default::default() });
+        s.update_frame(BagScreenInput { select: true, ..Default::default() });
+        for _ in 0..19 {
+            assert_eq!(s.update_frame(interference), BagScreenAction::Active);
+            assert_eq!(s.items(), original);
+        }
+        assert_eq!(s.update_frame(interference), BagScreenAction::ItemsReordered);
+        assert_eq!(s.items(), &[(ItemId::Antidote, 4), (ItemId::Potion, 3)]);
+        assert_eq!(s.update_frame(BagScreenInput::none()), BagScreenAction::Active);
     }
 }

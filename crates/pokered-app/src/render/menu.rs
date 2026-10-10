@@ -1146,6 +1146,7 @@ mod tests {
                 select: true,
                 ..BagScreenInput::none()
             });
+            for _ in 0..20 { swap.update_frame(BagScreenInput::none()); }
             let mut actual = FrameBuffer::new(config, Rgba::BLACK);
             draw_bag(&swap, &mut actual, language);
             let previous = top_level_bag_cursor_position(swap.items().len(), swap.cursor());
