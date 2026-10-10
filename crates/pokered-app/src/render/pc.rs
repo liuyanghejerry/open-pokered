@@ -895,6 +895,9 @@ mod layout_tests {
             }
             update_pc(&mut confirm, &mut save, A);
             assert_eq!(confirm.phase(), PcPhase::ChangeBoxConfirm);
+            assert!(confirm.yes_selected());
+            update_pc(&mut confirm, &mut save, DOWN);
+            assert!(!confirm.yes_selected());
             let mut yes = confirm.clone();
             update_pc(&mut yes, &mut save, UP);
             assert_cursor_repaint(
