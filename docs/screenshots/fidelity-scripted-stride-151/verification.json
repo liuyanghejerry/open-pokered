@@ -1,0 +1,23 @@
+{
+  "parent_head": "6ba647569cac68ca7cb47bc80badd5e2cbfb0de3",
+  "native_png_count": 2808,
+  "frames_per_case_repeat": 702,
+  "relative_logical_matching_frames_per_case": 52,
+  "rgb_different_frames_per_case": 51,
+  "absolute_timing_parity": false,
+  "archive": {
+    "paths": 2846,
+    "objects": 169,
+    "sha256": "81f97d36611e9cdbae0691e82508885d6472ba45075a722f0ab949d025bd5689",
+    "all_objects_verified": true
+  },
+  "reference_archive_sha256": "1122bdac240d334b4938e0cb16cbf51406d3398888db540ff76fe35333d694a8",
+  "source_work_archive_sha256": "c3278c5344f9f6cfee0e72f6b91b18b91f1fe7bff50245648aae1d32a4aadbe2",
+  "tests": {
+    "core": 2736,
+    "app": 201,
+    "ignored_capture_helpers": 24
+  },
+  "gba_metric_count": 31,
+  "scope": "shared field-loop waits and step transitions; CPU/LCD work phase, render/OAM, FollowNpc source differential and spinner animation audit remain pending"
+}

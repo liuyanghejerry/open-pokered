@@ -808,7 +808,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             // already Walking toward its next tile, not a stale Idle player,
             // or an NPC could start a step onto that tile in the gap.
             let pos_before = (self.state.player.x, self.state.player.y);
-            self.advance_scripted_player_path();
+            let had_scripted_path = !self.scripted_player_path.is_empty();
+            let player_was_walking = self.state.walk_counter != 0;
+            let scripted_field_tick = self.advance_scripted_player_path();
             // Only check warps when a step actually completed and the position
             // changed.  Checking on the frame that *starts* a walk would fire
             // on the old (warp-tile) position before the player has moved away,
@@ -821,7 +823,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
 
             // NPC movement must continue during script effects so that
             // MoveNpc / StartNpcMove / AwaitNpcMove effects can complete.
-            self.run_npc_movement_tick();
+            if !had_scripted_path || scripted_field_tick {
+                self.run_npc_movement_tick_with_player_walking(player_was_walking);
+            }
             return ScreenAction::Continue;
         }
         // External awaits are completed by the frontend, not by VM polling.
@@ -902,12 +906,15 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         // Scripted player movement — follow path ignoring real input.
         if !self.scripted_player_path.is_empty() {
             let pos_before = (self.state.player.x, self.state.player.y);
-            self.advance_scripted_player_path();
+            let player_was_walking = self.state.walk_counter != 0;
+            let scripted_field_tick = self.advance_scripted_player_path();
             let pos_after = (self.state.player.x, self.state.player.y);
             if pos_before != pos_after {
                 self.try_trigger_warp_at_player_position();
             }
-            self.run_npc_movement_tick();
+            if scripted_field_tick {
+                self.run_npc_movement_tick_with_player_walking(player_was_walking);
+            }
             return ScreenAction::Continue;
         }
 
@@ -1831,6 +1838,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     if !path.is_empty() {
                         self.sfx_event = OverworldSfxEvent::ArrowTiles;
                         self.scripted_player_path.extend(path);
+                        // This branch is already inside the current field
+                        // iteration: do not wait a second time before taking
+                        // the simulated direction owned by the arrow.
+                        self.field_loop_wait = 0;
                         // The arrow owns this frame too: do not let held input
                         // start an extra step before the queued path takes over.
                         self.advance_scripted_player_path();
@@ -2495,19 +2506,11 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         }
     }
 
-    /// FollowNpc lockstep: the engine paces scripted NPC steps at
-    /// NPC_WALK_FRAMES (16f/tile) while the player covers a tile in 8 —
-    /// the follower drained each vacated tile in half the leader's stride
-    /// and then idled for the remainder (stop-and-go hops, never in step
-    /// with Oak). An extra counter decrement per frame halves the followed
-    /// NPC's step to 8 frames. The counter still spans 16→0, so the
-    /// renderers' 16-unit normalization keeps mapping it onto the full
-    /// 16px tile — the sprite simply advances 2px/frame, exactly the
-    /// player's pace and walk-animation cadence.
-    ///
-    /// Only counters still ≥ 2 are decremented: reaching 0 inside the
-    /// engine's own tick is what commits the tile and chains the next
-    /// step, so an external decrement to 0 would skip the commit.
+    /// FollowNpc uses the same logical field ticks for leader and follower.
+    /// The NPC counter spans sixteen units and the player counter eight;
+    /// an extra NPC decrement makes each logical advance cover two pixels.
+    /// Hardware-frame waits belong to the shared field loop, not this counter.
+    /// Never decrement to zero here: the normal NPC tick must commit the tile.
     fn hasten_followed_npc(&mut self) {
         let mut followed: Option<String> = None;
         if let Some(script_bridge::ScriptEffect::FollowNpc { npc_id, phase, .. }) =
@@ -2528,18 +2531,31 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         }
     }
 
-    fn advance_scripted_player_path(&mut self) {
+    /// Simulated directions use the same OverworldLoop waits as physical
+    /// directions. A completed tile returns to that loop before a new sample.
+    /// The viewport rebuild on the first advance uses the existing field
+    /// redraw wait; exact CPU/LCD phase scheduling remains a separate concern.
+    fn advance_scripted_player_path(&mut self) -> bool {
         if self.scripted_player_path.is_empty() {
-            return;
+            return false;
         }
+        if self.field_loop_wait != 0 {
+            self.field_loop_wait -= 1;
+            return false;
+        }
+        self.field_loop_wait = 1;
         if self.state.player.movement_state == MovementState::Idle {
             self.start_next_scripted_player_step();
-        } else {
-            let step_done = player_movement::advance_step(&mut self.state);
-            if step_done && !self.scripted_player_path.is_empty() {
-                self.start_next_scripted_player_step();
+            if self.state.player.movement_state != MovementState::Idle {
+                self.player_sprite_state.update_sprite(0, self.player_moving_direction);
+                player_movement::advance_step(&mut self.state);
+                self.field_loop_wait = 2;
             }
+        } else {
+            self.player_sprite_state.update_sprite(self.state.walk_counter, self.player_moving_direction);
+            player_movement::advance_step(&mut self.state);
         }
+        true
     }
 
     fn start_next_scripted_player_step(&mut self) {
@@ -4684,8 +4700,14 @@ mod late_fidelity_tests {
         screen.state.player.x = 24;
         screen.state.player.y = 16;
         screen.run_on_load();
-        for _ in 0..600 {
+        for _ in 0..2000 {
             screen.update_frame(idle());
+            if screen.script_engine.is_idle()
+                && screen.scripted_player_path.is_empty()
+                && screen.unified_flags.get_flag("EVENT_LANCES_ROOM_LOCK_DOOR")
+            {
+                break;
+            }
         }
         assert_eq!((screen.state.player.x, screen.state.player.y), (6, 11));
         assert!(screen.unified_flags.get_flag("EVENT_LANCES_ROOM_LOCK_DOOR"));
@@ -5072,5 +5094,40 @@ impl<G: GameData<Tileset = pokered_data::tilesets::TilesetId>> OverworldScreen<G
         self.run_npc_movement_tick();
         if !submenu_reload { self.field_loop_wait = 2; }
         true
+    }
+}
+
+#[cfg(test)]
+mod scripted_field_clock_tests {
+    use super::*;
+    use pokered_data::impl_traits::PokemonRedData;
+
+    #[test]
+    fn safari_three_steps_match_original_relative_counter_trace() {
+        // Original AdvancePlayerSprite records at HW frames 500..549:
+        // first decrement at 0,3,5..15, then 17,20..32 and 34,37..49.
+        let mut screen = OverworldScreen::new(MapId::SafariZoneGate, None, PokemonRedData);
+        screen.state.player.x = 4;
+        screen.state.player.y = 0;
+        screen.state.player.movement_state = MovementState::Idle;
+        screen.state.walk_counter = 0;
+        screen.field_loop_wait = 0;
+        screen.scripted_player_path.extend([(4, 1), (4, 2), (4, 3)]);
+        let expected = [0, 3, 5, 7, 9, 11, 13, 15, 17, 20, 22, 24,
+            26, 28, 30, 32, 34, 37, 39, 41, 43, 45, 47, 49];
+        let mut advances = Vec::new();
+        let mut completions = Vec::new();
+        for t in 0..52 {
+            let old_y = screen.state.player.y;
+            let old_counter = screen.state.walk_counter;
+            screen.advance_scripted_player_path();
+            if screen.state.walk_counter != old_counter { advances.push(t); }
+            if screen.state.player.y != old_y { completions.push(t); }
+        }
+        assert_eq!(advances, expected);
+        assert_eq!(completions, [15, 32, 49]);
+        assert_eq!((screen.state.player.x, screen.state.player.y), (4, 3));
+        assert!(screen.scripted_player_path.is_empty());
+        assert_eq!(screen.state.player.movement_state, MovementState::Idle);
     }
 }
