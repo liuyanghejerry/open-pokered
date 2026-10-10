@@ -448,7 +448,12 @@ impl ScriptHost for NativeHost {
                 }
                 Ok(pokemon(PokemonScriptCommand::from_custom(name, &values)?))
             }
-            "printFieldParagraph" => Ok(pokemon(PokemonScriptCommand::PrintFieldParagraph { text: args::text(v.first().ok_or("printFieldParagraph: missing text")?, "printFieldParagraph")? })),
+            "printFieldParagraph" | "printItemFieldText" => {
+                let text=args::text(v.first().ok_or("field print: missing text")?, name)?;
+                let sound_id=v.get(1).map(|value|args::text(value,name)).transpose()?;
+                Ok(pokemon(if name=="printFieldParagraph" {PokemonScriptCommand::PrintFieldParagraph {text,sound_id}} else {PokemonScriptCommand::PrintItemFieldText {text,sound_id}}))
+            }
+            "waitFieldPrompt" => Ok(pokemon(PokemonScriptCommand::WaitFieldPrompt)),
             "finishFieldText" => Ok(pokemon(PokemonScriptCommand::FinishFieldText)),
             "printFieldText" => {
                 let text = args::text(v.first().ok_or("printFieldText: missing text")?, "printFieldText")?;
@@ -2636,10 +2641,14 @@ mod tests {
                 e.load_map(map, &scene);
                 let commands = drive_fidelity_scene(&mut e, "talkFishingGuru", room, "", &[0]);
                 let give_at = commands.iter().position(|c| matches!(c, ScriptCommand::GiveItem { .. })).unwrap();
-                let promise = commands.iter().position(|c| matches!(c, ScriptCommand::ShowText { text } if text.starts_with("Grand!")));
+                let promise = commands.iter().position(|c| match c {
+                    ScriptCommand::ShowText {text} => text.starts_with("Grand!"),
+                    ScriptCommand::Custom {name,args} if name=="printFieldText" => args.first().and_then(|v|v.as_str()).is_some_and(|text|text.starts_with("Grand!")),
+                    _ => false,
+                });
                 assert_eq!(promise.is_some(), room);
                 if let Some(at) = promise { assert!(give_at < at); }
-                assert_eq!(commands.iter().any(|c| matches!(c, ScriptCommand::Custom { name, .. } if name == "showItemDialogue")), room);
+                assert_eq!(commands.iter().any(|c| matches!(c, ScriptCommand::Custom { name, args } if name == "printFieldParagraph" && args.get(1).and_then(|v|v.as_str())==Some("SFX_GET_ITEM_1"))), room);
             }
         }
     }
@@ -2671,9 +2680,12 @@ mod tests {
                 let commands = drive_fidelity_scene(&mut e, handler, room, "", &[0]);
                 let receipts: Vec<_> = commands.iter().filter_map(|c| {
                     let ScriptCommand::Custom { name, args } = c else { return None };
-                    if name != "showItemDialogue" { return None }
+                    if !matches!(name.as_str(),"showItemDialogue" | "printItemFieldText" | "printFieldParagraph") { return None }
                     match pokered_data::script_command::PokemonScriptCommand::from_custom(name, args).unwrap() {
-                        pokered_data::script_command::PokemonScriptCommand::ShowItemDialogue { sound_id, .. } => Some(sound_id),
+                        pokered_data::script_command::PokemonScriptCommand::ShowItemDialogue { sound_id, .. }
+                        | pokered_data::script_command::PokemonScriptCommand::PrintItemFieldText {sound_id,..} => Some(sound_id),
+                        pokered_data::script_command::PokemonScriptCommand::PrintFieldParagraph {sound_id:Some(sound),..} => Some(Some(sound)),
+                        pokered_data::script_command::PokemonScriptCommand::PrintFieldParagraph {sound_id:None,..} => None,
                         _ => unreachable!(),
                     }
                 }).collect();

@@ -362,7 +362,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         // PlayCry waits in the sound loop without calling Joypad. Preserve
         // hJoyLast until its caller resumes polling: a press/release entirely
         // during the cry is ignored, but a newly held key is seen afterward.
-        if !matches!(self.active_script_effect.as_ref(), Some(script_bridge::ScriptEffect::PlayCry { .. } | script_bridge::ScriptEffect::PrintFieldParagraph { phase: script_bridge::FieldParagraphPhase::ProtectedDelay { .. } | script_bridge::FieldParagraphPhase::BlankDelay { .. }, .. })) {
+        if !matches!(self.active_script_effect.as_ref(), Some(script_bridge::ScriptEffect::PlayCry { .. } | script_bridge::ScriptEffect::PrintFieldParagraph { phase: script_bridge::FieldParagraphPhase::ProtectedDelay { .. } | script_bridge::FieldParagraphPhase::BlankDelay { .. } | script_bridge::FieldParagraphPhase::PlayingSound, .. } | script_bridge::ScriptEffect::PrintItemFieldText {phase:script_bridge::FieldParagraphPhase::PlayingSound,..} | script_bridge::ScriptEffect::WaitFieldPrompt {protected_remaining:1..=u8::MAX} )) {
             self.prev_a_pressed = input.a;
             self.prev_b_pressed = input.b;
             self.prev_up_pressed = input.up;
@@ -2718,7 +2718,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         script_music_playing: bool,
         script_sfx_playing: bool,
     ) -> bool {
-        let returns_after_print = matches!(effect, script_bridge::ScriptEffect::PrintFieldText { .. } | script_bridge::ScriptEffect::PrintFieldParagraph { .. });
+        let returns_after_print = matches!(effect, script_bridge::ScriptEffect::PrintFieldText { .. } | script_bridge::ScriptEffect::PrintFieldParagraph { .. } | script_bridge::ScriptEffect::PrintItemFieldText { .. });
         match effect {
             script_bridge::ScriptEffect::GivePokemon {
                 species,
@@ -2874,7 +2874,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 }
                 false
             }
-            script_bridge::ScriptEffect::ShowDialogue { text } | script_bridge::ScriptEffect::PrintFieldText { text } | script_bridge::ScriptEffect::PrintFieldParagraph { text, phase: script_bridge::FieldParagraphPhase::Printing } => {
+            script_bridge::ScriptEffect::ShowDialogue { text } | script_bridge::ScriptEffect::PrintFieldText { text } | script_bridge::ScriptEffect::PrintFieldParagraph { text, phase: script_bridge::FieldParagraphPhase::Printing, .. } | script_bridge::ScriptEffect::PrintItemFieldText {text,phase:script_bridge::FieldParagraphPhase::Printing,..} => {
                 if pending_dialogue.is_none() {
                     *last_script_dialogue = None;
                     *inner_field_text_open = returns_after_print;
@@ -2912,10 +2912,29 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     }
                     if returns_after_print && pending_dialogue.as_ref().is_some_and(|d| d.waiting_for_input() && d.is_last_page()) {
                         *last_script_dialogue = pending_dialogue.take();
-                        return true;
-                    }
-                    false
+                        match effect {
+                            script_bridge::ScriptEffect::PrintItemFieldText {sound_id,phase,..} => {
+                                audio_requests.push(OverworldAudioRequest::PlaySound {sound_id:sound_id.clone().unwrap_or_else(||"SFX_GET_ITEM_1".into())});
+                                *phase=script_bridge::FieldParagraphPhase::PlayingSound;false
+                            }
+                            script_bridge::ScriptEffect::PrintFieldParagraph {sound_id:Some(sound),phase,..} => {
+                                audio_requests.push(OverworldAudioRequest::PlaySound {sound_id:sound.clone()});
+                                *phase=script_bridge::FieldParagraphPhase::PlayingSound;false
+                            }
+                            _ => true,
+                        }
+                    } else { false }
                 }
+            }
+            script_bridge::ScriptEffect::PrintItemFieldText {phase:script_bridge::FieldParagraphPhase::PlayingSound,..}
+            | script_bridge::ScriptEffect::PrintFieldParagraph {phase:script_bridge::FieldParagraphPhase::PlayingSound,..} => !script_sfx_playing,
+            script_bridge::ScriptEffect::PrintItemFieldText {..} => unreachable!("item text starts in Printing"),
+            script_bridge::ScriptEffect::WaitFieldPrompt {protected_remaining} => {
+                if *protected_remaining>0 { *protected_remaining-=1;return false; }
+                if a_just_pressed || b_just_pressed {
+                    *sfx_event=OverworldSfxEvent::TextAdvance;
+                    true
+                } else {false}
             }
             script_bridge::ScriptEffect::PlayCry { species, started } => {
                 if !*started {
@@ -2927,7 +2946,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     !script_sfx_playing
                 }
             }
-            script_bridge::ScriptEffect::PrintFieldParagraph { text, phase } => {
+            script_bridge::ScriptEffect::PrintFieldParagraph { text, phase, .. } => {
                 use script_bridge::FieldParagraphPhase;
                 match phase {
                     FieldParagraphPhase::ProtectedDelay { remaining } => {
@@ -2963,7 +2982,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         }
                         false
                     }
-                    FieldParagraphPhase::Printing => unreachable!("handled with inner printing"),
+                    FieldParagraphPhase::Printing | FieldParagraphPhase::PlayingSound => unreachable!("handled with inner printing/sound"),
                 }
             }
             script_bridge::ScriptEffect::FinishFieldText { acknowledged } => {
@@ -5258,7 +5277,7 @@ mod field_typing_input_fidelity_tests {
         ow.last_script_dialogue=Some(BedroomDialogue::from_message("previous text"));
         ow.last_script_dialogue.as_mut().unwrap().skip_to_full_page();
         ow.inner_field_text_open=true;
-        ow.active_script_effect=Some(ScriptEffect::PrintFieldParagraph {text:"next paragraph".into(),phase:FieldParagraphPhase::ProtectedDelay {remaining:3}});
+        ow.active_script_effect=Some(ScriptEffect::PrintFieldParagraph {text:"next paragraph".into(),sound_id:None,phase:FieldParagraphPhase::ProtectedDelay {remaining:3}});
         let mut a=idle;a.a=true;
         ow.update_frame(a);assert!(!ow.prev_a_pressed);
         ow.update_frame(idle);assert!(!ow.prev_a_pressed);

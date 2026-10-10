@@ -198,6 +198,8 @@ const NO_STATE_COMMANDS: &[&str] = &[
     "printFieldText",
     "finishFieldText",
     "printFieldParagraph",
+    "printItemFieldText",
+    "waitFieldPrompt",
     // The found-item text and jingle only present a completed pickup;
     // giveItem / setFlag / hideObject carry its inventory/event effects.
     "showItemDialogue",

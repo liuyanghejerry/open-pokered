@@ -51,6 +51,7 @@ pub const POKERED_SCRIPT_FUNCTIONS: &[&str] = &[
     "pokemonMenu",
     "printFieldParagraph",
     "printFieldText",
+    "printItemFieldText",
     "readingMenu",
     "replaceTileBlock",
     "setPartyNickname",
@@ -67,6 +68,7 @@ pub const POKERED_SCRIPT_FUNCTIONS: &[&str] = &[
     "takeMoney",
     "tradePokemon",
     "vendingDelivery",
+    "waitFieldPrompt",
     "waitMusic",
     "withdrawDaycare",
 ];

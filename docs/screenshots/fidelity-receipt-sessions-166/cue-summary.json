@@ -1,0 +1,53 @@
+{
+  "cases": {
+    "old": {
+      "master31": {
+        "cue": 447,
+        "frames": 709,
+        "screenshot_hw": 597
+      },
+      "after-a8": {
+        "cue": 508,
+        "frames": 770,
+        "screenshot_hw": 658
+      }
+    },
+    "good": {
+      "master31": {
+        "cue": 492,
+        "frames": 754,
+        "screenshot_hw": 642
+      },
+      "after-a8": {
+        "cue": 553,
+        "frames": 815,
+        "screenshot_hw": 703
+      }
+    },
+    "super": {
+      "master31": {
+        "cue": 474,
+        "frames": 736,
+        "screenshot_hw": 624
+      },
+      "after-a8": {
+        "cue": 538,
+        "frames": 800,
+        "screenshot_hw": 688
+      }
+    },
+    "chairman": {
+      "master31": {
+        "cue": 1485,
+        "frames": 1747,
+        "screenshot_hw": 1635
+      },
+      "after-a8": {
+        "cue": 1660,
+        "frames": 1922,
+        "screenshot_hw": 1810
+      }
+    }
+  },
+  "scope": "Independent actual interaction prefixes in each branch to the same receipt/fanfare phase. Same261 postcue input bits; same screenshot hardware frame150 after first SoundStarted. Full raw frame numbers retained, no absolute pre-cue timing equality claim."
+}

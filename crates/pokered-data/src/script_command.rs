@@ -11,7 +11,11 @@ pub enum PokemonScriptCommand {
     /// Outer AfterDisplayingTextID wait on the retained inner text window.
     FinishFieldText,
     /// Leading PARA: wait A/B, clear the retained text interior, delay 20 frames.
-    PrintFieldParagraph { text: String },
+    PrintFieldParagraph { text: String, sound_id: Option<String> },
+    /// Inner text sound opcode, returning with its text window retained.
+    PrintItemFieldText { text: String, sound_id: Option<String> },
+    /// Inner PROMPT: manual A/B return without holding A or closing the window.
+    WaitFieldPrompt,
     ShowItemDialogue { text: String, sound_id: Option<String> },
     OldManTutorial,
     TradePokemon {
@@ -80,6 +84,8 @@ impl PokemonScriptCommand {
             Self::PrintFieldText { .. } => "printFieldText",
             Self::FinishFieldText => "finishFieldText",
             Self::PrintFieldParagraph { .. } => "printFieldParagraph",
+            Self::PrintItemFieldText { .. } => "printItemFieldText",
+            Self::WaitFieldPrompt => "waitFieldPrompt",
             Self::ShowItemDialogue { .. } => "showItemDialogue",
             Self::OldManTutorial => "oldManTutorial",
             Self::TradePokemon { .. } => "tradePokemon",
@@ -116,7 +122,10 @@ impl PokemonScriptCommand {
     pub fn into_script_command(self) -> ScriptCommand {
         let name = self.name().to_string();
         let args = match self {
-            Self::PrintFieldText { text } | Self::PrintFieldParagraph { text } => vec![json!(text)],
+            Self::PrintFieldText { text } => vec![json!(text)],
+            Self::PrintFieldParagraph { text, sound_id } | Self::PrintItemFieldText { text, sound_id } => {
+                let mut args=vec![json!(text)];if let Some(sound)=sound_id {args.push(json!(sound));}args
+            },
             Self::ShowItemDialogue { text, sound_id } => {
                 let mut args = vec![json!(text)];
                 if let Some(sound) = sound_id { args.push(json!(sound)); }
@@ -149,7 +158,8 @@ impl PokemonScriptCommand {
             Self::GiveCoins { amount } | Self::TakeCoins { amount } => vec![json!(amount)],
             Self::DepositDaycare { index } => vec![json!(index)],
             Self::ReplaceTileBlock { x, y, block_id } => vec![json!(x), json!(y), json!(block_id)],
-            Self::FinishFieldText
+            Self::WaitFieldPrompt
+            | Self::FinishFieldText
             | Self::OldManTutorial
             | Self::AnimateHealingMachine
             | Self::ChoosePartyPokemon
@@ -203,7 +213,9 @@ impl PokemonScriptCommand {
         Ok(match name {
             "printFieldText" => Self::PrintFieldText { text: string(0)? },
             "finishFieldText" => Self::FinishFieldText,
-            "printFieldParagraph" => Self::PrintFieldParagraph { text: string(0)? },
+            "printFieldParagraph" => Self::PrintFieldParagraph { text: string(0)?, sound_id: args.get(1).filter(|v| !v.is_null()).map(|_|string(1)).transpose()? },
+            "printItemFieldText" => Self::PrintItemFieldText { text: string(0)?, sound_id: args.get(1).filter(|v| !v.is_null()).map(|_|string(1)).transpose()? },
+            "waitFieldPrompt" => Self::WaitFieldPrompt,
             "waitMusic" => Self::WaitMusic,
             "vendingDelivery" => Self::VendingDelivery,
             "showMoneyBox" => Self::ShowMoneyBox { amount: args.first().and_then(Value::as_i64).ok_or_else(|| format!("{name}: amount must be an integer"))? },

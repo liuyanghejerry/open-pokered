@@ -58,9 +58,18 @@ impl ScriptApiRegistrar for PokemonScriptApi {
 
         engine.register_async_fn("printFieldParagraph", |args: &[JsValue], ctx: &mut Context| -> JsResult<ScriptCommand> {
             let text=args.get_or_undefined(0).to_string(ctx)?.to_std_string_lossy();
-            Ok(PokemonScriptCommand::PrintFieldParagraph { text }.into_script_command())
+            let sound_id=if args.len()>1 {Some(args.get_or_undefined(1).to_string(ctx)?.to_std_string_lossy())} else {None};
+            Ok(PokemonScriptCommand::PrintFieldParagraph { text, sound_id }.into_script_command())
         });
 
+        engine.register_async_fn("printItemFieldText", |args: &[JsValue], ctx: &mut Context| -> JsResult<ScriptCommand> {
+            let text=args.get_or_undefined(0).to_string(ctx)?.to_std_string_lossy();
+            let sound_id=if args.len()>1 {Some(args.get_or_undefined(1).to_string(ctx)?.to_std_string_lossy())} else {None};
+            Ok(PokemonScriptCommand::PrintItemFieldText {text,sound_id}.into_script_command())
+        });
+        engine.register_async_fn("waitFieldPrompt", |_: &[JsValue], _: &mut Context| -> JsResult<ScriptCommand> {
+            Ok(PokemonScriptCommand::WaitFieldPrompt.into_script_command())
+        });
         engine.register_async_fn("finishFieldText", |_: &[JsValue], _: &mut Context| -> JsResult<ScriptCommand> {
             Ok(PokemonScriptCommand::FinishFieldText.into_script_command())
         });

@@ -51,6 +51,7 @@ pub enum FieldParagraphPhase {
     WaitForButton,
     BlankDelay { remaining: u8 },
     Printing,
+    PlayingSound,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -60,7 +61,9 @@ pub enum ScriptEffect {
     PrintFieldText { text: String },
     FinishFieldText { acknowledged: bool },
     /// Original Paragraph keeps the same text window across its manual wait.
-    PrintFieldParagraph { text: String, phase: FieldParagraphPhase },
+    PrintFieldParagraph { text: String, #[serde(default)] sound_id: Option<String>, phase: FieldParagraphPhase },
+    PrintItemFieldText { text: String, sound_id: Option<String>, phase: FieldParagraphPhase },
+    WaitFieldPrompt { protected_remaining: u8 },
     ShowDialogue {
         text: String,
     },
@@ -378,7 +381,9 @@ impl ScriptEffect {
             ScriptEffect::ShowItemDialogue { text, sound_id, sound_started } => {
                 json!({ "effect": "ShowItemDialogue", "text": text, "sound_id": sound_id, "sound_started": sound_started })
             }
-            ScriptEffect::PrintFieldParagraph { text, phase } => json!({ "effect": "PrintFieldParagraph", "text": text, "phase": phase }),
+            ScriptEffect::PrintFieldParagraph { text, sound_id, phase } => json!({ "effect": "PrintFieldParagraph", "text": text, "sound_id": sound_id, "phase": phase }),
+            ScriptEffect::PrintItemFieldText { text, sound_id, phase } => json!({ "effect": "PrintItemFieldText", "text": text, "sound_id": sound_id, "phase": phase }),
+            ScriptEffect::WaitFieldPrompt { protected_remaining } => json!({ "effect": "WaitFieldPrompt", "protected_remaining": protected_remaining }),
             ScriptEffect::FinishFieldText { acknowledged } => json!({ "effect": "FinishFieldText", "acknowledged": acknowledged }),
             ScriptEffect::PrintFieldText { text } => {
                 json!({ "effect": "PrintFieldText", "text": text })
@@ -800,7 +805,7 @@ pub fn dispatch_command_with_names(
         // `pokered-data::script_api`).
         ScriptCommand::Custom { name, args } => {
             let mut effect = dispatch_custom(name, args);
-            if let ScriptEffect::ShowItemDialogue { text, .. } | ScriptEffect::PrintFieldText { text } | ScriptEffect::PrintFieldParagraph { text, .. } = &mut effect {
+            if let ScriptEffect::ShowItemDialogue { text, .. } | ScriptEffect::PrintFieldText { text } | ScriptEffect::PrintFieldParagraph { text, .. } | ScriptEffect::PrintItemFieldText {text,..} = &mut effect {
                 *text = resolve_placeholders(text, player_name, rival_name, starter_name);
             }
             effect
@@ -881,7 +886,9 @@ fn dispatch_custom(name: &str, args: &[Value]) -> ScriptEffect {
         Err(error) => return unsupported_with_reason(name, error),
     };
     match command {
-        PokemonScriptCommand::PrintFieldParagraph { text } => ScriptEffect::PrintFieldParagraph { text, phase: FieldParagraphPhase::ProtectedDelay { remaining: 3 } },
+        PokemonScriptCommand::PrintFieldParagraph { text, sound_id } => ScriptEffect::PrintFieldParagraph { text, sound_id, phase: FieldParagraphPhase::ProtectedDelay { remaining: 3 } },
+        PokemonScriptCommand::PrintItemFieldText {text,sound_id} => ScriptEffect::PrintItemFieldText {text,sound_id,phase:FieldParagraphPhase::Printing},
+        PokemonScriptCommand::WaitFieldPrompt => ScriptEffect::WaitFieldPrompt {protected_remaining:3},
         PokemonScriptCommand::FinishFieldText => ScriptEffect::FinishFieldText { acknowledged: false },
         PokemonScriptCommand::PrintFieldText { text } => ScriptEffect::PrintFieldText {
             text,

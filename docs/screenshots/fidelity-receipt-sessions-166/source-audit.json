@@ -1,0 +1,37 @@
+{
+  "native_head": "897c57a7322abb2b381300687d8c0f03ff80d46c",
+  "scope": "Source-backed follow-up, not implemented or original-emulator-verified. Font/layout exclusions do not excuse missing manual paragraph or outer final acknowledgement.",
+  "confirmed": [
+    {
+      "map": "VermilionOldRodHouse",
+      "original": "GiveItem and BIT_GOT_OLD_ROD before combined TakeThisText; text @->sound_get_item_1 blocking inner wait->leading PARA explanation->DONE outer A/B",
+      "native": "Old greeting ShowDialogue closes before setFlag/ShowItemDialogue received; automatic item receipt close then explanation starts with no manual paragraph wait",
+      "fix": "Keep flag timing and all greeting/receipt/narrative within shared text session; inner sound return preserving receipt, printFieldParagraph explanation, finishFieldText outer"
+    },
+    {
+      "map": "FuchsiaGoodRodHouse",
+      "original": "Received text @->sound_get_item_1->text_end, outer AfterDisplayingTextID fresh A/B",
+      "native": "ShowItemDialogue automatic closes on sound completion, omits final fresh A/B",
+      "fix": "Inner receipt/jingle keeping window, then finishFieldText"
+    },
+    {
+      "map": "Route12SuperRodHouse",
+      "original": "Combined greeting/receipt @->sound_get_item_1->leading PARA explanation->DONE outer A/B",
+      "native": "ShowItemDialogue automatic receipt close starts explanation without manual PARA",
+      "fix": "Inner receipt/jingle then printFieldParagraph explanation, finishFieldText"
+    },
+    {
+      "map": "PokemonFanClub",
+      "original": "Story PROMPT uses ProtectedDelay3+ManualTextScroll and returns inner PrintText without HoldA/Close; GiveItem->receipt @->sound_get_key_item->leading PARA explanation->DONE; EVENT_GOT_BIKE_VOUCHER is set AFTER explanation PrintText returns and before TextScriptEnd/outer final A/B",
+      "native": "Story ShowDialogue includes outer holdA/Close, voucher ShowItemDialogue auto-close and automatic explanation",
+      "fix": "Shared inner PROMPT wait preserving window, inner receipt jingle, printFieldParagraph explanation; set obtained flag after explanation before finishFieldText outer. Audit do-not-wait ownership separately."
+    }
+  ],
+  "source_primitives": {
+    "PlayCry": "home/pokemon.asm145 calls WaitForSoundToFinish (fixed165)",
+    "TextCommand_SOUND": "home/text.asm506 PlaySound/WaitForSoundToFinish then NextTextCommand, no HoldA/Close",
+    "PromptText": "home/text.asm209 draw arrow, ProtectedDelay3, ManualTextScroll, cleararrow, DoneText returns tocommand decoder; no wDoNotWait assignment here. Audit flag ownership; do not infer it from PROMPT.",
+    "Paragraph": "home/text.asm230 ProtectedDelay3+ManualTextScroll+ClearScreenArea+DelayFrames20+NextChar (fixed165primitive)"
+  },
+  "next": "Audit PromptText wDoNotWait flag ownership before implementation; distinguish inner receipt from FoundItemText outer auto-close. Native actual four receipt sound/lateheldA/paragraph/finalprompt/flags/bagfull regressions plus masterbefore/after screenshots; complete API/catalog/Boa/semantics andGBA. Do not blanket modify ShowItemDialogue for ordinary found items."
+}

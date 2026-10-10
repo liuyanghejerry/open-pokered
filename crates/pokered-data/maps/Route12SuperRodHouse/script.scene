@@ -10,29 +10,35 @@ game_scene Route12SuperRodHouse {
     @trigger(map = "Route12SuperRodHouse", npc = 1)
     @if (getFlag("EVENT_GOT_SUPER_ROD")) {
       // Already got the rod — fishing advice.
-      @speaker("") {
-        @t("Hello there, <PLAYER>!\n\nUse the SUPER ROD in any\nwater! You can catch\ndifferent kinds of POKeMON.\n\nTry fishing wherever you\ncan!", "你好呀， <PLAYER>！\n\n在任何水面用厉害钓竿！能钓到\n不同种类的宝可梦。\n\n试着在任何地方钓鱼吧！")
-      }
+      printFieldText(@t("Hello there, <PLAYER>!", "你好呀， <PLAYER>！"))
+      printFieldParagraph(@t("Use the SUPER ROD in any\nwater! You can catch\ndifferent kinds of POKeMON.", "在任何水面用厉害钓竿！能钓到\n不同种类的宝可梦。"))
+      printFieldParagraph(@t("Try fishing wherever you\ncan!", "试着在任何地方钓鱼吧！"))
+      finishFieldText()
     } @else {
       // Original inner PrintText returns on DONE before YesNoChoice.
-      printFieldText(@t("I'm the FISHING GURU's\nbrother!\n\nI simply Looove fishing!\n\nDo you like to fish?", "我是垂钓大师的哥哥！\n\n我超喜欢钓鱼！\n\n你喜欢钓鱼吗？"))
+      printFieldText(@t("I'm the FISHING GURU's\nbrother!", "我是垂钓大师的哥哥！"))
+      printFieldParagraph(@t("I simply Looove fishing!", "我超喜欢钓鱼！"))
+      printFieldParagraph(@t("Do you like to fish?", "你喜欢钓鱼吗？"))
       @choice {
         @option(@t("YES", "是")) {
           given = giveItem("SUPER_ROD", 1)
           @if (given) {
             setFlag("EVENT_GOT_SUPER_ROD")
-            showItemDialogue(@t("Grand! I like your style!\n\nTake this and fish, young\none!\n\n<PLAYER> received a SUPER\nROD!", "很好！我喜欢你的风格！\n\n拿上这个，去钓鱼吧，少年！\n\n<PLAYER>得到了厉害钓竿！"))
-            @speaker("") {
-              @t("Fishing is a way of life!\n\nFrom the seas to rivers, go\nout and land the big one!", "钓鱼是一种生活方式！\n\n从大海到河流，去钓上一条大家\n伙吧！")
-            }
+            printFieldText(@t("Grand! I like your style!", "很好！我喜欢你的风格！"))
+            printFieldParagraph(@t("Take this and fish, young\none!", "拿上这个，去钓鱼吧，少年！"))
+            printFieldParagraph(@t("<PLAYER> received a SUPER\nROD!", "<PLAYER>得到了厉害钓竿！"), "SFX_GET_ITEM_1")
+            printFieldParagraph(@t("Fishing is a way of life!", "钓鱼是一种生活方式！"))
+            printFieldParagraph(@t("From the seas to rivers, go\nout and land the big one!", "从大海到河流，去钓上一条大家\n伙吧！"))
+            finishFieldText()
           } @else {
-            @speaker("") { @t("Oh no!\n\nI had a gift for you, but\nyou have no room for it!", "糟了！\n\n我本来有礼物送你，可你没有地\n方放！") }
+            printFieldText(@t("Oh no!", "糟了！"))
+            printFieldParagraph(@t("I had a gift for you, but\nyou have no room for it!", "我本来有礼物送你，可你没有地\n方放！"))
+            finishFieldText()
           }
         }
         @option(@t("NO", "否")) {
-          @speaker("") {
-            @t("Oh... That's so\ndisappointing...", "哦……真让人失望……")
-          }
+          printFieldText(@t("Oh... That's so\ndisappointing...", "哦……真让人失望……"))
+          finishFieldText()
         }
       }
     }
