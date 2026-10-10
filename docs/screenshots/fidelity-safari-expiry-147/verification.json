@@ -1,0 +1,20 @@
+{
+  "setup": "original SRAM Continue; controlled original warp/one-step allowance, no ordinary paid-hunt proof",
+  "input": "Up held t0..69; A held t100..101,130..131,160..161,190..191,220..221",
+  "base": "31b1eda3112514d6bc803af559ec7f7c9e20374f",
+  "before_after_frame": 129,
+  "original_reference_frame": 180,
+  "native_first_step_zero": 17,
+  "native_expiry_on_next_step": 34,
+  "original_first_step_zero": 17,
+  "original_expiry_on_next_step": 34,
+  "original_text_entry": 54,
+  "native_text_entry": 34,
+  "known_remaining": "Native announcement work/input timing, full text/party restore CPU and LCD phase, boulder 2F2 scheduler remain unfinished; no pixel/audio timeline parity claim",
+  "positive_core_tests": 2735,
+  "positive_app_tests": 201,
+  "ignored_app_tests": 23,
+  "core_safari_tests": 9,
+  "gba_release_build": true,
+  "gba_performance_checks": 31
+}

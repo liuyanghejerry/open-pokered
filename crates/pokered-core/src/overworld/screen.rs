@@ -276,8 +276,10 @@ pub const SAFARI_ZONE_STEP_COUNT: u16 = 500;
 /// Safari Balls granted on entering the Safari Zone.
 pub const SAFARI_ZONE_BALL_COUNT: u8 = 30;
 /// Tile the player is dropped on inside the gate after the game ends.
-pub const SAFARI_GATE_RETURN_X: u8 = 3;
-pub const SAFARI_GATE_RETURN_Y: u8 = 1;
+// SafariZoneGameOver selects destination warp index 3, the gate's fourth
+// warp at (4, 0). Its LeavingSafariScript talks before the three exit steps.
+pub const SAFARI_GATE_RETURN_X: u8 = 4;
+pub const SAFARI_GATE_RETURN_Y: u8 = 0;
 
 /// Warp transition visual state.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]

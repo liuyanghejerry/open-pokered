@@ -10720,6 +10720,129 @@ mod link_stats_cry_fidelity_tests {
         )
         .unwrap();
     }
+    #[test]
+    #[ignore = "original one-step Safari SRAM, actual Continue and walking capture"]
+    fn capture_actual_safari_timeout_147() {
+        run_link_save_fixture(|| {
+            let dir = std::path::PathBuf::from(std::env::var("FIDELITY_SAFARI_CAPTURE").unwrap());
+            std::fs::create_dir_all(&dir).unwrap();
+            let save_path = dir.join("fixture.sav");
+            std::fs::copy(std::env::var("FIDELITY_SAFARI_SRAM").unwrap(), &save_path).unwrap();
+            let mut g = PokemonGame::new_with_options(GameVersion::Red, Some(save_path), None, None,
+                false, None, false, true, #[cfg(feature = "debug-server")] None);
+            g.set_seed(42);
+            g.audio = Some(AudioOutput::new_pcm());
+            g.state.config.language = pokered_core::game_state::Lang::En;
+            let idle = InputState::new();
+            let mut saw_menu = false;
+            for t in 0..2000 {
+                saw_menu |= g.state.screen == GameScreen::MainMenu;
+                if g.state.screen == GameScreen::Overworld { break; }
+                let a = button(GbButton::A);
+                g.update(if t % 20 == 19 { &a } else { &idle });
+            }
+            assert!(saw_menu);
+            assert_eq!(g.state.screen, GameScreen::Overworld);
+            // Continue constructs the loaded overworld; seed that actual
+            // instance as part of the explicitly controlled capture fixture.
+            g.set_seed(42);
+            assert_eq!(g.overworld.state.current_map, MapId::SafariZoneCenter);
+            assert_eq!((g.overworld.state.player.x, g.overworld.state.player.y), (14, 25));
+            assert!(g.overworld.is_safari_game_active());
+            assert_eq!(g.overworld.safari_steps_remaining(), 1);
+            assert_eq!(g.overworld.safari_balls_remaining(), 30);
+            for _ in 0..120 { g.update(&idle); }
+            let mut rows = Vec::new();
+            let mut input = InputState::new();
+            for t in -1i32..241 {
+                if t >= 0 {
+                    input.begin_frame();
+                    if t == 0 { input.press(GbButton::Up); }
+                    if t == 70 { input.release(GbButton::Up); }
+                    if t >= 100 && t % 30 == 10 { input.press(GbButton::A); }
+                    if t >= 100 && t % 30 == 12 { input.release(GbButton::A); }
+                    g.update(&input);
+                }
+                let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+                g.draw(&mut fb);
+                fb.save_png(&dir.join(format!("frame-{:04}.png", t + 1))).unwrap();
+                rows.push(serde_json::json!({"t":t,"input_bits":input.raw_current(),
+                    "screen":format!("{:?}",g.state.screen),
+                    "map":format!("{:?}",g.overworld.state.current_map),
+                    "x":g.overworld.state.player.x,"y":g.overworld.state.player.y,
+                    "steps":g.overworld.safari_steps_remaining(),
+                    "balls":g.overworld.safari_balls_remaining(),
+                    "active":g.overworld.is_safari_game_active(),
+                    "dialogue":g.overworld.pending_dialogue,
+                    "overworld":pokered_core::snapshot::OverworldSnapshot::capture(&g.overworld)}));
+            }
+            std::fs::write(dir.join("frames.json"), serde_json::to_string_pretty(&rows).unwrap()).unwrap();
+        });
+    }
+
+    #[test]
+    #[ignore = "original one-step Safari SRAM, actual Continue and walking capture"]
+    fn capture_actual_safari_return_148() {
+        run_link_save_fixture(|| {
+            let dir = std::path::PathBuf::from(std::env::var("FIDELITY_SAFARI_CAPTURE").unwrap());
+            std::fs::create_dir_all(&dir).unwrap();
+            let save_path = dir.join("fixture.sav");
+            std::fs::copy(std::env::var("FIDELITY_SAFARI_SRAM").unwrap(), &save_path).unwrap();
+            let mut g = PokemonGame::new_with_options(GameVersion::Red, Some(save_path), None, None,
+                false, None, false, true, #[cfg(feature = "debug-server")] None);
+            g.set_seed(42);
+            g.audio = Some(AudioOutput::new_pcm());
+            g.state.config.language = pokered_core::game_state::Lang::En;
+            let idle = InputState::new();
+            let mut saw_menu = false;
+            for t in 0..2000 {
+                saw_menu |= g.state.screen == GameScreen::MainMenu;
+                if g.state.screen == GameScreen::Overworld { break; }
+                let a = button(GbButton::A);
+                g.update(if t % 20 == 19 { &a } else { &idle });
+            }
+            assert!(saw_menu);
+            assert_eq!(g.state.screen, GameScreen::Overworld);
+            // Continue constructs the loaded overworld; seed that actual
+            // instance as part of the explicitly controlled capture fixture.
+            g.set_seed(42);
+            assert_eq!(g.overworld.state.current_map, MapId::SafariZoneCenter);
+            assert_eq!((g.overworld.state.player.x, g.overworld.state.player.y), (14, 25));
+            assert!(g.overworld.is_safari_game_active());
+            assert_eq!(g.overworld.safari_steps_remaining(), 1);
+            assert_eq!(g.overworld.safari_balls_remaining(), 30);
+            for _ in 0..120 { g.update(&idle); }
+            let empty_balls = std::env::var("FIDELITY_SAFARI_EMPTY_BALLS").is_ok();
+            if empty_balls { for _ in 0..30 { g.overworld.use_safari_ball(); } }
+            let mut rows = Vec::new();
+            let mut input = InputState::new();
+            for t in -1i32..701 {
+                if t >= 0 {
+                    input.begin_frame();
+                    if t == 0 && !empty_balls { input.press(GbButton::Up); }
+                    if t == 70 && !empty_balls { input.release(GbButton::Up); }
+                    if t >= 100 && t % 30 == 10 { input.press(GbButton::A); }
+                    if t >= 100 && t % 30 == 12 { input.release(GbButton::A); }
+                    g.update(&input);
+                }
+                let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+                g.draw(&mut fb);
+                fb.save_png(&dir.join(format!("frame-{:04}.png", t + 1))).unwrap();
+                rows.push(serde_json::json!({"t":t,"input_bits":input.raw_current(),
+                    "screen":format!("{:?}",g.state.screen),
+                    "map":format!("{:?}",g.overworld.state.current_map),
+                    "x":g.overworld.state.player.x,"y":g.overworld.state.player.y,
+                    "facing":format!("{:?}",g.overworld.state.player.facing),
+                    "steps":g.overworld.safari_steps_remaining(),
+                    "balls":g.overworld.safari_balls_remaining(),
+                    "active":g.overworld.is_safari_game_active(),
+                    "dialogue":g.overworld.pending_dialogue,
+                    "overworld":pokered_core::snapshot::OverworldSnapshot::capture(&g.overworld)}));
+            }
+            std::fs::write(dir.join("frames.json"), serde_json::to_string_pretty(&rows).unwrap()).unwrap();
+        });
+    }
+
 }
 
 #[cfg(all(test, not(target_os = "none")))]
