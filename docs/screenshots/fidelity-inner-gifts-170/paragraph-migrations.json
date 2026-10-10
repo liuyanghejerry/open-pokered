@@ -1,0 +1,57 @@
+[
+  {
+    "map": "SilphCo11F",
+    "speaker_paragraph_counts": [
+      4,
+      5,
+      1
+    ],
+    "sound": "SFX_GET_KEY_ITEM",
+    "flag_after_sound": true,
+    "flow": "Intro explicit PARA/PROMPT before GiveItem; receipt inner sound then outer fresh confirmation; repeat/full-bag inner DONE to outer wait."
+  },
+  {
+    "map": "CeladonDiner",
+    "speaker_paragraph_counts": [
+      1,
+      4,
+      1
+    ],
+    "sound": "SFX_GET_KEY_ITEM",
+    "flag_after_sound": false,
+    "flow": "Intro explicit PARA/PROMPT before GiveItem; receipt inner sound then outer fresh confirmation; repeat/full-bag inner DONE to outer wait."
+  },
+  {
+    "map": "Route16FlyHouse",
+    "speaker_paragraph_counts": [
+      2,
+      2,
+      1
+    ],
+    "sound": "SFX_GET_KEY_ITEM",
+    "flag_after_sound": false,
+    "flow": "Intro explicit PARA/PROMPT before GiveItem; receipt inner sound then outer fresh confirmation; repeat/full-bag inner DONE to outer wait."
+  },
+  {
+    "map": "SafariZoneSecretHouse",
+    "speaker_paragraph_counts": [
+      4,
+      4,
+      1
+    ],
+    "sound": "SFX_GET_ITEM_1",
+    "flag_after_sound": true,
+    "flow": "Intro explicit PARA/PROMPT before GiveItem; receipt inner sound then outer fresh confirmation; repeat/full-bag inner DONE to outer wait."
+  },
+  {
+    "map": "CeladonMart3F",
+    "speaker_paragraph_counts": [
+      1,
+      2,
+      1
+    ],
+    "sound": "SFX_GET_ITEM_1",
+    "flag_after_sound": false,
+    "flow": "Intro explicit PARA/PROMPT before GiveItem; receipt inner sound then outer fresh confirmation; repeat/full-bag inner DONE to outer wait."
+  }
+]

@@ -41,20 +41,21 @@ game_scene CeladonDiner {
   @storyline("talkGymGuide") {
     @trigger(map = "CeladonDiner", npc = 5)
     @if (getFlag("EVENT_GOT_COIN_CASE")) {
-      @speaker("") {
-        @t("I always thought I was going\nto win it back...", "我总想着总有一天能赢回来……")
-      }
+      printFieldText(t("I always thought I was going\nto win it back...", "我总想着总有一天能赢回来……"))
     } @else {
-      @speaker("") {
-        @t("Go ahead! Laugh!\n\nI'm flat out busted!\n\nNo more slots for me! I'm\ngoing straight!\n\nHere! I won't be needing\nthis any- more!", "尽管笑吧！\n\n我彻底破产了！\n\n我再也不玩老虎机了！我要改邪\n归正！\n\n给你！这个我再也用不上了！")
-      }
+      printFieldText(t("Go ahead! Laugh!", "尽管笑吧！"))
+      printFieldParagraph(t("I'm flat out busted!", "我彻底破产了！"))
+      printFieldParagraph(t("No more slots for me! I'm\ngoing straight!", "我再也不玩老虎机了！我要改邪\n归正！"))
+      printFieldParagraph(t("Here! I won't be needing\nthis any- more!", "给你！这个我再也用不上了！"))
+      waitFieldPrompt()
       given = giveItem("COIN_CASE", 1)
       @if (given) {
         setFlag("EVENT_GOT_COIN_CASE")
-        showItemDialogue(@t("<PLAYER> received a COIN\nCASE!", "<PLAYER>得到了代币盒！"), "SFX_GET_KEY_ITEM")
+        printItemFieldText(@t("<PLAYER> received a COIN\nCASE!", "<PLAYER>得到了代币盒！"), "SFX_GET_KEY_ITEM")
       } @else {
-        @speaker("") { @t("Make room for this!", "给这个腾出地方来！") }
+        printFieldText(t("Make room for this!", "给这个腾出地方来！"))
       }
     }
+    finishFieldText()
   }
 }

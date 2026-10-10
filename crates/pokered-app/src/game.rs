@@ -12403,6 +12403,19 @@ mod link_stats_cry_fidelity_tests {
         g.update(&button(GbButton::Up));for _ in 0..20 {g.update(&idle);}g
     }
 
+    fn gift_fixture_170(map: MapId) -> PokemonGame {
+        use pokered_core::overworld::{Direction,NpcMovementType};
+        let (x,y)=match map {MapId::SilphCo11F=>(7,6),MapId::CeladonDiner=>(0,2),MapId::Route16FlyHouse=>(2,4),MapId::SafariZoneSecretHouse=>(3,4),MapId::CeladonMart3F=>(16,4),_=>panic!("unknown gift fixture")};
+        let mut g=fixture(Species::Bulbasaur,x,Direction::Up);g.state.config.language=pokered_core::game_state::Lang::En;
+        g.save_data.game_data.bag=pokered_core::items::inventory::Inventory::new();
+        if map==MapId::SilphCo11F {g.overworld.set_flag_live("EVENT_BEAT_SILPH_CO_GIOVANNI",true);g.overworld.set_flag_live("EVENT_SILPH_CO_11_UNLOCKED_DOOR",true);}
+        g.overworld.warp_to_map(map,x as u8,y);let idle=InputState::new();for _ in 0..120 {g.update(&idle);}
+        for n in &mut g.overworld.npc_states {n.movement_type=NpcMovementType::Stationary;n.x=n.home_x;n.y=n.home_y;n.walk_counter=0;}
+        if map==MapId::CeladonMart3F {for _ in 0..20 {g.update(&button(GbButton::Down));}} else {g.update(&button(GbButton::Up));}for _ in 0..20 {g.update(&idle);}
+        assert_eq!((g.overworld.state.player.x,g.overworld.state.player.y),(x,u16::from(y)));
+        assert_eq!(g.overworld.state.player.facing,if map==MapId::CeladonMart3F {Direction::Down} else {Direction::Up});g
+    }
+
     #[test]
     #[ignore = "matched NPC reward interaction and raw frame evidence"]
     fn capture_reward_receipt_166() {
@@ -12410,6 +12423,11 @@ mod link_stats_cry_fidelity_tests {
         run_link_save_fixture(|| {
             let dir=std::path::PathBuf::from(std::env::var("FIDELITY_RECEIPT_CAPTURE").unwrap());std::fs::create_dir_all(&dir).unwrap();
             let (map,x,y,item,flag)=match std::env::var("FIDELITY_RECEIPT_CASE").unwrap().as_str() {
+                "masterball" => (MapId::SilphCo11F,7,6,"MASTER_BALL","EVENT_GOT_MASTER_BALL"),
+                "coincase" => (MapId::CeladonDiner,0,2,"COIN_CASE","EVENT_GOT_COIN_CASE"),
+                "fly" => (MapId::Route16FlyHouse,2,4,"HM02","EVENT_GOT_HM02"),
+                "surf" => (MapId::SafariZoneSecretHouse,3,4,"HM03","EVENT_GOT_HM03"),
+                "counter" => (MapId::CeladonMart3F,16,4,"TM18","EVENT_GOT_TM18"),
                 "aide2" => (MapId::Route2Gate,1,5,"HM05","EVENT_GOT_HM05"),
                 "aide11" => (MapId::Route11Gate2F,2,7,"ITEMFINDER","EVENT_GOT_ITEMFINDER"),
                 "aide15" => (MapId::Route15Gate2F,4,3,"EXP_ALL","EVENT_GOT_EXP_ALL"),
@@ -12422,9 +12440,10 @@ mod link_stats_cry_fidelity_tests {
                 "chairman" => (MapId::PokemonFanClub,3,2,"BIKE_VOUCHER","EVENT_GOT_BIKE_VOUCHER"),
                 _ => panic!("unknown fixture"),
             };
+            let gift=matches!(map,MapId::SilphCo11F|MapId::CeladonDiner|MapId::Route16FlyHouse|MapId::SafariZoneSecretHouse|MapId::CeladonMart3F);
             let aide=matches!(map,MapId::Route2Gate|MapId::Route11Gate2F|MapId::Route15Gate2F);
-            let mut g=if aide {aide_fixture_169(map,match map {MapId::Route2Gate=>10,MapId::Route11Gate2F=>30,_=>50})} else if matches!(map,MapId::BillsHouse|MapId::CopycatsHouse2F) {bill_copycat_fixture_168(map)} else {fixture(Species::Bulbasaur,x,Direction::Up)};g.state.config.language=pokered_core::game_state::Lang::En;
-            let idle=InputState::new();if !aide && !matches!(map,MapId::BillsHouse|MapId::CopycatsHouse2F) {g.overworld.warp_to_map(map,x as u8,y);for _ in 0..120 {g.update(&idle);}}
+            let mut g=if gift {gift_fixture_170(map)} else if aide {aide_fixture_169(map,match map {MapId::Route2Gate=>10,MapId::Route11Gate2F=>30,_=>50})} else if matches!(map,MapId::BillsHouse|MapId::CopycatsHouse2F) {bill_copycat_fixture_168(map)} else {fixture(Species::Bulbasaur,x,Direction::Up)};g.state.config.language=pokered_core::game_state::Lang::En;
+            let idle=InputState::new();if !gift && !aide && !matches!(map,MapId::BillsHouse|MapId::CopycatsHouse2F) {g.overworld.warp_to_map(map,x as u8,y);for _ in 0..120 {g.update(&idle);}}
             for n in &mut g.overworld.npc_states {n.movement_type=pokered_core::overworld::NpcMovementType::Stationary;n.x=n.home_x;n.y=n.home_y;n.walk_counter=0;}
             let replay:Option<Vec<Vec<String>>>=std::env::var("FIDELITY_RECEIPT_INPUTS").ok().map(|p|serde_json::from_str(&std::fs::read_to_string(p).unwrap()).unwrap());
             let mut input=InputState::new();let mut rows=Vec::new();let mut controls=Vec::new();let mut sound_started=None;
@@ -12434,14 +12453,14 @@ mod link_stats_cry_fidelity_tests {
                 let sound=(kind=="ShowItemDialogue" && effect["sound_started"]==true)
                     || ((kind=="PrintFieldParagraph" || kind=="PrintItemFieldText") && effect["phase"]=="PlayingSound");
                 if sound {sound_started.get_or_insert(t);}
-                let buttons=if let Some(replay)=&replay {replay[t].clone()} else if t<20 {vec!["up".to_string()]} else if (20..40).contains(&t) {vec!["a".to_string()]} else if let Some(start)=sound_started {
+                let buttons=if let Some(replay)=&replay {replay[t].clone()} else if t<20 {vec![if map==MapId::CeladonMart3F {"down".to_string()} else {"up".to_string()}]} else if (20..40).contains(&t) {vec!["a".to_string()]} else if let Some(start)=sound_started {
                     if (start+180..start+182).contains(&t) {vec!["a".to_string()]} else {Vec::new()}
                 } else {
                     let pages=g.overworld.pending_dialogue.as_ref().is_some_and(|d|d.waiting_for_input() && !d.holding_open() && (kind=="ShowDialogue" || d.has_more_pages()));
                     let wait=(kind=="PrintFieldParagraph" && effect["phase"]=="WaitForButton") || (kind=="WaitFieldPrompt" && effect["protected_remaining"]==0) || kind=="WaitFieldButton";
-                    if pages || wait || g.overworld.pending_choice.is_some() {vec!["a".to_string()]} else {Vec::new()}
+                    if pages || wait || g.overworld.pending_choice.is_some() {if gift && input.raw_current() & 1 != 0 {Vec::new()} else {vec!["a".to_string()]}} else {Vec::new()}
                 };
-                input.begin_frame();for (name,button) in [("up",GbButton::Up),("a",GbButton::A)] {if buttons.iter().any(|v|v==name) {input.press(button);} else {input.release(button);}}
+                input.begin_frame();for (name,button) in [("up",GbButton::Up),("down",GbButton::Down),("a",GbButton::A)] {if buttons.iter().any(|v|v==name) {input.press(button);} else {input.release(button);}}
                 g.update(&input);let mut fb=FrameBuffer::new(RenderConfig::new(160,144),Rgba::WHITE);g.draw(&mut fb);fb.save_png(&dir.join(format!("frame-{t:04}.png"))).unwrap();
                 let raw=serde_json::to_value(pokered_core::snapshot::OverworldSnapshot::capture(&g.overworld)).unwrap();
                 if t==0 {std::fs::write(dir.join("initial-snapshot.json"),serde_json::to_string_pretty(&raw).unwrap()).unwrap();}
@@ -12449,8 +12468,8 @@ mod link_stats_cry_fidelity_tests {
                 rows.push(serde_json::json!({"t":t,"input_bits":input.raw_current(),"sfx_playing":g.audio.as_ref().unwrap().is_sfx_playing(),"audio_channels":channels(&g),"has_item":g.save_data.game_data.bag.has_item_const(item),"has_doll":g.save_data.game_data.bag.has_item_const("POKE_DOLL"),"obtained_flag":g.overworld.script_flags().get(flag).copied().unwrap_or(false),"overworld":selected}));controls.push(buttons);
                 if replay.is_none() && sound_started.is_some_and(|start|t>=start+260) {break;}
             }
-            assert!(g.save_data.game_data.bag.has_item_const(item),"both branch fixtures must actually receive the reward");
             std::fs::write(dir.join("frames.json"),serde_json::to_string_pretty(&rows).unwrap()).unwrap();std::fs::write(dir.join("inputs.json"),serde_json::to_string_pretty(&controls).unwrap()).unwrap();
+            assert!(g.save_data.game_data.bag.has_item_const(item),"both branch fixtures must actually receive the reward");
         });
     }
 
@@ -12512,6 +12531,48 @@ mod link_stats_cry_fidelity_tests {
                 assert!(!g.overworld.script_flags().get(flag).copied().unwrap_or(false));
                 assert_eq!(g.save_data.game_data.bag,before);
                 assert!(g.overworld.displayed_field_dialogue().is_none());
+            }
+        });
+    }
+
+    #[test]
+    fn five_remaining_gifts_preserve_source_prompt_sound_flags_and_outer_confirmation() {
+        use pokered_core::overworld::script_bridge::{ScriptEffect,FieldParagraphPhase};
+        use pokered_core::snapshot::OverworldSnapshot;
+        use pokered_data::items::ItemId;
+        run_link_save_fixture(|| {
+            for (map,item,flag,sfx,late,paragraphs) in [(MapId::SilphCo11F,"MASTER_BALL","EVENT_GOT_MASTER_BALL",SfxId::GetKeyItem,true,4),(MapId::CeladonDiner,"COIN_CASE","EVENT_GOT_COIN_CASE",SfxId::GetKeyItem,false,3),(MapId::Route16FlyHouse,"HM02","EVENT_GOT_HM02",SfxId::GetKeyItem,false,1),(MapId::SafariZoneSecretHouse,"HM03","EVENT_GOT_HM03",SfxId::GetItem1,true,3),(MapId::CeladonMart3F,"TM18","EVENT_GOT_TM18",SfxId::GetItem1,false,1)] {
+                for full in [false,true] {
+                    let mut g=gift_fixture_170(map);
+                    if full {for id in 1..=255 {let id=ItemId::from_id(id);if id==ItemId::from_const_name(item).unwrap() {continue;}g.save_data.game_data.bag.add_item(id,1).unwrap();if g.save_data.game_data.bag.is_full() {break;}}assert!(g.save_data.game_data.bag.is_full());}
+                    let bag=g.save_data.game_data.bag.clone();let idle=InputState::new();let a=button(GbButton::A);let pos=(g.overworld.state.player.x,g.overworld.state.player.y);let mut prompt=false;let mut clears=0;let mut start=None;let mut end=None;
+                    for _ in 0..60 {g.update(&a);if g.overworld.active_script_effect_label().as_deref()==Some("PrintFieldText") {break;}}g.update(&idle);
+                    for t in 0..6000 {
+                        let snap=OverworldSnapshot::capture(&g.overworld);
+                        if start.is_some() && end.is_none() && !matches!(snap.active_script_effect,Some(ScriptEffect::PrintItemFieldText {phase:FieldParagraphPhase::PlayingSound,..})) {end=Some(t);}
+                        match snap.active_script_effect {
+                            Some(ScriptEffect::WaitFieldPrompt {protected_remaining:0}) => {
+                                assert!(!prompt);prompt=true;assert_eq!(clears,paragraphs,"{map:?} intro paragraphs");assert_eq!(g.save_data.game_data.bag,bag);assert!(!g.overworld.script_flags().get(flag).copied().unwrap_or(false));
+                                for _ in 0..40 {g.update(&idle);assert_eq!(g.save_data.game_data.bag,bag);}
+                                for _ in 0..8 {g.update(&a);}g.update(&idle);
+                            }
+                            Some(ScriptEffect::PrintFieldParagraph {phase:FieldParagraphPhase::BlankDelay {remaining:20},..}) => {clears+=1;for _ in 0..10 {g.update(&idle);}assert!(matches!(OverworldSnapshot::capture(&g.overworld).active_script_effect,Some(ScriptEffect::PrintFieldParagraph {phase:FieldParagraphPhase::BlankDelay {remaining:10},..})));}
+                            Some(ScriptEffect::PrintItemFieldText {phase:FieldParagraphPhase::PlayingSound,..}) => {
+                                assert!(!full);assert!(prompt);assert!(g.save_data.game_data.bag.has_item_const(item));assert_eq!(g.overworld.script_flags().get(flag).copied().unwrap_or(false),!late,"{map:?} flag during sound");
+                                if start.is_none() {start=Some(t);let raw=serde_json::to_string(&snap).unwrap();serde_json::from_str::<OverworldSnapshot>(&raw).unwrap().restore_into(&mut g.overworld);}
+                                let mut keys=InputState::new();if start.is_some_and(|s|t==s+1) {keys.press(GbButton::B);keys.press(GbButton::Down);}g.update(&keys);assert_eq!((g.overworld.state.player.x,g.overworld.state.player.y),pos);
+                            }
+                            Some(ScriptEffect::FinishFieldText {acknowledged:false}) => {break;}
+                            _ => {let ack=receipt_prompt_needs_press(&g);g.update(if ack {&a} else {&idle});}
+                        }
+                    }
+                    assert!(prompt,"{map:?} full={full}: actual NPC must reach PROMPT");assert_eq!(start.is_some(),!full);
+                    if full {assert_eq!(g.save_data.game_data.bag,bag);assert!(!g.overworld.script_flags().get(flag).copied().unwrap_or(false));assert!(!g.audio.as_ref().unwrap().is_sfx_playing());assert!(g.overworld.displayed_field_dialogue().unwrap().get_display_text().is_some_and(|(a,b)|{let s=format!("{a} {b}");s.contains("room")||s.contains("full")}));}
+                    else {let expected=AudioOutput::new_pcm();expected.play_sfx(sfx);let mut duration=0;while expected.is_sfx_playing()&&duration<1000 {expected.update_frame();duration+=1;}assert_eq!(end.unwrap()-start.unwrap(),duration,"{map:?} complete sound");assert!(g.overworld.script_flags().get(flag).copied().unwrap_or(false));}
+                    assert!(matches!(OverworldSnapshot::capture(&g.overworld).active_script_effect,Some(ScriptEffect::FinishFieldText {acknowledged:false})));
+                    for _ in 0..40 {g.update(&idle);assert!(g.overworld.displayed_field_dialogue().is_some());}for _ in 0..8 {g.update(&a);assert!(g.overworld.displayed_field_dialogue().is_some());}for _ in 0..40 {g.update(&idle);}assert!(g.overworld.displayed_field_dialogue().is_none());
+                    if !full {let bag=g.save_data.game_data.bag.clone();for _ in 0..60 {g.update(&a);if g.overworld.active_script_effect_label().as_deref()==Some("PrintFieldText") {break;}}g.update(&idle);let mut seen=false;for _t in 0..6000 {assert!(g.overworld.pending_choice.is_none());assert!(!matches!(OverworldSnapshot::capture(&g.overworld).active_script_effect,Some(ScriptEffect::PrintItemFieldText {..})));seen|=g.overworld.displayed_field_dialogue().is_some();let ack=receipt_prompt_needs_press(&g);g.update(if ack {&a} else {&idle});if seen&&g.overworld.script_engine_idle()&&g.overworld.active_script_effect_label().is_none() {break;}}assert!(seen);assert_eq!(g.save_data.game_data.bag,bag);assert!(g.overworld.displayed_field_dialogue().is_none());}
+                }
             }
         });
     }

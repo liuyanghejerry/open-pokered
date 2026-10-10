@@ -2702,13 +2702,20 @@ mod tests {
 
     #[test]
     fn fidelity_fly_explanation_only_on_repeat_and_bike_menu_displays_price() {
+        fn printed_text(c: &ScriptCommand) -> Option<&str> {
+            match c {
+                ScriptCommand::ShowText { text } => Some(text.as_str()),
+                ScriptCommand::Custom { name, args } if name == "printFieldText" || name == "printFieldParagraph" => args.first().and_then(|v| v.as_str()),
+                _ => None,
+            }
+        }
         let scene = pokered_data::embedded_scenes::get_scene_ast("Route16FlyHouse").unwrap();
         let mut e = NativeScriptEngine::new();
         e.load_map("Route16FlyHouse", &scene);
         let first = drive_fidelity_scene(&mut e, "talkBrunetteGirl", true, "", &[]);
-        assert!(!first.iter().any(|c| matches!(c, ScriptCommand::ShowText { text } if text.starts_with("HM02 is FLY"))));
+        assert!(!first.iter().any(|c| printed_text(c).is_some_and(|text| text.starts_with("HM02 is FLY"))));
         let repeat = drive_fidelity_scene(&mut e, "talkBrunetteGirl", true, "", &[]);
-        assert!(matches!(&repeat[0], ScriptCommand::ShowText { text } if text.starts_with("HM02 is FLY")));
+        assert!(printed_text(&repeat[0]).is_some_and(|text| text.starts_with("HM02 is FLY")));
         let scene = pokered_data::embedded_scenes::get_scene_ast("BikeShop").unwrap();
         for choice in [0, 1] {
             e = NativeScriptEngine::new();

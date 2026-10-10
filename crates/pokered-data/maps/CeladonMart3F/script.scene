@@ -8,21 +8,20 @@ game_scene CeladonMart3F {
   @storyline("talkClerk") {
     @trigger(map = "CeladonMart3F", npc = 1)
     @if (getFlag("EVENT_GOT_TM18")) {
-      @speaker("") {
-        @t("TM18 is COUNTER! Not like\nthe one I'm leaning on, mind\nyou!", "TM18 是反击！和我正靠着的这\n个可不一样，请注意！")
-      }
+      printFieldText(t("TM18 is COUNTER! Not like\nthe one I'm leaning on, mind\nyou!", "TM18 是反击！和我正靠着的这\n个可不一样，请注意！"))
     } @else {
-      @speaker("") {
-        @t("Oh, hi! I finally finished\nPOKeMON!\n\nNot done yet? This might be\nuseful!", "哦，你好！我终于通关宝可梦\n了！\n\n还没通关吗？这个也许有用！")
-      }
+      printFieldText(t("Oh, hi! I finally finished\nPOKeMON!", "哦，你好！我终于通关宝可梦\n了！"))
+      printFieldParagraph(t("Not done yet? This might be\nuseful!", "还没通关吗？这个也许有用！"))
+      waitFieldPrompt()
       given = giveItem("TM18", 1)
       @if (given) {
         setFlag("EVENT_GOT_TM18")
-        showItemDialogue(@t("<PLAYER> received TM18!", "<PLAYER>获得了 TM18！"))
+        printItemFieldText(@t("<PLAYER> received TM18!", "<PLAYER>获得了 TM18！"), "SFX_GET_ITEM_1")
       } @else {
-        @speaker("") { @t("Your pack is full of items!", "你的背包装满了道具！") }
+        printFieldText(t("Your pack is full of items!", "你的背包装满了道具！"))
       }
     }
+    finishFieldText()
   }
 
   // ── Game Boy Kid 1 (npc 2) — ID No. / OT explanation ───────────────────
