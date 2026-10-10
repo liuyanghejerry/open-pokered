@@ -56,43 +56,46 @@ game_scene Route11Gate2F {
     @trigger(map = "Route11Gate2F", npc = 2)
     @if (getFlag("EVENT_GOT_ITEMFINDER")) {
       // ItemfinderDescriptionText (shown once the player already has it)
-      @speaker("") {
-        @t("There are items on the\nground that can't be seen.\n\nITEMFINDER will detect an\nitem close to you.\n\nIt can't pinpoint it, so you\nhave to look yourself!", "地上有些看不见的道具。\n\n探宝器能探测到附近的道具。\n\n但无法准确定位，你得自己找才\n行！")
-      }
+      printFieldText(t("There are items on the\nground that can't be seen.", "地上有些看不见的道具。"))
+      printFieldParagraph(t("ITEMFINDER will detect an\nitem close to you.", "探宝器能探测到附近的道具。"))
+      printFieldParagraph(t("It can't pinpoint it, so you\nhave to look yourself!", "但无法准确定位，你得自己找才\n行！"))
     } @else {
       // OaksAideHiText (requirement = 30 kinds, reward = ITEMFINDER)
-      @speaker("") {
-        @t("Hi! Remember me? I'm\nPROF.OAK's AIDE!\n\nIf you caught 30 kinds of\nPOKeMON, I'm supposed to\ngive you an ITEMFINDER!\n\nSo, <PLAYER>! Have you\ncaught at least 30 kinds of\nPOKeMON?", "嗨！还记得我吗？我是大木博士\n的助手！\n\n如果你抓到了 30种宝可梦，我\n就要给你一个探宝器！\n\n那么，<PLAYER>！你抓到 30种\n以上的宝可梦了吗？")
-      }
+      printFieldText(t("Hi! Remember me? I'm\nPROF.OAK's AIDE!", "嗨！还记得我吗？我是大木博士\n的助手！"))
+      printFieldParagraph(t("If you caught 30 kinds of\nPOKeMON, I'm supposed to\ngive you an ITEMFINDER!", "如果你抓到了 30种宝可梦，我\n就要给你一个探宝器！"))
+      printFieldParagraph(t("So, <PLAYER>! Have you\ncaught at least 30 kinds of\nPOKeMON?", "那么，<PLAYER>！你抓到 30种\n以上的宝可梦了吗？"))
       @choice {
         @option(@t("YES", "是")) {
           @if (getPokedexOwnedCount() >= 30) {
             // OaksAideHereYouGoText -> give item -> OaksAideGotItemText
-            showText(@t("Great! You have caught ", "太好了！你已经抓到了") + getPokedexOwnedCount() + @t(" kinds of POKeMON!\nCongratulations!\n\nHere you go!", "种宝可梦！\n恭喜你！\n\n给你！"))
+            printFieldText(t("Great! You have caught ", "太好了！你已经抓到了") + getPokedexOwnedCount() + t(" kinds of POKeMON!\nCongratulations!", "种宝可梦！\n恭喜你！"))
+            printFieldParagraph(t("Here you go!", "给你！"))
+            waitFieldPrompt()
             given = giveItem("ITEMFINDER", 1)
             @if (given) {
+              printItemFieldText(@t("<PLAYER> got the ITEMFINDER!", "<PLAYER>得到了探宝器！"), "SFX_GET_ITEM_1")
               setFlag("EVENT_GOT_ITEMFINDER")
-              showItemDialogue(@t("<PLAYER> got the ITEMFINDER!", "<PLAYER>得到了探宝器！"))
               // ItemfinderDescriptionText follows in the original.
-              @speaker("") {
-                @t("There are items on the\nground that can't be seen.\n\nITEMFINDER will detect an\nitem close to you.\n\nIt can't pinpoint it, so you\nhave to look yourself!", "地上有些看不见的道具。\n\n探宝器能探测到附近的道具。\n\n但无法准确定位，你得自己找才\n行！")
-              }
+              printFieldText(t("There are items on the\nground that can't be seen.", "地上有些看不见的道具。"))
+              printFieldParagraph(t("ITEMFINDER will detect an\nitem close to you.", "探宝器能探测到附近的道具。"))
+              printFieldParagraph(t("It can't pinpoint it, so you\nhave to look yourself!", "但无法准确定位，你得自己找才\n行！"))
             } @else {
-              @speaker("") { @t("Oh! I see you don't have any\nroom for the ITEMFINDER.", "哦！看来你没有地方放探宝器。") }
+              printFieldText(t("Oh! I see you don't have any\nroom for the ITEMFINDER.", "哦！看来你没有地方放探宝器。"))
             }
           } @else {
             // OaksAideUhOhText (not enough kinds owned)
-            showText(@t("Let's see... Uh-oh! You have\ncaught only ", "让我看看……哎呀！你只抓到了") + getPokedexOwnedCount() + @t(" kinds of\nPOKeMON!\n\nYou need 30 kinds if you\nwant the ITEMFINDER.", "种宝可梦！\n\n要得到ITEMFINDER，需要抓到30种。"))
+            printFieldText(t("Let's see... Uh-oh! You have\ncaught only ", "让我看看……哎呀！你只抓到了") + getPokedexOwnedCount() + t(" kinds of\nPOKeMON!", "种宝可梦！"))
+            printFieldParagraph(t("You need 30 kinds if you\nwant the ITEMFINDER.", "要得到ITEMFINDER，需要抓到30种。"))
           }
         }
         @option(@t("NO", "否")) {
           // OaksAideComeBackText
-          @speaker("") {
-            @t("Oh. I see.\n\nWhen you get 30 kinds, come\nback for ITEMFINDER.", "哦，是吗。\n\n等你抓到30种，再来拿探宝器\n吧。")
-          }
+          printFieldText(t("Oh. I see.", "哦，是吗。"))
+          printFieldParagraph(t("When you get 30 kinds, come\nback for ITEMFINDER.", "等你抓到30种，再来拿探宝器\n吧。"))
         }
       }
     }
+    finishFieldText()
   }
 
   // ── Left binoculars (sign 1) — only shown when facing up ─────────────────

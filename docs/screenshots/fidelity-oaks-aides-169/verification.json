@@ -1,0 +1,1367 @@
+{
+  "parent": "bafcb000e36289ea14a91d11a067252554f4f031",
+  "base": "31b1eda3112514d6bc803af559ec7f7c9e20374f",
+  "tests": {
+    "core": {
+      "passed": 2742,
+      "ignored": 0
+    },
+    "data": {
+      "passed": 262,
+      "ignored": 0
+    },
+    "app": {
+      "passed": 216,
+      "ignored": 31
+    },
+    "agent": {
+      "passed": 54,
+      "ignored": 0
+    }
+  },
+  "native_feature_scope": "Default features, excluding debug-server-only tests",
+  "sources": {
+    "crates/pokered-app/src/game.rs": "5b4875a6c68b6901b4297062c4a675760a37cbece70b06fa139ea84911a39a0f",
+    "crates/pokered-app/src/render/mod.rs": "d2f3d05e9bec7b513fe26cd03d0ce651683b97d0b57ce316f7be9781d5772256",
+    "crates/pokered-app/src/render/overworld.rs": "efb6d1d65803d4a3c93e099822d2616b359dadd6a30d5410c3c56e8f4de4b184",
+    "crates/pokered-app/src/render/session.rs": "9233b9adbe2a5ff1501b9c4c28051ced36b1d0c5d937228b3a90c8ce1b70e47a",
+    "crates/pokered-core/src/overworld/field_moves.rs": "162384478610831fc7f2e751aadfa6cc2a27bb789f61e9d0651e4556ffc3cba1",
+    "crates/pokered-core/src/overworld/mod.rs": "7fddcc4bd8dc93ad43b7f356a114becb76469417dfa40e31edcb759313366499",
+    "crates/pokered-core/src/overworld/native_script.rs": "8f7a2b91b77f4ab057eecf7f33e61d0f48922aae365b906fcd18d69e1c3e4150",
+    "crates/pokered-core/src/overworld/presentation.rs": "46b142440f2dbc02ff05d75536ec62a2e1b60a0274c3893ea502147699128f6f",
+    "crates/pokered-core/src/overworld/screen.rs": "d213a37766c836ff1106e53b7be6bc4eeb643c652359a720943063e24ae1890c",
+    "crates/pokered-core/src/overworld/script_bridge.rs": "c46769ba3f2dd1b6271fa3a10f1feef69c094e069ea9fcb5ae06928b36141704",
+    "crates/pokered-core/src/overworld/script_interactions.rs": "6f6b8485879153b2ea818cb6a2cd0d159eb4480388eb45c5ee0b0d199cc0d608",
+    "crates/pokered-core/src/overworld/sprite_reload_work.rs": "cb4b676103f2d8cf0eadef886a1def09979b89578d3afd722f2c2bb2e78f06fa",
+    "crates/pokered-core/src/overworld/update.rs": "90d7fe1f7fc5f4c10be79c31cd59bc56e6c54a21bcd87efe5bb3de1752ddf60b",
+    "crates/pokered-core/src/snapshot.rs": "5b893d317d39e619f0a98ef2a41075a8bd555ca3d642f44b3f6d1a673fc5663e",
+    "crates/pokered-core/src/start_menu.rs": "ab213e322753ef89c0d44adf00433b0212e05c2e989f44ee8c62a78f6ad44786",
+    "crates/pokered-data/maps/Museum1F/script.scene": "8e9ae9a551aab5763a7c0f711f57e63be249ea597e2c4fe3f1a37b10eb752b42",
+    "crates/pokered-data/maps/SafariZoneGate/script.scene": "5428458468fa767724c631777240614d8ace5a69874a1c0829a7f8544186dbba",
+    "crates/pokered-data/src/dialog_text.rs": "b198760a5b1bd52a86ba3e7c3d9604e691bd1e4c8bb62f104cde2165a0eb3dec",
+    "crates/pokered-data/src/script_api.rs": "e231247affeb46b8ada619e3dafbdda0387b80aa7a3ca2d5a519fdee25ccad0b",
+    "crates/pokered-data/src/script_command.rs": "6b9f0ed086accda99a1c373e592083d3baf1008c15cccee07037039d05fe13f9",
+    "crates/pokered-data/src/script_function_catalog.rs": "ced5a2ec58ccf16c946f1e5928b6be2969030f6114136b07dfafa7135658d791",
+    "crates/pokered-data/maps/VermilionOldRodHouse/script.scene": "6d2891fc22dd37fd7f6e67ff639b0da4e845ddc5b7ee52c5ac0f7335a9559109",
+    "crates/pokered-data/maps/FuchsiaGoodRodHouse/script.scene": "b7bfda360aa8811996422b63c1dda5235697a3035bbc849cd8975c872ab2c17e",
+    "crates/pokered-data/maps/Route12SuperRodHouse/script.scene": "8bb2903842f72501074e601c2250a78e1c8985d846e61e586ddfd49e16f82b6c",
+    "crates/pokered-data/maps/PokemonFanClub/script.scene": "ad89baca52689e27ae0fcd24eee82594e9e8a14d5a3d0886490d3acbd0f10e53",
+    "crates/pokered-data/maps/CeladonCity/script.scene": "c92172f358a11bee106c6e807958b9cd78b9e14547c7b022a730d17d9f800174",
+    "crates/pokered-data/maps/CeladonMansion1F/script.scene": "120c275c5011d76fb7d9ca651faf08a147465418e8351dcf99454b3a79597f6e",
+    "crates/pokered-data/maps/CopycatsHouse1F/script.scene": "55941173da702bfc630ec8e72c1535b9fa3e502c0a24bae3f8803ff2e50761cf",
+    "crates/pokered-data/maps/LavenderCuboneHouse/script.scene": "3f9050f0445c06b46edfc990791c782295dbc53662f9d39b2872f93a248b15a4",
+    "crates/pokered-data/maps/MrFujisHouse/script.scene": "bab78db22fb3b6ab5f62e1a7b0d66fb8996ab9edee8b908ff25ad716fc253fbf",
+    "crates/pokered-data/maps/PewterNidoranHouse/script.scene": "3fa136f9ff0a10cb6a785724c56844a54dc59fbf8c0471faa9c04b8d5f773da7",
+    "crates/pokered-data/maps/Route16FlyHouse/script.scene": "d9121f6371ac79e98cef60797fef0fd990c727f6ed6f718906eb8edf71380a0f",
+    "crates/pokered-data/maps/SSAnne1FRooms/script.scene": "4c971fb6dcac3efadb69faeb7bf719ff571175131edf5debbf5051c8d117aabe",
+    "crates/pokered-data/maps/SSAnneB1FRooms/script.scene": "17e14f50d57b171eb6965500ea563f42c33d00a862f79a5da7ddf7d3e96f2dee",
+    "crates/pokered-data/maps/SaffronCity/script.scene": "3750d174634a2a9d93e0baf6fd3cd82d0fdbe947cf68e4d866e2358ac481d15b",
+    "crates/pokered-data/maps/SaffronPidgeyHouse/script.scene": "9e9a4e9d979ab476f5183c181d9756b5867ef7c046625a84bffd057fb7373c5b",
+    "crates/pokered-data/maps/VermilionCity/script.scene": "408513c550acbd32dff344a4d6f47001956df2305d0e8059367d81b9fe505472",
+    "crates/pokered-data/maps/VermilionPidgeyHouse/script.scene": "ed15a1fa4ffb57a98d707949570129e6868cf0642a50ccfa568163f40e79f80d",
+    "crates/pokered-data/maps/ViridianNicknameHouse/script.scene": "f7287563a7866bf49ccfa035021d9fb92a255fc205ad67fa19a65b66e5e9be9a",
+    "crates/pokered-data/maps/CinnabarLabMetronomeRoom/script.scene": "a9aa45fba159c120214e28b6247023348bc39b474a72288e29cfd403cb81282d",
+    "crates/pokered-data/maps/BillsHouse/script.scene": "1d274a1971bdc697db4c6481c97f5be09e6e1fe3f5f306fdad12b8ce232439f5",
+    "crates/pokered-data/maps/CopycatsHouse2F/script.scene": "34ac5995cad804c80757637decf5e2bd7ab917f45d2b553b08c35a680c9b5e7e",
+    "crates/pokered-agent/src/semantics/extract.rs": "ce875323f60790cd4937d61c5338adc7f428f03c7b3dd8adb125fe8adf62a9e1",
+    "crates/pokered-data/maps/Route2Gate/script.scene": "76e2d30fd9b74dc0e9a4bd3b013f2c7c08db1ef3ae84fe78cf1af9902ff66791",
+    "crates/pokered-data/maps/Route11Gate2F/script.scene": "39e184e35ff7786c5fa302dce6ef9fc97be0987e556e08e7f7c8f88b42f78259",
+    "crates/pokered-data/maps/Route15Gate2F/script.scene": "c4e811b2177793aa8e716548501a02a830733ffd918e724762f3445480ae0422"
+  },
+  "cue_summary": {
+    "cases": {
+      "aide2": {
+        "master31": {
+          "sound_cue": 729,
+          "receipt_screenshot_hw": 879,
+          "here_paragraph_ack_cue": 654,
+          "paragraph_screenshot_hw": 664,
+          "frames": 991,
+          "repeats_byteexact": true,
+          "receipt_frame_state": {
+            "audio_channels": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "has_doll": false,
+            "has_item": true,
+            "input_bits": 0,
+            "obtained_flag": true,
+            "overworld": {
+              "active_script_effect": {
+                "ShowDialogue": {
+                  "text": "The HM FLASH lights even the\ndarkest dungeons."
+                }
+              },
+              "field_loop_wait": null,
+              "field_text_restore": null,
+              "inner_field_text_open": null,
+              "last_script_dialogue": null,
+              "npc_states": [
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 1,
+                  "home_y": 4,
+                  "movement_type": "Stationary",
+                  "npc_index": 0,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 32,
+                  "text_id": 1,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 1,
+                  "y": 4
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 63,
+                  "facing": "Right",
+                  "home_x": 5,
+                  "home_y": 4,
+                  "movement_type": "Stationary",
+                  "npc_index": 1,
+                  "range": 2,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 4,
+                  "text_id": 2,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Horizontal",
+                  "x": 5,
+                  "y": 4
+                }
+              ],
+              "pending_dialogue": {
+                "char_index": 26,
+                "current_page": 0,
+                "delay_counter": 2,
+                "holding_open": false,
+                "pages": [
+                  {
+                    "line1": "The HM FLASH lights even the",
+                    "line2": "darkest dungeons."
+                  }
+                ],
+                "text_delay_frames": 3,
+                "waiting_for_input": false
+              },
+              "player_sprite_state": null,
+              "state": {
+                "current_map": "Route2Gate",
+                "encounter_cooldown": 0,
+                "exiting_door": false,
+                "player": {
+                  "bike_speedup_active": true,
+                  "facing": "Up",
+                  "movement_state": "Idle",
+                  "transport": "Walking",
+                  "x": 1,
+                  "y": 5
+                },
+                "repel_steps": 0,
+                "standing_on_door": false,
+                "standing_on_warp": false,
+                "walk_counter": 0
+              }
+            },
+            "sfx_playing": false,
+            "t": 879
+          },
+          "paragraph_frame_state": {
+            "audio_channels": [
+              true,
+              false,
+              false,
+              false
+            ],
+            "has_doll": false,
+            "has_item": false,
+            "input_bits": 0,
+            "obtained_flag": false,
+            "overworld": {
+              "active_script_effect": {
+                "ShowDialogue": {
+                  "text": "Great! You have caught 10 kinds of POKeMON!\nCongratulations!\n\nHere you go!"
+                }
+              },
+              "field_loop_wait": null,
+              "field_text_restore": null,
+              "inner_field_text_open": null,
+              "last_script_dialogue": null,
+              "npc_states": [
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 1,
+                  "home_y": 4,
+                  "movement_type": "Stationary",
+                  "npc_index": 0,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 32,
+                  "text_id": 1,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 1,
+                  "y": 4
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 63,
+                  "facing": "Right",
+                  "home_x": 5,
+                  "home_y": 4,
+                  "movement_type": "Stationary",
+                  "npc_index": 1,
+                  "range": 2,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 4,
+                  "text_id": 2,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Horizontal",
+                  "x": 5,
+                  "y": 4
+                }
+              ],
+              "pending_dialogue": {
+                "char_index": 4,
+                "current_page": 2,
+                "delay_counter": 2,
+                "holding_open": false,
+                "pages": [
+                  {
+                    "line1": "Great! You have caught 10",
+                    "line2": "kinds of POKeMON!"
+                  },
+                  {
+                    "line1": "Congratulations!",
+                    "line2": ""
+                  },
+                  {
+                    "line1": "Here you go!",
+                    "line2": ""
+                  }
+                ],
+                "text_delay_frames": 3,
+                "waiting_for_input": false
+              },
+              "player_sprite_state": null,
+              "state": {
+                "current_map": "Route2Gate",
+                "encounter_cooldown": 0,
+                "exiting_door": false,
+                "player": {
+                  "bike_speedup_active": true,
+                  "facing": "Up",
+                  "movement_state": "Idle",
+                  "transport": "Walking",
+                  "x": 1,
+                  "y": 5
+                },
+                "repel_steps": 0,
+                "standing_on_door": false,
+                "standing_on_warp": false,
+                "walk_counter": 0
+              }
+            },
+            "sfx_playing": true,
+            "t": 664
+          }
+        },
+        "after-a3": {
+          "sound_cue": 780,
+          "receipt_screenshot_hw": 930,
+          "here_paragraph_ack_cue": 680,
+          "paragraph_screenshot_hw": 690,
+          "frames": 1042,
+          "repeats_byteexact": true,
+          "receipt_frame_state": {
+            "audio_channels": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "has_doll": false,
+            "has_item": true,
+            "input_bits": 0,
+            "obtained_flag": true,
+            "overworld": {
+              "active_script_effect": {
+                "PrintFieldText": {
+                  "text": "The HM FLASH lights even the\ndarkest dungeons."
+                }
+              },
+              "field_loop_wait": 1,
+              "field_text_restore": null,
+              "inner_field_text_open": true,
+              "last_script_dialogue": null,
+              "npc_states": [
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 1,
+                  "home_y": 4,
+                  "movement_type": "Stationary",
+                  "npc_index": 0,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 32,
+                  "text_id": 1,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 1,
+                  "y": 4
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 94,
+                  "facing": "Right",
+                  "home_x": 5,
+                  "home_y": 4,
+                  "movement_type": "Stationary",
+                  "npc_index": 1,
+                  "range": 2,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 4,
+                  "text_id": 2,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Horizontal",
+                  "x": 5,
+                  "y": 4
+                }
+              ],
+              "pending_dialogue": {
+                "char_index": 26,
+                "current_page": 0,
+                "delay_counter": 2,
+                "holding_open": false,
+                "pages": [
+                  {
+                    "line1": "The HM FLASH lights even the",
+                    "line2": "darkest dungeons."
+                  }
+                ],
+                "text_delay_frames": 3,
+                "waiting_for_input": false
+              },
+              "player_sprite_state": {
+                "facing": 1,
+                "initialized": true,
+                "intra_frame": 0,
+                "pending": [
+                  4,
+                  4
+                ],
+                "phase": 0,
+                "visible": 4
+              },
+              "state": {
+                "current_map": "Route2Gate",
+                "encounter_cooldown": 0,
+                "exiting_door": false,
+                "player": {
+                  "bike_speedup_active": true,
+                  "facing": "Up",
+                  "movement_state": "Idle",
+                  "transport": "Walking",
+                  "x": 1,
+                  "y": 5
+                },
+                "repel_steps": 0,
+                "standing_on_door": false,
+                "standing_on_warp": false,
+                "walk_counter": 0
+              }
+            },
+            "sfx_playing": false,
+            "t": 930
+          },
+          "paragraph_frame_state": {
+            "audio_channels": [
+              true,
+              false,
+              false,
+              false
+            ],
+            "has_doll": false,
+            "has_item": false,
+            "input_bits": 0,
+            "obtained_flag": false,
+            "overworld": {
+              "active_script_effect": {
+                "PrintFieldParagraph": {
+                  "phase": {
+                    "BlankDelay": {
+                      "remaining": 10
+                    }
+                  },
+                  "sound_id": null,
+                  "text": "Here you go!"
+                }
+              },
+              "field_loop_wait": 1,
+              "field_text_restore": null,
+              "inner_field_text_open": true,
+              "last_script_dialogue": {
+                "char_index": 0,
+                "current_page": 0,
+                "delay_counter": 0,
+                "holding_open": false,
+                "pages": [
+                  {
+                    "line1": "",
+                    "line2": ""
+                  }
+                ],
+                "text_delay_frames": 1,
+                "waiting_for_input": false
+              },
+              "npc_states": [
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 1,
+                  "home_y": 4,
+                  "movement_type": "Stationary",
+                  "npc_index": 0,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 32,
+                  "text_id": 1,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 1,
+                  "y": 4
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 94,
+                  "facing": "Right",
+                  "home_x": 5,
+                  "home_y": 4,
+                  "movement_type": "Stationary",
+                  "npc_index": 1,
+                  "range": 2,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 4,
+                  "text_id": 2,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Horizontal",
+                  "x": 5,
+                  "y": 4
+                }
+              ],
+              "pending_dialogue": null,
+              "player_sprite_state": {
+                "facing": 1,
+                "initialized": true,
+                "intra_frame": 0,
+                "pending": [
+                  4,
+                  4
+                ],
+                "phase": 0,
+                "visible": 4
+              },
+              "state": {
+                "current_map": "Route2Gate",
+                "encounter_cooldown": 0,
+                "exiting_door": false,
+                "player": {
+                  "bike_speedup_active": true,
+                  "facing": "Up",
+                  "movement_state": "Idle",
+                  "transport": "Walking",
+                  "x": 1,
+                  "y": 5
+                },
+                "repel_steps": 0,
+                "standing_on_door": false,
+                "standing_on_warp": false,
+                "walk_counter": 0
+              }
+            },
+            "sfx_playing": true,
+            "t": 690
+          }
+        }
+      },
+      "aide11": {
+        "master31": {
+          "sound_cue": 777,
+          "receipt_screenshot_hw": 927,
+          "here_paragraph_ack_cue": 672,
+          "paragraph_screenshot_hw": 682,
+          "frames": 1039,
+          "repeats_byteexact": true,
+          "receipt_frame_state": {
+            "audio_channels": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "has_doll": false,
+            "has_item": true,
+            "input_bits": 0,
+            "obtained_flag": true,
+            "overworld": {
+              "active_script_effect": {
+                "ShowDialogue": {
+                  "text": "There are items on the\nground that can't be seen.\n\nITEMFINDER will detect an\nitem close to you.\n\nIt can't pinpoint it, so you\nhave to look yourself!"
+                }
+              },
+              "field_loop_wait": null,
+              "field_text_restore": null,
+              "inner_field_text_open": null,
+              "last_script_dialogue": null,
+              "npc_states": [
+                {
+                  "defeated": false,
+                  "delay_counter": 63,
+                  "facing": "Right",
+                  "home_x": 4,
+                  "home_y": 2,
+                  "movement_type": "Stationary",
+                  "npc_index": 0,
+                  "range": 2,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 4,
+                  "text_id": 1,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Horizontal",
+                  "x": 4,
+                  "y": 2
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 2,
+                  "home_y": 6,
+                  "movement_type": "Stationary",
+                  "npc_index": 1,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 32,
+                  "text_id": 2,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 2,
+                  "y": 6
+                }
+              ],
+              "pending_dialogue": {
+                "char_index": 26,
+                "current_page": 0,
+                "delay_counter": 2,
+                "holding_open": false,
+                "pages": [
+                  {
+                    "line1": "There are items on the",
+                    "line2": "ground that can't be seen."
+                  },
+                  {
+                    "line1": "",
+                    "line2": "ITEMFINDER will detect an"
+                  },
+                  {
+                    "line1": "item close to you.",
+                    "line2": ""
+                  },
+                  {
+                    "line1": "It can't pinpoint it, so you",
+                    "line2": "have to look yourself!"
+                  }
+                ],
+                "text_delay_frames": 3,
+                "waiting_for_input": false
+              },
+              "player_sprite_state": null,
+              "state": {
+                "current_map": "Route11Gate2F",
+                "encounter_cooldown": 0,
+                "exiting_door": false,
+                "player": {
+                  "bike_speedup_active": true,
+                  "facing": "Up",
+                  "movement_state": "Idle",
+                  "transport": "Walking",
+                  "x": 2,
+                  "y": 7
+                },
+                "repel_steps": 0,
+                "standing_on_door": false,
+                "standing_on_warp": false,
+                "walk_counter": 0
+              }
+            },
+            "sfx_playing": false,
+            "t": 927
+          },
+          "paragraph_frame_state": {
+            "audio_channels": [
+              true,
+              false,
+              false,
+              false
+            ],
+            "has_doll": false,
+            "has_item": false,
+            "input_bits": 0,
+            "obtained_flag": false,
+            "overworld": {
+              "active_script_effect": {
+                "ShowDialogue": {
+                  "text": "Great! You have caught 30 kinds of POKeMON!\nCongratulations!\n\nHere you go!"
+                }
+              },
+              "field_loop_wait": null,
+              "field_text_restore": null,
+              "inner_field_text_open": null,
+              "last_script_dialogue": null,
+              "npc_states": [
+                {
+                  "defeated": false,
+                  "delay_counter": 63,
+                  "facing": "Right",
+                  "home_x": 4,
+                  "home_y": 2,
+                  "movement_type": "Stationary",
+                  "npc_index": 0,
+                  "range": 2,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 4,
+                  "text_id": 1,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Horizontal",
+                  "x": 4,
+                  "y": 2
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 2,
+                  "home_y": 6,
+                  "movement_type": "Stationary",
+                  "npc_index": 1,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 32,
+                  "text_id": 2,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 2,
+                  "y": 6
+                }
+              ],
+              "pending_dialogue": {
+                "char_index": 4,
+                "current_page": 2,
+                "delay_counter": 2,
+                "holding_open": false,
+                "pages": [
+                  {
+                    "line1": "Great! You have caught 30",
+                    "line2": "kinds of POKeMON!"
+                  },
+                  {
+                    "line1": "Congratulations!",
+                    "line2": ""
+                  },
+                  {
+                    "line1": "Here you go!",
+                    "line2": ""
+                  }
+                ],
+                "text_delay_frames": 3,
+                "waiting_for_input": false
+              },
+              "player_sprite_state": null,
+              "state": {
+                "current_map": "Route11Gate2F",
+                "encounter_cooldown": 0,
+                "exiting_door": false,
+                "player": {
+                  "bike_speedup_active": true,
+                  "facing": "Up",
+                  "movement_state": "Idle",
+                  "transport": "Walking",
+                  "x": 2,
+                  "y": 7
+                },
+                "repel_steps": 0,
+                "standing_on_door": false,
+                "standing_on_warp": false,
+                "walk_counter": 0
+              }
+            },
+            "sfx_playing": true,
+            "t": 682
+          }
+        },
+        "after-a3": {
+          "sound_cue": 828,
+          "receipt_screenshot_hw": 978,
+          "here_paragraph_ack_cue": 698,
+          "paragraph_screenshot_hw": 708,
+          "frames": 1090,
+          "repeats_byteexact": true,
+          "receipt_frame_state": {
+            "audio_channels": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "has_doll": false,
+            "has_item": true,
+            "input_bits": 0,
+            "obtained_flag": true,
+            "overworld": {
+              "active_script_effect": {
+                "PrintFieldText": {
+                  "text": "There are items on the\nground that can't be seen."
+                }
+              },
+              "field_loop_wait": 1,
+              "field_text_restore": null,
+              "inner_field_text_open": true,
+              "last_script_dialogue": null,
+              "npc_states": [
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Left",
+                  "home_x": 4,
+                  "home_y": 2,
+                  "movement_type": "Stationary",
+                  "npc_index": 0,
+                  "range": 2,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 4,
+                  "text_id": 1,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Horizontal",
+                  "x": 4,
+                  "y": 2
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 2,
+                  "home_y": 6,
+                  "movement_type": "Stationary",
+                  "npc_index": 1,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 32,
+                  "text_id": 2,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 2,
+                  "y": 6
+                }
+              ],
+              "pending_dialogue": {
+                "char_index": 25,
+                "current_page": 0,
+                "delay_counter": 0,
+                "holding_open": false,
+                "pages": [
+                  {
+                    "line1": "There are items on the",
+                    "line2": "ground that can't be seen."
+                  }
+                ],
+                "text_delay_frames": 3,
+                "waiting_for_input": false
+              },
+              "player_sprite_state": {
+                "facing": 1,
+                "initialized": true,
+                "intra_frame": 0,
+                "pending": [
+                  4,
+                  4
+                ],
+                "phase": 0,
+                "visible": 4
+              },
+              "state": {
+                "current_map": "Route11Gate2F",
+                "encounter_cooldown": 0,
+                "exiting_door": false,
+                "player": {
+                  "bike_speedup_active": true,
+                  "facing": "Up",
+                  "movement_state": "Idle",
+                  "transport": "Walking",
+                  "x": 2,
+                  "y": 7
+                },
+                "repel_steps": 0,
+                "standing_on_door": false,
+                "standing_on_warp": false,
+                "walk_counter": 0
+              }
+            },
+            "sfx_playing": false,
+            "t": 978
+          },
+          "paragraph_frame_state": {
+            "audio_channels": [
+              true,
+              false,
+              false,
+              false
+            ],
+            "has_doll": false,
+            "has_item": false,
+            "input_bits": 0,
+            "obtained_flag": false,
+            "overworld": {
+              "active_script_effect": {
+                "PrintFieldParagraph": {
+                  "phase": {
+                    "BlankDelay": {
+                      "remaining": 10
+                    }
+                  },
+                  "sound_id": null,
+                  "text": "Here you go!"
+                }
+              },
+              "field_loop_wait": 1,
+              "field_text_restore": null,
+              "inner_field_text_open": true,
+              "last_script_dialogue": {
+                "char_index": 0,
+                "current_page": 0,
+                "delay_counter": 0,
+                "holding_open": false,
+                "pages": [
+                  {
+                    "line1": "",
+                    "line2": ""
+                  }
+                ],
+                "text_delay_frames": 1,
+                "waiting_for_input": false
+              },
+              "npc_states": [
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Left",
+                  "home_x": 4,
+                  "home_y": 2,
+                  "movement_type": "Stationary",
+                  "npc_index": 0,
+                  "range": 2,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 4,
+                  "text_id": 1,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Horizontal",
+                  "x": 4,
+                  "y": 2
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 2,
+                  "home_y": 6,
+                  "movement_type": "Stationary",
+                  "npc_index": 1,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 32,
+                  "text_id": 2,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 2,
+                  "y": 6
+                }
+              ],
+              "pending_dialogue": null,
+              "player_sprite_state": {
+                "facing": 1,
+                "initialized": true,
+                "intra_frame": 0,
+                "pending": [
+                  4,
+                  4
+                ],
+                "phase": 0,
+                "visible": 4
+              },
+              "state": {
+                "current_map": "Route11Gate2F",
+                "encounter_cooldown": 0,
+                "exiting_door": false,
+                "player": {
+                  "bike_speedup_active": true,
+                  "facing": "Up",
+                  "movement_state": "Idle",
+                  "transport": "Walking",
+                  "x": 2,
+                  "y": 7
+                },
+                "repel_steps": 0,
+                "standing_on_door": false,
+                "standing_on_warp": false,
+                "walk_counter": 0
+              }
+            },
+            "sfx_playing": true,
+            "t": 708
+          }
+        }
+      },
+      "aide15": {
+        "master31": {
+          "sound_cue": 759,
+          "receipt_screenshot_hw": 909,
+          "here_paragraph_ack_cue": 663,
+          "paragraph_screenshot_hw": 673,
+          "frames": 1021,
+          "repeats_byteexact": true,
+          "receipt_frame_state": {
+            "audio_channels": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "has_doll": false,
+            "has_item": true,
+            "input_bits": 0,
+            "obtained_flag": true,
+            "overworld": {
+              "active_script_effect": {
+                "ShowDialogue": {
+                  "text": "EXP.ALL gives EXP points to\nall the POKeMON with you,\neven if they don't fight.\n\nIt does, however, reduce the\namount of EXP for each\nPOKeMON.\n\nIf you don't need it, you\nshould store it via PC."
+                }
+              },
+              "field_loop_wait": null,
+              "field_text_restore": null,
+              "inner_field_text_open": null,
+              "last_script_dialogue": null,
+              "npc_states": [
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 4,
+                  "home_y": 2,
+                  "movement_type": "Stationary",
+                  "npc_index": 0,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 32,
+                  "text_id": 1,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 4,
+                  "y": 2
+                }
+              ],
+              "pending_dialogue": {
+                "char_index": 26,
+                "current_page": 0,
+                "delay_counter": 2,
+                "holding_open": false,
+                "pages": [
+                  {
+                    "line1": "EXP.ALL gives EXP points to",
+                    "line2": "all the POKeMON with you,"
+                  },
+                  {
+                    "line1": "even if they don't fight.",
+                    "line2": ""
+                  },
+                  {
+                    "line1": "It does, however, reduce the",
+                    "line2": "amount of EXP for each"
+                  },
+                  {
+                    "line1": "POKeMON.",
+                    "line2": ""
+                  },
+                  {
+                    "line1": "If you don't need it, you",
+                    "line2": "should store it via PC."
+                  }
+                ],
+                "text_delay_frames": 3,
+                "waiting_for_input": false
+              },
+              "player_sprite_state": null,
+              "state": {
+                "current_map": "Route15Gate2F",
+                "encounter_cooldown": 0,
+                "exiting_door": false,
+                "player": {
+                  "bike_speedup_active": true,
+                  "facing": "Up",
+                  "movement_state": "Idle",
+                  "transport": "Walking",
+                  "x": 4,
+                  "y": 3
+                },
+                "repel_steps": 0,
+                "standing_on_door": false,
+                "standing_on_warp": false,
+                "walk_counter": 0
+              }
+            },
+            "sfx_playing": false,
+            "t": 909
+          },
+          "paragraph_frame_state": {
+            "audio_channels": [
+              true,
+              false,
+              false,
+              false
+            ],
+            "has_doll": false,
+            "has_item": false,
+            "input_bits": 0,
+            "obtained_flag": false,
+            "overworld": {
+              "active_script_effect": {
+                "ShowDialogue": {
+                  "text": "Great! You have caught 50 kinds of POKeMON!\nCongratulations!\n\nHere you go!"
+                }
+              },
+              "field_loop_wait": null,
+              "field_text_restore": null,
+              "inner_field_text_open": null,
+              "last_script_dialogue": null,
+              "npc_states": [
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 4,
+                  "home_y": 2,
+                  "movement_type": "Stationary",
+                  "npc_index": 0,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 32,
+                  "text_id": 1,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 4,
+                  "y": 2
+                }
+              ],
+              "pending_dialogue": {
+                "char_index": 4,
+                "current_page": 2,
+                "delay_counter": 2,
+                "holding_open": false,
+                "pages": [
+                  {
+                    "line1": "Great! You have caught 50",
+                    "line2": "kinds of POKeMON!"
+                  },
+                  {
+                    "line1": "Congratulations!",
+                    "line2": ""
+                  },
+                  {
+                    "line1": "Here you go!",
+                    "line2": ""
+                  }
+                ],
+                "text_delay_frames": 3,
+                "waiting_for_input": false
+              },
+              "player_sprite_state": null,
+              "state": {
+                "current_map": "Route15Gate2F",
+                "encounter_cooldown": 0,
+                "exiting_door": false,
+                "player": {
+                  "bike_speedup_active": true,
+                  "facing": "Up",
+                  "movement_state": "Idle",
+                  "transport": "Walking",
+                  "x": 4,
+                  "y": 3
+                },
+                "repel_steps": 0,
+                "standing_on_door": false,
+                "standing_on_warp": false,
+                "walk_counter": 0
+              }
+            },
+            "sfx_playing": true,
+            "t": 673
+          }
+        },
+        "after-a3": {
+          "sound_cue": 810,
+          "receipt_screenshot_hw": 960,
+          "here_paragraph_ack_cue": 689,
+          "paragraph_screenshot_hw": 699,
+          "frames": 1072,
+          "repeats_byteexact": true,
+          "receipt_frame_state": {
+            "audio_channels": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "has_doll": false,
+            "has_item": true,
+            "input_bits": 0,
+            "obtained_flag": true,
+            "overworld": {
+              "active_script_effect": {
+                "PrintFieldText": {
+                  "text": "EXP.ALL gives EXP points to\nall the POKeMON with you,\neven if they don't fight."
+                }
+              },
+              "field_loop_wait": 1,
+              "field_text_restore": null,
+              "inner_field_text_open": true,
+              "last_script_dialogue": null,
+              "npc_states": [
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 4,
+                  "home_y": 2,
+                  "movement_type": "Stationary",
+                  "npc_index": 0,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 32,
+                  "text_id": 1,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 4,
+                  "y": 2
+                }
+              ],
+              "pending_dialogue": {
+                "char_index": 26,
+                "current_page": 0,
+                "delay_counter": 2,
+                "holding_open": false,
+                "pages": [
+                  {
+                    "line1": "EXP.ALL gives EXP points to",
+                    "line2": "all the POKeMON with you,"
+                  },
+                  {
+                    "line1": "even if they don't fight.",
+                    "line2": ""
+                  }
+                ],
+                "text_delay_frames": 3,
+                "waiting_for_input": false
+              },
+              "player_sprite_state": {
+                "facing": 1,
+                "initialized": true,
+                "intra_frame": 0,
+                "pending": [
+                  4,
+                  4
+                ],
+                "phase": 0,
+                "visible": 4
+              },
+              "state": {
+                "current_map": "Route15Gate2F",
+                "encounter_cooldown": 0,
+                "exiting_door": false,
+                "player": {
+                  "bike_speedup_active": true,
+                  "facing": "Up",
+                  "movement_state": "Idle",
+                  "transport": "Walking",
+                  "x": 4,
+                  "y": 3
+                },
+                "repel_steps": 0,
+                "standing_on_door": false,
+                "standing_on_warp": false,
+                "walk_counter": 0
+              }
+            },
+            "sfx_playing": false,
+            "t": 960
+          },
+          "paragraph_frame_state": {
+            "audio_channels": [
+              true,
+              false,
+              false,
+              false
+            ],
+            "has_doll": false,
+            "has_item": false,
+            "input_bits": 0,
+            "obtained_flag": false,
+            "overworld": {
+              "active_script_effect": {
+                "PrintFieldParagraph": {
+                  "phase": {
+                    "BlankDelay": {
+                      "remaining": 10
+                    }
+                  },
+                  "sound_id": null,
+                  "text": "Here you go!"
+                }
+              },
+              "field_loop_wait": 1,
+              "field_text_restore": null,
+              "inner_field_text_open": true,
+              "last_script_dialogue": {
+                "char_index": 0,
+                "current_page": 0,
+                "delay_counter": 0,
+                "holding_open": false,
+                "pages": [
+                  {
+                    "line1": "",
+                    "line2": ""
+                  }
+                ],
+                "text_delay_frames": 1,
+                "waiting_for_input": false
+              },
+              "npc_states": [
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 4,
+                  "home_y": 2,
+                  "movement_type": "Stationary",
+                  "npc_index": 0,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 32,
+                  "text_id": 1,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 4,
+                  "y": 2
+                }
+              ],
+              "pending_dialogue": null,
+              "player_sprite_state": {
+                "facing": 1,
+                "initialized": true,
+                "intra_frame": 0,
+                "pending": [
+                  4,
+                  4
+                ],
+                "phase": 0,
+                "visible": 4
+              },
+              "state": {
+                "current_map": "Route15Gate2F",
+                "encounter_cooldown": 0,
+                "exiting_door": false,
+                "player": {
+                  "bike_speedup_active": true,
+                  "facing": "Up",
+                  "movement_state": "Idle",
+                  "transport": "Walking",
+                  "x": 4,
+                  "y": 3
+                },
+                "repel_steps": 0,
+                "standing_on_door": false,
+                "standing_on_warp": false,
+                "walk_counter": 0
+              }
+            },
+            "sfx_playing": true,
+            "t": 699
+          }
+        }
+      }
+    },
+    "scope": "Independent actual input prefixes; receipt screenshots at matched sound-cue-relative HW150 with261 identical postcue bits. HereYouGo paragraph screenshots at acknowledgement-relative HW10, identical11bits(ACK thenidle), after stillBlank remaining10 and firstglyph at20. No absolute entry/init/closure or original-emulator frame parity claim; each case/side2 whole recordings byteexact; final-a3 captures also byteexact a2."
+  },
+  "archive": {
+    "bytes": 46475071,
+    "entries": 12678,
+    "sha256": "f17d214ecd579cc54e204cf64c0d8edfaa422b42dcfea0f5e39fc7889aacbe76"
+  },
+  "gba_metrics": 31,
+  "original_evidence": "Complete shared aide, caller, far-text and text-opcode ASM. No new original emulator recording; no absolute prefix/full-pixel/waveform/CPU timing claim.",
+  "failed_checks": [
+    "a1 actual app test incorrectly expected caught-at-least wording on the retained last question page; corrected visible-page assertion only.",
+    "a2 old core owned-count test recognized ShowText only; added printFieldText argument adapter, retained all thresholds, both languages and flags assertions. Production idle cleanup unchanged."
+  ],
+  "limitations": [
+    "Six remaining source-audited gift handlers need actual reproduction/migration.",
+    "Existing full text init/closure, acknowledged-A arrow phase, sprite work/movement and final m01..49 plus independent SAVE-CONTINUE gates remain."
+  ]
+}

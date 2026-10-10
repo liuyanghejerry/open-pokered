@@ -2626,7 +2626,9 @@ mod tests {
                     e.set_lang(lang);
                     let commands = drive_fidelity_scene(&mut e, "talkOaksAide", true, "", &[0]);
                     let evaluation = commands.iter().filter_map(|c| match c {
-                        ScriptCommand::ShowText { text } => Some(text), _ => None,
+                        ScriptCommand::ShowText { text } => Some(text.as_str()),
+                        ScriptCommand::Custom { name, args } if name=="printFieldText" => args.first().and_then(|v|v.as_str()),
+                        _ => None,
                     }).nth(1).unwrap();
                     assert!(evaluation.contains(&owned.to_string()), "{map}, {owned}, {lang}: {evaluation}");
                     assert_eq!(e.get_flag(flag), owned >= threshold);
