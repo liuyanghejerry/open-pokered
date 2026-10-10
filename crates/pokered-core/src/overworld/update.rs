@@ -2936,6 +2936,19 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     true
                 } else {false}
             }
+            script_bridge::ScriptEffect::WaitFieldButton { .. } => {
+                if a_just_pressed || b_just_pressed {
+                    *sfx_event=OverworldSfxEvent::TextAdvance;
+                    true
+                } else {false}
+            }
+            script_bridge::ScriptEffect::CloseFieldText => {
+                if a_pressed {false} else {
+                    *last_script_dialogue=None;
+                    *inner_field_text_open=false;
+                    true
+                }
+            }
             script_bridge::ScriptEffect::PlayCry { species, started } => {
                 if !*started {
                     audio_requests.push(OverworldAudioRequest::PlayCry { species: species.clone() });
@@ -5267,6 +5280,34 @@ mod scripted_field_clock_tests {
 mod field_typing_input_fidelity_tests {
     use super::*;
     use pokered_data::impl_traits::PokemonRedData;
+
+    #[test]
+    fn text_opcode_waits_accept_first_sample_and_outer_skip_only_holds_a() {
+        use script_bridge::ScriptEffect;
+        let idle=OverworldInput::new(false,false,false,false,false,false,false,false);
+        for arrow in [false,true] {
+            let mut ow=OverworldScreen::new(MapId::RedsHouse2F,None,PokemonRedData);
+            for _ in 0..120 {ow.update_frame(idle);}
+            ow.last_script_dialogue=Some(BedroomDialogue::from_message("completed inner text"));
+            ow.last_script_dialogue.as_mut().unwrap().skip_to_full_page();ow.inner_field_text_open=true;
+            ow.active_script_effect=Some(ScriptEffect::WaitFieldButton {show_arrow:arrow});
+            assert_eq!(ow.dialogue_needs_button(),arrow);
+            let raw=serde_json::to_string(&crate::snapshot::OverworldSnapshot::capture(&ow)).unwrap();
+            serde_json::from_str::<crate::snapshot::OverworldSnapshot>(&raw).unwrap().restore_into(&mut ow);
+            // Isolate the effect dispatcher: this unit fixture has no owning
+            // script VM; actual NPC regressions cover its caller lifecycle.
+            let mut a=idle;a.a=true;ow.update_frame_inner(a);
+            assert!(ow.active_script_effect.is_none(),"TX waits must accept first A sample without ProtectedDelay3");
+            assert_eq!(ow.sfx_event,OverworldSfxEvent::TextAdvance);
+            assert!(ow.inner_field_text_open && ow.last_script_dialogue.is_some());
+            assert!(ow.field_text_restore.is_none(),"inner wait returns without close/holdA");
+            ow.active_script_effect=Some(ScriptEffect::CloseFieldText);
+            for _ in 0..8 {ow.update_frame_inner(a);assert!(matches!(ow.active_script_effect,Some(ScriptEffect::CloseFieldText)));assert!(ow.last_script_dialogue.is_some());}
+            assert!(!ow.dialogue_needs_button());
+            ow.update_frame_inner(idle);
+            assert!(ow.active_script_effect.is_none());assert!(!ow.inner_field_text_open);assert!(ow.last_script_dialogue.is_none());
+        }
+    }
 
     #[test]
     fn paragraph_preserves_window_and_button_history_across_protected_and_blank_waits() {

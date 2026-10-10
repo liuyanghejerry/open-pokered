@@ -454,6 +454,9 @@ impl ScriptHost for NativeHost {
                 Ok(pokemon(if name=="printFieldParagraph" {PokemonScriptCommand::PrintFieldParagraph {text,sound_id}} else {PokemonScriptCommand::PrintItemFieldText {text,sound_id}}))
             }
             "waitFieldPrompt" => Ok(pokemon(PokemonScriptCommand::WaitFieldPrompt)),
+            "waitFieldPromptButton" => Ok(pokemon(PokemonScriptCommand::WaitFieldPromptButton)),
+            "waitFieldButton" => Ok(pokemon(PokemonScriptCommand::WaitFieldButton)),
+            "closeFieldText" => Ok(pokemon(PokemonScriptCommand::CloseFieldText)),
             "finishFieldText" => Ok(pokemon(PokemonScriptCommand::FinishFieldText)),
             "printFieldText" => {
                 let text = args::text(v.first().ok_or("printFieldText: missing text")?, "printFieldText")?;

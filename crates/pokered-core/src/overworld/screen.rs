@@ -1474,7 +1474,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             other => other,
         };
         (!(self.inner_field_text_open && self.pending_dialogue.is_none())
-            || matches!(effect, Some(super::script_bridge::ScriptEffect::WaitFieldPrompt { .. } | super::script_bridge::ScriptEffect::FinishFieldText { .. }
+            || matches!(effect, Some(super::script_bridge::ScriptEffect::WaitFieldPrompt { .. } | super::script_bridge::ScriptEffect::WaitFieldButton {show_arrow:true} | super::script_bridge::ScriptEffect::FinishFieldText { .. }
                 | super::script_bridge::ScriptEffect::PrintFieldParagraph { phase: super::script_bridge::FieldParagraphPhase::ProtectedDelay { .. } | super::script_bridge::FieldParagraphPhase::WaitForButton, .. })))
             && self.pending_choice.is_none()
             && !self.active_script_effect.as_ref().is_some_and(|effect| effect.is_choice())

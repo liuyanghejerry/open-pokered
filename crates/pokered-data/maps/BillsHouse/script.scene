@@ -84,31 +84,28 @@ game_scene BillsHouse {
   @storyline("talkBill") {
     @trigger(map = "BillsHouse", npc = 2, toggle = "BILLS_HOUSE_OBJ_2", hidden = true)
     @if (!getFlag("EVENT_GOT_SS_TICKET")) {
-      @speaker("") {
-        @t("BILL: Yeehah! Thanks, bud! I\nowe you one!\n\nSo, did you come to see my\nPOKeMON collection? You\ndidn't? That's a bummer.\n\nI've got to thank you... Oh\nhere, maybe this'll do.", "正辉：耶哈！谢谢你，兄弟！我\n欠你一个人情！\n\n那么，你是来看我的宝可梦收藏\n的吗？不是吗？真可惜。\n\n我得好好谢谢你……对了，给\n你，这个也许行。")
-      }
+      printFieldText(t("BILL: Yeehah! Thanks, bud! I\nowe you one!", "正辉：耶哈！谢谢你，兄弟！我\n欠你一个人情！"))
+      printFieldParagraph(t("So, did you come to see my\nPOKeMON collection? You\ndidn't? That's a bummer.", "那么，你是来看我的宝可梦收藏\n的吗？不是吗？真可惜。"))
+      printFieldParagraph(t("I've got to thank you... Oh\nhere, maybe this'll do.", "我得好好谢谢你……对了，给\n你，这个也许行。"))
+      waitFieldPrompt()
       given = giveItem("SS_TICKET", 1)
       @if (given) {
+        printItemFieldText(t("<PLAYER> received an\nS.S.TICKET!", "<PLAYER>获得了圣安奴号船票！"), "SFX_GET_KEY_ITEM")
+        // TX_PROMPT_BUTTON calls ManualTextScroll without ProtectedDelay3.
+        waitFieldPromptButton()
         setFlag("EVENT_GOT_SS_TICKET")
-        showItemDialogue(@t("<PLAYER> received an\nS.S.TICKET!", "<PLAYER>获得了圣安奴号船票！"), "SFX_GET_KEY_ITEM")
-        // Original BillsHouse.asm (TOGGLE_CERULEAN_GUARD_1 Show /
-        // TOGGLE_CERULEAN_GUARD_2 Hide): swap the Cerulean City bridge guards
-        // now that the S.S.TICKET lets the player through. The toggle persists
-        // across maps (__OBJ_HIDDEN_/__OBJ_SHOWN_ + SRAM toggleable bits) and
-        // is applied when CeruleanCity loads.
         showObjectByName("CERULEAN_GUARD_1")
         hideObjectByName("CERULEAN_GUARD_2")
-        @speaker("") {
-          @t("That cruise ship, S.S.ANNE,\nis in VERMILION CITY. Its\npassengers are all trainers!\n\nThey invited me to their\nparty, but I can't stand\nfancy do's. Why don't you go\ninstead of me?", "那艘游轮圣安奴号停靠在枯叶\n市。船上的乘客都是训练家！\n\n他们邀请我去参加派对，但我受\n不了那些花哨的聚会。为什么你\n不替我去呢？")
-        }
+        printFieldText(t("That cruise ship, S.S.ANNE,\nis in VERMILION CITY. Its\npassengers are all trainers!", "那艘游轮圣安奴号停靠在枯叶\n市。船上的乘客都是训练家！"))
+        printFieldParagraph(t("They invited me to their\nparty, but I can't stand\nfancy do's. Why don't you go\ninstead of me?", "他们邀请我去参加派对，但我受\n不了那些花哨的聚会。为什么你\n不替我去呢？"))
       } @else {
-        @speaker("") { @t("You've got too much stuff,\nbud!", "你带的东西太多了，兄弟！") }
+        printFieldText(t("You've got too much stuff,\nbud!", "你带的东西太多了，兄弟！"))
       }
     } @else {
-      @speaker("") {
-        @t("That cruise ship, S.S.ANNE,\nis in VERMILION CITY. Its\npassengers are all trainers!\n\nThey invited me to their\nparty, but I can't stand\nfancy do's. Why don't you go\ninstead of me?", "那艘游轮圣安奴号停靠在枯叶\n市。船上的乘客都是训练家！\n\n他们邀请我去参加派对，但我受\n不了那些花哨的聚会。为什么你\n不替我去呢？")
-      }
+      printFieldText(t("That cruise ship, S.S.ANNE,\nis in VERMILION CITY. Its\npassengers are all trainers!", "那艘游轮圣安奴号停靠在枯叶\n市。船上的乘客都是训练家！"))
+      printFieldParagraph(t("They invited me to their\nparty, but I can't stand\nfancy do's. Why don't you go\ninstead of me?", "他们邀请我去参加派对，但我受\n不了那些花哨的聚会。为什么你\n不替我去呢？"))
     }
+    finishFieldText()
   }
 
   // ── Bill, pointing at his PC of rare POKeMON (npc 3) ───────────────────

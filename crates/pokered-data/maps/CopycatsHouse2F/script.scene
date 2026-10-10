@@ -8,29 +8,40 @@ game_scene CopycatsHouse2F {
   @storyline("talkCopycat") {
     @trigger(map = "CopycatsHouse2F", npc = 1)
     @if (getFlag("EVENT_GOT_TM31")) {
-      @speaker("") {
-        @t("<PLAYER>: Hi! Thanks for\nTM31!\n\n<PLAYER>: Pardon?\n\n<PLAYER>: Is it that fun to\nmimic my every move?\n\nCOPYCAT: You bet! It's a\nscream!", "<PLAYER>：嗨！谢谢你给我\nTM31！\n\n<PLAYER>：什么？\n\n<PLAYER>：模仿我的一举一动就\n那么有趣吗？\n\n模仿少女：当然！太好玩了！")
-      }
+      printFieldText(t("<PLAYER>: Hi! Thanks for\nTM31!", "<PLAYER>：嗨！谢谢你给我\nTM31！"))
+      printFieldParagraph(t("<PLAYER>: Pardon?", "<PLAYER>：什么？"))
+      printFieldParagraph(t("<PLAYER>: Is it that fun to\nmimic my every move?", "<PLAYER>：模仿我的一举一动就\n那么有趣吗？"))
+      printFieldParagraph(t("COPYCAT: You bet! It's a\nscream!", "模仿少女：当然！太好玩了！"))
+      finishFieldText()
     } @else {
-      @speaker("") {
-        @t("<PLAYER>: Hi! Do you like\nPOKeMON?\n\n<PLAYER>: Uh no, I just\nasked you.\n\n<PLAYER>: Huh? You're\nstrange!\n\nCOPYCAT: Hmm? Quit\nmimicking?\n\nBut, that's my favorite\nhobby!", "<PLAYER>：嗨！你喜欢宝可梦\n吗？\n\n<PLAYER>：呃，不，我只是问\n你。\n\n<PLAYER>：嗯？你真奇怪！\n\n模仿少女：嗯？叫我别模仿？\n\n可是，这是我最喜欢的爱好！")
-      }
+      // This original branch sets wDoNotWaitForButtonPressAfterDisplayingText.
+      // Its inner waits still run; the outer path only holds A until release.
+      printFieldText(t("<PLAYER>: Hi! Do you like\nPOKeMON?", "<PLAYER>：嗨！你喜欢宝可梦\n吗？"))
+      printFieldParagraph(t("<PLAYER>: Uh no, I just\nasked you.", "<PLAYER>：呃，不，我只是问\n你。"))
+      printFieldParagraph(t("<PLAYER>: Huh? You're\nstrange!", "<PLAYER>：嗯？你真奇怪！"))
+      printFieldParagraph(t("COPYCAT: Hmm? Quit\nmimicking?", "模仿少女：嗯？叫我别模仿？"))
+      printFieldParagraph(t("But, that's my favorite\nhobby!", "可是，这是我最喜欢的爱好！"))
+      waitFieldPrompt()
       @if (hasItem("POKE_DOLL")) {
-        @speaker("") {
-          @t("Oh wow! A POKe DOLL!\n\nFor me? Thank you!\n\nYou can have this, then!", "哇！皮皮玩偶！\n\n给我的吗？谢谢你！\n\n那么，这个就给你吧！")
-        }
+        printFieldText(t("Oh wow! A POKe DOLL!", "哇！皮皮玩偶！"))
+        printFieldParagraph(t("For me? Thank you!", "给我的吗？谢谢你！"))
+        printFieldParagraph(t("You can have this, then!", "那么，这个就给你吧！"))
+        waitFieldPrompt()
         given = giveItem("TM31", 1)
         @if (given) {
+          printItemFieldText(t("<PLAYER> received TM31!", "<PLAYER>得到了 TM31！"), "SFX_GET_ITEM_1")
+          printFieldParagraph(t("TM31 contains my favorite,\nMIMIC!", "TM31里有我最喜欢的招式模仿！"))
+          printFieldParagraph(t("Use it on a good POKeMON!", "用在优秀的宝可梦身上！"))
+          // Receipt falls through to explanation, ending with TX_WAIT_BUTTON.
+          waitFieldButton()
           takeItem("POKE_DOLL", 1)
           setFlag("EVENT_GOT_TM31")
-          showItemDialogue(@t("<PLAYER> received TM31!", "<PLAYER>得到了 TM31！"))
-          @speaker("") {
-            @t("TM31 contains my favorite,\nMIMIC!\n\nUse it on a good POKeMON!", "TM31里有我最喜欢的招式模仿！\n\n用在优秀的宝可梦身上！")
-          }
         } @else {
-          @speaker("") { @t("Don't you want this?", "你不想要这个吗？") }
+          printFieldText(t("Don't you want this?", "你不想要这个吗？"))
+          waitFieldButton()
         }
       }
+      closeFieldText()
     }
   }
 

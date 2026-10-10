@@ -16,6 +16,12 @@ pub enum PokemonScriptCommand {
     PrintItemFieldText { text: String, sound_id: Option<String> },
     /// Inner PROMPT: manual A/B return without holding A or closing the window.
     WaitFieldPrompt,
+    /// TX_PROMPT_BUTTON: fresh A/B without ProtectedDelay3, with arrow.
+    WaitFieldPromptButton,
+    /// TX_WAIT_BUTTON: fresh A/B without ProtectedDelay3 or arrow.
+    WaitFieldButton,
+    /// Skip outer confirmation, holding the retained window until A release.
+    CloseFieldText,
     ShowItemDialogue { text: String, sound_id: Option<String> },
     OldManTutorial,
     TradePokemon {
@@ -86,6 +92,9 @@ impl PokemonScriptCommand {
             Self::PrintFieldParagraph { .. } => "printFieldParagraph",
             Self::PrintItemFieldText { .. } => "printItemFieldText",
             Self::WaitFieldPrompt => "waitFieldPrompt",
+            Self::WaitFieldPromptButton => "waitFieldPromptButton",
+            Self::WaitFieldButton => "waitFieldButton",
+            Self::CloseFieldText => "closeFieldText",
             Self::ShowItemDialogue { .. } => "showItemDialogue",
             Self::OldManTutorial => "oldManTutorial",
             Self::TradePokemon { .. } => "tradePokemon",
@@ -159,6 +168,9 @@ impl PokemonScriptCommand {
             Self::DepositDaycare { index } => vec![json!(index)],
             Self::ReplaceTileBlock { x, y, block_id } => vec![json!(x), json!(y), json!(block_id)],
             Self::WaitFieldPrompt
+            | Self::WaitFieldPromptButton
+            | Self::WaitFieldButton
+            | Self::CloseFieldText
             | Self::FinishFieldText
             | Self::OldManTutorial
             | Self::AnimateHealingMachine
@@ -216,6 +228,9 @@ impl PokemonScriptCommand {
             "printFieldParagraph" => Self::PrintFieldParagraph { text: string(0)?, sound_id: args.get(1).filter(|v| !v.is_null()).map(|_|string(1)).transpose()? },
             "printItemFieldText" => Self::PrintItemFieldText { text: string(0)?, sound_id: args.get(1).filter(|v| !v.is_null()).map(|_|string(1)).transpose()? },
             "waitFieldPrompt" => Self::WaitFieldPrompt,
+            "waitFieldPromptButton" => Self::WaitFieldPromptButton,
+            "waitFieldButton" => Self::WaitFieldButton,
+            "closeFieldText" => Self::CloseFieldText,
             "waitMusic" => Self::WaitMusic,
             "vendingDelivery" => Self::VendingDelivery,
             "showMoneyBox" => Self::ShowMoneyBox { amount: args.first().and_then(Value::as_i64).ok_or_else(|| format!("{name}: amount must be an integer"))? },

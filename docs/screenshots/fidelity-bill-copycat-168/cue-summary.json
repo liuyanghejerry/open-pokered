@@ -1,0 +1,611 @@
+{
+  "cases": {
+    "bill": {
+      "master31": {
+        "cue": 584,
+        "screenshot_hw": 734,
+        "frames": 846,
+        "repeats_byteexact": true,
+        "frame_state": {
+          "audio_channels": [
+            false,
+            false,
+            false,
+            false
+          ],
+          "has_doll": false,
+          "has_item": true,
+          "input_bits": 0,
+          "obtained_flag": true,
+          "overworld": {
+            "active_script_effect": {
+              "ShowDialogue": {
+                "text": "That cruise ship, S.S.ANNE,\nis in VERMILION CITY. Its\npassengers are all trainers!\n\nThey invited me to their\nparty, but I can't stand\nfancy do's. Why don't you go\ninstead of me?"
+              }
+            },
+            "field_loop_wait": null,
+            "field_text_restore": null,
+            "inner_field_text_open": null,
+            "last_script_dialogue": null,
+            "npc_states": [
+              {
+                "defeated": false,
+                "delay_counter": 0,
+                "facing": "Down",
+                "home_x": 6,
+                "home_y": 5,
+                "movement_type": "Stationary",
+                "npc_index": 0,
+                "range": 0,
+                "scripted_frame": null,
+                "scripted_path": [],
+                "sprite_id": 5,
+                "text_id": 1,
+                "visible": false,
+                "walk_counter": 0,
+                "wander_axis": "Any",
+                "x": 6,
+                "y": 5
+              },
+              {
+                "defeated": false,
+                "delay_counter": 0,
+                "facing": "Down",
+                "home_x": 4,
+                "home_y": 4,
+                "movement_type": "Stationary",
+                "npc_index": 1,
+                "range": 0,
+                "scripted_frame": null,
+                "scripted_path": [],
+                "sprite_id": 12,
+                "text_id": 2,
+                "visible": true,
+                "walk_counter": 0,
+                "wander_axis": "Any",
+                "x": 4,
+                "y": 4
+              },
+              {
+                "defeated": false,
+                "delay_counter": 0,
+                "facing": "Down",
+                "home_x": 6,
+                "home_y": 5,
+                "movement_type": "Stationary",
+                "npc_index": 2,
+                "range": 0,
+                "scripted_frame": null,
+                "scripted_path": [],
+                "sprite_id": 12,
+                "text_id": 3,
+                "visible": true,
+                "walk_counter": 0,
+                "wander_axis": "Any",
+                "x": 6,
+                "y": 5
+              }
+            ],
+            "pending_dialogue": {
+              "char_index": 9,
+              "current_page": 0,
+              "delay_counter": 1,
+              "holding_open": false,
+              "pages": [
+                {
+                  "line1": "That cruise ship, S.S.ANNE,",
+                  "line2": "is in VERMILION CITY. Its"
+                },
+                {
+                  "line1": "passengers are all trainers!",
+                  "line2": ""
+                },
+                {
+                  "line1": "They invited me to their",
+                  "line2": "party, but I can't stand"
+                },
+                {
+                  "line1": "fancy do's. Why don't you go",
+                  "line2": "instead of me?"
+                }
+              ],
+              "text_delay_frames": 3,
+              "waiting_for_input": false
+            },
+            "player_sprite_state": null,
+            "state": {
+              "current_map": "BillsHouse",
+              "encounter_cooldown": 0,
+              "exiting_door": false,
+              "player": {
+                "bike_speedup_active": true,
+                "facing": "Up",
+                "movement_state": "Idle",
+                "transport": "Walking",
+                "x": 4,
+                "y": 5
+              },
+              "repel_steps": 0,
+              "standing_on_door": false,
+              "standing_on_warp": false,
+              "walk_counter": 0
+            }
+          },
+          "sfx_playing": false,
+          "t": 734
+        }
+      },
+      "after-a2": {
+        "cue": 606,
+        "screenshot_hw": 756,
+        "frames": 868,
+        "repeats_byteexact": true,
+        "frame_state": {
+          "audio_channels": [
+            false,
+            false,
+            false,
+            false
+          ],
+          "has_doll": false,
+          "has_item": true,
+          "input_bits": 0,
+          "obtained_flag": false,
+          "overworld": {
+            "active_script_effect": {
+              "WaitFieldButton": {
+                "show_arrow": true
+              }
+            },
+            "field_loop_wait": 1,
+            "field_text_restore": null,
+            "inner_field_text_open": true,
+            "last_script_dialogue": {
+              "char_index": 26,
+              "current_page": 0,
+              "delay_counter": 0,
+              "holding_open": false,
+              "pages": [
+                {
+                  "line1": "RED received an",
+                  "line2": "S.S.TICKET!"
+                }
+              ],
+              "text_delay_frames": 3,
+              "waiting_for_input": true
+            },
+            "npc_states": [
+              {
+                "defeated": false,
+                "delay_counter": 0,
+                "facing": "Down",
+                "home_x": 6,
+                "home_y": 5,
+                "movement_type": "Stationary",
+                "npc_index": 0,
+                "range": 0,
+                "scripted_frame": null,
+                "scripted_path": [],
+                "sprite_id": 5,
+                "text_id": 1,
+                "visible": false,
+                "walk_counter": 0,
+                "wander_axis": "Any",
+                "x": 6,
+                "y": 5
+              },
+              {
+                "defeated": false,
+                "delay_counter": 0,
+                "facing": "Down",
+                "home_x": 4,
+                "home_y": 4,
+                "movement_type": "Stationary",
+                "npc_index": 1,
+                "range": 0,
+                "scripted_frame": null,
+                "scripted_path": [],
+                "sprite_id": 12,
+                "text_id": 2,
+                "visible": true,
+                "walk_counter": 0,
+                "wander_axis": "Any",
+                "x": 4,
+                "y": 4
+              },
+              {
+                "defeated": false,
+                "delay_counter": 0,
+                "facing": "Down",
+                "home_x": 6,
+                "home_y": 5,
+                "movement_type": "Stationary",
+                "npc_index": 2,
+                "range": 0,
+                "scripted_frame": null,
+                "scripted_path": [],
+                "sprite_id": 12,
+                "text_id": 3,
+                "visible": true,
+                "walk_counter": 0,
+                "wander_axis": "Any",
+                "x": 6,
+                "y": 5
+              }
+            ],
+            "pending_dialogue": null,
+            "player_sprite_state": {
+              "facing": 1,
+              "initialized": true,
+              "intra_frame": 0,
+              "pending": [
+                4,
+                4
+              ],
+              "phase": 0,
+              "visible": 4
+            },
+            "state": {
+              "current_map": "BillsHouse",
+              "encounter_cooldown": 0,
+              "exiting_door": false,
+              "player": {
+                "bike_speedup_active": true,
+                "facing": "Up",
+                "movement_state": "Idle",
+                "transport": "Walking",
+                "x": 4,
+                "y": 5
+              },
+              "repel_steps": 0,
+              "standing_on_door": false,
+              "standing_on_warp": false,
+              "walk_counter": 0
+            }
+          },
+          "sfx_playing": false,
+          "t": 756
+        }
+      }
+    },
+    "copycat": {
+      "master31": {
+        "cue": 666,
+        "screenshot_hw": 816,
+        "frames": 928,
+        "repeats_byteexact": true,
+        "frame_state": {
+          "audio_channels": [
+            false,
+            false,
+            false,
+            false
+          ],
+          "has_doll": false,
+          "has_item": true,
+          "input_bits": 0,
+          "obtained_flag": true,
+          "overworld": {
+            "active_script_effect": {
+              "ShowDialogue": {
+                "text": "TM31 contains my favorite,\nMIMIC!\n\nUse it on a good POKeMON!"
+              }
+            },
+            "field_loop_wait": null,
+            "field_text_restore": null,
+            "inner_field_text_open": null,
+            "last_script_dialogue": null,
+            "npc_states": [
+              {
+                "defeated": false,
+                "delay_counter": 63,
+                "facing": "Down",
+                "home_x": 4,
+                "home_y": 3,
+                "movement_type": "Stationary",
+                "npc_index": 0,
+                "range": 0,
+                "scripted_frame": null,
+                "scripted_path": [],
+                "sprite_id": 29,
+                "text_id": 1,
+                "visible": true,
+                "walk_counter": 0,
+                "wander_axis": "Any",
+                "x": 4,
+                "y": 3
+              },
+              {
+                "defeated": false,
+                "delay_counter": 63,
+                "facing": "Right",
+                "home_x": 4,
+                "home_y": 6,
+                "movement_type": "Stationary",
+                "npc_index": 1,
+                "range": 2,
+                "scripted_frame": null,
+                "scripted_path": [],
+                "sprite_id": 9,
+                "text_id": 2,
+                "visible": true,
+                "walk_counter": 0,
+                "wander_axis": "Horizontal",
+                "x": 4,
+                "y": 6
+              },
+              {
+                "defeated": false,
+                "delay_counter": 0,
+                "facing": "Down",
+                "home_x": 5,
+                "home_y": 1,
+                "movement_type": "Stationary",
+                "npc_index": 2,
+                "range": 0,
+                "scripted_frame": null,
+                "scripted_path": [],
+                "sprite_id": 5,
+                "text_id": 3,
+                "visible": true,
+                "walk_counter": 0,
+                "wander_axis": "Any",
+                "x": 5,
+                "y": 1
+              },
+              {
+                "defeated": false,
+                "delay_counter": 0,
+                "facing": "Down",
+                "home_x": 2,
+                "home_y": 0,
+                "movement_type": "Stationary",
+                "npc_index": 3,
+                "range": 0,
+                "scripted_frame": null,
+                "scripted_path": [],
+                "sprite_id": 9,
+                "text_id": 4,
+                "visible": true,
+                "walk_counter": 0,
+                "wander_axis": "Any",
+                "x": 2,
+                "y": 0
+              },
+              {
+                "defeated": false,
+                "delay_counter": 0,
+                "facing": "Right",
+                "home_x": 1,
+                "home_y": 6,
+                "movement_type": "Stationary",
+                "npc_index": 4,
+                "range": 0,
+                "scripted_frame": null,
+                "scripted_path": [],
+                "sprite_id": 56,
+                "text_id": 5,
+                "visible": true,
+                "walk_counter": 0,
+                "wander_axis": "Any",
+                "x": 1,
+                "y": 6
+              }
+            ],
+            "pending_dialogue": {
+              "char_index": 26,
+              "current_page": 0,
+              "delay_counter": 2,
+              "holding_open": false,
+              "pages": [
+                {
+                  "line1": "TM31 contains my favorite,",
+                  "line2": "MIMIC!"
+                },
+                {
+                  "line1": "",
+                  "line2": "Use it on a good POKeMON!"
+                }
+              ],
+              "text_delay_frames": 3,
+              "waiting_for_input": false
+            },
+            "player_sprite_state": null,
+            "state": {
+              "current_map": "CopycatsHouse2F",
+              "encounter_cooldown": 0,
+              "exiting_door": false,
+              "player": {
+                "bike_speedup_active": true,
+                "facing": "Up",
+                "movement_state": "Idle",
+                "transport": "Walking",
+                "x": 4,
+                "y": 4
+              },
+              "repel_steps": 0,
+              "standing_on_door": false,
+              "standing_on_warp": false,
+              "walk_counter": 0
+            }
+          },
+          "sfx_playing": false,
+          "t": 816
+        }
+      },
+      "after-a2": {
+        "cue": 782,
+        "screenshot_hw": 932,
+        "frames": 1044,
+        "repeats_byteexact": true,
+        "frame_state": {
+          "audio_channels": [
+            false,
+            false,
+            false,
+            false
+          ],
+          "has_doll": true,
+          "has_item": true,
+          "input_bits": 0,
+          "obtained_flag": false,
+          "overworld": {
+            "active_script_effect": {
+              "PrintFieldParagraph": {
+                "phase": "WaitForButton",
+                "sound_id": null,
+                "text": "TM31 contains my favorite,\nMIMIC!"
+              }
+            },
+            "field_loop_wait": 1,
+            "field_text_restore": null,
+            "inner_field_text_open": true,
+            "last_script_dialogue": {
+              "char_index": 18,
+              "current_page": 0,
+              "delay_counter": 0,
+              "holding_open": false,
+              "pages": [
+                {
+                  "line1": "RED received TM31!",
+                  "line2": ""
+                }
+              ],
+              "text_delay_frames": 3,
+              "waiting_for_input": true
+            },
+            "npc_states": [
+              {
+                "defeated": false,
+                "delay_counter": 94,
+                "facing": "Down",
+                "home_x": 4,
+                "home_y": 3,
+                "movement_type": "Stationary",
+                "npc_index": 0,
+                "range": 0,
+                "scripted_frame": null,
+                "scripted_path": [],
+                "sprite_id": 29,
+                "text_id": 1,
+                "visible": true,
+                "walk_counter": 0,
+                "wander_axis": "Any",
+                "x": 4,
+                "y": 3
+              },
+              {
+                "defeated": false,
+                "delay_counter": 94,
+                "facing": "Right",
+                "home_x": 4,
+                "home_y": 6,
+                "movement_type": "Stationary",
+                "npc_index": 1,
+                "range": 2,
+                "scripted_frame": null,
+                "scripted_path": [],
+                "sprite_id": 9,
+                "text_id": 2,
+                "visible": true,
+                "walk_counter": 0,
+                "wander_axis": "Horizontal",
+                "x": 4,
+                "y": 6
+              },
+              {
+                "defeated": false,
+                "delay_counter": 0,
+                "facing": "Down",
+                "home_x": 5,
+                "home_y": 1,
+                "movement_type": "Stationary",
+                "npc_index": 2,
+                "range": 0,
+                "scripted_frame": null,
+                "scripted_path": [],
+                "sprite_id": 5,
+                "text_id": 3,
+                "visible": true,
+                "walk_counter": 0,
+                "wander_axis": "Any",
+                "x": 5,
+                "y": 1
+              },
+              {
+                "defeated": false,
+                "delay_counter": 0,
+                "facing": "Down",
+                "home_x": 2,
+                "home_y": 0,
+                "movement_type": "Stationary",
+                "npc_index": 3,
+                "range": 0,
+                "scripted_frame": null,
+                "scripted_path": [],
+                "sprite_id": 9,
+                "text_id": 4,
+                "visible": true,
+                "walk_counter": 0,
+                "wander_axis": "Any",
+                "x": 2,
+                "y": 0
+              },
+              {
+                "defeated": false,
+                "delay_counter": 0,
+                "facing": "Right",
+                "home_x": 1,
+                "home_y": 6,
+                "movement_type": "Stationary",
+                "npc_index": 4,
+                "range": 0,
+                "scripted_frame": null,
+                "scripted_path": [],
+                "sprite_id": 56,
+                "text_id": 5,
+                "visible": true,
+                "walk_counter": 0,
+                "wander_axis": "Any",
+                "x": 1,
+                "y": 6
+              }
+            ],
+            "pending_dialogue": null,
+            "player_sprite_state": {
+              "facing": 1,
+              "initialized": true,
+              "intra_frame": 0,
+              "pending": [
+                4,
+                4
+              ],
+              "phase": 0,
+              "visible": 4
+            },
+            "state": {
+              "current_map": "CopycatsHouse2F",
+              "encounter_cooldown": 0,
+              "exiting_door": false,
+              "player": {
+                "bike_speedup_active": true,
+                "facing": "Up",
+                "movement_state": "Idle",
+                "transport": "Walking",
+                "x": 4,
+                "y": 4
+              },
+              "repel_steps": 0,
+              "standing_on_door": false,
+              "standing_on_warp": false,
+              "walk_counter": 0
+            }
+          },
+          "sfx_playing": false,
+          "t": 932
+        }
+      }
+    }
+  },
+  "scope": "Independent real NPC interaction prefixes per side; identical261 postcue inputbits; matched sound-cue-relative HW150. No absolute entry timing equality claim; two complete repeats byteexact per side/case."
+}

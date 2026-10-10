@@ -64,6 +64,10 @@ pub enum ScriptEffect {
     PrintFieldParagraph { text: String, #[serde(default)] sound_id: Option<String>, phase: FieldParagraphPhase },
     PrintItemFieldText { text: String, sound_id: Option<String>, phase: FieldParagraphPhase },
     WaitFieldPrompt { protected_remaining: u8 },
+    /// ManualTextScroll opcode waits without the PROMPT character delay.
+    WaitFieldButton { show_arrow: bool },
+    /// HoldTextDisplayOpen path when the original caller skips the outer wait.
+    CloseFieldText,
     ShowDialogue {
         text: String,
     },
@@ -384,6 +388,8 @@ impl ScriptEffect {
             ScriptEffect::PrintFieldParagraph { text, sound_id, phase } => json!({ "effect": "PrintFieldParagraph", "text": text, "sound_id": sound_id, "phase": phase }),
             ScriptEffect::PrintItemFieldText { text, sound_id, phase } => json!({ "effect": "PrintItemFieldText", "text": text, "sound_id": sound_id, "phase": phase }),
             ScriptEffect::WaitFieldPrompt { protected_remaining } => json!({ "effect": "WaitFieldPrompt", "protected_remaining": protected_remaining }),
+            ScriptEffect::WaitFieldButton { show_arrow } => json!({ "effect": "WaitFieldButton", "show_arrow": show_arrow }),
+            ScriptEffect::CloseFieldText => json!({ "effect": "CloseFieldText" }),
             ScriptEffect::FinishFieldText { acknowledged } => json!({ "effect": "FinishFieldText", "acknowledged": acknowledged }),
             ScriptEffect::PrintFieldText { text } => {
                 json!({ "effect": "PrintFieldText", "text": text })
@@ -889,6 +895,9 @@ fn dispatch_custom(name: &str, args: &[Value]) -> ScriptEffect {
         PokemonScriptCommand::PrintFieldParagraph { text, sound_id } => ScriptEffect::PrintFieldParagraph { text, sound_id, phase: FieldParagraphPhase::ProtectedDelay { remaining: 3 } },
         PokemonScriptCommand::PrintItemFieldText {text,sound_id} => ScriptEffect::PrintItemFieldText {text,sound_id,phase:FieldParagraphPhase::Printing},
         PokemonScriptCommand::WaitFieldPrompt => ScriptEffect::WaitFieldPrompt {protected_remaining:3},
+        PokemonScriptCommand::WaitFieldPromptButton => ScriptEffect::WaitFieldButton {show_arrow:true},
+        PokemonScriptCommand::WaitFieldButton => ScriptEffect::WaitFieldButton {show_arrow:false},
+        PokemonScriptCommand::CloseFieldText => ScriptEffect::CloseFieldText,
         PokemonScriptCommand::FinishFieldText => ScriptEffect::FinishFieldText { acknowledged: false },
         PokemonScriptCommand::PrintFieldText { text } => ScriptEffect::PrintFieldText {
             text,

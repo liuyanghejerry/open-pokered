@@ -70,6 +70,11 @@ impl ScriptApiRegistrar for PokemonScriptApi {
         engine.register_async_fn("waitFieldPrompt", |_: &[JsValue], _: &mut Context| -> JsResult<ScriptCommand> {
             Ok(PokemonScriptCommand::WaitFieldPrompt.into_script_command())
         });
+        for (name,command) in [("waitFieldPromptButton",PokemonScriptCommand::WaitFieldPromptButton),("waitFieldButton",PokemonScriptCommand::WaitFieldButton),("closeFieldText",PokemonScriptCommand::CloseFieldText)] {
+            engine.register_async_fn(name,move |_: &[JsValue], _: &mut Context| -> JsResult<ScriptCommand> {
+                Ok(command.clone().into_script_command())
+            });
+        }
         engine.register_async_fn("finishFieldText", |_: &[JsValue], _: &mut Context| -> JsResult<ScriptCommand> {
             Ok(PokemonScriptCommand::FinishFieldText.into_script_command())
         });
