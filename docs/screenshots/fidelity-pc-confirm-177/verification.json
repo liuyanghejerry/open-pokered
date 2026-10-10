@@ -1,0 +1,72 @@
+{
+  "parent_head": "1cb51db4641b37a38f1b1289c3cce115e11578de",
+  "master_head": "31b1eda3112514d6bc803af559ec7f7c9e20374f",
+  "source_hashes": {
+    "crates/pokered-core/src/pc_screen.rs": "fd64fd1b18e03263215dda5b105aa92a14e88b1ed0ed3a7bb7ffce76aeaac56b",
+    "crates/pokered-app/src/render/pc.rs": "43a7596efba21f0ee484d67815b5337b62a2bcb09f431abd3342209bae20c48e"
+  },
+  "native_tests": {
+    "core": 2750,
+    "data": 263,
+    "app": 222,
+    "app_ignored": 33,
+    "agent": 54,
+    "audio": 99
+  },
+  "original_native_replay": {
+    "native-change-box-a2": {
+      "frames": 93,
+      "files": 95,
+      "two_repeats_byte_exact": true,
+      "exact_post_cue_original_inputs": true,
+      "one_frame_per_input": true,
+      "phase_transitions": [
+        {
+          "t": 0,
+          "phase": "Message"
+        },
+        {
+          "t": 47,
+          "phase": "ChangeBoxConfirm"
+        }
+      ],
+      "frames_sha256": "bd44afb3199c44a31c02eaa6f9816fcbad432390674410816c37aed871a65e74"
+    },
+    "native-change-box-early-a2": {
+      "frames": 61,
+      "files": 63,
+      "two_repeats_byte_exact": true,
+      "exact_post_cue_original_inputs": true,
+      "one_frame_per_input": true,
+      "phase_transitions": [
+        {
+          "t": 0,
+          "phase": "Message"
+        }
+      ],
+      "frames_sha256": "85c7825d9d150ab5bba28f4270ab55c466e18ab13fd0482f477c6fb0cbea9631"
+    }
+  },
+  "master_before": {
+    "two_repeats_byte_exact": true,
+    "same_post_cue_inputs": true,
+    "frame_offset": 10,
+    "phase": "BillsMenu"
+  },
+  "gba_budget": "FAILED 2 of31 metrics; same ELF two complete measurements identical; retained failures, unchanged budget; NOT merge-ready",
+  "archive": {
+    "bytes": 7819159,
+    "sha256": "4104f82baf3f5ebd21c08a698a4afabc67e39c67cdc26f4e1d08984753261c75",
+    "entries": 3951
+  },
+  "remaining": [
+    "GBA original budget regression",
+    "CONT physical half-row scrolling",
+    "release/toss original runtime matched scenarios",
+    "PC quantity/list/menu authored prompt clocks",
+    "PC PCM bank matching",
+    "global text init/close/arrow",
+    "movement17 logical/27 RGB differences",
+    "final exact-head fresh m01-m49 and independent SAVE/CONTINUE"
+  ]
+}

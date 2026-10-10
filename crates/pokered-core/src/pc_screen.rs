@@ -190,6 +190,9 @@ enum AfterMessage {
     /// After "Accessed PROF.OAK's PC...": show the rating YES/NO prompt.
     OaksConfirmPage,
     OaksConfirmMenu,
+    ChangeBoxConfirm,
+    ReleaseConfirm,
+    TossConfirm,
     /// After the "#DEX completion is:" page: show the rating text page.
     OaksRating,
     /// After the rating text page: show "Closed link to PROF.OAK's PC."
@@ -425,6 +428,16 @@ impl PcScreen {
         &self.msg_lines[start..end]
     }
 
+    /// The original warning PrintText overlays the menu which selected it.
+    pub fn message_underlay(&self) -> Option<PcPhase> {
+        match self.msg_next {
+            AfterMessage::ChangeBoxConfirm => Some(PcPhase::BillsMenu),
+            AfterMessage::ReleaseConfirm => Some(PcPhase::MonList),
+            AfterMessage::TossConfirm => Some(PcPhase::ItemList),
+            _ => None,
+        }
+    }
+
     pub fn message_visible_chars(&self) -> usize { self.msg_chars }
 
     pub fn message_ready_for_ack(&self) -> bool {
@@ -635,9 +648,10 @@ impl PcScreen {
 
     fn advance_message(&mut self) {
         if self.msg_page + 1 < self.msg_pages.len() {
+            let previous_end = self.msg_pages[self.msg_page].1;
             self.msg_page += 1;
             self.start_message_page(0);
-            if self.msg_end == PcMessageEnd::Rating {
+            if self.msg_pages[self.msg_page].0 < previous_end {
                 // CONT retains the previous bottom line; two source scrolls
                 // each wait five frames before printing the new bottom line.
                 self.msg_chars = self.message_page_lines()[0].chars().count();
@@ -663,6 +677,9 @@ impl PcScreen {
                 vec!["Want to get your".into(), "#DEX rated?".into()],
                 AfterMessage::OaksConfirmMenu, PcMessageEnd::Done),
             AfterMessage::OaksConfirmMenu => self.enter_oaks_confirm(),
+            AfterMessage::ChangeBoxConfirm => self.phase = PcPhase::ChangeBoxConfirm,
+            AfterMessage::ReleaseConfirm => self.phase = PcPhase::ReleaseConfirm,
+            AfterMessage::TossConfirm => self.phase = PcPhase::TossConfirm,
             // "#DEX completion is: ..." → the rating itself.
             AfterMessage::OaksRating => {
                 let owned = self.dex_owned;
@@ -1025,7 +1042,16 @@ impl PcScreen {
                     // "When you change a #MON BOX, data will be saved. Is
                     // that okay?" (_WhenYouChangeBoxText) YES/NO.
                     self.yes_selected = false;
-                    self.phase = PcPhase::ChangeBoxConfirm;
+                    if self.language == crate::game_state::Lang::Zh {
+                        self.phase = PcPhase::ChangeBoxConfirm;
+                    } else {
+                        self.set_message_with_end(vec![
+                            "When you change a".into(), "#MON BOX, data".into(),
+                            "will be saved.".into(), "Is that okay?".into(),
+                        ], AfterMessage::ChangeBoxConfirm, PcMessageEnd::Done);
+                        // Source CONT retains the second line; PARA clears it.
+                        self.msg_pages = vec![(0, 2), (1, 3), (3, 4)];
+                    }
                     PcScreenAction::Continue
                 }
             },
@@ -1064,7 +1090,17 @@ impl PcScreen {
                     // bills_pc.asm BillsPCRelease: straight to the "gone
                     // forever" confirmation, no STATS popup.
                     self.yes_selected = false;
-                    self.phase = PcPhase::ReleaseConfirm;
+                    if self.language == crate::game_state::Lang::Zh {
+                        self.phase = PcPhase::ReleaseConfirm;
+                    } else {
+                        let mut name_buf = [0u8; crate::battle::state::NAME_TEXT_BUF];
+                        let name = ctx.pc_storage.current_box().get(self.mon_cursor)
+                            .map(|m| m.display_name(&mut name_buf)).unwrap_or("");
+                        self.set_message_with_end(vec!["Once released,".into(),
+                            format!("{} is", name), "gone forever. OK?".into()],
+                            AfterMessage::ReleaseConfirm, PcMessageEnd::Done);
+                        self.msg_pages = vec![(0, 2), (1, 3)];
+                    }
                 }
                 MonListMode::Withdraw | MonListMode::Deposit => {
                     self.mon_action_cursor = 0;
@@ -1204,6 +1240,9 @@ impl PcScreen {
                         ],
                         AfterMessage::BillsMenu,
                     );
+                    if self.language != crate::game_state::Lang::Zh {
+                        self.msg_pages = vec![(0, 2), (1, 3)];
+                    }
                 } else {
                     self.enter_bills_menu();
                 }
@@ -1429,7 +1468,13 @@ impl PcScreen {
                 ItemListMode::Toss => {
                     // "Is it OK to toss {ITEM}?" (_IsItOKToTossItemText) YES/NO.
                     self.yes_selected = false;
-                    self.phase = PcPhase::TossConfirm;
+                    if self.language == crate::game_state::Lang::Zh {
+                        self.phase = PcPhase::TossConfirm;
+                    } else {
+                        self.set_message_with_end(vec!["Is it OK to toss".into(),
+                            format!("{}?", item_name(*item))],
+                            AfterMessage::TossConfirm, PcMessageEnd::Prompt);
+                    }
                 }
             }
         }
@@ -1961,6 +2006,8 @@ mod tests {
         s.update_frame(A, &mut w.ctx());
         assert_eq!(s.phase(), PcPhase::MonList);
         s.update_frame(A, &mut w.ctx()); // pick mon → confirm
+        assert_eq!(s.phase(), PcPhase::Message);
+        skip_message(&mut s, &mut w);
         assert_eq!(s.phase(), PcPhase::ReleaseConfirm);
         assert!(!s.yes_selected());
         // NO (default): back to the list, mon kept.
@@ -1969,6 +2016,7 @@ mod tests {
         assert_eq!(w.pc_storage.current_box().count(), 1);
         // Again, this time YES.
         s.update_frame(A, &mut w.ctx());
+        skip_message(&mut s, &mut w);
         s.update_frame(UP, &mut w.ctx()); // toggle to YES
         s.update_frame(A, &mut w.ctx());
         assert_eq!(
@@ -1987,6 +2035,51 @@ mod tests {
     // ── Bill's PC: change box ────────────────────────────────────────────
 
     #[test]
+    fn change_box_retail_warning_inputs_cannot_select_a_box_early() {
+        let mut w = World::new();
+        let mut s = PcScreen::new(PcEntry::BillsPc, &open_ctx());
+        skip_message(&mut s, &mut w);
+        for _ in 0..3 { s.update_frame(DOWN, &mut w.ctx()); }
+        s.update_frame(A, &mut w.ctx()); // semantic cue: CHANGE BOX selected
+        assert_eq!(s.phase(), PcPhase::Message);
+        assert!(s.text_delay_disabled);
+        // Recorded original inputs: A held at +0/+1, UP +2/+3, A +4/+5.
+        // The fresh A at +4 is inside the text guard, not a YES selection.
+        for t in 1..=60 {
+            let input = match t { 2 => UP, 4 => A, _ => NONE };
+            s.update_frame_with_text_input(input, &mut w.ctx(), false, t == 1 || t == 4 || t == 5);
+            assert_eq!(s.phase(), PcPhase::Message, "warning frame {t}");
+            assert_eq!(s.msg_page, 0);
+            assert_eq!(w.pc_storage.current_box_index(), 0);
+            assert!(!s.take_save_request());
+        }
+    }
+
+    #[test]
+    fn change_box_cont_and_para_acknowledgements_precede_the_menu() {
+        let mut w = World::new();
+        let mut s = PcScreen::new(PcEntry::BillsPc, &open_ctx());
+        skip_message(&mut s, &mut w);
+        for _ in 0..3 { s.update_frame(DOWN, &mut w.ctx()); }
+        s.update_frame(A, &mut w.ctx());
+        s.take_field_text_delay_change();
+        // Original control recording uses fresh A at +7 and +27.
+        for t in 1..=46 {
+            let input = if t == 7 || t == 27 { A } else { NONE };
+            s.update_frame_with_text_input(input, &mut w.ctx(), false, matches!(t, 1 | 7 | 8 | 27 | 28));
+            assert_eq!(s.phase(), PcPhase::Message, "warning frame {t}");
+            assert!(s.text_delay_disabled);
+            assert_eq!(s.take_field_text_delay_change(), None);
+        }
+        assert_eq!(s.message_page_lines(), &["Is that okay?".to_string()]);
+        s.update_frame(NONE, &mut w.ctx());
+        assert_eq!(s.phase(), PcPhase::ChangeBoxConfirm);
+        assert!(!s.yes_selected());
+        assert_eq!(s.take_field_text_delay_change(), Some(false));
+        assert!(!s.take_save_request());
+    }
+
+    #[test]
     fn change_box_save_confirm_then_switch() {
         let mut w = World::new();
         w.party.add(mon(Species::Pikachu, 5)).unwrap();
@@ -2001,6 +2094,9 @@ mod tests {
             s.update_frame(DOWN, &mut w.ctx());
         }
         s.update_frame(A, &mut w.ctx());
+        assert_eq!(s.phase(), PcPhase::Message);
+        skip_message(&mut s, &mut w);
+        s.take_sfx();
         assert_eq!(s.phase(), PcPhase::ChangeBoxConfirm);
         // NO → back, no switch, no save.
         s.update_frame(A, &mut w.ctx());
@@ -2010,6 +2106,8 @@ mod tests {
         // YES → box list, cursor starts on the current box. (The bills menu
         // restored its saved cursor, so CHANGE BOX is still selected.)
         s.update_frame(A, &mut w.ctx());
+        skip_message(&mut s, &mut w);
+        s.take_sfx();
         s.update_frame(UP, &mut w.ctx()); // YES
         s.update_frame(A, &mut w.ctx());
         assert_eq!(s.phase(), PcPhase::BoxList);
@@ -2036,6 +2134,7 @@ mod tests {
             s.update_frame(DOWN, &mut w.ctx());
         }
         s.update_frame(A, &mut w.ctx());
+        skip_message(&mut s, &mut w);
         s.update_frame(UP, &mut w.ctx()); // YES
         s.update_frame(A, &mut w.ctx());
         assert_eq!(s.phase(), PcPhase::BoxList);
@@ -2297,6 +2396,8 @@ mod tests {
         assert_eq!(s.phase(), PcPhase::ItemQuantity);
         s.update_frame(UP, &mut w.ctx()); // 2
         s.update_frame(A, &mut w.ctx());
+        assert_eq!(s.phase(), PcPhase::Message);
+        skip_message(&mut s, &mut w);
         assert_eq!(s.phase(), PcPhase::TossConfirm);
         // NO keeps the items.
         s.update_frame(A, &mut w.ctx());
@@ -2305,6 +2406,7 @@ mod tests {
         // YES tosses.
         s.update_frame(A, &mut w.ctx());
         s.update_frame(A, &mut w.ctx()); // qty 1
+        skip_message(&mut s, &mut w);
         s.update_frame(UP, &mut w.ctx()); // toggle YES
         s.update_frame(A, &mut w.ctx());
         assert_eq!(
