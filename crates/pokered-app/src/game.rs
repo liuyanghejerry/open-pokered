@@ -2379,6 +2379,9 @@ impl PokemonGame {
                             OverworldScreen::new(map_id, self.scripts_dir.clone(), PokemonRedData);
                         #[cfg(target_os = "none")]
                         let mut overworld = OverworldScreen::new(map_id, PokemonRedData);
+                        if let Some(seed) = self.seed {
+                            overworld.set_rng_seed(seed);
+                        }
                         overworld.restore_saved_last_map(self.save_data.game_data.last_map);
                         overworld.state.player.x = px;
                         overworld.state.player.y = py;
@@ -2455,6 +2458,9 @@ impl PokemonGame {
                                 self.scripts_dir.clone(),
                                 PokemonRedData,
                             );
+                            if let Some(seed) = self.seed {
+                                overworld.set_rng_seed(seed);
+                            }
                             overworld.state.player.x = px;
                             overworld.state.player.y = py;
                             // NEW GAME installs the freshly-reset save's

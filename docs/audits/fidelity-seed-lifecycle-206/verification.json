@@ -1,0 +1,12 @@
+{
+  "base": "25c56cad113e3c167a14a86175c29c075be24495",
+  "sources": {
+    "crates/pokered-app/src/game.rs": "6ea34dea150df02874ff0644922e88bad83fe92b905db5c90cf4265ebbff90e4",
+    "crates/pokered-app/tests/agent_determinism.rs": "7058c734e9b684802aa0c6c750312d7205eef7ea3009e53cb5d26e43207d9ec6"
+  },
+  "binary_sha256": "895500ed76a3c272a81b70e6961b66de8f86900a1ee74e77ed1a3666d3abc09f",
+  "exit": 0,
+  "before": "correcta3 originalproduction+testonly:3executed,2failedNewGameContinue,1passedStartMenuReturn,5filtered",
+  "after": "8integrationtestsPASS incl3newcases andexistingbattle/fork/replay/scriptrestore",
+  "archive_sha256": "df08b8d5a07fa07d0ebfa2a33206126a6a55ac1bfa19ae80c7566168b419fd6c"
+}
