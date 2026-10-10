@@ -1,0 +1,37 @@
+{
+  "base": "61a1e666efc6191e8285fb67195ef9a18761e1ec",
+  "source_manifest": {
+    "base": "61a1e666efc6191e8285fb67195ef9a18761e1ec",
+    "head": "cd8a4fc8ad76781f1fddee3feeae637348feda59",
+    "sources": {
+      "crates/pokered-app/src/game.rs": "368a402f18ac8235383edbdc6090ddfa8ac4affa774f50ffb31692ddfb5de7f4",
+      "crates/pokered-app/src/render/menu.rs": "f263fc13361397f0f6b6da6e40f096b143d42275eb406f5e78450fea207007aa",
+      "crates/pokered-core/src/bag_screen.rs": "8f6a4c4b88638961ed46afbdb6a3e1dc34b026369344a53e7e26afdd1acbedf8"
+    },
+    "binaries": {
+      "core": "ab2d984f87f2ee577aacbe03277cc12ae46ac48fadf73b337b4d6c4851d45d57",
+      "app": "8e6ca355ad608419817c392989d57d7c0a6b30ace7f2f2a6a3194c23c57ca608"
+    }
+  },
+  "PNG": 2904,
+  "full_repeat_bytes_exact": true,
+  "retained_full_pixels_equal_each_frame": true,
+  "archive_all_files_roundtrip_bytes_exact": true,
+  "archive_sha256": "842f0e5274e112b16b838d8548d11eae7f471cc0986d8fb03e42a965a43ca6c4",
+  "full_tests": {
+    "core": 2722,
+    "app": 199,
+    "ignored": 23
+  },
+  "master_prefix_verified": {
+    "base": "61a1e666efc6191e8285fb67195ef9a18761e1ec",
+    "production_prefix_sha256": "472262c1b773d4269aa1afa31291f25cddd027e262e08eef6eb77331416ce154",
+    "full_game_sha256": "839ee4e5159001f1ba6d1aec827d08445cfec79cfaaab6a0e3b080f1ec6a654b",
+    "app_sha256": "9aa4d358ebae98ab2598c617d852bc3e590b0a1761eb717c437e622a5d7a2fce",
+    "helpers": {
+      "audit-217-escape-rope-owner-helper.rs": "e6a0f1bec68e948fbe075351f8031da2891ff79b0035b5f3139df3e99f197d46",
+      "audit-218-bag-action-owner-helper.rs": "ee07b8add854bbe7327ca7c06b27190b950f82f4f3c34d9c9f97cd3446dcf5db",
+      "audit-219-list-owner-helper.rs": "87f74471e65161216fab654dca42284d39ed39c1ecc4b1a02c1e853a7eab7af2"
+    }
+  }
+}
