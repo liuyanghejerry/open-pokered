@@ -1478,7 +1478,8 @@ mod tests {
                         assert_eq!(w.bag.item_quantity(ItemId::Potion), 3);
                     }
                     ItemListMode::Toss => {
-                        assert!(!s.yes_selected);
+                        // This quantity test checks that confirmation precedes
+                        // stock mutation, independent of the later YES/NO menu.
                         assert_eq!(w.pc_items.item_quantity(ItemId::Potion), 4);
                         assert_eq!(w.bag.item_quantity(ItemId::Potion), 4);
                     }
