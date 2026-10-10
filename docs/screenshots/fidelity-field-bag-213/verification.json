@@ -1,0 +1,23 @@
+{
+  "candidate_head": "b00ef803aec2112c7ad891ba707ba71ce3adc04b",
+  "baseline_head": "38d8f140df16e2dc7f1353d2727bf65586654e32",
+  "native_full_tests": {
+    "core": 2719,
+    "app": 195,
+    "ignored": 21,
+    "failed": 0
+  },
+  "cases": 15,
+  "native_and_master_png": 18060,
+  "repeat_byte_exact": true,
+  "every_frame_cached_and_full_pixels_identical": true,
+  "original_bicycle_png": 2484,
+  "original_plain_field_png": 3602,
+  "original_viewer_row0_and_coins_png": 2628,
+  "original_viewer_row1_png": 1918,
+  "original_row1_returns_selected_item": true,
+  "evidence_sha256": "bce3cda53432ea590b246dbc7e2e0a62d7100f6c8bde99ef543dd9eb6c42a7e1",
+  "archive_png_files": 28692,
+  "archive_unique_png_blobs": 654,
+  "png_archive_encoding": "Lossless SHA256 blob deduplication; png-index.json + restore-pngs.py reproduce every original path/byte. Raw original capture dirs untouched."
+}

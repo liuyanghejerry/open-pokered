@@ -659,6 +659,8 @@ pub struct PokemonGame {
     /// the party screen (potions, stones, TM/HM…), cleared when the item is
     /// applied or the selection is cancelled.
     pending_bag_item: Option<pokered_data::items::ItemId>,
+    /// TOWN MAP / POKEDEX opened as a bag item return to its saved list.
+    bag_viewer_return: bool,
     /// The SOFTBOILED user (party index): set when the party menu chose the
     /// field move for it; the party screen reopens in target-pick mode
     /// (Gen-1 `.softboiled` → `GoBackToPartyMenu`), cleared when the heal is
@@ -1316,6 +1318,7 @@ impl PokemonGame {
             fly_departure_screen_frames: 0,
             pc_stats_return_frame: None,
             pending_bag_item: None,
+            bag_viewer_return: false,
             pending_softboiled_user: None,
             stats_screen: None,
             slots_screen: None,
@@ -1489,6 +1492,7 @@ impl PokemonGame {
             fly_departure_screen_frames: 0,
             pc_stats_return_frame: None,
             pending_bag_item: None,
+            bag_viewer_return: false,
             pending_softboiled_user: None,
             stats_screen: None,
             slots_screen: None,
@@ -1611,6 +1615,7 @@ impl PokemonGame {
             fly_departure_screen_frames: 0,
             pc_stats_return_frame: None,
             pending_bag_item: None,
+            bag_viewer_return: false,
             pending_softboiled_user: None,
             stats_screen: None,
             slots_screen: None,
@@ -2729,8 +2734,12 @@ impl PokemonGame {
                 // (entry kind from the scene script + flags snapshot).
             }
             GameScreen::Bag => {
-                self.bag_screen =
-                    BagScreenState::new(self.save_data.game_data.bag.items().to_vec());
+                if self.bag_viewer_return {
+                    self.bag_screen.set_items(self.save_data.game_data.bag.items().to_vec());
+                    self.bag_viewer_return = false;
+                } else {
+                    self.bag_screen = BagScreenState::new(self.save_data.game_data.bag.items().to_vec());
+                }
             }
             GameScreen::TownMap => {
                 self.town_map_screen = if self.pending_fly_map {
@@ -5299,8 +5308,10 @@ impl PokemonGame {
                         // BICYCLE toggles riding, REPEL/ESCAPE ROPE…) and shows
                         // its message. Consumed items leave the bag.
                         if item == pokered_data::items::ItemId::TownMap {
+                            self.bag_viewer_return = true;
                             ScreenAction::Transition(GameScreen::TownMap)
                         } else if item == pokered_data::items::ItemId::Pokedex {
+                            self.bag_viewer_return = true;
                             ScreenAction::Transition(GameScreen::Pokedex)
                         } else {
                             match bag_use::classify_bag_use(item) {
@@ -5316,15 +5327,28 @@ impl PokemonGame {
                                         self.save_data.game_data.last_blackout_map,
                                     )
                                     .unwrap_or(pokered_data::maps::MapId::PalletTown);
-                                    let consumed =
-                                        self.overworld.use_field_item(item, last_blackout);
-                                    if consumed {
-                                        let _ = self.save_data.game_data.bag.remove_item(item, 1);
+                                    let result = self.overworld.use_field_item_with_result(item, last_blackout);
+                                    if result.closes_bag {
+                                        if result.consumed {
+                                            let _ = self.save_data.game_data.bag.remove_item(item, 1);
+                                        }
+                                        ScreenAction::Transition(GameScreen::Overworld)
+                                    } else {
+                                        if let Some(dialogue) = self.overworld.pending_dialogue.take() {
+                                            self.bag_screen.show_field_item_message(item, result.consumed, dialogue);
+                                        }
+                                        ScreenAction::Continue
                                     }
-                                    ScreenAction::Transition(GameScreen::Overworld)
                                 }
                             }
                         }
+                    }
+                    BagScreenAction::FieldMessageClosed { item, consumed } => {
+                        if consumed {
+                            let _ = self.save_data.game_data.bag.remove_item(item, 1);
+                        }
+                        self.bag_screen.set_items(self.save_data.game_data.bag.items().to_vec());
+                        ScreenAction::Continue
                     }
                     BagScreenAction::Active => ScreenAction::Continue,
                 }
@@ -5351,7 +5375,9 @@ impl PokemonGame {
                     // start menu (RedisplayStartMenu); the post-capture entry
                     // returns to the overworld.
                     PokedexScreenAction::Closed => {
-                        if self.pokedex_screen.from_list() {
+                        if self.bag_viewer_return {
+                            ScreenAction::Transition(GameScreen::Bag)
+                        } else if self.pokedex_screen.from_list() {
                             ScreenAction::Transition(GameScreen::StartMenu)
                         } else {
                             ScreenAction::Transition(GameScreen::Overworld)
@@ -5394,11 +5420,13 @@ impl PokemonGame {
                     match self.town_map_screen.update_frame(tm_input) {
                         TownMapScreenAction::Closed => {
                             // FLY cancel returns to the party menu (Gen-1 flow);
-                            // the bag's TOWN MAP viewer returns to the overworld.
+                            // the bag's TOWN MAP viewer returns to ItemMenuLoop.
                             if self.town_map_screen.mode()
                                 == pokered_core::town_map_screen::TownMapMode::Fly
                             {
                                 ScreenAction::Transition(GameScreen::PartyScreen)
+                            } else if self.bag_viewer_return {
+                                ScreenAction::Transition(GameScreen::Bag)
                             } else {
                                 ScreenAction::Transition(GameScreen::Overworld)
                             }
@@ -11224,4 +11252,92 @@ mod bag_toss_owner_210 {
         let dir = std::path::PathBuf::from(std::env::var("BAG_TOSS_CAPTURE_210").unwrap());
         run(Some(&dir));
     }
+}
+
+#[cfg(all(test, not(target_os = "none")))]
+mod field_bag_owner_213 {
+    use super::*;
+    use pokered_data::items::ItemId;
+    use pokered_core::overworld::TransportMode;
+    trait MessageObservation213 { fn toss_dialogue(&self) -> Option<&BedroomDialogue> { None } }
+    impl MessageObservation213 for BagScreenState {}
+
+    fn run(capture: Option<&std::path::Path>) {
+        for case in ["repel-a", "repel-b", "coins-a", "coins-b", "parcel-a", "parcel-b", "nugget-a", "nugget-b", "bike-indoor", "bike-surf", "bike-forced", "bike-mount", "bike-dismount", "town-map", "pokedex"] {
+            let mut g = PokemonGame::new(GameVersion::Red);
+            g.audio = None; g.set_seed(42);
+            g.state.config.language = pokered_core::game_state::Lang::En;
+            g.state.config.text_speed = pokered_core::game_state::TextSpeed::Medium;
+            let bike = case.starts_with("bike-");
+            let successful_bike = matches!(case, "bike-mount" | "bike-dismount");
+            let viewer = matches!(case, "town-map" | "pokedex");
+            g.state.screen = GameScreen::Overworld;
+            g.overworld.warp_to_map(if successful_bike { MapId::Route1 } else { MapId::ViridianPokecenter }, 4, 4);
+            let idle = InputState::new(); for _ in 0..120 { g.update(&idle); }
+            if case == "bike-surf" { g.overworld.state.player.transport = TransportMode::Surfing; }
+            if matches!(case, "bike-forced" | "bike-dismount") { g.overworld.state.player.transport = TransportMode::Biking; }
+            if case == "bike-forced" {
+                let mut value = serde_json::to_value(pokered_core::snapshot::OverworldSnapshot::capture(&g.overworld)).unwrap();
+                value["forced_bike"]["active"] = serde_json::json!(true);
+                let snapshot: pokered_core::snapshot::OverworldSnapshot = serde_json::from_value(value).unwrap();
+                snapshot.restore_into(&mut g.overworld);
+            }
+            g.save_data.game_data.bag = pokered_core::items::inventory::Inventory::new_bag();
+            let item = if case.starts_with("repel") { ItemId::Repel } else if case.starts_with("coins") { ItemId::CoinCase }
+                else if case.starts_with("parcel") { ItemId::OaksParcel } else if case.starts_with("nugget") { ItemId::Nugget }
+                else if bike { ItemId::Bicycle } else if case == "town-map" { ItemId::TownMap } else { ItemId::Pokedex };
+            let stock = if item == ItemId::Repel { 2 } else { 1 };
+            if viewer { g.save_data.game_data.bag.add_item(ItemId::Potion, 1).unwrap(); }
+            g.save_data.game_data.bag.add_item(item, stock).unwrap();
+            g.bag_screen = BagScreenState::new(g.save_data.game_data.bag.items().to_vec());
+            g.state.screen = GameScreen::Bag;
+            let mut session = crate::render::session::RenderSession::new();
+            let mut retained = FrameBuffer::new(dotzuki_engine::render_config::RenderConfig::new(160,144), pokered_renderer::Rgba::WHITE);
+            let mut scroll = |_: &mut [u8], _: usize, _: usize, _: i32, _: i32, _: u8| {};
+            let mut input = InputState::new(); let mut held = Vec::new(); let mut rows = Vec::new();
+            let acknowledgement = if case.ends_with("-b") || viewer { GbButton::B } else { GbButton::A };
+            for t in 0..301 {
+                input.begin_frame();
+                let keys = if viewer {
+                    match t { 8 => vec![GbButton::Down], 16 | 32 => vec![GbButton::A], 120 => vec![GbButton::B], _ => vec![] }
+                } else {
+                    match t { 0 => vec![GbButton::A], 16 if !bike => vec![GbButton::A], 120 => vec![acknowledgement],
+                        240 if case.starts_with("nugget") || case == "bike-surf" => vec![acknowledgement], _ => vec![] }
+                };
+                for &key in &held { if !keys.contains(&key) { input.release(key); } }
+                for &key in &keys { if !held.contains(&key) { input.press(key); } } held = keys;
+                g.update(&input); session.render(&mut g, &mut retained, &mut scroll);
+                let mut full = FrameBuffer::new(dotzuki_engine::render_config::RenderConfig::new(160,144), pokered_renderer::Rgba::WHITE); g.draw(&mut full);
+                assert_eq!(retained.packed(), full.packed(), "{case} retained/full frame{t}");
+                if capture.is_none() {
+                    if successful_bike {
+                        assert_eq!(g.state.screen, GameScreen::Overworld, "direct bike use closes the bag at{t}");
+                        assert_eq!(g.overworld.state.player.transport, if case == "bike-mount" { TransportMode::Biking } else { TransportMode::Walking });
+                    } else if viewer {
+                        if (32..120).contains(&t) { assert_eq!(g.state.screen, if case == "town-map" { GameScreen::TownMap } else { GameScreen::Pokedex }); }
+                        if t >= 120 { assert_eq!(g.state.screen, GameScreen::Bag); assert_eq!(g.bag_screen.cursor(), 1); }
+                    } else {
+                        assert_eq!(g.state.screen, GameScreen::Bag, "{case} should stay in ItemMenuLoop frame{t}");
+                        if bike && t == 0 { assert!(format!("{:?}",g.bag_screen.phase()).starts_with("FieldMessage"), "Bicycle skips USE/TOSS"); }
+                        let expected_stock = if item == ItemId::Repel && t >= 120 { 1 } else { stock };
+                        assert_eq!(g.save_data.game_data.bag.item_quantity(item), u16::from(expected_stock), "{case} consumption before PROMPT acknowledgement at{t}");
+                        if (case.starts_with("nugget") || case == "bike-surf") && t == 120 {
+                            assert!(format!("{:?}",g.bag_screen.phase()).starts_with("FieldMessage"), "first scroll must not close a multi-page refusal");
+                        }
+                        if t >= 240 { assert_eq!(format!("{:?}",g.bag_screen.phase()), "Browsing"); }
+                    }
+                }
+                if let Some(path) = capture {
+                    let dir = path.join(case); std::fs::create_dir_all(&dir).unwrap(); full.save_png(&dir.join(format!("frame-{t:04}.png"))).unwrap();
+                    rows.push(serde_json::json!({"t":t,"input":input.raw_current(),"screen":format!("{:?}",g.state.screen),"phase":format!("{:?}",g.bag_screen.phase()),"cursor":g.bag_screen.cursor(),"inventory":g.save_data.game_data.bag.items(),"dialogue":g.bag_screen.toss_dialogue(),"overworld":pokered_core::snapshot::OverworldSnapshot::capture(&g.overworld)}));
+                }
+            }
+            if let Some(path) = capture { std::fs::write(path.join(case).join("frames.json"),serde_json::to_string_pretty(&rows).unwrap()).unwrap(); }
+        }
+    }
+    #[test]
+    fn field_use_owns_prompt_return_and_consumption() { std::thread::Builder::new().stack_size(16*1024*1024).spawn(||run(None)).unwrap().join().unwrap(); }
+    #[test]
+    #[ignore = "controlled bag field-use before/after capture"]
+    fn capture_field_bag_213() { let path=std::path::PathBuf::from(std::env::var("FIELD_BAG_CAPTURE_213").unwrap());std::thread::Builder::new().stack_size(16*1024*1024).spawn(move||run(Some(&path))).unwrap().join().unwrap(); }
 }
