@@ -25,3 +25,13 @@ as source evidence. Its older Native/GBA claims are excluded. Three-frame
 redisplay and field input boundaries remain with the larger movement/input
 foundation split; this PR addresses menu availability/action only. No new full
 mainline or independent Continue result is claimed. No ROM/binaries published.
+
+## Preview CI follow-up
+
+CI on d1d98b1 failed only two UI-preview layout-mutation tests. Six menu rows
+make their old width/height operands visually equivalent after clipping/natural
+size. Fixed width8 and min-height16 exercise visible changes; both existing
+pixel inequality assertions remain. Full preview suite58PASS/1ignored. Tests
+and mock comment only changed; production renderer, screenshot inputs and images
+are unchanged. The negative CI excerpt and successful local log are archived;
+verification pins the added test source/binary. Latest-head CI must pass again.

@@ -30,6 +30,14 @@
     "menu-before.png": "244830fa3f6b30d2286c0e10e2d2b793ede59297fcd42f5b4c2dd56121faba6b",
     "select-after.png": "f81e222da3f2e27c28d3c9cb3c68f9f74ba6e6ba8def67b3e378e77821c171dd",
     "menu-after.png": "f81e222da3f2e27c28d3c9cb3c68f9f74ba6e6ba8def67b3e378e77821c171dd",
-    "evidence.zip": "8f260cbbdbccadefb8fd8fccd3b2c1d33bc51c7ec9108dbc09d819ea738e9c8e"
+    "evidence.zip": "108db3f3355945a75793a30b6fcc22a83cf1204a6d7b83870f0c1f1fb1c0c8c5"
+  },
+  "preview_followup": {
+    "failed_ci": "https://github.com/liuyanghejerry/open-pokered/actions/runs/38074762385/job/114279315426",
+    "reason": "two preview layout test boundaries cease to change visible pixels after POKEMON is included; retain assertions and choose visible boundaryvalues",
+    "tests": "58PASS+1ignored",
+    "source_sha256": "39d451c3bb9227f3e0e3bea1dbdc4df82f7a2f7ea2ea758bb3c99f52e3ef7459",
+    "binary_sha256": "dba0a3f5d688b91e4241f6cf1c50463a2e3c3944e3a0c04e763212b004eb303a",
+    "scope": "test input and mock-comment only; production renderer/game sources and four screenshot files unchanged"
   }
 }
