@@ -1214,12 +1214,16 @@ impl PcScreen {
             self.phase = PcPhase::ItemList;
             return PcScreenAction::Continue;
         };
-        if input.up && self.item_qty < *have {
-            self.item_qty += 1;
-        } else if input.down && self.item_qty > 1 {
-            self.item_qty -= 1;
+        // DisplayChooseQuantityMenu: A, B, UP, DOWN in that order;
+        // quantities wrap between 1 and the selected stack's maximum.
+        if !input.a && !input.b {
+            if input.up {
+                self.item_qty = if self.item_qty >= *have { 1 } else { self.item_qty + 1 };
+            } else if input.down {
+                self.item_qty = if self.item_qty <= 1 { *have } else { self.item_qty - 1 };
+            }
         }
-        if input.b {
+        if input.b && !input.a {
             self.phase = PcPhase::ItemList;
             return PcScreenAction::Continue;
         }
@@ -1422,6 +1426,63 @@ mod tests {
                 bag: &mut self.bag,
                 pc_items: &mut self.pc_items,
                 pokedex: &self.pokedex,
+            }
+        }
+    }
+
+    #[test]
+    fn source_quantity_pc_wraps_both_boundaries_without_moving_stock() {
+        for mode in [ItemListMode::Withdraw, ItemListMode::Deposit, ItemListMode::Toss] {
+            for have in [1, 4, 99] {
+                let mut w = World::new();
+                w.bag.add_item(ItemId::Potion, have).unwrap();
+                w.pc_items.add_item(ItemId::Potion, have).unwrap();
+                let mut s = PcScreen::new(PcEntry::PlayersPc, &open_ctx());
+                s.item_mode = mode;
+                s.phase = PcPhase::ItemQuantity;
+                s.item_qty = 1;
+                s.update_frame(DOWN, &mut w.ctx());
+                assert_eq!(s.item_qty(), have, "DOWN from1 mode{mode:?}");
+                s.update_frame(UP, &mut w.ctx());
+                assert_eq!(s.item_qty(), 1, "UP frommax mode{mode:?}");
+                s.update_frame(B, &mut w.ctx());
+                assert_eq!(w.bag.item_quantity(ItemId::Potion), u16::from(have));
+                assert_eq!(w.pc_items.item_quantity(ItemId::Potion), u16::from(have));
+            }
+        }
+    }
+
+    #[test]
+    fn source_quantity_pc_confirm_precedes_cancel_and_directions() {
+        for mode in [ItemListMode::Withdraw, ItemListMode::Deposit, ItemListMode::Toss] {
+            for b in [false, true] {
+                let mut w = World::new();
+                w.bag.add_item(ItemId::Potion, 4).unwrap();
+                w.pc_items.add_item(ItemId::Potion, 4).unwrap();
+                let mut s = PcScreen::new(PcEntry::PlayersPc, &open_ctx());
+                s.item_mode = mode;
+                s.phase = PcPhase::ItemQuantity;
+                s.item_qty = 1;
+                s.update_frame(MenuInput { a: true, b, up: true, down: true }, &mut w.ctx());
+                assert_eq!(s.item_qty(), 1, "A keeps chosen quantity mode{mode:?} B{b}");
+                assert_eq!(s.phase(), if mode == ItemListMode::Toss {
+                    PcPhase::TossConfirm
+                } else { PcPhase::Message });
+                match mode {
+                    ItemListMode::Withdraw => {
+                        assert_eq!(w.pc_items.item_quantity(ItemId::Potion), 3);
+                        assert_eq!(w.bag.item_quantity(ItemId::Potion), 5);
+                    }
+                    ItemListMode::Deposit => {
+                        assert_eq!(w.pc_items.item_quantity(ItemId::Potion), 5);
+                        assert_eq!(w.bag.item_quantity(ItemId::Potion), 3);
+                    }
+                    ItemListMode::Toss => {
+                        assert!(!s.yes_selected);
+                        assert_eq!(w.pc_items.item_quantity(ItemId::Potion), 4);
+                        assert_eq!(w.bag.item_quantity(ItemId::Potion), 4);
+                    }
+                }
             }
         }
     }

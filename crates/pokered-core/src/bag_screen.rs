@@ -305,14 +305,18 @@ impl BagScreenState {
             self.phase = BagPhase::Browsing;
             return BagScreenAction::Active;
         };
-        if input.up && qty < have {
-            qty += 1;
-        } else if input.down && qty > 1 {
-            qty -= 1;
+        // Shared original quantity menu wraps and gives A priority over
+        // B/directions, so a chord cannot alter the confirmed amount.
+        if !input.a && !input.b {
+            if input.up {
+                qty = if qty >= have { 1 } else { qty + 1 };
+            } else if input.down {
+                qty = if qty <= 1 { have } else { qty - 1 };
+            }
         }
         self.phase = BagPhase::TossQuantity { qty };
 
-        if input.b {
+        if input.b && !input.a {
             self.phase = BagPhase::Browsing;
             return BagScreenAction::Active;
         }
@@ -419,7 +423,35 @@ mod tests {
     }
 
     #[test]
-    fn toss_quantity_caps_at_held() {
+    fn source_quantity_bag_wraps_both_boundaries() {
+        for have in [1, 4, 99] {
+            let mut s = BagScreenState::new(vec![(ItemId::Potion, have)]);
+            s.phase = BagPhase::TossQuantity { qty: 1 };
+            s.update_frame(BagScreenInput { down: true, ..Default::default() });
+            assert_eq!(s.phase(), BagPhase::TossQuantity { qty: have });
+            s.update_frame(BagScreenInput { up: true, ..Default::default() });
+            assert_eq!(s.phase(), BagPhase::TossQuantity { qty: 1 });
+            assert_eq!(s.selected_item(), Some((ItemId::Potion, have)));
+        }
+    }
+
+    #[test]
+    fn source_quantity_bag_confirm_precedes_cancel_and_directions() {
+        for b in [false, true] {
+            let mut s = BagScreenState::new(vec![(ItemId::Potion, 4)]);
+            s.phase = BagPhase::TossQuantity { qty: 1 };
+            let result = s.update_frame(BagScreenInput {
+                a: true, b, up: true, down: true, ..Default::default()
+            });
+            assert_eq!(result, BagScreenAction::TossItem {
+                item: ItemId::Potion, index: 0, quantity: 1
+            });
+            assert_eq!(s.phase(), BagPhase::Browsing);
+        }
+    }
+
+    #[test]
+    fn toss_quantity_wraps_held_boundary_on_repeated_presses() {
         let mut s = BagScreenState::new(vec![(ItemId::Potion, 2)]);
         s.update_frame(BagScreenInput { a: true, ..Default::default() });
         s.update_frame(BagScreenInput { down: true, ..Default::default() });
@@ -427,7 +459,7 @@ mod tests {
         for _ in 0..10 {
             s.update_frame(BagScreenInput { up: true, ..Default::default() });
         }
-        assert_eq!(s.phase(), BagPhase::TossQuantity { qty: 2 });
+        assert_eq!(s.phase(), BagPhase::TossQuantity { qty: 1 });
     }
 }
 
