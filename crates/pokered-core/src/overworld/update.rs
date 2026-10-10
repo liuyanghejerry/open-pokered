@@ -307,6 +307,17 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     }
 
     pub fn update_frame(&mut self, input: OverworldInput) -> ScreenAction {
+        let action = self.update_frame_inner(input);
+        if self.script_engine.is_idle()
+            && self.active_script_effect.is_none()
+            && self.pending_choice.is_none()
+        {
+            self.last_script_dialogue = None;
+        }
+        action
+    }
+
+    fn update_frame_inner(&mut self, input: OverworldInput) -> ScreenAction {
         self.frame_counter = self.frame_counter.wrapping_add(1);
         self.sfx_event = OverworldSfxEvent::None;
         if self.preserve_audio_requests_next_frame {
@@ -636,6 +647,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 up_just_pressed,
                 down_just_pressed,
                 &mut self.pending_dialogue,
+                &mut self.last_script_dialogue,
                 &mut self.pending_choice,
                 &mut self.pending_pokedex_entry,
                 &mut self.pending_naming_screen,
@@ -2407,6 +2419,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         up_pressed: bool,
         down_pressed: bool,
         pending_dialogue: &mut Option<BedroomDialogue>,
+        last_script_dialogue: &mut Option<BedroomDialogue>,
         pending_choice: &mut Option<script_bridge::PendingChoice>,
         pending_pokedex_entry: &mut Option<PokedexEntryState>,
         pending_naming_screen: &mut Option<crate::naming_screen::NamingScreenState>,
@@ -2443,6 +2456,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     up_pressed,
                     down_pressed,
                     pending_dialogue,
+                    last_script_dialogue,
                     pending_choice,
                     pending_pokedex_entry,
                     pending_naming_screen,
@@ -2505,6 +2519,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     up_pressed,
                     down_pressed,
                     pending_dialogue,
+                    last_script_dialogue,
                     pending_choice,
                     pending_pokedex_entry,
                     pending_naming_screen,
@@ -2578,6 +2593,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             }
             script_bridge::ScriptEffect::ShowDialogue { text } => {
                 if pending_dialogue.is_none() {
+                    *last_script_dialogue = None;
                     let dialogue = script_bridge::text_to_dialogue_with_names(text, dialogue_names);
                     if dialogue.is_done() {
                         return true;
@@ -2591,16 +2607,18 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     if let Some(ref mut dlg) = pending_dialogue {
                         if dlg.holding_open() {
                             if !a_pressed || b_just_pressed {
-                                *pending_dialogue = None;
+                                *last_script_dialogue = pending_dialogue.take();
                                 return true;
                             }
                         } else if a_just_pressed || b_just_pressed {
                             if dlg.waiting_for_input() {
                                 if dlg.is_last_page() && a_just_pressed {
                                     dlg.start_holding_open();
-                                } else if !dlg.advance() {
-                                    *pending_dialogue = None;
+                                } else if dlg.is_last_page() {
+                                    *last_script_dialogue = pending_dialogue.take();
                                     return true;
+                                } else {
+                                    dlg.advance();
                                 }
                             } else {
                                 dlg.skip_to_full_page();
@@ -2633,17 +2651,20 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     if a_just_pressed {
                         *selected = choice.selected;
                         *pending_choice = None;
+                        *last_script_dialogue = None;
                         true
                     } else if b_just_pressed {
                         // B = cancel = last option (NO)
                         *selected = choice.options.len().saturating_sub(1) as u32;
                         *pending_choice = None;
+                        *last_script_dialogue = None;
                         true
                     } else {
                         false
                     }
                 } else {
                     // pending_choice was cleared externally — treat as done
+                    *last_script_dialogue = None;
                     true
                 }
             }

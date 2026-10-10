@@ -655,6 +655,8 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     pub npc_states: Vec<crate::overworld::npc_movement::NpcRuntimeState>,
     pub npc_pokemon_data: Vec<PokemonNpcData>,
     pub pending_dialogue: Option<BedroomDialogue>,
+    /// Last completed script text, retained only for the following choice.
+    pub last_script_dialogue: Option<BedroomDialogue>,
     pub pending_choice: Option<crate::overworld::script_bridge::PendingChoice>,
     pub pending_pokedex_entry: Option<PokedexEntryState>,
     pub pending_naming_screen: Option<crate::naming_screen::NamingScreenState>,
@@ -1132,6 +1134,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             npc_states,
             npc_pokemon_data,
             pending_dialogue: None,
+            last_script_dialogue: None,
             pending_choice: None,
             pending_pokedex_entry: None,
             pending_naming_screen: None,
@@ -1393,13 +1396,32 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             .or_else(|| pokered_data::embedded_scenes::get_scene_ast("shared/pokecenter"))
     }
 
+    /// YesNoChoice leaves the question in the text window. It is display
+    /// state, not an active ShowDialogue that may consume the choice input.
+    pub fn displayed_field_dialogue(&self) -> Option<&BedroomDialogue> {
+        self.pending_dialogue.as_ref()
+            .or(self.cut_retained_dialogue.as_ref())
+            .or_else(|| self.choice_question())
+    }
+
+    pub(crate) fn choice_question(&self) -> Option<&BedroomDialogue> {
+        if self.pending_choice.is_some()
+            || self.active_script_effect.as_ref().is_some_and(|effect| effect.is_choice()) {
+            self.last_script_dialogue.as_ref()
+        } else {
+            None
+        }
+    }
+
     /// FoundItemText has no ManualTextScroll prompt while its jingle plays.
     pub fn dialogue_needs_button(&self) -> bool {
         let effect = match self.active_script_effect.as_ref() {
             Some(super::script_bridge::ScriptEffect::GivePokemon { flow: Some(flow), .. }) => Some(flow.child.as_ref()),
             other => other,
         };
-        !matches!(effect, Some(super::script_bridge::ScriptEffect::ShowItemDialogue { .. }))
+        self.pending_choice.is_none()
+            && !self.active_script_effect.as_ref().is_some_and(|effect| effect.is_choice())
+            && !matches!(effect, Some(super::script_bridge::ScriptEffect::ShowItemDialogue { .. }))
     }
 
     /// Set the configured dialogue delay (1/3/5 frames per character).

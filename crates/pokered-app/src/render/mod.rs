@@ -50,6 +50,8 @@ pub use menu::{
 };
 pub use oak::{draw_naming_screen, draw_oak_speech};
 pub use overworld::draw_overworld;
+#[cfg(test)]
+pub(crate) use overworld::draw_overworld_cached;
 pub use overworld::{FrameDamageRect, OverworldBackgroundCache};
 pub mod session;
 pub use menu::redraw_mart_cursor;
