@@ -1,3 +1,17 @@
+## Latest integration on master61a1e66
+
+Current integration evidence: actual master61a1e66 vs frozen source 158f8576af0fad812f013ea7722dac343b13bdff.
+Full core 2724 / app199 pass (23 opt-in capture helpers ignored).
+All 1204 PNG paths plus complete raw JSON/logs/source are read back from the
+lossless SHA256 PNG archive and compared byte-for-byte. Both sides repeat exactly;
+every frame compares all retained/full pixels. Baseline Game production prefix
+is unchanged, with identical test-only helpers. Same inputs/state/frame screenshots
+are published above. No ROM/SRAM/emulator state/executable is distributed. These
+are controlled collision-checked owner fixtures, not natural mainline traversal.
+Latest own CI and unchanged GBA gates must independently pass before merge.
+
+## Historical evidence retained
+
 # ESCAPE ROPE 的保护等待与库存提交
 
 原作 `engine/items/item_effects.asm::ItemUseEscapeRope` 成功分支先设置逃离状态，接着 `ItemUseReloadOverworldData`、`DelayFrames(30)`、`RemoveUsedItem`；之后关闭 START 菜单并执行离开地图动画。`wPseudoItemID` 非零的 DIG 在重新加载/等待/消耗之前返回，不能套用道具等待。
