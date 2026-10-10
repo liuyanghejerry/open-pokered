@@ -6,7 +6,7 @@ Covered call sites: Safari information worker, Museum ticket price question thro
 
 ## Actual master before / current candidate after
 
-Master is 6d99bd6 (#152 already merged); candidate source head is 733cacc. Both builds use separate initially empty targets. They run the already committed test-only recorder from #153: real Continue from the same controlled original SRAM, end fixture Safari game, warp to its valid worker position, Medium=3. A at frame0, release1, no further keys; screenshot frame130 on both sides. This is a controlled fixture, not natural traversal. Neither side has production/capture helper patches. All ten candidate source hashes match the frozen passing build.
+Master is 6d99bd6 (#152 already merged); candidate source head is 733cacc. Both builds use separate initially empty targets. They run the already committed test-only recorder from #153: real Continue from the same controlled original SRAM, end fixture Safari game, warp to its valid worker position, Medium=3. A at frame0, release1, no further keys; screenshot frame130 on both sides. This is a controlled fixture, not natural traversal. Master production is unchanged; the already committed recorder is unchanged on both sides. The candidate carries its ten intentional source changes. All ten candidate source hashes match the frozen passing build.
 
 Before stays at the question waiting for another press. After returns automatically to YES/NO with YES selected and the final question retained. Both sides record145 full hardware frames twice (580PNG total), byte-exact PNG and full raw snapshot repeats; every frame checks retained against full drawing pixel-for-pixel. Input bits match across sides.
 
