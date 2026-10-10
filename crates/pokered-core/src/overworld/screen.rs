@@ -562,8 +562,14 @@ impl BedroomDialogue {
     /// before the next one (one character per `text_delay_frames` frames,
     /// matching `PrintLetterDelay`'s per-letter `DelayFrames` wait).
     pub fn reveal_next_char(&mut self) {
+        self.reveal_next_char_with_buttons(false);
+    }
+
+    /// PrintLetterDelay polls held A/B without a menu sound. A press ends the
+    /// current letter's wait after one hardware frame; it never reveals a page.
+    pub fn reveal_next_char_with_buttons(&mut self, fast_held: bool) {
         if self.delay_counter > 0 {
-            self.delay_counter -= 1;
+            self.delay_counter = if fast_held { 0 } else { self.delay_counter - 1 };
             return;
         }
         let total = self.total_chars();
@@ -573,7 +579,7 @@ impl BedroomDialogue {
                 self.char_index = total;
                 self.waiting_for_input = true;
             } else {
-                self.delay_counter = self.text_delay_frames - 1;
+                self.delay_counter = if fast_held { 0 } else { self.text_delay_frames - 1 };
             }
         }
     }
