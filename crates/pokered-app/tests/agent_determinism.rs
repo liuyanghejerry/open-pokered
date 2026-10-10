@@ -19,6 +19,64 @@ use pokered_core::pokemon::stats::create_pokemon;
 use pokered_core::save::SaveData;
 use pokered_data::{impl_traits::PokemonRedData, maps::MapId, species::Species};
 
+fn seeded_session_game(seed: u64) -> PokemonGame {
+    let mut game = PokemonGame::new_with_options(
+        GameVersion::Red, None, None, None, false, None, false, true,
+        #[cfg(feature = "debug-server")]
+        None,
+    );
+    game.set_seed(seed);
+    game
+}
+
+fn field_rng_bytes(game: &mut PokemonGame) -> Vec<u8> {
+    (0..32).map(|_| game.overworld.next_rng_u8()).collect()
+}
+
+#[test]
+fn seeded_session_new_game_preserves_preboot_field_seed() {
+    use pokered_core::game_state::MainMenuChoice;
+    for seed in [0, 42, u64::MAX] {
+        let mut game = seeded_session_game(seed);
+        let expected = field_rng_bytes(&mut game);
+        game.state.screen = GameScreen::OakSpeech;
+        game.main_menu.last_choice = Some(MainMenuChoice::NewGame);
+        game.handle_transition(GameScreen::Overworld);
+        assert_eq!(field_rng_bytes(&mut game), expected, "NEW GAME seed {seed}");
+    }
+}
+
+#[test]
+fn seeded_session_continue_preserves_preboot_field_seed() {
+    use pokered_core::game_state::MainMenuChoice;
+    for seed in [0, 42, u64::MAX] {
+        let mut game = seeded_session_game(seed);
+        let expected = field_rng_bytes(&mut game);
+        game.state.screen = GameScreen::MainMenu;
+        game.main_menu.last_choice = Some(MainMenuChoice::Continue);
+        game.save_data.game_data.position.map_id = MapId::PalletTown as u8;
+        game.save_data.game_data.position.x = 5;
+        game.save_data.game_data.position.y = 6;
+        game.handle_transition(GameScreen::Overworld);
+        assert_eq!(field_rng_bytes(&mut game), expected, "CONTINUE seed {seed}");
+    }
+}
+
+#[test]
+fn seeded_session_return_from_start_menu_does_not_restart_field_rng() {
+    use pokered_core::game_state::MainMenuChoice;
+    let mut game = seeded_session_game(42);
+    let first = field_rng_bytes(&mut game);
+    let expected = field_rng_bytes(&mut game);
+    assert_ne!(first, expected);
+    game.set_seed(42);
+    assert_eq!(field_rng_bytes(&mut game), first);
+    game.state.screen = GameScreen::StartMenu;
+    game.main_menu.last_choice = Some(MainMenuChoice::Continue);
+    game.handle_transition(GameScreen::Overworld);
+    assert_eq!(field_rng_bytes(&mut game), expected);
+}
+
 /// Start position note: (10, 6) is the open column north of Red's house —
 /// (10, 9) sits in a tile-pair pocket that can't be exited northbound.
 fn game_at_pallet(seed: u64, x: u16, y: u16) -> PokemonGame {
