@@ -1,3 +1,17 @@
+## Latest integration on master61a1e66
+
+Current integration evidence: actual master61a1e66 vs frozen source cd8a4fc8ad76781f1fddee3feeae637348feda59.
+Full core 2722 / app199 pass (23 opt-in capture helpers ignored).
+All 2904 PNG paths plus complete raw JSON/logs/source are read back from the
+lossless SHA256 PNG archive and compared byte-for-byte. Both sides repeat exactly;
+every frame compares all retained/full pixels. Baseline Game production prefix
+is unchanged, with identical test-only helpers. Same inputs/state/frame screenshots
+are published above. No ROM/SRAM/emulator state/executable is distributed. These
+are controlled collision-checked owner fixtures, not natural mainline traversal.
+Latest own CI and unchanged GBA gates must independently pass before merge.
+
+## Historical evidence retained
+
 # Bag USE/TOSS selection, independent repair 218
 
 Actual master 59d519f has an extra CANCEL row and processes simultaneous UP+DOWN
