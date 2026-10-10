@@ -10884,6 +10884,73 @@ mod link_stats_cry_fidelity_tests {
     }
 
     #[test]
+    fn eevee_nickname_print_done_opens_choice_without_skip_or_an_extra_press() {
+        use pokered_core::overworld::Direction;
+        run_link_save_fixture(|| {
+            let mut g=fixture(Species::Bulbasaur,3,Direction::Up);
+            g.overworld.warp_to_map(MapId::CeladonMansionRoofHouse,4,4);
+            let idle=InputState::new();let a=button(GbButton::A);
+            for _ in 0..120 {g.update(&idle);}
+            g.update(&button(GbButton::Up));for _ in 0..16 {g.update(&idle);}
+            for t in 0..1200 {
+                g.update(if t<2 {&a} else {&idle});
+                if g.overworld.pending_choice.is_some() {break;}
+            }
+            assert_eq!(g.overworld.pending_choice.as_ref().expect("nickname choice without extra A").options,["YES","NO"]);
+            assert!(!g.overworld.is_naming_screen_active());
+            assert_eq!(g.save_data.party.count(),1,"gift awaits the nickname answer");
+            let (top,bottom)=g.overworld.displayed_field_dialogue().unwrap().get_display_text().unwrap();
+            assert!(format!("{top} {bottom}").contains("nickname to EEVEE?"));
+            for _ in 0..20 {g.update(&idle);}
+            g.update(&button(GbButton::B));
+            for _ in 0..180 {g.update(&idle);}
+            assert_eq!(g.save_data.party.count(),2);
+            assert_eq!(g.save_data.party.get(1).unwrap().species,Species::Eevee);
+            assert!(g.overworld.script_flags().get("EVENT_GOT_EEVEE").copied().unwrap_or(false));
+            assert!(g.overworld.pending_choice.is_none());
+        });
+    }
+
+    #[test]
+    fn safari_print_done_enters_choice_without_an_extra_press_and_survives_final_wait_restore() {
+        use pokered_core::overworld::Direction;
+        use pokered_core::snapshot::OverworldSnapshot;
+        run_link_save_fixture(|| {
+            let mut g=fixture(Species::Bulbasaur,3,Direction::Left);
+            g.state.config.text_speed=pokered_core::game_state::TextSpeed::Medium;
+            g.overworld.warp_to_map(MapId::SafariZoneGate,3,4);
+            let idle=InputState::new();let a=button(GbButton::A);
+            for _ in 0..120 {g.update(&idle);}
+            g.update(&button(GbButton::Left));for _ in 0..16 {g.update(&idle);}
+            let mut first=None;let mut restored=false;let mut entry=None;
+            for t in 0..200 {
+                g.update(if t<2 {&a} else {&idle});
+                if let Some(d)=&g.overworld.pending_dialogue {
+                    if first.is_none() && d.char_index()>0 {first=Some(t);}
+                    if d.char_index()==30 && !restored {
+                        assert!(!d.waiting_for_input(),"final glyph still owns its delay");
+                        let raw=serde_json::to_string(&OverworldSnapshot::capture(&g.overworld)).unwrap();
+                        let snap:OverworldSnapshot=serde_json::from_str(&raw).unwrap();
+                        snap.restore_into(&mut g.overworld);restored=true;
+                    }
+                }
+                if entry.is_none() && g.overworld.active_script_effect_label().as_deref()==Some("ShowChoice") {entry=Some(t);}
+                if g.overworld.pending_choice.is_some() {break;}
+            }
+            assert!(restored && g.overworld.pending_choice.is_some(),"no third A is sent");
+            assert_eq!(entry.unwrap()-first.unwrap(),90,"original first24 -> YesNoChoice114");
+            assert!(g.overworld.pending_dialogue.is_none());
+            assert_eq!(g.overworld.displayed_field_dialogue().unwrap().get_display_text(),Some(("Hi! Is it your first time".into(),"here?".into())));
+            for _ in 0..20 {g.update(&idle);}
+            assert_eq!(g.overworld.pending_choice.as_ref().unwrap().selected,0,"opening A must not answer YES");
+            g.update(&button(GbButton::B));
+            for _ in 0..160 {g.update(&idle);}
+            let (top,bottom)=g.overworld.displayed_field_dialogue().unwrap().get_display_text().unwrap();
+            assert!(format!("{top} {bottom}").starts_with("Sorry, you're a regular"));
+        });
+    }
+
+    #[test]
     fn safari_information_choice_keeps_question_across_json_restore_and_replaces_it() {
         use pokered_core::overworld::Direction;
         use pokered_core::snapshot::OverworldSnapshot;
@@ -10946,7 +11013,7 @@ mod link_stats_cry_fidelity_tests {
     }
 
     #[test]
-    fn museum_choice_retains_final_question_page_across_money_box_command() {
+    fn museum_choice_retains_final_question_page_with_original_early_money_box() {
         use pokered_core::overworld::Direction;
         run_link_save_fixture(|| {
             let mut g = fixture(Species::Bulbasaur, 10, Direction::Up);
@@ -10957,10 +11024,18 @@ mod link_stats_cry_fidelity_tests {
             let up = button(GbButton::Up);
             for _ in 0..120 { g.update(&idle); }
             for _ in 0..30 { g.update(&up); }
+            let mut saw_price_page_with_money=false;
             for frame in 0..1800 {
                 if g.overworld.pending_choice.is_some() { break; }
                 g.update(if frame % 30 == 0 { &a } else { &idle });
+                if let Some(d)=&g.overworld.pending_dialogue {
+                    if d.current_page()==0 {
+                        assert!(g.overworld.script_money_box.is_some(),"original MONEY_BOX precedes PrintText");
+                        saw_price_page_with_money=true;
+                    }
+                }
             }
+            assert!(saw_price_page_with_money);
             assert!(g.overworld.pending_choice.is_some());
             assert!(g.overworld.script_money_box.is_some());
             let question = g.overworld.displayed_field_dialogue().unwrap();
