@@ -98,11 +98,17 @@ impl MartState {
     /// `player.money` and `player.bag` are mutated in-place when a
     /// transaction is committed.
     pub fn update_frame(&mut self, input: MenuInput, player: &mut PlayerData) -> MartUpdate {
+        // Gen I's shared quantity chooser tests A before B and directions.
+        // Keep the generic mart's other menu policies at their existing boundary.
+        let quantity_menu = matches!(self.0.phase,
+            MartPhase::Buy(BuyMenuState::Quantity { .. })
+                | MartPhase::Sell(SellMenuState::Quantity { .. }));
+        let direction_allowed = !quantity_menu || (!input.a && !input.b);
         let engine_input = EngineMenuInput {
-            up: input.up,
-            down: input.down,
+            up: input.up && direction_allowed,
+            down: input.down && direction_allowed,
             confirm: input.a,
-            cancel: input.b,
+            cancel: input.b && (!quantity_menu || !input.a),
         };
         self.0.update_frame(engine_input, player)
     }
