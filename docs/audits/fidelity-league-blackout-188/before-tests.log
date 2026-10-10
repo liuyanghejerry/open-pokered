@@ -1,0 +1,37 @@
+EE
+======================================================================
+ERROR: test_missing_agatha_after_confirmed_blackout_reaches_existing_retry (test_playthrough_recovery.LeagueRecoveryTests.test_missing_agatha_after_confirmed_blackout_reaches_existing_retry)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/usr/lib/python3.14/unittest/mock.py", line 1439, in patched
+    return func(*newargs, **newkeywargs)
+  File "/home/jerry/develop/open-pokered/.task-tmp/fidelity-91-plus-checkout/scripts/test_playthrough_recovery.py", line 144, in test_missing_agatha_after_confirmed_blackout_reaches_existing_retry
+    late.talk_npc(game, 'AgathasRoom', 1, completion_flag='EVENT_BEAT_AGATHAS_ROOM_TRAINER_0')
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "historical21_talk_npc", line 642, in talk_npc
+    state = g.st()
+      ^^^^^^
+  File "historical21_talk_npc", line 640, in find
+    npc = next((n for n in npcs if n["text_id"] == text_id and n.get("visible", True)), None)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+StopIteration
+
+======================================================================
+ERROR: test_missing_npc_without_loss_stays_a_failure (test_playthrough_recovery.LeagueRecoveryTests.test_missing_npc_without_loss_stays_a_failure)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/jerry/develop/open-pokered/.task-tmp/fidelity-91-plus-checkout/scripts/test_playthrough_recovery.py", line 157, in test_missing_npc_without_loss_stays_a_failure
+    late.talk_npc(game, 'AgathasRoom', 1)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "historical21_talk_npc", line 642, in talk_npc
+    state = g.st()
+      ^^^^^^
+  File "historical21_talk_npc", line 640, in find
+    npc = next((n for n in npcs if n["text_id"] == text_id and n.get("visible", True)), None)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+StopIteration
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.004s
+
+FAILED (errors=2)

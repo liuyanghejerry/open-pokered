@@ -1,0 +1,13 @@
+{
+  "before_head": "21c3583",
+  "after_head": "bef44441f42dbb470ec3e33cffc6a2ce6c0e5817",
+  "before_new_tests": "twoStopIterationerrors as expected",
+  "after_tests": "85 PASS",
+  "recorded_state": {
+    "map": "IndigoPlateau",
+    "screen": "overworld",
+    "frame": 926716,
+    "confirmed_league_blackout": true
+  },
+  "scope": "no gamecode/timing changes; missingNPC remains error unlessexisting confirmedleagueblackout predicate allows bounded earned reentry; old184 artifacts retained,188 fresh49 running"
+}
