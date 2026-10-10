@@ -5252,7 +5252,16 @@ impl PokemonGame {
                     b: input.is_just_pressed(GbButton::B),
                     select: input.is_just_pressed(GbButton::Select),
                 };
-                match self.bag_screen.update_frame(bag_input) {
+                let action = self.bag_screen.update_frame_with_text(
+                    bag_input,
+                    input.is_held(GbButton::A) || input.is_held(GbButton::B),
+                    self.state.config.language,
+                    self.state.config.text_speed.delay_frames(),
+                );
+                if self.bag_screen.take_press_sound() {
+                    if let Some(audio) = &self.audio { audio.play_sfx(SfxId::PressAB); }
+                }
+                match action {
                     BagScreenAction::Cancelled => ScreenAction::Transition(GameScreen::StartMenu),
                     BagScreenAction::TossItem {
                         item,
@@ -5269,7 +5278,7 @@ impl PokemonGame {
                                 .bag
                                 .toss_item(index, quantity.min(99) as u8);
                             self.bag_screen
-                                .set_items(self.save_data.game_data.bag.items().to_vec());
+                                .set_items_after_toss(self.save_data.game_data.bag.items().to_vec());
                             ScreenAction::Continue
                         } else {
                             self.overworld.pending_dialogue = Some(BedroomDialogue::from_message(
@@ -10886,5 +10895,94 @@ mod typing_pulse_capture_202 {
             }
             assert!(first.is_some());std::fs::write(dir.join("frames.json"),serde_json::to_string_pretty(&rows).unwrap()).unwrap();
         }).unwrap().join().unwrap();
+    }
+}
+
+#[cfg(all(test, not(target_os = "none")))]
+mod bag_toss_owner_210 {
+    use super::*;
+    use pokered_data::items::ItemId;
+    // Only the baseline lacks these observations. Both sides use this exact
+    // helper; final inherent methods take precedence over the empty baseline.
+    trait TossObservation210 {
+        fn toss_dialogue(&self) -> Option<&BedroomDialogue> { None }
+        fn toss_arrow_visible(&self) -> bool { false }
+    }
+    impl TossObservation210 for BagScreenState {}
+
+    fn run(capture: Option<&std::path::Path>) {
+        for case in ["yes", "no", "b", "ab", "important"] {
+            let mut game = PokemonGame::new(GameVersion::Red);
+            game.audio = None;
+            game.set_seed(42);
+            game.state.screen = GameScreen::Bag;
+            game.state.config.language = pokered_core::game_state::Lang::En;
+            game.state.config.text_speed = pokered_core::game_state::TextSpeed::Medium;
+            game.save_data.game_data.bag = pokered_core::items::inventory::Inventory::new_bag();
+            let item = if case == "important" { ItemId::Hm01 } else { ItemId::Potion };
+            let stock = if case == "important" { 1 } else { 4 };
+            game.save_data.game_data.bag.add_item(item, stock).unwrap();
+            game.bag_screen = BagScreenState::new(game.save_data.game_data.bag.items().to_vec());
+            let mut session = crate::render::session::RenderSession::new();
+            let mut retained = FrameBuffer::new(dotzuki_engine::render_config::RenderConfig::new(160,144), pokered_renderer::Rgba::WHITE);
+            let mut scroll = |_: &mut [u8], _: usize, _: usize, _: i32, _: i32, _: u8| {};
+            let mut input = InputState::new();
+            let mut held = Vec::new();
+            let mut rows = Vec::new();
+            for t in 0..301 {
+                input.begin_frame();
+                let keys = match t {
+                    0 | 16 | 120 => vec![GbButton::A],
+                    8 => vec![GbButton::Down],
+                    24 if case != "important" => vec![GbButton::Up],
+                    32 if case != "important" => vec![GbButton::A],
+                    150 if case == "no" => vec![GbButton::Down],
+                    170 if case == "yes" || case == "no" => vec![GbButton::A],
+                    170 if case == "b" => vec![GbButton::B],
+                    170 if case == "ab" => vec![GbButton::A, GbButton::B],
+                    270 if case == "yes" => vec![GbButton::A],
+                    _ => Vec::new(),
+                };
+                for &key in &held { if !keys.contains(&key) { input.release(key); } }
+                for &key in &keys { if !held.contains(&key) { input.press(key); } }
+                held = keys;
+                game.update(&input);
+                session.render(&mut game, &mut retained, &mut scroll);
+                let mut full = FrameBuffer::new(dotzuki_engine::render_config::RenderConfig::new(160,144), pokered_renderer::Rgba::WHITE);
+                game.draw(&mut full);
+                assert_eq!(retained.packed(), full.packed(), "bag toss {case} frame{t}");
+                let have = game.save_data.game_data.bag.item_quantity(item);
+                if capture.is_none() {
+                    assert_eq!(game.state.screen, GameScreen::Bag);
+                    if t < 185 || case != "yes" { assert_eq!(have, u16::from(stock), "{case} premature mutation at{t}"); }
+                    if t >= 185 && case == "yes" { assert_eq!(have, 2); }
+                    if t == 120 && case != "important" {
+                        assert!(format!("{:?}",game.bag_screen.phase()).starts_with("TossConfirm") && format!("{:?}",game.bag_screen.phase()).contains("cursor: 0"));
+                    }
+                    if t == 32 && case != "important" {
+                        assert!(format!("{:?}",game.bag_screen.phase()).starts_with("TossQuestion") && format!("{:?}",game.bag_screen.phase()).contains("qty: 2"));
+                    }
+                    if t == 16 && case == "important" { assert_eq!(format!("{:?}",game.bag_screen.phase()), "TossRejected"); }
+                }
+                if let Some(path) = capture {
+                    let dir = path.join(case); std::fs::create_dir_all(&dir).unwrap();
+                    full.save_png(&dir.join(format!("frame-{t:04}.png"))).unwrap();
+                    rows.push(serde_json::json!({"t":t, "input":input.raw_current(), "screen":format!("{:?}",game.state.screen),
+                        "phase":format!("{:?}",game.bag_screen.phase()), "inventory":game.save_data.game_data.bag.items(),
+                        "field_dialogue":game.overworld.pending_dialogue,"dialogue":game.bag_screen.toss_dialogue(), "arrow":game.bag_screen.toss_arrow_visible()}));
+                }
+            }
+            if let Some(path) = capture {
+                std::fs::write(path.join(case).join("frames.json"), serde_json::to_string_pretty(&rows).unwrap()).unwrap();
+            }
+        }
+    }
+    #[test]
+    fn bag_toss_confirmation_owns_mutation_and_retained_pixels() { run(None); }
+    #[test]
+    #[ignore = "controlled actual Bag input before/after capture"]
+    fn capture_bag_toss_210() {
+        let dir = std::path::PathBuf::from(std::env::var("BAG_TOSS_CAPTURE_210").unwrap());
+        run(Some(&dir));
     }
 }

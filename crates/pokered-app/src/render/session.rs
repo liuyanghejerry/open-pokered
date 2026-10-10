@@ -821,6 +821,8 @@ struct BagVisualKey {
     swap_marker_view_row: Option<usize>,
     items_hash: u32,
     language: Lang,
+    toss_text_hash: u32,
+    toss_arrow: bool,
 }
 
 impl BagVisualKey {
@@ -833,6 +835,12 @@ impl BagVisualKey {
             hash_u32(&mut items_hash, qty);
         }
         let phase = state.phase();
+        let mut toss_text_hash = 0x811c_9dc5;
+        if let Some((top, bottom)) = state.toss_dialogue().and_then(|d| d.get_display_text()) {
+            for byte in top.bytes().chain(core::iter::once(0)).chain(bottom.bytes()) {
+                hash_byte(&mut toss_text_hash, byte);
+            }
+        }
         Self {
             cursor: state.cursor(),
             cursor_position: super::top_level_bag_cursor_position(
@@ -850,6 +858,8 @@ impl BagVisualKey {
             },
             items_hash,
             language: game.state.config.language,
+            toss_text_hash,
+            toss_arrow: state.toss_arrow_visible(),
         }
     }
 

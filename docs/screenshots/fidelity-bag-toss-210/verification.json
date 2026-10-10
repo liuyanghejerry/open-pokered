@@ -1,0 +1,42 @@
+{
+  "base": "b9f47fa7554865bba5ed14a7a91715cfe09383ad",
+  "native": {
+    "base": "b9f47fa7554865bba5ed14a7a91715cfe09383ad",
+    "sources": {
+      "crates/pokered-app/src/game.rs": "2f799c176075ce82d77b41a98be24c717378795525c22bc7ef8e503a869091ce",
+      "crates/pokered-app/src/render/menu.rs": "07ddec24876c7e3bd1de36c66249eb493213973b840f12e508d61854a7aaa498",
+      "crates/pokered-app/src/render/session.rs": "063c42ec3e506dab8e9f7335b519740b26d9b501cb9692cdc7513266c8209178",
+      "crates/pokered-core/src/bag_screen.rs": "85237c8b6924e8cf749b86f651d86798f2c7984c497dd4fdecd80d72abb49e95"
+    },
+    "binaries": {
+      "core-tests": "0b0b9e9d72b999e8f5645bc68a24f754eabfe58d0dec7da4f766fca725fa76c4",
+      "app-tests": "939dd93d8cb4f089d276bee5564836b42f7c575da8e0f00e5fa014e767dc154d"
+    },
+    "scope": "actual Bag TossItem questionPROMPT+YESNO+15wait+receipt/refusal; renderer/cache owner"
+  },
+  "master": {
+    "base": "b9f47fa7554865bba5ed14a7a91715cfe09383ad",
+    "production_prefix_sha256": "e7e7992b4d5651751d9fd4ed9f62b276779fd6031d44393c211b35ad984714ef",
+    "helper_sha256": "ae736d8d3bef833b5a206823571ca68b45c62ecc55b0a613c98ffc79419ff76a",
+    "production_prefix_unchanged": true,
+    "binary_sha256": "2bb84b1184d1a74eecdb7d0faf9ce949baf8090bad3df0d3892d0be565fa3af9",
+    "test_source_sha256": "2ceb6cbdb7ebe107dd42011044da13c270d8e315ca140bc0c112093c7a9a042e"
+  },
+  "tests": {
+    "core": 2717,
+    "app": 192,
+    "app_ignored": 19
+  },
+  "before_negative": "actualmasterproduction+samehelper runs1 test andfails prematureinventorymutation at32:2instead4",
+  "recordings": "6020PNG 5cases*301frames*2sides*2repetitions;allPNG/fullrecordedJSONbyteexactwithin-side;samehardwareinputsbetweenmaster/native;allframesretained/fullpixels equal",
+  "original": "5544PNG 4cases*693frames*2repetitions, fullJSON+eventsbyteexact; questionPROMPT/defaultYES/BpriorityAB/15framecommit/receiptPROMPT",
+  "files": {
+    "important-after.png": "4aa04c73bf46f62ae0e92c44bc7d3190f4446c81b51342717ce76c4e5e681e37",
+    "confirmation-after.png": "6fc44c23d893539764c211598e8934ab47884dce59237a814c0bb36a271937aa",
+    "receipt-after.png": "4e4849335daea3c1a5f9d1aedfd32bc2140e4c88993345d4fe28eb93e62aa305",
+    "confirmation-before.png": "34118d11fc2ae92b640f33d3d585ebb7aaa3505f61d3030ffcbedf4ced7cdf71",
+    "receipt-before.png": "28968b413e90330674c051aafb92753479748135b34547db69dcc836e414b3f9",
+    "important-before.png": "ab6562bd8eb7329ff2673b05b0595781c2abc820fff1c30ea4c3ee0b0163d107",
+    "evidence.zip": "92217f326a95a29edc4efb09d5ca29f3e82afca260236f61ef272c4289b1cf01"
+  }
+}
