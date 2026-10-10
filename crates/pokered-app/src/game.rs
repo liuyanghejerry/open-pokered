@@ -10730,6 +10730,7 @@ mod link_stats_cry_fidelity_tests {
             std::fs::copy(std::env::var("FIDELITY_SAFARI_SRAM").unwrap(), &save_path).unwrap();
             let mut g = PokemonGame::new_with_options(GameVersion::Red, Some(save_path), None, None,
                 false, None, false, true, #[cfg(feature = "debug-server")] None);
+            g.set_seed(42);
             g.audio = Some(AudioOutput::new_pcm());
             g.state.config.language = pokered_core::game_state::Lang::En;
             let idle = InputState::new();
@@ -10786,6 +10787,7 @@ mod link_stats_cry_fidelity_tests {
             std::fs::copy(std::env::var("FIDELITY_SAFARI_SRAM").unwrap(), &save_path).unwrap();
             let mut g = PokemonGame::new_with_options(GameVersion::Red, Some(save_path), None, None,
                 false, None, false, true, #[cfg(feature = "debug-server")] None);
+            g.set_seed(42);
             g.audio = Some(AudioOutput::new_pcm());
             g.state.config.language = pokered_core::game_state::Lang::En;
             let idle = InputState::new();
