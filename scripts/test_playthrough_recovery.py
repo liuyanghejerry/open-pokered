@@ -133,6 +133,31 @@ class LeagueRecoveryTests(unittest.TestCase):
         state['battle_phase']='PlayerMenu'
         self.assertFalse(late.retry_elite_four(game,'m47',0))
 
+    @patch.object(late, 'lead_with')
+    def test_missing_agatha_after_confirmed_blackout_reaches_existing_retry(self, lead):
+        game = Mock()
+        state = self.state(hp=0, place='IndigoPlateau')
+        state.update(screen='overworld', battle_phase='TrainerVictory { player_won: false }', money=1000)
+        game.st.return_value = state
+        game.d.cmd.return_value = {'data': []}
+        with self.assertRaisesRegex(RuntimeError, 'NPC 1 missing'):
+            late.talk_npc(game, 'AgathasRoom', 1, completion_flag='EVENT_BEAT_AGATHAS_ROOM_TRAINER_0')
+        self.assertTrue(late.retry_elite_four(game, 'm47', 0))
+        game.nav_warp.assert_called_once_with(9, 5, 'IndigoPlateau', 'IndigoPlateauLobby')
+        lead.assert_called_once_with(game, 'Zapdos')
+        game.approach_object.assert_not_called()
+
+    def test_missing_npc_without_loss_stays_a_failure(self):
+        game = Mock()
+        state = self.state(hp=0, place='IndigoPlateau')
+        state.update(screen='overworld', battle_phase='PlayerMenu', money=1000)
+        game.st.return_value = state
+        game.d.cmd.return_value = {'data': []}
+        with self.assertRaisesRegex(RuntimeError, 'NPC 1 missing'):
+            late.talk_npc(game, 'AgathasRoom', 1)
+        self.assertFalse(late.retry_elite_four(game, 'm47', 0))
+        game.nav_warp.assert_not_called()
+
     @patch.object(late,'use_item')
     def test_exhausted_inventory_does_not_invent_medicine(self,use):
         game=Mock();game.st.return_value={'party':[{'hp':0,'max_hp':10,'status':'None'}]}

@@ -637,7 +637,14 @@ def talk_npc(g, map_name, text_id, completion_flag=None):
     def find():
         data = g.d.cmd(cmd="get_npcs")["data"]
         npcs = data.get("npcs", data) if isinstance(data, dict) else data
-        return next(n for n in npcs if n["text_id"] == text_id and n.get("visible", True))
+        npc = next((n for n in npcs if n["text_id"] == text_id and n.get("visible", True)), None)
+        if npc is None:
+            state = g.st()
+            # A loss can finish the blackout warp before the talk loop
+            # observes it. Let the existing, strictly confirmed league-loss
+            # handler retry; other missing NPCs remain hard failures.
+            raise RuntimeError(f"NPC {text_id} missing on {map_name}; current map {state.get('map_name')}")
+        return npc
     for _ in range(4):
         npc = find()
         g.approach_object(npc["x"], npc["y"], map_name)
