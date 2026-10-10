@@ -3173,9 +3173,18 @@ mod dialogue_localization_tests {
 impl<G: GameData> OverworldScreen<G> {
     /// Ordinary field sprites retain their phase across steps. Other field
     /// animations supply their own sprite poses through the existing renderer.
+    fn uses_scripted_field_loop_presentation(&self) -> bool {
+        !self.scripted_player_path.is_empty()
+            || matches!(self.active_script_effect,
+                Some(super::script_bridge::ScriptEffect::MovePlayer { .. }
+                    | super::script_bridge::ScriptEffect::FollowNpc { .. }))
+    }
+
     pub fn ordinary_player_sprite_frame(&self) -> Option<(usize, bool)> {
-        if self.player_sprite_state.initialized && self.active_script_effect.is_none()
-            && self.scripted_player_path.is_empty() && !self.cutscene_manager.is_blocking()
+        let scripted_field_loop = self.uses_scripted_field_loop_presentation();
+        if self.player_sprite_state.initialized
+            && (self.active_script_effect.is_none() || scripted_field_loop)
+            && (!self.cutscene_manager.is_blocking() || scripted_field_loop)
             && self.pending_connection.is_none() && self.ledge_jump.is_none()
             && self.boulder_push.is_none() && self.field_move_step.is_none()
             && self.pending_dialogue.is_none()
@@ -3279,8 +3288,10 @@ impl<G: GameData> OverworldScreen<G> {
 
     pub fn ordinary_npc_sprite_pose(&self, slot: usize) -> Option<presentation::NpcSpritePose> {
         let npc = self.npc_states.get(slot)?;
-        if npc.scripted_frame.is_some() || self.active_script_effect.is_some()
-            || !self.scripted_player_path.is_empty() || self.cutscene_manager.is_blocking()
+        let scripted_field_loop = self.uses_scripted_field_loop_presentation();
+        if npc.scripted_frame.is_some()
+            || (!scripted_field_loop && (self.active_script_effect.is_some()
+                || self.cutscene_manager.is_blocking()))
             || self.boulder_push.is_some_and(|push| push.npc_index == slot) { return None; }
         let mut pose = self.npc_sprite_states.get(slot).filter(|sprite| sprite.matches(npc))?.visible;
         // SCX/SCY latch before PrepareOAMData's coordinates are copied by
