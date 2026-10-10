@@ -4237,6 +4237,9 @@ impl PokemonGame {
                     let viewed_species = self.overworld.pending_pokedex_entry.as_ref()
                         .and_then(|entry| pokered_data::species::Species::from_scene_name(&entry.species));
                     let action = self.overworld.update_frame(ow_input);
+                    if self.overworld.take_escape_rope_consumption() {
+                        let _ = self.save_data.game_data.bag.remove_item(pokered_data::items::ItemId::EscapeRope, 1);
+                    }
                     if self.overworld.pending_pokedex_entry.is_none() {
                         if let Some(species) = viewed_species {
                             self.save_data.game_data.pokedex.set_seen(species);
@@ -5329,7 +5332,7 @@ impl PokemonGame {
                                     .unwrap_or(pokered_data::maps::MapId::PalletTown);
                                     let result = self.overworld.use_field_item_with_result(item, last_blackout);
                                     if result.closes_bag {
-                                        if result.consumed {
+                                        if result.consumed && self.overworld.escape_rope_delay_frames == 0 {
                                             let _ = self.save_data.game_data.bag.remove_item(item, 1);
                                         }
                                         ScreenAction::Transition(GameScreen::Overworld)
@@ -11340,4 +11343,30 @@ mod field_bag_owner_213 {
     #[test]
     #[ignore = "controlled bag field-use before/after capture"]
     fn capture_field_bag_213() { let path=std::path::PathBuf::from(std::env::var("FIELD_BAG_CAPTURE_213").unwrap());std::thread::Builder::new().stack_size(16*1024*1024).spawn(move||run(Some(&path))).unwrap().join().unwrap(); }
+}
+
+
+#[cfg(all(test, not(target_os="none")))]
+mod escape_rope_owner_216 {
+ use super::*;
+ fn run(capture:Option<&std::path::Path>) {
+  use pokered_data::items::ItemId;
+  let mut g=PokemonGame::new(GameVersion::Red);g.audio=None;g.set_seed(42);
+  g.state.config.language=pokered_core::game_state::Lang::En;g.state.config.text_speed=pokered_core::game_state::TextSpeed::Medium;
+  g.state.screen=GameScreen::Overworld;g.overworld.warp_to_map(MapId::VictoryRoad1F,6,6);
+  let mut input=InputState::new();for _ in 0..120 {g.update(&input);}
+  assert!(pokered_core::overworld::update::is_script_walkable_tile(g.overworld.map_data.as_ref().unwrap(),6,6),"escape rope fixture must stand on a walkable floor");
+  g.save_data.game_data.bag=pokered_core::items::inventory::Inventory::new_bag();g.save_data.game_data.bag.add_item(ItemId::EscapeRope,2).unwrap();
+  g.bag_screen=BagScreenState::new(g.save_data.game_data.bag.items().to_vec());g.state.screen=GameScreen::Bag;
+  let mut rows=Vec::new();let mut session=crate::render::session::RenderSession::new();let mut retained=FrameBuffer::new(dotzuki_engine::render_config::RenderConfig::new(160,144),pokered_renderer::Rgba::WHITE);let mut scroll=|_:&mut [u8],_:usize,_:usize,_:i32,_:i32,_:u8|{};
+  for t in 0..301 {
+   input.begin_frame();if t==0 || t==16 {input.press(GbButton::A);}if t==1 || t==17 {input.release(GbButton::A);}if t==20 {input.press(GbButton::Up);input.press(GbButton::Start);}if t==32 {input.release(GbButton::Up);input.release(GbButton::Start);}
+   g.update(&input);session.render(&mut g,&mut retained,&mut scroll);let mut full=FrameBuffer::new(dotzuki_engine::render_config::RenderConfig::new(160,144),pokered_renderer::Rgba::WHITE);g.draw(&mut full);assert_eq!(retained.packed(),full.packed(),"frame{t} cached/full");
+   if capture.is_none() && t>=16 {assert_eq!(g.save_data.game_data.bag.item_quantity(ItemId::EscapeRope),if t<46 {2}else{1},"rope consumption at{t}");if t<46 {assert_eq!((g.overworld.state.player.x,g.overworld.state.player.y),(6,6),"protected movement at{t}");assert_eq!(g.state.screen,GameScreen::Overworld,"protected menu at{t}");}}
+   if let Some(path)=capture {full.save_png(&path.join(format!("frame-{t:04}.png"))).unwrap();rows.push(serde_json::json!({"t":t,"input":input.raw_current(),"screen":format!("{:?}",g.state.screen),"stock":g.save_data.game_data.bag.item_quantity(ItemId::EscapeRope),"overworld":pokered_core::snapshot::OverworldSnapshot::capture(&g.overworld)}));}
+  }
+  if let Some(path)=capture {std::fs::write(path.join("frames.json"),serde_json::to_string_pretty(&rows).unwrap()).unwrap();}
+ }
+ #[test]fn escape_rope_keeps_inventory_during_protected_hold(){std::thread::Builder::new().stack_size(16*1024*1024).spawn(||run(None)).unwrap().join().unwrap();}
+ #[test]#[ignore="controlled escape rope before/after capture"]fn capture_escape_rope_216(){let path=std::path::PathBuf::from(std::env::var("ESCAPE_ROPE_CAPTURE_216").unwrap());std::thread::Builder::new().stack_size(16*1024*1024).spawn(move||run(Some(&path))).unwrap().join().unwrap();}
 }

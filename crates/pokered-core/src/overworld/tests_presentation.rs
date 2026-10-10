@@ -177,10 +177,12 @@ fn warp_fade_to_white_resets_after_fade() {
     // here Pallet Town (no heal recorded → wLastBlackoutMap defaults there).
     screen.use_field_move(MoveId::Dig, &mon, 0, MapId::PalletTown);
     assert!(screen.warp_fade_to_white);
+    assert_eq!(screen.escape_rope_delay_frames, 0, "DIG skips the bag-only delay");
     let input = idle_input();
     // Run through the spin + full fade (24 out + 1 black + 24 in frames).
     for _ in 0..(136 + 17 + 10 + 24 + 1 + 24) {
         screen.update_frame(input);
+        assert!(!screen.take_escape_rope_consumption(), "DIG never removes a bag item");
     }
     assert!(matches!(screen.warp_fade_state, WarpFadeState::Idle));
     assert!(!screen.warp_fade_to_white, "next warp defaults to black");

@@ -1,0 +1,41 @@
+{
+  "base": "61a1e666efc6191e8285fb67195ef9a18761e1ec",
+  "source_manifest": {
+    "base": "61a1e666efc6191e8285fb67195ef9a18761e1ec",
+    "head": "158f8576af0fad812f013ea7722dac343b13bdff",
+    "sources": {
+      "crates/pokered-app/src/game.rs": "043c40feabcac9afa13a6b04fabae0d9a2397a96df03f67aa6309d681520e035",
+      "crates/pokered-core/src/overworld/field_moves.rs": "3f8de14c0ae9fde4fc7ce720eed90dc8f0ba85b3abb084e915a9baae33dec679",
+      "crates/pokered-core/src/overworld/screen.rs": "4070a6b80a08c96edfa4a5d5f1b4060b500a22ebf6f2504d08ff13348b8c9aee",
+      "crates/pokered-core/src/overworld/tests_field_items.rs": "48d85c3bb48072d403220642401c6c7bd19699bd2d74665b28bee5b44648062c",
+      "crates/pokered-core/src/overworld/tests_presentation.rs": "09a1afdf239970c05bbca7ec05aa7d0dd20bc25e9ed9a477a96beb545df7050e",
+      "crates/pokered-core/src/overworld/update.rs": "90a950f2614287b464e5489e8c3b0dd105d5e028e392ebcfcc49c5d7765838a7",
+      "crates/pokered-core/src/snapshot.rs": "30a8de4705d39d9774f231094dab7cebeaa416a4993ab8b1feb1ad1536a5c32a"
+    },
+    "binaries": {
+      "core": "c00b48b002e58bbd50942c08dfa068873c04c1a9749f602308af07ebaf9ff3ca",
+      "app": "7a0c4c813921357c3c5f1a8d15e5966fdb4aeece2620874f1457bdd635cb1891"
+    }
+  },
+  "PNG": 1204,
+  "full_repeat_bytes_exact": true,
+  "retained_full_pixels_equal_each_frame": true,
+  "archive_all_files_roundtrip_bytes_exact": true,
+  "archive_sha256": "cfba2371c397f4316d97c589b78fe6d1734fb059025a6cb57f13b3a845d5841b",
+  "full_tests": {
+    "core": 2724,
+    "app": 199,
+    "ignored": 23
+  },
+  "master_prefix_verified": {
+    "base": "61a1e666efc6191e8285fb67195ef9a18761e1ec",
+    "production_prefix_sha256": "472262c1b773d4269aa1afa31291f25cddd027e262e08eef6eb77331416ce154",
+    "full_game_sha256": "839ee4e5159001f1ba6d1aec827d08445cfec79cfaaab6a0e3b080f1ec6a654b",
+    "app_sha256": "9aa4d358ebae98ab2598c617d852bc3e590b0a1761eb717c437e622a5d7a2fce",
+    "helpers": {
+      "audit-217-escape-rope-owner-helper.rs": "e6a0f1bec68e948fbe075351f8031da2891ff79b0035b5f3139df3e99f197d46",
+      "audit-218-bag-action-owner-helper.rs": "ee07b8add854bbe7327ca7c06b27190b950f82f4f3c34d9c9f97cd3446dcf5db",
+      "audit-219-list-owner-helper.rs": "87f74471e65161216fab654dca42284d39ed39c1ecc4b1a02c1e853a7eab7af2"
+    }
+  }
+}

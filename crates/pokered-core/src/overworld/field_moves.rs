@@ -340,6 +340,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         // Reuse the escape-rope flow; the `consumed` flag only tells bag-item
         // callers to remove the item, so it is ignored for the move.
         let _ = self.use_field_item(ItemId::EscapeRope, last_blackout_map);
+        // wPseudoItemID returns before ItemUseReloadOverworldData,
+        // DelayFrames(30), and RemoveUsedItem when this is DIG.
+        self.escape_rope_delay_frames = 0;
+        self.escape_rope_consumption_pending = false;
         FieldMoveOutcome::Done
     }
 
