@@ -575,12 +575,12 @@ impl BedroomDialogue {
         let total = self.total_chars();
         if self.char_index < total {
             self.char_index += TYPEWRITER_CHARS_PER_FRAME;
-            if self.char_index >= total {
-                self.char_index = total;
-                self.waiting_for_input = true;
-            } else {
-                self.delay_counter = if fast_held { 0 } else { self.text_delay_frames - 1 };
-            }
+            self.char_index = self.char_index.min(total);
+            self.delay_counter = if fast_held { 0 } else { self.text_delay_frames - 1 };
+        } else {
+            // PrintLetterDelay runs after the final glyph too. Only then may
+            // DONE return or a following scroll/outer display consume input.
+            self.waiting_for_input = true;
         }
     }
 
@@ -3034,6 +3034,11 @@ mod typewriter_tests {
             d.reveal_next_char();
             assert_eq!(d.char_index(), expected, "after {expected} frames");
         }
+        assert!(!d.waiting_for_input(), "last glyph still has its PrintLetterDelay");
+        for frame in 1..=1 {
+            d.reveal_next_char();
+            assert_eq!(d.waiting_for_input(), frame == 1);
+        }
         assert!(d.waiting_for_input());
     }
 
@@ -3049,6 +3054,11 @@ mod typewriter_tests {
             let expected = ((frame + 2) / 3).min(8);
             assert_eq!(d.char_index(), expected, "frame {frame}");
         }
+        assert!(!d.waiting_for_input(), "last glyph still has its PrintLetterDelay");
+        for frame in 1..=3 {
+            d.reveal_next_char();
+            assert_eq!(d.waiting_for_input(), frame == 3);
+        }
         assert!(d.waiting_for_input());
     }
 
@@ -3062,6 +3072,11 @@ mod typewriter_tests {
             d.reveal_next_char();
             let expected = ((frame + 4) / 5).min(5);
             assert_eq!(d.char_index(), expected, "frame {frame}");
+        }
+        assert!(!d.waiting_for_input(), "last glyph still has its PrintLetterDelay");
+        for frame in 1..=5 {
+            d.reveal_next_char();
+            assert_eq!(d.waiting_for_input(), frame == 5);
         }
         assert!(d.waiting_for_input());
     }

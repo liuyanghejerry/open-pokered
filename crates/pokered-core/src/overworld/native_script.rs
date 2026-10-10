@@ -448,6 +448,10 @@ impl ScriptHost for NativeHost {
                 }
                 Ok(pokemon(PokemonScriptCommand::from_custom(name, &values)?))
             }
+            "printFieldText" => {
+                let text = args::text(v.first().ok_or("printFieldText: missing text")?, "printFieldText")?;
+                Ok(pokemon(PokemonScriptCommand::PrintFieldText { text }))
+            }
             "readingMenu" => {
                 let options = args::string_array(v.first().ok_or("readingMenu: missing options")?, "readingMenu")?;
                 let texts = args::string_array(v.get(1).ok_or("readingMenu: missing texts")?, "readingMenu")?;

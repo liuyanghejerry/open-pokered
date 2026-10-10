@@ -1,0 +1,30 @@
+{
+  "sources": {
+    "crates/pokered-app/src/game.rs": "2a3b71d9cc309ce0ad45125a65c964cbe8e1b453a1d27f85d8aea84e256b94d9",
+    "crates/pokered-app/src/render/mod.rs": "d2f3d05e9bec7b513fe26cd03d0ce651683b97d0b57ce316f7be9781d5772256",
+    "crates/pokered-app/src/render/overworld.rs": "efb6d1d65803d4a3c93e099822d2616b359dadd6a30d5410c3c56e8f4de4b184",
+    "crates/pokered-app/src/render/session.rs": "9233b9adbe2a5ff1501b9c4c28051ced36b1d0c5d937228b3a90c8ce1b70e47a",
+    "crates/pokered-core/src/overworld/field_moves.rs": "162384478610831fc7f2e751aadfa6cc2a27bb789f61e9d0651e4556ffc3cba1",
+    "crates/pokered-core/src/overworld/mod.rs": "7fddcc4bd8dc93ad43b7f356a114becb76469417dfa40e31edcb759313366499",
+    "crates/pokered-core/src/overworld/native_script.rs": "405dd7d86a5adeb8421fb7c55199f4a611d42c331bc7caeebdc314dfa160ea70",
+    "crates/pokered-core/src/overworld/presentation.rs": "46b142440f2dbc02ff05d75536ec62a2e1b60a0274c3893ea502147699128f6f",
+    "crates/pokered-core/src/overworld/screen.rs": "61f8bf9b46b687a9cb9a6b304105ffcfc945b99061f32d0b6e50ad11fb4f36bc",
+    "crates/pokered-core/src/overworld/script_bridge.rs": "e1ac9f3e6792bf179a4696d494ea6123869e363e71e6bb3b1692e7564417649e",
+    "crates/pokered-core/src/overworld/script_interactions.rs": "6f6b8485879153b2ea818cb6a2cd0d159eb4480388eb45c5ee0b0d199cc0d608",
+    "crates/pokered-core/src/overworld/sprite_reload_work.rs": "cb4b676103f2d8cf0eadef886a1def09979b89578d3afd722f2c2bb2e78f06fa",
+    "crates/pokered-core/src/overworld/update.rs": "1a6685bb77bb835f7ad336de1ec2f3a14a48afc71ab5d395734b000c85ccb86c",
+    "crates/pokered-core/src/snapshot.rs": "a1845f95a18c864a8332da3effc0e9cc7f25795c5dd56c22b9c1f1ea42e9141d",
+    "crates/pokered-core/src/start_menu.rs": "ab213e322753ef89c0d44adf00433b0212e05c2e989f44ee8c62a78f6ad44786",
+    "crates/pokered-data/maps/Museum1F/script.scene": "8e9ae9a551aab5763a7c0f711f57e63be249ea597e2c4fe3f1a37b10eb752b42",
+    "crates/pokered-data/maps/SafariZoneGate/script.scene": "0af6118ea794f49ca718b2934d533b17b4c9e8b62fa9d864d018d005ddd05e5d",
+    "crates/pokered-data/src/dialog_text.rs": "b198760a5b1bd52a86ba3e7c3d9604e691bd1e4c8bb62f104cde2165a0eb3dec",
+    "crates/pokered-data/src/script_api.rs": "8c0b63500382d43b8940b5a5397e6a148be5722f7ad1e93cf0d4f94c368cd725",
+    "crates/pokered-data/src/script_command.rs": "9085a98e1c36332ea8cfcfb5d5a7906c6acad38a35d61b79bc11c7099de2547c",
+    "crates/pokered-data/src/script_function_catalog.rs": "ace6209e8ea73ba7d1fe17cd18e0337b307d16ab6ee48792b21f3aed355dcd25"
+  },
+  "baseline_sha256": "c9ef15a97a6f43d994fe177d7e0212a6a6cbaf561be955a5995fef4da7faebba",
+  "baseline_changed": false,
+  "scope": "21 final sources SHA exact; original baseline unchanged",
+  "elf_sha256": "ed189edcc4f995f1d590233215771d54ca4da55c037f3836327c5051ee1a6b0f",
+  "result_sha256": "7429c42e264ac56725115ecf6990d099f1d0a65b7de13e285c02fe009e55cf03"
+}

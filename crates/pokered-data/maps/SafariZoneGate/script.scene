@@ -55,9 +55,8 @@ game_scene SafariZoneGate {
   // ── Info worker (npc 2): explains the Safari Zone ────────────────────────
   @storyline("talkSafariZoneWorker2") {
     @trigger(map = "SafariZoneGate", npc = 2)
-    @speaker("") {
-      @t("Hi! Is it your first time\nhere?", "嗨！你是第一次来吗？")
-    }
+    // SafariZoneGateSafariZoneWorker2Text calls PrintText, then YesNoChoice.
+    printFieldText(@t("Hi! Is it your first time\nhere?", "嗨！你是第一次来吗？"))
     @choice {
       @option(@t("YES", "是")) {
         @speaker("") {
