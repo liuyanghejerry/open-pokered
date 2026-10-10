@@ -15,6 +15,10 @@ use dotzuki_engine::menu::MenuInput as EngineMenuInput;
 use pokered_data::item_data::get_item_data;
 use pokered_data::items::ItemId;
 
+#[path = "shop_field_text.rs"]
+mod field_text;
+use field_text::{AfterText, FieldFlow, MartText, TextUpdate};
+
 // Re-export the engine's mart types so existing `items::shop::*` paths
 // keep working. `SoundId` is pokered's historical name for the engine's
 // `MartSound` cue enum.
@@ -85,12 +89,45 @@ impl MartBackend for PlayerData {
 /// `mart.inventory`); [`MartState::update_frame`] keeps pokered's original
 /// signature, converting the input at the boundary.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct MartState(dotzuki_engine::items::mart::MartState<ItemId>);
+pub struct MartState(dotzuki_engine::items::mart::MartState<ItemId>, Option<FieldFlow>);
 
 impl MartState {
     /// Begin a mart session with the given shop inventory.
     pub fn new(inventory: ShopInventory) -> Self {
-        Self(dotzuki_engine::items::mart::MartState::new(inventory))
+        Self(dotzuki_engine::items::mart::MartState::new(inventory), None)
+    }
+
+    /// English mart scripts use the original DONE/PROMPT/CONT ownership.
+    /// The translated presentation and generic engine clients retain their flow.
+    pub fn configure_field_text(&mut self, delay_frames: u16) {
+        self.1 = Some(FieldFlow::new(delay_frames));
+    }
+
+    pub fn display_phase(&self) -> &MartPhase {
+        self.1.as_ref().and_then(|flow| flow.text.as_ref())
+            .map_or(&self.0.phase, |text| &text.underlay)
+    }
+
+    pub fn field_message_lines(&self) -> Vec<String> {
+        self.1.as_ref().map_or_else(Vec::new, |flow| flow.text.as_ref()
+            .map_or_else(|| flow.retained_lines.clone(), MartText::visible_lines))
+    }
+
+    pub fn field_message_active(&self) -> bool {
+        self.1.as_ref().is_some_and(|flow| flow.text.is_some())
+    }
+
+    pub fn field_message_waiting(&self) -> bool {
+        self.1.as_ref().and_then(|flow| flow.text.as_ref()).is_some_and(MartText::waiting)
+    }
+
+    pub fn field_prompt_arrow_visible(&self) -> bool {
+        self.1.as_ref().and_then(|flow| flow.text.as_ref())
+            .is_some_and(MartText::prompt_arrow_visible)
+    }
+
+    pub fn take_text_advance(&mut self) -> bool {
+        self.1.as_mut().is_some_and(|flow| core::mem::take(&mut flow.text_advance))
     }
 
     /// Advance the mart state machine by one frame of input.
@@ -98,6 +135,86 @@ impl MartState {
     /// `player.money` and `player.bag` are mutated in-place when a
     /// transaction is committed.
     pub fn update_frame(&mut self, input: MenuInput, player: &mut PlayerData) -> MartUpdate {
+        self.update_frame_with_text_input(input, player, input.a, input.b, false)
+    }
+
+    pub fn update_frame_with_text_input(&mut self, mut input: MenuInput, player: &mut PlayerData,
+        held_a: bool, held_b: bool, sound_playing: bool) -> MartUpdate {
+        if let Some(flow) = self.1.as_mut() {
+            if flow.exit_wait_a {
+                return if held_a { MartUpdate::Continue } else { MartUpdate::Exit };
+            }
+            if let Some(text) = flow.text.as_mut() {
+                match text.tick(input, held_a || held_b, sound_playing, flow.delay) {
+                    TextUpdate::Printing => return MartUpdate::Continue,
+                    TextUpdate::Scroll => { flow.text_advance = true; return MartUpdate::Continue; }
+                    TextUpdate::Finished { acknowledged } => {
+                        let text = flow.text.take().unwrap();
+                        flow.text_advance |= acknowledged && text.after != AfterText::Exit;
+                        flow.retained_lines = text.page().to_vec();
+                        match text.after {
+                            AfterText::Menu => {},
+                            AfterText::BuyList => {
+                                self.0.phase = MartPhase::Buy(BuyMenuState::SelectItem { cursor: 0 });
+                                flow.retained_lines = vec!["Take your time.".into()];
+                            },
+                            AfterText::AnythingElse => {
+                                FieldFlow::reset_main(&mut self.0.phase);
+                                flow.anything_else(self.0.phase.clone());
+                            },
+                            AfterText::Exit => {
+                                self.0.phase = text.underlay;
+                                flow.exit_wait_a = held_a;
+                                return if held_a { MartUpdate::Continue } else { MartUpdate::Exit };
+                            },
+                        }
+                        return MartUpdate::Continue;
+                    }
+                }
+            }
+        }
+        // DisplayListMenuID includes CANCEL after the last item, even when a
+        // sale removed the last stack. Expose that row to the engine adapter.
+        if self.1.is_some() {
+            let selection = match self.0.phase {
+                MartPhase::Buy(BuyMenuState::SelectItem { cursor }) => Some((false, cursor, self.0.inventory.len())),
+                MartPhase::Sell(SellMenuState::SelectItem { cursor }) => Some((true, cursor, player.bag.count())),
+                _ => None,
+            };
+            if let Some((sell, cursor, count)) = selection {
+                let cursor = cursor.min(count);
+                let cursor = if input.up { (cursor + count) % (count + 1) }
+                    else if input.down { (cursor + 1) % (count + 1) } else { cursor };
+                if input.b || (input.a && cursor == count) {
+                    FieldFlow::reset_main(&mut self.0.phase);
+                    self.1.as_mut().unwrap().anything_else(self.0.phase.clone());
+                    return MartUpdate::Continue;
+                }
+                self.0.phase = if sell { MartPhase::Sell(SellMenuState::SelectItem { cursor }) }
+                    else { MartPhase::Buy(BuyMenuState::SelectItem { cursor }) };
+                input.up = false;
+                input.down = false;
+            }
+        }
+        let previous = self.0.phase.clone();
+        if self.1.is_some() && input.b {
+            // Original NO/B confirmation returns through the saved list,
+            // resetting wCurrentMenuItem, rather than reopening quantity.
+            let list = match &previous {
+                MartPhase::Buy(BuyMenuState::Confirm { .. }) => Some(MartPhase::Buy(BuyMenuState::SelectItem { cursor: 0 })),
+                MartPhase::Sell(SellMenuState::Confirm { .. }) => Some(MartPhase::Sell(SellMenuState::SelectItem { cursor: 0 })),
+                _ => None,
+            };
+            if let Some(list) = list {
+                let flow = self.1.as_mut().unwrap();
+                flow.retained_lines = match list {
+                    MartPhase::Buy(_) => vec!["Take your time.".into()],
+                    _ => vec!["What would you".into(), "like to sell?".into()],
+                };
+                self.0.phase = list;
+                return MartUpdate::Continue;
+            }
+        }
         // Gen I's shared quantity chooser tests A before B and directions.
         // Keep the generic mart's other menu policies at their existing boundary.
         let quantity_menu = matches!(self.0.phase,
@@ -110,7 +227,80 @@ impl MartState {
             confirm: input.a,
             cancel: input.b && (!quantity_menu || !input.a),
         };
-        self.0.update_frame(engine_input, player)
+        let result = self.0.update_frame(engine_input, player);
+        let Some(flow) = self.1.as_mut() else { return result; };
+        if result == MartUpdate::Exit {
+            flow.print(&["Thank you!"], previous, true, AfterText::Exit);
+            return MartUpdate::Continue;
+        }
+        match (&previous, &self.0.phase) {
+            (MartPhase::MainMenu { .. }, MartPhase::Buy(BuyMenuState::SelectItem { .. })) => {
+                flow.print(&["Take your time."], previous.clone(), false, AfterText::Menu);
+            },
+            (MartPhase::MainMenu { .. }, MartPhase::Sell(SellMenuState::SelectItem { .. })) => {
+                flow.print(&["What would you", "like to sell?"], previous.clone(), false, AfterText::Menu);
+            },
+            (MartPhase::MainMenu { .. }, MartPhase::MainMenu { cursor: MartTopChoice::Sell })
+                if input.a && !input.b && player.bag.count() == 0 => {
+                flow.print(&["You don't have", "anything to sell."], self.0.phase.clone(), true, AfterText::AnythingElse);
+            },
+            (MartPhase::Buy(BuyMenuState::SelectItem { .. }) | MartPhase::Sell(SellMenuState::SelectItem { .. }), MartPhase::MainMenu { .. }) => {
+                FieldFlow::reset_main(&mut self.0.phase);
+                flow.anything_else(self.0.phase.clone());
+            },
+            (MartPhase::Sell(SellMenuState::SelectItem { .. }), MartPhase::Sell(SellMenuState::Quantity { item_index, .. }))
+                if player.bag.get(*item_index).is_some_and(|(item, _)| !can_sell(item)) => {
+                self.0.phase = MartPhase::Sell(SellMenuState::Result { dialogue: SellResult::Unsellable, return_to_list: false });
+                flow.print(&["I can't put a", "price on that."], previous.clone(), true, AfterText::AnythingElse);
+            },
+            (MartPhase::Buy(BuyMenuState::Quantity { .. }), MartPhase::Buy(BuyMenuState::Confirm { item_index, quantity, .. })) => {
+                if let Some(data) = self.0.inventory.get(*item_index).and_then(get_item_data) {
+                    flow.text = Some(MartText::new(vec![format!("{}?", data.name), "That will be".into(),
+                        format!("¥{}. OK?", u32::from(data.price) * u32::from(*quantity))], previous.clone(), false, AfterText::Menu));
+                    flow.retained_lines.clear();
+                }
+            },
+            (MartPhase::Sell(SellMenuState::Quantity { .. }), MartPhase::Sell(SellMenuState::Confirm { item_index, quantity, .. })) => {
+                if let Some((item, _)) = player.bag.get(*item_index) {
+                    let price = sell_price(item, *quantity).unwrap_or(0);
+                    flow.text = Some(MartText::new(vec!["I can pay you".into(), format!("¥{price} for that.")], previous.clone(), false, AfterText::Menu));
+                    flow.retained_lines.clear();
+                }
+            },
+            (_, MartPhase::Buy(BuyMenuState::Result { dialogue, .. })) => {
+                let (lines, after): (&[&str], _) = match dialogue {
+                    BuyResult::Success { .. } => (&["Here you are!", "Thank you!"], AfterText::BuyList),
+                    BuyResult::NotEnoughMoney => (&["You don't have", "enough money."], AfterText::AnythingElse),
+                    BuyResult::BagFull => (&["You can't carry", "any more items."], AfterText::AnythingElse),
+                    BuyResult::InvalidItem => (&["That item doesn't", "exist!"], AfterText::AnythingElse),
+                };
+                flow.print(lines, previous.clone(), true, after);
+                if matches!(dialogue, BuyResult::Success { .. }) { flow.text.as_mut().unwrap().wait_for_purchase_sound(); }
+            },
+            (_, MartPhase::Sell(SellMenuState::Result { dialogue: SellResult::Success { .. }, .. })) => {
+                // There is no success text or purchase fanfare when selling.
+                self.0.phase = MartPhase::Sell(SellMenuState::SelectItem { cursor: 0 });
+                flow.retained_lines = vec!["What would you".into(), "like to sell?".into()];
+            },
+            (MartPhase::Buy(BuyMenuState::Confirm { .. }), MartPhase::Buy(BuyMenuState::SelectItem { .. })) => {
+                self.0.phase = MartPhase::Buy(BuyMenuState::SelectItem { cursor: 0 });
+                flow.retained_lines = vec!["Take your time.".into()];
+            },
+            (MartPhase::Sell(SellMenuState::Confirm { .. }), MartPhase::Sell(SellMenuState::SelectItem { .. })) => {
+                self.0.phase = MartPhase::Sell(SellMenuState::SelectItem { cursor: 0 });
+                flow.retained_lines = vec!["What would you".into(), "like to sell?".into()];
+            },
+            (MartPhase::Buy(BuyMenuState::Quantity { .. }), MartPhase::Buy(BuyMenuState::SelectItem { .. })) => {
+                self.0.phase = MartPhase::Buy(BuyMenuState::SelectItem { cursor: 0 });
+                flow.retained_lines = vec!["Take your time.".into()];
+            },
+            (MartPhase::Sell(SellMenuState::Quantity { .. }), MartPhase::Sell(SellMenuState::SelectItem { .. })) => {
+                self.0.phase = MartPhase::Sell(SellMenuState::SelectItem { cursor: 0 });
+                flow.retained_lines = vec!["What would you".into(), "like to sell?".into()];
+            },
+            _ => {},
+        }
+        result
     }
 }
 
