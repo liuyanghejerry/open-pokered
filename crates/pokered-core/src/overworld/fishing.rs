@@ -188,7 +188,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             })
             .unwrap_or(false);
         if self.state.player.transport == TransportMode::Surfing || !facing_water {
-            return "This isn't the\ntime to use that!".to_string();
+            return self.item_use_not_time_message();
         }
 
         // FishingInit's success path prints ItemUseText00 ("<PLAYER> used
@@ -217,6 +217,6 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         // once that text is dismissed.
         self.pending_fishing = Some(PendingFishing { response });
 
-        format!("You used the\n{}!", rod_name)
+        format!("{} used\n{}!", self.player_name, rod_name)
     }
 }

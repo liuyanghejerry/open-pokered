@@ -1490,7 +1490,7 @@ pub fn draw_bag(state: &BagScreenState, fb: &mut FrameBuffer, lang: Lang) {
             menus::bag::draw_machine_prompt(item, Some(cursor), &mut ui, lang);
         }
         BagPhase::TossQuestion { .. } | BagPhase::TossConfirm { .. } | BagPhase::TossWait { .. }
-        | BagPhase::TossResult { .. } | BagPhase::TossRejected => {
+        | BagPhase::TossResult { .. } | BagPhase::TossRejected | BagPhase::FieldMessage { .. } => {
             if let Some(dialogue) = state.toss_dialogue() {
                 if let Some((top, bottom)) = dialogue.get_display_text() {
                     let text = if bottom.is_empty() { top } else { format!("{}\n{}", top, bottom) };

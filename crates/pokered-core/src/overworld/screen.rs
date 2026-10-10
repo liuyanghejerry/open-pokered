@@ -120,6 +120,15 @@ pub enum OverworldSfxEvent {
     TextAdvance,
 }
 
+/// ItemUse's return status separates consumption from menu disposition.
+/// Successful REPEL consumes an item but returns to the bag; successful
+/// BICYCLE closes the bag without consuming anything.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct FieldItemUseResult {
+    pub consumed: bool,
+    pub closes_bag: bool,
+}
+
 // ── Overworld Audio Requests (script-driven music/SFX) ────────────
 
 /// Audio requests produced by script effects and map transitions.
@@ -1917,10 +1926,24 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         item: pokered_data::items::ItemId,
         last_blackout_map: MapId,
     ) -> bool {
+        self.use_field_item_with_result(item, last_blackout_map).consumed
+    }
+
+    pub(crate) fn item_use_not_time_message(&self) -> String {
+        format!("OAK: {}!\nThis isn't the\ntime to use that!", self.player_name)
+    }
+
+    /// Includes the original ItemMenuLoop / CloseStartMenu disposition.
+    pub fn use_field_item_with_result(
+        &mut self,
+        item: pokered_data::items::ItemId,
+        last_blackout_map: MapId,
+    ) -> FieldItemUseResult {
         use pokered_data::event_flags::EventFlag;
         use pokered_data::items::ItemId;
 
         let mut consumed = false;
+        let mut closes_bag = false;
         // `Some(text)` shows a message on return to the field; `None` means the
         // item already triggered an animated action (e.g. the ESCAPE ROPE warp)
         // and no lingering dialogue should be shown.
@@ -1929,6 +1952,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             // (sets the FIGHT flag so talking to it starts the battle). Elsewhere
             // it just plays. (Original ItemUsePokeFlute; a key item, not consumed.)
             ItemId::PokeFlute => {
+                closes_bag = true;
                 let pos = (self.state.player.x, self.state.player.y);
                 let woke = match self.state.current_map {
                     MapId::Route12
@@ -1974,12 +1998,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     Some("You can't get off\nhere.".to_string())
                 } else {
                     Some(match self.state.player.transport {
-                        TransportMode::Surfing => format!(
-                            "OAK: {}!\nThis isn't the\ntime to use that!",
-                            self.player_name
-                        ),
+                        TransportMode::Surfing => self.item_use_not_time_message(),
                         TransportMode::Biking => {
                             self.state.player.transport = TransportMode::Walking;
+                            closes_bag = true;
                             // ItemUseBicycle calls PlayDefaultMusic after changing
                             // transport, before printing the result message.
                             self.audio_requests.push(OverworldAudioRequest::PlayMapMusic {
@@ -2000,6 +2022,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                             });
                             if map_override || tileset_allowed {
                                 self.state.player.transport = TransportMode::Biking;
+                                closes_bag = true;
                                 self.audio_requests.push(OverworldAudioRequest::PlayMapMusic {
                                     map: self.state.current_map,
                                 });
@@ -2016,7 +2039,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             // These have dedicated ItemUsePtrTable handlers in Gen I; they do
             // not use the generic OAK refusal shown for unusable items.
             ItemId::Pokedex => None,
-            ItemId::CoinCase => Some(format!("Coins\n{:04} ", self.player_coins)),
+            ItemId::CoinCase => Some(format!("Coins\n{}", self.player_coins)),
             ItemId::OaksParcel => Some("This isn't yours\nto use!".to_string()),
             // ESCAPE ROPE / DIG (ItemUseEscapeRope, engine/items/
             // item_effects.asm:1492-1528): usable only in a dungeon — a map
@@ -2060,9 +2083,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         presentation::TELEPORT_SPIN_FACINGS,
                     ));
                     consumed = true;
+                    closes_bag = true;
                     None
                 } else {
-                    Some("Can't use that\nhere.".to_string())
+                    Some(self.item_use_not_time_message())
                 }
             }
             // ITEMFINDER (ItemUseItemfinder, engine/items/item_effects.asm:1920-1941
@@ -2078,6 +2102,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             // after the final PURCHASE ends. `itemfinder_dings` blocks the
             // overworld for those exact per-track lifetimes.
             ItemId::Itemfinder => {
+                closes_bag = true;
                 let found = pokered_data::hidden_items::hidden_item_near(
                     self.state.current_map,
                     self.state.player.x as u8,
@@ -2112,7 +2137,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 let name = pokered_data::item_data::get_item_data(item)
                     .map(|d| d.name)
                     .unwrap_or("REPEL");
-                Some(format!("You used the\n{}!", name))
+                Some(format!("{} used\n{}!", self.player_name, name))
             }
             // OLD ROD / GOOD ROD / SUPER ROD (ItemUseOldRod / ItemUseGoodRod /
             // ItemUseSuperRod, engine/items/item_effects.asm:1826-1889): key
@@ -2122,10 +2147,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             ItemId::OldRod | ItemId::GoodRod | ItemId::SuperRod => {
                 let rod = crate::overworld::fishing::RodKind::from_item(item)
                     .expect("rod item maps to a rod kind");
-                Some(self.use_fishing_rod(rod))
+                let text = self.use_fishing_rod(rod);
+                closes_bag = self.pending_fishing.is_some();
+                Some(text)
             }
             // Anything else can't be used from the field.
-            _ => Some("This isn't the\ntime to use that!".to_string()),
+            _ => Some(self.item_use_not_time_message()),
         };
         if let Some(text) = msg {
             let text = self.localize_message(&text);
@@ -2134,7 +2161,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         if !self.audio_requests.is_empty() {
             self.preserve_audio_requests_next_frame = true;
         }
-        consumed
+        FieldItemUseResult { consumed, closes_bag }
     }
 
     /// Gen-1 DisplayRepelWoreOffText (home/text_script.asm:209): when the last

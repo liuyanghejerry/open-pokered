@@ -44,6 +44,8 @@ pub enum BagPhase {
     TossWait { item: ItemId, qty: u32, cursor: u8, remaining: u8, accepted: bool },
     TossResult { item: ItemId },
     TossRejected,
+    /// An item which returns to ItemMenuLoop; removal waits for its PROMPT.
+    FieldMessage { item: ItemId, consumed: bool },
     /// SELECT-swap mode (swap_items.asm): the marked row waits for a second
     /// SELECT on another row to swap/merge. B cancels the mark.
     SwapFrom { row: usize },
@@ -62,6 +64,8 @@ pub enum BagScreenAction {
     /// USE the item at `index`. The caller dispatches the field effect and is
     /// responsible for any consumption (then rebuilds the bag via `set_items`).
     UseItem { item: ItemId, index: usize },
+    /// Final field-message acknowledgement, before rebuilding the list.
+    FieldMessageClosed { item: ItemId, consumed: bool },
     /// TOSS `quantity` of the item at `index`. The caller removes them and
     /// rebuilds the bag via `set_items`.
     TossItem {
@@ -120,10 +124,16 @@ impl BagScreenState {
         self.clamp_scroll();
     }
 
+    pub fn show_field_item_message(&mut self, item: ItemId, consumed: bool, dialogue: BedroomDialogue) {
+        self.toss_dialogue = Some(dialogue);
+        self.toss_frames = 0;
+        self.phase = BagPhase::FieldMessage { item, consumed };
+    }
+
     pub fn toss_dialogue(&self) -> Option<&BedroomDialogue> { self.toss_dialogue.as_ref() }
 
     pub fn toss_arrow_visible(&self) -> bool {
-        matches!(self.phase, BagPhase::TossQuestion { .. } | BagPhase::TossResult { .. } | BagPhase::TossRejected)
+        matches!(self.phase, BagPhase::TossQuestion { .. } | BagPhase::TossResult { .. } | BagPhase::TossRejected | BagPhase::FieldMessage { .. })
             && self.toss_dialogue.as_ref().is_some_and(|d| d.waiting_for_input())
             && (self.toss_frames / 16) % 2 == 0
     }
@@ -182,7 +192,7 @@ impl BagScreenState {
             BagPhase::Browsing => self.update_browsing(input),
             BagPhase::ActionMenu { cursor } => self.update_action_menu(input, cursor, lang, delay),
             BagPhase::TossQuantity { qty } => self.update_toss_quantity(input, qty, lang, delay),
-            BagPhase::TossQuestion { .. } | BagPhase::TossResult { .. } | BagPhase::TossRejected => self.update_toss_text(input, fast_held, delay),
+            BagPhase::TossQuestion { .. } | BagPhase::TossResult { .. } | BagPhase::TossRejected | BagPhase::FieldMessage { .. } => self.update_toss_text(input, fast_held, delay),
             BagPhase::TossConfirm { item, qty, cursor } => self.update_toss_confirm(input, item, qty, cursor),
             BagPhase::TossWait { item, qty, cursor, remaining, accepted } => {
                 if remaining > 1 {
@@ -220,6 +230,11 @@ impl BagScreenState {
         if input.a {
             if self.on_cancel_row() {
                 return BagScreenAction::Cancelled;
+            }
+            if self.selected_item().is_some_and(|(item, _)| item == ItemId::Bicycle) {
+                // StartMenu_Item.choseItem skips USE/TOSS for the BICYCLE.
+                self.press_sound = true;
+                return BagScreenAction::UseItem { item: ItemId::Bicycle, index: self.cursor };
             }
             self.phase = BagPhase::ActionMenu { cursor: 0 };
             return BagScreenAction::Active;
@@ -418,9 +433,14 @@ impl BagScreenState {
             dialogue.reveal_next_char_with_buttons(fast_held);
         } else if input.a || input.b {
             self.press_sound = true;
-            if let BagPhase::TossQuestion { item, qty } = self.phase {
+            if !dialogue.is_last_page() {
+                dialogue.advance();
+            } else if let BagPhase::TossQuestion { item, qty } = self.phase {
                 // _IsItOKToTossItemText ends in PROMPT, unlike DONE questions.
                 self.phase = BagPhase::TossConfirm { item, qty, cursor: 0 };
+            } else if let BagPhase::FieldMessage { item, consumed } = self.phase {
+                self.finish_toss_text();
+                return BagScreenAction::FieldMessageClosed { item, consumed };
             } else {
                 self.finish_toss_text();
             }
