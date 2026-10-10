@@ -314,7 +314,7 @@ impl PcScreen {
             mon_mode: MonListMode::Withdraw,
             mon_cursor: 0,
             mon_action_cursor: 0,
-            yes_selected: false,
+            yes_selected: true,
             box_cursor: 0,
             item_mode: ItemListMode::Withdraw,
             item_list_cursor: 0,
@@ -827,7 +827,7 @@ impl PcScreen {
                 BillsPcAction::ChangeBox => {
                     // "When you change a #MON BOX, data will be saved. Is
                     // that okay?" (_WhenYouChangeBoxText) YES/NO.
-                    self.yes_selected = false;
+                    self.yes_selected = true;
                     self.phase = PcPhase::ChangeBoxConfirm;
                     PcScreenAction::Continue
                 }
@@ -866,7 +866,7 @@ impl PcScreen {
                 MonListMode::Release => {
                     // bills_pc.asm BillsPCRelease: straight to the "gone
                     // forever" confirmation, no STATS popup.
-                    self.yes_selected = false;
+                    self.yes_selected = true;
                     self.phase = PcPhase::ReleaseConfirm;
                 }
                 MonListMode::Withdraw | MonListMode::Deposit => {
@@ -975,8 +975,12 @@ impl PcScreen {
     }
 
     fn update_release_confirm(&mut self, input: MenuInput, ctx: &mut PcContext) -> PcScreenAction {
-        if input.up || input.down {
-            self.yes_selected = !self.yes_selected;
+        // YesNoChoice starts on YES and clamps without wrapping. UP wins
+        // when both directions are pressed (HandleMenuInput).
+        if input.up {
+            self.yes_selected = true;
+        } else if input.down {
+            self.yes_selected = false;
         }
         if input.b {
             // B == NO (YesNoChoice cursor on NO cancels).
@@ -1019,8 +1023,12 @@ impl PcScreen {
     }
 
     fn update_change_box_confirm(&mut self, input: MenuInput) -> PcScreenAction {
-        if input.up || input.down {
-            self.yes_selected = !self.yes_selected;
+        // YesNoChoice starts on YES and clamps without wrapping. UP wins
+        // when both directions are pressed (HandleMenuInput).
+        if input.up {
+            self.yes_selected = true;
+        } else if input.down {
+            self.yes_selected = false;
         }
         if input.b {
             self.enter_bills_menu();
@@ -1235,7 +1243,7 @@ impl PcScreen {
                 }
                 ItemListMode::Toss => {
                     // "Is it OK to toss {ITEM}?" (_IsItOKToTossItemText) YES/NO.
-                    self.yes_selected = false;
+                    self.yes_selected = true;
                     self.phase = PcPhase::TossConfirm;
                 }
             }
@@ -1294,8 +1302,12 @@ impl PcScreen {
     }
 
     fn update_toss_confirm(&mut self, input: MenuInput, ctx: &mut PcContext) -> PcScreenAction {
-        if input.up || input.down {
-            self.yes_selected = !self.yes_selected;
+        // YesNoChoice starts on YES and clamps without wrapping. UP wins
+        // when both directions are pressed (HandleMenuInput).
+        if input.up {
+            self.yes_selected = true;
+        } else if input.down {
+            self.yes_selected = false;
         }
         if input.b {
             self.phase = PcPhase::ItemList;
@@ -1324,8 +1336,12 @@ impl PcScreen {
     }
 
     fn update_oaks_confirm(&mut self, input: MenuInput, ctx: &mut PcContext) -> PcScreenAction {
-        if input.up || input.down {
-            self.yes_selected = !self.yes_selected;
+        // YesNoChoice starts on YES and clamps without wrapping. UP wins
+        // when both directions are pressed (HandleMenuInput).
+        if input.up {
+            self.yes_selected = true;
+        } else if input.down {
+            self.yes_selected = false;
         }
         if input.b {
             // B on the YES/NO counts as NO (YesNoChoice) → close the link.
@@ -1385,7 +1401,7 @@ pub fn mon_action_label(mode: MonListMode) -> &'static str {
 // YES/NO "Want to get your #DEX rated?" prompt (oaks_pc.asm:5-7).
 impl PcScreen {
     fn enter_oaks_confirm(&mut self) {
-        self.yes_selected = false;
+        self.yes_selected = true;
         self.phase = PcPhase::OaksConfirm;
     }
 }
@@ -1819,14 +1835,15 @@ mod tests {
         assert_eq!(s.phase(), PcPhase::MonList);
         s.update_frame(A, &mut w.ctx()); // pick mon → confirm
         assert_eq!(s.phase(), PcPhase::ReleaseConfirm);
-        assert!(!s.yes_selected());
-        // NO (default): back to the list, mon kept.
+        assert!(s.yes_selected());
+        // Select NO explicitly: back to the list, mon kept.
+        s.update_frame(DOWN, &mut w.ctx());
         s.update_frame(A, &mut w.ctx());
         assert_eq!(s.phase(), PcPhase::MonList);
         assert_eq!(w.pc_storage.current_box().count(), 1);
         // Again, this time YES.
         s.update_frame(A, &mut w.ctx());
-        s.update_frame(UP, &mut w.ctx()); // toggle to YES
+        s.update_frame(UP, &mut w.ctx()); // stay on YES
         s.update_frame(A, &mut w.ctx());
         assert_eq!(
             s.message_lines(),
@@ -1860,6 +1877,7 @@ mod tests {
         s.update_frame(A, &mut w.ctx());
         assert_eq!(s.phase(), PcPhase::ChangeBoxConfirm);
         // NO → back, no switch, no save.
+        s.update_frame(DOWN, &mut w.ctx());
         s.update_frame(A, &mut w.ctx());
         assert_eq!(s.phase(), PcPhase::BillsMenu);
         assert_eq!(w.pc_storage.current_box_index(), 0);
@@ -2155,14 +2173,15 @@ mod tests {
         s.update_frame(UP, &mut w.ctx()); // 2
         s.update_frame(A, &mut w.ctx());
         assert_eq!(s.phase(), PcPhase::TossConfirm);
-        // NO keeps the items.
+        // Select NO explicitly to keep the items.
+        s.update_frame(DOWN, &mut w.ctx());
         s.update_frame(A, &mut w.ctx());
         assert_eq!(s.phase(), PcPhase::ItemList);
         assert_eq!(w.pc_items.item_quantity(ItemId::Potion), 3);
         // YES tosses.
         s.update_frame(A, &mut w.ctx());
         s.update_frame(A, &mut w.ctx()); // qty 1
-        s.update_frame(UP, &mut w.ctx()); // toggle YES
+        s.update_frame(UP, &mut w.ctx()); // stay on YES
         s.update_frame(A, &mut w.ctx());
         assert_eq!(
             s.message_lines(),
@@ -2297,7 +2316,8 @@ mod tests {
         };
         let mut s = PcScreen::new(PcEntry::PokemonCenter, &open);
         open_oaks_confirm(&mut s, &mut w);
-        s.update_frame(A, &mut w.ctx()); // NO
+        s.update_frame(DOWN, &mut w.ctx()); // NO
+        s.update_frame(A, &mut w.ctx());
         assert_eq!(
             s.message_lines(),
             &["Closed link to".to_string(), "PROF.OAK's PC.".to_string()]

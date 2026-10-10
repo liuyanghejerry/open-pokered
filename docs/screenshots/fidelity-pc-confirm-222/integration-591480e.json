@@ -1,0 +1,21 @@
+{
+  "base": "591480e6244d74318cf490bbe0b7f2a0ebb0f2df",
+  "candidate": {
+    "base": "591480e6244d74318cf490bbe0b7f2a0ebb0f2df",
+    "head": "795861629213e297bba3c31b2eb7bce96513f0e6",
+    "sources": {
+      "crates/pokered-app/src/game.rs": "00062f7d22ac88e76e188ad153a22e82be53eb50a0465f321a4408fe19fd3422",
+      "crates/pokered-app/src/render/pc.rs": "ca1d26c6e33baa89ae1dfd390452b500dbe0b635e98c7ca116ce807ff0b803f1",
+      "crates/pokered-core/src/pc_screen.rs": "7817f04781e96aa6c4e349d5dab3ad58f11f4bd9338bfc17fd7dd88c6621ecf1"
+    },
+    "binaries": {
+      "core": "ce029387cf53be5a131d4ae0919cc15b8dac92a0bc093731d04f772d16a0cf33",
+      "app": "9882c80b299d238286cfb6f78b7de94e744090672b21230f52725207ca181a10"
+    }
+  },
+  "PNG": 18032,
+  "repeat_all_raw_and_png_exact": true,
+  "every_cached_full_pixel_equal": true,
+  "archive_every_file_roundtrip_exact": true,
+  "archive_sha256": "a24078dea89d6bc53359957da42d5e64a8d48e22bdf35fbe8977c86e9ceb01b7"
+}
