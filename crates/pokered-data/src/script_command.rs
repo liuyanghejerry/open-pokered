@@ -6,6 +6,8 @@ use serde_json::{json, Value};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum PokemonScriptCommand {
+    /// Inner PrintText with DONE: return after printing, without an outer A/B wait.
+    PrintFieldText { text: String },
     ShowItemDialogue { text: String, sound_id: Option<String> },
     OldManTutorial,
     TradePokemon {
@@ -71,6 +73,7 @@ pub enum PokemonScriptCommand {
 impl PokemonScriptCommand {
     pub const fn name(&self) -> &'static str {
         match self {
+            Self::PrintFieldText { .. } => "printFieldText",
             Self::ShowItemDialogue { .. } => "showItemDialogue",
             Self::OldManTutorial => "oldManTutorial",
             Self::TradePokemon { .. } => "tradePokemon",
@@ -107,6 +110,7 @@ impl PokemonScriptCommand {
     pub fn into_script_command(self) -> ScriptCommand {
         let name = self.name().to_string();
         let args = match self {
+            Self::PrintFieldText { text } => vec![json!(text)],
             Self::ShowItemDialogue { text, sound_id } => {
                 let mut args = vec![json!(text)];
                 if let Some(sound) = sound_id { args.push(json!(sound)); }
@@ -190,6 +194,7 @@ impl PokemonScriptCommand {
                 .collect::<Result<Vec<_>, _>>()
         };
         Ok(match name {
+            "printFieldText" => Self::PrintFieldText { text: string(0)? },
             "waitMusic" => Self::WaitMusic,
             "vendingDelivery" => Self::VendingDelivery,
             "showMoneyBox" => Self::ShowMoneyBox { amount: args.first().and_then(Value::as_i64).ok_or_else(|| format!("{name}: amount must be an integer"))? },

@@ -139,7 +139,7 @@ impl GiftPokemonFlow {
                     format!("Do you want to give a\nnickname to {}?", self.display_name)
                 };
                 self.phase = GiftPhase::Prompt;
-                self.child = Box::new(ScriptEffect::ShowDialogue { text });
+                self.child = Box::new(ScriptEffect::PrintFieldText { text });
             }
             GiftPhase::Prompt => {
                 self.phase = GiftPhase::Choice;
