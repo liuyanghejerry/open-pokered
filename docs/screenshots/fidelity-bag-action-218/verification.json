@@ -1,0 +1,24 @@
+{
+  "base": "59d519f54cc71c537b34ca1822ffc1b4a387aa0e",
+  "source_manifest": {
+    "head": "eb72e7d5fd7984a05e57adcd50c69b1d9430765b",
+    "base": "59d519f54cc71c537b34ca1822ffc1b4a387aa0e",
+    "sources": {
+      "crates/pokered-app/src/game.rs": "5c649cc3de4c92085762bfd2462f3f25ddb368f53ba9534fbdc3d66c16e58d2c",
+      "crates/pokered-app/src/render/menu.rs": "99c4212a4e3b1d7088e2f034358036e4dd0ba005dbcaa8ac5d8d9d71b25a5142",
+      "crates/pokered-core/src/bag_screen.rs": "f25fdffc5580b80751f8792b09f2fd2a8814b705add809c4071ad39de32e620a"
+    },
+    "binaries": {
+      "app": "7e84af7c7b8eca16444371ed7779f8a5d2b44cffa810004907c20f6ac9546f1a",
+      "core": "6cfde8a5223fc75c626e4da7400365a0754f60e0ec18e117d9cf9181073a9501"
+    }
+  },
+  "tests": {
+    "core": 2722,
+    "app": 198,
+    "app_ignored": 22
+  },
+  "PNG": 7344,
+  "archive_all_files_roundtrip_byte_exact": true,
+  "archive_sha256": "6313aec41bc3b3f6578c7f647ad106a7f859412d469b41f103c7f81bded52041"
+}
