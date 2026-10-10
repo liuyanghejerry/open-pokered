@@ -5760,7 +5760,7 @@ impl PokemonGame {
                 let update = mart_state.update_frame_with_text_input(menu_input, &mut player,
                     input.is_held(GbButton::A), input.is_held(GbButton::B),
                     self.audio.as_ref().is_some_and(|audio| audio.is_sfx_playing()));
-                if mart_state.take_text_advance() {
+                if mart_state.take_button_sound() {
                     if let Some(ref audio) = self.audio { audio.play_sfx(SfxId::PressAB); }
                 }
                 self.save_data.game_data.player_money = player.money;
@@ -13834,5 +13834,36 @@ mod mart_cash_register_audio_tests {
         assert!(matches!(mart.phase, MartPhase::Sell(SellMenuState::SelectItem { cursor: 0 })));
         assert_eq!(mart.field_message_lines(), vec!["What would you", "like to sell?"]);
         assert!(!mart.field_message_active());
+    }
+}
+
+#[cfg(all(test, not(target_os = "none")))]
+mod mart_menu_audio_tests {
+    use super::*;
+    use pokered_core::game_state::Lang;
+    use pokered_core::items::shop::{BuyMenuState, MartPhase, MartState, MartTopChoice, ShopInventory};
+    use pokered_data::items::ItemId;
+
+    #[test]
+    fn english_main_and_item_menu_acknowledgements_reach_the_audio_owner() {
+        for phase in [MartPhase::MainMenu { cursor: MartTopChoice::Buy },
+            MartPhase::Buy(BuyMenuState::SelectItem { cursor: 0 })] {
+            let mut game = PokemonGame::new(GameVersion::Red);
+            game.state.config.language = Lang::En;
+            game.audio = Some(AudioOutput::new_pcm());
+            game.save_data.game_data.player_money = 3000;
+            game.save_data.game_data.bag = pokered_core::items::inventory::Inventory::new_bag();
+            let mut mart = MartState::new(ShopInventory::new(vec![ItemId::Potion]));
+            mart.configure_field_text(5);
+            mart.phase = phase;
+            game.state.screen = GameScreen::Shop(mart);
+            let mut input = InputState::new();
+            input.press(GbButton::A);
+            game.update(&input);
+            assert_eq!(game.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.current_sfx_id,
+                SfxId::PressAB as u8);
+            assert_eq!(game.save_data.game_data.player_money, 3000);
+            assert_eq!(game.save_data.game_data.bag.count(), 0);
+        }
     }
 }

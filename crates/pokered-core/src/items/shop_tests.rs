@@ -791,6 +791,9 @@ fn source_mart_cancel_row_is_selectable_in_buy_sell_and_empty_return_list() {
         mart.phase = if sell { MartPhase::Sell(SellMenuState::SelectItem { cursor: 0 }) }
             else { MartPhase::Buy(BuyMenuState::SelectItem { cursor: 0 }) };
         mart.update_frame(menu_up(), &mut player);
+        assert!(match mart.phase { MartPhase::Buy(BuyMenuState::SelectItem { cursor }) | MartPhase::Sell(SellMenuState::SelectItem { cursor }) => cursor == 0, _ => false });
+        mart.update_frame(menu_down(), &mut player);
+        mart.update_frame(menu_down(), &mut player);
         let expected = usize::from(!empty);
         assert!(match mart.phase { MartPhase::Buy(BuyMenuState::SelectItem { cursor }) | MartPhase::Sell(SellMenuState::SelectItem { cursor }) => cursor == expected, _ => false });
         mart.update_frame(menu_a(), &mut player); source_mart_ready(&mut mart, &mut player, false);
@@ -880,6 +883,7 @@ fn source_mart_exit_thank_you_and_outer_ack_wait_for_a_release() {
     let mut mart = MartState::new(ShopInventory::new(vec![ItemId::Potion])); mart.configure_field_text(1);
     let mut player = player_data(1000, Inventory::new_bag());
     assert_eq!(mart.update_frame(menu_b(), &mut player), MartUpdate::Continue);
+    assert!(mart.take_button_sound(), "main-menu B plays HandleMenuInput PressAB");
     source_mart_ready(&mut mart, &mut player, true);
     assert_eq!(mart.field_message_lines(), vec!["Thank you!"]);
     assert_eq!(mart.update_frame_with_text_input(menu_a(), &mut player, true, false, false), MartUpdate::Continue);
@@ -912,5 +916,58 @@ fn source_mart_buy_error_prompts_do_not_dismiss_before_ack_and_anything_else() {
         mart.update_frame(menu_b(),&mut player);source_mart_ready(&mut mart,&mut player,false);
         assert!(matches!(mart.phase,MartPhase::MainMenu {cursor:MartTopChoice::Buy}));
         assert_eq!(player.money,money);assert_eq!(player.bag.items(),before);
+    }
+}
+
+#[test]
+fn source_mart_main_and_confirmation_directions_clamp_at_boundaries() {
+    let mut mart = MartState::new(ShopInventory::new(vec![ItemId::PokeBall]));
+    mart.configure_field_text(1);
+    let mut player = player_data(3000, Inventory::new_bag());
+    mart.update_frame(menu_up(), &mut player);
+    assert!(matches!(mart.phase, MartPhase::MainMenu { cursor: MartTopChoice::Buy }));
+    for _ in 0..3 { mart.update_frame(menu_down(), &mut player); }
+    assert!(matches!(mart.phase, MartPhase::MainMenu { cursor: MartTopChoice::Quit }));
+    for sell in [false, true] {
+        mart.phase = if sell { MartPhase::Sell(SellMenuState::Confirm { item_index: 0, quantity: 1, max_quantity: 1, selected: ConfirmChoice::Yes }) }
+            else { MartPhase::Buy(BuyMenuState::Confirm { item_index: 0, quantity: 1, selected: ConfirmChoice::Yes }) };
+        mart.update_frame(menu_up(), &mut player);
+        assert!(matches!(mart.phase, MartPhase::Buy(BuyMenuState::Confirm { selected: ConfirmChoice::Yes, .. }) | MartPhase::Sell(SellMenuState::Confirm { selected: ConfirmChoice::Yes, .. })));
+        for _ in 0..2 { mart.update_frame(menu_down(), &mut player); }
+        assert!(matches!(mart.phase, MartPhase::Buy(BuyMenuState::Confirm { selected: ConfirmChoice::No, .. }) | MartPhase::Sell(SellMenuState::Confirm { selected: ConfirmChoice::No, .. })));
+    }
+    assert_eq!(player.money, 3000);
+    assert_eq!(player.bag.count(), 0);
+}
+
+#[test]
+fn source_mart_menu_acknowledgements_sound_once_but_quantity_is_silent() {
+    let phases = [
+        MartPhase::MainMenu { cursor: MartTopChoice::Buy },
+        MartPhase::Buy(BuyMenuState::SelectItem { cursor: 0 }),
+        MartPhase::Buy(BuyMenuState::SelectItem { cursor: 1 }),
+        MartPhase::Sell(SellMenuState::SelectItem { cursor: 0 }),
+        MartPhase::Buy(BuyMenuState::Confirm { item_index: 0, quantity: 1, selected: ConfirmChoice::No }),
+        MartPhase::Sell(SellMenuState::Confirm { item_index: 0, quantity: 1, max_quantity: 4, selected: ConfirmChoice::No }),
+    ];
+    for phase in phases { for cancel in [false, true] {
+        let mut mart = MartState::new(ShopInventory::new(vec![ItemId::Potion]));
+        mart.configure_field_text(1);
+        mart.phase = phase.clone();
+        let mut bag = Inventory::new_bag(); bag.add_item(ItemId::Potion, 4).unwrap();
+        let mut player = player_data(1000, bag);
+        mart.update_frame(if cancel { menu_b() } else { menu_a() }, &mut player);
+        assert!(mart.take_button_sound(), "{phase:?} cancel={cancel}");
+        assert!(!mart.take_button_sound(), "cue must be consumed once");
+        mart.update_frame(MenuInput::none(), &mut player);
+        assert!(!mart.take_button_sound(), "idle frame must not replay cue");
+    } }
+    for cancel in [false, true] {
+        let mut mart = MartState::new(ShopInventory::new(vec![ItemId::Potion]));
+        mart.configure_field_text(1);
+        mart.phase = MartPhase::Buy(BuyMenuState::Quantity { item_index: 0, quantity: 1 });
+        let mut player = player_data(1000, Inventory::new_bag());
+        mart.update_frame(if cancel { menu_b() } else { menu_a() }, &mut player);
+        assert!(!mart.take_button_sound(), "SelectQuantityToBuyOrSell is silent");
     }
 }

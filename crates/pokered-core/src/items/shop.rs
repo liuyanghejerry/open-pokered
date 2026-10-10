@@ -126,8 +126,14 @@ impl MartState {
             .is_some_and(MartText::prompt_arrow_visible)
     }
 
-    pub fn take_text_advance(&mut self) -> bool {
+    /// Drain the PressAB cue from HandleMenuInput or manual text advance.
+    /// Quantity selection and the outer exit acknowledgement are silent.
+    pub fn take_button_sound(&mut self) -> bool {
         self.1.as_mut().is_some_and(|flow| core::mem::take(&mut flow.text_advance))
+    }
+
+    pub fn take_text_advance(&mut self) -> bool {
+        self.take_button_sound()
     }
 
     /// Advance the mart state machine by one frame of input.
@@ -173,6 +179,38 @@ impl MartState {
                 }
             }
         }
+        if let Some(flow) = self.1.as_mut() {
+            if (input.a || input.b) && matches!(self.0.phase,
+                MartPhase::MainMenu { .. }
+                    | MartPhase::Buy(BuyMenuState::SelectItem { .. } | BuyMenuState::Confirm { .. })
+                    | MartPhase::Sell(SellMenuState::SelectItem { .. } | SellMenuState::Confirm { .. })) {
+                flow.text_advance = true;
+            }
+        }
+        // HandleMenuInput clamps ordinary mart menus (wMenuWrappingEnabled=0).
+        // The quantity chooser has its own wrapping policy, handled below.
+        if self.1.is_some() {
+            match &mut self.0.phase {
+                MartPhase::MainMenu { cursor } => {
+                    let index: usize = match cursor {
+                        MartTopChoice::Buy => 0, MartTopChoice::Sell => 1, MartTopChoice::Quit => 2,
+                    };
+                    let index = if input.up { index.saturating_sub(1) }
+                        else if input.down { (index + 1).min(2) } else { index };
+                    *cursor = match index { 0 => MartTopChoice::Buy, 1 => MartTopChoice::Sell, _ => MartTopChoice::Quit };
+                    input.up = false;
+                    input.down = false;
+                },
+                MartPhase::Buy(BuyMenuState::Confirm { selected, .. })
+                    | MartPhase::Sell(SellMenuState::Confirm { selected, .. }) => {
+                    if input.up { *selected = ConfirmChoice::Yes; }
+                    else if input.down { *selected = ConfirmChoice::No; }
+                    input.up = false;
+                    input.down = false;
+                },
+                _ => {},
+            }
+        }
         // DisplayListMenuID includes CANCEL after the last item, even when a
         // sale removed the last stack. Expose that row to the engine adapter.
         if self.1.is_some() {
@@ -183,8 +221,8 @@ impl MartState {
             };
             if let Some((sell, cursor, count)) = selection {
                 let cursor = cursor.min(count);
-                let cursor = if input.up { (cursor + count) % (count + 1) }
-                    else if input.down { (cursor + 1) % (count + 1) } else { cursor };
+                let cursor = if input.up { cursor.saturating_sub(1) }
+                    else if input.down { (cursor + 1).min(count) } else { cursor };
                 if input.b || (input.a && cursor == count) {
                     FieldFlow::reset_main(&mut self.0.phase);
                     self.1.as_mut().unwrap().anything_else(self.0.phase.clone());
