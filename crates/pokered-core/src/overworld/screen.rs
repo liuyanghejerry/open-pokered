@@ -1958,6 +1958,11 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         ),
                         TransportMode::Biking => {
                             self.state.player.transport = TransportMode::Walking;
+                            // ItemUseBicycle calls PlayDefaultMusic after changing
+                            // transport, before printing the result message.
+                            self.audio_requests.push(OverworldAudioRequest::PlayMapMusic {
+                                map: self.state.current_map,
+                            });
                             format!("{} got off\nthe BICYCLE.", self.player_name)
                         }
                         TransportMode::Walking => {
@@ -1973,6 +1978,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                             });
                             if map_override || tileset_allowed {
                                 self.state.player.transport = TransportMode::Biking;
+                                self.audio_requests.push(OverworldAudioRequest::PlayMapMusic {
+                                    map: self.state.current_map,
+                                });
                                 format!("{} got on the\nBICYCLE!", self.player_name)
                             } else {
                                 "No cycling\nallowed here.".to_string()
