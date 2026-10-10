@@ -42,6 +42,7 @@ SECTIONS {
         *(.text.*pokered_app*render*oak*draw_oak_speech*);
         *(.text.*specialized_div_rem*u32_div_rem*);
         *(.text.*pokered_gba*Mode4Presenter*copy_full_page*);
+        *(.text.*pokered_gba*dma3_scroll_indices*);
         *(.iwram .iwram.*);
         . = ALIGN(4);
 
