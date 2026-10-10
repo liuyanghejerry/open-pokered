@@ -1716,6 +1716,12 @@ impl ShopVisualKey {
         let GameScreen::Shop(mart) = &game.state.screen else {
             return None;
         };
+        // Closing the text window restores sprites and hides the menu on
+        // separate frames. The stationary mart key does not describe those
+        // transfers, so draw every restoration frame before caching again.
+        if game.overworld.field_text_restore.is_some() {
+            return None;
+        }
         let background = OverworldVisualKey::new(game)?;
         let language = game.state.config.language;
         let mut visual_hash = 0x811c_9dc5;
@@ -1735,13 +1741,19 @@ impl ShopVisualKey {
             }
         }
 
-        let (phase, cursor) = match &mart.phase {
+        hash_byte(&mut visual_hash, mart.field_message_active() as u8);
+        hash_byte(&mut visual_hash, mart.field_prompt_arrow_visible() as u8);
+        for line in mart.field_message_lines() {
+            hash_u16(&mut visual_hash, line.len() as u16);
+            for byte in line.bytes() { hash_byte(&mut visual_hash, byte); }
+        }
+        let (phase, cursor) = match mart.display_phase() {
             MartPhase::MainMenu { cursor } => (
                 ShopPhaseKind::MainMenu,
                 Some(super::menu::mart_main_cursor_position(cursor.position())),
             ),
             MartPhase::Buy(BuyMenuState::SelectItem { cursor }) => {
-                let scroll = super::menu::mart_list_scroll(*cursor, mart.inventory.items().len(), language);
+                let scroll = super::menu::mart_list_scroll(*cursor, mart.inventory.items().len() + usize::from(language == Lang::En), language);
                 hash_u32(&mut visual_hash, scroll as u32);
                 (
                     ShopPhaseKind::BuySelect,
@@ -1824,6 +1836,7 @@ impl ShopVisualKey {
             MartPhase::Exiting => (ShopPhaseKind::Exiting, None),
         };
         hash_byte(&mut visual_hash, phase as u8);
+        let cursor = if mart.field_message_active() { None } else { cursor };
 
         Some(Self {
             phase,
@@ -2932,6 +2945,72 @@ mod session_tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn mart_owned_text_and_exit_retained_frames_match_full_draw() {
+        use dotzuki_app::{GbButton, InputState};
+        use pokered_core::items::shop::{MartState, MartTopChoice, ShopInventory};
+        use pokered_data::items::ItemId;
+        let mut game = PokemonGame::new(GameVersion::Red);
+        game.audio = None;
+        game.state.config.language = Lang::En;
+        game.save_data.game_data.bag = pokered_core::items::inventory::Inventory::new_bag();
+        let money = game.save_data.game_data.player_money;
+        let mut mart = MartState::new(ShopInventory::new(vec![ItemId::Potion]));
+        mart.configure_field_text(1);
+        mart.phase = MartPhase::MainMenu { cursor: MartTopChoice::Sell };
+        game.state.screen = GameScreen::Shop(mart);
+        let mut session = RenderSession::new();
+        let mut retained = FrameBuffer::new(RenderConfig::new(160,144), Rgba::WHITE);
+        let mut full = retained.clone();
+        let mut scroll = |_: &mut [u8], _: usize, _: usize, _: i32, _: i32, _: u8| {};
+        let mut stage = 0;
+        let mut hold = 0;
+        let mut idle_reused = false;
+        let mut arrow_states = [false; 2];
+        for frame in 0..600 {
+            let mut key = None;
+            if let GameScreen::Shop(mart) = &game.state.screen {
+                if stage == 0 { key = Some(GbButton::A); stage = 1; }
+                else if stage == 1 && mart.field_message_waiting() && frame > 160 {
+                    assert_eq!(mart.field_message_lines(), vec!["You don't have", "anything to sell."]);
+                    key = Some(GbButton::B); stage = 2;
+                } else if stage == 2 && !mart.field_message_active() {
+                    assert_eq!(mart.field_message_lines(), vec!["Is there anything", "else I can do?"]);
+                    assert!(matches!(mart.phase, MartPhase::MainMenu { cursor: MartTopChoice::Buy }));
+                    key = Some(GbButton::B); stage = 3;
+                } else if stage == 3 && mart.field_message_waiting() {
+                    assert_eq!(mart.field_message_lines(), vec!["Thank you!"]);
+                    key = Some(GbButton::A); stage = 4;
+                } else if stage == 4 && hold < 4 { key = Some(GbButton::A); hold += 1; }
+            }
+            let mut input = InputState::new();
+            if let Some(key) = key { input.press(key); }
+            game.update(&input);
+            if stage == 4 && hold < 4 { assert!(matches!(game.state.screen, GameScreen::Shop(_))); }
+            if stage == 1 {
+                if let GameScreen::Shop(mart) = &game.state.screen {
+                    if mart.field_message_waiting() {
+                        arrow_states[usize::from(mart.field_prompt_arrow_visible())] = true;
+                    }
+                }
+            }
+            let update = session.render(&mut game, &mut retained, &mut scroll);
+            idle_reused |= matches!(update, FrameUpdate::Reuse);
+            game.draw(&mut full);
+            for y in 0..144 { for x in 0..160 {
+                assert_eq!(retained.get_pixel(x,y),full.get_pixel(x,y),"mart stage{stage} frame{frame} ({x},{y})");
+            } }
+            assert_eq!(game.save_data.game_data.player_money, money);
+            assert_eq!(game.save_data.game_data.bag.count(), 0);
+            if stage == 4 && game.state.screen == GameScreen::Overworld {
+                assert!(idle_reused);
+                assert_eq!(arrow_states, [true, true], "prompt must redraw both arrow states");
+                return;
+            }
+        }
+        panic!("mart failed to finish stage{stage}");
     }
 
     #[test]

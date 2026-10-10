@@ -2931,6 +2931,27 @@ mod tests {
         }
     }
 
+    #[test]
+    fn source_mart_greeting_is_done_in_english_and_preserves_translated_dialogue() {
+        for (map, handler) in [("PewterMart", "talkClerk"), ("ViridianMart", "talkClerk"),
+            ("CeruleanMart", "talkClerk"), ("VermilionMart", "talkClerk"), ("FuchsiaMart", "talkClerk"),
+            ("CinnabarMart", "talkClerk"), ("LavenderMart", "talkClerk"), ("SaffronMart", "talkClerk")] {
+            let scene = pokered_data::embedded_scenes::get_scene_ast(map).unwrap();
+            for lang in ["en", "zh"] {
+                let mut engine = NativeScriptEngine::new();
+                engine.set_lang(lang); engine.load_map(map, &scene);
+                engine.set_flag("EVENT_OAK_GOT_PARCEL", true);
+                let commands = drive_fidelity_scene(&mut engine, handler, true, "", &[]);
+                if lang == "en" {
+                    assert!(matches!(&commands[0], ScriptCommand::Custom {name,args} if name == "printFieldText" && args[0].as_str()==Some("Hi there!\nMay I help you?")), "{map}");
+                } else {
+                    assert!(matches!(&commands[0], ScriptCommand::ShowText {text} if text=="你好！\n\n需要帮忙吗？"), "{map}");
+                }
+                assert!(commands.iter().any(|c| matches!(c,ScriptCommand::OpenShop { .. })), "{map}");
+            }
+        }
+    }
+
     fn drive_fidelity_scene(
         engine: &mut NativeScriptEngine,
         handler: &str,

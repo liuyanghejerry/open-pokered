@@ -449,7 +449,7 @@ pub fn draw_mart(state: &MartState, player_money: u32, bag_items: &[(pokered_dat
     let mut ui = Ui::new(&mut painter);
     // Names and prices occupy separate rows: four English or three Chinese
     // entries fit. RenderSession uses these same viewport/cursor helpers.
-    match &state.phase {
+    match state.display_phase() {
         MartPhase::MainMenu { cursor } => {
             menus::mart::draw_main_with_money(cursor.position(), player_money, &MART_MAIN_MENU_LAYOUT, &mut ui, lang);
         }
@@ -458,7 +458,7 @@ pub fn draw_mart(state: &MartState, player_money: u32, bag_items: &[(pokered_dat
                 menus::mart::draw_buy_items_with_money(
                     state.inventory.items(),
                     *cursor,
-                    mart_list_scroll(*cursor, state.inventory.items().len(), lang),
+                    mart_list_scroll(*cursor, state.inventory.items().len() + usize::from(lang == Lang::En), lang),
                     player_money,
                     &pokered_data::ui_layout::schema::MART_BUY_ITEMS_WITH_MONEY_LAYOUT,
                     &mut ui,
@@ -561,6 +561,14 @@ pub fn draw_mart(state: &MartState, player_money: u32, bag_items: &[(pokered_dat
             }
         },
         MartPhase::Exiting => {}
+    }
+    let field_lines = state.field_message_lines();
+    if state.field_message_active() || !field_lines.is_empty() {
+        let lines: Vec<&str> = field_lines.iter().map(String::as_str).collect();
+        menus::mart::draw_result_dialog(&lines, &MART_RESULT_DIALOG_LAYOUT, &mut ui);
+        if state.field_prompt_arrow_visible() {
+            ui.painter().draw_text(TilePos::new(18, 16), "▼", InkColor::Black.into());
+        }
     }
 }
 

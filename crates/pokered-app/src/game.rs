@@ -4415,7 +4415,12 @@ impl PokemonGame {
                         self.overworld.pending_dialogue = None;
                         match pokered_core::items::shop_stock_from_script_names(&shop_items) {
                             Ok(inv) => {
-                                let mart = pokered_core::items::MartState::new(inv);
+                                let mut mart = pokered_core::items::MartState::new(inv);
+                                if self.state.config.language == Lang::En {
+                                    mart.configure_field_text(self.state.config.text_speed.delay_frames());
+                                    // MONEY_BOX and BUY_SELL_QUIT_MENU clear the shared bit.
+                                    self.overworld.text_delay_disabled = false;
+                                }
                                 ScreenAction::Transition(GameScreen::Shop(mart))
                             }
                             Err(bad) => {
@@ -5738,6 +5743,10 @@ impl PokemonGame {
                 }
             }
             GameScreen::Shop(ref mut mart_state) => {
+                if self.overworld.field_text_restore.is_some() {
+                    if self.overworld.tick_field_text_restore() { ScreenAction::Transition(GameScreen::Overworld) }
+                    else { ScreenAction::Continue }
+                } else {
                 let menu_input = MenuInput {
                     up: input.is_just_pressed(GbButton::Up),
                     down: input.is_just_pressed(GbButton::Down),
@@ -5748,7 +5757,12 @@ impl PokemonGame {
                     money: self.save_data.game_data.player_money,
                     bag: self.save_data.game_data.bag.clone(),
                 };
-                let update = mart_state.update_frame(menu_input, &mut player);
+                let update = mart_state.update_frame_with_text_input(menu_input, &mut player,
+                    input.is_held(GbButton::A), input.is_held(GbButton::B),
+                    self.audio.as_ref().is_some_and(|audio| audio.is_sfx_playing()));
+                if mart_state.take_text_advance() {
+                    if let Some(ref audio) = self.audio { audio.play_sfx(SfxId::PressAB); }
+                }
                 self.save_data.game_data.player_money = player.money;
                 self.save_data.game_data.bag = player.bag;
                 match update {
@@ -5759,7 +5773,15 @@ impl PokemonGame {
                         }
                         ScreenAction::Continue
                     }
+                    MartUpdate::Exit if self.state.config.language == Lang::En => {
+                        self.overworld.pending_dialogue = None;
+                        self.overworld.last_script_dialogue = None;
+                        self.overworld.inner_field_text_open = false;
+                        self.overworld.begin_start_menu_restore();
+                        ScreenAction::Continue
+                    }
                     MartUpdate::Exit => ScreenAction::Transition(GameScreen::Overworld),
+                }
                 }
             }
         };
@@ -6735,6 +6757,13 @@ impl PokemonGame {
             bs.player.party.iter().collect()
         } else {
             self.save_data.party.iter().collect()
+        };
+        snapshot["shop_message"] = match &self.state.screen {
+            GameScreen::Shop(mart) => serde_json::json!({
+                "active": mart.field_message_active(), "waiting": mart.field_message_waiting(),
+                "lines": mart.field_message_lines(),
+            }),
+            _ => serde_json::Value::Null,
         };
         snapshot["evaluation"] = serde_json::json!({
             "party_source": if live.is_some() { "battle_live" } else { "save_data" },
@@ -7937,6 +7966,7 @@ impl PokemonGame {
                 );
                 let money = self.save_data.game_data.player_money;
                 let bag_slice = self.save_data.game_data.bag.items();
+                if self.overworld.field_text_restore.as_ref().is_none_or(|restore| restore.window_visible()) {
                 draw_mart(
                     mart_state,
                     money,
@@ -7944,6 +7974,7 @@ impl PokemonGame {
                     frame_buffer,
                     self.state.config.language,
                 );
+                }
             }
             GameScreen::Bag => {
                 draw_bag(&self.bag_screen, frame_buffer, self.state.config.language);
