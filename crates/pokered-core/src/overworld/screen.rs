@@ -931,6 +931,10 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     /// (`_LeaveMapAnim`). While `Some`, the warp fade is deferred and player
     /// input is frozen.
     pub teleport_spin: Option<presentation::TeleportSpinState>,
+    /// ItemUseEscapeRope reloads the field, then blocks for DelayFrames(30).
+    /// The application consumes the rope only when this hold has completed.
+    pub escape_rope_delay_frames: u8,
+    pub(crate) escape_rope_consumption_pending: bool,
     /// Active FLY-specific `_LeaveMapAnim`: bird pickup, two flight paths and
     /// their blocking delays. The warp fade starts only after this completes.
     pub fly_departure: Option<presentation::LeaveMapFlyState>,
@@ -1253,6 +1257,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             flash_pending_white: false,
             warp_fade_to_white: false,
             teleport_spin: None,
+            escape_rope_delay_frames: 0,
+            escape_rope_consumption_pending: false,
             fly_departure: None,
             enter_map_anim: None,
             enter_map_fly_anim: None,
@@ -1895,6 +1901,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         self.script_engine.set_flag(name, value);
     }
 
+    /// The application owns the inventory, so the blocking field routine
+    /// emits its RemoveUsedItem completion once instead of removing early.
+    pub fn take_escape_rope_consumption(&mut self) -> bool {
+        std::mem::take(&mut self.escape_rope_consumption_pending)
+    }
+
     /// Typed variant of `set_flag_live`: sets an `EventFlag` bit in BOTH
     /// the persistent `unified_flags` and the live script engine's flag
     /// store, so a running scene's `getFlag(...)` observes the change
@@ -2059,6 +2071,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         self.state.player.facing,
                         presentation::TELEPORT_SPIN_FACINGS,
                     ));
+                    self.escape_rope_delay_frames = 30;
+                    self.escape_rope_consumption_pending = false;
                     consumed = true;
                     None
                 } else {
