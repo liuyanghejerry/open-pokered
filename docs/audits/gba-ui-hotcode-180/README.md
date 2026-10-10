@@ -1,3 +1,11 @@
+# GBA UI helper instruction placement
+
+Move the existing opaque UI glyph painter to the existing IWRAM block. This split PR is based directly on master `31b1eda` and changes only one linker selection rule. Function implementations, fonts, frame output, input handling and gameplay are unchanged. No new screenshot pair is required for instruction placement alone.
+
+The verification JSON and evidence archive below are retained historical measurements from the larger #144 branch. Their source/ELF hashes identify that context; they are **not** measurements of this new master-based split. In particular, the larger branch's gameplay gates do not apply to this isolated change. This split must pass its own exact-head GBA production build, unchanged performance budgets and other CI before merge.
+
+## Historical evidence
+
 # GBA opaque UI tile hotcode (180)
 
 The Pokemon opaque UI tile painter still fetched instructions from cartridge ROM, while the older generic border helper was already in IWRAM. Add the current helper to the existing linker hot framebuffer block. Its implementation, glyphs, colors, layout, timing logic and framebuffer writes are unchanged. This is instruction placement only and changes no screen output; no additional visual comparison is required. The PR retains the earlier gameplay/rendering comparisons.
