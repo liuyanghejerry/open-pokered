@@ -1,0 +1,16 @@
+{
+  "scope": "semantic sale confirmation/commit/PlaySound/start-list timing; not pixel-perfect PPU/caption equivalence",
+  "original": {
+    "commit": 15,
+    "cash": 17,
+    "list": 34
+  },
+  "native_pcm_owner": {
+    "commit": 15,
+    "cash": 17,
+    "list": 34
+  },
+  "original_verification_sha256": "2ef9ecb649bee6e5aae6bece4cd3985d22ad3b5880f0a8d261407f6a9804b9f2",
+  "native_log_sha256": "1e37c7212f02446575e23f3056f488518b57653f10146e932799e1560f696357",
+  "known_followup": "originalpurchase bought-item PrintText hook709 still rendersoldquestion709; blank710..712; firstglyph713. Native final receipt pixel/letter cadence awaits recording; shared field workclocks remain underaudit."
+}

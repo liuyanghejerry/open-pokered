@@ -1,0 +1,104 @@
+{
+  "scope": "all23 receipt glyphwrites, originalPLD callbacks decodedwithcanonicalASCII literals vs nativefield_message glyphcount; semanticack aligned, not pixelPPUtransfer equivalence",
+  "original_ack": 675,
+  "native_ack": 465,
+  "matching_glyph_events": [
+    {
+      "offset": 37,
+      "char": "H"
+    },
+    {
+      "offset": 42,
+      "char": "e"
+    },
+    {
+      "offset": 47,
+      "char": "r"
+    },
+    {
+      "offset": 52,
+      "char": "e"
+    },
+    {
+      "offset": 57,
+      "char": " "
+    },
+    {
+      "offset": 62,
+      "char": "y"
+    },
+    {
+      "offset": 67,
+      "char": "o"
+    },
+    {
+      "offset": 72,
+      "char": "u"
+    },
+    {
+      "offset": 77,
+      "char": " "
+    },
+    {
+      "offset": 82,
+      "char": "a"
+    },
+    {
+      "offset": 87,
+      "char": "r"
+    },
+    {
+      "offset": 92,
+      "char": "e"
+    },
+    {
+      "offset": 97,
+      "char": "!"
+    },
+    {
+      "offset": 102,
+      "char": "T"
+    },
+    {
+      "offset": 107,
+      "char": "h"
+    },
+    {
+      "offset": 112,
+      "char": "a"
+    },
+    {
+      "offset": 117,
+      "char": "n"
+    },
+    {
+      "offset": 122,
+      "char": "k"
+    },
+    {
+      "offset": 127,
+      "char": " "
+    },
+    {
+      "offset": 132,
+      "char": "y"
+    },
+    {
+      "offset": 137,
+      "char": "o"
+    },
+    {
+      "offset": 142,
+      "char": "u"
+    },
+    {
+      "offset": 147,
+      "char": "!"
+    }
+  ],
+  "first_glyph_offset": 37,
+  "glyph_interval": 5,
+  "charmap_sha256": "64dab17f94a5312c1a09de651c94455fa0e7549cfd6340a2ff1394a50b933ef7",
+  "source_events_sha256": "8ac66b6524143f44831bdd280d7a62ddf488969e9efe842334a54725c2c420b4",
+  "native_frames_sha256": "bddcd75139dbeefbd6acf309a863cc8af57c2501cb187fa7c9ed43a4f4d60bc1"
+}

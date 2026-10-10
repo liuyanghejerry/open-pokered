@@ -1,0 +1,88 @@
+{
+  "scope": "original187 menu sound and15frame handoff, two byte-identical copies each; saleSound completion includes bag-removal timing",
+  "cases": {
+    "purchase": {
+      "files_per_copy": 819,
+      "two_copies_identical": true,
+      "response_frame": 675,
+      "money_change_frame": 690,
+      "list_return_frames": [],
+      "sounds": [
+        {
+          "t": 204,
+          "id": 144
+        },
+        {
+          "t": 383,
+          "id": 144
+        },
+        {
+          "t": 560,
+          "id": 144
+        },
+        {
+          "t": 675,
+          "id": 144
+        },
+        {
+          "t": 692,
+          "id": 178
+        }
+      ]
+    },
+    "buy-no": {
+      "files_per_copy": 819,
+      "two_copies_identical": true,
+      "response_frame": 675,
+      "money_change_frame": null,
+      "list_return_frames": [
+        690
+      ],
+      "sounds": [
+        {
+          "t": 204,
+          "id": 144
+        },
+        {
+          "t": 383,
+          "id": 144
+        },
+        {
+          "t": 560,
+          "id": 144
+        },
+        {
+          "t": 675,
+          "id": 144
+        }
+      ]
+    },
+    "sell-success": {
+      "files_per_copy": 869,
+      "two_copies_identical": true,
+      "response_frame": 725,
+      "money_change_frame": 740,
+      "list_return_frames": [
+        759
+      ],
+      "sounds": [
+        {
+          "t": 228,
+          "id": 144
+        },
+        {
+          "t": 467,
+          "id": 144
+        },
+        {
+          "t": 725,
+          "id": 144
+        },
+        {
+          "t": 742,
+          "id": 178
+        }
+      ]
+    }
+  }
+}

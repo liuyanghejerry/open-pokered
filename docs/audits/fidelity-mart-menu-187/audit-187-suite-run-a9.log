@@ -1,0 +1,5 @@
+audio 0 ['test result: ok. 99 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s']
+data 0 ['test result: ok. 263 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s']
+agent 0 ['test result: ok. 54 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.18s']
+core 0 ['test result: ok. 2772 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.72s']
+app 0 ['test result: ok. 234 passed; 0 failed; 34 ignored; 0 measured; 0 filtered out; finished in 4.06s']

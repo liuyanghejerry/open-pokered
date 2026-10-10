@@ -1,0 +1,397 @@
+{
+  "scope": "all8boundaries+7transactions finala9 realdebuginputs aftercontrolledwarp/snapshot, twobyteidenticalcopies each. --no-audio retainsactualPCMsequencer. Not freshNEWGAME proof or pixelPPU equivalence. Fullbag uses20validnativeitems vsSourceIDs1..20, samecapacitybranch.",
+  "binary_sha256": "a90d8827f2834b346c126e83c54c493094ce87c667a21db40bfba175ff273e7f",
+  "source_manifest": "audit-187-debug-cli-a9-immutable/manifest.json",
+  "cases": {
+    "boundary/main-up": {
+      "copies": [
+        "audit-187-native-main-up-after-a9-1",
+        "audit-187-native-main-up-after-a9-2"
+      ],
+      "byte_identical_files": 34,
+      "frames": 700,
+      "frames_sha256": "b04d5de3fed6c6753749d91c65a503bebf77cfc1b33e0b5f6d9819d7fcce4a0f",
+      "verification": {
+        "case": "main-up",
+        "revision": "after-a9",
+        "final_phase": "MainMenu { cursor: Buy }",
+        "final_money": 3000,
+        "list_cue": null,
+        "choice_cue": null,
+        "claim": "menu boundary assertions enabled"
+      }
+    },
+    "boundary/main-down": {
+      "copies": [
+        "audit-187-native-main-down-after-a9-1",
+        "audit-187-native-main-down-after-a9-2"
+      ],
+      "byte_identical_files": 34,
+      "frames": 700,
+      "frames_sha256": "6f50030452d814e5b1115dd6f465b6e094a1b078bdff05947a2584979e965411",
+      "verification": {
+        "case": "main-down",
+        "revision": "after-a9",
+        "final_phase": "MainMenu { cursor: Quit }",
+        "final_money": 3000,
+        "list_cue": null,
+        "choice_cue": null,
+        "claim": "menu boundary assertions enabled"
+      }
+    },
+    "boundary/buy-up": {
+      "copies": [
+        "audit-187-native-buy-up-after-a9-1",
+        "audit-187-native-buy-up-after-a9-2"
+      ],
+      "byte_identical_files": 34,
+      "frames": 700,
+      "frames_sha256": "6c7e29708bae7234c988b7941003d3cd2c85e921b8343a8e7ec482c5992abbd3",
+      "verification": {
+        "case": "buy-up",
+        "revision": "after-a9",
+        "final_phase": "Buy(SelectItem { cursor: 0 })",
+        "final_money": 3000,
+        "list_cue": 139,
+        "choice_cue": null,
+        "claim": "menu boundary assertions enabled"
+      }
+    },
+    "boundary/buy-down": {
+      "copies": [
+        "audit-187-native-buy-down-after-a9-1",
+        "audit-187-native-buy-down-after-a9-2"
+      ],
+      "byte_identical_files": 34,
+      "frames": 700,
+      "frames_sha256": "70a695e67b1ddbec5fa86c52601309e2b445da6452ade083678268b2f984c2ba",
+      "verification": {
+        "case": "buy-down",
+        "revision": "after-a9",
+        "final_phase": "Buy(SelectItem { cursor: 7 })",
+        "final_money": 3000,
+        "list_cue": 139,
+        "choice_cue": null,
+        "claim": "menu boundary assertions enabled"
+      }
+    },
+    "boundary/sell-up": {
+      "copies": [
+        "audit-187-native-sell-up-after-a9-1",
+        "audit-187-native-sell-up-after-a9-2"
+      ],
+      "byte_identical_files": 34,
+      "frames": 700,
+      "frames_sha256": "3bebc9e1a2c10752e84b6119771beec4ff8e4a01a75b384192158907ef06199c",
+      "verification": {
+        "case": "sell-up",
+        "revision": "after-a9",
+        "final_phase": "Sell(SelectItem { cursor: 0 })",
+        "final_money": 3000,
+        "list_cue": 223,
+        "choice_cue": null,
+        "claim": "menu boundary assertions enabled"
+      }
+    },
+    "boundary/sell-down": {
+      "copies": [
+        "audit-187-native-sell-down-after-a9-1",
+        "audit-187-native-sell-down-after-a9-2"
+      ],
+      "byte_identical_files": 34,
+      "frames": 700,
+      "frames_sha256": "4d1027c73a696bd94e1ba7eaad5b12d3cf4d351cadeb2728d6e12cedb3c01fc9",
+      "verification": {
+        "case": "sell-down",
+        "revision": "after-a9",
+        "final_phase": "Sell(SelectItem { cursor: 1 })",
+        "final_money": 3000,
+        "list_cue": 223,
+        "choice_cue": null,
+        "claim": "menu boundary assertions enabled"
+      }
+    },
+    "boundary/confirm-up": {
+      "copies": [
+        "audit-187-native-confirm-up-after-a9-1",
+        "audit-187-native-confirm-up-after-a9-2"
+      ],
+      "byte_identical_files": 36,
+      "frames": 766,
+      "frames_sha256": "a449a630c291de2736de300d17c9e39f6243da9ad0b713b79f1b2a1454ed1a96",
+      "verification": {
+        "case": "confirm-up",
+        "revision": "after-a9",
+        "final_phase": "Buy(Result { dialogue: Success { total_cost: 200 }, return_to_list: true })",
+        "final_money": 2800,
+        "list_cue": null,
+        "choice_cue": 405,
+        "claim": "menu boundary assertions enabled"
+      }
+    },
+    "boundary/confirm-down": {
+      "copies": [
+        "audit-187-native-confirm-down-after-a9-1",
+        "audit-187-native-confirm-down-after-a9-2"
+      ],
+      "byte_identical_files": 36,
+      "frames": 766,
+      "frames_sha256": "94308f40c5247f5878c8817a899bff38b89bf28715dbf16ee984bc5600e3b3eb",
+      "verification": {
+        "case": "confirm-down",
+        "revision": "after-a9",
+        "final_phase": "Buy(SelectItem { cursor: 0 })",
+        "final_money": 3000,
+        "list_cue": null,
+        "choice_cue": 405,
+        "claim": "menu boundary assertions enabled"
+      }
+    },
+    "transaction/purchase": {
+      "copies": [
+        "audit-187-native-purchase-transactions-a9-1",
+        "audit-187-native-purchase-transactions-a9-2"
+      ],
+      "byte_identical_files": 724,
+      "frames": 721,
+      "frames_sha256": "bddcd75139dbeefbd6acf309a863cc8af57c2501cb187fa7c9ed43a4f4d60bc1",
+      "verification": {
+        "case": "purchase",
+        "binary_sha256": "a90d8827f2834b346c126e83c54c493094ce87c667a21db40bfba175ff273e7f",
+        "frames": 721,
+        "final_money": 2800,
+        "final_bag": [
+          {
+            "item": "PokeBall",
+            "qty": 1
+          }
+        ],
+        "input": "real debug press_timeline only after controlled pretrigger warp/snapshot; no subsequent mutation",
+        "audio": "speaker output disabled; actualSome(new_pcm)sequencer advances eachGame.update, retainsSFXwait; audio_sfx recorded eachframe",
+        "full_bag_fixture": null
+      },
+      "ack_frame": 465,
+      "confirmation_delay": 15,
+      "commit_offset": 15,
+      "cash_offset": 17
+    },
+    "transaction/sell-success": {
+      "copies": [
+        "audit-187-native-sell-success-transactions-a9-1",
+        "audit-187-native-sell-success-transactions-a9-2"
+      ],
+      "byte_identical_files": 691,
+      "frames": 688,
+      "frames_sha256": "3ed7e88e5680678036a7a50410a0e92e4a1fcd13d83cf9d09c4ba43471b91c5e",
+      "verification": {
+        "case": "sell-success",
+        "binary_sha256": "a90d8827f2834b346c126e83c54c493094ce87c667a21db40bfba175ff273e7f",
+        "frames": 688,
+        "final_money": 3600,
+        "final_bag": [],
+        "input": "real debug press_timeline only after controlled pretrigger warp/snapshot; no subsequent mutation",
+        "audio": "speaker output disabled; actualSome(new_pcm)sequencer advances eachGame.update, retainsSFXwait; audio_sfx recorded eachframe",
+        "full_bag_fixture": null
+      },
+      "ack_frame": 553,
+      "confirmation_delay": 15,
+      "commit_offset": 15,
+      "cash_offset": 17,
+      "list_return_offset": 34
+    },
+    "transaction/buy-no": {
+      "copies": [
+        "audit-187-native-buy-no-transactions-a9-1",
+        "audit-187-native-buy-no-transactions-a9-2"
+      ],
+      "byte_identical_files": 584,
+      "frames": 581,
+      "frames_sha256": "25843e558e09e23d801aa27bd95d20edbeb3242d37ab3a8acf57cc34df854dc5",
+      "verification": {
+        "case": "buy-no",
+        "binary_sha256": "a90d8827f2834b346c126e83c54c493094ce87c667a21db40bfba175ff273e7f",
+        "frames": 581,
+        "final_money": 3000,
+        "final_bag": [],
+        "input": "real debug press_timeline only after controlled pretrigger warp/snapshot; no subsequent mutation",
+        "audio": "speaker output disabled; actualSome(new_pcm)sequencer advances eachGame.update, retainsSFXwait; audio_sfx recorded eachframe",
+        "full_bag_fixture": null
+      },
+      "ack_frame": 465,
+      "confirmation_delay": 15
+    },
+    "transaction/sell-no": {
+      "copies": [
+        "audit-187-native-sell-no-transactions-a9-1",
+        "audit-187-native-sell-no-transactions-a9-2"
+      ],
+      "byte_identical_files": 634,
+      "frames": 631,
+      "frames_sha256": "407b498b9b8b480b09c2ec9f99ee4d7f8fca1f3231d9824539089b0e6ae40822",
+      "verification": {
+        "case": "sell-no",
+        "binary_sha256": "a90d8827f2834b346c126e83c54c493094ce87c667a21db40bfba175ff273e7f",
+        "frames": 631,
+        "final_money": 3000,
+        "final_bag": [
+          {
+            "item": "Potion",
+            "qty": 4
+          }
+        ],
+        "input": "real debug press_timeline only after controlled pretrigger warp/snapshot; no subsequent mutation",
+        "audio": "speaker output disabled; actualSome(new_pcm)sequencer advances eachGame.update, retainsSFXwait; audio_sfx recorded eachframe",
+        "full_bag_fixture": null
+      },
+      "ack_frame": 515,
+      "confirmation_delay": 15
+    },
+    "transaction/unsellable": {
+      "copies": [
+        "audit-187-native-unsellable-transactions-a9-1",
+        "audit-187-native-unsellable-transactions-a9-2"
+      ],
+      "byte_identical_files": 513,
+      "frames": 510,
+      "frames_sha256": "7ab7e10a01779c23d63a209c8cfd60859fcd57803e4d4c4e9aaee02e2e37cc6f",
+      "verification": {
+        "case": "unsellable",
+        "binary_sha256": "a90d8827f2834b346c126e83c54c493094ce87c667a21db40bfba175ff273e7f",
+        "frames": 510,
+        "final_money": 3000,
+        "final_bag": [
+          {
+            "item": "Bicycle",
+            "qty": 1
+          }
+        ],
+        "input": "real debug press_timeline only after controlled pretrigger warp/snapshot; no subsequent mutation",
+        "audio": "speaker output disabled; actualSome(new_pcm)sequencer advances eachGame.update, retainsSFXwait; audio_sfx recorded eachframe",
+        "full_bag_fixture": null
+      }
+    },
+    "transaction/buy-insufficient": {
+      "copies": [
+        "audit-187-native-buy-insufficient-transactions-a9-1",
+        "audit-187-native-buy-insufficient-transactions-a9-2"
+      ],
+      "byte_identical_files": 725,
+      "frames": 722,
+      "frames_sha256": "81470f780e8963b1f63877297489a76205a5bd32b51ac6eda742c3723add920b",
+      "verification": {
+        "case": "buy-insufficient",
+        "binary_sha256": "a90d8827f2834b346c126e83c54c493094ce87c667a21db40bfba175ff273e7f",
+        "frames": 722,
+        "final_money": 0,
+        "final_bag": [],
+        "input": "real debug press_timeline only after controlled pretrigger warp/snapshot; no subsequent mutation",
+        "audio": "speaker output disabled; actualSome(new_pcm)sequencer advances eachGame.update, retainsSFXwait; audio_sfx recorded eachframe",
+        "full_bag_fixture": null
+      },
+      "ack_frame": 465,
+      "confirmation_delay": 15
+    },
+    "transaction/buy-full": {
+      "copies": [
+        "audit-187-native-buy-full-transactions-a9-1",
+        "audit-187-native-buy-full-transactions-a9-2"
+      ],
+      "byte_identical_files": 740,
+      "frames": 737,
+      "frames_sha256": "29c6ea69447cac786d5b4633dc1130dd224311d0bb8c83ce1882e7bc479bb7ec",
+      "verification": {
+        "case": "buy-full",
+        "binary_sha256": "a90d8827f2834b346c126e83c54c493094ce87c667a21db40bfba175ff273e7f",
+        "frames": 737,
+        "final_money": 3000,
+        "final_bag": [
+          {
+            "item": "MasterBall",
+            "qty": 99
+          },
+          {
+            "item": "UltraBall",
+            "qty": 99
+          },
+          {
+            "item": "GreatBall",
+            "qty": 99
+          },
+          {
+            "item": "PokeBall",
+            "qty": 99
+          },
+          {
+            "item": "TownMap",
+            "qty": 99
+          },
+          {
+            "item": "Bicycle",
+            "qty": 99
+          },
+          {
+            "item": "Antidote",
+            "qty": 99
+          },
+          {
+            "item": "BurnHeal",
+            "qty": 99
+          },
+          {
+            "item": "IceHeal",
+            "qty": 99
+          },
+          {
+            "item": "Awakening",
+            "qty": 99
+          },
+          {
+            "item": "ParlyzHeal",
+            "qty": 99
+          },
+          {
+            "item": "FullRestore",
+            "qty": 99
+          },
+          {
+            "item": "MaxPotion",
+            "qty": 99
+          },
+          {
+            "item": "HyperPotion",
+            "qty": 99
+          },
+          {
+            "item": "SuperPotion",
+            "qty": 99
+          },
+          {
+            "item": "EscapeRope",
+            "qty": 99
+          },
+          {
+            "item": "Repel",
+            "qty": 99
+          },
+          {
+            "item": "FireStone",
+            "qty": 99
+          },
+          {
+            "item": "ThunderStone",
+            "qty": 99
+          },
+          {
+            "item": "WaterStone",
+            "qty": 99
+          }
+        ],
+        "input": "real debug press_timeline only after controlled pretrigger warp/snapshot; no subsequent mutation",
+        "audio": "speaker output disabled; actualSome(new_pcm)sequencer advances eachGame.update, retainsSFXwait; audio_sfx recorded eachframe",
+        "full_bag_fixture": "20 valid native items qty99; differs from original IDs1..20 but same capacity/stock-full failure branch"
+      },
+      "ack_frame": 465,
+      "confirmation_delay": 15
+    }
+  }
+}

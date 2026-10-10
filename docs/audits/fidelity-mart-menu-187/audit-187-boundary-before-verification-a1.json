@@ -1,0 +1,114 @@
+{
+  "main-up": [
+    {
+      "first": "audit-187-original-main-up-boundaries-a2-1",
+      "second": "audit-187-original-main-up-boundaries-a2-2",
+      "byte_identical_files": 51,
+      "frames_sha256": "d4874e659cd2509e0f85000a496e0bbc93424761dcec749742c115675fc4537c"
+    },
+    {
+      "first": "audit-187-native-main-up-before-a8-1",
+      "second": "audit-187-native-main-up-before-a8-2",
+      "byte_identical_files": 34,
+      "frames_sha256": "777fa9486034fac9ae954b3692d6916e6a17cb041eec804b86d0b8c3073ad863"
+    }
+  ],
+  "main-down": [
+    {
+      "first": "audit-187-original-main-down-boundaries-a2-1",
+      "second": "audit-187-original-main-down-boundaries-a2-2",
+      "byte_identical_files": 51,
+      "frames_sha256": "f5541960c8808e7b52df96c9bdb5fe346a625d69d167819315af954854ae8cab"
+    },
+    {
+      "first": "audit-187-native-main-down-before-a8-1",
+      "second": "audit-187-native-main-down-before-a8-2",
+      "byte_identical_files": 34,
+      "frames_sha256": "efcea9f73f8366cd4ab5e020ba7164480213472a58bc29263968fbf1a5bbcfa3"
+    }
+  ],
+  "buy-up": [
+    {
+      "first": "audit-187-original-buy-up-boundaries-a2-1",
+      "second": "audit-187-original-buy-up-boundaries-a2-2",
+      "byte_identical_files": 51,
+      "frames_sha256": "df36abbbb7f5b4bc190e9787b0e9a630381fd6bd9ae29fa68d8706e2e0f3e857"
+    },
+    {
+      "first": "audit-187-native-buy-up-before-a8-1",
+      "second": "audit-187-native-buy-up-before-a8-2",
+      "byte_identical_files": 34,
+      "frames_sha256": "687b75195e732e73a84d4b0e0f94ec9bfe5fe2e3c442c9405cb8eb0346f75d03"
+    }
+  ],
+  "buy-down": [
+    {
+      "first": "audit-187-original-buy-down-boundaries-a2-1",
+      "second": "audit-187-original-buy-down-boundaries-a2-2",
+      "byte_identical_files": 51,
+      "frames_sha256": "305a45d2458fdb26a2b040aa9c5cf4abf9b72d653ef90fd9d6ee38badd3174b6"
+    },
+    {
+      "first": "audit-187-native-buy-down-before-a8-1",
+      "second": "audit-187-native-buy-down-before-a8-2",
+      "byte_identical_files": 34,
+      "frames_sha256": "96c842157cc984ecbd75ebe9f4aa76fd4c78903bcdd308c7278d520e636db4d3"
+    }
+  ],
+  "sell-up": [
+    {
+      "first": "audit-187-original-sell-up-boundaries-a2-1",
+      "second": "audit-187-original-sell-up-boundaries-a2-2",
+      "byte_identical_files": 51,
+      "frames_sha256": "492009a7cd26a337f2a859519b7a0dd7fa0ea152c1d712c26413bf688e71fadb"
+    },
+    {
+      "first": "audit-187-native-sell-up-before-a8-1",
+      "second": "audit-187-native-sell-up-before-a8-2",
+      "byte_identical_files": 34,
+      "frames_sha256": "3e35b727cc84a0f99f0d73af7bbba7af82a5cd9e824e175b72ca60f3c6e761a3"
+    }
+  ],
+  "sell-down": [
+    {
+      "first": "audit-187-original-sell-down-boundaries-a2-1",
+      "second": "audit-187-original-sell-down-boundaries-a2-2",
+      "byte_identical_files": 51,
+      "frames_sha256": "79768c24013f7658873706e94fe616a69b1a49c546969b5981ce9792bfd41ccf"
+    },
+    {
+      "first": "audit-187-native-sell-down-before-a8-1",
+      "second": "audit-187-native-sell-down-before-a8-2",
+      "byte_identical_files": 34,
+      "frames_sha256": "b56498fedade42f79ea8227213717905f755d40ab7ab289b3ce14e06797b6eaa"
+    }
+  ],
+  "confirm-up": [
+    {
+      "first": "audit-187-original-confirm-up-a1-1",
+      "second": "audit-187-original-confirm-up-a1-2",
+      "byte_identical_files": 819,
+      "frames_sha256": "94b98c3bcd77b372a79af105fa33b8736411ffedc5a41d763ea78a733f4e877a"
+    },
+    {
+      "first": "audit-187-native-confirm-up-before-a8-1",
+      "second": "audit-187-native-confirm-up-before-a8-2",
+      "byte_identical_files": 36,
+      "frames_sha256": "a93d92d40a273abe0ba959ce68057ec08d71fc514bf469bcb73592b38c379f1b"
+    }
+  ],
+  "confirm-down": [
+    {
+      "first": "audit-187-original-confirm-down-a1-1",
+      "second": "audit-187-original-confirm-down-a1-2",
+      "byte_identical_files": 819,
+      "frames_sha256": "467f6d5ebdf5fae019d52d4d53f0b40869f9f020a0fe6ec9efe4c4fe124bc6fb"
+    },
+    {
+      "first": "audit-187-native-confirm-down-before-a8-1",
+      "second": "audit-187-native-confirm-down-before-a8-2",
+      "byte_identical_files": 36,
+      "frames_sha256": "57351e4418bee02970bb8a775f9e55a9fd8c6442b6e77b9796fc4ed9fcd46719"
+    }
+  ]
+}

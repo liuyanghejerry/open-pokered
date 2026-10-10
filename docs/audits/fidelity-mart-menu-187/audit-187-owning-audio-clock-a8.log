@@ -1,0 +1,10 @@
+
+running 1 test
+Asset root found: "/home/jerry/develop/open-pokered/.task-tmp/fidelity-187-mart-menu-checkout/crates/pokered-renderer/../../gfx"
+Audio output initialized (cpal 44100 Hz stereo)
+mart audio: confirmation=0 commit=15 cash=17
+mart audio: list=34
+test game::mart_cash_register_audio_tests::english_sale_plays_cash_register_without_a_receipt ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 267 filtered out; finished in 0.02s
+
