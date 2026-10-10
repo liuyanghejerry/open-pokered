@@ -1,3 +1,5 @@
+> 历史证据：此目录原作参考和大分支录制保持原样；当前独立修复的实际master前/后、源码哈希和测试结果见相邻 `fidelity-safari-split-195`。历史native/GBA结果不作为独立PR最新提交的验证。
+
 # Safari 结束后的门房返程
 
 原作 `pret/pokered` fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c 的 `SafariZoneGameOver` 选择门房第四个 warp `(4,0)`。`SafariZoneGateLeavingSafariScript` 先让玩家面朝下告别，再自动向下走三格，停在 `(4,3)`。复刻原先从 `(3,1)` 开始，停在 `(3,4)`；此次修正入口和告别前朝向。

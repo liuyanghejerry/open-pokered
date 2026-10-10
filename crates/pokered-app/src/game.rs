@@ -12096,6 +12096,7 @@ mod link_stats_cry_fidelity_tests {
             std::fs::copy(std::env::var("FIDELITY_SAFARI_SRAM").unwrap(), &save_path).unwrap();
             let mut g = PokemonGame::new_with_options(GameVersion::Red, Some(save_path), None, None,
                 false, None, false, true, #[cfg(feature = "debug-server")] None);
+            g.set_seed(42);
             g.audio = Some(AudioOutput::new_pcm());
             g.state.config.language = pokered_core::game_state::Lang::En;
             let idle = InputState::new();
@@ -12108,6 +12109,9 @@ mod link_stats_cry_fidelity_tests {
             }
             assert!(saw_menu);
             assert_eq!(g.state.screen, GameScreen::Overworld);
+            // Continue constructs the loaded overworld; seed that actual
+            // instance as part of the explicitly controlled capture fixture.
+            g.set_seed(42);
             assert_eq!(g.overworld.state.current_map, MapId::SafariZoneCenter);
             assert_eq!((g.overworld.state.player.x, g.overworld.state.player.y), (14, 25));
             assert!(g.overworld.is_safari_game_active());
@@ -12152,6 +12156,7 @@ mod link_stats_cry_fidelity_tests {
             std::fs::copy(std::env::var("FIDELITY_SAFARI_SRAM").unwrap(), &save_path).unwrap();
             let mut g = PokemonGame::new_with_options(GameVersion::Red, Some(save_path), None, None,
                 false, None, false, true, #[cfg(feature = "debug-server")] None);
+            g.set_seed(42);
             g.audio = Some(AudioOutput::new_pcm());
             g.state.config.language = pokered_core::game_state::Lang::En;
             let idle = InputState::new();
@@ -12164,6 +12169,9 @@ mod link_stats_cry_fidelity_tests {
             }
             assert!(saw_menu);
             assert_eq!(g.state.screen, GameScreen::Overworld);
+            // Continue constructs the loaded overworld; seed that actual
+            // instance as part of the explicitly controlled capture fixture.
+            g.set_seed(42);
             assert_eq!(g.overworld.state.current_map, MapId::SafariZoneCenter);
             assert_eq!((g.overworld.state.player.x, g.overworld.state.player.y), (14, 25));
             assert!(g.overworld.is_safari_game_active());

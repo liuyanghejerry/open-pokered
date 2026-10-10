@@ -890,7 +890,7 @@ def m29_strength(g):
     # A finished hunt gets the farewell and auto-walks below the gate row.
     # There is no early-exit YES/NO prompt after the allowance expires.
     assert g.cutscene()
-    # Original SafariZoneGate return: enter at (4,0), walk down three tiles.
+    # Original return uses warp4 at (4,0), followed by three downward steps.
     assert g.pos() == ("SafariZoneGate", 4, 3), g.pos()
     flags = g.d.cmd(cmd="get_flags")["data"]
     assert not flags.get("EVENT_IN_SAFARI_ZONE", False), flags
