@@ -1,3 +1,5 @@
+> 历史证据：此目录原作参考和大分支录制保持原样；当前独立修复的实际master前/后、源码哈希和测试结果见相邻 `fidelity-safari-split-195`。历史native/GBA结果不作为独立PR最新提交的验证。
+
 # Safari 结束条件和公告
 
 原作依据：`pret/pokered` 的 `fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c`，`SafariZoneCheckSteps`、`SafariZoneCheck`、`SafariGameOverText` 和 `_TimesUpText` / `_GameOverText`。

@@ -10743,6 +10743,9 @@ mod link_stats_cry_fidelity_tests {
             }
             assert!(saw_menu);
             assert_eq!(g.state.screen, GameScreen::Overworld);
+            // Continue constructs the loaded overworld; seed that actual
+            // instance as part of the explicitly controlled capture fixture.
+            g.set_seed(42);
             assert_eq!(g.overworld.state.current_map, MapId::SafariZoneCenter);
             assert_eq!((g.overworld.state.player.x, g.overworld.state.player.y), (14, 25));
             assert!(g.overworld.is_safari_game_active());
@@ -10800,6 +10803,9 @@ mod link_stats_cry_fidelity_tests {
             }
             assert!(saw_menu);
             assert_eq!(g.state.screen, GameScreen::Overworld);
+            // Continue constructs the loaded overworld; seed that actual
+            // instance as part of the explicitly controlled capture fixture.
+            g.set_seed(42);
             assert_eq!(g.overworld.state.current_map, MapId::SafariZoneCenter);
             assert_eq!((g.overworld.state.player.x, g.overworld.state.player.y), (14, 25));
             assert!(g.overworld.is_safari_game_active());
