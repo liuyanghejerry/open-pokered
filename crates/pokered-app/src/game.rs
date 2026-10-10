@@ -12374,6 +12374,60 @@ mod link_stats_cry_fidelity_tests {
     }
 
     #[test]
+    fn fishing_and_chairman_questions_auto_return_but_story_prompt_still_waits() {
+        use pokered_core::overworld::Direction;
+        run_link_save_fixture(|| {
+            let cases = [
+                (MapId::VermilionOldRodHouse, 2, 5, "OLD_ROD", "EVENT_GOT_OLD_ROD"),
+                (MapId::FuchsiaGoodRodHouse, 5, 4, "GOOD_ROD", "EVENT_GOT_GOOD_ROD"),
+                (MapId::Route12SuperRodHouse, 2, 5, "SUPER_ROD", "EVENT_GOT_SUPER_ROD"),
+                (MapId::PokemonFanClub, 3, 2, "BIKE_VOUCHER", "EVENT_GOT_BIKE_VOUCHER"),
+            ];
+            for (map,x,y,item,flag) in cases {
+                for accept in [false,true] {
+                    let mut g=fixture(Species::Bulbasaur,u16::from(x),Direction::Up);
+                    g.overworld.warp_to_map(map,x,y);
+                    let idle=InputState::new();let a=button(GbButton::A);
+                    for _ in 0..120 {g.update(&idle);}
+                    g.update(&button(GbButton::Up));for _ in 0..20 {g.update(&idle);}
+                    for t in 0..2400 {
+                        let ack=g.overworld.pending_dialogue.as_ref().is_some_and(|d| d.waiting_for_input() && !d.holding_open() && d.has_more_pages());
+                        g.update(if t==0 || ack {&a} else {&idle});
+                        if g.overworld.pending_choice.is_some() {break;}
+                    }
+                    assert_eq!(g.overworld.pending_choice.as_ref().expect("inner question must auto-return").options,["YES","NO"],"{map:?}");
+                    let (top,bottom)=g.overworld.displayed_field_dialogue().unwrap().get_display_text().unwrap();
+                    assert!(format!("{top} {bottom}").contains(if map==MapId::PokemonFanClub {"about my POKeMON?"} else {"like to fish?"}),"{map:?}: {top} / {bottom}");
+                    assert!(!g.save_data.game_data.bag.has_item_const(item));
+                    for _ in 0..20 {g.update(&idle);}
+                    g.update(&button(if accept {GbButton::A} else {GbButton::B}));
+                    let mut saw_story_prompt=false;
+                    for _ in 0..6000 {
+                        let ack=g.overworld.pending_dialogue.as_ref().is_some_and(|d| d.waiting_for_input() && !d.holding_open()
+                            && (g.overworld.active_script_effect_label().as_deref()!=Some("ShowItemDialogue") || d.has_more_pages()));
+                        if accept && map==MapId::PokemonFanClub && ack {
+                            let d=g.overworld.pending_dialogue.as_ref().unwrap();
+                            if !d.has_more_pages() && d.get_display_text().is_some_and(|(top,bottom)|format!("{top} {bottom}").contains("want you to have this!")) {
+                                assert!(!g.save_data.game_data.bag.has_item_const(item),"original story ends in PROMPT before GiveItem");
+                                for _ in 0..12 {g.update(&idle);}
+                                assert!(!g.save_data.game_data.bag.has_item_const(item));
+                                saw_story_prompt=true;
+                            }
+                        }
+                        g.update(if ack {&a} else {&idle});
+                        if g.overworld.script_engine_idle() && g.overworld.pending_dialogue.is_none()
+                            && g.overworld.active_script_effect_label().is_none() && g.overworld.pending_choice.is_none() {break;}
+                    }
+                    assert_eq!(g.save_data.game_data.bag.has_item_const(item),accept,"{map:?}");
+                    assert_eq!(g.overworld.script_flags().get(flag).copied().unwrap_or(false),accept,"{map:?}");
+                    assert_eq!(saw_story_prompt,accept && map==MapId::PokemonFanClub);
+                    assert!(g.overworld.displayed_field_dialogue().is_none(),"{map:?}: no leaked question accept={accept} choice={:?} effect={:?} pending={:?} inner={}",g.overworld.pending_choice,g.overworld.active_script_effect_label(),g.overworld.pending_dialogue,g.overworld.inner_field_text_open);
+                }
+            }
+        });
+    }
+
+    #[test]
     fn museum_choice_retains_final_question_page_with_original_early_money_box() {
         use pokered_core::overworld::Direction;
         run_link_save_fixture(|| {
@@ -12534,6 +12588,51 @@ mod admission_capture_162 {
                 let buttons=if let Some(replay)=&replay {replay[t].clone()} else if t<20 {vec!["up".to_string()]} else {
                     let advance=g.overworld.pending_dialogue.as_ref().is_some_and(|d|d.waiting_for_input() && !d.holding_open() &&
                         (d.has_more_pages() || d.get_display_text().is_some_and(|(top,_)|top.starts_with("Welcome"))));
+                    if advance {vec!["a".to_string()]} else {Vec::new()}
+                };
+                input.begin_frame();for (name,button) in [("up",GbButton::Up),("a",GbButton::A)] {if buttons.iter().any(|v|v==name) {input.press(button);}else {input.release(button);}}
+                g.update(&input);let mut fb=FrameBuffer::new(dotzuki_engine::render_config::RenderConfig::new(160,144),pokered_renderer::Rgba::WHITE);g.draw(&mut fb);fb.save_png(&dir.join(format!("frame-{t:04}.png"))).unwrap();
+                rows.push(serde_json::json!({"t":t,"input_bits":input.raw_current(),"screen":format!("{:?}",g.state.screen),"overworld":pokered_core::snapshot::OverworldSnapshot::capture(&g.overworld)}));controls.push(buttons);
+            }
+            std::fs::write(dir.join("frames.json"),serde_json::to_string_pretty(&rows).unwrap()).unwrap();std::fs::write(dir.join("inputs.json"),serde_json::to_string_pretty(&controls).unwrap()).unwrap();
+        }).unwrap().join().unwrap();
+    }
+}
+
+#[cfg(all(test, not(target_os = "none")))]
+mod offer_capture_163 {
+    use super::*;
+    #[test]
+    #[ignore = "matched SRAM Continue, admission input replay and complete raw frames"]
+    fn capture_offer_163() {
+        std::thread::Builder::new().stack_size(16*1024*1024).spawn(|| {
+            let dir=std::path::PathBuf::from(std::env::var("FIDELITY_OFFER_CAPTURE").unwrap());std::fs::create_dir_all(&dir).unwrap();
+            let save=dir.join("fixture.sav");std::fs::copy(std::env::var("FIDELITY_SAFARI_SRAM").unwrap(),&save).unwrap();
+            let mut g=PokemonGame::new_with_options(GameVersion::Red,Some(save),None,None,false,None,false,true,#[cfg(feature="debug-server")] None);
+            g.state.config.language=pokered_core::game_state::Lang::En;
+            let idle=InputState::new();let mut a=InputState::new();a.press(GbButton::A);let mut menu=false;
+            for t in 0..2000 {menu|=g.state.screen==GameScreen::MainMenu;if g.state.screen==GameScreen::Overworld {break;}g.update(if t%20==19 {&a} else {&idle});}
+            assert!(menu);assert_eq!(g.state.screen,GameScreen::Overworld);
+            g.state.config.text_speed=pokered_core::game_state::TextSpeed::Medium;
+            g.overworld.end_safari_game();
+            // Controlled first-visit setup on the same continued SRAM, in both builds.
+            for flag in ["EVENT_GOT_OLD_ROD","EVENT_GOT_GOOD_ROD","EVENT_GOT_SUPER_ROD","EVENT_GOT_BIKE_VOUCHER"] {g.overworld.set_flag_live(flag,false);}
+            g.save_data.game_data.event_flags=g.overworld.unified_flags().as_bytes().to_vec();
+            let _=g.save_data.game_data.bag.remove_item(pokered_data::items::ItemId::Bicycle,1);
+            let _=g.save_data.game_data.bag.remove_item(pokered_data::items::ItemId::BikeVoucher,1);
+            let (map,x,y)=match std::env::var("FIDELITY_OFFER_MAP").unwrap().as_str() {
+                "old" => (MapId::VermilionOldRodHouse,2,5),
+                "good" => (MapId::FuchsiaGoodRodHouse,5,4),
+                "super" => (MapId::Route12SuperRodHouse,2,5),
+                "chairman" => (MapId::PokemonFanClub,3,2),
+                other => panic!("unknown case {other}"),
+            };g.overworld.warp_to_map(map,x,y);g.overworld.set_rng_seed(1);for _ in 0..120 {g.update(&idle);}
+            let replay:Option<Vec<Vec<String>>>=std::env::var("FIDELITY_OFFER_INPUTS").ok().map(|p|serde_json::from_str(&std::fs::read_to_string(p).unwrap()).unwrap());
+            let mut input=InputState::new();let mut rows=Vec::new();let mut controls=Vec::new();
+            for t in 0..1200 {
+                let buttons=if let Some(replay)=&replay {replay[t].clone()} else if t<20 {vec!["up".to_string()]} else if (20..40).contains(&t) {vec!["a".to_string()]} else {
+                    let advance=g.overworld.pending_dialogue.as_ref().is_some_and(|d|d.waiting_for_input() && !d.holding_open() &&
+                        d.has_more_pages());
                     if advance {vec!["a".to_string()]} else {Vec::new()}
                 };
                 input.begin_frame();for (name,button) in [("up",GbButton::Up),("a",GbButton::A)] {if buttons.iter().any(|v|v==name) {input.press(button);}else {input.release(button);}}

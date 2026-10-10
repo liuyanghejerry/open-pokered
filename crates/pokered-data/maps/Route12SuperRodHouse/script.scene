@@ -14,9 +14,8 @@ game_scene Route12SuperRodHouse {
         @t("Hello there, <PLAYER>!\n\nUse the SUPER ROD in any\nwater! You can catch\ndifferent kinds of POKeMON.\n\nTry fishing wherever you\ncan!", "你好呀， <PLAYER>！\n\n在任何水面用厉害钓竿！能钓到\n不同种类的宝可梦。\n\n试着在任何地方钓鱼吧！")
       }
     } @else {
-      @speaker("") {
-        @t("I'm the FISHING GURU's\nbrother!\n\nI simply Looove fishing!\n\nDo you like to fish?", "我是垂钓大师的哥哥！\n\n我超喜欢钓鱼！\n\n你喜欢钓鱼吗？")
-      }
+      // Original inner PrintText returns on DONE before YesNoChoice.
+      printFieldText(@t("I'm the FISHING GURU's\nbrother!\n\nI simply Looove fishing!\n\nDo you like to fish?", "我是垂钓大师的哥哥！\n\n我超喜欢钓鱼！\n\n你喜欢钓鱼吗？"))
       @choice {
         @option(@t("YES", "是")) {
           given = giveItem("SUPER_ROD", 1)

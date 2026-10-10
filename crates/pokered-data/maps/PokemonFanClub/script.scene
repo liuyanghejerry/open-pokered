@@ -71,9 +71,8 @@ game_scene PokemonFanClub {
         @t("Hello, <PLAYER>!\n\nDid you come see me about my\nPOKeMON again?\n\nNo? Too bad!", "你好，<PLAYER>！\n\n你又是来看我聊宝可梦的吗？\n\n不是？真遗憾！")
       }
     } @else {
-      @speaker("") {
-        @t("I chair the POKeMON Fan\nClub!\n\nI have collected over 100\nPOKeMON!\n\nI'm very fussy when it comes\nto POKeMON!\n\nSo...\n\nDid you come visit to hear\nabout my POKeMON?", "我是宝可梦粉丝俱乐部的会长！\n\n我收集了 100多只宝可梦！\n\n我挑宝可梦非常讲究！\n\n那么……\n\n你是来听我讲宝可梦故事的吗？")
-      }
+      // Original inner PrintText returns on DONE before YesNoChoice.
+      printFieldText(@t("I chair the POKeMON Fan\nClub!\n\nI have collected over 100\nPOKeMON!\n\nI'm very fussy when it comes\nto POKeMON!\n\nSo...\n\nDid you come visit to hear\nabout my POKeMON?", "我是宝可梦粉丝俱乐部的会长！\n\n我收集了 100多只宝可梦！\n\n我挑宝可梦非常讲究！\n\n那么……\n\n你是来听我讲宝可梦故事的吗？"))
       @choice {
         @option(@t("YES", "是")) {
           @speaker("") {

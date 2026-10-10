@@ -1,0 +1,38 @@
+{
+  "questions": [
+    {
+      "map": "VermilionOldRodHouse",
+      "question_label": "_VermilionOldRodHouseFishingGuruDoYouLikeToFishText",
+      "terminator": "done",
+      "runtime_scope": "source confirmed, actual native regressions/captures pending",
+      "script_sha256": "e379524ddd77af9111d77d8131c6672c431ca3432da46f707f02daa8d235a8b3",
+      "text_sha256": "f5ebbeccc2159bb8479bcf9004dfca6b520a1635bbf64b58295ffa8bb16d1522"
+    },
+    {
+      "map": "FuchsiaGoodRodHouse",
+      "question_label": "_FuchsiaGoodRodHouseFishingGuruText",
+      "terminator": "done",
+      "runtime_scope": "source confirmed, actual native regressions/captures pending",
+      "script_sha256": "60c00b40d13055e2104d68908ed99850c70a89dcabb76440698f69ec502d6d98",
+      "text_sha256": "317347f8f2215543febac83af8594c027b3de2dd6ee745ee2d8105b4e09fad66"
+    },
+    {
+      "map": "Route12SuperRodHouse",
+      "question_label": "_Route12SuperRodHouseFishingGuruDoYouLikeToFishText",
+      "terminator": "done",
+      "runtime_scope": "source confirmed, actual native regressions/captures pending",
+      "script_sha256": "9fa34c9fc60ab6bf6adc78fbc3753dff75e7ccc0ac522b81a026dcb2842d9681",
+      "text_sha256": "c03f729566db982ec20ad57a9a1cafe019945123640cfa9f7a9da243efd39895"
+    },
+    {
+      "map": "PokemonFanClub",
+      "question_label": "_PokemonFanClubChairmanIntroText",
+      "terminator": "done",
+      "runtime_scope": "source confirmed, actual native regressions/captures pending",
+      "script_sha256": "abcd6ddebb18fe56e7effd0157958bb00069617c7c41c398660e18fb3d4d872f",
+      "text_sha256": "eb7f1e1fcaa46234847cc62b3b4ab4a94a49b21de8445d972f72970d864a65a5"
+    }
+  ],
+  "chairman_story_terminator": "prompt",
+  "source_only": true
+}

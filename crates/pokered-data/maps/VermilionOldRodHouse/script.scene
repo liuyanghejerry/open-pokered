@@ -16,9 +16,8 @@ game_scene VermilionOldRodHouse {
       }
     } @else {
       // .DoYouLikeToFishText → YesNoChoice.
-      @speaker("") {
-        @t("I'm the FISHING GURU!\n\nI simply Looove fishing!\n\nDo you like to fish?", "我就是垂钓大师！\n\n我超喜欢钓鱼！\n\n你喜欢钓鱼吗？")
-      }
+      // Original inner PrintText returns on DONE before YesNoChoice.
+      printFieldText(@t("I'm the FISHING GURU!\n\nI simply Looove fishing!\n\nDo you like to fish?", "我就是垂钓大师！\n\n我超喜欢钓鱼！\n\n你喜欢钓鱼吗？"))
       @choice {
         @option(@t("YES", "是")) {
           // .TakeThisText + GiveItem OLD_ROD + .FishingIsAWayOfLifeText.

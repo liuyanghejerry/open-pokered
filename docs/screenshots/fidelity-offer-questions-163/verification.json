@@ -1,0 +1,80 @@
+{
+  "base": "31b1eda3112514d6bc803af559ec7f7c9e20374f",
+  "parent": "abe1398662441f6768f64cab3e9763cc8cacede2",
+  "base_binary_sha256": "4488698283110b3d381921691df4389bb68578f06ea2afafacb144bbbad47cf4",
+  "final_binary_sha256": "0b5e43595b5085b0ccaaa1f951fb9fe8c49ef5d1acc4229f2fb3c053f45a673f",
+  "helper_sha256": "45d4e1d7fa9aa8f8405d4f5c4f402eea08632b4f76979bab46064e693ec77fec",
+  "SRAM_sha256": "a2a4d4546d084e6540d678ff3826e58fc7872eecfeac990c30110008f61ddee2",
+  "cases": {
+    "old": {
+      "native_choice_initialized": 189,
+      "paired_frame": 1100,
+      "repeat_all_files_byte_exact": true,
+      "identical_inputs": true
+    },
+    "good": {
+      "native_choice_initialized": 234,
+      "paired_frame": 1100,
+      "repeat_all_files_byte_exact": true,
+      "identical_inputs": true
+    },
+    "super": {
+      "native_choice_initialized": 216,
+      "paired_frame": 1100,
+      "repeat_all_files_byte_exact": true,
+      "identical_inputs": true
+    },
+    "chairman": {
+      "native_choice_initialized": 446,
+      "paired_frame": 1100,
+      "repeat_all_files_byte_exact": true,
+      "identical_inputs": true
+    }
+  },
+  "archives": {
+    "evidence-old.zip": {
+      "sha256": "eba90b8084e863f58e7a4ebac1c34ad7b4376b45d20e97b28cf99d82b8b4af53",
+      "files": 4817,
+      "bytes": 44120136
+    },
+    "evidence-good.zip": {
+      "sha256": "02cf2e138a3857f576782ac8081508ee26fcf6b4eb024a65290b657f7a432018",
+      "files": 4817,
+      "bytes": 36544981
+    },
+    "evidence-super.zip": {
+      "sha256": "ed9d0bec061a1c400a17783272daaa453ce5a2555288405c2505491b182ad693",
+      "files": 4817,
+      "bytes": 43077074
+    },
+    "evidence-chairman.zip": {
+      "sha256": "c7b7f901bd20e36287f2e21fbc20e908396cec6b359c33b850bbe1843752ecb9",
+      "files": 4817,
+      "bytes": 49641021
+    },
+    "evidence-shared.zip": {
+      "sha256": "d7449c081038bf8c83dd9cbb3fd709eafe4f9f77e19b0b7b1f3f065493ef2fb8",
+      "files": 120,
+      "bytes": 732703
+    }
+  },
+  "tests": "core2739,data262,app213/29ignored,agent54,GBA31 unchanged budget and25finalsourceSHA",
+  "images": {
+    "old-after.png": "b810b6763d43f02cddf807a21f89bbef5046cfc89880e835fbfb3224c3f61bc9",
+    "chairman-before.png": "270fb4e977ff5823094e3bad1fabfa602f86151538a257d3103f4f51e29177e4",
+    "super-before.png": "a6507437e12b9d4b54007a2743a2c2f25fe4c4c22b601ee4bf6c33a89d114388",
+    "super-after.png": "39b422280e40f088fc1ce63ea9bba483f398d1535487917395e04337062244da",
+    "old-before.png": "5177148e0dbf714956f31b85b0f1a2ebd7844fecdeddd216184e2d9c267526e7",
+    "chairman-after.png": "0b820a00c2ac667224a76b4f2872c8970d2ce887059cc1af7bb8ab305070ddf4",
+    "good-after.png": "57158c40b23447073e00d8c81adf8126e7924ba279420daa357d2a658170d6fb",
+    "good-before.png": "70d232c0c935f0510fc6c1458efeab223e7ce537a1e81a090b553f0bc33d051a"
+  },
+  "scope": [
+    "Original evidence is disassembly/source only for these four new call sites; no original emulator/LCD timing equivalence claimed.",
+    "Native before/after same continued SRAM and controlled first-visit setup: clear four obtained flags and remove Bicycle/BikeVoucher in both; not an ordinary untouched SRAM mainline.",
+    "Native inputs from after pilot replayed exactly on master; master stuck at earlier paragraph under these controls, not matched absolute text-entry/printing cadence.",
+    "Rejected short-single-frame A recordings did not trigger dialogue; intermediate chairman recording entered revisit because source SRAM had bicycle. Those local records retained and logs archived, never counted as successful.",
+    "New test initially held A continuously during automatic item jingle; corrected driver releases A while waiting for final item text, preserving original HoldTextDisplayOpen behavior.",
+    "Existing draft gates and finalm49 plus independentSave/Continue still incomplete."
+  ]
+}
