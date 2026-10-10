@@ -1,0 +1,47 @@
+{
+  "base": "748c221b2ae8b2fd73824123b095f50b7b47d24f",
+  "native": {
+    "head": "5bf462fc814c03015b472d0473ede785fe6cb9cd",
+    "binaries": {
+      "core-tests": "9525c66ebcfaa8eab9a89e15a4b9fba15c3d953fc77e7e68a461b0d23bc6125c",
+      "app-tests": "b0f4e973fb09936070f15f48ecac5be7e66a496157d20eada772747a28d36dd3"
+    },
+    "sources": {
+      "crates/pokered-core/src/bag_screen.rs": "baee2f4de1afb61606c6e2bd60573d224fd70f7e8159378eb80e8b70f0773db2",
+      "crates/pokered-core/src/pc_screen.rs": "aae549a98284cb083d30a0b875ab510709f04c4394ffa35a4db7abdb2234e940",
+      "crates/pokered-core/src/items/shop.rs": "b995a13afd043e0c7712f598b57659e66dc495b9a872d2aa6f28d1cf0bd951ee",
+      "crates/pokered-core/src/items/shop_tests.rs": "5df5ddc5c7af99d204bd5bb6a4f8fd3ebb84878ea4502bcfc109a93158c6d389",
+      "crates/pokered-app/src/render/session.rs": "3d482563f78dd085808f52970a12ddb15c28792be353fedcc9accbcba40df852"
+    },
+    "scope": "master748+quantity controls only; app helper realmenus+pixel retained/full compare; no field-text or movement prerequisites"
+  },
+  "master": {
+    "head": "748c221b2ae8b2fd73824123b095f50b7b47d24f",
+    "binary": "821de414bf78a38c496d89acd9d4ea68fcb2824330e44773e339658b275a1333",
+    "capture_source": "3d482563f78dd085808f52970a12ddb15c28792be353fedcc9accbcba40df852",
+    "scope": "actual master748 production, identical ignored capture helper only; default desktop features; core has no default features"
+  },
+  "tests": {
+    "core": 2712,
+    "app": 191,
+    "app_ignored": 15,
+    "pixel_owner": "3 modes x 40 frames x 160x144 pixels, retained equals full after every update"
+  },
+  "repeat": "each side 120 PNG + 3 frames.json byte-exact across two repetitions",
+  "files": {
+    "deposit-up-before.png": "e42e57f1532032127c1be6813dc3db0fad6d0b9f7d91d25d30f1884d7da4360b",
+    "toss-up-before.png": "e42e57f1532032127c1be6813dc3db0fad6d0b9f7d91d25d30f1884d7da4360b",
+    "toss-down-after.png": "b05f297ef607a14b2bdadf18cccd3f1c54682c7f63ff6b4f98cb8df56e3d69dd",
+    "withdraw-down-after.png": "b05f297ef607a14b2bdadf18cccd3f1c54682c7f63ff6b4f98cb8df56e3d69dd",
+    "deposit-up-after.png": "bf9572916e1fb608832ea5b7ebc0969039d6a3876ac33e1bc7a4d2e3461a87c7",
+    "deposit-down-before.png": "bf9572916e1fb608832ea5b7ebc0969039d6a3876ac33e1bc7a4d2e3461a87c7",
+    "deposit-down-after.png": "b05f297ef607a14b2bdadf18cccd3f1c54682c7f63ff6b4f98cb8df56e3d69dd",
+    "toss-down-before.png": "bf9572916e1fb608832ea5b7ebc0969039d6a3876ac33e1bc7a4d2e3461a87c7",
+    "withdraw-down-before.png": "bf9572916e1fb608832ea5b7ebc0969039d6a3876ac33e1bc7a4d2e3461a87c7",
+    "withdraw-up-after.png": "bf9572916e1fb608832ea5b7ebc0969039d6a3876ac33e1bc7a4d2e3461a87c7",
+    "toss-up-after.png": "bf9572916e1fb608832ea5b7ebc0969039d6a3876ac33e1bc7a4d2e3461a87c7",
+    "withdraw-up-before.png": "e42e57f1532032127c1be6813dc3db0fad6d0b9f7d91d25d30f1884d7da4360b",
+    "evidence.zip": "67f6488f16e102f9c6d1f1990516edd5d60ab2022506dab139f89c9a8b1fea60"
+  },
+  "scope": "Native quantity controls only. Historical original ROM recordings prove wrap and key precedence; no final GBA or fresh playthrough claim."
+}

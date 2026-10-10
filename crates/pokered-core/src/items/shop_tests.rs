@@ -709,3 +709,29 @@ fn mart_sell_quantity_wrap() {
         })
     ));
 }
+
+
+#[test]
+fn source_quantity_mart_confirm_precedes_cancel_and_directions() {
+    for sell in [false, true] {
+        for b in [false, true] {
+            let mut mart = MartState::new(ShopInventory::new(vec![ItemId::Potion]));
+            let mut bag = Inventory::new_bag();
+            bag.add_item(ItemId::Potion, 4).unwrap();
+            let mut player = player_data(1000, bag);
+            mart.phase = if sell {
+                MartPhase::Sell(SellMenuState::Quantity { item_index: 0, quantity: 1, max_quantity: 4 })
+            } else {
+                MartPhase::Buy(BuyMenuState::Quantity { item_index: 0, quantity: 1 })
+            };
+            mart.update_frame(MenuInput { a: true, b, up: true, down: true }, &mut player);
+            if sell {
+                assert!(matches!(mart.phase, MartPhase::Sell(SellMenuState::Confirm { quantity: 1, .. })));
+            } else {
+                assert!(matches!(mart.phase, MartPhase::Buy(BuyMenuState::Confirm { quantity: 1, .. })));
+            }
+            assert_eq!(player.money, 1000);
+            assert_eq!(player.bag.item_quantity(ItemId::Potion), 4);
+        }
+    }
+}
