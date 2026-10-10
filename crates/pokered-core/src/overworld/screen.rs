@@ -1904,7 +1904,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     /// The application owns the inventory, so the blocking field routine
     /// emits its RemoveUsedItem completion once instead of removing early.
     pub fn take_escape_rope_consumption(&mut self) -> bool {
-        std::mem::take(&mut self.escape_rope_consumption_pending)
+        core::mem::take(&mut self.escape_rope_consumption_pending)
     }
 
     /// Typed variant of `set_flag_live`: sets an `EventFlag` bit in BOTH
