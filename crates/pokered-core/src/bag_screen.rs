@@ -3,10 +3,13 @@
 //! Reachable from the Start menu → ITEM. Lists the bag, and on a selected item
 //! offers USE / TOSS / CANCEL (matching the original overworld item menu). USE
 //! hands the item id back to the caller to dispatch a field effect; TOSS asks a
-//! quantity and removes that many. Pure logic (no rendering) — mirrors
+//! quantity, prints a blocking question, confirms YES/NO, then removes that many
+//! after the original protected wait and prints the result. Pure logic — mirrors
 //! `party_screen::PartyScreenState`.
 
 use crate::alloc_prelude::*;
+use crate::game_state::Lang;
+use crate::overworld::BedroomDialogue;
 use pokered_data::items::ItemId;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -36,6 +39,11 @@ pub enum BagPhase {
     ActionMenu { cursor: u8 },
     /// "Toss how many?" quantity selector for the selected item.
     TossQuantity { qty: u32 },
+    TossQuestion { item: ItemId, qty: u32 },
+    TossConfirm { item: ItemId, qty: u32, cursor: u8 },
+    TossWait { item: ItemId, qty: u32, cursor: u8, remaining: u8, accepted: bool },
+    TossResult { item: ItemId },
+    TossRejected,
     /// SELECT-swap mode (swap_items.asm): the marked row waits for a second
     /// SELECT on another row to swap/merge. B cancels the mark.
     SwapFrom { row: usize },
@@ -74,6 +82,9 @@ pub struct BagScreenState {
     phase: BagPhase,
     /// How many rows are shown at once (set by the renderer's viewport).
     visible_rows: usize,
+    toss_dialogue: Option<BedroomDialogue>,
+    toss_frames: u32,
+    press_sound: bool,
 }
 
 impl BagScreenState {
@@ -84,6 +95,9 @@ impl BagScreenState {
             scroll: 0,
             phase: BagPhase::Browsing,
             visible_rows: 4,
+            toss_dialogue: None,
+            toss_frames: 0,
+            press_sound: false,
         }
     }
 
@@ -95,7 +109,26 @@ impl BagScreenState {
         self.cursor = self.cursor.min(max);
         self.clamp_scroll();
         self.phase = BagPhase::Browsing;
+        self.toss_dialogue = None;
     }
+
+    /// The inventory is committed after YES's protected wait. Keep its result
+    /// PROMPT until the player acknowledges it rather than rebuilding the menu.
+    pub fn set_items_after_toss(&mut self, items: Vec<(ItemId, u32)>) {
+        self.items = items;
+        self.cursor = self.cursor.min(self.row_count().saturating_sub(1));
+        self.clamp_scroll();
+    }
+
+    pub fn toss_dialogue(&self) -> Option<&BedroomDialogue> { self.toss_dialogue.as_ref() }
+
+    pub fn toss_arrow_visible(&self) -> bool {
+        matches!(self.phase, BagPhase::TossQuestion { .. } | BagPhase::TossResult { .. } | BagPhase::TossRejected)
+            && self.toss_dialogue.as_ref().is_some_and(|d| d.waiting_for_input())
+            && (self.toss_frames / 16) % 2 == 0
+    }
+
+    pub fn take_press_sound(&mut self) -> bool { core::mem::take(&mut self.press_sound) }
 
     pub fn items(&self) -> &[(ItemId, u32)] {
         &self.items
@@ -139,10 +172,32 @@ impl BagScreenState {
     }
 
     pub fn update_frame(&mut self, input: BagScreenInput) -> BagScreenAction {
+        self.update_frame_with_text(input, input.a || input.b, Lang::En, 3)
+    }
+
+    pub fn update_frame_with_text(&mut self, input: BagScreenInput, fast_held: bool, lang: Lang, delay: u16) -> BagScreenAction {
+        self.press_sound = false;
+        self.toss_frames = self.toss_frames.wrapping_add(1);
         match self.phase {
             BagPhase::Browsing => self.update_browsing(input),
-            BagPhase::ActionMenu { cursor } => self.update_action_menu(input, cursor),
-            BagPhase::TossQuantity { qty } => self.update_toss_quantity(input, qty),
+            BagPhase::ActionMenu { cursor } => self.update_action_menu(input, cursor, lang, delay),
+            BagPhase::TossQuantity { qty } => self.update_toss_quantity(input, qty, lang, delay),
+            BagPhase::TossQuestion { .. } | BagPhase::TossResult { .. } | BagPhase::TossRejected => self.update_toss_text(input, fast_held, delay),
+            BagPhase::TossConfirm { item, qty, cursor } => self.update_toss_confirm(input, item, qty, cursor),
+            BagPhase::TossWait { item, qty, cursor, remaining, accepted } => {
+                if remaining > 1 {
+                    self.phase = BagPhase::TossWait { item, qty, cursor, remaining: remaining - 1, accepted };
+                    BagScreenAction::Active
+                } else if accepted {
+                    let name = pokered_data::lang_data::item_name(item, lang == Lang::Zh);
+                    let text = if lang == Lang::Zh { format!("扔掉了\n{}。", name) } else { format!("Threw away\n{}.", name) };
+                    self.start_toss_text(BagPhase::TossResult { item }, &text, delay);
+                    BagScreenAction::TossItem { item, index: self.cursor, quantity: qty }
+                } else {
+                    self.finish_toss_text();
+                    BagScreenAction::Active
+                }
+            }
             BagPhase::SwapFrom { row } => self.update_swap(input, row),
             BagPhase::MachineBoot { item } => self.update_machine_boot(input, item),
             BagPhase::MachineTeach { item, cursor } => {
@@ -224,7 +279,7 @@ impl BagScreenState {
         BagScreenAction::Active
     }
 
-    fn update_action_menu(&mut self, input: BagScreenInput, mut cursor: u8) -> BagScreenAction {
+    fn update_action_menu(&mut self, input: BagScreenInput, mut cursor: u8, lang: Lang, delay: u16) -> BagScreenAction {
         // HandleMenuInput checks UP first, even when already at the top.
         // USE/TOSS has wMaxMenuItem=1 and no wrapping/cancel entry.
         if input.up {
@@ -258,9 +313,14 @@ impl BagScreenState {
                     };
                 }
                 1 => {
-                    // TOSS — pick a quantity (start at 1).
+                    // IsKeyItem/IsItemHM precede DisplayChooseQuantityMenu.
                     let _ = qty;
-                    self.phase = BagPhase::TossQuantity { qty: 1 };
+                    if crate::items::inventory::is_tossable(item) {
+                        self.phase = BagPhase::TossQuantity { qty: 1 };
+                    } else {
+                        let text = if lang == Lang::Zh { "这东西太重要了，\n不能扔掉！" } else { "That's too impor-\ntant to toss!" };
+                        self.start_toss_text(BagPhase::TossRejected, text, delay);
+                    }
                 }
                 _ => {
                     self.phase = BagPhase::Browsing;
@@ -302,7 +362,7 @@ impl BagScreenState {
         BagScreenAction::Active
     }
 
-    fn update_toss_quantity(&mut self, input: BagScreenInput, mut qty: u32) -> BagScreenAction {
+    fn update_toss_quantity(&mut self, input: BagScreenInput, mut qty: u32, lang: Lang, delay: u16) -> BagScreenAction {
         let Some((item, have)) = self.selected_item() else {
             self.phase = BagPhase::Browsing;
             return BagScreenAction::Active;
@@ -323,12 +383,51 @@ impl BagScreenState {
             return BagScreenAction::Active;
         }
         if input.a {
-            self.phase = BagPhase::Browsing;
-            return BagScreenAction::TossItem {
-                item,
-                index: self.cursor,
-                quantity: qty,
-            };
+            let name = pokered_data::lang_data::item_name(item, lang == Lang::Zh);
+            let text = if lang == Lang::Zh { format!("确定要扔掉\n{}吗？", name) } else { format!("Is it OK to toss\n{}?", name) };
+            self.start_toss_text(BagPhase::TossQuestion { item, qty }, &text, delay);
+        }
+        BagScreenAction::Active
+    }
+
+    fn start_toss_text(&mut self, phase: BagPhase, text: &str, delay: u16) {
+        let mut dialogue = BedroomDialogue::from_message(text);
+        dialogue.set_text_delay_frames(delay);
+        self.toss_dialogue = Some(dialogue);
+        self.toss_frames = 0;
+        self.phase = phase;
+    }
+
+    fn finish_toss_text(&mut self) {
+        self.phase = BagPhase::Browsing;
+        self.toss_dialogue = None;
+    }
+
+    fn update_toss_text(&mut self, input: BagScreenInput, fast_held: bool, delay: u16) -> BagScreenAction {
+        let Some(dialogue) = &mut self.toss_dialogue else { self.finish_toss_text(); return BagScreenAction::Active; };
+        dialogue.set_text_delay_frames(delay);
+        if !dialogue.waiting_for_input() {
+            dialogue.reveal_next_char_with_buttons(fast_held);
+        } else if input.a || input.b {
+            self.press_sound = true;
+            if let BagPhase::TossQuestion { item, qty } = self.phase {
+                // _IsItOKToTossItemText ends in PROMPT, unlike DONE questions.
+                self.phase = BagPhase::TossConfirm { item, qty, cursor: 0 };
+            } else {
+                self.finish_toss_text();
+            }
+        }
+        BagScreenAction::Active
+    }
+
+    fn update_toss_confirm(&mut self, input: BagScreenInput, item: ItemId, qty: u32, mut cursor: u8) -> BagScreenAction {
+        if input.up { cursor = 0; } else if input.down { cursor = 1; }
+        self.phase = BagPhase::TossConfirm { item, qty, cursor };
+        if input.a || input.b {
+            // DisplayTwoOptionMenu checks B first, even in an A+B chord.
+            let accepted = !input.b && cursor == 0;
+            self.press_sound = true;
+            self.phase = BagPhase::TossWait { item, qty, cursor: if input.b { 1 } else { cursor }, remaining: 15, accepted };
         }
         BagScreenAction::Active
     }
@@ -418,10 +517,13 @@ mod tests {
         s.update_frame(BagScreenInput { up: true, ..Default::default() }); // qty=2
         s.update_frame(BagScreenInput { up: true, ..Default::default() }); // qty=3
         let act = s.update_frame(BagScreenInput { a: true, ..Default::default() });
-        assert_eq!(
-            act,
-            BagScreenAction::TossItem { item: ItemId::Potion, index: 0, quantity: 3 }
-        );
+        assert_eq!(act, BagScreenAction::Active);
+        assert_eq!(s.phase(), BagPhase::TossQuestion { item: ItemId::Potion, qty: 3 });
+        finish_printing(&mut s);
+        s.update_frame(BagScreenInput { a: true, ..Default::default() });
+        s.update_frame(BagScreenInput { a: true, ..Default::default() });
+        for _ in 0..14 { assert_eq!(s.update_frame(BagScreenInput::none()), BagScreenAction::Active); }
+        assert_eq!(s.update_frame(BagScreenInput::none()), BagScreenAction::TossItem { item: ItemId::Potion, index: 0, quantity: 3 });
     }
 
     #[test]
@@ -445,10 +547,76 @@ mod tests {
             let result = s.update_frame(BagScreenInput {
                 a: true, b, up: true, down: true, ..Default::default()
             });
-            assert_eq!(result, BagScreenAction::TossItem {
-                item: ItemId::Potion, index: 0, quantity: 1
-            });
+            assert_eq!(result, BagScreenAction::Active);
+            assert_eq!(s.phase(), BagPhase::TossQuestion { item: ItemId::Potion, qty: 1 });
+            assert_eq!(s.selected_item(), Some((ItemId::Potion, 4)));
+        }
+    }
+
+    fn finish_printing(s: &mut BagScreenState) {
+        for _ in 0..400 {
+            if s.toss_dialogue().is_some_and(|d| d.waiting_for_input()) { return; }
+            assert_eq!(s.update_frame(BagScreenInput::none()), BagScreenAction::Active);
+        }
+        panic!("PROMPT did not finish printing");
+    }
+
+    #[test]
+    fn toss_prompt_requires_ack_then_yes_waits_fifteen_frames_and_result_requires_ack() {
+        let mut s = BagScreenState::new(vec![(ItemId::Potion, 4)]);
+        s.phase = BagPhase::TossQuantity { qty: 2 };
+        s.update_frame(BagScreenInput { a: true, ..Default::default() });
+        finish_printing(&mut s);
+        for _ in 0..20 { s.update_frame(BagScreenInput::none()); }
+        assert!(matches!(s.phase(), BagPhase::TossQuestion { .. }), "PROMPT is not DONE");
+        s.update_frame(BagScreenInput { a: true, ..Default::default() });
+        assert_eq!(s.phase(), BagPhase::TossConfirm { item: ItemId::Potion, qty: 2, cursor: 0 });
+        assert!(s.take_press_sound());
+        s.update_frame(BagScreenInput { a: true, ..Default::default() });
+        assert!(s.take_press_sound());
+        for _ in 0..14 {
+            // Even fresh input is ignored during DisplayTwoOptionMenu's DelayFrames.
+            assert_eq!(s.update_frame(BagScreenInput { a: true, b: true, down: true, ..Default::default() }), BagScreenAction::Active);
+        }
+        assert_eq!(s.update_frame(BagScreenInput::none()), BagScreenAction::TossItem { item: ItemId::Potion, index: 0, quantity: 2 });
+        s.set_items_after_toss(vec![(ItemId::Potion, 2)]);
+        finish_printing(&mut s);
+        assert_eq!(s.phase(), BagPhase::TossResult { item: ItemId::Potion });
+        let (top, bottom) = s.toss_dialogue().unwrap().get_display_text().unwrap();
+        assert_eq!((top.as_str(), bottom.as_str()), ("Threw away", "POTION."));
+        s.update_frame(BagScreenInput { b: true, ..Default::default() });
+        assert_eq!(s.phase(), BagPhase::Browsing);
+        assert_eq!(s.selected_item(), Some((ItemId::Potion, 2)));
+    }
+
+    #[test]
+    fn toss_no_b_and_ab_never_request_inventory_removal() {
+        for case in 0..3 {
+            let mut s = BagScreenState::new(vec![(ItemId::Potion, 4)]);
+            s.phase = BagPhase::TossQuantity { qty: 2 };
+            s.update_frame(BagScreenInput { a: true, ..Default::default() });
+            finish_printing(&mut s);
+            s.update_frame(BagScreenInput { a: true, ..Default::default() });
+            if case == 0 { s.update_frame(BagScreenInput { down: true, ..Default::default() }); }
+            assert_eq!(s.update_frame(BagScreenInput { a: case != 1, b: case != 0, ..Default::default() }), BagScreenAction::Active);
+            for _ in 0..15 { assert_eq!(s.update_frame(BagScreenInput::none()), BagScreenAction::Active); }
             assert_eq!(s.phase(), BagPhase::Browsing);
+            assert_eq!(s.selected_item(), Some((ItemId::Potion, 4)));
+        }
+    }
+
+    #[test]
+    fn important_items_skip_quantity_and_refusal_returns_to_bag() {
+        for item in [ItemId::PokeFlute, ItemId::Hm01] {
+            let mut s = BagScreenState::new(vec![(item, 1)]);
+            s.update_frame(BagScreenInput { a: true, ..Default::default() });
+            s.update_frame(BagScreenInput { down: true, ..Default::default() });
+            s.update_frame(BagScreenInput { a: true, ..Default::default() });
+            assert_eq!(s.phase(), BagPhase::TossRejected);
+            finish_printing(&mut s);
+            assert_eq!(s.update_frame(BagScreenInput { a: true, ..Default::default() }), BagScreenAction::Active);
+            assert_eq!(s.phase(), BagPhase::Browsing);
+            assert_eq!(s.selected_item(), Some((item, 1)));
         }
     }
 
