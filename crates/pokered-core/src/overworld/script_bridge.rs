@@ -47,6 +47,9 @@ impl PendingChoice {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum ScriptEffect {
+    /// Inner PrintText ending in DONE. Keep the window for its caller, and
+    /// return after the final letter wait instead of waiting for a new press.
+    PrintFieldText { text: String },
     ShowDialogue {
         text: String,
     },
@@ -361,6 +364,9 @@ impl ScriptEffect {
             ScriptEffect::HallOfFameCeremony => json!({ "effect": "HallOfFameCeremony" }),
             ScriptEffect::ShowItemDialogue { text, sound_id, sound_started } => {
                 json!({ "effect": "ShowItemDialogue", "text": text, "sound_id": sound_id, "sound_started": sound_started })
+            }
+            ScriptEffect::PrintFieldText { text } => {
+                json!({ "effect": "PrintFieldText", "text": text })
             }
             ScriptEffect::ShowDialogue { text } => {
                 json!({ "effect": "ShowDialogue", "text": text })
@@ -779,7 +785,7 @@ pub fn dispatch_command_with_names(
         // `pokered-data::script_api`).
         ScriptCommand::Custom { name, args } => {
             let mut effect = dispatch_custom(name, args);
-            if let ScriptEffect::ShowItemDialogue { text, .. } = &mut effect {
+            if let ScriptEffect::ShowItemDialogue { text, .. } | ScriptEffect::PrintFieldText { text } = &mut effect {
                 *text = resolve_placeholders(text, player_name, rival_name, starter_name);
             }
             effect
@@ -859,6 +865,9 @@ fn dispatch_custom(name: &str, args: &[Value]) -> ScriptEffect {
         Err(error) => return unsupported_with_reason(name, error),
     };
     match command {
+        PokemonScriptCommand::PrintFieldText { text } => ScriptEffect::PrintFieldText {
+            text,
+        },
         PokemonScriptCommand::ShowItemDialogue { text, sound_id } => ScriptEffect::ShowItemDialogue { text, sound_id, sound_started: false },
         PokemonScriptCommand::PokemonMenu { options, species } => ScriptEffect::ReadingMenu {
             menu: super::script_interactions::ReadingMenu::pokemon(options, species),
@@ -1086,5 +1095,23 @@ mod script_effect_json_tests {
         }
         .to_debug_json();
         assert_eq!(j["result"], true);
+    }
+}
+
+#[cfg(test)]
+mod print_field_text_contract_tests {
+    use super::*;
+    #[test]
+    fn inner_print_uses_the_same_name_resolution_as_outer_text_and_restores_its_mode() {
+        let text="<PLAYER> asks <RIVAL> about <STARTER>.".to_string();
+        let command=PokemonScriptCommand::PrintFieldText {text:text.clone()}.into_script_command();
+        let inner=dispatch_command_with_names(&command,"RED","BLUE","BULBASAUR");
+        let outer=dispatch_command_with_names(&ScriptCommand::ShowText {text},"RED","BLUE","BULBASAUR");
+        let ScriptEffect::ShowDialogue {text:expected}=outer else {panic!()};
+        let raw=serde_json::to_string(&inner).unwrap();
+        let restored:ScriptEffect=serde_json::from_str(&raw).unwrap();
+        let ScriptEffect::PrintFieldText {text:actual}=restored else {panic!("lost inner return mode")};
+        assert_eq!(actual,expected);
+        assert_eq!(actual,"RED asks BLUE about BULBASAUR.");
     }
 }

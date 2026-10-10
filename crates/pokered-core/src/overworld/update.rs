@@ -641,7 +641,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             }
             // Only allocate the protected-name view when a page is created.
             let dialogue_names: Vec<&str> = if self.pending_dialogue.is_none()
-                && matches!(effect, script_bridge::ScriptEffect::ShowDialogue { .. })
+                && matches!(effect, script_bridge::ScriptEffect::ShowDialogue { .. } | script_bridge::ScriptEffect::PrintFieldText { .. })
             {
                 core::iter::once(self.player_name.as_str())
                     .chain(core::iter::once(self.rival_name.as_str()))
@@ -2475,6 +2475,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         script_music_playing: bool,
         script_sfx_playing: bool,
     ) -> bool {
+        let returns_after_print = matches!(effect, script_bridge::ScriptEffect::PrintFieldText { .. });
         match effect {
             script_bridge::ScriptEffect::GivePokemon {
                 species,
@@ -2514,7 +2515,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     script_sfx_playing,
                 ) {
                     let prompt = match flow.child.as_ref() {
-                        script_bridge::ScriptEffect::ShowDialogue { text } => Some(text.clone()),
+                        script_bridge::ScriptEffect::ShowDialogue { text } | script_bridge::ScriptEffect::PrintFieldText { text } => Some(text.clone()),
                         _ => None,
                     };
                     let was_choice = matches!(
@@ -2628,7 +2629,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 }
                 false
             }
-            script_bridge::ScriptEffect::ShowDialogue { text } => {
+            script_bridge::ScriptEffect::ShowDialogue { text } | script_bridge::ScriptEffect::PrintFieldText { text } => {
                 if pending_dialogue.is_none() {
                     *last_script_dialogue = None;
                     let dialogue = script_bridge::text_to_dialogue_with_names(text, dialogue_names);
@@ -2662,6 +2663,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                             }
                             *sfx_event = OverworldSfxEvent::TextAdvance;
                         }
+                    }
+                    if returns_after_print && pending_dialogue.as_ref().is_some_and(|d| d.waiting_for_input() && d.is_last_page()) {
+                        *last_script_dialogue = pending_dialogue.take();
+                        return true;
                     }
                     false
                 }
@@ -4859,6 +4864,36 @@ mod vending_delivery_fidelity_tests {
 mod field_typing_input_fidelity_tests {
     use super::*;
     use pokered_data::impl_traits::PokemonRedData;
+
+    #[test]
+    fn print_done_returns_only_after_original_final_letter_delay() {
+        // Executable original worker hooks: 30 glyphs, first24, last111,
+        // YesNoChoice114. Counts use relative first-glyph hardware frames.
+        let mut ow = OverworldScreen::new(MapId::RedsHouse2F, None, PokemonRedData);
+        let idle = OverworldInput::new(false,false,false,false,false,false,false,false);
+        for _ in 0..120 { ow.update_frame(idle); }
+        ow.set_text_delay_frames(3);
+        let text = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234".to_string();
+        ow.pending_dialogue = Some(BedroomDialogue::from_message(&text));
+        ow.active_script_effect = Some(script_bridge::ScriptEffect::PrintFieldText { text });
+        for _ in 0..120 {
+            ow.update_frame(idle);
+            if ow.pending_dialogue.as_ref().is_some_and(|d|d.char_index()==1) {break;}
+        }
+        assert_eq!(ow.pending_dialogue.as_ref().unwrap().char_index(),1);
+        for relative in 1..=90 {
+            ow.update_frame(idle);
+            if relative<90 {
+                assert!(ow.active_script_effect.is_some(), "early DONE at {relative}");
+                assert_eq!(ow.pending_dialogue.as_ref().unwrap().char_index(),(relative/3+1).min(30));
+                assert!(!ow.pending_dialogue.as_ref().unwrap().waiting_for_input());
+            } else {
+                assert!(ow.active_script_effect.is_none(), "DONE must return without fresh A/B");
+                assert!(ow.pending_dialogue.is_none());
+            }
+            assert_eq!(ow.sfx_event,OverworldSfxEvent::None);
+        }
+    }
 
     #[test]
     fn short_held_ab_matches_original_letter_wait_without_scroll_sound() {

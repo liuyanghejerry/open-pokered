@@ -48,6 +48,14 @@ fn badge_index(name: &str) -> Option<u8> {
 
 impl ScriptApiRegistrar for PokemonScriptApi {
     fn register_api(&self, engine: &mut dotzuki_engine_script::ScriptEngine) {
+        engine.register_async_fn(
+            "printFieldText",
+            |args: &[JsValue], ctx: &mut Context| -> JsResult<ScriptCommand> {
+                let text = args.get_or_undefined(0).to_string(ctx)?.to_std_string_lossy();
+                Ok(PokemonScriptCommand::PrintFieldText { text }.into_script_command())
+            },
+        );
+
         // FoundItemText prints, plays GET_ITEM_1, then closes without A.
         engine.register_async_fn(
             "showItemDialogue",

@@ -194,6 +194,8 @@ fn command_effect(name: &str, args: &[Expression]) -> StateEffect {
 /// Listed explicitly so unknown typos still surface as unknown.
 const NO_STATE_COMMANDS: &[&str] = &[
     "showText",
+    // Inner PrintText returns to its caller; it only presents dialogue.
+    "printFieldText",
     // The found-item text and jingle only present a completed pickup;
     // giveItem / setFlag / hideObject carry its inventory/event effects.
     "showItemDialogue",
@@ -878,6 +880,23 @@ mod tests {
                 .effects
                 .contains(&StateEffect::FlagSet { flag: flag.into() }));
         }
+    }
+
+    #[test]
+    fn inner_print_choices_preserve_the_actual_ticket_effects() {
+        let mut coverage = CoverageAccum::default();
+        let museum = pokered_data::embedded_scenes::get_scene_ast("Museum1F").unwrap();
+        let map = extract_map_with_coverage(&museum, &mut coverage);
+        let ticket = map.storylines.iter().find(|s| s.storyline == "ticketGate").unwrap();
+        assert!(ticket.effects.contains(&StateEffect::MoneyTaken { amount: Some(50) }));
+        assert!(ticket.effects.contains(&StateEffect::FlagSet {
+            flag: "EVENT_BOUGHT_MUSEUM_TICKET".into(),
+        }));
+        let safari = pokered_data::embedded_scenes::get_scene_ast("SafariZoneGate").unwrap();
+        let map = extract_map_with_coverage(&safari, &mut coverage);
+        let info = map.storylines.iter().find(|s| s.storyline == "talkSafariZoneWorker2").unwrap();
+        assert!(info.effects.is_empty(), "the information question changes no story state");
+        assert!(coverage.unknown.is_empty(), "{:?}", coverage.unknown);
     }
 
     #[test]
