@@ -218,17 +218,15 @@ impl BagScreenState {
 
     fn update_browsing(&mut self, input: BagScreenInput) -> BagScreenAction {
         let rows = self.row_count();
-        if input.up && self.cursor > 0 {
-            self.cursor -= 1;
+        if input.up {
+            self.cursor = self.cursor.saturating_sub(1);
             self.clamp_scroll();
         } else if input.down && self.cursor < rows - 1 {
             self.cursor += 1;
             self.clamp_scroll();
         }
 
-        if input.b {
-            return BagScreenAction::Cancelled;
-        }
+        // DisplayListMenuID gives A priority over B/SELECT after moving.
         if input.a {
             if self.on_cancel_row() {
                 return BagScreenAction::Cancelled;
@@ -239,7 +237,9 @@ impl BagScreenState {
                 return BagScreenAction::UseItem { item: ItemId::Bicycle, index: self.cursor };
             }
             self.phase = BagPhase::ActionMenu { cursor: 0 };
+            return BagScreenAction::Active;
         }
+        if input.b { return BagScreenAction::Cancelled; }
         // SELECT marks the first swap row (SwapItemsInMenu, swap_items.asm) —
         // only item rows, never CANCEL.
         if input.select && !self.on_cancel_row() && !self.items.is_empty() {
@@ -252,21 +252,31 @@ impl BagScreenState {
     /// row either SWAPS the two entries, or — for same-kind entries whose
     /// combined count fits one slot (≤99) — MERGES them into the first and
     /// drops the second; a merge that would overflow leaves the second filled
-    /// to 99 with the remainder staying in the first. B cancels the mark.
+    /// to 99 with the remainder staying in the first. B exits the list; A selects normally.
     fn update_swap(&mut self, input: BagScreenInput, row: usize) -> BagScreenAction {
-        if input.b {
-            self.phase = BagPhase::Browsing;
-            return BagScreenAction::Active;
-        }
-        if input.up && self.cursor > 0 {
-            self.cursor -= 1;
+        if input.up {
+            self.cursor = self.cursor.saturating_sub(1);
             self.clamp_scroll();
         } else if input.down && self.cursor < self.row_count() - 1 {
             self.cursor += 1;
             self.clamp_scroll();
         }
+        if input.a {
+            self.phase = BagPhase::Browsing;
+            if self.on_cancel_row() { return BagScreenAction::Cancelled; }
+            self.phase = BagPhase::ActionMenu { cursor: 0 };
+            return BagScreenAction::Active;
+        }
+        if input.b {
+            self.phase = BagPhase::Browsing;
+            return BagScreenAction::Cancelled;
+        }
         if input.select {
             let target = self.cursor;
+            // SELECT on the same item or CANCEL keeps the original mark.
+            if target == row || target >= self.items.len() || row >= self.items.len() {
+                return BagScreenAction::Active;
+            }
             if target != row && target < self.items.len() && row < self.items.len() {
                 let (a_item, a_qty) = self.items[row];
                 let (b_item, b_qty) = self.items[target];
@@ -700,7 +710,7 @@ mod swap_tests {
     fn select_cancel_with_b() {
         let mut s = BagScreenState::new(vec![(ItemId::Potion, 3), (ItemId::Antidote, 1)]);
         s.update_frame(sel()); // mark
-        s.update_frame(BagScreenInput { b: true, ..BagScreenInput::none() });
+        assert_eq!(s.update_frame(BagScreenInput { b: true, ..BagScreenInput::none() }), BagScreenAction::Cancelled);
         assert_eq!(s.phase(), BagPhase::Browsing);
         assert_eq!(s.items()[0], (ItemId::Potion, 3), "nothing moved");
     }

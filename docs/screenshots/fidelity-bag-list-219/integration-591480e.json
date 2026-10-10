@@ -1,0 +1,20 @@
+{
+  "base": "591480e6244d74318cf490bbe0b7f2a0ebb0f2df",
+  "candidate": {
+    "base": "591480e6244d74318cf490bbe0b7f2a0ebb0f2df",
+    "head": "82bb672574df808c4c4c23dedef56549e6088e0e",
+    "sources": {
+      "crates/pokered-app/src/game.rs": "daf691e84330d235b1e87126258488ebd2d5ed2d104171bb427de57fd1c0ff97",
+      "crates/pokered-core/src/bag_screen.rs": "cfe3235da3676c7d6694308ce6f6430f4e13e18f93e9d71565a279f48d79d4d4"
+    },
+    "binaries": {
+      "core": "9242e38a15e3d3ce856b2935823ecfd7538eac10fe5412d5195ac6c0b475e564",
+      "app": "d4fc01aaf1105dbad500610586a1a7c74f1ec5e0c6b69aa23e502326c2efcd0e"
+    }
+  },
+  "PNG": 3388,
+  "repeat_all_raw_and_png_exact": true,
+  "every_cached_full_pixel_equal": true,
+  "archive_every_file_roundtrip_exact": true,
+  "archive_sha256": "15d688ee4f9f2b70b9caa5c8db7a7af1bab40daaa3347f236994e323798d476f"
+}
