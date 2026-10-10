@@ -38,6 +38,8 @@ SECTIONS {
         *(.text.*dotzuki_renderer*indexed_framebuffer*remap_shades*);
         *(.text.*dotzuki_renderer*embedded_font*draw_char*);
         *(.text.*dotzuki_renderer*embedded_font*draw_box_tile*);
+        /* Pokemon opaque UI tiles use the project renderer helper. */
+        *(.text.*pokered_renderer*embedded_font*draw_glyph*);
         *(.text.*pokered_audio*gba_psg*write_register*);
         *(.text.*pokered_app*render*oak*draw_oak_speech*);
         *(.text.*specialized_div_rem*u32_div_rem*);
