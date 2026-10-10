@@ -40,3 +40,18 @@ typing, global repeat timing, choice post-confirm wait15, audio order,
 layout and broader PC lifecycle are outside this narrow fix and remain
 separate audits. Native transactions still commit immediately after A;
 this PR does not claim original post-confirm delay alignment.
+
+
+## Current master integration 591480e
+
+The paired images above have been replaced with actual master591480e and
+this independently frozen candidate using the identical helper, fixture,
+inputs and relative frame. Production master is unchanged: only cfg(test)
+helpers are appended. Full source/binary hash manifests, complete fresh
+core/app regression logs, negative master owner test, and 18032
+PNG with complete raw JSON are in integration-591480e.zip; every archive
+file is read back and byte-compared. Both repetitions are byte-exact,
+every recorded cached frame matches every full-redraw pixel. Earlier
+evidence.zip remains historical and is not claimed as this integration.
+Latest doc commit CI must be green before merge; stacked swap still
+requires its list dependency and own master integration checks.
