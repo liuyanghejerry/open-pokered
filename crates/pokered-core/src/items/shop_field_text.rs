@@ -26,6 +26,7 @@ pub(super) struct MartText {
     ready: bool,
     scroll_wait: u8,
     sound_wait: bool,
+    sound_wait_lines: Vec<String>,
     arrow_visible: bool,
     arrow_wait: u8,
 }
@@ -36,17 +37,21 @@ pub(super) enum TextUpdate { Printing, Scroll, Finished { acknowledged: bool } }
 impl MartText {
     pub fn new(lines: Vec<String>, underlay: MartPhase, prompt: bool, after: AfterText) -> Self {
         Self { lines, underlay, after, prompt, first_line: 0, chars: 0, intro: 3,
-            letter_wait: 0, guard: 0, ready: false, scroll_wait: 0, sound_wait: false,
+            letter_wait: 0, guard: 0, ready: false, scroll_wait: 0, sound_wait: false, sound_wait_lines: Vec::new(),
             arrow_visible: true, arrow_wait: 40 }
     }
 
-    pub fn wait_for_purchase_sound(&mut self) { self.sound_wait = true; }
+    pub fn wait_for_purchase_sound(&mut self, lines: Vec<String>) {
+        self.sound_wait = true;
+        self.sound_wait_lines = lines;
+    }
 
     pub fn page(&self) -> &[String] {
         &self.lines[self.first_line..(self.first_line + 2).min(self.lines.len())]
     }
 
     pub fn visible_lines(&self) -> Vec<String> {
+        if self.sound_wait { return self.sound_wait_lines.clone(); }
         let mut remaining = self.chars;
         self.page().iter().map(|line| {
             let text = line.chars().take(remaining).collect();
@@ -77,6 +82,8 @@ impl MartText {
         if self.sound_wait {
             if sound_playing { return TextUpdate::Printing; }
             self.sound_wait = false;
+            self.sound_wait_lines.clear();
+            return TextUpdate::Printing;
         }
         if self.intro != 0 {
             self.intro -= 1;
@@ -121,6 +128,18 @@ impl MartText {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) struct ConfirmationWait {
+    pub frames: u8,
+    pub cancel: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) struct SaleSoundWait {
+    pub underlay: MartPhase,
+    pub bag: Vec<(pokered_data::items::ItemId, u32)>,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct FieldFlow {
     pub delay: u16,
@@ -128,11 +147,14 @@ pub(super) struct FieldFlow {
     pub retained_lines: Vec<String>,
     pub text_advance: bool,
     pub exit_wait_a: bool,
+    pub confirmation_wait: Option<ConfirmationWait>,
+    pub pending_purchase: bool,
+    pub sale_sound_wait: Option<SaleSoundWait>,
 }
 
 impl FieldFlow {
     pub fn new(delay: u16) -> Self {
-        Self { delay: delay.max(1), text: None, retained_lines: vec!["Hi there!".into(), "May I help you?".into()], text_advance: false, exit_wait_a: false }
+        Self { delay: delay.max(1), text: None, retained_lines: vec!["Hi there!".into(), "May I help you?".into()], text_advance: false, exit_wait_a: false, confirmation_wait: None, pending_purchase: false, sale_sound_wait: None }
     }
 
     pub fn print(&mut self, lines: &[&str], underlay: MartPhase, prompt: bool, after: AfterText) {

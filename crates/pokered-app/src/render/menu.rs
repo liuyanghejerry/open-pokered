@@ -445,6 +445,7 @@ pub(super) fn mart_list_cursor_position(index: usize, scroll: usize, lang: Lang,
 }
 
 pub fn draw_mart(state: &MartState, player_money: u32, bag_items: &[(pokered_data::items::ItemId, u32)], fb: &mut FrameBuffer, lang: Lang) {
+    let bag_items = state.sale_bag_for_display().unwrap_or(bag_items);
     let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
     let mut ui = Ui::new(&mut painter);
     // Names and prices occupy separate rows: four English or three Chinese
