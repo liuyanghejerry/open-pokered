@@ -1,0 +1,17 @@
+{
+  "sources": {
+    "crates/pokered-core/src/overworld/presentation.rs": "46b142440f2dbc02ff05d75536ec62a2e1b60a0274c3893ea502147699128f6f",
+    "crates/pokered-core/src/overworld/screen.rs": "9b555d54f54b7f81c327d9968c1af812345c6ccfa1be45b7dc6ce32a038e4838",
+    "crates/pokered-core/src/overworld/update.rs": "e1a45c3b8a4791d02145c784da9f774c6655712a73da9c8c8d06cf09d2404df0",
+    "crates/pokered-core/src/overworld/field_moves.rs": "162384478610831fc7f2e751aadfa6cc2a27bb789f61e9d0651e4556ffc3cba1",
+    "crates/pokered-core/src/overworld/sprite_reload_work.rs": "cb4b676103f2d8cf0eadef886a1def09979b89578d3afd722f2c2bb2e78f06fa",
+    "crates/pokered-core/src/overworld/mod.rs": "7fddcc4bd8dc93ad43b7f356a114becb76469417dfa40e31edcb759313366499",
+    "crates/pokered-core/src/start_menu.rs": "ab213e322753ef89c0d44adf00433b0212e05c2e989f44ee8c62a78f6ad44786",
+    "crates/pokered-app/src/game.rs": "15556531177684a248dda0987dd07e00798104c53a9665ade952e0af084e87e4",
+    "crates/pokered-app/src/render/overworld.rs": "2522445134302ed787c5624784115b690fe36c883c9f0bd4583ab0cf2ded7c94",
+    "crates/pokered-app/src/render/session.rs": "9233b9adbe2a5ff1501b9c4c28051ced36b1d0c5d937228b3a90c8ce1b70e47a",
+    "crates/pokered-data/src/dialog_text.rs": "b198760a5b1bd52a86ba3e7c3d9604e691bd1e4c8bb62f104cde2165a0eb3dec"
+  },
+  "elf_sha256": "a1e3a2d42a0f0c6e14e0adf410bdeff61687a35019fa16a34c969b8ce4301bca",
+  "baseline_changed": false
+}
