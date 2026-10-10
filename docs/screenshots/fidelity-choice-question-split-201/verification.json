@@ -1,0 +1,41 @@
+{
+  "base": "506e19bea8cf0d40eb7a4f8ecfebc8213c59b590",
+  "native": {
+    "base": "506e19b",
+    "binaries": {
+      "core-tests": "d8da8cc2838a838b21e4cba5610ee2eebcb9072d84c93a179e6504f1292264d4",
+      "app-tests": "4880b951548ac8beb71611b8e264989eeb7734c082a10f9d325f89707f5d84df"
+    },
+    "sources": {
+      "crates/pokered-app/src/game.rs": "4bb2fb035f3939d2c700f0ba91b976874ecfb5343469e1be90fb6fbd46c4123c",
+      "crates/pokered-app/src/render/mod.rs": "d2f3d05e9bec7b513fe26cd03d0ce651683b97d0b57ce316f7be9781d5772256",
+      "crates/pokered-app/src/render/overworld.rs": "eeb301bcf126d0b04ea22e53efd43b7cce48f26d3ffd0652dc0514a0c77584c2",
+      "crates/pokered-core/src/overworld/screen.rs": "ac7eeb71252c0e9a50066f7f923d629c7af5921d042292306ef55b782a713b15",
+      "crates/pokered-core/src/overworld/script_bridge.rs": "63b5836bfd4d1b629f2244a6f7a8a3cb0c40e36e7995498aa88772fb90a6fa48",
+      "crates/pokered-core/src/overworld/update.rs": "d1888ae34aced8987d2708444404c4d4c6f3247bcd664d17dc0669cbf206486f",
+      "crates/pokered-core/src/snapshot.rs": "5dfb9f02a70f6ccf3409a43f4e4647faa08bda618e80c21d53bced63aec01bb7"
+    },
+    "scope": "retained question state/choice lifecycle/snapshot/display observation only; nofieldmovement,sprite orPCfoundations",
+    "core_provenance": "unchanged core files and same core binary from successfula1suite; a2 adds application FrameRecorder displayed-text observation only"
+  },
+  "master": {
+    "base": "506e19b",
+    "binary": "141c3ae92272daa3468c81fe39978583f7812f532535db1f445c2e1beafbcd9b",
+    "capture_source": "05cbf3865c784d045701f4c885eb9315c18210e1d18f3f95acb82c2791f7191f",
+    "production_game_prefix": "93c0f84552252dfddcada27b134164fcd17e7f3326eed02033498185aabe996a",
+    "scope": "actualmaster productionprefix intact; ignoredcapture only appended; reads preexisting displayedtext pending+cut"
+  },
+  "fixture_sha256": "a2a4d4546d084e6540d678ff3826e58fc7872eecfeac990c30110008f61ddee2",
+  "tests": {
+    "core": 2707,
+    "app": 192,
+    "app_ignored": 15
+  },
+  "repeat": "each side152PNG+frames.json(full raw snapshots)+observations.json byteexact across2repetitions; all608PNG retained, no masking",
+  "screens": "same t120/frame0121, identicalContinue fixture/setup/inputs; no font/layoutchange",
+  "files": {
+    "before.png": "3f6a1c3cb67285f9bd71c3c24611e2ecb6c41063b7a7e45b3c8e00475f569a4d",
+    "evidence.zip": "d5a9b2079b388795d494e2d0e7b78908b16ece31c6ba84af91e861eb8d77df90",
+    "after.png": "f65876a9236cdf5e1a768b9671774d4403935c38b2a18ec59f5b97998a7cd26e"
+  }
+}

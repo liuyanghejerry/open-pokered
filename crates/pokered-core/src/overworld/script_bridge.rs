@@ -337,6 +337,16 @@ pub enum HealingMachinePhase {
 }
 
 impl ScriptEffect {
+    /// Nested gift/reading flows use the same text-window choice handoff.
+    pub fn is_choice(&self) -> bool {
+        match self {
+            Self::ShowChoice { .. } => true,
+            Self::GivePokemon { flow: Some(flow), .. } => flow.child.is_choice(),
+            Self::ReadingMenu { menu } => menu.child.is_choice(),
+            _ => false,
+        }
+    }
+
     /// Structured JSON form of an active script effect, for debug protocol
     /// observability: the driver sees effect progress fields (Delay
     /// countdown, move-path state, FollowNpc phase, choice cursor, …)
