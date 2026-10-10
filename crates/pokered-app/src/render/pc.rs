@@ -239,6 +239,11 @@ pub fn draw_pc(
                     draw_menu(0, 0, 12, &labels, pc.bills_menu().cursor(), fb);
                     draw_box_no(save, fb, is_zh);
                 }
+                Some(PcPhase::ItemMenu) => {
+                    let labels: Vec<String> = PLAYERS_LABELS.iter()
+                        .map(|s| lang_data::ui_label(s, is_zh).to_string()).collect();
+                    draw_menu(0, 0, 14, &labels, pc.players_menu().cursor(), fb);
+                }
                 Some(PcPhase::MonList) => {
                     let rows = mon_rows(pc, save, is_zh);
                     let cursor = pc.mon_cursor();
@@ -385,6 +390,9 @@ pub fn draw_pc(
                 .map(|s| lang_data::ui_label(s, is_zh).to_string())
                 .collect();
             draw_menu(0, 0, 14, &labels, pc.players_menu().cursor(), fb);
+            if !is_zh {
+                draw_message(&["What do you want".into(), "to do?".into()], fb, is_zh);
+            }
         }
         PcPhase::ItemList | PcPhase::ItemQuantity | PcPhase::TossConfirm => {
             let rows = item_rows(pc, save, is_zh);
@@ -419,7 +427,11 @@ pub fn draw_pc(
                     }
                     draw_yes_no(pc.yes_selected(), fb, is_zh);
                 }
-                _ => {}
+                _ => {
+                    if !is_zh {
+                        draw_message(&pc.item_list_question().into_iter().map(String::from).collect::<Vec<_>>(), fb, is_zh);
+                    }
+                }
             }
         }
         PcPhase::OaksConfirm => {
@@ -605,7 +617,9 @@ mod layout_tests {
             let mut pc = PcScreen::new(PcEntry::PlayersPc,&open_context(false));
             skip_message(&mut pc,&mut save);
             update_pc(&mut pc,&mut save,A);
+            skip_message(&mut pc,&mut save);
             update_pc(&mut pc,&mut save,A);
+            skip_message(&mut pc,&mut save);
             assert_eq!(pc.phase(),PcPhase::ItemQuantity);
             render_pc_state(&pc,&save,language).save_png(&out.join(format!("pc-quantity-{tag}.png"))).unwrap();
             let mut fb=FrameBuffer::new(RenderConfig::new(160,144),BG);
@@ -868,6 +882,7 @@ mod layout_tests {
             let mut item_list = PcScreen::new(PcEntry::PlayersPc, &open_context(false));
             skip_message(&mut item_list, &mut item_save);
             update_pc(&mut item_list, &mut item_save, A);
+            skip_message(&mut item_list, &mut item_save);
             assert_eq!(item_list.phase(), PcPhase::ItemList);
 
             for previous_cursor in 0..3 {
@@ -1018,8 +1033,11 @@ mod layout_tests {
             update_pc(&mut toss, &mut toss_save, DOWN);
             update_pc(&mut toss, &mut toss_save, DOWN);
             update_pc(&mut toss, &mut toss_save, A);
+            skip_message(&mut toss, &mut toss_save);
             update_pc(&mut toss, &mut toss_save, A);
+            skip_message(&mut toss, &mut toss_save);
             update_pc(&mut toss, &mut toss_save, A);
+            skip_message(&mut toss, &mut toss_save);
             skip_message(&mut toss, &mut toss_save);
             assert_eq!(toss.phase(), PcPhase::TossConfirm);
             let mut toss_yes = toss.clone();

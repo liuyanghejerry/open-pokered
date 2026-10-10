@@ -184,6 +184,10 @@ enum AfterMessage {
     MainMenu,
     BillsMenu,
     ItemMenu,
+    ItemMenuReady,
+    ItemListFromMenuReady,
+    ItemListReady,
+    ItemQuantity,
     /// Re-enter the item list for the current mode (players_pc.asm loops back
     /// to the list after every successful deposit/withdraw/toss).
     ItemList,
@@ -433,7 +437,8 @@ impl PcScreen {
         match self.msg_next {
             AfterMessage::ChangeBoxConfirm => Some(PcPhase::BillsMenu),
             AfterMessage::ReleaseConfirm => Some(PcPhase::MonList),
-            AfterMessage::TossConfirm => Some(PcPhase::ItemList),
+            AfterMessage::TossConfirm | AfterMessage::ItemQuantity | AfterMessage::ItemListReady => Some(PcPhase::ItemList),
+            AfterMessage::ItemMenuReady | AfterMessage::ItemListFromMenuReady => Some(PcPhase::ItemMenu),
             _ => None,
         }
     }
@@ -667,11 +672,10 @@ impl PcScreen {
             AfterMessage::MainMenu => self.enter_main_menu(),
             AfterMessage::BillsMenu => self.enter_bills_menu(),
             AfterMessage::ItemMenu => self.enter_item_menu(),
-            AfterMessage::ItemList => {
-                // players_pc.asm `jp .loop` — re-show the list where the
-                // cursor was; update_item_list clamps it if the list shrank.
-                self.phase = PcPhase::ItemList;
-            }
+            AfterMessage::ItemList => self.print_item_list_question(false),
+            AfterMessage::ItemMenuReady => self.phase = PcPhase::ItemMenu,
+            AfterMessage::ItemListFromMenuReady | AfterMessage::ItemListReady => self.phase = PcPhase::ItemList,
+            AfterMessage::ItemQuantity => self.phase = PcPhase::ItemQuantity,
             // "Accessed PROF.OAK's PC..." → the YES/NO rating prompt.
             AfterMessage::OaksConfirmPage => self.set_message_with_end(
                 vec!["Want to get your".into(), "#DEX rated?".into()],
@@ -732,14 +736,51 @@ impl PcScreen {
 
     fn enter_item_menu(&mut self) {
         self.players_menu.restore_saved_cursor();
-        self.phase = PcPhase::ItemMenu;
+        if self.language == crate::game_state::Lang::Zh {
+            self.phase = PcPhase::ItemMenu;
+        } else {
+            // PlayerPCMenu prints DONE before HandleMenuInput.
+            self.set_message_with_end(vec!["What do you want".into(), "to do?".into()],
+                AfterMessage::ItemMenuReady, PcMessageEnd::Done);
+        }
     }
 
     fn enter_item_list(&mut self, mode: ItemListMode) {
         self.item_mode = mode;
         self.item_list_cursor = 0;
         self.item_list_scroll = 0;
-        self.phase = PcPhase::ItemList;
+        self.print_item_list_question(true);
+    }
+
+    pub fn item_list_question(&self) -> [&'static str; 2] {
+        ["What do you want", match self.item_mode {
+            ItemListMode::Deposit => "to deposit?",
+            ItemListMode::Withdraw => "to withdraw?",
+            ItemListMode::Toss => "to toss away?",
+        }]
+    }
+
+    fn print_item_list_question(&mut self, from_menu: bool) {
+        if self.language == crate::game_state::Lang::Zh {
+            self.phase = PcPhase::ItemList;
+        } else {
+            // The .loop prints the question before DisplayListMenuID sets
+            // NO_TEXT_DELAY. A receipt/quantity cancellation keeps its cursor.
+            let next = if from_menu { AfterMessage::ItemListFromMenuReady } else { AfterMessage::ItemListReady };
+            self.set_message_with_end(self.item_list_question().into_iter().map(String::from).collect(),
+                next, PcMessageEnd::Done);
+        }
+    }
+
+    fn enter_item_quantity(&mut self) {
+        self.item_qty = 1;
+        if self.language == crate::game_state::Lang::Zh {
+            self.phase = PcPhase::ItemQuantity;
+        } else {
+            // List selection has cleared NO_TEXT_DELAY. PrintText's DONE
+            // must finish before DisplayChooseQuantityMenu owns fresh input.
+            self.set_message_with_end(vec!["How many?".into()], AfterMessage::ItemQuantity, PcMessageEnd::Done);
+        }
     }
 
     /// B backs out of the top level of whichever PC we're in.
@@ -1421,9 +1462,8 @@ impl PcScreen {
                     if item.is_key_item() {
                         self.exec_item_move(ctx, self.item_list_cursor, *item, 1);
                     } else {
-                        self.item_qty = 1;
                         let _ = have;
-                        self.phase = PcPhase::ItemQuantity;
+                        self.enter_item_quantity();
                     }
                 }
                 ItemListMode::Toss => {
@@ -1435,8 +1475,7 @@ impl PcScreen {
                             AfterMessage::ItemList,
                         );
                     } else {
-                        self.item_qty = 1;
-                        self.phase = PcPhase::ItemQuantity;
+                        self.enter_item_quantity();
                     }
                 }
             }
@@ -1447,7 +1486,7 @@ impl PcScreen {
     fn update_item_quantity(&mut self, input: MenuInput, ctx: &mut PcContext) -> PcScreenAction {
         let source = self.item_source(ctx);
         let Some((item, have)) = source.get(self.item_list_cursor) else {
-            self.phase = PcPhase::ItemList;
+            self.print_item_list_question(false);
             return PcScreenAction::Continue;
         };
         if input.up && self.item_qty < *have {
@@ -1456,7 +1495,7 @@ impl PcScreen {
             self.item_qty -= 1;
         }
         if input.b {
-            self.phase = PcPhase::ItemList;
+            self.print_item_list_question(false);
             return PcScreenAction::Continue;
         }
         if input.a {
@@ -1536,7 +1575,7 @@ impl PcScreen {
             self.yes_selected = !self.yes_selected;
         }
         if input.b {
-            self.phase = PcPhase::ItemList;
+            self.print_item_list_question(false);
             return PcScreenAction::Continue;
         }
         if input.a {
@@ -1555,7 +1594,7 @@ impl PcScreen {
                     AfterMessage::ItemList,
                 );
             } else {
-                self.phase = PcPhase::ItemList;
+                self.print_item_list_question(false);
             }
         }
         PcScreenAction::Continue
@@ -1726,6 +1765,15 @@ mod tests {
         a: false,
         b: false,
     };
+
+    /// DONE questions yield to their menus automatically; supply no new input.
+    fn finish_pc_done_text(s: &mut PcScreen, w: &mut World) {
+        for _ in 0..3000 {
+            if s.phase() != PcPhase::Message || s.msg_end != PcMessageEnd::Done { return; }
+            s.update_frame(NONE, &mut w.ctx());
+        }
+        panic!("PC DONE question did not yield to its menu");
+    }
 
     /// Advance through every page of the current message.
     fn skip_message(screen: &mut PcScreen, w: &mut World) {
@@ -2194,20 +2242,84 @@ mod tests {
     }
 
     #[test]
+    fn item_questions_finish_before_list_and_quantity_input() {
+        for (mode, menu_moves) in [(ItemListMode::Withdraw, 0), (ItemListMode::Deposit, 1), (ItemListMode::Toss, 2)] {
+            let mut w = World::new();
+            w.bag.add_item(ItemId::Potion, 4).unwrap();
+            w.pc_items.add_item(ItemId::Potion, 4).unwrap();
+            let mut s = PcScreen::new(PcEntry::PokemonCenter, &open_ctx());
+            open_item_menu_from_center(&mut s, &mut w);
+            assert_eq!(s.message_lines(), &["What do you want".to_string(), "to do?".to_string()]);
+            for _ in 0..menu_moves { s.update_frame(DOWN, &mut w.ctx()); }
+            s.update_frame(A, &mut w.ctx());
+            assert_eq!(s.phase(), PcPhase::Message);
+            assert_eq!(s.item_mode(), mode);
+            assert_eq!(s.message_underlay(), Some(PcPhase::ItemMenu));
+            for _ in 0..4 { s.update_frame(NONE, &mut w.ctx()); }
+            assert_eq!(s.phase(), PcPhase::ItemList);
+            assert_eq!(s.message_lines(), &s.item_list_question().map(String::from));
+            s.configure_field_text(5, true);
+            s.update_frame_with_text_input(A, &mut w.ctx(), false, true);
+            assert_eq!(s.phase(), PcPhase::Message);
+            assert_eq!(s.message_underlay(), Some(PcPhase::ItemList));
+            assert_eq!(s.message_lines(), &["How many?".to_string()]);
+            // Original slow-text replay: A at +0/+1, then release. Quantity
+            // labels appear at +48; the early selection never moves an item.
+            for frame in 1..=48 {
+                s.update_frame_with_text_input(NONE, &mut w.ctx(), false, frame == 1);
+                assert_eq!(s.phase(), if frame == 48 {PcPhase::ItemQuantity} else {PcPhase::Message}, "{mode:?} +{frame}");
+                assert_eq!(w.bag.item_quantity(ItemId::Potion), 4);
+                assert_eq!(w.pc_items.item_quantity(ItemId::Potion), 4);
+            }
+            s.update_frame(UP, &mut w.ctx());
+            assert_eq!(s.item_qty(), 2);
+            s.update_frame(B, &mut w.ctx());
+            assert_eq!(s.phase(), PcPhase::Message);
+            assert_eq!(s.message_lines(), &s.item_list_question().map(String::from));
+            for _ in 0..300 {
+                if s.phase() == PcPhase::ItemList { break; }
+                s.update_frame(NONE, &mut w.ctx());
+            }
+            assert_eq!(s.phase(), PcPhase::ItemList);
+            assert_eq!(s.take_field_text_delay_change(), Some(true));
+            assert_eq!(w.bag.item_quantity(ItemId::Potion), 4);
+            assert_eq!(w.pc_items.item_quantity(ItemId::Potion), 4);
+            if mode == ItemListMode::Toss {
+                for cancel in [A, B] {
+                    s.update_frame(A, &mut w.ctx());
+                    finish_pc_done_text(&mut s, &mut w);
+                    assert_eq!(s.phase(), PcPhase::ItemQuantity);
+                    s.update_frame(A, &mut w.ctx());
+                    acknowledge_pc_page(&mut s, &mut w);
+                    assert_eq!(s.phase(), PcPhase::TossConfirm);
+                    assert!(!s.yes_selected());
+                    s.update_frame(cancel, &mut w.ctx());
+                    assert_eq!(s.phase(), PcPhase::Message);
+                    assert_eq!(s.message_lines(), &s.item_list_question().map(String::from));
+                    assert_eq!(w.pc_items.item_quantity(ItemId::Potion), 4);
+                    finish_pc_done_text(&mut s, &mut w);
+                    assert_eq!(s.phase(), PcPhase::ItemList);
+                    assert_eq!(w.pc_items.item_quantity(ItemId::Potion), 4);
+                }
+            }
+        }
+    }
+
+    #[test]
     fn deposit_item_with_quantity() {
         let mut w = World::new();
         w.bag.add_item(ItemId::Potion, 5).unwrap();
         let mut s = PcScreen::new(PcEntry::PokemonCenter, &open_ctx());
         open_item_menu_from_center(&mut s, &mut w);
         s.update_frame(DOWN, &mut w.ctx()); // DEPOSIT ITEM
-        s.update_frame(A, &mut w.ctx());
+        s.update_frame(A, &mut w.ctx()); finish_pc_done_text(&mut s, &mut w);
         assert_eq!(s.phase(), PcPhase::ItemList);
-        s.update_frame(A, &mut w.ctx()); // pick POTION
+        s.update_frame(A, &mut w.ctx()); finish_pc_done_text(&mut s, &mut w); // pick POTION
         assert_eq!(s.phase(), PcPhase::ItemQuantity);
         assert_eq!(s.item_qty(), 1);
         s.update_frame(UP, &mut w.ctx());
         s.update_frame(UP, &mut w.ctx()); // qty 3
-        s.update_frame(A, &mut w.ctx());
+        s.update_frame(A, &mut w.ctx()); finish_pc_done_text(&mut s, &mut w);
         assert_eq!(
             s.message_lines(),
             &["POTION was".to_string(), "stored via PC.".to_string()]
@@ -2227,8 +2339,8 @@ mod tests {
         let mut s = PcScreen::new(PcEntry::PokemonCenter, &open_ctx());
         open_item_menu_from_center(&mut s, &mut w);
         s.update_frame(DOWN, &mut w.ctx()); // DEPOSIT ITEM
-        s.update_frame(A, &mut w.ctx());
-        s.update_frame(A, &mut w.ctx()); // pick BICYCLE → no quantity prompt
+        s.update_frame(A, &mut w.ctx()); finish_pc_done_text(&mut s, &mut w);
+        s.update_frame(A, &mut w.ctx()); finish_pc_done_text(&mut s, &mut w); // pick BICYCLE → no quantity prompt
         assert_eq!(s.phase(), PcPhase::Message);
         assert_eq!(
             s.message_lines(),
@@ -2303,9 +2415,9 @@ mod tests {
         let mut s = PcScreen::new(PcEntry::PokemonCenter, &open_ctx());
         open_item_menu_from_center(&mut s, &mut w);
         s.update_frame(DOWN, &mut w.ctx()); // DEPOSIT ITEM
-        s.update_frame(A, &mut w.ctx());
-        s.update_frame(A, &mut w.ctx()); // POTION, qty 1
-        s.update_frame(A, &mut w.ctx());
+        s.update_frame(A, &mut w.ctx()); finish_pc_done_text(&mut s, &mut w);
+        s.update_frame(A, &mut w.ctx()); finish_pc_done_text(&mut s, &mut w); // POTION, qty 1
+        s.update_frame(A, &mut w.ctx()); finish_pc_done_text(&mut s, &mut w);
         assert_eq!(
             s.message_lines(),
             &["No room left to".to_string(), "store items.".to_string()]
@@ -2322,11 +2434,11 @@ mod tests {
         w.pc_items.add_item(ItemId::Potion, 4).unwrap();
         let mut s = PcScreen::new(PcEntry::PokemonCenter, &open_ctx());
         open_item_menu_from_center(&mut s, &mut w);
-        s.update_frame(A, &mut w.ctx()); // WITHDRAW ITEM
+        s.update_frame(A, &mut w.ctx()); finish_pc_done_text(&mut s, &mut w); // WITHDRAW ITEM
         assert_eq!(s.phase(), PcPhase::ItemList);
-        s.update_frame(A, &mut w.ctx()); // POTION
+        s.update_frame(A, &mut w.ctx()); finish_pc_done_text(&mut s, &mut w); // POTION
         s.update_frame(UP, &mut w.ctx()); // qty 2
-        s.update_frame(A, &mut w.ctx());
+        s.update_frame(A, &mut w.ctx()); finish_pc_done_text(&mut s, &mut w);
         assert_eq!(
             s.message_lines(),
             &["Withdrew".to_string(), "POTION.".to_string()]
@@ -2369,9 +2481,9 @@ mod tests {
         assert!(w.bag.is_full());
         let mut s = PcScreen::new(PcEntry::PokemonCenter, &open_ctx());
         open_item_menu_from_center(&mut s, &mut w);
-        s.update_frame(A, &mut w.ctx()); // WITHDRAW ITEM
-        s.update_frame(A, &mut w.ctx()); // POTION, qty 1
-        s.update_frame(A, &mut w.ctx());
+        s.update_frame(A, &mut w.ctx()); finish_pc_done_text(&mut s, &mut w); // WITHDRAW ITEM
+        s.update_frame(A, &mut w.ctx()); finish_pc_done_text(&mut s, &mut w); // POTION, qty 1
+        s.update_frame(A, &mut w.ctx()); finish_pc_done_text(&mut s, &mut w);
         assert_eq!(
             s.message_lines(),
             &["You can't carry".to_string(), "any more items.".to_string()]
@@ -2389,26 +2501,26 @@ mod tests {
         open_item_menu_from_center(&mut s, &mut w);
         s.update_frame(DOWN, &mut w.ctx());
         s.update_frame(DOWN, &mut w.ctx()); // TOSS ITEM
-        s.update_frame(A, &mut w.ctx());
+        s.update_frame(A, &mut w.ctx()); finish_pc_done_text(&mut s, &mut w);
         assert_eq!(s.phase(), PcPhase::ItemList);
         // POTION: quantity → "Is it OK to toss?" → YES.
-        s.update_frame(A, &mut w.ctx());
+        s.update_frame(A, &mut w.ctx()); finish_pc_done_text(&mut s, &mut w);
         assert_eq!(s.phase(), PcPhase::ItemQuantity);
         s.update_frame(UP, &mut w.ctx()); // 2
-        s.update_frame(A, &mut w.ctx());
+        s.update_frame(A, &mut w.ctx()); finish_pc_done_text(&mut s, &mut w);
         assert_eq!(s.phase(), PcPhase::Message);
         skip_message(&mut s, &mut w);
         assert_eq!(s.phase(), PcPhase::TossConfirm);
         // NO keeps the items.
-        s.update_frame(A, &mut w.ctx());
+        s.update_frame(A, &mut w.ctx()); finish_pc_done_text(&mut s, &mut w);
         assert_eq!(s.phase(), PcPhase::ItemList);
         assert_eq!(w.pc_items.item_quantity(ItemId::Potion), 3);
         // YES tosses.
-        s.update_frame(A, &mut w.ctx());
-        s.update_frame(A, &mut w.ctx()); // qty 1
+        s.update_frame(A, &mut w.ctx()); finish_pc_done_text(&mut s, &mut w);
+        s.update_frame(A, &mut w.ctx()); finish_pc_done_text(&mut s, &mut w); // qty 1
         skip_message(&mut s, &mut w);
         s.update_frame(UP, &mut w.ctx()); // toggle YES
-        s.update_frame(A, &mut w.ctx());
+        s.update_frame(A, &mut w.ctx()); finish_pc_done_text(&mut s, &mut w);
         assert_eq!(
             s.message_lines(),
             &["Threw away".to_string(), "POTION.".to_string()]
@@ -2417,7 +2529,7 @@ mod tests {
         assert_eq!(w.pc_items.item_quantity(ItemId::Potion), 2);
         // BICYCLE (key item): refused outright, no quantity prompt.
         s.update_frame(DOWN, &mut w.ctx());
-        s.update_frame(A, &mut w.ctx());
+        s.update_frame(A, &mut w.ctx()); finish_pc_done_text(&mut s, &mut w);
         assert_eq!(s.phase(), PcPhase::Message);
         assert_eq!(
             s.message_lines(),
@@ -2525,16 +2637,16 @@ mod tests {
             let mut w=World::new();let mut s=PcScreen::new(PcEntry::PokemonCenter,&open_ctx());
             if player_pc {open_item_menu_from_center(&mut s,&mut w);} else {open_bills_pc(&mut s,&mut w);}
             assert_eq!(s.take_field_text_delay_change(),Some(true));
-            s.update_frame(B,&mut w.ctx());assert_eq!(s.phase(),PcPhase::MainMenu);
+            s.update_frame(B,&mut w.ctx()); finish_pc_done_text(&mut s, &mut w);assert_eq!(s.phase(),PcPhase::MainMenu);
             assert_eq!(s.take_field_text_delay_change(),Some(false));
         }
         let mut w=World::new();w.bag.add_item(ItemId::Potion,1).unwrap();
         let mut s=PcScreen::new(PcEntry::PlayersPc,&open_ctx());s.take_field_text_delay_change();skip_message(&mut s,&mut w);
-        s.update_frame(DOWN,&mut w.ctx());s.update_frame(A,&mut w.ctx());
+        s.update_frame(DOWN,&mut w.ctx());s.update_frame(A,&mut w.ctx()); finish_pc_done_text(&mut s, &mut w);
         assert_eq!(s.phase(),PcPhase::ItemList);assert_eq!(s.take_field_text_delay_change(),Some(true));
-        s.update_frame(B,&mut w.ctx());assert_eq!(s.phase(),PcPhase::ItemMenu);assert_eq!(s.take_field_text_delay_change(),Some(false));
+        s.update_frame(B,&mut w.ctx()); finish_pc_done_text(&mut s, &mut w);assert_eq!(s.phase(),PcPhase::ItemMenu);assert_eq!(s.take_field_text_delay_change(),Some(false));
         s.update_frame(UP,&mut w.ctx()); // WITHDRAW, with empty PC storage.
-        s.update_frame(A,&mut w.ctx());assert_eq!(s.phase(),PcPhase::Message);skip_message(&mut s,&mut w);
+        s.update_frame(A,&mut w.ctx()); finish_pc_done_text(&mut s, &mut w);assert_eq!(s.phase(),PcPhase::Message);skip_message(&mut s,&mut w);
         assert_eq!(s.take_field_text_delay_change(),None,"returning to PlayerPCMenu after an ordinary message does not set the bit again");
     }
 

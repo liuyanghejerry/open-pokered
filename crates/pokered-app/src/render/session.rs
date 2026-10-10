@@ -1360,6 +1360,9 @@ impl PcVisualKey {
                             hash_u32(&mut visual_hash, pc.bills_menu().cursor() as u32);
                             hash_u32(&mut visual_hash, game.save_data.pc_storage.current_box_index() as u32);
                         }
+                        PcPhase::ItemMenu => {
+                            hash_u32(&mut visual_hash, pc.players_menu().cursor() as u32);
+                        }
                         PcPhase::MonList => {
                             hash_byte(&mut visual_hash, pc.mon_mode() as u8);
                             hash_u32(&mut visual_hash, pc.mon_cursor() as u32);
@@ -2680,6 +2683,68 @@ mod session_tests {
     use dotzuki_engine::render_config::RenderConfig;
     use pokered_core::options_menu::OptionsRow;
     use pokered_renderer::Rgba;
+
+    #[test]
+    fn pc_item_questions_retained_frames_match_full_draw() {
+        use dotzuki_app::{GbButton, InputState};
+        use pokered_core::pc_screen::{PcEntry, PcOpenContext, PcScreen};
+        let mut game = PokemonGame::new(GameVersion::Red);
+        game.audio = None;
+        game.state.screen = GameScreen::PC;
+        game.state.config.language = Lang::En;
+        game.state.config.text_speed = pokered_core::game_state::TextSpeed::Slow;
+        game.save_data.game_data.options.text_speed = pokered_core::options_menu::TextSpeed::Slow;
+        assert_eq!(game.save_data.game_data.pc_items.item_quantity(pokered_data::items::ItemId::Potion), 1);
+        game.save_data.game_data.pc_items.remove_item_at(0, 1).unwrap();
+        game.save_data.game_data.pc_items.add_item(pokered_data::items::ItemId::Potion, 4).unwrap();
+        let open = PcOpenContext {
+            met_bill: true, has_pokedex: true, beaten_league: false,
+            player_name: "RED".into(), hof_teams: Vec::new(),
+        };
+        let mut pc = PcScreen::new(PcEntry::PlayersPc, &open);
+        pc.configure_field_text(game.state.config.text_speed.delay_frames(), false);
+        game.pc_screen = Some(pc);
+        let mut session = RenderSession::new();
+        let mut retained = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+        let mut scroll = |_: &mut [u8], _: usize, _: usize, _: i32, _: i32, _: u8| {};
+        let mut last_key = None;
+        let mut stage = 0;
+        let mut selection = None;
+        let mut saw_reuse = false;
+        let mut completed = false;
+        for frame in 0..2000 {
+            let pc = game.pc_screen.as_ref().unwrap();
+            let phase = pc.phase();
+            let key = if last_key.is_some() { None }
+                else if phase == PcPhase::Message && pc.message_ready_for_ack() { Some(GbButton::A) }
+                else if stage == 0 && phase == PcPhase::ItemMenu { stage = 1; Some(GbButton::A) }
+                else if stage == 1 && phase == PcPhase::ItemList { stage = 2; selection = Some(frame); Some(GbButton::A) }
+                else if stage == 2 && phase == PcPhase::ItemQuantity {
+                    // This is the next update after the chooser first rendered.
+                    assert_eq!(frame - selection.unwrap(), 49);
+                    stage = 3; Some(GbButton::B)
+                } else { None };
+            let mut input = InputState::new();
+            if let Some(button) = key { input.press(button); }
+            game.update(&input);
+            last_key = key;
+            saw_reuse |= matches!(session.render(&mut game, &mut retained, &mut scroll), FrameUpdate::Reuse);
+            let mut full = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+            game.draw(&mut full);
+            for y in 0..144 { for x in 0..160 {
+                assert_eq!(retained.get_pixel(x,y), full.get_pixel(x,y), "item question stage{stage} frame{frame} pixel({x},{y})");
+            }}
+            let pc = game.pc_screen.as_ref().unwrap();
+            if stage == 3 && pc.phase() == PcPhase::ItemList {
+                assert_eq!(pc.message_lines(), &["What do you want".to_string(), "to withdraw?".to_string()]);
+                assert_eq!(game.save_data.game_data.pc_items.item_quantity(pokered_data::items::ItemId::Potion), 4);
+                assert_eq!(game.save_data.game_data.bag.item_quantity(pokered_data::items::ItemId::Potion), 0);
+                completed = true; break;
+            }
+        }
+        assert!(completed, "PC item text/quantity/cancel route did not complete");
+        assert!(saw_reuse, "idle PC text frames should still reuse their buffer");
+    }
 
     #[test]
     fn pc_retained_message_frames_match_full_draw() {
