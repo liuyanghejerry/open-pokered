@@ -103,9 +103,7 @@ fn bag_field_item_use_returns_to_overworld_without_rebuild() {
     game.handle_transition(GameScreen::Bag);
     assert_eq!(game.state.screen, GameScreen::Bag);
 
-    // A: open the USE/TOSS/CANCEL menu; A again: USE.
-    game.update(&press(GbButton::A));
-    assert_eq!(game.state.screen, GameScreen::Bag);
+    // StartMenu_Item directly uses BICYCLE, without USE/TOSS or a second A.
     game.update(&press(GbButton::A));
     assert_eq!(game.state.screen, GameScreen::Overworld);
     // The live overworld must survive (BICYCLE toggles riding in place);

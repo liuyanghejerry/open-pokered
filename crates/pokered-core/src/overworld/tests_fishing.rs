@@ -287,6 +287,18 @@ fn current_dialogue_page(screen: &OverworldScreen<PokemonRedData>) -> Option<Str
     Some(format!("{}\n{}", page.line1, page.line2))
 }
 
+// Verify the complete original three-line content in the existing page layout.
+// Original CONT carries the preceding line visually; dialogue layout is excluded.
+fn assert_not_time_message(screen: &OverworldScreen<PokemonRedData>) {
+    let mut dialogue = screen.pending_dialogue.clone().expect("refusal message");
+    for (line1, line2) in [("OAK: RED!", "This isn't the"), ("time to use that!", "")] {
+        let page = dialogue.current().unwrap();
+        assert_eq!((page.line1.as_ref(), page.line2.as_ref()), (line1, line2));
+        while !dialogue.waiting_for_input() { dialogue.reveal_next_char_with_buttons(true); }
+        dialogue.advance();
+    }
+}
+
 /// Accumulate every dialogue page shown while mashing A, until
 /// `pending_wild_encounter` surfaces (or the frame budget runs out).
 fn mash_a_until_encounter(screen: &mut OverworldScreen<PokemonRedData>) -> String {
@@ -325,7 +337,7 @@ fn old_rod_facing_water_hooks_magikarp_and_queues_battle_after_text() {
     )));
     assert_eq!(
         current_dialogue_page(&screen).as_deref(),
-        Some("You used the\nOLD ROD!")
+        Some("RED used\nOLD ROD!")
     );
 
     // The battle is deferred until the text is dismissed.
@@ -353,10 +365,7 @@ fn rod_refused_while_surfing() {
 
     let consumed = screen.use_field_item(ItemId::OldRod, MapId::PalletTown);
     assert!(!consumed);
-    assert_eq!(
-        current_dialogue_page(&screen).as_deref(),
-        Some("This isn't the\ntime to use that!")
-    );
+    assert_not_time_message(&screen);
     assert!(screen.post_dialogue_battle.is_none());
 }
 
@@ -371,10 +380,7 @@ fn rod_refused_when_not_facing_water() {
 
     let consumed = screen.use_field_item(ItemId::SuperRod, MapId::PalletTown);
     assert!(!consumed);
-    assert_eq!(
-        current_dialogue_page(&screen).as_deref(),
-        Some("This isn't the\ntime to use that!")
-    );
+    assert_not_time_message(&screen);
     assert!(screen.post_dialogue_battle.is_none());
 }
 
@@ -388,7 +394,7 @@ fn good_and_super_rods_facing_water_produce_a_result_message() {
         assert!(!screen.use_field_item(item, MapId::PalletTown));
         assert_eq!(
             current_dialogue_page(&screen).as_deref(),
-            Some(format!("You used the\n{}!", name)).as_deref()
+            Some(format!("RED used\n{}!", name)).as_deref()
         );
         let text = mash_a_until_encounter(&mut screen);
         assert!(
@@ -441,7 +447,7 @@ fn fishing_anim_plays_between_used_text_and_result_text_and_locks_input() {
     // animation not yet started (it is deferred until the text closes).
     assert_eq!(
         current_dialogue_page(&screen).as_deref(),
-        Some("You used the\nOLD ROD!")
+        Some("RED used\nOLD ROD!")
     );
     assert!(screen.pending_fishing.is_some());
     assert!(screen.fishing_anim.is_none());
@@ -518,7 +524,7 @@ fn fishing_anim_no_bite_skips_shake_and_bubble() {
     // 10 + 100 frames and the result text follows directly.
     let mut screen = screen_on(MapId::PalletTown);
     face_water(&mut screen);
-    screen.pending_dialogue = Some(BedroomDialogue::from_message("You used the\nGOOD ROD!"));
+    screen.pending_dialogue = Some(BedroomDialogue::from_message("RED used\nGOOD ROD!"));
     screen.pending_fishing = Some(PendingFishing {
         response: RodResponse::NoBite,
     });
@@ -556,10 +562,7 @@ fn fishing_anim_no_bite_skips_shake_and_bubble() {
 fn fishing_anim_refused_paths_never_start_the_animation() {
     fn assert_rod_refused(screen: &mut OverworldScreen<PokemonRedData>, item: ItemId) {
         assert!(!screen.use_field_item(item, MapId::PalletTown));
-        assert_eq!(
-            current_dialogue_page(screen).as_deref(),
-            Some("This isn't the\ntime to use that!")
-        );
+        assert_not_time_message(screen);
         assert!(
             screen.pending_fishing.is_none(),
             "failed FishingInit never defers an animation"
