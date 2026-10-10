@@ -1,0 +1,103 @@
+{
+  "base": "92fb3e57c7d8fa308a84b7cd9e9b90a55baf9320",
+  "scope": "controlled sourceSRAM Continue; identical inputs; seed42 applied to loaded overworld; only explicit emptying30balls before empty-balls case; paid entry/catching not claimed",
+  "repeats": {
+    "master-timeout": {
+      "frames": 702,
+      "all_png_byte_identical": true,
+      "full_json_byte_identical": true,
+      "comparison": "all states exact"
+    },
+    "master-empty-balls": {
+      "frames": 702,
+      "all_png_byte_identical": true,
+      "full_json_byte_identical": true,
+      "comparison": "all states exact"
+    },
+    "native-timeout": {
+      "frames": 702,
+      "all_png_byte_identical": true,
+      "full_json_byte_identical": true,
+      "comparison": "all states exact"
+    },
+    "native-empty-balls": {
+      "frames": 702,
+      "all_png_byte_identical": true,
+      "full_json_byte_identical": true,
+      "comparison": "all states exact"
+    }
+  },
+  "endpoints": {
+    "master-timeout": {
+      "map": "SafariZoneGate",
+      "x": 3,
+      "y": 4,
+      "facing": "Down",
+      "steps": 0,
+      "balls": 0,
+      "active": false
+    },
+    "master-empty-balls": {
+      "map": "SafariZoneCenter",
+      "x": 14,
+      "y": 25,
+      "facing": "Down",
+      "steps": 1,
+      "balls": 0,
+      "active": true
+    },
+    "native-timeout": {
+      "map": "SafariZoneGate",
+      "x": 4,
+      "y": 3,
+      "facing": "Down",
+      "steps": 0,
+      "balls": 0,
+      "active": false
+    },
+    "native-empty-balls": {
+      "map": "SafariZoneGate",
+      "x": 4,
+      "y": 3,
+      "facing": "Down",
+      "steps": 0,
+      "balls": 0,
+      "active": false
+    }
+  },
+  "pairs": [
+    {
+      "case": "timeout",
+      "frame": 129,
+      "input_identical_all702": true,
+      "files": {
+        "timeout-announcement-before.png": "cf011f95e058b1ef7d12feee9cea2878aa17782cff0d96c99b11a6e0b729b895",
+        "timeout-announcement-after.png": "780913ff501bea7681969def395de8abf531f44ebd6baac85b5fa3d3c541d256"
+      }
+    },
+    {
+      "case": "timeout",
+      "frame": 701,
+      "input_identical_all702": true,
+      "files": {
+        "timeout-return-before.png": "d93a195b5753fc4d094be590de09b7d36045479fce263385125b0519150a7e07",
+        "timeout-return-after.png": "dcd9d89c773b033af300633313649408f962069357cb78c6f24bccf1d90665c3"
+      }
+    },
+    {
+      "case": "empty-balls",
+      "frame": 701,
+      "input_identical_all702": true,
+      "files": {
+        "empty-balls-return-before.png": "f3d158157e0657ffaaaacf5da92ed6c2574ed12439eeb5e45a3d26e760f8f123",
+        "empty-balls-return-after.png": "dcd9d89c773b033af300633313649408f962069357cb78c6f24bccf1d90665c3"
+      }
+    }
+  ],
+  "archive": {
+    "paths": 5647,
+    "objects": 232,
+    "sha256": "73323ab39a793a9bd9548d68495fa9aab6bbcf34109639acb654988e1050d5c4",
+    "all_objects_verified": true
+  }
+}
