@@ -3177,6 +3177,7 @@ impl<G: GameData> OverworldScreen<G> {
         !self.scripted_player_path.is_empty()
             || matches!(self.active_script_effect,
                 Some(super::script_bridge::ScriptEffect::MovePlayer { .. }
+                    | super::script_bridge::ScriptEffect::MovePlayerRelative { .. }
                     | super::script_bridge::ScriptEffect::FollowNpc { .. }))
     }
 

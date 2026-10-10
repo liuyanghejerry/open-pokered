@@ -656,6 +656,13 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             Some(script_bridge::ScriptEffect::FollowNpc { .. })
         );
         if let Some(ref mut effect) = self.active_script_effect {
+            if matches!(effect, script_bridge::ScriptEffect::MovePlayer { started: false, .. }
+                | script_bridge::ScriptEffect::MovePlayerRelative { started: false, .. }) {
+                // The map script installs simulated directions inside the
+                // current field iteration, before direction dispatch. Its
+                // first sample must not consume a second stale loop wait.
+                self.field_loop_wait = 0;
+            }
             let naming_was_open = self.pending_naming_screen.is_some();
             if let script_bridge::ScriptEffect::GivePokemon { species, flow, .. } = effect {
                 if flow.is_none() {
@@ -3564,6 +3571,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         Direction::Right => 1, Direction::Left => 2,
                         Direction::Down => 4, Direction::Up => 8,
                     };
+                    // The explicit scripted turn updates the sprite before
+                    // a subsequent textbox loads/reset its animation phase.
+                    self.player_sprite_state.update_sprite(self.state.walk_counter, self.player_moving_direction);
                 }
                 script_bridge::ScriptEffect::ShowObject { object_index } => {
                     if let Some(npc) = self

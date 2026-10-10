@@ -1,0 +1,29 @@
+{
+  "parent_head": "57501b5c947c7879898b5b2b8f77f209d4640ca6",
+  "native_png_count": 2808,
+  "rejected_candidate_native_png_count": 2808,
+  "original_png_count": 2808,
+  "original_all_PNG_and_state_byte_equal_148": true,
+  "frames_per_case_repeat": 702,
+  "relative_logical_matching_frames_per_case": 52,
+  "rgb_different_frames_per_case": {
+    "timeout": 0,
+    "empty-balls": 0
+  },
+  "absolute_timing_parity": false,
+  "archive": {
+    "paths": 8500,
+    "objects": 399,
+    "sha256": "2f63f3efff2e80af91cb7ffd7fb2c6e9030a2aafed73a0fa33e1371df68a6e18",
+    "all_objects_verified": true
+  },
+  "reference_archive_sha256": "1122bdac240d334b4938e0cb16cbf51406d3398888db540ff76fe35333d694a8",
+  "source_work_archive_sha256": "c3278c5344f9f6cfee0e72f6b91b18b91f1fe7bff50245648aae1d32a4aadbe2",
+  "tests": {
+    "core": 2736,
+    "app": 201,
+    "ignored_capture_helpers": 24
+  },
+  "gba_metric_count": 31,
+  "scope": "absolute and relative MovePlayer startup resumes current field iteration; scripted turn updates player animation; both52relativeframes fullRGB/logic match, absolute schedule and prior gates remain incomplete"
+}
