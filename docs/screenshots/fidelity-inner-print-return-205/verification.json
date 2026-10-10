@@ -1,0 +1,93 @@
+{
+  "native": {
+    "head": "db02a853b22b786cc9451f2ecef40f19464c555a",
+    "base": "2a35c761c21a94cf2f9ba5e2c655913fb3f06c8a",
+    "sources": {
+      "crates/pokered-agent/src/semantics/extract.rs": "d619cd95ad0a07e4c3d30d146c8b0c9fc86ceb37d66064777391883d28731334",
+      "crates/pokered-app/src/game.rs": "315f96977d0e314fabe1884513c4feed1a7bf0644bf32841a556bf2d3a5abe02",
+      "crates/pokered-core/src/overworld/native_script.rs": "405dd7d86a5adeb8421fb7c55199f4a611d42c331bc7caeebdc314dfa160ea70",
+      "crates/pokered-core/src/overworld/script_bridge.rs": "e1ac9f3e6792bf179a4696d494ea6123869e363e71e6bb3b1692e7564417649e",
+      "crates/pokered-core/src/overworld/script_interactions.rs": "6f6b8485879153b2ea818cb6a2cd0d159eb4480388eb45c5ee0b0d199cc0d608",
+      "crates/pokered-core/src/overworld/update.rs": "42200fa459a13d7e9113cf9d332cecdf16a1c37c922aacc374fabb5375977943",
+      "crates/pokered-data/maps/Museum1F/script.scene": "8e9ae9a551aab5763a7c0f711f57e63be249ea597e2c4fe3f1a37b10eb752b42",
+      "crates/pokered-data/maps/SafariZoneGate/script.scene": "0af6118ea794f49ca718b2934d533b17b4c9e8b62fa9d864d018d005ddd05e5d",
+      "crates/pokered-data/src/script_api.rs": "8c0b63500382d43b8940b5a5397e6a148be5722f7ad1e93cf0d4f94c368cd725",
+      "crates/pokered-data/src/script_command.rs": "9085a98e1c36332ea8cfcfb5d5a7906c6acad38a35d61b79bc11c7099de2547c",
+      "crates/pokered-data/src/script_function_catalog.rs": "ace6209e8ea73ba7d1fe17cd18e0337b307d16ab6ee48792b21f3aed355dcd25"
+    },
+    "binaries": {
+      "core-tests": "ee10bddc55c8045d04edd96f146fe6969967b0fb813ae76a1dcc149d78855423",
+      "app-tests": "3c04a4d081fee8fc66003cf39a91c10ed936864390e8c129aa389afcb47a074d",
+      "data-tests": "d1c131ed5600b2f9b7be58a8a4f6a40842a5b799761f48bc7c8115483c071974"
+    },
+    "target": "dedicated audit205 target after syncing 2a35, all source additions and unchanged exact dependency sources rebuilt as needed",
+    "scope": "master2a35+205 PrintFieldText+agent semantics; dependencies152+153+154+156 merged"
+  },
+  "master": {
+    "base": "2a35c761c21a94cf2f9ba5e2c655913fb3f06c8a",
+    "binary_sha256": "31477aaf711b1ce36e181e0f01726d7f7df3fade42b6ba61acb77b3b3c484348",
+    "sources": {
+      "crates/pokered-agent/src/semantics/extract.rs": "813471ff4091afc1f6455dde9439655a4519260e984d434bc7dde44d82347bed",
+      "crates/pokered-app/src/game.rs": "29c54dfdd33a9ef3b48eadc2d91326f48c4bf326b0a77e4838700dd3a334ccc0",
+      "crates/pokered-core/src/overworld/native_script.rs": "3ff2a9bb2541f0d29bdce99fd253a0ea83a2e0c9b91947b853e47e98591855bc",
+      "crates/pokered-core/src/overworld/script_bridge.rs": "63b5836bfd4d1b629f2244a6f7a8a3cb0c40e36e7995498aa88772fb90a6fa48",
+      "crates/pokered-core/src/overworld/script_interactions.rs": "b34de2f3ebc5bc52afb91c1ceae37470dce75f444742a41bc02226f936362983",
+      "crates/pokered-core/src/overworld/update.rs": "ab6a67fce5dba4f9450c9cd57b8cb4b5b59240ca15f937a17d9c0c7c5086f5fe",
+      "crates/pokered-data/maps/Museum1F/script.scene": "bcf9d87f879728e7933643888c6be76934bb41286ea4e2289317770df0801986",
+      "crates/pokered-data/maps/SafariZoneGate/script.scene": "b37389caa98868f4496e601fbce1378c0910886f7b99add8eca1fef355da0f68",
+      "crates/pokered-data/src/script_api.rs": "16ed9e195d0173fd9ad5b418ec101dd7f836c20201d613e98e4ef61a1e98db18",
+      "crates/pokered-data/src/script_command.rs": "317f1af607b0cdd443d79716dfddad505de5b3c6e881fbf24a4e9ab871d00dee",
+      "crates/pokered-data/src/script_function_catalog.rs": "05c20cae649881de8398a6a64f9225137056ff5edb2efe5bf9f97695f07b5077"
+    },
+    "production_unchanged": true,
+    "target": "dedicatedactualmastertargeta5 updated2a35; existingcfgtestrecorder202 unchanged"
+  },
+  "captures": {
+    "master": {
+      "side": "master",
+      "first_letter": 2,
+      "first_choice": null,
+      "choice_effect_entry": null,
+      "frames_per_repeat": 145,
+      "all_png_full_raw_json_byte_exact": true,
+      "each_frame_retained_full_pixels_identical": true,
+      "input": "A at0 release1; 144 idle frames thereafter",
+      "scope": "Controlled original SRAM realContinue then controlled gate worker warp; no natural map traversal or absolute PPU/entry/font timing claim"
+    },
+    "native": {
+      "side": "native",
+      "first_letter": 2,
+      "first_choice": 93,
+      "choice_effect_entry": 92,
+      "frames_per_repeat": 145,
+      "all_png_full_raw_json_byte_exact": true,
+      "each_frame_retained_full_pixels_identical": true,
+      "input": "A at0 release1; 144 idle frames thereafter",
+      "scope": "Controlled original SRAM realContinue then controlled gate worker warp; no natural map traversal or absolute PPU/entry/font timing claim"
+    }
+  },
+  "original_stages": {
+    "first_glyph": 24,
+    "YesNoChoice_source_call": 114,
+    "viewed_complete_menu_frame": 115,
+    "source_timing": "entry+90 / visible+91 relativefirstglyph; manualview113/114/115, no absolute native-original entry/CPU/font/PPU claim"
+  },
+  "same_hardware_inputs": true,
+  "frame": 130,
+  "png_sha256": {
+    "before.png": "c93826a7490071986a4ee8491ff161a1afe7cecddd6c73d49296811eb6b406cd",
+    "after.png": "f65876a9236cdf5e1a768b9671774d4403935c38b2a18ec59f5b97998a7cd26e"
+  },
+  "fixture_sram_sha256": "a2a4d4546d084e6540d678ff3826e58fc7872eecfeac990c30110008f61ddee2",
+  "tests": "core2718 app195+19ignored data262 agent54 allPASS on updatedmaster2a35",
+  "rejected_verifier": "audit-205-native-verifier-a3-rejected.json: did not distinguish effect entry and menu visible; records untouched, corrected based on independent original stages",
+  "agent": {
+    "base": "2a35c761c21a94cf2f9ba5e2c655913fb3f06c8a",
+    "parent": "db02a853b22b786cc9451f2ecef40f19464c555a",
+    "source": "d619cd95ad0a07e4c3d30d146c8b0c9fc86ceb37d66064777391883d28731334",
+    "binary_sha256": "b8ddd879f0e1385b3c39af4a431a87315817b6e7540a447109d7ebbdce1ab31f",
+    "scope": "candidate205 synced2a35 plus explicit printFieldText semantics and real-map regression; no unknown allowlist edits"
+  },
+  "latest_records": "a5 actualmaster2a35 / latestcandidate11sourcehashes; earliera3 retained as historical",
+  "CI_failure": "c283aac coverage run38082717904 rejected unknown printFieldText in agent semantics. Explicit no-state classification + actualMuseum payment andSafari question regression; no unknown allowlist or coverage thresholds changed."
+}
