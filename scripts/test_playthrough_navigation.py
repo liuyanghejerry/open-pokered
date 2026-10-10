@@ -36,6 +36,25 @@ class NavigationRegression(unittest.TestCase):
         self.assertEqual(calls,['right','up','right','down'])
         self.assertEqual((state['player_x'],state['player_y']),(6,6))
 
+    def test_cutscene_acknowledges_field_text_without_legacy_dialogue_state(self):
+        for effect in ("PrintFieldText", "PrintFieldParagraph", "PrintItemFieldText",
+                       "WaitFieldPrompt", "WaitFieldButton", "FinishFieldText"):
+            with self.subTest(effect=effect):
+                game = nav.Game.__new__(nav.Game)
+                state = {"screen": "overworld", "choice": None,
+                         "active_script_effect": effect, "dialogue_state": None,
+                         "dialogue": "BILL: Yeehah! Thanks, bud! I owe you one!"}
+                advanced = []
+                def command(**kw):
+                    if kw["cmd"] == "skip_dialogue":
+                        advanced.append(effect)
+                        return {"ok": True, "data": {"stepped": 2}}
+                    self.assertEqual(kw["cmd"], "wait_until")
+                    return {"data": {"reached": bool(advanced), "state": state}}
+                game.d = SimpleNamespace(cmd=command)
+                self.assertTrue(game.cutscene(max_rounds=2))
+                self.assertEqual(advanced, [effect])
+
     def test_cutscene_declines_only_the_script_gift_nickname_prompt(self):
         for effect in ["GivePokemon", "ShowChoice"]:
             game = nav.Game.__new__(nav.Game)

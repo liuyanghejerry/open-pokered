@@ -6505,6 +6505,15 @@ impl PokemonGame {
                     }
     }
 
+    /// Text ownership includes inner waits after the legacy box is retired.
+    #[cfg(feature = "debug-server")]
+    fn debug_has_active_dialogue(&self) -> bool {
+        self.overworld.pending_dialogue.is_some()
+            || matches!(self.overworld.active_script_effect_label().as_deref(),
+                Some("PrintFieldText" | "PrintFieldParagraph" | "PrintItemFieldText"
+                    | "WaitFieldPrompt" | "WaitFieldButton" | "FinishFieldText"))
+    }
+
     /// Full structured state snapshot for the debug protocol's `get_state`
     /// (and the payload of `wait_until` / `skip_dialogue` responses).
     #[cfg(feature = "debug-server")]
@@ -6830,7 +6839,7 @@ impl PokemonGame {
     #[cfg(feature = "debug-server")]
     fn debug_condition_met(&self, condition: &str) -> bool {
         match condition {
-            "dialogue_done" => self.overworld.pending_dialogue.is_none(),
+            "dialogue_done" => !self.debug_has_active_dialogue(),
             "dialogue_ready" => self
                 .overworld
                 .pending_dialogue
@@ -7198,7 +7207,7 @@ impl PokemonGame {
                 let mut release = true;
                 // A question may remain visible below a choice menu. Stop
                 // when it opens: skip_dialogue must never answer it for us.
-                while self.overworld.pending_dialogue.is_some()
+                while self.debug_has_active_dialogue()
                     && self.overworld.pending_choice.is_none()
                     && stepped < MAX_SKIP_FRAMES
                 {
@@ -7212,7 +7221,7 @@ impl PokemonGame {
                 }
                 DebugResponse::ok_with_data(serde_json::json!({
                     "stepped": stepped,
-                    "dialogue_closed": self.overworld.pending_dialogue.is_none(),
+                    "dialogue_closed": !self.debug_has_active_dialogue(),
                     "state": self.debug_state_snapshot(),
                 }))
             }
@@ -12409,6 +12418,55 @@ mod link_stats_cry_fidelity_tests {
         for n in &mut g.overworld.npc_states {n.movement_type=NpcMovementType::Stationary;n.x=n.home_x;n.y=n.home_y;n.walk_counter=0;}
         g.update(&button(GbButton::Up));for _ in 0..20 {g.update(&idle);}
         g
+    }
+
+    #[cfg(feature = "debug-server")]
+    #[test]
+    fn skip_dialogue_advances_bills_authored_paragraph_and_receipt() {
+        run_link_save_fixture(|| {
+            let mut g = bill_copycat_fixture_168(MapId::BillsHouse);
+            g.audio = None;
+            let a = button(GbButton::A);
+            let idle = InputState::new();
+            let mut saw_paragraph_wait = false;
+            for _ in 0..240 {
+                g.update(&a);
+                if g.overworld.pending_dialogue.is_none()
+                    && g.overworld.active_script_effect_value().is_some_and(|v|
+                        v["effect"] == "PrintFieldParagraph" && v["phase"] == "WaitForButton") {
+                    saw_paragraph_wait = true;
+                    break;
+                }
+            }
+            assert!(saw_paragraph_wait, "Bill did not reach the original paragraph acknowledgement");
+            let before = g.debug_state_snapshot();
+            assert_eq!(before["dialogue_state"], serde_json::Value::Null);
+            assert!(before["dialogue"].as_str().unwrap().contains("Yeehah"));
+            assert!(!g.debug_condition_met("dialogue_done"));
+            let response = g.handle_debug_command(pokered_debug_server::DebugCommand::Game(
+                pokered_debug_server::GameDebugCommand::SkipDialogue));
+            assert!(response.ok);
+            if let Ok(dir) = std::env::var("FIDELITY_BILL_DEBUG_CAPTURE") {
+                let dir = std::path::PathBuf::from(dir);
+                std::fs::create_dir_all(&dir).unwrap();
+                std::fs::write(dir.join("before.json"), serde_json::to_string_pretty(&before).unwrap()).unwrap();
+                std::fs::write(dir.join("skip-response.json"), serde_json::to_string_pretty(&response.data).unwrap()).unwrap();
+            }
+            assert!(response.data.as_ref().unwrap()["stepped"].as_u64().unwrap() > 0,
+                "field paragraph was falsely reported as already closed");
+            for _ in 0..20 {
+                if g.debug_condition_met("control_ready") { break; }
+                for _ in 0..8 { g.update(&idle); }
+                let response = g.handle_debug_command(pokered_debug_server::DebugCommand::Game(
+                    pokered_debug_server::GameDebugCommand::SkipDialogue));
+                assert!(response.ok);
+                assert!(g.overworld.pending_choice.is_none());
+            }
+            assert!(g.debug_condition_met("control_ready"));
+            assert_eq!(g.overworld.script_flags().get("EVENT_GOT_SS_TICKET"), Some(&true));
+            assert_eq!(g.save_data.game_data.bag.item_quantity(
+                pokered_data::items::ItemId::from_const_name("S_S_TICKET").unwrap()), 1);
+        });
     }
 
     fn aide_fixture_169(map: MapId,owned: u8) -> PokemonGame {

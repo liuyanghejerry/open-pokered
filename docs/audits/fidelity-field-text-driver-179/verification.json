@@ -1,0 +1,41 @@
+{
+  "parent_head": "72257f93b054181b5bef5d46151881fe89f891c3",
+  "kind": "debug-server and playthrough driver only; normal player runtime unchanged",
+  "source_sha256": {
+    "crates/pokered-app/src/game.rs": "7b7edaef11ebbdf67aa71294c49dc9f2be0367396d36e50b05d73694f36f5bab",
+    "scripts/playthrough.py": "89e1cf9e79295015e306289a6783f1deb48aaac6f51d1f2e4da963460aba00dc",
+    "scripts/test_playthrough_navigation.py": "4b1444533184bb499d9e1a2ef317c587c4ab3419634c327b91ebdcfbd4d6ac59"
+  },
+  "before": {
+    "stepped": 0,
+    "dialogue_closed": true,
+    "actual_effect": "PrintFieldParagraph",
+    "legacy_dialogue_state": null
+  },
+  "after": {
+    "first_skip_stepped": 298,
+    "next_effect": "GiveItem",
+    "final_native_assertions": "SS_TICKET quantity1, GOT_SS_TICKET true, control_ready true; no choice selected"
+  },
+  "tests": {
+    "python": 72,
+    "debug_native": {
+      "core": 2750,
+      "data": 263,
+      "app": 229,
+      "app_ignored": 34,
+      "agent": 54,
+      "audio": 99
+    },
+    "final_targeted": 2,
+    "a2_delta": "comments only after full debug suite"
+  },
+  "binary_sha256": "701c8af274367462daaf4273583b6d7dff2cd50a887c16c49fab7d8ba6ac4399",
+  "fresh_mainline": "frozen context and CLI staged; not yet run, no complete mainline claim",
+  "gba": "PcVisualKey::new noinline diagnostic failed original budget; not adopted; no final current-source GBA pass",
+  "archive": {
+    "entries": 43,
+    "bytes": 696643,
+    "sha256": "7db1a63c2360666418360ba7fcc6e127d198d15c3048a21dc795c9d8703e2c70"
+  }
+}

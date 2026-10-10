@@ -478,6 +478,19 @@ class NavError(RuntimeError):
     pass
 
 
+# Inner PrintText effects can wait for A after their legacy dialogue object
+# has been retired. Observe the active effect rather than retained window text.
+FIELD_TEXT_EFFECTS = frozenset({
+    "PrintFieldText", "PrintFieldParagraph", "PrintItemFieldText",
+    "WaitFieldPrompt", "WaitFieldButton", "FinishFieldText",
+})
+
+
+def has_active_dialogue(state):
+    return (state.get("dialogue_state") is not None
+            or state.get("active_script_effect") in FIELD_TEXT_EFFECTS)
+
+
 class Game:
     def __init__(self, port=None, save_path=None, record_dir=None,
                  record_video=None, snapshot=None, binary=None, seed=None,
@@ -1218,7 +1231,7 @@ class Game:
                 raise NavError(f"cutscene blocked on choice "
                                f"{state['choice']['options']} "
                                f"(cursor {state['choice']['selected']})")
-            if state["dialogue_state"] is not None:
+            if has_active_dialogue(state):
                 self.skip()
         return False
 
@@ -1233,7 +1246,7 @@ class Game:
                 return s["choice"]
             if s["active_script_effect"] == "ShowPokedexEntry":
                 self.tap("a", 10)
-            elif s["dialogue_state"] is not None:
+            elif has_active_dialogue(s):
                 self.skip()
             else:
                 self.step(30)
