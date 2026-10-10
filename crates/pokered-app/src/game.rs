@@ -5667,7 +5667,19 @@ impl PokemonGame {
                             let id = match sfx {
                                 PcSfx::TurnOn => SfxId::TurnOnPC,
                                 PcSfx::TextAdvance => SfxId::PressAB,
-                                PcSfx::PokedexRating {tier} => [SfxId::Denied,SfxId::PokedexRating,SfxId::GetItem1,SfxId::CaughtMon,SfxId::LevelUp,SfxId::GetKeyItem,SfxId::GetItem2][usize::from(tier)],
+                                PcSfx::PokedexRating { tier } => {
+                                    use pokered_core::overworld::TransportMode;
+                                    let map = self.overworld.state.current_map;
+                                    let music = match self.overworld.state.player.transport {
+                                        TransportMode::Biking => MusicId::BIKE_RIDING,
+                                        TransportMode::Surfing => MusicId::SURFING,
+                                        TransportMode::Walking => MusicId::from_u8(
+                                            pokered_core::overworld::map_loading::get_map_music(map) as u8,
+                                        ).unwrap_or(MusicId::PALLET_TOWN),
+                                    };
+                                    audio.play_pokedex_rating(tier, music);
+                                    continue;
+                                }
                                 PcSfx::TurnOff => SfxId::TurnOffPC,
                                 PcSfx::Enter => SfxId::EnterPC,
                                 PcSfx::WithdrawDeposit => SfxId::WithdrawDeposit,
@@ -12693,6 +12705,56 @@ mod link_stats_cry_fidelity_tests {
             g.update(&b);for _ in 0..120 {g.update(&idle);if g.state.screen==GameScreen::Overworld && g.overworld.script_engine_idle() {break;}}
             assert_eq!(g.state.screen,GameScreen::Overworld);assert!(g.pc_screen.is_none());
             assert_eq!(g.overworld.text_delay_disabled,!player_pc,"ExitPlayerPC clears; generic PC LogOff preserves original NO_TEXT_DELAY");
+            }
+        });
+    }
+
+    #[test]
+    fn actual_oaks_pc_ratings_suspend_music_for_the_complete_sound() {
+        use pokered_core::pc_screen::PcPhase;
+        fn reach(g: &mut PokemonGame, target: PcPhase) {
+            let idle=InputState::new(); let a=button(GbButton::A);
+            for _ in 0..12000 {
+                if g.pc_screen.as_ref().unwrap().phase()==target { return; }
+                let ack=g.pc_screen.as_ref().unwrap().message_ready_for_ack();
+                g.update(if ack {&a} else {&idle}); if ack {g.update(&idle);}
+            }
+            panic!("PC did not reach {target:?}");
+        }
+        run_link_save_fixture(|| {
+            for (owned,sound,duration) in [(0,SfxId::Denied,29),(10,SfxId::PokedexRating,141),
+                (40,SfxId::GetItem1,73),(60,SfxId::CaughtMon,145),(90,SfxId::LevelUp,133),
+                (120,SfxId::GetKeyItem,121),(150,SfxId::GetItem2,181)] {
+                let mut g=bike_fixture_171(false);let idle=InputState::new();let a=button(GbButton::A);
+                g.audio=Some(AudioOutput::new_pcm());g.overworld.set_flag_live("EVENT_GOT_POKEDEX",true);
+                g.save_data.game_data.pokedex=pokered_core::pokemon::pokedex::Pokedex::new();
+                for n in 1..=owned {g.save_data.game_data.pokedex.set_owned(Species::from_index_id(n));}
+                g.overworld.warp_to_map(MapId::ViridianPokecenter,13,4);
+                for _ in 0..120 {g.update(&idle);}for _ in 0..20 {g.update(&button(GbButton::Up));}for _ in 0..20 {g.update(&idle);}
+                for _ in 0..60 {g.update(&a);if g.state.screen==GameScreen::PC {break;}}
+                assert_eq!(g.state.screen,GameScreen::PC);g.update(&idle);reach(&mut g,PcPhase::MainMenu);
+                for _ in 0..2 {g.update(&button(GbButton::Down));g.update(&idle);}
+                g.update(&a);g.update(&idle);reach(&mut g,PcPhase::OaksConfirm);
+                g.update(&button(GbButton::Up));g.update(&idle);g.update(&a);g.update(&idle);
+                let mut started=false;
+                for _ in 0..12000 {
+                    let ack=g.pc_screen.as_ref().unwrap().message_ready_for_ack();
+                    g.update(if ack {&a} else {&idle});
+                    let mgr=g.audio.as_ref().unwrap().manager.lock().unwrap();
+                    if mgr.is_sfx_playing() && mgr.sequencer.current_sfx_id==sound as u8 {started=true;break;}
+                    drop(mgr);if ack {g.update(&idle);}
+                }
+                assert!(started,"{sound:?}");
+                for _ in 0..duration {
+                    assert!(!g.audio.as_ref().unwrap().manager.lock().unwrap().is_music_playing());
+                    assert_eq!(g.pc_screen.as_ref().unwrap().phase(),PcPhase::Message);
+                    assert!(!g.pc_screen.as_ref().unwrap().message_ready_for_ack());
+                    g.update(&button(GbButton::B));
+                }
+                assert!(!g.audio.as_ref().unwrap().is_sfx_playing());
+                assert_eq!(g.audio.as_ref().unwrap().last_music_id(),Some(MusicId::POKECENTER));
+                g.update(&idle);assert!(g.pc_screen.as_ref().unwrap().message_ready_for_ack());
+                g.update(&a);assert!(g.pc_screen.as_ref().unwrap().message_lines()[0].starts_with("Closed link"));
             }
         });
     }

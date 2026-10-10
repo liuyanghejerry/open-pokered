@@ -560,7 +560,7 @@ impl PcScreen {
             }
         }
         if start < self.msg_lines.len() { self.msg_pages.push((start, self.msg_lines.len())); }
-        if ending == PcMessageEnd::Rating && self.msg_lines.len() > 2 {
+        if ending == PcMessageEnd::Rating && self.language != crate::game_state::Lang::Zh && self.msg_lines.len() > 2 {
             self.msg_pages = core::iter::once((0, 2))
                 .chain((2..self.msg_lines.len()).map(|i| (i - 1, i + 1))).collect();
         }

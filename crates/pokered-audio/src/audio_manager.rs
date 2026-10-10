@@ -113,6 +113,17 @@ impl AudioManager {
         self.engine.play_sfx(id);
     }
 
+    /// PlayPokedexRatingSfx stops all music, plays the selected rating sound,
+    /// then PlayDefaultMusic waits for it and restarts the field theme.
+    pub fn play_pokedex_rating(&mut self, tier: u8, resume_music: MusicId) {
+        let sounds = [SfxId::Denied, SfxId::PokedexRating, SfxId::GetItem1,
+            SfxId::CaughtMon, SfxId::LevelUp, SfxId::GetKeyItem, SfxId::GetItem2];
+        let Some(&sound) = sounds.get(usize::from(tier)) else { return; };
+        self.engine.stop_all();
+        self.play_sfx(sound);
+        self.music_after_sfx = Some(resume_music);
+    }
+
     /// Cerulean/Saffron/Cinnabar badge text selects GET_KEY_ITEM in bank 2,
     /// which resolves to only BALL_POOF's second (noise) channel in Red.
     pub fn play_badge_bank_quirk(&mut self) {

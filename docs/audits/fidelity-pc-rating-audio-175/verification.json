@@ -1,0 +1,34 @@
+{
+  "native_revision": "a4",
+  "tests": {
+    "core": 2748,
+    "data": 263,
+    "app": 221,
+    "app_ignored": 33,
+    "agent": 54,
+    "audio": 99
+  },
+  "ci_regressions": {
+    "core_integration": 4,
+    "app_integration": 3,
+    "app_integration_ignored": 2
+  },
+  "sources": {
+    "crates/pokered-app/src/game.rs": "ab12db0928352d9a3955fc80c1d3631eea555daa3bbe50cbd8dd35a3e5e7a5db",
+    "crates/pokered-app/tests/visual_verify_zh_descriptions.rs": "534a63b8834959a0dab5f09b9a038002bf56269e0496d7daee69e8e4989e127d",
+    "crates/pokered-audio/src/audio_manager.rs": "819d587b00d4b4d3eec09e7b1e0657b7a1fb4eb64a980e82ef11530ee2734006",
+    "crates/pokered-audio/src/audio_manager_tests.rs": "84f32324be8d396dbdb5c2ac56e840491a67de9493a7bfcf6217404b0601fb39",
+    "crates/pokered-audio/src/output.rs": "f25b62f7caf529b0737134764bcca6590751d90e6496bca443a94ddc5d20cb09",
+    "crates/pokered-audio/src/output_gba.rs": "dc2bb82c390c5e7c2395c03e94883283d4276587590d4402c65418b30abac80e",
+    "crates/pokered-core/src/pc_screen.rs": "4c8233973df4850daf8799ec89722fb8d28fe52af68a5cb8c899c6b912d148e4",
+    "crates/pokered-core/tests/zh_descriptive_text.rs": "c8f9a5cc7ef087a337495c85890a1f2cdd3e85fbf487e64e7e98447c9791f37b"
+  },
+  "gba_source_count": 59,
+  "gba_metrics": 31,
+  "archive": {
+    "bytes": 604038,
+    "sha256": "3e1306355c8c0bb43ac9356de620206f40aa36e544c59d4db27a7c5095111f3e",
+    "entries": 48
+  },
+  "scope": "rating sound/music lifecycle and old PC acknowledgement tests; physical PCM/ROM matching and broader draft gates remain"
+}
