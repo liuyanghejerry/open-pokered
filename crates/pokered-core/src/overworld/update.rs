@@ -432,6 +432,17 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             return ScreenAction::Continue;
         }
 
+        // ItemUseReloadOverworldData -> DelayFrames(30) -> RemoveUsedItem.
+        // Show the restored field without ticking the leave-map animation,
+        // movement, NPCs or menu inputs during this protected wait.
+        if self.escape_rope_delay_frames > 0 {
+            self.escape_rope_delay_frames -= 1;
+            if self.escape_rope_delay_frames == 0 {
+                self.escape_rope_consumption_pending = true;
+            }
+            return ScreenAction::Continue;
+        }
+
         // FLY's `_LeaveMapAnim`: unlike TELEPORT/DIG this is a bird pickup,
         // two coordinate-list passes and a blocking off-screen hold. Only its
         // completion starts GBFadeOutToWhite and permits the map commit.

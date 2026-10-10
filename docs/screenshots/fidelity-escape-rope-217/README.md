@@ -1,0 +1,47 @@
+## Latest integration on master61a1e66
+
+Current integration evidence: actual master61a1e66 vs frozen source 158f8576af0fad812f013ea7722dac343b13bdff.
+Full core 2724 / app199 pass (23 opt-in capture helpers ignored).
+All 1204 PNG paths plus complete raw JSON/logs/source are read back from the
+lossless SHA256 PNG archive and compared byte-for-byte. Both sides repeat exactly;
+every frame compares all retained/full pixels. Baseline Game production prefix
+is unchanged, with identical test-only helpers. Same inputs/state/frame screenshots
+are published above. No ROM/SRAM/emulator state/executable is distributed. These
+are controlled collision-checked owner fixtures, not natural mainline traversal.
+Latest own CI and unchanged GBA gates must independently pass before merge.
+
+## Historical evidence retained
+
+# ESCAPE ROPE 的保护等待与库存提交
+
+原作 `engine/items/item_effects.asm::ItemUseEscapeRope` 成功分支先设置逃离状态，接着 `ItemUseReloadOverworldData`、`DelayFrames(30)`、`RemoveUsedItem`；之后关闭 START 菜单并执行离开地图动画。`wPseudoItemID` 非零的 DIG 在重新加载/等待/消耗之前返回，不能套用道具等待。
+
+复刻此前调用道具当帧就扣库存，并立即推进逃脱旋转。现在恢复场景后阻止输入/动画推进30帧，等待结束发出一次库存提交事件；应用拥有库存，收到事件后才移除一件。DIG 显式跳过仅属于背包道具的等待与提交。两个等待/提交字段有向后兼容的 JSON 默认值，并进入完整场景快照。
+
+## 当前生产基线与冻结构建
+
+实际 master：`b0e1abaa8e4bb5181268df58bc464c27ff1143c5`。独立候选：`297f31f35f6cec30bda0fb72a54500df1f2cb106`。此PR以 master 为base，不带未合入 #155/#158 的背包文字/查看器改动。
+
+基线生产源码完全不变，仅追加候选同一 cfg(test) 录制辅助。基线 game.rs 生产前缀 SHA256：`315f96977d0e314fabe1884513c4feed1a7bf0644bf32841a556bf2d3a5abe02`。双方独立空目标目录起建，构建结束后立即冻结程序再执行测试/录制；七个候选源码和程序 SHA256 见归档中的 manifest.json。没有把共享目录里的可变程序用于最终证据。
+
+完整核心 **2721**、应用 **197** 全部通过（21个按需捕获辅助忽略）。新增核心回归验证中途快照恢复、30帧输入保护、一次提交和旧 JSON 默认字段；原有 DIG 旋转+淡入淡出的精确时长不变，并加每帧不发出道具提交的断言。
+
+实际应用回归使用真实 Bag USE：A0选择，A16使用，UP+START20..31干扰，其他帧空输入。受控 seed42、English、Medium；正常加载真实 VictoryRoad1F 并等待120帧，站立格6,6用实际碰撞提供者验证可通行；库存2件。master 同一回归在第16帧库存提前变1而失败；候选第16..45帧保持2，第46帧才变1，且保护期间不能移动或打开菜单。
+
+双方各301帧重复两次，共 **1204 PNG** 与完整状态 JSON 逐字节重复一致。每帧缓存绘制与全量绘制的所有像素一致。两张截图均为相同输入、地图、位置和第170帧：master 已提前离开画面，候选仍在正确延后的离开动画中。
+
+## 原作实测
+
+参考版本 `fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c`。使用 PyBoy 从保留的 VictoryRoad1F 场景状态实际 START→ITEM→USE，记录原作指令钩子和库存；没有直接跳到物品函数，也没有修改 ROM 或地图 tileset。
+
+空输入和使用后+10..21帧的 UP+START 干扰分别录制两次，各450帧，共 **1800 PNG**，每个场景的完整 PNG/JSON 重复逐字节一致。钩子 `ItemUseReloadOverworldData` 在269帧、`RemoveUsedItem` 在300帧，库存首次减少也在300帧；干扰期间坐标17,11不变且只调用一次 START 菜单。这个31帧调用入口间隔包含原作 CPU/重载所处帧；候选实现源码的30个保护帧，不把绝对调用入口等同于前端帧。
+
+原始场景来自此前受控 Strength/巨石研究夹具，包含玩家、视图指针和NPC放置及无战斗标志，不能声称它是自然行走/主线可达性证明。原始 provenance 和录制脚本一并保留。候选应用夹具也通过受控入口进入地图，没有自然完成胜利之路的剧情证明。DIG 不新增此等待的依据是原作 wPseudoItemID 明确分支和保持原有时长的回归，不宣称本PR重新完整录制了原作所有 DIG/飞行轨迹。
+
+## 证据与限制
+
+`evidence.zip` 保存全部完整状态、日志、候选七文件源码、源码/冻结程序哈希和复现脚本。PNG 按SHA256无损去重；解压后 `python3 restore-pngs.py` 可还原全部3004个原文件路径/字节，已逐个与本地原始文件验证相同。未包含 ROM、SRAM、状态二进制或可执行程序。
+
+历史 a1/a2 的核心 DIG 时长失败记录保留：最初共享逃脱实现误带等待，修复生产 DIG 分支，没有放宽时长测试。a2 的快照/旧JSON新增测试已通过；最终 a4 完整套件全部通过。新API集成后初次干净候选构建 a3 被终止（状态143、没有编译错误），原日志保留；待基线构建终止成功后在同一候选专用目录串行续建为a4，源码哈希/程序身份重新冻结。更早4,4诊断没有验证地格，不作为发布证据；发布的双方辅助均强制检查6,6通行性。
+
+本PR只修复背包逃脱绳的等待、消耗和 DIG 分支，未改变字体、中文/拼音或对话布局。没有声称完整CPU/PPU、PCM、所有旋转/升空动画或更广剧情已完全一致；原有 Safari 离开后的计数/标志清理已有实现，不能把它列作本PR修复。
