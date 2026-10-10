@@ -8,20 +8,24 @@ game_scene CinnabarLabMetronomeRoom {
   @storyline("talkScientist1") {
     @trigger(map = "CinnabarLabMetronomeRoom", npc = 1)
     @if (getFlag("EVENT_GOT_TM35")) {
-      @speaker("") {
-        @t("Tch-tch-tch! That's the\nsound of a METRONOME!\n\nIt tweaks your POKeMON's\nbrain into using moves it\ndoesn't know!", "嗒-嗒-嗒！这就是挥指的声音！\n\n它能让你的宝可梦的大脑使出不\n知道的招式！")
-      }
+      printFieldText(t("Tch-tch-tch! That's the\nsound of a METRONOME!", "嗒-嗒-嗒！这就是挥指的声音！"))
+      printFieldParagraph(t("It tweaks your POKeMON's\nbrain into using moves it\ndoesn't know!", "它能让你的宝可梦的大脑使出不\n知道的招式！"))
+      finishFieldText()
     } @else {
-      @speaker("") {
-        @t("Tch-tch-tch! I made a cool\nTM!\n\nIt can cause all kinds of\nfun!", "嗒-嗒-嗒！我做了个超棒的TM！\n\n它可以带来各种乐趣！")
-      }
+      printFieldText(t("Tch-tch-tch! I made a cool\nTM!", "嗒-嗒-嗒！我做了个超棒的TM！"))
+      printFieldParagraph(t("It can cause all kinds of\nfun!", "它可以带来各种乐趣！"))
+      // The introduction ends with PROMPT; GiveItem follows its inner wait.
+      waitFieldPrompt()
       given = giveItem("TM_35", 1)
       @if (given) {
+        // ReceivedTM35Text returns after the full fanfare. The caller then
+        // sets the flag, before the outer DisplayTextID confirmation.
+        printItemFieldText(t("<PLAYER> received TM35!", "<PLAYER>得到了 TM35！"), "SFX_GET_ITEM_1")
         setFlag("EVENT_GOT_TM35")
-        showItemDialogue(t("<PLAYER> received TM35!", "<PLAYER>得到了 TM35！"))
       } @else {
-        @speaker("") { @t("Your pack is crammed full!", "你的背包装满了！") }
+        printFieldText(t("Your pack is crammed full!", "你的背包装满了！"))
       }
+      finishFieldText()
     }
   }
 

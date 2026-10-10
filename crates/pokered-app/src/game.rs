@@ -12380,6 +12380,7 @@ mod link_stats_cry_fidelity_tests {
         run_link_save_fixture(|| {
             let dir=std::path::PathBuf::from(std::env::var("FIDELITY_RECEIPT_CAPTURE").unwrap());std::fs::create_dir_all(&dir).unwrap();
             let (map,x,y,item,flag)=match std::env::var("FIDELITY_RECEIPT_CASE").unwrap().as_str() {
+                "metronome" => (MapId::CinnabarLabMetronomeRoom,7,3,"TM_35","EVENT_GOT_TM35"),
                 "old" => (MapId::VermilionOldRodHouse,2,5,"OLD_ROD","EVENT_GOT_OLD_ROD"),
                 "good" => (MapId::FuchsiaGoodRodHouse,5,4,"GOOD_ROD","EVENT_GOT_GOOD_ROD"),
                 "super" => (MapId::Route12SuperRodHouse,2,5,"SUPER_ROD","EVENT_GOT_SUPER_ROD"),
@@ -12474,6 +12475,95 @@ mod link_stats_cry_fidelity_tests {
                 assert!(!g.overworld.script_flags().get(flag).copied().unwrap_or(false));
                 assert_eq!(g.save_data.game_data.bag,before);
                 assert!(g.overworld.displayed_field_dialogue().is_none());
+            }
+        });
+    }
+
+    #[test]
+    fn metronome_gift_waits_for_intro_then_sound_then_outer_confirmation() {
+        use pokered_core::overworld::{Direction,script_bridge::{ScriptEffect,FieldParagraphPhase}};
+        use pokered_core::snapshot::OverworldSnapshot;
+        use pokered_data::items::ItemId;
+        run_link_save_fixture(|| {
+            for full in [false,true] {
+                let mut g=fixture(Species::Bulbasaur,7,Direction::Up);
+                g.state.config.language=pokered_core::game_state::Lang::En;
+                g.save_data.game_data.bag=pokered_core::items::inventory::Inventory::new();
+                if full {
+                    for id in 1..=255 {
+                        let id=ItemId::from_id(id);
+                        if id==ItemId::from_id(235) {continue;} // TM35 must not stack into the full bag.
+                        g.save_data.game_data.bag.add_item(id,1).unwrap();
+                        if g.save_data.game_data.bag.is_full() {break;}
+                    }
+                }
+                let original_bag=g.save_data.game_data.bag.clone();
+                let idle=InputState::new();let a=button(GbButton::A);
+                g.overworld.warp_to_map(MapId::CinnabarLabMetronomeRoom,7,3);
+                for _ in 0..120 {g.update(&idle);}
+                g.update(&button(GbButton::Up));for _ in 0..20 {g.update(&idle);}
+                let mut intro=false;
+                for t in 0..2400 {
+                    let snap=OverworldSnapshot::capture(&g.overworld);
+                    assert!(!g.save_data.game_data.bag.has_item_const("TM_35"));
+                    assert!(!g.overworld.script_flags().get("EVENT_GOT_TM35").copied().unwrap_or(false));
+                    if matches!(snap.active_script_effect,Some(ScriptEffect::WaitFieldPrompt {protected_remaining:0})) {intro=true;break;}
+                    let ack=receipt_prompt_needs_press(&g);g.update(if t==0||ack {&a} else {&idle});
+                }
+                assert!(intro,"scientist's introductory PROMPT must precede GiveItem");
+                for _ in 0..60 {g.update(&idle);}
+                assert!(!g.save_data.game_data.bag.has_item_const("TM_35"));
+                for _ in 0..8 {g.update(&a);}
+                g.update(&idle);
+                assert_eq!(g.save_data.game_data.bag.has_item_const("TM_35"),!full);
+                let mut sound_start=None;let mut sound_end=None;
+                for t in 0..2400 {
+                    let snap=OverworldSnapshot::capture(&g.overworld);
+                    if matches!(snap.active_script_effect,Some(ScriptEffect::PrintItemFieldText {phase:FieldParagraphPhase::PlayingSound,..})) {
+                        assert!(!full);
+                        assert!(!g.overworld.script_flags().get("EVENT_GOT_TM35").copied().unwrap_or(false));
+                        if sound_start.is_none() {
+                            sound_start=Some(t);
+                            let raw=serde_json::to_string(&snap).unwrap();
+                            serde_json::from_str::<OverworldSnapshot>(&raw).unwrap().restore_into(&mut g.overworld);
+                        }
+                        let mut keys=InputState::new();
+                        if sound_start.is_some_and(|start|t==start+1) {keys.press(GbButton::B);keys.press(GbButton::Down);}
+                        g.update(&keys);
+                        assert_eq!((g.overworld.state.player.x,g.overworld.state.player.y),(7,3));
+                    } else if sound_start.is_some() {sound_end=Some(t);break;} else {
+                        if g.overworld.active_script_effect_label().as_deref()==Some("FinishFieldText") {break;}
+                        let ack=receipt_prompt_needs_press(&g);g.update(if ack {&a} else {&idle});
+                    }
+                }
+                assert_eq!(sound_start.is_some(),!full);
+                if !full {
+                    let expected=AudioOutput::new_pcm();expected.play_sfx(SfxId::GetItem1);
+                    let mut duration=0;while expected.is_sfx_playing() && duration<1000 {expected.update_frame();duration+=1;}
+                    assert_eq!(sound_end.unwrap()-sound_start.unwrap(),duration,"snapshot must not replay or shorten fanfare");
+                }
+                for _ in 0..60 {g.update(&idle);}
+                assert_eq!(g.overworld.active_script_effect_label().as_deref(),Some("FinishFieldText"));
+                assert_eq!(g.overworld.script_flags().get("EVENT_GOT_TM35").copied().unwrap_or(false),!full);
+                let (top,bottom)=g.overworld.displayed_field_dialogue().unwrap().get_display_text().unwrap();
+                assert!(format!("{top} {bottom}").contains(if full {"crammed full"} else {"received TM35"}));
+                for _ in 0..8 {g.update(&a);assert!(g.overworld.displayed_field_dialogue().is_some());}
+                for _ in 0..40 {g.update(&idle);}
+                assert!(g.overworld.displayed_field_dialogue().is_none());
+                if full {assert_eq!(g.save_data.game_data.bag,original_bag);} else {
+                    let bag=g.save_data.game_data.bag.clone();let mut explanation=false;
+                    for t in 0..3000 {
+                        assert!(!matches!(OverworldSnapshot::capture(&g.overworld).active_script_effect,Some(ScriptEffect::PrintItemFieldText {..})),"repeat must not give another TM or receipt");
+                        if let Some(d)=g.overworld.displayed_field_dialogue() {
+                            explanation|=d.get_display_text().is_some_and(|(a,b)|format!("{a} {b}").contains("doesn't know"));
+                        }
+                        let ack=receipt_prompt_needs_press(&g);g.update(if t==0||ack {&a} else {&idle});
+                        if explanation && g.overworld.script_engine_idle() && g.overworld.active_script_effect_label().is_none() {break;}
+                    }
+                    assert!(explanation,"repeat explains METRONOME");
+                    assert_eq!(g.save_data.game_data.bag,bag);
+                    assert!(g.overworld.displayed_field_dialogue().is_none());
+                }
             }
         });
     }
