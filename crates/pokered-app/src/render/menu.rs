@@ -1489,6 +1489,31 @@ pub fn draw_bag(state: &BagScreenState, fb: &mut FrameBuffer, lang: Lang) {
         BagPhase::MachineTeach { item, cursor } => {
             menus::bag::draw_machine_prompt(item, Some(cursor), &mut ui, lang);
         }
+        BagPhase::TossQuestion { .. } | BagPhase::TossConfirm { .. } | BagPhase::TossWait { .. }
+        | BagPhase::TossResult { .. } | BagPhase::TossRejected => {
+            if let Some(dialogue) = state.toss_dialogue() {
+                if let Some((top, bottom)) = dialogue.get_display_text() {
+                    let text = if bottom.is_empty() { top } else { format!("{}\n{}", top, bottom) };
+                    menus::dialog::draw_paginated(
+                        &text, state.toss_arrow_visible(),
+                        &pokered_data::ui_layout::schema::DIALOG_DEFAULT_LAYOUT, &mut ui, lang,
+                    );
+                }
+            }
+            let cursor = match state.phase() {
+                BagPhase::TossConfirm { cursor, .. } | BagPhase::TossWait { cursor, .. } => Some(cursor),
+                _ => None,
+            };
+            if let Some(cursor) = cursor {
+                ui.text_box(TileRect::new(14, 7, 6, 7), InkColor::Black, true, |frame| {
+                    frame.label(2, 1, lang_data::ui_label("YES", lang == Lang::Zh), InkColor::Black);
+                    frame.label(2, 3, lang_data::ui_label("NO", lang == Lang::Zh), InkColor::Black);
+                    if let Some(c) = &BAG_DEFAULT_LAYOUT.list.cursor {
+                        frame.cursor_glyph_at(1, 1 + cursor as u32 * 2, c.glyph, c.color);
+                    }
+                });
+            }
+        }
         BagPhase::Browsing => {}
     }
 }
