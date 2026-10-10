@@ -1741,6 +1741,13 @@ impl ShopVisualKey {
             }
         }
 
+        if let Some(bag) = mart.sale_bag_for_display() {
+            hash_u16(&mut visual_hash, bag.len() as u16);
+            for &(item, quantity) in bag {
+                hash_byte(&mut visual_hash, item as u8);
+                hash_u32(&mut visual_hash, quantity);
+            }
+        }
         hash_byte(&mut visual_hash, mart.field_message_active() as u8);
         hash_byte(&mut visual_hash, mart.field_prompt_arrow_visible() as u8);
         for line in mart.field_message_lines() {
@@ -2945,6 +2952,63 @@ mod session_tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn mart_sale_cash_wait_retains_old_bag_and_matches_full_draw() {
+        use dotzuki_app::{GbButton, InputState};
+        use pokered_core::items::shop::{ConfirmChoice, MartState, SellMenuState, ShopInventory};
+        use pokered_data::items::ItemId;
+        let mut game = PokemonGame::new(GameVersion::Red);
+        game.audio = Some(pokered_audio::output::AudioOutput::new_pcm());
+        game.state.config.language = Lang::En;
+        game.save_data.game_data.player_money = 3000;
+        game.save_data.game_data.bag = pokered_core::items::inventory::Inventory::new_bag();
+        game.save_data.game_data.bag.add_item(ItemId::Antidote, 2).unwrap();
+        game.save_data.game_data.bag.add_item(ItemId::Potion, 4).unwrap();
+        let mut mart = MartState::new(ShopInventory::new(vec![ItemId::Potion]));
+        mart.configure_field_text(1);
+        mart.phase = MartPhase::Sell(SellMenuState::Confirm {
+            item_index: 1, quantity: 4, max_quantity: 4, selected: ConfirmChoice::Yes,
+        });
+        game.state.screen = GameScreen::Shop(mart);
+        let mut session = RenderSession::new();
+        let mut retained = FrameBuffer::new(RenderConfig::new(160,144), Rgba::WHITE);
+        let mut full = retained.clone();
+        let mut scroll = |_: &mut [u8], _: usize, _: usize, _: i32, _: i32, _: u8| {};
+        let mut saw_cash_wait = false;
+        let mut saw_list = false;
+        let mut idle_reused = false;
+        for frame in 0..120 {
+            let mut input = InputState::new();
+            if frame == 0 { input.press(GbButton::A); }
+            else if frame == 4 { input.press(GbButton::B); }
+            game.update(&input);
+            let GameScreen::Shop(mart) = &game.state.screen else { panic!("cash wait left shop"); };
+            if frame < 15 {
+                assert_eq!(game.save_data.game_data.player_money, 3000);
+                assert_eq!(game.save_data.game_data.bag.item_quantity(ItemId::Potion), 4);
+            } else {
+                assert_eq!(game.save_data.game_data.player_money, 3600);
+                assert_eq!(game.save_data.game_data.bag.item_quantity(ItemId::Potion), 0);
+                if let Some(bag) = mart.sale_bag_for_display() {
+                    assert_eq!(bag, [(ItemId::Antidote, 2), (ItemId::Potion, 4)].as_slice());
+                    assert!(matches!(mart.display_phase(), MartPhase::Sell(SellMenuState::Quantity { item_index: 1, .. })));
+                    saw_cash_wait = true;
+                } else {
+                    assert!(!mart.field_message_active());
+                    assert!(matches!(mart.display_phase(), MartPhase::Sell(SellMenuState::SelectItem { cursor: 0 })));
+                    saw_list = true;
+                }
+            }
+            let update = session.render(&mut game, &mut retained, &mut scroll);
+            idle_reused |= matches!(update, FrameUpdate::Reuse);
+            game.draw(&mut full);
+            for y in 0..144 { for x in 0..160 {
+                assert_eq!(retained.get_pixel(x,y), full.get_pixel(x,y), "sale frame{frame} ({x},{y})");
+            } }
+        }
+        assert!(saw_cash_wait && saw_list && idle_reused);
     }
 
     #[test]

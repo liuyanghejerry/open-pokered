@@ -6758,10 +6758,18 @@ impl PokemonGame {
         } else {
             self.save_data.party.iter().collect()
         };
+        snapshot["audio_sfx"] = self.audio.as_ref().and_then(|audio| {
+            audio.manager.lock().ok().map(|manager| serde_json::json!({
+                "id": manager.sequencer.current_sfx_id,
+                "playing": manager.is_sfx_playing(),
+            }))
+        }).unwrap_or(serde_json::Value::Null);
         snapshot["shop_message"] = match &self.state.screen {
             GameScreen::Shop(mart) => serde_json::json!({
                 "active": mart.field_message_active(), "waiting": mart.field_message_waiting(),
                 "lines": mart.field_message_lines(),
+                "display_phase": format!("{:?}", mart.display_phase()),
+                "sale_display_bag": mart.sale_bag_for_display(),
             }),
             _ => serde_json::Value::Null,
         };
@@ -13827,13 +13835,54 @@ mod mart_cash_register_audio_tests {
         input.press(GbButton::A);
         game.update(&input);
         assert_eq!(game.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.current_sfx_id,
-            SfxId::Purchase as u8);
+            SfxId::PressAB as u8);
+        let idle = InputState::new();
+        for _ in 0..14 {
+            game.update(&idle);
+            assert_eq!(game.save_data.game_data.player_money, 3000);
+            assert_eq!(game.save_data.game_data.bag.item_quantity(ItemId::Potion), 4);
+        }
+        game.update(&idle);
+        // The confirmation click is still owned by the audio sequencer when
+        // the 15-frame menu delay ends. Purchase must wait, not replace it.
+        assert_eq!(game.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.current_sfx_id,
+            SfxId::PressAB as u8);
+        assert!(game.audio.as_ref().unwrap().is_sfx_playing());
+        let mut cash_started_at = None;
+        for frame in 16..120 {
+            game.update(&idle);
+            assert_eq!(game.save_data.game_data.player_money, 3600);
+            assert_eq!(game.save_data.game_data.bag.count(), 0);
+            if game.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.current_sfx_id == SfxId::Purchase as u8 {
+                cash_started_at = Some(frame);
+                break;
+            }
+        }
+        assert!(cash_started_at.is_some(), "cash register never followed confirmation click");
+        eprintln!("mart audio: confirmation=0 commit=15 cash={}", cash_started_at.unwrap());
         assert_eq!(game.save_data.game_data.player_money, 3600);
         assert_eq!(game.save_data.game_data.bag.count(), 0);
         let GameScreen::Shop(mart) = &game.state.screen else { panic!("sale left the mart"); };
         assert!(matches!(mart.phase, MartPhase::Sell(SellMenuState::SelectItem { cursor: 0 })));
-        assert_eq!(mart.field_message_lines(), vec!["What would you", "like to sell?"]);
-        assert!(!mart.field_message_active());
+        assert!(mart.field_message_active());
+        assert!(matches!(mart.display_phase(), MartPhase::Sell(SellMenuState::Quantity { .. })));
+        assert_eq!(mart.sale_bag_for_display(), Some([(ItemId::Potion, 4)].as_slice()));
+        // Drive the real audio owner until its sequencer releases the SFX.
+        let mut returned = false;
+        for elapsed in 1..120 {
+            game.update(&idle);
+            assert_eq!(game.save_data.game_data.player_money, 3600);
+            assert_eq!(game.save_data.game_data.bag.count(), 0);
+            let GameScreen::Shop(mart) = &game.state.screen else { panic!("sale left the mart"); };
+            if !mart.field_message_active() {
+                assert!(mart.sale_bag_for_display().is_none());
+                assert_eq!(mart.field_message_lines(), vec!["What would you", "like to sell?"]);
+                eprintln!("mart audio: list={}", cash_started_at.unwrap() + elapsed);
+                returned = true;
+                break;
+            }
+        }
+        assert!(returned, "cash register never returned to the bag list");
     }
 }
 
