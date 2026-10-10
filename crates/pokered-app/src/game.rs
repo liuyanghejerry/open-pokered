@@ -11380,6 +11380,42 @@ mod escape_rope_owner_216 {
 
 
 #[cfg(all(test,not(target_os="none")))]
+mod bag_action_owner_218 {
+ use super::*;
+ fn run(capture:Option<&std::path::Path>) {
+  use pokered_data::items::ItemId;
+  for case in ["down-down","up","down-up","up-down","ab","down-a"] {
+   let mut g=PokemonGame::new(GameVersion::Red);g.audio=None;g.set_seed(42);g.state.config.language=pokered_core::game_state::Lang::En;g.state.config.text_speed=pokered_core::game_state::TextSpeed::Medium;
+   let mut mon=pokered_core::pokemon::stats::create_pokemon(pokered_data::species::Species::Bulbasaur,5,[0x99,0x88]).unwrap();mon.hp-=1;g.save_data.party.add(mon).unwrap();
+   g.state.screen=GameScreen::Overworld;g.overworld.warp_to_map(MapId::ViridianPokecenter,4,4);let mut input=InputState::new();for _ in 0..120 {g.update(&input);}
+   assert!(pokered_core::overworld::update::is_script_walkable_tile(g.overworld.map_data.as_ref().unwrap(),4,4));
+   g.save_data.game_data.bag=pokered_core::items::inventory::Inventory::new_bag();g.save_data.game_data.bag.add_item(ItemId::Potion,3).unwrap();g.bag_screen=BagScreenState::new(g.save_data.game_data.bag.items().to_vec());g.state.screen=GameScreen::Bag;
+   let mut session=crate::render::session::RenderSession::new();let mut retained=FrameBuffer::new(dotzuki_engine::render_config::RenderConfig::new(160,144),pokered_renderer::Rgba::WHITE);let mut scroll=|_:&mut [u8],_:usize,_:usize,_:i32,_:i32,_:u8|{};let mut held=Vec::new();let mut rows=Vec::new();
+   for t in 0..121 {
+    input.begin_frame();let keys=match t {
+     0=>vec![GbButton::A],
+     8=>match case {"down-down"|"down-up"|"down-a"=>vec![GbButton::Down],"up"=>vec![GbButton::Up],"up-down"=>vec![GbButton::Up,GbButton::Down],_=>vec![]},
+     16=>match case {"down-down"=>vec![GbButton::Down],"down-up"=>vec![GbButton::Up],_=>vec![]},
+     24=>match case {"ab"=>vec![GbButton::A,GbButton::B],"down-a"=>vec![GbButton::A,GbButton::Down],_=>vec![GbButton::A]},_=>vec![]};
+    for &key in &held {if !keys.contains(&key){input.release(key);}}for &key in &keys {if !held.contains(&key){input.press(key);}}held=keys;
+    g.update(&input);session.render(&mut g,&mut retained,&mut scroll);let mut full=FrameBuffer::new(dotzuki_engine::render_config::RenderConfig::new(160,144),pokered_renderer::Rgba::WHITE);g.draw(&mut full);assert_eq!(retained.packed(),full.packed(),"{case} cached/full {t}");
+    if capture.is_none() {
+     if t<24 {let cursor=if (case=="down-down" || case=="down-a") && t>=8 || case=="down-up" && (8..16).contains(&t) {1}else{0};assert_eq!(g.bag_screen.phase(),pokered_core::bag_screen::BagPhase::ActionMenu{cursor},"{case} original two-entry priority at{t}");}
+     else if matches!(case,"down-down"|"down-a") {assert_eq!(g.state.screen,GameScreen::Bag);assert_eq!(g.bag_screen.phase(),pokered_core::bag_screen::BagPhase::TossQuantity{qty:1});}
+     else if case=="ab" {assert_eq!(g.state.screen,GameScreen::Bag);assert_eq!(g.bag_screen.phase(),pokered_core::bag_screen::BagPhase::Browsing);}
+     else {assert_eq!(g.state.screen,GameScreen::PartyScreen,"{case} uses POTION, opens party");}
+     assert_eq!(g.save_data.game_data.bag.item_quantity(ItemId::Potion),3);
+    }
+    if let Some(path)=capture {let dir=path.join(case);std::fs::create_dir_all(&dir).unwrap();full.save_png(&dir.join(format!("frame-{t:04}.png"))).unwrap();rows.push(serde_json::json!({"t":t,"input":input.raw_current(),"screen":format!("{:?}",g.state.screen),"phase":format!("{:?}",g.bag_screen.phase()),"stock":g.save_data.game_data.bag.item_quantity(ItemId::Potion),"overworld":pokered_core::snapshot::OverworldSnapshot::capture(&g.overworld)}));}
+   }
+   if let Some(path)=capture {std::fs::write(path.join(case).join("frames.json"),serde_json::to_string_pretty(&rows).unwrap()).unwrap();}
+  }
+ }
+ #[test]fn bag_action_two_entry_selection_and_input_priority(){std::thread::Builder::new().stack_size(16*1024*1024).spawn(||run(None)).unwrap().join().unwrap();}
+ #[test]#[ignore="controlled Bag USE/TOSS before-after capture"]fn capture_bag_action_218(){let path=std::path::PathBuf::from(std::env::var("BAG_ACTION_CAPTURE_218").unwrap());std::thread::Builder::new().stack_size(16*1024*1024).spawn(move||run(Some(&path))).unwrap().join().unwrap();}
+}
+
+#[cfg(all(test,not(target_os="none")))]
 mod bag_list_owner_219 {
  use super::*;
  fn run(capture:Option<&std::path::Path>) {

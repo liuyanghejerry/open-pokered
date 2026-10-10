@@ -35,7 +35,7 @@ impl BagScreenInput {
 pub enum BagPhase {
     /// Scrolling the item list (cursor over an item, or the trailing CANCEL row).
     Browsing,
-    /// USE / TOSS / CANCEL menu for the selected item. cursor: 0=USE 1=TOSS 2=CANCEL.
+    /// USE / TOSS menu for the selected item. cursor: 0=USE 1=TOSS.
     ActionMenu { cursor: u8 },
     /// "Toss how many?" quantity selector for the selected item.
     TossQuantity { qty: u32 },
@@ -334,9 +334,11 @@ impl BagScreenState {
     }
 
     fn update_action_menu(&mut self, input: BagScreenInput, mut cursor: u8, lang: Lang, delay: u16) -> BagScreenAction {
-        if input.up && cursor > 0 {
-            cursor -= 1;
-        } else if input.down && cursor < 2 {
+        // HandleMenuInput checks UP first, even when already at the top.
+        // USE/TOSS has wMaxMenuItem=1 and no wrapping/cancel entry.
+        if input.up {
+            cursor = cursor.saturating_sub(1);
+        } else if input.down && cursor < 1 {
             cursor += 1;
         }
         self.phase = BagPhase::ActionMenu { cursor };
