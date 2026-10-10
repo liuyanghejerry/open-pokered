@@ -2618,6 +2618,62 @@ mod session_tests {
     use pokered_core::options_menu::OptionsRow;
     use pokered_renderer::Rgba;
 
+    fn empty_party_frames_200(capture: Option<&std::path::Path>) {
+        use dotzuki_app::{GbButton, InputState};
+        use pokered_core::start_menu::StartMenuItem;
+        let mut game = PokemonGame::new(GameVersion::Red);
+        game.audio = None;
+        game.save_data.party = pokered_core::pokemon::party::Party::default();
+        game.state.config.language = Lang::En;
+        game.overworld.warp_to_map(MapId::PalletTown, 5, 5);
+        game.state.screen = GameScreen::StartMenu;
+        game.start_menu.open(false, false, false);
+        let mut retained = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+        let mut session = RenderSession::new();
+        let mut scroll = |_: &mut [u8], _: usize, _: usize, _: i32, _: i32, _: u8| {};
+        let mut rows = Vec::new();
+        for frame in 0..8 {
+            let mut input = InputState::new();
+            if frame == 1 { input.press(GbButton::A); }
+            game.update(&input);
+            session.render(&mut game, &mut retained, &mut scroll);
+            let mut full = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+            game.draw(&mut full);
+            for y in 0..144 { for x in 0..160 {
+                assert_eq!(retained.get_pixel(x, y), full.get_pixel(x, y),
+                    "empty-party frame{frame} pixel({x},{y})");
+            }}
+            assert_eq!(game.save_data.party.count(), 0);
+            if capture.is_none() {
+                assert_eq!(game.state.screen, GameScreen::StartMenu);
+                assert_eq!(game.start_menu.current_item(), StartMenuItem::Pokemon);
+                assert_eq!(game.start_menu.item_count(), 6);
+            }
+            if let Some(path) = capture {
+                std::fs::create_dir_all(path).unwrap();
+                full.save_png(&path.join(format!("frame-{frame:04}.png"))).unwrap();
+                rows.push(serde_json::json!({"frame":frame,"input_bits":input.raw_current(),
+                    "screen":format!("{:?}",game.state.screen),"party":game.save_data.party.count(),
+                    "items":game.start_menu.items().iter().map(|i|format!("{i:?}")).collect::<Vec<_>>()}));
+            }
+        }
+        if let Some(path) = capture {
+            std::fs::write(path.join("frames.json"), serde_json::to_string_pretty(&rows).unwrap()).unwrap();
+        }
+    }
+
+    #[test]
+    fn empty_party_menu_retained_frames_match_full_draw() {
+        empty_party_frames_200(None);
+    }
+
+    #[test]
+    #[ignore = "controlled empty-party menu before/after capture"]
+    fn capture_empty_party_200() {
+        let path = std::path::PathBuf::from(std::env::var("EMPTY_PARTY_CAPTURE_200").unwrap());
+        empty_party_frames_200(Some(&path));
+    }
+
     #[test]
     fn slots_retained_cursor_frames_match_full_draw_for_every_bet() {
         use pokered_core::slots_screen::SlotsScreen;

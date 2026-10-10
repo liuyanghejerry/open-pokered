@@ -1,0 +1,35 @@
+{
+  "base": "748c221b2ae8b2fd73824123b095f50b7b47d24f",
+  "native": {
+    "base": "748c221",
+    "binaries": {
+      "core-tests": "6c1854be25e94c7e7d07a31f275cb5978c2ef0cd1f26b9ac0562d5a764625213",
+      "app-tests": "b582a38d14d57b2a8a1ace034258e2c8705c42efa811122279a5cad8e46b1a53"
+    },
+    "sources": {
+      "crates/pokered-core/src/start_menu.rs": "9bfcca341755daf934d614df5742577769140c06b5fecf9532170a725332fbbf",
+      "crates/pokered-core/src/start_menu_tests.rs": "42dead89bf2e0e34f03ccd1ff691f7c03bf6aedcc22b1834303757c1a48eae9b",
+      "crates/pokered-app/src/render/session.rs": "107530f8adaf091f0b2ac4d435a2f5a35c75e9e0e28fcba6f4274ff95e966f07"
+    },
+    "scope": "empty-party itemvisibility and zero-partyselection only; no3frame initialization timing repair"
+  },
+  "master": {
+    "base": "748c221",
+    "binary": "83d29bb296186a4b586046f377a234b79f76cb340c2122c58b6d317ca7b47a37",
+    "capture_source": "107530f8adaf091f0b2ac4d435a2f5a35c75e9e0e28fcba6f4274ff95e966f07",
+    "scope": "actual master production with identical ignored helper appended"
+  },
+  "tests": {
+    "core": 2708,
+    "app": 191,
+    "app_ignored": 15
+  },
+  "repeats": "both sides all8PNG+JSON byte-exact",
+  "files": {
+    "select-before.png": "ba4727ec1f817d862b56d651a54a53d4e257f0d5512ebbe1fea705436ba3ce7c",
+    "menu-before.png": "244830fa3f6b30d2286c0e10e2d2b793ede59297fcd42f5b4c2dd56121faba6b",
+    "select-after.png": "f81e222da3f2e27c28d3c9cb3c68f9f74ba6e6ba8def67b3e378e77821c171dd",
+    "menu-after.png": "f81e222da3f2e27c28d3c9cb3c68f9f74ba6e6ba8def67b3e378e77821c171dd",
+    "evidence.zip": "8f260cbbdbccadefb8fd8fccd3b2c1d33bc51c7ec9108dbc09d819ea738e9c8e"
+  }
+}
