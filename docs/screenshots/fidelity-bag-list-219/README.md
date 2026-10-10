@@ -32,3 +32,18 @@ is unchanged, with identical test-only helpers. Same inputs/state/frame screensh
 are published above. No ROM/SRAM/emulator state/executable is distributed. These
 are controlled collision-checked owner fixtures, not natural mainline traversal.
 Latest own CI and unchanged GBA gates must independently pass before merge.
+
+
+## Current master integration 591480e
+
+The paired images above have been replaced with actual master591480e and
+this independently frozen candidate using the identical helper, fixture,
+inputs and relative frame. Production master is unchanged: only cfg(test)
+helpers are appended. Full source/binary hash manifests, complete fresh
+core/app regression logs, negative master owner test, and 3388
+PNG with complete raw JSON are in integration-591480e.zip; every archive
+file is read back and byte-compared. Both repetitions are byte-exact,
+every recorded cached frame matches every full-redraw pixel. Earlier
+evidence.zip remains historical and is not claimed as this integration.
+Latest doc commit CI must be green before merge; stacked swap still
+requires its list dependency and own master integration checks.
