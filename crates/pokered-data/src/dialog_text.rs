@@ -65,6 +65,8 @@ const EXACT: &[(&str, &str)] = &[
     ("Too bad! The trade\nwas canceled!", "真遗憾！交换\n被取消了！"),
     // ── Safari game over (overworld/update.rs) ──────────────────────
     ("PA: Ding-ding!\nYour SAFARI GAME is over!", "广播：叮叮！\n你的狩猎游戏结束了！"),
+    ("PA: Ding-dong!\n\nTime's up!", "广播：叮咚！\n\n时间到了！"),
+    ("PA: Your SAFARI\nGAME is over!", "广播：你的狩猎\n游戏结束了！"),
     // ── Bedroom intro (overworld/screen.rs) ─────────────────────────
     ("...Okay!\nIt's time to go!", "……好了！\n该出发了！"),
     // ── map.json sign/NPC fallback texts ────────────────────────────

@@ -1293,6 +1293,27 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             }
         }
 
+        // SafariZoneCheck runs after JoypadOverworld, before START and A.
+        // A last ball used in battle ends the hunt on returning to the idle
+        // field; it does not require another walking step.
+        if self.active_script_effect.is_none()
+            && self.scripted_player_path.is_empty()
+            && !self.cutscene_manager.is_blocking()
+            && self.pending_connection.is_none()
+            && self.ledge_jump.is_none()
+            && self.state.player.movement_state == MovementState::Idle
+            && self.state.walk_counter == 0
+            && self.safari_game_active
+            && self.safari_balls == 0
+            && pokered_data::map_flags::is_safari_zone_map(self.state.current_map)
+            && self.pending_wild_encounter.is_none()
+            && self.pending_dialogue.is_none()
+            && self.safari_eject_pending.is_none()
+        {
+            self.trigger_safari_game_over();
+            return ScreenAction::Continue;
+        }
+
         // A-button: check signs first, then NPCs (matches original game priority).
         // Held during a trainer engage intro (wJoyIgnore).
         if a_just_pressed
@@ -2121,9 +2142,14 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 );
             }
 
-            // Safari Zone: decrement the step counter and end the game at zero.
+            // SafariZoneCheckSteps tests the old counter before decrementing.
             if step_completed {
                 self.tick_safari_steps();
+                if self.safari_eject_pending.is_some() {
+                    // SafariZoneCheckSteps jumps straight to WarpFound2 on
+                    // timeout, before poison, daycare experience, or battle.
+                    return ScreenAction::Continue;
+                }
                 // Day Care: a deposited Pokémon gains one experience point per
                 // overworld step (original IncrementDayCareMonExp, called from
                 // the per-step ApplyOutOfBattlePoisonDamage). The exp lives in
@@ -4120,8 +4146,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     }
 
     /// Safari Zone step accounting, run once per completed step. Decrements the
-    /// step counter while inside the zone and, when the step (or ball) counter
-    /// reaches zero, ejects the player back to the gate with the game-over line.
+    /// step counter while inside the zone. The original permits the step that
+    /// changes 1 to 0 and ends the game on the following completed step.
     fn tick_safari_steps(&mut self) {
         if !self.safari_game_active {
             return;
@@ -4131,12 +4157,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         }
         if self.safari_steps > 0 {
             self.safari_steps -= 1;
+            return;
         }
-        // Eject on empty step or ball counter. Only fire when nothing else is
+        // Eject on an already empty step counter. Only fire when nothing else is
         // mid-flight (a wild battle just triggered, an active script, or an open
         // text box); the check re-runs on the next step, so the eject is not lost.
-        if (self.safari_steps == 0 || self.safari_balls == 0)
-            && self.pending_wild_encounter.is_none()
+        if self.pending_wild_encounter.is_none()
             && self.active_script_effect.is_none()
             && self.pending_dialogue.is_none()
             && self.safari_eject_pending.is_none()
@@ -4148,11 +4174,23 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     /// End the Safari game: show the announcer's "game over" line and queue the
     /// eject warp back to the gate (fired once the message is dismissed).
     fn trigger_safari_game_over(&mut self) {
+        // SafariGameOverText omits TimesUpText when there are no balls left.
+        // Preserve that distinction before end_safari_game clears counters.
+        let timed_out = self.safari_balls != 0;
         self.end_safari_game();
         self.set_flag_live("EVENT_SAFARI_GAME_OVER", true);
-        let msg = "PA: Ding-ding!\nYour SAFARI GAME is over!";
-        self.pending_dialogue =
-            Some(screen::BedroomDialogue::from_message(&self.localize_message(msg)));
+        self.audio_requests.push(OverworldAudioRequest::StopMusic);
+        self.audio_requests.push(OverworldAudioRequest::PlaySound {
+            sound_id: "SFX_SAFARI_ZONE_PA".to_string(),
+        });
+        let mut pages = Vec::new();
+        if timed_out {
+            let text = self.localize_message("PA: Ding-dong!\n\nTime's up!");
+            pages.extend_from_slice(screen::BedroomDialogue::from_message(&text).pages());
+        }
+        let text = self.localize_message("PA: Your SAFARI\nGAME is over!");
+        pages.extend_from_slice(screen::BedroomDialogue::from_message(&text).pages());
+        self.pending_dialogue = Some(screen::BedroomDialogue::from_pages(pages));
         self.safari_eject_pending = Some(PendingWarp {
             dest_map: MapId::SafariZoneGate,
             dest_x: screen::SAFARI_GATE_RETURN_X,
@@ -4247,6 +4285,10 @@ mod safari_timer_tests {
         ow.safari_steps = 1;
         ow.tick_safari_steps();
         assert_eq!(ow.safari_steps_remaining(), 0);
+        assert!(ow.is_safari_game_active(), "the 1-to-0 step is permitted");
+        assert!(ow.pending_dialogue.is_none());
+        assert!(ow.safari_eject_pending.is_none());
+        ow.tick_safari_steps();
         assert!(!ow.is_safari_game_active());
         assert!(ow.pending_dialogue.is_some());
         ow.sync_flags_from_engine();
@@ -4266,10 +4308,31 @@ mod safari_timer_tests {
         let mut ow = screen_at(MapId::SafariZoneGate);
         warp_to(&mut ow, MapId::SafariZoneCenter);
         ow.safari_balls = 0;
-        ow.tick_safari_steps();
+        let before = (ow.state.player.x, ow.state.player.y);
+        ow.update_frame(OverworldInput::new(false, false, false, false, false, false, false, false));
+        assert_eq!((ow.state.player.x, ow.state.player.y), before);
         assert!(!ow.is_safari_game_active());
         assert!(ow.unified_flags.get_flag("EVENT_SAFARI_GAME_OVER"));
         assert!(ow.safari_eject_pending.is_some());
+    }
+
+    #[test]
+    fn safari_announcement_distinguishes_timeout_from_empty_balls() {
+        for balls in [0, 1] {
+            let mut ow = screen_at(MapId::SafariZoneCenter);
+            ow.start_safari_game();
+            ow.safari_balls = balls;
+            ow.audio_requests.clear();
+            ow.trigger_safari_game_over();
+            let pages = ow.pending_dialogue.as_ref().unwrap().pages();
+            let text = pages.iter().map(|p| format!("{}\n{}", p.line1, p.line2))
+                .collect::<Vec<_>>().join("\n");
+            assert_eq!(text.contains("Time's up!"), balls != 0);
+            assert_eq!(text.contains("Ding-dong!"), balls != 0);
+            assert!(text.ends_with("PA: Your SAFARI\nGAME is over!"));
+            assert!(matches!(ow.audio_requests.first(), Some(OverworldAudioRequest::StopMusic)));
+            assert!(matches!(ow.audio_requests.get(1), Some(OverworldAudioRequest::PlaySound {sound_id}) if sound_id == "SFX_SAFARI_ZONE_PA"));
+        }
     }
 
     #[test]
