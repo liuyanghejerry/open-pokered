@@ -11,6 +11,61 @@ from playthrough_late import damage_slot
 
 
 class NavigationRegression(unittest.TestCase):
+    def test_face_waits_for_delayed_trainer_text_without_selecting_a_choice(self):
+        game = nav.Game.__new__(nav.Game)
+        state = dict(screen="overworld", player_facing="Left", dialogue_state=None,
+                     active_script_effect=None, choice=None)
+        game.st = lambda: state.copy()
+        calls = []
+        def drive(buttons, frames):
+            calls.append((buttons, frames))
+            if len(calls) == 2:
+                state["active_script_effect"] = "PrintFieldParagraph"
+                state["choice"] = {"options": ["YES", "NO"]}
+        game.d = SimpleNamespace(drive=drive)
+        game.face("up")
+        self.assertEqual(calls, [(["up", "up"], 14)] * 2)
+        self.assertEqual(state["player_facing"], "Left")
+        self.assertEqual(state["choice"]["options"], ["YES", "NO"])
+
+    def test_face_observes_delayed_turn_but_keeps_a_bounded_failure(self):
+        for turn_at in [2, 8, None]:
+            with self.subTest(turn_at=turn_at):
+                game = nav.Game.__new__(nav.Game)
+                state = dict(screen="overworld", player_facing="Left")
+                game.st = lambda: state.copy()
+                calls = []
+                def drive(buttons, frames):
+                    calls.append((buttons, frames))
+                    if turn_at is not None and len(calls) == turn_at:
+                        state["player_facing"] = "Up"
+                game.d = SimpleNamespace(drive=drive)
+                if turn_at is not None:
+                    game.face("up")
+                    self.assertEqual(len(calls), turn_at)
+                else:
+                    with self.assertRaisesRegex(nav.NavError, r"face\(up\) failed"):
+                        game.face("up")
+                    self.assertEqual(len(calls), 8)
+
+    def test_object_approach_drains_inner_text_before_planning(self):
+        game = nav.Game.__new__(nav.Game)
+        state = dict(screen="overworld", map_name="RocketHideoutB4F",
+                     player_x=11, player_y=3, player_facing="Up",
+                     dialogue_state=None, active_script_effect="PrintFieldParagraph")
+        game.st = lambda: state.copy()
+        game.pos = lambda: (state["map_name"], state["player_x"], state["player_y"])
+        game.cutscene = Mock(side_effect=lambda: state.update(active_script_effect=None))
+        game.live_npcs = lambda _: {(11, 2)}
+        game.nav_to = Mock()
+        game.face = Mock()
+        with patch.object(nav, "warp_tiles", return_value=set()), \
+             patch.object(nav, "bfs", side_effect=lambda _, start, target, *args, **kwargs:
+                          [((11, 3), None)] if target == (11, 3) else None):
+            game.approach_object(11, 2, "RocketHideoutB4F")
+        game.cutscene.assert_called_once()
+        game.face.assert_called_once_with("up")
+
     def test_collision_replans_before_a_stale_turn_can_enter_another_warp(self):
         game = nav.Game.__new__(nav.Game)
         state = dict(screen='overworld',map_name='PalletTown',player_x=5,player_y=5)

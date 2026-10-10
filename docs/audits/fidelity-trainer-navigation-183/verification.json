@@ -1,0 +1,35 @@
+{
+  "parent_head": "c11da19ac9e83bf1f6dd21f3b5417043e3029325",
+  "scope": "Python debug driver/tests only; player runtime unchanged",
+  "sources": {
+    "scripts/playthrough.py": "62f2aff1e10dcdbf3c644fac5d7caa42a3d90b376a0b0954efed860d2dca75d3",
+    "scripts/test_playthrough_navigation.py": "93c8996748f6cbd041c53ad98b1bc45b5a887c295e076c294ba7798eaa1d3d3a"
+  },
+  "binary": {
+    "parent_head": "df351fa49c52a33505b817660ea85fe11df76eae",
+    "build_log": "audit-181-debug-cli-build-a4.log",
+    "binary_sha256": "d791e09607928f4d30b9964f2c0f4f950ee2e0a63343309e40823d1887cdbde7",
+    "sources": {
+      "crates/pokered-app/src/game.rs": "7b7edaef11ebbdf67aa71294c49dc9f2be0367396d36e50b05d73694f36f5bab",
+      "crates/pokered-core/src/pc_screen.rs": "3ba132d4cff0b9da2182d0f1c65cf6dadb887398c27854d85f8d953801cae905",
+      "crates/pokered-app/src/render/pc.rs": "ac65c02dcbfdf84d32e05da666701463a5779f557485a20bdb76822da75d326b",
+      "crates/pokered-app/src/render/session.rs": "5a72963547df04e9d9d203f3790ef3ac7b5fb22cc4188aadce639c949c5913e4"
+    },
+    "configuration": "Final a7 including NO/B toss loop question; actual native debug-server binary"
+  },
+  "before": "two matched strong fixture copies, before-face frame416 exact; old2UP+12idle raises at430 while NPC intro owns field",
+  "after": "two matched strong fixture copies, bounded pulse/observe yields at448 to ShowDialogue, position11,3/facingLeft unchanged; approach drains script then fights; actual trainer2 flag true and returns overworld RocketHideoutB4F",
+  "copies": "all raw JSON/PNG within before and final after groups byte-exact2, no masks; pre-face before/final after full JSON byte-exact",
+  "controlled": "JSON template party changed using make_mon Venusaur38/Tackle,RazorLeaf,Cut,VineWhip, warp19,10; not actual fresh progression. Earlier Bulbasaur25 handoff also repeats2; its full continuation blacked out and is retained, not claimed passed",
+  "tests": 75,
+  "not_claimed": [
+    "original-RGB visual equivalence",
+    "full exact-head NEWGAME+CONTINUE",
+    "green CI or GBA performance"
+  ],
+  "archive": {
+    "entries": 112,
+    "bytes": 192451,
+    "sha256": "a28806998d1bde22470d3934309e017e654b6c1e641d4e82f5e73297d31abc2a"
+  }
+}

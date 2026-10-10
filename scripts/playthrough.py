@@ -777,22 +777,26 @@ class Game:
         raise NavError(f"nav_to({x},{y}) did not converge")
 
     def face(self, direction):
-        """Cross one field Joypad sample, then verify the requested facing."""
+        """Observe a sampled turn or a field-owner interruption.
+
+        A logical arrival can precede a trainer's bubble/text handoff. The
+        short pulse is ignored while that owner has wJoyIgnore; it must not
+        be reported as a failed turn before the dialogue becomes observable.
+        """
         state = self.st()
-        if state["player_facing"].lower() == direction:
-            return
-        self.d.drive([direction] * 2, frames=2 + 12)
-        state = self.st()
-        if state["player_facing"].lower() != direction:
-            # A trainer can promote its dialogue/battle during the turn.
-            # approach_object observes and drains this interruption before
-            # checking the interaction's facing and story completion again.
+        for attempt in range(9):
+            if state["player_facing"].lower() == direction:
+                return
             if (state["screen"] != "overworld"
-                    or state.get("dialogue_state") is not None
+                    or has_active_dialogue(state)
                     or state.get("choice") is not None
                     or state.get("active_script_effect") is not None):
                 return
-            raise NavError(f"face({direction}) failed: {state['player_facing']}")
+            if attempt == 8:
+                break
+            self.d.drive([direction] * 2, frames=2 + 12)
+            state = self.st()
+        raise NavError(f"face({direction}) failed: {state['player_facing']}")
 
     def approach_object(self, x, y, map_name):
         """Face an object from a reachable adjacent tile (trainers may
@@ -802,7 +806,8 @@ class Game:
             if state["screen"] == "battle":
                 self.battle_loop(prefer="fight" if state["script_awaiting_battle"] else "run")
                 self.cutscene()
-            elif state.get("dialogue_state") is not None:
+            elif (has_active_dialogue(state) or state.get("script_running")
+                  or state.get("active_script_effect") is not None):
                 self.cutscene()
             cm, cx, cy = self.pos()
             if cm != map_name:
