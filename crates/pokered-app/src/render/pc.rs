@@ -65,6 +65,10 @@ fn mon_row(mon: &Pokemon) -> String {
 /// [`zh_pc_line`] so the English messages produced by `pokered_core::pc_screen`
 /// are translated at display time only.
 fn draw_message(lines: &[String], fb: &mut FrameBuffer, is_zh: bool) {
+    draw_message_with_limit(lines, usize::MAX, fb, is_zh);
+}
+
+fn draw_message_with_limit(lines: &[String], mut visible: usize, fb: &mut FrameBuffer, is_zh: bool) {
     let shown: Vec<String> = lines.iter().take(5)
         .flat_map(|line| {
             let text = if is_zh { zh_pc_line(line) } else { line.clone() };
@@ -75,7 +79,9 @@ fn draw_message(lines: &[String], fb: &mut FrameBuffer, is_zh: bool) {
     let by = 144u32.saturating_sub((height + 2) * T);
     draw_text_box(fb, 0, by, 18, height, FG);
     for (i, line) in shown.iter().enumerate() {
-        draw_text(line, T, by + T + i as u32 * pitch, FG, fb);
+        let shown: String = line.chars().take(visible).collect();
+        visible = visible.saturating_sub(line.chars().count());
+        draw_text(&shown, T, by + T + i as u32 * pitch, FG, fb);
     }
 }
 
@@ -226,15 +232,7 @@ pub fn draw_pc(
     fb.clear(BG);
     match pc.phase() {
         PcPhase::Message => {
-            let start = pc.message_page() * 4;
-            let page: Vec<String> = pc
-                .message_lines()
-                .iter()
-                .skip(start)
-                .take(4)
-                .cloned()
-                .collect();
-            draw_message(&page, fb, is_zh);
+            draw_message_with_limit(pc.message_page_lines(), pc.message_visible_chars(), fb, is_zh);
         }
         PcPhase::MainMenu => {
             let labels: Vec<String> = pc

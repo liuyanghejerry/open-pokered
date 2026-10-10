@@ -1,0 +1,44 @@
+{
+  "native_revision": "a7",
+  "tests": {
+    "core": 2748,
+    "data": 263,
+    "app": 220,
+    "app_ignored": 33,
+    "agent": 54
+  },
+  "opening": {
+    "master31": {
+      "byteexact_repeats": true,
+      "file_count": 153,
+      "cue": 1,
+      "screenshot_offset": 10,
+      "screenshot_t": 11
+    },
+    "after-a7": {
+      "byteexact_repeats": true,
+      "file_count": 153,
+      "cue": 1,
+      "screenshot_offset": 10,
+      "screenshot_t": 11
+    }
+  },
+  "sources": {
+    "crates/pokered-app/src/game.rs": "bcdb81036378cfac5992caad340d379a9360323acf85398f34ce23705883c327",
+    "crates/pokered-app/src/render/pc.rs": "c0b1149a1072a43b314fb85e473ceabf6467bfbca89e9af1e23d3ec08fd2abb4",
+    "crates/pokered-core/src/pc_screen.rs": "72fe2177132ed6c52e518b98bfc9320f9cd835133a686fc7e6ad6e8a8551afd1"
+  },
+  "gba_source_count": 53,
+  "gba_metrics": 31,
+  "remaining": [
+    "actual PC PCM/music-bank equivalence",
+    "CONT intermediate half-row animation",
+    "special confirmation phase text clocks",
+    "full text init/close/arrow and earlier movement/mainline/SAVE-CONTINUE gates"
+  ],
+  "archive": {
+    "bytes": 3696464,
+    "sha256": "475404c65cba8a4791c8f97d1526c59de57bbbe665dda0bc37608dd992b0d248",
+    "entries": 1909
+  }
+}

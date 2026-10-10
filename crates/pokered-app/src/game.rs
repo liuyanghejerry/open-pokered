@@ -4476,6 +4476,10 @@ impl PokemonGame {
                             hof_teams: hof_team_records(&self.save_data),
                         };
                         self.pc_screen = Some(PcScreen::new_with_language(entry, &open, self.state.config.language));
+                        self.pc_screen.as_mut().unwrap().configure_field_text(self.state.config.text_speed.delay_frames(), self.overworld.text_delay_disabled);
+                        if let Some(disabled) = self.pc_screen.as_mut().unwrap().take_field_text_delay_change() {
+                            self.overworld.text_delay_disabled = disabled;
+                        }
                         ScreenAction::Transition(GameScreen::PC)
                     } else if self.overworld.pending_hof_ceremony {
                         // game.enterHallOfFame() — record the team and start
@@ -5638,7 +5642,7 @@ impl PokemonGame {
                     let pc = self.pc_screen.as_mut().unwrap();
                     // PCMainMenu / PlayerPCMenu set BIT_NO_MENU_BUTTON_SOUND.
                     // The standalone BillsPc entry retains its ordinary key sound.
-                    if menu_input.a && pc.entry() == PcEntry::BillsPc && !pc.waiting_for_sound() {
+                    if menu_input.a && pc.entry() == PcEntry::BillsPc && pc.phase() != pokered_core::pc_screen::PcPhase::Message && !pc.waiting_for_sound() {
                         if let Some(ref audio) = self.audio { audio.play_sfx(SfxId::PressAB); }
                     }
                     let pc_action = {
@@ -5650,15 +5654,20 @@ impl PokemonGame {
                             pokedex: &self.save_data.game_data.pokedex,
                         };
                         if let Some(ref audio) = self.audio {
-                            pc.update_frame_with_sound(menu_input, &mut ctx, audio.is_sfx_playing())
-                        } else { pc.update_frame(menu_input, &mut ctx) }
+                            pc.update_frame_with_text_input(menu_input, &mut ctx, audio.is_sfx_playing(), input.is_held(GbButton::A) || input.is_held(GbButton::B))
+                        } else { pc.update_frame_with_text_input(menu_input, &mut ctx, false, input.is_held(GbButton::A) || input.is_held(GbButton::B)) }
                     };
+                    if let Some(disabled) = pc.take_field_text_delay_change() {
+                        self.overworld.text_delay_disabled = disabled;
+                    }
                     // Every mutation must refresh the live bank-1 box, not only CHANGE BOX.
                     self.save_data.current_box = self.save_data.pc_storage.current_box().clone();
                     for sfx in pc.take_sfx() {
                         if let Some(ref audio) = self.audio {
                             let id = match sfx {
                                 PcSfx::TurnOn => SfxId::TurnOnPC,
+                                PcSfx::TextAdvance => SfxId::PressAB,
+                                PcSfx::PokedexRating {tier} => [SfxId::Denied,SfxId::PokedexRating,SfxId::GetItem1,SfxId::CaughtMon,SfxId::LevelUp,SfxId::GetKeyItem,SfxId::GetItem2][usize::from(tier)],
                                 PcSfx::TurnOff => SfxId::TurnOffPC,
                                 PcSfx::Enter => SfxId::EnterPC,
                                 PcSfx::WithdrawDeposit => SfxId::WithdrawDeposit,
@@ -12654,6 +12663,58 @@ mod link_stats_cry_fidelity_tests {
             std::fs::write(dir.join("frames.json"),serde_json::to_string_pretty(&rows).unwrap()).unwrap();
             assert!(menu.is_some()&&close.is_some()&&second.is_some(),"all phases recorded: menu={menu:?} close={close:?} second={second:?}");
             assert_eq!(g.save_data.game_data.player_money,999999);assert!(!g.save_data.game_data.bag.has_item_const("BICYCLE"));
+        });
+    }
+
+    #[test]
+    fn player_pc_exit_clears_bike_b_cancel_text_mode() {
+        use pokered_core::pc_screen::PcPhase;
+        run_link_save_fixture(|| {
+            for player_pc in [true,false] {
+            let mut g=bike_fixture_171(false);let idle=InputState::new();let a=button(GbButton::A);let b=button(GbButton::B);
+            bike_open_talk_171(&mut g);
+            for _ in 0..6000 {if g.overworld.pending_choice.is_some() {break;}let ack=receipt_prompt_needs_press(&g);g.update(if ack {&a} else {&idle});}
+            assert!(g.overworld.pending_choice.is_some());
+            for _ in 0..20 {g.update(&idle);}
+            g.update(&b);g.update(&idle);
+            for _ in 0..200 {if g.overworld.active_script_effect_label().as_deref()==Some("FinishFieldText") {break;}g.update(&idle);}
+            assert_eq!(g.overworld.active_script_effect_label().as_deref(),Some("FinishFieldText"));
+            for _ in 0..8 {g.update(&a);}for _ in 0..40 {g.update(&idle);}
+            assert!(g.overworld.displayed_field_dialogue().is_none());assert!(g.overworld.text_delay_disabled);
+            let (map,x,y)=if player_pc {(MapId::RedsHouse2F,0,2)} else {(MapId::ViridianPokecenter,13,4)};
+            g.overworld.warp_to_map(map,x,y);
+            for _ in 0..120 {g.update(&idle);}for _ in 0..20 {g.update(&button(GbButton::Up));}for _ in 0..20 {g.update(&idle);}
+            assert!(g.overworld.text_delay_disabled,"warp preserves actual original B carry");
+            for _ in 0..60 {g.update(&a);if g.state.screen==GameScreen::PC {break;}}
+            assert_eq!(g.state.screen,GameScreen::PC,"bedroom hidden PC actual interaction");g.update(&idle);
+            let target=if player_pc {PcPhase::ItemMenu} else {PcPhase::MainMenu};
+            for _ in 0..200 {if g.pc_screen.as_ref().unwrap().phase()==target {break;}g.update(&a);g.update(&idle);}
+            assert_eq!(g.pc_screen.as_ref().unwrap().phase(),target);
+            g.update(&b);for _ in 0..120 {g.update(&idle);if g.state.screen==GameScreen::Overworld && g.overworld.script_engine_idle() {break;}}
+            assert_eq!(g.state.screen,GameScreen::Overworld);assert!(g.pc_screen.is_none());
+            assert_eq!(g.overworld.text_delay_disabled,!player_pc,"ExitPlayerPC clears; generic PC LogOff preserves original NO_TEXT_DELAY");
+            }
+        });
+    }
+
+    #[test]
+    #[ignore = "actual generic PC opening glyph evidence"]
+    fn capture_pc_opening_173() {
+        run_link_save_fixture(|| {
+            let dir=std::path::PathBuf::from(std::env::var("FIDELITY_PC_CAPTURE").unwrap());std::fs::create_dir_all(&dir).unwrap();
+            let mut g=bike_fixture_171(false);let idle=InputState::new();let a=button(GbButton::A);
+            g.overworld.warp_to_map(MapId::ViridianPokecenter,13,4);
+            for _ in 0..120 {g.update(&idle);}for _ in 0..20 {g.update(&button(GbButton::Up));}for _ in 0..20 {g.update(&idle);}
+            assert!(!g.overworld.text_delay_disabled);
+            let mut rows=Vec::new();let mut cue=None;
+            for t in 0..300 {
+                let input=if cue.is_none() {&a} else {&idle};g.update(input);
+                if cue.is_none()&&g.state.screen==GameScreen::PC {cue=Some(t);}
+                let mut fb=FrameBuffer::new(RenderConfig::new(160,144),Rgba::WHITE);g.draw(&mut fb);fb.save_png(&dir.join(format!("frame-{t:04}.png"))).unwrap();
+                let pc=g.pc_screen.as_ref();rows.push(serde_json::json!({"t":t,"input":if cue.is_some_and(|n|t>n) {"idle"} else {"a"},"pc_entry":cue,"field_text_delay_disabled":g.overworld.text_delay_disabled,"phase":pc.map(|v|format!("{:?}",v.phase())),"message":pc.map(|v|v.message_lines()),"message_page":pc.map(|v|v.message_page()),"visible_chars":pc.map(|v|v.message_visible_chars()),"visible_page_lines":pc.map(|v|v.message_page_lines())}));
+                if cue.is_some_and(|n|t>=n+150) {break;}
+            }
+            std::fs::write(dir.join("frames.json"),serde_json::to_string_pretty(&rows).unwrap()).unwrap();assert!(cue.is_some());
         });
     }
 
