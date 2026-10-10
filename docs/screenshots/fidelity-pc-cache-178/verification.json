@@ -1,0 +1,53 @@
+{
+  "parent_head": "aa663990d72d8dd0ccdb1c7bd5274bf8082f8265",
+  "master_head": "31b1eda3112514d6bc803af559ec7f7c9e20374f",
+  "source_hash": "a45b33b046f2d56286eb1e8261648996c50626bb6945f332ab4dbf11431ab63e",
+  "before_source_with_same_capture_test_hash": "f80793a1ef2bcb3ad32931497c690e2c6ba085655cbfdc21ed9d99f0f3b5c8f5",
+  "captures": "same PC constructor, Game owner update frames0..10, idle input, English RED; master/current cache is compared with full draw; two master/after copies byte-exact",
+  "native": {
+    "core": 2750,
+    "data": 263,
+    "app": 223,
+    "app_ignored": 33,
+    "agent": 54,
+    "audio": 99
+  },
+  "before": {
+    "first_mismatch": {
+      "chars": 1,
+      "frame": 2,
+      "phase": "Message",
+      "x": 8,
+      "y": 115
+    },
+    "frame": 10,
+    "phase": "Message",
+    "visible_chars": 3
+  },
+  "after": {
+    "first_mismatch": null,
+    "frame": 10,
+    "phase": "Message",
+    "visible_chars": 3
+  },
+  "owning_regression": "2 complete after runs; opening\u2192Bill access\u2192CHANGE BOX CONT/PARA; all160x144 retained pixels match full draw after everyGame update; idle reuse remains",
+  "gba": {
+    "sources": 59,
+    "metrics": 31,
+    "status": "FAILED2 original budget metrics; unchanged budget",
+    "oak_draw_avg": 3008,
+    "movement_draw_peak": 3122
+  },
+  "archive": {
+    "bytes": 163670,
+    "sha256": "36f9cf82585706472ae940de55d8f8f1c14b6431f1130f850f19202d8147a8a3",
+    "entries": 45
+  },
+  "remaining": [
+    "GBA performance original budget",
+    "PC quantity/menu/list text and original CONT physical scroll/PCM",
+    "global text init/close/arrow",
+    "movement17logical/27RGB",
+    "exact final mainline+independentSAVE-CONTINUE"
+  ]
+}

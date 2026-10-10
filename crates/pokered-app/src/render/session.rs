@@ -1344,12 +1344,44 @@ impl PcVisualKey {
         match phase {
             PcPhase::Message => {
                 hash_u32(&mut visual_hash, pc.message_page() as u32);
-                let start = pc.message_page() * 4;
-                for line in pc.message_lines().iter().skip(start).take(4) {
+                hash_u32(&mut visual_hash, pc.message_visible_chars() as u32);
+                // Authored CONT pages overlap and PARA has its own range.
+                // Source text can stay unchanged while visible letters grow.
+                for line in pc.message_page_lines() {
                     for &byte in line.as_bytes() {
                         hash_byte(&mut visual_hash, byte);
                     }
                     hash_byte(&mut visual_hash, 0xff);
+                }
+                if let Some(underlay) = pc.message_underlay() {
+                    hash_byte(&mut visual_hash, underlay as u8);
+                    match underlay {
+                        PcPhase::BillsMenu => {
+                            hash_u32(&mut visual_hash, pc.bills_menu().cursor() as u32);
+                            hash_u32(&mut visual_hash, game.save_data.pc_storage.current_box_index() as u32);
+                        }
+                        PcPhase::MonList => {
+                            hash_byte(&mut visual_hash, pc.mon_mode() as u8);
+                            hash_u32(&mut visual_hash, pc.mon_cursor() as u32);
+                            match pc.mon_mode() {
+                                MonListMode::Deposit => {
+                                    for mon in game.save_data.party.iter() { hash_pc_mon(&mut visual_hash, mon); }
+                                }
+                                MonListMode::Withdraw | MonListMode::Release => {
+                                    for mon in game.save_data.pc_storage.current_box().iter() { hash_pc_mon(&mut visual_hash, mon); }
+                                }
+                            }
+                        }
+                        PcPhase::ItemList => {
+                            hash_byte(&mut visual_hash, pc.item_mode() as u8);
+                            hash_u32(&mut visual_hash, pc.item_list_cursor() as u32);
+                            match pc.item_mode() {
+                                ItemListMode::Deposit => hash_pc_inventory(&mut visual_hash, &game.save_data.game_data.bag),
+                                ItemListMode::Withdraw | ItemListMode::Toss => hash_pc_inventory(&mut visual_hash, &game.save_data.game_data.pc_items),
+                            }
+                        }
+                        _ => unreachable!(),
+                    }
                 }
             }
             PcPhase::MainMenu => {
@@ -2648,6 +2680,86 @@ mod session_tests {
     use dotzuki_engine::render_config::RenderConfig;
     use pokered_core::options_menu::OptionsRow;
     use pokered_renderer::Rgba;
+
+    #[test]
+    fn pc_retained_message_frames_match_full_draw() {
+        use dotzuki_app::{GbButton, InputState};
+        use pokered_core::pc_screen::{PcEntry, PcOpenContext, PcScreen};
+        let mut game = PokemonGame::new(GameVersion::Red);
+        game.audio = None;
+        game.state.screen = GameScreen::PC;
+        game.state.config.language = Lang::En;
+        let open = PcOpenContext {
+            met_bill: true, has_pokedex: true, beaten_league: false,
+            player_name: "RED".into(), hof_teams: Vec::new(),
+        };
+        let mut pc = PcScreen::new(PcEntry::PokemonCenter, &open);
+        pc.configure_field_text(3, false);
+        game.pc_screen = Some(pc);
+        let mut session = RenderSession::new();
+        let mut retained = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+        let mut scroll = |_: &mut [u8], _: usize, _: usize, _: i32, _: i32, _: u8| {};
+        // Real owner updates, including NO_TEXT_DELAY changes and held input.
+        // Opening letters and the later CONT/PARA warning must update retained
+        // pixels even while phase and complete source text stay unchanged.
+        let mut last_key = 0;
+        let mut stage = 0;
+        let mut down_count = 0;
+        let mut warning_frame = None;
+        let mut idle_seen = false;
+        let mut glyph_seen = false;
+        let mut first_mismatch = None;
+        for frame in 0..900 {
+            let phase = game.pc_screen.as_ref().unwrap().phase();
+            let key = if let Some(cue) = warning_frame {
+                match frame - cue { 1 | 7 | 8 | 27 | 28 => 1, _ => 0 }
+            } else if last_key != 0 { 0 }
+            else if phase == PcPhase::Message {
+                if game.pc_screen.as_ref().unwrap().message_ready_for_ack() { 1 } else { 0 }
+            } else if phase == PcPhase::MainMenu { 1 }
+            else if phase == PcPhase::BillsMenu {
+                if down_count < 3 { down_count += 1; 2 }
+                else { warning_frame = Some(frame); 1 }
+            } else { 0 };
+            let mut input = InputState::new();
+            if key == 1 { input.press(GbButton::A); }
+            if key == 2 { input.press(GbButton::Down); }
+            game.update(&input);
+            last_key = key;
+            let update = session.render(&mut game, &mut retained, &mut scroll);
+            idle_seen |= matches!(update, FrameUpdate::Reuse);
+            let chars = game.pc_screen.as_ref().unwrap().message_visible_chars();
+            glyph_seen |= chars > 0;
+            let mut full = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+            game.draw(&mut full);
+            for y in 0..144 {
+                for x in 0..160 {
+                    if retained.get_pixel(x, y) != full.get_pixel(x, y) && first_mismatch.is_none() {
+                        first_mismatch = Some((frame, phase, chars, x, y));
+                    }
+                }
+            }
+            if frame == 10 {
+                if let Ok(dir) = std::env::var("FIDELITY_PC_CACHE_CAPTURE") {
+                    let dir = std::path::PathBuf::from(dir);
+                    std::fs::create_dir_all(&dir).unwrap();
+                    retained.save_png(&dir.join("retained-frame-0010.png")).unwrap();
+                    full.save_png(&dir.join("full-frame-0010.png")).unwrap();
+                    std::fs::write(dir.join("state.json"), serde_json::to_string_pretty(
+                        &serde_json::json!({"frame":frame,"phase":format!("{:?}",game.pc_screen.as_ref().unwrap().phase()),
+                            "visible_chars":chars,"first_mismatch":first_mismatch.map(|(f,p,c,x,y)|
+                                serde_json::json!({"frame":f,"phase":format!("{p:?}"),"chars":c,"x":x,"y":y}))})).unwrap()).unwrap();
+                }
+            }
+            if frame >= 10 { assert_eq!(first_mismatch, None, "retained PC frame differs from full draw"); }
+            if warning_frame.is_some_and(|cue| frame >= cue + 60) {
+                assert_eq!(game.pc_screen.as_ref().unwrap().phase(), PcPhase::ChangeBoxConfirm);
+                stage = 1;
+                break;
+            }
+        }
+        assert!(glyph_seen && idle_seen && stage == 1);
+    }
 
     #[test]
     fn walking_and_bicycle_retained_frames_match_full_draw_through_start_transfers() {
