@@ -369,3 +369,45 @@ fn refused_bicycle_use_keeps_existing_music() {
         assert!(screen.audio_requests.is_empty());
     }
 }
+
+#[test]
+fn escape_rope_hold_blocks_input_and_resumes_from_snapshot_once() {
+    let mut screen = screen_on(MapId::MtMoon1F);
+    let idle = super::OverworldInput::new(false,false,false,false,false,false,false,false);
+    for _ in 0..120 { screen.update_frame(idle); }
+    assert!(screen.use_field_item(ItemId::EscapeRope, MapId::PalletTown));
+    let source_map = screen.state.current_map;
+    let position = (screen.state.player.x, screen.state.player.y);
+    let initial_spin = serde_json::to_value(&screen.teleport_spin).unwrap();
+    let held = super::OverworldInput::new(true,false,false,false,true,false,true,false);
+    for _ in 0..15 {
+        screen.update_frame(held);
+        assert_eq!(screen.state.current_map, source_map);
+        assert_eq!((screen.state.player.x,screen.state.player.y), position);
+        assert_eq!(serde_json::to_value(&screen.teleport_spin).unwrap(), initial_spin);
+        assert!(!screen.take_escape_rope_consumption());
+    }
+    let snapshot = crate::snapshot::OverworldSnapshot::capture(&screen);
+    let mut restored = screen_on(MapId::MtMoon1F);
+    let snapshot: crate::snapshot::OverworldSnapshot = serde_json::from_value(serde_json::to_value(snapshot).unwrap()).unwrap();
+    snapshot.restore_into(&mut restored);
+    for frame in 0..15 {
+        restored.update_frame(held);
+        assert_eq!(serde_json::to_value(&restored.teleport_spin).unwrap(), initial_spin);
+        assert_eq!(restored.take_escape_rope_consumption(), frame==14);
+    }
+    assert!(!restored.take_escape_rope_consumption(), "RemoveUsedItem is emitted once");
+    restored.update_frame(idle);
+    assert_ne!(serde_json::to_value(&restored.teleport_spin).unwrap(), initial_spin, "only then may departure tick");
+}
+
+#[test]
+fn old_snapshot_defaults_without_escape_rope_hold_fields() {
+    let screen = screen_on(MapId::MtMoon1F);
+    let mut old = serde_json::to_value(crate::snapshot::OverworldSnapshot::capture(&screen)).unwrap();
+    old.as_object_mut().unwrap().remove("escape_rope_delay_frames");
+    old.as_object_mut().unwrap().remove("escape_rope_consumption_pending");
+    let restored: crate::snapshot::OverworldSnapshot = serde_json::from_value(old).unwrap();
+    assert_eq!(restored.escape_rope_delay_frames,0);
+    assert!(!restored.escape_rope_consumption_pending);
+}

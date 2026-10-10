@@ -1,0 +1,23 @@
+{
+  "candidate": "297f31f35f6cec30bda0fb72a54500df1f2cb106",
+  "base": "b0e1abaa8e4bb5181268df58bc464c27ff1143c5",
+  "native_full_tests": {
+    "core": 2721,
+    "app": 197,
+    "ignored": 21,
+    "failed": 0
+  },
+  "master_first_consume": 16,
+  "native_first_consume": 46,
+  "input": "A0/A16 UP+START20..31",
+  "native_and_master_PNG": 1204,
+  "original_PNG": 1800,
+  "all_repeats_png_full_json_byte_exact": true,
+  "every_native_and_master_frame_cached_full_pixels_identical": true,
+  "walkable_floor": "VictoryRoad1F6,6 with actual collision check",
+  "image_frame": 170,
+  "archive_png_paths": 3004,
+  "archive_unique_png": 82,
+  "archive_lossless_dedup": true,
+  "evidence_sha256": "0188f5aa0a5e312de12623f18f7e2f4959c256840153ab7aff1d759f98420f95"
+}
