@@ -1,8 +1,9 @@
 {
   "native": {
-    "head": "733caccc1a762423d91f67285c07504c436d8b32",
-    "base": "6d99bd6bf8627cd14675ee12868a8d4c73263230",
+    "head": "db02a853b22b786cc9451f2ecef40f19464c555a",
+    "base": "2a35c761c21a94cf2f9ba5e2c655913fb3f06c8a",
     "sources": {
+      "crates/pokered-agent/src/semantics/extract.rs": "d619cd95ad0a07e4c3d30d146c8b0c9fc86ceb37d66064777391883d28731334",
       "crates/pokered-app/src/game.rs": "315f96977d0e314fabe1884513c4feed1a7bf0644bf32841a556bf2d3a5abe02",
       "crates/pokered-core/src/overworld/native_script.rs": "405dd7d86a5adeb8421fb7c55199f4a611d42c331bc7caeebdc314dfa160ea70",
       "crates/pokered-core/src/overworld/script_bridge.rs": "e1ac9f3e6792bf179a4696d494ea6123869e363e71e6bb3b1692e7564417649e",
@@ -15,17 +16,18 @@
       "crates/pokered-data/src/script_function_catalog.rs": "ace6209e8ea73ba7d1fe17cd18e0337b307d16ab6ee48792b21f3aed355dcd25"
     },
     "binaries": {
-      "core-tests": "1c27ba554237f2822d69c3fc9fb6714883ba9438198fd49258e40c9fb61cf17e",
-      "app-tests": "236e2edc134a5beb457636448cfc7bfe4c0bd6d32a63812786056cd01037050e",
+      "core-tests": "ee10bddc55c8045d04edd96f146fe6969967b0fb813ae76a1dcc149d78855423",
+      "app-tests": "3c04a4d081fee8fc66003cf39a91c10ed936864390e8c129aa389afcb47a074d",
       "data-tests": "d1c131ed5600b2f9b7be58a8a4f6a40842a5b799761f48bc7c8115483c071974"
     },
-    "target": "independent clean audit205 a3 target; no shared build artifacts",
-    "scope": "currentmaster6d99+205 PrintFieldText; dependencies152+153+154 merged"
+    "target": "dedicated audit205 target after syncing 2a35, all source additions and unchanged exact dependency sources rebuilt as needed",
+    "scope": "master2a35+205 PrintFieldText+agent semantics; dependencies152+153+154+156 merged"
   },
   "master": {
-    "base": "6d99bd6bf8627cd14675ee12868a8d4c73263230",
-    "binary_sha256": "e84be782fc6a19488dff4fc090ae4254c3b72ac2378b0b35ecf0fba843b3baf2",
+    "base": "2a35c761c21a94cf2f9ba5e2c655913fb3f06c8a",
+    "binary_sha256": "31477aaf711b1ce36e181e0f01726d7f7df3fade42b6ba61acb77b3b3c484348",
     "sources": {
+      "crates/pokered-agent/src/semantics/extract.rs": "813471ff4091afc1f6455dde9439655a4519260e984d434bc7dde44d82347bed",
       "crates/pokered-app/src/game.rs": "29c54dfdd33a9ef3b48eadc2d91326f48c4bf326b0a77e4838700dd3a334ccc0",
       "crates/pokered-core/src/overworld/native_script.rs": "3ff2a9bb2541f0d29bdce99fd253a0ea83a2e0c9b91947b853e47e98591855bc",
       "crates/pokered-core/src/overworld/script_bridge.rs": "63b5836bfd4d1b629f2244a6f7a8a3cb0c40e36e7995498aa88772fb90a6fa48",
@@ -38,7 +40,7 @@
       "crates/pokered-data/src/script_function_catalog.rs": "05c20cae649881de8398a6a64f9225137056ff5edb2efe5bf9f97695f07b5077"
     },
     "production_unchanged": true,
-    "target": "independent clean actualmaster-a3 target; existing committed cfgtest capturehelper202 unchanged"
+    "target": "dedicatedactualmastertargeta5 updated2a35; existingcfgtestrecorder202 unchanged"
   },
   "captures": {
     "master": {
@@ -77,6 +79,15 @@
     "after.png": "f65876a9236cdf5e1a768b9671774d4403935c38b2a18ec59f5b97998a7cd26e"
   },
   "fixture_sram_sha256": "a2a4d4546d084e6540d678ff3826e58fc7872eecfeac990c30110008f61ddee2",
-  "tests": "core2716 app195+19ignored data262 allPASS, independent clean native a3 target",
-  "rejected_verifier": "audit-205-native-verifier-a3-rejected.json: did not distinguish effect entry and menu visible; records untouched, corrected based on independent original stages"
+  "tests": "core2718 app195+19ignored data262 agent54 allPASS on updatedmaster2a35",
+  "rejected_verifier": "audit-205-native-verifier-a3-rejected.json: did not distinguish effect entry and menu visible; records untouched, corrected based on independent original stages",
+  "agent": {
+    "base": "2a35c761c21a94cf2f9ba5e2c655913fb3f06c8a",
+    "parent": "db02a853b22b786cc9451f2ecef40f19464c555a",
+    "source": "d619cd95ad0a07e4c3d30d146c8b0c9fc86ceb37d66064777391883d28731334",
+    "binary_sha256": "b8ddd879f0e1385b3c39af4a431a87315817b6e7540a447109d7ebbdce1ab31f",
+    "scope": "candidate205 synced2a35 plus explicit printFieldText semantics and real-map regression; no unknown allowlist edits"
+  },
+  "latest_records": "a5 actualmaster2a35 / latestcandidate11sourcehashes; earliera3 retained as historical",
+  "CI_failure": "c283aac coverage run38082717904 rejected unknown printFieldText in agent semantics. Explicit no-state classification + actualMuseum payment andSafari question regression; no unknown allowlist or coverage thresholds changed."
 }
