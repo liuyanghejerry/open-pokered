@@ -308,7 +308,13 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     }
 
     pub fn update_frame(&mut self, input: OverworldInput) -> ScreenAction {
+        let had_dialogue = self.pending_dialogue.is_some();
         let action = self.update_frame_inner(input);
+        if had_dialogue && self.pending_dialogue.is_none() {
+            // CloseTextDisplay returns through UpdateSprites before the
+            // map script resumes. Keep the player's animation counter too.
+            self.restore_player_sprite_after_field_text();
+        }
         // Field text uses the same BIT_FONT_LOADED sprite reset as START.
         // Do this after script/interaction dispatch, including early returns,
         // so a newly opened textbox starts the OAM pipeline this frame.
@@ -3554,6 +3560,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 }
                 script_bridge::ScriptEffect::FacePlayer { direction } => {
                     self.state.player.facing = direction;
+                    self.player_moving_direction = match direction {
+                        Direction::Right => 1, Direction::Left => 2,
+                        Direction::Down => 4, Direction::Up => 8,
+                    };
                 }
                 script_bridge::ScriptEffect::ShowObject { object_index } => {
                     if let Some(npc) = self
@@ -5083,6 +5093,10 @@ mod vending_delivery_fidelity_tests {
 }
 
 impl<G: GameData<Tileset = pokered_data::tilesets::TilesetId>> OverworldScreen<G> {
+    fn restore_player_sprite_after_field_text(&mut self) {
+        self.player_sprite_state.update_sprite(self.state.walk_counter, self.player_moving_direction);
+    }
+
     pub fn tick_field_text_restore(&mut self) -> bool {
         let Some(restore) = &mut self.field_text_restore else { return false; };
         restore.elapsed = restore.elapsed.saturating_add(1);
@@ -5091,6 +5105,7 @@ impl<G: GameData<Tileset = pokered_data::tilesets::TilesetId>> OverworldScreen<G
         self.field_text_restore = None;
         // CloseTextDisplay returns through UpdateSprites before the field
         // DelayFrame pair. Its sprite result still drains through OAM.
+        self.restore_player_sprite_after_field_text();
         self.run_npc_movement_tick();
         if !submenu_reload { self.field_loop_wait = 2; }
         true

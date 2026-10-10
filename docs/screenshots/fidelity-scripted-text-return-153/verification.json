@@ -1,0 +1,28 @@
+{
+  "parent_head": "a44266d46357c2f489270e4c31b93ba94c31c705",
+  "native_png_count": 2808,
+  "original_png_count": 2808,
+  "original_all_PNG_and_state_byte_equal_148": true,
+  "frames_per_case_repeat": 702,
+  "relative_logical_matching_frames_per_case": 52,
+  "rgb_different_frames_per_case": {
+    "timeout": 1,
+    "empty-balls": 1
+  },
+  "absolute_timing_parity": false,
+  "archive": {
+    "paths": 5670,
+    "objects": 385,
+    "sha256": "b65e2b4b5ad50cb33a7c2fb886489fa25612486b4591dc562824885bb625d7d6",
+    "all_objects_verified": true
+  },
+  "reference_archive_sha256": "1122bdac240d334b4938e0cb16cbf51406d3398888db540ff76fe35333d694a8",
+  "source_work_archive_sha256": "c3278c5344f9f6cfee0e72f6b91b18b91f1fe7bff50245648aae1d32a4aadbe2",
+  "tests": {
+    "core": 2736,
+    "app": 201,
+    "ignored_capture_helpers": 24
+  },
+  "gba_metric_count": 31,
+  "scope": "CloseTextDisplay player animation update restored; FacePlayer synchronizes moving direction; one195pixel startup frame and CPU/LCD phase plus prior draft gates remain pending"
+}
