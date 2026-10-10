@@ -17,6 +17,7 @@ game_scene SafariZoneGate {
     @if (getFlag("EVENT_SAFARI_GAME_OVER")) {
       resetFlag("EVENT_SAFARI_GAME_OVER")
       resetFlag("EVENT_IN_SAFARI_ZONE")
+      facePlayer("down")
       @speaker("") {
         @t("Did you get a\ngood haul?\nCome again!", "收获不错吧？\n欢迎再来！")
       }
