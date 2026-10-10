@@ -13801,3 +13801,38 @@ mod offer_capture_163 {
         }).unwrap().join().unwrap();
     }
 }
+
+#[cfg(all(test, not(target_os = "none")))]
+mod mart_cash_register_audio_tests {
+    use super::*;
+    use pokered_core::game_state::Lang;
+    use pokered_data::items::ItemId;
+
+    #[test]
+    fn english_sale_plays_cash_register_without_a_receipt() {
+        use pokered_core::items::shop::{ConfirmChoice, MartPhase, MartState, SellMenuState, ShopInventory};
+        let mut game = PokemonGame::new(GameVersion::Red);
+        game.state.config.language = Lang::En;
+        game.audio = Some(AudioOutput::new_pcm());
+        game.save_data.game_data.player_money = 3000;
+        game.save_data.game_data.bag = pokered_core::items::inventory::Inventory::new_bag();
+        game.save_data.game_data.bag.add_item(ItemId::Potion, 4).unwrap();
+        let mut mart = MartState::new(ShopInventory::new(vec![ItemId::Potion]));
+        mart.configure_field_text(5);
+        mart.phase = MartPhase::Sell(SellMenuState::Confirm {
+            item_index: 0, quantity: 4, max_quantity: 4, selected: ConfirmChoice::Yes,
+        });
+        game.state.screen = GameScreen::Shop(mart);
+        let mut input = InputState::new();
+        input.press(GbButton::A);
+        game.update(&input);
+        assert_eq!(game.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.current_sfx_id,
+            SfxId::Purchase as u8);
+        assert_eq!(game.save_data.game_data.player_money, 3600);
+        assert_eq!(game.save_data.game_data.bag.count(), 0);
+        let GameScreen::Shop(mart) = &game.state.screen else { panic!("sale left the mart"); };
+        assert!(matches!(mart.phase, MartPhase::Sell(SellMenuState::SelectItem { cursor: 0 })));
+        assert_eq!(mart.field_message_lines(), vec!["What would you", "like to sell?"]);
+        assert!(!mart.field_message_active());
+    }
+}
