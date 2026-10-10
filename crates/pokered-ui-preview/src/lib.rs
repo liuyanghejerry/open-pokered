@@ -1149,7 +1149,7 @@ fn clone_save_ask_prompt_static() -> pokered_data::ui_layout::schema::SaveAskPro
 fn render_start(mock_state_id: u32, layout_json: &str) -> Vec<u8> {
     let (has_pokedex, has_pokemon, is_link) = match mock_state_id {
         0 => (true, true, false),   // full menu: POKeDEX + POKeMON + ITEM + NAME + SAVE + OPTION + EXIT
-        1 => (false, false, false), // minimal: ITEM + NAME + SAVE + OPTION + EXIT
+        1 => (false, false, false), // no POKeDEX: POKeMON + ITEM + NAME + SAVE + OPTION + EXIT
         2 => (true, true, true),    // link mode: SAVE→RESET
         _ => return render_start(0, layout_json),
     };
@@ -2039,23 +2039,27 @@ mod tests {
         let canonical = pokered_data::ui_layout::schema::get_layout_json("start").unwrap();
         let mut json_val: serde_json::Value = serde_json::from_str(&canonical).unwrap();
         json_val["variants"]["default"]["children"][0]["width"] = serde_json::Value::String("fixed".into());
-        json_val["variants"]["default"]["children"][0]["rect"]["tw"] = serde_json::Value::Number(16.into());
+        // Keep the fixed right edge inside the viewport: the automatic box
+        // includes POKeMON and already reaches beyond its right edge.
+        json_val["variants"]["default"]["children"][0]["rect"]["tw"] = serde_json::Value::Number(8.into());
         let mutated = serde_json::to_string(&json_val).unwrap();
         let a = render_layout("start", "", 1, 0);
         let b = render_layout("start", &mutated, 1, 0);
         assert_valid_framebuffer(&b, "start width=fixed");
-        assert_ne!(framebuffer_hash(&a), framebuffer_hash(&b), "width auto→fixed(16) must change pixels");
+        assert_ne!(framebuffer_hash(&a), framebuffer_hash(&b), "width auto→fixed(8) must change pixels");
     }
 
     #[test]
     fn pixel_start_min_height_clamps() {
         let canonical = pokered_data::ui_layout::schema::get_layout_json("start").unwrap();
         let mut json_val: serde_json::Value = serde_json::from_str(&canonical).unwrap();
-        json_val["variants"]["default"]["children"][0]["min_height"] = serde_json::Value::Number(14.into());
+        // Six rows (including POKeMON), gaps, padding and borders need
+        // 15 tiles naturally. Clamp above that while staying on screen.
+        json_val["variants"]["default"]["children"][0]["min_height"] = serde_json::Value::Number(16.into());
         let mutated = serde_json::to_string(&json_val).unwrap();
         let a = render_layout("start", "", 1, 0);
         let b = render_layout("start", &mutated, 1, 0);
-        assert_valid_framebuffer(&b, "start min_h=14");
+        assert_valid_framebuffer(&b, "start min_h=16");
         assert_ne!(framebuffer_hash(&a), framebuffer_hash(&b), "min_height clamp must change pixels");
     }
 
