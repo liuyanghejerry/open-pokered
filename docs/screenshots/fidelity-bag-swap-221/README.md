@@ -54,3 +54,18 @@ uses expanded7-case helper on both sides. No ROM, SRAM, emulator state or binary
 is published. These are controlled runtime probes, not natural mainline traversal,
 a complete SAVE/CONTINUE proof, or absolute originalCPU/PPU pixel/frame alignment.
 Broader held-repeat/scroll/cursor-return and other fidelity audits remain open.
+
+
+## Current master integration 591480e
+
+The paired images above have been replaced with actual master591480e and
+this independently frozen candidate using the identical helper, fixture,
+inputs and relative frame. Production master is unchanged: only cfg(test)
+helpers are appended. Full source/binary hash manifests, complete fresh
+core/app regression logs, negative master owner test, and 4508
+PNG with complete raw JSON are in integration-591480e.zip; every archive
+file is read back and byte-compared. Both repetitions are byte-exact,
+every recorded cached frame matches every full-redraw pixel. Earlier
+evidence.zip remains historical and is not claimed as this integration.
+Latest doc commit CI must be green before merge; stacked swap still
+requires its list dependency and own master integration checks.
