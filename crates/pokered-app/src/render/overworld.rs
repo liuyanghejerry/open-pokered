@@ -730,8 +730,7 @@ pub(super) fn can_reuse_composited_frame(screen: &OverworldScreen) -> bool {
         && screen.pending_naming_screen.is_none()
         && screen.pending_party_select.is_none()
         && screen.pending_pokedex_entry.is_none()
-        && screen.pending_dialogue.is_none()
-        && screen.cut_retained_dialogue.is_none()
+        && screen.displayed_field_dialogue().is_none()
         && screen.pending_choice.is_none()
         && (screen.script_money_box.is_none() && screen.script_coin_box.is_none())
         && screen.pending_emotion_bubble.is_none()
@@ -2129,11 +2128,7 @@ fn draw_overworld_impl(
         return;
     }
 
-    if let Some(dlg) = screen
-        .pending_dialogue
-        .as_ref()
-        .or(screen.cut_retained_dialogue.as_ref())
-    {
+    if let Some(dlg) = screen.displayed_field_dialogue() {
         if let Some((d1, d2)) = dlg.get_display_text() {
             // Keep the script-authored line break: joining with ' ' and
             // re-wrapping loses it (and CJK pages re-wrap at wrong points).

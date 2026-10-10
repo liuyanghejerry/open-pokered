@@ -446,9 +446,7 @@ impl FrameRecorder {
             });
             let dialogue = game
                 .overworld
-                .pending_dialogue
-                .as_ref()
-                .or(game.overworld.cut_retained_dialogue.as_ref())
+                .displayed_field_dialogue()
                 .and_then(|state| state.get_display_text())
                 .map(|(top, bottom)| format!("{} {}", top, bottom).trim().to_string());
             let entry = serde_json::json!({
@@ -6429,8 +6427,7 @@ impl PokemonGame {
         // driver can observe interactions that don't change `screen`.
         let dialogue = self
             .overworld
-            .pending_dialogue
-            .as_ref()
+            .displayed_field_dialogue()
             .and_then(|d| d.get_display_text())
             .map(|(a, b)| format!("{} {}", a, b).trim().to_string());
         // Structured dialogue-machine state: page progress, typewriter
@@ -10858,6 +10855,167 @@ mod link_stats_cry_fidelity_tests {
         });
     }
 
+    #[test]
+    fn safari_information_choice_keeps_question_across_json_restore_and_replaces_it() {
+        use pokered_core::overworld::Direction;
+        use pokered_core::snapshot::OverworldSnapshot;
+        run_link_save_fixture(|| {
+            for (answer, expected) in [(GbButton::B, "Sorry, you're a regular"),
+                                      (GbButton::A, "SAFARI ZONE has 4 zones")] {
+                let mut g = fixture(Species::Bulbasaur, 3, Direction::Left);
+                g.overworld.warp_to_map(MapId::SafariZoneGate, 3, 4);
+                let idle = InputState::new();
+                let a = button(GbButton::A);
+                let b = button(GbButton::B);
+                let mut cache = crate::render::OverworldBackgroundCache::new(160,144);
+                let mut cached = FrameBuffer::new(dotzuki_engine::render_config::RenderConfig::new(160,144),pokered_renderer::Rgba::WHITE);
+                let mut cached_resources = Some(ResourceManager::new(pokered_renderer::resource::AssetRoot::auto_detect().unwrap()));
+                let mut compare_draws = |g: &mut PokemonGame| {
+                    let mut full = FrameBuffer::new(dotzuki_engine::render_config::RenderConfig::new(160,144),pokered_renderer::Rgba::WHITE);
+                    g.draw(&mut full);
+                    crate::render::draw_overworld_cached(&mut g.overworld,&mut cached_resources,&mut cached,
+                        g.state.config.language,&mut cache);
+                    assert_eq!(cached.packed(),full.packed(),"cached/full question handoff");
+                };
+                for _ in 0..120 { g.update(&idle); }
+                compare_draws(&mut g);
+                g.update(&button(GbButton::Left));
+                for _ in 0..16 { g.update(&idle); }
+                for frame in 0..1200 {
+                    g.update(if frame % 30 == 0 { &a } else { &idle });
+                    compare_draws(&mut g);
+                    if g.overworld.pending_choice.is_some() { break; }
+                }
+                assert!(g.overworld.pending_choice.is_some(), "worker question did not open");
+                assert!(g.overworld.pending_dialogue.is_none(), "question must not consume choice input");
+                let question = g.overworld.displayed_field_dialogue().unwrap().get_display_text().unwrap();
+                assert_eq!(question, ("Hi! Is it your first time".into(), "here?".into()));
+                assert!(!g.overworld.dialogue_needs_button(), "question has no text-scroll arrow during choice");
+                let snap = OverworldSnapshot::capture(&g.overworld);
+                let raw = serde_json::to_string(&snap).unwrap();
+                let restored: OverworldSnapshot = serde_json::from_str(&raw).unwrap();
+                restored.restore_into(&mut g.overworld);
+                assert_eq!(g.overworld.displayed_field_dialogue().unwrap().get_display_text(), Some(question));
+                // Earlier JSON fixtures omit the new retained-window state.
+                let mut legacy = serde_json::to_value(&snap).unwrap();
+                legacy.as_object_mut().unwrap().remove("last_script_dialogue");
+                assert!(serde_json::from_value::<OverworldSnapshot>(legacy).unwrap().last_script_dialogue.is_none());
+                for _ in 0..20 { g.update(&idle); }
+                g.update(&button(answer));
+                for _ in 0..200 { g.update(&idle); }
+                assert!(g.overworld.pending_choice.is_none());
+                let (top, bottom) = g.overworld.displayed_field_dialogue().unwrap().get_display_text().unwrap();
+                assert!(format!("{top} {bottom}").starts_with(expected), "answer text: {top} / {bottom}");
+                for frame in 0..1800 {
+                    g.update(if frame % 30 == 0 { &b } else { &idle });
+                    compare_draws(&mut g);
+                    if g.overworld.script_engine_idle() && g.overworld.pending_dialogue.is_none() { break; }
+                }
+                assert!(g.overworld.displayed_field_dialogue().is_none(), "question leaked past completed conversation");
+                assert!(g.overworld.last_script_dialogue.is_none());
+            }
+        });
+    }
+
+    #[test]
+    fn museum_choice_retains_final_question_page_across_money_box_command() {
+        use pokered_core::overworld::Direction;
+        run_link_save_fixture(|| {
+            let mut g = fixture(Species::Bulbasaur, 10, Direction::Up);
+            g.overworld.warp_to_map(MapId::Museum1F, 10, 5);
+            let idle = InputState::new();
+            let a = button(GbButton::A);
+            let b = button(GbButton::B);
+            let up = button(GbButton::Up);
+            for _ in 0..120 { g.update(&idle); }
+            for _ in 0..30 { g.update(&up); }
+            for frame in 0..1800 {
+                if g.overworld.pending_choice.is_some() { break; }
+                g.update(if frame % 30 == 0 { &a } else { &idle });
+            }
+            assert!(g.overworld.pending_choice.is_some());
+            assert!(g.overworld.script_money_box.is_some());
+            let question = g.overworld.displayed_field_dialogue().unwrap();
+            assert!(question.current_page() > 0, "must preserve the final page, not the ticket-price page");
+            let (top,bottom) = question.get_display_text().unwrap();
+            assert_eq!(format!("{top} {bottom}").trim(), "Would you like to come in?");
+            for _ in 0..20 { g.update(&idle); }
+            g.update(&b);
+            for frame in 0..1800 {
+                g.update(if frame % 30 == 0 { &b } else { &idle });
+                if g.overworld.script_engine_idle() && g.overworld.pending_dialogue.is_none() { break; }
+            }
+            assert!(g.overworld.pending_choice.is_none());
+            assert!(g.overworld.last_script_dialogue.is_none());
+            assert!(g.overworld.displayed_field_dialogue().is_none());
+            assert!(g.overworld.script_money_box.is_none());
+            assert_eq!((g.overworld.state.player.x,g.overworld.state.player.y),(10,5));
+        });
+    }
+
+}
+
+#[cfg(all(test, not(target_os = "none")))]
+mod choice_question_capture_201 {
+    use super::*;
+    #[test]
+    #[ignore = "controlled SRAM Continue, identical inputs and hardware frames"]
+    fn capture_choice_question_201() {
+        std::thread::Builder::new().stack_size(16 * 1024 * 1024).spawn(|| {
+            let dir = std::path::PathBuf::from(std::env::var("FIDELITY_CHOICE_CAPTURE_201").unwrap());
+            std::fs::create_dir_all(&dir).unwrap();
+            let save = dir.join("fixture.sav");
+            std::fs::copy(std::env::var("FIDELITY_SAFARI_SRAM").unwrap(), &save).unwrap();
+            let mut g = PokemonGame::new_with_options(GameVersion::Red, Some(save), None, None,
+                false, None, false, true, #[cfg(feature = "debug-server")] None);
+            g.state.config.language = pokered_core::game_state::Lang::En;
+            g.state.config.text_speed = pokered_core::game_state::TextSpeed::Fast;
+            let idle = InputState::new();
+            let mut a = InputState::new(); a.press(GbButton::A);
+            let mut saw_menu = false;
+            for t in 0..2000 {
+                saw_menu |= g.state.screen == GameScreen::MainMenu;
+                if g.state.screen == GameScreen::Overworld { break; }
+                g.update(if t % 20 == 19 { &a } else { &idle });
+            }
+            assert!(saw_menu);
+            assert_eq!(g.state.screen, GameScreen::Overworld);
+            // Diagnostic endpoint, not paid admission or last-ball proof.
+            g.overworld.end_safari_game();
+            g.overworld.warp_to_map(MapId::SafariZoneGate, 3, 4);
+            g.overworld.set_rng_seed(1);
+            for _ in 0..120 { g.update(&idle); }
+            let mut left = InputState::new(); left.press(GbButton::Left);
+            for _ in 0..8 { g.update(&left); }
+            for _ in 0..8 { g.update(&idle); }
+            assert_eq!((g.overworld.state.player.x,g.overworld.state.player.y),(3,4));
+            let mut input = InputState::new();
+            let mut rows = Vec::new();
+            let mut observations = Vec::new();
+            for t in -1i32..151 {
+                if t >= 0 {
+                    input.begin_frame();
+                    if t == 0 || t == 80 { input.press(GbButton::A); }
+                    if t == 2 || t == 82 { input.release(GbButton::A); }
+                    g.update(&input);
+                }
+                let mut fb = FrameBuffer::new(dotzuki_engine::render_config::RenderConfig::new(160,144), pokered_renderer::Rgba::WHITE);
+                g.draw(&mut fb);
+                fb.save_png(&dir.join(format!("frame-{:04}.png",t+1))).unwrap();
+                rows.push(serde_json::json!({"t":t,"input_bits":input.raw_current(),"screen":format!("{:?}",g.state.screen),
+                    "overworld":pokered_core::snapshot::OverworldSnapshot::capture(&g.overworld)}));
+                observations.push(serde_json::json!({"t":t,"input_bits":input.raw_current(),
+                    "screen":format!("{:?}",g.state.screen),
+                    "player":[g.overworld.state.player.x,g.overworld.state.player.y],
+                    "dialogue":g.overworld.pending_dialogue.as_ref().map(|d|d.get_display_text()),
+                    "choice":g.overworld.pending_choice,
+                    "visible_question":g.overworld.displayed_field_dialogue().map(|d|d.get_display_text())}));
+                if t == 120 { assert!(g.overworld.pending_choice.is_some(),"choice must be open at same hardware frame"); }
+            }
+            std::fs::write(dir.join("observations.json"),serde_json::to_string_pretty(&observations).unwrap()).unwrap();
+            std::fs::write(dir.join("frames.json"),serde_json::to_string_pretty(&rows).unwrap()).unwrap();
+        }).unwrap().join().unwrap();
+    }
 }
 
 #[cfg(all(test, not(target_os = "none")))]
