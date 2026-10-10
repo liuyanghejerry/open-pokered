@@ -670,6 +670,8 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     pub last_script_dialogue: Option<BedroomDialogue>,
     /// A returned inner PrintText keeps its window until its caller ends it.
     pub inner_field_text_open: bool,
+    /// RAM BIT_NO_TEXT_DELAY; e.g. Bike Shop B-cancel leaves it set.
+    pub text_delay_disabled: bool,
     pub pending_choice: Option<crate::overworld::script_bridge::PendingChoice>,
     pub pending_pokedex_entry: Option<PokedexEntryState>,
     pub pending_naming_screen: Option<crate::naming_screen::NamingScreenState>,
@@ -1166,6 +1168,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             pending_dialogue: None,
             last_script_dialogue: None,
             inner_field_text_open: false,
+            text_delay_disabled: false,
             pending_choice: None,
             pending_pokedex_entry: None,
             pending_naming_screen: None,

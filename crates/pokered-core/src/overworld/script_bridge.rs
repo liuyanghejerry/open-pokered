@@ -59,6 +59,8 @@ pub enum ScriptEffect {
     /// Inner PrintText ending in DONE. Keep the window for its caller, and
     /// return after the final letter wait instead of waiting for a new press.
     PrintFieldText { text: String },
+    SetFieldTextDelayDisabled { disabled: bool },
+    InstantFieldMenu { options: Vec<String>, text: String, started: bool, selected: i32 },
     FinishFieldText { acknowledged: bool },
     /// Original Paragraph keeps the same text window across its manual wait.
     PrintFieldParagraph { text: String, #[serde(default)] sound_id: Option<String>, phase: FieldParagraphPhase },
@@ -363,7 +365,7 @@ impl ScriptEffect {
     /// Nested gift/reading flows use the same text-window choice handoff.
     pub fn is_choice(&self) -> bool {
         match self {
-            Self::ShowChoice { .. } => true,
+            Self::ShowChoice { .. } | Self::InstantFieldMenu { .. } => true,
             Self::GivePokemon { flow: Some(flow), .. } => flow.child.is_choice(),
             Self::ReadingMenu { menu } => menu.child.is_choice(),
             _ => false,
@@ -391,6 +393,8 @@ impl ScriptEffect {
             ScriptEffect::WaitFieldButton { show_arrow } => json!({ "effect": "WaitFieldButton", "show_arrow": show_arrow }),
             ScriptEffect::CloseFieldText => json!({ "effect": "CloseFieldText" }),
             ScriptEffect::FinishFieldText { acknowledged } => json!({ "effect": "FinishFieldText", "acknowledged": acknowledged }),
+            ScriptEffect::SetFieldTextDelayDisabled {disabled} => json!({"effect":"SetFieldTextDelayDisabled","disabled":disabled}),
+            ScriptEffect::InstantFieldMenu {options,text,started,selected} => json!({"effect":"InstantFieldMenu","options":options,"text":text,"started":started,"selected":selected}),
             ScriptEffect::PrintFieldText { text } => {
                 json!({ "effect": "PrintFieldText", "text": text })
             }
@@ -811,7 +815,7 @@ pub fn dispatch_command_with_names(
         // `pokered-data::script_api`).
         ScriptCommand::Custom { name, args } => {
             let mut effect = dispatch_custom(name, args);
-            if let ScriptEffect::ShowItemDialogue { text, .. } | ScriptEffect::PrintFieldText { text } | ScriptEffect::PrintFieldParagraph { text, .. } | ScriptEffect::PrintItemFieldText {text,..} = &mut effect {
+            if let ScriptEffect::ShowItemDialogue { text, .. } | ScriptEffect::PrintFieldText { text } | ScriptEffect::InstantFieldMenu {text,..} | ScriptEffect::PrintFieldParagraph { text, .. } | ScriptEffect::PrintItemFieldText {text,..} = &mut effect {
                 *text = resolve_placeholders(text, player_name, rival_name, starter_name);
             }
             effect
@@ -899,6 +903,8 @@ fn dispatch_custom(name: &str, args: &[Value]) -> ScriptEffect {
         PokemonScriptCommand::WaitFieldButton => ScriptEffect::WaitFieldButton {show_arrow:false},
         PokemonScriptCommand::CloseFieldText => ScriptEffect::CloseFieldText,
         PokemonScriptCommand::FinishFieldText => ScriptEffect::FinishFieldText { acknowledged: false },
+        PokemonScriptCommand::SetFieldTextDelayDisabled {disabled} => ScriptEffect::SetFieldTextDelayDisabled {disabled},
+        PokemonScriptCommand::ChooseInstantFieldMenu {options,text} => ScriptEffect::InstantFieldMenu {options,text,started:false,selected:0},
         PokemonScriptCommand::PrintFieldText { text } => ScriptEffect::PrintFieldText {
             text,
         },

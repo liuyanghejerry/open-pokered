@@ -458,6 +458,15 @@ impl ScriptHost for NativeHost {
             "waitFieldButton" => Ok(pokemon(PokemonScriptCommand::WaitFieldButton)),
             "closeFieldText" => Ok(pokemon(PokemonScriptCommand::CloseFieldText)),
             "finishFieldText" => Ok(pokemon(PokemonScriptCommand::FinishFieldText)),
+            "setFieldTextDelayDisabled" => {
+                let Some(Value::Bool(disabled))=v.first() else { return Err("setFieldTextDelayDisabled: boolean required".into()); };
+                Ok(pokemon(PokemonScriptCommand::SetFieldTextDelayDisabled {disabled:*disabled}))
+            }
+            "chooseInstantFieldMenu" => {
+                let options=args::string_array(v.first().ok_or("chooseInstantFieldMenu: missing options")?,name)?;
+                let text=args::text(v.get(1).ok_or("chooseInstantFieldMenu: missing text")?,name)?;
+                Ok(pokemon(PokemonScriptCommand::from_custom(name,&[serde_json::json!(options),serde_json::json!(text)])?))
+            }
             "printFieldText" => {
                 let text = args::text(v.first().ok_or("printFieldText: missing text")?, "printFieldText")?;
                 Ok(pokemon(PokemonScriptCommand::PrintFieldText { text }))
@@ -2721,7 +2730,7 @@ mod tests {
             e = NativeScriptEngine::new();
             e.load_map("BikeShop", &scene);
             let cmds = drive_fidelity_scene(&mut e, "talkBikeShopClerk", false, "", &[choice]);
-            assert!(cmds.iter().any(|c| matches!(c, ScriptCommand::ShowChoice { options } if options == &["BICYCLE ¥1000000", "CANCEL"])));
+            assert!(cmds.iter().any(|c| matches!(c, ScriptCommand::Custom { name, args } if name == "chooseInstantFieldMenu" && args[0] == serde_json::json!(["BICYCLE ¥1000000", "CANCEL"]))));
             assert!(!cmds.iter().any(|c| matches!(c, ScriptCommand::GiveItem { .. } | ScriptCommand::TakeMoney { .. })));
         }
     }
@@ -2944,6 +2953,9 @@ mod tests {
                 }
                 ScriptCommand::ShowChoice { .. } => {
                     CommandResult::Number(*choices.next().expect("menu response") as f64)
+                }
+                ScriptCommand::Custom { name, .. } if name == "chooseInstantFieldMenu" => {
+                    CommandResult::Number(*choices.next().expect("instant menu response") as f64)
                 }
                 _ => CommandResult::Void,
             };

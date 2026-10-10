@@ -12423,6 +12423,7 @@ mod link_stats_cry_fidelity_tests {
         run_link_save_fixture(|| {
             let dir=std::path::PathBuf::from(std::env::var("FIDELITY_RECEIPT_CAPTURE").unwrap());std::fs::create_dir_all(&dir).unwrap();
             let (map,x,y,item,flag)=match std::env::var("FIDELITY_RECEIPT_CASE").unwrap().as_str() {
+                "bike" => (MapId::BikeShop,6,4,"BICYCLE","EVENT_GOT_BICYCLE"),
                 "masterball" => (MapId::SilphCo11F,7,6,"MASTER_BALL","EVENT_GOT_MASTER_BALL"),
                 "coincase" => (MapId::CeladonDiner,0,2,"COIN_CASE","EVENT_GOT_COIN_CASE"),
                 "fly" => (MapId::Route16FlyHouse,2,4,"HM02","EVENT_GOT_HM02"),
@@ -12440,9 +12441,9 @@ mod link_stats_cry_fidelity_tests {
                 "chairman" => (MapId::PokemonFanClub,3,2,"BIKE_VOUCHER","EVENT_GOT_BIKE_VOUCHER"),
                 _ => panic!("unknown fixture"),
             };
-            let gift=matches!(map,MapId::SilphCo11F|MapId::CeladonDiner|MapId::Route16FlyHouse|MapId::SafariZoneSecretHouse|MapId::CeladonMart3F);
+            let gift=matches!(map,MapId::BikeShop|MapId::SilphCo11F|MapId::CeladonDiner|MapId::Route16FlyHouse|MapId::SafariZoneSecretHouse|MapId::CeladonMart3F);
             let aide=matches!(map,MapId::Route2Gate|MapId::Route11Gate2F|MapId::Route15Gate2F);
-            let mut g=if gift {gift_fixture_170(map)} else if aide {aide_fixture_169(map,match map {MapId::Route2Gate=>10,MapId::Route11Gate2F=>30,_=>50})} else if matches!(map,MapId::BillsHouse|MapId::CopycatsHouse2F) {bill_copycat_fixture_168(map)} else {fixture(Species::Bulbasaur,x,Direction::Up)};g.state.config.language=pokered_core::game_state::Lang::En;
+            let mut g=if map==MapId::BikeShop {bike_fixture_171(true)} else if gift {gift_fixture_170(map)} else if aide {aide_fixture_169(map,match map {MapId::Route2Gate=>10,MapId::Route11Gate2F=>30,_=>50})} else if matches!(map,MapId::BillsHouse|MapId::CopycatsHouse2F) {bill_copycat_fixture_168(map)} else {fixture(Species::Bulbasaur,x,Direction::Up)};g.state.config.language=pokered_core::game_state::Lang::En;
             let idle=InputState::new();if !gift && !aide && !matches!(map,MapId::BillsHouse|MapId::CopycatsHouse2F) {g.overworld.warp_to_map(map,x as u8,y);for _ in 0..120 {g.update(&idle);}}
             for n in &mut g.overworld.npc_states {n.movement_type=pokered_core::overworld::NpcMovementType::Stationary;n.x=n.home_x;n.y=n.home_y;n.walk_counter=0;}
             let replay:Option<Vec<Vec<String>>>=std::env::var("FIDELITY_RECEIPT_INPUTS").ok().map(|p|serde_json::from_str(&std::fs::read_to_string(p).unwrap()).unwrap());
@@ -12470,6 +12471,189 @@ mod link_stats_cry_fidelity_tests {
             }
             std::fs::write(dir.join("frames.json"),serde_json::to_string_pretty(&rows).unwrap()).unwrap();std::fs::write(dir.join("inputs.json"),serde_json::to_string_pretty(&controls).unwrap()).unwrap();
             assert!(g.save_data.game_data.bag.has_item_const(item),"both branch fixtures must actually receive the reward");
+        });
+    }
+
+    fn bike_fixture_171(voucher: bool) -> PokemonGame {
+        use pokered_core::overworld::{Direction,NpcMovementType};
+        let mut g=fixture(Species::Bulbasaur,6,Direction::Up);
+        g.state.config.language=pokered_core::game_state::Lang::En;
+        g.state.config.text_speed=pokered_core::game_state::TextSpeed::Slow;
+        g.save_data.game_data.player_money=999999;
+        g.save_data.game_data.bag=pokered_core::items::inventory::Inventory::new();
+        if voucher {g.save_data.game_data.bag.add_item(pokered_data::items::ItemId::BikeVoucher,1).unwrap();}
+        g.overworld.warp_to_map(MapId::BikeShop,6,4);
+        let idle=InputState::new();
+        for _ in 0..120 {g.update(&idle);}
+        for n in &mut g.overworld.npc_states {n.movement_type=NpcMovementType::Stationary;n.x=n.home_x;n.y=n.home_y;n.walk_counter=0;}
+        for _ in 0..20 {g.update(&button(GbButton::Up));}
+        for _ in 0..20 {g.update(&idle);}
+        assert_eq!((g.overworld.state.player.x,g.overworld.state.player.y),(6,4));
+        assert_eq!(g.overworld.state.player.facing,Direction::Up);
+        g
+    }
+
+    fn bike_open_talk_171(g: &mut PokemonGame) {
+        let a=button(GbButton::A);
+        for _ in 0..60 {g.update(&a);if g.overworld.displayed_field_dialogue().is_some() {break;}}
+        assert!(g.overworld.displayed_field_dialogue().is_some(),"actual counter interaction");
+        g.update(&InputState::new());
+    }
+
+    #[test]
+    fn bike_shop_purchase_cancel_and_b_text_mode_survive_real_dialogues() {
+        use pokered_core::snapshot::OverworldSnapshot;
+        use pokered_core::overworld::script_bridge::ScriptEffect;
+        run_link_save_fixture(|| {
+            for key in [GbButton::A,GbButton::B,GbButton::Down] {
+                let mut g=bike_fixture_171(false);
+                let idle=InputState::new();let a=button(GbButton::A);
+                let bag=g.save_data.game_data.bag.clone();
+                bike_open_talk_171(&mut g);
+                let mut saw_prompt=false;
+                for _ in 0..6000 {
+                    if g.overworld.pending_choice.is_some() {break;}
+                    let snap=OverworldSnapshot::capture(&g.overworld);
+                    if matches!(snap.active_script_effect,Some(ScriptEffect::WaitFieldPrompt {protected_remaining:0})) {
+                        saw_prompt=true;
+                        assert!(!g.overworld.text_delay_disabled);
+                        for _ in 0..20 {g.update(&idle);assert!(g.overworld.pending_choice.is_none());}
+                    }
+                    let ack=receipt_prompt_needs_press(&g);
+                    g.update(if ack {&a} else {&idle});
+                }
+                assert!(saw_prompt);
+                assert_eq!(g.overworld.pending_choice.as_ref().expect("instant menu").options,["BICYCLE ¥1000000","CANCEL"]);
+                assert!(g.overworld.text_delay_disabled);
+                assert!(g.overworld.pending_dialogue.is_none());
+                let question=g.overworld.displayed_field_dialogue().unwrap().get_display_text().unwrap();
+                assert!(format!("{} {}",question.0,question.1).contains("want it?"));
+                let raw=serde_json::to_string(&OverworldSnapshot::capture(&g.overworld)).unwrap();
+                serde_json::from_str::<OverworldSnapshot>(&raw).unwrap().restore_into(&mut g.overworld);
+                assert!(g.overworld.text_delay_disabled);
+                for _ in 0..20 {g.update(&idle);}
+                if key==GbButton::Down {g.update(&button(GbButton::Down));g.update(&idle);assert_eq!(g.overworld.pending_choice.as_ref().unwrap().selected,1);}
+                g.update(&button(if key==GbButton::B {GbButton::B} else {GbButton::A}));
+                g.update(&idle);
+                assert_eq!(g.overworld.text_delay_disabled,key==GbButton::B);
+                let mut saw_cant_afford=false;
+                for _ in 0..6000 {
+                    if matches!(OverworldSnapshot::capture(&g.overworld).active_script_effect,Some(ScriptEffect::WaitFieldPrompt {..})) {saw_cant_afford=true;}
+                    if g.overworld.active_script_effect_label().as_deref()==Some("FinishFieldText") {break;}
+                    let ack=receipt_prompt_needs_press(&g);g.update(if ack {&a} else {&idle});
+                }
+                assert_eq!(saw_cant_afford,key==GbButton::A);
+                assert_eq!(g.overworld.active_script_effect_label().as_deref(),Some("FinishFieldText"));
+                assert!(g.overworld.displayed_field_dialogue().unwrap().get_display_text().is_some_and(|(a,b)|format!("{a} {b}").contains("Come back again")));
+                for _ in 0..20 {g.update(&idle);}
+                for _ in 0..8 {g.update(&a);assert!(g.overworld.displayed_field_dialogue().is_some());}
+                for _ in 0..40 {g.update(&idle);}
+                assert!(g.overworld.displayed_field_dialogue().is_none());
+                assert_eq!(g.save_data.game_data.bag,bag);
+                assert_eq!(g.save_data.game_data.player_money,999999);
+                assert!(!g.overworld.script_flags().get("EVENT_GOT_BICYCLE").copied().unwrap_or(false));
+                assert_eq!(g.overworld.text_delay_disabled,key==GbButton::B);
+                let snap=OverworldSnapshot::capture(&g.overworld);
+                let mut legacy=serde_json::to_value(&snap).unwrap();legacy.as_object_mut().unwrap().remove("text_delay_disabled");
+                assert!(!serde_json::from_value::<OverworldSnapshot>(legacy).unwrap().text_delay_disabled);
+                serde_json::from_str::<OverworldSnapshot>(&serde_json::to_string(&snap).unwrap()).unwrap().restore_into(&mut g.overworld);
+                bike_open_talk_171(&mut g);
+                let d=g.overworld.displayed_field_dialogue().unwrap();
+                assert_eq!(d.waiting_for_input(),key==GbButton::B,"B carry changes next conversation; A uses slow letters");
+            }
+        });
+    }
+
+    #[test]
+    fn bike_voucher_exchange_preserves_original_capacity_flag_and_sound_order() {
+        use pokered_core::snapshot::OverworldSnapshot;
+        use pokered_core::overworld::script_bridge::{ScriptEffect,FieldParagraphPhase};
+        use pokered_data::items::ItemId;
+        run_link_save_fixture(|| {
+            for full in [false,true] {
+                let mut g=bike_fixture_171(true);
+                if full {
+                    for id in 1..=255 {let item=ItemId::from_id(id);if matches!(item,ItemId::Bicycle|ItemId::BikeVoucher) {continue;}g.save_data.game_data.bag.add_item(item,1).unwrap();if g.save_data.game_data.bag.is_full() {break;}}
+                }
+                let original_bag=g.save_data.game_data.bag.clone();let idle=InputState::new();let a=button(GbButton::A);
+                bike_open_talk_171(&mut g);
+                for _ in 0..6000 {
+                    if matches!(OverworldSnapshot::capture(&g.overworld).active_script_effect,Some(ScriptEffect::WaitFieldPrompt {protected_remaining:0})) {break;}
+                    let ack=receipt_prompt_needs_press(&g);g.update(if ack {&a} else {&idle});
+                }
+                assert!(matches!(OverworldSnapshot::capture(&g.overworld).active_script_effect,Some(ScriptEffect::WaitFieldPrompt {protected_remaining:0})));
+                for _ in 0..40 {g.update(&idle);assert_eq!(g.save_data.game_data.bag,original_bag);}
+                assert!(!g.overworld.script_flags().get("EVENT_GOT_BICYCLE").copied().unwrap_or(false));
+                g.update(&a);g.update(&idle);
+                let mut start=None;let mut end=None;
+                for t in 0..6000 {
+                    let snap=OverworldSnapshot::capture(&g.overworld);
+                    if matches!(snap.active_script_effect,Some(ScriptEffect::PrintItemFieldText {phase:FieldParagraphPhase::PlayingSound,..})) {
+                        assert!(!full);
+                        assert!(g.save_data.game_data.bag.has_item_const("BICYCLE"));
+                        assert!(!g.save_data.game_data.bag.has_item_const("BIKE_VOUCHER"));
+                        assert!(g.overworld.script_flags().get("EVENT_GOT_BICYCLE").copied().unwrap_or(false));
+                        if start.is_none() {start=Some(t);serde_json::from_str::<OverworldSnapshot>(&serde_json::to_string(&snap).unwrap()).unwrap().restore_into(&mut g.overworld);}
+                        let mut keys=InputState::new();if start.is_some_and(|n|t==n+1) {keys.press(GbButton::B);keys.press(GbButton::Down);}
+                        g.update(&keys);assert_eq!((g.overworld.state.player.x,g.overworld.state.player.y),(6,4));
+                    } else if start.is_some() {end=Some(t);break;} else {
+                        if g.overworld.active_script_effect_label().as_deref()==Some("FinishFieldText") {break;}
+                        let ack=receipt_prompt_needs_press(&g);g.update(if ack {&a} else {&idle});
+                    }
+                }
+                assert_eq!(start.is_some(),!full);
+                if !full {
+                    let expected=AudioOutput::new_pcm();expected.play_sfx(SfxId::GetKeyItem);let mut duration=0;
+                    while expected.is_sfx_playing()&&duration<1000 {expected.update_frame();duration+=1;}
+                    assert_eq!(end.unwrap()-start.unwrap(),duration,"snapshot does not duplicate or shorten key-item fanfare");
+                }
+                for _ in 0..60 {g.update(&idle);}
+                assert_eq!(g.overworld.active_script_effect_label().as_deref(),Some("FinishFieldText"));
+                assert_eq!(g.overworld.script_flags().get("EVENT_GOT_BICYCLE").copied().unwrap_or(false),!full);
+                let text=g.overworld.displayed_field_dialogue().unwrap().get_display_text().unwrap();
+                assert!(format!("{} {}",text.0,text.1).contains(if full {"make room"} else {"exchanged"}));
+                for _ in 0..8 {g.update(&a);assert!(g.overworld.displayed_field_dialogue().is_some());}
+                for _ in 0..40 {g.update(&idle);}
+                assert!(g.overworld.displayed_field_dialogue().is_none());
+                if full {assert_eq!(g.save_data.game_data.bag,original_bag);} else {
+                    let bag=g.save_data.game_data.bag.clone();bike_open_talk_171(&mut g);
+                    let mut explanation=false;
+                    for _ in 0..6000 {
+                        assert!(!matches!(OverworldSnapshot::capture(&g.overworld).active_script_effect,Some(ScriptEffect::PrintItemFieldText {..})));
+                        explanation|=g.overworld.displayed_field_dialogue().is_some_and(|d|d.get_display_text().is_some_and(|(a,b)|format!("{a} {b}").contains("CYCLING")));
+                        if g.overworld.active_script_effect_label().as_deref()==Some("FinishFieldText") {break;}
+                        let ack=receipt_prompt_needs_press(&g);g.update(if ack {&a} else {&idle});
+                    }
+                    assert!(explanation);assert_eq!(g.save_data.game_data.bag,bag);
+                }
+            }
+        });
+    }
+
+    #[test]
+    #[ignore = "deterministic before/after Bike Shop capture"]
+    fn capture_bike_shopping_171() {
+        run_link_save_fixture(|| {
+            let dir=std::path::PathBuf::from(std::env::var("FIDELITY_BIKE_CAPTURE").unwrap());std::fs::create_dir_all(&dir).unwrap();
+            let mode=std::env::var("FIDELITY_BIKE_MODE").unwrap();assert!(["purchase","cancel_a","cancel_b"].contains(&mode.as_str()));
+            let mut g=bike_fixture_171(false);let mut input=InputState::new();let mut rows=Vec::new();let mut menu=None;let mut close=None;let mut second=None;
+            for t in 0..6000 {
+                if menu.is_none() && g.overworld.pending_choice.is_some() {menu=Some(t);}
+                if menu.is_some() && close.is_none() && g.overworld.script_engine_idle() && g.overworld.active_script_effect_label().is_none() && g.overworld.displayed_field_dialogue().is_none() {close=Some(t);}
+                if close.is_some_and(|n|t>=n+60) && second.is_none() && g.overworld.displayed_field_dialogue().is_some() {second=Some(t);}
+                let keys=if t<20 {vec![GbButton::A]} else if close.is_some_and(|n|(n+60..n+80).contains(&t)) {vec![GbButton::A]} else if close.is_some() {Vec::new()} else if let Some(cue)=menu {
+                    if (cue+40..cue+42).contains(&t) {vec![match mode.as_str() {"cancel_b"=>GbButton::B,"cancel_a"=>GbButton::Down,_=>GbButton::A}]} else if mode=="cancel_a" && (cue+60..cue+62).contains(&t) {vec![GbButton::A]} else if t>=cue+70 && receipt_prompt_needs_press(&g) && input.raw_current()&1==0 {vec![GbButton::A]} else {Vec::new()}
+                } else if receipt_prompt_needs_press(&g) && input.raw_current()&1==0 {vec![GbButton::A]} else {Vec::new()};
+                input.begin_frame();for key in [GbButton::A,GbButton::B,GbButton::Down] {if keys.contains(&key) {input.press(key);}else {input.release(key);}}
+                g.update(&input);let mut fb=FrameBuffer::new(RenderConfig::new(160,144),Rgba::WHITE);g.draw(&mut fb);fb.save_png(&dir.join(format!("frame-{t:04}.png"))).unwrap();
+                let raw=serde_json::to_value(pokered_core::snapshot::OverworldSnapshot::capture(&g.overworld)).unwrap();
+                let selected:serde_json::Map<String,serde_json::Value>=["state","active_script_effect","pending_dialogue","last_script_dialogue","inner_field_text_open","text_delay_disabled","pending_choice","field_text_restore","field_loop_wait"].into_iter().map(|k|(k.into(),raw.get(k).cloned().unwrap_or(serde_json::Value::Null))).collect();
+                rows.push(serde_json::json!({"t":t,"input_bits":input.raw_current(),"menu_cue":menu,"close_cue":close,"second_talk":second,"money":g.save_data.game_data.player_money,"overworld":selected}));
+                if second.is_some_and(|n|t>=n+45) {break;}
+            }
+            std::fs::write(dir.join("frames.json"),serde_json::to_string_pretty(&rows).unwrap()).unwrap();
+            assert!(menu.is_some()&&close.is_some()&&second.is_some(),"all phases recorded: menu={menu:?} close={close:?} second={second:?}");
+            assert_eq!(g.save_data.game_data.player_money,999999);assert!(!g.save_data.game_data.bag.has_item_const("BICYCLE"));
         });
     }
 

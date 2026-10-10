@@ -681,7 +681,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             }
             // Only allocate the protected-name view when a page is created.
             let dialogue_names: Vec<&str> = if self.pending_dialogue.is_none()
-                && matches!(effect, script_bridge::ScriptEffect::ShowDialogue { .. } | script_bridge::ScriptEffect::PrintFieldText { .. })
+                && matches!(effect, script_bridge::ScriptEffect::ShowDialogue { .. } | script_bridge::ScriptEffect::PrintFieldText { .. } | script_bridge::ScriptEffect::InstantFieldMenu {started:false,..})
             {
                 core::iter::once(self.player_name.as_str())
                     .chain(core::iter::once(self.rival_name.as_str()))
@@ -701,6 +701,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 &mut self.pending_dialogue,
                 &mut self.last_script_dialogue,
                 &mut self.inner_field_text_open,
+                &mut self.text_delay_disabled,
                 &mut self.pending_choice,
                 &mut self.pending_pokedex_entry,
                 &mut self.pending_naming_screen,
@@ -1433,6 +1434,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 // OverworldLoop .displayDialogue updates sprites once
                 // before DisplayTextIDInit sets BIT_FONT_LOADED.
                 self.run_npc_movement_tick();
+                // DrawStartMenu sets then clears BIT_NO_TEXT_DELAY, including
+                // a pre-existing Bike Shop B-cancel carry.
+                self.text_delay_disabled=false;
                 return ScreenAction::Transition(GameScreen::StartMenu);
             }
         }
@@ -2698,6 +2702,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         pending_dialogue: &mut Option<BedroomDialogue>,
         last_script_dialogue: &mut Option<BedroomDialogue>,
         inner_field_text_open: &mut bool,
+        text_delay_disabled: &mut bool,
         pending_choice: &mut Option<script_bridge::PendingChoice>,
         pending_pokedex_entry: &mut Option<PokedexEntryState>,
         pending_naming_screen: &mut Option<crate::naming_screen::NamingScreenState>,
@@ -2738,6 +2743,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     pending_dialogue,
                     last_script_dialogue,
                     inner_field_text_open,
+                    text_delay_disabled,
                     pending_choice,
                     pending_pokedex_entry,
                     pending_naming_screen,
@@ -2803,6 +2809,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     pending_dialogue,
                     last_script_dialogue,
                     inner_field_text_open,
+                    text_delay_disabled,
                     pending_choice,
                     pending_pokedex_entry,
                     pending_naming_screen,
@@ -2852,12 +2859,14 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     return true;
                 }
                 if pending_dialogue.is_none() {
-                    *pending_dialogue = Some(script_bridge::text_to_dialogue_with_names(text, dialogue_names));
+                    let mut dialogue=script_bridge::text_to_dialogue_with_names(text,dialogue_names);
+                    if *text_delay_disabled {dialogue.skip_to_full_page();}
+                    *pending_dialogue=Some(dialogue);
                     return false;
                 }
                 let dialogue = pending_dialogue.as_mut().unwrap();
                 if !dialogue.waiting_for_input() {
-                    dialogue.reveal_next_char_with_buttons(a_pressed || b_pressed);
+                    if *text_delay_disabled {dialogue.skip_to_full_page();} else {dialogue.reveal_next_char_with_buttons(a_pressed || b_pressed);}
                 }
                 if dialogue.waiting_for_input() {
                     if dialogue.has_more_pages() {
@@ -2878,9 +2887,18 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 if pending_dialogue.is_none() {
                     *last_script_dialogue = None;
                     *inner_field_text_open = returns_after_print;
-                    let dialogue = script_bridge::text_to_dialogue_with_names(text, dialogue_names);
+                    let mut dialogue = script_bridge::text_to_dialogue_with_names(text, dialogue_names);
+                    if *text_delay_disabled {dialogue.skip_to_full_page();}
                     if dialogue.is_done() {
                         return true;
+                    }
+                    if returns_after_print && dialogue.waiting_for_input() && dialogue.is_last_page() {
+                        *last_script_dialogue=Some(dialogue);
+                        match effect {
+                            script_bridge::ScriptEffect::PrintItemFieldText {sound_id,phase,..} => {audio_requests.push(OverworldAudioRequest::PlaySound {sound_id:sound_id.clone().unwrap_or_else(||"SFX_GET_ITEM_1".into())});*phase=script_bridge::FieldParagraphPhase::PlayingSound;return false;}
+                            script_bridge::ScriptEffect::PrintFieldParagraph {sound_id:Some(sound),phase,..} => {audio_requests.push(OverworldAudioRequest::PlaySound {sound_id:sound.clone()});*phase=script_bridge::FieldParagraphPhase::PlayingSound;return false;}
+                            _ => return true,
+                        }
                     }
                     *pending_dialogue = Some(dialogue);
                     false
@@ -2909,6 +2927,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                             }
                             *sfx_event = OverworldSfxEvent::TextAdvance;
                         }
+                    }
+                    if *text_delay_disabled {
+                        if let Some(dialogue)=pending_dialogue.as_mut() {if !dialogue.waiting_for_input() {dialogue.skip_to_full_page();}}
                     }
                     if returns_after_print && pending_dialogue.as_ref().is_some_and(|d| d.waiting_for_input() && d.is_last_page()) {
                         *last_script_dialogue = pending_dialogue.take();
@@ -3012,12 +3033,48 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     false
                 }
             }
+            script_bridge::ScriptEffect::SetFieldTextDelayDisabled {disabled} => {
+                *text_delay_disabled=*disabled;true
+            }
+            script_bridge::ScriptEffect::InstantFieldMenu {options,text,started,selected} => {
+                if !*started {
+                    *last_script_dialogue=None;
+                    *inner_field_text_open=true;
+                    let mut dialogue=script_bridge::text_to_dialogue_with_names(text,dialogue_names);
+                    if !dialogue.is_done() {
+                        dialogue.skip_to_full_page();
+                        if dialogue.has_more_pages() {*pending_dialogue=Some(dialogue);}
+                        else {*last_script_dialogue=Some(dialogue);}
+                    }
+                    *pending_choice=Some(script_bridge::PendingChoice::new(options.clone()));
+                    *started=true;return false;
+                }
+                if let Some(dialogue)=pending_dialogue {
+                    // Preserve pagination if a localized question wraps. The
+                    // original single-page question reaches the menu at once.
+                    if a_just_pressed||b_just_pressed {
+                        dialogue.advance();dialogue.skip_to_full_page();
+                        if !dialogue.has_more_pages() {*last_script_dialogue=pending_dialogue.take();}
+                        *sfx_event=OverworldSfxEvent::TextAdvance;
+                    }
+                    return false;
+                }
+                if let Some(choice)=pending_choice {
+                    if up_pressed {choice.move_up();}else if down_pressed {choice.move_down();}
+                    if a_just_pressed {*selected=choice.selected as i32;*pending_choice=None;true}
+                    else if b_just_pressed {*selected=-1;*pending_choice=None;true}
+                    else {false}
+                }else {*selected=-1;true}
+            }
             script_bridge::ScriptEffect::ShowChoice {
                 options,
                 started,
                 selected,
             } => {
                 if !*started {
+                    // DisplayTwoOptionMenu clears BIT_NO_TEXT_DELAY after
+                    // drawing its labels (engine/menus/text_box.asm).
+                    *text_delay_disabled=false;
                     let mut choice = script_bridge::PendingChoice::new(options.clone());
                     choice.selected = (*selected).min(options.len().saturating_sub(1) as u32);
                     *pending_choice = Some(choice);
@@ -3635,6 +3692,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
 
     fn finish_effect(effect: &script_bridge::ScriptEffect) -> CommandResult {
         match effect {
+            script_bridge::ScriptEffect::InstantFieldMenu {selected,..} => CommandResult::Number(f64::from(*selected)),
             script_bridge::ScriptEffect::ShowChoice { selected, .. } => {
                 CommandResult::Number(*selected as f64)
             }

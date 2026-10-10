@@ -527,6 +527,19 @@ impl ScriptApiRegistrar for PokemonScriptApi {
                 Ok(command.into_script_command())
             });
         }
+        engine.register_async_fn("setFieldTextDelayDisabled", |args: &[JsValue],ctx: &mut Context| {
+            let value=args.get_or_undefined(0).to_json(ctx)?;
+            let command=PokemonScriptCommand::from_custom("setFieldTextDelayDisabled", &[value])
+                .map_err(|error|boa_engine::JsNativeError::typ().with_message(error))?;
+            Ok(command.into_script_command())
+        });
+        engine.register_async_fn("chooseInstantFieldMenu", |args: &[JsValue],ctx: &mut Context| {
+            let options=args.get_or_undefined(0).to_json(ctx)?;
+            let text=args.get_or_undefined(1).to_json(ctx)?;
+            let command=PokemonScriptCommand::from_custom("chooseInstantFieldMenu", &[options,text])
+                .map_err(|error|boa_engine::JsNativeError::typ().with_message(error))?;
+            Ok(command.into_script_command())
+        });
         engine.register_async_fn("readingMenu", |args: &[JsValue], ctx: &mut Context| {
             let options = args.get_or_undefined(0).to_json(ctx)?;
             let texts = args.get_or_undefined(1).to_json(ctx)?;

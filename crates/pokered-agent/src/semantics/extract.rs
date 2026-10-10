@@ -196,6 +196,8 @@ const NO_STATE_COMMANDS: &[&str] = &[
     "showText",
     // Inner text return/retention changes presentation, not event-graph state.
     "printFieldText",
+    "setFieldTextDelayDisabled",
+    "chooseInstantFieldMenu",
     "finishFieldText",
     "printFieldParagraph",
     "printItemFieldText",
