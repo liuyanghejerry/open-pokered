@@ -12200,6 +12200,78 @@ mod link_stats_cry_fidelity_tests {
     }
 
     #[test]
+    fn safari_admission_keeps_inner_window_through_money_box_and_refusal() {
+        use pokered_core::overworld::Direction;
+        use pokered_core::snapshot::OverworldSnapshot;
+        run_link_save_fixture(|| {
+            let mut g=fixture(Species::Bulbasaur,3,Direction::Up);
+            g.overworld.end_safari_game();g.overworld.warp_to_map(MapId::SafariZoneGate,3,3);
+            let idle=InputState::new();let a=button(GbButton::A);let b=button(GbButton::B);
+            for _ in 0..120 {g.update(&idle);}
+            let balance=g.save_data.game_data.player_money;
+            for _ in 0..20 {g.update(&button(GbButton::Up));}
+            let mut handoff=false;
+            for _ in 0..1800 {
+                if g.overworld.pending_choice.is_some() {break;}
+                let advance=g.overworld.pending_dialogue.as_ref().is_some_and(|d|d.waiting_for_input() && !d.holding_open() &&
+                    (d.has_more_pages() || d.get_display_text().is_some_and(|(top,_)|top.starts_with("Welcome"))));
+                g.update(if advance {&a} else {&idle});
+                if g.overworld.active_script_effect_label().as_deref()==Some("ShowMoneyBox") && g.overworld.pending_dialogue.is_none() {
+                    handoff=true;
+                    assert!(g.overworld.inner_field_text_open);
+                    assert!(g.overworld.displayed_field_dialogue().is_some(),"PrintText does not close before MONEY_BOX");
+                    assert!(g.overworld.field_text_restore.is_none(),"no premature CloseTextDisplay sprite reload");
+                    assert!(!g.overworld.dialogue_needs_button());
+                    let raw=serde_json::to_string(&OverworldSnapshot::capture(&g.overworld)).unwrap();
+                    let snap:OverworldSnapshot=serde_json::from_str(&raw).unwrap();snap.restore_into(&mut g.overworld);
+                    assert!(g.overworld.inner_field_text_open && g.overworld.displayed_field_dialogue().is_some());
+                }
+            }
+            assert!(handoff && g.overworld.pending_choice.is_some(),"only paragraphs and welcome were acknowledged: {:?} at ({},{})",g.overworld.active_script_effect_label(),g.overworld.state.player.x,g.overworld.state.player.y);
+            assert_eq!(g.overworld.script_money_box,Some(balance));
+            for _ in 0..20 {g.update(&idle);}
+            g.update(&b);
+            for _ in 0..1000 {
+                let advance=g.overworld.pending_dialogue.as_ref().is_some_and(|d|d.waiting_for_input() && !d.holding_open());
+                g.update(if advance {&b} else {&idle});
+                if g.overworld.script_engine_idle() && g.overworld.active_script_effect_label().is_none() && g.overworld.pending_dialogue.is_none() {break;}
+            }
+            assert_eq!(g.save_data.game_data.player_money,balance);
+            assert!(!g.overworld.is_safari_game_active());
+            assert!(!g.overworld.inner_field_text_open);
+            assert!(g.overworld.displayed_field_dialogue().is_none());
+            assert_eq!((g.overworld.state.player.x,g.overworld.state.player.y),(4,3));
+        });
+    }
+
+    #[test]
+    fn safari_early_exit_question_auto_opens_and_no_preserves_the_existing_hunt() {
+        use pokered_core::overworld::Direction;
+        run_link_save_fixture(|| {
+            let mut g=fixture(Species::Bulbasaur,3,Direction::Down);
+            g.overworld.warp_to_map(MapId::SafariZoneCenter,3,3);
+            g.overworld.start_safari_game(); // controlled active-hunt setup
+            assert!(g.overworld.is_safari_game_active());
+            assert_eq!(g.overworld.use_safari_ball(),29); // controlled allowance fixture
+            g.overworld.warp_to_map(MapId::SafariZoneGate,4,0);
+            let idle=InputState::new();let a=button(GbButton::A);
+            for _ in 0..800 {g.update(&idle);if g.overworld.pending_choice.is_some() {break;}}
+            assert!(g.overworld.pending_choice.is_some(),"no A is sent for Leaving early?");
+            assert_eq!(g.overworld.displayed_field_dialogue().unwrap().get_display_text(),Some(("Leaving early?".into(),"".into())));
+            g.update(&button(GbButton::B));
+            for _ in 0..1800 {
+                let advance=g.overworld.pending_dialogue.as_ref().is_some_and(|d|d.waiting_for_input() && !d.holding_open());
+                g.update(if advance {&a} else {&idle});
+                if g.overworld.state.current_map==MapId::SafariZoneCenter && g.overworld.active_script_effect_label().is_none() {break;}
+            }
+            assert_eq!(g.overworld.state.current_map,MapId::SafariZoneCenter);
+            assert!(g.overworld.is_safari_game_active());
+            assert_eq!(g.overworld.safari_balls_remaining(),29,"continuing must not reset the allowance");
+            assert!(!g.overworld.inner_field_text_open);
+        });
+    }
+
+    #[test]
     fn safari_print_done_enters_choice_without_an_extra_press_and_survives_final_wait_restore() {
         use pokered_core::overworld::Direction;
         use pokered_core::snapshot::OverworldSnapshot;
@@ -12282,6 +12354,7 @@ mod link_stats_cry_fidelity_tests {
                 // Earlier JSON fixtures omit the new retained-window state.
                 let mut legacy = serde_json::to_value(&snap).unwrap();
                 legacy.as_object_mut().unwrap().remove("last_script_dialogue");
+                legacy.as_object_mut().unwrap().remove("inner_field_text_open");
                 assert!(serde_json::from_value::<OverworldSnapshot>(legacy).unwrap().last_script_dialogue.is_none());
                 for _ in 0..20 { g.update(&idle); }
                 g.update(&button(answer));
@@ -12435,6 +12508,39 @@ mod typing_pulse_capture_159 {
                 rows.push(serde_json::json!({"t":t,"first_letter":first,"letters":count,"input_bits":input.raw_current(),"config_speed":format!("{:?}",g.state.config.text_speed),"overworld":pokered_core::snapshot::OverworldSnapshot::capture(&g.overworld)}));
             }
             assert!(first.is_some());std::fs::write(dir.join("frames.json"),serde_json::to_string_pretty(&rows).unwrap()).unwrap();
+        }).unwrap().join().unwrap();
+    }
+}
+
+#[cfg(all(test, not(target_os = "none")))]
+mod admission_capture_162 {
+    use super::*;
+    #[test]
+    #[ignore = "matched SRAM Continue, admission input replay and complete raw frames"]
+    fn capture_admission_162() {
+        std::thread::Builder::new().stack_size(16*1024*1024).spawn(|| {
+            let dir=std::path::PathBuf::from(std::env::var("FIDELITY_ADMISSION_CAPTURE").unwrap());std::fs::create_dir_all(&dir).unwrap();
+            let save=dir.join("fixture.sav");std::fs::copy(std::env::var("FIDELITY_SAFARI_SRAM").unwrap(),&save).unwrap();
+            let mut g=PokemonGame::new_with_options(GameVersion::Red,Some(save),None,None,false,None,false,true,#[cfg(feature="debug-server")] None);
+            g.state.config.language=pokered_core::game_state::Lang::En;
+            let idle=InputState::new();let mut a=InputState::new();a.press(GbButton::A);let mut menu=false;
+            for t in 0..2000 {menu|=g.state.screen==GameScreen::MainMenu;if g.state.screen==GameScreen::Overworld {break;}g.update(if t%20==19 {&a} else {&idle});}
+            assert!(menu);assert_eq!(g.state.screen,GameScreen::Overworld);
+            g.state.config.text_speed=pokered_core::game_state::TextSpeed::Medium;
+            g.overworld.end_safari_game();g.overworld.warp_to_map(MapId::SafariZoneGate,3,3);g.overworld.set_rng_seed(1);for _ in 0..120 {g.update(&idle);}
+            let replay:Option<Vec<Vec<String>>>=std::env::var("FIDELITY_ADMISSION_INPUTS").ok().map(|p|serde_json::from_str(&std::fs::read_to_string(p).unwrap()).unwrap());
+            let mut input=InputState::new();let mut rows=Vec::new();let mut controls=Vec::new();
+            for t in 0..650 {
+                let buttons=if let Some(replay)=&replay {replay[t].clone()} else if t<20 {vec!["up".to_string()]} else {
+                    let advance=g.overworld.pending_dialogue.as_ref().is_some_and(|d|d.waiting_for_input() && !d.holding_open() &&
+                        (d.has_more_pages() || d.get_display_text().is_some_and(|(top,_)|top.starts_with("Welcome"))));
+                    if advance {vec!["a".to_string()]} else {Vec::new()}
+                };
+                input.begin_frame();for (name,button) in [("up",GbButton::Up),("a",GbButton::A)] {if buttons.iter().any(|v|v==name) {input.press(button);}else {input.release(button);}}
+                g.update(&input);let mut fb=FrameBuffer::new(dotzuki_engine::render_config::RenderConfig::new(160,144),pokered_renderer::Rgba::WHITE);g.draw(&mut fb);fb.save_png(&dir.join(format!("frame-{t:04}.png"))).unwrap();
+                rows.push(serde_json::json!({"t":t,"input_bits":input.raw_current(),"screen":format!("{:?}",g.state.screen),"overworld":pokered_core::snapshot::OverworldSnapshot::capture(&g.overworld)}));controls.push(buttons);
+            }
+            std::fs::write(dir.join("frames.json"),serde_json::to_string_pretty(&rows).unwrap()).unwrap();std::fs::write(dir.join("inputs.json"),serde_json::to_string_pretty(&controls).unwrap()).unwrap();
         }).unwrap().join().unwrap();
     }
 }

@@ -308,9 +308,14 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     }
 
     pub fn update_frame(&mut self, input: OverworldInput) -> ScreenAction {
-        let had_dialogue = self.pending_dialogue.is_some() || self.choice_question().is_some();
+        let had_dialogue = self.has_field_text_window();
         let action = self.update_frame_inner(input);
-        if had_dialogue && self.pending_dialogue.is_none() && self.choice_question().is_none() {
+        if self.script_engine.is_idle() && self.active_script_effect.is_none()
+            && self.pending_choice.is_none() {
+            self.last_script_dialogue = None;
+            self.inner_field_text_open = false;
+        }
+        if had_dialogue && !self.has_field_text_window() {
             // CloseTextDisplay returns through UpdateSprites before the
             // map script resumes. Keep the player's animation counter too.
             self.restore_player_sprite_after_field_text();
@@ -318,12 +323,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         // Field text uses the same BIT_FONT_LOADED sprite reset as START.
         // Do this after script/interaction dispatch, including early returns,
         // so a newly opened textbox starts the OAM pipeline this frame.
-        if (self.pending_dialogue.is_some() || self.choice_question().is_some()) && self.state.walk_counter == 0 {
+        if self.has_field_text_window() && self.state.walk_counter == 0 {
             self.prepare_field_textbox_sprite();
-        }
-        if self.script_engine.is_idle() && self.active_script_effect.is_none()
-            && self.pending_choice.is_none() {
-            self.last_script_dialogue = None;
         }
         action
     }
@@ -694,6 +695,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 down_just_pressed,
                 &mut self.pending_dialogue,
                 &mut self.last_script_dialogue,
+                &mut self.inner_field_text_open,
                 &mut self.pending_choice,
                 &mut self.pending_pokedex_entry,
                 &mut self.pending_naming_screen,
@@ -2690,6 +2692,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         down_pressed: bool,
         pending_dialogue: &mut Option<BedroomDialogue>,
         last_script_dialogue: &mut Option<BedroomDialogue>,
+        inner_field_text_open: &mut bool,
         pending_choice: &mut Option<script_bridge::PendingChoice>,
         pending_pokedex_entry: &mut Option<PokedexEntryState>,
         pending_naming_screen: &mut Option<crate::naming_screen::NamingScreenState>,
@@ -2729,6 +2732,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     down_pressed,
                     pending_dialogue,
                     last_script_dialogue,
+                    inner_field_text_open,
                     pending_choice,
                     pending_pokedex_entry,
                     pending_naming_screen,
@@ -2793,6 +2797,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     down_pressed,
                     pending_dialogue,
                     last_script_dialogue,
+                    inner_field_text_open,
                     pending_choice,
                     pending_pokedex_entry,
                     pending_naming_screen,
@@ -2867,6 +2872,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             script_bridge::ScriptEffect::ShowDialogue { text } | script_bridge::ScriptEffect::PrintFieldText { text } => {
                 if pending_dialogue.is_none() {
                     *last_script_dialogue = None;
+                    *inner_field_text_open = returns_after_print;
                     let dialogue = script_bridge::text_to_dialogue_with_names(text, dialogue_names);
                     if dialogue.is_done() {
                         return true;
@@ -2926,20 +2932,20 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     if a_just_pressed {
                         *selected = choice.selected;
                         *pending_choice = None;
-                        *last_script_dialogue = None;
+                        if !*inner_field_text_open { *last_script_dialogue = None; }
                         true
                     } else if b_just_pressed {
                         // B = cancel = last option (NO)
                         *selected = choice.options.len().saturating_sub(1) as u32;
                         *pending_choice = None;
-                        *last_script_dialogue = None;
+                        if !*inner_field_text_open { *last_script_dialogue = None; }
                         true
                     } else {
                         false
                     }
                 } else {
                     // pending_choice was cleared externally — treat as done
-                    *last_script_dialogue = None;
+                    if !*inner_field_text_open { *last_script_dialogue = None; }
                     true
                 }
             }

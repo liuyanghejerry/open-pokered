@@ -668,6 +668,8 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     pub pending_dialogue: Option<BedroomDialogue>,
     /// Last completed script text, retained only for the following choice.
     pub last_script_dialogue: Option<BedroomDialogue>,
+    /// A returned inner PrintText keeps its window until its caller ends it.
+    pub inner_field_text_open: bool,
     pub pending_choice: Option<crate::overworld::script_bridge::PendingChoice>,
     pub pending_pokedex_entry: Option<PokedexEntryState>,
     pub pending_naming_screen: Option<crate::naming_screen::NamingScreenState>,
@@ -1163,6 +1165,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             npc_pokemon_data,
             pending_dialogue: None,
             last_script_dialogue: None,
+            inner_field_text_open: false,
             pending_choice: None,
             pending_pokedex_entry: None,
             pending_naming_screen: None,
@@ -1443,7 +1446,16 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     pub fn displayed_field_dialogue(&self) -> Option<&BedroomDialogue> {
         self.pending_dialogue.as_ref()
             .or(self.cut_retained_dialogue.as_ref())
+            .or_else(|| self.retained_inner_field_text())
             .or_else(|| self.choice_question())
+    }
+
+    pub(crate) fn retained_inner_field_text(&self) -> Option<&BedroomDialogue> {
+        self.inner_field_text_open.then_some(self.last_script_dialogue.as_ref()).flatten()
+    }
+
+    pub(crate) fn has_field_text_window(&self) -> bool {
+        self.pending_dialogue.is_some() || self.retained_inner_field_text().is_some() || self.choice_question().is_some()
     }
 
     pub(crate) fn choice_question(&self) -> Option<&BedroomDialogue> {
@@ -1461,7 +1473,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             Some(super::script_bridge::ScriptEffect::GivePokemon { flow: Some(flow), .. }) => Some(flow.child.as_ref()),
             other => other,
         };
-        self.pending_choice.is_none()
+        !(self.inner_field_text_open && self.pending_dialogue.is_none())
+            && self.pending_choice.is_none()
             && !self.active_script_effect.as_ref().is_some_and(|effect| effect.is_choice())
             && !matches!(effect, Some(super::script_bridge::ScriptEffect::ShowItemDialogue { .. }))
     }

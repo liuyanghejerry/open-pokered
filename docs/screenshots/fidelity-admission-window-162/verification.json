@@ -1,0 +1,38 @@
+{
+  "base": "31b1eda3112514d6bc803af559ec7f7c9e20374f",
+  "parent": "014820b1b939d6716331f2b43a176a584dcdbb47",
+  "base_binary_sha256": "23968cdf1f131ebc57d6f59c643c0095c4ebc741f71d53b6abdefaa843a8a518",
+  "final_binary_sha256": "63c0cab659696db137d74b5e47e08ed13e7126de0d3ce410ec7df872015f73aa",
+  "helper_sha256": "cdab01535ead7e276bc524c50333f827bce7a5d6d8c5d77aadf7f38450c43e32",
+  "SRAM_sha256": "a2a4d4546d084e6540d678ff3826e58fc7872eecfeac990c30110008f61ddee2",
+  "paired_frame": 600,
+  "identical_native_inputs": true,
+  "repeat_byte_exact": true,
+  "original": {
+    "join_entry": 163,
+    "first_glyph": 183,
+    "last_question_glyph": 514,
+    "money_box_and_choice": 517,
+    "no_join_window_close": true
+  },
+  "native": {
+    "inner_return": 411,
+    "money_box": 412,
+    "choice_initialized": 413
+  },
+  "tests": "core2739;app212,28ignored;agent54;GBA31,21 final sourceSHA unchanged baseline",
+  "archive_sha256": "689af5006fd635544a98ae12cb079ca680c7b5e153da8cdc0a866007e24cb207",
+  "archive_files": 4393,
+  "images": {
+    "original-reference.png": "75f1c4eb6dfaf5546b1d46de45e6004e7da688be8c4e6de87d9c05019890b102",
+    "before.png": "467487f81e59acd6e5b813f19801c54758381fbc5ae3a9b240f5333922881e35",
+    "after.png": "15a96bad6d05e6948888502a9e41e8cd130c331675b11d3812ba13ec52f6d1af"
+  },
+  "limitations": [
+    "Original/native input and absolute frames differ; only native master/after use the same controls and frame.",
+    "Controlled SRAM Continue then warp/zero-ball-return setup is not final-head mainline proof.",
+    "Master remains at a preceding page under final-branch pilot inputs; this comparison proves resulting behavior, not matched dialogue entry timing.",
+    "Original rejected fixed-20-Up setup did not reach trigger; retained its log and local 1500 frames, not successful evidence.",
+    "Full outer text session initialization/close, other call sites and existing PR draft gates remain pending."
+  ]
+}
