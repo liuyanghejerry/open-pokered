@@ -633,6 +633,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 a_just_pressed,
                 b_just_pressed,
                 input.a,
+                input.b,
                 up_just_pressed,
                 down_just_pressed,
                 &mut self.pending_dialogue,
@@ -883,6 +884,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     }
                     self.pending_dialogue = None;
                 }
+            } else if !dlg.waiting_for_input() {
+                dlg.reveal_next_char_with_buttons(input.a || input.b);
             } else if a_just_pressed || b_just_pressed {
                 if dlg.waiting_for_input() {
                     // Page fully revealed → advance to next page
@@ -895,14 +898,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         }
                         self.pending_dialogue = None;
                     }
-                } else {
-                    // Still typing → skip to full page reveal
-                    dlg.skip_to_full_page();
                 }
                 self.sfx_event = OverworldSfxEvent::TextAdvance;
-            } else {
-                // No button pressed → advance typewriter
-                dlg.reveal_next_char();
             }
             if self.pending_dialogue.is_none()
                 && self.pending_field_move_step.is_some()
@@ -2430,6 +2427,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         a_just_pressed: bool,
         b_just_pressed: bool,
         a_pressed: bool,
+        b_pressed: bool,
         up_pressed: bool,
         down_pressed: bool,
         pending_dialogue: &mut Option<BedroomDialogue>,
@@ -2466,6 +2464,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     a_just_pressed,
                     b_just_pressed,
                     a_pressed,
+                    b_pressed,
                     up_pressed,
                     down_pressed,
                     pending_dialogue,
@@ -2528,6 +2527,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     a_just_pressed,
                     b_just_pressed,
                     a_pressed,
+                    b_pressed,
                     up_pressed,
                     down_pressed,
                     pending_dialogue,
@@ -2585,7 +2585,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 }
                 let dialogue = pending_dialogue.as_mut().unwrap();
                 if !dialogue.waiting_for_input() {
-                    dialogue.reveal_next_char();
+                    dialogue.reveal_next_char_with_buttons(a_pressed || b_pressed);
                 }
                 if dialogue.waiting_for_input() {
                     if dialogue.has_more_pages() {
@@ -2620,6 +2620,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                                 *pending_dialogue = None;
                                 return true;
                             }
+                        } else if !dlg.waiting_for_input() {
+                            dlg.reveal_next_char_with_buttons(a_pressed || b_pressed);
                         } else if a_just_pressed || b_just_pressed {
                             if dlg.waiting_for_input() {
                                 if dlg.is_last_page() && a_just_pressed {
@@ -2628,12 +2630,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                                     *pending_dialogue = None;
                                     return true;
                                 }
-                            } else {
-                                dlg.skip_to_full_page();
                             }
                             *sfx_event = OverworldSfxEvent::TextAdvance;
-                        } else {
-                            dlg.reveal_next_char();
                         }
                     }
                     false
@@ -4822,5 +4820,56 @@ mod vending_delivery_fidelity_tests {
             assert_eq!(ow.active_script_effect.is_none(), frame == 120);
         }
         assert_eq!(total, 60);
+    }
+}
+
+#[cfg(test)]
+mod field_typing_input_fidelity_tests {
+    use super::*;
+    use pokered_data::impl_traits::PokemonRedData;
+
+    #[test]
+    fn short_held_ab_matches_original_letter_wait_without_scroll_sound() {
+        // Original Safari worker, wOptions=3; first letter is relative frame 0.
+        // A/B held at relative 10,11: glyph counts from PrintLetterDelay hooks.
+        let expected = [1,1,1,2,2,2,3,3,3,4,4,5,6,6,6,7,7,7,8];
+        for scripted in [false, true] {
+            for b in [false, true] {
+                let mut ow = OverworldScreen::new(MapId::RedsHouse2F, None, PokemonRedData);
+                let idle = OverworldInput::new(false,false,false,false,false,false,false,false);
+                for _ in 0..120 { ow.update_frame(idle); }
+                ow.set_text_delay_frames(3);
+                let mut dialogue = BedroomDialogue::from_message("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+                dialogue.set_text_delay_frames(3);
+                ow.pending_dialogue = Some(dialogue);
+                if scripted {
+                    ow.active_script_effect = Some(script_bridge::ScriptEffect::ShowDialogue { text: "ABCDEFGHIJKLMNOPQRSTUVWXYZ".into() });
+                }
+                // Textbox preparation owns sprite work; find first glyph rather
+                // than claiming DisplayTextID's still-unmatched absolute entry.
+                for _ in 0..120 {
+                    ow.update_frame(idle);
+                    if ow.pending_dialogue.as_ref().unwrap().char_index() == 1 { break; }
+                }
+                assert_eq!(ow.pending_dialogue.as_ref().unwrap().char_index(),1);
+                for t in 1..expected.len() {
+                    let held = (10..12).contains(&t);
+                    ow.update_frame(OverworldInput::new(false,false,false,false,held && !b,held && b,false,false));
+                    assert_eq!(ow.pending_dialogue.as_ref().unwrap().char_index(),expected[t],"scripted={scripted},B={b},relative={t}");
+                    assert_eq!(ow.sfx_event,OverworldSfxEvent::None,"typing is not ManualTextScroll");
+                    assert!(!ow.pending_dialogue.as_ref().unwrap().waiting_for_input());
+                }
+                // A long hold accelerates one glyph per tick, without closing
+                // the fully printed page until a fresh button press.
+                for _ in 0..40 { ow.update_frame(OverworldInput::new(false,false,false,false,!b,b,false,false)); }
+                assert_eq!(ow.pending_dialogue.as_ref().unwrap().char_index(),26);
+                assert!(ow.pending_dialogue.as_ref().unwrap().waiting_for_input());
+                assert!(!ow.pending_dialogue.as_ref().unwrap().holding_open());
+                ow.update_frame(idle);
+                ow.update_frame(OverworldInput::new(false,false,false,false,true,false,false,false));
+                assert_eq!(ow.sfx_event,OverworldSfxEvent::TextAdvance);
+                assert!(ow.pending_dialogue.as_ref().unwrap().holding_open());
+            }
+        }
     }
 }

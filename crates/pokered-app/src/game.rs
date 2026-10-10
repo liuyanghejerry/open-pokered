@@ -10844,3 +10844,47 @@ mod link_stats_cry_fidelity_tests {
     }
 
 }
+
+#[cfg(all(test, not(target_os = "none")))]
+mod typing_pulse_capture_202 {
+    use super::*;
+    #[test]
+    #[ignore = "controlled original-SRAM Continue and short typing pulse"]
+    fn capture_typing_pulse_202() {
+        std::thread::Builder::new().stack_size(16*1024*1024).spawn(|| {
+            let dir=std::path::PathBuf::from(std::env::var("FIDELITY_TYPING_CAPTURE_202").unwrap());
+            std::fs::create_dir_all(&dir).unwrap();
+            let save=dir.join("fixture.sav");
+            std::fs::copy(std::env::var("FIDELITY_SAFARI_SRAM").unwrap(),&save).unwrap();
+            let mut g=PokemonGame::new_with_options(GameVersion::Red,Some(save),None,None,false,None,false,true,#[cfg(feature="debug-server")] None);
+            g.state.config.language=pokered_core::game_state::Lang::En;
+            let idle=InputState::new();let mut a=InputState::new();a.press(GbButton::A);
+            let mut saw_menu=false;
+            for t in 0..2000 {saw_menu|=g.state.screen==GameScreen::MainMenu;if g.state.screen==GameScreen::Overworld {break;}g.update(if t%20==19 {&a} else {&idle});}
+            assert!(saw_menu);assert_eq!(g.state.screen,GameScreen::Overworld);
+            // Match original wOptions &15 ==3; exclude text-speed confounding.
+            g.state.config.text_speed=pokered_core::game_state::TextSpeed::Medium;
+            g.overworld.end_safari_game();g.overworld.warp_to_map(MapId::SafariZoneGate,3,4);g.overworld.set_rng_seed(1);
+            for _ in 0..120 {g.update(&idle);}
+            let mut left=InputState::new();left.press(GbButton::Left);for _ in 0..8 {g.update(&left);}for _ in 0..8 {g.update(&idle);}
+            let pulse_button=if std::env::var_os("FIDELITY_TYPING_B").is_some() {GbButton::B} else {GbButton::A};
+            let fixed=std::env::var("FIDELITY_TYPING_FIXED_PULSE").ok().map(|v|v.parse::<i32>().unwrap());
+            let pulse=std::env::var_os("FIDELITY_TYPING_PULSE").is_some();let mut first=None;let mut input=InputState::new();let mut rows=Vec::new();
+            let mut retained = FrameBuffer::new(dotzuki_engine::render_config::RenderConfig::new(160,144),pokered_renderer::Rgba::WHITE);
+            let mut session = crate::render::session::RenderSession::new();
+            let mut scroll = |_: &mut [u8], _: usize, _: usize, _: i32, _: i32, _: u8| {};
+            for t in 0i32..145 {
+                input.begin_frame();if t==0 {input.press(GbButton::A);}if t==1 {input.release(GbButton::A);}
+                if pulse {if fixed.map_or_else(||first.is_some_and(|f|t==f+10),|f|t==f) {input.press(pulse_button);}if fixed.map_or_else(||first.is_some_and(|f|t==f+12),|f|t==f+2) {input.release(pulse_button);}}
+                g.update(&input);
+                let count=g.overworld.pending_dialogue.as_ref().map(|d|d.char_index());if first.is_none()&&count.is_some_and(|n|n>0) {first=Some(t);}
+                session.render(&mut g, &mut retained, &mut scroll);
+                let mut fb=FrameBuffer::new(dotzuki_engine::render_config::RenderConfig::new(160,144),pokered_renderer::Rgba::WHITE);g.draw(&mut fb);
+                assert_eq!(retained.packed(),fb.packed(),"typing retained/full frame{t}");
+                fb.save_png(&dir.join(format!("frame-{t:04}.png"))).unwrap();
+                rows.push(serde_json::json!({"t":t,"first_letter":first,"letters":count,"input_bits":input.raw_current(),"config_speed":format!("{:?}",g.state.config.text_speed),"sfx":format!("{:?}",g.overworld.sfx_event),"overworld":pokered_core::snapshot::OverworldSnapshot::capture(&g.overworld)}));
+            }
+            assert!(first.is_some());std::fs::write(dir.join("frames.json"),serde_json::to_string_pretty(&rows).unwrap()).unwrap();
+        }).unwrap().join().unwrap();
+    }
+}
