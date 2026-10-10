@@ -847,11 +847,12 @@ fn source_mart_purchase_sound_then_receipt_prompt_does_not_autodismiss_or_repeat
 }
 
 #[test]
-fn source_mart_sell_success_returns_directly_without_receipt_or_sound() {
+fn source_mart_sell_success_returns_without_receipt_and_plays_cash_register() {
     let mut mart = MartState::new(ShopInventory::new(vec![ItemId::Potion])); mart.configure_field_text(1);
     let mut bag = Inventory::new_bag(); bag.add_item(ItemId::Potion, 4).unwrap(); let mut player = player_data(1000, bag);
     mart.phase = MartPhase::Sell(SellMenuState::Confirm { item_index: 0, quantity: 4, max_quantity: 4, selected: ConfirmChoice::Yes });
-    assert_eq!(mart.update_frame(menu_a(), &mut player), MartUpdate::Continue);
+    assert_eq!(mart.update_frame(menu_a(), &mut player), MartUpdate::PlaySound(SoundId::Purchase));
+    for _ in 0..20 { assert_eq!(mart.update_frame(MenuInput::none(), &mut player), MartUpdate::Continue); }
     assert!(!mart.field_message_active()); assert!(matches!(mart.phase, MartPhase::Sell(SellMenuState::SelectItem { cursor: 0 })));
     assert_eq!(mart.field_message_lines(), vec!["What would you", "like to sell?"]);
     assert_eq!(player.money, 1600); assert_eq!(player.bag.count(), 0);

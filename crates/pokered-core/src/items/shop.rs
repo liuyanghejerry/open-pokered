@@ -278,9 +278,11 @@ impl MartState {
                 if matches!(dialogue, BuyResult::Success { .. }) { flow.text.as_mut().unwrap().wait_for_purchase_sound(); }
             },
             (_, MartPhase::Sell(SellMenuState::Result { dialogue: SellResult::Success { .. }, .. })) => {
-                // There is no success text or purchase fanfare when selling.
+                // AddAmountSoldToMoney plays the cash-register SFX, without
+                // a success textbox. Keep the saved selling greeting.
                 self.0.phase = MartPhase::Sell(SellMenuState::SelectItem { cursor: 0 });
                 flow.retained_lines = vec!["What would you".into(), "like to sell?".into()];
+                return MartUpdate::PlaySound(SoundId::Purchase);
             },
             (MartPhase::Buy(BuyMenuState::Confirm { .. }), MartPhase::Buy(BuyMenuState::SelectItem { .. })) => {
                 self.0.phase = MartPhase::Buy(BuyMenuState::SelectItem { cursor: 0 });
