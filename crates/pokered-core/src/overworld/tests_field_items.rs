@@ -331,3 +331,41 @@ fn poke_flute_starts_snorlax_after_text_without_another_interaction() {
         assert!(!flag_set(&screen, flag));
     }
 }
+
+#[test]
+fn bicycle_music_survives_the_first_frame_after_bag_return() {
+    use super::screen::OverworldAudioRequest;
+    let mut screen = screen_on(MapId::Route1);
+    for expected in [TransportMode::Biking, TransportMode::Walking] {
+        screen.audio_requests.clear();
+        assert!(!screen.use_field_item(ItemId::Bicycle, MapId::PalletTown));
+        assert_eq!(screen.state.player.transport, expected);
+        assert_eq!(screen.audio_requests.len(), 1);
+        assert!(matches!(screen.audio_requests[0], OverworldAudioRequest::PlayMapMusic { map: MapId::Route1 }));
+        screen.update_frame(OverworldInput::none());
+        assert_eq!(screen.audio_requests.len(), 1, "bag-return frame must preserve music until the app drains it");
+        assert!(matches!(screen.audio_requests[0], OverworldAudioRequest::PlayMapMusic { map: MapId::Route1 }));
+        screen.update_frame(OverworldInput::none());
+        assert!(screen.audio_requests.is_empty(), "do not restart music on each text frame");
+    }
+}
+
+#[test]
+fn refused_bicycle_use_keeps_existing_music() {
+    for (map, transport, forced) in [
+        (MapId::RedsHouse1F, TransportMode::Walking, false),
+        (MapId::Route1, TransportMode::Surfing, false),
+        (MapId::Route16, TransportMode::Biking, true),
+    ] {
+        let mut screen = screen_on(map);
+        screen.state.player.transport = transport;
+        screen.forced_bike.active = forced;
+        screen.audio_requests.clear();
+        assert!(!screen.use_field_item(ItemId::Bicycle, MapId::PalletTown));
+        assert_eq!(screen.state.player.transport, transport);
+        assert!(screen.pending_dialogue.is_some());
+        assert!(screen.audio_requests.is_empty());
+        screen.update_frame(OverworldInput::none());
+        assert!(screen.audio_requests.is_empty());
+    }
+}
