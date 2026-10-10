@@ -1,0 +1,171 @@
+{
+  "capture_master": "7d5fb20fb27ba4b4b301c34a4aff5729f3db22f5",
+  "current_base": "25c56cad113e3c167a14a86175c29c075be24495",
+  "native": {
+    "base": "7d5fb20fb27ba4b4b301c34a4aff5729f3db22f5",
+    "head": "d02b55842f7d0abf746207abf37d342ccfbe229a",
+    "binaries": {
+      "core-tests": "3122e3984400947acb01b1e80434f9f36f10b16b7632bac0f18618eb3cb7d175",
+      "app-tests": "86139072099412103164201c6abf4fc0901546dce2b0f7775ab1fc64e02ce40e"
+    },
+    "sources": {
+      "crates/pokered-app/src/game.rs": "e7e7992b4d5651751d9fd4ed9f62b276779fd6031d44393c211b35ad984714ef",
+      "crates/pokered-core/src/overworld/screen.rs": "adeeb9176a4682c138198ca27a09e1649d267eae3f9088415a3f928ec4e469de",
+      "crates/pokered-core/src/overworld/update.rs": "130edc4cbc610135085c0e9e2d5b4015131a47e768c0100351d053244718f03a"
+    },
+    "scope": "heldAB gradualtyping/noScrollSound+lastglyphwait only; capture has realGame and retained/full ownerpixels; noquestionretention orinnerPrintText auto-return prerequisites"
+  },
+  "master": {
+    "base": "7d5fb20fb27ba4b4b301c34a4aff5729f3db22f5",
+    "binary": "2284c09ad4cf9f9b7d9d22d0fb9dffa6f0d3df0ffcd8795aa2281afdb6fdb870",
+    "capture_source": "e7e7992b4d5651751d9fd4ed9f62b276779fd6031d44393c211b35ad984714ef",
+    "production_prefix_sha256": "56fc47cac09cfeca713214975a7a4a3b68bc3010bbdfde36c2367c7bbc4fe20a",
+    "scope": "actualmaster production intact, identical capturehelper appended"
+  },
+  "tests": {
+    "core": 2709,
+    "app": 190,
+    "app_ignored": 17
+  },
+  "fixture_sha256": "a2a4d4546d084e6540d678ff3826e58fc7872eecfeac990c30110008f61ddee2",
+  "recording": "3 cases * 2 sides * 2 repetitions * 145 frames = 1740 PNG; complete raw JSON and PNG repeats byte exact without masks; retained/full pixel comparison on every frame",
+  "source_comparison": {
+    "a-0": {
+      "first": 24,
+      "counts": [
+        1,
+        1,
+        1,
+        2,
+        2,
+        2,
+        3,
+        3,
+        3,
+        4,
+        4,
+        4,
+        5,
+        5,
+        5,
+        6,
+        6,
+        6,
+        7
+      ],
+      "two_rawcopies": "frames.jsonbyteexact",
+      "comparison": "nativefirst19glyphcounts exactrelativefirstglyph; original/nativeabsoluteentrytimingdifferent",
+      "final_wait": {
+        "source_last_glyph": 111,
+        "source_printtext_return_yesno_call": 114,
+        "last_wait_frames": 3,
+        "source_relative_print_completion": 90,
+        "native_relative_waiting_ready": 90,
+        "scope": "printercompletion timing; native stillrequiresmanualack beforechoice, independentauto-returnfix pending"
+      }
+    },
+    "a-1": {
+      "first": 24,
+      "counts": [
+        1,
+        1,
+        1,
+        2,
+        2,
+        2,
+        3,
+        3,
+        3,
+        4,
+        4,
+        5,
+        6,
+        6,
+        6,
+        7,
+        7,
+        7,
+        8
+      ],
+      "two_rawcopies": "frames.jsonbyteexact",
+      "comparison": "nativefirst19glyphcounts exactrelativefirstglyph; original/nativeabsoluteentrytimingdifferent",
+      "final_wait": {
+        "source_last_glyph": 108,
+        "source_printtext_return_yesno_call": 111,
+        "last_wait_frames": 3,
+        "source_relative_print_completion": 87,
+        "native_relative_waiting_ready": 87,
+        "scope": "printercompletion timing; native stillrequiresmanualack beforechoice, independentauto-returnfix pending"
+      }
+    },
+    "b-0": {
+      "first": 24,
+      "counts": [
+        1,
+        1,
+        1,
+        2,
+        2,
+        2,
+        3,
+        3,
+        3,
+        4,
+        4,
+        4,
+        5,
+        5,
+        5,
+        6,
+        6,
+        6,
+        7
+      ],
+      "two_rawcopies": "frames.jsonbyteexact",
+      "comparison": "nativefirst19glyphcounts exactrelativefirstglyph; original/nativeabsoluteentrytimingdifferent"
+    },
+    "b-1": {
+      "first": 24,
+      "counts": [
+        1,
+        1,
+        1,
+        2,
+        2,
+        2,
+        3,
+        3,
+        3,
+        4,
+        4,
+        5,
+        6,
+        6,
+        6,
+        7,
+        7,
+        7,
+        8
+      ],
+      "two_rawcopies": "frames.jsonbyteexact",
+      "comparison": "nativefirst19glyphcounts exactrelativefirstglyph; original/nativeabsoluteentrytimingdifferent",
+      "final_wait": {
+        "source_last_glyph": 108,
+        "source_printtext_return_yesno_call": 111,
+        "last_wait_frames": 3,
+        "source_relative_print_completion": 87,
+        "native_relative_waiting_ready": 87,
+        "scope": "printercompletion timing; native stillrequiresmanualack beforechoice, independentauto-returnfix pending"
+      }
+    }
+  },
+  "files": {
+    "a-before.png": "cd407802f38da7c3bcdec768f2702d6efab25611123389c9725b6a45bed98137",
+    "a-after.png": "f3fe00f49e86be3d0990d16a2ef4b2113c543a613c6a57d5c0dbd4930884d61e",
+    "b-before.png": "cd407802f38da7c3bcdec768f2702d6efab25611123389c9725b6a45bed98137",
+    "idle-before.png": "c93826a7490071986a4ee8491ff161a1afe7cecddd6c73d49296811eb6b406cd",
+    "b-after.png": "f3fe00f49e86be3d0990d16a2ef4b2113c543a613c6a57d5c0dbd4930884d61e",
+    "evidence.zip": "3b31159cdf1101d457409724f35d0e7d0db99103621dfc3f324d6d3f171e4248",
+    "idle-after.png": "cd407802f38da7c3bcdec768f2702d6efab25611123389c9725b6a45bed98137"
+  }
+}
