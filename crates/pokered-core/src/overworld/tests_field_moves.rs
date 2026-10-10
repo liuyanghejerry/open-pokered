@@ -3,7 +3,7 @@
 //! FLY / FLASH / DIG / TELEPORT) from the party menu.
 
 use crate::alloc_prelude::*;
-use super::field_moves::{FieldMoveOutcome, BOULDER_DUST_FRAMES};
+use super::field_moves::FieldMoveOutcome;
 use super::hm_effects;
 use super::presentation;
 use super::screen::{OverworldScreen, PendingWarp, WarpFadeState};
@@ -474,7 +474,9 @@ fn boulder_push_requires_two_frames_and_moves_boulder() {
 
     // Second frame (still holding): the boulder slides one tile.
     screen.tick_boulder_push(Some(Direction::Down));
-    assert_eq!(boulder_pos(&screen), (5, 7), "second push moves the boulder");
+    assert_eq!(boulder_pos(&screen), (5, 6), "second contact starts the scripted slide");
+    for _ in 0..38 {screen.tick_boulder_push(None);}
+    assert_eq!(boulder_pos(&screen), (5, 7), "slide reaches its resting tile");
     assert!(screen
         .audio_requests
         .iter()
@@ -543,10 +545,9 @@ fn boulder_push_starts_the_dust_at_the_push_spot() {
 
     screen.tick_boulder_push(Some(Direction::Down)); // arms the flag
     screen.tick_boulder_push(Some(Direction::Down)); // push
-    assert!(
-        screen.boulder_dust.is_active(),
-        "the push starts the dust puff (AnimateBoulderDust)"
-    );
+    assert!(!screen.boulder_dust.is_active(), "MoveSprite finishes before smoke is loaded");
+    for _ in 0..42 {screen.tick_boulder_push(None);}
+    assert!(screen.boulder_dust.is_active(), "smoke follows the scripted slide and graphics copy");
     assert_eq!(screen.boulder_dust.facing(), Direction::Down);
     // Anchored to the player's tile at push time (the original writes the
     // OAM block once from the player's sprite position).
@@ -554,32 +555,32 @@ fn boulder_push_starts_the_dust_at_the_push_spot() {
 }
 
 #[test]
-fn boulder_dust_runs_24_frames_independent_of_the_lockout() {
-    let mut screen = screen_on(MapId::PalletTown);
-    fill_map_with_passable_block(&mut screen);
-    screen.state.player.x = 5;
-    screen.state.player.y = 5;
-    screen.state.player.facing = Direction::Down;
-    screen.npc_states.push(make_boulder(5, 6));
-    screen.strength_active = true;
-
-    screen.tick_boulder_push(Some(Direction::Down)); // arms
-    screen.tick_boulder_push(Some(Direction::Down)); // push
-    assert_eq!(screen.boulder_dust_frames, BOULDER_DUST_FRAMES);
-
-    // The push lockout ends after 16 frames, but the dust keeps playing its
-    // full 8-step × 3-frame timeline (24 frames).
-    for _ in 0..16 {
-        screen.tick_boulder_push(None);
+fn boulder_push_blocks_player_and_inputs_until_graphics_restore() {
+    use crate::game_state::ScreenAction;
+    let mut screen=screen_on(MapId::PalletTown);fill_map_with_passable_block(&mut screen);
+    screen.state.player.x=5;screen.state.player.y=5;screen.state.player.facing=Direction::Down;
+    screen.npc_states.push(make_boulder(5,6));screen.strength_active=true;
+    screen.tick_boulder_push(Some(Direction::Down));screen.tick_boulder_push(Some(Direction::Down));
+    for frame in 1..=69 {
+        // Physical controls during the blocking routine must neither move
+        // the player nor open a menu/dialogue or start another push.
+        let noisy=super::OverworldInput::new(true,true,true,true,true,true,true,true);
+        assert_eq!(screen.update_frame(noisy),ScreenAction::Continue);
+        assert_eq!((screen.state.player.x,screen.state.player.y),(5,5),"player waits at {frame}");
+        assert!(screen.pending_dialogue.is_none());
+        assert_eq!(screen.boulder_dust.is_active(),(42..=66).contains(&frame),"logical smoke stage {frame}");
+        // Source TryWalking updates MapY/MapX before any visible slide.
+        assert_eq!(boulder_pos(&screen),if frame<2 {(5,6)} else {(5,7)});
+        assert_eq!(screen.boulder_push.is_some(),frame<72);
     }
-    assert_eq!(screen.boulder_dust_frames, 0, "lockout cleared");
-    assert!(screen.boulder_dust.is_active(), "dust still playing");
-    assert_eq!(screen.boulder_dust.step(), 5, "16 ticks = 5 steps + 1 frame");
-
-    for _ in 0..8 {
-        screen.tick_boulder_push(None);
-    }
-    assert!(!screen.boulder_dust.is_active(), "24 ticks = 8 steps, done");
+    let idle=super::OverworldInput::new(false,false,false,false,false,false,false,false);
+    screen.update_frame(idle);screen.update_frame(idle);screen.update_frame(idle);
+    assert_eq!(screen.boulder_dust_frames,0);
+    // A released/new direction after the routine can move normally.
+    let idle=super::OverworldInput::new(false,false,false,false,false,false,false,false);
+    screen.update_frame(idle);
+    for _ in 0..4 { screen.update_frame(super::OverworldInput::new(false,true,false,false,false,false,false,false)); }
+    assert_eq!(screen.state.player.movement_state,super::MovementState::Walking);
 }
 
 #[test]
@@ -609,29 +610,14 @@ fn boulder_dust_completion_plays_sfx_cut_once() {
 
     screen.tick_boulder_push(Some(Direction::Down)); // arms
     screen.tick_boulder_push(Some(Direction::Down)); // push (SFX_PUSH_BOULDER)
-    assert!(
-        screen.boulder_dust.is_active(),
-        "dust starts on the push frame"
-    );
-    assert_eq!(
-        cut_requests(&screen),
-        0,
-        "no SFX_CUT while the dust is still playing"
-    );
-
-    // DoBoulderDustAnimation (push_boulder.asm:89-103) plays SFX_CUT exactly
-    // when the 8-step × 3-frame dust animation completes (24th tick) — and
-    // BIT_BOULDER_DUST is cleared in the same routine, so it fires once.
-    for tick in 0..24 {
+    assert!(!screen.boulder_dust.is_active(),"no smoke before the slide");
+    for frame in 1..=72 {
         screen.tick_boulder_push(None);
-        let expected = if tick == 23 { 1 } else { 0 };
-        assert_eq!(
-            cut_requests(&screen),
-            expected,
-            "SFX_CUT fires only on the dust-completion tick (tick {tick})"
-        );
+        assert_eq!(cut_requests(&screen),usize::from(frame>=70),"SFX_CUT after graphics restoration at {frame}");
     }
-    assert!(!screen.boulder_dust.is_active(), "dust done after 24 ticks");
+    assert!(!screen.boulder_dust.is_active());
+    for _ in 0..10 {screen.tick_boulder_push(None);}
+    assert_eq!(cut_requests(&screen),1,"the completion cue is emitted once");
 }
 
 #[test]
@@ -646,20 +632,14 @@ fn boulder_dust_restarts_on_a_new_push() {
 
     screen.tick_boulder_push(Some(Direction::Down)); // arms
     screen.tick_boulder_push(Some(Direction::Down)); // push #1
-    for _ in 0..16 {
-        screen.tick_boulder_push(None); // wait out the lockout
-    }
-    assert!(screen.boulder_dust.is_active(), "dust from push #1 still up");
-
-    // The player steps forward to stand in front of the moved boulder.
-    screen.state.player.y = 6;
-    // A second push (allowed once the lockout clears, still inside the
-    // first puff's window) restarts the dust at the new spot.
-    screen.tick_boulder_push(Some(Direction::Down)); // arms
-    screen.tick_boulder_push(Some(Direction::Down)); // push #2
-    assert!(screen.boulder_dust.is_active());
-    assert_eq!(screen.boulder_dust.step(), 0, "dust restarted from step 0");
-    assert_eq!(screen.boulder_dust.anchor(), (5, 6), "anchored at the new player tile");
+    for _ in 0..75 {screen.tick_boulder_push(None);}
+    assert!(screen.boulder_push.is_none());
+    screen.state.player.y=6;
+    screen.tick_boulder_push(Some(Direction::Down));screen.tick_boulder_push(Some(Direction::Down));
+    assert!(!screen.boulder_dust.is_active(),"a new push starts with a slide");
+    for _ in 0..42 {screen.tick_boulder_push(None);}
+    assert_eq!(screen.boulder_dust.step(),0);
+    assert_eq!(screen.boulder_dust.anchor(),(5,6));
 }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -1061,4 +1041,395 @@ fn softboiled_truncates_the_fifth_like_gen1_divide() {
     }
     assert_eq!(user.hp, 99 - 19);
     assert_eq!(target.hp, 1 + 19);
+}
+
+#[test]
+fn direction_history_survives_idle_facing_changes_and_system_save_restore() {
+    let mut screen=screen_on(MapId::PalletTown);fill_map_with_passable_block(&mut screen);
+    screen.state.player.x=5;screen.state.player.y=5;
+    let left=super::OverworldInput::new(false,false,true,false,false,false,false,false);
+    let idle=super::OverworldInput::new(false,false,false,false,false,false,false,false);
+    screen.update_frame(left);
+    assert_eq!(screen.player_moving_direction,2);
+    assert_eq!(screen.player_last_stop_direction,0);
+    for _ in 0..32 {screen.update_frame(idle);}
+    assert_eq!(screen.player_moving_direction,0);
+    assert_eq!(screen.player_last_stop_direction,2);
+    // Continue resets only the visible facing; idle must retain the stop.
+    screen.state.player.facing=Direction::Down;
+    for _ in 0..120 {screen.update_frame(idle);}
+    assert_eq!(screen.player_last_stop_direction,2);
+    let mut data=crate::save::SaveData::new().game_data;
+    screen.write_system_save_state(&mut data);
+    assert_eq!(data.player_last_stop_direction,2);
+    assert_eq!(data.player_moving_direction,0);
+    let mut restored=screen_on(MapId::PalletTown);
+    restored.restore_system_save_state(&data);
+    restored.update_frame(idle);
+    assert_eq!(restored.player_last_stop_direction,2);
+    assert_eq!(restored.player_moving_direction,0);
+}
+
+#[test]
+fn player_start_pulse_is_discarded_midstep_but_held_start_opens_after_landing() {
+    use crate::game_state::{ScreenAction,GameScreen};
+    use super::MovementState;
+    for transport in [TransportMode::Walking,TransportMode::Biking] {
+        for held in [false,true] {
+            let mut screen=screen_on(MapId::PalletTown);fill_map_with_passable_block(&mut screen);
+            screen.state.player.x=5;screen.state.player.y=5;screen.state.player.transport=transport;
+            let down=OverworldInput::new(false,true,false,false,false,false,false,false);
+            let start=OverworldInput::new(false,true,false,false,false,false,true,false);
+            assert_eq!(screen.update_frame(down),ScreenAction::Continue);
+            assert_eq!(screen.state.player.movement_state,MovementState::Walking);
+            assert_eq!(screen.update_frame(start),ScreenAction::Continue,"START must wait for a tile");
+            let pending=if held {start} else {down};
+            for _ in 0..32 {
+                if screen.state.player.movement_state==MovementState::Idle {break;}
+                assert_eq!(screen.update_frame(pending),ScreenAction::Continue);
+            }
+            assert_eq!(screen.state.player.movement_state,MovementState::Idle);
+            assert_eq!((screen.state.player.x,screen.state.player.y),(5,6));
+            screen.update_frame(pending); // first DelayFrame after landing
+            assert_eq!(screen.update_frame(pending),if held {
+                ScreenAction::Transition(GameScreen::StartMenu)
+            } else {ScreenAction::Continue});
+        }
+    }
+}
+
+#[test]
+fn start_precedes_a_at_the_pokemon_center_pc() {
+    use crate::game_state::{ScreenAction,GameScreen};
+    let mut screen=screen_on(MapId::ViridianPokecenter);
+    screen.state.player.x=13;screen.state.player.y=4;screen.state.player.facing=Direction::Up;
+    let both=OverworldInput::new(false,false,false,false,true,false,true,false);
+    assert_eq!(screen.update_frame(both),ScreenAction::Transition(GameScreen::StartMenu));
+    assert!(screen.pending_pc.is_none());assert!(screen.pending_dialogue.is_none());
+}
+
+#[test]
+fn held_a_is_sampled_only_after_step() {
+    use crate::game_state::ScreenAction;
+    use super::MovementState;
+    let mut screen=screen_on(MapId::ViridianPokecenter);
+    screen.state.player.x=13;screen.state.player.y=5;screen.state.player.facing=Direction::Up;
+    screen.state.player.movement_state=MovementState::Walking;screen.state.walk_counter=2;
+    screen.player_moving_direction=8;
+    let held=OverworldInput::new(false,false,false,false,true,false,false,false);
+    assert_eq!(screen.update_frame(held),ScreenAction::Continue);
+    assert!(screen.pending_pc.is_none());assert!(screen.pending_dialogue.is_none());
+    screen.update_frame(held);screen.update_frame(held);
+    assert_eq!((screen.state.player.x,screen.state.player.y),(13,4));
+    assert!(screen.pending_pc.is_none());assert!(screen.pending_dialogue.is_none());
+    screen.update_frame(held);screen.update_frame(held);
+    assert!(screen.pending_pc.is_some() || screen.pending_dialogue.is_some() || screen.active_script_effect.is_some(),"held A interacts after landing");
+}
+
+#[test]
+fn seafoam_hole_waits_for_dust_and_keeps_the_lower_floor_event() {
+    use pokered_data::event_flags::EventFlag;
+    let mut screen=screen_on(MapId::SeafoamIslands1F);
+    screen.npc_states.clear();
+    screen.npc_states.push(make_boulder(17,5));
+    screen.npc_states[0].walk_counter=16;
+    screen.boulder_push=Some(presentation::BoulderPushState {
+        npc_index:0,direction:Direction::Down,anchor:(17,4),
+        origin:(17,5),destination:(17,6),frame:0,switch_block:None,redraw_remaining:0,walk_wait:0,
+    });
+    let flag=EventFlag::EVENT_SEAFOAM1_BOULDER1_DOWN_HOLE;
+    for frame in 1..=72 {
+        screen.advance_boulder_push();
+        assert_eq!(screen.npc_states[0].visible,frame<70);
+        assert_eq!(screen.unified_flags.check(flag),frame>=70);
+    }
+    assert_eq!((screen.npc_states[0].x,screen.npc_states[0].y),(17,6));
+    assert!(screen.boulder_push.is_none());
+    let saved=screen.unified_flags.to_event_bytes();
+    let mut lower=screen_on(MapId::SeafoamIslandsB1F);
+    lower.set_event_flags_bytes(&saved);
+    lower.run_on_load();
+    for _ in 0..120 {lower.update_frame(OverworldInput::new(false,false,false,false,false,false,false,false));}
+    assert!(lower.npc_states.iter().any(|n|n.visible && n.sprite_id==pokered_data::sprites::SpriteId::Boulder as u8));
+}
+
+#[test]
+fn victory_road_switch_commits_during_slide_and_redraw_depends_on_view_address() {
+    use pokered_data::event_flags::EventFlag;
+    for (map, x, y, flag, bx, by, block, pause) in [
+        (MapId::VictoryRoad1F,17,11,EventFlag::EVENT_VICTORY_ROAD_1_BOULDER_ON_SWITCH,4,6,29,9),
+        (MapId::VictoryRoad2F,1,14,EventFlag::EVENT_VICTORY_ROAD_2_BOULDER_ON_SWITCH1,3,4,21,0),
+        (MapId::VictoryRoad2F,9,14,EventFlag::EVENT_VICTORY_ROAD_2_BOULDER_ON_SWITCH2,11,7,29,9),
+    ] {
+        let mut screen=screen_on(map);
+        screen.state.player.x=x;screen.state.player.y=y;
+        screen.npc_states.clear();screen.npc_states.push(make_boulder(x,y+1));
+        screen.npc_states[0].walk_counter=16;
+        let old=screen.map_data.as_ref().unwrap().blocks[by as usize*screen.map_data.as_ref().unwrap().width as usize+bx as usize];
+        assert_ne!(old,block);
+        screen.boulder_push=Some(presentation::BoulderPushState {
+            npc_index:0,direction:Direction::Down,anchor:(x,y),origin:(x,y+1),
+            destination:(x,y+2),frame:0,switch_block:None,redraw_remaining:0,walk_wait:0,
+        });
+        for elapsed in 1..=72+pause {
+            screen.advance_boulder_push();
+            assert_eq!(screen.unified_flags.check(flag),elapsed>=4,"{map:?} elapsed {elapsed}");
+            assert_eq!(screen.npc_states[0].y,if elapsed<2 {y+1} else {y+2});
+            let m=screen.map_data.as_ref().unwrap();
+            assert_eq!(m.blocks[by as usize*m.width as usize+bx as usize],if elapsed<6 {old} else {block});
+            if (6..=6+pause).contains(&elapsed) {assert_eq!(screen.boulder_push.unwrap().frame,6);}
+            assert_eq!(screen.boulder_push.is_none(),elapsed==72+pause);
+        }
+        assert_eq!(screen.npc_states[0].walk_counter,0);
+    }
+}
+
+#[test]
+fn ordinary_steps_match_original_counter_trace_and_sample_after_landing() {
+    use crate::game_state::{ScreenAction, GameScreen};
+    use super::MovementState;
+    // Original AdvancePlayerSprite with an already matching stopped direction:
+    // the first redraw holds counter 7 across one extra hardware frame.
+    for (transport, trace, landing) in [
+        (TransportMode::Walking, vec![7,7,7,6,6,5,5,4,4,3,3,2,2,1,1,0],15),
+        (TransportMode::Biking, vec![7,6,6,4,4,2,2,0],7),
+    ] {
+        let mut screen=screen_on(MapId::PalletTown);fill_map_with_passable_block(&mut screen);
+        screen.state.player.x=5;screen.state.player.y=5;screen.state.player.facing=Direction::Down;
+        screen.state.player.transport=transport;
+        screen.player_last_stop_direction=4;screen.check_player_turn=true;
+        let down=OverworldInput::new(false,true,false,false,false,false,false,false);
+        let start=OverworldInput::new(false,true,false,false,false,false,true,false);
+        for (t, counter) in trace.into_iter().enumerate() {
+            assert_eq!(screen.update_frame(if t>=5 {start} else {down}),ScreenAction::Continue);
+            assert_eq!(screen.state.walk_counter,counter,"{transport:?}, t{t}");
+            assert_eq!(screen.state.player.y,if t<landing {5} else {6});
+        }
+        assert_eq!(screen.state.player.movement_state,MovementState::Idle);
+        assert_eq!(screen.update_frame(start),ScreenAction::Continue,"first wait after landing");
+        assert_eq!(screen.update_frame(start),ScreenAction::Transition(GameScreen::StartMenu));
+    }
+}
+
+#[test]
+fn ordinary_turn_wait_uses_last_stop_instead_of_visible_facing() {
+    use super::MovementState;
+    let idle=OverworldInput::new(false,false,false,false,false,false,false,false);
+    let down=OverworldInput::new(false,true,false,false,false,false,false,false);
+    let mut screen=screen_on(MapId::PalletTown);fill_map_with_passable_block(&mut screen);
+    screen.state.player.x=5;screen.state.player.y=5;screen.state.player.facing=Direction::Down;
+    screen.player_last_stop_direction=2;screen.check_player_turn=true;
+    // Same visible facing still needs the turn delay after Continue reset it.
+    screen.update_frame(down);
+    assert_eq!(screen.state.player.movement_state,MovementState::Idle);
+    assert_eq!(screen.player_moving_direction,4);
+    screen.update_frame(idle);screen.update_frame(idle);
+    assert_eq!((screen.state.player.x,screen.state.player.y),(5,5),"short turn pulse does not walk");
+    assert_eq!(screen.player_last_stop_direction,4);
+    screen.update_frame(down);screen.update_frame(down);
+    assert_eq!(screen.state.walk_counter,7,"matching stopped direction now walks");
+}
+
+#[test]
+fn boulder_map_script_arms_on_idle_and_uses_the_previous_field_sample() {
+    let mut screen=screen_on(MapId::PalletTown);fill_map_with_passable_block(&mut screen);
+    screen.state.player.x=5;screen.state.player.y=5;screen.state.player.facing=Direction::Down;
+    screen.player_last_stop_direction=4;screen.strength_active=true;
+    screen.npc_states.push(make_boulder(5,6));
+    let idle=OverworldInput::new(false,false,false,false,false,false,false,false);
+    let down=OverworldInput::new(false,true,false,false,false,false,false,false);
+    screen.update_frame(idle);screen.update_frame(idle);
+    assert!(screen.tried_push_boulder,"RunMapScript arms even with hJoyHeld=0");
+    screen.update_frame(down);
+    assert!(screen.boulder_push.is_none(),"script precedes the new Joypad sample");
+    screen.update_frame(idle);
+    screen.update_frame(idle);
+    assert!(screen.boulder_push.is_some(),"next script sees the previous held direction even after physical release");
+    assert_eq!(screen.boulder_push.unwrap().frame,0,"MoveSprite is the phase origin");
+    screen.update_frame(idle);screen.update_frame(idle);
+    assert_eq!(boulder_pos(&screen),(5,7),"TryWalking commits two hardware frames after MoveSprite");
+}
+
+#[test]
+fn menu_joypad_replaces_stale_direction_before_boulder_script_runs() {
+    use crate::game_state::{ScreenAction,GameScreen};
+    let mut screen=screen_on(MapId::PalletTown);fill_map_with_passable_block(&mut screen);
+    screen.state.player.x=5;screen.state.player.y=5;screen.state.player.facing=Direction::Down;
+    screen.player_last_stop_direction=4;screen.strength_active=true;
+    screen.npc_states.push(make_boulder(5,6));
+    let idle=OverworldInput::new(false,false,false,false,false,false,false,false);
+    let down_start=OverworldInput::new(false,true,false,false,false,false,true,false);
+    let menu_a=OverworldInput::new(false,false,false,false,true,false,false,false);
+    screen.update_frame(idle);screen.update_frame(idle);
+    assert!(screen.tried_push_boulder);
+    assert_eq!(screen.update_frame(down_start),ScreenAction::Transition(GameScreen::StartMenu));
+    // EXIT read A after the user released d-pad: the original menu Joypad
+    // replaced hJoyHeld. Neither the old direction nor its START may survive.
+    screen.synchronize_player_input(menu_a);
+    screen.update_frame(menu_a);screen.update_frame(menu_a);
+    assert!(screen.boulder_push.is_none(),"menu close must not reuse the pre-menu Down");
+    assert_eq!(boulder_pos(&screen),(5,6));
+    assert!(screen.pending_dialogue.is_none(),"held menu confirmation is not a new field A");
+}
+
+#[test]
+fn victory_road_hole_event_precedes_final_oam_image() {
+    use pokered_data::event_flags::EventFlag;
+    let mut screen=screen_on(MapId::VictoryRoad3F);
+    screen.npc_states.clear();
+    screen.npc_states.push(make_boulder(22,15));
+    screen.boulder_push=Some(presentation::BoulderPushState {
+        npc_index:0,direction:Direction::Right,anchor:(21,15),
+        origin:(22,15),destination:(23,15),frame:0,switch_block:None,redraw_remaining:0,walk_wait:0,
+    });
+    // Original MoveSprite at t3, HideObject/ShowObject/SFX_CUT at t73.
+    // The final displayed boulder persists until t75; no time shift.
+    for frame in 1..=72 {
+        screen.advance_boulder_push();
+        assert_eq!(screen.unified_flags.check(EventFlag::EVENT_VICTORY_ROAD_3_BOULDER_ON_SWITCH2),frame>=70);
+        assert_eq!(screen.npc_states[0].visible,frame<70);
+        assert_eq!(screen.boulder_push.is_some(),frame<72);
+    }
+}
+
+#[test]
+fn boulder_completion_samples_start_before_the_last_lcd_image() {
+    use crate::game_state::{ScreenAction,GameScreen};
+    let mut screen=screen_on(MapId::VictoryRoad3F);
+    screen.npc_states.clear();screen.npc_states.push(make_boulder(22,15));
+    screen.state.player.x=21;screen.state.player.y=15;screen.state.player.facing=Direction::Right;
+    screen.boulder_push=Some(presentation::BoulderPushState {
+        npc_index:0,direction:Direction::Right,anchor:(21,15),origin:(22,15),destination:(23,15),frame:69,switch_block:None,redraw_remaining:0,walk_wait:0,
+    });
+    let start=OverworldInput::new(false,false,false,false,false,false,true,false);
+    let idle=OverworldInput::new(false,false,false,false,false,false,false,false);
+    assert_eq!(screen.update_frame(start),ScreenAction::Continue);
+    assert_eq!(screen.boulder_push.unwrap().frame,70);
+    assert!(!screen.boulder_blocks_control());
+    // A single physical pulse on original Joypad t73 survives processing t74,
+    // while OAM still contains the boulder. It need not remain held until75.
+    assert_eq!(screen.update_frame(idle),ScreenAction::Transition(GameScreen::StartMenu));
+    assert_eq!(screen.boulder_push.unwrap().frame,71);
+    screen.tick_boulder_presentation_during_ui();
+    assert!(screen.boulder_push.is_none(),"opening START cannot freeze the hidden stone's LCD image");
+}
+
+
+#[test]
+fn ordinary_player_pose_and_camera_match_original_hardware_frames() {
+    // Independent golden transitions from original Red actual SRAM Continue,
+    // road (20,30), 32-frame foot / 16-frame bicycle inputs. Each reference
+    // was recorded twice. Camera registers are latched into the next LCD frame;
+    // sprite poses were classified from opaque original gfx pixels.
+    type PoseTrace = &'static [(i32, usize, bool)];
+    type CameraTrace = &'static [(i32, i16, i16)];
+    let cases: &[(bool, Direction, PoseTrace, CameraTrace)] = &[
+        (false, Direction::Left, &[(-1, 0, false), (2, 2, false), (9, 5, false), (17, 2, false), (26, 5, false), (34, 2, false)], &[(0, 0, 0), (2, -2, 0), (4, -4, 0), (6, -6, 0), (8, -8, 0), (10, -10, 0), (12, -12, 0), (14, -14, 0), (16, -16, 0), (19, -18, 0), (21, -20, 0), (23, -22, 0), (25, -24, 0), (27, -26, 0), (29, -28, 0), (31, -30, 0), (33, -32, 0)]),
+        (false, Direction::Right, &[(-1, 0, false), (4, 2, true), (11, 5, true), (19, 2, true), (28, 5, true), (36, 2, true)], &[(0, 0, 0), (4, 2, 0), (6, 4, 0), (8, 6, 0), (10, 8, 0), (12, 10, 0), (14, 12, 0), (16, 14, 0), (18, 16, 0), (21, 18, 0), (23, 20, 0), (25, 22, 0), (27, 24, 0), (29, 26, 0), (31, 28, 0), (33, 30, 0), (35, 32, 0)]),
+        (false, Direction::Up, &[(-1, 0, false), (4, 1, false), (11, 4, false), (19, 1, false), (28, 4, true), (36, 1, false)], &[(0, 0, 0), (4, 0, -2), (6, 0, -4), (8, 0, -6), (10, 0, -8), (12, 0, -10), (14, 0, -12), (16, 0, -14), (18, 0, -16), (21, 0, -18), (23, 0, -20), (25, 0, -22), (27, 0, -24), (29, 0, -26), (31, 0, -28), (33, 0, -30), (35, 0, -32)]),
+        (false, Direction::Down, &[(-1, 0, false), (11, 3, false), (19, 0, false), (28, 3, true), (36, 0, false)], &[(0, 0, 0), (4, 0, 2), (6, 0, 4), (8, 0, 6), (10, 0, 8), (12, 0, 10), (14, 0, 12), (16, 0, 14), (18, 0, 16), (21, 0, 18), (23, 0, 20), (25, 0, 22), (27, 0, 24), (29, 0, 26), (31, 0, 28), (33, 0, 30), (35, 0, 32)]),
+        (true, Direction::Left, &[(-1, 0, false), (3, 2, false), (10, 5, false), (19, 2, false)], &[(0, 0, 0), (3, -4, 0), (5, -8, 0), (7, -12, 0), (9, -16, 0), (12, -20, 0), (14, -24, 0), (16, -28, 0), (18, -32, 0)]),
+        (true, Direction::Right, &[(-1, 0, false), (5, 2, true), (12, 5, true), (21, 2, true)], &[(0, 0, 0), (5, 4, 0), (7, 8, 0), (9, 12, 0), (11, 16, 0), (14, 20, 0), (16, 24, 0), (18, 28, 0), (20, 32, 0)]),
+        (true, Direction::Up, &[(-1, 0, false), (5, 1, false), (12, 4, false), (21, 1, false)], &[(0, 0, 0), (5, 0, -4), (7, 0, -8), (9, 0, -12), (11, 0, -16), (14, 0, -20), (16, 0, -24), (18, 0, -28), (20, 0, -32)]),
+        (true, Direction::Down, &[(-1, 0, false), (12, 3, false), (21, 0, false)], &[(0, 0, 0), (5, 0, 4), (7, 0, 8), (9, 0, 12), (11, 0, 16), (14, 0, 20), (16, 0, 24), (18, 0, 28), (20, 0, 32)]),
+    ];
+    let idle = OverworldInput::new(false,false,false,false,false,false,false,false);
+    for &(bike,direction,poses,cameras) in cases {
+        let mut screen=screen_on(MapId::PalletTown);fill_map_with_passable_block(&mut screen);
+        screen.state.player.x=5;screen.state.player.y=5;screen.state.player.facing=Direction::Down;
+        screen.state.player.transport=if bike {TransportMode::Biking} else {TransportMode::Walking};
+        screen.player_last_stop_direction=2;screen.check_player_turn=true;
+        screen.field_loop_wait=if bike {1} else {0};
+        let held=OverworldInput::new(direction==Direction::Up,direction==Direction::Down,
+            direction==Direction::Left,direction==Direction::Right,false,false,false,false);
+        for t in 0..100 {
+            screen.update_frame(if t < if bike {16} else {32} {held} else {idle});
+            let &(_,frame,flip)=poses.iter().rev().find(|&&(start,_,_)| start<=t).unwrap();
+            assert_eq!(screen.ordinary_player_sprite_frame(),Some((frame,flip)),"{bike}/{direction:?} pose t{t}");
+            let &(_,x,y)=cameras.iter().rev().find(|&&(start,_,_)| start<=t).unwrap();
+            let view=screen.ordinary_player_camera().unwrap();
+            assert_eq!(((view.x as i16-5)*16+view.sub_x,(view.y as i16-5)*16+view.sub_y),
+                (x,y),"{bike}/{direction:?} camera t{t}");
+        }
+    }
+}
+
+
+#[test]
+fn mid_step_snapshot_replays_pending_player_presentation() {
+    use crate::snapshot::OverworldSnapshot;
+    let idle=OverworldInput::new(false,false,false,false,false,false,false,false);
+    let down=OverworldInput::new(false,true,false,false,false,false,false,false);
+    for bike in [false,true] {
+        let mut original=screen_on(MapId::PalletTown);fill_map_with_passable_block(&mut original);
+        original.state.player.x=5;original.state.player.y=5;
+        original.state.player.transport=if bike {TransportMode::Biking} else {TransportMode::Walking};
+        original.player_last_stop_direction=2;original.check_player_turn=true;
+        original.field_loop_wait=if bike {1} else {0};
+        for _ in 0..10 {original.update_frame(down);}
+        // This boundary includes an in-flight OAM pose and a latched viewport.
+        let encoded=serde_json::to_string(&OverworldSnapshot::capture(&original)).unwrap();
+        let snapshot: OverworldSnapshot=serde_json::from_str(&encoded).unwrap();
+        let mut restored=screen_on(MapId::PalletTown);snapshot.restore_into(&mut restored);
+        for t in 10..100 {
+            let input=if t < if bike {16} else {32} {down} else {idle};
+            original.update_frame(input);restored.update_frame(input);
+            assert_eq!(serde_json::to_string(&OverworldSnapshot::capture(&original)).unwrap(),
+                serde_json::to_string(&OverworldSnapshot::capture(&restored)).unwrap(),"{bike} t{t}");
+        }
+    }
+}
+
+#[test]
+fn boulder_logical_counter_matches_original_during_map_redraw() {
+    use pokered_data::event_flags::EventFlag;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(
+        "../../tests/fixtures/boulder-counter-139.json"
+    )).unwrap();
+    for case in fixture["cases"].as_array().unwrap() {
+        let (map, x, y, flag) = match case["case"].as_str().unwrap() {
+            "1f" => (MapId::VictoryRoad1F, 17, 11, EventFlag::EVENT_VICTORY_ROAD_1_BOULDER_ON_SWITCH),
+            "2f1" => (MapId::VictoryRoad2F, 1, 14, EventFlag::EVENT_VICTORY_ROAD_2_BOULDER_ON_SWITCH1),
+            _ => unreachable!(),
+        };
+        let mut screen = screen_on(map);
+        screen.state.player.x = x;
+        screen.state.player.y = y;
+        screen.state.player.facing = Direction::Down;
+        screen.strength_active = true;
+        screen.npc_states.clear();
+        screen.npc_states.push(make_boulder(x, y + 1));
+        // The actual native Continue/Strength capture starts MoveSprite at
+        // hardware t3. Original2F1 starts t2 but its actor update crosses
+        // VBlank; both logical TryWalking updates land at t5. These primary
+        // counter traces do not prove the unmodelled CPU/OAM initialization.
+        for row in case["trace"].as_array().unwrap() {
+            let values = row.as_array().unwrap();
+            let t = values[0].as_i64().unwrap();
+            if t == 3 {
+                screen.tick_boulder_push(Some(Direction::Down));
+                screen.tick_boulder_push(Some(Direction::Down));
+                assert!(screen.boulder_push.is_some());
+            } else if t > 3 {
+                screen.advance_boulder_push();
+            }
+            let npc = &screen.npc_states[0];
+            assert_eq!(
+                [u64::from(npc.x), u64::from(npc.y), u64::from(npc.walk_counter),
+                    u64::from(screen.unified_flags.check(flag))],
+                [values[1].as_u64().unwrap(), values[2].as_u64().unwrap(),
+                    values[3].as_u64().unwrap(), values[4].as_u64().unwrap()],
+                "{map:?} hardware t{t}"
+            );
+            if let Some(push) = screen.boulder_push {
+                let encoded = serde_json::to_value(push).unwrap();
+                let restored: presentation::BoulderPushState = serde_json::from_value(encoded.clone()).unwrap();
+                assert_eq!(restored, push, "walking update phase survives JSON at t{t}");
+                let mut legacy = encoded;
+                legacy.as_object_mut().unwrap().remove("walk_wait");
+                let restored: presentation::BoulderPushState = serde_json::from_value(legacy).unwrap();
+                assert_eq!(restored.walk_wait, u8::MAX, "legacy phase is derived on resume");
+            }
+        }
+    }
 }

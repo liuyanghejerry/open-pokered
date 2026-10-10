@@ -1,0 +1,14 @@
+{
+  "parent": "5de6ba9a688444455f3076d73843d37cb01c6a57",
+  "sources": {
+    "crates/pokered-core/src/overworld/field_moves.rs": "162384478610831fc7f2e751aadfa6cc2a27bb789f61e9d0651e4556ffc3cba1",
+    "crates/pokered-core/src/overworld/presentation.rs": "7231a5a9d7b7a9d1cba6f717f25672751467a2290b6df06b8f73a344d5fff53d",
+    "crates/pokered-core/src/overworld/tests_field_moves.rs": "5e28d3607ba3c8d5b10f2f487a8759858783939a776df3e27b63034858e5eb39",
+    "crates/pokered-core/tests/fixtures/boulder-counter-139.json": "680926a55f8d85c2817e75f332171a8414305bacdd15a449f4efc9fcc0d60ff0"
+  },
+  "native_binary_sha256": "de69be80e31dd76bf6bff060e8b3a9f59159fceeada4f76ba4b6ccbeef3ef478",
+  "source": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "changes": "MoveSprite queues without starting NPC walk counter; field walker updates every two HW frames; last RedrawMapView wait resumes NPC update in same hardware frame; walking phase serialized separately from LCD presentation.",
+  "captures": "Three201-frame scenarios, each twice. Unshifted original primary105 repeats and native138/139 repeats. All603 after PNGs byte-identical previous5de captures, so this increment is pure logic and changes no on-screen frame.",
+  "scope": "Controlled placements and actual Continue/Strength/Down inputs. Ordinary travel reachability not established. 1F/2F1 logical coordinates/counter/event flags exact all201frames each. 2F2 still17state differences and27RGBframes; this shared walking correction removes a previous counter delay that partly cancelled unmodelled CPU/OAM latency. Remaining CPU/script/OAM clocks must be fixed before merge."
+}

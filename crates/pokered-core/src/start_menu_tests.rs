@@ -247,31 +247,50 @@ fn select_all_items_with_pokedex() {
 }
 
 #[test]
-fn without_pokemon_omits_pokemon_item() {
+fn without_pokemon_keeps_pokemon_item() {
     let menu = StartMenuState::new(false, false, false);
-    assert_eq!(menu.item_count(), 5);
-    assert_eq!(menu.items()[0], StartMenuItem::Item);
-    assert_eq!(menu.items()[1], StartMenuItem::TrainerInfo);
-    assert_eq!(menu.items()[2], StartMenuItem::Save);
-    assert_eq!(menu.items()[3], StartMenuItem::Option);
-    assert_eq!(menu.items()[4], StartMenuItem::Exit);
+    assert_eq!(menu.items(), &[StartMenuItem::Pokemon, StartMenuItem::Item,
+        StartMenuItem::TrainerInfo, StartMenuItem::Save, StartMenuItem::Option, StartMenuItem::Exit]);
 }
 
 #[test]
 fn without_pokemon_with_pokedex() {
     let menu = StartMenuState::new(true, false, false);
-    assert_eq!(menu.item_count(), 6);
-    assert_eq!(menu.items()[0], StartMenuItem::Pokedex);
-    assert_eq!(menu.items()[1], StartMenuItem::Item);
-    assert_eq!(menu.items()[2], StartMenuItem::TrainerInfo);
-    assert_eq!(menu.items()[3], StartMenuItem::Save);
-    assert_eq!(menu.items()[4], StartMenuItem::Option);
-    assert_eq!(menu.items()[5], StartMenuItem::Exit);
+    assert_eq!(menu.items(), &[StartMenuItem::Pokedex, StartMenuItem::Pokemon,
+        StartMenuItem::Item, StartMenuItem::TrainerInfo, StartMenuItem::Save,
+        StartMenuItem::Option, StartMenuItem::Exit]);
 }
 
 #[test]
-fn without_pokemon_first_item_is_item() {
+fn without_pokemon_first_item_redisplays_and_second_opens_item() {
     let mut menu = StartMenuState::new(false, false, false);
-    let action = menu.update_frame(input_a());
-    assert_eq!(action, StartMenuAction::OpenItem);
+    assert_eq!(menu.update_frame(input_a()), StartMenuAction::Redisplay);
+    menu.update_frame(input_down());
+    assert_eq!(menu.update_frame(input_a()), StartMenuAction::OpenItem);
+}
+
+#[test]
+fn empty_party_keeps_pokemon_entry_and_redisplays_when_selected() {
+    for has_pokedex in [false, true] {
+        let mut menu = StartMenuState::new(has_pokedex, false, false);
+        assert_eq!(menu.item_count(), if has_pokedex { 7 } else { 6 });
+        if has_pokedex { menu.update_frame(input_down()); }
+        assert_eq!(menu.current_item(), StartMenuItem::Pokemon);
+        assert_eq!(menu.update_frame(input_a()), StartMenuAction::Redisplay);
+        menu.open(has_pokedex, true, false);
+        assert_eq!(menu.current_item(), StartMenuItem::Pokemon);
+        assert_eq!(menu.update_frame(input_a()), StartMenuAction::OpenPokemon);
+    }
+}
+
+#[test]
+fn direction_wins_over_confirm_cancel_start_and_opposite_direction() {
+    for (up, down, a, b, start) in [(true,false,true,false,false), (false,true,true,false,false),
+        (true,false,false,true,false), (false,true,false,true,false),
+        (true,false,false,false,true), (false,true,false,false,true), (true,true,false,false,false)] {
+        let mut menu = StartMenuState::new(true,true,false);
+        menu.update_frame(input_down());
+        assert_eq!(menu.update_frame(StartMenuInput {up,down,a,b,start}), StartMenuAction::Redisplay);
+        assert_eq!(menu.current_item(), if up {StartMenuItem::Pokedex} else {StartMenuItem::Item});
+    }
 }

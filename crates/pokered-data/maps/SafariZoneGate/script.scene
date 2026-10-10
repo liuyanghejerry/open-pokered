@@ -29,7 +29,7 @@ game_scene SafariZoneGate {
         @if (getPlayerY() == 0) {
           movePlayerRelative(["down"])
         }
-        @speaker("") { @t("Leaving early?", "要提前离开吗？") }
+        printFieldText(@t("Leaving early?", "要提前离开吗？"))
         @choice {
           @option(@t("YES", "是")) {
             @speaker("") { @t("Please return any SAFARI\nBALLs you have left.", "请把剩下的狩猎球还给我。") }
@@ -55,9 +55,8 @@ game_scene SafariZoneGate {
   // ── Info worker (npc 2): explains the Safari Zone ────────────────────────
   @storyline("talkSafariZoneWorker2") {
     @trigger(map = "SafariZoneGate", npc = 2)
-    @speaker("") {
-      @t("Hi! Is it your first time\nhere?", "嗨！你是第一次来吗？")
-    }
+    // SafariZoneGateSafariZoneWorker2Text calls PrintText, then YesNoChoice.
+    printFieldText(@t("Hi! Is it your first time\nhere?", "嗨！你是第一次来吗？"))
     @choice {
       @option(@t("YES", "是")) {
         @speaker("") {
@@ -83,7 +82,7 @@ game_scene SafariZoneGate {
     @trigger(map = "SafariZoneGate", name = "gateRow1", coords = [[3, 2], [4, 2]])
     @if (getFlag("EVENT_IN_SAFARI_ZONE")) {
       // Player is inside the Safari Zone and walked back toward the exit.
-      @speaker("") { @t("Leaving early?", "要提前离开吗？") }
+      printFieldText(@t("Leaving early?", "要提前离开吗？"))
       @choice {
         @option(@t("YES", "是")) {
           @speaker("") {
@@ -108,9 +107,7 @@ game_scene SafariZoneGate {
         movePlayerRelative(["right"])
       }
       facePlayer("right")
-      @speaker("") {
-        @t("For just ¥500, you can catch\nall the POKeMON you want in\nthe park!\n\nWould you like to join the\nhunt?", "只需500日元，你就能在公园里\n抓到所有想要的宝可梦！\n\n要加入狩猎吗？")
-      }
+      printFieldText(@t("For just ¥500, you can catch\nall the POKeMON you want in\nthe park!\n\nWould you like to join the\nhunt?", "只需500日元，你就能在公园里\n抓到所有想要的宝可梦！\n\n要加入狩猎吗？"))
       showMoneyBox(getMoney())
       @choice {
         @option(@t("YES", "是")) {

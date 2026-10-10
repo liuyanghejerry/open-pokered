@@ -145,9 +145,47 @@ fn blit_tile_clipped_flipped(
     );
 }
 
+/// DMG sprite priority: smaller raw X wins, then earlier OAM slot.
+/// Actor slots precede smoke36..39, so an equal X also hides smoke.
+fn mask_smoke_with_actor(
+    smoke: &mut Option<Vec<(usize,u8,Rgba)>>, fb: &FrameBuffer,
+    tile: &Tile, x: i32, y: i32, palette: &Palette, flip_h: bool,
+) {
+    let Some(pixels)=smoke.as_mut() else {return;};
+    let raw_x=(x+8) as u8;
+    for row in 0..8 {
+        let colors=tile.render_row(row,palette);
+        for col in 0..8 {
+            let px=x+col as i32;let py=y+row as i32;
+            if px<0 || py<0 || px>=fb.width() as i32 || py>=fb.height() as i32 {continue;}
+            if colors[if flip_h {7-col} else {col}]==Rgba::TRANSPARENT {continue;}
+            let offset=py as usize*fb.width() as usize+px as usize;
+            pixels.retain(|&(index,smoke_x,_)|index!=offset || raw_x>smoke_x);
+        }
+    }
+}
+
 #[inline]
 fn blit_priority_bg_tile(fb: &mut FrameBuffer, tile: &Tile, x: i32, y: i32) {
     fb.blit_gb_tile_indices(x, y, tile, true, false, false);
+}
+
+fn npc_draw_position(screen: &OverworldScreen, slot: usize, view_tx: i32, view_ty: i32,
+    sub_x: i32, sub_y: i32) -> Option<(i32,i32)> {
+    let npc = screen.npc_states.get(slot)?;
+    if let Some(pose) = screen.ordinary_npc_sprite_pose(slot) {
+        return Some((pose.x - view_tx * 8 - sub_x,
+            pose.y - view_ty * 8 + ACTOR_CELL_Y_OFFSET - sub_y));
+    }
+    let push = screen.boulder_push.filter(|p|p.npc_index==slot);
+    let (x,y) = push.map_or((npc.x,npc.y),|p|p.origin);
+    let pixels = push.map_or_else(||npc_walk_pixel_offset(npc.walk_counter),|p|i32::from(p.visible_slide_pixels()));
+    let (dx,dy) = match npc.facing {
+        Direction::Down => (0,pixels), Direction::Up => (0,-pixels),
+        Direction::Left => (-pixels,0), Direction::Right => (pixels,0),
+    };
+    Some((i32::from(x)*16-view_tx*8+dx-sub_x,
+        i32::from(y)*16-view_ty*8+ACTOR_CELL_Y_OFFSET+dy-sub_y))
 }
 
 /// Script-driven entry overlay (`showPokedexEntry`): resolve the scene species
@@ -730,8 +768,7 @@ pub(super) fn can_reuse_composited_frame(screen: &OverworldScreen) -> bool {
         && screen.pending_naming_screen.is_none()
         && screen.pending_party_select.is_none()
         && screen.pending_pokedex_entry.is_none()
-        && screen.pending_dialogue.is_none()
-        && screen.cut_retained_dialogue.is_none()
+        && screen.displayed_field_dialogue().is_none()
         && screen.pending_choice.is_none()
         && (screen.script_money_box.is_none() && screen.script_coin_box.is_none())
         && screen.pending_emotion_bubble.is_none()
@@ -750,6 +787,7 @@ pub(super) fn can_reuse_composited_frame(screen: &OverworldScreen) -> bool {
         && screen.fishing_anim.is_none()
         && screen.ship_departure.is_none()
         && screen.flash_lit_frames == 0
+        && screen.boulder_push.is_none()
         && !screen.boulder_dust.is_active()
 }
 
@@ -1033,8 +1071,9 @@ fn draw_overworld_impl(
 
     let sprite_pal = pokered_renderer::overworld_palette::normal_sprite_palette();
 
-    let player_tx = screen.state.player.x as i32 * 2;
-    let player_ty = screen.state.player.y as i32 * 2;
+    let camera = screen.ordinary_player_camera();
+    let player_tx = camera.map_or(screen.state.player.x, |view| view.x) as i32 * 2;
+    let player_ty = camera.map_or(screen.state.player.y, |view| view.y) as i32 * 2;
     let screen_center_tx = PLAYER_SCREEN_X / TILE_SIZE as i32;
     let screen_center_ty = (PLAYER_SCREEN_Y - ACTOR_CELL_Y_OFFSET) / TILE_SIZE as i32;
     let view_origin_tx = player_tx - screen_center_tx;
@@ -1042,7 +1081,9 @@ fn draw_overworld_impl(
 
     // Sub-pixel viewport offset: scrolls the world smoothly during player walking.
     // Original GB uses SCX/SCY registers to scroll the background 2px/frame.
-    let (view_sub_x, view_sub_y) = if let Some(jump) = screen.ledge_jump {
+    let (view_sub_x, view_sub_y) = if let Some(view) = camera {
+        (i32::from(view.sub_x), i32::from(view.sub_y))
+    } else if let Some(jump) = screen.ledge_jump {
         jump.camera_residual_px()
     } else if let Some(step) = screen.field_move_step {
         step.camera_residual_px()
@@ -1266,6 +1307,75 @@ fn draw_overworld_impl(
             }
             fb.clear(Rgba::WHITE);
         }
+        // Read the actual background before any actor/dust is painted. Only
+        // priority actors need the 16x8 underlay; animated tiles and scrolling
+        // are already reflected here. The mask never extends beyond the actor.
+        let mut npc_priority_underlays = Vec::new();
+        for (slot, npc) in screen.npc_states.iter().enumerate() {
+            if !npc.visible || !screen.npc_sprite_grass_priority(slot) { continue; }
+            if let Some((x,y)) = npc_draw_position(screen, slot, view_origin_tx, view_origin_ty, view_sub_x, view_sub_y) {
+                let mut pixels = [Rgba::WHITE; 128];
+                for py in 0..8usize {
+                    for px in 0..16usize {
+                        let sx = x + px as i32;
+                        let sy = y + 8 + py as i32;
+                        if sx >= 0 && sy >= 0 {
+                            pixels[py*16+px] = fb.get_pixel(sx as u32,sy as u32).unwrap_or(Rgba::WHITE);
+                        }
+                    }
+                }
+                npc_priority_underlays.push((slot,pixels));
+            }
+        }
+        // Keep smoke candidates until actor opacity and raw X are known.
+        // DMG priority is X first, OAM order only when X ties.
+        let mut smoke_pixels: Option<Vec<(usize,u8,Rgba)>> = None;
+        let visible_dust=screen.boulder_push.map(|p|p.visible_dust())
+            .unwrap_or_else(||screen.boulder_dust.is_active().then_some(screen.boulder_dust));
+        if let Some(dust)=visible_dust {
+            smoke_pixels=Some(Vec::with_capacity(256));
+            let (ax,ay)=dust.anchor();
+            let anchor_x=(ax as i32*2-view_origin_tx)*TILE_SIZE as i32-view_sub_x;
+            let anchor_y=(ay as i32*2-view_origin_ty)*TILE_SIZE as i32-view_sub_y+ACTOR_CELL_Y_OFFSET;
+            if let Ok(cached)=rm.load_asset(AssetCategory::Overworld,"smoke.png") {
+                if cached.tileset.len() > 0 {
+                    // OBP1=$e4, XOR $64 gives $80. OBP0 remains $d0.
+                    let normal=Palette::new(&[Rgba::TRANSPARENT,Rgba::rgb(170,170,170),Rgba::rgb(85,85,85),Rgba::BLACK]);
+                    let flash=Palette::new(&[Rgba::TRANSPARENT,Rgba::WHITE,Rgba::WHITE,Rgba::rgb(85,85,85)]);
+                    // Palette writes take effect immediately; OAM positions
+                    // wait for the next DMA. Do not delay both together.
+                    let normal_palette=screen.boulder_push.map_or_else(||dust.palette_flipped(),|p| {
+                        ((p.frame.saturating_sub(pokered_core::overworld::presentation::BoulderPushState::DUST_FIRST_FRAME)/3).min(7))%2==1
+                    });
+                    let obp1=if normal_palette {&normal} else {&flash};
+                    for entry in pokered_core::overworld::presentation::boulder_dust_oam(&dust,anchor_x,anchor_y) {
+                        let x=i32::from(entry.x)-8;let y=i32::from(entry.y)-16;
+                        let palette=if entry.attributes&0x10!=0 {obp1} else {&sprite_pal};
+                        let tile=cached.tileset.get(0);
+                        for row in 0..8 {
+                            let source_y=if entry.attributes&0x40!=0 {7-row} else {row};
+                            let colors=tile.render_row(source_y,palette);
+                            for col in 0..8 {
+                                let px=x+col as i32;let py=y+row as i32;
+                                if px<0 || py<0 || px>=fb.width() as i32 || py>=fb.height() as i32 {continue;}
+                                let source_x=if entry.attributes&0x20!=0 {7-col} else {col};
+                                let color=colors[source_x];
+                                if color==Rgba::TRANSPARENT {continue;}
+                                // Original downward clipping corrupts the upper
+                                // right entry to $a0: behind BG, X-flipped, OBP0.
+                                if entry.attributes&0x80!=0 && fb.get_pixel(px as u32,py as u32)!=Some(Rgba::WHITE) {continue;}
+                                let offset=py as usize*fb.width() as usize+px as usize;
+                                let pixels=smoke_pixels.as_mut().unwrap();
+                                if let Some(pixel)=pixels.iter_mut().find(|p|p.0==offset) {
+                                    if entry.x<pixel.1 {*pixel=(offset,entry.x,color);}
+                                } else {pixels.push((offset,entry.x,color));}
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         // Player sprite: 16×96 sheet = 6 frames of 16×16
         // Frame layout: DownStand=0, UpStand=1, LeftStand=2, DownWalk=3, UpWalk=4, LeftWalk=5
         // Right uses Left frames with horizontal flip
@@ -1331,7 +1441,12 @@ fn draw_overworld_impl(
             let player_visible =
                 player_visible && fly_player_visible && screen.field_move_restore.is_none();
 
-            let (frame, flip_h) = if screen.state.player.movement_state == MovementState::Walking
+            let ordinary_pose = if spin.is_none() && enter.is_none() && fishing.is_none()
+                && screen.enter_map_fly_anim.is_none() && screen.fly_departure.is_none()
+            {screen.ordinary_player_sprite_frame()} else {None};
+            let (frame, flip_h) = if let Some(pose) = ordinary_pose {
+                pose
+            } else if screen.state.player.movement_state == MovementState::Walking
                 || screen.state.player.movement_state == MovementState::Jumping
             {
                 // 4-frame walk cycle (facings.asm:3-18 + movement.asm:298-320):
@@ -1469,6 +1584,8 @@ fn draw_overworld_impl(
                             continue;
                         }
 
+                        mask_smoke_with_actor(&mut smoke_pixels,fb,tile_ts.get(tile_idx),
+                            (draw_x+col*TILE_SIZE) as i32,(draw_y+row*TILE_SIZE) as i32,&sprite_pal,flip_h);
                         blit_single_tile_flipped(
                             fb,
                             tile_ts,
@@ -1491,6 +1608,7 @@ fn draw_overworld_impl(
                     let bg_ts = &bg_cached.tileset;
                     let overlay_x = screen_center_tx as u32 * TILE_SIZE;
                     let overlay_y = screen_center_ty as u32 * TILE_SIZE + TILE_SIZE;
+                    let mut priority_underlay_saved = false;
                     for col_off in 0..2i32 {
                         let world_tx = player_tx + col_off;
                         let world_ty = player_ty + 1;
@@ -1515,6 +1633,17 @@ fn draw_overworld_impl(
                             .unwrap_or(0)
                             .min(bg_ts.len().saturating_sub(1));
                         if bg_tile_idx == grass_id as usize {
+                            // Only priority tiles write beyond the player
+                            // patch. Ordinary ground needs no extra damage.
+                            if !priority_underlay_saved {
+                                if let Some(cache) = background_cache.as_deref_mut() {
+                                    if cache.output_key.is_some() || cache.partial_present {
+                                        cache.save_foreground_rect(fb, overlay_x as i32,
+                                            overlay_y as i32, TILE_SIZE * 2, TILE_SIZE);
+                                    }
+                                }
+                                priority_underlay_saved = true;
+                            }
                             let tile = bg_ts.get(bg_tile_idx);
                             let gx = overlay_x as i32 + col_off * TILE_SIZE as i32;
                             blit_priority_bg_tile(fb, tile, gx, overlay_y as i32);
@@ -1523,11 +1652,14 @@ fn draw_overworld_impl(
                 }
             }
         }
-        for npc in &screen.npc_states {
+        for (npc_slot,npc) in screen.npc_states.iter().enumerate() {
             if screen.field_move_restore.is_some() {
                 break;
             }
-            if !npc.visible {
+            // HideObject changes logical visibility before the last LCD
+            // image from the blocking boulder routine has been replaced.
+            let retained_boulder=screen.boulder_push.is_some_and(|p|p.npc_index==npc_slot);
+            if !npc.visible && !retained_boulder {
                 continue;
             }
 
@@ -1542,8 +1674,12 @@ fn draw_overworld_impl(
                 let num_frames = (cached.source_size.1 / TILE_SIZE) as usize;
 
                 let npc_facing = npc.facing;
+                let presented = screen.ordinary_npc_sprite_pose(npc_slot);
+                if presented.is_some_and(|pose| pose.image == 0xff) { continue; }
 
-                let (frame, flip_h) = if let Some(sf) = npc.scripted_frame {
+                let (frame, flip_h) = if let Some(pose) = presented.filter(|_| num_frames >= 6) {
+                    pose.rendered_frame()
+                } else if let Some(sf) = npc.scripted_frame {
                     (sf as usize, false)
                 } else if num_frames >= 6 {
                     // AnimFrame 0-3: 0/2=stand, 1=walk, 3=walk+flip — phases
@@ -1598,26 +1734,8 @@ fn draw_overworld_impl(
                 let base_tile = frame * 4;
                 let tpr = cached.source_size.0 / TILE_SIZE;
 
-                let npc_screen_tx = npc.x as i32 * 2 - view_origin_tx;
-                let npc_screen_ty = npc.y as i32 * 2 - view_origin_ty;
-
-                // Smooth pixel interpolation during movement. Classic GB
-                // walkers advance 1px/frame over their 16-frame step
-                // (16px/tile) — unlike the player's 2px/frame over 8.
-                let (walk_dx, walk_dy) = if npc.walk_counter > 0 {
-                    let px = npc_walk_pixel_offset(npc.walk_counter);
-                    match npc.facing {
-                        Direction::Down => (0i32, px),
-                        Direction::Up => (0, -px),
-                        Direction::Left => (-px, 0),
-                        Direction::Right => (px, 0),
-                    }
-                } else {
-                    (0, 0)
-                };
-
-                let npc_px_x = npc_screen_tx * TILE_SIZE as i32 + walk_dx - view_sub_x;
-                let npc_px_y = npc_screen_ty * TILE_SIZE as i32 + ACTOR_CELL_Y_OFFSET + walk_dy - view_sub_y;
+                let Some((npc_px_x,npc_px_y)) = npc_draw_position(screen, npc_slot,
+                    view_origin_tx, view_origin_ty, view_sub_x, view_sub_y) else { continue; };
 
                 let sprite_size = (TILE_SIZE * 2) as i32;
                 if npc_px_x <= -sprite_size
@@ -1650,7 +1768,24 @@ fn draw_overworld_impl(
 
                         let tx = npc_px_x + (col * TILE_SIZE) as i32;
                         let ty = npc_px_y + (row * TILE_SIZE) as i32;
+                        mask_smoke_with_actor(&mut smoke_pixels,fb,ts.get(tile_idx),tx,ty,&sprite_pal,flip_h);
                         blit_tile_clipped_flipped(fb, ts, tile_idx, tx, ty, &sprite_pal, flip_h);
+                        if row == 1 {
+                            if let Some((_,underlay)) = npc_priority_underlays.iter().find(|(slot,_)|*slot==npc_slot) {
+                                for py in 0..8usize {
+                                    let actor = ts.get(tile_idx).render_row(py, &sprite_pal);
+                                    for px in 0..8usize {
+                                        if actor[if flip_h {7-px} else {px}] == Rgba::TRANSPARENT { continue; }
+                                        let color = underlay[py*16+col as usize*8+px];
+                                        let sx = tx + px as i32;
+                                        let sy = ty + py as i32;
+                                        if color != Rgba::WHITE && sx >= 0 && sy >= 0 {
+                                            fb.set_pixel(sx as u32,sy as u32,color);
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -1705,10 +1840,18 @@ fn draw_overworld_impl(
                             }
                             let tx = npc_px_x + (col * TILE_SIZE) as i32;
                             let ty = npc_px_y + (row * TILE_SIZE) as i32;
+                            mask_smoke_with_actor(&mut smoke_pixels,fb,ts.get(tile_idx),tx,ty,&sprite_pal,false);
                             blit_tile_clipped_flipped(fb, ts, tile_idx, tx, ty, &sprite_pal, false);
                         }
                     }
                 }
+            }
+        }
+
+        if let Some(pixels)=smoke_pixels {
+            let width=fb.width() as usize;
+            for (i,_,color) in pixels {
+                fb.set_pixel((i%width) as u32,(i/width) as u32,color);
             }
         }
 
@@ -1940,54 +2083,6 @@ fn draw_overworld_impl(
             }
         }
 
-        // Boulder push dust — AnimateBoulderDust (engine/overworld/
-        // dust_smoke.asm): a 2×2 OAM block of 8×8 smoke tiles
-        // (gfx/overworld/smoke.2bpp) kicked up at the boulder's base.
-        // Positioned from the player sprite's top-left + per-facing
-        // BoulderDustAnimationOffsets (cut.asm:170-176), anchored to the
-        // player's tile at push time. Each of the 8 steps (3 frames each)
-        // drifts the block 1px against the push direction and flashes the
-        // smoke palette (rOBP1 XOR %01100100).
-        if screen.boulder_dust.is_active() {
-            let dust = screen.boulder_dust;
-            let (ax, ay) = dust.anchor();
-            let anchor_px_x = (ax as i32 * 2 - view_origin_tx) * TILE_SIZE as i32;
-            let anchor_px_y = (ay as i32 * 2 - view_origin_ty) * TILE_SIZE as i32 + ACTOR_CELL_Y_OFFSET;
-            let (bx, by) = dust.base_offset();
-            let step = dust.step() as i32;
-            if let Ok(cached) = rm.load_asset(AssetCategory::Overworld, "smoke.png") {
-                let ts = &cached.tileset;
-                // rOBP1=%11100100: idx 0→transparent, 1→white, 2→light gray,
-                // 3→dark gray; the step flash XORs %01100100, swapping idx 2/3.
-                let obp1_pal = Palette::new(&[
-                    Rgba::TRANSPARENT,
-                    Rgba::rgb(0xFF, 0xFF, 0xFF),
-                    Rgba::rgb(0xAA, 0xAA, 0xAA),
-                    Rgba::rgb(0x55, 0x55, 0x55),
-                ]);
-                let obp1_flash = Palette::new(&[
-                    Rgba::TRANSPARENT,
-                    Rgba::rgb(0xFF, 0xFF, 0xFF),
-                    Rgba::rgb(0x55, 0x55, 0x55),
-                    Rgba::rgb(0xAA, 0xAA, 0xAA),
-                ]);
-                let dust_pal = if dust.palette_flipped() {
-                    &obp1_flash
-                } else {
-                    &obp1_pal
-                };
-                let drifts = dust.tile_drifts();
-                for i in 0..4 {
-                    let col = (i % 2) as i32;
-                    let row = (i / 2) as i32;
-                    let (ddx, ddy) = drifts[i];
-                    let tx = anchor_px_x + bx + col * TILE_SIZE as i32 + ddx * step;
-                    let ty = anchor_px_y + by + row * TILE_SIZE as i32 + ddy * step;
-                    blit_tile_clipped(fb, ts, 0, tx, ty, dust_pal);
-                }
-            }
-        }
-
         // CUT — InitCutAnimOAM + AnimCut. The map block underneath has already
         // been replaced; this 2×2 OAM copy of the tree holds the old shape,
         // then separates its rows horizontally one pixel per update.
@@ -2129,11 +2224,7 @@ fn draw_overworld_impl(
         return;
     }
 
-    if let Some(dlg) = screen
-        .pending_dialogue
-        .as_ref()
-        .or(screen.cut_retained_dialogue.as_ref())
-    {
+    if let Some(dlg) = screen.displayed_field_dialogue() {
         if let Some((d1, d2)) = dlg.get_display_text() {
             // Keep the script-authored line break: joining with ' ' and
             // re-wrapping loses it (and CJK pages re-wrap at wrong points).
@@ -3188,20 +3279,25 @@ mod elevator_edge_tests {
         let before = render_screen(&mut s);
         assert!(!s.boulder_dust.is_active(), "no dust before the push");
 
-        // Hold DOWN: frame 1 arms BIT_TRIED_PUSH_BOULDER, frame 2 pushes.
+        // Two logical collision attempts arm then push; DelayFrame falls
+        // between them, so keep holding until the blocking routine starts.
         let hold_down = pokered_core::overworld::OverworldInput::new(
             false, true, false, false, false, false, false, false,
         );
-        s.update_frame(hold_down);
-        s.update_frame(hold_down);
-        assert!(s.boulder_dust.is_active(), "push started the dust");
+        for _ in 0..10 {
+            s.update_frame(hold_down);
+            if s.boulder_push.is_some() {break;}
+        }
+        assert!(s.boulder_push.is_some());
+        assert!(!s.boulder_dust.is_active(), "stone slides before smoke appears");
+        for _ in 0..46 {s.update_frame(pokered_core::overworld::OverworldInput::new(false,false,false,false,false,false,false,false));}
+        assert!(s.boulder_dust.is_active(), "dust appears after the slide");
 
         let after = render_screen(&mut s);
-        // This presence test samples the dust's right column outside the
-        // boulder sprite. Exact raw-OAM conversion for dust is a separate
-        // audit; this only verifies the push starts drawing the smoke asset.
+        // Original OAM sprite36 is (Y=111,X=72), or LCD (64,95),
+        // at the first stage. This checks smoke outside the landed stone.
         let dust_area_changed =
-            (80..88).any(|x| (112..128).any(|y| before.get_pixel(x, y) != after.get_pixel(x, y)));
+            (64..80).any(|x| (94..103).any(|y| before.get_pixel(x, y) != after.get_pixel(x, y)));
         assert!(
             dust_area_changed,
             "dust pixels appear at the boulder's base during the push"

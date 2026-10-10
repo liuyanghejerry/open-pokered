@@ -1,0 +1,26 @@
+{
+  "parent_head": "913212938691e4d9534703b9119d02d3114d149a",
+  "native_png_count": 2808,
+  "frames_per_case_repeat": 702,
+  "relative_logical_matching_frames_per_case": 52,
+  "rgb_different_frames_per_case": {
+    "timeout": 14,
+    "empty-balls": 13
+  },
+  "absolute_timing_parity": false,
+  "archive": {
+    "paths": 2841,
+    "objects": 190,
+    "sha256": "d818eebb612fe393079260dfbda40a785d7fc8e176bbeae927cac88d12872c1d",
+    "all_objects_verified": true
+  },
+  "reference_archive_sha256": "1122bdac240d334b4938e0cb16cbf51406d3398888db540ff76fe35333d694a8",
+  "source_work_archive_sha256": "c3278c5344f9f6cfee0e72f6b91b18b91f1fe7bff50245648aae1d32a4aadbe2",
+  "tests": {
+    "core": 2736,
+    "app": 201,
+    "ignored_capture_helpers": 24
+  },
+  "gba_metric_count": 31,
+  "scope": "scripted field camera and player/NPC presentation now use latched state; startup and one-animation-update gap, CPU/LCD phase and prior draft gates remain pending"
+}

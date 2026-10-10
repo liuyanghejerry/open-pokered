@@ -27,6 +27,7 @@ pub mod script_interactions;
 pub mod special_terrain;
 pub mod spinner_paths;
 pub mod sprites;
+pub mod sprite_reload_work;
 pub mod trainer_engine;
 pub mod wild_encounters;
 pub mod screen;

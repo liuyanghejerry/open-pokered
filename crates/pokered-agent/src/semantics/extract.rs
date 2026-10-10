@@ -194,6 +194,17 @@ fn command_effect(name: &str, args: &[Expression]) -> StateEffect {
 /// Listed explicitly so unknown typos still surface as unknown.
 const NO_STATE_COMMANDS: &[&str] = &[
     "showText",
+    // Inner text return/retention changes presentation, not event-graph state.
+    "printFieldText",
+    "setFieldTextDelayDisabled",
+    "chooseInstantFieldMenu",
+    "finishFieldText",
+    "printFieldParagraph",
+    "printItemFieldText",
+    "waitFieldPrompt",
+    "waitFieldPromptButton",
+    "waitFieldButton",
+    "closeFieldText",
     // The found-item text and jingle only present a completed pickup;
     // giveItem / setFlag / hideObject carry its inventory/event effects.
     "showItemDialogue",
@@ -825,6 +836,17 @@ mod tests {
             "{:?}",
             oak.effects
         );
+    }
+
+    #[test]
+    fn museum_inner_question_keeps_ticket_payment_and_event_semantics() {
+        let scene=pokered_data::embedded_scenes::get_scene_ast("Museum1F").unwrap();
+        let mut coverage=CoverageAccum::default();
+        let map=extract_map_with_coverage(&scene,&mut coverage);
+        assert!(coverage.unknown.is_empty(),"{:?}",coverage.unknown);
+        let gate=map.storylines.iter().find(|s|s.storyline=="ticketGate").unwrap();
+        assert!(gate.effects.contains(&StateEffect::MoneyTaken {amount:Some(50)}));
+        assert!(gate.effects.contains(&StateEffect::FlagSet {flag:"EVENT_BOUGHT_MUSEUM_TICKET".into()}));
     }
 
     #[test]

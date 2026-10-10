@@ -14,43 +14,42 @@ game_scene Route2Gate {
     @trigger(map = "Route2Gate", npc = 1)
     @if (getFlag("EVENT_GOT_HM05")) {
       // Already received it: the aide just prints the FLASH explanation.
-      @speaker("") {
-        @t("The HM FLASH lights even the\ndarkest dungeons.", "秘传招式闪光能照亮最黑暗的洞\n窟。")
-      }
+      printFieldText(t("The HM FLASH lights even the\ndarkest dungeons.", "秘传招式闪光能照亮最黑暗的洞\n窟。"))
     } @else {
       // OaksAideHiText (requirement = 10 kinds, reward = HM05 FLASH)
-      @speaker("") {
-        @t("Hi! Remember me? I'm\nPROF.OAK's AIDE!\n\nIf you caught 10 kinds of\nPOKeMON, I'm supposed to\ngive you an HM05!\n\nSo, <PLAYER>! Have you\ncaught at least 10 kinds of\nPOKeMON?", "嗨！还记得我吗？我是大木博士\n的助手！\n\n如果你抓到了 10种宝可梦，我\n就可以把HM05给你！\n\n那么，<PLAYER>！你抓到至少\n10种宝可梦了吗？")
-      }
+      printFieldText(t("Hi! Remember me? I'm\nPROF.OAK's AIDE!", "嗨！还记得我吗？我是大木博士\n的助手！"))
+      printFieldParagraph(t("If you caught 10 kinds of\nPOKeMON, I'm supposed to\ngive you an HM05!", "如果你抓到了 10种宝可梦，我\n就可以把HM05给你！"))
+      printFieldParagraph(t("So, <PLAYER>! Have you\ncaught at least 10 kinds of\nPOKeMON?", "那么，<PLAYER>！你抓到至少\n10种宝可梦了吗？"))
       @choice {
         @option(@t("YES", "是")) {
           @if (getPokedexOwnedCount() >= 10) {
             // OaksAideHereYouGoText -> give item -> OaksAideGotItemText
-            showText(@t("Great! You have caught ", "太好了！你已经抓到了") + getPokedexOwnedCount() + @t(" kinds of POKeMON!\nCongratulations!\n\nHere you go!", "种宝可梦！\n恭喜你！\n\n给你！"))
+            printFieldText(t("Great! You have caught ", "太好了！你已经抓到了") + getPokedexOwnedCount() + t(" kinds of POKeMON!\nCongratulations!", "种宝可梦！\n恭喜你！"))
+            printFieldParagraph(t("Here you go!", "给你！"))
+            waitFieldPrompt()
             given = giveItem("HM05", 1)
             @if (given) {
+              printItemFieldText(@t("<PLAYER> got HM05!", "<PLAYER>得到了HM05！"), "SFX_GET_ITEM_1")
               setFlag("EVENT_GOT_HM05")
-              showItemDialogue(@t("<PLAYER> got HM05!", "<PLAYER>得到了HM05！"))
               // FlashExplanationText follows once the item is received.
-              @speaker("") {
-                @t("The HM FLASH lights even the\ndarkest dungeons.", "秘传招式闪光能照亮最黑暗的洞\n窟。")
-              }
+              printFieldText(t("The HM FLASH lights even the\ndarkest dungeons.", "秘传招式闪光能照亮最黑暗的洞\n窟。"))
             } @else {
-              @speaker("") { @t("Oh! I see you don't have any\nroom for the HM05.", "哎呀！你身上已经没有放HM05的\n空位了。") }
+              printFieldText(t("Oh! I see you don't have any\nroom for the HM05.", "哎呀！你身上已经没有放HM05的\n空位了。"))
             }
           } @else {
             // OaksAideUhOhText (not enough kinds owned)
-            showText(@t("Let's see... Uh-oh! You have\ncaught only ", "让我看看……哎呀！你只抓到了") + getPokedexOwnedCount() + @t(" kinds of\nPOKeMON!\n\nYou need 10 kinds if you\nwant the HM05.", "种宝可梦！\n\n要得到HM05，需要抓到10种。"))
+            printFieldText(t("Let's see... Uh-oh! You have\ncaught only ", "让我看看……哎呀！你只抓到了") + getPokedexOwnedCount() + t(" kinds of\nPOKeMON!", "种宝可梦！"))
+            printFieldParagraph(t("You need 10 kinds if you\nwant the HM05.", "要得到HM05，需要抓到10种。"))
           }
         }
         @option(@t("NO", "否")) {
           // OaksAideComeBackText
-          @speaker("") {
-            @t("Oh. I see.\n\nWhen you get 10 kinds, come\nback for the HM05.", "哦，是这样。\n\n等你抓到 10种宝可梦，再来拿\nHM05吧。")
-          }
+          printFieldText(t("Oh. I see.", "哦，是这样。"))
+          printFieldParagraph(t("When you get 10 kinds, come\nback for the HM05.", "等你抓到 10种宝可梦，再来拿\nHM05吧。"))
         }
       }
     }
+    finishFieldText()
   }
 
   // ── Youngster (npc 2) — ROCK TUNNEL hint ─────────────────────────────────

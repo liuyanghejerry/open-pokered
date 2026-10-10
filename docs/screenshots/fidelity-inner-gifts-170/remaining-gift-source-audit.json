@@ -1,0 +1,216 @@
+{
+  "scope": "original source audit only unless individual status says otherwise; no new original emulator frame timing claim",
+  "cases": [
+    {
+      "map": "CinnabarLabMetronomeRoom",
+      "original_sound_blocks": [
+        {
+          "sound": "sound_get_item_1",
+          "script": ".ReceivedTM35Text:\n\ttext_far _CinnabarLabMetronomeRoomScientist1ReceivedTM35Text\n\tsound_get_item_1\n\ttext_end",
+          "far_texts": [
+            {
+              "name": "_CinnabarLabMetronomeRoomScientist1ReceivedTM35Text",
+              "body": "_CinnabarLabMetronomeRoomScientist1ReceivedTM35Text::\n\ttext \"<PLAYER> received \"\n\tline \"@\"\n\ttext_ram wStringBuffer\n\ttext \"!@\"\n\ttext_end\n\n"
+            }
+          ]
+        }
+      ],
+      "native_auto_close_calls": [
+        "showItemDialogue(t(\"<PLAYER> received TM35!\", \"<PLAYER>得到了 TM35！\"))"
+      ],
+      "status": "Migrated and actual native success/full-bag/repeat/sound/snapshot/outer-confirmation test PASS. Source-only original evidence; no original emulator recording for this NPC.",
+      "original_full_flow": "intro PARA then PROMPT; GiveItem; received text + item1 sound; set flag; outer confirmation"
+    },
+    {
+      "map": "SilphCo11F",
+      "original_sound_blocks": [
+        {
+          "sound": "sound_get_key_item",
+          "script": ".ReceivedMasterBallText:\n\ttext_far _SilphCo11FSilphPresidentReceivedMasterBallText\n\tsound_get_key_item\n\ttext_end",
+          "far_texts": [
+            {
+              "name": "_SilphCo11FSilphPresidentReceivedMasterBallText",
+              "body": "_SilphCo11FSilphPresidentReceivedMasterBallText::\n\ttext \"<PLAYER> got a\"\n\tline \"@\"\n\ttext_ram wStringBuffer\n\ttext \"!@\"\n\ttext_end\n\n"
+            }
+          ]
+        }
+      ],
+      "native_auto_close_calls": [
+        "showItemDialogue(t(\"<PLAYER> got a MASTER BALL!\", \"<PLAYER>获得了大师球！\"), \"SFX_GET_KEY_ITEM\")"
+      ],
+      "status": "Migrated; actual NPC success/full-bag/repeat tests PASS. Explicit intro PARA/PROMPT before GiveItem; source-specific flag before/after full sound; retained final receipt and fresh outer confirmation. Source-only original evidence; no original emulator recording.",
+      "original_full_flow": "intro four PARA then PROMPT; GiveItem; received text + key sound; set flag; outer confirmation"
+    },
+    {
+      "map": "BillsHouse",
+      "original_sound_blocks": [
+        {
+          "sound": "sound_get_key_item",
+          "script": ".SSTicketReceivedText:\n\ttext_far _SSTicketReceivedText\n\tsound_get_key_item\n\ttext_promptbutton\n\ttext_end",
+          "far_texts": [
+            {
+              "name": "_SSTicketReceivedText",
+              "body": "_SSTicketReceivedText::\n\ttext \"<PLAYER> received\"\n\tline \"an @\"\n\ttext_ram wStringBuffer\n\ttext \"!@\"\n\ttext_end\n\n"
+            }
+          ]
+        }
+      ],
+      "native_auto_close_calls": [
+        "showItemDialogue(@t(\"<PLAYER> received an\\nS.S.TICKET!\", \"<PLAYER>获得了圣安奴号船票！\"), \"SFX_GET_KEY_ITEM\")"
+      ],
+      "status": "Migrated; actual NPC success/full-bag/repeat/no-doll (Copycat), full sound and mid-sound/mid-wait snapshot, item/flag/guard timing and outer confirmation/skip regressions PASS. Source-only original evidence; no new original emulator recording.",
+      "original_full_flow": "thank-you two PARA then PROMPT; GiveItem; received text + key sound; TX_PROMPT_BUTTON (ManualTextScroll without ProtectedDelay3); set flag and guard visibility; explanation one PARA then DONE; outer confirmation"
+    },
+    {
+      "map": "CeladonDiner",
+      "original_sound_blocks": [
+        {
+          "sound": "sound_get_key_item",
+          "script": ".ReceivedCoinCaseText:\n\ttext_far _CeladonDinerGymGuideReceivedCoinCaseText\n\tsound_get_key_item\n\ttext_end",
+          "far_texts": [
+            {
+              "name": "_CeladonDinerGymGuideReceivedCoinCaseText",
+              "body": "_CeladonDinerGymGuideReceivedCoinCaseText::\n\ttext \"<PLAYER> received\"\n\tline \"a @\"\n\ttext_ram wStringBuffer\n\ttext \"!@\"\n\ttext_end\n\n"
+            }
+          ]
+        }
+      ],
+      "native_auto_close_calls": [
+        "showItemDialogue(@t(\"<PLAYER> received a COIN\\nCASE!\", \"<PLAYER>得到了代币盒！\"), \"SFX_GET_KEY_ITEM\")"
+      ],
+      "status": "Migrated; actual NPC success/full-bag/repeat tests PASS. Explicit intro PARA/PROMPT before GiveItem; source-specific flag before/after full sound; retained final receipt and fresh outer confirmation. Source-only original evidence; no original emulator recording.",
+      "original_full_flow": "intro three PARA then PROMPT; GiveItem; set flag; received text + key sound; outer confirmation"
+    },
+    {
+      "map": "BikeShop",
+      "original_sound_blocks": [
+        {
+          "sound": "sound_get_key_item",
+          "script": "BikeShopExchangedVoucherText:\n\ttext_far _BikeShopExchangedVoucherText\n\tsound_get_key_item\n\ttext_end",
+          "far_texts": [
+            {
+              "name": "_BikeShopExchangedVoucherText",
+              "body": "_BikeShopExchangedVoucherText::\n\ttext \"<PLAYER> exchanged\"\n\tline \"the BIKE VOUCHER\"\n\tcont \"for a BICYCLE.@\"\n\ttext_end\n\n"
+            }
+          ]
+        }
+      ],
+      "native_auto_close_calls": [
+        "showItemDialogue(@t(\"<PLAYER> exchanged the BIKE\\nVOUCHER for a BICYCLE.\", \"<PLAYER>用自行车兑换券换到了\\n一辆自行车。\"), \"SFX_GET_KEY_ITEM\")"
+      ],
+      "status": "source caller and far-text flow audited; native actual reproduction/migration pending",
+      "original_full_flow": "voucher intro two PARA then PROMPT; GiveItem; RemoveItemByID voucher; set flag; exchanged text + key sound; outer confirmation; no-voucher purchase menu is separate"
+    },
+    {
+      "map": "Route16FlyHouse",
+      "original_sound_blocks": [
+        {
+          "sound": "sound_get_key_item",
+          "script": ".ReceivedHM02Text:\n\ttext_far _Route16FlyHouseBrunetteGirlReceivedHM02Text\n\tsound_get_key_item\n\ttext_end",
+          "far_texts": [
+            {
+              "name": "_Route16FlyHouseBrunetteGirlReceivedHM02Text",
+              "body": "_Route16FlyHouseBrunetteGirlReceivedHM02Text::\n\ttext \"<PLAYER> received\"\n\tline \"HM02!@\"\n\ttext_end\n\n"
+            }
+          ]
+        }
+      ],
+      "native_auto_close_calls": [
+        "showItemDialogue(@t(\"<PLAYER> received HM02!\", \"<PLAYER>得到了 HM02！\"), \"SFX_GET_KEY_ITEM\")"
+      ],
+      "status": "Migrated; actual NPC success/full-bag/repeat tests PASS. Explicit intro PARA/PROMPT before GiveItem; source-specific flag before/after full sound; retained final receipt and fresh outer confirmation. Source-only original evidence; no original emulator recording.",
+      "original_full_flow": "intro one PARA then PROMPT; GiveItem; set flag; received text + key sound; outer confirmation; explanation only on repeat"
+    },
+    {
+      "map": "CopycatsHouse2F",
+      "original_sound_blocks": [
+        {
+          "sound": "sound_get_item_1",
+          "script": ".ReceivedTM31Text:\n\ttext_far _CopycatsHouse2FCopycatReceivedTM31Text\n\tsound_get_item_1\n.TM31Explanation1Text:\n\ttext_far _CopycatsHouse2FCopycatTM31Explanation1Text\n\ttext_waitbutton\n\ttext_end",
+          "far_texts": [
+            {
+              "name": "_CopycatsHouse2FCopycatReceivedTM31Text",
+              "body": "_CopycatsHouse2FCopycatReceivedTM31Text::\n\ttext \"<PLAYER> received\"\n\tline \"@\"\n\ttext_ram wStringBuffer\n\ttext \"!@\"\n\ttext_end\n\n"
+            },
+            {
+              "name": "_CopycatsHouse2FCopycatTM31Explanation1Text",
+              "body": "_CopycatsHouse2FCopycatTM31Explanation1Text::\n\ttext_start\n\n\tpara \"TM31 contains my\"\n\tline \"favorite, MIMIC!\"\n\n\tpara \"Use it on a good\"\n\tline \"#MON!@\"\n\ttext_end\n\n"
+            }
+          ]
+        }
+      ],
+      "native_auto_close_calls": [
+        "showItemDialogue(@t(\"<PLAYER> received TM31!\", \"<PLAYER>得到了 TM31！\"))"
+      ],
+      "status": "Migrated; actual NPC success/full-bag/repeat/no-doll (Copycat), full sound and mid-sound/mid-wait snapshot, item/flag/guard timing and outer confirmation/skip regressions PASS. Source-only original evidence; no new original emulator recording.",
+      "original_full_flow": "unreceived sets wDoNotWaitForButtonPressAfterDisplayingText=TRUE; intro four PARA then PROMPT; if doll: gift intro two PARA then PROMPT; GiveItem; receipt item1 sound falls through to explanation leading PARA then another PARA, TX_WAIT_BUTTON; remove doll and set flag afterward; outer skip wait; bag-full text TX_WAIT_BUTTON; no-doll inner prompt followed by outer skip"
+    },
+    {
+      "map": "SafariZoneSecretHouse",
+      "original_sound_blocks": [
+        {
+          "sound": "sound_get_item_1",
+          "script": ".ReceivedHM03Text:\n\ttext_far _SafariZoneSecretHouseFishingGuruReceivedHM03Text\n\tsound_get_item_1\n\ttext_end",
+          "far_texts": [
+            {
+              "name": "_SafariZoneSecretHouseFishingGuruReceivedHM03Text",
+              "body": "_SafariZoneSecretHouseFishingGuruReceivedHM03Text::\n\ttext \"<PLAYER> received\"\n\tline \"@\"\n\ttext_ram wStringBuffer\n\ttext \"!@\"\n\ttext_end\n\n"
+            }
+          ]
+        }
+      ],
+      "native_auto_close_calls": [
+        "showItemDialogue(@t(\"<PLAYER> received HM03!\", \"<PLAYER>得到了 HM03！\"))"
+      ],
+      "status": "Migrated; actual NPC success/full-bag/repeat tests PASS. Explicit intro PARA/PROMPT before GiveItem; source-specific flag before/after full sound; retained final receipt and fresh outer confirmation. Source-only original evidence; no original emulator recording.",
+      "original_full_flow": "intro three PARA then PROMPT; GiveItem; receipt item1 sound; set flag; outer confirmation; explanation only on repeat"
+    },
+    {
+      "map": "CeladonMart3F",
+      "original_sound_blocks": [
+        {
+          "sound": "sound_get_item_1",
+          "script": ".ReceivedTM18Text:\n\ttext_far _CeladonMart3FClerkReceivedTM18Text\n\tsound_get_item_1\n\ttext_end",
+          "far_texts": [
+            {
+              "name": "_CeladonMart3FClerkReceivedTM18Text",
+              "body": "_CeladonMart3FClerkReceivedTM18Text::\n\ttext \"<PLAYER> received\"\n\tline \"@\"\n\ttext_ram wStringBuffer\n\ttext \"!@\"\n\ttext_end\n\n"
+            }
+          ]
+        }
+      ],
+      "native_auto_close_calls": [
+        "showItemDialogue(@t(\"<PLAYER> received TM18!\", \"<PLAYER>获得了 TM18！\"))"
+      ],
+      "status": "Migrated; actual NPC success/full-bag/repeat tests PASS. Explicit intro PARA/PROMPT before GiveItem; source-specific flag before/after full sound; retained final receipt and fresh outer confirmation. Source-only original evidence; no original emulator recording.",
+      "original_full_flow": "intro one PARA then PROMPT; GiveItem; set flag; receipt item1 sound; outer confirmation"
+    },
+    {
+      "map": "Route2Gate",
+      "original_sound_blocks": [],
+      "native_auto_close_calls": [
+        "showItemDialogue(@t(\"<PLAYER> got HM05!\", \"<PLAYER>得到了HM05！\"))"
+      ],
+      "status": "Migrated; actual owning-NPC success/full-bag/low-count/NO/repeat tests PASS, question DONE to choice, promise PROMPT before GiveItem, sound before flag/explanation, retained outer wait. Source-only original evidence; no new original emulator recording.",
+      "original_full_flow": "shared aide intro two PARA then DONE; YESNO; count; HereYouGo one PARA then PROMPT BEFORE GiveItem even bag-full; receipt item1 sound; shared result; caller set flag then separate explanation DONE; outer confirmation"
+    },
+    {
+      "map": "Route11Gate2F",
+      "original_sound_blocks": [],
+      "native_auto_close_calls": [
+        "showItemDialogue(@t(\"<PLAYER> got the ITEMFINDER!\", \"<PLAYER>得到了探宝器！\"))"
+      ],
+      "status": "Migrated; actual owning-NPC success/full-bag/low-count/NO/repeat tests PASS, question DONE to choice, promise PROMPT before GiveItem, sound before flag/explanation, retained outer wait. Source-only original evidence; no new original emulator recording.",
+      "original_full_flow": "same shared aide result sequence as Route2Gate; requirement30 ITEMFINDER; caller flag then separate description DONE; outer confirmation"
+    },
+    {
+      "map": "Route15Gate2F",
+      "original_sound_blocks": [],
+      "native_auto_close_calls": [
+        "showItemDialogue(@t(\"<PLAYER> got the EXP.ALL!\", \"<PLAYER>得到了 EXP.ALL！\"))"
+      ],
+      "status": "Migrated; actual owning-NPC success/full-bag/low-count/NO/repeat tests PASS, question DONE to choice, promise PROMPT before GiveItem, sound before flag/explanation, retained outer wait. Source-only original evidence; no new original emulator recording.",
+      "original_full_flow": "same shared aide result sequence as Route2Gate; requirement50 EXP_ALL; caller flag then separate explanation DONE; outer confirmation"
+    }
+  ]
+}

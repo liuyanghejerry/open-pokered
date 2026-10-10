@@ -38,13 +38,13 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from debug_drive import DebugClient  # noqa: E402
 
 BIN = ROOT / "target/debug/pokered-app"
-FRAMES_PER_TILE = 8  # held frames to cross one tile (smoke-tested)
+FRAMES_PER_TILE = 16  # eight movement ticks, sampled every two hardware frames
 
 
 def movement_frames(state, direction=None):
     """Match the observed transport's engine step duration."""
     uphill = state.get('map_name') == 'Route17' and direction in ('up', 'left', 'right')
-    return 4 if state.get('player_transport') == 'Biking' and not uphill else FRAMES_PER_TILE
+    return 8 if state.get('player_transport') == 'Biking' and not uphill else FRAMES_PER_TILE
 
 
 def movement_buttons(state, direction, held, frames):
@@ -478,6 +478,19 @@ class NavError(RuntimeError):
     pass
 
 
+# Inner PrintText effects can wait for A after their legacy dialogue object
+# has been retired. Observe the active effect rather than retained window text.
+FIELD_TEXT_EFFECTS = frozenset({
+    "PrintFieldText", "PrintFieldParagraph", "PrintItemFieldText",
+    "WaitFieldPrompt", "WaitFieldButton", "FinishFieldText",
+})
+
+
+def has_active_dialogue(state):
+    return (state.get("dialogue_state") is not None
+            or state.get("active_script_effect") in FIELD_TEXT_EFFECTS)
+
+
 class Game:
     def __init__(self, port=None, save_path=None, record_dir=None,
                  record_video=None, snapshot=None, binary=None, seed=None,
@@ -596,9 +609,15 @@ class Game:
         return r["data"]
 
     def tap(self, btn, gap=TAP_GAP):
-        """One held frame then idle frames — menus are edge-triggered
-        (a_just_pressed), so consecutive tap frames would read as a hold."""
-        self.d.drive([btn], frames=1 + gap)
+        """One fresh press, then release; field Joypad is sampled every two
+        hardware frames. UI/dialogue edges still use one held frame."""
+        state = self.st()
+        field = (state["screen"] == "overworld"
+                 and state.get("dialogue_state") is None
+                 and state.get("choice") is None
+                 and state.get("active_script_effect") is None)
+        held = 2 if field else 1
+        self.d.drive([btn] * held, frames=held + gap)
 
     def skip(self):
         r = self.d.cmd(cmd="skip_dialogue")
@@ -758,8 +777,26 @@ class Game:
         raise NavError(f"nav_to({x},{y}) did not converge")
 
     def face(self, direction):
-        """Turn in place: one held frame turns, walking needs more."""
-        self.d.drive([direction], frames=1 + 12)
+        """Observe a sampled turn or a field-owner interruption.
+
+        A logical arrival can precede a trainer's bubble/text handoff. The
+        short pulse is ignored while that owner has wJoyIgnore; it must not
+        be reported as a failed turn before the dialogue becomes observable.
+        """
+        state = self.st()
+        for attempt in range(9):
+            if state["player_facing"].lower() == direction:
+                return
+            if (state["screen"] != "overworld"
+                    or has_active_dialogue(state)
+                    or state.get("choice") is not None
+                    or state.get("active_script_effect") is not None):
+                return
+            if attempt == 8:
+                break
+            self.d.drive([direction] * 2, frames=2 + 12)
+            state = self.st()
+        raise NavError(f"face({direction}) failed: {state['player_facing']}")
 
     def approach_object(self, x, y, map_name):
         """Face an object from a reachable adjacent tile (trainers may
@@ -769,7 +806,8 @@ class Game:
             if state["screen"] == "battle":
                 self.battle_loop(prefer="fight" if state["script_awaiting_battle"] else "run")
                 self.cutscene()
-            elif state.get("dialogue_state") is not None:
+            elif (has_active_dialogue(state) or state.get("script_running")
+                  or state.get("active_script_effect") is not None):
                 self.cutscene()
             cm, cx, cy = self.pos()
             if cm != map_name:
@@ -1198,7 +1236,7 @@ class Game:
                 raise NavError(f"cutscene blocked on choice "
                                f"{state['choice']['options']} "
                                f"(cursor {state['choice']['selected']})")
-            if state["dialogue_state"] is not None:
+            if has_active_dialogue(state):
                 self.skip()
         return False
 
@@ -1213,7 +1251,7 @@ class Game:
                 return s["choice"]
             if s["active_script_effect"] == "ShowPokedexEntry":
                 self.tap("a", 10)
-            elif s["dialogue_state"] is not None:
+            elif has_active_dialogue(s):
                 self.skip()
             else:
                 self.step(30)
@@ -1384,7 +1422,7 @@ class Game:
             cur = p0
         dirs.reverse()
         for d in dirs:
-            self.d.drive([d] * FRAMES_PER_TILE, frames=16)
+            self.d.drive([d] * FRAMES_PER_TILE, frames=FRAMES_PER_TILE + 8)
         self.step(6)
 
     def train_until(self, level, map_name, spot, heal, max_cycles=400):
@@ -1422,14 +1460,14 @@ class Game:
                     # Outbound: grass -> Route1 north crossing -> city
                     # south lane -> PC door (proven m08 corridor).
                     self.nav_to(10, 1, map_name="Route1")
-                    self.d.drive(["up"] * 24, frames=28)
+                    self.d.drive(["up"] * (3 * FRAMES_PER_TILE), frames=3 * FRAMES_PER_TILE + 4)
                     self.step(8)
                     self.nav_to(23, 26, map_name="ViridianCity")
                 elif heal[1] == "ViridianCity":
                     # Outbound staged: grass -> Route2 south edge ->
                     # crossing -> city north lane -> PC door.
                     self.nav_to(8, 70, map_name="Route2")
-                    self.d.drive(["down"] * 24, frames=28)
+                    self.d.drive(["down"] * (3 * FRAMES_PER_TILE), frames=3 * FRAMES_PER_TILE + 4)
                     self.step(8)
                     self.nav_to(20, 32, map_name="ViridianCity")
                 self.heal_pokecenter(*heal)
@@ -1439,7 +1477,7 @@ class Game:
                     # Return: city south lane -> crossing -> grass.
                     self.nav_to(20, 32, map_name="ViridianCity")
                     self.nav_to(20, 33, map_name="ViridianCity")
-                    self.d.drive(["down"] * 24, frames=28)
+                    self.d.drive(["down"] * (3 * FRAMES_PER_TILE), frames=3 * FRAMES_PER_TILE + 4)
                     self.step(8)
                     self.nav_to(x, y, map_name, tries=120)
                 elif heal[1] == "PewterCity":
@@ -1449,7 +1487,7 @@ class Game:
                     # last_map stays Route2 through the whole chain, so
                     # every mat fires deterministically.
                     self.nav_to(18, 34, map_name="PewterCity")
-                    self.d.drive(["down"] * 24, frames=28)   # S connection
+                    self.d.drive(["down"] * (3 * FRAMES_PER_TILE), frames=3 * FRAMES_PER_TILE + 4)   # S connection
                     self.step(8)
                     self.nav_warp(3, 11, "Route2",
                                   "ViridianForestNorthGate",
@@ -1467,7 +1505,7 @@ class Game:
                 elif heal[1] == "ViridianCity":
                     self.nav_to(20, 32, map_name="ViridianCity")
                     self.nav_to(18, 1, map_name="ViridianCity")
-                    self.d.drive(["up"] * 24, frames=28)   # N connection
+                    self.d.drive(["up"] * (3 * FRAMES_PER_TILE), frames=3 * FRAMES_PER_TILE + 4)   # N connection
                     self.step(8)
                     self.nav_to(x, y, map_name, tries=120)
                 else:
@@ -1484,7 +1522,7 @@ class Game:
                 # return from wherever we are, same drift-proof pattern.
                 if cm == "PewterCity" and map_name == "Route2":
                     self.nav_to(18, 34, map_name="PewterCity")
-                    self.d.drive(["down"] * 24, frames=28)
+                    self.d.drive(["down"] * (3 * FRAMES_PER_TILE), frames=3 * FRAMES_PER_TILE + 4)
                     self.step(8)
                     self.nav_warp(3, 11, "Route2",
                                   "ViridianForestNorthGate",
@@ -1502,7 +1540,7 @@ class Game:
                 elif cm == "ViridianCity" and map_name == "Route2":
                     self.nav_to(20, 32, map_name="ViridianCity")
                     self.nav_to(18, 1, map_name="ViridianCity")
-                    self.d.drive(["up"] * 24, frames=28)
+                    self.d.drive(["up"] * (3 * FRAMES_PER_TILE), frames=3 * FRAMES_PER_TILE + 4)
                     self.step(8)
                     self.nav_to(x, y, map_name, tries=120)
                 else:
@@ -1831,7 +1869,7 @@ def m09_to_pewter(g):
             # preparation, using real Route 1 battles and Center healing.
             g.nav_to(20, 32, map_name='ViridianCity')
             g.nav_to(20, 33, map_name='ViridianCity')
-            g.d.drive(['down'] * 24, frames=28)
+            g.d.drive(['down'] * (3 * FRAMES_PER_TILE), frames=3 * FRAMES_PER_TILE + 4)
             g.step(8)
             g.nav_to(12, 7, map_name='Route1')
             heal = ((23, 25), 'ViridianCity', 'ViridianPokecenter')
@@ -1843,7 +1881,7 @@ def forest_corridor_back(g):
     """PewterCity -> Route2 north -> NorthGate -> forest -> SouthGate ->
     Route2 south: the m09 chain in reverse, Pewter-ward traffic only."""
     g.nav_to(18, 34, map_name="PewterCity")
-    g.d.drive(["down"] * 24, frames=28)
+    g.d.drive(["down"] * (3 * FRAMES_PER_TILE), frames=3 * FRAMES_PER_TILE + 4)
     g.step(8)
     g.nav_warp(3, 11, "Route2", "ViridianForestNorthGate", approach="down")
     g.nav_to(5, 6, map_name="ViridianForestNorthGate")
@@ -1881,12 +1919,12 @@ def m10_brock(g):
             g.evidence(f"m10-whiteout-{attempt}")
             walk_pallet_to_pewter(g)
     g.nav_to(8, 70, map_name="Route2")
-    g.d.drive(["down"] * 24, frames=28)   # -> city north border (18,0)
+    g.d.drive(["down"] * (3 * FRAMES_PER_TILE), frames=3 * FRAMES_PER_TILE + 4)   # -> city north border (18,0)
     g.step(8)
     g.nav_to(18, 1, map_name="ViridianCity")
     g.nav_to(20, 32, map_name="ViridianCity")
     g.nav_to(20, 33, map_name="ViridianCity")
-    g.d.drive(["down"] * 24, frames=28)
+    g.d.drive(["down"] * (3 * FRAMES_PER_TILE), frames=3 * FRAMES_PER_TILE + 4)
     g.step(8)
     g.nav_to(12, 7, map_name="Route1")
     assert g.train_until(13, "Route1", (12, 7), heal), "training stalled"
@@ -1901,7 +1939,7 @@ def m10_brock(g):
         # is the verified path.
         g.nav_to(20, 32, map_name="ViridianCity")
         g.nav_to(18, 1, map_name="ViridianCity")
-        g.d.drive(["up"] * 24, frames=28)    # N connection -> Route2 (8,71)
+        g.d.drive(["up"] * (3 * FRAMES_PER_TILE), frames=3 * FRAMES_PER_TILE + 4)    # N connection -> Route2 (8,71)
         g.step(8)
         forest_corridor_out(g)
         # Forest encounters can exhaust Vine Whip before the gym's

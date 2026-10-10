@@ -120,6 +120,11 @@ fn oak_pc_rating() -> PokemonGame {
     pc_step(pc, &mut game.save_data, a);
     let pages = pc.message_page_count();
     for _ in 0..pages {
+        for _ in 0..3000 {
+            if pc.message_ready_for_ack() { break; }
+            pc_step(pc, &mut game.save_data, MenuInput::none());
+        }
+        assert!(pc.message_ready_for_ack());
         pc_step(pc, &mut game.save_data, a);
     }
     game

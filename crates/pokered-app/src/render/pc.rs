@@ -65,6 +65,10 @@ fn mon_row(mon: &Pokemon) -> String {
 /// [`zh_pc_line`] so the English messages produced by `pokered_core::pc_screen`
 /// are translated at display time only.
 fn draw_message(lines: &[String], fb: &mut FrameBuffer, is_zh: bool) {
+    draw_message_with_limit(lines, usize::MAX, fb, is_zh);
+}
+
+fn draw_message_with_limit(lines: &[String], mut visible: usize, fb: &mut FrameBuffer, is_zh: bool) {
     let shown: Vec<String> = lines.iter().take(5)
         .flat_map(|line| {
             let text = if is_zh { zh_pc_line(line) } else { line.clone() };
@@ -75,7 +79,9 @@ fn draw_message(lines: &[String], fb: &mut FrameBuffer, is_zh: bool) {
     let by = 144u32.saturating_sub((height + 2) * T);
     draw_text_box(fb, 0, by, 18, height, FG);
     for (i, line) in shown.iter().enumerate() {
-        draw_text(line, T, by + T + i as u32 * pitch, FG, fb);
+        let shown: String = line.chars().take(visible).collect();
+        visible = visible.saturating_sub(line.chars().count());
+        draw_text(&shown, T, by + T + i as u32 * pitch, FG, fb);
     }
 }
 
@@ -226,15 +232,33 @@ pub fn draw_pc(
     fb.clear(BG);
     match pc.phase() {
         PcPhase::Message => {
-            let start = pc.message_page() * 4;
-            let page: Vec<String> = pc
-                .message_lines()
-                .iter()
-                .skip(start)
-                .take(4)
-                .cloned()
-                .collect();
-            draw_message(&page, fb, is_zh);
+            match pc.message_underlay() {
+                Some(PcPhase::BillsMenu) => {
+                    let labels: Vec<String> = BILLS_LABELS.iter()
+                        .map(|s| lang_data::ui_label(s, is_zh).to_string()).collect();
+                    draw_menu(0, 0, 12, &labels, pc.bills_menu().cursor(), fb);
+                    draw_box_no(save, fb, is_zh);
+                }
+                Some(PcPhase::ItemMenu) => {
+                    let labels: Vec<String> = PLAYERS_LABELS.iter()
+                        .map(|s| lang_data::ui_label(s, is_zh).to_string()).collect();
+                    draw_menu(0, 0, 14, &labels, pc.players_menu().cursor(), fb);
+                }
+                Some(PcPhase::MonList) => {
+                    let rows = mon_rows(pc, save, is_zh);
+                    let cursor = pc.mon_cursor();
+                    draw_list(0, 0, 18, 8, &rows, cursor,
+                        follow_scroll(cursor, rows.len(), 8), is_zh, fb);
+                }
+                Some(PcPhase::ItemList) => {
+                    let rows = item_rows(pc, save, is_zh);
+                    let cursor = pc.item_list_cursor();
+                    draw_list(0, 0, 18, 8, &rows, cursor,
+                        follow_scroll(cursor, rows.len(), PC_LIST_VISIBLE_ROWS.max(8)), is_zh, fb);
+                }
+                _ => {}
+            }
+            draw_message_with_limit(pc.message_page_lines(), pc.message_visible_chars(), fb, is_zh);
         }
         PcPhase::MainMenu => {
             let labels: Vec<String> = pc
@@ -291,15 +315,7 @@ pub fn draw_pc(
                             is_zh,
                         );
                     } else {
-                        draw_message(
-                            &[
-                                "Once released,".to_string(),
-                                format!("{} is", name),
-                                "gone forever. OK?".to_string(),
-                            ],
-                            fb,
-                            is_zh,
-                        );
+                        draw_message(pc.message_page_lines(), fb, is_zh);
                     }
                     draw_yes_no(pc.yes_selected(), fb, is_zh);
                 }
@@ -307,8 +323,15 @@ pub fn draw_pc(
             }
         }
         PcPhase::ChangeBoxConfirm => {
+            let labels: Vec<String> = BILLS_LABELS.iter()
+                .map(|s| lang_data::ui_label(s, is_zh).to_string()).collect();
+            draw_menu(0, 0, 12, &labels, pc.bills_menu().cursor(), fb);
+            draw_box_no(save, fb, is_zh);
             // "When you change a #MON BOX, data will be saved. Is that okay?"
             // (_WhenYouChangeBoxText)
+            if !is_zh {
+                draw_message(pc.message_page_lines(), fb, is_zh);
+            } else {
             draw_message(
                 &[
                     "When you change a".to_string(),
@@ -320,6 +343,7 @@ pub fn draw_pc(
                 fb,
                 is_zh,
             );
+            }
             draw_yes_no(pc.yes_selected(), fb, is_zh);
         }
         PcPhase::BoxList => {
@@ -366,6 +390,9 @@ pub fn draw_pc(
                 .map(|s| lang_data::ui_label(s, is_zh).to_string())
                 .collect();
             draw_menu(0, 0, 14, &labels, pc.players_menu().cursor(), fb);
+            if !is_zh {
+                draw_message(&["What do you want".into(), "to do?".into()], fb, is_zh);
+            }
         }
         PcPhase::ItemList | PcPhase::ItemQuantity | PcPhase::TossConfirm => {
             let rows = item_rows(pc, save, is_zh);
@@ -396,18 +423,15 @@ pub fn draw_pc(
                     if is_zh {
                         draw_message(&[format!("要扔掉{}吗？", name)], fb, is_zh);
                     } else {
-                        draw_message(
-                            &[
-                                "Is it OK to toss".to_string(),
-                                format!("{}?", name),
-                            ],
-                            fb,
-                            is_zh,
-                        );
+                        draw_message(pc.message_page_lines(), fb, is_zh);
                     }
                     draw_yes_no(pc.yes_selected(), fb, is_zh);
                 }
-                _ => {}
+                _ => {
+                    if !is_zh {
+                        draw_message(&pc.item_list_question().into_iter().map(String::from).collect::<Vec<_>>(), fb, is_zh);
+                    }
+                }
             }
         }
         PcPhase::OaksConfirm => {
@@ -593,7 +617,9 @@ mod layout_tests {
             let mut pc = PcScreen::new(PcEntry::PlayersPc,&open_context(false));
             skip_message(&mut pc,&mut save);
             update_pc(&mut pc,&mut save,A);
+            skip_message(&mut pc,&mut save);
             update_pc(&mut pc,&mut save,A);
+            skip_message(&mut pc,&mut save);
             assert_eq!(pc.phase(),PcPhase::ItemQuantity);
             render_pc_state(&pc,&save,language).save_png(&out.join(format!("pc-quantity-{tag}.png"))).unwrap();
             let mut fb=FrameBuffer::new(RenderConfig::new(160,144),BG);
@@ -856,6 +882,7 @@ mod layout_tests {
             let mut item_list = PcScreen::new(PcEntry::PlayersPc, &open_context(false));
             skip_message(&mut item_list, &mut item_save);
             update_pc(&mut item_list, &mut item_save, A);
+            skip_message(&mut item_list, &mut item_save);
             assert_eq!(item_list.phase(), PcPhase::ItemList);
 
             for previous_cursor in 0..3 {
@@ -880,6 +907,30 @@ mod layout_tests {
     }
 
     #[test]
+    fn change_box_warning_preserves_the_storage_menu() {
+        let mut save = SaveData::new();
+        let mut pc = PcScreen::new(PcEntry::BillsPc, &open_context(false));
+        skip_message(&mut pc, &mut save);
+        for _ in 0..3 { update_pc(&mut pc, &mut save, DOWN); }
+        let menu = render_pc_state(&pc, &save, Lang::En);
+        update_pc(&mut pc, &mut save, A);
+        assert_eq!(pc.phase(), PcPhase::Message);
+        let warning = render_pc_state(&pc, &save, Lang::En);
+        skip_message(&mut pc, &mut save);
+        assert_eq!(pc.phase(), PcPhase::ChangeBoxConfirm);
+        let confirmation = render_pc_state(&pc, &save, Lang::En);
+        for frame in [&warning, &confirmation] {
+            for y in 0..80 {
+                // YES/NO occupies the right side; the storage menu stays left.
+                for x in 0..96 {
+                    assert_eq!(frame.get_pixel(x, y), menu.get_pixel(x, y),
+                        "warning/confirmation erased menu at ({x}, {y})");
+                }
+            }
+        }
+    }
+
+    #[test]
     fn pc_confirmation_and_box_cursor_repaint_matches_full_redraw() {
         for language in [Lang::En, Lang::Zh] {
             let yes_no_position = |selected_yes| {
@@ -894,6 +945,7 @@ mod layout_tests {
                 update_pc(&mut confirm, &mut save, DOWN);
             }
             update_pc(&mut confirm, &mut save, A);
+            skip_message(&mut confirm, &mut save);
             assert_eq!(confirm.phase(), PcPhase::ChangeBoxConfirm);
             let mut yes = confirm.clone();
             update_pc(&mut yes, &mut save, UP);
@@ -957,6 +1009,7 @@ mod layout_tests {
             update_pc(&mut release, &mut release_save, DOWN);
             update_pc(&mut release, &mut release_save, A);
             update_pc(&mut release, &mut release_save, A);
+            skip_message(&mut release, &mut release_save);
             assert_eq!(release.phase(), PcPhase::ReleaseConfirm);
             let mut release_yes = release.clone();
             update_pc(&mut release_yes, &mut release_save, UP);
@@ -980,8 +1033,12 @@ mod layout_tests {
             update_pc(&mut toss, &mut toss_save, DOWN);
             update_pc(&mut toss, &mut toss_save, DOWN);
             update_pc(&mut toss, &mut toss_save, A);
+            skip_message(&mut toss, &mut toss_save);
             update_pc(&mut toss, &mut toss_save, A);
+            skip_message(&mut toss, &mut toss_save);
             update_pc(&mut toss, &mut toss_save, A);
+            skip_message(&mut toss, &mut toss_save);
+            skip_message(&mut toss, &mut toss_save);
             assert_eq!(toss.phase(), PcPhase::TossConfirm);
             let mut toss_yes = toss.clone();
             update_pc(&mut toss_yes, &mut toss_save, UP);

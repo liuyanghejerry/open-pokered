@@ -35,15 +35,17 @@ game_scene MrFujisHouse {
   // ── PSYDUCK (npc 3) ─────────────────────────────────────────────────────
   @storyline("talkPsyduck") {
     @trigger(map = "MrFujisHouse", npc = 3)
-    @speaker("") { @t("PSYDUCK: Gwappa!", "可达鸭：呱呱！") }
+    printFieldText(@t("PSYDUCK: Gwappa!", "可达鸭：呱呱！"))
     playCry("PSYDUCK")
+    finishFieldText()
   }
 
   // ── NIDORINO (npc 4) ────────────────────────────────────────────────────
   @storyline("talkNidorino") {
     @trigger(map = "MrFujisHouse", npc = 4)
-    @speaker("") { @t("NIDORINO: Gaoo!", "尼多力诺：嘎噢！") }
+    printFieldText(@t("NIDORINO: Gaoo!", "尼多力诺：嘎噢！"))
     playCry("NIDORINO")
+    finishFieldText()
   }
 
   // ── MR.FUJI (npc 5) — gives the POKe FLUTE the first time ────────────────

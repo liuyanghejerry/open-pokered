@@ -11,39 +11,37 @@ game_scene VermilionOldRodHouse {
     @trigger(map = "VermilionOldRodHouse", npc = 1)
     @if (getFlag("EVENT_GOT_OLD_ROD")) {
       // Already gave the rod (.HowAreTheFishBitingText).
-      @speaker("") {
-        @t("Hello there, <PLAYER>!\n\nHow are the fish biting?", "你好啊， <PLAYER>！\n\n鱼上钩的情况怎么样？")
-      }
+      printFieldText(@t("Hello there, <PLAYER>!", "你好啊， <PLAYER>！"))
+      printFieldParagraph(@t("How are the fish biting?", "鱼上钩的情况怎么样？"))
+      finishFieldText()
     } @else {
       // .DoYouLikeToFishText → YesNoChoice.
-      @speaker("") {
-        @t("I'm the FISHING GURU!\n\nI simply Looove fishing!\n\nDo you like to fish?", "我就是垂钓大师！\n\n我超喜欢钓鱼！\n\n你喜欢钓鱼吗？")
-      }
+      // Original inner PrintText returns on DONE before YesNoChoice.
+      printFieldText(@t("I'm the FISHING GURU!", "我就是垂钓大师！"))
+      printFieldParagraph(@t("I simply Looove fishing!", "我超喜欢钓鱼！"))
+      printFieldParagraph(@t("Do you like to fish?", "你喜欢钓鱼吗？"))
       @choice {
         @option(@t("YES", "是")) {
           // .TakeThisText + GiveItem OLD_ROD + .FishingIsAWayOfLifeText.
           given = giveItem("OLD_ROD", 1)
           @if (given) {
-            @speaker("") {
-              @t("Grand! I like your style!\n\nTake this and fish, young\none!", "太棒了！我喜欢你的风格！\n\n拿上这个去钓鱼吧，年轻人！")
-            }
-
             setFlag("EVENT_GOT_OLD_ROD")
-            showItemDialogue(@t("<PLAYER> received an OLD\nROD!", "<PLAYER>获得了破旧钓竿！"))
-            @speaker("") {
-              @t("Fishing is a way of life!\n\nFrom the seas to rivers, go\nout and land the big one,\nyoung one!", "钓鱼是一种生活方式！\n\n从大海到河流，出去钓上一条大\n家伙吧，年轻人！")
-            }
+            printFieldText(@t("Grand! I like your style!", "太棒了！我喜欢你的风格！"))
+            printFieldParagraph(@t("Take this and fish, young\none!", "拿上这个去钓鱼吧，年轻人！"))
+            printFieldParagraph(@t("<PLAYER> received an OLD\nROD!", "<PLAYER>获得了破旧钓竿！"), "SFX_GET_ITEM_1")
+            printFieldParagraph(@t("Fishing is a way of life!", "钓鱼是一种生活方式！"))
+            printFieldParagraph(@t("From the seas to rivers, go\nout and land the big one,\nyoung one!", "从大海到河流，出去钓上一条大\n家伙吧，年轻人！"))
+            finishFieldText()
           } @else {
-            @speaker("") {
-              @t("Oh no!\n\nYou have no room for my\ngift!", "哎呀！\n\n你没有空间装下我的礼物了！")
-            }
+            printFieldText(@t("Oh no!", "哎呀！"))
+            printFieldParagraph(@t("You have no room for my\ngift!", "你没有空间装下我的礼物了！"))
+            finishFieldText()
           }
         }
         @option(@t("NO", "否")) {
           // .ThatsSoDisappointingText.
-          @speaker("") {
-            @t("Oh... That's so\ndisappointing...", "哦……真令人失望……")
-          }
+          printFieldText(@t("Oh... That's so\ndisappointing...", "哦……真令人失望……"))
+          finishFieldText()
         }
       }
     }

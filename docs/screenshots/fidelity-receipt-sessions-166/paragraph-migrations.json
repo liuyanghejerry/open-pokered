@@ -1,0 +1,284 @@
+[
+  {
+    "map": "VermilionOldRodHouse",
+    "first": "printFieldText",
+    "paragraphs": 2,
+    "english": "Hello there, <PLAYER>!\\n\\nHow are the fish biting?"
+  },
+  {
+    "map": "VermilionOldRodHouse",
+    "first": "printFieldText",
+    "paragraphs": 2,
+    "english": "Oh no!\\n\\nYou have no room for my\\ngift!"
+  },
+  {
+    "map": "VermilionOldRodHouse",
+    "first": "printFieldText",
+    "paragraphs": 1,
+    "english": "Oh... That's so\\ndisappointing..."
+  },
+  {
+    "map": "VermilionOldRodHouse",
+    "first": "printFieldText",
+    "paragraphs": 1,
+    "english": "Hello there, <PLAYER>!"
+  },
+  {
+    "map": "VermilionOldRodHouse",
+    "first": "printFieldParagraph",
+    "paragraphs": 1,
+    "english": "How are the fish biting?"
+  },
+  {
+    "map": "VermilionOldRodHouse",
+    "first": "printFieldText",
+    "paragraphs": 3,
+    "english": "I'm the FISHING GURU!\\n\\nI simply Looove fishing!\\n\\nDo you like to fish?"
+  },
+  {
+    "map": "VermilionOldRodHouse",
+    "first": "printFieldText",
+    "paragraphs": 1,
+    "english": "Grand! I like your style!"
+  },
+  {
+    "map": "VermilionOldRodHouse",
+    "first": "printFieldParagraph",
+    "paragraphs": 1,
+    "english": "Take this and fish, young\\none!"
+  },
+  {
+    "map": "VermilionOldRodHouse",
+    "first": "printFieldParagraph",
+    "paragraphs": 2,
+    "english": "Fishing is a way of life!\\n\\nFrom the seas to rivers, go\\nout and land the big one,\\nyoung one!"
+  },
+  {
+    "map": "VermilionOldRodHouse",
+    "first": "printFieldText",
+    "paragraphs": 1,
+    "english": "Oh no!"
+  },
+  {
+    "map": "VermilionOldRodHouse",
+    "first": "printFieldParagraph",
+    "paragraphs": 1,
+    "english": "You have no room for my\\ngift!"
+  },
+  {
+    "map": "VermilionOldRodHouse",
+    "first": "printFieldText",
+    "paragraphs": 1,
+    "english": "Oh... That's so\\ndisappointing..."
+  },
+  {
+    "map": "FuchsiaGoodRodHouse",
+    "first": "printFieldText",
+    "paragraphs": 2,
+    "english": "Hello there, <PLAYER>!\\n\\nHow are the fish biting?"
+  },
+  {
+    "map": "FuchsiaGoodRodHouse",
+    "first": "printFieldText",
+    "paragraphs": 2,
+    "english": "Oh no!\\n\\nYou have no room for my\\ngift!"
+  },
+  {
+    "map": "FuchsiaGoodRodHouse",
+    "first": "printFieldText",
+    "paragraphs": 1,
+    "english": "Oh... That's so\\ndisappointing..."
+  },
+  {
+    "map": "FuchsiaGoodRodHouse",
+    "first": "printFieldText",
+    "paragraphs": 1,
+    "english": "Hello there, <PLAYER>!"
+  },
+  {
+    "map": "FuchsiaGoodRodHouse",
+    "first": "printFieldParagraph",
+    "paragraphs": 1,
+    "english": "How are the fish biting?"
+  },
+  {
+    "map": "FuchsiaGoodRodHouse",
+    "first": "printFieldText",
+    "paragraphs": 3,
+    "english": "I'm the FISHING GURU's older\\nbrother!\\n\\nI simply Looove fishing!\\n\\nDo you like to fish?"
+  },
+  {
+    "map": "FuchsiaGoodRodHouse",
+    "first": "printFieldText",
+    "paragraphs": 1,
+    "english": "Grand! I like your style!"
+  },
+  {
+    "map": "FuchsiaGoodRodHouse",
+    "first": "printFieldParagraph",
+    "paragraphs": 1,
+    "english": "Take this and fish, young\\none!"
+  },
+  {
+    "map": "FuchsiaGoodRodHouse",
+    "first": "printFieldText",
+    "paragraphs": 1,
+    "english": "Oh no!"
+  },
+  {
+    "map": "FuchsiaGoodRodHouse",
+    "first": "printFieldParagraph",
+    "paragraphs": 1,
+    "english": "You have no room for my\\ngift!"
+  },
+  {
+    "map": "FuchsiaGoodRodHouse",
+    "first": "printFieldText",
+    "paragraphs": 1,
+    "english": "Oh... That's so\\ndisappointing..."
+  },
+  {
+    "map": "Route12SuperRodHouse",
+    "first": "printFieldText",
+    "paragraphs": 3,
+    "english": "Hello there, <PLAYER>!\\n\\nUse the SUPER ROD in any\\nwater! You can catch\\ndifferent kinds of POKeMON.\\n\\nTry fishing wherever you\\ncan!"
+  },
+  {
+    "map": "Route12SuperRodHouse",
+    "first": "printFieldText",
+    "paragraphs": 2,
+    "english": "Oh no!\\n\\nI had a gift for you, but\\nyou have no room for it!"
+  },
+  {
+    "map": "Route12SuperRodHouse",
+    "first": "printFieldText",
+    "paragraphs": 1,
+    "english": "Oh... That's so\\ndisappointing..."
+  },
+  {
+    "map": "Route12SuperRodHouse",
+    "first": "printFieldText",
+    "paragraphs": 1,
+    "english": "Hello there, <PLAYER>!"
+  },
+  {
+    "map": "Route12SuperRodHouse",
+    "first": "printFieldParagraph",
+    "paragraphs": 1,
+    "english": "Use the SUPER ROD in any\\nwater! You can catch\\ndifferent kinds of POKeMON."
+  },
+  {
+    "map": "Route12SuperRodHouse",
+    "first": "printFieldParagraph",
+    "paragraphs": 1,
+    "english": "Try fishing wherever you\\ncan!"
+  },
+  {
+    "map": "Route12SuperRodHouse",
+    "first": "printFieldText",
+    "paragraphs": 3,
+    "english": "I'm the FISHING GURU's\\nbrother!\\n\\nI simply Looove fishing!\\n\\nDo you like to fish?"
+  },
+  {
+    "map": "Route12SuperRodHouse",
+    "first": "printFieldText",
+    "paragraphs": 1,
+    "english": "Grand! I like your style!"
+  },
+  {
+    "map": "Route12SuperRodHouse",
+    "first": "printFieldParagraph",
+    "paragraphs": 1,
+    "english": "Take this and fish, young\\none!"
+  },
+  {
+    "map": "Route12SuperRodHouse",
+    "first": "printFieldParagraph",
+    "paragraphs": 2,
+    "english": "Fishing is a way of life!\\n\\nFrom the seas to rivers, go\\nout and land the big one!"
+  },
+  {
+    "map": "Route12SuperRodHouse",
+    "first": "printFieldText",
+    "paragraphs": 1,
+    "english": "Oh no!"
+  },
+  {
+    "map": "Route12SuperRodHouse",
+    "first": "printFieldParagraph",
+    "paragraphs": 1,
+    "english": "I had a gift for you, but\\nyou have no room for it!"
+  },
+  {
+    "map": "Route12SuperRodHouse",
+    "first": "printFieldText",
+    "paragraphs": 1,
+    "english": "Oh... That's so\\ndisappointing..."
+  },
+  {
+    "map": "PokemonFanClub",
+    "first": "printFieldText",
+    "paragraphs": 3,
+    "english": "Hello, <PLAYER>!\\n\\nDid you come see me about my\\nPOKeMON again?\\n\\nNo? Too bad!"
+  },
+  {
+    "map": "PokemonFanClub",
+    "first": "printFieldText",
+    "paragraphs": 1,
+    "english": "Make room for this!"
+  },
+  {
+    "map": "PokemonFanClub",
+    "first": "printFieldText",
+    "paragraphs": 1,
+    "english": "Oh. Come back when you want\\nto hear my story!"
+  },
+  {
+    "map": "PokemonFanClub",
+    "first": "printFieldText",
+    "paragraphs": 1,
+    "english": "Hello, <PLAYER>!"
+  },
+  {
+    "map": "PokemonFanClub",
+    "first": "printFieldParagraph",
+    "paragraphs": 1,
+    "english": "Did you come see me about my\\nPOKeMON again?"
+  },
+  {
+    "map": "PokemonFanClub",
+    "first": "printFieldParagraph",
+    "paragraphs": 1,
+    "english": "No? Too bad!"
+  },
+  {
+    "map": "PokemonFanClub",
+    "first": "printFieldText",
+    "paragraphs": 5,
+    "english": "I chair the POKeMON Fan\\nClub!\\n\\nI have collected over 100\\nPOKeMON!\\n\\nI'm very fussy when it comes\\nto POKeMON!\\n\\nSo...\\n\\nDid you come visit to hear\\nabout my POKeMON?"
+  },
+  {
+    "map": "PokemonFanClub",
+    "first": "printFieldText",
+    "paragraphs": 5,
+    "english": "Good! Then listen up!\\n\\nMy favorite RAPIDASH...\\n\\nIt...cute...\\nlovely...smart...\\nplus...amazing... you think\\nso?... oh yes...it...\\nstunning... kindly... love\\nit!\\n\\nHug it...when...\\nsleeping...warm and\\ncuddly... spectacular...\\nravishing... ...Oops! Look\\nat the time! I kept you too\\nlong!\\n\\nThanks for hearing me out! I\\nwant you to have this!"
+  },
+  {
+    "map": "PokemonFanClub",
+    "first": "printFieldParagraph",
+    "paragraphs": 4,
+    "english": "Exchange that for a BICYCLE!\\n\\nDon't worry, my FEAROW will\\nFLY me anywhere!\\n\\nSo, I don't need a BICYCLE!\\n\\nI hope you like cycling!"
+  },
+  {
+    "map": "PokemonFanClub",
+    "first": "printFieldText",
+    "paragraphs": 1,
+    "english": "Make room for this!"
+  },
+  {
+    "map": "PokemonFanClub",
+    "first": "printFieldText",
+    "paragraphs": 1,
+    "english": "Oh. Come back when you want\\nto hear my story!"
+  }
+]

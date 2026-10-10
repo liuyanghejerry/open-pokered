@@ -1,0 +1,30 @@
+{
+  "base": "31b1eda3112514d6bc803af559ec7f7c9e20374f",
+  "starting_head": "7e78f1e564de195e48201f5a2418fe132a32a266",
+  "working_source_sha256": {
+    "crates/pokered-app/src/game.rs": "b46cbd00e3ebbd8b026f7a9fb9d69a6eb5f5878b9a0bfb19b221ee29a7b297d3",
+    "crates/pokered-app/src/render/overworld.rs": "3831ec2741fb9ec8492317d4ee49873be18eb88fd562724473edc4b91fc5611e",
+    "crates/pokered-app/src/render/session.rs": "453d045000231f88c2ea47cc5311b71542ebcf6591942f34a2260d86700d3d84",
+    "crates/pokered-core/src/overworld/presentation.rs": "13bca01be060f947a36bd84e691f98aea18a532c3026e4b2052a778d3edde6d8",
+    "crates/pokered-core/src/overworld/screen.rs": "59d394438cd55c7b5fedf848e89119d07475ec42dd839731f50bc7747ee3f72a",
+    "crates/pokered-core/src/overworld/update.rs": "6464abf0593dce814b2bead8fb3ca2e824e89d005e975b504b1fcfb96125a9cc",
+    "crates/pokered-core/src/snapshot.rs": "ddb811059b69cbada5e50a75b96610497c0f5f961b942ff193053fbb25fa914c",
+    "crates/pokered-core/src/overworld/tests_npc_overlap.rs": "5d973240d77959d6730a977c42891b2ae2174852250c6aa585a104c6b61b904a"
+  },
+  "matched_fixture": "same road.sav Continue player map1 x20 y30 facingDown, 120 idle frames after RNGseed0, controlled NPC0 sprite4 x19/22/27 y29 Down remaining12 future_delay54/27/54 visibletrue, four actual priming hardware frames; START0..39 B50..51 no direction",
+  "sram_sha256": "8e69cf22e2ed9c1a940512a135b0dae52bad662f43206978d13b85bfad777ced",
+  "note": "before and after use same controlled setup/input/HW frame; resulting pretrigger motion counters differ because this entire PR also changes overworld cadence. No claim identical pretrigger LCD state or naturally generated random walking. Original phase1/intra0 initialization is the compatible native inferred phase at remaining12.",
+  "gba": {
+    "elf_sha256": "07889e1899a96585fa12128338748909451b8ccb6ffc1266c678a26d1370b457",
+    "baseline_sha256": "c9ef15a97a6f43d994fe177d7e0212a6a6cbaf561be955a5995fef4da7faebba",
+    "emulator": "mGBA 0.10.5 SDL software renderer",
+    "toolchain": "nightly-2025-12-07",
+    "result": "all31 hardware-timer regression measures within unchanged configured budget"
+  },
+  "initial_full_regression": {
+    "groups": 39,
+    "passed": 3241,
+    "failed": 1,
+    "failure": "wander_roll_steering_moves_fisher_left used player5,5 and fisher12,14 outside original viewport; moved idle player to11,12, same origin as ledge regression without blocking target; production unchanged after GBA/captures"
+  }
+}

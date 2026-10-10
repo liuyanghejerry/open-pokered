@@ -1,0 +1,18 @@
+{
+  "outside": {
+    "frames": 101,
+    "repeat_exact": true,
+    "opaque_pose_mismatches": [],
+    "full_strip_rgb_mismatches": []
+  },
+  "boxed": {
+    "frames": 101,
+    "repeat_exact": true,
+    "opaque_pose_mismatches": []
+  },
+  "offscreen": {
+    "frames": 101,
+    "repeat_exact": true,
+    "opaque_pose_mismatches": []
+  }
+}

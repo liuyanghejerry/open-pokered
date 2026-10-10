@@ -1,0 +1,12 @@
+
+running 1 test
+test game::link_stats_cry_fidelity_tests::player_walk_defers_ready_random_npcs_but_advances_delay_and_running_steps ... Asset root found: "/home/jerry/develop/open-pokered/.task-tmp/fidelity-91-plus-checkout/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
+Asset root found: "/home/jerry/develop/open-pokered/.task-tmp/fidelity-91-plus-checkout/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
+Asset root found: "/home/jerry/develop/open-pokered/.task-tmp/fidelity-91-plus-checkout/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 224 filtered out; finished in 0.05s
+

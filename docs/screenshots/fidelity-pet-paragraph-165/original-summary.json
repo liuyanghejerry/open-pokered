@@ -1,0 +1,9 @@
+{
+  "paragraph": 123,
+  "manual_wait": 126,
+  "ack_clear": 400,
+  "first_narration_glyph": 420,
+  "outer_close": 652,
+  "repeats": "all700PNG+frames+events byteequal",
+  "scope": "Controlled map/player/view/NPC setup; unchanged ROM; standalone original relative temporal evidence, no absolute cross-engine glyph/cadence parity."
+}

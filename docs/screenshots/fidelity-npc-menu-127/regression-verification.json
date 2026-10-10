@@ -1,0 +1,19 @@
+{
+  "app": {
+    "passed": 513,
+    "failed": 0,
+    "ignored": 54,
+    "groups": 38,
+    "log_sha256": "0c5649bdc3df30673f06ed2fa892e9ddc7626aba2b805885af3b323e9c7775bc",
+    "note": "first38 completed groups from joint initial run; following corelib failed due offscreen steering fixture, retained"
+  },
+  "core": {
+    "passed": 3141,
+    "failed": 0,
+    "ignored": 1,
+    "groups": 41,
+    "log_sha256": "56832710882136b01a869d30872143127b57e84edaa6bb3020a568a80452a75d",
+    "note": "full core rerun after fixing only steering fixture player origin"
+  },
+  "production_changes_after_captures_and_GBA": false
+}

@@ -1,0 +1,202 @@
+{
+  "cases": {
+    "master31": {
+      "cue": 247,
+      "screenshot_hw": 397,
+      "total_frames": 509,
+      "repeats_byteexact": true,
+      "frame_state": {
+        "audio_channels": [
+          false,
+          false,
+          false,
+          false
+        ],
+        "has_item": true,
+        "input_bits": 0,
+        "obtained_flag": true,
+        "overworld": {
+          "active_script_effect": null,
+          "field_loop_wait": null,
+          "field_text_restore": null,
+          "inner_field_text_open": null,
+          "last_script_dialogue": null,
+          "npc_states": [
+            {
+              "defeated": false,
+              "delay_counter": 0,
+              "facing": "Down",
+              "home_x": 7,
+              "home_y": 2,
+              "movement_type": "Stationary",
+              "npc_index": 0,
+              "range": 0,
+              "scripted_frame": null,
+              "scripted_path": [],
+              "sprite_id": 32,
+              "text_id": 1,
+              "visible": true,
+              "walk_counter": 0,
+              "wander_axis": "Any",
+              "x": 7,
+              "y": 2
+            },
+            {
+              "defeated": false,
+              "delay_counter": 63,
+              "facing": "Right",
+              "home_x": 2,
+              "home_y": 3,
+              "movement_type": "Stationary",
+              "npc_index": 1,
+              "range": 2,
+              "scripted_frame": null,
+              "scripted_path": [],
+              "sprite_id": 32,
+              "text_id": 2,
+              "visible": true,
+              "walk_counter": 0,
+              "wander_axis": "Horizontal",
+              "x": 2,
+              "y": 3
+            }
+          ],
+          "pending_dialogue": null,
+          "player_sprite_state": null,
+          "state": {
+            "current_map": "CinnabarLabMetronomeRoom",
+            "encounter_cooldown": 0,
+            "exiting_door": false,
+            "player": {
+              "bike_speedup_active": true,
+              "facing": "Up",
+              "movement_state": "Idle",
+              "transport": "Walking",
+              "x": 7,
+              "y": 3
+            },
+            "repel_steps": 0,
+            "standing_on_door": false,
+            "standing_on_warp": false,
+            "walk_counter": 0
+          }
+        },
+        "sfx_playing": false,
+        "t": 397
+      }
+    },
+    "after-a1": {
+      "cue": 246,
+      "screenshot_hw": 396,
+      "total_frames": 508,
+      "repeats_byteexact": true,
+      "frame_state": {
+        "audio_channels": [
+          false,
+          false,
+          false,
+          false
+        ],
+        "has_item": true,
+        "input_bits": 0,
+        "obtained_flag": true,
+        "overworld": {
+          "active_script_effect": {
+            "FinishFieldText": {
+              "acknowledged": false
+            }
+          },
+          "field_loop_wait": 1,
+          "field_text_restore": null,
+          "inner_field_text_open": true,
+          "last_script_dialogue": {
+            "char_index": 18,
+            "current_page": 0,
+            "delay_counter": 0,
+            "holding_open": false,
+            "pages": [
+              {
+                "line1": "RED received TM35!",
+                "line2": ""
+              }
+            ],
+            "text_delay_frames": 3,
+            "waiting_for_input": true
+          },
+          "npc_states": [
+            {
+              "defeated": false,
+              "delay_counter": 0,
+              "facing": "Down",
+              "home_x": 7,
+              "home_y": 2,
+              "movement_type": "Stationary",
+              "npc_index": 0,
+              "range": 0,
+              "scripted_frame": null,
+              "scripted_path": [],
+              "sprite_id": 32,
+              "text_id": 1,
+              "visible": true,
+              "walk_counter": 0,
+              "wander_axis": "Any",
+              "x": 7,
+              "y": 2
+            },
+            {
+              "defeated": false,
+              "delay_counter": 0,
+              "facing": "Left",
+              "home_x": 2,
+              "home_y": 3,
+              "movement_type": "Stationary",
+              "npc_index": 1,
+              "range": 2,
+              "scripted_frame": null,
+              "scripted_path": [],
+              "sprite_id": 32,
+              "text_id": 2,
+              "visible": true,
+              "walk_counter": 0,
+              "wander_axis": "Horizontal",
+              "x": 2,
+              "y": 3
+            }
+          ],
+          "pending_dialogue": null,
+          "player_sprite_state": {
+            "facing": 1,
+            "initialized": true,
+            "intra_frame": 0,
+            "pending": [
+              4,
+              4
+            ],
+            "phase": 0,
+            "visible": 4
+          },
+          "state": {
+            "current_map": "CinnabarLabMetronomeRoom",
+            "encounter_cooldown": 0,
+            "exiting_door": false,
+            "player": {
+              "bike_speedup_active": true,
+              "facing": "Up",
+              "movement_state": "Idle",
+              "transport": "Walking",
+              "x": 7,
+              "y": 3
+            },
+            "repel_steps": 0,
+            "standing_on_door": false,
+            "standing_on_warp": false,
+            "walk_counter": 0
+          }
+        },
+        "sfx_playing": false,
+        "t": 396
+      }
+    }
+  },
+  "scope": "Independent actual interaction prefixes per branch; same 261 postcue input bits and same sound-cue-relative HW150 screenshot. No absolute prefix timing parity claim. Two repeated complete recordings byteexact per branch."
+}

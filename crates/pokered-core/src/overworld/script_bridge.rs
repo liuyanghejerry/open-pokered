@@ -46,7 +46,30 @@ impl PendingChoice {
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub enum FieldParagraphPhase {
+    ProtectedDelay { remaining: u8 },
+    WaitForButton,
+    BlankDelay { remaining: u8 },
+    Printing,
+    PlayingSound,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum ScriptEffect {
+    /// Inner PrintText ending in DONE. Keep the window for its caller, and
+    /// return after the final letter wait instead of waiting for a new press.
+    PrintFieldText { text: String },
+    SetFieldTextDelayDisabled { disabled: bool },
+    InstantFieldMenu { options: Vec<String>, text: String, started: bool, selected: i32 },
+    FinishFieldText { acknowledged: bool },
+    /// Original Paragraph keeps the same text window across its manual wait.
+    PrintFieldParagraph { text: String, #[serde(default)] sound_id: Option<String>, phase: FieldParagraphPhase },
+    PrintItemFieldText { text: String, sound_id: Option<String>, phase: FieldParagraphPhase },
+    WaitFieldPrompt { protected_remaining: u8 },
+    /// ManualTextScroll opcode waits without the PROMPT character delay.
+    WaitFieldButton { show_arrow: bool },
+    /// HoldTextDisplayOpen path when the original caller skips the outer wait.
+    CloseFieldText,
     ShowDialogue {
         text: String,
     },
@@ -293,6 +316,8 @@ pub enum ScriptEffect {
     WithdrawDaycare,
     PlayCry {
         species: String,
+        #[serde(default)]
+        started: bool,
     },
     GiveBadge {
         badge: u8,
@@ -337,6 +362,16 @@ pub enum HealingMachinePhase {
 }
 
 impl ScriptEffect {
+    /// Nested gift/reading flows use the same text-window choice handoff.
+    pub fn is_choice(&self) -> bool {
+        match self {
+            Self::ShowChoice { .. } | Self::InstantFieldMenu { .. } => true,
+            Self::GivePokemon { flow: Some(flow), .. } => flow.child.is_choice(),
+            Self::ReadingMenu { menu } => menu.child.is_choice(),
+            _ => false,
+        }
+    }
+
     /// Structured JSON form of an active script effect, for debug protocol
     /// observability: the driver sees effect progress fields (Delay
     /// countdown, move-path state, FollowNpc phase, choice cursor, …)
@@ -351,6 +386,17 @@ impl ScriptEffect {
             ScriptEffect::HallOfFameCeremony => json!({ "effect": "HallOfFameCeremony" }),
             ScriptEffect::ShowItemDialogue { text, sound_id, sound_started } => {
                 json!({ "effect": "ShowItemDialogue", "text": text, "sound_id": sound_id, "sound_started": sound_started })
+            }
+            ScriptEffect::PrintFieldParagraph { text, sound_id, phase } => json!({ "effect": "PrintFieldParagraph", "text": text, "sound_id": sound_id, "phase": phase }),
+            ScriptEffect::PrintItemFieldText { text, sound_id, phase } => json!({ "effect": "PrintItemFieldText", "text": text, "sound_id": sound_id, "phase": phase }),
+            ScriptEffect::WaitFieldPrompt { protected_remaining } => json!({ "effect": "WaitFieldPrompt", "protected_remaining": protected_remaining }),
+            ScriptEffect::WaitFieldButton { show_arrow } => json!({ "effect": "WaitFieldButton", "show_arrow": show_arrow }),
+            ScriptEffect::CloseFieldText => json!({ "effect": "CloseFieldText" }),
+            ScriptEffect::FinishFieldText { acknowledged } => json!({ "effect": "FinishFieldText", "acknowledged": acknowledged }),
+            ScriptEffect::SetFieldTextDelayDisabled {disabled} => json!({"effect":"SetFieldTextDelayDisabled","disabled":disabled}),
+            ScriptEffect::InstantFieldMenu {options,text,started,selected} => json!({"effect":"InstantFieldMenu","options":options,"text":text,"started":started,"selected":selected}),
+            ScriptEffect::PrintFieldText { text } => {
+                json!({ "effect": "PrintFieldText", "text": text })
             }
             ScriptEffect::ShowDialogue { text } => {
                 json!({ "effect": "ShowDialogue", "text": text })
@@ -587,8 +633,8 @@ impl ScriptEffect {
                 json!({ "effect": "DepositDaycare", "index": index })
             }
             ScriptEffect::WithdrawDaycare => json!({ "effect": "WithdrawDaycare" }),
-            ScriptEffect::PlayCry { species } => {
-                json!({ "effect": "PlayCry", "species": species })
+            ScriptEffect::PlayCry { species, started } => {
+                json!({ "effect": "PlayCry", "species": species, "started": started })
             }
             ScriptEffect::GiveBadge { badge } => {
                 json!({ "effect": "GiveBadge", "badge": badge })
@@ -769,7 +815,7 @@ pub fn dispatch_command_with_names(
         // `pokered-data::script_api`).
         ScriptCommand::Custom { name, args } => {
             let mut effect = dispatch_custom(name, args);
-            if let ScriptEffect::ShowItemDialogue { text, .. } = &mut effect {
+            if let ScriptEffect::ShowItemDialogue { text, .. } | ScriptEffect::PrintFieldText { text } | ScriptEffect::InstantFieldMenu {text,..} | ScriptEffect::PrintFieldParagraph { text, .. } | ScriptEffect::PrintItemFieldText {text,..} = &mut effect {
                 *text = resolve_placeholders(text, player_name, rival_name, starter_name);
             }
             effect
@@ -821,6 +867,7 @@ pub fn dispatch_command_with_names(
         ScriptCommand::TakeMoney { amount } => ScriptEffect::TakeMoney { amount: *amount },
         ScriptCommand::PlayCry { species } => ScriptEffect::PlayCry {
             species: species.clone(),
+            started: false,
         },
         ScriptCommand::GiveBadge { badge } => ScriptEffect::GiveBadge { badge: *badge },
         // Sync flag ops never reach dispatch — defensive fallback.
@@ -849,6 +896,18 @@ fn dispatch_custom(name: &str, args: &[Value]) -> ScriptEffect {
         Err(error) => return unsupported_with_reason(name, error),
     };
     match command {
+        PokemonScriptCommand::PrintFieldParagraph { text, sound_id } => ScriptEffect::PrintFieldParagraph { text, sound_id, phase: FieldParagraphPhase::ProtectedDelay { remaining: 3 } },
+        PokemonScriptCommand::PrintItemFieldText {text,sound_id} => ScriptEffect::PrintItemFieldText {text,sound_id,phase:FieldParagraphPhase::Printing},
+        PokemonScriptCommand::WaitFieldPrompt => ScriptEffect::WaitFieldPrompt {protected_remaining:3},
+        PokemonScriptCommand::WaitFieldPromptButton => ScriptEffect::WaitFieldButton {show_arrow:true},
+        PokemonScriptCommand::WaitFieldButton => ScriptEffect::WaitFieldButton {show_arrow:false},
+        PokemonScriptCommand::CloseFieldText => ScriptEffect::CloseFieldText,
+        PokemonScriptCommand::FinishFieldText => ScriptEffect::FinishFieldText { acknowledged: false },
+        PokemonScriptCommand::SetFieldTextDelayDisabled {disabled} => ScriptEffect::SetFieldTextDelayDisabled {disabled},
+        PokemonScriptCommand::ChooseInstantFieldMenu {options,text} => ScriptEffect::InstantFieldMenu {options,text,started:false,selected:0},
+        PokemonScriptCommand::PrintFieldText { text } => ScriptEffect::PrintFieldText {
+            text,
+        },
         PokemonScriptCommand::ShowItemDialogue { text, sound_id } => ScriptEffect::ShowItemDialogue { text, sound_id, sound_started: false },
         PokemonScriptCommand::PokemonMenu { options, species } => ScriptEffect::ReadingMenu {
             menu: super::script_interactions::ReadingMenu::pokemon(options, species),
@@ -1077,4 +1136,31 @@ mod script_effect_json_tests {
         .to_debug_json();
         assert_eq!(j["result"], true);
     }
+}
+
+#[cfg(test)]
+mod print_field_text_contract_tests {
+    use super::*;
+    #[test]
+    fn inner_print_uses_the_same_name_resolution_as_outer_text_and_restores_its_mode() {
+        let text="<PLAYER> asks <RIVAL> about <STARTER>.".to_string();
+        let command=PokemonScriptCommand::PrintFieldText {text:text.clone()}.into_script_command();
+        let inner=dispatch_command_with_names(&command,"RED","BLUE","BULBASAUR");
+        let outer=dispatch_command_with_names(&ScriptCommand::ShowText {text},"RED","BLUE","BULBASAUR");
+        let ScriptEffect::ShowDialogue {text:expected}=outer else {panic!()};
+        let raw=serde_json::to_string(&inner).unwrap();
+        let restored:ScriptEffect=serde_json::from_str(&raw).unwrap();
+        let ScriptEffect::PrintFieldText {text:actual}=restored else {panic!("lost inner return mode")};
+        assert_eq!(actual,expected);
+        assert_eq!(actual,"RED asks BLUE about BULBASAUR.");
+    }
+    #[test]
+    fn legacy_cry_snapshot_starts_once_and_new_snapshot_keeps_its_wait_state() {
+        let old: ScriptEffect=serde_json::from_str(r#"{"PlayCry":{"species":"PIKACHU"}}"#).unwrap();
+        assert!(matches!(old,ScriptEffect::PlayCry {started:false,..}));
+        let playing=ScriptEffect::PlayCry {species:"PIKACHU".into(),started:true};
+        let restored:ScriptEffect=serde_json::from_str(&serde_json::to_string(&playing).unwrap()).unwrap();
+        assert!(matches!(restored,ScriptEffect::PlayCry {started:true,..}));
+    }
+
 }

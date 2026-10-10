@@ -1,0 +1,16 @@
+{
+  "committed_base": "3ac4aea27211ca5cbdfbd7c475809ad59e13446e",
+  "exe": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-18-27/target/debug/deps/pokered_app-3ecc077a95dd783d",
+  "exe_sha256": "ad5aff84d5692927cb8303ff7245db43f84dc39d629c86bae69aa3391f9c3df0",
+  "uncommitted_runtime": true,
+  "build_log": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/party-144-runtime-build-a6.log",
+  "sources": {
+    "crates/pokered-app/src/game.rs": "51b6676af81290f1597b59519fb68c8f16614c6ce96b7cd9ed1e955bd0b91769",
+    "crates/pokered-app/src/render/session.rs": "464c0876e8a6f573b2270f85c2a6d7a0db9dc623b01c467fafe05e5d85944f24",
+    "crates/pokered-core/src/overworld/presentation.rs": "ad58aee0258342fb04c8fa7e218dc6a81c3de450e7c6fc3c37fa8d9f4402213b",
+    "crates/pokered-core/src/overworld/screen.rs": "4600fa2ed96c8c1db5ad8f0e4aa8d8c7c5da20f766a52b5d0fba2656ed2690f9",
+    "crates/pokered-core/src/overworld/update.rs": "d8851b9ba9944b1f85f8a4d7e0e0f9ed416a527764eb983a0604434ca76a9a00",
+    "crates/pokered-core/src/overworld/sprite_reload_work.rs": "cb4b676103f2d8cf0eadef886a1def09979b89578d3afd722f2c2bb2e78f06fa",
+    "crates/pokered-core/src/start_menu.rs": "ab213e322753ef89c0d44adf00433b0212e05c2e989f44ee8c62a78f6ad44786"
+  }
+}

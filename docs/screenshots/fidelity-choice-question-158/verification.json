@@ -1,0 +1,52 @@
+{
+  "parent_head": "35632e8b8c5500e8b87fbb47c06e127ff6e47b91",
+  "master": "31b1eda3112514d6bc803af559ec7f7c9e20374f",
+  "source_hashes": {
+    "crates/pokered-core/src/overworld/screen.rs": "92392c42a92cd458a71d2edb31c0bc57551c3603501338f9dc00b40485aae1c8",
+    "crates/pokered-core/src/overworld/update.rs": "9dcf3f2bf59c466cc86908e948f36e134fb1ea2f0ca063c60bb1f242e02556f0",
+    "crates/pokered-core/src/overworld/script_bridge.rs": "63b5836bfd4d1b629f2244a6f7a8a3cb0c40e36e7995498aa88772fb90a6fa48",
+    "crates/pokered-core/src/snapshot.rs": "a1845f95a18c864a8332da3effc0e9cc7f25795c5dd56c22b9c1f1ea42e9141d",
+    "crates/pokered-app/src/game.rs": "b670310457844597b916988ae00fdd0abe8e13ccf67b8225da9f31cee9b6f55e",
+    "crates/pokered-app/src/render/overworld.rs": "efb6d1d65803d4a3c93e099822d2616b359dadd6a30d5410c3c56e8f4de4b184",
+    "crates/pokered-app/src/render/mod.rs": "d2f3d05e9bec7b513fe26cd03d0ce651683b97d0b57ce316f7be9781d5772256"
+  },
+  "app_binary_sha256": "ef143d4415111ee46466d127cb42a5bce8fc09dc2da437a7bf08b8b2e7cb17e0",
+  "master_binary_sha256": "893396566d500a8681076cbbfb04daf3abc7c8a31934581f65235843670730e6",
+  "master_production_prefix_verified": true,
+  "helper_byte_identical": true,
+  "helper_sha256": "c987a4f79e7a1a7f25b9510b606599c2403f47624c5b4752e9cc2aefda17c408",
+  "save_sha256": "a2a4d4546d084e6540d678ff3826e58fc7872eecfeac990c30110008f61ddee2",
+  "captures": {
+    "groups": 4,
+    "frames_each": 152,
+    "pngs": 608,
+    "raw_json_repeat_exact": true,
+    "png_repeat_exact": true,
+    "same_input_and_frame_schedule": true,
+    "matched_screenshot_frame": 120
+  },
+  "core_tests": 2736,
+  "app_tests": 208,
+  "ignored_capture_helpers": 26,
+  "coverage": [
+    "actual Safari YES/A and NO/B",
+    "question retained through JSON restore",
+    "legacy JSON defaults",
+    "new answer replaces question and no leak after script end",
+    "Museum multi-page last question survives intermediate money-box command",
+    "actual Safari cached/full frames compared during question handoff and completion"
+  ],
+  "scope": "controlled real SRAM Continue then end hunt and warp to valid counter (3,4); original reaches same counter by real movement from controlled return; not normal paid admission, last-ball battle or current mainline proof",
+  "limits": [
+    "generic DisplayTextID initialization/CloseTextDisplay and absolute schedule still incomplete",
+    "earlier Victory Road, party restore, FollowNpc/spinner and other draft gates remain",
+    "final-head fresh m01-m49, independent CONTINUE and all22 completedCI required"
+  ],
+  "archive_sha256": "902f0feb21416c2ae1a43ec5cc886efdf0c49da9b1f346685f9b2f03affa14db",
+  "archive_files": 1285,
+  "gba_checks": 31,
+  "gba_source_hashes_verified": 15,
+  "gba_baseline_unchanged": true,
+  "screenshots_visually_inspected": true,
+  "final_rgba_byte_equal_to_inspected_candidate": true
+}

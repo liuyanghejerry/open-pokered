@@ -1,0 +1,25 @@
+{
+  "sources": {
+    "crates/pokered-core/src/overworld/presentation.rs": "46b142440f2dbc02ff05d75536ec62a2e1b60a0274c3893ea502147699128f6f",
+    "crates/pokered-core/src/overworld/screen.rs": "92392c42a92cd458a71d2edb31c0bc57551c3603501338f9dc00b40485aae1c8",
+    "crates/pokered-core/src/overworld/update.rs": "9dcf3f2bf59c466cc86908e948f36e134fb1ea2f0ca063c60bb1f242e02556f0",
+    "crates/pokered-core/src/overworld/field_moves.rs": "162384478610831fc7f2e751aadfa6cc2a27bb789f61e9d0651e4556ffc3cba1",
+    "crates/pokered-core/src/overworld/sprite_reload_work.rs": "cb4b676103f2d8cf0eadef886a1def09979b89578d3afd722f2c2bb2e78f06fa",
+    "crates/pokered-core/src/overworld/mod.rs": "7fddcc4bd8dc93ad43b7f356a114becb76469417dfa40e31edcb759313366499",
+    "crates/pokered-core/src/start_menu.rs": "ab213e322753ef89c0d44adf00433b0212e05c2e989f44ee8c62a78f6ad44786",
+    "crates/pokered-app/src/game.rs": "b670310457844597b916988ae00fdd0abe8e13ccf67b8225da9f31cee9b6f55e",
+    "crates/pokered-app/src/render/overworld.rs": "efb6d1d65803d4a3c93e099822d2616b359dadd6a30d5410c3c56e8f4de4b184",
+    "crates/pokered-app/src/render/session.rs": "9233b9adbe2a5ff1501b9c4c28051ced36b1d0c5d937228b3a90c8ce1b70e47a",
+    "crates/pokered-data/src/dialog_text.rs": "b198760a5b1bd52a86ba3e7c3d9604e691bd1e4c8bb62f104cde2165a0eb3dec",
+    "crates/pokered-data/maps/SafariZoneGate/script.scene": "b37389caa98868f4496e601fbce1378c0910886f7b99add8eca1fef355da0f68",
+    "crates/pokered-core/src/overworld/script_bridge.rs": "63b5836bfd4d1b629f2244a6f7a8a3cb0c40e36e7995498aa88772fb90a6fa48",
+    "crates/pokered-core/src/snapshot.rs": "a1845f95a18c864a8332da3effc0e9cc7f25795c5dd56c22b9c1f1ea42e9141d",
+    "crates/pokered-app/src/render/mod.rs": "d2f3d05e9bec7b513fe26cd03d0ce651683b97d0b57ce316f7be9781d5772256"
+  },
+  "baseline_sha256": "c9ef15a97a6f43d994fe177d7e0212a6a6cbaf561be955a5995fef4da7faebba",
+  "baseline_changed": false,
+  "cwd": "/home/jerry/develop/open-pokered-perf118/crates/pokered-gba",
+  "scope": "final source and unchanged baseline verified",
+  "elf_sha256": "140c57dbe8b28b786aec1e05ed27f8e71608c6e3ee4fe2515388d44de6c0a728",
+  "result_sha256": "8cc00bc13c950a547384606132cd43a6687d535b189e9357ebd5dae469927eca"
+}

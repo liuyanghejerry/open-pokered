@@ -1,0 +1,75 @@
+{
+  "reference_commit": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "original_dimensions_blocks": [
+    10,
+    18
+  ],
+  "dimensions_walk_cells": [
+    20,
+    36
+  ],
+  "previous_fixture": [
+    20,
+    30
+  ],
+  "previous_fixture_in_bounds": false,
+  "corrected_fixture": [
+    12,
+    22
+  ],
+  "down_path_cells": [
+    {
+      "x": 12,
+      "y": 22,
+      "block_index": 116,
+      "block": 11,
+      "lower_tiles": [
+        82,
+        82
+      ],
+      "blockset_offsets": [
+        180,
+        181
+      ]
+    },
+    {
+      "x": 12,
+      "y": 23,
+      "block_index": 116,
+      "block": 11,
+      "lower_tiles": [
+        82,
+        82
+      ],
+      "blockset_offsets": [
+        188,
+        189
+      ]
+    },
+    {
+      "x": 12,
+      "y": 24,
+      "block_index": 126,
+      "block": 11,
+      "lower_tiles": [
+        82,
+        82
+      ],
+      "blockset_offsets": [
+        180,
+        181
+      ]
+    }
+  ],
+  "grass_tile": 82,
+  "source_hashes": {
+    "maps/Route1.blk": "328b8ad2dee6852d9f332f18af80a6210bb0f9204597ad082ac6e569e226d482",
+    "gfx/blocksets/overworld.bst": "c4f6d88cc7dea8196aa51d3aa059c6d1da0ea45718dd12870fcddee9f9304d50"
+  },
+  "status": "verified: valid-map grass fixture, final2PASS (including800pixel/palette frame comparisons); selective grass-underlay removal reproduced mismatch t6x66y74, expected1PASS1FAIL; production renderer restored and same as committedcbf780f",
+  "actual_sram_capture_map": "ViridianCity (map id 1), player20,30; distinct from unit fixture",
+  "test_logs": {
+    "fixture-119-final-tests.log": "0738c2069dc4279c8b09f879f9a660d85158b3865c523669f312976f2abf27b3",
+    "fixture-119-without-grass-patch-tests.log": "9506a71ed7420e6a3c608deec60d33d584eb71e56a5264557bcbb1687878fde8"
+  }
+}

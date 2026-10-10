@@ -1,0 +1,12 @@
+{
+  "original_emulator": "Six complete repeated clips, no ROM edits; menu359 close B432/A550/purchase662; mode afterclose persists only B",
+  "native_after": "a4 core2742 data263 app219(32ignored) agent54 PASS; voucher and shopping actual NPC tests PASS; eight successful after captures, repeated bytes exact",
+  "rejected": [
+    "a1 native compile: incompatible DSL Value/serde Value arguments",
+    "master31 a1 helper used displayed_field_dialogue added only on branch; corrected base helper to original pending_dialogue view. Master production remains untouched."
+  ],
+  "limitations": [
+    "Cross-subsystem/global NO_TEXT_DELAY audits not complete (PC, naming, list menus, battle)",
+    "Full init/close/arrow/movement work and exact final m01..49+independent SAVE-CONTINUE draft gates remain"
+  ]
+}

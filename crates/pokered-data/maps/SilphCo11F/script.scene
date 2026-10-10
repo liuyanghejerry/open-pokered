@@ -99,21 +99,26 @@ game_scene SilphCo11F {
   @storyline("talkSilphPresident") {
     @trigger(map = "SilphCo11F", npc = 1)
     @if (getFlag("EVENT_GOT_MASTER_BALL")) {
-      @speaker("") {
-        @t("PRESIDENT: You can't buy\nthat anywhere!\n\nIt's our secret prototype\nMASTER BALL!\n\nIt will catch any POKeMON\nwithout fail!\n\nYou should be quiet about\nusing it, though.", "社长：这个东西哪里都买不到！\n\n这是我们秘密开发的试作型大师\n球！\n\n无论什么宝可梦都能抓住！\n\n不过这件事你可要保密不要声\n张！")
-      }
+      printFieldText(t("PRESIDENT: You can't buy\nthat anywhere!", "社长：这个东西哪里都买不到！"))
+      printFieldParagraph(t("It's our secret prototype\nMASTER BALL!", "这是我们秘密开发的试作型大师\n球！"))
+      printFieldParagraph(t("It will catch any POKeMON\nwithout fail!", "无论什么宝可梦都能抓住！"))
+      printFieldParagraph(t("You should be quiet about\nusing it, though.", "不过这件事你可要保密不要声\n张！"))
     } @else {
-      @speaker("") {
-        @t("PRESIDENT: Thank you for\nsaving SILPH!\n\nI will never forget you\nsaved us in our moment of\nperil!\n\nI have to thank you in some\nway!\n\nBecause I am rich, I can\ngive you anything!\n\nHere, maybe this will do!", "社长：谢谢你拯救了西尔佛公\n司！\n\n我永远不会忘记你在我们危难时\n刻救了我们！\n\n我必须要好好谢你！\n\n因为我很有钱，想要什么都给\n你！\n\n来，这个送给你！")
-      }
+      printFieldText(t("PRESIDENT: Thank you for\nsaving SILPH!", "社长：谢谢你拯救了西尔佛公\n司！"))
+      printFieldParagraph(t("I will never forget you\nsaved us in our moment of\nperil!", "我永远不会忘记你在我们危难时\n刻救了我们！"))
+      printFieldParagraph(t("I have to thank you in some\nway!", "我必须要好好谢你！"))
+      printFieldParagraph(t("Because I am rich, I can\ngive you anything!", "因为我很有钱，想要什么都给\n你！"))
+      printFieldParagraph(t("Here, maybe this will do!", "来，这个送给你！"))
+      waitFieldPrompt()
       given = giveItem("MASTER_BALL", 1)
       @if (given) {
+        printItemFieldText(t("<PLAYER> got a MASTER BALL!", "<PLAYER>获得了大师球！"), "SFX_GET_KEY_ITEM")
         setFlag("EVENT_GOT_MASTER_BALL")
-        showItemDialogue(t("<PLAYER> got a MASTER BALL!", "<PLAYER>获得了大师球！"), "SFX_GET_KEY_ITEM")
       } @else {
-        @speaker("") { @t("You have no room for this.", "你没有空间放这个了！") }
+        printFieldText(t("You have no room for this.", "你没有空间放这个了！"))
       }
     }
+    finishFieldText()
   }
 
   // ── Secretary / Beauty (npc 2) — dialogue only ──────────────────────────

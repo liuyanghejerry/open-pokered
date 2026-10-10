@@ -1,0 +1,38 @@
+[
+  {
+    "map": "Route2Gate",
+    "speaker_paragraph_counts": [
+      1,
+      3,
+      1,
+      1,
+      2
+    ],
+    "dynamic_blocks": 2,
+    "state_order": "HereYouGo PROMPT before GiveItem even full bag; receipt sound before caller flag then immediate explanation; outer finish only"
+  },
+  {
+    "map": "Route11Gate2F",
+    "speaker_paragraph_counts": [
+      3,
+      3,
+      3,
+      1,
+      2
+    ],
+    "dynamic_blocks": 2,
+    "state_order": "HereYouGo PROMPT before GiveItem even full bag; receipt sound before caller flag then immediate explanation; outer finish only"
+  },
+  {
+    "map": "Route15Gate2F",
+    "speaker_paragraph_counts": [
+      3,
+      3,
+      3,
+      1,
+      2
+    ],
+    "dynamic_blocks": 2,
+    "state_order": "HereYouGo PROMPT before GiveItem even full bag; receipt sound before caller flag then immediate explanation; outer finish only"
+  }
+]

@@ -48,6 +48,37 @@ fn badge_index(name: &str) -> Option<u8> {
 
 impl ScriptApiRegistrar for PokemonScriptApi {
     fn register_api(&self, engine: &mut dotzuki_engine_script::ScriptEngine) {
+        engine.register_async_fn(
+            "printFieldText",
+            |args: &[JsValue], ctx: &mut Context| -> JsResult<ScriptCommand> {
+                let text = args.get_or_undefined(0).to_string(ctx)?.to_std_string_lossy();
+                Ok(PokemonScriptCommand::PrintFieldText { text }.into_script_command())
+            },
+        );
+
+        engine.register_async_fn("printFieldParagraph", |args: &[JsValue], ctx: &mut Context| -> JsResult<ScriptCommand> {
+            let text=args.get_or_undefined(0).to_string(ctx)?.to_std_string_lossy();
+            let sound_id=if args.len()>1 {Some(args.get_or_undefined(1).to_string(ctx)?.to_std_string_lossy())} else {None};
+            Ok(PokemonScriptCommand::PrintFieldParagraph { text, sound_id }.into_script_command())
+        });
+
+        engine.register_async_fn("printItemFieldText", |args: &[JsValue], ctx: &mut Context| -> JsResult<ScriptCommand> {
+            let text=args.get_or_undefined(0).to_string(ctx)?.to_std_string_lossy();
+            let sound_id=if args.len()>1 {Some(args.get_or_undefined(1).to_string(ctx)?.to_std_string_lossy())} else {None};
+            Ok(PokemonScriptCommand::PrintItemFieldText {text,sound_id}.into_script_command())
+        });
+        engine.register_async_fn("waitFieldPrompt", |_: &[JsValue], _: &mut Context| -> JsResult<ScriptCommand> {
+            Ok(PokemonScriptCommand::WaitFieldPrompt.into_script_command())
+        });
+        for (name,command) in [("waitFieldPromptButton",PokemonScriptCommand::WaitFieldPromptButton),("waitFieldButton",PokemonScriptCommand::WaitFieldButton),("closeFieldText",PokemonScriptCommand::CloseFieldText)] {
+            engine.register_async_fn(name,move |_: &[JsValue], _: &mut Context| -> JsResult<ScriptCommand> {
+                Ok(command.clone().into_script_command())
+            });
+        }
+        engine.register_async_fn("finishFieldText", |_: &[JsValue], _: &mut Context| -> JsResult<ScriptCommand> {
+            Ok(PokemonScriptCommand::FinishFieldText.into_script_command())
+        });
+
         // FoundItemText prints, plays GET_ITEM_1, then closes without A.
         engine.register_async_fn(
             "showItemDialogue",
@@ -496,6 +527,19 @@ impl ScriptApiRegistrar for PokemonScriptApi {
                 Ok(command.into_script_command())
             });
         }
+        engine.register_async_fn("setFieldTextDelayDisabled", |args: &[JsValue],ctx: &mut Context| {
+            let value=args.get_or_undefined(0).to_json(ctx)?;
+            let command=PokemonScriptCommand::from_custom("setFieldTextDelayDisabled", &[value])
+                .map_err(|error|boa_engine::JsNativeError::typ().with_message(error))?;
+            Ok(command.into_script_command())
+        });
+        engine.register_async_fn("chooseInstantFieldMenu", |args: &[JsValue],ctx: &mut Context| {
+            let options=args.get_or_undefined(0).to_json(ctx)?;
+            let text=args.get_or_undefined(1).to_json(ctx)?;
+            let command=PokemonScriptCommand::from_custom("chooseInstantFieldMenu", &[options,text])
+                .map_err(|error|boa_engine::JsNativeError::typ().with_message(error))?;
+            Ok(command.into_script_command())
+        });
         engine.register_async_fn("readingMenu", |args: &[JsValue], ctx: &mut Context| {
             let options = args.get_or_undefined(0).to_json(ctx)?;
             let texts = args.get_or_undefined(1).to_json(ctx)?;

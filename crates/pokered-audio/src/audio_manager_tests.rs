@@ -735,3 +735,33 @@ fn badge_wrong_bank_plays_only_ball_poof_noise_and_finishes() {
     for _ in 0..120 { mgr.update_frame(); }
     assert!(!mgr.is_sfx_playing());
 }
+
+#[test]
+fn pokedex_rating_stops_music_until_each_sound_finishes_then_restarts_the_field_theme() {
+    let sounds = [(SfxId::Denied, 29), (SfxId::PokedexRating, 141),
+        (SfxId::GetItem1, 73), (SfxId::CaughtMon, 145), (SfxId::LevelUp, 133),
+        (SfxId::GetKeyItem, 121), (SfxId::GetItem2, 181)];
+    for music in [MusicId::POKECENTER, MusicId::BIKE_RIDING, MusicId::SURFING] {
+        for (tier, (sound, duration)) in sounds.iter().enumerate() {
+            let mut mgr = AudioManager::new();
+            mgr.play_music(music);
+            for _ in 0..60 { mgr.update_frame(); }
+            mgr.play_pokedex_rating(tier as u8, music);
+            assert!(!mgr.is_music_playing());
+            assert_eq!(mgr.last_music_id(), None);
+            assert_eq!(mgr.sequencer.current_sfx_id, *sound as u8);
+            for frame in 1..=*duration {
+                assert!(!mgr.is_music_playing(), "{music:?}/{sound:?} before frame {frame}");
+                assert!(mgr.is_sfx_playing());
+                mgr.update_frame();
+                if frame < *duration { assert!(!mgr.is_music_playing()); }
+            }
+            assert!(!mgr.is_sfx_playing());
+            assert!(mgr.is_music_playing());
+            assert_eq!(mgr.last_music_id(), Some(music));
+            let mut fresh = AudioManager::new(); fresh.play_music(music);
+            assert_eq!(format!("{:?}", &mgr.sequencer.channels[..4]),
+                format!("{:?}", &fresh.sequencer.channels[..4]), "field music starts fresh");
+        }
+    }
+}

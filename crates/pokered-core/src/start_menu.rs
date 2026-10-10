@@ -80,6 +80,7 @@ pub struct StartMenuState {
     items: Vec<StartMenuItem>,
     cursor: usize,
     has_pokedex: bool,
+    has_pokemon: bool,
     is_link_connected: bool,
     /// `wBattleAndStartSavedMenuItem` — persists cursor position across menu opens.
     saved_cursor: usize,
@@ -88,6 +89,10 @@ pub struct StartMenuState {
     /// with the "NNN/500" steps + "BALL×× NN" info box in the top-left.
     /// None = not in the Safari Zone.
     pub safari_info: Option<SafariZoneInfo>,
+    field_initialization: Option<(u8, StartMenuInput)>,
+    /// Field window/font transfers; direction delays keep existing pixels.
+    field_presentation_elapsed: Option<u8>,
+    first_transfer_portion: u8,
 }
 
 /// The Safari Zone START-menu info box contents.
@@ -101,29 +106,31 @@ pub struct SafariZoneInfo {
 
 impl StartMenuState {
     pub fn new(has_pokedex: bool, has_pokemon: bool, is_link_connected: bool) -> Self {
-        let items = Self::build_items(has_pokedex, has_pokemon, is_link_connected);
+        let items = Self::build_items(has_pokedex, is_link_connected);
         Self {
             items,
             cursor: 0,
             has_pokedex,
+            has_pokemon,
             is_link_connected,
             saved_cursor: 0,
             safari_info: None,
+            field_initialization: None,
+            field_presentation_elapsed: None,
+            first_transfer_portion: 0,
         }
     }
 
     fn build_items(
         has_pokedex: bool,
-        has_pokemon: bool,
         is_link_connected: bool,
     ) -> Vec<StartMenuItem> {
         let mut items = Vec::with_capacity(7);
         if has_pokedex {
             items.push(StartMenuItem::Pokedex);
         }
-        if has_pokemon {
-            items.push(StartMenuItem::Pokemon);
-        }
+        // DrawStartMenu always prints POKEMON, even before a starter exists.
+        items.push(StartMenuItem::Pokemon);
         items.push(StartMenuItem::Item);
         items.push(StartMenuItem::TrainerInfo);
         if is_link_connected {
@@ -137,22 +144,115 @@ impl StartMenuState {
     }
 
     pub fn open(&mut self, has_pokedex: bool, has_pokemon: bool, is_link_connected: bool) {
+        self.field_initialization = None;
+        self.field_presentation_elapsed = None;
         self.has_pokedex = has_pokedex;
+        self.has_pokemon = has_pokemon;
         self.is_link_connected = is_link_connected;
-        self.items = Self::build_items(has_pokedex, has_pokemon, is_link_connected);
+        self.items = Self::build_items(has_pokedex, is_link_connected);
         self.cursor = self.saved_cursor.min(self.items.len().saturating_sub(1));
     }
 
+    /// DisplayTextIDInit's transfers precede DrawStartMenu and its first
+    /// Joypad poll. Only field entry owns this wait; submenu returns do not.
+    pub fn begin_field_initialization(&mut self, previous: StartMenuInput) {
+        self.field_initialization = Some((23, previous));
+        self.field_presentation_elapsed = Some(0);
+        self.first_transfer_portion = 0;
+    }
+
+    /// AutoBgMapTransfer retains its current third while disabled in the
+    /// field/font loader. Copy order depends on UI history, not transport.
+    pub fn begin_field_initialization_with_portion(&mut self, previous: StartMenuInput, portion: u8) {
+        self.begin_field_initialization(previous);
+        self.first_transfer_portion = portion % 3;
+    }
+
+    /// RedisplayStartMenu redraws without DisplayTextIDInit or START SFX.
+    /// Its first Joypad is three hardware frames after DrawStartMenu.
+    pub fn begin_redisplay_initialization(&mut self, previous: StartMenuInput) {
+        self.field_initialization = Some((3, previous));
+    }
+
+    /// MenuJoypad invokes Delay3 after HandleMenuInput accepts a direction.
+    /// Compare the next poll with that complete sample, ignoring short pulses
+    /// inside the delay and suppressing a direction that stayed held.
+    pub fn begin_direction_delay(&mut self, previous: StartMenuInput) {
+        self.field_initialization = Some((3, previous));
+    }
+
+    /// CopyScreenTileBufferToVRAM reveals the window after three waits plus
+    /// the LCD frame. Font loading finishes at 20; AutoBgMapTransfer then
+    /// exposes six tile rows per vblank before the first Joypad at 23.
+    pub fn field_presentation_stage(&self) -> u8 {
+        self.field_presentation_elapsed.unwrap_or(23)
+    }
+
+    /// None retains the map; zero draws the empty border; other values are
+    /// a bitmask of the three six-row portions containing transferred text.
+    pub fn visible_text_portions(&self) -> Option<u8> {
+        // Safari prints its extra window before DisplayTextIDInit. Preserve
+        // that path until its distinct window-copy sequence is captured.
+        if self.safari_info.is_some() { return Some(7); }
+        let transferred = match self.field_presentation_stage() {
+            0..=3 => return None,
+            4..=20 => 0,
+            21 => 1,
+            22 => 2,
+            _ => 3,
+        };
+        let mut mask = 0;
+        for step in 0..transferred {
+            mask |= 1 << ((self.first_transfer_portion + step) % 3);
+        }
+        Some(mask)
+    }
+
+    pub fn field_initialization_active(&self) -> bool {
+        self.field_initialization.is_some()
+    }
+
+    /// START sound occurs at DrawStartMenu, three frames before its Joypad.
+    pub fn field_initialization_sound_due(&self) -> bool {
+        self.field_initialization.is_some_and(|(remaining, _)| remaining == 4)
+    }
+
+    /// Ignored pulses are discarded. A button held across initialization
+    /// is compared with the preceding FIELD Joypad sample, not UI frames.
+    pub fn sample_field_initialization(&mut self, held: StartMenuInput) -> Option<StartMenuInput> {
+        let (remaining, previous) = self.field_initialization?;
+        if let Some(elapsed) = &mut self.field_presentation_elapsed {
+            *elapsed = elapsed.saturating_add(1);
+        }
+        if remaining > 1 {
+            self.field_initialization = Some((remaining - 1, previous));
+            return None;
+        }
+        self.field_initialization = None;
+        self.field_presentation_elapsed = None;
+        Some(StartMenuInput {
+            up: held.up && !previous.up,
+            down: held.down && !previous.down,
+            a: held.a && !previous.a,
+            b: held.b && !previous.b,
+            start: held.start && !previous.start,
+        })
+    }
+
     pub fn update_frame(&mut self, input: StartMenuInput) -> StartMenuAction {
+        // HandleMenuInput moves the cursor first; DisplayStartMenu then
+        // loops on a direction before testing the accompanying A/B/START.
+        if input.up {
+            self.cursor_up();
+            return StartMenuAction::Redisplay;
+        } else if input.down {
+            self.cursor_down();
+            return StartMenuAction::Redisplay;
+        }
+
         if input.b || input.start {
             self.save_cursor();
             return StartMenuAction::Close;
-        }
-
-        if input.up {
-            self.cursor_up();
-        } else if input.down {
-            self.cursor_down();
         }
 
         if input.a {
@@ -185,6 +285,7 @@ impl StartMenuState {
     fn select_current_item(&self) -> StartMenuAction {
         match self.items[self.cursor] {
             StartMenuItem::Pokedex => StartMenuAction::OpenPokedex,
+            StartMenuItem::Pokemon if !self.has_pokemon => StartMenuAction::Redisplay,
             StartMenuItem::Pokemon => StartMenuAction::OpenPokemon,
             StartMenuItem::Item => StartMenuAction::OpenItem,
             StartMenuItem::TrainerInfo => StartMenuAction::OpenTrainerInfo,
@@ -278,5 +379,91 @@ mod safari_info_tests {
         let info = m.safari_info.unwrap();
         assert_eq!(info.steps, 427);
         assert_eq!(info.balls, 17);
+    }
+}
+
+#[cfg(test)]
+mod field_initialization_tests {
+    use super::*;
+    #[test]
+    fn field_window_transfer_keeps_source_six_row_order_without_hiding_direction_delays() {
+        // Original LCD captures: empty border at +4, first text at +21,
+        // and the following two vblanks complete the other six-row portions.
+        for (portion, masks) in [(0, [1, 3, 7]), (1, [2, 6, 7]), (2, [4, 5, 7])] {
+            let mut menu = StartMenuState::new(false, true, false);
+            menu.begin_field_initialization_with_portion(StartMenuInput::none(), portion);
+            for elapsed in 0..=23 {
+                let expected = match elapsed {
+                    0..=3 => None,
+                    4..=20 => Some(0),
+                    _ => Some(masks[elapsed - 21]),
+                };
+                assert_eq!(menu.visible_text_portions(), expected, "portion={portion} elapsed={elapsed}");
+                if elapsed < 23 { menu.sample_field_initialization(StartMenuInput::none()); }
+            }
+            for redisplay in [false, true] {
+                if redisplay { menu.begin_redisplay_initialization(StartMenuInput::none()); }
+                else { menu.begin_direction_delay(StartMenuInput::none()); }
+                for _ in 0..3 {
+                    assert_eq!(menu.visible_text_portions(), Some(7));
+                    menu.sample_field_initialization(StartMenuInput::none());
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn initialization_discards_short_pulses_but_reads_new_held_keys_at_first_joypad() {
+        let opening=StartMenuInput {start:true,..StartMenuInput::none()};
+        for held_down in [false,true] {
+            let mut menu=StartMenuState::new(false,true,false);
+            menu.begin_field_initialization(opening);
+            for frame in 1..=22 {
+                assert_eq!(menu.field_initialization_sound_due(),frame==20);
+                let input=StartMenuInput {start:true,down:frame>=11 && (held_down || frame==11),..StartMenuInput::none()};
+                assert!(menu.sample_field_initialization(input).is_none());
+                assert_eq!(menu.current_item(),StartMenuItem::Pokemon);
+            }
+            let first=menu.sample_field_initialization(StartMenuInput {start:true,down:held_down,..StartMenuInput::none()}).unwrap();
+            assert!(!first.start,"opening START is still held, not a new close");
+            menu.update_frame(first);
+            assert_eq!(menu.current_item(),if held_down {StartMenuItem::Item} else {StartMenuItem::Pokemon});
+        }
+    }
+    #[test]
+    fn opening_held_direction_is_not_replayed_and_submenu_return_has_no_field_wait() {
+        let opening=StartMenuInput {start:true,down:true,..StartMenuInput::none()};
+        let mut menu=StartMenuState::new(false,true,false);
+        menu.begin_field_initialization(opening);
+        for _ in 0..22 {assert!(menu.sample_field_initialization(opening).is_none());}
+        assert_eq!(menu.sample_field_initialization(opening),Some(StartMenuInput::none()));
+        menu.begin_field_initialization(opening);
+        menu.open(false,true,false);
+        assert!(!menu.field_initialization_active());
+    }
+}
+
+#[cfg(test)]
+mod redisplay_initialization_tests {
+    use super::*;
+
+    #[test]
+    fn redisplay_discards_early_pulse_and_suppresses_held_return_b() {
+        for held_down in [false, true] {
+            let mut menu = StartMenuState::new(false, true, false);
+            menu.begin_redisplay_initialization(StartMenuInput { b: true, ..StartMenuInput::none() });
+            for frame in 1..=2 {
+                assert!(!menu.field_initialization_sound_due());
+                assert!(menu.sample_field_initialization(StartMenuInput {
+                    b: true, down: held_down || frame == 1, ..StartMenuInput::none()
+                }).is_none());
+            }
+            let first = menu.sample_field_initialization(StartMenuInput {
+                b: true, down: held_down, ..StartMenuInput::none()
+            }).unwrap();
+            assert!(!first.b, "closing B remains held and is not a new press");
+            assert_eq!(menu.update_frame(first), StartMenuAction::Redisplay);
+            assert_eq!(menu.current_item(), if held_down { StartMenuItem::Item } else { StartMenuItem::Pokemon });
+        }
     }
 }

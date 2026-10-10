@@ -1,0 +1,16 @@
+{
+  "command": "cargo test -p pokered-core -p pokered-app --offline -j4",
+  "log_sha256": "de43002d3e494c846d39ad839ee60d325ec082c06e2264ea85c2491827428214",
+  "groups": 80,
+  "passed": 3646,
+  "failed": 0,
+  "ignored": 53,
+  "app_debug_server_separate": {
+    "command": "cargo test -p pokered-app --features debug-server --lib --offline -j4",
+    "groups": 1,
+    "passed": 204,
+    "failed": 0,
+    "ignored": 21
+  },
+  "mainline_7b4cc08": "FAILED m17: actual Raichu battle loss, original evidence preserved, not a pass"
+}

@@ -1,0 +1,14 @@
+{
+  "production_sources": {
+    "crates/pokered-core/src/overworld/presentation.rs": "7231a5a9d7b7a9d1cba6f717f25672751467a2290b6df06b8f73a344d5fff53d",
+    "crates/pokered-core/src/overworld/screen.rs": "9c19118c63da4e3420c35737dcb1e861056e61e74cd1ea11c4340fac16bf282c",
+    "crates/pokered-core/src/overworld/update.rs": "a779b05332ca9aab011e6f9c7fa6aecc95a1b45ce775cd9e681f56b3b5b6b2e6",
+    "crates/pokered-app/src/render/overworld.rs": "2522445134302ed787c5624784115b690fe36c883c9f0bd4583ab0cf2ded7c94",
+    "crates/pokered-app/src/render/session.rs": "51590c6c07f6be930367880041ef416410d526410e3fbb20dd21f7c32b2178da",
+    "crates/pokered-core/src/overworld/field_moves.rs": "162384478610831fc7f2e751aadfa6cc2a27bb789f61e9d0651e4556ffc3cba1"
+  },
+  "elf_sha256": "d2f329cba4515d205bd4caa0d8fb9799f0c9892ffaddce85f39965ff39b3879b",
+  "gba_source_checkout": "/home/jerry/develop/open-pokered-perf118",
+  "baseline": "unchanged crates/pokered-gba/perf-baseline.json",
+  "scope": "Six production files byte-identical native and GBA source; no runtime game.rs changes in this increment."
+}

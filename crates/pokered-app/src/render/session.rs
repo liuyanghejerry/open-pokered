@@ -574,6 +574,8 @@ struct OverworldVisualKey {
     player_movement: u8,
     player_transport: u8,
     walk_counter: u8,
+    player_pose: Option<(usize, bool)>,
+    player_camera: Option<(u16, u16, i16, i16)>,
     bump_counter: u8,
     tile_kind: u8,
     water_shift: i8,
@@ -643,7 +645,12 @@ impl OverworldVisualKey {
         // current pixels. Hash only the NPC fields consumed by the renderer.
         let mut npc_hash = 0x811c_9dc5;
         hash_u16(&mut npc_hash, screen.npc_states.len() as u16);
-        for npc in &screen.npc_states {
+        for (slot, npc) in screen.npc_states.iter().enumerate() {
+            if let Some(pose) = screen.ordinary_npc_sprite_pose(slot) {
+                hash_u16(&mut npc_hash, pose.x as u16);
+                hash_u16(&mut npc_hash, pose.y as u16);
+                hash_byte(&mut npc_hash, pose.image);
+            }
             hash_byte(&mut npc_hash, npc.npc_index);
             hash_byte(&mut npc_hash, npc.sprite_id);
             hash_u16(&mut npc_hash, npc.x);
@@ -652,18 +659,33 @@ impl OverworldVisualKey {
             hash_byte(&mut npc_hash, npc.scripted_frame.unwrap_or(u8::MAX));
             hash_byte(&mut npc_hash, npc.walk_counter);
             hash_byte(&mut npc_hash, npc.visible as u8);
+            hash_byte(&mut npc_hash, screen.npc_sprite_grass_priority(slot) as u8);
         }
 
+        let player_pose = screen.ordinary_player_sprite_frame();
+        let camera = screen.ordinary_player_camera();
+        // In the ordinary renderer these latched values own the pixels.
+        // Logical movement can change one frame before the LCD image; it
+        // must not cause a second submission of the same stored picture.
+        // Keep raw fields for special paths and missing-resource text.
+        let presented = game.resources.is_some() && screen.map_data.is_some()
+            && player_pose.is_some() && camera.is_some();
+        let movement = screen.state.player.movement_state;
+        let normal_movement = matches!(movement,
+            dotzuki_engine::overworld::MovementState::Idle
+                | dotzuki_engine::overworld::MovementState::Walking);
         Some(Self {
             language: game.state.config.language,
             map: screen.state.current_map as u8,
-            player_x: screen.state.player.x,
-            player_y: screen.state.player.y,
-            player_facing: screen.state.player.facing as u8,
-            player_movement: screen.state.player.movement_state as u8,
+            player_x: if presented { camera.unwrap().x } else { screen.state.player.x },
+            player_y: if presented { camera.unwrap().y } else { screen.state.player.y },
+            player_facing: if presented { 0 } else { screen.state.player.facing as u8 },
+            player_movement: if presented && normal_movement { 0 } else { movement as u8 },
             player_transport: screen.state.player.transport as u8,
-            walk_counter: screen.state.walk_counter,
-            bump_counter: screen.bump_anim_counter,
+            walk_counter: if presented { 0 } else { screen.state.walk_counter },
+            player_pose,
+            player_camera: camera.map(|v| (v.x,v.y,v.sub_x,v.sub_y)),
+            bump_counter: if presented { 0 } else { screen.bump_anim_counter },
             tile_kind: screen.tile_anim.kind() as u8,
             water_shift: screen.tile_anim.water_shift(),
             flower_frame: screen.tile_anim.flower_frame(),
@@ -680,6 +702,9 @@ impl OverworldVisualKey {
 #[derive(Clone, Copy, PartialEq, Eq)]
 struct StartMenuVisualKey {
     cursor: usize,
+    text_portions: Option<u8>,
+    submenu_white: bool,
+    submenu_prefix: Option<u8>,
     item_count: usize,
     items_hash: u32,
     player_name_hash: u32,
@@ -700,6 +725,12 @@ impl StartMenuVisualKey {
         }
         Some(Self {
             cursor: game.start_menu.cursor(),
+            text_portions: if game.overworld.field_text_window_visible() { game.start_menu.visible_text_portions() } else { None },
+            submenu_white: game.overworld.field_text_restore.as_ref()
+                .is_some_and(|restore| restore.submenu_reload.is_some()),
+            submenu_prefix: game.overworld.field_text_restore.as_ref().and_then(|restore|
+                (restore.elapsed == 0).then_some(restore.submenu_reload.as_ref())
+                    .flatten().map(|work| work.white_start_line)),
             item_count: game.start_menu.item_count(),
             items_hash,
             player_name_hash,
@@ -1313,12 +1344,47 @@ impl PcVisualKey {
         match phase {
             PcPhase::Message => {
                 hash_u32(&mut visual_hash, pc.message_page() as u32);
-                let start = pc.message_page() * 4;
-                for line in pc.message_lines().iter().skip(start).take(4) {
+                hash_u32(&mut visual_hash, pc.message_visible_chars() as u32);
+                // Authored CONT pages overlap and PARA has its own range.
+                // Source text can stay unchanged while visible letters grow.
+                for line in pc.message_page_lines() {
                     for &byte in line.as_bytes() {
                         hash_byte(&mut visual_hash, byte);
                     }
                     hash_byte(&mut visual_hash, 0xff);
+                }
+                if let Some(underlay) = pc.message_underlay() {
+                    hash_byte(&mut visual_hash, underlay as u8);
+                    match underlay {
+                        PcPhase::BillsMenu => {
+                            hash_u32(&mut visual_hash, pc.bills_menu().cursor() as u32);
+                            hash_u32(&mut visual_hash, game.save_data.pc_storage.current_box_index() as u32);
+                        }
+                        PcPhase::ItemMenu => {
+                            hash_u32(&mut visual_hash, pc.players_menu().cursor() as u32);
+                        }
+                        PcPhase::MonList => {
+                            hash_byte(&mut visual_hash, pc.mon_mode() as u8);
+                            hash_u32(&mut visual_hash, pc.mon_cursor() as u32);
+                            match pc.mon_mode() {
+                                MonListMode::Deposit => {
+                                    for mon in game.save_data.party.iter() { hash_pc_mon(&mut visual_hash, mon); }
+                                }
+                                MonListMode::Withdraw | MonListMode::Release => {
+                                    for mon in game.save_data.pc_storage.current_box().iter() { hash_pc_mon(&mut visual_hash, mon); }
+                                }
+                            }
+                        }
+                        PcPhase::ItemList => {
+                            hash_byte(&mut visual_hash, pc.item_mode() as u8);
+                            hash_u32(&mut visual_hash, pc.item_list_cursor() as u32);
+                            match pc.item_mode() {
+                                ItemListMode::Deposit => hash_pc_inventory(&mut visual_hash, &game.save_data.game_data.bag),
+                                ItemListMode::Withdraw | ItemListMode::Toss => hash_pc_inventory(&mut visual_hash, &game.save_data.game_data.pc_items),
+                            }
+                        }
+                        _ => unreachable!(),
+                    }
                 }
             }
             PcPhase::MainMenu => {
@@ -2699,6 +2765,211 @@ mod session_tests {
     fn capture_pc_quantity_197() {
         let path = std::path::PathBuf::from(std::env::var("QUANTITY_CAPTURE_197").unwrap());
         for mode in 0..3 { quantity_pc_197(mode,Some(&path.join(format!("mode-{mode}")))); }
+    }
+
+    #[test]
+    fn pc_item_questions_retained_frames_match_full_draw() {
+        use dotzuki_app::{GbButton, InputState};
+        use pokered_core::pc_screen::{PcEntry, PcOpenContext, PcScreen};
+        let mut game = PokemonGame::new(GameVersion::Red);
+        game.audio = None;
+        game.state.screen = GameScreen::PC;
+        game.state.config.language = Lang::En;
+        game.state.config.text_speed = pokered_core::game_state::TextSpeed::Slow;
+        game.save_data.game_data.options.text_speed = pokered_core::options_menu::TextSpeed::Slow;
+        assert_eq!(game.save_data.game_data.pc_items.item_quantity(pokered_data::items::ItemId::Potion), 1);
+        game.save_data.game_data.pc_items.remove_item_at(0, 1).unwrap();
+        game.save_data.game_data.pc_items.add_item(pokered_data::items::ItemId::Potion, 4).unwrap();
+        let open = PcOpenContext {
+            met_bill: true, has_pokedex: true, beaten_league: false,
+            player_name: "RED".into(), hof_teams: Vec::new(),
+        };
+        let mut pc = PcScreen::new(PcEntry::PlayersPc, &open);
+        pc.configure_field_text(game.state.config.text_speed.delay_frames(), false);
+        game.pc_screen = Some(pc);
+        let mut session = RenderSession::new();
+        let mut retained = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+        let mut scroll = |_: &mut [u8], _: usize, _: usize, _: i32, _: i32, _: u8| {};
+        let mut last_key = None;
+        let mut stage = 0;
+        let mut selection = None;
+        let mut saw_reuse = false;
+        let mut completed = false;
+        for frame in 0..2000 {
+            let pc = game.pc_screen.as_ref().unwrap();
+            let phase = pc.phase();
+            let key = if last_key.is_some() { None }
+                else if phase == PcPhase::Message && pc.message_ready_for_ack() { Some(GbButton::A) }
+                else if stage == 0 && phase == PcPhase::ItemMenu { stage = 1; Some(GbButton::A) }
+                else if stage == 1 && phase == PcPhase::ItemList { stage = 2; selection = Some(frame); Some(GbButton::A) }
+                else if stage == 2 && phase == PcPhase::ItemQuantity {
+                    // This is the next update after the chooser first rendered.
+                    assert_eq!(frame - selection.unwrap(), 49);
+                    stage = 3; Some(GbButton::B)
+                } else { None };
+            let mut input = InputState::new();
+            if let Some(button) = key { input.press(button); }
+            game.update(&input);
+            last_key = key;
+            saw_reuse |= matches!(session.render(&mut game, &mut retained, &mut scroll), FrameUpdate::Reuse);
+            let mut full = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+            game.draw(&mut full);
+            for y in 0..144 { for x in 0..160 {
+                assert_eq!(retained.get_pixel(x,y), full.get_pixel(x,y), "item question stage{stage} frame{frame} pixel({x},{y})");
+            }}
+            let pc = game.pc_screen.as_ref().unwrap();
+            if stage == 3 && pc.phase() == PcPhase::ItemList {
+                assert_eq!(pc.message_lines(), &["What do you want".to_string(), "to withdraw?".to_string()]);
+                assert_eq!(game.save_data.game_data.pc_items.item_quantity(pokered_data::items::ItemId::Potion), 4);
+                assert_eq!(game.save_data.game_data.bag.item_quantity(pokered_data::items::ItemId::Potion), 0);
+                completed = true; break;
+            }
+        }
+        assert!(completed, "PC item text/quantity/cancel route did not complete");
+        assert!(saw_reuse, "idle PC text frames should still reuse their buffer");
+    }
+
+    #[test]
+    fn pc_retained_message_frames_match_full_draw() {
+        use dotzuki_app::{GbButton, InputState};
+        use pokered_core::pc_screen::{PcEntry, PcOpenContext, PcScreen};
+        let mut game = PokemonGame::new(GameVersion::Red);
+        game.audio = None;
+        game.state.screen = GameScreen::PC;
+        game.state.config.language = Lang::En;
+        let open = PcOpenContext {
+            met_bill: true, has_pokedex: true, beaten_league: false,
+            player_name: "RED".into(), hof_teams: Vec::new(),
+        };
+        let mut pc = PcScreen::new(PcEntry::PokemonCenter, &open);
+        pc.configure_field_text(3, false);
+        game.pc_screen = Some(pc);
+        let mut session = RenderSession::new();
+        let mut retained = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+        let mut scroll = |_: &mut [u8], _: usize, _: usize, _: i32, _: i32, _: u8| {};
+        // Real owner updates, including NO_TEXT_DELAY changes and held input.
+        // Opening letters and the later CONT/PARA warning must update retained
+        // pixels even while phase and complete source text stay unchanged.
+        let mut last_key = 0;
+        let mut stage = 0;
+        let mut down_count = 0;
+        let mut warning_frame = None;
+        let mut idle_seen = false;
+        let mut glyph_seen = false;
+        let mut first_mismatch = None;
+        for frame in 0..900 {
+            let phase = game.pc_screen.as_ref().unwrap().phase();
+            let key = if let Some(cue) = warning_frame {
+                match frame - cue { 1 | 7 | 8 | 27 | 28 => 1, _ => 0 }
+            } else if last_key != 0 { 0 }
+            else if phase == PcPhase::Message {
+                if game.pc_screen.as_ref().unwrap().message_ready_for_ack() { 1 } else { 0 }
+            } else if phase == PcPhase::MainMenu { 1 }
+            else if phase == PcPhase::BillsMenu {
+                if down_count < 3 { down_count += 1; 2 }
+                else { warning_frame = Some(frame); 1 }
+            } else { 0 };
+            let mut input = InputState::new();
+            if key == 1 { input.press(GbButton::A); }
+            if key == 2 { input.press(GbButton::Down); }
+            game.update(&input);
+            last_key = key;
+            let update = session.render(&mut game, &mut retained, &mut scroll);
+            idle_seen |= matches!(update, FrameUpdate::Reuse);
+            let chars = game.pc_screen.as_ref().unwrap().message_visible_chars();
+            glyph_seen |= chars > 0;
+            let mut full = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+            game.draw(&mut full);
+            for y in 0..144 {
+                for x in 0..160 {
+                    if retained.get_pixel(x, y) != full.get_pixel(x, y) && first_mismatch.is_none() {
+                        first_mismatch = Some((frame, phase, chars, x, y));
+                    }
+                }
+            }
+            if frame == 10 {
+                if let Ok(dir) = std::env::var("FIDELITY_PC_CACHE_CAPTURE") {
+                    let dir = std::path::PathBuf::from(dir);
+                    std::fs::create_dir_all(&dir).unwrap();
+                    retained.save_png(&dir.join("retained-frame-0010.png")).unwrap();
+                    full.save_png(&dir.join("full-frame-0010.png")).unwrap();
+                    std::fs::write(dir.join("state.json"), serde_json::to_string_pretty(
+                        &serde_json::json!({"frame":frame,"phase":format!("{:?}",game.pc_screen.as_ref().unwrap().phase()),
+                            "visible_chars":chars,"first_mismatch":first_mismatch.map(|(f,p,c,x,y)|
+                                serde_json::json!({"frame":f,"phase":format!("{p:?}"),"chars":c,"x":x,"y":y}))})).unwrap()).unwrap();
+                }
+            }
+            if frame >= 10 { assert_eq!(first_mismatch, None, "retained PC frame differs from full draw"); }
+            if warning_frame.is_some_and(|cue| frame >= cue + 60) {
+                assert_eq!(game.pc_screen.as_ref().unwrap().phase(), PcPhase::ChangeBoxConfirm);
+                stage = 1;
+                break;
+            }
+        }
+        assert!(glyph_seen && idle_seen && stage == 1);
+    }
+
+    #[test]
+    fn walking_and_bicycle_retained_frames_match_full_draw_through_start_transfers() {
+        use dotzuki_app::{GbButton, InputState};
+        use dotzuki_engine::overworld::types::TransportMode;
+        use pokered_core::snapshot::OverworldSnapshot;
+        use pokered_data::maps::MapId;
+
+        for language in [Lang::En, Lang::Zh] {
+            for bike in [false, true] {
+                for open_menu in [false, true] {
+                    let mut game = PokemonGame::new(GameVersion::Red);
+                    game.audio = None;
+                    game.state.config.language = language;
+                    game.state.screen = GameScreen::Overworld;
+                    game.overworld.warp_to_map(MapId::Route1, 12, 22);
+                    // Original Route1 is 20 x 36 walk cells; (12,22..24) is grass.
+                    let (width, height) = MapId::Route1.dimensions();
+                    assert!(12 < u16::from(width) * 2 && 24 < u16::from(height) * 2);
+                    let idle = InputState::new();
+                    for _ in 0..120 { game.update(&idle); }
+                    game.overworld.state.player.transport = if bike { TransportMode::Biking } else { TransportMode::Walking };
+                    game.overworld.state.encounter_cooldown = 255;
+                    let mut snapshot = OverworldSnapshot::capture(&game.overworld);
+                    snapshot.field_loop_wait = if bike { 1 } else { 0 };
+                    snapshot.player_last_stop_direction = 2;
+                    snapshot.player_moving_direction = 0;
+                    snapshot.check_player_turn = true;
+                    snapshot.bg_transfer_portion = if bike { 0 } else { 2 };
+                    snapshot.restore_into(&mut game.overworld);
+                    let mut session = RenderSession::new();
+                    let mut retained = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+                    let mut full = retained.clone();
+                    let mut scroll = |_: &mut [u8], _: usize, _: usize, _: i32, _: i32, _: u8| {};
+                    let mut input = InputState::new();
+                    let mut reused = 0;
+                    for t in 0..100 {
+                        input.begin_frame();
+                        if t == 0 { input.press(GbButton::Down); }
+                        if t == if bike { 16 } else { 32 } { input.release(GbButton::Down); }
+                        if open_menu && t == 5 { input.press(GbButton::Start); }
+                        if open_menu && t == 45 { input.release(GbButton::Start); }
+                        game.update(&input);
+                        assert_eq!(game.overworld.state.current_map, MapId::Route1);
+                        assert!(game.overworld.state.player.x < u16::from(width) * 2);
+                        assert!(game.overworld.state.player.y < u16::from(height) * 2);
+                        if game.state.screen == GameScreen::Overworld {
+                            assert!(OverworldVisualKey::new(&game).is_some(), "exercise the overworld cache");
+                        }
+                        reused += usize::from(matches!(session.render(&mut game, &mut retained, &mut scroll), FrameUpdate::Reuse));
+                        game.draw(&mut full);
+                        for y in 0..144 { for x in 0..160 {
+                            assert_eq!(retained.get_pixel(x, y), full.get_pixel(x, y),
+                                "language={language:?} bike={bike} menu={open_menu} t={t} x={x} y={y}");
+                        } }
+                        assert_eq!(retained.display_palette(), full.display_palette());
+                    }
+                    assert!(reused > 0, "exercise actual frame reuse");
+                    assert_eq!(game.state.screen, if open_menu { GameScreen::StartMenu } else { GameScreen::Overworld });
+                }
+            }
+        }
     }
 
     #[test]

@@ -1,0 +1,67 @@
+{
+  "scope": "controlled Viridian Pokecenter input sampling, not ordinary movement cadence or full RGB oracle",
+  "base": "31b1eda3112514d6bc803af559ec7f7c9e20374f",
+  "cases": [
+    {
+      "variant": "master-before",
+      "case": "a-short",
+      "repeat_png_and_json_identical": true,
+      "first_action": null
+    },
+    {
+      "variant": "master-before",
+      "case": "a-held",
+      "repeat_png_and_json_identical": true,
+      "first_action": null
+    },
+    {
+      "variant": "master-before",
+      "case": "a-start-held",
+      "repeat_png_and_json_identical": true,
+      "first_action": {
+        "t": 5,
+        "screen": "StartMenu",
+        "pc_phase": null,
+        "pending_pc": false
+      }
+    },
+    {
+      "variant": "native-after",
+      "case": "a-short",
+      "repeat_png_and_json_identical": true,
+      "first_action": null
+    },
+    {
+      "variant": "native-after",
+      "case": "a-held",
+      "repeat_png_and_json_identical": true,
+      "first_action": {
+        "t": 10,
+        "screen": "PC",
+        "pc_phase": "Message",
+        "pending_pc": false
+      }
+    },
+    {
+      "variant": "native-after",
+      "case": "a-start-held",
+      "repeat_png_and_json_identical": true,
+      "first_action": {
+        "t": 9,
+        "screen": "StartMenu",
+        "pc_phase": null,
+        "pending_pc": false
+      }
+    }
+  ],
+  "driver_sha256": {
+    "master-before": "209d9de7570189117797ca1983483869b73fdb1ea46980c832da504527bcfe2c",
+    "native-after": "a9d7fc6809e66ea047e0d3274afb32a744a33d3e067257aaa1d9f93db9b01635"
+  },
+  "source": {
+    "a-short": "no interaction",
+    "a-held": "OpenPokemonCenterPC t18",
+    "a-start-held": "DisplayTextID t18 text0; DrawStartMenu t38; no PC",
+    "timing_verdict": "FAIL/PENDING: native held-A t10; ordinary clock still too fast"
+  }
+}

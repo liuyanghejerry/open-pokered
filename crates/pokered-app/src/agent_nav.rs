@@ -102,6 +102,8 @@ impl PokemonGame {
                 || self.overworld.pending_choice.is_some()
                 || self.overworld.trainer_encounter_pending(),
             self.overworld.active_script_effect_label().is_some()
+                // The last LCD image outlives logical control restoration.
+                || self.overworld.boulder_blocks_control()
                 || !self.overworld.script_engine_idle(),
         )
     }
@@ -125,6 +127,18 @@ impl PokemonGame {
         }
         self.update(&input);
         *frames += 1;
+    }
+
+    /// One continuous press crossing the field's two-hardware-frame Joypad
+    /// cadence, with a fresh edge only on the first physical frame.
+    fn press_across_field_sample(&mut self, button: GbButton, frames: &mut u32) {
+        let mut input = InputState::new();
+        input.press(button);
+        for frame in 0..2 {
+            if frame > 0 { input.begin_frame(); }
+            self.update(&input);
+            *frames += 1;
+        }
     }
 
     pub(crate) fn player_pos(&self) -> (u16, u16) {
@@ -324,13 +338,17 @@ impl PokemonGame {
         outcome
     }
 
-    /// Turn in place to face `dir` (one press frame + settle). No-op
+    /// Arm NoDirection, then turn across a complete field sample. No-op
     /// when already facing — never walks.
     pub(crate) fn turn_to(&mut self, dir: Direction, frames: &mut u32) {
         if self.overworld.state.player.facing == dir {
             return;
         }
-        self.step_with(Some(button_for(dir)), frames);
+        // A newly constructed/restored world may not have run NoDirection
+        // yet. Arm its turn check before holding a direction, so this atomic
+        // operation cannot start walking onto an interactable tile.
+        for _ in 0..2 { self.step_with(None, frames); }
+        self.press_across_field_sample(button_for(dir), frames);
         for _ in 0..4 {
             self.step_with(None, frames);
         }
@@ -375,7 +393,7 @@ impl PokemonGame {
     /// battle starts, a script takes over, the map changes, or nothing
     /// happens within [`INTERACT_FRAMES`].
     fn run_interaction(&mut self, frames: &mut u32, start_map: MapId) -> InteractResult {
-        self.step_with(Some(GbButton::A), frames);
+        self.press_across_field_sample(GbButton::A, frames);
         self.step_with(None, frames);
         for _ in 0..INTERACT_FRAMES {
             if self.overworld.state.current_map != start_map

@@ -1,0 +1,2761 @@
+{
+  "parent": "ec927d437bb610b6592082a0eefd8fb458499fea",
+  "base": "31b1eda3112514d6bc803af559ec7f7c9e20374f",
+  "final_native_revision": "a7",
+  "final_gba_revision": "a8",
+  "tests": {
+    "core": {
+      "passed": 2742,
+      "ignored": 0
+    },
+    "data": {
+      "passed": 262,
+      "ignored": 0
+    },
+    "app": {
+      "passed": 217,
+      "ignored": 31
+    },
+    "agent": {
+      "passed": 54,
+      "ignored": 0
+    }
+  },
+  "native_feature_scope": "Same four-package default feature union for after and master; app excludes debug-server-only tests.",
+  "sources": {
+    "crates/pokered-agent/src/semantics/extract.rs": "ce875323f60790cd4937d61c5338adc7f428f03c7b3dd8adb125fe8adf62a9e1",
+    "crates/pokered-app/src/game.rs": "bd138de889910480d4af4f74569b786ba8a352fabf487f00bd596103763487ca",
+    "crates/pokered-app/src/render/mod.rs": "d2f3d05e9bec7b513fe26cd03d0ce651683b97d0b57ce316f7be9781d5772256",
+    "crates/pokered-app/src/render/overworld.rs": "efb6d1d65803d4a3c93e099822d2616b359dadd6a30d5410c3c56e8f4de4b184",
+    "crates/pokered-app/src/render/session.rs": "9233b9adbe2a5ff1501b9c4c28051ced36b1d0c5d937228b3a90c8ce1b70e47a",
+    "crates/pokered-core/src/overworld/field_moves.rs": "162384478610831fc7f2e751aadfa6cc2a27bb789f61e9d0651e4556ffc3cba1",
+    "crates/pokered-core/src/overworld/mod.rs": "7fddcc4bd8dc93ad43b7f356a114becb76469417dfa40e31edcb759313366499",
+    "crates/pokered-core/src/overworld/native_script.rs": "e52a1d4bc68449438e9bff0fedf093d5e510c28fd251d458a3efaa21787ce6db",
+    "crates/pokered-core/src/overworld/presentation.rs": "46b142440f2dbc02ff05d75536ec62a2e1b60a0274c3893ea502147699128f6f",
+    "crates/pokered-core/src/overworld/screen.rs": "d213a37766c836ff1106e53b7be6bc4eeb643c652359a720943063e24ae1890c",
+    "crates/pokered-core/src/overworld/script_bridge.rs": "c46769ba3f2dd1b6271fa3a10f1feef69c094e069ea9fcb5ae06928b36141704",
+    "crates/pokered-core/src/overworld/script_interactions.rs": "6f6b8485879153b2ea818cb6a2cd0d159eb4480388eb45c5ee0b0d199cc0d608",
+    "crates/pokered-core/src/overworld/sprite_reload_work.rs": "cb4b676103f2d8cf0eadef886a1def09979b89578d3afd722f2c2bb2e78f06fa",
+    "crates/pokered-core/src/overworld/update.rs": "90d7fe1f7fc5f4c10be79c31cd59bc56e6c54a21bcd87efe5bb3de1752ddf60b",
+    "crates/pokered-core/src/snapshot.rs": "5b893d317d39e619f0a98ef2a41075a8bd555ca3d642f44b3f6d1a673fc5663e",
+    "crates/pokered-core/src/start_menu.rs": "ab213e322753ef89c0d44adf00433b0212e05c2e989f44ee8c62a78f6ad44786",
+    "crates/pokered-data/maps/BillsHouse/script.scene": "1d274a1971bdc697db4c6481c97f5be09e6e1fe3f5f306fdad12b8ce232439f5",
+    "crates/pokered-data/maps/CeladonCity/script.scene": "c92172f358a11bee106c6e807958b9cd78b9e14547c7b022a730d17d9f800174",
+    "crates/pokered-data/maps/CeladonDiner/script.scene": "4d1403ef76832fe7be6018a802b2da159aa12c2166e5a56cf62e6ad6a48a989d",
+    "crates/pokered-data/maps/CeladonMansion1F/script.scene": "120c275c5011d76fb7d9ca651faf08a147465418e8351dcf99454b3a79597f6e",
+    "crates/pokered-data/maps/CeladonMart3F/script.scene": "66d6fc2de46cf93db10f2359ba97da42c0f2ef7e52bffebc597007a31e1b9d71",
+    "crates/pokered-data/maps/CinnabarLabMetronomeRoom/script.scene": "a9aa45fba159c120214e28b6247023348bc39b474a72288e29cfd403cb81282d",
+    "crates/pokered-data/maps/CopycatsHouse1F/script.scene": "55941173da702bfc630ec8e72c1535b9fa3e502c0a24bae3f8803ff2e50761cf",
+    "crates/pokered-data/maps/CopycatsHouse2F/script.scene": "34ac5995cad804c80757637decf5e2bd7ab917f45d2b553b08c35a680c9b5e7e",
+    "crates/pokered-data/maps/FuchsiaGoodRodHouse/script.scene": "b7bfda360aa8811996422b63c1dda5235697a3035bbc849cd8975c872ab2c17e",
+    "crates/pokered-data/maps/LavenderCuboneHouse/script.scene": "3f9050f0445c06b46edfc990791c782295dbc53662f9d39b2872f93a248b15a4",
+    "crates/pokered-data/maps/MrFujisHouse/script.scene": "bab78db22fb3b6ab5f62e1a7b0d66fb8996ab9edee8b908ff25ad716fc253fbf",
+    "crates/pokered-data/maps/Museum1F/script.scene": "8e9ae9a551aab5763a7c0f711f57e63be249ea597e2c4fe3f1a37b10eb752b42",
+    "crates/pokered-data/maps/PewterNidoranHouse/script.scene": "3fa136f9ff0a10cb6a785724c56844a54dc59fbf8c0471faa9c04b8d5f773da7",
+    "crates/pokered-data/maps/PokemonFanClub/script.scene": "ad89baca52689e27ae0fcd24eee82594e9e8a14d5a3d0886490d3acbd0f10e53",
+    "crates/pokered-data/maps/Route11Gate2F/script.scene": "39e184e35ff7786c5fa302dce6ef9fc97be0987e556e08e7f7c8f88b42f78259",
+    "crates/pokered-data/maps/Route12SuperRodHouse/script.scene": "8bb2903842f72501074e601c2250a78e1c8985d846e61e586ddfd49e16f82b6c",
+    "crates/pokered-data/maps/Route15Gate2F/script.scene": "c4e811b2177793aa8e716548501a02a830733ffd918e724762f3445480ae0422",
+    "crates/pokered-data/maps/Route16FlyHouse/script.scene": "d0e6e2ba4a8d502bd116d649d3102d9ac532bae9a1d11b9e813efafb8ba5827e",
+    "crates/pokered-data/maps/Route2Gate/script.scene": "76e2d30fd9b74dc0e9a4bd3b013f2c7c08db1ef3ae84fe78cf1af9902ff66791",
+    "crates/pokered-data/maps/SSAnne1FRooms/script.scene": "4c971fb6dcac3efadb69faeb7bf719ff571175131edf5debbf5051c8d117aabe",
+    "crates/pokered-data/maps/SSAnneB1FRooms/script.scene": "17e14f50d57b171eb6965500ea563f42c33d00a862f79a5da7ddf7d3e96f2dee",
+    "crates/pokered-data/maps/SafariZoneGate/script.scene": "5428458468fa767724c631777240614d8ace5a69874a1c0829a7f8544186dbba",
+    "crates/pokered-data/maps/SafariZoneSecretHouse/script.scene": "6e6c063152be78d19c4613e70078d0a4517921bbbe316251741381792ea4cb95",
+    "crates/pokered-data/maps/SaffronCity/script.scene": "3750d174634a2a9d93e0baf6fd3cd82d0fdbe947cf68e4d866e2358ac481d15b",
+    "crates/pokered-data/maps/SaffronPidgeyHouse/script.scene": "9e9a4e9d979ab476f5183c181d9756b5867ef7c046625a84bffd057fb7373c5b",
+    "crates/pokered-data/maps/SilphCo11F/script.scene": "67f54d19351c4d4174068468beb61079dd262ebd824b1361b96f96b88d2f4f72",
+    "crates/pokered-data/maps/VermilionCity/script.scene": "408513c550acbd32dff344a4d6f47001956df2305d0e8059367d81b9fe505472",
+    "crates/pokered-data/maps/VermilionOldRodHouse/script.scene": "6d2891fc22dd37fd7f6e67ff639b0da4e845ddc5b7ee52c5ac0f7335a9559109",
+    "crates/pokered-data/maps/VermilionPidgeyHouse/script.scene": "ed15a1fa4ffb57a98d707949570129e6868cf0642a50ccfa568163f40e79f80d",
+    "crates/pokered-data/maps/ViridianNicknameHouse/script.scene": "f7287563a7866bf49ccfa035021d9fb92a255fc205ad67fa19a65b66e5e9be9a",
+    "crates/pokered-data/src/dialog_text.rs": "b198760a5b1bd52a86ba3e7c3d9604e691bd1e4c8bb62f104cde2165a0eb3dec",
+    "crates/pokered-data/src/script_api.rs": "e231247affeb46b8ada619e3dafbdda0387b80aa7a3ca2d5a519fdee25ccad0b",
+    "crates/pokered-data/src/script_command.rs": "6b9f0ed086accda99a1c373e592083d3baf1008c15cccee07037039d05fe13f9",
+    "crates/pokered-data/src/script_function_catalog.rs": "ced5a2ec58ccf16c946f1e5928b6be2969030f6114136b07dfafa7135658d791"
+  },
+  "cue_summary": {
+    "cases": {
+      "masterball": {
+        "master31": {
+          "sound_cue": 648,
+          "receipt_screenshot_hw": 798,
+          "frames": 910,
+          "repeats_byteexact": true,
+          "sound_cue_state": {
+            "audio_channels": [
+              true,
+              true,
+              true,
+              false
+            ],
+            "has_doll": false,
+            "has_item": true,
+            "input_bits": 0,
+            "obtained_flag": true,
+            "overworld": {
+              "active_script_effect": {
+                "ShowItemDialogue": {
+                  "sound_id": "SFX_GET_KEY_ITEM",
+                  "sound_started": true,
+                  "text": "RED got a MASTER BALL!"
+                }
+              },
+              "field_loop_wait": null,
+              "field_text_restore": null,
+              "inner_field_text_open": null,
+              "last_script_dialogue": null,
+              "npc_states": [
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 7,
+                  "home_y": 5,
+                  "movement_type": "Stationary",
+                  "npc_index": 0,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 43,
+                  "text_id": 1,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 7,
+                  "y": 5
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 10,
+                  "home_y": 5,
+                  "movement_type": "Stationary",
+                  "npc_index": 1,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 15,
+                  "text_id": 2,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 10,
+                  "y": 5
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 6,
+                  "home_y": 9,
+                  "movement_type": "Stationary",
+                  "npc_index": 2,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 23,
+                  "text_id": 3,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 6,
+                  "y": 9
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Up",
+                  "home_x": 3,
+                  "home_y": 16,
+                  "movement_type": "Stationary",
+                  "npc_index": 3,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 24,
+                  "text_id": 4,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 3,
+                  "y": 16
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Up",
+                  "home_x": 15,
+                  "home_y": 9,
+                  "movement_type": "Stationary",
+                  "npc_index": 4,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 24,
+                  "text_id": 5,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 15,
+                  "y": 9
+                }
+              ],
+              "pending_dialogue": {
+                "char_index": 22,
+                "current_page": 0,
+                "delay_counter": 0,
+                "holding_open": false,
+                "pages": [
+                  {
+                    "line1": "RED got a MASTER BALL!",
+                    "line2": ""
+                  }
+                ],
+                "text_delay_frames": 3,
+                "waiting_for_input": true
+              },
+              "player_sprite_state": null,
+              "state": {
+                "current_map": "SilphCo11F",
+                "encounter_cooldown": 0,
+                "exiting_door": false,
+                "player": {
+                  "bike_speedup_active": true,
+                  "facing": "Up",
+                  "movement_state": "Idle",
+                  "transport": "Walking",
+                  "x": 7,
+                  "y": 6
+                },
+                "repel_steps": 0,
+                "standing_on_door": false,
+                "standing_on_warp": false,
+                "walk_counter": 0
+              }
+            },
+            "sfx_playing": true,
+            "t": 648
+          },
+          "receipt_frame_state": {
+            "audio_channels": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "has_doll": false,
+            "has_item": true,
+            "input_bits": 0,
+            "obtained_flag": true,
+            "overworld": {
+              "active_script_effect": null,
+              "field_loop_wait": null,
+              "field_text_restore": null,
+              "inner_field_text_open": null,
+              "last_script_dialogue": null,
+              "npc_states": [
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 7,
+                  "home_y": 5,
+                  "movement_type": "Stationary",
+                  "npc_index": 0,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 43,
+                  "text_id": 1,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 7,
+                  "y": 5
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 10,
+                  "home_y": 5,
+                  "movement_type": "Stationary",
+                  "npc_index": 1,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 15,
+                  "text_id": 2,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 10,
+                  "y": 5
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 6,
+                  "home_y": 9,
+                  "movement_type": "Stationary",
+                  "npc_index": 2,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 23,
+                  "text_id": 3,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 6,
+                  "y": 9
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Up",
+                  "home_x": 3,
+                  "home_y": 16,
+                  "movement_type": "Stationary",
+                  "npc_index": 3,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 24,
+                  "text_id": 4,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 3,
+                  "y": 16
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Up",
+                  "home_x": 15,
+                  "home_y": 9,
+                  "movement_type": "Stationary",
+                  "npc_index": 4,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 24,
+                  "text_id": 5,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 15,
+                  "y": 9
+                }
+              ],
+              "pending_dialogue": null,
+              "player_sprite_state": null,
+              "state": {
+                "current_map": "SilphCo11F",
+                "encounter_cooldown": 0,
+                "exiting_door": false,
+                "player": {
+                  "bike_speedup_active": true,
+                  "facing": "Up",
+                  "movement_state": "Idle",
+                  "transport": "Walking",
+                  "x": 7,
+                  "y": 6
+                },
+                "repel_steps": 0,
+                "standing_on_door": false,
+                "standing_on_warp": false,
+                "walk_counter": 0
+              }
+            },
+            "sfx_playing": false,
+            "t": 798
+          }
+        },
+        "after-a7": {
+          "sound_cue": 716,
+          "receipt_screenshot_hw": 866,
+          "frames": 978,
+          "repeats_byteexact": true,
+          "sound_cue_state": {
+            "audio_channels": [
+              true,
+              true,
+              true,
+              false
+            ],
+            "has_doll": false,
+            "has_item": true,
+            "input_bits": 0,
+            "obtained_flag": false,
+            "overworld": {
+              "active_script_effect": {
+                "PrintItemFieldText": {
+                  "phase": "PlayingSound",
+                  "sound_id": "SFX_GET_KEY_ITEM",
+                  "text": "RED got a MASTER BALL!"
+                }
+              },
+              "field_loop_wait": 1,
+              "field_text_restore": null,
+              "inner_field_text_open": true,
+              "last_script_dialogue": {
+                "char_index": 22,
+                "current_page": 0,
+                "delay_counter": 0,
+                "holding_open": false,
+                "pages": [
+                  {
+                    "line1": "RED got a MASTER BALL!",
+                    "line2": ""
+                  }
+                ],
+                "text_delay_frames": 3,
+                "waiting_for_input": true
+              },
+              "npc_states": [
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 7,
+                  "home_y": 5,
+                  "movement_type": "Stationary",
+                  "npc_index": 0,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 43,
+                  "text_id": 1,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 7,
+                  "y": 5
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 10,
+                  "home_y": 5,
+                  "movement_type": "Stationary",
+                  "npc_index": 1,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 15,
+                  "text_id": 2,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 10,
+                  "y": 5
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 6,
+                  "home_y": 9,
+                  "movement_type": "Stationary",
+                  "npc_index": 2,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 23,
+                  "text_id": 3,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 6,
+                  "y": 9
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Up",
+                  "home_x": 3,
+                  "home_y": 16,
+                  "movement_type": "Stationary",
+                  "npc_index": 3,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 24,
+                  "text_id": 4,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 3,
+                  "y": 16
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Up",
+                  "home_x": 15,
+                  "home_y": 9,
+                  "movement_type": "Stationary",
+                  "npc_index": 4,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 24,
+                  "text_id": 5,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 15,
+                  "y": 9
+                }
+              ],
+              "pending_dialogue": null,
+              "player_sprite_state": {
+                "facing": 1,
+                "initialized": true,
+                "intra_frame": 0,
+                "pending": [
+                  4,
+                  4
+                ],
+                "phase": 0,
+                "visible": 4
+              },
+              "state": {
+                "current_map": "SilphCo11F",
+                "encounter_cooldown": 0,
+                "exiting_door": false,
+                "player": {
+                  "bike_speedup_active": true,
+                  "facing": "Up",
+                  "movement_state": "Idle",
+                  "transport": "Walking",
+                  "x": 7,
+                  "y": 6
+                },
+                "repel_steps": 0,
+                "standing_on_door": false,
+                "standing_on_warp": false,
+                "walk_counter": 0
+              }
+            },
+            "sfx_playing": true,
+            "t": 716
+          },
+          "receipt_frame_state": {
+            "audio_channels": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "has_doll": false,
+            "has_item": true,
+            "input_bits": 0,
+            "obtained_flag": true,
+            "overworld": {
+              "active_script_effect": {
+                "FinishFieldText": {
+                  "acknowledged": false
+                }
+              },
+              "field_loop_wait": 1,
+              "field_text_restore": null,
+              "inner_field_text_open": true,
+              "last_script_dialogue": {
+                "char_index": 22,
+                "current_page": 0,
+                "delay_counter": 0,
+                "holding_open": false,
+                "pages": [
+                  {
+                    "line1": "RED got a MASTER BALL!",
+                    "line2": ""
+                  }
+                ],
+                "text_delay_frames": 3,
+                "waiting_for_input": true
+              },
+              "npc_states": [
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 7,
+                  "home_y": 5,
+                  "movement_type": "Stationary",
+                  "npc_index": 0,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 43,
+                  "text_id": 1,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 7,
+                  "y": 5
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 10,
+                  "home_y": 5,
+                  "movement_type": "Stationary",
+                  "npc_index": 1,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 15,
+                  "text_id": 2,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 10,
+                  "y": 5
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 6,
+                  "home_y": 9,
+                  "movement_type": "Stationary",
+                  "npc_index": 2,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 23,
+                  "text_id": 3,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 6,
+                  "y": 9
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Up",
+                  "home_x": 3,
+                  "home_y": 16,
+                  "movement_type": "Stationary",
+                  "npc_index": 3,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 24,
+                  "text_id": 4,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 3,
+                  "y": 16
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Up",
+                  "home_x": 15,
+                  "home_y": 9,
+                  "movement_type": "Stationary",
+                  "npc_index": 4,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 24,
+                  "text_id": 5,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 15,
+                  "y": 9
+                }
+              ],
+              "pending_dialogue": null,
+              "player_sprite_state": {
+                "facing": 1,
+                "initialized": true,
+                "intra_frame": 0,
+                "pending": [
+                  4,
+                  4
+                ],
+                "phase": 0,
+                "visible": 4
+              },
+              "state": {
+                "current_map": "SilphCo11F",
+                "encounter_cooldown": 0,
+                "exiting_door": false,
+                "player": {
+                  "bike_speedup_active": true,
+                  "facing": "Up",
+                  "movement_state": "Idle",
+                  "transport": "Walking",
+                  "x": 7,
+                  "y": 6
+                },
+                "repel_steps": 0,
+                "standing_on_door": false,
+                "standing_on_warp": false,
+                "walk_counter": 0
+              }
+            },
+            "sfx_playing": false,
+            "t": 866
+          }
+        }
+      },
+      "coincase": {
+        "master31": {
+          "sound_cue": 434,
+          "receipt_screenshot_hw": 584,
+          "frames": 696,
+          "repeats_byteexact": true,
+          "sound_cue_state": {
+            "audio_channels": [
+              true,
+              true,
+              true,
+              false
+            ],
+            "has_doll": false,
+            "has_item": true,
+            "input_bits": 0,
+            "obtained_flag": true,
+            "overworld": {
+              "active_script_effect": {
+                "ShowItemDialogue": {
+                  "sound_id": "SFX_GET_KEY_ITEM",
+                  "sound_started": true,
+                  "text": "RED received a COIN\nCASE!"
+                }
+              },
+              "field_loop_wait": null,
+              "field_text_restore": null,
+              "inner_field_text_open": null,
+              "last_script_dialogue": null,
+              "npc_states": [
+                {
+                  "defeated": false,
+                  "delay_counter": 63,
+                  "facing": "Right",
+                  "home_x": 8,
+                  "home_y": 5,
+                  "movement_type": "Stationary",
+                  "npc_index": 0,
+                  "range": 2,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 20,
+                  "text_id": 1,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Horizontal",
+                  "x": 8,
+                  "y": 5
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 7,
+                  "home_y": 2,
+                  "movement_type": "Stationary",
+                  "npc_index": 1,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 28,
+                  "text_id": 2,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 7,
+                  "y": 2
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 1,
+                  "home_y": 4,
+                  "movement_type": "Stationary",
+                  "npc_index": 2,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 10,
+                  "text_id": 3,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 1,
+                  "y": 4
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Right",
+                  "home_x": 5,
+                  "home_y": 3,
+                  "movement_type": "Stationary",
+                  "npc_index": 3,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 47,
+                  "text_id": 4,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 5,
+                  "y": 3
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 0,
+                  "home_y": 1,
+                  "movement_type": "Stationary",
+                  "npc_index": 4,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 36,
+                  "text_id": 5,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 0,
+                  "y": 1
+                }
+              ],
+              "pending_dialogue": {
+                "char_index": 24,
+                "current_page": 0,
+                "delay_counter": 0,
+                "holding_open": false,
+                "pages": [
+                  {
+                    "line1": "RED received a COIN",
+                    "line2": "CASE!"
+                  }
+                ],
+                "text_delay_frames": 3,
+                "waiting_for_input": true
+              },
+              "player_sprite_state": null,
+              "state": {
+                "current_map": "CeladonDiner",
+                "encounter_cooldown": 0,
+                "exiting_door": false,
+                "player": {
+                  "bike_speedup_active": true,
+                  "facing": "Up",
+                  "movement_state": "Idle",
+                  "transport": "Walking",
+                  "x": 0,
+                  "y": 2
+                },
+                "repel_steps": 0,
+                "standing_on_door": false,
+                "standing_on_warp": false,
+                "walk_counter": 0
+              }
+            },
+            "sfx_playing": true,
+            "t": 434
+          },
+          "receipt_frame_state": {
+            "audio_channels": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "has_doll": false,
+            "has_item": true,
+            "input_bits": 0,
+            "obtained_flag": true,
+            "overworld": {
+              "active_script_effect": null,
+              "field_loop_wait": null,
+              "field_text_restore": null,
+              "inner_field_text_open": null,
+              "last_script_dialogue": null,
+              "npc_states": [
+                {
+                  "defeated": false,
+                  "delay_counter": 63,
+                  "facing": "Right",
+                  "home_x": 8,
+                  "home_y": 5,
+                  "movement_type": "Stationary",
+                  "npc_index": 0,
+                  "range": 2,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 20,
+                  "text_id": 1,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Horizontal",
+                  "x": 8,
+                  "y": 5
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 7,
+                  "home_y": 2,
+                  "movement_type": "Stationary",
+                  "npc_index": 1,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 28,
+                  "text_id": 2,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 7,
+                  "y": 2
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 1,
+                  "home_y": 4,
+                  "movement_type": "Stationary",
+                  "npc_index": 2,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 10,
+                  "text_id": 3,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 1,
+                  "y": 4
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Right",
+                  "home_x": 5,
+                  "home_y": 3,
+                  "movement_type": "Stationary",
+                  "npc_index": 3,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 47,
+                  "text_id": 4,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 5,
+                  "y": 3
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 0,
+                  "home_y": 1,
+                  "movement_type": "Stationary",
+                  "npc_index": 4,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 36,
+                  "text_id": 5,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 0,
+                  "y": 1
+                }
+              ],
+              "pending_dialogue": null,
+              "player_sprite_state": null,
+              "state": {
+                "current_map": "CeladonDiner",
+                "encounter_cooldown": 0,
+                "exiting_door": false,
+                "player": {
+                  "bike_speedup_active": true,
+                  "facing": "Up",
+                  "movement_state": "Idle",
+                  "transport": "Walking",
+                  "x": 0,
+                  "y": 2
+                },
+                "repel_steps": 0,
+                "standing_on_door": false,
+                "standing_on_warp": false,
+                "walk_counter": 0
+              }
+            },
+            "sfx_playing": false,
+            "t": 584
+          }
+        },
+        "after-a7": {
+          "sound_cue": 482,
+          "receipt_screenshot_hw": 632,
+          "frames": 744,
+          "repeats_byteexact": true,
+          "sound_cue_state": {
+            "audio_channels": [
+              true,
+              true,
+              true,
+              false
+            ],
+            "has_doll": false,
+            "has_item": true,
+            "input_bits": 0,
+            "obtained_flag": true,
+            "overworld": {
+              "active_script_effect": {
+                "PrintItemFieldText": {
+                  "phase": "PlayingSound",
+                  "sound_id": "SFX_GET_KEY_ITEM",
+                  "text": "RED received a COIN\nCASE!"
+                }
+              },
+              "field_loop_wait": 1,
+              "field_text_restore": null,
+              "inner_field_text_open": true,
+              "last_script_dialogue": {
+                "char_index": 24,
+                "current_page": 0,
+                "delay_counter": 0,
+                "holding_open": false,
+                "pages": [
+                  {
+                    "line1": "RED received a COIN",
+                    "line2": "CASE!"
+                  }
+                ],
+                "text_delay_frames": 3,
+                "waiting_for_input": true
+              },
+              "npc_states": [
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Left",
+                  "home_x": 8,
+                  "home_y": 5,
+                  "movement_type": "Stationary",
+                  "npc_index": 0,
+                  "range": 2,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 20,
+                  "text_id": 1,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Horizontal",
+                  "x": 8,
+                  "y": 5
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 7,
+                  "home_y": 2,
+                  "movement_type": "Stationary",
+                  "npc_index": 1,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 28,
+                  "text_id": 2,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 7,
+                  "y": 2
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 1,
+                  "home_y": 4,
+                  "movement_type": "Stationary",
+                  "npc_index": 2,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 10,
+                  "text_id": 3,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 1,
+                  "y": 4
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Right",
+                  "home_x": 5,
+                  "home_y": 3,
+                  "movement_type": "Stationary",
+                  "npc_index": 3,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 47,
+                  "text_id": 4,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 5,
+                  "y": 3
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 0,
+                  "home_y": 1,
+                  "movement_type": "Stationary",
+                  "npc_index": 4,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 36,
+                  "text_id": 5,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 0,
+                  "y": 1
+                }
+              ],
+              "pending_dialogue": null,
+              "player_sprite_state": {
+                "facing": 1,
+                "initialized": true,
+                "intra_frame": 0,
+                "pending": [
+                  4,
+                  4
+                ],
+                "phase": 0,
+                "visible": 4
+              },
+              "state": {
+                "current_map": "CeladonDiner",
+                "encounter_cooldown": 0,
+                "exiting_door": false,
+                "player": {
+                  "bike_speedup_active": true,
+                  "facing": "Up",
+                  "movement_state": "Idle",
+                  "transport": "Walking",
+                  "x": 0,
+                  "y": 2
+                },
+                "repel_steps": 0,
+                "standing_on_door": false,
+                "standing_on_warp": false,
+                "walk_counter": 0
+              }
+            },
+            "sfx_playing": true,
+            "t": 482
+          },
+          "receipt_frame_state": {
+            "audio_channels": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "has_doll": false,
+            "has_item": true,
+            "input_bits": 0,
+            "obtained_flag": true,
+            "overworld": {
+              "active_script_effect": {
+                "FinishFieldText": {
+                  "acknowledged": false
+                }
+              },
+              "field_loop_wait": 1,
+              "field_text_restore": null,
+              "inner_field_text_open": true,
+              "last_script_dialogue": {
+                "char_index": 24,
+                "current_page": 0,
+                "delay_counter": 0,
+                "holding_open": false,
+                "pages": [
+                  {
+                    "line1": "RED received a COIN",
+                    "line2": "CASE!"
+                  }
+                ],
+                "text_delay_frames": 3,
+                "waiting_for_input": true
+              },
+              "npc_states": [
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Left",
+                  "home_x": 8,
+                  "home_y": 5,
+                  "movement_type": "Stationary",
+                  "npc_index": 0,
+                  "range": 2,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 20,
+                  "text_id": 1,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Horizontal",
+                  "x": 8,
+                  "y": 5
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 7,
+                  "home_y": 2,
+                  "movement_type": "Stationary",
+                  "npc_index": 1,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 28,
+                  "text_id": 2,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 7,
+                  "y": 2
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 1,
+                  "home_y": 4,
+                  "movement_type": "Stationary",
+                  "npc_index": 2,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 10,
+                  "text_id": 3,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 1,
+                  "y": 4
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Right",
+                  "home_x": 5,
+                  "home_y": 3,
+                  "movement_type": "Stationary",
+                  "npc_index": 3,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 47,
+                  "text_id": 4,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 5,
+                  "y": 3
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 0,
+                  "home_y": 1,
+                  "movement_type": "Stationary",
+                  "npc_index": 4,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 36,
+                  "text_id": 5,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 0,
+                  "y": 1
+                }
+              ],
+              "pending_dialogue": null,
+              "player_sprite_state": {
+                "facing": 1,
+                "initialized": true,
+                "intra_frame": 0,
+                "pending": [
+                  4,
+                  4
+                ],
+                "phase": 0,
+                "visible": 4
+              },
+              "state": {
+                "current_map": "CeladonDiner",
+                "encounter_cooldown": 0,
+                "exiting_door": false,
+                "player": {
+                  "bike_speedup_active": true,
+                  "facing": "Up",
+                  "movement_state": "Idle",
+                  "transport": "Walking",
+                  "x": 0,
+                  "y": 2
+                },
+                "repel_steps": 0,
+                "standing_on_door": false,
+                "standing_on_warp": false,
+                "walk_counter": 0
+              }
+            },
+            "sfx_playing": false,
+            "t": 632
+          }
+        }
+      },
+      "fly": {
+        "master31": {
+          "sound_cue": 364,
+          "receipt_screenshot_hw": 514,
+          "frames": 626,
+          "repeats_byteexact": true,
+          "sound_cue_state": {
+            "audio_channels": [
+              true,
+              true,
+              true,
+              false
+            ],
+            "has_doll": false,
+            "has_item": true,
+            "input_bits": 0,
+            "obtained_flag": true,
+            "overworld": {
+              "active_script_effect": {
+                "ShowItemDialogue": {
+                  "sound_id": "SFX_GET_KEY_ITEM",
+                  "sound_started": true,
+                  "text": "RED received HM02!"
+                }
+              },
+              "field_loop_wait": null,
+              "field_text_restore": null,
+              "inner_field_text_open": null,
+              "last_script_dialogue": null,
+              "npc_states": [
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 2,
+                  "home_y": 3,
+                  "movement_type": "Stationary",
+                  "npc_index": 0,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 29,
+                  "text_id": 1,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 2,
+                  "y": 3
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 63,
+                  "facing": "Right",
+                  "home_x": 6,
+                  "home_y": 4,
+                  "movement_type": "Stationary",
+                  "npc_index": 1,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 9,
+                  "text_id": 2,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 6,
+                  "y": 4
+                }
+              ],
+              "pending_dialogue": {
+                "char_index": 18,
+                "current_page": 0,
+                "delay_counter": 0,
+                "holding_open": false,
+                "pages": [
+                  {
+                    "line1": "RED received HM02!",
+                    "line2": ""
+                  }
+                ],
+                "text_delay_frames": 3,
+                "waiting_for_input": true
+              },
+              "player_sprite_state": null,
+              "state": {
+                "current_map": "Route16FlyHouse",
+                "encounter_cooldown": 0,
+                "exiting_door": false,
+                "player": {
+                  "bike_speedup_active": true,
+                  "facing": "Up",
+                  "movement_state": "Idle",
+                  "transport": "Walking",
+                  "x": 2,
+                  "y": 4
+                },
+                "repel_steps": 0,
+                "standing_on_door": false,
+                "standing_on_warp": false,
+                "walk_counter": 0
+              }
+            },
+            "sfx_playing": true,
+            "t": 364
+          },
+          "receipt_frame_state": {
+            "audio_channels": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "has_doll": false,
+            "has_item": true,
+            "input_bits": 0,
+            "obtained_flag": true,
+            "overworld": {
+              "active_script_effect": null,
+              "field_loop_wait": null,
+              "field_text_restore": null,
+              "inner_field_text_open": null,
+              "last_script_dialogue": null,
+              "npc_states": [
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 2,
+                  "home_y": 3,
+                  "movement_type": "Stationary",
+                  "npc_index": 0,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 29,
+                  "text_id": 1,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 2,
+                  "y": 3
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 63,
+                  "facing": "Right",
+                  "home_x": 6,
+                  "home_y": 4,
+                  "movement_type": "Stationary",
+                  "npc_index": 1,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 9,
+                  "text_id": 2,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 6,
+                  "y": 4
+                }
+              ],
+              "pending_dialogue": null,
+              "player_sprite_state": null,
+              "state": {
+                "current_map": "Route16FlyHouse",
+                "encounter_cooldown": 0,
+                "exiting_door": false,
+                "player": {
+                  "bike_speedup_active": true,
+                  "facing": "Up",
+                  "movement_state": "Idle",
+                  "transport": "Walking",
+                  "x": 2,
+                  "y": 4
+                },
+                "repel_steps": 0,
+                "standing_on_door": false,
+                "standing_on_warp": false,
+                "walk_counter": 0
+              }
+            },
+            "sfx_playing": false,
+            "t": 514
+          }
+        },
+        "after-a7": {
+          "sound_cue": 362,
+          "receipt_screenshot_hw": 512,
+          "frames": 624,
+          "repeats_byteexact": true,
+          "sound_cue_state": {
+            "audio_channels": [
+              true,
+              true,
+              true,
+              false
+            ],
+            "has_doll": false,
+            "has_item": true,
+            "input_bits": 0,
+            "obtained_flag": true,
+            "overworld": {
+              "active_script_effect": {
+                "PrintItemFieldText": {
+                  "phase": "PlayingSound",
+                  "sound_id": "SFX_GET_KEY_ITEM",
+                  "text": "RED received HM02!"
+                }
+              },
+              "field_loop_wait": 1,
+              "field_text_restore": null,
+              "inner_field_text_open": true,
+              "last_script_dialogue": {
+                "char_index": 18,
+                "current_page": 0,
+                "delay_counter": 0,
+                "holding_open": false,
+                "pages": [
+                  {
+                    "line1": "RED received HM02!",
+                    "line2": ""
+                  }
+                ],
+                "text_delay_frames": 3,
+                "waiting_for_input": true
+              },
+              "npc_states": [
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 2,
+                  "home_y": 3,
+                  "movement_type": "Stationary",
+                  "npc_index": 0,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 29,
+                  "text_id": 1,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 2,
+                  "y": 3
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 94,
+                  "facing": "Right",
+                  "home_x": 6,
+                  "home_y": 4,
+                  "movement_type": "Stationary",
+                  "npc_index": 1,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 9,
+                  "text_id": 2,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 6,
+                  "y": 4
+                }
+              ],
+              "pending_dialogue": null,
+              "player_sprite_state": {
+                "facing": 1,
+                "initialized": true,
+                "intra_frame": 0,
+                "pending": [
+                  4,
+                  4
+                ],
+                "phase": 0,
+                "visible": 4
+              },
+              "state": {
+                "current_map": "Route16FlyHouse",
+                "encounter_cooldown": 0,
+                "exiting_door": false,
+                "player": {
+                  "bike_speedup_active": true,
+                  "facing": "Up",
+                  "movement_state": "Idle",
+                  "transport": "Walking",
+                  "x": 2,
+                  "y": 4
+                },
+                "repel_steps": 0,
+                "standing_on_door": false,
+                "standing_on_warp": false,
+                "walk_counter": 0
+              }
+            },
+            "sfx_playing": true,
+            "t": 362
+          },
+          "receipt_frame_state": {
+            "audio_channels": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "has_doll": false,
+            "has_item": true,
+            "input_bits": 0,
+            "obtained_flag": true,
+            "overworld": {
+              "active_script_effect": {
+                "FinishFieldText": {
+                  "acknowledged": false
+                }
+              },
+              "field_loop_wait": 1,
+              "field_text_restore": null,
+              "inner_field_text_open": true,
+              "last_script_dialogue": {
+                "char_index": 18,
+                "current_page": 0,
+                "delay_counter": 0,
+                "holding_open": false,
+                "pages": [
+                  {
+                    "line1": "RED received HM02!",
+                    "line2": ""
+                  }
+                ],
+                "text_delay_frames": 3,
+                "waiting_for_input": true
+              },
+              "npc_states": [
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 2,
+                  "home_y": 3,
+                  "movement_type": "Stationary",
+                  "npc_index": 0,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 29,
+                  "text_id": 1,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 2,
+                  "y": 3
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 94,
+                  "facing": "Right",
+                  "home_x": 6,
+                  "home_y": 4,
+                  "movement_type": "Stationary",
+                  "npc_index": 1,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 9,
+                  "text_id": 2,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 6,
+                  "y": 4
+                }
+              ],
+              "pending_dialogue": null,
+              "player_sprite_state": {
+                "facing": 1,
+                "initialized": true,
+                "intra_frame": 0,
+                "pending": [
+                  4,
+                  4
+                ],
+                "phase": 0,
+                "visible": 4
+              },
+              "state": {
+                "current_map": "Route16FlyHouse",
+                "encounter_cooldown": 0,
+                "exiting_door": false,
+                "player": {
+                  "bike_speedup_active": true,
+                  "facing": "Up",
+                  "movement_state": "Idle",
+                  "transport": "Walking",
+                  "x": 2,
+                  "y": 4
+                },
+                "repel_steps": 0,
+                "standing_on_door": false,
+                "standing_on_warp": false,
+                "walk_counter": 0
+              }
+            },
+            "sfx_playing": false,
+            "t": 512
+          }
+        }
+      },
+      "surf": {
+        "master31": {
+          "sound_cue": 523,
+          "receipt_screenshot_hw": 673,
+          "frames": 785,
+          "repeats_byteexact": true,
+          "sound_cue_state": {
+            "audio_channels": [
+              true,
+              true,
+              true,
+              false
+            ],
+            "has_doll": false,
+            "has_item": true,
+            "input_bits": 0,
+            "obtained_flag": true,
+            "overworld": {
+              "active_script_effect": {
+                "ShowItemDialogue": {
+                  "sound_id": null,
+                  "sound_started": true,
+                  "text": "RED received HM03!"
+                }
+              },
+              "field_loop_wait": null,
+              "field_text_restore": null,
+              "inner_field_text_open": null,
+              "last_script_dialogue": null,
+              "npc_states": [
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 3,
+                  "home_y": 3,
+                  "movement_type": "Stationary",
+                  "npc_index": 0,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 39,
+                  "text_id": 1,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 3,
+                  "y": 3
+                }
+              ],
+              "pending_dialogue": {
+                "char_index": 18,
+                "current_page": 0,
+                "delay_counter": 0,
+                "holding_open": false,
+                "pages": [
+                  {
+                    "line1": "RED received HM03!",
+                    "line2": ""
+                  }
+                ],
+                "text_delay_frames": 3,
+                "waiting_for_input": true
+              },
+              "player_sprite_state": null,
+              "state": {
+                "current_map": "SafariZoneSecretHouse",
+                "encounter_cooldown": 0,
+                "exiting_door": false,
+                "player": {
+                  "bike_speedup_active": true,
+                  "facing": "Up",
+                  "movement_state": "Idle",
+                  "transport": "Walking",
+                  "x": 3,
+                  "y": 4
+                },
+                "repel_steps": 0,
+                "standing_on_door": false,
+                "standing_on_warp": false,
+                "walk_counter": 0
+              }
+            },
+            "sfx_playing": true,
+            "t": 523
+          },
+          "receipt_frame_state": {
+            "audio_channels": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "has_doll": false,
+            "has_item": true,
+            "input_bits": 0,
+            "obtained_flag": true,
+            "overworld": {
+              "active_script_effect": null,
+              "field_loop_wait": null,
+              "field_text_restore": null,
+              "inner_field_text_open": null,
+              "last_script_dialogue": null,
+              "npc_states": [
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 3,
+                  "home_y": 3,
+                  "movement_type": "Stationary",
+                  "npc_index": 0,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 39,
+                  "text_id": 1,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 3,
+                  "y": 3
+                }
+              ],
+              "pending_dialogue": null,
+              "player_sprite_state": null,
+              "state": {
+                "current_map": "SafariZoneSecretHouse",
+                "encounter_cooldown": 0,
+                "exiting_door": false,
+                "player": {
+                  "bike_speedup_active": true,
+                  "facing": "Up",
+                  "movement_state": "Idle",
+                  "transport": "Walking",
+                  "x": 3,
+                  "y": 4
+                },
+                "repel_steps": 0,
+                "standing_on_door": false,
+                "standing_on_warp": false,
+                "walk_counter": 0
+              }
+            },
+            "sfx_playing": false,
+            "t": 673
+          }
+        },
+        "after-a7": {
+          "sound_cue": 583,
+          "receipt_screenshot_hw": 733,
+          "frames": 845,
+          "repeats_byteexact": true,
+          "sound_cue_state": {
+            "audio_channels": [
+              true,
+              true,
+              true,
+              false
+            ],
+            "has_doll": false,
+            "has_item": true,
+            "input_bits": 0,
+            "obtained_flag": false,
+            "overworld": {
+              "active_script_effect": {
+                "PrintItemFieldText": {
+                  "phase": "PlayingSound",
+                  "sound_id": "SFX_GET_ITEM_1",
+                  "text": "RED received HM03!"
+                }
+              },
+              "field_loop_wait": 1,
+              "field_text_restore": null,
+              "inner_field_text_open": true,
+              "last_script_dialogue": {
+                "char_index": 18,
+                "current_page": 0,
+                "delay_counter": 0,
+                "holding_open": false,
+                "pages": [
+                  {
+                    "line1": "RED received HM03!",
+                    "line2": ""
+                  }
+                ],
+                "text_delay_frames": 3,
+                "waiting_for_input": true
+              },
+              "npc_states": [
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 3,
+                  "home_y": 3,
+                  "movement_type": "Stationary",
+                  "npc_index": 0,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 39,
+                  "text_id": 1,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 3,
+                  "y": 3
+                }
+              ],
+              "pending_dialogue": null,
+              "player_sprite_state": {
+                "facing": 1,
+                "initialized": true,
+                "intra_frame": 0,
+                "pending": [
+                  4,
+                  4
+                ],
+                "phase": 0,
+                "visible": 4
+              },
+              "state": {
+                "current_map": "SafariZoneSecretHouse",
+                "encounter_cooldown": 0,
+                "exiting_door": false,
+                "player": {
+                  "bike_speedup_active": true,
+                  "facing": "Up",
+                  "movement_state": "Idle",
+                  "transport": "Walking",
+                  "x": 3,
+                  "y": 4
+                },
+                "repel_steps": 0,
+                "standing_on_door": false,
+                "standing_on_warp": false,
+                "walk_counter": 0
+              }
+            },
+            "sfx_playing": true,
+            "t": 583
+          },
+          "receipt_frame_state": {
+            "audio_channels": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "has_doll": false,
+            "has_item": true,
+            "input_bits": 0,
+            "obtained_flag": true,
+            "overworld": {
+              "active_script_effect": {
+                "FinishFieldText": {
+                  "acknowledged": false
+                }
+              },
+              "field_loop_wait": 1,
+              "field_text_restore": null,
+              "inner_field_text_open": true,
+              "last_script_dialogue": {
+                "char_index": 18,
+                "current_page": 0,
+                "delay_counter": 0,
+                "holding_open": false,
+                "pages": [
+                  {
+                    "line1": "RED received HM03!",
+                    "line2": ""
+                  }
+                ],
+                "text_delay_frames": 3,
+                "waiting_for_input": true
+              },
+              "npc_states": [
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 3,
+                  "home_y": 3,
+                  "movement_type": "Stationary",
+                  "npc_index": 0,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 39,
+                  "text_id": 1,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 3,
+                  "y": 3
+                }
+              ],
+              "pending_dialogue": null,
+              "player_sprite_state": {
+                "facing": 1,
+                "initialized": true,
+                "intra_frame": 0,
+                "pending": [
+                  4,
+                  4
+                ],
+                "phase": 0,
+                "visible": 4
+              },
+              "state": {
+                "current_map": "SafariZoneSecretHouse",
+                "encounter_cooldown": 0,
+                "exiting_door": false,
+                "player": {
+                  "bike_speedup_active": true,
+                  "facing": "Up",
+                  "movement_state": "Idle",
+                  "transport": "Walking",
+                  "x": 3,
+                  "y": 4
+                },
+                "repel_steps": 0,
+                "standing_on_door": false,
+                "standing_on_warp": false,
+                "walk_counter": 0
+              }
+            },
+            "sfx_playing": false,
+            "t": 733
+          }
+        }
+      },
+      "counter": {
+        "master31": {
+          "sound_cue": 277,
+          "receipt_screenshot_hw": 427,
+          "frames": 539,
+          "repeats_byteexact": true,
+          "sound_cue_state": {
+            "audio_channels": [
+              true,
+              true,
+              true,
+              false
+            ],
+            "has_doll": false,
+            "has_item": true,
+            "input_bits": 0,
+            "obtained_flag": true,
+            "overworld": {
+              "active_script_effect": {
+                "ShowItemDialogue": {
+                  "sound_id": null,
+                  "sound_started": true,
+                  "text": "RED received TM18!"
+                }
+              },
+              "field_loop_wait": null,
+              "field_text_restore": null,
+              "inner_field_text_open": null,
+              "last_script_dialogue": null,
+              "npc_states": [
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Up",
+                  "home_x": 16,
+                  "home_y": 5,
+                  "movement_type": "Stationary",
+                  "npc_index": 0,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 38,
+                  "text_id": 1,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 16,
+                  "y": 5
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Right",
+                  "home_x": 11,
+                  "home_y": 6,
+                  "movement_type": "Stationary",
+                  "npc_index": 1,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 55,
+                  "text_id": 2,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 11,
+                  "y": 6
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 7,
+                  "home_y": 2,
+                  "movement_type": "Stationary",
+                  "npc_index": 2,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 55,
+                  "text_id": 3,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 7,
+                  "y": 2
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 8,
+                  "home_y": 2,
+                  "movement_type": "Stationary",
+                  "npc_index": 3,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 55,
+                  "text_id": 4,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 8,
+                  "y": 2
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Up",
+                  "home_x": 2,
+                  "home_y": 5,
+                  "movement_type": "Stationary",
+                  "npc_index": 4,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 53,
+                  "text_id": 5,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 2,
+                  "y": 5
+                }
+              ],
+              "pending_dialogue": {
+                "char_index": 18,
+                "current_page": 0,
+                "delay_counter": 0,
+                "holding_open": false,
+                "pages": [
+                  {
+                    "line1": "RED received TM18!",
+                    "line2": ""
+                  }
+                ],
+                "text_delay_frames": 3,
+                "waiting_for_input": true
+              },
+              "player_sprite_state": null,
+              "state": {
+                "current_map": "CeladonMart3F",
+                "encounter_cooldown": 0,
+                "exiting_door": false,
+                "player": {
+                  "bike_speedup_active": true,
+                  "facing": "Down",
+                  "movement_state": "Idle",
+                  "transport": "Walking",
+                  "x": 16,
+                  "y": 4
+                },
+                "repel_steps": 0,
+                "standing_on_door": false,
+                "standing_on_warp": false,
+                "walk_counter": 0
+              }
+            },
+            "sfx_playing": true,
+            "t": 277
+          },
+          "receipt_frame_state": {
+            "audio_channels": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "has_doll": false,
+            "has_item": true,
+            "input_bits": 0,
+            "obtained_flag": true,
+            "overworld": {
+              "active_script_effect": null,
+              "field_loop_wait": null,
+              "field_text_restore": null,
+              "inner_field_text_open": null,
+              "last_script_dialogue": null,
+              "npc_states": [
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Up",
+                  "home_x": 16,
+                  "home_y": 5,
+                  "movement_type": "Stationary",
+                  "npc_index": 0,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 38,
+                  "text_id": 1,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 16,
+                  "y": 5
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Right",
+                  "home_x": 11,
+                  "home_y": 6,
+                  "movement_type": "Stationary",
+                  "npc_index": 1,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 55,
+                  "text_id": 2,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 11,
+                  "y": 6
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 7,
+                  "home_y": 2,
+                  "movement_type": "Stationary",
+                  "npc_index": 2,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 55,
+                  "text_id": 3,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 7,
+                  "y": 2
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 8,
+                  "home_y": 2,
+                  "movement_type": "Stationary",
+                  "npc_index": 3,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 55,
+                  "text_id": 4,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 8,
+                  "y": 2
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Up",
+                  "home_x": 2,
+                  "home_y": 5,
+                  "movement_type": "Stationary",
+                  "npc_index": 4,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 53,
+                  "text_id": 5,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 2,
+                  "y": 5
+                }
+              ],
+              "pending_dialogue": null,
+              "player_sprite_state": null,
+              "state": {
+                "current_map": "CeladonMart3F",
+                "encounter_cooldown": 0,
+                "exiting_door": false,
+                "player": {
+                  "bike_speedup_active": true,
+                  "facing": "Down",
+                  "movement_state": "Idle",
+                  "transport": "Walking",
+                  "x": 16,
+                  "y": 4
+                },
+                "repel_steps": 0,
+                "standing_on_door": false,
+                "standing_on_warp": false,
+                "walk_counter": 0
+              }
+            },
+            "sfx_playing": false,
+            "t": 427
+          }
+        },
+        "after-a7": {
+          "sound_cue": 276,
+          "receipt_screenshot_hw": 426,
+          "frames": 538,
+          "repeats_byteexact": true,
+          "sound_cue_state": {
+            "audio_channels": [
+              true,
+              true,
+              true,
+              false
+            ],
+            "has_doll": false,
+            "has_item": true,
+            "input_bits": 0,
+            "obtained_flag": true,
+            "overworld": {
+              "active_script_effect": {
+                "PrintItemFieldText": {
+                  "phase": "PlayingSound",
+                  "sound_id": "SFX_GET_ITEM_1",
+                  "text": "RED received TM18!"
+                }
+              },
+              "field_loop_wait": 1,
+              "field_text_restore": null,
+              "inner_field_text_open": true,
+              "last_script_dialogue": {
+                "char_index": 18,
+                "current_page": 0,
+                "delay_counter": 0,
+                "holding_open": false,
+                "pages": [
+                  {
+                    "line1": "RED received TM18!",
+                    "line2": ""
+                  }
+                ],
+                "text_delay_frames": 3,
+                "waiting_for_input": true
+              },
+              "npc_states": [
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Up",
+                  "home_x": 16,
+                  "home_y": 5,
+                  "movement_type": "Stationary",
+                  "npc_index": 0,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 38,
+                  "text_id": 1,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 16,
+                  "y": 5
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Right",
+                  "home_x": 11,
+                  "home_y": 6,
+                  "movement_type": "Stationary",
+                  "npc_index": 1,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 55,
+                  "text_id": 2,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 11,
+                  "y": 6
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 7,
+                  "home_y": 2,
+                  "movement_type": "Stationary",
+                  "npc_index": 2,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 55,
+                  "text_id": 3,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 7,
+                  "y": 2
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 8,
+                  "home_y": 2,
+                  "movement_type": "Stationary",
+                  "npc_index": 3,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 55,
+                  "text_id": 4,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 8,
+                  "y": 2
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Up",
+                  "home_x": 2,
+                  "home_y": 5,
+                  "movement_type": "Stationary",
+                  "npc_index": 4,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 53,
+                  "text_id": 5,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 2,
+                  "y": 5
+                }
+              ],
+              "pending_dialogue": null,
+              "player_sprite_state": {
+                "facing": 0,
+                "initialized": true,
+                "intra_frame": 0,
+                "pending": [
+                  0,
+                  0
+                ],
+                "phase": 0,
+                "visible": 0
+              },
+              "state": {
+                "current_map": "CeladonMart3F",
+                "encounter_cooldown": 0,
+                "exiting_door": false,
+                "player": {
+                  "bike_speedup_active": true,
+                  "facing": "Down",
+                  "movement_state": "Idle",
+                  "transport": "Walking",
+                  "x": 16,
+                  "y": 4
+                },
+                "repel_steps": 0,
+                "standing_on_door": false,
+                "standing_on_warp": false,
+                "walk_counter": 0
+              }
+            },
+            "sfx_playing": true,
+            "t": 276
+          },
+          "receipt_frame_state": {
+            "audio_channels": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "has_doll": false,
+            "has_item": true,
+            "input_bits": 0,
+            "obtained_flag": true,
+            "overworld": {
+              "active_script_effect": {
+                "FinishFieldText": {
+                  "acknowledged": false
+                }
+              },
+              "field_loop_wait": 1,
+              "field_text_restore": null,
+              "inner_field_text_open": true,
+              "last_script_dialogue": {
+                "char_index": 18,
+                "current_page": 0,
+                "delay_counter": 0,
+                "holding_open": false,
+                "pages": [
+                  {
+                    "line1": "RED received TM18!",
+                    "line2": ""
+                  }
+                ],
+                "text_delay_frames": 3,
+                "waiting_for_input": true
+              },
+              "npc_states": [
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Up",
+                  "home_x": 16,
+                  "home_y": 5,
+                  "movement_type": "Stationary",
+                  "npc_index": 0,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 38,
+                  "text_id": 1,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 16,
+                  "y": 5
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Right",
+                  "home_x": 11,
+                  "home_y": 6,
+                  "movement_type": "Stationary",
+                  "npc_index": 1,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 55,
+                  "text_id": 2,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 11,
+                  "y": 6
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 7,
+                  "home_y": 2,
+                  "movement_type": "Stationary",
+                  "npc_index": 2,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 55,
+                  "text_id": 3,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 7,
+                  "y": 2
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Down",
+                  "home_x": 8,
+                  "home_y": 2,
+                  "movement_type": "Stationary",
+                  "npc_index": 3,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 55,
+                  "text_id": 4,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 8,
+                  "y": 2
+                },
+                {
+                  "defeated": false,
+                  "delay_counter": 0,
+                  "facing": "Up",
+                  "home_x": 2,
+                  "home_y": 5,
+                  "movement_type": "Stationary",
+                  "npc_index": 4,
+                  "range": 0,
+                  "scripted_frame": null,
+                  "scripted_path": [],
+                  "sprite_id": 53,
+                  "text_id": 5,
+                  "visible": true,
+                  "walk_counter": 0,
+                  "wander_axis": "Any",
+                  "x": 2,
+                  "y": 5
+                }
+              ],
+              "pending_dialogue": null,
+              "player_sprite_state": {
+                "facing": 0,
+                "initialized": true,
+                "intra_frame": 0,
+                "pending": [
+                  0,
+                  0
+                ],
+                "phase": 0,
+                "visible": 0
+              },
+              "state": {
+                "current_map": "CeladonMart3F",
+                "encounter_cooldown": 0,
+                "exiting_door": false,
+                "player": {
+                  "bike_speedup_active": true,
+                  "facing": "Down",
+                  "movement_state": "Idle",
+                  "transport": "Walking",
+                  "x": 16,
+                  "y": 4
+                },
+                "repel_steps": 0,
+                "standing_on_door": false,
+                "standing_on_warp": false,
+                "walk_counter": 0
+              }
+            },
+            "sfx_playing": false,
+            "t": 426
+          }
+        }
+      }
+    },
+    "receipt_hw": 150,
+    "postcue_input_bits": 261,
+    "original_evidence": "ASM source only, no original emulator recording; independent interaction prefixes; no absolute entry/close timing parity.",
+    "postcue_inputs_equal_all_cases": true
+  },
+  "archive": {
+    "bytes": 68477035,
+    "entries": 19319,
+    "sha256": "44447878233068d4434831d1cd7d05d3eb7e62fbb8a1a305437188762ef7cee1"
+  },
+  "gba_metrics": 31,
+  "original_evidence": "Complete caller/far-text and text-opcode ASM; no new original emulator recording, absolute entry/close/CPU timing, full-pixel or waveform claim.",
+  "failed_checks": {
+    "native_a1": "Capture-helper insertion expected bare ignore attribute, but actual ignore contains a reason; no helper/source test write occurred. Initial script-only build completed; a2 injects actual helper/test before lib build.",
+    "gba_a2": "Attempted 46+5=51 manifest assertion failed before copying files because Route16FlyHouse was already present in inherited46. Following shell build ran with preceding old46 copy, so NOT accepted as final170 evidence. Must recopy50 unique files and perform final new build/record/compare.",
+    "app_a2": "Four actual gifts passed before Mart fixture failed to reach PROMPT: player16,7 faced a bookshelf, not a shop counter. Diagnostic250 frames and snapshot retained. Use legal floor16,4 above clerk16,5, Down/A real input on both branches; no production collision/NPC change.",
+    "a3_helper_patch": "WT helper/capture update succeeded; base patch initially tried to locate receipt_prompt_needs_press, which base lacks. Updated base via exact first-occurrence replacement before building. Native a3 build did not start on failed patch; GBA copied final WT50 sources.",
+    "app_a3": "Correct legal Mart fixture reaches original intro using actual Down20/A20 capture (250-frame diagnosis ends during intro, not successful receipt proof). Single-frame initial A in target test was discarded by field input cadence. Use heldA20/release for first/repeat actual NPC interactions, keep every bag/flag/paragraph/sound/close assertion.",
+    "core_a3": "Repeat Fly test recognized ShowText only. Local printed_text adapter covers ShowText and printFieldText/printFieldParagraph, retaining and strengthening first-talk absence/repeat presence; bike menu price/no-gift/no-money assertions preserved.",
+    "app_a4": "Held initial A20 was still held when short Diner intro reached its first fresh paragraph wait. Target test and autonomous capture kept A held, so did not create a new edge and stalled on Go ahead! Laugh!, not a production script failure. a5 target releases immediately when PrintFieldText starts, and gift capture alternates acknowledgement with release when A already held. Post-sound261-input policy unchanged. Failed capture4000PNG preserved; capture now writes selected state/controls before final gift assertion so future failed controls remain inspectable.",
+    "app_a5": "Four gifts pass; Mart initial one-frame Down preparation still discarded at field cadence. Capture Down20 reaches intro, confirming interaction itself works. a6 fixture holds Down20 before idle, asserts exact legal coordinates/facing on both master and after. Every prompt/item/flag/paragraph/sound/final-wait/repeat assertion retained.",
+    "native_a6_build": "New fixture-coordinate assertion compared u16 runtime y with u8 warp argument; compile error retained. a7 explicitly widens warp y with u16::from within helper only. First replacement guard found another preexisting (x,y) assertion and aborted before WT write/build; scoped replacement to gift_fixture_170. Production unaffected.",
+    "base_a1_features": "Base app-only lib build produced app3ecc077a while after four-package lib build produced app031fe43e. No base recordings were taken. Rebuild base with same core/data/app/agent selection and flags to match dependency feature union before freezing/capture."
+  },
+  "limitations": [
+    "BikeShop remaining source-audited gift and its separate no-voucher purchase flow pending.",
+    "Previous full text init/close, acknowledged-A arrow phase, sprite work/full movement and final m01..49/independent SAVE-CONTINUE gates remain."
+  ]
+}

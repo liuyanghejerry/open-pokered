@@ -6,6 +6,26 @@ use serde_json::{json, Value};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum PokemonScriptCommand {
+    /// Inner PrintText with DONE: return after printing, without an outer A/B wait.
+    PrintFieldText { text: String },
+    /// Original BIT_NO_TEXT_DELAY, retained across field conversations.
+    SetFieldTextDelayDisabled { disabled: bool },
+    /// Instant question and menu; return -1 for B, or the A-selected index.
+    ChooseInstantFieldMenu { options: Vec<String>, text: String },
+    /// Outer AfterDisplayingTextID wait on the retained inner text window.
+    FinishFieldText,
+    /// Leading PARA: wait A/B, clear the retained text interior, delay 20 frames.
+    PrintFieldParagraph { text: String, sound_id: Option<String> },
+    /// Inner text sound opcode, returning with its text window retained.
+    PrintItemFieldText { text: String, sound_id: Option<String> },
+    /// Inner PROMPT: manual A/B return without holding A or closing the window.
+    WaitFieldPrompt,
+    /// TX_PROMPT_BUTTON: fresh A/B without ProtectedDelay3, with arrow.
+    WaitFieldPromptButton,
+    /// TX_WAIT_BUTTON: fresh A/B without ProtectedDelay3 or arrow.
+    WaitFieldButton,
+    /// Skip outer confirmation, holding the retained window until A release.
+    CloseFieldText,
     ShowItemDialogue { text: String, sound_id: Option<String> },
     OldManTutorial,
     TradePokemon {
@@ -71,6 +91,16 @@ pub enum PokemonScriptCommand {
 impl PokemonScriptCommand {
     pub const fn name(&self) -> &'static str {
         match self {
+            Self::PrintFieldText { .. } => "printFieldText",
+            Self::SetFieldTextDelayDisabled { .. } => "setFieldTextDelayDisabled",
+            Self::ChooseInstantFieldMenu { .. } => "chooseInstantFieldMenu",
+            Self::FinishFieldText => "finishFieldText",
+            Self::PrintFieldParagraph { .. } => "printFieldParagraph",
+            Self::PrintItemFieldText { .. } => "printItemFieldText",
+            Self::WaitFieldPrompt => "waitFieldPrompt",
+            Self::WaitFieldPromptButton => "waitFieldPromptButton",
+            Self::WaitFieldButton => "waitFieldButton",
+            Self::CloseFieldText => "closeFieldText",
             Self::ShowItemDialogue { .. } => "showItemDialogue",
             Self::OldManTutorial => "oldManTutorial",
             Self::TradePokemon { .. } => "tradePokemon",
@@ -107,6 +137,12 @@ impl PokemonScriptCommand {
     pub fn into_script_command(self) -> ScriptCommand {
         let name = self.name().to_string();
         let args = match self {
+            Self::PrintFieldText { text } => vec![json!(text)],
+            Self::SetFieldTextDelayDisabled { disabled } => vec![json!(disabled)],
+            Self::ChooseInstantFieldMenu { options, text } => vec![json!(options),json!(text)],
+            Self::PrintFieldParagraph { text, sound_id } | Self::PrintItemFieldText { text, sound_id } => {
+                let mut args=vec![json!(text)];if let Some(sound)=sound_id {args.push(json!(sound));}args
+            },
             Self::ShowItemDialogue { text, sound_id } => {
                 let mut args = vec![json!(text)];
                 if let Some(sound) = sound_id { args.push(json!(sound)); }
@@ -139,7 +175,12 @@ impl PokemonScriptCommand {
             Self::GiveCoins { amount } | Self::TakeCoins { amount } => vec![json!(amount)],
             Self::DepositDaycare { index } => vec![json!(index)],
             Self::ReplaceTileBlock { x, y, block_id } => vec![json!(x), json!(y), json!(block_id)],
-            Self::OldManTutorial
+            Self::WaitFieldPrompt
+            | Self::WaitFieldPromptButton
+            | Self::WaitFieldButton
+            | Self::CloseFieldText
+            | Self::FinishFieldText
+            | Self::OldManTutorial
             | Self::AnimateHealingMachine
             | Self::ChoosePartyPokemon
             | Self::ShowDiploma
@@ -190,6 +231,20 @@ impl PokemonScriptCommand {
                 .collect::<Result<Vec<_>, _>>()
         };
         Ok(match name {
+            "printFieldText" => Self::PrintFieldText { text: string(0)? },
+            "setFieldTextDelayDisabled" => Self::SetFieldTextDelayDisabled { disabled: args.first().and_then(Value::as_bool).ok_or("setFieldTextDelayDisabled: boolean required")? },
+            "chooseInstantFieldMenu" => {
+                let options=strings(0)?;
+                if options.is_empty() {return Err("chooseInstantFieldMenu: at least one option required".into());}
+                Self::ChooseInstantFieldMenu {options,text:string(1)?}
+            },
+            "finishFieldText" => Self::FinishFieldText,
+            "printFieldParagraph" => Self::PrintFieldParagraph { text: string(0)?, sound_id: args.get(1).filter(|v| !v.is_null()).map(|_|string(1)).transpose()? },
+            "printItemFieldText" => Self::PrintItemFieldText { text: string(0)?, sound_id: args.get(1).filter(|v| !v.is_null()).map(|_|string(1)).transpose()? },
+            "waitFieldPrompt" => Self::WaitFieldPrompt,
+            "waitFieldPromptButton" => Self::WaitFieldPromptButton,
+            "waitFieldButton" => Self::WaitFieldButton,
+            "closeFieldText" => Self::CloseFieldText,
             "waitMusic" => Self::WaitMusic,
             "vendingDelivery" => Self::VendingDelivery,
             "showMoneyBox" => Self::ShowMoneyBox { amount: args.first().and_then(Value::as_i64).ok_or_else(|| format!("{name}: amount must be an integer"))? },
@@ -308,6 +363,27 @@ mod tests {
             PokemonScriptCommand::from_custom(&name, &args),
             Ok(expected)
         );
+    }
+
+    #[test]
+    fn bike_text_mode_protocol_round_trip_and_validation() {
+        for expected in [
+            PokemonScriptCommand::SetFieldTextDelayDisabled { disabled: true },
+            PokemonScriptCommand::SetFieldTextDelayDisabled { disabled: false },
+            PokemonScriptCommand::ChooseInstantFieldMenu {
+                options: vec!["BICYCLE ¥1000000".into(), "CANCEL".into()],
+                text: "It's a cool BIKE!".into(),
+            },
+        ] {
+            let ScriptCommand::Custom { name, args } = expected.clone().into_script_command() else { panic!() };
+            assert_eq!(PokemonScriptCommand::from_custom(&name, &args), Ok(expected));
+        }
+        for args in [vec![], vec![json!(1)], vec![json!("true")]] {
+            assert!(PokemonScriptCommand::from_custom("setFieldTextDelayDisabled", &args).is_err());
+        }
+        for args in [vec![], vec![json!([]), json!("question")], vec![json!([1]), json!("question")], vec![json!(["CANCEL"]), json!(false)]] {
+            assert!(PokemonScriptCommand::from_custom("chooseInstantFieldMenu", &args).is_err());
+        }
     }
 
     #[test]

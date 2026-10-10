@@ -15,10 +15,9 @@ game_scene VermilionPidgeyHouse {
   // ── PIDGEY (npc 2) — plays its cry after the text ──────────────────────
   @storyline("talkPidgey") {
     @trigger(map = "VermilionPidgeyHouse", npc = 2)
-    @speaker("") {
-      @t("PIDGEY: Kurukkoo!", "波波：咕咕咕！")
-    }
+    printFieldText(@t("PIDGEY: Kurukkoo!", "波波：咕咕咕！"))
     playCry("PIDGEY")
+    finishFieldText()
   }
 
   // ── Letter on the table (npc 3) ────────────────────────────────────────

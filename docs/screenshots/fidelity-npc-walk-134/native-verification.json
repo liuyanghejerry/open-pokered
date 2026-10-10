@@ -1,0 +1,730 @@
+{
+  "False": {
+    "frames": 20,
+    "opaque_pose_mismatch": [],
+    "rgb_strip_mismatch": [],
+    "poses": [
+      {
+        "t": -1,
+        "source": [
+          [
+            44,
+            "stand",
+            false
+          ]
+        ],
+        "native": [
+          [
+            44,
+            "stand",
+            false
+          ]
+        ]
+      },
+      {
+        "t": 0,
+        "source": [
+          [
+            44,
+            "stand",
+            false
+          ]
+        ],
+        "native": [
+          [
+            44,
+            "stand",
+            false
+          ]
+        ]
+      },
+      {
+        "t": 1,
+        "source": [
+          [
+            44,
+            "stand",
+            false
+          ]
+        ],
+        "native": [
+          [
+            44,
+            "stand",
+            false
+          ]
+        ]
+      },
+      {
+        "t": 2,
+        "source": [
+          [
+            44,
+            "stand",
+            false
+          ]
+        ],
+        "native": [
+          [
+            44,
+            "stand",
+            false
+          ]
+        ]
+      },
+      {
+        "t": 3,
+        "source": [
+          [
+            44,
+            "stand",
+            false
+          ]
+        ],
+        "native": [
+          [
+            44,
+            "stand",
+            false
+          ]
+        ]
+      },
+      {
+        "t": 4,
+        "source": [
+          [
+            44,
+            "stand",
+            false
+          ]
+        ],
+        "native": [
+          [
+            44,
+            "stand",
+            false
+          ]
+        ]
+      },
+      {
+        "t": 5,
+        "source": [
+          [
+            42,
+            "stand",
+            false
+          ]
+        ],
+        "native": [
+          [
+            42,
+            "stand",
+            false
+          ]
+        ]
+      },
+      {
+        "t": 6,
+        "source": [
+          [
+            42,
+            "stand",
+            false
+          ]
+        ],
+        "native": [
+          [
+            42,
+            "stand",
+            false
+          ]
+        ]
+      },
+      {
+        "t": 7,
+        "source": [
+          [
+            40,
+            "stand",
+            false
+          ]
+        ],
+        "native": [
+          [
+            40,
+            "stand",
+            false
+          ]
+        ]
+      },
+      {
+        "t": 8,
+        "source": [
+          [
+            40,
+            "stand",
+            false
+          ]
+        ],
+        "native": [
+          [
+            40,
+            "stand",
+            false
+          ]
+        ]
+      },
+      {
+        "t": 9,
+        "source": [
+          [
+            38,
+            "stand",
+            false
+          ]
+        ],
+        "native": [
+          [
+            38,
+            "stand",
+            false
+          ]
+        ]
+      },
+      {
+        "t": 10,
+        "source": [
+          [
+            38,
+            "stand",
+            false
+          ]
+        ],
+        "native": [
+          [
+            38,
+            "stand",
+            false
+          ]
+        ]
+      },
+      {
+        "t": 11,
+        "source": [
+          [
+            36,
+            "stand",
+            false
+          ]
+        ],
+        "native": [
+          [
+            36,
+            "stand",
+            false
+          ]
+        ]
+      },
+      {
+        "t": 12,
+        "source": [
+          [
+            36,
+            "stand",
+            false
+          ]
+        ],
+        "native": [
+          [
+            36,
+            "stand",
+            false
+          ]
+        ]
+      },
+      {
+        "t": 13,
+        "source": [
+          [
+            34,
+            "stand",
+            false
+          ]
+        ],
+        "native": [
+          [
+            34,
+            "stand",
+            false
+          ]
+        ]
+      },
+      {
+        "t": 14,
+        "source": [
+          [
+            34,
+            "stand",
+            false
+          ]
+        ],
+        "native": [
+          [
+            34,
+            "stand",
+            false
+          ]
+        ]
+      },
+      {
+        "t": 15,
+        "source": [
+          [
+            32,
+            "stand",
+            false
+          ]
+        ],
+        "native": [
+          [
+            32,
+            "stand",
+            false
+          ]
+        ]
+      },
+      {
+        "t": 16,
+        "source": [
+          [
+            32,
+            "stand",
+            false
+          ]
+        ],
+        "native": [
+          [
+            32,
+            "stand",
+            false
+          ]
+        ]
+      },
+      {
+        "t": 17,
+        "source": [
+          [
+            30,
+            "stand",
+            false
+          ]
+        ],
+        "native": [
+          [
+            30,
+            "stand",
+            false
+          ]
+        ]
+      },
+      {
+        "t": 18,
+        "source": [
+          [
+            30,
+            "stand",
+            false
+          ]
+        ],
+        "native": [
+          [
+            30,
+            "stand",
+            false
+          ]
+        ]
+      }
+    ]
+  },
+  "True": {
+    "frames": 20,
+    "opaque_pose_mismatch": [],
+    "rgb_strip_mismatch": [],
+    "poses": [
+      {
+        "t": -1,
+        "source": [
+          [
+            49,
+            "step",
+            false
+          ]
+        ],
+        "native": [
+          [
+            49,
+            "step",
+            false
+          ]
+        ]
+      },
+      {
+        "t": 0,
+        "source": [
+          [
+            50,
+            "step",
+            false
+          ]
+        ],
+        "native": [
+          [
+            50,
+            "step",
+            false
+          ]
+        ]
+      },
+      {
+        "t": 1,
+        "source": [
+          [
+            50,
+            "step",
+            false
+          ]
+        ],
+        "native": [
+          [
+            50,
+            "step",
+            false
+          ]
+        ]
+      },
+      {
+        "t": 2,
+        "source": [
+          [
+            50,
+            "step",
+            false
+          ]
+        ],
+        "native": [
+          [
+            50,
+            "step",
+            false
+          ]
+        ]
+      },
+      {
+        "t": 3,
+        "source": [
+          [
+            50,
+            "step",
+            false
+          ]
+        ],
+        "native": [
+          [
+            50,
+            "step",
+            false
+          ]
+        ]
+      },
+      {
+        "t": 4,
+        "source": [
+          [
+            51,
+            "step",
+            false
+          ]
+        ],
+        "native": [
+          [
+            51,
+            "step",
+            false
+          ]
+        ]
+      },
+      {
+        "t": 5,
+        "source": [
+          [
+            49,
+            "step",
+            false
+          ]
+        ],
+        "native": [
+          [
+            49,
+            "step",
+            false
+          ]
+        ]
+      },
+      {
+        "t": 6,
+        "source": [
+          [
+            49,
+            "step",
+            false
+          ]
+        ],
+        "native": [
+          [
+            49,
+            "step",
+            false
+          ]
+        ]
+      },
+      {
+        "t": 7,
+        "source": [
+          [
+            48,
+            "step",
+            false
+          ]
+        ],
+        "native": [
+          [
+            48,
+            "step",
+            false
+          ]
+        ]
+      },
+      {
+        "t": 8,
+        "source": [
+          [
+            48,
+            "step",
+            false
+          ]
+        ],
+        "native": [
+          [
+            48,
+            "step",
+            false
+          ]
+        ]
+      },
+      {
+        "t": 9,
+        "source": [
+          [
+            47,
+            "step",
+            false
+          ]
+        ],
+        "native": [
+          [
+            47,
+            "step",
+            false
+          ]
+        ]
+      },
+      {
+        "t": 10,
+        "source": [
+          [
+            47,
+            "step",
+            false
+          ]
+        ],
+        "native": [
+          [
+            47,
+            "step",
+            false
+          ]
+        ]
+      },
+      {
+        "t": 11,
+        "source": [
+          [
+            46,
+            "step",
+            false
+          ]
+        ],
+        "native": [
+          [
+            46,
+            "step",
+            false
+          ]
+        ]
+      },
+      {
+        "t": 12,
+        "source": [
+          [
+            46,
+            "step",
+            false
+          ]
+        ],
+        "native": [
+          [
+            46,
+            "step",
+            false
+          ]
+        ]
+      },
+      {
+        "t": 13,
+        "source": [
+          [
+            45,
+            "step",
+            false
+          ]
+        ],
+        "native": [
+          [
+            45,
+            "step",
+            false
+          ]
+        ]
+      },
+      {
+        "t": 14,
+        "source": [
+          [
+            45,
+            "step",
+            false
+          ]
+        ],
+        "native": [
+          [
+            45,
+            "step",
+            false
+          ]
+        ]
+      },
+      {
+        "t": 15,
+        "source": [
+          [
+            44,
+            "step",
+            false
+          ]
+        ],
+        "native": [
+          [
+            44,
+            "step",
+            false
+          ]
+        ]
+      },
+      {
+        "t": 16,
+        "source": [
+          [
+            44,
+            "step",
+            false
+          ]
+        ],
+        "native": [
+          [
+            44,
+            "step",
+            false
+          ]
+        ]
+      },
+      {
+        "t": 17,
+        "source": [
+          [
+            43,
+            "step",
+            false
+          ]
+        ],
+        "native": [
+          [
+            43,
+            "step",
+            false
+          ]
+        ]
+      },
+      {
+        "t": 18,
+        "source": [
+          [
+            43,
+            "step",
+            false
+          ]
+        ],
+        "native": [
+          [
+            43,
+            "step",
+            false
+          ]
+        ]
+      }
+    ]
+  },
+  "repeats": {
+    "npc-134-ready-source-valid": {
+      "frames": 161,
+      "ram_and_png_repeat": "exact"
+    },
+    "npc-134-ready-zero-source-valid": {
+      "frames": 161,
+      "ram_and_png_repeat": "exact"
+    },
+    "npc-132-moving-walk-source-valid": {
+      "frames": 161,
+      "ram_and_png_repeat": "exact"
+    },
+    "npc-131-ready-native-before": {
+      "frames": 101,
+      "ram_and_png_repeat": "exact"
+    },
+    "npc-132-walk-False-master": {
+      "frames": 101,
+      "ram_and_png_repeat": "exact"
+    },
+    "npc-132-walk-True-master": {
+      "frames": 101,
+      "ram_and_png_repeat": "exact"
+    },
+    "npc-134-walk-False-after": {
+      "frames": 101,
+      "ram_and_png_repeat": "exact"
+    },
+    "npc-134-walk-True-after": {
+      "frames": 101,
+      "ram_and_png_repeat": "exact"
+    }
+  }
+}

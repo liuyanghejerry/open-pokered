@@ -69,6 +69,11 @@ fn all_sixteen_chinese_pc_ratings_use_complete_messages_and_readable_pages() {
         pc.update_frame(a, &mut ctx);
         let pages = pc.message_page_count();
         for _ in 0..pages {
+            for _ in 0..3000 {
+                if pc.message_ready_for_ack() { break; }
+                pc.update_frame(MenuInput::none(), &mut ctx);
+            }
+            assert!(pc.message_ready_for_ack());
             pc.update_frame(a, &mut ctx);
         }
         let expected = pokered_data::ui_text::zh_pc_message(
@@ -96,6 +101,11 @@ fn all_sixteen_chinese_pc_ratings_use_complete_messages_and_readable_pages() {
             50 => assert!(expected.contains("学习装置")),
             _ => {}
         }
+        for _ in 0..3000 {
+            if pc.message_ready_for_ack() { break; }
+            pc.update_frame(MenuInput::none(), &mut ctx);
+        }
+        assert!(pc.message_ready_for_ack());
         pc.update_frame(a, &mut ctx);
         assert_eq!(pc.message_lines().concat(), "已断开与大木博士电脑的连线。");
     }

@@ -175,6 +175,11 @@ def open_start(g, entry):
             g.tap("start", 12)
             continue
         assert menu and menu["kind"] == "start", menu
+        # DisplayTextIDInit/DrawStartMenu can still own the input lock
+        # after the screen changes; wait for its observed first Joypad.
+        if not menu.get("input_ready", True):
+            g.step(1)
+            continue
         if menu["items"][menu["cursor"]] == entry:
             g.tap("a", 12)
             return
@@ -1373,7 +1378,19 @@ def lead_with(g, species):
             break
         g.tap("up", 8)
     g.tap("b", 8)
-    g.tap("b", 8)
+    # Party exit restores sprites and then redraws START. A second B tap
+    # during that input lock is discarded, leaving a ready menu behind.
+    # Observe the actual Joypad gate instead of treating a fixed gap as ready.
+    for _ in range(240):
+        state = g.st()
+        menu = state.get("field_menu")
+        assert menu and menu["kind"] == "start", state
+        if menu.get("input_ready", True):
+            g.tap("b", 8)
+            break
+        g.step(1)
+    else:
+        raise NavError(f"party return never reached ready START: {g.st()}")
     assert g.cutscene()
     assert g.st()["party"][0]["species"] == species
 

@@ -1,0 +1,16 @@
+{
+  "master": "31b1eda3112514d6bc803af559ec7f7c9e20374f",
+  "previous_head": "7b4cc08c65349c24bab9c3760dc7aea02b1924cd",
+  "original": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "input": "Down held HW 0..15, then released; each case prime4 after Continue/setup/120 idle",
+  "fixture": "City map1 player20,30; NPC0 sprite4 origin19,29 Down. Standing base rawY44; moving remaining12 phase1 intra0 rawY48. Script controls positions/counters, not naturally rolled placement. No PRNG alignment after ready_zero begins walking.",
+  "superseded": "ready131 Y48 was not valid standing OAM; source134 corrects rawY44 and repeated recordings replace it. Counter fixture unaffected. Native before131 had correct Y44. Native133 lacked NPC camera delay; native132 also used wrong final-step counter gate. Failure logs retained.",
+  "sources": {
+    "crates/pokered-core/src/overworld/update.rs": "941c0990abaf6abbb1fac772d8a7a7712613b368d1b4d3204ba66890b4366093",
+    "crates/pokered-core/src/overworld/screen.rs": "3f003ff9727b88b30ac5c7257b4adee8b22b3344c6b7a2025347667e960e1606",
+    "crates/pokered-core/src/snapshot.rs": "610179d586dc0ed60fa6039eb32cd05bef1aef48ce114850dc3eeaab0bb9c37c",
+    "crates/pokered-app/src/game.rs": "2a9a6439f73435aa41b6a21c118671147fee708484323053fc1ff1e904485e8a",
+    "crates/pokered-app/tests/fixtures/npc-player-walk-132.json": "84352c651fa412482ed68b530a3fa13713e05b1f2bbf7a7dd34015a378f78156"
+  },
+  "master_capture_helper_sha256": "34f64a378f8a69303002d7ddf11a7c5a6d4fc9845f316521b8c292e047f23d2e"
+}

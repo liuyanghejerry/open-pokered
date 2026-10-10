@@ -448,6 +448,29 @@ impl ScriptHost for NativeHost {
                 }
                 Ok(pokemon(PokemonScriptCommand::from_custom(name, &values)?))
             }
+            "printFieldParagraph" | "printItemFieldText" => {
+                let text=args::text(v.first().ok_or("field print: missing text")?, name)?;
+                let sound_id=v.get(1).map(|value|args::text(value,name)).transpose()?;
+                Ok(pokemon(if name=="printFieldParagraph" {PokemonScriptCommand::PrintFieldParagraph {text,sound_id}} else {PokemonScriptCommand::PrintItemFieldText {text,sound_id}}))
+            }
+            "waitFieldPrompt" => Ok(pokemon(PokemonScriptCommand::WaitFieldPrompt)),
+            "waitFieldPromptButton" => Ok(pokemon(PokemonScriptCommand::WaitFieldPromptButton)),
+            "waitFieldButton" => Ok(pokemon(PokemonScriptCommand::WaitFieldButton)),
+            "closeFieldText" => Ok(pokemon(PokemonScriptCommand::CloseFieldText)),
+            "finishFieldText" => Ok(pokemon(PokemonScriptCommand::FinishFieldText)),
+            "setFieldTextDelayDisabled" => {
+                let Some(Value::Bool(disabled))=v.first() else { return Err("setFieldTextDelayDisabled: boolean required".into()); };
+                Ok(pokemon(PokemonScriptCommand::SetFieldTextDelayDisabled {disabled:*disabled}))
+            }
+            "chooseInstantFieldMenu" => {
+                let options=args::string_array(v.first().ok_or("chooseInstantFieldMenu: missing options")?,name)?;
+                let text=args::text(v.get(1).ok_or("chooseInstantFieldMenu: missing text")?,name)?;
+                Ok(pokemon(PokemonScriptCommand::from_custom(name,&[serde_json::json!(options),serde_json::json!(text)])?))
+            }
+            "printFieldText" => {
+                let text = args::text(v.first().ok_or("printFieldText: missing text")?, "printFieldText")?;
+                Ok(pokemon(PokemonScriptCommand::PrintFieldText { text }))
+            }
             "readingMenu" => {
                 let options = args::string_array(v.first().ok_or("readingMenu: missing options")?, "readingMenu")?;
                 let texts = args::string_array(v.get(1).ok_or("readingMenu: missing texts")?, "readingMenu")?;
@@ -2612,7 +2635,9 @@ mod tests {
                     e.set_lang(lang);
                     let commands = drive_fidelity_scene(&mut e, "talkOaksAide", true, "", &[0]);
                     let evaluation = commands.iter().filter_map(|c| match c {
-                        ScriptCommand::ShowText { text } => Some(text), _ => None,
+                        ScriptCommand::ShowText { text } => Some(text.as_str()),
+                        ScriptCommand::Custom { name, args } if name=="printFieldText" => args.first().and_then(|v|v.as_str()),
+                        _ => None,
                     }).nth(1).unwrap();
                     assert!(evaluation.contains(&owned.to_string()), "{map}, {owned}, {lang}: {evaluation}");
                     assert_eq!(e.get_flag(flag), owned >= threshold);
@@ -2630,10 +2655,14 @@ mod tests {
                 e.load_map(map, &scene);
                 let commands = drive_fidelity_scene(&mut e, "talkFishingGuru", room, "", &[0]);
                 let give_at = commands.iter().position(|c| matches!(c, ScriptCommand::GiveItem { .. })).unwrap();
-                let promise = commands.iter().position(|c| matches!(c, ScriptCommand::ShowText { text } if text.starts_with("Grand!")));
+                let promise = commands.iter().position(|c| match c {
+                    ScriptCommand::ShowText {text} => text.starts_with("Grand!"),
+                    ScriptCommand::Custom {name,args} if name=="printFieldText" => args.first().and_then(|v|v.as_str()).is_some_and(|text|text.starts_with("Grand!")),
+                    _ => false,
+                });
                 assert_eq!(promise.is_some(), room);
                 if let Some(at) = promise { assert!(give_at < at); }
-                assert_eq!(commands.iter().any(|c| matches!(c, ScriptCommand::Custom { name, .. } if name == "showItemDialogue")), room);
+                assert_eq!(commands.iter().any(|c| matches!(c, ScriptCommand::Custom { name, args } if name == "printFieldParagraph" && args.get(1).and_then(|v|v.as_str())==Some("SFX_GET_ITEM_1"))), room);
             }
         }
     }
@@ -2665,9 +2694,12 @@ mod tests {
                 let commands = drive_fidelity_scene(&mut e, handler, room, "", &[0]);
                 let receipts: Vec<_> = commands.iter().filter_map(|c| {
                     let ScriptCommand::Custom { name, args } = c else { return None };
-                    if name != "showItemDialogue" { return None }
+                    if !matches!(name.as_str(),"showItemDialogue" | "printItemFieldText" | "printFieldParagraph") { return None }
                     match pokered_data::script_command::PokemonScriptCommand::from_custom(name, args).unwrap() {
-                        pokered_data::script_command::PokemonScriptCommand::ShowItemDialogue { sound_id, .. } => Some(sound_id),
+                        pokered_data::script_command::PokemonScriptCommand::ShowItemDialogue { sound_id, .. }
+                        | pokered_data::script_command::PokemonScriptCommand::PrintItemFieldText {sound_id,..} => Some(sound_id),
+                        pokered_data::script_command::PokemonScriptCommand::PrintFieldParagraph {sound_id:Some(sound),..} => Some(Some(sound)),
+                        pokered_data::script_command::PokemonScriptCommand::PrintFieldParagraph {sound_id:None,..} => None,
                         _ => unreachable!(),
                     }
                 }).collect();
@@ -2679,19 +2711,26 @@ mod tests {
 
     #[test]
     fn fidelity_fly_explanation_only_on_repeat_and_bike_menu_displays_price() {
+        fn printed_text(c: &ScriptCommand) -> Option<&str> {
+            match c {
+                ScriptCommand::ShowText { text } => Some(text.as_str()),
+                ScriptCommand::Custom { name, args } if name == "printFieldText" || name == "printFieldParagraph" => args.first().and_then(|v| v.as_str()),
+                _ => None,
+            }
+        }
         let scene = pokered_data::embedded_scenes::get_scene_ast("Route16FlyHouse").unwrap();
         let mut e = NativeScriptEngine::new();
         e.load_map("Route16FlyHouse", &scene);
         let first = drive_fidelity_scene(&mut e, "talkBrunetteGirl", true, "", &[]);
-        assert!(!first.iter().any(|c| matches!(c, ScriptCommand::ShowText { text } if text.starts_with("HM02 is FLY"))));
+        assert!(!first.iter().any(|c| printed_text(c).is_some_and(|text| text.starts_with("HM02 is FLY"))));
         let repeat = drive_fidelity_scene(&mut e, "talkBrunetteGirl", true, "", &[]);
-        assert!(matches!(&repeat[0], ScriptCommand::ShowText { text } if text.starts_with("HM02 is FLY")));
+        assert!(printed_text(&repeat[0]).is_some_and(|text| text.starts_with("HM02 is FLY")));
         let scene = pokered_data::embedded_scenes::get_scene_ast("BikeShop").unwrap();
         for choice in [0, 1] {
             e = NativeScriptEngine::new();
             e.load_map("BikeShop", &scene);
             let cmds = drive_fidelity_scene(&mut e, "talkBikeShopClerk", false, "", &[choice]);
-            assert!(cmds.iter().any(|c| matches!(c, ScriptCommand::ShowChoice { options } if options == &["BICYCLE ¥1000000", "CANCEL"])));
+            assert!(cmds.iter().any(|c| matches!(c, ScriptCommand::Custom { name, args } if name == "chooseInstantFieldMenu" && args[0] == serde_json::json!(["BICYCLE ¥1000000", "CANCEL"]))));
             assert!(!cmds.iter().any(|c| matches!(c, ScriptCommand::GiveItem { .. } | ScriptCommand::TakeMoney { .. })));
         }
     }
@@ -2914,6 +2953,9 @@ mod tests {
                 }
                 ScriptCommand::ShowChoice { .. } => {
                     CommandResult::Number(*choices.next().expect("menu response") as f64)
+                }
+                ScriptCommand::Custom { name, .. } if name == "chooseInstantFieldMenu" => {
+                    CommandResult::Number(*choices.next().expect("instant menu response") as f64)
                 }
                 _ => CommandResult::Void,
             };

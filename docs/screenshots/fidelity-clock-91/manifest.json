@@ -1,0 +1,49 @@
+{
+  "scope": "logical counter, coordinates and START event only; pixel/animation/script clock audit pending",
+  "source_inputs": "Down t0..31; START t5 with1 or40-frame hold, original captures in record_start_midstep_98.py",
+  "base": "31b1eda3112514d6bc803af559ec7f7c9e20374f",
+  "repair_preceding_commit": "af68845",
+  "cases": [
+    {
+      "bike": false,
+      "start_hold": 1,
+      "direction_hold": 32,
+      "repeat": "101 PNG/JSON identical",
+      "coordinate_counter_diff_frames": 0,
+      "diffs": [],
+      "scope": "logical counter/coordinate only, source menu draws20frames later; sprite/background pixel comparison pending"
+    },
+    {
+      "bike": false,
+      "start_hold": 40,
+      "direction_hold": 32,
+      "repeat": "101 PNG/JSON identical",
+      "coordinate_counter_diff_frames": 0,
+      "diffs": [],
+      "scope": "logical counter/coordinate only, source menu draws20frames later; sprite/background pixel comparison pending"
+    },
+    {
+      "bike": true,
+      "start_hold": 1,
+      "direction_hold": 32,
+      "repeat": "101 PNG/JSON identical",
+      "coordinate_counter_diff_frames": 0,
+      "diffs": [],
+      "scope": "logical counter/coordinate only, source menu draws20frames later; sprite/background pixel comparison pending"
+    },
+    {
+      "bike": true,
+      "start_hold": 40,
+      "direction_hold": 32,
+      "repeat": "101 PNG/JSON identical",
+      "coordinate_counter_diff_frames": 0,
+      "diffs": [],
+      "scope": "logical counter/coordinate only, source menu draws20frames later; sprite/background pixel comparison pending"
+    }
+  ],
+  "drivers": {
+    "master-before": "209d9de7570189117797ca1983483869b73fdb1ea46980c832da504527bcfe2c",
+    "clock-first": "8ab3544981ff4b8b73e44b3e4e95f9834da56d213af8cd83fe93cabe2702271e"
+  },
+  "rejected_prior_comparison": "Older native98 Bicycle heldDown16 vs original32. Preserved; do not claim matched-input whole sequence."
+}

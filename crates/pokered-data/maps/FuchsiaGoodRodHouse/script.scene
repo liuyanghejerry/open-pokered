@@ -11,36 +11,35 @@ game_scene FuchsiaGoodRodHouse {
     @trigger(map = "FuchsiaGoodRodHouse", npc = 1)
     @if (getFlag("EVENT_GOT_GOOD_ROD")) {
       // Already gave the rod (.HowAreTheFishText).
-      @speaker("") {
-        @t("Hello there, <PLAYER>!\n\nHow are the fish biting?", "你好呀， <PLAYER>！\n\n鱼钓得怎么样？")
-      }
+      printFieldText(@t("Hello there, <PLAYER>!", "你好呀， <PLAYER>！"))
+      printFieldParagraph(@t("How are the fish biting?", "鱼钓得怎么样？"))
+      finishFieldText()
     } @else {
       // .Text → YesNoChoice.
-      @speaker("") {
-        @t("I'm the FISHING GURU's older\nbrother!\n\nI simply Looove fishing!\n\nDo you like to fish?", "我啊，是那个垂钓大师的哥哥！\n\n我超喜欢钓鱼！\n\n你喜欢钓鱼吗？")
-      }
+      // Original inner PrintText returns on DONE before YesNoChoice.
+      printFieldText(@t("I'm the FISHING GURU's older\nbrother!", "我啊，是那个垂钓大师的哥哥！"))
+      printFieldParagraph(@t("I simply Looove fishing!", "我超喜欢钓鱼！"))
+      printFieldParagraph(@t("Do you like to fish?", "你喜欢钓鱼吗？"))
       @choice {
         @option(@t("YES", "是")) {
           // .ReceivedGoodRodText + GiveItem GOOD_ROD.
           given = giveItem("GOOD_ROD", 1)
           @if (given) {
-            @speaker("") {
-              @t("Grand! I like your style!\n\nTake this and fish, young\none!", "很好！我喜欢你的风格！\n\n拿上这个，去钓鱼吧，少年！")
-            }
-
             setFlag("EVENT_GOT_GOOD_ROD")
-            showItemDialogue(@t("<PLAYER> received a GOOD\nROD!", "<PLAYER>得到了一根好钓竿！"))
+            printFieldText(@t("Grand! I like your style!", "很好！我喜欢你的风格！"))
+            printFieldParagraph(@t("Take this and fish, young\none!", "拿上这个，去钓鱼吧，少年！"))
+            printFieldParagraph(@t("<PLAYER> received a GOOD\nROD!", "<PLAYER>得到了一根好钓竿！"), "SFX_GET_ITEM_1")
+            finishFieldText()
           } @else {
-            @speaker("") {
-              @t("Oh no!\n\nYou have no room for my\ngift!", "哎呀！\n\n你没有地方放我的礼物！")
-            }
+            printFieldText(@t("Oh no!", "哎呀！"))
+            printFieldParagraph(@t("You have no room for my\ngift!", "你没有地方放我的礼物！"))
+            finishFieldText()
           }
         }
         @option(@t("NO", "否")) {
           // .ThatsSoDisappointingText.
-          @speaker("") {
-            @t("Oh... That's so\ndisappointing...", "哦……真让人失望……")
-          }
+          printFieldText(@t("Oh... That's so\ndisappointing...", "哦……真让人失望……"))
+          finishFieldText()
         }
       }
     }

@@ -659,10 +659,19 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     pub(crate) wild_data_state: super::wild_encounters::WildDataState,
     pub(crate) game_data: G,
     pub state: OverworldState,
+    /// Original PLAYER_DIR_* masks, independent of the sprite's facing.
+    pub player_last_stop_direction: u8,
+    pub player_moving_direction: u8,
     pub map_data: Option<MapData<G::Tileset>>,
     pub npc_states: Vec<crate::overworld::npc_movement::NpcRuntimeState>,
     pub npc_pokemon_data: Vec<PokemonNpcData>,
     pub pending_dialogue: Option<BedroomDialogue>,
+    /// Last completed script text, retained for its inner caller or choice.
+    pub last_script_dialogue: Option<BedroomDialogue>,
+    /// A returned inner PrintText keeps its window until its caller ends it.
+    pub inner_field_text_open: bool,
+    /// RAM BIT_NO_TEXT_DELAY; e.g. Bike Shop B-cancel leaves it set.
+    pub text_delay_disabled: bool,
     pub pending_choice: Option<crate::overworld::script_bridge::PendingChoice>,
     pub pending_pokedex_entry: Option<PokedexEntryState>,
     pub pending_naming_screen: Option<crate::naming_screen::NamingScreenState>,
@@ -748,6 +757,19 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     /// `pending_dialogue` at the top of `update_frame`.
     pub text_delay_frames: u16,
     pub(crate) prev_a_pressed: bool,
+    pub(crate) sampled_player_input: dotzuki_engine::overworld::OverworldInput,
+    /// Remaining hardware frames in OverworldLoop's DelayFrame pair.
+    pub(crate) field_loop_wait: u8,
+    pub(crate) player_sprite_state: presentation::PlayerSpriteState,
+    pub(crate) npc_sprite_states: Vec<presentation::NpcSpriteState>,
+    pub field_text_restore: Option<presentation::FieldTextRestoreState>,
+    pub(crate) player_camera_state: Option<presentation::PlayerCameraState>,
+    pub(crate) npc_camera_state: Option<presentation::PlayerCameraState>,
+    pub bg_transfer_portion: u8,
+    /// First AdvancePlayerSprite redraw finishes before the second bike advance.
+    pub(crate) bike_redraw_advance: bool,
+    /// NoDirection arms the original turn-in-place check until it is consumed.
+    pub(crate) check_player_turn: bool,
     pub(crate) prev_movement_state: MovementState,
     pub(crate) prev_b_pressed: bool,
     pub(crate) prev_up_pressed: bool,
@@ -901,9 +923,13 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     pub(crate) boulder_dust_frames: u8,
     /// The boulder-push smoke puff (`AnimateBoulderDust`, dust_smoke.asm) —
     /// a frame-stepped 2×2 smoke-tile block anchored to the push spot. The
-    /// renderer draws it while [`BoulderDustState::is_active`]; `update.rs`
-    /// ticks it every frame.
+    /// renderer presents its OAM one frame later during the blocking push.
+    /// Logical palette changes apply immediately.
     pub boulder_dust: presentation::BoulderDustState,
+    /// Blocking scripted boulder slide, smoke, and graphics restoration.
+    pub boulder_push: Option<presentation::BoulderPushState>,
+    /// Joypad read on completion, processed after the next hardware boundary.
+    pub(crate) boulder_resume_input: Option<dotzuki_engine::overworld::OverworldInput>,
     /// Dark-cave palette state (wMapPalOffset): set on entering Rock Tunnel,
     /// cleared by FLASH or by leaving. The darkened *rendering* is a
     /// renderer-side follow-up; this tracks the logic state.
@@ -1140,6 +1166,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             npc_states,
             npc_pokemon_data,
             pending_dialogue: None,
+            last_script_dialogue: None,
+            inner_field_text_open: false,
+            text_delay_disabled: false,
             pending_choice: None,
             pending_pokedex_entry: None,
             pending_naming_screen: None,
@@ -1180,7 +1209,19 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             frame_counter: 0,
             text_delay_frames: DEFAULT_TEXT_DELAY_FRAMES,
             prev_a_pressed: false,
+            sampled_player_input: dotzuki_engine::overworld::OverworldInput::new(false,false,false,false,false,false,false,false),
+            field_loop_wait: 0,
+            player_sprite_state: presentation::PlayerSpriteState::default(),
+            npc_sprite_states: Vec::new(),
+            field_text_restore: None,
+            player_camera_state: None,
+            npc_camera_state: None,
+            bg_transfer_portion: 0,
+            bike_redraw_advance: false,
+            check_player_turn: false,
             prev_movement_state: MovementState::Idle,
+            player_last_stop_direction: 0,
+            player_moving_direction: 0,
             prev_b_pressed: false,
             prev_up_pressed: false,
             prev_down_pressed: false,
@@ -1244,6 +1285,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             tried_push_boulder: false,
             boulder_dust_frames: 0,
             boulder_dust: presentation::BoulderDustState::inactive(),
+            boulder_push: None,
+            boulder_resume_input: None,
             dark_cave,
             forced_bike: forced_bike::ForcedBikeState::default(),
             flash_lit_frames: 0,
@@ -1401,13 +1444,44 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             .or_else(|| pokered_data::embedded_scenes::get_scene_ast("shared/pokecenter"))
     }
 
+    /// YesNoChoice leaves the question in the text window. It is display
+    /// state, not an active ShowDialogue that may consume the choice input.
+    pub fn displayed_field_dialogue(&self) -> Option<&BedroomDialogue> {
+        self.pending_dialogue.as_ref()
+            .or(self.cut_retained_dialogue.as_ref())
+            .or_else(|| self.retained_inner_field_text())
+            .or_else(|| self.choice_question())
+    }
+
+    pub(crate) fn retained_inner_field_text(&self) -> Option<&BedroomDialogue> {
+        self.inner_field_text_open.then_some(self.last_script_dialogue.as_ref()).flatten()
+    }
+
+    pub(crate) fn has_field_text_window(&self) -> bool {
+        self.pending_dialogue.is_some() || self.retained_inner_field_text().is_some() || self.choice_question().is_some()
+    }
+
+    pub(crate) fn choice_question(&self) -> Option<&BedroomDialogue> {
+        if self.pending_choice.is_some()
+            || self.active_script_effect.as_ref().is_some_and(|effect| effect.is_choice()) {
+            self.last_script_dialogue.as_ref()
+        } else {
+            None
+        }
+    }
+
     /// FoundItemText has no ManualTextScroll prompt while its jingle plays.
     pub fn dialogue_needs_button(&self) -> bool {
         let effect = match self.active_script_effect.as_ref() {
             Some(super::script_bridge::ScriptEffect::GivePokemon { flow: Some(flow), .. }) => Some(flow.child.as_ref()),
             other => other,
         };
-        !matches!(effect, Some(super::script_bridge::ScriptEffect::ShowItemDialogue { .. }))
+        (!(self.inner_field_text_open && self.pending_dialogue.is_none())
+            || matches!(effect, Some(super::script_bridge::ScriptEffect::WaitFieldPrompt { .. } | super::script_bridge::ScriptEffect::WaitFieldButton {show_arrow:true} | super::script_bridge::ScriptEffect::FinishFieldText { .. }
+                | super::script_bridge::ScriptEffect::PrintFieldParagraph { phase: super::script_bridge::FieldParagraphPhase::ProtectedDelay { .. } | super::script_bridge::FieldParagraphPhase::WaitForButton, .. })))
+            && self.pending_choice.is_none()
+            && !self.active_script_effect.as_ref().is_some_and(|effect| effect.is_choice())
+            && !matches!(effect, Some(super::script_bridge::ScriptEffect::ShowItemDialogue { .. }))
     }
 
     /// Set the configured dialogue delay (1/3/5 frames per character).
@@ -2509,8 +2583,32 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         }
     }
 
+    /// Menus also read the joypad. Preserve their last button sample when
+    /// returning to the field so a held menu confirmation is not a new A.
+    pub fn synchronize_player_buttons(&mut self, a: bool, start: bool) {
+        self.sampled_player_input.a = a;
+        self.sampled_player_input.start = start;
+    }
+
+    /// Menu Joypad calls replace the entire field sample, including d-pad.
+    /// RunMapScript consumes that sample before the next field Joypad call.
+    pub fn synchronize_player_input(&mut self, input: dotzuki_engine::overworld::OverworldInput) {
+        self.sampled_player_input = input;
+    }
+
+    pub fn sampled_player_input(&self) -> dotzuki_engine::overworld::OverworldInput {
+        self.sampled_player_input
+    }
+
     /// Restore counters and status bytes that live outside the event bitset.
     pub fn restore_system_save_state(&mut self, data: &crate::save::game_data::GameData) {
+        self.player_sprite_state = presentation::PlayerSpriteState::default();
+        self.npc_sprite_states.clear();
+        self.field_text_restore = None;
+        self.player_camera_state = None;
+        self.npc_camera_state = None;
+        self.player_last_stop_direction = data.player_last_stop_direction;
+        self.player_moving_direction = data.player_moving_direction;
         self.first_lock_trash_can = data.first_lock_trash_can;
         self.second_lock_trash_can = data.second_lock_trash_can;
         self.script_engine.set_gym_trash_indices(self.first_lock_trash_can, self.second_lock_trash_can);
@@ -2528,6 +2626,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
 
     /// Persist Safari allowances and original status-byte script aliases.
     pub fn write_system_save_state(&self, data: &mut crate::save::game_data::GameData) {
+        data.player_last_stop_direction = self.player_last_stop_direction;
+        data.player_moving_direction = self.player_moving_direction;
         data.first_lock_trash_can = self.first_lock_trash_can;
         data.second_lock_trash_can = self.second_lock_trash_can;
         for (index, name) in ["TERRY", "MARCEL", "CHIKUCHIKU", "SAILOR", "DUX", "MARC", "LOLA", "DORIS", "CRINKLES", "SPOT"].iter().enumerate() {
@@ -2589,6 +2689,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             self.tried_push_boulder = false;
             self.boulder_dust_frames = 0;
             self.boulder_dust = presentation::BoulderDustState::inactive();
+            self.boulder_push = None;
+            self.boulder_resume_input = None;
             // A mid-cutscene map change (e.g. the departure's walk-out warp)
             // must not carry the animation into the next map.
             self.ship_departure = None;
@@ -2653,6 +2755,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     .push(OverworldAudioRequest::PlayMapMusic { map: warp.dest_map });
             }
             let hidden_npc_ids = self.map_script_config.hidden_npc_ids();
+            self.npc_sprite_states.clear();
+            self.npc_camera_state = None;
+            self.field_text_restore = None;
             self.npc_states = self
                 .map_data
                 .as_ref()
@@ -3123,5 +3228,233 @@ mod dialogue_localization_tests {
             screen.localize_message("No! A new BADGE\nis required."),
             "不行！需要新的\n徽章。"
         );
+    }
+}
+
+impl<G: GameData> OverworldScreen<G> {
+    /// Ordinary field sprites retain their phase across steps. Other field
+    /// animations supply their own sprite poses through the existing renderer.
+    fn uses_scripted_field_loop_presentation(&self) -> bool {
+        !self.scripted_player_path.is_empty()
+            || matches!(self.active_script_effect,
+                Some(super::script_bridge::ScriptEffect::MovePlayer { .. }
+                    | super::script_bridge::ScriptEffect::MovePlayerRelative { .. }
+                    | super::script_bridge::ScriptEffect::FollowNpc { .. }))
+    }
+
+    pub fn ordinary_player_sprite_frame(&self) -> Option<(usize, bool)> {
+        let scripted_field_loop = self.uses_scripted_field_loop_presentation();
+        if self.player_sprite_state.initialized
+            && (self.active_script_effect.is_none() || scripted_field_loop)
+            && (!self.cutscene_manager.is_blocking() || scripted_field_loop)
+            && self.pending_connection.is_none() && self.ledge_jump.is_none()
+            && self.boulder_push.is_none() && self.field_move_step.is_none()
+            && self.pending_dialogue.is_none()
+            && self.warp_fade_state == WarpFadeState::Idle
+            && self.teleport_spin.is_none() && self.enter_map_anim.is_none()
+            && self.fly_departure.is_none() && self.enter_map_fly_anim.is_none()
+            && !self.pending_fly_arrival && self.fly_arrival_delay_frames == 0
+            && self.fishing_anim.is_none() && self.elevator_shake.is_none()
+            && self.ship_departure.is_none() && self.cut_anim.is_none()
+            && self.field_move_restore.is_none()
+        {Some(self.player_sprite_state.rendered_frame())} else {None}
+    }
+}
+
+impl<G: GameData> OverworldScreen<G> {
+    pub fn ordinary_player_camera(&self) -> Option<&presentation::PlayerCameraState> {
+        if self.ordinary_player_sprite_frame().is_some() {
+            self.player_camera_state.as_ref().filter(|view| view.map == self.state.current_map as u8)
+        } else {None}
+    }
+
+    pub(crate) fn latch_player_camera(&mut self) {
+        if self.ordinary_player_sprite_frame().is_none() {return;}
+        // LoadCurrentMapView crosses vblank after a newly initialized step.
+        // The first scroll update is visible one extra frame later; ordinary
+        // AdvancePlayerSprite updates latch at the following vblank.
+        if self.field_loop_wait == 2 {return;}
+        let px = if self.state.player.movement_state == dotzuki_engine::overworld::MovementState::Walking {
+            i16::from(8u8.saturating_sub(self.state.walk_counter)) * 2
+        } else {0};
+        let (sub_x,sub_y) = match self.state.player.facing {
+            Direction::Down => (0,px), Direction::Up => (0,-px),
+            Direction::Left => (-px,0), Direction::Right => (px,0),
+        };
+        self.player_camera_state = Some(presentation::PlayerCameraState {
+            map:self.state.current_map as u8, x:self.state.player.x, y:self.state.player.y, sub_x,sub_y,
+        });
+    }
+}
+
+impl<G: GameData> OverworldScreen<G> {
+    pub fn prepare_field_textbox_sprite(&mut self) {
+        self.prepare_field_sprite_font((0, 12, 20, 6));
+    }
+
+    pub fn prepare_start_menu_sprite(&mut self, has_pokedex: bool) {
+        self.prepare_field_sprite_font((10, 0, 10, if has_pokedex { 16 } else { 14 }));
+    }
+
+    fn prepare_field_sprite_font(&mut self, (x, y, width, height): (i32, i32, i32, i32)) {
+        self.player_sprite_state.load_font();
+        self.sync_npc_sprite_states();
+        let px = i32::from(self.state.player.x) * 16;
+        let py = i32::from(self.state.player.y) * 16;
+        for slot in 0..self.npc_states.len() {
+            let npc = &self.npc_states[slot];
+            if !npc.visible { continue; }
+            let offscreen = !self.npc_in_field_viewport(slot);
+            let sprite = &mut self.npc_sprite_states[slot];
+            // GetTileSpriteStandsOn samples the two lower tiles and the
+            // two tiles above, after aligning Y+4 to a 16-pixel cell.
+            let tx = (sprite.pending[1].x - px + 64).div_euclid(8);
+            let ty = (sprite.pending[1].y - py + 64).div_euclid(16) * 2;
+            let font_footprint = tx < x + width && tx + 2 > x
+                && ty < y + height && ty + 2 > y;
+            sprite.load_font(npc, offscreen || font_footprint);
+        }
+    }
+
+    pub fn tick_player_presentation_during_ui(&mut self) {
+        self.npc_camera_state = self.player_camera_state.clone();
+        for sprite in &mut self.npc_sprite_states { sprite.hardware_frame(); }
+        if self.player_sprite_state.initialized {
+            self.player_sprite_state.hardware_frame(self.state.player.facing);
+        }
+    }
+}
+
+impl<G: GameData> OverworldScreen<G> {
+    pub fn tick_ui_background_transfer(&mut self) {
+        self.bg_transfer_portion = if self.bg_transfer_portion >= 2 { 0 } else { self.bg_transfer_portion + 1 };
+    }
+}
+
+impl<G: GameData> OverworldScreen<G> {
+    pub(crate) fn sync_npc_sprite_states(&mut self) {
+        self.npc_sprite_states.truncate(self.npc_states.len());
+        for (slot, npc) in self.npc_states.iter().enumerate() {
+            if let Some(sprite) = self.npc_sprite_states.get_mut(slot) {
+                if !sprite.matches(npc) { *sprite = presentation::NpcSpriteState::from_npc(npc); }
+            } else {
+                self.npc_sprite_states.push(presentation::NpcSpriteState::from_npc(npc));
+            }
+        }
+    }
+
+    pub fn npc_sprite_grass_priority(&self, slot: usize) -> bool {
+        self.npc_states.get(slot).zip(self.npc_sprite_states.get(slot))
+            .is_some_and(|(npc, sprite)| sprite.matches(npc) && sprite.visible.grass_priority)
+    }
+
+    pub fn ordinary_npc_sprite_pose(&self, slot: usize) -> Option<presentation::NpcSpritePose> {
+        let npc = self.npc_states.get(slot)?;
+        let scripted_field_loop = self.uses_scripted_field_loop_presentation();
+        if npc.scripted_frame.is_some()
+            || (!scripted_field_loop && (self.active_script_effect.is_some()
+                || self.cutscene_manager.is_blocking()))
+            || self.boulder_push.is_some_and(|push| push.npc_index == slot) { return None; }
+        let mut pose = self.npc_sprite_states.get(slot).filter(|sprite| sprite.matches(npc))?.visible;
+        // SCX/SCY latch before PrepareOAMData's coordinates are copied by
+        // the next DMA. NPCs therefore use the previous background viewport.
+        if let (Some(bg), Some(sprite_view)) = (self.ordinary_player_camera(), self.npc_camera_state.as_ref()) {
+            if bg.map == sprite_view.map {
+                pose.x += (i32::from(bg.x) - i32::from(sprite_view.x)) * 16
+                    + i32::from(bg.sub_x) - i32::from(sprite_view.sub_x);
+                pose.y += (i32::from(bg.y) - i32::from(sprite_view.y)) * 16
+                    + i32::from(bg.sub_y) - i32::from(sprite_view.sub_y);
+            }
+        }
+        Some(pose)
+    }
+}
+
+impl<G: GameData> OverworldScreen<G> {
+    pub fn field_text_window_visible(&self) -> bool {
+        self.field_text_restore.as_ref().is_none_or(|restore| restore.window_visible())
+    }
+
+    /// Full restoration for a party menu opened from START. `cpu_phase`
+    /// belongs to the LCD-off work clock, not a map-specific frame delay.
+    pub fn begin_party_menu_restore(&mut self, cpu_phase: u32, white_start_line: u8) -> bool {
+        let count = self.npc_states.len();
+        if count > 15 { return false; }
+        let mut pictures = [0u8; 16];
+        pictures[0] = 1;
+        for (slot, npc) in self.npc_states.iter().enumerate() {
+            pictures[slot + 1] = npc.sprite_id;
+        }
+        let Some(cpu_cycles) = super::sprite_reload_work::sprite_reload_cycles(
+            self.state.current_map as u8, self.state.player.x as u8,
+            self.state.player.y as u8, &pictures, count as u8)
+        else { return false; };
+        self.field_text_restore = Some(presentation::FieldTextRestoreState {
+            elapsed: 0, npc_transfer_frames: 0,
+            submenu_reload: Some(presentation::SubmenuReloadWork {
+                cpu_cycles, cpu_phase: cpu_phase % presentation::SubmenuReloadWork::CYCLES_PER_FRAME,
+                white_start_line: white_start_line.min(144),
+            }),
+        });
+        true
+    }
+
+    pub fn begin_start_menu_restore(&mut self) {
+        use pokered_data::sprite_set_data::{MapSpriteSetRef, SplitDirection, SpriteSetId,
+            MAP_SPRITE_SETS, SPLIT_MAP_SPRITE_SETS};
+        let map = self.state.current_map;
+        let (x, y) = (self.state.player.x, self.state.player.y);
+        let set = MAP_SPRITE_SETS.get(map as usize).map(|entry| match *entry {
+            MapSpriteSetRef::Direct(set) => set,
+            MapSpriteSetRef::Split(index) => {
+                // Original GetSplitMapSpriteSetID's Route20 coastline split.
+                if map == MapId::Route20 {
+                    if x < 43 { SpriteSetId::PalletViridian }
+                    else if x >= 62 || y < if x >= 55 { 8 } else { 13 } { SpriteSetId::Fuchsia }
+                    else { SpriteSetId::PalletViridian }
+                } else {
+                    let split = &SPLIT_MAP_SPRITE_SETS[index as usize];
+                    let coord = match split.direction { SplitDirection::NorthSouth => y, SplitDirection::EastWest => x };
+                    if coord < u16::from(split.coordinate) { split.set_north_or_west } else { split.set_south_or_east }
+                }
+            }
+        });
+        let mut seen = [false; 256];
+        let mut frames = 0;
+        let mut add = |sprite: pokered_data::sprites::SpriteId| {
+            let id = sprite as usize;
+            if !seen[id] && !sprite.is_still() {
+                seen[id] = true;
+                frames += 2; // CopyVideoData: 12 tiles, 8 then 4.
+            }
+        };
+        if let Some(set) = set {
+            for &sprite in set.sprites() { add(sprite); }
+        } else {
+            // LoadMapSpriteTilePatterns includes hidden slots and deduplicates
+            // picture IDs; four-tile still sprites have no upper block.
+            for npc in &self.npc_states {
+                if let Some(sprite) = pokered_data::sprites::SpriteId::from_u8(npc.sprite_id) { add(sprite); }
+            }
+        }
+        self.field_text_restore = Some(presentation::FieldTextRestoreState {
+            elapsed: 0, npc_transfer_frames: frames, submenu_reload: None,
+        });
+    }
+}
+
+impl<G: GameData> OverworldScreen<G> {
+    pub(crate) fn npc_in_field_viewport(&self, slot: usize) -> bool {
+        let npc = &self.npc_states[slot];
+        if !npc.scripted_path.is_empty() || npc.movement_type == dotzuki_engine::overworld::NpcMovementType::FixedPath {
+            return true; // CheckSpriteAvailability skips these coordinate tests for scripted paths.
+        }
+        let (dx, dy) = if npc.walk_counter != 0 { match npc.facing {
+            Direction::Down => (0, 1), Direction::Up => (0, -1),
+            Direction::Left => (-1, 0), Direction::Right => (1, 0),
+        }} else { (0, 0) };
+        let (x, y) = (i32::from(npc.x) + dx + 4, i32::from(npc.y) + dy + 4);
+        let (px, py) = (i32::from(self.state.player.x), i32::from(self.state.player.y));
+        x >= px && x <= px + 9 && y >= py && y <= py + 8
     }
 }

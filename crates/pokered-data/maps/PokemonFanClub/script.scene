@@ -43,19 +43,17 @@ game_scene PokemonFanClub {
   // ── Pet PIKACHU (npc 3) ─────────────────────────────────────────────────
   @storyline("talkPikachu") {
     @trigger(map = "PokemonFanClub", npc = 3)
-    @speaker("") {
-      @t("PIKACHU: Chu! Pikachu!", "皮卡丘：啾！皮卡丘！")
-    }
+    printFieldText(@t("PIKACHU: Chu! Pikachu!", "皮卡丘：啾！皮卡丘！"))
     playCry("PIKACHU")
+    finishFieldText()
   }
 
   // ── Pet SEEL (npc 4) ────────────────────────────────────────────────────
   @storyline("talkSeel") {
     @trigger(map = "PokemonFanClub", npc = 4)
-    @speaker("") {
-      @t("SEEL: Kyuoo!", "小海狮：啾呜！")
-    }
+    printFieldText(@t("SEEL: Kyuoo!", "小海狮：啾呜！"))
     playCry("SEEL")
+    finishFieldText()
   }
 
   // ── Chairman / Gentleman (npc 5) ────────────────────────────────────────
@@ -67,35 +65,44 @@ game_scene PokemonFanClub {
   @storyline("talkChairman") {
     @trigger(map = "PokemonFanClub", npc = 5)
     @if (getFlag("EVENT_GOT_BIKE_VOUCHER") || hasItem("BICYCLE") || hasItem("BIKE_VOUCHER")) {
-      @speaker("") {
-        @t("Hello, <PLAYER>!\n\nDid you come see me about my\nPOKeMON again?\n\nNo? Too bad!", "你好，<PLAYER>！\n\n你又是来看我聊宝可梦的吗？\n\n不是？真遗憾！")
-      }
+      printFieldText(@t("Hello, <PLAYER>!", "你好，<PLAYER>！"))
+      printFieldParagraph(@t("Did you come see me about my\nPOKeMON again?", "你又是来看我聊宝可梦的吗？"))
+      printFieldParagraph(@t("No? Too bad!", "不是？真遗憾！"))
+      finishFieldText()
     } @else {
-      @speaker("") {
-        @t("I chair the POKeMON Fan\nClub!\n\nI have collected over 100\nPOKeMON!\n\nI'm very fussy when it comes\nto POKeMON!\n\nSo...\n\nDid you come visit to hear\nabout my POKeMON?", "我是宝可梦粉丝俱乐部的会长！\n\n我收集了 100多只宝可梦！\n\n我挑宝可梦非常讲究！\n\n那么……\n\n你是来听我讲宝可梦故事的吗？")
-      }
+      // Original inner PrintText returns on DONE before YesNoChoice.
+      printFieldText(@t("I chair the POKeMON Fan\nClub!", "我是宝可梦粉丝俱乐部的会长！"))
+      printFieldParagraph(@t("I have collected over 100\nPOKeMON!", "我收集了 100多只宝可梦！"))
+      printFieldParagraph(@t("I'm very fussy when it comes\nto POKeMON!", "我挑宝可梦非常讲究！"))
+      printFieldParagraph(@t("So...", "那么……"))
+      printFieldParagraph(@t("Did you come visit to hear\nabout my POKeMON?", "你是来听我讲宝可梦故事的吗？"))
       @choice {
         @option(@t("YES", "是")) {
-          @speaker("") {
-            @t("Good! Then listen up!\n\nMy favorite RAPIDASH...\n\nIt...cute...\nlovely...smart...\nplus...amazing... you think\nso?... oh yes...it...\nstunning... kindly... love\nit!\n\nHug it...when...\nsleeping...warm and\ncuddly... spectacular...\nravishing... ...Oops! Look\nat the time! I kept you too\nlong!\n\nThanks for hearing me out! I\nwant you to have this!", "好！那你听好了！\n\n我最喜欢的烈焰马……\n\n它……可爱……伶俐……聪\n明……外加……惊人……你也这\n么觉得吧？……哦对……它……\n迷人……温柔……让人爱不释\n手！\n\n抱着它……睡觉时……又暖又舒\n服……华丽……惊艳…………哎\n呀！看时间！我耽误你太久了！\n\n谢谢你听我说完！我想把这个给\n你！")
-          }
+          printFieldText(@t("Good! Then listen up!", "好！那你听好了！"))
+          printFieldParagraph(@t("My favorite RAPIDASH...", "我最喜欢的烈焰马……"))
+          printFieldParagraph(@t("It...cute...\nlovely...smart...\nplus...amazing... you think\nso?... oh yes...it...\nstunning... kindly... love\nit!", "它……可爱……伶俐……聪\n明……外加……惊人……你也这\n么觉得吧？……哦对……它……\n迷人……温柔……让人爱不释\n手！"))
+          printFieldParagraph(@t("Hug it...when...\nsleeping...warm and\ncuddly... spectacular...\nravishing... ...Oops! Look\nat the time! I kept you too\nlong!", "抱着它……睡觉时……又暖又舒\n服……华丽……惊艳…………哎\n呀！看时间！我耽误你太久了！"))
+          printFieldParagraph(@t("Thanks for hearing me out! I\nwant you to have this!", "谢谢你听我说完！我想把这个给\n你！"))
+          waitFieldPrompt()
           // Original: GiveItem; on bag-full print BagFullText and keep the
           // voucher obtainable (no EVENT_GOT_BIKE_VOUCHER).
           given = giveItem("BIKE_VOUCHER", 1)
           @if (given) {
+            printItemFieldText(@t("<PLAYER> received a BIKE\nVOUCHER!", "<PLAYER>得到了自行车兑换券！"), "SFX_GET_KEY_ITEM")
+            printFieldParagraph(@t("Exchange that for a BICYCLE!", "用它去换自行车吧！"))
+            printFieldParagraph(@t("Don't worry, my FEAROW will\nFLY me anywhere!", "别担心，我的大嘴雀会带我飞往任何地方！"))
+            printFieldParagraph(@t("So, I don't need a BICYCLE!", "所以我不需要自行车！"))
+            printFieldParagraph(@t("I hope you like cycling!", "希望你喜欢骑自行车！"))
             setFlag("EVENT_GOT_BIKE_VOUCHER")
-            showItemDialogue(@t("<PLAYER> received a BIKE\nVOUCHER!", "<PLAYER>得到了自行车兑换券！"), "SFX_GET_KEY_ITEM")
-            @speaker("") { @t("Exchange that for a BICYCLE!\n\nDon't worry, my FEAROW will\nFLY me anywhere!\n\nSo, I don't need a BICYCLE!\n\nI hope you like cycling!", "用它去换自行车吧！\n\n别担心，我的大嘴雀会带我飞往任何地方！\n\n所以我不需要自行车！\n\n希望你喜欢骑自行车！") }
+            finishFieldText()
           } @else {
-            @speaker("") {
-              @t("Make room for this!", "请给这个腾点地方！")
-            }
+            printFieldText(@t("Make room for this!", "请给这个腾点地方！"))
+            finishFieldText()
           }
         }
         @option(@t("NO", "否")) {
-          @speaker("") {
-            @t("Oh. Come back when you want\nto hear my story!", "哦。想听我讲故事的时候再来\n吧！")
-          }
+          printFieldText(@t("Oh. Come back when you want\nto hear my story!", "哦。想听我讲故事的时候再来\n吧！"))
+          finishFieldText()
         }
       }
     }

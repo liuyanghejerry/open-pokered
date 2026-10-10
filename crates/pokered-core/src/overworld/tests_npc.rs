@@ -907,7 +907,7 @@ fn rocket_hideout_talk_only_guard_battles_after_scene_dialogue() {
     screen.state.player.facing = Direction::Up;
     let input = |a| super::OverworldInput::new(false, false, false, false, a, false, false, false);
     for _ in 0..20 { screen.update_frame(input(false)); }
-    screen.update_frame(input(true));
+    for _ in 0..2 { screen.update_frame(input(true)); }
     let mut saw_dialogue = false;
     for frame in 0..600 {
         if let Some(dialogue) = screen.pending_dialogue.as_mut() {
@@ -915,7 +915,7 @@ fn rocket_hideout_talk_only_guard_battles_after_scene_dialogue() {
             dialogue.skip_to_full_page();
             assert!(screen.pending_trainer_battle.is_none(), "battle must await the dialogue");
         }
-        screen.update_frame(input(frame % 2 == 1));
+        screen.update_frame(input(frame % 4 >= 2));
         if let Some(pending) = &screen.pending_trainer_battle {
             assert!(saw_dialogue);
             assert_eq!(pending.trainer_id, "OPP_ROCKET17");
@@ -938,17 +938,17 @@ fn silph_boardroom_door_opens_from_corridor_only_with_card_key() {
             let input = |a| super::OverworldInput::new(false, false, false, false, a, false, false, false);
             for _ in 0..100 {
                 screen.seed_script_query_state(0, &bag, 0, 0, 0, 0, &[], 0, 0, 0);
-                screen.update_frame(input(false));
+                for _ in 0..2 { screen.update_frame(input(false)); }
             }
             screen.state.player.facing = Direction::Up;
             let door = 6 * screen.map_data.as_ref().unwrap().width as usize + 3;
             assert_eq!(screen.map_data.as_ref().unwrap().blocks[door], 32);
-            screen.update_frame(input(true));
+            for _ in 0..2 { screen.update_frame(input(true)); }
             for frame in 0..180 {
                 if let Some(dialogue) = screen.pending_dialogue.as_mut() {
                     dialogue.skip_to_full_page();
                 }
-                screen.update_frame(input(frame % 2 == 1));
+                screen.update_frame(input(frame % 4 >= 2));
             }
             assert_eq!(screen.script_flags().get("EVENT_SILPH_CO_11_UNLOCKED_DOOR").copied().unwrap_or(false), has_key);
             assert_eq!(screen.map_data.as_ref().unwrap().blocks[door], if has_key { 3 } else { 32 });
@@ -966,17 +966,17 @@ fn silph_third_floor_door_requires_key_and_stays_open_after_reentry() {
         let input = |a| super::OverworldInput::new(false, false, false, false, a, false, false, false);
         for _ in 0..100 {
             screen.seed_script_query_state(0, &bag, 0, 0, 0, 0, &[], 0, 0, 0);
-            screen.update_frame(input(false));
+            for _ in 0..2 { screen.update_frame(input(false)); }
         }
         let door = 4 * screen.map_data.as_ref().unwrap().width as usize + 8;
         assert_eq!(screen.map_data.as_ref().unwrap().blocks[door], 95);
         screen.state.player.facing = Direction::Left;
-        screen.update_frame(input(true));
+        for _ in 0..2 { screen.update_frame(input(true)); }
         for frame in 0..180 {
             if let Some(dialogue) = screen.pending_dialogue.as_mut() {
                 dialogue.skip_to_full_page();
             }
-            screen.update_frame(input(frame % 2 == 1));
+            screen.update_frame(input(frame % 4 >= 2));
         }
         assert_eq!(screen.script_flags().get("EVENT_SILPH_CO_3_UNLOCKED_DOOR2").copied().unwrap_or(false), has_key);
         assert_eq!(screen.map_data.as_ref().unwrap().blocks[door], if has_key { 14 } else { 95 });
@@ -1032,19 +1032,19 @@ fn mansion_statues_offer_and_apply_switch_from_adjacent_floor() {
         for _ in 0..100 { screen.update_frame(input(false)); }
         screen.state.player.facing = Direction::Up;
         screen.seed_script_query_state(0, &[], 0, 0, 0, 0, &[], 0, 0, 0);
-        screen.update_frame(input(true));
+        for _ in 0..2 { screen.update_frame(input(true)); }
         for frame in 0..180 {
             if screen.pending_choice.is_some() { break; }
             if let Some(dialogue) = screen.pending_dialogue.as_mut() { dialogue.skip_to_full_page(); }
-            screen.update_frame(input(frame % 2 == 1));
+            screen.update_frame(input(frame % 4 >= 2));
         }
         assert!(screen.pending_choice.is_some(), "statue on {map:?} above ({x},{y}) must offer YES/NO");
-        screen.update_frame(input(false));
-        screen.update_frame(input(true));
+        for _ in 0..2 { screen.update_frame(input(false)); }
+        for _ in 0..2 { screen.update_frame(input(true)); }
         for frame in 0..180 {
             if screen.script_flags().get("EVENT_MANSION_SWITCH_ON") == Some(&true) { break; }
             if let Some(dialogue) = screen.pending_dialogue.as_mut() { dialogue.skip_to_full_page(); }
-            screen.update_frame(input(frame % 2 == 1));
+            screen.update_frame(input(frame % 4 >= 2));
         }
         assert_eq!(screen.script_flags().get("EVENT_MANSION_SWITCH_ON"), Some(&true));
     }
@@ -1079,7 +1079,7 @@ fn reentry_with_a_still_held_does_not_talk_to_facing_npc() {
     // Let the map settle (load effects, NPC ticks) — the overworld ran for a
     // while before the START menu was opened.
     for _ in 0..10 {
-        screen.update_frame(neutral);
+        for _ in 0..2 { screen.update_frame(neutral); }
     }
     assert!(screen.pending_dialogue.is_none());
     assert!(screen.active_script_effect.is_none());
@@ -1089,7 +1089,7 @@ fn reentry_with_a_still_held_does_not_talk_to_facing_npc() {
     screen.sync_prev_input(true, false, false, false);
 
     // ...so the first overworld frame with A held must not talk.
-    screen.update_frame(a_input);
+    for _ in 0..2 { screen.update_frame(a_input); }
     assert!(
         screen.pending_dialogue.is_none(),
         "held A re-fired after menu close and talked to the facing NPC"
@@ -1100,8 +1100,8 @@ fn reentry_with_a_still_held_does_not_talk_to_facing_npc() {
     );
 
     // Release, then a genuine press → talks to Daisy as usual.
-    screen.update_frame(neutral);
-    screen.update_frame(a_input);
+    for _ in 0..2 { screen.update_frame(neutral); }
+    for _ in 0..2 { screen.update_frame(a_input); }
     assert!(
         screen.pending_dialogue.is_some() || screen.active_script_effect.is_some(),
         "a genuine A press must still talk to the facing NPC"
@@ -1136,7 +1136,7 @@ fn held_a_across_map_warp_does_not_talk_to_facing_npc() {
     screen.state.player.y = 0;
     screen.state.player.facing = Direction::Up;
     for _ in 0..10 {
-        screen.update_frame(neutral);
+        for _ in 0..2 { screen.update_frame(neutral); }
     }
     assert!(screen.pending_dialogue.is_none());
     assert!(screen.active_script_effect.is_none());
@@ -1144,14 +1144,14 @@ fn held_a_across_map_warp_does_not_talk_to_facing_npc() {
     // Press A and keep it held: prev_a_pressed becomes true, and the player
     // then warps into BluesHouse at (1,3) facing Right — Daisy sits at
     // (2,3), directly in front of the landing spot.
-    screen.update_frame(a_input);
+    for _ in 0..2 { screen.update_frame(a_input); }
     screen.warp_to_map(MapId::BluesHouse, 1, 3);
     screen.state.player.facing = Direction::Right;
 
     // Hold A across fade-out, black screen, commit, fade-in and the first
     // settled frames of the new map (~57 fade frames in total).
     for _ in 0..90 {
-        screen.update_frame(a_input);
+        for _ in 0..2 { screen.update_frame(a_input); }
         assert!(
             screen.pending_dialogue.is_none() && screen.active_script_effect.is_none(),
             "held A re-fired after the warp and talked to the facing NPC"
@@ -1162,8 +1162,8 @@ fn held_a_across_map_warp_does_not_talk_to_facing_npc() {
     assert_eq!(screen.state.player.y, 3);
 
     // Release, then a genuine press → talks to Daisy as usual.
-    screen.update_frame(neutral);
-    screen.update_frame(a_input);
+    for _ in 0..2 { screen.update_frame(neutral); }
+    for _ in 0..2 { screen.update_frame(a_input); }
     assert!(
         screen.pending_dialogue.is_some() || screen.active_script_effect.is_some(),
         "a genuine A press must still talk to the facing NPC after a warp"
@@ -1187,14 +1187,14 @@ fn elite_four_talk_triggers_battle_after_map_trigger_setup() {
         screen.state.player.facing = Direction::Up;
         let input = |a| super::OverworldInput::new(false, false, false, false, a, false, false, false);
         for _ in 0..20 { screen.update_frame(input(false)); }
-        screen.update_frame(input(true));
+        for _ in 0..2 { screen.update_frame(input(true)); }
         let mut saw_dialogue = false;
         for frame in 0..1800 {
             if let Some(dialogue) = screen.pending_dialogue.as_mut() {
                 saw_dialogue = true;
                 dialogue.skip_to_full_page();
             }
-            screen.update_frame(input(frame % 2 == 1));
+            screen.update_frame(input(frame % 4 >= 2));
             if screen.pending_trainer_battle.is_some() { break; }
         }
         assert!(saw_dialogue, "{map:?}");
@@ -1675,7 +1675,7 @@ fn victory_road_switch_requires_boulder_pushed_onto_it() {
     screen.state.player.y = 11;
     screen.state.player.facing = Direction::Down;
     screen.strength_active = true;
-    for _ in 0..30 {
+    for _ in 0..78 {
         screen.update_frame(input_hold_down);
     }
     assert_eq!(
@@ -1725,16 +1725,16 @@ fn bills_pc_and_cutscene_run_at_real_pc_tile() {
     screen.run_on_load();
     let input = |a: bool| super::OverworldInput::new(false, false, false, false, a, false, false, false);
     for _ in 0..50 {
-        screen.update_frame(input(false));
+        for _ in 0..2 { screen.update_frame(input(false)); }
     }
 
     // 1. Fresh PC interaction: monitor text only, no subplot progress.
-    screen.update_frame(input(true));
+    for _ in 0..2 { screen.update_frame(input(true)); }
     for frame in 0..120 {
         if let Some(dialogue) = screen.pending_dialogue.as_mut() {
             dialogue.skip_to_full_page();
         }
-        screen.update_frame(input(frame % 2 == 1));
+        screen.update_frame(input(frame % 4 >= 2));
     }
     assert!(
         screen.script_flags().get("EVENT_BILL_SAID_USE_CELL_SEPARATOR") != Some(&true),
@@ -1747,19 +1747,19 @@ fn bills_pc_and_cutscene_run_at_real_pc_tile() {
     screen.state.player.y = 6;
     screen.state.player.facing = Direction::Up;
     screen.seed_script_query_state(0, &[], 0, 0, 0, 0, &[], 0, 0, 0);
-    screen.update_frame(input(true));
+    for _ in 0..2 { screen.update_frame(input(true)); }
     let mut chose_yes = false;
     for frame in 0..400 {
         if screen.pending_choice.is_some() && !chose_yes {
-            screen.update_frame(input(false));
-            screen.update_frame(input(true)); // YES
+            for _ in 0..2 { screen.update_frame(input(false)); }
+            for _ in 0..2 { screen.update_frame(input(true)); } // YES
             chose_yes = true;
             continue;
         }
         if let Some(dialogue) = screen.pending_dialogue.as_mut() {
             dialogue.skip_to_full_page();
         }
-        screen.update_frame(input(frame % 2 == 1));
+        screen.update_frame(input(frame % 4 >= 2));
     }
     assert!(chose_yes, "the help choice must appear");
     assert_eq!(
@@ -1778,7 +1778,7 @@ fn bills_pc_and_cutscene_run_at_real_pc_tile() {
     screen.state.player.x = 1;
     screen.state.player.y = 5;
     screen.state.player.facing = Direction::Up;
-    screen.update_frame(input(true));
+    for _ in 0..2 { screen.update_frame(input(true)); }
     for frame in 0..300 {
         if screen.script_flags().get("EVENT_MET_BILL") == Some(&true) {
             break;
@@ -1786,7 +1786,7 @@ fn bills_pc_and_cutscene_run_at_real_pc_tile() {
         if let Some(dialogue) = screen.pending_dialogue.as_mut() {
             dialogue.skip_to_full_page();
         }
-        screen.update_frame(input(frame % 2 == 1));
+        screen.update_frame(input(frame % 4 >= 2));
     }
     assert_eq!(
         screen.script_flags().get("EVENT_USED_CELL_SEPARATOR_ON_BILL"),
@@ -1914,7 +1914,14 @@ fn victory_road_boulder_drops_and_reappears_downstairs() {
     screen.strength_active = true;
     screen.tick_boulder_push(Some(Direction::Right));
     screen.tick_boulder_push(Some(Direction::Right));
-    assert!(!screen.npc_states.iter().find(|n| n.text_id == 10).unwrap().visible, "stone falls into the hole");
+    assert!(screen.npc_states.iter().find(|n|n.text_id==10).unwrap().visible,"stone starts sliding toward the hole");
+    for frame in 1..=69 {
+        screen.tick_boulder_push(None);
+        assert!(screen.npc_states.iter().find(|n|n.text_id==10).unwrap().visible,"stone remains through slide/dust frame {frame}");
+        assert!(!screen.unified_flags().check(pokered_data::event_flags::EventFlag::EVENT_VICTORY_ROAD_3_BOULDER_ON_SWITCH2));
+    }
+    screen.tick_boulder_push(None);
+    assert!(!screen.npc_states.iter().find(|n| n.text_id == 10).unwrap().visible, "3F handles BIT_PUSHED_BOULDER after dust completes");
     let bytes = screen.unified_flags.to_event_bytes();
     let mut restored = super::screen::OverworldScreen::new(MapId::VictoryRoad2F, None, PokemonRedData);
     restored.set_event_flags_bytes(&bytes);

@@ -1,0 +1,6 @@
+{
+  "paths": 1189,
+  "objects": 59,
+  "sha256": "1a53709d88ce8de97ac91245ed428700e77088746b792e3fe01891d14de5ea0b",
+  "scope": "Actual SRAM/inputs from master and provisional fix plus original short/held probe; raw captures preserved. Native/master repeat comparison excludes only latent independently initialized overworld.rng.seed and script_engine.interp.host.rng_state. Cross-engine equality compares decoded RGB, not encoder bytes. No full pixel parity outside72 white frames, no global-phase/five-scene native claim."
+}

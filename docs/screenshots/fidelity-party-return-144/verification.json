@@ -1,0 +1,27 @@
+{
+  "base_master": "31b1eda3112514d6bc803af559ec7f7c9e20374f",
+  "committed_base": "3ac4aea27211ca5cbdfbd7c475809ad59e13446e",
+  "scope": "Provisional party-return runtime lifecycle. Actual Continue, START, Pokemon and B/Down/A input on unchanged original SRAM; no warp/party/NPC edits. Original ROM unchanged.",
+  "inputs": "B0..1, DOWN10..11, A16..17; separate held DOWN10..40 original/actual regression",
+  "source_palette_restore_frame": 37,
+  "native_palette_restore_frame": 37,
+  "source_first_menu_joypad": 40,
+  "native_first_menu_joypad": 40,
+  "master_short_probe_at16": "Bag",
+  "native_short_probe_at16": "white restore, Pokemon selection retained",
+  "native_at40": "StartMenu Pokemon",
+  "fully_white_decoded_rgb_exact_frames_per_probe": 36,
+  "probes": 2,
+  "retained_full_render_equal_frames": 82,
+  "core_tests_passed": 2734,
+  "app_tests_passed": 201,
+  "app_ignored": 22,
+  "gba_release_build": true,
+  "gba_performance_comparisons_passed": 31,
+  "remaining": [
+    "Frontend CPU/PPU phase is still provisional zero; other scenes not verified to exact hardware frame.",
+    "First palette-change raster not reproduced; source retains top15/16 lines, native clears all.",
+    "Background transfer and NPC reload/update stages not exact; no full RGB equality claim beyond white1..36.",
+    "Victory2F2, scripted/FollowNpc/connection clocks, Safari/dialogue, latest fresh mainline+Continue and broad coverage remain merge gates."
+  ]
+}

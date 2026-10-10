@@ -1,0 +1,43 @@
+{
+  "scope": "ordinary four directions actualStrength/sourceSRAM; Victory switches,holes and scripted clocks remainopen",
+  "preceding_head": "93c38f8",
+  "base": "31b1eda3112514d6bc803af559ec7f7c9e20374f",
+  "source": "pret/pokered fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "driver_sha256": "cfb00d43c173e3fade8e9f4de5141c936e1f85f8f4586899cd53af85705a2e74",
+  "cases": [
+    {
+      "direction": "down",
+      "repeat": "201 PNG/JSON exact",
+      "native_MoveSprite_phase0_t": 3,
+      "pixel_diff_frames": 0,
+      "diffs": []
+    },
+    {
+      "direction": "up",
+      "repeat": "201 PNG/JSON exact",
+      "native_MoveSprite_phase0_t": 3,
+      "pixel_diff_frames": 0,
+      "diffs": []
+    },
+    {
+      "direction": "left",
+      "repeat": "201 PNG/JSON exact",
+      "native_MoveSprite_phase0_t": 3,
+      "pixel_diff_frames": 0,
+      "diffs": []
+    },
+    {
+      "direction": "right",
+      "repeat": "201 PNG/JSON exact",
+      "native_MoveSprite_phase0_t": 3,
+      "pixel_diff_frames": 0,
+      "diffs": []
+    }
+  ],
+  "rejected_probes": [
+    "clock91first53RGBframesfail",
+    "relativephasebeforepaletteconstant17RGBframesfail",
+    "otherdirectionsbeforepriorJoypadordering60RGBframesfaileach"
+  ],
+  "before_source": "actualmaster31b1eda readonlycapture, Down fixture/Strength/input16/201frames; no direction preparation in Down case"
+}

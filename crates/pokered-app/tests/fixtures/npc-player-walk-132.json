@@ -1,0 +1,552 @@
+{
+  "reference": "pret/pokered fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "scope": "controlled valid ViridianCity NPC slot1 world19,29 (source map23,33 ready /23,34 downward walking target), ready delay3 or moving remaining12 phase1 intra0; four actual idle priming frames; Down0..15 real player walk. Only first step and before NPC chooses another random move; native moving future idle54 preloaded, not compared to original unused delay0. Third ready_zero case has delay2 before four primes, ready at pretrigger; NPC may start on the first player step because UpdateSprites runs before setting wWalkCounter. Direction/image not compared after the random choice; no RNG alignment claim. Standing source YPixels44 derived from InitializeSpriteScreenPosition ((33-30)*16-4); moving12 source YPixels48 is that base plus4 walking pixels. Supersedes pixel-inconsistent 130/131/133 standing captures; 132 moving capture remains valid.",
+  "cases": {
+    "ready": [
+      {
+        "t": -1,
+        "player_counter": 0,
+        "remaining": 0,
+        "phase": 0,
+        "intra": 0,
+        "raw_image": 0,
+        "delay": 1
+      },
+      {
+        "t": 0,
+        "player_counter": 0,
+        "remaining": 0,
+        "phase": 0,
+        "intra": 0,
+        "raw_image": 0,
+        "delay": 1
+      },
+      {
+        "t": 1,
+        "player_counter": 0,
+        "remaining": 0,
+        "phase": 0,
+        "intra": 0,
+        "raw_image": 0,
+        "delay": 1
+      },
+      {
+        "t": 2,
+        "player_counter": 7,
+        "remaining": 0,
+        "phase": 0,
+        "intra": 0,
+        "raw_image": 0,
+        "delay": 0
+      },
+      {
+        "t": 3,
+        "player_counter": 7,
+        "remaining": 0,
+        "phase": 0,
+        "intra": 0,
+        "raw_image": 0,
+        "delay": 0
+      },
+      {
+        "t": 4,
+        "player_counter": 7,
+        "remaining": 0,
+        "phase": 0,
+        "intra": 0,
+        "raw_image": 0,
+        "delay": 0
+      },
+      {
+        "t": 5,
+        "player_counter": 6,
+        "remaining": 0,
+        "phase": 0,
+        "intra": 0,
+        "raw_image": 0,
+        "delay": 0
+      },
+      {
+        "t": 6,
+        "player_counter": 6,
+        "remaining": 0,
+        "phase": 0,
+        "intra": 0,
+        "raw_image": 0,
+        "delay": 0
+      },
+      {
+        "t": 7,
+        "player_counter": 5,
+        "remaining": 0,
+        "phase": 0,
+        "intra": 0,
+        "raw_image": 0,
+        "delay": 0
+      },
+      {
+        "t": 8,
+        "player_counter": 5,
+        "remaining": 0,
+        "phase": 0,
+        "intra": 0,
+        "raw_image": 0,
+        "delay": 0
+      },
+      {
+        "t": 9,
+        "player_counter": 4,
+        "remaining": 0,
+        "phase": 0,
+        "intra": 0,
+        "raw_image": 0,
+        "delay": 0
+      },
+      {
+        "t": 10,
+        "player_counter": 4,
+        "remaining": 0,
+        "phase": 0,
+        "intra": 0,
+        "raw_image": 0,
+        "delay": 0
+      },
+      {
+        "t": 11,
+        "player_counter": 3,
+        "remaining": 0,
+        "phase": 0,
+        "intra": 0,
+        "raw_image": 0,
+        "delay": 0
+      },
+      {
+        "t": 12,
+        "player_counter": 3,
+        "remaining": 0,
+        "phase": 0,
+        "intra": 0,
+        "raw_image": 0,
+        "delay": 0
+      },
+      {
+        "t": 13,
+        "player_counter": 2,
+        "remaining": 0,
+        "phase": 0,
+        "intra": 0,
+        "raw_image": 0,
+        "delay": 0
+      },
+      {
+        "t": 14,
+        "player_counter": 2,
+        "remaining": 0,
+        "phase": 0,
+        "intra": 0,
+        "raw_image": 0,
+        "delay": 0
+      },
+      {
+        "t": 15,
+        "player_counter": 1,
+        "remaining": 0,
+        "phase": 0,
+        "intra": 0,
+        "raw_image": 0,
+        "delay": 0
+      },
+      {
+        "t": 16,
+        "player_counter": 1,
+        "remaining": 0,
+        "phase": 0,
+        "intra": 0,
+        "raw_image": 0,
+        "delay": 0
+      },
+      {
+        "t": 17,
+        "player_counter": 0,
+        "remaining": 0,
+        "phase": 0,
+        "intra": 0,
+        "raw_image": 0,
+        "delay": 0
+      },
+      {
+        "t": 18,
+        "player_counter": 0,
+        "remaining": 0,
+        "phase": 0,
+        "intra": 0,
+        "raw_image": 0,
+        "delay": 0
+      }
+    ],
+    "moving": [
+      {
+        "t": -1,
+        "player_counter": 0,
+        "remaining": 10,
+        "phase": 1,
+        "intra": 2,
+        "raw_image": 1,
+        "delay": 0
+      },
+      {
+        "t": 0,
+        "player_counter": 0,
+        "remaining": 10,
+        "phase": 1,
+        "intra": 2,
+        "raw_image": 1,
+        "delay": 0
+      },
+      {
+        "t": 1,
+        "player_counter": 0,
+        "remaining": 10,
+        "phase": 1,
+        "intra": 2,
+        "raw_image": 1,
+        "delay": 0
+      },
+      {
+        "t": 2,
+        "player_counter": 7,
+        "remaining": 9,
+        "phase": 1,
+        "intra": 3,
+        "raw_image": 1,
+        "delay": 0
+      },
+      {
+        "t": 3,
+        "player_counter": 7,
+        "remaining": 9,
+        "phase": 1,
+        "intra": 3,
+        "raw_image": 1,
+        "delay": 0
+      },
+      {
+        "t": 4,
+        "player_counter": 7,
+        "remaining": 9,
+        "phase": 1,
+        "intra": 3,
+        "raw_image": 1,
+        "delay": 0
+      },
+      {
+        "t": 5,
+        "player_counter": 6,
+        "remaining": 8,
+        "phase": 2,
+        "intra": 0,
+        "raw_image": 1,
+        "delay": 0
+      },
+      {
+        "t": 6,
+        "player_counter": 6,
+        "remaining": 8,
+        "phase": 2,
+        "intra": 0,
+        "raw_image": 1,
+        "delay": 0
+      },
+      {
+        "t": 7,
+        "player_counter": 5,
+        "remaining": 7,
+        "phase": 2,
+        "intra": 1,
+        "raw_image": 1,
+        "delay": 0
+      },
+      {
+        "t": 8,
+        "player_counter": 5,
+        "remaining": 7,
+        "phase": 2,
+        "intra": 1,
+        "raw_image": 1,
+        "delay": 0
+      },
+      {
+        "t": 9,
+        "player_counter": 4,
+        "remaining": 6,
+        "phase": 2,
+        "intra": 2,
+        "raw_image": 1,
+        "delay": 0
+      },
+      {
+        "t": 10,
+        "player_counter": 4,
+        "remaining": 6,
+        "phase": 2,
+        "intra": 2,
+        "raw_image": 1,
+        "delay": 0
+      },
+      {
+        "t": 11,
+        "player_counter": 3,
+        "remaining": 5,
+        "phase": 2,
+        "intra": 3,
+        "raw_image": 1,
+        "delay": 0
+      },
+      {
+        "t": 12,
+        "player_counter": 3,
+        "remaining": 5,
+        "phase": 2,
+        "intra": 3,
+        "raw_image": 1,
+        "delay": 0
+      },
+      {
+        "t": 13,
+        "player_counter": 2,
+        "remaining": 4,
+        "phase": 3,
+        "intra": 0,
+        "raw_image": 1,
+        "delay": 0
+      },
+      {
+        "t": 14,
+        "player_counter": 2,
+        "remaining": 4,
+        "phase": 3,
+        "intra": 0,
+        "raw_image": 1,
+        "delay": 0
+      },
+      {
+        "t": 15,
+        "player_counter": 1,
+        "remaining": 3,
+        "phase": 3,
+        "intra": 1,
+        "raw_image": 1,
+        "delay": 0
+      },
+      {
+        "t": 16,
+        "player_counter": 1,
+        "remaining": 3,
+        "phase": 3,
+        "intra": 1,
+        "raw_image": 1,
+        "delay": 0
+      },
+      {
+        "t": 17,
+        "player_counter": 0,
+        "remaining": 2,
+        "phase": 3,
+        "intra": 2,
+        "raw_image": 1,
+        "delay": 0
+      },
+      {
+        "t": 18,
+        "player_counter": 0,
+        "remaining": 2,
+        "phase": 3,
+        "intra": 2,
+        "raw_image": 1,
+        "delay": 0
+      }
+    ],
+    "ready_zero": [
+      {
+        "t": -1,
+        "player_counter": 0,
+        "remaining": 0,
+        "phase": 0,
+        "intra": 0,
+        "raw_image": 0,
+        "delay": 0
+      },
+      {
+        "t": 0,
+        "player_counter": 0,
+        "remaining": 0,
+        "phase": 0,
+        "intra": 0,
+        "raw_image": 0,
+        "delay": 0
+      },
+      {
+        "t": 1,
+        "player_counter": 0,
+        "remaining": 0,
+        "phase": 0,
+        "intra": 0,
+        "raw_image": 0,
+        "delay": 0
+      },
+      {
+        "t": 2,
+        "player_counter": 7,
+        "remaining": 16,
+        "phase": 0,
+        "intra": 0,
+        "raw_image": 12,
+        "delay": 0
+      },
+      {
+        "t": 3,
+        "player_counter": 7,
+        "remaining": 16,
+        "phase": 0,
+        "intra": 0,
+        "raw_image": 12,
+        "delay": 0
+      },
+      {
+        "t": 4,
+        "player_counter": 7,
+        "remaining": 16,
+        "phase": 0,
+        "intra": 0,
+        "raw_image": 12,
+        "delay": 0
+      },
+      {
+        "t": 5,
+        "player_counter": 6,
+        "remaining": 15,
+        "phase": 0,
+        "intra": 1,
+        "raw_image": 12,
+        "delay": 0
+      },
+      {
+        "t": 6,
+        "player_counter": 6,
+        "remaining": 15,
+        "phase": 0,
+        "intra": 1,
+        "raw_image": 12,
+        "delay": 0
+      },
+      {
+        "t": 7,
+        "player_counter": 5,
+        "remaining": 14,
+        "phase": 0,
+        "intra": 2,
+        "raw_image": 12,
+        "delay": 0
+      },
+      {
+        "t": 8,
+        "player_counter": 5,
+        "remaining": 14,
+        "phase": 0,
+        "intra": 2,
+        "raw_image": 12,
+        "delay": 0
+      },
+      {
+        "t": 9,
+        "player_counter": 4,
+        "remaining": 13,
+        "phase": 0,
+        "intra": 3,
+        "raw_image": 12,
+        "delay": 0
+      },
+      {
+        "t": 10,
+        "player_counter": 4,
+        "remaining": 13,
+        "phase": 0,
+        "intra": 3,
+        "raw_image": 12,
+        "delay": 0
+      },
+      {
+        "t": 11,
+        "player_counter": 3,
+        "remaining": 12,
+        "phase": 1,
+        "intra": 0,
+        "raw_image": 12,
+        "delay": 0
+      },
+      {
+        "t": 12,
+        "player_counter": 3,
+        "remaining": 12,
+        "phase": 1,
+        "intra": 0,
+        "raw_image": 12,
+        "delay": 0
+      },
+      {
+        "t": 13,
+        "player_counter": 2,
+        "remaining": 11,
+        "phase": 1,
+        "intra": 1,
+        "raw_image": 12,
+        "delay": 0
+      },
+      {
+        "t": 14,
+        "player_counter": 2,
+        "remaining": 11,
+        "phase": 1,
+        "intra": 1,
+        "raw_image": 12,
+        "delay": 0
+      },
+      {
+        "t": 15,
+        "player_counter": 1,
+        "remaining": 10,
+        "phase": 1,
+        "intra": 2,
+        "raw_image": 12,
+        "delay": 0
+      },
+      {
+        "t": 16,
+        "player_counter": 1,
+        "remaining": 10,
+        "phase": 1,
+        "intra": 2,
+        "raw_image": 12,
+        "delay": 0
+      },
+      {
+        "t": 17,
+        "player_counter": 0,
+        "remaining": 9,
+        "phase": 1,
+        "intra": 3,
+        "raw_image": 12,
+        "delay": 0
+      },
+      {
+        "t": 18,
+        "player_counter": 0,
+        "remaining": 9,
+        "phase": 1,
+        "intra": 3,
+        "raw_image": 12,
+        "delay": 0
+      }
+    ]
+  }
+}

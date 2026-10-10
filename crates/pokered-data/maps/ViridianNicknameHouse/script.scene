@@ -24,8 +24,9 @@ game_scene ViridianNicknameHouse {
   // ── SPEARY the SPEAROW (npc 3) — plays its cry, like the original text_asm ──
   @storyline("talkSpearow") {
     @trigger(map = "ViridianNicknameHouse", npc = 3)
-    @speaker("") { @t("SPEARY: Tetweet!", "SPEARY：Tetweet！") }
+    printFieldText(@t("SPEARY: Tetweet!", "SPEARY：Tetweet！"))
     playCry("SPEAROW")
+    finishFieldText()
   }
 
   // ── Speary's name sign / clipboard (npc 4) ──────────────────────────────

@@ -1,0 +1,262 @@
+{
+  "before": "5de6ba9",
+  "after": "increment139; exact source SHA256 in provenance",
+  "all201_png_equal_before": true,
+  "bad_frames": [
+    {
+      "t": 5,
+      "source": [
+        9,
+        15,
+        0,
+        false
+      ],
+      "native": [
+        9,
+        16,
+        16,
+        false
+      ]
+    },
+    {
+      "t": 7,
+      "source": [
+        9,
+        16,
+        16,
+        false
+      ],
+      "native": [
+        9,
+        16,
+        15,
+        true
+      ]
+    },
+    {
+      "t": 18,
+      "source": [
+        9,
+        16,
+        15,
+        true
+      ],
+      "native": [
+        9,
+        16,
+        14,
+        true
+      ]
+    },
+    {
+      "t": 20,
+      "source": [
+        9,
+        16,
+        14,
+        true
+      ],
+      "native": [
+        9,
+        16,
+        13,
+        true
+      ]
+    },
+    {
+      "t": 22,
+      "source": [
+        9,
+        16,
+        13,
+        true
+      ],
+      "native": [
+        9,
+        16,
+        12,
+        true
+      ]
+    },
+    {
+      "t": 24,
+      "source": [
+        9,
+        16,
+        12,
+        true
+      ],
+      "native": [
+        9,
+        16,
+        11,
+        true
+      ]
+    },
+    {
+      "t": 26,
+      "source": [
+        9,
+        16,
+        11,
+        true
+      ],
+      "native": [
+        9,
+        16,
+        10,
+        true
+      ]
+    },
+    {
+      "t": 28,
+      "source": [
+        9,
+        16,
+        10,
+        true
+      ],
+      "native": [
+        9,
+        16,
+        9,
+        true
+      ]
+    },
+    {
+      "t": 30,
+      "source": [
+        9,
+        16,
+        9,
+        true
+      ],
+      "native": [
+        9,
+        16,
+        8,
+        true
+      ]
+    },
+    {
+      "t": 32,
+      "source": [
+        9,
+        16,
+        8,
+        true
+      ],
+      "native": [
+        9,
+        16,
+        7,
+        true
+      ]
+    },
+    {
+      "t": 34,
+      "source": [
+        9,
+        16,
+        7,
+        true
+      ],
+      "native": [
+        9,
+        16,
+        6,
+        true
+      ]
+    },
+    {
+      "t": 36,
+      "source": [
+        9,
+        16,
+        6,
+        true
+      ],
+      "native": [
+        9,
+        16,
+        5,
+        true
+      ]
+    },
+    {
+      "t": 38,
+      "source": [
+        9,
+        16,
+        5,
+        true
+      ],
+      "native": [
+        9,
+        16,
+        4,
+        true
+      ]
+    },
+    {
+      "t": 40,
+      "source": [
+        9,
+        16,
+        4,
+        true
+      ],
+      "native": [
+        9,
+        16,
+        3,
+        true
+      ]
+    },
+    {
+      "t": 42,
+      "source": [
+        9,
+        16,
+        3,
+        true
+      ],
+      "native": [
+        9,
+        16,
+        2,
+        true
+      ]
+    },
+    {
+      "t": 44,
+      "source": [
+        9,
+        16,
+        2,
+        true
+      ],
+      "native": [
+        9,
+        16,
+        1,
+        true
+      ]
+    },
+    {
+      "t": 46,
+      "source": [
+        9,
+        16,
+        1,
+        true
+      ],
+      "native": [
+        9,
+        16,
+        0,
+        true
+      ]
+    }
+  ]
+}

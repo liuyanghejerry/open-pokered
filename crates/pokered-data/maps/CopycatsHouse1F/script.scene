@@ -1,7 +1,7 @@
 // CopycatsHouse1F — translated from the original disassembly
 // (scripts/CopycatsHouse1F.asm, text/CopycatsHouse1F.asm) to the real Game DSL
 // API. Plain NPC house: COPYCAT's parents (dialogue only) and her CHANSEY,
-// which plays its cry then chirps.
+// which prints its text, then plays its cry.
 
 game_scene CopycatsHouse1F {
   // ── COPYCAT's mother (npc 1) ────────────────────────────────────────────
@@ -20,12 +20,11 @@ game_scene CopycatsHouse1F {
     }
   }
 
-  // ── CHANSEY (Fairy sprite, npc 3) — plays its cry then chirps ────────────
+  // ── CHANSEY (Fairy sprite, npc 3) — prints its text, then plays its cry ────────────
   @storyline("talkChansey") {
     @trigger(map = "CopycatsHouse1F", npc = 3)
+    printFieldText(@t("CHANSEY: Chaan! Sii!", "吉利蛋：恰恩！叽！"))
     playCry("CHANSEY")
-    @speaker("") {
-      @t("CHANSEY: Chaan! Sii!", "吉利蛋：恰恩！叽！")
-    }
+    finishFieldText()
   }
 }

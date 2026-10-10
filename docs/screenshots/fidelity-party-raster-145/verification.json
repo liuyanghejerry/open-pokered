@@ -1,0 +1,21 @@
+{
+  "base_master": "31b1eda3112514d6bc803af559ec7f7c9e20374f",
+  "committed_base": "0ce1bc8fd9d86646beef025b63df4f197d9e8302",
+  "first_white_line": 16,
+  "original_city_boundary": 16,
+  "original_prefix_changed_from_previous_frame": true,
+  "cache_full_frames": 82,
+  "original_white_rgb_frames_unchanged": 72,
+  "core_pass": 2734,
+  "app_pass": 201,
+  "ignored": 22,
+  "menu_snapshot_scope": "Agent snapshots intentionally reject menus; no new snapshot frontend feature added.",
+  "remaining": "Boundary16 is provisional for frontend; source other scenes have15 and subscanline differences. Global CPU/PPU phase, background/NPC reload, Victory2F2 and remaining full audit are unfinished. No full source/native firstframe pixel equality claim.",
+  "exe_sha256": "6f876cf274a7592aca9716a68e08f32d446603f0d2b407141a5fbbaac9408821",
+  "sources": {
+    "crates/pokered-app/src/game.rs": "c214c20d198e3963bf664d01ee3201bb06fbb3904e90d848080566d95f4c2d9d",
+    "crates/pokered-app/src/render/session.rs": "9233b9adbe2a5ff1501b9c4c28051ced36b1d0c5d937228b3a90c8ce1b70e47a",
+    "crates/pokered-core/src/overworld/screen.rs": "9b555d54f54b7f81c327d9968c1af812345c6ccfa1be45b7dc6ce32a038e4838",
+    "crates/pokered-core/src/overworld/presentation.rs": "46b142440f2dbc02ff05d75536ec62a2e1b60a0274c3893ea502147699128f6f"
+  }
+}

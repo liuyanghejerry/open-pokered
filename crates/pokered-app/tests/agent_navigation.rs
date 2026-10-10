@@ -160,3 +160,37 @@ fn interact_with_reports_not_found() {
     let outcome = game.agent_interact_with("bogus");
     assert_eq!(outcome.result, InteractResult::NotFound);
 }
+
+#[test]
+fn navigation_resumes_at_boulder_logical_completion_before_last_lcd_frame() {
+    use dotzuki_app::InputState;
+    use dotzuki_renderer::input::GbButton;
+    for (push_frame, expected) in [(69, NavigationResult::Interrupted), (70, NavigationResult::Reached)] {
+        let mut game = game_at_pallet(18, 9);
+        game.overworld = OverworldScreen::new(MapId::SeafoamIslands1F, None, PokemonRedData);
+        game.overworld.state.player.x = 18;
+        game.overworld.state.player.y = 9;
+        game.overworld.state.player.facing = Direction::Down;
+        game.overworld.strength_active = true;
+        game.overworld.state.encounter_cooldown = 255;
+        game.set_seed(42);
+        let mut down = InputState::new();
+        down.press(GbButton::Down);
+        for _ in 0..100 {
+            game.update(&down);
+            down.begin_frame();
+            if game.overworld.boulder_push.is_some_and(|push| push.frame >= push_frame) { break; }
+        }
+        assert_eq!(game.overworld.boulder_push.unwrap().frame, push_frame);
+        assert_eq!((game.overworld.state.player.x, game.overworld.state.player.y), (18, 9));
+        let outcome = game.agent_move_to(19, 9);
+        assert_eq!(outcome.result, expected, "push frame {push_frame}: {:?}", outcome.detail);
+        if push_frame == 69 {
+            assert_eq!(outcome.frames, 0, "navigation must not advance a locked push");
+            assert_eq!((game.overworld.state.player.x, game.overworld.state.player.y), (18, 9));
+        } else {
+            assert!(outcome.frames > 0);
+            assert_eq!((game.overworld.state.player.x, game.overworld.state.player.y), (19, 9));
+        }
+    }
+}

@@ -1,0 +1,105 @@
+{
+  "engine_head": "2d5b751a444164a478cc9431de4b498bdc30b47a",
+  "binary_sha256": "345c864596454ab373df0904fb8e49c39d147d6ead1afec45b62bc452ca19971",
+  "archive_sha256": "70d4bbd55e78a575aeac74d888e861598e83550b6b8bb61febfb676f04df3b67",
+  "verified_files": 40,
+  "results": [
+    {
+      "kind": "old-driver",
+      "trial": 1,
+      "screen": "start-menu",
+      "first_species": "Zapdos",
+      "moves": [
+        "Thundershock",
+        "DrillPeck",
+        "None",
+        "None"
+      ]
+    },
+    {
+      "kind": "old-driver",
+      "trial": 2,
+      "screen": "start-menu",
+      "first_species": "Zapdos",
+      "moves": [
+        "Thundershock",
+        "DrillPeck",
+        "None",
+        "None"
+      ]
+    },
+    {
+      "kind": "fixed-driver",
+      "trial": 1,
+      "screen": "overworld",
+      "first_species": "Zapdos",
+      "moves": [
+        "Thundershock",
+        "DrillPeck",
+        "None",
+        "None"
+      ]
+    },
+    {
+      "kind": "fixed-driver",
+      "trial": 2,
+      "screen": "overworld",
+      "first_species": "Zapdos",
+      "moves": [
+        "Thundershock",
+        "DrillPeck",
+        "None",
+        "None"
+      ]
+    },
+    {
+      "kind": "old-fly-driver",
+      "trial": 1,
+      "screen": "start-menu",
+      "first_species": "Zapdos",
+      "moves": [
+        "Thundershock",
+        "DrillPeck",
+        "Fly",
+        "None"
+      ]
+    },
+    {
+      "kind": "old-fly-driver",
+      "trial": 2,
+      "screen": "start-menu",
+      "first_species": "Zapdos",
+      "moves": [
+        "Thundershock",
+        "DrillPeck",
+        "Fly",
+        "None"
+      ]
+    },
+    {
+      "kind": "fixed-fly-driver",
+      "trial": 1,
+      "screen": "overworld",
+      "first_species": "Zapdos",
+      "moves": [
+        "Thundershock",
+        "DrillPeck",
+        "Fly",
+        "None"
+      ]
+    },
+    {
+      "kind": "fixed-fly-driver",
+      "trial": 2,
+      "screen": "overworld",
+      "first_species": "Zapdos",
+      "moves": [
+        "Thundershock",
+        "DrillPeck",
+        "Fly",
+        "None"
+      ]
+    }
+  ],
+  "scope": "seeded diagnostic; not full mainline or original timing parity"
+}

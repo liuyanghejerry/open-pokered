@@ -515,8 +515,8 @@ fn follow_npc_keeps_leader_and_player_in_lockstep() {
         "Oak never committed a follow step"
     );
     assert!(
-        oak_commit_intervals.iter().all(|&dt| dt == 8),
-        "Oak's follow-step commits must land every 8 frames (player pace), got: {oak_commit_intervals:?}"
+        oak_commit_intervals.iter().all(|&dt| dt == 17),
+        "leader and follower must share the 17-HW-frame field stride (8 logical advances plus viewport wait), got: {oak_commit_intervals:?}"
     );
     assert!(
         max_idle_streak <= 2,

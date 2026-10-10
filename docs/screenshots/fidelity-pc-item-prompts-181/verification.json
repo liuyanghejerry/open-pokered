@@ -1,0 +1,94 @@
+{
+  "parent_head": "df351fa49c52a33505b817660ea85fe11df76eae",
+  "master_head": "31b1eda3112514d6bc803af559ec7f7c9e20374f",
+  "fix": "authored DONE questions before item menu/list/quantity, loop question on quantitycancel/receipt and NO/B tosscancel, selecting screen underlay and cachecursor hash; Chinese behavior/content unchanged",
+  "sources": {
+    "crates/pokered-app/src/game.rs": "7b7edaef11ebbdf67aa71294c49dc9f2be0367396d36e50b05d73694f36f5bab",
+    "crates/pokered-core/src/pc_screen.rs": "3ba132d4cff0b9da2182d0f1c65cf6dadb887398c27854d85f8d953801cae905",
+    "crates/pokered-app/src/render/pc.rs": "ac65c02dcbfdf84d32e05da666701463a5779f557485a20bdb76822da75d326b",
+    "crates/pokered-app/src/render/session.rs": "5a72963547df04e9d9d203f3790ef3ac7b5fb22cc4188aadce639c949c5913e4"
+  },
+  "binary_sha256": "d791e09607928f4d30b9964f2c0f4f950ee2e0a63343309e40823d1887cdbde7",
+  "original": {
+    "source": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+    "rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+    "pretrigger_sha256": "257c220516922760d724d4670c3d2d44b4ae48cc0155baf2360e7da7916e9d52",
+    "settings": "originalSlow5/options5 incomingletterflags1; native matchedsnapshotSlow5/flags1. Olda1 Medium3 and a2 flags3 retained as diagnostics, not final matched comparison",
+    "mode_setup": "controlled originalpretrigger seeded BAG Potion4/PC Potion4/options speed; native equivalent JSON inventory/options; no normal progression claim",
+    "alignment": "ready list selection A,A then release; opening prefixes not claimed matched; actual quantity routine cue original and phaseItemQuantitynative"
+  },
+  "cases": [
+    {
+      "mode": "withdraw",
+      "speed": 5,
+      "original_quantity_start": 48,
+      "before": 0,
+      "after": 48,
+      "copies": "all original/before/after raw PNG and JSON byte-exact2; no masks; identical post-selection controls; bags unchanged"
+    },
+    {
+      "mode": "deposit",
+      "speed": 5,
+      "original_quantity_start": 48,
+      "before": 0,
+      "after": 48,
+      "copies": "all original/before/after raw PNG and JSON byte-exact2; no masks; identical post-selection controls; bags unchanged"
+    },
+    {
+      "mode": "toss",
+      "speed": 5,
+      "original_quantity_start": 48,
+      "before": 0,
+      "after": 48,
+      "copies": "all original/before/after raw PNG and JSON byte-exact2; no masks; identical post-selection controls; bags unchanged"
+    },
+    {
+      "mode": "withdraw",
+      "speed": 3,
+      "original_quantity_start": 30,
+      "before": 0,
+      "after": 30,
+      "copies": "all original/before/after raw PNG and JSON byte-exact2; no masks; identical post-selection controls; bags unchanged"
+    },
+    {
+      "mode": "withdraw",
+      "speed": 1,
+      "original_quantity_start": 12,
+      "before": 0,
+      "after": 12,
+      "copies": "all original/before/after raw PNG and JSON byte-exact2; no masks; identical post-selection controls; bags unchanged"
+    }
+  ],
+  "native": {
+    "core": 2751,
+    "data": 263,
+    "app": 230,
+    "app_ignored": 34,
+    "agent": 54,
+    "audio": 99
+  },
+  "owning_cache": "actualGame +RenderSession all160x144 pixels vsfull aftereveryupdate: opening\u2192itemmenuDONE\u2192listDONE\u2192HowManyDONE (+48)\u2192B\u2192listDONE; idleReuse and unchanged4potions aftercancel; sourcecore all3mode+48, early selectingAnevertransfers; existingkey/fullcapacity/receipt/cancel assertions retained",
+  "screenshots": "actualmaster31 andcurrent identicalSnapshotPotion1/bagempty/Slow5/flags1; menuReady/listReady+70 semanticframes; quantity +10 hardwareframes after list selection; two copies rawbyteexact",
+  "gba": {
+    "sources": 60,
+    "metrics": 31,
+    "pass": 30,
+    "fail": 1,
+    "oak_draw_avg": 2984,
+    "movement_draw_peak": 3122,
+    "movement_limit": 3113.1,
+    "budget": "unchanged original SHA c9ef15a97a6f43d994fe177d7e0212a6a6cbaf561be955a5995fef4da7faebba"
+  },
+  "fresh179": "m01..m21 passed on frozenparent native runtime; m22 terminated face(up) failed Left; failure artifacts retained; m14 raw flagtrue/oneSsTicket/idle; not finalhead fullmainline/independentContinue claim",
+  "archive": {
+    "entries": 11105,
+    "bytes": 20753441,
+    "sha256": "c40e89b95579416414a998dad28d51d8a220578ef8e3f33473987584161e8eaf"
+  },
+  "remaining": [
+    "movement draw peak budget",
+    "PC physicalCONT scroll/audio and other globalfieldtext gates",
+    "movement17logical/27RGB and remaining fidelityaudits",
+    "full final-source mainline+independentContinue/latestheadCI beforemerge"
+  ]
+}

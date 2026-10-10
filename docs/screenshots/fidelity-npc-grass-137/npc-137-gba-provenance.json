@@ -1,0 +1,15 @@
+{
+  "production_sources": {
+    "crates/pokered-core/src/overworld/presentation.rs": "0c076714557d678481bfd15d54bc7b5cbc02adff8dce9b151c2a6b0e70ed07bd",
+    "crates/pokered-core/src/overworld/screen.rs": "9c19118c63da4e3420c35737dcb1e861056e61e74cd1ea11c4340fac16bf282c",
+    "crates/pokered-core/src/overworld/update.rs": "a779b05332ca9aab011e6f9c7fa6aecc95a1b45ce775cd9e681f56b3b5b6b2e6",
+    "crates/pokered-app/src/render/overworld.rs": "2522445134302ed787c5624784115b690fe36c883c9f0bd4583ab0cf2ded7c94",
+    "crates/pokered-app/src/render/session.rs": "51590c6c07f6be930367880041ef416410d526410e3fbb20dd21f7c32b2178da"
+  },
+  "gba_source_checkout": "/home/jerry/develop/open-pokered-perf118",
+  "host_source_checkout": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-91-plus-checkout",
+  "elf_sha256": "560d8ed8685584c9f80a89bd7824695be06d3485c91d0fa649aa0bb8006627e8",
+  "test_only_difference": "game.rs changes after GBA build are all inside cfg(test) link_stats_cry_fidelity_tests; source runtime game code unchanged. All five changed production files byte-identical.",
+  "baseline": "unchanged crates/pokered-gba/perf-baseline.json",
+  "metrics": 31
+}

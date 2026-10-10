@@ -1,0 +1,24 @@
+
+running 2 tests
+Asset root found: "/home/jerry/develop/open-pokered/.task-tmp/fidelity-91-plus-checkout/crates/pokered-renderer/../../gfx"
+Asset root found: "/home/jerry/develop/open-pokered/.task-tmp/fidelity-91-plus-checkout/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
+Asset root found: "/home/jerry/develop/open-pokered/.task-tmp/fidelity-91-plus-checkout/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
+test game::link_stats_cry_fidelity_tests::walking_and_bicycle_start_menu_drain_sprite_before_standing ... ok
+Audio output initialized (cpal 44100 Hz stereo)
+
+thread 'render::session::session_tests::walking_and_bicycle_retained_frames_match_full_draw_through_start_transfers' (2281536) panicked at crates/pokered-app/src/render/session.rs:2690:29:
+assertion `left == right` failed: language=En bike=false menu=false t=6 x=66 y=74
+  left: Some(Rgba { r: 170, g: 170, b: 170, a: 255 })
+ right: Some(Rgba { r: 85, g: 85, b: 85, a: 255 })
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test render::session::session_tests::walking_and_bicycle_retained_frames_match_full_draw_through_start_transfers ... FAILED
+
+failures:
+
+failures:
+    render::session::session_tests::walking_and_bicycle_retained_frames_match_full_draw_through_start_transfers
+
+test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 221 filtered out; finished in 0.02s
+

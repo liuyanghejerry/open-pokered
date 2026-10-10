@@ -1,0 +1,21 @@
+[
+  {
+    "map": "BillsHouse",
+    "paragraph_counts": [
+      3,
+      2,
+      1,
+      2
+    ]
+  },
+  {
+    "map": "CopycatsHouse2F",
+    "paragraph_counts": [
+      4,
+      5,
+      3,
+      2,
+      1
+    ]
+  }
+]

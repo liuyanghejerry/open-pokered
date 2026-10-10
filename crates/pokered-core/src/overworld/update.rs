@@ -301,13 +301,41 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     /// never re-fire in another.
     pub fn sync_prev_input(&mut self, a: bool, b: bool, up: bool, down: bool) {
         self.prev_a_pressed = a;
+        self.sampled_player_input.a = a;
         self.prev_b_pressed = b;
         self.prev_up_pressed = up;
         self.prev_down_pressed = down;
     }
 
     pub fn update_frame(&mut self, input: OverworldInput) -> ScreenAction {
+        let had_dialogue = self.has_field_text_window();
+        let action = self.update_frame_inner(input);
+        if self.script_engine.is_idle() && self.active_script_effect.is_none()
+            && self.pending_choice.is_none() {
+            self.last_script_dialogue = None;
+            self.inner_field_text_open = false;
+        }
+        if had_dialogue && !self.has_field_text_window() {
+            // CloseTextDisplay returns through UpdateSprites before the
+            // map script resumes. Keep the player's animation counter too.
+            self.restore_player_sprite_after_field_text();
+        }
+        // Field text uses the same BIT_FONT_LOADED sprite reset as START.
+        // Do this after script/interaction dispatch, including early returns,
+        // so a newly opened textbox starts the OAM pipeline this frame.
+        if self.has_field_text_window() && self.state.walk_counter == 0 {
+            self.prepare_field_textbox_sprite();
+        }
+        action
+    }
+
+    fn update_frame_inner(&mut self, input: OverworldInput) -> ScreenAction {
         self.frame_counter = self.frame_counter.wrapping_add(1);
+        self.player_sprite_state.hardware_frame(self.state.player.facing);
+        self.sync_npc_sprite_states();
+        for sprite in &mut self.npc_sprite_states { sprite.hardware_frame(); }
+        self.npc_camera_state = self.player_camera_state.clone();
+        self.latch_player_camera();
         self.sfx_event = OverworldSfxEvent::None;
         if self.preserve_audio_requests_next_frame {
             self.preserve_audio_requests_next_frame = false;
@@ -331,10 +359,15 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         let b_just_pressed = input.b && !self.prev_b_pressed;
         let up_just_pressed = input.up && !self.prev_up_pressed;
         let down_just_pressed = input.down && !self.prev_down_pressed;
-        self.prev_a_pressed = input.a;
-        self.prev_b_pressed = input.b;
-        self.prev_up_pressed = input.up;
-        self.prev_down_pressed = input.down;
+        // PlayCry waits in the sound loop without calling Joypad. Preserve
+        // hJoyLast until its caller resumes polling: a press/release entirely
+        // during the cry is ignored, but a newly held key is seen afterward.
+        if !matches!(self.active_script_effect.as_ref(), Some(script_bridge::ScriptEffect::PlayCry { .. } | script_bridge::ScriptEffect::PrintFieldParagraph { phase: script_bridge::FieldParagraphPhase::ProtectedDelay { .. } | script_bridge::FieldParagraphPhase::BlankDelay { .. } | script_bridge::FieldParagraphPhase::PlayingSound, .. } | script_bridge::ScriptEffect::PrintItemFieldText {phase:script_bridge::FieldParagraphPhase::PlayingSound,..} | script_bridge::ScriptEffect::WaitFieldPrompt {protected_remaining:1..=u8::MAX} )) {
+            self.prev_a_pressed = input.a;
+            self.prev_b_pressed = input.b;
+            self.prev_up_pressed = input.up;
+            self.prev_down_pressed = input.down;
+        }
 
         // Link presence (Cable Club): while a link session is connected and
         // the player is inside Colosseum/TradeCenter, the app sets
@@ -366,6 +399,28 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         // UpdateMovingBgTiles: water/flower tile animation ticks every frame
         // (vblank-driven in the original).
         self.tile_anim.tick();
+
+        // MoveSprite ignores controls while the boulder slides. Dust then
+        // blocks inside Delay3, followed by LoadPlayerSpriteGraphics. Read
+        // physical A/B edges above so a held key cannot become a fresh press
+        // when the operation finishes. Player steps, scripts and menus wait.
+        if self.boulder_push.is_some() {
+            self.advance_boulder_push();
+            if let Some(push)=self.boulder_push {
+                if push.frame < presentation::BoulderPushState::COMPLETION_FRAME {
+                    return ScreenAction::Continue;
+                }
+                if push.frame == presentation::BoulderPushState::COMPLETION_FRAME {
+                    // Joypad resumes with the completion script. The following
+                    // CPU work reaches the next LCD frame before handling it.
+                    self.boulder_resume_input=Some(input);
+                    self.field_loop_wait=0;
+                    return ScreenAction::Continue;
+                }
+            }
+        }
+        let resumed_boulder=self.boulder_resume_input.take();
+        let input=resumed_boulder.unwrap_or(input);
 
         // ITEMFINDER: PlaySoundWaitForCurrent blocks for the exact lifetime of
         // each HEALING_MACHINE/PURCHASE track, four alternating pairs. The
@@ -611,6 +666,13 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             Some(script_bridge::ScriptEffect::FollowNpc { .. })
         );
         if let Some(ref mut effect) = self.active_script_effect {
+            if matches!(effect, script_bridge::ScriptEffect::MovePlayer { started: false, .. }
+                | script_bridge::ScriptEffect::MovePlayerRelative { started: false, .. }) {
+                // The map script installs simulated directions inside the
+                // current field iteration, before direction dispatch. Its
+                // first sample must not consume a second stale loop wait.
+                self.field_loop_wait = 0;
+            }
             let naming_was_open = self.pending_naming_screen.is_some();
             if let script_bridge::ScriptEffect::GivePokemon { species, flow, .. } = effect {
                 if flow.is_none() {
@@ -619,7 +681,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             }
             // Only allocate the protected-name view when a page is created.
             let dialogue_names: Vec<&str> = if self.pending_dialogue.is_none()
-                && matches!(effect, script_bridge::ScriptEffect::ShowDialogue { .. })
+                && matches!(effect, script_bridge::ScriptEffect::ShowDialogue { .. } | script_bridge::ScriptEffect::PrintFieldText { .. } | script_bridge::ScriptEffect::InstantFieldMenu {started:false,..})
             {
                 core::iter::once(self.player_name.as_str())
                     .chain(core::iter::once(self.rival_name.as_str()))
@@ -637,6 +699,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 up_just_pressed,
                 down_just_pressed,
                 &mut self.pending_dialogue,
+                &mut self.last_script_dialogue,
+                &mut self.inner_field_text_open,
+                &mut self.text_delay_disabled,
                 &mut self.pending_choice,
                 &mut self.pending_pokedex_entry,
                 &mut self.pending_naming_screen,
@@ -770,7 +835,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             // already Walking toward its next tile, not a stale Idle player,
             // or an NPC could start a step onto that tile in the gap.
             let pos_before = (self.state.player.x, self.state.player.y);
-            self.advance_scripted_player_path();
+            let had_scripted_path = !self.scripted_player_path.is_empty();
+            let player_was_walking = self.state.walk_counter != 0;
+            let scripted_field_tick = self.advance_scripted_player_path();
             // Only check warps when a step actually completed and the position
             // changed.  Checking on the frame that *starts* a walk would fire
             // on the old (warp-tile) position before the player has moved away,
@@ -783,7 +850,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
 
             // NPC movement must continue during script effects so that
             // MoveNpc / StartNpcMove / AwaitNpcMove effects can complete.
-            self.run_npc_movement_tick();
+            if !had_scripted_path || scripted_field_tick {
+                self.run_npc_movement_tick_with_player_walking(player_was_walking);
+            }
             return ScreenAction::Continue;
         }
         // External awaits are completed by the frontend, not by VM polling.
@@ -864,12 +933,15 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         // Scripted player movement — follow path ignoring real input.
         if !self.scripted_player_path.is_empty() {
             let pos_before = (self.state.player.x, self.state.player.y);
-            self.advance_scripted_player_path();
+            let player_was_walking = self.state.walk_counter != 0;
+            let scripted_field_tick = self.advance_scripted_player_path();
             let pos_after = (self.state.player.x, self.state.player.y);
             if pos_before != pos_after {
                 self.try_trigger_warp_at_player_position();
             }
-            self.run_npc_movement_tick();
+            if scripted_field_tick {
+                self.run_npc_movement_tick_with_player_walking(player_was_walking);
+            }
             return ScreenAction::Continue;
         }
 
@@ -1290,14 +1362,47 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             }
         }
 
-        // SafariZoneCheck runs after JoypadOverworld, before START and A.
-        // A last ball used in battle ends the hunt on returning to the idle
-        // field; it does not require another walking step.
-        if self.active_script_effect.is_none()
+        // OverworldLoop has two hardware-frame waits, independent of the
+        // vblank tile animation and physical dialogue edges above. Blocking
+        // field animations and scripted movement have their own clocks.
+        let ordinary_field_loop = self.active_script_effect.is_none()
             && self.scripted_player_path.is_empty()
             && !self.cutscene_manager.is_blocking()
             && self.pending_connection.is_none()
-            && self.ledge_jump.is_none()
+            && self.ledge_jump.is_none();
+        if ordinary_field_loop {
+            if self.bike_redraw_advance {
+                // LoadCurrentMapView crosses vblank between the two initial
+                // bike advances. No controls or NPCs are processed here.
+                self.bike_redraw_advance = false;
+                self.state.walk_counter = self.state.walk_counter.saturating_sub(1);
+                self.field_loop_wait = 1;
+                return ScreenAction::Continue;
+            }
+            if self.field_loop_wait != 0 {
+                self.field_loop_wait -= 1;
+                return ScreenAction::Continue;
+            }
+            self.field_loop_wait = if resumed_boulder.is_some() {0} else {1};
+        }
+
+        // JoypadOverworld runs RunMapScript BEFORE reading Joypad. The
+        // boulder script therefore sees the preceding field button sample,
+        // including idle calls that arm BIT_TRIED_PUSH_BOULDER without d-pad.
+        if ordinary_field_loop && self.boulder_push.is_none() && self.state.player.movement_state == MovementState::Idle
+            && self.state.walk_counter == 0
+        {
+            let old=self.sampled_player_input;
+            let direction=if old.down {Some(Direction::Down)} else if old.up {Some(Direction::Up)}
+                else if old.left {Some(Direction::Left)} else if old.right {Some(Direction::Right)} else {None};
+            self.tick_boulder_push(direction);
+            if self.boulder_push.is_some() {return ScreenAction::Continue;}
+        }
+
+        // SafariZoneCheck runs after JoypadOverworld, before START and A.
+        // A last ball used in battle ends the hunt on returning to the idle
+        // field; it does not require another walking step.
+        if ordinary_field_loop
             && self.state.player.movement_state == MovementState::Idle
             && self.state.walk_counter == 0
             && self.safari_game_active
@@ -1311,9 +1416,34 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             return ScreenAction::Continue;
         }
 
+        // JoypadOverworld is not sampled while a step is in progress.
+        // A short START pulse during the step is discarded; a held START
+        // becomes a fresh press at the next idle sample. START precedes A.
+        let mut control_a_just_pressed = false;
+        if self.state.player.movement_state == MovementState::Idle
+            && self.state.walk_counter == 0
+            && self.pending_connection.is_none()
+            && !self.cutscene_manager.is_blocking()
+            && self.trainer_encounter_intro.is_none()
+            && self.trainer_intro_text_pending.is_none()
+        {
+            let start_pressed = input.start && !self.sampled_player_input.start;
+            control_a_just_pressed = input.a && !self.sampled_player_input.a;
+            self.sampled_player_input = input;
+            if start_pressed {
+                // OverworldLoop .displayDialogue updates sprites once
+                // before DisplayTextIDInit sets BIT_FONT_LOADED.
+                self.run_npc_movement_tick();
+                // DrawStartMenu sets then clears BIT_NO_TEXT_DELAY, including
+                // a pre-existing Bike Shop B-cancel carry.
+                self.text_delay_disabled=false;
+                return ScreenAction::Transition(GameScreen::StartMenu);
+            }
+        }
+
         // A-button: check signs first, then NPCs (matches original game priority).
         // Held during a trainer engage intro (wJoyIgnore).
-        if a_just_pressed
+        if control_a_just_pressed
             && self.state.player.movement_state == MovementState::Idle
             && self.trainer_encounter_intro.is_none()
             && self.trainer_intro_text_pending.is_none()
@@ -1570,6 +1700,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     self.strength_active = false;
                     self.tried_push_boulder = false;
                     self.boulder_dust_frames = 0;
+                    self.boulder_push = None;
+                    self.boulder_resume_input = None;
                     self.dark_cave.enter_map(new_map);
                     if pokered_data::map_flags::is_city_map(new_map) {
                         self.game_data_requests
@@ -1589,6 +1721,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     self.audio_requests
                         .push(OverworldAudioRequest::PlayMapMusic { map: new_map });
                     let hidden_npc_ids = self.map_script_config.hidden_npc_ids();
+                    self.npc_sprite_states.clear();
+                    self.npc_camera_state = None;
+                    self.field_text_restore = None;
                     self.npc_states = self
                         .map_data
                         .as_ref()
@@ -1618,28 +1753,47 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             return ScreenAction::Continue;
         }
 
-        // Start menu is held during a trainer engage intro (wJoyIgnore).
-        if input.start
-            && self.trainer_encounter_intro.is_none()
-            && self.trainer_intro_text_pending.is_none()
-        {
-            return ScreenAction::Transition(GameScreen::StartMenu);
-        }
-
         // wJoyIgnore during a trainer engage intro: d-pad/A/B ignored while
         // the "!" bubble shows and the trainer walks up.
         let intro_holding_input =
             self.trainer_encounter_intro.is_some() || self.trainer_intro_text_pending.is_some();
+        // UpdateSprites sees the player's counter before AdvancePlayerSprite
+        // decrements it. Keep the final step's nonzero counter for the NPC
+        // ready-to-walk and sprite-image gates below.
+        let player_walking_before_advance = self.state.walk_counter != 0;
+        let player_input = self.sampled_player_input;
         let movement_input = MovementInput {
-            up: input.up && !intro_holding_input,
-            down: input.down && !intro_holding_input,
-            left: input.left && !intro_holding_input,
-            right: input.right && !intro_holding_input,
-            a_button: input.a && !intro_holding_input,
-            b_button: input.b && !intro_holding_input,
-            start: input.start && !intro_holding_input,
-            select: input.select && !intro_holding_input,
+            up: player_input.up && !intro_holding_input,
+            down: player_input.down && !intro_holding_input,
+            left: player_input.left && !intro_holding_input,
+            right: player_input.right && !intro_holding_input,
+            a_button: player_input.a && !intro_holding_input,
+            b_button: player_input.b && !intro_holding_input,
+            start: player_input.start && !intro_holding_input,
+            select: player_input.select && !intro_holding_input,
         };
+
+        let mut turning_in_place = false;
+
+        // OverworldLoop samples direction only after the current step.
+        // Releasing it records the last moving direction, not sprite facing.
+        if self.state.player.movement_state == MovementState::Idle {
+            if let Some(direction) = movement_input.direction_pressed() {
+                self.player_moving_direction = match direction {
+                    Direction::Right => 1, Direction::Left => 2,
+                    Direction::Down => 4, Direction::Up => 8,
+                };
+            } else {
+                if ordinary_field_loop {
+                    self.player_sprite_state.update_sprite(self.state.walk_counter, self.player_moving_direction);
+                }
+                self.check_player_turn = true;
+                if self.player_moving_direction != 0 {
+                    self.player_last_stop_direction = self.player_moving_direction;
+                    self.player_moving_direction = 0;
+                }
+            }
+        }
 
         let get_tile_id_at_position =
             |blocks: &[u8], width: u8, tileset: G::Tileset, x: u16, y: u16| -> u8 {
@@ -1710,6 +1864,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     if !path.is_empty() {
                         self.sfx_event = OverworldSfxEvent::ArrowTiles;
                         self.scripted_player_path.extend(path);
+                        // This branch is already inside the current field
+                        // iteration: do not wait a second time before taking
+                        // the simulated direction owned by the arrow.
+                        self.field_loop_wait = 0;
                         // The arrow owns this frame too: do not let held input
                         // start an extra step before the queued path takes over.
                         self.advance_scripted_player_path();
@@ -1815,7 +1973,33 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 movement_input
             };
 
-            let result = if let Some(ref mut jump) = self.ledge_jump {
+            if ordinary_field_loop && movement_before == MovementState::Idle {
+                if let Some(direction) = movement_input.direction_pressed() {
+                    let direction_mask = match direction {
+                        Direction::Right => 1, Direction::Left => 2,
+                        Direction::Down => 4, Direction::Up => 8,
+                    };
+                    turning_in_place = self.check_player_turn
+                        && direction_mask != self.player_last_stop_direction;
+                    if turning_in_place { self.check_player_turn = false; }
+                    self.player_moving_direction = direction_mask;
+                    // UpdateSprites gets the new direction before collision;
+                    // the engine's old-facing collision heuristic is not the
+                    // original check against the last stopped direction.
+                    self.state.player.facing = direction;
+                }
+            }
+            // .noDirectionChange and .moveAhead call UpdateSprites before
+            // initializing/advancing wWalkCounter. Turning-in-place returns
+            // before that call, while NoDirection was handled above.
+            if ordinary_field_loop && !turning_in_place
+                && (movement_before != MovementState::Idle || movement_input.direction_pressed().is_some())
+            {
+                self.player_sprite_state.update_sprite(self.state.walk_counter, self.player_moving_direction);
+            }
+            let result = if turning_in_place {
+                MoveResult::TurnedOnly
+            } else if let Some(ref mut jump) = self.ledge_jump {
                 let done = jump.tick();
                 let (x, y) = jump.player_position();
                 self.state.player.x = x;
@@ -1829,6 +2013,20 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 } else {
                     MoveResult::StillMoving
                 }
+            } else if movement_before != MovementState::Idle {
+                // Original AdvancePlayerSprite finishes the step, checks
+                // warps, then returns to OverworldLoop. It does not consume
+                // new physical input or start the next step in this call.
+                if player_movement::advance_step(&mut self.state) {
+                    let tile = collision_provider.get_tile_at_position(
+                        map.tileset, &map.blocks, map.width,
+                        self.state.player.x, self.state.player.y,
+                    );
+                    if let Some(warp_index) = player_movement::check_warps_no_collision(
+                        &mut self.state, map, tile,
+                        self.player_moving_direction != 0, &collision_provider,
+                    ) { MoveResult::Warped { warp_index } } else { MoveResult::StillMoving }
+                } else { MoveResult::StillMoving }
             } else {
                 player_movement::process_frame(
                     &mut self.state,
@@ -1840,6 +2038,15 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     &collision_provider,
                 )
             };
+
+            if ordinary_field_loop && matches!(result, MoveResult::Walking) {
+                // noCollision initializes eight and immediately advances once.
+                // The initial map redraw adds one hardware frame to this loop.
+                self.state.walk_counter = player_movement::WALK_COUNTER_INIT - 1;
+                self.field_loop_wait = 2;
+                self.bike_redraw_advance = self.state.player.transport == TransportMode::Biking
+                    && self.state.player.bike_speedup_active;
+            }
 
             // Surf dismount (CollisionCheckOnWater .stopSurfing): the engine
             // flipped the transport back to Walking after stepping ashore —
@@ -2184,13 +2391,19 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         // the player holds the d-pad toward a boulder, slide it one tile.
         // Runs in the normal gameplay path only (dialogue/scripts return
         // earlier), matching the original's RunMapScript call site.
-        self.tick_boulder_push(movement_input.direction_pressed());
+        if !ordinary_field_loop && !turning_in_place { self.tick_boulder_push(movement_input.direction_pressed()); }
+        if self.boulder_push.is_some() {
+            return ScreenAction::Continue;
+        }
 
         // Advance NPC movement every frame (DoMovementForAllSprites).
         // In the original game, NPC movement is frozen while a text box is displayed
         // (wFontLoaded / BIT_FONT_LOADED check in UpdateNPCSprite).
         // run_npc_movement_tick() gates on is_text_ui_active() internally.
-        self.run_npc_movement_tick();
+        if !turning_in_place {
+            self.run_npc_movement_tick_with_player_walking(
+                player_walking_before_advance);
+        }
 
         ScreenAction::Continue
     }
@@ -2203,10 +2416,36 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     }
 
     fn run_npc_movement_tick(&mut self) {
+        self.run_npc_movement_tick_with_player_walking(self.state.walk_counter != 0);
+    }
+
+    fn run_npc_movement_tick_with_player_walking(&mut self, player_walking: bool) {
         if self.is_text_ui_active() {
             return;
         }
+        if self.npc_sprite_states.len() != self.npc_states.len() {
+            self.sync_npc_sprite_states();
+        }
         if let Some(ref map) = self.map_data {
+            // CheckSpriteAvailability samples the tile under the old raw
+            // sprite position before advancing NPC movement. Grass priority
+            // stays latched while the player's old walk counter is nonzero.
+            if !player_walking {
+                let grass = pokered_data::tileset_data::get_grass_tile(map.tileset);
+                let blockset = pokered_data::blockset_data::blockset_for_tileset(map.tileset);
+                for slot in 0..self.npc_states.len() {
+                    let npc = &self.npc_states[slot];
+                    if !npc.visible || !self.npc_in_field_viewport(slot) { continue; }
+                    let (x,y) = presentation::NpcSpriteState::priority_background_tile(npc);
+                    let priority = grass.is_some_and(|grass| {
+                        if x < 0 || y < 0 || x >= i32::from(map.width) * 4 || y >= i32::from(map.height) * 4 { return false; }
+                        let block = map.blocks.get((y / 4) as usize * usize::from(map.width) + (x / 4) as usize);
+                        block.and_then(|block| blockset.get(usize::from(*block) * 16
+                            + (y % 4) as usize * 4 + (x % 4) as usize)).copied() == Some(grass)
+                    });
+                    self.npc_sprite_states[slot].set_grass_priority(priority);
+                }
+            }
             let rng_value = (self
                 .frame_counter
                 .wrapping_mul(1103515245)
@@ -2245,11 +2484,24 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 || self.trainer_encounter_intro.is_some()
                 || self.trainer_intro_text_pending.is_some();
             let mut frozen_slots: Vec<usize> = Vec::new();
-            if frozen {
-                for (i, n) in self.npc_states.iter_mut().enumerate() {
-                    if n.movement_type == NpcMovementType::Wander {
-                        n.movement_type = NpcMovementType::Stationary;
-                        frozen_slots.push(i);
+            for (i, n) in self.npc_states.iter_mut().enumerate() {
+                // UpdateNPCSprite checks wWalkCounter only after handling
+                // walking sprites and movement-delay countdowns. A ready
+                // random walker must not choose a new step while the player
+                // walks, but a running step or idle delay still advances.
+                let waiting_for_player = player_walking && n.walk_counter == 0
+                    && n.delay_counter == 0 && n.scripted_path.is_empty();
+                if n.movement_type == NpcMovementType::Wander && (frozen || waiting_for_player) {
+                    n.movement_type = NpcMovementType::Stationary;
+                    frozen_slots.push(i);
+                }
+            }
+            let mut offscreen_slots = Vec::new();
+            if !frozen {
+                for slot in 0..self.npc_states.len() {
+                    if self.npc_states[slot].visible && !self.npc_in_field_viewport(slot) {
+                        self.npc_states[slot].visible = false;
+                        offscreen_slots.push(slot);
                     }
                 }
             }
@@ -2265,26 +2517,26 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 map.tileset,
                 &collision::PokemonCollisionProvider::new(self.state.current_map, map.tileset),
             );
+            for i in offscreen_slots { self.npc_states[i].visible = true; }
             for &i in &frozen_slots {
                 self.npc_states[i].movement_type = NpcMovementType::Wander;
             }
             self.hasten_followed_npc();
+            for slot in 0..self.npc_states.len() {
+                if !frozen && (!self.npc_states[slot].visible || !self.npc_in_field_viewport(slot)) {
+                    self.npc_sprite_states[slot].hide();
+                } else {
+                    self.npc_sprite_states[slot].update_sprite(&self.npc_states[slot], player_walking);
+                }
+            }
         }
     }
 
-    /// FollowNpc lockstep: the engine paces scripted NPC steps at
-    /// NPC_WALK_FRAMES (16f/tile) while the player covers a tile in 8 —
-    /// the follower drained each vacated tile in half the leader's stride
-    /// and then idled for the remainder (stop-and-go hops, never in step
-    /// with Oak). An extra counter decrement per frame halves the followed
-    /// NPC's step to 8 frames. The counter still spans 16→0, so the
-    /// renderers' 16-unit normalization keeps mapping it onto the full
-    /// 16px tile — the sprite simply advances 2px/frame, exactly the
-    /// player's pace and walk-animation cadence.
-    ///
-    /// Only counters still ≥ 2 are decremented: reaching 0 inside the
-    /// engine's own tick is what commits the tile and chains the next
-    /// step, so an external decrement to 0 would skip the commit.
+    /// FollowNpc uses the same logical field ticks for leader and follower.
+    /// The NPC counter spans sixteen units and the player counter eight;
+    /// an extra NPC decrement makes each logical advance cover two pixels.
+    /// Hardware-frame waits belong to the shared field loop, not this counter.
+    /// Never decrement to zero here: the normal NPC tick must commit the tile.
     fn hasten_followed_npc(&mut self) {
         let mut followed: Option<String> = None;
         if let Some(script_bridge::ScriptEffect::FollowNpc { npc_id, phase, .. }) =
@@ -2305,18 +2557,31 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         }
     }
 
-    fn advance_scripted_player_path(&mut self) {
+    /// Simulated directions use the same OverworldLoop waits as physical
+    /// directions. A completed tile returns to that loop before a new sample.
+    /// The viewport rebuild on the first advance uses the existing field
+    /// redraw wait; exact CPU/LCD phase scheduling remains a separate concern.
+    fn advance_scripted_player_path(&mut self) -> bool {
         if self.scripted_player_path.is_empty() {
-            return;
+            return false;
         }
+        if self.field_loop_wait != 0 {
+            self.field_loop_wait -= 1;
+            return false;
+        }
+        self.field_loop_wait = 1;
         if self.state.player.movement_state == MovementState::Idle {
             self.start_next_scripted_player_step();
-        } else {
-            let step_done = player_movement::advance_step(&mut self.state);
-            if step_done && !self.scripted_player_path.is_empty() {
-                self.start_next_scripted_player_step();
+            if self.state.player.movement_state != MovementState::Idle {
+                self.player_sprite_state.update_sprite(0, self.player_moving_direction);
+                player_movement::advance_step(&mut self.state);
+                self.field_loop_wait = 2;
             }
+        } else {
+            self.player_sprite_state.update_sprite(self.state.walk_counter, self.player_moving_direction);
+            player_movement::advance_step(&mut self.state);
         }
+        true
     }
 
     fn start_next_scripted_player_step(&mut self) {
@@ -2329,6 +2594,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 direction_toward_player(self.state.player.x, self.state.player.y, tx, ty)
             {
                 self.state.player.facing = dir;
+                self.player_moving_direction = match dir {
+                    Direction::Right => 1, Direction::Left => 2,
+                    Direction::Down => 4, Direction::Up => 8,
+                };
                 self.state.player.movement_state = MovementState::Walking;
                 self.state.walk_counter = player_movement::WALK_COUNTER_INIT;
             }
@@ -2431,6 +2700,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         up_pressed: bool,
         down_pressed: bool,
         pending_dialogue: &mut Option<BedroomDialogue>,
+        last_script_dialogue: &mut Option<BedroomDialogue>,
+        inner_field_text_open: &mut bool,
+        text_delay_disabled: &mut bool,
         pending_choice: &mut Option<script_bridge::PendingChoice>,
         pending_pokedex_entry: &mut Option<PokedexEntryState>,
         pending_naming_screen: &mut Option<crate::naming_screen::NamingScreenState>,
@@ -2451,6 +2723,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         script_music_playing: bool,
         script_sfx_playing: bool,
     ) -> bool {
+        let returns_after_print = matches!(effect, script_bridge::ScriptEffect::PrintFieldText { .. } | script_bridge::ScriptEffect::PrintFieldParagraph { .. } | script_bridge::ScriptEffect::PrintItemFieldText { .. });
         match effect {
             script_bridge::ScriptEffect::GivePokemon {
                 species,
@@ -2468,6 +2741,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     up_pressed,
                     down_pressed,
                     pending_dialogue,
+                    last_script_dialogue,
+                    inner_field_text_open,
+                    text_delay_disabled,
                     pending_choice,
                     pending_pokedex_entry,
                     pending_naming_screen,
@@ -2489,7 +2765,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     script_sfx_playing,
                 ) {
                     let prompt = match flow.child.as_ref() {
-                        script_bridge::ScriptEffect::ShowDialogue { text } => Some(text.clone()),
+                        script_bridge::ScriptEffect::ShowDialogue { text } | script_bridge::ScriptEffect::PrintFieldText { text } => Some(text.clone()),
                         _ => None,
                     };
                     let was_choice = matches!(
@@ -2531,6 +2807,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     up_pressed,
                     down_pressed,
                     pending_dialogue,
+                    last_script_dialogue,
+                    inner_field_text_open,
+                    text_delay_disabled,
                     pending_choice,
                     pending_pokedex_entry,
                     pending_naming_screen,
@@ -2580,12 +2859,14 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     return true;
                 }
                 if pending_dialogue.is_none() {
-                    *pending_dialogue = Some(script_bridge::text_to_dialogue_with_names(text, dialogue_names));
+                    let mut dialogue=script_bridge::text_to_dialogue_with_names(text,dialogue_names);
+                    if *text_delay_disabled {dialogue.skip_to_full_page();}
+                    *pending_dialogue=Some(dialogue);
                     return false;
                 }
                 let dialogue = pending_dialogue.as_mut().unwrap();
                 if !dialogue.waiting_for_input() {
-                    dialogue.reveal_next_char_with_buttons(a_pressed || b_pressed);
+                    if *text_delay_disabled {dialogue.skip_to_full_page();} else {dialogue.reveal_next_char_with_buttons(a_pressed || b_pressed);}
                 }
                 if dialogue.waiting_for_input() {
                     if dialogue.has_more_pages() {
@@ -2602,11 +2883,22 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 }
                 false
             }
-            script_bridge::ScriptEffect::ShowDialogue { text } => {
+            script_bridge::ScriptEffect::ShowDialogue { text } | script_bridge::ScriptEffect::PrintFieldText { text } | script_bridge::ScriptEffect::PrintFieldParagraph { text, phase: script_bridge::FieldParagraphPhase::Printing, .. } | script_bridge::ScriptEffect::PrintItemFieldText {text,phase:script_bridge::FieldParagraphPhase::Printing,..} => {
                 if pending_dialogue.is_none() {
-                    let dialogue = script_bridge::text_to_dialogue_with_names(text, dialogue_names);
+                    *last_script_dialogue = None;
+                    *inner_field_text_open = returns_after_print;
+                    let mut dialogue = script_bridge::text_to_dialogue_with_names(text, dialogue_names);
+                    if *text_delay_disabled {dialogue.skip_to_full_page();}
                     if dialogue.is_done() {
                         return true;
+                    }
+                    if returns_after_print && dialogue.waiting_for_input() && dialogue.is_last_page() {
+                        *last_script_dialogue=Some(dialogue);
+                        match effect {
+                            script_bridge::ScriptEffect::PrintItemFieldText {sound_id,phase,..} => {audio_requests.push(OverworldAudioRequest::PlaySound {sound_id:sound_id.clone().unwrap_or_else(||"SFX_GET_ITEM_1".into())});*phase=script_bridge::FieldParagraphPhase::PlayingSound;return false;}
+                            script_bridge::ScriptEffect::PrintFieldParagraph {sound_id:Some(sound),phase,..} => {audio_requests.push(OverworldAudioRequest::PlaySound {sound_id:sound.clone()});*phase=script_bridge::FieldParagraphPhase::PlayingSound;return false;}
+                            _ => return true,
+                        }
                     }
                     *pending_dialogue = Some(dialogue);
                     false
@@ -2617,7 +2909,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     if let Some(ref mut dlg) = pending_dialogue {
                         if dlg.holding_open() {
                             if !a_pressed || b_just_pressed {
-                                *pending_dialogue = None;
+                                *last_script_dialogue = pending_dialogue.take();
                                 return true;
                             }
                         } else if !dlg.waiting_for_input() {
@@ -2626,16 +2918,153 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                             if dlg.waiting_for_input() {
                                 if dlg.is_last_page() && a_just_pressed {
                                     dlg.start_holding_open();
-                                } else if !dlg.advance() {
-                                    *pending_dialogue = None;
+                                } else if dlg.is_last_page() {
+                                    *last_script_dialogue = pending_dialogue.take();
                                     return true;
+                                } else {
+                                    dlg.advance();
                                 }
                             }
                             *sfx_event = OverworldSfxEvent::TextAdvance;
                         }
                     }
+                    if *text_delay_disabled {
+                        if let Some(dialogue)=pending_dialogue.as_mut() {if !dialogue.waiting_for_input() {dialogue.skip_to_full_page();}}
+                    }
+                    if returns_after_print && pending_dialogue.as_ref().is_some_and(|d| d.waiting_for_input() && d.is_last_page()) {
+                        *last_script_dialogue = pending_dialogue.take();
+                        match effect {
+                            script_bridge::ScriptEffect::PrintItemFieldText {sound_id,phase,..} => {
+                                audio_requests.push(OverworldAudioRequest::PlaySound {sound_id:sound_id.clone().unwrap_or_else(||"SFX_GET_ITEM_1".into())});
+                                *phase=script_bridge::FieldParagraphPhase::PlayingSound;false
+                            }
+                            script_bridge::ScriptEffect::PrintFieldParagraph {sound_id:Some(sound),phase,..} => {
+                                audio_requests.push(OverworldAudioRequest::PlaySound {sound_id:sound.clone()});
+                                *phase=script_bridge::FieldParagraphPhase::PlayingSound;false
+                            }
+                            _ => true,
+                        }
+                    } else { false }
+                }
+            }
+            script_bridge::ScriptEffect::PrintItemFieldText {phase:script_bridge::FieldParagraphPhase::PlayingSound,..}
+            | script_bridge::ScriptEffect::PrintFieldParagraph {phase:script_bridge::FieldParagraphPhase::PlayingSound,..} => !script_sfx_playing,
+            script_bridge::ScriptEffect::PrintItemFieldText {..} => unreachable!("item text starts in Printing"),
+            script_bridge::ScriptEffect::WaitFieldPrompt {protected_remaining} => {
+                if *protected_remaining>0 { *protected_remaining-=1;return false; }
+                if a_just_pressed || b_just_pressed {
+                    *sfx_event=OverworldSfxEvent::TextAdvance;
+                    true
+                } else {false}
+            }
+            script_bridge::ScriptEffect::WaitFieldButton { .. } => {
+                if a_just_pressed || b_just_pressed {
+                    *sfx_event=OverworldSfxEvent::TextAdvance;
+                    true
+                } else {false}
+            }
+            script_bridge::ScriptEffect::CloseFieldText => {
+                if a_pressed {false} else {
+                    *last_script_dialogue=None;
+                    *inner_field_text_open=false;
+                    true
+                }
+            }
+            script_bridge::ScriptEffect::PlayCry { species, started } => {
+                if !*started {
+                    audio_requests.push(OverworldAudioRequest::PlayCry { species: species.clone() });
+                    *started = true;
+                    false
+                } else {
+                    // Original PlayCry itself jumps to WaitForSoundToFinish.
+                    !script_sfx_playing
+                }
+            }
+            script_bridge::ScriptEffect::PrintFieldParagraph { text, phase, .. } => {
+                use script_bridge::FieldParagraphPhase;
+                match phase {
+                    FieldParagraphPhase::ProtectedDelay { remaining } => {
+                        *remaining = remaining.saturating_sub(1);
+                        if *remaining == 0 { *phase = FieldParagraphPhase::WaitForButton; }
+                        false
+                    }
+                    FieldParagraphPhase::WaitForButton => {
+                        if a_just_pressed || b_just_pressed {
+                            // ManualTextScroll plays PRESS_AB and returns without
+                            // HoldTextDisplayOpen or CloseTextDisplay. Preserve the
+                            // window and sprite ownership while its interior is blank.
+                            *sfx_event = OverworldSfxEvent::TextAdvance;
+                            *last_script_dialogue = Some(BedroomDialogue::from_pages(vec![super::screen::DialoguePage {
+                                line1: "".into(), line2: "".into(),
+                            }]));
+                            *inner_field_text_open = true;
+                            *phase = FieldParagraphPhase::BlankDelay { remaining: 20 };
+                        }
+                        false
+                    }
+                    FieldParagraphPhase::BlankDelay { remaining } => {
+                        *remaining = remaining.saturating_sub(1);
+                        if *remaining == 0 {
+                            // Paragraph resumes NextChar in this same frame;
+                            // returning through a separate DSL print command
+                            // would insert two hardware frames before its glyph.
+                            let mut dialogue=script_bridge::text_to_dialogue_with_names(text,dialogue_names);
+                            dialogue.reveal_next_char_with_buttons(a_pressed || b_pressed);
+                            *pending_dialogue=Some(dialogue);
+                            *last_script_dialogue=None;
+                            *phase=FieldParagraphPhase::Printing;
+                        }
+                        false
+                    }
+                    FieldParagraphPhase::Printing | FieldParagraphPhase::PlayingSound => unreachable!("handled with inner printing/sound"),
+                }
+            }
+            script_bridge::ScriptEffect::FinishFieldText { acknowledged } => {
+                if last_script_dialogue.is_none() {
+                    *inner_field_text_open = false;
+                    return true;
+                }
+                if a_just_pressed || b_just_pressed { *acknowledged = true; }
+                if *acknowledged && !a_pressed {
+                    *last_script_dialogue = None;
+                    *inner_field_text_open = false;
+                    true
+                } else {
                     false
                 }
+            }
+            script_bridge::ScriptEffect::SetFieldTextDelayDisabled {disabled} => {
+                *text_delay_disabled=*disabled;true
+            }
+            script_bridge::ScriptEffect::InstantFieldMenu {options,text,started,selected} => {
+                if !*started {
+                    *last_script_dialogue=None;
+                    *inner_field_text_open=true;
+                    let mut dialogue=script_bridge::text_to_dialogue_with_names(text,dialogue_names);
+                    if !dialogue.is_done() {
+                        dialogue.skip_to_full_page();
+                        if dialogue.has_more_pages() {*pending_dialogue=Some(dialogue);}
+                        else {*last_script_dialogue=Some(dialogue);}
+                    }
+                    *pending_choice=Some(script_bridge::PendingChoice::new(options.clone()));
+                    *started=true;return false;
+                }
+                if let Some(dialogue)=pending_dialogue {
+                    // Preserve pagination if a localized question wraps. The
+                    // original single-page question reaches the menu at once.
+                    if a_just_pressed||b_just_pressed {
+                        dialogue.advance();dialogue.skip_to_full_page();
+                        if !dialogue.has_more_pages() {*last_script_dialogue=pending_dialogue.take();}
+                        *sfx_event=OverworldSfxEvent::TextAdvance;
+                    }
+                    return false;
+                }
+                if let Some(choice)=pending_choice {
+                    if up_pressed {choice.move_up();}else if down_pressed {choice.move_down();}
+                    if a_just_pressed {*selected=choice.selected as i32;*pending_choice=None;true}
+                    else if b_just_pressed {*selected=-1;*pending_choice=None;true}
+                    else {false}
+                }else {*selected=-1;true}
             }
             script_bridge::ScriptEffect::ShowChoice {
                 options,
@@ -2643,6 +3072,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 selected,
             } => {
                 if !*started {
+                    // DisplayTwoOptionMenu clears BIT_NO_TEXT_DELAY after
+                    // drawing its labels (engine/menus/text_box.asm).
+                    *text_delay_disabled=false;
                     let mut choice = script_bridge::PendingChoice::new(options.clone());
                     choice.selected = (*selected).min(options.len().saturating_sub(1) as u32);
                     *pending_choice = Some(choice);
@@ -2657,17 +3089,20 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     if a_just_pressed {
                         *selected = choice.selected;
                         *pending_choice = None;
+                        if !*inner_field_text_open { *last_script_dialogue = None; }
                         true
                     } else if b_just_pressed {
                         // B = cancel = last option (NO)
                         *selected = choice.options.len().saturating_sub(1) as u32;
                         *pending_choice = None;
+                        if !*inner_field_text_open { *last_script_dialogue = None; }
                         true
                     } else {
                         false
                     }
                 } else {
                     // pending_choice was cleared externally — treat as done
+                    if !*inner_field_text_open { *last_script_dialogue = None; }
                     true
                 }
             }
@@ -2880,7 +3315,16 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         {
                             let (nx, ny, npc_done) = {
                                 let npc = &npc_states[idx];
-                                (npc.x, npc.y, npc_movement::is_scripted_move_done(npc))
+                                // Original TryWalking commits NPC MapX/MapY
+                                // at the start of a stride. The engine stores
+                                // its origin until the end, so expose the
+                                // logical destination to the follow script.
+                                let (dx,dy)=player_movement::direction_delta(npc.facing);
+                                let (x,y)=if npc.walk_counter>0 {
+                                    ((npc.x as i32+dx as i32).max(0) as u16,
+                                     (npc.y as i32+dy as i32).max(0) as u16)
+                                } else {(npc.x,npc.y)};
+                                (x, y, npc_movement::is_scripted_move_done(npc))
                             };
 
                             if nx != *last_npc_x || ny != *last_npc_y {
@@ -3248,6 +3692,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
 
     fn finish_effect(effect: &script_bridge::ScriptEffect) -> CommandResult {
         match effect {
+            script_bridge::ScriptEffect::InstantFieldMenu {selected,..} => CommandResult::Number(f64::from(*selected)),
             script_bridge::ScriptEffect::ShowChoice { selected, .. } => {
                 CommandResult::Number(*selected as f64)
             }
@@ -3303,6 +3748,13 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 }
                 script_bridge::ScriptEffect::FacePlayer { direction } => {
                     self.state.player.facing = direction;
+                    self.player_moving_direction = match direction {
+                        Direction::Right => 1, Direction::Left => 2,
+                        Direction::Down => 4, Direction::Up => 8,
+                    };
+                    // The explicit scripted turn updates the sprite before
+                    // a subsequent textbox loads/reset its animation phase.
+                    self.player_sprite_state.update_sprite(self.state.walk_counter, self.player_moving_direction);
                 }
                 script_bridge::ScriptEffect::ShowObject { object_index } => {
                     if let Some(npc) = self
@@ -3548,10 +4000,6 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 script_bridge::ScriptEffect::WithdrawDaycare => {
                     self.game_data_requests
                         .push(OverworldGameDataRequest::WithdrawDaycare);
-                }
-                script_bridge::ScriptEffect::PlayCry { species } => {
-                    self.audio_requests
-                        .push(OverworldAudioRequest::PlayCry { species });
                 }
                 script_bridge::ScriptEffect::GiveBadge { badge } => {
                     self.game_data_requests
@@ -4449,8 +4897,14 @@ mod late_fidelity_tests {
         screen.state.player.x = 24;
         screen.state.player.y = 16;
         screen.run_on_load();
-        for _ in 0..600 {
+        for _ in 0..2000 {
             screen.update_frame(idle());
+            if screen.script_engine.is_idle()
+                && screen.scripted_player_path.is_empty()
+                && screen.unified_flags.get_flag("EVENT_LANCES_ROOM_LOCK_DOOR")
+            {
+                break;
+            }
         }
         assert_eq!((screen.state.player.x, screen.state.player.y), (6, 11));
         assert!(screen.unified_flags.get_flag("EVENT_LANCES_ROOM_LOCK_DOOR"));
@@ -4580,6 +5034,8 @@ mod ground_pickup_fidelity_tests {
         // Free one bag slot and retry the same ball, then verify its byte item.
         ow.seed_script_query_state(0, &bag[..19], 0, 0, 0, 0, &[], 0, 0, 0);
         if press_a {
+            // Let JoypadOverworld observe the release after the full-bag text.
+            for _ in 0..2 { ow.update_frame(input(false)); }
             ow.update_frame(input(true));
         } else {
             assert!(ow.try_call_script_npc_talk(data.text_id));
@@ -4823,10 +5279,155 @@ mod vending_delivery_fidelity_tests {
     }
 }
 
+impl<G: GameData<Tileset = pokered_data::tilesets::TilesetId>> OverworldScreen<G> {
+    fn restore_player_sprite_after_field_text(&mut self) {
+        self.player_sprite_state.update_sprite(self.state.walk_counter, self.player_moving_direction);
+    }
+
+    pub fn tick_field_text_restore(&mut self) -> bool {
+        let Some(restore) = &mut self.field_text_restore else { return false; };
+        restore.elapsed = restore.elapsed.saturating_add(1);
+        if !restore.finished() { return false; }
+        let submenu_reload = restore.submenu_reload.is_some();
+        self.field_text_restore = None;
+        // CloseTextDisplay returns through UpdateSprites before the field
+        // DelayFrame pair. Its sprite result still drains through OAM.
+        self.restore_player_sprite_after_field_text();
+        self.run_npc_movement_tick();
+        if !submenu_reload { self.field_loop_wait = 2; }
+        true
+    }
+}
+
+#[cfg(test)]
+mod scripted_field_clock_tests {
+    use super::*;
+    use pokered_data::impl_traits::PokemonRedData;
+
+    #[test]
+    fn safari_three_steps_match_original_relative_counter_trace() {
+        // Original AdvancePlayerSprite records at HW frames 500..549:
+        // first decrement at 0,3,5..15, then 17,20..32 and 34,37..49.
+        let mut screen = OverworldScreen::new(MapId::SafariZoneGate, None, PokemonRedData);
+        screen.state.player.x = 4;
+        screen.state.player.y = 0;
+        screen.state.player.movement_state = MovementState::Idle;
+        screen.state.walk_counter = 0;
+        screen.field_loop_wait = 0;
+        screen.scripted_player_path.extend([(4, 1), (4, 2), (4, 3)]);
+        let expected = [0, 3, 5, 7, 9, 11, 13, 15, 17, 20, 22, 24,
+            26, 28, 30, 32, 34, 37, 39, 41, 43, 45, 47, 49];
+        let mut advances = Vec::new();
+        let mut completions = Vec::new();
+        for t in 0..52 {
+            let old_y = screen.state.player.y;
+            let old_counter = screen.state.walk_counter;
+            screen.advance_scripted_player_path();
+            if screen.state.walk_counter != old_counter { advances.push(t); }
+            if screen.state.player.y != old_y { completions.push(t); }
+        }
+        assert_eq!(advances, expected);
+        assert_eq!(completions, [15, 32, 49]);
+        assert_eq!((screen.state.player.x, screen.state.player.y), (4, 3));
+        assert!(screen.scripted_player_path.is_empty());
+        assert_eq!(screen.state.player.movement_state, MovementState::Idle);
+    }
+}
+
 #[cfg(test)]
 mod field_typing_input_fidelity_tests {
     use super::*;
     use pokered_data::impl_traits::PokemonRedData;
+
+    #[test]
+    fn text_opcode_waits_accept_first_sample_and_outer_skip_only_holds_a() {
+        use script_bridge::ScriptEffect;
+        let idle=OverworldInput::new(false,false,false,false,false,false,false,false);
+        for arrow in [false,true] {
+            let mut ow=OverworldScreen::new(MapId::RedsHouse2F,None,PokemonRedData);
+            for _ in 0..120 {ow.update_frame(idle);}
+            ow.last_script_dialogue=Some(BedroomDialogue::from_message("completed inner text"));
+            ow.last_script_dialogue.as_mut().unwrap().skip_to_full_page();ow.inner_field_text_open=true;
+            ow.active_script_effect=Some(ScriptEffect::WaitFieldButton {show_arrow:arrow});
+            assert_eq!(ow.dialogue_needs_button(),arrow);
+            let raw=serde_json::to_string(&crate::snapshot::OverworldSnapshot::capture(&ow)).unwrap();
+            serde_json::from_str::<crate::snapshot::OverworldSnapshot>(&raw).unwrap().restore_into(&mut ow);
+            // Isolate the effect dispatcher: this unit fixture has no owning
+            // script VM; actual NPC regressions cover its caller lifecycle.
+            let mut a=idle;a.a=true;ow.update_frame_inner(a);
+            assert!(ow.active_script_effect.is_none(),"TX waits must accept first A sample without ProtectedDelay3");
+            assert_eq!(ow.sfx_event,OverworldSfxEvent::TextAdvance);
+            assert!(ow.inner_field_text_open && ow.last_script_dialogue.is_some());
+            assert!(ow.field_text_restore.is_none(),"inner wait returns without close/holdA");
+            ow.active_script_effect=Some(ScriptEffect::CloseFieldText);
+            for _ in 0..8 {ow.update_frame_inner(a);assert!(matches!(ow.active_script_effect,Some(ScriptEffect::CloseFieldText)));assert!(ow.last_script_dialogue.is_some());}
+            assert!(!ow.dialogue_needs_button());
+            ow.update_frame_inner(idle);
+            assert!(ow.active_script_effect.is_none());assert!(!ow.inner_field_text_open);assert!(ow.last_script_dialogue.is_none());
+        }
+    }
+
+    #[test]
+    fn paragraph_preserves_window_and_button_history_across_protected_and_blank_waits() {
+        use script_bridge::{FieldParagraphPhase, ScriptEffect};
+        let mut ow=OverworldScreen::new(MapId::RedsHouse2F,None,PokemonRedData);
+        let idle=OverworldInput::new(false,false,false,false,false,false,false,false);
+        for _ in 0..120 {ow.update_frame(idle);}
+        ow.last_script_dialogue=Some(BedroomDialogue::from_message("previous text"));
+        ow.last_script_dialogue.as_mut().unwrap().skip_to_full_page();
+        ow.inner_field_text_open=true;
+        ow.active_script_effect=Some(ScriptEffect::PrintFieldParagraph {text:"next paragraph".into(),sound_id:None,phase:FieldParagraphPhase::ProtectedDelay {remaining:3}});
+        let mut a=idle;a.a=true;
+        ow.update_frame(a);assert!(!ow.prev_a_pressed);
+        ow.update_frame(idle);assert!(!ow.prev_a_pressed);
+        ow.update_frame(idle);
+        assert!(matches!(ow.active_script_effect,Some(ScriptEffect::PrintFieldParagraph {phase:FieldParagraphPhase::WaitForButton,..})));
+        for _ in 0..8 {ow.update_frame(idle);}
+        assert!(ow.last_script_dialogue.as_ref().unwrap().get_display_text().unwrap().0.contains("previous"));
+        ow.update_frame(a);
+        assert_eq!(ow.sfx_event,OverworldSfxEvent::TextAdvance);
+        assert!(ow.field_text_restore.is_none());
+        assert_eq!(ow.last_script_dialogue.as_ref().unwrap().get_display_text(),Some((String::new(),String::new())));
+        for remaining in (1..20).rev() {
+            ow.update_frame(idle);
+            assert!(ow.prev_a_pressed,"blank DelayFrames must not poll Joypad");
+            assert!(matches!(ow.active_script_effect,Some(ScriptEffect::PrintFieldParagraph {phase:FieldParagraphPhase::BlankDelay {remaining:r},..}) if r==remaining));
+            assert!(ow.field_text_restore.is_none());
+        }
+        ow.update_frame(idle);
+        assert!(matches!(ow.active_script_effect,Some(ScriptEffect::PrintFieldParagraph {phase:FieldParagraphPhase::Printing,..})));
+        assert_eq!(ow.pending_dialogue.as_ref().unwrap().get_display_text().unwrap().0,"n");
+    }
+
+    #[test]
+    fn print_done_returns_only_after_original_final_letter_delay() {
+        // Executable original worker hooks: 30 glyphs, first24, last111,
+        // YesNoChoice114. Counts use relative first-glyph hardware frames.
+        let mut ow = OverworldScreen::new(MapId::RedsHouse2F, None, PokemonRedData);
+        let idle = OverworldInput::new(false,false,false,false,false,false,false,false);
+        for _ in 0..120 { ow.update_frame(idle); }
+        ow.set_text_delay_frames(3);
+        let text = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234".to_string();
+        ow.pending_dialogue = Some(BedroomDialogue::from_message(&text));
+        ow.active_script_effect = Some(script_bridge::ScriptEffect::PrintFieldText { text });
+        for _ in 0..120 {
+            ow.update_frame(idle);
+            if ow.pending_dialogue.as_ref().is_some_and(|d|d.char_index()==1) {break;}
+        }
+        assert_eq!(ow.pending_dialogue.as_ref().unwrap().char_index(),1);
+        for relative in 1..=90 {
+            ow.update_frame(idle);
+            if relative<90 {
+                assert!(ow.active_script_effect.is_some(), "early DONE at {relative}");
+                assert_eq!(ow.pending_dialogue.as_ref().unwrap().char_index(),(relative/3+1).min(30));
+                assert!(!ow.pending_dialogue.as_ref().unwrap().waiting_for_input());
+            } else {
+                assert!(ow.active_script_effect.is_none(), "DONE must return without fresh A/B");
+                assert!(ow.pending_dialogue.is_none());
+            }
+            assert_eq!(ow.sfx_event,OverworldSfxEvent::None);
+        }
+    }
 
     #[test]
     fn short_held_ab_matches_original_letter_wait_without_scroll_sound() {

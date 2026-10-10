@@ -1,0 +1,402 @@
+{
+  "active_script_effect": null,
+  "badges": 255,
+  "battle_bag": null,
+  "battle_inventory": [
+    {
+      "item": "HelixFossil",
+      "qty": 1
+    },
+    {
+      "item": "SsTicket",
+      "qty": 1
+    },
+    {
+      "item": "Tm28",
+      "qty": 1
+    },
+    {
+      "item": "Hm01",
+      "qty": 1
+    },
+    {
+      "item": "LiftKey",
+      "qty": 1
+    },
+    {
+      "item": "SilphScope",
+      "qty": 1
+    },
+    {
+      "item": "RareCandy",
+      "qty": 1
+    },
+    {
+      "item": "PokeFlute",
+      "qty": 1
+    },
+    {
+      "item": "Tm06",
+      "qty": 1
+    },
+    {
+      "item": "Hm03",
+      "qty": 1
+    },
+    {
+      "item": "Hm04",
+      "qty": 1
+    },
+    {
+      "item": "CardKey",
+      "qty": 1
+    },
+    {
+      "item": "Tm46",
+      "qty": 1
+    },
+    {
+      "item": "Hm02",
+      "qty": 1
+    },
+    {
+      "item": "SecretKey",
+      "qty": 1
+    },
+    {
+      "item": "Tm38",
+      "qty": 1
+    }
+  ],
+  "battle_live": {
+    "enemy": {
+      "hp": 85,
+      "level": 56,
+      "max_hp": 142,
+      "species": "Gengar",
+      "status": "None"
+    },
+    "enemy_party": [
+      {
+        "hp": 85,
+        "level": 56,
+        "species": "Gengar"
+      },
+      {
+        "hp": 158,
+        "level": 56,
+        "species": "Golbat"
+      },
+      {
+        "hp": 123,
+        "level": 55,
+        "species": "Haunter"
+      },
+      {
+        "hp": 146,
+        "level": 58,
+        "species": "Arbok"
+      },
+      {
+        "hp": 151,
+        "level": 60,
+        "species": "Gengar"
+      }
+    ],
+    "is_ghost": false,
+    "player": {
+      "hp": 0,
+      "level": 15,
+      "max_hp": 67,
+      "species": "Lapras",
+      "status": "None"
+    },
+    "player_party": [
+      {
+        "hp": 0,
+        "level": 56,
+        "max_hp": 183,
+        "species": "Zapdos"
+      },
+      {
+        "hp": 0,
+        "level": 15,
+        "max_hp": 67,
+        "species": "Lapras"
+      },
+      {
+        "hp": 0,
+        "level": 53,
+        "max_hp": 178,
+        "species": "Venusaur"
+      }
+    ]
+  },
+  "battle_message": null,
+  "battle_moves": null,
+  "battle_party_cursor": 1,
+  "battle_phase": "TrainerVictory { phase: EndBattleText, wait_frames: 0, player_won: false }",
+  "choice": null,
+  "coins": 0,
+  "credits_final_button": null,
+  "credits_phase": null,
+  "dialogue": null,
+  "dialogue_state": null,
+  "evaluation": {
+    "party": [
+      {
+        "hp": 183,
+        "level": 56,
+        "max_hp": 183,
+        "moves": [
+          "Thunder",
+          "DrillPeck",
+          "Fly",
+          "Thunderbolt"
+        ],
+        "pp": [
+          10,
+          20,
+          15,
+          15
+        ],
+        "species": "Zapdos",
+        "status": "None",
+        "total_exp": 226739
+      },
+      {
+        "hp": 67,
+        "level": 15,
+        "max_hp": 67,
+        "moves": [
+          "WaterGun",
+          "Growl",
+          "Surf",
+          "Strength"
+        ],
+        "pp": [
+          25,
+          40,
+          15,
+          15
+        ],
+        "species": "Lapras",
+        "status": "None",
+        "total_exp": 4218
+      },
+      {
+        "hp": 178,
+        "level": 53,
+        "max_hp": 178,
+        "moves": [
+          "MegaDrain",
+          "RazorLeaf",
+          "Cut",
+          "VineWhip"
+        ],
+        "pp": [
+          10,
+          25,
+          30,
+          10
+        ],
+        "species": "Venusaur",
+        "status": "None",
+        "total_exp": 148930
+      }
+    ],
+    "party_source": "save_data",
+    "pokedex": {
+      "owned": 5,
+      "owned_numbers": [
+        1,
+        2,
+        3,
+        131,
+        145
+      ],
+      "seen": 107,
+      "total": 151
+    }
+  },
+  "field_menu": null,
+  "frame_count": 926716,
+  "hall_of_fame_count": 0,
+  "hof_phase": null,
+  "last_outside_map": "IndigoPlateau",
+  "link": {
+    "cable_phase": "Inactive",
+    "role": "Host",
+    "status": "disabled",
+    "trade": null
+  },
+  "map_blocks": [
+    24,
+    26,
+    26,
+    33,
+    23,
+    23,
+    34,
+    26,
+    26,
+    27,
+    28,
+    39,
+    28,
+    24,
+    26,
+    26,
+    27,
+    31,
+    39,
+    31,
+    1,
+    1,
+    1,
+    28,
+    29,
+    30,
+    31,
+    1,
+    1,
+    1,
+    41,
+    41,
+    41,
+    1,
+    67,
+    66,
+    1,
+    42,
+    42,
+    42,
+    44,
+    44,
+    44,
+    40,
+    67,
+    66,
+    40,
+    43,
+    43,
+    43,
+    41,
+    41,
+    41,
+    1,
+    67,
+    66,
+    1,
+    42,
+    42,
+    42,
+    44,
+    44,
+    44,
+    40,
+    67,
+    66,
+    40,
+    43,
+    43,
+    43,
+    41,
+    41,
+    41,
+    1,
+    67,
+    66,
+    1,
+    42,
+    42,
+    42,
+    44,
+    44,
+    44,
+    40,
+    67,
+    66,
+    40,
+    43,
+    43,
+    43
+  ],
+  "map_id": 9,
+  "map_name": "IndigoPlateau",
+  "money": 5954,
+  "party": [
+    {
+      "hp": 183,
+      "level": 56,
+      "max_hp": 183,
+      "moves": [
+        "Thunder",
+        "DrillPeck",
+        "Fly",
+        "Thunderbolt"
+      ],
+      "pp": [
+        10,
+        20,
+        15,
+        15
+      ],
+      "species": "Zapdos",
+      "status": "None"
+    },
+    {
+      "hp": 67,
+      "level": 15,
+      "max_hp": 67,
+      "moves": [
+        "WaterGun",
+        "Growl",
+        "Surf",
+        "Strength"
+      ],
+      "pp": [
+        25,
+        40,
+        15,
+        15
+      ],
+      "species": "Lapras",
+      "status": "None"
+    },
+    {
+      "hp": 178,
+      "level": 53,
+      "max_hp": 178,
+      "moves": [
+        "MegaDrain",
+        "RazorLeaf",
+        "Cut",
+        "VineWhip"
+      ],
+      "pp": [
+        10,
+        25,
+        30,
+        10
+      ],
+      "species": "Venusaur",
+      "status": "None"
+    }
+  ],
+  "party_count": 3,
+  "pc_phase": null,
+  "player_facing": "Right",
+  "player_movement_state": "Idle",
+  "player_name": "RED",
+  "player_transport": "Walking",
+  "player_x": 9,
+  "player_y": 6,
+  "screen": "overworld",
+  "script_awaiting_battle": false,
+  "script_effect": null,
+  "script_running": false,
+  "shop_phase": null,
+  "text_speed_delay_frames": 3,
+  "warp_fade": "Idle"
+}

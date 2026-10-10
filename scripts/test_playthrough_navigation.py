@@ -11,6 +11,61 @@ from playthrough_late import damage_slot
 
 
 class NavigationRegression(unittest.TestCase):
+    def test_face_waits_for_delayed_trainer_text_without_selecting_a_choice(self):
+        game = nav.Game.__new__(nav.Game)
+        state = dict(screen="overworld", player_facing="Left", dialogue_state=None,
+                     active_script_effect=None, choice=None)
+        game.st = lambda: state.copy()
+        calls = []
+        def drive(buttons, frames):
+            calls.append((buttons, frames))
+            if len(calls) == 2:
+                state["active_script_effect"] = "PrintFieldParagraph"
+                state["choice"] = {"options": ["YES", "NO"]}
+        game.d = SimpleNamespace(drive=drive)
+        game.face("up")
+        self.assertEqual(calls, [(["up", "up"], 14)] * 2)
+        self.assertEqual(state["player_facing"], "Left")
+        self.assertEqual(state["choice"]["options"], ["YES", "NO"])
+
+    def test_face_observes_delayed_turn_but_keeps_a_bounded_failure(self):
+        for turn_at in [2, 8, None]:
+            with self.subTest(turn_at=turn_at):
+                game = nav.Game.__new__(nav.Game)
+                state = dict(screen="overworld", player_facing="Left")
+                game.st = lambda: state.copy()
+                calls = []
+                def drive(buttons, frames):
+                    calls.append((buttons, frames))
+                    if turn_at is not None and len(calls) == turn_at:
+                        state["player_facing"] = "Up"
+                game.d = SimpleNamespace(drive=drive)
+                if turn_at is not None:
+                    game.face("up")
+                    self.assertEqual(len(calls), turn_at)
+                else:
+                    with self.assertRaisesRegex(nav.NavError, r"face\(up\) failed"):
+                        game.face("up")
+                    self.assertEqual(len(calls), 8)
+
+    def test_object_approach_drains_inner_text_before_planning(self):
+        game = nav.Game.__new__(nav.Game)
+        state = dict(screen="overworld", map_name="RocketHideoutB4F",
+                     player_x=11, player_y=3, player_facing="Up",
+                     dialogue_state=None, active_script_effect="PrintFieldParagraph")
+        game.st = lambda: state.copy()
+        game.pos = lambda: (state["map_name"], state["player_x"], state["player_y"])
+        game.cutscene = Mock(side_effect=lambda: state.update(active_script_effect=None))
+        game.live_npcs = lambda _: {(11, 2)}
+        game.nav_to = Mock()
+        game.face = Mock()
+        with patch.object(nav, "warp_tiles", return_value=set()), \
+             patch.object(nav, "bfs", side_effect=lambda _, start, target, *args, **kwargs:
+                          [((11, 3), None)] if target == (11, 3) else None):
+            game.approach_object(11, 2, "RocketHideoutB4F")
+        game.cutscene.assert_called_once()
+        game.face.assert_called_once_with("up")
+
     def test_collision_replans_before_a_stale_turn_can_enter_another_warp(self):
         game = nav.Game.__new__(nav.Game)
         state = dict(screen='overworld',map_name='PalletTown',player_x=5,player_y=5)
@@ -35,6 +90,25 @@ class NavigationRegression(unittest.TestCase):
         self.assertEqual(search.call_count,2)
         self.assertEqual(calls,['right','up','right','down'])
         self.assertEqual((state['player_x'],state['player_y']),(6,6))
+
+    def test_cutscene_acknowledges_field_text_without_legacy_dialogue_state(self):
+        for effect in ("PrintFieldText", "PrintFieldParagraph", "PrintItemFieldText",
+                       "WaitFieldPrompt", "WaitFieldButton", "FinishFieldText"):
+            with self.subTest(effect=effect):
+                game = nav.Game.__new__(nav.Game)
+                state = {"screen": "overworld", "choice": None,
+                         "active_script_effect": effect, "dialogue_state": None,
+                         "dialogue": "BILL: Yeehah! Thanks, bud! I owe you one!"}
+                advanced = []
+                def command(**kw):
+                    if kw["cmd"] == "skip_dialogue":
+                        advanced.append(effect)
+                        return {"ok": True, "data": {"stepped": 2}}
+                    self.assertEqual(kw["cmd"], "wait_until")
+                    return {"data": {"reached": bool(advanced), "state": state}}
+                game.d = SimpleNamespace(cmd=command)
+                self.assertTrue(game.cutscene(max_rounds=2))
+                self.assertEqual(advanced, [effect])
 
     def test_cutscene_declines_only_the_script_gift_nickname_prompt(self):
         for effect in ["GivePokemon", "ShowChoice"]:
@@ -112,9 +186,9 @@ class NavigationRegression(unittest.TestCase):
 
     def test_slope_brakes_idle_frames_and_respects_uphill_bike_speed(self):
         state = {'map_name': 'Route17', 'player_transport': 'Biking'}
-        self.assertEqual(nav.movement_frames(state, 'down'), 4)
-        self.assertEqual(nav.movement_frames(state, 'left'), 8)
-        self.assertEqual(nav.movement_buttons(state, 'left', 8, 12), ['left']*8 + ['b']*4)
+        self.assertEqual(nav.movement_frames(state, 'down'), 8)
+        self.assertEqual(nav.movement_frames(state, 'left'), 16)
+        self.assertEqual(nav.movement_buttons(state, 'left', 16, 20), ['left']*16 + ['b']*4)
         game = nav.Game.__new__(nav.Game)
         game.smart_moves = True
         game.st = lambda: {**state, 'screen': 'overworld', 'script_running': False}
@@ -134,11 +208,11 @@ class NavigationRegression(unittest.TestCase):
         def drive(buttons, frames):
             holds.append(len(buttons))
             dx, dy = nav.DELTA[buttons[0]]
-            state['player_x'] += dx * (len(buttons)//4)
-            state['player_y'] += dy * (len(buttons)//4)
+            state['player_x'] += dx * (len(buttons)//8)
+            state['player_y'] += dy * (len(buttons)//8)
         game.d = SimpleNamespace(drive=drive, step=lambda _: None)
         game.nav_to_map(15, 12, 'Route16', tries=2, avoid_grass=False)
-        self.assertEqual(holds, [4])
+        self.assertEqual(holds, [8])
 
     def test_cross_map_planner_searches_alternative_goals_in_one_pass(self):
         goals = {('PalletTown', 10, 10), ('PalletTown', 10, 12)}

@@ -1,0 +1,137 @@
+{
+  "parent": "897c57a7322abb2b381300687d8c0f03ff80d46c",
+  "master": "31b1eda3112514d6bc803af559ec7f7c9e20374f",
+  "sources": {
+    "crates/pokered-app/src/game.rs": "0b601e1c22c2206d822ed1ca5392a05bfcc2e9466a2cd567ee506dbeefa5602b",
+    "crates/pokered-app/src/render/mod.rs": "d2f3d05e9bec7b513fe26cd03d0ce651683b97d0b57ce316f7be9781d5772256",
+    "crates/pokered-app/src/render/overworld.rs": "efb6d1d65803d4a3c93e099822d2616b359dadd6a30d5410c3c56e8f4de4b184",
+    "crates/pokered-app/src/render/session.rs": "9233b9adbe2a5ff1501b9c4c28051ced36b1d0c5d937228b3a90c8ce1b70e47a",
+    "crates/pokered-core/src/overworld/field_moves.rs": "162384478610831fc7f2e751aadfa6cc2a27bb789f61e9d0651e4556ffc3cba1",
+    "crates/pokered-core/src/overworld/mod.rs": "7fddcc4bd8dc93ad43b7f356a114becb76469417dfa40e31edcb759313366499",
+    "crates/pokered-core/src/overworld/native_script.rs": "8bebe37c4676c1da1e7b9f6a44043e78b80cec65bcfa5bec5ffb9bb4fdf40983",
+    "crates/pokered-core/src/overworld/presentation.rs": "46b142440f2dbc02ff05d75536ec62a2e1b60a0274c3893ea502147699128f6f",
+    "crates/pokered-core/src/overworld/screen.rs": "1dd40b336b022105db6bd5c9122bc585491b765c7a08d2404b88cd3afb7310d3",
+    "crates/pokered-core/src/overworld/script_bridge.rs": "0b75fb6a83725fef4cc54d89b4a5fb0ae69b12aa229f7a573c772563929416ef",
+    "crates/pokered-core/src/overworld/script_interactions.rs": "6f6b8485879153b2ea818cb6a2cd0d159eb4480388eb45c5ee0b0d199cc0d608",
+    "crates/pokered-core/src/overworld/sprite_reload_work.rs": "cb4b676103f2d8cf0eadef886a1def09979b89578d3afd722f2c2bb2e78f06fa",
+    "crates/pokered-core/src/overworld/update.rs": "06988e397f6ba02876c7263c0f62c41d4f439c6f9d45b681f08f82b66971fe92",
+    "crates/pokered-core/src/snapshot.rs": "5b893d317d39e619f0a98ef2a41075a8bd555ca3d642f44b3f6d1a673fc5663e",
+    "crates/pokered-core/src/start_menu.rs": "ab213e322753ef89c0d44adf00433b0212e05c2e989f44ee8c62a78f6ad44786",
+    "crates/pokered-data/maps/Museum1F/script.scene": "8e9ae9a551aab5763a7c0f711f57e63be249ea597e2c4fe3f1a37b10eb752b42",
+    "crates/pokered-data/maps/SafariZoneGate/script.scene": "5428458468fa767724c631777240614d8ace5a69874a1c0829a7f8544186dbba",
+    "crates/pokered-data/src/dialog_text.rs": "b198760a5b1bd52a86ba3e7c3d9604e691bd1e4c8bb62f104cde2165a0eb3dec",
+    "crates/pokered-data/src/script_api.rs": "b12b54b16ec8c44b4826460b96bed8bd966cbd3de96cb10e3a7cb25436e9da3b",
+    "crates/pokered-data/src/script_command.rs": "56825d44f6e50ea8c932b248ab2842670269fa8fb4591f989bb1a43497c9298d",
+    "crates/pokered-data/src/script_function_catalog.rs": "adeda824ef37a12558e79be07e41bcb61d029ae78c822d3ef67ca2e3227cf881",
+    "crates/pokered-data/maps/VermilionOldRodHouse/script.scene": "6d2891fc22dd37fd7f6e67ff639b0da4e845ddc5b7ee52c5ac0f7335a9559109",
+    "crates/pokered-data/maps/FuchsiaGoodRodHouse/script.scene": "b7bfda360aa8811996422b63c1dda5235697a3035bbc849cd8975c872ab2c17e",
+    "crates/pokered-data/maps/Route12SuperRodHouse/script.scene": "8bb2903842f72501074e601c2250a78e1c8985d846e61e586ddfd49e16f82b6c",
+    "crates/pokered-data/maps/PokemonFanClub/script.scene": "ad89baca52689e27ae0fcd24eee82594e9e8a14d5a3d0886490d3acbd0f10e53",
+    "crates/pokered-data/maps/CeladonCity/script.scene": "c92172f358a11bee106c6e807958b9cd78b9e14547c7b022a730d17d9f800174",
+    "crates/pokered-data/maps/CeladonMansion1F/script.scene": "120c275c5011d76fb7d9ca651faf08a147465418e8351dcf99454b3a79597f6e",
+    "crates/pokered-data/maps/CopycatsHouse1F/script.scene": "55941173da702bfc630ec8e72c1535b9fa3e502c0a24bae3f8803ff2e50761cf",
+    "crates/pokered-data/maps/LavenderCuboneHouse/script.scene": "3f9050f0445c06b46edfc990791c782295dbc53662f9d39b2872f93a248b15a4",
+    "crates/pokered-data/maps/MrFujisHouse/script.scene": "bab78db22fb3b6ab5f62e1a7b0d66fb8996ab9edee8b908ff25ad716fc253fbf",
+    "crates/pokered-data/maps/PewterNidoranHouse/script.scene": "3fa136f9ff0a10cb6a785724c56844a54dc59fbf8c0471faa9c04b8d5f773da7",
+    "crates/pokered-data/maps/Route16FlyHouse/script.scene": "d9121f6371ac79e98cef60797fef0fd990c727f6ed6f718906eb8edf71380a0f",
+    "crates/pokered-data/maps/SSAnne1FRooms/script.scene": "4c971fb6dcac3efadb69faeb7bf719ff571175131edf5debbf5051c8d117aabe",
+    "crates/pokered-data/maps/SSAnneB1FRooms/script.scene": "17e14f50d57b171eb6965500ea563f42c33d00a862f79a5da7ddf7d3e96f2dee",
+    "crates/pokered-data/maps/SaffronCity/script.scene": "3750d174634a2a9d93e0baf6fd3cd82d0fdbe947cf68e4d866e2358ac481d15b",
+    "crates/pokered-data/maps/SaffronPidgeyHouse/script.scene": "9e9a4e9d979ab476f5183c181d9756b5867ef7c046625a84bffd057fb7373c5b",
+    "crates/pokered-data/maps/VermilionCity/script.scene": "408513c550acbd32dff344a4d6f47001956df2305d0e8059367d81b9fe505472",
+    "crates/pokered-data/maps/VermilionPidgeyHouse/script.scene": "ed15a1fa4ffb57a98d707949570129e6868cf0642a50ccfa568163f40e79f80d",
+    "crates/pokered-data/maps/ViridianNicknameHouse/script.scene": "f7287563a7866bf49ccfa035021d9fb92a255fc205ad67fa19a65b66e5e9be9a"
+  },
+  "tests": {
+    "core": 2741,
+    "data": 262,
+    "app": 217,
+    "agent": 54,
+    "app_ignored": 32
+  },
+  "archives": {
+    "old-evidence.zip": {
+      "bytes": 11496278,
+      "sha256": "5c5a1f8d908b06a8f6f8a60d3ff2d66884175ba3bf086ea3cc968622c0043130",
+      "entries": 2974
+    },
+    "good-evidence.zip": {
+      "bytes": 8388276,
+      "sha256": "b22c8604641dae6632287bf246b08db7936e06df6f74cb117787b23a57bd023f",
+      "entries": 3154
+    },
+    "super-evidence.zip": {
+      "bytes": 11948381,
+      "sha256": "85d2f69dd88005b29d63c5a64d01a9b364d5184932df9581cc00d0911e47ff44",
+      "entries": 3088
+    },
+    "chairman-evidence.zip": {
+      "bytes": 27572740,
+      "sha256": "f5ce04b232a84f428d220f2e0ad359e749032eacc6ad3f0d4e17c966162d2565",
+      "entries": 7354
+    },
+    "shared-evidence.zip": {
+      "bytes": 3880936,
+      "sha256": "94104cfaa2c0e79d64af90635f6fed3b1b475a571121c2c4e08898e234db3812",
+      "entries": 1789
+    }
+  },
+  "case_cues": {
+    "old": {
+      "master31": {
+        "cue": 447,
+        "frames": 709,
+        "screenshot_hw": 597
+      },
+      "after-a8": {
+        "cue": 508,
+        "frames": 770,
+        "screenshot_hw": 658
+      }
+    },
+    "good": {
+      "master31": {
+        "cue": 492,
+        "frames": 754,
+        "screenshot_hw": 642
+      },
+      "after-a8": {
+        "cue": 553,
+        "frames": 815,
+        "screenshot_hw": 703
+      }
+    },
+    "super": {
+      "master31": {
+        "cue": 474,
+        "frames": 736,
+        "screenshot_hw": 624
+      },
+      "after-a8": {
+        "cue": 538,
+        "frames": 800,
+        "screenshot_hw": 688
+      }
+    },
+    "chairman": {
+      "master31": {
+        "cue": 1485,
+        "frames": 1747,
+        "screenshot_hw": 1635
+      },
+      "after-a8": {
+        "cue": 1660,
+        "frames": 1922,
+        "screenshot_hw": 1810
+      }
+    }
+  },
+  "scope": "Independent actual interaction prefixes in each branch to the same receipt/fanfare phase. Same261 postcue input bits; same screenshot hardware frame150 after first SoundStarted. Full raw frame numbers retained, no absolute pre-cue timing equality claim.",
+  "state_capture": "Complete initial snapshot and selected per-frame player/NPC/effect/dialogue/window/restore fields plus audio channels, inputbits, reward/flag. Not a full per-frame runtime snapshot.",
+  "original": "Good Rod only, 2x820 PNG/rows/events byteexact: sound654 outerWait727 (73frames), noAfor60frames, finalreleaseClose789. Controlled map/view/player5,4, cleared obtainedbit+bag. Other3 source-audited, not emulator-recorded.",
+  "limitations": [
+    "No absolute prefix/init/close timing, pixel or audio-waveform parity claim.",
+    "Default font/layout/Chinese exclusions remain.",
+    "Fulltextinitialization/closure, acknowledged-Aarrowphase, other previous draft gates and final m01..49/independentSAVECONTINUE remain."
+  ]
+}

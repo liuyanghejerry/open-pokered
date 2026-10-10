@@ -1,0 +1,787 @@
+{
+  "native_head": "5de6ba9a688444455f3076d73843d37cb01c6a57",
+  "binary_sha256": "e07ecc2ea3e1e8fc2ba9149cb176752019384b033cf74f44bd1fab60437db465",
+  "source_commit": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "cases": {
+    "1f": {
+      "source_slot": 5,
+      "native_index": 4,
+      "first_update": {
+        "t": 3,
+        "routine": "UpdateSprites",
+        "cycles": 284271916,
+        "LY": 82,
+        "VB": 0,
+        "current": 240,
+        "status": 2,
+        "image": 255,
+        "raw_y": 0,
+        "raw_x": 0,
+        "remaining": 0,
+        "delay": 127
+      },
+      "first_target": {
+        "t": 3,
+        "routine": "UpdateNPCSprite",
+        "cycles": 284282512,
+        "LY": 105,
+        "VB": 0,
+        "current": 80,
+        "status": 2,
+        "image": 184,
+        "raw_y": 76,
+        "raw_x": 64,
+        "remaining": 0,
+        "delay": 39
+      },
+      "first_target_elapsed_cycles": 10596,
+      "intervening_vblanks": [],
+      "coordinate_commit": 5,
+      "first_walk16": 5,
+      "first_raw_pixel": 7,
+      "first_switch": 7,
+      "native_first_switch": 7,
+      "native_first_walk16": 3,
+      "state_mismatches_first42": [
+        {
+          "t": 3,
+          "differences": {
+            "remaining": [
+              0,
+              16
+            ]
+          }
+        },
+        {
+          "t": 4,
+          "differences": {
+            "remaining": [
+              0,
+              16
+            ]
+          }
+        },
+        {
+          "t": 7,
+          "differences": {
+            "remaining": [
+              15,
+              16
+            ]
+          }
+        },
+        {
+          "t": 18,
+          "differences": {
+            "remaining": [
+              14,
+              15
+            ]
+          }
+        },
+        {
+          "t": 20,
+          "differences": {
+            "remaining": [
+              13,
+              14
+            ]
+          }
+        },
+        {
+          "t": 22,
+          "differences": {
+            "remaining": [
+              12,
+              13
+            ]
+          }
+        },
+        {
+          "t": 24,
+          "differences": {
+            "remaining": [
+              11,
+              12
+            ]
+          }
+        },
+        {
+          "t": 26,
+          "differences": {
+            "remaining": [
+              10,
+              11
+            ]
+          }
+        },
+        {
+          "t": 28,
+          "differences": {
+            "remaining": [
+              9,
+              10
+            ]
+          }
+        },
+        {
+          "t": 30,
+          "differences": {
+            "remaining": [
+              8,
+              9
+            ]
+          }
+        },
+        {
+          "t": 32,
+          "differences": {
+            "remaining": [
+              7,
+              8
+            ]
+          }
+        },
+        {
+          "t": 34,
+          "differences": {
+            "remaining": [
+              6,
+              7
+            ]
+          }
+        },
+        {
+          "t": 36,
+          "differences": {
+            "remaining": [
+              5,
+              6
+            ]
+          }
+        },
+        {
+          "t": 38,
+          "differences": {
+            "remaining": [
+              4,
+              5
+            ]
+          }
+        },
+        {
+          "t": 40,
+          "differences": {
+            "remaining": [
+              3,
+              4
+            ]
+          }
+        }
+      ],
+      "rgb201": {
+        "repeat_exact": true,
+        "bad_frames": []
+      }
+    },
+    "2f1": {
+      "source_slot": 11,
+      "native_index": 10,
+      "first_update": {
+        "t": 2,
+        "routine": "UpdateSprites",
+        "cycles": 284247836,
+        "LY": 104,
+        "VB": 0,
+        "current": 240,
+        "status": 2,
+        "image": 255,
+        "raw_y": 0,
+        "raw_x": 0,
+        "remaining": 0,
+        "delay": 127
+      },
+      "first_target": {
+        "t": 3,
+        "routine": "UpdateNPCSprite",
+        "cycles": 284288184,
+        "LY": 39,
+        "VB": 0,
+        "current": 176,
+        "status": 2,
+        "image": 184,
+        "raw_y": 76,
+        "raw_x": 64,
+        "remaining": 0,
+        "delay": 79
+      },
+      "first_target_elapsed_cycles": 40348,
+      "intervening_vblanks": [
+        {
+          "t": 2,
+          "routine": "VBlank",
+          "cycles": 284265680,
+          "LY": 144,
+          "VB": 0,
+          "current": 144,
+          "status": 1,
+          "image": 255,
+          "raw_y": 0,
+          "raw_x": 0,
+          "remaining": 0,
+          "delay": 0
+        }
+      ],
+      "coordinate_commit": 5,
+      "first_walk16": 5,
+      "first_raw_pixel": 7,
+      "first_switch": 7,
+      "native_first_switch": 7,
+      "native_first_walk16": 3,
+      "state_mismatches_first42": [
+        {
+          "t": 3,
+          "differences": {
+            "remaining": [
+              0,
+              16
+            ]
+          }
+        },
+        {
+          "t": 4,
+          "differences": {
+            "remaining": [
+              0,
+              16
+            ]
+          }
+        },
+        {
+          "t": 7,
+          "differences": {
+            "remaining": [
+              15,
+              16
+            ]
+          }
+        },
+        {
+          "t": 9,
+          "differences": {
+            "remaining": [
+              14,
+              15
+            ]
+          }
+        },
+        {
+          "t": 11,
+          "differences": {
+            "remaining": [
+              13,
+              14
+            ]
+          }
+        },
+        {
+          "t": 13,
+          "differences": {
+            "remaining": [
+              12,
+              13
+            ]
+          }
+        },
+        {
+          "t": 15,
+          "differences": {
+            "remaining": [
+              11,
+              12
+            ]
+          }
+        },
+        {
+          "t": 17,
+          "differences": {
+            "remaining": [
+              10,
+              11
+            ]
+          }
+        },
+        {
+          "t": 19,
+          "differences": {
+            "remaining": [
+              9,
+              10
+            ]
+          }
+        },
+        {
+          "t": 21,
+          "differences": {
+            "remaining": [
+              8,
+              9
+            ]
+          }
+        },
+        {
+          "t": 23,
+          "differences": {
+            "remaining": [
+              7,
+              8
+            ]
+          }
+        },
+        {
+          "t": 25,
+          "differences": {
+            "remaining": [
+              6,
+              7
+            ]
+          }
+        },
+        {
+          "t": 27,
+          "differences": {
+            "remaining": [
+              5,
+              6
+            ]
+          }
+        },
+        {
+          "t": 29,
+          "differences": {
+            "remaining": [
+              4,
+              5
+            ]
+          }
+        },
+        {
+          "t": 31,
+          "differences": {
+            "remaining": [
+              3,
+              4
+            ]
+          }
+        },
+        {
+          "t": 33,
+          "differences": {
+            "remaining": [
+              2,
+              3
+            ]
+          }
+        },
+        {
+          "t": 35,
+          "differences": {
+            "remaining": [
+              1,
+              2
+            ]
+          }
+        },
+        {
+          "t": 37,
+          "differences": {
+            "remaining": [
+              0,
+              1
+            ]
+          }
+        }
+      ],
+      "rgb201": {
+        "repeat_exact": true,
+        "bad_frames": []
+      }
+    },
+    "2f2": {
+      "source_slot": 11,
+      "native_index": 10,
+      "first_update": {
+        "t": 3,
+        "routine": "UpdateSprites",
+        "cycles": 284321152,
+        "LY": 108,
+        "VB": 0,
+        "current": 240,
+        "status": 2,
+        "image": 255,
+        "raw_y": 0,
+        "raw_x": 0,
+        "remaining": 0,
+        "delay": 127
+      },
+      "first_target": {
+        "t": 4,
+        "routine": "UpdateNPCSprite",
+        "cycles": 284366860,
+        "LY": 54,
+        "VB": 0,
+        "current": 176,
+        "status": 2,
+        "image": 188,
+        "raw_y": 76,
+        "raw_x": 64,
+        "remaining": 0,
+        "delay": 106
+      },
+      "first_target_elapsed_cycles": 45708,
+      "intervening_vblanks": [
+        {
+          "t": 3,
+          "routine": "VBlank",
+          "cycles": 284337268,
+          "LY": 144,
+          "VB": 0,
+          "current": 112,
+          "status": 1,
+          "image": 255,
+          "raw_y": 0,
+          "raw_x": 0,
+          "remaining": 0,
+          "delay": 0
+        }
+      ],
+      "coordinate_commit": 6,
+      "first_walk16": 6,
+      "first_raw_pixel": 8,
+      "first_switch": 8,
+      "native_first_switch": 7,
+      "native_first_walk16": 3,
+      "state_mismatches_first42": [
+        {
+          "t": 3,
+          "differences": {
+            "remaining": [
+              0,
+              16
+            ]
+          }
+        },
+        {
+          "t": 4,
+          "differences": {
+            "remaining": [
+              0,
+              16
+            ]
+          }
+        },
+        {
+          "t": 5,
+          "differences": {
+            "logical_y": [
+              15,
+              16
+            ],
+            "remaining": [
+              0,
+              16
+            ]
+          }
+        },
+        {
+          "t": 7,
+          "differences": {
+            "switch": [
+              false,
+              true
+            ]
+          }
+        }
+      ],
+      "rgb201": {
+        "repeat_exact": true,
+        "bad_frames": [
+          {
+            "t": 9,
+            "pixels": 92,
+            "bbox": [
+              64,
+              76,
+              79,
+              92
+            ]
+          },
+          {
+            "t": 20,
+            "pixels": 102,
+            "bbox": [
+              64,
+              77,
+              79,
+              93
+            ]
+          },
+          {
+            "t": 22,
+            "pixels": 95,
+            "bbox": [
+              64,
+              78,
+              79,
+              94
+            ]
+          },
+          {
+            "t": 24,
+            "pixels": 100,
+            "bbox": [
+              64,
+              79,
+              79,
+              95
+            ]
+          },
+          {
+            "t": 26,
+            "pixels": 102,
+            "bbox": [
+              64,
+              80,
+              79,
+              96
+            ]
+          },
+          {
+            "t": 28,
+            "pixels": 97,
+            "bbox": [
+              64,
+              81,
+              78,
+              97
+            ]
+          },
+          {
+            "t": 30,
+            "pixels": 97,
+            "bbox": [
+              64,
+              82,
+              79,
+              98
+            ]
+          },
+          {
+            "t": 32,
+            "pixels": 101,
+            "bbox": [
+              64,
+              83,
+              79,
+              99
+            ]
+          },
+          {
+            "t": 34,
+            "pixels": 93,
+            "bbox": [
+              64,
+              84,
+              79,
+              100
+            ]
+          },
+          {
+            "t": 36,
+            "pixels": 101,
+            "bbox": [
+              64,
+              85,
+              79,
+              101
+            ]
+          },
+          {
+            "t": 38,
+            "pixels": 97,
+            "bbox": [
+              64,
+              86,
+              79,
+              102
+            ]
+          },
+          {
+            "t": 40,
+            "pixels": 101,
+            "bbox": [
+              64,
+              87,
+              79,
+              103
+            ]
+          },
+          {
+            "t": 42,
+            "pixels": 101,
+            "bbox": [
+              64,
+              88,
+              79,
+              104
+            ]
+          },
+          {
+            "t": 44,
+            "pixels": 97,
+            "bbox": [
+              64,
+              89,
+              78,
+              105
+            ]
+          },
+          {
+            "t": 46,
+            "pixels": 99,
+            "bbox": [
+              64,
+              90,
+              79,
+              106
+            ]
+          },
+          {
+            "t": 48,
+            "pixels": 99,
+            "bbox": [
+              64,
+              91,
+              79,
+              107
+            ]
+          },
+          {
+            "t": 61,
+            "pixels": 2,
+            "bbox": [
+              64,
+              94,
+              65,
+              96
+            ]
+          },
+          {
+            "t": 63,
+            "pixels": 2,
+            "bbox": [
+              64,
+              94,
+              65,
+              96
+            ]
+          },
+          {
+            "t": 66,
+            "pixels": 7,
+            "bbox": [
+              64,
+              92,
+              68,
+              96
+            ]
+          },
+          {
+            "t": 67,
+            "pixels": 8,
+            "bbox": [
+              64,
+              91,
+              68,
+              96
+            ]
+          },
+          {
+            "t": 69,
+            "pixels": 9,
+            "bbox": [
+              64,
+              91,
+              68,
+              95
+            ]
+          },
+          {
+            "t": 70,
+            "pixels": 8,
+            "bbox": [
+              65,
+              90,
+              70,
+              94
+            ]
+          },
+          {
+            "t": 72,
+            "pixels": 12,
+            "bbox": [
+              64,
+              90,
+              70,
+              94
+            ]
+          },
+          {
+            "t": 73,
+            "pixels": 15,
+            "bbox": [
+              64,
+              89,
+              70,
+              94
+            ]
+          },
+          {
+            "t": 75,
+            "pixels": 15,
+            "bbox": [
+              64,
+              89,
+              70,
+              93
+            ]
+          },
+          {
+            "t": 76,
+            "pixels": 18,
+            "bbox": [
+              65,
+              88,
+              71,
+              94
+            ]
+          },
+          {
+            "t": 80,
+            "pixels": 14,
+            "bbox": [
+              64,
+              88,
+              71,
+              94
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "verification": "126 unique source hardware frames, each twice; all 252 PNGs exact original105 captures. Native603 unique frames twice, all repeated JSON/PNG exact.",
+  "scope": "Controlled original source map-load/view/player/NPC placements with actual Strength menu and Down held0..15 release16. Ordinary route reachability remains unproven; no ROM edits or frame shifts.",
+  "correction": "Both original2F staged boulders are source slot11/native index10. Earlier slot3 versus slot11 explanation is unsupported by these fixtures and must not drive a fix.",
+  "next_action": "Model resumable actor/script update work and OAM sampling, including CPU work crossing VBlank, without map-specific padding. Retest counter/coordinate/event boundaries as well as RGB."
+}

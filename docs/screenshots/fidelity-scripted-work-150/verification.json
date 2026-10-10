@@ -1,0 +1,16 @@
+{
+  "native_parent_head": "c62dc0bac290cbee169b212784ea9760b339ab87",
+  "png_count": 5616,
+  "all_images_and_states_identical_to_validated_original_148": true,
+  "all_recordings_repeat_exact": true,
+  "work_instances": 48,
+  "cpu_work_and_all_return_registers_exact": true,
+  "tilemap_surrounding_tiles_scroll_coordinates_exact": true,
+  "sprite_exception": "only player YAdjusted changed in one call per case; proved VBlank entry/RETI values; work VM excludes interrupt side effects",
+  "paths": 5665,
+  "objects": 210,
+  "archive_sha256": "c3278c5344f9f6cfee0e72f6b91b18b91f1fe7bff50245648aae1d32a4aadbe2",
+  "all_objects_verified": true,
+  "production_change": false,
+  "native_timing_repair_complete": false
+}

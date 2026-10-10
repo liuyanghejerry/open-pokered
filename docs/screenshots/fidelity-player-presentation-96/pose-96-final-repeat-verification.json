@@ -1,0 +1,146 @@
+[
+  {
+    "kind": "source",
+    "bike": false,
+    "direction": "left",
+    "mismatches": []
+  },
+  {
+    "kind": "source",
+    "bike": false,
+    "direction": "right",
+    "mismatches": []
+  },
+  {
+    "kind": "source",
+    "bike": false,
+    "direction": "up",
+    "mismatches": []
+  },
+  {
+    "kind": "source",
+    "bike": false,
+    "direction": "down",
+    "mismatches": []
+  },
+  {
+    "kind": "source",
+    "bike": true,
+    "direction": "left",
+    "mismatches": []
+  },
+  {
+    "kind": "source",
+    "bike": true,
+    "direction": "right",
+    "mismatches": []
+  },
+  {
+    "kind": "source",
+    "bike": true,
+    "direction": "up",
+    "mismatches": []
+  },
+  {
+    "kind": "source",
+    "bike": true,
+    "direction": "down",
+    "mismatches": []
+  },
+  {
+    "kind": "master-before",
+    "bike": false,
+    "direction": "left",
+    "mismatches": []
+  },
+  {
+    "kind": "master-before",
+    "bike": false,
+    "direction": "right",
+    "mismatches": []
+  },
+  {
+    "kind": "master-before",
+    "bike": false,
+    "direction": "up",
+    "mismatches": []
+  },
+  {
+    "kind": "master-before",
+    "bike": false,
+    "direction": "down",
+    "mismatches": []
+  },
+  {
+    "kind": "master-before",
+    "bike": true,
+    "direction": "left",
+    "mismatches": []
+  },
+  {
+    "kind": "master-before",
+    "bike": true,
+    "direction": "right",
+    "mismatches": []
+  },
+  {
+    "kind": "master-before",
+    "bike": true,
+    "direction": "up",
+    "mismatches": []
+  },
+  {
+    "kind": "master-before",
+    "bike": true,
+    "direction": "down",
+    "mismatches": []
+  },
+  {
+    "kind": "camera-after",
+    "bike": false,
+    "direction": "left",
+    "mismatches": []
+  },
+  {
+    "kind": "camera-after",
+    "bike": false,
+    "direction": "right",
+    "mismatches": []
+  },
+  {
+    "kind": "camera-after",
+    "bike": false,
+    "direction": "up",
+    "mismatches": []
+  },
+  {
+    "kind": "camera-after",
+    "bike": false,
+    "direction": "down",
+    "mismatches": []
+  },
+  {
+    "kind": "camera-after",
+    "bike": true,
+    "direction": "left",
+    "mismatches": []
+  },
+  {
+    "kind": "camera-after",
+    "bike": true,
+    "direction": "right",
+    "mismatches": []
+  },
+  {
+    "kind": "camera-after",
+    "bike": true,
+    "direction": "up",
+    "mismatches": []
+  },
+  {
+    "kind": "camera-after",
+    "bike": true,
+    "direction": "down",
+    "mismatches": []
+  }
+]

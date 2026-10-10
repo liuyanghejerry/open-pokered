@@ -1,0 +1,13 @@
+# PC warning input ordering
+
+CHANGE BOX previously opened YES/NO immediately. A used by the original warning's CONT instead selected NO in the remake; an earlier UP/A sequence could enter the box list before the original reached its first text acknowledgement. Original and old-native normal/early inputs each reproduced twice. Every post-cue native input advances exactly one hardware frame; captures do not advance the simulation.
+
+Warnings now finish their authored text before opening confirmation: CHANGE BOX uses CONT, PARA, DONE; RELEASE uses CONT, DONE; TOSS uses PROMPT. YES/NO clears NO_TEXT_DELAY after its labels, rather than when the warning starts. RELEASE's receipt also uses CONT. The selecting menu remains behind the warning and confirmation. English confirmation renders the final authored page; localized warning content is retained.
+
+`change-box-before.png` is actual master `31b1eda3112514d6bc803af559ec7f7c9e20374f`; `change-box-after.png` is the repaired source. Both are at +10 frames after choosing CHANGE BOX, using identical recorded original post-cue controls, the same seed and constructed canonical native PC fixture. The original/native prefixes have different clocks; no prefix or pixel equality with the ROM is claimed. Original inputs are preserved in full in the archive. Each native/master scenario has two byte-identical recording copies. The normal repaired menu enters at +47, matching the original YesNoChoice cue; the early sequence remains at its first warning. Original intermediate physical scrolling remains an audit gate.
+
+Native validation: core 2750, data 263, app 222 (33 ignored), agent 54, audio 99 pass. Tests preserve cancellation, release, tossing, box contents and save-request assertions, and add the recorded original controls plus menu-background pixels.
+
+GBA is **not passing**: two identical complete measurements of the exact a5 ELF exceed the unchanged original budget: oak dialogue draw average 3008 vs limit 3004.9; overworld draw peak 3121 vs limit 3113.1. All 31 values, source manifest and failures are retained. A subsequent cold-function experiment did not change the measurements and was reverted. This checkpoint is not merge-ready.
+
+`verification.json` records hashes, inputs, results and open gates. `evidence.zip` contains full original/native/master recordings, setup provenance, source snapshots, tools, native logs and GBA failures. Final exact-head CI and the existing broader draft gates are required before merging. The independently running fresh mainline uses frozen parent 1cb51db; it is not validation of this new change or proof of completion.

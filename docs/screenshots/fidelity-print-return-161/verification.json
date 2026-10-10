@@ -1,0 +1,40 @@
+{
+  "base": "31b1eda3112514d6bc803af559ec7f7c9e20374f",
+  "parent": "f4921b84c8ab035bc71c143c3eea25492476a02d",
+  "reference": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "base_binary_sha256": "7853ade620aa4faa4a28d91ff2aa9038734c8904916f9cc689735beee956e031",
+  "final_binary_sha256": "4d46b1f9084f349a000fe2de7d65abe28f127433cef43641d35c61f073ac7d1f",
+  "ROM_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+  "SRAM_sha256": "a2a4d4546d084e6540d678ff3826e58fc7872eecfeac990c30110008f61ddee2",
+  "helper_sha256": "b65fdddfa1501f2cda0872d2db15e14c76460e93051c6308b646c5a9856e327f",
+  "paired_frame": 120,
+  "identical_inputs": true,
+  "repeat_byte_exact": true,
+  "native": {
+    "first": 3,
+    "last": 90,
+    "return_to_choice": 93,
+    "choice_initialized": 94
+  },
+  "original": {
+    "first": 24,
+    "last": 111,
+    "return_to_choice": 114
+  },
+  "relative_last_wait": 3,
+  "relative_first_to_choice": 90,
+  "tests": "core2739;app210,27ignored;data262;GBA31 unchanged baseline,21 final fileSHAexact",
+  "archive_sha256": "b2ac57a04ec56aa23f4576e46aafa4876c1d6f86446339a18431de54db56b1b1",
+  "archive_files": 1246,
+  "images": {
+    "original-reference.png": "117239e7ae716240a5352b6396c6f0c448e2154db3107074365f4eb2d0f71a7b",
+    "before.png": "c93826a7490071986a4ee8491ff161a1afe7cecddd6c73d49296811eb6b406cd",
+    "after.png": "f65876a9236cdf5e1a768b9671774d4403935c38b2a18ec59f5b97998a7cd26e"
+  },
+  "scope": [
+    "Controlled original SRAM Continue then counter warp; not normal paid entry or finalhead mainline proof.",
+    "Original/native firstglyph24/3 differ: relative PrintText return only, no absolute startup/LCD parity claim.",
+    "Confirmed auto-return call sites migrated: Safari information question, Museum ticket questions at two entry paths and AMBER question, shared gifted-Pokemon nickname question. Other call sites and full text session boundary/init/close still pending.",
+    "Native choice command dispatched relative90; menu initialized next tick. Original YesNoChoice entry is relative90; actual LCD transfer not equated."
+  ]
+}

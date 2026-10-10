@@ -117,6 +117,13 @@ impl AudioOutput {
         }
     }
 
+    pub fn play_pokedex_rating(&self, tier: u8, resume_music: MusicId) {
+        self.try_resume();
+        if let Ok(mut mgr) = self.manager.lock() {
+            mgr.play_pokedex_rating(tier, resume_music);
+        }
+    }
+
     pub fn play_badge_bank_quirk(&self) {
         self.try_resume();
         if let Ok(mut mgr) = self.manager.lock() {

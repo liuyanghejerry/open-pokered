@@ -1,0 +1,162 @@
+[
+  {
+    "bike": false,
+    "direction": "left",
+    "raw": [],
+    "previous_native_diagnostic_only": [
+      2,
+      4,
+      6,
+      8,
+      10,
+      12,
+      14,
+      16,
+      19,
+      21,
+      23,
+      25,
+      27,
+      29,
+      31,
+      33
+    ],
+    "pretrigger_equal": true
+  },
+  {
+    "bike": false,
+    "direction": "right",
+    "raw": [],
+    "previous_native_diagnostic_only": [
+      4,
+      6,
+      8,
+      10,
+      12,
+      14,
+      16,
+      18,
+      21,
+      23,
+      25,
+      27,
+      29,
+      31,
+      33,
+      35
+    ],
+    "pretrigger_equal": true
+  },
+  {
+    "bike": false,
+    "direction": "up",
+    "raw": [],
+    "previous_native_diagnostic_only": [
+      4,
+      6,
+      8,
+      10,
+      12,
+      14,
+      16,
+      18,
+      21,
+      23,
+      25,
+      27,
+      29,
+      31,
+      33,
+      35
+    ],
+    "pretrigger_equal": true
+  },
+  {
+    "bike": false,
+    "direction": "down",
+    "raw": [],
+    "previous_native_diagnostic_only": [
+      4,
+      6,
+      8,
+      10,
+      12,
+      14,
+      16,
+      18,
+      21,
+      23,
+      25,
+      27,
+      29,
+      31,
+      33,
+      35
+    ],
+    "pretrigger_equal": true
+  },
+  {
+    "bike": true,
+    "direction": "left",
+    "raw": [],
+    "previous_native_diagnostic_only": [
+      3,
+      5,
+      7,
+      9,
+      12,
+      14,
+      16,
+      18
+    ],
+    "pretrigger_equal": true
+  },
+  {
+    "bike": true,
+    "direction": "right",
+    "raw": [],
+    "previous_native_diagnostic_only": [
+      5,
+      7,
+      9,
+      11,
+      14,
+      16,
+      18,
+      20
+    ],
+    "pretrigger_equal": true
+  },
+  {
+    "bike": true,
+    "direction": "up",
+    "raw": [],
+    "previous_native_diagnostic_only": [
+      5,
+      7,
+      9,
+      11,
+      14,
+      16,
+      18,
+      20
+    ],
+    "pretrigger_equal": true
+  },
+  {
+    "bike": true,
+    "direction": "down",
+    "raw": [],
+    "previous_native_diagnostic_only": [
+      5,
+      7,
+      9,
+      11,
+      14,
+      16,
+      18,
+      20
+    ],
+    "pretrigger_equal": true
+  }
+]

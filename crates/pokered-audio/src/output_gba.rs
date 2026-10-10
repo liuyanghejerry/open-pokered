@@ -65,6 +65,9 @@ impl AudioOutput {
     pub fn play_sfx(&self, id: SfxId) {
         self.manager.borrow_mut().play_sfx(id)
     }
+    pub fn play_pokedex_rating(&self, tier: u8, resume_music: MusicId) {
+        self.manager.borrow_mut().play_pokedex_rating(tier, resume_music)
+    }
     pub fn play_badge_bank_quirk(&self) {
         self.manager.borrow_mut().play_badge_bank_quirk()
     }
