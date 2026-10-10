@@ -43,19 +43,17 @@ game_scene PokemonFanClub {
   // ── Pet PIKACHU (npc 3) ─────────────────────────────────────────────────
   @storyline("talkPikachu") {
     @trigger(map = "PokemonFanClub", npc = 3)
-    @speaker("") {
-      @t("PIKACHU: Chu! Pikachu!", "皮卡丘：啾！皮卡丘！")
-    }
+    printFieldText(@t("PIKACHU: Chu! Pikachu!", "皮卡丘：啾！皮卡丘！"))
     playCry("PIKACHU")
+    finishFieldText()
   }
 
   // ── Pet SEEL (npc 4) ────────────────────────────────────────────────────
   @storyline("talkSeel") {
     @trigger(map = "PokemonFanClub", npc = 4)
-    @speaker("") {
-      @t("SEEL: Kyuoo!", "小海狮：啾呜！")
-    }
+    printFieldText(@t("SEEL: Kyuoo!", "小海狮：啾呜！"))
     playCry("SEEL")
+    finishFieldText()
   }
 
   // ── Chairman / Gentleman (npc 5) ────────────────────────────────────────

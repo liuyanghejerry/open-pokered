@@ -8,8 +8,9 @@ game_scene CeladonMansion1F {
   // ── MEOWTH (npc 1) — plays its cry on talk ──────────────────────────────
   @storyline("talkMeowth") {
     @trigger(map = "CeladonMansion1F", npc = 1)
-    @speaker("") { @t("MEOWTH: Meow!", "喵喵：喵！") }
+    printFieldText(@t("MEOWTH: Meow!", "喵喵：喵！"))
     playCry("MEOWTH")
+    finishFieldText()
   }
 
   // ── Granny (npc 2) — dialogue only ──────────────────────────────────────
@@ -23,15 +24,17 @@ game_scene CeladonMansion1F {
   // ── CLEFAIRY (npc 3) — plays its cry on talk ────────────────────────────
   @storyline("talkClefairy") {
     @trigger(map = "CeladonMansion1F", npc = 3)
-    @speaker("") { @t("CLEFAIRY: Pi pippippi!", "皮皮：Pi pippippi！") }
+    printFieldText(@t("CLEFAIRY: Pi pippippi!", "皮皮：Pi pippippi！"))
     playCry("CLEFAIRY")
+    finishFieldText()
   }
 
   // ── NIDORAN (npc 4) — plays its cry on talk ─────────────────────────────
   @storyline("talkNidoran") {
     @trigger(map = "CeladonMansion1F", npc = 4)
-    @speaker("") { @t("NIDORAN: Kya kyaoo!", "尼多兰：Kya kyaoo！") }
+    printFieldText(@t("NIDORAN: Kya kyaoo!", "尼多兰：Kya kyaoo！"))
     playCry("NIDORAN_F")
+    finishFieldText()
   }
 
   // ── Manager's Suite sign (sign 1) ───────────────────────────────────────

@@ -102,10 +102,9 @@ game_scene SSAnneB1FRooms {
   // ── Machoke (npc 8) — text then play its cry ────────────────────────────
   @storyline("talkMachoke") {
     @trigger(map = "SSAnneB1FRooms", npc = 8)
-    @speaker("") {
-      @t("MACHOKE: Gwoh! Goggoh!", "豪力：吼！吼吼！")
-    }
+    printFieldText(@t("MACHOKE: Gwoh! Goggoh!", "豪力：吼！吼吼！"))
     playCry("MACHOKE")
+    finishFieldText()
   }
 
   // ── PokeBall ground item (npc 9) — ETHER ────────────────────────────────

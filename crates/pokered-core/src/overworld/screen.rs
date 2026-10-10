@@ -666,7 +666,7 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     pub npc_states: Vec<crate::overworld::npc_movement::NpcRuntimeState>,
     pub npc_pokemon_data: Vec<PokemonNpcData>,
     pub pending_dialogue: Option<BedroomDialogue>,
-    /// Last completed script text, retained only for the following choice.
+    /// Last completed script text, retained for its inner caller or choice.
     pub last_script_dialogue: Option<BedroomDialogue>,
     /// A returned inner PrintText keeps its window until its caller ends it.
     pub inner_field_text_open: bool,
@@ -1473,7 +1473,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             Some(super::script_bridge::ScriptEffect::GivePokemon { flow: Some(flow), .. }) => Some(flow.child.as_ref()),
             other => other,
         };
-        !(self.inner_field_text_open && self.pending_dialogue.is_none())
+        (!(self.inner_field_text_open && self.pending_dialogue.is_none())
+            || matches!(effect, Some(super::script_bridge::ScriptEffect::FinishFieldText { .. }
+                | super::script_bridge::ScriptEffect::PrintFieldParagraph { phase: super::script_bridge::FieldParagraphPhase::ProtectedDelay { .. } | super::script_bridge::FieldParagraphPhase::WaitForButton, .. })))
             && self.pending_choice.is_none()
             && !self.active_script_effect.as_ref().is_some_and(|effect| effect.is_choice())
             && !matches!(effect, Some(super::script_bridge::ScriptEffect::ShowItemDialogue { .. }))

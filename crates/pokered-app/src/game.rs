@@ -12428,6 +12428,202 @@ mod link_stats_cry_fidelity_tests {
     }
 
     #[test]
+    #[ignore = "actual PCM NPC dialogue/cry ordering evidence"]
+    fn capture_npc_cry_order_164() {
+        use pokered_core::overworld::Direction;
+        run_link_save_fixture(|| {
+            let dir=std::path::PathBuf::from(std::env::var("FIDELITY_CRY_CAPTURE").unwrap());
+            std::fs::create_dir_all(&dir).unwrap();
+            let mut g=fixture(Species::Bulbasaur,6,Direction::Up);
+            g.overworld.warp_to_map(MapId::PokemonFanClub,6,5);
+            let idle=InputState::new();for _ in 0..120 {g.update(&idle);}
+            let mut input=InputState::new();let mut rows=Vec::new();
+            for t in 0..360 {
+                input.begin_frame();for (button,on) in [(GbButton::Up,t<20),(GbButton::A,(20..40).contains(&t)||(200..202).contains(&t)),(GbButton::Down,(220..240).contains(&t))] {
+                    if on {input.press(button);} else {input.release(button);}
+                }
+                g.update(&input);
+                let mut fb=FrameBuffer::new(RenderConfig::new(160,144),Rgba::WHITE);g.draw(&mut fb);
+                fb.save_png(&dir.join(format!("frame-{t:04}.png"))).unwrap();
+                rows.push(serde_json::json!({"t":t,"input_bits":input.raw_current(),"audio_channels":channels(&g),"sfx_playing":g.audio.as_ref().unwrap().is_sfx_playing(),"overworld":pokered_core::snapshot::OverworldSnapshot::capture(&g.overworld)}));
+            }
+            std::fs::write(dir.join("frames.json"),serde_json::to_string_pretty(&rows).unwrap()).unwrap();
+        });
+    }
+
+    #[test]
+    #[ignore = "actual PCM NPC dialogue/cry ordering evidence"]
+    fn capture_pet_text_session_165() {
+        use pokered_core::overworld::Direction;
+        run_link_save_fixture(|| {
+            let dir=std::path::PathBuf::from(std::env::var("FIDELITY_CRY_CAPTURE").unwrap());
+            std::fs::create_dir_all(&dir).unwrap();
+            let mut g=fixture(Species::Bulbasaur,6,Direction::Up);
+            let machop=std::env::var("FIDELITY_PET_CASE").as_deref()==Ok("machop");
+            let (map,x,y)=if machop {(MapId::VermilionCity,29,10)} else {(MapId::PokemonFanClub,6,5)};
+            g.state.config.language=pokered_core::game_state::Lang::En;
+            g.overworld.warp_to_map(map,x,y);
+            let idle=InputState::new();for _ in 0..120 {g.update(&idle);}
+            for n in &mut g.overworld.npc_states {n.movement_type=pokered_core::overworld::NpcMovementType::Stationary;n.x=n.home_x;n.y=n.home_y;n.walk_counter=0;}
+            let mut input=InputState::new();let mut rows=Vec::new();
+            for t in 0..720 {
+                input.begin_frame();for (button,on) in [(GbButton::Up,t<20),(GbButton::A,(20..40).contains(&t)||(400..402).contains(&t)||(600..602).contains(&t)),(GbButton::Down,(450..452).contains(&t))] {
+                    if on {input.press(button);} else {input.release(button);}
+                }
+                g.update(&input);
+                let mut fb=FrameBuffer::new(RenderConfig::new(160,144),Rgba::WHITE);g.draw(&mut fb);
+                fb.save_png(&dir.join(format!("frame-{t:04}.png"))).unwrap();
+                rows.push(serde_json::json!({"t":t,"input_bits":input.raw_current(),"audio_channels":channels(&g),"sfx_playing":g.audio.as_ref().unwrap().is_sfx_playing(),"overworld":pokered_core::snapshot::OverworldSnapshot::capture(&g.overworld)}));
+            }
+            std::fs::write(dir.join("frames.json"),serde_json::to_string_pretty(&rows).unwrap()).unwrap();
+        });
+    }
+
+    #[test]
+    fn all_pet_cries_follow_printing_block_input_and_keep_the_outer_prompt() {
+        use pokered_core::overworld::Direction;
+        use pokered_core::snapshot::OverworldSnapshot;
+        run_link_save_fixture(|| {
+            let cases = [
+                (MapId::SSAnneB1FRooms, 8, "MACHOKE", ""),
+                (MapId::MrFujisHouse, 3, "PSYDUCK", ""),
+                (MapId::MrFujisHouse, 4, "NIDORINO", ""),
+                (MapId::VermilionPidgeyHouse, 2, "PIDGEY", ""),
+                (MapId::CeladonCity, 7, "POLIWRATH", ""),
+                (MapId::VermilionCity, 5, "MACHOP", ""),
+                (MapId::PokemonFanClub, 3, "PIKACHU", ""),
+                (MapId::PokemonFanClub, 4, "SEEL", ""),
+                (MapId::PewterNidoranHouse, 1, "NIDORAN_M", ""),
+                (MapId::SaffronPidgeyHouse, 2, "PIDGEY", ""),
+                (MapId::CopycatsHouse1F, 3, "CHANSEY", ""),
+                (MapId::Route16FlyHouse, 2, "FEAROW", ""),
+                (MapId::LavenderCuboneHouse, 1, "CUBONE", ""),
+                (MapId::SSAnne1FRooms, 8, "WIGGLYTUFF", ""),
+                (MapId::ViridianNicknameHouse, 3, "SPEAROW", ""),
+                (MapId::SaffronCity, 12, "PIDGEOT", "SAFFRON_CITY_OBJ_12"),
+                (MapId::CeladonMansion1F, 1, "MEOWTH", ""),
+                (MapId::CeladonMansion1F, 3, "CLEFAIRY", ""),
+                (MapId::CeladonMansion1F, 4, "NIDORAN_F", ""),
+            ];
+            for (map,npc_id,species,toggle) in cases {
+                let mut g=fixture(Species::Bulbasaur,1,Direction::Up);
+                g.state.config.language=pokered_core::game_state::Lang::En;
+                g.overworld.warp_to_map(map,1,1);
+                let idle=InputState::new();for _ in 0..120 {g.update(&idle);}
+                let npc=g.overworld.npc_states.iter().find(|n|n.text_id==npc_id).unwrap_or_else(||panic!("{map:?}/{species}: NPC not loaded, current={:?}",g.overworld.state.current_map)).clone();
+                let positions=[(npc.home_x,npc.home_y.saturating_add(1),Direction::Up,GbButton::Up),
+                    (npc.home_x.saturating_sub(1),npc.home_y,Direction::Right,GbButton::Right),
+                    (npc.home_x.saturating_add(1),npc.home_y,Direction::Left,GbButton::Left),
+                    (npc.home_x,npc.home_y.saturating_sub(1),Direction::Down,GbButton::Down)];
+                let (x,y,facing,key)=positions.into_iter().find(|(x,y,_,_)| {
+                    pokered_core::overworld::update::is_script_walkable_tile(g.overworld.map_data.as_ref().unwrap(),*x,*y)
+                        && !g.overworld.npc_states.iter().any(|n|n.home_x==*x && n.home_y==*y)
+                }).expect("a valid adjacent standing tile");
+                g.overworld.warp_to_map(map,x as u8,y as u8);
+                if !toggle.is_empty() {g.overworld.set_flag_live(&format!("__OBJ_HIDDEN_{toggle}"),false);}
+                let idle=InputState::new();for _ in 0..120 {g.update(&idle);}
+                for n in &mut g.overworld.npc_states {n.movement_type=pokered_core::overworld::NpcMovementType::Stationary;n.x=n.home_x;n.y=n.home_y;n.walk_counter=0;if n.text_id==npc_id {n.visible=true;}}
+                g.overworld.state.player.facing=facing;
+                let mut input=InputState::new();let mut started=None;let mut ended=None;
+                for t in 0..2400 {
+                    input.begin_frame();
+                    for (button,on) in [(key,t<20),(GbButton::A,(20..40).contains(&t)),(GbButton::B,started.is_some_and(|begin|t==begin+1)),(GbButton::Down,started.is_some_and(|begin|t==begin+3))] {
+                        if on {input.press(button);} else {input.release(button);}
+                    }
+                    g.update(&input);
+                    let snap=OverworldSnapshot::capture(&g.overworld);
+                    let playing=snap.active_script_effect.as_ref().is_some_and(|e|matches!(e,pokered_core::overworld::script_bridge::ScriptEffect::PlayCry{started:true,..}));
+                    if playing {
+                        if started.is_none() {started=Some(t);let json=serde_json::to_string(&snap).unwrap();let restored:OverworldSnapshot=serde_json::from_str(&json).unwrap();restored.restore_into(&mut g.overworld);}
+                        let d=g.overworld.displayed_field_dialogue().expect("complete pet text remains throughout cry");
+                        assert!(d.waiting_for_input() && !d.has_more_pages(),"{map:?}/{species}");
+                        assert!(!g.overworld.dialogue_needs_button(),"cry is not an A/B prompt");
+                        assert_eq!((g.overworld.state.player.x,g.overworld.state.player.y),(x,y));
+                    } else if started.is_some() {ended=Some(t);break;}
+                }
+                let (begin,end)=(started.unwrap_or_else(||panic!("{map:?}/{species}: no cry, position={:?}, target={:?}, effect={:?}, dialogue={:?}",g.overworld.state.player,npc,g.overworld.active_script_effect_label(),g.overworld.pending_dialogue)),ended.expect("cry finishes"));
+                let expected=AudioOutput::new_pcm();play_species_cry(&expected,Species::from_scene_name(species).unwrap());
+                let mut duration=0;while expected.is_sfx_playing() && duration<1000 {expected.update_frame();duration+=1;}
+                assert_eq!(end-begin,duration,"{map:?}/{species}: full uninterrupted PCM cry length");
+                for _ in 0..30 {g.update(&idle);}
+                for _ in 0..1000 {
+                    if g.overworld.displayed_field_dialogue().is_some_and(|d|d.waiting_for_input() && !d.has_more_pages()) {break;}
+                    g.update(&idle);
+                }
+                assert!(g.overworld.displayed_field_dialogue().is_some(),"outer dialogue must still wait after the sound");
+                assert!(g.overworld.dialogue_needs_button());
+                if map==MapId::VermilionCity {
+                    let (a,b)=g.overworld.displayed_field_dialogue().unwrap().get_display_text().unwrap();
+                    assert!(format!("{a} {b}").contains("Guoh"), "leading PARA must wait before narration");
+                    // A/B during the cry was released before the paragraph's
+                    // Joypad poll, so it cannot acknowledge this wait.
+                    assert_eq!(g.overworld.active_script_effect_label().as_deref(),Some("PrintFieldParagraph"));
+                    for _ in 0..40 {g.update(&idle);}
+                    assert_eq!(g.overworld.active_script_effect_label().as_deref(),Some("PrintFieldParagraph"));
+                    let ack=button(GbButton::B);g.update(&ack);
+                    let snap=OverworldSnapshot::capture(&g.overworld);
+                    assert!(matches!(snap.active_script_effect,Some(pokered_core::overworld::script_bridge::ScriptEffect::PrintFieldParagraph {phase:pokered_core::overworld::script_bridge::FieldParagraphPhase::BlankDelay {remaining:20},..})));
+                    let json=serde_json::to_string(&snap).unwrap();
+                    serde_json::from_str::<OverworldSnapshot>(&json).unwrap().restore_into(&mut g.overworld);
+                    for frame in 1..=19 {
+                        g.update(&idle);
+                        assert_eq!(g.overworld.displayed_field_dialogue().unwrap().get_display_text(),Some((String::new(),String::new())),"blank frame {frame}");
+                        assert!(!g.overworld.dialogue_needs_button());
+                        assert!(OverworldSnapshot::capture(&g.overworld).field_text_restore.is_none(),"paragraph must not close text/sprites");
+                    }
+                    g.update(&idle);
+                    assert_eq!(g.overworld.active_script_effect_label().as_deref(),Some("PrintFieldParagraph"));
+                    assert_eq!(g.overworld.displayed_field_dialogue().unwrap().get_display_text().unwrap().0,"A");
+                    for _ in 0..1000 {
+                        g.update(&idle);
+                        if g.overworld.active_script_effect_label().as_deref()==Some("FinishFieldText") {break;}
+                    }
+                    let (a,b)=g.overworld.displayed_field_dialogue().unwrap().get_display_text().unwrap();
+                    assert!(format!("{a} {b}").contains("stomping"));
+                    assert!(g.overworld.dialogue_needs_button());
+                }
+                let mut a=button(GbButton::A);for _ in 0..4 {g.update(&a);a.begin_frame();assert!(g.overworld.displayed_field_dialogue().is_some(),"A hold must keep the outer window open");}
+                for _ in 0..30 {g.update(&idle);}
+                assert!(g.overworld.displayed_field_dialogue().is_none(),"{map:?}/{species}: closes after release");
+            }
+        });
+    }
+
+    #[test]
+    fn a_button_first_held_during_the_cry_is_polled_after_sound_returns() {
+        use pokered_core::overworld::Direction;
+        use pokered_core::snapshot::OverworldSnapshot;
+        run_link_save_fixture(|| {
+            for held in [GbButton::A,GbButton::B] {
+                let mut g=fixture(Species::Bulbasaur,6,Direction::Up);
+                g.overworld.warp_to_map(MapId::PokemonFanClub,6,5);
+                let idle=InputState::new();for _ in 0..120 {g.update(&idle);}
+                let mut input=InputState::new();let mut cry_started=None;let mut returned=None;
+                for t in 0..2400 {
+                    input.begin_frame();for (key,on) in [(GbButton::Up,t<20),(GbButton::A,(20..40).contains(&t)|| (held==GbButton::A && cry_started.is_some_and(|c|t>c))),(GbButton::B,held==GbButton::B && cry_started.is_some_and(|c|t>c))] {if on {input.press(key);} else {input.release(key);}}
+                    g.update(&input);
+                    let snapshot=OverworldSnapshot::capture(&g.overworld);
+                    if snapshot.active_script_effect.as_ref().is_some_and(|e|matches!(e,pokered_core::overworld::script_bridge::ScriptEffect::PlayCry {started:true,..})) {
+                        cry_started.get_or_insert(t);assert!(g.overworld.displayed_field_dialogue().is_some());
+                    } else if cry_started.is_some() {returned=Some(t);break;}
+                }
+                assert!(returned.is_some(),"sound must return while the button is held");
+                // Joypad did not run during WaitForSoundToFinish. Its first
+                // subsequent poll sees the newly held key against hJoyLast.
+                input.begin_frame();g.update(&input);
+                if held==GbButton::A {
+                    assert!(g.overworld.displayed_field_dialogue().is_some(),"HoldTextDisplayOpen waits for A release");
+                    let json=serde_json::to_string(&OverworldSnapshot::capture(&g.overworld)).unwrap();
+                    serde_json::from_str::<OverworldSnapshot>(&json).unwrap().restore_into(&mut g.overworld);
+                    for _ in 0..8 {input.begin_frame();g.update(&input);assert!(g.overworld.displayed_field_dialogue().is_some());}
+                    for _ in 0..20 {g.update(&idle);}
+                }
+                assert!(g.overworld.displayed_field_dialogue().is_none(),"held B closes immediately; A closes on release without a second press");
+            }
+        });
+    }
+
+    #[test]
     fn museum_choice_retains_final_question_page_with_original_early_money_box() {
         use pokered_core::overworld::Direction;
         run_link_save_fixture(|| {

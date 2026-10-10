@@ -74,10 +74,9 @@ game_scene CeladonCity {
   // ── Poliwrath (npc 7) — plays its cry ──────────────────────────────────
   @storyline("talkPoliwrath") {
     @trigger(map = "CeladonCity", npc = 7)
-    @speaker("") {
-      @t("POLIWRATH: Ribi ribit!", "快泳蛙：呱呱呱呱！")
-    }
+    printFieldText(@t("POLIWRATH: Ribi ribit!", "快泳蛙：呱呱呱呱！"))
     playCry("POLIWRATH")
+    finishFieldText()
   }
 
   // ── Rocket 1 (npc 8) ───────────────────────────────────────────────────

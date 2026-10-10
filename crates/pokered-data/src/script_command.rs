@@ -8,6 +8,10 @@ use serde_json::{json, Value};
 pub enum PokemonScriptCommand {
     /// Inner PrintText with DONE: return after printing, without an outer A/B wait.
     PrintFieldText { text: String },
+    /// Outer AfterDisplayingTextID wait on the retained inner text window.
+    FinishFieldText,
+    /// Leading PARA: wait A/B, clear the retained text interior, delay 20 frames.
+    PrintFieldParagraph { text: String },
     ShowItemDialogue { text: String, sound_id: Option<String> },
     OldManTutorial,
     TradePokemon {
@@ -74,6 +78,8 @@ impl PokemonScriptCommand {
     pub const fn name(&self) -> &'static str {
         match self {
             Self::PrintFieldText { .. } => "printFieldText",
+            Self::FinishFieldText => "finishFieldText",
+            Self::PrintFieldParagraph { .. } => "printFieldParagraph",
             Self::ShowItemDialogue { .. } => "showItemDialogue",
             Self::OldManTutorial => "oldManTutorial",
             Self::TradePokemon { .. } => "tradePokemon",
@@ -110,7 +116,7 @@ impl PokemonScriptCommand {
     pub fn into_script_command(self) -> ScriptCommand {
         let name = self.name().to_string();
         let args = match self {
-            Self::PrintFieldText { text } => vec![json!(text)],
+            Self::PrintFieldText { text } | Self::PrintFieldParagraph { text } => vec![json!(text)],
             Self::ShowItemDialogue { text, sound_id } => {
                 let mut args = vec![json!(text)];
                 if let Some(sound) = sound_id { args.push(json!(sound)); }
@@ -143,7 +149,8 @@ impl PokemonScriptCommand {
             Self::GiveCoins { amount } | Self::TakeCoins { amount } => vec![json!(amount)],
             Self::DepositDaycare { index } => vec![json!(index)],
             Self::ReplaceTileBlock { x, y, block_id } => vec![json!(x), json!(y), json!(block_id)],
-            Self::OldManTutorial
+            Self::FinishFieldText
+            | Self::OldManTutorial
             | Self::AnimateHealingMachine
             | Self::ChoosePartyPokemon
             | Self::ShowDiploma
@@ -195,6 +202,8 @@ impl PokemonScriptCommand {
         };
         Ok(match name {
             "printFieldText" => Self::PrintFieldText { text: string(0)? },
+            "finishFieldText" => Self::FinishFieldText,
+            "printFieldParagraph" => Self::PrintFieldParagraph { text: string(0)? },
             "waitMusic" => Self::WaitMusic,
             "vendingDelivery" => Self::VendingDelivery,
             "showMoneyBox" => Self::ShowMoneyBox { amount: args.first().and_then(Value::as_i64).ok_or_else(|| format!("{name}: amount must be an integer"))? },

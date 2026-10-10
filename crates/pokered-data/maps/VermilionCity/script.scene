@@ -103,13 +103,10 @@ game_scene VermilionCity {
   // ── Machop (npc 5) — plays its cry, then narrates ──────────────────────
   @storyline("talkMachop") {
     @trigger(map = "VermilionCity", npc = 5)
-    @speaker("") {
-      @t("MACHOP: Guoh! Gogogoh!", "腕力：咕！咯咯咯！")
-    }
+    printFieldText(@t("MACHOP: Guoh! Gogogoh!", "腕力：咕！咯咯咯！"))
     playCry("MACHOP")
-    @speaker("") {
-      @t("A MACHOP is stomping the\nland flat.", "一只腕力正在把地面踩得平平\n的。")
-    }
+    printFieldParagraph(@t("A MACHOP is stomping the\nland flat.", "一只腕力正在把地面踩得平平\n的。"))
+    finishFieldText()
   }
 
   // ── Sailor in the harbor (npc 6) ───────────────────────────────────────

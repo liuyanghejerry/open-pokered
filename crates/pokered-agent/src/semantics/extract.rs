@@ -196,6 +196,8 @@ const NO_STATE_COMMANDS: &[&str] = &[
     "showText",
     // Inner text return/retention changes presentation, not event-graph state.
     "printFieldText",
+    "finishFieldText",
+    "printFieldParagraph",
     // The found-item text and jingle only present a completed pickup;
     // giveItem / setFlag / hideObject carry its inventory/event effects.
     "showItemDialogue",

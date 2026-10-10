@@ -1,0 +1,208 @@
+[
+  {
+    "map": "SSAnneB1FRooms",
+    "species": "MACHOKE",
+    "handler": "SSAnneB1FRoomsMachokeText",
+    "far_label": "_SSAnneB1FRoomsMachokeText",
+    "terminator": "text_end",
+    "source_block": "SSAnneB1FRoomsMachokeText:\n\ttext_far _SSAnneB1FRoomsMachokeText\n\ttext_asm\n\tld a, MACHOKE\n\tcall PlayCry\n\tjp TextScriptEnd\n\n",
+    "text_source": "\ttext \"MACHOKE: Gwoh!\"\n\tline \"Goggoh!@\"\n\ttext_end\n",
+    "eligible_inner_return": true,
+    "after_cry": "\n\tjp TextScriptEnd"
+  },
+  {
+    "map": "MrFujisHouse",
+    "species": "PSYDUCK",
+    "handler": "MrFujisHousePsyduckText",
+    "far_label": "_MrFujisHousePsyduckText",
+    "terminator": "text_end",
+    "source_block": "MrFujisHousePsyduckText:\n\ttext_far _MrFujisHousePsyduckText\n\ttext_asm\n\tld a, PSYDUCK\n\tcall PlayCry\n\tjp TextScriptEnd\n\n",
+    "text_source": "\ttext \"PSYDUCK: Gwappa!@\"\n\ttext_end\n",
+    "eligible_inner_return": true,
+    "after_cry": "\n\tjp TextScriptEnd"
+  },
+  {
+    "map": "MrFujisHouse",
+    "species": "NIDORINO",
+    "handler": "MrFujisHouseNidorinoText",
+    "far_label": "_MrFujisHouseNidorinoText",
+    "terminator": "text_end",
+    "source_block": "MrFujisHouseNidorinoText:\n\ttext_far _MrFujisHouseNidorinoText\n\ttext_asm\n\tld a, NIDORINO\n\tcall PlayCry\n\tjp TextScriptEnd\n\n",
+    "text_source": "\ttext \"NIDORINO: Gaoo!@\"\n\ttext_end\n",
+    "eligible_inner_return": true,
+    "after_cry": "\n\tjp TextScriptEnd"
+  },
+  {
+    "map": "VermilionPidgeyHouse",
+    "species": "PIDGEY",
+    "handler": "VermilionPidgeyHousePidgeyText",
+    "far_label": "_VermilionPidgeyHousePidgeyText",
+    "terminator": "text_end",
+    "source_block": "VermilionPidgeyHousePidgeyText:\n\ttext_far _VermilionPidgeyHousePidgeyText\n\ttext_asm\n\tld a, PIDGEY\n\tcall PlayCry\n\tcall WaitForSoundToFinish\n\tjp TextScriptEnd\n\n",
+    "text_source": "\ttext \"PIDGEY: Kurukkoo!@\"\n\ttext_end\n",
+    "eligible_inner_return": true,
+    "after_cry": "\n\tcall WaitForSoundToFinish\n\tjp TextScriptEnd"
+  },
+  {
+    "map": "CeladonCity",
+    "species": "POLIWRATH",
+    "handler": "CeladonCityPoliwrathText",
+    "far_label": "_CeladonCityPoliwrathText",
+    "terminator": "text_end",
+    "source_block": "CeladonCityPoliwrathText:\n\ttext_far _CeladonCityPoliwrathText\n\ttext_asm\n\tld a, POLIWRATH\n\tcall PlayCry\n\tjp TextScriptEnd\n\n",
+    "text_source": "\ttext \"POLIWRATH: Ribi\"\n\tline \"ribit!@\"\n\ttext_end\n",
+    "eligible_inner_return": true,
+    "after_cry": "\n\tjp TextScriptEnd"
+  },
+  {
+    "map": "VermilionCity",
+    "species": "MACHOP",
+    "handler": "VermilionCityMachopText",
+    "far_label": "_VermilionCityMachopText",
+    "terminator": "text_end",
+    "source_block": "VermilionCityMachopText:\n\ttext_far _VermilionCityMachopText\n\ttext_asm\n\tld a, MACHOP\n\tcall PlayCry\n\tcall WaitForSoundToFinish\n\tld hl, .StompingTheLandFlatText\n\tret\n\n.StompingTheLandFlatText:\n\ttext_far _VermilionCityMachopStompingTheLandFlatText\n\ttext_end\n\n",
+    "text_source": "\ttext \"MACHOP: Guoh!\"\n\tline \"Gogogoh!@\"\n\ttext_end\n",
+    "eligible_inner_return": true,
+    "after_cry": "\n\tcall WaitForSoundToFinish\n\tld hl, .StompingTheLandFlatText\n\tret"
+  },
+  {
+    "map": "PokemonFanClub",
+    "species": "PIKACHU",
+    "handler": "PokemonFanClubPikachuText",
+    "far_label": "_PokemonFanClubPikachuText",
+    "terminator": "done",
+    "source_block": "PokemonFanClubPikachuText:\n\ttext_asm\n\tld hl, .Text\n\tcall PrintText\n\tld a, PIKACHU\n\tcall PlayCry\n\tcall WaitForSoundToFinish\n\tjp TextScriptEnd\n\n.Text\n\ttext_far _PokemonFanClubPikachuText\n\ttext_end\n\n",
+    "text_source": "\ttext \"PIKACHU: Chu!\"\n\tline \"Pikachu!\"\n\tdone\n",
+    "eligible_inner_return": true,
+    "after_cry": "\n\tcall WaitForSoundToFinish\n\tjp TextScriptEnd"
+  },
+  {
+    "map": "PokemonFanClub",
+    "species": "SEEL",
+    "handler": "PokemonFanClubSeelText",
+    "far_label": "_PokemonFanClubSeelText",
+    "terminator": "done",
+    "source_block": "PokemonFanClubSeelText:\n\ttext_asm\n\tld hl, .Text\n\tcall PrintText\n\tld a, SEEL\n\tcall PlayCry\n\tcall WaitForSoundToFinish\n\tjp TextScriptEnd\n\n.Text:\n\ttext_far _PokemonFanClubSeelText\n\ttext_end\n\n",
+    "text_source": "\ttext \"SEEL: Kyuoo!\"\n\tdone\n",
+    "eligible_inner_return": true,
+    "after_cry": "\n\tcall WaitForSoundToFinish\n\tjp TextScriptEnd"
+  },
+  {
+    "map": "SaffronPidgeyHouse",
+    "species": "PIDGEY",
+    "handler": "SaffronPidgeyHousePidgeyText",
+    "far_label": "_SaffronPidgeyHousePidgeyText",
+    "terminator": "text_end",
+    "source_block": "SaffronPidgeyHousePidgeyText:\n\ttext_far _SaffronPidgeyHousePidgeyText\n\ttext_asm\n\tld a, PIDGEY\n\tcall PlayCry\n\tjp TextScriptEnd\n\n",
+    "text_source": "\ttext \"PIDGEY: Kurukkoo!@\"\n\ttext_end\n",
+    "eligible_inner_return": true,
+    "after_cry": "\n\tjp TextScriptEnd"
+  },
+  {
+    "map": "Route16FlyHouse",
+    "species": "FEAROW",
+    "handler": "Route16FlyHouseFearowText",
+    "far_label": "_Route16FlyHouseFearowText",
+    "terminator": "done",
+    "source_block": "Route16FlyHouseFearowText:\n\ttext_asm\n\tld hl, .Text\n\tcall PrintText\n\tld a, FEAROW\n\tcall PlayCry\n\tcall WaitForSoundToFinish\n\tjp TextScriptEnd\n\n.Text:\n\ttext_far _Route16FlyHouseFearowText\n\ttext_end\n",
+    "text_source": "\ttext \"FEAROW: Kyueen!\"\n\tdone\n",
+    "eligible_inner_return": true,
+    "after_cry": "\n\tcall WaitForSoundToFinish\n\tjp TextScriptEnd"
+  },
+  {
+    "map": "SSAnne1FRooms",
+    "species": "WIGGLYTUFF",
+    "handler": "SSAnne1FRoomsWigglytuffText",
+    "far_label": "_SSAnne1FRoomsWigglytuffText",
+    "terminator": "text_end",
+    "source_block": "SSAnne1FRoomsWigglytuffText:\n\ttext_far _SSAnne1FRoomsWigglytuffText\n\ttext_asm\n\tld a, WIGGLYTUFF\n\tcall PlayCry\n\tjp TextScriptEnd\n\n",
+    "text_source": "\ttext \"WIGGLYTUFF: Puup\"\n\tline \"pupuu!@\"\n\ttext_end\n",
+    "eligible_inner_return": true,
+    "after_cry": "\n\tjp TextScriptEnd"
+  },
+  {
+    "map": "ViridianNicknameHouse",
+    "species": "SPEAROW",
+    "handler": "ViridianNicknameHouseSpearowText",
+    "far_label": "_ViridianNicknameHouseSpearowText",
+    "terminator": "done",
+    "source_block": "ViridianNicknameHouseSpearowText:\n\ttext_asm\n\tld hl, .Text\n\tcall PrintText\n\tld a, SPEAROW\n\tcall PlayCry\n\tcall WaitForSoundToFinish\n\tjp TextScriptEnd\n\n.Text:\n\ttext_far _ViridianNicknameHouseSpearowText\n\ttext_end\n\n",
+    "text_source": "\ttext \"SPEARY: Tetweet!\"\n\tdone\n",
+    "eligible_inner_return": true,
+    "after_cry": "\n\tcall WaitForSoundToFinish\n\tjp TextScriptEnd"
+  },
+  {
+    "map": "SaffronCity",
+    "species": "PIDGEOT",
+    "handler": "SaffronCityPidgeotText",
+    "far_label": "_SaffronCityPidgeotText",
+    "terminator": "text_end",
+    "source_block": "SaffronCityPidgeotText:\n\ttext_far _SaffronCityPidgeotText\n\tsound_cry_pidgeot\n\ttext_end\n\n",
+    "text_source": "\ttext \"PIDGEOT: Bi bibii!@\"\n\ttext_end\n",
+    "eligible_inner_return": true,
+    "after_cry": "\n\ttext_end"
+  },
+  {
+    "map": "CeladonMansion1F",
+    "species": "MEOWTH",
+    "handler": "CeladonMansion1FMeowthText",
+    "far_label": "_CeladonMansion1FMeowthText",
+    "terminator": "text_end",
+    "source_block": "CeladonMansion1FMeowthText:\n\ttext_far _CeladonMansion1FMeowthText\n\ttext_asm\n\tld a, MEOWTH\n\tjp CeladonMansion1_PlayCryScript\n\n",
+    "text_source": "\ttext \"MEOWTH: Meow!@\"\n\ttext_end\n",
+    "eligible_inner_return": true,
+    "after_cry": ""
+  },
+  {
+    "map": "CeladonMansion1F",
+    "species": "CLEFAIRY",
+    "handler": "CeladonMansion1FClefairyText",
+    "far_label": "_CeladonMansion1FClefairyText",
+    "terminator": "text_end",
+    "source_block": "CeladonMansion1FClefairyText:\n\ttext_far _CeladonMansion1FClefairyText\n\ttext_asm\n\tld a, CLEFAIRY\n\tjp CeladonMansion1_PlayCryScript\n\n",
+    "text_source": "\ttext \"CLEFAIRY: Pi\"\n\tline \"pippippi!@\"\n\ttext_end\n",
+    "eligible_inner_return": true,
+    "after_cry": ""
+  },
+  {
+    "map": "CeladonMansion1F",
+    "species": "NIDORAN_F",
+    "handler": "CeladonMansion1FNidoranFText",
+    "far_label": "_CeladonMansion1FNidoranFText",
+    "terminator": "text_end",
+    "source_block": "CeladonMansion1FNidoranFText:\n\ttext_far _CeladonMansion1FNidoranFText\n\ttext_asm\n\tld a, NIDORAN_F\n\tjp CeladonMansion1_PlayCryScript\n\n",
+    "text_source": "\ttext \"NIDORAN: Kya\"\n\tline \"kyaoo!@\"\n\ttext_end\n",
+    "eligible_inner_return": true,
+    "after_cry": ""
+  },
+  {
+    "map": "PewterNidoranHouse",
+    "species": "NIDORAN_M",
+    "far_label": "_PewterNidoranHouseNidoranText",
+    "terminator": "text_end",
+    "source_block": "\ttext_far _PewterNidoranHouseNidoranText\n\ttext_asm\n\tld a, NIDORAN_M\n\tcall PlayCry\n\tcall WaitForSoundToFinish\n\tjp TextScriptEnd",
+    "text_source": "\ttext \"NIDORAN: Bowbow!@\"\n\ttext_end\n",
+    "eligible_inner_return": true,
+    "original_reversed": true
+  },
+  {
+    "map": "CopycatsHouse1F",
+    "species": "CHANSEY",
+    "far_label": "_CopycatsHouse1FChanseyText",
+    "terminator": "text_end",
+    "source_block": "\ttext_far _CopycatsHouse1FChanseyText\n\ttext_asm\n\tld a, CHANSEY\n\tcall PlayCry\n\tjp TextScriptEnd\n",
+    "text_source": "\ttext \"CHANSEY: Chaan!\"\n\tline \"Sii!@\"\n\ttext_end\n",
+    "eligible_inner_return": true,
+    "original_reversed": true
+  },
+  {
+    "map": "LavenderCuboneHouse",
+    "species": "CUBONE",
+    "far_label": "_LavenderCuboneHouseCuboneText",
+    "terminator": "text_end",
+    "source_block": "\ttext_far _LavenderCuboneHouseCuboneText\n\ttext_asm\n\tld a, CUBONE\n\tcall PlayCry\n\tjp TextScriptEnd",
+    "text_source": "\ttext \"CUBONE: Kyarugoo!@\"\n\ttext_end\n",
+    "eligible_inner_return": true,
+    "original_reversed": true
+  }
+]

@@ -28,7 +28,8 @@ game_scene Route16FlyHouse {
   // ── Fearow (npc 2) — plays its cry ─────────────────────────────────────
   @storyline("talkBird") {
     @trigger(map = "Route16FlyHouse", npc = 2)
-    @speaker("") { @t("FEAROW: Kyueen!", "大嘴雀：Kyueen！") }
+    printFieldText(@t("FEAROW: Kyueen!", "大嘴雀：Kyueen！"))
     playCry("FEAROW")
+    finishFieldText()
   }
 }

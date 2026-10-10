@@ -359,10 +359,15 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         let b_just_pressed = input.b && !self.prev_b_pressed;
         let up_just_pressed = input.up && !self.prev_up_pressed;
         let down_just_pressed = input.down && !self.prev_down_pressed;
-        self.prev_a_pressed = input.a;
-        self.prev_b_pressed = input.b;
-        self.prev_up_pressed = input.up;
-        self.prev_down_pressed = input.down;
+        // PlayCry waits in the sound loop without calling Joypad. Preserve
+        // hJoyLast until its caller resumes polling: a press/release entirely
+        // during the cry is ignored, but a newly held key is seen afterward.
+        if !matches!(self.active_script_effect.as_ref(), Some(script_bridge::ScriptEffect::PlayCry { .. } | script_bridge::ScriptEffect::PrintFieldParagraph { phase: script_bridge::FieldParagraphPhase::ProtectedDelay { .. } | script_bridge::FieldParagraphPhase::BlankDelay { .. }, .. })) {
+            self.prev_a_pressed = input.a;
+            self.prev_b_pressed = input.b;
+            self.prev_up_pressed = input.up;
+            self.prev_down_pressed = input.down;
+        }
 
         // Link presence (Cable Club): while a link session is connected and
         // the player is inside Colosseum/TradeCenter, the app sets
@@ -2713,7 +2718,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         script_music_playing: bool,
         script_sfx_playing: bool,
     ) -> bool {
-        let returns_after_print = matches!(effect, script_bridge::ScriptEffect::PrintFieldText { .. });
+        let returns_after_print = matches!(effect, script_bridge::ScriptEffect::PrintFieldText { .. } | script_bridge::ScriptEffect::PrintFieldParagraph { .. });
         match effect {
             script_bridge::ScriptEffect::GivePokemon {
                 species,
@@ -2869,7 +2874,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 }
                 false
             }
-            script_bridge::ScriptEffect::ShowDialogue { text } | script_bridge::ScriptEffect::PrintFieldText { text } => {
+            script_bridge::ScriptEffect::ShowDialogue { text } | script_bridge::ScriptEffect::PrintFieldText { text } | script_bridge::ScriptEffect::PrintFieldParagraph { text, phase: script_bridge::FieldParagraphPhase::Printing } => {
                 if pending_dialogue.is_none() {
                     *last_script_dialogue = None;
                     *inner_field_text_open = returns_after_print;
@@ -2909,6 +2914,69 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         *last_script_dialogue = pending_dialogue.take();
                         return true;
                     }
+                    false
+                }
+            }
+            script_bridge::ScriptEffect::PlayCry { species, started } => {
+                if !*started {
+                    audio_requests.push(OverworldAudioRequest::PlayCry { species: species.clone() });
+                    *started = true;
+                    false
+                } else {
+                    // Original PlayCry itself jumps to WaitForSoundToFinish.
+                    !script_sfx_playing
+                }
+            }
+            script_bridge::ScriptEffect::PrintFieldParagraph { text, phase } => {
+                use script_bridge::FieldParagraphPhase;
+                match phase {
+                    FieldParagraphPhase::ProtectedDelay { remaining } => {
+                        *remaining = remaining.saturating_sub(1);
+                        if *remaining == 0 { *phase = FieldParagraphPhase::WaitForButton; }
+                        false
+                    }
+                    FieldParagraphPhase::WaitForButton => {
+                        if a_just_pressed || b_just_pressed {
+                            // ManualTextScroll plays PRESS_AB and returns without
+                            // HoldTextDisplayOpen or CloseTextDisplay. Preserve the
+                            // window and sprite ownership while its interior is blank.
+                            *sfx_event = OverworldSfxEvent::TextAdvance;
+                            *last_script_dialogue = Some(BedroomDialogue::from_pages(vec![super::screen::DialoguePage {
+                                line1: "".into(), line2: "".into(),
+                            }]));
+                            *inner_field_text_open = true;
+                            *phase = FieldParagraphPhase::BlankDelay { remaining: 20 };
+                        }
+                        false
+                    }
+                    FieldParagraphPhase::BlankDelay { remaining } => {
+                        *remaining = remaining.saturating_sub(1);
+                        if *remaining == 0 {
+                            // Paragraph resumes NextChar in this same frame;
+                            // returning through a separate DSL print command
+                            // would insert two hardware frames before its glyph.
+                            let mut dialogue=script_bridge::text_to_dialogue_with_names(text,dialogue_names);
+                            dialogue.reveal_next_char_with_buttons(a_pressed || b_pressed);
+                            *pending_dialogue=Some(dialogue);
+                            *last_script_dialogue=None;
+                            *phase=FieldParagraphPhase::Printing;
+                        }
+                        false
+                    }
+                    FieldParagraphPhase::Printing => unreachable!("handled with inner printing"),
+                }
+            }
+            script_bridge::ScriptEffect::FinishFieldText { acknowledged } => {
+                if last_script_dialogue.is_none() {
+                    *inner_field_text_open = false;
+                    return true;
+                }
+                if a_just_pressed || b_just_pressed { *acknowledged = true; }
+                if *acknowledged && !a_pressed {
+                    *last_script_dialogue = None;
+                    *inner_field_text_open = false;
+                    true
+                } else {
                     false
                 }
             }
@@ -3842,10 +3910,6 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 script_bridge::ScriptEffect::WithdrawDaycare => {
                     self.game_data_requests
                         .push(OverworldGameDataRequest::WithdrawDaycare);
-                }
-                script_bridge::ScriptEffect::PlayCry { species } => {
-                    self.audio_requests
-                        .push(OverworldAudioRequest::PlayCry { species });
                 }
                 script_bridge::ScriptEffect::GiveBadge { badge } => {
                     self.game_data_requests
@@ -5184,6 +5248,38 @@ mod scripted_field_clock_tests {
 mod field_typing_input_fidelity_tests {
     use super::*;
     use pokered_data::impl_traits::PokemonRedData;
+
+    #[test]
+    fn paragraph_preserves_window_and_button_history_across_protected_and_blank_waits() {
+        use script_bridge::{FieldParagraphPhase, ScriptEffect};
+        let mut ow=OverworldScreen::new(MapId::RedsHouse2F,None,PokemonRedData);
+        let idle=OverworldInput::new(false,false,false,false,false,false,false,false);
+        for _ in 0..120 {ow.update_frame(idle);}
+        ow.last_script_dialogue=Some(BedroomDialogue::from_message("previous text"));
+        ow.last_script_dialogue.as_mut().unwrap().skip_to_full_page();
+        ow.inner_field_text_open=true;
+        ow.active_script_effect=Some(ScriptEffect::PrintFieldParagraph {text:"next paragraph".into(),phase:FieldParagraphPhase::ProtectedDelay {remaining:3}});
+        let mut a=idle;a.a=true;
+        ow.update_frame(a);assert!(!ow.prev_a_pressed);
+        ow.update_frame(idle);assert!(!ow.prev_a_pressed);
+        ow.update_frame(idle);
+        assert!(matches!(ow.active_script_effect,Some(ScriptEffect::PrintFieldParagraph {phase:FieldParagraphPhase::WaitForButton,..})));
+        for _ in 0..8 {ow.update_frame(idle);}
+        assert!(ow.last_script_dialogue.as_ref().unwrap().get_display_text().unwrap().0.contains("previous"));
+        ow.update_frame(a);
+        assert_eq!(ow.sfx_event,OverworldSfxEvent::TextAdvance);
+        assert!(ow.field_text_restore.is_none());
+        assert_eq!(ow.last_script_dialogue.as_ref().unwrap().get_display_text(),Some((String::new(),String::new())));
+        for remaining in (1..20).rev() {
+            ow.update_frame(idle);
+            assert!(ow.prev_a_pressed,"blank DelayFrames must not poll Joypad");
+            assert!(matches!(ow.active_script_effect,Some(ScriptEffect::PrintFieldParagraph {phase:FieldParagraphPhase::BlankDelay {remaining:r},..}) if r==remaining));
+            assert!(ow.field_text_restore.is_none());
+        }
+        ow.update_frame(idle);
+        assert!(matches!(ow.active_script_effect,Some(ScriptEffect::PrintFieldParagraph {phase:FieldParagraphPhase::Printing,..})));
+        assert_eq!(ow.pending_dialogue.as_ref().unwrap().get_display_text().unwrap().0,"n");
+    }
 
     #[test]
     fn print_done_returns_only_after_original_final_letter_delay() {

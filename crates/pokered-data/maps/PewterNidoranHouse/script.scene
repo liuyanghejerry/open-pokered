@@ -4,11 +4,12 @@
 // playing its cry when spoken to (original: PlayCry NIDORAN_M).
 
 game_scene PewterNidoranHouse {
-  // ── NIDORAN_M pet (npc 1) — plays its cry, then "speaks" ───────────────
+  // ── NIDORAN_M pet (npc 1) — prints its text, then plays its cry ───────────────
   @storyline("talkNidoran") {
     @trigger(map = "PewterNidoranHouse", npc = 1)
+    printFieldText(@t("NIDORAN: Bowbow!", "尼多朗：汪汪！"))
     playCry("NIDORAN_M")
-    @speaker("") { @t("NIDORAN: Bowbow!", "尼多朗：汪汪！") }
+    finishFieldText()
   }
 
   // ── Little boy (npc 2) ─────────────────────────────────────────────────

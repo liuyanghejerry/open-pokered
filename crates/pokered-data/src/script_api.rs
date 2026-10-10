@@ -56,6 +56,15 @@ impl ScriptApiRegistrar for PokemonScriptApi {
             },
         );
 
+        engine.register_async_fn("printFieldParagraph", |args: &[JsValue], ctx: &mut Context| -> JsResult<ScriptCommand> {
+            let text=args.get_or_undefined(0).to_string(ctx)?.to_std_string_lossy();
+            Ok(PokemonScriptCommand::PrintFieldParagraph { text }.into_script_command())
+        });
+
+        engine.register_async_fn("finishFieldText", |_: &[JsValue], _: &mut Context| -> JsResult<ScriptCommand> {
+            Ok(PokemonScriptCommand::FinishFieldText.into_script_command())
+        });
+
         // FoundItemText prints, plays GET_ITEM_1, then closes without A.
         engine.register_async_fn(
             "showItemDialogue",

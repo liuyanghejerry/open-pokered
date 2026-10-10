@@ -15,8 +15,9 @@ game_scene SaffronPidgeyHouse {
   // ── PIDGEY (npc 2) — plays its cry, like the original text_asm ──────────
   @storyline("talkPidgey") {
     @trigger(map = "SaffronPidgeyHouse", npc = 2)
-    @speaker("") { @t("PIDGEY: Kurukkoo!", "波波：Kurukkoo！") }
+    printFieldText(@t("PIDGEY: Kurukkoo!", "波波：Kurukkoo！"))
     playCry("PIDGEY")
+    finishFieldText()
   }
 
   // ── Youngster (npc 3) ──────────────────────────────────────────────────
