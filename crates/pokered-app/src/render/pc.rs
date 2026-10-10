@@ -918,6 +918,7 @@ mod layout_tests {
             );
 
             update_pc(&mut yes, &mut save, A);
+            for _ in 0..15 { update_pc(&mut yes, &mut save, MenuInput { up: false, down: false, a: false, b: false }); }
             assert_eq!(yes.phase(), PcPhase::BoxList);
             let box_position = |cursor: usize| {
                 if language == Lang::Zh {
@@ -961,6 +962,9 @@ mod layout_tests {
             update_pc(&mut release, &mut release_save, A);
             update_pc(&mut release, &mut release_save, A);
             assert_eq!(release.phase(), PcPhase::ReleaseConfirm);
+            assert!(release.yes_selected());
+            update_pc(&mut release, &mut release_save, DOWN);
+            assert!(!release.yes_selected());
             let mut release_yes = release.clone();
             update_pc(&mut release_yes, &mut release_save, UP);
             assert_cursor_repaint(
@@ -986,6 +990,9 @@ mod layout_tests {
             update_pc(&mut toss, &mut toss_save, A);
             update_pc(&mut toss, &mut toss_save, A);
             assert_eq!(toss.phase(), PcPhase::TossConfirm);
+            assert!(toss.yes_selected());
+            update_pc(&mut toss, &mut toss_save, DOWN);
+            assert!(!toss.yes_selected());
             let mut toss_yes = toss.clone();
             update_pc(&mut toss_yes, &mut toss_save, UP);
             assert_cursor_repaint(
@@ -1005,6 +1012,9 @@ mod layout_tests {
             update_pc(&mut oak, &mut oak_save, A);
             skip_message(&mut oak, &mut oak_save);
             assert_eq!(oak.phase(), PcPhase::OaksConfirm);
+            assert!(oak.yes_selected());
+            update_pc(&mut oak, &mut oak_save, DOWN);
+            assert!(!oak.yes_selected());
             let mut oak_yes = oak.clone();
             update_pc(&mut oak_yes, &mut oak_save, UP);
             assert_cursor_repaint(
