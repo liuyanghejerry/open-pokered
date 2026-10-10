@@ -1,0 +1,35 @@
+{
+  "parent_head": "0b2f7f20e587605ec0979760e01cc66e0d7e50c8",
+  "repair": "linker placement only for Pokemon opaque UI tile helper; no runtime/font/tile/pixel changes",
+  "runtime_sources": 59,
+  "linker_sha256": "cedc63c8dc3bab762ec939a0217f252033d74363131f49b443a085749cf70e6f",
+  "perf_elf_sha256": "08d48314796f6df6eb2303bb92a60659b75fc54a88287e3af05c67cbc94d41ed",
+  "production_elf_sha256": "17b763ae5a5c8f6e3df3bcf96ec12f81bd985770a5d9ce88bc1ab3ce071a3382",
+  "original_baseline_sha256": "c9ef15a97a6f43d994fe177d7e0212a6a6cbaf561be955a5995fef4da7faebba",
+  "performance": {
+    "metrics": 31,
+    "pass": 30,
+    "fail": 1,
+    "recordings": "two final sameELF complete resultJSON byteexact",
+    "oak_draw_avg": {
+      "before": 3008,
+      "after": 2985,
+      "limit": 3004.9
+    },
+    "movement_draw_peak": {
+      "before": 3122,
+      "after": 3122,
+      "limit": 3113.1
+    },
+    "samples_renders": "all seven scenarios unchanged from before"
+  },
+  "memory": "perf IWRAM end03004e10 =19984 bytes, originalcap24320; production link also passes sameassert8KiB stackreserve",
+  "withdrawn": "all pixel-run/clipped/fullresolver/border/raster refactors withdrawn; final runtime59sources unchanged from179; failed logs retained",
+  "native": "no new native runtime change;179 full debug suites remain applicable by byteexact source; no fresh final mainline completion claim",
+  "visual": "linker-only instruction placement; rendering implementation/glyph assets unchanged; no on-screen output change and no new screenshots required",
+  "archive": {
+    "entries": 71,
+    "bytes": 259078,
+    "sha256": "4f495098f5c6f30d5f4b19a3f5dcd2a66ec29ca3d2b170c4fea713f5d1069ae7"
+  }
+}
