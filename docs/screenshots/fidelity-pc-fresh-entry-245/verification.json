@@ -1,0 +1,23 @@
+{
+  "base": "40ebaa763b440951368c8ec88b8c72bd6a463d75",
+  "source_head": "606408fda0326175125a1e7026e9e60d4b20712c",
+  "tests": {
+    "programs": 78,
+    "pass": 3675,
+    "fail": 0,
+    "ignore": 76
+  },
+  "cases": [
+    "player fresh entry",
+    "Bill fresh entry"
+  ],
+  "source_and_native_two_repeats_raw_exact": true,
+  "native_fresh_entry_png_matches_initial_default_exact": true,
+  "inside_player_pc_list_return_preserves_selection": true,
+  "current_box_preserved_by_core_regression": 2,
+  "PNG": 5202,
+  "archive_roundtrip_byte_exact": true,
+  "archive_sha256": "cbd632331988474c224c97953adc5022250bbd61f85124a70c1aec33589d322b",
+  "archive_bytes": 553242,
+  "scope": "fresh PC menu defaults only; controlled snapshot fixture, not full natural playthrough or complete PC timing fidelity"
+}
