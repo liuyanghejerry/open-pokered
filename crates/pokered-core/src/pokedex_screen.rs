@@ -312,11 +312,11 @@ impl PokedexScreenState {
             self.mode = PokedexScreenMode::List;
             return PokedexScreenAction::Active;
         }
-        if input.up && self.side_menu_cursor > 0 {
-            self.side_menu_cursor -= 1;
-        }
-        if input.down && self.side_menu_cursor < SIDE_MENU_OPTIONS as u8 - 1 {
-            self.side_menu_cursor += 1;
+        // HandleMenuInput tests UP before DOWN even when UP cannot move.
+        if input.up {
+            self.side_menu_cursor = self.side_menu_cursor.saturating_sub(1);
+        } else if input.down {
+            self.side_menu_cursor = (self.side_menu_cursor + 1).min(SIDE_MENU_OPTIONS as u8 - 1);
         }
         if input.a {
             match self.side_menu_cursor {
@@ -480,6 +480,24 @@ mod tests {
         let mut state = screen(dex_with(&[1, 2, 3, 4, 5, 6], &[]));
         state.update_frame(PokedexScreenInput { down: true, a: true, ..Default::default() });
         assert_eq!((state.cursor(), state.scroll_offset(), state.mode()), (2, 0, PokedexScreenMode::List));
+    }
+
+    #[test]
+    fn side_menu_opposite_vertical_keys_use_up_priority_at_top_and_inside() {
+        let seen: Vec<u8> = (1..=25).collect();
+        let mut endpoints = Vec::new();
+        for initial_down in [0, 2] {
+            let mut state = screen(dex_with(&seen, &[]));
+            state.update_frame(a());
+            for _ in 0..initial_down {
+                state.update_frame(PokedexScreenInput { down: true, ..Default::default() });
+            }
+            state.update_frame(PokedexScreenInput { up: true, down: true, ..Default::default() });
+            assert_eq!(state.cursor(), 1, "side navigation preserves selected species");
+            assert!(!state.take_cry_pending(), "directions do not trigger a cry");
+            endpoints.push((state.side_menu_cursor(), state.mode()));
+        }
+        assert_eq!(endpoints, vec![(0, PokedexScreenMode::SideMenu), (1, PokedexScreenMode::SideMenu)]);
     }
 
     #[test]
