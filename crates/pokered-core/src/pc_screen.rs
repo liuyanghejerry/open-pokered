@@ -757,7 +757,9 @@ impl PcScreen {
             let select = !blocked && held.select && (pressed != 0 || repeat);
             let used = if blocked || (resumed && pressed == 0 && !select) {
                 MenuInput { up:false, down:false, a:false, b:false }
-            } else if resumed || select {
+            } else if resumed || select || (!blocked && pressed != 0 && (held.a || held.b)) {
+                // Mode 1 returns all held keys on ANY fresh press, including
+                // an A held while a newly pressed direction chooses a slot.
                 MenuInput { a:held.a, b:held.b, up:held.up, down:held.down }
             } else { input };
             if !blocked { self.item_swap_last_buttons = buttons; }
@@ -1475,9 +1477,9 @@ impl PcScreen {
             if self.item_swap_reload_wait > 0 { return PcScreenAction::Continue; }
         }
         let rows = self.item_row_count(ctx);
-        if select {
-            // A watched SELECT returns after the inner visible-row move;
-            // the caller handles SELECT before its scrolling directions.
+        if select || input.a || input.b {
+            // Watched A/B/SELECT return after the inner visible-row move;
+            // the caller handles watched keys before its scrolling directions.
             let row = self.item_list_cursor - self.item_list_scroll;
             let max_row = rows.saturating_sub(self.item_list_scroll + 1).min(PC_LIST_CURSOR_ROWS - 1);
             if input.up { if row > 0 { self.item_list_cursor -= 1; } }
@@ -1934,6 +1936,58 @@ mod tests {
             screen.update_frame_with_held_input(input, held, &mut world.ctx(), None);
             previous = bits;
         }
+    }
+
+    #[test]
+    fn item_list_watched_a_down_stays_on_the_bottom_visible_slot() {
+        let slots=[(ItemId::Potion,4),(ItemId::Antidote,3),(ItemId::PokeBall,2)];
+        for mode in [ItemListMode::Withdraw,ItemListMode::Deposit,ItemListMode::Toss] {
+            let (mut s,mut w)=select_fixture(mode,&slots);
+            s.item_list_cursor=2;
+            s.update_frame_with_held_input(DOWN,PcHeldInput {a:true,down:true,..Default::default()},&mut w.ctx(),None);
+            assert_eq!(s.phase(),PcPhase::ItemQuantityPrompt);
+            assert_eq!((s.item_list_cursor(),s.item_list_scroll()),(2,0));
+            assert_eq!(s.item_source(&w.ctx())[s.item_list_cursor()].0,ItemId::PokeBall);
+            assert_eq!(w.bag.items(),slots);assert_eq!(w.pc_items.items(),slots);assert!(!s.take_save_request());
+        }
+    }
+
+    #[test]
+    fn item_list_watched_a_up_stays_on_the_top_scrolled_slot() {
+        let slots=[(ItemId::Potion,4),(ItemId::Antidote,3),(ItemId::PokeBall,2)];
+        let (mut s,mut w)=select_fixture(ItemListMode::Withdraw,&slots);
+        s.item_list_cursor=1;s.item_list_scroll=1;
+        s.update_frame_with_held_input(UP,PcHeldInput {a:true,up:true,..Default::default()},&mut w.ctx(),None);
+        assert_eq!(s.phase(),PcPhase::ItemQuantityPrompt);
+        assert_eq!((s.item_list_cursor(),s.item_list_scroll()),(1,1));
+        assert_eq!(s.item_source(&w.ctx())[s.item_list_cursor()].0,ItemId::Antidote);
+        assert_eq!(w.pc_items.items(),slots);
+    }
+
+    #[test]
+    fn item_list_held_a_and_fresh_direction_choose_the_moved_visible_slot() {
+        let slots=[(ItemId::Potion,4),(ItemId::Antidote,3),(ItemId::PokeBall,2)];
+        let (mut s,mut w)=select_fixture(ItemListMode::Withdraw,&slots);
+        s.item_swap_last_buttons=1;
+        for t in 1..=40 {
+            let (_,used)=s.update_frame_with_held_input(if t==40 {DOWN} else {NONE},PcHeldInput {a:true,down:t==40,..Default::default()},&mut w.ctx(),None);
+            if t<40 {assert_eq!(s.phase(),PcPhase::ItemList);assert!(!used.a);}
+            else {assert!(used.a && used.down);}
+        }
+        assert_eq!(s.phase(),PcPhase::ItemQuantityPrompt);
+        assert_eq!(s.item_source(&w.ctx())[s.item_list_cursor()].0,ItemId::Antidote);assert_eq!(s.item_list_cursor(),1);
+        assert_eq!(w.pc_items.items(),slots);assert!(!s.take_save_request());
+    }
+
+    #[test]
+    fn item_list_a_b_down_keeps_a_priority_and_visible_bottom_slot() {
+        let slots=[(ItemId::Potion,4),(ItemId::Antidote,3),(ItemId::PokeBall,2)];
+        let (mut s,mut w)=select_fixture(ItemListMode::Withdraw,&slots);
+        s.item_list_cursor=2;
+        s.update_frame_with_held_input(NONE,PcHeldInput {a:true,b:true,down:true,..Default::default()},&mut w.ctx(),None);
+        assert_eq!(s.phase(),PcPhase::ItemQuantityPrompt);
+        assert_eq!(s.item_source(&w.ctx())[s.item_list_cursor()].0,ItemId::PokeBall);assert_eq!(s.item_list_cursor(),2);
+        assert_eq!(w.pc_items.items(),slots);
     }
 
     #[test]
