@@ -1,0 +1,26 @@
+{
+  "base": "a7d4731291ab16a0449ce2698063a57717902e8e",
+  "tested_head": "0b7331f84f20b7514dfcbd2cc0c445555bd92fde",
+  "tests": {
+    "base": "a7d4731291ab16a0449ce2698063a57717902e8e",
+    "source_head": "0b7331f84f20b7514dfcbd2cc0c445555bd92fde",
+    "programs": 78,
+    "passed": 3703,
+    "failed": 0,
+    "ignored": 76
+  },
+  "cases": 19,
+  "source_and_native_repeats": 2,
+  "inventory_every_frame_matches_original": true,
+  "four_held_cases_cursor_scroll_every_frame_matches": true,
+  "all19_cached_equals_full_every_frame": true,
+  "ordinary_ui_save_separate_process_continue_cases": 15,
+  "same_before_after_helper_source_sha256": "770c5b3d8619814e610362ae1c141fd3c845aee9542663a3954165aa36160286",
+  "helper_feature_fixed": "after-only public mark getter for record; before records none",
+  "archive_roundtrip_byte_exact": true,
+  "archive_sha256": "774e19f307e68d9e3535ace4813c6f33527acf7cf78c71d7ad6fd37cd1ce9360",
+  "archive_bytes": 7937222,
+  "PNG_paths": 18262,
+  "deduplicated_PNG": 237,
+  "scope": "PC SELECT sorting and held SELECT30/5 repeat,20/6 protected waits. General directional held repeat without SELECT, initial item-list sampling guards, other redraw guards and whole-game fidelity remain under audit; original PPU exact frame rendering not claimed."
+}
