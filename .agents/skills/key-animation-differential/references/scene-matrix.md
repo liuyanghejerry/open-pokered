@@ -12,6 +12,8 @@
 | `overworld-origin` | 同一原作实机 SAVE，`ViridianPokecenter (13,4)`，实际标题菜单 Continue；方向输入前朝下，先空走时钟 120 帧 | 左方向按住 16 帧，第 16 帧释放；录制 `t=-1..99` 至站稳 | 连续 PNG、玩家 OAM / 背景、坐标提交与 walk_counter、实际输入、两轮重现；几何和行走时序分开量化 | 玩家 sprite-state `(64,60)`；背景地面格 `(64,64)`；硬件 OAM `+8/+16` 在 LCD 抵消。普通 OverworldLoop 两次 DelayFrame，不能把八次推进误称八个硬件帧。 |
 | `stats-pc-transition` | `docs/screenshots/fidelity-82-85/fixture.sav`，实际 Continue→面向上→PC→Bill PC→DEPOSIT / WITHDRAW→STATS | 各按键按住 2 帧，第三帧释放；分别连续记录进入、翻页、退出至稳定操作菜单 | palette/NR50、画面阶段、species/level/moves/数据来源、鸣叫起止、输入边界、两轮重现 | 源码 `StatusScreen` / `StatusScreen2` / `GetMaxPP`。不能仅改 loadedMoves 推算耗时：GetMaxPP 读取队伍/箱子实际招式。箱子需 CalcStats；此特定 PC 夹具返回完整清屏帧 1..6、菜单输入帧 6。 |
 
+| `mart-final-text-exit` | `PewterMart (2,5)`，面向左，余额 3000、固定三种道具，原作与复刻分别使用构造存档 | 进入商店→QUIT→等待“Thank you!”→A 按住 20 帧→松开；至窗口关闭、精灵恢复且可走动 | 连续 PNG/帧号、WY/窗口、玩家/NPC朝向及位置、确认和松开 A 的输入锁、首个可走动帧、两轮重现 | 商店直接走 `CloseTextDisplay`；不能包含 `CloseStartMenu` 的 32 文本框图块重载。构造存档不证明真实主线或 SAVE/CONTINUE。 |
+
 ## 原版实现锚点
 
 当需要解释“为什么应该有这一段”时，优先对照固定的原版 routine，而不是只凭截图猜测：

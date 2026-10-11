@@ -1672,7 +1672,7 @@ impl ShopVisualKey {
         // Closing the text window restores sprites and hides the menu on
         // separate frames. The stationary mart key does not describe those
         // transfers, so draw every restoration frame before caching again.
-        if game.overworld.field_text_restore.is_some() {
+        if game.overworld.mart_text_restore.is_some() {
             return None;
         }
         let background = OverworldVisualKey::new(game)?;

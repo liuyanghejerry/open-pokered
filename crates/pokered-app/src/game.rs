@@ -4435,8 +4435,7 @@ impl PokemonGame {
                                 let mut mart = pokered_core::items::MartState::new(inv);
                                 if self.state.config.language == Lang::En {
                                     mart.configure_field_text(self.state.config.text_speed.delay_frames());
-                                    // MONEY_BOX and BUY_SELL_QUIT_MENU clear the shared bit.
-                                    self.overworld.text_delay_disabled = false;
+                                    // This field flow owns its text delay locally.
                                 }
                                 ScreenAction::Transition(GameScreen::Shop(mart))
                             }
@@ -5741,8 +5740,8 @@ impl PokemonGame {
                 }
             }
             GameScreen::Shop(ref mut mart_state) => {
-                if self.overworld.field_text_restore.is_some() {
-                    if self.overworld.tick_field_text_restore() { ScreenAction::Transition(GameScreen::Overworld) }
+                if self.overworld.mart_text_restore.is_some() {
+                    if self.overworld.tick_mart_text_restore() { ScreenAction::Transition(GameScreen::Overworld) }
                     else { ScreenAction::Continue }
                 } else {
                 let menu_input = MenuInput {
@@ -5774,8 +5773,7 @@ impl PokemonGame {
                     MartUpdate::Exit if self.state.config.language == Lang::En => {
                         self.overworld.pending_dialogue = None;
                         self.overworld.last_script_dialogue = None;
-                        self.overworld.inner_field_text_open = false;
-                        self.overworld.begin_start_menu_restore();
+                        self.overworld.begin_mart_text_restore();
                         ScreenAction::Continue
                     }
                     MartUpdate::Exit => ScreenAction::Transition(GameScreen::Overworld),
@@ -7926,7 +7924,7 @@ impl PokemonGame {
                 );
                 let money = self.save_data.game_data.player_money;
                 let bag_slice = self.save_data.game_data.bag.items();
-                if self.overworld.field_text_restore.as_ref().is_none_or(|restore| restore.window_visible()) {
+                if self.overworld.mart_text_restore.is_none() {
                 draw_mart(
                     mart_state,
                     money,
@@ -11884,5 +11882,61 @@ mod mart_cash_register_audio_tests {
         assert!(matches!(mart.phase, MartPhase::Sell(SellMenuState::SelectItem { cursor: 0 })));
         assert_eq!(mart.field_message_lines(), vec!["What would you", "like to sell?"]);
         assert!(!mart.field_message_active());
+    }
+}
+
+#[cfg(all(test, not(target_os = "none")))]
+mod mart_text_exit_tests {
+    use super::*;
+    use pokered_core::game_state::Lang;
+    use pokered_core::items::shop::{MartState, ShopInventory};
+    use pokered_data::items::ItemId;
+
+    #[test]
+    fn clerk_final_text_waits_for_a_release_then_directly_restores_the_field() {
+        let mut game = PokemonGame::new(GameVersion::Red);
+        game.state.config.language = Lang::En;
+        game.overworld = OverworldScreen::new(MapId::PewterMart, None, PokemonRedData);
+        game.overworld.state.player.x = 2;
+        game.overworld.state.player.y = 5;
+        let mut mart = MartState::new(ShopInventory::new(vec![ItemId::Potion]));
+        mart.configure_field_text(1);
+        game.state.screen = GameScreen::Shop(mart);
+        let mut quit = InputState::new(); quit.press(GbButton::B);
+        game.update(&quit);
+        let mut ready = false;
+        for _ in 0..200 {
+            game.update(&InputState::new());
+            let GameScreen::Shop(mart) = &game.state.screen else { panic!("quit skipped final text"); };
+            if mart.field_message_waiting() {
+                assert_eq!(mart.field_message_lines(), vec!["Thank you!"]);
+                ready = true; break;
+            }
+        }
+        assert!(ready, "final clerk text never waited for acknowledgement");
+        let mut acknowledge = InputState::new(); acknowledge.press(GbButton::A);
+        for _ in 0..20 {
+            game.update(&acknowledge);
+            assert!(matches!(game.state.screen, GameScreen::Shop(_)));
+            assert!(game.overworld.mart_text_restore.is_none(), "held A prematurely closed the text");
+        }
+        game.update(&InputState::new());
+        let restore = game.overworld.mart_text_restore.as_ref().expect("release begins direct closure");
+        assert_eq!(restore.elapsed, 0);
+        // Original PewterMart call trace: three unique 12-tile NPC transfers
+        // at t+1,+3,+5, two player transfers at +7,+9, UpdateSprites at +11.
+        assert_eq!(restore.npc_transfer_frames, 6);
+        let mut movement = InputState::new(); movement.press(GbButton::Right);
+        for elapsed in 1..=13 {
+            game.update(&movement);
+            assert_eq!((game.overworld.state.player.x, game.overworld.state.player.y), (2, 5));
+            if elapsed < 13 {
+                assert!(matches!(game.state.screen, GameScreen::Shop(_)));
+                assert_eq!(game.overworld.mart_text_restore.as_ref().unwrap().elapsed, elapsed);
+            } else {
+                assert_eq!(game.state.screen, GameScreen::Overworld);
+                assert!(game.overworld.mart_text_restore.is_none());
+            }
+        }
     }
 }

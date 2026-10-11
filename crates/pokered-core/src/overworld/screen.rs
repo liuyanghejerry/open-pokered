@@ -674,6 +674,8 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     pub pending_dialogue: Option<BedroomDialogue>,
     /// Last completed script text, retained only for the following choice.
     pub last_script_dialogue: Option<BedroomDialogue>,
+    /// Direct clerk-text closure; independent of START/submenu reloads.
+    pub mart_text_restore: Option<presentation::MartTextRestoreState>,
     pub pending_choice: Option<crate::overworld::script_bridge::PendingChoice>,
     pub pending_pokedex_entry: Option<PokedexEntryState>,
     pub pending_naming_screen: Option<crate::naming_screen::NamingScreenState>,
@@ -1156,6 +1158,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             npc_pokemon_data,
             pending_dialogue: None,
             last_script_dialogue: None,
+            mart_text_restore: None,
             pending_choice: None,
             pending_pokedex_entry: None,
             pending_naming_screen: None,
@@ -3194,5 +3197,50 @@ mod dialogue_localization_tests {
             screen.localize_message("No! A new BADGE\nis required."),
             "不行！需要新的\n徽章。"
         );
+    }
+}
+
+impl<G: GameData> OverworldScreen<G> {
+    pub fn begin_mart_text_restore(&mut self) {
+        use pokered_data::sprite_set_data::{MapSpriteSetRef, SplitDirection, SpriteSetId,
+            MAP_SPRITE_SETS, SPLIT_MAP_SPRITE_SETS};
+        let map = self.state.current_map;
+        let (x, y) = (self.state.player.x, self.state.player.y);
+        let set = MAP_SPRITE_SETS.get(map as usize).map(|entry| match *entry {
+            MapSpriteSetRef::Direct(set) => set,
+            MapSpriteSetRef::Split(index) => {
+                // Original GetSplitMapSpriteSetID's Route20 coastline split.
+                if map == MapId::Route20 {
+                    if x < 43 { SpriteSetId::PalletViridian }
+                    else if x >= 62 || y < if x >= 55 { 8 } else { 13 } { SpriteSetId::Fuchsia }
+                    else { SpriteSetId::PalletViridian }
+                } else {
+                    let split = &SPLIT_MAP_SPRITE_SETS[index as usize];
+                    let coord = match split.direction { SplitDirection::NorthSouth => y, SplitDirection::EastWest => x };
+                    if coord < u16::from(split.coordinate) { split.set_north_or_west } else { split.set_south_or_east }
+                }
+            }
+        });
+        let mut seen = [false; 256];
+        let mut frames = 0;
+        let mut add = |sprite: pokered_data::sprites::SpriteId| {
+            let id = sprite as usize;
+            if !seen[id] && !sprite.is_still() {
+                seen[id] = true;
+                frames += 2; // CopyVideoData: 12 tiles, 8 then 4.
+            }
+        };
+        if let Some(set) = set {
+            for &sprite in set.sprites() { add(sprite); }
+        } else {
+            // LoadMapSpriteTilePatterns includes hidden slots and deduplicates
+            // picture IDs; four-tile still sprites have no upper block.
+            for npc in &self.npc_states {
+                if let Some(sprite) = pokered_data::sprites::SpriteId::from_u8(npc.sprite_id) { add(sprite); }
+            }
+        }
+        self.mart_text_restore = Some(presentation::MartTextRestoreState {
+            elapsed: 0, npc_transfer_frames: frames,
+        });
     }
 }
