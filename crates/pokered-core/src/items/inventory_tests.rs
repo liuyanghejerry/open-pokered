@@ -485,3 +485,42 @@ fn serde_rejects_more_items_than_capacity() {
     let err = serde_json::from_str::<Inventory<2>>(json).unwrap_err();
     assert!(err.is_data());
 }
+
+#[test]
+fn emptied_slot_event_survives_equal_count_exchange_and_is_not_saved() {
+    let mut bag = Inventory::new_bag();
+    bag.add_item(ItemId::Potion, 2).unwrap();
+    bag.add_item(ItemId::Antidote, 1).unwrap();
+    assert!(!bag.take_depleted_slot_event());
+    bag.remove_item_at(0, 1).unwrap();
+    assert!(!bag.take_depleted_slot_event(), "partial removal keeps memory");
+    assert_eq!(bag.remove_item_at(0, 2), Err(InventoryError::NotEnoughItems));
+    assert!(!bag.take_depleted_slot_event(), "refused removal keeps memory");
+    bag.use_item(0).unwrap();
+    bag.add_item(ItemId::Repel, 1).unwrap();
+    assert_eq!(bag.count(), 2, "remove/add ends at the original slot count");
+    let encoded = serde_json::to_string(&bag).unwrap();
+    assert!(!encoded.contains("slot_depleted"));
+    let mut restored: Inventory<BAG_ITEM_CAPACITY> = serde_json::from_str(&encoded).unwrap();
+    assert_eq!(bag, restored, "inventory equality describes its stock");
+    assert!(!restored.take_depleted_slot_event(), "RAM menu memory is not saved");
+    assert!(bag.take_depleted_slot_event());
+    assert!(!bag.take_depleted_slot_event(), "notification is consumed once");
+}
+
+#[test]
+fn physical_slot_merge_notifies_but_reorder_and_invalid_replacement_do_not() {
+    let mut bag = Inventory::new_bag();
+    bag.replace_item_slots(&[(ItemId::Potion, 1), (ItemId::Potion, 2)]).unwrap();
+    assert!(!bag.take_depleted_slot_event());
+    bag.swap(0, 1).unwrap();
+    assert!(!bag.take_depleted_slot_event());
+    assert_eq!(bag.replace_item_slots(&[(ItemId::Potion, 0)]), Err(InventoryError::ZeroQuantity));
+    assert!(!bag.take_depleted_slot_event());
+    bag.replace_item_slots(&[(ItemId::Potion, 3)]).unwrap();
+    assert!(bag.take_depleted_slot_event());
+    bag.clear();
+    assert!(bag.take_depleted_slot_event());
+    bag.clear();
+    assert!(!bag.take_depleted_slot_event());
+}

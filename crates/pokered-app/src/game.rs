@@ -2293,6 +2293,13 @@ impl PokemonGame {
             largest_free_block()
         );
         self.prepare_gba_screen_resources(&screen);
+        // InitBattleVariables/EndOfBattle clear wBagSavedMenuItem and scroll.
+        // Main-menu/new-game entry starts another RAM session as well.
+        if matches!(screen, GameScreen::Battle | GameScreen::MainMenu | GameScreen::OakSpeech)
+            || (self.state.screen == GameScreen::Battle && screen == GameScreen::Overworld)
+        {
+            self.bag_screen.reset_list_position();
+        }
         // Set in the Battle→Overworld settle below when a caught species was
         // newly added to the Pokédex — the post-capture "New DEX data will be
         // added…" entry then opens instead of the overworld
@@ -2734,12 +2741,10 @@ impl PokemonGame {
                 // (entry kind from the scene script + flags snapshot).
             }
             GameScreen::Bag => {
-                if self.bag_viewer_return {
-                    self.bag_screen.set_items(self.save_data.game_data.bag.items().to_vec());
-                    self.bag_viewer_return = false;
-                } else {
-                    self.bag_screen = BagScreenState::new(self.save_data.game_data.bag.items().to_vec());
-                }
+                // StartMenu_Item restores the saved row and scroll. Refresh the
+                // stock and clear transient submenus/SELECT, retaining position.
+                self.bag_screen.set_items(self.save_data.game_data.bag.items().to_vec());
+                self.bag_viewer_return = false;
             }
             GameScreen::TownMap => {
                 self.town_map_screen = if self.pending_fly_map {
@@ -3312,7 +3317,9 @@ impl PokemonGame {
     }
 
     pub fn update(&mut self, input: &InputState) {
+        self.sync_bag_list_memory();
         self.update_inner(input);
+        self.sync_bag_list_memory();
         // Per-frame recorders (`--record-frames` / `--record-video`):
         // capture AFTER the frame's logic ran, and do it here rather than
         // inside the update body so every frame lands — early returns,
@@ -3327,6 +3334,21 @@ impl PokemonGame {
             rec.capture(self);
             self.video_recorder = Some(rec);
         }
+    }
+
+    fn sync_bag_list_memory(&mut self) {
+        // Both inventories use RemoveItemFromInventory_, whose full-slot
+        // removal resets the bag memory even after an equal-count exchange.
+        let depleted = self.save_data.game_data.bag.take_depleted_slot_event()
+            | self.save_data.game_data.pc_items.take_depleted_slot_event();
+        // PlayerPC clears it on entry/exit; BillsPC saves/restores it instead.
+        let player_pc = self.state.screen == GameScreen::PC
+            && self.pc_screen.as_ref().is_some_and(|pc| {
+                pc.entry() == PcEntry::PlayersPc
+                    || matches!(pc.phase(), pokered_core::pc_screen::PcPhase::ItemQuestion
+                        | pokered_core::pc_screen::PcPhase::ItemMenu)
+            });
+        if depleted || player_pc { self.bag_screen.reset_list_position(); }
     }
 
     /// Poll and execute pending debug-server commands WITHOUT advancing a
@@ -4786,12 +4808,7 @@ impl PokemonGame {
                     }
                     StartMenuAction::OpenSave => ScreenAction::Transition(GameScreen::SaveMenu),
                     StartMenuAction::OpenPokemon => ScreenAction::Transition(GameScreen::PartyScreen),
-                    StartMenuAction::OpenItem => {
-                        let items: Vec<(pokered_data::items::ItemId, u32)> =
-                            self.save_data.game_data.bag.items().to_vec();
-                        self.bag_screen = BagScreenState::new(items);
-                        ScreenAction::Transition(GameScreen::Bag)
-                    }
+                    StartMenuAction::OpenItem => ScreenAction::Transition(GameScreen::Bag),
                     StartMenuAction::OpenPokedex => ScreenAction::Transition(GameScreen::Pokedex),
                     StartMenuAction::OpenTrainerInfo => {
                         ScreenAction::Transition(GameScreen::TrainerCard)
