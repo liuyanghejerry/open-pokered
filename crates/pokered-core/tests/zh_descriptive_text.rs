@@ -67,6 +67,10 @@ fn all_sixteen_chinese_pc_ratings_use_complete_messages_and_readable_pages() {
             &mut ctx,
         );
         pc.update_frame(a, &mut ctx);
+        for _ in 0..15 {
+            pc.update_frame(MenuInput::none(), &mut ctx);
+        }
+        assert_eq!(pc.phase(), PcPhase::Message);
         let pages = pc.message_page_count();
         for _ in 0..pages {
             pc.update_frame(a, &mut ctx);
