@@ -199,8 +199,10 @@ enum AfterMessage {
 }
 
 const MSG_LINES_PER_PAGE: usize = 4;
-/// DisplayListMenuID shows three inventory entries, including CANCEL.
-pub const PC_LIST_VISIBLE_ROWS: usize = 3;
+/// PrintListMenuEntries draws four rows; the fourth previews the next entry.
+pub const PC_LIST_VISIBLE_ROWS: usize = 4;
+/// DisplayListMenuID limits the cursor to rows 0 through 2 before scrolling.
+const PC_LIST_CURSOR_ROWS: usize = 3;
 
 /// Rating table thresholds (engine/events/pokedex_rating.asm:58-74): the
 /// first entry whose threshold exceeds the owned count is shown.
@@ -1281,10 +1283,10 @@ impl PcScreen {
         }
         if self.item_list_cursor < self.item_list_scroll {
             self.item_list_scroll = self.item_list_cursor;
-        } else if self.item_list_cursor >= self.item_list_scroll + PC_LIST_VISIBLE_ROWS {
-            self.item_list_scroll = self.item_list_cursor + 1 - PC_LIST_VISIBLE_ROWS;
+        } else if self.item_list_cursor >= self.item_list_scroll + PC_LIST_CURSOR_ROWS {
+            self.item_list_scroll = self.item_list_cursor + 1 - PC_LIST_CURSOR_ROWS;
         }
-        let max_scroll = rows.saturating_sub(PC_LIST_VISIBLE_ROWS);
+        let max_scroll = rows.saturating_sub(PC_LIST_CURSOR_ROWS);
         if self.item_list_scroll > max_scroll {
             self.item_list_scroll = max_scroll;
         }
