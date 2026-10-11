@@ -273,13 +273,19 @@ impl PokedexScreenState {
         if input.down && self.cursor < self.max_seen {
             self.cursor += 1;
         }
-        if input.left {
-            self.cursor = self.cursor.saturating_sub(LIST_ROWS).max(1);
-        }
-        if input.right {
-            self.cursor = (self.cursor + LIST_ROWS).min(self.max_seen);
-        }
         self.clamp_scroll();
+        if input.right || input.left {
+            // HandlePokedexListMenu pages the window while retaining its
+            // cursor row. RIGHT wins over LEFT; clamp the final page offset.
+            let row = self.cursor - 1 - self.scroll;
+            let max_scroll = self.max_seen.saturating_sub(LIST_ROWS);
+            self.scroll = if input.right {
+                (self.scroll + LIST_ROWS).min(max_scroll)
+            } else {
+                self.scroll.saturating_sub(LIST_ROWS)
+            };
+            self.cursor = self.scroll + row + 1;
+        }
         if input.a && self.is_seen(self.cursor) {
             // HandlePokedexSideMenu: unseen entries exit back to the list
             // (b=2); seen ones open the 4-option menu.
@@ -470,12 +476,12 @@ mod tests {
             right: true,
             ..Default::default()
         }));
-        assert_eq!(s.cursor(), 20, "clamped at max_seen");
+        assert_eq!((s.cursor(), s.scroll_offset()), (14, 13), "first row of final page");
         s.update_frame(press(PokedexScreenInput {
             left: true,
             ..Default::default()
         }));
-        assert_eq!(s.cursor(), 13);
+        assert_eq!((s.cursor(), s.scroll_offset()), (7, 6));
         s.update_frame(press(PokedexScreenInput {
             left: true,
             ..Default::default()
@@ -485,6 +491,48 @@ mod tests {
             ..Default::default()
         }));
         assert_eq!(s.cursor(), 1, "clamped at 1");
+    }
+
+    #[test]
+    fn horizontal_pages_keep_cursor_row_at_both_bounds() {
+        for max_seen in [1u8, 6, 7, 8, 25, 151] {
+            for row in [0u16, 3, 6].into_iter().filter(|r| *r < u16::from(max_seen)) {
+                let mut s = screen(dex_with(&(1..=max_seen).collect::<Vec<_>>(), &[]));
+                for _ in 0..row {
+                    s.update_frame(PokedexScreenInput { down: true, ..Default::default() });
+                }
+                let max_scroll = u16::from(max_seen).saturating_sub(LIST_ROWS);
+                for press in 1..=24 {
+                    s.update_frame(PokedexScreenInput { right: true, ..Default::default() });
+                    let scroll = (press * LIST_ROWS).min(max_scroll);
+                    assert_eq!((s.cursor(), s.scroll_offset()), (scroll + row + 1, scroll),
+                        "max{max_seen} row{row} right{press}");
+                    assert_eq!(s.seen_count(), u32::from(max_seen));
+                    assert_eq!(s.owned_count(), 0);
+                    assert!(!s.take_cry_pending());
+                }
+                for press in 1..=24 {
+                    s.update_frame(PokedexScreenInput { left: true, ..Default::default() });
+                    let scroll = max_scroll.saturating_sub(press * LIST_ROWS);
+                    assert_eq!((s.cursor(), s.scroll_offset()), (scroll + row + 1, scroll),
+                        "max{max_seen} row{row} left{press}");
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn horizontal_right_priority_and_data_selection_follow_retained_row() {
+        let mut s = screen(dex_with(&(1..=25).collect::<Vec<_>>(), &[]));
+        s.update_frame(PokedexScreenInput { left: true, right: true, ..Default::default() });
+        assert_eq!((s.cursor(), s.scroll_offset()), (8, 7), "source RIGHT priority");
+        for _ in 0..3 {
+            s.update_frame(PokedexScreenInput { right: true, ..Default::default() });
+        }
+        assert_eq!((s.cursor(), s.scroll_offset()), (19, 18));
+        open_entry(&mut s);
+        assert_eq!(s.cursor_species(), Species::Rattata, "DATA opens retained row, not page-end Pikachu");
+        assert!(s.take_cry_pending());
     }
 
     #[test]

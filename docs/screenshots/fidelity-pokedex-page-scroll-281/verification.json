@@ -1,0 +1,74 @@
+{
+  "base": "a908e9081d00e3792e8b7ad312f12895f4c1309e",
+  "source_head": "a62c611bb051fbad8c6a894bd80572c3117ce68c",
+  "tests": {
+    "programs": 78,
+    "pass": 3685,
+    "fail": 0,
+    "ignore": 76
+  },
+  "cases": [
+    {
+      "case": "right-one",
+      "seen": 25,
+      "source_scroll": 7,
+      "source_cursor_row": 0,
+      "both_sides_two_repeats_byte_exact": true,
+      "native_bag_unchanged_no_auto_save": true
+    },
+    {
+      "case": "right-four",
+      "seen": 25,
+      "source_scroll": 18,
+      "source_cursor_row": 0,
+      "both_sides_two_repeats_byte_exact": true,
+      "native_bag_unchanged_no_auto_save": true
+    },
+    {
+      "case": "right-four-left",
+      "seen": 25,
+      "source_scroll": 0,
+      "source_cursor_row": 0,
+      "both_sides_two_repeats_byte_exact": true,
+      "native_bag_unchanged_no_auto_save": true
+    },
+    {
+      "case": "right-one",
+      "seen": 8,
+      "initial_row": 0,
+      "source_scroll": 1,
+      "source_cursor_row": 0,
+      "both_sides_two_repeats_byte_exact": true,
+      "native_bag_unchanged_no_auto_save": true,
+      "correct_control_endpoint_frame_preserved": false
+    },
+    {
+      "case": "right-one",
+      "seen": 25,
+      "initial_row": 6,
+      "source_scroll": 7,
+      "source_cursor_row": 6,
+      "both_sides_two_repeats_byte_exact": true,
+      "native_bag_unchanged_no_auto_save": true,
+      "correct_control_endpoint_frame_preserved": true
+    },
+    {
+      "case": "right-one",
+      "seen": 6,
+      "initial_row": 5,
+      "source_scroll": 0,
+      "source_cursor_row": 5,
+      "both_sides_two_repeats_byte_exact": true,
+      "native_bag_unchanged_no_auto_save": true,
+      "correct_control_endpoint_frame_preserved": true
+    }
+  ],
+  "right_over_left_priority": "actual original double-key control + core test; existing TCP timeline supports one button per frame, not a claimed native double-key recording",
+  "data_entry_species_verified_in_core": "last page row0 selects Rattata019 rather than prior Pikachu025",
+  "cache_safety": "existing PokedexVisualKey includes scroll and rejects cursor-only redraw when scroll differs; renderer unchanged, no new cache/full frame test claimed",
+  "PNG": 4610,
+  "archive_roundtrip_byte_exact": true,
+  "archive_sha256": "c6bc001b2483f4407e3e0a725bccb0ddae57e2b36b9985ea590ffd01a74d9e7c",
+  "archive_bytes": 574883,
+  "scope": "Horizontal window paging and cursor-row retention only. Controlled actual START->POKEDEX fixtures, not natural playthrough. Native numeric dex cursor getter absent; paired visible labels/cursor and core assertions are evidence. Divider/layout, held repeat/guards/combined direction priority and wider gameplay/story continue under audit."
+}
