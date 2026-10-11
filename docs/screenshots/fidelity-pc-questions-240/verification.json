@@ -1,0 +1,19 @@
+{
+  "base": "3badf5a7359c93e684f4d8ef7d5329a83fe28da2",
+  "source_head": "3badf5a7359c93e684f4d8ef7d5329a83fe28da2",
+  "tests": {
+    "programs": 78,
+    "pass": 3673,
+    "fail": 0,
+    "ignore": 76
+  },
+  "source_cases": 9,
+  "native_stages_per_case": 4,
+  "PNG": 26100,
+  "repeat_raw_png_byte_exact": true,
+  "every_native_cached_full_frame_pixel_equal": true,
+  "all_archive_files_roundtrip_byte_exact": true,
+  "archive_sha256": "b90c41d4a8b03f486cec1cfe78b4ec87966d8fd3fb149612a9f9873f12d39d2a",
+  "archive_bytes": 3561761,
+  "scope": "PC item operation/list questions; logical PrintText handoff anchors, not absolute CPU/PPU timing or complete menu polling fidelity"
+}
