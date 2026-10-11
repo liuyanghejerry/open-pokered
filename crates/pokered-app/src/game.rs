@@ -5402,13 +5402,25 @@ impl PokemonGame {
                         play_species_cry(audio, self.pokedex_screen.cursor_species());
                     }
                 }
+                // The list uses JoypadLowSensitivity with hJoy7=1: a new
+                // button reports the full held mask. Thus holding DOWN/RIGHT
+                // and then pressing A still takes the direction branch.
+                let list_press = self.pokedex_screen.mode()
+                    == pokered_core::pokedex_screen::PokedexScreenMode::List
+                    && [GbButton::Up, GbButton::Down, GbButton::Left, GbButton::Right,
+                        GbButton::A, GbButton::B, GbButton::Start, GbButton::Select]
+                        .iter().any(|&button| input.is_just_pressed(button));
+                let pressed = |button| {
+                    if list_press { input.is_held(button) }
+                    else { input.is_just_pressed(button) }
+                };
                 let dex_input = PokedexScreenInput {
-                    up: input.is_just_pressed(GbButton::Up),
-                    down: input.is_just_pressed(GbButton::Down),
-                    left: input.is_just_pressed(GbButton::Left),
-                    right: input.is_just_pressed(GbButton::Right),
-                    a: input.is_just_pressed(GbButton::A),
-                    b: input.is_just_pressed(GbButton::B),
+                    up: pressed(GbButton::Up),
+                    down: pressed(GbButton::Down),
+                    left: pressed(GbButton::Left),
+                    right: pressed(GbButton::Right),
+                    a: pressed(GbButton::A),
+                    b: pressed(GbButton::B),
                 };
                 match self.pokedex_screen.update_frame(dex_input) {
                     // List-B / post-capture close: the original returns to the
@@ -12017,6 +12029,75 @@ mod mart_menu_audio_tests {
                 SfxId::PressAB as u8);
             assert_eq!(game.save_data.game_data.player_money, 3000);
             assert_eq!(game.save_data.game_data.bag.count(), 0);
+        }
+    }
+}
+
+#[cfg(test)]
+mod pokedex_held_combination_tests {
+    use super::*;
+    use pokered_data::species::Species;
+    use pokered_core::pokedex_screen::PokedexScreenMode;
+
+    fn enter_list() -> PokemonGame {
+        let mut game = PokemonGame::new_with_options(
+            GameVersion::Red, None, None, None, false, None, false, true,
+            #[cfg(feature = "debug-server")] None,
+        );
+        game.save_data = SaveData::new();
+        for index in 1..=25 {
+            game.save_data.game_data.pokedex.set_seen(Species::from_index_id(index));
+        }
+        game.overworld = pokered_core::overworld::OverworldScreen::new(
+            MapId::ViridianPokecenter, None, pokered_core::data::impl_traits::PokemonRedData,
+        );
+        game.overworld.state.player.x = 13;
+        game.overworld.state.player.y = 4;
+        game.overworld.set_event_flag_live(
+            pokered_data::event_flags::EventFlag::EVENT_GOT_POKEDEX,
+        );
+        game.state.screen = GameScreen::Overworld;
+        for _ in 0..120 { game.update(&InputState::new()); }
+        let mut input = InputState::new();
+        input.press(GbButton::Start);
+        game.update(&input);
+        for _ in 0..90 { game.update(&InputState::new()); }
+        assert_eq!(game.state.screen, GameScreen::StartMenu);
+        assert!(game.start_menu.has_pokedex());
+        let mut input = InputState::new();
+        input.press(GbButton::A);
+        game.update(&input);
+        assert_eq!(game.state.screen, GameScreen::Pokedex);
+        assert_eq!(game.pokedex_screen.mode(), PokedexScreenMode::List);
+        for _ in 0..70 { game.update(&InputState::new()); }
+        game
+    }
+
+    #[test]
+    fn a_pressed_while_direction_held_keeps_original_list_priority() {
+        // Real START entry and persistent held input: the original retail
+        // matched traces finish DOWN+A at (4,1), RIGHT+A at (15,14).
+        for (direction, delay, cursor, scroll) in [
+            (GbButton::Down, 4, 4, 1), (GbButton::Right, 10, 15, 14),
+        ] {
+            let mut game = enter_list();
+            let mut input = InputState::new();
+            input.press(direction);
+            game.update(&input);
+            for _ in 1..delay {
+                input.begin_frame();
+                game.update(&input);
+            }
+            input.begin_frame();
+            input.press(GbButton::A);
+            game.update(&input);
+            assert_eq!(game.pokedex_screen.mode(), PokedexScreenMode::List);
+            assert_eq!(game.pokedex_screen.cursor(), cursor);
+            assert_eq!(game.pokedex_screen.scroll_offset(), scroll);
+            // A held without any new button must not produce another event.
+            input.begin_frame();
+            game.update(&input);
+            assert_eq!(game.pokedex_screen.cursor(), cursor);
         }
     }
 }

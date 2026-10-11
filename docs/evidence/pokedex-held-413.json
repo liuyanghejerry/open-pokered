@@ -1,0 +1,89 @@
+{
+  "base": "735a389323278e5ae0ab9ae4e72e9cdb16db450b",
+  "scope": "Controlled25-seen/0-owned save setup, actual START→POKEDEX selection using PokemonGame/InputState, same four schedules before/after, relative frame240 endpoint. Not full animation/input-clock parity.",
+  "original_rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+  "source_assembly": [
+    "ShowPokedexMenu hJoy7=1",
+    "JoypadLowSensitivity newly pressed event reports hJoyHeld",
+    "HandlePokedexListMenu directions take precedence over A"
+  ],
+  "results": [
+    {
+      "case": "down-taps-70-74",
+      "original": {
+        "mode": "List",
+        "cursor": 3,
+        "scroll": 0
+      },
+      "before": {
+        "mode": "List",
+        "cursor": 3,
+        "scroll": 0
+      },
+      "after": {
+        "mode": "List",
+        "cursor": 3,
+        "scroll": 0
+      },
+      "twice_byte_equal": true
+    },
+    {
+      "case": "down-taps-70-75",
+      "original": {
+        "mode": "List",
+        "cursor": 3,
+        "scroll": 0
+      },
+      "before": {
+        "mode": "List",
+        "cursor": 3,
+        "scroll": 0
+      },
+      "after": {
+        "mode": "List",
+        "cursor": 3,
+        "scroll": 0
+      },
+      "twice_byte_equal": true
+    },
+    {
+      "case": "held-down-a74",
+      "original": {
+        "mode": "List",
+        "cursor": 4,
+        "scroll": 1
+      },
+      "before": {
+        "mode": "SideMenu",
+        "cursor": 2,
+        "scroll": 0
+      },
+      "after": {
+        "mode": "List",
+        "cursor": 4,
+        "scroll": 1
+      },
+      "twice_byte_equal": true
+    },
+    {
+      "case": "held-right-a80",
+      "original": {
+        "mode": "List",
+        "cursor": 15,
+        "scroll": 14
+      },
+      "before": {
+        "mode": "SideMenu",
+        "cursor": 8,
+        "scroll": 7
+      },
+      "after": {
+        "mode": "List",
+        "cursor": 15,
+        "scroll": 14
+      },
+      "twice_byte_equal": true
+    }
+  ],
+  "remaining": "Held repeat and variable redraw sampling workclock are separate unresolved audit; no fixed7/8 delay introduced."
+}
