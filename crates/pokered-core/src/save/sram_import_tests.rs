@@ -355,3 +355,22 @@ mod legacy_layout_migration_tests {
         assert!(matches!(import_sram(&sram), Err(SaveError::BadChecksum)));
     }
 }
+
+#[test]
+fn sram_import_preserves_physical_item_slots_in_bag_and_pc() {
+    use crate::save::{SaveData, sram_export::export_sram};
+    use pokered_data::items::ItemId::{Potion, Antidote};
+    for slots in [vec![(Potion,11),(Potion,99),(Antidote,2)],
+                  vec![(Potion,4),(Antidote,2),(Potion,3)],
+                  vec![(Potion,4),(Potion,3),(Antidote,2)]] {
+        let mut save=SaveData::new();
+        save.game_data.bag.replace_item_slots(&slots).unwrap();
+        save.game_data.pc_items.replace_item_slots(&slots).unwrap();
+        let sram=export_sram(&save);
+        for loaded in [import_sram(&sram).unwrap(),import_sram_no_checksum(&sram).unwrap()] {
+            assert_eq!(loaded.game_data.bag.items(),slots,"bag physical slots");
+            assert_eq!(loaded.game_data.pc_items.items(),slots,"PC physical slots");
+            assert_eq!(export_sram(&loaded),sram,"valid SRAM must roundtrip byte exactly");
+        }
+    }
+}
