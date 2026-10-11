@@ -389,9 +389,25 @@ pub struct BedroomDialogue {
     text_delay_frames: u16,
     /// Countdown until the next character may be revealed.
     delay_counter: u16,
+    /// Outer field display preparation, separate from per-letter waits.
+    #[serde(default)]
+    field_entry_frames: u8,
 }
 
 impl BedroomDialogue {
+    const FIELD_BG_TRANSFER_FRAMES: u8 = 3;
+    const FIELD_FONT_TILES: u8 = 128;
+    const FIELD_FONT_AND_PRINT_FRAMES: u8 = Self::FIELD_FONT_TILES / 8 + 1 + 3;
+
+    /// DisplayTextIDInit copies the background in thirds, loads the font
+    /// with CopyVideoDataDouble, and PrintText then waits Delay3. A/B cannot
+    /// skip these transfers; only the following per-letter waits accelerate.
+    pub(crate) fn begin_field_display(&mut self, outer_display: bool) {
+        self.field_entry_frames = if outer_display {
+            Self::FIELD_BG_TRANSFER_FRAMES + Self::FIELD_FONT_AND_PRINT_FRAMES
+        } else { 3 }; // Inner PrintText still performs Delay3.
+    }
+
     pub fn new(player_name: &str) -> Self {
         Self {
             pages: vec![
@@ -410,6 +426,7 @@ impl BedroomDialogue {
             holding_open: false,
             text_delay_frames: DEFAULT_TEXT_DELAY_FRAMES,
             delay_counter: 0,
+            field_entry_frames: 0,
         }
     }
 
@@ -434,6 +451,7 @@ impl BedroomDialogue {
             holding_open: false,
             text_delay_frames: DEFAULT_TEXT_DELAY_FRAMES,
             delay_counter: 0,
+            field_entry_frames: 0,
         }
     }
 
@@ -490,6 +508,7 @@ impl BedroomDialogue {
             holding_open: false,
             text_delay_frames: DEFAULT_TEXT_DELAY_FRAMES,
             delay_counter: 0,
+            field_entry_frames: 0,
         }
     }
 
@@ -532,6 +551,8 @@ impl BedroomDialogue {
     }
 
     pub fn get_display_text(&self) -> Option<(String, String)> {
+        // WY moves on-screen after the three background transfers.
+        if self.field_entry_frames > Self::FIELD_FONT_AND_PRINT_FRAMES { return None; }
         let page = self.pages.get(self.current_page)?;
         let idx = self.char_index as usize;
         let l1_chars: Vec<char> = page.line1.chars().collect();
@@ -577,6 +598,10 @@ impl BedroomDialogue {
     /// PrintLetterDelay polls held A/B without a menu sound. A press ends the
     /// current letter's wait after one hardware frame; it never reveals a page.
     pub fn reveal_next_char_with_buttons(&mut self, fast_held: bool) {
+        if self.field_entry_frames != 0 {
+            self.field_entry_frames -= 1;
+            return;
+        }
         if self.delay_counter > 0 {
             self.delay_counter = if fast_held { 0 } else { self.delay_counter - 1 };
             return;
@@ -603,6 +628,7 @@ impl BedroomDialogue {
         self.char_index = 0;
         self.waiting_for_input = false;
         self.delay_counter = 0;
+        self.field_entry_frames = 0;
         self.current_page < self.pages.len()
     }
 

@@ -2631,8 +2631,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             }
             script_bridge::ScriptEffect::ShowDialogue { text } | script_bridge::ScriptEffect::PrintFieldText { text } => {
                 if pending_dialogue.is_none() {
+                    let needs_field_display = returns_after_print && last_script_dialogue.is_none();
                     *last_script_dialogue = None;
-                    let dialogue = script_bridge::text_to_dialogue_with_names(text, dialogue_names);
+                    let mut dialogue = script_bridge::text_to_dialogue_with_names(text, dialogue_names);
+                    if returns_after_print { dialogue.begin_field_display(needs_field_display); }
                     if dialogue.is_done() {
                         return true;
                     }
