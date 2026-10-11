@@ -17,7 +17,7 @@ use pokered_data::items::ItemId;
 
 #[path = "shop_field_text.rs"]
 mod field_text;
-use field_text::{AfterText, FieldFlow, MartText, TextUpdate};
+use field_text::{AfterText, ConfirmationWait, FieldFlow, MartText, SaleSoundWait, TextUpdate};
 
 // Re-export the engine's mart types so existing `items::shop::*` paths
 // keep working. `SoundId` is pokered's historical name for the engine's
@@ -104,8 +104,27 @@ impl MartState {
     }
 
     pub fn display_phase(&self) -> &MartPhase {
-        self.1.as_ref().and_then(|flow| flow.text.as_ref())
-            .map_or(&self.0.phase, |text| &text.underlay)
+        if let Some(flow) = self.1.as_ref() {
+            if let Some(wait) = &flow.sale_sound_wait { return &wait.underlay; }
+            if let Some(text) = &flow.text { return &text.underlay; }
+        }
+        &self.0.phase
+    }
+
+    /// Only a render snapshot: money and inventory commit atomically, while
+    /// the original selling screen remains visible until the cash SFX ends.
+    pub fn sale_bag_for_display(&self) -> Option<&[(ItemId, u32)]> {
+        self.1.as_ref()?.sale_sound_wait.as_ref().map(|wait| wait.bag.as_slice())
+    }
+
+    fn confirmation_underlay(phase: &MartPhase) -> MartPhase {
+        match phase {
+            MartPhase::Buy(BuyMenuState::Confirm { item_index, quantity, .. }) =>
+                MartPhase::Buy(BuyMenuState::Quantity { item_index: *item_index, quantity: *quantity }),
+            MartPhase::Sell(SellMenuState::Confirm { item_index, quantity, max_quantity, .. }) =>
+                MartPhase::Sell(SellMenuState::Quantity { item_index: *item_index, quantity: *quantity, max_quantity: *max_quantity }),
+            _ => phase.clone(),
+        }
     }
 
     pub fn field_message_lines(&self) -> Vec<String> {
@@ -114,7 +133,7 @@ impl MartState {
     }
 
     pub fn field_message_active(&self) -> bool {
-        self.1.as_ref().is_some_and(|flow| flow.text.is_some())
+        self.1.as_ref().is_some_and(|flow| flow.text.is_some() || flow.confirmation_wait.is_some() || flow.pending_purchase || flow.sale_sound_wait.is_some())
     }
 
     pub fn field_message_waiting(&self) -> bool {
@@ -126,8 +145,14 @@ impl MartState {
             .is_some_and(MartText::prompt_arrow_visible)
     }
 
-    pub fn take_text_advance(&mut self) -> bool {
+    /// Drain the PressAB cue from HandleMenuInput or manual text advance.
+    /// Quantity selection and the outer exit acknowledgement are silent.
+    pub fn take_button_sound(&mut self) -> bool {
         self.1.as_mut().is_some_and(|flow| core::mem::take(&mut flow.text_advance))
+    }
+
+    pub fn take_text_advance(&mut self) -> bool {
+        self.take_button_sound()
     }
 
     /// Advance the mart state machine by one frame of input.
@@ -140,7 +165,29 @@ impl MartState {
 
     pub fn update_frame_with_text_input(&mut self, mut input: MenuInput, player: &mut PlayerData,
         held_a: bool, held_b: bool, sound_playing: bool) -> MartUpdate {
+        let mut resumed_confirmation = false;
         if let Some(flow) = self.1.as_mut() {
+            if flow.pending_purchase {
+                if sound_playing { return MartUpdate::Continue; }
+                flow.pending_purchase = false;
+                return MartUpdate::PlaySound(SoundId::Purchase);
+            }
+            if flow.sale_sound_wait.is_some() {
+                if sound_playing { return MartUpdate::Continue; }
+                flow.sale_sound_wait = None;
+                flow.retained_lines = vec!["What would you".into(), "like to sell?".into()];
+                return MartUpdate::Continue;
+            }
+            if let Some(wait) = flow.confirmation_wait.as_mut() {
+                // DisplayTwoOptionMenu retains the chosen menu for DelayFrames15
+                // before restoring tiles and returning to the transaction caller.
+                wait.frames -= 1;
+                if wait.frames != 0 { return MartUpdate::Continue; }
+                let cancel = wait.cancel;
+                flow.confirmation_wait = None;
+                input = MenuInput { a: !cancel, b: cancel, ..MenuInput::none() };
+                resumed_confirmation = true;
+            }
             if flow.exit_wait_a {
                 return if held_a { MartUpdate::Continue } else { MartUpdate::Exit };
             }
@@ -173,6 +220,50 @@ impl MartState {
                 }
             }
         }
+        if let Some(flow) = self.1.as_mut() {
+            if !resumed_confirmation && (input.a || input.b) && matches!(self.0.phase,
+                MartPhase::MainMenu { .. }
+                    | MartPhase::Buy(BuyMenuState::SelectItem { .. } | BuyMenuState::Confirm { .. })
+                    | MartPhase::Sell(SellMenuState::SelectItem { .. } | SellMenuState::Confirm { .. })) {
+                flow.text_advance = true;
+            }
+        }
+        // HandleMenuInput clamps ordinary mart menus (wMenuWrappingEnabled=0).
+        // The quantity chooser has its own wrapping policy, handled below.
+        if self.1.is_some() {
+            match &mut self.0.phase {
+                MartPhase::MainMenu { cursor } => {
+                    let index: usize = match cursor {
+                        MartTopChoice::Buy => 0, MartTopChoice::Sell => 1, MartTopChoice::Quit => 2,
+                    };
+                    let index = if input.up { index.saturating_sub(1) }
+                        else if input.down { (index + 1).min(2) } else { index };
+                    *cursor = match index { 0 => MartTopChoice::Buy, 1 => MartTopChoice::Sell, _ => MartTopChoice::Quit };
+                    input.up = false;
+                    input.down = false;
+                },
+                MartPhase::Buy(BuyMenuState::Confirm { selected, .. })
+                    | MartPhase::Sell(SellMenuState::Confirm { selected, .. }) => {
+                    if input.up { *selected = ConfirmChoice::Yes; }
+                    else if input.down { *selected = ConfirmChoice::No; }
+                    input.up = false;
+                    input.down = false;
+                },
+                _ => {},
+            }
+        }
+        if !resumed_confirmation && self.1.is_some() && (input.a || input.b) {
+            let selected = match &mut self.0.phase {
+                MartPhase::Buy(BuyMenuState::Confirm { selected, .. })
+                    | MartPhase::Sell(SellMenuState::Confirm { selected, .. }) => Some(selected),
+                _ => None,
+            };
+            if let Some(selected) = selected {
+                if input.b { *selected = ConfirmChoice::No; }
+                self.1.as_mut().unwrap().confirmation_wait = Some(ConfirmationWait { frames: 15, cancel: input.b });
+                return MartUpdate::Continue;
+            }
+        }
         // DisplayListMenuID includes CANCEL after the last item, even when a
         // sale removed the last stack. Expose that row to the engine adapter.
         if self.1.is_some() {
@@ -183,8 +274,8 @@ impl MartState {
             };
             if let Some((sell, cursor, count)) = selection {
                 let cursor = cursor.min(count);
-                let cursor = if input.up { (cursor + count) % (count + 1) }
-                    else if input.down { (cursor + 1) % (count + 1) } else { cursor };
+                let cursor = if input.up { cursor.saturating_sub(1) }
+                    else if input.down { (cursor + 1).min(count) } else { cursor };
                 if input.b || (input.a && cursor == count) {
                     FieldFlow::reset_main(&mut self.0.phase);
                     self.1.as_mut().unwrap().anything_else(self.0.phase.clone());
@@ -227,6 +318,9 @@ impl MartState {
             confirm: input.a,
             cancel: input.b && (!quantity_menu || !input.a),
         };
+        let sale_bag = if self.1.is_some() && matches!(previous, MartPhase::Sell(SellMenuState::Confirm { .. })) {
+            player.bag.items().to_vec()
+        } else { Vec::new() };
         let result = self.0.update_frame(engine_input, player);
         let Some(flow) = self.1.as_mut() else { return result; };
         if result == MartUpdate::Exit {
@@ -274,14 +368,22 @@ impl MartState {
                     BuyResult::BagFull => (&["You can't carry", "any more items."], AfterText::AnythingElse),
                     BuyResult::InvalidItem => (&["That item doesn't", "exist!"], AfterText::AnythingElse),
                 };
-                flow.print(lines, previous.clone(), true, after);
-                if matches!(dialogue, BuyResult::Success { .. }) { flow.text.as_mut().unwrap().wait_for_purchase_sound(); }
+                let saved_lines = flow.retained_lines.clone();
+                flow.print(lines, Self::confirmation_underlay(&previous), true, after);
+                if matches!(dialogue, BuyResult::Success { .. }) {
+                    flow.text.as_mut().unwrap().wait_for_purchase_sound(saved_lines);
+                    if sound_playing { flow.pending_purchase = true; return MartUpdate::Continue; }
+                }
             },
             (_, MartPhase::Sell(SellMenuState::Result { dialogue: SellResult::Success { .. }, .. })) => {
-                // AddAmountSoldToMoney plays the cash-register SFX, without
-                // a success textbox. Keep the saved selling greeting.
+                // AddAmountSoldToMoney waits for the previous SFX, then waits
+                // for the cash register before restoring the saved bag list.
+                // Keep a visual snapshot without splitting the transaction.
                 self.0.phase = MartPhase::Sell(SellMenuState::SelectItem { cursor: 0 });
-                flow.retained_lines = vec!["What would you".into(), "like to sell?".into()];
+                flow.sale_sound_wait = Some(SaleSoundWait {
+                    underlay: Self::confirmation_underlay(&previous), bag: sale_bag,
+                });
+                if sound_playing { flow.pending_purchase = true; return MartUpdate::Continue; }
                 return MartUpdate::PlaySound(SoundId::Purchase);
             },
             (MartPhase::Buy(BuyMenuState::Confirm { .. }), MartPhase::Buy(BuyMenuState::SelectItem { .. })) => {
