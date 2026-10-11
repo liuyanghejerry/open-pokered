@@ -1,13 +1,13 @@
 # 背包整格丢弃后的返回位置
 
-基底实际 master f348c563c19b60c44e3fcff021ffac082cef1edc；仅 bag_screen.rs。原作 pret/pokered fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c 的 engine/items/inventory.asm RemoveItemFromInventory_ 在物理格清空时将 wCurrentMenuItem/wListScrollOffset/wBagSavedMenuItem/wSavedListScrollOffset 清零；部分扣减不重置。
+基底实际 master c8566923c691ba9b6538a57a11500c19fe391230；仅 bag_screen.rs。原作 pret/pokered fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c 的 engine/items/inventory.asm RemoveItemFromInventory_ 在物理格清空时将 wCurrentMenuItem/wListScrollOffset/wBagSavedMenuItem/wSavedListScrollOffset 清零；部分扣减不重置。
 
 复刻先前只限制光标越界，丢弃中间格后仍指着后继道具，丢弃末格后会停在 CANCEL。现在仅在格数减少时将光标/滚动重置0；保留丢弃结果PROMPT与确认/保护等待，部分丢弃、NO及B操作维持原行为。
 
 八组原作、实际master和修复分支分别两遍、每遍1801帧：部分丢弃、整格、中间格、末格、首格、唯一格、NO、B。原作采用START0，Native从对应START菜单状态开始，其后相同输入/帧。候选库存每帧与原作一致，缓存/完整绘制每帧一致且无SAVE；整格最终返回1500..1800的301帧光标/滚动与原作均为0/0。部分、NO、B前后全1801帧光标/滚动相同；NO/B的稳定位置在1300检查（共同1450的A会打开下一菜单）。
 
-四组前后截图取1800帧，同输入/帧/配置：整格、中间格、末格及部分数量控制。基底已有的背包窗口差异是独立PR180，本修复不声称部分数量窗口与原作完全相同，也不修复菜单重入记忆、问题文本/箭头/音频/初读重绘时序、字体或布局。
+四组前后截图取1800帧，同输入/帧/配置：整格、中间格、末格及部分数量控制。基底已合入PR180背包窗口修复，部分丢弃/NO/B最终光标和滚动也与原作6/4一致，本修复不声称完整逐帧窗口时序相同，也不修复菜单重入记忆、问题文本/箭头/音频/初读重绘时序、字体或布局。
 
-78个应用/核心测试程序：3702通过，0失败，74忽略。专项6情况通过，完整默认核心2762通过；全应用/核心的冻结结果在包内。新启动m01-m03和独立进程s07 SAVE/CONTINUE通过。第一次专项命令误从其他检出运行、筛选0测试，以及第一次证据脚本语法错误，均保留本地且未算验证通过；后续正确检出实际1测试通过、独立验证退出0。
+78个应用/核心测试程序：3713通过，0失败，76忽略。专项6情况通过，完整当前核心2763通过；全应用/核心的冻结结果在包内。新启动m01-m03和独立进程s07 SAVE/CONTINUE通过。先前实际master f348的历史验证及其截图已另行归档；现在全部前后基于c856重新录制。第一次专项命令误从其他检出运行、筛选0测试，以及第一次证据脚本语法错误，均保留本地且未算验证通过；后续正确检出实际1测试通过、独立验证退出0。
 
 证据包只包含裁剪观察、采集/校验代码、摘要和SHA，不包含ROM、SRAM、模拟器状态、完整游戏快照或执行文件。解压后运行 python3 verify_evidence.py。
