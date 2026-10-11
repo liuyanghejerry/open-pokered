@@ -794,6 +794,8 @@ impl PcScreen {
                 }
                 PcMainMenuTarget::BillsPc => {
                     self.sfx.push(PcSfx::Enter);
+                    // BillsPC_ resets wParentMenuItem, preserving the current box.
+                    self.bills_menu = BillsPcMenuState::new(self.bills_menu.current_box());
                     // "Accessed BILL's PC. / Accessed #MON Storage System."
                     // (_AccessedBillsPCText / _AccessedSomeonesPCText)
                     let first = if self.met_bill {
@@ -1601,6 +1603,22 @@ impl PcScreen {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn fresh_bills_pc_entry_resets_cursor_and_preserves_current_box() {
+        let mut w = World::new();
+        let mut s = PcScreen::new(PcEntry::PokemonCenter, &open_ctx());
+        open_bills_pc(&mut s,&mut w);
+        s.bills_menu.set_current_box(2);
+        for _ in 0..4 { s.update_frame(DOWN,&mut w.ctx()); }
+        assert_eq!(s.bills_menu().cursor(),4);
+        s.update_frame(A,&mut w.ctx()); assert_eq!(s.phase(),PcPhase::MainMenu);
+        s.update_frame(A,&mut w.ctx()); skip_message(&mut s,&mut w);
+        assert_eq!(s.phase(),PcPhase::BillsMenu);
+        assert_eq!(s.bills_menu().cursor(),0,"fresh BillsPC_ starts at WITHDRAW PKMN");
+        assert_eq!(s.bills_menu().current_box(),2,"fresh menu does not change the selected box");
+        assert!(!s.take_save_request());
+    }
+
     #[test]
     fn fresh_player_pc_entry_resets_cursor_without_resetting_list_return() {
         fn settle(s: &mut PcScreen, w: &mut World) {
