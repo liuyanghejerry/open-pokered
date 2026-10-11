@@ -1715,6 +1715,7 @@ impl PcScreen {
             self.yes_selected = false;
         }
         if input.b {
+            self.item_list_cursor = (self.item_list_scroll + 1).min(ctx.pc_items.count());
             self.begin_item_question(true, true);
             return PcScreenAction::Continue;
         }
@@ -1727,13 +1728,23 @@ impl PcScreen {
                     .get(idx)
                     .map(|(item, _)| item_name(*item))
                     .unwrap_or_default();
+                let slots_before = ctx.pc_items.count();
                 let _ = ctx.pc_items.remove_item_at(idx, qty);
+                if ctx.pc_items.count() < slots_before {
+                    self.item_list_cursor = 0;
+                    self.item_list_scroll = 0;
+                } else {
+                    // DisplayTwoOptionMenu leaves its YES row (zero) in
+                    // wCurrentMenuItem; physical removal still uses idx.
+                    self.item_list_cursor = self.item_list_scroll;
+                }
                 // "Threw away {ITEM}." (_ThrewAwayItemText)
                 self.set_message(
                     vec!["Threw away".into(), format!("{}.", name)],
                     AfterMessage::ItemList,
                 );
             } else {
+                self.item_list_cursor = (self.item_list_scroll + 1).min(ctx.pc_items.count());
                 self.begin_item_question(true, true);
             }
         }
@@ -2085,6 +2096,55 @@ mod tests {
                 assert!(!screen.take_save_request());
             }
         }
+    }
+
+    #[test]
+    fn pc_toss_returns_to_the_source_choice_row_and_removes_the_physical_slot() {
+        let slots = [(ItemId::Potion,4),(ItemId::Antidote,3),(ItemId::PokeBall,2),
+                     (ItemId::Revive,2),(ItemId::EscapeRope,1)];
+        for (index,scroll) in [(1,0),(3,1)] {
+            for choice in ["full", "partial", "no", "b"] {
+                let (mut screen,mut world) = select_fixture(ItemListMode::Toss,&slots);
+                screen.phase = PcPhase::TossConfirm;
+                screen.item_list_cursor = index;
+                screen.item_list_scroll = scroll;
+                screen.item_qty = (slots[index].1 - u32::from(choice == "partial")) as u8;
+                screen.yes_selected = choice != "no";
+                let input = if choice == "b" { B } else { A };
+                screen.update_frame(input,&mut world.ctx());
+                assert_eq!(screen.pending_confirmation,Some(choice == "full" || choice == "partial"));
+                for frame in 1..=15 {
+                    screen.update_frame(NONE,&mut world.ctx());
+                    if frame < 15 {
+                        assert_eq!(world.pc_items.items(),slots);
+                        assert_eq!((screen.item_list_cursor(),screen.item_list_scroll()),(index,scroll));
+                        assert_eq!(screen.phase(),PcPhase::TossConfirm);
+                    }
+                }
+                let mut expected = slots.to_vec();
+                let position = match choice {
+                    "full" => { expected.remove(index); (0,0) },
+                    "partial" => { expected[index].1 = 1; (scroll,scroll) },
+                    _ => (scroll+1,scroll),
+                };
+                assert_eq!(world.pc_items.items(),expected,"physical target {choice} {index}");
+                assert_eq!(world.bag.items(),slots);
+                assert_eq!((screen.item_list_cursor(),screen.item_list_scroll()),position);
+                if choice == "full" || choice == "partial" { skip_message(&mut screen,&mut world); }
+                else { finish_item_question(&mut screen,&mut world); }
+                assert_eq!(screen.phase(),PcPhase::ItemList);
+                assert_eq!((screen.item_list_cursor(),screen.item_list_scroll()),position);
+                assert!(!screen.take_save_request());
+            }
+        }
+        // NO is row one even when the only remaining list entry is CANCEL.
+        let (mut screen,mut world) = select_fixture(ItemListMode::Toss,&slots[..1]);
+        screen.phase=PcPhase::TossConfirm;
+        screen.update_frame(B,&mut world.ctx());
+        finish_confirmation_wait(&mut screen,&mut world);
+        finish_item_question(&mut screen,&mut world);
+        assert_eq!(screen.item_list_cursor(),1);
+        assert_eq!(world.pc_items.items(),slots[..1]);
     }
 
     #[test]
@@ -3199,6 +3259,8 @@ mod tests {
         finish_item_question(&mut s, &mut w);
         assert_eq!(s.phase(), PcPhase::ItemList);
         assert_eq!(w.pc_items.item_quantity(ItemId::Potion), 3);
+        assert_eq!(s.item_list_cursor(), 1); // original NO row is retained
+        s.update_frame(UP, &mut w.ctx()); // select POTION again
         // YES tosses.
         s.update_frame(A, &mut w.ctx());
         finish_item_question(&mut s, &mut w);
