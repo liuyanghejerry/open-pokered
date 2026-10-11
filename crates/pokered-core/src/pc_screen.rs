@@ -1209,7 +1209,8 @@ impl PcScreen {
         }
         self.clamp_item_scroll(ctx);
 
-        if input.b {
+        // DisplayListMenuID checks A before B, including simultaneous input.
+        if input.b && !input.a {
             self.enter_item_menu();
             return PcScreenAction::Continue;
         }

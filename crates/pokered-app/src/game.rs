@@ -11532,3 +11532,55 @@ mod bag_list_owner_219 {
  #[test]fn bag_list_selection_and_mark_match_original(){std::thread::Builder::new().stack_size(16*1024*1024).spawn(||run(None)).unwrap().join().unwrap();}
  #[test]#[ignore="controlled Bag list before-after capture"]fn capture_bag_list_219(){let path=std::path::PathBuf::from(std::env::var("BAG_LIST_CAPTURE_219").unwrap());std::thread::Builder::new().stack_size(16*1024*1024).spawn(move||run(Some(&path))).unwrap().join().unwrap();}
 }
+
+#[cfg(all(test, not(target_os = "none")))]
+mod pc_item_list_owner_228 {
+ use super::*;
+ use pokered_core::pc_screen::PcPhase;
+ fn tick(g:&mut PokemonGame,input:&mut InputState,held:&mut Vec<GbButton>,keys:Vec<GbButton>){input.begin_frame();for &k in held.iter(){if !keys.contains(&k){input.release(k);}}for &k in &keys{if !held.contains(&k){input.press(k);}}*held=keys;g.update(input);}
+ fn run(capture: Option<&std::path::Path>) {
+  use pokered_data::items::ItemId;
+  for (context, cursor) in [("withdraw",0), ("deposit",1), ("toss",2)] {
+   let private_dir=std::env::temp_dir().join(format!("pc-list-228-{}-{}",std::process::id(),std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()));
+   std::fs::create_dir(&private_dir).unwrap();let save_path=private_dir.join("owned.sav");assert!(!save_path.exists());
+   #[cfg(feature="debug-server")]let mut g=PokemonGame::new_with_options(GameVersion::Red,Some(save_path.clone()),None,None,false,None,false,true,None);
+   #[cfg(not(feature="debug-server"))]let mut g=PokemonGame::new_with_options(GameVersion::Red,Some(save_path.clone()),None,None,false,None,false,true);
+   g.audio=None;g.set_seed(42);g.state.config.language=pokered_core::game_state::Lang::En;g.state.config.text_speed=pokered_core::game_state::TextSpeed::Slow;
+   g.save_data.game_data.pc_items=pokered_core::items::inventory::Inventory::new_pc();
+   g.save_data.game_data.bag.add_item(ItemId::Potion,4).unwrap();g.save_data.game_data.pc_items.add_item(ItemId::Potion,4).unwrap();
+   assert_eq!(g.save_data.game_data.bag.item_quantity(ItemId::Potion),4);assert_eq!(g.save_data.game_data.pc_items.item_quantity(ItemId::Potion),4);
+   g.state.screen=GameScreen::Overworld;g.overworld.warp_to_map(MapId::ViridianPokecenter,13,4);g.overworld.state.player.facing=pokered_core::overworld::Direction::Up;
+   let idle=InputState::new();for _ in 0..120{g.update(&idle);}
+   assert!(pokered_core::overworld::update::is_script_walkable_tile(g.overworld.map_data.as_ref().unwrap(),13,4));
+   let mut input=InputState::new();let mut held=Vec::new();let mut setup=None;
+   for t in 0..2000 {
+    let phase=g.pc_screen.as_ref().map(|p|p.phase());if phase==Some(PcPhase::ItemList){setup=Some(t);break;}
+    let keys=if t==0 {vec![GbButton::A]}else if t%8!=0 {vec![]}else {match phase {
+     Some(PcPhase::Message)=>vec![GbButton::A],
+     Some(PcPhase::MainMenu)=>{if g.pc_screen.as_ref().unwrap().main_menu().cursor()<1 {vec![GbButton::Down]}else{vec![GbButton::A]}},
+     Some(PcPhase::ItemMenu)=>{if g.pc_screen.as_ref().unwrap().players_menu().cursor()<cursor {vec![GbButton::Down]}else{vec![GbButton::A]}},
+     _=>vec![]}};
+    tick(&mut g,&mut input,&mut held,keys);
+   }
+   assert!(setup.is_some(),"{context}: actual hidden PC and item-menu navigation");
+   for _ in 0..70 {tick(&mut g,&mut input,&mut held,vec![]);}
+   assert_eq!(g.pc_screen.as_ref().unwrap().phase(),PcPhase::ItemList);
+   assert_eq!(g.pc_screen.as_ref().unwrap().item_list_cursor(),0);
+   let mut session=crate::render::session::RenderSession::new();let mut retained=FrameBuffer::new(dotzuki_engine::render_config::RenderConfig::new(160,144),pokered_renderer::Rgba::WHITE);let mut scroll=|_:&mut [u8],_:usize,_:usize,_:i32,_:i32,_:u8|{};let mut rows=Vec::new();
+   for t in 0..61 {
+    let keys=if t==0 {vec![GbButton::A,GbButton::B]}else{vec![]};tick(&mut g,&mut input,&mut held,keys);session.render(&mut g,&mut retained,&mut scroll);
+    let mut full=FrameBuffer::new(dotzuki_engine::render_config::RenderConfig::new(160,144),pokered_renderer::Rgba::WHITE);g.draw(&mut full);assert_eq!(retained.packed(),full.packed(),"{context} cached/full {t}");
+    assert_eq!(g.save_data.game_data.bag.item_quantity(ItemId::Potion),4);assert_eq!(g.save_data.game_data.pc_items.item_quantity(ItemId::Potion),4);assert!(!save_path.exists());
+    if capture.is_none(){assert_eq!(g.pc_screen.as_ref().unwrap().phase(),PcPhase::ItemQuantity,"{context}: original A wins over B in DisplayListMenuID");}
+    if let Some(root)=capture {
+     let dir=root.join(context);std::fs::create_dir_all(&dir).unwrap();full.save_png(&dir.join(format!("frame-{t:03}.png"))).unwrap();
+     rows.push(serde_json::json!({"t":t,"input":if t==0 {vec!["a","b"]}else{vec![]},"phase":format!("{:?}",g.pc_screen.as_ref().unwrap().phase()),"pc":format!("{:?}",g.pc_screen.as_ref().unwrap()),"bag_potions":g.save_data.game_data.bag.item_quantity(ItemId::Potion),"pc_potions":g.save_data.game_data.pc_items.item_quantity(ItemId::Potion),"owned_save_exists":save_path.exists(),"overworld":pokered_core::snapshot::OverworldSnapshot::capture(&g.overworld)}));
+    }
+   }
+   if let Some(root)=capture{std::fs::write(root.join(context).join("frames.json"),serde_json::to_vec_pretty(&rows).unwrap()).unwrap();}
+   std::fs::remove_dir_all(private_dir).unwrap();
+  }
+ }
+ #[test]fn pc_item_list_simultaneous_ab_selects_without_mutating_inventory(){std::thread::Builder::new().stack_size(16*1024*1024).spawn(||run(None)).unwrap().join().unwrap();}
+ #[test]#[ignore="actual PC list simultaneous A/B before/after capture"]fn capture_pc_item_list_228(){let path=std::path::PathBuf::from(std::env::var("PC_ITEM_LIST_CAPTURE_228").unwrap());std::thread::Builder::new().stack_size(16*1024*1024).spawn(move||run(Some(&path))).unwrap().join().unwrap();}
+}
