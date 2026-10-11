@@ -81,12 +81,21 @@ fn pc_main_menu_b_logs_off() {
 }
 
 #[test]
-fn pc_main_menu_cursor_wraps() {
-    let mut menu = PcMainMenuState::new(false, false, false);
-    menu.update_frame(menu_up());
-    assert_eq!(menu.cursor(), 2);
-    menu.update_frame(menu_down());
-    assert_eq!(menu.cursor(), 0);
+fn pc_main_menu_boundaries_keep_the_source_action_for_each_available_menu() {
+    for (dex,league) in [(false,false),(true,false),(true,true)] {
+        for met_bill in [false,true] {
+            let mut menu = PcMainMenuState::new(dex,league,met_bill);
+            for _ in 0..12 { assert_eq!(menu.update_frame(menu_up()),None); }
+            assert_eq!(menu.cursor(),0);
+            assert_eq!(menu.update_frame(MenuInput { up:true, a:true, ..menu_none() }),Some(PcMainMenuTarget::BillsPc));
+            for _ in 0..12 { assert_eq!(menu.update_frame(menu_down()),None); }
+            assert_eq!(menu.cursor(),menu.item_count()-1);
+            assert_eq!(menu.update_frame(MenuInput { down:true, a:true, ..menu_none() }),Some(PcMainMenuTarget::LogOff));
+            for _ in 0..12 { menu.update_frame(menu_up()); }
+            assert_eq!(menu.update_frame(MenuInput { up:true, down:true, a:true, ..menu_none() }),Some(PcMainMenuTarget::BillsPc));
+            assert_eq!(menu.met_bill(),met_bill);
+        }
+    }
 }
 
 #[test]
@@ -139,13 +148,17 @@ fn bills_pc_menu_b_exits() {
 }
 
 #[test]
-fn bills_pc_menu_cursor_wraps() {
-    let mut menu = BillsPcMenuState::new(0);
-    menu.update_frame(menu_up());
-    assert_eq!(menu.cursor(), 4);
-    assert_eq!(menu.current_action(), BillsPcAction::Exit);
-    menu.update_frame(menu_down());
-    assert_eq!(menu.cursor(), 0);
+fn bills_pc_menu_boundaries_keep_withdraw_and_exit_and_the_current_box() {
+    let mut menu = BillsPcMenuState::new(2);
+    for _ in 0..12 { menu.update_frame(menu_up()); }
+    assert_eq!(menu.cursor(),0);
+    assert_eq!(menu.update_frame(MenuInput { up:true, a:true, ..menu_none() }),Some(BillsPcAction::Withdraw));
+    for _ in 0..12 { menu.update_frame(menu_down()); }
+    assert_eq!(menu.cursor(),4);
+    assert_eq!(menu.update_frame(MenuInput { down:true, a:true, ..menu_none() }),Some(BillsPcAction::Exit));
+    assert_eq!(menu.current_box(),2);
+    for _ in 0..12 { menu.update_frame(menu_up()); }
+    assert_eq!(menu.current_action(),BillsPcAction::Withdraw);
 }
 
 #[test]
@@ -204,12 +217,16 @@ fn players_pc_menu_b_logs_off() {
 }
 
 #[test]
-fn players_pc_menu_cursor_wraps() {
+fn players_pc_menu_boundaries_keep_withdraw_item_and_log_off() {
     let mut menu = PlayersPcMenuState::new();
-    menu.update_frame(menu_up());
-    assert_eq!(menu.cursor(), 3);
-    menu.update_frame(menu_down());
-    assert_eq!(menu.cursor(), 0);
+    for _ in 0..12 { menu.update_frame(menu_up()); }
+    assert_eq!(menu.cursor(),0);
+    assert_eq!(menu.update_frame(MenuInput { up:true, a:true, ..menu_none() }),Some(PlayersPcAction::WithdrawItem));
+    for _ in 0..12 { menu.update_frame(menu_down()); }
+    assert_eq!(menu.cursor(),3);
+    assert_eq!(menu.update_frame(MenuInput { down:true, a:true, ..menu_none() }),Some(PlayersPcAction::LogOff));
+    for _ in 0..12 { menu.update_frame(menu_up()); }
+    assert_eq!(menu.current_action(),PlayersPcAction::WithdrawItem);
 }
 
 #[test]

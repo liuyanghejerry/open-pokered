@@ -1,0 +1,103 @@
+{
+  "base": "35b6b1eb0d5dd1632ab1176c1b30d06c8e354e29",
+  "source_head": "b50f5e706bd9843aa12c99f53cbab91098c6ccd0",
+  "tests": {
+    "programs": 78,
+    "pass": 3675,
+    "fail": 0,
+    "ignore": 76
+  },
+  "cases": [
+    {
+      "menu": "main",
+      "direction": "up",
+      "original_final_cursor": 0,
+      "original_wrapping_enabled": 0,
+      "source_raw_repeat_exact": true,
+      "master_raw_repeat_exact": true,
+      "candidate_raw_repeat_exact": true,
+      "candidate_final_png_equals_edge": true,
+      "master_final_png_differs_from_edge": true,
+      "inventory_unchanged": true,
+      "save_not_created": true
+    },
+    {
+      "menu": "main",
+      "direction": "down",
+      "original_final_cursor": 3,
+      "original_wrapping_enabled": 0,
+      "source_raw_repeat_exact": true,
+      "master_raw_repeat_exact": true,
+      "candidate_raw_repeat_exact": true,
+      "candidate_final_png_equals_edge": true,
+      "master_final_png_differs_from_edge": true,
+      "inventory_unchanged": true,
+      "save_not_created": true
+    },
+    {
+      "menu": "player",
+      "direction": "up",
+      "original_final_cursor": 0,
+      "original_wrapping_enabled": 0,
+      "source_raw_repeat_exact": true,
+      "master_raw_repeat_exact": true,
+      "candidate_raw_repeat_exact": true,
+      "candidate_final_png_equals_edge": true,
+      "master_final_png_differs_from_edge": true,
+      "inventory_unchanged": true,
+      "save_not_created": true
+    },
+    {
+      "menu": "player",
+      "direction": "down",
+      "original_final_cursor": 3,
+      "original_wrapping_enabled": 0,
+      "source_raw_repeat_exact": true,
+      "master_raw_repeat_exact": true,
+      "candidate_raw_repeat_exact": true,
+      "candidate_final_png_equals_edge": true,
+      "master_final_png_differs_from_edge": true,
+      "inventory_unchanged": true,
+      "save_not_created": true
+    },
+    {
+      "menu": "bill",
+      "direction": "up",
+      "original_final_cursor": 0,
+      "original_wrapping_enabled": 0,
+      "source_raw_repeat_exact": true,
+      "master_raw_repeat_exact": true,
+      "candidate_raw_repeat_exact": true,
+      "candidate_final_png_equals_edge": true,
+      "master_final_png_differs_from_edge": true,
+      "inventory_unchanged": true,
+      "save_not_created": true
+    },
+    {
+      "menu": "bill",
+      "direction": "down",
+      "original_final_cursor": 4,
+      "original_wrapping_enabled": 0,
+      "source_raw_repeat_exact": true,
+      "master_raw_repeat_exact": true,
+      "candidate_raw_repeat_exact": true,
+      "candidate_final_png_equals_edge": true,
+      "master_final_png_differs_from_edge": true,
+      "inventory_unchanged": true,
+      "save_not_created": true
+    }
+  ],
+  "main_actual_menu_rows": 4,
+  "main_fixture_get_pokedex": true,
+  "main_fixture_entered_hall_of_fame": false,
+  "core_main_availability_variants": [
+    3,
+    4,
+    5
+  ],
+  "PNG": 7828,
+  "archive_roundtrip_byte_exact": true,
+  "archive_sha256": "bfc36abceab02f8ef20d23e8b7d61d77fe327f52d54d06ca0ac736788b3f50fc",
+  "archive_bytes": 1779961,
+  "scope": "PC direction boundaries only; controlled snapshots, not natural playthrough or complete input timing fidelity"
+}
