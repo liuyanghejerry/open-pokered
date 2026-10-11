@@ -1,0 +1,14 @@
+{
+  "base": "ab9a272202270b9370690bdfb874edc12af89c31",
+  "original_pngs": 4686,
+  "matched_native_before_after_pngs": 732,
+  "total_pngs": 5418,
+  "all_png_roundtrip_byte_exact": true,
+  "all_raw_repeat_byte_exact": true,
+  "cached_and_full_framebuffers_equal_every_recorded_frame": true,
+  "core_tests_pass": 2724,
+  "app_tests_pass": 203,
+  "app_ignored": 27,
+  "before_negative": "stock valid; actual ItemMenu != expected ItemQuantity",
+  "scope": "PCItemList A/B precedence only. PC typing, source quantity delays12/30/48 andearlyAB42 remain a separate confirmed bug; source initialPC prefix and absolute PPU clocks not claimed aligned. Original press2frames and nativeone rising edge; nativebefore/after identicalinputs/screens/frame20."
+}
