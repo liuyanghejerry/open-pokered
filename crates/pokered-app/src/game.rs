@@ -2300,6 +2300,13 @@ impl PokemonGame {
         {
             self.bag_screen.reset_list_position();
         }
+        // The START menu shares its saved row with the original battle menu;
+        // both battle initialization and completion clear that RAM byte.
+        if screen == GameScreen::Battle
+            || (self.state.screen == GameScreen::Battle && screen == GameScreen::Overworld)
+        {
+            self.start_menu.reset_saved_cursor();
+        }
         // Set in the Battle→Overworld settle below when a caught species was
         // newly added to the Pokédex — the post-capture "New DEX data will be
         // added…" entry then opens instead of the overworld
