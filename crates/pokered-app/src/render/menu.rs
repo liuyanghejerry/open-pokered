@@ -1110,30 +1110,46 @@ mod tests {
     #[test]
     fn top_level_bag_list_cursor_repaint_matches_a_fresh_bag() {
         for language in [Lang::En, Lang::Zh] {
-            for (previous_cursor, down) in [(0, true), (1, false), (4, true), (5, false)] {
+            for (previous_cursor, down) in [(0, true), (1, false), (4, false), (5, false)] {
                 let mut state = bag_at(previous_cursor);
                 let config = dotzuki_engine::render_config::RenderConfig::new(160, 144);
                 let mut actual = FrameBuffer::new(config, Rgba::BLACK);
                 draw_bag(&state, &mut actual, language);
-                let previous = top_level_bag_cursor_position(state.items().len(), state.cursor());
+                let previous = top_level_bag_cursor_position(&state);
+                let previous_scroll = state.scroll();
 
                 state.update_frame(BagScreenInput {
                     up: !down,
                     down,
                     ..BagScreenInput::none()
                 });
-                let current = top_level_bag_cursor_position(state.items().len(), state.cursor());
+                let current = top_level_bag_cursor_position(&state);
                 assert_eq!(
-                    top_level_bag_viewport_offset(state.items().len(), previous_cursor),
-                    top_level_bag_viewport_offset(state.items().len(), state.cursor()),
+                    previous_scroll,
+                    top_level_bag_viewport_offset(&state),
                 );
-                redraw_top_level_bag_cursor(previous, current, &mut actual, language);
+                redraw_top_level_bag_cursor(previous, current, None, &mut actual, language);
 
                 let mut expected = FrameBuffer::new(config, Rgba::BLACK);
                 draw_bag(&state, &mut expected, language);
                 assert_framebuffers_equal(&actual, &expected);
             }
         }
+    }
+
+    #[test]
+    fn bag_mark_shares_the_cursor_column_and_only_draws_inside_the_four_row_window() {
+        let mut state=bag_at(3);
+        state.update_frame(BagScreenInput {select:true,..BagScreenInput::none()});
+        for _ in 0..20 {state.update_frame(BagScreenInput::none());}
+        assert_eq!(top_level_bag_marker_position(&state),Some(top_level_bag_cursor_position(&state)));
+        for _ in 0..3 {state.update_frame(BagScreenInput {up:true,..BagScreenInput::none()});}
+        let position=top_level_bag_marker_position(&state).unwrap();
+        let cursor=top_level_bag_cursor_position(&state);
+        assert_eq!(position.tx,cursor.tx);
+        assert_eq!(position.ty,cursor.ty+3*(1+BAG_DEFAULT_LAYOUT.list.gap));
+        for _ in 0..7 {state.update_frame(BagScreenInput {down:true,..BagScreenInput::none()});}
+        assert_eq!(top_level_bag_marker_position(&state),None);
     }
 
     #[test]
@@ -1149,13 +1165,13 @@ mod tests {
             for _ in 0..20 { swap.update_frame(BagScreenInput::none()); }
             let mut actual = FrameBuffer::new(config, Rgba::BLACK);
             draw_bag(&swap, &mut actual, language);
-            let previous = top_level_bag_cursor_position(swap.items().len(), swap.cursor());
+            let previous = top_level_bag_cursor_position(&swap);
             swap.update_frame(BagScreenInput {
                 down: true,
                 ..BagScreenInput::none()
             });
-            let current = top_level_bag_cursor_position(swap.items().len(), swap.cursor());
-            redraw_top_level_bag_cursor(previous, current, &mut actual, language);
+            let current = top_level_bag_cursor_position(&swap);
+            redraw_top_level_bag_cursor(previous, current, top_level_bag_marker_position(&swap), &mut actual, language);
             let mut expected = FrameBuffer::new(config, Rgba::BLACK);
             draw_bag(&swap, &mut expected, language);
             assert_framebuffers_equal(&actual, &expected);
@@ -1445,27 +1461,12 @@ pub fn draw_bag(state: &BagScreenState, fb: &mut FrameBuffer, lang: Lang) {
     let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
     let mut ui = Ui::new(&mut painter);
     let rd = PokemonRenderData::new(false);
-    menus::bag::draw(state.items(), state.cursor(), &BAG_DEFAULT_LAYOUT, &mut ui, &rd);
+    let marked = match state.phase() { BagPhase::SwapFrom { row } => Some(row), _ => None };
+    menus::bag::draw_window(state.items(), state.cursor(), state.scroll(),
+        state.visible_rows() + 1, marked, &BAG_DEFAULT_LAYOUT, &mut ui, &rd);
 
     match state.phase() {
-        BagPhase::SwapFrom { row } => {
-            // ▷ marker on the swap row (SwapItemsInMenu's select cursor),
-            // drawn through a borderless overlay box at the list's left edge.
-            let y = row.saturating_sub(state.scroll()) as u32;
-            ui.text_box(
-                TileRect::new(
-                    BAG_DEFAULT_LAYOUT.list.rect.tx.saturating_sub(1),
-                    BAG_DEFAULT_LAYOUT.list.rect.ty + 1 + y,
-                    1,
-                    1,
-                ),
-                InkColor::White,
-                false,
-                |frame| {
-                    frame.label(0, 0, "▷", InkColor::Black);
-                },
-            );
-        }
+        BagPhase::SwapFrom { .. } => {}
         BagPhase::ActionMenu { cursor } => {
             let is_zh = lang == Lang::Zh;
             // Keep the existing Chinese font spacing; the English two-entry
@@ -1526,23 +1527,34 @@ pub fn draw_bag(state: &BagScreenState, fb: &mut FrameBuffer, lang: Lang) {
     }
 }
 
-pub fn top_level_bag_viewport_offset(item_count: usize, cursor: usize) -> usize {
-    menus::bag::viewport_offset(item_count, cursor, &BAG_DEFAULT_LAYOUT)
+pub fn top_level_bag_viewport_offset(state: &BagScreenState) -> usize {
+    state.scroll()
 }
 
-pub fn top_level_bag_cursor_position(item_count: usize, cursor: usize) -> TilePos {
-    menus::bag::cursor_position(item_count, cursor, &BAG_DEFAULT_LAYOUT)
+pub fn top_level_bag_cursor_position(state: &BagScreenState) -> TilePos {
+    menus::bag::cursor_position_in_window(state.cursor(), state.scroll(), &BAG_DEFAULT_LAYOUT)
+}
+
+pub fn top_level_bag_marker_position(state: &BagScreenState) -> Option<TilePos> {
+    let BagPhase::SwapFrom { row } = state.phase() else { return None; };
+    let relative = row.checked_sub(state.scroll())?;
+    (relative < state.visible_rows() + 1).then(||
+        menus::bag::cursor_position_in_window(row, state.scroll(), &BAG_DEFAULT_LAYOUT))
 }
 
 /// Repaint only the changed list cursor cells of an already-rendered bag.
 pub fn redraw_top_level_bag_cursor(
     previous: TilePos,
     current: TilePos,
+    marker: Option<TilePos>,
     fb: &mut FrameBuffer,
     lang: Lang,
 ) {
     let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
     menus::bag::redraw_cursor(previous, current, &mut painter);
+    if let Some(position) = marker.filter(|position| *position != current) {
+        painter.draw_glyph(position, '▷', Rgba::INK_BLACK);
+    }
 }
 
 /// Repaint only the changed USE/TOSS/CANCEL cursor cells.

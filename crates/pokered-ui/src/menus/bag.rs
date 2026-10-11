@@ -12,17 +12,37 @@ pub fn draw<P: Painter>(
     items: &[(ItemId, u32)], cursor: usize, layout: &BagDefaultLayout, ui: &mut Ui<P>,
     render_data: &dyn RenderData<Move = MoveId, Item = ItemId, Species = Species>,
 ) {
-    ui.clear(InkColor::White);
+    let geometry = list_geometry(items.len(), cursor, layout);
+    draw_with_geometry(items, cursor, None, geometry, layout, ui, render_data);
+}
 
+/// Draw a retained list window, including its non-selectable preview row.
+pub fn draw_window<P: Painter>(
+    items: &[(ItemId, u32)], cursor: usize, offset: usize, displayed_rows: usize,
+    marked: Option<usize>, layout: &BagDefaultLayout, ui: &mut Ui<P>,
+    render_data: &dyn RenderData<Move = MoveId, Item = ItemId, Species = Species>,
+) {
+    let (rect, fitting_rows, _) = list_geometry(items.len(), cursor, layout);
+    let offset = offset.min(items.len());
+    let rows = (displayed_rows as u32).min(fitting_rows)
+        .min((items.len() + 1 - offset) as u32);
+    draw_with_geometry(items, cursor, marked, (rect, rows, offset), layout, ui, render_data);
+}
+
+fn draw_with_geometry<P: Painter>(
+    items: &[(ItemId, u32)], cursor: usize, marked: Option<usize>,
+    (rect, visible_rows, offset): (TileRect, u32, usize),
+    layout: &BagDefaultLayout, ui: &mut Ui<P>,
+    render_data: &dyn RenderData<Move = MoveId, Item = ItemId, Species = Species>,
+) {
+    ui.clear(InkColor::White);
     let header = &layout.box_0;
     ui.text_box(header.rect, header.color, true, |frame| {
         for label in header.labels.iter() {
             frame.label(label.tx, label.ty, &label.text, label.color);
         }
     });
-
     let list_child = &layout.list;
-    let (rect, visible_rows, offset) = list_geometry(items.len(), cursor, layout);
     let start_y = list_child.padding.top;
     let row_pitch = 1 + list_child.gap;
 
@@ -55,7 +75,12 @@ pub fn draw<P: Painter>(
         }
 
         if let Some(c) = &list_child.cursor {
-            let cur_y = start_y + (cursor - offset) as u32 * row_pitch;
+            if let Some(row) = marked.filter(|row| *row != cursor).and_then(|row| row.checked_sub(offset))
+                .filter(|row| *row < visible_rows as usize) {
+                frame.cursor_glyph_at(1, start_y + row as u32 * row_pitch, '▷', c.color);
+            }
+            // PlaceMenuCursor overwrites the mark when both share a row.
+            let cur_y = start_y + cursor.saturating_sub(offset) as u32 * row_pitch;
             frame.cursor_glyph_at(1, cur_y, c.glyph, c.color);
         }
     });
@@ -117,6 +142,15 @@ pub fn cursor_position(item_count: usize, cursor: usize, layout: &BagDefaultLayo
     crate::engine::TilePos::new(
         rect.tx + 2,
         rect.ty + 1 + list.padding.top + cursor.saturating_sub(offset) as u32 * (1 + list.gap),
+    )
+}
+
+/// Absolute cursor cell for the caller's retained window.
+pub fn cursor_position_in_window(cursor: usize, offset: usize, layout: &BagDefaultLayout) -> crate::engine::TilePos {
+    let list = &layout.list;
+    crate::engine::TilePos::new(
+        list.rect.tx + 2,
+        list.rect.ty + 1 + list.padding.top + cursor.saturating_sub(offset) as u32 * (1 + list.gap),
     )
 }
 
