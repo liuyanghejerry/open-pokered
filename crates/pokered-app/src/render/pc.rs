@@ -364,8 +364,8 @@ pub fn draw_pc(
             if pc.item_question_draw_list() {
                 let rows = item_rows(pc, save, is_zh);
                 let cursor = pc.item_list_cursor();
-                let scroll = follow_scroll(cursor, rows.len(), PC_LIST_VISIBLE_ROWS.max(8));
-                draw_list(0, 0, 18, 8, &rows, cursor, scroll, is_zh, fb);
+                let scroll = pc.item_list_scroll();
+                draw_list(0, 0, 18, PC_LIST_VISIBLE_ROWS, &rows, cursor, scroll, is_zh, fb);
             } else {
                 let labels: Vec<String> = PLAYERS_LABELS.iter()
                     .map(|s| lang_data::ui_label(s, is_zh).to_string()).collect();
@@ -384,8 +384,8 @@ pub fn draw_pc(
         PcPhase::ItemList | PcPhase::ItemQuantityPrompt | PcPhase::ItemQuantity | PcPhase::TossConfirm => {
             let rows = item_rows(pc, save, is_zh);
             let cursor = pc.item_list_cursor();
-            let scroll = follow_scroll(cursor, rows.len(), PC_LIST_VISIBLE_ROWS.max(8));
-            draw_list(0, 0, 18, 8, &rows, cursor, scroll, is_zh, fb);
+            let scroll = pc.item_list_scroll();
+            draw_list(0, 0, 18, PC_LIST_VISIBLE_ROWS, &rows, cursor, scroll, is_zh, fb);
             match pc.phase() {
                 PcPhase::ItemList => draw_message(&pc.item_question_lines(), fb, is_zh),
                 PcPhase::ItemQuantityPrompt => {
@@ -594,6 +594,64 @@ mod layout_tests {
             update_pc(&mut state, save, DOWN);
         }
         state
+    }
+
+    #[test]
+    fn item_list_draws_fourth_row_preview_before_three_row_cursor_scroll() {
+        let mut save = SaveData::new();
+        save.game_data.pc_items = pokered_core::items::inventory::Inventory::new_pc();
+        for (id, qty) in [(ItemId::Potion, 4), (ItemId::Antidote, 3), (ItemId::PokeBall, 2)] {
+            save.game_data.pc_items.add_item(id, qty).unwrap();
+        }
+        let mut pc = PcScreen::new(PcEntry::PlayersPc, &open_context(true));
+        skip_message(&mut pc, &mut save);
+        update_pc(&mut pc, &mut save, A);
+        assert_eq!(pc.phase(), PcPhase::ItemQuestion);
+        finish_item_question(&mut pc, &mut save);
+        // Retail PrintListMenuEntries prints CANCEL as the fourth preview
+        // while the cursor still starts on POTION in the first row. Initial
+        // question typing keeps the parent menu, so inspect the drawn list
+        // and then the retained list behind the quantity-cancel question.
+        for phase in [PcPhase::ItemList, PcPhase::ItemQuestion] {
+            assert_eq!(pc.phase(), phase);
+            assert_eq!((pc.item_list_cursor(), pc.item_list_scroll()), (0, 0));
+            let actual = render_pc_state(&pc, &save, Lang::En);
+            let mut expected = FrameBuffer::new(RenderConfig::new(160, 144), BG);
+            for (row, text) in ["> POTION x04", "  ANTIDOTE x03", "  POKé BALL x02", "  CANCEL"].iter().enumerate() {
+                draw_text(text, 8, 8 + row as u32 * 12, FG, &mut expected);
+            }
+            if let Ok(dir) = std::env::var("PC_PREVIEW_CAPTURE_266") {
+                let dir = std::path::Path::new(&dir);
+                std::fs::create_dir_all(dir).unwrap();
+                actual.save_png(&dir.join(format!("{phase:?}-actual.png"))).unwrap();
+                expected.save_png(&dir.join(format!("{phase:?}-expected.png"))).unwrap();
+            }
+            for y in 44..54 { for x in 8..144 {
+                assert_eq!(actual.get_pixel(x,y), expected.get_pixel(x,y),
+                    "missing fourth-row CANCEL preview in {phase:?} at ({x},{y})");
+            }}
+            if phase == PcPhase::ItemList {
+                update_pc(&mut pc, &mut save, A);
+                for _ in 0..30 {
+                    update_pc(&mut pc, &mut save, MenuInput { a:false, b:false, up:false, down:false });
+                }
+                assert_eq!(pc.phase(), PcPhase::ItemQuantity);
+                update_pc(&mut pc, &mut save, MenuInput { a:false, b:true, up:false, down:false });
+                assert!(pc.item_question_draw_list());
+            } else {
+                finish_item_question(&mut pc, &mut save);
+            }
+        }
+        for _ in 0..3 { update_pc(&mut pc, &mut save, DOWN); }
+        assert_eq!((pc.item_list_cursor(), pc.item_list_scroll()), (3, 1));
+        let actual = render_pc_state(&pc, &save, Lang::En);
+        let mut expected = FrameBuffer::new(RenderConfig::new(160, 144), BG);
+        for (row, text) in ["  ANTIDOTE x03", "  POKé BALL x02", "> CANCEL"].iter().enumerate() {
+            draw_text(text, 8, 8 + row as u32 * 12, FG, &mut expected);
+        }
+        for y in 44..54 { for x in 8..144 {
+            assert_eq!(actual.get_pixel(x,y), expected.get_pixel(x,y), "stale fourth preview at ({x},{y})");
+        }}
     }
 
     #[test]

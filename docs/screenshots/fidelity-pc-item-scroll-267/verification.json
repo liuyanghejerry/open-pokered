@@ -1,0 +1,59 @@
+{
+  "base": "47395a7d631e10c9ef2d12587e76504918a981ae",
+  "source_head": "204dea841c90dffbeca412c7295d268d7d3bae54",
+  "tests": {
+    "programs": 78,
+    "pass": 3680,
+    "fail": 0,
+    "ignore": 76
+  },
+  "cases": [
+    {
+      "case": "down",
+      "original_cursor": 2,
+      "original_scroll": 1,
+      "source_two_repeats_byte_exact": true,
+      "master_two_repeats_byte_exact": true,
+      "candidate_two_repeats_byte_exact": true,
+      "source_full_PC_inventory_unchanged": true,
+      "native_bag_unchanged": true,
+      "no_native_automatic_save": true,
+      "native_PC_inventory_asserted_in_core_and_cached_renderer_tests": true
+    },
+    {
+      "case": "return",
+      "original_cursor": 0,
+      "original_scroll": 1,
+      "source_two_repeats_byte_exact": true,
+      "master_two_repeats_byte_exact": true,
+      "candidate_two_repeats_byte_exact": true,
+      "source_full_PC_inventory_unchanged": true,
+      "native_bag_unchanged": true,
+      "no_native_automatic_save": true,
+      "native_PC_inventory_asserted_in_core_and_cached_renderer_tests": true
+    }
+  ],
+  "label_crops": [
+    {
+      "label": "ANTIDOTE",
+      "same_pixels_after_row_translation": true
+    },
+    {
+      "label": "POKE BALL",
+      "same_pixels_after_row_translation": true
+    },
+    {
+      "label": "CANCEL",
+      "same_pixels_after_row_translation": true
+    }
+  ],
+  "initial_fourth_CANCEL_preview_label_pixels_preserved": true,
+  "fourth_preview_and_quantity_cancel_retained_list_renderer_test": true,
+  "cached_and_full_render_match_for_221_frames": true,
+  "three_item_modes_core_navigation_cancel_and_inventory_verified": true,
+  "PNG": 3324,
+  "archive_roundtrip_byte_exact": true,
+  "archive_sha256": "0d1ae57db2a7ba6ea3a860da779307acbc4d357d21a0906a11de8ec97da88554",
+  "archive_bytes": 1042236,
+  "scope": "three-row cursor window, four rendered rows including the fourth preview, and retained scroll only; controlled snapshot and synthetic cache fixture, not natural playthrough; native PC stock is asserted in core/cache tests, not via missing TCP getter; menu geometry/background, input guards/repeat and other PC text/audio remain under audit"
+}
