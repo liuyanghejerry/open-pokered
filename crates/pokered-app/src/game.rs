@@ -11434,10 +11434,10 @@ mod pc_confirm_owner_222 {
    let mut session=crate::render::session::RenderSession::new();let mut retained=FrameBuffer::new(dotzuki_engine::render_config::RenderConfig::new(160,144),pokered_renderer::Rgba::WHITE);let mut scroll=|_:&mut [u8],_:usize,_:usize,_:i32,_:i32,_:u8|{};let mut rows=Vec::new();
    for t in 0..161 {
     let keys=match t {40=>match case {"up"=>vec![GbButton::Up],"down-down"|"down-up"=>vec![GbButton::Down],"up-down"=>vec![GbButton::Up,GbButton::Down],_=>vec![]},64=>match case {"down-down"=>vec![GbButton::Down],"down-up"=>vec![GbButton::Up],_=>vec![]},90=>match case {"a"=>vec![GbButton::A],"ab"=>vec![GbButton::A,GbButton::B],_=>vec![]},_=>vec![]};tick(&mut g,&mut input,&mut held,keys);session.render(&mut g,&mut retained,&mut scroll);let mut full=FrameBuffer::new(dotzuki_engine::render_config::RenderConfig::new(160,144),pokered_renderer::Rgba::WHITE);g.draw(&mut full);assert_eq!(retained.packed(),full.packed(),"{context}/{case} cached/full {t}");
-    if capture.is_none(){if t<90 || !matches!(case,"a"|"ab") {let expected=!(case=="down-down" && t>=40 || case=="down-up" && (40..64).contains(&t));assert_eq!(g.pc_screen.as_ref().unwrap().phase(),target);assert_eq!(g.pc_screen.as_ref().unwrap().yes_selected(),expected,"{context}/{case} original defaultYES/UPpriority/clamp {t}");}
-     if context=="release" {assert_eq!(g.save_data.pc_storage.current_box().count(),if case=="a" && t>=90 {0}else{1});}
-     if context=="toss" {assert_eq!(g.save_data.game_data.pc_items.item_quantity(ItemId::Potion),if case=="a" && t>=90 {3}else{4});}
-     if context=="change" && case=="a" && t>=90 {assert_eq!(g.pc_screen.as_ref().unwrap().phase(),PcPhase::BoxList);}
+    if capture.is_none(){if t<105 || !matches!(case,"a"|"ab") {let expected=!(case=="down-down" && t>=40 || case=="down-up" && (40..64).contains(&t));assert_eq!(g.pc_screen.as_ref().unwrap().phase(),target);assert_eq!(g.pc_screen.as_ref().unwrap().yes_selected(),expected,"{context}/{case} original defaultYES/UPpriority/clamp {t}");}
+     if context=="release" {assert_eq!(g.save_data.pc_storage.current_box().count(),if case=="a" && t>=105 {0}else{1});}
+     if context=="toss" {assert_eq!(g.save_data.game_data.pc_items.item_quantity(ItemId::Potion),if case=="a" && t>=105 {3}else{4});}
+     if context=="change" && case=="a" && t>=105 {assert_eq!(g.pc_screen.as_ref().unwrap().phase(),PcPhase::BoxList);}
     }
     if let Some(path)=capture{let dir=path.join(format!("{context}-{case}"));std::fs::create_dir_all(&dir).unwrap();full.save_png(&dir.join(format!("frame-{t:04}.png"))).unwrap();rows.push(serde_json::json!({"t":t,"setup_frames":setup,"input":input.raw_current(),"screen":format!("{:?}",g.state.screen),"pc":format!("{:?}",g.pc_screen.as_ref().unwrap()),"phase":format!("{:?}",g.pc_screen.as_ref().unwrap().phase()),"yes":g.pc_screen.as_ref().unwrap().yes_selected(),"box_count":g.save_data.pc_storage.current_box().count(),"pc_items":g.save_data.game_data.pc_items,"overworld":pokered_core::snapshot::OverworldSnapshot::capture(&g.overworld)}));}
    }
@@ -11447,6 +11447,55 @@ mod pc_confirm_owner_222 {
  #[test]fn pc_confirm_defaults_clamps_and_cancel_follow_original(){std::thread::Builder::new().stack_size(16*1024*1024).spawn(||run(None)).unwrap().join().unwrap();}
  #[test]#[ignore="controlled actual PC choice before/after capture"]fn capture_pc_confirm_222(){let path=std::path::PathBuf::from(std::env::var("PC_CONFIRM_CAPTURE_222").unwrap());std::thread::Builder::new().stack_size(16*1024*1024).spawn(move||run(Some(&path))).unwrap().join().unwrap();}
 }
+
+#[cfg(all(test,not(target_os="none")))]
+mod pc_confirm_delay_owner_224 {
+ use super::*;
+ use pokered_core::pc_screen::PcPhase;
+ fn tick(g:&mut PokemonGame,input:&mut InputState,held:&mut Vec<GbButton>,keys:Vec<GbButton>){input.begin_frame();for &k in held.iter(){if !keys.contains(&k){input.release(k);}}for &k in &keys{if !held.contains(&k){input.press(k);}}*held=keys;g.update(input);}
+ fn run(capture:Option<&std::path::Path>){
+  use pokered_data::items::ItemId;
+  for context in ["change","release","toss","oak"] {for case in ["yes","yes-a","yes-b","yes-down","no","ab","up-a","down-a"] {
+   let private_dir=std::env::temp_dir().join(format!("pc-delay-224-{}-{}",std::process::id(),std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()));std::fs::create_dir(&private_dir).unwrap();let save_path=private_dir.join("owned.sav");assert!(!save_path.exists());
+   #[cfg(feature="debug-server")]let mut g=PokemonGame::new_with_options(GameVersion::Red,Some(save_path.clone()),None,None,false,None,false,true,None);
+   #[cfg(not(feature="debug-server"))]let mut g=PokemonGame::new_with_options(GameVersion::Red,Some(save_path.clone()),None,None,false,None,false,true);
+   assert_eq!(g.save_data.party.count(),0);assert_eq!(g.save_data.pc_storage.current_box().count(),0);g.audio=None;g.set_seed(42);g.state.config.language=pokered_core::game_state::Lang::En;g.state.config.text_speed=pokered_core::game_state::TextSpeed::Medium;
+   let mon=pokered_core::pokemon::stats::create_pokemon(pokered_data::species::Species::Exeggutor,13,[0x99,0x88]).unwrap();g.save_data.party.add(mon.clone()).unwrap();g.save_data.pc_storage.current_box_mut().deposit(mon).unwrap();g.save_data.game_data.pc_items=pokered_core::items::inventory::Inventory::new_pc();g.save_data.game_data.pc_items.add_item(ItemId::Potion,4).unwrap();
+   g.state.screen=GameScreen::Overworld;g.overworld.warp_to_map(MapId::ViridianPokecenter,13,4);g.overworld.state.player.facing=pokered_core::overworld::Direction::Up;let idle=InputState::new();for _ in 0..120{g.update(&idle);}assert!(pokered_core::overworld::update::is_script_walkable_tile(g.overworld.map_data.as_ref().unwrap(),13,4));g.overworld.unified_flags_mut().set_flag("EVENT_GOT_POKEDEX",true);
+   let target=match context {"change"=>PcPhase::ChangeBoxConfirm,"release"=>PcPhase::ReleaseConfirm,"toss"=>PcPhase::TossConfirm,_=>PcPhase::OaksConfirm};let mut input=InputState::new();let mut held=Vec::new();let mut setup=0;
+   for t in 0..2000 {
+    let phase=g.pc_screen.as_ref().map(|p|p.phase());if phase==Some(target){setup=t;break;}
+    let keys=if t==0 {vec![GbButton::A]}else if t%8!=0 {vec![]}else {match phase {
+     Some(PcPhase::Message)=>vec![GbButton::A],
+     Some(PcPhase::MainMenu)=>{let desired=if context=="toss" {1}else if context=="oak" {2}else{0};if g.pc_screen.as_ref().unwrap().main_menu().cursor()<desired {vec![GbButton::Down]}else{vec![GbButton::A]}},
+     Some(PcPhase::BillsMenu)=>{let desired=if context=="release" {2}else{3};if g.pc_screen.as_ref().unwrap().bills_menu().cursor()<desired {vec![GbButton::Down]}else{vec![GbButton::A]}},
+     Some(PcPhase::ItemMenu)=>{if g.pc_screen.as_ref().unwrap().players_menu().cursor()<2 {vec![GbButton::Down]}else{vec![GbButton::A]}},
+     Some(PcPhase::MonList)|Some(PcPhase::ItemList)|Some(PcPhase::ItemQuantity)=>vec![GbButton::A],_=>vec![]}};
+    tick(&mut g,&mut input,&mut held,keys);
+   }
+   assert_eq!(g.state.screen,GameScreen::PC,"{context}/{case} real PC hidden event");assert_eq!(g.pc_screen.as_ref().unwrap().phase(),target,"{context}/{case} setup navigation");assert!(setup>0);
+   let mut session=crate::render::session::RenderSession::new();let mut retained=FrameBuffer::new(dotzuki_engine::render_config::RenderConfig::new(160,144),pokered_renderer::Rgba::WHITE);let mut scroll=|_:&mut [u8],_:usize,_:usize,_:i32,_:i32,_:u8|{};let mut rows=Vec::new();
+   for t in 0..191 {
+    let keys=match t {40=>vec![GbButton::Up],64 if matches!(case,"no"|"up-a")=>vec![GbButton::Down],90=>match case {"ab"=>vec![GbButton::A,GbButton::B],"up-a"=>vec![GbButton::A,GbButton::Up],"down-a"=>vec![GbButton::A,GbButton::Down],_=>vec![GbButton::A]},100=>match case {"yes-a"=>vec![GbButton::A],"yes-b"=>vec![GbButton::B],"yes-down"=>vec![GbButton::Down],_=>vec![]},_=>vec![]};tick(&mut g,&mut input,&mut held,keys);session.render(&mut g,&mut retained,&mut scroll);let mut full=FrameBuffer::new(dotzuki_engine::render_config::RenderConfig::new(160,144),pokered_renderer::Rgba::WHITE);g.draw(&mut full);assert_eq!(retained.packed(),full.packed(),"{context}/{case} cached/full {t}");
+    if capture.is_none(){
+     let yes=case.starts_with("yes")||case=="up-a";
+     assert!(!save_path.exists(),"protected early A must not save {context}/{case} {t}");
+     if t<105 {assert_eq!(g.pc_screen.as_ref().unwrap().phase(),target,"{context}/{case} protected choice wait {t}");if t>=40 {assert_eq!(g.pc_screen.as_ref().unwrap().yes_selected(),!matches!(case,"no"|"up-a")||t<64,"{context}/{case} displayed cursor held {t}");}}
+     if context=="release" {assert_eq!(g.save_data.pc_storage.current_box().count(),if yes && t>=105 {0}else{1},"{context}/{case} release boundary {t}");if t>=105 {assert_eq!(g.pc_screen.as_ref().unwrap().phase(),if yes{PcPhase::Message}else{PcPhase::MonList});}}
+     if context=="toss" {assert_eq!(g.save_data.game_data.pc_items.item_quantity(ItemId::Potion),if yes && t>=105 {3}else{4},"{context}/{case} toss boundary {t}");if t>=105 {assert_eq!(g.pc_screen.as_ref().unwrap().phase(),if yes{PcPhase::Message}else{PcPhase::ItemList});}}
+     if context=="change" && t>=105 {assert_eq!(g.pc_screen.as_ref().unwrap().phase(),if yes{PcPhase::BoxList}else{PcPhase::BillsMenu});if yes {assert_eq!(g.pc_screen.as_ref().unwrap().box_cursor(),0,"protected DOWN cannot select box {t}");}}
+     if context=="oak" && t>=105 {assert_eq!(g.pc_screen.as_ref().unwrap().phase(),PcPhase::Message);assert_eq!(g.pc_screen.as_ref().unwrap().message_lines().first().unwrap(),if yes {"#DEX comp-"}else{"Closed link to"});assert_eq!(g.pc_screen.as_ref().unwrap().message_page(),0,"protected A cannot flip receipt {t}");}
+    }
+    if let Some(path)=capture{let dir=path.join(format!("{context}-{case}"));std::fs::create_dir_all(&dir).unwrap();full.save_png(&dir.join(format!("frame-{t:04}.png"))).unwrap();rows.push(serde_json::json!({"t":t,"setup_frames":setup,"owned_save_exists":save_path.exists(),"input":input.raw_current(),"screen":format!("{:?}",g.state.screen),"pc":format!("{:?}",g.pc_screen.as_ref().unwrap()),"phase":format!("{:?}",g.pc_screen.as_ref().unwrap().phase()),"yes":g.pc_screen.as_ref().unwrap().yes_selected(),"box_count":g.save_data.pc_storage.current_box().count(),"pc_items":g.save_data.game_data.pc_items,"overworld":pokered_core::snapshot::OverworldSnapshot::capture(&g.overworld)}));}
+   }
+   if let Some(path)=capture{std::fs::write(path.join(format!("{context}-{case}")).join("frames.json"),serde_json::to_string_pretty(&rows).unwrap()).unwrap();}
+   std::fs::remove_dir_all(&private_dir).unwrap();
+  }}
+ }
+ #[test]fn pc_confirm_waits_15_before_commit_and_blocks_input(){std::thread::Builder::new().stack_size(16*1024*1024).spawn(||run(None)).unwrap().join().unwrap();}
+ #[test]#[ignore="controlled actual PC choice before/after capture"]fn capture_pc_confirm_delay_224(){let path=std::path::PathBuf::from(std::env::var("PC_CONFIRM_CAPTURE_224").unwrap());std::thread::Builder::new().stack_size(16*1024*1024).spawn(move||run(Some(&path))).unwrap().join().unwrap();}
+}
+
 
 #[cfg(all(test,not(target_os="none")))]
 mod bag_list_owner_219 {

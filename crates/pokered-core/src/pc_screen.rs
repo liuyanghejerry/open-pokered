@@ -267,6 +267,8 @@ pub struct PcScreen {
 
     // YES/NO confirmation phases.
     yes_selected: bool,
+    confirm_wait_frames: u8,
+    pending_confirmation: Option<bool>,
 
     // Box chooser.
     box_cursor: usize,
@@ -315,6 +317,8 @@ impl PcScreen {
             mon_cursor: 0,
             mon_action_cursor: 0,
             yes_selected: true,
+            confirm_wait_frames: 0,
+            pending_confirmation: None,
             box_cursor: 0,
             item_mode: ItemListMode::Withdraw,
             item_list_cursor: 0,
@@ -592,6 +596,24 @@ impl PcScreen {
     }
 
     pub fn update_frame_with_sound(&mut self, input: MenuInput, ctx: &mut PcContext, sound_playing: bool) -> PcScreenAction {
+        // DisplayTwoOptionMenu holds its drawn cursor and ignores all input
+        // for 15 frames before restoring the screen and returning the choice.
+        if self.confirm_wait_frames > 0 {
+            self.confirm_wait_frames -= 1;
+            if self.confirm_wait_frames == 0 {
+                let yes = self.pending_confirmation.take().expect("pending PC choice");
+                self.yes_selected = yes;
+                let accepted = MenuInput { up: false, down: false, a: yes, b: !yes };
+                return match self.phase {
+                    PcPhase::ReleaseConfirm => self.update_release_confirm(accepted, ctx),
+                    PcPhase::ChangeBoxConfirm => self.update_change_box_confirm(accepted),
+                    PcPhase::TossConfirm => self.update_toss_confirm(accepted, ctx),
+                    PcPhase::OaksConfirm => self.update_oaks_confirm(accepted, ctx),
+                    _ => unreachable!("protected PC confirmation phase"),
+                };
+            }
+            return PcScreenAction::Continue;
+        }
         if self.waiting_for_cry {
             if sound_playing { return PcScreenAction::Continue; }
             self.waiting_for_cry = false;
@@ -622,16 +644,32 @@ impl PcScreen {
             PcPhase::BillsMenu => self.update_bills_menu(input, ctx),
             PcPhase::MonList => self.update_mon_list(input, ctx),
             PcPhase::MonAction => self.update_mon_action(input, ctx),
-            PcPhase::ReleaseConfirm => self.update_release_confirm(input, ctx),
-            PcPhase::ChangeBoxConfirm => self.update_change_box_confirm(input),
+            PcPhase::ReleaseConfirm | PcPhase::ChangeBoxConfirm
+            | PcPhase::TossConfirm | PcPhase::OaksConfirm => self.update_confirmation(input),
             PcPhase::BoxList => self.update_box_list(input, ctx),
             PcPhase::ItemMenu => self.update_item_menu(input, ctx),
             PcPhase::ItemList => self.update_item_list(input, ctx),
             PcPhase::ItemQuantity => self.update_item_quantity(input, ctx),
-            PcPhase::TossConfirm => self.update_toss_confirm(input, ctx),
-            PcPhase::OaksConfirm => self.update_oaks_confirm(input, ctx),
             PcPhase::LeagueHoF => self.update_league_hof(input),
         }
+    }
+
+    fn update_confirmation(&mut self, input: MenuInput) -> PcScreenAction {
+        let drawn_yes = self.yes_selected;
+        if input.up {
+            self.yes_selected = true;
+        } else if input.down {
+            self.yes_selected = false;
+        }
+        if input.a || input.b {
+            // HandleMenuInput changes the selected row before returning A/B,
+            // but does not redraw it. Hold the old cursor even for UP+A,
+            // DOWN+A or B; commit the separately frozen choice after 15 ticks.
+            self.pending_confirmation = Some(!input.b && self.yes_selected);
+            self.yes_selected = drawn_yes;
+            self.confirm_wait_frames = 15;
+        }
+        PcScreenAction::Continue
     }
 
     /// HoF viewer (LeaguePCShowTeam, league_pc.asm:52-76): A advances to the
@@ -1448,6 +1486,38 @@ mod tests {
     }
 
     #[test]
+    fn confirmations_hold_fifteen_frames_ignore_input_and_commit_once() {
+        for phase in [PcPhase::ReleaseConfirm, PcPhase::ChangeBoxConfirm, PcPhase::TossConfirm, PcPhase::OaksConfirm] {
+            for (selected_yes, cancel) in [(true, false), (false, false), (true, true)] {
+                let mut w = World::new();
+                w.pc_storage.current_box_mut().deposit(mon(Species::Abra, 10)).unwrap();
+                w.pc_items.add_item(ItemId::Potion, 4).unwrap();
+                let mut s = PcScreen::new(PcEntry::PokemonCenter, &open_ctx());
+                s.take_sfx();
+                s.phase = phase;
+                s.yes_selected = selected_yes;
+                s.update_frame(MenuInput { a: true, b: cancel, up: false, down: false }, &mut w.ctx());
+                let yes = selected_yes && !cancel;
+                assert_eq!(s.pending_confirmation, Some(yes));
+                for frame in 1..=15 {
+                    s.update_frame(MenuInput { a: true, b: true, up: true, down: true }, &mut w.ctx());
+                    assert_eq!(s.confirm_wait_frames, 15-frame);
+                    if frame<15 {assert_eq!(s.yes_selected, selected_yes, "drawn cursor held even for B");}
+                    else {assert_eq!(s.yes_selected,yes);}
+                    assert_eq!(w.pc_storage.current_box().count(), if phase==PcPhase::ReleaseConfirm && yes && frame==15 {0}else{1});
+                    assert_eq!(w.pc_items.item_quantity(ItemId::Potion), if phase==PcPhase::TossConfirm && yes && frame==15 {3}else{4});
+                    if frame<15 {assert_eq!(s.phase(),phase);assert!(s.take_sfx().is_empty());}
+                }
+                assert!(s.pending_confirmation.is_none());
+                assert_ne!(s.phase(),phase);
+                let stock=(w.pc_storage.current_box().count(),w.pc_items.item_quantity(ItemId::Potion));
+                s.update_frame(MenuInput { a:false,b:false,up:false,down:false }, &mut w.ctx());
+                assert_eq!((w.pc_storage.current_box().count(),w.pc_items.item_quantity(ItemId::Potion)),stock);
+            }
+        }
+    }
+
+    #[test]
     fn source_quantity_pc_wraps_both_boundaries_without_moving_stock() {
         for mode in [ItemListMode::Withdraw, ItemListMode::Deposit, ItemListMode::Toss] {
             for have in [1, 4, 99] {
@@ -1563,6 +1633,16 @@ mod tests {
         a: false,
         b: false,
     };
+
+    fn finish_confirmation_wait(screen: &mut PcScreen, w: &mut World) {
+        assert_eq!(screen.confirm_wait_frames, 15);
+        assert!(screen.pending_confirmation.is_some());
+        for _ in 0..15 {
+            screen.update_frame(MenuInput { up: false, down: false, a: false, b: false }, &mut w.ctx());
+        }
+        assert_eq!(screen.confirm_wait_frames, 0);
+        assert!(screen.pending_confirmation.is_none());
+    }
 
     /// Advance through every page of the current message.
     fn skip_message(screen: &mut PcScreen, w: &mut World) {
@@ -1840,12 +1920,14 @@ mod tests {
         // Select NO explicitly: back to the list, mon kept.
         s.update_frame(DOWN, &mut w.ctx());
         s.update_frame(A, &mut w.ctx());
+        finish_confirmation_wait(&mut s, &mut w);
         assert_eq!(s.phase(), PcPhase::MonList);
         assert_eq!(w.pc_storage.current_box().count(), 1);
         // Again, this time YES.
         s.update_frame(A, &mut w.ctx());
         s.update_frame(UP, &mut w.ctx()); // stay on YES
         s.update_frame(A, &mut w.ctx());
+        finish_confirmation_wait(&mut s, &mut w);
         assert_eq!(
             s.message_lines(),
             &[
@@ -1880,6 +1962,7 @@ mod tests {
         // NO → back, no switch, no save.
         s.update_frame(DOWN, &mut w.ctx());
         s.update_frame(A, &mut w.ctx());
+        finish_confirmation_wait(&mut s, &mut w);
         assert_eq!(s.phase(), PcPhase::BillsMenu);
         assert_eq!(w.pc_storage.current_box_index(), 0);
         assert!(!s.take_save_request());
@@ -1888,6 +1971,7 @@ mod tests {
         s.update_frame(A, &mut w.ctx());
         s.update_frame(UP, &mut w.ctx()); // YES
         s.update_frame(A, &mut w.ctx());
+        finish_confirmation_wait(&mut s, &mut w);
         assert_eq!(s.phase(), PcPhase::BoxList);
         assert_eq!(s.box_cursor(), 0);
         s.update_frame(DOWN, &mut w.ctx());
@@ -1914,6 +1998,7 @@ mod tests {
         s.update_frame(A, &mut w.ctx());
         s.update_frame(UP, &mut w.ctx()); // YES
         s.update_frame(A, &mut w.ctx());
+        finish_confirmation_wait(&mut s, &mut w);
         assert_eq!(s.phase(), PcPhase::BoxList);
         s.update_frame(DOWN, &mut w.ctx());
         assert_eq!(s.update_frame(B, &mut w.ctx()), PcScreenAction::Continue);
@@ -2177,6 +2262,7 @@ mod tests {
         // Select NO explicitly to keep the items.
         s.update_frame(DOWN, &mut w.ctx());
         s.update_frame(A, &mut w.ctx());
+        finish_confirmation_wait(&mut s, &mut w);
         assert_eq!(s.phase(), PcPhase::ItemList);
         assert_eq!(w.pc_items.item_quantity(ItemId::Potion), 3);
         // YES tosses.
@@ -2184,6 +2270,7 @@ mod tests {
         s.update_frame(A, &mut w.ctx()); // qty 1
         s.update_frame(UP, &mut w.ctx()); // stay on YES
         s.update_frame(A, &mut w.ctx());
+        finish_confirmation_wait(&mut s, &mut w);
         assert_eq!(
             s.message_lines(),
             &["Threw away".to_string(), "POTION.".to_string()]
@@ -2254,6 +2341,7 @@ mod tests {
         // YES → completion page (2 pages: 8 lines).
         s.update_frame(UP, &mut w.ctx());
         s.update_frame(A, &mut w.ctx());
+        finish_confirmation_wait(&mut s, &mut w);
         assert_eq!(s.phase(), PcPhase::Message);
         assert_eq!(s.dex_seen(), 25);
         assert_eq!(s.dex_owned(), 25);
@@ -2295,6 +2383,7 @@ mod tests {
             open_oaks_confirm(&mut s, &mut w);
             s.update_frame(UP, &mut w.ctx()); // YES
             s.update_frame(A, &mut w.ctx());
+            finish_confirmation_wait(&mut s, &mut w);
             // Skip the completion pages.
             while s.phase() == PcPhase::Message
                 && !s.message_lines().first().map_or(false, |l| {
@@ -2319,6 +2408,7 @@ mod tests {
         open_oaks_confirm(&mut s, &mut w);
         s.update_frame(DOWN, &mut w.ctx()); // NO
         s.update_frame(A, &mut w.ctx());
+        finish_confirmation_wait(&mut s, &mut w);
         assert_eq!(
             s.message_lines(),
             &["Closed link to".to_string(), "PROF.OAK's PC.".to_string()]
@@ -2479,6 +2569,9 @@ mod tests {
         s.phase = PcPhase::ReleaseConfirm;
         s.yes_selected = true;
         s.update_frame_with_sound(A, &mut w.ctx(), false);
+        assert_eq!(w.pc_storage.current_box().count(), 1);
+        assert!(s.take_sfx().is_empty());
+        finish_confirmation_wait(&mut s, &mut w);
         assert_eq!(w.pc_storage.current_box().count(), 0);
         assert_eq!(s.phase(), PcPhase::Message);
         assert!(!s.waiting_for_sound());
