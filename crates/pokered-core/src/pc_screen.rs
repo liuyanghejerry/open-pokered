@@ -817,6 +817,8 @@ impl PcScreen {
                     // PlayerPC starts a fresh local text context each entry.
                     self.item_text_no_delay = true;
                     self.sfx.push(PcSfx::Enter);
+                    // PlayerPC resets wParentMenuItem on each fresh entry.
+                    self.players_menu = PlayersPcMenuState::new();
                     // "Accessed my PC. / Accessed Item Storage System."
                     // (_AccessedMyPCText)
                     self.set_message(
@@ -1599,6 +1601,40 @@ impl PcScreen {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn fresh_player_pc_entry_resets_cursor_without_resetting_list_return() {
+        fn settle(s: &mut PcScreen, w: &mut World) {
+            skip_message(s, w);
+            for _ in 0..200 {
+                if format!("{:?}", s.phase()) != "ItemQuestion" { break; }
+                s.update_frame(MenuInput { a:false, b:false, up:false, down:false }, &mut w.ctx());
+            }
+            assert_eq!(s.phase(), PcPhase::ItemMenu);
+        }
+        for cursor in [1, 2] {
+            let mut w = World::new();
+            w.bag.add_item(ItemId::Potion,4).unwrap();
+            w.pc_items.add_item(ItemId::Potion,4).unwrap();
+            let mut s = PcScreen::new(PcEntry::PokemonCenter, &open_ctx());
+            skip_message(&mut s,&mut w);
+            s.update_frame(DOWN,&mut w.ctx()); s.update_frame(A,&mut w.ctx()); settle(&mut s,&mut w);
+            for _ in 0..cursor { s.update_frame(DOWN,&mut w.ctx()); }
+            s.update_frame(A,&mut w.ctx());
+            for _ in 0..200 {
+                if s.phase()==PcPhase::ItemList { break; }
+                s.update_frame(MenuInput { a:false,b:false,up:false,down:false },&mut w.ctx());
+            }
+            assert_eq!(s.phase(),PcPhase::ItemList);
+            s.update_frame(B,&mut w.ctx()); settle(&mut s,&mut w);
+            assert_eq!(s.players_menu().cursor(),cursor,"return within player PC preserves chosen operation");
+            s.update_frame(B,&mut w.ctx()); assert_eq!(s.phase(),PcPhase::MainMenu);
+            s.update_frame(DOWN,&mut w.ctx()); s.update_frame(A,&mut w.ctx()); settle(&mut s,&mut w);
+            assert_eq!(s.players_menu().cursor(),0,"fresh PlayerPC starts at WITHDRAW ITEM");
+            assert_eq!(w.bag.item_quantity(ItemId::Potion),4);
+            assert_eq!(w.pc_items.item_quantity(ItemId::Potion),4);
+        }
+    }
+
     use super::*;
     use crate::pokemon::stats::create_pokemon;
     use pokered_data::species::Species;
