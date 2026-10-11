@@ -1,0 +1,73 @@
+{
+  "base": "7a6191e1959f1ca4eca70f35feac23044e0cfd8c",
+  "tested_source_head": "adca47253f1e62bd0cb08159a028ca391eacd3b1",
+  "tests": {
+    "base": "7a6191e1959f1ca4eca70f35feac23044e0cfd8c",
+    "source_head": "adca47253f1e62bd0cb08159a028ca391eacd3b1",
+    "build_exit": 0,
+    "immutable_run_exit": 0,
+    "programs": 78,
+    "passed": 3687,
+    "failed": 0,
+    "ignored": 76,
+    "all_pass": true,
+    "all_completed": true,
+    "generated_png_preserved": 56,
+    "tracked_png_restored": 13,
+    "bare_untracked_png_retained": 43
+  },
+  "actual_control": "START -> POKEDEX, DOWN at70, A at118, B at166; first25 seen, owned001/003/005; actual original and both native sides each repeat twice byte exact",
+  "source_coordinates": "CONTENTS(1,1), number(1,2+2row), owned ball(3,3+2row), name(4,3+2row); PrintNumber advances HL before dec/inc",
+  "tiles": "pokedex tiles70/71, battle HUD7a, battle balls72; resource-backed/fallback equality test requires real assets to load",
+  "cursor": "existing filled/hollow glyphs; list cursor column0, owned marker column3, existing cached cursor repaint unchanged and full/cached equality tests pass",
+  "master_binary": "frozen tested172 binary, entire crates tree equality to actual master proved; not claimed newly rebuilt",
+  "scope": "CONTENTS English coordinates and UI artwork/active selection only; fonts/Chinese/IME/dialogue layout excluded; input guards/repeat/combined keys and broader gameplay audits remain incomplete",
+  "controlled_fixture_not_natural_playthrough": true,
+  "native_bag_stable_no_auto_save": true,
+  "PNG": 598,
+  "archive_roundtrip_byte_exact": true,
+  "archive_sha256": "8c922afadf51e0cbdc3a924bdd5821ef8c54d3446a106893b70e1e4c916fc7e9",
+  "archive_bytes": 228882,
+  "post_package_visual_review": {
+    "source_before_after_contact": "audit-283-source-before-after-contact.png",
+    "reviewed": true,
+    "original_and_candidate_UI_tiles": {
+      "stem": {
+        "pixel_box": [
+          112,
+          0,
+          120,
+          8
+        ],
+        "RGBA_byte_exact": true
+      },
+      "box": {
+        "pixel_box": [
+          112,
+          16,
+          120,
+          24
+        ],
+        "RGBA_byte_exact": true
+      },
+      "horizontal": {
+        "pixel_box": [
+          120,
+          64,
+          128,
+          72
+        ],
+        "RGBA_byte_exact": true
+      },
+      "owned-ball": {
+        "pixel_box": [
+          24,
+          24,
+          32,
+          32
+        ],
+        "RGBA_byte_exact": true
+      }
+    }
+  }
+}
