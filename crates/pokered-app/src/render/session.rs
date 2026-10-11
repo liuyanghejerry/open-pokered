@@ -1404,7 +1404,7 @@ impl PcVisualKey {
             PcPhase::ItemMenu => {
                 cursor = Some((8, (1 + pc.players_menu().cursor() as u32 * 2) * 8));
             }
-            PcPhase::ItemList | PcPhase::ItemQuantity | PcPhase::TossConfirm => {
+            PcPhase::ItemList | PcPhase::ItemQuantityPrompt | PcPhase::ItemQuantity | PcPhase::TossConfirm => {
                 hash_byte(&mut visual_hash, pc.item_mode() as u8);
                 let rows = match pc.item_mode() {
                     ItemListMode::Deposit => {
@@ -1427,6 +1427,10 @@ impl PcVisualKey {
                             rows,
                             language,
                         ));
+                    }
+                    PcPhase::ItemQuantityPrompt => {
+                        hash_u32(&mut visual_hash, pc.item_list_cursor() as u32);
+                        hash_byte(&mut visual_hash, pc.quantity_prompt_chars() as u8);
                     }
                     PcPhase::ItemQuantity => {
                         hash_u32(&mut visual_hash, pc.item_list_cursor() as u32);

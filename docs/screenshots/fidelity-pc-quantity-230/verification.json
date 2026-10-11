@@ -1,0 +1,28 @@
+{
+  "base": "535c1cf7f8061e105ee788df41e4f664c498b72c",
+  "source_head": "8ec3d970d257f6780fb42adec1728d1bb839d7a6",
+  "tests": {
+    "programs": 78,
+    "pass": 3669,
+    "fail": 0,
+    "ignore": 74
+  },
+  "source_cases": 19,
+  "original_png": 28166,
+  "current_native_png": 7524,
+  "PNG": 35690,
+  "repeat_raw_png_byte_exact": true,
+  "every_native_cached_full_frame_pixel_equal": true,
+  "all_archive_files_roundtrip_byte_exact": true,
+  "archive_sha256": "0b5b010eeff514c5a632d7508ce20d9aef243a99a0deb532ef662715099f7490",
+  "archive_bytes": 2781287,
+  "cli_regression": {
+    "head": "8ec3d970d257f6780fb42adec1728d1bb839d7a6",
+    "base": "535c1cf7f8061e105ee788df41e4f664c498b72c",
+    "binary_sha256": "4277f58e548820b34b006c68e3f1cf59463fb1f544d4b1db2254bf769313d192",
+    "fresh_m01_m03": true,
+    "separate_process_s07_save_continue": true,
+    "seed": 42,
+    "speed": 0
+  }
+}
