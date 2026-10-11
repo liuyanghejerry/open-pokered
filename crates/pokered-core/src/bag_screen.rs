@@ -127,6 +127,12 @@ impl BagScreenState {
     /// The inventory is committed after YES's protected wait. Keep its result
     /// PROMPT until the player acknowledges it rather than rebuilding the menu.
     pub fn set_items_after_toss(&mut self, items: Vec<(ItemId, u32)>) {
+        // RemoveItemFromInventory_ resets list position when a physical slot
+        // is emptied. Partial removal keeps the selected item and window.
+        if items.len() < self.items.len() {
+            self.cursor = 0;
+            self.scroll = 0;
+        }
         self.items = items;
         self.cursor = self.cursor.min(self.row_count().saturating_sub(1));
         self.clamp_scroll();
@@ -682,6 +688,43 @@ mod tests {
         s.update_frame(BagScreenInput { b: true, ..Default::default() });
         assert_eq!(s.phase(), BagPhase::Browsing);
         assert_eq!(s.selected_item(), Some((ItemId::Potion, 2)));
+    }
+
+    #[test]
+    fn toss_physical_slot_removal_resets_list_but_partial_quantity_keeps_window() {
+        // Source real-input cases audit-335/336: first, middle, scrolled,
+        // last and only slot all reset; a partial Hyper Potion stays at 6/4.
+        let stock = vec![(ItemId::Potion, 4), (ItemId::Antidote, 3),
+            (ItemId::PokeBall, 2), (ItemId::Revive, 2),
+            (ItemId::EscapeRope, 1), (ItemId::Repel, 2),
+            (ItemId::HyperPotion, 3), (ItemId::SuperPotion, 4)];
+        for (index, partial, single) in [(0, false, false), (3, false, false),
+            (6, false, false), (7, false, false), (0, false, true),
+            (6, true, false)] {
+            let items = if single { vec![(ItemId::HyperPotion, 3)] } else { stock.clone() };
+            let mut s = BagScreenState::new(items.clone());
+            s.set_visible_rows(3);
+            for _ in 0..index { s.update_frame(BagScreenInput { down: true, ..Default::default() }); }
+            let before = (s.cursor(), s.scroll());
+            let (item, have) = items[index];
+            let qty = if partial { 1 } else { have };
+            s.phase = BagPhase::TossQuantity { qty };
+            s.update_frame(BagScreenInput { a: true, ..Default::default() });
+            finish_printing(&mut s);
+            s.update_frame(BagScreenInput { a: true, ..Default::default() });
+            s.update_frame(BagScreenInput { a: true, ..Default::default() });
+            for _ in 0..14 { assert_eq!(s.update_frame(BagScreenInput::none()), BagScreenAction::Active); }
+            assert_eq!(s.update_frame(BagScreenInput::none()), BagScreenAction::TossItem { item, index, quantity: qty });
+            let mut remaining = items;
+            if partial { remaining[index].1 -= qty; } else { remaining.remove(index); }
+            s.set_items_after_toss(remaining.clone());
+            assert_eq!(s.phase(), BagPhase::TossResult { item });
+            finish_printing(&mut s);
+            s.update_frame(BagScreenInput { b: true, ..Default::default() });
+            assert_eq!(s.phase(), BagPhase::Browsing);
+            assert_eq!(s.items(), remaining);
+            assert_eq!((s.cursor(), s.scroll()), if partial { before } else { (0, 0) });
+        }
     }
 
     #[test]
