@@ -1516,6 +1516,14 @@ fn draw_overworld_impl(
                         if bg_tile_idx == grass_id as usize {
                             let tile = bg_ts.get(bg_tile_idx);
                             let gx = overlay_x as i32 + col_off * TILE_SIZE as i32;
+                            // The grass priority overlay extends below the
+                            // player's 16px patch. Restore it before scrolling
+                            // too, so those pixels cannot trail behind a step.
+                            if let Some(cache) = background_cache.as_deref_mut() {
+                                cache.save_foreground_rect(
+                                    fb, gx, overlay_y as i32, TILE_SIZE, TILE_SIZE,
+                                );
+                            }
                             blit_priority_bg_tile(fb, tile, gx, overlay_y as i32);
                         }
                     }
