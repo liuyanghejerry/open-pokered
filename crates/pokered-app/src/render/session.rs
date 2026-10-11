@@ -1255,6 +1255,7 @@ struct PcVisualKey {
     visual_hash: u32,
     cursor: Option<(u32, u32)>,
     language: Lang,
+    marked_slot: Option<usize>,
 }
 
 fn hash_pc_mon(hash: &mut u32, pokemon: &pokered_core::battle::state::Pokemon) {
@@ -1318,6 +1319,8 @@ impl PcVisualKey {
         let language = game.state.config.language;
         let mut visual_hash = 0x811c_9dc5;
         let mut cursor = None;
+        let marked_slot = pc.item_list_marked_slot();
+        hash_u32(&mut visual_hash, marked_slot.map_or(0, |slot| slot as u32 + 1));
         hash_byte(&mut visual_hash, phase as u8);
         hash_byte(&mut visual_hash, game.pc_stats_return_frame.unwrap_or(8).min(8));
         match phase {
@@ -1466,11 +1469,13 @@ impl PcVisualKey {
             visual_hash,
             cursor,
             language,
+            marked_slot,
         })
     }
 
     fn cursor_change_from(&self, previous: &Self) -> Option<((u32, u32), (u32, u32))> {
         (self.phase == previous.phase
+            && self.marked_slot.is_none() && previous.marked_slot.is_none()
             && self.visual_hash == previous.visual_hash
             && self.language == previous.language
             && self.cursor != previous.cursor)
