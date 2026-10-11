@@ -53,20 +53,13 @@ impl PcMainMenuState {
     }
 
     fn cursor_up(&mut self) {
-        if self.cursor == 0 {
-            self.cursor = self.items.len().saturating_sub(1);
-        } else {
-            self.cursor -= 1;
-        }
+        // HandleMenuInput leaves the cursor at the edge when wrapping is off.
+        self.cursor = self.cursor.saturating_sub(1);
     }
 
     fn cursor_down(&mut self) {
-        if self.items.is_empty() {
-            return;
-        }
-        self.cursor += 1;
-        if self.cursor >= self.items.len() {
-            self.cursor = 0;
+        if self.cursor < self.items.len().saturating_sub(1) {
+            self.cursor += 1;
         }
     }
 
@@ -141,17 +134,12 @@ impl BillsPcMenuState {
     }
 
     fn cursor_up(&mut self) {
-        if self.cursor == 0 {
-            self.cursor = Self::ITEMS.len() - 1;
-        } else {
-            self.cursor -= 1;
-        }
+        self.cursor = self.cursor.saturating_sub(1);
     }
 
     fn cursor_down(&mut self) {
-        self.cursor += 1;
-        if self.cursor >= Self::ITEMS.len() {
-            self.cursor = 0;
+        if self.cursor < Self::ITEMS.len() - 1 {
+            self.cursor += 1;
         }
     }
 
@@ -226,17 +214,12 @@ impl PlayersPcMenuState {
     }
 
     fn cursor_up(&mut self) {
-        if self.cursor == 0 {
-            self.cursor = Self::ITEMS.len() - 1;
-        } else {
-            self.cursor -= 1;
-        }
+        self.cursor = self.cursor.saturating_sub(1);
     }
 
     fn cursor_down(&mut self) {
-        self.cursor += 1;
-        if self.cursor >= Self::ITEMS.len() {
-            self.cursor = 0;
+        if self.cursor < Self::ITEMS.len() - 1 {
+            self.cursor += 1;
         }
     }
 
