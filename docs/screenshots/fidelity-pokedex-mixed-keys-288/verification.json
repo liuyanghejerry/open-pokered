@@ -1,0 +1,41 @@
+{
+  "base": "c6f40c24f008c00c8dd74433affae3504a41878d",
+  "tested_source_head": "8333476b0f6b27196dbf15652042856e5a15435e",
+  "tests": {
+    "base": "c6f40c24f008c00c8dd74433affae3504a41878d",
+    "source_head": "8333476b0f6b27196dbf15652042856e5a15435e",
+    "programs": 78,
+    "passed": 3691,
+    "failed": 0,
+    "ignored": 76,
+    "build_exit": 0,
+    "immutable_runner_exit": 0,
+    "all_completed": true
+  },
+  "cases": [
+    "a",
+    "a-right",
+    "down-a",
+    "short-down-a",
+    "down",
+    "down-right",
+    "left-a",
+    "right",
+    "up-down-top",
+    "up-down-mid",
+    "up-right",
+    "side-top",
+    "side-mid"
+  ],
+  "original_and_native_repeats": 2,
+  "three_single_key_control_PNG_byte_exact": true,
+  "native_method": "public seeded PokemonGame.update(InputState) with multiple keys, then real Pokedex renderer; TCP one-button interface not used; not natural START/playthrough",
+  "inventory_stable": true,
+  "captures_match_same_menu_frame": true,
+  "capture_dependencies_locked_equal_except_helper_package": true,
+  "archive_roundtrip_byte_exact": true,
+  "archive_SHA256": "2e8211c193fffcf05e69ce95d43d9be1a32bf8491dd2404f3ff40ad3b3afe36a",
+  "archive_bytes": 708931,
+  "PNG": 7078,
+  "scope": "list inner row move then watched-key caller priority; common side UP-over-DOWN priority. Held repeats, initial guards, cry waits and broader gameplay remain under audit; fonts/Chinese/IME/dialogue layout excluded."
+}

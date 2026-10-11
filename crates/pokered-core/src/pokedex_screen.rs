@@ -267,31 +267,40 @@ impl PokedexScreenState {
         if input.b {
             return PokedexScreenAction::Closed;
         }
-        if input.up && self.cursor > 1 {
-            self.cursor -= 1;
+        // HandleMenuInput moves within the visible rows first; UP wins over
+        // DOWN. A boundary attempt or a watched A/LEFT/RIGHT key then returns
+        // to HandlePokedexListMenu, whose own direction priority comes first.
+        let visible_rows = (self.max_seen - self.scroll).min(LIST_ROWS);
+        let mut row = self.cursor - 1 - self.scroll;
+        let moving_out = if input.up {
+            row == 0
+        } else {
+            input.down && row + 1 >= visible_rows
+        };
+        if input.up {
+            row = row.saturating_sub(1);
+        } else if input.down {
+            row = (row + 1).min(visible_rows.saturating_sub(1));
         }
-        if input.down && self.cursor < self.max_seen {
-            self.cursor += 1;
-        }
-        self.clamp_scroll();
-        if input.right || input.left {
-            // HandlePokedexListMenu pages the window while retaining its
-            // cursor row. RIGHT wins over LEFT; clamp the final page offset.
-            let row = self.cursor - 1 - self.scroll;
+        let watched = input.a || input.left || input.right;
+        if moving_out || watched {
             let max_scroll = self.max_seen.saturating_sub(LIST_ROWS);
-            self.scroll = if input.right {
-                (self.scroll + LIST_ROWS).min(max_scroll)
-            } else {
-                self.scroll.saturating_sub(LIST_ROWS)
-            };
-            self.cursor = self.scroll + row + 1;
+            if input.up {
+                self.scroll = self.scroll.saturating_sub(1);
+            } else if input.down {
+                self.scroll = (self.scroll + 1).min(max_scroll);
+            } else if input.right {
+                self.scroll = (self.scroll + LIST_ROWS).min(max_scroll);
+            } else if input.left {
+                self.scroll = self.scroll.saturating_sub(LIST_ROWS);
+            } else if input.a && self.is_seen(self.cursor) {
+                // Unseen entries return to the list without opening DATA.
+                self.mode = PokedexScreenMode::SideMenu;
+                self.side_menu_cursor = 0;
+            }
         }
-        if input.a && self.is_seen(self.cursor) {
-            // HandlePokedexSideMenu: unseen entries exit back to the list
-            // (b=2); seen ones open the 4-option menu.
-            self.mode = PokedexScreenMode::SideMenu;
-            self.side_menu_cursor = 0;
-        }
+        self.cursor = self.scroll + row + 1;
+        self.clamp_scroll();
         PokedexScreenAction::Active
     }
 
@@ -303,11 +312,11 @@ impl PokedexScreenState {
             self.mode = PokedexScreenMode::List;
             return PokedexScreenAction::Active;
         }
-        if input.up && self.side_menu_cursor > 0 {
-            self.side_menu_cursor -= 1;
-        }
-        if input.down && self.side_menu_cursor < SIDE_MENU_OPTIONS as u8 - 1 {
-            self.side_menu_cursor += 1;
+        // HandleMenuInput tests UP before DOWN even when UP cannot move.
+        if input.up {
+            self.side_menu_cursor = self.side_menu_cursor.saturating_sub(1);
+        } else if input.down {
+            self.side_menu_cursor = (self.side_menu_cursor + 1).min(SIDE_MENU_OPTIONS as u8 - 1);
         }
         if input.a {
             match self.side_menu_cursor {
@@ -418,6 +427,77 @@ mod tests {
         assert_eq!(s.mode(), PokedexScreenMode::SideMenu);
         s.update_frame(press(a()));
         assert_eq!(s.mode(), PokedexScreenMode::Entry);
+    }
+
+    #[test]
+    fn list_mixed_keys_follow_original_inner_menu_and_outer_caller_priority() {
+        // Matched original emulator controls (audit285) exercise both levels:
+        // HandleMenuInput moves a row, then the caller handles watched keys.
+        // DOWN+A therefore moves one row and scrolls once, without opening DATA.
+        let cases = [
+            ("down", PokedexScreenInput { down: true, ..Default::default() }, (2, 0, PokedexScreenMode::List)),
+            ("down-a", PokedexScreenInput { down: true, a: true, ..Default::default() }, (3, 1, PokedexScreenMode::List)),
+            ("up-right", PokedexScreenInput { up: true, right: true, ..Default::default() }, (1, 0, PokedexScreenMode::List)),
+            ("down-right", PokedexScreenInput { down: true, right: true, ..Default::default() }, (3, 1, PokedexScreenMode::List)),
+            ("right", PokedexScreenInput { right: true, ..Default::default() }, (8, 7, PokedexScreenMode::List)),
+            ("a-right", PokedexScreenInput { a: true, right: true, ..Default::default() }, (8, 7, PokedexScreenMode::List)),
+            ("a", PokedexScreenInput { a: true, ..Default::default() }, (1, 0, PokedexScreenMode::SideMenu)),
+            ("left-a", PokedexScreenInput { left: true, a: true, ..Default::default() }, (1, 0, PokedexScreenMode::List)),
+        ];
+        let seen: Vec<u8> = (1..=25).collect();
+        let mut actual = Vec::new();
+        let mut expected = Vec::new();
+        for (name, input, endpoint) in cases {
+            let mut state = screen(dex_with(&seen, &[]));
+            state.update_frame(input);
+            let result = (state.cursor(), state.scroll_offset(), state.mode());
+            if matches!(name, "down" | "right" | "a") {
+                assert_eq!(result, endpoint, "single-key control {name}");
+            }
+            actual.push((name, result));
+            expected.push((name, endpoint));
+        }
+        assert_eq!(actual, expected, "original paired two-level menu controls");
+    }
+
+    #[test]
+    fn opposite_vertical_keys_keep_the_original_up_priority() {
+        let seen: Vec<u8> = (1..=25).collect();
+        let mut endpoints = Vec::new();
+        for initial_down in [0, 3] {
+            let mut state = screen(dex_with(&seen, &[]));
+            for _ in 0..initial_down {
+                state.update_frame(PokedexScreenInput { down: true, ..Default::default() });
+            }
+            state.update_frame(PokedexScreenInput { up: true, down: true, ..Default::default() });
+            endpoints.push((state.cursor(), state.scroll_offset(), state.mode()));
+        }
+        assert_eq!(endpoints, vec![(1, 0, PokedexScreenMode::List), (3, 0, PokedexScreenMode::List)]);
+    }
+
+    #[test]
+    fn down_with_a_keeps_a_short_list_without_opening_the_side_menu() {
+        let mut state = screen(dex_with(&[1, 2, 3, 4, 5, 6], &[]));
+        state.update_frame(PokedexScreenInput { down: true, a: true, ..Default::default() });
+        assert_eq!((state.cursor(), state.scroll_offset(), state.mode()), (2, 0, PokedexScreenMode::List));
+    }
+
+    #[test]
+    fn side_menu_opposite_vertical_keys_use_up_priority_at_top_and_inside() {
+        let seen: Vec<u8> = (1..=25).collect();
+        let mut endpoints = Vec::new();
+        for initial_down in [0, 2] {
+            let mut state = screen(dex_with(&seen, &[]));
+            state.update_frame(a());
+            for _ in 0..initial_down {
+                state.update_frame(PokedexScreenInput { down: true, ..Default::default() });
+            }
+            state.update_frame(PokedexScreenInput { up: true, down: true, ..Default::default() });
+            assert_eq!(state.cursor(), 1, "side navigation preserves selected species");
+            assert!(!state.take_cry_pending(), "directions do not trigger a cry");
+            endpoints.push((state.side_menu_cursor(), state.mode()));
+        }
+        assert_eq!(endpoints, vec![(0, PokedexScreenMode::SideMenu), (1, PokedexScreenMode::SideMenu)]);
     }
 
     #[test]
