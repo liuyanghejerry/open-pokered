@@ -1661,7 +1661,14 @@ impl PcScreen {
                     return;
                 }
                 core::mem::swap(ctx.pc_items, &mut trial);
+                let slots_before = ctx.bag.count();
                 let _ = ctx.bag.remove_item_at(index, qty);
+                // RemoveItemFromInventory_ resets the list window only when
+                // the selected physical slot is depleted and shifted out.
+                if ctx.bag.count() < slots_before {
+                    self.item_list_cursor = 0;
+                    self.item_list_scroll = 0;
+                }
                 self.sfx.push(PcSfx::WithdrawDeposit);
                 // "{ITEM} was stored via PC." (_ItemWasStoredText)
                 self.set_message(
@@ -1680,7 +1687,14 @@ impl PcScreen {
                     return;
                 }
                 core::mem::swap(ctx.bag, &mut trial);
+                let slots_before = ctx.pc_items.count();
                 let _ = ctx.pc_items.remove_item_at(index, qty);
+                // RemoveItemFromInventory_ resets the list window only when
+                // the selected physical slot is depleted and shifted out.
+                if ctx.pc_items.count() < slots_before {
+                    self.item_list_cursor = 0;
+                    self.item_list_scroll = 0;
+                }
                 self.sfx.push(PcSfx::WithdrawDeposit);
                 // "Withdrew {ITEM}." (_WithdrewItemText)
                 self.set_message(
@@ -2032,6 +2046,44 @@ mod tests {
             assert_eq!(other,slots,"sorting mutates only its selected inventory");
             assert_eq!(screen.phase(),PcPhase::ItemList);
             assert!(!screen.take_save_request(),"sorting does not perform an ordinary SAVE");
+        }
+    }
+
+    #[test]
+    fn pc_transfer_depleted_slots_reset_the_window_but_partial_slots_keep_it() {
+        let slots = [(ItemId::Potion,4),(ItemId::Antidote,3),(ItemId::PokeBall,2),
+                     (ItemId::Revive,2),(ItemId::EscapeRope,1)];
+        for mode in [ItemListMode::Withdraw, ItemListMode::Deposit] {
+            for (partial, scrolled) in [(false,false),(true,false),(false,true),(true,true)] {
+                let (mut screen,mut world) = select_fixture(mode,&slots);
+                let mut inputs = if scrolled {
+                    vec![(70,128),(110,128),(150,128),(190,1)]
+                } else { vec![(70,128),(110,1),(190,64)] };
+                if scrolled {
+                    if !partial { inputs.push((270,64)); }
+                    inputs.push((310,1));
+                } else {
+                    if !partial { inputs.push((214,64)); }
+                    inputs.push((250,1));
+                }
+                inputs.push((700,1));
+                select_timeline(&mut screen,&mut world,&inputs,1101);
+                let (source,destination) = if mode==ItemListMode::Deposit {
+                    (world.bag.items(),world.pc_items.items())
+                } else { (world.pc_items.items(),world.bag.items()) };
+                let index = if scrolled {3} else {1};
+                let mut expected = slots.to_vec();
+                let quantity = slots[index].1 - u32::from(partial);
+                if partial { expected[index].1 = 1; } else { expected.remove(index); }
+                let mut received = slots.to_vec(); received[index].1 += quantity;
+                assert_eq!(source,expected,"source {mode:?} partial={partial} scrolled={scrolled}");
+                assert_eq!(destination,received);
+                assert_eq!(screen.phase(),PcPhase::ItemList);
+                let position = if partial { (index,usize::from(scrolled)) } else { (0,0) };
+                assert_eq!((screen.item_list_cursor(),screen.item_list_scroll()),position,
+                           "RemoveItemFromInventory_ {mode:?} partial={partial} scrolled={scrolled}");
+                assert!(!screen.take_save_request());
+            }
         }
     }
 
