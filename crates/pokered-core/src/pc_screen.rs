@@ -1606,6 +1606,7 @@ mod tests {
     #[test]
     fn fresh_bills_pc_entry_resets_cursor_and_preserves_current_box() {
         let mut w = World::new();
+        w.pc_storage.change_box(2).unwrap();
         let mut s = PcScreen::new(PcEntry::PokemonCenter, &open_ctx());
         open_bills_pc(&mut s,&mut w);
         s.bills_menu.set_current_box(2);
