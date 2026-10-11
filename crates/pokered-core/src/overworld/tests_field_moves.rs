@@ -3,7 +3,7 @@
 //! FLY / FLASH / DIG / TELEPORT) from the party menu.
 
 use crate::alloc_prelude::*;
-use super::field_moves::{FieldMoveOutcome, BOULDER_DUST_FRAMES};
+use super::field_moves::FieldMoveOutcome;
 use super::hm_effects;
 use super::presentation;
 use super::screen::{OverworldScreen, PendingWarp, WarpFadeState};
@@ -474,7 +474,9 @@ fn boulder_push_requires_two_frames_and_moves_boulder() {
 
     // Second frame (still holding): the boulder slides one tile.
     screen.tick_boulder_push(Some(Direction::Down));
-    assert_eq!(boulder_pos(&screen), (5, 7), "second push moves the boulder");
+    assert_eq!(boulder_pos(&screen), (5, 6), "second contact starts the scripted slide");
+    for _ in 0..38 {screen.tick_boulder_push(None);}
+    assert_eq!(boulder_pos(&screen), (5, 7), "slide reaches its resting tile");
     assert!(screen
         .audio_requests
         .iter()
@@ -543,10 +545,9 @@ fn boulder_push_starts_the_dust_at_the_push_spot() {
 
     screen.tick_boulder_push(Some(Direction::Down)); // arms the flag
     screen.tick_boulder_push(Some(Direction::Down)); // push
-    assert!(
-        screen.boulder_dust.is_active(),
-        "the push starts the dust puff (AnimateBoulderDust)"
-    );
+    assert!(!screen.boulder_dust.is_active(), "MoveSprite finishes before smoke is loaded");
+    for _ in 0..45 {screen.tick_boulder_push(None);}
+    assert!(screen.boulder_dust.is_active(), "smoke follows the scripted slide and graphics copy");
     assert_eq!(screen.boulder_dust.facing(), Direction::Down);
     // Anchored to the player's tile at push time (the original writes the
     // OAM block once from the player's sprite position).
@@ -554,32 +555,30 @@ fn boulder_push_starts_the_dust_at_the_push_spot() {
 }
 
 #[test]
-fn boulder_dust_runs_24_frames_independent_of_the_lockout() {
-    let mut screen = screen_on(MapId::PalletTown);
-    fill_map_with_passable_block(&mut screen);
-    screen.state.player.x = 5;
-    screen.state.player.y = 5;
-    screen.state.player.facing = Direction::Down;
-    screen.npc_states.push(make_boulder(5, 6));
-    screen.strength_active = true;
-
-    screen.tick_boulder_push(Some(Direction::Down)); // arms
-    screen.tick_boulder_push(Some(Direction::Down)); // push
-    assert_eq!(screen.boulder_dust_frames, BOULDER_DUST_FRAMES);
-
-    // The push lockout ends after 16 frames, but the dust keeps playing its
-    // full 8-step × 3-frame timeline (24 frames).
-    for _ in 0..16 {
-        screen.tick_boulder_push(None);
+fn boulder_push_blocks_player_and_inputs_through_slide_dust_and_restore() {
+    use crate::game_state::ScreenAction;
+    let mut screen=screen_on(MapId::PalletTown);fill_map_with_passable_block(&mut screen);
+    screen.state.player.x=5;screen.state.player.y=5;screen.state.player.facing=Direction::Down;
+    screen.npc_states.push(make_boulder(5,6));screen.strength_active=true;
+    screen.tick_boulder_push(Some(Direction::Down));screen.tick_boulder_push(Some(Direction::Down));
+    for frame in 1..=75 {
+        // Physical controls during the blocking routine must neither move
+        // the player nor open a menu/dialogue or start another push.
+        let noisy=super::OverworldInput::new(true,true,true,true,true,true,true,true);
+        assert_eq!(screen.update_frame(noisy),ScreenAction::Continue);
+        assert_eq!((screen.state.player.x,screen.state.player.y),(5,5),"player waits at {frame}");
+        assert!(screen.pending_dialogue.is_none());
+        assert_eq!(screen.boulder_dust.is_active(),(45..=69).contains(&frame),"logical smoke stage {frame}");
+        // Source TryWalking updates MapY/MapX before any visible slide.
+        assert_eq!(boulder_pos(&screen),if frame<5 {(5,6)} else {(5,7)});
+        assert_eq!(screen.boulder_push.is_some(),frame<75);
     }
-    assert_eq!(screen.boulder_dust_frames, 0, "lockout cleared");
-    assert!(screen.boulder_dust.is_active(), "dust still playing");
-    assert_eq!(screen.boulder_dust.step(), 5, "16 ticks = 5 steps + 1 frame");
-
-    for _ in 0..8 {
-        screen.tick_boulder_push(None);
-    }
-    assert!(!screen.boulder_dust.is_active(), "24 ticks = 8 steps, done");
+    assert_eq!(screen.boulder_dust_frames,0);
+    // A released/new direction after the routine can move normally.
+    let idle=super::OverworldInput::new(false,false,false,false,false,false,false,false);
+    screen.update_frame(idle);
+    screen.update_frame(super::OverworldInput::new(false,true,false,false,false,false,false,false));
+    assert_eq!(screen.state.player.movement_state,super::MovementState::Walking);
 }
 
 #[test]
@@ -609,29 +608,14 @@ fn boulder_dust_completion_plays_sfx_cut_once() {
 
     screen.tick_boulder_push(Some(Direction::Down)); // arms
     screen.tick_boulder_push(Some(Direction::Down)); // push (SFX_PUSH_BOULDER)
-    assert!(
-        screen.boulder_dust.is_active(),
-        "dust starts on the push frame"
-    );
-    assert_eq!(
-        cut_requests(&screen),
-        0,
-        "no SFX_CUT while the dust is still playing"
-    );
-
-    // DoBoulderDustAnimation (push_boulder.asm:89-103) plays SFX_CUT exactly
-    // when the 8-step × 3-frame dust animation completes (24th tick) — and
-    // BIT_BOULDER_DUST is cleared in the same routine, so it fires once.
-    for tick in 0..24 {
+    assert!(!screen.boulder_dust.is_active(),"no smoke before the slide");
+    for frame in 1..=75 {
         screen.tick_boulder_push(None);
-        let expected = if tick == 23 { 1 } else { 0 };
-        assert_eq!(
-            cut_requests(&screen),
-            expected,
-            "SFX_CUT fires only on the dust-completion tick (tick {tick})"
-        );
+        assert_eq!(cut_requests(&screen),usize::from(frame==75),"SFX_CUT after graphics restoration at {frame}");
     }
-    assert!(!screen.boulder_dust.is_active(), "dust done after 24 ticks");
+    assert!(!screen.boulder_dust.is_active());
+    for _ in 0..10 {screen.tick_boulder_push(None);}
+    assert_eq!(cut_requests(&screen),1,"the completion cue is emitted once");
 }
 
 #[test]
@@ -646,20 +630,14 @@ fn boulder_dust_restarts_on_a_new_push() {
 
     screen.tick_boulder_push(Some(Direction::Down)); // arms
     screen.tick_boulder_push(Some(Direction::Down)); // push #1
-    for _ in 0..16 {
-        screen.tick_boulder_push(None); // wait out the lockout
-    }
-    assert!(screen.boulder_dust.is_active(), "dust from push #1 still up");
-
-    // The player steps forward to stand in front of the moved boulder.
-    screen.state.player.y = 6;
-    // A second push (allowed once the lockout clears, still inside the
-    // first puff's window) restarts the dust at the new spot.
-    screen.tick_boulder_push(Some(Direction::Down)); // arms
-    screen.tick_boulder_push(Some(Direction::Down)); // push #2
-    assert!(screen.boulder_dust.is_active());
-    assert_eq!(screen.boulder_dust.step(), 0, "dust restarted from step 0");
-    assert_eq!(screen.boulder_dust.anchor(), (5, 6), "anchored at the new player tile");
+    for _ in 0..75 {screen.tick_boulder_push(None);}
+    assert!(screen.boulder_push.is_none());
+    screen.state.player.y=6;
+    screen.tick_boulder_push(Some(Direction::Down));screen.tick_boulder_push(Some(Direction::Down));
+    assert!(!screen.boulder_dust.is_active(),"a new push starts with a slide");
+    for _ in 0..45 {screen.tick_boulder_push(None);}
+    assert_eq!(screen.boulder_dust.step(),0);
+    assert_eq!(screen.boulder_dust.anchor(),(5,6));
 }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -1061,4 +1039,62 @@ fn softboiled_truncates_the_fifth_like_gen1_divide() {
     }
     assert_eq!(user.hp, 99 - 19);
     assert_eq!(target.hp, 1 + 19);
+}
+
+#[test]
+fn seafoam_hole_waits_for_dust_and_keeps_the_lower_floor_event() {
+    use pokered_data::event_flags::EventFlag;
+    let mut screen=screen_on(MapId::SeafoamIslands1F);
+    screen.npc_states.clear();
+    screen.npc_states.push(make_boulder(17,5));
+    screen.npc_states[0].walk_counter=16;
+    screen.boulder_push=Some(presentation::BoulderPushState {
+        npc_index:0,direction:Direction::Down,anchor:(17,4),
+        origin:(17,5),destination:(17,6),frame:0,switch_block:None,redraw_remaining:0,
+    });
+    let flag=EventFlag::EVENT_SEAFOAM1_BOULDER1_DOWN_HOLE;
+    for frame in 1..=75 {
+        screen.advance_boulder_push();
+        assert_eq!(screen.npc_states[0].visible,frame<75);
+        assert_eq!(screen.unified_flags.check(flag),frame==75);
+    }
+    assert_eq!((screen.npc_states[0].x,screen.npc_states[0].y),(17,6));
+    assert!(screen.boulder_push.is_none());
+    let saved=screen.unified_flags.to_event_bytes();
+    let mut lower=screen_on(MapId::SeafoamIslandsB1F);
+    lower.set_event_flags_bytes(&saved);
+    lower.run_on_load();
+    for _ in 0..120 {lower.update_frame(OverworldInput::new(false,false,false,false,false,false,false,false));}
+    assert!(lower.npc_states.iter().any(|n|n.visible && n.sprite_id==pokered_data::sprites::SpriteId::Boulder as u8));
+}
+
+#[test]
+fn victory_road_switch_commits_during_slide_and_redraw_depends_on_view_address() {
+    use pokered_data::event_flags::EventFlag;
+    for (map, x, y, flag, bx, by, block, pause) in [
+        (MapId::VictoryRoad1F,17,11,EventFlag::EVENT_VICTORY_ROAD_1_BOULDER_ON_SWITCH,4,6,29,9),
+        (MapId::VictoryRoad2F,1,14,EventFlag::EVENT_VICTORY_ROAD_2_BOULDER_ON_SWITCH1,3,4,21,0),
+        (MapId::VictoryRoad2F,9,14,EventFlag::EVENT_VICTORY_ROAD_2_BOULDER_ON_SWITCH2,11,7,29,9),
+    ] {
+        let mut screen=screen_on(map);
+        screen.state.player.x=x;screen.state.player.y=y;
+        screen.npc_states.clear();screen.npc_states.push(make_boulder(x,y+1));
+        screen.npc_states[0].walk_counter=16;
+        let old=screen.map_data.as_ref().unwrap().blocks[by as usize*screen.map_data.as_ref().unwrap().width as usize+bx as usize];
+        assert_ne!(old,block);
+        screen.boulder_push=Some(presentation::BoulderPushState {
+            npc_index:0,direction:Direction::Down,anchor:(x,y),origin:(x,y+1),
+            destination:(x,y+2),frame:0,switch_block:None,redraw_remaining:0,
+        });
+        for elapsed in 1..=75+pause {
+            screen.advance_boulder_push();
+            assert_eq!(screen.unified_flags.check(flag),elapsed>=7,"{map:?} elapsed {elapsed}");
+            assert_eq!(screen.npc_states[0].y,if elapsed<5 {y+1} else {y+2});
+            let m=screen.map_data.as_ref().unwrap();
+            assert_eq!(m.blocks[by as usize*m.width as usize+bx as usize],if elapsed<9 {old} else {block});
+            if (9..=9+pause).contains(&elapsed) {assert_eq!(screen.boulder_push.unwrap().frame,9);}
+            assert_eq!(screen.boulder_push.is_none(),elapsed==75+pause);
+        }
+        assert_eq!(screen.npc_states[0].walk_counter,0);
+    }
 }

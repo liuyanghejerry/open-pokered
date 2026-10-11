@@ -102,6 +102,7 @@ impl PokemonGame {
                 || self.overworld.pending_choice.is_some()
                 || self.overworld.trainer_encounter_pending(),
             self.overworld.active_script_effect_label().is_some()
+                || self.overworld.boulder_push.is_some()
                 || !self.overworld.script_engine_idle(),
         )
     }

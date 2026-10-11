@@ -1675,7 +1675,7 @@ fn victory_road_switch_requires_boulder_pushed_onto_it() {
     screen.state.player.y = 11;
     screen.state.player.facing = Direction::Down;
     screen.strength_active = true;
-    for _ in 0..30 {
+    for _ in 0..78 {
         screen.update_frame(input_hold_down);
     }
     assert_eq!(
@@ -1914,7 +1914,14 @@ fn victory_road_boulder_drops_and_reappears_downstairs() {
     screen.strength_active = true;
     screen.tick_boulder_push(Some(Direction::Right));
     screen.tick_boulder_push(Some(Direction::Right));
-    assert!(!screen.npc_states.iter().find(|n| n.text_id == 10).unwrap().visible, "stone falls into the hole");
+    assert!(screen.npc_states.iter().find(|n|n.text_id==10).unwrap().visible,"stone starts sliding toward the hole");
+    for frame in 1..=74 {
+        screen.tick_boulder_push(None);
+        assert!(screen.npc_states.iter().find(|n|n.text_id==10).unwrap().visible,"stone remains through slide/dust frame {frame}");
+        assert!(!screen.unified_flags().check(pokered_data::event_flags::EventFlag::EVENT_VICTORY_ROAD_3_BOULDER_ON_SWITCH2));
+    }
+    screen.tick_boulder_push(None);
+    assert!(!screen.npc_states.iter().find(|n| n.text_id == 10).unwrap().visible, "3F handles BIT_PUSHED_BOULDER after dust completes");
     let bytes = screen.unified_flags.to_event_bytes();
     let mut restored = super::screen::OverworldScreen::new(MapId::VictoryRoad2F, None, PokemonRedData);
     restored.set_event_flags_bytes(&bytes);
