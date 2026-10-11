@@ -313,17 +313,17 @@ fn draw_dex_tile(
     let (category, name, index, bits): (_, _, _, [u8; 16]) = match tile {
         DexTile::Box => (
             AssetCategory::Pokedex,
-            "pokedex",
+            "pokedex.png",
             16,
             [
                 0x18, 0x18, 0x7e, 0x7e, 0x66, 0x42, 0x66, 0x42, 0x66, 0x42, 0x66, 0x42, 0x7e, 0x7e,
                 0x18, 0x18,
             ],
         ),
-        DexTile::Stem => (AssetCategory::Pokedex, "pokedex", 17, [0x18; 16]),
+        DexTile::Stem => (AssetCategory::Pokedex, "pokedex.png", 17, [0x18; 16]),
         DexTile::Horizontal => (
             AssetCategory::Font,
-            "font_battle_extra",
+            "font_battle_extra.png",
             24,
             [
                 0, 0, 0, 0, 0xff, 0xff, 0, 0, 0xff, 0xff, 0xff, 0xff, 0, 0, 0, 0,
@@ -331,7 +331,7 @@ fn draw_dex_tile(
         ),
         DexTile::Ball => (
             AssetCategory::Battle,
-            "balls",
+            "balls.png",
             0,
             [
                 0, 0, 0x1c, 0x1c, 0x22, 0x3e, 0x51, 0x6f, 0x41, 0x7f, 0x7f, 0x41, 0x3e, 0x22, 0x1c,
@@ -594,9 +594,9 @@ mod tests {
             pokered_renderer::resource::AssetRoot::auto_detect().expect("test gfx root"),
         ));
         for (category, name) in [
-            (AssetCategory::Pokedex, "pokedex"),
-            (AssetCategory::Font, "font_battle_extra"),
-            (AssetCategory::Battle, "balls"),
+            (AssetCategory::Pokedex, "pokedex.png"),
+            (AssetCategory::Font, "font_battle_extra.png"),
+            (AssetCategory::Battle, "balls.png"),
         ] {
             resources.as_mut().unwrap().load_asset_2bpp(category, name)
                 .expect("canonical asset must load; fallback alone cannot validate this test");
