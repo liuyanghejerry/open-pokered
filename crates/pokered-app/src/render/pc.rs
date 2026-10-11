@@ -360,12 +360,26 @@ pub fn draw_pc(
                 }
             }
         }
+        PcPhase::ItemQuestion => {
+            if pc.item_question_draw_list() {
+                let rows = item_rows(pc, save, is_zh);
+                let cursor = pc.item_list_cursor();
+                let scroll = follow_scroll(cursor, rows.len(), PC_LIST_VISIBLE_ROWS.max(8));
+                draw_list(0, 0, 18, 8, &rows, cursor, scroll, is_zh, fb);
+            } else {
+                let labels: Vec<String> = PLAYERS_LABELS.iter()
+                    .map(|s| lang_data::ui_label(s, is_zh).to_string()).collect();
+                draw_menu(0, 0, 14, &labels, pc.players_menu().cursor(), fb);
+            }
+            draw_message(&pc.item_question_lines(), fb, is_zh);
+        }
         PcPhase::ItemMenu => {
             let labels: Vec<String> = PLAYERS_LABELS
                 .iter()
                 .map(|s| lang_data::ui_label(s, is_zh).to_string())
                 .collect();
             draw_menu(0, 0, 14, &labels, pc.players_menu().cursor(), fb);
+            draw_message(&pc.item_question_lines(), fb, is_zh);
         }
         PcPhase::ItemList | PcPhase::ItemQuantityPrompt | PcPhase::ItemQuantity | PcPhase::TossConfirm => {
             let rows = item_rows(pc, save, is_zh);
@@ -373,6 +387,7 @@ pub fn draw_pc(
             let scroll = follow_scroll(cursor, rows.len(), PC_LIST_VISIBLE_ROWS.max(8));
             draw_list(0, 0, 18, 8, &rows, cursor, scroll, is_zh, fb);
             match pc.phase() {
+                PcPhase::ItemList => draw_message(&pc.item_question_lines(), fb, is_zh),
                 PcPhase::ItemQuantityPrompt => {
                     // Keep the existing localized wording; the protected
                     // typing/menu handoff follows the authored source text.
@@ -513,10 +528,25 @@ mod layout_tests {
         let _ = pc.update_frame(input, &mut ctx);
     }
 
+    fn finish_item_question(pc: &mut PcScreen, save: &mut SaveData) {
+        // These fixtures compare ready-menu geometry/cursor damage; actual
+        // Game and core tests separately check protected typing frames.
+        let bag = save.game_data.bag.items().to_vec();
+        let stored = save.game_data.pc_items.items().to_vec();
+        for _ in 0..200 {
+            if pc.phase() != PcPhase::ItemQuestion { break; }
+            update_pc(pc, save, MenuInput { a:false,b:false,up:false,down:false });
+        }
+        assert_ne!(pc.phase(), PcPhase::ItemQuestion);
+        assert_eq!(save.game_data.bag.items(), bag);
+        assert_eq!(save.game_data.pc_items.items(), stored);
+    }
+
     fn skip_message(pc: &mut PcScreen, save: &mut SaveData) {
         while pc.phase() == PcPhase::Message {
             update_pc(pc, save, A);
         }
+        finish_item_question(pc, save);
     }
 
     fn render_pc_state(pc: &PcScreen, save: &SaveData, language: Lang) -> FrameBuffer {
@@ -591,16 +621,24 @@ mod layout_tests {
             render_pc_state(&pc,&save,language).save_png(&out.join(format!("pc-bills-{tag}.png"))).unwrap();
             for _ in 0..3 { update_pc(&mut pc,&mut save,DOWN); }
             update_pc(&mut pc,&mut save,A);
+
+            finish_item_question(&mut pc, &mut save);
             skip_message(&mut pc,&mut save);
             update_pc(&mut pc,&mut save,UP);
             update_pc(&mut pc,&mut save,A);
+
+            finish_item_question(&mut pc, &mut save);
             assert_eq!(pc.phase(),PcPhase::BoxList);
             render_pc_state(&pc,&save,language).save_png(&out.join(format!("pc-box-list-{tag}.png"))).unwrap();
             save.game_data.pc_items.add_item(ItemId::Potion,99).unwrap();
             let mut pc = PcScreen::new(PcEntry::PlayersPc,&open_context(false));
             skip_message(&mut pc,&mut save);
             update_pc(&mut pc,&mut save,A);
+
+            finish_item_question(&mut pc, &mut save);
             update_pc(&mut pc,&mut save,A);
+
+            finish_item_question(&mut pc, &mut save);
             for _ in 0..30 {update_pc(&mut pc,&mut save,MenuInput { a:false,b:false,up:false,down:false });}
             assert_eq!(pc.phase(),PcPhase::ItemQuantity);
             render_pc_state(&pc,&save,language).save_png(&out.join(format!("pc-quantity-{tag}.png"))).unwrap();
@@ -709,6 +747,8 @@ mod layout_tests {
             skip_message(&mut pc, &mut save);
             for _ in 0..3 { update_pc(&mut pc, &mut save, DOWN); }
             update_pc(&mut pc, &mut save, A);
+
+            finish_item_question(&mut pc, &mut save);
             skip_message(&mut pc, &mut save);
             assert_eq!(pc.phase(), PcPhase::LeagueHoF);
             let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), BG);
@@ -808,6 +848,8 @@ mod layout_tests {
             let mut mon_list = PcScreen::new(PcEntry::BillsPc, &open_context(false));
             skip_message(&mut mon_list, &mut mon_save);
             update_pc(&mut mon_list, &mut mon_save, A);
+
+            finish_item_question(&mut mon_list, &mut mon_save);
             assert_eq!(mon_list.phase(), PcPhase::MonList);
 
             let mon_cancel = cursor_state(&mon_list, &mut mon_save, 1);
@@ -830,6 +872,8 @@ mod layout_tests {
 
             let mut mon_action = mon_list.clone();
             update_pc(&mut mon_action, &mut mon_save, A);
+
+            finish_item_question(&mut mon_action, &mut mon_save);
             assert_eq!(mon_action.phase(), PcPhase::MonAction);
             for previous_cursor in 0..3 {
                 for current_cursor in 0..3 {
@@ -864,6 +908,8 @@ mod layout_tests {
             let mut item_list = PcScreen::new(PcEntry::PlayersPc, &open_context(false));
             skip_message(&mut item_list, &mut item_save);
             update_pc(&mut item_list, &mut item_save, A);
+
+            finish_item_question(&mut item_list, &mut item_save);
             assert_eq!(item_list.phase(), PcPhase::ItemList);
 
             for previous_cursor in 0..3 {
@@ -902,6 +948,8 @@ mod layout_tests {
                 update_pc(&mut confirm, &mut save, DOWN);
             }
             update_pc(&mut confirm, &mut save, A);
+
+            finish_item_question(&mut confirm, &mut save);
             assert_eq!(confirm.phase(), PcPhase::ChangeBoxConfirm);
             assert!(confirm.yes_selected());
             update_pc(&mut confirm, &mut save, DOWN);
@@ -926,6 +974,9 @@ mod layout_tests {
             );
 
             update_pc(&mut yes, &mut save, A);
+
+
+            finish_item_question(&mut yes, &mut save);
             for _ in 0..15 { update_pc(&mut yes, &mut save, MenuInput { up: false, down: false, a: false, b: false }); }
             assert_eq!(yes.phase(), PcPhase::BoxList);
             let box_position = |cursor: usize| {
@@ -968,7 +1019,11 @@ mod layout_tests {
             update_pc(&mut release, &mut release_save, DOWN);
             update_pc(&mut release, &mut release_save, DOWN);
             update_pc(&mut release, &mut release_save, A);
+
+            finish_item_question(&mut release, &mut release_save);
             update_pc(&mut release, &mut release_save, A);
+
+            finish_item_question(&mut release, &mut release_save);
             assert_eq!(release.phase(), PcPhase::ReleaseConfirm);
             assert!(release.yes_selected());
             update_pc(&mut release, &mut release_save, DOWN);
@@ -995,11 +1050,17 @@ mod layout_tests {
             update_pc(&mut toss, &mut toss_save, DOWN);
             update_pc(&mut toss, &mut toss_save, DOWN);
             update_pc(&mut toss, &mut toss_save, A);
+
+            finish_item_question(&mut toss, &mut toss_save);
             update_pc(&mut toss, &mut toss_save, A);
+
+            finish_item_question(&mut toss, &mut toss_save);
             assert_eq!(toss.phase(), PcPhase::ItemQuantityPrompt);
             for _ in 0..30 {update_pc(&mut toss,&mut toss_save,MenuInput { a:false,b:false,up:false,down:false });}
             assert_eq!(toss.phase(), PcPhase::ItemQuantity);
             update_pc(&mut toss, &mut toss_save, A);
+
+            finish_item_question(&mut toss, &mut toss_save);
             assert_eq!(toss.phase(), PcPhase::TossConfirm);
             assert!(toss.yes_selected());
             update_pc(&mut toss, &mut toss_save, DOWN);
@@ -1021,6 +1082,8 @@ mod layout_tests {
             update_pc(&mut oak, &mut oak_save, DOWN);
             update_pc(&mut oak, &mut oak_save, DOWN);
             update_pc(&mut oak, &mut oak_save, A);
+
+            finish_item_question(&mut oak, &mut oak_save);
             skip_message(&mut oak, &mut oak_save);
             assert_eq!(oak.phase(), PcPhase::OaksConfirm);
             assert!(oak.yes_selected());

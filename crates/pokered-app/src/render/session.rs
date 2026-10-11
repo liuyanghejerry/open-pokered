@@ -1401,6 +1401,20 @@ impl PcVisualKey {
                     hash_byte(&mut visual_hash, nonempty as u8);
                 }
             }
+            PcPhase::ItemQuestion => {
+                hash_byte(&mut visual_hash, pc.item_mode() as u8);
+                hash_byte(&mut visual_hash, pc.item_question_is_list() as u8);
+                hash_byte(&mut visual_hash, pc.item_question_draw_list() as u8);
+                hash_u32(&mut visual_hash, pc.item_question_chars() as u32);
+                hash_u32(&mut visual_hash, pc.players_menu().cursor() as u32);
+                hash_u32(&mut visual_hash, pc.item_list_cursor() as u32);
+                if pc.item_question_draw_list() {
+                    match pc.item_mode() {
+                        ItemListMode::Deposit => hash_pc_inventory(&mut visual_hash, &game.save_data.game_data.bag),
+                        ItemListMode::Withdraw | ItemListMode::Toss => hash_pc_inventory(&mut visual_hash, &game.save_data.game_data.pc_items),
+                    }
+                }
+            }
             PcPhase::ItemMenu => {
                 cursor = Some((8, (1 + pc.players_menu().cursor() as u32 * 2) * 8));
             }
@@ -2746,7 +2760,12 @@ mod session_tests {
                 if frame == 1 || frame == 17 { assert_eq!(pc.item_qty(), 4); }
                 if frame == 9 { assert_eq!(pc.item_qty(), 1); }
             }
-            if frame >= 25 { assert_eq!(pc.phase(), PcPhase::ItemList); }
+            if frame >= 25 {
+                assert_eq!(pc.phase(), PcPhase::ItemQuestion);
+                assert!(pc.item_question_draw_list());
+                let chars = if frame < 28 {0} else {(frame-28)/3+1};
+                assert_eq!(pc.item_question_chars(), chars as usize);
+            }
             if let Some(path) = capture {
                 std::fs::create_dir_all(path).unwrap();
                 full.save_png(&path.join(format!("frame-{frame:04}.png"))).unwrap();
