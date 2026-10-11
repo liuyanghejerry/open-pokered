@@ -2219,7 +2219,7 @@ impl RenderSession {
                 super::redraw_top_level_bag_cursor(
                     previous,
                     current,
-                    super::top_level_bag_marker_position(&game.bag_screen),
+                    super::menu::top_level_bag_marker_position(&game.bag_screen),
                     fb,
                     game.state.config.language,
                 );

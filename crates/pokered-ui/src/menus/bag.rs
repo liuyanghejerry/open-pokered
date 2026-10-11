@@ -75,7 +75,7 @@ fn draw_with_geometry<P: Painter>(
         }
 
         if let Some(c) = &list_child.cursor {
-            if let Some(row) = marked.and_then(|row| row.checked_sub(offset))
+            if let Some(row) = marked.filter(|row| *row != cursor).and_then(|row| row.checked_sub(offset))
                 .filter(|row| *row < visible_rows as usize) {
                 frame.cursor_glyph_at(1, start_y + row as u32 * row_pitch, '▷', c.color);
             }

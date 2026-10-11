@@ -1553,7 +1553,7 @@ pub fn redraw_top_level_bag_cursor(
     let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
     menus::bag::redraw_cursor(previous, current, &mut painter);
     if let Some(position) = marker.filter(|position| *position != current) {
-        painter.draw_glyph(position, '▷', pokered_ui::engine::Rgba::INK_BLACK);
+        painter.draw_glyph(position, '▷', Rgba::INK_BLACK);
     }
 }
 
