@@ -144,6 +144,12 @@ impl StartMenuState {
         self.cursor = self.saved_cursor.min(self.items.len().saturating_sub(1));
     }
 
+    /// InitBattleVariables and EndOfBattle clear wBattleAndStartSavedMenuItem.
+    pub fn reset_saved_cursor(&mut self) {
+        self.cursor = 0;
+        self.saved_cursor = 0;
+    }
+
     pub fn update_frame(&mut self, input: StartMenuInput) -> StartMenuAction {
         if input.b || input.start {
             self.save_cursor();

@@ -282,3 +282,22 @@ fn empty_party_keeps_pokemon_entry_and_redisplays_when_selected() {
         assert_eq!(menu.update_frame(input_a()), StartMenuAction::OpenPokemon);
     }
 }
+
+#[test]
+fn battle_reset_clears_current_and_remembered_row_without_changing_items() {
+    for (has_dex, linked) in [(true, false), (false, false), (true, true)] {
+        let mut menu = StartMenuState::new(has_dex, true, linked);
+        menu.update_frame(input_down());
+        menu.update_frame(input_down());
+        menu.update_frame(input_b());
+        menu.open(has_dex, true, linked);
+        assert_eq!(menu.cursor(), 2);
+        let items = menu.items().to_vec();
+        menu.reset_saved_cursor();
+        assert_eq!(menu.cursor(), 0);
+        assert_eq!(menu.saved_cursor(), 0);
+        menu.open(has_dex, true, linked);
+        assert_eq!(menu.cursor(), 0);
+        assert_eq!(menu.items(), items);
+    }
+}
