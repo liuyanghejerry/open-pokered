@@ -41,10 +41,18 @@ pub fn is_tossable(item: ItemId) -> bool {
 ///
 /// Bag = `Inventory<BAG_ITEM_CAPACITY>`, PC = `Inventory<PC_ITEM_CAPACITY>`,
 /// max 99 per slot.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub struct Inventory<const N: usize> {
     inner: EngineInventory<ItemId, N>,
+    // RemoveItemFromInventory_ also clears menu memory when a slot is emptied.
+    // Keep that notification across remove/add exchanges; it is runtime-only.
+    slot_depleted: bool,
 }
+
+impl<const N: usize> PartialEq for Inventory<N> {
+    fn eq(&self, other: &Self) -> bool { self.inner == other.inner }
+}
+impl<const N: usize> Eq for Inventory<N> {}
 
 impl<const N: usize> Inventory<N> {
     /// Create an empty inventory with `N` slots and the standard 99-per-slot
@@ -52,6 +60,7 @@ impl<const N: usize> Inventory<N> {
     pub fn new() -> Self {
         Self {
             inner: EngineInventory::with_capacity(MAX_ITEM_QUANTITY as u32),
+            slot_depleted: false,
         }
     }
 
@@ -158,6 +167,7 @@ impl<const N: usize> Inventory<N> {
         let new_qty = current_qty - qty;
         if new_qty == 0 {
             self.inner.remove_at(index);
+            self.slot_depleted = true;
         } else {
             self.inner.get_mut(index).unwrap().1 = new_qty;
         }
@@ -199,6 +209,7 @@ impl<const N: usize> Inventory<N> {
             if quantity > MAX_ITEM_QUANTITY as u32 { return Err(InventoryError::QuantityOverflow); }
             replacement.inner.push_slot(id, quantity).map_err(|_| InventoryError::InventoryFull)?;
         }
+        self.slot_depleted |= replacement.count() < self.count();
         self.inner = replacement.inner;
         Ok(())
     }
@@ -260,8 +271,15 @@ impl<const N: usize> Inventory<N> {
         Ok(item_id)
     }
 
+    /// Consume the original's menu-reset side effect of an emptied slot.
+    /// Partial removal and refused operations do not produce it.
+    pub fn take_depleted_slot_event(&mut self) -> bool {
+        core::mem::take(&mut self.slot_depleted)
+    }
+
     /// Remove all items.
     pub fn clear(&mut self) {
+        self.slot_depleted |= !self.inner.is_empty();
         self.inner.clear();
     }
 }
@@ -316,7 +334,7 @@ impl<'de, const N: usize> Deserialize<'de> for Inventory<N> {
                 .push_slot(id, qty)
                 .map_err(|_| serde::de::Error::custom("inventory has more items than capacity"))?;
         }
-        Ok(Inventory { inner })
+        Ok(Inventory { inner, slot_depleted: false })
     }
 }
 

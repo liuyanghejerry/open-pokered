@@ -124,6 +124,12 @@ impl BagScreenState {
         self.pending_swap_target = None;
     }
 
+    /// Clear saved list position without interrupting an item's feedback prompt.
+    pub fn reset_list_position(&mut self) {
+        self.cursor = 0;
+        self.scroll = 0;
+    }
+
     /// The inventory is committed after YES's protected wait. Keep its result
     /// PROMPT until the player acknowledges it rather than rebuilding the menu.
     pub fn set_items_after_toss(&mut self, items: Vec<(ItemId, u32)>) {
