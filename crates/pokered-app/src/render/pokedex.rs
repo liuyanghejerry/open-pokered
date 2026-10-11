@@ -75,7 +75,7 @@ fn draw_dex_list(
     draw_text(
         if is_zh { "内容" } else { "CONTENTS" },
         t,
-        if is_zh { t } else { 0 },
+        t,
         fg,
         fb,
     );
