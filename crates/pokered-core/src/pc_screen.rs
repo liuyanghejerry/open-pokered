@@ -309,6 +309,7 @@ pub struct PcScreen {
     item_swap_wait_frames: u8,
     item_swap_reload_wait: u8,
     item_swap_last_buttons: u8,
+    item_swap_repeat_frames: u8,
     item_qty: u8,
     item_text_no_delay: bool,
     item_question_no_delay: bool,
@@ -374,6 +375,7 @@ impl PcScreen {
             item_swap_wait_frames: 0,
             item_swap_reload_wait: 0,
             item_swap_last_buttons: 0,
+            item_swap_repeat_frames: 0,
             item_qty: 1,
             item_text_no_delay: true,
             item_question_no_delay: true,
@@ -733,14 +735,27 @@ impl PcScreen {
         let ordinary = matches!(self.phase, PcPhase::MainMenu | PcPhase::BillsMenu | PcPhase::ItemMenu);
         let before = self.phase;
         let buttons = held.bits();
+        // hFrameCounter advances even while Delay20/list redraw protects input.
+        self.item_swap_repeat_frames = self.item_swap_repeat_frames.saturating_sub(1);
         if before == PcPhase::ItemList {
             // HandleItemListSwapping does not sample Joypad during Delay20
             // or the subsequent list redraw/HandleMenuInput Delay3 pair.
             let blocked = self.item_swap_wait_frames > 0 || self.item_swap_reload_wait > 1;
             let resumed = self.item_swap_reload_wait == 1;
             let pressed = buttons & !self.item_swap_last_buttons;
-            let select = !blocked && held.select && pressed != 0;
-            let used = if blocked || (resumed && pressed == 0) {
+            // The watched SELECT key uses hJoy7=1/hJoy6=0: a new press
+            // starts 30 frames, then held keys repeat every 5. Repeated
+            // same-slot SELECT redraws still protect input for six frames.
+            let mut repeat = false;
+            if !blocked {
+                if pressed != 0 { self.item_swap_repeat_frames = 30; }
+                else if self.item_swap_repeat_frames == 0 {
+                    self.item_swap_repeat_frames = 5;
+                    repeat = !held.a && !held.b;
+                }
+            }
+            let select = !blocked && held.select && (pressed != 0 || repeat);
+            let used = if blocked || (resumed && pressed == 0 && !select) {
                 MenuInput { up:false, down:false, a:false, b:false }
             } else if resumed || select {
                 MenuInput { a:held.a, b:held.b, up:held.up, down:held.down }
@@ -1919,6 +1934,36 @@ mod tests {
             screen.update_frame_with_held_input(input, held, &mut world.ctx(), None);
             previous = bits;
         }
+    }
+
+    #[test]
+    fn item_select_held_direction_repeats_after_thirty_frames() {
+        let slots=[(ItemId::Potion,4),(ItemId::Antidote,3),(ItemId::PokeBall,2)];
+        let (mut s,mut w)=select_fixture(ItemListMode::Withdraw,&slots);
+        let schedule:Vec<_>=(70..150).map(|t|(t,132)).collect();
+        select_timeline(&mut s,&mut w,&schedule,350);
+        assert_eq!(w.pc_items.items(),vec![slots[0],slots[2],slots[1]]);
+        assert_eq!((s.item_list_cursor(),s.item_list_marked_slot()),(2,Some(2)));
+        assert_eq!(w.bag.items(),slots);
+    }
+    #[test]
+    fn item_select_held_redraw_guard_discards_short_new_direction() {
+        let slots=[(ItemId::Potion,4),(ItemId::Antidote,3),(ItemId::PokeBall,2)];
+        let (mut s,mut w)=select_fixture(ItemListMode::Withdraw,&slots);
+        let schedule:Vec<_>=(70..150).map(|t|(t,if (110..112).contains(&t){132}else{4})).collect();
+        select_timeline(&mut s,&mut w,&schedule,350);
+        assert_eq!(w.pc_items.items(),slots);
+        assert_eq!((s.item_list_cursor(),s.item_list_marked_slot()),(0,Some(0)));
+    }
+    #[test]
+    fn item_select_held_continues_marking_after_the_first_swap() {
+        let slots=[(ItemId::Potion,4),(ItemId::Antidote,3),(ItemId::PokeBall,2)];
+        let (mut s,mut w)=select_fixture(ItemListMode::Withdraw,&slots);
+        let mut schedule=vec![(70,4),(71,4)];
+        schedule.extend((110..190).map(|t|(t,132)));
+        select_timeline(&mut s,&mut w,&schedule,350);
+        assert_eq!(w.pc_items.items(),vec![slots[1],slots[0],slots[2]]);
+        assert_eq!((s.item_list_cursor(),s.item_list_marked_slot()),(2,Some(2)));
     }
 
     #[test]
