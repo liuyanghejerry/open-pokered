@@ -1,0 +1,40 @@
+{
+  "base": "6f1d09b74082a39dd403738d3f95c42578029a9f",
+  "tested_code": "5931fb619203f0c00a5a8f42a64f1cdc05e680d8",
+  "new_source_native_cases": 12,
+  "repeats": 2,
+  "frames_per_new_case": 501,
+  "new_cursor_scroll_inventory_every_frame_source_equal": true,
+  "new_quantity_entry_frames_source_equal": true,
+  "prior_SELECT_cases": 19,
+  "prior_SELECT_entire_frame_records_identical_to_source_verified_captures": true,
+  "source_quantity_cancel_cases": 3,
+  "cache_full_render_every_frame_equal": true,
+  "core_default_passed": 2759,
+  "full_regression": {
+    "base": "6f1d09b74082a39dd403738d3f95c42578029a9f",
+    "head": "5931fb619203f0c00a5a8f42a64f1cdc05e680d8",
+    "programs": 78,
+    "passed": 3707,
+    "failed": 0,
+    "ignored": 76
+  },
+  "ordinary_UI_SAVE_separate_process_CONTINUE_cases": 15,
+  "fresh_boot_m01_m03": true,
+  "s07_separate_process": true,
+  "CLI_retry": "combined build exited143 after test build completed; standalone CLI retry exited0",
+  "deferred": "initial sampling, ordinary held repeat and variable redraw waits remain under audit",
+  "archive": {
+    "paths": 1725,
+    "archive_bytes": 11478537,
+    "sha256": "260538e8bd058cc41fb3941cf277603a9f9941eebc910ae56edbac96b47c0526",
+    "roundtrip_verified": true,
+    "excluded": [
+      "ROM",
+      "SRAM",
+      "whole game snapshot",
+      "emulator state",
+      "executables"
+    ]
+  }
+}
