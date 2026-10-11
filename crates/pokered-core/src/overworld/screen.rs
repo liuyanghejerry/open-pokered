@@ -389,9 +389,25 @@ pub struct BedroomDialogue {
     text_delay_frames: u16,
     /// Countdown until the next character may be revealed.
     delay_counter: u16,
+    /// Outer field display preparation, separate from per-letter waits.
+    #[serde(default)]
+    field_entry_frames: u8,
 }
 
 impl BedroomDialogue {
+    const FIELD_BG_TRANSFER_FRAMES: u8 = 3;
+    const FIELD_FONT_TILES: u8 = 128;
+    const FIELD_FONT_AND_PRINT_FRAMES: u8 = Self::FIELD_FONT_TILES / 8 + 1 + 3;
+
+    /// DisplayTextIDInit copies the background in thirds, loads the font
+    /// with CopyVideoDataDouble, and PrintText then waits Delay3. A/B cannot
+    /// skip these transfers; only the following per-letter waits accelerate.
+    pub(crate) fn begin_field_display(&mut self, outer_display: bool) {
+        self.field_entry_frames = if outer_display {
+            Self::FIELD_BG_TRANSFER_FRAMES + Self::FIELD_FONT_AND_PRINT_FRAMES
+        } else { 3 }; // Inner PrintText still performs Delay3.
+    }
+
     pub fn new(player_name: &str) -> Self {
         Self {
             pages: vec![
@@ -410,6 +426,7 @@ impl BedroomDialogue {
             holding_open: false,
             text_delay_frames: DEFAULT_TEXT_DELAY_FRAMES,
             delay_counter: 0,
+            field_entry_frames: 0,
         }
     }
 
@@ -434,6 +451,7 @@ impl BedroomDialogue {
             holding_open: false,
             text_delay_frames: DEFAULT_TEXT_DELAY_FRAMES,
             delay_counter: 0,
+            field_entry_frames: 0,
         }
     }
 
@@ -490,6 +508,7 @@ impl BedroomDialogue {
             holding_open: false,
             text_delay_frames: DEFAULT_TEXT_DELAY_FRAMES,
             delay_counter: 0,
+            field_entry_frames: 0,
         }
     }
 
@@ -532,6 +551,8 @@ impl BedroomDialogue {
     }
 
     pub fn get_display_text(&self) -> Option<(String, String)> {
+        // WY moves on-screen after the three background transfers.
+        if self.field_entry_frames > Self::FIELD_FONT_AND_PRINT_FRAMES { return None; }
         let page = self.pages.get(self.current_page)?;
         let idx = self.char_index as usize;
         let l1_chars: Vec<char> = page.line1.chars().collect();
@@ -577,6 +598,10 @@ impl BedroomDialogue {
     /// PrintLetterDelay polls held A/B without a menu sound. A press ends the
     /// current letter's wait after one hardware frame; it never reveals a page.
     pub fn reveal_next_char_with_buttons(&mut self, fast_held: bool) {
+        if self.field_entry_frames != 0 {
+            self.field_entry_frames -= 1;
+            return;
+        }
         if self.delay_counter > 0 {
             self.delay_counter = if fast_held { 0 } else { self.delay_counter - 1 };
             return;
@@ -603,6 +628,7 @@ impl BedroomDialogue {
         self.char_index = 0;
         self.waiting_for_input = false;
         self.delay_counter = 0;
+        self.field_entry_frames = 0;
         self.current_page < self.pages.len()
     }
 
@@ -674,6 +700,8 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     pub pending_dialogue: Option<BedroomDialogue>,
     /// Last completed script text, retained only for the following choice.
     pub last_script_dialogue: Option<BedroomDialogue>,
+    /// Direct clerk-text closure; independent of START/submenu reloads.
+    pub mart_text_restore: Option<presentation::MartTextRestoreState>,
     pub pending_choice: Option<crate::overworld::script_bridge::PendingChoice>,
     pub pending_pokedex_entry: Option<PokedexEntryState>,
     pub pending_naming_screen: Option<crate::naming_screen::NamingScreenState>,
@@ -1156,6 +1184,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             npc_pokemon_data,
             pending_dialogue: None,
             last_script_dialogue: None,
+            mart_text_restore: None,
             pending_choice: None,
             pending_pokedex_entry: None,
             pending_naming_screen: None,
@@ -3194,5 +3223,50 @@ mod dialogue_localization_tests {
             screen.localize_message("No! A new BADGE\nis required."),
             "不行！需要新的\n徽章。"
         );
+    }
+}
+
+impl<G: GameData> OverworldScreen<G> {
+    pub fn begin_mart_text_restore(&mut self) {
+        use pokered_data::sprite_set_data::{MapSpriteSetRef, SplitDirection, SpriteSetId,
+            MAP_SPRITE_SETS, SPLIT_MAP_SPRITE_SETS};
+        let map = self.state.current_map;
+        let (x, y) = (self.state.player.x, self.state.player.y);
+        let set = MAP_SPRITE_SETS.get(map as usize).map(|entry| match *entry {
+            MapSpriteSetRef::Direct(set) => set,
+            MapSpriteSetRef::Split(index) => {
+                // Original GetSplitMapSpriteSetID's Route20 coastline split.
+                if map == MapId::Route20 {
+                    if x < 43 { SpriteSetId::PalletViridian }
+                    else if x >= 62 || y < if x >= 55 { 8 } else { 13 } { SpriteSetId::Fuchsia }
+                    else { SpriteSetId::PalletViridian }
+                } else {
+                    let split = &SPLIT_MAP_SPRITE_SETS[index as usize];
+                    let coord = match split.direction { SplitDirection::NorthSouth => y, SplitDirection::EastWest => x };
+                    if coord < u16::from(split.coordinate) { split.set_north_or_west } else { split.set_south_or_east }
+                }
+            }
+        });
+        let mut seen = [false; 256];
+        let mut frames = 0;
+        let mut add = |sprite: pokered_data::sprites::SpriteId| {
+            let id = sprite as usize;
+            if !seen[id] && !sprite.is_still() {
+                seen[id] = true;
+                frames += 2; // CopyVideoData: 12 tiles, 8 then 4.
+            }
+        };
+        if let Some(set) = set {
+            for &sprite in set.sprites() { add(sprite); }
+        } else {
+            // LoadMapSpriteTilePatterns includes hidden slots and deduplicates
+            // picture IDs; four-tile still sprites have no upper block.
+            for npc in &self.npc_states {
+                if let Some(sprite) = pokered_data::sprites::SpriteId::from_u8(npc.sprite_id) { add(sprite); }
+            }
+        }
+        self.mart_text_restore = Some(presentation::MartTextRestoreState {
+            elapsed: 0, npc_transfer_frames: frames,
+        });
     }
 }

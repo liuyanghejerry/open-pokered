@@ -41,7 +41,8 @@ SECTIONS {
         /* Pokemon opaque UI tiles use the project renderer helper. */
         *(.text.*pokered_renderer*embedded_font*draw_glyph*);
         *(.text.*pokered_audio*gba_psg*write_register*);
-        *(.text.*pokered_app*render*oak*draw_oak_speech*);
+        /* Oak scene dispatch stays in ROM; its tile/font inner loops above
+         * remain in IWRAM. Do not spend the hot-code budget on scene dispatch. */
         *(.text.*specialized_div_rem*u32_div_rem*);
         *(.text.*pokered_gba*Mode4Presenter*copy_full_page*);
         *(.iwram .iwram.*);

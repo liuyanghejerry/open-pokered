@@ -1,0 +1,487 @@
+{
+  "base": "16c2dccdd7a18deb0c789dad4f721dacc135d721",
+  "candidate_runtime_commit": "c922626001af13b1bb05af7bcd4cc0c1d798904a",
+  "scope": "Field flow and input ownership; no overall animation parity claim",
+  "native_tests": {
+    "core_passed": 2778,
+    "app_passed": 218,
+    "app_preexisting_ignored": 32,
+    "ui_passed": 16
+  },
+  "transactions": [
+    {
+      "case": "purchase",
+      "binary_sha256": "35919f87eac37b2ea8de8c4b48956b842c0057245b01303d1a825679b3b01a67",
+      "state_samples": 69,
+      "scope": "Functional transaction branches only; batched idle input, not animation timing proof",
+      "final_money": 2800,
+      "final_bag": [
+        {
+          "item": "PokeBall",
+          "qty": 1
+        }
+      ],
+      "input": "real debug press_timeline only after controlled pretrigger warp/snapshot; no subsequent mutation",
+      "audio": "no audio CLI; purchase SFX waiting is separately covered by core test",
+      "full_bag_fixture": null
+    },
+    {
+      "case": "buy-no",
+      "binary_sha256": "35919f87eac37b2ea8de8c4b48956b842c0057245b01303d1a825679b3b01a67",
+      "state_samples": 52,
+      "scope": "Functional transaction branches only; batched idle input, not animation timing proof",
+      "final_money": 3000,
+      "final_bag": [],
+      "input": "real debug press_timeline only after controlled pretrigger warp/snapshot; no subsequent mutation",
+      "audio": "no audio CLI; purchase SFX waiting is separately covered by core test",
+      "full_bag_fixture": null
+    },
+    {
+      "case": "sell-success",
+      "binary_sha256": "35919f87eac37b2ea8de8c4b48956b842c0057245b01303d1a825679b3b01a67",
+      "state_samples": 59,
+      "scope": "Functional transaction branches only; batched idle input, not animation timing proof",
+      "final_money": 3600,
+      "final_bag": [],
+      "input": "real debug press_timeline only after controlled pretrigger warp/snapshot; no subsequent mutation",
+      "audio": "no audio CLI; purchase SFX waiting is separately covered by core test",
+      "full_bag_fixture": null
+    },
+    {
+      "case": "sell-no",
+      "binary_sha256": "35919f87eac37b2ea8de8c4b48956b842c0057245b01303d1a825679b3b01a67",
+      "state_samples": 55,
+      "scope": "Functional transaction branches only; batched idle input, not animation timing proof",
+      "final_money": 3000,
+      "final_bag": [
+        {
+          "item": "Potion",
+          "qty": 4
+        }
+      ],
+      "input": "real debug press_timeline only after controlled pretrigger warp/snapshot; no subsequent mutation",
+      "audio": "no audio CLI; purchase SFX waiting is separately covered by core test",
+      "full_bag_fixture": null
+    },
+    {
+      "case": "unsellable",
+      "binary_sha256": "35919f87eac37b2ea8de8c4b48956b842c0057245b01303d1a825679b3b01a67",
+      "state_samples": 48,
+      "scope": "Functional transaction branches only; batched idle input, not animation timing proof",
+      "final_money": 3000,
+      "final_bag": [
+        {
+          "item": "Bicycle",
+          "qty": 1
+        }
+      ],
+      "input": "real debug press_timeline only after controlled pretrigger warp/snapshot; no subsequent mutation",
+      "audio": "no audio CLI; purchase SFX waiting is separately covered by core test",
+      "full_bag_fixture": null
+    },
+    {
+      "case": "buy-insufficient",
+      "binary_sha256": "35919f87eac37b2ea8de8c4b48956b842c0057245b01303d1a825679b3b01a67",
+      "state_samples": 70,
+      "scope": "Functional transaction branches only; batched idle input, not animation timing proof",
+      "final_money": 0,
+      "final_bag": [],
+      "input": "real debug press_timeline only after controlled pretrigger warp/snapshot; no subsequent mutation",
+      "audio": "no audio CLI; purchase SFX waiting is separately covered by core test",
+      "full_bag_fixture": null
+    },
+    {
+      "case": "buy-full",
+      "binary_sha256": "35919f87eac37b2ea8de8c4b48956b842c0057245b01303d1a825679b3b01a67",
+      "state_samples": 72,
+      "scope": "Functional transaction branches only; batched idle input, not animation timing proof",
+      "final_money": 3000,
+      "final_bag": [
+        {
+          "item": "MasterBall",
+          "qty": 99
+        },
+        {
+          "item": "UltraBall",
+          "qty": 99
+        },
+        {
+          "item": "GreatBall",
+          "qty": 99
+        },
+        {
+          "item": "PokeBall",
+          "qty": 99
+        },
+        {
+          "item": "TownMap",
+          "qty": 99
+        },
+        {
+          "item": "Bicycle",
+          "qty": 99
+        },
+        {
+          "item": "Antidote",
+          "qty": 99
+        },
+        {
+          "item": "BurnHeal",
+          "qty": 99
+        },
+        {
+          "item": "IceHeal",
+          "qty": 99
+        },
+        {
+          "item": "Awakening",
+          "qty": 99
+        },
+        {
+          "item": "ParlyzHeal",
+          "qty": 99
+        },
+        {
+          "item": "FullRestore",
+          "qty": 99
+        },
+        {
+          "item": "MaxPotion",
+          "qty": 99
+        },
+        {
+          "item": "HyperPotion",
+          "qty": 99
+        },
+        {
+          "item": "SuperPotion",
+          "qty": 99
+        },
+        {
+          "item": "EscapeRope",
+          "qty": 99
+        },
+        {
+          "item": "Repel",
+          "qty": 99
+        },
+        {
+          "item": "FireStone",
+          "qty": 99
+        },
+        {
+          "item": "ThunderStone",
+          "qty": 99
+        },
+        {
+          "item": "WaterStone",
+          "qty": 99
+        }
+      ],
+      "input": "real debug press_timeline only after controlled pretrigger warp/snapshot; no subsequent mutation",
+      "audio": "no audio CLI; purchase SFX waiting is separately covered by core test",
+      "full_bag_fixture": "20 valid native items qty99; differs from original IDs1..20 but same capacity/stock-full failure branch"
+    }
+  ],
+  "recordings": [
+    {
+      "side": "master",
+      "group": "audit-400-native-mart-fixed-irsf731q",
+      "frames": 822,
+      "first_frame": 163,
+      "last_frame": 984,
+      "twice_png_identical": true,
+      "binary_sha256": "13b615184edef116d26ae153366a58c9efe775f93296345ea8084acda5e1e2f3",
+      "fixture_sha256": "0b90ed0bea3395894235b4f69895a12600742fbbf6adff3257900b4262f4f562"
+    },
+    {
+      "side": "candidate",
+      "group": "audit-400-native-mart-fixed-irsf731q",
+      "frames": 822,
+      "first_frame": 163,
+      "last_frame": 984,
+      "twice_png_identical": true,
+      "binary_sha256": "35919f87eac37b2ea8de8c4b48956b842c0057245b01303d1a825679b3b01a67",
+      "fixture_sha256": "0b90ed0bea3395894235b4f69895a12600742fbbf6adff3257900b4262f4f562"
+    },
+    {
+      "side": "candidate",
+      "group": "audit-400-native-early-A-nebrs4yk",
+      "frames": 822,
+      "first_frame": 163,
+      "last_frame": 984,
+      "twice_png_identical": true,
+      "binary_sha256": "35919f87eac37b2ea8de8c4b48956b842c0057245b01303d1a825679b3b01a67",
+      "fixture_sha256": "0b90ed0bea3395894235b4f69895a12600742fbbf6adff3257900b4262f4f562"
+    }
+  ],
+  "reference": {
+    "frames": 984,
+    "repeated_png_and_json_identical": true,
+    "options": 5,
+    "medium_comparisons_rejected": true
+  },
+  "screenshots": [
+    {
+      "path": "docs/screenshots/mart-field-401-greeting-before.png",
+      "capture_index": 500,
+      "frame_count": 501,
+      "side": "master",
+      "sha256": "fea5bcc1b4c776ddfb56db492c4df7e028c8d938f16bc527161c49efdc4e8aac"
+    },
+    {
+      "path": "docs/screenshots/mart-field-401-greeting-after.png",
+      "capture_index": 500,
+      "frame_count": 501,
+      "side": "candidate",
+      "sha256": "afa7eae6535bc7fa49ab7f5b382c6b7ff47bdcfce666d96953f29a10758488a3"
+    },
+    {
+      "path": "docs/screenshots/mart-field-401-farewell-before.png",
+      "capture_index": 850,
+      "frame_count": 851,
+      "side": "master",
+      "sha256": "6eb51f815c379645099245f27e761b2082c4fb35a41ad72003761739909ccb61"
+    },
+    {
+      "path": "docs/screenshots/mart-field-401-farewell-after.png",
+      "capture_index": 850,
+      "frame_count": 851,
+      "side": "candidate",
+      "sha256": "29c8902847c2c8a4e1d8211b8aef6d981db0679773eca8323679391aff4cb901"
+    }
+  ],
+  "early_A": {
+    "absolute_input_frames": [
+      280,
+      281
+    ],
+    "old_candidate_checkpoint500": "Buy SelectItem",
+    "candidate_checkpoint500": "MainMenu Buy",
+    "original": "No DisplayListMenuID calls; main menu",
+    "trials": 2
+  },
+  "limitations": [
+    "No complete NPC/OAM animation parity proof",
+    "No new-game whole-mainline proof from controlled saves",
+    "No-audio runtime replay does not prove original SFX wait timing; separate owning App PCM test"
+  ],
+  "sale_boundaries": [
+    {
+      "case": "sell-second-partial",
+      "fixture_sha256": "0b90ed0bea3395894235b4f69895a12600742fbbf6adff3257900b4262f4f562",
+      "binary_sha256": "35919f87eac37b2ea8de8c4b48956b842c0057245b01303d1a825679b3b01a67",
+      "base": "16c2dccdd7a18deb0c789dad4f721dacc135d721",
+      "candidate": "c922626001af13b1bb05af7bcd4cc0c1d798904a",
+      "frames": 648,
+      "final_phase": "Sell(SelectItem { cursor: 0 })",
+      "final_money": 3150,
+      "final_bag": [
+        {
+          "item": "PokeBall",
+          "qty": 5
+        },
+        {
+          "item": "Potion",
+          "qty": 3
+        },
+        {
+          "item": "Antidote",
+          "qty": 7
+        }
+      ],
+      "inventory_and_money_passed": true,
+      "scope": "Controlled save input replay; no fresh-mainline/SAVE claim; no-audio return timing not Original SFX-wait proof."
+    },
+    {
+      "case": "sell-second-full",
+      "fixture_sha256": "0b90ed0bea3395894235b4f69895a12600742fbbf6adff3257900b4262f4f562",
+      "binary_sha256": "35919f87eac37b2ea8de8c4b48956b842c0057245b01303d1a825679b3b01a67",
+      "base": "16c2dccdd7a18deb0c789dad4f721dacc135d721",
+      "candidate": "c922626001af13b1bb05af7bcd4cc0c1d798904a",
+      "frames": 686,
+      "final_phase": "Sell(SelectItem { cursor: 0 })",
+      "final_money": 3600,
+      "final_bag": [
+        {
+          "item": "PokeBall",
+          "qty": 5
+        },
+        {
+          "item": "Antidote",
+          "qty": 7
+        }
+      ],
+      "inventory_and_money_passed": true,
+      "scope": "Controlled save input replay; no fresh-mainline/SAVE claim; no-audio return timing not Original SFX-wait proof."
+    },
+    {
+      "case": "sell-scrolled-full",
+      "fixture_sha256": "ebe9bdb84c98083367b5cdd99e39b69dd6dcf80a6090673a33ac3fdfc8a4ef69",
+      "binary_sha256": "35919f87eac37b2ea8de8c4b48956b842c0057245b01303d1a825679b3b01a67",
+      "base": "16c2dccdd7a18deb0c789dad4f721dacc135d721",
+      "candidate": "c922626001af13b1bb05af7bcd4cc0c1d798904a",
+      "frames": 806,
+      "final_phase": "Sell(SelectItem { cursor: 0 })",
+      "final_money": 3600,
+      "final_bag": [
+        {
+          "item": "PokeBall",
+          "qty": 5
+        },
+        {
+          "item": "Antidote",
+          "qty": 7
+        },
+        {
+          "item": "BurnHeal",
+          "qty": 3
+        },
+        {
+          "item": "IceHeal",
+          "qty": 2
+        },
+        {
+          "item": "Awakening",
+          "qty": 6
+        },
+        {
+          "item": "ParlyzHeal",
+          "qty": 8
+        }
+      ],
+      "inventory_and_money_passed": true,
+      "scope": "Controlled save input replay; no fresh-mainline/SAVE claim; no-audio return timing not Original SFX-wait proof."
+    },
+    {
+      "case": "sell-cash-cap",
+      "fixture_sha256": "c3fe2bb5224751dc5dd266943f12aef74feb78048618eb3a863ee2542e05665e",
+      "binary_sha256": "35919f87eac37b2ea8de8c4b48956b842c0057245b01303d1a825679b3b01a67",
+      "base": "16c2dccdd7a18deb0c789dad4f721dacc135d721",
+      "candidate": "c922626001af13b1bb05af7bcd4cc0c1d798904a",
+      "frames": 648,
+      "final_phase": "Sell(SelectItem { cursor: 0 })",
+      "final_money": 999999,
+      "final_bag": [
+        {
+          "item": "PokeBall",
+          "qty": 5
+        },
+        {
+          "item": "Potion",
+          "qty": 3
+        },
+        {
+          "item": "Antidote",
+          "qty": 7
+        }
+      ],
+      "inventory_and_money_passed": true,
+      "scope": "Controlled save input replay; no fresh-mainline/SAVE claim; no-audio return timing not Original SFX-wait proof."
+    }
+  ],
+  "gba_production": {
+    "runtime_source_commit": "c922626001af13b1bb05af7bcd4cc0c1d798904a",
+    "working_tree_change": "gba.ld Oak dispatcher ROM placement only",
+    "elf_sha256": "de492d6cd1036a9bd635157dd344586ac0a4becc23010cc6b040b79912fc4e80",
+    "iwram_bytes": 22120,
+    "iwram_limit": 24320,
+    "spare_bytes": 2200,
+    "production_build_passed": true
+  },
+  "gba_performance": {
+    "result": "PASS unchanged original31 budgets",
+    "baseline_sha256": "c9ef15a97a6f43d994fe177d7e0212a6a6cbaf561be955a5995fef4da7faebba",
+    "candidate": {
+      "emulator": "stdbuf -oL -eL /home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/gba-perf-tools/usr/games/mgba -C videoRenderer=0",
+      "scenarios": {
+        "battle-entry-v1": {
+          "draw_max_ticks": 8858,
+          "draw_per_frame_ticks": 2653,
+          "present_max_ticks": 782,
+          "present_per_frame_ticks": 567,
+          "renders": 369,
+          "samples": 500,
+          "scenario": "battle-entry-v1",
+          "update_avg_ticks": 208,
+          "update_core_avg_ticks": 198,
+          "update_flush_avg_ticks": 1
+        },
+        "intro-title-v1": {
+          "draw_max_ticks": 9830,
+          "draw_per_frame_ticks": 1204,
+          "present_max_ticks": 782,
+          "present_per_frame_ticks": 353,
+          "renders": 115,
+          "samples": 250,
+          "scenario": "intro-title-v1",
+          "update_avg_ticks": 115,
+          "update_core_avg_ticks": 106,
+          "update_flush_avg_ticks": 1
+        },
+        "oak-dialogue-v1": {
+          "draw_max_ticks": 9005,
+          "draw_per_frame_ticks": 2959,
+          "present_max_ticks": 782,
+          "present_per_frame_ticks": 392,
+          "renders": 307,
+          "samples": 600,
+          "scenario": "oak-dialogue-v1",
+          "update_avg_ticks": 185,
+          "update_core_avg_ticks": 175,
+          "update_flush_avg_ticks": 1
+        },
+        "overworld-idle-v1": {
+          "draw_max_ticks": 0,
+          "draw_per_frame_ticks": 0,
+          "present_max_ticks": 0,
+          "present_per_frame_ticks": 0,
+          "renders": 0,
+          "samples": 1400,
+          "scenario": "overworld-idle-v1",
+          "update_avg_ticks": 373,
+          "update_core_avg_ticks": 364,
+          "update_flush_avg_ticks": 1
+        },
+        "overworld-movement-v1": {
+          "draw_max_ticks": 2937,
+          "draw_per_frame_ticks": 277,
+          "present_max_ticks": 781,
+          "present_per_frame_ticks": 77,
+          "renders": 26,
+          "samples": 240,
+          "scenario": "overworld-movement-v1",
+          "update_avg_ticks": 386,
+          "update_core_avg_ticks": 376,
+          "update_flush_avg_ticks": 1
+        },
+        "pokedex-entry-v1": {
+          "draw_max_ticks": 16300,
+          "draw_per_frame_ticks": 40,
+          "present_max_ticks": 767,
+          "present_per_frame_ticks": 1,
+          "renders": 1,
+          "samples": 400,
+          "scenario": "pokedex-entry-v1",
+          "update_avg_ticks": 101,
+          "update_core_avg_ticks": 90,
+          "update_flush_avg_ticks": 1
+        },
+        "trainer-battle-entry-v1": {
+          "draw_max_ticks": 10160,
+          "draw_per_frame_ticks": 2417,
+          "present_max_ticks": 782,
+          "present_per_frame_ticks": 344,
+          "renders": 224,
+          "samples": 500,
+          "scenario": "trainer-battle-entry-v1",
+          "update_avg_ticks": 224,
+          "update_core_avg_ticks": 213,
+          "update_flush_avg_ticks": 1
+        }
+      },
+      "suite": "autopilot-v1"
+    },
+    "benchmark_ROM_sha256": "b204c29b8aa93035b8caab039843e8dfaeed95b5d4e645bc203620d7d9978805"
+  }
+}

@@ -2631,8 +2631,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             }
             script_bridge::ScriptEffect::ShowDialogue { text } | script_bridge::ScriptEffect::PrintFieldText { text } => {
                 if pending_dialogue.is_none() {
+                    let needs_field_display = returns_after_print && last_script_dialogue.is_none();
                     *last_script_dialogue = None;
-                    let dialogue = script_bridge::text_to_dialogue_with_names(text, dialogue_names);
+                    let mut dialogue = script_bridge::text_to_dialogue_with_names(text, dialogue_names);
+                    if returns_after_print { dialogue.begin_field_display(needs_field_display); }
                     if dialogue.is_done() {
                         return true;
                     }
@@ -4938,5 +4940,22 @@ mod field_typing_input_fidelity_tests {
                 assert!(ow.pending_dialogue.as_ref().unwrap().holding_open());
             }
         }
+    }
+}
+
+impl<G: GameData<Tileset = pokered_data::tilesets::TilesetId>> OverworldScreen<G> {
+    /// Run the direct CloseTextDisplay transfers with gameplay input frozen.
+    pub fn tick_mart_text_restore(&mut self) -> bool {
+        let Some(restore) = &mut self.mart_text_restore else { return false; };
+        restore.elapsed = restore.elapsed.saturating_add(1);
+        let sprites_ready = restore.sprites_ready();
+        let finished = restore.finished();
+        if sprites_ready {
+            // CloseTextDisplay ends with UpdateSprites, before the field's
+            // two DelayFrames. Text/menu ownership has already been released.
+            self.run_npc_movement_tick();
+        }
+        if finished { self.mart_text_restore = None; }
+        finished
     }
 }

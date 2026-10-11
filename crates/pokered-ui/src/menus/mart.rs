@@ -137,6 +137,10 @@ pub fn draw_buy_items_with_money<P: Painter>(
                 frame.label(1, row, name, InkColor::Black);
             }
         }
+        if lang == Lang::En {
+            let row = 1 + (items.len().saturating_sub(scroll_offset) as u32 * 2);
+            if row < list_rect.th.saturating_sub(2) { frame.label(1, row, "CANCEL", InkColor::Black); }
+        }
         let cursor_row = layout.cursor.base_ty
             + ((cursor - scroll_offset) as u32
                 * if lang == Lang::Zh {

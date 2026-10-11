@@ -802,3 +802,24 @@ mod fly_tests {
         );
     }
 }
+
+/// Direct CloseTextDisplay lifecycle used after the clerk's final text.
+/// Unlike CloseStartMenu, it does not first reload 32 textbox tiles.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MartTextRestoreState {
+    pub elapsed: u8,
+    pub npc_transfer_frames: u8,
+}
+
+impl MartTextRestoreState {
+    pub fn sprites_ready(&self) -> bool {
+        // One DelayFrame after hiding WY, unique NPC upper blocks, then
+        // two player blocks of 12 tiles each (two VBlanks per block).
+        self.elapsed == 1 + self.npc_transfer_frames + 4
+    }
+
+    pub fn finished(&self) -> bool {
+        // The field resumes after its DelayFrame pair following UpdateSprites.
+        self.elapsed >= 1 + self.npc_transfer_frames + 4 + 2
+    }
+}
