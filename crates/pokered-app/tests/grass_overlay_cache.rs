@@ -52,6 +52,7 @@ fn route1_grass_walk_cached_pixels_match_full_draw_every_frame() {
                         .unwrap(),
                 )
                 .unwrap();
+            g.overworld.party_lead_level = g.save_data.party.leader_level();
             g.overworld.state.repel_steps = 200;
             let mut session = RenderSession::new();
             let mut cached = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
