@@ -364,8 +364,8 @@ pub fn draw_pc(
             if pc.item_question_draw_list() {
                 let rows = item_rows(pc, save, is_zh);
                 let cursor = pc.item_list_cursor();
-                let scroll = follow_scroll(cursor, rows.len(), PC_LIST_VISIBLE_ROWS.max(8));
-                draw_list(0, 0, 18, 8, &rows, cursor, scroll, is_zh, fb);
+                let scroll = pc.item_list_scroll();
+                draw_list(0, 0, 18, PC_LIST_VISIBLE_ROWS, &rows, cursor, scroll, is_zh, fb);
             } else {
                 let labels: Vec<String> = PLAYERS_LABELS.iter()
                     .map(|s| lang_data::ui_label(s, is_zh).to_string()).collect();
@@ -384,8 +384,8 @@ pub fn draw_pc(
         PcPhase::ItemList | PcPhase::ItemQuantityPrompt | PcPhase::ItemQuantity | PcPhase::TossConfirm => {
             let rows = item_rows(pc, save, is_zh);
             let cursor = pc.item_list_cursor();
-            let scroll = follow_scroll(cursor, rows.len(), PC_LIST_VISIBLE_ROWS.max(8));
-            draw_list(0, 0, 18, 8, &rows, cursor, scroll, is_zh, fb);
+            let scroll = pc.item_list_scroll();
+            draw_list(0, 0, 18, PC_LIST_VISIBLE_ROWS, &rows, cursor, scroll, is_zh, fb);
             match pc.phase() {
                 PcPhase::ItemList => draw_message(&pc.item_question_lines(), fb, is_zh),
                 PcPhase::ItemQuantityPrompt => {
