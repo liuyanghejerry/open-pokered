@@ -1,0 +1,22 @@
+{
+  "base": "591480e6244d74318cf490bbe0b7f2a0ebb0f2df",
+  "candidate": {
+    "base": "591480e6244d74318cf490bbe0b7f2a0ebb0f2df",
+    "head": "ec362db0b4a1ab8895887ede8186ffb609355694",
+    "sources": {
+      "crates/pokered-app/src/game.rs": "d91c8b5fa43a8c4da070d36b2ef8d8042da9bf01efee17bdb52bbe9747ffb0f8",
+      "crates/pokered-app/src/render/menu.rs": "f9642a8f41c5c68781708a551e9c48284165249ca9401c62c28cd4d78cda0911",
+      "crates/pokered-core/src/bag_screen.rs": "2682d4fe01394af5a22cb820bbabc8cf4b350c1ab0a57b676dd01d7dcb38f8df",
+      "crates/pokered-core/src/items/inventory.rs": "990a02a1e69ed230fa39f9f985e914ca231178c9374d3f9e3ccf4fa7646e37a3"
+    },
+    "binaries": {
+      "core": "24232e2c6219944ee2a8b66f444c2e00c41fab8b61526dd7c37b9aa53a050bdc",
+      "app": "781d04050d672c894eefa870502299f13cd31bc030857130eadb30f3efe5f975"
+    }
+  },
+  "PNG": 4508,
+  "repeat_all_raw_and_png_exact": true,
+  "every_cached_full_pixel_equal": true,
+  "archive_every_file_roundtrip_exact": true,
+  "archive_sha256": "f750e6fccdb503079a13c27ce037ad17277e37bf1ae1102cf531e8e12ac22c35"
+}

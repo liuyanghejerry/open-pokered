@@ -1,0 +1,27 @@
+{
+  "master_before": "61a1e666efc6191e8285fb67195ef9a18761e1ec",
+  "stacked_source_base": "af67939 PR161",
+  "source_commit": "7893247",
+  "sources": {
+    "base": "af67939",
+    "master": "61a1e66",
+    "sources": {
+      "crates/pokered-core/src/bag_screen.rs": "8eb1f0749f860eb276db7e3fc84575288beb53c102dd719ee6e7d09313ddd3e8",
+      "crates/pokered-core/src/items/inventory.rs": "990a02a1e69ed230fa39f9f985e914ca231178c9374d3f9e3ccf4fa7646e37a3",
+      "crates/pokered-app/src/game.rs": "1b37274827af27667d326eda69f1aa96035275df0a6014cdcc5a132bd7934ae8",
+      "crates/pokered-app/src/render/menu.rs": "2e8e98121ce47ac6ae49d8b7c32a63632b3aca0f0d6ad07993f59bf404ed095b"
+    },
+    "binaries": {
+      "core": "9bd7a49df0e00e24d5c38564d568b134984f0856ec3bac8661b8da2b999421be",
+      "app": "ccf935dc5f2f581b4c9ca9fa171cf886e06bfd90469e9d36645b0ef748ec8435"
+    }
+  },
+  "tests": {
+    "core": 2724,
+    "app": 200,
+    "ignored": 24
+  },
+  "PNG": 9408,
+  "all_archive_files_roundtrip_bytes_equal": true,
+  "archive_sha256": "82977c30a893bbbb5fcc7c6ae90bfa0e35b5ea7d0c5ccda049f9e73f9932e9a7"
+}
