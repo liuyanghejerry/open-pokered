@@ -86,7 +86,7 @@ pub struct BagScreenState {
     /// First visible row (for scrolling long bags).
     scroll: usize,
     phase: BagPhase,
-    /// How many rows are shown at once (set by the renderer's viewport).
+    /// Rows the cursor may occupy; the renderer also shows the following preview row.
     visible_rows: usize,
     toss_dialogue: Option<BedroomDialogue>,
     toss_frames: u32,
@@ -102,7 +102,7 @@ impl BagScreenState {
             cursor: 0,
             scroll: 0,
             phase: BagPhase::Browsing,
-            visible_rows: 4,
+            visible_rows: 3,
             toss_dialogue: None,
             toss_frames: 0,
             press_sound: false,
@@ -160,6 +160,9 @@ impl BagScreenState {
     pub fn phase(&self) -> BagPhase {
         self.phase
     }
+    /// Activity rows; the following row is a non-selectable preview.
+    pub fn visible_rows(&self) -> usize { self.visible_rows }
+
     pub fn set_visible_rows(&mut self, rows: usize) {
         self.visible_rows = rows.max(1);
         self.clamp_scroll();
@@ -498,6 +501,39 @@ mod tests {
 
     fn bag() -> Vec<(ItemId, u32)> {
         vec![(ItemId::Potion, 5), (ItemId::PokeFlute, 1), (ItemId::Bicycle, 1)]
+    }
+
+    #[test]
+    fn source_bag_window_keeps_three_activity_rows_and_retains_upward_scroll() {
+        let stock=vec![(ItemId::Potion,4),(ItemId::Antidote,3),(ItemId::PokeBall,2),
+            (ItemId::Revive,2),(ItemId::EscapeRope,1),(ItemId::Repel,2),
+            (ItemId::HyperPotion,3),(ItemId::SuperPotion,4)];
+        for (case,expected) in [("end",(8,6,None)),("top",(0,0,None)),
+            ("hysteresis",(4,4,None)),("mark_visible",(5,4,Some(6))),
+            ("mark_offscreen",(7,5,Some(3))),("mark_preview",(0,0,Some(3)))] {
+            let mut motions=Vec::new();
+            let down=match case {"end"=>10,"mark_offscreen"|"mark_preview"=>3,_=>6};
+            for i in 0..down {motions.push((230+40*i,'d'));}
+            match case {
+                "top"=>for i in 0..8 {motions.push((550+40*i,'u'));},
+                "hysteresis"=>motions.extend([(550,'u'),(590,'u')]),
+                "mark_visible"=>motions.extend([(550,'s'),(590,'u')]),
+                "mark_offscreen"=>{motions.push((400,'s'));for i in 0..4 {motions.push((440+40*i,'d'));}},
+                "mark_preview"=>{motions.push((400,'s'));for i in 0..3 {motions.push((440+40*i,'u'));}},
+                _=>{},
+            }
+            let mut state=BagScreenState::new(stock.clone());
+            assert_eq!(state.visible_rows(),3);
+            for frame in 200..=850 {
+                let key=motions.iter().find(|(at,_)|*at==frame).map(|(_,key)|*key);
+                state.update_frame(BagScreenInput {down:key==Some('d'),up:key==Some('u'),
+                    select:key==Some('s'),..Default::default()});
+                assert_eq!(state.items(),stock,"no exchange/removal {case}/{frame}");
+                assert!(state.cursor()>=state.scroll() && state.cursor()<state.scroll()+3);
+            }
+            let marked=match state.phase() {BagPhase::SwapFrom {row}=>Some(row),_=>None};
+            assert_eq!((state.cursor(),state.scroll(),marked),expected,"Source {case}");
+        }
     }
 
     #[test]

@@ -843,17 +843,12 @@ impl BagVisualKey {
         }
         Self {
             cursor: state.cursor(),
-            cursor_position: super::top_level_bag_cursor_position(
-                state.items().len(),
-                state.cursor(),
-            ),
-            viewport_offset: super::top_level_bag_viewport_offset(
-                state.items().len(),
-                state.cursor(),
-            ),
+            cursor_position: super::top_level_bag_cursor_position(state),
+            viewport_offset: super::top_level_bag_viewport_offset(state),
             phase,
             swap_marker_view_row: match phase {
-                BagPhase::SwapFrom { row } => Some(row.saturating_sub(state.scroll())),
+                BagPhase::SwapFrom { row } => row.checked_sub(state.scroll())
+                    .filter(|row| *row < state.visible_rows() + 1),
                 _ => None,
             },
             items_hash,
@@ -2224,6 +2219,7 @@ impl RenderSession {
                 super::redraw_top_level_bag_cursor(
                     previous,
                     current,
+                    super::top_level_bag_marker_position(&game.bag_screen),
                     fb,
                     game.state.config.language,
                 );
