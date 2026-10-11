@@ -1,0 +1,13 @@
+{
+  "base": "95c11d4a73c7499066d62e866f1e2d35b5a21822",
+  "candidate": "7e07de09ea0fb371f4355d84db89d8f87f1509d0",
+  "full_test_programs": 78,
+  "passed": 3653,
+  "failed": 0,
+  "ignored": 68,
+  "png_count": 732,
+  "all_repeat_byte_exact": true,
+  "cached_full_equal": true,
+  "all_roundtrip_byte_exact": true,
+  "all_six_published_images_byte_exact_to_current_base_replay": true
+}
