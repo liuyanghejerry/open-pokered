@@ -105,13 +105,20 @@ impl<'a> SramReader<'a> {
     ) -> Result<crate::items::inventory::Inventory<N>, SaveError> {
         let capacity = N;
         let count = self.read_u8()? as usize;
+        if count > capacity {
+            return Err(SaveError::InvalidData);
+        }
         let mut inv = crate::items::inventory::Inventory::<N>::new();
+        let mut slots = Vec::with_capacity(count);
         for _ in 0..count {
             let item_id = self.read_u8()?;
             let qty = self.read_u8()?;
             let item = pokered_data::items::ItemId::from_id(item_id);
-            let _ = inv.add_item(item, qty);
+            slots.push((item, qty as u32));
         }
+        // SRAM stores physical slots. Adding items here would merge duplicate
+        // stacks, changing their quantities, order and even the slot count.
+        inv.replace_item_slots(&slots).map_err(|_| SaveError::InvalidData)?;
         let _terminator = self.read_u8()?;
         let items_read = count * 2 + 1;
         let total_slots = capacity * 2 + 1;
