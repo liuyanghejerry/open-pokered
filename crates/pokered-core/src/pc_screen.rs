@@ -198,6 +198,27 @@ enum AfterMessage {
     Exit,
 }
 
+/// Physical PC buttons, separate from a host's per-frame edge events.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct PcHeldInput {
+    pub a: bool,
+    pub b: bool,
+    pub select: bool,
+    pub start: bool,
+    pub right: bool,
+    pub left: bool,
+    pub up: bool,
+    pub down: bool,
+}
+
+impl PcHeldInput {
+    fn bits(self) -> u8 {
+        (self.a as u8) | (self.b as u8) << 1 | (self.select as u8) << 2
+            | (self.start as u8) << 3 | (self.right as u8) << 4
+            | (self.left as u8) << 5 | (self.up as u8) << 6 | (self.down as u8) << 7
+    }
+}
+
 const MSG_LINES_PER_PAGE: usize = 4;
 /// PrintListMenuEntries draws four rows; the fourth previews the next entry.
 pub const PC_LIST_VISIBLE_ROWS: usize = 4;
@@ -294,6 +315,11 @@ pub struct PcScreen {
     quantity_prompt_letter_wait: u16,
     quantity_prompt_one_frame_wait: bool,
 
+    // HandleMenuInput's Delay3 does not call Joypad. A release during that
+    // interval is only observed when polling resumes, not on every host frame.
+    ordinary_menu_last_buttons: u8,
+    ordinary_menu_poll_wait: u8,
+
     // Side effects for the app.
     sfx: Vec<PcSfx>,
     waiting_for_cry: bool,
@@ -348,6 +374,8 @@ impl PcScreen {
             quantity_prompt_chars: 0,
             quantity_prompt_letter_wait: 0,
             quantity_prompt_one_frame_wait: false,
+            ordinary_menu_last_buttons: 0,
+            ordinary_menu_poll_wait: 0,
             sfx: Vec::new(),
             waiting_for_cry: false,
             finishing_cry: false,
@@ -676,6 +704,52 @@ impl PcScreen {
 
     pub fn update_frame_with_sound(&mut self, input: MenuInput, ctx: &mut PcContext, sound_playing: bool) -> PcScreenAction {
         self.update_frame_with_text_input(input, ctx, sound_playing, input.a || input.b)
+    }
+
+    /// Hosted input path for the three ordinary PC menus. HandleMenuInput
+    /// reads newly pressed buttons (hJoy7=0), then waits three frames after
+    /// an unwatched key. Preserve its sampled history through that wait.
+    /// Other PC phases retain their existing per-frame input path.
+    /// Returns the input handed to the phase update for the host's key sound.
+    pub fn update_frame_with_held_input(
+        &mut self,
+        input: MenuInput,
+        held: PcHeldInput,
+        ctx: &mut PcContext,
+        sound_playing: Option<bool>,
+    ) -> (PcScreenAction, MenuInput) {
+        let ordinary = matches!(self.phase, PcPhase::MainMenu | PcPhase::BillsMenu | PcPhase::ItemMenu);
+        let before = self.phase;
+        let buttons = held.bits();
+        let used = if ordinary {
+            if self.ordinary_menu_poll_wait > 0 {
+                self.ordinary_menu_poll_wait -= 1;
+                if self.ordinary_menu_poll_wait > 0 {
+                    return (PcScreenAction::Continue, MenuInput { up:false, down:false, a:false, b:false });
+                }
+            }
+            let pressed = buttons & !self.ordinary_menu_last_buttons;
+            self.ordinary_menu_last_buttons = buttons;
+            // A/B are watched keys and return directly. All other new keys
+            // go through .loop1's Delay3, including attempts at a boundary.
+            if pressed != 0 && pressed & 3 == 0 {
+                self.ordinary_menu_poll_wait = 3;
+            }
+            MenuInput { a: pressed & 1 != 0, b: pressed & 2 != 0,
+                up: pressed & 64 != 0, down: pressed & 128 != 0 }
+        } else {
+            self.ordinary_menu_last_buttons = buttons;
+            self.ordinary_menu_poll_wait = 0;
+            input
+        };
+        let held_ab = held.a || held.b;
+        let action = if let Some(playing) = sound_playing {
+            self.update_frame_with_text_input(used, ctx, playing, held_ab)
+        } else {
+            self.update_frame_without_audio_with_text_input(used, ctx, held_ab)
+        };
+        if self.phase != before { self.ordinary_menu_poll_wait = 0; }
+        (action, used)
     }
 
     /// Separate held typing input from newly pressed menu/transaction input.
@@ -1605,6 +1679,68 @@ impl PcScreen {
 
 #[cfg(test)]
 mod tests {
+    fn ordinary_ready(entry: PcEntry, w: &mut World) -> PcScreen {
+        let mut s = PcScreen::new(entry, &open_ctx());
+        skip_message(&mut s, w);
+        assert!(matches!(s.phase(), PcPhase::MainMenu | PcPhase::BillsMenu | PcPhase::ItemMenu));
+        s
+    }
+
+    fn ordinary_cursor(s: &PcScreen) -> usize {
+        match s.phase() {
+            PcPhase::MainMenu => s.main_menu().cursor(),
+            PcPhase::BillsMenu => s.bills_menu().cursor(),
+            PcPhase::ItemMenu => s.players_menu().cursor(),
+            _ => panic!("ordinary menu expected"),
+        }
+    }
+
+    #[test]
+    fn ordinary_pc_menu_samples_release_only_after_navigation_delay() {
+        for entry in [PcEntry::PokemonCenter, PcEntry::PlayersPc, PcEntry::BillsPc] {
+            for spacing in [3,4] {
+                let mut w = World::new();
+                let stock = w.pc_items.items();
+                let mut s = ordinary_ready(entry, &mut w);
+                for t in 0..191 {
+                    let held = PcHeldInput { down:t==70 || t==70+spacing, ..Default::default() };
+                    s.update_frame_with_held_input(NONE, held, &mut w.ctx(), None);
+                    let expected = if t < 70 {0} else if spacing==4 && t>=74 {2} else {1};
+                    assert_eq!(ordinary_cursor(&s),expected,"{entry:?} spacing{spacing} frame{t}");
+                    assert_eq!(w.pc_items.items(),stock);
+                    assert!(!s.take_save_request());
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn ordinary_pc_menu_held_direction_has_no_repeat() {
+        for entry in [PcEntry::PokemonCenter, PcEntry::PlayersPc, PcEntry::BillsPc] {
+            let mut w = World::new();
+            let mut s = ordinary_ready(entry, &mut w);
+            for t in 0..191 {
+                s.update_frame_with_held_input(NONE,PcHeldInput { down:(70..150).contains(&t), ..Default::default() },&mut w.ctx(),None);
+                assert_eq!(ordinary_cursor(&s),if t<70 {0} else {1},"{entry:?} frame{t}");
+            }
+        }
+    }
+
+    #[test]
+    fn ordinary_pc_menu_reads_buttons_held_across_the_wait_but_drops_released_ones() {
+        for duration in [2,3] {
+            let mut w = World::new();
+            let mut s = ordinary_ready(PcEntry::PokemonCenter, &mut w);
+            for t in 0..80 {
+                let held = PcHeldInput { down:t==70, a:(71..71+duration).contains(&t), ..Default::default() };
+                let (_, used) = s.update_frame_with_held_input(NONE,held,&mut w.ctx(),None);
+                assert_eq!(used.a,duration==3 && t==73,"duration{duration} frame{t}");
+                if duration==3 && t==73 { assert_eq!(s.phase(),PcPhase::Message); break; }
+                assert_eq!(s.phase(),PcPhase::MainMenu);
+            }
+        }
+    }
+
     #[test]
     fn fresh_bills_pc_entry_resets_cursor_and_preserves_current_box() {
         let mut w = World::new();
