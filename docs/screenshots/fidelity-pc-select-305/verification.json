@@ -22,5 +22,7 @@
   "archive_bytes": 7937222,
   "PNG_paths": 18262,
   "deduplicated_PNG": 237,
-  "scope": "PC SELECT sorting and held SELECT30/5 repeat,20/6 protected waits. General directional held repeat without SELECT, initial item-list sampling guards, other redraw guards and whole-game fidelity remain under audit; original PPU exact frame rendering not claimed."
+  "scope": "PC SELECT sorting and held SELECT30/5 repeat,20/6 protected waits. General directional held repeat without SELECT, initial item-list sampling guards, other redraw guards and whole-game fidelity remain under audit; original PPU exact frame rendering not claimed.",
+  "before_after_common_helper_cases": 15,
+  "held_candidate_original_cases": 4
 }
