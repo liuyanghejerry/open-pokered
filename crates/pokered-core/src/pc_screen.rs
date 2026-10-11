@@ -163,6 +163,8 @@ pub enum PcPhase {
     ItemMenu,
     /// Bag/PC item list (WITHDRAW, DEPOSIT or TOSS mode).
     ItemList,
+    /// Print the timed DONE quantity question before accepting menu input.
+    ItemQuantityPrompt,
     /// "How many?" quantity chooser.
     ItemQuantity,
     /// "Is it OK to toss X?" YES/NO (item_effects.asm TossItem_).
@@ -278,6 +280,11 @@ pub struct PcScreen {
     item_list_cursor: usize,
     item_list_scroll: usize,
     item_qty: u8,
+    quantity_text_delay_frames: u16,
+    quantity_prompt_intro: u8,
+    quantity_prompt_chars: u8,
+    quantity_prompt_letter_wait: u16,
+    quantity_prompt_one_frame_wait: bool,
 
     // Side effects for the app.
     sfx: Vec<PcSfx>,
@@ -324,6 +331,11 @@ impl PcScreen {
             item_list_cursor: 0,
             item_list_scroll: 0,
             item_qty: 1,
+            quantity_text_delay_frames: 3,
+            quantity_prompt_intro: 0,
+            quantity_prompt_chars: 0,
+            quantity_prompt_letter_wait: 0,
+            quantity_prompt_one_frame_wait: false,
             sfx: Vec::new(),
             waiting_for_cry: false,
             finishing_cry: false,
@@ -475,6 +487,16 @@ impl PcScreen {
         (self.league_team, self.hof_teams.len())
     }
 
+    /// Source text speed for the quantity PrintText call; list selection has
+    /// cleared BIT_NO_TEXT_DELAY before this nine-character DONE question.
+    pub fn set_quantity_text_delay_frames(&mut self, frames: u16) {
+        self.quantity_text_delay_frames = frames.max(1);
+    }
+
+    pub fn quantity_prompt_chars(&self) -> usize {
+        usize::from(self.quantity_prompt_chars)
+    }
+
     // ── Internals ─────────────────────────────────────────────────────────
 
     fn set_message(&mut self, lines: Vec<String>, next: AfterMessage) {
@@ -580,9 +602,14 @@ impl PcScreen {
 
     /// No-audio hosts complete the cry boundary immediately.
     pub fn update_frame(&mut self, input: MenuInput, ctx: &mut PcContext) -> PcScreenAction {
-        let action = self.update_frame_with_sound(input, ctx, false);
+        self.update_frame_without_audio_with_text_input(input, ctx, input.a || input.b)
+    }
+
+    /// Preserve immediate cry completion for hosts without an audio backend.
+    pub fn update_frame_without_audio_with_text_input(&mut self, input: MenuInput, ctx: &mut PcContext, held_ab: bool) -> PcScreenAction {
+        let action = self.update_frame_with_text_input(input, ctx, false, held_ab);
         if self.waiting_for_cry {
-            self.update_frame_with_sound(MenuInput { up: false, down: false, a: false, b: false }, ctx, false)
+            self.update_frame_with_text_input(MenuInput { up: false, down: false, a: false, b: false }, ctx, false, held_ab)
         } else { action }
     }
 
@@ -596,6 +623,11 @@ impl PcScreen {
     }
 
     pub fn update_frame_with_sound(&mut self, input: MenuInput, ctx: &mut PcContext, sound_playing: bool) -> PcScreenAction {
+        self.update_frame_with_text_input(input, ctx, sound_playing, input.a || input.b)
+    }
+
+    /// Separate held typing input from newly pressed menu/transaction input.
+    pub fn update_frame_with_text_input(&mut self, input: MenuInput, ctx: &mut PcContext, sound_playing: bool, held_ab: bool) -> PcScreenAction {
         // DisplayTwoOptionMenu holds its drawn cursor and ignores all input
         // for 15 frames before restoring the screen and returning the choice.
         if self.confirm_wait_frames > 0 {
@@ -649,6 +681,7 @@ impl PcScreen {
             PcPhase::BoxList => self.update_box_list(input, ctx),
             PcPhase::ItemMenu => self.update_item_menu(input, ctx),
             PcPhase::ItemList => self.update_item_list(input, ctx),
+            PcPhase::ItemQuantityPrompt => self.update_quantity_prompt(held_ab),
             PcPhase::ItemQuantity => self.update_item_quantity(input, ctx),
             PcPhase::LeagueHoF => self.update_league_hof(input),
         }
@@ -1232,9 +1265,8 @@ impl PcScreen {
                     if item.is_key_item() {
                         self.exec_item_move(ctx, self.item_list_cursor, *item, 1);
                     } else {
-                        self.item_qty = 1;
                         let _ = have;
-                        self.phase = PcPhase::ItemQuantity;
+                        self.enter_quantity_prompt();
                     }
                 }
                 ItemListMode::Toss => {
@@ -1246,12 +1278,59 @@ impl PcScreen {
                             AfterMessage::ItemList,
                         );
                     } else {
-                        self.item_qty = 1;
-                        self.phase = PcPhase::ItemQuantity;
+                        self.enter_quantity_prompt();
                     }
                 }
             }
         }
+        PcScreenAction::Continue
+    }
+
+    fn enter_quantity_prompt(&mut self) {
+        self.item_qty = 1;
+        self.quantity_prompt_intro = 3;
+        self.quantity_prompt_chars = 0;
+        self.quantity_prompt_letter_wait = 0;
+        self.quantity_prompt_one_frame_wait = false;
+        self.phase = PcPhase::ItemQuantityPrompt;
+    }
+
+    fn update_quantity_prompt(&mut self, held_ab: bool) -> PcScreenAction {
+        if self.quantity_prompt_intro > 0 {
+            self.quantity_prompt_intro -= 1;
+            if self.quantity_prompt_intro > 0 { return PcScreenAction::Continue; }
+        }
+        if self.quantity_prompt_letter_wait > 0 {
+            // After the final glyph, PrintLetterDelay samples A/B before
+            // returning DONE. Even input on the normal expiry frame calls
+            // DelayFrame once. An already scheduled short wait completes
+            // without sampling the same held key again.
+            if self.quantity_prompt_chars == 9 && held_ab && !self.quantity_prompt_one_frame_wait {
+                self.quantity_prompt_letter_wait = 1;
+                self.quantity_prompt_one_frame_wait = true;
+                return PcScreenAction::Continue;
+            }
+            self.quantity_prompt_letter_wait -= 1;
+            if self.quantity_prompt_letter_wait > 0 {
+                // PrintLetterDelay's A/B exit still calls DelayFrame. The
+                // next letter must appear on the following frame, not now.
+                if held_ab {
+                    self.quantity_prompt_letter_wait = 1;
+                    self.quantity_prompt_one_frame_wait = true;
+                }
+                return PcScreenAction::Continue;
+            }
+            self.quantity_prompt_one_frame_wait = false;
+        }
+        if self.quantity_prompt_chars < 9 { // Authored "How many?" glyph count.
+            self.quantity_prompt_chars += 1;
+            self.quantity_prompt_letter_wait = if held_ab { 1 } else { self.quantity_text_delay_frames };
+            self.quantity_prompt_one_frame_wait = held_ab;
+            return PcScreenAction::Continue;
+        }
+        // DONE returns without acknowledgement. This typing input cannot also
+        // choose a quantity or mutate inventory in the new menu.
+        self.phase = PcPhase::ItemQuantity;
         PcScreenAction::Continue
     }
 
@@ -1515,6 +1594,83 @@ mod tests {
                 assert_eq!((w.pc_storage.current_box().count(),w.pc_items.item_quantity(ItemId::Potion)),stock);
             }
         }
+    }
+
+    #[test]
+    fn quantity_question_matches_recorded_source_clocks_and_protects_stock() {
+        for mode in [ItemListMode::Withdraw, ItemListMode::Deposit, ItemListMode::Toss] {
+            for delay in [1, 3, 5] {
+                if mode != ItemListMode::Withdraw && delay != 5 { continue; }
+                for early in [None, Some(A), Some(B)] {
+                    if delay != 5 && early.is_some() { continue; }
+                    let mut w = World::new();
+                    w.bag.add_item(ItemId::Potion,4).unwrap();
+                    w.pc_items.add_item(ItemId::Potion,4).unwrap();
+                    let mut s = PcScreen::new(PcEntry::PlayersPc,&open_ctx());
+                    s.set_quantity_text_delay_frames(delay);
+                    s.item_mode = mode;
+                    s.phase = PcPhase::ItemList;
+                    s.update_frame_with_text_input(A,&mut w.ctx(),false,true);
+                    assert_eq!(s.phase(),PcPhase::ItemQuantityPrompt);
+                    let boundary = if early.is_some() {42} else {3+9*delay};
+                    for frame in 1..=boundary {
+                        let input = if frame==10 {early.unwrap_or(NONE)}else{NONE};
+                        let held_ab = early.is_some() && (frame==10 || frame==11);
+                        s.update_frame_with_text_input(input,&mut w.ctx(),false,held_ab);
+                        assert_eq!(s.phase(),if frame<boundary {PcPhase::ItemQuantityPrompt}else{PcPhase::ItemQuantity},"mode{mode:?} delay{delay} frame{frame}");
+                        assert_eq!(s.item_qty(),1);
+                        assert_eq!(w.bag.item_quantity(ItemId::Potion),4);
+                        assert_eq!(w.pc_items.item_quantity(ItemId::Potion),4);
+                    }
+                    // A fresh press in the quantity menu commits exactly once;
+                    // the earlier typing input never consumed a stock item.
+                    s.update_frame(A,&mut w.ctx());
+                    match mode {
+                        ItemListMode::Withdraw=>{assert_eq!(w.bag.item_quantity(ItemId::Potion),5);assert_eq!(w.pc_items.item_quantity(ItemId::Potion),3);},
+                        ItemListMode::Deposit=>{assert_eq!(w.bag.item_quantity(ItemId::Potion),3);assert_eq!(w.pc_items.item_quantity(ItemId::Potion),5);},
+                        ItemListMode::Toss=>{assert_eq!(s.phase(),PcPhase::TossConfirm);assert_eq!(w.bag.item_quantity(ItemId::Potion),4);assert_eq!(w.pc_items.item_quantity(ItemId::Potion),4);},
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn quantity_question_matches_source_letter_and_done_boundary_inputs() {
+        for (offset,boundary,glyphs) in [
+            (3,40,vec![3,4,5,10,15,20,25,30,35]),
+            (8,40,vec![3,8,9,10,15,20,25,30,35]),
+            (47,48,vec![3,8,13,18,23,28,33,38,43]),
+            (48,49,vec![3,8,13,18,23,28,33,38,43]),
+        ] {
+            for key in [A,B] {
+                let mut w=World::new();
+                w.bag.add_item(ItemId::Potion,4).unwrap();
+                w.pc_items.add_item(ItemId::Potion,4).unwrap();
+                let mut s=PcScreen::new(PcEntry::PlayersPc,&open_ctx());
+                s.set_quantity_text_delay_frames(5);
+                s.phase=PcPhase::ItemList;
+                s.update_frame_with_text_input(A,&mut w.ctx(),false,true);
+                let mut observed=Vec::new();let mut chars=0;
+                for frame in 1..=boundary {
+                    s.update_frame_with_text_input(if frame==offset {key}else{NONE},&mut w.ctx(),false,frame==offset || frame==offset+1);
+                    if s.quantity_prompt_chars()!=chars {observed.push(frame);chars=s.quantity_prompt_chars();}
+                    assert_eq!(s.phase(),if frame<boundary {PcPhase::ItemQuantityPrompt}else{PcPhase::ItemQuantity});
+                    assert_eq!(w.bag.item_quantity(ItemId::Potion),4);
+                    assert_eq!(w.pc_items.item_quantity(ItemId::Potion),4);
+                }
+                assert_eq!(observed,glyphs,"source offset{offset} A{}",key.a);
+                s.update_frame(A,&mut w.ctx());
+                assert_eq!(w.bag.item_quantity(ItemId::Potion),5);
+                assert_eq!(w.pc_items.item_quantity(ItemId::Potion),3);
+            }
+        }
+    }
+
+    fn finish_quantity_prompt(s: &mut PcScreen, w: &mut World) {
+        assert_eq!(s.phase(),PcPhase::ItemQuantityPrompt);
+        for _ in 0..30 {s.update_frame(NONE,&mut w.ctx());}
+        assert_eq!(s.phase(),PcPhase::ItemQuantity);
     }
 
     #[test]
@@ -2063,13 +2219,16 @@ mod tests {
         open_item_menu_from_center(&mut s, &mut w);
         s.update_frame(DOWN, &mut w.ctx()); // DEPOSIT ITEM
         s.update_frame(A, &mut w.ctx());
+        if s.phase()==PcPhase::ItemQuantityPrompt {finish_quantity_prompt(&mut s,&mut w);}
         assert_eq!(s.phase(), PcPhase::ItemList);
         s.update_frame(A, &mut w.ctx()); // pick POTION
+        if s.phase()==PcPhase::ItemQuantityPrompt {finish_quantity_prompt(&mut s,&mut w);}
         assert_eq!(s.phase(), PcPhase::ItemQuantity);
         assert_eq!(s.item_qty(), 1);
         s.update_frame(UP, &mut w.ctx());
         s.update_frame(UP, &mut w.ctx()); // qty 3
         s.update_frame(A, &mut w.ctx());
+        if s.phase()==PcPhase::ItemQuantityPrompt {finish_quantity_prompt(&mut s,&mut w);}
         assert_eq!(
             s.message_lines(),
             &["POTION was".to_string(), "stored via PC.".to_string()]
@@ -2166,8 +2325,11 @@ mod tests {
         open_item_menu_from_center(&mut s, &mut w);
         s.update_frame(DOWN, &mut w.ctx()); // DEPOSIT ITEM
         s.update_frame(A, &mut w.ctx());
+        if s.phase()==PcPhase::ItemQuantityPrompt {finish_quantity_prompt(&mut s,&mut w);}
         s.update_frame(A, &mut w.ctx()); // POTION, qty 1
+        if s.phase()==PcPhase::ItemQuantityPrompt {finish_quantity_prompt(&mut s,&mut w);}
         s.update_frame(A, &mut w.ctx());
+        if s.phase()==PcPhase::ItemQuantityPrompt {finish_quantity_prompt(&mut s,&mut w);}
         assert_eq!(
             s.message_lines(),
             &["No room left to".to_string(), "store items.".to_string()]
@@ -2185,10 +2347,13 @@ mod tests {
         let mut s = PcScreen::new(PcEntry::PokemonCenter, &open_ctx());
         open_item_menu_from_center(&mut s, &mut w);
         s.update_frame(A, &mut w.ctx()); // WITHDRAW ITEM
+        if s.phase()==PcPhase::ItemQuantityPrompt {finish_quantity_prompt(&mut s,&mut w);}
         assert_eq!(s.phase(), PcPhase::ItemList);
         s.update_frame(A, &mut w.ctx()); // POTION
+        if s.phase()==PcPhase::ItemQuantityPrompt {finish_quantity_prompt(&mut s,&mut w);}
         s.update_frame(UP, &mut w.ctx()); // qty 2
         s.update_frame(A, &mut w.ctx());
+        if s.phase()==PcPhase::ItemQuantityPrompt {finish_quantity_prompt(&mut s,&mut w);}
         assert_eq!(
             s.message_lines(),
             &["Withdrew".to_string(), "POTION.".to_string()]
@@ -2232,8 +2397,11 @@ mod tests {
         let mut s = PcScreen::new(PcEntry::PokemonCenter, &open_ctx());
         open_item_menu_from_center(&mut s, &mut w);
         s.update_frame(A, &mut w.ctx()); // WITHDRAW ITEM
+        if s.phase()==PcPhase::ItemQuantityPrompt {finish_quantity_prompt(&mut s,&mut w);}
         s.update_frame(A, &mut w.ctx()); // POTION, qty 1
+        if s.phase()==PcPhase::ItemQuantityPrompt {finish_quantity_prompt(&mut s,&mut w);}
         s.update_frame(A, &mut w.ctx());
+        if s.phase()==PcPhase::ItemQuantityPrompt {finish_quantity_prompt(&mut s,&mut w);}
         assert_eq!(
             s.message_lines(),
             &["You can't carry".to_string(), "any more items.".to_string()]
@@ -2252,24 +2420,31 @@ mod tests {
         s.update_frame(DOWN, &mut w.ctx());
         s.update_frame(DOWN, &mut w.ctx()); // TOSS ITEM
         s.update_frame(A, &mut w.ctx());
+        if s.phase()==PcPhase::ItemQuantityPrompt {finish_quantity_prompt(&mut s,&mut w);}
         assert_eq!(s.phase(), PcPhase::ItemList);
         // POTION: quantity → "Is it OK to toss?" → YES.
         s.update_frame(A, &mut w.ctx());
+        if s.phase()==PcPhase::ItemQuantityPrompt {finish_quantity_prompt(&mut s,&mut w);}
         assert_eq!(s.phase(), PcPhase::ItemQuantity);
         s.update_frame(UP, &mut w.ctx()); // 2
         s.update_frame(A, &mut w.ctx());
+        if s.phase()==PcPhase::ItemQuantityPrompt {finish_quantity_prompt(&mut s,&mut w);}
         assert_eq!(s.phase(), PcPhase::TossConfirm);
         // Select NO explicitly to keep the items.
         s.update_frame(DOWN, &mut w.ctx());
         s.update_frame(A, &mut w.ctx());
+        if s.phase()==PcPhase::ItemQuantityPrompt {finish_quantity_prompt(&mut s,&mut w);}
         finish_confirmation_wait(&mut s, &mut w);
         assert_eq!(s.phase(), PcPhase::ItemList);
         assert_eq!(w.pc_items.item_quantity(ItemId::Potion), 3);
         // YES tosses.
         s.update_frame(A, &mut w.ctx());
+        if s.phase()==PcPhase::ItemQuantityPrompt {finish_quantity_prompt(&mut s,&mut w);}
         s.update_frame(A, &mut w.ctx()); // qty 1
+        if s.phase()==PcPhase::ItemQuantityPrompt {finish_quantity_prompt(&mut s,&mut w);}
         s.update_frame(UP, &mut w.ctx()); // stay on YES
         s.update_frame(A, &mut w.ctx());
+        if s.phase()==PcPhase::ItemQuantityPrompt {finish_quantity_prompt(&mut s,&mut w);}
         finish_confirmation_wait(&mut s, &mut w);
         assert_eq!(
             s.message_lines(),
@@ -2280,6 +2455,7 @@ mod tests {
         // BICYCLE (key item): refused outright, no quantity prompt.
         s.update_frame(DOWN, &mut w.ctx());
         s.update_frame(A, &mut w.ctx());
+        if s.phase()==PcPhase::ItemQuantityPrompt {finish_quantity_prompt(&mut s,&mut w);}
         assert_eq!(s.phase(), PcPhase::Message);
         assert_eq!(
             s.message_lines(),

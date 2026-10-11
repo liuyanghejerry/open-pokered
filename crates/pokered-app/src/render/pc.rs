@@ -367,12 +367,19 @@ pub fn draw_pc(
                 .collect();
             draw_menu(0, 0, 14, &labels, pc.players_menu().cursor(), fb);
         }
-        PcPhase::ItemList | PcPhase::ItemQuantity | PcPhase::TossConfirm => {
+        PcPhase::ItemList | PcPhase::ItemQuantityPrompt | PcPhase::ItemQuantity | PcPhase::TossConfirm => {
             let rows = item_rows(pc, save, is_zh);
             let cursor = pc.item_list_cursor();
             let scroll = follow_scroll(cursor, rows.len(), PC_LIST_VISIBLE_ROWS.max(8));
             draw_list(0, 0, 18, 8, &rows, cursor, scroll, is_zh, fb);
             match pc.phase() {
+                PcPhase::ItemQuantityPrompt => {
+                    // Keep the existing localized wording; the protected
+                    // typing/menu handoff follows the authored source text.
+                    let prompt = if is_zh { "几个？".to_string() }
+                        else { "How many?".chars().take(pc.quantity_prompt_chars()).collect() };
+                    draw_message(&[prompt], fb, is_zh);
+                }
                 PcPhase::ItemQuantity => {
                     // "How many?" + the running quantity (players_pc.asm
                     // DisplayChooseQuantityMenu).
@@ -594,6 +601,7 @@ mod layout_tests {
             skip_message(&mut pc,&mut save);
             update_pc(&mut pc,&mut save,A);
             update_pc(&mut pc,&mut save,A);
+            for _ in 0..30 {update_pc(&mut pc,&mut save,MenuInput { a:false,b:false,up:false,down:false });}
             assert_eq!(pc.phase(),PcPhase::ItemQuantity);
             render_pc_state(&pc,&save,language).save_png(&out.join(format!("pc-quantity-{tag}.png"))).unwrap();
             let mut fb=FrameBuffer::new(RenderConfig::new(160,144),BG);
@@ -988,6 +996,9 @@ mod layout_tests {
             update_pc(&mut toss, &mut toss_save, DOWN);
             update_pc(&mut toss, &mut toss_save, A);
             update_pc(&mut toss, &mut toss_save, A);
+            assert_eq!(toss.phase(), PcPhase::ItemQuantityPrompt);
+            for _ in 0..30 {update_pc(&mut toss,&mut toss_save,MenuInput { a:false,b:false,up:false,down:false });}
+            assert_eq!(toss.phase(), PcPhase::ItemQuantity);
             update_pc(&mut toss, &mut toss_save, A);
             assert_eq!(toss.phase(), PcPhase::TossConfirm);
             assert!(toss.yes_selected());
