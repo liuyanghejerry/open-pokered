@@ -281,13 +281,7 @@ pub fn draw_dex_area(
             draw_text(ui_label("AREA UNKNOWN", is_zh), 2 * t, 8 * t, fg, fb);
         } else {
             for (i, map) in areas.iter().enumerate().take(7) {
-                draw_text(
-                    map_name_for_map(*map, is_zh),
-                    2 * t,
-                    (4 + i as u32) * t,
-                    fg,
-                    fb,
-                );
+                draw_text(map_name_for_map(*map, is_zh), 2 * t, (4 + i as u32) * t, fg, fb);
             }
         }
     }
@@ -298,8 +292,7 @@ pub fn draw_dex_area(
     draw_text(&format!("{name}{suffix}"), t, 0, fg, fb);
 }
 
-/// The Pokéball mark the original puts next to owned Pokémon (tile $72).
-/// Drawn programmatically: circle outline + equator + center button.
+/// UI tiles loaded by LoadPokedexTilePatterns and HandlePokedexListMenu.
 #[derive(Clone, Copy)]
 enum DexTile {
     Box,
@@ -600,6 +593,14 @@ mod tests {
         let mut resources = Some(ResourceManager::new(
             pokered_renderer::resource::AssetRoot::auto_detect().expect("test gfx root"),
         ));
+        for (category, name) in [
+            (AssetCategory::Pokedex, "pokedex"),
+            (AssetCategory::Font, "font_battle_extra"),
+            (AssetCategory::Battle, "balls"),
+        ] {
+            resources.as_mut().unwrap().load_asset_2bpp(category, name)
+                .expect("canonical asset must load; fallback alone cannot validate this test");
+        }
         for tile in [DexTile::Box, DexTile::Stem, DexTile::Horizontal, DexTile::Ball] {
             let mut loaded = new_fb();
             let mut fallback = new_fb();
