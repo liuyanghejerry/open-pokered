@@ -141,6 +141,14 @@ fn follow_scroll(cursor: usize, rows: usize, visible: usize) -> usize {
         .min(rows - visible)
 }
 
+fn draw_item_swap_mark(pc: &PcScreen, cursor: usize, scroll: usize, fb: &mut FrameBuffer) {
+    if let Some(mark) = pc.item_list_marked_slot() {
+        if mark != cursor && mark >= scroll && mark < scroll + PC_LIST_VISIBLE_ROWS {
+            draw_text("▷", T, T + (mark - scroll) as u32 * 12, FG, fb);
+        }
+    }
+}
+
 /// Current mon list (party for DEPOSIT, current box otherwise) + CANCEL.
 fn mon_rows(pc: &PcScreen, save: &SaveData, is_zh: bool) -> Vec<String> {
     let mut rows: Vec<String> = match pc.mon_mode() {
@@ -366,6 +374,7 @@ pub fn draw_pc(
                 let cursor = pc.item_list_cursor();
                 let scroll = pc.item_list_scroll();
                 draw_list(0, 0, 18, PC_LIST_VISIBLE_ROWS, &rows, cursor, scroll, is_zh, fb);
+                draw_item_swap_mark(pc, cursor, scroll, fb);
             } else {
                 let labels: Vec<String> = PLAYERS_LABELS.iter()
                     .map(|s| lang_data::ui_label(s, is_zh).to_string()).collect();
@@ -386,6 +395,7 @@ pub fn draw_pc(
             let cursor = pc.item_list_cursor();
             let scroll = pc.item_list_scroll();
             draw_list(0, 0, 18, PC_LIST_VISIBLE_ROWS, &rows, cursor, scroll, is_zh, fb);
+            draw_item_swap_mark(pc, cursor, scroll, fb);
             match pc.phase() {
                 PcPhase::ItemList => draw_message(&pc.item_question_lines(), fb, is_zh),
                 PcPhase::ItemQuantityPrompt => {

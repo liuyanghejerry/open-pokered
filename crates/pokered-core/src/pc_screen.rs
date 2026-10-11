@@ -304,6 +304,12 @@ pub struct PcScreen {
     item_mode: ItemListMode,
     item_list_cursor: usize,
     item_list_scroll: usize,
+    item_swap_first: Option<usize>,
+    item_swap_target: Option<usize>,
+    item_swap_wait_frames: u8,
+    item_swap_reload_wait: u8,
+    item_swap_last_buttons: u8,
+    item_swap_repeat_frames: u8,
     item_qty: u8,
     item_text_no_delay: bool,
     item_question_no_delay: bool,
@@ -364,6 +370,12 @@ impl PcScreen {
             item_mode: ItemListMode::Withdraw,
             item_list_cursor: 0,
             item_list_scroll: 0,
+            item_swap_first: None,
+            item_swap_target: None,
+            item_swap_wait_frames: 0,
+            item_swap_reload_wait: 0,
+            item_swap_last_buttons: 0,
+            item_swap_repeat_frames: 0,
             item_qty: 1,
             item_text_no_delay: true,
             item_question_no_delay: true,
@@ -617,6 +629,7 @@ impl PcScreen {
     }
 
     fn enter_item_menu(&mut self) {
+        self.clear_item_swap();
         self.players_menu.restore_saved_cursor();
         self.begin_item_question(false, false);
     }
@@ -629,6 +642,7 @@ impl PcScreen {
     }
 
     fn begin_item_question(&mut self, list: bool, draw_list: bool) {
+        if list { self.clear_item_swap(); }
         self.item_question_is_list = list;
         self.item_question_draw_list = draw_list;
         self.item_question_no_delay = self.item_text_no_delay;
@@ -721,6 +735,36 @@ impl PcScreen {
         let ordinary = matches!(self.phase, PcPhase::MainMenu | PcPhase::BillsMenu | PcPhase::ItemMenu);
         let before = self.phase;
         let buttons = held.bits();
+        // hFrameCounter advances even while Delay20/list redraw protects input.
+        self.item_swap_repeat_frames = self.item_swap_repeat_frames.saturating_sub(1);
+        if before == PcPhase::ItemList {
+            // HandleItemListSwapping does not sample Joypad during Delay20
+            // or the subsequent list redraw/HandleMenuInput Delay3 pair.
+            let blocked = self.item_swap_wait_frames > 0 || self.item_swap_reload_wait > 1;
+            let resumed = self.item_swap_reload_wait == 1;
+            let pressed = buttons & !self.item_swap_last_buttons;
+            // The watched SELECT key uses hJoy7=1/hJoy6=0: a new press
+            // starts 30 frames, then held keys repeat every 5. Repeated
+            // same-slot SELECT redraws still protect input for six frames.
+            let mut repeat = false;
+            if !blocked {
+                if pressed != 0 { self.item_swap_repeat_frames = 30; }
+                else if self.item_swap_repeat_frames == 0 {
+                    self.item_swap_repeat_frames = 5;
+                    repeat = !held.a && !held.b;
+                }
+            }
+            let select = !blocked && held.select && (pressed != 0 || repeat);
+            let used = if blocked || (resumed && pressed == 0 && !select) {
+                MenuInput { up:false, down:false, a:false, b:false }
+            } else if resumed || select {
+                MenuInput { a:held.a, b:held.b, up:held.up, down:held.down }
+            } else { input };
+            if !blocked { self.item_swap_last_buttons = buttons; }
+            let action = self.update_item_list_with_select(used, select, ctx);
+            return (action, used);
+        }
+        self.item_swap_last_buttons = buttons;
         let used = if ordinary {
             if self.ordinary_menu_poll_wait > 0 {
                 self.ordinary_menu_poll_wait -= 1;
@@ -1367,8 +1411,78 @@ impl PcScreen {
     }
 
     fn update_item_list(&mut self, input: MenuInput, ctx: &mut PcContext) -> PcScreenAction {
+        self.update_item_list_with_select(input, false, ctx)
+    }
+
+    /// Physical slot marked by SELECT; retained beneath quantity prompts.
+    pub fn item_list_marked_slot(&self) -> Option<usize> { self.item_swap_first }
+
+    fn clear_item_swap(&mut self) {
+        self.item_swap_first = None;
+        self.item_swap_target = None;
+        self.item_swap_wait_frames = 0;
+        self.item_swap_reload_wait = 0;
+    }
+
+    fn complete_item_swap(&mut self, ctx: &mut PcContext) {
+        let first = self.item_swap_first.take();
+        let target = self.item_swap_target.take();
+        let (Some(first), Some(target)) = (first, target) else { return; };
+        let mut slots: Vec<(ItemId, u32)> = self.item_source(ctx).into_iter()
+            .map(|(item, qty)| (item, qty as u32)).collect();
+        if first >= slots.len() || target >= slots.len() || first == target { return; }
+        let merge = slots[first].0 == slots[target].0 && slots[first].1 + slots[target].1 <= 99;
+        if slots[first].0 == slots[target].0 {
+            let total = slots[first].1 + slots[target].1;
+            slots[target].1 = total.min(99);
+            if merge { slots.remove(first); } else { slots[first].1 = total - 99; }
+        } else { slots.swap(first, target); }
+        let result = match self.item_mode {
+            ItemListMode::Deposit => ctx.bag.replace_item_slots(&slots),
+            ItemListMode::Withdraw | ItemListMode::Toss => ctx.pc_items.replace_item_slots(&slots),
+        };
+        if result.is_ok() && merge {
+            self.item_list_cursor = 0;
+            self.item_list_scroll = 0;
+        }
+        self.clamp_item_scroll(ctx);
+    }
+
+    fn select_item_slot(&mut self, ctx: &PcContext) {
+        let target = self.item_list_cursor;
+        if target >= self.item_source(ctx).len() || self.item_swap_first == Some(target) {
+            // CANCEL and selecting the same slot preserve the mark and only
+            // reload the list; they do not call Delay20 or mutate inventory.
+            self.item_swap_reload_wait = 6;
+            return;
+        }
+        if self.item_swap_first.is_some() { self.item_swap_target = Some(target); }
+        else { self.item_swap_first = Some(target); }
+        self.item_swap_wait_frames = 20;
+    }
+
+    fn update_item_list_with_select(&mut self, input: MenuInput, select: bool, ctx: &mut PcContext) -> PcScreenAction {
+        if self.item_swap_wait_frames > 0 {
+            self.item_swap_wait_frames -= 1;
+            if self.item_swap_wait_frames == 0 {
+                if self.item_swap_target.is_some() { self.complete_item_swap(ctx); }
+                self.item_swap_reload_wait = 6;
+            }
+            return PcScreenAction::Continue;
+        }
+        if self.item_swap_reload_wait > 0 {
+            self.item_swap_reload_wait -= 1;
+            if self.item_swap_reload_wait > 0 { return PcScreenAction::Continue; }
+        }
         let rows = self.item_row_count(ctx);
-        if input.up && self.item_list_cursor > 0 {
+        if select {
+            // A watched SELECT returns after the inner visible-row move;
+            // the caller handles SELECT before its scrolling directions.
+            let row = self.item_list_cursor - self.item_list_scroll;
+            let max_row = rows.saturating_sub(self.item_list_scroll + 1).min(PC_LIST_CURSOR_ROWS - 1);
+            if input.up { if row > 0 { self.item_list_cursor -= 1; } }
+            else if input.down && row < max_row { self.item_list_cursor += 1; }
+        } else if input.up && self.item_list_cursor > 0 {
             self.item_list_cursor -= 1;
         } else if input.down && self.item_list_cursor < rows - 1 {
             self.item_list_cursor += 1;
@@ -1379,6 +1493,10 @@ impl PcScreen {
         if input.b && !input.a {
             self.item_text_no_delay = false; // ExitListMenu
             self.enter_item_menu();
+            return PcScreenAction::Continue;
+        }
+        if select && !input.a {
+            self.select_item_slot(ctx);
             return PcScreenAction::Continue;
         }
         if input.a {
@@ -1793,6 +1911,159 @@ mod tests {
     }
 
     use super::*;
+
+    fn select_fixture(mode: ItemListMode, slots: &[(ItemId, u32)]) -> (PcScreen, World) {
+        let mut world = World::new();
+        world.bag.replace_item_slots(slots).unwrap();
+        world.pc_items.replace_item_slots(slots).unwrap();
+        let mut screen = PcScreen::new(PcEntry::PlayersPc, &open_ctx());
+        screen.phase = PcPhase::ItemList;
+        screen.item_mode = mode;
+        (screen, world)
+    }
+
+    fn select_timeline(screen: &mut PcScreen, world: &mut World, schedule: &[(u16, u8)], end: u16) {
+        let mut previous = 0u8;
+        for frame in 0..=end {
+            let bits = schedule.iter().find(|(at, _)| *at == frame).map_or(0, |(_, bits)| *bits);
+            let pressed = bits & !previous;
+            let input = MenuInput { a: pressed & 1 != 0, b: pressed & 2 != 0,
+                up: pressed & 64 != 0, down: pressed & 128 != 0 };
+            let held = PcHeldInput { a:bits & 1 != 0, b:bits & 2 != 0, select:bits & 4 != 0,
+                up:bits & 64 != 0, down:bits & 128 != 0, ..Default::default() };
+            screen.update_frame_with_held_input(input, held, &mut world.ctx(), None);
+            previous = bits;
+        }
+    }
+
+    #[test]
+    fn item_select_held_direction_repeats_after_thirty_frames() {
+        let slots=[(ItemId::Potion,4),(ItemId::Antidote,3),(ItemId::PokeBall,2)];
+        let (mut s,mut w)=select_fixture(ItemListMode::Withdraw,&slots);
+        let schedule:Vec<_>=(70..150).map(|t|(t,132)).collect();
+        select_timeline(&mut s,&mut w,&schedule,350);
+        assert_eq!(w.pc_items.items(),vec![slots[0],slots[2],slots[1]]);
+        assert_eq!((s.item_list_cursor(),s.item_list_marked_slot()),(2,Some(2)));
+        assert_eq!(w.bag.items(),slots);
+    }
+    #[test]
+    fn item_select_held_redraw_guard_discards_short_new_direction() {
+        let slots=[(ItemId::Potion,4),(ItemId::Antidote,3),(ItemId::PokeBall,2)];
+        let (mut s,mut w)=select_fixture(ItemListMode::Withdraw,&slots);
+        let schedule:Vec<_>=(70..150).map(|t|(t,if (110..112).contains(&t){132}else{4})).collect();
+        select_timeline(&mut s,&mut w,&schedule,350);
+        assert_eq!(w.pc_items.items(),slots);
+        assert_eq!((s.item_list_cursor(),s.item_list_marked_slot()),(0,Some(0)));
+    }
+    #[test]
+    fn item_select_held_continues_marking_after_the_first_swap() {
+        let slots=[(ItemId::Potion,4),(ItemId::Antidote,3),(ItemId::PokeBall,2)];
+        let (mut s,mut w)=select_fixture(ItemListMode::Withdraw,&slots);
+        let mut schedule=vec![(70,4),(71,4)];
+        schedule.extend((110..190).map(|t|(t,132)));
+        select_timeline(&mut s,&mut w,&schedule,350);
+        assert_eq!(w.pc_items.items(),vec![slots[1],slots[0],slots[2]]);
+        assert_eq!((s.item_list_cursor(),s.item_list_marked_slot()),(2,Some(2)));
+    }
+
+    #[test]
+    fn item_select_swaps_exact_slots_in_each_pc_operation() {
+        let slots = [(ItemId::Potion,4),(ItemId::Antidote,3),(ItemId::PokeBall,2)];
+        for mode in [ItemListMode::Withdraw,ItemListMode::Deposit,ItemListMode::Toss] {
+            let (mut screen,mut world)=select_fixture(mode,&slots);
+            select_timeline(&mut screen,&mut world,&[(70,4),(110,128),(150,4)],171);
+            let target=if mode==ItemListMode::Deposit {world.bag.items()} else {world.pc_items.items()};
+            let other=if mode==ItemListMode::Deposit {world.pc_items.items()} else {world.bag.items()};
+            assert_eq!(target,vec![slots[1],slots[0],slots[2]],"original SELECT swap in {mode:?}");
+            assert_eq!(other,slots,"sorting mutates only its selected inventory");
+            assert_eq!(screen.phase(),PcPhase::ItemList);
+            assert!(!screen.take_save_request(),"sorting does not perform an ordinary SAVE");
+        }
+    }
+
+    #[test]
+    fn item_select_same_slot_is_ignored_and_keeps_the_first_mark() {
+        let slots=[(ItemId::Potion,4),(ItemId::Antidote,3),(ItemId::PokeBall,2)];
+        let (mut screen,mut world)=select_fixture(ItemListMode::Withdraw,&slots);
+        select_timeline(&mut screen,&mut world,&[(70,4),(110,4),(150,128),(190,4)],211);
+        assert_eq!(world.pc_items.items(),vec![slots[1],slots[0],slots[2]]);
+    }
+
+    #[test]
+    fn item_select_cancel_row_is_ignored_and_keeps_the_first_mark() {
+        let slots=[(ItemId::Potion,4),(ItemId::Antidote,3),(ItemId::PokeBall,2)];
+        let (mut screen,mut world)=select_fixture(ItemListMode::Withdraw,&slots);
+        select_timeline(&mut screen,&mut world,&[(70,4),(110,128),(150,128),(190,128),(230,4),(270,64),(310,4)],331);
+        assert_eq!(world.pc_items.items(),vec![slots[2],slots[1],slots[0]]);
+        assert_eq!((screen.item_list_cursor(),screen.item_list_scroll()),(2,1));
+    }
+
+    #[test]
+    fn item_select_merges_same_kind_into_second_and_resets_the_window() {
+        let slots=[(ItemId::Potion,4),(ItemId::Potion,3),(ItemId::Antidote,2)];
+        let (mut screen,mut world)=select_fixture(ItemListMode::Withdraw,&slots);
+        select_timeline(&mut screen,&mut world,&[(70,4),(110,128),(150,4)],171);
+        assert_eq!(world.pc_items.items(),vec![(ItemId::Potion,7),(ItemId::Antidote,2)]);
+        assert_eq!((screen.item_list_cursor(),screen.item_list_scroll()),(0,0));
+        assert_eq!(world.bag.items(),slots);
+    }
+
+    #[test]
+    fn item_select_overflow_keeps_remainder_in_first_and_caps_second_at99() {
+        let slots=[(ItemId::Potion,80),(ItemId::Potion,30),(ItemId::Antidote,2)];
+        let (mut screen,mut world)=select_fixture(ItemListMode::Withdraw,&slots);
+        select_timeline(&mut screen,&mut world,&[(70,4),(110,128),(150,4)],171);
+        assert_eq!(world.pc_items.items(),vec![(ItemId::Potion,11),(ItemId::Potion,99),(ItemId::Antidote,2)]);
+        assert_eq!((screen.item_list_cursor(),screen.item_list_scroll()),(1,0));
+        assert_eq!(world.bag.items(),slots);
+    }
+
+    #[test]
+    fn item_select_protected_mark_ignores_navigation_and_cancel() {
+        let slots=[(ItemId::Potion,4),(ItemId::Antidote,3),(ItemId::PokeBall,2)];
+        let (mut screen,mut world)=select_fixture(ItemListMode::Withdraw,&slots);
+        select_timeline(&mut screen,&mut world,&[(70,4),(75,128),(80,2)],91);
+        assert_eq!(screen.phase(),PcPhase::ItemList);
+        assert_eq!((screen.item_list_cursor(),screen.item_list_scroll()),(0,0));
+        assert_eq!(world.pc_items.items(),slots);
+    }
+
+    #[test]
+    fn item_select_commits_once_after20_and_samples_a_held_through_reload() {
+        let slots=[(ItemId::Potion,4),(ItemId::Antidote,3),(ItemId::PokeBall,2)];
+        let (mut screen,mut world)=select_fixture(ItemListMode::Withdraw,&slots);
+        select_timeline(&mut screen,&mut world,&[(70,4),(110,128)],149);
+        screen.update_frame_with_held_input(NONE,PcHeldInput { select:true,..Default::default() },&mut world.ctx(),None);
+        for _ in 151..170 {
+            screen.update_frame_with_held_input(A,PcHeldInput { a:true,..Default::default() },&mut world.ctx(),None);
+            assert_eq!(world.pc_items.items(),slots,"no transaction before Delay20 ends");
+            assert_eq!(screen.phase(),PcPhase::ItemList);
+        }
+        screen.update_frame_with_held_input(NONE,PcHeldInput { a:true,..Default::default() },&mut world.ctx(),None);
+        assert_eq!(world.pc_items.items(),vec![slots[1],slots[0],slots[2]]);
+        assert_eq!(screen.item_list_marked_slot(),None);
+        for _ in 171..176 {
+            screen.update_frame_with_held_input(NONE,PcHeldInput { a:true,..Default::default() },&mut world.ctx(),None);
+            assert_eq!(screen.phase(),PcPhase::ItemList,"list reload does not read buttons");
+        }
+        screen.update_frame_with_held_input(NONE,PcHeldInput { a:true,..Default::default() },&mut world.ctx(),None);
+        assert_eq!(screen.phase(),PcPhase::ItemQuantityPrompt,"A newly observed after reload is accepted");
+        assert_eq!(world.pc_items.items(),vec![slots[1],slots[0],slots[2]],"transaction occurs once");
+    }
+
+    #[test]
+    fn item_select_quantity_cancel_clears_mark_without_stock_loss() {
+        let slots=[(ItemId::Potion,4),(ItemId::Antidote,3),(ItemId::PokeBall,2)];
+        let (mut screen,mut world)=select_fixture(ItemListMode::Withdraw,&slots);
+        select_timeline(&mut screen,&mut world,&[(70,4),(110,1)],189);
+        assert_eq!(screen.item_list_marked_slot(),Some(0),"mark is preserved beneath quantity prompt");
+        assert_eq!(screen.phase(),PcPhase::ItemQuantity);
+        screen.update_frame_with_held_input(B,PcHeldInput { b:true,..Default::default() },&mut world.ctx(),None);
+        assert_eq!(screen.item_list_marked_slot(),None);
+        assert_eq!(world.pc_items.items(),slots);
+        assert_eq!(world.bag.items(),slots);
+    }
+
     use crate::pokemon::stats::create_pokemon;
     use pokered_data::species::Species;
 
