@@ -9795,7 +9795,10 @@ mod link_stats_cry_fidelity_tests {
             let advance=button(GbButton::A); g.update(if frame%20==19 {&advance} else {&idle});
         }
         assert_eq!(g.pc_screen.as_ref().unwrap().phase(),PcPhase::BillsMenu);
-        if !from_box {g.update(&button(GbButton::Down));g.update(&idle);}
+        // Release the acknowledgement key, then respect HandleMenuInput's
+        // three-frame polling delay after navigating the ordinary PC menu.
+        g.update(&idle);
+        if !from_box {g.update(&button(GbButton::Down));for _ in 0..3 {g.update(&idle);}}
         g.update(&button(GbButton::A));for _ in 0..120 {g.update(&idle);}
         assert_eq!(g.pc_screen.as_ref().unwrap().phase(),PcPhase::MonList);
         g.update(&button(GbButton::A));for _ in 0..120 {g.update(&idle);}
@@ -9984,7 +9987,10 @@ mod link_stats_cry_fidelity_tests {
             let advance=button(GbButton::A);g.update(if frame%20==19 {&advance} else {&idle});
         }
         assert_eq!(g.pc_screen.as_ref().unwrap().phase(),PcPhase::BillsMenu);
-        if !from_box {g.update(&button(GbButton::Down));g.update(&idle);}
+        // Release the acknowledgement key, then respect HandleMenuInput's
+        // three-frame polling delay after navigating the ordinary PC menu.
+        g.update(&idle);
+        if !from_box {g.update(&button(GbButton::Down));for _ in 0..3 {g.update(&idle);}}
         g.update(&button(GbButton::A));for _ in 0..120 {g.update(&idle);}
         assert_eq!(g.pc_screen.as_ref().unwrap().phase(),PcPhase::MonList);
         g.update(&button(GbButton::A));for _ in 0..120 {g.update(&idle);}
@@ -11770,7 +11776,9 @@ mod pc_item_questions_owner_240 {
    assert!(found,"{context} hidden PC initial operation question");
    record(&mut g,&mut input,&mut held,&save_path,capture,&context,"menu-initial",3,22,delay,true,false);
    for _ in 0..49 {tick(&mut g,&mut input,&mut held,vec![]);}
-   for _ in 0..cursor {tick(&mut g,&mut input,&mut held,vec![GbButton::Down]);tick(&mut g,&mut input,&mut held,vec![]);}
+   // Setup navigation finishes HandleMenuInput's three-frame wait before
+   // the next direction or A; question clocks begin after that A.
+   for _ in 0..cursor {tick(&mut g,&mut input,&mut held,vec![GbButton::Down]);for _ in 0..3 {tick(&mut g,&mut input,&mut held,vec![]);}}
    tick(&mut g,&mut input,&mut held,vec![GbButton::A]);
    record(&mut g,&mut input,&mut held,&save_path,capture,&context,"list-initial",3,count,delay,true,true);
    for _ in 0..49 {tick(&mut g,&mut input,&mut held,vec![]);}
