@@ -69,7 +69,7 @@ use pokered_core::trainer_card_screen::{
 };
 
 use pokered_core::elevator_screen::{ElevatorAction, ElevatorInput, ElevatorScreen};
-use pokered_core::pc_screen::{PcContext, PcEntry, PcOpenContext, PcScreen, PcScreenAction, PcSfx};
+use pokered_core::pc_screen::{PcContext, PcEntry, PcHeldInput, PcOpenContext, PcScreen, PcScreenAction, PcSfx};
 #[cfg(not(target_arch = "wasm32"))]
 use pokered_core::save::sram_import::import_sram;
 #[cfg(target_os = "none")]
@@ -5622,10 +5622,18 @@ impl PokemonGame {
                     let pc = self.pc_screen.as_mut().unwrap();
                     // PCMainMenu / PlayerPCMenu set BIT_NO_MENU_BUTTON_SOUND.
                     // The standalone BillsPc entry retains its ordinary key sound.
-                    if menu_input.a && pc.entry() == PcEntry::BillsPc && !pc.waiting_for_sound() {
-                        if let Some(ref audio) = self.audio { audio.play_sfx(SfxId::PressAB); }
-                    }
-                    let pc_action = {
+                    let key_sound_allowed = pc.entry() == PcEntry::BillsPc && !pc.waiting_for_sound();
+                    let held = PcHeldInput {
+                        a: !restoring_tiles && input.is_held(GbButton::A),
+                        b: !restoring_tiles && input.is_held(GbButton::B),
+                        select: !restoring_tiles && input.is_held(GbButton::Select),
+                        start: !restoring_tiles && input.is_held(GbButton::Start),
+                        right: !restoring_tiles && input.is_held(GbButton::Right),
+                        left: !restoring_tiles && input.is_held(GbButton::Left),
+                        up: !restoring_tiles && input.is_held(GbButton::Up),
+                        down: !restoring_tiles && input.is_held(GbButton::Down),
+                    };
+                    let (pc_action, used_input) = {
                         let mut ctx = PcContext {
                             party: &mut self.save_data.party,
                             pc_storage: &mut self.save_data.pc_storage,
@@ -5633,10 +5641,13 @@ impl PokemonGame {
                             pc_items: &mut self.save_data.game_data.pc_items,
                             pokedex: &self.save_data.game_data.pokedex,
                         };
-                        if let Some(ref audio) = self.audio {
-                            pc.update_frame_with_text_input(menu_input, &mut ctx, audio.is_sfx_playing(), !restoring_tiles && (input.is_held(GbButton::A) || input.is_held(GbButton::B)))
-                        } else { pc.update_frame_without_audio_with_text_input(menu_input, &mut ctx, !restoring_tiles && (input.is_held(GbButton::A) || input.is_held(GbButton::B))) }
+                        pc.update_frame_with_held_input(menu_input, held, &mut ctx,
+                            self.audio.as_ref().map(|audio| audio.is_sfx_playing()))
                     };
+                    if used_input.a && key_sound_allowed {
+                        if let Some(ref audio) = self.audio { audio.play_sfx(SfxId::PressAB); }
+                    };
+
                     // Every mutation must refresh the live bank-1 box, not only CHANGE BOX.
                     self.save_data.current_box = self.save_data.pc_storage.current_box().clone();
                     for sfx in pc.take_sfx() {
@@ -9784,7 +9795,10 @@ mod link_stats_cry_fidelity_tests {
             let advance=button(GbButton::A); g.update(if frame%20==19 {&advance} else {&idle});
         }
         assert_eq!(g.pc_screen.as_ref().unwrap().phase(),PcPhase::BillsMenu);
-        if !from_box {g.update(&button(GbButton::Down));g.update(&idle);}
+        // Release the acknowledgement key, then respect HandleMenuInput's
+        // three-frame polling delay after navigating the ordinary PC menu.
+        g.update(&idle);
+        if !from_box {g.update(&button(GbButton::Down));for _ in 0..3 {g.update(&idle);}}
         g.update(&button(GbButton::A));for _ in 0..120 {g.update(&idle);}
         assert_eq!(g.pc_screen.as_ref().unwrap().phase(),PcPhase::MonList);
         g.update(&button(GbButton::A));for _ in 0..120 {g.update(&idle);}
@@ -9973,7 +9987,10 @@ mod link_stats_cry_fidelity_tests {
             let advance=button(GbButton::A);g.update(if frame%20==19 {&advance} else {&idle});
         }
         assert_eq!(g.pc_screen.as_ref().unwrap().phase(),PcPhase::BillsMenu);
-        if !from_box {g.update(&button(GbButton::Down));g.update(&idle);}
+        // Release the acknowledgement key, then respect HandleMenuInput's
+        // three-frame polling delay after navigating the ordinary PC menu.
+        g.update(&idle);
+        if !from_box {g.update(&button(GbButton::Down));for _ in 0..3 {g.update(&idle);}}
         g.update(&button(GbButton::A));for _ in 0..120 {g.update(&idle);}
         assert_eq!(g.pc_screen.as_ref().unwrap().phase(),PcPhase::MonList);
         g.update(&button(GbButton::A));for _ in 0..120 {g.update(&idle);}
@@ -11759,7 +11776,9 @@ mod pc_item_questions_owner_240 {
    assert!(found,"{context} hidden PC initial operation question");
    record(&mut g,&mut input,&mut held,&save_path,capture,&context,"menu-initial",3,22,delay,true,false);
    for _ in 0..49 {tick(&mut g,&mut input,&mut held,vec![]);}
-   for _ in 0..cursor {tick(&mut g,&mut input,&mut held,vec![GbButton::Down]);tick(&mut g,&mut input,&mut held,vec![]);}
+   // Setup navigation finishes HandleMenuInput's three-frame wait before
+   // the next direction or A; question clocks begin after that A.
+   for _ in 0..cursor {tick(&mut g,&mut input,&mut held,vec![GbButton::Down]);for _ in 0..3 {tick(&mut g,&mut input,&mut held,vec![]);}}
    tick(&mut g,&mut input,&mut held,vec![GbButton::A]);
    record(&mut g,&mut input,&mut held,&save_path,capture,&context,"list-initial",3,count,delay,true,true);
    for _ in 0..49 {tick(&mut g,&mut input,&mut held,vec![]);}

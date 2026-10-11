@@ -1,0 +1,79 @@
+{
+  "base": "7bdc4f097b3df815bec055aa4a5a161729b50318",
+  "source_head": "eacb1112ca734710756be66ebcde40a81a6eff37",
+  "tests": {
+    "programs": 78,
+    "pass": 3683,
+    "fail": 0,
+    "ignore": 76
+  },
+  "cases": [
+    {
+      "menu": "main",
+      "spacing": 3,
+      "source_final_cursor": 1,
+      "two_repeat_frames_and_JSON_byte_exact": true,
+      "candidate_second_tap_ignored": true,
+      "native_bag_unchanged": true,
+      "source_full_bag_and_PC_unchanged": true,
+      "no_native_automatic_save": true
+    },
+    {
+      "menu": "main",
+      "spacing": 4,
+      "source_final_cursor": 2,
+      "two_repeat_frames_and_JSON_byte_exact": true,
+      "candidate_second_tap_ignored": false,
+      "native_bag_unchanged": true,
+      "source_full_bag_and_PC_unchanged": true,
+      "no_native_automatic_save": true
+    },
+    {
+      "menu": "player",
+      "spacing": 3,
+      "source_final_cursor": 1,
+      "two_repeat_frames_and_JSON_byte_exact": true,
+      "candidate_second_tap_ignored": true,
+      "native_bag_unchanged": true,
+      "source_full_bag_and_PC_unchanged": true,
+      "no_native_automatic_save": true
+    },
+    {
+      "menu": "player",
+      "spacing": 4,
+      "source_final_cursor": 2,
+      "two_repeat_frames_and_JSON_byte_exact": true,
+      "candidate_second_tap_ignored": false,
+      "native_bag_unchanged": true,
+      "source_full_bag_and_PC_unchanged": true,
+      "no_native_automatic_save": true
+    },
+    {
+      "menu": "bill",
+      "spacing": 3,
+      "source_final_cursor": 1,
+      "two_repeat_frames_and_JSON_byte_exact": true,
+      "candidate_second_tap_ignored": true,
+      "native_bag_unchanged": true,
+      "source_full_bag_and_PC_unchanged": true,
+      "no_native_automatic_save": true
+    },
+    {
+      "menu": "bill",
+      "spacing": 4,
+      "source_final_cursor": 2,
+      "two_repeat_frames_and_JSON_byte_exact": true,
+      "candidate_second_tap_ignored": false,
+      "native_bag_unchanged": true,
+      "source_full_bag_and_PC_unchanged": true,
+      "no_native_automatic_save": true
+    }
+  ],
+  "held_direction_control_80_frames": true,
+  "short_and_crossing_A_controls": true,
+  "PNG": 12864,
+  "archive_roundtrip_byte_exact": true,
+  "archive_sha256": "0b0769fc1c23ebe851d43a92620f00b3eb017a6a151ed5f89893cda32de44c7c",
+  "archive_bytes": 3030511,
+  "scope": "Post-navigation sampled input history in MainMenu/BillsMenu/ItemMenu only. Controlled real-host PC fixtures and source emulator input; not natural playthrough. Native PC stock asserted in core test; TCP getter absent. Initial menu guards, list repeat/SELECT sorting and other text/audio differences remain under audit."
+}
