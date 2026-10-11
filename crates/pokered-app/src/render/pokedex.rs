@@ -4,9 +4,7 @@
 //! overworld's script-driven entry overlay.
 
 use crate::alloc_prelude::*;
-use pokered_core::pokedex_screen::{
-    PokedexScreenMode, PokedexScreenState, LIST_ROWS,
-};
+use pokered_core::pokedex_screen::{PokedexScreenMode, PokedexScreenState, LIST_ROWS};
 use pokered_data::lang_data::ui_label;
 use pokered_data::map_names::map_name_for_map;
 use pokered_data::maps::MapId;
@@ -14,9 +12,9 @@ use pokered_data::pokedex::PokedexEntry;
 use pokered_data::species::Species;
 use pokered_data::town_map_data::{decode_town_map_tilemap, town_map_position, TOWN_MAP_WIDTH};
 use pokered_data::ui_layout::schema::POKEDEX_DEFAULT_LAYOUT;
-use pokered_renderer::embedded_font::{draw_text, fill_tile};
+use pokered_renderer::embedded_font::draw_text;
 use pokered_renderer::palette::{Palette, GRAYSCALE_PALETTE};
-use pokered_renderer::resource::ResourceManager;
+use pokered_renderer::resource::{AssetCategory, ResourceManager};
 use pokered_renderer::{FrameBuffer, Rgba, TILE_SIZE};
 use pokered_ui::backends::FrameBufferPainter;
 use pokered_ui::Ui;
@@ -34,8 +32,8 @@ pub fn draw_pokedex_screen(
     fb: &mut FrameBuffer,
 ) {
     match state.mode() {
-        PokedexScreenMode::List => draw_dex_list(state, is_zh, fb),
-        PokedexScreenMode::SideMenu => draw_dex_list(state, is_zh, fb),
+        PokedexScreenMode::List => draw_dex_list(state, is_zh, res, fb),
+        PokedexScreenMode::SideMenu => draw_dex_list(state, is_zh, res, fb),
         PokedexScreenMode::Entry => {
             let sp = state.cursor_species();
             let owned = state.is_owned(state.cursor());
@@ -50,21 +48,37 @@ pub fn draw_pokedex_screen(
 /// unseen — with SEEN/OWN totals and the always-visible DATA/CRY/AREA/QUIT
 /// side-menu items on the right (`PokedexMenuItemsText`, placed at (16,10)).
 /// In [`PokedexScreenMode::SideMenu`] an arrow marks the selected item.
-fn draw_dex_list(state: &PokedexScreenState, is_zh: bool, fb: &mut FrameBuffer) {
+fn draw_dex_list(
+    state: &PokedexScreenState,
+    is_zh: bool,
+    res: &mut Option<ResourceManager>,
+    fb: &mut FrameBuffer,
+) {
     fb.clear(Rgba::WHITE);
     let fg = Rgba::BLACK;
     let t = TILE_SIZE;
 
-    // Right column divider lines (asm: horizontal at (15,8), vertical at
-    // (14,1..9) — drawn first so long names overwrite them, as in the asm).
+    // HandlePokedexListMenu draws the alternating Pokédex divider over
+    // the whole screen, plus the battle HUD horizontal tile at (15,8).
     for col in 15..20 {
-        fill_tile(col * t, 8 * t, fg, fb);
+        draw_dex_tile(DexTile::Horizontal, col * t, 8 * t, res, fb);
     }
-    for row in 1..10 {
-        fill_tile(14 * t, row * t, fg, fb);
+    for row in 0..18 {
+        let tile = if row == 0 || row % 2 == 1 {
+            DexTile::Stem
+        } else {
+            DexTile::Box
+        };
+        draw_dex_tile(tile, 14 * t, row * t, res, fb);
     }
 
-    draw_text(if is_zh { "内容" } else { "CONTENTS" }, t, t, fg, fb);
+    draw_text(
+        if is_zh { "内容" } else { "CONTENTS" },
+        t,
+        if is_zh { t } else { 0 },
+        fg,
+        fb,
+    );
 
     let scroll = state.scroll_offset();
     for row in 0..LIST_ROWS {
@@ -73,11 +87,17 @@ fn draw_dex_list(state: &PokedexScreenState, is_zh: bool, fb: &mut FrameBuffer) 
             break;
         }
         let y = (3 + row * 2) as u32 * t;
-        draw_text(&format!("{:03}", n), t, y, fg, fb);
-        let name_x = t * 5;
+        draw_text(
+            &format!("{:03}", n),
+            t,
+            if is_zh { y } else { y - t },
+            fg,
+            fb,
+        );
+        let name_x = if is_zh { t * 5 } else { t * 4 };
         if state.is_seen(n) {
             if state.is_owned(n) {
-                draw_pokeball_mark(t * 4, y, fb);
+                draw_dex_tile(DexTile::Ball, if is_zh { t * 4 } else { t * 3 }, y, res, fb);
             }
             let name = if is_zh {
                 pokered_data::lang_data::species_name(Species::from_index_id(n as u8), true)
@@ -94,24 +114,59 @@ fn draw_dex_list(state: &PokedexScreenState, is_zh: bool, fb: &mut FrameBuffer) 
 
     // Cursor arrow on the selected row.
     let sel_row = state.cursor() - 1 - scroll;
-    draw_text("▶", 0, (3 + sel_row * 2) as u32 * t, fg, fb);
+    let cursor_y = (3 + sel_row * 2) as u32 * t;
+    draw_text(
+        if state.mode() == PokedexScreenMode::SideMenu {
+            "▷"
+        } else {
+            "▶"
+        },
+        0,
+        cursor_y,
+        fg,
+        fb,
+    );
 
     // Right column: SEEN/OWN totals (asm prints at hlcoord 16,2-6).
     draw_text(ui_label("SEEN", is_zh), 16 * t, 2 * t, fg, fb);
-    draw_text(&format!("{:3}", state.seen_count()), 16 * t, 3 * t + if is_zh { 4 } else { 0 }, fg, fb);
+    draw_text(
+        &format!("{:3}", state.seen_count()),
+        16 * t,
+        3 * t + if is_zh { 4 } else { 0 },
+        fg,
+        fb,
+    );
     draw_text(ui_label("OWN", is_zh), 16 * t, 5 * t, fg, fb);
-    draw_text(&format!("{:3}", state.owned_count()), 16 * t, 6 * t + if is_zh { 4 } else { 0 }, fg, fb);
+    draw_text(
+        &format!("{:3}", state.owned_count()),
+        16 * t,
+        6 * t + if is_zh { 4 } else { 0 },
+        fg,
+        fb,
+    );
 
     // Side menu items (PokedexMenuItemsText): DATA/CRY/AREA/QUIT at (16,10..13).
     let row_step = if is_zh { 2 } else { 1 };
     let items = ["DATA", "CRY", "AREA", "QUIT"];
     for (i, item) in items.iter().enumerate() {
-        draw_text(ui_label(item, is_zh), 16 * t, (10 + i * row_step) as u32 * t, fg, fb);
+        draw_text(
+            ui_label(item, is_zh),
+            16 * t,
+            (10 + i * row_step) as u32 * t,
+            fg,
+            fb,
+        );
     }
 
     // The side-menu cursor arrow, at (15, 10+item) (wTopMenuItemX=15, Y=10).
     if state.mode() == PokedexScreenMode::SideMenu {
-        draw_text("▶", 15 * t, (10 + state.side_menu_cursor() as u32 * row_step as u32) * t, fg, fb);
+        draw_text(
+            "▶",
+            15 * t,
+            (10 + state.side_menu_cursor() as u32 * row_step as u32) * t,
+            fg,
+            fb,
+        );
     }
 }
 
@@ -226,7 +281,13 @@ pub fn draw_dex_area(
             draw_text(ui_label("AREA UNKNOWN", is_zh), 2 * t, 8 * t, fg, fb);
         } else {
             for (i, map) in areas.iter().enumerate().take(7) {
-                draw_text(map_name_for_map(*map, is_zh), 2 * t, (4 + i as u32) * t, fg, fb);
+                draw_text(
+                    map_name_for_map(*map, is_zh),
+                    2 * t,
+                    (4 + i as u32) * t,
+                    fg,
+                    fb,
+                );
             }
         }
     }
@@ -239,26 +300,67 @@ pub fn draw_dex_area(
 
 /// The Pokéball mark the original puts next to owned Pokémon (tile $72).
 /// Drawn programmatically: circle outline + equator + center button.
-fn draw_pokeball_mark(x: u32, y: u32, fb: &mut FrameBuffer) {
-    const BALL: [u8; 8] = [
-        0b0011_1100,
-        0b0110_0110,
-        0b1100_0011,
-        0b1111_1111,
-        0b1111_1111,
-        0b1100_0011,
-        0b0110_0110,
-        0b0011_1100,
-    ];
-    for (dy, bits) in BALL.iter().enumerate() {
-        for dx in 0..8u32 {
-            if bits & (0x80 >> dx) != 0 {
-                let px = x + dx;
-                let py = y + dy as u32;
-                if px < fb.width() && py < fb.height() {
-                    fb.set_pixel(px, py, Rgba::BLACK);
-                }
-            }
+#[derive(Clone, Copy)]
+enum DexTile {
+    Box,
+    Stem,
+    Horizontal,
+    Ball,
+}
+
+/// Original UI artwork, also available without a resource manager (headless
+/// tests and minimal frontends). These are graphics, not text glyphs.
+fn draw_dex_tile(
+    tile: DexTile,
+    x: u32,
+    y: u32,
+    res: &mut Option<ResourceManager>,
+    fb: &mut FrameBuffer,
+) {
+    let (category, name, index, bits): (_, _, _, [u8; 16]) = match tile {
+        DexTile::Box => (
+            AssetCategory::Pokedex,
+            "pokedex",
+            16,
+            [
+                0x18, 0x18, 0x7e, 0x7e, 0x66, 0x42, 0x66, 0x42, 0x66, 0x42, 0x66, 0x42, 0x7e, 0x7e,
+                0x18, 0x18,
+            ],
+        ),
+        DexTile::Stem => (AssetCategory::Pokedex, "pokedex", 17, [0x18; 16]),
+        DexTile::Horizontal => (
+            AssetCategory::Font,
+            "font_battle_extra",
+            24,
+            [
+                0, 0, 0, 0, 0xff, 0xff, 0, 0, 0xff, 0xff, 0xff, 0xff, 0, 0, 0, 0,
+            ],
+        ),
+        DexTile::Ball => (
+            AssetCategory::Battle,
+            "balls",
+            0,
+            [
+                0, 0, 0x1c, 0x1c, 0x22, 0x3e, 0x51, 0x6f, 0x41, 0x7f, 0x7f, 0x41, 0x3e, 0x22, 0x1c,
+                0x1c,
+            ],
+        ),
+    };
+    if let Some(rm) = res {
+        if let Ok(sheet) = rm.load_asset_2bpp(category, name) {
+            blit_single_tile(fb, &sheet.tileset, index, x, y, &GRAYSCALE_PALETTE);
+            return;
+        }
+    }
+    for dy in 0..8 {
+        for dx in 0..8 {
+            let color =
+                ((bits[dy * 2] >> (7 - dx)) & 1) | (((bits[dy * 2 + 1] >> (7 - dx)) & 1) << 1);
+            fb.set_pixel(
+                x + dx as u32,
+                y + dy as u32,
+                GRAYSCALE_PALETTE.colors[color as usize],
+            );
         }
     }
 }
@@ -491,6 +593,20 @@ mod tests {
         assert!(data_row_clean, "no arrow at (15,10) when CRY is selected");
         let path = std::env::temp_dir().join("pokedex_side_menu_test.png");
         fb.save_png(&path).expect("save side menu png");
+    }
+
+    #[test]
+    fn contents_ui_tiles_match_canonical_assets_without_resources() {
+        let mut resources = Some(ResourceManager::new(
+            pokered_renderer::resource::AssetRoot::auto_detect().expect("test gfx root"),
+        ));
+        for tile in [DexTile::Box, DexTile::Stem, DexTile::Horizontal, DexTile::Ball] {
+            let mut loaded = new_fb();
+            let mut fallback = new_fb();
+            draw_dex_tile(tile, 8, 8, &mut resources, &mut loaded);
+            draw_dex_tile(tile, 8, 8, &mut None, &mut fallback);
+            assert_eq!(loaded, fallback, "headless UI artwork must match asset-backed rendering");
+        }
     }
 
     #[test]
