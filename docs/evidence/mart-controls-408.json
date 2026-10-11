@@ -1,0 +1,888 @@
+{
+  "base": "6ce1ebb0edc1039216722765f2d61b6abcf40961",
+  "runtime_candidate": "be31476ddde62ae8da1b8d17eafd098e7ff286ac",
+  "scope": "Functional boundary behavior; batched idle, no entire animation parity claim",
+  "native_tests": {
+    "Core_shop_passed": 50,
+    "App_passed": 220,
+    "App_preexisting_ignored": 32
+  },
+  "boundaries": {
+    "base": "6ce1ebb0edc1039216722765f2d61b6abcf40961",
+    "candidate": "be31476ddde62ae8da1b8d17eafd098e7ff286ac",
+    "scope": "Functional boundary behavior; batched idle, no entire animation parity claim",
+    "cases": {
+      "main-up": {
+        "before": {
+          "case": "main-up",
+          "commit": "6ce1ebb0edc1039216722765f2d61b6abcf40961",
+          "binary_sha256": "5bd8deda014db1418926d82a33ebf63e765a17dbaebf95b6be8328b9fdd571a5",
+          "state_samples": 5,
+          "scope": "Functional transaction branches only; batched idle input, not animation timing proof",
+          "final_money": 3000,
+          "final_bag": [],
+          "final_phase": "MainMenu { cursor: Quit }",
+          "clamp_assertions": false,
+          "input": "real debug press_timeline only after controlled pretrigger warp/snapshot; no subsequent mutation",
+          "audio": "no audio CLI; purchase SFX waiting is separately covered by core test",
+          "full_bag_fixture": null
+        },
+        "after": {
+          "case": "main-up",
+          "commit": "be31476ddde62ae8da1b8d17eafd098e7ff286ac",
+          "binary_sha256": "4adb6f234e0e2884779ecb41912967bd2dd8e65a8e2b03f63949a2ac7a5ec027",
+          "state_samples": 5,
+          "scope": "Functional transaction branches only; batched idle input, not animation timing proof",
+          "final_money": 3000,
+          "final_bag": [],
+          "final_phase": "MainMenu { cursor: Buy }",
+          "clamp_assertions": true,
+          "input": "real debug press_timeline only after controlled pretrigger warp/snapshot; no subsequent mutation",
+          "audio": "no audio CLI; purchase SFX waiting is separately covered by core test",
+          "full_bag_fixture": null
+        },
+        "same_schedule": true,
+        "last_frame_count": 350,
+        "each_side_repeated_png_json_identical": true,
+        "input_schedule_sha256": "c1c3e4aa9ed35ea09108528ac970326bcdf64f93d02427fa9fe0506ea8ad1b67"
+      },
+      "main-down": {
+        "before": {
+          "case": "main-down",
+          "commit": "6ce1ebb0edc1039216722765f2d61b6abcf40961",
+          "binary_sha256": "5bd8deda014db1418926d82a33ebf63e765a17dbaebf95b6be8328b9fdd571a5",
+          "state_samples": 13,
+          "scope": "Functional transaction branches only; batched idle input, not animation timing proof",
+          "final_money": 3000,
+          "final_bag": [],
+          "final_phase": "MainMenu { cursor: Buy }",
+          "clamp_assertions": false,
+          "input": "real debug press_timeline only after controlled pretrigger warp/snapshot; no subsequent mutation",
+          "audio": "no audio CLI; purchase SFX waiting is separately covered by core test",
+          "full_bag_fixture": null
+        },
+        "after": {
+          "case": "main-down",
+          "commit": "be31476ddde62ae8da1b8d17eafd098e7ff286ac",
+          "binary_sha256": "4adb6f234e0e2884779ecb41912967bd2dd8e65a8e2b03f63949a2ac7a5ec027",
+          "state_samples": 13,
+          "scope": "Functional transaction branches only; batched idle input, not animation timing proof",
+          "final_money": 3000,
+          "final_bag": [],
+          "final_phase": "MainMenu { cursor: Quit }",
+          "clamp_assertions": true,
+          "input": "real debug press_timeline only after controlled pretrigger warp/snapshot; no subsequent mutation",
+          "audio": "no audio CLI; purchase SFX waiting is separately covered by core test",
+          "full_bag_fixture": null
+        },
+        "same_schedule": true,
+        "last_frame_count": 383,
+        "each_side_repeated_png_json_identical": true,
+        "input_schedule_sha256": "24f747fddd33f174593c2299ac57aa1fe8d96cce53faf57e5705b3d441b03e8b"
+      },
+      "buy-up": {
+        "before": {
+          "case": "buy-up",
+          "commit": "6ce1ebb0edc1039216722765f2d61b6abcf40961",
+          "binary_sha256": "5bd8deda014db1418926d82a33ebf63e765a17dbaebf95b6be8328b9fdd571a5",
+          "state_samples": 19,
+          "scope": "Functional transaction branches only; batched idle input, not animation timing proof",
+          "final_money": 3000,
+          "final_bag": [],
+          "final_phase": "Buy(SelectItem { cursor: 7 })",
+          "clamp_assertions": false,
+          "input": "real debug press_timeline only after controlled pretrigger warp/snapshot; no subsequent mutation",
+          "audio": "no audio CLI; purchase SFX waiting is separately covered by core test",
+          "full_bag_fixture": null
+        },
+        "after": {
+          "case": "buy-up",
+          "commit": "be31476ddde62ae8da1b8d17eafd098e7ff286ac",
+          "binary_sha256": "4adb6f234e0e2884779ecb41912967bd2dd8e65a8e2b03f63949a2ac7a5ec027",
+          "state_samples": 19,
+          "scope": "Functional transaction branches only; batched idle input, not animation timing proof",
+          "final_money": 3000,
+          "final_bag": [],
+          "final_phase": "Buy(SelectItem { cursor: 0 })",
+          "clamp_assertions": true,
+          "input": "real debug press_timeline only after controlled pretrigger warp/snapshot; no subsequent mutation",
+          "audio": "no audio CLI; purchase SFX waiting is separately covered by core test",
+          "full_bag_fixture": null
+        },
+        "same_schedule": true,
+        "last_frame_count": 493,
+        "each_side_repeated_png_json_identical": true,
+        "input_schedule_sha256": "6027bad0706863037b5953efe171f7c5f8e5fe43cef25db0ce5cd9c5026d9046"
+      },
+      "buy-down": {
+        "before": {
+          "case": "buy-down",
+          "commit": "6ce1ebb0edc1039216722765f2d61b6abcf40961",
+          "binary_sha256": "5bd8deda014db1418926d82a33ebf63e765a17dbaebf95b6be8328b9fdd571a5",
+          "state_samples": 51,
+          "scope": "Functional transaction branches only; batched idle input, not animation timing proof",
+          "final_money": 3000,
+          "final_bag": [],
+          "final_phase": "Buy(SelectItem { cursor: 1 })",
+          "clamp_assertions": false,
+          "input": "real debug press_timeline only after controlled pretrigger warp/snapshot; no subsequent mutation",
+          "audio": "no audio CLI; purchase SFX waiting is separately covered by core test",
+          "full_bag_fixture": null
+        },
+        "after": {
+          "case": "buy-down",
+          "commit": "be31476ddde62ae8da1b8d17eafd098e7ff286ac",
+          "binary_sha256": "4adb6f234e0e2884779ecb41912967bd2dd8e65a8e2b03f63949a2ac7a5ec027",
+          "state_samples": 51,
+          "scope": "Functional transaction branches only; batched idle input, not animation timing proof",
+          "final_money": 3000,
+          "final_bag": [],
+          "final_phase": "Buy(SelectItem { cursor: 7 })",
+          "clamp_assertions": true,
+          "input": "real debug press_timeline only after controlled pretrigger warp/snapshot; no subsequent mutation",
+          "audio": "no audio CLI; purchase SFX waiting is separately covered by core test",
+          "full_bag_fixture": null
+        },
+        "same_schedule": true,
+        "last_frame_count": 688,
+        "each_side_repeated_png_json_identical": true,
+        "input_schedule_sha256": "38016c52f146d2d9664e5075cab8129e11edceb1f71d8bfe2430a77e98e02f6b"
+      },
+      "sell-up": {
+        "before": {
+          "case": "sell-up",
+          "commit": "6ce1ebb0edc1039216722765f2d61b6abcf40961",
+          "binary_sha256": "5bd8deda014db1418926d82a33ebf63e765a17dbaebf95b6be8328b9fdd571a5",
+          "state_samples": 30,
+          "scope": "Functional transaction branches only; batched idle input, not animation timing proof",
+          "final_money": 3000,
+          "final_bag": [
+            {
+              "item": "Potion",
+              "qty": 4
+            }
+          ],
+          "final_phase": "Sell(SelectItem { cursor: 1 })",
+          "clamp_assertions": false,
+          "input": "real debug press_timeline only after controlled pretrigger warp/snapshot; no subsequent mutation",
+          "audio": "no audio CLI; purchase SFX waiting is separately covered by core test",
+          "full_bag_fixture": null
+        },
+        "after": {
+          "case": "sell-up",
+          "commit": "be31476ddde62ae8da1b8d17eafd098e7ff286ac",
+          "binary_sha256": "4adb6f234e0e2884779ecb41912967bd2dd8e65a8e2b03f63949a2ac7a5ec027",
+          "state_samples": 30,
+          "scope": "Functional transaction branches only; batched idle input, not animation timing proof",
+          "final_money": 3000,
+          "final_bag": [
+            {
+              "item": "Potion",
+              "qty": 4
+            }
+          ],
+          "final_phase": "Sell(SelectItem { cursor: 0 })",
+          "clamp_assertions": true,
+          "input": "real debug press_timeline only after controlled pretrigger warp/snapshot; no subsequent mutation",
+          "audio": "no audio CLI; purchase SFX waiting is separately covered by core test",
+          "full_bag_fixture": null
+        },
+        "same_schedule": true,
+        "last_frame_count": 576,
+        "each_side_repeated_png_json_identical": true,
+        "input_schedule_sha256": "77f06eb390cd164a8694094c0ad08ed19584c281847d71d34e6d779f1621830a"
+      },
+      "sell-down": {
+        "before": {
+          "case": "sell-down",
+          "commit": "6ce1ebb0edc1039216722765f2d61b6abcf40961",
+          "binary_sha256": "5bd8deda014db1418926d82a33ebf63e765a17dbaebf95b6be8328b9fdd571a5",
+          "state_samples": 38,
+          "scope": "Functional transaction branches only; batched idle input, not animation timing proof",
+          "final_money": 3000,
+          "final_bag": [
+            {
+              "item": "Potion",
+              "qty": 4
+            }
+          ],
+          "final_phase": "Sell(SelectItem { cursor: 1 })",
+          "clamp_assertions": false,
+          "input": "real debug press_timeline only after controlled pretrigger warp/snapshot; no subsequent mutation",
+          "audio": "no audio CLI; purchase SFX waiting is separately covered by core test",
+          "full_bag_fixture": null
+        },
+        "after": {
+          "case": "sell-down",
+          "commit": "be31476ddde62ae8da1b8d17eafd098e7ff286ac",
+          "binary_sha256": "4adb6f234e0e2884779ecb41912967bd2dd8e65a8e2b03f63949a2ac7a5ec027",
+          "state_samples": 38,
+          "scope": "Functional transaction branches only; batched idle input, not animation timing proof",
+          "final_money": 3000,
+          "final_bag": [
+            {
+              "item": "Potion",
+              "qty": 4
+            }
+          ],
+          "final_phase": "Sell(SelectItem { cursor: 1 })",
+          "clamp_assertions": true,
+          "input": "real debug press_timeline only after controlled pretrigger warp/snapshot; no subsequent mutation",
+          "audio": "no audio CLI; purchase SFX waiting is separately covered by core test",
+          "full_bag_fixture": null
+        },
+        "same_schedule": true,
+        "last_frame_count": 609,
+        "each_side_repeated_png_json_identical": true,
+        "input_schedule_sha256": "6570934e10fc3ff715f3758df9a004c36f15f344d7b7df20fdefaff8777e219e"
+      },
+      "confirm-up": {
+        "before": {
+          "case": "confirm-up",
+          "commit": "6ce1ebb0edc1039216722765f2d61b6abcf40961",
+          "binary_sha256": "5bd8deda014db1418926d82a33ebf63e765a17dbaebf95b6be8328b9fdd571a5",
+          "state_samples": 56,
+          "scope": "Functional transaction branches only; batched idle input, not animation timing proof",
+          "final_money": 3000,
+          "final_bag": [],
+          "final_phase": "Buy(SelectItem { cursor: 0 })",
+          "clamp_assertions": false,
+          "input": "real debug press_timeline only after controlled pretrigger warp/snapshot; no subsequent mutation",
+          "audio": "no audio CLI; purchase SFX waiting is separately covered by core test",
+          "full_bag_fixture": null
+        },
+        "after": {
+          "case": "confirm-up",
+          "commit": "be31476ddde62ae8da1b8d17eafd098e7ff286ac",
+          "binary_sha256": "4adb6f234e0e2884779ecb41912967bd2dd8e65a8e2b03f63949a2ac7a5ec027",
+          "state_samples": 56,
+          "scope": "Functional transaction branches only; batched idle input, not animation timing proof",
+          "final_money": 2800,
+          "final_bag": [
+            {
+              "item": "PokeBall",
+              "qty": 1
+            }
+          ],
+          "final_phase": "Buy(Result { dialogue: Success { total_cost: 200 }, return_to_list: true })",
+          "clamp_assertions": true,
+          "input": "real debug press_timeline only after controlled pretrigger warp/snapshot; no subsequent mutation",
+          "audio": "no audio CLI; purchase SFX waiting is separately covered by core test",
+          "full_bag_fixture": null
+        },
+        "same_schedule": true,
+        "last_frame_count": 1036,
+        "each_side_repeated_png_json_identical": true,
+        "input_schedule_sha256": "e2d2ee4ee549d07f44c93b48148f91b89d06aca62c13edbc7aa05db82b8e4d48"
+      },
+      "confirm-down": {
+        "before": {
+          "case": "confirm-down",
+          "commit": "6ce1ebb0edc1039216722765f2d61b6abcf40961",
+          "binary_sha256": "5bd8deda014db1418926d82a33ebf63e765a17dbaebf95b6be8328b9fdd571a5",
+          "state_samples": 60,
+          "scope": "Functional transaction branches only; batched idle input, not animation timing proof",
+          "final_money": 2800,
+          "final_bag": [
+            {
+              "item": "PokeBall",
+              "qty": 1
+            }
+          ],
+          "final_phase": "Buy(Result { dialogue: Success { total_cost: 200 }, return_to_list: true })",
+          "clamp_assertions": false,
+          "input": "real debug press_timeline only after controlled pretrigger warp/snapshot; no subsequent mutation",
+          "audio": "no audio CLI; purchase SFX waiting is separately covered by core test",
+          "full_bag_fixture": null
+        },
+        "after": {
+          "case": "confirm-down",
+          "commit": "be31476ddde62ae8da1b8d17eafd098e7ff286ac",
+          "binary_sha256": "4adb6f234e0e2884779ecb41912967bd2dd8e65a8e2b03f63949a2ac7a5ec027",
+          "state_samples": 60,
+          "scope": "Functional transaction branches only; batched idle input, not animation timing proof",
+          "final_money": 3000,
+          "final_bag": [],
+          "final_phase": "Buy(SelectItem { cursor: 0 })",
+          "clamp_assertions": true,
+          "input": "real debug press_timeline only after controlled pretrigger warp/snapshot; no subsequent mutation",
+          "audio": "no audio CLI; purchase SFX waiting is separately covered by core test",
+          "full_bag_fixture": null
+        },
+        "same_schedule": true,
+        "last_frame_count": 1042,
+        "each_side_repeated_png_json_identical": true,
+        "input_schedule_sha256": "d6055f20382c9c24456702226f324e4466eaa693392ea24173ce8d1e29a3321c"
+      }
+    },
+    "screenshots": [
+      {
+        "path": "docs/screenshots/mart-controls-407-main-up-before.png",
+        "case": "main-up",
+        "side": "before",
+        "frame_count": 350,
+        "sha256": "7b6d85b612915a5b0a01f43ff20a1b28bd30c8f10fe1922816ae4624f1c3d454"
+      },
+      {
+        "path": "docs/screenshots/mart-controls-407-main-up-after.png",
+        "case": "main-up",
+        "side": "after",
+        "frame_count": 350,
+        "sha256": "afa7eae6535bc7fa49ab7f5b382c6b7ff47bdcfce666d96953f29a10758488a3"
+      },
+      {
+        "path": "docs/screenshots/mart-controls-407-buy-up-before.png",
+        "case": "buy-up",
+        "side": "before",
+        "frame_count": 493,
+        "sha256": "315b302a2b1db741b666dfba5d2b25cb505b7a55ffffef65290499449454b501"
+      },
+      {
+        "path": "docs/screenshots/mart-controls-407-buy-up-after.png",
+        "case": "buy-up",
+        "side": "after",
+        "frame_count": 493,
+        "sha256": "082475c493a3e5ca957245ac9dea2606ee7cded2798ffa81a5ff69d42de2e224"
+      },
+      {
+        "path": "docs/screenshots/mart-controls-407-buy-down-before.png",
+        "case": "buy-down",
+        "side": "before",
+        "frame_count": 688,
+        "sha256": "1722fe5ae40dd95c1fb3f1dfd820eeb11ccad98ca71a27908b76d2664f1beeaa"
+      },
+      {
+        "path": "docs/screenshots/mart-controls-407-buy-down-after.png",
+        "case": "buy-down",
+        "side": "after",
+        "frame_count": 688,
+        "sha256": "315b302a2b1db741b666dfba5d2b25cb505b7a55ffffef65290499449454b501"
+      },
+      {
+        "path": "docs/screenshots/mart-controls-407-confirm-up-before.png",
+        "case": "confirm-up",
+        "side": "before",
+        "frame_count": 1036,
+        "sha256": "082475c493a3e5ca957245ac9dea2606ee7cded2798ffa81a5ff69d42de2e224"
+      },
+      {
+        "path": "docs/screenshots/mart-controls-407-confirm-up-after.png",
+        "case": "confirm-up",
+        "side": "after",
+        "frame_count": 1036,
+        "sha256": "825638c806e58979257b26b0fb26259a6bc568d4d4d6ebc486f7c06db53fc775"
+      },
+      {
+        "path": "docs/screenshots/mart-controls-407-confirm-down-before.png",
+        "case": "confirm-down",
+        "side": "before",
+        "frame_count": 1042,
+        "sha256": "837ba884372989c5ddc14f946786ab78f96df5ac541c44ede939a34bb1d33327"
+      },
+      {
+        "path": "docs/screenshots/mart-controls-407-confirm-down-after.png",
+        "case": "confirm-down",
+        "side": "after",
+        "frame_count": 1042,
+        "sha256": "082475c493a3e5ca957245ac9dea2606ee7cded2798ffa81a5ff69d42de2e224"
+      }
+    ]
+  },
+  "transaction_cases_each_repeated_twice": [
+    {
+      "case": "purchase",
+      "binary_sha256": "4adb6f234e0e2884779ecb41912967bd2dd8e65a8e2b03f63949a2ac7a5ec027",
+      "state_samples": 72,
+      "scope": "Functional transaction branches only; batched idle input, not animation timing proof",
+      "final_money": 2800,
+      "final_bag": [
+        {
+          "item": "PokeBall",
+          "qty": 1
+        }
+      ],
+      "input": "real debug press_timeline only after controlled pretrigger warp/snapshot; no subsequent mutation",
+      "audio": "no audio CLI; purchase SFX waiting is separately covered by core test",
+      "full_bag_fixture": null
+    },
+    {
+      "case": "buy-no",
+      "binary_sha256": "4adb6f234e0e2884779ecb41912967bd2dd8e65a8e2b03f63949a2ac7a5ec027",
+      "state_samples": 54,
+      "scope": "Functional transaction branches only; batched idle input, not animation timing proof",
+      "final_money": 3000,
+      "final_bag": [],
+      "input": "real debug press_timeline only after controlled pretrigger warp/snapshot; no subsequent mutation",
+      "audio": "no audio CLI; purchase SFX waiting is separately covered by core test",
+      "full_bag_fixture": null
+    },
+    {
+      "case": "sell-success",
+      "binary_sha256": "4adb6f234e0e2884779ecb41912967bd2dd8e65a8e2b03f63949a2ac7a5ec027",
+      "state_samples": 63,
+      "scope": "Functional transaction branches only; batched idle input, not animation timing proof",
+      "final_money": 3600,
+      "final_bag": [],
+      "input": "real debug press_timeline only after controlled pretrigger warp/snapshot; no subsequent mutation",
+      "audio": "no audio CLI; purchase SFX waiting is separately covered by core test",
+      "full_bag_fixture": null
+    },
+    {
+      "case": "sell-no",
+      "binary_sha256": "4adb6f234e0e2884779ecb41912967bd2dd8e65a8e2b03f63949a2ac7a5ec027",
+      "state_samples": 57,
+      "scope": "Functional transaction branches only; batched idle input, not animation timing proof",
+      "final_money": 3000,
+      "final_bag": [
+        {
+          "item": "Potion",
+          "qty": 4
+        }
+      ],
+      "input": "real debug press_timeline only after controlled pretrigger warp/snapshot; no subsequent mutation",
+      "audio": "no audio CLI; purchase SFX waiting is separately covered by core test",
+      "full_bag_fixture": null
+    },
+    {
+      "case": "unsellable",
+      "binary_sha256": "4adb6f234e0e2884779ecb41912967bd2dd8e65a8e2b03f63949a2ac7a5ec027",
+      "state_samples": 48,
+      "scope": "Functional transaction branches only; batched idle input, not animation timing proof",
+      "final_money": 3000,
+      "final_bag": [
+        {
+          "item": "Bicycle",
+          "qty": 1
+        }
+      ],
+      "input": "real debug press_timeline only after controlled pretrigger warp/snapshot; no subsequent mutation",
+      "audio": "no audio CLI; purchase SFX waiting is separately covered by core test",
+      "full_bag_fixture": null
+    },
+    {
+      "case": "buy-insufficient",
+      "binary_sha256": "4adb6f234e0e2884779ecb41912967bd2dd8e65a8e2b03f63949a2ac7a5ec027",
+      "state_samples": 72,
+      "scope": "Functional transaction branches only; batched idle input, not animation timing proof",
+      "final_money": 0,
+      "final_bag": [],
+      "input": "real debug press_timeline only after controlled pretrigger warp/snapshot; no subsequent mutation",
+      "audio": "no audio CLI; purchase SFX waiting is separately covered by core test",
+      "full_bag_fixture": null
+    },
+    {
+      "case": "buy-full",
+      "binary_sha256": "4adb6f234e0e2884779ecb41912967bd2dd8e65a8e2b03f63949a2ac7a5ec027",
+      "state_samples": 74,
+      "scope": "Functional transaction branches only; batched idle input, not animation timing proof",
+      "final_money": 3000,
+      "final_bag": [
+        {
+          "item": "MasterBall",
+          "qty": 99
+        },
+        {
+          "item": "UltraBall",
+          "qty": 99
+        },
+        {
+          "item": "GreatBall",
+          "qty": 99
+        },
+        {
+          "item": "PokeBall",
+          "qty": 99
+        },
+        {
+          "item": "TownMap",
+          "qty": 99
+        },
+        {
+          "item": "Bicycle",
+          "qty": 99
+        },
+        {
+          "item": "Antidote",
+          "qty": 99
+        },
+        {
+          "item": "BurnHeal",
+          "qty": 99
+        },
+        {
+          "item": "IceHeal",
+          "qty": 99
+        },
+        {
+          "item": "Awakening",
+          "qty": 99
+        },
+        {
+          "item": "ParlyzHeal",
+          "qty": 99
+        },
+        {
+          "item": "FullRestore",
+          "qty": 99
+        },
+        {
+          "item": "MaxPotion",
+          "qty": 99
+        },
+        {
+          "item": "HyperPotion",
+          "qty": 99
+        },
+        {
+          "item": "SuperPotion",
+          "qty": 99
+        },
+        {
+          "item": "EscapeRope",
+          "qty": 99
+        },
+        {
+          "item": "Repel",
+          "qty": 99
+        },
+        {
+          "item": "FireStone",
+          "qty": 99
+        },
+        {
+          "item": "ThunderStone",
+          "qty": 99
+        },
+        {
+          "item": "WaterStone",
+          "qty": 99
+        }
+      ],
+      "input": "real debug press_timeline only after controlled pretrigger warp/snapshot; no subsequent mutation",
+      "audio": "no audio CLI; purchase SFX waiting is separately covered by core test",
+      "full_bag_fixture": "20 valid native items qty99; differs from original IDs1..20 but same capacity/stock-full failure branch"
+    }
+  ],
+  "original_menu_sound_and_confirmation": {
+    "scope": "original187 menu sound and15frame handoff, two byte-identical copies each; saleSound completion includes bag-removal timing",
+    "cases": {
+      "purchase": {
+        "files_per_copy": 819,
+        "two_copies_identical": true,
+        "response_frame": 675,
+        "money_change_frame": 690,
+        "list_return_frames": [],
+        "sounds": [
+          {
+            "t": 204,
+            "id": 144
+          },
+          {
+            "t": 383,
+            "id": 144
+          },
+          {
+            "t": 560,
+            "id": 144
+          },
+          {
+            "t": 675,
+            "id": 144
+          },
+          {
+            "t": 692,
+            "id": 178
+          }
+        ]
+      },
+      "buy-no": {
+        "files_per_copy": 819,
+        "two_copies_identical": true,
+        "response_frame": 675,
+        "money_change_frame": null,
+        "list_return_frames": [
+          690
+        ],
+        "sounds": [
+          {
+            "t": 204,
+            "id": 144
+          },
+          {
+            "t": 383,
+            "id": 144
+          },
+          {
+            "t": 560,
+            "id": 144
+          },
+          {
+            "t": 675,
+            "id": 144
+          }
+        ]
+      },
+      "sell-success": {
+        "files_per_copy": 869,
+        "two_copies_identical": true,
+        "response_frame": 725,
+        "money_change_frame": 740,
+        "list_return_frames": [
+          759
+        ],
+        "sounds": [
+          {
+            "t": 228,
+            "id": 144
+          },
+          {
+            "t": 467,
+            "id": 144
+          },
+          {
+            "t": 725,
+            "id": 144
+          },
+          {
+            "t": 742,
+            "id": 178
+          }
+        ]
+      }
+    }
+  },
+  "current_owning_audio_source_comparison": {
+    "scope": "semantic sale confirmation/commit/cash/list timing; not PPU/caption pixel equivalence",
+    "original": {
+      "commit": 15,
+      "cash": 17,
+      "list": 34
+    },
+    "current_candidate_pcm_owner": {
+      "commit": 15,
+      "cash": 17,
+      "list": 34
+    },
+    "candidate": "be31476ddde62ae8da1b8d17eafd098e7ff286ac",
+    "original_verification_sha256": "2ef9ecb649bee6e5aae6bece4cd3985d22ad3b5880f0a8d261407f6a9804b9f2",
+    "owning_log_sha256": "fc7372480bcd20163b75035ab89a3819a93f1071cf9cf59406b794be55b87c10",
+    "PASS": true
+  },
+  "GBA": {
+    "production_passed": true,
+    "iwram_bytes": 22120,
+    "iwram_limit": 24320,
+    "performance_original31_budget_passed": true,
+    "baseline_sha256": "c9ef15a97a6f43d994fe177d7e0212a6a6cbaf561be955a5995fef4da7faebba",
+    "performance": {
+      "emulator": "stdbuf -oL -eL /home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/gba-perf-tools/usr/games/mgba -C videoRenderer=0",
+      "scenarios": {
+        "battle-entry-v1": {
+          "draw_max_ticks": 8858,
+          "draw_per_frame_ticks": 2653,
+          "present_max_ticks": 782,
+          "present_per_frame_ticks": 567,
+          "renders": 369,
+          "samples": 500,
+          "scenario": "battle-entry-v1",
+          "update_avg_ticks": 210,
+          "update_core_avg_ticks": 200,
+          "update_flush_avg_ticks": 1
+        },
+        "intro-title-v1": {
+          "draw_max_ticks": 9829,
+          "draw_per_frame_ticks": 1204,
+          "present_max_ticks": 782,
+          "present_per_frame_ticks": 353,
+          "renders": 115,
+          "samples": 250,
+          "scenario": "intro-title-v1",
+          "update_avg_ticks": 115,
+          "update_core_avg_ticks": 106,
+          "update_flush_avg_ticks": 1
+        },
+        "oak-dialogue-v1": {
+          "draw_max_ticks": 9003,
+          "draw_per_frame_ticks": 2959,
+          "present_max_ticks": 781,
+          "present_per_frame_ticks": 392,
+          "renders": 307,
+          "samples": 600,
+          "scenario": "oak-dialogue-v1",
+          "update_avg_ticks": 185,
+          "update_core_avg_ticks": 175,
+          "update_flush_avg_ticks": 1
+        },
+        "overworld-idle-v1": {
+          "draw_max_ticks": 0,
+          "draw_per_frame_ticks": 0,
+          "present_max_ticks": 0,
+          "present_per_frame_ticks": 0,
+          "renders": 0,
+          "samples": 1400,
+          "scenario": "overworld-idle-v1",
+          "update_avg_ticks": 375,
+          "update_core_avg_ticks": 365,
+          "update_flush_avg_ticks": 1
+        },
+        "overworld-movement-v1": {
+          "draw_max_ticks": 2935,
+          "draw_per_frame_ticks": 276,
+          "present_max_ticks": 781,
+          "present_per_frame_ticks": 77,
+          "renders": 26,
+          "samples": 240,
+          "scenario": "overworld-movement-v1",
+          "update_avg_ticks": 388,
+          "update_core_avg_ticks": 378,
+          "update_flush_avg_ticks": 1
+        },
+        "pokedex-entry-v1": {
+          "draw_max_ticks": 16303,
+          "draw_per_frame_ticks": 40,
+          "present_max_ticks": 767,
+          "present_per_frame_ticks": 1,
+          "renders": 1,
+          "samples": 400,
+          "scenario": "pokedex-entry-v1",
+          "update_avg_ticks": 101,
+          "update_core_avg_ticks": 90,
+          "update_flush_avg_ticks": 1
+        },
+        "trainer-battle-entry-v1": {
+          "draw_max_ticks": 10159,
+          "draw_per_frame_ticks": 2417,
+          "present_max_ticks": 782,
+          "present_per_frame_ticks": 344,
+          "renders": 224,
+          "samples": 500,
+          "scenario": "trainer-battle-entry-v1",
+          "update_avg_ticks": 226,
+          "update_core_avg_ticks": 215,
+          "update_flush_avg_ticks": 1
+        }
+      },
+      "suite": "autopilot-v1"
+    }
+  },
+  "limitations": [
+    "Functional batched-idle replays do not prove full animation timing",
+    "Original confirmation/audio records reused unchanged; current native code independently exercised",
+    "Controlled saves do not replace fresh new-game mainline coverage",
+    "Whole field NPC/PPU/typing phase parity remains under audit; no entire animation PASS"
+  ],
+  "sale_boundaries_each_repeated_twice": [
+    {
+      "case": "sell-second-partial",
+      "fixture_sha256": "0b90ed0bea3395894235b4f69895a12600742fbbf6adff3257900b4262f4f562",
+      "binary_sha256": "4adb6f234e0e2884779ecb41912967bd2dd8e65a8e2b03f63949a2ac7a5ec027",
+      "base": "6ce1ebb0edc1039216722765f2d61b6abcf40961",
+      "candidate": "be31476ddde62ae8da1b8d17eafd098e7ff286ac",
+      "frames": 63,
+      "final_phase": "Sell(SelectItem { cursor: 0 })",
+      "final_money": 3150,
+      "final_bag": [
+        {
+          "item": "PokeBall",
+          "qty": 5
+        },
+        {
+          "item": "Potion",
+          "qty": 3
+        },
+        {
+          "item": "Antidote",
+          "qty": 7
+        }
+      ],
+      "inventory_and_money_passed": true,
+      "scope": "Batched idle functional replay, not animation timing; controlled save input replay; no fresh-mainline/SAVE claim; no-audio return timing not Original SFX-wait proof."
+    },
+    {
+      "case": "sell-second-full",
+      "fixture_sha256": "0b90ed0bea3395894235b4f69895a12600742fbbf6adff3257900b4262f4f562",
+      "binary_sha256": "4adb6f234e0e2884779ecb41912967bd2dd8e65a8e2b03f63949a2ac7a5ec027",
+      "base": "6ce1ebb0edc1039216722765f2d61b6abcf40961",
+      "candidate": "be31476ddde62ae8da1b8d17eafd098e7ff286ac",
+      "frames": 67,
+      "final_phase": "Sell(SelectItem { cursor: 0 })",
+      "final_money": 3600,
+      "final_bag": [
+        {
+          "item": "PokeBall",
+          "qty": 5
+        },
+        {
+          "item": "Antidote",
+          "qty": 7
+        }
+      ],
+      "inventory_and_money_passed": true,
+      "scope": "Batched idle functional replay, not animation timing; controlled save input replay; no fresh-mainline/SAVE claim; no-audio return timing not Original SFX-wait proof."
+    },
+    {
+      "case": "sell-scrolled-full",
+      "fixture_sha256": "ebe9bdb84c98083367b5cdd99e39b69dd6dcf80a6090673a33ac3fdfc8a4ef69",
+      "binary_sha256": "4adb6f234e0e2884779ecb41912967bd2dd8e65a8e2b03f63949a2ac7a5ec027",
+      "base": "6ce1ebb0edc1039216722765f2d61b6abcf40961",
+      "candidate": "be31476ddde62ae8da1b8d17eafd098e7ff286ac",
+      "frames": 83,
+      "final_phase": "Sell(SelectItem { cursor: 0 })",
+      "final_money": 3600,
+      "final_bag": [
+        {
+          "item": "PokeBall",
+          "qty": 5
+        },
+        {
+          "item": "Antidote",
+          "qty": 7
+        },
+        {
+          "item": "BurnHeal",
+          "qty": 3
+        },
+        {
+          "item": "IceHeal",
+          "qty": 2
+        },
+        {
+          "item": "Awakening",
+          "qty": 6
+        },
+        {
+          "item": "ParlyzHeal",
+          "qty": 8
+        }
+      ],
+      "inventory_and_money_passed": true,
+      "scope": "Batched idle functional replay, not animation timing; controlled save input replay; no fresh-mainline/SAVE claim; no-audio return timing not Original SFX-wait proof."
+    },
+    {
+      "case": "sell-cash-cap",
+      "fixture_sha256": "c3fe2bb5224751dc5dd266943f12aef74feb78048618eb3a863ee2542e05665e",
+      "binary_sha256": "4adb6f234e0e2884779ecb41912967bd2dd8e65a8e2b03f63949a2ac7a5ec027",
+      "base": "6ce1ebb0edc1039216722765f2d61b6abcf40961",
+      "candidate": "be31476ddde62ae8da1b8d17eafd098e7ff286ac",
+      "frames": 63,
+      "final_phase": "Sell(SelectItem { cursor: 0 })",
+      "final_money": 999999,
+      "final_bag": [
+        {
+          "item": "PokeBall",
+          "qty": 5
+        },
+        {
+          "item": "Potion",
+          "qty": 3
+        },
+        {
+          "item": "Antidote",
+          "qty": 7
+        }
+      ],
+      "inventory_and_money_passed": true,
+      "scope": "Batched idle functional replay, not animation timing; controlled save input replay; no fresh-mainline/SAVE claim; no-audio return timing not Original SFX-wait proof."
+    }
+  ]
+}
