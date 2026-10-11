@@ -199,8 +199,10 @@ enum AfterMessage {
 }
 
 const MSG_LINES_PER_PAGE: usize = 4;
-/// Visible rows in scrolling lists (mon list / item list).
+/// PrintListMenuEntries draws four rows; the fourth previews the next entry.
 pub const PC_LIST_VISIBLE_ROWS: usize = 4;
+/// DisplayListMenuID limits the cursor to rows 0 through 2 before scrolling.
+const PC_LIST_CURSOR_ROWS: usize = 3;
 
 /// Rating table thresholds (engine/events/pokedex_rating.asm:58-74): the
 /// first entry whose threshold exceeds the owned count is shown.
@@ -1281,10 +1283,10 @@ impl PcScreen {
         }
         if self.item_list_cursor < self.item_list_scroll {
             self.item_list_scroll = self.item_list_cursor;
-        } else if self.item_list_cursor >= self.item_list_scroll + PC_LIST_VISIBLE_ROWS {
-            self.item_list_scroll = self.item_list_cursor + 1 - PC_LIST_VISIBLE_ROWS;
+        } else if self.item_list_cursor >= self.item_list_scroll + PC_LIST_CURSOR_ROWS {
+            self.item_list_scroll = self.item_list_cursor + 1 - PC_LIST_CURSOR_ROWS;
         }
-        let max_scroll = rows.saturating_sub(PC_LIST_VISIBLE_ROWS);
+        let max_scroll = rows.saturating_sub(PC_LIST_CURSOR_ROWS);
         if self.item_list_scroll > max_scroll {
             self.item_list_scroll = max_scroll;
         }
@@ -1689,6 +1691,43 @@ mod tests {
                 pc_items: &mut self.pc_items,
                 pokedex: &self.pokedex,
             }
+        }
+    }
+
+    #[test]
+    fn player_item_list_scrolls_three_rows_and_keeps_window_on_return() {
+        for mode in 0..3 {
+            let mut w = World::new();
+            for (item, quantity) in [(ItemId::Potion, 4), (ItemId::Antidote, 3), (ItemId::PokeBall, 2)] {
+                w.bag.add_item(item, quantity).unwrap();
+                w.pc_items.add_item(item, quantity).unwrap();
+            }
+            let bag = w.bag.items().to_vec();
+            let stored = w.pc_items.items().to_vec();
+            let mut screen = PcScreen::new(PcEntry::PlayersPc, &open_ctx());
+            skip_message(&mut screen, &mut w);
+            for _ in 0..mode { screen.update_frame(DOWN, &mut w.ctx()); }
+            screen.update_frame(A, &mut w.ctx());
+            finish_item_question(&mut screen, &mut w);
+            assert_eq!(screen.phase(), PcPhase::ItemList);
+            assert_eq!((screen.item_list_cursor(), screen.item_list_scroll()), (0, 0));
+            for (input, expected) in [
+                (DOWN, (1, 0)), (DOWN, (2, 0)), (DOWN, (3, 1)),
+                (DOWN, (3, 1)), (UP, (2, 1)), (UP, (1, 1)), (UP, (0, 0)),
+                (DOWN, (1, 0)), (DOWN, (2, 0)), (DOWN, (3, 1)),
+            ] {
+                screen.update_frame(input, &mut w.ctx());
+                assert_eq!((screen.item_list_cursor(), screen.item_list_scroll()), expected, "mode {mode}");
+                assert_eq!(w.bag.items(), bag);
+                assert_eq!(w.pc_items.items(), stored);
+                assert!(!screen.take_save_request());
+            }
+            screen.update_frame(A, &mut w.ctx()); // CANCEL, not the third item.
+            finish_item_question(&mut screen, &mut w);
+            assert_eq!(screen.phase(), PcPhase::ItemMenu);
+            assert_eq!(w.bag.items(), bag);
+            assert_eq!(w.pc_items.items(), stored);
+            assert!(!screen.take_save_request());
         }
     }
 

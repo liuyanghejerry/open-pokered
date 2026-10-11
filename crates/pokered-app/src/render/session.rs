@@ -1409,6 +1409,7 @@ impl PcVisualKey {
                 hash_u32(&mut visual_hash, pc.players_menu().cursor() as u32);
                 hash_u32(&mut visual_hash, pc.item_list_cursor() as u32);
                 if pc.item_question_draw_list() {
+                    hash_u32(&mut visual_hash, pc.item_list_scroll() as u32);
                     match pc.item_mode() {
                         ItemListMode::Deposit => hash_pc_inventory(&mut visual_hash, &game.save_data.game_data.bag),
                         ItemListMode::Withdraw | ItemListMode::Toss => hash_pc_inventory(&mut visual_hash, &game.save_data.game_data.pc_items),
@@ -1420,26 +1421,16 @@ impl PcVisualKey {
             }
             PcPhase::ItemList | PcPhase::ItemQuantityPrompt | PcPhase::ItemQuantity | PcPhase::TossConfirm => {
                 hash_byte(&mut visual_hash, pc.item_mode() as u8);
-                let rows = match pc.item_mode() {
-                    ItemListMode::Deposit => {
-                        hash_pc_inventory(&mut visual_hash, &game.save_data.game_data.bag);
-                        game.save_data.game_data.bag.count() + 1
-                    }
-                    ItemListMode::Withdraw | ItemListMode::Toss => {
-                        hash_pc_inventory(&mut visual_hash, &game.save_data.game_data.pc_items);
-                        game.save_data.game_data.pc_items.count() + 1
-                    }
-                };
+                hash_u32(&mut visual_hash, pc.item_list_scroll() as u32);
+                match pc.item_mode() {
+                    ItemListMode::Deposit => hash_pc_inventory(&mut visual_hash, &game.save_data.game_data.bag),
+                    ItemListMode::Withdraw | ItemListMode::Toss => hash_pc_inventory(&mut visual_hash, &game.save_data.game_data.pc_items),
+                }
                 match phase {
                     PcPhase::ItemList => {
-                        hash_u32(
-                            &mut visual_hash,
-                            pc_follow_scroll(pc.item_list_cursor(), rows) as u32,
-                        );
-                        cursor = Some(pc_list_cursor_position(
-                            pc.item_list_cursor(),
-                            rows,
-                            language,
+                        cursor = Some((
+                            8,
+                            8 + pc.item_list_cursor().saturating_sub(pc.item_list_scroll()) as u32 * 12,
                         ));
                     }
                     PcPhase::ItemQuantityPrompt => {
@@ -2700,6 +2691,62 @@ mod session_tests {
     fn capture_empty_party_200() {
         let path = std::path::PathBuf::from(std::env::var("EMPTY_PARTY_CAPTURE_200").unwrap());
         empty_party_frames_200(Some(&path));
+    }
+
+    #[test]
+    fn pc_item_scroll_and_return_retained_frames_match_full_draw() {
+        use dotzuki_app::{GbButton, InputState};
+        use pokered_core::pc_screen::{PcEntry, PcOpenContext, PcScreen};
+        use pokered_data::items::ItemId;
+        let mut game = PokemonGame::new(GameVersion::Red);
+        game.audio = None;
+        game.set_seed(42);
+        game.state.screen = GameScreen::PC;
+        game.state.config.language = Lang::En;
+        game.save_data.game_data.pc_items = pokered_core::items::inventory::Inventory::new_pc();
+        for (item, quantity) in [(ItemId::Potion, 4), (ItemId::Antidote, 3), (ItemId::PokeBall, 2)] {
+            game.save_data.game_data.pc_items.add_item(item, quantity).unwrap();
+        }
+        let stock = game.save_data.game_data.pc_items.items().to_vec();
+        game.pc_screen = Some(PcScreen::new(PcEntry::PlayersPc, &PcOpenContext {
+            met_bill: true, has_pokedex: true, beaten_league: false,
+            player_name: "RED".into(), hof_teams: Vec::new(),
+        }));
+        for frame in 0..500 {
+            let phase = game.pc_screen.as_ref().unwrap().phase();
+            if phase == PcPhase::ItemList { break; }
+            let mut input = InputState::new();
+            if frame % 8 == 0 && matches!(phase, PcPhase::Message | PcPhase::ItemMenu) {
+                input.press(GbButton::A);
+            }
+            game.update(&input);
+        }
+        assert_eq!(game.pc_screen.as_ref().unwrap().phase(), PcPhase::ItemList);
+        let mut retained = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+        let mut session = RenderSession::new();
+        let mut scroll = |_: &mut [u8], _: usize, _: usize, _: i32, _: i32, _: u8| {};
+        for frame in 0..221 {
+            let mut input = InputState::new();
+            match frame {
+                70 | 94 | 118 => input.press(GbButton::Down),
+                150 | 174 | 198 => input.press(GbButton::Up),
+                _ => {}
+            }
+            game.update(&input);
+            session.render(&mut game, &mut retained, &mut scroll);
+            let mut full = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+            game.draw(&mut full);
+            assert!(retained.packed() == full.packed(), "item PC scroll frame {frame}");
+            let expected = match frame {
+                0..=69 => (0, 0), 70..=93 => (1, 0), 94..=117 => (2, 0),
+                118..=149 => (3, 1), 150..=173 => (2, 1), 174..=197 => (1, 1),
+                _ => (0, 0),
+            };
+            let pc = game.pc_screen.as_mut().unwrap();
+            assert_eq!((pc.item_list_cursor(), pc.item_list_scroll()), expected, "frame {frame}");
+            assert!(!pc.take_save_request());
+            assert_eq!(game.save_data.game_data.pc_items.items(), stock);
+        }
     }
 
     fn quantity_pc_197(mode: u8, capture: Option<&std::path::Path>) {
