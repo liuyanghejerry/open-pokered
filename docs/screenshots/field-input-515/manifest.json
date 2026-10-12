@@ -111,19 +111,23 @@
       "t": 760
     }
   ],
-  "final_capture_binary_sha256": "7404f5c0736b0df9a19c9f950bd25a7fe33ae5ea540d26aa587493e8f88e94d8",
+  "final_capture_binary_sha256": "a11edce3dc7ed87d00c3a5aa450e1f28aa233aa8a6c9a64d1d86b6fd81db5798",
   "candidate_rust_file_sha256": {
     "crates/pokered-app/src/game.rs": "a8036ff2612dfc2611d9257c701452eb4d1677db4c5ef9734b7ed73a7e3e85a6",
-    "crates/pokered-core/src/overworld/update.rs": "78554b74b55f6de91df926007605dc580edf6e3283ff48ee1cdd31aa3e91a355",
-    "crates/pokered-core/src/overworld/screen.rs": "f96e175e0480fd717269cf94d1025471129e206ed5db1cba746b5be9278d5784",
+    "crates/pokered-core/src/overworld/update.rs": "44ba47e02fe8a330ac0ef766a6a675a3a3b15b8808d6e0e9bcdb6a3c6ba12493",
+    "crates/pokered-core/src/overworld/screen.rs": "c0cf46feee65f1b255d569f7962fc3d81a2b0545448454330285c54e39162edd",
     "crates/pokered-core/src/overworld/player_movement.rs": "33f76a18c6db93acde09cb8b26aeaaac77070f8e626b6626334ca6189e18ac29",
     "crates/pokered-core/src/overworld/tests_field_moves.rs": "07b2f430cd279fd382853bd3afca09920abf50a89d23113f947c034ce8998248",
-    "crates/pokered-core/src/snapshot.rs": "0bfb7f3f4ae496ec583df5866f7a045ef29fa7153471c74915f6b1595b487b61"
+    "crates/pokered-core/src/snapshot.rs": "b5f119334359f3f3d129d3545ae76d373f58995f1a5bd9d069460127e34ee366"
   },
-  "final_candidate_replay": "All six scenarios twice; every PNG and JSON matches initial candidate captures byte-for-byte after legacy snapshot migration.",
+  "final_candidate_replay": "All six scenes twice after packed sampler optimization; every PNG and JSON byte-identical to initial candidate captures.",
   "local_validation": {
-    "core_tests_passed": 2789,
-    "app_tests_passed": 232,
-    "app_existing_and_capture_ignored": 33
+    "core_tests_passed": 2790,
+    "full_app_tests_passed": 576,
+    "full_app_test_executables": 42,
+    "app_ignored_including_capture": 33,
+    "gba_idle_ticks": 382,
+    "gba_movement_ticks": 393,
+    "gba_thresholds_unchanged": true
   }
 }

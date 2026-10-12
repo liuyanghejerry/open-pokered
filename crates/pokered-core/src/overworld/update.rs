@@ -301,10 +301,31 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     /// never re-fire in another.
     pub fn sync_prev_input(&mut self, a: bool, b: bool, up: bool, down: bool) {
         self.prev_a_pressed = a;
-        self.sampled_player_input.a = a;
+        self.sampled_player_input.set_a(a);
         self.prev_b_pressed = b;
         self.prev_up_pressed = up;
         self.prev_down_pressed = down;
+    }
+
+    // Keep the small sampler inline so the field loop can share its state
+    // checks and avoid a per-frame call on the GBA.
+    #[inline(always)]
+    fn sample_idle_field_buttons(&mut self, input: OverworldInput) -> (bool, bool) {
+        if self.state.player.movement_state != MovementState::Idle {
+            return (false, false);
+        }
+        let sample = super::screen::FieldInputSample::from(input);
+        if sample == self.sampled_player_input
+            || self.state.walk_counter != 0
+            || self.pending_connection.is_some()
+            || self.cutscene_manager.is_blocking()
+        {
+            return (false, false);
+        }
+        let start = input.start && !self.sampled_player_input.start();
+        let a = input.a && !self.sampled_player_input.a();
+        self.sampled_player_input = sample;
+        (start, a)
     }
 
     pub fn update_frame(&mut self, input: OverworldInput) -> ScreenAction {
@@ -1317,19 +1338,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         // JoypadOverworld is not sampled while a step is in progress.
         // A short START pulse during the step is discarded; a held START
         // becomes a fresh press at the next idle sample. START precedes A.
-        let mut control_a_just_pressed = false;
-        let mut control_start_just_pressed = false;
-        if self.state.player.movement_state == MovementState::Idle
-            && self.state.walk_counter == 0
-            && self.pending_connection.is_none()
-            && !self.cutscene_manager.is_blocking()
-            && self.trainer_encounter_intro.is_none()
-            && self.trainer_intro_text_pending.is_none()
-        {
-            control_start_just_pressed = input.start && !self.sampled_player_input.start;
-            control_a_just_pressed = input.a && !self.sampled_player_input.a;
-            self.sampled_player_input = input;
-        }
+        let (control_start_just_pressed, control_a_just_pressed) = self.sample_idle_field_buttons(input);
 
         // SafariZoneCheck runs after JoypadOverworld, before START and A.
         // A last ball used in battle ends the hunt on returning to the idle
@@ -1667,7 +1676,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         // the "!" bubble shows and the trainer walks up.
         let intro_holding_input =
             self.trainer_encounter_intro.is_some() || self.trainer_intro_text_pending.is_some();
-        let player_input = self.sampled_player_input;
+        let player_input = self.sampled_player_input.as_input();
         let movement_input = MovementInput {
             up: player_input.up && !intro_holding_input,
             down: player_input.down && !intro_holding_input,

@@ -238,7 +238,7 @@ impl OverworldSnapshot {
             state: screen.state.clone(),
             player_last_stop_direction: screen.player_last_stop_direction,
             player_moving_direction: screen.player_moving_direction,
-            sampled_player_input: Some(screen.sampled_player_input),
+            sampled_player_input: Some(screen.sampled_player_input.as_input()),
             map_data: None,
             npc_states: Vec::new(),
             npc_pokemon_data: Vec::new(),
@@ -396,7 +396,7 @@ impl OverworldSnapshot {
                 self.prev_up_pressed, self.prev_down_pressed, false, false,
                 self.prev_a_pressed, self.prev_b_pressed, false, false,
             )
-        });
+        }).into();
         snapshot_fields!(restore screen, self,
             player_last_stop_direction, player_moving_direction,
             wild_data_state,
@@ -611,21 +611,21 @@ mod balance_snapshot_tests {
     #[test]
     fn sampled_field_buttons_survive_snapshot_and_legacy_json() {
         let mut screen = OverworldScreen::new(pokered_data::maps::MapId::PalletTown, None, pokered_data::impl_traits::PokemonRedData);
-        screen.sampled_player_input = dotzuki_engine::overworld::OverworldInput::new(true, false, false, false, true, false, true, false);
+        screen.sampled_player_input = dotzuki_engine::overworld::OverworldInput::new(true, false, false, false, true, false, true, false).into();
         let snapshot = OverworldSnapshot::capture(&screen);
         let mut encoded = serde_json::to_value(&snapshot).unwrap();
         let decoded: OverworldSnapshot = serde_json::from_value(encoded.clone()).unwrap();
-        screen.sampled_player_input = default_overworld_input();
+        screen.sampled_player_input = default_overworld_input().into();
         decoded.restore_into(&mut screen);
-        assert_eq!(screen.sampled_player_input, snapshot.sampled_player_input.unwrap());
+        assert_eq!(screen.sampled_player_input.as_input(), snapshot.sampled_player_input.unwrap());
         encoded.as_object_mut().unwrap().remove("sampled_player_input");
         encoded["prev_a_pressed"] = serde_json::json!(true);
         encoded["prev_up_pressed"] = serde_json::json!(true);
         let legacy: OverworldSnapshot = serde_json::from_value(encoded).unwrap();
         legacy.restore_into(&mut screen);
-        assert!(screen.sampled_player_input.a);
-        assert!(screen.sampled_player_input.up);
-        assert!(!screen.sampled_player_input.start);
+        assert!(screen.sampled_player_input.a());
+        assert!(screen.sampled_player_input.as_input().up);
+        assert!(!screen.sampled_player_input.start());
     }
 
     #[test]

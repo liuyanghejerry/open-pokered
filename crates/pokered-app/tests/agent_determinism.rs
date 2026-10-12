@@ -126,11 +126,14 @@ fn held(button: GbButton, frames: usize) -> Vec<Option<GbButton>> {
     std::iter::repeat_n(Some(button), frames).collect()
 }
 
-/// The replay sequence: walk north through the connection onto Route 1
-/// (60 tiles at 8 frames/tile), then pace the grass until a wild battle
-/// starts, then confirm the first move a few times.
+/// Enter the southern Route 1 grass, change direction, then pace north/south
+/// and confirm battle moves. The full input list is
+/// replayed unchanged after restore; the test requires a real wild battle.
 fn sequence_a() -> Vec<Option<GbButton>> {
-    let mut frames = held(GbButton::Up, 520);
+    // Turn in the southern grass before continuing toward the blocked path.
+    let mut frames = held(GbButton::Up, 80);
+    frames.extend(held(GbButton::Left, 36));
+    frames.extend(held(GbButton::Up, 440));
     // Pace up/down in the grass to roll encounters.
     for _ in 0..14 {
         frames.extend(held(GbButton::Down, 9));
