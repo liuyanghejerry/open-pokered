@@ -2445,7 +2445,21 @@ impl PokemonGame {
                             self.overworld.state.current_map
                         );
                         if let Some(ref audio) = self.audio {
-                            audio.play_music(MusicId::PALLET_TOWN);
+                            // SpecialEnterMap resumes PlayDefaultMusic for the
+                            // loaded map and transport, not the new-game theme.
+                            use dotzuki_engine::overworld::types::TransportMode;
+                            let music = match self.overworld.state.player.transport {
+                                TransportMode::Walking => MusicId::from_u8(
+                                    pokered_core::overworld::map_loading::get_map_music(
+                                        self.overworld.state.current_map,
+                                    ) as u8,
+                                ),
+                                TransportMode::Biking => Some(MusicId::BIKE_RIDING),
+                                TransportMode::Surfing => Some(MusicId::SURFING),
+                            };
+                            if let Some(music) = music {
+                                audio.play_music(music);
+                            }
                         }
                     }
                     Some(MainMenuChoice::NewGame)
@@ -12098,6 +12112,41 @@ mod pokedex_held_combination_tests {
             input.begin_frame();
             game.update(&input);
             assert_eq!(game.pokedex_screen.cursor(), cursor);
+        }
+    }
+}
+
+#[cfg(test)]
+mod continue_map_music_tests {
+    use super::*;
+
+    #[test]
+    fn continue_starts_the_loaded_maps_default_music() {
+        // SpecialEnterMap → EnterMap → PlayDefaultMusic chooses the restored
+        // map/transport theme. It does not always start Pallet Town's song.
+        for (map, expected) in [
+            (MapId::PalletTown, MusicId::PALLET_TOWN),
+            (MapId::ViridianPokecenter, MusicId::POKECENTER),
+            (MapId::LavenderTown, MusicId::LAVENDER),
+            (MapId::PewterGym, MusicId::GYM),
+            (MapId::RockTunnel1F, MusicId::DUNGEON3),
+            (MapId::Route1, MusicId::ROUTES1),
+        ] {
+            let mut game = PokemonGame::new_with_options(
+                GameVersion::Red, None, None, None, false, None, false, true,
+                #[cfg(feature = "debug-server")] None,
+            );
+            game.save_data = SaveData::new();
+            game.save_data.game_data.position.map_id = map as u8;
+            game.save_data.game_data.position.x = 8;
+            game.save_data.game_data.position.y = 10;
+            game.state.screen = GameScreen::MainMenu;
+            game.main_menu.last_choice = Some(pokered_core::game_state::MainMenuChoice::Continue);
+            game.handle_transition(GameScreen::Overworld);
+            assert_eq!(game.overworld.state.current_map, map);
+            let manager = game.audio.as_ref().unwrap().manager.lock().unwrap();
+            assert!(manager.sequencer.music_playing, "{map:?}");
+            assert_eq!(manager.sequencer.current_music_id, expected as u8, "{map:?}");
         }
     }
 }
