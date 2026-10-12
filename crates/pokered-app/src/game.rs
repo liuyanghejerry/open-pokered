@@ -5468,7 +5468,16 @@ impl PokemonGame {
                         audio.play_sfx(SfxId::PressAB);
                     }
                 }
-                match self.pokedex_screen.update_frame(dex_input) {
+                let entry_page_before = self.pokedex_screen.entry_page();
+                let dex_action = self.pokedex_screen.update_frame(dex_input);
+                // Intermediate DATA pages use ManualTextScroll, which accepts
+                // both A and B and plays PressAB. The final wait has no SFX.
+                if self.pokedex_screen.entry_page() > entry_page_before {
+                    if let Some(ref audio) = self.audio {
+                        audio.play_sfx(SfxId::PressAB);
+                    }
+                }
+                match dex_action {
                     // List-B / post-capture close: the original returns to the
                     // start menu (RedisplayStartMenu); the post-capture entry
                     // returns to the overworld.
@@ -12323,6 +12332,28 @@ mod pokedex_menu_audio_tests {
         input.begin_frame(); g.update(&input);
         input.begin_frame(); input.press(GbButton::Down); g.update(&input);
         assert_eq!(g.pokedex_screen.mode(), PokedexScreenMode::Entry);
+    }
+
+    #[test]
+    fn owned_entry_b_turns_the_page_with_sound_and_final_b_returns() {
+        use pokered_core::pokedex_screen::{PokedexScreenMode, PokedexScreenState};
+        let mut g = enter_list(true);
+        let mut dex = g.save_data.game_data.pokedex.clone();
+        dex.set_owned(Species::Bulbasaur);
+        g.pokedex_screen = PokedexScreenState::new(dex, GameVersion::Red);
+        let mut input = InputState::new(); input.press(GbButton::A); g.update(&input);
+        g.update(&InputState::new());
+        let mut input = InputState::new(); input.press(GbButton::A); g.update(&input);
+        for _ in 0..128 { g.update(&InputState::new()); }
+        assert_eq!(g.pokedex_screen.mode(), PokedexScreenMode::Entry);
+        let mut input = InputState::new(); input.press(GbButton::B); g.update(&input);
+        assert_eq!(g.pokedex_screen.mode(), PokedexScreenMode::Entry);
+        assert_eq!(g.pokedex_screen.entry_page(), 1);
+        assert_eq!(g.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.current_sfx_id, SfxId::PressAB as u8);
+        for _ in 0..90 { g.update(&InputState::new()); }
+        let mut input = InputState::new(); input.press(GbButton::B); g.update(&input);
+        assert_eq!(g.pokedex_screen.mode(), PokedexScreenMode::List);
+        assert!(!g.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.sfx_playing);
     }
 
     #[test]

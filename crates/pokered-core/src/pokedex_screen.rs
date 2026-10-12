@@ -22,7 +22,7 @@
 //! - After DATA/AREA the list is redrawn at the same cursor (the side menu
 //!   restores `wCurrentMenuItem`/`wListScrollOffset` on exit, then
 //!   `.setUpGraphics` re-runs the list menu).
-//! - B in the list exits; B in the entry view returns to the list; B in the
+//! - B in the list exits; A/B page through entry text, then return; B in the
 //!   AREA page returns to the list (the original's `WaitForTextScrollButtonPress`
 //!   accepts both buttons).
 //!
@@ -354,8 +354,8 @@ impl PokedexScreenState {
     }
 
     fn update_entry(&mut self, input: PokedexScreenInput) -> PokedexScreenAction {
-        let close = input.b
-            || (input.a && self.entry_page + 1 >= self.entry_total_pages());
+        let pressed = input.a || input.b;
+        let close = pressed && self.entry_page + 1 >= self.entry_total_pages();
         if close {
             if self.from_list {
                 self.mode = PokedexScreenMode::List;
@@ -363,7 +363,7 @@ impl PokedexScreenState {
             }
             return PokedexScreenAction::Closed;
         }
-        if input.a {
+        if pressed {
             self.entry_page += 1;
         }
         PokedexScreenAction::Active
@@ -679,13 +679,16 @@ mod tests {
     }
 
     #[test]
-    fn b_in_entry_returns_to_list() {
+    fn b_in_entry_turns_the_page_then_returns_to_list() {
         let mut s = screen(dex_with(&[1], &[1]));
         open_entry(&mut s);
         assert_eq!(
             s.update_frame(press(b())),
             PokedexScreenAction::Active
         );
+        assert_eq!(s.mode(), PokedexScreenMode::Entry);
+        assert_eq!(s.entry_page(), 1);
+        assert_eq!(s.update_frame(press(b())), PokedexScreenAction::Active);
         assert_eq!(s.mode(), PokedexScreenMode::List);
     }
 
@@ -725,11 +728,13 @@ mod tests {
         assert_eq!(s.mode(), PokedexScreenMode::Entry);
         assert!(!s.from_list());
         assert!(s.take_cry_pending(), "post-catch entry plays the cry");
-        // B closes the whole screen (not back to a list that never opened).
-        assert_eq!(
-            s.update_frame(press(b())),
-            PokedexScreenAction::Closed
-        );
+        // DATA's intermediate page uses ManualTextScroll for either A or B.
+        assert_eq!(s.entry_total_pages(), 2);
+        assert_eq!(s.update_frame(press(b())), PokedexScreenAction::Active);
+        assert_eq!(s.mode(), PokedexScreenMode::Entry);
+        assert_eq!(s.entry_page(), 1);
+        // Only the final B closes to the caller, without opening a list.
+        assert_eq!(s.update_frame(press(b())), PokedexScreenAction::Closed);
     }
 
     // ── side menu (HandlePokedexSideMenu) ──────────────────────────────
