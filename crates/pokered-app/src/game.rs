@@ -5432,7 +5432,10 @@ impl PokemonGame {
                 // The cry plays when an entry opens (PlayCry in
                 // ShowPokedexDataInternal).
                 self.pokedex_screen.language = self.state.config.language;
-                if self.pokedex_screen.take_cry_pending() {
+                let cry_started = self.pokedex_screen.take_cry_pending();
+                let entry_cry_started = cry_started && self.pokedex_screen.mode()
+                    == pokered_core::pokedex_screen::PokedexScreenMode::Entry;
+                if cry_started {
                     if let Some(ref audio) = self.audio {
                         play_species_cry(audio, self.pokedex_screen.cursor_species());
                     }
@@ -5476,6 +5479,15 @@ impl PokemonGame {
                     if let Some(ref audio) = self.audio {
                         audio.play_sfx(SfxId::PressAB);
                     }
+                }
+                // ShowPokedexDataInternal keeps NR50=$33 until DATA exits.
+                // PlaySound briefly resets it to $77 when the cry starts.
+                if let Some(ref audio) = self.audio {
+                    let volume = if self.pokedex_screen.mode()
+                        == pokered_core::pokedex_screen::PokedexScreenMode::Entry
+                        && dex_action != PokedexScreenAction::Closed
+                        && !entry_cry_started { 3 } else { 7 };
+                    audio.set_master_volume(volume, volume);
                 }
                 match dex_action {
                     // List-B / post-capture close: the original returns to the
@@ -12354,6 +12366,49 @@ mod pokedex_menu_audio_tests {
         let mut input = InputState::new(); input.press(GbButton::B); g.update(&input);
         assert_eq!(g.pokedex_screen.mode(), PokedexScreenMode::List);
         assert!(!g.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.sfx_playing);
+    }
+
+    #[test]
+    fn data_volume_is_reduced_with_a_cry_initialization_pulse_and_restored_on_exit() {
+        use pokered_core::pokedex_screen::PokedexScreenMode;
+        let volume = |g: &PokemonGame| g.audio.as_ref().unwrap().manager.lock().unwrap().apu.read_register(0xff24);
+        for exit_key in [GbButton::A, GbButton::B] {
+            let mut g = enter_list(true);
+            let mut input = InputState::new(); input.press(GbButton::A); g.update(&input);
+            g.update(&InputState::new());
+            let mut input = InputState::new(); input.press(GbButton::A); g.update(&input);
+            assert_eq!(g.pokedex_screen.mode(), PokedexScreenMode::Entry);
+            assert_eq!(volume(&g), 0x33);
+            g.update(&InputState::new());
+            assert_eq!(volume(&g), 0x77, "cry initialization");
+            for _ in 0..120 { g.update(&InputState::new()); assert_eq!(volume(&g), 0x33); }
+            let mut input = InputState::new(); input.press(exit_key); g.update(&input);
+            assert_eq!(g.pokedex_screen.mode(), PokedexScreenMode::List);
+            assert_eq!(volume(&g), 0x77);
+        }
+    }
+
+    #[test]
+    fn area_stays_full_volume_and_direct_entry_restores_volume_to_its_caller() {
+        use pokered_core::pokedex_screen::{PokedexScreenMode, PokedexScreenState};
+        let volume = |g: &PokemonGame| g.audio.as_ref().unwrap().manager.lock().unwrap().apu.read_register(0xff24);
+        let mut g = enter_list(true);
+        let mut input = InputState::new(); input.press(GbButton::A); g.update(&input);
+        g.update(&InputState::new());
+        for _ in 0..2 {
+            let mut input = InputState::new(); input.press(GbButton::Down); g.update(&input);
+            g.update(&InputState::new());
+        }
+        let mut input = InputState::new(); input.press(GbButton::A); g.update(&input);
+        assert_eq!(g.pokedex_screen.mode(), PokedexScreenMode::Area);
+        assert_eq!(volume(&g), 0x77);
+        g.pokedex_screen = PokedexScreenState::new_entry(
+            g.save_data.game_data.pokedex.clone(), Species::Bulbasaur, GameVersion::Red);
+        for _ in 0..120 { g.update(&InputState::new()); }
+        assert_eq!(volume(&g), 0x33);
+        let mut input = InputState::new(); input.press(GbButton::B); g.update(&input);
+        assert_eq!(g.state.screen, GameScreen::Overworld);
+        assert_eq!(volume(&g), 0x77);
     }
 
     #[test]
