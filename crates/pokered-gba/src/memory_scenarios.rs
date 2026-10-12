@@ -63,6 +63,12 @@ impl Scenarios {
             }
             2 => {
                 assert_eq!(game.pokedex_screen.mode(), PokedexScreenMode::Entry);
+                // DATA ignores input until its opening cry finishes. Keep the
+                // real audio sequencer running and retry before the first B;
+                // do not count ignored input as a successful page turn.
+                if game.audio.as_ref().is_some_and(|audio| audio.is_sfx_playing()) {
+                    return;
+                }
                 agb::println!(
                     "memory: dex={} free={}B stack={}B",
                     game.pokedex_screen.cursor(),

@@ -652,6 +652,8 @@ pub struct PokemonGame {
     pub bag_screen: BagScreenState,
     pub town_map_screen: TownMapScreenState,
     pub pokedex_screen: PokedexScreenState,
+    /// The DATA caller waits for its opening cry, not later page-button SFX.
+    pokedex_entry_cry_waiting: bool,
     pub trainer_card_screen: TrainerCardScreenState,
     /// Set when the town map should open in FLY destination-picker mode
     /// (party-menu FLY) instead of the read-only viewer.
@@ -1330,6 +1332,7 @@ impl PokemonGame {
                 pokered_core::pokemon::pokedex::Pokedex::new(),
                 version,
             ),
+            pokedex_entry_cry_waiting: false,
             trainer_card_screen: TrainerCardScreenState::new(),
             pending_evolve_move_replace: None,
             pending_fly_map: false,
@@ -1504,6 +1507,7 @@ impl PokemonGame {
             bag_screen: f_bag,
             town_map_screen: f_town,
             pokedex_screen: f_dex,
+            pokedex_entry_cry_waiting: false,
             trainer_card_screen: f_card,
             pending_evolve_move_replace: None,
             pending_fly_map: false,
@@ -1627,6 +1631,7 @@ impl PokemonGame {
                 pokered_core::pokemon::pokedex::Pokedex::new(),
                 version,
             ),
+            pokedex_entry_cry_waiting: false,
             trainer_card_screen: TrainerCardScreenState::new(),
             pending_evolve_move_replace: None,
             pending_fly_map: false,
@@ -5440,6 +5445,14 @@ impl PokemonGame {
                         play_species_cry(audio, self.pokedex_screen.cursor_species());
                     }
                 }
+                if entry_cry_started && self.pokedex_screen.from_list() {
+                    self.pokedex_entry_cry_waiting = true;
+                } else if self.pokedex_screen.mode()
+                    != pokered_core::pokedex_screen::PokedexScreenMode::Entry
+                    || !self.audio.as_ref().is_some_and(|audio| audio.is_sfx_playing())
+                {
+                    self.pokedex_entry_cry_waiting = false;
+                }
                 // The list, side menu and its DATA/AREA pages inherit
                 // hJoy7=1: any new button reports the full held mask.
                 // Direct post-capture entries keep newly pressed input.
@@ -5451,7 +5464,7 @@ impl PokemonGame {
                     if menu_press { input.is_held(button) }
                     else { input.is_just_pressed(button) }
                 };
-                let dex_input = PokedexScreenInput {
+                let mut dex_input = PokedexScreenInput {
                     up: pressed(GbButton::Up),
                     down: pressed(GbButton::Down),
                     left: pressed(GbButton::Left),
@@ -5459,6 +5472,17 @@ impl PokemonGame {
                     a: pressed(GbButton::A),
                     b: pressed(GbButton::B),
                 };
+                // DATA calls blocking PlayCry / WaitForSoundToFinish before
+                // polling its text buttons. Discard input during playback;
+                // do not queue it for the first readable frame. Keep direct
+                // post-capture entries separate from this list caller.
+                if self.pokedex_screen.from_list()
+                    && self.pokedex_screen.mode()
+                        == pokered_core::pokedex_screen::PokedexScreenMode::Entry
+                    && self.pokedex_entry_cry_waiting
+                {
+                    dex_input = PokedexScreenInput::default();
+                }
                 // HandleMenuInput plays SFX_PRESS_AB for accepted A/B in
                 // both Pokédex menus, including an unseen list selection.
                 // Entry/AREA use WaitForTextScrollButtonPress instead.
@@ -12435,5 +12459,84 @@ mod pokedex_menu_audio_tests {
         let mut input = InputState::new(); input.press(GbButton::A); unseen.update(&input);
         assert_eq!(unseen.pokedex_screen.mode(), pokered_core::pokedex_screen::PokedexScreenMode::List);
         assert_eq!(unseen.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.current_sfx_id, SfxId::PressAB as u8);
+    }
+}
+
+#[cfg(test)]
+mod pokedex_data_cry_input_tests {
+    use super::*;
+    use pokered_data::species::Species;
+    use pokered_core::{pokemon::pokedex::Pokedex, pokedex_screen::PokedexScreenMode};
+
+    #[test]
+    fn data_discards_early_buttons_until_the_live_cry_finishes() {
+        for dex_number in [1, 6, 25, 103, 129, 150, 151] {
+            for owned in [false, true] {
+                for button in [GbButton::A, GbButton::B] {
+                    let species = Species::from_index_id(dex_number);
+                    let mut dex = Pokedex::new();
+                    dex.set_seen(species);
+                    if owned { dex.set_owned(species); }
+                    let mut game = PokemonGame::new_with_options(GameVersion::Red,
+                        None, None, None, false, None, false, true,
+                        #[cfg(feature = "debug-server")] None);
+                    game.state.screen = GameScreen::Pokedex;
+                    game.pokedex_screen = PokedexScreenState::new(dex, GameVersion::Red);
+                    while game.pokedex_screen.cursor() < dex_number as u16 {
+                        game.pokedex_screen.update_frame(PokedexScreenInput {
+                            down: true, ..Default::default()
+                        });
+                    }
+                    for _ in 0..2 {
+                        game.pokedex_screen.update_frame(PokedexScreenInput {
+                            a: true, ..Default::default()
+                        });
+                    }
+                    let mut input = InputState::new();
+                    input.press(button);
+                    game.update(&input);
+                    assert_eq!(game.pokedex_screen.mode(), PokedexScreenMode::Entry);
+                    assert_eq!(game.pokedex_screen.entry_page(), 0);
+                    assert!(game.audio.as_ref().unwrap().is_sfx_playing());
+                    let mut frames = 0;
+                    // Fresh presses during the initial cry are discarded.
+                    while game.audio.as_ref().unwrap().is_sfx_playing() {
+                        input.begin_frame();
+                        input.set_from_bitmask(0);
+                        if frames < 12 && frames % 2 == 0 { input.press(button); }
+                        game.update(&input);
+                        if game.audio.as_ref().unwrap().is_sfx_playing() {
+                            assert_eq!(game.pokedex_screen.mode(), PokedexScreenMode::Entry);
+                            assert_eq!(game.pokedex_screen.entry_page(), 0);
+                        }
+                        frames += 1;
+                        assert!(frames < 200, "cry must finish for {species:?}");
+                    }
+                    // Fresh input remains usable after playback finishes.
+                    if game.pokedex_screen.mode() == PokedexScreenMode::Entry
+                        && game.pokedex_screen.entry_page() == 0 {
+                        game.update(&InputState::new());
+                        let mut fresh = InputState::new();
+                        fresh.press(button);
+                        game.update(&fresh);
+                    }
+                    if owned && game.pokedex_screen.entry_total_pages() > 1 {
+                        assert_eq!(game.pokedex_screen.mode(), PokedexScreenMode::Entry);
+                        assert_eq!(game.pokedex_screen.entry_page(), 1);
+                        assert!(game.audio.as_ref().unwrap().is_sfx_playing(),
+                            "page turn plays PressAB");
+                        game.update(&InputState::new());
+                        let mut next = InputState::new();
+                        next.press(button);
+                        game.update(&next);
+                        assert!(game.pokedex_screen.mode() == PokedexScreenMode::List
+                            || game.pokedex_screen.entry_page() == 2,
+                            "page-button sound must not restart the cry lock");
+                    } else {
+                        assert_eq!(game.pokedex_screen.mode(), PokedexScreenMode::List);
+                    }
+                }
+            }
+        }
     }
 }
