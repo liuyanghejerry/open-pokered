@@ -5437,12 +5437,10 @@ impl PokemonGame {
                         play_species_cry(audio, self.pokedex_screen.cursor_species());
                     }
                 }
-                // Both menus use JoypadLowSensitivity with hJoy7=1: a new
-                // button reports the full held mask. Thus holding DOWN/RIGHT
-                // and then pressing A still takes the direction branch.
-                let menu_press = matches!(self.pokedex_screen.mode(),
-                    pokered_core::pokedex_screen::PokedexScreenMode::List
-                        | pokered_core::pokedex_screen::PokedexScreenMode::SideMenu)
+                // The list, side menu and its DATA/AREA pages inherit
+                // hJoy7=1: any new button reports the full held mask.
+                // Direct post-capture entries keep newly pressed input.
+                let menu_press = self.pokedex_screen.from_list()
                     && [GbButton::Up, GbButton::Down, GbButton::Left, GbButton::Right,
                         GbButton::A, GbButton::B, GbButton::Start, GbButton::Select]
                         .iter().any(|&button| input.is_just_pressed(button));
@@ -12294,6 +12292,37 @@ mod pokedex_menu_audio_tests {
         // DOWN|A mask, then HandlePokedexSideMenu selects AREA.
         assert_eq!(g.pokedex_screen.side_menu_cursor(), 2);
         assert_eq!(g.pokedex_screen.mode(), pokered_core::pokedex_screen::PokedexScreenMode::Area);
+    }
+
+    #[test]
+    fn list_entry_and_area_keep_held_a_when_a_direction_is_newly_pressed() {
+        use pokered_core::pokedex_screen::PokedexScreenMode;
+        for area in [false, true] {
+            let mut g = enter_list(true);
+            let mut input = InputState::new(); input.press(GbButton::A); g.update(&input);
+            g.update(&InputState::new());
+            if area {
+                for _ in 0..2 {
+                    let mut down = InputState::new(); down.press(GbButton::Down); g.update(&down);
+                    g.update(&InputState::new());
+                }
+            }
+            input = InputState::new(); input.press(GbButton::A); g.update(&input);
+            let expected = if area { PokedexScreenMode::Area } else { PokedexScreenMode::Entry };
+            assert_eq!(g.pokedex_screen.mode(), expected);
+            for _ in 0..128 { input.begin_frame(); g.update(&input); }
+            assert_eq!(g.pokedex_screen.mode(), expected);
+            input.begin_frame(); input.press(GbButton::Down); g.update(&input);
+            assert_eq!(g.pokedex_screen.mode(), PokedexScreenMode::List);
+        }
+        // A directly opened post-capture entry does not inherit hJoy7=1.
+        let mut g = enter_list(true);
+        g.pokedex_screen = pokered_core::pokedex_screen::PokedexScreenState::new_entry(
+            g.save_data.game_data.pokedex.clone(), Species::Bulbasaur, GameVersion::Red);
+        let mut input = InputState::new(); input.press(GbButton::A);
+        input.begin_frame(); g.update(&input);
+        input.begin_frame(); input.press(GbButton::Down); g.update(&input);
+        assert_eq!(g.pokedex_screen.mode(), PokedexScreenMode::Entry);
     }
 
     #[test]
