@@ -12389,6 +12389,29 @@ mod pokedex_menu_audio_tests {
     }
 
     #[test]
+    fn area_stays_full_volume_and_direct_entry_restores_volume_to_its_caller() {
+        use pokered_core::pokedex_screen::{PokedexScreenMode, PokedexScreenState};
+        let volume = |g: &PokemonGame| g.audio.as_ref().unwrap().manager.lock().unwrap().apu.read_register(0xff24);
+        let mut g = enter_list(true);
+        let mut input = InputState::new(); input.press(GbButton::A); g.update(&input);
+        g.update(&InputState::new());
+        for _ in 0..2 {
+            let mut input = InputState::new(); input.press(GbButton::Down); g.update(&input);
+            g.update(&InputState::new());
+        }
+        let mut input = InputState::new(); input.press(GbButton::A); g.update(&input);
+        assert_eq!(g.pokedex_screen.mode(), PokedexScreenMode::Area);
+        assert_eq!(volume(&g), 0x77);
+        g.pokedex_screen = PokedexScreenState::new_entry(
+            g.save_data.game_data.pokedex.clone(), Species::Bulbasaur, GameVersion::Red);
+        for _ in 0..120 { g.update(&InputState::new()); }
+        assert_eq!(volume(&g), 0x33);
+        let mut input = InputState::new(); input.press(GbButton::B); g.update(&input);
+        assert_eq!(g.state.screen, GameScreen::Overworld);
+        assert_eq!(volume(&g), 0x77);
+    }
+
+    #[test]
     fn actual_pokedex_menu_confirm_and_cancel_start_button_sfx() {
         for key in [GbButton::A, GbButton::B] {
             let mut g = enter_list(true);
