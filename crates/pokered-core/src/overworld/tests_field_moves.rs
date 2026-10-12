@@ -1089,3 +1089,58 @@ fn direction_history_survives_idle_facing_changes_and_system_save_restore() {
     assert_eq!(restored.player_last_stop_direction,2);
     assert_eq!(restored.player_moving_direction,0);
 }
+
+#[test]
+fn player_start_pulse_is_discarded_midstep_but_held_start_opens_after_landing() {
+    use crate::game_state::{ScreenAction,GameScreen};
+    use super::MovementState;
+    for transport in [TransportMode::Walking,TransportMode::Biking] {
+        for held in [false,true] {
+            let mut screen=screen_on(MapId::PalletTown);fill_map_with_passable_block(&mut screen);
+            screen.state.player.x=5;screen.state.player.y=5;screen.state.player.transport=transport;
+            let down=OverworldInput::new(false,true,false,false,false,false,false,false);
+            let start=OverworldInput::new(false,true,false,false,false,false,true,false);
+            assert_eq!(screen.update_frame(down),ScreenAction::Continue);
+            assert_eq!(screen.state.player.movement_state,MovementState::Walking);
+            assert_eq!(screen.update_frame(start),ScreenAction::Continue,"START must wait for a tile");
+            let pending=if held {start} else {down};
+            for _ in 0..32 {
+                if screen.state.player.movement_state==MovementState::Idle {break;}
+                assert_eq!(screen.update_frame(pending),ScreenAction::Continue);
+            }
+            assert_eq!(screen.state.player.movement_state,MovementState::Idle);
+            assert_eq!((screen.state.player.x,screen.state.player.y),(5,6));
+            assert_eq!(screen.update_frame(pending),if held {
+                ScreenAction::Transition(GameScreen::StartMenu)
+            } else {ScreenAction::Continue});
+        }
+    }
+}
+
+#[test]
+fn start_precedes_a_at_the_pokemon_center_pc() {
+    use crate::game_state::{ScreenAction,GameScreen};
+    let mut screen=screen_on(MapId::ViridianPokecenter);
+    screen.state.player.x=13;screen.state.player.y=4;screen.state.player.facing=Direction::Up;
+    let both=OverworldInput::new(false,false,false,false,true,false,true,false);
+    assert_eq!(screen.update_frame(both),ScreenAction::Transition(GameScreen::StartMenu));
+    assert!(screen.pending_pc.is_none());assert!(screen.pending_dialogue.is_none());
+}
+
+#[test]
+fn held_a_is_sampled_only_after_step() {
+    use crate::game_state::ScreenAction;
+    use super::MovementState;
+    let mut screen=screen_on(MapId::ViridianPokecenter);
+    screen.state.player.x=13;screen.state.player.y=5;screen.state.player.facing=Direction::Up;
+    screen.state.player.movement_state=MovementState::Walking;screen.state.walk_counter=2;
+    screen.player_moving_direction=8;
+    let held=OverworldInput::new(false,false,false,false,true,false,false,false);
+    assert_eq!(screen.update_frame(held),ScreenAction::Continue);
+    assert!(screen.pending_pc.is_none());assert!(screen.pending_dialogue.is_none());
+    screen.update_frame(held);
+    assert_eq!((screen.state.player.x,screen.state.player.y),(13,4));
+    assert!(screen.pending_pc.is_none());assert!(screen.pending_dialogue.is_none());
+    screen.update_frame(held);
+    assert!(screen.pending_pc.is_some() || screen.pending_dialogue.is_some() || screen.active_script_effect.is_some(),"held A interacts after landing");
+}

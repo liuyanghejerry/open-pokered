@@ -1,0 +1,133 @@
+{
+  "base_source_head": "1b3d833ec9fc7089c94aff6966e7a12e5cc3080f",
+  "base_master_merge": "b614ac605cf4e5a9a9a8329cee1d6c37b68bd326",
+  "fixture": "Same seeded native runtime setup and fixed per-frame InputState trace in both builds; initial frames identical. PC coordinates and Oak trigger position staged. No claim of unassisted play or complete original timing parity.",
+  "capture_harness_sha256": "51edfe90ccb54a7f9ca9aa73c78996dc1f6ebb24ad4fdf62cec1b2359face579",
+  "captures": [
+    {
+      "case": "a-short",
+      "frames": 47,
+      "two_trials_exact": true,
+      "pretrigger_rgb_equal": true,
+      "input_masks_equal_every_frame": true,
+      "after_final": {
+        "screen": "Overworld",
+        "map": "ViridianPokecenter",
+        "x": 13,
+        "y": 4,
+        "movement": "Idle"
+      }
+    },
+    {
+      "case": "a-held",
+      "frames": 47,
+      "two_trials_exact": true,
+      "pretrigger_rgb_equal": true,
+      "input_masks_equal_every_frame": true,
+      "after_final": {
+        "screen": "PC",
+        "map": "ViridianPokecenter",
+        "x": 13,
+        "y": 4,
+        "movement": "Idle"
+      }
+    },
+    {
+      "case": "start-short",
+      "frames": 47,
+      "two_trials_exact": true,
+      "pretrigger_rgb_equal": true,
+      "input_masks_equal_every_frame": true,
+      "after_final": {
+        "screen": "Overworld",
+        "map": "ViridianPokecenter",
+        "x": 13,
+        "y": 4,
+        "movement": "Idle"
+      }
+    },
+    {
+      "case": "start-held",
+      "frames": 47,
+      "two_trials_exact": true,
+      "pretrigger_rgb_equal": true,
+      "input_masks_equal_every_frame": true,
+      "after_final": {
+        "screen": "StartMenu",
+        "map": "ViridianPokecenter",
+        "x": 13,
+        "y": 4,
+        "movement": "Idle"
+      }
+    },
+    {
+      "case": "both-idle",
+      "frames": 47,
+      "two_trials_exact": true,
+      "pretrigger_rgb_equal": true,
+      "input_masks_equal_every_frame": true,
+      "after_final": {
+        "screen": "StartMenu",
+        "map": "ViridianPokecenter",
+        "x": 13,
+        "y": 4,
+        "movement": "Idle"
+      }
+    },
+    {
+      "case": "oak-follow",
+      "frames": 1402,
+      "two_trials_exact": true,
+      "pretrigger_rgb_equal": true,
+      "input_masks_equal_every_frame": true,
+      "after_final": {
+        "screen": "Overworld",
+        "map": "OaksLab",
+        "x": 5,
+        "y": 3,
+        "movement": "Idle"
+      }
+    }
+  ],
+  "selected_screenshots": [
+    {
+      "case": "a-held",
+      "t": 20
+    },
+    {
+      "case": "start-short",
+      "t": 5
+    },
+    {
+      "case": "start-held",
+      "t": 10
+    },
+    {
+      "case": "both-idle",
+      "t": 10
+    },
+    {
+      "case": "oak-follow",
+      "t": 760
+    }
+  ],
+  "final_capture_binary_sha256": "a11edce3dc7ed87d00c3a5aa450e1f28aa233aa8a6c9a64d1d86b6fd81db5798",
+  "candidate_rust_file_sha256": {
+    "crates/pokered-app/src/game.rs": "a8036ff2612dfc2611d9257c701452eb4d1677db4c5ef9734b7ed73a7e3e85a6",
+    "crates/pokered-core/src/overworld/update.rs": "44ba47e02fe8a330ac0ef766a6a675a3a3b15b8808d6e0e9bcdb6a3c6ba12493",
+    "crates/pokered-core/src/overworld/screen.rs": "c0cf46feee65f1b255d569f7962fc3d81a2b0545448454330285c54e39162edd",
+    "crates/pokered-core/src/overworld/player_movement.rs": "33f76a18c6db93acde09cb8b26aeaaac77070f8e626b6626334ca6189e18ac29",
+    "crates/pokered-core/src/overworld/tests_field_moves.rs": "07b2f430cd279fd382853bd3afca09920abf50a89d23113f947c034ce8998248",
+    "crates/pokered-core/src/snapshot.rs": "b5f119334359f3f3d129d3545ae76d373f58995f1a5bd9d069460127e34ee366"
+  },
+  "final_candidate_replay": "All six scenes twice after packed sampler optimization; every PNG and JSON byte-identical to initial candidate captures.",
+  "local_validation": {
+    "core_tests_passed": 2790,
+    "full_app_tests_passed": 576,
+    "full_app_test_executables": 42,
+    "app_ignored_including_capture": 33,
+    "gba_idle_ticks": 382,
+    "gba_movement_ticks": 393,
+    "gba_thresholds_unchanged": true
+  }
+}

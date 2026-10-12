@@ -690,6 +690,32 @@ pub(crate) struct PendingCut {
 
 use crate::overworld::collision;
 
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub(crate) struct FieldInputSample(u8);
+
+impl From<dotzuki_engine::overworld::OverworldInput> for FieldInputSample {
+    fn from(i: dotzuki_engine::overworld::OverworldInput) -> Self {
+        Self((i.up as u8) | ((i.down as u8) << 1) | ((i.left as u8) << 2)
+            | ((i.right as u8) << 3) | ((i.a as u8) << 4) | ((i.b as u8) << 5)
+            | ((i.start as u8) << 6) | ((i.select as u8) << 7))
+    }
+}
+
+impl FieldInputSample {
+    pub(crate) fn as_input(self) -> dotzuki_engine::overworld::OverworldInput {
+        dotzuki_engine::overworld::OverworldInput::new(
+            self.0 & 1 != 0, self.0 & 2 != 0, self.0 & 4 != 0, self.0 & 8 != 0,
+            self.a(), self.0 & 32 != 0, self.start(), self.0 & 128 != 0,
+        )
+    }
+    pub(crate) fn a(self) -> bool { self.0 & 16 != 0 }
+    pub(crate) fn start(self) -> bool { self.0 & 64 != 0 }
+    pub(crate) fn set_a(&mut self, value: bool) { self.0 = (self.0 & !16) | ((value as u8) << 4); }
+    pub(crate) fn set_start(&mut self, value: bool) { self.0 = (self.0 & !64) | ((value as u8) << 6); }
+}
+
+
 pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedData> {
     pub(crate) wild_data_state: super::wild_encounters::WildDataState,
     pub(crate) game_data: G,
@@ -790,6 +816,7 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     /// `pending_dialogue` at the top of `update_frame`.
     pub text_delay_frames: u16,
     pub(crate) prev_a_pressed: bool,
+    pub(crate) sampled_player_input: FieldInputSample,
     pub(crate) prev_movement_state: MovementState,
     pub(crate) prev_b_pressed: bool,
     pub(crate) prev_up_pressed: bool,
@@ -1228,6 +1255,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             frame_counter: 0,
             text_delay_frames: DEFAULT_TEXT_DELAY_FRAMES,
             prev_a_pressed: false,
+            sampled_player_input: FieldInputSample::default(),
             prev_movement_state: MovementState::Idle,
             player_last_stop_direction: 0,
             player_moving_direction: 0,
@@ -2629,6 +2657,13 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         }
     }
 
+    /// Menus also read the joypad. Preserve their last button sample when
+    /// returning to the field so a held menu confirmation is not a new A.
+    pub fn synchronize_player_buttons(&mut self, a: bool, start: bool) {
+        self.sampled_player_input.set_a(a);
+        self.sampled_player_input.set_start(start);
+    }
+
     /// Restore counters and status bytes that live outside the event bitset.
     pub fn restore_system_save_state(&mut self, data: &crate::save::game_data::GameData) {
         self.forced_bike.active = data.status_flags[5] & (1 << 5) != 0;
@@ -3296,5 +3331,32 @@ impl<G: GameData> OverworldScreen<G> {
         self.mart_text_restore = Some(presentation::MartTextRestoreState {
             elapsed: 0, npc_transfer_frames: frames,
         });
+    }
+}
+
+#[cfg(test)]
+mod field_input_sample_tests {
+    use super::FieldInputSample;
+    use dotzuki_engine::overworld::OverworldInput;
+    #[test]
+    fn all_button_combinations_and_updates_preserve_the_other_buttons() {
+        assert_eq!(core::mem::size_of::<FieldInputSample>(), 1);
+        for bits in 0u16..=255 {
+            let input = OverworldInput::new(bits & 1 != 0, bits & 2 != 0, bits & 4 != 0,
+                bits & 8 != 0, bits & 16 != 0, bits & 32 != 0, bits & 64 != 0, bits & 128 != 0);
+            let sample = FieldInputSample::from(input);
+            assert_eq!(sample.as_input(), input);
+            assert_eq!(sample.a(), input.a);
+            assert_eq!(sample.start(), input.start);
+            for a in [false, true] {
+                for start in [false, true] {
+                    let mut changed = sample;
+                    changed.set_a(a); changed.set_start(start);
+                    let mut expected = input;
+                    expected.a = a; expected.start = start;
+                    assert_eq!(changed.as_input(), expected);
+                }
+            }
+        }
     }
 }
