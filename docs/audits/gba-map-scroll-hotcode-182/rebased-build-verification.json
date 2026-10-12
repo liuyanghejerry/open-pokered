@@ -1,0 +1,26 @@
+{
+  "base": "dcdc03869aae4456d3706cddf0dda7958f6f5b91",
+  "production": {
+    "result": "release build PASS",
+    "iwram_bytes": 23104,
+    "limit_bytes": 24320,
+    "remaining_bytes": 1216,
+    "helper_bytes": 952,
+    "helper_address": "0x03002ff1",
+    "elf_sha256": "fc1f300d8506d9b79476b218521008431ffbd1ca929133a3a1e7d4cb06d6cf2f"
+  },
+  "old_failure": "2aa8f806: release and perf link both exceed unchanged IWRAM cap",
+  "resolution": "rebase onto master containing c78b53a: Oak scene dispatch stays in ROM; unchanged inner loops remain IWRAM",
+  "ci": "latest PR head must pass its own unchanged performance comparison and complete CI before merge",
+  "benchmark": {
+    "result": "release build PASS",
+    "iwram_bytes": 23104,
+    "limit_bytes": 24320,
+    "remaining_bytes": 1216,
+    "helper_bytes": 952,
+    "helper_address": "0x03002ff1",
+    "elf_sha256": "e3482c551664b1cff2e4a155e3fa3348cadc0848283ac0cc83a8d5973e1e58de"
+  },
+  "build_head": "c7266444c0bb20876a49b748f59111140bb65d42",
+  "tracked_crates_source_manifest_sha256": "eaf185dd6b4db79ac0e2c432560207ce4f3902c5e8cf6ba11867c4579ba241ae"
+}
