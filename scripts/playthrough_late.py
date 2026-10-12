@@ -190,7 +190,7 @@ def use_item(g, name, party_index=None, forget=None):
         target = next(i for i, item in enumerate(menu["items"]) if item["item"] == name)
         if menu["cursor"] == target:
             break
-        g.tap("down", 8)
+        g.tap("up" if menu["cursor"] > target else "down", 8)
     else:
         raise RuntimeError(f"bag item not selected: {name}")
     g.tap("a", 8)  # USE / TOSS / CANCEL, default USE.
