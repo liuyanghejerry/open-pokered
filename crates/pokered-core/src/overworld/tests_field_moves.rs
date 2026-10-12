@@ -1062,3 +1062,30 @@ fn softboiled_truncates_the_fifth_like_gen1_divide() {
     assert_eq!(user.hp, 99 - 19);
     assert_eq!(target.hp, 1 + 19);
 }
+
+#[test]
+fn direction_history_survives_idle_facing_changes_and_system_save_restore() {
+    let mut screen=screen_on(MapId::PalletTown);fill_map_with_passable_block(&mut screen);
+    screen.state.player.x=5;screen.state.player.y=5;
+    let left=super::OverworldInput::new(false,false,true,false,false,false,false,false);
+    let idle=super::OverworldInput::new(false,false,false,false,false,false,false,false);
+    screen.update_frame(left);
+    assert_eq!(screen.player_moving_direction,2);
+    assert_eq!(screen.player_last_stop_direction,0);
+    for _ in 0..32 {screen.update_frame(idle);}
+    assert_eq!(screen.player_moving_direction,0);
+    assert_eq!(screen.player_last_stop_direction,2);
+    // Continue resets only the visible facing; idle must retain the stop.
+    screen.state.player.facing=Direction::Down;
+    for _ in 0..120 {screen.update_frame(idle);}
+    assert_eq!(screen.player_last_stop_direction,2);
+    let mut data=crate::save::SaveData::new().game_data;
+    screen.write_system_save_state(&mut data);
+    assert_eq!(data.player_last_stop_direction,2);
+    assert_eq!(data.player_moving_direction,0);
+    let mut restored=screen_on(MapId::PalletTown);
+    restored.restore_system_save_state(&data);
+    restored.update_frame(idle);
+    assert_eq!(restored.player_last_stop_direction,2);
+    assert_eq!(restored.player_moving_direction,0);
+}
