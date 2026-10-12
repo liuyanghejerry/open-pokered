@@ -72,6 +72,10 @@ pub struct OverworldSnapshot {
     pub wild_data_state: crate::overworld::wild_encounters::WildDataState,
     pub frame_counter: u32,
     pub state: OverworldState,
+    #[serde(default)]
+    pub player_last_stop_direction: u8,
+    #[serde(default)]
+    pub player_moving_direction: u8,
     pub map_data: Option<MapData>,
     pub npc_states: Vec<NpcRuntimeState>,
     pub npc_pokemon_data: Vec<PokemonNpcData>,
@@ -226,6 +230,8 @@ impl OverworldSnapshot {
             script_engine: None,
             frame_counter: 0,
             state: screen.state.clone(),
+            player_last_stop_direction: screen.player_last_stop_direction,
+            player_moving_direction: screen.player_moving_direction,
             map_data: None,
             npc_states: Vec::new(),
             npc_pokemon_data: Vec::new(),
@@ -337,6 +343,7 @@ impl OverworldSnapshot {
             ship_departure: None,
         };
         snapshot_fields!(restore &mut snap, screen,
+            player_last_stop_direction, player_moving_direction,
             frame_counter, state, map_data, npc_states, npc_pokemon_data, pending_dialogue,
             last_script_dialogue, pending_choice, script_money_box, script_coin_box, gift_box_number, pending_pokedex_entry, pending_naming_screen, naming_flash_frames,
             pending_party_select, party_select_requested, pending_set_nickname,
@@ -376,6 +383,7 @@ impl OverworldSnapshot {
     ) {
         screen.load_map_script_ex(self.state.current_map, false);
         snapshot_fields!(restore screen, self,
+            player_last_stop_direction, player_moving_direction,
             wild_data_state,
             frame_counter, state, map_data, npc_states, npc_pokemon_data, pending_dialogue,
             last_script_dialogue, pending_choice, script_money_box, script_coin_box, gift_box_number, pending_pokedex_entry, pending_naming_screen, naming_flash_frames,
@@ -585,6 +593,25 @@ impl BattleSnapshot {
 #[cfg(test)]
 mod balance_snapshot_tests {
     use super::*;
+    #[test]
+    fn direction_history_survives_frame_snapshot_and_legacy_json() {
+        let mut screen = OverworldScreen::new(pokered_data::maps::MapId::PalletTown, None, pokered_data::impl_traits::PokemonRedData);
+        screen.player_last_stop_direction = 2;
+        screen.player_moving_direction = 8;
+        let snapshot = OverworldSnapshot::capture(&screen);
+        let mut encoded = serde_json::to_value(&snapshot).unwrap();
+        let decoded: OverworldSnapshot = serde_json::from_value(encoded.clone()).unwrap();
+        screen.player_last_stop_direction = 4;
+        screen.player_moving_direction = 1;
+        decoded.restore_into(&mut screen);
+        assert_eq!((screen.player_last_stop_direction, screen.player_moving_direction), (2, 8));
+        encoded.as_object_mut().unwrap().remove("player_last_stop_direction");
+        encoded.as_object_mut().unwrap().remove("player_moving_direction");
+        let legacy: OverworldSnapshot = serde_json::from_value(encoded).unwrap();
+        legacy.restore_into(&mut screen);
+        assert_eq!((screen.player_last_stop_direction, screen.player_moving_direction), (0, 0));
+    }
+
     #[test]
     fn script_balances_survive_frame_snapshot_restore() {
         let mut screen = OverworldScreen::new(pokered_data::maps::MapId::GameCorner, None, pokered_data::impl_traits::PokemonRedData);
