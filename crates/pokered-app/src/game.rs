@@ -2868,22 +2868,17 @@ impl PokemonGame {
         let _ = next;
     }
 
-    /// Re-baseline the overworld's button edge detectors against the buttons
-    /// currently held. Called by the update loop before the first
-    /// `overworld.update_frame` after any frame that skipped it (sub-screens,
-    /// naming screen, cutscenes…): the press that drove whatever ran in
-    /// between may still be down, and without the re-baseline the overworld's
-    /// own edge detection (`update.rs a_just_pressed`) re-detects it as a
-    /// fresh press on the first frame back — instantly talking to a facing
-    /// NPC. The original is immune: home/joypad.asm recomputes hJoyPressed
-    /// against hJoyReleased every frame, so a press consumed by one loop can
-    /// never re-fire in another.
+    /// Restore the previous physical sample after a menu/cutscene gap.
+    /// A held confirmation must not become a fresh field press; a genuinely
+    /// new press on the first returning frame must remain detectable.
     fn sync_overworld_input_edges(&mut self, input: &InputState) {
+        let previously_held = |b| input.is_just_released(b)
+            || (input.is_held(b) && !input.is_just_pressed(b));
         self.overworld.sync_prev_input(
-            input.is_held(GbButton::A),
-            input.is_held(GbButton::B),
-            input.is_held(GbButton::Up),
-            input.is_held(GbButton::Down),
+            previously_held(GbButton::A),
+            previously_held(GbButton::B),
+            previously_held(GbButton::Up),
+            previously_held(GbButton::Down),
         );
     }
 
@@ -4159,6 +4154,13 @@ impl PokemonGame {
                         && input.is_held(GbButton::B)
                         && input.is_held(GbButton::Start)
                         && input.is_held(GbButton::Select);
+                    if ow_gapped_last_frame {
+                        let previously_held = |b| input.is_just_released(b)
+                            || (input.is_held(b) && !input.is_just_pressed(b));
+                        self.overworld.synchronize_player_buttons(
+                            previously_held(GbButton::A), previously_held(GbButton::Start),
+                        );
+                    }
                     let ow_input = OverworldInput::new(
                         input.is_held(GbButton::Up),
                         input.is_held(GbButton::Down),
@@ -4166,7 +4168,7 @@ impl PokemonGame {
                         input.is_held(GbButton::Right),
                         input.is_held(GbButton::A),
                         input.is_held(GbButton::B),
-                        input.is_just_pressed(GbButton::Start) && !soft_reset_combo_held,
+                        input.is_held(GbButton::Start) && !soft_reset_combo_held,
                         input.is_held(GbButton::Select),
                     );
                     // Seed synchronous script-query state from persistent game
@@ -9991,6 +9993,67 @@ mod link_stats_cry_fidelity_tests {
                 assert_eq!(g.pc_screen.as_ref().unwrap().phase(),pokered_core::pc_screen::PcPhase::MonAction);
                 assert_eq!(g.save_data.party.count(),2);assert_eq!(g.save_data.pc_storage.current_box().count(),1);
             }
+        });
+    }
+
+    #[test]
+    #[ignore = "deterministic headless before/after capture; FIDELITY_FIELD_INPUT_CAPTURE"]
+    fn capture_field_input_and_follow_515() {
+        run_link_save_fixture(|| {
+            use pokered_core::overworld::Direction;
+            let dir = std::path::PathBuf::from(std::env::var("FIDELITY_FIELD_INPUT_CAPTURE").unwrap());
+            let case = std::env::var("FIDELITY_FIELD_INPUT_CASE").unwrap();
+            std::fs::create_dir_all(&dir).unwrap();
+            let mut g = fixture(Species::Bulbasaur, 13, Direction::Up);
+            let map = if case == "oak-follow" { MapId::PalletTown } else { MapId::ViridianPokecenter };
+            g.overworld = OverworldScreen::new(map, None, PokemonRedData);
+            g.overworld.set_rng_seed(42);
+            g.overworld.state.player.x = if case == "oak-follow" { 10 } else { 13 };
+            g.overworld.state.player.y = if case == "oak-follow" { 3 } else if case == "both-idle" { 4 } else { 5 };
+            g.overworld.state.player.facing = Direction::Up;
+            if case == "oak-follow" { g.save_data.party = Default::default(); }
+            let idle = InputState::new();
+            for _ in 0..120 { g.update(&idle); }
+            let anchor = g.frame_count;
+            let mut input = InputState::new();
+            let mut rows = Vec::new();
+            let last = if case == "oak-follow" { 1400 } else { 45 };
+            for t in -1i32..=last {
+                if t >= 0 {
+                    input.begin_frame();
+                    let up = (case == "oak-follow") || (case != "both-idle" && t == 0);
+                    let a = match case.as_str() {
+                        "a-short" => t == 5,
+                        "a-held" => (5..40).contains(&t),
+                        "both-idle" => t == 0,
+                        "oak-follow" => t % 40 == 0,
+                        _ => false,
+                    };
+                    let start = match case.as_str() {
+                        "start-short" => t == 5,
+                        "start-held" => (5..40).contains(&t),
+                        "both-idle" => t == 0,
+                        _ => false,
+                    };
+                    for (button, held) in [(GbButton::Up, up), (GbButton::A, a), (GbButton::Start, start)] {
+                        if held { input.press(button); } else { input.release(button); }
+                    }
+                    g.update(&input);
+                    assert_eq!(g.frame_count, anchor + t as u64 + 1);
+                }
+                let mut fb = FrameBuffer::new(RenderConfig::new(160,144), Rgba::WHITE);
+                g.draw(&mut fb);
+                fb.save_png(&dir.join(format!("frame-{:04}.png",t+1))).unwrap();
+                rows.push(serde_json::json!({"t":t,"frame":g.frame_count,"input":input.raw_current(),
+                    "screen":format!("{:?}",g.state.screen),"map":format!("{:?}",g.overworld.state.current_map),
+                    "x":g.overworld.state.player.x,"y":g.overworld.state.player.y,
+                    "facing":format!("{:?}",g.overworld.state.player.facing),
+                    "movement":format!("{:?}",g.overworld.state.player.movement_state),
+                    "walk_counter":g.overworld.state.walk_counter,"dialogue":g.overworld.pending_dialogue.is_some(),
+                    "effect":g.overworld.active_script_effect_value(),
+                    "npcs":g.overworld.npc_states.iter().map(|n|serde_json::json!({"x":n.x,"y":n.y,"walk_counter":n.walk_counter})).collect::<Vec<_>>() }));
+            }
+            std::fs::write(dir.join("frames.json"),serde_json::to_string_pretty(&rows).unwrap()).unwrap();
         });
     }
 

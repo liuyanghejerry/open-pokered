@@ -1,7 +1,7 @@
 //! Pokémon Red/Blue player movement — re-exports from dotzuki-engine.
 
 pub use dotzuki_engine::overworld::player_movement::{
-    advance_step, direction_delta, frames_per_step, get_tile_at_position, opposite_direction,
+    advance_step, check_warps_no_collision, direction_delta, frames_per_step, get_tile_at_position, opposite_direction,
     process_frame, try_move, InputState, MoveResult, WALK_COUNTER_INIT,
 };
 

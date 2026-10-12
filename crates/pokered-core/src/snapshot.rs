@@ -65,6 +65,10 @@ use pokered_data::trainer_data::TrainerClass;
 
 use crate::overworld::native_script::NativeScriptEngineSnapshot;
 
+fn default_overworld_input() -> dotzuki_engine::overworld::OverworldInput {
+    dotzuki_engine::overworld::OverworldInput::new(false, false, false, false, false, false, false, false)
+}
+
 /// Everything on [`OverworldScreen`] that influences future frames.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OverworldSnapshot {
@@ -76,6 +80,8 @@ pub struct OverworldSnapshot {
     pub player_last_stop_direction: u8,
     #[serde(default)]
     pub player_moving_direction: u8,
+    #[serde(default)]
+    pub sampled_player_input: Option<dotzuki_engine::overworld::OverworldInput>,
     pub map_data: Option<MapData>,
     pub npc_states: Vec<NpcRuntimeState>,
     pub npc_pokemon_data: Vec<PokemonNpcData>,
@@ -232,6 +238,7 @@ impl OverworldSnapshot {
             state: screen.state.clone(),
             player_last_stop_direction: screen.player_last_stop_direction,
             player_moving_direction: screen.player_moving_direction,
+            sampled_player_input: Some(screen.sampled_player_input),
             map_data: None,
             npc_states: Vec::new(),
             npc_pokemon_data: Vec::new(),
@@ -382,6 +389,14 @@ impl OverworldSnapshot {
         screen: &mut OverworldScreen<G>,
     ) {
         screen.load_map_script_ex(self.state.current_map, false);
+        // Older snapshots already preserve these button edges. Retain them
+        // when migrating so a held A does not become a fresh field press.
+        screen.sampled_player_input = self.sampled_player_input.unwrap_or_else(|| {
+            dotzuki_engine::overworld::OverworldInput::new(
+                self.prev_up_pressed, self.prev_down_pressed, false, false,
+                self.prev_a_pressed, self.prev_b_pressed, false, false,
+            )
+        });
         snapshot_fields!(restore screen, self,
             player_last_stop_direction, player_moving_direction,
             wild_data_state,
@@ -593,6 +608,26 @@ impl BattleSnapshot {
 #[cfg(test)]
 mod balance_snapshot_tests {
     use super::*;
+    #[test]
+    fn sampled_field_buttons_survive_snapshot_and_legacy_json() {
+        let mut screen = OverworldScreen::new(pokered_data::maps::MapId::PalletTown, None, pokered_data::impl_traits::PokemonRedData);
+        screen.sampled_player_input = dotzuki_engine::overworld::OverworldInput::new(true, false, false, false, true, false, true, false);
+        let snapshot = OverworldSnapshot::capture(&screen);
+        let mut encoded = serde_json::to_value(&snapshot).unwrap();
+        let decoded: OverworldSnapshot = serde_json::from_value(encoded.clone()).unwrap();
+        screen.sampled_player_input = default_overworld_input();
+        decoded.restore_into(&mut screen);
+        assert_eq!(screen.sampled_player_input, snapshot.sampled_player_input.unwrap());
+        encoded.as_object_mut().unwrap().remove("sampled_player_input");
+        encoded["prev_a_pressed"] = serde_json::json!(true);
+        encoded["prev_up_pressed"] = serde_json::json!(true);
+        let legacy: OverworldSnapshot = serde_json::from_value(encoded).unwrap();
+        legacy.restore_into(&mut screen);
+        assert!(screen.sampled_player_input.a);
+        assert!(screen.sampled_player_input.up);
+        assert!(!screen.sampled_player_input.start);
+    }
+
     #[test]
     fn direction_history_survives_frame_snapshot_and_legacy_json() {
         let mut screen = OverworldScreen::new(pokered_data::maps::MapId::PalletTown, None, pokered_data::impl_traits::PokemonRedData);
