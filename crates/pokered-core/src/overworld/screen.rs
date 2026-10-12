@@ -2586,6 +2586,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     pub fn restore_loaded_save_flags(&mut self, save: &crate::save::SaveData, extras: Option<HashMap<String, bool>>) {
         self.set_event_flags_bytes(&save.game_data.event_flags);
         self.restore_system_save_state(&save.game_data);
+        self.restore_saved_transport(save);
         if let Some(mut extras)=extras {
             extras.retain(|name,value| {
                 if pokered_data::event_flags::EventFlag::from_name(name).is_some() { return false; }
@@ -2596,6 +2597,20 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             });
             self.set_script_flags(extras);
         }
+    }
+
+    fn restore_saved_transport(&mut self, save: &crate::save::SaveData) {
+        // LoadPlayerSpriteGraphics keeps a saved bike only where riding is
+        // allowed, and resets other modes when tile animations are disabled.
+        // LoadMapData runs this before CheckForceBikeOrSurf on map entry.
+        let bike_allowed = matches!(self.state.current_map, MapId::Route23 | MapId::IndigoPlateau)
+            || self.map_data.as_ref().is_some_and(|map| matches!(map.tileset.to_u8(), 0 | 3 | 11 | 14 | 17));
+        self.state.player.transport = match save.game_data.walk_bike_surf_state {
+            1 if bike_allowed => TransportMode::Biking,
+            2 if save.tile_animations != 0 => TransportMode::Surfing,
+            _ => TransportMode::Walking,
+        };
+        self.apply_map_entry_transport(self.state.current_map, self.state.player.x, self.state.player.y);
     }
 
     /// InGameTrade_DoTrade records success after species validation, before
@@ -2611,6 +2626,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
 
     /// Restore counters and status bytes that live outside the event bitset.
     pub fn restore_system_save_state(&mut self, data: &crate::save::game_data::GameData) {
+        self.forced_bike.active = data.status_flags[5] & (1 << 5) != 0;
         self.first_lock_trash_can = data.first_lock_trash_can;
         self.second_lock_trash_can = data.second_lock_trash_can;
         self.script_engine.set_gym_trash_indices(self.first_lock_trash_can, self.second_lock_trash_can);
@@ -2628,6 +2644,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
 
     /// Persist Safari allowances and original status-byte script aliases.
     pub fn write_system_save_state(&self, data: &mut crate::save::game_data::GameData) {
+        // Preserve BIT_ALWAYS_ON_BIKE separately from the player sprite/mode.
+        if self.forced_bike.active { data.status_flags[5] |= 1 << 5; }
+        else { data.status_flags[5] &= !(1 << 5); }
         data.first_lock_trash_can = self.first_lock_trash_can;
         data.second_lock_trash_can = self.second_lock_trash_can;
         for (index, name) in ["TERRY", "MARCEL", "CHIKUCHIKU", "SAILOR", "DUX", "MARC", "LOLA", "DORIS", "CRINKLES", "SPOT"].iter().enumerate() {

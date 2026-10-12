@@ -474,3 +474,32 @@ fn seafoam_current_releases_outside() {
     mount_on_road(&mut screen, MapId::Route1, 10, 2);
     assert_eq!(screen.state.player.transport, TransportMode::Surfing);
 }
+
+#[test]
+fn saved_transport_respects_tileset_and_forced_entry_rules() {
+    use crate::save::SaveData;
+    use dotzuki_engine::overworld::types::TransportMode;
+    let cases = [
+        (MapId::PalletTown, 5, 6, 1, 2, false, TransportMode::Biking, false),
+        (MapId::ViridianPokecenter, 13, 4, 1, 0, false, TransportMode::Walking, false),
+        (MapId::Route23, 5, 6, 1, 0, false, TransportMode::Biking, false),
+        (MapId::PalletTown, 5, 6, 2, 2, false, TransportMode::Surfing, false),
+        (MapId::ViridianPokecenter, 13, 4, 2, 0, false, TransportMode::Walking, false),
+        (MapId::Route16, 17, 10, 0, 2, false, TransportMode::Biking, true),
+        (MapId::Route16Gate1F, 5, 6, 1, 0, true, TransportMode::Walking, false),
+        (MapId::Route17, 8, 10, 1, 2, true, TransportMode::Biking, true),
+    ];
+    for (map, x, y, mode, animations, locked, expected, expected_lock) in cases {
+        let mut screen = crate::overworld::OverworldScreen::new(map, None, pokered_data::impl_traits::PokemonRedData);
+        screen.state.player.x = x; screen.state.player.y = y;
+        let mut save = SaveData::new();
+        save.game_data.walk_bike_surf_state = mode;
+        save.game_data.status_flags[5] = if locked { 1 << 5 } else { 0 };
+        save.tile_animations = animations;
+        screen.restore_loaded_save_flags(&save, None);
+        assert_eq!(screen.state.player.transport, expected, "{map:?}");
+        assert_eq!(screen.forced_bike.active, expected_lock, "{map:?}");
+        screen.write_system_save_state(&mut save.game_data);
+        assert_eq!(save.game_data.status_flags[5] & (1 << 5) != 0, expected_lock);
+    }
+}

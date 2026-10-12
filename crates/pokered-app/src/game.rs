@@ -1914,6 +1914,11 @@ impl PokemonGame {
     save.game_data.position.y = player.y as u8;
     save.game_data.position.x_block = (player.x % 2) as u8;
     save.game_data.position.y_block = (player.y % 2) as u8;
+    save.game_data.walk_bike_surf_state = match player.transport {
+        dotzuki_engine::overworld::types::TransportMode::Walking => 0,
+        dotzuki_engine::overworld::types::TransportMode::Biking => 1,
+        dotzuki_engine::overworld::types::TransportMode::Surfing => 2,
+    };
     if let Some(last_map) = overworld.last_map {
         save.game_data.last_map = last_map as u8;
     }
@@ -12147,6 +12152,50 @@ mod continue_map_music_tests {
             let manager = game.audio.as_ref().unwrap().manager.lock().unwrap();
             assert!(manager.sequencer.music_playing, "{map:?}");
             assert_eq!(manager.sequencer.current_music_id, expected as u8, "{map:?}");
+        }
+    }
+}
+
+#[cfg(test)]
+mod saved_transport_tests {
+    use super::*;
+    use dotzuki_engine::overworld::types::TransportMode;
+
+    #[test]
+    fn live_save_writes_current_transport_and_clears_stale_mode() {
+        let mut game = PokemonGame::new_with_options(
+            GameVersion::Red, None, None, None, false, None, false, true,
+            #[cfg(feature = "debug-server")] None,
+        );
+        game.save_data = SaveData::new();
+        for (transport, expected) in [(TransportMode::Biking, 1), (TransportMode::Surfing, 2), (TransportMode::Walking, 0)] {
+            game.overworld.state.player.transport = transport;
+            let saved = game.build_save_data();
+            assert_eq!(saved.game_data.walk_bike_surf_state, expected);
+            let bytes = pokered_core::save::sram_export::export_sram(&saved);
+            assert_eq!(pokered_core::save::sram_import::import_sram(&bytes).unwrap().game_data.walk_bike_surf_state, expected);
+        }
+    }
+
+    #[test]
+    fn continue_restores_saved_transport_before_starting_music() {
+        for (mode, expected, music) in [(1, TransportMode::Biking, MusicId::BIKE_RIDING),
+            (2, TransportMode::Surfing, MusicId::SURFING), (0, TransportMode::Walking, MusicId::PALLET_TOWN)] {
+            let mut game = PokemonGame::new_with_options(
+                GameVersion::Red, None, None, None, false, None, false, true,
+                #[cfg(feature = "debug-server")] None,
+            );
+            game.save_data = SaveData::new();
+            game.save_data.game_data.position.map_id = MapId::PalletTown as u8;
+            game.save_data.game_data.position.x = 5;
+            game.save_data.game_data.position.y = 6;
+            game.save_data.game_data.walk_bike_surf_state = mode;
+            game.save_data.tile_animations = 2;
+            game.state.screen = GameScreen::MainMenu;
+            game.main_menu.last_choice = Some(pokered_core::game_state::MainMenuChoice::Continue);
+            game.handle_transition(GameScreen::Overworld);
+            assert_eq!(game.overworld.state.player.transport, expected);
+            assert_eq!(game.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.current_music_id, music as u8);
         }
     }
 }
