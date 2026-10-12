@@ -2680,8 +2680,13 @@ impl PokemonGame {
                 } else {
                     None
                 };
-                if let Some(ref audio) = self.audio {
-                    audio.play_sfx(SfxId::StartMenu);
+                // DisplayStartMenu plays this only on an overworld START.
+                // Returning from a submenu uses RedisplayStartMenu, which
+                // preserves that submenu's confirm/cancel sound.
+                if self.state.screen == GameScreen::Overworld {
+                    if let Some(ref audio) = self.audio {
+                        audio.play_sfx(SfxId::StartMenu);
+                    }
                 }
             }
             GameScreen::OptionsMenu => {
@@ -5452,6 +5457,18 @@ impl PokemonGame {
                     a: pressed(GbButton::A),
                     b: pressed(GbButton::B),
                 };
+                // HandleMenuInput plays SFX_PRESS_AB for accepted A/B in
+                // both Pokédex menus, including an unseen list selection.
+                // Entry/AREA use WaitForTextScrollButtonPress instead.
+                if matches!(self.pokedex_screen.mode(),
+                    pokered_core::pokedex_screen::PokedexScreenMode::List
+                        | pokered_core::pokedex_screen::PokedexScreenMode::SideMenu)
+                    && (dex_input.a || dex_input.b)
+                {
+                    if let Some(ref audio) = self.audio {
+                        audio.play_sfx(SfxId::PressAB);
+                    }
+                }
                 match self.pokedex_screen.update_frame(dex_input) {
                     // List-B / post-capture close: the original returns to the
                     // start menu (RedisplayStartMenu); the post-capture entry
@@ -12228,5 +12245,56 @@ mod quick_start_music_tests {
             assert!(manager.sequencer.music_playing, "{warp}");
             assert_eq!(manager.sequencer.current_music_id, expected as u8, "{warp}");
         }
+    }
+}
+
+#[cfg(test)]
+mod pokedex_menu_audio_tests {
+    use super::*;
+    use pokered_data::species::Species;
+
+    fn enter_list(full_seen: bool) -> PokemonGame {
+        let mut g = PokemonGame::new_with_options(
+            GameVersion::Red, None, None, None, false, None, false, true,
+            #[cfg(feature = "debug-server")] None,
+        );
+        g.save_data = SaveData::new();
+        for n in 1..=25 { if full_seen || n==1 || n==25 { g.save_data.game_data.pokedex.set_seen(Species::from_index_id(n)); } }
+        g.overworld.set_event_flag_live(pokered_data::event_flags::EventFlag::EVENT_GOT_POKEDEX);
+        g.state.screen = GameScreen::Overworld;
+        let mut input = InputState::new(); input.press(GbButton::Start); g.update(&input);
+        assert_eq!(g.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.current_sfx_id, SfxId::StartMenu as u8);
+        for _ in 0..90 { g.update(&InputState::new()); }
+        let mut input = InputState::new(); input.press(GbButton::A); g.update(&input);
+        for _ in 0..70 { g.update(&InputState::new()); }
+        assert_eq!(g.state.screen, GameScreen::Pokedex);
+        assert_eq!(g.pokedex_screen.mode(), pokered_core::pokedex_screen::PokedexScreenMode::List);
+        g
+    }
+
+    #[test]
+    fn actual_pokedex_menu_confirm_and_cancel_start_button_sfx() {
+        for key in [GbButton::A, GbButton::B] {
+            let mut g = enter_list(true);
+            assert!(!g.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.sfx_playing);
+            let mut input = InputState::new(); input.press(key); g.update(&input);
+            let manager = g.audio.as_ref().unwrap().manager.lock().unwrap();
+            assert!(manager.sequencer.sfx_playing);
+            assert_eq!(manager.sequencer.current_sfx_id, SfxId::PressAB as u8);
+        }
+        let mut g = enter_list(true);
+        let mut input = InputState::new(); input.press(GbButton::A); g.update(&input);
+        for _ in 0..70 { g.update(&InputState::new()); }
+        assert_eq!(g.pokedex_screen.mode(), pokered_core::pokedex_screen::PokedexScreenMode::SideMenu);
+        let mut input = InputState::new(); input.press(GbButton::B); g.update(&input);
+        assert_eq!(g.pokedex_screen.mode(), pokered_core::pokedex_screen::PokedexScreenMode::List);
+        assert_eq!(g.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.current_sfx_id, SfxId::PressAB as u8);
+
+        let mut unseen = enter_list(false);
+        let mut input = InputState::new(); input.press(GbButton::Down); unseen.update(&input);
+        unseen.update(&InputState::new());
+        let mut input = InputState::new(); input.press(GbButton::A); unseen.update(&input);
+        assert_eq!(unseen.pokedex_screen.mode(), pokered_core::pokedex_screen::PokedexScreenMode::List);
+        assert_eq!(unseen.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.current_sfx_id, SfxId::PressAB as u8);
     }
 }
