@@ -288,6 +288,15 @@ fn save_summary_from_data(save: &SaveData) -> SaveFileSummary {
 /// (`LoadHallOfFameTeams` + `wHoFTeamNo`, engine/menus/league_pc.asm:16-35):
 /// oldest first, numbered by their all-time index so teams recorded before
 /// the 50-team SRAM window wrapped keep their true number.
+fn default_overworld_music(map: MapId, transport: dotzuki_engine::overworld::types::TransportMode) -> Option<MusicId> {
+    use dotzuki_engine::overworld::types::TransportMode;
+    match transport {
+        TransportMode::Walking => MusicId::from_u8(pokered_core::overworld::map_loading::get_map_music(map) as u8),
+        TransportMode::Biking => Some(MusicId::BIKE_RIDING),
+        TransportMode::Surfing => Some(MusicId::SURFING),
+    }
+}
+
 fn hof_team_records(save: &SaveData) -> Vec<pokered_core::pc_screen::HofTeamRecord> {
     use pokered_core::pc_screen::{HofMonView, HofTeamRecord};
     let count = save.hall_of_fame.team_count();
@@ -1241,6 +1250,15 @@ impl PokemonGame {
                 }
             }
         };
+
+        // A direct overworld boot bypasses the Continue transition that
+        // normally starts the map theme. Keep silent/PCM runs in sync too.
+        if skip_intro {
+            if let (Some(audio), Some(music)) = (&audio,
+                default_overworld_music(overworld.state.current_map, overworld.state.player.transport)) {
+                audio.play_music(music);
+            }
+        }
 
         #[cfg(all(feature = "desktop", debug_assertions, not(target_arch = "wasm32")))]
         let asset_watcher = if watch {
@@ -2452,16 +2470,9 @@ impl PokemonGame {
                         if let Some(ref audio) = self.audio {
                             // SpecialEnterMap resumes PlayDefaultMusic for the
                             // loaded map and transport, not the new-game theme.
-                            use dotzuki_engine::overworld::types::TransportMode;
-                            let music = match self.overworld.state.player.transport {
-                                TransportMode::Walking => MusicId::from_u8(
-                                    pokered_core::overworld::map_loading::get_map_music(
-                                        self.overworld.state.current_map,
-                                    ) as u8,
-                                ),
-                                TransportMode::Biking => Some(MusicId::BIKE_RIDING),
-                                TransportMode::Surfing => Some(MusicId::SURFING),
-                            };
+                            let music = default_overworld_music(
+                                self.overworld.state.current_map, self.overworld.state.player.transport,
+                            );
                             if let Some(music) = music {
                                 audio.play_music(music);
                             }
@@ -12196,6 +12207,26 @@ mod saved_transport_tests {
             game.handle_transition(GameScreen::Overworld);
             assert_eq!(game.overworld.state.player.transport, expected);
             assert_eq!(game.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.current_music_id, music as u8);
+        }
+    }
+}
+
+#[cfg(test)]
+mod quick_start_music_tests {
+    use super::*;
+
+    #[test]
+    fn quick_start_starts_the_selected_map_theme_even_without_device_output() {
+        for (warp, expected) in [("ViridianPokecenter,13,4", MusicId::POKECENTER),
+            ("PewterGym,4,10", MusicId::GYM), ("LavenderTown,5,6", MusicId::LAVENDER)] {
+            let game = PokemonGame::new_with_options(
+                GameVersion::Red, None, None, None, true, Some(warp.into()), false, true,
+                #[cfg(feature = "debug-server")] None,
+            );
+            assert_eq!(game.state.screen, GameScreen::Overworld);
+            let manager = game.audio.as_ref().unwrap().manager.lock().unwrap();
+            assert!(manager.sequencer.music_playing, "{warp}");
+            assert_eq!(manager.sequencer.current_music_id, expected as u8, "{warp}");
         }
     }
 }
