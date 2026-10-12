@@ -333,3 +333,34 @@ class BattleCompletionBudgetTests(unittest.TestCase):
         game.wait.side_effect=AssertionError("terminal text stuck")
         with self.assertRaises(AssertionError):pt.Game.battle_loop(game,max_iters=1)
         self.assertEqual(game.tap.call_count,121)
+
+
+class BagSelectionTests(unittest.TestCase):
+    @patch.object(late, "open_start")
+    def test_selects_tm24_above_the_recorded_cancel_cursor(self, open_start):
+        # Actual m36 failure: TM24 exists at index 7, cursor 19 is CANCEL.
+        items = ["Tm34", "HelixFossil", "Tm11", "Nugget", "SsTicket",
+                 "Tm28", "Hm01", "Tm24", "LiftKey", "SilphScope",
+                 "RareCandy", "PokeFlute", "Tm06", "Hm03", "Hm04",
+                 "CardKey", "HyperPotion", "Tm46", "Hm02"]
+        class Selected(Exception):
+            pass
+        class Bag:
+            cursor = 19
+            def st(self):
+                return {"field_menu": {"kind": "bag", "cursor": self.cursor,
+                        "items": [{"item": name, "qty": 1} for name in items]}}
+            def tap(self, key, frames):
+                if key == "up":
+                    self.cursor = max(0, self.cursor - 1)
+                elif key == "down":
+                    self.cursor = min(len(items), self.cursor + 1)
+                elif key == "a":
+                    raise Selected(items[self.cursor])
+                else:
+                    raise AssertionError(key)
+        game = Bag()
+        with self.assertRaisesRegex(Selected, "^Tm24$"):
+            late.use_item(game, "Tm24", party_index=2)
+        self.assertEqual(game.cursor, 7)
+        open_start.assert_called_once_with(game, "Item")
