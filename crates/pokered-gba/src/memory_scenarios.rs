@@ -16,6 +16,7 @@ pub struct Scenarios {
     observed: bool,
     case_started: bool,
     next_input: u32,
+    last_dex_page: usize,
 }
 
 impl Scenarios {
@@ -68,9 +69,20 @@ impl Scenarios {
                     pokered_app::game::largest_free_block(),
                     crate::unused_stack_bytes()
                 );
+                self.last_dex_page = 0;
                 input.press(GbButton::B);
             }
             _ => {
+                // Original DATA pages accept B as a page turn; only the last
+                // page returns to the list. Exercise every page in EN/ZH.
+                if game.pokedex_screen.mode() == PokedexScreenMode::Entry {
+                    let page = game.pokedex_screen.entry_page();
+                    assert!(page > self.last_dex_page, "B must advance the DATA page");
+                    assert!(page < game.pokedex_screen.entry_total_pages());
+                    self.last_dex_page = page;
+                    input.press(GbButton::B);
+                    return;
+                }
                 assert_eq!(game.pokedex_screen.mode(), PokedexScreenMode::List);
                 if game.pokedex_screen.cursor() == 151 {
                     if self.case == 0 {
