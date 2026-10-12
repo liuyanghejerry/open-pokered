@@ -5445,7 +5445,7 @@ impl PokemonGame {
                         play_species_cry(audio, self.pokedex_screen.cursor_species());
                     }
                 }
-                if entry_cry_started && self.pokedex_screen.from_list() {
+                if entry_cry_started {
                     self.pokedex_entry_cry_waiting = true;
                 } else if self.pokedex_screen.mode()
                     != pokered_core::pokedex_screen::PokedexScreenMode::Entry
@@ -5474,10 +5474,9 @@ impl PokemonGame {
                 };
                 // DATA calls blocking PlayCry / WaitForSoundToFinish before
                 // polling its text buttons. Discard input during playback;
-                // do not queue it for the first readable frame. Keep direct
-                // post-capture entries separate from this list caller.
-                if self.pokedex_screen.from_list()
-                    && self.pokedex_screen.mode()
+                // do not queue it for the first readable frame. The list
+                // and post-capture callers share ShowPokedexDataInternal.
+                if self.pokedex_screen.mode()
                         == pokered_core::pokedex_screen::PokedexScreenMode::Entry
                     && self.pokedex_entry_cry_waiting
                 {
@@ -12471,7 +12470,7 @@ mod pokedex_data_cry_input_tests {
     #[test]
     fn data_discards_early_buttons_until_the_live_cry_finishes() {
         for dex_number in [1, 6, 25, 103, 129, 150, 151] {
-            for owned in [false, true] {
+            for (owned, from_list) in [(false, true), (true, true), (false, false), (true, false)] {
                 for button in [GbButton::A, GbButton::B] {
                     let species = Species::from_index_id(dex_number);
                     let mut dex = Pokedex::new();
@@ -12491,6 +12490,13 @@ mod pokedex_data_cry_input_tests {
                         game.pokedex_screen.update_frame(PokedexScreenInput {
                             a: true, ..Default::default()
                         });
+                    }
+                    if !from_list {
+                        // Use the actual ownership flags of this fixture.
+                        let mut direct = Pokedex::new();
+                        direct.set_seen(species);
+                        if owned { direct.set_owned(species); }
+                        game.pokedex_screen = PokedexScreenState::new_entry(direct, species, GameVersion::Red);
                     }
                     let mut input = InputState::new();
                     input.press(button);
@@ -12529,11 +12535,13 @@ mod pokedex_data_cry_input_tests {
                         let mut next = InputState::new();
                         next.press(button);
                         game.update(&next);
-                        assert!(game.pokedex_screen.mode() == PokedexScreenMode::List
+                        assert!(game.state.screen != GameScreen::Pokedex
+                            || game.pokedex_screen.mode() == PokedexScreenMode::List
                             || game.pokedex_screen.entry_page() == 2,
                             "page-button sound must not restart the cry lock");
                     } else {
-                        assert_eq!(game.pokedex_screen.mode(), PokedexScreenMode::List);
+                        if from_list { assert_eq!(game.pokedex_screen.mode(), PokedexScreenMode::List); }
+                        else { assert_eq!(game.state.screen, GameScreen::Overworld); }
                     }
                 }
             }
