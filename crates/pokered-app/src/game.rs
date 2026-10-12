@@ -5437,16 +5437,17 @@ impl PokemonGame {
                         play_species_cry(audio, self.pokedex_screen.cursor_species());
                     }
                 }
-                // The list uses JoypadLowSensitivity with hJoy7=1: a new
+                // Both menus use JoypadLowSensitivity with hJoy7=1: a new
                 // button reports the full held mask. Thus holding DOWN/RIGHT
                 // and then pressing A still takes the direction branch.
-                let list_press = self.pokedex_screen.mode()
-                    == pokered_core::pokedex_screen::PokedexScreenMode::List
+                let menu_press = matches!(self.pokedex_screen.mode(),
+                    pokered_core::pokedex_screen::PokedexScreenMode::List
+                        | pokered_core::pokedex_screen::PokedexScreenMode::SideMenu)
                     && [GbButton::Up, GbButton::Down, GbButton::Left, GbButton::Right,
                         GbButton::A, GbButton::B, GbButton::Start, GbButton::Select]
                         .iter().any(|&button| input.is_just_pressed(button));
                 let pressed = |button| {
-                    if list_press { input.is_held(button) }
+                    if menu_press { input.is_held(button) }
                     else { input.is_just_pressed(button) }
                 };
                 let dex_input = PokedexScreenInput {
@@ -12270,6 +12271,29 @@ mod pokedex_menu_audio_tests {
         assert_eq!(g.state.screen, GameScreen::Pokedex);
         assert_eq!(g.pokedex_screen.mode(), pokered_core::pokedex_screen::PokedexScreenMode::List);
         g
+    }
+
+    #[test]
+    fn side_menu_new_a_includes_the_already_held_down_key() {
+        let mut g = enter_list(true);
+        let mut input = InputState::new();
+        input.press(GbButton::A);
+        g.update(&input);
+        for _ in 0..70 { g.update(&InputState::new()); }
+        input = InputState::new();
+        input.press(GbButton::Down);
+        g.update(&input);
+        assert_eq!(g.pokedex_screen.side_menu_cursor(), 1);
+        // Holding the same mask alone produces no new event here.
+        for _ in 0..3 { input.begin_frame(); g.update(&input); }
+        assert_eq!(g.pokedex_screen.side_menu_cursor(), 1);
+        input.begin_frame();
+        input.press(GbButton::A);
+        g.update(&input);
+        // Original HandleMenuInput first moves CRY→AREA with the full
+        // DOWN|A mask, then HandlePokedexSideMenu selects AREA.
+        assert_eq!(g.pokedex_screen.side_menu_cursor(), 2);
+        assert_eq!(g.pokedex_screen.mode(), pokered_core::pokedex_screen::PokedexScreenMode::Area);
     }
 
     #[test]
