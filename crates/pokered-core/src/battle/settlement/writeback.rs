@@ -73,6 +73,20 @@ pub fn settle_battle_into_save(
                 }
                 // Mark the trainer NPC as defeated.
                 if let Some(npc_index) = battle.trainer_npc_index.take() {
+                    // PrintEndBattleText sets ordinary trainers to STAY/NONE:
+                    // no further wandering, but unrestricted random facing.
+                    // Rivals and Tower7F Rockets retain their departure scripts.
+                    use pokered_data::trainer_data::TrainerClass;
+                    let stays = battle.map_id != crate::data::maps::MapId::PokemonTower7F as u8
+                        && battle.trainer_class.is_some_and(|class| !matches!(class,
+                            TrainerClass::Rival1 | TrainerClass::Rival2 | TrainerClass::Rival3));
+                    if stays {
+                        if let Some(npc) = overworld.npc_states.iter_mut()
+                            .find(|npc| npc.npc_index == npc_index) {
+                            npc.movement_type = crate::overworld::NpcMovementType::Stationary;
+                            npc.range = 0xFF;
+                        }
+                    }
                     crate::overworld::npc_interaction::mark_trainer_defeated(
                         &mut overworld.npc_states,
                         npc_index,
@@ -209,5 +223,53 @@ pub fn settle_battle_into_save(
     SettleWriteback {
         outcome: battle_outcome,
         pending_evolutions,
+    }
+}
+
+#[cfg(test)]
+mod trainer_victory_tests {
+    use super::*;
+    use crate::battle::settlement::{BattleOutcome, BattleSettlement};
+    use crate::overworld::{Direction, NpcMovementType};
+    use pokered_data::{impl_traits::PokemonRedData, maps::MapId, trainer_data::TrainerClass};
+
+    #[test]
+    fn trainer_victory_sets_stay_none_with_original_exceptions() {
+        for (map, class, outcome, expected) in [
+            (MapId::PokemonMansion2F, TrainerClass::Burglar, BattleOutcome::Win, true),
+            (MapId::PokemonMansion3F, TrainerClass::Burglar, BattleOutcome::Win, true),
+            (MapId::Route3, TrainerClass::Youngster, BattleOutcome::Win, true),
+            (MapId::OaksLab, TrainerClass::Rival1, BattleOutcome::Win, false),
+            (MapId::Route22, TrainerClass::Rival2, BattleOutcome::Win, false),
+            (MapId::ChampionsRoom, TrainerClass::Rival3, BattleOutcome::Win, false),
+            (MapId::PokemonTower7F, TrainerClass::Rocket, BattleOutcome::Win, false),
+            (MapId::PokemonMansion2F, TrainerClass::Burglar, BattleOutcome::Loss, false),
+        ] {
+            let mut ow = OverworldScreen::new(map, None, PokemonRedData);
+            let npc = &mut ow.npc_states[0];
+            npc.movement_type = NpcMovementType::Wander;
+            npc.range = 0xFC;
+            npc.facing = Direction::Left;
+            npc.walk_counter = 8;
+            npc.delay_counter = 7;
+            let index = npc.npc_index;
+            let mut battle = BattleScreen::new(true);
+            battle.map_id = map as u8;
+            battle.trainer_class = Some(class);
+            battle.trainer_npc_index = Some(index);
+            battle.settlement = Some(BattleSettlement {
+                outcome, money_gained: 0, money_lost: 0, payday_bonus: 0,
+                exp_entries: vec![], level_ups: vec![], evolutions: vec![],
+            });
+            settle_battle_into_save(&mut battle, &mut SaveData::new(), &mut ow);
+            let npc = &ow.npc_states[0];
+            assert_eq!(npc.movement_type, if expected { NpcMovementType::Stationary }
+                else { NpcMovementType::Wander }, "{map:?}/{class:?}/{outcome:?}");
+            assert_eq!(npc.range, if expected { 0xFF } else { 0xFC });
+            // The source changes only its two movement bytes, preserving
+            // pending pixels, facing and delay from the interrupted walk.
+            assert_eq!((npc.walk_counter, npc.delay_counter, npc.facing),
+                (8, 7, Direction::Left));
+        }
     }
 }
