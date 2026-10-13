@@ -1,0 +1,54 @@
+// prof_parcel.scene — Prof's Parcel cross-map quest
+//
+// This quest spans two maps (ProfLab → CityMart → ProfLab).
+// Each storyline has a @trigger that controls when it activates.
+// The "after" chain links them into a single narrative flow.
+
+game_scene ProfParcelQuest {
+  @storyline("prof_ask") {
+    @trigger(map = "ProfLab", npc = "Prof", after = "prof_lab_intro")
+    @speaker("Prof") {
+      "I need you to go get my parcel"
+      "from the CITY MART."
+    }
+    setFlag("PROF_ASKED_FOR_PARCEL")
+  }
+
+  @storyline("mart_pickup") {
+    @trigger(map = "CityMart", onEnter = true, after = "prof_ask")
+    @speaker("Clerk") {
+      "Hey! You came from the starting town?"
+      "You know the professor, right?"
+      "His order came in. Will you take it to him?"
+    }
+    @choice {
+      @option("Yes") {
+        giveItem("PROF_PARCEL", 1)
+        setFlag("GOT_PROF_PARCEL")
+        @speaker("Clerk") {
+          "OK! Please deliver it to the professor!"
+        }
+      }
+      @option("No") {
+        @speaker("Clerk") {
+          "Oh... well, please come back!"
+        }
+      }
+    }
+  }
+
+  @storyline("prof_delivery") {
+    @trigger(map = "ProfLab", npc = "Prof", after = "mart_pickup")
+    @speaker("Prof") {
+      "Oh! That's my parcel!"
+      "Thank you!"
+    }
+    removeItem("PROF_PARCEL", 1)
+    setFlag("PROF_GOT_PARCEL")
+    @speaker("Prof") {
+      "Now, as promised, here is something"
+      "special for you!"
+    }
+    // Starter scene would continue here
+  }
+}

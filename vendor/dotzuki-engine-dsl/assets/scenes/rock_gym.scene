@@ -1,0 +1,36 @@
+game_scene RockGym {
+  @storyline("gym_battle") {
+    @trigger(map = "RockGym", npc = "Rocco")
+    @speaker("Rocco") {
+      "I'm ROCCO!"
+      "I'm this town's GYM LEADER!"
+      ""
+      "I believe in rock hard defense"
+      "and determination!"
+      ""
+      "That's why my monsters are all"
+      "the rock-type!"
+      ""
+      "Do you still want to challenge me?"
+      "Fine then! Show me your best!"
+    }
+
+    startGymBattle("ROCCO", 1)
+
+    @speaker("Rocco") {
+      "I took you for granted."
+      "As proof of your victory, here's"
+      "the ROCKBADGE!"
+    }
+
+    giveItem("TM_34", 1)
+    giveBadge("ROCKBADGE")
+
+    @speaker("System") {
+      "<PLAYER> received TM34!"
+      ""
+      "TM34 is ROCK SLIDE!"
+      "It hurls massive boulders at the foe!"
+    }
+  }
+}

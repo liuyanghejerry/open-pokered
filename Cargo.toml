@@ -46,6 +46,8 @@ strum_macros = "0.26"
 num-derive = "0.4"
 num-traits = { version = "0.2", default-features = false }
 
-# All dotzuki crates use the same audited commit in their Cargo.toml files.
-# This includes pitch slides, terminating spiral wipes and classic NPC policy,
-# on top of v0.8.2 and the existing bare-metal audio fixes (dotzuki PR #78).
+# All dotzuki crates use the v0.10.0 release commit in their Cargo.toml files.
+# Keep the root and standalone GBA workspaces on the same engine revision. The
+# DSL crate is the v0.10.0 source with a no_std integer-check compatibility fix.
+[patch."https://github.com/liuyanghejerry/dotzuki"]
+dotzuki-engine-dsl = { path = "vendor/dotzuki-engine-dsl" }

@@ -9,7 +9,7 @@ use dotzuki_engine::render::TileRect;
 use pokered_data::ui_layout::schema::YesNoDefaultLayout;
 
 use crate::engine::{Painter, Rgba, TilePos, Ui};
-use dotzuki_ui::widgets::yes_no;
+use dotzuki_ui::widgets::draw_yes_no;
 
 /// Draw a yes/no choice box using a pokered layout definition.
 pub fn draw<P: Painter>(options: &[String], selected: u32, layout: &YesNoDefaultLayout, ui: &mut Ui<P>) {
@@ -32,7 +32,7 @@ pub fn draw<P: Painter>(options: &[String], selected: u32, layout: &YesNoDefault
     let config = MenuConfig::new(area, None, content, cursor);
 
     let opt_vec: Vec<String> = options.to_vec();
-    yes_no::draw_yes_no(&opt_vec, selected as usize, &[config], ui.painter());
+    draw_yes_no(&opt_vec, selected as usize, &[config], ui.painter());
 }
 
 /// Repaint only the changed cursor cells of an already-rendered choice box.
@@ -67,5 +67,5 @@ pub fn cursor_damage(selected: usize, layout: &YesNoDefaultLayout) -> crate::Dam
 
 /// Draw a script menu with a roomier, caller-authored area using the shared widget.
 pub fn draw_with_config<P: Painter>(options: &[String], selected: usize, configs: &[MenuConfig], painter: &mut P) {
-    yes_no::draw_yes_no(options, selected, configs, painter);
+    draw_yes_no(options, selected, configs, painter);
 }

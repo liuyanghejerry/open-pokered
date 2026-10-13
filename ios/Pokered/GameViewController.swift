@@ -1,5 +1,6 @@
 import Metal
 import MetalKit
+import DotzukiTouch
 import UIKit
 
 // MARK: - FFI Bridge
@@ -108,7 +109,10 @@ final class GameViewController: UIViewController {
     var ctxPtr: UnsafeMutablePointer<DotzukiMobileRunner>? = nil
     private var lastCommittedSave = ""
 
-    private let touchHandler = TouchHandler()
+    private var touchOverlay: DTZTouchOverlay!
+    private var touchInputBits: UInt8 = 0
+    private var applicationIsActive = true
+    private var touchSettingsVisible = false
 
     /// Loading screen state — 3-frame deferred init to avoid SpringBoard watchdog.
     private var isLoading = true
@@ -136,7 +140,7 @@ final class GameViewController: UIViewController {
         commandQueue = queue
 
         setupMTKView()
-        setupGamepad()
+        setupTouchOverlay()
         setupFPS()
         setupTexture()
         setupPipeline()
@@ -145,45 +149,24 @@ final class GameViewController: UIViewController {
 
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
-        displayLink.invalidate()
+        touchOverlay?.releaseAll()
     }
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        let safeTop = view.safeAreaInsets.top
-        let w = view.bounds.width
-        let h = view.bounds.height - safeTop
-        let gameH = min(w * 144.0 / 160.0, h * 0.55)
-        mtkView.frame = CGRect(x: 0, y: safeTop, width: w, height: gameH)
-        if let gp = view.subviews.last(where: { $0 is VirtualGamepad }) {
-            gp.frame = CGRect(x: 0, y: safeTop + gameH, width: w, height: h - gameH)
-        }
-    }
-
-    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        touchHandler.touchesBegan(touches, in: view)
-    }
-
-    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-        touchHandler.touchesMoved(touches, in: view)
-    }
-
-    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-        touchHandler.touchesEnded(touches, in: view)
-    }
-
-    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
-        touchHandler.touchesCancelled(touches, in: view)
+        mtkView.frame = view.bounds
+        fpsLabel.frame.origin = CGPoint(x: 6, y: view.safeAreaInsets.top + 6)
     }
 
     // MARK: - Setup
 
     private func setupMTKView() {
         mtkView = MTKView(frame: .zero, device: device)
-        mtkView.clearColor       = MTLClearColor(red: 0, green: 0, blue: 0, alpha: 1)
+        mtkView.clearColor       = MTLClearColor(red: 0.102, green: 0.102, blue: 0.180, alpha: 1)
         mtkView.colorPixelFormat = .bgra8Unorm
         mtkView.isPaused              = false
         mtkView.enableSetNeedsDisplay = false
+        mtkView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         view.addSubview(mtkView)
     }
 
@@ -235,16 +218,27 @@ final class GameViewController: UIViewController {
         view.addSubview(fpsLabel)
     }
 
-    private func setupGamepad() {
-        let gamepad = VirtualGamepad(frame: .zero)
-        gamepad.backgroundColor = .clear
-        gamepad.onButtonStateChange = { [weak self] bits in
-            self?.currentInputBits = bits
+    private func setupTouchOverlay() {
+        let overlay = DTZTouchOverlay(frame: .zero)
+        overlay.translatesAutoresizingMaskIntoConstraints = false
+        overlay.onInputChanged = { [weak self] bits in
+            self?.touchInputBits = bits
         }
-        view.addSubview(gamepad)
+        overlay.onSettingsVisibilityChanged = { [weak self] visible in
+            guard let self else { return }
+            self.touchSettingsVisible = visible
+            self.updateDisplayLinkState()
+        }
+        view.addSubview(overlay)
+        NSLayoutConstraint.activate([
+            overlay.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            overlay.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            overlay.topAnchor.constraint(equalTo: view.topAnchor),
+            overlay.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+        ])
+        touchOverlay = overlay
     }
 
-    private var currentInputBits: UInt8 = 0
     private var frameCount: UInt64 = 0
     private var droppedFrames: UInt64 = 0
     private var fpsStartTime: CFTimeInterval = CACurrentMediaTime()
@@ -264,7 +258,8 @@ final class GameViewController: UIViewController {
         }
 
         if let ctx = ctxPtr {
-            guard dotzuki_mobile_tick(ctx, currentInputBits) else {
+            let inputBits = touchOverlay.consumeInput() | touchInputBits
+            guard dotzuki_mobile_tick(ctx, inputBits) else {
                 destroyRunner()
                 return
             }
@@ -304,10 +299,7 @@ final class GameViewController: UIViewController {
         else { droppedFrames += 1; return }
 
         encoder.setRenderPipelineState(pipelineState)
-        encoder.setViewport(MTLViewport(originX: 0, originY: 0,
-                                         width: Double(drawable.texture.width),
-                                         height: Double(drawable.texture.height),
-                                         znear: 0, zfar: 1))
+        encoder.setViewport(letterboxViewport(drawableSize: drawable.texture.size))
         encoder.setFragmentTexture(gameTexture, index: 0)
         encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
         encoder.endEncoding()
@@ -396,11 +388,18 @@ final class GameViewController: UIViewController {
     }
 
     func pauseDisplayLink() {
-        displayLink.isPaused = true
+        applicationIsActive = false
+        touchOverlay?.releaseAll()
+        updateDisplayLinkState()
     }
 
     func resumeDisplayLink() {
-        displayLink.isPaused = false
+        applicationIsActive = true
+        updateDisplayLinkState()
+    }
+
+    private func updateDisplayLinkState() {
+        displayLink?.isPaused = !applicationIsActive || touchSettingsVisible
     }
 
     func releaseDrawables() {
@@ -431,6 +430,7 @@ final class GameViewController: UIViewController {
 
     /// Stop Core Audio before releasing the FFI runner, as required by ABI v1.
     func destroyRunner() {
+        touchOverlay?.releaseAll()
         audioEngine?.stop()
         audioEngine = nil
         guard let ctx = ctxPtr else { return }
@@ -471,145 +471,6 @@ final class GameViewController: UIViewController {
             try audioEngine?.start()
         } catch {
             print("AudioEngine start failed after runner creation: \(error)")
-        }
-    }
-}
-
-private class VirtualGamepad: UIView {
-    var onButtonStateChange: ((UInt8) -> Void)?
-
-    private let btnA = UIButton()
-    private let btnB = UIButton()
-    private let btnUp = UIButton()
-    private let btnDown = UIButton()
-    private let btnLeft = UIButton()
-    private let btnRight = UIButton()
-    private let btnStart = UIButton()
-    private let btnSelect = UIButton()
-    private let dpadCenter = UIView()
-
-    private var activeBits: UInt8 = 0
-    private var touchToButton: [UITouch: UIButton] = [:]
-
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        setupButtons()
-    }
-
-    required init?(coder: NSCoder) { fatalError() }
-
-    private func setupButtons() {
-        let dpadColor    = UIColor(red: 0.165, green: 0.165, blue: 0.243, alpha: 1)
-        let dpadBorder   = UIColor(red: 0.227, green: 0.227, blue: 0.369, alpha: 1)
-        let abColor      = UIColor(red: 0.800, green: 0.133, blue: 0.133, alpha: 1)
-        let abHighlight  = UIColor(red: 1.0, green: 0.267, blue: 0.267, alpha: 1)
-        let metaColor    = UIColor(red: 0.200, green: 0.200, blue: 0.314, alpha: 1)
-        let metaBorder   = dpadBorder
-        let textColor    = UIColor(white: 0.667, alpha: 1)
-
-        func makeBtn(_ btn: UIButton, title: String, bg: UIColor, border: UIColor, cornerRadius: CGFloat? = nil) {
-            btn.setTitle(title, for: .normal)
-            btn.setTitleColor(.white, for: .normal)
-            btn.titleLabel?.font = .monospacedSystemFont(ofSize: 16, weight: .bold)
-            btn.backgroundColor = bg
-            btn.layer.borderColor = border.cgColor
-            btn.layer.borderWidth = 2
-            if let r = cornerRadius { btn.layer.cornerRadius = r }
-            btn.addTarget(self, action: #selector(buttonTouchDown(_:)), for: .touchDown)
-            btn.addTarget(self, action: #selector(buttonTouchUp(_:)), for: [.touchUpInside, .touchUpOutside, .touchCancel])
-            addSubview(btn)
-        }
-
-        // D-pad buttons
-        for (btn, title, corners) in [(btnUp, "▲", CACornerMask([.layerMinXMinYCorner, .layerMaxXMinYCorner])),
-                                       (btnDown, "▼", CACornerMask([.layerMinXMaxYCorner, .layerMaxXMaxYCorner])),
-                                       (btnLeft, "◀", CACornerMask([.layerMinXMinYCorner, .layerMinXMaxYCorner])),
-                                       (btnRight, "▶", CACornerMask([.layerMaxXMinYCorner, .layerMaxXMaxYCorner]))] {
-            makeBtn(btn, title: title, bg: dpadColor, border: dpadBorder)
-            btn.layer.cornerRadius = 0
-            btn.layer.maskedCorners = corners
-            btn.layer.cornerRadius = 8
-        }
-        dpadCenter.backgroundColor = UIColor(red: 0.133, green: 0.133, blue: 0.220, alpha: 1)
-        dpadCenter.layer.borderColor = dpadBorder.cgColor
-        dpadCenter.layer.borderWidth = 2
-        addSubview(dpadCenter)
-
-        // A / B
-        makeBtn(btnA, title: "A", bg: abColor, border: abColor, cornerRadius: 31)
-        makeBtn(btnB, title: "B", bg: abColor, border: abColor, cornerRadius: 31)
-        btnB.titleLabel?.font = .monospacedSystemFont(ofSize: 14, weight: .bold)
-
-        // Start / Select
-        for (btn, title) in [(btnSelect, "SELECT"), (btnStart, "START")] {
-            makeBtn(btn, title: title, bg: metaColor, border: metaBorder, cornerRadius: 14)
-            btn.setTitleColor(textColor, for: .normal)
-            btn.titleLabel?.font = .monospacedSystemFont(ofSize: 10, weight: .bold)
-        }
-    }
-
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        let w = bounds.width
-        let h = bounds.height
-        let dpadSize: CGFloat = 48
-        let abSize: CGFloat = 56
-
-        let dpadX: CGFloat = 28
-        let dpadCY = h / 2
-        btnUp.frame    = CGRect(x: dpadX + dpadSize, y: dpadCY - dpadSize * 1.5, width: dpadSize, height: dpadSize)
-        btnLeft.frame  = CGRect(x: dpadX, y: dpadCY - dpadSize * 0.5, width: dpadSize, height: dpadSize)
-        dpadCenter.frame = CGRect(x: dpadX + dpadSize, y: dpadCY - dpadSize * 0.5, width: dpadSize, height: dpadSize)
-        btnRight.frame = CGRect(x: dpadX + dpadSize * 2, y: dpadCY - dpadSize * 0.5, width: dpadSize, height: dpadSize)
-        btnDown.frame  = CGRect(x: dpadX + dpadSize, y: dpadCY + dpadSize * 0.5, width: dpadSize, height: dpadSize)
-
-        let abX = w - 28 - abSize * 2 - 12
-        let abCY = h / 2
-        btnB.frame = CGRect(x: abX, y: abCY - abSize / 2, width: abSize, height: abSize)
-        btnA.frame = CGRect(x: abX + abSize + 12, y: abCY - abSize / 2 - 10, width: abSize, height: abSize)
-
-        let metaW: CGFloat = 80
-        let metaH: CGFloat = 32
-        let metaY = h - metaH - 16
-        btnSelect.frame = CGRect(x: w / 2 - metaW - 12, y: metaY, width: metaW, height: metaH)
-        btnStart.frame  = CGRect(x: w / 2 + 12, y: metaY, width: metaW, height: metaH)
-    }
-
-    @objc private func buttonTouchDown(_ sender: UIButton) {
-        let bit = buttonBit(sender)
-        activeBits |= bit
-        onButtonStateChange?(activeBits)
-        if sender == btnA || sender == btnB {
-            sender.backgroundColor = UIColor(red: 1, green: 0.267, blue: 0.267, alpha: 1)
-        } else {
-            sender.backgroundColor = UIColor(red: 1, green: 0.267, blue: 0.267, alpha: 1)
-        }
-    }
-
-    @objc private func buttonTouchUp(_ sender: UIButton) {
-        let bit = buttonBit(sender)
-        activeBits &= ~bit
-        onButtonStateChange?(activeBits)
-        if sender == btnA || sender == btnB {
-            sender.backgroundColor = UIColor(red: 0.8, green: 0.133, blue: 0.133, alpha: 1)
-        } else if sender == btnStart || sender == btnSelect {
-            sender.backgroundColor = UIColor(red: 0.2, green: 0.2, blue: 0.314, alpha: 1)
-        } else {
-            sender.backgroundColor = UIColor(red: 0.165, green: 0.165, blue: 0.243, alpha: 1)
-        }
-    }
-
-    private func buttonBit(_ btn: UIButton) -> UInt8 {
-        switch btn {
-        case btnA:      return 1 << 0
-        case btnB:      return 1 << 1
-        case btnSelect: return 1 << 2
-        case btnStart:  return 1 << 3
-        case btnRight:  return 1 << 4
-        case btnLeft:   return 1 << 5
-        case btnUp:     return 1 << 6
-        case btnDown:   return 1 << 7
-        default:        return 0
         }
     }
 }
