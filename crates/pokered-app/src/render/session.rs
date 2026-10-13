@@ -643,27 +643,65 @@ impl OverworldVisualKey {
         // current pixels. Hash only the NPC fields consumed by the renderer.
         let mut npc_hash = 0x811c_9dc5;
         hash_u16(&mut npc_hash, screen.npc_states.len() as u16);
-        for npc in &screen.npc_states {
+        for (slot, npc) in screen.npc_states.iter().enumerate() {
             hash_byte(&mut npc_hash, npc.npc_index);
             hash_byte(&mut npc_hash, npc.sprite_id);
-            hash_u16(&mut npc_hash, npc.x);
-            hash_u16(&mut npc_hash, npc.y);
-            hash_byte(&mut npc_hash, npc.facing as u8);
-            hash_byte(&mut npc_hash, npc.scripted_frame.unwrap_or(u8::MAX));
-            hash_byte(&mut npc_hash, npc.walk_counter);
-            hash_byte(&mut npc_hash, npc.visible as u8);
+            if let Some(pose) = screen.npc_presentation.pose(screen.state.current_map, slot) {
+                // The renderer consumes the published pose/image. Logical
+                // changes awaiting publication do not change current pixels.
+                hash_byte(&mut npc_hash, 1);
+                hash_byte(&mut npc_hash, pose.visible as u8);
+                if pose.visible {
+                    hash_u32(&mut npc_hash, pose.x as u32);
+                    hash_u32(&mut npc_hash, pose.y as u32);
+                    hash_byte(&mut npc_hash, pose.image.facing as u8);
+                    hash_byte(&mut npc_hash, pose.image.phase);
+                    hash_byte(&mut npc_hash, pose.image.scripted_frame.unwrap_or(u8::MAX));
+                }
+            } else {
+                hash_byte(&mut npc_hash, 0);
+                hash_u16(&mut npc_hash, npc.x);
+                hash_u16(&mut npc_hash, npc.y);
+                hash_byte(&mut npc_hash, npc.facing as u8);
+                hash_byte(&mut npc_hash, npc.scripted_frame.unwrap_or(u8::MAX));
+                hash_byte(&mut npc_hash, npc.walk_counter);
+                hash_byte(&mut npc_hash, npc.visible as u8);
+            }
         }
+
+        if let Some((x, y)) = screen.field_viewport.residual(screen.state.current_map,
+            (screen.state.player.x, screen.state.player.y)) {
+            hash_byte(&mut npc_hash, 1);
+            hash_u32(&mut npc_hash, x as u32);
+            hash_u32(&mut npc_hash, y as u32);
+        } else { hash_byte(&mut npc_hash, 0); }
+        if let Some(image) = screen.player_presentation.image(screen.state.current_map) {
+            hash_byte(&mut npc_hash, 1);
+            hash_byte(&mut npc_hash, image.facing as u8);
+            hash_byte(&mut npc_hash, image.phase);
+        } else { hash_byte(&mut npc_hash, 0); }
+
+        // With a published player image and viewport, the renderer ignores
+        // pending logical facing/walk phase. Preserve logical fields for the
+        // graphics-free diagnostic view and for unmodeled compositions.
+        let published_player = screen.field_viewport.residual(screen.state.current_map,
+            (screen.state.player.x, screen.state.player.y))
+            .and_then(|_| screen.player_presentation.image(screen.state.current_map))
+            .filter(|_| game.resources.is_some());
 
         Some(Self {
             language: game.state.config.language,
             map: screen.state.current_map as u8,
             player_x: screen.state.player.x,
             player_y: screen.state.player.y,
-            player_facing: screen.state.player.facing as u8,
-            player_movement: screen.state.player.movement_state as u8,
+            player_facing: published_player.map_or(screen.state.player.facing as u8, |_| 0),
+            player_movement: if published_player.is_some()
+                && screen.state.player.movement_state != pokered_core::overworld::MovementState::Jumping {
+                0
+            } else { screen.state.player.movement_state as u8 },
             player_transport: screen.state.player.transport as u8,
-            walk_counter: screen.state.walk_counter,
-            bump_counter: screen.bump_anim_counter,
+            walk_counter: published_player.map_or(screen.state.walk_counter, |_| 0),
+            bump_counter: published_player.map_or(screen.bump_anim_counter, |_| 0),
             tile_kind: screen.tile_anim.kind() as u8,
             water_shift: screen.tile_anim.water_shift(),
             flower_frame: screen.tile_anim.flower_frame(),
@@ -2657,6 +2695,37 @@ mod session_tests {
     use dotzuki_engine::render_config::RenderConfig;
     use pokered_core::options_menu::OptionsRow;
     use pokered_renderer::Rgba;
+
+    #[test]
+    fn published_images_reuse_identical_pixels_despite_pending_logical_changes() {
+        let mut game = PokemonGame::new(GameVersion::Red);
+        game.audio = None;
+        game.state.screen = GameScreen::Overworld;
+        game.overworld = pokered_core::overworld::OverworldScreen::new(
+            MapId::ViridianPokecenter, None, pokered_data::impl_traits::PokemonRedData);
+        game.overworld.state.player.x = 3;
+        game.overworld.state.player.y = 3;
+        game.overworld.state.player.facing = pokered_core::overworld::Direction::Up;
+        for npc in &mut game.overworld.npc_states { npc.visible = false; }
+        game.overworld.publish_npc_frame(false);
+        assert!(game.resources.is_some());
+        let before_key = OverworldVisualKey::new(&game).unwrap();
+        let mut before = FrameBuffer::new(RenderConfig::new(160,144), Rgba::WHITE);
+        game.draw(&mut before);
+        // These values affect the next logical update, but published images
+        // and viewport still describe the previous hardware frame.
+        game.overworld.state.player.facing = pokered_core::overworld::Direction::Right;
+        game.overworld.state.player.movement_state = pokered_core::overworld::MovementState::Walking;
+        game.overworld.state.walk_counter = 5;
+        game.overworld.bump_anim_counter = 5;
+        for npc in &mut game.overworld.npc_states { npc.x += 1; }
+        for _ in 0..2 { game.overworld.publish_npc_frame(false); }
+        let after_key = OverworldVisualKey::new(&game).unwrap();
+        let mut after = before.clone();
+        game.draw(&mut after);
+        assert_eq!(before.packed(), after.packed(), "full renderer has no pixel change");
+        assert!(before_key == after_key, "cache must reuse the identical frame");
+    }
 
     fn empty_party_frames_200(capture: Option<&std::path::Path>) {
         use dotzuki_app::{GbButton, InputState};

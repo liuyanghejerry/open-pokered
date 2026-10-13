@@ -1054,7 +1054,10 @@ fn draw_overworld_impl(
 
     // Sub-pixel viewport offset: scrolls the world smoothly during player walking.
     // Original GB uses SCX/SCY registers to scroll the background 2px/frame.
-    let (view_sub_x, view_sub_y) = if let Some(jump) = screen.ledge_jump {
+    let (view_sub_x, view_sub_y) = if let Some(camera) = screen.field_viewport.residual(
+        screen.state.current_map, (screen.state.player.x, screen.state.player.y)) {
+        camera
+    } else if let Some(jump) = screen.ledge_jump {
         jump.camera_residual_px()
     } else if let Some(step) = screen.field_move_step {
         step.camera_residual_px()
@@ -1301,11 +1304,14 @@ fn draw_overworld_impl(
         // (RedFishingTiles — the bottom two tiles) and the sprite shakes
         // ±1 px vertically on a bite (.ShakePlayerSprite).
         let fishing = screen.fishing_anim.as_ref();
+        let published_player = screen.field_viewport.residual(screen.state.current_map,
+            (screen.state.player.x, screen.state.player.y))
+            .and_then(|_| screen.player_presentation.image(screen.state.current_map));
         let player_facing = fishing
             .map(|f| f.facing())
             .or_else(|| enter.map(|s| s.facing()))
             .or_else(|| spin.map(|s| s.facing()))
-            .unwrap_or(screen.state.player.facing);
+            .unwrap_or_else(|| published_player.map_or(screen.state.player.facing, |p| p.facing));
         let fishing_pose = fishing.map_or(false, |f| f.pose_active());
         // Load the optional pose first so the common player sheet can remain
         // borrowed from the resource cache instead of cloning its TileSet.
@@ -1343,14 +1349,16 @@ fn draw_overworld_impl(
             let player_visible =
                 player_visible && fly_player_visible && screen.field_move_restore.is_none();
 
-            let (frame, flip_h) = if screen.state.player.movement_state == MovementState::Walking
+            let (frame, flip_h) = if published_player.is_some() || screen.state.player.movement_state == MovementState::Walking
                 || screen.state.player.movement_state == MovementState::Jumping
             {
                 // 4-frame walk cycle (facings.asm:3-18 + movement.asm:298-320):
                 // stand → step → stand → step(mirrored) for Down/Up; Left/
                 // Right have no mirror (Right = mirrored Left sheet). The
                 // NPC path below uses the same cadence.
-                let anim_frame = if screen.state.walk_counter > 6 {
+                let anim_frame = if let Some(image) = published_player {
+                    image.phase
+                } else if screen.state.walk_counter > 6 {
                     0 // 7,8: stand
                 } else if screen.state.walk_counter > 4 {
                     1 // 5,6: step
@@ -1529,11 +1537,12 @@ fn draw_overworld_impl(
                 }
             }
         }
-        for npc in &screen.npc_states {
+        for (npc_slot, npc) in screen.npc_states.iter().enumerate() {
+            let pose = screen.npc_presentation.pose(screen.state.current_map, npc_slot);
             if screen.field_move_restore.is_some() {
                 break;
             }
-            if !npc.visible {
+            if !pose.map_or(npc.visible, |p| p.visible) {
                 continue;
             }
 
@@ -1547,14 +1556,14 @@ fn draw_overworld_impl(
                 let ts = &cached.tileset;
                 let num_frames = (cached.source_size.1 / TILE_SIZE) as usize;
 
-                let npc_facing = npc.facing;
+                let npc_facing = pose.map_or(npc.facing, |p| p.image.facing);
 
-                let (frame, flip_h) = if let Some(sf) = npc.scripted_frame {
+                let (frame, flip_h) = if let Some(sf) = pose.map_or(npc.scripted_frame, |p| p.image.scripted_frame) {
                     (sf as usize, false)
                 } else if num_frames >= 6 {
                     // AnimFrame 0-3: 0/2=stand, 1=walk, 3=walk+flip — phases
                     // spread evenly over the NPC's 16-frame step (4 each).
-                    let anim_frame = npc_walk_anim_phase(npc.walk_counter);
+                    let anim_frame = pose.map_or_else(|| npc_walk_anim_phase(npc.walk_counter), |p| p.image.phase);
 
                     match npc_facing {
                         Direction::Down => {
@@ -1622,8 +1631,8 @@ fn draw_overworld_impl(
                     (0, 0)
                 };
 
-                let npc_px_x = npc_screen_tx * TILE_SIZE as i32 + walk_dx - view_sub_x;
-                let npc_px_y = npc_screen_ty * TILE_SIZE as i32 + ACTOR_CELL_Y_OFFSET + walk_dy - view_sub_y;
+                let npc_px_x = pose.map_or(npc_screen_tx * TILE_SIZE as i32 + walk_dx - view_sub_x, |p| p.x);
+                let npc_px_y = pose.map_or(npc_screen_ty * TILE_SIZE as i32 + ACTOR_CELL_Y_OFFSET + walk_dy - view_sub_y, |p| p.y);
 
                 let sprite_size = (TILE_SIZE * 2) as i32;
                 if npc_px_x <= -sprite_size
@@ -3211,8 +3220,8 @@ mod elevator_edge_tests {
         let hold_down = pokered_core::overworld::OverworldInput::new(
             false, true, false, false, false, false, false, false,
         );
-        s.update_frame(hold_down);
-        s.update_frame(hold_down);
+        // Arm and push on separate foreground samples, with waits between.
+        for _ in 0..4 { s.update_frame(hold_down); }
         assert!(s.boulder_dust.is_active(), "push started the dust");
 
         let after = render_screen(&mut s);

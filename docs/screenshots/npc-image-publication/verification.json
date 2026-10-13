@@ -1,0 +1,94 @@
+{
+  "base": "7a99466177e9bce36d53b2f3ec0c2d8fa2313e9b",
+  "scenario": "ViridianPokecenter NPC2; player3,3 Up, seed0, no input,900updates, frame10 after update",
+  "before_after_pretrigger_identical": true,
+  "difference_bbox": [
+    83,
+    64,
+    93,
+    72
+  ],
+  "repeat_checks": {
+    "base_artifacts_each": 902,
+    "candidate_artifacts_each": 902,
+    "nurse_artifacts_each": 1208,
+    "all_pairwise_repeats_byte_identical": true
+  },
+  "autonomous_latency": {
+    "scope": "Native NPC2 no-input turns; sprite crop classified by exact steady orientation templates. Base provides Down/Up/Left; candidate steady Right needed because base never faced Right. Not full source RNG alignment.",
+    "template_origins": {
+      "Down": {
+        "base_frame": 812
+      },
+      "Up": {
+        "base_frame": 821
+      },
+      "Left": {
+        "base_frame": 899
+      },
+      "Right": {
+        "candidate_steady_frame": 222,
+        "logical_facing_stable_radius": 16
+      }
+    },
+    "turns": [
+      {
+        "logical_frame": 6,
+        "visible_frame": 10,
+        "latency": 4,
+        "facing": "Up"
+      },
+      {
+        "logical_frame": 206,
+        "visible_frame": 210,
+        "latency": 4,
+        "facing": "Right"
+      },
+      {
+        "logical_frame": 382,
+        "visible_frame": 386,
+        "latency": 4,
+        "facing": "Up"
+      },
+      {
+        "logical_frame": 408,
+        "visible_frame": 412,
+        "latency": 4,
+        "facing": "Right"
+      },
+      {
+        "logical_frame": 566,
+        "visible_frame": 570,
+        "latency": 4,
+        "facing": "Up"
+      },
+      {
+        "logical_frame": 802,
+        "visible_frame": 806,
+        "latency": 4,
+        "facing": "Left"
+      }
+    ],
+    "original_per_turn_latency": 4,
+    "remaining": "19 core failures; moving camera and manual images not fully integrated"
+  },
+  "manual_nurse_latency": {
+    "scope": "Actual five-party native nurse interaction; script frame1 selects nurse bow asset. Comparison of exact fixed nurse sprite crop64,28,80,44, old and stable bow pixels. Not a normal-character up-facing walk frame.",
+    "logical_bow_frame": 1083,
+    "visible_bow_frame": 1085,
+    "latency": 2,
+    "frames_recorded": 1206,
+    "healing_completed": true,
+    "reference_manual_image_latency": 2
+  },
+  "validation": {
+    "core": 2823,
+    "app_test_executables": 41,
+    "fresh_playthrough": "m01-m04 PASS; final OaksLab5,3 frame5970"
+  },
+  "limitations": [
+    "Full original/native RNG trajectories are not aligned; compare per-turn latency, not turn times.",
+    "Viewport/player unit golden records cover their recorded source walks; complete rendered movement comparison remains to be expanded.",
+    "Full source CPU/IRQ latency, every map and field animation are not claimed identical."
+  ]
+}

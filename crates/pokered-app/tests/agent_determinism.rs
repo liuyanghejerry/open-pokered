@@ -131,8 +131,8 @@ fn held(button: GbButton, frames: usize) -> Vec<Option<GbButton>> {
 /// replayed unchanged after restore; the test requires a real wild battle.
 fn sequence_a() -> Vec<Option<GbButton>> {
     // Turn in the southern grass before continuing toward the blocked path.
-    let mut frames = held(GbButton::Up, 80);
-    frames.extend(held(GbButton::Left, 36));
+    let mut frames = held(GbButton::Up, 170);
+    frames.extend(held(GbButton::Left, 72));
     frames.extend(held(GbButton::Up, 440));
     // Pace up/down in the grass to roll encounters.
     for _ in 0..14 {

@@ -330,7 +330,10 @@ impl PokemonGame {
         if self.overworld.state.player.facing == dir {
             return;
         }
-        self.step_with(Some(button_for(dir)), frames);
+        for _ in 0..3 {
+            self.step_with(Some(button_for(dir)), frames);
+            if self.overworld.state.player.facing == dir { break; }
+        }
         for _ in 0..4 {
             self.step_with(None, frames);
         }
@@ -375,7 +378,17 @@ impl PokemonGame {
     /// battle starts, a script takes over, the map changes, or nothing
     /// happens within [`INTERACT_FRAMES`].
     fn run_interaction(&mut self, frames: &mut u32, start_map: MapId) -> InteractResult {
-        self.step_with(Some(GbButton::A), frames);
+        // A field sample may follow two wait frames. Stop holding as soon
+        // as the interaction takes over so no dialogue page is advanced.
+        for _ in 0..3 {
+            self.step_with(Some(GbButton::A), frames);
+            if self.overworld.pending_dialogue.is_some()
+                || self.overworld.pending_choice.is_some()
+                || self.overworld.active_script_effect_label().is_some()
+                || !self.overworld.script_engine_idle()
+                || self.overworld.state.current_map != start_map
+                || !matches!(self.state.screen, GameScreen::Overworld) { break; }
+        }
         self.step_with(None, frames);
         for _ in 0..INTERACT_FRAMES {
             if self.overworld.state.current_map != start_map

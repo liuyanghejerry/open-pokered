@@ -3357,6 +3357,11 @@ impl PokemonGame {
     }
 
     pub fn update(&mut self, input: &InputState) {
+        // Full-screen sequences own their OAM; only map-backed menus
+        // continue publishing the frozen field sprites under the overlay.
+        if matches!(self.state.screen, GameScreen::StartMenu | GameScreen::Shop(_) | GameScreen::Elevator) {
+            self.overworld.publish_npc_frame(true);
+        }
         self.sync_bag_list_memory();
         self.update_inner(input);
         self.sync_bag_list_memory();
@@ -8575,7 +8580,7 @@ mod wall_town_map_tests {
         for _ in 0..40 {
             game.update(&idle);
         }
-        game.update(&a);
+        for _ in 0..2 { game.update(&a); }
         assert!(game.overworld.pending_town_map);
         assert!(game.overworld.pending_dialogue.is_some());
         assert_eq!(game.state.screen, GameScreen::Overworld);
@@ -8622,7 +8627,7 @@ mod wall_town_map_tests {
             (3, 1)
         );
         assert_eq!(game.overworld.state.player.facing, Direction::Up);
-        game.update(&a);
+        for _ in 0..2 { game.update(&a); }
         assert!(
             game.overworld.pending_town_map,
             "wall map can be inspected again"
@@ -9084,7 +9089,7 @@ mod link_stats_cry_fidelity_tests {
             g.draw(&mut fb);fb.save_png(&dir.join("pretrigger.png")).unwrap();
             for t in 0..4000u64 {
                 input.begin_frame();input.release(GbButton::A);
-                if t%40==0 {input.press(GbButton::A);}
+                if t%40<=1 {input.press(GbButton::A);}
                 g.update(&input);assert_eq!(g.frame_count,anchor+t+1);
                 g.draw(&mut fb);fb.save_png(&dir.join(format!("frame-{t:04}.png"))).unwrap();
                 let machine=g.overworld.pending_healing_machine.is_some();healed|=machine;
@@ -9270,10 +9275,10 @@ mod link_stats_cry_fidelity_tests {
                 assert_eq!((peer.overworld.state.player.x, peer.overworld.state.player.y), target,
                     "incoming request must leave real walking input available");
             }
-            peer.update(&button(GbButton::Left));
+            for _ in 0..2 { peer.update(&button(GbButton::Left)); host.update(&idle); }
             for _ in 0..20 { peer.update(&idle); host.update(&idle); }
             assert_eq!((peer.overworld.state.player.x, peer.overworld.state.player.y), (6, 4));
-            peer.update(&button(GbButton::A));
+            for _ in 0..2 { peer.update(&button(GbButton::A)); host.update(&idle); }
             for _ in 0..2 { peer.update(&idle); host.update(&idle); }
             assert!(matches!(peer.link_cable.phase(), CableClubPhase::JustAMoment { .. }));
             peer.update(&button(GbButton::A)); host.update(&idle);
@@ -11858,7 +11863,7 @@ mod pc_confirm_owner_222 {
    let target=match context {"change"=>PcPhase::ChangeBoxConfirm,"release"=>PcPhase::ReleaseConfirm,"toss"=>PcPhase::TossConfirm,_=>PcPhase::OaksConfirm};let mut input=InputState::new();let mut held=Vec::new();let mut setup=0;
    for t in 0..2000 {
     let phase=g.pc_screen.as_ref().map(|p|p.phase());if phase==Some(target){setup=t;break;}
-    let keys=if t==0 {vec![GbButton::A]}else if t%8!=0 {vec![]}else {match phase {
+    let keys=if t<=1 {vec![GbButton::A]}else if t%8!=0 {vec![]}else {match phase {
      Some(PcPhase::Message)=>vec![GbButton::A],
      Some(PcPhase::MainMenu)=>{let desired=if context=="toss" {1}else if context=="oak" {2}else{0};if g.pc_screen.as_ref().unwrap().main_menu().cursor()<desired {vec![GbButton::Down]}else{vec![GbButton::A]}},
      Some(PcPhase::BillsMenu)=>{let desired=if context=="release" {2}else{3};if g.pc_screen.as_ref().unwrap().bills_menu().cursor()<desired {vec![GbButton::Down]}else{vec![GbButton::A]}},
@@ -11901,7 +11906,7 @@ mod pc_confirm_delay_owner_224 {
    let target=match context {"change"=>PcPhase::ChangeBoxConfirm,"release"=>PcPhase::ReleaseConfirm,"toss"=>PcPhase::TossConfirm,_=>PcPhase::OaksConfirm};let mut input=InputState::new();let mut held=Vec::new();let mut setup=0;
    for t in 0..2000 {
     let phase=g.pc_screen.as_ref().map(|p|p.phase());if phase==Some(target){setup=t;break;}
-    let keys=if t==0 {vec![GbButton::A]}else if t%8!=0 {vec![]}else {match phase {
+    let keys=if t<=1 {vec![GbButton::A]}else if t%8!=0 {vec![]}else {match phase {
      Some(PcPhase::Message)=>vec![GbButton::A],
      Some(PcPhase::MainMenu)=>{let desired=if context=="toss" {1}else if context=="oak" {2}else{0};if g.pc_screen.as_ref().unwrap().main_menu().cursor()<desired {vec![GbButton::Down]}else{vec![GbButton::A]}},
      Some(PcPhase::BillsMenu)=>{let desired=if context=="release" {2}else{3};if g.pc_screen.as_ref().unwrap().bills_menu().cursor()<desired {vec![GbButton::Down]}else{vec![GbButton::A]}},
@@ -12039,7 +12044,7 @@ mod pc_item_list_owner_228 {
    let mut input=InputState::new();let mut held=Vec::new();let mut setup=None;
    for t in 0..2000 {
     let phase=g.pc_screen.as_ref().map(|p|p.phase());if phase==Some(PcPhase::ItemList){setup=Some(t);break;}
-    let keys=if t==0 {vec![GbButton::A]}else if t%8!=0 {vec![]}else {match phase {
+    let keys=if t<=1 {vec![GbButton::A]}else if t%8!=0 {vec![]}else {match phase {
      Some(PcPhase::Message)=>vec![GbButton::A],
      Some(PcPhase::MainMenu)=>{if g.pc_screen.as_ref().unwrap().main_menu().cursor()<1 {vec![GbButton::Down]}else{vec![GbButton::A]}},
      Some(PcPhase::ItemMenu)=>{if g.pc_screen.as_ref().unwrap().players_menu().cursor()<cursor {vec![GbButton::Down]}else{vec![GbButton::A]}},
@@ -12098,7 +12103,7 @@ mod pc_quantity_owner_230 {
    let mut input=InputState::new();let mut held=Vec::new();let mut setup=None;
    for t in 0..2000 {
     let phase=g.pc_screen.as_ref().map(|p|p.phase());if phase==Some(PcPhase::ItemList){setup=Some(t);break;}
-    let keys=if t==0 {vec![GbButton::A]}else if t%8!=0 {vec![]}else {match phase {
+    let keys=if t<=1 {vec![GbButton::A]}else if t%8!=0 {vec![]}else {match phase {
      Some(PcPhase::Message)=>vec![GbButton::A],
      Some(PcPhase::MainMenu)=>{if g.pc_screen.as_ref().unwrap().main_menu().cursor()<1 {vec![GbButton::Down]}else{vec![GbButton::A]}},
      Some(PcPhase::ItemMenu)=>{if g.pc_screen.as_ref().unwrap().players_menu().cursor()<cursor {vec![GbButton::Down]}else{vec![GbButton::A]}},
@@ -12180,7 +12185,7 @@ mod pc_item_questions_owner_240 {
 
    let mut input=InputState::new();let mut held=Vec::new();let mut found=false;
    for t in 0..2000 {
-    let phase=g.pc_screen.as_ref().map(|p|p.phase());let keys=if t==0 {vec![GbButton::A]}else if t%8!=0 {vec![]}else {match phase {Some(PcPhase::Message)=>vec![GbButton::A],Some(PcPhase::MainMenu)=>{if g.pc_screen.as_ref().unwrap().main_menu().cursor()<1 {vec![GbButton::Down]}else{vec![GbButton::A]}},_=>vec![]}};tick(&mut g,&mut input,&mut held,keys);
+    let phase=g.pc_screen.as_ref().map(|p|p.phase());let keys=if t<=1 {vec![GbButton::A]}else if t%8!=0 {vec![]}else {match phase {Some(PcPhase::Message)=>vec![GbButton::A],Some(PcPhase::MainMenu)=>{if g.pc_screen.as_ref().unwrap().main_menu().cursor()<1 {vec![GbButton::Down]}else{vec![GbButton::A]}},_=>vec![]}};tick(&mut g,&mut input,&mut held,keys);
     let phase=g.pc_screen.as_ref().map(|p|format!("{:?}",p.phase()));if matches!(phase.as_deref(),Some("ItemQuestion")|Some("ItemMenu")){found=true;break;}
    }
    assert!(found,"{context} hidden PC initial operation question");

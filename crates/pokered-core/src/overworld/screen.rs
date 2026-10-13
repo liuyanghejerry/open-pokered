@@ -727,6 +727,9 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     pub player_moving_direction: u8,
     pub map_data: Option<MapData<G::Tileset>>,
     pub npc_states: Vec<crate::overworld::npc_movement::NpcRuntimeState>,
+    pub npc_presentation: super::npc_presentation::NpcPresentation,
+    pub field_viewport: super::npc_presentation::FieldViewport,
+    pub player_presentation: super::npc_presentation::PlayerPresentation,
     pub npc_pokemon_data: Vec<PokemonNpcData>,
     pub pending_dialogue: Option<BedroomDialogue>,
     /// Last completed script text, retained only for the following choice.
@@ -820,6 +823,9 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     pub text_delay_frames: u16,
     pub(crate) prev_a_pressed: bool,
     pub(crate) sampled_player_input: FieldInputSample,
+    /// Hardware-frame wait remaining before the next foreground field loop.
+    pub(crate) field_loop_wait: u8,
+    pub(crate) bike_redraw_advance: bool,
     pub(crate) prev_movement_state: MovementState,
     pub(crate) prev_b_pressed: bool,
     pub(crate) prev_up_pressed: bool,
@@ -1229,6 +1235,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             state: OverworldState::new(start_map),
             map_data,
             npc_states,
+            npc_presentation: Default::default(),
+            field_viewport: Default::default(),
+            player_presentation: Default::default(),
             npc_pokemon_data,
             pending_dialogue: None,
             last_script_dialogue: None,
@@ -1275,6 +1284,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             text_delay_frames: DEFAULT_TEXT_DELAY_FRAMES,
             prev_a_pressed: false,
             sampled_player_input: FieldInputSample::default(),
+            field_loop_wait: 0,
+            bike_redraw_advance: false,
             prev_movement_state: MovementState::Idle,
             player_last_stop_direction: 0,
             player_moving_direction: 0,
@@ -2836,6 +2847,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     .push(OverworldAudioRequest::PlayMapMusic { map: warp.dest_map });
             }
             let hidden_npc_ids = self.map_script_config.hidden_npc_ids();
+            self.npc_presentation = Default::default();
+            self.field_viewport = Default::default();
+            self.player_presentation = Default::default();
             self.npc_states = self
                 .map_data
                 .as_ref()

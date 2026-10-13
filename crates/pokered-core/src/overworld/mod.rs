@@ -19,6 +19,7 @@ pub mod map_loading;
 pub mod native_script;
 pub mod npc_interaction;
 pub mod npc_movement;
+pub mod npc_presentation;
 pub mod player_movement;
 pub mod poison;
 pub mod presentation;

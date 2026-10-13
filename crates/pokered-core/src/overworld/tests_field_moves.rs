@@ -1110,7 +1110,12 @@ fn player_start_pulse_is_discarded_midstep_but_held_start_opens_after_landing() 
             }
             assert_eq!(screen.state.player.movement_state,MovementState::Idle);
             assert_eq!((screen.state.player.x,screen.state.player.y),(5,6));
-            assert_eq!(screen.update_frame(pending),if held {
+            let mut action = ScreenAction::Continue;
+            for _ in 0..2 {
+                action = screen.update_frame(pending);
+                if action != ScreenAction::Continue { break; }
+            }
+            assert_eq!(action, if held {
                 ScreenAction::Transition(GameScreen::StartMenu)
             } else {ScreenAction::Continue});
         }
@@ -1138,9 +1143,13 @@ fn held_a_is_sampled_only_after_step() {
     let held=OverworldInput::new(false,false,false,false,true,false,false,false);
     assert_eq!(screen.update_frame(held),ScreenAction::Continue);
     assert!(screen.pending_pc.is_none());assert!(screen.pending_dialogue.is_none());
-    screen.update_frame(held);
+    for _ in 0..4 {
+        if screen.state.player.movement_state == MovementState::Idle { break; }
+        screen.update_frame(held);
+        assert!(screen.pending_pc.is_none());assert!(screen.pending_dialogue.is_none());
+    }
     assert_eq!((screen.state.player.x,screen.state.player.y),(13,4));
     assert!(screen.pending_pc.is_none());assert!(screen.pending_dialogue.is_none());
-    screen.update_frame(held);
+    for _ in 0..2 { screen.update_frame(held); }
     assert!(screen.pending_pc.is_some() || screen.pending_dialogue.is_some() || screen.active_script_effect.is_some(),"held A interacts after landing");
 }
