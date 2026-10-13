@@ -49,6 +49,7 @@ pub fn update_npc_movement<T: dotzuki_engine::tileset::TilesetTrait>(
 /// STAY reaches TryWalking's direction selection but cannot translate.
 /// Two random draws select direction and the subsequent delay separately.
 /// Legacy stationary range zero retains its existing fixed-facing behavior.
+#[inline(always)]
 pub fn advance_stationary_facing(npc: &mut NpcRuntimeState, player_moving: bool,
     direction_random: u8, delay_random: u8) {
     if !npc.visible || npc.movement_type != NpcMovementType::Stationary
@@ -80,6 +81,7 @@ pub fn stationary_range(movement: NpcMovementType, range: u8, facing: Direction)
 
 /// CheckSpriteAvailability's map rectangle (stored sprite coordinates add 4).
 /// Hidden/off-screen STAY objects do not decrement their delay or draw RNG.
+#[inline(always)]
 pub fn stationary_available(npc: &NpcRuntimeState, player: (u16, u16)) -> bool {
     let dx = i32::from(npc.x) - i32::from(player.0);
     let dy = i32::from(npc.y) - i32::from(player.1);
