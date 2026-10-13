@@ -1187,3 +1187,34 @@ fn same_stopped_direction_starts_without_an_extra_turn_sample() {
     for _ in 0..2 {screen.update_frame(OverworldInput::new(false,true,false,false,false,false,false,false));}
     assert_eq!(screen.state.player.movement_state,MovementState::Walking);
 }
+
+#[test]
+fn door_exit_uses_simulated_down_and_the_foreground_walk_clock() {
+    use super::MovementState;
+    let mut screen = screen_on(MapId::ViridianCity);
+    screen.state.player.x = 23;
+    screen.state.player.y = 25;
+    screen.state.player.facing = Direction::Up;
+    screen.player_moving_direction = 8;
+    screen.state.standing_on_door = true;
+    // Physical UP cannot interrupt simulated DOWN or consume a turn sample.
+    let up = OverworldInput::new(true, false, false, false, false, false, false, false);
+    screen.update_frame(up);
+    assert_eq!(screen.player_moving_direction, 4);
+    assert_eq!(screen.state.player.facing, Direction::Down);
+    assert_eq!(screen.state.walk_counter, 7);
+    for counter in [7, 7, 6, 6, 5, 5, 4, 4, 3, 3, 2, 2, 1, 1] {
+        screen.update_frame(up);
+        assert_eq!(screen.state.walk_counter, counter);
+        assert_eq!(screen.state.player.movement_state, MovementState::Walking);
+        assert!(screen.state.exiting_door);
+        assert_eq!((screen.state.player.x, screen.state.player.y), (23, 25));
+    }
+    screen.update_frame(up);
+    assert_eq!(screen.state.player.movement_state, MovementState::Idle);
+    assert!(!screen.state.exiting_door);
+    assert_eq!((screen.state.player.x, screen.state.player.y), (23, 26));
+    for _ in 0..2 { screen.update_frame(no_input()); }
+    assert_eq!(screen.player_last_stop_direction, 4);
+    assert!(screen.check_player_turn);
+}
