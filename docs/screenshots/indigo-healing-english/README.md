@@ -11,7 +11,7 @@ helper accepts NURSE_CAPTURE_MAP=indigo and derives the standing position
 from the nurse object, retaining the same input/frame timeline and five
 party members in both base and fix.
 
-Before/after are the same frame 1110 of actual nurse interactions. Two full
+Before/after are the same frame 1150 of actual nurse interactions. Two full
 fixed captures match byte-for-byte. Differences are confined to the text
 box. Base is #208; refresh against merged master before merging this
 patch. The text-preservation tool intentionally flags this corrected

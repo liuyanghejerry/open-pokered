@@ -4,7 +4,7 @@
   "source_dispatch": "IndigoPlateauLobbyNurseText uses script_pokecenter_nurse, resolving to common DisplayPokemonCenterDialogue_ and _PokemonFightingFitText",
   "source_text_file": "data/text/text_4.asm",
   "native_repeat_exact_frames": 1285,
-  "screenshot_frame": 1110,
+  "screenshot_frame": 1150,
   "diff_bbox": [
     8,
     115,
