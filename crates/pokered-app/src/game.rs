@@ -8999,10 +8999,16 @@ mod link_stats_cry_fidelity_tests {
             let mut g=fixture(Species::Bulbasaur,3,Direction::Up);
             let mon=g.save_data.party.get(0).unwrap().clone();
             g.save_data.party=pokered_core::pokemon::party::Party::from(vec![mon;5]);
-            g.overworld=OverworldScreen::new(MapId::ViridianPokecenter,None,PokemonRedData);
+            let map = match std::env::var("NURSE_CAPTURE_MAP").as_deref() {
+                Ok("indigo") => MapId::IndigoPlateauLobby,
+                _ => MapId::ViridianPokecenter,
+            };
+            g.overworld=OverworldScreen::new(map,None,PokemonRedData);
             g.overworld.party_count=g.save_data.party.count() as u8;
             assert_eq!(g.overworld.party_count,5);
-            g.overworld.state.player.x=3;g.overworld.state.player.y=3;g.overworld.state.player.facing=Direction::Up;
+            g.overworld.state.player.x=g.overworld.npc_states[0].x;
+            g.overworld.state.player.y=g.overworld.npc_states[0].y+2;
+            g.overworld.state.player.facing=Direction::Up;
             g.overworld.set_rng_seed(0);g.overworld.run_on_load();
             g.audio.as_ref().unwrap().play_music(pokered_audio::music_data::MusicId::POKECENTER);
             for _ in 0..120 {g.update(&InputState::new());}

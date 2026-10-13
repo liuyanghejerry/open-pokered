@@ -49,7 +49,7 @@ POKeMON.", "好的，请把宝可梦交给我。")
         heal()
         animateHealingMachine()
         @speaker("") {
-          @t("Thank you for waiting.\n\nYour POKeMON are fully\nhealed!", "谢谢你的等待。\n\n你的宝可梦已完全恢复了！")
+          @t("Thank you!\nYour POKeMON are\nfighting fit!", "谢谢你的等待。\n\n你的宝可梦已完全恢复了！")
         }
         // Original nurse image $14 is the bow frame after fighting-fit text.
         setNpcFrame("1", 1)

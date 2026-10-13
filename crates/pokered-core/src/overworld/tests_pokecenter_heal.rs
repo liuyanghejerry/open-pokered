@@ -105,7 +105,7 @@ fn nurse_bows_after_fighting_fit_and_restores_pose_after_farewell() {
             if let Some(dialogue)=&screen.pending_dialogue {
                 let text=dialogue.pages().iter().map(|p|format!("{} {}",p.line1,p.line2)).collect::<Vec<_>>().join(" ");
                 let text=text.split_whitespace().collect::<Vec<_>>().join(" ");
-                if text.contains("fighting fit") || text.contains("fully healed") {fit=true;assert_ne!(screen.npc_states[0].scripted_frame,Some(1),"{map:?}: bow must follow fighting-fit text");}
+                if text.contains("fighting fit") {fit=true;assert_ne!(screen.npc_states[0].scripted_frame,Some(1),"{map:?}: bow must follow fighting-fit text");}
                 if text.contains("hope to see") {
                     farewell=true;assert_eq!(screen.npc_states[0].scripted_frame,Some(1),"{map:?}: keep bow through farewell");
                 }
