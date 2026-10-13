@@ -41,5 +41,6 @@
       60,
       46
     ]
-  }
+  },
+  "startup_scope_limit": "Source and native party counts match, but their move sets differ. Original HealParty uses move-dependent AddNTimes work. The measured startup gap cannot be classified as a dispatch bug until move sets and PP-up inputs match."
 }
