@@ -1621,7 +1621,7 @@ fn draw_overworld_impl(
                 // (16px/tile) — unlike the player's 2px/frame over 8.
                 let (walk_dx, walk_dy) = if npc.walk_counter > 0 {
                     let px = npc_walk_pixel_offset(npc.walk_counter);
-                    match npc.facing {
+                    match npc.walking_direction() {
                         Direction::Down => (0i32, px),
                         Direction::Up => (0, -px),
                         Direction::Left => (-px, 0),
@@ -1796,7 +1796,7 @@ fn draw_overworld_impl(
                         .map(|npc| {
                             let (walk_dx, walk_dy) = if npc.walk_counter > 0 {
                                 let px = npc_walk_pixel_offset(npc.walk_counter);
-                                match npc.facing {
+                                match npc.walking_direction() {
                                     Direction::Down => (0, px), Direction::Up => (0, -px),
                                     Direction::Left => (-px, 0), Direction::Right => (px, 0),
                                 }
@@ -3200,6 +3200,7 @@ mod elevator_edge_tests {
                 home_x: 5,
                 home_y: 6,
                 facing: Direction::Down,
+                step_direction: None,
                 scripted_frame: None,
                 movement_type: dotzuki_engine::overworld::NpcMovementType::Stationary,
                 wander_axis: dotzuki_engine::overworld::NpcWanderAxis::Any,

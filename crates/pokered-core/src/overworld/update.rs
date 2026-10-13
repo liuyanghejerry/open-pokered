@@ -1941,7 +1941,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     let cur = collision::SpritePosition { x: npc.x, y: npc.y };
                     if npc.walk_counter > 0 {
                         // NPC is walking - include destination tile
-                        let (dx, dy) = player_movement::direction_delta(npc.facing);
+                        let (dx, dy) = player_movement::direction_delta(npc.walking_direction());
                         let dest = collision::SpritePosition {
                             x: (npc.x as i32 + dx as i32).max(0) as u16,
                             y: (npc.y as i32 + dy as i32).max(0) as u16,
@@ -3170,7 +3170,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                                 // at the start of a stride. The engine stores
                                 // its origin until the end, so expose the
                                 // logical destination to the follow script.
-                                let (dx,dy)=player_movement::direction_delta(npc.facing);
+                                let (dx,dy)=player_movement::direction_delta(npc.walking_direction());
                                 let (x,y)=if npc.walk_counter>0 {
                                     ((npc.x as i32+dx as i32).max(0) as u16,
                                      (npc.y as i32+dy as i32).max(0) as u16)

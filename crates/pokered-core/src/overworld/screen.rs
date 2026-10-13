@@ -3057,6 +3057,7 @@ pub(crate) fn build_npc_runtime_states(
                 home_x: npc.x as u16,
                 home_y: npc.y as u16,
                 facing: npc.facing,
+                step_direction: None,
                 scripted_frame: None,
                 movement_type: npc.movement,
                 wander_axis: crate::overworld::npc_movement::convert_wander_axis(npc.range),

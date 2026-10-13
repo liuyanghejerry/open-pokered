@@ -80,7 +80,7 @@ impl NpcPresentation {
         }
         for (slot, (n, image)) in npcs.iter().zip(&self.images).enumerate() {
             let px = super::presentation::npc_walk_pixel_offset(n.walk_counter);
-            let (dx, dy) = match n.facing {
+            let (dx, dy) = match n.walking_direction() {
                 Direction::Down => (0, px),
                 Direction::Up => (0, -px),
                 Direction::Left => (-px, 0),
@@ -109,7 +109,7 @@ impl NpcPresentation {
             return true;
         }
         let (dx, dy) = if n.walk_counter > 0 {
-            match n.facing {
+            match n.walking_direction() {
                 Direction::Down => (0, 1),
                 Direction::Up => (0, -1),
                 Direction::Left => (-1, 0),
@@ -147,7 +147,7 @@ impl NpcPresentation {
         self.player_walking && n.walk_counter == 0 && n.delay_counter == 0
     }
     pub fn step_within_screen(&self, n: &NpcRuntimeState) -> bool {
-        let (dx, dy) = match n.facing {
+        let (dx, dy) = match n.walking_direction() {
             Direction::Down => (0, 1),
             Direction::Up => (0, -1),
             Direction::Left => (-1, 0),
@@ -268,6 +268,22 @@ mod tests {
         n.scripted_frame = None;
         n
     }
+    #[test]
+    fn turned_sprite_keeps_its_original_physical_offset() {
+        let mut n = human();
+        n.x = 10;
+        n.y = 6;
+        n.walk_counter = 8;
+        n.facing = Direction::Right;
+        n.step_direction = Some(Direction::Left);
+        let mut p = NpcPresentation::default();
+        p.publish(MapId::MtMoonPokecenter, core::slice::from_ref(&n),
+            (11, 6), (0, 0), false);
+        assert_eq!(p.poses[0].x, 40, "eight pixels left of the origin tile");
+        assert_eq!(p.poses[0].y, 60);
+        assert_eq!(p.poses[0].image.facing, Direction::Right);
+    }
+
     #[test]
     fn scripted_stop_preserves_original_negative_coordinate_swap_glitch() {
         let mut n = human();
