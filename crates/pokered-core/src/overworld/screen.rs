@@ -146,6 +146,8 @@ pub enum OverworldAudioRequest {
     FadeOutMusic,
     /// Play the default map music for the given map (used on warp).
     PlayMapMusic { map: MapId },
+    /// Nurse routine restores map music immediately after the healing hold.
+    RestoreMapMusic { map: MapId },
     /// Play a Pokémon cry by species name (script `game.playCry(...)`).
     PlayCry { species: String },
     /// ItemUsePokeFlute: stop map music, play the full channel-3 jingle, then

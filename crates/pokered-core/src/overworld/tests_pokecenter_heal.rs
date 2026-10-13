@@ -259,6 +259,8 @@ fn healing_waits_for_live_music_then_thirty_two_frames() {
     }
     screen.update_frame(input(false));
     assert!(screen.pending_healing_machine.is_none());
+    assert!(screen.audio_requests.iter().any(|request| matches!(request,
+        super::screen::OverworldAudioRequest::RestoreMapMusic { map: MapId::ViridianPokecenter })));
 }
 
 
