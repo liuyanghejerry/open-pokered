@@ -701,6 +701,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 &mut self.ship_departure,
                 &dialogue_names,
                 self.script_music_playing,
+                self.script_audio_fading,
                 self.script_sfx_playing,
             );
             if !naming_was_open && self.pending_naming_screen.is_some() {
@@ -2530,6 +2531,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         ship_departure: &mut Option<presentation::ShipDepartureState>,
         dialogue_names: &[&str],
         script_music_playing: bool,
+        script_audio_fading: bool,
         script_sfx_playing: bool,
     ) -> bool {
         let returns_after_print = matches!(effect, script_bridge::ScriptEffect::PrintFieldText { .. });
@@ -2569,6 +2571,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     ship_departure,
                     dialogue_names,
                     script_music_playing,
+                    script_audio_fading,
                     script_sfx_playing,
                 ) {
                     let prompt = match flow.child.as_ref() {
@@ -2633,6 +2636,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     ship_departure,
                     dialogue_names,
                     script_music_playing,
+                    script_audio_fading,
                     script_sfx_playing,
                 ) {
                     menu.advance()
@@ -3120,16 +3124,16 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         audio_requests.push(OverworldAudioRequest::FadeOutMusic);
                         *pending_healing_machine = Some(HealingMachineState {
                             phase: HealingMachinePhase::FadeOutMusic,
-                            frames_remaining: 32,
+                            frames_remaining: 0,
                             pokeballs_visible: 0,
                             flash_active: false,
                         });
                         *phase = HealingMachinePhase::WaitForFadeOut;
-                        *frames_remaining = 32;
+                        *frames_remaining = 0;
                         false
                     }
                     HealingMachinePhase::WaitForFadeOut => {
-                        if *frames_remaining == 0 {
+                        if !script_audio_fading {
                             let total = if party_count == 0 { 0 } else { party_count };
                             *phase = HealingMachinePhase::HealPartyMember {
                                 member_index: 0,
@@ -3148,11 +3152,6 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                                 };
                                 state.frames_remaining = 30;
                                 state.pokeballs_visible = if total > 0 { 1 } else { 0 };
-                            }
-                        } else {
-                            *frames_remaining -= 1;
-                            if let Some(ref mut state) = pending_healing_machine {
-                                state.frames_remaining = *frames_remaining;
                             }
                         }
                         false

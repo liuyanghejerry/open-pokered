@@ -104,6 +104,11 @@ impl AudioOutput {
         }
     }
 
+    /// Live FadeOutAudio state, including its final zero-volume interval.
+    pub fn is_fading(&self) -> bool {
+        self.manager.lock().map(|mgr| mgr.is_fading()).unwrap_or(false)
+    }
+
     pub fn fade_out(&self, fade_speed: u8) {
         if let Ok(mut mgr) = self.manager.lock() {
             mgr.fade_out(fade_speed);

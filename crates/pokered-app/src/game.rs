@@ -4300,6 +4300,8 @@ impl PokemonGame {
                         }
                     }
                     // SSAnneCaptainsRoom.asm waits on music channel 1.
+                    self.overworld.script_audio_fading = self.audio.as_ref()
+                        .is_some_and(|audio| audio.is_fading());
                     self.overworld.script_music_playing = self.audio.as_ref()
                         .is_some_and(|audio| audio.is_music_channel_playing(0));
                     // Original DisplayPokedex records the species as seen after viewing.
@@ -8995,7 +8997,9 @@ mod link_stats_cry_fidelity_tests {
             assert_eq!(g.overworld.party_count,5);
             g.overworld.state.player.x=3;g.overworld.state.player.y=3;g.overworld.state.player.facing=Direction::Up;
             g.overworld.set_rng_seed(0);g.overworld.run_on_load();
+            g.audio.as_ref().unwrap().play_music(pokered_audio::music_data::MusicId::POKECENTER);
             for _ in 0..120 {g.update(&InputState::new());}
+            assert!(g.audio.as_ref().unwrap().is_music_channel_playing(0));
             let mut rows=Vec::new();let mut healed=false;let mut idle_frames=0;
             let anchor=g.frame_count;let mut input=InputState::new();
             let mut fb=FrameBuffer::new(RenderConfig::new(160,144),Rgba::WHITE);
@@ -9007,7 +9011,7 @@ mod link_stats_cry_fidelity_tests {
                 g.draw(&mut fb);fb.save_png(&dir.join(format!("frame-{t:04}.png"))).unwrap();
                 let machine=g.overworld.pending_healing_machine.is_some();healed|=machine;
                 let n=&g.overworld.npc_states[0];
-                rows.push(serde_json::json!({"t":t,"frame":g.frame_count,"effect":g.overworld.active_script_effect_value(),"facing":format!("{:?}",n.facing),"sprite_frame":n.scripted_frame,"machine":machine,"music_channel0_playing":g.audio.as_ref().is_some_and(|a| a.is_music_channel_playing(0)),"party_count":g.overworld.party_count,"balls":g.overworld.pending_healing_machine.as_ref().map(|m|m.pokeballs_visible),"dialogue":format!("{:?}",g.overworld.pending_dialogue)}));
+                rows.push(serde_json::json!({"t":t,"frame":g.frame_count,"effect":g.overworld.active_script_effect_value(),"facing":format!("{:?}",n.facing),"sprite_frame":n.scripted_frame,"machine":machine,"audio_fading":g.audio.as_ref().is_some_and(|a| a.is_fading()),"music_channel0_playing":g.audio.as_ref().is_some_and(|a| a.is_music_channel_playing(0)),"party_count":g.overworld.party_count,"balls":g.overworld.pending_healing_machine.as_ref().map(|m|m.pokeballs_visible),"dialogue":format!("{:?}",g.overworld.pending_dialogue)}));
                 if healed && !machine && g.overworld.active_script_effect_label().is_none() && g.overworld.pending_dialogue.is_none() {idle_frames+=1;} else {idle_frames=0;}
                 if idle_frames>=3 {break;}
             }

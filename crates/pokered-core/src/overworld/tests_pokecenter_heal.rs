@@ -260,3 +260,30 @@ fn healing_waits_for_live_music_then_thirty_two_frames() {
     screen.update_frame(input(false));
     assert!(screen.pending_healing_machine.is_none());
 }
+
+
+#[test]
+fn healing_waits_for_actual_audio_fade_and_snapshots_its_state() {
+    use super::script_bridge::{HealingMachinePhase, ScriptEffect};
+    let mut screen = OverworldScreen::new(MapId::ViridianPokecenter, None, PokemonRedData);
+    screen.party_count = 5;
+    screen.active_script_effect = Some(ScriptEffect::AnimateHealingMachine {
+        phase: HealingMachinePhase::FadeOutMusic, frames_remaining: 0,
+    });
+    screen.script_audio_fading = true;
+    for _ in 0..80 { screen.update_frame(input(false)); }
+    assert_eq!(screen.pending_healing_machine.as_ref().unwrap().pokeballs_visible, 0);
+    let saved = crate::snapshot::OverworldSnapshot::capture(&screen);
+    let mut restored = OverworldScreen::new(MapId::ViridianPokecenter, None, PokemonRedData);
+    saved.restore_into(&mut restored);
+    assert!(restored.script_audio_fading);
+    restored.update_frame(input(false));
+    assert_eq!(restored.pending_healing_machine.as_ref().unwrap().pokeballs_visible, 0);
+    restored.script_audio_fading = false;
+    restored.update_frame(input(false));
+    assert_eq!(restored.pending_healing_machine.as_ref().unwrap().pokeballs_visible, 1);
+    let mut legacy = serde_json::to_value(saved).unwrap();
+    legacy.as_object_mut().unwrap().remove("script_audio_fading");
+    let legacy: crate::snapshot::OverworldSnapshot = serde_json::from_value(legacy).unwrap();
+    assert!(!legacy.script_audio_fading);
+}
