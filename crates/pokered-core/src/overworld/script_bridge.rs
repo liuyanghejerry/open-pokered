@@ -336,6 +336,7 @@ pub enum HealingMachinePhase {
     PlayHealedMusic,
     FlashSprite { flashes_remaining: u8 },
     WaitForMusic,
+    PostMusicDelay,
     Done,
 }
 
@@ -661,6 +662,7 @@ fn healing_phase_json(phase: &HealingMachinePhase) -> serde_json::Value {
             "flashes_remaining": flashes_remaining,
         }),
         HealingMachinePhase::WaitForMusic => json!({ "phase": "WaitForMusic" }),
+        HealingMachinePhase::PostMusicDelay => json!({ "phase": "PostMusicDelay" }),
         HealingMachinePhase::Done => json!({ "phase": "Done" }),
     }
 }

@@ -235,3 +235,28 @@ fn healing_palette_has_eight_ten_frame_intervals() {
     for pair in toggles.windows(2) { assert_eq!(pair[1] - pair[0], 10); }
     assert_eq!(finished.unwrap() - toggles[0], 80);
 }
+
+
+#[test]
+fn healing_waits_for_live_music_then_thirty_two_frames() {
+    use super::script_bridge::{HealingMachinePhase, ScriptEffect};
+    let mut screen = OverworldScreen::new(MapId::ViridianPokecenter, None, PokemonRedData);
+    screen.party_count = 5;
+    screen.active_script_effect = Some(ScriptEffect::AnimateHealingMachine {
+        phase: HealingMachinePhase::FadeOutMusic, frames_remaining: 0,
+    });
+    screen.script_music_playing = true;
+    for _ in 0..500 { screen.update_frame(input(false)); }
+    assert!(matches!(screen.pending_healing_machine.as_ref().unwrap().phase,
+        HealingMachinePhase::WaitForMusic), "must not interrupt a still-playing song");
+    screen.script_music_playing = false;
+    screen.update_frame(input(false));
+    assert!(matches!(screen.pending_healing_machine.as_ref().unwrap().phase,
+        HealingMachinePhase::PostMusicDelay));
+    for _ in 0..31 {
+        screen.update_frame(input(false));
+        assert!(screen.pending_healing_machine.is_some());
+    }
+    screen.update_frame(input(false));
+    assert!(screen.pending_healing_machine.is_none());
+}

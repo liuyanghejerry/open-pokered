@@ -9007,7 +9007,7 @@ mod link_stats_cry_fidelity_tests {
                 g.draw(&mut fb);fb.save_png(&dir.join(format!("frame-{t:04}.png"))).unwrap();
                 let machine=g.overworld.pending_healing_machine.is_some();healed|=machine;
                 let n=&g.overworld.npc_states[0];
-                rows.push(serde_json::json!({"t":t,"frame":g.frame_count,"effect":g.overworld.active_script_effect_value(),"facing":format!("{:?}",n.facing),"sprite_frame":n.scripted_frame,"machine":machine,"party_count":g.overworld.party_count,"balls":g.overworld.pending_healing_machine.as_ref().map(|m|m.pokeballs_visible),"dialogue":format!("{:?}",g.overworld.pending_dialogue)}));
+                rows.push(serde_json::json!({"t":t,"frame":g.frame_count,"effect":g.overworld.active_script_effect_value(),"facing":format!("{:?}",n.facing),"sprite_frame":n.scripted_frame,"machine":machine,"music_channel0_playing":g.audio.as_ref().is_some_and(|a| a.is_music_channel_playing(0)),"party_count":g.overworld.party_count,"balls":g.overworld.pending_healing_machine.as_ref().map(|m|m.pokeballs_visible),"dialogue":format!("{:?}",g.overworld.pending_dialogue)}));
                 if healed && !machine && g.overworld.active_script_effect_label().is_none() && g.overworld.pending_dialogue.is_none() {idle_frames+=1;} else {idle_frames=0;}
                 if idle_frames>=3 {break;}
             }
