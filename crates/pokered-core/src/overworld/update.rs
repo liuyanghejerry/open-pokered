@@ -1780,6 +1780,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             select: player_input.select && !intro_holding_input,
         };
 
+        let mut turning_in_place = false;
+
         // OverworldLoop samples direction only after the current step.
         // Releasing it records the last moving direction, not sprite facing.
         if self.state.player.movement_state == MovementState::Idle {
@@ -1788,9 +1790,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     Direction::Right => 1, Direction::Left => 2,
                     Direction::Down => 4, Direction::Up => 8,
                 };
-            } else if self.player_moving_direction != 0 {
-                self.player_last_stop_direction = self.player_moving_direction;
-                self.player_moving_direction = 0;
+            } else {
+                self.check_player_turn = true;
+                if self.player_moving_direction != 0 {
+                    self.player_last_stop_direction = self.player_moving_direction;
+                    self.player_moving_direction = 0;
+                }
             }
         }
 
@@ -1968,7 +1973,23 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 movement_input
             };
 
-            let result = if let Some(ref mut jump) = self.ledge_jump {
+            if movement_before == MovementState::Idle && self.active_script_effect.is_none()
+                && self.scripted_player_path.is_empty() && !self.cutscene_manager.is_blocking() {
+                if let Some(direction) = movement_input.direction_pressed() {
+                    let direction_mask = match direction {
+                        Direction::Right => 1, Direction::Left => 2,
+                        Direction::Down => 4, Direction::Up => 8,
+                    };
+                    turning_in_place = self.check_player_turn
+                        && direction_mask != self.player_last_stop_direction;
+                    if turning_in_place { self.check_player_turn = false; }
+                    self.player_moving_direction = direction_mask;
+                    self.state.player.facing = direction;
+                }
+            }
+            let result = if turning_in_place {
+                MoveResult::TurnedOnly
+            } else if let Some(ref mut jump) = self.ledge_jump {
                 let done = jump.tick();
                 let (x, y) = jump.player_position();
                 self.state.player.x = x;
@@ -2366,7 +2387,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         // In the original game, NPC movement is frozen while a text box is displayed
         // (wFontLoaded / BIT_FONT_LOADED check in UpdateNPCSprite).
         // run_npc_movement_tick() gates on is_text_ui_active() internally.
-        self.run_npc_movement_tick();
+        // holdIntermediateDirectionLoop calls NewBattle and returns without
+        // UpdateSprites. The source does not advance NPCs on this turn sample.
+        if !turning_in_place { self.run_npc_movement_tick(); }
 
         ScreenAction::Continue
     }

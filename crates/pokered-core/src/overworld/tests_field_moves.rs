@@ -1153,3 +1153,37 @@ fn held_a_is_sampled_only_after_step() {
     for _ in 0..2 { screen.update_frame(held); }
     assert!(screen.pending_pc.is_some() || screen.pending_dialogue.is_some() || screen.active_script_effect.is_some(),"held A interacts after landing");
 }
+
+#[test]
+fn stopped_direction_turn_consumes_a_sample_even_when_already_facing_that_way() {
+    use super::MovementState;
+    let idle=OverworldInput::new(false,false,false,false,false,false,false,false);
+    let down=OverworldInput::new(false,true,false,false,false,false,false,false);
+    let mut screen=screen_on(MapId::PalletTown);
+    fill_map_with_passable_block(&mut screen);
+    screen.state.player.x=5;screen.state.player.y=5;
+    screen.state.player.facing=Direction::Down;
+    // CONTINUE can reset facing independently of the remembered stopped direction.
+    screen.player_last_stop_direction=2;
+    screen.update_frame(idle);
+    assert!(screen.check_player_turn);
+    for _ in 0..2 {screen.update_frame(down);}
+    assert_eq!(screen.state.player.movement_state,MovementState::Idle);
+    assert_eq!((screen.state.player.x,screen.state.player.y),(5,5));
+    assert!(!screen.check_player_turn);
+    for _ in 0..2 {screen.update_frame(down);}
+    assert_eq!(screen.state.player.movement_state,MovementState::Walking);
+}
+
+#[test]
+fn same_stopped_direction_starts_without_an_extra_turn_sample() {
+    use super::MovementState;
+    let mut screen=screen_on(MapId::PalletTown);
+    fill_map_with_passable_block(&mut screen);
+    screen.state.player.x=5;screen.state.player.y=5;
+    screen.state.player.facing=Direction::Down;
+    screen.player_last_stop_direction=4;
+    screen.update_frame(OverworldInput::new(false,false,false,false,false,false,false,false));
+    for _ in 0..2 {screen.update_frame(OverworldInput::new(false,true,false,false,false,false,false,false));}
+    assert_eq!(screen.state.player.movement_state,MovementState::Walking);
+}
