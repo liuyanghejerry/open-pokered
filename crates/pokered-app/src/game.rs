@@ -8970,6 +8970,39 @@ mod link_stats_cry_fidelity_tests {
     }
 
     #[test]
+    #[ignore = "natural Oak escort recording; FIDELITY_OAK_CAPTURE"]
+    fn capture_natural_oak_615() {
+        run_link_save_fixture(|| {
+            use pokered_core::overworld::Direction;
+            let dir=std::path::PathBuf::from(std::env::var("FIDELITY_OAK_CAPTURE").unwrap());
+            std::fs::create_dir_all(&dir).unwrap();
+            let mut g=fixture(Species::Bulbasaur,10,Direction::Up);
+            g.save_data=SaveData::default();
+            g.overworld=OverworldScreen::new(MapId::PalletTown,None,PokemonRedData);
+            g.overworld.state.player.x=std::env::var("FIDELITY_OAK_PLAYER_X").ok().map(|x|x.parse().unwrap()).unwrap_or(10);g.overworld.state.player.y=2;g.overworld.state.player.facing=Direction::Up;
+            g.overworld.set_rng_seed(0);g.overworld.run_on_load();
+            for _ in 0..120 {g.update(&InputState::new());}
+            let mut fb=FrameBuffer::new(RenderConfig::new(160,144),Rgba::WHITE);g.draw(&mut fb);fb.save_png(&dir.join("pretrigger.png")).unwrap();
+            let anchor=g.frame_count;let mut input=InputState::new();let mut rows=Vec::new();let mut following=None;let mut lab=None;
+            for t in 0..2400u64 {
+                let is_follow=g.overworld.active_script_effect_label().as_deref()==Some("FollowNpc");
+                if is_follow && following.is_none() {following=Some(t);}
+                input.begin_frame();
+                for b in [GbButton::Up,GbButton::A] {input.release(b);}
+                if t<18 {input.press(GbButton::Up);} else if following.is_none() && t%40==20 {input.press(GbButton::A);}
+                g.update(&input);assert_eq!(g.frame_count,anchor+t+1);
+                g.draw(&mut fb);fb.save_png(&dir.join(format!("frame-{t:04}.png"))).unwrap();
+                let n=&g.overworld.npc_states[0];
+                rows.push(serde_json::json!({"t":t,"frame":g.frame_count,"map":format!("{:?}",g.overworld.state.current_map),"player_x":g.overworld.state.player.x,"player_y":g.overworld.state.player.y,"player_counter":g.overworld.state.walk_counter,"npc_x":n.x,"npc_y":n.y,"npc_counter":n.walk_counter,"npc_facing":format!("{:?}",n.facing),"effect":g.overworld.active_script_effect_value()}));
+                if g.overworld.state.current_map==MapId::OaksLab && lab.is_none() {lab=Some(t);}
+                if lab.is_some_and(|f|t>=f+60) {break;}
+            }
+            assert!(following.is_some() && lab.is_some(),"escort did not complete");
+            std::fs::write(dir.join("manifest.json"),serde_json::to_string_pretty(&serde_json::json!({"follow_frame":following,"lab_frame":lab,"frames":rows})).unwrap()).unwrap();
+        });
+    }
+
+    #[test]
     #[ignore = "manual deterministic grass screenshot; GRASS_CAPTURE_DIR"]
     fn capture_player_grass_priority() {
         run_link_save_fixture(|| {

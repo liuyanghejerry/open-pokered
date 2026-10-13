@@ -523,3 +523,43 @@ fn follow_npc_keeps_leader_and_player_in_lockstep() {
         "player idled {max_idle_streak} frames in a row mid-follow: stop-and-go desync is back"
     );
 }
+
+// Route geometry only: source hardware-frame pacing is audited separately.
+#[test]
+fn oak_approach_geometry_matches_both_natural_retail_paths() {
+    let oracle: serde_json::Value = serde_json::from_str(include_str!("oak_approach_golden.json")).unwrap();
+    for case in oracle["cases"].as_array().unwrap() {
+        let mut screen = OverworldScreen::new(MapId::PalletTown, None, PokemonRedData);
+        screen.state.player.x = case["player_x"].as_u64().unwrap() as u16;
+        screen.state.player.y = 2;
+        screen.state.player.facing = Direction::Up;
+        let mut starts = Vec::new();
+        let mut previous_counter = 0;
+        let mut following = false;
+        for frame in 0..8000u32 {
+            if let Some(dialogue) = screen.pending_dialogue.as_mut() { dialogue.skip_to_full_page(); }
+            let input = if frame < 18 { up_input() } else {
+                OverworldInput::new(false, false, false, false, frame % 40 == 20, false, false, false)
+            };
+            screen.update_frame(input);
+            let n = &screen.npc_states[0];
+            if matches!(&screen.active_script_effect, Some(super::script_bridge::ScriptEffect::MoveNpc { .. }))
+                && n.walk_counter == 16 && previous_counter != 16 {
+                let (dx,dy) = super::player_movement::direction_delta(n.facing);
+                starts.push((frame, (n.x as i32 + dx as i32) as u16, (n.y as i32 + dy as i32) as u16));
+            }
+            previous_counter = n.walk_counter;
+            if matches!(&screen.active_script_effect, Some(super::script_bridge::ScriptEffect::FollowNpc { .. })) {
+                following = true;
+                break;
+            }
+        }
+        assert!(following, "approach must reach the escort");
+        let expected = case["starts"].as_array().unwrap();
+        assert_eq!(starts.len(), expected.len());
+        for ((_,x,y), row) in starts.iter().zip(expected) {
+            assert_eq!((*x,*y), (row["x"].as_u64().unwrap() as u16, row["y"].as_u64().unwrap() as u16));
+        }
+        assert_eq!((screen.state.player.x, screen.state.player.y), (10,1), "right exit must align before escort");
+    }
+}

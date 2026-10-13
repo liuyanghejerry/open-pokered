@@ -1,0 +1,40 @@
+{
+  "base_commit": "934ba3db95da9a322a9f6401ac010500e7e6d5f7",
+  "source_commit": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+  "comparisons": [
+    {
+      "player_x": 10,
+      "elapsed_frame": 202,
+      "game_frame": 323,
+      "walk_counter": 10,
+      "bbox": [
+        33,
+        103,
+        53,
+        124
+      ],
+      "repeat_exact": true,
+      "captured_frames": 890,
+      "follow_frame_after": 663,
+      "lab_frame_after": 829
+    },
+    {
+      "player_x": 11,
+      "elapsed_frame": 186,
+      "game_frame": 307,
+      "walk_counter": 10,
+      "bbox": [
+        17,
+        119,
+        37,
+        140
+      ],
+      "repeat_exact": true,
+      "captured_frames": 958,
+      "follow_frame_after": 731,
+      "lab_frame_after": 897
+    }
+  ],
+  "scope": "Route geometry and right-column player alignment only. Same initial state/input/frame for base and fix; no resampling. Complete animation/frame timing remains unproven."
+}
