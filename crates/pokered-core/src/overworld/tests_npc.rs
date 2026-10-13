@@ -1998,3 +1998,29 @@ fn victory_road_3f_entry_keeps_the_original_2f_switch_flags() {
     assert_eq!(screen.script_flags().get("EVENT_VICTORY_ROAD_2_BOULDER_ON_SWITCH1"), Some(&true));
     assert_eq!(screen.script_flags().get("EVENT_VICTORY_ROAD_2_BOULDER_ON_SWITCH2"), Some(&true));
 }
+
+#[test]
+fn standing_center_npc_turns_without_walking_and_hidden_npcs_stay_frozen() {
+    use super::screen::OverworldScreen;
+    use pokered_data::{impl_traits::PokemonRedData, maps::MapId};
+    let mut screen = OverworldScreen::new(MapId::ViridianPokecenter, None, PokemonRedData);
+    screen.state.player.x = 3;
+    screen.state.player.y = 3;
+    screen.set_rng_seed(0);
+    let mut facings = Vec::new();
+    for _ in 0..900 {
+        screen.update_frame(super::OverworldInput::new(false,false,false,false,false,false,false,false));
+        let n = &screen.npc_states[2];
+        assert_eq!((n.x,n.y), (4,3));
+        assert_eq!(n.walk_counter, 0);
+        if !facings.contains(&n.facing) { facings.push(n.facing); }
+    }
+    assert!(facings.len() > 1, "STAY NONE must turn without translation");
+    let n = &mut screen.npc_states[2];
+    n.visible = false;
+    let frozen = (n.facing, n.delay_counter);
+    for _ in 0..200 {
+        screen.update_frame(super::OverworldInput::new(false,false,false,false,false,false,false,false));
+        assert_eq!((screen.npc_states[2].facing, screen.npc_states[2].delay_counter), frozen);
+    }
+}

@@ -2344,6 +2344,45 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             for &i in &frozen_slots {
                 self.npc_states[i].movement_type = NpcMovementType::Wander;
             }
+            // STAY still reaches original TryWalking's facing selection.
+            // Blocking text, DelayFrames and healing do not update sprites.
+            let stationary_field_tick = !self.cutscene_manager.is_blocking()
+                && self.trainer_encounter_intro.is_none()
+                && self.trainer_intro_text_pending.is_none()
+                && self.active_script_effect.as_ref().map_or(self.script_engine.is_idle(), |effect|
+                    matches!(effect, script_bridge::ScriptEffect::MoveNpc { .. }
+                        | script_bridge::ScriptEffect::MoveNpcTo { .. }
+                        | script_bridge::ScriptEffect::AwaitNpcMove { .. }
+                        | script_bridge::ScriptEffect::MovePlayer { .. }
+                        | script_bridge::ScriptEffect::MovePlayerTo { .. }
+                        | script_bridge::ScriptEffect::FollowNpc { .. }));
+            if stationary_field_tick {
+                let controlled_slot = match &self.active_script_effect {
+                    Some(script_bridge::ScriptEffect::MoveNpc { npc_id, .. }
+                        | script_bridge::ScriptEffect::MoveNpcTo { npc_id, .. }
+                        | script_bridge::ScriptEffect::AwaitNpcMove { npc_id }
+                        | script_bridge::ScriptEffect::FollowNpc { npc_id, .. }) =>
+                        resolve_npc_index(npc_id, &self.npc_states, &self.map_script_config),
+                    _ => None,
+                };
+                for (slot, n) in self.npc_states.iter_mut().enumerate() {
+                    // Scripted and remote-controlled avatars keep their owner.
+                    if controlled_slot == Some(slot)
+                        || (self.link_opponent.is_some() && n.text_id == 1) { continue; }
+                    if n.movement_type != NpcMovementType::Stationary
+                        || !npc_movement::stationary_available(n, (self.state.player.x, self.state.player.y)) {
+                        continue;
+                    }
+                    let ready = n.walk_counter == 0 && n.scripted_path.is_empty()
+                        && matches!(n.range, 0xD0..=0xD3 | 0xFC..=0xFF)
+                        && n.delay_counter == 0 && self.state.walk_counter == 0;
+                    let (direction, delay) = if ready {
+                        use rand::Rng;
+                        (self.rng.gen(), self.rng.gen())
+                    } else { (0, 0) };
+                    npc_movement::advance_stationary_facing(n, self.state.walk_counter != 0, direction, delay);
+                }
+            }
             self.hasten_followed_npc();
         }
     }

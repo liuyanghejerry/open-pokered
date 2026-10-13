@@ -67,7 +67,7 @@
       "y": 16,
       "movement": "Stationary",
       "facing": "Down",
-      "range": 0,
+      "range": 255,
       "textId": 3,
       "isTrainer": false,
       "itemId": 17
@@ -79,7 +79,7 @@
       "y": 5,
       "movement": "Stationary",
       "facing": "Down",
-      "range": 0,
+      "range": 255,
       "textId": 4,
       "isTrainer": false,
       "itemId": 37
@@ -91,7 +91,7 @@
       "y": 12,
       "movement": "Stationary",
       "facing": "Down",
-      "range": 0,
+      "range": 255,
       "textId": 5,
       "isTrainer": false
     }
