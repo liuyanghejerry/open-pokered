@@ -495,6 +495,12 @@ impl ScriptApiRegistrar for PokemonScriptApi {
         engine.register_async_fn("vendingDelivery", |_: &[JsValue], _: &mut Context| {
             Ok(PokemonScriptCommand::VendingDelivery.into_script_command())
         });
+        engine.register_async_fn("walkTogether", |args: &[JsValue], ctx: &mut Context| {
+            let values = vec![args.get_or_undefined(0).to_json(ctx)?, args.get_or_undefined(1).to_json(ctx)?, args.get_or_undefined(2).to_json(ctx)?];
+            let command = PokemonScriptCommand::from_custom("walkTogether", &values)
+                .map_err(|error| boa_engine::JsNativeError::typ().with_message(error))?;
+            Ok(command.into_script_command())
+        });
         engine.register_async_fn("followNpcPath", |args: &[JsValue], ctx: &mut Context| {
             let values = vec![args.get_or_undefined(0).to_json(ctx)?, args.get_or_undefined(1).to_json(ctx)?];
             let command = PokemonScriptCommand::from_custom("followNpcPath", &values)

@@ -1,5 +1,5 @@
 //! Regression tests for the scripted-guide / current-sweep features:
-//! Pewter City escorts (followNpc), the OaksLab rival challenge flow, and
+//! Pewter City escorts (independent synchronized routes), the OaksLab rival challenge flow, and
 //! the Seafoam Islands B4F water-current sweeps.
 
 use super::screen::OverworldScreen;
@@ -35,8 +35,7 @@ fn cutscene_input(screen: &OverworldScreen<PokemonRedData>, frame: u32) -> Overw
 /// Pewter City east-exit interception: before Brock is beaten, stepping
 /// onto (36,17) makes the gym guide escort the player to the gym front.
 /// Original ends with the player at (11,18) and the guide at (12,18) in
-/// front of the gym sign; followNpc lands both on the guide's final tile
-/// (12,18). Afterwards the guide resets to his (35,16) spawn and is shown
+/// front of the gym sign. Afterwards the guide resets to his (35,16) spawn and is shown
 /// again (orig PewterCityResetYoungsterScript).
 #[test]
 fn pewter_gym_guy_escorts_player_to_gym() {
@@ -46,6 +45,7 @@ fn pewter_gym_guy_escorts_player_to_gym() {
     screen.state.player.facing = Direction::Up;
 
     let mut arrived = false;
+    let mut farewell = false;
     for frame in 0..6000 {
         let input = if screen.active_script_effect.is_some() {
             cutscene_input(&screen, frame)
@@ -57,8 +57,16 @@ fn pewter_gym_guy_escorts_player_to_gym() {
             up_input()
         };
         screen.update_frame(input);
-        if (screen.state.player.x, screen.state.player.y) == (12, 18) {
+        if (screen.state.player.x, screen.state.player.y) == (11, 18) {
             arrived = true;
+        }
+        if let Some(super::script_bridge::ScriptEffect::ShowDialogue { text, .. }) = &screen.active_script_effect {
+            if text.contains("right stuff") {
+                farewell = true;
+                assert_eq!((screen.state.player.x, screen.state.player.y), (11,18));
+                let guide=&screen.npc_states[4];
+                assert_eq!((guide.x,guide.y,guide.facing), (12,18,Direction::Left));
+            }
         }
         let guy = &screen.npc_states[4];
         if arrived && guy.visible && guy.x == 35 && guy.y == 16 {
@@ -73,9 +81,10 @@ fn pewter_gym_guy_escorts_player_to_gym() {
     );
     assert!(
         arrived,
-        "escort never delivered the player to the gym front (12,18); at ({},{})",
+        "escort never delivered the player to the gym front (11,18); at ({},{})",
         screen.state.player.x, screen.state.player.y
     );
+    assert!(farewell, "escort must deliver the original farewell before resetting");
     // The guide (npc 5) resets to his spawn and is shown again.
     let guy = &screen.npc_states[4];
     assert!(
@@ -85,6 +94,41 @@ fn pewter_gym_guy_escorts_player_to_gym() {
         guy.y,
         guy.visible
     );
+}
+
+/// The easternmost trigger waits eight empty joypad samples while the guide
+/// starts down. A trail-follow implementation instead moves the player at once.
+#[test]
+fn pewter_east_escort_pauses_player_while_guide_walks() {
+    let mut screen = OverworldScreen::new(MapId::PewterCity, None, PokemonRedData);
+    screen.state.player.x=38;
+    screen.state.player.y=18;
+    screen.state.player.facing=Direction::Left;
+    let mut idle_frames=0;
+    let mut guide_moved=false;
+    let mut player_started=false;
+    for frame in 0..2000 {
+        let input = if screen.active_script_effect.is_some() || !screen.script_engine.is_idle() {
+            cutscene_input(&screen, frame)
+        } else {
+            OverworldInput::new(false, false, true, false, false, false, false, false)
+        };
+        screen.update_frame(input);
+        if matches!(&screen.active_script_effect,
+            Some(super::script_bridge::ScriptEffect::FollowNpc {
+                phase: super::script_bridge::FollowNpcPhase::Following { .. }, .. })) {
+            if screen.state.player.movement_state == super::MovementState::Walking {
+                player_started=true;
+                break;
+            }
+            assert_eq!((screen.state.player.x,screen.state.player.y), (37,18));
+            idle_frames+=1;
+            guide_moved |= screen.npc_states[4].walk_counter>0;
+        }
+    }
+    assert!(player_started, "player must resume after the positioning pause");
+    assert!(guide_moved, "NO_INPUT must not freeze the synchronized guide");
+    assert!(idle_frames>=14, "eight empty inputs must span ordinary two-frame field updates: {idle_frames}");
 }
 
 /// OaksLab rival challenge: with a starter chosen, walking down to row 6

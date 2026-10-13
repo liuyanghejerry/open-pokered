@@ -191,6 +191,9 @@ interface GameAPI {
    * @param targetX - Target tile X coordinate.
    * @param targetY - Target tile Y coordinate.
    */
+  /** Walk independent synchronized routes; [0,0] pauses the player for one field update. */
+  walkTogether(npcId: string, path: [number, number][], playerSteps: [number, number][]): Promise<void>;
+
   followNpc(npcId: string, targetX: number, targetY: number): Promise<void>;
 
   /**

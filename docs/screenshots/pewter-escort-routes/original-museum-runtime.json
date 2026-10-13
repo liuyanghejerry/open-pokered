@@ -1,0 +1,30 @@
+{
+  "scope": "Controlled boot fixture: native serialized SRAM, forced original map-header reload and reconstructed map-view pointer only during setup; hooks removed before saved start. Then real Up/A/Down/A input and unmodified original movement code; no player or NPC runtime edits during escort. Not a naturally reached original save or complete rendered parity.",
+  "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+  "position_note": "Original synchronized movement changes screen pixels only; stale map X/Y27,17 must not be used as physical escort endpoint. Guide screen48,60 is one tile left of player64,60.",
+  "repeat_exact": true,
+  "farewell": {
+    "frame": 425,
+    "state": {
+      "wXCoord": 14,
+      "wYCoord": 8,
+      "wWalkCounter": 0,
+      "wFontLoaded": 1,
+      "wPewterCityCurScript": 1,
+      "wSimulatedJoypadStatesIndex": 0,
+      "wNPCMovementScriptPointerTableNum": 0
+    },
+    "guide": {
+      "x": 27,
+      "y": 17,
+      "counter": 0,
+      "facing": 4,
+      "x_step": 0,
+      "y_step": 0,
+      "screen_x": 48,
+      "screen_y": 60,
+      "script_walk_counter": 8,
+      "route_index": 23
+    }
+  }
+}

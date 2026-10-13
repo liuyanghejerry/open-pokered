@@ -1,0 +1,104 @@
+{
+  "base": "ecc5d0bba4d69cebdb96dfc2434deeb119ac8e68",
+  "native_scenarios": 9,
+  "repeats_per_scenario": 2,
+  "screenshots": [
+    {
+      "kind": "museum",
+      "label": "before",
+      "frame_count": 1200,
+      "file": "museum-before.png",
+      "sha256": "6ea15e1f899c0dc1cc610821f6859f018d493bfa1a61f32f6c960c57ac1e2a4e",
+      "player": [
+        14,
+        8
+      ],
+      "guide": {
+        "facing": "Left",
+        "home_x": 27,
+        "home_y": 17,
+        "npc_index": 2,
+        "scripted_path_remaining": 0,
+        "sprite_id": 12,
+        "text_id": 3,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 14,
+        "y": 8
+      }
+    },
+    {
+      "kind": "gym",
+      "label": "before",
+      "frame_count": 1200,
+      "file": "gym-before.png",
+      "sha256": "c479ce1bec918692af596c94e6824f06346b34e38c545e0fe82f978e447837a7",
+      "player": [
+        12,
+        18
+      ],
+      "guide": {
+        "facing": "Right",
+        "home_x": 35,
+        "home_y": 16,
+        "npc_index": 4,
+        "scripted_path_remaining": 0,
+        "sprite_id": 4,
+        "text_id": 5,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 12,
+        "y": 18
+      }
+    },
+    {
+      "kind": "museum",
+      "label": "after",
+      "frame_count": 1200,
+      "file": "museum-after.png",
+      "sha256": "22a296aa0af30aabe7ff3052744dda2dfb6ad6c9864f8746c66bb94c8908ae49",
+      "player": [
+        14,
+        8
+      ],
+      "guide": {
+        "facing": "Up",
+        "home_x": 27,
+        "home_y": 17,
+        "npc_index": 2,
+        "scripted_path_remaining": 0,
+        "sprite_id": 12,
+        "text_id": 3,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 13,
+        "y": 8
+      }
+    },
+    {
+      "kind": "gym",
+      "label": "after",
+      "frame_count": 1200,
+      "file": "gym-after.png",
+      "sha256": "fa0ddc5f74e82d61d3778870ea86d8f0e5022cc39a3a861c70fff050e042aa62",
+      "player": [
+        11,
+        18
+      ],
+      "guide": {
+        "facing": "Left",
+        "home_x": 35,
+        "home_y": 16,
+        "npc_index": 4,
+        "scripted_path_remaining": 0,
+        "sprite_id": 4,
+        "text_id": 5,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 12,
+        "y": 18
+      }
+    }
+  ],
+  "scope": "Native nine-start script continuation tested twice. Screenshot comparisons use same hardware frame1200 and farewell text page. Original controlled boot checks museum/gym route completion and facing, not full rendered/audio/RNG parity."
+}

@@ -191,6 +191,8 @@ pub enum ScriptEffect {
         target_y: u8,
         #[serde(default)]
         path: Option<Vec<(u8, u8)>>,
+        #[serde(default)]
+        player_steps: Option<Vec<(i8, i8)>>,
         phase: FollowNpcPhase,
     },
     ShowPokedexEntry {
@@ -521,6 +523,7 @@ impl ScriptEffect {
                 target_x,
                 target_y,
                 path,
+                player_steps,
                 phase,
             } => json!({
                 "effect": "FollowNpc",
@@ -528,6 +531,7 @@ impl ScriptEffect {
                 "target_x": target_x,
                 "target_y": target_y,
                 "path": path,
+                "player_steps": player_steps,
                 "phase": follow_phase_json(phase),
             }),
             ScriptEffect::ShowPokedexEntry { species, started } => {
@@ -820,6 +824,7 @@ pub fn dispatch_command_with_names(
             target_x: *target_x,
             target_y: *target_y,
             path: None,
+            player_steps: None,
             phase: FollowNpcPhase::StartNpc,
         },
         ScriptCommand::OpenShop { items } => ScriptEffect::OpenShop {
@@ -872,9 +877,13 @@ fn dispatch_custom(name: &str, args: &[Value]) -> ScriptEffect {
         Err(error) => return unsupported_with_reason(name, error),
     };
     match command {
+        PokemonScriptCommand::WalkTogether { npc_id, path, player_steps } => {
+            let (target_x,target_y)=*path.last().expect("validated nonempty route");
+            ScriptEffect::FollowNpc { npc_id, target_x, target_y, path: Some(path), player_steps: Some(player_steps), phase: FollowNpcPhase::StartNpc }
+        },
         PokemonScriptCommand::FollowNpcPath { npc_id, path } => {
             let (target_x, target_y) = *path.last().expect("validated nonempty escort route");
-            ScriptEffect::FollowNpc { npc_id, target_x, target_y, path: Some(path), phase: FollowNpcPhase::StartNpc }
+            ScriptEffect::FollowNpc { npc_id, target_x, target_y, path: Some(path), player_steps: None, phase: FollowNpcPhase::StartNpc }
         },
         PokemonScriptCommand::PrintFieldText { text } => ScriptEffect::PrintFieldText {
             text,
@@ -1091,6 +1100,7 @@ mod script_effect_json_tests {
             target_x: 11,
             target_y: 2,
             path: None,
+            player_steps: None,
             phase: FollowNpcPhase::Following {
                 last_npc_x: 10,
                 last_npc_y: 3,
