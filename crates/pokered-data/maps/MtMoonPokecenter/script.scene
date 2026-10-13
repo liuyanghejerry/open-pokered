@@ -17,7 +17,7 @@ perfect health!\n\nShall we heal your POKeMON?", "欢迎光临宝可梦中心！
 POKeMON.", "OK，我们需要你的宝可梦。")
         }
         faceNpc("1", "left")
-        delay(8)
+        delay(3)
         heal()
         animateHealingMachine()
         @speaker("") {

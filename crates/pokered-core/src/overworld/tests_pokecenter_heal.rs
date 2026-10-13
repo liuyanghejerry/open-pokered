@@ -297,3 +297,32 @@ fn healing_waits_for_actual_audio_fade_and_snapshots_its_state() {
     old.update_frame(input(false));
     assert_eq!(old.pending_healing_machine.as_ref().unwrap().pokeballs_visible, 1);
 }
+
+
+#[test]
+fn all_centers_wait_three_frames_after_nurse_turns() {
+    use super::script_bridge::ScriptEffect;
+    for map in [MapId::ViridianPokecenter, MapId::PewterPokecenter, MapId::CeruleanPokecenter,
+        MapId::VermilionPokecenter, MapId::LavenderPokecenter, MapId::CeladonPokecenter,
+        MapId::FuchsiaPokecenter, MapId::SaffronPokecenter, MapId::CinnabarPokecenter,
+        MapId::MtMoonPokecenter, MapId::RockTunnelPokecenter, MapId::IndigoPlateauLobby] {
+        let mut screen = OverworldScreen::new(map, None, PokemonRedData);
+        screen.party_count = 1;
+        screen.state.player.x = screen.npc_states[0].x;
+        screen.state.player.y = screen.npc_states[0].y + 2;
+        screen.state.player.facing = Direction::Up;
+        let mut countdown = Vec::new();
+        for frame in 0..2000 {
+            if let Some(d) = screen.pending_dialogue.as_mut() { d.skip_to_full_page(); }
+            screen.update_frame(input(frame % 40 == 0));
+            if screen.pending_healing_machine.is_some() { break; }
+            if screen.npc_states[0].facing == Direction::Left {
+                if let Some(ScriptEffect::Delay { frames_remaining, .. }) = &screen.active_script_effect {
+                    countdown.push(*frames_remaining);
+                }
+            }
+        }
+        assert_eq!(countdown, vec![3, 2, 1], "{map:?}: original Delay3 before healing");
+        assert!(screen.pending_healing_machine.is_some());
+    }
+}
