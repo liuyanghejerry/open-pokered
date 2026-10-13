@@ -79,6 +79,8 @@ pub struct OverworldSnapshot {
     pub field_loop_wait: u8,
     #[serde(default)]
     pub bike_redraw_advance: bool,
+    #[serde(default)]
+    pub check_player_turn: bool,
     pub state: OverworldState,
     #[serde(default)]
     pub player_last_stop_direction: u8,
@@ -249,6 +251,7 @@ impl OverworldSnapshot {
             frame_counter: 0,
             field_loop_wait: 0,
             bike_redraw_advance: false,
+            check_player_turn: false,
             state: screen.state.clone(),
             player_last_stop_direction: screen.player_last_stop_direction,
             player_moving_direction: screen.player_moving_direction,
@@ -369,7 +372,7 @@ impl OverworldSnapshot {
         };
         snapshot_fields!(restore &mut snap, screen,
             player_last_stop_direction, player_moving_direction,
-            frame_counter, field_loop_wait, bike_redraw_advance, state, map_data, npc_states, npc_presentation, field_viewport, player_presentation, npc_pokemon_data, pending_dialogue,
+            frame_counter, field_loop_wait, bike_redraw_advance, check_player_turn, state, map_data, npc_states, npc_presentation, field_viewport, player_presentation, npc_pokemon_data, pending_dialogue,
             last_script_dialogue, retain_healing_text, pending_choice, script_money_box, script_coin_box, gift_box_number, pending_pokedex_entry, pending_naming_screen, naming_flash_frames,
             pending_party_select, party_select_requested, pending_set_nickname,
             pending_emotion_bubble, pending_healing_machine, last_map, last_map_entry,
@@ -418,7 +421,7 @@ impl OverworldSnapshot {
         snapshot_fields!(restore screen, self,
             player_last_stop_direction, player_moving_direction,
             wild_data_state,
-            frame_counter, field_loop_wait, bike_redraw_advance, state, map_data, npc_states, npc_presentation, field_viewport, player_presentation, npc_pokemon_data, pending_dialogue,
+            frame_counter, field_loop_wait, bike_redraw_advance, check_player_turn, state, map_data, npc_states, npc_presentation, field_viewport, player_presentation, npc_pokemon_data, pending_dialogue,
             last_script_dialogue, retain_healing_text, pending_choice, script_money_box, script_coin_box, gift_box_number, pending_pokedex_entry, pending_naming_screen, naming_flash_frames,
             pending_party_select, party_select_requested, pending_set_nickname,
             pending_emotion_bubble, pending_healing_machine, last_map, last_map_entry,
@@ -656,6 +659,23 @@ mod balance_snapshot_tests {
         assert!(restored.npc_presentation.pose(MapId::ViridianPokecenter, 2).is_none());
         restored.publish_npc_frame(false);
         assert_eq!(restored.npc_presentation.pose(MapId::ViridianPokecenter, 2).unwrap().image.facing, Direction::Left);
+    }
+
+    #[test]
+    fn armed_stop_direction_check_survives_snapshot() {
+        let mut screen=OverworldScreen::new(pokered_data::maps::MapId::PalletTown,None,
+            pokered_data::impl_traits::PokemonRedData);
+        screen.update_frame(default_overworld_input());
+        assert!(screen.check_player_turn);
+        let saved=OverworldSnapshot::capture(&screen);
+        screen.check_player_turn=false;
+        saved.restore_into(&mut screen);
+        assert!(screen.check_player_turn);
+        let mut legacy=serde_json::to_value(&saved).unwrap();
+        legacy.as_object_mut().unwrap().remove("check_player_turn");
+        let saved:OverworldSnapshot=serde_json::from_value(legacy).unwrap();
+        saved.restore_into(&mut screen);
+        assert!(!screen.check_player_turn);
     }
 
     #[test]

@@ -596,9 +596,29 @@ class Game:
         return r["data"]
 
     def tap(self, btn, gap=TAP_GAP):
-        """One held frame then idle frames — menus are edge-triggered
-        (a_just_pressed), so consecutive tap frames would read as a hold."""
-        self.d.drive([btn], frames=1 + gap)
+        """Menus use one edge; ordinary field A/START crosses the field sample."""
+        state = self.st()
+        field_press = (btn in {"a", "start"}
+                       and state["screen"] == "overworld"
+                       and state["dialogue_state"] is None
+                       and state["choice"] is None
+                       and state["active_script_effect"] is None
+                       and not state["script_running"]
+                       and state["player_movement_state"] == "Idle")
+        if field_press:
+            for _ in range(3):
+                r = self.d.cmd(cmd="press_timeline", buttons=[btn], advance=True)
+                assert r["ok"], r
+                current = self.st()
+                if (current["screen"] != state["screen"]
+                        or current["dialogue_state"] is not None
+                        or current["choice"] is not None
+                        or current["active_script_effect"] is not None
+                        or current["script_running"]):
+                    break
+            self.step(gap)
+        else:
+            self.d.drive([btn], frames=1 + gap)
 
     def skip(self):
         r = self.d.cmd(cmd="skip_dialogue")
@@ -758,8 +778,18 @@ class Game:
         raise NavError(f"nav_to({x},{y}) did not converge")
 
     def face(self, direction):
-        """Turn in place: one held frame turns, walking needs more."""
-        self.d.drive([direction], frames=1 + 12)
+        """Hold through the foreground sample, then verify a turn without walking."""
+        start = self.st()
+        wanted = direction.capitalize()
+        for _ in range(3):
+            if self.st()["player_facing"] == wanted:
+                break
+            r = self.d.cmd(cmd="press_timeline", buttons=[direction], advance=True)
+            assert r["ok"], r
+        self.step(12)
+        state = self.st()
+        assert state["player_facing"] == wanted, state
+        assert (state["player_x"], state["player_y"]) == (start["player_x"], start["player_y"]), state
 
     def approach_object(self, x, y, map_name):
         """Face an object from a reachable adjacent tile (trainers may

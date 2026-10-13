@@ -217,12 +217,16 @@ fn flash_white_out_freezes_movement_for_three_frames() {
     );
     assert_eq!(screen.flash_lit_frames, 0, "3 frames elapsed");
 
-    // Movement resumes at the next foreground field sample after the freeze.
+    // The freeze ends before ordinary direction handling resumes. The first
+    // changed direction after NoDirection turns in place; the next sample walks.
+    for _ in 0..2 { screen.update_frame(up); }
+    assert_eq!(screen.state.player.movement_state, MovementState::Idle);
+    assert_eq!(screen.state.player.facing, super::Direction::Up);
     for _ in 0..2 { screen.update_frame(up); }
     assert_eq!(
         screen.state.player.movement_state,
         MovementState::Walking,
-        "movement resumes after the freeze"
+        "movement resumes after the post-freeze turn sample"
     );
 }
 

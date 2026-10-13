@@ -503,3 +503,15 @@ fn saved_transport_respects_tileset_and_forced_entry_rules() {
         assert_eq!(save.game_data.status_flags[5] & (1 << 5) != 0, expected_lock);
     }
 }
+
+#[test]
+fn downhill_simulated_input_does_not_arm_the_no_direction_turn_check() {
+    let mut screen=screen_on(MapId::Route17);
+    screen.state.player.x=8;screen.state.player.y=12;
+    screen.state.player.transport=TransportMode::Biking;
+    screen.update_frame(OverworldInput::new(false,false,false,false,false,false,false,false));
+    assert_eq!(screen.state.player.movement_state,super::MovementState::Walking);
+    assert_eq!(screen.player_moving_direction,4);
+    assert!(!screen.check_player_turn,"forced DOWN is a direction, not NoDirection");
+    assert_eq!(screen.player_last_stop_direction,0,"no stop was sampled");
+}

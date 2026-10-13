@@ -826,6 +826,8 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     /// Hardware-frame wait remaining before the next foreground field loop.
     pub(crate) field_loop_wait: u8,
     pub(crate) bike_redraw_advance: bool,
+    /// NoDirection arms the source turn check until a changed direction consumes it.
+    pub(crate) check_player_turn: bool,
     pub(crate) prev_movement_state: MovementState,
     pub(crate) prev_b_pressed: bool,
     pub(crate) prev_up_pressed: bool,
@@ -1286,6 +1288,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             sampled_player_input: FieldInputSample::default(),
             field_loop_wait: 0,
             bike_redraw_advance: false,
+            check_player_turn: false,
             prev_movement_state: MovementState::Idle,
             player_last_stop_direction: 0,
             player_moving_direction: 0,
