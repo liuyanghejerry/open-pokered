@@ -235,6 +235,8 @@ const fn rgb15(r: u8, g: u8, b: u8) -> u16 {
     ((r >> 3) as u16) | (((g >> 3) as u16) << 5) | (((b >> 3) as u16) << 10)
 }
 
+mod dirty_spans;
+
 struct Mode4Presenter {
     draw_page: u8,
     ready_page: Option<u8>,
@@ -243,8 +245,8 @@ struct Mode4Presenter {
 }
 
 /// Pixels each VRAM page is missing relative to the software framebuffer.
-/// Rectangles are rounded out to 8×8 cells, then each tile row is submitted
-/// as one horizontal DMA span. This keeps the bookkeeping tiny and preserves
+/// Rectangles are rounded out to 8×8 cells, then contiguous dirty cells are submitted
+/// as horizontal DMA spans. This keeps the bookkeeping tiny and preserves
 /// aligned 32-bit transfers even when a sprite is moving in 2px steps.
 #[derive(Clone, Copy)]
 struct DirtyTiles {
@@ -362,15 +364,17 @@ impl Mode4Presenter {
             if row_mask == 0 {
                 continue;
             }
-            let first_col = row_mask.trailing_zeros() as usize;
-            let end_col = (u32::BITS - row_mask.leading_zeros()) as usize;
-            let x = first_col * DAMAGE_TILE_SIZE;
-            let width = (end_col - first_col) * DAMAGE_TILE_SIZE;
-            for sub_y in 0..DAMAGE_TILE_SIZE {
-                let y = tile_y * DAMAGE_TILE_SIZE + sub_y;
-                let src_word = unsafe { indices.as_ptr().add(y * VIEW_W + x).cast::<u32>() };
-                let dst_word = ((VIEW_Y + y) * SCREEN_W + VIEW_X + x) / 4;
-                unsafe { dma3_copy_words(src_word, dst.add(dst_word), width / 4) };
+            // Separate distant actors instead of recopying unchanged cells
+            // between them. Pending damage still accumulates per VRAM page.
+            for (first_col, columns) in dirty_spans::spans(row_mask) {
+                let x = first_col * DAMAGE_TILE_SIZE;
+                let width = columns * DAMAGE_TILE_SIZE;
+                for sub_y in 0..DAMAGE_TILE_SIZE {
+                    let y = tile_y * DAMAGE_TILE_SIZE + sub_y;
+                    let src_word = unsafe { indices.as_ptr().add(y * VIEW_W + x).cast::<u32>() };
+                    let dst_word = ((VIEW_Y + y) * SCREEN_W + VIEW_X + x) / 4;
+                    unsafe { dma3_copy_words(src_word, dst.add(dst_word), width / 4) };
+                }
             }
         }
     }
