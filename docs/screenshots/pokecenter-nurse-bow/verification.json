@@ -1,0 +1,21 @@
+{
+  "base_commit": "5da13d1bb85e61d132307dca12f7eb16ee421a64",
+  "fixture": "Actual ViridianPokecenter nurse interaction from player3,3 facingUp, five party members, same40-frame A pulse schedule on master and fix,120 idle setup frames.",
+  "elapsed_frame": 1110,
+  "hardware_frame": 1231,
+  "before": "Nurse standing Down during farewell, no bow override.",
+  "after": "Nurse scripted sprite frame1 retained during farewell.",
+  "original_roi": "64,28,16,16; all256 pixels match original observed bow frame. Static pose comparison, not full animation timing PASS.",
+  "reference_rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+  "reference_source_commit": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "reference_anchors": {
+    "_HealFaceMachine": 531,
+    "_HealAfterTurnDelay": 534,
+    "AnimateHealingMachine": 535,
+    "_HealBow": 1080,
+    "_HealAfterBowDelay": 1100
+  },
+  "before_sha256": "b14ddf58f8766c5223cae9d621e8df8de504b9548720a552c5a45a52a3f0ce5a",
+  "after_sha256": "ac871bf0a75053e4893504b9e39a21e74d50c35fba5b594197cbf2bbf908ba05",
+  "pending": "Pre-heal delay8 versus original Delay3, text retention during script waits, and full machine/nurse hardware timing remain broader audit items."
+}

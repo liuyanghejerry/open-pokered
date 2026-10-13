@@ -8980,6 +8980,40 @@ mod link_stats_cry_fidelity_tests {
         });
     }
 
+    #[test]
+    #[ignore = "actual nurse interaction capture; NURSE_CAPTURE_DIR"]
+    fn capture_nurse_interaction_641() {
+        run_link_save_fixture(|| {
+            use pokered_core::overworld::Direction;
+            let dir=std::path::PathBuf::from(std::env::var("NURSE_CAPTURE_DIR").unwrap());
+            std::fs::create_dir_all(&dir).unwrap();
+            let mut g=fixture(Species::Bulbasaur,3,Direction::Up);
+            let mon=g.save_data.party.get(0).unwrap().clone();
+            g.save_data.party=pokered_core::pokemon::party::Party::from(vec![mon;5]);
+            g.overworld=OverworldScreen::new(MapId::ViridianPokecenter,None,PokemonRedData);
+            g.overworld.state.player.x=3;g.overworld.state.player.y=3;g.overworld.state.player.facing=Direction::Up;
+            g.overworld.set_rng_seed(0);g.overworld.run_on_load();
+            for _ in 0..120 {g.update(&InputState::new());}
+            let mut rows=Vec::new();let mut healed=false;let mut idle_frames=0;
+            let anchor=g.frame_count;let mut input=InputState::new();
+            let mut fb=FrameBuffer::new(RenderConfig::new(160,144),Rgba::WHITE);
+            g.draw(&mut fb);fb.save_png(&dir.join("pretrigger.png")).unwrap();
+            for t in 0..4000u64 {
+                input.begin_frame();input.release(GbButton::A);
+                if t%40==0 {input.press(GbButton::A);}
+                g.update(&input);assert_eq!(g.frame_count,anchor+t+1);
+                g.draw(&mut fb);fb.save_png(&dir.join(format!("frame-{t:04}.png"))).unwrap();
+                let machine=g.overworld.pending_healing_machine.is_some();healed|=machine;
+                let n=&g.overworld.npc_states[0];
+                rows.push(serde_json::json!({"t":t,"frame":g.frame_count,"effect":g.overworld.active_script_effect_value(),"facing":format!("{:?}",n.facing),"sprite_frame":n.scripted_frame,"machine":machine,"dialogue":format!("{:?}",g.overworld.pending_dialogue)}));
+                if healed && !machine && g.overworld.active_script_effect_label().is_none() && g.overworld.pending_dialogue.is_none() {idle_frames+=1;} else {idle_frames=0;}
+                if idle_frames>=3 {break;}
+            }
+            assert!(healed && idle_frames>=3,"healing conversation must complete");
+            std::fs::write(dir.join("manifest.json"),serde_json::to_string_pretty(&rows).unwrap()).unwrap();
+        });
+    }
+
     fn fixture(
         species: Species,
         x: u16,

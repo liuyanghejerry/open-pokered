@@ -22,14 +22,16 @@ game_scene pokecenter {
         delay(8)
         heal()
         animateHealingMachine()
-        faceNpc("1", "down")
-        delay(8)
         @speaker("") { @t("Thank you!\nYour #MON are\nfighting fit!", "谢谢！\n您的宝可梦\n已经精神饱满！") }
+        // Original nurse image $14 is the bow frame after fighting-fit text.
+        setNpcFrame("1", 1)
+        delay(20)
       }
       @option(@t("No", "否")) {
       }
     }
     @speaker("") { @t("We hope to see\nyou again!", "欢迎再次\n光临！") }
+    faceNpc("1", "down")
   }
 
   @storyline("talkLinkReceptionist") {
