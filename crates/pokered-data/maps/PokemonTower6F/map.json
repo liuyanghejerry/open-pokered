@@ -75,7 +75,7 @@
       "y": 8,
       "movement": "Stationary",
       "facing": "Down",
-      "range": 0,
+      "range": 255,
       "textId": 4,
       "isTrainer": false,
       "itemId": 40
@@ -87,7 +87,7 @@
       "y": 14,
       "movement": "Stationary",
       "facing": "Down",
-      "range": 0,
+      "range": 255,
       "textId": 5,
       "isTrainer": false,
       "itemId": 46

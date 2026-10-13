@@ -8970,6 +8970,32 @@ mod link_stats_cry_fidelity_tests {
     }
 
     #[test]
+    #[ignore = "stationary NPC recording; FIDELITY_STATIONARY_CAPTURE"]
+    fn capture_stationary_npc_670() {
+        run_link_save_fixture(|| {
+            use pokered_core::overworld::Direction;
+            let dir=std::path::PathBuf::from(std::env::var("FIDELITY_STATIONARY_CAPTURE").unwrap());
+            std::fs::create_dir_all(&dir).unwrap();
+            let mut g=fixture(Species::Bulbasaur,10,Direction::Up);
+            g.save_data=SaveData::default();
+            g.overworld=OverworldScreen::new(MapId::ViridianPokecenter,None,PokemonRedData);
+            g.overworld.state.player.x=3;g.overworld.state.player.y=3;
+            g.overworld.state.player.facing=Direction::Up;
+            g.overworld.set_rng_seed(0);g.overworld.run_on_load();
+            let mut fb=FrameBuffer::new(RenderConfig::new(160,144),Rgba::WHITE);
+            g.draw(&mut fb);fb.save_png(&dir.join("pretrigger.png")).unwrap();
+            let mut rows=Vec::new();
+            for t in 0..900u64 {
+                g.update(&InputState::new());g.draw(&mut fb);
+                fb.save_png(&dir.join(format!("frame-{t:04}.png"))).unwrap();
+                let n=&g.overworld.npc_states[2];
+                rows.push(serde_json::json!({"t":t,"frame":g.frame_count,"map":format!("{:?}",g.overworld.state.current_map),"player_x":g.overworld.state.player.x,"player_y":g.overworld.state.player.y,"npc_x":n.x,"npc_y":n.y,"npc_counter":n.walk_counter,"npc_facing":format!("{:?}",n.facing),"delay_counter":n.delay_counter}));
+            }
+            std::fs::write(dir.join("manifest.json"),serde_json::to_string_pretty(&rows).unwrap()).unwrap();
+        });
+    }
+
+    #[test]
     #[ignore = "natural Oak escort recording; FIDELITY_OAK_CAPTURE"]
     fn capture_natural_oak_615() {
         run_link_save_fixture(|| {

@@ -31,7 +31,7 @@
       "y": 3,
       "movement": "Stationary",
       "facing": "Down",
-      "range": 0,
+      "range": 255,
       "textId": 1,
       "isTrainer": false,
       "trainerClass": "Rival1",
@@ -44,7 +44,7 @@
       "y": 3,
       "movement": "Stationary",
       "facing": "Down",
-      "range": 0,
+      "range": 255,
       "textId": 2,
       "isTrainer": false
     },
@@ -55,7 +55,7 @@
       "y": 3,
       "movement": "Stationary",
       "facing": "Down",
-      "range": 0,
+      "range": 255,
       "textId": 3,
       "isTrainer": false
     },
@@ -66,7 +66,7 @@
       "y": 3,
       "movement": "Stationary",
       "facing": "Down",
-      "range": 0,
+      "range": 255,
       "textId": 4,
       "isTrainer": false
     },
@@ -88,7 +88,7 @@
       "y": 1,
       "movement": "Stationary",
       "facing": "Down",
-      "range": 0,
+      "range": 255,
       "textId": 6,
       "isTrainer": false
     },
@@ -99,7 +99,7 @@
       "y": 1,
       "movement": "Stationary",
       "facing": "Down",
-      "range": 0,
+      "range": 255,
       "textId": 7,
       "isTrainer": false
     },
@@ -132,7 +132,7 @@
       "y": 10,
       "movement": "Stationary",
       "facing": "Down",
-      "range": 0,
+      "range": 255,
       "textId": 10,
       "isTrainer": false
     },
@@ -143,7 +143,7 @@
       "y": 10,
       "movement": "Stationary",
       "facing": "Down",
-      "range": 0,
+      "range": 255,
       "textId": 11,
       "isTrainer": false
     }
