@@ -20,13 +20,14 @@ POKeMON.", "好的，请把宝可梦交给我。")
         delay(8)
         heal()
         animateHealingMachine()
-        faceNpc("1", "down")
-        delay(8)
         @speaker("") {
           @t("Thank you!
 Your POKeMON are
 fighting fit!", "谢谢你的等待。\n\n你的宝可梦已完全恢复了！")
         }
+        // Original nurse image $14 is the bow frame after fighting-fit text.
+        setNpcFrame("1", 1)
+        delay(20)
       }
       @option(@t("No", "否")) {
       }
@@ -34,6 +35,7 @@ fighting fit!", "谢谢你的等待。\n\n你的宝可梦已完全恢复了！")
     @speaker("") {
       @t("We hope to see you again!", "期待你再次光临！")
     }
+    faceNpc("1", "down")
   }
 
   @storyline("talkGentleman") {
