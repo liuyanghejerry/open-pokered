@@ -174,9 +174,16 @@ fn empty_clipboard_dialogue_never_opens_a_blank_box() {
     let mut screen = OverworldScreen::new(MapId::MtMoonPokecenter, None, PokemonRedData);
     screen.set_script_lang("zh");
     screen.run_on_load();
-    screen.state.player.x = 6;
-    screen.state.player.y = 2;
-    screen.state.player.facing = Direction::Right;
+    // Exercise the empty script on a reachable floor tile. The original
+    // clipboard sits on a counter; its 32-pixel talking target bypasses
+    // that adjacent object, so teleporting onto the counter is not a valid
+    // way to test the dialogue pipeline.
+    let clipboard = screen.npc_states.iter_mut().find(|npc| npc.text_id == 5).unwrap();
+    clipboard.x = 3;
+    clipboard.y = 4;
+    screen.state.player.x = 3;
+    screen.state.player.y = 5;
+    screen.state.player.facing = Direction::Up;
     let mut saw_clipboard_effect = false;
     for frame in 0..30 {
         screen.update_frame(OverworldInput::new(
