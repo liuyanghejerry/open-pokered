@@ -40,6 +40,7 @@ const EFFECT_COMMANDS: &[&str] = &[
     "setNpcPosition",
     "followNpc",
     "followNpcPath",
+    "walkTogether",
     "movePlayer",
     "movePlayerTo",
     "movePlayerRelative",
@@ -142,7 +143,7 @@ fn command_effect(name: &str, args: &[Expression]) -> StateEffect {
             None => dynamic(),
         },
         "moveNpc" | "startNpcMove" | "moveNpcTo" | "startNpcMoveTo" | "setNpcPosition"
-        | "followNpc" | "followNpcPath" => match str_arg(0) {
+        | "followNpc" | "followNpcPath" | "walkTogether" => match str_arg(0) {
             Some(npc_id) => StateEffect::NpcMoved { npc_id },
             None => dynamic(),
         },
@@ -468,6 +469,7 @@ impl<'a> Extractor<'a> {
                     self.coverage.commands_recognized += 1;
                 } else {
                     self.effect(command_effect(name, args));
+                    if name == "walkTogether" { self.effects.push(StateEffect::PlayerMoved); }
                 }
             }
         }
@@ -503,6 +505,7 @@ impl<'a> Extractor<'a> {
                     self.coverage.commands_recognized += 1;
                 } else if EFFECT_COMMANDS.contains(&callee) {
                     self.effect(command_effect(callee, args));
+                    if callee == "walkTogether" { self.effects.push(StateEffect::PlayerMoved); }
                 } else {
                     self.predicate(call_predicate(callee, args));
                 }
@@ -946,6 +949,19 @@ mod tests {
             "{:?}",
             sem.reads
         );
+    }
+
+    #[test]
+    fn synchronized_escort_records_both_actors_without_unknown_constructs() {
+        let command=StoryStmt::Command {
+            name: "walkTogether".into(),
+            args: vec![Expression::StringLit("PEWTER_CITY_OBJ_5".into())],
+            span: SourceSpan::point("test",1,1),
+        };
+        let sem=extract_storyline("PewterCity","escort",&[],&[command]);
+        assert!(sem.effects.contains(&StateEffect::NpcMoved { npc_id: "PEWTER_CITY_OBJ_5".into() }));
+        assert!(sem.effects.contains(&StateEffect::PlayerMoved));
+        assert!(!sem.effects.iter().any(|effect| matches!(effect,StateEffect::Unknown { .. })));
     }
 
     #[test]
