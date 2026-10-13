@@ -1763,6 +1763,8 @@ mod tests {
             pokered_data::embedded_scenes::scene_functions(),
         );
         engine.set_flag("EVENT_GOT_STARTER", true);
+        // The coordinate event fires at row 6; the rival approaches y - 1.
+        engine.set_player_position(4, 6);
 
         let mut next = engine.call_function_no_args("coordDontGoAway").unwrap();
         let mut saw_battle = false;

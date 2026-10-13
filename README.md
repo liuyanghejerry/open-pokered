@@ -16,7 +16,7 @@
 
 A faithful reimplementation of **Pokémon Red and Blue** in **Rust**, built from the [pret/pokered](https://github.com/pret/pokered) disassembly — playable on **desktop, web, Android, iOS and the terminal** from a single codebase, fully playable in **English and 中文**, and shipping with a full **visual editor suite** for maps, data, UI layouts, and saves.
 
-This repo is **game-only**: the generic **JRPG engine** lives in a separate repository and is consumed here as Cargo **git dependencies** (`dotzuki-engine`, `dotzuki-engine-dsl`, `dotzuki-engine-script`, `dotzuki-rules`, `dotzuki-renderer`, `dotzuki-ui`, `dotzuki-audio`, `dotzuki-app`, `dotzuki-mobile`, `dotzuki-tui` — see `crates/*/Cargo.toml`, pinned to the `v0.10.0` release commit of the engine repo). `dotzuki-engine-dsl` uses the same release source with a one-line no_std compatibility fix in `vendor/dotzuki-engine-dsl` for the GBA build.
+This repo is **game-only**: the generic **JRPG engine** lives in a separate repository and is consumed here as Cargo **git dependencies** (`dotzuki-engine`, `dotzuki-engine-dsl`, `dotzuki-engine-script`, `dotzuki-rules`, `dotzuki-renderer`, `dotzuki-ui`, `dotzuki-audio`, `dotzuki-app`, `dotzuki-mobile`, `dotzuki-tui` — see `crates/*/Cargo.toml`, pinned to the `v0.10.1` release commit of the engine repo). The upstream DSL crate includes the no_std integer-check fix required by the GBA build.
 
 ## Story behind the repo
 
@@ -187,7 +187,7 @@ cargo run --release --bin pokered-app
 cargo test
 ```
 
-The engine is consumed from `https://github.com/liuyanghejerry/dotzuki`, pinned to the `v0.10.0` release commit (see the `Cargo.toml` files). `dotzuki-engine-dsl` has the documented no_std compatibility fix in `vendor/dotzuki-engine-dsl`. Keep the root and standalone GBA manifests on the same revision and update both lockfiles after changing it.
+The engine is consumed from `https://github.com/liuyanghejerry/dotzuki`, pinned to the `v0.10.1` release commit (see the `Cargo.toml` files). All engine crates, including the no_std DSL runtime, come directly from that release without local engine patches. Keep the root and standalone GBA manifests on the same revision and update both lockfiles after changing it.
 
 ## What this repo contains
 

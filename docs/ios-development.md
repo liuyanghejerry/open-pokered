@@ -6,7 +6,7 @@ aware touch controls and settings editor.
 
 ## Engine and controller sources
 
-Cargo dependencies are pinned to the dotzuki `v0.10.0` release commit. The
+Cargo dependencies are pinned to the dotzuki `v0.10.1` release commit. The
 `ios/DotzukiTouch` local Swift package is the matching
 `workspace/crates/dotzuki-mobile/controls` directory from that same release;
 the Xcode project links its `DotzukiTouch` product. Keep both revisions in
