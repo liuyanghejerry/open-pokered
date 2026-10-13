@@ -150,6 +150,19 @@ fn blit_priority_bg_tile(fb: &mut FrameBuffer, tile: &Tile, x: i32, y: i32) {
     fb.blit_gb_tile_indices(x, y, tile, true, false, false);
 }
 
+fn blit_priority_bg_tile_clipped(fb: &mut FrameBuffer, tile: &Tile, x: i32, y: i32, clip: [i32; 4]) {
+    for row in 0..8i32 {
+        let sy = y + row;
+        if sy < clip[1] || sy >= clip[1] + clip[3] || sy < 0 || sy >= fb.height() as i32 { continue; }
+        for col in 0..8i32 {
+            let sx = x + col;
+            if sx < clip[0] || sx >= clip[0] + clip[2] || sx < 0 || sx >= fb.width() as i32 { continue; }
+            let index = tile.pixels[row as usize][col as usize];
+            if index != 0 { fb.set_pixel(sx as u32, sy as u32, GRAYSCALE_PALETTE.colors[index as usize]); }
+        }
+    }
+}
+
 /// Script-driven entry overlay (`showPokedexEntry`): resolve the scene species
 /// token and draw the real dex data (`pokered_data::pokedex`, ported from
 /// `data/pokemon/dex_entries.asm`) via the shared entry renderer. Previews
@@ -1488,43 +1501,29 @@ fn draw_overworld_impl(
             if let Some(grass_id) = tileset_data::get_grass_tile(tileset_id) {
                 if let Ok(bg_cached) = rm.load_tileset(tileset_name) {
                     let bg_ts = &bg_cached.tileset;
-                    let overlay_x = screen_center_tx as u32 * TILE_SIZE;
-                    let overlay_y = screen_center_ty as u32 * TILE_SIZE + TILE_SIZE;
-                    for col_off in 0..2i32 {
-                        let world_tx = player_tx + col_off;
-                        let world_ty = player_ty + 1;
-                        let bx = world_tx.div_euclid(4);
-                        let by = world_ty.div_euclid(4);
-                        let sub_x = world_tx.rem_euclid(4) as usize;
-                        let sub_y = world_ty.rem_euclid(4) as usize;
-                        let block_id = resolve_block_with_connections(
-                            map_json,
-                            map_w,
-                            map_h,
-                            blk,
-                            border_block,
-                            bx,
-                            by,
-                        );
-                        let block_offset = block_id as usize * blockset_data::BLOCK_SIZE;
-                        let bg_tile_idx = blockset
-                            .get(block_offset + sub_y * 4 + sub_x)
-                            .copied()
-                            .map(usize::from)
-                            .unwrap_or(0)
-                            .min(bg_ts.len().saturating_sub(1));
-                        if bg_tile_idx == grass_id as usize {
-                            let tile = bg_ts.get(bg_tile_idx);
-                            let gx = overlay_x as i32 + col_off * TILE_SIZE as i32;
-                            // The grass priority overlay extends below the
-                            // player's 16px patch. Restore it before scrolling
-                            // too, so those pixels cannot trail behind a step.
-                            if let Some(cache) = background_cache.as_deref_mut() {
-                                cache.save_foreground_rect(
-                                    fb, gx, overlay_y as i32, TILE_SIZE, TILE_SIZE,
-                                );
+                    let tile_at = |world_tx: i32, world_ty: i32| {
+                        let block_id = resolve_block_with_connections(map_json, map_w, map_h,
+                            blk, border_block, world_tx.div_euclid(4), world_ty.div_euclid(4));
+                        let offset = block_id as usize * blockset_data::BLOCK_SIZE
+                            + world_ty.rem_euclid(4) as usize * 4 + world_tx.rem_euclid(4) as usize;
+                        blockset.get(offset).copied().map(usize::from).unwrap_or(0)
+                            .min(bg_ts.len().saturating_sub(1))
+                    };
+                    // OAM_PRIO belongs to the entire lower sprite half,
+                    // not just the grass tile underneath its feet. Nonzero
+                    // pixels from every overlapping BG tile take priority.
+                    if tile_at(player_tx, player_ty + 1) == grass_id as usize {
+                        let clip = [PLAYER_SCREEN_X, PLAYER_SCREEN_Y + 8, 16, 8];
+                        let first_x = (clip[0] + view_sub_x).div_euclid(8);
+                        let last_x = (clip[0] + clip[2] - 1 + view_sub_x).div_euclid(8);
+                        let first_y = (clip[1] + view_sub_y).div_euclid(8);
+                        let last_y = (clip[1] + clip[3] - 1 + view_sub_y).div_euclid(8);
+                        for ty in first_y..=last_y {
+                            for tx in first_x..=last_x {
+                                let tile = bg_ts.get(tile_at(view_origin_tx + tx, view_origin_ty + ty));
+                                blit_priority_bg_tile_clipped(fb, tile,
+                                    tx * 8 - view_sub_x, ty * 8 - view_sub_y, clip);
                             }
-                            blit_priority_bg_tile(fb, tile, gx, overlay_y as i32);
                         }
                     }
                 }
@@ -2375,6 +2374,23 @@ mod tests {
                 );
             }
         }
+    }
+
+    #[test]
+    fn grass_priority_covers_all_eight_lower_sprite_pixels() {
+        let mut tile = Tile::blank();
+        tile.pixels = [[3; 8]; 8];
+        tile.pixels[4][2] = 0;
+        tile.pixels[0][2] = 0;
+        let mut fb = FrameBuffer::new(RenderConfig::new(160,144), Rgba::rgb(0xaa,0xaa,0xaa));
+        let clip = [64,68,16,8];
+        blit_priority_bg_tile_clipped(&mut fb,&tile,64,64,clip);
+        blit_priority_bg_tile_clipped(&mut fb,&tile,64,72,clip);
+        assert_eq!(fb.get_pixel(64,67),Some(Rgba::rgb(0xaa,0xaa,0xaa)),"upper body remains visible");
+        assert_eq!(fb.get_pixel(64,68),Some(Rgba::BLACK),"priority starts above the lower BG tile");
+        assert_eq!(fb.get_pixel(64,75),Some(Rgba::BLACK));
+        assert_eq!(fb.get_pixel(64,76),Some(Rgba::rgb(0xaa,0xaa,0xaa)),"outside sprite remains intact");
+        assert_eq!(fb.get_pixel(66,68),Some(Rgba::rgb(0xaa,0xaa,0xaa)),"BG color zero preserves sprite");
     }
 
     #[test]
