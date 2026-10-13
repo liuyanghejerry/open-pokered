@@ -701,7 +701,6 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 &mut self.ship_departure,
                 &dialogue_names,
                 self.script_music_playing,
-                self.script_audio_fading,
                 self.script_sfx_playing,
             );
             if !naming_was_open && self.pending_naming_screen.is_some() {
@@ -2531,7 +2530,6 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         ship_departure: &mut Option<presentation::ShipDepartureState>,
         dialogue_names: &[&str],
         script_music_playing: bool,
-        script_audio_fading: bool,
         script_sfx_playing: bool,
     ) -> bool {
         let returns_after_print = matches!(effect, script_bridge::ScriptEffect::PrintFieldText { .. });
@@ -2571,7 +2569,6 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     ship_departure,
                     dialogue_names,
                     script_music_playing,
-                    script_audio_fading,
                     script_sfx_playing,
                 ) {
                     let prompt = match flow.child.as_ref() {
@@ -2636,7 +2633,6 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     ship_departure,
                     dialogue_names,
                     script_music_playing,
-                    script_audio_fading,
                     script_sfx_playing,
                 ) {
                     menu.advance()
@@ -3133,7 +3129,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         false
                     }
                     HealingMachinePhase::WaitForFadeOut => {
-                        if !script_audio_fading {
+                        if *frames_remaining == 0 {
                             let total = if party_count == 0 { 0 } else { party_count };
                             *phase = HealingMachinePhase::HealPartyMember {
                                 member_index: 0,
