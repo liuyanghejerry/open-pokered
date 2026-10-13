@@ -346,18 +346,11 @@ impl Mode4Presenter {
     #[inline(never)]
     fn copy_full_page(fb: &FrameBuffer, page: u8) {
         let indices = fb.indices();
-        // Increment row pointers directly instead of rebuilding both row
-        // addresses for every transfer. Viewport rows still use separate DMA
-        // submissions so the surrounding Mode 4 border stays untouched.
-        let mut src = indices.as_ptr().cast::<u32>();
-        let end = unsafe { src.add(VIEW_W * VIEW_H / 4) };
-        let mut dst = unsafe { mode4_page(page).add((VIEW_Y * SCREEN_W + VIEW_X) / 4) };
-        while src != end {
-            unsafe {
-                dma3_copy_words(src, dst, VIEW_W / 4);
-                src = src.add(VIEW_W / 4);
-                dst = dst.add(SCREEN_W / 4);
-            }
+        let dst = mode4_page(page);
+        for y in 0..VIEW_H {
+            let src_word = unsafe { indices.as_ptr().add(y * VIEW_W).cast::<u32>() };
+            let dst_word = ((VIEW_Y + y) * SCREEN_W + VIEW_X) / 4;
+            unsafe { dma3_copy_words(src_word, dst.add(dst_word), VIEW_W / 4) };
         }
     }
 
