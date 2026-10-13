@@ -3357,7 +3357,9 @@ impl PokemonGame {
     }
 
     pub fn update(&mut self, input: &InputState) {
-        if self.state.screen != GameScreen::Overworld {
+        // Full-screen sequences own their OAM; only map-backed menus
+        // continue publishing the frozen field sprites under the overlay.
+        if matches!(self.state.screen, GameScreen::StartMenu | GameScreen::Shop(_) | GameScreen::Elevator) {
             self.overworld.publish_npc_frame(true);
         }
         self.sync_bag_list_memory();

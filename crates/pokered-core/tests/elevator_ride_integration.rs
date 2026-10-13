@@ -36,11 +36,11 @@ fn celadon_elevator_to_1f_lands_on_elevator_tile() {
         screen.update_frame(neutral());
     }
 
-    // Open the panel: alternate press/release so the "Which floor?" dialogue
+    // Open the panel: hold press/release across field samples so "Which floor?"
     // page advances, then `elevatorMenu` suspends the script.
     let mut opened = false;
     for i in 0..240 {
-        screen.update_frame(if i % 2 == 0 { a_press() } else { neutral() });
+        screen.update_frame(if i % 4 < 2 { a_press() } else { neutral() });
         if screen.script_awaiting_elevator {
             opened = true;
             break;

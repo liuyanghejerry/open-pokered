@@ -643,15 +643,29 @@ impl OverworldVisualKey {
         // current pixels. Hash only the NPC fields consumed by the renderer.
         let mut npc_hash = 0x811c_9dc5;
         hash_u16(&mut npc_hash, screen.npc_states.len() as u16);
-        for npc in &screen.npc_states {
+        for (slot, npc) in screen.npc_states.iter().enumerate() {
             hash_byte(&mut npc_hash, npc.npc_index);
             hash_byte(&mut npc_hash, npc.sprite_id);
-            hash_u16(&mut npc_hash, npc.x);
-            hash_u16(&mut npc_hash, npc.y);
-            hash_byte(&mut npc_hash, npc.facing as u8);
-            hash_byte(&mut npc_hash, npc.scripted_frame.unwrap_or(u8::MAX));
-            hash_byte(&mut npc_hash, npc.walk_counter);
-            hash_byte(&mut npc_hash, npc.visible as u8);
+            if let Some(pose) = screen.npc_presentation.pose(screen.state.current_map, slot) {
+                // The renderer consumes the published pose/image. Logical
+                // changes awaiting publication do not change current pixels.
+                hash_byte(&mut npc_hash, 1);
+                hash_u32(&mut npc_hash, pose.x as u32);
+                hash_u32(&mut npc_hash, pose.y as u32);
+                hash_byte(&mut npc_hash, pose.visible as u8);
+                hash_byte(&mut npc_hash, pose.image.facing as u8);
+                hash_byte(&mut npc_hash, pose.image.phase);
+                hash_byte(&mut npc_hash, pose.image.scripted_frame.unwrap_or(u8::MAX));
+                hash_byte(&mut npc_hash, pose.image.visible as u8);
+            } else {
+                hash_byte(&mut npc_hash, 0);
+                hash_u16(&mut npc_hash, npc.x);
+                hash_u16(&mut npc_hash, npc.y);
+                hash_byte(&mut npc_hash, npc.facing as u8);
+                hash_byte(&mut npc_hash, npc.scripted_frame.unwrap_or(u8::MAX));
+                hash_byte(&mut npc_hash, npc.walk_counter);
+                hash_byte(&mut npc_hash, npc.visible as u8);
+            }
         }
 
         if let Some((x, y)) = screen.field_viewport.residual(screen.state.current_map,
@@ -665,23 +679,6 @@ impl OverworldVisualKey {
             hash_byte(&mut npc_hash, image.facing as u8);
             hash_byte(&mut npc_hash, image.phase);
         } else { hash_byte(&mut npc_hash, 0); }
-
-        // A displayed image can change after logical movement has stopped.
-        // Include both its pose and cached image in the whole-frame cache key.
-        for slot in 0..screen.npc_states.len() {
-            if let Some(pose) = screen.npc_presentation.pose(screen.state.current_map, slot) {
-                hash_byte(&mut npc_hash, 1);
-                hash_u32(&mut npc_hash, pose.x as u32);
-                hash_u32(&mut npc_hash, pose.y as u32);
-                hash_byte(&mut npc_hash, pose.visible as u8);
-                hash_byte(&mut npc_hash, pose.image.facing as u8);
-                hash_byte(&mut npc_hash, pose.image.phase);
-                hash_byte(&mut npc_hash, pose.image.scripted_frame.unwrap_or(u8::MAX));
-                hash_byte(&mut npc_hash, pose.image.visible as u8);
-            } else {
-                hash_byte(&mut npc_hash, 0);
-            }
-        }
 
         Some(Self {
             language: game.state.config.language,
