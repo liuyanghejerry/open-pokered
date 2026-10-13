@@ -3161,6 +3161,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         member_index,
                         total_members,
                     } => {
+                        // DelayFrames resumes on the Nth frame, without an extra zero frame.
+                        *frames_remaining = frames_remaining.saturating_sub(1);
                         if *frames_remaining == 0 {
                             if *member_index + 1 < *total_members {
                                 *member_index += 1;
@@ -3185,7 +3187,6 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                                 }
                             }
                         } else {
-                            *frames_remaining -= 1;
                             if let Some(ref mut state) = pending_healing_machine {
                                 state.frames_remaining = *frames_remaining;
                             }
@@ -3196,16 +3197,20 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         audio_requests.push(OverworldAudioRequest::PlayMusic {
                             music_id: "MUSIC_PKMN_HEALED".to_string(),
                         });
-                        *phase = HealingMachinePhase::FlashSprite { flashes_remaining: 8 };
+                        // The first palette toggle happens now; seven further toggles
+                        // complete the original eight iterations, each held for ten frames.
+                        *phase = HealingMachinePhase::FlashSprite { flashes_remaining: 7 };
                         *frames_remaining = 10;
                         if let Some(ref mut state) = pending_healing_machine {
-                            state.phase = HealingMachinePhase::FlashSprite { flashes_remaining: 8 };
+                            state.phase = HealingMachinePhase::FlashSprite { flashes_remaining: 7 };
                             state.frames_remaining = 10;
                             state.flash_active = true;
                         }
                         false
                     }
                     HealingMachinePhase::FlashSprite { flashes_remaining } => {
+                        // DelayFrames resumes on the Nth frame, without an extra zero frame.
+                        *frames_remaining = frames_remaining.saturating_sub(1);
                         if *frames_remaining == 0 {
                             if *flashes_remaining > 0 {
                                 *flashes_remaining -= 1;
@@ -3227,7 +3232,6 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                                 }
                             }
                         } else {
-                            *frames_remaining -= 1;
                             if let Some(ref mut state) = pending_healing_machine {
                                 state.frames_remaining = *frames_remaining;
                             }
