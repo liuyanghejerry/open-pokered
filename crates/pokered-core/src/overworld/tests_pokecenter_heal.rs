@@ -181,3 +181,57 @@ fn retained_healing_text_round_trips_snapshot_and_clears_on_map_load() {
     let old:crate::snapshot::OverworldSnapshot=serde_json::from_value(legacy).unwrap();
     assert!(!old.retain_healing_text);
 }
+
+
+#[test]
+fn healing_balls_follow_original_thirty_frame_intervals() {
+    use super::script_bridge::{HealingMachinePhase, ScriptEffect};
+    for count in 1..=6 {
+        let mut screen = OverworldScreen::new(MapId::ViridianPokecenter, None, PokemonRedData);
+        screen.party_count = count;
+        screen.active_script_effect = Some(ScriptEffect::AnimateHealingMachine {
+            phase: HealingMachinePhase::FadeOutMusic, frames_remaining: 0,
+        });
+        let mut ball_frames = Vec::new();
+        let mut previous = 0;
+        for frame in 0..240 {
+            screen.update_frame(input(false));
+            if let Some(machine) = &screen.pending_healing_machine {
+                if machine.pokeballs_visible != previous {
+                    ball_frames.push(frame);
+                    previous = machine.pokeballs_visible;
+                }
+            }
+        }
+        assert_eq!(ball_frames.len(), count as usize);
+        for pair in ball_frames.windows(2) { assert_eq!(pair[1] - pair[0], 30); }
+    }
+}
+
+
+#[test]
+fn healing_palette_has_eight_ten_frame_intervals() {
+    use super::script_bridge::{HealingMachinePhase, ScriptEffect};
+    let mut screen = OverworldScreen::new(MapId::ViridianPokecenter, None, PokemonRedData);
+    screen.party_count = 5;
+    screen.active_script_effect = Some(ScriptEffect::AnimateHealingMachine {
+        phase: HealingMachinePhase::FadeOutMusic, frames_remaining: 0,
+    });
+    let mut toggles = Vec::new();
+    let mut previous = false;
+    let mut finished = None;
+    for frame in 0..400 {
+        screen.update_frame(input(false));
+        if let Some(machine) = &screen.pending_healing_machine {
+            if matches!(machine.phase, HealingMachinePhase::FlashSprite { .. }) {
+                if machine.flash_active != previous { toggles.push(frame); }
+                previous = machine.flash_active;
+            } else if matches!(machine.phase, HealingMachinePhase::WaitForMusic) {
+                finished = Some(frame); break;
+            }
+        }
+    }
+    assert_eq!(toggles.len(), 8, "Original FlashSprite8Times performs eight toggles");
+    for pair in toggles.windows(2) { assert_eq!(pair[1] - pair[0], 10); }
+    assert_eq!(finished.unwrap() - toggles[0], 80);
+}
