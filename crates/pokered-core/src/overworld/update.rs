@@ -2329,16 +2329,6 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     }
                 }
             }
-            let stationary_field_tick = !self.cutscene_manager.is_blocking()
-                && self.trainer_encounter_intro.is_none()
-                && self.trainer_intro_text_pending.is_none()
-                && self.active_script_effect.as_ref().map_or(self.script_engine.is_idle(), |effect|
-                    matches!(effect, script_bridge::ScriptEffect::MoveNpc { .. }
-                    | script_bridge::ScriptEffect::MoveNpcTo { .. }
-                    | script_bridge::ScriptEffect::AwaitNpcMove { .. }
-                    | script_bridge::ScriptEffect::MovePlayer { .. }
-                    | script_bridge::ScriptEffect::MovePlayerTo { .. }
-                    | script_bridge::ScriptEffect::FollowNpc { .. }));
             let controlled_slot = match &self.active_script_effect {
                 Some(script_bridge::ScriptEffect::MoveNpc { npc_id, .. }
                     | script_bridge::ScriptEffect::MoveNpcTo { npc_id, .. }
@@ -2359,12 +2349,22 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 map.tileset,
                 &collision::PokemonCollisionProvider::new(self.state.current_map, map.tileset),
                 |slot, n| {
-                    if !stationary_field_tick || controlled_slot == Some(slot)
-                        || (self.link_opponent.is_some() && n.text_id == 1)
+                    if (self.link_opponent.is_some() && n.text_id == 1)
                         || frozen_slots.contains(&slot)
                         || !npc_movement::stationary_available(n, (self.state.player.x, self.state.player.y)) {
                         return;
                     }
+                    let stationary_field_tick = !self.cutscene_manager.is_blocking()
+                        && self.trainer_encounter_intro.is_none()
+                        && self.trainer_intro_text_pending.is_none()
+                        && self.active_script_effect.as_ref().map_or(self.script_engine.is_idle(), |effect|
+                            matches!(effect, script_bridge::ScriptEffect::MoveNpc { .. }
+                            | script_bridge::ScriptEffect::MoveNpcTo { .. }
+                            | script_bridge::ScriptEffect::AwaitNpcMove { .. }
+                            | script_bridge::ScriptEffect::MovePlayer { .. }
+                            | script_bridge::ScriptEffect::MovePlayerTo { .. }
+                            | script_bridge::ScriptEffect::FollowNpc { .. }));
+                    if !stationary_field_tick || controlled_slot == Some(slot) { return; }
                     npc_movement::advance_stationary_facing_with_rng(n, self.state.walk_counter != 0, || {
                         use rand::Rng;
                         (self.rng.gen(), self.rng.gen())
