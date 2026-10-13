@@ -32,6 +32,8 @@ ios/build.sh
 ```
 
 The script builds device and simulator static libraries, then builds the Xcode
-app without signing. The touch overlay package has its upstream XCTest suite
+app without signing. It uses the shared `Pokered` scheme and one derived-data
+directory so the app and local Swift package share generated module maps.
+The touch overlay package has its upstream XCTest suite
 under `ios/DotzukiTouch/tests/ios`; verify it in an Xcode iOS simulator when
 changing or upgrading the native controller.
