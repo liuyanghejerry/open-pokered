@@ -33,8 +33,9 @@ Full original hardware cadence, publication latency and RNG trajectory remain
 under audit. This PR keeps the existing field driver; it does not claim all original
 NPC frames or timing match.
 
-The GBA scan is a small non-inlined function selected by gba.ld for IWRAM.
-Readiness is tested once before the two random draws. Core 2,804 and all41 app
-executables were rerun after these optimizations; all900 recorded state rows and
-PNGs still equal the original candidate bytes. Performance and IWRAM budget
-thresholds remain unchanged; latest-head GBA CI is required before merging.
+Stationary updates now use the engine's callback in the existing movement pass,
+without a second NPC traversal. dotzuki#87 merged this optional generic hook;
+old engine APIs keep their no-op stationary behavior. All2,804 core tests and
+all41 app executables passed after integration. All900 recorded rows and PNGs
+still equal the original candidate bytes. Failed IWRAM scan placement was removed.
+Performance and memory thresholds remain unchanged; latest GBA CI gates merging.
