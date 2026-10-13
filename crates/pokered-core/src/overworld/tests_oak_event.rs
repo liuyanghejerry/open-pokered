@@ -428,14 +428,9 @@ fn load_map_script_keeps_selected_language() {
     );
 }
 
-/// FollowNpc lockstep: the followed NPC must walk at the player's pace.
-/// The engine paces scripted NPC steps at 16 frames/tile while the player
-/// covers a tile in 8 — before the in-tick hastening the follower drained
-/// each vacated tile in half the leader's stride and idled for the rest,
-/// so the two never moved in step. The hastened cadence must (a) commit
-/// Oak's tiles every exactly 8 frames while the follow is under way and
-/// (b) keep the player from idling longer than the 1-frame waypoint
-/// alignment gap. The escort must still land the player in OaksLab.
+/// Original synchronized escort: eight 2-pixel advances separated by two
+/// hardware frames, plus one map-redraw boundary per player stride.
+/// Natural source recordings establish 17 hardware frames between commits.
 #[test]
 fn follow_npc_keeps_leader_and_player_in_lockstep() {
     let mut screen = OverworldScreen::new(MapId::PalletTown, None, PokemonRedData);
@@ -515,8 +510,8 @@ fn follow_npc_keeps_leader_and_player_in_lockstep() {
         "Oak never committed a follow step"
     );
     assert!(
-        oak_commit_intervals.iter().all(|&dt| dt == 8),
-        "Oak's follow-step commits must land every 8 frames (player pace), got: {oak_commit_intervals:?}"
+        oak_commit_intervals.iter().all(|&dt| dt == 17),
+        "Oak's follow-step commits must land every 17 hardware frames (source synchronized stride), got: {oak_commit_intervals:?}"
     );
     assert!(
         max_idle_streak <= 2,
@@ -599,5 +594,46 @@ fn oak_lab_escort_includes_original_final_northbound_stride() {
         assert_eq!(starts, expected, "Oak escort route from exit {player_x}");
         assert_eq!(screen.state.current_map, MapId::OaksLab);
         assert!(flag_set(&screen, "__OBJ_HIDDEN_PALLET_TOWN_OBJ_1"));
+    }
+}
+
+#[test]
+fn oak_approach_matches_both_natural_retail_paths() {
+    let oracle: serde_json::Value = serde_json::from_str(include_str!("oak_approach_golden.json")).unwrap();
+    for case in oracle["cases"].as_array().unwrap() {
+        let mut screen = OverworldScreen::new(MapId::PalletTown, None, PokemonRedData);
+        screen.state.player.x = case["player_x"].as_u64().unwrap() as u16;
+        screen.state.player.y = 2;
+        screen.state.player.facing = Direction::Up;
+        let mut starts = Vec::new();
+        let mut previous_counter = 0;
+        let mut following = false;
+        for frame in 0..8000u32 {
+            if let Some(dialogue) = screen.pending_dialogue.as_mut() { dialogue.skip_to_full_page(); }
+            let input = if frame < 18 { up_input() } else {
+                OverworldInput::new(false, false, false, false, frame % 40 == 20, false, false, false)
+            };
+            screen.update_frame(input);
+            let n = &screen.npc_states[0];
+            if matches!(&screen.active_script_effect, Some(super::script_bridge::ScriptEffect::MoveNpc { .. }))
+                && n.walk_counter == 16 && previous_counter == 0 {
+                let (dx,dy) = super::player_movement::direction_delta(n.facing);
+                starts.push((frame, (n.x as i32 + dx as i32) as u16, (n.y as i32 + dy as i32) as u16));
+            }
+            previous_counter = n.walk_counter;
+            if matches!(&screen.active_script_effect, Some(super::script_bridge::ScriptEffect::FollowNpc { .. })) {
+                following = true;
+                break;
+            }
+        }
+        assert!(following, "approach must reach the escort");
+        let expected = case["starts"].as_array().unwrap();
+        assert_eq!(starts.len(), expected.len());
+        for ((_,x,y), row) in starts.iter().zip(expected) {
+            assert_eq!((*x,*y), (row["x"].as_u64().unwrap() as u16, row["y"].as_u64().unwrap() as u16));
+        }
+        let count = case["approach_steps"].as_u64().unwrap() as usize;
+        for pair in starts[..count].windows(2) { assert_eq!(pair[1].0 - pair[0].0, 34); }
+        assert_eq!((screen.state.player.x, screen.state.player.y), (10,1), "right exit must align before escort");
     }
 }

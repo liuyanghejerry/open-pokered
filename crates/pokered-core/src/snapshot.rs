@@ -77,6 +77,8 @@ pub struct OverworldSnapshot {
     pub frame_counter: u32,
     #[serde(default)]
     pub field_loop_wait: u8,
+    #[serde(default)]
+    pub bike_redraw_advance: bool,
     pub state: OverworldState,
     #[serde(default)]
     pub player_last_stop_direction: u8,
@@ -88,6 +90,10 @@ pub struct OverworldSnapshot {
     pub npc_states: Vec<NpcRuntimeState>,
     #[serde(default)]
     pub npc_presentation: crate::overworld::npc_presentation::NpcPresentation,
+    #[serde(default)]
+    pub field_viewport: crate::overworld::npc_presentation::FieldViewport,
+    #[serde(default)]
+    pub player_presentation: crate::overworld::npc_presentation::PlayerPresentation,
     pub npc_pokemon_data: Vec<PokemonNpcData>,
     pub pending_dialogue: Option<BedroomDialogue>,
     #[serde(default)]
@@ -242,6 +248,7 @@ impl OverworldSnapshot {
             script_engine: None,
             frame_counter: 0,
             field_loop_wait: 0,
+            bike_redraw_advance: false,
             state: screen.state.clone(),
             player_last_stop_direction: screen.player_last_stop_direction,
             player_moving_direction: screen.player_moving_direction,
@@ -249,6 +256,8 @@ impl OverworldSnapshot {
             map_data: None,
             npc_states: Vec::new(),
             npc_presentation: Default::default(),
+            field_viewport: Default::default(),
+            player_presentation: Default::default(),
             npc_pokemon_data: Vec::new(),
             pending_dialogue: None,
             last_script_dialogue: None,
@@ -360,7 +369,7 @@ impl OverworldSnapshot {
         };
         snapshot_fields!(restore &mut snap, screen,
             player_last_stop_direction, player_moving_direction,
-            frame_counter, field_loop_wait, state, map_data, npc_states, npc_presentation, npc_pokemon_data, pending_dialogue,
+            frame_counter, field_loop_wait, bike_redraw_advance, state, map_data, npc_states, npc_presentation, field_viewport, player_presentation, npc_pokemon_data, pending_dialogue,
             last_script_dialogue, retain_healing_text, pending_choice, script_money_box, script_coin_box, gift_box_number, pending_pokedex_entry, pending_naming_screen, naming_flash_frames,
             pending_party_select, party_select_requested, pending_set_nickname,
             pending_emotion_bubble, pending_healing_machine, last_map, last_map_entry,
@@ -409,7 +418,7 @@ impl OverworldSnapshot {
         snapshot_fields!(restore screen, self,
             player_last_stop_direction, player_moving_direction,
             wild_data_state,
-            frame_counter, field_loop_wait, state, map_data, npc_states, npc_presentation, npc_pokemon_data, pending_dialogue,
+            frame_counter, field_loop_wait, bike_redraw_advance, state, map_data, npc_states, npc_presentation, field_viewport, player_presentation, npc_pokemon_data, pending_dialogue,
             last_script_dialogue, retain_healing_text, pending_choice, script_money_box, script_coin_box, gift_box_number, pending_pokedex_entry, pending_naming_screen, naming_flash_frames,
             pending_party_select, party_select_requested, pending_set_nickname,
             pending_emotion_bubble, pending_healing_machine, last_map, last_map_entry,

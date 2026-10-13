@@ -1054,7 +1054,10 @@ fn draw_overworld_impl(
 
     // Sub-pixel viewport offset: scrolls the world smoothly during player walking.
     // Original GB uses SCX/SCY registers to scroll the background 2px/frame.
-    let (view_sub_x, view_sub_y) = if let Some(jump) = screen.ledge_jump {
+    let (view_sub_x, view_sub_y) = if let Some(camera) = screen.field_viewport.residual(
+        screen.state.current_map, (screen.state.player.x, screen.state.player.y)) {
+        camera
+    } else if let Some(jump) = screen.ledge_jump {
         jump.camera_residual_px()
     } else if let Some(step) = screen.field_move_step {
         step.camera_residual_px()
@@ -1301,11 +1304,14 @@ fn draw_overworld_impl(
         // (RedFishingTiles — the bottom two tiles) and the sprite shakes
         // ±1 px vertically on a bite (.ShakePlayerSprite).
         let fishing = screen.fishing_anim.as_ref();
+        let published_player = screen.field_viewport.residual(screen.state.current_map,
+            (screen.state.player.x, screen.state.player.y))
+            .and_then(|_| screen.player_presentation.image(screen.state.current_map));
         let player_facing = fishing
             .map(|f| f.facing())
             .or_else(|| enter.map(|s| s.facing()))
             .or_else(|| spin.map(|s| s.facing()))
-            .unwrap_or(screen.state.player.facing);
+            .unwrap_or_else(|| published_player.map_or(screen.state.player.facing, |p| p.facing));
         let fishing_pose = fishing.map_or(false, |f| f.pose_active());
         // Load the optional pose first so the common player sheet can remain
         // borrowed from the resource cache instead of cloning its TileSet.
@@ -1343,14 +1349,16 @@ fn draw_overworld_impl(
             let player_visible =
                 player_visible && fly_player_visible && screen.field_move_restore.is_none();
 
-            let (frame, flip_h) = if screen.state.player.movement_state == MovementState::Walking
+            let (frame, flip_h) = if published_player.is_some() || screen.state.player.movement_state == MovementState::Walking
                 || screen.state.player.movement_state == MovementState::Jumping
             {
                 // 4-frame walk cycle (facings.asm:3-18 + movement.asm:298-320):
                 // stand → step → stand → step(mirrored) for Down/Up; Left/
                 // Right have no mirror (Right = mirrored Left sheet). The
                 // NPC path below uses the same cadence.
-                let anim_frame = if screen.state.walk_counter > 6 {
+                let anim_frame = if let Some(image) = published_player {
+                    image.phase
+                } else if screen.state.walk_counter > 6 {
                     0 // 7,8: stand
                 } else if screen.state.walk_counter > 4 {
                     1 // 5,6: step

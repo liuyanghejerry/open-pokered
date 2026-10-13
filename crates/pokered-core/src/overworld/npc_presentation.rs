@@ -558,3 +558,223 @@ mod tests {
     }
 }
 
+
+/// SCX/SCY are copied at VBlank, before foreground advancement. The initial
+/// LoadCurrentMapView crosses that VBlank before it writes the first scroll.
+#[derive(Clone, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct FieldViewport {
+    map: Option<MapId>,
+    scroll: (i32, i32),
+    displayed: (i32, i32),
+}
+impl FieldViewport {
+    pub fn begin(&mut self, map: MapId, active: bool, current: (i32, i32)) {
+        if !active {
+            self.map = None;
+            return;
+        }
+        if self.map != Some(map) {
+            self.map = Some(map);
+            self.scroll = current;
+        }
+        self.displayed = self.scroll;
+    }
+    pub fn finish(&mut self, map: MapId, current: (i32, i32), redraw_crosses_vblank: bool) {
+        if self.map == Some(map) && !redraw_crosses_vblank {
+            self.scroll = current;
+        }
+    }
+    pub fn residual(&self, map: MapId, player: (u16, u16)) -> Option<(i32, i32)> {
+        (self.map == Some(map)).then(|| {
+            (
+                self.displayed.0 - i32::from(player.0) * 16,
+                self.displayed.1 - i32::from(player.1) * 16,
+            )
+        })
+    }
+}
+
+#[cfg(test)]
+mod viewport_tests {
+    use super::*;
+    #[test]
+    fn field_scroll_publication_matches_two_complete_original_steps() {
+        let golden: serde_json::Value =
+            serde_json::from_str(include_str!("field_viewport_golden.json")).unwrap();
+        let mut s = FieldViewport::default();
+        for (t, row) in golden["rows"].as_array().unwrap().iter().enumerate() {
+            let by = row[0].as_i64().unwrap() as u16;
+            let bc = row[1].as_i64().unwrap() as u8;
+            let bw = row[2].as_bool().unwrap();
+            let ay = row[3].as_i64().unwrap() as u16;
+            let ac = row[4].as_i64().unwrap() as u8;
+            let aw = row[5].as_bool().unwrap();
+            s.begin(
+                MapId::ViridianCity,
+                true,
+                (
+                    320,
+                    i32::from(by) * 16 + if bw { i32::from(8 - bc) * 2 } else { 0 },
+                ),
+            );
+            assert_eq!(
+                s.displayed.1,
+                row[6].as_i64().unwrap() as i32,
+                "raw frame {t}"
+            );
+            s.finish(
+                MapId::ViridianCity,
+                (
+                    320,
+                    i32::from(ay) * 16 + if aw { i32::from(8 - ac) * 2 } else { 0 },
+                ),
+                !bw && aw,
+            );
+        }
+    }
+    #[test]
+    fn snapshot_preserves_pending_scroll_and_map_change_resets_it() {
+        let mut a = FieldViewport::default();
+        a.begin(MapId::ViridianCity, true, (320, 480));
+        a.finish(MapId::ViridianCity, (320, 482), false);
+        let mut b: FieldViewport =
+            serde_json::from_str(&serde_json::to_string(&a).unwrap()).unwrap();
+        a.begin(MapId::ViridianCity, true, (320, 482));
+        b.begin(MapId::ViridianCity, true, (320, 482));
+        assert_eq!(a, b);
+        b.begin(MapId::PalletTown, true, (80, 96));
+        assert_eq!(b.displayed, (80, 96));
+        assert!(b.residual(MapId::ViridianCity, (20, 30)).is_none());
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct PlayerImage {
+    pub facing: Direction,
+    pub phase: u8,
+}
+/// Player animation advances every UpdatePlayerSprite, independent of tile
+/// distance. Its image persists across held-direction steps and OAM stages.
+#[derive(Clone, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct PlayerPresentation {
+    map: Option<MapId>,
+    intra: u8,
+    phase: u8,
+    current: Option<PlayerImage>,
+    shadow: Option<PlayerImage>,
+    displayed: Option<PlayerImage>,
+    was_moving: bool,
+}
+impl PlayerPresentation {
+    pub fn publish(&mut self, map: MapId, facing: Direction, moving: bool, font_loaded: bool) {
+        if self.map != Some(map) {
+            *self = Self::default();
+            self.map = Some(map);
+            let image = Some(PlayerImage { facing, phase: 0 });
+            self.current = image;
+            self.shadow = image;
+        }
+        if font_loaded {
+            self.intra = 0;
+            self.phase = 0;
+            self.current = Some(PlayerImage { facing, phase: 0 });
+        }
+        self.was_moving = moving;
+        self.displayed = self.shadow;
+        self.shadow = self.current;
+    }
+    pub fn tick(&mut self, facing: Direction, moving: bool) {
+        if moving || self.was_moving {
+            self.intra += 1;
+            if self.intra == 4 {
+                self.intra = 0;
+                self.phase = (self.phase + 1) & 3;
+            }
+        } else {
+            self.intra = 0;
+            self.phase = 0;
+        }
+        self.current = Some(PlayerImage {
+            facing,
+            phase: self.phase,
+        });
+    }
+    pub fn image(&self, map: MapId) -> Option<PlayerImage> {
+        (self.map == Some(map)).then_some(self.displayed).flatten()
+    }
+}
+
+#[cfg(test)]
+mod player_tests {
+    use super::*;
+    #[test]
+    fn player_animation_and_publication_match_original_across_two_steps() {
+        let golden: serde_json::Value =
+            serde_json::from_str(include_str!("player_presentation_golden.json")).unwrap();
+        let mut s = PlayerPresentation::default();
+        let mut tick = 0;
+        for (t, expected) in golden["images"].as_array().unwrap().iter().enumerate() {
+            s.publish(MapId::ViridianCity, Direction::Down, false, false);
+            let image = s.image(MapId::ViridianCity).unwrap();
+            assert_eq!(
+                image.phase & 1 != 0,
+                expected[0].as_bool().unwrap(),
+                "raw frame {t}"
+            );
+            assert_eq!(
+                image.phase == 3,
+                expected[1].as_bool().unwrap(),
+                "raw frame {t}"
+            );
+            if let Some(row) = golden["ticks"].as_array().unwrap().get(tick) {
+                if row[0].as_u64().unwrap() == t as u64 {
+                    s.tick(
+                        Direction::Down,
+                        row[1].as_u64().unwrap() != 0 || row[2].as_u64().unwrap() != 0,
+                    );
+                    assert_eq!(s.intra, row[3].as_u64().unwrap() as u8, "tick {tick}");
+                    assert_eq!(s.phase, row[4].as_u64().unwrap() as u8, "tick {tick}");
+                    tick += 1;
+                }
+            }
+        }
+        assert_eq!(tick, golden["ticks"].as_array().unwrap().len());
+    }
+    #[test]
+    fn font_restores_standing_despite_the_previous_held_direction() {
+        let mut s = PlayerPresentation::default();
+        s.publish(MapId::ViridianCity, Direction::Down, true, false);
+        for _ in 0..4 {
+            s.tick(Direction::Down, true);
+        }
+        assert_eq!(s.phase, 1);
+        s.publish(MapId::ViridianCity, Direction::Down, true, true);
+        assert_eq!((s.intra, s.phase), (0, 0));
+        assert_eq!(s.current.unwrap().phase, 0);
+    }
+    #[test]
+    fn snapshot_preserves_animation_counters_and_both_sprite_images() {
+        let mut a = PlayerPresentation::default();
+        a.publish(MapId::ViridianCity, Direction::Up, false, false);
+        for _ in 0..5 {
+            a.tick(Direction::Up, true);
+            a.publish(MapId::ViridianCity, Direction::Up, true, false);
+        }
+        let mut b: PlayerPresentation =
+            serde_json::from_str(&serde_json::to_string(&a).unwrap()).unwrap();
+        a.tick(Direction::Up, true);
+        b.tick(Direction::Up, true);
+        a.publish(MapId::ViridianCity, Direction::Up, true, false);
+        b.publish(MapId::ViridianCity, Direction::Up, true, false);
+        assert_eq!(a, b);
+        b.publish(MapId::PalletTown, Direction::Left, false, false);
+        assert_eq!(
+            b.image(MapId::PalletTown),
+            Some(PlayerImage {
+                facing: Direction::Left,
+                phase: 0
+            })
+        );
+        assert!(b.image(MapId::ViridianCity).is_none());
+    }
+}

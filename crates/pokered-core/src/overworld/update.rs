@@ -328,12 +328,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         (start, a)
     }
 
-    /// Publish the previous shadow-OAM pose before foreground logic advances.
-    pub fn publish_npc_frame(&mut self, font_loaded: bool) {
-        if font_loaded {
-            self.npc_presentation.refresh_font_images(&self.npc_states);
-        }
-        let camera = if let Some(jump) = self.ledge_jump {
+    fn runtime_camera_residual(&self) -> (i32, i32) {
+        if let Some(jump) = self.ledge_jump {
             jump.camera_residual_px()
         } else if let Some(step) = self.field_move_step {
             step.camera_residual_px()
@@ -343,14 +339,37 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 Direction::Down => (0, px), Direction::Up => (0, -px),
                 Direction::Left => (-px, 0), Direction::Right => (px, 0),
             }
-        } else { (0, 0) };
+        } else { (0, 0) }
+    }
+
+    /// Publish the previous shadow-OAM pose before foreground logic advances.
+    pub fn publish_npc_frame(&mut self, font_loaded: bool) {
+        if font_loaded {
+            self.npc_presentation.refresh_font_images(&self.npc_states);
+        }
+        let camera = self.runtime_camera_residual();
+        let player = (self.state.player.x, self.state.player.y);
+        let ordinary = self.active_script_effect.is_none() && self.scripted_player_path.is_empty()
+            && !self.cutscene_manager.is_blocking() && self.pending_connection.is_none()
+            && self.ledge_jump.is_none() && self.field_move_step.is_none();
+        self.field_viewport.begin(self.state.current_map, ordinary,
+            (i32::from(player.0)*16+camera.0, i32::from(player.1)*16+camera.1));
+        let camera = self.field_viewport.residual(self.state.current_map, player).unwrap_or(camera);
+        self.player_presentation.publish(self.state.current_map, self.state.player.facing,
+            self.state.walk_counter != 0 || self.player_moving_direction != 0,
+            font_loaded && self.state.walk_counter == 0);
         self.npc_presentation.publish(self.state.current_map, &self.npc_states,
             (self.state.player.x, self.state.player.y), camera, self.state.walk_counter != 0);
     }
 
     pub fn update_frame(&mut self, input: OverworldInput) -> ScreenAction {
         self.publish_npc_frame(self.is_text_ui_active());
+        let was_idle = self.state.player.movement_state == MovementState::Idle;
         let action = self.update_frame_inner(input);
+        let camera = self.runtime_camera_residual();
+        self.field_viewport.finish(self.state.current_map,
+            (i32::from(self.state.player.x)*16+camera.0, i32::from(self.state.player.y)*16+camera.1),
+            was_idle && self.state.player.movement_state == MovementState::Walking && self.field_loop_wait == 2);
         if self.script_engine.is_idle()
             && self.active_script_effect.is_none()
             && self.pending_choice.is_none()
@@ -1392,6 +1411,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             && self.pending_connection.is_none()
             && self.ledge_jump.is_none();
         if ordinary_field_loop {
+            if self.bike_redraw_advance {
+                self.bike_redraw_advance = false;
+                self.state.walk_counter = self.state.walk_counter.saturating_sub(1);
+                self.field_loop_wait = 1;
+                return ScreenAction::Continue;
+            }
             if self.field_loop_wait != 0 {
                 self.field_loop_wait -= 1;
                 return ScreenAction::Continue;
@@ -1708,6 +1733,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         .push(OverworldAudioRequest::PlayMapMusic { map: new_map });
                     let hidden_npc_ids = self.map_script_config.hidden_npc_ids();
                     self.npc_presentation = Default::default();
+                    self.field_viewport = Default::default();
+                    self.player_presentation = Default::default();
                     self.npc_states = self
                         .map_data
                         .as_ref()
@@ -1980,6 +2007,15 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     &collision_provider,
                 )
             };
+
+            if ordinary_field_loop && matches!(result, MoveResult::Walking) {
+                // noCollision advances once immediately; initial map redraw
+                // crosses an extra hardware boundary before the next loop.
+                self.state.walk_counter = player_movement::WALK_COUNTER_INIT - 1;
+                self.field_loop_wait = 2;
+                self.bike_redraw_advance = self.state.player.transport == TransportMode::Biking
+                    && self.state.player.bike_speedup_active;
+            }
 
             // Surf dismount (CollisionCheckOnWater .stopSurfing): the engine
             // flipped the transport back to Walking after stepping ashore —
@@ -2346,6 +2382,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         if self.is_text_ui_active() {
             return;
         }
+        if self.map_data.is_some() { self.hasten_followed_npc(); }
         if let Some(ref map) = self.map_data {
             let rng_value = (self
                 .frame_counter
@@ -2401,7 +2438,27 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     resolve_npc_index(npc_id, &self.npc_states, &self.map_script_config),
                 _ => None,
             };
+            let followed_slot = match &self.active_script_effect {
+                Some(script_bridge::ScriptEffect::FollowNpc {
+                    phase: script_bridge::FollowNpcPhase::Following { .. }, ..
+                }) => controlled_slot,
+                _ => None,
+            };
+            let scripted_before: Vec<(usize, u8)> = self.npc_states.iter().enumerate()
+                .filter(|(_, npc)| !npc.scripted_path.is_empty())
+                .map(|(slot, npc)| (slot, npc.walk_counter)).collect();
+            self.player_presentation.tick(self.state.player.facing, self.state.walk_counter != 0 || self.player_moving_direction != 0);
             self.npc_presentation.update_images_before_movement(&self.npc_states);
+            if matches!(&self.active_script_effect, Some(script_bridge::ScriptEffect::FollowNpc {
+                phase: script_bridge::FollowNpcPhase::Following { .. }, ..
+            })) {
+                if let Some(slot) = controlled_slot {
+                    let npc = &self.npc_states[slot];
+                    if npc.walk_counter != 0 || !npc.scripted_path.is_empty() {
+                        self.npc_presentation.advance_follow_image(slot, npc);
+                    }
+                }
+            }
             npc_movement::update_npc_movement_with_stationary(
                 &mut self.npc_states,
                 self.state.player.x,
@@ -2436,26 +2493,29 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     });
                 },
             );
+            for (slot, old_counter) in scripted_before {
+                let npc = &mut self.npc_states[slot];
+                if Some(slot) != followed_slot && old_counter == 1
+                    && npc.walk_counter == npc_movement::NPC_WALK_FRAMES {
+                    // Source walking returns ready before reading the next
+                    // direction. The engine chains it immediately; defer the
+                    // next stride to its own foreground invocation.
+                    npc.walk_counter = 0;
+                } else if Some(slot) != followed_slot && old_counter == 0
+                    && npc.walk_counter == npc_movement::NPC_WALK_FRAMES {
+                    self.npc_presentation.started_wander_image(slot, npc);
+                }
+            }
             for &i in &frozen_slots {
                 self.npc_states[i].movement_type = NpcMovementType::Wander;
             }
-            self.hasten_followed_npc();
         }
     }
 
-    /// FollowNpc lockstep: the engine paces scripted NPC steps at
-    /// NPC_WALK_FRAMES (16f/tile) while the player covers a tile in 8 —
-    /// the follower drained each vacated tile in half the leader's stride
-    /// and then idled for the remainder (stop-and-go hops, never in step
-    /// with Oak). An extra counter decrement per frame halves the followed
-    /// NPC's step to 8 frames. The counter still spans 16→0, so the
-    /// renderers' 16-unit normalization keeps mapping it onto the full
-    /// 16px tile — the sprite simply advances 2px/frame, exactly the
-    /// player's pace and walk-animation cadence.
-    ///
-    /// Only counters still ≥ 2 are decremented: reaching 0 inside the
-    /// engine's own tick is what commits the tile and chains the next
-    /// step, so an external decrement to 0 would skip the commit.
+    /// Synchronized NPCs consume two pixels per foreground update, matching
+    /// the player's eight-update stride. Decrement before the engine so
+    /// initialization itself consumes no pixel and only the engine commits
+    /// at zero. Hardware-frame waits are handled by the field-loop clock.
     fn hasten_followed_npc(&mut self) {
         let Some(script_bridge::ScriptEffect::FollowNpc {
             npc_id, phase: script_bridge::FollowNpcPhase::Following { .. }, ..
@@ -2498,6 +2558,14 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 };
                 self.state.player.movement_state = MovementState::Walking;
                 self.state.walk_counter = player_movement::WALK_COUNTER_INIT;
+                if matches!(&self.active_script_effect,
+                    Some(script_bridge::ScriptEffect::FollowNpc {
+                        phase: script_bridge::FollowNpcPhase::Following { .. }, ..
+                    } | script_bridge::ScriptEffect::MovePlayer { .. }
+                      | script_bridge::ScriptEffect::MovePlayerTo { .. })) {
+                    // Initial map redraw crosses an extra VBlank per stride.
+                    self.field_loop_wait = 2;
+                }
             }
             return;
         }
@@ -4687,7 +4755,7 @@ mod ground_pickup_fidelity_tests {
             if let Some(dialogue) = ow.pending_dialogue.as_mut() {
                 dialogue.skip_to_full_page();
             }
-            ow.update_frame(input(frame % 2 == 1));
+            ow.update_frame(input(frame % 4 >= 2));
             item_jingles += ow
                 .audio_requests
                 .iter()
@@ -4752,7 +4820,8 @@ mod ground_pickup_fidelity_tests {
         let before_flags = ow.script_flags();
         ow.audio_requests.clear();
         if press_a {
-            ow.update_frame(input(true));
+            for _ in 0..2 { ow.update_frame(input(false)); }
+            for _ in 0..2 { ow.update_frame(input(true)); }
         } else {
             assert!(
                 ow.try_call_script_npc_talk(data.text_id),
@@ -4788,7 +4857,8 @@ mod ground_pickup_fidelity_tests {
         // Free one bag slot and retry the same ball, then verify its byte item.
         ow.seed_script_query_state(0, &bag[..19], 0, 0, 0, 0, &[], 0, 0, 0);
         if press_a {
-            ow.update_frame(input(true));
+            for _ in 0..2 { ow.update_frame(input(false)); }
+            for _ in 0..2 { ow.update_frame(input(true)); }
         } else {
             assert!(ow.try_call_script_npc_talk(data.text_id));
         }

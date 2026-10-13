@@ -654,6 +654,18 @@ impl OverworldVisualKey {
             hash_byte(&mut npc_hash, npc.visible as u8);
         }
 
+        if let Some((x, y)) = screen.field_viewport.residual(screen.state.current_map,
+            (screen.state.player.x, screen.state.player.y)) {
+            hash_byte(&mut npc_hash, 1);
+            hash_u32(&mut npc_hash, x as u32);
+            hash_u32(&mut npc_hash, y as u32);
+        } else { hash_byte(&mut npc_hash, 0); }
+        if let Some(image) = screen.player_presentation.image(screen.state.current_map) {
+            hash_byte(&mut npc_hash, 1);
+            hash_byte(&mut npc_hash, image.facing as u8);
+            hash_byte(&mut npc_hash, image.phase);
+        } else { hash_byte(&mut npc_hash, 0); }
+
         // A displayed image can change after logical movement has stopped.
         // Include both its pose and cached image in the whole-frame cache key.
         for slot in 0..screen.npc_states.len() {
