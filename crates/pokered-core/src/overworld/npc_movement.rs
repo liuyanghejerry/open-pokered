@@ -186,6 +186,7 @@ pub fn load_map_npcs(npcs: &[NpcEntry]) -> Vec<NpcRuntimeState> {
             home_x: npc.x as u16,
             home_y: npc.y as u16,
             facing: convert_facing(npc.facing),
+            step_direction: None,
             scripted_frame: None,
             movement_type: convert_movement(npc.movement),
             wander_axis: convert_wander_axis(npc.range),

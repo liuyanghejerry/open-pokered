@@ -665,6 +665,9 @@ impl OverworldVisualKey {
                 hash_byte(&mut npc_hash, npc.facing as u8);
                 hash_byte(&mut npc_hash, npc.scripted_frame.unwrap_or(u8::MAX));
                 hash_byte(&mut npc_hash, npc.walk_counter);
+                if npc.walk_counter > 0 {
+                    hash_byte(&mut npc_hash, npc.walking_direction() as u8);
+                }
                 hash_byte(&mut npc_hash, npc.visible as u8);
             }
         }

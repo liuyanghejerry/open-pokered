@@ -38,6 +38,7 @@ fn make_npc(
         home_x: x,
         home_y: y,
         facing,
+        step_direction: None,
         scripted_frame: None,
         movement_type: pokered_core::overworld::NpcMovementType::Stationary,
         wander_axis: dotzuki_engine::overworld::NpcWanderAxis::Any,
