@@ -124,3 +124,60 @@ fn nurse_bows_after_fighting_fit_and_restores_pose_after_farewell() {
         assert!(fit && bow && farewell && completed,"{map:?}: incomplete healing/bow flow");
     }
 }
+
+#[test]
+fn healing_keeps_last_message_visible_during_machine_and_bow() {
+    let mut screen=OverworldScreen::new(MapId::ViridianPokecenter,None,PokemonRedData);
+    screen.state.player.x=3;screen.state.player.y=3;screen.state.player.facing=Direction::Up;
+    let mut machine=false;let mut bow=false;let mut ended=false;
+    for frame in 0..8000 {
+        if let Some(d)=screen.pending_dialogue.as_mut() {d.skip_to_full_page();}
+        screen.update_frame(input(frame%40==0));
+        if screen.pending_healing_machine.is_some() {
+            assert!(screen.pending_dialogue.is_none());
+            assert!(screen.displayed_field_dialogue().is_some(),"machine must retain need-your-Pokemon message");
+            machine=true;
+        }
+        if screen.npc_states[0].scripted_frame==Some(1) && screen.pending_dialogue.is_none() {
+            assert!(screen.displayed_field_dialogue().is_some(),"bow wait must retain fighting-fit message");
+            bow=true;
+        }
+        if bow && screen.active_script_effect.is_none() && screen.pending_dialogue.is_none() {
+            assert!(!screen.retain_healing_text);
+            assert!(screen.displayed_field_dialogue().is_none(),"clear text when routine returns");
+            ended=true;break;
+        }
+    }
+    assert!(machine && bow && ended);
+}
+
+#[test]
+fn unrelated_script_delay_does_not_retain_old_dialogue() {
+    let mut screen=OverworldScreen::new(MapId::PalletTown,None,PokemonRedData);
+    screen.last_script_dialogue=Some(super::screen::BedroomDialogue::from_message("Old text"));
+    screen.active_script_effect=Some(super::script_bridge::ScriptEffect::Delay{frames:10,frames_remaining:10});
+    assert!(screen.displayed_field_dialogue().is_none());
+}
+
+#[test]
+fn retained_healing_text_round_trips_snapshot_and_clears_on_map_load() {
+    let mut screen=OverworldScreen::new(MapId::ViridianPokecenter,None,PokemonRedData);
+    screen.retain_healing_text=true;
+    let mut text=super::screen::BedroomDialogue::from_message("Fighting fit!");
+    text.skip_to_full_page();screen.last_script_dialogue=Some(text);
+    screen.active_script_effect=Some(super::script_bridge::ScriptEffect::Delay{frames:20,frames_remaining:12});
+    let saved=crate::snapshot::OverworldSnapshot::capture(&screen);
+    let mut restored=OverworldScreen::new(MapId::ViridianPokecenter,None,PokemonRedData);
+    saved.restore_into(&mut restored);
+    assert!(restored.retain_healing_text);
+    assert_eq!(restored.displayed_field_dialogue().unwrap().get_display_text(),screen.displayed_field_dialogue().unwrap().get_display_text());
+    restored.warp_to_map(MapId::PalletTown,5,6);
+    for _ in 0..100 {restored.update_frame(input(false));}
+    assert_eq!(restored.state.current_map,MapId::PalletTown);
+    assert!(!restored.retain_healing_text);
+    assert!(restored.displayed_field_dialogue().is_none());
+    let mut legacy=serde_json::to_value(saved).unwrap();
+    legacy.as_object_mut().unwrap().remove("retain_healing_text");
+    let old:crate::snapshot::OverworldSnapshot=serde_json::from_value(legacy).unwrap();
+    assert!(!old.retain_healing_text);
+}
