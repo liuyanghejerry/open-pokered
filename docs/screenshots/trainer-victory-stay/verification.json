@@ -1,0 +1,145 @@
+{
+  "before": {
+    "repeat_exact": true,
+    "repeated_artifacts": 1738,
+    "png_count": 1737,
+    "first_post_battle_frame": 1337,
+    "post_battle_positions": [
+      [
+        1,
+        17
+      ],
+      [
+        2,
+        17
+      ],
+      [
+        3,
+        17
+      ],
+      [
+        4,
+        17
+      ]
+    ],
+    "post_battle_facings": [
+      "Left",
+      "Right",
+      "Up"
+    ],
+    "screenshot_state": {
+      "battle_message": null,
+      "battle_phase": "TrainerVictory { phase: EndBattleText, wait_frames: 0, player_won: true }",
+      "capture_index": 1615,
+      "cut_anim": null,
+      "cut_retained_dialogue": false,
+      "dialogue": null,
+      "enter_map_fly": null,
+      "field_move_restore": null,
+      "field_move_step": null,
+      "fly_arrival_delay_frames": 0,
+      "fly_departure": null,
+      "frame_count": 1616,
+      "ledge_jump": null,
+      "map": "PokemonMansion2F",
+      "pending_fly_arrival": false,
+      "player_facing": "Down",
+      "player_movement_state": "Idle",
+      "player_transport": "Walking",
+      "player_x": 4,
+      "player_y": 16,
+      "png": "frame-001615.png",
+      "png_written": true,
+      "screen": "overworld",
+      "walk_counter": 0,
+      "warp_fade": "Idle"
+    },
+    "screenshot_npc": {
+      "facing": "Left",
+      "home_x": 3,
+      "home_y": 17,
+      "npc_index": 0,
+      "scripted_path_remaining": 0,
+      "sprite_id": 12,
+      "text_id": 1,
+      "visible": true,
+      "walk_counter": 0,
+      "x": 1,
+      "y": 17
+    },
+    "screenshot_sha256": "1660579de82e8ffa1979f8afc55174058b69205ebdc223b7ac81cec585b53097"
+  },
+  "after": {
+    "repeat_exact": true,
+    "repeated_artifacts": 1738,
+    "png_count": 1737,
+    "first_post_battle_frame": 1337,
+    "post_battle_positions": [
+      [
+        4,
+        17
+      ]
+    ],
+    "post_battle_facings": [
+      "Left",
+      "Up"
+    ],
+    "screenshot_state": {
+      "battle_message": null,
+      "battle_phase": "TrainerVictory { phase: EndBattleText, wait_frames: 0, player_won: true }",
+      "capture_index": 1615,
+      "cut_anim": null,
+      "cut_retained_dialogue": false,
+      "dialogue": null,
+      "enter_map_fly": null,
+      "field_move_restore": null,
+      "field_move_step": null,
+      "fly_arrival_delay_frames": 0,
+      "fly_departure": null,
+      "frame_count": 1616,
+      "ledge_jump": null,
+      "map": "PokemonMansion2F",
+      "pending_fly_arrival": false,
+      "player_facing": "Down",
+      "player_movement_state": "Idle",
+      "player_transport": "Walking",
+      "player_x": 4,
+      "player_y": 16,
+      "png": "frame-001615.png",
+      "png_written": true,
+      "screen": "overworld",
+      "walk_counter": 0,
+      "warp_fade": "Idle"
+    },
+    "screenshot_npc": {
+      "facing": "Left",
+      "home_x": 3,
+      "home_y": 17,
+      "npc_index": 0,
+      "scripted_path_remaining": 0,
+      "sprite_id": 12,
+      "text_id": 1,
+      "visible": true,
+      "walk_counter": 0,
+      "x": 4,
+      "y": 17
+    },
+    "screenshot_sha256": "036888f1117a6d1c529290af59bfdd35dce766a06fbeca45e237798f36267150"
+  },
+  "base": "5454eacb3081946adfc1a582884883ec4428eef6",
+  "fix": "ae6aa52ff4953083e7f4c9639d573c4912d3e688",
+  "same_frame": 1616,
+  "pretrigger_frame": 1358,
+  "pretrigger_equal": true,
+  "core_suites": 40,
+  "core_tests_passed": 3241,
+  "app_executables": 41,
+  "pixel_diff_bbox": [
+    18,
+    76,
+    78,
+    92
+  ],
+  "reference_policy": "PrintEndBattleText -> SetEnemyTrainerToStayAndFaceAnyDirection -> SetSpriteMovementBytesToFF: STAY/NONE; exceptions Rival1/2/3 and Tower7F",
+  "original_complete_battle_movie_verified": false
+}
