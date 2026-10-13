@@ -20,12 +20,14 @@
   "scope": "Live fade completion and first-ball relative delay verified. No claim of absolute full-scene hardware timing parity.",
   "ci_followup": {
     "issue": "Sampling every overworld fade added unrelated audio state to logic snapshots; replay differed only in script_audio_fading. Idle manager query also exceeded GBA update budget.",
-    "fix": "Poll and retain fading only while the healing machine is waiting for its fade.",
+    "fix": "Feedback resides only in the current healing effect counter. Remove the global field and extra tick arguments. Poll only during the fade wait.",
     "agent_determinism_tests": 8,
     "all_app_test_executables": 41,
     "all_app_test_executables_passed": true,
     "healing_record_and_all_pngs_unchanged": 1285,
-    "gba_performance": "Await latest-head CI; budget is unchanged.",
-    "remaining": "Full audio-engine restoration during active healing needs separate runtime-snapshot validation."
+    "gba_performance": "Await latest-head CI for effect-local feedback; budget unchanged.",
+    "remaining": "Full audio-engine restoration during active healing needs separate runtime-snapshot validation.",
+    "record_scope": "All pixels and all recorded fields except the changed fade-wait counter encoding match; two fixed raw recordings match exactly.",
+    "prior_scoped_global_attempt_gba_idle_ticks": 383
   }
 }
