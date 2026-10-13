@@ -52,6 +52,13 @@ pub fn update_npc_movement<T: dotzuki_engine::tileset::TilesetTrait>(
 #[inline(always)]
 pub fn advance_stationary_facing(npc: &mut NpcRuntimeState, player_moving: bool,
     direction_random: u8, delay_random: u8) {
+    advance_stationary_facing_with_rng(npc, player_moving, || (direction_random, delay_random));
+}
+
+/// Draw only when a sprite is ready, checking its eligibility once before RNG.
+#[inline(always)]
+pub fn advance_stationary_facing_with_rng(npc: &mut NpcRuntimeState, player_moving: bool,
+    mut random: impl FnMut() -> (u8, u8)) {
     if !npc.visible || npc.movement_type != NpcMovementType::Stationary
         || npc.walk_counter != 0 || !npc.scripted_path.is_empty()
         || !matches!(npc.range, 0xD0..=0xD3 | 0xFC..=0xFF) { return; }
@@ -60,6 +67,7 @@ pub fn advance_stationary_facing(npc: &mut NpcRuntimeState, player_moving: bool,
         return;
     }
     if player_moving { return; }
+    let (direction_random, delay_random) = random();
     let index = if matches!(npc.range, 0xD0..=0xD3) {npc.range - 0xD0}
         else {direction_random >> 6};
     npc.facing = match npc.range {

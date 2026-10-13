@@ -2373,14 +2373,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         || !npc_movement::stationary_available(n, (self.state.player.x, self.state.player.y)) {
                         continue;
                     }
-                    let ready = n.walk_counter == 0 && n.scripted_path.is_empty()
-                        && matches!(n.range, 0xD0..=0xD3 | 0xFC..=0xFF)
-                        && n.delay_counter == 0 && self.state.walk_counter == 0;
-                    let (direction, delay) = if ready {
+                    npc_movement::advance_stationary_facing_with_rng(n, self.state.walk_counter != 0, || {
                         use rand::Rng;
                         (self.rng.gen(), self.rng.gen())
-                    } else { (0, 0) };
-                    npc_movement::advance_stationary_facing(n, self.state.walk_counter != 0, direction, delay);
+                    });
                 }
             }
             self.hasten_followed_npc();
