@@ -63,7 +63,17 @@ game_scene PalletTown {
       // Oak spawns at (8, 5) and walks to the cell directly below the
       // player (original: FindPathToPlayer predef). Inlined from
       // palletTownOakWalksToPlayer.
-      moveNpcTo("PALLET_TOWN_OBJ_1", getPlayerX(), getPlayerY() + 1)
+      // FindPathToPlayer reduces the greater remaining distance; X wins
+      // ties. The north exit has two possible player columns.
+      @if (getPlayerX() == 10) {
+        moveNpc("PALLET_TOWN_OBJ_1", [[8, 4], [9, 4], [9, 3], [10, 3], [10, 2]])
+      } @else {
+        @if (getPlayerX() == 11) {
+          moveNpc("PALLET_TOWN_OBJ_1", [[9, 5], [9, 4], [10, 4], [10, 3], [11, 3], [11, 2]])
+        } @else {
+          moveNpcTo("PALLET_TOWN_OBJ_1", getPlayerX(), getPlayerY() + 1)
+        }
+      }
       faceNpc("PALLET_TOWN_OBJ_1", "up")
       setJoyIgnore(0x0F | 0xF0)
       facePlayer("down")
@@ -72,6 +82,12 @@ game_scene PalletTown {
         @t("OAK: It's unsafe! Wild\nPOKeMON live in tall grass!\nYou need your own POKeMON\nfor your protection. I know!\nHere, come with me!", "大木博士：外面很危险！野生的\n宝可梦生活在草丛中！你需要自\n己的宝可梦来保护自己。我知道\n了！来，跟我来！")
       }
       setJoyIgnore(0x0F | 0xF0)
+      // Original OakMoveLeft/PlayerMoveLeft align the right-column
+      // trigger with the common lab route before simultaneous movement.
+      @if (getPlayerX() == 11) {
+        moveNpc("PALLET_TOWN_OBJ_1", [[10, 2]])
+        movePlayer([[10, 1]])
+      }
       // Inlined palletTownPlayerFollowsOak: hand off to the Rust
       // followNpc state machine — Oak leads the player to the lab
       // door. The target is the cell just south of the door warp tile

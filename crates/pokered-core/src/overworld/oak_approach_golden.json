@@ -1,0 +1,79 @@
+{
+  "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+  "source_commit": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "scope": "Both natural northern-exit triggers, two exact retail NEW GAME recordings each. Includes later left alignment for right-column trigger.",
+  "cases": [
+    {
+      "player_x": 10,
+      "approach_steps": 5,
+      "starts": [
+        {
+          "t": 229,
+          "x": 8,
+          "y": 4
+        },
+        {
+          "t": 263,
+          "x": 9,
+          "y": 4
+        },
+        {
+          "t": 297,
+          "x": 9,
+          "y": 3
+        },
+        {
+          "t": 331,
+          "x": 10,
+          "y": 3
+        },
+        {
+          "t": 365,
+          "x": 10,
+          "y": 2
+        }
+      ]
+    },
+    {
+      "player_x": 11,
+      "approach_steps": 6,
+      "starts": [
+        {
+          "t": 232,
+          "x": 9,
+          "y": 5
+        },
+        {
+          "t": 266,
+          "x": 9,
+          "y": 4
+        },
+        {
+          "t": 300,
+          "x": 10,
+          "y": 4
+        },
+        {
+          "t": 334,
+          "x": 10,
+          "y": 3
+        },
+        {
+          "t": 368,
+          "x": 11,
+          "y": 3
+        },
+        {
+          "t": 402,
+          "x": 11,
+          "y": 2
+        },
+        {
+          "t": 1008,
+          "x": 10,
+          "y": 2
+        }
+      ]
+    }
+  ]
+}
