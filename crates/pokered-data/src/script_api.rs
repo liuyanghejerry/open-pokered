@@ -998,6 +998,25 @@ mod tests {
     }
 
     #[test]
+    fn explicit_escort_suspends_boa_until_movement_finishes() {
+        use crate::script_command::PokemonScriptCommand;
+        let mut engine = ScriptEngine::with_api(&PokemonScriptApi);
+        engine.load_script(r#"
+            export async function f() {
+                await game.followNpcPath("OAK", [[12,12], [12,11]]);
+                await game.showText("arrived");
+            }
+        "#).unwrap();
+        let command = engine.call_function("f", &[]).unwrap();
+        let Some(ScriptCommand::Custom { name, args }) = &command else { panic!("missing escort command"); };
+        assert_eq!(PokemonScriptCommand::from_custom(name, args).unwrap(),
+            PokemonScriptCommand::FollowNpcPath { npc_id: "OAK".into(), path: vec![(12,12), (12,11)] });
+        assert_eq!(engine.tick(), command, "movement must stay awaited");
+        assert_eq!(engine.signal_done(CommandResult::Void).unwrap(),
+            Some(ScriptCommand::ShowText { text: "arrived".into() }));
+    }
+
+    #[test]
     fn reading_and_vending_apis_suspend_the_boa_fallback() {
         let mut engine = ScriptEngine::with_api(&PokemonScriptApi);
         engine.load_script(r#"

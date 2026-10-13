@@ -18,7 +18,9 @@ alignment. Each after sequence was repeated byte-for-byte (all manifest rows and
 PNG files); initial screenshots equal their base. Both enter OaksLab at the same
 frame as base. Verification JSON contains exact positions, counters and differences.
 
-Core: 2,801 passed. All 41 application test executables passed. The added engine
+Core: 2,801 passed. All 41 application test executables passed. Data crate:
+263 default tests and 275 Boa-feature tests passed, including the explicit escort
+await and malformed-route checks. The added engine
 regression compares all 15 leader destination tiles from both exits and verifies
 laboratory entry and Oak's hide flag. Existing tests verify lab entry cutscene,
 saved hide bits and guide escorts. This proves the missing stride and route;

@@ -11,6 +11,7 @@ pub const POKERED_SCRIPT_FUNCTIONS: &[&str] = &[
     "elevatorMenu",
     "enterHallOfFame",
     "filterBag",
+    "followNpcPath",
     "getBadgeCount",
     "getCoins",
     "getDaycareCost",
@@ -65,7 +66,6 @@ pub const POKERED_SCRIPT_FUNCTIONS: &[&str] = &[
     "takeMoney",
     "tradePokemon",
     "vendingDelivery",
-    "followNpcPath",
     "waitMusic",
     "withdrawDaycare",
 ];

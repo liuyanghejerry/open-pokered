@@ -326,6 +326,14 @@ mod tests {
     }
 
     #[test]
+    fn explicit_escort_rejects_missing_or_invalid_routes() {
+        for args in [vec![json!("OAK")], vec![json!("OAK"), json!([])],
+            vec![json!("OAK"), json!([[12]])], vec![json!("OAK"), json!([[256,12]])]] {
+            assert!(PokemonScriptCommand::from_custom("followNpcPath", &args).is_err());
+        }
+    }
+
+    #[test]
     fn malformed_and_unknown_commands_are_rejected() {
         assert!(PokemonScriptCommand::from_custom("giveCoins", &[json!(70000)]).is_err());
         assert!(PokemonScriptCommand::from_custom("notRegistered", &[]).is_err());
