@@ -8954,6 +8954,32 @@ mod link_stats_cry_fidelity_tests {
             .unwrap();
     }
 
+    #[test]
+    #[ignore = "manual deterministic grass screenshot; GRASS_CAPTURE_DIR"]
+    fn capture_player_grass_priority() {
+        run_link_save_fixture(|| {
+            use pokered_core::overworld::Direction;
+            let dir=std::path::PathBuf::from(std::env::var("GRASS_CAPTURE_DIR").unwrap());
+            std::fs::create_dir_all(&dir).unwrap();
+            let mut g=fixture(Species::Bulbasaur,10,Direction::Down);
+            g.overworld=OverworldScreen::new(MapId::PalletTown,None,PokemonRedData);
+            g.overworld.state.player.x=10;g.overworld.state.player.y=1;
+            g.overworld.state.player.facing=Direction::Down;
+            g.overworld.set_event_flag_live(pokered_data::event_flags::EventFlag::EVENT_FOLLOWED_OAK_INTO_LAB);
+            g.save_data.game_data.event_flags=g.overworld.unified_flags().as_bytes().to_vec();
+            for n in &mut g.overworld.npc_states {n.visible=false;}
+            let idle=InputState::new();
+            for _ in 0..20 {g.update(&idle);}
+            let mut fb=FrameBuffer::new(RenderConfig::new(160,144),Rgba::WHITE);
+            g.draw(&mut fb);fb.save_png(&dir.join("player-grass.png")).unwrap();
+            assert_eq!(g.overworld.state.current_map,MapId::PalletTown);
+            assert_eq!((g.overworld.state.player.x,g.overworld.state.player.y),(10,1));
+            std::fs::write(dir.join("state.json"),serde_json::to_string_pretty(&serde_json::json!({
+                "frame":g.frame_count,"map":"PalletTown","x":10,"y":1,"facing":"Down","walk_counter":g.overworld.state.walk_counter
+            })).unwrap()).unwrap();
+        });
+    }
+
     fn fixture(
         species: Species,
         x: u16,

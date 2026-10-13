@@ -1,0 +1,24 @@
+{
+  "base_commit": "be54dcbde23b7507eb1127bd8fead7ab302f2348",
+  "fix_commit": "b07f75d2",
+  "setup": {
+    "facing": "Down",
+    "frame": 20,
+    "map": "PalletTown",
+    "walk_counter": 0,
+    "x": 10,
+    "y": 1
+  },
+  "before_after_diff_bbox": [
+    65,
+    68,
+    78,
+    72
+  ],
+  "before_sha256": "cb635524ed6fda7136d674f2a6a4220a89e5a0dbda0ad25ed8f94219e43424aa",
+  "after_sha256": "a614255986a22069c38de71aceb1bcf032e25adf90c0f6b04c1db5f172467512",
+  "reference_rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+  "reference_source_commit": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "reference_scope": "Natural NEW GAME Oak approach frame229; only player16x16 crop compared. All256 pixels match isolated fixed branch. Full frame not asserted equal.",
+  "continuity_evidence": "Earlier integration audit: two source/native recordings each of both exit positions; player and stable background regions identical on374 consecutive unresampled frames. This PR uses matching master-base/fixed screenshot fixture independently."
+}
