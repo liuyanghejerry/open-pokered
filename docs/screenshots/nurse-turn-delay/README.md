@@ -17,3 +17,9 @@ The native machine entry is still five updates after the nurse turn, versus
 four hardware frames in the original. Script dispatch/publication remains
 unproven; do not infer full animation parity from this constant correction.
 Source identities and numeric evidence are in verification.json.
+
+Follow-up: the source party has mixed moves while the native fixture uses
+five Tackle-only members. HealParty performs move-dependent AddNTimes work
+when restoring PP. The measured one-frame startup gap is not a confirmed
+dispatch bug in this mismatched setup. Match the party/moves/PP-up inputs
+before judging full startup timing. Delay3 itself is verified independently.
