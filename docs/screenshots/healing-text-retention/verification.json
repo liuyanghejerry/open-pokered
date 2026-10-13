@@ -1,0 +1,19 @@
+{
+  "base_commit": "fa1e86179e53f141f95dd8c1e317d8304368a2cf",
+  "fix_commit": "e00cc75c3446603f22ee1d804ed5ace482d58bc4",
+  "elapsed_frame": 1084,
+  "capture_scope": "Actual nurse conversation, five party members, same input and frame numbers on checked-out master and fix.",
+  "manifests_identical": true,
+  "diff_bbox": [
+    0,
+    96,
+    160,
+    144
+  ],
+  "before_sha256": "8e39d98a1296e62dd323815698f0110e916a3e03525f089b707045543fd7ffe4",
+  "after_sha256": "1c3bf1fceb0b81c1b2ca5d5933aef885cdd64b5c2ef52bc3acdf08874e88f6ae",
+  "reference_rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+  "source_commit": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "original_behavior": "Common Pokemon Center text routine preserves the printed page during machine animation and bow wait. Original interaction recorded twice exactly in prior nurse audit.",
+  "scope_limit": "No font/Chinese/layout changes. Last existing page display is restored; no claim of whole-machine hardware timing parity."
+}
