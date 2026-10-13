@@ -1,0 +1,64 @@
+{
+  "base": "ac8dfa2ab6fdba052b03df0a10650b1eeaa01936",
+  "screen": "ViridianPokecenter",
+  "player": [
+    3,
+    3
+  ],
+  "npc": [
+    4,
+    3
+  ],
+  "inputs": "900 frames without input",
+  "snapshot_t": 400,
+  "before_state": {
+    "delay_counter": 0,
+    "frame": 401,
+    "map": "ViridianPokecenter",
+    "npc_counter": 0,
+    "npc_facing": "Down",
+    "npc_x": 4,
+    "npc_y": 3,
+    "player_x": 3,
+    "player_y": 3,
+    "t": 400
+  },
+  "after_state": {
+    "delay_counter": 90,
+    "frame": 401,
+    "map": "ViridianPokecenter",
+    "npc_counter": 0,
+    "npc_facing": "Left",
+    "npc_x": 4,
+    "npc_y": 3,
+    "player_x": 3,
+    "player_y": 3,
+    "t": 400
+  },
+  "pixel_difference_bbox": [
+    81,
+    60,
+    95,
+    76
+  ],
+  "initial_png_sha256": "14465a969d6561f90681c376bfd147541e4dca2d78fc58f18bf7f01247872510",
+  "repeat_exact_pngs_and_manifest": true,
+  "frames_per_trial": 900,
+  "before_facings": [
+    "Down"
+  ],
+  "after_facings": [
+    "Down",
+    "Left",
+    "Up"
+  ],
+  "original_reproduction": "audit-670-actual-difference.json: naturally walked-to-center original no-input state, repeated900 hardware frames; stays4,3, facings0/8/12. Initial RNG/phase differs; not frame parity.",
+  "data_entries": 253,
+  "maps": 122,
+  "animated_sprites": 110,
+  "single_image_sprites": 143,
+  "core_tests": 2804,
+  "app_test_executables": 41,
+  "data_tests": 263,
+  "agent_tests": 54
+}

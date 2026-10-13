@@ -3043,7 +3043,7 @@ pub(crate) fn build_npc_runtime_states(
                 scripted_frame: None,
                 movement_type: npc.movement,
                 wander_axis: crate::overworld::npc_movement::convert_wander_axis(npc.range),
-                range: npc.range,
+                range: crate::overworld::npc_movement::stationary_range(npc.movement, npc.range, npc.facing),
                 walk_counter: 0,
                 delay_counter: 0,
                 text_id: npc.text_id,

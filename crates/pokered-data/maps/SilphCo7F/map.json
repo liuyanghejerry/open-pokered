@@ -57,7 +57,7 @@
       "y": 5,
       "movement": "Stationary",
       "facing": "Down",
-      "range": 0,
+      "range": 255,
       "textId": 1,
       "isTrainer": false
     },
@@ -79,7 +79,7 @@
       "y": 10,
       "movement": "Stationary",
       "facing": "Down",
-      "range": 0,
+      "range": 255,
       "textId": 3,
       "isTrainer": false
     },
@@ -90,7 +90,7 @@
       "y": 8,
       "movement": "Stationary",
       "facing": "Down",
-      "range": 0,
+      "range": 255,
       "textId": 4,
       "isTrainer": false
     },
@@ -168,7 +168,7 @@
       "y": 9,
       "movement": "Stationary",
       "facing": "Down",
-      "range": 0,
+      "range": 255,
       "textId": 10,
       "isTrainer": false,
       "itemId": 39
@@ -180,7 +180,7 @@
       "y": 11,
       "movement": "Stationary",
       "facing": "Down",
-      "range": 0,
+      "range": 255,
       "textId": 11,
       "isTrainer": false,
       "itemId": 203
