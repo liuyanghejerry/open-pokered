@@ -10,7 +10,7 @@ and Gradle project template.
 - the `aarch64-linux-android` Rust target;
 - Android SDK 35, NDK 27, CMake 3.22.1, and JDK 17;
 - the `gfx/` assets from `scripts/fetch-gfx.sh`;
-- a dotzuki engine checkout at v0.8.2 or later; and
+- a dotzuki engine checkout at v0.10.1 or later; and
 - Pillow for the launcher-icon step: `python3 -m pip install pillow`.
 
 ## Export the Android Studio project

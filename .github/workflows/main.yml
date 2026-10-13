@@ -541,7 +541,9 @@ jobs:
         working-directory: ios
         run: |
           xcodebuild -project Pokered.xcodeproj \
-            -target Pokered \
+            -scheme Pokered \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
             -sdk iphoneos \
             -configuration Release \
             CODE_SIGNING_ALLOWED=NO \

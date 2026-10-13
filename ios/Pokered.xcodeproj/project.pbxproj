@@ -12,12 +12,12 @@
 		A5B6C7D8E9F0A5B6C7D8E9F0 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A3B4C5D6E7F8A3B4C5D6E7F8 /* UIKit.framework */; };
 		A9B0C1D2E3F4A9B0C1D2E3F4 /* GameViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B8C9D0E1F2A7B8C9D0E1F2 /* GameViewController.swift */; };
 		B6C7D8E9F0A1B6C7D8E9F0A1 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B4C5D6E7F8A9B4C5D6E7F8A9 /* AVFoundation.framework */; };
-		C1D2E3F4A5B6C1D2E3F4A5B6 /* TouchHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9D0E1F2A3B4C9D0E1F2A3B4 /* TouchHandler.swift */; };
 		E3F4A5B6C7D8E3F4A5B6C7D8 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E1F2A3B4C5D6E1F2A3B4C5D6 /* Metal.framework */; };
 		F4A5B6C7D8E9F4A5B6C7D8E9 /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F2A3B4C5D6E7F2A3B4C5D6E7 /* MetalKit.framework */; };
 		F8A9B0C1D2E3F8A9B0C1D2E3 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6A7B8C9D0E1F6A7B8C9D0E1 /* AppDelegate.swift */; };
 		C7D8E9F0A1B2C7D8E9F0A1B2 /* libpokered_mobile_device.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C5D6E7F8A9B0C5D6E7F8A9B0 /* libpokered_mobile_device.a */; platformFilters = (iphoneos); };
 		D8E9F0A1B2C3D8E9F0A1B2C5 /* libpokered_mobile_sim.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D6E7F8A9B0C1D6E7F8A9B0C1 /* libpokered_mobile_sim.a */; platformFilters = (iphonesimulator); };
+		F1A2B3C4D5E6F1A2B3C4D5E6 /* DotzukiTouch in Frameworks */ = {isa = PBXBuildFile; productRef = F1A2B3C4D5E6F1A2B3C4D5E7 /* DotzukiTouch */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,7 +27,6 @@
 		B4C5D6E7F8A9B4C5D6E7F8A9 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		B8C9D0E1F2A3B8C9D0E1F2A3 /* AudioEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioEngine.swift; sourceTree = "<group>"; };
 		C5D6E7F8A9B0C5D6E7F8A9B0 /* libpokered_mobile_device.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = Pokered/lib/libpokered_mobile_device.a; sourceTree = "<group>"; };
-		C9D0E1F2A3B4C9D0E1F2A3B4 /* TouchHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchHandler.swift; sourceTree = "<group>"; };
 		D0E1F2A3B4C5D0E1F2A3B4C5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D6E7F8A9B0C1D6E7F8A9B0C1 /* libpokered_mobile_sim.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = Pokered/lib/libpokered_mobile_sim.a; sourceTree = "<group>"; };
 		E1F2A3B4C5D6E1F2A3B4C5D6 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
@@ -47,6 +46,7 @@
 				B6C7D8E9F0A1B6C7D8E9F0A1 /* AVFoundation.framework in Frameworks */,
 				D8E9F0A1B2C3D8E9F0A1B2C5 /* libpokered_mobile_sim.a in Frameworks */,
 				C7D8E9F0A1B2C7D8E9F0A1B2 /* libpokered_mobile_device.a in Frameworks */,
+				F1A2B3C4D5E6F1A2B3C4D5E6 /* DotzukiTouch in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -69,7 +69,6 @@
 				F6A7B8C9D0E1F6A7B8C9D0E1 /* AppDelegate.swift */,
 				A7B8C9D0E1F2A7B8C9D0E1F2 /* GameViewController.swift */,
 				B8C9D0E1F2A3B8C9D0E1F2A3 /* AudioEngine.swift */,
-				C9D0E1F2A3B4C9D0E1F2A3B4 /* TouchHandler.swift */,
 				D0E1F2A3B4C5D0E1F2A3B4C5 /* Info.plist */,
 			);
 			path = Pokered;
@@ -111,6 +110,9 @@
 			);
 			dependencies = (
 			);
+			packageProductDependencies = (
+				F1A2B3C4D5E6F1A2B3C4D5E7 /* DotzukiTouch */,
+			);
 			name = Pokered;
 			productName = Pokered;
 			productReference = E7F8A9B0C1D2E7F8A9B0C1D2 /* Pokered.app */;
@@ -146,6 +148,9 @@
 			targets = (
 				A1B2C3D4E5F6A1B2C3D4E5F7 /* Pokered */,
 			);
+			packageReferences = (
+				F1A2B3C4D5E6F1A2B3C4D5E8 /* XCLocalSwiftPackageReference "DotzukiTouch" */,
+			);
 		};
 /* End PBXProject section */
 
@@ -168,7 +173,6 @@
 				F8A9B0C1D2E3F8A9B0C1D2E3 /* AppDelegate.swift in Sources */,
 				A9B0C1D2E3F4A9B0C1D2E3F4 /* GameViewController.swift in Sources */,
 				B0C1D2E3F4A5B0C1D2E3F4A5 /* AudioEngine.swift in Sources */,
-				C1D2E3F4A5B6C1D2E3F4A5B6 /* TouchHandler.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -374,6 +378,21 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		F1A2B3C4D5E6F1A2B3C4D5E8 /* XCLocalSwiftPackageReference "DotzukiTouch" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = DotzukiTouch;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		F1A2B3C4D5E6F1A2B3C4D5E7 /* DotzukiTouch */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F1A2B3C4D5E6F1A2B3C4D5E8 /* XCLocalSwiftPackageReference "DotzukiTouch" */;
+			productName = DotzukiTouch;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = B2C3D4E5F6A7B2C3D4E5F6A7 /* Project object */;
 }

@@ -40,7 +40,9 @@ echo "  → $LIBS_DIR/libpokered_mobile_sim.a"
 echo ""
 echo "=== phase 4: Build Xcode project ==="
 xcodebuild -project "$IOS_DIR/Pokered.xcodeproj" \
-  -target Pokered \
+  -scheme Pokered \
+  -destination 'generic/platform=iOS' \
+  -derivedDataPath "$IOS_DIR/build" \
   -sdk iphoneos \
   -configuration Release \
   CODE_SIGNING_ALLOWED=NO \

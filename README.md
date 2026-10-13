@@ -16,7 +16,7 @@
 
 A faithful reimplementation of **Pokémon Red and Blue** in **Rust**, built from the [pret/pokered](https://github.com/pret/pokered) disassembly — playable on **desktop, web, Android, iOS and the terminal** from a single codebase, fully playable in **English and 中文**, and shipping with a full **visual editor suite** for maps, data, UI layouts, and saves.
 
-This repo is **game-only**: the generic **JRPG engine** lives in a separate repository and is consumed here as a Cargo **git dependency** (`dotzuki-engine`, `dotzuki-engine-dsl`, `dotzuki-engine-script`, `dotzuki-rules`, `dotzuki-renderer`, `dotzuki-ui`, `dotzuki-audio`, `dotzuki-app`, `dotzuki-mobile`, `dotzuki-tui` — see `crates/*/Cargo.toml`, all pinned to the `v0.8.2` tag of the engine repo).
+This repo is **game-only**: the generic **JRPG engine** lives in a separate repository and is consumed here as Cargo **git dependencies** (`dotzuki-engine`, `dotzuki-engine-dsl`, `dotzuki-engine-script`, `dotzuki-rules`, `dotzuki-renderer`, `dotzuki-ui`, `dotzuki-audio`, `dotzuki-app`, `dotzuki-mobile`, `dotzuki-tui` — see `crates/*/Cargo.toml`, pinned to the `v0.10.1` release commit of the engine repo). The upstream DSL crate includes the no_std integer-check fix required by the GBA build.
 
 ## Story behind the repo
 
@@ -83,7 +83,7 @@ The game itself stays faithful — same mechanics, same maps, [deliberate bugs i
 - **Drive the game like a service** — a JSON-line TCP debug server (`run --headless --debug-port 9000`) with 20+ commands: `get_state`, `get_party`, `get_flags`, `get_npcs` to see; `warp`, `press_sequence`, `give_pokemon`, `start_wild_battle` to act; `step_frames` and `wait_until` for deterministic, frame-exact control
 - **Capture anything, headlessly** — `screenshot --screen <target>` (22 screen targets), `screenshot-all`, `dump-state` as JSON, plus `--record-frames` (PNG sequence with a per-frame animation manifest) and `--record-video` (H.264, via ffmpeg)
 - **Skip the story when you don't need it** — `run --skip-intro --warp CeruleanCity,14,8`, or `battle --config sample_battle.json` to jump straight into a battle defined in JSON
-- **Touch and browser conveniences** — an on-screen gamepad on web, Android and iOS, plus volume/mute and an FPS readout in the web build
+- **Touch and browser conveniences** — an on-screen gamepad on web, and dotzuki's native touch controller on Android, iOS and HarmonyOS, plus volume/mute and an FPS readout in the web build
 
 ## Built for hacking — and for AI collaboration
 
@@ -187,7 +187,7 @@ cargo run --release --bin pokered-app
 cargo test
 ```
 
-The engine is consumed as a Cargo git dependency: `https://github.com/liuyanghejerry/dotzuki`, pinned to tag `v0.8.2` (see the `Cargo.toml` of each crate). After pulling a new engine tag, bump the `tag` and run `cargo update`.
+The engine is consumed from `https://github.com/liuyanghejerry/dotzuki`, pinned to the `v0.10.1` release commit (see the `Cargo.toml` files). All engine crates, including the no_std DSL runtime, come directly from that release without local engine patches. Keep the root and standalone GBA manifests on the same revision and update both lockfiles after changing it.
 
 ## What this repo contains
 
@@ -196,7 +196,7 @@ The engine is consumed as a Cargo git dependency: `https://github.com/liuyanghej
 - `android/` — Gradle wrapper for the generated engine-owned Android host;
   `ios/` — the iOS build project
 - `scripts/` — Python data-extraction/verification helpers
-- `docs/` — NPC dialogue transcripts, move animation data, fidelity audits
+- `docs/` — NPC dialogue transcripts, move animation data, fidelity audits, platform development guides
 
 ## Not included
 

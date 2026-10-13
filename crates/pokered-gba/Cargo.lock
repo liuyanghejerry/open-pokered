@@ -669,8 +669,8 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-app"
-version = "0.8.2"
-source = "git+https://github.com/liuyanghejerry/dotzuki?rev=1c6cea350960519e12254e9a375c00a7ceb4b1b2#1c6cea350960519e12254e9a375c00a7ceb4b1b2"
+version = "0.10.1"
+source = "git+https://github.com/liuyanghejerry/dotzuki?rev=74e831c00467f028914f9ef6730a22e605ae2e04#74e831c00467f028914f9ef6730a22e605ae2e04"
 dependencies = [
  "dotzuki-engine",
  "dotzuki-renderer",
@@ -681,8 +681,8 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-audio"
-version = "0.8.2"
-source = "git+https://github.com/liuyanghejerry/dotzuki?rev=1c6cea350960519e12254e9a375c00a7ceb4b1b2#1c6cea350960519e12254e9a375c00a7ceb4b1b2"
+version = "0.10.1"
+source = "git+https://github.com/liuyanghejerry/dotzuki?rev=74e831c00467f028914f9ef6730a22e605ae2e04#74e831c00467f028914f9ef6730a22e605ae2e04"
 dependencies = [
  "bitflags 2.13.2",
  "log",
@@ -694,8 +694,8 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-engine"
-version = "0.8.2"
-source = "git+https://github.com/liuyanghejerry/dotzuki?rev=1c6cea350960519e12254e9a375c00a7ceb4b1b2#1c6cea350960519e12254e9a375c00a7ceb4b1b2"
+version = "0.10.1"
+source = "git+https://github.com/liuyanghejerry/dotzuki?rev=74e831c00467f028914f9ef6730a22e605ae2e04#74e831c00467f028914f9ef6730a22e605ae2e04"
 dependencies = [
  "hashbrown 0.15.5",
  "libm",
@@ -706,8 +706,8 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-engine-dsl"
-version = "0.8.2"
-source = "git+https://github.com/liuyanghejerry/dotzuki?rev=1c6cea350960519e12254e9a375c00a7ceb4b1b2#1c6cea350960519e12254e9a375c00a7ceb4b1b2"
+version = "0.10.1"
+source = "git+https://github.com/liuyanghejerry/dotzuki?rev=74e831c00467f028914f9ef6730a22e605ae2e04#74e831c00467f028914f9ef6730a22e605ae2e04"
 dependencies = [
  "dotzuki-engine-script",
  "hashbrown 0.15.5",
@@ -720,8 +720,8 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-engine-script"
-version = "0.8.2"
-source = "git+https://github.com/liuyanghejerry/dotzuki?rev=1c6cea350960519e12254e9a375c00a7ceb4b1b2#1c6cea350960519e12254e9a375c00a7ceb4b1b2"
+version = "0.10.1"
+source = "git+https://github.com/liuyanghejerry/dotzuki?rev=74e831c00467f028914f9ef6730a22e605ae2e04#74e831c00467f028914f9ef6730a22e605ae2e04"
 dependencies = [
  "log",
  "serde",
@@ -731,8 +731,8 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-renderer"
-version = "0.8.2"
-source = "git+https://github.com/liuyanghejerry/dotzuki?rev=1c6cea350960519e12254e9a375c00a7ceb4b1b2#1c6cea350960519e12254e9a375c00a7ceb4b1b2"
+version = "0.10.1"
+source = "git+https://github.com/liuyanghejerry/dotzuki?rev=74e831c00467f028914f9ef6730a22e605ae2e04#74e831c00467f028914f9ef6730a22e605ae2e04"
 dependencies = [
  "dotzuki-engine",
  "error-iter",
@@ -750,8 +750,8 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-rules"
-version = "0.8.2"
-source = "git+https://github.com/liuyanghejerry/dotzuki?rev=1c6cea350960519e12254e9a375c00a7ceb4b1b2#1c6cea350960519e12254e9a375c00a7ceb4b1b2"
+version = "0.10.1"
+source = "git+https://github.com/liuyanghejerry/dotzuki?rev=74e831c00467f028914f9ef6730a22e605ae2e04#74e831c00467f028914f9ef6730a22e605ae2e04"
 dependencies = [
  "dotzuki-engine",
  "ron",
@@ -761,8 +761,8 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-ui"
-version = "0.8.2"
-source = "git+https://github.com/liuyanghejerry/dotzuki?rev=1c6cea350960519e12254e9a375c00a7ceb4b1b2#1c6cea350960519e12254e9a375c00a7ceb4b1b2"
+version = "0.10.1"
+source = "git+https://github.com/liuyanghejerry/dotzuki?rev=74e831c00467f028914f9ef6730a22e605ae2e04#74e831c00467f028914f9ef6730a22e605ae2e04"
 dependencies = [
  "dotzuki-engine",
  "dotzuki-renderer",
@@ -770,8 +770,8 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-web"
-version = "0.8.2"
-source = "git+https://github.com/liuyanghejerry/dotzuki?rev=1c6cea350960519e12254e9a375c00a7ceb4b1b2#1c6cea350960519e12254e9a375c00a7ceb4b1b2"
+version = "0.10.1"
+source = "git+https://github.com/liuyanghejerry/dotzuki?rev=74e831c00467f028914f9ef6730a22e605ae2e04#74e831c00467f028914f9ef6730a22e605ae2e04"
 dependencies = [
  "dotzuki-audio",
  "dotzuki-engine",
