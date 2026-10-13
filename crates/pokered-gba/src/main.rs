@@ -346,11 +346,18 @@ impl Mode4Presenter {
     #[inline(never)]
     fn copy_full_page(fb: &FrameBuffer, page: u8) {
         let indices = fb.indices();
-        let dst = mode4_page(page);
-        for y in 0..VIEW_H {
-            let src_word = unsafe { indices.as_ptr().add(y * VIEW_W).cast::<u32>() };
-            let dst_word = ((VIEW_Y + y) * SCREEN_W + VIEW_X) / 4;
-            unsafe { dma3_copy_words(src_word, dst.add(dst_word), VIEW_W / 4) };
+        // Increment row pointers directly instead of rebuilding both row
+        // addresses for every transfer. Viewport rows still use separate DMA
+        // submissions so the surrounding Mode 4 border stays untouched.
+        let mut src = indices.as_ptr().cast::<u32>();
+        let end = unsafe { src.add(VIEW_W * VIEW_H / 4) };
+        let mut dst = unsafe { mode4_page(page).add((VIEW_Y * SCREEN_W + VIEW_X) / 4) };
+        while src != end {
+            unsafe {
+                dma3_copy_words(src, dst, VIEW_W / 4);
+                src = src.add(VIEW_W / 4);
+                dst = dst.add(SCREEN_W / 4);
+            }
         }
     }
 
@@ -401,14 +408,16 @@ impl Mode4Presenter {
         self.ready_page = Some(self.draw_page);
     }
 
-    /// Complete small pending changes during a static image. A whole-page
-    /// refresh waits until the page is presented: moving scenes can otherwise
-    /// copy the entire hidden page here and overwrite it again on the next
-    /// rendered frame. `present` still resolves full damage before a flip.
+    /// When the image is static, use the otherwise idle frame budget to bring
+    /// the hidden page up to date without flipping it. This lets the next
+    /// isolated sprite-only redraw use its small damage set immediately.
     fn sync_hidden(&mut self, fb: &FrameBuffer) {
         let page = self.draw_page as usize;
         let pending = self.pending_damage[page];
-        if pending.any && !pending.full {
+        if pending.full {
+            Self::copy_full_page(fb, self.draw_page);
+            self.pending_damage[page] = DirtyTiles::EMPTY;
+        } else if pending.any {
             Self::copy_dirty_page(fb, self.draw_page, pending);
             self.pending_damage[page] = DirtyTiles::EMPTY;
         }
