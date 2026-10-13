@@ -2582,6 +2582,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         while let Some(&(tx, ty)) = self.scripted_player_path.front() {
             if self.state.player.x == tx && self.state.player.y == ty {
                 self.scripted_player_path.pop_front();
+                if matches!(&self.active_script_effect,
+                    Some(script_bridge::ScriptEffect::FollowNpc { player_steps: Some(_), .. })) {
+                    // NO_INPUT is sampled once in JoypadOverworld; the NPC
+                    // still advances during this ordinary two-VBlank field loop.
+                    return;
+                }
                 continue;
             }
             if let Some(dir) =
@@ -3122,6 +3128,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 target_x,
                 target_y,
                 path: explicit_path,
+                player_steps,
                 phase,
             } => {
                 use script_bridge::FollowNpcPhase;
@@ -3148,6 +3155,14 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                                         &path_u8,
                                     );
                                 }
+                            }
+                        }
+                        if let Some(steps) = player_steps {
+                            scripted_player_path.clear();
+                            let (mut x,mut y)=(player_state.x as i32,player_state.y as i32);
+                            for &(dx,dy) in steps.iter() {
+                                x+=i32::from(dx);y+=i32::from(dy);
+                                if x>=0 && y>=0 { scripted_player_path.push_back((x as u16,y as u16)); }
                             }
                         }
                         *phase = FollowNpcPhase::Following {
@@ -3178,7 +3193,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                                 (x, y, npc_movement::is_scripted_move_done(npc))
                             };
 
-                            if nx != *last_npc_x || ny != *last_npc_y {
+                            if player_steps.is_none() && (nx != *last_npc_x || ny != *last_npc_y) {
                                 scripted_player_path.push_back((*last_npc_x, *last_npc_y));
                                 *last_npc_x = nx;
                                 *last_npc_y = ny;

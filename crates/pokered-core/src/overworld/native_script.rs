@@ -427,6 +427,25 @@ impl ScriptHost for NativeHost {
 
             "waitMusic" => Ok(pokemon(PokemonScriptCommand::WaitMusic)),
             "vendingDelivery" => Ok(pokemon(PokemonScriptCommand::VendingDelivery)),
+            "walkTogether" => {
+                let npc_id = args::text(v.first().ok_or("walkTogether: missing NPC")?, "walkTogether")?;
+                let mut pairs = Vec::new();
+                for value in v.iter().skip(1).take(2) {
+                    let Value::Array(points) = value else { return Err("walkTogether: expected route array".into()); };
+                    let mut route = Vec::new();
+                    for point in points {
+                        let Value::Array(coords) = point else { return Err("walkTogether: expected coordinate pair".into()); };
+                        if coords.len()!=2 { return Err("walkTogether: expected two coordinates".into()); }
+                        let x=args::number(&coords[0], "walkTogether x")?;
+                        let y=args::number(&coords[1], "walkTogether y")?;
+                        if !x.is_finite() || !y.is_finite() || x != (x as i64) as f64 || y != (y as i64) as f64 { return Err("walkTogether: integer coordinates required".into()); }
+                        route.push(serde_json::json!([x as i64,y as i64]));
+                    }
+                    pairs.push(serde_json::json!(route));
+                }
+                let mut values=vec![serde_json::json!(npc_id)];values.extend(pairs);
+                Ok(pokemon(PokemonScriptCommand::from_custom("walkTogether", &values)?))
+            },
             "followNpcPath" => {
                 let npc_id = args::text(v.first().ok_or("followNpcPath: missing NPC")?, "followNpcPath")?;
                 let Value::Array(points) = v.get(1).ok_or("followNpcPath: missing path")? else {

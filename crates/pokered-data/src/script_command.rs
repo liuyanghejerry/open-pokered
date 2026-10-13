@@ -70,6 +70,8 @@ pub enum PokemonScriptCommand {
     VendingDelivery,
     /// Escort one tile behind an explicit NPC route, including backtracking.
     FollowNpcPath { npc_id: String, path: Vec<(u8, u8)> },
+    /// Independent synchronized routes; a zero player delta is one field-loop pause.
+    WalkTogether { npc_id: String, path: Vec<(u8, u8)>, player_steps: Vec<(i8, i8)> },
 }
 
 impl PokemonScriptCommand {
@@ -107,6 +109,7 @@ impl PokemonScriptCommand {
             Self::ShowCoinBox { .. } => "showCoinBox",
             Self::VendingDelivery => "vendingDelivery",
             Self::FollowNpcPath { .. } => "followNpcPath",
+            Self::WalkTogether { .. } => "walkTogether",
         }
     }
 
@@ -115,6 +118,7 @@ impl PokemonScriptCommand {
         let args = match self {
             Self::PrintFieldText { text } => vec![json!(text)],
             Self::FollowNpcPath { npc_id, path } => vec![json!(npc_id), json!(path)],
+            Self::WalkTogether { npc_id, path, player_steps } => vec![json!(npc_id), json!(path), json!(player_steps)],
             Self::ShowItemDialogue { text, sound_id } => {
                 let mut args = vec![json!(text)];
                 if let Some(sound) = sound_id { args.push(json!(sound)); }
@@ -201,6 +205,17 @@ impl PokemonScriptCommand {
             "printFieldText" => Self::PrintFieldText { text: string(0)? },
             "waitMusic" => Self::WaitMusic,
             "vendingDelivery" => Self::VendingDelivery,
+            "walkTogether" => {
+                let path: Vec<(u8, u8)> = serde_json::from_value(args.get(1).cloned().ok_or("walkTogether: missing NPC path")?)
+                    .map_err(|error| format!("walkTogether: invalid NPC path: {error}"))?;
+                let player_steps: Vec<(i8, i8)> = serde_json::from_value(args.get(2).cloned().ok_or("walkTogether: missing player steps")?)
+                    .map_err(|error| format!("walkTogether: invalid player steps: {error}"))?;
+                if path.is_empty() || player_steps.is_empty() { return Err("walkTogether: empty route".into()); }
+                if player_steps.iter().any(|&(x,y)| i16::from(x).abs()+i16::from(y).abs()>1) {
+                    return Err("walkTogether: player steps must be cardinal unit deltas or pauses".into());
+                }
+                Self::WalkTogether { npc_id: string(0)?, path, player_steps }
+            },
             "followNpcPath" => {
                 let path: Vec<(u8, u8)> = serde_json::from_value(args.get(1).cloned().ok_or("followNpcPath: missing path")?)
                     .map_err(|error| format!("followNpcPath: invalid path: {error}"))?;
@@ -323,6 +338,23 @@ mod tests {
             PokemonScriptCommand::from_custom(&name, &args),
             Ok(expected)
         );
+    }
+
+    #[test]
+    fn synchronized_routes_preserve_pauses_and_reject_non_unit_player_steps() {
+        let args = vec![json!("GUIDE"), json!([[35,17], [35,18]]),
+            json!([[0,0], [0,0], [-1,0], [0,1]])];
+        let expected = PokemonScriptCommand::WalkTogether {
+            npc_id: "GUIDE".into(), path: vec![(35,17),(35,18)],
+            player_steps: vec![(0,0),(0,0),(-1,0),(0,1)],
+        };
+        assert_eq!(PokemonScriptCommand::from_custom("walkTogether", &args), Ok(expected.clone()));
+        let ScriptCommand::Custom { name, args } = expected.into_script_command() else { panic!("custom command required"); };
+        assert_eq!(PokemonScriptCommand::from_custom(&name, &args).unwrap().name(), "walkTogether");
+        for steps in [json!([]), json!([[1,1]]), json!([[2,0]]), json!([[0,0.5]]), json!([[0,128]])] {
+            assert!(PokemonScriptCommand::from_custom("walkTogether",
+                &[json!("GUIDE"), json!([[35,17]]), steps]).is_err());
+        }
     }
 
     #[test]

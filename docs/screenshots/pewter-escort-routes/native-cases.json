@@ -1,0 +1,240 @@
+{
+  "base": "ecc5d0bba4d69cebdb96dfc2434deeb119ac8e68",
+  "scope": "Native scene continuation from original nine start coordinates; debug interaction for adjacent talk cases; no native NPC runtime writes; not original hardware timing proof.",
+  "cases": [
+    {
+      "kind": "museum",
+      "start": [
+        27,
+        18
+      ],
+      "player": [
+        14,
+        8
+      ],
+      "guide": {
+        "facing": "Up",
+        "home_x": 27,
+        "home_y": 17,
+        "npc_index": 2,
+        "scripted_path_remaining": 0,
+        "sprite_id": 12,
+        "text_id": 3,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 13,
+        "y": 8
+      },
+      "frame_count": 615,
+      "repeat_exact": true
+    },
+    {
+      "kind": "museum",
+      "start": [
+        27,
+        16
+      ],
+      "player": [
+        14,
+        8
+      ],
+      "guide": {
+        "facing": "Up",
+        "home_x": 27,
+        "home_y": 17,
+        "npc_index": 2,
+        "scripted_path_remaining": 0,
+        "sprite_id": 12,
+        "text_id": 3,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 13,
+        "y": 8
+      },
+      "frame_count": 609,
+      "repeat_exact": true
+    },
+    {
+      "kind": "museum",
+      "start": [
+        26,
+        17
+      ],
+      "player": [
+        14,
+        8
+      ],
+      "guide": {
+        "facing": "Up",
+        "home_x": 27,
+        "home_y": 17,
+        "npc_index": 2,
+        "scripted_path_remaining": 0,
+        "sprite_id": 12,
+        "text_id": 3,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 13,
+        "y": 8
+      },
+      "frame_count": 615,
+      "repeat_exact": true
+    },
+    {
+      "kind": "museum",
+      "start": [
+        28,
+        17
+      ],
+      "player": [
+        14,
+        8
+      ],
+      "guide": {
+        "facing": "Up",
+        "home_x": 27,
+        "home_y": 17,
+        "npc_index": 2,
+        "scripted_path_remaining": 0,
+        "sprite_id": 12,
+        "text_id": 3,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 13,
+        "y": 8
+      },
+      "frame_count": 615,
+      "repeat_exact": true
+    },
+    {
+      "kind": "gym",
+      "start": [
+        34,
+        16
+      ],
+      "player": [
+        11,
+        18
+      ],
+      "guide": {
+        "facing": "Left",
+        "home_x": 35,
+        "home_y": 16,
+        "npc_index": 4,
+        "scripted_path_remaining": 0,
+        "sprite_id": 4,
+        "text_id": 5,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 12,
+        "y": 18
+      },
+      "frame_count": 963,
+      "repeat_exact": true
+    },
+    {
+      "kind": "gym",
+      "start": [
+        35,
+        17
+      ],
+      "player": [
+        11,
+        18
+      ],
+      "guide": {
+        "facing": "Left",
+        "home_x": 35,
+        "home_y": 16,
+        "npc_index": 4,
+        "scripted_path_remaining": 0,
+        "sprite_id": 4,
+        "text_id": 5,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 12,
+        "y": 18
+      },
+      "frame_count": 949,
+      "repeat_exact": true
+    },
+    {
+      "kind": "gym",
+      "start": [
+        37,
+        18
+      ],
+      "player": [
+        11,
+        18
+      ],
+      "guide": {
+        "facing": "Left",
+        "home_x": 35,
+        "home_y": 16,
+        "npc_index": 4,
+        "scripted_path_remaining": 0,
+        "sprite_id": 4,
+        "text_id": 5,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 12,
+        "y": 18
+      },
+      "frame_count": 949,
+      "repeat_exact": true
+    },
+    {
+      "kind": "gym",
+      "start": [
+        37,
+        19
+      ],
+      "player": [
+        11,
+        18
+      ],
+      "guide": {
+        "facing": "Left",
+        "home_x": 35,
+        "home_y": 16,
+        "npc_index": 4,
+        "scripted_path_remaining": 0,
+        "sprite_id": 4,
+        "text_id": 5,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 12,
+        "y": 18
+      },
+      "frame_count": 949,
+      "repeat_exact": true
+    },
+    {
+      "kind": "gym",
+      "start": [
+        36,
+        17
+      ],
+      "player": [
+        11,
+        18
+      ],
+      "guide": {
+        "facing": "Left",
+        "home_x": 35,
+        "home_y": 16,
+        "npc_index": 4,
+        "scripted_path_remaining": 0,
+        "sprite_id": 4,
+        "text_id": 5,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 12,
+        "y": 18
+      },
+      "frame_count": 949,
+      "repeat_exact": true
+    }
+  ]
+}
