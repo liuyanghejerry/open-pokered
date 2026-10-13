@@ -189,6 +189,8 @@ pub enum ScriptEffect {
         npc_id: String,
         target_x: u8,
         target_y: u8,
+        #[serde(default)]
+        path: Option<Vec<(u8, u8)>>,
         phase: FollowNpcPhase,
     },
     ShowPokedexEntry {
@@ -518,12 +520,14 @@ impl ScriptEffect {
                 npc_id,
                 target_x,
                 target_y,
+                path,
                 phase,
             } => json!({
                 "effect": "FollowNpc",
                 "npc_id": npc_id,
                 "target_x": target_x,
                 "target_y": target_y,
+                "path": path,
                 "phase": follow_phase_json(phase),
             }),
             ScriptEffect::ShowPokedexEntry { species, started } => {
@@ -815,6 +819,7 @@ pub fn dispatch_command_with_names(
             npc_id: npc_id.clone(),
             target_x: *target_x,
             target_y: *target_y,
+            path: None,
             phase: FollowNpcPhase::StartNpc,
         },
         ScriptCommand::OpenShop { items } => ScriptEffect::OpenShop {
@@ -867,6 +872,10 @@ fn dispatch_custom(name: &str, args: &[Value]) -> ScriptEffect {
         Err(error) => return unsupported_with_reason(name, error),
     };
     match command {
+        PokemonScriptCommand::FollowNpcPath { npc_id, path } => {
+            let (target_x, target_y) = *path.last().expect("validated nonempty escort route");
+            ScriptEffect::FollowNpc { npc_id, target_x, target_y, path: Some(path), phase: FollowNpcPhase::StartNpc }
+        },
         PokemonScriptCommand::PrintFieldText { text } => ScriptEffect::PrintFieldText {
             text,
         },
@@ -1081,6 +1090,7 @@ mod script_effect_json_tests {
             npc_id: "PALLET_TOWN_OBJ_1".to_string(),
             target_x: 11,
             target_y: 2,
+            path: None,
             phase: FollowNpcPhase::Following {
                 last_npc_x: 10,
                 last_npc_y: 3,

@@ -88,24 +88,16 @@ game_scene PalletTown {
         moveNpc("PALLET_TOWN_OBJ_1", [[10, 2]])
         movePlayer([[10, 1]])
       }
-      // Inlined palletTownPlayerFollowsOak: hand off to the Rust
-      // followNpc state machine — Oak leads the player to the lab
-      // door. The target is the cell just south of the door warp tile
-      // (12, 11): ending the follow ON a warp tile would fire the warp
-      // before the hideObject cleanup below runs — warp fades freeze
-      // script execution and the leftover effect is dropped on commit,
-      // leaving Oak stuck visible in Pallet Town. Same stop-short
-      // pattern as the PewterCity escort scenes.
-      followNpc("PALLET_TOWN_OBJ_1", 12, 12)
+      // RLEList_ProfOakWalkToLab: D5, L1, D5, R3, U1.
+      // The last northbound Oak stride is visible before he disappears.
+      // The player follows one tile behind. Hide Oak before the player
+      // enters the final door tile, so warp cleanup preserves his hide bit.
+      followNpcPath("PALLET_TOWN_OBJ_1", [[10, 3], [10, 4], [10, 5], [10, 6], [10, 7], [9, 7], [9, 8], [9, 9], [9, 10], [9, 11], [9, 12], [10, 12], [11, 12], [12, 12], [12, 11]])
       hideObject("PALLET_TOWN_OBJ_1")
       // EVENT_FOLLOWED_OAK_INTO_LAB is set by the OaksLab @load entry
       // cutscene (orig OaksLabFollowedOakScript), not here — setting it
       // here would skip the lab's entry animation.
       clearJoyIgnore()
-      // Walk the final step onto the door tile to trigger the lab warp,
-      // now that Oak is hidden. An explicit movePlayer path is required:
-      // the door tile is unwalkable, so movePlayerTo's path planner
-      // would refuse it.
       movePlayer([[12, 11]])
     }
 

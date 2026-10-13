@@ -2930,6 +2930,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 npc_id,
                 target_x,
                 target_y,
+                path: explicit_path,
                 phase,
             } => {
                 use script_bridge::FollowNpcPhase;
@@ -2944,14 +2945,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                                 start_x = npc_states[idx].x;
                                 start_y = npc_states[idx].y;
                                 let target = (*target_x as u16, *target_y as u16);
-                                let path = plan_terrain_path_allow_target_step(
-                                    map,
-                                    (start_x, start_y),
-                                    target,
-                                )
-                                .unwrap_or_else(|| {
-                                    plan_straight_path((start_x, start_y), target)
-                                });
+                                let path = if let Some(points) = explicit_path {
+                                    points.iter().map(|&(x, y)| (x as u16, y as u16)).collect()
+                                } else {
+                                    plan_terrain_path_allow_target_step(map, (start_x, start_y), target)
+                                        .unwrap_or_else(|| plan_straight_path((start_x, start_y), target))
+                                };
                                 if let Some(path_u8) = path_u16_to_u8(&path) {
                                     npc_movement::start_scripted_move(
                                         &mut npc_states[idx],
@@ -2995,8 +2994,11 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                             }
 
                             if npc_done && !*final_push_done {
+                                // Explicit escorts leave the player behind the leader;
+                                // the scene owns the last door step after hide cleanup.
+                                // Coordinate-based escorts retain their final push.
                                 let pos = (nx, ny);
-                                if scripted_player_path.back() != Some(&pos) {
+                                if explicit_path.is_none() && scripted_player_path.back() != Some(&pos) {
                                     scripted_player_path.push_back(pos);
                                 }
                                 // NOTE: the NPC is NOT hidden here — scenes

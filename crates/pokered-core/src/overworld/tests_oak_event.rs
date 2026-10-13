@@ -563,3 +563,41 @@ fn oak_approach_geometry_matches_both_natural_retail_paths() {
         assert_eq!((screen.state.player.x, screen.state.player.y), (10,1), "right exit must align before escort");
     }
 }
+
+// Compare the whole leader route with the original RLE list, including U1.
+// Existing escort tests separately verify hide cleanup, lab entry and flags.
+#[test]
+fn oak_lab_escort_includes_original_final_northbound_stride() {
+    let expected = [(10,3), (10,4), (10,5), (10,6), (10,7), (9,7),
+        (9,8), (9,9), (9,10), (9,11), (9,12), (10,12), (11,12), (12,12), (12,11)];
+    for player_x in [10, 11] {
+        let mut screen = OverworldScreen::new(MapId::PalletTown, None, PokemonRedData);
+        screen.state.player.x = player_x;
+        screen.state.player.y = 2;
+        screen.state.player.facing = Direction::Up;
+        let mut starts = Vec::new();
+        let mut last_destination = None;
+        for frame in 0..8000 {
+            if let Some(dialogue) = screen.pending_dialogue.as_mut() { dialogue.skip_to_full_page(); }
+            let input = if frame < 18 { up_input() } else {
+                OverworldInput::new(false, false, false, false, frame % 40 == 20, false, false, false)
+            };
+            screen.update_frame(input);
+            if screen.state.current_map != MapId::PalletTown { break; }
+            if matches!(&screen.active_script_effect, Some(super::script_bridge::ScriptEffect::FollowNpc { .. })) {
+                let npc = &screen.npc_states[0];
+                if npc.walk_counter > 0 {
+                    let (dx, dy) = super::player_movement::direction_delta(npc.facing);
+                    let destination = ((npc.x as i32 + dx as i32) as u16, (npc.y as i32 + dy as i32) as u16);
+                    if last_destination != Some(destination) {
+                        starts.push(destination);
+                        last_destination = Some(destination);
+                    }
+                }
+            }
+        }
+        assert_eq!(starts, expected, "Oak escort route from exit {player_x}");
+        assert_eq!(screen.state.current_map, MapId::OaksLab);
+        assert!(flag_set(&screen, "__OBJ_HIDDEN_PALLET_TOWN_OBJ_1"));
+    }
+}

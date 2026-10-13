@@ -427,6 +427,20 @@ impl ScriptHost for NativeHost {
 
             "waitMusic" => Ok(pokemon(PokemonScriptCommand::WaitMusic)),
             "vendingDelivery" => Ok(pokemon(PokemonScriptCommand::VendingDelivery)),
+            "followNpcPath" => {
+                let npc_id = args::text(v.first().ok_or("followNpcPath: missing NPC")?, "followNpcPath")?;
+                let Value::Array(points) = v.get(1).ok_or("followNpcPath: missing path")? else {
+                    return Err("followNpcPath: expected path array".into());
+                };
+                let mut path = Vec::new();
+                for point in points {
+                    let Value::Array(coords) = point else { return Err("followNpcPath: expected coordinate pair".into()); };
+                    if coords.len() != 2 { return Err("followNpcPath: expected two coordinates".into()); }
+                    path.push((args::u8(&coords[0], "followNpcPath x")?, args::u8(&coords[1], "followNpcPath y")?));
+                }
+                if path.is_empty() { return Err("followNpcPath: empty path".into()); }
+                Ok(pokemon(PokemonScriptCommand::FollowNpcPath { npc_id, path }))
+            },
             "showMoneyBox" => {
                 let amount = args::number(v.first().ok_or("showMoneyBox: missing amount")?, "showMoneyBox")? as i64;
                 Ok(pokemon(PokemonScriptCommand::ShowMoneyBox { amount }))

@@ -495,6 +495,12 @@ impl ScriptApiRegistrar for PokemonScriptApi {
         engine.register_async_fn("vendingDelivery", |_: &[JsValue], _: &mut Context| {
             Ok(PokemonScriptCommand::VendingDelivery.into_script_command())
         });
+        engine.register_async_fn("followNpcPath", |args: &[JsValue], ctx: &mut Context| {
+            let values = vec![args.get_or_undefined(0).to_json(ctx)?, args.get_or_undefined(1).to_json(ctx)?];
+            let command = PokemonScriptCommand::from_custom("followNpcPath", &values)
+                .map_err(|error| boa_engine::JsNativeError::typ().with_message(error))?;
+            Ok(command.into_script_command())
+        });
         for name in ["badgeMenu", "pokemonMenu"] {
             engine.register_async_fn(name, move |args: &[JsValue], ctx: &mut Context| {
                 let mut values = vec![args.get_or_undefined(0).to_json(ctx)?, args.get_or_undefined(1).to_json(ctx)?];
@@ -989,6 +995,25 @@ mod tests {
             }),
             "resuming with floor 2 must take the floor==2 branch -> showText(\"3F\")",
         );
+    }
+
+    #[test]
+    fn explicit_escort_suspends_boa_until_movement_finishes() {
+        use crate::script_command::PokemonScriptCommand;
+        let mut engine = ScriptEngine::with_api(&PokemonScriptApi);
+        engine.load_script(r#"
+            export async function f() {
+                await game.followNpcPath("OAK", [[12,12], [12,11]]);
+                await game.showText("arrived");
+            }
+        "#).unwrap();
+        let command = engine.call_function("f", &[]).unwrap();
+        let Some(ScriptCommand::Custom { name, args }) = &command else { panic!("missing escort command"); };
+        assert_eq!(PokemonScriptCommand::from_custom(name, args).unwrap(),
+            PokemonScriptCommand::FollowNpcPath { npc_id: "OAK".into(), path: vec![(12,12), (12,11)] });
+        assert_eq!(engine.tick(), command, "movement must stay awaited");
+        assert_eq!(engine.signal_done(CommandResult::Void).unwrap(),
+            Some(ScriptCommand::ShowText { text: "arrived".into() }));
     }
 
     #[test]

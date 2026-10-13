@@ -68,6 +68,8 @@ pub enum PokemonScriptCommand {
     ShowMoneyBox { amount: i64 },
     ShowCoinBox { amount: i64 },
     VendingDelivery,
+    /// Escort one tile behind an explicit NPC route, including backtracking.
+    FollowNpcPath { npc_id: String, path: Vec<(u8, u8)> },
 }
 
 impl PokemonScriptCommand {
@@ -104,6 +106,7 @@ impl PokemonScriptCommand {
             Self::ShowMoneyBox { .. } => "showMoneyBox",
             Self::ShowCoinBox { .. } => "showCoinBox",
             Self::VendingDelivery => "vendingDelivery",
+            Self::FollowNpcPath { .. } => "followNpcPath",
         }
     }
 
@@ -111,6 +114,7 @@ impl PokemonScriptCommand {
         let name = self.name().to_string();
         let args = match self {
             Self::PrintFieldText { text } => vec![json!(text)],
+            Self::FollowNpcPath { npc_id, path } => vec![json!(npc_id), json!(path)],
             Self::ShowItemDialogue { text, sound_id } => {
                 let mut args = vec![json!(text)];
                 if let Some(sound) = sound_id { args.push(json!(sound)); }
@@ -197,6 +201,12 @@ impl PokemonScriptCommand {
             "printFieldText" => Self::PrintFieldText { text: string(0)? },
             "waitMusic" => Self::WaitMusic,
             "vendingDelivery" => Self::VendingDelivery,
+            "followNpcPath" => {
+                let path: Vec<(u8, u8)> = serde_json::from_value(args.get(1).cloned().ok_or("followNpcPath: missing path")?)
+                    .map_err(|error| format!("followNpcPath: invalid path: {error}"))?;
+                if path.is_empty() { return Err("followNpcPath: empty path".into()); }
+                Self::FollowNpcPath { npc_id: string(0)?, path }
+            },
             "showMoneyBox" => Self::ShowMoneyBox { amount: args.first().and_then(Value::as_i64).ok_or_else(|| format!("{name}: amount must be an integer"))? },
             "showCoinBox" => Self::ShowCoinBox { amount: args.first().and_then(Value::as_i64).ok_or_else(|| format!("{name}: amount must be an integer"))? },
             "badgeMenu" => {
@@ -313,6 +323,14 @@ mod tests {
             PokemonScriptCommand::from_custom(&name, &args),
             Ok(expected)
         );
+    }
+
+    #[test]
+    fn explicit_escort_rejects_missing_or_invalid_routes() {
+        for args in [vec![json!("OAK")], vec![json!("OAK"), json!([])],
+            vec![json!("OAK"), json!([[12]])], vec![json!("OAK"), json!([[256,12]])]] {
+            assert!(PokemonScriptCommand::from_custom("followNpcPath", &args).is_err());
+        }
     }
 
     #[test]

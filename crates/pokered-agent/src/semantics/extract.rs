@@ -39,6 +39,7 @@ const EFFECT_COMMANDS: &[&str] = &[
     "startNpcMoveTo",
     "setNpcPosition",
     "followNpc",
+    "followNpcPath",
     "movePlayer",
     "movePlayerTo",
     "movePlayerRelative",
@@ -141,7 +142,7 @@ fn command_effect(name: &str, args: &[Expression]) -> StateEffect {
             None => dynamic(),
         },
         "moveNpc" | "startNpcMove" | "moveNpcTo" | "startNpcMoveTo" | "setNpcPosition"
-        | "followNpc" => match str_arg(0) {
+        | "followNpc" | "followNpcPath" => match str_arg(0) {
             Some(npc_id) => StateEffect::NpcMoved { npc_id },
             None => dynamic(),
         },
