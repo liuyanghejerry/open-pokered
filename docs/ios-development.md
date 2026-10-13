@@ -1,35 +1,37 @@
 # iOS development
 
-iOS uses the same `pokered-mobile` ABI v1 as Android and HarmonyOS. The UIKit
-and Metal host in `ios/Pokered/` owns input, display, lifecycle and audio
-session integration. The Rust static library owns game state, the 160 × 144
-RGBA frame, a committed JSON save, and the 44.1 kHz PCM queue.
+The iOS app is a native UIKit/Metal shell over `pokered-mobile`'s shared
+mobile ABI. It uses dotzuki's `DotzukiTouch` Swift package for its safe-area
+aware touch controls and settings editor.
 
-Build an unsigned app with:
+## Engine and controller sources
 
-```bash
+Cargo dependencies are pinned to the dotzuki `v0.10.0` release commit. The
+`ios/DotzukiTouch` local Swift package is the matching
+`workspace/crates/dotzuki-mobile/controls` directory from that same release;
+the Xcode project links its `DotzukiTouch` product. Keep both revisions in
+sync when upgrading dotzuki.
+
+The overlay fills the host view, applies the safe area internally, and leaves
+blank regions available to the game view. `GameViewController` reads
+`consumeInput()` on each game tick so quick taps between display frames reach
+the game. Opening the native controls editor pauses the frame loop; closing it
+resumes only while the app is active. Touch state is released on app
+deactivation and before the runtime is destroyed. The Metal viewport preserves
+the 160×144 framebuffer aspect ratio, and the host supports both landscape
+orientations.
+
+## Build
+
+Build on macOS with Xcode and the iOS Rust targets installed:
+
+```sh
 rustup target add aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios
+scripts/fetch-gfx.sh
 ios/build.sh
 ```
 
-The script builds the device archive plus arm64 and x86_64 simulator archives,
-joins the simulator archives with `lipo`, then invokes `xcodebuild`. The CI
-workflow repeats those steps so the Xcode project cannot link a stale or
-single-architecture library.
-
-The host initializes the runner with `pokered:red:v1`, stores committed saves
-as UTF-8 JSON in `UserDefaults` under `pokered-mobile-save-v1`, and exports a
-save when the app resigns active or terminates. The former iOS-only
-`pokered.sav` file is left in the app container and is not imported
-automatically, because ABI v1 uses the shared committed-save envelope.
-
-The audio callback calls `dotzuki_mobile_audio_fill` at 44.1 kHz. It must stop
-before `dotzuki_mobile_destroy`, because the ABI requires the host to stop all
-audio callbacks before releasing its runner.
-
-For direct validation, build both host SDKs after running the script:
-
-```bash
-xcodebuild -project ios/Pokered.xcodeproj -target Pokered -sdk iphoneos -configuration Release CODE_SIGNING_ALLOWED=NO build
-xcodebuild -project ios/Pokered.xcodeproj -target Pokered -sdk iphonesimulator -configuration Release CODE_SIGNING_ALLOWED=NO build
-```
+The script builds device and simulator static libraries, then builds the Xcode
+app without signing. The touch overlay package has its upstream XCTest suite
+under `ios/DotzukiTouch/tests/ios`; verify it in an Xcode iOS simulator when
+changing or upgrading the native controller.
