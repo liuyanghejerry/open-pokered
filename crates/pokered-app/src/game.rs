@@ -4300,8 +4300,14 @@ impl PokemonGame {
                         }
                     }
                     // SSAnneCaptainsRoom.asm waits on music channel 1.
-                    self.overworld.script_audio_fading = self.audio.as_ref()
-                        .is_some_and(|audio| audio.is_fading());
+                    // Only the healing fade wait consumes this frontend input.
+                    // Sampling unrelated fades would retain audio history outside
+                    // the logic snapshot and add a manager query to every idle frame.
+                    self.overworld.script_audio_fading = self.overworld.pending_healing_machine
+                        .as_ref().is_some_and(|machine| matches!(machine.phase,
+                            pokered_core::overworld::script_bridge::HealingMachinePhase::FadeOutMusic
+                            | pokered_core::overworld::script_bridge::HealingMachinePhase::WaitForFadeOut))
+                        && self.audio.as_ref().is_some_and(|audio| audio.is_fading());
                     self.overworld.script_music_playing = self.audio.as_ref()
                         .is_some_and(|audio| audio.is_music_channel_playing(0));
                     // Original DisplayPokedex records the species as seen after viewing.

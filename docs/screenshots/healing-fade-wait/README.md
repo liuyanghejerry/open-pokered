@@ -22,3 +22,10 @@ refresh against merged master before merging this dependent patch.
 Core regression checks a fade longer than the former timeout, snapshot
 restore/legacy default and immediate progress after completion. Core 2798
 and app 229 full library tests pass.
+
+CI follow-up: sample the fade only during the healing fade wait. Unrelated
+audio histories must not leak into the logic snapshot, and idle frames need
+no additional manager query. The unchanged agent determinism assertion now
+passes, all 41 app test executables pass, and the healing manifest and all
+1285 PNGs are unchanged. GBA performance remains gated by latest-head CI.
+Full audio-engine restore during active healing still needs validation.
