@@ -3224,10 +3224,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                                 }
                             } else {
                                 *phase = HealingMachinePhase::WaitForMusic;
-                                *frames_remaining = 120;
+                                *frames_remaining = 0;
                                 if let Some(ref mut state) = pending_healing_machine {
                                     state.phase = HealingMachinePhase::WaitForMusic;
-                                    state.frames_remaining = 120;
+                                    state.frames_remaining = 0;
                                     state.flash_active = false;
                                 }
                             }
@@ -3239,14 +3239,25 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         false
                     }
                     HealingMachinePhase::WaitForMusic => {
+                        // The original polls music channel 1 after FlashSprite8Times.
+                        // A fixed delay cannot follow natural sound_ret termination.
+                        if !script_music_playing {
+                            *phase = HealingMachinePhase::PostMusicDelay;
+                            *frames_remaining = 32;
+                            if let Some(ref mut state) = pending_healing_machine {
+                                state.phase = HealingMachinePhase::PostMusicDelay;
+                                state.frames_remaining = 32;
+                            }
+                        }
+                        false
+                    }
+                    HealingMachinePhase::PostMusicDelay => {
+                        *frames_remaining = frames_remaining.saturating_sub(1);
                         if *frames_remaining == 0 {
                             *phase = HealingMachinePhase::Done;
                             *pending_healing_machine = None;
-                        } else {
-                            *frames_remaining -= 1;
-                            if let Some(ref mut state) = pending_healing_machine {
-                                state.frames_remaining = *frames_remaining;
-                            }
+                        } else if let Some(ref mut state) = pending_healing_machine {
+                            state.frames_remaining = *frames_remaining;
                         }
                         false
                     }
