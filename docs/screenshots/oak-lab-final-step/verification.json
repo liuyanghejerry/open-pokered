@@ -1,0 +1,258 @@
+{
+  "base": "451074bd17ba2759aeb42052cb3b6e3d788f694d",
+  "base_capture_tree": "b7564dcc88efa67e5d1c1caa9bbf4aa873281997",
+  "reference_source": "pret/pokered fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c engine/overworld/auto_movement.asm RLEList_ProfOakWalkToLab",
+  "original_directions": "D5 L1 D5 R3 U1; NPC_CHANGE_FACING",
+  "cases": [
+    {
+      "exit_x": 10,
+      "t": 778,
+      "frame": 899,
+      "before": {
+        "effect": {
+          "effect": "FollowNpc",
+          "npc_id": "PALLET_TOWN_OBJ_1",
+          "phase": {
+            "final_push_done": true,
+            "last_npc_x": 12,
+            "last_npc_y": 12,
+            "phase": "Following"
+          },
+          "target_x": 12,
+          "target_y": 12
+        },
+        "frame": 899,
+        "map": "PalletTown",
+        "npc_counter": 0,
+        "npc_facing": "Right",
+        "npc_x": 12,
+        "npc_y": 12,
+        "player_counter": 6,
+        "player_x": 11,
+        "player_y": 12,
+        "t": 778
+      },
+      "after": {
+        "effect": {
+          "effect": "FollowNpc",
+          "npc_id": "PALLET_TOWN_OBJ_1",
+          "path": [
+            [
+              10,
+              3
+            ],
+            [
+              10,
+              4
+            ],
+            [
+              10,
+              5
+            ],
+            [
+              10,
+              6
+            ],
+            [
+              10,
+              7
+            ],
+            [
+              9,
+              7
+            ],
+            [
+              9,
+              8
+            ],
+            [
+              9,
+              9
+            ],
+            [
+              9,
+              10
+            ],
+            [
+              9,
+              11
+            ],
+            [
+              9,
+              12
+            ],
+            [
+              10,
+              12
+            ],
+            [
+              11,
+              12
+            ],
+            [
+              12,
+              12
+            ],
+            [
+              12,
+              11
+            ]
+          ],
+          "phase": {
+            "final_push_done": false,
+            "last_npc_x": 12,
+            "last_npc_y": 11,
+            "phase": "Following"
+          },
+          "target_x": 12,
+          "target_y": 11
+        },
+        "frame": 899,
+        "map": "PalletTown",
+        "npc_counter": 9,
+        "npc_facing": "Up",
+        "npc_x": 12,
+        "npc_y": 12,
+        "player_counter": 6,
+        "player_x": 11,
+        "player_y": 12,
+        "t": 778
+      },
+      "image_difference_bbox": [
+        77,
+        54,
+        92,
+        76
+      ],
+      "initial_png_sha256": "538885a47e0348c2e1bab41f7a5fcb0224d1d433b8113f58c1f9afb15cd64ef8",
+      "repeats_equal": true,
+      "png_count": 891,
+      "lab_frame": 829
+    },
+    {
+      "exit_x": 11,
+      "t": 846,
+      "frame": 967,
+      "before": {
+        "effect": {
+          "effect": "FollowNpc",
+          "npc_id": "PALLET_TOWN_OBJ_1",
+          "phase": {
+            "final_push_done": true,
+            "last_npc_x": 12,
+            "last_npc_y": 12,
+            "phase": "Following"
+          },
+          "target_x": 12,
+          "target_y": 12
+        },
+        "frame": 967,
+        "map": "PalletTown",
+        "npc_counter": 0,
+        "npc_facing": "Right",
+        "npc_x": 12,
+        "npc_y": 12,
+        "player_counter": 6,
+        "player_x": 11,
+        "player_y": 12,
+        "t": 846
+      },
+      "after": {
+        "effect": {
+          "effect": "FollowNpc",
+          "npc_id": "PALLET_TOWN_OBJ_1",
+          "path": [
+            [
+              10,
+              3
+            ],
+            [
+              10,
+              4
+            ],
+            [
+              10,
+              5
+            ],
+            [
+              10,
+              6
+            ],
+            [
+              10,
+              7
+            ],
+            [
+              9,
+              7
+            ],
+            [
+              9,
+              8
+            ],
+            [
+              9,
+              9
+            ],
+            [
+              9,
+              10
+            ],
+            [
+              9,
+              11
+            ],
+            [
+              9,
+              12
+            ],
+            [
+              10,
+              12
+            ],
+            [
+              11,
+              12
+            ],
+            [
+              12,
+              12
+            ],
+            [
+              12,
+              11
+            ]
+          ],
+          "phase": {
+            "final_push_done": false,
+            "last_npc_x": 12,
+            "last_npc_y": 11,
+            "phase": "Following"
+          },
+          "target_x": 12,
+          "target_y": 11
+        },
+        "frame": 967,
+        "map": "PalletTown",
+        "npc_counter": 9,
+        "npc_facing": "Up",
+        "npc_x": 12,
+        "npc_y": 12,
+        "player_counter": 6,
+        "player_x": 11,
+        "player_y": 12,
+        "t": 846
+      },
+      "image_difference_bbox": [
+        77,
+        54,
+        92,
+        76
+      ],
+      "initial_png_sha256": "4a792102b9abd0468133278d29b2ca4ea009c7c71b5e6195916daacf94781926",
+      "repeats_equal": true,
+      "png_count": 959,
+      "lab_frame": 897
+    }
+  ]
+}

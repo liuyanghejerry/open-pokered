@@ -65,6 +65,7 @@ pub const POKERED_SCRIPT_FUNCTIONS: &[&str] = &[
     "takeMoney",
     "tradePokemon",
     "vendingDelivery",
+    "followNpcPath",
     "waitMusic",
     "withdrawDaycare",
 ];
