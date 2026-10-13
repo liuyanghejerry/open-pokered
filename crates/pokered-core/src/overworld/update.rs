@@ -2365,19 +2365,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         resolve_npc_index(npc_id, &self.npc_states, &self.map_script_config),
                     _ => None,
                 };
-                for (slot, n) in self.npc_states.iter_mut().enumerate() {
-                    // Scripted and remote-controlled avatars keep their owner.
-                    if controlled_slot == Some(slot)
-                        || (self.link_opponent.is_some() && n.text_id == 1) { continue; }
-                    if n.movement_type != NpcMovementType::Stationary
-                        || !npc_movement::stationary_available(n, (self.state.player.x, self.state.player.y)) {
-                        continue;
-                    }
-                    npc_movement::advance_stationary_facing_with_rng(n, self.state.walk_counter != 0, || {
+                npc_movement::tick_stationary_npcs(&mut self.npc_states,
+                    (self.state.player.x, self.state.player.y), self.state.walk_counter != 0,
+                    controlled_slot, self.link_opponent.is_some(), || {
                         use rand::Rng;
                         (self.rng.gen(), self.rng.gen())
                     });
-                }
             }
             self.hasten_followed_npc();
         }

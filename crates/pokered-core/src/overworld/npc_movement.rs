@@ -79,6 +79,20 @@ pub fn advance_stationary_facing_with_rng(npc: &mut NpcRuntimeState, player_movi
     npc.delay_counter = if delay == 0 {256} else {u16::from(delay)};
 }
 
+/// Small per-frame loop kept separate so GBA can place it in fast memory.
+#[inline(never)]
+pub(crate) fn tick_stationary_npcs(npcs: &mut [NpcRuntimeState], player: (u16, u16),
+    player_moving: bool, controlled_slot: Option<usize>, remote_present: bool,
+    mut random: impl FnMut() -> (u8, u8)) {
+    for (slot, npc) in npcs.iter_mut().enumerate() {
+        if controlled_slot == Some(slot) || (remote_present && npc.text_id == 1) { continue; }
+        if npc.movement_type != NpcMovementType::Stationary || !stationary_available(npc, player) {
+            continue;
+        }
+        advance_stationary_facing_with_rng(npc, player_moving, &mut random);
+    }
+}
+
 pub fn stationary_range(movement: NpcMovementType, range: u8, facing: Direction) -> u8 {
     if movement == NpcMovementType::Stationary && range == 0 {
         0xD0 + match facing {Direction::Down=>0, Direction::Up=>1, Direction::Left=>2, Direction::Right=>3}
