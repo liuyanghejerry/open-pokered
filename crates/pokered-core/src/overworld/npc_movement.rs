@@ -13,9 +13,36 @@ use pokered_data::npc_data::{NpcEntry, NpcFacing, NpcMovement};
 // Re-export engine NPC movement types and functions
 pub use dotzuki_engine::overworld::npc_movement::{
     direction_toward, get_npc_positions, is_scripted_move_done, npc_at_position,
-    npc_at_position_mut, npc_in_front_of_player, start_scripted_move, NpcRuntimeState,
+    npc_at_position_mut, start_scripted_move, NpcRuntimeState,
     NPC_MAX_DELAY, NPC_WALK_FRAMES,
 };
+
+/// Original IsSpriteInFrontOfPlayer compares exact pixel coordinates, not
+/// the origin tile retained by the engine during a stride. A partial-pixel
+/// step cannot align with either the normal or extended counter target.
+pub fn npc_in_front_of_player<'a, M: dotzuki_engine::map::MapTrait,
+    T: dotzuki_engine::tileset::TilesetTrait, Mus>(
+    npcs: &'a [NpcRuntimeState], player_x: u16, player_y: u16, facing: Direction,
+    map: Option<&dotzuki_engine::overworld::MapData<M, T, Mus>>,
+    provider: &impl dotzuki_engine::overworld::CollisionProvider<T>,
+) -> Option<&'a NpcRuntimeState> {
+    let aligned_at = |x, y| npcs.iter().find(|npc| npc.visible
+        && (npc.walk_counter == 0 || npc.walk_counter == NPC_WALK_FRAMES)
+        && npc.x == x && npc.y == y);
+    let (dx, dy) = dotzuki_engine::overworld::player_movement::direction_delta(facing);
+    let mut tx = (i32::from(player_x) + i32::from(dx)) as u16;
+    let mut ty = (i32::from(player_y) + i32::from(dy)) as u16;
+    if let Some(map) = map {
+        let tile = provider.get_tile_at_position(map.tileset, &map.blocks, map.width, tx, ty);
+        if provider.is_counter_tile(map.tileset, tile) {
+            // Original counter detection selects the 32-pixel target;
+            // it does not first accept an NPC on the counter itself.
+            tx = (i32::from(tx) + i32::from(dx)) as u16;
+            ty = (i32::from(ty) + i32::from(dy)) as u16;
+        }
+    }
+    aligned_at(tx, ty)
+}
 
 /// Use the original four direction intervals, axis remapping and zero-delay
 /// wrap without changing the generic engine's default wandering policy.

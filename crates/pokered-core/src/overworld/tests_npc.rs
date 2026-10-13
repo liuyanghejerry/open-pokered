@@ -2027,3 +2027,54 @@ fn standing_center_npc_turns_without_walking_and_hidden_npcs_stay_frozen() {
         assert_eq!((screen.npc_states[2].facing, screen.npc_states[2].delay_counter), frozen);
     }
 }
+
+#[test]
+fn moving_npc_talk_requires_exact_pixel_alignment() {
+    for facing in [Direction::Down, Direction::Up, Direction::Left, Direction::Right] {
+        let (dx, dy) = super::player_movement::direction_delta(facing);
+        let mut npcs = vec![make_test_npc((5i32 + i32::from(dx)) as u16,
+            (5i32 + i32::from(dy)) as u16, NpcMovementType::Wander)];
+        npcs[0].facing = facing;
+        for counter in 0..=NPC_WALK_FRAMES {
+            npcs[0].walk_counter = counter;
+            assert_eq!(npc_in_front_of_player(&npcs, 5, 5, facing,
+                None::<&MapData<MapId, TilesetId, MusicId>>, &provider()).is_some(),
+                counter == 0 || counter == NPC_WALK_FRAMES, "{facing:?}, counter{counter}");
+        }
+        npcs[0].visible = false;
+        assert!(npc_in_front_of_player(&npcs, 5, 5, facing,
+            None::<&MapData<MapId, TilesetId, MusicId>>, &provider()).is_none());
+    }
+}
+
+#[test]
+fn counter_talk_also_requires_npc_pixel_alignment() {
+    let screen = super::screen::OverworldScreen::new(MapId::ViridianPokecenter,
+        None, pokered_data::impl_traits::PokemonRedData);
+    let mut npcs = screen.npc_states.clone();
+    let provider = PokemonCollisionProvider::new(MapId::ViridianPokecenter, TilesetId::Pokecenter);
+    for counter in 0..=NPC_WALK_FRAMES {
+        npcs[0].walk_counter = counter;
+        assert_eq!(npc_in_front_of_player(&npcs, 3, 3, Direction::Up,
+            screen.map_data.as_ref(), &provider).is_some(),
+            counter == 0 || counter == NPC_WALK_FRAMES, "counter{counter}");
+    }
+}
+
+#[test]
+fn counter_talk_selects_the_extended_target_instead_of_the_counter_tile() {
+    let screen = super::screen::OverworldScreen::new(MapId::ViridianPokecenter,
+        None, pokered_data::impl_traits::PokemonRedData);
+    let mut npcs = screen.npc_states.clone();
+    // Even an aligned object on the counter is outside its 32-pixel target.
+    npcs[1].x = 3;
+    npcs[1].y = 2;
+    npcs[1].walk_counter = 0;
+    let provider = PokemonCollisionProvider::new(MapId::ViridianPokecenter, TilesetId::Pokecenter);
+    let target = npc_in_front_of_player(&npcs, 3, 3, Direction::Up,
+        screen.map_data.as_ref(), &provider).unwrap();
+    assert_eq!(target.npc_index, 0);
+    npcs[0].visible = false;
+    assert!(npc_in_front_of_player(&npcs, 3, 3, Direction::Up,
+        screen.map_data.as_ref(), &provider).is_none());
+}

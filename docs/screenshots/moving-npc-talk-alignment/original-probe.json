@@ -1,0 +1,3066 @@
+{
+  "scope": "Controlled sprite pixel/counter/facing geometry and normal/extended-range registerD16/32 at original IsSpriteInFrontOfPlayer2 entry, driven by actual A input from natural Center save. Policy/unit probe, not a natural walking playthrough or OAM/hardware timing comparison.",
+  "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+  "cases": [
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "down",
+      "counter": 0,
+      "repeat_exact": true,
+      "found": true,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 76,
+          "counter": 0
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "down",
+      "counter": 1,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 91,
+          "counter": 1
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "down",
+      "counter": 2,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 90,
+          "counter": 2
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "down",
+      "counter": 3,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 89,
+          "counter": 3
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "down",
+      "counter": 4,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 88,
+          "counter": 4
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "down",
+      "counter": 5,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 87,
+          "counter": 5
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "down",
+      "counter": 6,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 86,
+          "counter": 6
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "down",
+      "counter": 7,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 85,
+          "counter": 7
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "down",
+      "counter": 8,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 84,
+          "counter": 8
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "down",
+      "counter": 9,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 83,
+          "counter": 9
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "down",
+      "counter": 10,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 82,
+          "counter": 10
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "down",
+      "counter": 11,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 81,
+          "counter": 11
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "down",
+      "counter": 12,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 80,
+          "counter": 12
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "down",
+      "counter": 13,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 79,
+          "counter": 13
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "down",
+      "counter": 14,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 78,
+          "counter": 14
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "down",
+      "counter": 15,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 77,
+          "counter": 15
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "down",
+      "counter": 16,
+      "repeat_exact": true,
+      "found": true,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 76,
+          "counter": 16
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "up",
+      "counter": 0,
+      "repeat_exact": true,
+      "found": true,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 44,
+          "counter": 0
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "up",
+      "counter": 1,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 29,
+          "counter": 1
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "up",
+      "counter": 2,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 30,
+          "counter": 2
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "up",
+      "counter": 3,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 31,
+          "counter": 3
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "up",
+      "counter": 4,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 32,
+          "counter": 4
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "up",
+      "counter": 5,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 33,
+          "counter": 5
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "up",
+      "counter": 6,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 34,
+          "counter": 6
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "up",
+      "counter": 7,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 35,
+          "counter": 7
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "up",
+      "counter": 8,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 36,
+          "counter": 8
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "up",
+      "counter": 9,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 37,
+          "counter": 9
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "up",
+      "counter": 10,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 38,
+          "counter": 10
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "up",
+      "counter": 11,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 39,
+          "counter": 11
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "up",
+      "counter": 12,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 40,
+          "counter": 12
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "up",
+      "counter": 13,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 41,
+          "counter": 13
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "up",
+      "counter": 14,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 42,
+          "counter": 14
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "up",
+      "counter": 15,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 43,
+          "counter": 15
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "up",
+      "counter": 16,
+      "repeat_exact": true,
+      "found": true,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 44,
+          "counter": 16
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "left",
+      "counter": 0,
+      "repeat_exact": true,
+      "found": true,
+      "geometry": [
+        {
+          "x_pixels": 48,
+          "y_pixels": 60,
+          "counter": 0
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "left",
+      "counter": 1,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 33,
+          "y_pixels": 60,
+          "counter": 1
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "left",
+      "counter": 2,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 34,
+          "y_pixels": 60,
+          "counter": 2
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "left",
+      "counter": 3,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 35,
+          "y_pixels": 60,
+          "counter": 3
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "left",
+      "counter": 4,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 36,
+          "y_pixels": 60,
+          "counter": 4
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "left",
+      "counter": 5,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 37,
+          "y_pixels": 60,
+          "counter": 5
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "left",
+      "counter": 6,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 38,
+          "y_pixels": 60,
+          "counter": 6
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "left",
+      "counter": 7,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 39,
+          "y_pixels": 60,
+          "counter": 7
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "left",
+      "counter": 8,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 40,
+          "y_pixels": 60,
+          "counter": 8
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "left",
+      "counter": 9,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 41,
+          "y_pixels": 60,
+          "counter": 9
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "left",
+      "counter": 10,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 42,
+          "y_pixels": 60,
+          "counter": 10
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "left",
+      "counter": 11,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 43,
+          "y_pixels": 60,
+          "counter": 11
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "left",
+      "counter": 12,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 44,
+          "y_pixels": 60,
+          "counter": 12
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "left",
+      "counter": 13,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 45,
+          "y_pixels": 60,
+          "counter": 13
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "left",
+      "counter": 14,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 46,
+          "y_pixels": 60,
+          "counter": 14
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "left",
+      "counter": 15,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 47,
+          "y_pixels": 60,
+          "counter": 15
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "left",
+      "counter": 16,
+      "repeat_exact": true,
+      "found": true,
+      "geometry": [
+        {
+          "x_pixels": 48,
+          "y_pixels": 60,
+          "counter": 16
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "right",
+      "counter": 0,
+      "repeat_exact": true,
+      "found": true,
+      "geometry": [
+        {
+          "x_pixels": 80,
+          "y_pixels": 60,
+          "counter": 0
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "right",
+      "counter": 1,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 95,
+          "y_pixels": 60,
+          "counter": 1
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "right",
+      "counter": 2,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 94,
+          "y_pixels": 60,
+          "counter": 2
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "right",
+      "counter": 3,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 93,
+          "y_pixels": 60,
+          "counter": 3
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "right",
+      "counter": 4,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 92,
+          "y_pixels": 60,
+          "counter": 4
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "right",
+      "counter": 5,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 91,
+          "y_pixels": 60,
+          "counter": 5
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "right",
+      "counter": 6,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 90,
+          "y_pixels": 60,
+          "counter": 6
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "right",
+      "counter": 7,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 89,
+          "y_pixels": 60,
+          "counter": 7
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "right",
+      "counter": 8,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 88,
+          "y_pixels": 60,
+          "counter": 8
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "right",
+      "counter": 9,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 87,
+          "y_pixels": 60,
+          "counter": 9
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "right",
+      "counter": 10,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 86,
+          "y_pixels": 60,
+          "counter": 10
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "right",
+      "counter": 11,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 85,
+          "y_pixels": 60,
+          "counter": 11
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "right",
+      "counter": 12,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 84,
+          "y_pixels": 60,
+          "counter": 12
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "right",
+      "counter": 13,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 83,
+          "y_pixels": 60,
+          "counter": 13
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "right",
+      "counter": 14,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 82,
+          "y_pixels": 60,
+          "counter": 14
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "right",
+      "counter": 15,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 81,
+          "y_pixels": 60,
+          "counter": 15
+        }
+      ]
+    },
+    {
+      "talking_range": 16,
+      "npc_origin_distance": 16,
+      "direction": "right",
+      "counter": 16,
+      "repeat_exact": true,
+      "found": true,
+      "geometry": [
+        {
+          "x_pixels": 80,
+          "y_pixels": 60,
+          "counter": 16
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "down",
+      "counter": 0,
+      "repeat_exact": true,
+      "found": true,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 92,
+          "counter": 0
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "down",
+      "counter": 1,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 107,
+          "counter": 1
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "down",
+      "counter": 2,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 106,
+          "counter": 2
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "down",
+      "counter": 3,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 105,
+          "counter": 3
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "down",
+      "counter": 4,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 104,
+          "counter": 4
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "down",
+      "counter": 5,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 103,
+          "counter": 5
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "down",
+      "counter": 6,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 102,
+          "counter": 6
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "down",
+      "counter": 7,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 101,
+          "counter": 7
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "down",
+      "counter": 8,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 100,
+          "counter": 8
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "down",
+      "counter": 9,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 99,
+          "counter": 9
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "down",
+      "counter": 10,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 98,
+          "counter": 10
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "down",
+      "counter": 11,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 97,
+          "counter": 11
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "down",
+      "counter": 12,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 96,
+          "counter": 12
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "down",
+      "counter": 13,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 95,
+          "counter": 13
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "down",
+      "counter": 14,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 94,
+          "counter": 14
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "down",
+      "counter": 15,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 93,
+          "counter": 15
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "down",
+      "counter": 16,
+      "repeat_exact": true,
+      "found": true,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 92,
+          "counter": 16
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "up",
+      "counter": 0,
+      "repeat_exact": true,
+      "found": true,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 28,
+          "counter": 0
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "up",
+      "counter": 1,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 13,
+          "counter": 1
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "up",
+      "counter": 2,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 14,
+          "counter": 2
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "up",
+      "counter": 3,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 15,
+          "counter": 3
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "up",
+      "counter": 4,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 16,
+          "counter": 4
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "up",
+      "counter": 5,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 17,
+          "counter": 5
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "up",
+      "counter": 6,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 18,
+          "counter": 6
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "up",
+      "counter": 7,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 19,
+          "counter": 7
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "up",
+      "counter": 8,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 20,
+          "counter": 8
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "up",
+      "counter": 9,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 21,
+          "counter": 9
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "up",
+      "counter": 10,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 22,
+          "counter": 10
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "up",
+      "counter": 11,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 23,
+          "counter": 11
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "up",
+      "counter": 12,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 24,
+          "counter": 12
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "up",
+      "counter": 13,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 25,
+          "counter": 13
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "up",
+      "counter": 14,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 26,
+          "counter": 14
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "up",
+      "counter": 15,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 27,
+          "counter": 15
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "up",
+      "counter": 16,
+      "repeat_exact": true,
+      "found": true,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 28,
+          "counter": 16
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "left",
+      "counter": 0,
+      "repeat_exact": true,
+      "found": true,
+      "geometry": [
+        {
+          "x_pixels": 32,
+          "y_pixels": 60,
+          "counter": 0
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "left",
+      "counter": 1,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 17,
+          "y_pixels": 60,
+          "counter": 1
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "left",
+      "counter": 2,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 18,
+          "y_pixels": 60,
+          "counter": 2
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "left",
+      "counter": 3,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 19,
+          "y_pixels": 60,
+          "counter": 3
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "left",
+      "counter": 4,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 20,
+          "y_pixels": 60,
+          "counter": 4
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "left",
+      "counter": 5,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 21,
+          "y_pixels": 60,
+          "counter": 5
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "left",
+      "counter": 6,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 22,
+          "y_pixels": 60,
+          "counter": 6
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "left",
+      "counter": 7,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 23,
+          "y_pixels": 60,
+          "counter": 7
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "left",
+      "counter": 8,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 24,
+          "y_pixels": 60,
+          "counter": 8
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "left",
+      "counter": 9,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 25,
+          "y_pixels": 60,
+          "counter": 9
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "left",
+      "counter": 10,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 26,
+          "y_pixels": 60,
+          "counter": 10
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "left",
+      "counter": 11,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 27,
+          "y_pixels": 60,
+          "counter": 11
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "left",
+      "counter": 12,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 28,
+          "y_pixels": 60,
+          "counter": 12
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "left",
+      "counter": 13,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 29,
+          "y_pixels": 60,
+          "counter": 13
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "left",
+      "counter": 14,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 30,
+          "y_pixels": 60,
+          "counter": 14
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "left",
+      "counter": 15,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 31,
+          "y_pixels": 60,
+          "counter": 15
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "left",
+      "counter": 16,
+      "repeat_exact": true,
+      "found": true,
+      "geometry": [
+        {
+          "x_pixels": 32,
+          "y_pixels": 60,
+          "counter": 16
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "right",
+      "counter": 0,
+      "repeat_exact": true,
+      "found": true,
+      "geometry": [
+        {
+          "x_pixels": 96,
+          "y_pixels": 60,
+          "counter": 0
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "right",
+      "counter": 1,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 111,
+          "y_pixels": 60,
+          "counter": 1
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "right",
+      "counter": 2,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 110,
+          "y_pixels": 60,
+          "counter": 2
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "right",
+      "counter": 3,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 109,
+          "y_pixels": 60,
+          "counter": 3
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "right",
+      "counter": 4,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 108,
+          "y_pixels": 60,
+          "counter": 4
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "right",
+      "counter": 5,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 107,
+          "y_pixels": 60,
+          "counter": 5
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "right",
+      "counter": 6,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 106,
+          "y_pixels": 60,
+          "counter": 6
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "right",
+      "counter": 7,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 105,
+          "y_pixels": 60,
+          "counter": 7
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "right",
+      "counter": 8,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 104,
+          "y_pixels": 60,
+          "counter": 8
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "right",
+      "counter": 9,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 103,
+          "y_pixels": 60,
+          "counter": 9
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "right",
+      "counter": 10,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 102,
+          "y_pixels": 60,
+          "counter": 10
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "right",
+      "counter": 11,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 101,
+          "y_pixels": 60,
+          "counter": 11
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "right",
+      "counter": 12,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 100,
+          "y_pixels": 60,
+          "counter": 12
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "right",
+      "counter": 13,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 99,
+          "y_pixels": 60,
+          "counter": 13
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "right",
+      "counter": 14,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 98,
+          "y_pixels": 60,
+          "counter": 14
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "right",
+      "counter": 15,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 97,
+          "y_pixels": 60,
+          "counter": 15
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 32,
+      "direction": "right",
+      "counter": 16,
+      "repeat_exact": true,
+      "found": true,
+      "geometry": [
+        {
+          "x_pixels": 96,
+          "y_pixels": 60,
+          "counter": 16
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "down",
+      "counter": 0,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 76,
+          "counter": 0
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "down",
+      "counter": 1,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 91,
+          "counter": 1
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "down",
+      "counter": 2,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 90,
+          "counter": 2
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "down",
+      "counter": 3,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 89,
+          "counter": 3
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "down",
+      "counter": 4,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 88,
+          "counter": 4
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "down",
+      "counter": 5,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 87,
+          "counter": 5
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "down",
+      "counter": 6,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 86,
+          "counter": 6
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "down",
+      "counter": 7,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 85,
+          "counter": 7
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "down",
+      "counter": 8,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 84,
+          "counter": 8
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "down",
+      "counter": 9,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 83,
+          "counter": 9
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "down",
+      "counter": 10,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 82,
+          "counter": 10
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "down",
+      "counter": 11,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 81,
+          "counter": 11
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "down",
+      "counter": 12,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 80,
+          "counter": 12
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "down",
+      "counter": 13,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 79,
+          "counter": 13
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "down",
+      "counter": 14,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 78,
+          "counter": 14
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "down",
+      "counter": 15,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 77,
+          "counter": 15
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "down",
+      "counter": 16,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 76,
+          "counter": 16
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "up",
+      "counter": 0,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 44,
+          "counter": 0
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "up",
+      "counter": 1,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 29,
+          "counter": 1
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "up",
+      "counter": 2,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 30,
+          "counter": 2
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "up",
+      "counter": 3,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 31,
+          "counter": 3
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "up",
+      "counter": 4,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 32,
+          "counter": 4
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "up",
+      "counter": 5,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 33,
+          "counter": 5
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "up",
+      "counter": 6,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 34,
+          "counter": 6
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "up",
+      "counter": 7,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 35,
+          "counter": 7
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "up",
+      "counter": 8,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 36,
+          "counter": 8
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "up",
+      "counter": 9,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 37,
+          "counter": 9
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "up",
+      "counter": 10,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 38,
+          "counter": 10
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "up",
+      "counter": 11,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 39,
+          "counter": 11
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "up",
+      "counter": 12,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 40,
+          "counter": 12
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "up",
+      "counter": 13,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 41,
+          "counter": 13
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "up",
+      "counter": 14,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 42,
+          "counter": 14
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "up",
+      "counter": 15,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 43,
+          "counter": 15
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "up",
+      "counter": 16,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 64,
+          "y_pixels": 44,
+          "counter": 16
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "left",
+      "counter": 0,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 48,
+          "y_pixels": 60,
+          "counter": 0
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "left",
+      "counter": 1,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 33,
+          "y_pixels": 60,
+          "counter": 1
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "left",
+      "counter": 2,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 34,
+          "y_pixels": 60,
+          "counter": 2
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "left",
+      "counter": 3,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 35,
+          "y_pixels": 60,
+          "counter": 3
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "left",
+      "counter": 4,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 36,
+          "y_pixels": 60,
+          "counter": 4
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "left",
+      "counter": 5,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 37,
+          "y_pixels": 60,
+          "counter": 5
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "left",
+      "counter": 6,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 38,
+          "y_pixels": 60,
+          "counter": 6
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "left",
+      "counter": 7,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 39,
+          "y_pixels": 60,
+          "counter": 7
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "left",
+      "counter": 8,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 40,
+          "y_pixels": 60,
+          "counter": 8
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "left",
+      "counter": 9,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 41,
+          "y_pixels": 60,
+          "counter": 9
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "left",
+      "counter": 10,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 42,
+          "y_pixels": 60,
+          "counter": 10
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "left",
+      "counter": 11,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 43,
+          "y_pixels": 60,
+          "counter": 11
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "left",
+      "counter": 12,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 44,
+          "y_pixels": 60,
+          "counter": 12
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "left",
+      "counter": 13,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 45,
+          "y_pixels": 60,
+          "counter": 13
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "left",
+      "counter": 14,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 46,
+          "y_pixels": 60,
+          "counter": 14
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "left",
+      "counter": 15,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 47,
+          "y_pixels": 60,
+          "counter": 15
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "left",
+      "counter": 16,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 48,
+          "y_pixels": 60,
+          "counter": 16
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "right",
+      "counter": 0,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 80,
+          "y_pixels": 60,
+          "counter": 0
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "right",
+      "counter": 1,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 95,
+          "y_pixels": 60,
+          "counter": 1
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "right",
+      "counter": 2,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 94,
+          "y_pixels": 60,
+          "counter": 2
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "right",
+      "counter": 3,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 93,
+          "y_pixels": 60,
+          "counter": 3
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "right",
+      "counter": 4,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 92,
+          "y_pixels": 60,
+          "counter": 4
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "right",
+      "counter": 5,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 91,
+          "y_pixels": 60,
+          "counter": 5
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "right",
+      "counter": 6,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 90,
+          "y_pixels": 60,
+          "counter": 6
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "right",
+      "counter": 7,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 89,
+          "y_pixels": 60,
+          "counter": 7
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "right",
+      "counter": 8,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 88,
+          "y_pixels": 60,
+          "counter": 8
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "right",
+      "counter": 9,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 87,
+          "y_pixels": 60,
+          "counter": 9
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "right",
+      "counter": 10,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 86,
+          "y_pixels": 60,
+          "counter": 10
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "right",
+      "counter": 11,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 85,
+          "y_pixels": 60,
+          "counter": 11
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "right",
+      "counter": 12,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 84,
+          "y_pixels": 60,
+          "counter": 12
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "right",
+      "counter": 13,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 83,
+          "y_pixels": 60,
+          "counter": 13
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "right",
+      "counter": 14,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 82,
+          "y_pixels": 60,
+          "counter": 14
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "right",
+      "counter": 15,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 81,
+          "y_pixels": 60,
+          "counter": 15
+        }
+      ]
+    },
+    {
+      "talking_range": 32,
+      "npc_origin_distance": 16,
+      "direction": "right",
+      "counter": 16,
+      "repeat_exact": true,
+      "found": false,
+      "geometry": [
+        {
+          "x_pixels": 80,
+          "y_pixels": 60,
+          "counter": 16
+        }
+      ]
+    }
+  ]
+}

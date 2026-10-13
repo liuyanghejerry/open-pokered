@@ -265,6 +265,18 @@ impl Scenarios {
                     let npc = &mut game.overworld.npc_states[index];
                     npc.visible = true;
                     npc.movement_type = dotzuki_engine::overworld::NpcMovementType::Stationary;
+                    if self.case == 17 {
+                        // This scenario measures the fossil script, not NPC
+                        // wandering. Map-entry time may leave the scientist
+                        // partway through a stride; pin a genuinely aligned
+                        // stationary interaction instead of talking to its
+                        // retained origin tile between pixels.
+                        npc.x = 5;
+                        npc.y = 2;
+                        npc.walk_counter = 0;
+                        npc.delay_counter = 0;
+                        npc.scripted_path.clear();
+                    }
                     agb::println!(
                         "memory: script={:?} case={} free={}B stack={}B",
                         map,
