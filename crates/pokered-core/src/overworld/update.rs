@@ -2392,18 +2392,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     /// engine's own tick is what commits the tile and chains the next
     /// step, so an external decrement to 0 would skip the commit.
     fn hasten_followed_npc(&mut self) {
-        let mut followed: Option<String> = None;
-        if let Some(script_bridge::ScriptEffect::FollowNpc { npc_id, phase, .. }) =
-            &self.active_script_effect
-        {
-            if matches!(phase, script_bridge::FollowNpcPhase::Following { .. }) {
-                followed = Some(npc_id.clone());
-            }
-        }
-        let Some(npc_id) = followed else {
-            return;
-        };
-        if let Some(idx) = resolve_npc_index(&npc_id, &self.npc_states, &self.map_script_config) {
+        let Some(script_bridge::ScriptEffect::FollowNpc {
+            npc_id, phase: script_bridge::FollowNpcPhase::Following { .. }, ..
+        }) = &self.active_script_effect else { return; };
+        if let Some(idx) = resolve_npc_index(npc_id, &self.npc_states, &self.map_script_config) {
             let npc = &mut self.npc_states[idx];
             if npc.walk_counter >= 2 {
                 npc.walk_counter -= 1;
