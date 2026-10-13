@@ -45,7 +45,7 @@ game_scene IndigoPlateauLobby {
 POKeMON.", "好的，请把宝可梦交给我。")
         }
         faceNpc("1", "left")
-        delay(8)
+        delay(3)
         heal()
         animateHealingMachine()
         @speaker("") {

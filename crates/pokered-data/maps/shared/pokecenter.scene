@@ -19,7 +19,7 @@ game_scene pokecenter {
       @option(@t("Yes", "是")) {
         @speaker("") { @t("OK. We'll need\nyour #MON.", "好的。\n请把宝可梦\n交给我们。") }
         faceNpc("1", "left")
-        delay(8)
+        delay(3)
         heal()
         animateHealingMachine()
         @speaker("") { @t("Thank you!\nYour #MON are\nfighting fit!", "谢谢！\n您的宝可梦\n已经精神饱满！") }

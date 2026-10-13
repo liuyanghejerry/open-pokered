@@ -1,0 +1,45 @@
+{
+  "base_commit": "e943fece2d1bf1f1ee0700922d00fb7fcca8d8dc",
+  "source_commit": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "source_rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+  "source_nurse_turn": 531,
+  "source_after_delay3": 534,
+  "source_machine_entry": 535,
+  "native_nurse_turn": 602,
+  "native_delay_countdown": [
+    3,
+    2,
+    1
+  ],
+  "native_machine_start_before": 612,
+  "native_machine_start_after": 607,
+  "repeat_exact_frames": 1285,
+  "screenshot_frame": 650,
+  "diff_bbox": [
+    42,
+    30,
+    48,
+    34
+  ],
+  "changed_runtime_scripts": 14,
+  "core_tests": 2799,
+  "scope": "Nurse pre-heal delay constant and actual countdown verified. One-frame command-dispatch/publication difference remains; no full-scene parity claim.",
+  "source_visible_left": 533,
+  "source_visible_machine": 537,
+  "native_visible_left": 602,
+  "native_visible_machine": 607,
+  "visible_probe_rois": {
+    "nurse": [
+      64,
+      28,
+      80,
+      44
+    ],
+    "machine": [
+      40,
+      20,
+      60,
+      46
+    ]
+  }
+}
