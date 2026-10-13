@@ -8991,6 +8991,8 @@ mod link_stats_cry_fidelity_tests {
             let mon=g.save_data.party.get(0).unwrap().clone();
             g.save_data.party=pokered_core::pokemon::party::Party::from(vec![mon;5]);
             g.overworld=OverworldScreen::new(MapId::ViridianPokecenter,None,PokemonRedData);
+            g.overworld.party_count=g.save_data.party.count() as u8;
+            assert_eq!(g.overworld.party_count,5);
             g.overworld.state.player.x=3;g.overworld.state.player.y=3;g.overworld.state.player.facing=Direction::Up;
             g.overworld.set_rng_seed(0);g.overworld.run_on_load();
             for _ in 0..120 {g.update(&InputState::new());}
@@ -9005,11 +9007,12 @@ mod link_stats_cry_fidelity_tests {
                 g.draw(&mut fb);fb.save_png(&dir.join(format!("frame-{t:04}.png"))).unwrap();
                 let machine=g.overworld.pending_healing_machine.is_some();healed|=machine;
                 let n=&g.overworld.npc_states[0];
-                rows.push(serde_json::json!({"t":t,"frame":g.frame_count,"effect":g.overworld.active_script_effect_value(),"facing":format!("{:?}",n.facing),"sprite_frame":n.scripted_frame,"machine":machine,"dialogue":format!("{:?}",g.overworld.pending_dialogue)}));
+                rows.push(serde_json::json!({"t":t,"frame":g.frame_count,"effect":g.overworld.active_script_effect_value(),"facing":format!("{:?}",n.facing),"sprite_frame":n.scripted_frame,"machine":machine,"party_count":g.overworld.party_count,"balls":g.overworld.pending_healing_machine.as_ref().map(|m|m.pokeballs_visible),"dialogue":format!("{:?}",g.overworld.pending_dialogue)}));
                 if healed && !machine && g.overworld.active_script_effect_label().is_none() && g.overworld.pending_dialogue.is_none() {idle_frames+=1;} else {idle_frames=0;}
                 if idle_frames>=3 {break;}
             }
             assert!(healed && idle_frames>=3,"healing conversation must complete");
+            assert!(rows.iter().any(|r|r["balls"].as_u64()==Some(5)),"fixture must show all five healing balls");
             std::fs::write(dir.join("manifest.json"),serde_json::to_string_pretty(&rows).unwrap()).unwrap();
         });
     }

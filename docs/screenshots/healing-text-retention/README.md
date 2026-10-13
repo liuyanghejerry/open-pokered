@@ -12,9 +12,12 @@ flag; older snapshots default to false. Font/layout/text content is unchanged.
 
 Both screenshots are from an actual nurse interaction in ViridianPokecenter,
 player `(3,3)` facing Up, five party members and the same 40-frame A-button
-timeline. They are elapsed frame 1084, during the bow wait. The base capture
+timeline. They are elapsed frame 1204, during the bow wait. The base capture
 was built and recorded on master `fa1e86179e53f141f95dd8c1e317d8304368a2cf`.
-The capture helper is already on master.
+The capture helper synchronizes the runtime party count after replacing the
+overworld fixture and asserts that all five healing balls appear. Earlier
+captures populated saved party data but omitted that synchronization; these
+replacement captures verify the five-member animation.
 
 ```sh
 NURSE_CAPTURE_DIR=/tmp/healing-text cargo test -p pokered-app --lib capture_nurse_interaction_641 -- --ignored --nocapture
