@@ -1,0 +1,32 @@
+{
+  "base": "4a4bbbdbebbda5ee715f6bed4b2d4c9604145306",
+  "scenario": "ViridianPokecenter: warp3,4 Up,actualUp input to3,3 idle,120idle,Down12 thenrelease8;seed0",
+  "input_clock": "synchronous press_timeline advance=true; frame_count increments exactly1 per tested frame",
+  "comparison_frame_count": 140,
+  "relative_input_frame": 3,
+  "before_after_pretrigger_png_equal": true,
+  "difference_bbox": [
+    16,
+    14,
+    160,
+    144
+  ],
+  "before_first_walking": 1,
+  "after_first_walking": 3,
+  "original_first_walking": 3,
+  "all20_after_coordinates_equal_original": true,
+  "repeats": {
+    "before_artifacts_each": 157,
+    "after_artifacts_each": 157,
+    "all_pngs_and_frame_manifest_identical": true
+  },
+  "original_source": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "original_rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+  "scope": "Coordinate/movement-state timelines checked. Native original complete RNG trajectories and visual pixel parity are not claimed.",
+  "validation": {
+    "core_suites": 40,
+    "core_tests": 3238,
+    "app_test_executables": 41,
+    "fresh_power_on": "m01-m06 PASS OaksLab5,6 party1 frame10662"
+  }
+}
