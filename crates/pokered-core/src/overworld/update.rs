@@ -335,6 +335,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             && self.pending_choice.is_none()
         {
             self.last_script_dialogue = None;
+            self.retain_healing_text = false;
         }
         action
     }
@@ -3747,6 +3748,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     /// this path but must NOT fire `@load` (the restored storyline state
     /// is authoritative; re-firing would double-apply its effects).
     pub(crate) fn load_map_script_ex(&mut self, map_id: MapId, fire_on_load: bool) {
+        self.retain_healing_text = false;
         self.wild_data_state.load_map(map_id);
         self.sync_flags_from_engine();
 
@@ -4065,6 +4067,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 self.script_engine
                     .set_player_position(self.state.player.x as u8, self.state.player.y as u8);
                 if let Ok(Some(cmd)) = self.script_engine.call_function_no_args(fn_name) {
+                    self.retain_healing_text = fn_name.trim_start_matches("storyline_") == "talkNurse";
                     self.active_script_effect = Some(script_bridge::dispatch_command_with_names(
                         &cmd,
                         &self.player_name,
