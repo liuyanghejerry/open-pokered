@@ -1918,6 +1918,14 @@ fn victory_road_boulder_drops_and_reappears_downstairs() {
     screen.strength_active = true;
     screen.tick_boulder_push(Some(Direction::Right));
     screen.tick_boulder_push(Some(Direction::Right));
+    assert!(screen.npc_states.iter().find(|n| n.text_id == 10).unwrap().visible,
+        "stone remains visible while sliding and producing smoke");
+    for _ in 0..100 {
+        if !screen.boulder_blocks_control() {break;}
+        assert!(screen.npc_states.iter().find(|n| n.text_id == 10).unwrap().visible,
+            "fall must wait for push completion");
+        screen.tick_boulder_push(None);
+    }
     assert!(!screen.npc_states.iter().find(|n| n.text_id == 10).unwrap().visible, "stone falls into the hole");
     let bytes = screen.unified_flags.to_event_bytes();
     let mut restored = super::screen::OverworldScreen::new(MapId::VictoryRoad2F, None, PokemonRedData);

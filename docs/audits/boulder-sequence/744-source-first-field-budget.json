@@ -1,0 +1,366 @@
+{
+  "scope": "First UpdateSprites after MoveSprite, original ROM diagnostic hooks; corrected complete interrupt accounting.",
+  "irq_extra_cycles": 52,
+  "cases": [
+    {
+      "case": "down",
+      "move_frame": 3,
+      "update_frame": 3,
+      "update_ly": 57,
+      "end_frame": 3,
+      "end_ly": 78,
+      "foreground_cycles": 9348,
+      "irq_count": 0,
+      "slots": [
+        {
+          "slot": 0,
+          "foreground_cycles": 3356,
+          "lookup_iterations": 0,
+          "invisible": false
+        },
+        {
+          "slot": 1,
+          "foreground_cycles": 2652,
+          "lookup_iterations": 1,
+          "invisible": false
+        },
+        {
+          "slot": 2,
+          "foreground_cycles": 1660,
+          "lookup_iterations": 2,
+          "invisible": true
+        }
+      ]
+    },
+    {
+      "case": "1f",
+      "move_frame": 3,
+      "update_frame": 3,
+      "update_ly": 82,
+      "end_frame": 3,
+      "end_ly": 118,
+      "foreground_cycles": 16312,
+      "irq_count": 0,
+      "slots": [
+        {
+          "slot": 0,
+          "foreground_cycles": 3516,
+          "lookup_iterations": 0,
+          "invisible": false
+        },
+        {
+          "slot": 1,
+          "foreground_cycles": 1284,
+          "lookup_iterations": 3,
+          "invisible": true
+        },
+        {
+          "slot": 2,
+          "foreground_cycles": 1284,
+          "lookup_iterations": 3,
+          "invisible": true
+        },
+        {
+          "slot": 3,
+          "foreground_cycles": 1652,
+          "lookup_iterations": 1,
+          "invisible": true
+        },
+        {
+          "slot": 4,
+          "foreground_cycles": 1732,
+          "lookup_iterations": 2,
+          "invisible": true
+        },
+        {
+          "slot": 5,
+          "foreground_cycles": 2188,
+          "lookup_iterations": 3,
+          "invisible": false
+        },
+        {
+          "slot": 6,
+          "foreground_cycles": 1284,
+          "lookup_iterations": 3,
+          "invisible": true
+        },
+        {
+          "slot": 7,
+          "foreground_cycles": 1352,
+          "lookup_iterations": 3,
+          "invisible": true
+        }
+      ]
+    },
+    {
+      "case": "2f1",
+      "move_frame": 2,
+      "update_frame": 2,
+      "update_ly": 104,
+      "end_frame": 3,
+      "end_ly": 52,
+      "foreground_cycles": 28300,
+      "irq_count": 1,
+      "slots": [
+        {
+          "slot": 0,
+          "foreground_cycles": 3708,
+          "lookup_iterations": 0,
+          "invisible": false
+        },
+        {
+          "slot": 1,
+          "foreground_cycles": 1476,
+          "lookup_iterations": 7,
+          "invisible": true
+        },
+        {
+          "slot": 2,
+          "foreground_cycles": 1564,
+          "lookup_iterations": 7,
+          "invisible": true
+        },
+        {
+          "slot": 3,
+          "foreground_cycles": 1476,
+          "lookup_iterations": 7,
+          "invisible": true
+        },
+        {
+          "slot": 4,
+          "foreground_cycles": 1476,
+          "lookup_iterations": 7,
+          "invisible": true
+        },
+        {
+          "slot": 5,
+          "foreground_cycles": 1476,
+          "lookup_iterations": 7,
+          "invisible": true
+        },
+        {
+          "slot": 6,
+          "foreground_cycles": 1620,
+          "lookup_iterations": 1,
+          "invisible": true
+        },
+        {
+          "slot": 7,
+          "foreground_cycles": 1700,
+          "lookup_iterations": 2,
+          "invisible": true
+        },
+        {
+          "slot": 8,
+          "foreground_cycles": 1780,
+          "lookup_iterations": 3,
+          "invisible": true
+        },
+        {
+          "slot": 9,
+          "foreground_cycles": 1948,
+          "lookup_iterations": 4,
+          "invisible": true
+        },
+        {
+          "slot": 10,
+          "foreground_cycles": 1940,
+          "lookup_iterations": 5,
+          "invisible": true
+        },
+        {
+          "slot": 11,
+          "foreground_cycles": 2380,
+          "lookup_iterations": 7,
+          "invisible": false
+        },
+        {
+          "slot": 12,
+          "foreground_cycles": 1476,
+          "lookup_iterations": 7,
+          "invisible": true
+        },
+        {
+          "slot": 13,
+          "foreground_cycles": 1852,
+          "lookup_iterations": 6,
+          "invisible": true
+        }
+      ]
+    },
+    {
+      "case": "2f2",
+      "move_frame": 3,
+      "update_frame": 3,
+      "update_ly": 108,
+      "end_frame": 4,
+      "end_ly": 68,
+      "foreground_cycles": 29624,
+      "irq_count": 1,
+      "slots": [
+        {
+          "slot": 0,
+          "foreground_cycles": 4096,
+          "lookup_iterations": 0,
+          "invisible": false
+        },
+        {
+          "slot": 1,
+          "foreground_cycles": 1476,
+          "lookup_iterations": 7,
+          "invisible": true
+        },
+        {
+          "slot": 2,
+          "foreground_cycles": 1564,
+          "lookup_iterations": 7,
+          "invisible": true
+        },
+        {
+          "slot": 3,
+          "foreground_cycles": 1476,
+          "lookup_iterations": 7,
+          "invisible": true
+        },
+        {
+          "slot": 4,
+          "foreground_cycles": 1476,
+          "lookup_iterations": 7,
+          "invisible": true
+        },
+        {
+          "slot": 5,
+          "foreground_cycles": 1476,
+          "lookup_iterations": 7,
+          "invisible": true
+        },
+        {
+          "slot": 6,
+          "foreground_cycles": 1620,
+          "lookup_iterations": 1,
+          "invisible": true
+        },
+        {
+          "slot": 7,
+          "foreground_cycles": 1700,
+          "lookup_iterations": 2,
+          "invisible": true
+        },
+        {
+          "slot": 8,
+          "foreground_cycles": 1780,
+          "lookup_iterations": 3,
+          "invisible": true
+        },
+        {
+          "slot": 9,
+          "foreground_cycles": 2884,
+          "lookup_iterations": 4,
+          "invisible": false
+        },
+        {
+          "slot": 10,
+          "foreground_cycles": 1940,
+          "lookup_iterations": 5,
+          "invisible": true
+        },
+        {
+          "slot": 11,
+          "foreground_cycles": 2380,
+          "lookup_iterations": 7,
+          "invisible": false
+        },
+        {
+          "slot": 12,
+          "foreground_cycles": 1476,
+          "lookup_iterations": 7,
+          "invisible": true
+        },
+        {
+          "slot": 13,
+          "foreground_cycles": 1852,
+          "lookup_iterations": 6,
+          "invisible": true
+        }
+      ]
+    },
+    {
+      "case": "3f",
+      "move_frame": 2,
+      "update_frame": 2,
+      "update_ly": 91,
+      "end_frame": 2,
+      "end_ly": 138,
+      "foreground_cycles": 21460,
+      "irq_count": 0,
+      "slots": [
+        {
+          "slot": 0,
+          "foreground_cycles": 3992,
+          "lookup_iterations": 0,
+          "invisible": false
+        },
+        {
+          "slot": 1,
+          "foreground_cycles": 1332,
+          "lookup_iterations": 4,
+          "invisible": true
+        },
+        {
+          "slot": 2,
+          "foreground_cycles": 1400,
+          "lookup_iterations": 4,
+          "invisible": true
+        },
+        {
+          "slot": 3,
+          "foreground_cycles": 1400,
+          "lookup_iterations": 4,
+          "invisible": true
+        },
+        {
+          "slot": 4,
+          "foreground_cycles": 1332,
+          "lookup_iterations": 4,
+          "invisible": true
+        },
+        {
+          "slot": 5,
+          "foreground_cycles": 1524,
+          "lookup_iterations": 1,
+          "invisible": true
+        },
+        {
+          "slot": 6,
+          "foreground_cycles": 1604,
+          "lookup_iterations": 2,
+          "invisible": true
+        },
+        {
+          "slot": 7,
+          "foreground_cycles": 1332,
+          "lookup_iterations": 4,
+          "invisible": true
+        },
+        {
+          "slot": 8,
+          "foreground_cycles": 1400,
+          "lookup_iterations": 4,
+          "invisible": true
+        },
+        {
+          "slot": 9,
+          "foreground_cycles": 1332,
+          "lookup_iterations": 4,
+          "invisible": true
+        },
+        {
+          "slot": 10,
+          "foreground_cycles": 2588,
+          "lookup_iterations": 3,
+          "invisible": false
+        }
+      ]
+    }
+  ]
+}

@@ -984,6 +984,8 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     /// renderer draws it while [`BoulderDustState::is_active`]; `update.rs`
     /// ticks it every frame.
     pub boulder_dust: presentation::BoulderDustState,
+    pub boulder_push: Option<presentation::BoulderPushState>,
+    pub(crate) boulder_resume_input: Option<super::OverworldInput>,
     /// Dark-cave palette state (wMapPalOffset): set on entering Rock Tunnel,
     /// cleared by FLASH or by leaving. The darkened *rendering* is a
     /// renderer-side follow-up; this tracks the logic state.
@@ -1355,6 +1357,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             tried_push_boulder: false,
             boulder_dust_frames: 0,
             boulder_dust: presentation::BoulderDustState::inactive(),
+            boulder_push: None,
+            boulder_resume_input: None,
             dark_cave,
             forced_bike: forced_bike::ForcedBikeState::default(),
             flash_lit_frames: 0,
@@ -2786,6 +2790,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             self.tried_push_boulder = false;
             self.boulder_dust_frames = 0;
             self.boulder_dust = presentation::BoulderDustState::inactive();
+            self.boulder_push = None;
+            self.boulder_resume_input = None;
             // A mid-cutscene map change (e.g. the departure's walk-out warp)
             // must not carry the animation into the next map.
             self.ship_departure = None;
