@@ -25,8 +25,10 @@
   "scope": "Coordinate/movement-state timelines checked. Native original complete RNG trajectories and visual pixel parity are not claimed.",
   "validation": {
     "core_suites": 40,
-    "core_tests": 3238,
+    "core_tests": 3239,
     "app_test_executables": 41,
     "fresh_power_on": "m01-m06 PASS OaksLab5,6 party1 frame10662"
-  }
+  },
+  "slope_input_order": "ForcedDown is substituted before NoDirection bookkeeping; first autoDown walks without arming check; regressionPASS",
+  "ordinary_capture_after_slope_change": "20states and157 artifacts remain identical, repeatedtwice"
 }
