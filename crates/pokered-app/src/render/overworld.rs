@@ -1529,11 +1529,12 @@ fn draw_overworld_impl(
                 }
             }
         }
-        for npc in &screen.npc_states {
+        for (npc_slot, npc) in screen.npc_states.iter().enumerate() {
+            let pose = screen.npc_presentation.pose(screen.state.current_map, npc_slot);
             if screen.field_move_restore.is_some() {
                 break;
             }
-            if !npc.visible {
+            if !pose.map_or(npc.visible, |p| p.visible) {
                 continue;
             }
 
@@ -1547,14 +1548,14 @@ fn draw_overworld_impl(
                 let ts = &cached.tileset;
                 let num_frames = (cached.source_size.1 / TILE_SIZE) as usize;
 
-                let npc_facing = npc.facing;
+                let npc_facing = pose.map_or(npc.facing, |p| p.image.facing);
 
-                let (frame, flip_h) = if let Some(sf) = npc.scripted_frame {
+                let (frame, flip_h) = if let Some(sf) = pose.map_or(npc.scripted_frame, |p| p.image.scripted_frame) {
                     (sf as usize, false)
                 } else if num_frames >= 6 {
                     // AnimFrame 0-3: 0/2=stand, 1=walk, 3=walk+flip — phases
                     // spread evenly over the NPC's 16-frame step (4 each).
-                    let anim_frame = npc_walk_anim_phase(npc.walk_counter);
+                    let anim_frame = pose.map_or_else(|| npc_walk_anim_phase(npc.walk_counter), |p| p.image.phase);
 
                     match npc_facing {
                         Direction::Down => {
@@ -1622,8 +1623,8 @@ fn draw_overworld_impl(
                     (0, 0)
                 };
 
-                let npc_px_x = npc_screen_tx * TILE_SIZE as i32 + walk_dx - view_sub_x;
-                let npc_px_y = npc_screen_ty * TILE_SIZE as i32 + ACTOR_CELL_Y_OFFSET + walk_dy - view_sub_y;
+                let npc_px_x = pose.map_or(npc_screen_tx * TILE_SIZE as i32 + walk_dx - view_sub_x, |p| p.x);
+                let npc_px_y = pose.map_or(npc_screen_ty * TILE_SIZE as i32 + ACTOR_CELL_Y_OFFSET + walk_dy - view_sub_y, |p| p.y);
 
                 let sprite_size = (TILE_SIZE * 2) as i32;
                 if npc_px_x <= -sprite_size

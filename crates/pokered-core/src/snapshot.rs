@@ -84,6 +84,8 @@ pub struct OverworldSnapshot {
     pub sampled_player_input: Option<dotzuki_engine::overworld::OverworldInput>,
     pub map_data: Option<MapData>,
     pub npc_states: Vec<NpcRuntimeState>,
+    #[serde(default)]
+    pub npc_presentation: crate::overworld::npc_presentation::NpcPresentation,
     pub npc_pokemon_data: Vec<PokemonNpcData>,
     pub pending_dialogue: Option<BedroomDialogue>,
     #[serde(default)]
@@ -243,6 +245,7 @@ impl OverworldSnapshot {
             sampled_player_input: Some(screen.sampled_player_input.as_input()),
             map_data: None,
             npc_states: Vec::new(),
+            npc_presentation: Default::default(),
             npc_pokemon_data: Vec::new(),
             pending_dialogue: None,
             last_script_dialogue: None,
@@ -354,7 +357,7 @@ impl OverworldSnapshot {
         };
         snapshot_fields!(restore &mut snap, screen,
             player_last_stop_direction, player_moving_direction,
-            frame_counter, state, map_data, npc_states, npc_pokemon_data, pending_dialogue,
+            frame_counter, state, map_data, npc_states, npc_presentation, npc_pokemon_data, pending_dialogue,
             last_script_dialogue, retain_healing_text, pending_choice, script_money_box, script_coin_box, gift_box_number, pending_pokedex_entry, pending_naming_screen, naming_flash_frames,
             pending_party_select, party_select_requested, pending_set_nickname,
             pending_emotion_bubble, pending_healing_machine, last_map, last_map_entry,
@@ -403,7 +406,7 @@ impl OverworldSnapshot {
         snapshot_fields!(restore screen, self,
             player_last_stop_direction, player_moving_direction,
             wild_data_state,
-            frame_counter, state, map_data, npc_states, npc_pokemon_data, pending_dialogue,
+            frame_counter, state, map_data, npc_states, npc_presentation, npc_pokemon_data, pending_dialogue,
             last_script_dialogue, retain_healing_text, pending_choice, script_money_box, script_coin_box, gift_box_number, pending_pokedex_entry, pending_naming_screen, naming_flash_frames,
             pending_party_select, party_select_requested, pending_set_nickname,
             pending_emotion_bubble, pending_healing_machine, last_map, last_map_entry,
@@ -611,6 +614,38 @@ impl BattleSnapshot {
 #[cfg(test)]
 mod balance_snapshot_tests {
     use super::*;
+    #[test]
+    fn npc_display_pipeline_survives_snapshot_and_legacy_json() {
+        use crate::overworld::Direction;
+        use pokered_data::{maps::MapId, impl_traits::PokemonRedData};
+        let mut screen = OverworldScreen::new(MapId::ViridianPokecenter, None, PokemonRedData);
+        screen.state.player.x = 3;
+        screen.state.player.y = 3;
+        screen.npc_states[2].facing = Direction::Down;
+        screen.publish_npc_frame(false);
+        screen.npc_states[2].facing = Direction::Left;
+        screen.npc_presentation.update_images_before_movement(&screen.npc_states);
+        // Save while logical facing and displayed facing differ.
+        let saved = OverworldSnapshot::capture(&screen);
+        let mut restored = OverworldScreen::new(MapId::PalletTown, None, PokemonRedData);
+        saved.restore_into(&mut restored);
+        assert_eq!(screen.npc_presentation, restored.npc_presentation);
+        assert_eq!(restored.npc_presentation.pose(MapId::ViridianPokecenter, 2).unwrap().image.facing, Direction::Down);
+        for _ in 0..3 {
+            screen.publish_npc_frame(false);
+            restored.publish_npc_frame(false);
+            assert_eq!(screen.npc_presentation, restored.npc_presentation);
+        }
+        assert_eq!(restored.npc_presentation.pose(MapId::ViridianPokecenter, 2).unwrap().image.facing, Direction::Left);
+        let mut legacy = serde_json::to_value(&saved).unwrap();
+        legacy.as_object_mut().unwrap().remove("npc_presentation");
+        let saved: OverworldSnapshot = serde_json::from_value(legacy).unwrap();
+        saved.restore_into(&mut restored);
+        assert!(restored.npc_presentation.pose(MapId::ViridianPokecenter, 2).is_none());
+        restored.publish_npc_frame(false);
+        assert_eq!(restored.npc_presentation.pose(MapId::ViridianPokecenter, 2).unwrap().image.facing, Direction::Left);
+    }
+
     #[test]
     fn sampled_field_buttons_survive_snapshot_and_legacy_json() {
         let mut screen = OverworldScreen::new(pokered_data::maps::MapId::PalletTown, None, pokered_data::impl_traits::PokemonRedData);

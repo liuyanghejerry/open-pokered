@@ -654,6 +654,23 @@ impl OverworldVisualKey {
             hash_byte(&mut npc_hash, npc.visible as u8);
         }
 
+        // A displayed image can change after logical movement has stopped.
+        // Include both its pose and cached image in the whole-frame cache key.
+        for slot in 0..screen.npc_states.len() {
+            if let Some(pose) = screen.npc_presentation.pose(screen.state.current_map, slot) {
+                hash_byte(&mut npc_hash, 1);
+                hash_u32(&mut npc_hash, pose.x as u32);
+                hash_u32(&mut npc_hash, pose.y as u32);
+                hash_byte(&mut npc_hash, pose.visible as u8);
+                hash_byte(&mut npc_hash, pose.image.facing as u8);
+                hash_byte(&mut npc_hash, pose.image.phase);
+                hash_byte(&mut npc_hash, pose.image.scripted_frame.unwrap_or(u8::MAX));
+                hash_byte(&mut npc_hash, pose.image.visible as u8);
+            } else {
+                hash_byte(&mut npc_hash, 0);
+            }
+        }
+
         Some(Self {
             language: game.state.config.language,
             map: screen.state.current_map as u8,

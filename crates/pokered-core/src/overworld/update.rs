@@ -328,7 +328,28 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         (start, a)
     }
 
+    /// Publish the previous shadow-OAM pose before foreground logic advances.
+    pub fn publish_npc_frame(&mut self, font_loaded: bool) {
+        if font_loaded {
+            self.npc_presentation.refresh_font_images(&self.npc_states);
+        }
+        let camera = if let Some(jump) = self.ledge_jump {
+            jump.camera_residual_px()
+        } else if let Some(step) = self.field_move_step {
+            step.camera_residual_px()
+        } else if self.state.player.movement_state == MovementState::Walking {
+            let px = i32::from(8u8.saturating_sub(self.state.walk_counter)) * 2;
+            match self.state.player.facing {
+                Direction::Down => (0, px), Direction::Up => (0, -px),
+                Direction::Left => (-px, 0), Direction::Right => (px, 0),
+            }
+        } else { (0, 0) };
+        self.npc_presentation.publish(self.state.current_map, &self.npc_states,
+            (self.state.player.x, self.state.player.y), camera, self.state.walk_counter != 0);
+    }
+
     pub fn update_frame(&mut self, input: OverworldInput) -> ScreenAction {
+        self.publish_npc_frame(self.is_text_ui_active());
         let action = self.update_frame_inner(input);
         if self.script_engine.is_idle()
             && self.active_script_effect.is_none()
@@ -1644,6 +1665,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     self.audio_requests
                         .push(OverworldAudioRequest::PlayMapMusic { map: new_map });
                     let hidden_npc_ids = self.map_script_config.hidden_npc_ids();
+                    self.npc_presentation = Default::default();
                     self.npc_states = self
                         .map_data
                         .as_ref()
@@ -2337,6 +2359,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     resolve_npc_index(npc_id, &self.npc_states, &self.map_script_config),
                 _ => None,
             };
+            self.npc_presentation.update_images_before_movement(&self.npc_states);
             npc_movement::update_npc_movement_with_stationary(
                 &mut self.npc_states,
                 self.state.player.x,

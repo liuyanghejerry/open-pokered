@@ -3357,6 +3357,9 @@ impl PokemonGame {
     }
 
     pub fn update(&mut self, input: &InputState) {
+        if self.state.screen != GameScreen::Overworld {
+            self.overworld.publish_npc_frame(true);
+        }
         self.sync_bag_list_memory();
         self.update_inner(input);
         self.sync_bag_list_memory();

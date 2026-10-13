@@ -727,6 +727,7 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     pub player_moving_direction: u8,
     pub map_data: Option<MapData<G::Tileset>>,
     pub npc_states: Vec<crate::overworld::npc_movement::NpcRuntimeState>,
+    pub npc_presentation: super::npc_presentation::NpcPresentation,
     pub npc_pokemon_data: Vec<PokemonNpcData>,
     pub pending_dialogue: Option<BedroomDialogue>,
     /// Last completed script text, retained only for the following choice.
@@ -1229,6 +1230,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             state: OverworldState::new(start_map),
             map_data,
             npc_states,
+            npc_presentation: Default::default(),
             npc_pokemon_data,
             pending_dialogue: None,
             last_script_dialogue: None,
@@ -2836,6 +2838,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     .push(OverworldAudioRequest::PlayMapMusic { map: warp.dest_map });
             }
             let hidden_npc_ids = self.map_script_config.hidden_npc_ids();
+            self.npc_presentation = Default::default();
             self.npc_states = self
                 .map_data
                 .as_ref()
