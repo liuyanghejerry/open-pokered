@@ -7,9 +7,9 @@ the old script began healing after its fixed 32-frame counter plus a zero
 frame, while the music was still fading.
 
 Expose is_fading on native/GBA audio outputs, feed script_audio_fading to
-the core, and wait on it instead of a fixed count. Runtime snapshots retain
-this flag and older snapshots default to false. Nested effects receive the
-same live state. The capture fixture starts center background music before
+the core, and wait on it instead of a fixed count. The existing active effect stores the wait signal in its counter; no new
+global audio-history field is serialized. The frontend refreshes the signal
+only while the healing machine waits for the fade. The capture fixture starts center background music before
 its warmup, on both the base and fix, and requires a live channel.
 
 Same input and frame 646: the old runtime already shows a healing ball;
@@ -29,3 +29,11 @@ no additional manager query. The unchanged agent determinism assertion now
 passes, all 41 app test executables pass, and the healing manifest and all
 1285 PNGs are unchanged. GBA performance remains gated by latest-head CI.
 Full audio-engine restore during active healing still needs validation.
+
+Second CI follow-up: idle performance stayed at 383 ticks after merely
+limiting sampling. Remove the global field and additional effect-tick
+arguments altogether. Store the live wait signal in the existing healing
+effect counter instead. Core 2798 tests and all 41 app test executables pass.
+Repeated captures match; all 1285 rendered frames are unchanged. The only
+manifest representation change is the fade-wait counter encoding its live
+signal. Latest GBA hardware-timer CI must still pass, without budget changes.

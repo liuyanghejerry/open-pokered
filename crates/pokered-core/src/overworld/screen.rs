@@ -763,8 +763,6 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     pub pending_emotion_bubble: Option<EmotionBubbleState>,
     /// Frontend sequencer status for blocking script jingles.
     pub script_music_playing: bool,
-    /// Frontend audio fade status for the healing-machine wait.
-    pub script_audio_fading: bool,
     pub pending_healing_machine: Option<HealingMachineState>,
     pub last_map: Option<MapId>,
     pub first_lock_trash_can: u8,
@@ -1076,6 +1074,21 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
 // ── Constructor + accessor methods ────────────────────────────────
 
 impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
+    /// Supply the live audio wait input only to the active healing effect.
+    /// The existing effect counter snapshots this signal without a global
+    /// audio-history field or extra arguments on every effect tick.
+    pub fn set_healing_audio_fading(&mut self, fading: bool) {
+        if let Some(super::script_bridge::ScriptEffect::AnimateHealingMachine {
+            phase: super::script_bridge::HealingMachinePhase::WaitForFadeOut,
+            frames_remaining,
+        }) = self.active_script_effect.as_mut() {
+            *frames_remaining = u16::from(fading);
+            if let Some(machine) = self.pending_healing_machine.as_mut() {
+                machine.frames_remaining = *frames_remaining;
+            }
+        }
+    }
+
     pub fn new(
         start_map: MapId,
         #[cfg(not(target_os = "none"))] scripts_dir: Option<std::path::PathBuf>,
@@ -1232,7 +1245,6 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             pending_set_nickname: None,
             pending_emotion_bubble: None,
             script_music_playing: false,
-            script_audio_fading: false,
             pending_healing_machine: None,
             first_lock_trash_can: 0,
             second_lock_trash_can: 0,
