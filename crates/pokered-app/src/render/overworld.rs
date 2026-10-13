@@ -3220,8 +3220,8 @@ mod elevator_edge_tests {
         let hold_down = pokered_core::overworld::OverworldInput::new(
             false, true, false, false, false, false, false, false,
         );
-        s.update_frame(hold_down);
-        s.update_frame(hold_down);
+        // Arm and push on separate foreground samples, with waits between.
+        for _ in 0..4 { s.update_frame(hold_down); }
         assert!(s.boulder_dust.is_active(), "push started the dust");
 
         let after = render_screen(&mut s);

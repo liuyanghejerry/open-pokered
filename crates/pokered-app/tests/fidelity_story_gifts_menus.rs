@@ -209,7 +209,10 @@ fn museum_back_counter_requires_a_and_ticket_gate_still_triggers_on_step() {
     );
     assert!(g.overworld.pending_dialogue.is_none());
     g.overworld.state.player.facing = Direction::Left;
-    tap(&mut g, GbButton::A);
+    let mut a = InputState::new();
+    a.press(GbButton::A);
+    for _ in 0..2 { g.update(&a); }
+    idle(&mut g, 2);
     idle(&mut g, 8);
     assert!(
         g.overworld.pending_dialogue.is_some(),
