@@ -953,6 +953,13 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         // Door exit auto-step (PlayerStepOutFromDoor / BIT_EXITING_DOOR).
         // When exiting_door is active, advance the walk animation ignoring real input.
         if self.state.exiting_door {
+            // Simulated DOWN uses the same two-VBlank foreground loop as
+            // ordinary walking; real buttons remain ignored during the exit.
+            if self.field_loop_wait != 0 {
+                self.field_loop_wait -= 1;
+                return ScreenAction::Continue;
+            }
+            self.field_loop_wait = 1;
             if self.state.player.movement_state != MovementState::Idle {
                 let step_done = player_movement::advance_step(&mut self.state);
                 if step_done {
@@ -970,7 +977,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             self.state.player.facing = Direction::Down;
             self.state.player.movement_state = MovementState::Walking;
             self.state.walk_counter = player_movement::WALK_COUNTER_INIT;
+            self.player_moving_direction = 4;
             self.state.exiting_door = true;
+            // UpdateSprites advances the first two pixels before the map
+            // redraw, which adds one VBlank to the initial foreground wait.
+            player_movement::advance_step(&mut self.state);
+            self.field_loop_wait = 2;
             return ScreenAction::Continue;
         }
 
