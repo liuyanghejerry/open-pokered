@@ -1,0 +1,574 @@
+{
+  "scope": "Controlled walking NPC16 with face-player flag and playerdirection at UpdateNPCSprite entry. Original code execution confirms facing change leaves pending movement vectors and finishes sixteen pixels in original direction. Logical function-update policy probe; not a natural conversation movie or OAM/hardware timing comparison.",
+  "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+  "cases": [
+    {
+      "direction": "left",
+      "repeat_exact": true,
+      "updates": [
+        {
+          "counter": 16,
+          "facing": 12,
+          "x_pixels": 48,
+          "y_pixels": 60,
+          "x_step": 255,
+          "y_step": 0
+        },
+        {
+          "counter": 15,
+          "facing": 12,
+          "x_pixels": 47,
+          "y_pixels": 60,
+          "x_step": 255,
+          "y_step": 0
+        },
+        {
+          "counter": 14,
+          "facing": 12,
+          "x_pixels": 46,
+          "y_pixels": 60,
+          "x_step": 255,
+          "y_step": 0
+        },
+        {
+          "counter": 13,
+          "facing": 12,
+          "x_pixels": 45,
+          "y_pixels": 60,
+          "x_step": 255,
+          "y_step": 0
+        },
+        {
+          "counter": 12,
+          "facing": 12,
+          "x_pixels": 44,
+          "y_pixels": 60,
+          "x_step": 255,
+          "y_step": 0
+        },
+        {
+          "counter": 11,
+          "facing": 12,
+          "x_pixels": 43,
+          "y_pixels": 60,
+          "x_step": 255,
+          "y_step": 0
+        },
+        {
+          "counter": 10,
+          "facing": 12,
+          "x_pixels": 42,
+          "y_pixels": 60,
+          "x_step": 255,
+          "y_step": 0
+        },
+        {
+          "counter": 9,
+          "facing": 12,
+          "x_pixels": 41,
+          "y_pixels": 60,
+          "x_step": 255,
+          "y_step": 0
+        },
+        {
+          "counter": 8,
+          "facing": 12,
+          "x_pixels": 40,
+          "y_pixels": 60,
+          "x_step": 255,
+          "y_step": 0
+        },
+        {
+          "counter": 7,
+          "facing": 12,
+          "x_pixels": 39,
+          "y_pixels": 60,
+          "x_step": 255,
+          "y_step": 0
+        },
+        {
+          "counter": 6,
+          "facing": 12,
+          "x_pixels": 38,
+          "y_pixels": 60,
+          "x_step": 255,
+          "y_step": 0
+        },
+        {
+          "counter": 5,
+          "facing": 12,
+          "x_pixels": 37,
+          "y_pixels": 60,
+          "x_step": 255,
+          "y_step": 0
+        },
+        {
+          "counter": 4,
+          "facing": 12,
+          "x_pixels": 36,
+          "y_pixels": 60,
+          "x_step": 255,
+          "y_step": 0
+        },
+        {
+          "counter": 3,
+          "facing": 12,
+          "x_pixels": 35,
+          "y_pixels": 60,
+          "x_step": 255,
+          "y_step": 0
+        },
+        {
+          "counter": 2,
+          "facing": 12,
+          "x_pixels": 34,
+          "y_pixels": 60,
+          "x_step": 255,
+          "y_step": 0
+        },
+        {
+          "counter": 1,
+          "facing": 12,
+          "x_pixels": 33,
+          "y_pixels": 60,
+          "x_step": 255,
+          "y_step": 0
+        },
+        {
+          "counter": 0,
+          "facing": 12,
+          "x_pixels": 32,
+          "y_pixels": 60,
+          "x_step": 0,
+          "y_step": 0
+        }
+      ]
+    },
+    {
+      "direction": "right",
+      "repeat_exact": true,
+      "updates": [
+        {
+          "counter": 16,
+          "facing": 8,
+          "x_pixels": 80,
+          "y_pixels": 60,
+          "x_step": 1,
+          "y_step": 0
+        },
+        {
+          "counter": 15,
+          "facing": 8,
+          "x_pixels": 81,
+          "y_pixels": 60,
+          "x_step": 1,
+          "y_step": 0
+        },
+        {
+          "counter": 14,
+          "facing": 8,
+          "x_pixels": 82,
+          "y_pixels": 60,
+          "x_step": 1,
+          "y_step": 0
+        },
+        {
+          "counter": 13,
+          "facing": 8,
+          "x_pixels": 83,
+          "y_pixels": 60,
+          "x_step": 1,
+          "y_step": 0
+        },
+        {
+          "counter": 12,
+          "facing": 8,
+          "x_pixels": 84,
+          "y_pixels": 60,
+          "x_step": 1,
+          "y_step": 0
+        },
+        {
+          "counter": 11,
+          "facing": 8,
+          "x_pixels": 85,
+          "y_pixels": 60,
+          "x_step": 1,
+          "y_step": 0
+        },
+        {
+          "counter": 10,
+          "facing": 8,
+          "x_pixels": 86,
+          "y_pixels": 60,
+          "x_step": 1,
+          "y_step": 0
+        },
+        {
+          "counter": 9,
+          "facing": 8,
+          "x_pixels": 87,
+          "y_pixels": 60,
+          "x_step": 1,
+          "y_step": 0
+        },
+        {
+          "counter": 8,
+          "facing": 8,
+          "x_pixels": 88,
+          "y_pixels": 60,
+          "x_step": 1,
+          "y_step": 0
+        },
+        {
+          "counter": 7,
+          "facing": 8,
+          "x_pixels": 89,
+          "y_pixels": 60,
+          "x_step": 1,
+          "y_step": 0
+        },
+        {
+          "counter": 6,
+          "facing": 8,
+          "x_pixels": 90,
+          "y_pixels": 60,
+          "x_step": 1,
+          "y_step": 0
+        },
+        {
+          "counter": 5,
+          "facing": 8,
+          "x_pixels": 91,
+          "y_pixels": 60,
+          "x_step": 1,
+          "y_step": 0
+        },
+        {
+          "counter": 4,
+          "facing": 8,
+          "x_pixels": 92,
+          "y_pixels": 60,
+          "x_step": 1,
+          "y_step": 0
+        },
+        {
+          "counter": 3,
+          "facing": 8,
+          "x_pixels": 93,
+          "y_pixels": 60,
+          "x_step": 1,
+          "y_step": 0
+        },
+        {
+          "counter": 2,
+          "facing": 8,
+          "x_pixels": 94,
+          "y_pixels": 60,
+          "x_step": 1,
+          "y_step": 0
+        },
+        {
+          "counter": 1,
+          "facing": 8,
+          "x_pixels": 95,
+          "y_pixels": 60,
+          "x_step": 1,
+          "y_step": 0
+        },
+        {
+          "counter": 0,
+          "facing": 8,
+          "x_pixels": 96,
+          "y_pixels": 60,
+          "x_step": 0,
+          "y_step": 0
+        }
+      ]
+    },
+    {
+      "direction": "up",
+      "repeat_exact": true,
+      "updates": [
+        {
+          "counter": 16,
+          "facing": 0,
+          "x_pixels": 64,
+          "y_pixels": 44,
+          "x_step": 0,
+          "y_step": 255
+        },
+        {
+          "counter": 15,
+          "facing": 0,
+          "x_pixels": 64,
+          "y_pixels": 43,
+          "x_step": 0,
+          "y_step": 255
+        },
+        {
+          "counter": 14,
+          "facing": 0,
+          "x_pixels": 64,
+          "y_pixels": 42,
+          "x_step": 0,
+          "y_step": 255
+        },
+        {
+          "counter": 13,
+          "facing": 0,
+          "x_pixels": 64,
+          "y_pixels": 41,
+          "x_step": 0,
+          "y_step": 255
+        },
+        {
+          "counter": 12,
+          "facing": 0,
+          "x_pixels": 64,
+          "y_pixels": 40,
+          "x_step": 0,
+          "y_step": 255
+        },
+        {
+          "counter": 11,
+          "facing": 0,
+          "x_pixels": 64,
+          "y_pixels": 39,
+          "x_step": 0,
+          "y_step": 255
+        },
+        {
+          "counter": 10,
+          "facing": 0,
+          "x_pixels": 64,
+          "y_pixels": 38,
+          "x_step": 0,
+          "y_step": 255
+        },
+        {
+          "counter": 9,
+          "facing": 0,
+          "x_pixels": 64,
+          "y_pixels": 37,
+          "x_step": 0,
+          "y_step": 255
+        },
+        {
+          "counter": 8,
+          "facing": 0,
+          "x_pixels": 64,
+          "y_pixels": 36,
+          "x_step": 0,
+          "y_step": 255
+        },
+        {
+          "counter": 7,
+          "facing": 0,
+          "x_pixels": 64,
+          "y_pixels": 35,
+          "x_step": 0,
+          "y_step": 255
+        },
+        {
+          "counter": 6,
+          "facing": 0,
+          "x_pixels": 64,
+          "y_pixels": 34,
+          "x_step": 0,
+          "y_step": 255
+        },
+        {
+          "counter": 5,
+          "facing": 0,
+          "x_pixels": 64,
+          "y_pixels": 33,
+          "x_step": 0,
+          "y_step": 255
+        },
+        {
+          "counter": 4,
+          "facing": 0,
+          "x_pixels": 64,
+          "y_pixels": 32,
+          "x_step": 0,
+          "y_step": 255
+        },
+        {
+          "counter": 3,
+          "facing": 0,
+          "x_pixels": 64,
+          "y_pixels": 31,
+          "x_step": 0,
+          "y_step": 255
+        },
+        {
+          "counter": 2,
+          "facing": 0,
+          "x_pixels": 64,
+          "y_pixels": 30,
+          "x_step": 0,
+          "y_step": 255
+        },
+        {
+          "counter": 1,
+          "facing": 0,
+          "x_pixels": 64,
+          "y_pixels": 29,
+          "x_step": 0,
+          "y_step": 255
+        },
+        {
+          "counter": 0,
+          "facing": 0,
+          "x_pixels": 64,
+          "y_pixels": 28,
+          "x_step": 0,
+          "y_step": 0
+        }
+      ]
+    },
+    {
+      "direction": "down",
+      "repeat_exact": true,
+      "updates": [
+        {
+          "counter": 16,
+          "facing": 4,
+          "x_pixels": 64,
+          "y_pixels": 76,
+          "x_step": 0,
+          "y_step": 1
+        },
+        {
+          "counter": 15,
+          "facing": 4,
+          "x_pixels": 64,
+          "y_pixels": 77,
+          "x_step": 0,
+          "y_step": 1
+        },
+        {
+          "counter": 14,
+          "facing": 4,
+          "x_pixels": 64,
+          "y_pixels": 78,
+          "x_step": 0,
+          "y_step": 1
+        },
+        {
+          "counter": 13,
+          "facing": 4,
+          "x_pixels": 64,
+          "y_pixels": 79,
+          "x_step": 0,
+          "y_step": 1
+        },
+        {
+          "counter": 12,
+          "facing": 4,
+          "x_pixels": 64,
+          "y_pixels": 80,
+          "x_step": 0,
+          "y_step": 1
+        },
+        {
+          "counter": 11,
+          "facing": 4,
+          "x_pixels": 64,
+          "y_pixels": 81,
+          "x_step": 0,
+          "y_step": 1
+        },
+        {
+          "counter": 10,
+          "facing": 4,
+          "x_pixels": 64,
+          "y_pixels": 82,
+          "x_step": 0,
+          "y_step": 1
+        },
+        {
+          "counter": 9,
+          "facing": 4,
+          "x_pixels": 64,
+          "y_pixels": 83,
+          "x_step": 0,
+          "y_step": 1
+        },
+        {
+          "counter": 8,
+          "facing": 4,
+          "x_pixels": 64,
+          "y_pixels": 84,
+          "x_step": 0,
+          "y_step": 1
+        },
+        {
+          "counter": 7,
+          "facing": 4,
+          "x_pixels": 64,
+          "y_pixels": 85,
+          "x_step": 0,
+          "y_step": 1
+        },
+        {
+          "counter": 6,
+          "facing": 4,
+          "x_pixels": 64,
+          "y_pixels": 86,
+          "x_step": 0,
+          "y_step": 1
+        },
+        {
+          "counter": 5,
+          "facing": 4,
+          "x_pixels": 64,
+          "y_pixels": 87,
+          "x_step": 0,
+          "y_step": 1
+        },
+        {
+          "counter": 4,
+          "facing": 4,
+          "x_pixels": 64,
+          "y_pixels": 88,
+          "x_step": 0,
+          "y_step": 1
+        },
+        {
+          "counter": 3,
+          "facing": 4,
+          "x_pixels": 64,
+          "y_pixels": 89,
+          "x_step": 0,
+          "y_step": 1
+        },
+        {
+          "counter": 2,
+          "facing": 4,
+          "x_pixels": 64,
+          "y_pixels": 90,
+          "x_step": 0,
+          "y_step": 1
+        },
+        {
+          "counter": 1,
+          "facing": 4,
+          "x_pixels": 64,
+          "y_pixels": 91,
+          "x_step": 0,
+          "y_step": 1
+        },
+        {
+          "counter": 0,
+          "facing": 4,
+          "x_pixels": 64,
+          "y_pixels": 92,
+          "x_step": 0,
+          "y_step": 0
+        }
+      ]
+    }
+  ]
+}
