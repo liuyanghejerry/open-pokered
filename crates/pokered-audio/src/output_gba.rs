@@ -59,6 +59,11 @@ impl AudioOutput {
     pub fn clear_saved_music_states(&self) {
         self.manager.borrow_mut().clear_saved_music_states()
     }
+    /// Live FadeOutAudio state, including its final zero-volume interval.
+    pub fn is_fading(&self) -> bool {
+        self.manager.borrow().is_fading()
+    }
+
     pub fn fade_out(&self, fade_speed: u8) {
         self.manager.borrow_mut().fade_out(fade_speed)
     }

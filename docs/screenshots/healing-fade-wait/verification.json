@@ -1,0 +1,33 @@
+{
+  "base_commit": "ebfd0debf313f5fc2a64e27d74a7a227f8a4a5b9",
+  "source_rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+  "source_commit": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "source_fade_begin": 536,
+  "source_first_ball": 576,
+  "native_fade_begin": 612,
+  "native_first_ball_before": 645,
+  "native_first_ball_after": 652,
+  "native_repeat_exact_frames": 1285,
+  "party_count": 5,
+  "background_music": "POKECENTER started before 120 warmup frames in both baseline and fix fixtures",
+  "screenshot_frame": 646,
+  "diff_bbox": [
+    42,
+    30,
+    48,
+    34
+  ],
+  "scope": "Live fade completion and first-ball relative delay verified. No claim of absolute full-scene hardware timing parity.",
+  "ci_followup": {
+    "issue": "Sampling every overworld fade added unrelated audio state to logic snapshots; replay differed only in script_audio_fading. Idle manager query also exceeded GBA update budget.",
+    "fix": "Feedback resides only in the current healing effect counter. Remove the global field and extra tick arguments. Poll only during the fade wait.",
+    "agent_determinism_tests": 8,
+    "all_app_test_executables": 41,
+    "all_app_test_executables_passed": true,
+    "healing_record_and_all_pngs_unchanged": 1285,
+    "gba_performance": "Await latest-head CI for effect-local feedback; budget unchanged.",
+    "remaining": "Full audio-engine restoration during active healing needs separate runtime-snapshot validation.",
+    "record_scope": "All pixels and all recorded fields except the changed fade-wait counter encoding match; two fixed raw recordings match exactly.",
+    "prior_scoped_global_attempt_gba_idle_ticks": 383
+  }
+}

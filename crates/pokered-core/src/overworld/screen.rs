@@ -1072,6 +1072,21 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
 // ── Constructor + accessor methods ────────────────────────────────
 
 impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
+    /// Supply the live audio wait input only to the active healing effect.
+    /// The existing effect counter snapshots this signal without a global
+    /// audio-history field or extra arguments on every effect tick.
+    pub fn set_healing_audio_fading(&mut self, fading: bool) {
+        if let Some(super::script_bridge::ScriptEffect::AnimateHealingMachine {
+            phase: super::script_bridge::HealingMachinePhase::WaitForFadeOut,
+            frames_remaining,
+        }) = self.active_script_effect.as_mut() {
+            *frames_remaining = u16::from(fading);
+            if let Some(machine) = self.pending_healing_machine.as_mut() {
+                machine.frames_remaining = *frames_remaining;
+            }
+        }
+    }
+
     pub fn new(
         start_map: MapId,
         #[cfg(not(target_os = "none"))] scripts_dir: Option<std::path::PathBuf>,

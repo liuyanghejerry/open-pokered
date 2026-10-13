@@ -3120,12 +3120,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         audio_requests.push(OverworldAudioRequest::FadeOutMusic);
                         *pending_healing_machine = Some(HealingMachineState {
                             phase: HealingMachinePhase::FadeOutMusic,
-                            frames_remaining: 32,
+                            frames_remaining: 0,
                             pokeballs_visible: 0,
                             flash_active: false,
                         });
                         *phase = HealingMachinePhase::WaitForFadeOut;
-                        *frames_remaining = 32;
+                        *frames_remaining = 0;
                         false
                     }
                     HealingMachinePhase::WaitForFadeOut => {
@@ -3148,11 +3148,6 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                                 };
                                 state.frames_remaining = 30;
                                 state.pokeballs_visible = if total > 0 { 1 } else { 0 };
-                            }
-                        } else {
-                            *frames_remaining -= 1;
-                            if let Some(ref mut state) = pending_healing_machine {
-                                state.frames_remaining = *frames_remaining;
                             }
                         }
                         false

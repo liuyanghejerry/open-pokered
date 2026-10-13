@@ -260,3 +260,38 @@ fn healing_waits_for_live_music_then_thirty_two_frames() {
     screen.update_frame(input(false));
     assert!(screen.pending_healing_machine.is_none());
 }
+
+
+#[test]
+fn healing_waits_for_actual_audio_fade_and_snapshots_its_state() {
+    use super::script_bridge::{HealingMachinePhase, ScriptEffect};
+    let mut screen = OverworldScreen::new(MapId::ViridianPokecenter, None, PokemonRedData);
+    screen.party_count = 5;
+    screen.active_script_effect = Some(ScriptEffect::AnimateHealingMachine {
+        phase: HealingMachinePhase::FadeOutMusic, frames_remaining: 0,
+    });
+    screen.update_frame(input(false));
+    screen.set_healing_audio_fading(true);
+    for _ in 0..80 { screen.update_frame(input(false)); }
+    assert_eq!(screen.pending_healing_machine.as_ref().unwrap().pokeballs_visible, 0);
+    let saved = crate::snapshot::OverworldSnapshot::capture(&screen);
+    let mut restored = OverworldScreen::new(MapId::ViridianPokecenter, None, PokemonRedData);
+    saved.restore_into(&mut restored);
+    assert!(matches!(restored.active_script_effect, Some(ScriptEffect::AnimateHealingMachine {
+        phase: HealingMachinePhase::WaitForFadeOut, frames_remaining: 1 })));
+    restored.update_frame(input(false));
+    assert_eq!(restored.pending_healing_machine.as_ref().unwrap().pokeballs_visible, 0);
+    restored.set_healing_audio_fading(false);
+    restored.update_frame(input(false));
+    assert_eq!(restored.pending_healing_machine.as_ref().unwrap().pokeballs_visible, 1);
+    // A snapshot written by the initial fade implementation may contain
+    // its now-unused global input; serde ignores it and preserves the effect.
+    let mut legacy = serde_json::to_value(saved).unwrap();
+    legacy.as_object_mut().unwrap().insert("script_audio_fading".into(), serde_json::json!(true));
+    let legacy: crate::snapshot::OverworldSnapshot = serde_json::from_value(legacy).unwrap();
+    let mut old = OverworldScreen::new(MapId::ViridianPokecenter, None, PokemonRedData);
+    legacy.restore_into(&mut old);
+    old.set_healing_audio_fading(false);
+    old.update_frame(input(false));
+    assert_eq!(old.pending_healing_machine.as_ref().unwrap().pokeballs_visible, 1);
+}
