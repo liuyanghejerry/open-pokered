@@ -3255,6 +3255,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         if *frames_remaining == 0 {
                             *phase = HealingMachinePhase::Done;
                             *pending_healing_machine = None;
+                            audio_requests.push(OverworldAudioRequest::RestoreMapMusic { map: current_map });
                         } else if let Some(ref mut state) = pending_healing_machine {
                             state.frames_remaining = *frames_remaining;
                         }
@@ -3262,7 +3263,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     }
                     HealingMachinePhase::Done => {
                         *pending_healing_machine = None;
-                        audio_requests.push(OverworldAudioRequest::PlayMapMusic {
+                        // Also handle a restored snapshot that is already in Done.
+                        audio_requests.push(OverworldAudioRequest::RestoreMapMusic {
                             map: current_map,
                         });
                         true

@@ -1,0 +1,18 @@
+{
+  "base_commit": "06997a9768cc436b21572d1c1f8c244c72e10534",
+  "source_commit": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "source_rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+  "source_overlay_end_and_music_restart": 894,
+  "native_overlay_end": 971,
+  "native_music_restart_before": 1060,
+  "native_music_restart_after": 971,
+  "silent_gap_before": 89,
+  "silent_gap_after": 0,
+  "recorded_frames": 1285,
+  "after_repeat_exact": true,
+  "all_before_after_rendered_frames_identical": true,
+  "party_count": 5,
+  "core_tests": 2798,
+  "app_tests": 230,
+  "scope": "Actual native nurse interaction using the PCM audio sequencer, compared against original continuous hardware-frame recordings. Immediate map-music restoration verified; absolute scene timing remains unproven."
+}

@@ -4335,6 +4335,7 @@ impl PokemonGame {
                             OverworldSfxEvent::None => {}
                         }
                         for req in self.overworld.audio_requests.drain(..) {
+                            let restore_immediately = matches!(&req, OverworldAudioRequest::RestoreMapMusic { .. });
                             match req {
                                 OverworldAudioRequest::PlayMusic { music_id } => {
                                     // Alternate tempo/start variants
@@ -4366,7 +4367,8 @@ impl PokemonGame {
                                     // Original uses fade_speed=4 for healing machine
                                     audio.fade_out(4);
                                 }
-                                OverworldAudioRequest::PlayMapMusic { map } => {
+                                OverworldAudioRequest::PlayMapMusic { map }
+                                | OverworldAudioRequest::RestoreMapMusic { map } => {
                                     use pokered_core::overworld::TransportMode;
                                     let data_id = match self.overworld.state.player.transport {
                                         TransportMode::Biking => 32,  // MUSIC_BIKE_RIDING
@@ -4378,7 +4380,12 @@ impl PokemonGame {
                                     };
                                     if let Some(id) = MusicId::from_u8(data_id) {
                                         if audio.last_music_id() != Some(id) {
-                                            audio.play_music_with_fade(id, 10);
+                                            if restore_immediately {
+                                                audio.clear_saved_music_states();
+                                                audio.play_music(id);
+                                            } else {
+                                                audio.play_music_with_fade(id, 10);
+                                            }
                                         }
                                     }
                                 }
@@ -9018,6 +9025,38 @@ mod link_stats_cry_fidelity_tests {
             assert!(healed && idle_frames>=3,"healing conversation must complete");
             assert!(rows.iter().any(|r|r["balls"].as_u64()==Some(5)),"fixture must show all five healing balls");
             std::fs::write(dir.join("manifest.json"),serde_json::to_string_pretty(&rows).unwrap()).unwrap();
+        });
+    }
+
+    #[test]
+    fn nurse_restarts_center_music_when_machine_overlay_ends() {
+        run_link_save_fixture(|| {
+            use pokered_core::overworld::Direction;
+            let mut g = fixture(Species::Bulbasaur, 3, Direction::Up);
+            g.overworld = OverworldScreen::new(MapId::ViridianPokecenter, None, PokemonRedData);
+            g.overworld.party_count = g.save_data.party.count() as u8;
+            g.overworld.state.player.x = 3;
+            g.overworld.state.player.y = 3;
+            g.overworld.state.player.facing = Direction::Up;
+            g.overworld.run_on_load();
+            g.audio.as_ref().unwrap().play_music(pokered_audio::music_data::MusicId::POKECENTER);
+            let mut seen_machine = false;
+            let mut input = InputState::new();
+            for frame in 0..4000 {
+                input.begin_frame();
+                input.release(GbButton::A);
+                if frame % 40 == 0 { input.press(GbButton::A); }
+                g.update(&input);
+                if g.overworld.pending_healing_machine.is_some() { seen_machine = true; }
+                else if seen_machine {
+                    let audio = g.audio.as_ref().unwrap();
+                    assert_eq!(audio.last_music_id(), Some(pokered_audio::music_data::MusicId::POKECENTER));
+                    assert!(audio.is_music_channel_playing(0), "no extra silent fade after healing");
+                    assert!(!audio.is_fading());
+                    return;
+                }
+            }
+            panic!("nurse healing did not finish");
         });
     }
 
