@@ -821,6 +821,8 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     pub text_delay_frames: u16,
     pub(crate) prev_a_pressed: bool,
     pub(crate) sampled_player_input: FieldInputSample,
+    /// Hardware-frame wait remaining before the next foreground field loop.
+    pub(crate) field_loop_wait: u8,
     pub(crate) prev_movement_state: MovementState,
     pub(crate) prev_b_pressed: bool,
     pub(crate) prev_up_pressed: bool,
@@ -1277,6 +1279,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             text_delay_frames: DEFAULT_TEXT_DELAY_FRAMES,
             prev_a_pressed: false,
             sampled_player_input: FieldInputSample::default(),
+            field_loop_wait: 0,
             prev_movement_state: MovementState::Idle,
             player_last_stop_direction: 0,
             player_moving_direction: 0,

@@ -676,6 +676,33 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             self.active_script_effect,
             Some(script_bridge::ScriptEffect::FollowNpc { .. })
         );
+        // DoScriptedNPCMovement uses the field loop's two DelayFrame calls,
+        // even while a movement script controls both actors. Its eight
+        // advances are logic updates, not eight displayed frames.
+        if let Some(script_bridge::ScriptEffect::FollowNpc { phase, .. }) = &self.active_script_effect {
+            if matches!(phase, script_bridge::FollowNpcPhase::Following { .. }) {
+                if self.field_loop_wait != 0 {
+                    self.field_loop_wait -= 1;
+                    return ScreenAction::Continue;
+                }
+                self.field_loop_wait = 1;
+            } else {
+                self.field_loop_wait = u8::from(matches!(phase, script_bridge::FollowNpcPhase::StartNpc));
+            }
+        } else if matches!(&self.active_script_effect,
+            Some(script_bridge::ScriptEffect::MoveNpc { .. }
+                | script_bridge::ScriptEffect::MoveNpcTo { .. }
+                | script_bridge::ScriptEffect::AwaitNpcMove { .. }
+                | script_bridge::ScriptEffect::MovePlayer { .. }
+                | script_bridge::ScriptEffect::MovePlayerTo { .. })) {
+            // These commands wait in the normal field loop too. MoveSprite
+            // takes sixteen updates plus its ready boundary per NPC stride.
+            if self.field_loop_wait != 0 {
+                self.field_loop_wait -= 1;
+                return ScreenAction::Continue;
+            }
+            self.field_loop_wait = 1;
+        }
         if let Some(ref mut effect) = self.active_script_effect {
             let naming_was_open = self.pending_naming_screen.is_some();
             if let script_bridge::ScriptEffect::GivePokemon { species, flow, .. } = effect {
@@ -1355,6 +1382,21 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             {
                 return ScreenAction::Continue;
             }
+        }
+
+        // OverworldLoop waits for two VBlanks between foreground updates.
+        // OAM publication still runs on every hardware frame above.
+        let ordinary_field_loop = self.active_script_effect.is_none()
+            && self.scripted_player_path.is_empty()
+            && !self.cutscene_manager.is_blocking()
+            && self.pending_connection.is_none()
+            && self.ledge_jump.is_none();
+        if ordinary_field_loop {
+            if self.field_loop_wait != 0 {
+                self.field_loop_wait -= 1;
+                return ScreenAction::Continue;
+            }
+            self.field_loop_wait = 1;
         }
 
         // JoypadOverworld is not sampled while a step is in progress.
