@@ -2087,3 +2087,47 @@ fn counter_talk_selects_the_extended_target_instead_of_the_counter_tile() {
     assert!(npc_in_front_of_player(&npcs, 3, 3, Direction::Up,
         screen.map_data.as_ref(), &provider).is_none());
 }
+
+#[test]
+fn silph_liberation_enemy_bits_hide_all_original_targets_on_map_reload() {
+    use pokered_data::impl_traits::PokemonRedData;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../pokered-data/src/silph_liberation_golden.json"
+    )).unwrap();
+    let cases = fixture["cases"].as_array().unwrap();
+    for hidden in [false,true] {
+        let mut screen = OverworldScreen::new(MapId::PalletTown,None,PokemonRedData);
+        screen.toggleable_object_flags = pokered_data::toggleable_objects::initial_toggle_flags();
+        for case in cases {
+            let bit = case["bit"].as_u64().unwrap() as u16;
+            if hidden { pokered_data::toggleable_objects::set_object_hidden(&mut screen.toggleable_object_flags,bit); }
+            else { pokered_data::toggleable_objects::set_object_shown(&mut screen.toggleable_object_flags,bit); }
+        }
+        for floor in 2..=11 {
+            let name = format!("SilphCo{floor}F");
+            let map = pokered_data::map_data_loader::resolve_map_id(&name).unwrap();
+            screen.warp_to_map(map,0,0);
+            for _ in 0..240 {
+                screen.update_frame(super::OverworldInput::new(
+                    false, false, false, false, false, false, false, false,
+                ));
+                if screen.state.current_map == map
+                    && screen.pending_warp.is_none()
+                    && matches!(screen.warp_fade_state, super::WarpFadeState::Idle)
+                {
+                    break;
+                }
+            }
+            assert_eq!(screen.state.current_map, map, "transition to {name}");
+            assert!(screen.pending_warp.is_none(), "unfinished transition to {name}");
+            screen.apply_hidden_object_flags();
+            for case in cases.iter().filter(|c| c["map"]==name) {
+                let id=case["npc"].as_u64().unwrap() as u8;
+                let binding=screen.map_script_config.npcs.iter().find(|c|c.id==id).unwrap();
+                assert_eq!(binding.toggle_id.as_deref(),case["toggle"].as_str());
+                let npc=screen.npc_states.iter().find(|n|n.text_id==id).unwrap();
+                assert_eq!(npc.visible,!hidden,"{name} NPC{id} hidden={hidden}");
+            }
+        }
+    }
+}

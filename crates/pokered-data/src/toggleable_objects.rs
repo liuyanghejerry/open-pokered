@@ -494,6 +494,27 @@ pub fn toggle_id_to_bit_index(toggle_id: &str) -> Option<u16> {
         "ROCKET_HIDEOUT_B4F_OBJ_8" => Some(0x87), // TOGGLE_ROCKET_HIDEOUT_B4F_ITEM_4 (SILPH_SCOPE)
         "ROCKET_HIDEOUT_B4F_OBJ_9" => Some(0x88), // TOGGLE_ROCKET_HIDEOUT_B4F_ITEM_5 (LIFT_KEY)
 
+        // Enemy objects cleared by the original Silph liberation sequence.
+        "SILPH_CO_2F_OBJ_2" => Some(0x8A), // TOGGLE_SILPH_CO_2F_2
+        "SILPH_CO_2F_OBJ_3" => Some(0x8B), // TOGGLE_SILPH_CO_2F_3
+        "SILPH_CO_2F_OBJ_4" => Some(0x8C), // TOGGLE_SILPH_CO_2F_4
+        "SILPH_CO_2F_OBJ_5" => Some(0x8D), // TOGGLE_SILPH_CO_2F_5
+        "SILPH_CO_3F_OBJ_2" => Some(0x8E), // TOGGLE_SILPH_CO_3F_1
+        "SILPH_CO_3F_OBJ_3" => Some(0x8F), // TOGGLE_SILPH_CO_3F_2
+        "SILPH_CO_4F_OBJ_2" => Some(0x91), // TOGGLE_SILPH_CO_4F_1
+        "SILPH_CO_4F_OBJ_3" => Some(0x92), // TOGGLE_SILPH_CO_4F_2
+        "SILPH_CO_4F_OBJ_4" => Some(0x93), // TOGGLE_SILPH_CO_4F_3
+        "SILPH_CO_5F_OBJ_2" => Some(0x97), // TOGGLE_SILPH_CO_5F_1
+        "SILPH_CO_5F_OBJ_3" => Some(0x98), // TOGGLE_SILPH_CO_5F_2
+        "SILPH_CO_5F_OBJ_4" => Some(0x99), // TOGGLE_SILPH_CO_5F_3
+        "SILPH_CO_5F_OBJ_5" => Some(0x9A), // TOGGLE_SILPH_CO_5F_4
+        "SILPH_CO_6F_OBJ_6" => Some(0x9E), // TOGGLE_SILPH_CO_6F_1
+        "SILPH_CO_6F_OBJ_7" => Some(0x9F), // TOGGLE_SILPH_CO_6F_2
+        "SILPH_CO_6F_OBJ_8" => Some(0xA0), // TOGGLE_SILPH_CO_6F_3
+        "SILPH_CO_8F_OBJ_2" => Some(0xAB), // TOGGLE_SILPH_CO_8F_1
+        "SILPH_CO_8F_OBJ_3" => Some(0xAC), // TOGGLE_SILPH_CO_8F_2
+        "SILPH_CO_8F_OBJ_4" => Some(0xAD), // TOGGLE_SILPH_CO_8F_3
+
         // SILPH_CO_3F
         "SILPH_CO_3F_OBJ_4" => Some(0x90), // TOGGLE_SILPH_CO_3F_ITEM (HYPER_POTION)
 
@@ -727,5 +748,20 @@ mod tests {
         // Show it again
         set_object_shown(&mut flags, 0x2B);
         assert!(!is_object_hidden(&flags, 0x2B));
+    }
+}
+
+#[cfg(test)]
+mod silph_liberation_source_tests {
+    use super::*;
+    #[test]
+    fn enemy_save_bits_match_original_toggle_constants_and_object_ids() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("silph_liberation_golden.json")).unwrap();
+        let cases = fixture["cases"].as_array().unwrap();
+        assert_eq!(cases.len(),31);
+        for case in cases {
+            assert_eq!(toggle_id_to_bit_index(case["toggle"].as_str().unwrap()),
+                Some(case["bit"].as_u64().unwrap() as u16),"{}",case["source_constant"]);
+        }
     }
 }

@@ -57,15 +57,18 @@
     },
     {
       "id": 6,
-      "talk": "talkRocket1"
+      "talk": "talkRocket1",
+      "toggleId": "SILPH_CO_6F_OBJ_6"
     },
     {
       "id": 7,
-      "talk": "talkScientist"
+      "talk": "talkScientist",
+      "toggleId": "SILPH_CO_6F_OBJ_7"
     },
     {
       "id": 8,
-      "talk": "talkRocket2"
+      "talk": "talkRocket2",
+      "toggleId": "SILPH_CO_6F_OBJ_8"
     },
     {
       "id": 9,

@@ -28,7 +28,7 @@ game_scene SilphCo2F {
 
   // ── Scientist 1 (npc 2) — sight-engaged trainer; dialogue only ──────────
   @storyline("talkScientist1") {
-    @trigger(map = "SilphCo2F", npc = 2)
+    @trigger(map = "SilphCo2F", npc = 2, toggle = "SILPH_CO_2F_OBJ_2")
     @if (getFlag("EVENT_BEAT_SILPH_CO_2F_TRAINER_0")) {
       @speaker("") { @t("I work for both SILPH and\nTEAM ROCKET!", "我同时为西尔佛和火箭队工作！") }
     } @else {
@@ -38,7 +38,7 @@ game_scene SilphCo2F {
 
   // ── Scientist 2 (npc 3) — sight-engaged trainer; dialogue only ──────────
   @storyline("talkScientist2") {
-    @trigger(map = "SilphCo2F", npc = 3)
+    @trigger(map = "SilphCo2F", npc = 3, toggle = "SILPH_CO_2F_OBJ_3")
     @if (getFlag("EVENT_BEAT_SILPH_CO_2F_TRAINER_1")) {
       @speaker("") { @t("Can you solve the maze in\nhere?", "你能解开这里的迷宫吗？") }
     } @else {
@@ -48,7 +48,7 @@ game_scene SilphCo2F {
 
   // ── Rocket 1 (npc 4) — sight-engaged trainer; dialogue only ─────────────
   @storyline("talkRocket1") {
-    @trigger(map = "SilphCo2F", npc = 4)
+    @trigger(map = "SilphCo2F", npc = 4, toggle = "SILPH_CO_2F_OBJ_4")
     @if (getFlag("EVENT_BEAT_SILPH_CO_2F_TRAINER_2")) {
       @speaker("") {
         @t("Diamond shaped tiles are\nteleport blocks!\n\nThey're hi-tech\ntransporters!", "菱形的地板是传送方块！\n\n它们是高科技的传送装置！")
@@ -60,7 +60,7 @@ game_scene SilphCo2F {
 
   // ── Rocket 2 (npc 5) — sight-engaged trainer; dialogue only ─────────────
   @storyline("talkRocket2") {
-    @trigger(map = "SilphCo2F", npc = 5)
+    @trigger(map = "SilphCo2F", npc = 5, toggle = "SILPH_CO_2F_OBJ_5")
     @if (getFlag("EVENT_BEAT_SILPH_CO_2F_TRAINER_3")) {
       @speaker("") { @t("SILPH CO. will be merged\nwith TEAM ROCKET!", "西尔佛公司将会与火箭队合并！") }
     } @else {

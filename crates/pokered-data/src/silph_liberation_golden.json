@@ -1,0 +1,254 @@
+{
+  "source_revision": "pokered-fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "scope": "Original SilphCo11F hide list, constants, map toggle table and object IDs; includes31 Silph enemies, excludes9 Saffron blockers.",
+  "cases": [
+    {
+      "map": "SilphCo2F",
+      "npc": 2,
+      "toggle": "SILPH_CO_2F_OBJ_2",
+      "bit": 138,
+      "source_constant": "TOGGLE_SILPH_CO_2F_2",
+      "source_object": "SILPHCO2F_SCIENTIST1"
+    },
+    {
+      "map": "SilphCo2F",
+      "npc": 3,
+      "toggle": "SILPH_CO_2F_OBJ_3",
+      "bit": 139,
+      "source_constant": "TOGGLE_SILPH_CO_2F_3",
+      "source_object": "SILPHCO2F_SCIENTIST2"
+    },
+    {
+      "map": "SilphCo2F",
+      "npc": 4,
+      "toggle": "SILPH_CO_2F_OBJ_4",
+      "bit": 140,
+      "source_constant": "TOGGLE_SILPH_CO_2F_4",
+      "source_object": "SILPHCO2F_ROCKET1"
+    },
+    {
+      "map": "SilphCo2F",
+      "npc": 5,
+      "toggle": "SILPH_CO_2F_OBJ_5",
+      "bit": 141,
+      "source_constant": "TOGGLE_SILPH_CO_2F_5",
+      "source_object": "SILPHCO2F_ROCKET2"
+    },
+    {
+      "map": "SilphCo3F",
+      "npc": 2,
+      "toggle": "SILPH_CO_3F_OBJ_2",
+      "bit": 142,
+      "source_constant": "TOGGLE_SILPH_CO_3F_1",
+      "source_object": "SILPHCO3F_ROCKET"
+    },
+    {
+      "map": "SilphCo3F",
+      "npc": 3,
+      "toggle": "SILPH_CO_3F_OBJ_3",
+      "bit": 143,
+      "source_constant": "TOGGLE_SILPH_CO_3F_2",
+      "source_object": "SILPHCO3F_SCIENTIST"
+    },
+    {
+      "map": "SilphCo4F",
+      "npc": 2,
+      "toggle": "SILPH_CO_4F_OBJ_2",
+      "bit": 145,
+      "source_constant": "TOGGLE_SILPH_CO_4F_1",
+      "source_object": "SILPHCO4F_ROCKET1"
+    },
+    {
+      "map": "SilphCo4F",
+      "npc": 3,
+      "toggle": "SILPH_CO_4F_OBJ_3",
+      "bit": 146,
+      "source_constant": "TOGGLE_SILPH_CO_4F_2",
+      "source_object": "SILPHCO4F_SCIENTIST"
+    },
+    {
+      "map": "SilphCo4F",
+      "npc": 4,
+      "toggle": "SILPH_CO_4F_OBJ_4",
+      "bit": 147,
+      "source_constant": "TOGGLE_SILPH_CO_4F_3",
+      "source_object": "SILPHCO4F_ROCKET2"
+    },
+    {
+      "map": "SilphCo5F",
+      "npc": 2,
+      "toggle": "SILPH_CO_5F_OBJ_2",
+      "bit": 151,
+      "source_constant": "TOGGLE_SILPH_CO_5F_1",
+      "source_object": "SILPHCO5F_ROCKET1"
+    },
+    {
+      "map": "SilphCo5F",
+      "npc": 3,
+      "toggle": "SILPH_CO_5F_OBJ_3",
+      "bit": 152,
+      "source_constant": "TOGGLE_SILPH_CO_5F_2",
+      "source_object": "SILPHCO5F_SCIENTIST"
+    },
+    {
+      "map": "SilphCo5F",
+      "npc": 4,
+      "toggle": "SILPH_CO_5F_OBJ_4",
+      "bit": 153,
+      "source_constant": "TOGGLE_SILPH_CO_5F_3",
+      "source_object": "SILPHCO5F_ROCKER"
+    },
+    {
+      "map": "SilphCo5F",
+      "npc": 5,
+      "toggle": "SILPH_CO_5F_OBJ_5",
+      "bit": 154,
+      "source_constant": "TOGGLE_SILPH_CO_5F_4",
+      "source_object": "SILPHCO5F_ROCKET2"
+    },
+    {
+      "map": "SilphCo6F",
+      "npc": 6,
+      "toggle": "SILPH_CO_6F_OBJ_6",
+      "bit": 158,
+      "source_constant": "TOGGLE_SILPH_CO_6F_1",
+      "source_object": "SILPHCO6F_ROCKET1"
+    },
+    {
+      "map": "SilphCo6F",
+      "npc": 7,
+      "toggle": "SILPH_CO_6F_OBJ_7",
+      "bit": 159,
+      "source_constant": "TOGGLE_SILPH_CO_6F_2",
+      "source_object": "SILPHCO6F_SCIENTIST"
+    },
+    {
+      "map": "SilphCo6F",
+      "npc": 8,
+      "toggle": "SILPH_CO_6F_OBJ_8",
+      "bit": 160,
+      "source_constant": "TOGGLE_SILPH_CO_6F_3",
+      "source_object": "SILPHCO6F_ROCKET2"
+    },
+    {
+      "map": "SilphCo7F",
+      "npc": 5,
+      "toggle": "SILPH_CO_7F_OBJ_5",
+      "bit": 163,
+      "source_constant": "TOGGLE_SILPH_CO_7F_1",
+      "source_object": "SILPHCO7F_ROCKET1"
+    },
+    {
+      "map": "SilphCo7F",
+      "npc": 6,
+      "toggle": "SILPH_CO_7F_OBJ_6",
+      "bit": 164,
+      "source_constant": "TOGGLE_SILPH_CO_7F_2",
+      "source_object": "SILPHCO7F_SCIENTIST"
+    },
+    {
+      "map": "SilphCo7F",
+      "npc": 7,
+      "toggle": "SILPH_CO_7F_OBJ_7",
+      "bit": 165,
+      "source_constant": "TOGGLE_SILPH_CO_7F_3",
+      "source_object": "SILPHCO7F_ROCKET2"
+    },
+    {
+      "map": "SilphCo7F",
+      "npc": 8,
+      "toggle": "SILPH_CO_7F_OBJ_8",
+      "bit": 166,
+      "source_constant": "TOGGLE_SILPH_CO_7F_4",
+      "source_object": "SILPHCO7F_ROCKET3"
+    },
+    {
+      "map": "SilphCo8F",
+      "npc": 2,
+      "toggle": "SILPH_CO_8F_OBJ_2",
+      "bit": 171,
+      "source_constant": "TOGGLE_SILPH_CO_8F_1",
+      "source_object": "SILPHCO8F_ROCKET1"
+    },
+    {
+      "map": "SilphCo8F",
+      "npc": 3,
+      "toggle": "SILPH_CO_8F_OBJ_3",
+      "bit": 172,
+      "source_constant": "TOGGLE_SILPH_CO_8F_2",
+      "source_object": "SILPHCO8F_SCIENTIST"
+    },
+    {
+      "map": "SilphCo8F",
+      "npc": 4,
+      "toggle": "SILPH_CO_8F_OBJ_4",
+      "bit": 173,
+      "source_constant": "TOGGLE_SILPH_CO_8F_3",
+      "source_object": "SILPHCO8F_ROCKET2"
+    },
+    {
+      "map": "SilphCo9F",
+      "npc": 2,
+      "toggle": "SILPH_CO_9F_OBJ_2",
+      "bit": 174,
+      "source_constant": "TOGGLE_SILPH_CO_9F_1",
+      "source_object": "SILPHCO9F_ROCKET1"
+    },
+    {
+      "map": "SilphCo9F",
+      "npc": 3,
+      "toggle": "SILPH_CO_9F_OBJ_3",
+      "bit": 175,
+      "source_constant": "TOGGLE_SILPH_CO_9F_2",
+      "source_object": "SILPHCO9F_SCIENTIST"
+    },
+    {
+      "map": "SilphCo9F",
+      "npc": 4,
+      "toggle": "SILPH_CO_9F_OBJ_4",
+      "bit": 176,
+      "source_constant": "TOGGLE_SILPH_CO_9F_3",
+      "source_object": "SILPHCO9F_ROCKET2"
+    },
+    {
+      "map": "SilphCo10F",
+      "npc": 1,
+      "toggle": "SILPH_CO_10F_OBJ_1",
+      "bit": 177,
+      "source_constant": "TOGGLE_SILPH_CO_10F_1",
+      "source_object": "SILPHCO10F_ROCKET"
+    },
+    {
+      "map": "SilphCo10F",
+      "npc": 2,
+      "toggle": "SILPH_CO_10F_OBJ_2",
+      "bit": 178,
+      "source_constant": "TOGGLE_SILPH_CO_10F_2",
+      "source_object": "SILPHCO10F_SCIENTIST"
+    },
+    {
+      "map": "SilphCo11F",
+      "npc": 3,
+      "toggle": "SILPH_CO_11F_OBJ_3",
+      "bit": 183,
+      "source_constant": "TOGGLE_SILPH_CO_11F_1",
+      "source_object": "SILPHCO11F_GIOVANNI"
+    },
+    {
+      "map": "SilphCo11F",
+      "npc": 4,
+      "toggle": "SILPH_CO_11F_OBJ_4",
+      "bit": 184,
+      "source_constant": "TOGGLE_SILPH_CO_11F_2",
+      "source_object": "SILPHCO11F_ROCKET1"
+    },
+    {
+      "map": "SilphCo11F",
+      "npc": 5,
+      "toggle": "SILPH_CO_11F_OBJ_5",
+      "bit": 185,
+      "source_constant": "TOGGLE_SILPH_CO_11F_3",
+      "source_object": "SILPHCO11F_ROCKET2"
+    }
+  ]
+}

@@ -69,13 +69,7 @@ game_scene SilphCo11F {
         @speaker("") {
           @t("Blast it all! You ruined our\nplans for SILPH!\n\nBut, TEAM ROCKET will never\nfall!\n\n<PLAYER>! Never forget that\nall POKeMON exist for TEAM\nROCKET!\n\nI must go, but I shall\nreturn!", "可恶！你毁了我们西尔佛的计\n划！\n\n但是，火箭队永远打不倒！\n\n<PLAYER>！永远不要忘记，所有\n宝可梦都归火箭队所有！\n\n我该走了，还会再回来！")
         }
-        setFlag("EVENT_BEAT_SILPH_CO_GIOVANNI")
-        hideObjectByName("SILPH_CO_11F_OBJ_3")
-        hideObjectByName("SILPH_CO_11F_OBJ_4")
-        hideObjectByName("SILPH_CO_11F_OBJ_5")
-        // SilphCo11FTeamRocketLeavesScript: the occupation ends — every
-        // Saffron City rocket clears and the liberated citizens return
-        // (cross-map toggle bits, applied on SaffronCity entry).
+        // Original hide/show list: all occupied Silph floors and Saffron City.
         hideObjectByName("SAFFRON_CITY_OBJ_1")
         hideObjectByName("SAFFRON_CITY_OBJ_2")
         hideObjectByName("SAFFRON_CITY_OBJ_3")
@@ -85,12 +79,44 @@ game_scene SilphCo11F {
         hideObjectByName("SAFFRON_CITY_OBJ_7")
         hideObjectByName("SAFFRON_CITY_OBJ_14")
         hideObjectByName("SAFFRON_CITY_OBJ_15")
+        hideObjectByName("SILPH_CO_2F_OBJ_2")
+        hideObjectByName("SILPH_CO_2F_OBJ_3")
+        hideObjectByName("SILPH_CO_2F_OBJ_4")
+        hideObjectByName("SILPH_CO_2F_OBJ_5")
+        hideObjectByName("SILPH_CO_3F_OBJ_2")
+        hideObjectByName("SILPH_CO_3F_OBJ_3")
+        hideObjectByName("SILPH_CO_4F_OBJ_2")
+        hideObjectByName("SILPH_CO_4F_OBJ_3")
+        hideObjectByName("SILPH_CO_4F_OBJ_4")
+        hideObjectByName("SILPH_CO_5F_OBJ_2")
+        hideObjectByName("SILPH_CO_5F_OBJ_3")
+        hideObjectByName("SILPH_CO_5F_OBJ_4")
+        hideObjectByName("SILPH_CO_5F_OBJ_5")
+        hideObjectByName("SILPH_CO_6F_OBJ_6")
+        hideObjectByName("SILPH_CO_6F_OBJ_7")
+        hideObjectByName("SILPH_CO_6F_OBJ_8")
+        hideObjectByName("SILPH_CO_7F_OBJ_5")
+        hideObjectByName("SILPH_CO_7F_OBJ_6")
+        hideObjectByName("SILPH_CO_7F_OBJ_7")
+        hideObjectByName("SILPH_CO_7F_OBJ_8")
+        hideObjectByName("SILPH_CO_8F_OBJ_2")
+        hideObjectByName("SILPH_CO_8F_OBJ_3")
+        hideObjectByName("SILPH_CO_8F_OBJ_4")
+        hideObjectByName("SILPH_CO_9F_OBJ_2")
+        hideObjectByName("SILPH_CO_9F_OBJ_3")
+        hideObjectByName("SILPH_CO_9F_OBJ_4")
+        hideObjectByName("SILPH_CO_10F_OBJ_1")
+        hideObjectByName("SILPH_CO_10F_OBJ_2")
+        hideObjectByName("SILPH_CO_11F_OBJ_3")
+        hideObjectByName("SILPH_CO_11F_OBJ_4")
+        hideObjectByName("SILPH_CO_11F_OBJ_5")
         showObjectByName("SAFFRON_CITY_OBJ_8")
         showObjectByName("SAFFRON_CITY_OBJ_9")
         showObjectByName("SAFFRON_CITY_OBJ_10")
         showObjectByName("SAFFRON_CITY_OBJ_11")
         showObjectByName("SAFFRON_CITY_OBJ_12")
         showObjectByName("SAFFRON_CITY_OBJ_13")
+        setFlag("EVENT_BEAT_SILPH_CO_GIOVANNI")
       }
     }
   }
@@ -143,16 +169,7 @@ game_scene SilphCo11F {
         @speaker("") {
           @t("Blast it all! You ruined our\nplans for SILPH!\n\nBut, TEAM ROCKET will never\nfall!\n\n<PLAYER>! Never forget that\nall POKeMON exist for TEAM\nROCKET!\n\nI must go, but I shall\nreturn!", "可恶！你毁了我们西尔佛的计\n划！\n\n但是，火箭队永远打不倒！\n\n<PLAYER>！永远不要忘记，所有\n宝可梦都归火箭队所有！\n\n我该走了，还会再回来！")
         }
-        setFlag("EVENT_BEAT_SILPH_CO_GIOVANNI")
-        // TEAM ROCKET leaves SILPH. The original hides dozens of Rocket grunts
-        // across every Silph floor (cross-map ShowObject/HideObject on the
-        // SAFFRON/SILPH toggle tables); the DSL surface can only touch this
-        // map's objects, so we hide Giovanni and the two guards here. The
-        // EVENT flag is what gates the other floors' grunts on re-entry.
-        hideObjectByName("SILPH_CO_11F_OBJ_3")
-        hideObjectByName("SILPH_CO_11F_OBJ_4")
-        hideObjectByName("SILPH_CO_11F_OBJ_5")
-        // SilphCo11FTeamRocketLeavesScript: the Saffron City occupation ends.
+        // Original hide/show list: all occupied Silph floors and Saffron City.
         hideObjectByName("SAFFRON_CITY_OBJ_1")
         hideObjectByName("SAFFRON_CITY_OBJ_2")
         hideObjectByName("SAFFRON_CITY_OBJ_3")
@@ -162,12 +179,44 @@ game_scene SilphCo11F {
         hideObjectByName("SAFFRON_CITY_OBJ_7")
         hideObjectByName("SAFFRON_CITY_OBJ_14")
         hideObjectByName("SAFFRON_CITY_OBJ_15")
+        hideObjectByName("SILPH_CO_2F_OBJ_2")
+        hideObjectByName("SILPH_CO_2F_OBJ_3")
+        hideObjectByName("SILPH_CO_2F_OBJ_4")
+        hideObjectByName("SILPH_CO_2F_OBJ_5")
+        hideObjectByName("SILPH_CO_3F_OBJ_2")
+        hideObjectByName("SILPH_CO_3F_OBJ_3")
+        hideObjectByName("SILPH_CO_4F_OBJ_2")
+        hideObjectByName("SILPH_CO_4F_OBJ_3")
+        hideObjectByName("SILPH_CO_4F_OBJ_4")
+        hideObjectByName("SILPH_CO_5F_OBJ_2")
+        hideObjectByName("SILPH_CO_5F_OBJ_3")
+        hideObjectByName("SILPH_CO_5F_OBJ_4")
+        hideObjectByName("SILPH_CO_5F_OBJ_5")
+        hideObjectByName("SILPH_CO_6F_OBJ_6")
+        hideObjectByName("SILPH_CO_6F_OBJ_7")
+        hideObjectByName("SILPH_CO_6F_OBJ_8")
+        hideObjectByName("SILPH_CO_7F_OBJ_5")
+        hideObjectByName("SILPH_CO_7F_OBJ_6")
+        hideObjectByName("SILPH_CO_7F_OBJ_7")
+        hideObjectByName("SILPH_CO_7F_OBJ_8")
+        hideObjectByName("SILPH_CO_8F_OBJ_2")
+        hideObjectByName("SILPH_CO_8F_OBJ_3")
+        hideObjectByName("SILPH_CO_8F_OBJ_4")
+        hideObjectByName("SILPH_CO_9F_OBJ_2")
+        hideObjectByName("SILPH_CO_9F_OBJ_3")
+        hideObjectByName("SILPH_CO_9F_OBJ_4")
+        hideObjectByName("SILPH_CO_10F_OBJ_1")
+        hideObjectByName("SILPH_CO_10F_OBJ_2")
+        hideObjectByName("SILPH_CO_11F_OBJ_3")
+        hideObjectByName("SILPH_CO_11F_OBJ_4")
+        hideObjectByName("SILPH_CO_11F_OBJ_5")
         showObjectByName("SAFFRON_CITY_OBJ_8")
         showObjectByName("SAFFRON_CITY_OBJ_9")
         showObjectByName("SAFFRON_CITY_OBJ_10")
         showObjectByName("SAFFRON_CITY_OBJ_11")
         showObjectByName("SAFFRON_CITY_OBJ_12")
         showObjectByName("SAFFRON_CITY_OBJ_13")
+        setFlag("EVENT_BEAT_SILPH_CO_GIOVANNI")
       }
     }
   }

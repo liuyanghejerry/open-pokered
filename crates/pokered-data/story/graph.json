@@ -13329,6 +13329,16 @@
     },
     {
       "from": "script:SilphCo11F:giovanniStep",
+      "to": "object:SILPH_CO_10F_OBJ_1",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:giovanniStep",
+      "to": "object:SILPH_CO_10F_OBJ_2",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:giovanniStep",
       "to": "object:SILPH_CO_11F_OBJ_3",
       "kind": "hides"
     },
@@ -13340,6 +13350,136 @@
     {
       "from": "script:SilphCo11F:giovanniStep",
       "to": "object:SILPH_CO_11F_OBJ_5",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:giovanniStep",
+      "to": "object:SILPH_CO_2F_OBJ_2",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:giovanniStep",
+      "to": "object:SILPH_CO_2F_OBJ_3",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:giovanniStep",
+      "to": "object:SILPH_CO_2F_OBJ_4",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:giovanniStep",
+      "to": "object:SILPH_CO_2F_OBJ_5",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:giovanniStep",
+      "to": "object:SILPH_CO_3F_OBJ_2",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:giovanniStep",
+      "to": "object:SILPH_CO_3F_OBJ_3",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:giovanniStep",
+      "to": "object:SILPH_CO_4F_OBJ_2",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:giovanniStep",
+      "to": "object:SILPH_CO_4F_OBJ_3",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:giovanniStep",
+      "to": "object:SILPH_CO_4F_OBJ_4",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:giovanniStep",
+      "to": "object:SILPH_CO_5F_OBJ_2",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:giovanniStep",
+      "to": "object:SILPH_CO_5F_OBJ_3",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:giovanniStep",
+      "to": "object:SILPH_CO_5F_OBJ_4",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:giovanniStep",
+      "to": "object:SILPH_CO_5F_OBJ_5",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:giovanniStep",
+      "to": "object:SILPH_CO_6F_OBJ_6",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:giovanniStep",
+      "to": "object:SILPH_CO_6F_OBJ_7",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:giovanniStep",
+      "to": "object:SILPH_CO_6F_OBJ_8",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:giovanniStep",
+      "to": "object:SILPH_CO_7F_OBJ_5",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:giovanniStep",
+      "to": "object:SILPH_CO_7F_OBJ_6",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:giovanniStep",
+      "to": "object:SILPH_CO_7F_OBJ_7",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:giovanniStep",
+      "to": "object:SILPH_CO_7F_OBJ_8",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:giovanniStep",
+      "to": "object:SILPH_CO_8F_OBJ_2",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:giovanniStep",
+      "to": "object:SILPH_CO_8F_OBJ_3",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:giovanniStep",
+      "to": "object:SILPH_CO_8F_OBJ_4",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:giovanniStep",
+      "to": "object:SILPH_CO_9F_OBJ_2",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:giovanniStep",
+      "to": "object:SILPH_CO_9F_OBJ_3",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:giovanniStep",
+      "to": "object:SILPH_CO_9F_OBJ_4",
       "kind": "hides"
     },
     {
@@ -13449,6 +13589,16 @@
     },
     {
       "from": "script:SilphCo11F:talkGiovanni",
+      "to": "object:SILPH_CO_10F_OBJ_1",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:talkGiovanni",
+      "to": "object:SILPH_CO_10F_OBJ_2",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:talkGiovanni",
       "to": "object:SILPH_CO_11F_OBJ_3",
       "kind": "hides"
     },
@@ -13460,6 +13610,136 @@
     {
       "from": "script:SilphCo11F:talkGiovanni",
       "to": "object:SILPH_CO_11F_OBJ_5",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:talkGiovanni",
+      "to": "object:SILPH_CO_2F_OBJ_2",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:talkGiovanni",
+      "to": "object:SILPH_CO_2F_OBJ_3",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:talkGiovanni",
+      "to": "object:SILPH_CO_2F_OBJ_4",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:talkGiovanni",
+      "to": "object:SILPH_CO_2F_OBJ_5",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:talkGiovanni",
+      "to": "object:SILPH_CO_3F_OBJ_2",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:talkGiovanni",
+      "to": "object:SILPH_CO_3F_OBJ_3",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:talkGiovanni",
+      "to": "object:SILPH_CO_4F_OBJ_2",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:talkGiovanni",
+      "to": "object:SILPH_CO_4F_OBJ_3",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:talkGiovanni",
+      "to": "object:SILPH_CO_4F_OBJ_4",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:talkGiovanni",
+      "to": "object:SILPH_CO_5F_OBJ_2",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:talkGiovanni",
+      "to": "object:SILPH_CO_5F_OBJ_3",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:talkGiovanni",
+      "to": "object:SILPH_CO_5F_OBJ_4",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:talkGiovanni",
+      "to": "object:SILPH_CO_5F_OBJ_5",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:talkGiovanni",
+      "to": "object:SILPH_CO_6F_OBJ_6",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:talkGiovanni",
+      "to": "object:SILPH_CO_6F_OBJ_7",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:talkGiovanni",
+      "to": "object:SILPH_CO_6F_OBJ_8",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:talkGiovanni",
+      "to": "object:SILPH_CO_7F_OBJ_5",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:talkGiovanni",
+      "to": "object:SILPH_CO_7F_OBJ_6",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:talkGiovanni",
+      "to": "object:SILPH_CO_7F_OBJ_7",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:talkGiovanni",
+      "to": "object:SILPH_CO_7F_OBJ_8",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:talkGiovanni",
+      "to": "object:SILPH_CO_8F_OBJ_2",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:talkGiovanni",
+      "to": "object:SILPH_CO_8F_OBJ_3",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:talkGiovanni",
+      "to": "object:SILPH_CO_8F_OBJ_4",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:talkGiovanni",
+      "to": "object:SILPH_CO_9F_OBJ_2",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:talkGiovanni",
+      "to": "object:SILPH_CO_9F_OBJ_3",
+      "kind": "hides"
+    },
+    {
+      "from": "script:SilphCo11F:talkGiovanni",
+      "to": "object:SILPH_CO_9F_OBJ_4",
       "kind": "hides"
     },
     {

@@ -105,19 +105,23 @@
     },
     {
       "id": 2,
-      "talk": "talkRocket1"
+      "talk": "talkRocket1",
+      "toggleId": "SILPH_CO_5F_OBJ_2"
     },
     {
       "id": 3,
-      "talk": "talkScientist"
+      "talk": "talkScientist",
+      "toggleId": "SILPH_CO_5F_OBJ_3"
     },
     {
       "id": 4,
-      "talk": "talkRocker"
+      "talk": "talkRocker",
+      "toggleId": "SILPH_CO_5F_OBJ_4"
     },
     {
       "id": 5,
-      "talk": "talkRocket2"
+      "talk": "talkRocket2",
+      "toggleId": "SILPH_CO_5F_OBJ_5"
     },
     {
       "id": 6,

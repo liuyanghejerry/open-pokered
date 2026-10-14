@@ -68,7 +68,7 @@ game_scene SilphCo3F {
 
   // ── Rocket (npc 2) — sight-engaged trainer; dialogue only ───────────────
   @storyline("talkRocket") {
-    @trigger(map = "SilphCo3F", npc = 2)
+    @trigger(map = "SilphCo3F", npc = 2, toggle = "SILPH_CO_3F_OBJ_2")
     @if (getFlag("EVENT_BEAT_SILPH_CO_3F_TRAINER_0")) {
       @speaker("") { @t("A hint? You can open doors\nwith a CARD KEY!", "给你个提示？用磁卡钥匙就能开\n门！") }
     } @else {
@@ -78,7 +78,7 @@ game_scene SilphCo3F {
 
   // ── Scientist (npc 3) — sight-engaged trainer; dialogue only ────────────
   @storyline("talkScientist") {
-    @trigger(map = "SilphCo3F", npc = 3)
+    @trigger(map = "SilphCo3F", npc = 3, toggle = "SILPH_CO_3F_OBJ_3")
     @if (getFlag("EVENT_BEAT_SILPH_CO_3F_TRAINER_1")) {
       @speaker("") {
         @t("Humph...\n\nTEAM ROCKET said that if I\nhelped them, they'd let me\nstudy POKeMON!", "哼……\n\n火箭队说过只要我帮他们，他们\n就让我研究宝可梦！")

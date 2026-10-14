@@ -1,0 +1,160 @@
+{
+  "scope": "Separate native processes use the actual main-menu Continue from the two battle-written saves; no skip-intro or map warp. Not a fresh first playthrough.",
+  "cases": [
+    {
+      "case": "below",
+      "flow": "title A, actual main-menu CONTINUE, wait control_ready",
+      "map": "SilphCo11F",
+      "position": [
+        6,
+        13
+      ],
+      "npcs": [
+        {
+          "facing": "Down",
+          "home_x": 7,
+          "home_y": 5,
+          "npc_index": 0,
+          "scripted_path_remaining": 0,
+          "sprite_id": 43,
+          "text_id": 1,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 7,
+          "y": 5
+        },
+        {
+          "facing": "Down",
+          "home_x": 10,
+          "home_y": 5,
+          "npc_index": 1,
+          "scripted_path_remaining": 0,
+          "sprite_id": 15,
+          "text_id": 2,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 10,
+          "y": 5
+        },
+        {
+          "facing": "Down",
+          "home_x": 6,
+          "home_y": 9,
+          "npc_index": 2,
+          "scripted_path_remaining": 0,
+          "sprite_id": 23,
+          "text_id": 3,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 6,
+          "y": 9
+        },
+        {
+          "facing": "Up",
+          "home_x": 3,
+          "home_y": 16,
+          "npc_index": 3,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 4,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 3,
+          "y": 16
+        },
+        {
+          "facing": "Up",
+          "home_x": 15,
+          "home_y": 9,
+          "npc_index": 4,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 5,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 15,
+          "y": 9
+        }
+      ],
+      "script_running": false
+    },
+    {
+      "case": "right",
+      "flow": "title A, actual main-menu CONTINUE, wait control_ready",
+      "map": "SilphCo11F",
+      "position": [
+        7,
+        12
+      ],
+      "npcs": [
+        {
+          "facing": "Down",
+          "home_x": 7,
+          "home_y": 5,
+          "npc_index": 0,
+          "scripted_path_remaining": 0,
+          "sprite_id": 43,
+          "text_id": 1,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 7,
+          "y": 5
+        },
+        {
+          "facing": "Down",
+          "home_x": 10,
+          "home_y": 5,
+          "npc_index": 1,
+          "scripted_path_remaining": 0,
+          "sprite_id": 15,
+          "text_id": 2,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 10,
+          "y": 5
+        },
+        {
+          "facing": "Down",
+          "home_x": 6,
+          "home_y": 9,
+          "npc_index": 2,
+          "scripted_path_remaining": 0,
+          "sprite_id": 23,
+          "text_id": 3,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 6,
+          "y": 9
+        },
+        {
+          "facing": "Up",
+          "home_x": 3,
+          "home_y": 16,
+          "npc_index": 3,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 4,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 3,
+          "y": 16
+        },
+        {
+          "facing": "Up",
+          "home_x": 15,
+          "home_y": 9,
+          "npc_index": 4,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 5,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 15,
+          "y": 9
+        }
+      ],
+      "script_running": false
+    }
+  ],
+  "pass": true
+}
