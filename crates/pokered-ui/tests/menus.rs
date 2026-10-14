@@ -1412,3 +1412,38 @@ fn machine_party_menu_shows_species_compatibility_instead_of_hp() {
         }
     }
 }
+
+#[test]
+fn stone_party_menu_shows_species_compatibility_for_all_five_stones() {
+    use pokered_core::pokemon::stats::create_pokemon;
+    use pokered_data::items::ItemId;
+    use pokered_data::species::Species;
+    for (stone, species) in [
+        (ItemId::ThunderStone, Species::Pikachu),
+        (ItemId::FireStone, Species::Eevee),
+        (ItemId::WaterStone, Species::Eevee),
+        (ItemId::LeafStone, Species::Gloom),
+        (ItemId::MoonStone, Species::Clefairy),
+    ] {
+        let mut compatible = create_pokemon(species, 22, [0x9a, 0x78]).unwrap();
+        compatible.hp = 0;
+        compatible.status = StatusCondition::Poison;
+        let incompatible = create_pokemon(Species::Bulbasaur, 12, [0x9a, 0x78]).unwrap();
+        let state = PartyScreenState::new_for_item(vec![compatible, incompatible], stone);
+        let mut rec = Recorder::default();
+        menus::party::draw(&state, &PARTY_DEFAULT_LAYOUT, &mut Ui::new(&mut rec), Lang::En);
+        let texts: Vec<_> = rec.ops.iter().filter_map(|op| match op {
+            Op::Text(_, text, _) => Some(text.as_str()),
+            _ => None,
+        }).collect();
+        assert_eq!(texts.iter().filter(|&&text| text == "ABLE").count(), 1, "{stone:?}");
+        assert_eq!(texts.iter().filter(|&&text| text == "NOT ABLE").count(), 1, "{stone:?}");
+        assert!(!texts.contains(&"PSN") && !texts.iter().any(|text| text.contains('/')));
+        assert_eq!(state.party(), &[compatible, incompatible]);
+        assert_eq!(state.item_compatibility(2), None, "missing member has no row");
+    }
+    let evolved = create_pokemon(Species::Raichu, 100, [0x9a, 0x78]).unwrap();
+    let state = PartyScreenState::new_for_item(vec![evolved], ItemId::ThunderStone);
+    assert_eq!(state.item_compatibility(0), Some(false));
+    assert_eq!(PartyScreenState::new(vec![evolved]).item_compatibility(0), None);
+}
