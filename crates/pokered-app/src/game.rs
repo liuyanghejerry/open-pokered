@@ -2894,6 +2894,7 @@ impl PokemonGame {
     /// all sounds, reload the save from disk (unsaved progress is lost, as on
     /// hardware), and return to the title screen.
     fn soft_reset(&mut self) {
+        self.clear_rare_candy_continuation();
         #[cfg(not(target_os = "none"))]
         {
             if self.external_saves {

@@ -128,3 +128,16 @@ that build before invoking the script. The script refuses to reuse a case
 run directory and retains inputs, snapshots, flags, PNGs and SRAM readback.
 It does not build or mutate source code. The ordinary SAVE input checks are
 limited to these constructed cases; they do not claim a complete playthrough.
+
+
+## Snapshot restore and player soft reset follow-up
+
+The new blocking continuation also needs to be dropped when its runtime is abandoned. An old overworld `save_state` slot restored during the learned notice previously replaced SaveData but kept the old RareCandy flow. Opening POKEMON and pressing A could consume a candy without the restored level-12 mon leveling up. Desktop soft reset had the same new-flow leak: actual full-slot replacement input, a held A+B+Start+Select chord for 16 frames, real Title/CONTINUE and the party menu resumed an abandoned prompt and consumed a candy while the mon stayed level 12.
+
+Restore now clears this continuation after the existing movie rejection; the actual soft-reset entry clears it before reload/replacement. Capture still rejects party menus and active movies. Menu continuations were never part of the existing Overworld/Battle snapshot contract; no new menu snapshot format is introduced. Existing unrelated pending-item/evolution fields are outside this correction.
+
+Two added application tests use real item/menu input, without constructing a RareCandyFlow. One saves an overworld slot, reaches the learned notice with two candies, restores the old slot, opens the normal party action menu and uses a fresh candy. The other prepares a private committed SRAM **before input** with `external_saves=false`, reaches a full-slot replacement prompt, holds the real reset chord, selects and acknowledges CONTINUE, then verifies normal party reentry and another actual replacement. The private SRAM stays byte-identical; this is not an ordinary SAVE claim. Both final runs preserve level12/old moves/two candies after restoration, then reach level13/VineWhip/one candy after intentional reuse.
+
+All **11** scoped application tests pass with default features and with `debug-server`; a new debug application builds. The old nine gameplay tests still pass. The frozen older executable reproduces the snapshot loss, and the pre-soft-reset-fix desktop test fails specifically on the observed wrong quantity (1 instead of 2); the corrected test passes. Same-input party screenshots match at snapshot-reentry frame256 and soft-reset-reentry frame841. Initial harness failures at CONTINUE input gates, a test compile error, and an acknowledgement before learning SFX finished are retained and excluded from the gameplay proof.
+
+`lifecycle-verification.json` records this separate build/source identity and bounded restore/reset evidence. Earlier source/native ordinary SAVE captures and m01–m06 retain their actual frozen `e196942e` build identity and were not recaptured or relabelled. The original learning implementation is unchanged by the lifecycle cleanup. No new full application-suite, original reset/animation parity or local GBA runtime PASS is claimed for this follow-up.

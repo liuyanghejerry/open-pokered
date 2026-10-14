@@ -34,6 +34,10 @@ impl PokemonGame {
         self.rare_candy_flow.as_ref().map(|flow| flow.phase)
     }
 
+    pub(crate) fn clear_rare_candy_continuation(&mut self) {
+        self.rare_candy_flow = None;
+    }
+
     pub(super) fn begin_rare_candy(&mut self, party_index: usize, level: u8, moves: Vec<MoveId>) {
         self.pending_bag_item = None;
         self.overworld.party_lead_level = self.save_data.party.leader_level();
