@@ -69,6 +69,10 @@ pub fn apply_evolution(pokemon: &mut Pokemon, new_species: Species) {
     };
 
     let old_max_hp = pokemon.max_hp;
+    // Evolution changes the two type bytes but preserves MON_CATCH_RATE.
+    if pokemon.catch_rate.is_none() {
+        pokemon.catch_rate = Some(pokemon.effective_catch_rate());
+    }
     pokemon.species = new_species;
     pokemon.type1 = base.type1;
     pokemon.type2 = base.type2;

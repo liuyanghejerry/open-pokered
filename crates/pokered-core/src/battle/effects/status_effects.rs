@@ -182,6 +182,7 @@ mod tests {
             special: 80,
             type1: t1,
             type2: t2,
+            catch_rate: Some(pokered_data::pokemon_data::get_base_stats(Species::Pikachu).map_or(0, |b| b.catch_rate)),
             moves: [MoveId::Tackle, MoveId::None, MoveId::None, MoveId::None],
             pp: [35, 0, 0, 0],
             pp_ups: [0; 4],

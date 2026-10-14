@@ -24,6 +24,7 @@ fn make_pokemon(species: Species, level: u8, moves: [MoveId; 4]) -> Pokemon {
         special: 50,
         type1: PokemonType::Grass,
         type2: PokemonType::Poison,
+        catch_rate: Some(pokered_data::pokemon_data::get_base_stats(species).map_or(0, |b| b.catch_rate)),
         moves,
         pp,
         pp_ups: [0; 4],

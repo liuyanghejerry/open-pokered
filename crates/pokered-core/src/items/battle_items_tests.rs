@@ -19,6 +19,7 @@ fn make_battler() -> BattlerState {
         special: 50,
         type1: PokemonType::Electric,
         type2: PokemonType::Electric,
+        catch_rate: Some(pokered_data::pokemon_data::get_base_stats(Species::Pikachu).map_or(0, |b| b.catch_rate)),
         moves: [
             MoveId::Thundershock,
             MoveId::None,
