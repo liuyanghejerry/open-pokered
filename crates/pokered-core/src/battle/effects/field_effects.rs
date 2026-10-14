@@ -172,6 +172,7 @@ mod tests {
             special: 80,
             type1: PokemonType::Electric,
             type2: PokemonType::Electric,
+            catch_rate: Some(pokered_data::pokemon_data::get_base_stats(Species::Pikachu).map_or(0, |b| b.catch_rate)),
             moves: [MoveId::Tackle, MoveId::None, MoveId::None, MoveId::None],
             pp: [35, 0, 0, 0],
             pp_ups: [0; 4],

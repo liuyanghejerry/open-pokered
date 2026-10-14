@@ -68,6 +68,7 @@ pub fn create_pokemon(species: Species, level: u8, dv_bytes: [u8; 2]) -> Option<
         special: spc,
         type1: base.type1,
         type2: base.type2,
+        catch_rate: Some(base.catch_rate),
         moves,
         pp: [
             super::move_learning::get_move_max_pp(moves[0]),
