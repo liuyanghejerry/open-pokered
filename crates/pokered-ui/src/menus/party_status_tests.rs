@@ -36,7 +36,7 @@ fn ailments() -> [(StatusCondition, &'static str); 6] {
 
 fn render(mon: &Pokemon) -> Labels {
     let mut labels = Labels::default();
-    draw_entry(&mut labels, mon, 0, &PARTY_ENTRY_LAYOUT);
+    draw_entry(&mut labels, mon, 0, &PARTY_ENTRY_LAYOUT, None, Lang::En);
     labels
 }
 
@@ -118,4 +118,18 @@ fn long_name_reserves_a_tile_for_visible_fnt_or_ailment_only() {
             );
         }
     }
+}
+
+#[test]
+fn machine_hint_hides_fnt_and_keeps_the_full_name_room() {
+    let mut mon = create_pokemon(Species::Bulbasaur, 12, [0x9a, 0x78]).unwrap();
+    mon.hp = 0;
+    mon.status = StatusCondition::Poison;
+    mon.set_nickname("WWWWWWWWWW");
+    let mut labels = Labels::default();
+    draw_entry(&mut labels, &mon, 0, &PARTY_ENTRY_LAYOUT, Some(true), Lang::En);
+    assert_eq!(labels.0[0].2, "WWWWWWWWWW");
+    assert_eq!(status_text(&labels), "");
+    assert!(labels.0.iter().any(|(_, _, text)| text == "ABLE"));
+    assert!(!labels.0.iter().any(|(_, _, text)| text == "FNT" || text == "PSN" || text.contains('/')));
 }

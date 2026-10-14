@@ -102,6 +102,8 @@ pub fn draw_entries<P: Painter>(
             pokemon,
             i as u32 * cursors[0].row_step,
             entry_layout,
+            state.machine_compatibility(i),
+            lang,
         );
     }
 }
@@ -167,6 +169,8 @@ fn draw_entry<P: Painter>(
     pokemon: &Pokemon,
     row: u32,
     layout: &pokered_data::ui_layout::schema::PartyEntryLayout,
+    machine_compatibility: Option<bool>,
+    lang: Lang,
 ) {
     let dl = layout.dynamic_labels.as_ref();
 
@@ -188,7 +192,7 @@ fn draw_entry<P: Painter>(
     let name = pokemon.display_name(&mut name_buf);
     if let Some(dl) = name_dl {
         // Leave a full tile before status/level, including for wide nicknames.
-        let name_right = if !code.is_empty() {
+        let name_right = if machine_compatibility.is_none() && !code.is_empty() {
             88
         } else {
             120
@@ -216,14 +220,20 @@ fn draw_entry<P: Painter>(
         );
     }
 
-    if !code.is_empty() {
+    if machine_compatibility.is_none() && !code.is_empty() {
         if let Some(dl) = status_dl {
             painter.draw_text_px(dl.tx * 8, (dl.ty + row) * 8, code, dl.color.into());
         }
     }
 
-    let hp_str = format!("{}/{}", pokemon.hp, pokemon.max_hp);
-    if let Some(dl) = hp_val_dl {
+    if let Some(able) = machine_compatibility {
+        let text = lang_data::ui_label(if able { "ABLE" } else { "NOT ABLE" }, lang == Lang::Zh);
+        if let Some((_, dl)) = dl.iter().find(|(key, _)| *key == "hp_bar") {
+            // PrintPartyMenu: name column 3 + nine columns, one row below.
+            painter.draw_text_px(12 * 8, (dl.ty + row) * 8 + 4, text, dl.color.into());
+        }
+    } else if let Some(dl) = hp_val_dl {
+        let hp_str = format!("{}/{}", pokemon.hp, pokemon.max_hp);
         let right = (dl.tx + 7) * 8 - 8;
         // Fusion Pixel ink is taller than 8px: use 12px between text baselines.
         painter.draw_text_px(

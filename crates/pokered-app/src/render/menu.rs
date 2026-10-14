@@ -170,6 +170,9 @@ pub fn draw_party_screen(
                 }
             }
 
+            if state.machine_compatibility(i).is_some() {
+                continue;
+            }
             let hp_bar_y = (i as u32) * row_height + hp_bar.ty * TILE_SIZE + 4;
             if let Err(e) = draw_party_hp_bar(
                 fb,

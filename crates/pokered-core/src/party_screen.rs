@@ -166,6 +166,19 @@ impl PartyScreenState {
         self.mode
     }
 
+    /// TM/HM party menus replace HP with species compatibility, even for
+    /// fainted members or a move that is already known (PrintPartyMenu).
+    pub fn machine_compatibility(&self, party_index: usize) -> Option<bool> {
+        use crate::items::bag_use::{machine_of, MachineKind};
+        use crate::pokemon::move_learning::{can_learn_hm, can_learn_tm};
+        let PartyScreenMode::UseItem(item) = self.mode else { return None };
+        let mon = self.party.get(party_index)?;
+        match machine_of(item)? {
+            MachineKind::Tm(n) => Some(can_learn_tm(mon.species, n)),
+            MachineKind::Hm(n) => Some(can_learn_hm(mon.species, n)),
+        }
+    }
+
     pub fn party(&self) -> &[Pokemon] {
         &self.party
     }
