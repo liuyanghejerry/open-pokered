@@ -157,6 +157,45 @@ pub fn display_name(state: &EngineState<PokeredRules>, who: BattlerRef) -> Strin
     }
 }
 
+/// Names belong to the original party identity, even while Transform replaces
+/// the battle copy. Keep them separate from the mechanics engine's species.
+pub struct BattleNameContext {
+    player: String,
+    opponent: String,
+}
+
+pub fn party_display_name(party: &LegacyParty, is_zh: bool) -> String {
+    pokemon_display_name(party.party_mon(party.active_pokemon_index), is_zh)
+}
+
+pub fn pokemon_display_name(mon: &Pokemon, is_zh: bool) -> String {
+    if mon.has_nickname() {
+        let mut buffer = [0; crate::battle::state::NAME_TEXT_BUF];
+        mon.display_name(&mut buffer).to_string()
+    } else if is_zh {
+        species_name(mon.species, true).to_string()
+    } else {
+        species_name(mon.species, false).to_uppercase()
+    }
+}
+
+impl BattleNameContext {
+    pub fn from_legacy(state: &LegacyBattleState) -> Self {
+        Self {
+            player: party_display_name(&state.player, false),
+            opponent: format!("Enemy {}", party_display_name(&state.enemy, false)),
+        }
+    }
+}
+
+pub fn display_name_named(state: &EngineState<PokeredRules>, who: BattlerRef, names: Option<&BattleNameContext>) -> String {
+    match names {
+        Some(names) if who.side == 0 => names.player.clone(),
+        Some(names) => names.opponent.clone(),
+        None => display_name(state, who),
+    }
+}
+
 fn opp_ref(who: BattlerRef) -> BattlerRef {
     BattlerRef::new(if who.side == 0 { 1 } else { 0 }, who.slot)
 }
@@ -213,6 +252,15 @@ pub fn translate_turn(
     state: &EngineState<PokeredRules>,
     effects: &[EffectState<PokeredRules>],
 ) -> Vec<String> {
+    translate_turn_named(log, state, effects, None)
+}
+
+pub fn translate_turn_named(
+    log: &TurnLog<PokeredRules>,
+    state: &EngineState<PokeredRules>,
+    effects: &[EffectState<PokeredRules>],
+    names: Option<&BattleNameContext>,
+) -> Vec<String> {
     let evs = &log.events;
     let mut msgs = Vec::new();
     // The move whose effect events are currently being walked — Haze's own
@@ -242,20 +290,20 @@ pub fn translate_turn(
                 let eff = if move_is_immune(state,effects,actor,*move_) { Effectiveness::NoEffect }
                     else if dealt_damage { effectiveness_category(md.move_type, d1, d2) } else { Effectiveness::Normal };
                 if md.effect == pokered_data::moves::MoveEffect::SwitchAndTeleportEffect {
-                    msgs.push(format!("{} used {}!", display_name(state, actor), move_name(*move_, false)));
-                    let target_name = display_name(state, opp_ref(actor));
+                    msgs.push(format!("{} used {}!", display_name_named(state, actor, names), move_name(*move_, false)));
+                    let target_name = display_name_named(state, opp_ref(actor), names);
                     if missed {
                         msgs.push(if *move_ == MoveId::Teleport { "But it failed!".to_string() }
                             else { format!("{target_name} is unaffected!") });
                     } else {
                         msgs.push(match *move_ {
-                            MoveId::Teleport => format!("{} ran from battle!", display_name(state, actor)),
+                            MoveId::Teleport => format!("{} ran from battle!", display_name_named(state, actor, names)),
                             MoveId::Roar => format!("{target_name} ran away scared!"),
                             _ => format!("{target_name} was blown away!"),
                         });
                     }
                 } else {
-                    msgs.extend(move_announcement(&display_name(state, actor), move_name(*move_, false), crit, missed, eff, None));
+                    msgs.extend(move_announcement(&display_name_named(state, actor, names), move_name(*move_, false), crit, missed, eff, None));
                 }
                 // HazeEffect (haze.asm:1-49): a landed Haze narrates ONLY
                 // StatusChangesEliminatedText ("All STATUS changes are
@@ -266,11 +314,11 @@ pub fn translate_turn(
                 }
             }
             TurnEvent::Blocked { actor } => {
-                msgs.push(format!("{} {}", display_name(state, *actor), blocked_reason(state, log, *actor)));
+                msgs.push(format!("{} {}", display_name_named(state, *actor, names), blocked_reason(state, log, *actor)));
             }
-            TurnEvent::Fainted { who } => msgs.push(format!("{} fainted!", display_name(state, *who))),
+            TurnEvent::Fainted { who } => msgs.push(format!("{} fainted!", display_name_named(state, *who, names))),
             TurnEvent::StatusInflicted { target, status } => {
-                let name = display_name(state, *target);
+                let name = display_name_named(state, *target, names);
                 let line = match status {
                     LegacyStatus::Poison => format!("{name} was poisoned!"),
                     LegacyStatus::Burn => format!("{name} was burned!"),
@@ -294,9 +342,9 @@ pub fn translate_turn(
                 // "Fire defrosted <TARGET>!" when a Fire-type burn-family move
                 // thaws a frozen target.
                 if matches!(status, LegacyStatus::Sleep(_)) {
-                    msgs.push(format!("{} woke up!", display_name(state, *target)));
+                    msgs.push(format!("{} woke up!", display_name_named(state, *target, names)));
                 } else if matches!(status, LegacyStatus::Freeze) {
-                    msgs.push(format!("Fire defrosted\n{}!", display_name(state, *target)));
+                    msgs.push(format!("Fire defrosted\n{}!", display_name_named(state, *target, names)));
                 }
             }
             TurnEvent::StatChanged { target, stat, delta } => {
@@ -306,7 +354,7 @@ pub fn translate_turn(
                     continue;
                 }
                 if *delta != 0 {
-                    let name = display_name(state, *target);
+                    let name = display_name_named(state, *target, names);
                     let verb = match *delta {
                         d if d >= 2 => "greatly rose",
                         1 => "rose",
@@ -317,7 +365,7 @@ pub fn translate_turn(
                 }
             }
             TurnEvent::Damaged { .. } => {
-                if let Some(line) = presentation_hp_message(e, state, log) { msgs.push(line); }
+                if let Some(line) = presentation_hp_message_named(e, state, log, names) { msgs.push(line); }
             }
             _ => {}
         }
@@ -327,10 +375,14 @@ pub fn translate_turn(
 
 /// Narration boundaries for HP changes outside an executed move.
 pub(crate) fn presentation_hp_message(event: &TurnEvent<PokeredRules>, state: &EngineState<PokeredRules>, log: &TurnLog<PokeredRules>) -> Option<String> {
+    presentation_hp_message_named(event, state, log, None)
+}
+
+fn presentation_hp_message_named(event: &TurnEvent<PokeredRules>, state: &EngineState<PokeredRules>, log: &TurnLog<PokeredRules>, names: Option<&BattleNameContext>) -> Option<String> {
     match event {
-        TurnEvent::Blocked { actor } => Some(format!("{} {}",display_name(state,*actor),blocked_reason(state,log,*actor))),
+        TurnEvent::Blocked { actor } => Some(format!("{} {}",display_name_named(state,*actor,names),blocked_reason(state,log,*actor))),
         TurnEvent::Damaged { target, cause: Some(cause), .. } => {
-            let name=display_name(state,*target);
+            let name=display_name_named(state,*target,names);
             match cause {
                 HpChangeCause::Status(LegacyStatus::Poison) | HpChangeCause::Volatile(PokeVolatile::Toxic { .. }) => Some(format!("{name} is hurt by POISON!")),
                 HpChangeCause::Status(LegacyStatus::Burn) => Some(format!("{name} is hurt by its BURN!")),

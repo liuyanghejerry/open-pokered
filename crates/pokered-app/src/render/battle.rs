@@ -3897,10 +3897,8 @@ pub fn draw_battle(
             } else {
                 "GHOST".to_string()
             }
-        } else if is_zh {
-            pokered_data::lang_data::species_name(screen.enemy_species, true).to_string()
         } else {
-            format!("{}", screen.enemy_species).to_uppercase()
+            screen.enemy_display_name(is_zh)
         };
     // The catch tutorial shows the player as "OLD MAN" (Gen-1 BATTLE_TYPE_OLD_MAN).
     let player_name = if screen.is_old_man {
@@ -3909,10 +3907,8 @@ pub fn draw_battle(
         } else {
             "OLD MAN".to_string()
         }
-    } else if is_zh {
-        pokered_data::lang_data::species_name(screen.player_species, true).to_string()
     } else {
-        format!("{}", screen.player_species).to_uppercase()
+        screen.player_display_name(is_zh)
     };
     let enemy_sprite = species_to_sprite_name(&format!("{}", screen.enemy_species));
     let player_sprite = species_to_sprite_name(&format!("{}", screen.player_species));

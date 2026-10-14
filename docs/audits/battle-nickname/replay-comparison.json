@@ -1,0 +1,10 @@
+{
+  "scope": "Two before and after real-input replays; sameframe544/currentmessagepage. State rows and message sequences agree after nickname substitution. Pixel changes confined to player HUD name and narration name line.",
+  "frame": 544,
+  "replays_per_version": 2,
+  "rows_match_after_name_substitution": true,
+  "changed_pixels": 340,
+  "outside_name_regions_changed": 0,
+  "before_sha256": "dd1d037ad967bbf455ca94f97082a4e20bb4a404bf94f2574ff5daa1888650f3",
+  "after_sha256": "e63b8be2a8c2a135d31783872e72be8d72074bc00075e709ca2fc3e3f7b17360"
+}

@@ -2251,8 +2251,7 @@ impl BattleScreen {
                                     let active = bs.player.active_pokemon_index;
                                     if selected_index == active {
                                         let name =
-                                            format!("{}", bs.player.party[selected_index].species)
-                                                .to_uppercase();
+                                            pokered_rules::runtime::party_display_name(&bs.player, false);
                                         // EN keeps the original two-page split;
                                         // zh recombines so the template can match.
                                         let msgs: Vec<String> = if self.is_zh {
@@ -2385,8 +2384,7 @@ impl BattleScreen {
                         let chosen = self.party_cursor;
                         let active = bs.player.active_pokemon_index;
                         if chosen == active {
-                            let name = format!("{}", bs.player.party[chosen].species)
-                                .to_uppercase();
+                            let name = pokered_rules::runtime::party_display_name(&bs.player, false);
                             let msgs: Vec<String> = if self.is_zh {
                                 vec![pokered_data::battle_text::localize(
                                     &format!("{} is already out!", name),
@@ -3653,6 +3651,7 @@ learn {learn_name}!")];
             let e_recharging = bs.enemy.has_status2(NEEDS_TO_RECHARGE);
             let e_was_charging = bs.enemy.has_status1(CHARGING_UP);
             let e_had_sub = bs.enemy.has_status2(HAS_SUBSTITUTE_UP);
+            let battle_names = pokered_rules::runtime::BattleNameContext::from_legacy(bs);
             let (mut state, mut effects) = pokered_rules::runtime::engine_state_from_legacy(bs);
             // The player is fleeing / has just switched → it does Nothing this turn.
             // In a ghost battle the GHOST itself never attacks either —
@@ -3715,11 +3714,11 @@ learn {learn_name}!")];
                 bs.enemy.clear_status2(NEEDS_TO_RECHARGE);
             }
 
-            let mut m = pokered_rules::runtime::translate_turn(&log, &state, &effects);
+            let mut m = pokered_rules::runtime::translate_turn_named(&log, &state, &effects, Some(&battle_names));
             if let Some(label) = enemy_call {
                 if !ghost_enemy_blocked {
                     self.presentation.called_move_in_order(&mut m,
-                        &pokered_rules::runtime::display_name(&state, BattlerRef::OPPONENT),
+                        &pokered_rules::runtime::display_name_named(&state, BattlerRef::OPPONENT, Some(&battle_names)),
                         label, enemy_move_id, false, enemy_call_failed,
                         [self.player_hp, self.enemy_hp]);
                 }
@@ -3731,21 +3730,21 @@ learn {learn_name}!")];
             }
             if !e_was_charging && bs.enemy.has_status1(CHARGING_UP) {
                 self.presentation.charge_in_order(&mut m,
-                    &pokered_rules::runtime::display_name(&state, BattlerRef::OPPONENT), enemy_move_id, false);
+                    &pokered_rules::runtime::display_name_named(&state, BattlerRef::OPPONENT, Some(&battle_names)), enemy_move_id, false);
             }
             let now_sub = bs.enemy.has_status2(HAS_SUBSTITUTE_UP);
             let created_sub = pokered_rules::sub_created_this_turn(BattlerRef::OPPONENT);
             if created_sub {
                 m.push(format!("{} put in a SUBSTITUTE!",
-                    pokered_rules::runtime::display_name(&state, BattlerRef::OPPONENT)));
+                    pokered_rules::runtime::display_name_named(&state, BattlerRef::OPPONENT, Some(&battle_names))));
             }
             if (e_had_sub || created_sub) && !now_sub {
                 m.push(format!("{}'s SUBSTITUTE broke!",
-                    pokered_rules::runtime::display_name(&state, BattlerRef::OPPONENT)));
+                    pokered_rules::runtime::display_name_named(&state, BattlerRef::OPPONENT, Some(&battle_names))));
             }
             if e_recharging {
                 m.insert(0, format!("{} must recharge!",
-                    pokered_rules::runtime::display_name(&state, BattlerRef::OPPONENT)));
+                    pokered_rules::runtime::display_name_named(&state, BattlerRef::OPPONENT, Some(&battle_names))));
             }
             (m, escape)
         };
@@ -3842,11 +3841,7 @@ learn {learn_name}!")];
         use crate::battle::state::status2;
         // Canonical display spelling (matches the stack-log narration, which also uses
         // species_name) — NOT the strum variant name (e.g. "MR.MIME", not "MRMIME").
-        let enemy_display = format!(
-            "Enemy {}",
-            pokered_data::lang_data::species_name(bs.enemy.active_mon().species, false)
-                .to_uppercase()
-        );
+        let enemy_display = format!("Enemy {}", pokered_rules::runtime::party_display_name(&bs.enemy, false));
         match action {
             AiAction::UsePotion { heal_amount } => {
                 let mon = bs.enemy.active_mon_mut();
@@ -3906,11 +3901,7 @@ learn {learn_name}!")];
                 match target {
                     Some(idx) => {
                         let name = |bs: &BattleState| {
-                            pokered_data::lang_data::species_name(
-                                bs.enemy.active_mon().species,
-                                false,
-                            )
-                            .to_uppercase()
+                            pokered_rules::runtime::party_display_name(&bs.enemy, false)
                         };
                         let old = name(bs);
                         bs.enemy.active_pokemon_index = idx;
@@ -4259,6 +4250,7 @@ learn {learn_name}!")];
                 // broken (the write-back below updates HAS_SUBSTITUTE_UP).
                 let p_had_sub = bs.player.has_status2(crate::battle::state::status2::HAS_SUBSTITUTE_UP);
                 let e_had_sub = bs.enemy.has_status2(crate::battle::state::status2::HAS_SUBSTITUTE_UP);
+                let mut battle_names = pokered_rules::runtime::BattleNameContext::from_legacy(bs);
                 let (mut state, mut effects) = pokered_rules::runtime::engine_state_from_legacy(bs);
                 if enemy_ai_fired {
                     effects.push(dotzuki_engine::battle::stack::EffectState {
@@ -4323,6 +4315,7 @@ learn {learn_name}!")];
                                 &mut self.enemy_ai_count,
                                 &mut ai_msgs,
                             );
+                            battle_names = pokered_rules::runtime::BattleNameContext::from_legacy(bs);
                             let (next_state, mut next_effects) =
                                 pokered_rules::runtime::engine_state_from_legacy(bs);
                             next_effects.push(dotzuki_engine::battle::stack::EffectState {
@@ -4424,7 +4417,7 @@ learn {learn_name}!")];
                 if e_recharging && !enemy_ai_fired {
                     bs.enemy.clear_status2(NEEDS_TO_RECHARGE);
                 }
-                let mut m = pokered_rules::runtime::translate_turn(&log, &state, &effects);
+                let mut m = pokered_rules::runtime::translate_turn_named(&log, &state, &effects, Some(&battle_names));
                 // Called moves stay beside their resolved action, including when
                 // the caller acts second. Their own animation precedes the strike.
                 for (call, actor, resolved, failed) in [
@@ -4433,7 +4426,7 @@ learn {learn_name}!")];
                 ] {
                     if let Some(label) = call {
                         self.presentation.called_move_in_order(&mut m,
-                            &pokered_rules::runtime::display_name(&state, actor),
+                            &pokered_rules::runtime::display_name_named(&state, actor, Some(&battle_names)),
                             label, resolved, actor.side == 0, failed,
                             [self.player_hp, self.enemy_hp]);
                     }
@@ -4442,11 +4435,11 @@ learn {learn_name}!")];
                 // after the other actor's action. Strike turns use normal narration.
                 if !p_was_charging && bs.player.has_status1(CHARGING_UP) {
                     self.presentation.charge_in_order(&mut m,
-                        &pokered_rules::runtime::display_name(&state, BattlerRef::PLAYER), player_move_id, true);
+                        &pokered_rules::runtime::display_name_named(&state, BattlerRef::PLAYER, Some(&battle_names)), player_move_id, true);
                 }
                 if !e_was_charging && bs.enemy.has_status1(CHARGING_UP) {
                     self.presentation.charge_in_order(&mut m,
-                        &pokered_rules::runtime::display_name(&state, BattlerRef::OPPONENT), enemy_move_id, false);
+                        &pokered_rules::runtime::display_name_named(&state, BattlerRef::OPPONENT, Some(&battle_names)), enemy_move_id, false);
                 }
                 // Substitute: narrate a doll raised this turn ("put in a SUBSTITUTE!")
                 // and/or broken ("'s SUBSTITUTE broke!"). The absorb itself is silent, as
@@ -4461,10 +4454,10 @@ learn {learn_name}!")];
                         let now = side.has_status2(HAS_SUBSTITUTE_UP);
                         let created = pokered_rules::sub_created_this_turn(who);
                         if created {
-                            m.push(format!("{} put in a SUBSTITUTE!", pokered_rules::runtime::display_name(&state, who)));
+                            m.push(format!("{} put in a SUBSTITUTE!", pokered_rules::runtime::display_name_named(&state, who, Some(&battle_names))));
                         }
                         if (had || created) && !now {
-                            m.push(format!("{}'s SUBSTITUTE broke!", pokered_rules::runtime::display_name(&state, who)));
+                            m.push(format!("{}'s SUBSTITUTE broke!", pokered_rules::runtime::display_name_named(&state, who, Some(&battle_names))));
                         }
                     }
                 }
@@ -4475,7 +4468,7 @@ learn {learn_name}!")];
                         0,
                         format!(
                             "{} must recharge!",
-                            pokered_rules::runtime::display_name(&state, BattlerRef::OPPONENT)
+                            pokered_rules::runtime::display_name_named(&state, BattlerRef::OPPONENT, Some(&battle_names))
                         ),
                     );
                 }
@@ -4484,7 +4477,7 @@ learn {learn_name}!")];
                         0,
                         format!(
                             "{} must recharge!",
-                            pokered_rules::runtime::display_name(&state, BattlerRef::PLAYER)
+                            pokered_rules::runtime::display_name_named(&state, BattlerRef::PLAYER, Some(&battle_names))
                         ),
                     );
                 }
@@ -4496,7 +4489,7 @@ learn {learn_name}!")];
                     if player_scared {
                         ghost_msgs.push(format!(
                             "{} is too\nscared to move!",
-                            pokered_rules::runtime::display_name(&state, BattlerRef::PLAYER)
+                            pokered_rules::runtime::display_name_named(&state, BattlerRef::PLAYER, Some(&battle_names))
                         ));
                     }
                     if ghost_enemy_blocked {
@@ -4744,7 +4737,7 @@ learn {learn_name}!")];
             .battle_state
             .as_ref()
             .and_then(|bs| bs.enemy.party.iter().find(|p| p.hp > 0))
-            .map(|p| format!("{}", p.species).to_uppercase())
+            .map(|p| pokered_rules::runtime::pokemon_display_name(p, false))
             .unwrap_or_default();
         let player = self.player_name.clone().unwrap_or_else(|| "you".to_string());
         format!(
@@ -4786,12 +4779,22 @@ learn {learn_name}!")];
         self.execute_enemy_free_turn_after_switch(msgs);
     }
 
+    pub fn player_display_name(&self, is_zh: bool) -> String {
+        self.battle_state.as_ref().map(|bs| pokered_rules::runtime::party_display_name(&bs.player, is_zh))
+            .unwrap_or_else(|| if is_zh { pokered_data::lang_data::species_name(self.player_species, true).to_string() } else { format!("{}", self.player_species).to_uppercase() })
+    }
+
+    pub fn enemy_display_name(&self, is_zh: bool) -> String {
+        self.battle_state.as_ref().map(|bs| pokered_rules::runtime::party_display_name(&bs.enemy, is_zh))
+            .unwrap_or_else(|| if is_zh { pokered_data::lang_data::species_name(self.enemy_species, true).to_string() } else { format!("{}", self.enemy_species).to_uppercase() })
+    }
+
     /// PrintSendOutMonMessage selects encouragement from the live enemy HP.
     pub fn player_send_out_message(&self) -> String {
         let (hp, max_hp) = self.battle_state.as_ref()
             .map(|bs| (bs.enemy.active_mon().hp, bs.enemy.active_mon().max_hp))
             .unwrap_or((self.enemy_hp, self.enemy_max_hp));
-        switch_dialogue::send_out(&format!("{}", self.player_species).to_uppercase(), hp, max_hp)
+        switch_dialogue::send_out(&self.player_display_name(false), hp, max_hp)
     }
 
     fn record_switch_in_enemy_hp(&mut self) {
@@ -4808,7 +4811,7 @@ learn {learn_name}!")];
     /// Returns the "come back / Go!" narration lines.
     fn apply_player_switch(&mut self, new_index: usize) -> Vec<String> {
         if let Some(ref mut bs) = self.battle_state {
-            let old_name = format!("{}", bs.player.active_mon().species).to_uppercase();
+            let old_name = pokered_rules::runtime::party_display_name(&bs.player, false);
             let enemy = bs.enemy.active_mon();
             let recall = switch_dialogue::recall(
                 &old_name, self.last_switch_in_enemy_hp, enemy.hp, enemy.max_hp,
@@ -4850,7 +4853,7 @@ learn {learn_name}!")];
         let enemy_name = self
             .battle_state
             .as_ref()
-            .map(|bs| format!("{}", bs.enemy.active_mon().species).to_uppercase())
+            .map(|bs| pokered_rules::runtime::party_display_name(&bs.enemy, false))
             .unwrap_or_default();
         // Original text order: TrainerSentOutText, then the retreat/send-out
         // pair from RetreatMon + SendOutMon.
@@ -5123,7 +5126,7 @@ learn {learn_name}!")];
                     bs.enemy.active_pokemon_index = idx;
                     bs.enemy.reset_volatile_status();
                     bs.enemy.refresh_unmodified_stats();
-                    let name = format!("{}", bs.enemy.active_mon().species).to_uppercase();
+                    let name = pokered_rules::runtime::party_display_name(&bs.enemy, false);
                     let trainer = self
                         .trainer_name
                         .clone()
@@ -5197,7 +5200,7 @@ learn {learn_name}!")];
             (_, LinkAction::Run) => {
                 // The remote ran → we win (`EnemyRan`, core.asm:246-267:
                 // "Enemy {nick} ran!", wBattleResult = 0).
-                let nick = format!("{}", self.enemy_species).to_uppercase();
+                let nick = self.enemy_display_name(false);
                 self.finish_link_battle(
                     LinkBattleResult::Win,
                     vec![format!("Enemy {} ran!", nick)],
@@ -7482,3 +7485,6 @@ mod fidelity_blackout_tests {
         }
     }
 }
+
+#[cfg(test)]
+mod nickname_narration_tests;
