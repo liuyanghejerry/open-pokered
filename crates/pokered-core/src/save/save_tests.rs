@@ -699,6 +699,39 @@ fn test_box_sram_roundtrip_preserves_ot_and_nickname() {
     assert_eq!(m.pp_ups, [1, 1, 0, 0]);
 }
 
+/// Loading a saved box keeps its existing order, including a newly received
+/// mon at the front and a party member deposited at the end.
+#[test]
+fn test_sram_import_preserves_box_order_after_receiving_and_depositing() {
+    use crate::save::ser_pokemon::serialize_box_into;
+    use crate::save::sram_export::export_sram;
+    use crate::save::sram_import::import_sram;
+
+    let mut save = SaveData::new();
+    let mut old = make_test_pokemon(Species::Bulbasaur, 12);
+    old.set_nickname("OLD");
+    old.ot_id = 1000;
+    let mut received = make_test_pokemon(Species::Eevee, 25);
+    received.set_nickname("NEW");
+    let mut deposited = make_test_pokemon(Species::Pidgey, 5);
+    deposited.set_nickname("DEPOSIT");
+    save.current_box.deposit(old).unwrap();
+    save.current_box.insert_new_mon(received).unwrap();
+    save.current_box.deposit(deposited).unwrap();
+    let mut expected = Vec::new();
+    serialize_box_into(&save.current_box, &mut expected);
+
+    let restored = import_sram(&export_sram(&save)).unwrap();
+    assert_eq!(
+        restored.current_box.species_list(),
+        [Species::Eevee, Species::Bulbasaur, Species::Pidgey],
+    );
+    let mut actual = Vec::new();
+    serialize_box_into(&restored.current_box, &mut actual);
+    assert_eq!(actual, expected, "SRAM import retains structs and both name tables");
+    assert_eq!(restored.pc_storage.current_box(), &restored.current_box);
+}
+
 /// The editor tooling (`export-snapshot`/`import-snapshot`, pokered-runner-web)
 /// persists `SaveData` as JSON. Chunk C moved party/boxes/HoF to fixed-capacity
 /// arrays; this locks the legacy JSON shapes (plain arrays of active entries —
