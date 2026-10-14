@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-855-native-stone.py", line 34, in <module>
+    tap('a');assert state('save-open')['screen']=='save'
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
