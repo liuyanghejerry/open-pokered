@@ -3381,6 +3381,9 @@ mod tests {
                 let commands = drive_fidelity_scene(&mut engine, "prizeVendor3", success, "", &[selection, confirm]);
                 assert_eq!(commands.iter().any(|c| matches!(c, ScriptCommand::GiveItem { .. })), confirm == 0);
                 assert_eq!(commands.iter().any(|c| matches!(c, ScriptCommand::Custom { name, .. } if name == "takeCoins")), confirm == 0 && success);
+                assert_eq!(commands.iter().any(|c| matches!(c,
+                    ScriptCommand::ShowText { text } if text == "Oops! You don't\nhave enough room."
+                )), confirm == 0 && !success, "selection {selection}, confirm {confirm}, success {success}");
             }
         }
     }

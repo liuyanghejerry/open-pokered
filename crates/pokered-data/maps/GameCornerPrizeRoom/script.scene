@@ -318,7 +318,7 @@ game_scene GameCornerPrizeRoom {
                 @if (given) {
                   takeCoins(3300)
                 } @else {
-                  @speaker("") { @t("You have no room for this!", "你身上没有空间放这个！") }
+                  @speaker("") { @t("Oops! You don't\nhave enough room.", "你身上没有空间放这个！") }
                 }
               } @else {
                 @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
@@ -338,7 +338,7 @@ game_scene GameCornerPrizeRoom {
                 @if (given) {
                   takeCoins(5500)
                 } @else {
-                  @speaker("") { @t("You have no room for this!", "你身上没有空间放这个！") }
+                  @speaker("") { @t("Oops! You don't\nhave enough room.", "你身上没有空间放这个！") }
                 }
               } @else {
                 @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
@@ -358,7 +358,7 @@ game_scene GameCornerPrizeRoom {
                 @if (given) {
                   takeCoins(7700)
                 } @else {
-                  @speaker("") { @t("You have no room for this!", "你身上没有空间放这个！") }
+                  @speaker("") { @t("Oops! You don't\nhave enough room.", "你身上没有空间放这个！") }
                 }
               } @else {
                 @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }

@@ -1,0 +1,171 @@
+{
+  "before": [
+    {
+      "stage": "before",
+      "frame_count": 120,
+      "map_name": "GameCornerPrizeRoom",
+      "player_x": 6,
+      "player_y": 3,
+      "coins": 9999,
+      "dialogue": null,
+      "choice": null,
+      "active_script_effect": null,
+      "script_running": false
+    },
+    {
+      "stage": "list",
+      "frame_count": 409,
+      "map_name": "GameCornerPrizeRoom",
+      "player_x": 6,
+      "player_y": 3,
+      "coins": 9999,
+      "dialogue": "Which prize do you want?",
+      "choice": {
+        "options": [
+          "TM23  3300",
+          "TM15  5500",
+          "TM50  7700",
+          "NO THANKS"
+        ],
+        "selected": 0
+      },
+      "active_script_effect": "ShowChoice",
+      "script_running": true
+    },
+    {
+      "stage": "confirm",
+      "frame_count": 504,
+      "map_name": "GameCornerPrizeRoom",
+      "player_x": 6,
+      "player_y": 3,
+      "coins": 9999,
+      "dialogue": "So, you want TM23?",
+      "choice": {
+        "options": [
+          "YES",
+          "NO"
+        ],
+        "selected": 0
+      },
+      "active_script_effect": "ShowChoice",
+      "script_running": true
+    },
+    {
+      "stage": "failure",
+      "frame_count": 666,
+      "map_name": "GameCornerPrizeRoom",
+      "player_x": 6,
+      "player_y": 3,
+      "coins": 9999,
+      "dialogue": "You have no room for this!",
+      "choice": null,
+      "active_script_effect": "ShowDialogue",
+      "script_running": true
+    },
+    {
+      "stage": "finished",
+      "frame_count": 679,
+      "map_name": "GameCornerPrizeRoom",
+      "player_x": 6,
+      "player_y": 3,
+      "coins": 9999,
+      "dialogue": null,
+      "choice": null,
+      "active_script_effect": null,
+      "script_running": false
+    }
+  ],
+  "before_storage": {
+    "scope": "Constructed full-bag state, actual prize counter 3 input, first TM confirmation YES; separate saved-state readback. Not full playthrough.",
+    "bag_slots": 20,
+    "coins_before": 9999,
+    "coins_after": 9999,
+    "bag_unchanged": true,
+    "pass": true
+  },
+  "after": [
+    {
+      "stage": "before",
+      "frame_count": 120,
+      "map_name": "GameCornerPrizeRoom",
+      "player_x": 6,
+      "player_y": 3,
+      "coins": 9999,
+      "dialogue": null,
+      "choice": null,
+      "active_script_effect": null,
+      "script_running": false
+    },
+    {
+      "stage": "list",
+      "frame_count": 409,
+      "map_name": "GameCornerPrizeRoom",
+      "player_x": 6,
+      "player_y": 3,
+      "coins": 9999,
+      "dialogue": "Which prize do you want?",
+      "choice": {
+        "options": [
+          "TM23  3300",
+          "TM15  5500",
+          "TM50  7700",
+          "NO THANKS"
+        ],
+        "selected": 0
+      },
+      "active_script_effect": "ShowChoice",
+      "script_running": true
+    },
+    {
+      "stage": "confirm",
+      "frame_count": 504,
+      "map_name": "GameCornerPrizeRoom",
+      "player_x": 6,
+      "player_y": 3,
+      "coins": 9999,
+      "dialogue": "So, you want TM23?",
+      "choice": {
+        "options": [
+          "YES",
+          "NO"
+        ],
+        "selected": 0
+      },
+      "active_script_effect": "ShowChoice",
+      "script_running": true
+    },
+    {
+      "stage": "failure",
+      "frame_count": 666,
+      "map_name": "GameCornerPrizeRoom",
+      "player_x": 6,
+      "player_y": 3,
+      "coins": 9999,
+      "dialogue": "Oops! You don't have enough room.",
+      "choice": null,
+      "active_script_effect": "ShowDialogue",
+      "script_running": true
+    },
+    {
+      "stage": "finished",
+      "frame_count": 679,
+      "map_name": "GameCornerPrizeRoom",
+      "player_x": 6,
+      "player_y": 3,
+      "coins": 9999,
+      "dialogue": null,
+      "choice": null,
+      "active_script_effect": null,
+      "script_running": false
+    }
+  ],
+  "after_storage": {
+    "scope": "Constructed full-bag state, actual prize counter 3 input, first TM confirmation YES; separate saved-state readback. Not full playthrough.",
+    "bag_slots": 20,
+    "coins_before": 9999,
+    "coins_after": 9999,
+    "bag_unchanged": true,
+    "pass": true
+  },
+  "scope": "Constructed 20-slot bag, COIN_CASE, 9999 coins, counter 3 TM23 YES; same inputs, screenshot frame index 665. Other two TM paths covered by native scene assertions."
+}
