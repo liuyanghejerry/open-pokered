@@ -55,9 +55,51 @@ integration), with no failures; one documentation example is ignored. Logs
 are `audit-841-vitamin-tests.log` and `audit-841-core.log` in the private audit
 directory. `git diff --check` passes.
 
-Native full-menu captures and SAVE readback on the corrected build remain
-pending at the initial core commit. Full rendered cadence parity is not
-claimed by this item-rule verification.
+Matched native captures now cover master `117a326a` and corrected core
+`3fc50abb`, using the same fixture bytes and fixed real button inputs. Every
+case runs twice per build (12 complete runs). Result notices are captured at
+frame 640, status screens at 956, bag quantities at 1,216 and ordinary
+SAVE/YES completes before the frame 2,264 capture. Each image is byte-identical
+between repeats. The entire action trace also matches across before/after.
+
+| Native case | Before | After |
+| --- | --- | --- |
+| Fainted Protein | Attack 18, StatExp 0, quantity 2 | Attack 20, StatExp 2,560, quantity 1; HP stays 0 |
+| Injured HP UP | HP 16, max HP 121 | HP 10, max HP 121 |
+| Near-threshold Protein | Attack 83, StatExp 25,600 | Attack 84, StatExp 28,060 |
+
+Ordinary SAVE/YES and independent SRAM reads verify the corrected HP, stats,
+StatExp and PP. All 12 main checksums validate; cash stays 3,000 and the native
+healthy partner's 44 bytes are identical in every run. The corrected target's
+43 modeled bytes match the original reference; byte 7 is the pre-existing
+unrepresented catch-rate byte (native 0, constructed original 45) and is
+explicitly excluded from that source-byte comparison. This evidence does not
+claim whole-save parity or full rendered animation cadence parity.
+
+[Native capture and SAVE manifest](native-verification.json) includes binary,
+fixture, image and SRAM hashes plus the fixed action traces. Full private
+records and screenshots are at the directory named by
+`.task-tmp/fidelity-39-plus/audit-841-native-vitamins-path.txt`; the capture
+script is `audit-841-native-vitamin-capture.py`. An initial capture navigation
+omitted the ActionMenu return from Stats, and a readback assertion used an
+incorrect money key; both runs were rejected and replaced by the 12 verified
+fresh captures. No production changes were made during capture.
+
+### Matched native status screens
+
+前 / 后, each pair at frame 956:
+
+![前 fainted Protein](../../screenshots/vitamin-original-rules/protein-fainted-stats-before.png)
+![后 fainted Protein](../../screenshots/vitamin-original-rules/protein-fainted-stats-after.png)
+![前 injured HP UP](../../screenshots/vitamin-original-rules/hp-up-injured-stats-before.png)
+![后 injured HP UP](../../screenshots/vitamin-original-rules/hp-up-injured-stats-after.png)
+![前 near-threshold Protein](../../screenshots/vitamin-original-rules/protein-near-cap-stats-before.png)
+![后 near-threshold Protein](../../screenshots/vitamin-original-rules/protein-near-cap-stats-after.png)
+
+Fainted Protein bag quantity, both at frame 1,216:
+
+![前 Protein quantity](../../screenshots/vitamin-original-rules/protein-fainted-bag-before.png)
+![后 Protein quantity](../../screenshots/vitamin-original-rules/protein-fainted-bag-after.png)
 
 Full original inputs, routine observations, ordinary SAVE and stats-menu
 captures remain at the directory named by
