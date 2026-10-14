@@ -22,10 +22,10 @@ does the normal runtime grant one level-25 Eevee, set the gift flag and return
 player control. This is in-process PokemonGame input evidence, not an ordinary
 SRAM SAVE, source-emulator comparison or screenshot-parity claim.
 
-Only the `#[cfg(all(test, feature = "debug-server"))]` test module changes. The
-surrounding production file content is byte-identical to base
-`db612ae63b22106632bc1b2f62b835614442d4f7`; no player mechanics or rendering
-changes. Before/after screenshots are unnecessary under the test/tooling
+Only the `#[cfg(all(test, feature = "debug-server"))]` test module changes. At the original fix commit `c96c9c22770c7946a8703ce679938cdeb299e4fc`,
+the surrounding production file content was byte-identical to base
+`db612ae63b22106632bc1b2f62b835614442d4f7`. No player mechanics or rendering
+changes are introduced by the test fix. Before/after screenshots are unnecessary under the test/tooling
 exception in AGENTS.md.
 
 Evidence is retained externally under `fidelity-39-plus/audit-887-*`: the exact
@@ -43,9 +43,19 @@ failure did not reproduce with telemetry, so its cause remains unknown;
 parallel interference is not established. No boulder input or assertion was
 changed, and temporary instrumentation was removed before final validation.
 
-Final source validation: exact SkipDialogue test 1/1, debug gift/control module
+Original fix source validation (c96c9c22): exact SkipDialogue test 1/1, debug gift/control module
 4/4, and the same final debug-library executable with default parallelism
 251/251 enabled tests passed (38 pre-existing ignored tests). The final source
 SHA matches its pre-build freeze; final full parallel validation used no
 boulder instrumentation. Earlier failure and control logs retain their own
 identities rather than being relabeled as final-binary results.
+
+The focused test branch was subsequently merged with master
+`72912bc174a5af7059f254581dfb720574021b7f`, including its new-box front insertion
+fix. The production prefix/suffix around this test module and both existing
+boulder/door controls are byte-identical to that new master. Original-fix logs
+and frozen executables keep their original identities. Integration source
+freeze, executable and new scoped/default-parallel full results are archived
+separately as `audit-887-integration-*`; their exact results are recorded in
+the integration verification report. No screenshots are required: the PR
+diff against current master remains test-only and documentation.
