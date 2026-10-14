@@ -78,6 +78,7 @@ participant EXP fix was merged:
 Both use a dedicated W883 Cargo target, `dev opt0debug0` and `debug-server`.
 Full source/manifests hashes are archived in the before/after build identity
 files. Later branch updates do not relabel these frozen binaries or captures.
+The final build/test source is separately recorded in `final-build-identity.json`.
 
 Native actions match across before/after and across repeats. CUT completes
 at frame 580, the next tile is captured at 628, city entry at 1,316, Route 6
@@ -106,9 +107,23 @@ complete core suite passes **3,279 tests** (2,867 library + 412 integration),
 with one documentation example ignored. The `debug-server` app build and
 `git diff --check` also pass. Local logs retain those source identities.
 
-[verification.json](verification.json) contains actual action traces, source
-routine observations, map/party observations, fixture/binary/script/PNG/SRAM
-hashes and raw evidence directories. The three capture scripts are archived
+After merging master `db612ae6`, the same two selected tests pass and the
+complete core suite passes **3,288 tests** (2,876 library + 412 integration),
+with one documentation example ignored. The final `debug-server` app build
+passes at exact source `0f40def21f7984c848f9d794b71a87d4a29f4dc7`. This
+common-base regression includes the participant EXP correction; it is not
+a new capture identity for the historical screenshot pair.
+
+[verification.json](verification.json) is the compact 4-source/8-native
+summary with fixture, input, frame, binary, PNG and SRAM identities. Full
+metadata, actual traces, checkpoints, PNGs, ordinary SRAM and build/test logs
+are retained in [evidence.zip](evidence.zip), SHA-256
+`4810964e9f02cb894c4148dc71408e539426353cb7a6b35d534d0b2239bd0478`.
+All 198 archived entries are individually hashed in
+[evidence-entry-manifest.json](evidence-entry-manifest.json), and the archive
+was read back and verified against that manifest. ROMs and executable
+binaries are excluded; their hashes remain recorded and private originals
+are retained. No evidence is deleted or relabeled during compaction. The three capture scripts are archived
 verbatim with their actual hashes; they retain explicit local reference and
 earlier fixture dependencies. This is a bounded CUT scenario, not a fresh
 main-line completion claim.
