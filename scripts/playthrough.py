@@ -821,18 +821,34 @@ class Game:
     def approach_object(self, x, y, map_name):
         """Face an object from a reachable adjacent tile (trainers may
         occupy one side after walking up to challenge the player)."""
+        def pending(state):
+            return (state.get("dialogue_state") is not None
+                    or state.get("active_script_effect") is not None
+                    or state.get("choice") is not None
+                    or state.get("script_running"))
+
+        was_live_npc = False
         for _ in range(4):
             state = self.st()
             if state["screen"] == "battle":
                 self.battle_loop(prefer="fight" if state["script_awaiting_battle"] else "run")
-                self.cutscene()
-            elif state.get("dialogue_state") is not None:
-                self.cutscene()
-            cm, cx, cy = self.pos()
+                if not self.cutscene():
+                    raise NavError("object approach cutscene did not finish")
+                self.step(1)  # Observe the update that promotes closed trainer text.
+            elif pending(state):
+                if not self.cutscene():
+                    raise NavError("object approach cutscene did not finish")
+                self.step(1)
+            state = self.st()
+            if state["screen"] == "battle" or pending(state):
+                continue
+            cm, cx, cy = state["map_name"], state["player_x"], state["player_y"]
             if cm != map_name:
                 raise NavError(f"object approach left {map_name} -> {cm}")
             live = self.live_npcs(cm)
-            was_live_npc = (x, y) in live
+            was_live_npc = was_live_npc or (x, y) in live
+            if was_live_npc and (x, y) not in live:
+                return  # The caller verifies completion or re-observes a moved NPC.
             blocked = live | warp_tiles(cm) | {(x, y)}
             candidates = []
             for direction, (dx, dy) in DELTA.items():
@@ -850,6 +866,22 @@ class Game:
                 self.nav_to(*target, cm)
             except NavError:
                 continue
+            # The trainer's "!" intro blocks control before debug state
+            # exposes dialogue (32 field ticks, two rendered frames each).
+            # Wait with neutral input so that handoff becomes observable.
+            self.step(64)
+            # nav_to deliberately returns at a requested destination even
+            # when that tile triggers a trainer. Settle that handoff before
+            # sending direction input, then re-observe the live NPC/target.
+            state = self.st()
+            if state["screen"] == "battle" or pending(state):
+                continue
+            if state["map_name"] != cm:
+                raise NavError(f"object approach left {map_name} -> {state['map_name']}")
+            if was_live_npc and (x, y) not in self.live_npcs(cm):
+                return
+            if (state["player_x"], state["player_y"]) != target:
+                continue
             self.face(direction)
             # Facing can itself start a wild encounter or trainer dialogue.
             # Return only while the requested interaction is still reachable.
@@ -862,7 +894,7 @@ class Game:
             if (state["screen"] == "overworld" and state["map_name"] == map_name
                     and (state["player_x"], state["player_y"]) == target
                     and state["player_facing"].lower() == direction
-                    and state.get("dialogue_state") is None):
+                    and not pending(state)):
                 return
         raise NavError(f"object approach did not settle: {map_name} ({x},{y})")
 
