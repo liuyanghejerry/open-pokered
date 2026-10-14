@@ -20,6 +20,7 @@ fn screen(traded: bool, exp_all: bool) -> BattleScreen {
         false, &[active, partner], &[enemy], Some(TrainerClass::BugCatcher),
     );
     if exp_all { screen.player_bag.add_item(ItemId::ExpAll, 1).unwrap(); }
+    screen.battle_state.as_mut().unwrap().enemy.party[0].hp = 0;
     screen
 }
 
@@ -40,9 +41,9 @@ fn exp_award_notice_ordinary_and_traded_first_pass_keep_source_wording() {
 
 #[test]
 fn exp_award_notice_exp_all_marks_second_pass_and_prioritizes_it_over_trade() {
-    for (traded, first, shared, total, wording) in [
-        (false, 33, 16, 49, "BULBASAUR gained 33 exp. points!"),
-        (true, 49, 24, 73, "BULBASAUR gained a boosted 49 exp. points!"),
+    for (traded, shared, total, wording) in [
+        (false, 16, 49, "BULBASAUR gained 33 exp. points!"),
+        (true, 24, 73, "BULBASAUR gained a boosted 49 exp. points!"),
     ] {
         let mut s = screen(traded, true);
         let before = s.battle_state.as_ref().unwrap().player.party[0].total_exp;
@@ -58,6 +59,5 @@ fn exp_award_notice_exp_all_marks_second_pass_and_prioritizes_it_over_trade() {
         assert_eq!(s.player_bag.items(), &[(ItemId::ExpAll, 1)]);
         // These exact amounts/order come from the actual original Weedle6
         // battle: the participant pass precedes the two full-party notices.
-        assert_eq!(first + shared, total);
     }
 }
