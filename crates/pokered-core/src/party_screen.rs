@@ -166,17 +166,29 @@ impl PartyScreenState {
         self.mode
     }
 
-    /// TM/HM party menus replace HP with species compatibility, even for
+    /// TM/HM and stone party menus replace HP with species compatibility, even for
     /// fainted members or a move that is already known (PrintPartyMenu).
-    pub fn machine_compatibility(&self, party_index: usize) -> Option<bool> {
+    pub fn item_compatibility(&self, party_index: usize) -> Option<bool> {
         use crate::items::bag_use::{machine_of, MachineKind};
         use crate::pokemon::move_learning::{can_learn_hm, can_learn_tm};
+        use pokered_data::evos_moves::{get_evos_moves, EvolutionMethod};
+        use pokered_data::items::ItemId;
         let PartyScreenMode::UseItem(item) = self.mode else { return None };
         let mon = self.party.get(party_index)?;
-        match machine_of(item)? {
-            MachineKind::Tm(n) => Some(can_learn_tm(mon.species, n)),
-            MachineKind::Hm(n) => Some(can_learn_hm(mon.species, n)),
+        if let Some(machine) = machine_of(item) {
+            return Some(match machine {
+                MachineKind::Tm(n) => can_learn_tm(mon.species, n),
+                MachineKind::Hm(n) => can_learn_hm(mon.species, n),
+            });
         }
+        if !matches!(item, ItemId::MoonStone | ItemId::FireStone | ItemId::ThunderStone | ItemId::WaterStone | ItemId::LeafStone) {
+            return None;
+        }
+        // The original menu checks the species' stone entry, without HP,
+        // status, or level checks; actual use remains the item handler's job.
+        Some(get_evos_moves(mon.species).is_some_and(|entry| entry.evolutions.iter().any(|evo| {
+            matches!(evo, EvolutionMethod::Item { item: stone, .. } if *stone == item)
+        })))
     }
 
     pub fn party(&self) -> &[Pokemon] {
