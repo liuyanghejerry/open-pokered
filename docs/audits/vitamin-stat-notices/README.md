@@ -19,25 +19,30 @@ pointer; wStringBuffer contains the expected stat name. The healthy partner
 and currentHP stay unchanged, the selected StatExp becomes2560, and an
 acknowledgement consumes exactly one item. No original SAVE-menu claim.
 
-Native comparison is master3568 versus source01ca4612. The same five initial
+Latest native comparison is master1b5f69ae versus head d0e94f05, after
+integrating the vitamin numeric fix PR230 on both sides. The same five initial
 fixtures use actual START/ITEM/USE/party, Stats, bag and ordinary SAVE/YES,
 two runs per case/build (20 total). All notices capture frame640 with identical
 actions. Repeats have byte-identical PNGs. All four corresponding SRAM files
 for each case have the same SHA256; independent imports retain party/PP,
 cash3000 and quantity1. The only production change is the notice text.
 
-The baseline's HP UP still changes currentHP10 to11; this numeric issue is
-handled separately by PR230. This message-only comparison preserves that
-behavior on both sides and does not claim original full-gameplay parity.
-The original catch-rate byte is also outside this text change.
+All five native cases now preserve currentHP10 and match all43 modeled
+original party bytes, including updated StatExp/cached stats. Byte7 (catch
+rate) is excluded: original45 versus native0 is a separately confirmed save
+issue. These checks do not claim original whole-save or animation parity.
+The older master3568 captures (HP UP currentHP11) remain private historical
+evidence and are replaced by the current-master20-run set in this PR.
 
-Existing bag-use tests pass; the debug-server application builds. The compact
+All23 existing bag-use tests pass on the updated branch; the debug-server
+application builds for both the exact master and updated branch. The compact
 verification.json records image/binary/fixture/SRAM hashes and outcomes.
 Private original/native evidence roots are located through
-.task-tmp/fidelity-39-plus/audit-849-{original,native}-notices-path.txt.
+.task-tmp/fidelity-39-plus/audit-849-original-notices-path.txt and
+audit-849-current-master-native-path.txt.
 Scripts and logs are audit-849-original-vitamin-notices.py,
-audit-849-native-vitamin-notices.py, their retry logs, and
- audit-849-bag-use-tests.log / audit-849-stat-notice-app-build.log.
+audit-849-current-master-native-capture.py, their success logs, and
+audit-849-current-master-bag-tests.log / audit-849-current-master-app-build.log.
 
 Initial source runs incorrectly tried to hook a text-data label as executable
 code; those failed runs are retained and excluded. The first native harness
