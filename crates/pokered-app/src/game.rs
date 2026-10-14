@@ -4489,7 +4489,8 @@ impl PokemonGame {
                             if self.save_data.party.count() < 6 {
                                 let _ = self.save_data.party.add(pokemon);
                             } else {
-                                let _ = self.save_data.pc_storage.deposit_to_current(pokemon);
+                                let _ = self.save_data.pc_storage.current_box_mut()
+                                    .insert_new_mon(pokemon);
                                 self.save_data.current_box =
                                     self.save_data.pc_storage.current_box().clone();
                             }
