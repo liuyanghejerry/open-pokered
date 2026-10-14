@@ -96,14 +96,14 @@ fn calcium_adds_special_stat_exp() {
 }
 
 #[test]
-fn vitamin_caps_at_25600() {
+fn vitamin_gain_can_pass_the_pre_use_threshold() {
     let mut mon = make_mon_with_stat_exp([24000, 0, 0, 0, 0]);
     let result = use_vitamin(&mut mon, ItemId::HpUp);
     assert_eq!(
         result,
         VitaminResult::Applied {
             stat_index: 0,
-            new_stat_exp: 25600
+            new_stat_exp: 26560
         }
     );
 }
@@ -116,11 +116,64 @@ fn vitamin_no_effect_at_cap() {
 }
 
 #[test]
-fn vitamin_no_effect_on_fainted() {
-    let mut mon = make_mon_with_stat_exp([0; 5]);
+fn vitamin_applies_without_reviving_a_fainted_pokemon() {
+    // Actual original menu/SAVE result: audit841, DV9a78, Lv12 Bulbasaur.
+    let mut mon =
+        crate::pokemon::stats::create_pokemon(Species::Bulbasaur, 12, [0x9a, 0x78]).unwrap();
     mon.hp = 0;
-    let result = use_vitamin(&mut mon, ItemId::HpUp);
-    assert_eq!(result, VitaminResult::NoEffect);
+    let result = use_vitamin(&mut mon, ItemId::Protein);
+    assert_eq!(
+        result,
+        VitaminResult::Applied {
+            stat_index: 1,
+            new_stat_exp: 2560
+        }
+    );
+    assert_eq!((mon.hp, mon.max_hp, mon.attack), (0, 35, 20));
+}
+
+#[test]
+fn hp_up_preserves_injured_current_hp() {
+    let mut mon =
+        crate::pokemon::stats::create_pokemon(Species::Bulbasaur, 50, [0x9a, 0x78]).unwrap();
+    mon.hp = 10;
+    assert_eq!(mon.max_hp, 115);
+    assert_eq!(
+        use_vitamin(&mut mon, ItemId::HpUp),
+        VitaminResult::Applied {
+            stat_index: 0,
+            new_stat_exp: 2560
+        }
+    );
+    assert_eq!((mon.hp, mon.max_hp), (10, 121));
+}
+
+#[test]
+fn vitamin_preserves_low_byte_across_the_threshold_for_all_stats() {
+    for (stat_index, item) in [
+        ItemId::HpUp,
+        ItemId::Protein,
+        ItemId::Iron,
+        ItemId::Carbos,
+        ItemId::Calcium,
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        let mut experience = [0; 5];
+        experience[stat_index] = 25500;
+        let mut mon = make_mon_with_stat_exp(experience);
+        assert_eq!(
+            use_vitamin(&mut mon, item),
+            VitaminResult::Applied {
+                stat_index,
+                new_stat_exp: 28060
+            }
+        );
+        assert_eq!(mon.stat_exp[stat_index], 28060);
+        assert_eq!(use_vitamin(&mut mon, item), VitaminResult::NoEffect);
+        assert_eq!(mon.stat_exp[stat_index], 28060);
+    }
 }
 
 #[test]

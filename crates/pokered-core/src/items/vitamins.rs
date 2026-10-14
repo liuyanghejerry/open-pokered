@@ -5,6 +5,7 @@ use pokered_data::items::ItemId;
 use pokered_data::pokemon_data::get_base_stats;
 
 pub const VITAMIN_STAT_EXP_GAIN: u16 = 2560;
+/// Eligibility threshold checked before use, not a cap on the resulting value.
 pub const VITAMIN_STAT_EXP_CAP: u16 = 25600;
 pub const MAX_LEVEL: u8 = 100;
 
@@ -34,16 +35,17 @@ pub fn use_vitamin(mon: &mut Pokemon, item: ItemId) -> VitaminResult {
         _ => return VitaminResult::NotApplicable,
     };
 
-    if mon.hp == 0 {
-        return VitaminResult::NoEffect;
-    }
     if mon.stat_exp[stat_index] >= VITAMIN_STAT_EXP_CAP {
         return VitaminResult::NoEffect;
     }
 
-    mon.stat_exp[stat_index] =
-        (mon.stat_exp[stat_index] + VITAMIN_STAT_EXP_GAIN).min(VITAMIN_STAT_EXP_CAP);
+    // ItemUseVitamin adds ten to the eligible StatExp high byte, preserving
+    // the low byte. It can exceed the pre-use threshold and affect fainted
+    // party members. CalcStats rewrites stats without changing current HP.
+    let current_hp = mon.hp;
+    mon.stat_exp[stat_index] += VITAMIN_STAT_EXP_GAIN;
     recalculate_stats(mon);
+    mon.hp = current_hp;
 
     VitaminResult::Applied {
         stat_index,
