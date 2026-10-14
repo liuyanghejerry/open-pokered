@@ -317,8 +317,11 @@ pub fn apply_item_to_pokemon(item: ItemId, mon: &mut Pokemon, pokedex: &mut Poke
     }
     // Vitamins.
     match use_vitamin(mon, item) {
-        VitaminResult::Applied { .. } => {
-            return used(format!("{}'s stats\nrose!", mon.display_name(&mut name_buf)), true)
+        VitaminResult::Applied { stat_index, .. } => {
+            // VitaminStats (data/battle/stat_names.asm) names the stat,
+            // including HEALTH for HP UP rather than the generic "stats".
+            let stat = ["HEALTH", "ATTACK", "DEFENSE", "SPEED", "SPECIAL"][stat_index];
+            return used(format!("{}'s\n{} rose.", mon.display_name(&mut name_buf), stat), true)
         }
         VitaminResult::NoEffect => return no_effect(),
         VitaminResult::NotApplicable => {}
