@@ -52,9 +52,14 @@
 实际通过：m12 观察为 frame 218467、华蓝市 `(19,18)`，妙蛙草
 Lv18/HP54，移动/warp Idle、无剧情与对话；月见山出口理科男已击败，
 背包持有 Helix Fossil，两枚化石对象均已隐藏。随后 m13 Misty 战
-也通过。运行继续验证后续主线，尚不宣称 m49 或最新 master 全链
-通过。此 frozen binary 对应合入维他命 PR230 前的生产源；PR230
-改变道具逻辑，本轮主线没有使用维他命。
+也通过。该运行后来完成 m01–m21，在 m22 RocketHideoutB4F 以 exit 1
+终止：目的地上的训练家视线事件启动战前对话，导航工具却立即转向。
+不是战后对话；调试状态里的 TrainerVictory 是上一场 GameCorner 战残留。
+终止状态、视频和日志均保留，不宣称 fresh m22、m49 或最新 master 全链通过。
+后续同二进制的构造存档 A/B 两次验证通过，但不算 fresh 主线完成；具体修复、
+完整输入及范围见 [对象接近结算说明](playthrough-object-approach-settlement.md)。
+此 frozen binary 对应合入维他命 PR230 前的生产源；PR230 改变道具逻辑，
+本轮主线没有使用维他命。
 
 `python3 -m unittest discover -s scripts -p test_playthrough_navigation.py -v`：46 项通过。新增覆盖固定登山男与暂时行走/脚本/游走对象的区分、固定目标不耗尽等待预算、楼梯后备路径避开固定对象，以及独立 16 帧移动模型下的完整 90 格路线。现有 map mismatch、错误 warp 目标、黑屏后回城、方向地毯和游走 NPC 等断言保持。
 
