@@ -1,0 +1,1997 @@
+{
+  "base": "3568cac414537f965824ecd100fd807de2098bbd",
+  "production_commit": "01ca4612",
+  "native_runs": 20,
+  "source_runs": 10,
+  "native_save_menu": true,
+  "native_full_sram_same_across_builds_for_each_case": true,
+  "native_frame": 640,
+  "source_frame": 814,
+  "records": [
+    {
+      "case": "HpUp",
+      "native": [
+        {
+          "label": "before",
+          "repeat": 1,
+          "binary_sha256": "9ff93ef98a2cd19d01d7792b0868180a3a0fd92e208ae180e0a0daf4e2c7254b",
+          "fixture_sha256": "70a1f8b6c7a73512ef137d4dae9facbbf6d5e71f4407b33f33cf0202cad72f08",
+          "save_sha256": "fe3aaaab8607d5a0d88f19bc618f71351184d4af2e936d03529bb2e90bcb65a5",
+          "quantity": 1,
+          "money": 3000,
+          "normal_save": true,
+          "after_mon": {
+            "species": "Bulbasaur",
+            "nickname": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "level": 12,
+            "hp": 11,
+            "max_hp": 36,
+            "attack": 18,
+            "defense": 19,
+            "speed": 17,
+            "special": 22,
+            "type1": "Grass",
+            "type2": "Poison",
+            "moves": [
+              "Tackle",
+              "Growl",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              40,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              2560,
+              0,
+              0,
+              0,
+              0
+            ],
+            "total_exp": 973,
+            "is_traded": false,
+            "ot_id": 0,
+            "ot_name": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ]
+          },
+          "notice": {
+            "frame": 640,
+            "sha256": "3176720dfb583d28674f06bc97971e81f7e888d4d4cfb30fb597abe5e4e7f121"
+          },
+          "actions_sha256": "fbfac70866b1d53e47d74a7bb458b09ac03d7aa49890446d1610e05c66c7789c"
+        },
+        {
+          "label": "before",
+          "repeat": 2,
+          "binary_sha256": "9ff93ef98a2cd19d01d7792b0868180a3a0fd92e208ae180e0a0daf4e2c7254b",
+          "fixture_sha256": "70a1f8b6c7a73512ef137d4dae9facbbf6d5e71f4407b33f33cf0202cad72f08",
+          "save_sha256": "fe3aaaab8607d5a0d88f19bc618f71351184d4af2e936d03529bb2e90bcb65a5",
+          "quantity": 1,
+          "money": 3000,
+          "normal_save": true,
+          "after_mon": {
+            "species": "Bulbasaur",
+            "nickname": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "level": 12,
+            "hp": 11,
+            "max_hp": 36,
+            "attack": 18,
+            "defense": 19,
+            "speed": 17,
+            "special": 22,
+            "type1": "Grass",
+            "type2": "Poison",
+            "moves": [
+              "Tackle",
+              "Growl",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              40,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              2560,
+              0,
+              0,
+              0,
+              0
+            ],
+            "total_exp": 973,
+            "is_traded": false,
+            "ot_id": 0,
+            "ot_name": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ]
+          },
+          "notice": {
+            "frame": 640,
+            "sha256": "3176720dfb583d28674f06bc97971e81f7e888d4d4cfb30fb597abe5e4e7f121"
+          },
+          "actions_sha256": "fbfac70866b1d53e47d74a7bb458b09ac03d7aa49890446d1610e05c66c7789c"
+        },
+        {
+          "label": "after",
+          "repeat": 1,
+          "binary_sha256": "d9080057f24b2a9aecfc676ac2a43d4c79c875050197a0d21f694b01c019422d",
+          "fixture_sha256": "70a1f8b6c7a73512ef137d4dae9facbbf6d5e71f4407b33f33cf0202cad72f08",
+          "save_sha256": "fe3aaaab8607d5a0d88f19bc618f71351184d4af2e936d03529bb2e90bcb65a5",
+          "quantity": 1,
+          "money": 3000,
+          "normal_save": true,
+          "after_mon": {
+            "species": "Bulbasaur",
+            "nickname": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "level": 12,
+            "hp": 11,
+            "max_hp": 36,
+            "attack": 18,
+            "defense": 19,
+            "speed": 17,
+            "special": 22,
+            "type1": "Grass",
+            "type2": "Poison",
+            "moves": [
+              "Tackle",
+              "Growl",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              40,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              2560,
+              0,
+              0,
+              0,
+              0
+            ],
+            "total_exp": 973,
+            "is_traded": false,
+            "ot_id": 0,
+            "ot_name": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ]
+          },
+          "notice": {
+            "frame": 640,
+            "sha256": "ea5590ca786eb92db05739c7dc5109e97796bba2129358b4eb4b258235da4783"
+          },
+          "actions_sha256": "fbfac70866b1d53e47d74a7bb458b09ac03d7aa49890446d1610e05c66c7789c"
+        },
+        {
+          "label": "after",
+          "repeat": 2,
+          "binary_sha256": "d9080057f24b2a9aecfc676ac2a43d4c79c875050197a0d21f694b01c019422d",
+          "fixture_sha256": "70a1f8b6c7a73512ef137d4dae9facbbf6d5e71f4407b33f33cf0202cad72f08",
+          "save_sha256": "fe3aaaab8607d5a0d88f19bc618f71351184d4af2e936d03529bb2e90bcb65a5",
+          "quantity": 1,
+          "money": 3000,
+          "normal_save": true,
+          "after_mon": {
+            "species": "Bulbasaur",
+            "nickname": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "level": 12,
+            "hp": 11,
+            "max_hp": 36,
+            "attack": 18,
+            "defense": 19,
+            "speed": 17,
+            "special": 22,
+            "type1": "Grass",
+            "type2": "Poison",
+            "moves": [
+              "Tackle",
+              "Growl",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              40,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              2560,
+              0,
+              0,
+              0,
+              0
+            ],
+            "total_exp": 973,
+            "is_traded": false,
+            "ot_id": 0,
+            "ot_name": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ]
+          },
+          "notice": {
+            "frame": 640,
+            "sha256": "ea5590ca786eb92db05739c7dc5109e97796bba2129358b4eb4b258235da4783"
+          },
+          "actions_sha256": "fbfac70866b1d53e47d74a7bb458b09ac03d7aa49890446d1610e05c66c7789c"
+        }
+      ],
+      "source": [
+        {
+          "stat": "HEALTH",
+          "repeat": 1,
+          "frame": 814,
+          "notice_sha256": "6b66d4f1f5d4d572767e596562f73c256c5285411583aee3b3a1a8c167a0452f",
+          "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+          "string_buffer": [
+            135,
+            132,
+            128,
+            139,
+            147,
+            135,
+            80,
+            128,
+            147,
+            147
+          ],
+          "notice_hook_frames": [
+            475
+          ],
+          "no_mutation_after_input": true
+        },
+        {
+          "stat": "HEALTH",
+          "repeat": 2,
+          "frame": 814,
+          "notice_sha256": "6b66d4f1f5d4d572767e596562f73c256c5285411583aee3b3a1a8c167a0452f",
+          "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+          "string_buffer": [
+            135,
+            132,
+            128,
+            139,
+            147,
+            135,
+            80,
+            128,
+            147,
+            147
+          ],
+          "notice_hook_frames": [
+            475
+          ],
+          "no_mutation_after_input": true
+        }
+      ]
+    },
+    {
+      "case": "Protein",
+      "native": [
+        {
+          "label": "before",
+          "repeat": 1,
+          "binary_sha256": "9ff93ef98a2cd19d01d7792b0868180a3a0fd92e208ae180e0a0daf4e2c7254b",
+          "fixture_sha256": "c856652b4b6245c22525a4d6d5175dc964731d57f91bfb290ac4b404efa3d42b",
+          "save_sha256": "448be1f6b99a081599cd5cd375530a1ceabda2be47776c0b2bbeb5215ef2f1fb",
+          "quantity": 1,
+          "money": 3000,
+          "normal_save": true,
+          "after_mon": {
+            "species": "Bulbasaur",
+            "nickname": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "level": 12,
+            "hp": 10,
+            "max_hp": 35,
+            "attack": 20,
+            "defense": 19,
+            "speed": 17,
+            "special": 22,
+            "type1": "Grass",
+            "type2": "Poison",
+            "moves": [
+              "Tackle",
+              "Growl",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              40,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              2560,
+              0,
+              0,
+              0
+            ],
+            "total_exp": 973,
+            "is_traded": false,
+            "ot_id": 0,
+            "ot_name": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ]
+          },
+          "notice": {
+            "frame": 640,
+            "sha256": "ba30c7613e97bc4379d4c6853c07aa3178fe8dec38633ad95ac58719ea785071"
+          },
+          "actions_sha256": "fbfac70866b1d53e47d74a7bb458b09ac03d7aa49890446d1610e05c66c7789c"
+        },
+        {
+          "label": "before",
+          "repeat": 2,
+          "binary_sha256": "9ff93ef98a2cd19d01d7792b0868180a3a0fd92e208ae180e0a0daf4e2c7254b",
+          "fixture_sha256": "c856652b4b6245c22525a4d6d5175dc964731d57f91bfb290ac4b404efa3d42b",
+          "save_sha256": "448be1f6b99a081599cd5cd375530a1ceabda2be47776c0b2bbeb5215ef2f1fb",
+          "quantity": 1,
+          "money": 3000,
+          "normal_save": true,
+          "after_mon": {
+            "species": "Bulbasaur",
+            "nickname": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "level": 12,
+            "hp": 10,
+            "max_hp": 35,
+            "attack": 20,
+            "defense": 19,
+            "speed": 17,
+            "special": 22,
+            "type1": "Grass",
+            "type2": "Poison",
+            "moves": [
+              "Tackle",
+              "Growl",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              40,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              2560,
+              0,
+              0,
+              0
+            ],
+            "total_exp": 973,
+            "is_traded": false,
+            "ot_id": 0,
+            "ot_name": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ]
+          },
+          "notice": {
+            "frame": 640,
+            "sha256": "ba30c7613e97bc4379d4c6853c07aa3178fe8dec38633ad95ac58719ea785071"
+          },
+          "actions_sha256": "fbfac70866b1d53e47d74a7bb458b09ac03d7aa49890446d1610e05c66c7789c"
+        },
+        {
+          "label": "after",
+          "repeat": 1,
+          "binary_sha256": "d9080057f24b2a9aecfc676ac2a43d4c79c875050197a0d21f694b01c019422d",
+          "fixture_sha256": "c856652b4b6245c22525a4d6d5175dc964731d57f91bfb290ac4b404efa3d42b",
+          "save_sha256": "448be1f6b99a081599cd5cd375530a1ceabda2be47776c0b2bbeb5215ef2f1fb",
+          "quantity": 1,
+          "money": 3000,
+          "normal_save": true,
+          "after_mon": {
+            "species": "Bulbasaur",
+            "nickname": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "level": 12,
+            "hp": 10,
+            "max_hp": 35,
+            "attack": 20,
+            "defense": 19,
+            "speed": 17,
+            "special": 22,
+            "type1": "Grass",
+            "type2": "Poison",
+            "moves": [
+              "Tackle",
+              "Growl",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              40,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              2560,
+              0,
+              0,
+              0
+            ],
+            "total_exp": 973,
+            "is_traded": false,
+            "ot_id": 0,
+            "ot_name": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ]
+          },
+          "notice": {
+            "frame": 640,
+            "sha256": "69f4178757ecf673e22787bb50f87faf9c68333ed07daab68539c7d7c69eb1dc"
+          },
+          "actions_sha256": "fbfac70866b1d53e47d74a7bb458b09ac03d7aa49890446d1610e05c66c7789c"
+        },
+        {
+          "label": "after",
+          "repeat": 2,
+          "binary_sha256": "d9080057f24b2a9aecfc676ac2a43d4c79c875050197a0d21f694b01c019422d",
+          "fixture_sha256": "c856652b4b6245c22525a4d6d5175dc964731d57f91bfb290ac4b404efa3d42b",
+          "save_sha256": "448be1f6b99a081599cd5cd375530a1ceabda2be47776c0b2bbeb5215ef2f1fb",
+          "quantity": 1,
+          "money": 3000,
+          "normal_save": true,
+          "after_mon": {
+            "species": "Bulbasaur",
+            "nickname": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "level": 12,
+            "hp": 10,
+            "max_hp": 35,
+            "attack": 20,
+            "defense": 19,
+            "speed": 17,
+            "special": 22,
+            "type1": "Grass",
+            "type2": "Poison",
+            "moves": [
+              "Tackle",
+              "Growl",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              40,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              2560,
+              0,
+              0,
+              0
+            ],
+            "total_exp": 973,
+            "is_traded": false,
+            "ot_id": 0,
+            "ot_name": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ]
+          },
+          "notice": {
+            "frame": 640,
+            "sha256": "69f4178757ecf673e22787bb50f87faf9c68333ed07daab68539c7d7c69eb1dc"
+          },
+          "actions_sha256": "fbfac70866b1d53e47d74a7bb458b09ac03d7aa49890446d1610e05c66c7789c"
+        }
+      ],
+      "source": [
+        {
+          "stat": "ATTACK",
+          "repeat": 1,
+          "frame": 814,
+          "notice_sha256": "60d8722f34bdeca982129208a5171cf83bf3741b1f995192bbd2e7421716d3cd",
+          "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+          "string_buffer": [
+            128,
+            147,
+            147,
+            128,
+            130,
+            138,
+            80,
+            131,
+            132,
+            133
+          ],
+          "notice_hook_frames": [
+            475
+          ],
+          "no_mutation_after_input": true
+        },
+        {
+          "stat": "ATTACK",
+          "repeat": 2,
+          "frame": 814,
+          "notice_sha256": "60d8722f34bdeca982129208a5171cf83bf3741b1f995192bbd2e7421716d3cd",
+          "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+          "string_buffer": [
+            128,
+            147,
+            147,
+            128,
+            130,
+            138,
+            80,
+            131,
+            132,
+            133
+          ],
+          "notice_hook_frames": [
+            475
+          ],
+          "no_mutation_after_input": true
+        }
+      ]
+    },
+    {
+      "case": "Iron",
+      "native": [
+        {
+          "label": "before",
+          "repeat": 1,
+          "binary_sha256": "9ff93ef98a2cd19d01d7792b0868180a3a0fd92e208ae180e0a0daf4e2c7254b",
+          "fixture_sha256": "08d61eb3b8d03e71bd8bdf499880de46457f474e7fedfef3053837ea2f3b10ac",
+          "save_sha256": "f447d87b44b43675aa1f1df35d1c0eb0607d1d42a1772908b713d52463fc72ff",
+          "quantity": 1,
+          "money": 3000,
+          "normal_save": true,
+          "after_mon": {
+            "species": "Bulbasaur",
+            "nickname": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "level": 12,
+            "hp": 10,
+            "max_hp": 35,
+            "attack": 18,
+            "defense": 20,
+            "speed": 17,
+            "special": 22,
+            "type1": "Grass",
+            "type2": "Poison",
+            "moves": [
+              "Tackle",
+              "Growl",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              40,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              0,
+              2560,
+              0,
+              0
+            ],
+            "total_exp": 973,
+            "is_traded": false,
+            "ot_id": 0,
+            "ot_name": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ]
+          },
+          "notice": {
+            "frame": 640,
+            "sha256": "ba30c7613e97bc4379d4c6853c07aa3178fe8dec38633ad95ac58719ea785071"
+          },
+          "actions_sha256": "fbfac70866b1d53e47d74a7bb458b09ac03d7aa49890446d1610e05c66c7789c"
+        },
+        {
+          "label": "before",
+          "repeat": 2,
+          "binary_sha256": "9ff93ef98a2cd19d01d7792b0868180a3a0fd92e208ae180e0a0daf4e2c7254b",
+          "fixture_sha256": "08d61eb3b8d03e71bd8bdf499880de46457f474e7fedfef3053837ea2f3b10ac",
+          "save_sha256": "f447d87b44b43675aa1f1df35d1c0eb0607d1d42a1772908b713d52463fc72ff",
+          "quantity": 1,
+          "money": 3000,
+          "normal_save": true,
+          "after_mon": {
+            "species": "Bulbasaur",
+            "nickname": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "level": 12,
+            "hp": 10,
+            "max_hp": 35,
+            "attack": 18,
+            "defense": 20,
+            "speed": 17,
+            "special": 22,
+            "type1": "Grass",
+            "type2": "Poison",
+            "moves": [
+              "Tackle",
+              "Growl",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              40,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              0,
+              2560,
+              0,
+              0
+            ],
+            "total_exp": 973,
+            "is_traded": false,
+            "ot_id": 0,
+            "ot_name": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ]
+          },
+          "notice": {
+            "frame": 640,
+            "sha256": "ba30c7613e97bc4379d4c6853c07aa3178fe8dec38633ad95ac58719ea785071"
+          },
+          "actions_sha256": "fbfac70866b1d53e47d74a7bb458b09ac03d7aa49890446d1610e05c66c7789c"
+        },
+        {
+          "label": "after",
+          "repeat": 1,
+          "binary_sha256": "d9080057f24b2a9aecfc676ac2a43d4c79c875050197a0d21f694b01c019422d",
+          "fixture_sha256": "08d61eb3b8d03e71bd8bdf499880de46457f474e7fedfef3053837ea2f3b10ac",
+          "save_sha256": "f447d87b44b43675aa1f1df35d1c0eb0607d1d42a1772908b713d52463fc72ff",
+          "quantity": 1,
+          "money": 3000,
+          "normal_save": true,
+          "after_mon": {
+            "species": "Bulbasaur",
+            "nickname": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "level": 12,
+            "hp": 10,
+            "max_hp": 35,
+            "attack": 18,
+            "defense": 20,
+            "speed": 17,
+            "special": 22,
+            "type1": "Grass",
+            "type2": "Poison",
+            "moves": [
+              "Tackle",
+              "Growl",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              40,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              0,
+              2560,
+              0,
+              0
+            ],
+            "total_exp": 973,
+            "is_traded": false,
+            "ot_id": 0,
+            "ot_name": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ]
+          },
+          "notice": {
+            "frame": 640,
+            "sha256": "f6a993a363277bb482d960e9cd4554035bac1861d7d56f3068d608931f2664d0"
+          },
+          "actions_sha256": "fbfac70866b1d53e47d74a7bb458b09ac03d7aa49890446d1610e05c66c7789c"
+        },
+        {
+          "label": "after",
+          "repeat": 2,
+          "binary_sha256": "d9080057f24b2a9aecfc676ac2a43d4c79c875050197a0d21f694b01c019422d",
+          "fixture_sha256": "08d61eb3b8d03e71bd8bdf499880de46457f474e7fedfef3053837ea2f3b10ac",
+          "save_sha256": "f447d87b44b43675aa1f1df35d1c0eb0607d1d42a1772908b713d52463fc72ff",
+          "quantity": 1,
+          "money": 3000,
+          "normal_save": true,
+          "after_mon": {
+            "species": "Bulbasaur",
+            "nickname": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "level": 12,
+            "hp": 10,
+            "max_hp": 35,
+            "attack": 18,
+            "defense": 20,
+            "speed": 17,
+            "special": 22,
+            "type1": "Grass",
+            "type2": "Poison",
+            "moves": [
+              "Tackle",
+              "Growl",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              40,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              0,
+              2560,
+              0,
+              0
+            ],
+            "total_exp": 973,
+            "is_traded": false,
+            "ot_id": 0,
+            "ot_name": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ]
+          },
+          "notice": {
+            "frame": 640,
+            "sha256": "f6a993a363277bb482d960e9cd4554035bac1861d7d56f3068d608931f2664d0"
+          },
+          "actions_sha256": "fbfac70866b1d53e47d74a7bb458b09ac03d7aa49890446d1610e05c66c7789c"
+        }
+      ],
+      "source": [
+        {
+          "stat": "DEFENSE",
+          "repeat": 1,
+          "frame": 814,
+          "notice_sha256": "54c7f32f102a2c4c12422038f2a2561cb518d3f04c1a2d3ef928f62f31fd8870",
+          "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+          "string_buffer": [
+            131,
+            132,
+            133,
+            132,
+            141,
+            146,
+            132,
+            80,
+            146,
+            143
+          ],
+          "notice_hook_frames": [
+            475
+          ],
+          "no_mutation_after_input": true
+        },
+        {
+          "stat": "DEFENSE",
+          "repeat": 2,
+          "frame": 814,
+          "notice_sha256": "54c7f32f102a2c4c12422038f2a2561cb518d3f04c1a2d3ef928f62f31fd8870",
+          "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+          "string_buffer": [
+            131,
+            132,
+            133,
+            132,
+            141,
+            146,
+            132,
+            80,
+            146,
+            143
+          ],
+          "notice_hook_frames": [
+            475
+          ],
+          "no_mutation_after_input": true
+        }
+      ]
+    },
+    {
+      "case": "Carbos",
+      "native": [
+        {
+          "label": "before",
+          "repeat": 1,
+          "binary_sha256": "9ff93ef98a2cd19d01d7792b0868180a3a0fd92e208ae180e0a0daf4e2c7254b",
+          "fixture_sha256": "d1cf949c0545eee041f816926829c587b5efddab059bd477d5f5c4e07613650d",
+          "save_sha256": "7e97141f0776abcd092759c4809c24d67ac6e014b637106eb3f65db9c5376674",
+          "quantity": 1,
+          "money": 3000,
+          "normal_save": true,
+          "after_mon": {
+            "species": "Bulbasaur",
+            "nickname": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "level": 12,
+            "hp": 10,
+            "max_hp": 35,
+            "attack": 18,
+            "defense": 19,
+            "speed": 18,
+            "special": 22,
+            "type1": "Grass",
+            "type2": "Poison",
+            "moves": [
+              "Tackle",
+              "Growl",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              40,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              0,
+              0,
+              2560,
+              0
+            ],
+            "total_exp": 973,
+            "is_traded": false,
+            "ot_id": 0,
+            "ot_name": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ]
+          },
+          "notice": {
+            "frame": 640,
+            "sha256": "ba30c7613e97bc4379d4c6853c07aa3178fe8dec38633ad95ac58719ea785071"
+          },
+          "actions_sha256": "fbfac70866b1d53e47d74a7bb458b09ac03d7aa49890446d1610e05c66c7789c"
+        },
+        {
+          "label": "before",
+          "repeat": 2,
+          "binary_sha256": "9ff93ef98a2cd19d01d7792b0868180a3a0fd92e208ae180e0a0daf4e2c7254b",
+          "fixture_sha256": "d1cf949c0545eee041f816926829c587b5efddab059bd477d5f5c4e07613650d",
+          "save_sha256": "7e97141f0776abcd092759c4809c24d67ac6e014b637106eb3f65db9c5376674",
+          "quantity": 1,
+          "money": 3000,
+          "normal_save": true,
+          "after_mon": {
+            "species": "Bulbasaur",
+            "nickname": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "level": 12,
+            "hp": 10,
+            "max_hp": 35,
+            "attack": 18,
+            "defense": 19,
+            "speed": 18,
+            "special": 22,
+            "type1": "Grass",
+            "type2": "Poison",
+            "moves": [
+              "Tackle",
+              "Growl",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              40,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              0,
+              0,
+              2560,
+              0
+            ],
+            "total_exp": 973,
+            "is_traded": false,
+            "ot_id": 0,
+            "ot_name": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ]
+          },
+          "notice": {
+            "frame": 640,
+            "sha256": "ba30c7613e97bc4379d4c6853c07aa3178fe8dec38633ad95ac58719ea785071"
+          },
+          "actions_sha256": "fbfac70866b1d53e47d74a7bb458b09ac03d7aa49890446d1610e05c66c7789c"
+        },
+        {
+          "label": "after",
+          "repeat": 1,
+          "binary_sha256": "d9080057f24b2a9aecfc676ac2a43d4c79c875050197a0d21f694b01c019422d",
+          "fixture_sha256": "d1cf949c0545eee041f816926829c587b5efddab059bd477d5f5c4e07613650d",
+          "save_sha256": "7e97141f0776abcd092759c4809c24d67ac6e014b637106eb3f65db9c5376674",
+          "quantity": 1,
+          "money": 3000,
+          "normal_save": true,
+          "after_mon": {
+            "species": "Bulbasaur",
+            "nickname": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "level": 12,
+            "hp": 10,
+            "max_hp": 35,
+            "attack": 18,
+            "defense": 19,
+            "speed": 18,
+            "special": 22,
+            "type1": "Grass",
+            "type2": "Poison",
+            "moves": [
+              "Tackle",
+              "Growl",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              40,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              0,
+              0,
+              2560,
+              0
+            ],
+            "total_exp": 973,
+            "is_traded": false,
+            "ot_id": 0,
+            "ot_name": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ]
+          },
+          "notice": {
+            "frame": 640,
+            "sha256": "daa3f4fcf4a530f248ec7e4d8d20b78e7fde366056a1cc69c31095d4c2b2cb7b"
+          },
+          "actions_sha256": "fbfac70866b1d53e47d74a7bb458b09ac03d7aa49890446d1610e05c66c7789c"
+        },
+        {
+          "label": "after",
+          "repeat": 2,
+          "binary_sha256": "d9080057f24b2a9aecfc676ac2a43d4c79c875050197a0d21f694b01c019422d",
+          "fixture_sha256": "d1cf949c0545eee041f816926829c587b5efddab059bd477d5f5c4e07613650d",
+          "save_sha256": "7e97141f0776abcd092759c4809c24d67ac6e014b637106eb3f65db9c5376674",
+          "quantity": 1,
+          "money": 3000,
+          "normal_save": true,
+          "after_mon": {
+            "species": "Bulbasaur",
+            "nickname": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "level": 12,
+            "hp": 10,
+            "max_hp": 35,
+            "attack": 18,
+            "defense": 19,
+            "speed": 18,
+            "special": 22,
+            "type1": "Grass",
+            "type2": "Poison",
+            "moves": [
+              "Tackle",
+              "Growl",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              40,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              0,
+              0,
+              2560,
+              0
+            ],
+            "total_exp": 973,
+            "is_traded": false,
+            "ot_id": 0,
+            "ot_name": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ]
+          },
+          "notice": {
+            "frame": 640,
+            "sha256": "daa3f4fcf4a530f248ec7e4d8d20b78e7fde366056a1cc69c31095d4c2b2cb7b"
+          },
+          "actions_sha256": "fbfac70866b1d53e47d74a7bb458b09ac03d7aa49890446d1610e05c66c7789c"
+        }
+      ],
+      "source": [
+        {
+          "stat": "SPEED",
+          "repeat": 1,
+          "frame": 814,
+          "notice_sha256": "0ba009b7aff6f4afc973d151d1f312861241fe148900f76c079950df7199c94c",
+          "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+          "string_buffer": [
+            146,
+            143,
+            132,
+            132,
+            131,
+            80,
+            146,
+            143,
+            132,
+            130
+          ],
+          "notice_hook_frames": [
+            475
+          ],
+          "no_mutation_after_input": true
+        },
+        {
+          "stat": "SPEED",
+          "repeat": 2,
+          "frame": 814,
+          "notice_sha256": "0ba009b7aff6f4afc973d151d1f312861241fe148900f76c079950df7199c94c",
+          "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+          "string_buffer": [
+            146,
+            143,
+            132,
+            132,
+            131,
+            80,
+            146,
+            143,
+            132,
+            130
+          ],
+          "notice_hook_frames": [
+            475
+          ],
+          "no_mutation_after_input": true
+        }
+      ]
+    },
+    {
+      "case": "Calcium",
+      "native": [
+        {
+          "label": "before",
+          "repeat": 1,
+          "binary_sha256": "9ff93ef98a2cd19d01d7792b0868180a3a0fd92e208ae180e0a0daf4e2c7254b",
+          "fixture_sha256": "092cb12eb434268b71b490e0a24e2318c8ef79703f9edc362a31f4ef71637909",
+          "save_sha256": "08086c8b4508ced9497ca998c24c0c1c217f8835bfd96dd717ceb14e2dc559f8",
+          "quantity": 1,
+          "money": 3000,
+          "normal_save": true,
+          "after_mon": {
+            "species": "Bulbasaur",
+            "nickname": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "level": 12,
+            "hp": 10,
+            "max_hp": 35,
+            "attack": 18,
+            "defense": 19,
+            "speed": 17,
+            "special": 23,
+            "type1": "Grass",
+            "type2": "Poison",
+            "moves": [
+              "Tackle",
+              "Growl",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              40,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              0,
+              0,
+              0,
+              2560
+            ],
+            "total_exp": 973,
+            "is_traded": false,
+            "ot_id": 0,
+            "ot_name": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ]
+          },
+          "notice": {
+            "frame": 640,
+            "sha256": "ba30c7613e97bc4379d4c6853c07aa3178fe8dec38633ad95ac58719ea785071"
+          },
+          "actions_sha256": "fbfac70866b1d53e47d74a7bb458b09ac03d7aa49890446d1610e05c66c7789c"
+        },
+        {
+          "label": "before",
+          "repeat": 2,
+          "binary_sha256": "9ff93ef98a2cd19d01d7792b0868180a3a0fd92e208ae180e0a0daf4e2c7254b",
+          "fixture_sha256": "092cb12eb434268b71b490e0a24e2318c8ef79703f9edc362a31f4ef71637909",
+          "save_sha256": "08086c8b4508ced9497ca998c24c0c1c217f8835bfd96dd717ceb14e2dc559f8",
+          "quantity": 1,
+          "money": 3000,
+          "normal_save": true,
+          "after_mon": {
+            "species": "Bulbasaur",
+            "nickname": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "level": 12,
+            "hp": 10,
+            "max_hp": 35,
+            "attack": 18,
+            "defense": 19,
+            "speed": 17,
+            "special": 23,
+            "type1": "Grass",
+            "type2": "Poison",
+            "moves": [
+              "Tackle",
+              "Growl",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              40,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              0,
+              0,
+              0,
+              2560
+            ],
+            "total_exp": 973,
+            "is_traded": false,
+            "ot_id": 0,
+            "ot_name": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ]
+          },
+          "notice": {
+            "frame": 640,
+            "sha256": "ba30c7613e97bc4379d4c6853c07aa3178fe8dec38633ad95ac58719ea785071"
+          },
+          "actions_sha256": "fbfac70866b1d53e47d74a7bb458b09ac03d7aa49890446d1610e05c66c7789c"
+        },
+        {
+          "label": "after",
+          "repeat": 1,
+          "binary_sha256": "d9080057f24b2a9aecfc676ac2a43d4c79c875050197a0d21f694b01c019422d",
+          "fixture_sha256": "092cb12eb434268b71b490e0a24e2318c8ef79703f9edc362a31f4ef71637909",
+          "save_sha256": "08086c8b4508ced9497ca998c24c0c1c217f8835bfd96dd717ceb14e2dc559f8",
+          "quantity": 1,
+          "money": 3000,
+          "normal_save": true,
+          "after_mon": {
+            "species": "Bulbasaur",
+            "nickname": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "level": 12,
+            "hp": 10,
+            "max_hp": 35,
+            "attack": 18,
+            "defense": 19,
+            "speed": 17,
+            "special": 23,
+            "type1": "Grass",
+            "type2": "Poison",
+            "moves": [
+              "Tackle",
+              "Growl",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              40,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              0,
+              0,
+              0,
+              2560
+            ],
+            "total_exp": 973,
+            "is_traded": false,
+            "ot_id": 0,
+            "ot_name": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ]
+          },
+          "notice": {
+            "frame": 640,
+            "sha256": "7ad519a27770270e8800dbde91b14a01231340247f2e3356b79ff93c54cc3b15"
+          },
+          "actions_sha256": "fbfac70866b1d53e47d74a7bb458b09ac03d7aa49890446d1610e05c66c7789c"
+        },
+        {
+          "label": "after",
+          "repeat": 2,
+          "binary_sha256": "d9080057f24b2a9aecfc676ac2a43d4c79c875050197a0d21f694b01c019422d",
+          "fixture_sha256": "092cb12eb434268b71b490e0a24e2318c8ef79703f9edc362a31f4ef71637909",
+          "save_sha256": "08086c8b4508ced9497ca998c24c0c1c217f8835bfd96dd717ceb14e2dc559f8",
+          "quantity": 1,
+          "money": 3000,
+          "normal_save": true,
+          "after_mon": {
+            "species": "Bulbasaur",
+            "nickname": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "level": 12,
+            "hp": 10,
+            "max_hp": 35,
+            "attack": 18,
+            "defense": 19,
+            "speed": 17,
+            "special": 23,
+            "type1": "Grass",
+            "type2": "Poison",
+            "moves": [
+              "Tackle",
+              "Growl",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              40,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              0,
+              0,
+              0,
+              2560
+            ],
+            "total_exp": 973,
+            "is_traded": false,
+            "ot_id": 0,
+            "ot_name": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ]
+          },
+          "notice": {
+            "frame": 640,
+            "sha256": "7ad519a27770270e8800dbde91b14a01231340247f2e3356b79ff93c54cc3b15"
+          },
+          "actions_sha256": "fbfac70866b1d53e47d74a7bb458b09ac03d7aa49890446d1610e05c66c7789c"
+        }
+      ],
+      "source": [
+        {
+          "stat": "SPECIAL",
+          "repeat": 1,
+          "frame": 814,
+          "notice_sha256": "bd551517514d475ec38f02f907a157285a29a32d1562ac5d33b7506b6b24db4a",
+          "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+          "string_buffer": [
+            146,
+            143,
+            132,
+            130,
+            136,
+            128,
+            139,
+            80,
+            33,
+            165
+          ],
+          "notice_hook_frames": [
+            475
+          ],
+          "no_mutation_after_input": true
+        },
+        {
+          "stat": "SPECIAL",
+          "repeat": 2,
+          "frame": 814,
+          "notice_sha256": "bd551517514d475ec38f02f907a157285a29a32d1562ac5d33b7506b6b24db4a",
+          "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+          "string_buffer": [
+            146,
+            143,
+            132,
+            130,
+            136,
+            128,
+            139,
+            80,
+            33,
+            165
+          ],
+          "notice_hook_frames": [
+            475
+          ],
+          "no_mutation_after_input": true
+        }
+      ]
+    }
+  ]
+}
