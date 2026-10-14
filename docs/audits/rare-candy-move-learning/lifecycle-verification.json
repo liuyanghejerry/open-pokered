@@ -1,0 +1,883 @@
+{
+  "scope": "RareCandy continuation lifecycle only: agent snapshot restoration and player desktop soft reset/CONTINUE. Not an ordinary SRAM SAVE rerun or original evolution/soft-reset frame parity.",
+  "base_commit": "9d830c5110c6ad15cf5a71de1f65b85cec9fb296",
+  "build_identity": {
+    "base_commit": "9d830c5110c6ad15cf5a71de1f65b85cec9fb296",
+    "binary_sha256": "69097e3e5fff14fdf13ca6cfb68c1eec1bf3f40f9fe796ee35ab227640646fc3",
+    "source_hashes": {
+      "crates/pokered-app/src/game.rs": "3b23ce3d45f494512cb01a3d22aa50f2f4386476f54e59614e52c3910ff153a3",
+      "crates/pokered-app/src/rare_candy.rs": "cdb3064118e0a8f2bc1782da46576c9ab1872e4b49a854fbbce7fe1c341750d1",
+      "crates/pokered-app/src/agent_state.rs": "68dea278abb148423c7fb2aa18936a9911bfd55040f937a4d49563c10b9082a0",
+      "crates/pokered-app/src/rare_candy_tests.rs": "9eadd66625e785f62c879a619fa0b8de91b83abe982c963bfb1716f12240ed2d"
+    },
+    "scoped_app_debug_pass": 11,
+    "scoped_app_default_pass": 11,
+    "app_build_pass": true
+  },
+  "original_rare_candy_learning_body_unchanged": true,
+  "original_rare_candy_file_sha256": "e34f23e6d97f43378a02635c9f8d08b10699396e9d5c6a47ec1e67feed53627b",
+  "old_ordinary_save_replays_keep_e196_build_identity": true,
+  "snapshot_restore": {
+    "before": {
+      "evidence_dir": "audit-850-restore-before-sfyyout8",
+      "binary_sha256": "54449980f858054fae60f407140cea5ea2f758565372ae6cfd1334f74dcc0301",
+      "script_sha256": "58526e86b431b032da8b446743f61b1997ee219d19735f567785e8d731937ed4",
+      "fixture_sha256": "67a64f376b070324ecc3f1d9748545b11583c7f0c05d2c3043e000dac32182fc",
+      "snapshot_hash": "bd3522a8eb99801d",
+      "party_capture_rejected": true,
+      "no_sram_save": true,
+      "captures": {
+        "learned-before-restore": {
+          "frame": 436,
+          "sha256": "0c68afb07d6ce95ba213c229645f0e9b3c6f9d01ba45ef4b4fea121c0267e0d5"
+        },
+        "party-after-restore": {
+          "frame": 256,
+          "sha256": "db69dbe21659bd39a528145838143ecad654e6713b4535c9a5ebd952253ef449"
+        },
+        "a-after-restore": {
+          "frame": 292,
+          "sha256": "96f64631a4cb3a2479827d99a651f55fe4d24b10721e0167dc023442316d3402"
+        }
+      },
+      "states": {
+        "restored": {
+          "frame": 120,
+          "screen": "overworld",
+          "phase": null,
+          "lead": {
+            "species": "Bulbasaur",
+            "level": 12,
+            "hp": 35,
+            "max_hp": 35,
+            "moves": [
+              "Tackle",
+              "Growl",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              40,
+              0,
+              0
+            ],
+            "status": "None"
+          },
+          "full_party_sha256": "080e650d366618aa37d77177ba09398a91cfe112eb908ad0e441567617e9ab79"
+        },
+        "party-after-restore": {
+          "frame": 256,
+          "screen": "party",
+          "phase": "Learned(VineWhip)",
+          "lead": {
+            "species": "Bulbasaur",
+            "level": 12,
+            "hp": 35,
+            "max_hp": 35,
+            "moves": [
+              "Tackle",
+              "Growl",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              40,
+              0,
+              0
+            ],
+            "status": "None"
+          },
+          "full_party_sha256": "080e650d366618aa37d77177ba09398a91cfe112eb908ad0e441567617e9ab79"
+        },
+        "a-after-restore": {
+          "frame": 292,
+          "screen": "bag",
+          "phase": null,
+          "lead": {
+            "species": "Bulbasaur",
+            "level": 12,
+            "hp": 35,
+            "max_hp": 35,
+            "moves": [
+              "Tackle",
+              "Growl",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              40,
+              0,
+              0
+            ],
+            "status": "None"
+          },
+          "full_party_sha256": "080e650d366618aa37d77177ba09398a91cfe112eb908ad0e441567617e9ab79"
+        }
+      },
+      "actions": [
+        {
+          "frame": 120,
+          "button": "start",
+          "frames": 60
+        },
+        {
+          "frame": 184,
+          "button": "down",
+          "frames": 32
+        },
+        {
+          "frame": 220,
+          "button": "down",
+          "frames": 32
+        },
+        {
+          "frame": 256,
+          "button": "a",
+          "frames": 32
+        },
+        {
+          "frame": 292,
+          "button": "a",
+          "frames": 32
+        },
+        {
+          "frame": 328,
+          "button": "a",
+          "frames": 32
+        },
+        {
+          "frame": 364,
+          "button": "a",
+          "frames": 32
+        },
+        {
+          "frame": 400,
+          "button": "a",
+          "frames": 32
+        },
+        {
+          "frame": 120,
+          "button": "start",
+          "frames": 60
+        },
+        {
+          "frame": 184,
+          "button": "up",
+          "frames": 32
+        },
+        {
+          "frame": 220,
+          "button": "a",
+          "frames": 32
+        },
+        {
+          "frame": 256,
+          "button": "a",
+          "frames": 32
+        }
+      ],
+      "observed_quantity_after_party_a": 1,
+      "code_identity_note": "Frozen e196 build; master merge changes were outside this snapshot reproduction."
+    },
+    "after": {
+      "evidence_dir": "audit-850-restore-after-f044f7ry",
+      "binary_sha256": "69097e3e5fff14fdf13ca6cfb68c1eec1bf3f40f9fe796ee35ab227640646fc3",
+      "script_sha256": "58526e86b431b032da8b446743f61b1997ee219d19735f567785e8d731937ed4",
+      "fixture_sha256": "67a64f376b070324ecc3f1d9748545b11583c7f0c05d2c3043e000dac32182fc",
+      "snapshot_hash": "bd3522a8eb99801d",
+      "party_capture_rejected": true,
+      "no_sram_save": true,
+      "captures": {
+        "learned-before-restore": {
+          "frame": 436,
+          "sha256": "0c68afb07d6ce95ba213c229645f0e9b3c6f9d01ba45ef4b4fea121c0267e0d5"
+        },
+        "party-after-restore": {
+          "frame": 256,
+          "sha256": "ede51a40f3e7f5dbd8e3526bed43455be1fbd6eef2d76a3dd7542afab8250ed3"
+        },
+        "a-after-restore": {
+          "frame": 292,
+          "sha256": "2142618f80c9f09b8fa084023568fae320980cf0f9556cf9f75311003e8222df"
+        },
+        "second-learned": {
+          "frame": 580,
+          "sha256": "0c68afb07d6ce95ba213c229645f0e9b3c6f9d01ba45ef4b4fea121c0267e0d5"
+        },
+        "second-finished": {
+          "frame": 856,
+          "sha256": "96f64631a4cb3a2479827d99a651f55fe4d24b10721e0167dc023442316d3402"
+        }
+      },
+      "states": {
+        "restored": {
+          "frame": 120,
+          "screen": "overworld",
+          "phase": null,
+          "lead": {
+            "species": "Bulbasaur",
+            "level": 12,
+            "hp": 35,
+            "max_hp": 35,
+            "moves": [
+              "Tackle",
+              "Growl",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              40,
+              0,
+              0
+            ],
+            "status": "None"
+          },
+          "full_party_sha256": "080e650d366618aa37d77177ba09398a91cfe112eb908ad0e441567617e9ab79"
+        },
+        "party-after-restore": {
+          "frame": 256,
+          "screen": "party",
+          "phase": null,
+          "lead": {
+            "species": "Bulbasaur",
+            "level": 12,
+            "hp": 35,
+            "max_hp": 35,
+            "moves": [
+              "Tackle",
+              "Growl",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              40,
+              0,
+              0
+            ],
+            "status": "None"
+          },
+          "full_party_sha256": "080e650d366618aa37d77177ba09398a91cfe112eb908ad0e441567617e9ab79"
+        },
+        "a-after-restore": {
+          "frame": 292,
+          "screen": "party",
+          "phase": null,
+          "lead": {
+            "species": "Bulbasaur",
+            "level": 12,
+            "hp": 35,
+            "max_hp": 35,
+            "moves": [
+              "Tackle",
+              "Growl",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              40,
+              0,
+              0
+            ],
+            "status": "None"
+          },
+          "full_party_sha256": "080e650d366618aa37d77177ba09398a91cfe112eb908ad0e441567617e9ab79"
+        },
+        "second-finished": {
+          "frame": 856,
+          "screen": "bag",
+          "phase": null,
+          "lead": {
+            "species": "Bulbasaur",
+            "level": 13,
+            "hp": 37,
+            "max_hp": 37,
+            "moves": [
+              "Tackle",
+              "Growl",
+              "VineWhip",
+              "None"
+            ],
+            "pp": [
+              35,
+              40,
+              10,
+              0
+            ],
+            "status": "None"
+          },
+          "full_party_sha256": "37d64e0af07addbb6dac0fe44f52edeec00ab85f75605ff41d1141e6eacb06e7"
+        }
+      },
+      "actions": [
+        {
+          "frame": 120,
+          "button": "start",
+          "frames": 60
+        },
+        {
+          "frame": 184,
+          "button": "down",
+          "frames": 32
+        },
+        {
+          "frame": 220,
+          "button": "down",
+          "frames": 32
+        },
+        {
+          "frame": 256,
+          "button": "a",
+          "frames": 32
+        },
+        {
+          "frame": 292,
+          "button": "a",
+          "frames": 32
+        },
+        {
+          "frame": 328,
+          "button": "a",
+          "frames": 32
+        },
+        {
+          "frame": 364,
+          "button": "a",
+          "frames": 32
+        },
+        {
+          "frame": 400,
+          "button": "a",
+          "frames": 32
+        },
+        {
+          "frame": 120,
+          "button": "start",
+          "frames": 60
+        },
+        {
+          "frame": 184,
+          "button": "up",
+          "frames": 32
+        },
+        {
+          "frame": 220,
+          "button": "a",
+          "frames": 32
+        },
+        {
+          "frame": 256,
+          "button": "a",
+          "frames": 32
+        },
+        {
+          "frame": 292,
+          "button": "b",
+          "frames": 32
+        },
+        {
+          "frame": 328,
+          "button": "b",
+          "frames": 32
+        },
+        {
+          "frame": 364,
+          "button": "down",
+          "frames": 32
+        },
+        {
+          "frame": 400,
+          "button": "a",
+          "frames": 32
+        },
+        {
+          "frame": 436,
+          "button": "a",
+          "frames": 32
+        },
+        {
+          "frame": 472,
+          "button": "a",
+          "frames": 32
+        },
+        {
+          "frame": 508,
+          "button": "a",
+          "frames": 32
+        },
+        {
+          "frame": 544,
+          "button": "a",
+          "frames": 32
+        },
+        {
+          "frame": 820,
+          "button": "a",
+          "frames": 32
+        }
+      ],
+      "observed_quantity_after_party_a": 2,
+      "observed_quantity_after_intentional_reuse": 1
+    }
+  },
+  "soft_reset": {
+    "before": {
+      "evidence_dir": "audit-850-soft-reset-before-proof",
+      "states": {
+        "after-chord": {
+          "frame": 313,
+          "phase": "AbandonConfirm { yes: true }",
+          "quantity": 2,
+          "screen": "TitleScreen",
+          "lead": {
+            "species": "Bulbasaur",
+            "level": 12,
+            "hp": 35,
+            "max_hp": 35,
+            "moves": [
+              "Tackle",
+              "Growl",
+              "LeechSeed",
+              "Cut"
+            ],
+            "pp": [
+              7,
+              4,
+              3,
+              1
+            ],
+            "status": "None",
+            "pp_ups": [
+              1,
+              2,
+              3,
+              1
+            ]
+          },
+          "full_party_sha256": "7ee351fb1c133ff3f014c0b4509b0e316f5dc102b438df91b3e952a9f4cc90da"
+        },
+        "before-chord": {
+          "frame": 297,
+          "phase": "ReplaceConfirm { yes: true }",
+          "quantity": 2,
+          "screen": "PartyScreen",
+          "lead": {
+            "species": "Bulbasaur",
+            "level": 13,
+            "hp": 37,
+            "max_hp": 37,
+            "moves": [
+              "Tackle",
+              "Growl",
+              "LeechSeed",
+              "Cut"
+            ],
+            "pp": [
+              7,
+              4,
+              3,
+              1
+            ],
+            "status": "None",
+            "pp_ups": [
+              1,
+              2,
+              3,
+              1
+            ]
+          },
+          "full_party_sha256": "99393e8399720e4c57aac904dc682c281435c7a3b9d24605cfc70b20c0ac78de"
+        },
+        "continued": {
+          "frame": 610,
+          "phase": "AbandonConfirm { yes: true }",
+          "quantity": 2,
+          "screen": "Overworld",
+          "lead": {
+            "species": "Bulbasaur",
+            "level": 12,
+            "hp": 35,
+            "max_hp": 35,
+            "moves": [
+              "Tackle",
+              "Growl",
+              "LeechSeed",
+              "Cut"
+            ],
+            "pp": [
+              7,
+              4,
+              3,
+              1
+            ],
+            "status": "None",
+            "pp_ups": [
+              1,
+              2,
+              3,
+              1
+            ]
+          },
+          "full_party_sha256": "7ee351fb1c133ff3f014c0b4509b0e316f5dc102b438df91b3e952a9f4cc90da"
+        },
+        "party-a": {
+          "frame": 874,
+          "phase": "DidNotLearn",
+          "quantity": 2,
+          "screen": "PartyScreen",
+          "lead": {
+            "species": "Bulbasaur",
+            "level": 12,
+            "hp": 35,
+            "max_hp": 35,
+            "moves": [
+              "Tackle",
+              "Growl",
+              "LeechSeed",
+              "Cut"
+            ],
+            "pp": [
+              7,
+              4,
+              3,
+              1
+            ],
+            "status": "None",
+            "pp_ups": [
+              1,
+              2,
+              3,
+              1
+            ]
+          },
+          "full_party_sha256": "7ee351fb1c133ff3f014c0b4509b0e316f5dc102b438df91b3e952a9f4cc90da"
+        },
+        "party-entry": {
+          "frame": 841,
+          "phase": "AbandonConfirm { yes: true }",
+          "quantity": 2,
+          "screen": "PartyScreen",
+          "lead": {
+            "species": "Bulbasaur",
+            "level": 12,
+            "hp": 35,
+            "max_hp": 35,
+            "moves": [
+              "Tackle",
+              "Growl",
+              "LeechSeed",
+              "Cut"
+            ],
+            "pp": [
+              7,
+              4,
+              3,
+              1
+            ],
+            "status": "None",
+            "pp_ups": [
+              1,
+              2,
+              3,
+              1
+            ]
+          },
+          "full_party_sha256": "7ee351fb1c133ff3f014c0b4509b0e316f5dc102b438df91b3e952a9f4cc90da"
+        },
+        "stale-finished": {
+          "frame": 907,
+          "phase": null,
+          "quantity": 1,
+          "screen": "Bag",
+          "lead": {
+            "species": "Bulbasaur",
+            "level": 12,
+            "hp": 35,
+            "max_hp": 35,
+            "moves": [
+              "Tackle",
+              "Growl",
+              "LeechSeed",
+              "Cut"
+            ],
+            "pp": [
+              7,
+              4,
+              3,
+              1
+            ],
+            "status": "None",
+            "pp_ups": [
+              1,
+              2,
+              3,
+              1
+            ]
+          },
+          "full_party_sha256": "7ee351fb1c133ff3f014c0b4509b0e316f5dc102b438df91b3e952a9f4cc90da"
+        }
+      },
+      "png_sha256": {
+        "after-chord": "bd7830fb0e4ce2a9cc77bff39ac3c0f0c55a09a9812e8cea88cf35bfc00f9613",
+        "before-chord": "ae533c6f8eaa3a38438bd1c59fbfa01597b80fe805a096bfbb2d8b9e91c9e2d0",
+        "continued": "7e293a211d83937df5365bb53143b8cd07c8df5e67eb3ebf420f4c816e428f5f",
+        "party-a": "c9ea3f19fa59b4527d9a258ca47d522264fc72ada108385fe817fa5859399df4",
+        "party-entry": "0fd2d739d3bbed8a1f050e375b4a1deb78e026219ca733ea5a6d016b741d458d",
+        "stale-finished": "96f64631a4cb3a2479827d99a651f55fe4d24b10721e0167dc023442316d3402"
+      },
+      "run_result": "Expected pre-fix failure: candy quantity1 versus2 after stale prompt completion",
+      "desktop_external_saves": false,
+      "initial_private_sram_is_pre_input_fixture_not_ordinary_save": true,
+      "held_chord_frames": 16,
+      "real_title_continue_and_menu_inputs": true,
+      "code_identity_note": "9d base with snapshot cleanup and new tests only; production soft_reset was unchanged until this expected failing desktop input proof."
+    },
+    "after": {
+      "evidence_dir": "audit-850-soft-reset-after-proof",
+      "states": {
+        "after-chord": {
+          "frame": 313,
+          "phase": null,
+          "quantity": 2,
+          "screen": "TitleScreen",
+          "lead": {
+            "species": "Bulbasaur",
+            "level": 12,
+            "hp": 35,
+            "max_hp": 35,
+            "moves": [
+              "Tackle",
+              "Growl",
+              "LeechSeed",
+              "Cut"
+            ],
+            "pp": [
+              7,
+              4,
+              3,
+              1
+            ],
+            "status": "None",
+            "pp_ups": [
+              1,
+              2,
+              3,
+              1
+            ]
+          },
+          "full_party_sha256": "7ee351fb1c133ff3f014c0b4509b0e316f5dc102b438df91b3e952a9f4cc90da"
+        },
+        "before-chord": {
+          "frame": 297,
+          "phase": "ReplaceConfirm { yes: true }",
+          "quantity": 2,
+          "screen": "PartyScreen",
+          "lead": {
+            "species": "Bulbasaur",
+            "level": 13,
+            "hp": 37,
+            "max_hp": 37,
+            "moves": [
+              "Tackle",
+              "Growl",
+              "LeechSeed",
+              "Cut"
+            ],
+            "pp": [
+              7,
+              4,
+              3,
+              1
+            ],
+            "status": "None",
+            "pp_ups": [
+              1,
+              2,
+              3,
+              1
+            ]
+          },
+          "full_party_sha256": "99393e8399720e4c57aac904dc682c281435c7a3b9d24605cfc70b20c0ac78de"
+        },
+        "continued": {
+          "frame": 610,
+          "phase": null,
+          "quantity": 2,
+          "screen": "Overworld",
+          "lead": {
+            "species": "Bulbasaur",
+            "level": 12,
+            "hp": 35,
+            "max_hp": 35,
+            "moves": [
+              "Tackle",
+              "Growl",
+              "LeechSeed",
+              "Cut"
+            ],
+            "pp": [
+              7,
+              4,
+              3,
+              1
+            ],
+            "status": "None",
+            "pp_ups": [
+              1,
+              2,
+              3,
+              1
+            ]
+          },
+          "full_party_sha256": "7ee351fb1c133ff3f014c0b4509b0e316f5dc102b438df91b3e952a9f4cc90da"
+        },
+        "new-candy-finished": {
+          "frame": 1410,
+          "phase": null,
+          "quantity": 1,
+          "screen": "Bag",
+          "lead": {
+            "species": "Bulbasaur",
+            "level": 13,
+            "hp": 37,
+            "max_hp": 37,
+            "moves": [
+              "Tackle",
+              "VineWhip",
+              "LeechSeed",
+              "Cut"
+            ],
+            "pp": [
+              7,
+              10,
+              3,
+              1
+            ],
+            "status": "None",
+            "pp_ups": [
+              1,
+              0,
+              3,
+              1
+            ]
+          },
+          "full_party_sha256": "c80ee32f6e8eccabb9ccfebc84029d6088a9ed59b1b5c62168f53edae01646f3"
+        },
+        "party-a": {
+          "frame": 874,
+          "phase": null,
+          "quantity": 2,
+          "screen": "PartyScreen",
+          "lead": {
+            "species": "Bulbasaur",
+            "level": 12,
+            "hp": 35,
+            "max_hp": 35,
+            "moves": [
+              "Tackle",
+              "Growl",
+              "LeechSeed",
+              "Cut"
+            ],
+            "pp": [
+              7,
+              4,
+              3,
+              1
+            ],
+            "status": "None",
+            "pp_ups": [
+              1,
+              2,
+              3,
+              1
+            ]
+          },
+          "full_party_sha256": "7ee351fb1c133ff3f014c0b4509b0e316f5dc102b438df91b3e952a9f4cc90da"
+        },
+        "party-entry": {
+          "frame": 841,
+          "phase": null,
+          "quantity": 2,
+          "screen": "PartyScreen",
+          "lead": {
+            "species": "Bulbasaur",
+            "level": 12,
+            "hp": 35,
+            "max_hp": 35,
+            "moves": [
+              "Tackle",
+              "Growl",
+              "LeechSeed",
+              "Cut"
+            ],
+            "pp": [
+              7,
+              4,
+              3,
+              1
+            ],
+            "status": "None",
+            "pp_ups": [
+              1,
+              2,
+              3,
+              1
+            ]
+          },
+          "full_party_sha256": "7ee351fb1c133ff3f014c0b4509b0e316f5dc102b438df91b3e952a9f4cc90da"
+        }
+      },
+      "png_sha256": {
+        "after-chord": "bd7830fb0e4ce2a9cc77bff39ac3c0f0c55a09a9812e8cea88cf35bfc00f9613",
+        "before-chord": "ae533c6f8eaa3a38438bd1c59fbfa01597b80fe805a096bfbb2d8b9e91c9e2d0",
+        "continued": "7e293a211d83937df5365bb53143b8cd07c8df5e67eb3ebf420f4c816e428f5f",
+        "new-candy-finished": "96f64631a4cb3a2479827d99a651f55fe4d24b10721e0167dc023442316d3402",
+        "party-a": "3e137ee90d9b77996b62a3f2cfe914b2a4a9f42f3fb8ad89e64e4f8d62340293",
+        "party-entry": "ede51a40f3e7f5dbd8e3526bed43455be1fbd6eef2d76a3dd7542afab8250ed3"
+      },
+      "run_result": "PASS: party quantity2/Lv12, real Candy reuseLv13/VineWhip/quantity1",
+      "desktop_external_saves": false,
+      "initial_private_sram_is_pre_input_fixture_not_ordinary_save": true,
+      "held_chord_frames": 16,
+      "real_title_continue_and_menu_inputs": true
+    }
+  },
+  "guard_contract": "Capture still only supports Overworld/Battle and rejects active movies. Restore to an old supported slot clears the abandoned RareCandy menu continuation, not serialized menu support.",
+  "failed_harness_runs_preserved": [
+    {
+      "log": "audit-850-soft-reset-before-test.log",
+      "reason": "Insufficient CONTINUE acknowledgement; stopped at MainMenu, not a consumed-candy proof"
+    },
+    {
+      "log": "audit-850-soft-reset-before-retry-test.log",
+      "reason": "Test compile missing qualified MainMenuChoice type; no runtime result"
+    },
+    {
+      "log": "audit-850-soft-reset-before-complete-test.log",
+      "reason": "Missed main-menu initial input gate; stopped before CONTINUE, not a consumed-candy proof"
+    },
+    {
+      "log": "audit-850-restore-after.log",
+      "reason": "Second learned notice was acknowledged before its SFX finished; continuation correctly waited. Corrected replay waits for learning sound."
+    }
+  ],
+  "log_sha256": {
+    "audit-850-restore-debug-tests.log": "3b63c3cf4d135207a87d7856ad321c67bed27ada1218924ce592d71089aafbf4",
+    "audit-850-restore-default-tests.log": "9f66b7927e17752ece35e6f579c4e56645c0928fbf7e9cd33b45b9841361424e",
+    "audit-850-soft-reset-before-test.log": "f4dc05f5757d577fdb64868527670a80ca3c8e946be1e7384b4c7339eebe3e97",
+    "audit-850-soft-reset-before-retry-test.log": "9c57c4006430ef2f692e3288a7771fae8d548aee0377e136c89068af9b5fc7ba",
+    "audit-850-soft-reset-before-complete-test.log": "53866ed523fa3bf97c70bab051101df7479aa51de830aa92f225dc94ab5fb989",
+    "audit-850-soft-reset-before-proof-test.log": "3c67df1bfbd1575340a786edf7b5fc7bd1f5125bb368c5609c0804902ea587bc",
+    "audit-850-lifecycle-debug-tests.log": "4343ef6c481d02b020eff37e042ba7dd178b2f1699fe41b5c28d0db55006bf14",
+    "audit-850-lifecycle-default-tests.log": "ca23d40bc38dfed56f3ba8d290fd313be018bfff157c61de97d964d6baf0bd74",
+    "audit-850-lifecycle-app-build.log": "090f4fa1a674bd78c9f79a47d9aaf204c7757941f1e1c034317301ff430298d9",
+    "audit-850-restore-after.log": "e2c992346e922cc9a2c36a479a60b91af1f3169dafd268c6e63e31caf39d0737"
+  },
+  "local_gba_build_or_runtime_claim": false
+}
