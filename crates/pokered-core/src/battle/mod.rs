@@ -37,6 +37,8 @@ mod item_fidelity_tests;
 #[cfg(test)]
 mod exp_participant_tests;
 #[cfg(test)]
+mod exp_award_notice_tests;
+#[cfg(test)]
 mod link_battle_driver_tests;
 #[cfg(test)]
 mod catch_tests;
@@ -4969,7 +4971,7 @@ learn {learn_name}!")];
 
         let mut msgs = vec![];
         if let Some(bs) = self.battle_state.as_ref() {
-            use experience::gain::ExperienceNotice;
+            use experience::gain::{ExperienceAwardKind, ExperienceNotice};
             for notice in &result.notices {
                 let idx = match *notice {
                     ExperienceNotice::Gained { party_index, .. }
@@ -4980,7 +4982,11 @@ learn {learn_name}!")];
                 let mut name_buf = [0u8; crate::battle::state::NAME_TEXT_BUF];
                 let name = mon.display_name(&mut name_buf);
                 msgs.push(match *notice {
-                    ExperienceNotice::Gained { amount, .. } => format!("{name} gained {amount} exp. points!"),
+                    ExperienceNotice::Gained { amount, kind, .. } => match kind {
+                        ExperienceAwardKind::Ordinary => format!("{name} gained {amount} exp. points!"),
+                        ExperienceAwardKind::Boosted => format!("{name} gained a boosted {amount} exp. points!"),
+                        ExperienceAwardKind::ExpAll => format!("{name} gained with EXP.ALL, {amount} exp. points!"),
+                    },
                     ExperienceNotice::Leveled { level, .. } => format!("{name} grew to level {level}!"),
                     ExperienceNotice::Learned { move_id, .. } => format!("{name} learned {}!",
                         pokered_data::lang_data::move_name(move_id, false)),

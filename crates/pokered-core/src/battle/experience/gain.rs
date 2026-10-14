@@ -41,8 +41,15 @@ pub struct GainExpResult {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ExperienceAwardKind {
+    Ordinary,
+    Boosted,
+    ExpAll,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ExperienceNotice {
-    Gained { party_index: usize, amount: u32 },
+    Gained { party_index: usize, amount: u32, kind: ExperienceAwardKind },
     Leveled { party_index: usize, level: u8 },
     Learned { party_index: usize, move_id: pokered_data::moves::MoveId },
 }
@@ -109,7 +116,7 @@ pub fn gain_experience(
             continue;
         }
         if let Some(exp) = gain_one(
-            state, i, &data, defeated_level, is_trainer, &mut leveled_up, &mut new_moves,
+            state, i, &data, defeated_level, is_trainer, false, &mut leveled_up, &mut new_moves,
             &mut blocked_moves, &mut notices,
         ) { exp_gains.push((i, exp)); }
     }
@@ -123,7 +130,7 @@ pub fn gain_experience(
         }
         for i in 0..state.player.party.len() {
             if let Some(exp) = gain_one(
-                state, i, &data, defeated_level, is_trainer, &mut leveled_up, &mut new_moves,
+                state, i, &data, defeated_level, is_trainer, true, &mut leveled_up, &mut new_moves,
                 &mut blocked_moves, &mut notices,
             ) { exp_gains.push((i, exp)); }
         }
@@ -150,6 +157,7 @@ fn gain_one(
     data: &BaseStats,
     defeated_level: u8,
     is_trainer: bool,
+    via_exp_all: bool,
     leveled_up: &mut Vec<usize>,
     new_moves: &mut Vec<(usize, pokered_data::moves::MoveId)>,
     blocked_moves: &mut Vec<(usize, pokered_data::moves::MoveId)>,
@@ -172,7 +180,16 @@ fn gain_one(
     mon.total_exp = (mon.total_exp + exp).min(max);
 
     let result = process_level_up(mon);
-    notices.push(ExperienceNotice::Gained { party_index: i, amount: exp });
+    // GainedText prioritizes the second EXP.ALL pass over a traded boost.
+    // The first (participant) pass retains the ordinary/boosted wording.
+    let kind = if via_exp_all {
+        ExperienceAwardKind::ExpAll
+    } else if mon.is_traded {
+        ExperienceAwardKind::Boosted
+    } else {
+        ExperienceAwardKind::Ordinary
+    };
+    notices.push(ExperienceNotice::Gained { party_index: i, amount: exp, kind });
     if result.leveled_up {
         notices.push(ExperienceNotice::Leveled { party_index: i, level: result.new_level });
     }
