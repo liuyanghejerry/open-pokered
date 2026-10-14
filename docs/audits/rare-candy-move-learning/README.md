@@ -143,3 +143,35 @@ All **11** scoped application tests pass with default features and with `debug-s
 `lifecycle-verification.json` records this separate build/source identity and bounded restore/reset evidence. Earlier source/native ordinary SAVE captures and m01–m06 retain their actual frozen `e196942e` build identity and were not recaptured or relabelled. The original learning implementation is unchanged by the lifecycle cleanup. No new full application-suite, original reset/animation parity or local GBA runtime PASS is claimed for this follow-up.
 
 发布前合并 master `5941a7f1` 的 Python 导航工具修复。该更新未改变本次已验证的生产游戏代码；普通 SAVE、生命周期和 m06 各自仍使用其记录中的冻结构建，不改标成发布头。
+
+## GBA performance follow-up
+
+PR238's first GBA performance run exceeded the existing Oak draw budget
+(3093 versus 3004.9 timer ticks). With the same pinned nightly and mGBA0.10.5,
+master906 measured 2958 and the unchanged PR measured 3092, both with 307
+redraws. Boxing the cold flow, shrinking the render key, and outlining Party
+renderers did not restore the budget; those experiments are not shipped.
+
+The selected change keeps Oak's substituted Unicode character prefixes and
+typewriter cadence, while truncating the already-owned UTF-8 lines, avoiding
+character vectors and the first-line clone, and constructing line 2 only when
+it becomes visible. Token-free lines take an ordinary string-copy path. The
+final candidate includes mastere481. Its seven GBA scenario gates pass, and a
+second run of the same ROM has identical metrics: Oak 2994 ticks with the
+unchanged 3004.9 limit, 600 samples and 307 redraws. No baseline, thresholds,
+frame/input cadence, font or layout changes.
+
+Final-source validation: 15 Oak core tests (including fixed expected Unicode,
+empty-name, repeated-token and boundary prefixes), the full 2859 core tests,
+and all 11 Candy application tests under both default and debug-server
+features pass. The debug client builds. Actual snapshot restore, ordinary
+POKEMON/A entry and a fresh Candy reuse pass; this uses agent snapshots, not
+SRAM SAVE. Six real soft-reset/CONTINUE/reuse captures and seven selected Oak
+CLI captures are byte-identical to the prior lifecycle build's captures.
+
+`gba-performance-verification.json` records the experiment identities, final
+metrics, repeat, source/build hashes and scoped native checks. This is a local
+performance gate result, not a claim that the newly pushed GitHub CI has
+finished, or an original animation/frame-parity claim. The earlier original
+8 SAVE/native 16 SAVE evidence, screenshots, m01–m06 and full-application
+known-failure result retain their historical build identities.
