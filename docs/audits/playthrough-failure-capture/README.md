@@ -52,6 +52,23 @@ step120 frames, then send `{"cmd":"export_fixture"}`. The response's `data`
 is loadable using `--snapshot`; `get_state`, `get_flags`, and
 `get_agent_state` provide the separate runtime observations.
 
+## Integration with master422
+
+Merged master `422270c4df1d6939e64ca74a941433c1c5c82fff` cleanly at
+`6157dca950bef21ae6d178dde705e64790b7c0a4`. Re-ran the three Python
+contracts, all five protocol tests, and the read-only app test in both
+library and binary targets. All pass. The protocol and app were rebuilt in
+fresh, private `fidelity-882-diagnostic-native-target` with debug-server,
+dev opt0/debug0; the first shared-target E0599 attempt remains recorded.
+
+The isolated clean6157 binary SHA-256 is
+`25993d6b71f3cb7993c2d14f1f7c1a213c0b96c66c2332ad2ac3054a41151788`.
+Two new real TCP export/capture/reboot controls pass with the same frame120,
+runtime hash, observed state, PNG and owned checkpoint SRAM invariants.
+[Integration verification](integration-master422.json) pins this build and
+its results. The original d2ef build/capture records above retain their
+historical identity. Full-mainline regression has not passed.
+
 ## Healing diagnosis remains open
 
 Same frozen906 binary (`b50130e04db566195707c8c48fa57746fe71d34d8f9c0a3c62883e19c901c2bb`):
