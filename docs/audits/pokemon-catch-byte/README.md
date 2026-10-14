@@ -65,3 +65,5 @@ This changes save data and game logic; no renderer/layout surface changes or
 visual screenshot claim is included. The private source replay and logs are
 `audit-851-catch-byte-roundtrip.py`, `audit-851-fixed-catch-roundtrip.py`,
 `audit-851-catch-byte-tests.log`, `audit-851-core.log` and `audit-851-app-build.log`.
+
+发布头 `fb184098` 的 CI 在 `agent_determinism` 集成测试发生默认工作线程栈溢出：普通客户端测试在 `script_engine_snapshot_round_trips_mid_cutscene` 中止，coverage 在 `fork_diverges_with_different_inputs` 中止。核心测试和 GBA ROM 构建通过。增加实例字段后，含整份游戏及存档临时对象的未优化测试超过默认 2 MiB 线程栈；这组测试现与其他全游戏测试一样使用显式 16 MiB 工作线程。全部输入、断言及测试数量保留，线程 panic 会传回测试框架，没有设置全局环境变量或改变生产代码。合并 master `6a0ef88b` 后，8 个测试分别在本地优化和未优化构建全部通过。最新 GitHub coverage 和完整工作流仍须另行通过，才可合入。

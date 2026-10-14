@@ -19,6 +19,21 @@ use pokered_core::pokemon::stats::create_pokemon;
 use pokered_core::save::SaveData;
 use pokered_data::{impl_traits::PokemonRedData, maps::MapId, species::Species};
 
+// Full-game snapshots retain inline party and PC storage. In debug/coverage
+// builds their construction and restore temporaries exceed libtest's default
+// 2 MiB worker stack. Match the explicit stack used by other full-game tests;
+// preserve every assertion and propagate a worker panic to the test harness.
+fn on_game_stack(test: impl FnOnce() + Send + 'static) {
+    let result = std::thread::Builder::new()
+        .stack_size(16 * 1024 * 1024)
+        .spawn(test)
+        .expect("spawn full-game test")
+        .join();
+    if let Err(panic) = result {
+        std::panic::resume_unwind(panic);
+    }
+}
+
 fn seeded_session_game(seed: u64) -> PokemonGame {
     let mut game = PokemonGame::new_with_options(
         GameVersion::Red, None, None, None, false, None, false, true,
@@ -35,46 +50,52 @@ fn field_rng_bytes(game: &mut PokemonGame) -> Vec<u8> {
 
 #[test]
 fn seeded_session_new_game_preserves_preboot_field_seed() {
-    use pokered_core::game_state::MainMenuChoice;
-    for seed in [0, 42, u64::MAX] {
-        let mut game = seeded_session_game(seed);
-        let expected = field_rng_bytes(&mut game);
-        game.state.screen = GameScreen::OakSpeech;
-        game.main_menu.last_choice = Some(MainMenuChoice::NewGame);
-        game.handle_transition(GameScreen::Overworld);
-        assert_eq!(field_rng_bytes(&mut game), expected, "NEW GAME seed {seed}");
-    }
+    on_game_stack(|| {
+        use pokered_core::game_state::MainMenuChoice;
+        for seed in [0, 42, u64::MAX] {
+            let mut game = seeded_session_game(seed);
+            let expected = field_rng_bytes(&mut game);
+            game.state.screen = GameScreen::OakSpeech;
+            game.main_menu.last_choice = Some(MainMenuChoice::NewGame);
+            game.handle_transition(GameScreen::Overworld);
+            assert_eq!(field_rng_bytes(&mut game), expected, "NEW GAME seed {seed}");
+        }
+    });
 }
 
 #[test]
 fn seeded_session_continue_preserves_preboot_field_seed() {
-    use pokered_core::game_state::MainMenuChoice;
-    for seed in [0, 42, u64::MAX] {
-        let mut game = seeded_session_game(seed);
-        let expected = field_rng_bytes(&mut game);
-        game.state.screen = GameScreen::MainMenu;
-        game.main_menu.last_choice = Some(MainMenuChoice::Continue);
-        game.save_data.game_data.position.map_id = MapId::PalletTown as u8;
-        game.save_data.game_data.position.x = 5;
-        game.save_data.game_data.position.y = 6;
-        game.handle_transition(GameScreen::Overworld);
-        assert_eq!(field_rng_bytes(&mut game), expected, "CONTINUE seed {seed}");
-    }
+    on_game_stack(|| {
+        use pokered_core::game_state::MainMenuChoice;
+        for seed in [0, 42, u64::MAX] {
+            let mut game = seeded_session_game(seed);
+            let expected = field_rng_bytes(&mut game);
+            game.state.screen = GameScreen::MainMenu;
+            game.main_menu.last_choice = Some(MainMenuChoice::Continue);
+            game.save_data.game_data.position.map_id = MapId::PalletTown as u8;
+            game.save_data.game_data.position.x = 5;
+            game.save_data.game_data.position.y = 6;
+            game.handle_transition(GameScreen::Overworld);
+            assert_eq!(field_rng_bytes(&mut game), expected, "CONTINUE seed {seed}");
+        }
+    });
 }
 
 #[test]
 fn seeded_session_return_from_start_menu_does_not_restart_field_rng() {
-    use pokered_core::game_state::MainMenuChoice;
-    let mut game = seeded_session_game(42);
-    let first = field_rng_bytes(&mut game);
-    let expected = field_rng_bytes(&mut game);
-    assert_ne!(first, expected);
-    game.set_seed(42);
-    assert_eq!(field_rng_bytes(&mut game), first);
-    game.state.screen = GameScreen::StartMenu;
-    game.main_menu.last_choice = Some(MainMenuChoice::Continue);
-    game.handle_transition(GameScreen::Overworld);
-    assert_eq!(field_rng_bytes(&mut game), expected);
+    on_game_stack(|| {
+        use pokered_core::game_state::MainMenuChoice;
+        let mut game = seeded_session_game(42);
+        let first = field_rng_bytes(&mut game);
+        let expected = field_rng_bytes(&mut game);
+        assert_ne!(first, expected);
+        game.set_seed(42);
+        assert_eq!(field_rng_bytes(&mut game), first);
+        game.state.screen = GameScreen::StartMenu;
+        game.main_menu.last_choice = Some(MainMenuChoice::Continue);
+        game.handle_transition(GameScreen::Overworld);
+        assert_eq!(field_rng_bytes(&mut game), expected);
+    });
 }
 
 /// Start position note: (10, 6) is the open column north of Red's house —
@@ -150,150 +171,160 @@ fn sequence_a() -> Vec<Option<GbButton>> {
 
 #[test]
 fn save_restore_replays_identically() {
-    let mut game = game_at_pallet(42, 10, 6);
-    game.agent_save_state_slot(0).unwrap();
+    on_game_stack(|| {
+        let mut game = game_at_pallet(42, 10, 6);
+        game.agent_save_state_slot(0).unwrap();
 
-    let inputs = sequence_a();
-    drive(&mut game, &inputs);
-    let h1 = game.agent_save_state_slot(1).unwrap();
-    // Precondition: the sequence reached Route 1 and a wild battle.
-    assert_eq!(game.overworld.state.current_map, MapId::Route1);
-    let saw_battle = matches!(game.state.screen, GameScreen::Battle)
-        || game.battle.battle_state.is_some()
-        || game.save_data.party.get(0).map_or(0, |m| m.hp) < game.save_data.party.get(0).unwrap().max_hp;
-    assert!(saw_battle, "sequence should have produced a wild battle");
+        let inputs = sequence_a();
+        drive(&mut game, &inputs);
+        let h1 = game.agent_save_state_slot(1).unwrap();
+        // Precondition: the sequence reached Route 1 and a wild battle.
+        assert_eq!(game.overworld.state.current_map, MapId::Route1);
+        let saw_battle = matches!(game.state.screen, GameScreen::Battle)
+            || game.battle.battle_state.is_some()
+            || game.save_data.party.get(0).map_or(0, |m| m.hp) < game.save_data.party.get(0).unwrap().max_hp;
+        assert!(saw_battle, "sequence should have produced a wild battle");
 
-    game.agent_restore_state_slot(0).unwrap();
-    drive(&mut game, &inputs);
-    let h1_replay = game.agent_save_state_slot(1).unwrap();
-    assert_eq!(h1, h1_replay, "restored + replayed inputs must reproduce the state");
+        game.agent_restore_state_slot(0).unwrap();
+        drive(&mut game, &inputs);
+        let h1_replay = game.agent_save_state_slot(1).unwrap();
+        assert_eq!(h1, h1_replay, "restored + replayed inputs must reproduce the state");
+    });
 }
 
 #[test]
 fn fork_diverges_with_different_inputs() {
-    let mut game = game_at_pallet(42, 10, 6);
-    game.agent_save_state_slot(0).unwrap();
-    drive(&mut game, &sequence_a());
-    let h1 = game.agent_save_state_slot(1).unwrap();
+    on_game_stack(|| {
+        let mut game = game_at_pallet(42, 10, 6);
+        game.agent_save_state_slot(0).unwrap();
+        drive(&mut game, &sequence_a());
+        let h1 = game.agent_save_state_slot(1).unwrap();
 
-    game.agent_restore_state_slot(0).unwrap();
-    // Different inputs: south instead of the grass pacing.
-    let mut other = held(GbButton::Up, 520);
-    other.extend(held(GbButton::Down, 120));
-    drive(&mut game, &other);
-    let h2 = game.agent_save_state_slot(1).unwrap();
-    assert_ne!(h1, h2, "different inputs must diverge the fork");
+        game.agent_restore_state_slot(0).unwrap();
+        // Different inputs: south instead of the grass pacing.
+        let mut other = held(GbButton::Up, 520);
+        other.extend(held(GbButton::Down, 120));
+        drive(&mut game, &other);
+        let h2 = game.agent_save_state_slot(1).unwrap();
+        assert_ne!(h1, h2, "different inputs must diverge the fork");
+    });
 }
 
 #[test]
 fn unchanged_script_queries_survive_map_and_same_map_warps() {
-    #[inline(never)]
-    fn query_host(game: &PokemonGame) -> serde_json::Value {
-        let snapshot = pokered_core::snapshot::OverworldSnapshot::capture(&game.overworld);
-        serde_json::to_value(snapshot).unwrap()["script_engine"]["interp"]["host"].clone()
-    }
-
-    let mut game = game_at_pallet(42, 10, 6);
-    drive(&mut game, &[None]);
-    let initial = query_host(&game);
-    assert_eq!(initial["numbers"]["money"], 3000.0);
-    assert_eq!(initial["numbers"]["partyCount"], 1.0);
-    for map in [MapId::Route1, MapId::PalletTown, MapId::PalletTown] {
-        game.overworld.warp_to_map(map, 10, 6);
-        drive(&mut game, &[None; 80]);
-        assert_eq!(game.overworld.state.current_map, map);
-        let current = query_host(&game);
-        for section in ["numbers", "texts", "sets"] {
-            assert_eq!(current[section], initial[section], "query host after {map:?} warp");
+    on_game_stack(|| {
+        #[inline(never)]
+        fn query_host(game: &PokemonGame) -> serde_json::Value {
+            let snapshot = pokered_core::snapshot::OverworldSnapshot::capture(&game.overworld);
+            serde_json::to_value(snapshot).unwrap()["script_engine"]["interp"]["host"].clone()
         }
-    }
+
+        let mut game = game_at_pallet(42, 10, 6);
+        drive(&mut game, &[None]);
+        let initial = query_host(&game);
+        assert_eq!(initial["numbers"]["money"], 3000.0);
+        assert_eq!(initial["numbers"]["partyCount"], 1.0);
+        for map in [MapId::Route1, MapId::PalletTown, MapId::PalletTown] {
+            game.overworld.warp_to_map(map, 10, 6);
+            drive(&mut game, &[None; 80]);
+            assert_eq!(game.overworld.state.current_map, map);
+            let current = query_host(&game);
+            for section in ["numbers", "texts", "sets"] {
+                assert_eq!(current[section], initial[section], "query host after {map:?} warp");
+            }
+        }
+    });
 }
 
 #[test]
 fn battle_determinism_same_seed_same_outcome() {
-    fn run_battle(seed: u64) -> (u16, u16, u16) {
-        let mut game = game_at_pallet(seed, 10, 9);
-        game.debug_start_trainer_battle(pokered_data::trainer_data::TrainerClass::BugCatcher, 1);
-        game.state.screen = GameScreen::Battle;
-        // Spam A through the whole battle (bounded).
-        for _ in 0..900 {
-            let mut input = InputState::new();
-            input.press(GbButton::A);
-            game.update(&input);
-            game.update(&InputState::new());
-            if game.state.screen != GameScreen::Battle {
-                break;
+    on_game_stack(|| {
+        fn run_battle(seed: u64) -> (u16, u16, u16) {
+            let mut game = game_at_pallet(seed, 10, 9);
+            game.debug_start_trainer_battle(pokered_data::trainer_data::TrainerClass::BugCatcher, 1);
+            game.state.screen = GameScreen::Battle;
+            // Spam A through the whole battle (bounded).
+            for _ in 0..900 {
+                let mut input = InputState::new();
+                input.press(GbButton::A);
+                game.update(&input);
+                game.update(&InputState::new());
+                if game.state.screen != GameScreen::Battle {
+                    break;
+                }
             }
+            (
+                game.battle.player_hp,
+                game.battle.enemy_hp,
+                game.save_data.party.get(0).map_or(0, |m| m.hp),
+            )
         }
-        (
-            game.battle.player_hp,
-            game.battle.enemy_hp,
-            game.save_data.party.get(0).map_or(0, |m| m.hp),
-        )
-    }
-    let a1 = run_battle(7);
-    let a2 = run_battle(7);
-    assert_eq!(a1, a2, "same seed must produce the same battle trajectory");
-    // A different seed must change the trajectory. A single battle can
-    // legitimately repeat a short trajectory (a 2HKO with no crits), so
-    // check a small seed set and require at least one divergence — a
-    // bounded flake risk, not seed-fishing.
-    let diverged = [8u64, 9, 10, 11].iter().any(|&s| run_battle(s) != a1);
-    assert!(diverged, "no seed in 8..=11 changed the trajectory — seeding is broken");
+        let a1 = run_battle(7);
+        let a2 = run_battle(7);
+        assert_eq!(a1, a2, "same seed must produce the same battle trajectory");
+        // A different seed must change the trajectory. A single battle can
+        // legitimately repeat a short trajectory (a 2HKO with no crits), so
+        // check a small seed set and require at least one divergence — a
+        // bounded flake risk, not seed-fishing.
+        let diverged = [8u64, 9, 10, 11].iter().any(|&s| run_battle(s) != a1);
+        assert!(diverged, "no seed in 8..=11 changed the trajectory — seeding is broken");
+    });
 }
 
 #[test]
 fn script_engine_snapshot_round_trips_mid_cutscene() {
-    // Start Oak's north-exit escort (a real storyline with a FollowNpc
-    // script effect), run a few frames into it, fork, run on, and
-    // require identical follow-through after restore.
-    let mut game = PokemonGame::new_with_options(
-        GameVersion::Red,
-        None,
-        None,
-        None,
-        false,
-        None,
-        false,
-        true,
-        #[cfg(feature = "debug-server")]
-        None,
-    );
-    game.save_data = SaveData::new();
-    game.state.screen = GameScreen::Overworld;
-    game.overworld = OverworldScreen::new(MapId::PalletTown, None, PokemonRedData);
-    game.save_data
-        .party
-        .add(create_pokemon(Species::Charmander, 8, [0x9a, 0x78]).unwrap())
-        .unwrap();
-    game.overworld.party_count = 1;
-    game.overworld.party_lead_level = 8;
-    game.set_seed(99);
-    // Step onto the north-exit trigger: the escort storyline starts.
-    game.overworld.state.player.x = 10;
-    game.overworld.state.player.y = 2;
-    game.overworld.state.player.facing = Direction::Up;
-    drive(&mut game, &held(GbButton::Up, 16));
-    assert!(
-        game.overworld.active_script_effect_label().is_some()
-            || !game.overworld.script_engine_idle()
-            || game.overworld.pending_dialogue.is_some(),
-        "the Oak event must be running"
-    );
-    // Advance a bounded number of frames into the cutscene (dialogue +
-    // walk-up), then fork.
-    for _ in 0..120 {
-        game.update(&InputState::new());
-    }
-    game.agent_save_state_slot(0).unwrap();
-    for _ in 0..240 {
-        game.update(&InputState::new());
-    }
-    let h1 = game.agent_save_state_slot(1).unwrap();
-    game.agent_restore_state_slot(0).unwrap();
-    for _ in 0..240 {
-        game.update(&InputState::new());
-    }
-    let h2 = game.agent_save_state_slot(1).unwrap();
-    assert_eq!(h1, h2, "script-engine state must round-trip through fork/restore");
+    on_game_stack(|| {
+        // Start Oak's north-exit escort (a real storyline with a FollowNpc
+        // script effect), run a few frames into it, fork, run on, and
+        // require identical follow-through after restore.
+        let mut game = PokemonGame::new_with_options(
+            GameVersion::Red,
+            None,
+            None,
+            None,
+            false,
+            None,
+            false,
+            true,
+            #[cfg(feature = "debug-server")]
+            None,
+        );
+        game.save_data = SaveData::new();
+        game.state.screen = GameScreen::Overworld;
+        game.overworld = OverworldScreen::new(MapId::PalletTown, None, PokemonRedData);
+        game.save_data
+            .party
+            .add(create_pokemon(Species::Charmander, 8, [0x9a, 0x78]).unwrap())
+            .unwrap();
+        game.overworld.party_count = 1;
+        game.overworld.party_lead_level = 8;
+        game.set_seed(99);
+        // Step onto the north-exit trigger: the escort storyline starts.
+        game.overworld.state.player.x = 10;
+        game.overworld.state.player.y = 2;
+        game.overworld.state.player.facing = Direction::Up;
+        drive(&mut game, &held(GbButton::Up, 16));
+        assert!(
+            game.overworld.active_script_effect_label().is_some()
+                || !game.overworld.script_engine_idle()
+                || game.overworld.pending_dialogue.is_some(),
+            "the Oak event must be running"
+        );
+        // Advance a bounded number of frames into the cutscene (dialogue +
+        // walk-up), then fork.
+        for _ in 0..120 {
+            game.update(&InputState::new());
+        }
+        game.agent_save_state_slot(0).unwrap();
+        for _ in 0..240 {
+            game.update(&InputState::new());
+        }
+        let h1 = game.agent_save_state_slot(1).unwrap();
+        game.agent_restore_state_slot(0).unwrap();
+        for _ in 0..240 {
+            game.update(&InputState::new());
+        }
+        let h2 = game.agent_save_state_slot(1).unwrap();
+        assert_eq!(h1, h2, "script-engine state must round-trip through fork/restore");
+    });
 }
