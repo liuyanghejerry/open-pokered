@@ -38,13 +38,15 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from debug_drive import DebugClient  # noqa: E402
 
 BIN = ROOT / "target/debug/pokered-app"
-FRAMES_PER_TILE = 8  # held frames to cross one tile (smoke-tested)
+FRAMES_PER_TILE = 8  # Scripted movement ticks; ordinary field ticks wait two VBlanks.
 
 
 def movement_frames(state, direction=None):
     """Match the observed transport's engine step duration."""
     uphill = state.get('map_name') == 'Route17' and direction in ('up', 'left', 'right')
-    return 4 if state.get('player_transport') == 'Biking' and not uphill else FRAMES_PER_TILE
+    # Ordinary OverworldLoop advances the eight walking (four bike) ticks
+    # once per two rendered frames. Scripted movement retains its own budget.
+    return 8 if state.get('player_transport') == 'Biking' and not uphill else 16
 
 
 def movement_buttons(state, direction, held, frames):
@@ -58,11 +60,13 @@ _MD = json.load(open(ROOT / "tools/map_data.json"))
 BLOCKSETS = {b["tileset_id"]: b["blocks"] for b in _MD["blocksets"]}
 MAPS = {m["name"]: m for m in _MD["maps"]}
 CONNS = {}
+NPC_MOVEMENTS = {}
 for _p in sorted((ROOT / "crates/pokered-data/maps").iterdir()):
     _f = _p / "map.json"
     if _f.exists():
         _j = json.load(open(_f))
         CONNS[_j["name"]] = _j.get("connections") or {}
+        NPC_MOVEMENTS[_j["name"]] = [n.get("movement") for n in _j.get("npcs", [])]
         # The export supplies decoded blocksets, but its map topology may
         # predate fixes in the canonical build inputs. Read current warps
         # and block bytes from the same sources as the game binary.
@@ -653,13 +657,36 @@ class Game:
         return any(current.get(key) != state.get(key) for key in keys)
 
     def destination_blocked_by_live_npc(self, current_map, target_map, x, y):
-        """Whether a moving NPC temporarily occupies the requested tile."""
-        return current_map == target_map and (x, y) in self.live_npcs(current_map)
+        """Wait only for a temporary occupant, rather than a fixed map object."""
+        if current_map != target_map:
+            return False
+        live = self.live_npcs(current_map)
+        return (x, y) in live and (x, y) not in self.stationary_npc_tiles(current_map)
+
+    def stationary_npc_tiles(self, map_name):
+        """Classify observed blockers using map movement, not a paused pose.
+
+        A wandering NPC at its home tile can still move. A stationary NPC
+        with an active scripted path can also vacate the tile. Unknown
+        metadata keeps the ordinary temporary-occupant wait behavior.
+        """
+        movements = NPC_MOVEMENTS.get(map_name, [])
+        observed = getattr(self, 'npc_observations', {}).get(map_name, [])
+        return {(n['x'], n['y']) for n in observed
+                if n.get('visible', True)
+                and isinstance(n.get('npc_index'), int)
+                and 0 <= n['npc_index'] < len(movements)
+                and movements[n['npc_index']] == 'Stationary'
+                and n.get('walk_counter', 0) == 0
+                and n.get('scripted_path_remaining', 0) == 0}
 
     def live_npcs(self, map_name):
         data = self.d.cmd(cmd="get_npcs")["data"]
         npcs = data.get("npcs", data) if isinstance(data, dict) else data
         self.remember_npcs(map_name, npcs)
+        if not hasattr(self, 'npc_observations'):
+            self.npc_observations = {}
+        self.npc_observations[map_name] = npcs
         live = {(n["x"], n["y"]) for n in npcs
                 if n.get("visible", True) and (n["x"], n["y"]) != (-1, -1)}
         # Remember every observed NPC tile: wandering NPCs patrol a
@@ -794,18 +821,34 @@ class Game:
     def approach_object(self, x, y, map_name):
         """Face an object from a reachable adjacent tile (trainers may
         occupy one side after walking up to challenge the player)."""
+        def pending(state):
+            return (state.get("dialogue_state") is not None
+                    or state.get("active_script_effect") is not None
+                    or state.get("choice") is not None
+                    or state.get("script_running"))
+
+        was_live_npc = False
         for _ in range(4):
             state = self.st()
             if state["screen"] == "battle":
                 self.battle_loop(prefer="fight" if state["script_awaiting_battle"] else "run")
-                self.cutscene()
-            elif state.get("dialogue_state") is not None:
-                self.cutscene()
-            cm, cx, cy = self.pos()
+                if not self.cutscene():
+                    raise NavError("object approach cutscene did not finish")
+                self.step(1)  # Observe the update that promotes closed trainer text.
+            elif pending(state):
+                if not self.cutscene():
+                    raise NavError("object approach cutscene did not finish")
+                self.step(1)
+            state = self.st()
+            if state["screen"] == "battle" or pending(state):
+                continue
+            cm, cx, cy = state["map_name"], state["player_x"], state["player_y"]
             if cm != map_name:
                 raise NavError(f"object approach left {map_name} -> {cm}")
             live = self.live_npcs(cm)
-            was_live_npc = (x, y) in live
+            was_live_npc = was_live_npc or (x, y) in live
+            if was_live_npc and (x, y) not in live:
+                return  # The caller verifies completion or re-observes a moved NPC.
             blocked = live | warp_tiles(cm) | {(x, y)}
             candidates = []
             for direction, (dx, dy) in DELTA.items():
@@ -823,6 +866,22 @@ class Game:
                 self.nav_to(*target, cm)
             except NavError:
                 continue
+            # The trainer's "!" intro blocks control before debug state
+            # exposes dialogue (32 field ticks, two rendered frames each).
+            # Wait with neutral input so that handoff becomes observable.
+            self.step(64)
+            # nav_to deliberately returns at a requested destination even
+            # when that tile triggers a trainer. Settle that handoff before
+            # sending direction input, then re-observe the live NPC/target.
+            state = self.st()
+            if state["screen"] == "battle" or pending(state):
+                continue
+            if state["map_name"] != cm:
+                raise NavError(f"object approach left {map_name} -> {state['map_name']}")
+            if was_live_npc and (x, y) not in self.live_npcs(cm):
+                return
+            if (state["player_x"], state["player_y"]) != target:
+                continue
             self.face(direction)
             # Facing can itself start a wild encounter or trainer dialogue.
             # Return only while the requested interaction is still reachable.
@@ -835,7 +894,7 @@ class Game:
             if (state["screen"] == "overworld" and state["map_name"] == map_name
                     and (state["player_x"], state["player_y"]) == target
                     and state["player_facing"].lower() == direction
-                    and state.get("dialogue_state") is None):
+                    and not pending(state)):
                 return
         raise NavError(f"object approach did not settle: {map_name} ({x},{y})")
 
@@ -1136,9 +1195,14 @@ class Game:
                 # An inward neighbor may be in another disconnected room
                 # of this map (Mt Moon B1F). Cross-map BFS follows the real
                 # stairs back through the connecting floor when necessary.
+                # Geometry alone can select a permanently occupied approach
+                # tile (MtMoon1F's Hiker at (5,6) below the (5,5) stairs). Keep
+                # real cross-map routing, but consider another inward tile.
+                self.live_npcs(from_map)
+                fixed = self.stationary_npc_tiles(from_map)
                 for d, (dx, dy) in DELTA.items():
                     inner = (x - dx, y - dy)
-                    if walkable(from_map, *inner):
+                    if walkable(from_map, *inner) and inner not in fixed:
                         self.nav_to_map(*inner, map_name=from_map,
                                         tries=tries, avoid_grass=False)
                         self.d.drive([d] * 40, frames=48)
@@ -1862,7 +1926,7 @@ def m09_to_pewter(g):
             # preparation, using real Route 1 battles and Center healing.
             g.nav_to(20, 32, map_name='ViridianCity')
             g.nav_to(20, 33, map_name='ViridianCity')
-            g.d.drive(['down'] * 24, frames=28)
+            g.d.drive(['down'] * 40, frames=44)
             g.step(8)
             g.nav_to(12, 7, map_name='Route1')
             heal = ((23, 25), 'ViridianCity', 'ViridianPokecenter')
