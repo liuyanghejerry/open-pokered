@@ -1,0 +1,3636 @@
+{
+  "scope": "Constructed before boot level6 fainted Bulbasaur with legitimate Tackle/Growl and a healthy partner. Ordinary START/ITEM/USE, existing machine boot/teach confirmation, party pick and SAVE/YES. Same fixture/prefix input/frame before/after; twice repeat each. No postboot state mutation or debug save.",
+  "script_sha256": "3b782ce50dfb3204714b1cfd98a710aa85b2a34432008abd100cdbb9c4df6178",
+  "base_commit": "72f9d593c6f17be00e668ec447bfb5b0217a651f",
+  "scoped_core_pass": 4,
+  "full_core_pass": 2856,
+  "app_build_pass": true,
+  "paired_proof": [
+    {
+      "item": "Tm03",
+      "repeat": 1,
+      "same_fixture": true,
+      "same_prefix_inputs": true,
+      "same_result_frame": 712,
+      "identical_pre_application_captures": true,
+      "party_raw_changes": [
+        {
+          "offset": 10,
+          "before": 0,
+          "after": 14
+        },
+        {
+          "offset": 31,
+          "before": 0,
+          "after": 30
+        }
+      ]
+    },
+    {
+      "item": "Tm03",
+      "repeat": 2,
+      "same_fixture": true,
+      "same_prefix_inputs": true,
+      "same_result_frame": 712,
+      "identical_pre_application_captures": true,
+      "party_raw_changes": [
+        {
+          "offset": 10,
+          "before": 0,
+          "after": 14
+        },
+        {
+          "offset": 31,
+          "before": 0,
+          "after": 30
+        }
+      ]
+    },
+    {
+      "item": "Hm01",
+      "repeat": 1,
+      "same_fixture": true,
+      "same_prefix_inputs": true,
+      "same_result_frame": 712,
+      "identical_pre_application_captures": true,
+      "party_raw_changes": [
+        {
+          "offset": 10,
+          "before": 0,
+          "after": 15
+        },
+        {
+          "offset": 31,
+          "before": 0,
+          "after": 30
+        }
+      ]
+    },
+    {
+      "item": "Hm01",
+      "repeat": 2,
+      "same_fixture": true,
+      "same_prefix_inputs": true,
+      "same_result_frame": 712,
+      "identical_pre_application_captures": true,
+      "party_raw_changes": [
+        {
+          "offset": 10,
+          "before": 0,
+          "after": 15
+        },
+        {
+          "offset": 31,
+          "before": 0,
+          "after": 30
+        }
+      ]
+    }
+  ],
+  "before": [
+    {
+      "item": "Tm03",
+      "label": "before",
+      "repeat": 1,
+      "binary_sha256": "d56763248aea1a9599d1aae5600e6b65f67e68a0f905cd7b600067cb53a57347",
+      "fixture_sha256": "f9c4af3551569f8e03babe01e9f6f3eb2bd5ead29e3e02d186dfb099e32c794b",
+      "initial_party": [
+        {
+          "species": "Bulbasaur",
+          "level": 6,
+          "max_hp": 22,
+          "hp": 0,
+          "attack": 11,
+          "defense": 12,
+          "speed": 11,
+          "special": 13,
+          "type1": "Grass",
+          "type2": "Poison",
+          "moves": [
+            "Tackle",
+            "Growl",
+            "None",
+            "None"
+          ],
+          "pp": [
+            35,
+            40,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "dv_bytes": [
+            154,
+            120
+          ],
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "total_exp": 179,
+          "is_traded": false,
+          "ot_id": 62901
+        },
+        {
+          "species": "Bulbasaur",
+          "level": 6,
+          "max_hp": 22,
+          "hp": 22,
+          "attack": 11,
+          "defense": 12,
+          "speed": 11,
+          "special": 13,
+          "type1": "Grass",
+          "type2": "Poison",
+          "moves": [
+            "Tackle",
+            "Growl",
+            "None",
+            "None"
+          ],
+          "pp": [
+            35,
+            40,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "dv_bytes": [
+            154,
+            120
+          ],
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "total_exp": 179,
+          "is_traded": false,
+          "ot_id": 62901
+        }
+      ],
+      "after_party": [
+        {
+          "species": "Bulbasaur",
+          "nickname": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "level": 6,
+          "hp": 0,
+          "max_hp": 22,
+          "attack": 11,
+          "defense": 12,
+          "speed": 11,
+          "special": 13,
+          "type1": "Grass",
+          "type2": "Poison",
+          "moves": [
+            "Tackle",
+            "Growl",
+            "None",
+            "None"
+          ],
+          "pp": [
+            35,
+            40,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "dv_bytes": [
+            154,
+            120
+          ],
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "total_exp": 179,
+          "is_traded": false,
+          "ot_id": 62901,
+          "ot_name": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ]
+        },
+        {
+          "species": "Bulbasaur",
+          "nickname": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "level": 6,
+          "hp": 22,
+          "max_hp": 22,
+          "attack": 11,
+          "defense": 12,
+          "speed": 11,
+          "special": 13,
+          "type1": "Grass",
+          "type2": "Poison",
+          "moves": [
+            "Tackle",
+            "Growl",
+            "None",
+            "None"
+          ],
+          "pp": [
+            35,
+            40,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "dv_bytes": [
+            154,
+            120
+          ],
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "total_exp": 179,
+          "is_traded": false,
+          "ot_id": 62901,
+          "ot_name": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ]
+        }
+      ],
+      "initial_items": [
+        [
+          "Tm03",
+          2
+        ]
+      ],
+      "after_items": [
+        [
+          "Tm03",
+          2
+        ]
+      ],
+      "captures": {
+        "initial": {
+          "frame": 120,
+          "sha256": "955575fbcdb07fcad3c5d55e3c68cf35cb804f0be5735a1e1d3972c22c0bad4e"
+        },
+        "machine-boot": {
+          "frame": 364,
+          "sha256": "2e2b4b20c84125ac750f88ed2d21b4b35437e02c1f48946f6d0213bc3e54e6a0"
+        },
+        "machine-teach": {
+          "frame": 400,
+          "sha256": "f785a9ce4260300d989104094e95a5144ede0d66c62b23b96acbe2134606854e"
+        },
+        "party-select": {
+          "frame": 436,
+          "sha256": "6fc7785b82a446c570e76282b65c2a870f8525138715654ce433e5f14c342ab8"
+        },
+        "machine-result": {
+          "frame": 712,
+          "sha256": "7d9d63da59af7d1dee6b0f7d875e2dffa4affa786301a5d9f3a5451d785da4e1"
+        },
+        "saved": {
+          "frame": 1832,
+          "sha256": "c93d780c612f51629e2c6ed33e73b5426c9d467db614f2602d8b9d478496d69f"
+        }
+      },
+      "prefix_actions": [
+        {
+          "frame": 120,
+          "button": "start",
+          "held": 4,
+          "frames": 60
+        },
+        {
+          "frame": 184,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 220,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 256,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 292,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 328,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 364,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 400,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 436,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        }
+      ],
+      "actions": [
+        {
+          "frame": 120,
+          "button": "start",
+          "held": 4,
+          "frames": 60
+        },
+        {
+          "frame": 184,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 220,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 256,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 292,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 328,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 364,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 400,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 436,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 712,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 748,
+          "button": "b",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 784,
+          "button": "b",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 820,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 856,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 892,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 1128,
+          "button": "a",
+          "held": 1,
+          "frames": 400
+        }
+      ],
+      "normal_save": true,
+      "no_state_edits_after_boot": true,
+      "private_binary": true,
+      "sidecars_absent_before_boot": true,
+      "sram_sha256": "51150748a7c9798e612f6d50594ad8bf622dc31662c55361b21c1472d1f07454",
+      "sram_checksum": 31,
+      "party_raw_hex": "9900000600160300212d0000f5b50000b3000000000000000000009a7823280000060016000b000c000b000d9900160600160300212d0000f5b50000b3000000000000000000009a7823280000060016000b000c000b000d",
+      "flags_sha256": "c8df9c7ece1a2445825b20dfa745b63c1266ad8c1b03e0f272e4e3f62dfcff4f",
+      "all_flags_unchanged": true
+    },
+    {
+      "item": "Tm03",
+      "label": "before",
+      "repeat": 2,
+      "binary_sha256": "d56763248aea1a9599d1aae5600e6b65f67e68a0f905cd7b600067cb53a57347",
+      "fixture_sha256": "f9c4af3551569f8e03babe01e9f6f3eb2bd5ead29e3e02d186dfb099e32c794b",
+      "initial_party": [
+        {
+          "species": "Bulbasaur",
+          "level": 6,
+          "max_hp": 22,
+          "hp": 0,
+          "attack": 11,
+          "defense": 12,
+          "speed": 11,
+          "special": 13,
+          "type1": "Grass",
+          "type2": "Poison",
+          "moves": [
+            "Tackle",
+            "Growl",
+            "None",
+            "None"
+          ],
+          "pp": [
+            35,
+            40,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "dv_bytes": [
+            154,
+            120
+          ],
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "total_exp": 179,
+          "is_traded": false,
+          "ot_id": 62901
+        },
+        {
+          "species": "Bulbasaur",
+          "level": 6,
+          "max_hp": 22,
+          "hp": 22,
+          "attack": 11,
+          "defense": 12,
+          "speed": 11,
+          "special": 13,
+          "type1": "Grass",
+          "type2": "Poison",
+          "moves": [
+            "Tackle",
+            "Growl",
+            "None",
+            "None"
+          ],
+          "pp": [
+            35,
+            40,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "dv_bytes": [
+            154,
+            120
+          ],
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "total_exp": 179,
+          "is_traded": false,
+          "ot_id": 62901
+        }
+      ],
+      "after_party": [
+        {
+          "species": "Bulbasaur",
+          "nickname": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "level": 6,
+          "hp": 0,
+          "max_hp": 22,
+          "attack": 11,
+          "defense": 12,
+          "speed": 11,
+          "special": 13,
+          "type1": "Grass",
+          "type2": "Poison",
+          "moves": [
+            "Tackle",
+            "Growl",
+            "None",
+            "None"
+          ],
+          "pp": [
+            35,
+            40,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "dv_bytes": [
+            154,
+            120
+          ],
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "total_exp": 179,
+          "is_traded": false,
+          "ot_id": 62901,
+          "ot_name": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ]
+        },
+        {
+          "species": "Bulbasaur",
+          "nickname": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "level": 6,
+          "hp": 22,
+          "max_hp": 22,
+          "attack": 11,
+          "defense": 12,
+          "speed": 11,
+          "special": 13,
+          "type1": "Grass",
+          "type2": "Poison",
+          "moves": [
+            "Tackle",
+            "Growl",
+            "None",
+            "None"
+          ],
+          "pp": [
+            35,
+            40,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "dv_bytes": [
+            154,
+            120
+          ],
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "total_exp": 179,
+          "is_traded": false,
+          "ot_id": 62901,
+          "ot_name": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ]
+        }
+      ],
+      "initial_items": [
+        [
+          "Tm03",
+          2
+        ]
+      ],
+      "after_items": [
+        [
+          "Tm03",
+          2
+        ]
+      ],
+      "captures": {
+        "initial": {
+          "frame": 120,
+          "sha256": "955575fbcdb07fcad3c5d55e3c68cf35cb804f0be5735a1e1d3972c22c0bad4e"
+        },
+        "machine-boot": {
+          "frame": 364,
+          "sha256": "2e2b4b20c84125ac750f88ed2d21b4b35437e02c1f48946f6d0213bc3e54e6a0"
+        },
+        "machine-teach": {
+          "frame": 400,
+          "sha256": "f785a9ce4260300d989104094e95a5144ede0d66c62b23b96acbe2134606854e"
+        },
+        "party-select": {
+          "frame": 436,
+          "sha256": "6fc7785b82a446c570e76282b65c2a870f8525138715654ce433e5f14c342ab8"
+        },
+        "machine-result": {
+          "frame": 712,
+          "sha256": "7d9d63da59af7d1dee6b0f7d875e2dffa4affa786301a5d9f3a5451d785da4e1"
+        },
+        "saved": {
+          "frame": 1832,
+          "sha256": "c93d780c612f51629e2c6ed33e73b5426c9d467db614f2602d8b9d478496d69f"
+        }
+      },
+      "prefix_actions": [
+        {
+          "frame": 120,
+          "button": "start",
+          "held": 4,
+          "frames": 60
+        },
+        {
+          "frame": 184,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 220,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 256,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 292,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 328,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 364,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 400,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 436,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        }
+      ],
+      "actions": [
+        {
+          "frame": 120,
+          "button": "start",
+          "held": 4,
+          "frames": 60
+        },
+        {
+          "frame": 184,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 220,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 256,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 292,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 328,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 364,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 400,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 436,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 712,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 748,
+          "button": "b",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 784,
+          "button": "b",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 820,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 856,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 892,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 1128,
+          "button": "a",
+          "held": 1,
+          "frames": 400
+        }
+      ],
+      "normal_save": true,
+      "no_state_edits_after_boot": true,
+      "private_binary": true,
+      "sidecars_absent_before_boot": true,
+      "sram_sha256": "51150748a7c9798e612f6d50594ad8bf622dc31662c55361b21c1472d1f07454",
+      "sram_checksum": 31,
+      "party_raw_hex": "9900000600160300212d0000f5b50000b3000000000000000000009a7823280000060016000b000c000b000d9900160600160300212d0000f5b50000b3000000000000000000009a7823280000060016000b000c000b000d",
+      "flags_sha256": "c8df9c7ece1a2445825b20dfa745b63c1266ad8c1b03e0f272e4e3f62dfcff4f",
+      "all_flags_unchanged": true
+    },
+    {
+      "item": "Hm01",
+      "label": "before",
+      "repeat": 1,
+      "binary_sha256": "d56763248aea1a9599d1aae5600e6b65f67e68a0f905cd7b600067cb53a57347",
+      "fixture_sha256": "b8c68f88d13d65a8dba2856d7c6969a125bc37ece29b256670a60cd4673d1977",
+      "initial_party": [
+        {
+          "species": "Bulbasaur",
+          "level": 6,
+          "max_hp": 22,
+          "hp": 0,
+          "attack": 11,
+          "defense": 12,
+          "speed": 11,
+          "special": 13,
+          "type1": "Grass",
+          "type2": "Poison",
+          "moves": [
+            "Tackle",
+            "Growl",
+            "None",
+            "None"
+          ],
+          "pp": [
+            35,
+            40,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "dv_bytes": [
+            154,
+            120
+          ],
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "total_exp": 179,
+          "is_traded": false,
+          "ot_id": 62901
+        },
+        {
+          "species": "Bulbasaur",
+          "level": 6,
+          "max_hp": 22,
+          "hp": 22,
+          "attack": 11,
+          "defense": 12,
+          "speed": 11,
+          "special": 13,
+          "type1": "Grass",
+          "type2": "Poison",
+          "moves": [
+            "Tackle",
+            "Growl",
+            "None",
+            "None"
+          ],
+          "pp": [
+            35,
+            40,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "dv_bytes": [
+            154,
+            120
+          ],
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "total_exp": 179,
+          "is_traded": false,
+          "ot_id": 62901
+        }
+      ],
+      "after_party": [
+        {
+          "species": "Bulbasaur",
+          "nickname": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "level": 6,
+          "hp": 0,
+          "max_hp": 22,
+          "attack": 11,
+          "defense": 12,
+          "speed": 11,
+          "special": 13,
+          "type1": "Grass",
+          "type2": "Poison",
+          "moves": [
+            "Tackle",
+            "Growl",
+            "None",
+            "None"
+          ],
+          "pp": [
+            35,
+            40,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "dv_bytes": [
+            154,
+            120
+          ],
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "total_exp": 179,
+          "is_traded": false,
+          "ot_id": 62901,
+          "ot_name": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ]
+        },
+        {
+          "species": "Bulbasaur",
+          "nickname": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "level": 6,
+          "hp": 22,
+          "max_hp": 22,
+          "attack": 11,
+          "defense": 12,
+          "speed": 11,
+          "special": 13,
+          "type1": "Grass",
+          "type2": "Poison",
+          "moves": [
+            "Tackle",
+            "Growl",
+            "None",
+            "None"
+          ],
+          "pp": [
+            35,
+            40,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "dv_bytes": [
+            154,
+            120
+          ],
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "total_exp": 179,
+          "is_traded": false,
+          "ot_id": 62901,
+          "ot_name": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ]
+        }
+      ],
+      "initial_items": [
+        [
+          "Hm01",
+          1
+        ]
+      ],
+      "after_items": [
+        [
+          "Hm01",
+          1
+        ]
+      ],
+      "captures": {
+        "initial": {
+          "frame": 120,
+          "sha256": "955575fbcdb07fcad3c5d55e3c68cf35cb804f0be5735a1e1d3972c22c0bad4e"
+        },
+        "machine-boot": {
+          "frame": 364,
+          "sha256": "4404e028cc02f1886370561a1bf0544e50937ae92c9b551def56a98d90c80ee6"
+        },
+        "machine-teach": {
+          "frame": 400,
+          "sha256": "95a0854da52a00b63600e880f6dbe8b644e9a339a8837661309f09532c4c258c"
+        },
+        "party-select": {
+          "frame": 436,
+          "sha256": "6fc7785b82a446c570e76282b65c2a870f8525138715654ce433e5f14c342ab8"
+        },
+        "machine-result": {
+          "frame": 712,
+          "sha256": "7d9d63da59af7d1dee6b0f7d875e2dffa4affa786301a5d9f3a5451d785da4e1"
+        },
+        "saved": {
+          "frame": 1832,
+          "sha256": "c93d780c612f51629e2c6ed33e73b5426c9d467db614f2602d8b9d478496d69f"
+        }
+      },
+      "prefix_actions": [
+        {
+          "frame": 120,
+          "button": "start",
+          "held": 4,
+          "frames": 60
+        },
+        {
+          "frame": 184,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 220,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 256,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 292,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 328,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 364,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 400,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 436,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        }
+      ],
+      "actions": [
+        {
+          "frame": 120,
+          "button": "start",
+          "held": 4,
+          "frames": 60
+        },
+        {
+          "frame": 184,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 220,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 256,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 292,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 328,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 364,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 400,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 436,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 712,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 748,
+          "button": "b",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 784,
+          "button": "b",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 820,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 856,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 892,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 1128,
+          "button": "a",
+          "held": 1,
+          "frames": 400
+        }
+      ],
+      "normal_save": true,
+      "no_state_edits_after_boot": true,
+      "private_binary": true,
+      "sidecars_absent_before_boot": true,
+      "sram_sha256": "a8dbbe71273a365f23db082c8714e2b1fe2323287ffc2d93f1879a6e6eb9d106",
+      "sram_checksum": 39,
+      "party_raw_hex": "9900000600160300212d0000f5b50000b3000000000000000000009a7823280000060016000b000c000b000d9900160600160300212d0000f5b50000b3000000000000000000009a7823280000060016000b000c000b000d",
+      "flags_sha256": "c8df9c7ece1a2445825b20dfa745b63c1266ad8c1b03e0f272e4e3f62dfcff4f",
+      "all_flags_unchanged": true
+    },
+    {
+      "item": "Hm01",
+      "label": "before",
+      "repeat": 2,
+      "binary_sha256": "d56763248aea1a9599d1aae5600e6b65f67e68a0f905cd7b600067cb53a57347",
+      "fixture_sha256": "b8c68f88d13d65a8dba2856d7c6969a125bc37ece29b256670a60cd4673d1977",
+      "initial_party": [
+        {
+          "species": "Bulbasaur",
+          "level": 6,
+          "max_hp": 22,
+          "hp": 0,
+          "attack": 11,
+          "defense": 12,
+          "speed": 11,
+          "special": 13,
+          "type1": "Grass",
+          "type2": "Poison",
+          "moves": [
+            "Tackle",
+            "Growl",
+            "None",
+            "None"
+          ],
+          "pp": [
+            35,
+            40,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "dv_bytes": [
+            154,
+            120
+          ],
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "total_exp": 179,
+          "is_traded": false,
+          "ot_id": 62901
+        },
+        {
+          "species": "Bulbasaur",
+          "level": 6,
+          "max_hp": 22,
+          "hp": 22,
+          "attack": 11,
+          "defense": 12,
+          "speed": 11,
+          "special": 13,
+          "type1": "Grass",
+          "type2": "Poison",
+          "moves": [
+            "Tackle",
+            "Growl",
+            "None",
+            "None"
+          ],
+          "pp": [
+            35,
+            40,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "dv_bytes": [
+            154,
+            120
+          ],
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "total_exp": 179,
+          "is_traded": false,
+          "ot_id": 62901
+        }
+      ],
+      "after_party": [
+        {
+          "species": "Bulbasaur",
+          "nickname": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "level": 6,
+          "hp": 0,
+          "max_hp": 22,
+          "attack": 11,
+          "defense": 12,
+          "speed": 11,
+          "special": 13,
+          "type1": "Grass",
+          "type2": "Poison",
+          "moves": [
+            "Tackle",
+            "Growl",
+            "None",
+            "None"
+          ],
+          "pp": [
+            35,
+            40,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "dv_bytes": [
+            154,
+            120
+          ],
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "total_exp": 179,
+          "is_traded": false,
+          "ot_id": 62901,
+          "ot_name": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ]
+        },
+        {
+          "species": "Bulbasaur",
+          "nickname": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "level": 6,
+          "hp": 22,
+          "max_hp": 22,
+          "attack": 11,
+          "defense": 12,
+          "speed": 11,
+          "special": 13,
+          "type1": "Grass",
+          "type2": "Poison",
+          "moves": [
+            "Tackle",
+            "Growl",
+            "None",
+            "None"
+          ],
+          "pp": [
+            35,
+            40,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "dv_bytes": [
+            154,
+            120
+          ],
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "total_exp": 179,
+          "is_traded": false,
+          "ot_id": 62901,
+          "ot_name": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ]
+        }
+      ],
+      "initial_items": [
+        [
+          "Hm01",
+          1
+        ]
+      ],
+      "after_items": [
+        [
+          "Hm01",
+          1
+        ]
+      ],
+      "captures": {
+        "initial": {
+          "frame": 120,
+          "sha256": "955575fbcdb07fcad3c5d55e3c68cf35cb804f0be5735a1e1d3972c22c0bad4e"
+        },
+        "machine-boot": {
+          "frame": 364,
+          "sha256": "4404e028cc02f1886370561a1bf0544e50937ae92c9b551def56a98d90c80ee6"
+        },
+        "machine-teach": {
+          "frame": 400,
+          "sha256": "95a0854da52a00b63600e880f6dbe8b644e9a339a8837661309f09532c4c258c"
+        },
+        "party-select": {
+          "frame": 436,
+          "sha256": "6fc7785b82a446c570e76282b65c2a870f8525138715654ce433e5f14c342ab8"
+        },
+        "machine-result": {
+          "frame": 712,
+          "sha256": "7d9d63da59af7d1dee6b0f7d875e2dffa4affa786301a5d9f3a5451d785da4e1"
+        },
+        "saved": {
+          "frame": 1832,
+          "sha256": "c93d780c612f51629e2c6ed33e73b5426c9d467db614f2602d8b9d478496d69f"
+        }
+      },
+      "prefix_actions": [
+        {
+          "frame": 120,
+          "button": "start",
+          "held": 4,
+          "frames": 60
+        },
+        {
+          "frame": 184,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 220,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 256,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 292,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 328,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 364,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 400,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 436,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        }
+      ],
+      "actions": [
+        {
+          "frame": 120,
+          "button": "start",
+          "held": 4,
+          "frames": 60
+        },
+        {
+          "frame": 184,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 220,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 256,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 292,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 328,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 364,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 400,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 436,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 712,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 748,
+          "button": "b",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 784,
+          "button": "b",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 820,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 856,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 892,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 1128,
+          "button": "a",
+          "held": 1,
+          "frames": 400
+        }
+      ],
+      "normal_save": true,
+      "no_state_edits_after_boot": true,
+      "private_binary": true,
+      "sidecars_absent_before_boot": true,
+      "sram_sha256": "a8dbbe71273a365f23db082c8714e2b1fe2323287ffc2d93f1879a6e6eb9d106",
+      "sram_checksum": 39,
+      "party_raw_hex": "9900000600160300212d0000f5b50000b3000000000000000000009a7823280000060016000b000c000b000d9900160600160300212d0000f5b50000b3000000000000000000009a7823280000060016000b000c000b000d",
+      "flags_sha256": "c8df9c7ece1a2445825b20dfa745b63c1266ad8c1b03e0f272e4e3f62dfcff4f",
+      "all_flags_unchanged": true
+    }
+  ],
+  "after": [
+    {
+      "item": "Tm03",
+      "label": "after",
+      "repeat": 1,
+      "binary_sha256": "2274928cb9e9cfef7e9c86789f19b73bb5bafb64dc5794ccf680f9aee5160916",
+      "fixture_sha256": "f9c4af3551569f8e03babe01e9f6f3eb2bd5ead29e3e02d186dfb099e32c794b",
+      "initial_party": [
+        {
+          "species": "Bulbasaur",
+          "level": 6,
+          "max_hp": 22,
+          "hp": 0,
+          "attack": 11,
+          "defense": 12,
+          "speed": 11,
+          "special": 13,
+          "type1": "Grass",
+          "type2": "Poison",
+          "moves": [
+            "Tackle",
+            "Growl",
+            "None",
+            "None"
+          ],
+          "pp": [
+            35,
+            40,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "dv_bytes": [
+            154,
+            120
+          ],
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "total_exp": 179,
+          "is_traded": false,
+          "ot_id": 62901
+        },
+        {
+          "species": "Bulbasaur",
+          "level": 6,
+          "max_hp": 22,
+          "hp": 22,
+          "attack": 11,
+          "defense": 12,
+          "speed": 11,
+          "special": 13,
+          "type1": "Grass",
+          "type2": "Poison",
+          "moves": [
+            "Tackle",
+            "Growl",
+            "None",
+            "None"
+          ],
+          "pp": [
+            35,
+            40,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "dv_bytes": [
+            154,
+            120
+          ],
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "total_exp": 179,
+          "is_traded": false,
+          "ot_id": 62901
+        }
+      ],
+      "after_party": [
+        {
+          "species": "Bulbasaur",
+          "nickname": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "level": 6,
+          "hp": 0,
+          "max_hp": 22,
+          "attack": 11,
+          "defense": 12,
+          "speed": 11,
+          "special": 13,
+          "type1": "Grass",
+          "type2": "Poison",
+          "moves": [
+            "Tackle",
+            "Growl",
+            "SwordsDance",
+            "None"
+          ],
+          "pp": [
+            35,
+            40,
+            30,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "dv_bytes": [
+            154,
+            120
+          ],
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "total_exp": 179,
+          "is_traded": false,
+          "ot_id": 62901,
+          "ot_name": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ]
+        },
+        {
+          "species": "Bulbasaur",
+          "nickname": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "level": 6,
+          "hp": 22,
+          "max_hp": 22,
+          "attack": 11,
+          "defense": 12,
+          "speed": 11,
+          "special": 13,
+          "type1": "Grass",
+          "type2": "Poison",
+          "moves": [
+            "Tackle",
+            "Growl",
+            "None",
+            "None"
+          ],
+          "pp": [
+            35,
+            40,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "dv_bytes": [
+            154,
+            120
+          ],
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "total_exp": 179,
+          "is_traded": false,
+          "ot_id": 62901,
+          "ot_name": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ]
+        }
+      ],
+      "initial_items": [
+        [
+          "Tm03",
+          2
+        ]
+      ],
+      "after_items": [
+        [
+          "Tm03",
+          1
+        ]
+      ],
+      "captures": {
+        "initial": {
+          "frame": 120,
+          "sha256": "955575fbcdb07fcad3c5d55e3c68cf35cb804f0be5735a1e1d3972c22c0bad4e"
+        },
+        "machine-boot": {
+          "frame": 364,
+          "sha256": "2e2b4b20c84125ac750f88ed2d21b4b35437e02c1f48946f6d0213bc3e54e6a0"
+        },
+        "machine-teach": {
+          "frame": 400,
+          "sha256": "f785a9ce4260300d989104094e95a5144ede0d66c62b23b96acbe2134606854e"
+        },
+        "party-select": {
+          "frame": 436,
+          "sha256": "6fc7785b82a446c570e76282b65c2a870f8525138715654ce433e5f14c342ab8"
+        },
+        "machine-result": {
+          "frame": 712,
+          "sha256": "fc772446896d676a56b087a79d108f2d88368ad36f677334aa36da1c11f8cf05"
+        },
+        "saved": {
+          "frame": 1796,
+          "sha256": "c93d780c612f51629e2c6ed33e73b5426c9d467db614f2602d8b9d478496d69f"
+        }
+      },
+      "prefix_actions": [
+        {
+          "frame": 120,
+          "button": "start",
+          "held": 4,
+          "frames": 60
+        },
+        {
+          "frame": 184,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 220,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 256,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 292,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 328,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 364,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 400,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 436,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        }
+      ],
+      "actions": [
+        {
+          "frame": 120,
+          "button": "start",
+          "held": 4,
+          "frames": 60
+        },
+        {
+          "frame": 184,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 220,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 256,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 292,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 328,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 364,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 400,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 436,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 712,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 748,
+          "button": "b",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 784,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 820,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 856,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 1092,
+          "button": "a",
+          "held": 1,
+          "frames": 400
+        }
+      ],
+      "normal_save": true,
+      "no_state_edits_after_boot": true,
+      "private_binary": true,
+      "sidecars_absent_before_boot": true,
+      "sram_sha256": "6f9dcc217ed4ec98f59dacb90895c04c79750166c566aa04c966cd242c3f8394",
+      "sram_checksum": 221,
+      "party_raw_hex": "9900000600160300212d0e00f5b50000b3000000000000000000009a7823281e00060016000b000c000b000d9900160600160300212d0000f5b50000b3000000000000000000009a7823280000060016000b000c000b000d",
+      "flags_sha256": "c8df9c7ece1a2445825b20dfa745b63c1266ad8c1b03e0f272e4e3f62dfcff4f",
+      "all_flags_unchanged": true
+    },
+    {
+      "item": "Tm03",
+      "label": "after",
+      "repeat": 2,
+      "binary_sha256": "2274928cb9e9cfef7e9c86789f19b73bb5bafb64dc5794ccf680f9aee5160916",
+      "fixture_sha256": "f9c4af3551569f8e03babe01e9f6f3eb2bd5ead29e3e02d186dfb099e32c794b",
+      "initial_party": [
+        {
+          "species": "Bulbasaur",
+          "level": 6,
+          "max_hp": 22,
+          "hp": 0,
+          "attack": 11,
+          "defense": 12,
+          "speed": 11,
+          "special": 13,
+          "type1": "Grass",
+          "type2": "Poison",
+          "moves": [
+            "Tackle",
+            "Growl",
+            "None",
+            "None"
+          ],
+          "pp": [
+            35,
+            40,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "dv_bytes": [
+            154,
+            120
+          ],
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "total_exp": 179,
+          "is_traded": false,
+          "ot_id": 62901
+        },
+        {
+          "species": "Bulbasaur",
+          "level": 6,
+          "max_hp": 22,
+          "hp": 22,
+          "attack": 11,
+          "defense": 12,
+          "speed": 11,
+          "special": 13,
+          "type1": "Grass",
+          "type2": "Poison",
+          "moves": [
+            "Tackle",
+            "Growl",
+            "None",
+            "None"
+          ],
+          "pp": [
+            35,
+            40,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "dv_bytes": [
+            154,
+            120
+          ],
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "total_exp": 179,
+          "is_traded": false,
+          "ot_id": 62901
+        }
+      ],
+      "after_party": [
+        {
+          "species": "Bulbasaur",
+          "nickname": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "level": 6,
+          "hp": 0,
+          "max_hp": 22,
+          "attack": 11,
+          "defense": 12,
+          "speed": 11,
+          "special": 13,
+          "type1": "Grass",
+          "type2": "Poison",
+          "moves": [
+            "Tackle",
+            "Growl",
+            "SwordsDance",
+            "None"
+          ],
+          "pp": [
+            35,
+            40,
+            30,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "dv_bytes": [
+            154,
+            120
+          ],
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "total_exp": 179,
+          "is_traded": false,
+          "ot_id": 62901,
+          "ot_name": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ]
+        },
+        {
+          "species": "Bulbasaur",
+          "nickname": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "level": 6,
+          "hp": 22,
+          "max_hp": 22,
+          "attack": 11,
+          "defense": 12,
+          "speed": 11,
+          "special": 13,
+          "type1": "Grass",
+          "type2": "Poison",
+          "moves": [
+            "Tackle",
+            "Growl",
+            "None",
+            "None"
+          ],
+          "pp": [
+            35,
+            40,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "dv_bytes": [
+            154,
+            120
+          ],
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "total_exp": 179,
+          "is_traded": false,
+          "ot_id": 62901,
+          "ot_name": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ]
+        }
+      ],
+      "initial_items": [
+        [
+          "Tm03",
+          2
+        ]
+      ],
+      "after_items": [
+        [
+          "Tm03",
+          1
+        ]
+      ],
+      "captures": {
+        "initial": {
+          "frame": 120,
+          "sha256": "955575fbcdb07fcad3c5d55e3c68cf35cb804f0be5735a1e1d3972c22c0bad4e"
+        },
+        "machine-boot": {
+          "frame": 364,
+          "sha256": "2e2b4b20c84125ac750f88ed2d21b4b35437e02c1f48946f6d0213bc3e54e6a0"
+        },
+        "machine-teach": {
+          "frame": 400,
+          "sha256": "f785a9ce4260300d989104094e95a5144ede0d66c62b23b96acbe2134606854e"
+        },
+        "party-select": {
+          "frame": 436,
+          "sha256": "6fc7785b82a446c570e76282b65c2a870f8525138715654ce433e5f14c342ab8"
+        },
+        "machine-result": {
+          "frame": 712,
+          "sha256": "fc772446896d676a56b087a79d108f2d88368ad36f677334aa36da1c11f8cf05"
+        },
+        "saved": {
+          "frame": 1796,
+          "sha256": "c93d780c612f51629e2c6ed33e73b5426c9d467db614f2602d8b9d478496d69f"
+        }
+      },
+      "prefix_actions": [
+        {
+          "frame": 120,
+          "button": "start",
+          "held": 4,
+          "frames": 60
+        },
+        {
+          "frame": 184,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 220,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 256,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 292,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 328,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 364,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 400,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 436,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        }
+      ],
+      "actions": [
+        {
+          "frame": 120,
+          "button": "start",
+          "held": 4,
+          "frames": 60
+        },
+        {
+          "frame": 184,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 220,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 256,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 292,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 328,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 364,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 400,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 436,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 712,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 748,
+          "button": "b",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 784,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 820,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 856,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 1092,
+          "button": "a",
+          "held": 1,
+          "frames": 400
+        }
+      ],
+      "normal_save": true,
+      "no_state_edits_after_boot": true,
+      "private_binary": true,
+      "sidecars_absent_before_boot": true,
+      "sram_sha256": "6f9dcc217ed4ec98f59dacb90895c04c79750166c566aa04c966cd242c3f8394",
+      "sram_checksum": 221,
+      "party_raw_hex": "9900000600160300212d0e00f5b50000b3000000000000000000009a7823281e00060016000b000c000b000d9900160600160300212d0000f5b50000b3000000000000000000009a7823280000060016000b000c000b000d",
+      "flags_sha256": "c8df9c7ece1a2445825b20dfa745b63c1266ad8c1b03e0f272e4e3f62dfcff4f",
+      "all_flags_unchanged": true
+    },
+    {
+      "item": "Hm01",
+      "label": "after",
+      "repeat": 1,
+      "binary_sha256": "2274928cb9e9cfef7e9c86789f19b73bb5bafb64dc5794ccf680f9aee5160916",
+      "fixture_sha256": "b8c68f88d13d65a8dba2856d7c6969a125bc37ece29b256670a60cd4673d1977",
+      "initial_party": [
+        {
+          "species": "Bulbasaur",
+          "level": 6,
+          "max_hp": 22,
+          "hp": 0,
+          "attack": 11,
+          "defense": 12,
+          "speed": 11,
+          "special": 13,
+          "type1": "Grass",
+          "type2": "Poison",
+          "moves": [
+            "Tackle",
+            "Growl",
+            "None",
+            "None"
+          ],
+          "pp": [
+            35,
+            40,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "dv_bytes": [
+            154,
+            120
+          ],
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "total_exp": 179,
+          "is_traded": false,
+          "ot_id": 62901
+        },
+        {
+          "species": "Bulbasaur",
+          "level": 6,
+          "max_hp": 22,
+          "hp": 22,
+          "attack": 11,
+          "defense": 12,
+          "speed": 11,
+          "special": 13,
+          "type1": "Grass",
+          "type2": "Poison",
+          "moves": [
+            "Tackle",
+            "Growl",
+            "None",
+            "None"
+          ],
+          "pp": [
+            35,
+            40,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "dv_bytes": [
+            154,
+            120
+          ],
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "total_exp": 179,
+          "is_traded": false,
+          "ot_id": 62901
+        }
+      ],
+      "after_party": [
+        {
+          "species": "Bulbasaur",
+          "nickname": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "level": 6,
+          "hp": 0,
+          "max_hp": 22,
+          "attack": 11,
+          "defense": 12,
+          "speed": 11,
+          "special": 13,
+          "type1": "Grass",
+          "type2": "Poison",
+          "moves": [
+            "Tackle",
+            "Growl",
+            "Cut",
+            "None"
+          ],
+          "pp": [
+            35,
+            40,
+            30,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "dv_bytes": [
+            154,
+            120
+          ],
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "total_exp": 179,
+          "is_traded": false,
+          "ot_id": 62901,
+          "ot_name": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ]
+        },
+        {
+          "species": "Bulbasaur",
+          "nickname": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "level": 6,
+          "hp": 22,
+          "max_hp": 22,
+          "attack": 11,
+          "defense": 12,
+          "speed": 11,
+          "special": 13,
+          "type1": "Grass",
+          "type2": "Poison",
+          "moves": [
+            "Tackle",
+            "Growl",
+            "None",
+            "None"
+          ],
+          "pp": [
+            35,
+            40,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "dv_bytes": [
+            154,
+            120
+          ],
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "total_exp": 179,
+          "is_traded": false,
+          "ot_id": 62901,
+          "ot_name": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ]
+        }
+      ],
+      "initial_items": [
+        [
+          "Hm01",
+          1
+        ]
+      ],
+      "after_items": [
+        [
+          "Hm01",
+          1
+        ]
+      ],
+      "captures": {
+        "initial": {
+          "frame": 120,
+          "sha256": "955575fbcdb07fcad3c5d55e3c68cf35cb804f0be5735a1e1d3972c22c0bad4e"
+        },
+        "machine-boot": {
+          "frame": 364,
+          "sha256": "4404e028cc02f1886370561a1bf0544e50937ae92c9b551def56a98d90c80ee6"
+        },
+        "machine-teach": {
+          "frame": 400,
+          "sha256": "95a0854da52a00b63600e880f6dbe8b644e9a339a8837661309f09532c4c258c"
+        },
+        "party-select": {
+          "frame": 436,
+          "sha256": "6fc7785b82a446c570e76282b65c2a870f8525138715654ce433e5f14c342ab8"
+        },
+        "machine-result": {
+          "frame": 712,
+          "sha256": "0c4437823f840b56e51380e8abf0fd12d4048629d90128e44bf504ab6d295593"
+        },
+        "saved": {
+          "frame": 1796,
+          "sha256": "c93d780c612f51629e2c6ed33e73b5426c9d467db614f2602d8b9d478496d69f"
+        }
+      },
+      "prefix_actions": [
+        {
+          "frame": 120,
+          "button": "start",
+          "held": 4,
+          "frames": 60
+        },
+        {
+          "frame": 184,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 220,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 256,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 292,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 328,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 364,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 400,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 436,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        }
+      ],
+      "actions": [
+        {
+          "frame": 120,
+          "button": "start",
+          "held": 4,
+          "frames": 60
+        },
+        {
+          "frame": 184,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 220,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 256,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 292,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 328,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 364,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 400,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 436,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 712,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 748,
+          "button": "b",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 784,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 820,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 856,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 1092,
+          "button": "a",
+          "held": 1,
+          "frames": 400
+        }
+      ],
+      "normal_save": true,
+      "no_state_edits_after_boot": true,
+      "private_binary": true,
+      "sidecars_absent_before_boot": true,
+      "sram_sha256": "f92bceae713a51920f8eb052c80a8d4a123415f5b55c8ecf23b7a4575523625b",
+      "sram_checksum": 227,
+      "party_raw_hex": "9900000600160300212d0f00f5b50000b3000000000000000000009a7823281e00060016000b000c000b000d9900160600160300212d0000f5b50000b3000000000000000000009a7823280000060016000b000c000b000d",
+      "flags_sha256": "c8df9c7ece1a2445825b20dfa745b63c1266ad8c1b03e0f272e4e3f62dfcff4f",
+      "all_flags_unchanged": true
+    },
+    {
+      "item": "Hm01",
+      "label": "after",
+      "repeat": 2,
+      "binary_sha256": "2274928cb9e9cfef7e9c86789f19b73bb5bafb64dc5794ccf680f9aee5160916",
+      "fixture_sha256": "b8c68f88d13d65a8dba2856d7c6969a125bc37ece29b256670a60cd4673d1977",
+      "initial_party": [
+        {
+          "species": "Bulbasaur",
+          "level": 6,
+          "max_hp": 22,
+          "hp": 0,
+          "attack": 11,
+          "defense": 12,
+          "speed": 11,
+          "special": 13,
+          "type1": "Grass",
+          "type2": "Poison",
+          "moves": [
+            "Tackle",
+            "Growl",
+            "None",
+            "None"
+          ],
+          "pp": [
+            35,
+            40,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "dv_bytes": [
+            154,
+            120
+          ],
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "total_exp": 179,
+          "is_traded": false,
+          "ot_id": 62901
+        },
+        {
+          "species": "Bulbasaur",
+          "level": 6,
+          "max_hp": 22,
+          "hp": 22,
+          "attack": 11,
+          "defense": 12,
+          "speed": 11,
+          "special": 13,
+          "type1": "Grass",
+          "type2": "Poison",
+          "moves": [
+            "Tackle",
+            "Growl",
+            "None",
+            "None"
+          ],
+          "pp": [
+            35,
+            40,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "dv_bytes": [
+            154,
+            120
+          ],
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "total_exp": 179,
+          "is_traded": false,
+          "ot_id": 62901
+        }
+      ],
+      "after_party": [
+        {
+          "species": "Bulbasaur",
+          "nickname": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "level": 6,
+          "hp": 0,
+          "max_hp": 22,
+          "attack": 11,
+          "defense": 12,
+          "speed": 11,
+          "special": 13,
+          "type1": "Grass",
+          "type2": "Poison",
+          "moves": [
+            "Tackle",
+            "Growl",
+            "Cut",
+            "None"
+          ],
+          "pp": [
+            35,
+            40,
+            30,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "dv_bytes": [
+            154,
+            120
+          ],
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "total_exp": 179,
+          "is_traded": false,
+          "ot_id": 62901,
+          "ot_name": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ]
+        },
+        {
+          "species": "Bulbasaur",
+          "nickname": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "level": 6,
+          "hp": 22,
+          "max_hp": 22,
+          "attack": 11,
+          "defense": 12,
+          "speed": 11,
+          "special": 13,
+          "type1": "Grass",
+          "type2": "Poison",
+          "moves": [
+            "Tackle",
+            "Growl",
+            "None",
+            "None"
+          ],
+          "pp": [
+            35,
+            40,
+            0,
+            0
+          ],
+          "pp_ups": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "status": "None",
+          "dv_bytes": [
+            154,
+            120
+          ],
+          "stat_exp": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "total_exp": 179,
+          "is_traded": false,
+          "ot_id": 62901,
+          "ot_name": [
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80,
+            80
+          ]
+        }
+      ],
+      "initial_items": [
+        [
+          "Hm01",
+          1
+        ]
+      ],
+      "after_items": [
+        [
+          "Hm01",
+          1
+        ]
+      ],
+      "captures": {
+        "initial": {
+          "frame": 120,
+          "sha256": "955575fbcdb07fcad3c5d55e3c68cf35cb804f0be5735a1e1d3972c22c0bad4e"
+        },
+        "machine-boot": {
+          "frame": 364,
+          "sha256": "4404e028cc02f1886370561a1bf0544e50937ae92c9b551def56a98d90c80ee6"
+        },
+        "machine-teach": {
+          "frame": 400,
+          "sha256": "95a0854da52a00b63600e880f6dbe8b644e9a339a8837661309f09532c4c258c"
+        },
+        "party-select": {
+          "frame": 436,
+          "sha256": "6fc7785b82a446c570e76282b65c2a870f8525138715654ce433e5f14c342ab8"
+        },
+        "machine-result": {
+          "frame": 712,
+          "sha256": "0c4437823f840b56e51380e8abf0fd12d4048629d90128e44bf504ab6d295593"
+        },
+        "saved": {
+          "frame": 1796,
+          "sha256": "c93d780c612f51629e2c6ed33e73b5426c9d467db614f2602d8b9d478496d69f"
+        }
+      },
+      "prefix_actions": [
+        {
+          "frame": 120,
+          "button": "start",
+          "held": 4,
+          "frames": 60
+        },
+        {
+          "frame": 184,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 220,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 256,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 292,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 328,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 364,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 400,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 436,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        }
+      ],
+      "actions": [
+        {
+          "frame": 120,
+          "button": "start",
+          "held": 4,
+          "frames": 60
+        },
+        {
+          "frame": 184,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 220,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 256,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 292,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 328,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 364,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 400,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 436,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 712,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 748,
+          "button": "b",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 784,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 820,
+          "button": "down",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 856,
+          "button": "a",
+          "held": 1,
+          "frames": 32
+        },
+        {
+          "frame": 1092,
+          "button": "a",
+          "held": 1,
+          "frames": 400
+        }
+      ],
+      "normal_save": true,
+      "no_state_edits_after_boot": true,
+      "private_binary": true,
+      "sidecars_absent_before_boot": true,
+      "sram_sha256": "f92bceae713a51920f8eb052c80a8d4a123415f5b55c8ecf23b7a4575523625b",
+      "sram_checksum": 227,
+      "party_raw_hex": "9900000600160300212d0f00f5b50000b3000000000000000000009a7823281e00060016000b000c000b000d9900160600160300212d0000f5b50000b3000000000000000000009a7823280000060016000b000c000b000d",
+      "flags_sha256": "c8df9c7ece1a2445825b20dfa745b63c1266ad8c1b03e0f272e4e3f62dfcff4f",
+      "all_flags_unchanged": true
+    }
+  ],
+  "original_capture_sha256": "59d89aeb548133bbb4026975d430b45f458a770d298530d369f094cac2d70f3d",
+  "original_verification_sha256": "eb8d0483bc2add4fe21b661947e63d721983c73d3217e59fe23075f6cc9d54cd",
+  "build_identity": {
+    "base": "72f9d593c6f17be00e668ec447bfb5b0217a651f",
+    "test_executable_sha256": "07475c3e0bab7ec5c9d26ab9066686a1ceb250dd17a6a25f97a1d1526aa3db76",
+    "files": {
+      "crates/pokered-core/src/items/bag_use.rs": "d0ae01a4d18c250c4381d40181db6e705c597a83eec1945d1c91672276e745bc",
+      "crates/pokered-core/src/party_screen.rs": "694f92eaa85f1fc55e5369999e84e2b43b09c7c0235c582f88b7a1c7428242aa"
+    },
+    "scoped_pass": 4,
+    "full_core_pass": 2856,
+    "app_binary_sha256": "2274928cb9e9cfef7e9c86789f19b73bb5bafb64dc5794ccf680f9aee5160916",
+    "app_build_pass": true
+  }
+}
