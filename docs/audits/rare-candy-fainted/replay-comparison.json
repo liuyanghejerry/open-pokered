@@ -1,0 +1,86 @@
+{
+  "base": "959b3e38d136634f9210c55bc2849e178ca0860e",
+  "production_base_equivalent_to": "117a326a5a442d47951203c59760c780ea8c82c7",
+  "before_binary_sha256": "dffbebdcf3c44cee83c6d3060997b13c2222fc129e6b88aae7bad3a759fa4457",
+  "after_binary_sha256": "020eecac5b4d9aba4ca7e933b3fedd8adebe586fad3c3d23f5870f79e329e726",
+  "repeats_each_side": 2,
+  "matched_actions": true,
+  "fixture_sha256": "c034610eded4b6fd756fe5e1540834901b2adf05cd7740dc16df0b027fdbb7de",
+  "before": {
+    "level": 12,
+    "hp": 0,
+    "max_hp": 35,
+    "moves": [
+      "Tackle",
+      "Growl",
+      "None",
+      "None"
+    ],
+    "items": 2
+  },
+  "after": {
+    "level": 13,
+    "hp": 2,
+    "max_hp": 37,
+    "moves": [
+      "Tackle",
+      "Growl",
+      "VineWhip",
+      "None"
+    ],
+    "pp": [
+      35,
+      40,
+      10,
+      0
+    ],
+    "stats": [
+      37,
+      20,
+      20,
+      18,
+      23
+    ],
+    "items": 1
+  },
+  "healthy_partner_and_cash_unchanged": true,
+  "captures": [
+    {
+      "name": "result",
+      "side": "before",
+      "frame": 640,
+      "sha256": "d38ceba3c1aba12bee5f57637f01d76cc5a86729d220a81a02b62eb9b0de8036"
+    },
+    {
+      "name": "result",
+      "side": "after",
+      "frame": 640,
+      "sha256": "a2bb799cd5f5c7a2f1d47d5f696f2414b89704c913a75dc2d60474dc13671cc2"
+    },
+    {
+      "name": "stats",
+      "side": "before",
+      "frame": 1216,
+      "sha256": "76a6a40a82ab6c176ba461a925a595cf40a658e8b0ee499606c39e1215be2b0c"
+    },
+    {
+      "name": "stats",
+      "side": "after",
+      "frame": 1216,
+      "sha256": "d6a5e2f56f4610d6036eb609ba2f9cae504b96975d8a6d112f1345034052f1e3"
+    },
+    {
+      "name": "moves",
+      "side": "before",
+      "frame": 1280,
+      "sha256": "a5e6cbc555e986bc7040935b57d5033d0e27ce0b15f7b2ef8163a1893b9bfa19"
+    },
+    {
+      "name": "moves",
+      "side": "after",
+      "frame": 1280,
+      "sha256": "48c1dd63b2ebea53b468cec908705604b3a6546dab57b9b41e85a10d008cc9b9"
+    }
+  ],
+  "native_save_scope": "Native actual START/ITEM/USE/party input, fixed timeline stats/moves captures. Debug save uses ordinary SRAM serialization but is not a SAVE-menu input test. No fixture writes after boot. Original actual menu+SAVE reference is audit-841-original-vitamins-pg23sdh_."
+}
