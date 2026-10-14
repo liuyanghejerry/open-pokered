@@ -5,8 +5,9 @@ Viridian City at `(20,35)`. It has not entered Route 1. The original Red ROM
 also stops there with this input, so this failure does not justify speeding
 up the game engine.
 
-Only m10's south crossing is adjusted to 40 held frames, followed by the same
-neutral tail. Its explicit Route 1 navigation and training checks remain.
+Both m10's initial south crossing and its return from healing use 40 held
+frames, followed by the same neutral tail. Their explicit Route 1 navigation
+and training checks remain.
 If it is still in Viridian City after the crossing input, the error now says
 entry did not finish; it must not be described as having warped back from a
 map that the run never reached.
@@ -16,6 +17,13 @@ map that the run never reached.
 Two independent fresh runs of the frozen nickname-fix binary failed at this
 site, at frames 56,777 and 54,777. Both final states were overworld,
 Viridian City `(20,35)`, facing DOWN, idle, no script, no warp fade.
+
+The next fresh run completed the fixed initial crossing and started training.
+It then failed after healing because the return leg still used the same
+24-frame hold from `(20,33)`. Its final state at frame 56,874 was again
+Viridian City `(20,35)`, facing DOWN and idle. The identical input correction
+is therefore also applied to that observed return site. This is evidence
+for the two crossings, not for completion of m10 or the full main flow.
 
 Separate native probes used that same frozen binary and a controlled CLI warp
 at `(20,33)`, then actual UP and DOWN steps to establish the previous stop

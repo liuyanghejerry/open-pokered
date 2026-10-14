@@ -1469,7 +1469,8 @@ class Game:
                     # Return: city south lane -> crossing -> grass.
                     self.nav_to(20, 32, map_name="ViridianCity")
                     self.nav_to(20, 33, map_name="ViridianCity")
-                    self.d.drive(["down"] * 24, frames=28)
+                    # This is the same three-step crossing as m10's entry.
+                    self.d.drive(["down"] * 40, frames=44)
                     self.step(8)
                     self.nav_to(x, y, map_name, tries=120)
                 elif heal[1] == "PewterCity":

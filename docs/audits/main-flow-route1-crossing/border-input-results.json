@@ -30,6 +30,19 @@
       "player_movement_state": "Idle",
       "warp_fade": "Idle",
       "script_running": false
+    },
+    {
+      "frame_count": 56874,
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 20,
+      "player_y": 35,
+      "player_facing": "Down",
+      "player_movement_state": "Idle",
+      "warp_fade": "Idle",
+      "script_running": false,
+      "run": "audit-838-full-main-flow",
+      "site": "train_until Route1 return after healing; initialcrossingpassed"
     }
   ],
   "original_trials": [
