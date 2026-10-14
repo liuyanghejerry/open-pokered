@@ -35,6 +35,7 @@ pub fn make_pokemon(
         special,
         type1,
         type2,
+        catch_rate: Some(pokered_data::pokemon_data::get_base_stats(species).map_or(0, |b| b.catch_rate)),
         moves,
         pp,
         pp_ups: [0; 4],
