@@ -951,6 +951,7 @@ impl BagVisualKey {
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 struct PartyVisualKey {
+    rare_candy_phase: Option<crate::game::rare_candy::RareCandyPhase>,
     cursor: usize,
     phase: PartyScreenPhase,
     mode: PartyScreenMode,
@@ -988,6 +989,7 @@ impl PartyVisualKey {
             }
         }
         Self {
+            rare_candy_phase: game.rare_candy_phase(),
             cursor: state.cursor(),
             phase: state.phase(),
             mode: state.mode(),

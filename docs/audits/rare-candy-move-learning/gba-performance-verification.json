@@ -1,0 +1,499 @@
+{
+  "scope": "PR238 GBA performance follow-up. Same current baseline and 15%/25-tick thresholds; no gameplay, render layout, input cadence or font changes. Old source/native ordinary SAVE captures retain their original builds.",
+  "compiler": "nightly-2025-12-07, fat LTO, thumbv4t-none-eabi",
+  "emulator": "mGBA0.10.5 SDL dummy/headless; emulated hardware timer",
+  "compiled_parent": "1566b58c8188eabe892efa3780232cad549f56f0",
+  "base_master": "e481388da39ab702480779bcb191f4ca8dc5772a",
+  "source_sha256": {
+    "crates/pokered-core/src/oak_speech.rs": "952e0f905df50bfbbca86eeac4c5b93ffbad6780d2afc801bdad53cfec5412bc",
+    "crates/pokered-app/src/game.rs": "3b23ce3d45f494512cb01a3d22aa50f2f4386476f54e59614e52c3910ff153a3",
+    "crates/pokered-app/src/rare_candy.rs": "cdb3064118e0a8f2bc1782da46576c9ab1872e4b49a854fbbce7fe1c341750d1",
+    "crates/pokered-app/src/rare_candy_tests.rs": "9eadd66625e785f62c879a619fa0b8de91b83abe982c963bfb1716f12240ed2d",
+    "crates/pokered-app/src/agent_state.rs": "68dea278abb148423c7fb2aa18936a9911bfd55040f937a4d49563c10b9082a0",
+    "crates/pokered-app/src/render/session.rs": "323c5002109d272ca5b84d9960200655fcff2b9551607cb3e141539f9cd1f669"
+  },
+  "all_630_rust_cargo_build_files_equal_between_worktree_and_gba_mirror": true,
+  "full_source_manifest_sha256": "e03fdea541d8b124b5ad8e1d25b73dbb9457ed582cdd52272960d8b421e85dd0",
+  "baseline_sha256": "c9ef15a97a6f43d994fe177d7e0212a6a6cbaf561be955a5995fef4da7faebba",
+  "gate_source_sha256": "6578ea611e55413b7603b65a91b019f08e3b2a38b571076204d3b2f12e8e2403",
+  "codegen_observation": {
+    "oak_reachable_str_replace_bytes": {
+      "master906": 304,
+      "unchanged_pr": 1416
+    },
+    "note": "An observed fat-LTO specialization difference, not a cycle attribution of the entire regression. Shrinking game/key storage and cold boundaries did not restore the budget. The selected fix reduces actual per-render temporary allocations.",
+    "gba_sizes_bytes": {
+      "game_master": 32800,
+      "game_inline_flow": 32832,
+      "game_boxed_flow": 32808,
+      "party_key_master": 28,
+      "party_key_new": 36,
+      "party_key_compact_slot": 28
+    }
+  },
+  "trials": [
+    {
+      "trial": "master906 reference",
+      "compiled_parent": "906ae8f82d05006691c5aca3cb9cb2fc67b035c7",
+      "oak": {
+        "draw_max_ticks": 9003,
+        "draw_per_frame_ticks": 2958,
+        "present_max_ticks": 781,
+        "present_per_frame_ticks": 392,
+        "renders": 307,
+        "samples": 600,
+        "scenario": "oak-dialogue-v1",
+        "update_avg_ticks": 186,
+        "update_core_avg_ticks": 176,
+        "update_flush_avg_ticks": 1
+      },
+      "budget_pass": true,
+      "metrics_sha256": "a5f462f44b9ec4c5d368b27b76a0bf41d6d4755b66fd77d35fc90ad6c9fda457",
+      "rom_sha256": "99bef8a20389aa357d4af751014cea8b59fb1940636dba95a3ae5b9b299a1768"
+    },
+    {
+      "trial": "PR after merge master906, unchanged",
+      "compiled_parent": "5d0994b916a6f7cc206f79a03d99e39f5b430640",
+      "oak": {
+        "draw_max_ticks": 9312,
+        "draw_per_frame_ticks": 3092,
+        "present_max_ticks": 782,
+        "present_per_frame_ticks": 392,
+        "renders": 307,
+        "samples": 600,
+        "scenario": "oak-dialogue-v1",
+        "update_avg_ticks": 187,
+        "update_core_avg_ticks": 178,
+        "update_flush_avg_ticks": 1
+      },
+      "budget_pass": false,
+      "metrics_sha256": "385264c12d221bc5caaa7e8d17439eee9fed6ba6d13215598f5ccae798fdfb11",
+      "rom_sha256": "158da90949c1a5126d3a4b41480c9fea0a6d0f145aa134358fa5e4d34fdbd2e3",
+      "identity_record_sha256": "131e449933e12f999349b690fdfcef005cc50e9a9c78d5d605330ab2b0ba176f"
+    },
+    {
+      "trial": "experiment only: boxed cold flow",
+      "compiled_parent": "5d0994b916a6f7cc206f79a03d99e39f5b430640",
+      "oak": {
+        "draw_max_ticks": 9312,
+        "draw_per_frame_ticks": 3092,
+        "present_max_ticks": 782,
+        "present_per_frame_ticks": 392,
+        "renders": 307,
+        "samples": 600,
+        "scenario": "oak-dialogue-v1",
+        "update_avg_ticks": 187,
+        "update_core_avg_ticks": 178,
+        "update_flush_avg_ticks": 1
+      },
+      "budget_pass": false,
+      "metrics_sha256": "f43286ac6e0eb142c3e40b04faf46fb8db1a833f6a5572b0a43e76fa7b3c38b9",
+      "rom_sha256": "b7170b1aeac16b2ddd21d48845792d1aeaee4f4fc373ea3d71cf2a0e297af8b9",
+      "patch_sha256": "058036066134e6f956f04f6300c840a1b2bd73f6e6a03a61a29dfe68b3b747e4",
+      "identity_record_sha256": "e0f9eaa07e591e54529aaf71f779a579574718684a35be1cdee6b2810c548906"
+    },
+    {
+      "trial": "experiment only: u8 Forgot slot",
+      "compiled_parent": "5d0994b916a6f7cc206f79a03d99e39f5b430640",
+      "oak": {
+        "draw_max_ticks": 9309,
+        "draw_per_frame_ticks": 3091,
+        "present_max_ticks": 782,
+        "present_per_frame_ticks": 392,
+        "renders": 307,
+        "samples": 600,
+        "scenario": "oak-dialogue-v1",
+        "update_avg_ticks": 187,
+        "update_core_avg_ticks": 178,
+        "update_flush_avg_ticks": 1
+      },
+      "budget_pass": false,
+      "metrics_sha256": "04ba97face9e9e262852ba20a1b48d346ca169ce7a3fb157b2814d9bcaa3a46d",
+      "rom_sha256": "eb88182c2e0728ab4a3f05e84b317c5e8a41f301df277590d69e892d1c6e595d",
+      "patch_sha256": "60949d95cdf5db2a02b67c2813cbff5c4f350fcade15a0b9a14aa237e9aec592",
+      "identity_record_sha256": "cc82e5ff9d012b4615be27abf49bdded954f7cc659d2f50ec0db24305a250f79"
+    },
+    {
+      "trial": "experiment only: noinline Party renderers",
+      "compiled_parent": "5d0994b916a6f7cc206f79a03d99e39f5b430640",
+      "oak": {
+        "draw_max_ticks": 9312,
+        "draw_per_frame_ticks": 3092,
+        "present_max_ticks": 782,
+        "present_per_frame_ticks": 392,
+        "renders": 307,
+        "samples": 600,
+        "scenario": "oak-dialogue-v1",
+        "update_avg_ticks": 187,
+        "update_core_avg_ticks": 178,
+        "update_flush_avg_ticks": 1
+      },
+      "budget_pass": false,
+      "metrics_sha256": "385264c12d221bc5caaa7e8d17439eee9fed6ba6d13215598f5ccae798fdfb11",
+      "rom_sha256": "1b47404f35bb1f504bd4c3d66202c72cc7b142080a4eaab2fddef39356d2a256",
+      "patch_sha256": "7069d06f68d68bc3f4f260b93a553da4b8e8c2659c637ecf33695573697e549e",
+      "identity_record_sha256": "d2463e8aa87ef9198a01bfce1f5c7b67b585c10f1c121be677cfaa7620d7fe80"
+    },
+    {
+      "trial": "experiment only: outlined Party dispatch",
+      "compiled_parent": "5d0994b916a6f7cc206f79a03d99e39f5b430640",
+      "oak": {
+        "draw_max_ticks": 9312,
+        "draw_per_frame_ticks": 3092,
+        "present_max_ticks": 782,
+        "present_per_frame_ticks": 392,
+        "renders": 307,
+        "samples": 600,
+        "scenario": "oak-dialogue-v1",
+        "update_avg_ticks": 187,
+        "update_core_avg_ticks": 178,
+        "update_flush_avg_ticks": 1
+      },
+      "budget_pass": false,
+      "metrics_sha256": "385264c12d221bc5caaa7e8d17439eee9fed6ba6d13215598f5ccae798fdfb11",
+      "rom_sha256": "1f1aa7219bf5d6a19bc8b6ac5cee572e8c090e5687a2cec0be385a9a6f5b6120",
+      "patch_sha256": "23f2cde6eff331dd598071fe79320822a097659a5d21ca69a892b55dd73c4b6a",
+      "identity_record_sha256": "4853209ecd657fc530ddf0f178e676dbffee9a2aa752143714aa1dc1def76bdb"
+    },
+    {
+      "trial": "experiment only: noinline name replacement",
+      "compiled_parent": "5d0994b916a6f7cc206f79a03d99e39f5b430640",
+      "oak": {
+        "draw_max_ticks": 9312,
+        "draw_per_frame_ticks": 3092,
+        "present_max_ticks": 782,
+        "present_per_frame_ticks": 392,
+        "renders": 307,
+        "samples": 600,
+        "scenario": "oak-dialogue-v1",
+        "update_avg_ticks": 187,
+        "update_core_avg_ticks": 178,
+        "update_flush_avg_ticks": 1
+      },
+      "budget_pass": false,
+      "metrics_sha256": "385264c12d221bc5caaa7e8d17439eee9fed6ba6d13215598f5ccae798fdfb11",
+      "rom_sha256": "0df926960ef445cdd8d935021be0e89332aa80e6eb62fe672f237b10ef769889",
+      "patch_sha256": "6f1679ae723f0dea60442a6fab327197e7e097f156fb4c208c90865e55b3d735",
+      "identity_record_sha256": "078faeb5a65b334a92d5e21931471df104e21eed60203d5383bc4fca0255cb13"
+    },
+    {
+      "trial": "experiment only: no-token copy",
+      "compiled_parent": "5d0994b916a6f7cc206f79a03d99e39f5b430640",
+      "oak": {
+        "draw_max_ticks": 9312,
+        "draw_per_frame_ticks": 3077,
+        "present_max_ticks": 782,
+        "present_per_frame_ticks": 392,
+        "renders": 307,
+        "samples": 600,
+        "scenario": "oak-dialogue-v1",
+        "update_avg_ticks": 187,
+        "update_core_avg_ticks": 178,
+        "update_flush_avg_ticks": 1
+      },
+      "budget_pass": false,
+      "metrics_sha256": "3d601a33bfc2d5d46b4ed148e421ee9e4499b52ef2950d8c1bca17915c10e29f",
+      "rom_sha256": "2f64f0711342aa24676fe0608d53b86e181ab834b8e41311e3ba7d75bfd93e7d",
+      "patch_sha256": "1344e8c018efba9b4325891abb20963529a2d9233314c11d6370bf154f5e565f",
+      "identity_record_sha256": "686c537ba168fa6eca5be496af32abb080105708bf60b32376a956f19d015f6b"
+    },
+    {
+      "trial": "experiment only: owned UTF-8 prefixes",
+      "compiled_parent": "5d0994b916a6f7cc206f79a03d99e39f5b430640",
+      "oak": {
+        "draw_max_ticks": 9312,
+        "draw_per_frame_ticks": 3020,
+        "present_max_ticks": 782,
+        "present_per_frame_ticks": 392,
+        "renders": 307,
+        "samples": 600,
+        "scenario": "oak-dialogue-v1",
+        "update_avg_ticks": 187,
+        "update_core_avg_ticks": 178,
+        "update_flush_avg_ticks": 1
+      },
+      "budget_pass": false,
+      "metrics_sha256": "2cf413dc1b1abcaa9561a3b7996a6bb364176b26fdf16d214c4eb9017ecb946c",
+      "rom_sha256": "97655cb243a8649ec9e039f248d3863296abe4c47cdba497838d0c6a7d670f5c",
+      "patch_sha256": "3974bd412fc016e613ca13e269827a895b84877b84bdf424b85136dffb3cd988",
+      "identity_record_sha256": "ea887f0117da24de2f882d8d72f40bb6760e24704f12916a803d052455771ba1"
+    },
+    {
+      "trial": "selected on mastere481: owned prefixes + lazy second line + no-token copy",
+      "compiled_parent": "1566b58c8188eabe892efa3780232cad549f56f0",
+      "oak": {
+        "draw_max_ticks": 9312,
+        "draw_per_frame_ticks": 2994,
+        "present_max_ticks": 782,
+        "present_per_frame_ticks": 392,
+        "renders": 307,
+        "samples": 600,
+        "scenario": "oak-dialogue-v1",
+        "update_avg_ticks": 187,
+        "update_core_avg_ticks": 178,
+        "update_flush_avg_ticks": 1
+      },
+      "budget_pass": true,
+      "metrics_sha256": "e2111287f8c865c118f1747d526f4d6327303fd5f33e939a0871f380a86b4e6c",
+      "rom_sha256": "071caa2c9d0e49268de720115d9c2f70bc4b8e07d3cec321c4bb47648b33ac65"
+    }
+  ],
+  "final_all_seven_scenarios": {
+    "battle-entry-v1": {
+      "draw_max_ticks": 8861,
+      "draw_per_frame_ticks": 2644,
+      "present_max_ticks": 782,
+      "present_per_frame_ticks": 567,
+      "renders": 369,
+      "samples": 500,
+      "scenario": "battle-entry-v1",
+      "update_avg_ticks": 211,
+      "update_core_avg_ticks": 200,
+      "update_flush_avg_ticks": 1
+    },
+    "intro-title-v1": {
+      "draw_max_ticks": 9833,
+      "draw_per_frame_ticks": 1205,
+      "present_max_ticks": 782,
+      "present_per_frame_ticks": 353,
+      "renders": 115,
+      "samples": 250,
+      "scenario": "intro-title-v1",
+      "update_avg_ticks": 118,
+      "update_core_avg_ticks": 109,
+      "update_flush_avg_ticks": 1
+    },
+    "oak-dialogue-v1": {
+      "draw_max_ticks": 9312,
+      "draw_per_frame_ticks": 2994,
+      "present_max_ticks": 782,
+      "present_per_frame_ticks": 392,
+      "renders": 307,
+      "samples": 600,
+      "scenario": "oak-dialogue-v1",
+      "update_avg_ticks": 187,
+      "update_core_avg_ticks": 178,
+      "update_flush_avg_ticks": 1
+    },
+    "overworld-idle-v1": {
+      "draw_max_ticks": 0,
+      "draw_per_frame_ticks": 0,
+      "present_max_ticks": 0,
+      "present_per_frame_ticks": 0,
+      "renders": 0,
+      "samples": 1400,
+      "scenario": "overworld-idle-v1",
+      "update_avg_ticks": 363,
+      "update_core_avg_ticks": 353,
+      "update_flush_avg_ticks": 1
+    },
+    "overworld-movement-v1": {
+      "draw_max_ticks": 3091,
+      "draw_per_frame_ticks": 223,
+      "present_max_ticks": 769,
+      "present_per_frame_ticks": 70,
+      "renders": 24,
+      "samples": 240,
+      "scenario": "overworld-movement-v1",
+      "update_avg_ticks": 368,
+      "update_core_avg_ticks": 358,
+      "update_flush_avg_ticks": 1
+    },
+    "pokedex-entry-v1": {
+      "draw_max_ticks": 16319,
+      "draw_per_frame_ticks": 40,
+      "present_max_ticks": 767,
+      "present_per_frame_ticks": 1,
+      "renders": 1,
+      "samples": 400,
+      "scenario": "pokedex-entry-v1",
+      "update_avg_ticks": 115,
+      "update_core_avg_ticks": 104,
+      "update_flush_avg_ticks": 1
+    },
+    "trainer-battle-entry-v1": {
+      "draw_max_ticks": 10162,
+      "draw_per_frame_ticks": 2475,
+      "present_max_ticks": 782,
+      "present_per_frame_ticks": 344,
+      "renders": 224,
+      "samples": 500,
+      "scenario": "trainer-battle-entry-v1",
+      "update_avg_ticks": 229,
+      "update_core_avg_ticks": 219,
+      "update_flush_avg_ticks": 1
+    }
+  },
+  "same_final_rom_repeat_identical_metrics": true,
+  "repeat_metrics_sha256": "e2111287f8c865c118f1747d526f4d6327303fd5f33e939a0871f380a86b4e6c",
+  "tests": {
+    "oak_scoped": 15,
+    "core_full": 2859,
+    "application_debug_candy": 11,
+    "application_default_candy": 11,
+    "full_application_suite_not_rerun": "The prior unrelated gift failure remains documented; only the scoped 11 tests are a new PASS claim."
+  },
+  "soft_reset_actual_input_screens": [
+    {
+      "name": "after-chord.png",
+      "old_lifecycle_sha256": "bd7830fb0e4ce2a9cc77bff39ac3c0f0c55a09a9812e8cea88cf35bfc00f9613",
+      "current_debug_test_sha256": "bd7830fb0e4ce2a9cc77bff39ac3c0f0c55a09a9812e8cea88cf35bfc00f9613",
+      "pixel_file_identical": true
+    },
+    {
+      "name": "before-chord.png",
+      "old_lifecycle_sha256": "ae533c6f8eaa3a38438bd1c59fbfa01597b80fe805a096bfbb2d8b9e91c9e2d0",
+      "current_debug_test_sha256": "ae533c6f8eaa3a38438bd1c59fbfa01597b80fe805a096bfbb2d8b9e91c9e2d0",
+      "pixel_file_identical": true
+    },
+    {
+      "name": "continued.png",
+      "old_lifecycle_sha256": "7e293a211d83937df5365bb53143b8cd07c8df5e67eb3ebf420f4c816e428f5f",
+      "current_debug_test_sha256": "7e293a211d83937df5365bb53143b8cd07c8df5e67eb3ebf420f4c816e428f5f",
+      "pixel_file_identical": true
+    },
+    {
+      "name": "new-candy-finished.png",
+      "old_lifecycle_sha256": "96f64631a4cb3a2479827d99a651f55fe4d24b10721e0167dc023442316d3402",
+      "current_debug_test_sha256": "96f64631a4cb3a2479827d99a651f55fe4d24b10721e0167dc023442316d3402",
+      "pixel_file_identical": true
+    },
+    {
+      "name": "party-a.png",
+      "old_lifecycle_sha256": "3e137ee90d9b77996b62a3f2cfe914b2a4a9f42f3fb8ad89e64e4f8d62340293",
+      "current_debug_test_sha256": "3e137ee90d9b77996b62a3f2cfe914b2a4a9f42f3fb8ad89e64e4f8d62340293",
+      "pixel_file_identical": true
+    },
+    {
+      "name": "party-entry.png",
+      "old_lifecycle_sha256": "ede51a40f3e7f5dbd8e3526bed43455be1fbd6eef2d76a3dd7542afab8250ed3",
+      "current_debug_test_sha256": "ede51a40f3e7f5dbd8e3526bed43455be1fbd6eef2d76a3dd7542afab8250ed3",
+      "pixel_file_identical": true
+    }
+  ],
+  "retained_non_game_build_failures": [
+    {
+      "file": "audit-850-gba-master-build.log",
+      "reason": "Started cargo with the standalone manifest from repository cwd, missing local thumbv4t config; terminated, no result counted.",
+      "sha256": "be2f93f5400bff24ef2bbc750c4da0ce2a0995dcdc151da65e84538eed47ef12"
+    },
+    {
+      "file": "audit-850-gba-final-build.log",
+      "reason": "Wrong repository cwd selected workspace packages lacking perf-benchmark; failed before compilation. Correct-cwd build recorded separately.",
+      "sha256": "94c4c775452494ab09172cc5ab3744370d28134dc0f96229eda7d2a95e8ed7dd"
+    }
+  ],
+  "limits": [
+    "Local benchmark gate PASS is not GitHub CI completion. CI must re-run on the pushed head.",
+    "Only unchanged native PNGs and Unicode prefix semantics checked here; no new original animation/frame parity claim.",
+    "Original evolution movie was not recaptured. Historical 8 original/16 native ordinary SAVE evidence not re-badged."
+  ],
+  "host_app_sha256": "90110dbe6967526901a2802beba0e8459f24ff280a854b5dc9ef454829f08177",
+  "native_oak_pixels": {
+    "scope": "Native screenshot CLI selected Oak state, not original/GBA timing comparison.",
+    "before_binary_sha256": "69097e3e5fff14fdf13ca6cfb68c1eec1bf3f40f9fe796ee35ab227640646fc3",
+    "after_binary_sha256": "90110dbe6967526901a2802beba0e8459f24ff280a854b5dc9ef454829f08177",
+    "captures": [
+      {
+        "lang": "en",
+        "frame": 0,
+        "png_sha256": "9153a960bd0a70d4be7d1ee9a831b7c5706ecda9f5c19e9fadf118f5e61b1642",
+        "bytes_identical": true
+      },
+      {
+        "lang": "en",
+        "frame": 70,
+        "png_sha256": "924abe90e5a92936f423b2c20002305976173214123670d81e3704b3ca8f2092",
+        "bytes_identical": true
+      },
+      {
+        "lang": "en",
+        "frame": 110,
+        "png_sha256": "d6f5414a0248694b0ed6bfe33e6da9518f36521afd11e60c8781061e542aa7e6",
+        "bytes_identical": true
+      },
+      {
+        "lang": "en",
+        "frame": 150,
+        "png_sha256": "d6f5414a0248694b0ed6bfe33e6da9518f36521afd11e60c8781061e542aa7e6",
+        "bytes_identical": true
+      },
+      {
+        "lang": "en",
+        "frame": 200,
+        "png_sha256": "d6f5414a0248694b0ed6bfe33e6da9518f36521afd11e60c8781061e542aa7e6",
+        "bytes_identical": true
+      },
+      {
+        "lang": "zh",
+        "frame": 130,
+        "png_sha256": "683d4fdd4a61b64774e90df11e774c3a0cb84eb6b2112c78499bcee44829d072",
+        "bytes_identical": true
+      },
+      {
+        "lang": "zh",
+        "frame": 200,
+        "png_sha256": "683d4fdd4a61b64774e90df11e774c3a0cb84eb6b2112c78499bcee44829d072",
+        "bytes_identical": true
+      }
+    ]
+  },
+  "native_real_menu_restore_and_candy_reuse": {
+    "script_sha256": "58526e86b431b032da8b446743f61b1997ee219d19735f567785e8d731937ed4",
+    "binary_sha256": "90110dbe6967526901a2802beba0e8459f24ff280a854b5dc9ef454829f08177",
+    "fixture_sha256": "67a64f376b070324ecc3f1d9748545b11583c7f0c05d2c3043e000dac32182fc",
+    "verification_sha256": "bd964a98049d3f54b5a978f2fe153e66d821c01a1e6817541b0c6623fc391d78",
+    "party_capture_rejected": true,
+    "no_sram_save": true,
+    "final_qty": 1,
+    "final_level": 13,
+    "final_moves": [
+      "Tackle",
+      "Growl",
+      "VineWhip",
+      "None"
+    ],
+    "captures": [
+      {
+        "name": "learned-before-restore",
+        "frame": 436,
+        "png_sha256": "0c68afb07d6ce95ba213c229645f0e9b3c6f9d01ba45ef4b4fea121c0267e0d5",
+        "same_as_prior_lifecycle_after_build": true
+      },
+      {
+        "name": "party-after-restore",
+        "frame": 256,
+        "png_sha256": "ede51a40f3e7f5dbd8e3526bed43455be1fbd6eef2d76a3dd7542afab8250ed3",
+        "same_as_prior_lifecycle_after_build": true
+      },
+      {
+        "name": "a-after-restore",
+        "frame": 292,
+        "png_sha256": "2142618f80c9f09b8fa084023568fae320980cf0f9556cf9f75311003e8222df",
+        "same_as_prior_lifecycle_after_build": true
+      },
+      {
+        "name": "second-learned",
+        "frame": 580,
+        "png_sha256": "0c68afb07d6ce95ba213c229645f0e9b3c6f9d01ba45ef4b4fea121c0267e0d5",
+        "same_as_prior_lifecycle_after_build": true
+      },
+      {
+        "name": "second-finished",
+        "frame": 856,
+        "png_sha256": "96f64631a4cb3a2479827d99a651f55fe4d24b10721e0167dc023442316d3402",
+        "same_as_prior_lifecycle_after_build": true
+      }
+    ]
+  },
+  "test_logs_sha256": {
+    "audit-850-perf-oak-core-tests.log": "b418dfea4d5570d598c5bc66a28ab4fdf8a6b87836ea4cc0b5abd68310dff407",
+    "audit-850-perf-core-full.log": "bc776c1b8e0b09160c1d6c2ba53413d8f8ba1e19668048b9225d8592aae018e0",
+    "audit-850-perf-debug-tests.log": "d886f04b06f982cc857c991c17d5a426eae953d5ea242c47d0ba0b85332bd8df",
+    "audit-850-perf-default-tests.log": "9cb1950e16aa2d86955bff13ac7028afcbe98c333d5ccba4bd04b448ca1a0f07",
+    "audit-850-perf-app-build.log": "a3bdb6ee38c1f468dc9f667ab9f2dd12b90af1745a6704fc316b68219377484e",
+    "audit-850-gba-final-build-correct-cwd.log": "43cdf14266939e8f041bd2ada5b56ad3a96294ef7d2c52f8f2746bd035a6c58e",
+    "audit-850-gba-final-compare.log": "2b8d36739906f579c057775b8e46ab52054b76f7c07cf1008aef1f599d52e351",
+    "audit-850-gba-final-repeat-compare.log": "2b8d36739906f579c057775b8e46ab52054b76f7c07cf1008aef1f599d52e351"
+  }
+}
