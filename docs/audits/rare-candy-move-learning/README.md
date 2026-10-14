@@ -61,6 +61,10 @@ master `72f9d593` production difference is PR231's removal of the HP-zero
 Rare Candy guard; it does not change these four healthy cases. After is built
 from `e196942e`, including that merged fix and the deferred field flow.
 Executable hashes and source identities are in `replay-comparison.json`.
+The review tree subsequently merges master `6a0ef88b`; its only additional
+production change is vitamin success-message wording, outside these Rare
+Candy cases. Tests and captures above retain their real frozen `e196942e`
+identity; they are not relabelled as a post-merge build.
 
 The same initial fixtures and real input prefix produce paired level/stat
 screens at frame 640 and first-acknowledgement screens at frame 676. Before

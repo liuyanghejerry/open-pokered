@@ -10,7 +10,7 @@
       {"task": "final-debug-app-build", "exit_code": 0, "log": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-850-final-debug-app-build.log"}
     ]
   },
-  "before_to_current_master_production_difference": "Only merged PR231 changes RareCandy HP0 rejection in vitamins.rs; these four native visual cases have healthy HP35. Relevant healthy case execution and rendering remain equal to master72f.",
+  "before_to_current_master_production_difference": "PR231 removes RareCandy HP0 rejection; PR234 changes vitamin success-message wording. Neither changes these four healthy RareCandy cases.",
   "repeats_per_scenario": 2,
   "native_trials": [
     {
@@ -2538,5 +2538,7 @@
   "native_capture_script_sha256": "93d630d4278b3fd2471d290ec9c3d9cac6cf2d711f545d243da3216c22d2f56b",
   "public_replay_script_sha256": "43c09b7e9d661100e5d4e82f008fff89d7e931be6efcf2b73fe95d719a4d766c",
   "tests": {"core_scoped": "9 passed", "app_scoped_debug_server": "9 passed", "app_scoped_default": "9 passed", "app_full_debug_server": "247 passed, 1 baseline gift test failed, 38 ignored; not a whole-suite PASS", "build": "debug-server application passed", "fresh_m01_m06": "PASS frame12227 OaksLab(5,6), overworld, one party member, money3175, no active effect"},
-  "superseded": "The first after8 capture set used the older y2 stats rectangle. It is retained privately under superseded-y2-* and is not used for final screenshots or results. Initial too-early learning-sound test harness failures were corrected by waiting for sound readiness and driving the actual evolution actor."
+  "superseded": "The first after8 capture set used the older y2 stats rectangle. It is retained privately under superseded-y2-* and is not used for final screenshots or results. Initial too-early learning-sound test harness failures were corrected by waiting for sound readiness and driving the actual evolution actor.",
+  "review_base_commit": "6a0ef88bdff7447e2478ae7d0a87b71fd372b011",
+  "post_capture_master_merge": "Master6a adds PR234 vitamin success-message wording only to production bag_use.rs. RareCandy handler/continuation/renderer/test sources unchanged versus frozen e196. No post-merge binary rebuild claimed."
 }
