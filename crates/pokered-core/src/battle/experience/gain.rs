@@ -70,6 +70,8 @@ pub fn gain_experience(
 
     let num_gainers = state.party_gain_exp_flags.iter().filter(|&&f| f).count() as u32;
     if num_gainers == 0 && !has_exp_all {
+        // The original still reaches .done when every gain bit is clear.
+        state.reset_player_participants();
         return GainExpResult {
             exp_gains: vec![],
             notices: vec![],

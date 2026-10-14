@@ -165,3 +165,25 @@ fn exp_participant_failed_revive_changes_neither_masks_nor_quantity() {
     assert_eq!(masks(&s), (FIRST, FIRST));
     assert_eq!(s.player_bag.items(), &[(ItemId::Revive, 2)]);
 }
+
+#[test]
+fn exp_participant_no_eligible_gainers_still_reset_fought_history() {
+    let mut s = battle();
+    s.apply_player_switch(1);
+    let bs = s.battle_state.as_mut().unwrap();
+    bs.party_gain_exp_flags.fill(false);
+    bs.enemy.party[0].hp = 0;
+    let before: Vec<_> = bs.player.party.iter().map(|p| p.total_exp).collect();
+    assert!(s.process_exp_gain().is_empty());
+    assert_eq!(masks(&s), (SECOND, SECOND));
+    let after: Vec<_> = s
+        .battle_state
+        .as_ref()
+        .unwrap()
+        .player
+        .party
+        .iter()
+        .map(|p| p.total_exp)
+        .collect();
+    assert_eq!(before, after);
+}
