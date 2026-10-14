@@ -31,7 +31,8 @@ impl Painter for Recorder {
 }
 
 fn rendered_status(hp: u16, status: StatusCondition) -> String {
-    let mut mon = create_pokemon(Species::Bulbasaur, 100, [0xff, 0xff]).unwrap();
+    let mut mon = create_pokemon(Species::Chansey, 100, [0xff, 0xff]).unwrap();
+    assert!(hp <= mon.max_hp, "fixture current HP must be legal");
     mon.hp = hp;
     mon.status = status;
     let state = StatsScreenState::new(mon);
