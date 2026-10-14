@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-865-native-stone-hints.py", line 34, in <module>
+    party=capture('party-selection');assert party['screen']=='party' and party['field_menu']['phase']=='Browsing'
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

@@ -1,0 +1,241 @@
+{
+  "scope": "Two actual stone menus x2 repeated, compatible fainted poisoned Pikachu or poisoned Gloom vs incompatible Bulbasaur; real START/ITEM/USE, move cursor then B cancellation, ordinary SAVE both. No teaching/evolution attempt. Source ROM/source fixture and native master906 identities retained. No state writes after input boundary. Source/native frame/text/font parity not claimed. Original minLevel ignored in menu; native levels valid. First native harness failed by selecting trainer-card from non-Pokedex START; rejected log retained.",
+  "source_dir": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-865-original-stone-hints-u1z4hs94",
+  "native_dir": ".task-tmp/fidelity-39-plus/audit-865-native-before-retry1",
+  "native_build": {
+    "commit": "906ae8f82d05006691c5aca3cb9cb2fc67b035c7",
+    "sha256": "b50130e04db566195707c8c48fa57746fe71d34d8f9c0a3c62883e19c901c2bb",
+    "feature": "debug-server",
+    "profile": "dev opt0 debug0",
+    "source_clean_at_build": true
+  },
+  "source_script_sha256": "0473e3cca619935aed42c17b7aec23a15c21a21265b01ed021b4f695d85e46cf",
+  "native_script_sha256": "aa8202660f4467e9c6f31290cf64e32968f4aae98bdc75d5ee43423564d7441e",
+  "confirmed": "Source displays ABLE/NOT ABLE and hides HP/status. Native only HP/status and no compatibility labels. Saved raw party88bytes exactlymatch all4 pairs after235.",
+  "pairs": [
+    {
+      "flow": "thunderstone",
+      "repeat": 1,
+      "source_saved_party_88_bytes_match_native": true,
+      "source_menu_labels": [
+        "   PIKACHU   ..     ",
+        ".           ABLE    ",
+        "   BULBASAUR ...    ",
+        "            NOT ABLE",
+        "                    ",
+        "                    ",
+        "                    ",
+        "                    ",
+        "                    ",
+        "                    ",
+        "                    ",
+        "                    ",
+        "....................",
+        ".                  .",
+        ".U.. .... .. ..... .",
+        ".                  .",
+        ".POK.MON.          .",
+        "...................."
+      ],
+      "source_party_unchanged": true,
+      "native_party_unchanged": true,
+      "normal_SAVE_both": true,
+      "source_checksum": 13,
+      "native_checksum": 13,
+      "source_png": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-865-original-stone-hints-u1z4hs94/thunderstone-1/party-selection.png",
+      "native_png": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-865-native-before-retry1/thunderstone-1/party-selection.png"
+    },
+    {
+      "flow": "thunderstone",
+      "repeat": 2,
+      "source_saved_party_88_bytes_match_native": true,
+      "source_menu_labels": [
+        "   PIKACHU   ..     ",
+        ".           ABLE    ",
+        "   BULBASAUR ...    ",
+        "            NOT ABLE",
+        "                    ",
+        "                    ",
+        "                    ",
+        "                    ",
+        "                    ",
+        "                    ",
+        "                    ",
+        "                    ",
+        "....................",
+        ".                  .",
+        ".U.. .... .. ..... .",
+        ".                  .",
+        ".POK.MON.          .",
+        "...................."
+      ],
+      "source_party_unchanged": true,
+      "native_party_unchanged": true,
+      "normal_SAVE_both": true,
+      "source_checksum": 13,
+      "native_checksum": 13,
+      "source_png": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-865-original-stone-hints-u1z4hs94/thunderstone-2/party-selection.png",
+      "native_png": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-865-native-before-retry1/thunderstone-2/party-selection.png"
+    },
+    {
+      "flow": "leaf-stone",
+      "repeat": 1,
+      "source_saved_party_88_bytes_match_native": true,
+      "source_menu_labels": [
+        "   GLOOM     ...    ",
+        ".           ABLE    ",
+        "   BULBASAUR ...    ",
+        "            NOT ABLE",
+        "                    ",
+        "                    ",
+        "                    ",
+        "                    ",
+        "                    ",
+        "                    ",
+        "                    ",
+        "                    ",
+        "....................",
+        ".                  .",
+        ".U.. .... .. ..... .",
+        ".                  .",
+        ".POK.MON.          .",
+        "...................."
+      ],
+      "source_party_unchanged": true,
+      "native_party_unchanged": true,
+      "normal_SAVE_both": true,
+      "source_checksum": 178,
+      "native_checksum": 178,
+      "source_png": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-865-original-stone-hints-u1z4hs94/leaf-stone-1/party-selection.png",
+      "native_png": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-865-native-before-retry1/leaf-stone-1/party-selection.png"
+    },
+    {
+      "flow": "leaf-stone",
+      "repeat": 2,
+      "source_saved_party_88_bytes_match_native": true,
+      "source_menu_labels": [
+        "   GLOOM     ...    ",
+        ".           ABLE    ",
+        "   BULBASAUR ...    ",
+        "            NOT ABLE",
+        "                    ",
+        "                    ",
+        "                    ",
+        "                    ",
+        "                    ",
+        "                    ",
+        "                    ",
+        "                    ",
+        "....................",
+        ".                  .",
+        ".U.. .... .. ..... .",
+        ".                  .",
+        ".POK.MON.          .",
+        "...................."
+      ],
+      "source_party_unchanged": true,
+      "native_party_unchanged": true,
+      "normal_SAVE_both": true,
+      "source_checksum": 178,
+      "native_checksum": 178,
+      "source_png": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-865-original-stone-hints-u1z4hs94/leaf-stone-2/party-selection.png",
+      "native_png": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-865-native-before-retry1/leaf-stone-2/party-selection.png"
+    }
+  ],
+  "after_build": {
+    "commit": "f58e6d283388b51a5ad48c7394fd18efb6b216e1",
+    "sha256": "0e44eea14d120fd6cde19354bbb44a7e1401561379598143e3f94f09911a87d6",
+    "feature": "debug-server",
+    "profile": "dev opt0 debug0",
+    "source_clean_at_build": true,
+    "parent239_unmerged": true
+  },
+  "after_dir": ".task-tmp/fidelity-39-plus/audit-865-native-after",
+  "paired_verification": [
+    {
+      "flow": "thunderstone",
+      "repeat": 1,
+      "actions_identical": true,
+      "all_sram_32768_bytes_identical": true,
+      "party88_bytes_identical_to_original": true,
+      "flags_unchanged": true,
+      "capture_frames": {
+        "party-selection": 364,
+        "bulbasaur-selection": 400,
+        "after-cancel": 436,
+        "saved": 1484
+      },
+      "changed_captures": [
+        "party-selection",
+        "bulbasaur-selection"
+      ],
+      "sram_sha256": "0d2c1815cfda0fa6da4242db9a26db9337f41b4619329fa8273f4262161d09c2",
+      "before_png_sha256": "07606afd624b92aab6309f293da13e4c5d7f3b4f7ca0be9e098843a340a2d33a",
+      "after_png_sha256": "3404daaa13aaa34a992ae644f5529213d7f5b3f2c9c94ea5f3b1002aace85e18"
+    },
+    {
+      "flow": "thunderstone",
+      "repeat": 2,
+      "actions_identical": true,
+      "all_sram_32768_bytes_identical": true,
+      "party88_bytes_identical_to_original": true,
+      "flags_unchanged": true,
+      "capture_frames": {
+        "party-selection": 364,
+        "bulbasaur-selection": 400,
+        "after-cancel": 436,
+        "saved": 1484
+      },
+      "changed_captures": [
+        "party-selection",
+        "bulbasaur-selection"
+      ],
+      "sram_sha256": "0d2c1815cfda0fa6da4242db9a26db9337f41b4619329fa8273f4262161d09c2",
+      "before_png_sha256": "07606afd624b92aab6309f293da13e4c5d7f3b4f7ca0be9e098843a340a2d33a",
+      "after_png_sha256": "3404daaa13aaa34a992ae644f5529213d7f5b3f2c9c94ea5f3b1002aace85e18"
+    },
+    {
+      "flow": "leaf-stone",
+      "repeat": 1,
+      "actions_identical": true,
+      "all_sram_32768_bytes_identical": true,
+      "party88_bytes_identical_to_original": true,
+      "flags_unchanged": true,
+      "capture_frames": {
+        "party-selection": 364,
+        "bulbasaur-selection": 400,
+        "after-cancel": 436,
+        "saved": 1484
+      },
+      "changed_captures": [
+        "party-selection",
+        "bulbasaur-selection"
+      ],
+      "sram_sha256": "95d9c7a14d65284a1543018dadf7c17a6e08d0927322bf6ea7e80e1f69991b84",
+      "before_png_sha256": "c3b0ade29e322ff1ac5e32a3ca1a44995468f339d85bb751abd3ea5b2c2aff3f",
+      "after_png_sha256": "fa321db9eff8c5ca7dba59716083a8bdca7ee60e1d535901fce8f4a165b82faf"
+    },
+    {
+      "flow": "leaf-stone",
+      "repeat": 2,
+      "actions_identical": true,
+      "all_sram_32768_bytes_identical": true,
+      "party88_bytes_identical_to_original": true,
+      "flags_unchanged": true,
+      "capture_frames": {
+        "party-selection": 364,
+        "bulbasaur-selection": 400,
+        "after-cancel": 436,
+        "saved": 1484
+      },
+      "changed_captures": [
+        "party-selection",
+        "bulbasaur-selection"
+      ],
+      "sram_sha256": "95d9c7a14d65284a1543018dadf7c17a6e08d0927322bf6ea7e80e1f69991b84",
+      "before_png_sha256": "c3b0ade29e322ff1ac5e32a3ca1a44995468f339d85bb751abd3ea5b2c2aff3f",
+      "after_png_sha256": "fa321db9eff8c5ca7dba59716083a8bdca7ee60e1d535901fce8f4a165b82faf"
+    }
+  ],
+  "tests": "59 menus integration tests PASS, includes all five stones/HP0Poison/incompatible/evolved/ordinaryParty/Potion/machine controls; debug-server app build PASS. Actual menu source2 stonesx2/nativebefore4+after4 only."
+}
