@@ -57,17 +57,8 @@ pub fn use_vitamin(mon: &mut Pokemon, item: ItemId) -> VitaminResult {
 /// is deliberately NOT done here — the caller runs it through the evolution
 /// cutscene (`crate::evolution_screen`), which handles the B-cancel.
 pub fn use_rare_candy(mon: &mut Pokemon) -> Option<RareCandyResult> {
-    if mon.hp == 0 || mon.level >= MAX_LEVEL {
-        return None;
-    }
-
     let old_level = mon.level;
-    mon.level += 1;
-
-    let base = get_base_stats(mon.species)?;
-    mon.total_exp = crate::battle::experience::growth::exp_for_level(base.growth_rate, mon.level);
-
-    recalculate_stats(mon);
+    raise_level_with_rare_candy(mon)?;
 
     let move_result = process_level_up_moves(mon, old_level, mon.level);
 
@@ -75,4 +66,22 @@ pub fn use_rare_candy(mon: &mut Pokemon) -> Option<RareCandyResult> {
         new_level: mon.level,
         move_result,
     })
+}
+
+/// Rare Candy's level/stat/HP step, before its blocking stats and learn-move
+/// dialogue. Field menus defer learning until the player reaches LearnMove;
+/// bulk item callers retain `use_rare_candy`'s immediate learning contract.
+pub fn raise_level_with_rare_candy(mon: &mut Pokemon) -> Option<u8> {
+    if mon.hp == 0 || mon.level >= MAX_LEVEL {
+        return None;
+    }
+
+    mon.level += 1;
+
+    let base = get_base_stats(mon.species)?;
+    mon.total_exp = crate::battle::experience::growth::exp_for_level(base.growth_rate, mon.level);
+
+    recalculate_stats(mon);
+
+    Some(mon.level)
 }

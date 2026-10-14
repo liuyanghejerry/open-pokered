@@ -131,6 +131,20 @@ pub fn draw_party_screen(
     fb: &mut FrameBuffer,
     lang: Lang,
 ) {
+    draw_party_screen_base(state, resources, frame_counter, fb, lang);
+    let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
+    menus::party::draw_overlay(state, &mut Ui::new(&mut painter), lang);
+}
+
+/// Party entries/icons before modal overlays, also used by Rare Candy's
+/// stats box (the forget-menu must cover that saved stats background).
+pub(crate) fn draw_party_screen_base(
+    state: &PartyScreenState,
+    resources: Option<&mut ResourceManager>,
+    frame_counter: u64,
+    fb: &mut FrameBuffer,
+    lang: Lang,
+) {
     {
         let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
         let mut ui = Ui::new(&mut painter);
@@ -187,8 +201,6 @@ pub fn draw_party_screen(
             }
         }
     }
-    let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
-    menus::party::draw_overlay(state, &mut Ui::new(&mut painter), lang);
 }
 fn selected_party_icon_frame(state: &PartyScreenState, counter: u64) -> IconFrame {
     state
