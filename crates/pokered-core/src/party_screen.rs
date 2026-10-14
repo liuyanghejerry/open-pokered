@@ -1494,6 +1494,22 @@ use crate::alloc_prelude::*;
     }
 
     #[test]
+    fn fainted_machine_party_pick_reaches_application_without_a_stats_menu() {
+        for item in [ItemId::Tm03, ItemId::Hm01] {
+            let mut party = party_of(2);
+            party[0].hp = 0;
+            let before = party.clone();
+            let mut screen = PartyScreenState::new_for_item(party, item);
+            assert_eq!(
+                screen.update_frame(PartyScreenInput { a: true, ..PartyScreenInput::none() }),
+                PartyScreenAction::ApplyItem { party_index: 0 },
+            );
+            assert_eq!(screen.phase(), PartyScreenPhase::Browsing);
+            assert_eq!(screen.party(), before);
+        }
+    }
+
+    #[test]
     fn elixir_item_still_applies_without_move_choice() {
         let party = party_of(1);
         let mut screen = PartyScreenState::new_for_item(party, ItemId::Elixer);
