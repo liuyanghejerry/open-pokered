@@ -460,7 +460,7 @@ fn boulder_pos(screen: &OverworldScreen<PokemonRedData>) -> (u16, u16) {
 }
 
 #[test]
-fn boulder_push_requires_two_frames_and_moves_boulder() {
+fn boulder_push_requires_second_contact_then_slides() {
     let mut screen = screen_on(MapId::PalletTown);
     fill_map_with_passable_block(&mut screen);
     screen.state.player.x = 5;
@@ -473,9 +473,15 @@ fn boulder_push_requires_two_frames_and_moves_boulder() {
     screen.tick_boulder_push(Some(Direction::Down));
     assert_eq!(boulder_pos(&screen), (5, 6), "first push only arms the flag");
 
-    // Second frame (still holding): the boulder slides one tile.
+    // Second contact starts MoveSprite; map coordinates commit before the
+    // first visible pixel, rather than teleporting on this call.
     screen.tick_boulder_push(Some(Direction::Down));
-    assert_eq!(boulder_pos(&screen), (5, 7), "second push moves the boulder");
+    assert_eq!(boulder_pos(&screen), (5, 6));
+    assert!(screen.boulder_push.is_some());
+    screen.tick_boulder_push(None);
+    assert_eq!(boulder_pos(&screen), (5, 6));
+    screen.tick_boulder_push(None);
+    assert_eq!(boulder_pos(&screen), (5, 7), "MoveSprite commits its destination");
     assert!(screen
         .audio_requests
         .iter()
@@ -544,10 +550,14 @@ fn boulder_push_starts_the_dust_at_the_push_spot() {
 
     screen.tick_boulder_push(Some(Direction::Down)); // arms the flag
     screen.tick_boulder_push(Some(Direction::Down)); // push
-    assert!(
-        screen.boulder_dust.is_active(),
-        "the push starts the dust puff (AnimateBoulderDust)"
-    );
+    assert!(!screen.boulder_dust.is_active(), "smoke must wait for the stone slide");
+    for _ in 0..100 {
+        if screen.boulder_dust.is_active() { break; }
+        screen.tick_boulder_push(None);
+    }
+    assert!(screen.boulder_dust.is_active());
+    assert_eq!(boulder_pos(&screen),(5,7));
+    assert_eq!(screen.boulder_dust.step(),0);
     assert_eq!(screen.boulder_dust.facing(), Direction::Down);
     // Anchored to the player's tile at push time (the original writes the
     // OAM block once from the player's sprite position).
@@ -555,32 +565,42 @@ fn boulder_push_starts_the_dust_at_the_push_spot() {
 }
 
 #[test]
-fn boulder_dust_runs_24_frames_independent_of_the_lockout() {
+fn boulder_slide_smoke_and_graphics_restore_share_control_lock() {
     let mut screen = screen_on(MapId::PalletTown);
     fill_map_with_passable_block(&mut screen);
-    screen.state.player.x = 5;
-    screen.state.player.y = 5;
-    screen.state.player.facing = Direction::Down;
-    screen.npc_states.push(make_boulder(5, 6));
-    screen.strength_active = true;
-
-    screen.tick_boulder_push(Some(Direction::Down)); // arms
-    screen.tick_boulder_push(Some(Direction::Down)); // push
-    assert_eq!(screen.boulder_dust_frames, BOULDER_DUST_FRAMES);
-
-    // The push lockout ends after 16 frames, but the dust keeps playing its
-    // full 8-step × 3-frame timeline (24 frames).
-    for _ in 0..16 {
+    screen.state.player.x=5;screen.state.player.y=5;
+    screen.state.player.facing=Direction::Down;
+    screen.npc_states.push(make_boulder(5,6));screen.strength_active=true;
+    screen.tick_boulder_push(Some(Direction::Down));
+    screen.tick_boulder_push(Some(Direction::Down));
+    assert_eq!(screen.boulder_dust_frames,BOULDER_DUST_FRAMES);
+    assert!(screen.boulder_blocks_control());
+    assert!(!screen.boulder_dust.is_active());
+    for _ in 0..100 {
+        if screen.boulder_dust.is_active() {break;}
+        assert!(screen.boulder_blocks_control());
         screen.tick_boulder_push(None);
     }
-    assert_eq!(screen.boulder_dust_frames, 0, "lockout cleared");
-    assert!(screen.boulder_dust.is_active(), "dust still playing");
-    assert_eq!(screen.boulder_dust.step(), 5, "16 ticks = 5 steps + 1 frame");
-
-    for _ in 0..8 {
+    assert!(screen.boulder_dust.is_active());
+    // Original eight smoke positions each occupy three hardware updates.
+    for sample in 0..24 {
+        assert_eq!(screen.boulder_dust.step(),sample/3);
+        assert!(screen.boulder_blocks_control());
         screen.tick_boulder_push(None);
     }
-    assert!(!screen.boulder_dust.is_active(), "24 ticks = 8 steps, done");
+    for _ in 0..100 {
+        if !screen.boulder_dust.is_active() {break;}
+        screen.tick_boulder_push(None);
+    }
+    assert!(!screen.boulder_dust.is_active());
+    assert!(screen.boulder_blocks_control(), "graphics restoration still owns control");
+    for _ in 0..100 {
+        if screen.boulder_push.is_none() {break;}
+        screen.tick_boulder_push(None);
+    }
+    assert!(screen.boulder_push.is_none());
+    assert_eq!(screen.boulder_dust_frames,0);
+    assert!(!screen.boulder_blocks_control());
 }
 
 #[test]
@@ -610,29 +630,17 @@ fn boulder_dust_completion_plays_sfx_cut_once() {
 
     screen.tick_boulder_push(Some(Direction::Down)); // arms
     screen.tick_boulder_push(Some(Direction::Down)); // push (SFX_PUSH_BOULDER)
-    assert!(
-        screen.boulder_dust.is_active(),
-        "dust starts on the push frame"
-    );
-    assert_eq!(
-        cut_requests(&screen),
-        0,
-        "no SFX_CUT while the dust is still playing"
-    );
-
-    // DoBoulderDustAnimation (push_boulder.asm:89-103) plays SFX_CUT exactly
-    // when the 8-step × 3-frame dust animation completes (24th tick) — and
-    // BIT_BOULDER_DUST is cleared in the same routine, so it fires once.
-    for tick in 0..24 {
+    assert!(!screen.boulder_dust.is_active(), "slide precedes smoke");
+    assert_eq!(cut_requests(&screen),0);
+    for _ in 0..100 {
+        if !screen.boulder_blocks_control() {break;}
+        assert_eq!(cut_requests(&screen),0, "completion sound must wait for graphics restoration");
         screen.tick_boulder_push(None);
-        let expected = if tick == 23 { 1 } else { 0 };
-        assert_eq!(
-            cut_requests(&screen),
-            expected,
-            "SFX_CUT fires only on the dust-completion tick (tick {tick})"
-        );
     }
-    assert!(!screen.boulder_dust.is_active(), "dust done after 24 ticks");
+    assert!(!screen.boulder_blocks_control());
+    assert_eq!(cut_requests(&screen),1);
+    for _ in 0..20 {screen.tick_boulder_push(None);}
+    assert_eq!(cut_requests(&screen),1,"completion sound must not repeat");
 }
 
 #[test]
@@ -647,20 +655,23 @@ fn boulder_dust_restarts_on_a_new_push() {
 
     screen.tick_boulder_push(Some(Direction::Down)); // arms
     screen.tick_boulder_push(Some(Direction::Down)); // push #1
-    for _ in 0..16 {
-        screen.tick_boulder_push(None); // wait out the lockout
+    for _ in 0..100 {
+        if screen.boulder_push.is_none() {break;}
+        screen.tick_boulder_push(None);
     }
-    assert!(screen.boulder_dust.is_active(), "dust from push #1 still up");
-
-    // The player steps forward to stand in front of the moved boulder.
-    screen.state.player.y = 6;
-    // A second push (allowed once the lockout clears, still inside the
-    // first puff's window) restarts the dust at the new spot.
-    screen.tick_boulder_push(Some(Direction::Down)); // arms
-    screen.tick_boulder_push(Some(Direction::Down)); // push #2
+    assert!(screen.boulder_push.is_none());
+    assert!(!screen.boulder_dust.is_active());
+    screen.state.player.y=6;
+    screen.tick_boulder_push(Some(Direction::Down));
+    screen.tick_boulder_push(Some(Direction::Down));
+    assert!(!screen.boulder_dust.is_active(), "second slide also precedes its smoke");
+    for _ in 0..100 {
+        if screen.boulder_dust.is_active() {break;}
+        screen.tick_boulder_push(None);
+    }
     assert!(screen.boulder_dust.is_active());
-    assert_eq!(screen.boulder_dust.step(), 0, "dust restarted from step 0");
-    assert_eq!(screen.boulder_dust.anchor(), (5, 6), "anchored at the new player tile");
+    assert_eq!(screen.boulder_dust.step(),0);
+    assert_eq!(screen.boulder_dust.anchor(),(5,6));
 }
 
 // ══════════════════════════════════════════════════════════════════════

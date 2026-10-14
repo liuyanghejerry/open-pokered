@@ -190,6 +190,10 @@ pub struct OverworldSnapshot {
     pub tried_push_boulder: bool,
     pub boulder_dust_frames: u8,
     pub boulder_dust: BoulderDustState,
+    #[serde(default)]
+    pub boulder_push: Option<crate::overworld::presentation::BoulderPushState>,
+    #[serde(default)]
+    pub boulder_resume_input: Option<crate::overworld::OverworldInput>,
     pub dark_cave: DarkCaveState,
     pub forced_bike: ForcedBikeState,
     pub flash_lit_frames: u8,
@@ -347,6 +351,8 @@ impl OverworldSnapshot {
             tried_push_boulder: false,
             boulder_dust_frames: 0,
             boulder_dust: screen.boulder_dust,
+            boulder_push: screen.boulder_push,
+            boulder_resume_input: screen.boulder_resume_input,
             dark_cave: screen.dark_cave.clone(),
             forced_bike: screen.forced_bike,
             flash_lit_frames: 0,
@@ -392,7 +398,7 @@ impl OverworldSnapshot {
             toggleable_object_flags, hidden_item_flags, hidden_coin_flags, player_coins,
             itemfinder_dings, rng, safari_steps, safari_balls, safari_game_active,
             safari_eject_pending, strength_active, tried_push_boulder, boulder_dust_frames,
-            boulder_dust, dark_cave, forced_bike, flash_lit_frames, flash_pending_white,
+            boulder_dust, boulder_push, boulder_resume_input, dark_cave, forced_bike, flash_lit_frames, flash_pending_white,
             warp_fade_to_white, teleport_spin, escape_rope_delay_frames, escape_rope_consumption_pending, fly_departure, enter_map_anim,
             enter_map_fly_anim, pending_fly_arrival, fly_arrival_delay_frames, elevator_shake,
             elevator_shake_pending, fishing_cast_delay, tile_anim, post_dialogue_warp,
@@ -441,7 +447,7 @@ impl OverworldSnapshot {
             toggleable_object_flags, hidden_item_flags, hidden_coin_flags, player_coins,
             itemfinder_dings, rng, safari_steps, safari_balls, safari_game_active,
             safari_eject_pending, strength_active, tried_push_boulder, boulder_dust_frames,
-            boulder_dust, dark_cave, forced_bike, flash_lit_frames, flash_pending_white,
+            boulder_dust, boulder_push, boulder_resume_input, dark_cave, forced_bike, flash_lit_frames, flash_pending_white,
             warp_fade_to_white, teleport_spin, escape_rope_delay_frames, escape_rope_consumption_pending, fly_departure, enter_map_anim,
             enter_map_fly_anim, pending_fly_arrival, fly_arrival_delay_frames, elevator_shake,
             elevator_shake_pending, fishing_cast_delay, tile_anim, post_dialogue_warp,
@@ -629,6 +635,39 @@ impl BattleSnapshot {
 #[cfg(test)]
 mod balance_snapshot_tests {
     use super::*;
+    #[test]
+    fn boulder_push_snapshot_resumes_slide_smoke_and_restore() {
+        use crate::overworld::{Direction, OverworldInput};
+        use pokered_data::{maps::MapId, impl_traits::PokemonRedData};
+        for elapsed in [0,10,42,65,70] {
+            let mut screen=OverworldScreen::new(MapId::SeafoamIslands1F,None,PokemonRedData);
+            screen.state.player.x=18;screen.state.player.y=9;
+            screen.state.player.facing=Direction::Down;
+            screen.strength_active=true;screen.tried_push_boulder=true;
+            screen.tick_boulder_push(Some(Direction::Down));
+            assert!(screen.boulder_push.is_some());
+            for _ in 0..elapsed { screen.advance_boulder_push(); }
+            let json=serde_json::to_value(OverworldSnapshot::capture(&screen)).unwrap();
+            let saved: OverworldSnapshot=serde_json::from_value(json.clone()).unwrap();
+            let mut restored=OverworldScreen::new(MapId::PalletTown,None,PokemonRedData);
+            saved.restore_into(&mut restored);
+            let idle=OverworldInput::new(false,false,false,false,false,false,false,false);
+            for _ in 0..80 {
+                assert_eq!(screen.boulder_push,restored.boulder_push);
+                assert_eq!((screen.npc_states[0].x,screen.npc_states[0].y,screen.npc_states[0].walk_counter),
+                    (restored.npc_states[0].x,restored.npc_states[0].y,restored.npc_states[0].walk_counter));
+                assert_eq!((screen.state.player.x,screen.state.player.y),(restored.state.player.x,restored.state.player.y));
+                screen.update_frame(idle);restored.update_frame(idle);
+            }
+            assert!(restored.boulder_push.is_none());
+            assert_eq!((restored.npc_states[0].x,restored.npc_states[0].y),(18,11));
+            let mut legacy=json;legacy.as_object_mut().unwrap().remove("boulder_push");
+            legacy.as_object_mut().unwrap().remove("boulder_resume_input");
+            let saved: OverworldSnapshot=serde_json::from_value(legacy).unwrap();
+            assert!(saved.boulder_push.is_none());
+        }
+    }
+
     #[test]
     fn npc_display_pipeline_survives_snapshot_and_legacy_json() {
         use crate::overworld::Direction;

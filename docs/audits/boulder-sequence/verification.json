@@ -1,0 +1,29 @@
+{
+  "base": "02b9d9a2e234c1a4ca92247afa32de8dc0adb775",
+  "files": {
+    "crates/pokered-app/src/game.rs": "e395f420ca12eda73dd71277d01b5a367d32fd9972399afc44f79fcc10252360",
+    "crates/pokered-app/src/render/overworld.rs": "8a17dace939b4a78246f0ea2a5825703b001c0b0906f5726febb6acf3d36d07a",
+    "crates/pokered-core/src/overworld/field_moves.rs": "e8ae7100363bf6bc62e09ab5795f0d3f69ba611f935f5f9ff5c799281c398b5e",
+    "crates/pokered-core/src/overworld/presentation.rs": "4189b90875fc4fbfdbd4f57a68594bf27932e2860c971b1120fff55b4243f121",
+    "crates/pokered-core/src/overworld/screen.rs": "ef060e214a42fa099973813baa1a995c3cce81efce8a6b13507aa7e9bfdec57e",
+    "crates/pokered-core/src/overworld/tests_field_moves.rs": "05b1a191e7e61159b695bd7af4bc06713e774c84419f947d71f02f973bed5660",
+    "crates/pokered-core/src/overworld/tests_npc.rs": "b561257449fbfe88394235db116e11141ba6a2faee3ac11b50515fb670937f00",
+    "crates/pokered-core/src/overworld/update.rs": "ca773fae36bc17ae0cc4da1e0797519c813fc60ad98c2f8cdefd4edf14ffee33",
+    "crates/pokered-core/src/snapshot.rs": "f5eca011ac5623ce9af9f9eb3e8fe3267ae202ea24119070b57e1887e6fcb445"
+  },
+  "local_checks": {
+    "core_suites": 40,
+    "core_tests": 3248,
+    "app_executables": 41,
+    "gba_release_memory_scenarios_build": "passed; runtime and performance await CI"
+  },
+  "remaining": [
+    "VictoryRoad2F second switch: 27/201 mismatching frames",
+    "VictoryRoad3F hole: 33/201 mismatching frames, original event t72 vs native t73",
+    "General initial field workload and UI/input phase scheduling not reproduced; no map-specific workaround applied"
+  ],
+  "scope_limits": [
+    "Controlled fixtures; no fresh full playthrough claim",
+    "Repel used in native setup; original encounter suppression differs; no RNG/audio/hardware identity claim"
+  ]
+}
