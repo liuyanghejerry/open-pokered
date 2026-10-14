@@ -1,0 +1,823 @@
+{
+  "scope": "Independent review of completed original level6 live RAM plus native before2/after2 ordinary-input-and-SAVE evidence. No new game runs, builds or production/test edits.",
+  "original": {
+    "evidence_dir": "audit-855-original-fainted-machines-stone-ng6pfmo4",
+    "capture_script_sha256": "002210752988be2d4b41992159a7e1692b6b012e8cd4c4031d8513df884d4d55",
+    "full_original_verification_sha256": "33194270ff8737cd575f29f6728bf56c6cab944f02b74f4c80d45f497a955195",
+    "save_to_sram_verified": false,
+    "initial_lead": {
+      "species": "Pikachu",
+      "level": 6,
+      "hp": 0,
+      "max_hp": 21,
+      "moves": [
+        "Thundershock",
+        "Growl",
+        "None",
+        "None"
+      ]
+    },
+    "initial_partner": {
+      "species": "Bulbasaur",
+      "level": 6,
+      "hp": 22
+    },
+    "inputs": [
+      {
+        "button": "start",
+        "press": 2,
+        "neutral": 100,
+        "start_frame": 0
+      },
+      {
+        "button": "down",
+        "press": 2,
+        "neutral": 30,
+        "start_frame": 102
+      },
+      {
+        "button": "down",
+        "press": 2,
+        "neutral": 30,
+        "start_frame": 134
+      },
+      {
+        "button": "a",
+        "press": 2,
+        "neutral": 100,
+        "start_frame": 166
+      },
+      {
+        "button": "a",
+        "press": 2,
+        "neutral": 100,
+        "start_frame": 268
+      },
+      {
+        "button": "a",
+        "press": 2,
+        "neutral": 100,
+        "start_frame": 370
+      },
+      {
+        "button": "a",
+        "press": 2,
+        "neutral": 120,
+        "start_frame": 472
+      },
+      {
+        "button": "a",
+        "press": 2,
+        "neutral": 120,
+        "start_frame": 594
+      },
+      {
+        "button": "a",
+        "press": 2,
+        "neutral": 120,
+        "start_frame": 716
+      },
+      {
+        "button": "a",
+        "press": 2,
+        "neutral": 120,
+        "start_frame": 838
+      },
+      {
+        "button": "a",
+        "press": 2,
+        "neutral": 120,
+        "start_frame": 960
+      },
+      {
+        "button": "a",
+        "press": 2,
+        "neutral": 120,
+        "start_frame": 1082
+      },
+      {
+        "button": "a",
+        "press": 2,
+        "neutral": 120,
+        "start_frame": 1204
+      },
+      {
+        "button": "a",
+        "press": 2,
+        "neutral": 120,
+        "start_frame": 1326
+      },
+      {
+        "button": "a",
+        "press": 2,
+        "neutral": 120,
+        "start_frame": 1448
+      }
+    ],
+    "trials": [
+      {
+        "repeat": 1,
+        "before_party_88_hex": "54000006001717be542d000000000000d8000000000000000000009a781e280000060015000c00090010000b990016060016032d212d000000000000b3000000000000000000009a7823280000060016000b000c000b000d",
+        "after_party_88_hex": "55000306001717be542d000000000000d8000000000000000000009a781e2800000600180010000c00110010990016060016032d212d000000000000b3000000000000000000009a7823280000060016000b000c000b000d",
+        "final_bag_bytes": [
+          33,
+          1,
+          255
+        ],
+        "final_frame": 1810,
+        "after_png_sha256": "27f4be4542358806a8daecc7ea29ccdbe8011c79ac10451268e6ce25257b708d",
+        "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+        "events": [
+          {
+            "label": "ItemUseEvoStone",
+            "frame": 370
+          },
+          {
+            "label": "TryEvolvingMon",
+            "frame": 516
+          },
+          {
+            "label": "RemoveItemFromInventory",
+            "frame": 1523
+          }
+        ],
+        "no_ram_writes_after_input": true
+      },
+      {
+        "repeat": 2,
+        "before_party_88_hex": "54000006001717be542d000000000000d8000000000000000000009a781e280000060015000c00090010000b990016060016032d212d000000000000b3000000000000000000009a7823280000060016000b000c000b000d",
+        "after_party_88_hex": "55000306001717be542d000000000000d8000000000000000000009a781e2800000600180010000c00110010990016060016032d212d000000000000b3000000000000000000009a7823280000060016000b000c000b000d",
+        "final_bag_bytes": [
+          33,
+          1,
+          255
+        ],
+        "final_frame": 1810,
+        "after_png_sha256": "27f4be4542358806a8daecc7ea29ccdbe8011c79ac10451268e6ce25257b708d",
+        "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+        "events": [
+          {
+            "label": "ItemUseEvoStone",
+            "frame": 370
+          },
+          {
+            "label": "TryEvolvingMon",
+            "frame": 516
+          },
+          {
+            "label": "RemoveItemFromInventory",
+            "frame": 1523
+          }
+        ],
+        "no_ram_writes_after_input": true
+      }
+    ]
+  },
+  "native": {
+    "capture_script_sha256": "7a483aa2e8ed526f2ba78f2a045e9d73df70ea8e65bac7e78f33367d7e26e704",
+    "initial_party": [
+      {
+        "species": "Pikachu",
+        "level": 6,
+        "max_hp": 21,
+        "hp": 0,
+        "attack": 12,
+        "defense": 9,
+        "speed": 16,
+        "special": 11,
+        "type1": "Electric",
+        "type2": "Electric",
+        "moves": [
+          "Thundershock",
+          "Growl",
+          "None",
+          "None"
+        ],
+        "pp": [
+          30,
+          40,
+          0,
+          0
+        ],
+        "pp_ups": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "status": "None",
+        "dv_bytes": [
+          154,
+          120
+        ],
+        "stat_exp": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "total_exp": 216,
+        "is_traded": false,
+        "ot_id": 0
+      },
+      {
+        "species": "Bulbasaur",
+        "level": 6,
+        "max_hp": 22,
+        "hp": 22,
+        "attack": 11,
+        "defense": 12,
+        "speed": 11,
+        "special": 13,
+        "type1": "Grass",
+        "type2": "Poison",
+        "moves": [
+          "Tackle",
+          "Growl",
+          "None",
+          "None"
+        ],
+        "pp": [
+          35,
+          40,
+          0,
+          0
+        ],
+        "pp_ups": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "status": "None",
+        "dv_bytes": [
+          154,
+          120
+        ],
+        "stat_exp": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "total_exp": 179,
+        "is_traded": false,
+        "ot_id": 0
+      }
+    ],
+    "initial_items": [
+      [
+        "ThunderStone",
+        2
+      ]
+    ],
+    "initial_money": 3000,
+    "common_actions": [
+      {
+        "button": "start",
+        "start": 120,
+        "held": 4,
+        "frames": 60
+      },
+      {
+        "button": "down",
+        "start": 184,
+        "held": 1,
+        "frames": 32
+      },
+      {
+        "button": "down",
+        "start": 220,
+        "held": 1,
+        "frames": 32
+      },
+      {
+        "button": "a",
+        "start": 256,
+        "held": 1,
+        "frames": 32
+      },
+      {
+        "button": "a",
+        "start": 292,
+        "held": 1,
+        "frames": 32
+      },
+      {
+        "button": "a",
+        "start": 328,
+        "held": 1,
+        "frames": 32
+      },
+      {
+        "button": "a",
+        "start": 364,
+        "held": 1,
+        "frames": 32
+      },
+      {
+        "button": "b",
+        "start": 640,
+        "held": 1,
+        "frames": 32
+      },
+      {
+        "button": "a",
+        "start": 2476,
+        "held": 1,
+        "frames": 160
+      },
+      {
+        "button": "a",
+        "start": 2640,
+        "held": 1,
+        "frames": 160
+      },
+      {
+        "button": "a",
+        "start": 2804,
+        "held": 1,
+        "frames": 160
+      },
+      {
+        "button": "a",
+        "start": 2968,
+        "held": 1,
+        "frames": 160
+      },
+      {
+        "button": "b",
+        "start": 3132,
+        "held": 1,
+        "frames": 32
+      },
+      {
+        "button": "b",
+        "start": 3168,
+        "held": 1,
+        "frames": 32
+      },
+      {
+        "button": "b",
+        "start": 3204,
+        "held": 1,
+        "frames": 32
+      },
+      {
+        "button": "b",
+        "start": 3240,
+        "held": 1,
+        "frames": 32
+      },
+      {
+        "button": "start",
+        "start": 3276,
+        "held": 4,
+        "frames": 60
+      },
+      {
+        "button": "down",
+        "start": 3340,
+        "held": 1,
+        "frames": 32
+      },
+      {
+        "button": "down",
+        "start": 3376,
+        "held": 1,
+        "frames": 32
+      },
+      {
+        "button": "a",
+        "start": 3412,
+        "held": 1,
+        "frames": 32
+      },
+      {
+        "button": "a",
+        "start": 3648,
+        "held": 1,
+        "frames": 400
+      }
+    ],
+    "all_four_action_timelines_identical": true,
+    "fixture_bytes_identical_before_after": true,
+    "no_debug_save_or_input_window_mutation_in_capture_script": true,
+    "before": {
+      "evidence_dir": "audit-855-native-stone-before-rawo1vai",
+      "binary_sha256": "d56763248aea1a9599d1aae5600e6b65f67e68a0f905cd7b600067cb53a57347",
+      "fixture_sha256": "c6edf363607862bd96d12c640a87d6911d5bc03e7139cbb91fdd6b9350e0d56b",
+      "trials": [
+        {
+          "repeat": 1,
+          "captures": {
+            "result": {
+              "frame": 640,
+              "sha256": "d4fe908ea8ca7a20fc1eba2a2315e904641068f057d31339b729ab7ac7b1bf24"
+            },
+            "settled": {
+              "frame": 3132,
+              "sha256": "e3a25b0897a5466a385b4f7538a3166ca7923dc490ae1824443f9a8b6baddea7"
+            }
+          },
+          "save_sha256": "4cc29ca78e229ad7b998c73e7d93e324ba7cfd4ebed7ee6b70aacc1bc79017a5",
+          "sram_checksum": 202,
+          "party_88_hex": "5400000600171700542d000000000000d8000000000000000000009a781e280000060015000c00090010000b9900160600160300212d000000000000b3000000000000000000009a7823280000060016000b000c000b000d",
+          "original_comparison_noncatch_equal_bytes_per_mon": 43,
+          "original_comparison_excluded_byte_per_mon": 7,
+          "original_comparison_differences": [
+            {
+              "offset": 7,
+              "native": 0,
+              "original": 190
+            },
+            {
+              "offset": 51,
+              "native": 0,
+              "original": 45
+            }
+          ],
+          "readback_sha256": "8949af8780508c04c0964d4b72f823f8bb3cefb2e00502f76ab06434168317b7",
+          "readback_lead": {
+            "species": "Pikachu",
+            "level": 6,
+            "hp": 0,
+            "max_hp": 21,
+            "attack": 12,
+            "defense": 9,
+            "speed": 16,
+            "special": 11,
+            "moves": [
+              "Thundershock",
+              "Growl",
+              "None",
+              "None"
+            ],
+            "pp": [
+              30,
+              40,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "total_exp": 216
+          },
+          "quantity": 2,
+          "ordinary_save": true,
+          "save_screen_frame": 3448,
+          "healthy_partner_all_input_fields_unchanged": true,
+          "money_unchanged": true,
+          "pokedex_event_and_progress_flags_unchanged": true
+        },
+        {
+          "repeat": 2,
+          "captures": {
+            "result": {
+              "frame": 640,
+              "sha256": "d4fe908ea8ca7a20fc1eba2a2315e904641068f057d31339b729ab7ac7b1bf24"
+            },
+            "settled": {
+              "frame": 3132,
+              "sha256": "e3a25b0897a5466a385b4f7538a3166ca7923dc490ae1824443f9a8b6baddea7"
+            }
+          },
+          "save_sha256": "4cc29ca78e229ad7b998c73e7d93e324ba7cfd4ebed7ee6b70aacc1bc79017a5",
+          "sram_checksum": 202,
+          "party_88_hex": "5400000600171700542d000000000000d8000000000000000000009a781e280000060015000c00090010000b9900160600160300212d000000000000b3000000000000000000009a7823280000060016000b000c000b000d",
+          "original_comparison_noncatch_equal_bytes_per_mon": 43,
+          "original_comparison_excluded_byte_per_mon": 7,
+          "original_comparison_differences": [
+            {
+              "offset": 7,
+              "native": 0,
+              "original": 190
+            },
+            {
+              "offset": 51,
+              "native": 0,
+              "original": 45
+            }
+          ],
+          "readback_sha256": "8949af8780508c04c0964d4b72f823f8bb3cefb2e00502f76ab06434168317b7",
+          "readback_lead": {
+            "species": "Pikachu",
+            "level": 6,
+            "hp": 0,
+            "max_hp": 21,
+            "attack": 12,
+            "defense": 9,
+            "speed": 16,
+            "special": 11,
+            "moves": [
+              "Thundershock",
+              "Growl",
+              "None",
+              "None"
+            ],
+            "pp": [
+              30,
+              40,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "total_exp": 216
+          },
+          "quantity": 2,
+          "ordinary_save": true,
+          "save_screen_frame": 3448,
+          "healthy_partner_all_input_fields_unchanged": true,
+          "money_unchanged": true,
+          "pokedex_event_and_progress_flags_unchanged": true
+        }
+      ]
+    },
+    "after": {
+      "evidence_dir": "audit-855-native-stone-after-1ca4qupr",
+      "binary_sha256": "e6e1bd779cfe7640ca832046de231cc8a21e9ebcac73c28034fd613adec7dd4e",
+      "fixture_sha256": "c6edf363607862bd96d12c640a87d6911d5bc03e7139cbb91fdd6b9350e0d56b",
+      "trials": [
+        {
+          "repeat": 1,
+          "captures": {
+            "result": {
+              "frame": 640,
+              "sha256": "b3efbb0f563775cdbe8f6967dc56cef71d42737fc28e21bcc57d0878dadc8631"
+            },
+            "settled": {
+              "frame": 3132,
+              "sha256": "066899dce5e03ef79209bc4d6995fcfae1fa13de94429369b32220d70365de44"
+            }
+          },
+          "save_sha256": "b61c4d7d292cd5df0b253c700c601d7fd28898274eb9e54cddcc7f5e7fca6d39",
+          "sram_checksum": 238,
+          "party_88_hex": "5500030600171700542d000000000000d8000000000000000000009a781e2800000600180010000c001100109900160600160300212d000000000000b3000000000000000000009a7823280000060016000b000c000b000d",
+          "original_comparison_noncatch_equal_bytes_per_mon": 43,
+          "original_comparison_excluded_byte_per_mon": 7,
+          "original_comparison_differences": [
+            {
+              "offset": 7,
+              "native": 0,
+              "original": 190
+            },
+            {
+              "offset": 51,
+              "native": 0,
+              "original": 45
+            }
+          ],
+          "readback_sha256": "395fa97a493e67fb44b2c54798c7a8b1329c0b8a9f87165699a3ad0ba1925aa5",
+          "readback_lead": {
+            "species": "Raichu",
+            "level": 6,
+            "hp": 3,
+            "max_hp": 24,
+            "attack": 16,
+            "defense": 12,
+            "speed": 17,
+            "special": 16,
+            "moves": [
+              "Thundershock",
+              "Growl",
+              "None",
+              "None"
+            ],
+            "pp": [
+              30,
+              40,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "total_exp": 216
+          },
+          "quantity": 1,
+          "ordinary_save": true,
+          "save_screen_frame": 3448,
+          "healthy_partner_all_input_fields_unchanged": true,
+          "money_unchanged": true,
+          "pokedex_event_and_progress_flags_unchanged": true
+        },
+        {
+          "repeat": 2,
+          "captures": {
+            "result": {
+              "frame": 640,
+              "sha256": "b3efbb0f563775cdbe8f6967dc56cef71d42737fc28e21bcc57d0878dadc8631"
+            },
+            "settled": {
+              "frame": 3132,
+              "sha256": "066899dce5e03ef79209bc4d6995fcfae1fa13de94429369b32220d70365de44"
+            }
+          },
+          "save_sha256": "b61c4d7d292cd5df0b253c700c601d7fd28898274eb9e54cddcc7f5e7fca6d39",
+          "sram_checksum": 238,
+          "party_88_hex": "5500030600171700542d000000000000d8000000000000000000009a781e2800000600180010000c001100109900160600160300212d000000000000b3000000000000000000009a7823280000060016000b000c000b000d",
+          "original_comparison_noncatch_equal_bytes_per_mon": 43,
+          "original_comparison_excluded_byte_per_mon": 7,
+          "original_comparison_differences": [
+            {
+              "offset": 7,
+              "native": 0,
+              "original": 190
+            },
+            {
+              "offset": 51,
+              "native": 0,
+              "original": 45
+            }
+          ],
+          "readback_sha256": "395fa97a493e67fb44b2c54798c7a8b1329c0b8a9f87165699a3ad0ba1925aa5",
+          "readback_lead": {
+            "species": "Raichu",
+            "level": 6,
+            "hp": 3,
+            "max_hp": 24,
+            "attack": 16,
+            "defense": 12,
+            "speed": 17,
+            "special": 16,
+            "moves": [
+              "Thundershock",
+              "Growl",
+              "None",
+              "None"
+            ],
+            "pp": [
+              30,
+              40,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "total_exp": 216
+          },
+          "quantity": 1,
+          "ordinary_save": true,
+          "save_screen_frame": 3448,
+          "healthy_partner_all_input_fields_unchanged": true,
+          "money_unchanged": true,
+          "pokedex_event_and_progress_flags_unchanged": true
+        }
+      ]
+    }
+  },
+  "paired_proof": [
+    {
+      "repeat": 1,
+      "native_party_changes_equal_original_party_changes": true,
+      "changes": [
+        {
+          "offset": 0,
+          "before": 84,
+          "after": 85
+        },
+        {
+          "offset": 2,
+          "before": 0,
+          "after": 3
+        },
+        {
+          "offset": 35,
+          "before": 21,
+          "after": 24
+        },
+        {
+          "offset": 37,
+          "before": 12,
+          "after": 16
+        },
+        {
+          "offset": 39,
+          "before": 9,
+          "after": 12
+        },
+        {
+          "offset": 41,
+          "before": 16,
+          "after": 17
+        },
+        {
+          "offset": 43,
+          "before": 11,
+          "after": 16
+        }
+      ],
+      "healthy_partner_all_44_bytes_unchanged": true
+    },
+    {
+      "repeat": 2,
+      "native_party_changes_equal_original_party_changes": true,
+      "changes": [
+        {
+          "offset": 0,
+          "before": 84,
+          "after": 85
+        },
+        {
+          "offset": 2,
+          "before": 0,
+          "after": 3
+        },
+        {
+          "offset": 35,
+          "before": 21,
+          "after": 24
+        },
+        {
+          "offset": 37,
+          "before": 12,
+          "after": 16
+        },
+        {
+          "offset": 39,
+          "before": 9,
+          "after": 12
+        },
+        {
+          "offset": 41,
+          "before": 16,
+          "after": 17
+        },
+        {
+          "offset": 43,
+          "before": 11,
+          "after": 16
+        }
+      ],
+      "healthy_partner_all_44_bytes_unchanged": true
+    }
+  ],
+  "catch_byte_exclusion": {
+    "zero_based_offset_per_mon": 7,
+    "reason": "The frozen native builds predate the separate catch-byte roundtrip fix (PR235). Native0 versus original190/45 is disclosed, not treated as full44-byte parity."
+  },
+  "screenshot_scope": {
+    "result_frame": 640,
+    "before": "Readable HP0 Pikachu party/no-effect message.",
+    "after": "Evolution animation in progress; persistent species/HP/quantity are proven by SRAM, not by this screenshot.",
+    "settled_frame": 3132,
+    "settled_captures_not_used_as_matched_party_stat_screens": true,
+    "no_original_native_frame_alignment_claim": true
+  },
+  "failed_harness_runs": [
+    {
+      "log": "audit-855-native-before.log",
+      "log_sha256": "b041f024fc48ba95c589550949963489edbd2680ac21e0186f7c129f9616835e",
+      "evidence_dir": "audit-855-native-stone-before-fsceab_m",
+      "fixture_sha256": "c6edf363607862bd96d12c640a87d6911d5bc03e7139cbb91fdd6b9350e0d56b",
+      "states_sha256": "95ae389cbc7cbfc75c6a6d770e41f78bc913ff8310444debea92f6aba84ada95",
+      "reason": "Harness expected overworld at settled frame3132; actual screen was bag after the no-effect return.",
+      "no_sram_created": true,
+      "counted_as_pass": false,
+      "failed_script_revision_not_archived": true
+    },
+    {
+      "log": "audit-855-native-before-retry.log",
+      "log_sha256": "a7555b15707fb1fa74296cf718e3dc0b755b02bcbfdb0b426e25c18cab63c74d",
+      "evidence_dir": "audit-855-native-stone-before-i3247gk2",
+      "fixture_sha256": "c6edf363607862bd96d12c640a87d6911d5bc03e7139cbb91fdd6b9350e0d56b",
+      "states_sha256": "a0b931c3d33e06349181640479f71a3a6b86400f54cbedfcdbbf1bb04b172dfe",
+      "reason": "Harness chose the wrong START menu cursor, so save-open was overworld rather than save.",
+      "no_sram_created": true,
+      "counted_as_pass": false,
+      "failed_script_revision_not_archived": true
+    }
+  ],
+  "validation": {
+    "scoped_fainted_filter_pass": 11,
+    "full_core_pass": 2854,
+    "app_build_pass": true,
+    "tests_predate_master_vitamin_message_merge": true,
+    "no_rebuild_performed_for_docs": true,
+    "new_stone_tests_pass": 2,
+    "reviewed_branch_before_docs": "c4e6c196d9a60ce27172d32b168961fe153f45c2",
+    "logs": {
+      "audit-855-stone-core-tests.log": "bac67d7e9bb8d593af8bee34ad3d9f89f8a76a81dd08102573553cfecdbf70ee",
+      "audit-855-stone-full-core.log": "32af472d7792bab6d3e63216bbb05920dfc8fb5c0b92978cb1485f983282c747",
+      "audit-855-stone-app-build.log": "3def4b0c41f8fc4737c4d7e6a6e910ffd857eae328afffed197449907bd3123f"
+    }
+  }
+}
