@@ -510,3 +510,64 @@ fn tmhm_soft_reset_then_continue_discards_unsaved_learning_and_consumption() {
         std::fs::remove_dir(dir).unwrap();
     });
 }
+
+#[test]
+fn tmhm_full_learning_on_fainted_mon_preserves_hp_zero_and_stats() {
+    on_game_thread(|| {
+        let mut game = fixture(ItemId::Tm21, true);
+        game.save_data.party.get_mut(0).unwrap().hp = 0;
+        let numbers = numeric_state(&game);
+        use_machine(&mut game, ItemId::Tm21);
+        assert_eq!(
+            game.party_screen.mode(),
+            pokered_core::party_screen::PartyScreenMode::UseItem(ItemId::Tm21)
+        );
+        full_confirm(&mut game);
+        tap(&mut game, GbButton::A);
+        tap(&mut game, GbButton::Down);
+        tap(&mut game, GbButton::A);
+        tap(&mut game, GbButton::A);
+        ack_learned(&mut game);
+        assert_eq!(
+            game.save_data.party.get(0).unwrap().moves[1],
+            MoveId::MegaDrain
+        );
+        assert_eq!(numeric_state(&game), numbers);
+        assert_eq!(quantity(&game), 1);
+    });
+}
+
+#[test]
+fn tmhm_selected_bench_member_keeps_item_mode_and_learning_target() {
+    on_game_thread(|| {
+        let mut game = fixture(ItemId::Tm21, true);
+        let lead = *game.save_data.party.get(0).unwrap();
+        for _ in 0..4 {
+            tap(&mut game, GbButton::A);
+        }
+        assert_eq!(game.party_screen.phase(), PartyScreenPhase::Browsing);
+        tap(&mut game, GbButton::Down);
+        tap(&mut game, GbButton::A);
+        assert_eq!(game.party_screen.cursor(), 1);
+        assert_eq!(
+            game.party_screen.mode(),
+            pokered_core::party_screen::PartyScreenMode::UseItem(ItemId::Tm21)
+        );
+        assert_eq!(
+            game.machine_learning_phase(),
+            Some(LearnPhase::Learned(MoveId::MegaDrain))
+        );
+        assert_eq!(*game.save_data.party.get(0).unwrap(), lead);
+        ack_learned(&mut game);
+        assert_eq!(quantity(&game), 1);
+        assert_eq!(game.save_data.party.get(1).unwrap().level, 12);
+        assert!(game
+            .save_data
+            .party
+            .get(1)
+            .unwrap()
+            .moves
+            .contains(&MoveId::MegaDrain));
+        assert!(game.evolution_anim.is_none());
+    });
+}
