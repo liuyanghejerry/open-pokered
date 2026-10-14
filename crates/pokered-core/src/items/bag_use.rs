@@ -357,11 +357,9 @@ pub fn apply_item_to_pokemon(item: ItemId, mon: &mut Pokemon, pokedex: &mut Poke
             None => no_effect(),
         };
     }
-    // TM/HM machines (ItemUseTMHM).
+    // ItemUseTMHM checks compatibility and known moves, but not current HP:
+    // a fainted party member can learn without being revived.
     if let Some(machine) = machine_of(item) {
-        if mon.hp == 0 {
-            return no_effect();
-        }
         let name = mon.display_name(&mut name_buf);
         let result = match machine {
             MachineKind::Tm(n) => teach_tm(mon, n),
@@ -820,6 +818,82 @@ mod tests {
     }
 
     // -- TM / HM ---------------------------------------------------------------
+
+    #[test]
+    fn fainted_machine_learning_uses_free_slot_without_reviving_or_recalculating() {
+        // Original START/ITEM/USE capture: TM03 and HM01 both teach a
+        // fainted Bulbasaur, initialize the third slot to 30 PP, and only
+        // TM03 consumes one item (audit-855-original-fainted-items.py).
+        for (item, learned, consume) in [
+            (ItemId::Tm03, MoveId::SwordsDance, true),
+            (ItemId::Hm01, MoveId::Cut, false),
+        ] {
+            let mut mon = test_pokemon(Species::Bulbasaur, 6);
+            mon.hp = 0;
+            mon.pp[0] = 7;
+            mon.pp_ups[0] = 2;
+            let mut expected = mon;
+            expected.moves[2] = learned;
+            expected.pp[2] = 30;
+            let mut dex = Pokedex::new();
+            let old_dex = dex.clone();
+            let outcome = apply_item_to_pokemon(item, &mut mon, &mut dex);
+            assert!(matches!(outcome, ItemApplyOutcome::Used { consume: got, .. } if got == consume));
+            assert_eq!(mon, expected, "only the learned move and its PP change");
+            assert_eq!(dex, old_dex);
+        }
+    }
+
+    #[test]
+    fn fainted_machine_still_rejects_known_or_incompatible_moves() {
+        let mut known = test_pokemon(Species::Bulbasaur, 6);
+        known.hp = 0;
+        known.moves[2] = MoveId::Cut;
+        known.pp[2] = 4;
+        let mut incompatible = test_pokemon(Species::Rattata, 6);
+        incompatible.hp = 0;
+        for (item, mut mon, text) in [
+            (ItemId::Hm01, known, "already\nknows CUT!"),
+            (ItemId::Hm01, incompatible, "not\ncompatible"),
+        ] {
+            let before = mon;
+            let mut dex = Pokedex::new();
+            match apply_item_to_pokemon(item, &mut mon, &mut dex) {
+                ItemApplyOutcome::NoEffect { message } => assert!(message.contains(text), "{message}"),
+                other => panic!("expected refusal, got {other:?}"),
+            }
+            assert_eq!(mon, before);
+        }
+    }
+
+    #[test]
+    fn fainted_machine_full_moveset_enters_replacement_and_preserves_other_fields() {
+        for (item, learned, consume) in [
+            (ItemId::Tm03, MoveId::SwordsDance, true),
+            (ItemId::Hm01, MoveId::Cut, false),
+        ] {
+            let mut mon = test_pokemon(Species::Bulbasaur, 16);
+            mon.hp = 0;
+            mon.pp[1] = 7;
+            mon.pp_ups[1] = 3;
+            let before = mon;
+            let mut dex = Pokedex::new();
+            assert_eq!(
+                apply_item_to_pokemon(item, &mut mon, &mut dex),
+                ItemApplyOutcome::NeedsMoveReplace { move_id: learned },
+            );
+            assert_eq!(mon, before, "opening the replacement menu must not change the party");
+            let mut expected = before;
+            expected.moves[1] = learned;
+            expected.pp[1] = 30;
+            expected.pp_ups[1] = 0;
+            assert!(matches!(
+                finish_tm_hm_replace(item, &mut mon, 1),
+                ItemApplyOutcome::Used { consume: got, .. } if got == consume
+            ));
+            assert_eq!(mon, expected);
+        }
+    }
 
     #[test]
     fn tm_teaches_compatible_move_and_consumes() {
