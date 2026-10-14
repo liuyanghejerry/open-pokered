@@ -13,7 +13,11 @@ use crate::engine::{InkColor, Painter, TileRect, Ui};
 
 const NAME_MAX_LEN: usize = 10;
 
-fn status_code(status: &StatusCondition) -> &'static str {
+fn status_code(hp: u16, status: &StatusCondition) -> &'static str {
+    // PrintStatusCondition checks both HP bytes before the ailment byte.
+    if hp == 0 {
+        return "FNT";
+    }
     match status {
         StatusCondition::None => "",
         StatusCondition::Sleep(_) => "SLP",
@@ -179,11 +183,12 @@ fn draw_entry<P: Painter>(
         .iter()
         .find_map(|(k, v)| if k == "hp_value" { Some(v) } else { None });
 
+    let code = status_code(pokemon.hp, &pokemon.status);
     let mut name_buf = [0u8; pokered_core::battle::state::NAME_TEXT_BUF];
     let name = pokemon.display_name(&mut name_buf);
     if let Some(dl) = name_dl {
         // Leave a full tile before status/level, including for wide nicknames.
-        let name_right = if pokemon.status != StatusCondition::None {
+        let name_right = if !code.is_empty() {
             88
         } else {
             120
@@ -211,7 +216,6 @@ fn draw_entry<P: Painter>(
         );
     }
 
-    let code = status_code(&pokemon.status);
     if !code.is_empty() {
         if let Some(dl) = status_dl {
             painter.draw_text_px(dl.tx * 8, (dl.ty + row) * 8, code, dl.color.into());
@@ -381,6 +385,10 @@ pub fn overlay_cursor_damage(
 ) -> Option<crate::DamageRect> {
     overlay_cursor_position(state, cursor, lang).map(crate::DamageRect::cursor)
 }
+
+#[cfg(test)]
+#[path = "party_status_tests.rs"]
+mod status_tests;
 
 #[cfg(test)]
 mod move_choice_tests {
