@@ -51,6 +51,16 @@ The current hosted `SaveData` is 26,896 bytes. The optional field increases
 inline party/box storage; this report does not claim a local GBA build or budget
 PASS. GBA checks remain part of the PR gate.
 
+The updated PR includes master `72f9d593` (Rare Candy's fainted-use fix).
+All six catch-byte tests and 2,858 core tests pass after that integration.
+The recorded ordinary SAVE captures predate this unrelated item guard change.
+
+A byte already overwritten by an older native save cannot be reconstructed
+from a canonical SRAM record alone. Such a zero is indistinguishable from a
+deliberately stored original zero, and evolution can preserve a rate different
+from the current species' base value. This fix preserves explicit SRAM bytes;
+the species fallback applies only to old JSON that has no catch-rate field.
+
 This changes save data and game logic; no renderer/layout surface changes or
 visual screenshot claim is included. The private source replay and logs are
 `audit-851-catch-byte-roundtrip.py`, `audit-851-fixed-catch-roundtrip.py`,
