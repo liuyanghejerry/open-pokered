@@ -1,0 +1,2587 @@
+{
+  "scope": "actual original trainer battles and native before/after ordinary menu input, four cases repeated twice; no runtime state writes",
+  "source_identity": {
+    "revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+    "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+    "pyboy": "2.8.1"
+  },
+  "source_map_preparation": {
+    "scope": "Map preparation only: preparation-only EI/JP bootstrap enters original EnterMap, which completes LoadMapData/map header/sprites/tiles at safeForest(28,32), before party construction and all validation input. No battle routine or EXP function is called, no audit case result yet.",
+    "source_revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+    "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+    "base_state_sha256": "24c7be7572ebd6ad1b2960e9ff9bdd9384119f3f8c7548b766c9472a772e0ade",
+    "state": {
+      "wCurMap": 51,
+      "wXCoord": 28,
+      "wYCoord": 32,
+      "wCurMapWidth": 17,
+      "wCurMapHeight": 24,
+      "wIsInBattle": 0,
+      "wViridianForestCurScript": 0
+    },
+    "prepared_state_sha256": "c0497d9ccae92cebd148ebd8ca95cf8e8ad92f47ed3f5421a038612be029c485",
+    "script_sha256": "e479ee471c1ad53c421038efba6df0d0dffe2cc57b321e8bd70e8a5cf770f82e"
+  },
+  "before_identity": {
+    "commit": "906ae8f82d05006691c5aca3cb9cb2fc67b035c7",
+    "sha256": "b50130e04db566195707c8c48fa57746fe71d34d8f9c0a3c62883e19c901c2bb",
+    "feature": "debug-server",
+    "profile": "dev opt0 debug0",
+    "source_clean_at_build": true
+  },
+  "after_identity": {
+    "commit": "7834bff8da0413f2756f1126736410adc8293eda",
+    "sha256": "2c156369f624ee84d64dbbcdc85e54398c980b246c43d8ad387987728f060b6a",
+    "feature": "debug-server",
+    "profile": "dev opt2 debug0",
+    "source_clean_at_build": true
+  },
+  "test_result": "9 participant regression tests included in full pokered-core --lib: 2867 passed, 0 failed",
+  "trials": [
+    {
+      "case": "no-revive",
+      "repeat": 1,
+      "source": {
+        "run_dir": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-863-original-faint-exp-no-revive-1-hwsvlj50",
+        "source_revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+        "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+        "script_sha256": "6ec7cbe28830b7b28a9c347ab15f64475b53e4e69929ae6db4834af97938d5a0",
+        "constructed_state_sha256": "442f1ef677e0fac794ce56c341abe3fdc8db857b577a458f8b0080ffd91b842f",
+        "prepared_map_state_sha256": "c0497d9ccae92cebd148ebd8ca95cf8e8ad92f47ed3f5421a038612be029c485",
+        "initial": {
+          "tag": "initial",
+          "state": {
+            "frame": 0,
+            "in_battle": 0,
+            "active": 0,
+            "gain": 0,
+            "fought": 0,
+            "party_hp": [1, 52],
+            "party_exp": [135, 5460],
+            "x": 28,
+            "y": 32,
+            "party": [
+              [153, 0, 1, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+              [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 84, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 30, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+            ],
+            "cursor": 0,
+            "menu_max": 1
+          }
+        },
+        "final": {
+          "tag": "saved",
+          "state": {
+            "frame": 6498,
+            "in_battle": 0,
+            "active": 1,
+            "gain": 2,
+            "fought": 2,
+            "party_hp": [0, 52],
+            "party_exp": [135, 5593],
+            "x": 28,
+            "y": 33,
+            "party": [
+              [153, 0, 0, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+              [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 217, 0, 85, 0, 65, 0, 65, 0, 95, 0, 40, 154, 120, 28, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+            ],
+            "cursor": 0,
+            "menu_max": 1
+          }
+        },
+        "events": [
+          {
+            "routine": "EnemySendOutFirstMon",
+            "state": {
+              "frame": 737,
+              "in_battle": 2,
+              "active": 0,
+              "gain": 0,
+              "fought": 0,
+              "party_hp": [1, 52],
+              "party_exp": [135, 5460],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 1, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+                [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 84, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 30, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+              ],
+              "cursor": 0,
+              "menu_max": 1
+            }
+          },
+          {
+            "routine": "RemoveFaintedPlayerMon",
+            "state": {
+              "frame": 1538,
+              "in_battle": 2,
+              "active": 0,
+              "gain": 1,
+              "fought": 1,
+              "party_hp": [1, 52],
+              "party_exp": [135, 5460],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 1, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+                [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 84, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 30, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+              ],
+              "cursor": 0,
+              "menu_max": 3
+            }
+          },
+          {
+            "routine": "GainExperience",
+            "state": {
+              "frame": 2707,
+              "in_battle": 2,
+              "active": 1,
+              "gain": 2,
+              "fought": 3,
+              "party_hp": [0, 52],
+              "party_exp": [135, 5460],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 0, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+                [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 84, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 29, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+              ],
+              "cursor": 0,
+              "menu_max": 5
+            }
+          },
+          {
+            "routine": "EnemySendOut",
+            "state": {
+              "frame": 2876,
+              "in_battle": 2,
+              "active": 1,
+              "gain": 2,
+              "fought": 2,
+              "party_hp": [0, 52],
+              "party_exp": [135, 5526],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 0, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+                [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 150, 0, 40, 0, 35, 0, 30, 0, 50, 0, 20, 154, 120, 29, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+              ],
+              "cursor": 0,
+              "menu_max": 5
+            }
+          },
+          {
+            "routine": "EnemySendOutFirstMon",
+            "state": {
+              "frame": 2876,
+              "in_battle": 2,
+              "active": 1,
+              "gain": 2,
+              "fought": 2,
+              "party_hp": [0, 52],
+              "party_exp": [135, 5526],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 0, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+                [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 150, 0, 40, 0, 35, 0, 30, 0, 50, 0, 20, 154, 120, 29, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+              ],
+              "cursor": 0,
+              "menu_max": 5
+            }
+          },
+          {
+            "routine": "GainExperience",
+            "state": {
+              "frame": 3679,
+              "in_battle": 2,
+              "active": 1,
+              "gain": 2,
+              "fought": 2,
+              "party_hp": [0, 52],
+              "party_exp": [135, 5526],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 0, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+                [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 150, 0, 40, 0, 35, 0, 30, 0, 50, 0, 20, 154, 120, 28, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+              ],
+              "cursor": 0,
+              "menu_max": 5
+            }
+          }
+        ],
+        "sram_sha256": "764f976b07ff13b93288a9c4887088297c31999fbc0a760d82190d0a1c788d04",
+        "sram_checksum": 212,
+        "party_sram_raw_hex": "990000050016032d212d00000000000087000000000000000000009a7823280000050014000a000a000a000c990034140016032d0f22242600000015d9005500410041005f00289a781c0f140f140034001c001c00190022",
+        "saved_money": 3060,
+        "saved_bag_hex": "00ff011063",
+        "saved_exp": [135, 5593],
+        "saved_stat_exp": [
+          [0, 0, 0, 0, 0],
+          [85, 65, 65, 95, 40]
+        ],
+        "saved_pp": [
+          [35, 40, 0, 0],
+          [28, 15, 20, 15]
+        ],
+        "saved_hp": [0, 52],
+        "normal_save": true
+      },
+      "native": {
+        "before": {
+          "run_dir": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-867-native-faint-exp-before-no-revive-1-gkf558fv",
+          "source_commit": "906ae8f82d05006691c5aca3cb9cb2fc67b035c7",
+          "binary_sha256": "b50130e04db566195707c8c48fa57746fe71d34d8f9c0a3c62883e19c901c2bb",
+          "script_sha256": "b94b2d5c4a8f2532ed8dc084cc4fb86d2545465d803e701cfc30e30e3a12dfb8",
+          "fixture_sha256": "fcd6104f95c31824916247a1052e62dddc546133baf87b4ad47695750497217d",
+          "initial_bag": {
+            "items": [],
+            "capacity": 20
+          },
+          "saved_party": [
+            {
+              "species": "Bulbasaur",
+              "level": 5,
+              "hp": 0,
+              "max_hp": 20,
+              "attack": 10,
+              "defense": 10,
+              "speed": 10,
+              "special": 12,
+              "catch_rate": 45,
+              "moves": ["Tackle", "Growl", "None", "None"],
+              "pp": [35, 40, 0, 0],
+              "pp_ups": [0, 0, 0, 0],
+              "status": "None",
+              "stat_exp": [0, 0, 0, 0, 0],
+              "total_exp": 135
+            },
+            {
+              "species": "Bulbasaur",
+              "level": 20,
+              "hp": 52,
+              "max_hp": 52,
+              "attack": 28,
+              "defense": 28,
+              "speed": 25,
+              "special": 34,
+              "catch_rate": 45,
+              "moves": ["Cut", "BodySlam", "TakeDown", "DoubleEdge"],
+              "pp": [28, 15, 20, 15],
+              "pp_ups": [0, 0, 0, 0],
+              "status": "None",
+              "stat_exp": [65, 47, 50, 70, 30],
+              "total_exp": 5560
+            }
+          ],
+          "saved_money": 3060,
+          "saved_bag": {
+            "items": [],
+            "capacity": 20
+          },
+          "normal_save": true,
+          "sram_sha256": "00d7059a41aba31397b54efc3e26670cadfd17fec6c59d42a588b1d22f026409",
+          "sram_checksum": 134,
+          "party_sram_raw_hex": "990000050016032d212d00000000000087000000000000000000009a7823280000050014000a000a000a000c990034140016032d0f22242600000015b80041002f00320046001e9a781c0f140f140034001c001c00190022",
+          "exp_notice_frame": 1488,
+          "exp_notice_phase": "ShowingText { messages: [\"BULBASAUR used CUT!\", \"Enemy WEEDLE fainted!\", \"BULBASAUR gained 33 exp.\\npoints!\"], current: 2, wait_frames: 0, next_phase: EnemySendingNext { wait_frames: 30 } }",
+          "exp_notice_png_sha256": "3714ae91b4de516466fc151bc3cc1a54f1675a52e43bbdc7c038f273ab40f090",
+          "actions_sha256": "38ad923197bb1f62d09dc50236fd9ace1ee78af9bd06183ff4f3785b789007f3",
+          "states_sha256": "291823012c6684561a141fb6d77ddb4e3c4eb5107eb61f483290fdfb1fbf738a",
+          "private_layout": "binary/cwd/SAVE private for each run; save sidecar absent at process start, created by ordinary SAVE; JSON snapshot is modern, no shared legacy sidecar read"
+        },
+        "after": {
+          "run_dir": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-867-native-faint-exp-after-no-revive-1-74xvi_4x",
+          "source_commit": "7834bff8da0413f2756f1126736410adc8293eda",
+          "binary_sha256": "2c156369f624ee84d64dbbcdc85e54398c980b246c43d8ad387987728f060b6a",
+          "script_sha256": "3ce94a110e367d11481fbb5e368cdcdc02ffbab147719837caf606f22d71d4b1",
+          "fixture_sha256": "fcd6104f95c31824916247a1052e62dddc546133baf87b4ad47695750497217d",
+          "initial_bag": {
+            "items": [],
+            "capacity": 20
+          },
+          "saved_party": [
+            {
+              "species": "Bulbasaur",
+              "level": 5,
+              "hp": 0,
+              "max_hp": 20,
+              "attack": 10,
+              "defense": 10,
+              "speed": 10,
+              "special": 12,
+              "catch_rate": 45,
+              "moves": ["Tackle", "Growl", "None", "None"],
+              "pp": [35, 40, 0, 0],
+              "pp_ups": [0, 0, 0, 0],
+              "status": "None",
+              "stat_exp": [0, 0, 0, 0, 0],
+              "total_exp": 135
+            },
+            {
+              "species": "Bulbasaur",
+              "level": 20,
+              "hp": 52,
+              "max_hp": 52,
+              "attack": 28,
+              "defense": 28,
+              "speed": 25,
+              "special": 34,
+              "catch_rate": 45,
+              "moves": ["Cut", "BodySlam", "TakeDown", "DoubleEdge"],
+              "pp": [28, 15, 20, 15],
+              "pp_ups": [0, 0, 0, 0],
+              "status": "None",
+              "stat_exp": [85, 65, 65, 95, 40],
+              "total_exp": 5593
+            }
+          ],
+          "saved_money": 3060,
+          "saved_bag": {
+            "items": [],
+            "capacity": 20
+          },
+          "normal_save": true,
+          "sram_sha256": "0344f71ff22002a8e825d573da171dae7879db8c4af2ef452bd33c4bad7023f5",
+          "sram_checksum": 13,
+          "party_sram_raw_hex": "990000050016032d212d00000000000087000000000000000000009a7823280000050014000a000a000a000c990034140016032d0f22242600000015d9005500410041005f00289a781c0f140f140034001c001c00190022",
+          "exp_notice_frame": 1488,
+          "exp_notice_phase": "ShowingText { messages: [\"BULBASAUR used CUT!\", \"Enemy WEEDLE fainted!\", \"BULBASAUR gained 66 exp.\\npoints!\"], current: 2, wait_frames: 0, next_phase: EnemySendingNext { wait_frames: 30 } }",
+          "exp_notice_png_sha256": "2b2e6c3557c763cb177bcad7483f73ef50f1dcd5a214b67e13ecb9bb4ae64cf1",
+          "actions_sha256": "38ad923197bb1f62d09dc50236fd9ace1ee78af9bd06183ff4f3785b789007f3",
+          "states_sha256": "41087038c43a92828a08e1ca6f7d3b7393cf832d8c4532c6f8d93debb1d3904f",
+          "private_layout": "binary/cwd/SAVE private for each run; save sidecar absent at process start, created by ordinary SAVE; JSON snapshot is modern, no shared legacy sidecar read"
+        }
+      },
+      "source_after_party_byte_differences": []
+    },
+    {
+      "case": "no-revive",
+      "repeat": 2,
+      "source": {
+        "run_dir": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-863-original-faint-exp-no-revive-2-yead9mx8",
+        "source_revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+        "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+        "script_sha256": "6ec7cbe28830b7b28a9c347ab15f64475b53e4e69929ae6db4834af97938d5a0",
+        "constructed_state_sha256": "442f1ef677e0fac794ce56c341abe3fdc8db857b577a458f8b0080ffd91b842f",
+        "prepared_map_state_sha256": "c0497d9ccae92cebd148ebd8ca95cf8e8ad92f47ed3f5421a038612be029c485",
+        "initial": {
+          "tag": "initial",
+          "state": {
+            "frame": 0,
+            "in_battle": 0,
+            "active": 0,
+            "gain": 0,
+            "fought": 0,
+            "party_hp": [1, 52],
+            "party_exp": [135, 5460],
+            "x": 28,
+            "y": 32,
+            "party": [
+              [153, 0, 1, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+              [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 84, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 30, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+            ],
+            "cursor": 0,
+            "menu_max": 1
+          }
+        },
+        "final": {
+          "tag": "saved",
+          "state": {
+            "frame": 6498,
+            "in_battle": 0,
+            "active": 1,
+            "gain": 2,
+            "fought": 2,
+            "party_hp": [0, 52],
+            "party_exp": [135, 5593],
+            "x": 28,
+            "y": 33,
+            "party": [
+              [153, 0, 0, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+              [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 217, 0, 85, 0, 65, 0, 65, 0, 95, 0, 40, 154, 120, 28, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+            ],
+            "cursor": 0,
+            "menu_max": 1
+          }
+        },
+        "events": [
+          {
+            "routine": "EnemySendOutFirstMon",
+            "state": {
+              "frame": 737,
+              "in_battle": 2,
+              "active": 0,
+              "gain": 0,
+              "fought": 0,
+              "party_hp": [1, 52],
+              "party_exp": [135, 5460],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 1, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+                [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 84, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 30, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+              ],
+              "cursor": 0,
+              "menu_max": 1
+            }
+          },
+          {
+            "routine": "RemoveFaintedPlayerMon",
+            "state": {
+              "frame": 1538,
+              "in_battle": 2,
+              "active": 0,
+              "gain": 1,
+              "fought": 1,
+              "party_hp": [1, 52],
+              "party_exp": [135, 5460],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 1, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+                [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 84, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 30, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+              ],
+              "cursor": 0,
+              "menu_max": 3
+            }
+          },
+          {
+            "routine": "GainExperience",
+            "state": {
+              "frame": 2707,
+              "in_battle": 2,
+              "active": 1,
+              "gain": 2,
+              "fought": 3,
+              "party_hp": [0, 52],
+              "party_exp": [135, 5460],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 0, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+                [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 84, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 29, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+              ],
+              "cursor": 0,
+              "menu_max": 5
+            }
+          },
+          {
+            "routine": "EnemySendOut",
+            "state": {
+              "frame": 2876,
+              "in_battle": 2,
+              "active": 1,
+              "gain": 2,
+              "fought": 2,
+              "party_hp": [0, 52],
+              "party_exp": [135, 5526],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 0, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+                [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 150, 0, 40, 0, 35, 0, 30, 0, 50, 0, 20, 154, 120, 29, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+              ],
+              "cursor": 0,
+              "menu_max": 5
+            }
+          },
+          {
+            "routine": "EnemySendOutFirstMon",
+            "state": {
+              "frame": 2876,
+              "in_battle": 2,
+              "active": 1,
+              "gain": 2,
+              "fought": 2,
+              "party_hp": [0, 52],
+              "party_exp": [135, 5526],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 0, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+                [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 150, 0, 40, 0, 35, 0, 30, 0, 50, 0, 20, 154, 120, 29, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+              ],
+              "cursor": 0,
+              "menu_max": 5
+            }
+          },
+          {
+            "routine": "GainExperience",
+            "state": {
+              "frame": 3679,
+              "in_battle": 2,
+              "active": 1,
+              "gain": 2,
+              "fought": 2,
+              "party_hp": [0, 52],
+              "party_exp": [135, 5526],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 0, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+                [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 150, 0, 40, 0, 35, 0, 30, 0, 50, 0, 20, 154, 120, 28, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+              ],
+              "cursor": 0,
+              "menu_max": 5
+            }
+          }
+        ],
+        "sram_sha256": "764f976b07ff13b93288a9c4887088297c31999fbc0a760d82190d0a1c788d04",
+        "sram_checksum": 212,
+        "party_sram_raw_hex": "990000050016032d212d00000000000087000000000000000000009a7823280000050014000a000a000a000c990034140016032d0f22242600000015d9005500410041005f00289a781c0f140f140034001c001c00190022",
+        "saved_money": 3060,
+        "saved_bag_hex": "00ff011063",
+        "saved_exp": [135, 5593],
+        "saved_stat_exp": [
+          [0, 0, 0, 0, 0],
+          [85, 65, 65, 95, 40]
+        ],
+        "saved_pp": [
+          [35, 40, 0, 0],
+          [28, 15, 20, 15]
+        ],
+        "saved_hp": [0, 52],
+        "normal_save": true
+      },
+      "native": {
+        "before": {
+          "run_dir": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-867-native-faint-exp-before-no-revive-2-vxpty5ws",
+          "source_commit": "906ae8f82d05006691c5aca3cb9cb2fc67b035c7",
+          "binary_sha256": "b50130e04db566195707c8c48fa57746fe71d34d8f9c0a3c62883e19c901c2bb",
+          "script_sha256": "b94b2d5c4a8f2532ed8dc084cc4fb86d2545465d803e701cfc30e30e3a12dfb8",
+          "fixture_sha256": "fcd6104f95c31824916247a1052e62dddc546133baf87b4ad47695750497217d",
+          "initial_bag": {
+            "items": [],
+            "capacity": 20
+          },
+          "saved_party": [
+            {
+              "species": "Bulbasaur",
+              "level": 5,
+              "hp": 0,
+              "max_hp": 20,
+              "attack": 10,
+              "defense": 10,
+              "speed": 10,
+              "special": 12,
+              "catch_rate": 45,
+              "moves": ["Tackle", "Growl", "None", "None"],
+              "pp": [35, 40, 0, 0],
+              "pp_ups": [0, 0, 0, 0],
+              "status": "None",
+              "stat_exp": [0, 0, 0, 0, 0],
+              "total_exp": 135
+            },
+            {
+              "species": "Bulbasaur",
+              "level": 20,
+              "hp": 52,
+              "max_hp": 52,
+              "attack": 28,
+              "defense": 28,
+              "speed": 25,
+              "special": 34,
+              "catch_rate": 45,
+              "moves": ["Cut", "BodySlam", "TakeDown", "DoubleEdge"],
+              "pp": [28, 15, 20, 15],
+              "pp_ups": [0, 0, 0, 0],
+              "status": "None",
+              "stat_exp": [65, 47, 50, 70, 30],
+              "total_exp": 5560
+            }
+          ],
+          "saved_money": 3060,
+          "saved_bag": {
+            "items": [],
+            "capacity": 20
+          },
+          "normal_save": true,
+          "sram_sha256": "00d7059a41aba31397b54efc3e26670cadfd17fec6c59d42a588b1d22f026409",
+          "sram_checksum": 134,
+          "party_sram_raw_hex": "990000050016032d212d00000000000087000000000000000000009a7823280000050014000a000a000a000c990034140016032d0f22242600000015b80041002f00320046001e9a781c0f140f140034001c001c00190022",
+          "exp_notice_frame": 1488,
+          "exp_notice_phase": "ShowingText { messages: [\"BULBASAUR used CUT!\", \"Enemy WEEDLE fainted!\", \"BULBASAUR gained 33 exp.\\npoints!\"], current: 2, wait_frames: 0, next_phase: EnemySendingNext { wait_frames: 30 } }",
+          "exp_notice_png_sha256": "3714ae91b4de516466fc151bc3cc1a54f1675a52e43bbdc7c038f273ab40f090",
+          "actions_sha256": "38ad923197bb1f62d09dc50236fd9ace1ee78af9bd06183ff4f3785b789007f3",
+          "states_sha256": "291823012c6684561a141fb6d77ddb4e3c4eb5107eb61f483290fdfb1fbf738a",
+          "private_layout": "binary/cwd/SAVE private for each run; save sidecar absent at process start, created by ordinary SAVE; JSON snapshot is modern, no shared legacy sidecar read"
+        },
+        "after": {
+          "run_dir": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-867-native-faint-exp-after-no-revive-2-7kw_8cw9",
+          "source_commit": "7834bff8da0413f2756f1126736410adc8293eda",
+          "binary_sha256": "2c156369f624ee84d64dbbcdc85e54398c980b246c43d8ad387987728f060b6a",
+          "script_sha256": "3ce94a110e367d11481fbb5e368cdcdc02ffbab147719837caf606f22d71d4b1",
+          "fixture_sha256": "fcd6104f95c31824916247a1052e62dddc546133baf87b4ad47695750497217d",
+          "initial_bag": {
+            "items": [],
+            "capacity": 20
+          },
+          "saved_party": [
+            {
+              "species": "Bulbasaur",
+              "level": 5,
+              "hp": 0,
+              "max_hp": 20,
+              "attack": 10,
+              "defense": 10,
+              "speed": 10,
+              "special": 12,
+              "catch_rate": 45,
+              "moves": ["Tackle", "Growl", "None", "None"],
+              "pp": [35, 40, 0, 0],
+              "pp_ups": [0, 0, 0, 0],
+              "status": "None",
+              "stat_exp": [0, 0, 0, 0, 0],
+              "total_exp": 135
+            },
+            {
+              "species": "Bulbasaur",
+              "level": 20,
+              "hp": 52,
+              "max_hp": 52,
+              "attack": 28,
+              "defense": 28,
+              "speed": 25,
+              "special": 34,
+              "catch_rate": 45,
+              "moves": ["Cut", "BodySlam", "TakeDown", "DoubleEdge"],
+              "pp": [28, 15, 20, 15],
+              "pp_ups": [0, 0, 0, 0],
+              "status": "None",
+              "stat_exp": [85, 65, 65, 95, 40],
+              "total_exp": 5593
+            }
+          ],
+          "saved_money": 3060,
+          "saved_bag": {
+            "items": [],
+            "capacity": 20
+          },
+          "normal_save": true,
+          "sram_sha256": "0344f71ff22002a8e825d573da171dae7879db8c4af2ef452bd33c4bad7023f5",
+          "sram_checksum": 13,
+          "party_sram_raw_hex": "990000050016032d212d00000000000087000000000000000000009a7823280000050014000a000a000a000c990034140016032d0f22242600000015d9005500410041005f00289a781c0f140f140034001c001c00190022",
+          "exp_notice_frame": 1488,
+          "exp_notice_phase": "ShowingText { messages: [\"BULBASAUR used CUT!\", \"Enemy WEEDLE fainted!\", \"BULBASAUR gained 66 exp.\\npoints!\"], current: 2, wait_frames: 0, next_phase: EnemySendingNext { wait_frames: 30 } }",
+          "exp_notice_png_sha256": "2b2e6c3557c763cb177bcad7483f73ef50f1dcd5a214b67e13ecb9bb4ae64cf1",
+          "actions_sha256": "38ad923197bb1f62d09dc50236fd9ace1ee78af9bd06183ff4f3785b789007f3",
+          "states_sha256": "41087038c43a92828a08e1ca6f7d3b7393cf832d8c4532c6f8d93debb1d3904f",
+          "private_layout": "binary/cwd/SAVE private for each run; save sidecar absent at process start, created by ordinary SAVE; JSON snapshot is modern, no shared legacy sidecar read"
+        }
+      },
+      "source_after_party_byte_differences": []
+    },
+    {
+      "case": "solo",
+      "repeat": 1,
+      "source": {
+        "run_dir": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-863-original-faint-exp-solo-1-ugz32ryb",
+        "source_revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+        "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+        "script_sha256": "6ec7cbe28830b7b28a9c347ab15f64475b53e4e69929ae6db4834af97938d5a0",
+        "constructed_state_sha256": "c5fc98882aac4a635b940966a179bb96b87b0a95eea8533e9a98c3175bb83ada",
+        "prepared_map_state_sha256": "c0497d9ccae92cebd148ebd8ca95cf8e8ad92f47ed3f5421a038612be029c485",
+        "initial": {
+          "tag": "initial",
+          "state": {
+            "frame": 0,
+            "in_battle": 0,
+            "active": 0,
+            "gain": 0,
+            "fought": 0,
+            "party_hp": [52, 1],
+            "party_exp": [5460, 135],
+            "x": 28,
+            "y": 32,
+            "party": [
+              [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 84, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 30, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34],
+              [153, 0, 1, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12]
+            ],
+            "cursor": 0,
+            "menu_max": 1
+          }
+        },
+        "final": {
+          "tag": "saved",
+          "state": {
+            "frame": 5656,
+            "in_battle": 0,
+            "active": 0,
+            "gain": 1,
+            "fought": 1,
+            "party_hp": [52, 1],
+            "party_exp": [5593, 135],
+            "x": 28,
+            "y": 33,
+            "party": [
+              [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 217, 0, 85, 0, 65, 0, 65, 0, 95, 0, 40, 154, 120, 28, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34],
+              [153, 0, 1, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12]
+            ],
+            "cursor": 0,
+            "menu_max": 1
+          }
+        },
+        "events": [
+          {
+            "routine": "EnemySendOutFirstMon",
+            "state": {
+              "frame": 737,
+              "in_battle": 2,
+              "active": 0,
+              "gain": 0,
+              "fought": 0,
+              "party_hp": [52, 1],
+              "party_exp": [5460, 135],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 84, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 30, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34],
+                [153, 0, 1, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12]
+              ],
+              "cursor": 0,
+              "menu_max": 1
+            }
+          },
+          {
+            "routine": "GainExperience",
+            "state": {
+              "frame": 1865,
+              "in_battle": 2,
+              "active": 0,
+              "gain": 1,
+              "fought": 1,
+              "party_hp": [52, 1],
+              "party_exp": [5460, 135],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 84, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 29, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34],
+                [153, 0, 1, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12]
+              ],
+              "cursor": 0,
+              "menu_max": 5
+            }
+          },
+          {
+            "routine": "EnemySendOut",
+            "state": {
+              "frame": 2034,
+              "in_battle": 2,
+              "active": 0,
+              "gain": 1,
+              "fought": 1,
+              "party_hp": [52, 1],
+              "party_exp": [5526, 135],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 150, 0, 40, 0, 35, 0, 30, 0, 50, 0, 20, 154, 120, 29, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34],
+                [153, 0, 1, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12]
+              ],
+              "cursor": 0,
+              "menu_max": 5
+            }
+          },
+          {
+            "routine": "EnemySendOutFirstMon",
+            "state": {
+              "frame": 2034,
+              "in_battle": 2,
+              "active": 0,
+              "gain": 1,
+              "fought": 1,
+              "party_hp": [52, 1],
+              "party_exp": [5526, 135],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 150, 0, 40, 0, 35, 0, 30, 0, 50, 0, 20, 154, 120, 29, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34],
+                [153, 0, 1, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12]
+              ],
+              "cursor": 0,
+              "menu_max": 5
+            }
+          },
+          {
+            "routine": "GainExperience",
+            "state": {
+              "frame": 2837,
+              "in_battle": 2,
+              "active": 0,
+              "gain": 1,
+              "fought": 1,
+              "party_hp": [52, 1],
+              "party_exp": [5526, 135],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 150, 0, 40, 0, 35, 0, 30, 0, 50, 0, 20, 154, 120, 28, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34],
+                [153, 0, 1, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12]
+              ],
+              "cursor": 0,
+              "menu_max": 5
+            }
+          }
+        ],
+        "sram_sha256": "a3d4d6d6d4ae77e7679cf0a6bf2c6ce67860da22211d47a5903406f6dc4c65d9",
+        "sram_checksum": 243,
+        "party_sram_raw_hex": "990034140016032d0f22242600000015d9005500410041005f00289a781c0f140f140034001c001c00190022990001050016032d212d00000000000087000000000000000000009a7823280000050014000a000a000a000c",
+        "saved_money": 3060,
+        "saved_bag_hex": "00ff011063",
+        "saved_exp": [5593, 135],
+        "saved_stat_exp": [
+          [85, 65, 65, 95, 40],
+          [0, 0, 0, 0, 0]
+        ],
+        "saved_pp": [
+          [28, 15, 20, 15],
+          [35, 40, 0, 0]
+        ],
+        "saved_hp": [52, 1],
+        "normal_save": true
+      },
+      "native": {
+        "before": {
+          "run_dir": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-867-native-faint-exp-before-solo-1-xhk_sgox",
+          "source_commit": "906ae8f82d05006691c5aca3cb9cb2fc67b035c7",
+          "binary_sha256": "b50130e04db566195707c8c48fa57746fe71d34d8f9c0a3c62883e19c901c2bb",
+          "script_sha256": "b94b2d5c4a8f2532ed8dc084cc4fb86d2545465d803e701cfc30e30e3a12dfb8",
+          "fixture_sha256": "6ba9ad98f697488d64e6b98f884027e0b79ef93c23a3cf8f4f4265c0822288eb",
+          "initial_bag": {
+            "items": [],
+            "capacity": 20
+          },
+          "saved_party": [
+            {
+              "species": "Bulbasaur",
+              "level": 20,
+              "hp": 52,
+              "max_hp": 52,
+              "attack": 28,
+              "defense": 28,
+              "speed": 25,
+              "special": 34,
+              "catch_rate": 45,
+              "moves": ["Cut", "BodySlam", "TakeDown", "DoubleEdge"],
+              "pp": [28, 15, 20, 15],
+              "pp_ups": [0, 0, 0, 0],
+              "status": "None",
+              "stat_exp": [85, 65, 65, 95, 40],
+              "total_exp": 5593
+            },
+            {
+              "species": "Bulbasaur",
+              "level": 5,
+              "hp": 1,
+              "max_hp": 20,
+              "attack": 10,
+              "defense": 10,
+              "speed": 10,
+              "special": 12,
+              "catch_rate": 45,
+              "moves": ["Tackle", "Growl", "None", "None"],
+              "pp": [35, 40, 0, 0],
+              "pp_ups": [0, 0, 0, 0],
+              "status": "None",
+              "stat_exp": [0, 0, 0, 0, 0],
+              "total_exp": 135
+            }
+          ],
+          "saved_money": 3060,
+          "saved_bag": {
+            "items": [],
+            "capacity": 20
+          },
+          "normal_save": true,
+          "sram_sha256": "20f5501a6102838bf34e32fff4674cc2a7219fb86b6fbfd388636dd08f62e8fe",
+          "sram_checksum": 217,
+          "party_sram_raw_hex": "990034140016032d0f22242600000015d9005500410041005f00289a781c0f140f140034001c001c00190022990001050016032d212d00000000000087000000000000000000009a7823280000050014000a000a000a000c",
+          "exp_notice_frame": 1008,
+          "exp_notice_phase": "ShowingText { messages: [\"BULBASAUR used CUT!\", \"Enemy WEEDLE fainted!\", \"BULBASAUR gained 66 exp.\\npoints!\"], current: 2, wait_frames: 0, next_phase: EnemySendingNext { wait_frames: 30 } }",
+          "exp_notice_png_sha256": "2b2e6c3557c763cb177bcad7483f73ef50f1dcd5a214b67e13ecb9bb4ae64cf1",
+          "actions_sha256": "7e1fd2baabc836c80f84b63593c722cfa128d527ef6702985a995f6e64eecbd1",
+          "states_sha256": "3b9acdc760f18fe948c5937f6da74414dfc3981692fa8484dc205b1c24246b7f",
+          "private_layout": "binary/cwd/SAVE private for each run; save sidecar absent at process start, created by ordinary SAVE; JSON snapshot is modern, no shared legacy sidecar read"
+        },
+        "after": {
+          "run_dir": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-867-native-faint-exp-after-solo-1-hr0somua",
+          "source_commit": "7834bff8da0413f2756f1126736410adc8293eda",
+          "binary_sha256": "2c156369f624ee84d64dbbcdc85e54398c980b246c43d8ad387987728f060b6a",
+          "script_sha256": "3ce94a110e367d11481fbb5e368cdcdc02ffbab147719837caf606f22d71d4b1",
+          "fixture_sha256": "6ba9ad98f697488d64e6b98f884027e0b79ef93c23a3cf8f4f4265c0822288eb",
+          "initial_bag": {
+            "items": [],
+            "capacity": 20
+          },
+          "saved_party": [
+            {
+              "species": "Bulbasaur",
+              "level": 20,
+              "hp": 52,
+              "max_hp": 52,
+              "attack": 28,
+              "defense": 28,
+              "speed": 25,
+              "special": 34,
+              "catch_rate": 45,
+              "moves": ["Cut", "BodySlam", "TakeDown", "DoubleEdge"],
+              "pp": [28, 15, 20, 15],
+              "pp_ups": [0, 0, 0, 0],
+              "status": "None",
+              "stat_exp": [85, 65, 65, 95, 40],
+              "total_exp": 5593
+            },
+            {
+              "species": "Bulbasaur",
+              "level": 5,
+              "hp": 1,
+              "max_hp": 20,
+              "attack": 10,
+              "defense": 10,
+              "speed": 10,
+              "special": 12,
+              "catch_rate": 45,
+              "moves": ["Tackle", "Growl", "None", "None"],
+              "pp": [35, 40, 0, 0],
+              "pp_ups": [0, 0, 0, 0],
+              "status": "None",
+              "stat_exp": [0, 0, 0, 0, 0],
+              "total_exp": 135
+            }
+          ],
+          "saved_money": 3060,
+          "saved_bag": {
+            "items": [],
+            "capacity": 20
+          },
+          "normal_save": true,
+          "sram_sha256": "20f5501a6102838bf34e32fff4674cc2a7219fb86b6fbfd388636dd08f62e8fe",
+          "sram_checksum": 217,
+          "party_sram_raw_hex": "990034140016032d0f22242600000015d9005500410041005f00289a781c0f140f140034001c001c00190022990001050016032d212d00000000000087000000000000000000009a7823280000050014000a000a000a000c",
+          "exp_notice_frame": 1008,
+          "exp_notice_phase": "ShowingText { messages: [\"BULBASAUR used CUT!\", \"Enemy WEEDLE fainted!\", \"BULBASAUR gained 66 exp.\\npoints!\"], current: 2, wait_frames: 0, next_phase: EnemySendingNext { wait_frames: 30 } }",
+          "exp_notice_png_sha256": "2b2e6c3557c763cb177bcad7483f73ef50f1dcd5a214b67e13ecb9bb4ae64cf1",
+          "actions_sha256": "7e1fd2baabc836c80f84b63593c722cfa128d527ef6702985a995f6e64eecbd1",
+          "states_sha256": "3b9acdc760f18fe948c5937f6da74414dfc3981692fa8484dc205b1c24246b7f",
+          "private_layout": "binary/cwd/SAVE private for each run; save sidecar absent at process start, created by ordinary SAVE; JSON snapshot is modern, no shared legacy sidecar read"
+        }
+      },
+      "source_after_party_byte_differences": []
+    },
+    {
+      "case": "solo",
+      "repeat": 2,
+      "source": {
+        "run_dir": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-863-original-faint-exp-solo-2-7g7fndl8",
+        "source_revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+        "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+        "script_sha256": "6ec7cbe28830b7b28a9c347ab15f64475b53e4e69929ae6db4834af97938d5a0",
+        "constructed_state_sha256": "c5fc98882aac4a635b940966a179bb96b87b0a95eea8533e9a98c3175bb83ada",
+        "prepared_map_state_sha256": "c0497d9ccae92cebd148ebd8ca95cf8e8ad92f47ed3f5421a038612be029c485",
+        "initial": {
+          "tag": "initial",
+          "state": {
+            "frame": 0,
+            "in_battle": 0,
+            "active": 0,
+            "gain": 0,
+            "fought": 0,
+            "party_hp": [52, 1],
+            "party_exp": [5460, 135],
+            "x": 28,
+            "y": 32,
+            "party": [
+              [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 84, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 30, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34],
+              [153, 0, 1, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12]
+            ],
+            "cursor": 0,
+            "menu_max": 1
+          }
+        },
+        "final": {
+          "tag": "saved",
+          "state": {
+            "frame": 5656,
+            "in_battle": 0,
+            "active": 0,
+            "gain": 1,
+            "fought": 1,
+            "party_hp": [52, 1],
+            "party_exp": [5593, 135],
+            "x": 28,
+            "y": 33,
+            "party": [
+              [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 217, 0, 85, 0, 65, 0, 65, 0, 95, 0, 40, 154, 120, 28, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34],
+              [153, 0, 1, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12]
+            ],
+            "cursor": 0,
+            "menu_max": 1
+          }
+        },
+        "events": [
+          {
+            "routine": "EnemySendOutFirstMon",
+            "state": {
+              "frame": 737,
+              "in_battle": 2,
+              "active": 0,
+              "gain": 0,
+              "fought": 0,
+              "party_hp": [52, 1],
+              "party_exp": [5460, 135],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 84, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 30, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34],
+                [153, 0, 1, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12]
+              ],
+              "cursor": 0,
+              "menu_max": 1
+            }
+          },
+          {
+            "routine": "GainExperience",
+            "state": {
+              "frame": 1865,
+              "in_battle": 2,
+              "active": 0,
+              "gain": 1,
+              "fought": 1,
+              "party_hp": [52, 1],
+              "party_exp": [5460, 135],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 84, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 29, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34],
+                [153, 0, 1, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12]
+              ],
+              "cursor": 0,
+              "menu_max": 5
+            }
+          },
+          {
+            "routine": "EnemySendOut",
+            "state": {
+              "frame": 2034,
+              "in_battle": 2,
+              "active": 0,
+              "gain": 1,
+              "fought": 1,
+              "party_hp": [52, 1],
+              "party_exp": [5526, 135],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 150, 0, 40, 0, 35, 0, 30, 0, 50, 0, 20, 154, 120, 29, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34],
+                [153, 0, 1, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12]
+              ],
+              "cursor": 0,
+              "menu_max": 5
+            }
+          },
+          {
+            "routine": "EnemySendOutFirstMon",
+            "state": {
+              "frame": 2034,
+              "in_battle": 2,
+              "active": 0,
+              "gain": 1,
+              "fought": 1,
+              "party_hp": [52, 1],
+              "party_exp": [5526, 135],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 150, 0, 40, 0, 35, 0, 30, 0, 50, 0, 20, 154, 120, 29, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34],
+                [153, 0, 1, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12]
+              ],
+              "cursor": 0,
+              "menu_max": 5
+            }
+          },
+          {
+            "routine": "GainExperience",
+            "state": {
+              "frame": 2837,
+              "in_battle": 2,
+              "active": 0,
+              "gain": 1,
+              "fought": 1,
+              "party_hp": [52, 1],
+              "party_exp": [5526, 135],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 150, 0, 40, 0, 35, 0, 30, 0, 50, 0, 20, 154, 120, 28, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34],
+                [153, 0, 1, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12]
+              ],
+              "cursor": 0,
+              "menu_max": 5
+            }
+          }
+        ],
+        "sram_sha256": "a3d4d6d6d4ae77e7679cf0a6bf2c6ce67860da22211d47a5903406f6dc4c65d9",
+        "sram_checksum": 243,
+        "party_sram_raw_hex": "990034140016032d0f22242600000015d9005500410041005f00289a781c0f140f140034001c001c00190022990001050016032d212d00000000000087000000000000000000009a7823280000050014000a000a000a000c",
+        "saved_money": 3060,
+        "saved_bag_hex": "00ff011063",
+        "saved_exp": [5593, 135],
+        "saved_stat_exp": [
+          [85, 65, 65, 95, 40],
+          [0, 0, 0, 0, 0]
+        ],
+        "saved_pp": [
+          [28, 15, 20, 15],
+          [35, 40, 0, 0]
+        ],
+        "saved_hp": [52, 1],
+        "normal_save": true
+      },
+      "native": {
+        "before": {
+          "run_dir": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-867-native-faint-exp-before-solo-2-amofa0t7",
+          "source_commit": "906ae8f82d05006691c5aca3cb9cb2fc67b035c7",
+          "binary_sha256": "b50130e04db566195707c8c48fa57746fe71d34d8f9c0a3c62883e19c901c2bb",
+          "script_sha256": "b94b2d5c4a8f2532ed8dc084cc4fb86d2545465d803e701cfc30e30e3a12dfb8",
+          "fixture_sha256": "6ba9ad98f697488d64e6b98f884027e0b79ef93c23a3cf8f4f4265c0822288eb",
+          "initial_bag": {
+            "items": [],
+            "capacity": 20
+          },
+          "saved_party": [
+            {
+              "species": "Bulbasaur",
+              "level": 20,
+              "hp": 52,
+              "max_hp": 52,
+              "attack": 28,
+              "defense": 28,
+              "speed": 25,
+              "special": 34,
+              "catch_rate": 45,
+              "moves": ["Cut", "BodySlam", "TakeDown", "DoubleEdge"],
+              "pp": [28, 15, 20, 15],
+              "pp_ups": [0, 0, 0, 0],
+              "status": "None",
+              "stat_exp": [85, 65, 65, 95, 40],
+              "total_exp": 5593
+            },
+            {
+              "species": "Bulbasaur",
+              "level": 5,
+              "hp": 1,
+              "max_hp": 20,
+              "attack": 10,
+              "defense": 10,
+              "speed": 10,
+              "special": 12,
+              "catch_rate": 45,
+              "moves": ["Tackle", "Growl", "None", "None"],
+              "pp": [35, 40, 0, 0],
+              "pp_ups": [0, 0, 0, 0],
+              "status": "None",
+              "stat_exp": [0, 0, 0, 0, 0],
+              "total_exp": 135
+            }
+          ],
+          "saved_money": 3060,
+          "saved_bag": {
+            "items": [],
+            "capacity": 20
+          },
+          "normal_save": true,
+          "sram_sha256": "20f5501a6102838bf34e32fff4674cc2a7219fb86b6fbfd388636dd08f62e8fe",
+          "sram_checksum": 217,
+          "party_sram_raw_hex": "990034140016032d0f22242600000015d9005500410041005f00289a781c0f140f140034001c001c00190022990001050016032d212d00000000000087000000000000000000009a7823280000050014000a000a000a000c",
+          "exp_notice_frame": 1008,
+          "exp_notice_phase": "ShowingText { messages: [\"BULBASAUR used CUT!\", \"Enemy WEEDLE fainted!\", \"BULBASAUR gained 66 exp.\\npoints!\"], current: 2, wait_frames: 0, next_phase: EnemySendingNext { wait_frames: 30 } }",
+          "exp_notice_png_sha256": "2b2e6c3557c763cb177bcad7483f73ef50f1dcd5a214b67e13ecb9bb4ae64cf1",
+          "actions_sha256": "7e1fd2baabc836c80f84b63593c722cfa128d527ef6702985a995f6e64eecbd1",
+          "states_sha256": "3b9acdc760f18fe948c5937f6da74414dfc3981692fa8484dc205b1c24246b7f",
+          "private_layout": "binary/cwd/SAVE private for each run; save sidecar absent at process start, created by ordinary SAVE; JSON snapshot is modern, no shared legacy sidecar read"
+        },
+        "after": {
+          "run_dir": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-867-native-faint-exp-after-solo-2-jg48nsj5",
+          "source_commit": "7834bff8da0413f2756f1126736410adc8293eda",
+          "binary_sha256": "2c156369f624ee84d64dbbcdc85e54398c980b246c43d8ad387987728f060b6a",
+          "script_sha256": "3ce94a110e367d11481fbb5e368cdcdc02ffbab147719837caf606f22d71d4b1",
+          "fixture_sha256": "6ba9ad98f697488d64e6b98f884027e0b79ef93c23a3cf8f4f4265c0822288eb",
+          "initial_bag": {
+            "items": [],
+            "capacity": 20
+          },
+          "saved_party": [
+            {
+              "species": "Bulbasaur",
+              "level": 20,
+              "hp": 52,
+              "max_hp": 52,
+              "attack": 28,
+              "defense": 28,
+              "speed": 25,
+              "special": 34,
+              "catch_rate": 45,
+              "moves": ["Cut", "BodySlam", "TakeDown", "DoubleEdge"],
+              "pp": [28, 15, 20, 15],
+              "pp_ups": [0, 0, 0, 0],
+              "status": "None",
+              "stat_exp": [85, 65, 65, 95, 40],
+              "total_exp": 5593
+            },
+            {
+              "species": "Bulbasaur",
+              "level": 5,
+              "hp": 1,
+              "max_hp": 20,
+              "attack": 10,
+              "defense": 10,
+              "speed": 10,
+              "special": 12,
+              "catch_rate": 45,
+              "moves": ["Tackle", "Growl", "None", "None"],
+              "pp": [35, 40, 0, 0],
+              "pp_ups": [0, 0, 0, 0],
+              "status": "None",
+              "stat_exp": [0, 0, 0, 0, 0],
+              "total_exp": 135
+            }
+          ],
+          "saved_money": 3060,
+          "saved_bag": {
+            "items": [],
+            "capacity": 20
+          },
+          "normal_save": true,
+          "sram_sha256": "20f5501a6102838bf34e32fff4674cc2a7219fb86b6fbfd388636dd08f62e8fe",
+          "sram_checksum": 217,
+          "party_sram_raw_hex": "990034140016032d0f22242600000015d9005500410041005f00289a781c0f140f140034001c001c00190022990001050016032d212d00000000000087000000000000000000009a7823280000050014000a000a000a000c",
+          "exp_notice_frame": 1008,
+          "exp_notice_phase": "ShowingText { messages: [\"BULBASAUR used CUT!\", \"Enemy WEEDLE fainted!\", \"BULBASAUR gained 66 exp.\\npoints!\"], current: 2, wait_frames: 0, next_phase: EnemySendingNext { wait_frames: 30 } }",
+          "exp_notice_png_sha256": "2b2e6c3557c763cb177bcad7483f73ef50f1dcd5a214b67e13ecb9bb4ae64cf1",
+          "actions_sha256": "7e1fd2baabc836c80f84b63593c722cfa128d527ef6702985a995f6e64eecbd1",
+          "states_sha256": "3b9acdc760f18fe948c5937f6da74414dfc3981692fa8484dc205b1c24246b7f",
+          "private_layout": "binary/cwd/SAVE private for each run; save sidecar absent at process start, created by ordinary SAVE; JSON snapshot is modern, no shared legacy sidecar read"
+        }
+      },
+      "source_after_party_byte_differences": []
+    },
+    {
+      "case": "revive",
+      "repeat": 1,
+      "source": {
+        "run_dir": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-867-original-faint-exp-revive-1-a4_rg_pe",
+        "source_revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+        "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+        "script_sha256": "e56b5a7ba2967f0ded7f774ee241df01d617211a8e31ee1a010bd529a36b55f3",
+        "constructed_state_sha256": "bffacb46b8ce4a8c6bb5180ca60d3a7a27976ecf1265a7516dbb2fc8ea417539",
+        "prepared_map_state_sha256": "c0497d9ccae92cebd148ebd8ca95cf8e8ad92f47ed3f5421a038612be029c485",
+        "initial": {
+          "tag": "initial",
+          "state": {
+            "frame": 0,
+            "in_battle": 0,
+            "active": 0,
+            "gain": 0,
+            "fought": 0,
+            "party_hp": [1, 52],
+            "party_exp": [135, 5460],
+            "x": 28,
+            "y": 32,
+            "party": [
+              [153, 0, 1, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+              [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 84, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 30, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+            ],
+            "cursor": 0,
+            "menu_max": 1
+          }
+        },
+        "final": {
+          "tag": "saved",
+          "state": {
+            "frame": 7942,
+            "in_battle": 0,
+            "active": 1,
+            "gain": 2,
+            "fought": 2,
+            "party_hp": [10, 50],
+            "party_exp": [168, 5560],
+            "x": 28,
+            "y": 33,
+            "party": [
+              [153, 0, 10, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 168, 0, 20, 0, 17, 0, 15, 0, 25, 0, 10, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+              [153, 0, 50, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 184, 0, 65, 0, 47, 0, 50, 0, 70, 0, 30, 154, 120, 28, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+            ],
+            "cursor": 0,
+            "menu_max": 1
+          }
+        },
+        "events": [
+          {
+            "routine": "EnemySendOutFirstMon",
+            "state": {
+              "frame": 737,
+              "in_battle": 2,
+              "active": 0,
+              "gain": 0,
+              "fought": 0,
+              "party_hp": [1, 52],
+              "party_exp": [135, 5460],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 1, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+                [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 84, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 30, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+              ],
+              "cursor": 0,
+              "menu_max": 1
+            }
+          },
+          {
+            "routine": "RemoveFaintedPlayerMon",
+            "state": {
+              "frame": 1538,
+              "in_battle": 2,
+              "active": 0,
+              "gain": 1,
+              "fought": 1,
+              "party_hp": [1, 52],
+              "party_exp": [135, 5460],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 1, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+                [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 84, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 30, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+              ],
+              "cursor": 0,
+              "menu_max": 3
+            }
+          },
+          {
+            "routine": "GainExperience",
+            "state": {
+              "frame": 3961,
+              "in_battle": 2,
+              "active": 1,
+              "gain": 3,
+              "fought": 3,
+              "party_hp": [10, 50],
+              "party_exp": [135, 5460],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 10, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+                [153, 0, 50, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 84, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 29, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+              ],
+              "cursor": 0,
+              "menu_max": 5
+            }
+          },
+          {
+            "routine": "EnemySendOut",
+            "state": {
+              "frame": 4292,
+              "in_battle": 2,
+              "active": 1,
+              "gain": 2,
+              "fought": 2,
+              "party_hp": [10, 50],
+              "party_exp": [168, 5493],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 10, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 168, 0, 20, 0, 17, 0, 15, 0, 25, 0, 10, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+                [153, 0, 50, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 117, 0, 20, 0, 17, 0, 15, 0, 25, 0, 10, 154, 120, 29, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+              ],
+              "cursor": 0,
+              "menu_max": 5
+            }
+          },
+          {
+            "routine": "EnemySendOutFirstMon",
+            "state": {
+              "frame": 4292,
+              "in_battle": 2,
+              "active": 1,
+              "gain": 2,
+              "fought": 2,
+              "party_hp": [10, 50],
+              "party_exp": [168, 5493],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 10, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 168, 0, 20, 0, 17, 0, 15, 0, 25, 0, 10, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+                [153, 0, 50, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 117, 0, 20, 0, 17, 0, 15, 0, 25, 0, 10, 154, 120, 29, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+              ],
+              "cursor": 0,
+              "menu_max": 5
+            }
+          },
+          {
+            "routine": "GainExperience",
+            "state": {
+              "frame": 5123,
+              "in_battle": 2,
+              "active": 1,
+              "gain": 2,
+              "fought": 2,
+              "party_hp": [10, 50],
+              "party_exp": [168, 5493],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 10, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 168, 0, 20, 0, 17, 0, 15, 0, 25, 0, 10, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+                [153, 0, 50, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 117, 0, 20, 0, 17, 0, 15, 0, 25, 0, 10, 154, 120, 28, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+              ],
+              "cursor": 0,
+              "menu_max": 5
+            }
+          }
+        ],
+        "sram_sha256": "788b360c0887a891d4de3a225b465d88eefee94c891afbf7c2a03581afbe84ff",
+        "sram_checksum": 15,
+        "party_sram_raw_hex": "99000a050016032d212d000000000000a800140011000f0019000a9a7823280000050014000a000a000a000c990032140016032d0f22242600000015b80041002f00320046001e9a781c0f140f140034001c001c00190022",
+        "saved_money": 3060,
+        "saved_bag_hex": "00ff00ff63",
+        "saved_exp": [168, 5560],
+        "saved_stat_exp": [
+          [20, 17, 15, 25, 10],
+          [65, 47, 50, 70, 30]
+        ],
+        "saved_pp": [
+          [35, 40, 0, 0],
+          [28, 15, 20, 15]
+        ],
+        "saved_hp": [10, 50],
+        "normal_save": true
+      },
+      "native": {
+        "before": {
+          "run_dir": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-867-native-faint-exp-before-revive-1-lxj2ubq2",
+          "source_commit": "906ae8f82d05006691c5aca3cb9cb2fc67b035c7",
+          "binary_sha256": "b50130e04db566195707c8c48fa57746fe71d34d8f9c0a3c62883e19c901c2bb",
+          "script_sha256": "08b8c210ad80a52a1723778dd4d00bb13a12361939642cf599133b1b349079fd",
+          "fixture_sha256": "9d23f18263c6aee0c83d5200a24ac28bf06d2b2ea78974c4d8b434a380be7938",
+          "initial_bag": {
+            "items": [
+              ["Revive", 1]
+            ],
+            "capacity": 20
+          },
+          "saved_party": [
+            {
+              "species": "Bulbasaur",
+              "level": 5,
+              "hp": 10,
+              "max_hp": 20,
+              "attack": 10,
+              "defense": 10,
+              "speed": 10,
+              "special": 12,
+              "catch_rate": 45,
+              "moves": ["Tackle", "Growl", "None", "None"],
+              "pp": [35, 40, 0, 0],
+              "pp_ups": [0, 0, 0, 0],
+              "status": "None",
+              "stat_exp": [20, 17, 15, 25, 10],
+              "total_exp": 168
+            },
+            {
+              "species": "Bulbasaur",
+              "level": 20,
+              "hp": 52,
+              "max_hp": 52,
+              "attack": 28,
+              "defense": 28,
+              "speed": 25,
+              "special": 34,
+              "catch_rate": 45,
+              "moves": ["Cut", "BodySlam", "TakeDown", "DoubleEdge"],
+              "pp": [28, 15, 20, 15],
+              "pp_ups": [0, 0, 0, 0],
+              "status": "None",
+              "stat_exp": [65, 47, 50, 70, 30],
+              "total_exp": 5560
+            }
+          ],
+          "saved_money": 3060,
+          "saved_bag": {
+            "items": [],
+            "capacity": 20
+          },
+          "normal_save": true,
+          "sram_sha256": "09185538e76c693d572797dcaa0f69aad8f1c46d0a5ff9481905c0553846d251",
+          "sram_checksum": 227,
+          "party_sram_raw_hex": "99000a050016032d212d000000000000a800140011000f0019000a9a7823280000050014000a000a000a000c990034140016032d0f22242600000015b80041002f00320046001e9a781c0f140f140034001c001c00190022",
+          "exp_notice_frame": 1984,
+          "exp_notice_phase": "ShowingText { messages: [\"BULBASAUR used CUT!\", \"Enemy WEEDLE fainted!\", \"BULBASAUR gained 33 exp.\\npoints!\", \"BULBASAUR gained 33 exp.\\npoints!\"], current: 2, wait_frames: 0, next_phase: EnemySendingNext { wait_frames: 30 } }",
+          "exp_notice_png_sha256": "ae4bf0e4a0457319e190f34bf5bc9f9614646a8b55960ff557c93c5a2787f36c",
+          "actions_sha256": "64436d637af11a5661c92157b686a1492d9975ea8f88c7b801b521b3d09dff39",
+          "states_sha256": "3e4e45847121b7ba84a7b02962bc2c2e4f0fe1cb2d44008f29ae3c02c56e666b",
+          "private_layout": "binary/cwd/SAVE private for each run; save sidecar absent at process start, created by ordinary SAVE; JSON snapshot is modern, no shared legacy sidecar read"
+        },
+        "after": {
+          "run_dir": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-867-native-faint-exp-after-revive-1-l1dnyiml",
+          "source_commit": "7834bff8da0413f2756f1126736410adc8293eda",
+          "binary_sha256": "2c156369f624ee84d64dbbcdc85e54398c980b246c43d8ad387987728f060b6a",
+          "script_sha256": "3ce94a110e367d11481fbb5e368cdcdc02ffbab147719837caf606f22d71d4b1",
+          "fixture_sha256": "9d23f18263c6aee0c83d5200a24ac28bf06d2b2ea78974c4d8b434a380be7938",
+          "initial_bag": {
+            "items": [
+              ["Revive", 1]
+            ],
+            "capacity": 20
+          },
+          "saved_party": [
+            {
+              "species": "Bulbasaur",
+              "level": 5,
+              "hp": 10,
+              "max_hp": 20,
+              "attack": 10,
+              "defense": 10,
+              "speed": 10,
+              "special": 12,
+              "catch_rate": 45,
+              "moves": ["Tackle", "Growl", "None", "None"],
+              "pp": [35, 40, 0, 0],
+              "pp_ups": [0, 0, 0, 0],
+              "status": "None",
+              "stat_exp": [20, 17, 15, 25, 10],
+              "total_exp": 168
+            },
+            {
+              "species": "Bulbasaur",
+              "level": 20,
+              "hp": 52,
+              "max_hp": 52,
+              "attack": 28,
+              "defense": 28,
+              "speed": 25,
+              "special": 34,
+              "catch_rate": 45,
+              "moves": ["Cut", "BodySlam", "TakeDown", "DoubleEdge"],
+              "pp": [28, 15, 20, 15],
+              "pp_ups": [0, 0, 0, 0],
+              "status": "None",
+              "stat_exp": [65, 47, 50, 70, 30],
+              "total_exp": 5560
+            }
+          ],
+          "saved_money": 3060,
+          "saved_bag": {
+            "items": [],
+            "capacity": 20
+          },
+          "normal_save": true,
+          "sram_sha256": "09185538e76c693d572797dcaa0f69aad8f1c46d0a5ff9481905c0553846d251",
+          "sram_checksum": 227,
+          "party_sram_raw_hex": "99000a050016032d212d000000000000a800140011000f0019000a9a7823280000050014000a000a000a000c990034140016032d0f22242600000015b80041002f00320046001e9a781c0f140f140034001c001c00190022",
+          "exp_notice_frame": 1984,
+          "exp_notice_phase": "ShowingText { messages: [\"BULBASAUR used CUT!\", \"Enemy WEEDLE fainted!\", \"BULBASAUR gained 33 exp.\\npoints!\", \"BULBASAUR gained 33 exp.\\npoints!\"], current: 2, wait_frames: 0, next_phase: EnemySendingNext { wait_frames: 30 } }",
+          "exp_notice_png_sha256": "ae4bf0e4a0457319e190f34bf5bc9f9614646a8b55960ff557c93c5a2787f36c",
+          "actions_sha256": "64436d637af11a5661c92157b686a1492d9975ea8f88c7b801b521b3d09dff39",
+          "states_sha256": "3e4e45847121b7ba84a7b02962bc2c2e4f0fe1cb2d44008f29ae3c02c56e666b",
+          "private_layout": "binary/cwd/SAVE private for each run; save sidecar absent at process start, created by ordinary SAVE; JSON snapshot is modern, no shared legacy sidecar read"
+        }
+      },
+      "source_after_party_byte_differences": [
+        {
+          "index": 46,
+          "original": 50,
+          "native": 52
+        }
+      ]
+    },
+    {
+      "case": "revive",
+      "repeat": 2,
+      "source": {
+        "run_dir": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-867-original-faint-exp-revive-2-1aombcic",
+        "source_revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+        "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+        "script_sha256": "e56b5a7ba2967f0ded7f774ee241df01d617211a8e31ee1a010bd529a36b55f3",
+        "constructed_state_sha256": "bffacb46b8ce4a8c6bb5180ca60d3a7a27976ecf1265a7516dbb2fc8ea417539",
+        "prepared_map_state_sha256": "c0497d9ccae92cebd148ebd8ca95cf8e8ad92f47ed3f5421a038612be029c485",
+        "initial": {
+          "tag": "initial",
+          "state": {
+            "frame": 0,
+            "in_battle": 0,
+            "active": 0,
+            "gain": 0,
+            "fought": 0,
+            "party_hp": [1, 52],
+            "party_exp": [135, 5460],
+            "x": 28,
+            "y": 32,
+            "party": [
+              [153, 0, 1, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+              [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 84, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 30, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+            ],
+            "cursor": 0,
+            "menu_max": 1
+          }
+        },
+        "final": {
+          "tag": "saved",
+          "state": {
+            "frame": 7942,
+            "in_battle": 0,
+            "active": 1,
+            "gain": 2,
+            "fought": 2,
+            "party_hp": [10, 50],
+            "party_exp": [168, 5560],
+            "x": 28,
+            "y": 33,
+            "party": [
+              [153, 0, 10, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 168, 0, 20, 0, 17, 0, 15, 0, 25, 0, 10, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+              [153, 0, 50, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 184, 0, 65, 0, 47, 0, 50, 0, 70, 0, 30, 154, 120, 28, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+            ],
+            "cursor": 0,
+            "menu_max": 1
+          }
+        },
+        "events": [
+          {
+            "routine": "EnemySendOutFirstMon",
+            "state": {
+              "frame": 737,
+              "in_battle": 2,
+              "active": 0,
+              "gain": 0,
+              "fought": 0,
+              "party_hp": [1, 52],
+              "party_exp": [135, 5460],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 1, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+                [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 84, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 30, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+              ],
+              "cursor": 0,
+              "menu_max": 1
+            }
+          },
+          {
+            "routine": "RemoveFaintedPlayerMon",
+            "state": {
+              "frame": 1538,
+              "in_battle": 2,
+              "active": 0,
+              "gain": 1,
+              "fought": 1,
+              "party_hp": [1, 52],
+              "party_exp": [135, 5460],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 1, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+                [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 84, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 30, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+              ],
+              "cursor": 0,
+              "menu_max": 3
+            }
+          },
+          {
+            "routine": "GainExperience",
+            "state": {
+              "frame": 3961,
+              "in_battle": 2,
+              "active": 1,
+              "gain": 3,
+              "fought": 3,
+              "party_hp": [10, 50],
+              "party_exp": [135, 5460],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 10, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+                [153, 0, 50, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 84, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 29, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+              ],
+              "cursor": 0,
+              "menu_max": 5
+            }
+          },
+          {
+            "routine": "EnemySendOut",
+            "state": {
+              "frame": 4292,
+              "in_battle": 2,
+              "active": 1,
+              "gain": 2,
+              "fought": 2,
+              "party_hp": [10, 50],
+              "party_exp": [168, 5493],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 10, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 168, 0, 20, 0, 17, 0, 15, 0, 25, 0, 10, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+                [153, 0, 50, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 117, 0, 20, 0, 17, 0, 15, 0, 25, 0, 10, 154, 120, 29, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+              ],
+              "cursor": 0,
+              "menu_max": 5
+            }
+          },
+          {
+            "routine": "EnemySendOutFirstMon",
+            "state": {
+              "frame": 4292,
+              "in_battle": 2,
+              "active": 1,
+              "gain": 2,
+              "fought": 2,
+              "party_hp": [10, 50],
+              "party_exp": [168, 5493],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 10, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 168, 0, 20, 0, 17, 0, 15, 0, 25, 0, 10, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+                [153, 0, 50, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 117, 0, 20, 0, 17, 0, 15, 0, 25, 0, 10, 154, 120, 29, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+              ],
+              "cursor": 0,
+              "menu_max": 5
+            }
+          },
+          {
+            "routine": "GainExperience",
+            "state": {
+              "frame": 5123,
+              "in_battle": 2,
+              "active": 1,
+              "gain": 2,
+              "fought": 2,
+              "party_hp": [10, 50],
+              "party_exp": [168, 5493],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 10, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 168, 0, 20, 0, 17, 0, 15, 0, 25, 0, 10, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+                [153, 0, 50, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 117, 0, 20, 0, 17, 0, 15, 0, 25, 0, 10, 154, 120, 28, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+              ],
+              "cursor": 0,
+              "menu_max": 5
+            }
+          }
+        ],
+        "sram_sha256": "788b360c0887a891d4de3a225b465d88eefee94c891afbf7c2a03581afbe84ff",
+        "sram_checksum": 15,
+        "party_sram_raw_hex": "99000a050016032d212d000000000000a800140011000f0019000a9a7823280000050014000a000a000a000c990032140016032d0f22242600000015b80041002f00320046001e9a781c0f140f140034001c001c00190022",
+        "saved_money": 3060,
+        "saved_bag_hex": "00ff00ff63",
+        "saved_exp": [168, 5560],
+        "saved_stat_exp": [
+          [20, 17, 15, 25, 10],
+          [65, 47, 50, 70, 30]
+        ],
+        "saved_pp": [
+          [35, 40, 0, 0],
+          [28, 15, 20, 15]
+        ],
+        "saved_hp": [10, 50],
+        "normal_save": true
+      },
+      "native": {
+        "before": {
+          "run_dir": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-867-native-faint-exp-before-revive-2-bzmz2ons",
+          "source_commit": "906ae8f82d05006691c5aca3cb9cb2fc67b035c7",
+          "binary_sha256": "b50130e04db566195707c8c48fa57746fe71d34d8f9c0a3c62883e19c901c2bb",
+          "script_sha256": "3ce94a110e367d11481fbb5e368cdcdc02ffbab147719837caf606f22d71d4b1",
+          "fixture_sha256": "9d23f18263c6aee0c83d5200a24ac28bf06d2b2ea78974c4d8b434a380be7938",
+          "initial_bag": {
+            "items": [
+              ["Revive", 1]
+            ],
+            "capacity": 20
+          },
+          "saved_party": [
+            {
+              "species": "Bulbasaur",
+              "level": 5,
+              "hp": 10,
+              "max_hp": 20,
+              "attack": 10,
+              "defense": 10,
+              "speed": 10,
+              "special": 12,
+              "catch_rate": 45,
+              "moves": ["Tackle", "Growl", "None", "None"],
+              "pp": [35, 40, 0, 0],
+              "pp_ups": [0, 0, 0, 0],
+              "status": "None",
+              "stat_exp": [20, 17, 15, 25, 10],
+              "total_exp": 168
+            },
+            {
+              "species": "Bulbasaur",
+              "level": 20,
+              "hp": 52,
+              "max_hp": 52,
+              "attack": 28,
+              "defense": 28,
+              "speed": 25,
+              "special": 34,
+              "catch_rate": 45,
+              "moves": ["Cut", "BodySlam", "TakeDown", "DoubleEdge"],
+              "pp": [28, 15, 20, 15],
+              "pp_ups": [0, 0, 0, 0],
+              "status": "None",
+              "stat_exp": [65, 47, 50, 70, 30],
+              "total_exp": 5560
+            }
+          ],
+          "saved_money": 3060,
+          "saved_bag": {
+            "items": [],
+            "capacity": 20
+          },
+          "normal_save": true,
+          "sram_sha256": "09185538e76c693d572797dcaa0f69aad8f1c46d0a5ff9481905c0553846d251",
+          "sram_checksum": 227,
+          "party_sram_raw_hex": "99000a050016032d212d000000000000a800140011000f0019000a9a7823280000050014000a000a000a000c990034140016032d0f22242600000015b80041002f00320046001e9a781c0f140f140034001c001c00190022",
+          "exp_notice_frame": 1984,
+          "exp_notice_phase": "ShowingText { messages: [\"BULBASAUR used CUT!\", \"Enemy WEEDLE fainted!\", \"BULBASAUR gained 33 exp.\\npoints!\", \"BULBASAUR gained 33 exp.\\npoints!\"], current: 2, wait_frames: 0, next_phase: EnemySendingNext { wait_frames: 30 } }",
+          "exp_notice_png_sha256": "ae4bf0e4a0457319e190f34bf5bc9f9614646a8b55960ff557c93c5a2787f36c",
+          "actions_sha256": "64436d637af11a5661c92157b686a1492d9975ea8f88c7b801b521b3d09dff39",
+          "states_sha256": "3e4e45847121b7ba84a7b02962bc2c2e4f0fe1cb2d44008f29ae3c02c56e666b",
+          "private_layout": "binary/cwd/SAVE private for each run; save sidecar absent at process start, created by ordinary SAVE; JSON snapshot is modern, no shared legacy sidecar read"
+        },
+        "after": {
+          "run_dir": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-867-native-faint-exp-after-revive-2-1tfkxzjg",
+          "source_commit": "7834bff8da0413f2756f1126736410adc8293eda",
+          "binary_sha256": "2c156369f624ee84d64dbbcdc85e54398c980b246c43d8ad387987728f060b6a",
+          "script_sha256": "3ce94a110e367d11481fbb5e368cdcdc02ffbab147719837caf606f22d71d4b1",
+          "fixture_sha256": "9d23f18263c6aee0c83d5200a24ac28bf06d2b2ea78974c4d8b434a380be7938",
+          "initial_bag": {
+            "items": [
+              ["Revive", 1]
+            ],
+            "capacity": 20
+          },
+          "saved_party": [
+            {
+              "species": "Bulbasaur",
+              "level": 5,
+              "hp": 10,
+              "max_hp": 20,
+              "attack": 10,
+              "defense": 10,
+              "speed": 10,
+              "special": 12,
+              "catch_rate": 45,
+              "moves": ["Tackle", "Growl", "None", "None"],
+              "pp": [35, 40, 0, 0],
+              "pp_ups": [0, 0, 0, 0],
+              "status": "None",
+              "stat_exp": [20, 17, 15, 25, 10],
+              "total_exp": 168
+            },
+            {
+              "species": "Bulbasaur",
+              "level": 20,
+              "hp": 52,
+              "max_hp": 52,
+              "attack": 28,
+              "defense": 28,
+              "speed": 25,
+              "special": 34,
+              "catch_rate": 45,
+              "moves": ["Cut", "BodySlam", "TakeDown", "DoubleEdge"],
+              "pp": [28, 15, 20, 15],
+              "pp_ups": [0, 0, 0, 0],
+              "status": "None",
+              "stat_exp": [65, 47, 50, 70, 30],
+              "total_exp": 5560
+            }
+          ],
+          "saved_money": 3060,
+          "saved_bag": {
+            "items": [],
+            "capacity": 20
+          },
+          "normal_save": true,
+          "sram_sha256": "09185538e76c693d572797dcaa0f69aad8f1c46d0a5ff9481905c0553846d251",
+          "sram_checksum": 227,
+          "party_sram_raw_hex": "99000a050016032d212d000000000000a800140011000f0019000a9a7823280000050014000a000a000a000c990034140016032d0f22242600000015b80041002f00320046001e9a781c0f140f140034001c001c00190022",
+          "exp_notice_frame": 1984,
+          "exp_notice_phase": "ShowingText { messages: [\"BULBASAUR used CUT!\", \"Enemy WEEDLE fainted!\", \"BULBASAUR gained 33 exp.\\npoints!\", \"BULBASAUR gained 33 exp.\\npoints!\"], current: 2, wait_frames: 0, next_phase: EnemySendingNext { wait_frames: 30 } }",
+          "exp_notice_png_sha256": "ae4bf0e4a0457319e190f34bf5bc9f9614646a8b55960ff557c93c5a2787f36c",
+          "actions_sha256": "64436d637af11a5661c92157b686a1492d9975ea8f88c7b801b521b3d09dff39",
+          "states_sha256": "3e4e45847121b7ba84a7b02962bc2c2e4f0fe1cb2d44008f29ae3c02c56e666b",
+          "private_layout": "binary/cwd/SAVE private for each run; save sidecar absent at process start, created by ordinary SAVE; JSON snapshot is modern, no shared legacy sidecar read"
+        }
+      },
+      "source_after_party_byte_differences": [
+        {
+          "index": 46,
+          "original": 50,
+          "native": 52
+        }
+      ]
+    },
+    {
+      "case": "revive-next",
+      "repeat": 1,
+      "source": {
+        "run_dir": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-867-original-faint-exp-revive-next-1-wh_oqkbs",
+        "source_revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+        "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+        "script_sha256": "a21847e5d3105dc58c994d9f0eaed949e4c5bd8ff2b9cbc8e454811675248515",
+        "constructed_state_sha256": "bffacb46b8ce4a8c6bb5180ca60d3a7a27976ecf1265a7516dbb2fc8ea417539",
+        "prepared_map_state_sha256": "c0497d9ccae92cebd148ebd8ca95cf8e8ad92f47ed3f5421a038612be029c485",
+        "initial": {
+          "tag": "initial",
+          "state": {
+            "frame": 0,
+            "in_battle": 0,
+            "active": 0,
+            "gain": 0,
+            "fought": 0,
+            "party_hp": [1, 52],
+            "party_exp": [135, 5460],
+            "x": 28,
+            "y": 32,
+            "party": [
+              [153, 0, 1, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+              [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 84, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 30, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+            ],
+            "cursor": 0,
+            "menu_max": 1
+          }
+        },
+        "final": {
+          "tag": "saved",
+          "state": {
+            "frame": 7266,
+            "in_battle": 0,
+            "active": 1,
+            "gain": 2,
+            "fought": 2,
+            "party_hp": [10, 51],
+            "party_exp": [135, 5593],
+            "x": 28,
+            "y": 33,
+            "party": [
+              [153, 0, 10, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+              [153, 0, 51, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 217, 0, 85, 0, 65, 0, 65, 0, 95, 0, 40, 154, 120, 28, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+            ],
+            "cursor": 0,
+            "menu_max": 1
+          }
+        },
+        "events": [
+          {
+            "routine": "EnemySendOutFirstMon",
+            "state": {
+              "frame": 737,
+              "in_battle": 2,
+              "active": 0,
+              "gain": 0,
+              "fought": 0,
+              "party_hp": [1, 52],
+              "party_exp": [135, 5460],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 1, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+                [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 84, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 30, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+              ],
+              "cursor": 0,
+              "menu_max": 1
+            }
+          },
+          {
+            "routine": "RemoveFaintedPlayerMon",
+            "state": {
+              "frame": 1538,
+              "in_battle": 2,
+              "active": 0,
+              "gain": 1,
+              "fought": 1,
+              "party_hp": [1, 52],
+              "party_exp": [135, 5460],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 1, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+                [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 84, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 30, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+              ],
+              "cursor": 0,
+              "menu_max": 3
+            }
+          },
+          {
+            "routine": "GainExperience",
+            "state": {
+              "frame": 2707,
+              "in_battle": 2,
+              "active": 1,
+              "gain": 2,
+              "fought": 3,
+              "party_hp": [0, 52],
+              "party_exp": [135, 5460],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 0, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+                [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 84, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 29, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+              ],
+              "cursor": 0,
+              "menu_max": 5
+            }
+          },
+          {
+            "routine": "EnemySendOut",
+            "state": {
+              "frame": 2876,
+              "in_battle": 2,
+              "active": 1,
+              "gain": 2,
+              "fought": 2,
+              "party_hp": [0, 52],
+              "party_exp": [135, 5526],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 0, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+                [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 150, 0, 40, 0, 35, 0, 30, 0, 50, 0, 20, 154, 120, 29, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+              ],
+              "cursor": 0,
+              "menu_max": 5
+            }
+          },
+          {
+            "routine": "EnemySendOutFirstMon",
+            "state": {
+              "frame": 2876,
+              "in_battle": 2,
+              "active": 1,
+              "gain": 2,
+              "fought": 2,
+              "party_hp": [0, 52],
+              "party_exp": [135, 5526],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 0, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+                [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 150, 0, 40, 0, 35, 0, 30, 0, 50, 0, 20, 154, 120, 29, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+              ],
+              "cursor": 0,
+              "menu_max": 5
+            }
+          },
+          {
+            "routine": "GainExperience",
+            "state": {
+              "frame": 4447,
+              "in_battle": 2,
+              "active": 1,
+              "gain": 2,
+              "fought": 2,
+              "party_hp": [10, 51],
+              "party_exp": [135, 5526],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 10, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+                [153, 0, 51, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 150, 0, 40, 0, 35, 0, 30, 0, 50, 0, 20, 154, 120, 28, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+              ],
+              "cursor": 0,
+              "menu_max": 5
+            }
+          }
+        ],
+        "sram_sha256": "c30fcb31f5395231855affab9c50fee5f6460a8f92ae1ccff0a423017ab67452",
+        "sram_checksum": 17,
+        "party_sram_raw_hex": "99000a050016032d212d00000000000087000000000000000000009a7823280000050014000a000a000a000c990033140016032d0f22242600000015d9005500410041005f00289a781c0f140f140034001c001c00190022",
+        "saved_money": 3060,
+        "saved_bag_hex": "00ff00ff63",
+        "saved_exp": [135, 5593],
+        "saved_stat_exp": [
+          [0, 0, 0, 0, 0],
+          [85, 65, 65, 95, 40]
+        ],
+        "saved_pp": [
+          [35, 40, 0, 0],
+          [28, 15, 20, 15]
+        ],
+        "saved_hp": [10, 51],
+        "normal_save": true
+      },
+      "native": {
+        "before": {
+          "run_dir": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-867-native-faint-exp-before-revive-next-1-snjryetq",
+          "source_commit": "906ae8f82d05006691c5aca3cb9cb2fc67b035c7",
+          "binary_sha256": "b50130e04db566195707c8c48fa57746fe71d34d8f9c0a3c62883e19c901c2bb",
+          "script_sha256": "3ce94a110e367d11481fbb5e368cdcdc02ffbab147719837caf606f22d71d4b1",
+          "fixture_sha256": "9d23f18263c6aee0c83d5200a24ac28bf06d2b2ea78974c4d8b434a380be7938",
+          "initial_bag": {
+            "items": [
+              ["Revive", 1]
+            ],
+            "capacity": 20
+          },
+          "saved_party": [
+            {
+              "species": "Bulbasaur",
+              "level": 5,
+              "hp": 10,
+              "max_hp": 20,
+              "attack": 10,
+              "defense": 10,
+              "speed": 10,
+              "special": 12,
+              "catch_rate": 45,
+              "moves": ["Tackle", "Growl", "None", "None"],
+              "pp": [35, 40, 0, 0],
+              "pp_ups": [0, 0, 0, 0],
+              "status": "None",
+              "stat_exp": [0, 0, 0, 0, 0],
+              "total_exp": 135
+            },
+            {
+              "species": "Bulbasaur",
+              "level": 20,
+              "hp": 51,
+              "max_hp": 52,
+              "attack": 28,
+              "defense": 28,
+              "speed": 25,
+              "special": 34,
+              "catch_rate": 45,
+              "moves": ["Cut", "BodySlam", "TakeDown", "DoubleEdge"],
+              "pp": [28, 15, 20, 15],
+              "pp_ups": [0, 0, 0, 0],
+              "status": "None",
+              "stat_exp": [65, 47, 50, 70, 30],
+              "total_exp": 5560
+            }
+          ],
+          "saved_money": 3060,
+          "saved_bag": {
+            "items": [],
+            "capacity": 20
+          },
+          "normal_save": true,
+          "sram_sha256": "62137cd2f5365ae37be95eb82fb7de242356d8b178b4b16d2eb3ec8e205a2589",
+          "sram_checksum": 128,
+          "party_sram_raw_hex": "99000a050016032d212d00000000000087000000000000000000009a7823280000050014000a000a000a000c990033140016032d0f22242600000015b80041002f00320046001e9a781c0f140f140034001c001c00190022",
+          "exp_notice_frame": 1488,
+          "exp_notice_phase": "ShowingText { messages: [\"BULBASAUR used CUT!\", \"Enemy WEEDLE fainted!\", \"BULBASAUR gained 33 exp.\\npoints!\"], current: 2, wait_frames: 0, next_phase: EnemySendingNext { wait_frames: 30 } }",
+          "exp_notice_png_sha256": "3714ae91b4de516466fc151bc3cc1a54f1675a52e43bbdc7c038f273ab40f090",
+          "actions_sha256": "c9b0b502096aed5e4465e918efc5487728bc7400d02e58a8f547811161aa2698",
+          "states_sha256": "87c3bf9ebfb66cca283c93ea8e15ee2a16fcc8ae56f3fa19326380816a7bc035",
+          "private_layout": "binary/cwd/SAVE private for each run; save sidecar absent at process start, created by ordinary SAVE; JSON snapshot is modern, no shared legacy sidecar read"
+        },
+        "after": {
+          "run_dir": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-867-native-faint-exp-after-revive-next-1-r7lz4p_r",
+          "source_commit": "7834bff8da0413f2756f1126736410adc8293eda",
+          "binary_sha256": "2c156369f624ee84d64dbbcdc85e54398c980b246c43d8ad387987728f060b6a",
+          "script_sha256": "3ce94a110e367d11481fbb5e368cdcdc02ffbab147719837caf606f22d71d4b1",
+          "fixture_sha256": "9d23f18263c6aee0c83d5200a24ac28bf06d2b2ea78974c4d8b434a380be7938",
+          "initial_bag": {
+            "items": [
+              ["Revive", 1]
+            ],
+            "capacity": 20
+          },
+          "saved_party": [
+            {
+              "species": "Bulbasaur",
+              "level": 5,
+              "hp": 10,
+              "max_hp": 20,
+              "attack": 10,
+              "defense": 10,
+              "speed": 10,
+              "special": 12,
+              "catch_rate": 45,
+              "moves": ["Tackle", "Growl", "None", "None"],
+              "pp": [35, 40, 0, 0],
+              "pp_ups": [0, 0, 0, 0],
+              "status": "None",
+              "stat_exp": [0, 0, 0, 0, 0],
+              "total_exp": 135
+            },
+            {
+              "species": "Bulbasaur",
+              "level": 20,
+              "hp": 51,
+              "max_hp": 52,
+              "attack": 28,
+              "defense": 28,
+              "speed": 25,
+              "special": 34,
+              "catch_rate": 45,
+              "moves": ["Cut", "BodySlam", "TakeDown", "DoubleEdge"],
+              "pp": [28, 15, 20, 15],
+              "pp_ups": [0, 0, 0, 0],
+              "status": "None",
+              "stat_exp": [85, 65, 65, 95, 40],
+              "total_exp": 5593
+            }
+          ],
+          "saved_money": 3060,
+          "saved_bag": {
+            "items": [],
+            "capacity": 20
+          },
+          "normal_save": true,
+          "sram_sha256": "3b00da249b49e52dea21271d6148dc95155bba78e8a22fbf878180f9cca8fc16",
+          "sram_checksum": 7,
+          "party_sram_raw_hex": "99000a050016032d212d00000000000087000000000000000000009a7823280000050014000a000a000a000c990033140016032d0f22242600000015d9005500410041005f00289a781c0f140f140034001c001c00190022",
+          "exp_notice_frame": 1488,
+          "exp_notice_phase": "ShowingText { messages: [\"BULBASAUR used CUT!\", \"Enemy WEEDLE fainted!\", \"BULBASAUR gained 66 exp.\\npoints!\"], current: 2, wait_frames: 0, next_phase: EnemySendingNext { wait_frames: 30 } }",
+          "exp_notice_png_sha256": "2b2e6c3557c763cb177bcad7483f73ef50f1dcd5a214b67e13ecb9bb4ae64cf1",
+          "actions_sha256": "c9b0b502096aed5e4465e918efc5487728bc7400d02e58a8f547811161aa2698",
+          "states_sha256": "ac345d4f5f8b4bd53280e0440321dac503b2ba59b2fe4281a99b18171d8147b5",
+          "private_layout": "binary/cwd/SAVE private for each run; save sidecar absent at process start, created by ordinary SAVE; JSON snapshot is modern, no shared legacy sidecar read"
+        }
+      },
+      "source_after_party_byte_differences": []
+    },
+    {
+      "case": "revive-next",
+      "repeat": 2,
+      "source": {
+        "run_dir": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-867-original-faint-exp-revive-next-2-yavlxlyn",
+        "source_revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+        "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+        "script_sha256": "a21847e5d3105dc58c994d9f0eaed949e4c5bd8ff2b9cbc8e454811675248515",
+        "constructed_state_sha256": "bffacb46b8ce4a8c6bb5180ca60d3a7a27976ecf1265a7516dbb2fc8ea417539",
+        "prepared_map_state_sha256": "c0497d9ccae92cebd148ebd8ca95cf8e8ad92f47ed3f5421a038612be029c485",
+        "initial": {
+          "tag": "initial",
+          "state": {
+            "frame": 0,
+            "in_battle": 0,
+            "active": 0,
+            "gain": 0,
+            "fought": 0,
+            "party_hp": [1, 52],
+            "party_exp": [135, 5460],
+            "x": 28,
+            "y": 32,
+            "party": [
+              [153, 0, 1, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+              [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 84, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 30, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+            ],
+            "cursor": 0,
+            "menu_max": 1
+          }
+        },
+        "final": {
+          "tag": "saved",
+          "state": {
+            "frame": 7266,
+            "in_battle": 0,
+            "active": 1,
+            "gain": 2,
+            "fought": 2,
+            "party_hp": [10, 51],
+            "party_exp": [135, 5593],
+            "x": 28,
+            "y": 33,
+            "party": [
+              [153, 0, 10, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+              [153, 0, 51, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 217, 0, 85, 0, 65, 0, 65, 0, 95, 0, 40, 154, 120, 28, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+            ],
+            "cursor": 0,
+            "menu_max": 1
+          }
+        },
+        "events": [
+          {
+            "routine": "EnemySendOutFirstMon",
+            "state": {
+              "frame": 737,
+              "in_battle": 2,
+              "active": 0,
+              "gain": 0,
+              "fought": 0,
+              "party_hp": [1, 52],
+              "party_exp": [135, 5460],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 1, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+                [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 84, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 30, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+              ],
+              "cursor": 0,
+              "menu_max": 1
+            }
+          },
+          {
+            "routine": "RemoveFaintedPlayerMon",
+            "state": {
+              "frame": 1538,
+              "in_battle": 2,
+              "active": 0,
+              "gain": 1,
+              "fought": 1,
+              "party_hp": [1, 52],
+              "party_exp": [135, 5460],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 1, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+                [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 84, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 30, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+              ],
+              "cursor": 0,
+              "menu_max": 3
+            }
+          },
+          {
+            "routine": "GainExperience",
+            "state": {
+              "frame": 2707,
+              "in_battle": 2,
+              "active": 1,
+              "gain": 2,
+              "fought": 3,
+              "party_hp": [0, 52],
+              "party_exp": [135, 5460],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 0, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+                [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 84, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 29, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+              ],
+              "cursor": 0,
+              "menu_max": 5
+            }
+          },
+          {
+            "routine": "EnemySendOut",
+            "state": {
+              "frame": 2876,
+              "in_battle": 2,
+              "active": 1,
+              "gain": 2,
+              "fought": 2,
+              "party_hp": [0, 52],
+              "party_exp": [135, 5526],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 0, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+                [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 150, 0, 40, 0, 35, 0, 30, 0, 50, 0, 20, 154, 120, 29, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+              ],
+              "cursor": 0,
+              "menu_max": 5
+            }
+          },
+          {
+            "routine": "EnemySendOutFirstMon",
+            "state": {
+              "frame": 2876,
+              "in_battle": 2,
+              "active": 1,
+              "gain": 2,
+              "fought": 2,
+              "party_hp": [0, 52],
+              "party_exp": [135, 5526],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 0, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+                [153, 0, 52, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 150, 0, 40, 0, 35, 0, 30, 0, 50, 0, 20, 154, 120, 29, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+              ],
+              "cursor": 0,
+              "menu_max": 5
+            }
+          },
+          {
+            "routine": "GainExperience",
+            "state": {
+              "frame": 4447,
+              "in_battle": 2,
+              "active": 1,
+              "gain": 2,
+              "fought": 2,
+              "party_hp": [10, 51],
+              "party_exp": [135, 5526],
+              "x": 28,
+              "y": 33,
+              "party": [
+                [153, 0, 10, 5, 0, 22, 3, 45, 33, 45, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 154, 120, 35, 40, 0, 0, 5, 0, 20, 0, 10, 0, 10, 0, 10, 0, 12],
+                [153, 0, 51, 20, 0, 22, 3, 45, 15, 34, 36, 38, 0, 0, 0, 21, 150, 0, 40, 0, 35, 0, 30, 0, 50, 0, 20, 154, 120, 28, 15, 20, 15, 20, 0, 52, 0, 28, 0, 28, 0, 25, 0, 34]
+              ],
+              "cursor": 0,
+              "menu_max": 5
+            }
+          }
+        ],
+        "sram_sha256": "c30fcb31f5395231855affab9c50fee5f6460a8f92ae1ccff0a423017ab67452",
+        "sram_checksum": 17,
+        "party_sram_raw_hex": "99000a050016032d212d00000000000087000000000000000000009a7823280000050014000a000a000a000c990033140016032d0f22242600000015d9005500410041005f00289a781c0f140f140034001c001c00190022",
+        "saved_money": 3060,
+        "saved_bag_hex": "00ff00ff63",
+        "saved_exp": [135, 5593],
+        "saved_stat_exp": [
+          [0, 0, 0, 0, 0],
+          [85, 65, 65, 95, 40]
+        ],
+        "saved_pp": [
+          [35, 40, 0, 0],
+          [28, 15, 20, 15]
+        ],
+        "saved_hp": [10, 51],
+        "normal_save": true
+      },
+      "native": {
+        "before": {
+          "run_dir": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-867-native-faint-exp-before-revive-next-2-k2_sjmnw",
+          "source_commit": "906ae8f82d05006691c5aca3cb9cb2fc67b035c7",
+          "binary_sha256": "b50130e04db566195707c8c48fa57746fe71d34d8f9c0a3c62883e19c901c2bb",
+          "script_sha256": "3ce94a110e367d11481fbb5e368cdcdc02ffbab147719837caf606f22d71d4b1",
+          "fixture_sha256": "9d23f18263c6aee0c83d5200a24ac28bf06d2b2ea78974c4d8b434a380be7938",
+          "initial_bag": {
+            "items": [
+              ["Revive", 1]
+            ],
+            "capacity": 20
+          },
+          "saved_party": [
+            {
+              "species": "Bulbasaur",
+              "level": 5,
+              "hp": 10,
+              "max_hp": 20,
+              "attack": 10,
+              "defense": 10,
+              "speed": 10,
+              "special": 12,
+              "catch_rate": 45,
+              "moves": ["Tackle", "Growl", "None", "None"],
+              "pp": [35, 40, 0, 0],
+              "pp_ups": [0, 0, 0, 0],
+              "status": "None",
+              "stat_exp": [0, 0, 0, 0, 0],
+              "total_exp": 135
+            },
+            {
+              "species": "Bulbasaur",
+              "level": 20,
+              "hp": 51,
+              "max_hp": 52,
+              "attack": 28,
+              "defense": 28,
+              "speed": 25,
+              "special": 34,
+              "catch_rate": 45,
+              "moves": ["Cut", "BodySlam", "TakeDown", "DoubleEdge"],
+              "pp": [28, 15, 20, 15],
+              "pp_ups": [0, 0, 0, 0],
+              "status": "None",
+              "stat_exp": [65, 47, 50, 70, 30],
+              "total_exp": 5560
+            }
+          ],
+          "saved_money": 3060,
+          "saved_bag": {
+            "items": [],
+            "capacity": 20
+          },
+          "normal_save": true,
+          "sram_sha256": "62137cd2f5365ae37be95eb82fb7de242356d8b178b4b16d2eb3ec8e205a2589",
+          "sram_checksum": 128,
+          "party_sram_raw_hex": "99000a050016032d212d00000000000087000000000000000000009a7823280000050014000a000a000a000c990033140016032d0f22242600000015b80041002f00320046001e9a781c0f140f140034001c001c00190022",
+          "exp_notice_frame": 1488,
+          "exp_notice_phase": "ShowingText { messages: [\"BULBASAUR used CUT!\", \"Enemy WEEDLE fainted!\", \"BULBASAUR gained 33 exp.\\npoints!\"], current: 2, wait_frames: 0, next_phase: EnemySendingNext { wait_frames: 30 } }",
+          "exp_notice_png_sha256": "3714ae91b4de516466fc151bc3cc1a54f1675a52e43bbdc7c038f273ab40f090",
+          "actions_sha256": "c9b0b502096aed5e4465e918efc5487728bc7400d02e58a8f547811161aa2698",
+          "states_sha256": "87c3bf9ebfb66cca283c93ea8e15ee2a16fcc8ae56f3fa19326380816a7bc035",
+          "private_layout": "binary/cwd/SAVE private for each run; save sidecar absent at process start, created by ordinary SAVE; JSON snapshot is modern, no shared legacy sidecar read"
+        },
+        "after": {
+          "run_dir": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-867-native-faint-exp-after-revive-next-2-4ojcp2a_",
+          "source_commit": "7834bff8da0413f2756f1126736410adc8293eda",
+          "binary_sha256": "2c156369f624ee84d64dbbcdc85e54398c980b246c43d8ad387987728f060b6a",
+          "script_sha256": "3ce94a110e367d11481fbb5e368cdcdc02ffbab147719837caf606f22d71d4b1",
+          "fixture_sha256": "9d23f18263c6aee0c83d5200a24ac28bf06d2b2ea78974c4d8b434a380be7938",
+          "initial_bag": {
+            "items": [
+              ["Revive", 1]
+            ],
+            "capacity": 20
+          },
+          "saved_party": [
+            {
+              "species": "Bulbasaur",
+              "level": 5,
+              "hp": 10,
+              "max_hp": 20,
+              "attack": 10,
+              "defense": 10,
+              "speed": 10,
+              "special": 12,
+              "catch_rate": 45,
+              "moves": ["Tackle", "Growl", "None", "None"],
+              "pp": [35, 40, 0, 0],
+              "pp_ups": [0, 0, 0, 0],
+              "status": "None",
+              "stat_exp": [0, 0, 0, 0, 0],
+              "total_exp": 135
+            },
+            {
+              "species": "Bulbasaur",
+              "level": 20,
+              "hp": 51,
+              "max_hp": 52,
+              "attack": 28,
+              "defense": 28,
+              "speed": 25,
+              "special": 34,
+              "catch_rate": 45,
+              "moves": ["Cut", "BodySlam", "TakeDown", "DoubleEdge"],
+              "pp": [28, 15, 20, 15],
+              "pp_ups": [0, 0, 0, 0],
+              "status": "None",
+              "stat_exp": [85, 65, 65, 95, 40],
+              "total_exp": 5593
+            }
+          ],
+          "saved_money": 3060,
+          "saved_bag": {
+            "items": [],
+            "capacity": 20
+          },
+          "normal_save": true,
+          "sram_sha256": "3b00da249b49e52dea21271d6148dc95155bba78e8a22fbf878180f9cca8fc16",
+          "sram_checksum": 7,
+          "party_sram_raw_hex": "99000a050016032d212d00000000000087000000000000000000009a7823280000050014000a000a000a000c990033140016032d0f22242600000015d9005500410041005f00289a781c0f140f140034001c001c00190022",
+          "exp_notice_frame": 1488,
+          "exp_notice_phase": "ShowingText { messages: [\"BULBASAUR used CUT!\", \"Enemy WEEDLE fainted!\", \"BULBASAUR gained 66 exp.\\npoints!\"], current: 2, wait_frames: 0, next_phase: EnemySendingNext { wait_frames: 30 } }",
+          "exp_notice_png_sha256": "2b2e6c3557c763cb177bcad7483f73ef50f1dcd5a214b67e13ecb9bb4ae64cf1",
+          "actions_sha256": "c9b0b502096aed5e4465e918efc5487728bc7400d02e58a8f547811161aa2698",
+          "states_sha256": "ac345d4f5f8b4bd53280e0440321dac503b2ba59b2fe4281a99b18171d8147b5",
+          "private_layout": "binary/cwd/SAVE private for each run; save sidecar absent at process start, created by ordinary SAVE; JSON snapshot is modern, no shared legacy sidecar read"
+        }
+      },
+      "source_after_party_byte_differences": []
+    }
+  ],
+  "validation": {
+    "original_actual_runs": 8,
+    "native_actual_runs": 16,
+    "ordinary_save_all": true,
+    "checksums_valid": true,
+    "repeat_fixture_input_state_png_sram_identical": true,
+    "before_after_native_same_fixture_inputs_and_exp_notice_frame": true,
+    "no_revive_solo_revive_next_source_after_party_88bytes_identical": true,
+    "same_enemy_revive_only_hp_low_byte_diff": true,
+    "prize_money3000_to3060": true
+  },
+  "limits": ["Original RNG and native seed42 are not aligned; same-enemy Revive original healthy HP50 vs native52. Native before/after HP52 identical. Other three cases all88 saved party bytes agree, including catch-ratebyte7/51.", "Original new-enemy and same-enemy Revive exercised by actual buttons. Simultaneous faint/SHIFT/trainer AI switch boundaries have source static and targeted unit coverage. Link reset has static callpath review and existing full core link tests, not a new direct mask assertion or actual link recording; no broader wholegameplay parity claim.", "Native debug snapshot does not export participant masks. Source masks come from readonly executable hooks; native eligibility proven through actual gains and SAVE plus production callpath.", "Frozen BEFORE906 and AFTER7834 are exact recorded build identities. Subsequent e481 merge changes only Stats status renderer/tests/docs, outside these battle/menu paths. No capture relabeled as a later build.", "Source setup uses preparation-only EI/JP into EnterMap before party construction; does not enter battle or EXP routines. Cases begin at constructed-start.state; all subsequent verification uses ordinary inputs/readonly hooks.", "Rejected source Revive-v1 loop reopened the empty bag after successful Revive; not counted. v2/v3 normalize FIGHT via actual Up/Left inputs and then complete SAVE."],
+  "post_capture_merge": {
+    "commit": "e481388da39ab702480779bcb191f4ca8dc5772a",
+    "change": "Stats semantic FNT renderer/tests/docs only",
+    "four_changed_core_source_blobs_identical_to_frozen7834": true,
+    "core_test_identity": {
+      "source_commit": "7834bff8da0413f2756f1126736410adc8293eda",
+      "sha256": "08bb529792803dbd6eaff536c13e5bd9bfa6fdf67b34fb8d7ea37ef1651d3711"
+    }
+  }
+}
