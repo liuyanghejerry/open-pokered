@@ -936,7 +936,21 @@ pub fn finish_move_choice(item: ItemId, mon: &mut Pokemon, slot: usize) -> ItemA
     }
 }
 
+/// ItemUsePPRestore's PPMaxedOutText branch retries the same move menu.
+/// Empty or invalid slots retain the ordinary no-effect path.
+pub fn pp_up_move_is_maxed(mon: &Pokemon, move_index: usize) -> bool {
+    mon.moves.get(move_index).is_some_and(|&move_id| move_id != MoveId::None)
+        && mon.pp_ups.get(move_index).is_some_and(|&count| {
+            count >= crate::items::pp_restore::MAX_PP_UPS_PER_MOVE
+        })
+}
+
 pub fn finish_pp_restore(item: ItemId, mon: &mut Pokemon, move_index: usize) -> ItemApplyOutcome {
+    if item == ItemId::PpUp && pp_up_move_is_maxed(mon, move_index) {
+        return ItemApplyOutcome::NoEffect {
+            message: format!("{}'s PP\nis maxed out.", move_display(mon.moves[move_index])),
+        };
+    }
     match use_pp_restore(mon, item, move_index) {
         PpRestoreResult::Restored { .. } | PpRestoreResult::AllRestored { .. } => {
             used("PP was\nrestored!".to_string(), true)
@@ -985,6 +999,27 @@ mod pp_move_choice_tests {
         assert!(matches!(outcome, ItemApplyOutcome::Used { .. }));
         assert_eq!(mon.pp[1], max1, "slot 1 back to full (+10 over the drained 25)");
         assert_eq!(mon.pp[0], before0, "slot 0 untouched");
+    }
+
+    #[test]
+    fn maxed_pp_up_names_the_chosen_move_without_changing_the_mon() {
+        let mut mon = four_move_mon();
+        mon.pp_ups[1] = 3;
+        mon.pp[1] = 1;
+        let before = mon.clone();
+        assert!(pp_up_move_is_maxed(&mon, 1));
+        assert_eq!(
+            finish_move_choice(ItemId::PpUp, &mut mon, 1),
+            ItemApplyOutcome::NoEffect {
+                message: "POISONPOWDER's PP\nis maxed out.".to_string(),
+            }
+        );
+        assert_eq!(mon, before);
+        assert!(!pp_up_move_is_maxed(&mon, 0));
+        assert!(!pp_up_move_is_maxed(&mon, 4));
+        mon.moves[1] = MoveId::None;
+        assert!(!pp_up_move_is_maxed(&mon, 1));
+        assert_eq!(finish_move_choice(ItemId::PpUp, &mut mon, 1), no_effect());
     }
 
     /// Elixirs restore EVERY move and skip the menu entirely.

@@ -1,0 +1,46 @@
+{
+  "base": "117a326a5a442d47951203c59760c780ea8c82c7",
+  "before_binary_sha256": "dffbebdcf3c44cee83c6d3060997b13c2222fc129e6b88aae7bad3a759fa4457",
+  "after_binary_sha256": "9ff93ef98a2cd19d01d7792b0868180a3a0fd92e208ae180e0a0daf4e2c7254b",
+  "repeats_each_side": 2,
+  "matched_actions_through_confirmation": true,
+  "saved_state_unchanged_on_refusal": true,
+  "after_confirmation": {
+    "screen": "party",
+    "phase": "ChooseMove { cursor: 0 }"
+  },
+  "reselect_growl": {
+    "pp_before": 40,
+    "pp_after": 47,
+    "pp_ups_after": 1,
+    "items_before": 2,
+    "items_after": 1
+  },
+  "captures": [
+    {
+      "capture": "refusal",
+      "side": "before",
+      "frame": 616,
+      "sha256": "51397a4d0522058a026d64916941c052484db6cf04b8ea5a07f8b29fb83bf021"
+    },
+    {
+      "capture": "refusal",
+      "side": "after",
+      "frame": 616,
+      "sha256": "2bf696a9a2210a6354f076af254e0b3a3b909aab0501f2e86a1bb5cc9aea7663"
+    },
+    {
+      "capture": "retry",
+      "side": "before",
+      "frame": 752,
+      "sha256": "351b399b37cceecad940ab452e22eee6baf9fffefba1acd3c00d00deabdc97fa"
+    },
+    {
+      "capture": "retry",
+      "side": "after",
+      "frame": 752,
+      "sha256": "6151fdd4b2dfc00056795c0f49254abd810aeb439714bf63c4281ee8b63915c8"
+    }
+  ],
+  "original_scope": "Static source confirms namedPPMaxedOutText and retry .chooseMove resets firstcursor. No original rendered/typing/complete menu recording claim."
+}
