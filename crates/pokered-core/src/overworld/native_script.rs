@@ -3370,6 +3370,26 @@ mod tests {
     }
 
     #[test]
+    fn fidelity_gamecorner_beauty_only_talks_and_machines_still_open_slots() {
+        let scene = pokered_data::embedded_scenes::get_scene_ast("GameCorner").unwrap();
+        for bag in [vec![], vec!["COIN_CASE".to_string()]] {
+            for coins in [0.0, 50.0] {
+                let mut engine = NativeScriptEngine::new();
+                engine.load_map("GameCorner", &scene);
+                engine.seed_set("bag", &bag);
+                engine.seed_number("coins", coins);
+                let commands = drive_fidelity_scene(&mut engine, "talkBeauty2", false, "", &[]);
+                assert_eq!(commands.len(), 1);
+                assert!(matches!(&commands[0], ScriptCommand::ShowText { text }
+                    if text == "I think these machines have\ndifferent odds."));
+                let commands = drive_fidelity_scene(&mut engine, "slotMachines", false, "", &[]);
+                assert!(commands.iter().any(|c| matches!(c,
+                    ScriptCommand::Custom { name, .. } if name == "openSlots")));
+            }
+        }
+    }
+
+    #[test]
     fn fidelity_tm_prizes_require_confirmation_and_success_before_payment() {
         let scene = pokered_data::embedded_scenes::get_scene_ast("GameCornerPrizeRoom").unwrap();
         for selection in 0..3 {
