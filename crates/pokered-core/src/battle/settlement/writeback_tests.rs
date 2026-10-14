@@ -225,11 +225,17 @@ fn capture_full_party_goes_to_box() {
     battle.settlement = Some(settlement(BattleOutcome::Captured, 0, 0));
     battle.captured_mon = Some(mon(Species::Pidgey, 5));
     let mut save = SaveData::new();
+    let mut old = mon(Species::Eevee, 25);
+    old.set_nickname("OLD");
+    save.current_box.deposit(old).unwrap();
     let mut ow = overworld();
 
     settle_battle_into_save(&mut battle, &mut save, &mut ow);
     assert_eq!(save.party.count(), 6, "party stays full");
-    assert_eq!(save.current_box.count(), 1, "caught mon deposited to the PC box");
+    assert_eq!(save.current_box.count(), 2, "caught mon added to the PC box");
+    assert_eq!(save.current_box.get(0).unwrap().species, Species::Pidgey);
+    assert_eq!(save.current_box.get(1), Some(&old));
+    assert_eq!(save.pc_storage.current_box(), &save.current_box);
     assert!(save.game_data.pokedex.is_owned(Species::Pidgey));
 }
 

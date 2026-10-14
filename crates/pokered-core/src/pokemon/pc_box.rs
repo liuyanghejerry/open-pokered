@@ -58,6 +58,8 @@ impl PcBox {
         self.mons.get_mut(index)
     }
 
+    /// Append a party member deposited through Bill's PC (`_MoveMon`).
+    /// SRAM import also appends records in their existing on-disk order.
     pub fn deposit(&mut self, pokemon: Pokemon) -> Result<usize, BoxError> {
         if self.is_full() {
             return Err(BoxError::BoxFull);
@@ -66,6 +68,18 @@ impl PcBox {
         self.mons[index] = pokemon;
         self.count += 1;
         Ok(index)
+    }
+
+    /// Newly caught or gifted Pokémon enter the front of the current box
+    /// (`SendNewMonToBox`), retaining every existing record in order.
+    pub fn insert_new_mon(&mut self, pokemon: Pokemon) -> Result<usize, BoxError> {
+        if self.is_full() {
+            return Err(BoxError::BoxFull);
+        }
+        self.mons.copy_within(0..self.count, 1);
+        self.mons[0] = pokemon;
+        self.count += 1;
+        Ok(0)
     }
 
     pub fn withdraw(&mut self, index: usize) -> Result<Pokemon, BoxError> {
