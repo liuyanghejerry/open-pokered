@@ -12,6 +12,9 @@ macro_rules! dbg_eprintln {
     }};
 }
 
+#[path = "rare_candy.rs"]
+pub(crate) mod rare_candy;
+
 use crate::alloc_prelude::*;
 
 // Link play, save files and the recorders are hosted-only (std fs/net/time).
@@ -683,6 +686,7 @@ pub struct PokemonGame {
     /// (party index, move). Consumed by `MoveForgetChosen`; cleared on
     /// CANCEL (the move is then not learned, like AbandonLearning).
     pending_evolve_move_replace: Option<(usize, pokered_data::moves::MoveId)>,
+    rare_candy_flow: Option<rare_candy::RareCandyFlow>,
     pub stats_screen: Option<StatsScreenState>,
     pub slots_screen: Option<SlotsScreen>,
     pub elevator_screen: Option<ElevatorScreen>,
@@ -1335,6 +1339,7 @@ impl PokemonGame {
             pokedex_entry_cry_waiting: false,
             trainer_card_screen: TrainerCardScreenState::new(),
             pending_evolve_move_replace: None,
+            rare_candy_flow: None,
             pending_fly_map: false,
             fly_departure_screen_frames: 0,
             pc_stats_return_frame: None,
@@ -1510,6 +1515,7 @@ impl PokemonGame {
             pokedex_entry_cry_waiting: false,
             trainer_card_screen: f_card,
             pending_evolve_move_replace: None,
+            rare_candy_flow: None,
             pending_fly_map: false,
             fly_departure_screen_frames: 0,
             pc_stats_return_frame: None,
@@ -1634,6 +1640,7 @@ impl PokemonGame {
             pokedex_entry_cry_waiting: false,
             trainer_card_screen: TrainerCardScreenState::new(),
             pending_evolve_move_replace: None,
+            rare_candy_flow: None,
             pending_fly_map: false,
             fly_departure_screen_frames: 0,
             pc_stats_return_frame: None,
@@ -2887,6 +2894,7 @@ impl PokemonGame {
     /// all sounds, reload the save from disk (unsaved progress is lost, as on
     /// hardware), and return to the title screen.
     fn soft_reset(&mut self) {
+        self.clear_rare_candy_continuation();
         #[cfg(not(target_os = "none"))]
         {
             if self.external_saves {
@@ -3666,6 +3674,9 @@ impl PokemonGame {
                 self.overworld.box_count = self.save_data.current_box.count() as u8;
                 self.overworld.gift_box_number = self.save_data.pc_storage.current_box_index() as u8 + 1;
                 self.overworld.party_lead_level = self.save_data.party.leader_level();
+                if self.resume_rare_candy_after_evolution() {
+                    return;
+                }
                 // A full-moveset level-up move couldn't be learned: open the
                 // party screen's forget-a-move prompt, exactly where the
                 // original's `predef LearnMove` would (evos_moves.asm:212).
@@ -3674,6 +3685,11 @@ impl PokemonGame {
                     return;
                 }
             }
+            return;
+        }
+
+        if self.state.screen == GameScreen::PartyScreen && self.rare_candy_flow.is_some() {
+            self.update_rare_candy(input);
             return;
         }
 
@@ -5120,6 +5136,10 @@ impl PokemonGame {
                                         self.party_screen.enter_move_choice();
                                         ScreenAction::Continue
                                     }
+                                    ItemApplyOutcome::RareCandyLevelUp { new_level, moves } => {
+                                        self.begin_rare_candy(party_index, new_level, moves);
+                                        ScreenAction::Continue
+                                    }
                                     ItemApplyOutcome::EvolutionPending {
                                         pre_text,
                                         from,
@@ -5258,7 +5278,8 @@ impl PokemonGame {
                                         (bag_use::NO_EFFECT_MESSAGE.to_string(), false)
                                     }
                                     // …nor starts an evolution.
-                                    ItemApplyOutcome::EvolutionPending { .. } => {
+                                    ItemApplyOutcome::EvolutionPending { .. }
+                                    | ItemApplyOutcome::RareCandyLevelUp { .. } => {
                                         (bag_use::NO_EFFECT_MESSAGE.to_string(), false)
                                     }
                                 };
@@ -6803,6 +6824,7 @@ impl PokemonGame {
                     "kind": "party", "cursor": self.party_screen.cursor(),
                     "phase": format!("{:?}", self.party_screen.phase()),
                     "mode": format!("{:?}", self.party_screen.mode()),
+                    "rare_candy_phase": self.rare_candy_phase().map(|phase| format!("{phase:?}")),
                     "field_moves": self.party_screen.selected_field_moves().iter().map(|m| format!("{:?}", m)).collect::<Vec<_>>(),
                     "known_moves": self.party_screen.selected_known_moves().iter().map(|m| format!("{:?}", m)).collect::<Vec<_>>(),
                 })),
@@ -7834,6 +7856,9 @@ impl PokemonGame {
         if outcome.kind != EvolutionOutcomeKind::Evolved {
             return;
         }
+        if self.apply_rare_candy_evolution(outcome) {
+            return;
+        }
         if let Some(mon) = self.save_data.party.get_mut(outcome.party_index) {
             let blocked = pokered_core::pokemon::evolution::finalize_evolution(
                 mon,
@@ -8031,6 +8056,10 @@ impl PokemonGame {
                 draw_save_menu(&self.save_menu, frame_buffer, self.state.config.language);
             }
             GameScreen::PartyScreen => {
+                if self.rare_candy_flow.is_some() {
+                    self.draw_rare_candy(frame_buffer);
+                    return;
+                }
                 draw_party_screen(
                     &self.party_screen,
                     self.resources.as_mut(),
@@ -8170,6 +8199,10 @@ impl PokemonGame {
 #[cfg(all(test, feature = "debug-server"))]
 #[path = "pp_up_maxed_retry_tests.rs"]
 mod pp_up_maxed_retry_tests;
+
+#[cfg(test)]
+#[path = "rare_candy_tests.rs"]
+mod rare_candy_tests;
 
 const BLACK_SCREEN_DURATION: u32 = 30;
 

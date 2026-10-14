@@ -171,6 +171,9 @@ impl PokemonGame {
     /// debug inputs are cleared; battle VFX restarts (presentation).
     pub fn agent_restore_state(&mut self, snapshot: &GameSnapshot) -> Result<(), StateError> {
         self.check_not_mid_movie()?;
+        // Menu continuations are outside this overworld/battle snapshot.
+        // Drop the abandoned timeline before later party inputs can resume it.
+        self.clear_rare_candy_continuation();
         self.state.screen = match snapshot.screen {
             GameScreenTag::Overworld => GameScreen::Overworld,
             GameScreenTag::Battle => GameScreen::Battle,

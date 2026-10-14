@@ -24,7 +24,7 @@ use crate::battle::state::Pokemon;
 use crate::items::healing::{use_healing_item, HealResult};
 use crate::items::pp_restore::{use_pp_restore, PpRestoreResult};
 use crate::items::status_cure::{use_status_cure, StatusCureResult};
-use crate::items::vitamins::{use_rare_candy, use_vitamin, VitaminResult};
+use crate::items::vitamins::{raise_level_with_rare_candy, use_vitamin, VitaminResult};
 use crate::pokemon::evolution::{check_evolution, EvolutionTrigger};
 use crate::pokemon::move_learning::{
     can_learn_hm, can_learn_tm, hm_to_move, is_hm_move, replace_move, teach_hm, teach_tm, tm_to_move,
@@ -185,7 +185,10 @@ pub enum ItemApplyOutcome {
     /// TM/HM: the Pokémon already knows four moves. The caller must run the
     /// forget-a-move flow and then call [`finish_tm_hm_replace`].
     NeedsMoveReplace { move_id: MoveId },
-    /// The item triggers an evolution (stone / Rare Candy level-up). NOTHING
+    /// Level/stats applied; the caller completes stats, learning and then
+    /// evolution before consuming the Rare Candy once. Moves are still unchanged.
+    RareCandyLevelUp { new_level: u8, moves: Vec<MoveId> },
+    /// The item triggers a stone evolution. NOTHING
     /// has been applied to the species yet — the caller must run the
     /// evolution cutscene (`crate::evolution_screen`) and, on success,
     /// `pokemon::evolution::finalize_evolution`; on a B-cancel the mon is
@@ -326,25 +329,14 @@ pub fn apply_item_to_pokemon(item: ItemId, mon: &mut Pokemon, pokedex: &mut Poke
         VitaminResult::NoEffect => return no_effect(),
         VitaminResult::NotApplicable => {}
     }
-    // Rare Candy: level-up + move learning now; the level-up evolution check
-    // runs through the cutscene (ItemUseRareCandy → TryEvolvingMon with
-    // wForceEvolution = 0, item_effects.asm:1409-1411).
+    // ItemUseRareCandy shows the updated stats before LearnMoveFromLevelUp,
+    // then tries evolution and only finally removes the item.
     if item == ItemId::RareCandy {
-        let name = mon.display_name(&mut name_buf);
-        return match use_rare_candy(mon) {
-            Some(result) => {
-                let msg = format!("{} grew to\nlevel {}!", name, result.new_level);
-                match check_evolution(mon, EvolutionTrigger::LevelUp) {
-                    Some(to) => ItemApplyOutcome::EvolutionPending {
-                        pre_text: Some(msg),
-                        from: mon.species,
-                        to,
-                        force: false,
-                        consume: true,
-                    },
-                    None => used(msg, true),
-                }
-            }
+        return match raise_level_with_rare_candy(mon) {
+            Some(new_level) => ItemApplyOutcome::RareCandyLevelUp {
+                new_level,
+                moves: crate::pokemon::move_learning::moves_at_level(mon.species, new_level),
+            },
             None => no_effect(),
         };
     }
@@ -751,52 +743,25 @@ mod tests {
     // -- Rare Candy ----------------------------------------------------------
 
     #[test]
-    fn rare_candy_levels_up_and_learns_moves() {
-        // Bulbasaur learns Leech Seed at level 7.
+    fn rare_candy_defers_new_moves_until_after_the_stats_notice() {
         let mut mon = test_pokemon(Species::Bulbasaur, 6);
+        let before_moves = mon.moves;
+        let before_pp = mon.pp;
         let mut dex = Pokedex::new();
-        match apply_item_to_pokemon(ItemId::RareCandy, &mut mon, &mut dex) {
-            ItemApplyOutcome::Used { message, consume } => {
-                assert!(consume);
-                assert!(message.contains("grew to"), "{message}");
-            }
-            other => panic!("expected Used, got {other:?}"),
-        }
+        assert_eq!(apply_item_to_pokemon(ItemId::RareCandy, &mut mon, &mut dex),
+            ItemApplyOutcome::RareCandyLevelUp { new_level: 7, moves: vec![MoveId::LeechSeed] });
         assert_eq!(mon.level, 7);
-        assert!(mon.moves.contains(&MoveId::LeechSeed));
+        assert_eq!((mon.moves, mon.pp), (before_moves, before_pp));
     }
 
     #[test]
-    fn rare_candy_evolution_goes_through_cutscene() {
-        // Charmander evolves into Charmeleon at level 16.
+    fn rare_candy_defers_evolution_until_the_field_learning_flow_finishes() {
         let mut mon = test_pokemon(Species::Charmander, 15);
         let mut dex = Pokedex::new();
-        match apply_item_to_pokemon(ItemId::RareCandy, &mut mon, &mut dex) {
-            ItemApplyOutcome::EvolutionPending {
-                pre_text,
-                from,
-                to,
-                force,
-                consume,
-            } => {
-                assert!(consume);
-                assert!(!force, "Rare Candy evolutions are B-cancellable");
-                assert_eq!(from, Species::Charmander);
-                assert_eq!(to, Species::Charmeleon);
-                let pre = pre_text.expect("level-up message precedes 'What?'");
-                assert!(pre.contains("grew to"), "{pre}");
-            }
-            other => panic!("expected EvolutionPending, got {other:?}"),
-        }
-        // Not yet applied — the cutscene decides (B-cancel keeps Charmander).
-        assert_eq!(mon.species, Species::Charmander);
-        assert_eq!(mon.level, 16);
+        assert!(matches!(apply_item_to_pokemon(ItemId::RareCandy, &mut mon, &mut dex),
+            ItemApplyOutcome::RareCandyLevelUp { new_level: 16, .. }));
+        assert_eq!((mon.species, mon.level), (Species::Charmander, 16));
         assert!(!dex.is_owned(Species::Charmeleon));
-        // The confirmed path applies the swap + dex (seen+owned).
-        crate::pokemon::evolution::finalize_evolution(&mut mon, &mut dex, Species::Charmeleon);
-        assert_eq!(mon.species, Species::Charmeleon);
-        assert!(dex.is_owned(Species::Charmeleon));
-        assert!(dex.is_seen(Species::Charmeleon));
     }
 
     #[test]
