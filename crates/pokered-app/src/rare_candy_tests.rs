@@ -23,6 +23,9 @@ fn quantity(game: &PokemonGame) -> u8 {
     game.save_data.game_data.bag.get(0).unwrap().1
 }
 fn candy_game(species: Species, level: u8, full: bool) -> PokemonGame {
+    candy_game_with_hp(species, level, full, None)
+}
+fn candy_game_with_hp(species: Species, level: u8, full: bool, hp: Option<u16>) -> PokemonGame {
     let mut game = PokemonGame::new_with_options(
         GameVersion::Red,
         None,
@@ -32,6 +35,7 @@ fn candy_game(species: Species, level: u8, full: bool) -> PokemonGame {
         None,
         false,
         true,
+        #[cfg(feature = "debug-server")]
         None,
     );
     game.save_data = SaveData::new();
@@ -57,6 +61,9 @@ fn candy_game(species: Species, level: u8, full: bool) -> PokemonGame {
     };
     mon.pp = if full { [7, 4, 3, 1] } else { [7, 4, 0, 0] };
     mon.pp_ups = if full { [1, 2, 3, 1] } else { [1, 2, 0, 0] };
+    if let Some(hp) = hp {
+        mon.hp = hp;
+    }
     game.save_data.party.add(mon).unwrap();
     game.save_data
         .party
@@ -378,5 +385,39 @@ fn rare_candy_stats_overlay_preserves_the_selected_current_hp_numbers() {
             }
         }
         assert!(ink > 0, "HP-number region must actually contain ink");
+    });
+}
+
+#[test]
+fn rare_candy_field_revives_a_fainted_mon_before_its_pending_learning_prompt() {
+    on_game_thread(|| {
+        let mut game = candy_game_with_hp(Species::Bulbasaur, 12, true, Some(0));
+        let partner = game.save_data.party.get(1).unwrap().clone();
+        let mon = game.save_data.party.get(0).unwrap();
+        assert_eq!((mon.level, mon.hp, mon.max_hp), (13, 2, 37));
+        assert_eq!(
+            mon.moves,
+            [
+                MoveId::Tackle,
+                MoveId::Growl,
+                MoveId::LeechSeed,
+                MoveId::Cut
+            ]
+        );
+        full_confirm(&mut game);
+        tap(&mut game, GbButton::B);
+        tap(&mut game, GbButton::A);
+        assert_eq!(game.rare_candy_phase(), Some(RareCandyPhase::DidNotLearn));
+        tap(&mut game, GbButton::A);
+        assert_eq!(game.state.screen, GameScreen::Bag);
+        assert_eq!(quantity(&game), 1);
+        assert_eq!(
+            (
+                game.save_data.party.get(0).unwrap().level,
+                game.save_data.party.get(0).unwrap().hp
+            ),
+            (13, 2)
+        );
+        assert_eq!(game.save_data.party.get(1).unwrap(), &partner);
     });
 }

@@ -74,7 +74,9 @@ pub fn use_rare_candy(mon: &mut Pokemon) -> Option<RareCandyResult> {
 /// dialogue. Field menus defer learning until the player reaches LearnMove;
 /// bulk item callers retain `use_rare_candy`'s immediate learning contract.
 pub fn raise_level_with_rare_candy(mon: &mut Pokemon) -> Option<u8> {
-    if mon.hp == 0 || mon.level >= MAX_LEVEL {
+    // The original rejects only level 100. Max-HP growth is also added to
+    // zero current HP, so this level/stat step can revive a fainted Pokemon.
+    if mon.level >= MAX_LEVEL {
         return None;
     }
 
