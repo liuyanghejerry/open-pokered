@@ -155,6 +155,10 @@ pub struct Pokemon {
     pub special: u16,
     pub type1: PokemonType,
     pub type2: PokemonType,
+    /// Original MON_CATCH_RATE byte, also the Gen-2 held-item byte.
+    /// None is legacy JSON absence; explicit zero/non-species bytes are saved data.
+    #[serde(default)]
+    pub catch_rate: Option<u8>,
     pub moves: [MoveId; 4],
     pub pp: [u8; 4],
     /// Number of PP Ups applied to each move slot (0-3 each).
@@ -183,6 +187,13 @@ pub struct Pokemon {
 }
 
 impl Pokemon {
+    /// Resolve legacy absence without replacing any explicit saved byte.
+    pub fn effective_catch_rate(&self) -> u8 {
+        self.catch_rate.unwrap_or_else(|| {
+            pokered_data::pokemon_data::get_base_stats(self.species)
+                .map_or(255, |base| base.catch_rate)
+        })
+    }
     /// The mon's display name: the nickname when set, else the species'
     /// English name from the `lang_data` table. A set nickname decodes into
     /// `out` (a caller-owned stack buffer); species names are `&'static str`
@@ -230,6 +241,7 @@ pub(crate) fn blank_pokemon() -> Pokemon {
         special: 0,
         type1: PokemonType::Normal,
         type2: PokemonType::Normal,
+        catch_rate: Some(pokered_data::pokemon_data::get_base_stats(Species::None).map_or(0, |b| b.catch_rate)),
         moves: [MoveId::None; 4],
         pp: [0; 4],
         pp_ups: [0; 4],
@@ -640,6 +652,7 @@ mod tests {
             special: 50,
             type1: PokemonType::Electric,
             type2: PokemonType::Electric,
+            catch_rate: Some(pokered_data::pokemon_data::get_base_stats(Species::Pikachu).map_or(0, |b| b.catch_rate)),
             moves: [
                 MoveId::Thundershock,
                 MoveId::QuickAttack,

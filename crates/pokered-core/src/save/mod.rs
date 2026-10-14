@@ -249,3 +249,6 @@ impl Default for SaveData {
         Self::new()
     }
 }
+
+#[cfg(test)]
+mod catch_byte_tests;

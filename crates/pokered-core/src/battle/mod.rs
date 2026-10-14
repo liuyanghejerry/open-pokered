@@ -3308,9 +3308,7 @@ learn {learn_name}!")];
         }
         if let Some(ref mut bs) = self.battle_state {
             let enemy = bs.enemy.active_mon();
-            let catch_rate = bs.enemy.transform_catch_rate.unwrap_or_else(|| get_base_stats(enemy.species)
-                .map(|s| s.catch_rate)
-                .unwrap_or(255));
+            let catch_rate = bs.enemy.transform_catch_rate.unwrap_or_else(|| enemy.effective_catch_rate());
             // Snapshot the wild mon in its current (weakened) state before the
             // borrow of `bs` ends, so it can be handed to the party on a catch.
             // A freshly caught mon is the player's own: stamp it with the

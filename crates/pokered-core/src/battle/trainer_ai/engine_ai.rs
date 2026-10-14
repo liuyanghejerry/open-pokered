@@ -205,6 +205,7 @@ mod tests {
             special: 100,
             type1: PokemonType::Normal,
             type2: PokemonType::Normal,
+            catch_rate: Some(pokered_data::pokemon_data::get_base_stats(Species::Tauros).map_or(0, |b| b.catch_rate)),
             moves,
             pp: [10, 10, 10, 10],
             pp_ups: [0; 4],
