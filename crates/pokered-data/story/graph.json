@@ -3352,11 +3352,6 @@
     },
     {
       "from": "script:GameCorner:talkBeauty2",
-      "to": "item:COIN_CASE",
-      "kind": "requires"
-    },
-    {
-      "from": "script:GameCorner:talkBeauty2",
       "to": "map:GameCorner",
       "kind": "triggered_at"
     },
