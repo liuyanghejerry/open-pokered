@@ -8981,18 +8981,9 @@ mod gift_dialogue_debug_tests {
         assert!(game.debug_condition_met("control_ready"));
     }
 
-    #[test]
-    fn skip_dialogue_stops_at_gift_question_without_selecting_yes() {
+    fn gift_game_at_control_ready(neutral_frames: usize) -> PokemonGame {
         let mut game = PokemonGame::new_with_options(
-            GameVersion::Red,
-            None,
-            None,
-            None,
-            false,
-            None,
-            false,
-            true,
-            None,
+            GameVersion::Red, None, None, None, false, None, false, true, None,
         );
         game.state.screen = GameScreen::Overworld;
         game.save_data = SaveData::new();
@@ -9004,10 +8995,25 @@ mod gift_dialogue_debug_tests {
         game.overworld.state.player.x = 4;
         game.overworld.state.player.y = 4;
         game.overworld.state.player.facing = pokered_core::overworld::Direction::Up;
-        game.update(&InputState::new());
+        for _ in 0..neutral_frames {
+            game.update(&InputState::new());
+        }
+        assert!(game.debug_condition_met("control_ready"));
+        game
+    }
+
+    fn tap_gift_a(game: &mut PokemonGame) {
         let mut a = InputState::new();
         a.press(GbButton::A);
+        // JoypadOverworld runs once per two hardware frames. Cover both
+        // phases so a one-frame pulse cannot land only in its wait frame.
         game.update(&a);
+        game.update(&a);
+        game.update(&InputState::new());
+        game.update(&InputState::new());
+    }
+
+    fn skip_to_gift_question(game: &mut PokemonGame) {
         for _ in 0..10 {
             for _ in 0..8 {
                 game.update(&InputState::new());
@@ -9017,19 +9023,87 @@ mod gift_dialogue_debug_tests {
             ));
             assert!(response.ok);
             if game.overworld.pending_choice.is_some() {
-                break;
+                return;
             }
         }
-        assert_eq!(
-            game.overworld
-                .pending_choice
-                .as_ref()
-                .expect("nickname prompt")
-                .options,
-            ["YES", "NO"]
-        );
+        panic!("nickname prompt never opened");
+    }
+
+    fn assert_gift_question_unanswered(game: &PokemonGame) {
+        let choice = game.overworld.pending_choice.as_ref().expect("nickname prompt");
+        assert_eq!(choice.options, ["YES", "NO"]);
+        assert_eq!(choice.selected, 0);
         assert!(!game.overworld.is_naming_screen_active());
         assert!(game.save_data.party.is_empty());
+        assert!(!game.overworld.unified_flags().get_flag("EVENT_GOT_EEVEE"));
+    }
+
+    #[test]
+    fn skip_dialogue_stops_at_gift_question_without_selecting_yes() {
+        // A fresh map can be in either phase of the two-VBlank field loop.
+        for neutral_frames in [1, 2] {
+            let mut game = gift_game_at_control_ready(neutral_frames);
+            tap_gift_a(&mut game);
+            assert!(game.overworld.pending_dialogue.is_some(), "gift interaction must start");
+            skip_to_gift_question(&mut game);
+            assert_gift_question_unanswered(&game);
+            let question = game.debug_state_snapshot()["dialogue"].clone();
+            let response = game.handle_debug_command(pokered_debug_server::DebugCommand::Game(
+                pokered_debug_server::GameDebugCommand::SkipDialogue,
+            ));
+            assert!(response.ok);
+            assert_eq!(response.data.as_ref().unwrap()["stepped"], 0);
+            assert_eq!(game.debug_state_snapshot()["dialogue"], question);
+            assert_gift_question_unanswered(&game);
+        }
+    }
+
+    #[test]
+    fn gift_question_matches_ordinary_input_and_waits_for_explicit_answer() {
+        for neutral_frames in [1, 2] {
+            let mut skipped = gift_game_at_control_ready(neutral_frames);
+            tap_gift_a(&mut skipped);
+            skip_to_gift_question(&mut skipped);
+            assert_gift_question_unanswered(&skipped);
+
+            let mut ordinary = gift_game_at_control_ready(neutral_frames);
+            tap_gift_a(&mut ordinary);
+            for _ in 0..300 {
+                if ordinary.overworld.pending_choice.is_some() {
+                    break;
+                }
+                tap_gift_a(&mut ordinary);
+            }
+            assert_gift_question_unanswered(&ordinary);
+            let expected = skipped.debug_state_snapshot();
+            let actual = ordinary.debug_state_snapshot();
+            for key in ["dialogue", "choice", "party", "active_script_effect", "script_running"] {
+                assert_eq!(actual[key], expected[key], "question state: {key}");
+            }
+            for _ in 0..8 {
+                ordinary.update(&InputState::new());
+            }
+            assert_gift_question_unanswered(&ordinary);
+
+            let mut down = InputState::new();
+            down.press(GbButton::Down);
+            ordinary.update(&down);
+            assert_eq!(ordinary.overworld.pending_choice.as_ref().unwrap().selected, 1);
+            tap_gift_a(&mut ordinary);
+            for _ in 0..100 {
+                ordinary.update(&InputState::new());
+                if ordinary.debug_condition_met("control_ready") {
+                    break;
+                }
+            }
+            assert!(ordinary.debug_condition_met("control_ready"));
+            assert!(!ordinary.overworld.is_naming_screen_active());
+            assert_eq!(ordinary.save_data.party.count(), 1);
+            let gift = ordinary.save_data.party.get(0).unwrap();
+            assert_eq!(gift.species, pokered_data::species::Species::Eevee);
+            assert_eq!(gift.level, 25);
+            assert!(ordinary.overworld.unified_flags().get_flag("EVENT_GOT_EEVEE"));
+        }
     }
 }
 
