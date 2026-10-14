@@ -1,0 +1,1150 @@
+{
+  "scope": "Actual ordinary NPC battle + ordinary SAVE. Four cases repeated twice per provider. All preparations happen before input; no battle-state/EXP writes during verification. Matched native scenes and frames from master018 and fix98c98a88. Original scene timing is independent; no ROM/native frame or RNG alignment claim.",
+  "source_revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+  "native_capture_script_sha256": "f7dfee39e17cdc74a8fe94f3f1ad395d258793766521d752b9f27885e795dfce",
+  "builds": {
+    "before": {
+      "source_commit": "018bd130ff44045e993c1cd992285fffda70341e",
+      "binary_sha256": "68b3a576fac5be948f38da0ca8c71c24e423b393de0803022e69d4ddddf272c3",
+      "profile": "dev opt0 debug0; debug-server",
+      "clean_status": ""
+    },
+    "after": {
+      "source_commit": "98c98a880230f58641496b37b21df8909ab13a18",
+      "binary_sha256": "9a05442209c6b8c7dbcab88b0bad9c6c385dcb6dbb4141a1fbc2dfa5110cec3a",
+      "profile": "dev opt0 debug0; debug-server",
+      "clean_status": ""
+    }
+  },
+  "records": [
+    {
+      "case": "solo",
+      "repeat": 1,
+      "source_capture": "audit-872-original-faint-exp-solo-1-zry3o9vf",
+      "native_captures": {
+        "before": "audit-873-native-exp-notices-before-solo-1-7ez03rgn",
+        "after": "audit-873-native-exp-notices-after-solo-1-7qqgxsao"
+      },
+      "normal_save_all": true,
+      "party88_bytes_match_source": true,
+      "full_native_sram_identical": true,
+      "input_actions_identical": true,
+      "fixture_sha256": "6ba9ad98f697488d64e6b98f884027e0b79ef93c23a3cf8f4f4265c0822288eb",
+      "native_sram_sha256": "bc4a4797ff9c8af837a4d62be73743e35fb4ed81c6e9bf2dc7a126d7933dc0fb",
+      "source_sram_sha256": "da92aac5cc758ec4669bb55c1961042c9067a14bc676b8ef9093162fea891a20",
+      "final_exp": [
+        5593,
+        135
+      ],
+      "source_awards": [
+        {
+          "exp_all_pass": 0,
+          "traded_boost": 0,
+          "amount": 66
+        },
+        {
+          "exp_all_pass": 0,
+          "traded_boost": 0,
+          "amount": 67
+        }
+      ],
+      "native_before_notices": [
+        {
+          "key": [
+            "Weedle",
+            2
+          ],
+          "frame": 1208,
+          "message": "BULBASAUR gained 66 exp.\npoints!",
+          "png": "notice-Weedle-2.png"
+        },
+        {
+          "key": [
+            "Caterpie",
+            2
+          ],
+          "frame": 1820,
+          "message": "BULBASAUR gained 67 exp.\npoints!",
+          "png": "notice-Caterpie-2.png"
+        }
+      ],
+      "native_after_notices": [
+        {
+          "key": [
+            "Weedle",
+            2
+          ],
+          "frame": 1208,
+          "message": "BULBASAUR gained 66 exp.\npoints!",
+          "png": "notice-Weedle-2.png"
+        },
+        {
+          "key": [
+            "Caterpie",
+            2
+          ],
+          "frame": 1820,
+          "message": "BULBASAUR gained 67 exp.\npoints!",
+          "png": "notice-Caterpie-2.png"
+        }
+      ]
+    },
+    {
+      "case": "solo",
+      "repeat": 2,
+      "source_capture": "audit-872-original-faint-exp-solo-2-aejm4nuj",
+      "native_captures": {
+        "before": "audit-873-native-exp-notices-before-solo-2-fhlyxufn",
+        "after": "audit-873-native-exp-notices-after-solo-2-g4l_vdrn"
+      },
+      "normal_save_all": true,
+      "party88_bytes_match_source": true,
+      "full_native_sram_identical": true,
+      "input_actions_identical": true,
+      "fixture_sha256": "6ba9ad98f697488d64e6b98f884027e0b79ef93c23a3cf8f4f4265c0822288eb",
+      "native_sram_sha256": "bc4a4797ff9c8af837a4d62be73743e35fb4ed81c6e9bf2dc7a126d7933dc0fb",
+      "source_sram_sha256": "da92aac5cc758ec4669bb55c1961042c9067a14bc676b8ef9093162fea891a20",
+      "final_exp": [
+        5593,
+        135
+      ],
+      "source_awards": [
+        {
+          "exp_all_pass": 0,
+          "traded_boost": 0,
+          "amount": 66
+        },
+        {
+          "exp_all_pass": 0,
+          "traded_boost": 0,
+          "amount": 67
+        }
+      ],
+      "native_before_notices": [
+        {
+          "key": [
+            "Weedle",
+            2
+          ],
+          "frame": 1208,
+          "message": "BULBASAUR gained 66 exp.\npoints!",
+          "png": "notice-Weedle-2.png"
+        },
+        {
+          "key": [
+            "Caterpie",
+            2
+          ],
+          "frame": 1820,
+          "message": "BULBASAUR gained 67 exp.\npoints!",
+          "png": "notice-Caterpie-2.png"
+        }
+      ],
+      "native_after_notices": [
+        {
+          "key": [
+            "Weedle",
+            2
+          ],
+          "frame": 1208,
+          "message": "BULBASAUR gained 66 exp.\npoints!",
+          "png": "notice-Weedle-2.png"
+        },
+        {
+          "key": [
+            "Caterpie",
+            2
+          ],
+          "frame": 1820,
+          "message": "BULBASAUR gained 67 exp.\npoints!",
+          "png": "notice-Caterpie-2.png"
+        }
+      ]
+    },
+    {
+      "case": "exp-all",
+      "repeat": 1,
+      "source_capture": "audit-872-original-faint-exp-exp-all-1-dyl6sfsx",
+      "native_captures": {
+        "before": "audit-873-native-exp-notices-before-exp-all-1-wa8jxiko",
+        "after": "audit-873-native-exp-notices-after-exp-all-1-6eobb9i2"
+      },
+      "normal_save_all": true,
+      "party88_bytes_match_source": true,
+      "full_native_sram_identical": true,
+      "input_actions_identical": true,
+      "fixture_sha256": "008948d501cb7818a45ec646f84dda599552c09b90e519df1ae2abd87e9e8349",
+      "native_sram_sha256": "7a62c13de00c5b8063d4f7a43a12409eb503559e6a52055f715ec0eb63e8fc08",
+      "source_sram_sha256": "a4cb8b8c8e63403a6e703a4728781c7b0b6423abc3be23ac8d41c394b9352a56",
+      "final_exp": [
+        5558,
+        167
+      ],
+      "source_awards": [
+        {
+          "exp_all_pass": 0,
+          "traded_boost": 0,
+          "amount": 33
+        },
+        {
+          "exp_all_pass": 1,
+          "traded_boost": 0,
+          "amount": 16
+        },
+        {
+          "exp_all_pass": 1,
+          "traded_boost": 0,
+          "amount": 16
+        },
+        {
+          "exp_all_pass": 0,
+          "traded_boost": 0,
+          "amount": 33
+        },
+        {
+          "exp_all_pass": 1,
+          "traded_boost": 0,
+          "amount": 16
+        },
+        {
+          "exp_all_pass": 1,
+          "traded_boost": 0,
+          "amount": 16
+        }
+      ],
+      "native_before_notices": [
+        {
+          "key": [
+            "Weedle",
+            2
+          ],
+          "frame": 1208,
+          "message": "BULBASAUR gained 33 exp.\npoints!",
+          "png": "notice-Weedle-2.png"
+        },
+        {
+          "key": [
+            "Weedle",
+            3
+          ],
+          "frame": 1476,
+          "message": "BULBASAUR gained 16 exp.\npoints!",
+          "png": "notice-Weedle-3.png"
+        },
+        {
+          "key": [
+            "Weedle",
+            4
+          ],
+          "frame": 1744,
+          "message": "BULBASAUR gained 16 exp.\npoints!",
+          "png": "notice-Weedle-4.png"
+        },
+        {
+          "key": [
+            "Caterpie",
+            2
+          ],
+          "frame": 2356,
+          "message": "BULBASAUR gained 33 exp.\npoints!",
+          "png": "notice-Caterpie-2.png"
+        },
+        {
+          "key": [
+            "Caterpie",
+            3
+          ],
+          "frame": 2624,
+          "message": "BULBASAUR gained 16 exp.\npoints!",
+          "png": "notice-Caterpie-3.png"
+        },
+        {
+          "key": [
+            "Caterpie",
+            4
+          ],
+          "frame": 2892,
+          "message": "BULBASAUR gained 16 exp.\npoints!",
+          "png": "notice-Caterpie-4.png"
+        }
+      ],
+      "native_after_notices": [
+        {
+          "key": [
+            "Weedle",
+            2
+          ],
+          "frame": 1208,
+          "message": "BULBASAUR gained 33 exp.\npoints!",
+          "png": "notice-Weedle-2.png"
+        },
+        {
+          "key": [
+            "Weedle",
+            3
+          ],
+          "frame": 1476,
+          "message": "BULBASAUR gained with\nEXP.ALL, 16 exp. points!",
+          "png": "notice-Weedle-3.png"
+        },
+        {
+          "key": [
+            "Weedle",
+            4
+          ],
+          "frame": 1744,
+          "message": "BULBASAUR gained with\nEXP.ALL, 16 exp. points!",
+          "png": "notice-Weedle-4.png"
+        },
+        {
+          "key": [
+            "Caterpie",
+            2
+          ],
+          "frame": 2356,
+          "message": "BULBASAUR gained 33 exp.\npoints!",
+          "png": "notice-Caterpie-2.png"
+        },
+        {
+          "key": [
+            "Caterpie",
+            3
+          ],
+          "frame": 2624,
+          "message": "BULBASAUR gained with\nEXP.ALL, 16 exp. points!",
+          "png": "notice-Caterpie-3.png"
+        },
+        {
+          "key": [
+            "Caterpie",
+            4
+          ],
+          "frame": 2892,
+          "message": "BULBASAUR gained with\nEXP.ALL, 16 exp. points!",
+          "png": "notice-Caterpie-4.png"
+        }
+      ]
+    },
+    {
+      "case": "exp-all",
+      "repeat": 2,
+      "source_capture": "audit-872-original-faint-exp-exp-all-2-0cjs63ia",
+      "native_captures": {
+        "before": "audit-873-native-exp-notices-before-exp-all-2-67h3lf0l",
+        "after": "audit-873-native-exp-notices-after-exp-all-2-7mjou025"
+      },
+      "normal_save_all": true,
+      "party88_bytes_match_source": true,
+      "full_native_sram_identical": true,
+      "input_actions_identical": true,
+      "fixture_sha256": "008948d501cb7818a45ec646f84dda599552c09b90e519df1ae2abd87e9e8349",
+      "native_sram_sha256": "7a62c13de00c5b8063d4f7a43a12409eb503559e6a52055f715ec0eb63e8fc08",
+      "source_sram_sha256": "a4cb8b8c8e63403a6e703a4728781c7b0b6423abc3be23ac8d41c394b9352a56",
+      "final_exp": [
+        5558,
+        167
+      ],
+      "source_awards": [
+        {
+          "exp_all_pass": 0,
+          "traded_boost": 0,
+          "amount": 33
+        },
+        {
+          "exp_all_pass": 1,
+          "traded_boost": 0,
+          "amount": 16
+        },
+        {
+          "exp_all_pass": 1,
+          "traded_boost": 0,
+          "amount": 16
+        },
+        {
+          "exp_all_pass": 0,
+          "traded_boost": 0,
+          "amount": 33
+        },
+        {
+          "exp_all_pass": 1,
+          "traded_boost": 0,
+          "amount": 16
+        },
+        {
+          "exp_all_pass": 1,
+          "traded_boost": 0,
+          "amount": 16
+        }
+      ],
+      "native_before_notices": [
+        {
+          "key": [
+            "Weedle",
+            2
+          ],
+          "frame": 1208,
+          "message": "BULBASAUR gained 33 exp.\npoints!",
+          "png": "notice-Weedle-2.png"
+        },
+        {
+          "key": [
+            "Weedle",
+            3
+          ],
+          "frame": 1476,
+          "message": "BULBASAUR gained 16 exp.\npoints!",
+          "png": "notice-Weedle-3.png"
+        },
+        {
+          "key": [
+            "Weedle",
+            4
+          ],
+          "frame": 1744,
+          "message": "BULBASAUR gained 16 exp.\npoints!",
+          "png": "notice-Weedle-4.png"
+        },
+        {
+          "key": [
+            "Caterpie",
+            2
+          ],
+          "frame": 2356,
+          "message": "BULBASAUR gained 33 exp.\npoints!",
+          "png": "notice-Caterpie-2.png"
+        },
+        {
+          "key": [
+            "Caterpie",
+            3
+          ],
+          "frame": 2624,
+          "message": "BULBASAUR gained 16 exp.\npoints!",
+          "png": "notice-Caterpie-3.png"
+        },
+        {
+          "key": [
+            "Caterpie",
+            4
+          ],
+          "frame": 2892,
+          "message": "BULBASAUR gained 16 exp.\npoints!",
+          "png": "notice-Caterpie-4.png"
+        }
+      ],
+      "native_after_notices": [
+        {
+          "key": [
+            "Weedle",
+            2
+          ],
+          "frame": 1208,
+          "message": "BULBASAUR gained 33 exp.\npoints!",
+          "png": "notice-Weedle-2.png"
+        },
+        {
+          "key": [
+            "Weedle",
+            3
+          ],
+          "frame": 1476,
+          "message": "BULBASAUR gained with\nEXP.ALL, 16 exp. points!",
+          "png": "notice-Weedle-3.png"
+        },
+        {
+          "key": [
+            "Weedle",
+            4
+          ],
+          "frame": 1744,
+          "message": "BULBASAUR gained with\nEXP.ALL, 16 exp. points!",
+          "png": "notice-Weedle-4.png"
+        },
+        {
+          "key": [
+            "Caterpie",
+            2
+          ],
+          "frame": 2356,
+          "message": "BULBASAUR gained 33 exp.\npoints!",
+          "png": "notice-Caterpie-2.png"
+        },
+        {
+          "key": [
+            "Caterpie",
+            3
+          ],
+          "frame": 2624,
+          "message": "BULBASAUR gained with\nEXP.ALL, 16 exp. points!",
+          "png": "notice-Caterpie-3.png"
+        },
+        {
+          "key": [
+            "Caterpie",
+            4
+          ],
+          "frame": 2892,
+          "message": "BULBASAUR gained with\nEXP.ALL, 16 exp. points!",
+          "png": "notice-Caterpie-4.png"
+        }
+      ]
+    },
+    {
+      "case": "traded",
+      "repeat": 1,
+      "source_capture": "audit-872-original-faint-exp-traded-1-i25y4fp3",
+      "native_captures": {
+        "before": "audit-873-native-exp-notices-before-traded-1-ipflveyc",
+        "after": "audit-873-native-exp-notices-after-traded-1-m24mdeeb"
+      },
+      "normal_save_all": true,
+      "party88_bytes_match_source": true,
+      "full_native_sram_identical": true,
+      "input_actions_identical": true,
+      "fixture_sha256": "1824274e397763a20b45a061a2ff4da0f3d8fa2e5a7e086511543b8967abb695",
+      "native_sram_sha256": "21da22db3512469a29790f70721bf22518cfc07ad61a63d2cccf13d373fb2a64",
+      "source_sram_sha256": "3b287182cdc7a2f405dfe4558e4be989a6fb384a29fd5a5aa3a238437611725f",
+      "final_exp": [
+        5659,
+        135
+      ],
+      "source_awards": [
+        {
+          "exp_all_pass": 0,
+          "traded_boost": 1,
+          "amount": 99
+        },
+        {
+          "exp_all_pass": 0,
+          "traded_boost": 1,
+          "amount": 100
+        }
+      ],
+      "native_before_notices": [
+        {
+          "key": [
+            "Weedle",
+            2
+          ],
+          "frame": 1208,
+          "message": "BULBASAUR gained 99 exp.\npoints!",
+          "png": "notice-Weedle-2.png"
+        },
+        {
+          "key": [
+            "Caterpie",
+            2
+          ],
+          "frame": 1820,
+          "message": "BULBASAUR gained 100 exp.\npoints!",
+          "png": "notice-Caterpie-2.png"
+        }
+      ],
+      "native_after_notices": [
+        {
+          "key": [
+            "Weedle",
+            2
+          ],
+          "frame": 1208,
+          "message": "BULBASAUR gained a boosted\n99 exp. points!",
+          "png": "notice-Weedle-2.png"
+        },
+        {
+          "key": [
+            "Caterpie",
+            2
+          ],
+          "frame": 1820,
+          "message": "BULBASAUR gained a boosted\n100 exp. points!",
+          "png": "notice-Caterpie-2.png"
+        }
+      ]
+    },
+    {
+      "case": "traded",
+      "repeat": 2,
+      "source_capture": "audit-872-original-faint-exp-traded-2-gfrk1pao",
+      "native_captures": {
+        "before": "audit-873-native-exp-notices-before-traded-2-t8hbw5cw",
+        "after": "audit-873-native-exp-notices-after-traded-2-r1wbigfd"
+      },
+      "normal_save_all": true,
+      "party88_bytes_match_source": true,
+      "full_native_sram_identical": true,
+      "input_actions_identical": true,
+      "fixture_sha256": "1824274e397763a20b45a061a2ff4da0f3d8fa2e5a7e086511543b8967abb695",
+      "native_sram_sha256": "21da22db3512469a29790f70721bf22518cfc07ad61a63d2cccf13d373fb2a64",
+      "source_sram_sha256": "3b287182cdc7a2f405dfe4558e4be989a6fb384a29fd5a5aa3a238437611725f",
+      "final_exp": [
+        5659,
+        135
+      ],
+      "source_awards": [
+        {
+          "exp_all_pass": 0,
+          "traded_boost": 1,
+          "amount": 99
+        },
+        {
+          "exp_all_pass": 0,
+          "traded_boost": 1,
+          "amount": 100
+        }
+      ],
+      "native_before_notices": [
+        {
+          "key": [
+            "Weedle",
+            2
+          ],
+          "frame": 1208,
+          "message": "BULBASAUR gained 99 exp.\npoints!",
+          "png": "notice-Weedle-2.png"
+        },
+        {
+          "key": [
+            "Caterpie",
+            2
+          ],
+          "frame": 1820,
+          "message": "BULBASAUR gained 100 exp.\npoints!",
+          "png": "notice-Caterpie-2.png"
+        }
+      ],
+      "native_after_notices": [
+        {
+          "key": [
+            "Weedle",
+            2
+          ],
+          "frame": 1208,
+          "message": "BULBASAUR gained a boosted\n99 exp. points!",
+          "png": "notice-Weedle-2.png"
+        },
+        {
+          "key": [
+            "Caterpie",
+            2
+          ],
+          "frame": 1820,
+          "message": "BULBASAUR gained a boosted\n100 exp. points!",
+          "png": "notice-Caterpie-2.png"
+        }
+      ]
+    },
+    {
+      "case": "traded-exp-all",
+      "repeat": 1,
+      "source_capture": "audit-872-original-faint-exp-traded-exp-all-1-oiwy0j8e",
+      "native_captures": {
+        "before": "audit-873-native-exp-notices-before-traded-exp-all-1-glsh58km",
+        "after": "audit-873-native-exp-notices-after-traded-exp-all-1-kkwpovh2"
+      },
+      "normal_save_all": true,
+      "party88_bytes_match_source": true,
+      "full_native_sram_identical": true,
+      "input_actions_identical": true,
+      "fixture_sha256": "ca28918b5a03d2a9646dde86f2dbf448467c018354f274c38d54abc189b36bf1",
+      "native_sram_sha256": "fb40dd3aa496f581893113786ff3966b824bd5fc8d656dd7bcf0d0a6db7cc1bb",
+      "source_sram_sha256": "4a80713b40f9cf34e2f639fde41a48ab299cdde6e56fe153667d9caa3ca01dda",
+      "final_exp": [
+        5606,
+        167
+      ],
+      "source_awards": [
+        {
+          "exp_all_pass": 0,
+          "traded_boost": 1,
+          "amount": 49
+        },
+        {
+          "exp_all_pass": 1,
+          "traded_boost": 1,
+          "amount": 24
+        },
+        {
+          "exp_all_pass": 1,
+          "traded_boost": 0,
+          "amount": 16
+        },
+        {
+          "exp_all_pass": 0,
+          "traded_boost": 1,
+          "amount": 49
+        },
+        {
+          "exp_all_pass": 1,
+          "traded_boost": 1,
+          "amount": 24
+        },
+        {
+          "exp_all_pass": 1,
+          "traded_boost": 0,
+          "amount": 16
+        }
+      ],
+      "native_before_notices": [
+        {
+          "key": [
+            "Weedle",
+            2
+          ],
+          "frame": 1208,
+          "message": "BULBASAUR gained 49 exp.\npoints!",
+          "png": "notice-Weedle-2.png"
+        },
+        {
+          "key": [
+            "Weedle",
+            3
+          ],
+          "frame": 1476,
+          "message": "BULBASAUR gained 24 exp.\npoints!",
+          "png": "notice-Weedle-3.png"
+        },
+        {
+          "key": [
+            "Weedle",
+            4
+          ],
+          "frame": 1744,
+          "message": "BULBASAUR gained 16 exp.\npoints!",
+          "png": "notice-Weedle-4.png"
+        },
+        {
+          "key": [
+            "Caterpie",
+            2
+          ],
+          "frame": 2356,
+          "message": "BULBASAUR gained 49 exp.\npoints!",
+          "png": "notice-Caterpie-2.png"
+        },
+        {
+          "key": [
+            "Caterpie",
+            3
+          ],
+          "frame": 2624,
+          "message": "BULBASAUR gained 24 exp.\npoints!",
+          "png": "notice-Caterpie-3.png"
+        },
+        {
+          "key": [
+            "Caterpie",
+            4
+          ],
+          "frame": 2892,
+          "message": "BULBASAUR gained 16 exp.\npoints!",
+          "png": "notice-Caterpie-4.png"
+        }
+      ],
+      "native_after_notices": [
+        {
+          "key": [
+            "Weedle",
+            2
+          ],
+          "frame": 1208,
+          "message": "BULBASAUR gained a boosted\n49 exp. points!",
+          "png": "notice-Weedle-2.png"
+        },
+        {
+          "key": [
+            "Weedle",
+            3
+          ],
+          "frame": 1476,
+          "message": "BULBASAUR gained with\nEXP.ALL, 24 exp. points!",
+          "png": "notice-Weedle-3.png"
+        },
+        {
+          "key": [
+            "Weedle",
+            4
+          ],
+          "frame": 1744,
+          "message": "BULBASAUR gained with\nEXP.ALL, 16 exp. points!",
+          "png": "notice-Weedle-4.png"
+        },
+        {
+          "key": [
+            "Caterpie",
+            2
+          ],
+          "frame": 2356,
+          "message": "BULBASAUR gained a boosted\n49 exp. points!",
+          "png": "notice-Caterpie-2.png"
+        },
+        {
+          "key": [
+            "Caterpie",
+            3
+          ],
+          "frame": 2624,
+          "message": "BULBASAUR gained with\nEXP.ALL, 24 exp. points!",
+          "png": "notice-Caterpie-3.png"
+        },
+        {
+          "key": [
+            "Caterpie",
+            4
+          ],
+          "frame": 2892,
+          "message": "BULBASAUR gained with\nEXP.ALL, 16 exp. points!",
+          "png": "notice-Caterpie-4.png"
+        }
+      ]
+    },
+    {
+      "case": "traded-exp-all",
+      "repeat": 2,
+      "source_capture": "audit-872-original-faint-exp-traded-exp-all-2-6yh3_mqf",
+      "native_captures": {
+        "before": "audit-873-native-exp-notices-before-traded-exp-all-2-14zv28f7",
+        "after": "audit-873-native-exp-notices-after-traded-exp-all-2-8wf15lsv"
+      },
+      "normal_save_all": true,
+      "party88_bytes_match_source": true,
+      "full_native_sram_identical": true,
+      "input_actions_identical": true,
+      "fixture_sha256": "ca28918b5a03d2a9646dde86f2dbf448467c018354f274c38d54abc189b36bf1",
+      "native_sram_sha256": "fb40dd3aa496f581893113786ff3966b824bd5fc8d656dd7bcf0d0a6db7cc1bb",
+      "source_sram_sha256": "4a80713b40f9cf34e2f639fde41a48ab299cdde6e56fe153667d9caa3ca01dda",
+      "final_exp": [
+        5606,
+        167
+      ],
+      "source_awards": [
+        {
+          "exp_all_pass": 0,
+          "traded_boost": 1,
+          "amount": 49
+        },
+        {
+          "exp_all_pass": 1,
+          "traded_boost": 1,
+          "amount": 24
+        },
+        {
+          "exp_all_pass": 1,
+          "traded_boost": 0,
+          "amount": 16
+        },
+        {
+          "exp_all_pass": 0,
+          "traded_boost": 1,
+          "amount": 49
+        },
+        {
+          "exp_all_pass": 1,
+          "traded_boost": 1,
+          "amount": 24
+        },
+        {
+          "exp_all_pass": 1,
+          "traded_boost": 0,
+          "amount": 16
+        }
+      ],
+      "native_before_notices": [
+        {
+          "key": [
+            "Weedle",
+            2
+          ],
+          "frame": 1208,
+          "message": "BULBASAUR gained 49 exp.\npoints!",
+          "png": "notice-Weedle-2.png"
+        },
+        {
+          "key": [
+            "Weedle",
+            3
+          ],
+          "frame": 1476,
+          "message": "BULBASAUR gained 24 exp.\npoints!",
+          "png": "notice-Weedle-3.png"
+        },
+        {
+          "key": [
+            "Weedle",
+            4
+          ],
+          "frame": 1744,
+          "message": "BULBASAUR gained 16 exp.\npoints!",
+          "png": "notice-Weedle-4.png"
+        },
+        {
+          "key": [
+            "Caterpie",
+            2
+          ],
+          "frame": 2356,
+          "message": "BULBASAUR gained 49 exp.\npoints!",
+          "png": "notice-Caterpie-2.png"
+        },
+        {
+          "key": [
+            "Caterpie",
+            3
+          ],
+          "frame": 2624,
+          "message": "BULBASAUR gained 24 exp.\npoints!",
+          "png": "notice-Caterpie-3.png"
+        },
+        {
+          "key": [
+            "Caterpie",
+            4
+          ],
+          "frame": 2892,
+          "message": "BULBASAUR gained 16 exp.\npoints!",
+          "png": "notice-Caterpie-4.png"
+        }
+      ],
+      "native_after_notices": [
+        {
+          "key": [
+            "Weedle",
+            2
+          ],
+          "frame": 1208,
+          "message": "BULBASAUR gained a boosted\n49 exp. points!",
+          "png": "notice-Weedle-2.png"
+        },
+        {
+          "key": [
+            "Weedle",
+            3
+          ],
+          "frame": 1476,
+          "message": "BULBASAUR gained with\nEXP.ALL, 24 exp. points!",
+          "png": "notice-Weedle-3.png"
+        },
+        {
+          "key": [
+            "Weedle",
+            4
+          ],
+          "frame": 1744,
+          "message": "BULBASAUR gained with\nEXP.ALL, 16 exp. points!",
+          "png": "notice-Weedle-4.png"
+        },
+        {
+          "key": [
+            "Caterpie",
+            2
+          ],
+          "frame": 2356,
+          "message": "BULBASAUR gained a boosted\n49 exp. points!",
+          "png": "notice-Caterpie-2.png"
+        },
+        {
+          "key": [
+            "Caterpie",
+            3
+          ],
+          "frame": 2624,
+          "message": "BULBASAUR gained with\nEXP.ALL, 24 exp. points!",
+          "png": "notice-Caterpie-3.png"
+        },
+        {
+          "key": [
+            "Caterpie",
+            4
+          ],
+          "frame": 2892,
+          "message": "BULBASAUR gained with\nEXP.ALL, 16 exp. points!",
+          "png": "notice-Caterpie-4.png"
+        }
+      ]
+    }
+  ],
+  "repeats": [
+    {
+      "case": "solo",
+      "provider": "before",
+      "actions_states_png_sram_identical": true,
+      "png_sha256": {
+        "saved.png": "addf0211d2f3a54d88c3c96ef2d40b73ff56ef5b597abd30d3d5180b63836ced",
+        "notice-Caterpie-2.png": "97090112b70c398143a43c0b698028a8aa33d6eece7a8a666019ff2494bf1888",
+        "notice-Weedle-2.png": "2b2e6c3557c763cb177bcad7483f73ef50f1dcd5a214b67e13ecb9bb4ae64cf1",
+        "after.png": "f42e0b777619c9ff010fef8be26802701149be065644a55d5a40f43dea47ca8e"
+      }
+    },
+    {
+      "case": "solo",
+      "provider": "after",
+      "actions_states_png_sram_identical": true,
+      "png_sha256": {
+        "saved.png": "addf0211d2f3a54d88c3c96ef2d40b73ff56ef5b597abd30d3d5180b63836ced",
+        "notice-Caterpie-2.png": "97090112b70c398143a43c0b698028a8aa33d6eece7a8a666019ff2494bf1888",
+        "notice-Weedle-2.png": "2b2e6c3557c763cb177bcad7483f73ef50f1dcd5a214b67e13ecb9bb4ae64cf1",
+        "after.png": "f42e0b777619c9ff010fef8be26802701149be065644a55d5a40f43dea47ca8e"
+      }
+    },
+    {
+      "case": "solo",
+      "provider": "original",
+      "actions_states_png_sram_identical": true
+    },
+    {
+      "case": "exp-all",
+      "provider": "before",
+      "actions_states_png_sram_identical": true,
+      "png_sha256": {
+        "saved.png": "addf0211d2f3a54d88c3c96ef2d40b73ff56ef5b597abd30d3d5180b63836ced",
+        "notice-Weedle-4.png": "ac69278928afabd88edd03afd2fbcb64fbb1a90e5989120ec5e0bb1bb61b0c80",
+        "notice-Weedle-3.png": "8e456052a9c096888d401b66c09a781c82a0a5ca025ec74222737e145d7b27fc",
+        "notice-Caterpie-3.png": "29ddb7ceafd72499ed8340ab1c12286b005b190d00c6a55ed05437bc875953c4",
+        "notice-Caterpie-4.png": "d3f5e6ead38bd1a59144c53d0bedbd3e7b6c35132bc309c3169778bf7e94bfd9",
+        "notice-Caterpie-2.png": "70cf47da93ffe639e441d24e6e523924370083f8095dba6662f361c4f698e59e",
+        "notice-Weedle-2.png": "ae4bf0e4a0457319e190f34bf5bc9f9614646a8b55960ff557c93c5a2787f36c",
+        "after.png": "f42e0b777619c9ff010fef8be26802701149be065644a55d5a40f43dea47ca8e"
+      }
+    },
+    {
+      "case": "exp-all",
+      "provider": "after",
+      "actions_states_png_sram_identical": true,
+      "png_sha256": {
+        "saved.png": "addf0211d2f3a54d88c3c96ef2d40b73ff56ef5b597abd30d3d5180b63836ced",
+        "notice-Weedle-4.png": "e0a1b35e2e484b569a963108ace206945e20d33238a79a94d404cc8ccc816e3c",
+        "notice-Weedle-3.png": "45c963d92735ee89c6af8803c8e351d85ffee9fae2ce49da6a854924e230b4ae",
+        "notice-Caterpie-3.png": "3c09088287e40b0324c4ecbbfac1707540b66fb87cb8ea72c0c3a3f7d6abad47",
+        "notice-Caterpie-4.png": "20673c029adadc013c747d0f3d83466abe4ddeee30fd458841db19a62a7a35fb",
+        "notice-Caterpie-2.png": "70cf47da93ffe639e441d24e6e523924370083f8095dba6662f361c4f698e59e",
+        "notice-Weedle-2.png": "ae4bf0e4a0457319e190f34bf5bc9f9614646a8b55960ff557c93c5a2787f36c",
+        "after.png": "f42e0b777619c9ff010fef8be26802701149be065644a55d5a40f43dea47ca8e"
+      }
+    },
+    {
+      "case": "exp-all",
+      "provider": "original",
+      "actions_states_png_sram_identical": true
+    },
+    {
+      "case": "traded",
+      "provider": "before",
+      "actions_states_png_sram_identical": true,
+      "png_sha256": {
+        "saved.png": "addf0211d2f3a54d88c3c96ef2d40b73ff56ef5b597abd30d3d5180b63836ced",
+        "notice-Caterpie-2.png": "1e525632028e908ff2bbc9e327c6b5d29f65f33bfb4e3bce168c5a45c164402c",
+        "notice-Weedle-2.png": "b4b21df9c1dedf8ac026823b673596ff4ed869f870fe561ce7c953d88369c438",
+        "after.png": "f42e0b777619c9ff010fef8be26802701149be065644a55d5a40f43dea47ca8e"
+      }
+    },
+    {
+      "case": "traded",
+      "provider": "after",
+      "actions_states_png_sram_identical": true,
+      "png_sha256": {
+        "saved.png": "addf0211d2f3a54d88c3c96ef2d40b73ff56ef5b597abd30d3d5180b63836ced",
+        "notice-Caterpie-2.png": "59da57c7f97c5a50aae7f74e53d96b616d9cc3815e0f1cc798c1a3c5439fdd26",
+        "notice-Weedle-2.png": "a44c069022de7597149cc34cc03a75107a922b0714e6780e420e378487f491f8",
+        "after.png": "f42e0b777619c9ff010fef8be26802701149be065644a55d5a40f43dea47ca8e"
+      }
+    },
+    {
+      "case": "traded",
+      "provider": "original",
+      "actions_states_png_sram_identical": true
+    },
+    {
+      "case": "traded-exp-all",
+      "provider": "before",
+      "actions_states_png_sram_identical": true,
+      "png_sha256": {
+        "saved.png": "addf0211d2f3a54d88c3c96ef2d40b73ff56ef5b597abd30d3d5180b63836ced",
+        "notice-Weedle-4.png": "ac69278928afabd88edd03afd2fbcb64fbb1a90e5989120ec5e0bb1bb61b0c80",
+        "notice-Weedle-3.png": "abe6cb3036a5d96160ebadc74605d677b7bd62a4d5598f41b07119a493dacca8",
+        "notice-Caterpie-3.png": "43fb4578d896b6cd2b3a735fa9d194b9acbe350fcd3fa33647d9d3f9e854d4af",
+        "notice-Caterpie-4.png": "d3f5e6ead38bd1a59144c53d0bedbd3e7b6c35132bc309c3169778bf7e94bfd9",
+        "notice-Caterpie-2.png": "8a9210d81abe6c8aa2ac2035a01c5c3d3e4bead66f8097b9ecabf8d20ae586df",
+        "notice-Weedle-2.png": "155870ac62b685da09502a94391fafea3449102a2827678513e54937fd5b31fc",
+        "after.png": "f42e0b777619c9ff010fef8be26802701149be065644a55d5a40f43dea47ca8e"
+      }
+    },
+    {
+      "case": "traded-exp-all",
+      "provider": "after",
+      "actions_states_png_sram_identical": true,
+      "png_sha256": {
+        "saved.png": "addf0211d2f3a54d88c3c96ef2d40b73ff56ef5b597abd30d3d5180b63836ced",
+        "notice-Weedle-4.png": "e0a1b35e2e484b569a963108ace206945e20d33238a79a94d404cc8ccc816e3c",
+        "notice-Weedle-3.png": "20d73e301535244903cfa79727481ac10c59ece06311ff61beed2b4997f43be5",
+        "notice-Caterpie-3.png": "882b0bb22d253fb0aa90144d50af316db117fa089112933d5370a13cbc192e80",
+        "notice-Caterpie-4.png": "20673c029adadc013c747d0f3d83466abe4ddeee30fd458841db19a62a7a35fb",
+        "notice-Caterpie-2.png": "b81dde401942e276bd5dc671f464ed9239d583e65057bb5ae59caeab00b4368f",
+        "notice-Weedle-2.png": "d4b07ab614e636b4f82c3e581626ca3a151d2b8454113ded96cdfb3116a4dfed",
+        "after.png": "f42e0b777619c9ff010fef8be26802701149be065644a55d5a40f43dea47ca8e"
+      }
+    },
+    {
+      "case": "traded-exp-all",
+      "provider": "original",
+      "actions_states_png_sram_identical": true
+    }
+  ],
+  "validation": {
+    "core_scoped": 2,
+    "core_full": 2864,
+    "battle_text": 10,
+    "debug_app_build": "PASS",
+    "current_mainline_full_playthrough": false
+  },
+  "screenshots": [
+    {
+      "path": "docs/screenshots/experience-traded-before.png",
+      "case": "traded",
+      "stage": "before",
+      "frame": 1208,
+      "message": "BULBASAUR gained 99 exp.\npoints!",
+      "sha256": "b4b21df9c1dedf8ac026823b673596ff4ed869f870fe561ce7c953d88369c438"
+    },
+    {
+      "path": "docs/screenshots/experience-traded-after.png",
+      "case": "traded",
+      "stage": "after",
+      "frame": 1208,
+      "message": "BULBASAUR gained a boosted\n99 exp. points!",
+      "sha256": "a44c069022de7597149cc34cc03a75107a922b0714e6780e420e378487f491f8"
+    },
+    {
+      "path": "docs/screenshots/experience-exp-all-before.png",
+      "case": "exp-all",
+      "stage": "before",
+      "frame": 1476,
+      "message": "BULBASAUR gained 16 exp.\npoints!",
+      "sha256": "8e456052a9c096888d401b66c09a781c82a0a5ca025ec74222737e145d7b27fc"
+    },
+    {
+      "path": "docs/screenshots/experience-exp-all-after.png",
+      "case": "exp-all",
+      "stage": "after",
+      "frame": 1476,
+      "message": "BULBASAUR gained with\nEXP.ALL, 16 exp. points!",
+      "sha256": "45c963d92735ee89c6af8803c8e351d85ffee9fae2ce49da6a854924e230b4ae"
+    }
+  ],
+  "public_replayer": {
+    "sha256": "9a54f7fe5fb00afd62a70c690de8d7f019dcda0d3dfab82b60a34f506fdd97f5",
+    "controls": [
+      {
+        "stage": "before",
+        "case": "traded-exp-all",
+        "capture": "audit-public-exp-notices-before-traded-exp-all-1-z1ps1gmo",
+        "actions_states_png_sram_match_primary_capture": true
+      },
+      {
+        "stage": "after",
+        "case": "traded-exp-all",
+        "capture": "audit-public-exp-notices-after-traded-exp-all-1-mbtms9pg",
+        "actions_states_png_sram_match_primary_capture": true
+      }
+    ]
+  }
+}
