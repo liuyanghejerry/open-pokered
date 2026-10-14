@@ -3315,6 +3315,38 @@ mod tests {
     }
 
     #[test]
+    fn fidelity_prize_dialogue_distinguishes_list_exit_from_confirmation_no() {
+        let scene = pokered_data::embedded_scenes::get_scene_ast("GameCornerPrizeRoom").unwrap();
+        for version in [0.0, 1.0] {
+            for handler in ["prizeVendor1", "prizeVendor2", "prizeVendor3"] {
+                for (choices, success, refusal) in [
+                    (vec![3], false, false),
+                    (vec![0, 1], false, true),
+                    (vec![0, 0], true, false),
+                ] {
+                    let mut engine = NativeScriptEngine::new();
+                    engine.load_map("GameCornerPrizeRoom", &scene);
+                    engine.seed_set("bag", &["COIN_CASE".into()]);
+                    engine.seed_number("coins", 9999.0);
+                    engine.seed_number("gameVersion", version);
+                    let commands = drive_fidelity_scene(&mut engine, handler, success, "", &choices);
+                    assert_eq!(commands.iter().any(|c| matches!(c,
+                        ScriptCommand::ShowText { text } if text == "Oh, fine then."
+                    )), refusal, "version {version}, {handler}, {choices:?}");
+                    assert!(!commands.iter().any(|c| matches!(c,
+                        ScriptCommand::ShowText { text } if text == "Here you go!"
+                    )), "unreferenced source dialogue: version {version}, {handler}");
+                    if choices == [3] {
+                        assert!(!commands.iter().any(|c| matches!(c,
+                            ScriptCommand::GiveMonster { .. } | ScriptCommand::GiveItem { .. }
+                        )));
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
     fn fidelity_pokemon_prizes_require_confirmation_and_charge_only_after_delivery() {
         let scene = pokered_data::embedded_scenes::get_scene_ast("GameCornerPrizeRoom").unwrap();
         for version in [0.0, 1.0] {

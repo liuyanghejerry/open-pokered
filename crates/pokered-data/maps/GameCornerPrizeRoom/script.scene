@@ -54,7 +54,6 @@ game_scene GameCornerPrizeRoom {
                 given = givePokemon("ABRA", 9)
                 @if (given) {
                   takeCoins(180)
-                  @speaker("") { @t("Here you go!", "给你！") }
                 }
               } @else {
                 @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
@@ -73,7 +72,6 @@ game_scene GameCornerPrizeRoom {
                 given = givePokemon("CLEFAIRY", 8)
                 @if (given) {
                   takeCoins(500)
-                  @speaker("") { @t("Here you go!", "给你！") }
                 }
               } @else {
                 @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
@@ -92,7 +90,6 @@ game_scene GameCornerPrizeRoom {
                 given = givePokemon("NIDORINA", 17)
                 @if (given) {
                   takeCoins(1200)
-                  @speaker("") { @t("Here you go!", "给你！") }
                 }
               } @else {
                 @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
@@ -103,9 +100,7 @@ game_scene GameCornerPrizeRoom {
             }
           }
         }
-        @option(@t("NO THANKS", "不用了")) {
-          @speaker("") { @t("Oh, fine then.", "那好吧。") }
-        }
+        @option(@t("NO THANKS", "不用了")) {}
       }
       } @else {
       @choice {
@@ -117,7 +112,6 @@ game_scene GameCornerPrizeRoom {
                 given = givePokemon("ABRA", 6)
                 @if (given) {
                   takeCoins(120)
-                  @speaker("") { @t("Here you go!", "给你！") }
                 }
               } @else {
                 @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
@@ -136,7 +130,6 @@ game_scene GameCornerPrizeRoom {
                 given = givePokemon("CLEFAIRY", 12)
                 @if (given) {
                   takeCoins(750)
-                  @speaker("") { @t("Here you go!", "给你！") }
                 }
               } @else {
                 @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
@@ -155,7 +148,6 @@ game_scene GameCornerPrizeRoom {
                 given = givePokemon("NIDORINO", 17)
                 @if (given) {
                   takeCoins(1200)
-                  @speaker("") { @t("Here you go!", "给你！") }
                 }
               } @else {
                 @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
@@ -166,9 +158,7 @@ game_scene GameCornerPrizeRoom {
             }
           }
         }
-        @option(@t("NO THANKS", "不用了")) {
-          @speaker("") { @t("Oh, fine then.", "那好吧。") }
-        }
+        @option(@t("NO THANKS", "不用了")) {}
       }
       }
     }
@@ -193,7 +183,6 @@ game_scene GameCornerPrizeRoom {
                 given = givePokemon("DRATINI", 18)
                 @if (given) {
                   takeCoins(2800)
-                  @speaker("") { @t("Here you go!", "给你！") }
                 }
               } @else {
                 @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
@@ -212,7 +201,6 @@ game_scene GameCornerPrizeRoom {
                 given = givePokemon("SCYTHER", 25)
                 @if (given) {
                   takeCoins(5500)
-                  @speaker("") { @t("Here you go!", "给你！") }
                 }
               } @else {
                 @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
@@ -231,7 +219,6 @@ game_scene GameCornerPrizeRoom {
                 given = givePokemon("PORYGON", 26)
                 @if (given) {
                   takeCoins(9999)
-                  @speaker("") { @t("Here you go!", "给你！") }
                 }
               } @else {
                 @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
@@ -242,9 +229,7 @@ game_scene GameCornerPrizeRoom {
             }
           }
         }
-        @option(@t("NO THANKS", "不用了")) {
-          @speaker("") { @t("Oh, fine then.", "那好吧。") }
-        }
+        @option(@t("NO THANKS", "不用了")) {}
       }
       } @else {
       @choice {
@@ -256,7 +241,6 @@ game_scene GameCornerPrizeRoom {
                 given = givePokemon("PINSIR", 20)
                 @if (given) {
                   takeCoins(2500)
-                  @speaker("") { @t("Here you go!", "给你！") }
                 }
               } @else {
                 @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
@@ -275,7 +259,6 @@ game_scene GameCornerPrizeRoom {
                 given = givePokemon("DRATINI", 24)
                 @if (given) {
                   takeCoins(4600)
-                  @speaker("") { @t("Here you go!", "给你！") }
                 }
               } @else {
                 @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
@@ -294,7 +277,6 @@ game_scene GameCornerPrizeRoom {
                 given = givePokemon("PORYGON", 18)
                 @if (given) {
                   takeCoins(6500)
-                  @speaker("") { @t("Here you go!", "给你！") }
                 }
               } @else {
                 @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
@@ -305,9 +287,7 @@ game_scene GameCornerPrizeRoom {
             }
           }
         }
-        @option(@t("NO THANKS", "不用了")) {
-          @speaker("") { @t("Oh, fine then.", "那好吧。") }
-        }
+        @option(@t("NO THANKS", "不用了")) {}
       }
       }
     }
@@ -337,7 +317,6 @@ game_scene GameCornerPrizeRoom {
                 given = giveItem("TM23", 1)
                 @if (given) {
                   takeCoins(3300)
-                  @speaker("") { @t("Here you go!", "给你！") }
                 } @else {
                   @speaker("") { @t("You have no room for this!", "你身上没有空间放这个！") }
                 }
@@ -358,7 +337,6 @@ game_scene GameCornerPrizeRoom {
                 given = giveItem("TM15", 1)
                 @if (given) {
                   takeCoins(5500)
-                  @speaker("") { @t("Here you go!", "给你！") }
                 } @else {
                   @speaker("") { @t("You have no room for this!", "你身上没有空间放这个！") }
                 }
@@ -379,7 +357,6 @@ game_scene GameCornerPrizeRoom {
                 given = giveItem("TM50", 1)
                 @if (given) {
                   takeCoins(7700)
-                  @speaker("") { @t("Here you go!", "给你！") }
                 } @else {
                   @speaker("") { @t("You have no room for this!", "你身上没有空间放这个！") }
                 }
@@ -392,9 +369,7 @@ game_scene GameCornerPrizeRoom {
             }
           }
         }
-        @option(@t("NO THANKS", "不用了")) {
-          @speaker("") { @t("Oh, fine then.", "那好吧。") }
-        }
+        @option(@t("NO THANKS", "不用了")) {}
       }
     }
   }
