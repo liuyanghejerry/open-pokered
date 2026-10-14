@@ -207,7 +207,7 @@ pub fn settle_battle_into_save(
         if save.party.count() < 6 {
             let _ = save.party.add(caught);
         } else {
-            let _ = save.current_box.deposit(caught);
+            let _ = save.current_box.insert_new_mon(caught);
             save.sync_current_box_to_storage();
         }
         save.game_data.pokedex.set_seen(species);

@@ -73,6 +73,50 @@ fn deposit_up_to_twenty() {
 }
 
 #[test]
+fn new_mon_enters_first_without_changing_existing_records() {
+    for count in [0, 1, 19, 20] {
+        let mut b = PcBox::new();
+        for i in 0..count {
+            let mut mon = make_pokemon(Species::Bulbasaur, (i + 1) as u8);
+            mon.set_nickname(&format!("OLD{i}"));
+            mon.ot_name = crate::battle::state::encode_name("RED");
+            mon.ot_id = 1000 + i as u16;
+            mon.dv_bytes = [i as u8, 255 - i as u8];
+            mon.stat_exp = [i as u16; 5];
+            mon.status = StatusCondition::Poison;
+            mon.pp_ups = [1, 2, 3, 0];
+            b.deposit(mon).unwrap();
+        }
+        let before = b;
+        let mut new = make_pokemon(Species::Eevee, 25);
+        new.set_nickname("NEW");
+        if count == MONS_PER_BOX {
+            assert_eq!(b.insert_new_mon(new), Err(BoxError::BoxFull));
+            assert_eq!(b, before, "full-box refusal changes no record or count");
+        } else {
+            assert_eq!(b.insert_new_mon(new), Ok(0));
+            assert_eq!(b.count(), count + 1);
+            assert_eq!(b.get(0), Some(&new));
+            for i in 0..count {
+                assert_eq!(b.get(i + 1), before.get(i), "old record {i}");
+            }
+        }
+    }
+}
+
+#[test]
+fn ordinary_deposit_still_appends_after_a_new_mon() {
+    let mut b = PcBox::new();
+    let old = make_pokemon(Species::Bulbasaur, 12);
+    let received = make_pokemon(Species::Eevee, 25);
+    let deposited = make_pokemon(Species::Pidgey, 5);
+    b.deposit(old).unwrap();
+    b.insert_new_mon(received).unwrap();
+    assert_eq!(b.deposit(deposited), Ok(2));
+    assert_eq!(b.iter().copied().collect::<Vec<_>>(), [received, old, deposited]);
+}
+
+#[test]
 fn withdraw_out_of_bounds() {
     let mut b = PcBox::new();
     b.deposit(make_pokemon(Species::Pikachu, 25)).unwrap();
