@@ -1894,7 +1894,7 @@ def m09_to_pewter(g):
             # preparation, using real Route 1 battles and Center healing.
             g.nav_to(20, 32, map_name='ViridianCity')
             g.nav_to(20, 33, map_name='ViridianCity')
-            g.d.drive(['down'] * 24, frames=28)
+            g.d.drive(['down'] * 40, frames=44)
             g.step(8)
             g.nav_to(12, 7, map_name='Route1')
             heal = ((23, 25), 'ViridianCity', 'ViridianPokecenter')

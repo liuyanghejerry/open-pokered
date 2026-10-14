@@ -40,6 +40,13 @@
 
 ## 自动回归与证据
 
+全新开机验证 `audit-844-fresh-main-flow` 在 m01–m08 通过后，m09
+首次森林训练师战败正常回城。恢复训练入口仍有一个 24 帧的常磐市南口
+调用，停在常磐市 `(20,35)` 后报错，frame 35785。该运行退出 1，
+没有走到 m12，证据和完整视频保留。这个遗漏调用也更新为与已合入
+#229 相同的 40 帧按键 / 44 帧观察预算；未修改游戏引擎、目标地图
+或到达检查。新的全主线需要从头重跑，不把本次失败算成月见山通过。
+
 `python3 -m unittest discover -s scripts -p test_playthrough_navigation.py -v`：46 项通过。新增覆盖固定登山男与暂时行走/脚本/游走对象的区分、固定目标不耗尽等待预算、楼梯后备路径避开固定对象，以及独立 16 帧移动模型下的完整 90 格路线。现有 map mismatch、错误 warp 目标、黑屏后回城、方向地毯和游走 NPC 等断言保持。
 
 本机证据根目录为 `.task-tmp/fidelity-39-plus`，主线原始证据在 `audit-838-full-main-flow-retry2/`；构造过程、初始 flags/NPC、最终完整 state、game log 和全部 PNG/manifest 在：
