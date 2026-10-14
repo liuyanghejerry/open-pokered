@@ -1,0 +1,146 @@
+{
+  "scope": "Original actual START/ITEM/USE/party and ordinary SAVE/YES. Only Rare Candy fainted case is included here. No function-entry bootstrap or input-window RAM patches.",
+  "reference_source": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+  "emulator_version": "2.8.1",
+  "construction_fields": {
+    "party_count": 2,
+    "species_ids": [
+      153,
+      153,
+      255
+    ],
+    "party_struct_bytes": 44,
+    "DVs": [
+      154,
+      120
+    ],
+    "types": [
+      22,
+      3
+    ],
+    "initial_moves": [
+      33,
+      45,
+      0,
+      0
+    ],
+    "initial_pp": [
+      35,
+      40,
+      0,
+      0
+    ],
+    "second_mon": "BulbasaurLv12 HP35/35, zeroStatExp, identical DVs, remains unchanged",
+    "cash_bcd": [
+      0,
+      48,
+      0
+    ],
+    "cash": 3000,
+    "bag_quantity": 2,
+    "initial_state_source": "movement-91-setup/outside-after-save.state, previously verified retail Continue outdoor Viridian state",
+    "input_window_write_policy": "All fixture WRAM writes end before constructed-start.state; menu use and actual SAVE use real button inputs only."
+  },
+  "script_sha256": {
+    "audit-841-original-vitamins.py": "a1e6b5d7c69477aee556b63990e4d233ac8b1ca7a9e143b588d479726849841f",
+    "audit-841-original-vitamins-save.py": "879080a8e3d5e5b45c0bc39eb6d6c93b0195437a541968739d1e45e9bdf9702f",
+    "audit-841-original-vitamins-view-stats.py": "788763574fc08d623a32f7b5f654db6883b4060e88840d40a7f6227c82060dde"
+  },
+  "case": {
+    "case": "rare-candy-fainted",
+    "initial": {
+      "level": 12,
+      "hp": 0,
+      "stats": [
+        35,
+        18,
+        19,
+        17,
+        22
+      ],
+      "stat_exp": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "moves": [
+        33,
+        45,
+        0,
+        0
+      ],
+      "pp": [
+        35,
+        40,
+        0,
+        0
+      ],
+      "cash_bcd": [
+        0,
+        48,
+        0
+      ],
+      "bag": [
+        40,
+        2,
+        255
+      ]
+    },
+    "after": {
+      "level": 13,
+      "hp": 2,
+      "stats": [
+        37,
+        20,
+        20,
+        18,
+        23
+      ],
+      "stat_exp": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "moves": [
+        33,
+        45,
+        22,
+        0
+      ],
+      "pp": [
+        35,
+        40,
+        10,
+        0
+      ],
+      "cash_bcd": [
+        0,
+        48,
+        0
+      ],
+      "bag": [
+        40,
+        1,
+        255
+      ]
+    },
+    "healthy_partner_unchanged": true,
+    "actual_SAVE_checksum": {
+      "stored": 221,
+      "calculated": 221,
+      "byte_offset": 13603,
+      "range_start": 9624,
+      "range_end_exclusive": 13603,
+      "valid": true
+    },
+    "sram_sha256": "143a0fa7b9f698a235dc53f393666aa7af4368925dfd9a9ec8ebf2f29ba35548",
+    "constructed_state_sha256": "500b8fb4c7a732b8b68d2ef995a60f643c450c73bf71175ea0c6acb08410ac6c",
+    "after_stats_screenshot": "docs/screenshots/rare-candy-fainted-source-after.png",
+    "after_stats_screenshot_sha256": "cfe3505d81d1f9f5487eec8c18e2c0d29f6e86088af29ab7854ee27cb275f881"
+  }
+}

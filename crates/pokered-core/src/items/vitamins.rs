@@ -59,7 +59,9 @@ pub fn use_vitamin(mon: &mut Pokemon, item: ItemId) -> VitaminResult {
 /// is deliberately NOT done here — the caller runs it through the evolution
 /// cutscene (`crate::evolution_screen`), which handles the B-cancel.
 pub fn use_rare_candy(mon: &mut Pokemon) -> Option<RareCandyResult> {
-    if mon.hp == 0 || mon.level >= MAX_LEVEL {
+    // The original only rejects level 100. Its max-HP growth is also added
+    // to zero current HP, so a Rare Candy can revive a fainted Pokemon.
+    if mon.level >= MAX_LEVEL {
         return None;
     }
 
