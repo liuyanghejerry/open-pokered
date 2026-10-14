@@ -4,7 +4,7 @@ pub mod money;
 pub mod settle;
 pub mod writeback;
 
-pub use writeback::{settle_battle_into_save, SettleWriteback};
+pub use writeback::{settle_battle_into_save, CapturedLocation, CapturedMonReceipt, SettleWriteback};
 
 #[cfg(test)]
 mod writeback_tests;
