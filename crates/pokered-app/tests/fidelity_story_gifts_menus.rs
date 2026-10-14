@@ -135,8 +135,10 @@ fn declining_or_submitting_empty_nickname_keeps_species_name() {
 }
 #[test]
 fn full_party_still_asks_name_then_sends_to_current_box_and_full_box_retains_ball() {
-    for full in [false, true] {
-        let mut g = game(MapId::CeladonMansionRoofHouse, 4, 4);
+    for count in [0, 1, 19, 20] {
+        let full = count == 20;
+        let mut g = game(MapId::CeladonMansionRoofHouse, 5, 3);
+        g.overworld.state.player.facing = Direction::Left;
         for _ in 0..6 {
             g.save_data
                 .party
@@ -144,15 +146,14 @@ fn full_party_still_asks_name_then_sends_to_current_box_and_full_box_retains_bal
                 .unwrap();
         }
         g.save_data.pc_storage.change_box(3).unwrap();
-        if full {
-            for _ in 0..20 {
-                g.save_data
-                    .pc_storage
-                    .deposit_to_current(create_pokemon(Species::Rattata, 5, [0, 0]).unwrap())
-                    .unwrap();
-            }
+        for i in 0..count {
+            let mut old = create_pokemon(Species::Rattata, 5, [i as u8, 0]).unwrap();
+            old.set_nickname(&format!("OLD{i}"));
+            old.ot_id = 1000 + i as u16;
+            g.save_data.pc_storage.deposit_to_current(old).unwrap();
         }
         g.save_data.current_box = g.save_data.pc_storage.current_box().clone();
+        let before = g.save_data.current_box;
         g.overworld.party_count = 6;
         g.overworld.box_count = g.save_data.current_box.count() as u8;
         eevee(&mut g);
@@ -180,8 +181,17 @@ fn full_party_still_asks_name_then_sends_to_current_box_and_full_box_retains_bal
         assert_eq!(g.save_data.party.count(), 6);
         assert_eq!(
             g.save_data.pc_storage.current_box().count(),
-            if full { 20 } else { 1 }
+            if full { 20 } else { count + 1 }
         );
+        assert_eq!(&g.save_data.current_box, g.save_data.pc_storage.current_box());
+        if full {
+            assert_eq!(g.save_data.current_box, before);
+        } else {
+            assert_eq!(g.save_data.current_box.get(0).unwrap().species, Species::Eevee);
+            for i in 0..count {
+                assert_eq!(g.save_data.current_box.get(i + 1), before.get(i));
+            }
+        }
         assert_eq!(
             g.overworld
                 .script_flags()
