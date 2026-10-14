@@ -432,7 +432,7 @@ fn engine_active(party: &LegacyParty) -> EngineBattler<PokeredRules> {
     b.resources.set(super::RES_SELECTED_SLOT, party.selected_move_index as u16, 4);
     b.resources.set(super::RES_DV0, mon.dv_bytes[0] as u16, 255);
     b.resources.set(super::RES_DV1, mon.dv_bytes[1] as u16, 255);
-    let catch_rate = party.transform_catch_rate.unwrap_or_else(|| get_base_stats(mon.species).map_or(255, |b| b.catch_rate));
+    let catch_rate = party.transform_catch_rate.unwrap_or_else(|| mon.effective_catch_rate());
     b.resources.set(super::RES_CATCH_RATE, catch_rate as u16, 255);
     super::bind_types(&mut b, (party.conversion_type1.unwrap_or(mon.type1), party.conversion_type2.unwrap_or(mon.type2)));
     for (slot, pp) in mon.pp.iter().enumerate() { b.resources.set(super::RES_PP_BASE + slot as u16, *pp as u16, 255); }
@@ -889,5 +889,57 @@ mod tests {
         apply_engine_to_legacy(&mut ls, &state2, &[]);
         assert_eq!(ls.player.active_mon().pp[0], 3, "PP not reset on a later (no-marker) turn");
         assert_eq!(ls.player.active_mon().species, Species::Tauros, "transformed species persists");
+    }
+}
+
+#[cfg(test)]
+mod catch_byte_tests {
+    use super::*;
+    use pokered_data::species::Species;
+    use crate::battle::state::{new_battle_state, BattleType};
+    use dotzuki_engine::battle::stack::StackDriver;
+    use dotzuki_engine::battle::BattleAction;
+    #[test]
+    fn catch_byte_actual_transform_copies_target_saved_value_and_keeps_party_identity() {
+        for value in [0, 173] {
+            super::super::install_canonical();
+            super::super::set_current_move(BattlerRef::PLAYER, *MoveData::get(MoveId::Transform).unwrap());
+            super::super::set_current_move(BattlerRef::OPPONENT, *MoveData::get(MoveId::Splash).unwrap());
+            let mut target = crate::pokemon::stats::create_pokemon_with_moves(
+                Species::Magikarp,
+                30,
+                [255, 255],
+                [MoveId::Splash, MoveId::None, MoveId::None, MoveId::None],
+            )
+            .unwrap();
+            target.catch_rate = Some(value);
+            let ditto = crate::pokemon::stats::create_pokemon_with_moves(
+                Species::Ditto,
+                30,
+                [255, 255],
+                [MoveId::Transform, MoveId::None, MoveId::None, MoveId::None],
+            )
+            .unwrap();
+            let mut legacy = new_battle_state(BattleType::Wild, vec![ditto], vec![target]);
+            let (mut engine, mut effects) = engine_state_from_legacy(&legacy);
+            let mut rng = StdBattleRng::from_seed(42);
+            StackDriver::execute_turn_logged(
+                &PokeredRules,
+                &mut engine,
+                &mut effects,
+                [
+                    BattleAction::Fight {
+                        move_: MoveId::Transform,
+                    },
+                    BattleAction::Fight {
+                        move_: MoveId::Splash,
+                    },
+                ],
+                &mut rng,
+            );
+            apply_engine_to_legacy(&mut legacy, &engine, &effects);
+            assert_eq!(legacy.player.transform_catch_rate, Some(value));
+            assert_eq!(legacy.player.party_mon(0).catch_rate, Some(35));
+        }
     }
 }

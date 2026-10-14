@@ -258,7 +258,7 @@ impl Pokemon {
     /// battle/leveling-relevant fields (species, level, total_exp, DV bytes,
     /// stat-exp, computed stats, current HP, status, moves+PP). Fields the
     /// engine has no concept of — `nickname`, `type1`/`type2`, `is_traded`,
-    /// `ot_id`/`ot_name`, the
+    /// `ot_id`/`ot_name`, `catch_rate`, the
     /// cached `max_hp`, and per-move `pp_ups` — are intentionally NOT
     /// represented and stay on the pokered side. `MoveSlot::pp_up` is taken from
     /// pokered's `pp_ups`, so PP-Ups *do* round-trip.
@@ -306,6 +306,9 @@ impl Pokemon {
     /// Move slots are re-padded to the fixed `[MoveId; 4]` layout; trailing
     /// empty slots become `MoveId::None` with `pp = 0`.
     pub fn apply_monster_instance(&mut self, inst: &PokeredMonster) {
+        if self.species != inst.species && self.catch_rate.is_none() {
+            self.catch_rate = Some(self.effective_catch_rate());
+        }
         self.species = inst.species;
         self.level = inst.level;
         self.total_exp = inst.exp;
@@ -384,6 +387,7 @@ mod tests {
             special,
             type1: base.type1,
             type2: base.type2,
+            catch_rate: Some(pokered_data::pokemon_data::get_base_stats(TEST_SPECIES).map_or(0, |b| b.catch_rate)),
             moves: [MoveId::Tackle, MoveId::Growl, MoveId::None, MoveId::None],
             pp: [35, 40, 0, 0],
             pp_ups: [1, 0, 0, 0],
@@ -499,6 +503,7 @@ mod tests {
             special,
             type1: base.type1,
             type2: base.type2,
+            catch_rate: Some(pokered_data::pokemon_data::get_base_stats(TEST_SPECIES).map_or(0, |b| b.catch_rate)),
             // Packed front-to-back (two real moves, two empty) so the engine's
             // Vec model and the legacy [MoveId;4] model agree on slot placement.
             moves: [MoveId::Tackle, MoveId::Growl, MoveId::None, MoveId::None],

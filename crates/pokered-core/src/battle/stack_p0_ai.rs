@@ -365,6 +365,7 @@ use crate::alloc_prelude::*;
                 special: 80,
                 type1: base.type1,
                 type2: base.type2,
+                catch_rate: Some(pokered_data::pokemon_data::get_base_stats(spec.species).map_or(0, |b| b.catch_rate)),
                 moves: spec.moves,
                 pp: spec.pp,
                 pp_ups: [0; 4],

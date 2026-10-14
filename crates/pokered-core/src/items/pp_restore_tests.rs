@@ -18,6 +18,7 @@ fn make_mon_with_pp(moves: [MoveId; 4], pp: [u8; 4], pp_ups: [u8; 4]) -> Pokemon
         special: 50,
         type1: PokemonType::Electric,
         type2: PokemonType::Electric,
+        catch_rate: Some(pokered_data::pokemon_data::get_base_stats(Species::Pikachu).map_or(0, |b| b.catch_rate)),
         moves,
         pp,
         pp_ups,
