@@ -168,6 +168,7 @@ fn poke(m: &Mon, move_id: MoveId) -> Pokemon {
         special: m.special,
         type1: base.type1,
         type2: base.type2,
+        catch_rate: Some(pokered_data::pokemon_data::get_base_stats(m.species).map_or(0, |b| b.catch_rate)),
         moves: [move_id, MoveId::None, MoveId::None, MoveId::None],
         pp: [30, 0, 0, 0],
         pp_ups: [0; 4],

@@ -21,6 +21,7 @@ mod tests {
             special: 30,
             type1: base.type1,
             type2: base.type2,
+            catch_rate: Some(pokered_data::pokemon_data::get_base_stats(species).map_or(0, |b| b.catch_rate)),
             moves: [MoveId::Tackle, MoveId::None, MoveId::None, MoveId::None],
             pp: [35, 0, 0, 0],
             pp_ups: [0; 4],

@@ -18,6 +18,7 @@ fn make_mon_with_stat_exp(stat_exp: [u16; 5]) -> Pokemon {
         special: 50,
         type1: PokemonType::Grass,
         type2: PokemonType::Poison,
+        catch_rate: Some(pokered_data::pokemon_data::get_base_stats(Species::Bulbasaur).map_or(0, |b| b.catch_rate)),
         moves: [MoveId::VineWhip, MoveId::None, MoveId::None, MoveId::None],
         pp: [10, 0, 0, 0],
         pp_ups: [0; 4],

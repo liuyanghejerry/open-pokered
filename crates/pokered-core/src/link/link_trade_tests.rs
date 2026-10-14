@@ -19,6 +19,7 @@ fn make_test_pokemon(species: Species, level: u8) -> Pokemon {
         special: 55,
         type1: PokemonType::Normal,
         type2: PokemonType::Normal,
+        catch_rate: Some(pokered_data::pokemon_data::get_base_stats(species).map_or(0, |b| b.catch_rate)),
         moves: [MoveId::Tackle, MoveId::None, MoveId::None, MoveId::None],
         pp: [35, 0, 0, 0],
         pp_ups: [0; 4],
@@ -1034,4 +1035,36 @@ fn presentation_sync_requires_both_peers_and_resets_for_next_trade() {
         assert!(!host.both_presentations_ready());
         assert!(!peer.both_presentations_ready());
     }
+}
+
+#[test]
+fn catch_byte_trade_and_trade_evolution_preserve_explicit_zero_and_nonbase_data() {
+    use crate::pokemon::party::Party;
+    use crate::pokemon::pokedex::Pokedex;
+    let (mut left, mut right) = (
+        trade_mon(Species::Pikachu, 30, 0x1111, None),
+        trade_mon(Species::Kadabra, 33, 0x2222, None),
+    );
+    left.catch_rate = Some(0);
+    right.catch_rate = Some(173);
+    let (mut a, mut b) = ChannelTransport::new_pair();
+    let (mut host, mut peer) = driver_pair(
+        &mut a,
+        &mut b,
+        Party::from(vec![left]),
+        Party::from(vec![right]),
+    );
+    run_to_trade_execute(&mut host, &mut peer, &mut a, &mut b, 0, 0);
+    let mut dex = Pokedex::new();
+    let pending = host.apply_exchange(&mut dex).unwrap().unwrap();
+    peer.apply_exchange(&mut Pokedex::new()).unwrap();
+    assert_eq!(host.received_mon().unwrap().catch_rate, Some(173));
+    assert_eq!(peer.received_mon().unwrap().catch_rate, Some(0));
+    crate::pokemon::evolution::finalize_evolution(
+        host.received_mon_mut().unwrap(),
+        &mut dex,
+        pending.to,
+    );
+    assert_eq!(host.received_mon().unwrap().species, Species::Alakazam);
+    assert_eq!(host.received_mon().unwrap().catch_rate, Some(173));
 }

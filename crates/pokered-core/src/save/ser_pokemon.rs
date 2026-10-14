@@ -59,7 +59,7 @@ pub fn serialize_box_mon(mon: &Pokemon, buf: &mut Vec<u8>) {
     buf.push(status_to_byte(&mon.status));
     buf.push(mon.type1 as u8);
     buf.push(mon.type2 as u8);
-    buf.push(0);
+    buf.push(mon.effective_catch_rate());
     for i in 0..NUM_MOVES {
         buf.push(mon.moves[i] as u8);
     }
@@ -236,6 +236,7 @@ pub fn deserialize_box_mon(data: &[u8]) -> Result<Pokemon, SaveError> {
         special: 0,
         type1,
         type2,
+        catch_rate: Some(data[7]),
         moves,
         pp,
         pp_ups,
