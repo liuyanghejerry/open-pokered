@@ -36,11 +36,11 @@ TM21/MegaDrain 用 Bulbasaur12、HP35、Tackle/Growl/LeechSeed/Cut、PP35/40/10/
 
 同一 fixture、同一输入前缀、同一 native frame472：
 
-前（parent 901）：
+前（clean master7bd）：
 
 ![前](../../screenshots/tmhm-full-move-learning/first-learning-before.png)
 
-后（child a548）：
+后（child f456）：
 
 ![后](../../screenshots/tmhm-full-move-learning/first-learning-after.png)
 
@@ -48,15 +48,15 @@ TM21/MegaDrain 用 Bulbasaur12、HP35、Tackle/Growl/LeechSeed/Cut、PP35/40/10/
 
 ![原作参考](../../screenshots/tmhm-full-move-learning/first-learning-original-reference.png)
 
-其他 after 真正菜单帧保留 Delete/Abandon/DidNotLearn/HMretry/Learned PNG，具体帧数见 verification。BEFORE `audit-850-perf-final-debug` SHA `90110dbe6967526901a2802beba0e8459f24ff280a854b5dc9ef454829f08177`，编译的Git parent1566+已测试Oakpatch，其完整manifest的584个crate Rust源逐一匹配最终提交d455。没有改称clean2cc、当前master或新2cc构建。parent2cc另合入236的HP0门禁修复/测试，健康审计路径没有变化。
+其他 after 真正菜单帧保留 Delete/Abandon/DidNotLearn/HMretry/Learned PNG，具体帧数见 verification。父 #238 已合入；发布前重新构建、冻结并实测当前 master7bd BEFORE10 与 childf456 AFTER10。前 binary SHA256 为 `2560827d483a78f51bce9fb3146daf26014a02c6ae7ce6be7ac46e148defa206`，后为 `4451dc198a3b8e44671b81168c09db627530de68fd3b7c9e70b11d0ebe7ec351`，dev opt2/debug0 + debug-server。上述 native PNG 均来自这轮最新 base 验证，原作参考仍为原860捕获。
 
-AFTER 是 clean `a5488a64c8f5641e80105d6b884e5fbc67296eff`（基于parent2cc），debug-server/dev opt2/debug0，SHA `f726a5e287ec6c78df3f78e5855d6b23b498653ac47642cf0d5a8284ddba60c2`。父PR238尚未合入时，这份子修复不发布；父合入后必须更新master base并完成必要当前base比较图。此处不将冻结旧图重标成更晚构建。
+历史 parent901/childa548 的完整哈希、事件和菜单记录保留在[原始审计提交](https://github.com/liuyanghejerry/open-pokered/blob/3054e749f43b249fd9a636b4dfdf7767d4486468/docs/audits/tmhm-full-move-learning/verification.json)，没有改称最新二进制。最新精简验证列出每个独立run的原始record/actions/states/SRAM哈希、帧和数量检查点；完整私有trace保持原样。
 
 ## 校验与资料
 
-10个本次应用测试通过：TM/HM full/free-slot、成功ACK/消费、NO/B/listCANCEL/Abandon retry、HM cursor0、保留PP Ups/Stats/伙伴、无stats-box/evo、Boot/Teach/partyCancel/Known/Incompatible、FNT full-set、bench target、restore以及真实soft-reset→CONTINUE。11个父 Rare Candy 兼容回归通过。debug-server app构建通过。
+合入最新 master7bd 后重跑10个本次应用测试通过：TM/HM full/free-slot、成功ACK/消费、NO/B/listCANCEL/Abandon retry、HM cursor0、保留PP Ups/Stats/伙伴、无stats-box/evo、Boot/Teach/partyCancel/Known/Incompatible、FNT full-set、bench target、restore以及真实soft-reset→CONTINUE。11个父 Rare Candy 兼容回归也在新base重跑通过。debug-server app构建通过。
 
-全debug-app结果 **258 passed / 1 failed / 38 ignored**；失败是已独立确认的既有 `gift_dialogue_debug_tests::skip_dialogue_stops_at_gift_question_without_selecting_yes`（GiftQuestion→nickname prompt）。原始失败日志保留，并没有将整套应用测试称为通过。父Gift边界独立审计中，本修复未修改gift逻辑。
+历史 a548 全debug-app结果 **258 passed / 1 failed / 38 ignored**；失败是已独立确认的既有 `gift_dialogue_debug_tests::skip_dialogue_stops_at_gift_question_without_selecting_yes`（GiftQuestion→nickname prompt）。原始失败日志保留，并没有将整套应用测试称为通过。父Gift边界独立审计中，本修复未修改gift逻辑。
 
 [verification.json](verification.json) 包含每次run目录、构建/脚本/fixture/SRAM哈希、checksum、原作关键执行事件、原作菜单帧、before/after对应菜单帧、只读数量检查点和最终字节结果。完整原始source事件/旗标读取在各run的record.json保留。少量重复旧870v1 scope文字/combined-forgot命名错误已由明确版本身份和真实learned-message的v2全10次重跑纠正；旧尝试不作为最终报告源。
 
