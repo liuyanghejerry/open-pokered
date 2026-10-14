@@ -1,0 +1,666 @@
+{
+  "scope": "Stable-frame status-selection evidence from real native menu inputs, with isolated executable/save directory and ordinary SAVE. Native 16 successful runs, original 8 independent runs. Images visually inspected; pixel comparisons restrict fainted changes to status value and preserve alive controls. This is not whole-save parity with original or full animation cadence parity.",
+  "before_master": "117a326a",
+  "branch_base": "959b3e38d136634f9210c55bc2849e178ca0860e",
+  "before_to_branch_base_production_diff": "empty for crates, Cargo.toml, Cargo.lock",
+  "corrected_production_commit": "36bb0232",
+  "tested_source_commit": "f14cb856",
+  "binaries": {
+    "before": {
+      "sha256": "dffbebdcf3c44cee83c6d3060997b13c2222fc129e6b88aae7bad3a759fa4457",
+      "source_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-836-pp-up-debug"
+    },
+    "after": {
+      "sha256": "e3f66c2ff516d01c5a38c18e1ba3a7f9ee5c3e8049a20dc941f9f76d917452a8",
+      "source_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-845-stats-debug"
+    }
+  },
+  "native_capture_script_sha256": "903be84108f4a359652b79c517c10a1825f8d8bcd372785a4060f73d8e5f9af5",
+  "sidecar_seed": "Both executable-global and save-bound sidecars absent before launch; binary lives in private run directory.",
+  "actual_loaded_flags": {
+    "EVENT_GOT_GOOD_ROD": false,
+    "EVENT_GOT_LICKITUNG_FROM_TRADE": false,
+    "EVENT_GOT_OLD_ROD": false,
+    "EVENT_GOT_POKEDEX": true,
+    "EVENT_GOT_SUPER_ROD": false,
+    "EVENT_IN_SEAFOAM_ISLANDS": true,
+    "EVENT_TRADED_FOR_CHIKUCHIKU": false,
+    "EVENT_TRADED_FOR_CRINKLES": false,
+    "EVENT_TRADED_FOR_DORIS": false,
+    "EVENT_TRADED_FOR_DUX": false,
+    "EVENT_TRADED_FOR_LOLA": false,
+    "EVENT_TRADED_FOR_MARC": false,
+    "EVENT_TRADED_FOR_MARCEL": false,
+    "EVENT_TRADED_FOR_SAILOR": false,
+    "EVENT_TRADED_FOR_SPOT": false,
+    "EVENT_TRADED_FOR_TERRY": false
+  },
+  "actual_loaded_flags_same_all16": true,
+  "input_trace": [
+    {
+      "frame": 120,
+      "button": "start",
+      "frames": 60,
+      "held_frames": 4
+    },
+    {
+      "frame": 184,
+      "button": "down",
+      "frames": 32,
+      "held_frames": 1
+    },
+    {
+      "frame": 220,
+      "button": "a",
+      "frames": 32,
+      "held_frames": 1
+    },
+    {
+      "frame": 256,
+      "button": "a",
+      "frames": 32,
+      "held_frames": 1
+    },
+    {
+      "frame": 292,
+      "button": "a",
+      "frames": 32,
+      "held_frames": 1
+    },
+    {
+      "frame": 428,
+      "button": "b",
+      "frames": 32,
+      "held_frames": 1
+    },
+    {
+      "frame": 464,
+      "button": "b",
+      "frames": 32,
+      "held_frames": 1
+    },
+    {
+      "frame": 500,
+      "button": "b",
+      "frames": 32,
+      "held_frames": 1
+    },
+    {
+      "frame": 536,
+      "button": "down",
+      "frames": 32,
+      "held_frames": 1
+    },
+    {
+      "frame": 572,
+      "button": "down",
+      "frames": 32,
+      "held_frames": 1
+    },
+    {
+      "frame": 608,
+      "button": "down",
+      "frames": 32,
+      "held_frames": 1
+    },
+    {
+      "frame": 644,
+      "button": "a",
+      "frames": 32,
+      "held_frames": 1
+    },
+    {
+      "frame": 880,
+      "button": "a",
+      "frames": 400,
+      "held_frames": 1
+    }
+  ],
+  "source_first_party_fixture": {
+    "species": "Bulbasaur",
+    "level": 12,
+    "max_hp": 35,
+    "hp": 0,
+    "attack": 18,
+    "defense": 19,
+    "speed": 17,
+    "special": 22,
+    "type1": "Grass",
+    "type2": "Poison",
+    "moves": [
+      "Tackle",
+      "Growl",
+      "None",
+      "None"
+    ],
+    "pp": [
+      35,
+      40,
+      0,
+      0
+    ],
+    "pp_ups": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "status": "None",
+    "dv_bytes": [
+      154,
+      120
+    ],
+    "stat_exp": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "total_exp": 973,
+    "is_traded": false,
+    "ot_id": 0
+  },
+  "healthy_second_party_fixture": {
+    "species": "Bulbasaur",
+    "level": 12,
+    "max_hp": 35,
+    "hp": 35,
+    "attack": 18,
+    "defense": 19,
+    "speed": 17,
+    "special": 22,
+    "type1": "Grass",
+    "type2": "Poison",
+    "moves": [
+      "Tackle",
+      "Growl",
+      "None",
+      "None"
+    ],
+    "pp": [
+      35,
+      40,
+      0,
+      0
+    ],
+    "pp_ups": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "status": "None",
+    "dv_bytes": [
+      154,
+      120
+    ],
+    "stat_exp": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "total_exp": 973,
+    "is_traded": false,
+    "ot_id": 0
+  },
+  "verification": {
+    "scoped_stats_tests": 3,
+    "whole_ui_tests": 112,
+    "ui_features": "--no-default-features --features framebuffer,pokered-renderer/resource",
+    "app_build": "--bin pokered-app --features debug-server",
+    "log_sha256": {
+      "audit-845-final-stats-status-tests.log": "494298b31c29a7b331d79db57ef8776e9a8544990b88d3add516f375f567408f",
+      "audit-845-final-ui-tests.log": "551594fcb34c384fb75b5087fa0e41127646a7981a021beb621df295dc5356c3",
+      "audit-845-debug-app-build.log": "e8789f1f227ae8f1e0f190ebff7038b0b15414c3d009eed8d23c7e073949ffcc"
+    },
+    "stats_source_sha256": "2f96e0a560eb6f1a2e0c104c5094d6daa1509ee746b68d143746da78ab04b05c",
+    "stats_tests_sha256": "fcdb625d11736297f309daafff25c49021d2573bce91df646a1d579a0423443e"
+  },
+  "cases": [
+    {
+      "case": "zero-none",
+      "current_hp": 0,
+      "stored_status": "None",
+      "visually_observed_before": "OK",
+      "visually_observed_after": "FNT",
+      "fixture_sha256": "8be6491514b6b60f0e35942f603729a142af40ce66b3fa67661d8ffe6fed8ab9",
+      "source_fixture_construction": "native-base-fixture.json plus first-mon HP/status overrides only",
+      "before_png": "../../screenshots/stats-fainted-status/zero-none-before.png",
+      "after_png": "../../screenshots/stats-fainted-status/zero-none-after.png",
+      "repeat_png_and_trace_identical": true,
+      "actions_identical_across_builds": true,
+      "flags_identical_across_builds": true,
+      "native_party_raw_identical_across_builds": true,
+      "native_sram_identical_across_builds": true,
+      "pixel_difference_bbox_exclusive": [
+        128,
+        51,
+        148,
+        58
+      ],
+      "changed_pixels": 30,
+      "trials": [
+        {
+          "label": "before",
+          "repeat": 1,
+          "stats_png_sha256": "76a6a40a82ab6c176ba461a925a595cf40a658e8b0ee499606c39e1215be2b0c",
+          "capture_frame": 428,
+          "normal_save": true,
+          "sram_checksum": 115,
+          "sram_sha256": "6dfeffc2b88df63fb726fbf45293817830aa9cdf5f33e06394fc190b3759df12",
+          "first_party_raw_hex": "9900000c00160300212d000000000003cd000000000000000000009a78232800000c00230012001300110016",
+          "healthy_second_raw_hex": "9900230c00160300212d000000000003cd000000000000000000009a78232800000c00230012001300110016",
+          "party_gameplay_fields_unchanged": true,
+          "money": 3000,
+          "bag": [
+            [
+              "Protein",
+              2
+            ]
+          ],
+          "generated_sidecars": {
+            "isolated.script_flags.json": "e4799d677682468e838fcdd0a7136805c269c28fd808eb8177464b0c04e2b418"
+          }
+        },
+        {
+          "label": "before",
+          "repeat": 2,
+          "stats_png_sha256": "76a6a40a82ab6c176ba461a925a595cf40a658e8b0ee499606c39e1215be2b0c",
+          "capture_frame": 428,
+          "normal_save": true,
+          "sram_checksum": 115,
+          "sram_sha256": "6dfeffc2b88df63fb726fbf45293817830aa9cdf5f33e06394fc190b3759df12",
+          "first_party_raw_hex": "9900000c00160300212d000000000003cd000000000000000000009a78232800000c00230012001300110016",
+          "healthy_second_raw_hex": "9900230c00160300212d000000000003cd000000000000000000009a78232800000c00230012001300110016",
+          "party_gameplay_fields_unchanged": true,
+          "money": 3000,
+          "bag": [
+            [
+              "Protein",
+              2
+            ]
+          ],
+          "generated_sidecars": {
+            "isolated.script_flags.json": "e4799d677682468e838fcdd0a7136805c269c28fd808eb8177464b0c04e2b418"
+          }
+        },
+        {
+          "label": "after",
+          "repeat": 1,
+          "stats_png_sha256": "c8637ef9c99376409b862e270e4751ab91c0b3eac507959fa4b7aac4806d11e2",
+          "capture_frame": 428,
+          "normal_save": true,
+          "sram_checksum": 115,
+          "sram_sha256": "6dfeffc2b88df63fb726fbf45293817830aa9cdf5f33e06394fc190b3759df12",
+          "first_party_raw_hex": "9900000c00160300212d000000000003cd000000000000000000009a78232800000c00230012001300110016",
+          "healthy_second_raw_hex": "9900230c00160300212d000000000003cd000000000000000000009a78232800000c00230012001300110016",
+          "party_gameplay_fields_unchanged": true,
+          "money": 3000,
+          "bag": [
+            [
+              "Protein",
+              2
+            ]
+          ],
+          "generated_sidecars": {
+            "isolated.script_flags.json": "e4799d677682468e838fcdd0a7136805c269c28fd808eb8177464b0c04e2b418"
+          }
+        },
+        {
+          "label": "after",
+          "repeat": 2,
+          "stats_png_sha256": "c8637ef9c99376409b862e270e4751ab91c0b3eac507959fa4b7aac4806d11e2",
+          "capture_frame": 428,
+          "normal_save": true,
+          "sram_checksum": 115,
+          "sram_sha256": "6dfeffc2b88df63fb726fbf45293817830aa9cdf5f33e06394fc190b3759df12",
+          "first_party_raw_hex": "9900000c00160300212d000000000003cd000000000000000000009a78232800000c00230012001300110016",
+          "healthy_second_raw_hex": "9900230c00160300212d000000000003cd000000000000000000009a78232800000c00230012001300110016",
+          "party_gameplay_fields_unchanged": true,
+          "money": 3000,
+          "bag": [
+            [
+              "Protein",
+              2
+            ]
+          ],
+          "generated_sidecars": {
+            "isolated.script_flags.json": "e4799d677682468e838fcdd0a7136805c269c28fd808eb8177464b0c04e2b418"
+          }
+        }
+      ]
+    },
+    {
+      "case": "zero-poison",
+      "current_hp": 0,
+      "stored_status": "Poison",
+      "visually_observed_before": "PSN",
+      "visually_observed_after": "FNT",
+      "fixture_sha256": "d8ada8bfb69b0cfa980c1319c5313567cc68a0b21ad6f3f647d55b2441db5166",
+      "source_fixture_construction": "native-base-fixture.json plus first-mon HP/status overrides only",
+      "before_png": "../../screenshots/stats-fainted-status/zero-poison-before.png",
+      "after_png": "../../screenshots/stats-fainted-status/zero-poison-after.png",
+      "repeat_png_and_trace_identical": true,
+      "actions_identical_across_builds": true,
+      "flags_identical_across_builds": true,
+      "native_party_raw_identical_across_builds": true,
+      "native_sram_identical_across_builds": true,
+      "pixel_difference_bbox_exclusive": [
+        131,
+        51,
+        148,
+        58
+      ],
+      "changed_pixels": 39,
+      "trials": [
+        {
+          "label": "before",
+          "repeat": 1,
+          "stats_png_sha256": "f40a13c06f3f0ac6da7c696338a6419a788ec1051bc682f3e2ec0b9caf1571d3",
+          "capture_frame": 428,
+          "normal_save": true,
+          "sram_checksum": 107,
+          "sram_sha256": "d18f74515bb8a5fefa521376a2ea1d1fdc57b75485b29628d917d99d7501d550",
+          "first_party_raw_hex": "9900000c08160300212d000000000003cd000000000000000000009a78232800000c00230012001300110016",
+          "healthy_second_raw_hex": "9900230c00160300212d000000000003cd000000000000000000009a78232800000c00230012001300110016",
+          "party_gameplay_fields_unchanged": true,
+          "money": 3000,
+          "bag": [
+            [
+              "Protein",
+              2
+            ]
+          ],
+          "generated_sidecars": {
+            "isolated.script_flags.json": "e4799d677682468e838fcdd0a7136805c269c28fd808eb8177464b0c04e2b418"
+          }
+        },
+        {
+          "label": "before",
+          "repeat": 2,
+          "stats_png_sha256": "f40a13c06f3f0ac6da7c696338a6419a788ec1051bc682f3e2ec0b9caf1571d3",
+          "capture_frame": 428,
+          "normal_save": true,
+          "sram_checksum": 107,
+          "sram_sha256": "d18f74515bb8a5fefa521376a2ea1d1fdc57b75485b29628d917d99d7501d550",
+          "first_party_raw_hex": "9900000c08160300212d000000000003cd000000000000000000009a78232800000c00230012001300110016",
+          "healthy_second_raw_hex": "9900230c00160300212d000000000003cd000000000000000000009a78232800000c00230012001300110016",
+          "party_gameplay_fields_unchanged": true,
+          "money": 3000,
+          "bag": [
+            [
+              "Protein",
+              2
+            ]
+          ],
+          "generated_sidecars": {
+            "isolated.script_flags.json": "e4799d677682468e838fcdd0a7136805c269c28fd808eb8177464b0c04e2b418"
+          }
+        },
+        {
+          "label": "after",
+          "repeat": 1,
+          "stats_png_sha256": "c8637ef9c99376409b862e270e4751ab91c0b3eac507959fa4b7aac4806d11e2",
+          "capture_frame": 428,
+          "normal_save": true,
+          "sram_checksum": 107,
+          "sram_sha256": "d18f74515bb8a5fefa521376a2ea1d1fdc57b75485b29628d917d99d7501d550",
+          "first_party_raw_hex": "9900000c08160300212d000000000003cd000000000000000000009a78232800000c00230012001300110016",
+          "healthy_second_raw_hex": "9900230c00160300212d000000000003cd000000000000000000009a78232800000c00230012001300110016",
+          "party_gameplay_fields_unchanged": true,
+          "money": 3000,
+          "bag": [
+            [
+              "Protein",
+              2
+            ]
+          ],
+          "generated_sidecars": {
+            "isolated.script_flags.json": "e4799d677682468e838fcdd0a7136805c269c28fd808eb8177464b0c04e2b418"
+          }
+        },
+        {
+          "label": "after",
+          "repeat": 2,
+          "stats_png_sha256": "c8637ef9c99376409b862e270e4751ab91c0b3eac507959fa4b7aac4806d11e2",
+          "capture_frame": 428,
+          "normal_save": true,
+          "sram_checksum": 107,
+          "sram_sha256": "d18f74515bb8a5fefa521376a2ea1d1fdc57b75485b29628d917d99d7501d550",
+          "first_party_raw_hex": "9900000c08160300212d000000000003cd000000000000000000009a78232800000c00230012001300110016",
+          "healthy_second_raw_hex": "9900230c00160300212d000000000003cd000000000000000000009a78232800000c00230012001300110016",
+          "party_gameplay_fields_unchanged": true,
+          "money": 3000,
+          "bag": [
+            [
+              "Protein",
+              2
+            ]
+          ],
+          "generated_sidecars": {
+            "isolated.script_flags.json": "e4799d677682468e838fcdd0a7136805c269c28fd808eb8177464b0c04e2b418"
+          }
+        }
+      ]
+    },
+    {
+      "case": "one-none",
+      "current_hp": 1,
+      "stored_status": "None",
+      "visually_observed_before": "OK",
+      "visually_observed_after": "OK",
+      "fixture_sha256": "b0a69aa14a773ab6dfbb989cb0d0b7281431cfb5a8f6408504e356c24939c7e4",
+      "source_fixture_construction": "native-base-fixture.json plus first-mon HP/status overrides only",
+      "before_png": "../../screenshots/stats-fainted-status/one-none-before.png",
+      "after_png": "../../screenshots/stats-fainted-status/one-none-after.png",
+      "repeat_png_and_trace_identical": true,
+      "actions_identical_across_builds": true,
+      "flags_identical_across_builds": true,
+      "native_party_raw_identical_across_builds": true,
+      "native_sram_identical_across_builds": true,
+      "pixel_difference_bbox_exclusive": null,
+      "changed_pixels": 0,
+      "trials": [
+        {
+          "label": "before",
+          "repeat": 1,
+          "stats_png_sha256": "97388a369df8b183168b536d4f87678163154dfcd99d41a24c42f16a291a6320",
+          "capture_frame": 428,
+          "normal_save": true,
+          "sram_checksum": 114,
+          "sram_sha256": "23ec69f9cbb5d30fbcbd043e76f0b6a6cfd8d74a605572703e0d1477953fdd28",
+          "first_party_raw_hex": "9900010c00160300212d000000000003cd000000000000000000009a78232800000c00230012001300110016",
+          "healthy_second_raw_hex": "9900230c00160300212d000000000003cd000000000000000000009a78232800000c00230012001300110016",
+          "party_gameplay_fields_unchanged": true,
+          "money": 3000,
+          "bag": [
+            [
+              "Protein",
+              2
+            ]
+          ],
+          "generated_sidecars": {
+            "isolated.script_flags.json": "e4799d677682468e838fcdd0a7136805c269c28fd808eb8177464b0c04e2b418"
+          }
+        },
+        {
+          "label": "before",
+          "repeat": 2,
+          "stats_png_sha256": "97388a369df8b183168b536d4f87678163154dfcd99d41a24c42f16a291a6320",
+          "capture_frame": 428,
+          "normal_save": true,
+          "sram_checksum": 114,
+          "sram_sha256": "23ec69f9cbb5d30fbcbd043e76f0b6a6cfd8d74a605572703e0d1477953fdd28",
+          "first_party_raw_hex": "9900010c00160300212d000000000003cd000000000000000000009a78232800000c00230012001300110016",
+          "healthy_second_raw_hex": "9900230c00160300212d000000000003cd000000000000000000009a78232800000c00230012001300110016",
+          "party_gameplay_fields_unchanged": true,
+          "money": 3000,
+          "bag": [
+            [
+              "Protein",
+              2
+            ]
+          ],
+          "generated_sidecars": {
+            "isolated.script_flags.json": "e4799d677682468e838fcdd0a7136805c269c28fd808eb8177464b0c04e2b418"
+          }
+        },
+        {
+          "label": "after",
+          "repeat": 1,
+          "stats_png_sha256": "97388a369df8b183168b536d4f87678163154dfcd99d41a24c42f16a291a6320",
+          "capture_frame": 428,
+          "normal_save": true,
+          "sram_checksum": 114,
+          "sram_sha256": "23ec69f9cbb5d30fbcbd043e76f0b6a6cfd8d74a605572703e0d1477953fdd28",
+          "first_party_raw_hex": "9900010c00160300212d000000000003cd000000000000000000009a78232800000c00230012001300110016",
+          "healthy_second_raw_hex": "9900230c00160300212d000000000003cd000000000000000000009a78232800000c00230012001300110016",
+          "party_gameplay_fields_unchanged": true,
+          "money": 3000,
+          "bag": [
+            [
+              "Protein",
+              2
+            ]
+          ],
+          "generated_sidecars": {
+            "isolated.script_flags.json": "e4799d677682468e838fcdd0a7136805c269c28fd808eb8177464b0c04e2b418"
+          }
+        },
+        {
+          "label": "after",
+          "repeat": 2,
+          "stats_png_sha256": "97388a369df8b183168b536d4f87678163154dfcd99d41a24c42f16a291a6320",
+          "capture_frame": 428,
+          "normal_save": true,
+          "sram_checksum": 114,
+          "sram_sha256": "23ec69f9cbb5d30fbcbd043e76f0b6a6cfd8d74a605572703e0d1477953fdd28",
+          "first_party_raw_hex": "9900010c00160300212d000000000003cd000000000000000000009a78232800000c00230012001300110016",
+          "healthy_second_raw_hex": "9900230c00160300212d000000000003cd000000000000000000009a78232800000c00230012001300110016",
+          "party_gameplay_fields_unchanged": true,
+          "money": 3000,
+          "bag": [
+            [
+              "Protein",
+              2
+            ]
+          ],
+          "generated_sidecars": {
+            "isolated.script_flags.json": "e4799d677682468e838fcdd0a7136805c269c28fd808eb8177464b0c04e2b418"
+          }
+        }
+      ]
+    },
+    {
+      "case": "one-poison",
+      "current_hp": 1,
+      "stored_status": "Poison",
+      "visually_observed_before": "PSN",
+      "visually_observed_after": "PSN",
+      "fixture_sha256": "b412dcdfd85d80a61598fd2dcf32aa8a855ea639c58d620ab693955489a984e7",
+      "source_fixture_construction": "native-base-fixture.json plus first-mon HP/status overrides only",
+      "before_png": "../../screenshots/stats-fainted-status/one-poison-before.png",
+      "after_png": "../../screenshots/stats-fainted-status/one-poison-after.png",
+      "repeat_png_and_trace_identical": true,
+      "actions_identical_across_builds": true,
+      "flags_identical_across_builds": true,
+      "native_party_raw_identical_across_builds": true,
+      "native_sram_identical_across_builds": true,
+      "pixel_difference_bbox_exclusive": null,
+      "changed_pixels": 0,
+      "trials": [
+        {
+          "label": "before",
+          "repeat": 1,
+          "stats_png_sha256": "279918e800f60b5f2029d57bf9bc283155a251c3509d41382d82df8495c50f33",
+          "capture_frame": 428,
+          "normal_save": true,
+          "sram_checksum": 106,
+          "sram_sha256": "a72748df36743a511f902747f3e5f9205581af64c413cbe33fa647ddb32e2565",
+          "first_party_raw_hex": "9900010c08160300212d000000000003cd000000000000000000009a78232800000c00230012001300110016",
+          "healthy_second_raw_hex": "9900230c00160300212d000000000003cd000000000000000000009a78232800000c00230012001300110016",
+          "party_gameplay_fields_unchanged": true,
+          "money": 3000,
+          "bag": [
+            [
+              "Protein",
+              2
+            ]
+          ],
+          "generated_sidecars": {
+            "isolated.script_flags.json": "e4799d677682468e838fcdd0a7136805c269c28fd808eb8177464b0c04e2b418"
+          }
+        },
+        {
+          "label": "before",
+          "repeat": 2,
+          "stats_png_sha256": "279918e800f60b5f2029d57bf9bc283155a251c3509d41382d82df8495c50f33",
+          "capture_frame": 428,
+          "normal_save": true,
+          "sram_checksum": 106,
+          "sram_sha256": "a72748df36743a511f902747f3e5f9205581af64c413cbe33fa647ddb32e2565",
+          "first_party_raw_hex": "9900010c08160300212d000000000003cd000000000000000000009a78232800000c00230012001300110016",
+          "healthy_second_raw_hex": "9900230c00160300212d000000000003cd000000000000000000009a78232800000c00230012001300110016",
+          "party_gameplay_fields_unchanged": true,
+          "money": 3000,
+          "bag": [
+            [
+              "Protein",
+              2
+            ]
+          ],
+          "generated_sidecars": {
+            "isolated.script_flags.json": "e4799d677682468e838fcdd0a7136805c269c28fd808eb8177464b0c04e2b418"
+          }
+        },
+        {
+          "label": "after",
+          "repeat": 1,
+          "stats_png_sha256": "279918e800f60b5f2029d57bf9bc283155a251c3509d41382d82df8495c50f33",
+          "capture_frame": 428,
+          "normal_save": true,
+          "sram_checksum": 106,
+          "sram_sha256": "a72748df36743a511f902747f3e5f9205581af64c413cbe33fa647ddb32e2565",
+          "first_party_raw_hex": "9900010c08160300212d000000000003cd000000000000000000009a78232800000c00230012001300110016",
+          "healthy_second_raw_hex": "9900230c00160300212d000000000003cd000000000000000000009a78232800000c00230012001300110016",
+          "party_gameplay_fields_unchanged": true,
+          "money": 3000,
+          "bag": [
+            [
+              "Protein",
+              2
+            ]
+          ],
+          "generated_sidecars": {
+            "isolated.script_flags.json": "e4799d677682468e838fcdd0a7136805c269c28fd808eb8177464b0c04e2b418"
+          }
+        },
+        {
+          "label": "after",
+          "repeat": 2,
+          "stats_png_sha256": "279918e800f60b5f2029d57bf9bc283155a251c3509d41382d82df8495c50f33",
+          "capture_frame": 428,
+          "normal_save": true,
+          "sram_checksum": 106,
+          "sram_sha256": "a72748df36743a511f902747f3e5f9205581af64c413cbe33fa647ddb32e2565",
+          "first_party_raw_hex": "9900010c08160300212d000000000003cd000000000000000000009a78232800000c00230012001300110016",
+          "healthy_second_raw_hex": "9900230c00160300212d000000000003cd000000000000000000009a78232800000c00230012001300110016",
+          "party_gameplay_fields_unchanged": true,
+          "money": 3000,
+          "bag": [
+            [
+              "Protein",
+              2
+            ]
+          ],
+          "generated_sidecars": {
+            "isolated.script_flags.json": "e4799d677682468e838fcdd0a7136805c269c28fd808eb8177464b0c04e2b418"
+          }
+        }
+      ]
+    }
+  ]
+}
