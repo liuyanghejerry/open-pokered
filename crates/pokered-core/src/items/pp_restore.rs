@@ -103,9 +103,11 @@ fn use_pp_up(mon: &mut Pokemon, move_index: usize) -> PpRestoreResult {
     if mon.pp_ups[move_index] >= MAX_PP_UPS_PER_MOVE {
         return PpRestoreResult::NoEffect;
     }
+    // RestoreBonusPP/AddBonusPP adds only this PP Up's bonus to the current
+    // PP. Already-spent PP stays spent, including on the second and third use.
+    let bonus = (get_move_max_pp(mon.moves[move_index]) / 5).min(PP_UP_BONUS_CAP);
     mon.pp_ups[move_index] += 1;
-    let new_max = get_max_pp_with_ups(mon.moves[move_index], mon.pp_ups[move_index]);
-    mon.pp[move_index] = new_max;
+    mon.pp[move_index] += bonus;
     PpRestoreResult::PpUpApplied {
         move_index,
         new_pp_up_count: mon.pp_ups[move_index],

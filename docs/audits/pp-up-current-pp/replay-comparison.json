@@ -1,0 +1,150 @@
+{
+  "base_commit": "862bb216d4733e1f361f615447fe3aab74e49982",
+  "before_binary_sha256": "503ab0f626ef1839862b7ed8059ed51154530b1c21bb4b0af23905f3e9979fcd",
+  "after_binary_sha256": "dffbebdcf3c44cee83c6d3060997b13c2222fc129e6b88aae7bad3a759fa4457",
+  "replay_script_sha256": "f3ff3636727be7b46417f9088513d5353ecf831847813d4d271db09a50f13e6d",
+  "native_repeats_each_side": 2,
+  "original_isolated_function": {
+    "name": "AddBonusPP",
+    "bank": 3,
+    "address": 26178,
+    "legal_cases_per_repeat": 669,
+    "repeats": 2,
+    "pass": true,
+    "scope": "Direct isolated retail-original AddBonusPP function calls, wUsingPPUp=1. All legal basePP5..40 and currentPP0..old-max for0..2 existingUPs. Actual ordinary bag/menu item use is NOT emulated. Two identical repeats; ROM hooks exact SP return, IRQdisabled. Synthetic bases0/1 separately marked invalid move-data cases."
+  },
+  "cases": [
+    {
+      "case": "tackle-zero-0",
+      "move": "Tackle",
+      "base_pp": 35,
+      "before_pp": 0,
+      "before_ups": 0,
+      "master_pp": 42,
+      "fixed_pp": 7,
+      "max_pp": 42,
+      "new_ups": 1,
+      "one_item_consumed": true,
+      "capture_frame": 1040,
+      "matched_actions": true,
+      "only_current_pp_changed_in_saved_snapshot": true,
+      "changed_pixels": 25,
+      "changed_bbox": [
+        112,
+        83,
+        120,
+        89
+      ]
+    },
+    {
+      "case": "tackle-ten-1",
+      "move": "Tackle",
+      "base_pp": 35,
+      "before_pp": 10,
+      "before_ups": 1,
+      "master_pp": 49,
+      "fixed_pp": 17,
+      "max_pp": 49,
+      "new_ups": 2,
+      "one_item_consumed": true,
+      "capture_frame": 1040,
+      "matched_actions": true,
+      "only_current_pp_changed_in_saved_snapshot": true,
+      "changed_pixels": 29,
+      "changed_bbox": [
+        112,
+        83,
+        120,
+        89
+      ]
+    },
+    {
+      "case": "tackle-ten-2",
+      "move": "Tackle",
+      "base_pp": 35,
+      "before_pp": 10,
+      "before_ups": 2,
+      "master_pp": 56,
+      "fixed_pp": 17,
+      "max_pp": 56,
+      "new_ups": 3,
+      "one_item_consumed": true,
+      "capture_frame": 1040,
+      "matched_actions": true,
+      "only_current_pp_changed_in_saved_snapshot": true,
+      "changed_pixels": 30,
+      "changed_bbox": [
+        112,
+        83,
+        120,
+        89
+      ]
+    },
+    {
+      "case": "growl-zero-0",
+      "move": "Growl",
+      "base_pp": 40,
+      "before_pp": 0,
+      "before_ups": 0,
+      "master_pp": 47,
+      "fixed_pp": 7,
+      "max_pp": 47,
+      "new_ups": 1,
+      "one_item_consumed": true,
+      "capture_frame": 1040,
+      "matched_actions": true,
+      "only_current_pp_changed_in_saved_snapshot": true,
+      "changed_pixels": 15,
+      "changed_bbox": [
+        112,
+        83,
+        115,
+        89
+      ]
+    },
+    {
+      "case": "growl-ten-1",
+      "move": "Growl",
+      "base_pp": 40,
+      "before_pp": 10,
+      "before_ups": 1,
+      "master_pp": 54,
+      "fixed_pp": 17,
+      "max_pp": 54,
+      "new_ups": 2,
+      "one_item_consumed": true,
+      "capture_frame": 1040,
+      "matched_actions": true,
+      "only_current_pp_changed_in_saved_snapshot": true,
+      "changed_pixels": 31,
+      "changed_bbox": [
+        112,
+        83,
+        120,
+        89
+      ]
+    },
+    {
+      "case": "growl-ten-2",
+      "move": "Growl",
+      "base_pp": 40,
+      "before_pp": 10,
+      "before_ups": 2,
+      "master_pp": 61,
+      "fixed_pp": 17,
+      "max_pp": 61,
+      "new_ups": 3,
+      "one_item_consumed": true,
+      "capture_frame": 1040,
+      "matched_actions": true,
+      "only_current_pp_changed_in_saved_snapshot": true,
+      "changed_pixels": 28,
+      "changed_bbox": [
+        112,
+        83,
+        120,
+        89
+      ]
+    }
+  ]
+}
