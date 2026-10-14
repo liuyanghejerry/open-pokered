@@ -44,3 +44,26 @@ B 取消、通过正常 SAVE 保存。每次队伍 HP/status/招式/属性、背
 
 限定绘制回归覆盖 HP0 的六类异常、HP1 与合法 HP256 的六类异常，以及长昵称在
 FNT/PSN/无标签时的空间预留和非重叠。3 项新增检查及 UI 库完整 19 项通过。
+
+
+## 合并兼容提示后的 CI 集成测试修正（audit874）
+
+PR242 的 `e1c9dae5` 合入 PR239 后，GitHub job
+[Build pokered-ui / Test native package](https://github.com/liuyanghejerry/open-pokered/actions/runs/38642505837/job/116121398915)
+失败。编译成功、20项库测试全部通过；完整包测试中的两处旧断言还要求HP0显示
+SLP/PSN：`party_menu_zero_hp_skips_filled_rect` 与
+`machine_party_menu_shows_species_compatibility_instead_of_hp` 的 Potion 对照。
+
+此修正只改集成测试的原作约束：HP0/Sleep→FNT且不打印SLP；Potion HP0/Poison→FNT、
+HP1/Poison→PSN；TM21/HM01在两种HP下仍只显示ABLE/NOTABLE，均不混入FNT/PSN/HP。
+仍检查成员数据不变。原生产代码、FNT优先规则、机器兼容提示规则未改动。
+
+本地按CI的整个包命令执行 `cargo build -p pokered-ui` 与 `cargo test -p pokered-ui`，
+完整结果116通过、0失败、0忽略（含20库测试、58菜单集成测试、其他38集成测试，doc-tests0）。
+原始日志在 `.task-tmp/fidelity-39-plus/audit-874-ui-build.log`、
+`audit-874-ui-final-full.log`，CI失败日志在 `audit-874-party-ci-job.plain.log`。
+共享target使用dev opt2/debug0；CI使用默认dev profile，测试目标/默认features相同。
+
+此前截图仍标记冻结 master e481 / 修复ab616程序；合入236、239及本次测试修正不把它们
+改称当前head。这些截图展示普通POKéMON菜单的FNT变化，机器选择提示另有PR239自己的
+before/after证据。本次只有测试/文档修改，无新增可见行为，也没有新增构建/截图主张。

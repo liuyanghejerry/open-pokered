@@ -601,7 +601,7 @@ fn party_menu_single_pokemon_full_hp_no_status() {
 }
 
 #[test]
-fn party_menu_zero_hp_skips_filled_rect() {
+fn party_menu_zero_hp_shows_fnt_and_skips_filled_rect() {
     let mon = fixture_pokemon(Species::Snorlax, 50, 0.0, StatusCondition::Sleep(3));
     let state = PartyScreenState::new(vec![mon]);
     let mut rec = Recorder::default();
@@ -610,9 +610,10 @@ fn party_menu_zero_hp_skips_filled_rect() {
     // No pixel rects — HP bar is drawn at app layer.
     assert_eq!(collect_pixel_rects(&rec.ops).len(), 0);
 
-    // Status code SLP is rendered at column 12.
+    // PrintStatusCondition checks HP before ailments: FNT replaces SLP at HP0.
     let texts = collect_texts(&rec.ops);
-    assert!(texts.contains(&(12, 0, "SLP".into())));
+    assert!(texts.contains(&(12, 0, "FNT".into())));
+    assert!(!texts.iter().any(|(_, _, text)| text == "SLP"));
 }
 
 #[test]
@@ -1380,28 +1381,34 @@ fn machine_party_menu_shows_species_compatibility_instead_of_hp() {
     use pokered_data::items::ItemId;
     use pokered_data::species::Species;
     let mut compatible = create_pokemon(Species::Bulbasaur, 12, [0x9a, 0x78]).unwrap();
-    compatible.hp = 0; // Compatibility is independent of current HP.
     compatible.status = StatusCondition::Poison;
     let incompatible = create_pokemon(Species::Caterpie, 12, [0x9a, 0x78]).unwrap();
-    for item in [ItemId::Tm21, ItemId::Hm01, ItemId::Potion] {
-        let state = PartyScreenState::new_for_item(vec![compatible, incompatible], item);
-        let mut rec = Recorder::default();
-        menus::party::draw(&state, &PARTY_DEFAULT_LAYOUT, &mut Ui::new(&mut rec), Lang::En);
-        let texts: Vec<_> = rec.ops.iter().filter_map(|op| match op {
-            Op::Text(_, text, _) => Some(text.as_str()),
-            _ => None,
-        }).collect();
-        if item == ItemId::Potion {
-            assert!(!texts.contains(&"ABLE") && !texts.contains(&"NOT ABLE"));
-            assert!(texts.contains(&"PSN"));
-            assert!(texts.contains(&format!("0/{}", compatible.max_hp).as_str()));
-            assert!(texts.contains(&format!("{}/{}", incompatible.hp, incompatible.max_hp).as_str()));
-        } else {
-            assert_eq!(texts.iter().filter(|&&t| t == "ABLE").count(), 1);
-            assert_eq!(texts.iter().filter(|&&t| t == "NOT ABLE").count(), 1);
-            assert!(!texts.contains(&"PSN"), "machine rows omit the status label too");
-            assert!(!texts.iter().any(|text| text.contains('/')), "machine rows must replace HP");
+    // Both states are legal. Ordinary item selection uses FNT before PSN;
+    // machine selection uses species compatibility independently of HP/status.
+    for (hp, visible_status) in [(0, "FNT"), (1, "PSN")] {
+        compatible.hp = hp;
+        for item in [ItemId::Tm21, ItemId::Hm01, ItemId::Potion] {
+            let state = PartyScreenState::new_for_item(vec![compatible, incompatible], item);
+            let mut rec = Recorder::default();
+            menus::party::draw(&state, &PARTY_DEFAULT_LAYOUT, &mut Ui::new(&mut rec), Lang::En);
+            let texts: Vec<_> = rec.ops.iter().filter_map(|op| match op {
+                Op::Text(_, text, _) => Some(text.as_str()),
+                _ => None,
+            }).collect();
+            if item == ItemId::Potion {
+                assert!(!texts.contains(&"ABLE") && !texts.contains(&"NOT ABLE"));
+                assert!(texts.contains(&visible_status));
+                assert!(!texts.contains(&if hp == 0 { "PSN" } else { "FNT" }));
+                assert!(texts.contains(&format!("{}/{}", hp, compatible.max_hp).as_str()));
+                assert!(texts.contains(&format!("{}/{}", incompatible.hp, incompatible.max_hp).as_str()));
+            } else {
+                assert_eq!(texts.iter().filter(|&&t| t == "ABLE").count(), 1);
+                assert_eq!(texts.iter().filter(|&&t| t == "NOT ABLE").count(), 1);
+                assert!(!texts.contains(&"PSN") && !texts.contains(&"FNT"),
+                    "machine rows omit both the fainted and ailment labels");
+                assert!(!texts.iter().any(|text| text.contains('/')), "machine rows must replace HP");
+            }
+            assert_eq!(state.party(), &[compatible, incompatible]);
         }
-        assert_eq!(state.party(), &[compatible, incompatible]);
     }
 }
