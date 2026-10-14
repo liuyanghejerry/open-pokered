@@ -135,25 +135,33 @@ impl TextPage {
     }
 
     fn replace_player(text: &str, player_name: Option<&str>) -> String {
+        if !text.contains("<PLAYER>") {
+            return text.to_string();
+        }
         text.replace("<PLAYER>", player_name.unwrap_or("RED"))
     }
 
     pub fn get_display_text(&self, player_name: Option<&str>, char_index: u16) -> (String, String) {
-        let l1 = Self::replace_player(self.line1, player_name);
-        let l2 = Self::replace_player(self.line2, player_name);
-
-        let l1_chars: Vec<char> = l1.chars().collect();
-        let l2_chars: Vec<char> = l2.chars().collect();
-        let total = l1_chars.len() + l2_chars.len();
+        let mut l1 = Self::replace_player(self.line1, player_name);
+        let l1_chars = l1.chars().count();
         let idx = char_index as usize;
 
-        if idx >= total {
-            (l1, l2)
-        } else if idx <= l1_chars.len() {
-            (l1_chars[..idx].iter().collect(), String::new())
+        // The substituted lines are already owned. Retain their visible
+        // prefixes without allocating character vectors or cloning line 1.
+        let truncate_chars = |line: &mut String, count: usize| {
+            let end = line
+                .char_indices()
+                .nth(count)
+                .map_or(line.len(), |(byte, _)| byte);
+            line.truncate(end);
+        };
+        if idx <= l1_chars {
+            truncate_chars(&mut l1, idx);
+            (l1, String::new())
         } else {
-            let l2_idx = idx - l1_chars.len();
-            (l1.clone(), l2_chars[..l2_idx].iter().collect())
+            let mut l2 = Self::replace_player(self.line2, player_name);
+            truncate_chars(&mut l2, idx - l1_chars);
+            (l1, l2)
         }
     }
 }
@@ -850,6 +858,71 @@ mod tests {
                     + page.line2.replace("<PLAYER>", name.unwrap_or("RED")).chars().count();
                 assert_eq!(page.total_chars(name), expected);
             }
+        }
+    }
+
+    #[test]
+    fn typewriter_text_prefixes_match_expected_substituted_unicode_lines() {
+        for (page, name, first, second) in [
+            (
+                TextPage::new("Hello!", "Welcome!"),
+                None,
+                "Hello!",
+                "Welcome!",
+            ),
+            (
+                TextPage::new("你好😀", "é，欢迎！"),
+                Some("小智"),
+                "你好😀",
+                "é，欢迎！",
+            ),
+            (
+                TextPage::new("Hi <PLAYER>!", "<PLAYER>, go!"),
+                None,
+                "Hi RED!",
+                "RED, go!",
+            ),
+            (
+                TextPage::new("<PLAYER><PLAYER>", "End."),
+                Some(""),
+                "",
+                "End.",
+            ),
+            (
+                TextPage::new("你好<PLAYER>", "<PLAYER>😀"),
+                Some("小智"),
+                "你好小智",
+                "小智😀",
+            ),
+            (
+                TextPage::new("<PLAYER>", "<PLAYER>"),
+                Some("<PLAYER>"),
+                "<PLAYER>",
+                "<PLAYER>",
+            ),
+            (TextPage::new("<PLAYER", ""), Some("RED"), "<PLAYER", ""),
+            (TextPage::new("", ""), None, "", ""),
+        ] {
+            let first_len = first.chars().count();
+            let total = first_len + second.chars().count();
+            for idx in 0..=total + 2 {
+                let expected = (
+                    first.chars().take(idx).collect::<String>(),
+                    second
+                        .chars()
+                        .take(idx.saturating_sub(first_len))
+                        .collect::<String>(),
+                );
+                assert_eq!(
+                    page.get_display_text(name, idx as u16),
+                    expected,
+                    "name={name:?}, idx={idx}"
+                );
+            }
+            assert_eq!(
+                page.get_display_text(name, u16::MAX),
+                (first.to_string(), second.to_string())
+            );
         }
     }
 
