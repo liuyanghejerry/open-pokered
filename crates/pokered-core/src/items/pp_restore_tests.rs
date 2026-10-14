@@ -315,6 +315,44 @@ fn pp_up_capped_at_3() {
 }
 
 #[test]
+fn pp_up_preserves_spent_pp_on_each_use() {
+    for old_ups in 0..3 {
+        for current_pp in [0, 4, 17] {
+            let mut mon = make_mon_with_pp(
+                [MoveId::Tackle, MoveId::Growl, MoveId::None, MoveId::None],
+                [current_pp, 11, 0, 0],
+                [old_ups, 2, 0, 0],
+            );
+            let result = use_pp_restore(&mut mon, ItemId::PpUp, 0);
+            assert_eq!(result, PpRestoreResult::PpUpApplied {
+                move_index: 0,
+                new_pp_up_count: old_ups + 1,
+            });
+            assert_eq!(mon.pp, [current_pp + 7, 11, 0, 0]);
+            assert_eq!(mon.pp_ups, [old_ups + 1, 2, 0, 0]);
+            let old_max = get_max_pp_with_ups(MoveId::Tackle, old_ups);
+            let new_max = get_max_pp_with_ups(MoveId::Tackle, old_ups + 1);
+            assert_eq!(new_max - mon.pp[0], old_max - current_pp);
+        }
+    }
+}
+
+#[test]
+fn pp_up_uses_original_bonus_for_low_and_high_pp_moves() {
+    let mut mon = make_mon_with_pp(
+        [MoveId::FireBlast, MoveId::Growl, MoveId::None, MoveId::None],
+        [0, 2, 0, 0],
+        [0; 4],
+    );
+    use_pp_restore(&mut mon, ItemId::PpUp, 0);
+    use_pp_restore(&mut mon, ItemId::PpUp, 1);
+    assert_eq!(mon.pp, [1, 9, 0, 0]);
+    assert_eq!(mon.pp_ups, [1, 1, 0, 0]);
+    assert_eq!(get_max_pp_with_ups(MoveId::FireBlast, 1), 6);
+    assert_eq!(get_max_pp_with_ups(MoveId::Growl, 1), 47);
+}
+
+#[test]
 fn pp_up_on_empty_slot_no_effect() {
     let mut mon = make_mon_with_pp(
         [MoveId::None, MoveId::None, MoveId::None, MoveId::None],
