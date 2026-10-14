@@ -47,6 +47,15 @@
 #229 相同的 40 帧按键 / 44 帧观察预算；未修改游戏引擎、目标地图
 或到达检查。新的全主线需要从头重跑，不把本次失败算成月见山通过。
 
+后续全新开机 `audit-844-fresh-main-flow-retry2` 使用隔离检出
+`b232f87e` 和上述冻结 binary，没有 resume 或载入旧档。m01–m12
+实际通过：m12 观察为 frame 218467、华蓝市 `(19,18)`，妙蛙草
+Lv18/HP54，移动/warp Idle、无剧情与对话；月见山出口理科男已击败，
+背包持有 Helix Fossil，两枚化石对象均已隐藏。随后 m13 Misty 战
+也通过。运行继续验证后续主线，尚不宣称 m49 或最新 master 全链
+通过。此 frozen binary 对应合入维他命 PR230 前的生产源；PR230
+改变道具逻辑，本轮主线没有使用维他命。
+
 `python3 -m unittest discover -s scripts -p test_playthrough_navigation.py -v`：46 项通过。新增覆盖固定登山男与暂时行走/脚本/游走对象的区分、固定目标不耗尽等待预算、楼梯后备路径避开固定对象，以及独立 16 帧移动模型下的完整 90 格路线。现有 map mismatch、错误 warp 目标、黑屏后回城、方向地毯和游走 NPC 等断言保持。
 
 本机证据根目录为 `.task-tmp/fidelity-39-plus`，主线原始证据在 `audit-838-full-main-flow-retry2/`；构造过程、初始 flags/NPC、最终完整 state、game log 和全部 PNG/manifest 在：
