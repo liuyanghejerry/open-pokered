@@ -63,7 +63,7 @@ fn draw_page1_v2<P: Painter>(
     ctx.set("level", mon.level as i64);
     ctx.set("hp", mon.hp as i64);
     ctx.set("max_hp", mon.max_hp as i64);
-    ctx.set("status", status_code(&mon.status));
+    ctx.set("status", status_code(mon.hp, &mon.status));
     ctx.set("dex_num", mon.species as u8 as i64);
     ctx.set("attack", mon.attack as i64);
     ctx.set("defense", mon.defense as i64);
@@ -189,7 +189,11 @@ fn display_name(
     render_data.species_name(mon.species).to_string()
 }
 
-fn status_code(status: &StatusCondition) -> &'static str {
+fn status_code(hp: u16, status: &StatusCondition) -> &'static str {
+    // PrintStatusCondition checks current HP before the stored ailment byte.
+    if hp == 0 {
+        return "FNT";
+    }
     match status {
         StatusCondition::None => "OK",
         StatusCondition::Sleep(_) => "SLP",
