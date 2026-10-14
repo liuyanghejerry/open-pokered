@@ -1,0 +1,4563 @@
+{
+  "scope": "Compatibility cue in field TM/HM party selection; actual input then cancel and ordinary SAVE, no learning attempt, no source/native frame parity claim.",
+  "source_revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "source_script_sha256": "35fcfb17bd47667378fa46dd5cc32a889d111082d9d3c204b2a5c73c2f90a16e",
+  "compatibility_bitmap_comparison": {
+    "scope": "Readonly typed7byte u8 nativeJSON compatibility flags equal original compiledROM BaseStats offset20. TM21 bit20 and HM01 bit50 use exact core can_learn_tm/hm mapping. No Cargo/no runtime overrides.",
+    "native_source_commit": "6a0ef88bdff7447e2478ae7d0a87b71fd372b011",
+    "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+    "rows": [
+      {
+        "species": "Bulbasaur",
+        "dex": 1,
+        "rom_record_offset": "0x383de",
+        "original_base_record_hex": "012d31312d4116032d40550040e540212d000003a40338c003080600",
+        "original_bitmap_hex": "a40338c0030806",
+        "native_tm_hm_flags": [
+          164,
+          3,
+          56,
+          192,
+          3,
+          8,
+          6
+        ],
+        "typed_readonly_results": {
+          "TM21": true,
+          "HM01": true
+        },
+        "native_base_json_sha256": "cbae0caa13f6eff43dc34dd7fd1719995a97ea41fb739773ce694cdc34ad2e7f"
+      },
+      {
+        "species": "Caterpie",
+        "dex": 10,
+        "rom_record_offset": "0x384da",
+        "original_base_record_hex": "0a2d1e232d140707ff3555494ae14a21510000000000000000000000",
+        "original_bitmap_hex": "00000000000000",
+        "native_tm_hm_flags": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "typed_readonly_results": {
+          "TM21": false,
+          "HM01": false
+        },
+        "native_base_json_sha256": "663b66145b6425b377041b4656f8ea7601d80a3613b808f0c84b012a78327da2"
+      }
+    ]
+  },
+  "builds": {
+    "before": {
+      "head": "5941a7f1e3012f02b87e9797ab9b439a18898966",
+      "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-861-machine-hints-before-debug",
+      "binary_sha256": "f5079766939731fdef7bf48fc257d4bed418344b158bb2394842ecd580794fd8",
+      "source_files": {
+        "crates/pokered-app/src/render/menu.rs": "eeb39be7edfcb1a76237193b33e3e4e9792bdedd4fd026bcdfc86c34d11c89ad",
+        "crates/pokered-core/src/party_screen.rs": "e92410bdcd3eedefd6228d3947018a7633c10a926b6aab7cb5a31d5f3e6b0b95",
+        "crates/pokered-ui/src/menus/party.rs": "a22295adb06e916ad56712f08c8be344cd89735cbe59317af577953e2820f8ea"
+      }
+    },
+    "after": {
+      "head": "56b167f2d980d1323017de9634350fcfa36219a6",
+      "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-861-machine-hints-after-debug",
+      "binary_sha256": "ab202271a04a562fcd9ba768dfbb0a8f269791f97055845572582dd33ec7ebf4",
+      "source_files": {
+        "crates/pokered-app/src/render/menu.rs": "f6b89a034519564e10a23e9eb640a527f3448a82cffa7fb9d380a800159226d6",
+        "crates/pokered-core/src/party_screen.rs": "ec6b380c59959418e0a34ddc4fda336aa7946be1a9e8549ba423db6ba07d3037",
+        "crates/pokered-ui/src/menus/party.rs": "378b67978e903683837297bb2823e6fdb2c36aca2414f4b031b2dce569596ab9"
+      }
+    }
+  },
+  "portable_replay_sha256": "0b7c7217b758e226ee1d9965a9e2cf687791dc3776520ea4b701495e6df02824",
+  "source_trials": [
+    {
+      "flow": "tm21",
+      "repeat": 1,
+      "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+      "constructed_state_sha256": "9a925a167050752f31245313a31a26b48130c99dbec053754b8012641642f964",
+      "normal_save": true,
+      "sram_sha256": "6595fb2484228bf1cd5fd085ab93d51a424f2bbcfd2e4e8a21d5aea0697d9f71",
+      "sram_checksum": 80,
+      "saved_money": 3000,
+      "actions": [
+        {
+          "button": "start",
+          "press": 2,
+          "neutral": 100,
+          "start_frame": 0
+        },
+        {
+          "button": "down",
+          "press": 2,
+          "neutral": 30,
+          "start_frame": 102
+        },
+        {
+          "button": "down",
+          "press": 2,
+          "neutral": 30,
+          "start_frame": 134
+        },
+        {
+          "button": "a",
+          "press": 2,
+          "neutral": 100,
+          "start_frame": 166
+        },
+        {
+          "button": "a",
+          "press": 2,
+          "neutral": 100,
+          "start_frame": 268
+        },
+        {
+          "button": "a",
+          "press": 2,
+          "neutral": 100,
+          "start_frame": 370
+        },
+        {
+          "button": "a",
+          "press": 2,
+          "neutral": 120,
+          "start_frame": 472
+        },
+        {
+          "button": "a",
+          "press": 2,
+          "neutral": 120,
+          "start_frame": 594
+        },
+        {
+          "button": "a",
+          "press": 2,
+          "neutral": 120,
+          "start_frame": 716
+        },
+        {
+          "button": "down",
+          "press": 2,
+          "neutral": 30,
+          "start_frame": 838
+        },
+        {
+          "button": "b",
+          "press": 2,
+          "neutral": 120,
+          "start_frame": 870
+        },
+        {
+          "button": "b",
+          "press": 2,
+          "neutral": 100,
+          "start_frame": 1242
+        },
+        {
+          "button": "down",
+          "press": 2,
+          "neutral": 30,
+          "start_frame": 1344
+        },
+        {
+          "button": "down",
+          "press": 2,
+          "neutral": 30,
+          "start_frame": 1376
+        },
+        {
+          "button": "a",
+          "press": 2,
+          "neutral": 100,
+          "start_frame": 1408
+        },
+        {
+          "button": "a",
+          "press": 2,
+          "neutral": 250,
+          "start_frame": 1510
+        },
+        {
+          "button": "a",
+          "press": 2,
+          "neutral": 250,
+          "start_frame": 1762
+        }
+      ],
+      "initial": {
+        "frame": 0,
+        "level": 12,
+        "hp": 35,
+        "moves": [
+          33,
+          45,
+          73,
+          15
+        ],
+        "pp": [
+          35,
+          40,
+          10,
+          30
+        ],
+        "raw": [
+          153,
+          0,
+          35,
+          12,
+          0,
+          22,
+          3,
+          45,
+          33,
+          45,
+          73,
+          15,
+          0,
+          0,
+          0,
+          3,
+          205,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          154,
+          120,
+          35,
+          40,
+          10,
+          30,
+          12,
+          0,
+          35,
+          0,
+          18,
+          0,
+          19,
+          0,
+          17,
+          0,
+          22
+        ],
+        "partner": [
+          123,
+          0,
+          35,
+          12,
+          0,
+          7,
+          7,
+          255,
+          33,
+          81,
+          0,
+          0,
+          0,
+          0,
+          0,
+          6,
+          192,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          154,
+          120,
+          35,
+          40,
+          0,
+          0,
+          12,
+          0,
+          35,
+          0,
+          14,
+          0,
+          15,
+          0,
+          17,
+          0,
+          11
+        ],
+        "bag": [
+          221,
+          2,
+          255
+        ],
+        "money": [
+          0,
+          48,
+          0
+        ],
+        "menu": 0,
+        "menu_max": 1,
+        "text_box_id": 1,
+        "party_menu_type": 0
+      },
+      "after": {
+        "frame": 992,
+        "level": 12,
+        "hp": 35,
+        "moves": [
+          33,
+          45,
+          73,
+          15
+        ],
+        "pp": [
+          35,
+          40,
+          10,
+          30
+        ],
+        "raw": [
+          153,
+          0,
+          35,
+          12,
+          0,
+          22,
+          3,
+          45,
+          33,
+          45,
+          73,
+          15,
+          0,
+          0,
+          0,
+          3,
+          205,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          154,
+          120,
+          35,
+          40,
+          10,
+          30,
+          12,
+          0,
+          35,
+          0,
+          18,
+          0,
+          19,
+          0,
+          17,
+          0,
+          22
+        ],
+        "partner": [
+          123,
+          0,
+          35,
+          12,
+          0,
+          7,
+          7,
+          255,
+          33,
+          81,
+          0,
+          0,
+          0,
+          0,
+          0,
+          6,
+          192,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          154,
+          120,
+          35,
+          40,
+          0,
+          0,
+          12,
+          0,
+          35,
+          0,
+          14,
+          0,
+          15,
+          0,
+          17,
+          0,
+          11
+        ],
+        "bag": [
+          221,
+          2,
+          255
+        ],
+        "money": [
+          0,
+          48,
+          0
+        ],
+        "menu": 0,
+        "menu_max": 1,
+        "text_box_id": 13,
+        "party_menu_type": 3
+      },
+      "party_menu": {
+        "frame": 838,
+        "png_sha256": "9757641763a63b15d4f19ca7dae104087ecfae1b53687c8f79df4306670bdab7",
+        "decoded_uppercase_rows": [
+          "   BULBASAUR ...    ",
+          ".           ABLE    ",
+          "   CATERPIE  ...    ",
+          "            NOT ABLE"
+        ]
+      }
+    },
+    {
+      "flow": "tm21",
+      "repeat": 2,
+      "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+      "constructed_state_sha256": "9a925a167050752f31245313a31a26b48130c99dbec053754b8012641642f964",
+      "normal_save": true,
+      "sram_sha256": "6595fb2484228bf1cd5fd085ab93d51a424f2bbcfd2e4e8a21d5aea0697d9f71",
+      "sram_checksum": 80,
+      "saved_money": 3000,
+      "actions": [
+        {
+          "button": "start",
+          "press": 2,
+          "neutral": 100,
+          "start_frame": 0
+        },
+        {
+          "button": "down",
+          "press": 2,
+          "neutral": 30,
+          "start_frame": 102
+        },
+        {
+          "button": "down",
+          "press": 2,
+          "neutral": 30,
+          "start_frame": 134
+        },
+        {
+          "button": "a",
+          "press": 2,
+          "neutral": 100,
+          "start_frame": 166
+        },
+        {
+          "button": "a",
+          "press": 2,
+          "neutral": 100,
+          "start_frame": 268
+        },
+        {
+          "button": "a",
+          "press": 2,
+          "neutral": 100,
+          "start_frame": 370
+        },
+        {
+          "button": "a",
+          "press": 2,
+          "neutral": 120,
+          "start_frame": 472
+        },
+        {
+          "button": "a",
+          "press": 2,
+          "neutral": 120,
+          "start_frame": 594
+        },
+        {
+          "button": "a",
+          "press": 2,
+          "neutral": 120,
+          "start_frame": 716
+        },
+        {
+          "button": "down",
+          "press": 2,
+          "neutral": 30,
+          "start_frame": 838
+        },
+        {
+          "button": "b",
+          "press": 2,
+          "neutral": 120,
+          "start_frame": 870
+        },
+        {
+          "button": "b",
+          "press": 2,
+          "neutral": 100,
+          "start_frame": 1242
+        },
+        {
+          "button": "down",
+          "press": 2,
+          "neutral": 30,
+          "start_frame": 1344
+        },
+        {
+          "button": "down",
+          "press": 2,
+          "neutral": 30,
+          "start_frame": 1376
+        },
+        {
+          "button": "a",
+          "press": 2,
+          "neutral": 100,
+          "start_frame": 1408
+        },
+        {
+          "button": "a",
+          "press": 2,
+          "neutral": 250,
+          "start_frame": 1510
+        },
+        {
+          "button": "a",
+          "press": 2,
+          "neutral": 250,
+          "start_frame": 1762
+        }
+      ],
+      "initial": {
+        "frame": 0,
+        "level": 12,
+        "hp": 35,
+        "moves": [
+          33,
+          45,
+          73,
+          15
+        ],
+        "pp": [
+          35,
+          40,
+          10,
+          30
+        ],
+        "raw": [
+          153,
+          0,
+          35,
+          12,
+          0,
+          22,
+          3,
+          45,
+          33,
+          45,
+          73,
+          15,
+          0,
+          0,
+          0,
+          3,
+          205,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          154,
+          120,
+          35,
+          40,
+          10,
+          30,
+          12,
+          0,
+          35,
+          0,
+          18,
+          0,
+          19,
+          0,
+          17,
+          0,
+          22
+        ],
+        "partner": [
+          123,
+          0,
+          35,
+          12,
+          0,
+          7,
+          7,
+          255,
+          33,
+          81,
+          0,
+          0,
+          0,
+          0,
+          0,
+          6,
+          192,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          154,
+          120,
+          35,
+          40,
+          0,
+          0,
+          12,
+          0,
+          35,
+          0,
+          14,
+          0,
+          15,
+          0,
+          17,
+          0,
+          11
+        ],
+        "bag": [
+          221,
+          2,
+          255
+        ],
+        "money": [
+          0,
+          48,
+          0
+        ],
+        "menu": 0,
+        "menu_max": 1,
+        "text_box_id": 1,
+        "party_menu_type": 0
+      },
+      "after": {
+        "frame": 992,
+        "level": 12,
+        "hp": 35,
+        "moves": [
+          33,
+          45,
+          73,
+          15
+        ],
+        "pp": [
+          35,
+          40,
+          10,
+          30
+        ],
+        "raw": [
+          153,
+          0,
+          35,
+          12,
+          0,
+          22,
+          3,
+          45,
+          33,
+          45,
+          73,
+          15,
+          0,
+          0,
+          0,
+          3,
+          205,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          154,
+          120,
+          35,
+          40,
+          10,
+          30,
+          12,
+          0,
+          35,
+          0,
+          18,
+          0,
+          19,
+          0,
+          17,
+          0,
+          22
+        ],
+        "partner": [
+          123,
+          0,
+          35,
+          12,
+          0,
+          7,
+          7,
+          255,
+          33,
+          81,
+          0,
+          0,
+          0,
+          0,
+          0,
+          6,
+          192,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          154,
+          120,
+          35,
+          40,
+          0,
+          0,
+          12,
+          0,
+          35,
+          0,
+          14,
+          0,
+          15,
+          0,
+          17,
+          0,
+          11
+        ],
+        "bag": [
+          221,
+          2,
+          255
+        ],
+        "money": [
+          0,
+          48,
+          0
+        ],
+        "menu": 0,
+        "menu_max": 1,
+        "text_box_id": 13,
+        "party_menu_type": 3
+      },
+      "party_menu": {
+        "frame": 838,
+        "png_sha256": "9757641763a63b15d4f19ca7dae104087ecfae1b53687c8f79df4306670bdab7",
+        "decoded_uppercase_rows": [
+          "   BULBASAUR ...    ",
+          ".           ABLE    ",
+          "   CATERPIE  ...    ",
+          "            NOT ABLE"
+        ]
+      }
+    },
+    {
+      "flow": "hm01",
+      "repeat": 1,
+      "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+      "constructed_state_sha256": "6d8c67a1c9fc7c0ea530c3237246df8c3c9d3f7dfa4821627d1482847e569200",
+      "normal_save": true,
+      "sram_sha256": "2a3ebda4439b96db1c95e98051bfa83838142a6a661661cae12e270f45954261",
+      "sram_checksum": 75,
+      "saved_money": 3000,
+      "actions": [
+        {
+          "button": "start",
+          "press": 2,
+          "neutral": 100,
+          "start_frame": 0
+        },
+        {
+          "button": "down",
+          "press": 2,
+          "neutral": 30,
+          "start_frame": 102
+        },
+        {
+          "button": "down",
+          "press": 2,
+          "neutral": 30,
+          "start_frame": 134
+        },
+        {
+          "button": "a",
+          "press": 2,
+          "neutral": 100,
+          "start_frame": 166
+        },
+        {
+          "button": "a",
+          "press": 2,
+          "neutral": 100,
+          "start_frame": 268
+        },
+        {
+          "button": "a",
+          "press": 2,
+          "neutral": 100,
+          "start_frame": 370
+        },
+        {
+          "button": "a",
+          "press": 2,
+          "neutral": 120,
+          "start_frame": 472
+        },
+        {
+          "button": "a",
+          "press": 2,
+          "neutral": 120,
+          "start_frame": 594
+        },
+        {
+          "button": "a",
+          "press": 2,
+          "neutral": 120,
+          "start_frame": 716
+        },
+        {
+          "button": "down",
+          "press": 2,
+          "neutral": 30,
+          "start_frame": 838
+        },
+        {
+          "button": "b",
+          "press": 2,
+          "neutral": 120,
+          "start_frame": 870
+        },
+        {
+          "button": "b",
+          "press": 2,
+          "neutral": 100,
+          "start_frame": 1242
+        },
+        {
+          "button": "down",
+          "press": 2,
+          "neutral": 30,
+          "start_frame": 1344
+        },
+        {
+          "button": "down",
+          "press": 2,
+          "neutral": 30,
+          "start_frame": 1376
+        },
+        {
+          "button": "a",
+          "press": 2,
+          "neutral": 100,
+          "start_frame": 1408
+        },
+        {
+          "button": "a",
+          "press": 2,
+          "neutral": 250,
+          "start_frame": 1510
+        },
+        {
+          "button": "a",
+          "press": 2,
+          "neutral": 250,
+          "start_frame": 1762
+        }
+      ],
+      "initial": {
+        "frame": 0,
+        "level": 13,
+        "hp": 37,
+        "moves": [
+          33,
+          45,
+          73,
+          22
+        ],
+        "pp": [
+          35,
+          40,
+          10,
+          10
+        ],
+        "raw": [
+          153,
+          0,
+          37,
+          13,
+          0,
+          22,
+          3,
+          45,
+          33,
+          45,
+          73,
+          22,
+          0,
+          0,
+          0,
+          4,
+          237,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          154,
+          120,
+          35,
+          40,
+          10,
+          10,
+          13,
+          0,
+          37,
+          0,
+          20,
+          0,
+          20,
+          0,
+          18,
+          0,
+          23
+        ],
+        "partner": [
+          123,
+          0,
+          35,
+          12,
+          0,
+          7,
+          7,
+          255,
+          33,
+          81,
+          0,
+          0,
+          0,
+          0,
+          0,
+          6,
+          192,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          154,
+          120,
+          35,
+          40,
+          0,
+          0,
+          12,
+          0,
+          35,
+          0,
+          14,
+          0,
+          15,
+          0,
+          17,
+          0,
+          11
+        ],
+        "bag": [
+          196,
+          1,
+          255
+        ],
+        "money": [
+          0,
+          48,
+          0
+        ],
+        "menu": 0,
+        "menu_max": 1,
+        "text_box_id": 1,
+        "party_menu_type": 0
+      },
+      "after": {
+        "frame": 992,
+        "level": 13,
+        "hp": 37,
+        "moves": [
+          33,
+          45,
+          73,
+          22
+        ],
+        "pp": [
+          35,
+          40,
+          10,
+          10
+        ],
+        "raw": [
+          153,
+          0,
+          37,
+          13,
+          0,
+          22,
+          3,
+          45,
+          33,
+          45,
+          73,
+          22,
+          0,
+          0,
+          0,
+          4,
+          237,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          154,
+          120,
+          35,
+          40,
+          10,
+          10,
+          13,
+          0,
+          37,
+          0,
+          20,
+          0,
+          20,
+          0,
+          18,
+          0,
+          23
+        ],
+        "partner": [
+          123,
+          0,
+          35,
+          12,
+          0,
+          7,
+          7,
+          255,
+          33,
+          81,
+          0,
+          0,
+          0,
+          0,
+          0,
+          6,
+          192,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          154,
+          120,
+          35,
+          40,
+          0,
+          0,
+          12,
+          0,
+          35,
+          0,
+          14,
+          0,
+          15,
+          0,
+          17,
+          0,
+          11
+        ],
+        "bag": [
+          196,
+          1,
+          255
+        ],
+        "money": [
+          0,
+          48,
+          0
+        ],
+        "menu": 0,
+        "menu_max": 1,
+        "text_box_id": 13,
+        "party_menu_type": 3
+      },
+      "party_menu": {
+        "frame": 838,
+        "png_sha256": "8476387674ac4030a9446008b9b6259e2b0b0839192aa2bcf4040bf4855d9f64",
+        "decoded_uppercase_rows": [
+          "   BULBASAUR ...    ",
+          ".           ABLE    ",
+          "   CATERPIE  ...    ",
+          "            NOT ABLE"
+        ]
+      }
+    },
+    {
+      "flow": "hm01",
+      "repeat": 2,
+      "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+      "constructed_state_sha256": "6d8c67a1c9fc7c0ea530c3237246df8c3c9d3f7dfa4821627d1482847e569200",
+      "normal_save": true,
+      "sram_sha256": "2a3ebda4439b96db1c95e98051bfa83838142a6a661661cae12e270f45954261",
+      "sram_checksum": 75,
+      "saved_money": 3000,
+      "actions": [
+        {
+          "button": "start",
+          "press": 2,
+          "neutral": 100,
+          "start_frame": 0
+        },
+        {
+          "button": "down",
+          "press": 2,
+          "neutral": 30,
+          "start_frame": 102
+        },
+        {
+          "button": "down",
+          "press": 2,
+          "neutral": 30,
+          "start_frame": 134
+        },
+        {
+          "button": "a",
+          "press": 2,
+          "neutral": 100,
+          "start_frame": 166
+        },
+        {
+          "button": "a",
+          "press": 2,
+          "neutral": 100,
+          "start_frame": 268
+        },
+        {
+          "button": "a",
+          "press": 2,
+          "neutral": 100,
+          "start_frame": 370
+        },
+        {
+          "button": "a",
+          "press": 2,
+          "neutral": 120,
+          "start_frame": 472
+        },
+        {
+          "button": "a",
+          "press": 2,
+          "neutral": 120,
+          "start_frame": 594
+        },
+        {
+          "button": "a",
+          "press": 2,
+          "neutral": 120,
+          "start_frame": 716
+        },
+        {
+          "button": "down",
+          "press": 2,
+          "neutral": 30,
+          "start_frame": 838
+        },
+        {
+          "button": "b",
+          "press": 2,
+          "neutral": 120,
+          "start_frame": 870
+        },
+        {
+          "button": "b",
+          "press": 2,
+          "neutral": 100,
+          "start_frame": 1242
+        },
+        {
+          "button": "down",
+          "press": 2,
+          "neutral": 30,
+          "start_frame": 1344
+        },
+        {
+          "button": "down",
+          "press": 2,
+          "neutral": 30,
+          "start_frame": 1376
+        },
+        {
+          "button": "a",
+          "press": 2,
+          "neutral": 100,
+          "start_frame": 1408
+        },
+        {
+          "button": "a",
+          "press": 2,
+          "neutral": 250,
+          "start_frame": 1510
+        },
+        {
+          "button": "a",
+          "press": 2,
+          "neutral": 250,
+          "start_frame": 1762
+        }
+      ],
+      "initial": {
+        "frame": 0,
+        "level": 13,
+        "hp": 37,
+        "moves": [
+          33,
+          45,
+          73,
+          22
+        ],
+        "pp": [
+          35,
+          40,
+          10,
+          10
+        ],
+        "raw": [
+          153,
+          0,
+          37,
+          13,
+          0,
+          22,
+          3,
+          45,
+          33,
+          45,
+          73,
+          22,
+          0,
+          0,
+          0,
+          4,
+          237,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          154,
+          120,
+          35,
+          40,
+          10,
+          10,
+          13,
+          0,
+          37,
+          0,
+          20,
+          0,
+          20,
+          0,
+          18,
+          0,
+          23
+        ],
+        "partner": [
+          123,
+          0,
+          35,
+          12,
+          0,
+          7,
+          7,
+          255,
+          33,
+          81,
+          0,
+          0,
+          0,
+          0,
+          0,
+          6,
+          192,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          154,
+          120,
+          35,
+          40,
+          0,
+          0,
+          12,
+          0,
+          35,
+          0,
+          14,
+          0,
+          15,
+          0,
+          17,
+          0,
+          11
+        ],
+        "bag": [
+          196,
+          1,
+          255
+        ],
+        "money": [
+          0,
+          48,
+          0
+        ],
+        "menu": 0,
+        "menu_max": 1,
+        "text_box_id": 1,
+        "party_menu_type": 0
+      },
+      "after": {
+        "frame": 992,
+        "level": 13,
+        "hp": 37,
+        "moves": [
+          33,
+          45,
+          73,
+          22
+        ],
+        "pp": [
+          35,
+          40,
+          10,
+          10
+        ],
+        "raw": [
+          153,
+          0,
+          37,
+          13,
+          0,
+          22,
+          3,
+          45,
+          33,
+          45,
+          73,
+          22,
+          0,
+          0,
+          0,
+          4,
+          237,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          154,
+          120,
+          35,
+          40,
+          10,
+          10,
+          13,
+          0,
+          37,
+          0,
+          20,
+          0,
+          20,
+          0,
+          18,
+          0,
+          23
+        ],
+        "partner": [
+          123,
+          0,
+          35,
+          12,
+          0,
+          7,
+          7,
+          255,
+          33,
+          81,
+          0,
+          0,
+          0,
+          0,
+          0,
+          6,
+          192,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          154,
+          120,
+          35,
+          40,
+          0,
+          0,
+          12,
+          0,
+          35,
+          0,
+          14,
+          0,
+          15,
+          0,
+          17,
+          0,
+          11
+        ],
+        "bag": [
+          196,
+          1,
+          255
+        ],
+        "money": [
+          0,
+          48,
+          0
+        ],
+        "menu": 0,
+        "menu_max": 1,
+        "text_box_id": 13,
+        "party_menu_type": 3
+      },
+      "party_menu": {
+        "frame": 838,
+        "png_sha256": "8476387674ac4030a9446008b9b6259e2b0b0839192aa2bcf4040bf4855d9f64",
+        "decoded_uppercase_rows": [
+          "   BULBASAUR ...    ",
+          ".           ABLE    ",
+          "   CATERPIE  ...    ",
+          "            NOT ABLE"
+        ]
+      }
+    }
+  ],
+  "native_trials": {
+    "before": [
+      {
+        "flow": "tm21",
+        "repeat": 1,
+        "binary_sha256": "f5079766939731fdef7bf48fc257d4bed418344b158bb2394842ecd580794fd8",
+        "fixture_sha256": "6471dc3300ef5a3f8b24cb9acf329835e18e20ab1a2999b7f3820a76b5096d53",
+        "actions": [
+          {
+            "frame": 120,
+            "button": "start",
+            "held": 4,
+            "frames": 60
+          },
+          {
+            "frame": 184,
+            "button": "down",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 220,
+            "button": "down",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 256,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 292,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 328,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 364,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 400,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 436,
+            "button": "down",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 472,
+            "button": "b",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 508,
+            "button": "b",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 544,
+            "button": "down",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 580,
+            "button": "down",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 616,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 852,
+            "button": "a",
+            "held": 1,
+            "frames": 400
+          }
+        ],
+        "initial_party": [
+          {
+            "species": "Bulbasaur",
+            "level": 12,
+            "max_hp": 35,
+            "hp": 35,
+            "attack": 18,
+            "defense": 19,
+            "speed": 17,
+            "special": 22,
+            "type1": "Grass",
+            "type2": "Poison",
+            "moves": [
+              "Tackle",
+              "Growl",
+              "LeechSeed",
+              "Cut"
+            ],
+            "pp": [
+              35,
+              40,
+              10,
+              30
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "total_exp": 973,
+            "is_traded": false,
+            "ot_id": 0
+          },
+          {
+            "species": "Caterpie",
+            "level": 12,
+            "max_hp": 35,
+            "hp": 35,
+            "attack": 14,
+            "defense": 15,
+            "speed": 17,
+            "special": 11,
+            "type1": "Bug",
+            "type2": "Bug",
+            "moves": [
+              "Tackle",
+              "StringShot",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              40,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "total_exp": 1728,
+            "is_traded": false,
+            "ot_id": 0
+          }
+        ],
+        "after_party": [
+          {
+            "species": "Bulbasaur",
+            "nickname": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "level": 12,
+            "hp": 35,
+            "max_hp": 35,
+            "attack": 18,
+            "defense": 19,
+            "speed": 17,
+            "special": 22,
+            "type1": "Grass",
+            "type2": "Poison",
+            "moves": [
+              "Tackle",
+              "Growl",
+              "LeechSeed",
+              "Cut"
+            ],
+            "pp": [
+              35,
+              40,
+              10,
+              30
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "total_exp": 973,
+            "is_traded": false,
+            "ot_id": 0,
+            "ot_name": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ]
+          },
+          {
+            "species": "Caterpie",
+            "nickname": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "level": 12,
+            "hp": 35,
+            "max_hp": 35,
+            "attack": 14,
+            "defense": 15,
+            "speed": 17,
+            "special": 11,
+            "type1": "Bug",
+            "type2": "Bug",
+            "moves": [
+              "Tackle",
+              "StringShot",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              40,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "total_exp": 1728,
+            "is_traded": false,
+            "ot_id": 0,
+            "ot_name": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ]
+          }
+        ],
+        "after_items": [
+          [
+            "Tm21",
+            2
+          ]
+        ],
+        "normal_save": true,
+        "sram_sha256": "e5564b530e31905fdc679c1b5459c8aab848f4e990bdd4d2489137d18bafdc5a",
+        "sram_checksum": 123,
+        "party_raw_hex": "9900230c00160300212d490f00000003cd000000000000000000009a7823280a1e0c002300120013001100167b00230c000707002151000000000006c0000000000000000000009a78232800000c0023000e000f0011000b",
+        "captures": {
+          "booted-machine": {
+            "frame": 364,
+            "sha256": "7e23015aa5a985ace0b9b50d9073da6e59d327ca5ab3e030d44b6c582d1e8277"
+          },
+          "teach-choice": {
+            "frame": 400,
+            "sha256": "54fcd2176a1fa5a6e3b963fb95c49fdcd58f28e5a92eb014ca55fd026bf98bec"
+          },
+          "party-selection": {
+            "frame": 436,
+            "sha256": "883438550b68359721a89793fed8056e46a26aa947243cb5cdd58abe90f59199"
+          },
+          "caterpie-selection": {
+            "frame": 472,
+            "sha256": "c079237e41bb3815e83daf81682a42f638d3ed7c5de6ae1c4feb1686e6f90321"
+          },
+          "after-cancel": {
+            "frame": 508,
+            "sha256": "56665181c794b0f8473c063d31b30a20ef5ee736eec43d0ee235e0fea37f6acd"
+          },
+          "saved": {
+            "frame": 1556,
+            "sha256": "c93d780c612f51629e2c6ed33e73b5426c9d467db614f2602d8b9d478496d69f"
+          }
+        },
+        "flags_unchanged": true
+      },
+      {
+        "flow": "tm21",
+        "repeat": 2,
+        "binary_sha256": "f5079766939731fdef7bf48fc257d4bed418344b158bb2394842ecd580794fd8",
+        "fixture_sha256": "6471dc3300ef5a3f8b24cb9acf329835e18e20ab1a2999b7f3820a76b5096d53",
+        "actions": [
+          {
+            "frame": 120,
+            "button": "start",
+            "held": 4,
+            "frames": 60
+          },
+          {
+            "frame": 184,
+            "button": "down",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 220,
+            "button": "down",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 256,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 292,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 328,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 364,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 400,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 436,
+            "button": "down",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 472,
+            "button": "b",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 508,
+            "button": "b",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 544,
+            "button": "down",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 580,
+            "button": "down",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 616,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 852,
+            "button": "a",
+            "held": 1,
+            "frames": 400
+          }
+        ],
+        "initial_party": [
+          {
+            "species": "Bulbasaur",
+            "level": 12,
+            "max_hp": 35,
+            "hp": 35,
+            "attack": 18,
+            "defense": 19,
+            "speed": 17,
+            "special": 22,
+            "type1": "Grass",
+            "type2": "Poison",
+            "moves": [
+              "Tackle",
+              "Growl",
+              "LeechSeed",
+              "Cut"
+            ],
+            "pp": [
+              35,
+              40,
+              10,
+              30
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "total_exp": 973,
+            "is_traded": false,
+            "ot_id": 0
+          },
+          {
+            "species": "Caterpie",
+            "level": 12,
+            "max_hp": 35,
+            "hp": 35,
+            "attack": 14,
+            "defense": 15,
+            "speed": 17,
+            "special": 11,
+            "type1": "Bug",
+            "type2": "Bug",
+            "moves": [
+              "Tackle",
+              "StringShot",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              40,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "total_exp": 1728,
+            "is_traded": false,
+            "ot_id": 0
+          }
+        ],
+        "after_party": [
+          {
+            "species": "Bulbasaur",
+            "nickname": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "level": 12,
+            "hp": 35,
+            "max_hp": 35,
+            "attack": 18,
+            "defense": 19,
+            "speed": 17,
+            "special": 22,
+            "type1": "Grass",
+            "type2": "Poison",
+            "moves": [
+              "Tackle",
+              "Growl",
+              "LeechSeed",
+              "Cut"
+            ],
+            "pp": [
+              35,
+              40,
+              10,
+              30
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "total_exp": 973,
+            "is_traded": false,
+            "ot_id": 0,
+            "ot_name": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ]
+          },
+          {
+            "species": "Caterpie",
+            "nickname": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "level": 12,
+            "hp": 35,
+            "max_hp": 35,
+            "attack": 14,
+            "defense": 15,
+            "speed": 17,
+            "special": 11,
+            "type1": "Bug",
+            "type2": "Bug",
+            "moves": [
+              "Tackle",
+              "StringShot",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              40,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "total_exp": 1728,
+            "is_traded": false,
+            "ot_id": 0,
+            "ot_name": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ]
+          }
+        ],
+        "after_items": [
+          [
+            "Tm21",
+            2
+          ]
+        ],
+        "normal_save": true,
+        "sram_sha256": "e5564b530e31905fdc679c1b5459c8aab848f4e990bdd4d2489137d18bafdc5a",
+        "sram_checksum": 123,
+        "party_raw_hex": "9900230c00160300212d490f00000003cd000000000000000000009a7823280a1e0c002300120013001100167b00230c000707002151000000000006c0000000000000000000009a78232800000c0023000e000f0011000b",
+        "captures": {
+          "booted-machine": {
+            "frame": 364,
+            "sha256": "7e23015aa5a985ace0b9b50d9073da6e59d327ca5ab3e030d44b6c582d1e8277"
+          },
+          "teach-choice": {
+            "frame": 400,
+            "sha256": "54fcd2176a1fa5a6e3b963fb95c49fdcd58f28e5a92eb014ca55fd026bf98bec"
+          },
+          "party-selection": {
+            "frame": 436,
+            "sha256": "883438550b68359721a89793fed8056e46a26aa947243cb5cdd58abe90f59199"
+          },
+          "caterpie-selection": {
+            "frame": 472,
+            "sha256": "c079237e41bb3815e83daf81682a42f638d3ed7c5de6ae1c4feb1686e6f90321"
+          },
+          "after-cancel": {
+            "frame": 508,
+            "sha256": "56665181c794b0f8473c063d31b30a20ef5ee736eec43d0ee235e0fea37f6acd"
+          },
+          "saved": {
+            "frame": 1556,
+            "sha256": "c93d780c612f51629e2c6ed33e73b5426c9d467db614f2602d8b9d478496d69f"
+          }
+        },
+        "flags_unchanged": true
+      },
+      {
+        "flow": "hm01",
+        "repeat": 1,
+        "binary_sha256": "f5079766939731fdef7bf48fc257d4bed418344b158bb2394842ecd580794fd8",
+        "fixture_sha256": "e0deb503bd745964ffe1e148a603f2df1c81f7d3cdb6872a86fbfbfc6702371a",
+        "actions": [
+          {
+            "frame": 120,
+            "button": "start",
+            "held": 4,
+            "frames": 60
+          },
+          {
+            "frame": 184,
+            "button": "down",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 220,
+            "button": "down",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 256,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 292,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 328,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 364,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 400,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 436,
+            "button": "down",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 472,
+            "button": "b",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 508,
+            "button": "b",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 544,
+            "button": "down",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 580,
+            "button": "down",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 616,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 852,
+            "button": "a",
+            "held": 1,
+            "frames": 400
+          }
+        ],
+        "initial_party": [
+          {
+            "species": "Bulbasaur",
+            "level": 13,
+            "max_hp": 37,
+            "hp": 37,
+            "attack": 20,
+            "defense": 20,
+            "speed": 18,
+            "special": 23,
+            "type1": "Grass",
+            "type2": "Poison",
+            "moves": [
+              "Tackle",
+              "Growl",
+              "LeechSeed",
+              "VineWhip"
+            ],
+            "pp": [
+              35,
+              40,
+              10,
+              10
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "total_exp": 1261,
+            "is_traded": false,
+            "ot_id": 0
+          },
+          {
+            "species": "Caterpie",
+            "level": 12,
+            "max_hp": 35,
+            "hp": 35,
+            "attack": 14,
+            "defense": 15,
+            "speed": 17,
+            "special": 11,
+            "type1": "Bug",
+            "type2": "Bug",
+            "moves": [
+              "Tackle",
+              "StringShot",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              40,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "total_exp": 1728,
+            "is_traded": false,
+            "ot_id": 0
+          }
+        ],
+        "after_party": [
+          {
+            "species": "Bulbasaur",
+            "nickname": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "level": 13,
+            "hp": 37,
+            "max_hp": 37,
+            "attack": 20,
+            "defense": 20,
+            "speed": 18,
+            "special": 23,
+            "type1": "Grass",
+            "type2": "Poison",
+            "moves": [
+              "Tackle",
+              "Growl",
+              "LeechSeed",
+              "VineWhip"
+            ],
+            "pp": [
+              35,
+              40,
+              10,
+              10
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "total_exp": 1261,
+            "is_traded": false,
+            "ot_id": 0,
+            "ot_name": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ]
+          },
+          {
+            "species": "Caterpie",
+            "nickname": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "level": 12,
+            "hp": 35,
+            "max_hp": 35,
+            "attack": 14,
+            "defense": 15,
+            "speed": 17,
+            "special": 11,
+            "type1": "Bug",
+            "type2": "Bug",
+            "moves": [
+              "Tackle",
+              "StringShot",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              40,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "total_exp": 1728,
+            "is_traded": false,
+            "ot_id": 0,
+            "ot_name": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ]
+          }
+        ],
+        "after_items": [
+          [
+            "Hm01",
+            1
+          ]
+        ],
+        "normal_save": true,
+        "sram_sha256": "cdba544a9e6723c875dae2d8d6560bf3627e4f921ebb0f5be929fddc6ab62634",
+        "sram_checksum": 118,
+        "party_raw_hex": "9900250d00160300212d491600000004ed000000000000000000009a7823280a0a0d002500140014001200177b00230c000707002151000000000006c0000000000000000000009a78232800000c0023000e000f0011000b",
+        "captures": {
+          "booted-machine": {
+            "frame": 364,
+            "sha256": "4404e028cc02f1886370561a1bf0544e50937ae92c9b551def56a98d90c80ee6"
+          },
+          "teach-choice": {
+            "frame": 400,
+            "sha256": "95a0854da52a00b63600e880f6dbe8b644e9a339a8837661309f09532c4c258c"
+          },
+          "party-selection": {
+            "frame": 436,
+            "sha256": "6c8e429ce8ba85e42941d9cc8297724565590c5f2aa9916c664803f602d4661a"
+          },
+          "caterpie-selection": {
+            "frame": 472,
+            "sha256": "7e4217901eb74a1b126fba5dc8d91fbd10fb55f95cf6d4c13fee31f1dbd7b70c"
+          },
+          "after-cancel": {
+            "frame": 508,
+            "sha256": "2ed7ec879cbca4e5918af5da23000b9f0a5cf28ec6ab537801fd496bb38d8ab8"
+          },
+          "saved": {
+            "frame": 1556,
+            "sha256": "c93d780c612f51629e2c6ed33e73b5426c9d467db614f2602d8b9d478496d69f"
+          }
+        },
+        "flags_unchanged": true
+      },
+      {
+        "flow": "hm01",
+        "repeat": 2,
+        "binary_sha256": "f5079766939731fdef7bf48fc257d4bed418344b158bb2394842ecd580794fd8",
+        "fixture_sha256": "e0deb503bd745964ffe1e148a603f2df1c81f7d3cdb6872a86fbfbfc6702371a",
+        "actions": [
+          {
+            "frame": 120,
+            "button": "start",
+            "held": 4,
+            "frames": 60
+          },
+          {
+            "frame": 184,
+            "button": "down",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 220,
+            "button": "down",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 256,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 292,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 328,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 364,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 400,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 436,
+            "button": "down",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 472,
+            "button": "b",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 508,
+            "button": "b",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 544,
+            "button": "down",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 580,
+            "button": "down",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 616,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 852,
+            "button": "a",
+            "held": 1,
+            "frames": 400
+          }
+        ],
+        "initial_party": [
+          {
+            "species": "Bulbasaur",
+            "level": 13,
+            "max_hp": 37,
+            "hp": 37,
+            "attack": 20,
+            "defense": 20,
+            "speed": 18,
+            "special": 23,
+            "type1": "Grass",
+            "type2": "Poison",
+            "moves": [
+              "Tackle",
+              "Growl",
+              "LeechSeed",
+              "VineWhip"
+            ],
+            "pp": [
+              35,
+              40,
+              10,
+              10
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "total_exp": 1261,
+            "is_traded": false,
+            "ot_id": 0
+          },
+          {
+            "species": "Caterpie",
+            "level": 12,
+            "max_hp": 35,
+            "hp": 35,
+            "attack": 14,
+            "defense": 15,
+            "speed": 17,
+            "special": 11,
+            "type1": "Bug",
+            "type2": "Bug",
+            "moves": [
+              "Tackle",
+              "StringShot",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              40,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "total_exp": 1728,
+            "is_traded": false,
+            "ot_id": 0
+          }
+        ],
+        "after_party": [
+          {
+            "species": "Bulbasaur",
+            "nickname": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "level": 13,
+            "hp": 37,
+            "max_hp": 37,
+            "attack": 20,
+            "defense": 20,
+            "speed": 18,
+            "special": 23,
+            "type1": "Grass",
+            "type2": "Poison",
+            "moves": [
+              "Tackle",
+              "Growl",
+              "LeechSeed",
+              "VineWhip"
+            ],
+            "pp": [
+              35,
+              40,
+              10,
+              10
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "total_exp": 1261,
+            "is_traded": false,
+            "ot_id": 0,
+            "ot_name": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ]
+          },
+          {
+            "species": "Caterpie",
+            "nickname": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "level": 12,
+            "hp": 35,
+            "max_hp": 35,
+            "attack": 14,
+            "defense": 15,
+            "speed": 17,
+            "special": 11,
+            "type1": "Bug",
+            "type2": "Bug",
+            "moves": [
+              "Tackle",
+              "StringShot",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              40,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "total_exp": 1728,
+            "is_traded": false,
+            "ot_id": 0,
+            "ot_name": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ]
+          }
+        ],
+        "after_items": [
+          [
+            "Hm01",
+            1
+          ]
+        ],
+        "normal_save": true,
+        "sram_sha256": "cdba544a9e6723c875dae2d8d6560bf3627e4f921ebb0f5be929fddc6ab62634",
+        "sram_checksum": 118,
+        "party_raw_hex": "9900250d00160300212d491600000004ed000000000000000000009a7823280a0a0d002500140014001200177b00230c000707002151000000000006c0000000000000000000009a78232800000c0023000e000f0011000b",
+        "captures": {
+          "booted-machine": {
+            "frame": 364,
+            "sha256": "4404e028cc02f1886370561a1bf0544e50937ae92c9b551def56a98d90c80ee6"
+          },
+          "teach-choice": {
+            "frame": 400,
+            "sha256": "95a0854da52a00b63600e880f6dbe8b644e9a339a8837661309f09532c4c258c"
+          },
+          "party-selection": {
+            "frame": 436,
+            "sha256": "6c8e429ce8ba85e42941d9cc8297724565590c5f2aa9916c664803f602d4661a"
+          },
+          "caterpie-selection": {
+            "frame": 472,
+            "sha256": "7e4217901eb74a1b126fba5dc8d91fbd10fb55f95cf6d4c13fee31f1dbd7b70c"
+          },
+          "after-cancel": {
+            "frame": 508,
+            "sha256": "2ed7ec879cbca4e5918af5da23000b9f0a5cf28ec6ab537801fd496bb38d8ab8"
+          },
+          "saved": {
+            "frame": 1556,
+            "sha256": "c93d780c612f51629e2c6ed33e73b5426c9d467db614f2602d8b9d478496d69f"
+          }
+        },
+        "flags_unchanged": true
+      }
+    ],
+    "after": [
+      {
+        "flow": "tm21",
+        "repeat": 1,
+        "binary_sha256": "ab202271a04a562fcd9ba768dfbb0a8f269791f97055845572582dd33ec7ebf4",
+        "fixture_sha256": "6471dc3300ef5a3f8b24cb9acf329835e18e20ab1a2999b7f3820a76b5096d53",
+        "actions": [
+          {
+            "frame": 120,
+            "button": "start",
+            "held": 4,
+            "frames": 60
+          },
+          {
+            "frame": 184,
+            "button": "down",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 220,
+            "button": "down",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 256,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 292,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 328,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 364,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 400,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 436,
+            "button": "down",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 472,
+            "button": "b",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 508,
+            "button": "b",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 544,
+            "button": "down",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 580,
+            "button": "down",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 616,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 852,
+            "button": "a",
+            "held": 1,
+            "frames": 400
+          }
+        ],
+        "initial_party": [
+          {
+            "species": "Bulbasaur",
+            "level": 12,
+            "max_hp": 35,
+            "hp": 35,
+            "attack": 18,
+            "defense": 19,
+            "speed": 17,
+            "special": 22,
+            "type1": "Grass",
+            "type2": "Poison",
+            "moves": [
+              "Tackle",
+              "Growl",
+              "LeechSeed",
+              "Cut"
+            ],
+            "pp": [
+              35,
+              40,
+              10,
+              30
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "total_exp": 973,
+            "is_traded": false,
+            "ot_id": 0
+          },
+          {
+            "species": "Caterpie",
+            "level": 12,
+            "max_hp": 35,
+            "hp": 35,
+            "attack": 14,
+            "defense": 15,
+            "speed": 17,
+            "special": 11,
+            "type1": "Bug",
+            "type2": "Bug",
+            "moves": [
+              "Tackle",
+              "StringShot",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              40,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "total_exp": 1728,
+            "is_traded": false,
+            "ot_id": 0
+          }
+        ],
+        "after_party": [
+          {
+            "species": "Bulbasaur",
+            "nickname": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "level": 12,
+            "hp": 35,
+            "max_hp": 35,
+            "attack": 18,
+            "defense": 19,
+            "speed": 17,
+            "special": 22,
+            "type1": "Grass",
+            "type2": "Poison",
+            "moves": [
+              "Tackle",
+              "Growl",
+              "LeechSeed",
+              "Cut"
+            ],
+            "pp": [
+              35,
+              40,
+              10,
+              30
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "total_exp": 973,
+            "is_traded": false,
+            "ot_id": 0,
+            "ot_name": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ]
+          },
+          {
+            "species": "Caterpie",
+            "nickname": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "level": 12,
+            "hp": 35,
+            "max_hp": 35,
+            "attack": 14,
+            "defense": 15,
+            "speed": 17,
+            "special": 11,
+            "type1": "Bug",
+            "type2": "Bug",
+            "moves": [
+              "Tackle",
+              "StringShot",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              40,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "total_exp": 1728,
+            "is_traded": false,
+            "ot_id": 0,
+            "ot_name": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ]
+          }
+        ],
+        "after_items": [
+          [
+            "Tm21",
+            2
+          ]
+        ],
+        "normal_save": true,
+        "sram_sha256": "e5564b530e31905fdc679c1b5459c8aab848f4e990bdd4d2489137d18bafdc5a",
+        "sram_checksum": 123,
+        "party_raw_hex": "9900230c00160300212d490f00000003cd000000000000000000009a7823280a1e0c002300120013001100167b00230c000707002151000000000006c0000000000000000000009a78232800000c0023000e000f0011000b",
+        "captures": {
+          "booted-machine": {
+            "frame": 364,
+            "sha256": "7e23015aa5a985ace0b9b50d9073da6e59d327ca5ab3e030d44b6c582d1e8277"
+          },
+          "teach-choice": {
+            "frame": 400,
+            "sha256": "54fcd2176a1fa5a6e3b963fb95c49fdcd58f28e5a92eb014ca55fd026bf98bec"
+          },
+          "party-selection": {
+            "frame": 436,
+            "sha256": "0edacc70c2bf2ee6729d3844d9a7d428d9d05d2f4d3eb47d40809a8132b96e10"
+          },
+          "caterpie-selection": {
+            "frame": 472,
+            "sha256": "05b735a4a000f2f06a0c1fa5229a9a3c4aba12d76ed2e0290b78522dd8423dd7"
+          },
+          "after-cancel": {
+            "frame": 508,
+            "sha256": "56665181c794b0f8473c063d31b30a20ef5ee736eec43d0ee235e0fea37f6acd"
+          },
+          "saved": {
+            "frame": 1556,
+            "sha256": "c93d780c612f51629e2c6ed33e73b5426c9d467db614f2602d8b9d478496d69f"
+          }
+        },
+        "flags_unchanged": true
+      },
+      {
+        "flow": "tm21",
+        "repeat": 2,
+        "binary_sha256": "ab202271a04a562fcd9ba768dfbb0a8f269791f97055845572582dd33ec7ebf4",
+        "fixture_sha256": "6471dc3300ef5a3f8b24cb9acf329835e18e20ab1a2999b7f3820a76b5096d53",
+        "actions": [
+          {
+            "frame": 120,
+            "button": "start",
+            "held": 4,
+            "frames": 60
+          },
+          {
+            "frame": 184,
+            "button": "down",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 220,
+            "button": "down",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 256,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 292,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 328,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 364,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 400,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 436,
+            "button": "down",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 472,
+            "button": "b",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 508,
+            "button": "b",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 544,
+            "button": "down",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 580,
+            "button": "down",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 616,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 852,
+            "button": "a",
+            "held": 1,
+            "frames": 400
+          }
+        ],
+        "initial_party": [
+          {
+            "species": "Bulbasaur",
+            "level": 12,
+            "max_hp": 35,
+            "hp": 35,
+            "attack": 18,
+            "defense": 19,
+            "speed": 17,
+            "special": 22,
+            "type1": "Grass",
+            "type2": "Poison",
+            "moves": [
+              "Tackle",
+              "Growl",
+              "LeechSeed",
+              "Cut"
+            ],
+            "pp": [
+              35,
+              40,
+              10,
+              30
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "total_exp": 973,
+            "is_traded": false,
+            "ot_id": 0
+          },
+          {
+            "species": "Caterpie",
+            "level": 12,
+            "max_hp": 35,
+            "hp": 35,
+            "attack": 14,
+            "defense": 15,
+            "speed": 17,
+            "special": 11,
+            "type1": "Bug",
+            "type2": "Bug",
+            "moves": [
+              "Tackle",
+              "StringShot",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              40,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "total_exp": 1728,
+            "is_traded": false,
+            "ot_id": 0
+          }
+        ],
+        "after_party": [
+          {
+            "species": "Bulbasaur",
+            "nickname": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "level": 12,
+            "hp": 35,
+            "max_hp": 35,
+            "attack": 18,
+            "defense": 19,
+            "speed": 17,
+            "special": 22,
+            "type1": "Grass",
+            "type2": "Poison",
+            "moves": [
+              "Tackle",
+              "Growl",
+              "LeechSeed",
+              "Cut"
+            ],
+            "pp": [
+              35,
+              40,
+              10,
+              30
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "total_exp": 973,
+            "is_traded": false,
+            "ot_id": 0,
+            "ot_name": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ]
+          },
+          {
+            "species": "Caterpie",
+            "nickname": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "level": 12,
+            "hp": 35,
+            "max_hp": 35,
+            "attack": 14,
+            "defense": 15,
+            "speed": 17,
+            "special": 11,
+            "type1": "Bug",
+            "type2": "Bug",
+            "moves": [
+              "Tackle",
+              "StringShot",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              40,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "total_exp": 1728,
+            "is_traded": false,
+            "ot_id": 0,
+            "ot_name": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ]
+          }
+        ],
+        "after_items": [
+          [
+            "Tm21",
+            2
+          ]
+        ],
+        "normal_save": true,
+        "sram_sha256": "e5564b530e31905fdc679c1b5459c8aab848f4e990bdd4d2489137d18bafdc5a",
+        "sram_checksum": 123,
+        "party_raw_hex": "9900230c00160300212d490f00000003cd000000000000000000009a7823280a1e0c002300120013001100167b00230c000707002151000000000006c0000000000000000000009a78232800000c0023000e000f0011000b",
+        "captures": {
+          "booted-machine": {
+            "frame": 364,
+            "sha256": "7e23015aa5a985ace0b9b50d9073da6e59d327ca5ab3e030d44b6c582d1e8277"
+          },
+          "teach-choice": {
+            "frame": 400,
+            "sha256": "54fcd2176a1fa5a6e3b963fb95c49fdcd58f28e5a92eb014ca55fd026bf98bec"
+          },
+          "party-selection": {
+            "frame": 436,
+            "sha256": "0edacc70c2bf2ee6729d3844d9a7d428d9d05d2f4d3eb47d40809a8132b96e10"
+          },
+          "caterpie-selection": {
+            "frame": 472,
+            "sha256": "05b735a4a000f2f06a0c1fa5229a9a3c4aba12d76ed2e0290b78522dd8423dd7"
+          },
+          "after-cancel": {
+            "frame": 508,
+            "sha256": "56665181c794b0f8473c063d31b30a20ef5ee736eec43d0ee235e0fea37f6acd"
+          },
+          "saved": {
+            "frame": 1556,
+            "sha256": "c93d780c612f51629e2c6ed33e73b5426c9d467db614f2602d8b9d478496d69f"
+          }
+        },
+        "flags_unchanged": true
+      },
+      {
+        "flow": "hm01",
+        "repeat": 1,
+        "binary_sha256": "ab202271a04a562fcd9ba768dfbb0a8f269791f97055845572582dd33ec7ebf4",
+        "fixture_sha256": "e0deb503bd745964ffe1e148a603f2df1c81f7d3cdb6872a86fbfbfc6702371a",
+        "actions": [
+          {
+            "frame": 120,
+            "button": "start",
+            "held": 4,
+            "frames": 60
+          },
+          {
+            "frame": 184,
+            "button": "down",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 220,
+            "button": "down",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 256,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 292,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 328,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 364,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 400,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 436,
+            "button": "down",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 472,
+            "button": "b",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 508,
+            "button": "b",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 544,
+            "button": "down",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 580,
+            "button": "down",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 616,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 852,
+            "button": "a",
+            "held": 1,
+            "frames": 400
+          }
+        ],
+        "initial_party": [
+          {
+            "species": "Bulbasaur",
+            "level": 13,
+            "max_hp": 37,
+            "hp": 37,
+            "attack": 20,
+            "defense": 20,
+            "speed": 18,
+            "special": 23,
+            "type1": "Grass",
+            "type2": "Poison",
+            "moves": [
+              "Tackle",
+              "Growl",
+              "LeechSeed",
+              "VineWhip"
+            ],
+            "pp": [
+              35,
+              40,
+              10,
+              10
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "total_exp": 1261,
+            "is_traded": false,
+            "ot_id": 0
+          },
+          {
+            "species": "Caterpie",
+            "level": 12,
+            "max_hp": 35,
+            "hp": 35,
+            "attack": 14,
+            "defense": 15,
+            "speed": 17,
+            "special": 11,
+            "type1": "Bug",
+            "type2": "Bug",
+            "moves": [
+              "Tackle",
+              "StringShot",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              40,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "total_exp": 1728,
+            "is_traded": false,
+            "ot_id": 0
+          }
+        ],
+        "after_party": [
+          {
+            "species": "Bulbasaur",
+            "nickname": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "level": 13,
+            "hp": 37,
+            "max_hp": 37,
+            "attack": 20,
+            "defense": 20,
+            "speed": 18,
+            "special": 23,
+            "type1": "Grass",
+            "type2": "Poison",
+            "moves": [
+              "Tackle",
+              "Growl",
+              "LeechSeed",
+              "VineWhip"
+            ],
+            "pp": [
+              35,
+              40,
+              10,
+              10
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "total_exp": 1261,
+            "is_traded": false,
+            "ot_id": 0,
+            "ot_name": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ]
+          },
+          {
+            "species": "Caterpie",
+            "nickname": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "level": 12,
+            "hp": 35,
+            "max_hp": 35,
+            "attack": 14,
+            "defense": 15,
+            "speed": 17,
+            "special": 11,
+            "type1": "Bug",
+            "type2": "Bug",
+            "moves": [
+              "Tackle",
+              "StringShot",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              40,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "total_exp": 1728,
+            "is_traded": false,
+            "ot_id": 0,
+            "ot_name": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ]
+          }
+        ],
+        "after_items": [
+          [
+            "Hm01",
+            1
+          ]
+        ],
+        "normal_save": true,
+        "sram_sha256": "cdba544a9e6723c875dae2d8d6560bf3627e4f921ebb0f5be929fddc6ab62634",
+        "sram_checksum": 118,
+        "party_raw_hex": "9900250d00160300212d491600000004ed000000000000000000009a7823280a0a0d002500140014001200177b00230c000707002151000000000006c0000000000000000000009a78232800000c0023000e000f0011000b",
+        "captures": {
+          "booted-machine": {
+            "frame": 364,
+            "sha256": "4404e028cc02f1886370561a1bf0544e50937ae92c9b551def56a98d90c80ee6"
+          },
+          "teach-choice": {
+            "frame": 400,
+            "sha256": "95a0854da52a00b63600e880f6dbe8b644e9a339a8837661309f09532c4c258c"
+          },
+          "party-selection": {
+            "frame": 436,
+            "sha256": "b8faabce92a8d4f049a82ebf8f64bf6b6171dce5aa8cbb9fc299a91f8cca20a1"
+          },
+          "caterpie-selection": {
+            "frame": 472,
+            "sha256": "69ec42f5fab74f29321cfbd7d9bdb8dccafddd94f40befaf66612752949f8e01"
+          },
+          "after-cancel": {
+            "frame": 508,
+            "sha256": "2ed7ec879cbca4e5918af5da23000b9f0a5cf28ec6ab537801fd496bb38d8ab8"
+          },
+          "saved": {
+            "frame": 1556,
+            "sha256": "c93d780c612f51629e2c6ed33e73b5426c9d467db614f2602d8b9d478496d69f"
+          }
+        },
+        "flags_unchanged": true
+      },
+      {
+        "flow": "hm01",
+        "repeat": 2,
+        "binary_sha256": "ab202271a04a562fcd9ba768dfbb0a8f269791f97055845572582dd33ec7ebf4",
+        "fixture_sha256": "e0deb503bd745964ffe1e148a603f2df1c81f7d3cdb6872a86fbfbfc6702371a",
+        "actions": [
+          {
+            "frame": 120,
+            "button": "start",
+            "held": 4,
+            "frames": 60
+          },
+          {
+            "frame": 184,
+            "button": "down",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 220,
+            "button": "down",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 256,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 292,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 328,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 364,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 400,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 436,
+            "button": "down",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 472,
+            "button": "b",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 508,
+            "button": "b",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 544,
+            "button": "down",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 580,
+            "button": "down",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 616,
+            "button": "a",
+            "held": 1,
+            "frames": 32
+          },
+          {
+            "frame": 852,
+            "button": "a",
+            "held": 1,
+            "frames": 400
+          }
+        ],
+        "initial_party": [
+          {
+            "species": "Bulbasaur",
+            "level": 13,
+            "max_hp": 37,
+            "hp": 37,
+            "attack": 20,
+            "defense": 20,
+            "speed": 18,
+            "special": 23,
+            "type1": "Grass",
+            "type2": "Poison",
+            "moves": [
+              "Tackle",
+              "Growl",
+              "LeechSeed",
+              "VineWhip"
+            ],
+            "pp": [
+              35,
+              40,
+              10,
+              10
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "total_exp": 1261,
+            "is_traded": false,
+            "ot_id": 0
+          },
+          {
+            "species": "Caterpie",
+            "level": 12,
+            "max_hp": 35,
+            "hp": 35,
+            "attack": 14,
+            "defense": 15,
+            "speed": 17,
+            "special": 11,
+            "type1": "Bug",
+            "type2": "Bug",
+            "moves": [
+              "Tackle",
+              "StringShot",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              40,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "total_exp": 1728,
+            "is_traded": false,
+            "ot_id": 0
+          }
+        ],
+        "after_party": [
+          {
+            "species": "Bulbasaur",
+            "nickname": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "level": 13,
+            "hp": 37,
+            "max_hp": 37,
+            "attack": 20,
+            "defense": 20,
+            "speed": 18,
+            "special": 23,
+            "type1": "Grass",
+            "type2": "Poison",
+            "moves": [
+              "Tackle",
+              "Growl",
+              "LeechSeed",
+              "VineWhip"
+            ],
+            "pp": [
+              35,
+              40,
+              10,
+              10
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "total_exp": 1261,
+            "is_traded": false,
+            "ot_id": 0,
+            "ot_name": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ]
+          },
+          {
+            "species": "Caterpie",
+            "nickname": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "level": 12,
+            "hp": 35,
+            "max_hp": 35,
+            "attack": 14,
+            "defense": 15,
+            "speed": 17,
+            "special": 11,
+            "type1": "Bug",
+            "type2": "Bug",
+            "moves": [
+              "Tackle",
+              "StringShot",
+              "None",
+              "None"
+            ],
+            "pp": [
+              35,
+              40,
+              0,
+              0
+            ],
+            "pp_ups": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "status": "None",
+            "dv_bytes": [
+              154,
+              120
+            ],
+            "stat_exp": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "total_exp": 1728,
+            "is_traded": false,
+            "ot_id": 0,
+            "ot_name": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ]
+          }
+        ],
+        "after_items": [
+          [
+            "Hm01",
+            1
+          ]
+        ],
+        "normal_save": true,
+        "sram_sha256": "cdba544a9e6723c875dae2d8d6560bf3627e4f921ebb0f5be929fddc6ab62634",
+        "sram_checksum": 118,
+        "party_raw_hex": "9900250d00160300212d491600000004ed000000000000000000009a7823280a0a0d002500140014001200177b00230c000707002151000000000006c0000000000000000000009a78232800000c0023000e000f0011000b",
+        "captures": {
+          "booted-machine": {
+            "frame": 364,
+            "sha256": "4404e028cc02f1886370561a1bf0544e50937ae92c9b551def56a98d90c80ee6"
+          },
+          "teach-choice": {
+            "frame": 400,
+            "sha256": "95a0854da52a00b63600e880f6dbe8b644e9a339a8837661309f09532c4c258c"
+          },
+          "party-selection": {
+            "frame": 436,
+            "sha256": "b8faabce92a8d4f049a82ebf8f64bf6b6171dce5aa8cbb9fc299a91f8cca20a1"
+          },
+          "caterpie-selection": {
+            "frame": 472,
+            "sha256": "69ec42f5fab74f29321cfbd7d9bdb8dccafddd94f40befaf66612752949f8e01"
+          },
+          "after-cancel": {
+            "frame": 508,
+            "sha256": "2ed7ec879cbca4e5918af5da23000b9f0a5cf28ec6ab537801fd496bb38d8ab8"
+          },
+          "saved": {
+            "frame": 1556,
+            "sha256": "c93d780c612f51629e2c6ed33e73b5426c9d467db614f2602d8b9d478496d69f"
+          }
+        },
+        "flags_unchanged": true
+      }
+    ]
+  },
+  "paired_current_master_checks": [
+    {
+      "flow": "tm21",
+      "repeat": 1,
+      "frame": 436,
+      "identical_actions_and_entire_sram": true,
+      "party_menu_png_changed_only_during_picker": true
+    },
+    {
+      "flow": "tm21",
+      "repeat": 2,
+      "frame": 436,
+      "identical_actions_and_entire_sram": true,
+      "party_menu_png_changed_only_during_picker": true
+    },
+    {
+      "flow": "hm01",
+      "repeat": 1,
+      "frame": 436,
+      "identical_actions_and_entire_sram": true,
+      "party_menu_png_changed_only_during_picker": true
+    },
+    {
+      "flow": "hm01",
+      "repeat": 2,
+      "frame": 436,
+      "identical_actions_and_entire_sram": true,
+      "party_menu_png_changed_only_during_picker": true
+    }
+  ]
+}

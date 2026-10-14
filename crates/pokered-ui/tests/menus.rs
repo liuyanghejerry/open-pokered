@@ -1373,3 +1373,35 @@ fn draw_main_menu_uses_layout_static() {
 
     assert_eq!(collect_glyphs(&rec.ops), vec![(1, 1, '\u{25B6}')]); // origin +1 + cursor.tx=0
 }
+
+#[test]
+fn machine_party_menu_shows_species_compatibility_instead_of_hp() {
+    use pokered_core::pokemon::stats::create_pokemon;
+    use pokered_data::items::ItemId;
+    use pokered_data::species::Species;
+    let mut compatible = create_pokemon(Species::Bulbasaur, 12, [0x9a, 0x78]).unwrap();
+    compatible.hp = 0; // Compatibility is independent of current HP.
+    compatible.status = StatusCondition::Poison;
+    let incompatible = create_pokemon(Species::Caterpie, 12, [0x9a, 0x78]).unwrap();
+    for item in [ItemId::Tm21, ItemId::Hm01, ItemId::Potion] {
+        let state = PartyScreenState::new_for_item(vec![compatible, incompatible], item);
+        let mut rec = Recorder::default();
+        menus::party::draw(&state, &PARTY_DEFAULT_LAYOUT, &mut Ui::new(&mut rec), Lang::En);
+        let texts: Vec<_> = rec.ops.iter().filter_map(|op| match op {
+            Op::Text(_, text, _) => Some(text.as_str()),
+            _ => None,
+        }).collect();
+        if item == ItemId::Potion {
+            assert!(!texts.contains(&"ABLE") && !texts.contains(&"NOT ABLE"));
+            assert!(texts.contains(&"PSN"));
+            assert!(texts.contains(&format!("0/{}", compatible.max_hp).as_str()));
+            assert!(texts.contains(&format!("{}/{}", incompatible.hp, incompatible.max_hp).as_str()));
+        } else {
+            assert_eq!(texts.iter().filter(|&&t| t == "ABLE").count(), 1);
+            assert_eq!(texts.iter().filter(|&&t| t == "NOT ABLE").count(), 1);
+            assert!(!texts.contains(&"PSN"), "machine rows omit the status label too");
+            assert!(!texts.iter().any(|text| text.contains('/')), "machine rows must replace HP");
+        }
+        assert_eq!(state.party(), &[compatible, incompatible]);
+    }
+}
