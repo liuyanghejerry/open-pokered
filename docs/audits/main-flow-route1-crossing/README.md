@@ -62,3 +62,11 @@ This change affects regression tooling only, so no game-frame screenshot
 changes result. It does not establish full rendered movement parity or
 completion of the main-flow regression. A new fresh main-flow run remains
 required after this commit.
+
+The fresh `audit-838-full-main-flow-retry2` run with both sites fixed reached
+level 13 after 44 training battles and multiple successful healing returns.
+It then beat Brock: m10 finished at frame 155884 in PewterGym `(4,2)`,
+overworld with no active effect. m11 also passed at frame 179853 in Route4
+`(11,6)`. The run is continuing through later milestones; this report does
+not claim m49 completion. The binary is the frozen nickname-fix binary;
+the later PP-Up numeric change on master is verified separately in PR #227.
