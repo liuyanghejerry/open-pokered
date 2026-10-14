@@ -501,7 +501,11 @@ pub struct BattleState {
     pub damage: u16,
     pub num_run_attempts: u8,
     pub escaped: bool,
+    /// `wPartyFoughtCurrentEnemyFlags`: participation survives fainting so a
+    /// same-enemy Revive can restore the mon's experience eligibility.
     pub party_fought_flags: [bool; 6],
+    /// `wPartyGainExpFlags`: cleared when a participant faints, restored by
+    /// Revive only if it fought the current enemy.
     pub party_gain_exp_flags: [bool; 6],
     /// `wCanEvolveFlags` — set for a party mon each time it levels up in
     /// battle (`FlagAction` in the level-up path, engine/battle/experience.asm:257),
@@ -525,6 +529,22 @@ pub struct BattleState {
 }
 
 impl BattleState {
+    pub(crate) fn mark_player_participant(&mut self, index: usize) {
+        if index < self.party_gain_exp_flags.len() {
+            self.party_gain_exp_flags[index] = true;
+            self.party_fought_flags[index] = true;
+        }
+    }
+
+    /// EnemySendOut and GainExperience.done seed both masks for the mon
+    /// currently out. Do not infer eligibility from current HP here: the
+    /// original writes the flags even during simultaneous-faint handling.
+    pub(crate) fn reset_player_participants(&mut self) {
+        self.party_gain_exp_flags.fill(false);
+        self.party_fought_flags.fill(false);
+        self.mark_player_participant(self.player.active_pokemon_index);
+    }
+
     pub fn attacker(&self) -> &BattlerState {
         match self.whose_turn {
             Side::Player => &self.player,
