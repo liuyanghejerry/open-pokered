@@ -352,7 +352,7 @@ impl PokemonGame {
         let mut ui = Ui::new(&mut painter);
         if let Some(mon) = self.save_data.party.get(flow.party_index) {
             ui.text_box(
-                TileRect::new(10, 2, 10, 10),
+                TileRect::new(10, 3, 10, 10),
                 InkColor::Black,
                 true,
                 |frame| {

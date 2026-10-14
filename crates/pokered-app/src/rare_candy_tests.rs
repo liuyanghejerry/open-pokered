@@ -353,3 +353,30 @@ fn rare_candy_field_evolution_announces_new_species_moves_without_replaying_leve
         assert!(game.evolution_anim.is_none());
     });
 }
+
+#[test]
+fn rare_candy_stats_overlay_preserves_the_selected_current_hp_numbers() {
+    on_game_thread(|| {
+        let mut game = candy_game(Species::Bulbasaur, 12, false);
+        let mut shown = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+        game.draw(&mut shown);
+        let flow = game.rare_candy_flow.take();
+        let mut underlying = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+        game.draw(&mut underlying);
+        game.rare_candy_flow = flow;
+        let mut ink = 0;
+        for y in 16..24 {
+            for x in 80..160 {
+                assert_eq!(
+                    shown.get_pixel(x, y),
+                    underlying.get_pixel(x, y),
+                    "stats must leave the selected member's current/max HP visible at ({x},{y})"
+                );
+                if underlying.get_pixel(x, y) != Some(Rgba::WHITE) {
+                    ink += 1;
+                }
+            }
+        }
+        assert!(ink > 0, "HP-number region must actually contain ink");
+    });
+}
