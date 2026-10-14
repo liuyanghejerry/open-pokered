@@ -77,6 +77,8 @@ pub fn gain_experience(
 
     let num_gainers = state.party_gain_exp_flags.iter().filter(|&&f| f).count() as u32;
     if num_gainers == 0 && !has_exp_all {
+        // The original still reaches .done when every gain bit is clear.
+        state.reset_player_participants();
         return GainExpResult {
             exp_gains: vec![],
             notices: vec![],
@@ -134,10 +136,8 @@ pub fn gain_experience(
         }
     }
 
-    // GainExperience.done clears the flags after each defeated enemy and
-    // seeds only the mon that is still out for the next enemy.
-    state.party_gain_exp_flags.fill(false);
-    state.party_gain_exp_flags[state.player.active_pokemon_index] = true;
+    // GainExperience.done resets BOTH masks, including the Revive history.
+    state.reset_player_participants();
     GainExpResult {
         exp_gains,
         notices,
