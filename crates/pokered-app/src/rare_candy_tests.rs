@@ -35,22 +35,26 @@ fn candy_game(species: Species, level: u8, full: bool) -> PokemonGame {
         None,
     );
     game.save_data = SaveData::new();
-    let mut mon = pokered_core::pokemon::stats::create_pokemon_with_moves(
-        species,
-        level,
-        [0x9a, 0x78],
-        if full {
-            [
-                MoveId::Tackle,
-                MoveId::Growl,
-                MoveId::LeechSeed,
-                MoveId::Cut,
-            ]
-        } else {
-            [MoveId::Tackle, MoveId::Growl, MoveId::None, MoveId::None]
-        },
-    )
-    .unwrap();
+    let mut mon = if species == Species::Bulbasaur {
+        pokered_core::pokemon::stats::create_pokemon_with_moves(
+            species,
+            level,
+            [0x9a, 0x78],
+            if full {
+                [
+                    MoveId::Tackle,
+                    MoveId::Growl,
+                    MoveId::LeechSeed,
+                    MoveId::Cut,
+                ]
+            } else {
+                [MoveId::Tackle, MoveId::Growl, MoveId::None, MoveId::None]
+            },
+        )
+        .unwrap()
+    } else {
+        pokered_core::pokemon::stats::create_pokemon(species, level, [0x9a, 0x78]).unwrap()
+    };
     mon.pp = if full { [7, 4, 3, 1] } else { [7, 4, 0, 0] };
     mon.pp_ups = if full { [1, 2, 3, 1] } else { [1, 2, 0, 0] };
     game.save_data.party.add(mon).unwrap();
@@ -80,6 +84,49 @@ fn candy_game(species: Species, level: u8, full: bool) -> PokemonGame {
     assert!(game.evolution_anim.is_none());
     game
 }
+fn acknowledge_learned(game: &mut PokemonGame) {
+    for _ in 0..600 {
+        if !game
+            .audio
+            .as_ref()
+            .is_some_and(|audio| audio.is_sfx_playing())
+        {
+            tap(game, GbButton::A);
+            return;
+        }
+        game.update(&InputState::new());
+    }
+    panic!("learning sound did not complete");
+}
+
+fn finish_evolution(game: &mut PokemonGame, cancel: bool) {
+    if cancel {
+        for _ in 0..1200 {
+            if game
+                .evolution_anim
+                .as_ref()
+                .is_some_and(|anim| anim.cancel_window_open())
+            {
+                break;
+            }
+            game.update(&InputState::new());
+        }
+        assert!(game.evolution_anim.as_ref().unwrap().cancel_window_open());
+        tap(game, GbButton::B);
+    }
+    for frame in 0..3000 {
+        if game.evolution_anim.is_none() {
+            return;
+        }
+        let mut input = InputState::new();
+        if frame % 64 == 0 {
+            input.press(GbButton::A);
+        }
+        game.update(&input);
+    }
+    panic!("evolution did not return control");
+}
+
 fn full_confirm(game: &mut PokemonGame) {
     for expected in [
         RareCandyPhase::TryingToLearn(0),
@@ -124,7 +171,7 @@ fn rare_candy_field_free_slot_shows_stats_then_learned_notice_and_consumes_once(
         assert_eq!(mon.pp, [7, 4, 10, 0]);
         assert_eq!(mon.pp_ups, [1, 2, 0, 0]);
         assert_eq!(quantity(&game), 2);
-        tap(&mut game, GbButton::A);
+        acknowledge_learned(&mut game);
         assert_eq!(game.state.screen, GameScreen::Bag);
         assert_eq!(game.rare_candy_phase(), None);
         assert_eq!(quantity(&game), 1);
@@ -168,7 +215,7 @@ fn rare_candy_field_full_moves_can_replace_preserving_other_pp_and_ups() {
         assert_eq!(mon.pp, [7, 10, 3, 1]);
         assert_eq!(mon.pp_ups, [1, 0, 3, 1]);
         assert_eq!(quantity(&game), 2);
-        tap(&mut game, GbButton::A);
+        acknowledge_learned(&mut game);
         assert_eq!(quantity(&game), 1);
         assert_eq!(game.state.screen, GameScreen::Bag);
     });
@@ -255,7 +302,7 @@ fn rare_candy_field_hm_guard_keeps_the_pending_move_and_can_retry() {
         tap(&mut game, GbButton::Down);
         tap(&mut game, GbButton::A);
         tap(&mut game, GbButton::A);
-        tap(&mut game, GbButton::A);
+        acknowledge_learned(&mut game);
         assert_eq!(quantity(&game), 1);
         assert_eq!(game.save_data.party.get(0).unwrap().moves[3], MoveId::Cut);
     });
@@ -270,9 +317,9 @@ fn rare_candy_field_evolution_waits_for_stats_and_cancel_still_consumes_once() {
         assert_eq!(game.rare_candy_phase(), Some(RareCandyPhase::Evolving));
         assert!(game.evolution_anim.is_some());
         assert_eq!(quantity(&game), 2);
-        // Resolve a cancellable cutscene without replaying the candy effect.
-        game.evolution_anim = None;
-        assert!(game.resume_rare_candy_after_evolution());
+        // Drive the real movie to its B-cancel window and acknowledge its
+        // stopped-evolving text; no synthetic outcome or actor removal.
+        finish_evolution(&mut game, true);
         assert_eq!(
             game.save_data.party.get(0).unwrap().species,
             Species::Charmander
@@ -290,15 +337,7 @@ fn rare_candy_field_evolution_announces_new_species_moves_without_replaying_leve
         let mut game = candy_game(Species::Magikarp, 19, false);
         tap(&mut game, GbButton::A);
         assert_eq!(game.rare_candy_phase(), Some(RareCandyPhase::Evolving));
-        let outcome = pokered_core::evolution_screen::EvolutionOutcome {
-            party_index: 0,
-            from: Species::Magikarp,
-            to: Species::Gyarados,
-            kind: pokered_core::evolution_screen::EvolutionOutcomeKind::Evolved,
-        };
-        game.apply_evolution_outcome(&outcome);
-        game.evolution_anim = None;
-        game.resume_rare_candy_after_evolution();
+        finish_evolution(&mut game, false);
         assert_eq!(
             game.rare_candy_phase(),
             Some(RareCandyPhase::Learned(MoveId::Bite))
@@ -309,7 +348,7 @@ fn rare_candy_field_evolution_announces_new_species_moves_without_replaying_leve
         );
         assert_eq!(game.save_data.party.get(0).unwrap().level, 20);
         assert_eq!(quantity(&game), 2);
-        tap(&mut game, GbButton::A);
+        acknowledge_learned(&mut game);
         assert_eq!(quantity(&game), 1);
         assert!(game.evolution_anim.is_none());
     });
