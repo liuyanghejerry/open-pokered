@@ -127,10 +127,8 @@ pub fn gain_experience(
         }
     }
 
-    // GainExperience.done clears the flags after each defeated enemy and
-    // seeds only the mon that is still out for the next enemy.
-    state.party_gain_exp_flags.fill(false);
-    state.party_gain_exp_flags[state.player.active_pokemon_index] = true;
+    // GainExperience.done resets BOTH masks, including the Revive history.
+    state.reset_player_participants();
     GainExpResult {
         exp_gains,
         notices,

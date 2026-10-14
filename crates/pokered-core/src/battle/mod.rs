@@ -35,6 +35,8 @@ mod menu_tests;
 #[cfg(test)]
 mod item_fidelity_tests;
 #[cfg(test)]
+mod exp_participant_tests;
+#[cfg(test)]
 mod link_battle_driver_tests;
 #[cfg(test)]
 mod catch_tests;
@@ -1281,7 +1283,7 @@ impl BattleScreen {
         };
         let mut bs =
             state::new_battle_state(battle_type, player_party.to_vec(), enemy_party.to_vec());
-        bs.party_gain_exp_flags[bs.player.active_pokemon_index] = true;
+        bs.mark_player_participant(bs.player.active_pokemon_index);
 
         let transition = BattleTransition::select(!is_wild, enemy.level, player.level, 0);
 
@@ -2983,6 +2985,12 @@ learn {learn_name}!")];
                     use crate::items::healing::{use_healing_item, HealResult};
                     match use_healing_item(mon, item_id) {
                         HealResult::Revived { hp_restored } => {
+                            // ItemUseMedicine.updateInBattleFaintedData:
+                            // reviving a bench mon restores its share only if
+                            // it participated against this same enemy.
+                            if bs.party_fought_flags[pokemon_index] {
+                                bs.party_gain_exp_flags[pokemon_index] = true;
+                            }
                             self.consume_selected_item();
                             (format!("Revived! HP restored by {}!", hp_restored), true)
                         }
@@ -3905,6 +3913,7 @@ learn {learn_name}!")];
                         bs.enemy.active_pokemon_index = idx;
                         bs.enemy.reset_volatile_status();
                         bs.enemy.refresh_unmodified_stats();
+                        bs.reset_player_participants();
                         let new = name(bs);
                         // Each mon that enters play re-seeds its AI budget (wAICount),
                         // overriding the per-turn decrement.
@@ -4565,9 +4574,15 @@ learn {learn_name}!")];
     }
 
     fn check_faint_after_turn(&mut self) -> BattlePhase {
-        if let Some(ref bs) = self.battle_state {
+        if let Some(ref mut bs) = self.battle_state {
             let player_fainted = bs.player.active_mon().hp == 0;
             let enemy_fainted = bs.enemy.active_mon().hp == 0;
+
+            // RemoveFaintedPlayerMon precedes experience distribution, even
+            // when both mons faint. Preserve fought history for a later Revive.
+            if player_fainted {
+                bs.party_gain_exp_flags[bs.player.active_pokemon_index] = false;
+            }
 
             if enemy_fainted {
                 let alive_enemies = bs
@@ -4754,6 +4769,7 @@ learn {learn_name}!")];
                 bs.enemy.active_pokemon_index = idx;
                 bs.enemy.reset_volatile_status();
                 bs.enemy.refresh_unmodified_stats();
+                bs.reset_player_participants();
             }
             // Each newly sent-out enemy mon resets its trainer-AI budget (wAICount).
             if let Some(tc) = self.trainer_class {
@@ -4817,9 +4833,7 @@ learn {learn_name}!")];
             bs.player.active_pokemon_index = new_index;
             bs.player.reset_volatile_status();
             bs.player.refresh_unmodified_stats();
-            if new_index < 6 {
-                bs.party_gain_exp_flags[new_index] = true;
-            }
+            bs.mark_player_participant(new_index);
             self.sync_display_from_state();
             let send_out = self.player_send_out_message();
             self.record_switch_in_enemy_hp();
@@ -4841,6 +4855,12 @@ learn {learn_name}!")];
     fn apply_shift_switch(&mut self, new_index: usize) {
         if self.battle_state.is_none() {
             return;
+        }
+        // ReplaceFaintedEnemyMon's SHIFT-YES tail clears both masks before
+        // SwitchPlayerMon. The recalled mon never faced this new enemy.
+        if let Some(bs) = self.battle_state.as_mut() {
+            bs.party_gain_exp_flags.fill(false);
+            bs.party_fought_flags.fill(false);
         }
         let mut switch_messages = self.apply_player_switch(new_index);
         let trainer = self
@@ -4876,9 +4896,7 @@ learn {learn_name}!")];
             bs.player.active_pokemon_index = new_index;
             bs.player.reset_volatile_status();
             bs.player.refresh_unmodified_stats();
-            if new_index < 6 {
-                bs.party_gain_exp_flags[new_index] = true;
-            }
+            bs.mark_player_participant(new_index);
             self.sync_display_from_state();
             let send_out = self.player_send_out_message();
             self.record_switch_in_enemy_hp();
@@ -5124,6 +5142,7 @@ learn {learn_name}!")];
                     bs.enemy.active_pokemon_index = idx;
                     bs.enemy.reset_volatile_status();
                     bs.enemy.refresh_unmodified_stats();
+                    bs.reset_player_participants();
                     let name = pokered_rules::runtime::party_display_name(&bs.enemy, false);
                     let trainer = self
                         .trainer_name
