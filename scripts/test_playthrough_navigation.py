@@ -25,7 +25,7 @@ class NavigationRegression(unittest.TestCase):
                 state['map_name']='UnexpectedMap'
                 return
             dx,dy=nav.DELTA[direction]
-            tiles=len(buttons)//nav.FRAMES_PER_TILE
+            tiles=len(buttons)//16
             state['player_x']+=dx*tiles;state['player_y']+=dy*tiles
         game.d=SimpleNamespace(drive=drive)
         paths=[ [((5,5),None),((6,5),'right'),((6,6),'down')],
@@ -112,8 +112,8 @@ class NavigationRegression(unittest.TestCase):
 
     def test_slope_brakes_idle_frames_and_respects_uphill_bike_speed(self):
         state = {'map_name': 'Route17', 'player_transport': 'Biking'}
-        self.assertEqual(nav.movement_frames(state, 'down'), 4)
-        self.assertEqual(nav.movement_frames(state, 'left'), 8)
+        self.assertEqual(nav.movement_frames(state, 'down'), 8)
+        self.assertEqual(nav.movement_frames(state, 'left'), 16)
         self.assertEqual(nav.movement_buttons(state, 'left', 8, 12), ['left']*8 + ['b']*4)
         game = nav.Game.__new__(nav.Game)
         game.smart_moves = True
@@ -134,11 +134,11 @@ class NavigationRegression(unittest.TestCase):
         def drive(buttons, frames):
             holds.append(len(buttons))
             dx, dy = nav.DELTA[buttons[0]]
-            state['player_x'] += dx * (len(buttons)//4)
-            state['player_y'] += dy * (len(buttons)//4)
+            state['player_x'] += dx * (len(buttons)//8)
+            state['player_y'] += dy * (len(buttons)//8)
         game.d = SimpleNamespace(drive=drive, step=lambda _: None)
         game.nav_to_map(15, 12, 'Route16', tries=2, avoid_grass=False)
-        self.assertEqual(holds, [4])
+        self.assertEqual(holds, [8])
 
     def test_cross_map_planner_searches_alternative_goals_in_one_pass(self):
         goals = {('PalletTown', 10, 10), ('PalletTown', 10, 12)}
@@ -255,7 +255,7 @@ class NavigationRegression(unittest.TestCase):
         def drive(buttons, frames):
             direction = buttons[0]
             directions.append(direction)
-            tiles = len(buttons) // nav.FRAMES_PER_TILE
+            tiles = len(buttons) // 16
             if len(directions) == 1:
                 tiles -= 1  # One tile was lost to an input lock or NPC.
             dx, dy = nav.DELTA[direction]
@@ -307,6 +307,101 @@ class NavigationRegression(unittest.TestCase):
             "Route4", "Route4", 11, 6))
         self.assertFalse(game.destination_blocked_by_live_npc(
             "Route4", "LavenderTown", 11, 6))
+
+    def test_stationary_hiker_is_not_a_temporary_destination(self):
+        game = nav.Game.__new__(nav.Game)
+        npc = dict(npc_index=0, x=5, y=6, visible=True,
+                   walk_counter=0, scripted_path_remaining=0)
+        game.observed_npcs = {}
+        game.d = SimpleNamespace(cmd=lambda **_: {'data': [npc]})
+        self.assertEqual(nav.NPC_MOVEMENTS['MtMoon1F'][0], 'Stationary')
+        self.assertFalse(game.destination_blocked_by_live_npc(
+            'MtMoon1F', 'MtMoon1F', 5, 6))
+        for changed in ({'walk_counter': 3}, {'scripted_path_remaining': 2}):
+            with self.subTest(changed=changed):
+                npc.update(walk_counter=0, scripted_path_remaining=0)
+                npc.update(changed)
+                self.assertTrue(game.destination_blocked_by_live_npc(
+                    'MtMoon1F', 'MtMoon1F', 5, 6))
+        npc.update(walk_counter=0, scripted_path_remaining=0)
+        with patch.dict(nav.NPC_MOVEMENTS, {'MtMoon1F': ['WalkAny']}):
+            self.assertTrue(game.destination_blocked_by_live_npc(
+                'MtMoon1F', 'MtMoon1F', 5, 6))
+
+    def test_stationary_destination_fails_without_burning_wait_budget(self):
+        game = nav.Game.__new__(nav.Game)
+        state = dict(screen='overworld', map_name='MtMoon1F', player_x=16,
+                     player_y=10, dialogue_state=None)
+        game.st = lambda: state.copy()
+        game.last_map = 'Route4'
+        game.observed_npcs = {}
+        game.step = Mock()
+        npc = dict(npc_index=0, x=5, y=6, visible=True,
+                   walk_counter=0, scripted_path_remaining=0)
+        game.d = SimpleNamespace(cmd=lambda **_: {'data': [npc]})
+        with patch.object(nav, 'bfs_cross', return_value=None) as search:
+            with self.assertRaisesRegex(nav.NavError, 'no cross path'):
+                game.nav_to_map(5, 6, 'MtMoon1F', tries=30, avoid_grass=False)
+        self.assertEqual(search.call_count, 1)
+        game.step.assert_not_called()
+
+    def test_stair_fallback_rejects_the_stationary_hiker_approach(self):
+        game = nav.Game.__new__(nav.Game)
+        state = dict(screen='overworld', map_name='MtMoon1F', player_x=16,
+                     player_y=10, warp_fade='Idle')
+        game.st = lambda: state.copy()
+        game.nav_to = Mock(side_effect=nav.NavError('replan budget exhausted'))
+        game.nav_to_map = Mock()
+        game.observed_npcs = {}
+        npc = dict(npc_index=0, x=5, y=6, visible=True,
+                   walk_counter=0, scripted_path_remaining=0)
+        def drive(buttons, frames):
+            state.update(map_name='MtMoonB1F', player_x=5, player_y=5)
+        game.d = SimpleNamespace(cmd=lambda **_: {'data': [npc]}, drive=drive)
+        game._wait_for_warp = Mock(return_value='MtMoonB1F')
+        self.assertEqual(game.nav_warp(5, 5, 'MtMoon1F', 'MtMoonB1F'), 'MtMoonB1F')
+        game.nav_to_map.assert_called_once_with(5, 4, map_name='MtMoon1F',
+                                               tries=30, avoid_grass=False)
+
+    def test_full_mt_moon_route_fits_budget_with_two_vblank_walking(self):
+        # Independent movement model: a held step consumes16 rendered frames.
+        # Real frozen-binary captures establish this duration; the model does
+        # not derive it from the helper being tested.
+        game = nav.Game.__new__(nav.Game)
+        state = dict(screen='overworld', map_name='MtMoon1F', player_x=14,
+                     player_y=34, dialogue_state=None, warp_fade='Idle')
+        game.st = lambda: state.copy()
+        game.npc_blocked = game.live_npcs = lambda _: {(5, 6), (12, 16),
+            (30, 4), (24, 31), (16, 23), (7, 22), (30, 27), (2, 20),
+            (2, 2), (35, 31), (36, 23), (20, 33), (5, 32)}
+        pending = [None, 0]
+        def tick(button):
+            if pending[1]:
+                pending[1] -= 1
+            elif button in nav.DELTA:
+                dx, dy = nav.DELTA[button]
+                target = (state['player_x'] + dx, state['player_y'] + dy)
+                if (nav.walkable_edge('MtMoon1F',
+                        (state['player_x'], state['player_y']), target)
+                        and target not in game.live_npcs('MtMoon1F')):
+                    pending[:] = [target, 15]
+            if pending[0] is not None and pending[1] == 0:
+                state['player_x'], state['player_y'] = pending[0]
+                pending[0] = None
+                if (state['player_x'], state['player_y']) == (5, 5):
+                    state.update(map_name='MtMoonB1F')
+        def drive(buttons, frames):
+            for frame in range(frames):
+                tick(buttons[frame] if frame < len(buttons) else None)
+        game.d = SimpleNamespace(drive=drive)
+        game.step = lambda count: [tick(None) for _ in range(count)]
+        path = nav.bfs('MtMoon1F', (14, 34), (5, 5), blocked=
+            game.live_npcs('MtMoon1F') | (nav.warp_tiles('MtMoon1F') - {(5, 5)}))
+        self.assertEqual(len(path) - 1, 90)
+        with self.assertRaisesRegex(nav.NavError, 'warped out'):
+            game.nav_to(5, 5, 'MtMoon1F', tries=30)
+        self.assertEqual((state['map_name'], state['player_x'], state['player_y']),
+                         ('MtMoonB1F', 5, 5))
 
     def test_directional_warp_retries_after_interrupted_hold(self):
         game = nav.Game.__new__(nav.Game)
