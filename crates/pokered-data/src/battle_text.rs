@@ -404,6 +404,12 @@ pub fn localize(text: &str, is_zh: bool) -> String {
     // "{a} gained {n} exp. points!"
     if let Some(idx) = text.find(" gained ") {
         if let Some(rest) = text[idx + " gained ".len()..].strip_suffix(" exp. points!") {
+            if let Some(amount) = rest.strip_prefix("with EXP.ALL, ") {
+                return format!("{}通过学习装置获得了{}点经验值！", zh_name(&text[..idx]), amount);
+            }
+            if let Some(amount) = rest.strip_prefix("a boosted ") {
+                return format!("{}获得了额外的{}点经验值！", zh_name(&text[..idx]), amount);
+            }
             return format!("{}获得了{}点经验值！", zh_name(&text[..idx]), rest);
         }
     }
@@ -639,6 +645,8 @@ mod tests {
         assert_eq!(localize("PIKACHU's attack missed!", true), "皮卡丘的攻击没有命中！");
         assert_eq!(localize("PIKACHU is fast asleep!", true), "皮卡丘正在熟睡！");
         assert_eq!(localize("PIKACHU gained 120 exp. points!", true), "皮卡丘获得了120点经验值！");
+        assert_eq!(localize("PIKACHU gained a boosted 180 exp. points!", true), "皮卡丘获得了额外的180点经验值！");
+        assert_eq!(localize("PIKACHU gained with EXP.ALL, 30 exp. points!", true), "皮卡丘通过学习装置获得了30点经验值！");
         assert_eq!(localize("PIKACHU grew to level 12!", true), "皮卡丘升到了12级！");
         assert_eq!(localize("PIKACHU learned THUNDERBOLT!", true), "皮卡丘学会了十万伏特！");
         assert_eq!(localize("Gotcha!\nCATERPIE was caught!", true), "中了！\n绿毛虫被抓住了！");
