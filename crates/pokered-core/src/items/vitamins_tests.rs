@@ -156,12 +156,34 @@ fn rare_candy_no_effect_at_100() {
 }
 
 #[test]
-fn rare_candy_no_effect_on_fainted() {
-    let mut mon =
-        crate::pokemon::stats::create_pokemon(Species::Bulbasaur, 10, [0xFF, 0xFF]).unwrap();
+fn rare_candy_revives_fainted_mon_by_hp_growth_and_learns_move() {
+    let mut mon = crate::pokemon::stats::create_pokemon_with_moves(
+        Species::Bulbasaur,
+        12,
+        [0x9A, 0x78],
+        [MoveId::Tackle, MoveId::Growl, MoveId::None, MoveId::None],
+    ).unwrap();
     mon.hp = 0;
-    let result = use_rare_candy(&mut mon);
-    assert!(result.is_none());
+    mon.pp = [1, 2, 0, 0];
+    assert_eq!(mon.max_hp, 35);
+    let result = use_rare_candy(&mut mon).unwrap();
+    assert_eq!(result.new_level, 13);
+    assert_eq!((mon.hp, mon.max_hp), (2, 37));
+    assert_eq!(mon.moves, [MoveId::Tackle, MoveId::Growl, MoveId::VineWhip, MoveId::None]);
+    assert_eq!(mon.pp, [1, 2, 10, 0]);
+    assert_eq!(result.move_result.learned.len(), 1);
+    assert_eq!(result.move_result.learned[0].move_id, MoveId::VineWhip);
+}
+
+#[test]
+fn rare_candy_still_rejects_fainted_level_100_without_changing_it() {
+    let mut mon = crate::pokemon::stats::create_pokemon(
+        Species::Bulbasaur, 100, [0x9A, 0x78],
+    ).unwrap();
+    mon.hp = 0;
+    let before = mon.clone();
+    assert!(use_rare_candy(&mut mon).is_none());
+    assert_eq!(mon, before);
 }
 
 #[test]
