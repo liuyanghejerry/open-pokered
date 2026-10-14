@@ -5221,21 +5221,30 @@ impl PokemonGame {
                             match self.pending_bag_item {
                             None => ScreenAction::Continue,
                             Some(item) => {
+                                let retry_maxed_pp_up = item == pokered_data::items::ItemId::PpUp
+                                    && self.save_data.party.get(party_index).is_some_and(|mon| {
+                                        bag_use::pp_up_move_is_maxed(mon, slot)
+                                    });
                                 let outcome = match self.save_data.party.get_mut(party_index) {
                                     Some(mon) => bag_use::finish_move_choice(item, mon, slot),
                                     None => ItemApplyOutcome::NoEffect {
                                         message: bag_use::NO_EFFECT_MESSAGE.to_string(),
                                     },
                                 };
-                                let hm_notice = match &outcome {
+                                let move_choice_notice = match &outcome {
                                     ItemApplyOutcome::NoEffect { message }
-                                        if message.starts_with("HM techniques") =>
+                                        if message.starts_with("HM techniques") || retry_maxed_pp_up =>
                                     {
                                         Some(self.localize_dialogue(message))
                                     }
                                     _ => None,
                                 };
-                                if let Some(message) = hm_notice {
+                                if let Some(message) = move_choice_notice {
+                                    // .chooseMove reinitializes the move index after
+                                    // PPMaxedOutText; HM refusal keeps its old cursor.
+                                    if retry_maxed_pp_up {
+                                        self.party_screen.enter_move_choice();
+                                    }
                                     self.party_screen.show_move_choice_notice(message);
                                     ScreenAction::Continue
                                 } else {
@@ -8157,6 +8166,10 @@ impl PokemonGame {
         self.exit_requested
     }
 }
+
+#[cfg(all(test, feature = "debug-server"))]
+#[path = "pp_up_maxed_retry_tests.rs"]
+mod pp_up_maxed_retry_tests;
 
 const BLACK_SCREEN_DURATION: u32 = 30;
 
