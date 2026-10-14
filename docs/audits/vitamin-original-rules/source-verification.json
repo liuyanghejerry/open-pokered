@@ -1,0 +1,343 @@
+{
+  "scope": "Original actual START/ITEM/USE/party-selection and subsequent ordinary SAVE/YES. This report includes the three vitamin cases only; Rare Candy is tracked separately.",
+  "reference_source": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+  "emulator_version": "2.8.1",
+  "construction_fields": {
+    "party_count": 2,
+    "species_ids": [
+      153,
+      153,
+      255
+    ],
+    "party_struct_bytes": 44,
+    "DVs": [
+      154,
+      120
+    ],
+    "types": [
+      22,
+      3
+    ],
+    "initial_moves": [
+      33,
+      45,
+      0,
+      0
+    ],
+    "initial_pp": [
+      35,
+      40,
+      0,
+      0
+    ],
+    "second_mon": "BulbasaurLv12 HP35/35, zeroStatExp, identical DVs, remains unchanged",
+    "cash_bcd": [
+      0,
+      48,
+      0
+    ],
+    "cash": 3000,
+    "bag_quantity": 2,
+    "initial_state_source": "movement-91-setup/outside-after-save.state, previously verified retail Continue outdoor Viridian state",
+    "input_window_write_policy": "All fixture WRAM writes end before constructed-start.state; menu use and actual SAVE use real button inputs only."
+  },
+  "script_sha256": {
+    "audit-841-original-vitamins.py": "a1e6b5d7c69477aee556b63990e4d233ac8b1ca7a9e143b588d479726849841f",
+    "audit-841-original-vitamins-save.py": "879080a8e3d5e5b45c0bc39eb6d6c93b0195437a541968739d1e45e9bdf9702f",
+    "audit-841-original-vitamins-view-stats.py": "788763574fc08d623a32f7b5f654db6883b4060e88840d40a7f6227c82060dde"
+  },
+  "cases": [
+    {
+      "case": "protein-fainted",
+      "initial": {
+        "level": 12,
+        "hp": 0,
+        "stats": [
+          35,
+          18,
+          19,
+          17,
+          22
+        ],
+        "stat_exp": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "moves": [
+          33,
+          45,
+          0,
+          0
+        ],
+        "pp": [
+          35,
+          40,
+          0,
+          0
+        ],
+        "cash_bcd": [
+          0,
+          48,
+          0
+        ],
+        "bag": [
+          36,
+          2,
+          255
+        ]
+      },
+      "after": {
+        "level": 12,
+        "hp": 0,
+        "stats": [
+          35,
+          20,
+          19,
+          17,
+          22
+        ],
+        "stat_exp": [
+          0,
+          2560,
+          0,
+          0,
+          0
+        ],
+        "moves": [
+          33,
+          45,
+          0,
+          0
+        ],
+        "pp": [
+          35,
+          40,
+          0,
+          0
+        ],
+        "cash_bcd": [
+          0,
+          48,
+          0
+        ],
+        "bag": [
+          36,
+          1,
+          255
+        ]
+      },
+      "healthy_partner_unchanged": true,
+      "actual_SAVE_checksum": {
+        "stored": 241,
+        "calculated": 241,
+        "byte_offset": 13603,
+        "range_start": 9624,
+        "range_end_exclusive": 13603,
+        "valid": true
+      },
+      "sram_sha256": "24d2a89c51a64530dcee60f3235d63d60ec6501dc638312cbc89f3db2f07c795",
+      "constructed_state_sha256": "ad2045dccb9d03a9dcf538d59be939b97e2269e73546075a5b6caed8da3349dd",
+      "after_stats_screenshot": "docs/screenshots/vitamin-original-rules/protein-fainted-source-after.png",
+      "after_stats_screenshot_sha256": "b8b16dc223e25ccee69ac740c0685c051c3fecdf88285490d7001f499d9cad71",
+      "source_bag_screenshot": "docs/screenshots/vitamin-original-rules/protein-fainted-source-bag.png"
+    },
+    {
+      "case": "hp-up-injured",
+      "initial": {
+        "level": 50,
+        "hp": 10,
+        "stats": [
+          115,
+          63,
+          64,
+          57,
+          78
+        ],
+        "stat_exp": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "moves": [
+          33,
+          45,
+          0,
+          0
+        ],
+        "pp": [
+          35,
+          40,
+          0,
+          0
+        ],
+        "cash_bcd": [
+          0,
+          48,
+          0
+        ],
+        "bag": [
+          35,
+          2,
+          255
+        ]
+      },
+      "after": {
+        "level": 50,
+        "hp": 10,
+        "stats": [
+          121,
+          63,
+          64,
+          57,
+          78
+        ],
+        "stat_exp": [
+          2560,
+          0,
+          0,
+          0,
+          0
+        ],
+        "moves": [
+          33,
+          45,
+          0,
+          0
+        ],
+        "pp": [
+          35,
+          40,
+          0,
+          0
+        ],
+        "cash_bcd": [
+          0,
+          48,
+          0
+        ],
+        "bag": [
+          35,
+          1,
+          255
+        ]
+      },
+      "healthy_partner_unchanged": true,
+      "actual_SAVE_checksum": {
+        "stored": 35,
+        "calculated": 35,
+        "byte_offset": 13603,
+        "range_start": 9624,
+        "range_end_exclusive": 13603,
+        "valid": true
+      },
+      "sram_sha256": "d4c16a86ce1654dcbe37d8195926805a846c06ed84c04393138f791a01165996",
+      "constructed_state_sha256": "26cf8d901f3d1d9a1f032e800f0a36ce7f356bd937abc23b8e1e72534c5057f2",
+      "after_stats_screenshot": "docs/screenshots/vitamin-original-rules/hp-up-injured-source-after.png",
+      "after_stats_screenshot_sha256": "15315e2407104954d656a73c6150f4598d04a46ad84602dea7f91d3fffafc46f",
+      "source_bag_screenshot": "docs/screenshots/vitamin-original-rules/hp-up-injured-source-bag.png"
+    },
+    {
+      "case": "protein-near-cap",
+      "initial": {
+        "level": 50,
+        "hp": 10,
+        "stats": [
+          115,
+          83,
+          64,
+          57,
+          78
+        ],
+        "stat_exp": [
+          0,
+          25500,
+          0,
+          0,
+          0
+        ],
+        "moves": [
+          33,
+          45,
+          0,
+          0
+        ],
+        "pp": [
+          35,
+          40,
+          0,
+          0
+        ],
+        "cash_bcd": [
+          0,
+          48,
+          0
+        ],
+        "bag": [
+          36,
+          2,
+          255
+        ]
+      },
+      "after": {
+        "level": 50,
+        "hp": 10,
+        "stats": [
+          115,
+          84,
+          64,
+          57,
+          78
+        ],
+        "stat_exp": [
+          0,
+          28060,
+          0,
+          0,
+          0
+        ],
+        "moves": [
+          33,
+          45,
+          0,
+          0
+        ],
+        "pp": [
+          35,
+          40,
+          0,
+          0
+        ],
+        "cash_bcd": [
+          0,
+          48,
+          0
+        ],
+        "bag": [
+          36,
+          1,
+          255
+        ]
+      },
+      "healthy_partner_unchanged": true,
+      "actual_SAVE_checksum": {
+        "stored": 19,
+        "calculated": 19,
+        "byte_offset": 13603,
+        "range_start": 9624,
+        "range_end_exclusive": 13603,
+        "valid": true
+      },
+      "sram_sha256": "5a118753375c931ceede8fe1e6f03e2f8aa5d82f78e158b49ab9c8ac7062e966",
+      "constructed_state_sha256": "e76649cd0db62563fea681109cb99a80c32ecca1aa198f5b834c7c38702dd228",
+      "after_stats_screenshot": "docs/screenshots/vitamin-original-rules/protein-near-cap-source-after.png",
+      "after_stats_screenshot_sha256": "f1ed48432c3df288d82dd5b9d302b91c07495574c3cd5aaf577ceaff412687ef",
+      "source_bag_screenshot": "docs/screenshots/vitamin-original-rules/protein-near-cap-source-bag.png"
+    }
+  ]
+}
