@@ -184,7 +184,7 @@ pub(crate) fn draw_party_screen_base(
                 }
             }
 
-            if state.machine_compatibility(i).is_some() {
+            if state.item_compatibility(i).is_some() {
                 continue;
             }
             let hp_bar_y = (i as u32) * row_height + hp_bar.ty * TILE_SIZE + 4;
