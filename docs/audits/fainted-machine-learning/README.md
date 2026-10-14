@@ -14,3 +14,5 @@ python3 docs/audits/fainted-machine-learning/native_capture.py after /abs/fixed-
 四个核心回归测试覆盖空槽学习及非招式字段保持、已知或不兼容招式拒绝、满槽替换及 PP Up 重置、昏倒队员选择直接进入应用。这里没有原作逐帧视觉或完整 TM/HM 满槽对话流程一致性的声明。
 
 验证完成：四个针对性核心测试通过，基于 `72f9d593` 的全部 2856 个核心测试通过，debug-server 客户端构建通过。TM03、HM01 在修复前后均重复两次；每组输入、结果帧和保存哈希重复一致。`native-verification.json` 保留构建与脚本哈希、完整队员读回数据、逐次输入、SRAM 原始队伍记录和前后配对检查。截图位于 `docs/screenshots/fainted-machine-learning/`。原作记录仅作为对照断言；运行实现不读取测试记录。
+
+发布前已合并 master `6a0ef88b`（维他命具体能力提示）。该更新不经过本次 TM/HM 用例的路径；采集二进制仍对应上面记录的 `72f9d593` 基线，不能称为发布头的完整二进制验证。
