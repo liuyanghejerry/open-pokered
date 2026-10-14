@@ -707,6 +707,49 @@ mod tests {
         assert!(mon.stat_exp[0] > before);
     }
 
+    #[test]
+    fn bag_vitamin_results_match_original_menu_and_saved_party_cases() {
+        // Independent original START/ITEM/USE/party and SAVE captures, audit841.
+        // (item, level, currentHP, AttackStatExp, expected maxHP/Attack/StatExp).
+        let cases = [
+            (ItemId::Protein, 12, 0, 0, 35, 20, [0, 2560, 0, 0, 0]),
+            (ItemId::HpUp, 50, 10, 0, 121, 63, [2560, 0, 0, 0, 0]),
+            (ItemId::Protein, 50, 10, 25500, 115, 84, [0, 28060, 0, 0, 0]),
+        ];
+        for (item, level, hp, attack_exp, max_hp, attack, stat_exp) in cases {
+            let mut mon = crate::pokemon::stats::create_pokemon_with_moves(
+                Species::Bulbasaur,
+                level,
+                [0x9a, 0x78],
+                [MoveId::Tackle, MoveId::Growl, MoveId::None, MoveId::None],
+            )
+            .unwrap();
+            mon.stat_exp[1] = attack_exp;
+            crate::pokemon::stats::recalculate_stats(&mut mon);
+            mon.hp = hp;
+            let old_exp = mon.total_exp;
+            let mut dex = Pokedex::new();
+            assert!(
+                matches!(
+                    apply_item_to_pokemon(item, &mut mon, &mut dex),
+                    ItemApplyOutcome::Used { consume: true, .. }
+                ),
+                "{item:?}"
+            );
+            assert_eq!(
+                (mon.level, mon.hp, mon.max_hp, mon.attack),
+                (level, hp, max_hp, attack)
+            );
+            assert_eq!(mon.stat_exp, stat_exp);
+            assert_eq!(mon.pp, [35, 40, 0, 0]);
+            assert_eq!(
+                mon.moves,
+                [MoveId::Tackle, MoveId::Growl, MoveId::None, MoveId::None]
+            );
+            assert_eq!(mon.total_exp, old_exp);
+        }
+    }
+
     // -- Rare Candy ----------------------------------------------------------
 
     #[test]
