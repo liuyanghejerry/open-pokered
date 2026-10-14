@@ -41,15 +41,18 @@
     },
     {
       "id": 2,
-      "talk": "talkRocket1"
+      "talk": "talkRocket1",
+      "toggleId": "SILPH_CO_8F_OBJ_2"
     },
     {
       "id": 3,
-      "talk": "talkScientist"
+      "talk": "talkScientist",
+      "toggleId": "SILPH_CO_8F_OBJ_3"
     },
     {
       "id": 4,
-      "talk": "talkRocket2"
+      "talk": "talkRocket2",
+      "toggleId": "SILPH_CO_8F_OBJ_4"
     }
   ],
   "onLoad": "SilphCo8FOnLoad",

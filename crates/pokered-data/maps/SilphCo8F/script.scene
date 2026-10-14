@@ -66,7 +66,7 @@ game_scene SilphCo8F {
 
   // ── Rocket #1 (npc 2) — sight-engaged trainer; dialogue only ─────────────
   @storyline("talkRocket1") {
-    @trigger(map = "SilphCo8F", npc = 2)
+    @trigger(map = "SilphCo8F", npc = 2, toggle = "SILPH_CO_8F_OBJ_2")
     @if (getFlag("EVENT_BEAT_SILPH_CO_8F_TRAINER_0")) {
       @speaker("") { @t("If you don't turn back, I'll\ncall for backup!", "你再不回头，我就要呼叫增援\n了！") }
     } @else {
@@ -76,7 +76,7 @@ game_scene SilphCo8F {
 
   // ── Scientist (npc 3) — sight-engaged trainer; dialogue only ─────────────
   @storyline("talkScientist") {
-    @trigger(map = "SilphCo8F", npc = 3)
+    @trigger(map = "SilphCo8F", npc = 3, toggle = "SILPH_CO_8F_OBJ_3")
     @if (getFlag("EVENT_BEAT_SILPH_CO_8F_TRAINER_1")) {
       @speaker("") { @t("So, what do you think of\nSILPH BUILDING's maze?", "你觉得西尔佛公司的迷宫怎么\n样？") }
     } @else {
@@ -86,7 +86,7 @@ game_scene SilphCo8F {
 
   // ── Rocket #2 (npc 4) — sight-engaged trainer; dialogue only ─────────────
   @storyline("talkRocket2") {
-    @trigger(map = "SilphCo8F", npc = 4)
+    @trigger(map = "SilphCo8F", npc = 4, toggle = "SILPH_CO_8F_OBJ_4")
     @if (getFlag("EVENT_BEAT_SILPH_CO_8F_TRAINER_2")) {
       @speaker("") { @t("I'll leave you up to my\nbrothers!", "我会把你交给我的兄弟们！") }
     } @else {

@@ -105,7 +105,7 @@ game_scene SilphCo5F {
 
   // ── Rocket (npc 2) — sight-engaged trainer; dialogue only ───────────────
   @storyline("talkRocket1") {
-    @trigger(map = "SilphCo5F", npc = 2)
+    @trigger(map = "SilphCo5F", npc = 2, toggle = "SILPH_CO_5F_OBJ_2")
     @if (getFlag("EVENT_BEAT_SILPH_CO_5F_TRAINER_0")) {
       @speaker("") { @t("It's not smart to pick a\nfight with TEAM ROCKET!", "跟火箭队作对可不是聪明的做\n法！") }
     } @else {
@@ -115,7 +115,7 @@ game_scene SilphCo5F {
 
   // ── Scientist (npc 3) — sight-engaged trainer; dialogue only ────────────
   @storyline("talkScientist") {
-    @trigger(map = "SilphCo5F", npc = 3)
+    @trigger(map = "SilphCo5F", npc = 3, toggle = "SILPH_CO_5F_OBJ_3")
     @if (getFlag("EVENT_BEAT_SILPH_CO_5F_TRAINER_1")) {
       @speaker("") { @t("We worked on the ultimate\nPOKé BALL which would\ncontain anything!", "我们曾致力于制造终极精灵球无\n论什么宝可梦都能抓到！") }
     } @else {
@@ -125,7 +125,7 @@ game_scene SilphCo5F {
 
   // ── Rocker (npc 4) — sight-engaged trainer; dialogue only ───────────────
   @storyline("talkRocker") {
-    @trigger(map = "SilphCo5F", npc = 4)
+    @trigger(map = "SilphCo5F", npc = 4, toggle = "SILPH_CO_5F_OBJ_4")
     @if (getFlag("EVENT_BEAT_SILPH_CO_5F_TRAINER_2")) {
       @speaker("") { @t("You're only on 5F. It's a\nlong way to my BOSS!", "你才到5层而已。要见到我的老\n大还远着呢！") }
     } @else {
@@ -135,7 +135,7 @@ game_scene SilphCo5F {
 
   // ── Rocket (npc 5) — sight-engaged trainer; dialogue only ───────────────
   @storyline("talkRocket2") {
-    @trigger(map = "SilphCo5F", npc = 5)
+    @trigger(map = "SilphCo5F", npc = 5, toggle = "SILPH_CO_5F_OBJ_5")
     @if (getFlag("EVENT_BEAT_SILPH_CO_5F_TRAINER_3")) {
       @speaker("") {
         @t("Which reminds me.\n\nKOFFING evolves into\nWEEZING!", "说起来……\n\n瓦斯弹会进化成双弹瓦斯！")

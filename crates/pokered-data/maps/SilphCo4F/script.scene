@@ -37,7 +37,7 @@ game_scene SilphCo4F {
 
   // ── Rocket (npc 2) — sight-engaged trainer; dialogue only ───────────────
   @storyline("talkRocket1") {
-    @trigger(map = "SilphCo4F", npc = 2)
+    @trigger(map = "SilphCo4F", npc = 2, toggle = "SILPH_CO_4F_OBJ_2")
     @if (getFlag("EVENT_BEAT_SILPH_CO_4F_TRAINER_0")) {
       @speaker("") { @t("Fwahahaha! My BOSS has been\nafter this place!", "哈哈哈！我的老大一直想要这个\n地方！") }
     } @else {
@@ -47,7 +47,7 @@ game_scene SilphCo4F {
 
   // ── Scientist (npc 3) — sight-engaged trainer; dialogue only ────────────
   @storyline("talkScientist") {
-    @trigger(map = "SilphCo4F", npc = 3)
+    @trigger(map = "SilphCo4F", npc = 3, toggle = "SILPH_CO_4F_OBJ_3")
     @if (getFlag("EVENT_BEAT_SILPH_CO_4F_TRAINER_1")) {
       @speaker("") { @t("The doors are electronically\nlocked! A CARD KEY opens\nthem!", "这些门是电子锁的！磁卡钥匙能\n打开它们！") }
     } @else {
@@ -57,7 +57,7 @@ game_scene SilphCo4F {
 
   // ── Rocket (npc 4) — sight-engaged trainer; dialogue only ───────────────
   @storyline("talkRocket2") {
-    @trigger(map = "SilphCo4F", npc = 4)
+    @trigger(map = "SilphCo4F", npc = 4, toggle = "SILPH_CO_4F_OBJ_4")
     @if (getFlag("EVENT_BEAT_SILPH_CO_4F_TRAINER_2")) {
       @speaker("") { @t("I better tell the BOSS on\n11F!", "我得去11层告诉老大！") }
     } @else {

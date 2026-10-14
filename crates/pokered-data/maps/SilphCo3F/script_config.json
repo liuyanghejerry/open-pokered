@@ -73,11 +73,13 @@
     },
     {
       "id": 2,
-      "talk": "talkRocket"
+      "talk": "talkRocket",
+      "toggleId": "SILPH_CO_3F_OBJ_2"
     },
     {
       "id": 3,
-      "talk": "talkScientist"
+      "talk": "talkScientist",
+      "toggleId": "SILPH_CO_3F_OBJ_3"
     },
     {
       "id": 4,

@@ -1,0 +1,1995 @@
+{
+  "scope": "Actual one-step coordinate entry from two constructed saves; source scripts/SilphCo11F.asm path is initial9 plus DOWN3 and reciprocal facing. Actual battle win and post-battle save readback; exact-cycle parity and rendering not yet compared.",
+  "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-796-silph-after-debug",
+  "cases": [
+    {
+      "case": "below",
+      "start": [
+        6,
+        14
+      ],
+      "trigger": [
+        6,
+        13
+      ],
+      "intro": "Ah NINTEN! So we meet agai",
+      "npc_positions": [
+        [
+          6,
+          9
+        ],
+        [
+          6,
+          10
+        ],
+        [
+          6,
+          11
+        ],
+        [
+          6,
+          12
+        ]
+      ],
+      "events": [
+        {
+          "step": 34,
+          "position": [
+            6,
+            10
+          ],
+          "npc": {
+            "facing": "Down",
+            "home_x": 6,
+            "home_y": 9,
+            "npc_index": 2,
+            "scripted_path_remaining": 2,
+            "sprite_id": 23,
+            "text_id": 3,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 6,
+            "y": 10
+          },
+          "effect": "MoveNpc"
+        },
+        {
+          "step": 68,
+          "position": [
+            6,
+            11
+          ],
+          "npc": {
+            "facing": "Down",
+            "home_x": 6,
+            "home_y": 9,
+            "npc_index": 2,
+            "scripted_path_remaining": 1,
+            "sprite_id": 23,
+            "text_id": 3,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 6,
+            "y": 11
+          },
+          "effect": "MoveNpc"
+        },
+        {
+          "step": 102,
+          "position": [
+            6,
+            12
+          ],
+          "npc": {
+            "facing": "Down",
+            "home_x": 6,
+            "home_y": 9,
+            "npc_index": 2,
+            "scripted_path_remaining": 0,
+            "sprite_id": 23,
+            "text_id": 3,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 6,
+            "y": 12
+          },
+          "effect": "MoveNpc"
+        }
+      ],
+      "player_facing": "Up",
+      "npc_facing": "Down",
+      "screen": "battle",
+      "battle_phase": "Intro { phase: BattleTransitionWipe(Spiral { outward: false }), wait_frames: 120 }",
+      "battle_messages": [
+        "Go! EXEGGUTOR!",
+        "EXEGGUTOR used SURF!",
+        "Enemy NIDORINO fainted!",
+        "EXEGGUTOR gained 934 exp.\npoints!",
+        "GIOVANNI is about to use KANGASKHAN!\nWill NINTEN change POK\u00e9MON?",
+        "EXEGGUTOR used SURF!",
+        "Enemy KANGASKHAN fainted!",
+        "EXEGGUTOR gained 1312 exp.\npoints!",
+        "GIOVANNI is about to use RHYHORN!\nWill NINTEN change POK\u00e9MON?",
+        "EXEGGUTOR used SURF!",
+        "It's super effective!",
+        "Enemy RHYHORN fainted!",
+        "EXEGGUTOR gained 1069 exp.\npoints!",
+        "GIOVANNI is about to use NIDOQUEEN!\nWill NINTEN change POK\u00e9MON?",
+        "EXEGGUTOR used SURF!",
+        "It's super effective!",
+        "Enemy NIDOQUEEN fainted!",
+        "EXEGGUTOR gained 1704 exp.\npoints!",
+        "NINTEN got $4059 for\nwinning!"
+      ],
+      "post_battle": [
+        {
+          "frame": 3133,
+          "dialogue": null,
+          "effect": "ShowDialogue",
+          "warp_fade": "FadingIn { frames_remaining: 14 }",
+          "npcs": [
+            {
+              "facing": "Down",
+              "home_x": 7,
+              "home_y": 5,
+              "npc_index": 0,
+              "scripted_path_remaining": 0,
+              "sprite_id": 43,
+              "text_id": 1,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 7,
+              "y": 5
+            },
+            {
+              "facing": "Down",
+              "home_x": 10,
+              "home_y": 5,
+              "npc_index": 1,
+              "scripted_path_remaining": 0,
+              "sprite_id": 15,
+              "text_id": 2,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 10,
+              "y": 5
+            },
+            {
+              "facing": "Down",
+              "home_x": 6,
+              "home_y": 9,
+              "npc_index": 2,
+              "scripted_path_remaining": 0,
+              "sprite_id": 23,
+              "text_id": 3,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 6,
+              "y": 12
+            },
+            {
+              "facing": "Up",
+              "home_x": 3,
+              "home_y": 16,
+              "npc_index": 3,
+              "scripted_path_remaining": 0,
+              "sprite_id": 24,
+              "text_id": 4,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 3,
+              "y": 16
+            },
+            {
+              "facing": "Up",
+              "home_x": 15,
+              "home_y": 9,
+              "npc_index": 4,
+              "scripted_path_remaining": 0,
+              "sprite_id": 24,
+              "text_id": 5,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 15,
+              "y": 9
+            }
+          ]
+        },
+        {
+          "frame": 3143,
+          "dialogue": null,
+          "effect": "ShowDialogue",
+          "warp_fade": "FadingIn { frames_remaining: 4 }",
+          "npcs": [
+            {
+              "facing": "Down",
+              "home_x": 7,
+              "home_y": 5,
+              "npc_index": 0,
+              "scripted_path_remaining": 0,
+              "sprite_id": 43,
+              "text_id": 1,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 7,
+              "y": 5
+            },
+            {
+              "facing": "Down",
+              "home_x": 10,
+              "home_y": 5,
+              "npc_index": 1,
+              "scripted_path_remaining": 0,
+              "sprite_id": 15,
+              "text_id": 2,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 10,
+              "y": 5
+            },
+            {
+              "facing": "Down",
+              "home_x": 6,
+              "home_y": 9,
+              "npc_index": 2,
+              "scripted_path_remaining": 0,
+              "sprite_id": 23,
+              "text_id": 3,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 6,
+              "y": 12
+            },
+            {
+              "facing": "Up",
+              "home_x": 3,
+              "home_y": 16,
+              "npc_index": 3,
+              "scripted_path_remaining": 0,
+              "sprite_id": 24,
+              "text_id": 4,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 3,
+              "y": 16
+            },
+            {
+              "facing": "Up",
+              "home_x": 15,
+              "home_y": 9,
+              "npc_index": 4,
+              "scripted_path_remaining": 0,
+              "sprite_id": 24,
+              "text_id": 5,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 15,
+              "y": 9
+            }
+          ]
+        },
+        {
+          "frame": 3153,
+          "dialogue": "Ar",
+          "effect": "ShowDialogue",
+          "warp_fade": "Idle",
+          "npcs": [
+            {
+              "facing": "Down",
+              "home_x": 7,
+              "home_y": 5,
+              "npc_index": 0,
+              "scripted_path_remaining": 0,
+              "sprite_id": 43,
+              "text_id": 1,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 7,
+              "y": 5
+            },
+            {
+              "facing": "Down",
+              "home_x": 10,
+              "home_y": 5,
+              "npc_index": 1,
+              "scripted_path_remaining": 0,
+              "sprite_id": 15,
+              "text_id": 2,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 10,
+              "y": 5
+            },
+            {
+              "facing": "Down",
+              "home_x": 6,
+              "home_y": 9,
+              "npc_index": 2,
+              "scripted_path_remaining": 0,
+              "sprite_id": 23,
+              "text_id": 3,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 6,
+              "y": 12
+            },
+            {
+              "facing": "Up",
+              "home_x": 3,
+              "home_y": 16,
+              "npc_index": 3,
+              "scripted_path_remaining": 0,
+              "sprite_id": 24,
+              "text_id": 4,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 3,
+              "y": 16
+            },
+            {
+              "facing": "Up",
+              "home_x": 15,
+              "home_y": 9,
+              "npc_index": 4,
+              "scripted_path_remaining": 0,
+              "sprite_id": 24,
+              "text_id": 5,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 15,
+              "y": 9
+            }
+          ]
+        },
+        {
+          "frame": 3196,
+          "dialogue": null,
+          "effect": "ShowDialogue",
+          "warp_fade": "Idle",
+          "npcs": [
+            {
+              "facing": "Down",
+              "home_x": 7,
+              "home_y": 5,
+              "npc_index": 0,
+              "scripted_path_remaining": 0,
+              "sprite_id": 43,
+              "text_id": 1,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 7,
+              "y": 5
+            },
+            {
+              "facing": "Down",
+              "home_x": 10,
+              "home_y": 5,
+              "npc_index": 1,
+              "scripted_path_remaining": 0,
+              "sprite_id": 15,
+              "text_id": 2,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 10,
+              "y": 5
+            },
+            {
+              "facing": "Down",
+              "home_x": 6,
+              "home_y": 9,
+              "npc_index": 2,
+              "scripted_path_remaining": 0,
+              "sprite_id": 23,
+              "text_id": 3,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 6,
+              "y": 12
+            },
+            {
+              "facing": "Up",
+              "home_x": 3,
+              "home_y": 16,
+              "npc_index": 3,
+              "scripted_path_remaining": 0,
+              "sprite_id": 24,
+              "text_id": 4,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 3,
+              "y": 16
+            },
+            {
+              "facing": "Up",
+              "home_x": 15,
+              "home_y": 9,
+              "npc_index": 4,
+              "scripted_path_remaining": 0,
+              "sprite_id": 24,
+              "text_id": 5,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 15,
+              "y": 9
+            }
+          ]
+        },
+        {
+          "frame": 3206,
+          "dialogue": "Bla",
+          "effect": "ShowDialogue",
+          "warp_fade": "Idle",
+          "npcs": [
+            {
+              "facing": "Down",
+              "home_x": 7,
+              "home_y": 5,
+              "npc_index": 0,
+              "scripted_path_remaining": 0,
+              "sprite_id": 43,
+              "text_id": 1,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 7,
+              "y": 5
+            },
+            {
+              "facing": "Down",
+              "home_x": 10,
+              "home_y": 5,
+              "npc_index": 1,
+              "scripted_path_remaining": 0,
+              "sprite_id": 15,
+              "text_id": 2,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 10,
+              "y": 5
+            },
+            {
+              "facing": "Down",
+              "home_x": 6,
+              "home_y": 9,
+              "npc_index": 2,
+              "scripted_path_remaining": 0,
+              "sprite_id": 23,
+              "text_id": 3,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 6,
+              "y": 12
+            },
+            {
+              "facing": "Up",
+              "home_x": 3,
+              "home_y": 16,
+              "npc_index": 3,
+              "scripted_path_remaining": 0,
+              "sprite_id": 24,
+              "text_id": 4,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 3,
+              "y": 16
+            },
+            {
+              "facing": "Up",
+              "home_x": 15,
+              "home_y": 9,
+              "npc_index": 4,
+              "scripted_path_remaining": 0,
+              "sprite_id": 24,
+              "text_id": 5,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 15,
+              "y": 9
+            }
+          ]
+        },
+        {
+          "frame": 3539,
+          "dialogue": null,
+          "effect": "HideObjectByName",
+          "warp_fade": "Idle",
+          "npcs": [
+            {
+              "facing": "Down",
+              "home_x": 7,
+              "home_y": 5,
+              "npc_index": 0,
+              "scripted_path_remaining": 0,
+              "sprite_id": 43,
+              "text_id": 1,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 7,
+              "y": 5
+            },
+            {
+              "facing": "Down",
+              "home_x": 10,
+              "home_y": 5,
+              "npc_index": 1,
+              "scripted_path_remaining": 0,
+              "sprite_id": 15,
+              "text_id": 2,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 10,
+              "y": 5
+            },
+            {
+              "facing": "Down",
+              "home_x": 6,
+              "home_y": 9,
+              "npc_index": 2,
+              "scripted_path_remaining": 0,
+              "sprite_id": 23,
+              "text_id": 3,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 6,
+              "y": 12
+            },
+            {
+              "facing": "Up",
+              "home_x": 3,
+              "home_y": 16,
+              "npc_index": 3,
+              "scripted_path_remaining": 0,
+              "sprite_id": 24,
+              "text_id": 4,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 3,
+              "y": 16
+            },
+            {
+              "facing": "Up",
+              "home_x": 15,
+              "home_y": 9,
+              "npc_index": 4,
+              "scripted_path_remaining": 0,
+              "sprite_id": 24,
+              "text_id": 5,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 15,
+              "y": 9
+            }
+          ]
+        },
+        {
+          "frame": 3549,
+          "dialogue": null,
+          "effect": "HideObjectByName",
+          "warp_fade": "Idle",
+          "npcs": [
+            {
+              "facing": "Down",
+              "home_x": 7,
+              "home_y": 5,
+              "npc_index": 0,
+              "scripted_path_remaining": 0,
+              "sprite_id": 43,
+              "text_id": 1,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 7,
+              "y": 5
+            },
+            {
+              "facing": "Down",
+              "home_x": 10,
+              "home_y": 5,
+              "npc_index": 1,
+              "scripted_path_remaining": 0,
+              "sprite_id": 15,
+              "text_id": 2,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 10,
+              "y": 5
+            },
+            {
+              "facing": "Down",
+              "home_x": 6,
+              "home_y": 9,
+              "npc_index": 2,
+              "scripted_path_remaining": 0,
+              "sprite_id": 23,
+              "text_id": 3,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 6,
+              "y": 12
+            },
+            {
+              "facing": "Up",
+              "home_x": 3,
+              "home_y": 16,
+              "npc_index": 3,
+              "scripted_path_remaining": 0,
+              "sprite_id": 24,
+              "text_id": 4,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 3,
+              "y": 16
+            },
+            {
+              "facing": "Up",
+              "home_x": 15,
+              "home_y": 9,
+              "npc_index": 4,
+              "scripted_path_remaining": 0,
+              "sprite_id": 24,
+              "text_id": 5,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 15,
+              "y": 9
+            }
+          ]
+        },
+        {
+          "frame": 3559,
+          "dialogue": null,
+          "effect": "HideObjectByName",
+          "warp_fade": "Idle",
+          "npcs": [
+            {
+              "facing": "Down",
+              "home_x": 7,
+              "home_y": 5,
+              "npc_index": 0,
+              "scripted_path_remaining": 0,
+              "sprite_id": 43,
+              "text_id": 1,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 7,
+              "y": 5
+            },
+            {
+              "facing": "Down",
+              "home_x": 10,
+              "home_y": 5,
+              "npc_index": 1,
+              "scripted_path_remaining": 0,
+              "sprite_id": 15,
+              "text_id": 2,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 10,
+              "y": 5
+            },
+            {
+              "facing": "Down",
+              "home_x": 6,
+              "home_y": 9,
+              "npc_index": 2,
+              "scripted_path_remaining": 0,
+              "sprite_id": 23,
+              "text_id": 3,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 6,
+              "y": 12
+            },
+            {
+              "facing": "Up",
+              "home_x": 3,
+              "home_y": 16,
+              "npc_index": 3,
+              "scripted_path_remaining": 0,
+              "sprite_id": 24,
+              "text_id": 4,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 3,
+              "y": 16
+            },
+            {
+              "facing": "Up",
+              "home_x": 15,
+              "home_y": 9,
+              "npc_index": 4,
+              "scripted_path_remaining": 0,
+              "sprite_id": 24,
+              "text_id": 5,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 15,
+              "y": 9
+            }
+          ]
+        },
+        {
+          "frame": 3569,
+          "dialogue": null,
+          "effect": "HideObjectByName",
+          "warp_fade": "Idle",
+          "npcs": [
+            {
+              "facing": "Down",
+              "home_x": 7,
+              "home_y": 5,
+              "npc_index": 0,
+              "scripted_path_remaining": 0,
+              "sprite_id": 43,
+              "text_id": 1,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 7,
+              "y": 5
+            },
+            {
+              "facing": "Down",
+              "home_x": 10,
+              "home_y": 5,
+              "npc_index": 1,
+              "scripted_path_remaining": 0,
+              "sprite_id": 15,
+              "text_id": 2,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 10,
+              "y": 5
+            },
+            {
+              "facing": "Down",
+              "home_x": 6,
+              "home_y": 9,
+              "npc_index": 2,
+              "scripted_path_remaining": 0,
+              "sprite_id": 23,
+              "text_id": 3,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 6,
+              "y": 12
+            },
+            {
+              "facing": "Up",
+              "home_x": 3,
+              "home_y": 16,
+              "npc_index": 3,
+              "scripted_path_remaining": 0,
+              "sprite_id": 24,
+              "text_id": 4,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 3,
+              "y": 16
+            },
+            {
+              "facing": "Up",
+              "home_x": 15,
+              "home_y": 9,
+              "npc_index": 4,
+              "scripted_path_remaining": 0,
+              "sprite_id": 24,
+              "text_id": 5,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 15,
+              "y": 9
+            }
+          ]
+        },
+        {
+          "frame": 3579,
+          "dialogue": null,
+          "effect": "ShowObjectByName",
+          "warp_fade": "Idle",
+          "npcs": [
+            {
+              "facing": "Down",
+              "home_x": 7,
+              "home_y": 5,
+              "npc_index": 0,
+              "scripted_path_remaining": 0,
+              "sprite_id": 43,
+              "text_id": 1,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 7,
+              "y": 5
+            },
+            {
+              "facing": "Down",
+              "home_x": 10,
+              "home_y": 5,
+              "npc_index": 1,
+              "scripted_path_remaining": 0,
+              "sprite_id": 15,
+              "text_id": 2,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 10,
+              "y": 5
+            },
+            {
+              "facing": "Down",
+              "home_x": 6,
+              "home_y": 9,
+              "npc_index": 2,
+              "scripted_path_remaining": 0,
+              "sprite_id": 23,
+              "text_id": 3,
+              "visible": false,
+              "walk_counter": 0,
+              "x": 6,
+              "y": 12
+            },
+            {
+              "facing": "Up",
+              "home_x": 3,
+              "home_y": 16,
+              "npc_index": 3,
+              "scripted_path_remaining": 0,
+              "sprite_id": 24,
+              "text_id": 4,
+              "visible": false,
+              "walk_counter": 0,
+              "x": 3,
+              "y": 16
+            },
+            {
+              "facing": "Up",
+              "home_x": 15,
+              "home_y": 9,
+              "npc_index": 4,
+              "scripted_path_remaining": 0,
+              "sprite_id": 24,
+              "text_id": 5,
+              "visible": false,
+              "walk_counter": 0,
+              "x": 15,
+              "y": 9
+            }
+          ]
+        },
+        {
+          "frame": 3589,
+          "dialogue": null,
+          "effect": null,
+          "warp_fade": "Idle",
+          "npcs": [
+            {
+              "facing": "Down",
+              "home_x": 7,
+              "home_y": 5,
+              "npc_index": 0,
+              "scripted_path_remaining": 0,
+              "sprite_id": 43,
+              "text_id": 1,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 7,
+              "y": 5
+            },
+            {
+              "facing": "Down",
+              "home_x": 10,
+              "home_y": 5,
+              "npc_index": 1,
+              "scripted_path_remaining": 0,
+              "sprite_id": 15,
+              "text_id": 2,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 10,
+              "y": 5
+            },
+            {
+              "facing": "Down",
+              "home_x": 6,
+              "home_y": 9,
+              "npc_index": 2,
+              "scripted_path_remaining": 0,
+              "sprite_id": 23,
+              "text_id": 3,
+              "visible": false,
+              "walk_counter": 0,
+              "x": 6,
+              "y": 12
+            },
+            {
+              "facing": "Up",
+              "home_x": 3,
+              "home_y": 16,
+              "npc_index": 3,
+              "scripted_path_remaining": 0,
+              "sprite_id": 24,
+              "text_id": 4,
+              "visible": false,
+              "walk_counter": 0,
+              "x": 3,
+              "y": 16
+            },
+            {
+              "facing": "Up",
+              "home_x": 15,
+              "home_y": 9,
+              "npc_index": 4,
+              "scripted_path_remaining": 0,
+              "sprite_id": 24,
+              "text_id": 5,
+              "visible": false,
+              "walk_counter": 0,
+              "x": 15,
+              "y": 9
+            }
+          ]
+        }
+      ],
+      "final_npcs": [
+        {
+          "facing": "Down",
+          "home_x": 7,
+          "home_y": 5,
+          "npc_index": 0,
+          "scripted_path_remaining": 0,
+          "sprite_id": 43,
+          "text_id": 1,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 7,
+          "y": 5
+        },
+        {
+          "facing": "Down",
+          "home_x": 10,
+          "home_y": 5,
+          "npc_index": 1,
+          "scripted_path_remaining": 0,
+          "sprite_id": 15,
+          "text_id": 2,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 10,
+          "y": 5
+        },
+        {
+          "facing": "Down",
+          "home_x": 6,
+          "home_y": 9,
+          "npc_index": 2,
+          "scripted_path_remaining": 0,
+          "sprite_id": 23,
+          "text_id": 3,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 6,
+          "y": 12
+        },
+        {
+          "facing": "Up",
+          "home_x": 3,
+          "home_y": 16,
+          "npc_index": 3,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 4,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 3,
+          "y": 16
+        },
+        {
+          "facing": "Up",
+          "home_x": 15,
+          "home_y": 9,
+          "npc_index": 4,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 5,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 15,
+          "y": 9
+        }
+      ],
+      "saved_beat_flag": true,
+      "saved_local_rocket_hides": true
+    },
+    {
+      "case": "right",
+      "start": [
+        8,
+        12
+      ],
+      "trigger": [
+        7,
+        12
+      ],
+      "intro": "Ah NINTEN! So we meet agai",
+      "npc_positions": [
+        [
+          6,
+          9
+        ],
+        [
+          6,
+          10
+        ],
+        [
+          6,
+          11
+        ],
+        [
+          6,
+          12
+        ]
+      ],
+      "events": [
+        {
+          "step": 34,
+          "position": [
+            6,
+            10
+          ],
+          "npc": {
+            "facing": "Down",
+            "home_x": 6,
+            "home_y": 9,
+            "npc_index": 2,
+            "scripted_path_remaining": 2,
+            "sprite_id": 23,
+            "text_id": 3,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 6,
+            "y": 10
+          },
+          "effect": "MoveNpc"
+        },
+        {
+          "step": 68,
+          "position": [
+            6,
+            11
+          ],
+          "npc": {
+            "facing": "Down",
+            "home_x": 6,
+            "home_y": 9,
+            "npc_index": 2,
+            "scripted_path_remaining": 1,
+            "sprite_id": 23,
+            "text_id": 3,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 6,
+            "y": 11
+          },
+          "effect": "MoveNpc"
+        },
+        {
+          "step": 102,
+          "position": [
+            6,
+            12
+          ],
+          "npc": {
+            "facing": "Down",
+            "home_x": 6,
+            "home_y": 9,
+            "npc_index": 2,
+            "scripted_path_remaining": 0,
+            "sprite_id": 23,
+            "text_id": 3,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 6,
+            "y": 12
+          },
+          "effect": "MoveNpc"
+        }
+      ],
+      "player_facing": "Left",
+      "npc_facing": "Right",
+      "screen": "battle",
+      "battle_phase": "Intro { phase: BattleTransitionWipe(Spiral { outward: false }), wait_frames: 120 }",
+      "battle_messages": [
+        "Go! EXEGGUTOR!",
+        "EXEGGUTOR used SURF!",
+        "Enemy NIDORINO fainted!",
+        "EXEGGUTOR gained 934 exp.\npoints!",
+        "GIOVANNI is about to use KANGASKHAN!\nWill NINTEN change POK\u00e9MON?",
+        "EXEGGUTOR used SURF!",
+        "Enemy KANGASKHAN fainted!",
+        "EXEGGUTOR gained 1312 exp.\npoints!",
+        "GIOVANNI is about to use RHYHORN!\nWill NINTEN change POK\u00e9MON?",
+        "EXEGGUTOR used SURF!",
+        "It's super effective!",
+        "Enemy RHYHORN fainted!",
+        "EXEGGUTOR gained 1069 exp.\npoints!",
+        "GIOVANNI is about to use NIDOQUEEN!\nWill NINTEN change POK\u00e9MON?",
+        "EXEGGUTOR used SURF!",
+        "It's super effective!",
+        "Enemy NIDOQUEEN fainted!",
+        "EXEGGUTOR gained 1704 exp.\npoints!",
+        "NINTEN got $4059 for\nwinning!"
+      ],
+      "post_battle": [
+        {
+          "frame": 3133,
+          "dialogue": null,
+          "effect": "ShowDialogue",
+          "warp_fade": "FadingIn { frames_remaining: 14 }",
+          "npcs": [
+            {
+              "facing": "Down",
+              "home_x": 7,
+              "home_y": 5,
+              "npc_index": 0,
+              "scripted_path_remaining": 0,
+              "sprite_id": 43,
+              "text_id": 1,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 7,
+              "y": 5
+            },
+            {
+              "facing": "Down",
+              "home_x": 10,
+              "home_y": 5,
+              "npc_index": 1,
+              "scripted_path_remaining": 0,
+              "sprite_id": 15,
+              "text_id": 2,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 10,
+              "y": 5
+            },
+            {
+              "facing": "Right",
+              "home_x": 6,
+              "home_y": 9,
+              "npc_index": 2,
+              "scripted_path_remaining": 0,
+              "sprite_id": 23,
+              "text_id": 3,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 6,
+              "y": 12
+            },
+            {
+              "facing": "Up",
+              "home_x": 3,
+              "home_y": 16,
+              "npc_index": 3,
+              "scripted_path_remaining": 0,
+              "sprite_id": 24,
+              "text_id": 4,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 3,
+              "y": 16
+            },
+            {
+              "facing": "Up",
+              "home_x": 15,
+              "home_y": 9,
+              "npc_index": 4,
+              "scripted_path_remaining": 0,
+              "sprite_id": 24,
+              "text_id": 5,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 15,
+              "y": 9
+            }
+          ]
+        },
+        {
+          "frame": 3143,
+          "dialogue": null,
+          "effect": "ShowDialogue",
+          "warp_fade": "FadingIn { frames_remaining: 4 }",
+          "npcs": [
+            {
+              "facing": "Down",
+              "home_x": 7,
+              "home_y": 5,
+              "npc_index": 0,
+              "scripted_path_remaining": 0,
+              "sprite_id": 43,
+              "text_id": 1,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 7,
+              "y": 5
+            },
+            {
+              "facing": "Down",
+              "home_x": 10,
+              "home_y": 5,
+              "npc_index": 1,
+              "scripted_path_remaining": 0,
+              "sprite_id": 15,
+              "text_id": 2,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 10,
+              "y": 5
+            },
+            {
+              "facing": "Right",
+              "home_x": 6,
+              "home_y": 9,
+              "npc_index": 2,
+              "scripted_path_remaining": 0,
+              "sprite_id": 23,
+              "text_id": 3,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 6,
+              "y": 12
+            },
+            {
+              "facing": "Up",
+              "home_x": 3,
+              "home_y": 16,
+              "npc_index": 3,
+              "scripted_path_remaining": 0,
+              "sprite_id": 24,
+              "text_id": 4,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 3,
+              "y": 16
+            },
+            {
+              "facing": "Up",
+              "home_x": 15,
+              "home_y": 9,
+              "npc_index": 4,
+              "scripted_path_remaining": 0,
+              "sprite_id": 24,
+              "text_id": 5,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 15,
+              "y": 9
+            }
+          ]
+        },
+        {
+          "frame": 3153,
+          "dialogue": "Ar",
+          "effect": "ShowDialogue",
+          "warp_fade": "Idle",
+          "npcs": [
+            {
+              "facing": "Down",
+              "home_x": 7,
+              "home_y": 5,
+              "npc_index": 0,
+              "scripted_path_remaining": 0,
+              "sprite_id": 43,
+              "text_id": 1,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 7,
+              "y": 5
+            },
+            {
+              "facing": "Down",
+              "home_x": 10,
+              "home_y": 5,
+              "npc_index": 1,
+              "scripted_path_remaining": 0,
+              "sprite_id": 15,
+              "text_id": 2,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 10,
+              "y": 5
+            },
+            {
+              "facing": "Right",
+              "home_x": 6,
+              "home_y": 9,
+              "npc_index": 2,
+              "scripted_path_remaining": 0,
+              "sprite_id": 23,
+              "text_id": 3,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 6,
+              "y": 12
+            },
+            {
+              "facing": "Up",
+              "home_x": 3,
+              "home_y": 16,
+              "npc_index": 3,
+              "scripted_path_remaining": 0,
+              "sprite_id": 24,
+              "text_id": 4,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 3,
+              "y": 16
+            },
+            {
+              "facing": "Up",
+              "home_x": 15,
+              "home_y": 9,
+              "npc_index": 4,
+              "scripted_path_remaining": 0,
+              "sprite_id": 24,
+              "text_id": 5,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 15,
+              "y": 9
+            }
+          ]
+        },
+        {
+          "frame": 3196,
+          "dialogue": null,
+          "effect": "ShowDialogue",
+          "warp_fade": "Idle",
+          "npcs": [
+            {
+              "facing": "Down",
+              "home_x": 7,
+              "home_y": 5,
+              "npc_index": 0,
+              "scripted_path_remaining": 0,
+              "sprite_id": 43,
+              "text_id": 1,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 7,
+              "y": 5
+            },
+            {
+              "facing": "Down",
+              "home_x": 10,
+              "home_y": 5,
+              "npc_index": 1,
+              "scripted_path_remaining": 0,
+              "sprite_id": 15,
+              "text_id": 2,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 10,
+              "y": 5
+            },
+            {
+              "facing": "Right",
+              "home_x": 6,
+              "home_y": 9,
+              "npc_index": 2,
+              "scripted_path_remaining": 0,
+              "sprite_id": 23,
+              "text_id": 3,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 6,
+              "y": 12
+            },
+            {
+              "facing": "Up",
+              "home_x": 3,
+              "home_y": 16,
+              "npc_index": 3,
+              "scripted_path_remaining": 0,
+              "sprite_id": 24,
+              "text_id": 4,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 3,
+              "y": 16
+            },
+            {
+              "facing": "Up",
+              "home_x": 15,
+              "home_y": 9,
+              "npc_index": 4,
+              "scripted_path_remaining": 0,
+              "sprite_id": 24,
+              "text_id": 5,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 15,
+              "y": 9
+            }
+          ]
+        },
+        {
+          "frame": 3206,
+          "dialogue": "Bla",
+          "effect": "ShowDialogue",
+          "warp_fade": "Idle",
+          "npcs": [
+            {
+              "facing": "Down",
+              "home_x": 7,
+              "home_y": 5,
+              "npc_index": 0,
+              "scripted_path_remaining": 0,
+              "sprite_id": 43,
+              "text_id": 1,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 7,
+              "y": 5
+            },
+            {
+              "facing": "Down",
+              "home_x": 10,
+              "home_y": 5,
+              "npc_index": 1,
+              "scripted_path_remaining": 0,
+              "sprite_id": 15,
+              "text_id": 2,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 10,
+              "y": 5
+            },
+            {
+              "facing": "Right",
+              "home_x": 6,
+              "home_y": 9,
+              "npc_index": 2,
+              "scripted_path_remaining": 0,
+              "sprite_id": 23,
+              "text_id": 3,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 6,
+              "y": 12
+            },
+            {
+              "facing": "Up",
+              "home_x": 3,
+              "home_y": 16,
+              "npc_index": 3,
+              "scripted_path_remaining": 0,
+              "sprite_id": 24,
+              "text_id": 4,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 3,
+              "y": 16
+            },
+            {
+              "facing": "Up",
+              "home_x": 15,
+              "home_y": 9,
+              "npc_index": 4,
+              "scripted_path_remaining": 0,
+              "sprite_id": 24,
+              "text_id": 5,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 15,
+              "y": 9
+            }
+          ]
+        },
+        {
+          "frame": 3539,
+          "dialogue": null,
+          "effect": "HideObjectByName",
+          "warp_fade": "Idle",
+          "npcs": [
+            {
+              "facing": "Down",
+              "home_x": 7,
+              "home_y": 5,
+              "npc_index": 0,
+              "scripted_path_remaining": 0,
+              "sprite_id": 43,
+              "text_id": 1,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 7,
+              "y": 5
+            },
+            {
+              "facing": "Down",
+              "home_x": 10,
+              "home_y": 5,
+              "npc_index": 1,
+              "scripted_path_remaining": 0,
+              "sprite_id": 15,
+              "text_id": 2,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 10,
+              "y": 5
+            },
+            {
+              "facing": "Right",
+              "home_x": 6,
+              "home_y": 9,
+              "npc_index": 2,
+              "scripted_path_remaining": 0,
+              "sprite_id": 23,
+              "text_id": 3,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 6,
+              "y": 12
+            },
+            {
+              "facing": "Up",
+              "home_x": 3,
+              "home_y": 16,
+              "npc_index": 3,
+              "scripted_path_remaining": 0,
+              "sprite_id": 24,
+              "text_id": 4,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 3,
+              "y": 16
+            },
+            {
+              "facing": "Up",
+              "home_x": 15,
+              "home_y": 9,
+              "npc_index": 4,
+              "scripted_path_remaining": 0,
+              "sprite_id": 24,
+              "text_id": 5,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 15,
+              "y": 9
+            }
+          ]
+        },
+        {
+          "frame": 3549,
+          "dialogue": null,
+          "effect": "HideObjectByName",
+          "warp_fade": "Idle",
+          "npcs": [
+            {
+              "facing": "Down",
+              "home_x": 7,
+              "home_y": 5,
+              "npc_index": 0,
+              "scripted_path_remaining": 0,
+              "sprite_id": 43,
+              "text_id": 1,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 7,
+              "y": 5
+            },
+            {
+              "facing": "Down",
+              "home_x": 10,
+              "home_y": 5,
+              "npc_index": 1,
+              "scripted_path_remaining": 0,
+              "sprite_id": 15,
+              "text_id": 2,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 10,
+              "y": 5
+            },
+            {
+              "facing": "Right",
+              "home_x": 6,
+              "home_y": 9,
+              "npc_index": 2,
+              "scripted_path_remaining": 0,
+              "sprite_id": 23,
+              "text_id": 3,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 6,
+              "y": 12
+            },
+            {
+              "facing": "Up",
+              "home_x": 3,
+              "home_y": 16,
+              "npc_index": 3,
+              "scripted_path_remaining": 0,
+              "sprite_id": 24,
+              "text_id": 4,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 3,
+              "y": 16
+            },
+            {
+              "facing": "Up",
+              "home_x": 15,
+              "home_y": 9,
+              "npc_index": 4,
+              "scripted_path_remaining": 0,
+              "sprite_id": 24,
+              "text_id": 5,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 15,
+              "y": 9
+            }
+          ]
+        },
+        {
+          "frame": 3559,
+          "dialogue": null,
+          "effect": "HideObjectByName",
+          "warp_fade": "Idle",
+          "npcs": [
+            {
+              "facing": "Down",
+              "home_x": 7,
+              "home_y": 5,
+              "npc_index": 0,
+              "scripted_path_remaining": 0,
+              "sprite_id": 43,
+              "text_id": 1,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 7,
+              "y": 5
+            },
+            {
+              "facing": "Down",
+              "home_x": 10,
+              "home_y": 5,
+              "npc_index": 1,
+              "scripted_path_remaining": 0,
+              "sprite_id": 15,
+              "text_id": 2,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 10,
+              "y": 5
+            },
+            {
+              "facing": "Right",
+              "home_x": 6,
+              "home_y": 9,
+              "npc_index": 2,
+              "scripted_path_remaining": 0,
+              "sprite_id": 23,
+              "text_id": 3,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 6,
+              "y": 12
+            },
+            {
+              "facing": "Up",
+              "home_x": 3,
+              "home_y": 16,
+              "npc_index": 3,
+              "scripted_path_remaining": 0,
+              "sprite_id": 24,
+              "text_id": 4,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 3,
+              "y": 16
+            },
+            {
+              "facing": "Up",
+              "home_x": 15,
+              "home_y": 9,
+              "npc_index": 4,
+              "scripted_path_remaining": 0,
+              "sprite_id": 24,
+              "text_id": 5,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 15,
+              "y": 9
+            }
+          ]
+        },
+        {
+          "frame": 3569,
+          "dialogue": null,
+          "effect": "HideObjectByName",
+          "warp_fade": "Idle",
+          "npcs": [
+            {
+              "facing": "Down",
+              "home_x": 7,
+              "home_y": 5,
+              "npc_index": 0,
+              "scripted_path_remaining": 0,
+              "sprite_id": 43,
+              "text_id": 1,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 7,
+              "y": 5
+            },
+            {
+              "facing": "Down",
+              "home_x": 10,
+              "home_y": 5,
+              "npc_index": 1,
+              "scripted_path_remaining": 0,
+              "sprite_id": 15,
+              "text_id": 2,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 10,
+              "y": 5
+            },
+            {
+              "facing": "Right",
+              "home_x": 6,
+              "home_y": 9,
+              "npc_index": 2,
+              "scripted_path_remaining": 0,
+              "sprite_id": 23,
+              "text_id": 3,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 6,
+              "y": 12
+            },
+            {
+              "facing": "Up",
+              "home_x": 3,
+              "home_y": 16,
+              "npc_index": 3,
+              "scripted_path_remaining": 0,
+              "sprite_id": 24,
+              "text_id": 4,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 3,
+              "y": 16
+            },
+            {
+              "facing": "Up",
+              "home_x": 15,
+              "home_y": 9,
+              "npc_index": 4,
+              "scripted_path_remaining": 0,
+              "sprite_id": 24,
+              "text_id": 5,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 15,
+              "y": 9
+            }
+          ]
+        },
+        {
+          "frame": 3579,
+          "dialogue": null,
+          "effect": "ShowObjectByName",
+          "warp_fade": "Idle",
+          "npcs": [
+            {
+              "facing": "Down",
+              "home_x": 7,
+              "home_y": 5,
+              "npc_index": 0,
+              "scripted_path_remaining": 0,
+              "sprite_id": 43,
+              "text_id": 1,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 7,
+              "y": 5
+            },
+            {
+              "facing": "Down",
+              "home_x": 10,
+              "home_y": 5,
+              "npc_index": 1,
+              "scripted_path_remaining": 0,
+              "sprite_id": 15,
+              "text_id": 2,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 10,
+              "y": 5
+            },
+            {
+              "facing": "Right",
+              "home_x": 6,
+              "home_y": 9,
+              "npc_index": 2,
+              "scripted_path_remaining": 0,
+              "sprite_id": 23,
+              "text_id": 3,
+              "visible": false,
+              "walk_counter": 0,
+              "x": 6,
+              "y": 12
+            },
+            {
+              "facing": "Up",
+              "home_x": 3,
+              "home_y": 16,
+              "npc_index": 3,
+              "scripted_path_remaining": 0,
+              "sprite_id": 24,
+              "text_id": 4,
+              "visible": false,
+              "walk_counter": 0,
+              "x": 3,
+              "y": 16
+            },
+            {
+              "facing": "Up",
+              "home_x": 15,
+              "home_y": 9,
+              "npc_index": 4,
+              "scripted_path_remaining": 0,
+              "sprite_id": 24,
+              "text_id": 5,
+              "visible": false,
+              "walk_counter": 0,
+              "x": 15,
+              "y": 9
+            }
+          ]
+        },
+        {
+          "frame": 3589,
+          "dialogue": null,
+          "effect": null,
+          "warp_fade": "Idle",
+          "npcs": [
+            {
+              "facing": "Down",
+              "home_x": 7,
+              "home_y": 5,
+              "npc_index": 0,
+              "scripted_path_remaining": 0,
+              "sprite_id": 43,
+              "text_id": 1,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 7,
+              "y": 5
+            },
+            {
+              "facing": "Down",
+              "home_x": 10,
+              "home_y": 5,
+              "npc_index": 1,
+              "scripted_path_remaining": 0,
+              "sprite_id": 15,
+              "text_id": 2,
+              "visible": true,
+              "walk_counter": 0,
+              "x": 10,
+              "y": 5
+            },
+            {
+              "facing": "Right",
+              "home_x": 6,
+              "home_y": 9,
+              "npc_index": 2,
+              "scripted_path_remaining": 0,
+              "sprite_id": 23,
+              "text_id": 3,
+              "visible": false,
+              "walk_counter": 0,
+              "x": 6,
+              "y": 12
+            },
+            {
+              "facing": "Up",
+              "home_x": 3,
+              "home_y": 16,
+              "npc_index": 3,
+              "scripted_path_remaining": 0,
+              "sprite_id": 24,
+              "text_id": 4,
+              "visible": false,
+              "walk_counter": 0,
+              "x": 3,
+              "y": 16
+            },
+            {
+              "facing": "Up",
+              "home_x": 15,
+              "home_y": 9,
+              "npc_index": 4,
+              "scripted_path_remaining": 0,
+              "sprite_id": 24,
+              "text_id": 5,
+              "visible": false,
+              "walk_counter": 0,
+              "x": 15,
+              "y": 9
+            }
+          ]
+        }
+      ],
+      "final_npcs": [
+        {
+          "facing": "Down",
+          "home_x": 7,
+          "home_y": 5,
+          "npc_index": 0,
+          "scripted_path_remaining": 0,
+          "sprite_id": 43,
+          "text_id": 1,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 7,
+          "y": 5
+        },
+        {
+          "facing": "Down",
+          "home_x": 10,
+          "home_y": 5,
+          "npc_index": 1,
+          "scripted_path_remaining": 0,
+          "sprite_id": 15,
+          "text_id": 2,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 10,
+          "y": 5
+        },
+        {
+          "facing": "Right",
+          "home_x": 6,
+          "home_y": 9,
+          "npc_index": 2,
+          "scripted_path_remaining": 0,
+          "sprite_id": 23,
+          "text_id": 3,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 6,
+          "y": 12
+        },
+        {
+          "facing": "Up",
+          "home_x": 3,
+          "home_y": 16,
+          "npc_index": 3,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 4,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 3,
+          "y": 16
+        },
+        {
+          "facing": "Up",
+          "home_x": 15,
+          "home_y": 9,
+          "npc_index": 4,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 5,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 15,
+          "y": 9
+        }
+      ],
+      "saved_beat_flag": true,
+      "saved_local_rocket_hides": true
+    }
+  ],
+  "pass": true
+}

@@ -1,0 +1,1988 @@
+{
+  "scope": "Separate processes reload real battle-written saves, debug warp to all occupied floors, identical 120 neutral frames and seed42. Not evidence of stair traversal. Every non-target NPC visibility preserved.",
+  "cases": [
+    {
+      "version": "before",
+      "map": "SilphCo2F",
+      "position": [
+        5,
+        11
+      ],
+      "enemies": [
+        {
+          "facing": "Down",
+          "home_x": 5,
+          "home_y": 12,
+          "npc_index": 1,
+          "scripted_path_remaining": 0,
+          "sprite_id": 32,
+          "text_id": 2,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 5,
+          "y": 12
+        },
+        {
+          "facing": "Left",
+          "home_x": 24,
+          "home_y": 13,
+          "npc_index": 2,
+          "scripted_path_remaining": 0,
+          "sprite_id": 32,
+          "text_id": 3,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 24,
+          "y": 13
+        },
+        {
+          "facing": "Up",
+          "home_x": 16,
+          "home_y": 11,
+          "npc_index": 3,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 4,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 16,
+          "y": 11
+        },
+        {
+          "facing": "Up",
+          "home_x": 24,
+          "home_y": 7,
+          "npc_index": 4,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 5,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 24,
+          "y": 7
+        }
+      ],
+      "controls": [
+        {
+          "facing": "Up",
+          "home_x": 10,
+          "home_y": 1,
+          "npc_index": 0,
+          "scripted_path_remaining": 0,
+          "sprite_id": 27,
+          "text_id": 1,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 10,
+          "y": 1
+        }
+      ]
+    },
+    {
+      "version": "before",
+      "map": "SilphCo3F",
+      "position": [
+        10,
+        8
+      ],
+      "enemies": [
+        {
+          "facing": "Left",
+          "home_x": 20,
+          "home_y": 7,
+          "npc_index": 1,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 2,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 20,
+          "y": 7
+        },
+        {
+          "facing": "Down",
+          "home_x": 7,
+          "home_y": 9,
+          "npc_index": 2,
+          "scripted_path_remaining": 0,
+          "sprite_id": 32,
+          "text_id": 3,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 7,
+          "y": 9
+        }
+      ],
+      "controls": [
+        {
+          "facing": "Down",
+          "home_x": 24,
+          "home_y": 8,
+          "npc_index": 0,
+          "scripted_path_remaining": 0,
+          "sprite_id": 44,
+          "text_id": 1,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 24,
+          "y": 8
+        },
+        {
+          "facing": "Left",
+          "home_x": 8,
+          "home_y": 5,
+          "npc_index": 3,
+          "scripted_path_remaining": 0,
+          "sprite_id": 61,
+          "text_id": 4,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 8,
+          "y": 5
+        }
+      ]
+    },
+    {
+      "version": "before",
+      "map": "SilphCo4F",
+      "position": [
+        24,
+        0
+      ],
+      "enemies": [
+        {
+          "facing": "Right",
+          "home_x": 9,
+          "home_y": 14,
+          "npc_index": 1,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 2,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 9,
+          "y": 14
+        },
+        {
+          "facing": "Left",
+          "home_x": 14,
+          "home_y": 6,
+          "npc_index": 2,
+          "scripted_path_remaining": 0,
+          "sprite_id": 32,
+          "text_id": 3,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 14,
+          "y": 6
+        },
+        {
+          "facing": "Up",
+          "home_x": 26,
+          "home_y": 10,
+          "npc_index": 3,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 4,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 26,
+          "y": 10
+        }
+      ],
+      "controls": [
+        {
+          "facing": "Down",
+          "home_x": 6,
+          "home_y": 2,
+          "npc_index": 0,
+          "scripted_path_remaining": 0,
+          "sprite_id": 44,
+          "text_id": 1,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 6,
+          "y": 2
+        },
+        {
+          "facing": "Down",
+          "home_x": 3,
+          "home_y": 9,
+          "npc_index": 4,
+          "scripted_path_remaining": 0,
+          "sprite_id": 61,
+          "text_id": 5,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 3,
+          "y": 9
+        },
+        {
+          "facing": "Down",
+          "home_x": 4,
+          "home_y": 7,
+          "npc_index": 5,
+          "scripted_path_remaining": 0,
+          "sprite_id": 61,
+          "text_id": 6,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 4,
+          "y": 7
+        },
+        {
+          "facing": "Down",
+          "home_x": 5,
+          "home_y": 8,
+          "npc_index": 6,
+          "scripted_path_remaining": 0,
+          "sprite_id": 61,
+          "text_id": 7,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 5,
+          "y": 8
+        }
+      ]
+    },
+    {
+      "version": "before",
+      "map": "SilphCo5F",
+      "position": [
+        24,
+        0
+      ],
+      "enemies": [
+        {
+          "facing": "Right",
+          "home_x": 8,
+          "home_y": 16,
+          "npc_index": 1,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 2,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 8,
+          "y": 16
+        },
+        {
+          "facing": "Right",
+          "home_x": 8,
+          "home_y": 3,
+          "npc_index": 2,
+          "scripted_path_remaining": 0,
+          "sprite_id": 32,
+          "text_id": 3,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 8,
+          "y": 3
+        },
+        {
+          "facing": "Up",
+          "home_x": 18,
+          "home_y": 10,
+          "npc_index": 3,
+          "scripted_path_remaining": 0,
+          "sprite_id": 33,
+          "text_id": 4,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 18,
+          "y": 10
+        },
+        {
+          "facing": "Up",
+          "home_x": 28,
+          "home_y": 4,
+          "npc_index": 4,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 5,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 28,
+          "y": 4
+        }
+      ],
+      "controls": [
+        {
+          "facing": "Down",
+          "home_x": 13,
+          "home_y": 9,
+          "npc_index": 0,
+          "scripted_path_remaining": 0,
+          "sprite_id": 44,
+          "text_id": 1,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 13,
+          "y": 9
+        },
+        {
+          "facing": "Down",
+          "home_x": 2,
+          "home_y": 13,
+          "npc_index": 5,
+          "scripted_path_remaining": 0,
+          "sprite_id": 61,
+          "text_id": 6,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 2,
+          "y": 13
+        },
+        {
+          "facing": "Down",
+          "home_x": 4,
+          "home_y": 6,
+          "npc_index": 6,
+          "scripted_path_remaining": 0,
+          "sprite_id": 61,
+          "text_id": 7,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 4,
+          "y": 6
+        },
+        {
+          "facing": "Down",
+          "home_x": 21,
+          "home_y": 16,
+          "npc_index": 7,
+          "scripted_path_remaining": 0,
+          "sprite_id": 61,
+          "text_id": 8,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 21,
+          "y": 16
+        },
+        {
+          "facing": "Down",
+          "home_x": 22,
+          "home_y": 12,
+          "npc_index": 8,
+          "scripted_path_remaining": 0,
+          "sprite_id": 66,
+          "text_id": 9,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 22,
+          "y": 12
+        },
+        {
+          "facing": "Down",
+          "home_x": 25,
+          "home_y": 10,
+          "npc_index": 9,
+          "scripted_path_remaining": 0,
+          "sprite_id": 66,
+          "text_id": 10,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 25,
+          "y": 10
+        },
+        {
+          "facing": "Down",
+          "home_x": 24,
+          "home_y": 6,
+          "npc_index": 10,
+          "scripted_path_remaining": 0,
+          "sprite_id": 66,
+          "text_id": 11,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 24,
+          "y": 6
+        }
+      ]
+    },
+    {
+      "version": "before",
+      "map": "SilphCo6F",
+      "position": [
+        10,
+        8
+      ],
+      "enemies": [
+        {
+          "facing": "Right",
+          "home_x": 17,
+          "home_y": 3,
+          "npc_index": 5,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 6,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 17,
+          "y": 3
+        },
+        {
+          "facing": "Down",
+          "home_x": 7,
+          "home_y": 8,
+          "npc_index": 6,
+          "scripted_path_remaining": 0,
+          "sprite_id": 32,
+          "text_id": 7,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 7,
+          "y": 8
+        },
+        {
+          "facing": "Left",
+          "home_x": 14,
+          "home_y": 15,
+          "npc_index": 7,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 8,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 14,
+          "y": 15
+        }
+      ],
+      "controls": [
+        {
+          "facing": "Down",
+          "home_x": 10,
+          "home_y": 6,
+          "npc_index": 0,
+          "scripted_path_remaining": 0,
+          "sprite_id": 44,
+          "text_id": 1,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 10,
+          "y": 6
+        },
+        {
+          "facing": "Down",
+          "home_x": 20,
+          "home_y": 6,
+          "npc_index": 1,
+          "scripted_path_remaining": 0,
+          "sprite_id": 44,
+          "text_id": 2,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 20,
+          "y": 6
+        },
+        {
+          "facing": "Down",
+          "home_x": 21,
+          "home_y": 6,
+          "npc_index": 2,
+          "scripted_path_remaining": 0,
+          "sprite_id": 27,
+          "text_id": 3,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 21,
+          "y": 6
+        },
+        {
+          "facing": "Right",
+          "home_x": 11,
+          "home_y": 10,
+          "npc_index": 3,
+          "scripted_path_remaining": 0,
+          "sprite_id": 27,
+          "text_id": 4,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 11,
+          "y": 10
+        },
+        {
+          "facing": "Up",
+          "home_x": 18,
+          "home_y": 13,
+          "npc_index": 4,
+          "scripted_path_remaining": 0,
+          "sprite_id": 44,
+          "text_id": 5,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 18,
+          "y": 13
+        },
+        {
+          "facing": "Down",
+          "home_x": 3,
+          "home_y": 12,
+          "npc_index": 8,
+          "scripted_path_remaining": 0,
+          "sprite_id": 61,
+          "text_id": 9,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 3,
+          "y": 12
+        },
+        {
+          "facing": "Down",
+          "home_x": 2,
+          "home_y": 15,
+          "npc_index": 9,
+          "scripted_path_remaining": 0,
+          "sprite_id": 61,
+          "text_id": 10,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 2,
+          "y": 15
+        }
+      ]
+    },
+    {
+      "version": "before",
+      "map": "SilphCo7F",
+      "position": [
+        10,
+        8
+      ],
+      "enemies": [
+        {
+          "facing": "Down",
+          "home_x": 13,
+          "home_y": 1,
+          "npc_index": 4,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 5,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 13,
+          "y": 1
+        },
+        {
+          "facing": "Down",
+          "home_x": 2,
+          "home_y": 13,
+          "npc_index": 5,
+          "scripted_path_remaining": 0,
+          "sprite_id": 32,
+          "text_id": 6,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 2,
+          "y": 13
+        },
+        {
+          "facing": "Left",
+          "home_x": 20,
+          "home_y": 2,
+          "npc_index": 6,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 7,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 20,
+          "y": 2
+        },
+        {
+          "facing": "Right",
+          "home_x": 19,
+          "home_y": 14,
+          "npc_index": 7,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 8,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 19,
+          "y": 14
+        }
+      ],
+      "controls": [
+        {
+          "facing": "Down",
+          "home_x": 1,
+          "home_y": 5,
+          "npc_index": 0,
+          "scripted_path_remaining": 0,
+          "sprite_id": 44,
+          "text_id": 1,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 1,
+          "y": 5
+        },
+        {
+          "facing": "Up",
+          "home_x": 13,
+          "home_y": 13,
+          "npc_index": 1,
+          "scripted_path_remaining": 0,
+          "sprite_id": 44,
+          "text_id": 2,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 13,
+          "y": 13
+        },
+        {
+          "facing": "Left",
+          "home_x": 7,
+          "home_y": 10,
+          "npc_index": 2,
+          "scripted_path_remaining": 0,
+          "sprite_id": 44,
+          "text_id": 3,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 7,
+          "y": 10
+        },
+        {
+          "facing": "Right",
+          "home_x": 10,
+          "home_y": 8,
+          "npc_index": 3,
+          "scripted_path_remaining": 0,
+          "sprite_id": 27,
+          "text_id": 4,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 10,
+          "y": 8
+        },
+        {
+          "facing": "Up",
+          "home_x": 3,
+          "home_y": 7,
+          "npc_index": 8,
+          "scripted_path_remaining": 0,
+          "sprite_id": 2,
+          "text_id": 9,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 3,
+          "y": 7
+        },
+        {
+          "facing": "Down",
+          "home_x": 1,
+          "home_y": 9,
+          "npc_index": 9,
+          "scripted_path_remaining": 0,
+          "sprite_id": 61,
+          "text_id": 10,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 1,
+          "y": 9
+        },
+        {
+          "facing": "Down",
+          "home_x": 24,
+          "home_y": 11,
+          "npc_index": 10,
+          "scripted_path_remaining": 0,
+          "sprite_id": 61,
+          "text_id": 11,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 24,
+          "y": 11
+        }
+      ]
+    },
+    {
+      "version": "before",
+      "map": "SilphCo8F",
+      "position": [
+        10,
+        8
+      ],
+      "enemies": [
+        {
+          "facing": "Left",
+          "home_x": 19,
+          "home_y": 2,
+          "npc_index": 1,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 2,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 19,
+          "y": 2
+        },
+        {
+          "facing": "Down",
+          "home_x": 10,
+          "home_y": 2,
+          "npc_index": 2,
+          "scripted_path_remaining": 0,
+          "sprite_id": 32,
+          "text_id": 3,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 10,
+          "y": 2
+        },
+        {
+          "facing": "Right",
+          "home_x": 12,
+          "home_y": 15,
+          "npc_index": 3,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 4,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 12,
+          "y": 15
+        }
+      ],
+      "controls": [
+        {
+          "facing": "Down",
+          "home_x": 4,
+          "home_y": 2,
+          "npc_index": 0,
+          "scripted_path_remaining": 0,
+          "sprite_id": 44,
+          "text_id": 1,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 4,
+          "y": 2
+        }
+      ]
+    },
+    {
+      "version": "before",
+      "map": "SilphCo9F",
+      "position": [
+        14,
+        0
+      ],
+      "enemies": [
+        {
+          "facing": "Up",
+          "home_x": 2,
+          "home_y": 4,
+          "npc_index": 1,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 2,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 2,
+          "y": 4
+        },
+        {
+          "facing": "Down",
+          "home_x": 21,
+          "home_y": 13,
+          "npc_index": 2,
+          "scripted_path_remaining": 0,
+          "sprite_id": 32,
+          "text_id": 3,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 21,
+          "y": 13
+        },
+        {
+          "facing": "Up",
+          "home_x": 13,
+          "home_y": 16,
+          "npc_index": 3,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 4,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 13,
+          "y": 16
+        }
+      ],
+      "controls": [
+        {
+          "facing": "Down",
+          "home_x": 3,
+          "home_y": 14,
+          "npc_index": 0,
+          "scripted_path_remaining": 0,
+          "sprite_id": 41,
+          "text_id": 1,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 3,
+          "y": 14
+        }
+      ]
+    },
+    {
+      "version": "before",
+      "map": "SilphCo10F",
+      "position": [
+        10,
+        3
+      ],
+      "enemies": [
+        {
+          "facing": "Right",
+          "home_x": 1,
+          "home_y": 9,
+          "npc_index": 0,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 1,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 1,
+          "y": 9
+        },
+        {
+          "facing": "Left",
+          "home_x": 10,
+          "home_y": 2,
+          "npc_index": 1,
+          "scripted_path_remaining": 0,
+          "sprite_id": 32,
+          "text_id": 2,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 10,
+          "y": 2
+        }
+      ],
+      "controls": [
+        {
+          "facing": "Right",
+          "home_x": 9,
+          "home_y": 15,
+          "npc_index": 2,
+          "scripted_path_remaining": 0,
+          "sprite_id": 27,
+          "text_id": 3,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 10,
+          "y": 15
+        },
+        {
+          "facing": "Down",
+          "home_x": 2,
+          "home_y": 12,
+          "npc_index": 3,
+          "scripted_path_remaining": 0,
+          "sprite_id": 61,
+          "text_id": 4,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 2,
+          "y": 12
+        },
+        {
+          "facing": "Down",
+          "home_x": 4,
+          "home_y": 14,
+          "npc_index": 4,
+          "scripted_path_remaining": 0,
+          "sprite_id": 61,
+          "text_id": 5,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 4,
+          "y": 14
+        },
+        {
+          "facing": "Down",
+          "home_x": 5,
+          "home_y": 11,
+          "npc_index": 5,
+          "scripted_path_remaining": 0,
+          "sprite_id": 61,
+          "text_id": 6,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 5,
+          "y": 11
+        }
+      ]
+    },
+    {
+      "version": "before",
+      "map": "SilphCo11F",
+      "position": [
+        10,
+        8
+      ],
+      "enemies": [
+        {
+          "facing": "Down",
+          "home_x": 6,
+          "home_y": 9,
+          "npc_index": 2,
+          "scripted_path_remaining": 0,
+          "sprite_id": 23,
+          "text_id": 3,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 6,
+          "y": 9
+        },
+        {
+          "facing": "Up",
+          "home_x": 3,
+          "home_y": 16,
+          "npc_index": 3,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 4,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 3,
+          "y": 16
+        },
+        {
+          "facing": "Up",
+          "home_x": 15,
+          "home_y": 9,
+          "npc_index": 4,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 5,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 15,
+          "y": 9
+        }
+      ],
+      "controls": [
+        {
+          "facing": "Down",
+          "home_x": 7,
+          "home_y": 5,
+          "npc_index": 0,
+          "scripted_path_remaining": 0,
+          "sprite_id": 43,
+          "text_id": 1,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 7,
+          "y": 5
+        },
+        {
+          "facing": "Down",
+          "home_x": 10,
+          "home_y": 5,
+          "npc_index": 1,
+          "scripted_path_remaining": 0,
+          "sprite_id": 15,
+          "text_id": 2,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 10,
+          "y": 5
+        }
+      ]
+    },
+    {
+      "version": "after",
+      "map": "SilphCo2F",
+      "position": [
+        5,
+        11
+      ],
+      "enemies": [
+        {
+          "facing": "Down",
+          "home_x": 5,
+          "home_y": 12,
+          "npc_index": 1,
+          "scripted_path_remaining": 0,
+          "sprite_id": 32,
+          "text_id": 2,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 5,
+          "y": 12
+        },
+        {
+          "facing": "Left",
+          "home_x": 24,
+          "home_y": 13,
+          "npc_index": 2,
+          "scripted_path_remaining": 0,
+          "sprite_id": 32,
+          "text_id": 3,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 24,
+          "y": 13
+        },
+        {
+          "facing": "Up",
+          "home_x": 16,
+          "home_y": 11,
+          "npc_index": 3,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 4,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 16,
+          "y": 11
+        },
+        {
+          "facing": "Up",
+          "home_x": 24,
+          "home_y": 7,
+          "npc_index": 4,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 5,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 24,
+          "y": 7
+        }
+      ],
+      "controls": [
+        {
+          "facing": "Up",
+          "home_x": 10,
+          "home_y": 1,
+          "npc_index": 0,
+          "scripted_path_remaining": 0,
+          "sprite_id": 27,
+          "text_id": 1,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 10,
+          "y": 1
+        }
+      ]
+    },
+    {
+      "version": "after",
+      "map": "SilphCo3F",
+      "position": [
+        10,
+        8
+      ],
+      "enemies": [
+        {
+          "facing": "Left",
+          "home_x": 20,
+          "home_y": 7,
+          "npc_index": 1,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 2,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 20,
+          "y": 7
+        },
+        {
+          "facing": "Down",
+          "home_x": 7,
+          "home_y": 9,
+          "npc_index": 2,
+          "scripted_path_remaining": 0,
+          "sprite_id": 32,
+          "text_id": 3,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 7,
+          "y": 9
+        }
+      ],
+      "controls": [
+        {
+          "facing": "Down",
+          "home_x": 24,
+          "home_y": 8,
+          "npc_index": 0,
+          "scripted_path_remaining": 0,
+          "sprite_id": 44,
+          "text_id": 1,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 24,
+          "y": 8
+        },
+        {
+          "facing": "Right",
+          "home_x": 8,
+          "home_y": 5,
+          "npc_index": 3,
+          "scripted_path_remaining": 0,
+          "sprite_id": 61,
+          "text_id": 4,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 8,
+          "y": 5
+        }
+      ]
+    },
+    {
+      "version": "after",
+      "map": "SilphCo4F",
+      "position": [
+        24,
+        0
+      ],
+      "enemies": [
+        {
+          "facing": "Right",
+          "home_x": 9,
+          "home_y": 14,
+          "npc_index": 1,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 2,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 9,
+          "y": 14
+        },
+        {
+          "facing": "Left",
+          "home_x": 14,
+          "home_y": 6,
+          "npc_index": 2,
+          "scripted_path_remaining": 0,
+          "sprite_id": 32,
+          "text_id": 3,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 14,
+          "y": 6
+        },
+        {
+          "facing": "Up",
+          "home_x": 26,
+          "home_y": 10,
+          "npc_index": 3,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 4,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 26,
+          "y": 10
+        }
+      ],
+      "controls": [
+        {
+          "facing": "Down",
+          "home_x": 6,
+          "home_y": 2,
+          "npc_index": 0,
+          "scripted_path_remaining": 0,
+          "sprite_id": 44,
+          "text_id": 1,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 6,
+          "y": 2
+        },
+        {
+          "facing": "Down",
+          "home_x": 3,
+          "home_y": 9,
+          "npc_index": 4,
+          "scripted_path_remaining": 0,
+          "sprite_id": 61,
+          "text_id": 5,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 3,
+          "y": 9
+        },
+        {
+          "facing": "Down",
+          "home_x": 4,
+          "home_y": 7,
+          "npc_index": 5,
+          "scripted_path_remaining": 0,
+          "sprite_id": 61,
+          "text_id": 6,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 4,
+          "y": 7
+        },
+        {
+          "facing": "Down",
+          "home_x": 5,
+          "home_y": 8,
+          "npc_index": 6,
+          "scripted_path_remaining": 0,
+          "sprite_id": 61,
+          "text_id": 7,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 5,
+          "y": 8
+        }
+      ]
+    },
+    {
+      "version": "after",
+      "map": "SilphCo5F",
+      "position": [
+        24,
+        0
+      ],
+      "enemies": [
+        {
+          "facing": "Right",
+          "home_x": 8,
+          "home_y": 16,
+          "npc_index": 1,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 2,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 8,
+          "y": 16
+        },
+        {
+          "facing": "Right",
+          "home_x": 8,
+          "home_y": 3,
+          "npc_index": 2,
+          "scripted_path_remaining": 0,
+          "sprite_id": 32,
+          "text_id": 3,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 8,
+          "y": 3
+        },
+        {
+          "facing": "Up",
+          "home_x": 18,
+          "home_y": 10,
+          "npc_index": 3,
+          "scripted_path_remaining": 0,
+          "sprite_id": 33,
+          "text_id": 4,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 18,
+          "y": 10
+        },
+        {
+          "facing": "Up",
+          "home_x": 28,
+          "home_y": 4,
+          "npc_index": 4,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 5,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 28,
+          "y": 4
+        }
+      ],
+      "controls": [
+        {
+          "facing": "Down",
+          "home_x": 13,
+          "home_y": 9,
+          "npc_index": 0,
+          "scripted_path_remaining": 0,
+          "sprite_id": 44,
+          "text_id": 1,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 13,
+          "y": 9
+        },
+        {
+          "facing": "Down",
+          "home_x": 2,
+          "home_y": 13,
+          "npc_index": 5,
+          "scripted_path_remaining": 0,
+          "sprite_id": 61,
+          "text_id": 6,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 2,
+          "y": 13
+        },
+        {
+          "facing": "Down",
+          "home_x": 4,
+          "home_y": 6,
+          "npc_index": 6,
+          "scripted_path_remaining": 0,
+          "sprite_id": 61,
+          "text_id": 7,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 4,
+          "y": 6
+        },
+        {
+          "facing": "Down",
+          "home_x": 21,
+          "home_y": 16,
+          "npc_index": 7,
+          "scripted_path_remaining": 0,
+          "sprite_id": 61,
+          "text_id": 8,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 21,
+          "y": 16
+        },
+        {
+          "facing": "Down",
+          "home_x": 22,
+          "home_y": 12,
+          "npc_index": 8,
+          "scripted_path_remaining": 0,
+          "sprite_id": 66,
+          "text_id": 9,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 22,
+          "y": 12
+        },
+        {
+          "facing": "Down",
+          "home_x": 25,
+          "home_y": 10,
+          "npc_index": 9,
+          "scripted_path_remaining": 0,
+          "sprite_id": 66,
+          "text_id": 10,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 25,
+          "y": 10
+        },
+        {
+          "facing": "Down",
+          "home_x": 24,
+          "home_y": 6,
+          "npc_index": 10,
+          "scripted_path_remaining": 0,
+          "sprite_id": 66,
+          "text_id": 11,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 24,
+          "y": 6
+        }
+      ]
+    },
+    {
+      "version": "after",
+      "map": "SilphCo6F",
+      "position": [
+        10,
+        8
+      ],
+      "enemies": [
+        {
+          "facing": "Right",
+          "home_x": 17,
+          "home_y": 3,
+          "npc_index": 5,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 6,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 17,
+          "y": 3
+        },
+        {
+          "facing": "Down",
+          "home_x": 7,
+          "home_y": 8,
+          "npc_index": 6,
+          "scripted_path_remaining": 0,
+          "sprite_id": 32,
+          "text_id": 7,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 7,
+          "y": 8
+        },
+        {
+          "facing": "Left",
+          "home_x": 14,
+          "home_y": 15,
+          "npc_index": 7,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 8,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 14,
+          "y": 15
+        }
+      ],
+      "controls": [
+        {
+          "facing": "Up",
+          "home_x": 10,
+          "home_y": 6,
+          "npc_index": 0,
+          "scripted_path_remaining": 0,
+          "sprite_id": 44,
+          "text_id": 1,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 10,
+          "y": 6
+        },
+        {
+          "facing": "Down",
+          "home_x": 20,
+          "home_y": 6,
+          "npc_index": 1,
+          "scripted_path_remaining": 0,
+          "sprite_id": 44,
+          "text_id": 2,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 20,
+          "y": 6
+        },
+        {
+          "facing": "Down",
+          "home_x": 21,
+          "home_y": 6,
+          "npc_index": 2,
+          "scripted_path_remaining": 0,
+          "sprite_id": 27,
+          "text_id": 3,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 21,
+          "y": 6
+        },
+        {
+          "facing": "Right",
+          "home_x": 11,
+          "home_y": 10,
+          "npc_index": 3,
+          "scripted_path_remaining": 0,
+          "sprite_id": 27,
+          "text_id": 4,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 11,
+          "y": 10
+        },
+        {
+          "facing": "Up",
+          "home_x": 18,
+          "home_y": 13,
+          "npc_index": 4,
+          "scripted_path_remaining": 0,
+          "sprite_id": 44,
+          "text_id": 5,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 18,
+          "y": 13
+        },
+        {
+          "facing": "Down",
+          "home_x": 3,
+          "home_y": 12,
+          "npc_index": 8,
+          "scripted_path_remaining": 0,
+          "sprite_id": 61,
+          "text_id": 9,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 3,
+          "y": 12
+        },
+        {
+          "facing": "Down",
+          "home_x": 2,
+          "home_y": 15,
+          "npc_index": 9,
+          "scripted_path_remaining": 0,
+          "sprite_id": 61,
+          "text_id": 10,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 2,
+          "y": 15
+        }
+      ]
+    },
+    {
+      "version": "after",
+      "map": "SilphCo7F",
+      "position": [
+        10,
+        8
+      ],
+      "enemies": [
+        {
+          "facing": "Down",
+          "home_x": 13,
+          "home_y": 1,
+          "npc_index": 4,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 5,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 13,
+          "y": 1
+        },
+        {
+          "facing": "Down",
+          "home_x": 2,
+          "home_y": 13,
+          "npc_index": 5,
+          "scripted_path_remaining": 0,
+          "sprite_id": 32,
+          "text_id": 6,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 2,
+          "y": 13
+        },
+        {
+          "facing": "Left",
+          "home_x": 20,
+          "home_y": 2,
+          "npc_index": 6,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 7,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 20,
+          "y": 2
+        },
+        {
+          "facing": "Right",
+          "home_x": 19,
+          "home_y": 14,
+          "npc_index": 7,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 8,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 19,
+          "y": 14
+        }
+      ],
+      "controls": [
+        {
+          "facing": "Down",
+          "home_x": 1,
+          "home_y": 5,
+          "npc_index": 0,
+          "scripted_path_remaining": 0,
+          "sprite_id": 44,
+          "text_id": 1,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 1,
+          "y": 5
+        },
+        {
+          "facing": "Up",
+          "home_x": 13,
+          "home_y": 13,
+          "npc_index": 1,
+          "scripted_path_remaining": 0,
+          "sprite_id": 44,
+          "text_id": 2,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 13,
+          "y": 13
+        },
+        {
+          "facing": "Left",
+          "home_x": 7,
+          "home_y": 10,
+          "npc_index": 2,
+          "scripted_path_remaining": 0,
+          "sprite_id": 44,
+          "text_id": 3,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 7,
+          "y": 10
+        },
+        {
+          "facing": "Right",
+          "home_x": 10,
+          "home_y": 8,
+          "npc_index": 3,
+          "scripted_path_remaining": 0,
+          "sprite_id": 27,
+          "text_id": 4,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 10,
+          "y": 8
+        },
+        {
+          "facing": "Up",
+          "home_x": 3,
+          "home_y": 7,
+          "npc_index": 8,
+          "scripted_path_remaining": 0,
+          "sprite_id": 2,
+          "text_id": 9,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 3,
+          "y": 7
+        },
+        {
+          "facing": "Down",
+          "home_x": 1,
+          "home_y": 9,
+          "npc_index": 9,
+          "scripted_path_remaining": 0,
+          "sprite_id": 61,
+          "text_id": 10,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 1,
+          "y": 9
+        },
+        {
+          "facing": "Down",
+          "home_x": 24,
+          "home_y": 11,
+          "npc_index": 10,
+          "scripted_path_remaining": 0,
+          "sprite_id": 61,
+          "text_id": 11,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 24,
+          "y": 11
+        }
+      ]
+    },
+    {
+      "version": "after",
+      "map": "SilphCo8F",
+      "position": [
+        10,
+        8
+      ],
+      "enemies": [
+        {
+          "facing": "Left",
+          "home_x": 19,
+          "home_y": 2,
+          "npc_index": 1,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 2,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 19,
+          "y": 2
+        },
+        {
+          "facing": "Down",
+          "home_x": 10,
+          "home_y": 2,
+          "npc_index": 2,
+          "scripted_path_remaining": 0,
+          "sprite_id": 32,
+          "text_id": 3,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 10,
+          "y": 2
+        },
+        {
+          "facing": "Right",
+          "home_x": 12,
+          "home_y": 15,
+          "npc_index": 3,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 4,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 12,
+          "y": 15
+        }
+      ],
+      "controls": [
+        {
+          "facing": "Down",
+          "home_x": 4,
+          "home_y": 2,
+          "npc_index": 0,
+          "scripted_path_remaining": 0,
+          "sprite_id": 44,
+          "text_id": 1,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 4,
+          "y": 2
+        }
+      ]
+    },
+    {
+      "version": "after",
+      "map": "SilphCo9F",
+      "position": [
+        14,
+        0
+      ],
+      "enemies": [
+        {
+          "facing": "Up",
+          "home_x": 2,
+          "home_y": 4,
+          "npc_index": 1,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 2,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 2,
+          "y": 4
+        },
+        {
+          "facing": "Down",
+          "home_x": 21,
+          "home_y": 13,
+          "npc_index": 2,
+          "scripted_path_remaining": 0,
+          "sprite_id": 32,
+          "text_id": 3,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 21,
+          "y": 13
+        },
+        {
+          "facing": "Up",
+          "home_x": 13,
+          "home_y": 16,
+          "npc_index": 3,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 4,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 13,
+          "y": 16
+        }
+      ],
+      "controls": [
+        {
+          "facing": "Down",
+          "home_x": 3,
+          "home_y": 14,
+          "npc_index": 0,
+          "scripted_path_remaining": 0,
+          "sprite_id": 41,
+          "text_id": 1,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 3,
+          "y": 14
+        }
+      ]
+    },
+    {
+      "version": "after",
+      "map": "SilphCo10F",
+      "position": [
+        10,
+        3
+      ],
+      "enemies": [
+        {
+          "facing": "Right",
+          "home_x": 1,
+          "home_y": 9,
+          "npc_index": 0,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 1,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 1,
+          "y": 9
+        },
+        {
+          "facing": "Left",
+          "home_x": 10,
+          "home_y": 2,
+          "npc_index": 1,
+          "scripted_path_remaining": 0,
+          "sprite_id": 32,
+          "text_id": 2,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 10,
+          "y": 2
+        }
+      ],
+      "controls": [
+        {
+          "facing": "Right",
+          "home_x": 9,
+          "home_y": 15,
+          "npc_index": 2,
+          "scripted_path_remaining": 0,
+          "sprite_id": 27,
+          "text_id": 3,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 10,
+          "y": 15
+        },
+        {
+          "facing": "Down",
+          "home_x": 2,
+          "home_y": 12,
+          "npc_index": 3,
+          "scripted_path_remaining": 0,
+          "sprite_id": 61,
+          "text_id": 4,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 2,
+          "y": 12
+        },
+        {
+          "facing": "Down",
+          "home_x": 4,
+          "home_y": 14,
+          "npc_index": 4,
+          "scripted_path_remaining": 0,
+          "sprite_id": 61,
+          "text_id": 5,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 4,
+          "y": 14
+        },
+        {
+          "facing": "Down",
+          "home_x": 5,
+          "home_y": 11,
+          "npc_index": 5,
+          "scripted_path_remaining": 0,
+          "sprite_id": 61,
+          "text_id": 6,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 5,
+          "y": 11
+        }
+      ]
+    },
+    {
+      "version": "after",
+      "map": "SilphCo11F",
+      "position": [
+        10,
+        8
+      ],
+      "enemies": [
+        {
+          "facing": "Down",
+          "home_x": 6,
+          "home_y": 9,
+          "npc_index": 2,
+          "scripted_path_remaining": 0,
+          "sprite_id": 23,
+          "text_id": 3,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 6,
+          "y": 9
+        },
+        {
+          "facing": "Up",
+          "home_x": 3,
+          "home_y": 16,
+          "npc_index": 3,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 4,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 3,
+          "y": 16
+        },
+        {
+          "facing": "Up",
+          "home_x": 15,
+          "home_y": 9,
+          "npc_index": 4,
+          "scripted_path_remaining": 0,
+          "sprite_id": 24,
+          "text_id": 5,
+          "visible": false,
+          "walk_counter": 0,
+          "x": 15,
+          "y": 9
+        }
+      ],
+      "controls": [
+        {
+          "facing": "Down",
+          "home_x": 7,
+          "home_y": 5,
+          "npc_index": 0,
+          "scripted_path_remaining": 0,
+          "sprite_id": 43,
+          "text_id": 1,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 7,
+          "y": 5
+        },
+        {
+          "facing": "Down",
+          "home_x": 10,
+          "home_y": 5,
+          "npc_index": 1,
+          "scripted_path_remaining": 0,
+          "sprite_id": 15,
+          "text_id": 2,
+          "visible": true,
+          "walk_counter": 0,
+          "x": 10,
+          "y": 5
+        }
+      ]
+    }
+  ],
+  "pass": true
+}

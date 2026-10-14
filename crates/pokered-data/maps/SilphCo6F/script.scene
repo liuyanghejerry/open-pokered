@@ -104,7 +104,7 @@ game_scene SilphCo6F {
 
   // ── Rocket (npc 6) — sight-engaged trainer; dialogue only ───────────────
   @storyline("talkRocket1") {
-    @trigger(map = "SilphCo6F", npc = 6)
+    @trigger(map = "SilphCo6F", npc = 6, toggle = "SILPH_CO_6F_OBJ_6")
     @if (getFlag("EVENT_BEAT_SILPH_CO_6F_TRAINER_0")) {
       @speaker("") { @t("No matter! My brothers will\navenge me!", "没关系！我的兄弟们会为我报\n仇！") }
     } @else {
@@ -114,7 +114,7 @@ game_scene SilphCo6F {
 
   // ── Scientist (npc 7) — sight-engaged trainer; dialogue only ────────────
   @storyline("talkScientist") {
-    @trigger(map = "SilphCo6F", npc = 7)
+    @trigger(map = "SilphCo6F", npc = 7, toggle = "SILPH_CO_6F_OBJ_7")
     @if (getFlag("EVENT_BEAT_SILPH_CO_6F_TRAINER_1")) {
       @speaker("") { @t("TIKSI BRANCH? It's in\nRussian no man's land!", "提克西分部？它在俄罗斯的不毛\n之地！") }
     } @else {
@@ -124,7 +124,7 @@ game_scene SilphCo6F {
 
   // ── Rocket (npc 8) — sight-engaged trainer; dialogue only ───────────────
   @storyline("talkRocket2") {
-    @trigger(map = "SilphCo6F", npc = 8)
+    @trigger(map = "SilphCo6F", npc = 8, toggle = "SILPH_CO_6F_OBJ_8")
     @if (getFlag("EVENT_BEAT_SILPH_CO_6F_TRAINER_2")) {
       @speaker("") { @t("If you stand for justice,\nyou betray evil!", "如果你维护正义，就会背叛邪\n恶！") }
     } @else {

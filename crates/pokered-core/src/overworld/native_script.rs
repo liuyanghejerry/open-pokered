@@ -3444,6 +3444,43 @@ mod tests {
     }
 
     #[test]
+    fn fidelity_silph_victory_hides_all_original_enemies_from_both_handlers() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../pokered-data/src/silph_liberation_golden.json"
+        )).unwrap();
+        let mut expected: Vec<String> = [1, 2, 3, 4, 5, 6, 7, 14, 15]
+            .into_iter().map(|id| format!("SAFFRON_CITY_OBJ_{id}")).collect();
+        expected.extend(fixture["cases"].as_array().unwrap().iter()
+            .map(|case| case["toggle"].as_str().unwrap().to_owned()));
+        for handler in ["giovanniStep", "talkGiovanni"] {
+            for outcome in ["win", "lose"] {
+                let mut engine = NativeScriptEngine::new();
+                engine.load_map("SilphCo11F", &pokered_data::embedded_scenes::get_scene_ast("SilphCo11F").unwrap());
+                engine.set_player_position(6, 13);
+                let commands = drive_fidelity_scene(&mut engine, handler, false, outcome, &[]);
+                let hides: Vec<String> = commands.iter().filter_map(|command| {
+                    if let ScriptCommand::HideObjectByName { toggle_id } = command {
+                        Some(toggle_id.clone())
+                    } else { None }
+                }).collect();
+                let shows: Vec<String> = commands.iter().filter_map(|command| {
+                    if let ScriptCommand::ShowObjectByName { toggle_id } = command {
+                        Some(toggle_id.clone())
+                    } else { None }
+                }).collect();
+                if outcome == "win" {
+                    assert_eq!(hides, expected, "{handler}");
+                    assert_eq!(shows, (8..=13).map(|id| format!("SAFFRON_CITY_OBJ_{id}")).collect::<Vec<_>>());
+                } else {
+                    assert!(hides.is_empty(), "{handler} loss must preserve enemies");
+                    assert!(shows.is_empty(), "{handler} loss must preserve citizens");
+                }
+                assert_eq!(engine.get_flag("EVENT_BEAT_SILPH_CO_GIOVANNI"), outcome == "win");
+            }
+        }
+    }
+
+    #[test]
     fn fidelity_silph_giovanni_walks_and_faces_before_battle() {
         for (x, y, player, npc) in [(6, 13, "up", "down"), (7, 12, "left", "right")] {
             let mut engine = NativeScriptEngine::new();
