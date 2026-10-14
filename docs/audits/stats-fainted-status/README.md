@@ -58,6 +58,12 @@ from that revision to this branch's base `959b3e38` is empty. The after
 binary was built from corrected production `36bb0232` and test revision
 `f14cb856`, with `--features debug-server`.
 
+The PR subsequently integrates master `3568cac4` (the independent PP Up
+refusal/reselection fix). That merge does not change Stats rendering or
+these HP/status fixtures; the captures above remain evidence from the
+recorded revisions, rather than a claim that every production file in the
+updated branch matches the capture base.
+
 The fixed real START / POKEMON / party / STATS trace captures frame 428
 for every case, build and repeat (16 complete runs). The capture script
 uses read-only `get_flags` observations as well as fixed frame inputs;
