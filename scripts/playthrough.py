@@ -578,6 +578,12 @@ class Game:
                 capture["ok"] = True
             except Exception as error:
                 capture["error"] = f"{type(error).__name__}: {error}"
+                # A reused artifact directory must not retain a previous
+                # run's fixture while the manifest reports capture failure.
+                try:
+                    (directory / name).unlink(missing_ok=True)
+                except OSError as cleanup_error:
+                    capture["stale_cleanup_error"] = str(cleanup_error)
                 print(f"[failure capture] {name}: {capture['error']}", file=sys.stderr)
             captures.append(capture)
 

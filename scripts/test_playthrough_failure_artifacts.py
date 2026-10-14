@@ -25,6 +25,8 @@ class FailureArtifactsTests(unittest.TestCase):
         }
         game = self.capture(responses)
         with tempfile.TemporaryDirectory() as directory:
+            # Previous captures must never impersonate the failed export.
+            (Path(directory) / 'failure-fixture.json').write_text('{"stale": true}')
             game.capture_failure_artifacts(directory, 'original healing assertion\n')
             directory = Path(directory)
             self.assertEqual((directory / 'failure.txt').read_text(), 'original healing assertion\n')
