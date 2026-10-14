@@ -1916,8 +1916,14 @@ def m10_brock(g):
     g.nav_to(18, 1, map_name="ViridianCity")
     g.nav_to(20, 32, map_name="ViridianCity")
     g.nav_to(20, 33, map_name="ViridianCity")
-    g.d.drive(["down"] * 24, frames=28)
+    # Three source-paced steps must start before releasing DOWN. A 24-frame
+    # hold stops at city y=35; 40 crosses into Route1 in the original and app.
+    g.d.drive(["down"] * 40, frames=44)
     g.step(8)
+    border = g.st()
+    if border["screen"] == "overworld" and border["map_name"] == "ViridianCity":
+        raise NavError(f"Route1 entry did not finish; still in ViridianCity "
+                       f"({border['player_x']},{border['player_y']})")
     g.nav_to(12, 7, map_name="Route1")
     assert g.train_until(13, "Route1", (12, 7), heal), "training stalled"
     g.evidence("m10-trained")
