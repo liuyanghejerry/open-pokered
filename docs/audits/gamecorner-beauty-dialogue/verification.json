@@ -1,0 +1,71 @@
+{
+  "before": [
+    {
+      "stage": "original-dialogue",
+      "frame_count": 364,
+      "map_name": "GameCorner",
+      "player_x": 2,
+      "player_y": 14,
+      "screen": "overworld",
+      "dialogue": "I think these machines have different odds.",
+      "choice": null,
+      "coins": 50,
+      "active_script_effect": "ShowDialogue",
+      "script_running": true
+    },
+    {
+      "stage": "after-original-dialogue",
+      "frame_count": 526,
+      "map_name": "GameCorner",
+      "player_x": 2,
+      "player_y": 14,
+      "screen": "overworld",
+      "dialogue": "Want to try your luck?",
+      "choice": null,
+      "coins": 50,
+      "active_script_effect": "ShowDialogue",
+      "script_running": true
+    }
+  ],
+  "after": [
+    {
+      "stage": "original-dialogue",
+      "frame_count": 364,
+      "map_name": "GameCorner",
+      "player_x": 2,
+      "player_y": 14,
+      "screen": "overworld",
+      "dialogue": "I think these machines have different odds.",
+      "choice": null,
+      "coins": 50,
+      "active_script_effect": "ShowDialogue",
+      "script_running": true
+    },
+    {
+      "stage": "after-original-dialogue",
+      "frame_count": 526,
+      "map_name": "GameCorner",
+      "player_x": 2,
+      "player_y": 14,
+      "screen": "overworld",
+      "dialogue": null,
+      "choice": null,
+      "coins": 50,
+      "active_script_effect": null,
+      "script_running": false
+    },
+    {
+      "stage": "machine-entry",
+      "frame_count": 890,
+      "map_name": "GameCorner",
+      "player_x": 18,
+      "player_y": 16,
+      "screen": "slots",
+      "dialogue": null,
+      "choice": null,
+      "coins": 50,
+      "active_script_effect": null,
+      "script_running": false
+    }
+  ]
+}

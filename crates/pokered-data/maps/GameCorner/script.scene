@@ -1,7 +1,7 @@
 // GameCorner (ROCKET GAME CORNER) — translated from the original disassembly
 // (scripts/GameCorner.asm, text/GameCorner.asm) to the real Game DSL API surface.
 //
-// Slot machines are playable via openSlots() (Beauty 2), and the coin balance
+// Slot machines are playable through their machine interactions, and the coin balance
 // settles through getCoins/giveCoins/takeCoins: Clerk 1's ¥1000-for-50 exchange
 // counter and the one-time coin gifts (Fishing Guru 10 / Clerk 2 20 / Gentleman
 // 20) all credit/deduct real coins. The poster "switch" tile-swap that opens the
@@ -63,27 +63,13 @@ game_scene GameCorner {
     }
   }
 
-  // ── Beauty 2 (npc 4) — tends the slot machines ──────────────────────────
-  // Original flavor line, now also the entry point to the playable slot
-  // machine minigame. Gated on the COIN CASE (as the coin-buying counter is).
+  // ── Beauty 2 (npc 4) — original talk-only flavor ────────────────────────
   @storyline("talkBeauty2") {
     @trigger(map = "GameCorner", npc = 4)
     @speaker("") {
       @t("I think these machines have\ndifferent odds.", "我觉得这些机器的中奖概率不一\n样。")
     }
-    @if (!hasItem("COIN_CASE")) {
-      @speaker("") { @t("You need a COIN CASE to\nplay!", "你需要代币盒才能玩！") }
-    } @else {
-      @speaker("") { @t("Want to try your luck?", "想试试你的运气吗？") }
-      @choice {
-        @option(@t("PLAY", "开始")) {
-          openSlots()
-        }
-        @option(@t("QUIT", "退出")) {
-          @speaker("") { @t("Come back anytime!", "随时再来玩！") }
-        }
-      }
-    }
+
   }
 
   // ── Fishing Guru (npc 5) — one-time gift of 10 coins ────────────────────
