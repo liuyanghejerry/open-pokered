@@ -348,9 +348,6 @@ pub fn apply_item_to_pokemon(item: ItemId, mon: &mut Pokemon, pokedex: &mut Poke
     // Evolution stones (ItemUseEvoStone): the cutscene is FORCED
     // (wForceEvolution = TRUE, item_effects.asm:776-778 — B cannot cancel).
     if is_evolution_stone(item) {
-        if mon.hp == 0 {
-            return no_effect();
-        }
         return match check_evolution(mon, EvolutionTrigger::Item(item)) {
             Some(to) => ItemApplyOutcome::EvolutionPending {
                 pre_text: None,
@@ -812,6 +809,46 @@ mod tests {
     }
 
     // -- evolution stones ----------------------------------------------------
+
+    #[test]
+    fn fainted_pikachu_stone_forces_evolution_and_gains_original_hp_delta() {
+        // Actual original Lv6 / DV9a78: HP0 max21 -> Raichu HP3 max24.
+        let mut mon = crate::pokemon::stats::create_pokemon(
+            Species::Pikachu, 6, [0x9a, 0x78],
+        ).unwrap();
+        mon.hp = 0;
+        let before = mon;
+        let mut dex = Pokedex::new();
+        assert!(matches!(
+            apply_item_to_pokemon(ItemId::ThunderStone, &mut mon, &mut dex),
+            ItemApplyOutcome::EvolutionPending {
+                from: Species::Pikachu, to: Species::Raichu,
+                force: true, consume: true, pre_text: None,
+            }
+        ));
+        assert_eq!(mon, before, "the cutscene still owns the mutation");
+        crate::pokemon::evolution::finalize_evolution(&mut mon, &mut dex, Species::Raichu);
+        assert_eq!((mon.species, mon.level, mon.hp, mon.max_hp),
+                   (Species::Raichu, 6, 3, 24));
+        assert_eq!([mon.attack, mon.defense, mon.speed, mon.special], [16, 12, 17, 16]);
+        assert_eq!(mon.moves, before.moves);
+        assert_eq!(mon.pp, before.pp);
+        assert_eq!(mon.total_exp, before.total_exp);
+        assert!(dex.is_owned(Species::Raichu));
+    }
+
+    #[test]
+    fn fainted_incompatible_stone_target_stays_unchanged() {
+        let mut mon = test_pokemon(Species::Bulbasaur, 6);
+        mon.hp = 0;
+        let before = mon;
+        let mut dex = Pokedex::new();
+        assert!(matches!(
+            apply_item_to_pokemon(ItemId::ThunderStone, &mut mon, &mut dex),
+            ItemApplyOutcome::NoEffect { .. }
+        ));
+        assert_eq!(mon, before);
+    }
 
     #[test]
     fn fire_stone_triggers_forced_cutscene() {
