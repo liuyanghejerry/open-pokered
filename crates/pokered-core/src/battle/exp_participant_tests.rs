@@ -95,8 +95,7 @@ fn revive_from_bag(s: &mut BattleScreen, item: ItemId) {
     });
     assert_eq!(s.player_bag.items(), &[(item, 1)]);
     assert!(
-        matches!(&s.phase, BattlePhase::ShowingText { next_phase, .. }
-        if **next_phase == BattlePhase::EnemyFreeTurnAfterItem)
+        matches!(s.phase, BattlePhase::ItemMedicineResult { .. })
     );
 }
 

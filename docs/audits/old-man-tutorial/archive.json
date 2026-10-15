@@ -1,0 +1,11 @@
+{
+  "path": "evidence.zip",
+  "bytes": 6390000,
+  "sha256": "6fafc4856dfa2e86c00c10d66e4e88724c955ed1f8d46b2a616db8eb7fd591aa",
+  "entry_manifest_sha256": "dda8d717666e365aba94a01c3034eace966307e8db5c98aca5e1107d62564787",
+  "original_paths": 20089,
+  "unique_blobs": 1485,
+  "all_paths_readback_verified": true,
+  "rom_executable_emulator_state_excluded": true,
+  "policy": "Exact-content dedup only; failed/intermediate records and every captured source/native frame remain under their original relative path. Full fixtures/ordinary SRAM included. No dropped/resampled/padded frames."
+}
