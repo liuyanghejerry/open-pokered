@@ -169,3 +169,94 @@ fn medicine_result_names_the_selected_member_for_every_source_cure_and_full_rest
         assert_eq!(s.player_bag.items(), &[(item, 1)]);
     }
 }
+
+#[test]
+fn medicine_no_effect_preserves_party_bag_ai_and_returns_on_generic_ack() {
+    for item in [ItemId::Potion, ItemId::ParlyzHeal, ItemId::Revive] {
+        for target in [0, 1] {
+            for ack_b in [false, true] {
+                let mut s = battle(item, target);
+                s.enemy_ai_count = 3;
+                let original = serde_json::to_value(s.battle_state.as_ref().unwrap()).unwrap();
+                s.update_frame(BattleInput { a: true, ..BattleInput::none() });
+                assert!(matches!(&s.phase, BattlePhase::ShowingText {
+                    wait_frames: BATTLE_TEXT_PAGE_WAIT_FRAMES,
+                    backdrop: BattleTextBackdrop::MedicineParty, next_phase, ..
+                } if **next_phase == BattlePhase::BagSelect));
+                assert_eq!(s.current_message.as_deref(), Some("It won't have any effect."));
+                assert_eq!(s.take_item_sfx_pending(), None);
+                for _ in 0..600 {
+                    s.update_frame(BattleInput { down: true, ..BattleInput::none() });
+                    assert!(s.phase.uses_medicine_party_backdrop());
+                    assert_eq!(s.party_cursor, target);
+                }
+                assert_eq!(serde_json::to_value(s.battle_state.as_ref().unwrap()).unwrap(), original);
+                assert_eq!(s.enemy_ai_count, 3);
+                assert_eq!(s.player_bag.items(), &[(item, 2)]);
+                assert!(s.bag_menu.is_some());
+                s.update_frame(BattleInput { a: !ack_b, b: ack_b, ..BattleInput::none() });
+                assert_eq!(s.phase, BattlePhase::BagSelect);
+                assert!(!s.phase.uses_medicine_party_backdrop());
+                assert!(s.current_message.is_none());
+                for _ in 0..60 { s.update_frame(BattleInput::none()); }
+                assert_eq!(s.enemy_ai_count, 3);
+                assert_eq!(s.player_bag.items(), &[(item, 2)]);
+                assert_eq!(serde_json::to_value(s.battle_state.as_ref().unwrap()).unwrap(), original);
+                s.update_frame(BattleInput { b: true, ..BattleInput::none() });
+                assert_eq!(s.phase, BattlePhase::PlayerMenu);
+            }
+        }
+    }
+}
+
+#[test]
+fn medicine_no_effect_has_no_success_delay50_and_backdrop_survives_pagination() {
+    let mut s = battle(ItemId::Potion, 1);
+    s.update_frame(BattleInput { a: true, ..BattleInput::none() });
+    for remaining in (0..BATTLE_TEXT_PAGE_WAIT_FRAMES).rev() {
+        s.update_frame(BattleInput { a: true, ..BattleInput::none() });
+        assert!(matches!(s.phase, BattlePhase::ShowingText {
+            wait_frames, backdrop: BattleTextBackdrop::MedicineParty, ..
+        } if wait_frames == remaining));
+    }
+    s.update_frame(BattleInput { a: true, ..BattleInput::none() });
+    assert_eq!(s.phase, BattlePhase::BagSelect, "ordinary page wait, no success Delay50");
+    s.show_medicine_no_effect("First line\nSecond line\nThird line".into());
+    assert!(matches!(&s.phase, BattlePhase::ShowingText { messages, .. } if messages.len() > 1));
+    for _ in 0..BATTLE_TEXT_PAGE_WAIT_FRAMES { s.update_frame(BattleInput::none()); }
+    s.update_frame(BattleInput { b: true, ..BattleInput::none() });
+    assert!(matches!(s.phase, BattlePhase::ShowingText {
+        current: 1, backdrop: BattleTextBackdrop::MedicineParty, ..
+    }));
+    // Equal wording from another caller must not select a medicine view.
+    s.show_text_then(vec!["It won't have any effect.".into()], BattlePhase::PlayerMenu);
+    assert!(matches!(s.phase, BattlePhase::ShowingText { backdrop: BattleTextBackdrop::Battle, .. }));
+    assert!(!s.phase.uses_medicine_party_backdrop());
+}
+
+#[test]
+fn medicine_no_effect_snapshot_owns_backdrop_and_legacy_text_defaults_to_battle() {
+    let mut s = battle(ItemId::Revive, 1);
+    s.update_frame(BattleInput { a: true, ..BattleInput::none() });
+    for _ in 0..3 { s.update_frame(BattleInput::none()); }
+    let snapshot = BattleSnapshot::capture(&s);
+    let encoded = serde_json::to_vec(&snapshot).unwrap();
+    let restored: BattleSnapshot = serde_json::from_slice(&encoded).unwrap();
+    restored.restore_into(&mut s);
+    assert!(matches!(&s.phase, BattlePhase::ShowingText {
+        wait_frames: 7, backdrop: BattleTextBackdrop::MedicineParty, next_phase, ..
+    } if **next_phase == BattlePhase::BagSelect));
+    assert_eq!(s.party_cursor, 1);
+    assert_eq!(s.current_message.as_deref(), Some("It won't have any effect."));
+    let mut legacy = serde_json::to_value(&snapshot).unwrap();
+    legacy["phase"]["ShowingText"].as_object_mut().unwrap().remove("backdrop");
+    let old: BattleSnapshot = serde_json::from_value(legacy).unwrap();
+    old.restore_into(&mut s);
+    assert!(matches!(s.phase, BattlePhase::ShowingText { backdrop: BattleTextBackdrop::Battle, .. }));
+    restored.restore_into(&mut s);
+    for _ in 0..7 { s.update_frame(BattleInput::none()); }
+    s.update_frame(BattleInput { a: true, ..BattleInput::none() });
+    assert_eq!(s.phase, BattlePhase::BagSelect);
+    assert_eq!(s.player_bag.items(), &[(ItemId::Revive, 2)]);
+    assert!(!BattleScreen::new(true).phase.uses_medicine_party_backdrop());
+}

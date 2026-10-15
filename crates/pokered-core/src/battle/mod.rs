@@ -398,6 +398,14 @@ pub enum VictoryPhase {
     EndBattleText,
 }
 
+/// The caller's screen retained behind a blocking text sequence.
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub enum BattleTextBackdrop {
+    #[default]
+    Battle,
+    MedicineParty,
+}
+
 /// High-level battle phase (frame-loop granularity).
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum BattlePhase {
@@ -432,6 +440,10 @@ pub enum BattlePhase {
         wait_frames: u16,
         /// Phase to transition to after all messages are shown.
         next_phase: Box<BattlePhase>,
+        /// Medicine failure prints over its existing party caller. Older
+        /// snapshots and every other text caller retain the battle screen.
+        #[serde(default)]
+        backdrop: BattleTextBackdrop,
     },
     /// A successfully used battle item costs the player's action. This
     /// one-frame handoff runs the opponent's free move only after the item's
@@ -507,6 +519,13 @@ pub enum BattlePhase {
         escaped: bool,
         wait_frames: u16,
     },
+}
+
+impl BattlePhase {
+    pub fn uses_medicine_party_backdrop(&self) -> bool {
+        matches!(self, Self::ItemTargetSelect { .. } | Self::ItemMedicineResult { .. }
+            | Self::ShowingText { backdrop: BattleTextBackdrop::MedicineParty, .. })
+    }
 }
 
 /// Input forwarded to the battle screen each frame.
@@ -2191,6 +2210,7 @@ impl BattleScreen {
                 current,
                 wait_frames,
                 next_phase,
+                backdrop,
             } => {
                 if wait_frames > 0 {
                     self.phase = BattlePhase::ShowingText {
@@ -2198,6 +2218,7 @@ impl BattleScreen {
                         current,
                         wait_frames: wait_frames - 1,
                         next_phase,
+                        backdrop,
                     };
                     return ScreenAction::Continue;
                 }
@@ -2222,6 +2243,7 @@ impl BattleScreen {
                             current: next_idx,
                             wait_frames: BATTLE_TEXT_PAGE_WAIT_FRAMES,
                             next_phase,
+                            backdrop,
                         };
                     }
                 }
@@ -2846,7 +2868,15 @@ learn {learn_name}!")];
             current: 0,
             wait_frames: BATTLE_TEXT_PAGE_WAIT_FRAMES,
             next_phase: Box::new(next),
+            backdrop: BattleTextBackdrop::Battle,
         };
+    }
+
+    fn show_medicine_no_effect(&mut self, message: String) {
+        self.show_text_then(vec![message], BattlePhase::BagSelect);
+        if let BattlePhase::ShowingText { backdrop, .. } = &mut self.phase {
+            *backdrop = BattleTextBackdrop::MedicineParty;
+        }
     }
 
     fn handle_item_use(&mut self, item_id: ItemId) {
@@ -2939,7 +2969,7 @@ learn {learn_name}!")];
         {
             let active_hp = self.player_hp;
             if active_hp == 0 && item_id != ItemId::Revive && item_id != ItemId::MaxRevive {
-                self.show_text_then(vec!["It won't have any effect.".to_string()], BattlePhase::BagSelect);
+                self.show_medicine_no_effect("It won't have any effect.".to_string());
                 return;
             }
         }
@@ -3034,7 +3064,7 @@ learn {learn_name}!")];
                             self.consume_selected_item();
                             (format!("{}\nis revitalized!", medicine_name), true)
                         }
-                        _ => ("Can't revive that!".to_string(), false),
+                        _ => ("It won't have any effect.".to_string(), false),
                     }
                 }
                 _ => ("It won't have any effect.".to_string(), false),
@@ -3064,7 +3094,7 @@ learn {learn_name}!")];
             self.current_message = Some(pokered_data::battle_text::localize(&result_msg, self.is_zh));
             self.phase = BattlePhase::ItemMedicineResult { wait_frames: 50 };
         } else {
-            self.show_text_then(vec![result_msg], BattlePhase::BagSelect);
+            self.show_medicine_no_effect(result_msg);
         }
     }
 
@@ -7358,6 +7388,7 @@ mod hp_bar_anim_tests {
             current: 0,
             wait_frames: 0,
             next_phase: Box::new(BattlePhase::PlayerMenu),
+            backdrop: Default::default(),
         };
         // Frame 1: message shows, input pressed but drain still active.
         s.update_frame(BattleInput {

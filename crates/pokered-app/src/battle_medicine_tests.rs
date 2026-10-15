@@ -81,3 +81,64 @@ fn medicine_result_soft_reset_continue_and_new_battle_abandon_old_result_without
         assert_eq!(g.battle.player_party_size, 1);
     });
 }
+
+#[test]
+fn medicine_no_effect_app_snapshot_keeps_typed_party_text_and_free_ack() {
+    on_stack(|| {
+        let mut g = game();
+        let mon = &mut g.battle.battle_state.as_mut().unwrap().player.party[1];
+        mon.hp = mon.max_hp;
+        let field_party = serde_json::to_value(&g.save_data.party).unwrap();
+        let before = serde_json::to_value(&g.battle.battle_state).unwrap();
+        let mut a = InputState::new(); a.press(GbButton::A); g.update(&a);
+        assert!(g.battle.phase.uses_medicine_party_backdrop());
+        assert!(matches!(&g.battle.phase, BattlePhase::ShowingText { next_phase, .. }
+            if **next_phase == BattlePhase::BagSelect));
+        let saved = g.agent_save_state().unwrap();
+        for _ in 0..100 { g.update(&InputState::new()); }
+        g.agent_restore_state(&saved).unwrap();
+        assert!(g.battle.phase.uses_medicine_party_backdrop());
+        assert_eq!(g.battle.party_cursor, 1);
+        assert_eq!(g.battle.current_message.as_deref(), Some("It won't have any effect."));
+        for _ in 0..10 { g.update(&InputState::new()); }
+        let mut b = InputState::new(); b.press(GbButton::B); g.update(&b);
+        assert_eq!(g.battle.phase, BattlePhase::BagSelect);
+        assert!(!g.battle.phase.uses_medicine_party_backdrop());
+        assert_eq!(g.battle.player_bag.items(), &[(ItemId::Potion, 2)]);
+        assert_eq!(serde_json::to_value(&g.battle.battle_state).unwrap(), before);
+        assert_eq!(serde_json::to_value(&g.save_data.party).unwrap(), field_party);
+    });
+}
+
+#[test]
+fn medicine_no_effect_soft_reset_continue_newbattle_cannot_reuse_party_text() {
+    on_stack(|| {
+        let mut g = game();
+        let mon = &mut g.battle.battle_state.as_mut().unwrap().player.party[1];
+        mon.hp = mon.max_hp;
+        g.battle.update_frame(BattleInput { a: true, ..BattleInput::none() });
+        assert!(g.battle.phase.uses_medicine_party_backdrop());
+        let mut replacement = pokered_core::save::SaveData::new();
+        replacement.party.add(create_pokemon(Species::Charmander, 8, [0x9a,0x78]).unwrap()).unwrap();
+        let path = std::env::temp_dir().join(format!("pokered-medicine-negative-reset-{}.sav",std::process::id()));
+        std::fs::write(&path,pokered_core::save::sram_export::export_sram(&replacement)).unwrap();
+        g.save_path = Some(path.clone());
+        let mut reset = InputState::new();
+        for button in [GbButton::A,GbButton::B,GbButton::Start,GbButton::Select] { reset.press(button); }
+        for _ in 0..16 { g.update(&reset); }
+        std::fs::remove_file(path).unwrap();
+        assert_eq!(g.state.screen,GameScreen::TitleScreen);
+        g.handle_transition(GameScreen::MainMenu);
+        g.main_menu.last_choice=Some(pokered_core::game_state::MainMenuChoice::Continue);
+        g.handle_transition(GameScreen::Overworld);
+        for _ in 0..120 { g.update(&InputState::new()); }
+        assert_ne!(g.state.screen,GameScreen::Battle);
+        assert_eq!(g.save_data.party.count(),1);
+        assert_eq!(g.save_data.party.get(0).unwrap().species,Species::Charmander);
+        g.start_wild_battle(Species::Rattata,5);
+        assert!(matches!(g.battle.phase,BattlePhase::Intro { .. }));
+        assert!(!g.battle.phase.uses_medicine_party_backdrop());
+        assert!(g.battle.current_message.is_none());
+        assert_eq!(g.battle.battle_state.as_ref().unwrap().player.party[0].species,Species::Charmander);
+    });
+}

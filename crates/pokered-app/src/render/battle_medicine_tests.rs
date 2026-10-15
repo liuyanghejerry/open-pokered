@@ -66,3 +66,35 @@ fn medicine_result_renders_updated_bench_hp_and_original_transformed_identity() 
 fn player_view(screen: &BattleScreen) -> Vec<pokered_core::battle::state::Pokemon> {
     screen.battle_state.as_ref().unwrap().player.persistent_party()
 }
+
+#[test]
+fn medicine_no_effect_draws_canonical_full_party_and_only_typed_context_changes_background() {
+    use pokered_core::battle::{BattleInput, BattleTextBackdrop};
+    for item in [ItemId::Potion, ItemId::ParlyzHeal, ItemId::Revive] {
+        let mut screen = battle();
+        screen.party_cursor = 1;
+        let bench = &mut screen.battle_state.as_mut().unwrap().player.party[1];
+        bench.hp = bench.max_hp;
+        bench.status = CoreStatus::None;
+        screen.player_bag.add_item(item, 2).unwrap();
+        screen.phase = BattlePhase::ItemTargetSelect { item_id: item };
+        screen.update_frame(BattleInput { a: true, ..BattleInput::none() });
+        let canonical = serde_json::to_value(&screen.battle_state).unwrap();
+        let config = dotzuki_engine::render_config::RenderConfig::new(160,144);
+        let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+        draw_battle(&screen, &mut None, &mut actual, &mut BattleVisualEffects::default(), Lang::En);
+        let mut party = PartyScreenState::new(player_view(&screen)); party.set_cursor(1);
+        let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+        crate::render::menu::draw_party_screen_base(&party, None, 0, &mut expected, Lang::En);
+        let mut painter = FrameBufferPainter::new(&mut expected).with_lang(Lang::En);
+        menus::party::draw_notice(&mut Ui::new(&mut painter), "It won't have any effect.");
+        assert_eq!(actual.packed(), expected.packed(), "full party and original error for {item:?}");
+        assert_eq!(serde_json::to_value(&screen.battle_state).unwrap(), canonical);
+        if let BattlePhase::ShowingText { backdrop, .. } = &mut screen.phase {
+            *backdrop = BattleTextBackdrop::Battle;
+        } else { panic!("ordinary ShowingText owner expected"); }
+        let mut unrelated = actual.clone();
+        draw_battle(&screen, &mut None, &mut unrelated, &mut BattleVisualEffects::default(), Lang::En);
+        assert_ne!(actual.packed(), unrelated.packed(), "same message cannot choose the party by string");
+    }
+}

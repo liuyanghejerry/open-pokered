@@ -945,7 +945,8 @@ impl BattleVisualEffects {
             // Ether's per-move pick reuses the FIGHT move-menu layout.
             BattlePhase::ItemMoveSelect { .. } => BattlePhaseKind::MoveSelect,
             BattlePhase::BagSelect => BattlePhaseKind::BagSelect,
-            BattlePhase::ItemTargetSelect { .. } | BattlePhase::ItemMedicineResult { .. } => BattlePhaseKind::ItemTargetSelect,
+            BattlePhase::ItemTargetSelect { .. } | BattlePhase::ItemMedicineResult { .. }
+                | BattlePhase::ShowingText { backdrop: pokered_core::battle::BattleTextBackdrop::MedicineParty, .. } => BattlePhaseKind::ItemTargetSelect,
             BattlePhase::ShowingText { .. } | BattlePhase::EnemyFreeTurnAfterItem => {
                 BattlePhaseKind::ShowingText
             }
@@ -3812,7 +3813,7 @@ pub fn draw_battle(
     language: pokered_core::game_state::Lang,
 ) {
     fb.clear(Rgba::WHITE);
-    if matches!(screen.phase, BattlePhase::ItemTargetSelect { .. } | BattlePhase::ItemMedicineResult { .. }) {
+    if screen.phase.uses_medicine_party_backdrop() {
         if let Some(bs) = screen.battle_state.as_ref() {
             // A draw-only adapter: input and item effects always operate on
             // BattleState, never on the field PartyScreen/save-data copy.
