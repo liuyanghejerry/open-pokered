@@ -4630,13 +4630,18 @@ impl PokemonGame {
                 let caught_sound_holds_input = self.battle.captured_mon.is_some()
                     && self.battle.current_message.as_ref().is_some_and(|msg| msg.starts_with("All right!"))
                     && self.audio.as_ref().is_some_and(|audio| audio.is_sfx_playing() && !audio.low_health_alarm_active());
+                // ItemUseBall finishes the toss/poof/shakes before its next
+                // text page. A later ball Tink would replace CaughtMon CHAN5.
+                let capture_animation_holds_input = matches!(
+                    self.battle.phase, pokered_core::battle::BattlePhase::ShowingText { .. }
+                ) && self.battle_vfx.ball_animation_active();
                 let battle_input = BattleInput {
                     up: input.is_just_pressed(GbButton::Up),
                     down: input.is_just_pressed(GbButton::Down),
                     left: input.is_just_pressed(GbButton::Left),
                     right: input.is_just_pressed(GbButton::Right),
-                    a: input.is_just_pressed(GbButton::A) && !caught_sound_holds_input,
-                    b: input.is_just_pressed(GbButton::B) && !caught_sound_holds_input,
+                    a: input.is_just_pressed(GbButton::A) && !caught_sound_holds_input && !capture_animation_holds_input,
+                    b: input.is_just_pressed(GbButton::B) && !caught_sound_holds_input && !capture_animation_holds_input,
                 };
                 // ── Link battle driving ─────────────────────────────────
                 // The CORE `LinkBattleDriver` owns the battle screen (turn

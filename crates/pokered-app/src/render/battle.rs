@@ -713,6 +713,12 @@ impl BattleVisualEffects {
         self.ball_choreo.is_none() && self.anim_player.is_finished() && self.anim_wait == 0
     }
 
+    /// A toss owns its complete synchronous sequence, including the gaps
+    /// between raw animation commands and both failed and successful throws.
+    pub(crate) fn ball_animation_active(&self) -> bool {
+        self.ball_choreo.is_some()
+    }
+
     pub(crate) fn set_capture_applying_type(&mut self, kind: u8, player: bool) {
         let anim_type=match kind {
             1=>AnimationType::ShakeScreenVertically,
@@ -4089,6 +4095,9 @@ pub fn draw_battle(
                     }
                     _ => None,
                 },
+                BattlePhase::BattleOver { .. } if screen.captured_mon.is_some() => {
+                    screen.current_message.clone()
+                }
                 BattlePhase::BattleOver { won, escaped, .. } => {
                     if *escaped {
                         None

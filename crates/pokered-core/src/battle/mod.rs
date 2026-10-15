@@ -1505,7 +1505,9 @@ impl BattleScreen {
         // (engine/battle/end_of_battle.asm:48). Gen-1 wins always come
         // from wiping the enemy party (wild: core.asm:793; trainer:
         // core.asm:916); the battle-over phases cover escape/loss/catch.
-        if self.enemy_party_wiped()
+        // Safari never draws the player's HP HUD, so it cannot enable the
+        // alarm. This also lets its successful catch play CaughtMon normally.
+        if self.is_safari || self.enemy_party_wiped()
             || matches!(
                 self.phase,
                 BattlePhase::TrainerVictory { .. } | BattlePhase::BattleOver { .. }
@@ -2191,7 +2193,11 @@ impl BattleScreen {
                 if (input.a || input.b) && !self.hp_bar_anim.is_active() {
                     let next_idx = current + 1;
                     if next_idx >= messages.len() {
-                        self.current_message = None;
+                        // ItemUseBall returns with the successful catch text
+                        // intact; its caller proceeds to the Pokédex/AskName.
+                        if self.captured_mon.is_none() {
+                            self.current_message = None;
+                        }
                         self.presentation.finish_pages();
                         self.sync_display_from_state();
                         self.phase = *next_phase;
@@ -3139,6 +3145,10 @@ learn {learn_name}!")];
                     );
                     return;
                 }
+                // ItemUseText00 precedes the animation for every Safari Ball,
+                // including a miss or a break-out. It does not spend another ball.
+                let thrower = self.player_name.as_deref().unwrap_or("RED").to_uppercase();
+                msgs.push(format!("{} used\nSAFARI BALL!", thrower));
                 // Rand1 rejection-sampled inside throw_ball (the `.loop`).
                 let result = self
                     .safari
@@ -3156,7 +3166,11 @@ learn {learn_name}!")];
                         if let Some(bs) = self.battle_state.as_ref() {
                             self.captured_mon = Some(bs.enemy.persistent_party()[bs.enemy.active_pokemon_index].clone());
                         }
-                        msgs.push(format!("All right!\n{} was caught!", name));
+                        let mut name_buf = [0u8; state::NAME_TEXT_BUF];
+                        let caught_name = self.captured_mon.as_ref()
+                            .map(|mon| mon.display_name(&mut name_buf))
+                            .unwrap_or("POKéMON");
+                        msgs.push(format!("All right!\n{} was caught!", caught_name));
                     }
                     Some(CaptureResult::Failed { shakes }) => {
                         self.pending_anim_events.push_back(BattleAnimEvent::Ball {
@@ -7531,3 +7545,29 @@ mod fidelity_blackout_tests {
 
 #[cfg(test)]
 mod nickname_narration_tests;
+
+
+#[cfg(test)]
+mod safari_capture_alarm_tests {
+    use super::*;
+    use crate::pokemon::stats::create_pokemon;
+
+    #[test]
+    fn safari_has_no_player_alarm_but_ordinary_low_hp_keeps_it() {
+        let mut player = create_pokemon(Species::Bulbasaur, 12, [0x9a, 0x78]).unwrap();
+        player.hp = 1;
+        let enemy = create_pokemon(Species::Venonat, 22, [0x9a, 0x78]).unwrap();
+        let mut screen = BattleScreen::from_parties(true, &[player], &[enemy], None);
+        screen.phase = BattlePhase::PlayerMenu;
+        assert!(screen.low_health_alarm());
+        screen.is_safari = true;
+        screen.safari = Some(safari::SafariState::new(190, 1));
+        assert!(!screen.low_health_alarm());
+        screen.show_text_then(vec!["All right!\nVENONAT was caught!".to_string()],
+            BattlePhase::BattleOver { won: true, escaped: false, wait_frames: 30 });
+        assert!(!screen.low_health_alarm());
+        assert_eq!(screen.player_hp, 1, "Safari presentation does not heal the party");
+        screen.is_safari = false;
+        assert!(screen.low_health_alarm());
+    }
+}

@@ -654,3 +654,160 @@ fn ordinary_save_load_discards_modal_without_old_battle_party_writeback() {
     assert_eq!(g.save_data.party.count(), 1);
     assert_eq!(g.save_data.party.get(0).unwrap().species, Species::Pikachu);
 }
+
+#[test]
+fn capture_ball_finishes_before_success_sound_and_caption_survives_return() {
+    for boxed in [false, true] {
+        for low_hp in [false, true] {
+            for safari in [false, true] {
+                verify_capture_presentation(boxed, low_hp, safari);
+            }
+        }
+    }
+}
+
+fn verify_capture_presentation(boxed: bool, low_hp: bool, safari: bool) {
+    use pokered_core::battle::{BattlePhase, menu::BagMenuState};
+    use pokered_data::items::ItemId;
+    let mut g = PokemonGame::new_with_options(
+        GameVersion::Red, None, None, None, false, None, false, true,
+        #[cfg(feature = "debug-server")] None,
+    );
+    g.state.config.language = pokered_core::game_state::Lang::En;
+    g.save_data.party.clear();
+    for index in 0..if boxed { 6 } else { 1 } {
+        let mut player = mon(Species::Bulbasaur, 12);
+        if low_hp && index == 0 { player.hp = 1; }
+        g.save_data.party.add(player).unwrap();
+    }
+    let protected = g.save_data.party.to_vec();
+    g.save_data.game_data.pokedex.set_owned(Species::Weedle);
+    g.save_data.game_data.bag.add_item(ItemId::MasterBall, 2).unwrap();
+    let mut enemy = mon(Species::Weedle, 4);
+    if safari { enemy.hp = 1; }
+    g.battle = BattleScreen::from_parties(true, &protected, &[enemy], None);
+    g.battle.player_bag = g.save_data.game_data.bag.clone();
+    g.battle.bag_menu = Some(BagMenuState::new(vec![(ItemId::MasterBall, 2)]));
+    g.battle.phase = if safari { BattlePhase::PlayerMenu } else { BattlePhase::BagSelect };
+    if safari {
+        // Natural WEEDLE catch rate255 + legal HP1 makes W>255, so the
+        // actual Safari path captures for every legal Rand1/Rand2 draw.
+        g.battle.is_safari = true;
+        g.battle.safari = Some(pokered_core::battle::safari::SafariState::new(255, 1));
+    }
+    g.state.screen = GameScreen::Battle;
+    g.audio = Some(AudioOutput::new_pcm());
+    let mut seen = false;
+    let mut finished = false;
+    let mut saw_battle_over = false;
+    let mut active_frames = [0usize; 3];
+    let mut pcm = vec![0.0f32; 1470];
+    let mut audible = false;
+    let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+    for frame in 0..2400 {
+        let mut input = InputState::new();
+        if frame % 8 == 0 { input.press(GbButton::A); }
+        g.update(&input);
+        g.draw(&mut fb);
+        let channels = {
+            let manager = g.audio.as_ref().unwrap().manager.lock().unwrap();
+            core::array::from_fn::<_, 3, _>(|i| {
+                let channel = &manager.sequencer.channels[4 + i];
+                (channel.active, channel.sound_id)
+            })
+        };
+        g.audio.as_ref().unwrap().render_pcm(&mut pcm);
+        if channels.iter().any(|&(active, id)| active && id == SfxId::CaughtMon as u8) {
+            assert!(!low_hp || safari, "the ordinary low-health alarm rejects this SFX");
+            assert!(g.battle_vfx.item_animation_capture_finished(), "a later Tink must not replace the jingle");
+            if !seen {
+                assert_eq!(channels, [(true, SfxId::CaughtMon as u8); 3]);
+                seen = true;
+            }
+        }
+        if seen && !finished {
+            audible |= pcm.iter().any(|sample| sample.abs() > 0.00001);
+            for (i, &(active, id)) in channels.iter().enumerate() {
+                if active {
+                    assert_eq!(id, SfxId::CaughtMon as u8, "caught voice {i} was replaced");
+                    active_frames[i] += 1;
+                }
+            }
+            if channels.iter().all(|&(active, _)| !active) { finished = true; }
+            else {
+                assert_eq!(g.state.screen, GameScreen::Battle);
+                assert!(g.battle.current_message.as_deref().unwrap_or_default().contains("was caught!"));
+            }
+        }
+        if matches!(g.battle.phase, BattlePhase::BattleOver { .. }) {
+            saw_battle_over = true;
+            assert_eq!(g.battle.current_message.as_deref(), Some("All right!\nWEEDLE was caught!"));
+            if !low_hp || safari { assert!(seen && finished, "sound must return before the text caller"); }
+            let actual = fb.clone();
+            let phase = g.battle.phase.clone();
+            g.battle.phase = BattlePhase::ShowingText {
+                messages: vec!["All right!\nWEEDLE was caught!".to_string()], current: 0,
+                wait_frames: 0, next_phase: Box::new(phase.clone()),
+            };
+            g.draw(&mut fb);
+            for y in 96..144 { for x in 0..160 {
+                assert_eq!(actual.get_pixel(x, y), fb.get_pixel(x, y), "catch return must render its success caption");
+            } }
+            g.battle.phase = phase;
+        }
+        if g.post_capture_active() { break; }
+    }
+    assert!(saw_battle_over && g.post_capture_active());
+    if low_hp && !safari { assert!(!seen); }
+    else { assert!(seen && finished && audible); assert!(active_frames.iter().all(|&n| n > 4)); }
+    for (index, player) in protected.iter().enumerate() {
+        assert_eq!(serde_json::to_value(g.save_data.party.get(index).unwrap()).unwrap(), serde_json::to_value(player).unwrap());
+    }
+    assert_eq!(g.save_data.party.count(), if boxed { 6 } else { 2 });
+    assert_eq!(g.save_data.current_box.count(), usize::from(boxed));
+    if safari { assert_eq!(g.battle.safari.as_ref().unwrap().balls, 0); }
+}
+
+#[test]
+fn failed_ball_result_waits_for_the_complete_throw() {
+    use pokered_core::battle::{BallAnimOutcome, BattleAnimEvent, BattlePhase};
+    use pokered_data::items::ItemId;
+    let mut g = PokemonGame::new_with_options(
+        GameVersion::Red, None, None, None, false, None, false, true,
+        #[cfg(feature = "debug-server")] None,
+    );
+    // Isolate the already-resolved failed throw's presentation. Whole failed
+    // Safari throws and their ball economy are checked by the actual controls.
+    g.battle = BattleScreen::from_parties(true, &[mon(Species::Bulbasaur, 12)], &[mon(Species::Venonat, 22)], None);
+    g.battle.is_safari = true;
+    g.battle.safari = Some(pokered_core::battle::safari::SafariState::new(190, 29));
+    g.battle.phase = BattlePhase::ShowingText {
+        messages: vec!["RED used\nSAFARI BALL!".to_string(), "Aww! It appeared\nto be caught!".to_string()],
+        current: 0, wait_frames: 0, next_phase: Box::new(BattlePhase::PlayerMenu),
+    };
+    g.battle_vfx.on_anim_event(BattleAnimEvent::Ball {
+        ball: ItemId::SafariBall, shakes: 2, outcome: BallAnimOutcome::BrokeFree,
+    });
+    g.state.screen = GameScreen::Battle;
+    g.audio = Some(AudioOutput::new_pcm());
+    let mut saw_active = false;
+    let mut saw_result = false;
+    for frame in 0..1200 {
+        let was_active = g.battle_vfx.ball_animation_active();
+        saw_active |= was_active;
+        let mut input = InputState::new();
+        if frame % 8 == 0 { input.press(GbButton::A); }
+        g.update(&input);
+        if let BattlePhase::ShowingText { current, .. } = g.battle.phase {
+            if was_active { assert_eq!(current, 0, "result text cannot interrupt the ball"); }
+            saw_result |= current == 1;
+        }
+        assert_eq!(g.battle.safari.as_ref().unwrap().balls, 29);
+        assert!(g.battle.captured_mon.is_none());
+        if g.battle.phase == BattlePhase::PlayerMenu {
+            assert!(saw_active && saw_result);
+            return;
+        }
+    }
+    panic!("failed ball presentation did not return to its caller");
+}
