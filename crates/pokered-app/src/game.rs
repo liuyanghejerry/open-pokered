@@ -4690,7 +4690,7 @@ impl PokemonGame {
                         //    screen.
                         if let Some(screen) = driver.screen_mut() {
                             screen.battle_style = self.state.config.battle_style;
-                            screen.player_name = Some(self.player_name.clone());
+                            screen.player_name.get_or_insert_with(String::new).clone_from(&self.player_name);
                         }
                         // 4. Mirror the canonical screen into `self.battle`
                         //    for the render/vfx/audio blocks below and the
@@ -4732,6 +4732,8 @@ impl PokemonGame {
                 // battle_animation below. (For link battles `self.battle` is
                 // the mirror; the canonical screen gets the same pushes above.)
                 self.battle.battle_style = self.state.config.battle_style;
+                // Keep synchronizing names after restores/edits, while reusing
+                // the existing string allocation on ordinary battle frames.
                 self.battle.player_name.get_or_insert_with(String::new).clone_from(&self.player_name);
                 let action = if self.battle.link_mode && battle_over {
                     // The driver's screen is frozen at the end narration;
