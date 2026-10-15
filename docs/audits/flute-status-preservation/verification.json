@@ -1,0 +1,689 @@
+{
+  "scope": "Actual original12/current216nativeBEFORE12/frozen9d945nativeAFTER12 natural Route1 encounter/PokeFlute/RUN/ordinarySAVE. No live setters. All statuses at instant and persistent SAVE verified; source/native species/RNG/HP/fullparty/wholeSRAM equality not claimed.",
+  "original_revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "original_rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+  "before_identity": "audit-912-current-before-identity.json",
+  "after_identity": "audit-916-after-identity.json",
+  "ordinary_save_controls": [
+    {
+      "case": "poison",
+      "repeat": 1,
+      "provider": "source",
+      "record": "audit-916-original-flute-status-voalgp65/poison-1/record.json",
+      "record_sha256": "f5248577a61e39f8e43c1e2588c0044c4987eadcd7d7d175217a942edaf1f0b0",
+      "sram": "audit-916-original-flute-status-voalgp65/poison-1/original.gbc.ram",
+      "sram_sha256": "34c92ff70a67cb07b4d7435cd0e6dac8d13945a1e0dadbbf431e7a729a8dbb40",
+      "status_bytes": [
+        8,
+        0
+      ],
+      "checksum": 159
+    },
+    {
+      "case": "poison",
+      "repeat": 1,
+      "provider": "before",
+      "record": "audit-916-native-flute-before-z93o_abz/poison-1/record.json",
+      "record_sha256": "5b1073c59579700f714286286154fc774663406a1f41874ba819598b6b5d390a",
+      "sram": "audit-916-native-flute-before-z93o_abz/poison-1/ordinary.sav",
+      "sram_sha256": "4149892822835311e3e90aeb402a3dbc7602bc4add4a9bc00558fff135a420e5",
+      "status_bytes": [
+        0,
+        0
+      ],
+      "checksum": 25
+    },
+    {
+      "case": "poison",
+      "repeat": 1,
+      "provider": "after",
+      "record": "audit-916-native-flute-after-87mkif1p/poison-1/record.json",
+      "record_sha256": "a1e57c6e4e43fe6171e76025145d6fb10b957cc12b4d4c8cc04967f22216bd15",
+      "sram": "audit-916-native-flute-after-87mkif1p/poison-1/ordinary.sav",
+      "sram_sha256": "f52fbd22b9f6119684239f953bf44c4ab5487c540885a360b823f8a159c8acce",
+      "status_bytes": [
+        8,
+        0
+      ],
+      "checksum": 233
+    },
+    {
+      "case": "poison",
+      "repeat": 2,
+      "provider": "source",
+      "record": "audit-916-original-flute-status-voalgp65/poison-2/record.json",
+      "record_sha256": "52011138647efffa006ee12a273bb283f3a373aa5602e3dd91c262fb3f2bfdac",
+      "sram": "audit-916-original-flute-status-voalgp65/poison-2/original.gbc.ram",
+      "sram_sha256": "34c92ff70a67cb07b4d7435cd0e6dac8d13945a1e0dadbbf431e7a729a8dbb40",
+      "status_bytes": [
+        8,
+        0
+      ],
+      "checksum": 159
+    },
+    {
+      "case": "poison",
+      "repeat": 2,
+      "provider": "before",
+      "record": "audit-916-native-flute-before-z93o_abz/poison-2/record.json",
+      "record_sha256": "24269bebd758def8a574168cd5dcfcf469a5badef046afd84ce7b7c35ec424bb",
+      "sram": "audit-916-native-flute-before-z93o_abz/poison-2/ordinary.sav",
+      "sram_sha256": "4149892822835311e3e90aeb402a3dbc7602bc4add4a9bc00558fff135a420e5",
+      "status_bytes": [
+        0,
+        0
+      ],
+      "checksum": 25
+    },
+    {
+      "case": "poison",
+      "repeat": 2,
+      "provider": "after",
+      "record": "audit-916-native-flute-after-87mkif1p/poison-2/record.json",
+      "record_sha256": "7e6a9c822b9c4a312f29ce856c4d6870e644e5bffa1808a0122abe112d1f7b7c",
+      "sram": "audit-916-native-flute-after-87mkif1p/poison-2/ordinary.sav",
+      "sram_sha256": "f52fbd22b9f6119684239f953bf44c4ab5487c540885a360b823f8a159c8acce",
+      "status_bytes": [
+        8,
+        0
+      ],
+      "checksum": 233
+    },
+    {
+      "case": "burn",
+      "repeat": 1,
+      "provider": "source",
+      "record": "audit-916-original-flute-status-voalgp65/burn-1/record.json",
+      "record_sha256": "fb09f8036596ca6ed92f5008393bfd91465eb67045e47ef9eb683a7740f15d96",
+      "sram": "audit-916-original-flute-status-voalgp65/burn-1/original.gbc.ram",
+      "sram_sha256": "69ca3cf6a4d4c940705cdb28c1e4d5c5a3888a851d5b5f9e1329b38a330cf2fa",
+      "status_bytes": [
+        16,
+        0
+      ],
+      "checksum": 42
+    },
+    {
+      "case": "burn",
+      "repeat": 1,
+      "provider": "before",
+      "record": "audit-916-native-flute-before-z93o_abz/burn-1/record.json",
+      "record_sha256": "1bc57a84b68d36f4f9d2c5993a21d36b72aa39a589fdfc9ac11b62347c6a2941",
+      "sram": "audit-916-native-flute-before-z93o_abz/burn-1/ordinary.sav",
+      "sram_sha256": "4149892822835311e3e90aeb402a3dbc7602bc4add4a9bc00558fff135a420e5",
+      "status_bytes": [
+        0,
+        0
+      ],
+      "checksum": 25
+    },
+    {
+      "case": "burn",
+      "repeat": 1,
+      "provider": "after",
+      "record": "audit-916-native-flute-after-87mkif1p/burn-1/record.json",
+      "record_sha256": "d9bbf4823088cb17d355988a31c64c12e129611920164d443a467e4f20c7f646",
+      "sram": "audit-916-native-flute-after-87mkif1p/burn-1/ordinary.sav",
+      "sram_sha256": "c78a4fb81bd1ce1e52cb761cf990dfa8eb3085bff81eeec84a9899ecd6e6b451",
+      "status_bytes": [
+        16,
+        0
+      ],
+      "checksum": 225
+    },
+    {
+      "case": "burn",
+      "repeat": 2,
+      "provider": "source",
+      "record": "audit-916-original-flute-status-voalgp65/burn-2/record.json",
+      "record_sha256": "78eda3ed15dc81b45ac5ed015db07de2d697fba8821f85d225d0a26cdc8f52aa",
+      "sram": "audit-916-original-flute-status-voalgp65/burn-2/original.gbc.ram",
+      "sram_sha256": "69ca3cf6a4d4c940705cdb28c1e4d5c5a3888a851d5b5f9e1329b38a330cf2fa",
+      "status_bytes": [
+        16,
+        0
+      ],
+      "checksum": 42
+    },
+    {
+      "case": "burn",
+      "repeat": 2,
+      "provider": "before",
+      "record": "audit-916-native-flute-before-z93o_abz/burn-2/record.json",
+      "record_sha256": "ad1d37becb300f86dec618dbec7b5ad7503a08e8318e49eb469ce4311213d3f6",
+      "sram": "audit-916-native-flute-before-z93o_abz/burn-2/ordinary.sav",
+      "sram_sha256": "4149892822835311e3e90aeb402a3dbc7602bc4add4a9bc00558fff135a420e5",
+      "status_bytes": [
+        0,
+        0
+      ],
+      "checksum": 25
+    },
+    {
+      "case": "burn",
+      "repeat": 2,
+      "provider": "after",
+      "record": "audit-916-native-flute-after-87mkif1p/burn-2/record.json",
+      "record_sha256": "3c9e1f939d02c77b7e1a459307b244da16617074376616bbfbb61635439ca1cd",
+      "sram": "audit-916-native-flute-after-87mkif1p/burn-2/ordinary.sav",
+      "sram_sha256": "c78a4fb81bd1ce1e52cb761cf990dfa8eb3085bff81eeec84a9899ecd6e6b451",
+      "status_bytes": [
+        16,
+        0
+      ],
+      "checksum": 225
+    },
+    {
+      "case": "freeze",
+      "repeat": 1,
+      "provider": "source",
+      "record": "audit-916-original-flute-status-voalgp65/freeze-1/record.json",
+      "record_sha256": "070021d56e589fcd0cb5bbb3aea377762dd806856e662fcb615d6cc0efd07f3b",
+      "sram": "audit-916-original-flute-status-voalgp65/freeze-1/original.gbc.ram",
+      "sram_sha256": "cd1207a251b2e09c6afc395101739662fc393606bf25cac7b8074ad633d6edec",
+      "status_bytes": [
+        32,
+        0
+      ],
+      "checksum": 31
+    },
+    {
+      "case": "freeze",
+      "repeat": 1,
+      "provider": "before",
+      "record": "audit-916-native-flute-before-z93o_abz/freeze-1/record.json",
+      "record_sha256": "82a625579498bcd39bb26b0ac21b5264a49d310bf729bf895d1e7420bff24f28",
+      "sram": "audit-916-native-flute-before-z93o_abz/freeze-1/ordinary.sav",
+      "sram_sha256": "4149892822835311e3e90aeb402a3dbc7602bc4add4a9bc00558fff135a420e5",
+      "status_bytes": [
+        0,
+        0
+      ],
+      "checksum": 25
+    },
+    {
+      "case": "freeze",
+      "repeat": 1,
+      "provider": "after",
+      "record": "audit-916-native-flute-after-87mkif1p/freeze-1/record.json",
+      "record_sha256": "bb8cc4257cceb5911feb2fc89971d81a54881f83a10409a55af1524d9be6ccd2",
+      "sram": "audit-916-native-flute-after-87mkif1p/freeze-1/ordinary.sav",
+      "sram_sha256": "1f6fd4deb870d1c2f2d946b2aacbbe6eb43f4b047af493c9f0c654e06f22069c",
+      "status_bytes": [
+        32,
+        0
+      ],
+      "checksum": 249
+    },
+    {
+      "case": "freeze",
+      "repeat": 2,
+      "provider": "source",
+      "record": "audit-916-original-flute-status-voalgp65/freeze-2/record.json",
+      "record_sha256": "4cf1c7d3b970d63eaa6b915fbf549c1a5a44a2e79a8a62dce2573e91ce20dd12",
+      "sram": "audit-916-original-flute-status-voalgp65/freeze-2/original.gbc.ram",
+      "sram_sha256": "cd1207a251b2e09c6afc395101739662fc393606bf25cac7b8074ad633d6edec",
+      "status_bytes": [
+        32,
+        0
+      ],
+      "checksum": 31
+    },
+    {
+      "case": "freeze",
+      "repeat": 2,
+      "provider": "before",
+      "record": "audit-916-native-flute-before-z93o_abz/freeze-2/record.json",
+      "record_sha256": "088ed4bd9bda91fdc8eb6b7a259f17678f764a9425b5945c987f7dcbb232e76c",
+      "sram": "audit-916-native-flute-before-z93o_abz/freeze-2/ordinary.sav",
+      "sram_sha256": "4149892822835311e3e90aeb402a3dbc7602bc4add4a9bc00558fff135a420e5",
+      "status_bytes": [
+        0,
+        0
+      ],
+      "checksum": 25
+    },
+    {
+      "case": "freeze",
+      "repeat": 2,
+      "provider": "after",
+      "record": "audit-916-native-flute-after-87mkif1p/freeze-2/record.json",
+      "record_sha256": "e857cb373dd7a72d2c39aa694f0226f54f911b4c457d8dd85ab4ad3747496a4b",
+      "sram": "audit-916-native-flute-after-87mkif1p/freeze-2/ordinary.sav",
+      "sram_sha256": "1f6fd4deb870d1c2f2d946b2aacbbe6eb43f4b047af493c9f0c654e06f22069c",
+      "status_bytes": [
+        32,
+        0
+      ],
+      "checksum": 249
+    },
+    {
+      "case": "paralysis",
+      "repeat": 1,
+      "provider": "source",
+      "record": "audit-916-original-flute-status-voalgp65/paralysis-1/record.json",
+      "record_sha256": "54496966c3a72c621b1d0a64590cb350efc618aff615112267c73ff6e7ad293e",
+      "sram": "audit-916-original-flute-status-voalgp65/paralysis-1/original.gbc.ram",
+      "sram_sha256": "b40d45c73be30a4fd2cbe3dfd89ab468fcb865ae6ee55013ca71b0dfcd12b943",
+      "status_bytes": [
+        64,
+        0
+      ],
+      "checksum": 33
+    },
+    {
+      "case": "paralysis",
+      "repeat": 1,
+      "provider": "before",
+      "record": "audit-916-native-flute-before-z93o_abz/paralysis-1/record.json",
+      "record_sha256": "31d0151807122ad3b42e1cf6ad6617452e61017f22bccd237671c0b58e3fdc62",
+      "sram": "audit-916-native-flute-before-z93o_abz/paralysis-1/ordinary.sav",
+      "sram_sha256": "4149892822835311e3e90aeb402a3dbc7602bc4add4a9bc00558fff135a420e5",
+      "status_bytes": [
+        0,
+        0
+      ],
+      "checksum": 25
+    },
+    {
+      "case": "paralysis",
+      "repeat": 1,
+      "provider": "after",
+      "record": "audit-916-native-flute-after-87mkif1p/paralysis-1/record.json",
+      "record_sha256": "d5ce3de6d3358072d31bff66e37022de597154726aeb420970620eccddd8733d",
+      "sram": "audit-916-native-flute-after-87mkif1p/paralysis-1/ordinary.sav",
+      "sram_sha256": "3bfb662271815bf3dcc7fa002ed2ffe2dc0c407b5516cc5fca5f1cd49423f037",
+      "status_bytes": [
+        64,
+        0
+      ],
+      "checksum": 225
+    },
+    {
+      "case": "paralysis",
+      "repeat": 2,
+      "provider": "source",
+      "record": "audit-916-original-flute-status-voalgp65/paralysis-2/record.json",
+      "record_sha256": "528f1101f2f4a91176668e8856fd0a2cf5906bb37e7a0dd5547a4e687acf2655",
+      "sram": "audit-916-original-flute-status-voalgp65/paralysis-2/original.gbc.ram",
+      "sram_sha256": "b40d45c73be30a4fd2cbe3dfd89ab468fcb865ae6ee55013ca71b0dfcd12b943",
+      "status_bytes": [
+        64,
+        0
+      ],
+      "checksum": 33
+    },
+    {
+      "case": "paralysis",
+      "repeat": 2,
+      "provider": "before",
+      "record": "audit-916-native-flute-before-z93o_abz/paralysis-2/record.json",
+      "record_sha256": "dff143fab9e9d593019c972ba1c509862eb92ca88e47f1d38074a9ce9233a467",
+      "sram": "audit-916-native-flute-before-z93o_abz/paralysis-2/ordinary.sav",
+      "sram_sha256": "4149892822835311e3e90aeb402a3dbc7602bc4add4a9bc00558fff135a420e5",
+      "status_bytes": [
+        0,
+        0
+      ],
+      "checksum": 25
+    },
+    {
+      "case": "paralysis",
+      "repeat": 2,
+      "provider": "after",
+      "record": "audit-916-native-flute-after-87mkif1p/paralysis-2/record.json",
+      "record_sha256": "d58bc4eabeea69323136d6c8278faf84a613743f9532de2a7def7909310dffad",
+      "sram": "audit-916-native-flute-after-87mkif1p/paralysis-2/ordinary.sav",
+      "sram_sha256": "cdcdfa20fadf2f69760caee0bc5088e195acde19e0696a81969b02d65de46399",
+      "status_bytes": [
+        64,
+        0
+      ],
+      "checksum": 2
+    },
+    {
+      "case": "sleep",
+      "repeat": 1,
+      "provider": "source",
+      "record": "audit-916-original-flute-status-voalgp65/sleep-1/record.json",
+      "record_sha256": "691b9480764667646ed1b63ea275096e3f4432bc373bd0e9a0e64841912764d3",
+      "sram": "audit-916-original-flute-status-voalgp65/sleep-1/original.gbc.ram",
+      "sram_sha256": "81d51cf13cdee7e2becfad4b81e1a8718a85de48ca94c3d539c174e35af20c0b",
+      "status_bytes": [
+        0,
+        0
+      ],
+      "checksum": 63
+    },
+    {
+      "case": "sleep",
+      "repeat": 1,
+      "provider": "before",
+      "record": "audit-916-native-flute-before-z945hjkr/sleep-1/record.json",
+      "record_sha256": "e6a7056dcf019ca117011268f17798e801da05dbd690216e0bb785ee474a60c9",
+      "sram": "audit-916-native-flute-before-z945hjkr/sleep-1/ordinary.sav",
+      "sram_sha256": "4149892822835311e3e90aeb402a3dbc7602bc4add4a9bc00558fff135a420e5",
+      "status_bytes": [
+        0,
+        0
+      ],
+      "checksum": 25
+    },
+    {
+      "case": "sleep",
+      "repeat": 1,
+      "provider": "after",
+      "record": "audit-916-native-flute-after-87mkif1p/sleep-1/record.json",
+      "record_sha256": "fc4e7ab84932a9cb047a78d9884eef92155f55e29f7102c69b0325ee0659bde4",
+      "sram": "audit-916-native-flute-after-87mkif1p/sleep-1/ordinary.sav",
+      "sram_sha256": "4149892822835311e3e90aeb402a3dbc7602bc4add4a9bc00558fff135a420e5",
+      "status_bytes": [
+        0,
+        0
+      ],
+      "checksum": 25
+    },
+    {
+      "case": "sleep",
+      "repeat": 2,
+      "provider": "source",
+      "record": "audit-916-original-flute-status-voalgp65/sleep-2/record.json",
+      "record_sha256": "f684071d0652fbbddba71bf0c26b50bf3399d53907142d26c3fea764336dc9ad",
+      "sram": "audit-916-original-flute-status-voalgp65/sleep-2/original.gbc.ram",
+      "sram_sha256": "81d51cf13cdee7e2becfad4b81e1a8718a85de48ca94c3d539c174e35af20c0b",
+      "status_bytes": [
+        0,
+        0
+      ],
+      "checksum": 63
+    },
+    {
+      "case": "sleep",
+      "repeat": 2,
+      "provider": "before",
+      "record": "audit-916-native-flute-before-z945hjkr/sleep-2/record.json",
+      "record_sha256": "dfbdc1b55fcd1ad6b2b31ee9e29ddae65a545abec433aa24c3cff37227073b1b",
+      "sram": "audit-916-native-flute-before-z945hjkr/sleep-2/ordinary.sav",
+      "sram_sha256": "4149892822835311e3e90aeb402a3dbc7602bc4add4a9bc00558fff135a420e5",
+      "status_bytes": [
+        0,
+        0
+      ],
+      "checksum": 25
+    },
+    {
+      "case": "sleep",
+      "repeat": 2,
+      "provider": "after",
+      "record": "audit-916-native-flute-after-87mkif1p/sleep-2/record.json",
+      "record_sha256": "581a121e8f694de329ec83613d2edfa6e709643741518728743d8c2c2d56d59b",
+      "sram": "audit-916-native-flute-after-87mkif1p/sleep-2/ordinary.sav",
+      "sram_sha256": "4149892822835311e3e90aeb402a3dbc7602bc4add4a9bc00558fff135a420e5",
+      "status_bytes": [
+        0,
+        0
+      ],
+      "checksum": 25
+    },
+    {
+      "case": "no-sleeper",
+      "repeat": 1,
+      "provider": "source",
+      "record": "audit-916-original-flute-status-voalgp65/no-sleeper-1/record.json",
+      "record_sha256": "992ad370e92098872257011fae50d62b40d4e09e18a366c9f93a58eae5b24f44",
+      "sram": "audit-916-original-flute-status-voalgp65/no-sleeper-1/original.gbc.ram",
+      "sram_sha256": "faf9558cbabd7967e43394a6884dbbccfc8f0dd686287562f17f7b86b595d31f",
+      "status_bytes": [
+        8,
+        0
+      ],
+      "checksum": 179
+    },
+    {
+      "case": "no-sleeper",
+      "repeat": 1,
+      "provider": "before",
+      "record": "audit-916-native-flute-before-z945hjkr/no-sleeper-1/record.json",
+      "record_sha256": "915d432b0e8e032c382a75cafa2c023b39a1290764833a3d1fee6b2eced99d2b",
+      "sram": "audit-916-native-flute-before-z945hjkr/no-sleeper-1/ordinary.sav",
+      "sram_sha256": "f2aa93cc68b84b382e264ccb47f54c19153e34b581add1dbc9981a9d25341f42",
+      "status_bytes": [
+        8,
+        0
+      ],
+      "checksum": 18
+    },
+    {
+      "case": "no-sleeper",
+      "repeat": 1,
+      "provider": "after",
+      "record": "audit-916-native-flute-after-87mkif1p/no-sleeper-1/record.json",
+      "record_sha256": "181e7179f533dce5404ed506995d6103cff56f691ffd05a4146bde8a9eec0650",
+      "sram": "audit-916-native-flute-after-87mkif1p/no-sleeper-1/ordinary.sav",
+      "sram_sha256": "f2aa93cc68b84b382e264ccb47f54c19153e34b581add1dbc9981a9d25341f42",
+      "status_bytes": [
+        8,
+        0
+      ],
+      "checksum": 18
+    },
+    {
+      "case": "no-sleeper",
+      "repeat": 2,
+      "provider": "source",
+      "record": "audit-916-original-flute-status-voalgp65/no-sleeper-2/record.json",
+      "record_sha256": "07023855149295088323f49a53cfd6151898a3a4078241cce9d4639c4f43a8cb",
+      "sram": "audit-916-original-flute-status-voalgp65/no-sleeper-2/original.gbc.ram",
+      "sram_sha256": "faf9558cbabd7967e43394a6884dbbccfc8f0dd686287562f17f7b86b595d31f",
+      "status_bytes": [
+        8,
+        0
+      ],
+      "checksum": 179
+    },
+    {
+      "case": "no-sleeper",
+      "repeat": 2,
+      "provider": "before",
+      "record": "audit-916-native-flute-before-z945hjkr/no-sleeper-2/record.json",
+      "record_sha256": "e89b4a136c26433fcad9db94fd2dfcdf2d8d390f826e76c8ab79241075d681a8",
+      "sram": "audit-916-native-flute-before-z945hjkr/no-sleeper-2/ordinary.sav",
+      "sram_sha256": "f2aa93cc68b84b382e264ccb47f54c19153e34b581add1dbc9981a9d25341f42",
+      "status_bytes": [
+        8,
+        0
+      ],
+      "checksum": 18
+    },
+    {
+      "case": "no-sleeper",
+      "repeat": 2,
+      "provider": "after",
+      "record": "audit-916-native-flute-after-87mkif1p/no-sleeper-2/record.json",
+      "record_sha256": "d16a250af6a8225791ec8a0f9a3be7140b43f765d49c618e5c02e70c70c9f9a8",
+      "sram": "audit-916-native-flute-after-87mkif1p/no-sleeper-2/ordinary.sav",
+      "sram_sha256": "f2aa93cc68b84b382e264ccb47f54c19153e34b581add1dbc9981a9d25341f42",
+      "status_bytes": [
+        8,
+        0
+      ],
+      "checksum": 18
+    }
+  ],
+  "native_pairs": [
+    {
+      "case": "poison",
+      "repeat": 1,
+      "frame": 1020,
+      "fixture_sha256": "c2c43b45cb0432269f1e47e4bbba497e8764601c4ff73af047116bdc71c1ba7b",
+      "input_prefix_sha256": "7b460cf477392caad10903040292d6accd8dda964c6f62186e639f5e5356b2f9",
+      "before": "audit-916-native-flute-before-z93o_abz/poison-1/flute-notice.png",
+      "after": "audit-916-native-flute-after-87mkif1p/poison-1/flute-notice.png",
+      "before_png_sha256": "244fa6cd9b331279b184c9dd453d9b1eaf4ba21199b1b0cebade29c95a51fdef",
+      "after_png_sha256": "02f649cb3a41f9dd72649eb6eb15d91057ff86327b382b9774a45b8f2bd54d6e"
+    },
+    {
+      "case": "poison",
+      "repeat": 2,
+      "frame": 1020,
+      "fixture_sha256": "c2c43b45cb0432269f1e47e4bbba497e8764601c4ff73af047116bdc71c1ba7b",
+      "input_prefix_sha256": "7b460cf477392caad10903040292d6accd8dda964c6f62186e639f5e5356b2f9",
+      "before": "audit-916-native-flute-before-z93o_abz/poison-2/flute-notice.png",
+      "after": "audit-916-native-flute-after-87mkif1p/poison-2/flute-notice.png",
+      "before_png_sha256": "244fa6cd9b331279b184c9dd453d9b1eaf4ba21199b1b0cebade29c95a51fdef",
+      "after_png_sha256": "02f649cb3a41f9dd72649eb6eb15d91057ff86327b382b9774a45b8f2bd54d6e"
+    },
+    {
+      "case": "burn",
+      "repeat": 1,
+      "frame": 1020,
+      "fixture_sha256": "5e32b4c1bfb85a0fb01115eb26c7e9ecae7e406cfedac3a9d11f0fead5da2c0d",
+      "input_prefix_sha256": "7b460cf477392caad10903040292d6accd8dda964c6f62186e639f5e5356b2f9",
+      "before": "audit-916-native-flute-before-z93o_abz/burn-1/flute-notice.png",
+      "after": "audit-916-native-flute-after-87mkif1p/burn-1/flute-notice.png",
+      "before_png_sha256": "244fa6cd9b331279b184c9dd453d9b1eaf4ba21199b1b0cebade29c95a51fdef",
+      "after_png_sha256": "8e95e3233a650d884690e8a560b77f86bcf0ebb6a54932e252ec93e62848020d"
+    },
+    {
+      "case": "burn",
+      "repeat": 2,
+      "frame": 1020,
+      "fixture_sha256": "5e32b4c1bfb85a0fb01115eb26c7e9ecae7e406cfedac3a9d11f0fead5da2c0d",
+      "input_prefix_sha256": "7b460cf477392caad10903040292d6accd8dda964c6f62186e639f5e5356b2f9",
+      "before": "audit-916-native-flute-before-z93o_abz/burn-2/flute-notice.png",
+      "after": "audit-916-native-flute-after-87mkif1p/burn-2/flute-notice.png",
+      "before_png_sha256": "244fa6cd9b331279b184c9dd453d9b1eaf4ba21199b1b0cebade29c95a51fdef",
+      "after_png_sha256": "8e95e3233a650d884690e8a560b77f86bcf0ebb6a54932e252ec93e62848020d"
+    },
+    {
+      "case": "freeze",
+      "repeat": 1,
+      "frame": 1020,
+      "fixture_sha256": "249bb5ec342041304d8a503bda0e1335fb1e982b85d8573f18162e18e3e8cf8e",
+      "input_prefix_sha256": "7b460cf477392caad10903040292d6accd8dda964c6f62186e639f5e5356b2f9",
+      "before": "audit-916-native-flute-before-z93o_abz/freeze-1/flute-notice.png",
+      "after": "audit-916-native-flute-after-87mkif1p/freeze-1/flute-notice.png",
+      "before_png_sha256": "244fa6cd9b331279b184c9dd453d9b1eaf4ba21199b1b0cebade29c95a51fdef",
+      "after_png_sha256": "78a0dce60b1b8d5b6f8c1fb15346e23314381c83e8300a9ce5573599b45585aa"
+    },
+    {
+      "case": "freeze",
+      "repeat": 2,
+      "frame": 1020,
+      "fixture_sha256": "249bb5ec342041304d8a503bda0e1335fb1e982b85d8573f18162e18e3e8cf8e",
+      "input_prefix_sha256": "7b460cf477392caad10903040292d6accd8dda964c6f62186e639f5e5356b2f9",
+      "before": "audit-916-native-flute-before-z93o_abz/freeze-2/flute-notice.png",
+      "after": "audit-916-native-flute-after-87mkif1p/freeze-2/flute-notice.png",
+      "before_png_sha256": "244fa6cd9b331279b184c9dd453d9b1eaf4ba21199b1b0cebade29c95a51fdef",
+      "after_png_sha256": "78a0dce60b1b8d5b6f8c1fb15346e23314381c83e8300a9ce5573599b45585aa"
+    },
+    {
+      "case": "paralysis",
+      "repeat": 1,
+      "frame": 1020,
+      "fixture_sha256": "987605349f9979302c7e35198bca9b438abf5fb9427836c83829e495c955348d",
+      "input_prefix_sha256": "7b460cf477392caad10903040292d6accd8dda964c6f62186e639f5e5356b2f9",
+      "before": "audit-916-native-flute-before-z93o_abz/paralysis-1/flute-notice.png",
+      "after": "audit-916-native-flute-after-87mkif1p/paralysis-1/flute-notice.png",
+      "before_png_sha256": "244fa6cd9b331279b184c9dd453d9b1eaf4ba21199b1b0cebade29c95a51fdef",
+      "after_png_sha256": "ff4523442ff2e9f61d7873eea7ac66288bc720bfdfd48ac15f6552b084444998"
+    },
+    {
+      "case": "paralysis",
+      "repeat": 2,
+      "frame": 1020,
+      "fixture_sha256": "987605349f9979302c7e35198bca9b438abf5fb9427836c83829e495c955348d",
+      "input_prefix_sha256": "7b460cf477392caad10903040292d6accd8dda964c6f62186e639f5e5356b2f9",
+      "before": "audit-916-native-flute-before-z93o_abz/paralysis-2/flute-notice.png",
+      "after": "audit-916-native-flute-after-87mkif1p/paralysis-2/flute-notice.png",
+      "before_png_sha256": "244fa6cd9b331279b184c9dd453d9b1eaf4ba21199b1b0cebade29c95a51fdef",
+      "after_png_sha256": "ff4523442ff2e9f61d7873eea7ac66288bc720bfdfd48ac15f6552b084444998"
+    },
+    {
+      "case": "sleep",
+      "repeat": 1,
+      "frame": 1020,
+      "fixture_sha256": "b719767c8e77016d5b3804af68c8b0d32e7df13f1e58f565bf81671a354ae908",
+      "input_prefix_sha256": "7b460cf477392caad10903040292d6accd8dda964c6f62186e639f5e5356b2f9",
+      "before": "audit-916-native-flute-before-z945hjkr/sleep-1/flute-notice.png",
+      "after": "audit-916-native-flute-after-87mkif1p/sleep-1/flute-notice.png",
+      "before_png_sha256": "244fa6cd9b331279b184c9dd453d9b1eaf4ba21199b1b0cebade29c95a51fdef",
+      "after_png_sha256": "244fa6cd9b331279b184c9dd453d9b1eaf4ba21199b1b0cebade29c95a51fdef"
+    },
+    {
+      "case": "sleep",
+      "repeat": 2,
+      "frame": 1020,
+      "fixture_sha256": "b719767c8e77016d5b3804af68c8b0d32e7df13f1e58f565bf81671a354ae908",
+      "input_prefix_sha256": "7b460cf477392caad10903040292d6accd8dda964c6f62186e639f5e5356b2f9",
+      "before": "audit-916-native-flute-before-z945hjkr/sleep-2/flute-notice.png",
+      "after": "audit-916-native-flute-after-87mkif1p/sleep-2/flute-notice.png",
+      "before_png_sha256": "244fa6cd9b331279b184c9dd453d9b1eaf4ba21199b1b0cebade29c95a51fdef",
+      "after_png_sha256": "244fa6cd9b331279b184c9dd453d9b1eaf4ba21199b1b0cebade29c95a51fdef"
+    },
+    {
+      "case": "no-sleeper",
+      "repeat": 1,
+      "frame": 1020,
+      "fixture_sha256": "e045228ba0b8765d1093e2b5d4093614a7a4abc5b96f893975325698df7714ff",
+      "input_prefix_sha256": "7b460cf477392caad10903040292d6accd8dda964c6f62186e639f5e5356b2f9",
+      "before": "audit-916-native-flute-before-z945hjkr/no-sleeper-1/flute-notice.png",
+      "after": "audit-916-native-flute-after-87mkif1p/no-sleeper-1/flute-notice.png",
+      "before_png_sha256": "13120558d82fbb56eec49c91761fedabb55cb23de3a3cb54d25e74bb1218d039",
+      "after_png_sha256": "13120558d82fbb56eec49c91761fedabb55cb23de3a3cb54d25e74bb1218d039"
+    },
+    {
+      "case": "no-sleeper",
+      "repeat": 2,
+      "frame": 1020,
+      "fixture_sha256": "e045228ba0b8765d1093e2b5d4093614a7a4abc5b96f893975325698df7714ff",
+      "input_prefix_sha256": "7b460cf477392caad10903040292d6accd8dda964c6f62186e639f5e5356b2f9",
+      "before": "audit-916-native-flute-before-z945hjkr/no-sleeper-2/flute-notice.png",
+      "after": "audit-916-native-flute-after-87mkif1p/no-sleeper-2/flute-notice.png",
+      "before_png_sha256": "13120558d82fbb56eec49c91761fedabb55cb23de3a3cb54d25e74bb1218d039",
+      "after_png_sha256": "13120558d82fbb56eec49c91761fedabb55cb23de3a3cb54d25e74bb1218d039"
+    }
+  ],
+  "within_provider_repeat_whole_sram_exact_except_recorded_RNG_tail": true,
+  "recorded_repeat_differences": [
+    {
+      "case": "paralysis",
+      "provider": "after",
+      "diffs": [
+        {
+          "offset": "0x2cf0",
+          "first": 30,
+          "second": 6
+        },
+        {
+          "offset": "0x2cf1",
+          "first": 50,
+          "second": 26
+        },
+        {
+          "offset": "0x2f36",
+          "first": 16,
+          "second": 31
+        },
+        {
+          "offset": "0x3523",
+          "first": 225,
+          "second": 2
+        }
+      ],
+      "reason": "Actual ordinary RUN retries differ (5 vs2 attempts), native handle_run draws global crate::rng::random rather than BattleScreen.rng. HP/time/checksum differ; both persistent statuses64/0 and PP unchanged. Seeded escape audit remains separate."
+    }
+  ],
+  "party_pp_preserved": true,
+  "flute_count_always_one": true,
+  "source_party_only_HP_status_changed": true,
+  "limits": [
+    "Preinput constructed normal Rattata12/moves/statuses/item; not freshgame route to PokeFlute.",
+    "Live enemy non-sleep status preservation has bounded core regression, not a source/native battle status-infliction matrix.",
+    "Existing poison-step-before-wild gap pendingPR256 means HP and fieldpoison order not equated.",
+    "No audio waveform or animation timing parity claim.",
+    "Two valid sourcepoison v1 retained; v1burn lacked natural encounter after foursteps; v2 uses ordinary walking until natural encounter.",
+    "Nativev1 relative executablepath failed; v2 initialSleep debugstring assertion failed after eightvalid controls; v3 corrects representation only. All rawlogs/scripts retained.",
+    "Latest6d30 integration tests and GBA have separate identities and do not relabel frozen216 capture source."
+  ]
+}
