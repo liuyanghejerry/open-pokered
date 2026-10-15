@@ -44,3 +44,5 @@
 `evidence.zip` 使用按 SHA256 去除相同内容的存储方式；`entry-manifest.json` 保留全部原始路径与内容哈希。用 `python3 extract_evidence.py evidence.zip --verify-only` 校验，或把第二参数换为目录以重建证据。ROM 与可执行文件不在归档内，其精确哈希和源码构建清单保留；终结后仅清理了冗余副本，原始存档、截图、输入、失败记录没有删除。
 
 已整合中毒流程 master `7310d298`。生产整合提交 `8b6460af` 完整 debug app 283 通过、39 个已有忽略项、0 失败；完整 core 2888 通过。完整日志见 `master-7310-integration.json` / `master-7310-integration-logs.zip`，原截图与录制身份未重新标记。
+
+当前集成验证：已整合 master `b7c81d82`（#255）；完整 debug-server app **284通过、39忽略、0失败**。核心源码与上次完整通过时相同，没有重复执行核心测试。实际重播和截图保留各自冻结提交身份，未改称本次构建。
