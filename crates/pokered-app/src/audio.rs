@@ -122,10 +122,18 @@ mod fight_notice_sound_tests {
         game.audio.as_ref().unwrap().stop_all();
         game.update(&b); // early ACK ignored, without another sound
         assert_eq!(game.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.current_sfx_id,0);
-        for _ in 0..10 {game.update(&InputState::new());}
+        let work = game.battle.fight_text_work().unwrap();
+        assert_eq!(work.settings, pokered_core::battle::BattleTextSettings::fight_menu(3, false));
+        // One early frame above, then box3 + 24 actual glyph waits at Medium3
+        // + prompt3. These are source wait requests, not a ROM wall-frame fit.
+        for _ in 1..78 {game.update(&InputState::new());}
+        assert_eq!(game.battle.fight_text_work().unwrap().stage,
+            pokered_core::battle::FightTextStage::ManualScroll);
         game.update(&b);
-        assert!(matches!(game.battle.phase,BattlePhase::MoveSelect));
+        assert!(game.battle.fight_text_work().unwrap().returning_menu());
         assert_eq!(game.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.current_sfx_id,SfxId::PressAB as u8);
+        for _ in 0..6 {game.update(&InputState::new());}
+        assert!(matches!(game.battle.phase,BattlePhase::MoveSelect));
     }
 
     #[test]
@@ -162,7 +170,8 @@ mod fight_notice_sound_tests {
         let mut b = InputState::new();
         b.press(GbButton::B);
         game.update(&a);
-        assert!(matches!(game.battle.phase, BattlePhase::ForcedStruggle { wait_frames: 60 }));
+        assert_eq!(game.battle.fight_text_work().unwrap().stage,
+            pokered_core::battle::FightTextStage::BoxSync);
         assert_eq!(
             game.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.current_sfx_id,
             SfxId::PressAB as u8,
@@ -173,6 +182,22 @@ mod fight_notice_sound_tests {
         let mut finished = false;
         let mut audible = false;
         let mut pcm = [0.0f32; 1470];
+        // DONE is after the box and all 25 glyph waits; no prompt or ACK.
+        for frame in 1..=78 {
+            game.update(&InputState::new());
+            if frame < 78 {
+                assert!(game.battle.fight_text_work().is_some());
+            }
+            assert_eq!(serde_json::to_value(&game.battle.battle_state).unwrap(), state);
+            assert_eq!(serde_json::to_value(&game.battle.rng).unwrap(), rng);
+            let audio = game.audio.as_ref().unwrap();
+            let id = audio.manager.lock().unwrap().sequencer.current_sfx_id;
+            if id == 0 { finished = true; }
+            else { assert_eq!(id, SfxId::PressAB as u8); assert!(!finished); }
+            audio.render_pcm(&mut pcm);
+            audible |= pcm.iter().any(|sample| sample.abs() > 0.00001);
+        }
+        assert!(matches!(game.battle.phase, BattlePhase::ForcedStruggle { wait_frames: 60 }));
         for frame in 1..60 {
             game.update(if frame % 2 == 0 { &a } else { &b });
             assert!(matches!(game.battle.phase, BattlePhase::ForcedStruggle {

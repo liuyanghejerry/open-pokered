@@ -368,9 +368,9 @@ impl GameLoop for DirectBattleGame {
         }
         // DirectBattle has no save/options owner: this synthetic entry uses
         // the frontend's explicit Medium default, not an inferred SRAM flag.
-        let text_frame = crate::battle_text_input::frame(input, Some(pokered_core::battle::BattleTextSettings {
-            options_delay: 3, letter_flags_before_processor: 1, no_text_delay: false,
-        }));
+        let text_frame = crate::battle_text_input::frame(input, Some(
+            pokered_core::battle::BattleTextSettings::fight_menu(3, self.battle.link_mode),
+        ));
         let (action, text_receipt) = self.battle.update_frame_with_text_input(battle_input, text_frame);
         #[cfg(not(target_arch = "wasm32"))]
         if !ordinary_menu_sound && (text_receipt.press_ab || (fight_notice_sound.after(&self.battle.phase, false)

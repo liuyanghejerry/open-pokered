@@ -2685,20 +2685,25 @@ mod session_tests {
             let mut retained=FrameBuffer::new(config,Rgba::WHITE); let mut session=RenderSession::new();
             let mut scroll=|_:&mut [u8],_:usize,_:usize,_:i32,_:i32,_:u8|{};
             let mut seen_notice=false; let mut seen_cursor_damage=false; let mut seen_rebuilt=false;
-            for frame in 0..36 {
+            for frame in 0..98 {
                 let mut input=InputState::new();
-                match frame { 0|4=>input.press(GbButton::A), 2|30=>input.press(GbButton::Down),
-                    24=>input.press(GbButton::B), _=>{} }
+                match frame { 0|4=>input.press(GbButton::A), 2|92=>input.press(GbButton::Down),
+                    84=>input.press(GbButton::B), _=>{} }
                 game.update(&input);
                 let update=session.render(&mut game,&mut retained,&mut scroll);
-                if frame==2 || frame==30 { seen_cursor_damage |= matches!(update,FrameUpdate::Damage(_)); }
+                if frame==2 || frame==92 { seen_cursor_damage |= matches!(update,FrameUpdate::Damage(_)); }
                 if matches!(game.battle.phase,BattlePhase::ShowingText {
-                    backdrop:BattleTextBackdrop::FightMoveNotice { wait:FightNoticeWait::Ack },..}) {
+                    backdrop:BattleTextBackdrop::FightMoveNotice { wait:FightNoticeWait::Source(_) },..}) {
                     seen_notice=true;
                     assert!(BattleVisualKey::new(&game).is_none(),"notice caller is deliberately not an ordinary text cache key");
                     assert!(matches!(update,FrameUpdate::Full));
                 }
-                if frame==24 { assert!(matches!(game.battle.phase,BattlePhase::MoveSelect)); seen_rebuilt=true; }
+                if frame==84 { assert!(game.battle.fight_text_work().unwrap().returning_menu()); }
+                if frame==90 {
+                    assert!(matches!(game.battle.phase,BattlePhase::MoveSelect));
+                    assert!(game.battle.current_message.is_none());
+                    seen_rebuilt=true;
+                }
                 let mut full=FrameBuffer::new(config,Rgba::WHITE); game.draw(&mut full);
                 assert_eq!(retained.packed(),full.packed(),"frame={frame},disabled={disabled}");
                 assert_eq!(retained.display_palette(),full.display_palette());

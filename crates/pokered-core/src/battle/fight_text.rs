@@ -13,6 +13,18 @@ pub struct BattleTextSettings {
 }
 
 impl BattleTextSettings {
+    /// The FIGHT caller is outside temporary Party/List/Slide NoTextDelay
+    /// lifetimes. InitOptions establishes FAST; CableClub's LinkMenu clears
+    /// it before InitOpponent. TextCommandProcessor temporarily adds TEXT.
+    /// This models that call boundary, not a copy of a saved WRAM byte.
+    pub fn fight_menu(options_delay: u8, link_mode: bool) -> Self {
+        Self {
+            options_delay,
+            letter_flags_before_processor: u8::from(!link_mode),
+            no_text_delay: false,
+        }
+    }
+
     /// TextCommandProcessor sets BIT_TEXT_DELAY even after InitBattleCommon
     /// cleared it. The ordinary battle caller is outside the Pokedex's
     /// temporary hClearLetterPrintingDelayFlags=2 lifetime.
@@ -291,8 +303,13 @@ impl BattleScreen {
                     if work.settings.no_text_delay {
                         work.visible_chars = total;
                     } else {
-                        // PrintLetterDelay calls Joypad, unlike either Delay3.
-                        sample_pressed(&mut work.last_polled_buttons, held);
+                        // .endWait -> DelayFrame -> .done has no Joypad on
+                        // its return frame. A following glyph will call it;
+                        // the final glyph instead enters ProtectedDelay3.
+                        let short_delay_return = remaining != 0 && work.short_exit_scheduled;
+                        if !short_delay_return {
+                            sample_pressed(&mut work.last_polled_buttons, held);
+                        }
                         if !poll_wait(
                             &mut remaining,
                             &mut work.short_exit_scheduled,
@@ -302,6 +319,9 @@ impl BattleScreen {
                             break;
                         }
                         if work.visible_chars < total {
+                            // This glyph starts its own PrintLetterDelay,
+                            // including when the prior short wait just returned.
+                            sample_pressed(&mut work.last_polled_buttons, held);
                             let delay = work.settings.glyph_delay(held & 3 != 0);
                             if delay == 0 {
                                 // A raw zero options delay has no hardware wait.

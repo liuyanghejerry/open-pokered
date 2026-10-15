@@ -4692,11 +4692,14 @@ impl PokemonGame {
             }
             GameScreen::Battle => {
                 let fight_notice_sound = crate::audio::FightNoticeSound::before(&self.battle.phase);
-                // Native entry flags still require the original checkpoint.
-                // None does not invent a live NO_TEXT_DELAY value. Pending
-                // source calls nevertheless resume their phase-owned settings
-                // using the real physical held sample, including Link mirrors.
-                let text_frame = crate::battle_text_input::frame(input, None);
+                // Normal FIGHT returns outside the Party/List/Slide temporary
+                // NoTextDelay scopes. Use live options, not saved WRAM flags;
+                // an active continuation retains its own captured settings.
+                let text_settings = pokered_core::battle::BattleTextSettings::fight_menu(
+                    self.state.config.text_speed.delay_frames() as u8,
+                    self.battle.link_mode,
+                );
+                let text_frame = crate::battle_text_input::frame(input, Some(text_settings));
                 let mut text_receipt = pokered_core::battle::FightTextReceipt::default();
                 // Keep deterministic turn resolution separate from presentation:
                 // finish this move's visuals, then drain its HP, then allow the

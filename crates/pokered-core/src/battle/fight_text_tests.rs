@@ -78,13 +78,7 @@ fn wait(s: &BattleScreen) -> u16 {
 #[test]
 fn fight_processor_reenables_letters_and_retains_the_final_glyph_wait() {
     for delay in [1, 3, 5] {
-        let mut s = notice(
-            BattleTextSettings {
-                options_delay: delay,
-                ..FAST
-            },
-            false,
-        );
+        let mut s = notice(BattleTextSettings::fight_menu(delay, false), false);
         for frame in 1..=2 {
             step(&mut s, a(), 1, None);
             assert_eq!(s.fight_text_visible_message().as_deref(), Some(""));
@@ -107,11 +101,15 @@ fn fight_processor_reenables_letters_and_retains_the_final_glyph_wait() {
         assert_eq!(wait(&s), 3);
         assert!(s.fight_text_work().unwrap().arrow_visible());
     }
-    let flags = BattleTextSettings {
-        letter_flags_before_processor: 0,
-        options_delay: 5,
-        ..FAST
-    };
+    let flags = BattleTextSettings::fight_menu(5, true);
+    assert_eq!(
+        flags.letter_flags_before_processor, 0,
+        "LinkMenu clears FAST"
+    );
+    assert!(
+        !flags.no_text_delay,
+        "temporary menus returned before FIGHT"
+    );
     assert_eq!(
         flags.effective_letter_flags(),
         2,
@@ -185,6 +183,50 @@ fn fight_final_glyph_expiry_a_schedules_one_real_frame_and_is_not_an_ack() {
         FightTextStage::PromptSync
     );
     assert_eq!(wait(&s), 3);
+}
+
+#[test]
+fn fight_short_wait_return_polls_only_when_a_following_glyph_calls_joypad() {
+    let mut final_glyph = notice(FAST, false);
+    for _ in 0..26 {
+        step(&mut final_glyph, BattleInput::none(), 0, None);
+    }
+    assert_eq!(final_glyph.fight_text_work().unwrap().visible_chars, 24);
+    // A causes the final PrintLetterDelay to take .endWait -> DelayFrame.
+    assert!(!step(&mut final_glyph, a(), 1, None).press_ab);
+    assert!(final_glyph.fight_text_work().unwrap().short_exit_scheduled);
+    // Releasing on .done's return frame must not change hJoyLast's analogue.
+    assert!(!step(&mut final_glyph, BattleInput::none(), 0, None).press_ab);
+    let work = final_glyph.fight_text_work().unwrap();
+    assert_eq!(work.stage, FightTextStage::PromptSync);
+    assert_eq!(work.last_polled_buttons, 1);
+    for held in [0, 1, 1] {
+        assert!(!step(&mut final_glyph, BattleInput::none(), held, None).press_ab);
+    }
+    assert_eq!(
+        final_glyph.fight_text_work().unwrap().stage,
+        FightTextStage::ManualScroll
+    );
+    // Only an actual ManualTextScroll release poll and subsequent press ACK.
+    assert!(!step(&mut final_glyph, BattleInput::none(), 0, None).press_ab);
+    assert!(step(&mut final_glyph, a(), 1, None).press_ab);
+    assert!(final_glyph.fight_text_work().unwrap().returning_menu());
+
+    let mut next_glyph = notice(FAST, false);
+    for _ in 0..3 {
+        step(&mut next_glyph, BattleInput::none(), 1, None);
+    }
+    let work = next_glyph.fight_text_work().unwrap();
+    assert_eq!(work.visible_chars, 1);
+    assert!(work.short_exit_scheduled);
+    assert_eq!(work.last_polled_buttons, 1);
+    // The same .done return has another glyph after it. That glyph really
+    // enters PrintLetterDelay and observes the release in this update.
+    assert!(!step(&mut next_glyph, BattleInput::none(), 0, None).press_ab);
+    let work = next_glyph.fight_text_work().unwrap();
+    assert_eq!(work.stage, FightTextStage::Printing);
+    assert_eq!(work.visible_chars, 2);
+    assert_eq!(work.last_polled_buttons, 0);
 }
 
 #[test]
