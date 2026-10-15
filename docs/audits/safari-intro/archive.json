@@ -1,0 +1,10 @@
+{
+  "path": "evidence.zip",
+  "bytes": 3066656,
+  "sha256": "66a3976dc26bd56ab14cce8176d56fd67f15978e373b8998a381a301c6773895",
+  "manifest_sha256": "f06284987cacbd0e7a48f10faf1f11ccd0b5286e9147ccc10bcbe2701701a558",
+  "original_paths": 26525,
+  "unique_content_blobs": 535,
+  "every_path_content_hash_length_and_PNG_readback_verified": true,
+  "ROM_executable_emulator_states_excluded": true
+}
