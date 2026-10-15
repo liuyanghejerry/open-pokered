@@ -16,6 +16,9 @@ macro_rules! dbg_eprintln {
 pub(crate) mod rare_candy;
 #[path = "post_capture.rs"]
 pub(crate) mod post_capture;
+#[cfg(all(test, not(target_os = "none")))]
+#[path = "old_man_capture_tests.rs"]
+mod old_man_capture_tests;
 
 use crate::alloc_prelude::*;
 
@@ -4686,16 +4689,24 @@ impl PokemonGame {
                 if self.battle.presentation.waiting && self.battle_vfx.is_frame_stable() {
                     self.battle.complete_move_presentation();
                 }
-                let caught_sound_holds_input = self.battle.captured_mon.is_some()
+                // ItemUseBallText05 also plays for the old man's demonstration,
+                // which deliberately does not put a captured mon in the save.
+                let caught_sound_holds_input = (self.battle.captured_mon.is_some() || self.battle.is_old_man)
                     && self.battle.current_message.as_ref().is_some_and(|msg| msg.starts_with("All right!"))
                     && self.audio.as_ref().is_some_and(|audio| audio.is_sfx_playing() && !audio.low_health_alarm_active());
+                // ItemUseBall completes every toss/poof/shake before printing
+                // the success text and starting its three-channel jingle.
+                // Advancing the demo early lets a queued Tink replace CHAN5.
+                let demo_animation_holds_input = self.battle.is_old_man
+                    && matches!(self.battle.phase, pokered_core::battle::BattlePhase::ShowingText { .. })
+                    && !self.battle_vfx.item_animation_capture_finished();
                 let battle_input = BattleInput {
                     up: input.is_just_pressed(GbButton::Up),
                     down: input.is_just_pressed(GbButton::Down),
                     left: input.is_just_pressed(GbButton::Left),
                     right: input.is_just_pressed(GbButton::Right),
-                    a: input.is_just_pressed(GbButton::A) && !caught_sound_holds_input,
-                    b: input.is_just_pressed(GbButton::B) && !caught_sound_holds_input,
+                    a: input.is_just_pressed(GbButton::A) && !caught_sound_holds_input && !demo_animation_holds_input,
+                    b: input.is_just_pressed(GbButton::B) && !caught_sound_holds_input && !demo_animation_holds_input,
                 };
                 // ── Link battle driving ─────────────────────────────────
                 // The CORE `LinkBattleDriver` owns the battle screen (turn
@@ -4918,7 +4929,7 @@ impl PokemonGame {
                     if cur_message != self.battle_prev_message {
                         if let Some(ref msg) = cur_message {
                             let msg_lower = msg.to_lowercase();
-                            if self.battle.captured_mon.is_some() && msg_lower.starts_with("all right!") {
+                            if (self.battle.captured_mon.is_some() || self.battle.is_old_man) && msg_lower.starts_with("all right!") {
                                 audio.play_sfx(SfxId::CaughtMon);
                             } else if msg_lower.contains("super effective") {
                                 audio.play_sfx(SfxId::SuperEffective);
