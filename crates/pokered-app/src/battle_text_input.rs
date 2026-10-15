@@ -3,26 +3,24 @@
 use pokered_renderer::input::{GbButton, InputState};
 use pokered_core::battle::{BattleTextFrame, BattleTextSettings};
 
+// The pinned engine stores the source's eight logical bits directly. Make
+// that contract a compile-time check so a later engine remap cannot silently
+// change text input, and avoid eight held-key polls on every battle frame.
+const _: () = {
+    assert!(GbButton::A as u8 == 0);
+    assert!(GbButton::B as u8 == 1);
+    assert!(GbButton::Select as u8 == 2);
+    assert!(GbButton::Start as u8 == 3);
+    assert!(GbButton::Right as u8 == 4);
+    assert!(GbButton::Left as u8 == 5);
+    assert!(GbButton::Up as u8 == 6);
+    assert!(GbButton::Down as u8 == 7);
+};
+
+#[inline]
 pub(crate) fn frame(input: &InputState, settings: Option<BattleTextSettings>) -> BattleTextFrame {
-    let mut held_buttons = 0;
-    // e533 currently uses the same layout, but keep the boundary explicit:
-    // source work must not silently depend on an engine enum's discriminants.
-    for (button, source_bit) in [
-        (GbButton::A, 0x01),
-        (GbButton::B, 0x02),
-        (GbButton::Select, 0x04),
-        (GbButton::Start, 0x08),
-        (GbButton::Right, 0x10),
-        (GbButton::Left, 0x20),
-        (GbButton::Up, 0x40),
-        (GbButton::Down, 0x80),
-    ] {
-        if input.is_held(button) {
-            held_buttons |= source_bit;
-        }
-    }
     BattleTextFrame {
-        held_buttons,
+        held_buttons: input.raw_current(),
         settings,
     }
 }
