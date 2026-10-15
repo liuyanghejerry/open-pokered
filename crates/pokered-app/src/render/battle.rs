@@ -3952,7 +3952,9 @@ pub fn draw_battle(
                     | IntroPhase::WildReveal
             )
         );
-        let hide_player_hud = matches!(
+        // The demonstration has no player Pokémon: LoadPlayerBackPic keeps
+        // OldManPicBack, and DrawPlayerHUDAndHPBar is never called.
+        let hide_player_hud = screen.is_old_man || matches!(
             &screen.phase,
             BattlePhase::Intro { phase, .. }
             if matches!(
@@ -4007,7 +4009,7 @@ pub fn draw_battle(
                 wait_frames,
             } if *wait_frames < WILD_REVEAL_BALL_FRAMES
         );
-        if screen.show_player_pokeballs || wild_reveal_balls {
+        if !screen.is_old_man && (screen.show_player_pokeballs || wild_reveal_balls) {
             let player_balls: [BallStatus; 6] =
                 screen.player_pokeball_status.map(slot_status_to_pokeball);
             BallIndicators::draw_player(&mut tile_buf, &player_balls);
@@ -4090,7 +4092,11 @@ pub fn draw_battle(
                     _ => None,
                 },
                 BattlePhase::BattleOver { won, escaped, .. } => {
-                    if *escaped {
+                    if screen.is_old_man {
+                        // ItemUseBallText05 remains until the demonstration
+                        // returns to ViridianCity, without a victory message.
+                        screen.current_message.clone()
+                    } else if *escaped {
                         None
                     } else if *won {
                         Some("You won!".to_string())
@@ -4422,7 +4428,7 @@ pub fn draw_battle(
             }
         }
 
-        let show_player_trainer_back = match &screen.phase {
+        let show_player_trainer_back = screen.is_old_man || match &screen.phase {
             BattlePhase::Intro { phase, .. } => {
                 matches!(phase, IntroPhase::SilhouetteSlide | IntroPhase::WildReveal)
                     || (!screen.is_wild
@@ -6130,5 +6136,58 @@ mod zh_render_tests {
             let _ = fb_zh.save_png(&out("tui-battle-zh.png"));
             let _ = fb_en.save_png(&out("tui-battle-en.png"));
         }
+    }
+}
+
+#[cfg(test)]
+mod old_man_render_tests {
+    use super::*;
+    use pokered_renderer::resource::AssetRoot;
+
+    #[test]
+    fn tutorial_keeps_its_intro_portrait_without_player_hud_after_reveal() {
+        let root = AssetRoot::auto_detect().expect("gfx assets for tutorial render regression");
+        let mut resources = Some(ResourceManager::new(root));
+        let mut screen = BattleScreen::new(true);
+        screen.is_old_man = true;
+        screen.show_player_pokeballs = true;
+        screen.current_message = Some("All right!\nWEEDLE was caught!".to_string());
+        let mut render = |screen: &BattleScreen| {
+            let mut fb = FrameBuffer::new(
+                dotzuki_engine::render_config::RenderConfig::new(160, 144),
+                Rgba::BLACK,
+            );
+            draw_battle(screen, &mut resources, &mut fb,
+                &mut BattleVisualEffects::default(), Lang::En);
+            fb
+        };
+        let portrait = |fb: &FrameBuffer| {
+            (40..96).flat_map(|y| (8..64).map(move |x| fb.get_pixel(x, y)))
+                .collect::<Vec<_>>()
+        };
+        screen.phase = BattlePhase::Intro { phase: IntroPhase::WildReveal, wait_frames: 32 };
+        let intro = render(&screen);
+        let expected = portrait(&intro);
+        assert!(expected.iter().any(|p| p.is_some_and(|color| color != Rgba::WHITE)));
+        for phase in [BattlePhase::PlayerMenu,
+            BattlePhase::ShowingText { messages: vec![screen.current_message.clone().unwrap()],
+                current: 0, wait_frames: 0,
+                next_phase: Box::new(BattlePhase::BattleOver { won: true, escaped: false, wait_frames: 30 }) },
+            BattlePhase::BattleOver { won: true, escaped: false, wait_frames: 30 }]
+        {
+            screen.phase = phase;
+            let frame = render(&screen);
+            assert_eq!(portrait(&frame), expected, "tutorial must retain OldManPicBack");
+            assert!((56..96).all(|y| (72..160).all(|x| frame.get_pixel(x, y) == Some(Rgba::WHITE))),
+                "tutorial has neither a player HP HUD nor party balls");
+            assert!((0..32).any(|y| (0..88).any(|x| frame.get_pixel(x, y) != Some(Rgba::WHITE))),
+                "enemy name/HP HUD remains visible");
+        }
+        screen.is_old_man = false;
+        screen.phase = BattlePhase::PlayerMenu;
+        let ordinary = render(&screen);
+        assert_ne!(portrait(&ordinary), expected, "ordinary battle keeps the Pokémon back pic");
+        assert!((56..96).any(|y| (72..160).any(|x| ordinary.get_pixel(x, y) != Some(Rgba::WHITE))),
+            "ordinary battle keeps its player HUD");
     }
 }

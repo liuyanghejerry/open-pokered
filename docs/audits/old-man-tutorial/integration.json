@@ -1,0 +1,19 @@
+{
+  "source": "3c7b43e46385b2664745b124e7f9abee980aed8a",
+  "master": "dfeefa3411634e187119862288ad78d5a3e933fe",
+  "core_passed": 2885,
+  "app_passed": 272,
+  "ignored": 39,
+  "failures": 0,
+  "logs": {
+    "core": {
+      "name": "audit-901-final-899-core.log",
+      "sha256": "45d0fe3852128a12a29ae71adece64802f783d6d80c581e6d38d75e6fcea8718"
+    },
+    "app": {
+      "name": "audit-901-final-899-app.log",
+      "sha256": "c6dfea2a47bafbce8ee949de85590a126936b2282384572452cd2861c2f6c52b"
+    }
+  },
+  "capture_identity": "f44BEFORE/64fFINAL identities retained; no relabeling."
+}
