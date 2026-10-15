@@ -1935,6 +1935,8 @@ impl BattleScreen {
                             Some(pokered_data::battle_text::localize(&msg, self.is_zh));
                         BattlePhase::PlayerMenu
                     }
+                    // Handled above so that button input cannot skip it.
+                    IntroPhase::SafariMenuPreparation => BattlePhase::PlayerMenu,
                     // FlashScreen strobe (Circle/DoubleCircle only) plays
                     // BEFORE the wipe, exactly as BattleTransition_Circle /
                     // BattleTransition_DoubleCircle call it in the original.
