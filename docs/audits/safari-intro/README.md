@@ -52,4 +52,6 @@ scenarios inside the existing budget (trainer update 232 ticks). The two Rust
 files changed by this fix remain byte-identical to the frozen `6abff9bf` capture
 build. Historical captures retain their 6085/6abff identities.
 
-已整合最新 master `6d30ba5a`（#257，训练家图鉴修复）：完整核心 **2889 通过**、debug-server 应用 **290 通过/39 忽略/0 失败**。精确源码与日志见 `master-6d30-integration.json` 和日志包。原作与原生实际捕获继续保留各自冻结身份；本次整合不重标截图或存档。
+此前整合 master `6d30ba5a`（#257，训练家图鉴修复）：完整核心 **2889 通过**、debug-server 应用 **290 通过/39 忽略/0 失败**。精确源码与日志见 `master-6d30-integration.json` 和日志包。原作与原生实际捕获继续保留各自冻结身份；本次整合不重标截图或存档。
+
+已整合最新 master `8eb08f56`（#262，FLASH 触发修复）：完整核心 **2889 通过**、debug-server 应用 **290 通过/39 忽略/0 失败**。精确源码与日志见 `master-8eb-integration.json` 和日志包。原作与原生实际捕获继续保留各自冻结身份；本次整合不重标截图或存档。
