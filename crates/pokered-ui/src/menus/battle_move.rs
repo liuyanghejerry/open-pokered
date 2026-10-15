@@ -209,16 +209,17 @@ fn redraw_en_selected_info<P: Painter>(
         }
         return;
     }
-    // A disabled row omits the fixed TYPE/PP labels too. Clear their whole
-    // interior when entering/leaving it, including glyph ink below tile rows.
-    painter.draw_pixel_rect(8, 72, 72, 26, Rgba::INK_WHITE);
-    let Some(slot) = state.current_move() else {
-        return;
-    };
-    if slot.is_disabled {
+    let slot = state.current_move();
+    if slot.is_some_and(|slot| slot.is_disabled) {
+        // A disabled row replaces even the fixed TYPE/PP labels.
+        painter.draw_pixel_rect(8, 72, 72, 26, Rgba::INK_WHITE);
         painter.draw_text(TilePos::new(1, 10), "disabled!", Rgba::INK_BLACK);
         return;
     }
+    // Preserve the ordinary selection's smaller clears. They also erase the
+    // disabled notice when leaving it; repaint fixed labels before values.
+    painter.draw_pixel_rect(8, 80, 72, 10, Rgba::INK_WHITE);
+    painter.draw_pixel_rect(40, 88, 40, 10, Rgba::INK_WHITE);
     for label in layout.box_1.labels.iter() {
         painter.draw_text(
             TilePos::new(
@@ -229,6 +230,9 @@ fn redraw_en_selected_info<P: Painter>(
             label.color.into(),
         );
     }
+    let Some(slot) = slot else {
+        return;
+    };
     let type_name = move_type_display_name(render_data.move_type(slot.move_id));
     painter.draw_text(TilePos::new(1, 10), &type_name, Rgba::INK_BLACK);
     painter.draw_text(
