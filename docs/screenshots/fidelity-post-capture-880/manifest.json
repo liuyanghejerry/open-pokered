@@ -1,0 +1,91 @@
+{
+  "scope": "Same frozen729 master, exact finalAFTER legalfixture and seed12, actual prefix inputs replayed at their recordedframes. Unrecorded frame gaps are original neutral step commands from actions timestamps. Read-only captures at identicalsimulationframe; master has no corresponding addedcapture modal, so after-DATA/AskName/naming comparisons intentionally show returnedfield vsnewmodal. No direct map/battle/RAM writes, no full pixel/timing parity.",
+  "before_identity": {
+    "commit": "72912bc174a5af7059f254581dfb720574021b7f",
+    "binary_sha256": "c7f51b327265fdfc45a78d4fab562e6453e396aba8cc2e88dc15bf8a39c04477",
+    "profile": "fresh888 same isolated worktree dev opt0 debug0",
+    "feature": "debug-server",
+    "clean": true,
+    "source_hashes": {
+      "crates/pokered-app/src/game.rs": "a8e2316e62e95b2ba4e196e23657f2355f2771b89611941bfc0710975125582e",
+      "crates/pokered-core/src/battle/mod.rs": "541d0fdf14b6123c50be3611d3da7fbe1e3b635207b01043a70660262c27e5fb",
+      "crates/pokered-core/src/battle/settlement/writeback.rs": "86c09e7c72c54ba86d0839213b012e19bd2934e4935e5fb53df80fbbec1a90df",
+      "crates/pokered-core/src/pokemon/pc_box.rs": "868bea883615cdd1aef3d0590b46f2b286943399848926b94fd495548a250c37",
+      "crates/pokered-core/src/pokemon/pokedex.rs": "fa9212866dd963dc7de7a59e9860641a3d79cc40175072c18813e13a5b548bbf",
+      "Cargo.lock": "074eae4164ec091d018bbc30696ee57e878f545bbd70350b87c27e3bc776d07d"
+    },
+    "build_log_sha256": "48c518a504a7444c23cba4239887ce49983c59663b0e0d055f9d1a5566bd9577"
+  },
+  "after_identity": {
+    "commit": "b98bd9ebcbe85f74968cab207439bf7bbb72b21c",
+    "base": "72912bc174a5af7059f254581dfb720574021b7f",
+    "binary_sha256": "f574dbe43c3e23aefe4093b03b938a757949b83b74b09916d15b870f44b495e6",
+    "profile": "isolated888 dev opt0 debug0",
+    "feature": "debug-server",
+    "clean": true,
+    "source_hashes": {
+      "crates/pokered-app/src/game.rs": "15ca5e6fcc2f257c4b6a993792d6b006eabef89d80ef32667e56a317555922fd",
+      "crates/pokered-app/src/post_capture.rs": "f844e2f1b8b877f8a7a48ab133a14bfd57787348ddf8f8c1a833a6c57344b5be",
+      "crates/pokered-app/src/post_capture_tests.rs": "ce44e5bb0fceeb737803b061b968bfb59d80745d0e91e0ff4430412391456aa5",
+      "crates/pokered-app/src/agent_state.rs": "a2f05f2f42c6e835d313227a909418c59db0a12643b9f2aa37528de168c581aa",
+      "crates/pokered-core/src/battle/mod.rs": "f0d8180bd8542bfa3389dff5f5d148614e7c09ea841e3cfc04ed9b5885df68ac",
+      "crates/pokered-core/src/battle/settlement/writeback.rs": "0f5ad44795671eba557bd17a332f6f94c8fdc90299e4bc361f81ad886b5dc40f",
+      "crates/pokered-core/src/battle/settlement/mod.rs": "407202364bf771b3b9c278e4fda31a9f6276b7bb4da4be9e15a8b12f38c04d35",
+      "crates/pokered-core/src/pokemon/pc_box.rs": "868bea883615cdd1aef3d0590b46f2b286943399848926b94fd495548a250c37",
+      "crates/pokered-core/src/naming_screen.rs": "c443d3446cfe85787d7ed040ac5b8095f2d43d6509b99da1462cb643911534e0",
+      "Cargo.lock": "074eae4164ec091d018bbc30696ee57e878f545bbd70350b87c27e3bc776d07d"
+    },
+    "build_log_sha256": "824a046d29d393b45f6b300b6a263db3e38b84301f9b4409100c28a87d1085fa"
+  },
+  "fixture_sha256": "504bcd054b9b723695177ba906114ee82dd04ad964b292b617f48b220a5eb892",
+  "pairs": [
+    {
+      "tag": "caught-caption",
+      "frame": 2181,
+      "before_screen": "battle",
+      "before_png": "caught-caption-before.png",
+      "before_sha256": "581a8011c1a9ef9b0faf2656f3880f95238e142fb19c1075125c2fb573d4c10a",
+      "after_png": "caught-caption-after.png",
+      "after_sha256": "b8036e683794f2dafbd5a1780a7ae55bfdee6dbdb93410d6842f54342bb84fdf"
+    },
+    {
+      "tag": "new-dex-announcement",
+      "frame": 2498,
+      "before_screen": "overworld",
+      "before_png": "new-dex-announcement-before.png",
+      "before_sha256": "b43fa9e60222979bf12d70a6d213321a924ea9e180d63a91728f5fc0db216a45",
+      "after_png": "new-dex-announcement-after.png",
+      "after_sha256": "7a35d3eb0a7a0bcfa5699691d950932a8414dd1a0434d7ec9aff6893709b3640"
+    },
+    {
+      "tag": "nickname-choice",
+      "frame": 2709,
+      "before_screen": "overworld",
+      "before_png": "nickname-choice-before.png",
+      "before_sha256": "b43fa9e60222979bf12d70a6d213321a924ea9e180d63a91728f5fc0db216a45",
+      "after_png": "nickname-choice-after.png",
+      "after_sha256": "d5d60b2525f36c2706859da0442e6a20fd255df7fc31fcbaf12cda6e78b06f58"
+    },
+    {
+      "tag": "typed-A",
+      "frame": 2721,
+      "before_screen": "overworld",
+      "before_png": "typed-A-before.png",
+      "before_sha256": "b43fa9e60222979bf12d70a6d213321a924ea9e180d63a91728f5fc0db216a45",
+      "after_png": "typed-A-after.png",
+      "after_sha256": "61069dc7b61dfcbd84a9fb1da3837a24cc6ce659cc4be5e87b1f2f022fd2d05c"
+    },
+    {
+      "tag": "bill-transfer-last-page",
+      "frame": 2567,
+      "before_screen": "pokedex",
+      "fixture_sha256": "45f1deba653edc44e0cbc8fcf9836a0633793bb8230f35f72dcb9a0c7238331b",
+      "before_png": "bill-transfer-last-page-before.png",
+      "before_sha256": "90620f954d90a8356963581805d2edbc322609f0b90f16d3e3b3c41fab9e0347",
+      "after_png": "bill-transfer-last-page-after.png",
+      "after_sha256": "4d69c262e23b1172e2e7acd4b0f2bf27dfac02561e31c94b386844744a9ee6aa"
+    }
+  ],
+  "bill_replay_scope": "Same frozen729 master, exact finalAFTER legalfixture and seed12, actual prefix inputs replayed at their recordedframes. Unrecorded frame gaps are original neutral step commands from actions timestamps. Read-only captures at identicalsimulationframe; master has no corresponding addedcapture modal, so transfer comparison intentionally shows the baseline Pokedex list (the naming START input is received by the earlier returned field) versus the new transfer modal. No direct map/battle/RAM writes, no full pixel/timing parity.",
+  "excluded_driver_attempt": "First Bill replay captured same PNG/state at2567 but asserted baseline overworld; naming START had already returned to field and opened menus. Expected Pokedex list is now independently reproduced with unchanged exact fixture/input/frame and explicit assertion; first exit1 log preserved."
+}

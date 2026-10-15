@@ -129,6 +129,9 @@ impl PokemonGame {
     /// data mutations queued on the overworld are flushed first, so no
     /// committed effect is lost sitting in the queue.
     pub fn agent_save_state(&mut self) -> Result<GameSnapshot, StateError> {
+        if self.post_capture_active() {
+            return Err(StateError::MidMovie("post-capture".to_string()));
+        }
         let screen = self.screen_tag()?;
         self.check_not_mid_movie()?;
         self.apply_overworld_game_data_requests();
@@ -174,6 +177,7 @@ impl PokemonGame {
         // Menu continuations are outside this overworld/battle snapshot.
         // Drop the abandoned timeline before later party inputs can resume it.
         self.clear_rare_candy_continuation();
+        self.clear_post_capture_continuation();
         self.state.screen = match snapshot.screen {
             GameScreenTag::Overworld => GameScreen::Overworld,
             GameScreenTag::Battle => GameScreen::Battle,

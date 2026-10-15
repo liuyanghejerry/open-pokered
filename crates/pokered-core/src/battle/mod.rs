@@ -3156,7 +3156,7 @@ learn {learn_name}!")];
                         if let Some(bs) = self.battle_state.as_ref() {
                             self.captured_mon = Some(bs.enemy.persistent_party()[bs.enemy.active_pokemon_index].clone());
                         }
-                        msgs.push(format!("Gotcha!\n{} was caught!", name));
+                        msgs.push(format!("All right!\n{} was caught!", name));
                     }
                     Some(CaptureResult::Failed { shakes }) => {
                         self.pending_anim_events.push_back(BattleAnimEvent::Ball {
@@ -3376,7 +3376,10 @@ learn {learn_name}!")];
                     // settle) — previously the BattleOver phase set here was
                     // clobbered by the show_text_then below.
                     (
-                        "Caught!".to_string(),
+                        {
+                            let mut name_buf = [0u8; state::NAME_TEXT_BUF];
+                            format!("All right!\n{} was caught!", caught_candidate.display_name(&mut name_buf))
+                        },
                         BattlePhase::BattleOver {
                             won: true,
                             escaped: false,
@@ -6458,6 +6461,23 @@ mod old_man_tests {
             s.current_message
         );
         assert!(s.captured_mon.is_none(), "the tutorial WEEDLE is a demo — not kept");
+    }
+
+    #[test]
+    fn transformed_capture_caption_names_the_received_ditto() {
+        let mut s = BattleScreen::from_parties(true, &[mk(Species::Charmander, 5)], &[mk(Species::Weedle, 5)], None);
+        s.battle_state.as_mut().unwrap().enemy.set_status3(state::status3::TRANSFORMED);
+        s.player_bag.add_item(ItemId::MasterBall, 1).unwrap();
+        s.use_ball(ItemId::MasterBall);
+        assert_eq!(s.captured_mon.unwrap().species, Species::Ditto);
+        assert!(turn_message_for_capture(&s).contains("All right!\nDITTO was caught!"));
+    }
+
+    fn turn_message_for_capture(s: &BattleScreen) -> String {
+        match &s.phase {
+            BattlePhase::ShowingText { messages, .. } => messages.join("\n"),
+            _ => s.current_message.clone().unwrap_or_default(),
+        }
     }
 }
 
