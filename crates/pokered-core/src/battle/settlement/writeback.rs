@@ -17,6 +17,21 @@ use crate::overworld::OverworldScreen;
 use crate::save::SaveData;
 use dotzuki_engine::overworld::types::TransportMode;
 
+/// The insertion primitive's actual slot, retained until AskName returns.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CapturedLocation {
+    Party(usize),
+    CurrentBox(usize),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CapturedMonReceipt {
+    pub location: CapturedLocation,
+    pub species: pokered_data::species::Species,
+    /// Tested before the caught species' owned flag is set.
+    pub new_pokedex_entry: bool,
+}
+
 /// What [`settle_battle_into_save`] produced.
 pub struct SettleWriteback {
     /// The outcome string (`"win"` / `"lose"` / `"caught"` / `"fled"` =
@@ -32,6 +47,7 @@ pub struct SettleWriteback {
     /// applies nothing and retries on the mon's next level-up, matching
     /// `wCanEvolveFlags` semantics).
     pub pending_evolutions: Vec<EvolutionEvent>,
+    pub captured: Option<CapturedMonReceipt>,
 }
 
 /// Fold a finished battle's results into `save` + `overworld`.
@@ -48,6 +64,7 @@ pub fn settle_battle_into_save(
 
     let mut battle_outcome: Option<&'static str> = None;
     let mut pending_evolutions: Vec<EvolutionEvent> = Vec::new();
+    let mut captured_receipt = None;
     if let Some(ref settlement) = battle.settlement {
         battle_outcome = Some(match settlement.outcome {
             BattleOutcome::Win => "win",
@@ -202,14 +219,27 @@ pub fn settle_battle_into_save(
     }
     // A caught wild Pokémon joins the party (or the current PC box if the party is full)
     // and enters the Pokédex.
-    if let Some(caught) = battle.captured_mon.take() {
+    if let Some(mut caught) = battle.captured_mon.take() {
+        // _AddPartyMon / SendNewMonToBox stamp the player's raw ownership
+        // fields in both ordinary and Safari captures, preserving all other
+        // caught data (including HP, status, DVs and current PP).
+        caught.ot_id = save.game_data.player_id;
+        caught.ot_name.fill(0x50);
+        let name_len = caught.ot_name.len().min(save.player_name.len());
+        caught.ot_name[..name_len].copy_from_slice(&save.player_name[..name_len]);
         let species = caught.species;
-        if save.party.count() < 6 {
-            let _ = save.party.add(caught);
+        let new_pokedex_entry = !save.game_data.pokedex.is_owned(species);
+        let location = if save.party.count() < 6 {
+            save.party.add(caught).ok().map(CapturedLocation::Party)
         } else {
-            let _ = save.current_box.insert_new_mon(caught);
+            let location = save.current_box.insert_new_mon(caught).ok()
+                .map(CapturedLocation::CurrentBox);
             save.sync_current_box_to_storage();
-        }
+            location
+        };
+        captured_receipt = location.map(|location| CapturedMonReceipt {
+            location, species, new_pokedex_entry,
+        });
         save.game_data.pokedex.set_seen(species);
         save.game_data.pokedex.set_owned(species);
     }
@@ -223,6 +253,7 @@ pub fn settle_battle_into_save(
     SettleWriteback {
         outcome: battle_outcome,
         pending_evolutions,
+        captured: captured_receipt,
     }
 }
 

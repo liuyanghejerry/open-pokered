@@ -1,0 +1,9 @@
+{
+  "path": "evidence.zip",
+  "original_paths": 19557,
+  "unique_blobs": 655,
+  "bytes": 7054984,
+  "sha256": "17173da28ed30c868df3d678dac11ec94b0e22d0713642b699a65943e0e02f96",
+  "all_path_readback": true,
+  "source_compact_archive_sha256": "b22ea14cbec0e8fe903549406bf0221203ea11d9a7886d45baca5f21d0a9321f"
+}
