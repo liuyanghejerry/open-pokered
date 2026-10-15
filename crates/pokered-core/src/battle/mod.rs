@@ -382,6 +382,9 @@ pub enum IntroPhase {
     TrainerSendOut,
     /// Player sends out first Pokémon — "Go! X!" with Poké Ball throw animation
     PlayerSendOut,
+    /// StartBattle's DelayFrames40 before the Safari menu; the trainer stays
+    /// on screen and no party Pokémon is sent out (core.asm:155-168).
+    SafariMenuPreparation,
 }
 
 /// Sub-phases of trainer battle victory sequence.
@@ -1840,6 +1843,17 @@ impl BattleScreen {
                 phase,
                 mut wait_frames,
             } => {
+                if phase == IntroPhase::SafariMenuPreparation {
+                    // DelayFrames ignores buttons. Finish on the fortieth
+                    // update after the wild-text ACK, without consuming that
+                    // update's A/B as a Safari menu action.
+                    self.phase = if wait_frames > 1 {
+                        BattlePhase::Intro { phase, wait_frames: wait_frames - 1 }
+                    } else {
+                        BattlePhase::PlayerMenu
+                    };
+                    return ScreenAction::Continue;
+                }
                 // Button press can skip text-wait phases but NOT
                 // TransitionFlash or SilhouetteSlide (non-skippable animations).
                 let is_unskippable = matches!(
@@ -1908,9 +1922,15 @@ impl BattleScreen {
                                 wait_frames: 30,
                             }
                         } else if self.is_old_man {
-                            // The demonstration goes straight to its scripted
-                            // throw; it never sends out the player's first mon.
+                            // The demonstration throws without sending out a mon.
                             BattlePhase::PlayerMenu
+                        } else if self.is_safari {
+                            self.current_message = None;
+                            self.show_player_pokeballs = false;
+                            BattlePhase::Intro {
+                                phase: IntroPhase::SafariMenuPreparation,
+                                wait_frames: 40,
+                            }
                         } else {
                             BattlePhase::Intro {
                                 phase: IntroPhase::PlayerSendOut,
@@ -1948,6 +1968,8 @@ impl BattleScreen {
                             Some(pokered_data::battle_text::localize(&msg, self.is_zh));
                         BattlePhase::PlayerMenu
                     }
+                    // Handled above so that button input cannot skip it.
+                    IntroPhase::SafariMenuPreparation => BattlePhase::PlayerMenu,
                     // FlashScreen strobe (Circle/DoubleCircle only) plays
                     // BEFORE the wipe, exactly as BattleTransition_Circle /
                     // BattleTransition_DoubleCircle call it in the original.
@@ -6501,6 +6523,37 @@ mod safari_integration_tests {
             "RUN escapes: {:?}",
             s.current_message
         );
+    }
+
+    #[test]
+    fn safari_intro_waits_forty_frames_without_sending_out_a_mon() {
+        for buttons in [BattleInput::none(), BattleInput { a: true, ..BattleInput::none() },
+            BattleInput { b: true, ..BattleInput::none() },
+            BattleInput { a: true, b: true, ..BattleInput::none() }] {
+            let mut s = safari_battle(100, 30);
+            let hp = s.player_hp;
+            s.phase = BattlePhase::Intro { phase: IntroPhase::WildReveal, wait_frames: 0 };
+            s.update_frame(BattleInput { a: true, ..BattleInput::none() });
+            for elapsed in 0..40 {
+                assert!(matches!(s.phase, BattlePhase::Intro { phase, .. }
+                    if phase != IntroPhase::PlayerSendOut),
+                    "Safari must wait without sending out the party mon, elapsed={elapsed}: {:?}", s.phase);
+                assert!(!s.show_player_pokeballs);
+                assert_eq!(s.safari.as_ref().unwrap().balls, 30);
+                s.update_frame(buttons);
+            }
+            assert!(matches!(s.phase, BattlePhase::PlayerMenu), "40 frames reach the menu: {:?}", s.phase);
+            assert_eq!(s.player_hp, hp);
+            assert_eq!(s.safari.as_ref().unwrap().balls, 30, "A/B during the delay must not throw a ball");
+            assert!(!s.show_player_pokeballs);
+            assert!(s.current_message.as_ref().is_none_or(|text| !text.starts_with("Go!")));
+        }
+
+        let mut normal = safari_battle(100, 30);
+        normal.is_safari = false;
+        normal.phase = BattlePhase::Intro { phase: IntroPhase::WildReveal, wait_frames: 0 };
+        normal.update_frame(BattleInput { a: true, ..BattleInput::none() });
+        assert!(matches!(normal.phase, BattlePhase::Intro { phase: IntroPhase::PlayerSendOut, .. }));
     }
 
     #[test]
