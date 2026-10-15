@@ -135,7 +135,6 @@ enum ReusableBattlePhase {
     MoveSelect { cursor: usize },
     ItemMoveSelect { cursor: usize },
     BagSelect { cursor: usize },
-    ItemTargetSelect { cursor: usize },
     ShowingText { current: usize },
     PartySelect { cursor: usize },
     ShiftSwitchSelect { cursor: usize },
@@ -220,12 +219,10 @@ impl BattleVisualKey {
             BattlePhase::BagSelect => ReusableBattlePhase::BagSelect {
                 cursor: battle.bag_menu.as_ref()?.cursor(),
             },
-            BattlePhase::ItemTargetSelect { .. } => ReusableBattlePhase::ItemTargetSelect {
-                cursor: battle.party_cursor,
-            },
             BattlePhase::ShowingText {
                 current,
                 wait_frames: 0,
+                backdrop: pokered_core::battle::BattleTextBackdrop::Battle,
                 ..
             } => ReusableBattlePhase::ShowingText { current: *current },
             BattlePhase::PartySelect => ReusableBattlePhase::PartySelect {
@@ -277,7 +274,6 @@ impl BattleVisualKey {
             ReusableBattlePhase::PartySelect { .. }
                 | ReusableBattlePhase::ShiftSwitchSelect { .. }
                 | ReusableBattlePhase::PlayerFaintSwitch { .. }
-                | ReusableBattlePhase::ItemTargetSelect { .. }
         ) {
             battle.battle_state.as_ref().map_or(0, |state| {
                 for mon in state.player.party.iter() {
@@ -478,16 +474,6 @@ impl BattleVisualKey {
                 cursor,
                 previous_cursor,
                 ReusableBattlePhase::PlayerFaintSwitch { cursor: 0 },
-            ),
-            (
-                ReusableBattlePhase::ItemTargetSelect { cursor },
-                ReusableBattlePhase::ItemTargetSelect {
-                    cursor: previous_cursor,
-                },
-            ) => (
-                cursor,
-                previous_cursor,
-                ReusableBattlePhase::ItemTargetSelect { cursor: 0 },
             ),
             _ => return None,
         };
@@ -2700,6 +2686,23 @@ mod session_tests {
     use dotzuki_engine::render_config::RenderConfig;
     use pokered_core::options_menu::OptionsRow;
     use pokered_renderer::Rgba;
+
+    #[test]
+    fn medicine_negative_party_view_declines_battle_hud_cache_keys() {
+        let mut game = PokemonGame::new(GameVersion::Red);
+        game.audio = None;
+        game.state.screen = GameScreen::Battle;
+        game.battle.phase = BattlePhase::ShowingText {
+            messages: vec!["It won't have any effect.".into()], current: 0,
+            wait_frames: 0, next_phase: Box::new(BattlePhase::BagSelect),
+            backdrop: pokered_core::battle::BattleTextBackdrop::MedicineParty,
+        };
+        assert!(BattleVisualKey::new(&game).is_none(), "full party is not a HUD/text partial repaint");
+        if let BattlePhase::ShowingText { backdrop, .. } = &mut game.battle.phase {
+            *backdrop = pokered_core::battle::BattleTextBackdrop::Battle;
+        }
+        assert!(BattleVisualKey::new(&game).is_some(), "ordinary battle text keeps its previous cache route");
+    }
 
     #[test]
     fn published_images_reuse_identical_pixels_despite_pending_logical_changes() {

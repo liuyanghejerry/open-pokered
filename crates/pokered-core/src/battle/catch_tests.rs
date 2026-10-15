@@ -191,3 +191,119 @@ fn revealed_restless_soul_dodges_master_ball_but_regular_marowak_is_catchable() 
         assert_eq!(battle.player_bag.items(), &[(ItemId::MasterBall, 1)]);
     }
 }
+
+fn capture_rng_open_bag(battle: &mut BattleScreen) {
+    battle.phase = BattlePhase::PlayerMenu;
+    battle.update_frame(input(true, false));
+    battle.update_frame(input(false, true));
+    assert_eq!(battle.phase, BattlePhase::BagSelect);
+}
+
+#[test]
+fn capture_rng_owned_normal_ball_matches_stream_and_replays_snapshot() {
+    use crate::battle::pokered_rules::runtime::StdBattleRng;
+    use crate::snapshot::BattleSnapshot;
+    use dotzuki_engine::battle::rng::BattleRng;
+    let player = create_pokemon(Species::Rattata, 12, [0x9a, 0x78]).unwrap();
+    let enemy = create_pokemon(Species::Rattata, 3, [0x9a, 0x78]).unwrap();
+    let w = (enemy.max_hp as u32 * 255 / 12) / u32::from((enemy.hp / 4).max(1));
+    assert!(w <= 255);
+    let mut observed = [false; 2];
+    for seed in 0..16 {
+        let mut battle = BattleScreen::from_parties(true, &[player], &[enemy], None);
+        battle.rng = StdBattleRng::from_seed(seed);
+        let mut expected_rng = battle.rng.clone();
+        let _rand1 = expected_rng.next_u8(); // Rattata catch-rate255 accepts every byte.
+        let caught = u32::from(expected_rng.next_u8()) <= w;
+        observed[usize::from(caught)] = true;
+        battle.player_bag.add_item(ItemId::PokeBall, 2).unwrap();
+        capture_rng_open_bag(&mut battle);
+        let before = BattleSnapshot::capture(&battle);
+        let mut expected = None;
+        for _ in 0..4 {
+            before.restore_into(&mut battle);
+            battle.update_frame(input(false, true));
+            assert_eq!(
+                serde_json::to_value(&battle.rng).unwrap(),
+                serde_json::to_value(&expected_rng).unwrap()
+            );
+            assert_eq!(battle.captured_mon.is_some(), caught);
+            assert_eq!(battle.player_bag.items(), &[(ItemId::PokeBall, 1)]);
+            assert!(
+                matches!(&battle.phase, BattlePhase::ShowingText { next_phase, .. }
+                if matches!(**next_phase, BattlePhase::BattleOver { .. }) == caught)
+            );
+            if !caught {
+                assert!(
+                    matches!(&battle.phase, BattlePhase::ShowingText { next_phase, .. }
+                    if **next_phase == BattlePhase::EnemyFreeTurnAfterItem)
+                );
+            }
+            let result = serde_json::to_value(BattleSnapshot::capture(&battle)).unwrap();
+            if let Some(ref expected) = expected {
+                assert_eq!(&result, expected);
+            } else {
+                expected = Some(result);
+            }
+        }
+    }
+    assert_eq!(
+        observed,
+        [true, true],
+        "cover both successful and failed throws"
+    );
+}
+
+#[test]
+fn capture_rng_owned_master_ball_advances_once_and_consumes_once() {
+    use crate::battle::pokered_rules::runtime::StdBattleRng;
+    use dotzuki_engine::battle::rng::BattleRng;
+    let player = create_pokemon(Species::Rattata, 12, [0x9a, 0x78]).unwrap();
+    let enemy = create_pokemon(Species::Pidgey, 3, [0x9a, 0x78]).unwrap();
+    let mut battle = BattleScreen::from_parties(true, &[player], &[enemy], None);
+    battle.rng = StdBattleRng::from_seed(19);
+    let mut expected = battle.rng.clone();
+    expected.next_u8();
+    battle.player_bag.add_item(ItemId::MasterBall, 2).unwrap();
+    capture_rng_open_bag(&mut battle);
+    battle.update_frame(input(false, true));
+    assert_eq!(
+        serde_json::to_value(&battle.rng).unwrap(),
+        serde_json::to_value(expected).unwrap()
+    );
+    assert!(battle.captured_mon.is_some());
+    assert_eq!(battle.player_bag.items(), &[(ItemId::MasterBall, 1)]);
+}
+
+#[test]
+fn capture_rng_owned_refusal_and_dodge_do_not_draw() {
+    use crate::battle::pokered_rules::runtime::StdBattleRng;
+    for case in ["trainer", "full-box", "ghost", "restless-soul"] {
+        let player = create_pokemon(Species::Rattata, 12, [0x9a, 0x78]).unwrap();
+        let party = vec![player; if case == "full-box" { 6 } else { 1 }];
+        let enemy = create_pokemon(Species::Marowak, 30, [0x9a, 0x78]).unwrap();
+        let mut battle = BattleScreen::from_parties(case != "trainer", &party, &[enemy], None);
+        battle.rng = StdBattleRng::from_seed(19);
+        battle.player_box_full = case == "full-box";
+        battle.is_ghost = case == "ghost";
+        if case == "restless-soul" {
+            battle.map_id = pokered_data::maps::MapId::PokemonTower6F as u8;
+        }
+        let expected = serde_json::to_value(&battle.rng).unwrap();
+        battle.player_bag.add_item(ItemId::MasterBall, 2).unwrap();
+        capture_rng_open_bag(&mut battle);
+        battle.update_frame(input(false, true));
+        assert_eq!(
+            serde_json::to_value(&battle.rng).unwrap(),
+            expected,
+            "{case}"
+        );
+        assert!(battle.captured_mon.is_none(), "{case}");
+        let qty = if case == "full-box" { 2 } else { 1 };
+        assert_eq!(
+            battle.player_bag.items(),
+            &[(ItemId::MasterBall, qty)],
+            "{case}"
+        );
+    }
+}

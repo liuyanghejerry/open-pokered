@@ -1,0 +1,128 @@
+[
+  {
+    "case": "sendout",
+    "stage": "before",
+    "frame": 930,
+    "path": "docs/screenshots/old-man-tutorial/sendout-before.png",
+    "source_png": "audit-901-strict-prefix-before-rgrtlngt/frames/frame-000929.png",
+    "sha256": "c2e4025dc6877e834859e4f050397da283512b8bdef955e3763dba5bff278890",
+    "source": "f44e3ef500ea92b24e625bb82687a449a2ee532d",
+    "binary_sha256": "c1d22a1da550ae611bee78d831c188cec684abe15bc3649193da022577ece7d0",
+    "state": {
+      "frame_count": 930,
+      "screen": "battle",
+      "battle_phase": "Intro { phase: PlayerSendOut, wait_frames: 0 }",
+      "battle_message": null,
+      "dialogue": null,
+      "audio_sfx": {
+        "id": 0,
+        "playing": false
+      }
+    }
+  },
+  {
+    "case": "portrait",
+    "stage": "before",
+    "frame": 1050,
+    "path": "docs/screenshots/old-man-tutorial/portrait-before.png",
+    "source_png": "audit-901-strict-prefix-before-rgrtlngt/frames/frame-001049.png",
+    "sha256": "c5f2dbf5097d85ef652b2533b511652cf9d7731dc3d91d2d15b8bdb66759280b",
+    "source": "f44e3ef500ea92b24e625bb82687a449a2ee532d",
+    "binary_sha256": "c1d22a1da550ae611bee78d831c188cec684abe15bc3649193da022577ece7d0",
+    "state": {
+      "frame_count": 1050,
+      "screen": "battle",
+      "battle_phase": "ShowingText { messages: [\"OLD MAN used\\nPOK\u00e9 BALL!\", \"All right!\\nWEEDLE was caught!\"], current: 0, wait_frames: 0, next_phase: BattleOver { won: true, escaped: false, wait_frames: 30 } }",
+      "battle_message": "OLD MAN used\nPOK\u00e9 BALL!",
+      "dialogue": null,
+      "audio_sfx": {
+        "id": 0,
+        "playing": false
+      }
+    }
+  },
+  {
+    "case": "confirmation",
+    "stage": "before",
+    "frame": 1220,
+    "path": "docs/screenshots/old-man-tutorial/confirmation-before.png",
+    "source_png": "audit-901-strict-prefix-before-rgrtlngt/frames/frame-001219.png",
+    "sha256": "c5de54985d2f093bc7053d770333760f10a0eeae67d79888d3c9dc35433f4ab4",
+    "source": "f44e3ef500ea92b24e625bb82687a449a2ee532d",
+    "binary_sha256": "c1d22a1da550ae611bee78d831c188cec684abe15bc3649193da022577ece7d0",
+    "state": {
+      "frame_count": 1220,
+      "screen": "battle",
+      "battle_phase": "BattleOver { won: true, escaped: false, wait_frames: 11 }",
+      "battle_message": null,
+      "dialogue": null,
+      "audio_sfx": {
+        "id": 0,
+        "playing": false
+      }
+    }
+  },
+  {
+    "case": "sendout",
+    "stage": "final",
+    "frame": 930,
+    "path": "docs/screenshots/old-man-tutorial/sendout-final.png",
+    "source_png": "audit-901-strict-prefix-final-kj8ymldw/frames/frame-000929.png",
+    "sha256": "a4b62d3e476a78c7b86f5ac3ade2f0328f6b1c3bbbcac8fae5d45d6b289fb8d2",
+    "source": "64f15615de388244500a7f7e21c12425df9bbf50",
+    "binary_sha256": "499a71ba2cdd91f02a5cdb7f0f89c362a8e7198d81e22264ce8b95eeb08e66d5",
+    "state": {
+      "frame_count": 930,
+      "screen": "battle",
+      "battle_phase": "ShowingText { messages: [\"OLD MAN used\\nPOK\u00e9 BALL!\", \"All right!\\nWEEDLE was caught!\"], current: 0, wait_frames: 0, next_phase: BattleOver { won: true, escaped: false, wait_frames: 30 } }",
+      "battle_message": "OLD MAN used\nPOK\u00e9 BALL!",
+      "dialogue": null,
+      "audio_sfx": {
+        "id": 96,
+        "playing": true
+      }
+    }
+  },
+  {
+    "case": "portrait",
+    "stage": "final",
+    "frame": 1050,
+    "path": "docs/screenshots/old-man-tutorial/portrait-final.png",
+    "source_png": "audit-901-strict-prefix-final-kj8ymldw/frames/frame-001049.png",
+    "sha256": "853047c2e4e460e7164f230b95b448caab14357c7aec067ea5012ce8b43e48dc",
+    "source": "64f15615de388244500a7f7e21c12425df9bbf50",
+    "binary_sha256": "499a71ba2cdd91f02a5cdb7f0f89c362a8e7198d81e22264ce8b95eeb08e66d5",
+    "state": {
+      "frame_count": 1050,
+      "screen": "battle",
+      "battle_phase": "ShowingText { messages: [\"OLD MAN used\\nPOK\u00e9 BALL!\", \"All right!\\nWEEDLE was caught!\"], current: 0, wait_frames: 0, next_phase: BattleOver { won: true, escaped: false, wait_frames: 30 } }",
+      "battle_message": "OLD MAN used\nPOK\u00e9 BALL!",
+      "dialogue": null,
+      "audio_sfx": {
+        "id": 0,
+        "playing": false
+      }
+    }
+  },
+  {
+    "case": "confirmation",
+    "stage": "final",
+    "frame": 1220,
+    "path": "docs/screenshots/old-man-tutorial/confirmation-final.png",
+    "source_png": "audit-901-strict-prefix-final-kj8ymldw/frames/frame-001219.png",
+    "sha256": "0f476137f0180fa3003b1877c3fc6776dace92b742f2b9b82767bf73b66e37b2",
+    "source": "64f15615de388244500a7f7e21c12425df9bbf50",
+    "binary_sha256": "499a71ba2cdd91f02a5cdb7f0f89c362a8e7198d81e22264ce8b95eeb08e66d5",
+    "state": {
+      "frame_count": 1220,
+      "screen": "battle",
+      "battle_phase": "ShowingText { messages: [\"OLD MAN used\\nPOK\u00e9 BALL!\", \"All right!\\nWEEDLE was caught!\"], current: 1, wait_frames: 0, next_phase: BattleOver { won: true, escaped: false, wait_frames: 30 } }",
+      "battle_message": "All right!\nWEEDLE was caught!",
+      "dialogue": null,
+      "audio_sfx": {
+        "id": 101,
+        "playing": true
+      }
+    }
+  }
+]
