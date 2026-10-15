@@ -26,8 +26,9 @@ pub fn draw_pp_restore<P: Painter>(
         true,
         |frame| {
             if !proportional {
-                for (row, id) in moves.iter().filter(|m| **m != MoveId::None).enumerate() {
-                    let name: String = render_data.move_name(*id).chars().take(12).collect();
+                for (row, id) in moves.iter().enumerate() {
+                    let name: String = if *id == MoveId::None { "-".into() }
+                        else { render_data.move_name(*id).chars().take(12).collect() };
                     frame.label(1, row as u32, &name, InkColor::Black);
                 }
                 frame.cursor_glyph_at(0, cursor as u32, '▶', InkColor::Black);
@@ -35,8 +36,9 @@ pub fn draw_pp_restore<P: Painter>(
         },
     );
     if proportional {
-        for (row, id) in moves.iter().filter(|m| **m != MoveId::None).enumerate() {
-            let name: String = render_data.move_name(*id).chars().take(12).collect();
+        for (row, id) in moves.iter().enumerate() {
+            let name: String = if *id == MoveId::None { "-".into() }
+                        else { render_data.move_name(*id).chars().take(12).collect() };
             ui.painter().draw_text_px(48, (top + 1) * 8 + row as u32 * 12, &name, Rgba::INK_BLACK);
         }
         ui.painter().draw_text_px(40, (top + 1) * 8 + cursor as u32 * 12, "▶", Rgba::INK_BLACK);

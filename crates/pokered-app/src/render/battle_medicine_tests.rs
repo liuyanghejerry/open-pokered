@@ -119,7 +119,8 @@ fn pp_move_choice_and_results_borrow_full_party_and_keep_selected_original_moves
         draw_battle(&screen, &mut None, &mut actual, &mut BattleVisualEffects::default(), Lang::En);
         // Both paths retain the first party row and its HP/name, which the
         // ordinary battle HUD could never draw in this location.
-        let party = PartyScreenState::new(player_view(&screen));
+        let mut party = PartyScreenState::new(player_view(&screen));
+        party.set_cursor(1);
         let mut expected = FrameBuffer::new(config, Rgba::BLACK);
         crate::render::menu::draw_party_screen_base(&party, None, 0, &mut expected, Lang::En);
         for y in 0..40 { for x in 0..160 {
