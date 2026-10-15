@@ -1,0 +1,13 @@
+{
+  "archive": "evidence.zip",
+  "sha256": "052d70931bfae9bebc66e99b486e03b5e8e947782ec974676fb3319584eb82fb",
+  "bytes": 1521588,
+  "original_paths": 510,
+  "unique_blobs": 136,
+  "every_entry_readback_verified": true,
+  "no_ROM_executable_emulator_state": true,
+  "input_selection": "Only3 explicitly named920capture roots and an explicit file list. Initialreadonly920archive included unchanged as nested custody archive.",
+  "nested_initial_archive_sha256": "61685e9cc0891ec058bfd4e7c0d913be14b61f72118f7cf923b20652fefcd71f",
+  "nested_initial_paths": 358,
+  "nested_initial_unique_blobs": 111
+}

@@ -284,13 +284,20 @@ pub fn apply_item_to_pokemon(item: ItemId, mon: &mut Pokemon, pokedex: &mut Poke
     // Healing (HP / revive / full-restore).
     match use_healing_item(mon, item) {
         HealResult::Healed { hp_restored } => {
+            // ItemUseMedicine uses FullHealText when FULL RESTORE only
+            // cures an ailment at full HP, and PotionText when it heals HP.
+            let message = if item == ItemId::FullRestore && hp_restored == 0 {
+                format!("{}'s\nhealth returned!", mon.display_name(&mut name_buf))
+            } else {
+                format!("{}\nrecovered by {}!", mon.display_name(&mut name_buf), hp_restored)
+            };
             return used(
-                format!("{}'s HP was\nrestored by {}!", mon.display_name(&mut name_buf), hp_restored),
+                message,
                 true,
             )
         }
         HealResult::Revived { .. } => {
-            return used(format!("{} was\nrevitalized!", mon.display_name(&mut name_buf)), true)
+            return used(format!("{}\nis revitalized!", mon.display_name(&mut name_buf)), true)
         }
         HealResult::AlreadyFullHp | HealResult::NotFainted => return no_effect(),
         HealResult::NotApplicable => {}
@@ -298,7 +305,18 @@ pub fn apply_item_to_pokemon(item: ItemId, mon: &mut Pokemon, pokedex: &mut Poke
     // Status cures.
     match use_status_cure(mon, item) {
         StatusCureResult::Cured => {
-            return used(format!("{} was cured\nof its status!", mon.display_name(&mut name_buf)), true)
+            // PartyMenuItemUseMessagePointers / data/text/text_2.asm.
+            let name = mon.display_name(&mut name_buf);
+            let message = match item {
+                ItemId::Antidote => format!("{} was\ncured of poison!", name),
+                ItemId::ParlyzHeal => format!("{}'s\nrid of paralysis!", name),
+                ItemId::BurnHeal => format!("{}'s\nburn was healed!", name),
+                ItemId::IceHeal => format!("{} was\ndefrosted!", name),
+                ItemId::Awakening => format!("{}\nwoke up!", name),
+                ItemId::FullHeal => format!("{}'s\nhealth returned!", name),
+                _ => unreachable!("only status medicines return Cured"),
+            };
+            return used(message, true)
         }
         StatusCureResult::NoEffect => return no_effect(),
         StatusCureResult::NotApplicable => {}
@@ -615,6 +633,93 @@ mod tests {
     }
 
     // -- healing / status / PP / vitamins ----------------------------------
+
+    #[test]
+    fn field_medicine_hp_and_revive_use_original_named_results() {
+        for item in [ItemId::Potion, ItemId::SuperPotion, ItemId::HyperPotion,
+            ItemId::MaxPotion, ItemId::FullRestore, ItemId::FreshWater,
+            ItemId::SodaPop, ItemId::Lemonade] {
+            let mut mon = test_pokemon(Species::Bulbasaur, 12);
+            mon.set_nickname("SPROUT");
+            mon.hp = mon.max_hp - 10;
+            let mut expected = mon;
+            expected.hp = expected.max_hp;
+            assert_eq!(apply_item_to_pokemon(item, &mut mon, &mut Pokedex::new()),
+                used("SPROUT\nrecovered by 10!".into(), true), "{item:?}");
+            assert_eq!(mon, expected, "{item:?}: only HP changes");
+        }
+        for item in [ItemId::Revive, ItemId::MaxRevive] {
+            let mut mon = test_pokemon(Species::Bulbasaur, 12);
+            mon.set_nickname("ABCDEFGHIJ");
+            mon.hp = 0;
+            let mut expected = mon;
+            expected.hp = if item == ItemId::Revive { mon.max_hp / 2 } else { mon.max_hp };
+            assert_eq!(apply_item_to_pokemon(item, &mut mon, &mut Pokedex::new()),
+                used("ABCDEFGHIJ\nis revitalized!".into(), true));
+            assert_eq!(mon, expected, "{item:?}: identity, PP and other stats stay intact");
+        }
+    }
+
+    #[test]
+    fn field_medicine_status_results_name_each_original_cure() {
+        use crate::battle::state::StatusCondition::*;
+        for (item, status, message) in [
+            (ItemId::Antidote, Poison, "SPROUT was\ncured of poison!"),
+            (ItemId::ParlyzHeal, Paralysis, "SPROUT's\nrid of paralysis!"),
+            (ItemId::BurnHeal, Burn, "SPROUT's\nburn was healed!"),
+            (ItemId::IceHeal, Freeze, "SPROUT was\ndefrosted!"),
+            (ItemId::Awakening, Sleep(3), "SPROUT\nwoke up!"),
+            (ItemId::FullHeal, Poison, "SPROUT's\nhealth returned!"),
+            (ItemId::FullHeal, Sleep(2), "SPROUT's\nhealth returned!"),
+        ] {
+            let mut mon = test_pokemon(Species::Bulbasaur, 12);
+            mon.set_nickname("SPROUT");
+            mon.status = status;
+            let mut expected = mon;
+            expected.status = None;
+            assert_eq!(apply_item_to_pokemon(item, &mut mon, &mut Pokedex::new()),
+                used(message.into(), true), "{item:?}");
+            assert_eq!(mon, expected, "{item:?}: only status changes");
+        }
+    }
+
+    #[test]
+    fn field_medicine_full_restore_selects_message_from_actual_hp_restoration() {
+        use crate::battle::state::StatusCondition;
+        for (damage, message) in [(0, "SPROUT's\nhealth returned!"),
+            (10, "SPROUT\nrecovered by 10!")] {
+            let mut mon = test_pokemon(Species::Bulbasaur, 12);
+            mon.set_nickname("SPROUT");
+            mon.hp -= damage;
+            mon.status = StatusCondition::Paralysis;
+            let mut expected = mon;
+            expected.hp = expected.max_hp;
+            expected.status = StatusCondition::None;
+            assert_eq!(apply_item_to_pokemon(ItemId::FullRestore, &mut mon, &mut Pokedex::new()),
+                used(message.into(), true));
+            assert_eq!(mon, expected);
+        }
+    }
+
+    #[test]
+    fn field_medicine_refusals_and_pp_items_keep_their_existing_effects() {
+        for (item, fainted) in [(ItemId::Potion, false), (ItemId::FullRestore, false),
+            (ItemId::Revive, false), (ItemId::Antidote, false),
+            (ItemId::FullHeal, true)] {
+            let mut mon = test_pokemon(Species::Bulbasaur, 12);
+            if fainted { mon.hp = 0; }
+            let before = mon;
+            assert_eq!(apply_item_to_pokemon(item, &mut mon, &mut Pokedex::new()), no_effect());
+            assert_eq!(mon, before, "{item:?}");
+        }
+        let mut mon = test_pokemon(Species::Bulbasaur, 12);
+        mon.pp[0] = 0;
+        let mut expected = mon;
+        expected.pp[0] = 10;
+        assert_eq!(apply_item_to_pokemon(ItemId::Ether, &mut mon, &mut Pokedex::new()),
+            used("PP was\nrestored!".into(), true));
+        assert_eq!(mon, expected);
+    }
 
     #[test]
     fn potion_heals_and_consumes() {

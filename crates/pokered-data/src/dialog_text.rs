@@ -291,6 +291,27 @@ fn localize_template(text: &str) -> (String, bool) {
         }
     }
     // Bag use on party Pokémon.
+    // Original medicine templates retain the existing field translations.
+    if let Some((name, amount)) = text.split_once("\nrecovered by ") {
+        if let Some(amount) = amount.strip_suffix('!') {
+            return (format!("{}的HP回复了{}点！", crate::battle_text::zh_name(name), amount), true);
+        }
+    }
+    if let Some(name) = text.strip_suffix("\nis revitalized!") {
+        return (format!("{}恢复活力了！", crate::battle_text::zh_name(name)), true);
+    }
+    for suffix in [
+        " was\ncured of poison!",
+        "'s\nrid of paralysis!",
+        "'s\nburn was healed!",
+        " was\ndefrosted!",
+        "\nwoke up!",
+        "'s\nhealth returned!",
+    ] {
+        if let Some(name) = text.strip_suffix(suffix) {
+            return (format!("{}的异常状态\n治好了！", crate::battle_text::zh_name(name)), true);
+        }
+    }
     // "{mon}'s HP was\nrestored by {n}!"
     if let Some(idx) = text.find("'s HP was\nrestored by ") {
         if let Some(n) = text[idx + "'s HP was\nrestored by ".len()..].strip_suffix('!') {
@@ -435,6 +456,22 @@ mod tests {
         );
         assert_eq!(localize("You checked the\nTOWN MAP."), "查看了城镇地图。");
         assert_eq!(localize("REPEL's effect\nwore off."), "驱虫剂的效果\n消失了。");
+    }
+
+    #[test]
+    fn original_field_medicine_templates_preserve_existing_chinese() {
+        assert_eq!(localize("PIKACHU\nrecovered by 20!"), "皮卡丘的HP回复了20点！");
+        assert_eq!(localize("SPROUT\nrecovered by 20!"), "SPROUT的HP回复了20点！");
+        assert_eq!(localize("PIKACHU\nis revitalized!"), "皮卡丘恢复活力了！");
+        for suffix in [" was\ncured of poison!", "'s\nrid of paralysis!",
+            "'s\nburn was healed!", " was\ndefrosted!", "\nwoke up!",
+            "'s\nhealth returned!"] {
+            assert_eq!(localize(&format!("PIKACHU{suffix}")), "皮卡丘的异常状态\n治好了！");
+        }
+        for text in ["SPROUT recovered by 20!", "SPROUT is revitalized!",
+            "SPROUT's rid of paralysis!", "An unrelated notice!"] {
+            assert_eq!(localize_template(text), (text.to_string(), false), "{text}");
+        }
     }
 
     #[test]
