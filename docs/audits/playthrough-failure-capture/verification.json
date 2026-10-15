@@ -1,0 +1,1591 @@
+{
+  "scope": "879 debug tooling: actual TCP fixture export and independent failure artifact capture, no healing behavior change. 866 gameplay failure remains unreproduced by bounded constructed controls.",
+  "base_commit": "7bdba5760a5e3ee48fd91423fcca5b8bf20b13fb",
+  "frozen_source_commit": "d2eface67ce5c632cbc18972891cda5ef6716728",
+  "frozen_binary_sha256": "ebd19ae8cd767403ee8901f5d4ea597a48141f2710a67e4b63ee24a4b2ad1adb",
+  "feature": "debug-server",
+  "profile": "dev opt0 debug0",
+  "source_clean_at_build": true,
+  "raw_api_artifacts": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-879-tcp-export-v2-3yie4eb8",
+  "raw_api_verification_sha256": "1a6e91ca8869040cab44da1da5fe5627ce3e63787dbdd4803e26a5ccaba42794",
+  "capture_script_sha256": "e7f779a3430f17c768fd25c441d1cb03ef39eb27fb0f3279acd7f330f57d5c1b",
+  "actual_tcp_trials": [
+    {
+      "repeat": 1,
+      "source_commit": "d2eface67ce5c632cbc18972891cda5ef6716728",
+      "binary_sha256": "ebd19ae8cd767403ee8901f5d4ea597a48141f2710a67e4b63ee24a4b2ad1adb",
+      "fixture_sha256": "95fefd979ee98a4b3d0efbd044c48d3c83ced75e4c718e34800cbeb7a8ac2fca",
+      "exported_fixture_sha256": "a8c5a3c682369ece110d3212b9a9d0420cc19324d83b23a86804b4448f4ab3f0",
+      "frame_count": 120,
+      "snapshot_hash_before": "b3cba103d1f1846a",
+      "snapshot_hash_after": "b3cba103d1f1846a",
+      "owned_sram_sha256_before": "746bbc0524b4132812180ba16442c10be8ed21b3b8d6eff528cc91f8566a7f27",
+      "owned_sram_sha256_after": "746bbc0524b4132812180ba16442c10be8ed21b3b8d6eff528cc91f8566a7f27",
+      "png_sha256_before": "774181d9d715e972369aebb1ba38d1a4b688bc43dc90befcbca711f827dba6e0",
+      "png_sha256_after": "774181d9d715e972369aebb1ba38d1a4b688bc43dc90befcbca711f827dba6e0",
+      "captures": [
+        {
+          "file": "failure.txt",
+          "ok": true
+        },
+        {
+          "file": "failure-state.json",
+          "ok": true,
+          "command": {
+            "cmd": "get_state"
+          }
+        },
+        {
+          "file": "failure-npcs.json",
+          "ok": true,
+          "command": {
+            "cmd": "get_npcs"
+          }
+        },
+        {
+          "file": "failure-flags.json",
+          "ok": true,
+          "command": {
+            "cmd": "get_flags"
+          }
+        },
+        {
+          "file": "failure-agent.json",
+          "ok": true,
+          "command": {
+            "cmd": "get_agent_state",
+            "level": 3
+          }
+        },
+        {
+          "file": "failure-fixture.json",
+          "ok": true,
+          "command": {
+            "cmd": "export_fixture"
+          }
+        }
+      ],
+      "sidecars_initially_absent": true,
+      "normal_save": false,
+      "scope": "Existing ordinary SAVE from independent875 serves as private checkpoint sentinel only. Actual TCP export/failure writer/reboot compatibility validated; no runtime patch or save/debug SAVE call in these879 controls. Persistent fixture is not full runtime/RNG replay.",
+      "state_before_sha256": "a817a9ea25904370bd15686f520fb23d31238a8e460c5f308408bffd5419ed7d",
+      "state_after_sha256": "a817a9ea25904370bd15686f520fb23d31238a8e460c5f308408bffd5419ed7d",
+      "reloaded_map": "VermilionPokecenter",
+      "reloaded_position": [
+        3,
+        3
+      ],
+      "reloaded_party": [
+        {
+          "hp": 43,
+          "level": 29,
+          "max_hp": 79,
+          "moves": [
+            "Tackle",
+            "Growl",
+            "LeechSeed",
+            "VineWhip"
+          ],
+          "pp": [
+            5,
+            40,
+            10,
+            10
+          ],
+          "species": "Ivysaur",
+          "status": "None"
+        }
+      ],
+      "reloaded_money": 2081
+    },
+    {
+      "repeat": 2,
+      "source_commit": "d2eface67ce5c632cbc18972891cda5ef6716728",
+      "binary_sha256": "ebd19ae8cd767403ee8901f5d4ea597a48141f2710a67e4b63ee24a4b2ad1adb",
+      "fixture_sha256": "95fefd979ee98a4b3d0efbd044c48d3c83ced75e4c718e34800cbeb7a8ac2fca",
+      "exported_fixture_sha256": "a8c5a3c682369ece110d3212b9a9d0420cc19324d83b23a86804b4448f4ab3f0",
+      "frame_count": 120,
+      "snapshot_hash_before": "b3cba103d1f1846a",
+      "snapshot_hash_after": "b3cba103d1f1846a",
+      "owned_sram_sha256_before": "746bbc0524b4132812180ba16442c10be8ed21b3b8d6eff528cc91f8566a7f27",
+      "owned_sram_sha256_after": "746bbc0524b4132812180ba16442c10be8ed21b3b8d6eff528cc91f8566a7f27",
+      "png_sha256_before": "774181d9d715e972369aebb1ba38d1a4b688bc43dc90befcbca711f827dba6e0",
+      "png_sha256_after": "774181d9d715e972369aebb1ba38d1a4b688bc43dc90befcbca711f827dba6e0",
+      "captures": [
+        {
+          "file": "failure.txt",
+          "ok": true
+        },
+        {
+          "file": "failure-state.json",
+          "ok": true,
+          "command": {
+            "cmd": "get_state"
+          }
+        },
+        {
+          "file": "failure-npcs.json",
+          "ok": true,
+          "command": {
+            "cmd": "get_npcs"
+          }
+        },
+        {
+          "file": "failure-flags.json",
+          "ok": true,
+          "command": {
+            "cmd": "get_flags"
+          }
+        },
+        {
+          "file": "failure-agent.json",
+          "ok": true,
+          "command": {
+            "cmd": "get_agent_state",
+            "level": 3
+          }
+        },
+        {
+          "file": "failure-fixture.json",
+          "ok": true,
+          "command": {
+            "cmd": "export_fixture"
+          }
+        }
+      ],
+      "sidecars_initially_absent": true,
+      "normal_save": false,
+      "scope": "Existing ordinary SAVE from independent875 serves as private checkpoint sentinel only. Actual TCP export/failure writer/reboot compatibility validated; no runtime patch or save/debug SAVE call in these879 controls. Persistent fixture is not full runtime/RNG replay.",
+      "state_before_sha256": "a817a9ea25904370bd15686f520fb23d31238a8e460c5f308408bffd5419ed7d",
+      "state_after_sha256": "a817a9ea25904370bd15686f520fb23d31238a8e460c5f308408bffd5419ed7d",
+      "reloaded_map": "VermilionPokecenter",
+      "reloaded_position": [
+        3,
+        3
+      ],
+      "reloaded_party": [
+        {
+          "hp": 43,
+          "level": 29,
+          "max_hp": 79,
+          "moves": [
+            "Tackle",
+            "Growl",
+            "LeechSeed",
+            "VineWhip"
+          ],
+          "pp": [
+            5,
+            40,
+            10,
+            10
+          ],
+          "species": "Ivysaur",
+          "status": "None"
+        }
+      ],
+      "reloaded_money": 2081
+    }
+  ],
+  "failure_866_state": {
+    "active_script_effect": null,
+    "audio_sfx": {
+      "id": 0,
+      "playing": false
+    },
+    "badges": 3,
+    "battle_bag": null,
+    "battle_inventory": [
+      {
+        "item": "Tm34",
+        "qty": 1
+      },
+      {
+        "item": "HelixFossil",
+        "qty": 1
+      },
+      {
+        "item": "Tm11",
+        "qty": 1
+      },
+      {
+        "item": "Nugget",
+        "qty": 1
+      },
+      {
+        "item": "SsTicket",
+        "qty": 1
+      },
+      {
+        "item": "Tm28",
+        "qty": 1
+      }
+    ],
+    "battle_live": {
+      "enemy": {
+        "hp": 0,
+        "level": 12,
+        "max_hp": 34,
+        "species": "Mankey",
+        "status": "None"
+      },
+      "enemy_party": [
+        {
+          "hp": 0,
+          "level": 12,
+          "species": "Mankey"
+        }
+      ],
+      "is_ghost": false,
+      "player": {
+        "hp": 43,
+        "level": 29,
+        "max_hp": 79,
+        "species": "Ivysaur",
+        "status": "None"
+      },
+      "player_party": [
+        {
+          "hp": 43,
+          "level": 29,
+          "max_hp": 79,
+          "species": "Ivysaur"
+        }
+      ]
+    },
+    "battle_message": null,
+    "battle_moves": null,
+    "battle_party_cursor": 0,
+    "battle_phase": "BattleOver { won: true, escaped: false, wait_frames: 38 }",
+    "choice": null,
+    "coins": 0,
+    "credits_final_button": null,
+    "credits_phase": null,
+    "dialogue": null,
+    "dialogue_state": null,
+    "evaluation": {
+      "party": [
+        {
+          "hp": 43,
+          "level": 29,
+          "max_hp": 79,
+          "moves": [
+            "Tackle",
+            "Growl",
+            "LeechSeed",
+            "VineWhip"
+          ],
+          "pp": [
+            5,
+            40,
+            10,
+            10
+          ],
+          "species": "Ivysaur",
+          "status": "None",
+          "total_exp": 21022
+        }
+      ],
+      "party_source": "save_data",
+      "pokedex": {
+        "owned": 2,
+        "owned_numbers": [
+          1,
+          2
+        ],
+        "seen": 38,
+        "total": 151
+      }
+    },
+    "field_menu": null,
+    "frame_count": 383212,
+    "hall_of_fame_count": 0,
+    "hof_phase": null,
+    "last_outside_map": "VermilionCity",
+    "link": {
+      "cable_phase": "Inactive",
+      "role": "Host",
+      "status": "disabled",
+      "trade": null
+    },
+    "map_blocks": [
+      32,
+      16,
+      1,
+      2,
+      12,
+      13,
+      13,
+      33,
+      4,
+      5,
+      7,
+      7,
+      34,
+      35,
+      8,
+      15,
+      15,
+      15,
+      15,
+      15,
+      27,
+      14,
+      10,
+      11,
+      14,
+      15,
+      15,
+      14
+    ],
+    "map_id": 89,
+    "map_name": "VermilionPokecenter",
+    "money": 2081,
+    "party": [
+      {
+        "hp": 43,
+        "level": 29,
+        "max_hp": 79,
+        "moves": [
+          "Tackle",
+          "Growl",
+          "LeechSeed",
+          "VineWhip"
+        ],
+        "pp": [
+          5,
+          40,
+          10,
+          10
+        ],
+        "species": "Ivysaur",
+        "status": "None"
+      }
+    ],
+    "party_count": 1,
+    "pc_phase": null,
+    "player_facing": "Up",
+    "player_movement_state": "Idle",
+    "player_name": "RED",
+    "player_transport": "Walking",
+    "player_x": 3,
+    "player_y": 3,
+    "screen": "overworld",
+    "script_awaiting_battle": false,
+    "script_effect": null,
+    "script_running": false,
+    "shop_message": null,
+    "shop_phase": null,
+    "text_speed_delay_frames": 3,
+    "warp_fade": "Idle"
+  },
+  "failure_866_state_sha256": "b5dd2e6419d90b111120978d81395500870b0c099ab89a8f014aaa24222311c4",
+  "heal_controls": [
+    {
+      "raw_artifacts": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-875-heal-probe-eiwz0trj",
+      "raw_verification_sha256": "ef2f3a402b8907f0200f8c976b3fc539cb5b52f273806fa38c330a3118ea1d8c",
+      "source_commit": "906ae8f82d05006691c5aca3cb9cb2fc67b035c7",
+      "binary_sha256": "b50130e04db566195707c8c48fa57746fe71d34d8f9c0a3c62883e19c901c2bb",
+      "scope": "Private preboot constructed lawful matching injury, eight phase offsets, exact W866 helper; extra-idle fresh A control only if helper fails, ordinary SAVE readback. No runtime state patch.",
+      "trials": [
+        {
+          "offset": 0,
+          "error": null,
+          "before_hp": 43,
+          "after_hp": 79,
+          "after_max_hp": 79,
+          "saved_party": [
+            {
+              "species": "Ivysaur",
+              "nickname": [
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80
+              ],
+              "level": 29,
+              "hp": 79,
+              "max_hp": 79,
+              "attack": 42,
+              "defense": 46,
+              "speed": 45,
+              "special": 56,
+              "type1": "Grass",
+              "type2": "Poison",
+              "catch_rate": 45,
+              "moves": [
+                "Tackle",
+                "Growl",
+                "LeechSeed",
+                "VineWhip"
+              ],
+              "pp": [
+                35,
+                40,
+                10,
+                10
+              ],
+              "pp_ups": [
+                0,
+                0,
+                0,
+                0
+              ],
+              "status": "None",
+              "dv_bytes": [
+                41,
+                152
+              ],
+              "stat_exp": [
+                576,
+                0,
+                0,
+                0,
+                0
+              ],
+              "total_exp": 21022,
+              "is_traded": false,
+              "ot_id": 0,
+              "ot_name": [
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80
+              ]
+            }
+          ],
+          "ordinary_save": true,
+          "after_frame": 1695
+        },
+        {
+          "offset": 1,
+          "error": null,
+          "before_hp": 43,
+          "after_hp": 79,
+          "after_max_hp": 79,
+          "saved_party": [
+            {
+              "species": "Ivysaur",
+              "nickname": [
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80
+              ],
+              "level": 29,
+              "hp": 79,
+              "max_hp": 79,
+              "attack": 42,
+              "defense": 46,
+              "speed": 45,
+              "special": 56,
+              "type1": "Grass",
+              "type2": "Poison",
+              "catch_rate": 45,
+              "moves": [
+                "Tackle",
+                "Growl",
+                "LeechSeed",
+                "VineWhip"
+              ],
+              "pp": [
+                35,
+                40,
+                10,
+                10
+              ],
+              "pp_ups": [
+                0,
+                0,
+                0,
+                0
+              ],
+              "status": "None",
+              "dv_bytes": [
+                41,
+                152
+              ],
+              "stat_exp": [
+                576,
+                0,
+                0,
+                0,
+                0
+              ],
+              "total_exp": 21022,
+              "is_traded": false,
+              "ot_id": 0,
+              "ot_name": [
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80
+              ]
+            }
+          ],
+          "ordinary_save": true,
+          "after_frame": 1697
+        },
+        {
+          "offset": 2,
+          "error": null,
+          "before_hp": 43,
+          "after_hp": 79,
+          "after_max_hp": 79,
+          "saved_party": [
+            {
+              "species": "Ivysaur",
+              "nickname": [
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80
+              ],
+              "level": 29,
+              "hp": 79,
+              "max_hp": 79,
+              "attack": 42,
+              "defense": 46,
+              "speed": 45,
+              "special": 56,
+              "type1": "Grass",
+              "type2": "Poison",
+              "catch_rate": 45,
+              "moves": [
+                "Tackle",
+                "Growl",
+                "LeechSeed",
+                "VineWhip"
+              ],
+              "pp": [
+                35,
+                40,
+                10,
+                10
+              ],
+              "pp_ups": [
+                0,
+                0,
+                0,
+                0
+              ],
+              "status": "None",
+              "dv_bytes": [
+                41,
+                152
+              ],
+              "stat_exp": [
+                576,
+                0,
+                0,
+                0,
+                0
+              ],
+              "total_exp": 21022,
+              "is_traded": false,
+              "ot_id": 0,
+              "ot_name": [
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80
+              ]
+            }
+          ],
+          "ordinary_save": true,
+          "after_frame": 1697
+        },
+        {
+          "offset": 3,
+          "error": null,
+          "before_hp": 43,
+          "after_hp": 79,
+          "after_max_hp": 79,
+          "saved_party": [
+            {
+              "species": "Ivysaur",
+              "nickname": [
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80
+              ],
+              "level": 29,
+              "hp": 79,
+              "max_hp": 79,
+              "attack": 42,
+              "defense": 46,
+              "speed": 45,
+              "special": 56,
+              "type1": "Grass",
+              "type2": "Poison",
+              "catch_rate": 45,
+              "moves": [
+                "Tackle",
+                "Growl",
+                "LeechSeed",
+                "VineWhip"
+              ],
+              "pp": [
+                35,
+                40,
+                10,
+                10
+              ],
+              "pp_ups": [
+                0,
+                0,
+                0,
+                0
+              ],
+              "status": "None",
+              "dv_bytes": [
+                41,
+                152
+              ],
+              "stat_exp": [
+                576,
+                0,
+                0,
+                0,
+                0
+              ],
+              "total_exp": 21022,
+              "is_traded": false,
+              "ot_id": 0,
+              "ot_name": [
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80
+              ]
+            }
+          ],
+          "ordinary_save": true,
+          "after_frame": 1699
+        },
+        {
+          "offset": 4,
+          "error": null,
+          "before_hp": 43,
+          "after_hp": 79,
+          "after_max_hp": 79,
+          "saved_party": [
+            {
+              "species": "Ivysaur",
+              "nickname": [
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80
+              ],
+              "level": 29,
+              "hp": 79,
+              "max_hp": 79,
+              "attack": 42,
+              "defense": 46,
+              "speed": 45,
+              "special": 56,
+              "type1": "Grass",
+              "type2": "Poison",
+              "catch_rate": 45,
+              "moves": [
+                "Tackle",
+                "Growl",
+                "LeechSeed",
+                "VineWhip"
+              ],
+              "pp": [
+                35,
+                40,
+                10,
+                10
+              ],
+              "pp_ups": [
+                0,
+                0,
+                0,
+                0
+              ],
+              "status": "None",
+              "dv_bytes": [
+                41,
+                152
+              ],
+              "stat_exp": [
+                576,
+                0,
+                0,
+                0,
+                0
+              ],
+              "total_exp": 21022,
+              "is_traded": false,
+              "ot_id": 0,
+              "ot_name": [
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80
+              ]
+            }
+          ],
+          "ordinary_save": true,
+          "after_frame": 1699
+        },
+        {
+          "offset": 5,
+          "error": null,
+          "before_hp": 43,
+          "after_hp": 79,
+          "after_max_hp": 79,
+          "saved_party": [
+            {
+              "species": "Ivysaur",
+              "nickname": [
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80
+              ],
+              "level": 29,
+              "hp": 79,
+              "max_hp": 79,
+              "attack": 42,
+              "defense": 46,
+              "speed": 45,
+              "special": 56,
+              "type1": "Grass",
+              "type2": "Poison",
+              "catch_rate": 45,
+              "moves": [
+                "Tackle",
+                "Growl",
+                "LeechSeed",
+                "VineWhip"
+              ],
+              "pp": [
+                35,
+                40,
+                10,
+                10
+              ],
+              "pp_ups": [
+                0,
+                0,
+                0,
+                0
+              ],
+              "status": "None",
+              "dv_bytes": [
+                41,
+                152
+              ],
+              "stat_exp": [
+                576,
+                0,
+                0,
+                0,
+                0
+              ],
+              "total_exp": 21022,
+              "is_traded": false,
+              "ot_id": 0,
+              "ot_name": [
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80
+              ]
+            }
+          ],
+          "ordinary_save": true,
+          "after_frame": 1701
+        },
+        {
+          "offset": 6,
+          "error": null,
+          "before_hp": 43,
+          "after_hp": 79,
+          "after_max_hp": 79,
+          "saved_party": [
+            {
+              "species": "Ivysaur",
+              "nickname": [
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80
+              ],
+              "level": 29,
+              "hp": 79,
+              "max_hp": 79,
+              "attack": 42,
+              "defense": 46,
+              "speed": 45,
+              "special": 56,
+              "type1": "Grass",
+              "type2": "Poison",
+              "catch_rate": 45,
+              "moves": [
+                "Tackle",
+                "Growl",
+                "LeechSeed",
+                "VineWhip"
+              ],
+              "pp": [
+                35,
+                40,
+                10,
+                10
+              ],
+              "pp_ups": [
+                0,
+                0,
+                0,
+                0
+              ],
+              "status": "None",
+              "dv_bytes": [
+                41,
+                152
+              ],
+              "stat_exp": [
+                576,
+                0,
+                0,
+                0,
+                0
+              ],
+              "total_exp": 21022,
+              "is_traded": false,
+              "ot_id": 0,
+              "ot_name": [
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80
+              ]
+            }
+          ],
+          "ordinary_save": true,
+          "after_frame": 1701
+        },
+        {
+          "offset": 7,
+          "error": null,
+          "before_hp": 43,
+          "after_hp": 79,
+          "after_max_hp": 79,
+          "saved_party": [
+            {
+              "species": "Ivysaur",
+              "nickname": [
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80
+              ],
+              "level": 29,
+              "hp": 79,
+              "max_hp": 79,
+              "attack": 42,
+              "defense": 46,
+              "speed": 45,
+              "special": 56,
+              "type1": "Grass",
+              "type2": "Poison",
+              "catch_rate": 45,
+              "moves": [
+                "Tackle",
+                "Growl",
+                "LeechSeed",
+                "VineWhip"
+              ],
+              "pp": [
+                35,
+                40,
+                10,
+                10
+              ],
+              "pp_ups": [
+                0,
+                0,
+                0,
+                0
+              ],
+              "status": "None",
+              "dv_bytes": [
+                41,
+                152
+              ],
+              "stat_exp": [
+                576,
+                0,
+                0,
+                0,
+                0
+              ],
+              "total_exp": 21022,
+              "is_traded": false,
+              "ot_id": 0,
+              "ot_name": [
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80
+              ]
+            }
+          ],
+          "ordinary_save": true,
+          "after_frame": 1703
+        }
+      ]
+    },
+    {
+      "raw_artifacts": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-875-realtime-heal-probe-goq12iln",
+      "raw_verification_sha256": "81ed258c37f4385646e7bb98772801b9e3b86cdcfbba9166086121b7caae217a",
+      "source_commit": "906ae8f82d05006691c5aca3cb9cb2fc67b035c7",
+      "binary_sha256": "b50130e04db566195707c8c48fa57746fe71d34d8f9c0a3c62883e19c901c2bb",
+      "scope": "Private preboot constructed lawful matching injury, eight phase offsets, exact W866 helper; extra-idle fresh A control only if helper fails, ordinary SAVE readback. No runtime state patch.",
+      "trials": [
+        {
+          "offset": 0,
+          "error": null,
+          "before_hp": 43,
+          "after_hp": 79,
+          "after_max_hp": 79,
+          "saved_party": [
+            {
+              "species": "Ivysaur",
+              "nickname": [
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80
+              ],
+              "level": 29,
+              "hp": 79,
+              "max_hp": 79,
+              "attack": 42,
+              "defense": 46,
+              "speed": 45,
+              "special": 56,
+              "type1": "Grass",
+              "type2": "Poison",
+              "catch_rate": 45,
+              "moves": [
+                "Tackle",
+                "Growl",
+                "LeechSeed",
+                "VineWhip"
+              ],
+              "pp": [
+                35,
+                40,
+                10,
+                10
+              ],
+              "pp_ups": [
+                0,
+                0,
+                0,
+                0
+              ],
+              "status": "None",
+              "dv_bytes": [
+                41,
+                152
+              ],
+              "stat_exp": [
+                576,
+                0,
+                0,
+                0,
+                0
+              ],
+              "total_exp": 21022,
+              "is_traded": false,
+              "ot_id": 0,
+              "ot_name": [
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80
+              ]
+            }
+          ],
+          "ordinary_save": true,
+          "after_frame": 1830
+        },
+        {
+          "offset": 1,
+          "error": null,
+          "before_hp": 43,
+          "after_hp": 79,
+          "after_max_hp": 79,
+          "saved_party": [
+            {
+              "species": "Ivysaur",
+              "nickname": [
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80
+              ],
+              "level": 29,
+              "hp": 79,
+              "max_hp": 79,
+              "attack": 42,
+              "defense": 46,
+              "speed": 45,
+              "special": 56,
+              "type1": "Grass",
+              "type2": "Poison",
+              "catch_rate": 45,
+              "moves": [
+                "Tackle",
+                "Growl",
+                "LeechSeed",
+                "VineWhip"
+              ],
+              "pp": [
+                35,
+                40,
+                10,
+                10
+              ],
+              "pp_ups": [
+                0,
+                0,
+                0,
+                0
+              ],
+              "status": "None",
+              "dv_bytes": [
+                41,
+                152
+              ],
+              "stat_exp": [
+                576,
+                0,
+                0,
+                0,
+                0
+              ],
+              "total_exp": 21022,
+              "is_traded": false,
+              "ot_id": 0,
+              "ot_name": [
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80
+              ]
+            }
+          ],
+          "ordinary_save": true,
+          "after_frame": 1860
+        },
+        {
+          "offset": 2,
+          "error": null,
+          "before_hp": 43,
+          "after_hp": 79,
+          "after_max_hp": 79,
+          "saved_party": [
+            {
+              "species": "Ivysaur",
+              "nickname": [
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80
+              ],
+              "level": 29,
+              "hp": 79,
+              "max_hp": 79,
+              "attack": 42,
+              "defense": 46,
+              "speed": 45,
+              "special": 56,
+              "type1": "Grass",
+              "type2": "Poison",
+              "catch_rate": 45,
+              "moves": [
+                "Tackle",
+                "Growl",
+                "LeechSeed",
+                "VineWhip"
+              ],
+              "pp": [
+                35,
+                40,
+                10,
+                10
+              ],
+              "pp_ups": [
+                0,
+                0,
+                0,
+                0
+              ],
+              "status": "None",
+              "dv_bytes": [
+                41,
+                152
+              ],
+              "stat_exp": [
+                576,
+                0,
+                0,
+                0,
+                0
+              ],
+              "total_exp": 21022,
+              "is_traded": false,
+              "ot_id": 0,
+              "ot_name": [
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80
+              ]
+            }
+          ],
+          "ordinary_save": true,
+          "after_frame": 1860
+        },
+        {
+          "offset": 3,
+          "error": null,
+          "before_hp": 43,
+          "after_hp": 79,
+          "after_max_hp": 79,
+          "saved_party": [
+            {
+              "species": "Ivysaur",
+              "nickname": [
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80
+              ],
+              "level": 29,
+              "hp": 79,
+              "max_hp": 79,
+              "attack": 42,
+              "defense": 46,
+              "speed": 45,
+              "special": 56,
+              "type1": "Grass",
+              "type2": "Poison",
+              "catch_rate": 45,
+              "moves": [
+                "Tackle",
+                "Growl",
+                "LeechSeed",
+                "VineWhip"
+              ],
+              "pp": [
+                35,
+                40,
+                10,
+                10
+              ],
+              "pp_ups": [
+                0,
+                0,
+                0,
+                0
+              ],
+              "status": "None",
+              "dv_bytes": [
+                41,
+                152
+              ],
+              "stat_exp": [
+                576,
+                0,
+                0,
+                0,
+                0
+              ],
+              "total_exp": 21022,
+              "is_traded": false,
+              "ot_id": 0,
+              "ot_name": [
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80
+              ]
+            }
+          ],
+          "ordinary_save": true,
+          "after_frame": 1862
+        }
+      ]
+    },
+    {
+      "raw_artifacts": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-875-postbattle-v2-heal-probe-hatmmsdn",
+      "raw_verification_sha256": "85e1fc72f5c2ad86f49d08d4e8c28055720e6b429add790ea528b30154533095",
+      "source_commit": "906ae8f82d05006691c5aca3cb9cb2fc67b035c7",
+      "binary_sha256": "b50130e04db566195707c8c48fa57746fe71d34d8f9c0a3c62883e19c901c2bb",
+      "scope": "Private preboot constructed lawful matching injury, eight phase offsets, exact W866 helper; extra-idle fresh A control only if helper fails, ordinary SAVE readback. No runtime state patch.",
+      "trials": [
+        {
+          "offset": 0,
+          "error": null,
+          "before_hp": 43,
+          "after_hp": 79,
+          "after_max_hp": 79,
+          "saved_party": [
+            {
+              "species": "Ivysaur",
+              "nickname": [
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80
+              ],
+              "level": 29,
+              "hp": 79,
+              "max_hp": 79,
+              "attack": 42,
+              "defense": 46,
+              "speed": 45,
+              "special": 56,
+              "type1": "Grass",
+              "type2": "Poison",
+              "catch_rate": 45,
+              "moves": [
+                "Tackle",
+                "Growl",
+                "LeechSeed",
+                "VineWhip"
+              ],
+              "pp": [
+                35,
+                40,
+                10,
+                10
+              ],
+              "pp_ups": [
+                0,
+                0,
+                0,
+                0
+              ],
+              "status": "None",
+              "dv_bytes": [
+                41,
+                152
+              ],
+              "stat_exp": [
+                621,
+                50,
+                55,
+                30,
+                75
+              ],
+              "total_exp": 21166,
+              "is_traded": false,
+              "ot_id": 0,
+              "ot_name": [
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80
+              ]
+            }
+          ],
+          "ordinary_save": true,
+          "after_frame": 3646
+        },
+        {
+          "offset": 1,
+          "error": null,
+          "before_hp": 43,
+          "after_hp": 79,
+          "after_max_hp": 79,
+          "saved_party": [
+            {
+              "species": "Ivysaur",
+              "nickname": [
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80
+              ],
+              "level": 29,
+              "hp": 79,
+              "max_hp": 79,
+              "attack": 42,
+              "defense": 46,
+              "speed": 45,
+              "special": 56,
+              "type1": "Grass",
+              "type2": "Poison",
+              "catch_rate": 45,
+              "moves": [
+                "Tackle",
+                "Growl",
+                "LeechSeed",
+                "VineWhip"
+              ],
+              "pp": [
+                35,
+                40,
+                10,
+                10
+              ],
+              "pp_ups": [
+                0,
+                0,
+                0,
+                0
+              ],
+              "status": "None",
+              "dv_bytes": [
+                41,
+                152
+              ],
+              "stat_exp": [
+                621,
+                50,
+                55,
+                30,
+                75
+              ],
+              "total_exp": 21166,
+              "is_traded": false,
+              "ot_id": 0,
+              "ot_name": [
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80,
+                80
+              ]
+            }
+          ],
+          "ordinary_save": true,
+          "after_frame": 3695
+        }
+      ]
+    }
+  ],
+  "rejected_probe_attempts": [
+    {
+      "log": "audit-875-postbattle-heal-probe.log",
+      "reason": "Invalid/non-grass startup coordinate(12,25); real battle precondition was not met. Not a healing failure/control PASS."
+    },
+    {
+      "log": "audit-879-tcp-export.log",
+      "reason": "Initial raw input JSON omitted optional fields populated during deserialization; full party JSON comparison rejected. Authoritative v2 checks every explicitly constructed field plus full runtime hash/state/SRAM/PNG invariance."
+    }
+  ],
+  "limits": [
+    "SaveData fixture contains persistent game data and live map/position/names/flags. It is not a full runtime/RNG snapshot.",
+    "Battle-start SaveData party may differ from live battle HP/PP; failure-state and failure-agent are retained separately.",
+    "TCP observation commands do not freeze a free-running session. The invariant controls use speed0; do not infer all real-time artifact files share a frame.",
+    "Controlled879 diagnostic-capture exercise did not represent an actual new gameplay failure or ordinarySAVE validation.",
+    "No exact866failurefixture existed; original DVs/statExp/field RNG and script history were not reconstructed. Fourteen successful bounded heal controls do not prove the original issue resolved."
+  ]
+}
