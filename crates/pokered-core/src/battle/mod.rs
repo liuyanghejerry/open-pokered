@@ -3501,8 +3501,9 @@ learn {learn_name}!")];
                         mon.status = StatusCondition::None;
                     }
                 }
-                bs.player.active_mon_mut().status = StatusCondition::None;
-                bs.enemy.active_mon_mut().status = StatusCondition::None;
+                // The active battlers are already entries in these parties.
+                // ItemUsePokeFlute masks only SLP bits; another sleeping mon
+                // must not cure their poison, burn, paralysis or freeze.
                 self.sync_display_from_state();
                 self.bag_menu = None;
                 // engine/items/item_effects.asm:1732-1739: the in-battle flute
@@ -6698,6 +6699,33 @@ mod poke_flute_tests {
             "the request is consumed by the first take"
         );
         assert!(!s.enemy_status.is_sleep());
+    }
+
+    #[test]
+    fn flute_only_cures_sleep_and_preserves_other_active_statuses() {
+        for status in [
+            StatusCondition::Poison,
+            StatusCondition::Burn,
+            StatusCondition::Paralysis,
+            StatusCondition::Freeze,
+        ] {
+            let mut s = battle_screen();
+            let bs = s.battle_state.as_mut().unwrap();
+            let mut sleeper = bs.player.active_mon().clone();
+            sleeper.status = StatusCondition::Sleep(3);
+            bs.player.party.push(sleeper);
+            bs.player.active_mon_mut().status = status;
+            bs.enemy.active_mon_mut().status = status;
+            let before = bs.clone();
+            s.use_poke_flute();
+            let bs = s.battle_state.as_ref().unwrap();
+            assert_eq!(bs.player.active_mon().status, status, "player {status:?}");
+            assert_eq!(bs.enemy.active_mon().status, status, "enemy {status:?}");
+            assert_eq!(bs.player.party[1].status, StatusCondition::None);
+            assert_eq!(bs.player.active_mon().hp, before.player.active_mon().hp);
+            assert_eq!(bs.enemy.active_mon().hp, before.enemy.active_mon().hp);
+            assert!(s.take_poke_flute_sfx_pending());
+        }
     }
 
     /// Player-side sleep also triggers the jingle and wakes the whole party
