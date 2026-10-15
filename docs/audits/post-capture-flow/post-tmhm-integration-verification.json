@@ -18,5 +18,11 @@
       "log": "audit-898-candy-integrated-app.log",
       "sha256": "55c603c92ee8eafbb52dc963dbd03425ffac7c18d5e26683828592d1b250cd80"
     }
+  },
+  "logs_archive": {
+    "path": "post-tmhm-integration-logs.zip",
+    "sha256": "946eaca43770cfa88d126ce977b0a61abb57606cf5a1929c21c5efb41cbdda64",
+    "bytes": 25153,
+    "all_entry_hash_readback": true
   }
 }
