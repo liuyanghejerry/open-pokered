@@ -19,7 +19,7 @@
 
 生产改动位于 `battle/pokered_rules/p5_native.rs::confusion_gate`，将自伤条件改为 `roll >= 128`。减回合、解除混乱时不取随机数、混乱先于麻痹、后续招式处理及 PP 收费政策保持原有调用顺序。legacy 状态检查、测试侧栈 parity gate、随机流消费预测器及有意行动／自伤的向量同步采用原作边界；它们之间的一致性本身不作为原作正确性的依据。
 
-## 实际核心回归
+## 首次完整核心回归
 
 基线为已合入畏缩修复的 `e6150de4`，实际完整测试版本为 `2e76fe7d6a34abbd232c966638cd6aa6d83f846e`。在该 WT 专属的 `fidelity-1044-confusion-host-target` 上，以 `opt-level=0`、`debug=0`、`CARGO_INCREMENTAL=0` 运行一次：
 
@@ -39,6 +39,22 @@ cargo test -p pokered-core --offline --locked --target-dir "$TARGET" -j1
 
 继承的 5 项畏缩生命周期、4 项捕获结果回归，以及 `confusion_uses_typeless_modified_own_stats_and_cancels_charge` 也逐名通过。在隔离回合用例中，自伤只读 1 字节，正常攻击读 4 字节；这不是对所有战斗状态的统一取数断言。
 
+## PR279 固定版本本地集成回归
+
+在远端 PR279 的分支与 pull/head 均确认为 `1d2911cfe94c960385961e02ac2e9f5739e904df`、实际主分支仍为 `e6150de4` 后，将该固定版本用普通 merge 合入 `6257efe2`。实际集成版本为 `06d80d3dde1c2d7c9c9c5b5985cebd41397ff439`；没有冲突或人工源码调整，merge tree 与 Git 独立重算结果完全相同。相对 PR279 的差异仍仅为此前混乱修复及文档：除 `battle/mod.rs` 的两行测试模块注册外，各个混乱源码／测试文件与 `6257efe2` 字节一致；去掉该注册后，`battle/mod.rs` 与 PR279 字节一致。FIGHT receipt/API、等待、输入处理与混乱 `>= 128` 条件均保留。
+
+在同一混乱 WT 原有专属 target 上，使用同样离线、锁定依赖、单任务及 `opt-level=0`／`debug=0` 环境，只运行一次完整 `pokered-core`。结果为 **3406 项通过，0 失败**（2994 lib + 412 integration），另有 1 个已有 doc test ignored。实际 session `27214` 退出 0，runner `3227809` 与 Cargo `3228015` 的进程组均已结束。新增五项混乱、继承畏缩／捕获、FIGHT 文本／通知及 Link 空 receipt 等 35 项指定测试逐名通过；所有测试 summary 均为 0 failed。没有修改断言／fixture 或重跑同版本。
+
+本次冻结覆盖 2706 个非文档文件（2188 个编译相关文件）、702 项 GFX，以及 dotzuki `e533a3d2` 的 981 个 tracked 文件；前后源码完全一致。当前结果来自本地私有集成，没有把 PR279 合入实际主分支，也没有新增 App、原生 Game、GBA 或截图执行；PR279 自身的历史验证保持原身份。
+
+| 本次证据（同一本地证据目录） | SHA-256 |
+| --- | --- |
+| `audit-1045-confusion-pr279-integration-checkpoint-v1.json` | `5777a8221579a7c5a232acb416f8d040df98e26f962f1a7aef0e0b003996491c` |
+| `audit-1045-confusion-pr279-integrated-core-v1/result.json` | `7b8adbd7200cb5405c30e5a2363f41d1acb8e3eeb0f05dee02446834dc1e1095` |
+| `audit-1045-confusion-pr279-integrated-core-v1/full-core.log` | `d9a97a86f35d5b821192e03999c78738175f00af5db5b9700fe08eff38f8ed49` |
+| `audit-1045-confusion-pr279-integrated-core-v1/source-before.json`／`source-after.json` | 均为 `62089c4a9f0240a335de42854d25721abd20d8642593c333eda0b988afe83279` |
+| `audit-1045-confusion-pr279-integrated-core-receipt-v1.json` | `b0454fd91b5ef7f726f9e96d7d2d6854499a68b08a5ca33d62fd0947e87300b4` |
+
 ## 保留的失败记录与证据身份
 
 前一版本 `710a5d8b` 的 lib 2974 项已通过，但完整包测试在 `fidelity_battle` 的自伤用例失败：该用例仍用字节 0，却要求 HP 从 400 降至 381。随后 `2e76fe7d` 仅将该测试两处刻意自伤向量首字节改为 128，并说明原作阈值；HP 381／356、蓄力与 INVULNERABLE 断言全部保留，生产源码未因这次失败再改。新提交的完整包测试通过；旧失败记录及其部分测试范围没有改写。
@@ -54,6 +70,6 @@ cargo test -p pokered-core --offline --locked --target-dir "$TARGET" -j1
 | 独立最终复核 | `audit-1044-confusion-final-fullcore-receipt-v2.json`：`f9db39bd0cabb700f0de20e41fab323e5330fd7c93b69ea046f1fbda764893b2` |
 | 旧版本首败 | `audit-1044-confusion-full-core-v1/result.json`：`4186ff95998166c6a1a9721d025e3696917ffe3d0ea357a33a02eaecc066cc4b` |
 
-冻结覆盖 2700 个非文档文件（其中 2182 个编译相关文件）、702 项 GFX、锁定的 dotzuki `e533a3d2` 及其 981 个 tracked 文件。文档提交只新增本文件，编译源码与实际测试版本逐项等值。
+首次完整回归的冻结覆盖 2700 个非文档文件（其中 2182 个编译相关文件）、702 项 GFX、锁定的 dotzuki `e533a3d2` 及其 981 个 tracked 文件。原文档提交 `6257efe2` 仅新增本文件，编译源码与当时实际测试版本 `2e76fe7d` 逐项等值；本次补充集成结果的提交也只修改文档，编译源码与 `06d80d3d` 等值。
 
 本次为纯游戏逻辑及测试修复，按 AGENTS.md 的 pure game logic 排除项无需截图。验证范围为 core；本次未新增原生 Game、GBA、真实 Link 联机或原 ROM 逐帧验证。最终官方 CI 以 PR 实际 head 的检查记录为准。
