@@ -4636,32 +4636,20 @@ impl PokemonGame {
                 let caught_sound_holds_input = self.battle.captured_mon.is_some()
                     && self.battle.current_message.as_ref().is_some_and(|msg| msg.starts_with("All right!"))
                     && self.audio.as_ref().is_some_and(|audio| audio.is_sfx_playing() && !audio.low_health_alarm_active());
-                // ItemUseBall finishes the toss/poof/shakes before its next
-                // text page. A later ball Tink would replace CaughtMon CHAN5.
-                let capture_animation_holds_input = self.battle_vfx.ball_animation_active() && matches!(
-                    self.battle.phase, pokered_core::battle::BattlePhase::ShowingText { .. }
-                );
-                // ItemUseText00 is text_end, not text_promptbutton. Return
-                // automatically from the actual animation to its result page;
-                // later catch, failure and nickname prompts still need input.
-                // Ordinary battle frames have no ball caller to resume.
-                let automatic_ball_result = self.battle_vfx.ball_result_ready() && match &self.battle.phase {
-                    pokered_core::battle::BattlePhase::ShowingText {
-                        current: 0, wait_frames: 0, messages, ..
-                    } if messages.len() > 1 => self.battle_vfx.take_ball_result_ready(),
-                    pokered_core::battle::BattlePhase::ShowingText {
-                        current: 0, messages, ..
-                    } if messages.len() > 1 => false,
-                    _ => { self.battle_vfx.take_ball_result_ready(); false }
-                };
-                let battle_input = BattleInput {
+                let mut battle_input = BattleInput {
                     up: input.is_just_pressed(GbButton::Up),
                     down: input.is_just_pressed(GbButton::Down),
                     left: input.is_just_pressed(GbButton::Left),
                     right: input.is_just_pressed(GbButton::Right),
-                    a: automatic_ball_result || (input.is_just_pressed(GbButton::A) && !caught_sound_holds_input && !capture_animation_holds_input),
-                    b: input.is_just_pressed(GbButton::B) && !caught_sound_holds_input && !capture_animation_holds_input,
+                    a: input.is_just_pressed(GbButton::A) && !caught_sound_holds_input,
+                    b: input.is_just_pressed(GbButton::B) && !caught_sound_holds_input,
                 };
+                // Only an actual ball caller needs its text/animation gate.
+                if self.battle_vfx.ball_result_ready()
+                    || ((battle_input.a || battle_input.b) && self.battle_vfx.ball_animation_active())
+                {
+                    self.apply_ball_text_continuation(&mut battle_input);
+                }
                 // ── Link battle driving ─────────────────────────────────
                 // The CORE `LinkBattleDriver` owns the battle screen (turn
                 // resolution, RNG, end detection); `self.battle` is a
