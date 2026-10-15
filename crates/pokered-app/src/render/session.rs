@@ -2666,6 +2666,53 @@ mod session_tests {
     use pokered_renderer::Rgba;
 
     #[test]
+    fn fight_notice_context_and_ack_return_match_full_render_through_cursor_damage() {
+        use dotzuki_app::{GbButton, InputState};
+        use pokered_core::battle::{BattleScreen, BattleTextBackdrop, FightNoticeWait};
+        use pokered_core::pokemon::stats::create_pokemon_with_moves;
+        use pokered_data::{moves::MoveId, species::Species};
+        let make = |species,moves| create_pokemon_with_moves(species,50,[0x9a,0x78],moves).unwrap();
+        for disabled in [false,true] {
+            let mut game = PokemonGame::new(GameVersion::Red); game.audio=None;
+            game.state.screen=GameScreen::Battle; game.state.config.language=Lang::En;
+            game.battle=BattleScreen::from_parties(true,
+                &[make(Species::Snorlax,[MoveId::Headbutt,MoveId::Amnesia,MoveId::Rest,MoveId::BodySlam])],
+                &[make(Species::Magikarp,[MoveId::Splash,MoveId::None,MoveId::None,MoveId::None])],None);
+            game.battle.phase=BattlePhase::PlayerMenu;
+            if disabled { game.battle.battle_state.as_mut().unwrap().player.disabled_move=2; }
+            else { game.battle.battle_state.as_mut().unwrap().player.active_mon_mut().pp[1]=0; }
+            let config=RenderConfig::new(160,144);
+            let mut retained=FrameBuffer::new(config,Rgba::WHITE); let mut session=RenderSession::new();
+            let mut scroll=|_:&mut [u8],_:usize,_:usize,_:i32,_:i32,_:u8|{};
+            let mut seen_notice=false; let mut seen_cursor_damage=false; let mut seen_rebuilt=false;
+            for frame in 0..98 {
+                let mut input=InputState::new();
+                match frame { 0|4=>input.press(GbButton::A), 2|92=>input.press(GbButton::Down),
+                    84=>input.press(GbButton::B), _=>{} }
+                game.update(&input);
+                let update=session.render(&mut game,&mut retained,&mut scroll);
+                if frame==2 || frame==92 { seen_cursor_damage |= matches!(update,FrameUpdate::Damage(_)); }
+                if matches!(game.battle.phase,BattlePhase::ShowingText {
+                    backdrop:BattleTextBackdrop::FightMoveNotice { wait:FightNoticeWait::Source(_) },..}) {
+                    seen_notice=true;
+                    assert!(BattleVisualKey::new(&game).is_none(),"notice caller is deliberately not an ordinary text cache key");
+                    assert!(matches!(update,FrameUpdate::Full));
+                }
+                if frame==84 { assert!(game.battle.fight_text_work().unwrap().returning_menu()); }
+                if frame==90 {
+                    assert!(matches!(game.battle.phase,BattlePhase::MoveSelect));
+                    assert!(game.battle.current_message.is_none());
+                    seen_rebuilt=true;
+                }
+                let mut full=FrameBuffer::new(config,Rgba::WHITE); game.draw(&mut full);
+                assert_eq!(retained.packed(),full.packed(),"frame={frame},disabled={disabled}");
+                assert_eq!(retained.display_palette(),full.display_palette());
+            }
+            assert!(seen_notice && seen_rebuilt && seen_cursor_damage);
+        }
+    }
+
+    #[test]
     fn medicine_negative_party_view_declines_battle_hud_cache_keys() {
         let mut game = PokemonGame::new(GameVersion::Red);
         game.audio = None;

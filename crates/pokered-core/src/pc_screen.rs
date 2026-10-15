@@ -1572,27 +1572,13 @@ impl PcScreen {
             self.phase = target;
             return PcScreenAction::Continue;
         }
-        if self.quantity_prompt_letter_wait > 0 {
-            // After the final glyph, PrintLetterDelay samples A/B before
-            // returning DONE. Even input on the normal expiry frame calls
-            // DelayFrame once. An already scheduled short wait completes
-            // without sampling the same held key again.
-            if self.quantity_prompt_chars == count && held_ab && !self.quantity_prompt_one_frame_wait {
-                self.quantity_prompt_letter_wait = 1;
-                self.quantity_prompt_one_frame_wait = true;
-                return PcScreenAction::Continue;
-            }
-            self.quantity_prompt_letter_wait -= 1;
-            if self.quantity_prompt_letter_wait > 0 {
-                // PrintLetterDelay's A/B exit still calls DelayFrame. The
-                // next letter must appear on the following frame, not now.
-                if held_ab {
-                    self.quantity_prompt_letter_wait = 1;
-                    self.quantity_prompt_one_frame_wait = true;
-                }
-                return PcScreenAction::Continue;
-            }
-            self.quantity_prompt_one_frame_wait = false;
+        if !crate::text::letter_delay::poll_wait(
+            &mut self.quantity_prompt_letter_wait,
+            &mut self.quantity_prompt_one_frame_wait,
+            self.quantity_prompt_chars == count,
+            held_ab,
+        ) {
+            return PcScreenAction::Continue;
         }
         if self.quantity_prompt_chars < count {
             self.quantity_prompt_chars += 1;
