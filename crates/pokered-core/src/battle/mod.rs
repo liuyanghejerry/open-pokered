@@ -3344,7 +3344,7 @@ learn {learn_name}!")];
 
     fn use_ball(&mut self, ball_id: ItemId) {
         use crate::battle::capture::{
-            try_capture_with_rolls, CaptureContext, CaptureResult,
+            try_capture_with_rng, CaptureContext, CaptureResult,
         };
         use pokered_data::pokemon_data::get_base_stats;
         let ball_name = pokered_data::item_data::get_item_data(ball_id)
@@ -3431,9 +3431,9 @@ learn {learn_name}!")];
                 wild_catch_rate: catch_rate,
                 wild_status: enemy.status,
             };
-            // Rand1 uses the original's rejection sampling (the `.loop` redraw):
-            // a Great/Ultra/Safari draw above threshold is REDRAWN, never a fail.
-            let result = try_capture_with_rolls(&ctx, &mut crate::rng::random, crate::rng::random());
+            // ItemUseBall draws Rand1 first (including Master Ball), then Rand2
+            // only if the intervening guards need it. Both use the saved owner.
+            let result = try_capture_with_rng(&ctx, &mut || self.rng.next_u8());
             self.consume_selected_item();
             self.pending_item_sfx = Some(BattleItemSfx::HealAilment);
             // wPokeBallAnimData: $43 caught (3 shakes) / $20 missed /
