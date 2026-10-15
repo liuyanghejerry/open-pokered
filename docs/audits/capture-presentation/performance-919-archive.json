@@ -1,0 +1,11 @@
+{
+  "path": "performance-919-evidence.zip",
+  "bytes": 5052858,
+  "sha256": "c51a0701809522b68d5b6f537324550d0df2d37ada296d68448062c6d66752b3",
+  "manifest_sha256": "6cca5bb7afcd2217ef7343bb80efd03862af0418ab310020628d8af571904ffe",
+  "original_paths": 66640,
+  "unique_blobs": 918,
+  "all_paths_and_PNGs_verified": true,
+  "ROM_executables_excluded": true,
+  "scope": "Only capture-presentation PR261 performance/capture metadata and all66537 original raw paths; unrelated shared-run metadata excluded without editing captured bytes."
+}

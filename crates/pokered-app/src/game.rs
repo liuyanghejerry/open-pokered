@@ -4709,7 +4709,7 @@ impl PokemonGame {
                 let demo_animation_holds_input = self.battle.is_old_man
                     && matches!(self.battle.phase, pokered_core::battle::BattlePhase::ShowingText { .. })
                     && !self.battle_vfx.item_animation_capture_finished();
-                let battle_input = BattleInput {
+                let mut battle_input = BattleInput {
                     up: input.is_just_pressed(GbButton::Up),
                     down: input.is_just_pressed(GbButton::Down),
                     left: input.is_just_pressed(GbButton::Left),
@@ -4717,6 +4717,12 @@ impl PokemonGame {
                     a: input.is_just_pressed(GbButton::A) && !caught_sound_holds_input && !demo_animation_holds_input,
                     b: input.is_just_pressed(GbButton::B) && !caught_sound_holds_input && !demo_animation_holds_input,
                 };
+                // Only an actual ball caller needs its text/animation gate.
+                if self.battle_vfx.ball_result_ready()
+                    || ((battle_input.a || battle_input.b) && self.battle_vfx.ball_animation_active())
+                {
+                    self.apply_ball_text_continuation(&mut battle_input);
+                }
                 // ── Link battle driving ─────────────────────────────────
                 // The CORE `LinkBattleDriver` owns the battle screen (turn
                 // resolution, RNG, end detection); `self.battle` is a

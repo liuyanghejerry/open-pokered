@@ -10,6 +10,14 @@ use dotzuki_engine::battle::{
     BattleState,
 };
 use pokered_data::{lang_data::move_name, moves::MoveId};
+use serde::{Deserialize, Serialize};
+
+/// The existing text publication owner, without transient move/VFX state.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct TextPagePublication {
+    enabled: bool,
+    page: Option<usize>,
+}
 
 #[derive(Debug, Clone)]
 struct MoveStep {
@@ -38,6 +46,21 @@ pub struct BattlePresentation {
     hit_index: usize,
 }
 impl BattlePresentation {
+    pub(crate) fn capture_text_publication(&self) -> TextPagePublication {
+        TextPagePublication { enabled: self.enabled, page: self.page }
+    }
+
+    pub(crate) fn restore_text_publication(&mut self, saved: TextPagePublication) {
+        self.enabled = saved.enabled;
+        self.page = saved.page;
+    }
+
+    /// Old snapshots did not record publication. Preserve their prior ACK
+    /// behavior only for this current page; future pages activate normally.
+    pub(crate) fn restore_legacy_text_page(&mut self, page: usize) {
+        self.page = Some(page);
+    }
+
     pub fn current_leech_seed(&self) -> Option<(u32, bool)> {
         self.current_leech_seed
     }
@@ -247,9 +270,11 @@ impl BattlePresentation {
             *self.pages.last_mut().unwrap() = step;
         }
     }
-    pub(super) fn activate(&mut self, page: usize) {
+    /// Publish one page. A frontend must present a newly activated page
+    /// before its acknowledgement can advance the caller.
+    pub(super) fn activate(&mut self, page: usize) -> bool {
         if !self.enabled || self.page == Some(page) {
-            return;
+            return false;
         }
         self.page = Some(page);
         let step = self.pages.get(page).and_then(Option::as_ref);
@@ -271,6 +296,7 @@ impl BattlePresentation {
                 (self.serial, move_id, step.player)
             })
         });
+        true
     }
     pub(super) fn next_hit(&mut self) -> bool {
         let Some(step) = self
@@ -353,6 +379,121 @@ mod tests {
         pokemon::stats::create_pokemon_with_moves,
     };
     use pokered_data::species::Species;
+
+    fn second_plain_text_page(presentation_enabled: bool) -> BattleScreen {
+        let mut battle = BattleScreen::new(true);
+        battle.set_presentation_enabled(presentation_enabled);
+        battle.show_text_then(
+            vec!["First page".to_string(), "Second page".to_string()],
+            BattlePhase::PlayerMenu,
+        );
+        for _ in 0..crate::battle::BATTLE_TEXT_PAGE_WAIT_FRAMES {
+            battle.update_frame(BattleInput::none());
+        }
+        battle.update_frame(BattleInput { a: true, ..BattleInput::none() });
+        assert!(matches!(battle.phase, BattlePhase::ShowingText { current: 1, .. }));
+        for _ in 0..crate::battle::BATTLE_TEXT_PAGE_WAIT_FRAMES {
+            battle.update_frame(BattleInput { a: true, ..BattleInput::none() });
+        }
+        assert!(matches!(battle.phase, BattlePhase::ShowingText { current: 1, wait_frames: 0, .. }));
+        assert_eq!(battle.current_message.as_deref(), Some("First page"));
+        battle
+    }
+
+    #[test]
+    fn frontend_page_is_published_before_ack_and_needs_no_extra_wait() {
+        let mut battle = second_plain_text_page(true);
+        battle.update_frame(BattleInput { a: true, ..BattleInput::none() });
+        assert_eq!(battle.current_message.as_deref(), Some("Second page"));
+        assert!(matches!(battle.phase, BattlePhase::ShowingText { current: 1, wait_frames: 0, .. }));
+        assert!(!battle.presentation.waiting, "plain text has no animation or sound wait");
+        battle.update_frame(BattleInput { a: true, ..BattleInput::none() });
+        assert_eq!(battle.phase, BattlePhase::PlayerMenu);
+    }
+
+    #[test]
+    fn core_only_text_ack_does_not_wait_for_frontend_publication() {
+        let mut battle = second_plain_text_page(false);
+        battle.update_frame(BattleInput { a: true, ..BattleInput::none() });
+        assert_eq!(battle.phase, BattlePhase::PlayerMenu);
+    }
+
+    #[test]
+    fn publication_snapshot_distinguishes_pending_and_published_second_pages() {
+        use crate::snapshot::BattleSnapshot;
+        for page in [None, Some(0), Some(1)] {
+            let mut battle = second_plain_text_page(page.is_some());
+            if page.is_none() {
+                // A core-driven text caller can enable its frontend later.
+                // Its existing publication owner has no active page yet.
+                battle.set_presentation_enabled(true);
+            } else if page == Some(1) {
+                battle.update_frame(BattleInput::none());
+            }
+            let json = serde_json::to_value(BattleSnapshot::capture(&battle)).unwrap();
+            assert_eq!(json["text_publication"]["enabled"], true);
+            assert_eq!(json["text_publication"]["page"], serde_json::to_value(page).unwrap());
+            let saved: BattleSnapshot = serde_json::from_value(json).unwrap();
+            assert!(saved.text_publication.is_some(), "Some(page=None) is not a legacy snapshot");
+            let mut restored = BattleScreen::new(true);
+            saved.restore_into(&mut restored);
+            restored.update_frame(BattleInput { a: true, ..BattleInput::none() });
+            if page == Some(1) {
+                assert_eq!(restored.phase, BattlePhase::PlayerMenu, "published page needs only one ACK");
+            } else {
+                assert_eq!(restored.current_message.as_deref(), Some("Second page"));
+                assert!(matches!(restored.phase, BattlePhase::ShowingText { current: 1, wait_frames: 0, .. }));
+                restored.update_frame(BattleInput { a: true, ..BattleInput::none() });
+                assert_eq!(restored.phase, BattlePhase::PlayerMenu);
+            }
+        }
+    }
+
+    #[test]
+    fn publication_snapshot_keeps_core_only_ack_without_frontend_wait() {
+        use crate::snapshot::BattleSnapshot;
+        let battle = second_plain_text_page(false);
+        let json = serde_json::to_value(BattleSnapshot::capture(&battle)).unwrap();
+        let saved: BattleSnapshot = serde_json::from_value(json).unwrap();
+        let mut restored = BattleScreen::new(true);
+        saved.restore_into(&mut restored);
+        assert!(!restored.presentation.enabled);
+        restored.update_frame(BattleInput { a: true, ..BattleInput::none() });
+        assert_eq!(restored.phase, BattlePhase::PlayerMenu);
+    }
+
+    #[test]
+    fn legacy_snapshot_keeps_current_ack_and_future_page_publication_barrier() {
+        use crate::snapshot::BattleSnapshot;
+        let mut battle = BattleScreen::new(true);
+        battle.set_presentation_enabled(true);
+        battle.show_text_then(
+            vec!["First page".to_string(), "Second page".to_string()],
+            BattlePhase::PlayerMenu,
+        );
+        for _ in 0..crate::battle::BATTLE_TEXT_PAGE_WAIT_FRAMES {
+            battle.update_frame(BattleInput::none());
+        }
+        let mut json = serde_json::to_value(BattleSnapshot::capture(&battle)).unwrap();
+        json.as_object_mut().unwrap().remove("text_publication");
+        let saved: BattleSnapshot = serde_json::from_value(json).unwrap();
+        assert!(saved.text_publication.is_none());
+        let mut restored = BattleScreen::new(true);
+        saved.restore_into(&mut restored);
+        restored.set_presentation_enabled(true);
+        restored.update_frame(BattleInput { a: true, ..BattleInput::none() });
+        assert!(matches!(restored.phase, BattlePhase::ShowingText { current: 1, .. }),
+            "legacy current page keeps its old one-ACK behavior");
+        for _ in 0..crate::battle::BATTLE_TEXT_PAGE_WAIT_FRAMES {
+            restored.update_frame(BattleInput::none());
+        }
+        restored.update_frame(BattleInput { a: true, ..BattleInput::none() });
+        assert_eq!(restored.current_message.as_deref(), Some("Second page"));
+        assert!(matches!(restored.phase, BattlePhase::ShowingText { current: 1, wait_frames: 0, .. }),
+            "a future page must still be published before its ACK");
+        restored.update_frame(BattleInput { a: true, ..BattleInput::none() });
+        assert_eq!(restored.phase, BattlePhase::PlayerMenu);
+    }
 
     #[test]
     fn both_speed_orders_wait_for_each_animation_then_drain_only_its_damage() {

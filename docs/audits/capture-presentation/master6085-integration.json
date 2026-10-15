@@ -1,0 +1,131 @@
+{
+  "source": "490146cac1046afd0a15a9c8c9468cb79b578ab5",
+  "integrated_master": "6085c98704a9b0cb25cbcd34afcc028184ce9217",
+  "recorded_identities_preserved": {
+    "broad_before": "dfeefa3411634e187119862288ad78d5a3e933fe",
+    "broad_after": "fbed8302e50735b77e658b4650dde4531e9acbe4",
+    "optimized_replay": "40e86bc15e7dd18ec8c2acee3566d4ac93546311",
+    "no_new_native_debug_binary_or_actual_controls_claimed_for_490": true
+  },
+  "app_capture_files_exact_at_40e": {
+    "crates/pokered-app/src/game.rs": "88071a08bb2fa2653c238d7ff99741a6ec548e27252913e64d3ebd8c781b8438",
+    "crates/pokered-app/src/render/battle.rs": "4bddddc712a93872e919802121cb01f6b50ba5bd2608cd055a7a0399cf9de098",
+    "crates/pokered-app/src/post_capture.rs": "8e7ab9a483841286014f96f67fdda1e400f2aa1f0ca8c5039ad114bc332f4199",
+    "crates/pokered-app/src/post_capture_tests.rs": "5ae4bd4cb5968c6af65782976bf185af873db693435e14c3430ddcc8d56af731"
+  },
+  "core_delta": {
+    "scope": "Only PokeDoll used-item text/deferred removal. New post_text_transition arm requires escaped:true and escaped_via_poke_doll; captured BattleOver uses escaped:false, covered by full actualGame capture tests. Capture functions/lowHP guard unchanged.",
+    "diff_path": "audit-905-master6085-core-delta.diff",
+    "sha256": "72a51a98779f0986e0ba4b880474c09c7d565a53bd39acc71c52bd9d152f27cd"
+  },
+  "tests": {
+    "app": "283PASS/39ignored",
+    "core": "2889PASS",
+    "host_exit": 0,
+    "host_session": 36622
+  },
+  "GBA": {
+    "source": "490146cac1046afd0a15a9c8c9468cb79b578ab5",
+    "ROM_sha256": "7563043daa19b7c8472990a2877ee0027a9332741e1cae1cddbcc68c84ae9f28",
+    "nightly": "nightly-2025-12-07",
+    "features": [
+      "perf-benchmark"
+    ],
+    "emulator": "mGBA0.10.5 SDL",
+    "gate_PASS": true,
+    "baseline_and_threshold_unchanged": true,
+    "metrics": {
+      "battle-entry-v1": {
+        "draw_max_ticks": 8860,
+        "draw_per_frame_ticks": 2644,
+        "present_max_ticks": 782,
+        "present_per_frame_ticks": 567,
+        "renders": 369,
+        "samples": 500,
+        "scenario": "battle-entry-v1",
+        "update_avg_ticks": 214,
+        "update_core_avg_ticks": 203,
+        "update_flush_avg_ticks": 1
+      },
+      "intro-title-v1": {
+        "draw_max_ticks": 10015,
+        "draw_per_frame_ticks": 1214,
+        "present_max_ticks": 782,
+        "present_per_frame_ticks": 353,
+        "renders": 115,
+        "samples": 250,
+        "scenario": "intro-title-v1",
+        "update_avg_ticks": 118,
+        "update_core_avg_ticks": 109,
+        "update_flush_avg_ticks": 1
+      },
+      "oak-dialogue-v1": {
+        "draw_max_ticks": 9312,
+        "draw_per_frame_ticks": 2994,
+        "present_max_ticks": 782,
+        "present_per_frame_ticks": 392,
+        "renders": 307,
+        "samples": 600,
+        "scenario": "oak-dialogue-v1",
+        "update_avg_ticks": 188,
+        "update_core_avg_ticks": 178,
+        "update_flush_avg_ticks": 1
+      },
+      "overworld-idle-v1": {
+        "draw_max_ticks": 0,
+        "draw_per_frame_ticks": 0,
+        "present_max_ticks": 0,
+        "present_per_frame_ticks": 0,
+        "renders": 0,
+        "samples": 1400,
+        "scenario": "overworld-idle-v1",
+        "update_avg_ticks": 382,
+        "update_core_avg_ticks": 372,
+        "update_flush_avg_ticks": 1
+      },
+      "overworld-movement-v1": {
+        "draw_max_ticks": 3111,
+        "draw_per_frame_ticks": 225,
+        "present_max_ticks": 769,
+        "present_per_frame_ticks": 70,
+        "renders": 24,
+        "samples": 240,
+        "scenario": "overworld-movement-v1",
+        "update_avg_ticks": 387,
+        "update_core_avg_ticks": 377,
+        "update_flush_avg_ticks": 1
+      },
+      "pokedex-entry-v1": {
+        "draw_max_ticks": 16318,
+        "draw_per_frame_ticks": 40,
+        "present_max_ticks": 767,
+        "present_per_frame_ticks": 1,
+        "renders": 1,
+        "samples": 400,
+        "scenario": "pokedex-entry-v1",
+        "update_avg_ticks": 116,
+        "update_core_avg_ticks": 104,
+        "update_flush_avg_ticks": 1
+      },
+      "trainer-battle-entry-v1": {
+        "draw_max_ticks": 10162,
+        "draw_per_frame_ticks": 2475,
+        "present_max_ticks": 782,
+        "present_per_frame_ticks": 344,
+        "renders": 224,
+        "samples": 500,
+        "scenario": "trainer-battle-entry-v1",
+        "update_avg_ticks": 232,
+        "update_core_avg_ticks": 221,
+        "update_flush_avg_ticks": 1
+      }
+    },
+    "build_session14918_exit": 0,
+    "record_session33196_exit": 0,
+    "compare_exit": 0
+  },
+  "archives_unchanged": {
+    "evidence.zip": "498d2a03ab0f66fbb32f48b7c6acc058dc8c89b6d2558105249cef5abb254932",
+    "integration-evidence.zip": "e0222da9b750d8f634e1443ebccbf1692032b43acae6379cfc3892ef1422b096"
+  }
+}
