@@ -2,7 +2,15 @@
 
 用球结果由真实球动画完成事件继续；捕获音效结束后才接受成功页确认。Safari 成功/失败投球补用球文字与实际捕获名；没有额外用球页A或新计时器。首次发布成功页不能把同一A同时当作确认，提前启动BattleOver倒数。快照只镜像既有 enabled/page，保留新/旧快照边界；没有新 live owner 或完整VFX/PCM快照。
 
-## 当前发布身份
+## GBA 检查修复后的发布身份（2026-10-15）
+
+受测源码 `9bce1d6382bd350721551f5e249e6b7cebd6cd2e` 在 `d8d4d2a9` 上只增加两个 renderer 文件的改动与地图缓存回归。将本帧已算的 live 地图指纹交给背景缓存，省去重复扫描；每帧仍验证实时方块，没有跨帧 revision、删帧或放宽基线。原 CI ROM 七场景已在本地逐项复现，其中移动最慢绘制 3114 超过 3113.1；新 ROM 为 **3107**，31 项原门禁全部通过，24 次绘制保持。新完整 app debug-server **330 通过／39 忽略**。旧核心、默认 app、determinism 和捕获录制仍保留各自身份。
+
+从 literal master `44f22348` 构建基线，与 source-equivalent `0fb/d8d` 及修复 `9bce` 使用同一普通存档和完整按钮序列，均至实际第 **799** 帧。三张 PNG／RGBA 相同，优化前后完整公开状态序列相同，队伍、金额和输入存档未改；无新的 SAVE。Headless 图只验证 Game.draw 可见输出；RenderSession 实时地图修改和完整像素／调色板由 app 测试验证，GBA ROM 给出实际硬件计时。
+
+精确身份、原 CI 失败与本地环境失败、新源码冻结、五阶段日志和三份实际输入见 `perf-1009.json`／`perf-1009-evidence.zip`。ZIP 是普通 `index.json` + `files/`，不使用旧 `extract_evidence.py`；逐文件 SHA 已解包回读验证。ROM、ELF、可执行文件仅留本地。新发布头的三个官方工作流仍须全部通过后合入。
+
+## 此前 publication-993 的发布身份（保留历史）
 
 #264 实际合入 `44f2234823eb5bd0d793ef966871f6028426aaa2` 后整合实时 master `44f2234823eb5bd0d793ef966871f6028426aaa2`，相对该master仅8个本PR源码/测试路径（6带生产逻辑、2仅测试）。原受测 runtime 为 `0fb1b57fd3096ba0332cd814319305fee1dc754b`，旧本地 docs head `534f06c52a892d5b1c03b6ced0236c99b1695fd7` 不是另一份runtime身份。原2172项编译映射不变；另从受测Git blob补证漏记的run-wasm/src/main.rs为2173项，docs外2691项NUL Git blob/模式与literal symlink也完全相等。原日志仍标2172项；没有伪称重新执行2173项。
 
