@@ -105,3 +105,5 @@ before/after renderer screenshot requirement is therefore inapplicable. Actual
 screenshots remain in the evidence archive. Runtime snapshot logic is verified;
 presentation reset, complete frame/audio parity, source failure-path actual
 coverage and other global RNG callers are not claimed.
+
+已整合最新 master `f0787e19`（#268，巨石测试隔离；包含 #258 中毒与进门顺序）：core 2895 通过/0 忽略；app 296 通过/39 忽略；determinism 9 通过/0 忽略，全部 0 失败。当前受测源码 `24ee8a081d598b9d6e30b9128c7873a81a7b782c`、编译包装脚本与日志见 `master-f078-integration.json` 和独立日志包。历史原作/原生录制与 SAVE 保留各自冻结身份；本次新 head 仍需远程三个工作流全部通过。
