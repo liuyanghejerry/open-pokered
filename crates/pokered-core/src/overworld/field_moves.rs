@@ -136,13 +136,13 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 });
                 self.field_message(&format!("{} hacked\naway with CUT!", mon_name))
             }
-            // Gen-1 grass cutting plays the same animation + text but does not
-            // alter the map (grass blocks are not in CutTreeBlockSwaps).
+            // UsedCut sends grass through the same block swap table as trees.
+            // A missing entry still permits the grass animation without a swap.
             CutResult::CutGrass => {
                 self.pending_cut = Some(PendingCut {
                     block_x: (fx / 2) as u8,
                     block_y: (fy / 2) as u8,
-                    replacement_block: None,
+                    replacement_block: pokered_data::tileset_data::cut_tree_replacement(current_block),
                     kind: presentation::CutAnimKind::Grass,
                 });
                 self.field_message(&format!("{} hacked\naway with CUT!", mon_name))
