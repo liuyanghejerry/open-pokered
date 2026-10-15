@@ -11,7 +11,7 @@ embedded-map-data = ["pokered-app/embedded-map-data"]
 pokered-app = { path = "../pokered-app", default-features = false }
 pokered-data = { path = "../pokered-data" }
 pokered-renderer = { path = "../pokered-renderer", default-features = false, features = ["framebuffer", "resource"] }
-dotzuki-tui = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "976f86b42813a657047db89ca4dca2d6b9172dff" }
+dotzuki-tui = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "76da597b1604305121c866831b5542e70c2b82c8" }
 # Device output comes from pokered-audio's `cpal` feature (the shared
 # `output::AudioOutput`, built on dotzuki-audio's cpal backend).
 pokered-audio = { path = "../pokered-audio", features = ["cpal"] }
@@ -21,4 +21,4 @@ clap = { version = "4", features = ["derive"] }
 
 [dev-dependencies]
 pokered-core = { path = "../pokered-core" }
-dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "976f86b42813a657047db89ca4dca2d6b9172dff" }
+dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "76da597b1604305121c866831b5542e70c2b82c8" }
