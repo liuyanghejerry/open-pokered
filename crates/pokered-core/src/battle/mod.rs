@@ -35,6 +35,8 @@ mod menu_tests;
 #[cfg(test)]
 mod item_fidelity_tests;
 #[cfg(test)]
+mod medicine_result_tests;
+#[cfg(test)]
 mod exp_participant_tests;
 #[cfg(test)]
 mod exp_award_notice_tests;
@@ -413,6 +415,9 @@ pub enum BattlePhase {
     BagSelect,
     /// Player selects a party member to use item on (for healing/status items).
     ItemTargetSelect { item_id: ItemId },
+    /// ItemUseMedicine keeps the redrawn party visible for Delay50 and ACK.
+    /// Party data, selection and text remain owned by the battle.
+    ItemMedicineResult { wait_frames: u8 },
     /// `ItemUsePPRestore`'s MoveSelectionMenu (wMoveMenuType $02): picking
     /// WHICH move of the chosen party member receives the (Max) Ether.
     /// B returns to the party pick (the original's `.chooseMon` loop).
@@ -2137,6 +2142,15 @@ impl BattleScreen {
                 }
                 ScreenAction::Continue
             }
+            BattlePhase::ItemMedicineResult { wait_frames } => {
+                if wait_frames > 0 {
+                    self.phase = BattlePhase::ItemMedicineResult { wait_frames: wait_frames - 1 };
+                } else if input.a || input.b {
+                    self.current_message = None;
+                    self.phase = BattlePhase::EnemyFreeTurnAfterItem;
+                }
+                ScreenAction::Continue
+            }
             // MoveSelectionMenu for (Max) Ether: A applies to the highlighted
             // move, B loops back to the party pick (`.chooseMon`). Selecting a
             // 0-PP (or "disabled"-flagged) row is NOT vetoed here — the item
@@ -3024,14 +3038,16 @@ learn {learn_name}!")];
                 _ => BattleItemSfx::HealHp,
             });
         }
-        self.show_text_then(
-            vec![result_msg],
-            if item_used {
-                BattlePhase::EnemyFreeTurnAfterItem
-            } else {
-                BattlePhase::BagSelect
-            },
-        );
+        if item_used {
+            // RedrawPartyMenu owns this result, not the battle HUD. Keep only
+            // the existing battle message/selection and a scalar Delay50;
+            // rendering reads the live (persistent-identity) party each time.
+            self.presentation.finish_pages();
+            self.current_message = Some(pokered_data::battle_text::localize(&result_msg, self.is_zh));
+            self.phase = BattlePhase::ItemMedicineResult { wait_frames: 50 };
+        } else {
+            self.show_text_then(vec![result_msg], BattlePhase::BagSelect);
+        }
     }
 
     /// Apply a PP-restore item chosen in battle (ItemUsePPRestore's

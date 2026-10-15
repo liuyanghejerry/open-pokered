@@ -136,7 +136,8 @@ pub fn draw_overlay<P: Painter>(state: &PartyScreenState, ui: &mut Ui<P>, lang: 
     }
 }
 
-fn draw_notice<P: Painter>(ui: &mut Ui<P>, text: &str) {
+/// Draw a borrowed notice over a party view without owning another party or text state.
+pub fn draw_notice<P: Painter>(ui: &mut Ui<P>, text: &str) {
     let lines: Vec<_> = text.lines().take(4).collect();
     let proportional = ui.painter().supports_proportional();
     let height = if proportional {

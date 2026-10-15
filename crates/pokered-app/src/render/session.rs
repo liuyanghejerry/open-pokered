@@ -135,7 +135,6 @@ enum ReusableBattlePhase {
     MoveSelect { cursor: usize },
     ItemMoveSelect { cursor: usize },
     BagSelect { cursor: usize },
-    ItemTargetSelect { cursor: usize },
     ShowingText { current: usize },
     PartySelect { cursor: usize },
     ShiftSwitchSelect { cursor: usize },
@@ -220,9 +219,6 @@ impl BattleVisualKey {
             BattlePhase::BagSelect => ReusableBattlePhase::BagSelect {
                 cursor: battle.bag_menu.as_ref()?.cursor(),
             },
-            BattlePhase::ItemTargetSelect { .. } => ReusableBattlePhase::ItemTargetSelect {
-                cursor: battle.party_cursor,
-            },
             BattlePhase::ShowingText {
                 current,
                 wait_frames: 0,
@@ -277,7 +273,6 @@ impl BattleVisualKey {
             ReusableBattlePhase::PartySelect { .. }
                 | ReusableBattlePhase::ShiftSwitchSelect { .. }
                 | ReusableBattlePhase::PlayerFaintSwitch { .. }
-                | ReusableBattlePhase::ItemTargetSelect { .. }
         ) {
             battle.battle_state.as_ref().map_or(0, |state| {
                 for mon in state.player.party.iter() {
@@ -478,16 +473,6 @@ impl BattleVisualKey {
                 cursor,
                 previous_cursor,
                 ReusableBattlePhase::PlayerFaintSwitch { cursor: 0 },
-            ),
-            (
-                ReusableBattlePhase::ItemTargetSelect { cursor },
-                ReusableBattlePhase::ItemTargetSelect {
-                    cursor: previous_cursor,
-                },
-            ) => (
-                cursor,
-                previous_cursor,
-                ReusableBattlePhase::ItemTargetSelect { cursor: 0 },
             ),
             _ => return None,
         };
