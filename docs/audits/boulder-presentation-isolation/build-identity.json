@@ -1,0 +1,11 @@
+{
+  "base_commit": "05f6e76c2e8fc6c0a64dbf6486316a073fa20347",
+  "source_sha256": "4640bc00996ccf3e9d2d69a55ad67c902147b48f09e7378b35c8ee0dc6382cdc",
+  "source_diff": "diff --git a/crates/pokered-app/src/game.rs b/crates/pokered-app/src/game.rs\nindex d815b2ad..027886e1 100644\n--- a/crates/pokered-app/src/game.rs\n+++ b/crates/pokered-app/src/game.rs\n@@ -9016,6 +9016,9 @@ mod gift_dialogue_debug_tests {\n         game.overworld.state.player.x=18;game.overworld.state.player.y=9;\n         game.overworld.state.player.facing=Direction::Down;\n         game.overworld.strength_active=true;\n+        // The initial direction sample can roll a cave encounter before the\n+        // boulder push starts. This test owns the push presentation only.\n+        game.overworld.state.encounter_cooldown=1;\n         let mut down=InputState::new();down.press(GbButton::Down);\n         for _ in 0..10 {\n             game.update(&down);\n",
+  "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-922-final-debug-libtest",
+  "binary_sha256": "8883641e82264d5a6787b0bf650ae0a6c81a97627ce2999e3242a384c23cce10",
+  "scope": "final test-only encounter cooldown; production unchanged; debug-server libtest dev opt0/debug0",
+  "source_dependencies": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-922-boulder-readiness-target/debug/deps/pokered_app-d48503787002b91a.d",
+  "verified_committed_source": "99e2f2f4d40c9d6eec062791f200b4ce18b80eba",
+  "compiled_source_description": "05f6 base + the final test-only three-line diff; committed unchanged as verified_committed_source after all Cargo/runs terminated."
+}

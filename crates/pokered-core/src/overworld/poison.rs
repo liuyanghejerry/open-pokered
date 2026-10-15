@@ -26,6 +26,42 @@ pub enum FieldPoisonFlow {
     Blackout,
 }
 
+/// The door target is already in pending_warp; retain only its sound while
+/// the source ApplyOutOfBattlePoisonDamage caller precedes CheckWarps.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub enum PoisonStepWarpSound {
+    GoInside,
+    GoOutside,
+}
+
+/// Resume PlayMapChangeSound/fade only after the party's poison caller returns.
+pub fn resume_step_warp_after_poison(overworld: &mut OverworldScreen) {
+    if overworld.safari_eject_pending.is_some() {
+        if overworld.poison_step_warp_sound.take().is_some() {
+            overworld.pending_warp = None;
+        }
+        return;
+    }
+    if overworld.poison_flow.is_some() {
+        return;
+    }
+    if let Some(sound) = overworld.poison_step_warp_sound.take() {
+        if overworld.pending_warp.is_some() {
+            // Queue after SFX_POISONED, matching PlaySound before the door's
+            // PlayMapChangeSound. One-frame sfx_event cannot retain this call.
+            overworld.audio_requests.push(OverworldAudioRequest::PlaySound {
+                sound_id: match sound {
+                    PoisonStepWarpSound::GoInside => "SFX_GO_INSIDE",
+                    PoisonStepWarpSound::GoOutside => "SFX_GO_OUTSIDE",
+                }.to_string(),
+            });
+            overworld.warp_fade_state = super::WarpFadeState::FadingOut {
+                frames_remaining: super::WARP_FADE_OUT_FRAMES,
+            };
+        }
+    }
+}
+
 impl FieldPoisonFlow {
     pub fn bg_flash_active(self) -> bool {
         matches!(
@@ -131,6 +167,11 @@ fn finish_poison_tick(save: &mut SaveData, overworld: &mut OverworldScreen) {
     if save.party.iter().any(|mon| mon.hp > 0) {
         overworld.poison_flow = None;
     } else {
+        // HandleBlackOut replaces CheckWarps: the original door and its sound
+        // must never resume after the player is healed at the blackout point.
+        if overworld.poison_step_warp_sound.take().is_some() {
+            overworld.pending_warp = None;
+        }
         // TEXT_BLACKED_OUT is a separate blocking DisplayTextID call.
         let message = format!("{}\nblacked out!", overworld.player_name);
         show_poison_dialogue(overworld, &message);

@@ -4385,6 +4385,11 @@ impl PokemonGame {
                         &mut self.save_data, &mut self.overworld,
                     );
                     self.apply_overworld_game_data_requests();
+                    if self.overworld.poison_step_warp_sound.is_some() {
+                        pokered_core::overworld::poison::resume_step_warp_after_poison(
+                            &mut self.overworld,
+                        );
+                    }
                     // The money box follows the committed balance, including
                     // mutations queued just before the next script query.
                     if self.overworld.script_money_box.is_some() {
@@ -9038,6 +9043,9 @@ mod gift_dialogue_debug_tests {
         game.overworld.state.player.x=18;game.overworld.state.player.y=9;
         game.overworld.state.player.facing=Direction::Down;
         game.overworld.strength_active=true;
+        // The initial direction sample can roll a cave encounter before the
+        // boulder push starts. This test owns the push presentation only.
+        game.overworld.state.encounter_cooldown=1;
         let mut down=InputState::new();down.press(GbButton::Down);
         for _ in 0..10 {
             game.update(&down);

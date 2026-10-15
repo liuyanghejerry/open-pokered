@@ -1,0 +1,65 @@
+[
+  {
+    "provider": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-922-boulder-readiness",
+    "path": "crates/pokered-app/src/game.rs",
+    "sha256": "4640bc00996ccf3e9d2d69a55ad67c902147b48f09e7378b35c8ee0dc6382cdc",
+    "excerpts": [
+      {
+        "first": 8999,
+        "last": 9038,
+        "source": "mod tui_runtime_regressions;\n\n#[cfg(all(test, feature = \"debug-server\"))]\nmod gift_dialogue_debug_tests {\n    use super::*;\n    #[test]\n    fn control_ready_waits_for_boulder_slide_dust_and_graphics_restore() {\n        use pokered_core::overworld::{Direction,OverworldScreen};\n        use pokered_data::impl_traits::PokemonRedData;\n        let mut game=PokemonGame::new_with_options(\n            GameVersion::Red,None,None,None,false,None,false,true,None,\n        );\n        game.state.screen=GameScreen::Overworld;\n        game.overworld=OverworldScreen::new(MapId::SeafoamIslands1F,None,PokemonRedData);\n        game.overworld.run_on_load();\n        let idle=InputState::new();\n        for _ in 0..120 {game.update(&idle);}\n        game.overworld.state.player.x=18;game.overworld.state.player.y=9;\n        game.overworld.state.player.facing=Direction::Down;\n        game.overworld.strength_active=true;\n        // The initial direction sample can roll a cave encounter before the\n        // boulder push starts. This test owns the push presentation only.\n        game.overworld.state.encounter_cooldown=1;\n        let mut down=InputState::new();down.press(GbButton::Down);\n        for _ in 0..10 {\n            game.update(&down);\n            if game.overworld.boulder_push.is_some() {break;}\n        }\n        assert!(game.overworld.boulder_push.is_some());\n        let mut elapsed=0;\n        while game.overworld.boulder_push.is_some() {\n            let completed=game.overworld.boulder_push.unwrap().frame>=\n                pokered_core::overworld::presentation::BoulderPushState::COMPLETION_FRAME;\n            assert_eq!(game.debug_condition_met(\"control_ready\"),completed,\n                \"logical control resumes before the last LCD image\");\n            game.update(&idle);elapsed+=1;assert!(elapsed<=72);\n        }\n        assert!(elapsed>=71);\n        assert!(game.debug_condition_met(\"control_ready\"));\n    }"
+      }
+    ]
+  },
+  {
+    "provider": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-922-boulder-readiness",
+    "path": "crates/pokered-core/src/overworld/update.rs",
+    "sha256": "6f8e85d4521763e93c935393629920283106042ebcbe20a4782ce81dab36cc19",
+    "excerpts": [
+      {
+        "first": 1471,
+        "last": 1489,
+        "source": "        // RunMapScript precedes JoypadOverworld: boulders consume the\n        // preceding field input, before player collision or movement.\n        if ordinary_field_loop && self.boulder_push.is_none()\n            && self.state.player.movement_state == MovementState::Idle\n            && self.state.walk_counter == 0 {\n            let old=self.sampled_player_input.as_input();\n            let direction = if old.down { Some(Direction::Down) }\n                else if old.up { Some(Direction::Up) }\n                else if old.left { Some(Direction::Left) }\n                else if old.right { Some(Direction::Right) }\n                else { None };\n            self.tick_boulder_push(direction);\n            if self.boulder_push.is_some() { return ScreenAction::Continue; }\n        }\n\n        // JoypadOverworld is not sampled while a step is in progress.\n        // A short START pulse during the step is discarded; a held START\n        // becomes a fresh press at the next idle sample. START precedes A.\n        let (control_start_just_pressed, control_a_just_pressed) = self.sample_idle_field_buttons(input);"
+      },
+      {
+        "first": 2037,
+        "last": 2052,
+        "source": "\n            if movement_before == MovementState::Idle && self.active_script_effect.is_none()\n                && self.scripted_player_path.is_empty() && !self.cutscene_manager.is_blocking() {\n                if let Some(direction) = movement_input.direction_pressed() {\n                    let direction_mask = match direction {\n                        Direction::Right => 1, Direction::Left => 2,\n                        Direction::Down => 4, Direction::Up => 8,\n                    };\n                    turning_in_place = self.check_player_turn\n                        && direction_mask != self.player_last_stop_direction;\n                    if turning_in_place { self.check_player_turn = false; }\n                    self.player_moving_direction = direction_mask;\n                    self.state.player.facing = direction;\n                }\n            }\n            let result = if turning_in_place {"
+      },
+      {
+        "first": 2268,
+        "last": 2289,
+        "source": "                    }\n                }\n                MoveResult::TurnedOnly => {\n                    // holdIntermediateDirectionLoop \u2192 call NewBattle\n                    // (home/overworld.asm:224-234): a completed 180\u00b0 turn-in-\n                    // place ROLLS the wild-encounter check (and burns a repel\n                    // step) exactly like a completed step. Record it; the\n                    // roll runs after the map borrow ends (same queue as the\n                    // on-step check below).\n                    self.bump_anim_counter = 0;\n                    if self.pending_wild_encounter.is_none() && turn_encounter_check.is_none() {\n                        turn_encounter_check = Some((\n                            map.id,\n                            map.tileset,\n                            standing_tile,\n                            wild_encounters::encounter_rate_tile(\n                                map.tileset, &map.blocks, map.width,\n                                self.state.player.x, self.state.player.y,\n                            ),\n                        ));\n                    }\n                }"
+      },
+      {
+        "first": 4461,
+        "last": 4508,
+        "source": "        let roll_gated =\n            !standing_on_warp && !has_script_effect && self.state.encounter_cooldown == 0;\n        let mut wore_off = false;\n        if roll_gated {\n            if self.state.repel_steps > 0 {\n                self.state.repel_steps -= 1;\n                if self.state.repel_steps == 0 {\n                    wore_off = true;\n                }\n            }\n        }\n        if wore_off {\n            // .lastRepelStep: the \"wore off\" step never rolls an encounter.\n            return true;\n        }\n\n        let encounter_roll = self.rng.gen_range(0u8..=255);\n        let slot_roll = self.rng.gen_range(0u8..=255);\n\n        let randoms = WildEncounterRandoms {\n            encounter_roll,\n            slot_roll,\n        };\n\n        let context = EncounterContext {\n            repel_active: self.state.repel_steps > 0,\n            // Gen-1 repel compares wild level against the LEAD (first) party\n            // member's level. The OverworldScreen does not own the full party,\n            // so the app layer keeps `party_lead_level` in sync from save data.\n            party_lead_level: self.party_lead_level,\n        };\n\n        let result = wild_encounters::check_wild_encounter_with_tables(\n            map_id,\n            tileset,\n            standing_tile,\n            right_tile,\n            &self.wild_data_state.grass,\n            &self.wild_data_state.water,\n            &randoms,\n            &context,\n            standing_on_warp,\n            has_script_effect,\n            self.state.encounter_cooldown,\n        );\n\n        if let crate::battle::wild::WildEncounterResult::Encounter { level, species } = result {\n            self.pending_wild_encounter = Some(PendingWildEncounter { species, level, old_man: false, hooked: false });"
+      }
+    ]
+  },
+  {
+    "provider": "/home/jerry/develop/open-pokered/.task-tmp/stats-59-reference-sgvaaq",
+    "path": "home/overworld.asm",
+    "sha256": "ce1ebcec0d71af2fb61369295ad180bb51f18a5ba13711035524011bd0c7a849",
+    "excerpts": [
+      {
+        "first": 180,
+        "last": 234,
+        "source": "\tld [wPlayerDirection], a ; new direction\n\tld a, [wStatusFlags5]\n\tbit BIT_SCRIPTED_MOVEMENT_STATE, a\n\tjr nz, .noDirectionChange ; ignore direction changes if we are\n\tld a, [wCheckFor180DegreeTurn]\n\tand a\n\tjr z, .noDirectionChange\n\tld a, [wPlayerDirection] ; new direction\n\tld b, a\n\tld a, [wPlayerLastStopDirection] ; old direction\n\tcp b\n\tjr z, .noDirectionChange\n; Check whether the player did a 180-degree turn.\n; It appears that this code was supposed to show the player rotate by having\n; the player's sprite face an intermediate direction before facing the opposite\n; direction (instead of doing an instantaneous about-face), but the intermediate\n; direction is only set for a short period of time. It is unlikely for it to\n; ever be visible because DelayFrame is called at the start of OverworldLoop and\n; normally not enough cycles would be executed between then and the time the\n; direction is set for V-blank to occur while the direction is still set.\n\tswap a ; put old direction in upper half\n\tor b ; put new direction in lower half\n\tcp (PLAYER_DIR_DOWN << 4) | PLAYER_DIR_UP ; change dir from down to up\n\tjr nz, .notDownToUp\n\tld a, PLAYER_DIR_LEFT\n\tld [wPlayerMovingDirection], a\n\tjr .holdIntermediateDirectionLoop\n.notDownToUp\n\tcp (PLAYER_DIR_UP << 4) | PLAYER_DIR_DOWN ; change dir from up to down\n\tjr nz, .notUpToDown\n\tld a, PLAYER_DIR_RIGHT\n\tld [wPlayerMovingDirection], a\n\tjr .holdIntermediateDirectionLoop\n.notUpToDown\n\tcp (PLAYER_DIR_RIGHT << 4) | PLAYER_DIR_LEFT ; change dir from right to left\n\tjr nz, .notRightToLeft\n\tld a, PLAYER_DIR_DOWN\n\tld [wPlayerMovingDirection], a\n\tjr .holdIntermediateDirectionLoop\n.notRightToLeft\n\tcp (PLAYER_DIR_LEFT << 4) | PLAYER_DIR_RIGHT ; change dir from left to right\n\tjr nz, .holdIntermediateDirectionLoop\n\tld a, PLAYER_DIR_UP\n\tld [wPlayerMovingDirection], a\n.holdIntermediateDirectionLoop\n\tld hl, wMiscFlags\n\tset BIT_TURNING, [hl]\n\tld hl, wCheckFor180DegreeTurn\n\tdec [hl]\n\tjr nz, .holdIntermediateDirectionLoop\n\tld a, [wPlayerDirection]\n\tld [wPlayerMovingDirection], a\n\tcall NewBattle\n\tjp c, .battleOccurred\n\tjp OverworldLoop"
+      }
+    ]
+  },
+  {
+    "provider": "/home/jerry/develop/open-pokered/.task-tmp/stats-59-reference-sgvaaq",
+    "path": "engine/battle/wild_encounters.asm",
+    "sha256": "5d1522885ae5a67fc4e077e8ee8ff2bac76f7011360d02a7354599326209f16d",
+    "excerpts": [
+      {
+        "first": 1,
+        "last": 65,
+        "source": "; try to initiate a wild pokemon encounter\n; returns success in Z\nTryDoWildEncounter:\n\tld a, [wNPCMovementScriptPointerTableNum]\n\tand a\n\tret nz\n\tld a, [wMovementFlags]\n\tand a ; is player exiting a door, jumping over a ledge, or fishing?\n\tret nz\n\tcallfar IsPlayerStandingOnDoorTileOrWarpTile\n\tjr nc, .notStandingOnDoorOrWarpTile\n.CantEncounter\n\tld a, $1\n\tand a\n\tret\n.notStandingOnDoorOrWarpTile\n\tcallfar IsPlayerJustOutsideMap\n\tjr z, .CantEncounter\n\tld a, [wRepelRemainingSteps]\n\tand a\n\tjr z, .next\n\tdec a\n\tjr z, .lastRepelStep\n\tld [wRepelRemainingSteps], a\n.next\n; determine if wild pokemon can appear in the half-block we're standing in\n; is the bottom right tile (9,9) of the half-block we're standing in a grass/water tile?\n\thlcoord 9, 9\n\tld c, [hl]\n\tld a, [wGrassTile]\n\tcp c\n\tld a, [wGrassRate]\n\tjr z, .CanEncounter\n\tld a, $14 ; in all tilesets with a water tile, this is its id\n\tcp c\n\tld a, [wWaterRate]\n\tjr z, .CanEncounter\n; even if not in grass/water, standing anywhere we can encounter pokemon\n; so long as the map is \"indoor\" and has wild pokemon defined.\n; ...as long as it's not Viridian Forest or Safari Zone.\n\tld a, [wCurMap]\n\tcp FIRST_INDOOR_MAP ; is this an indoor map?\n\tjr c, .CantEncounter2\n\tld a, [wCurMapTileset]\n\tcp FOREST ; Viridian Forest/Safari Zone\n\tjr z, .CantEncounter2\n\tld a, [wGrassRate]\n.CanEncounter\n; compare encounter chance with a random number to determine if there will be an encounter\n\tld b, a\n\tldh a, [hRandomAdd]\n\tcp b\n\tjr nc, .CantEncounter2\n\tldh a, [hRandomSub]\n\tld b, a\n\tld hl, WildMonEncounterSlotChances\n.determineEncounterSlot\n\tld a, [hli]\n\tcp b\n\tjr nc, .gotEncounterSlot\n\tinc hl\n\tjr .determineEncounterSlot\n.gotEncounterSlot\n; determine which wild pokemon (grass or water) can appear in the half-block we're standing in\n\tld c, [hl]"
+      }
+    ]
+  }
+]
