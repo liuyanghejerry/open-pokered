@@ -866,32 +866,36 @@ mod tests {
     /// them alone (PP depletes normally — the PP-reset trap is avoided).
     #[test]
     fn transform_persists_identity_once() {
+        use super::super::{clear_current_moves, install_canonical, set_current_move};
         use crate::battle::state::{new_battle_state, status3, BattleType};
+        use dotzuki_engine::battle::{rng::ScriptedRng, stack::StackDriver, BattleAction};
         use pokered_data::species::Species;
-        let mk = |sp| {
+        let mk = |sp, move_| {
             crate::pokemon::stats::create_pokemon_with_moves(
                 sp, 30, [0xFF, 0xFF],
-                [MoveId::Tackle, MoveId::None, MoveId::None, MoveId::None],
+                [move_, MoveId::None, MoveId::None, MoveId::None],
             ).unwrap()
         };
-        let mut ls = new_battle_state(BattleType::Wild, vec![mk(Species::Ditto)], vec![mk(Species::Tauros)]);
+        let mut ls = new_battle_state(
+            BattleType::Wild,
+            vec![mk(Species::Ditto, MoveId::Transform)],
+            vec![mk(Species::Tauros, MoveId::Tackle)],
+        );
 
-        // Simulate a post-Transform engine state: the player battler copied the foe's
-        // identity (what transform_install does) and carries the marker.
-        let mut state = EngineState::new(vec![engine_active(&ls.player)], vec![engine_active(&ls.enemy)]);
-        let (sp, stats, moves) = {
-            let d = &state.opponent_battlers[0];
-            (d.species, d.stats.clone(), d.moves.clone())
-        };
-        state.player_battlers[0].species = sp;
-        state.player_battlers[0].stats = stats;
-        state.player_battlers[0].moves = moves;
-        let effects = vec![EffectState {
-            id: EffectId(1),
-            host: BattlerRef::PLAYER,
-            effect_order: 0,
-            kind: PokeVolatile::Transformed,
-        }];
+        // Obtain the complete poststate, including packed PP, from the actual
+        // Transform handler rather than fabricating only its identity/marker.
+        let (mut state, mut effects) = engine_state_from_legacy(&ls);
+        install_canonical();
+        clear_current_moves();
+        set_current_move(BattlerRef::PLAYER, *MoveData::get(MoveId::Transform).unwrap());
+        let mut rng = ScriptedRng::new(vec![0]);
+        StackDriver::execute_turn_logged(
+            &PokeredRules,
+            &mut state,
+            &mut effects,
+            [BattleAction::Fight { move_: MoveId::Transform }, BattleAction::Nothing],
+            &mut rng,
+        );
         apply_engine_to_legacy(&mut ls, &state, &effects);
         assert_eq!(ls.player.active_mon().species, Species::Tauros, "species copied");
         assert_eq!(ls.player.active_mon().pp, [5, 0, 0, 0], "only copied known slots get 5 PP");
