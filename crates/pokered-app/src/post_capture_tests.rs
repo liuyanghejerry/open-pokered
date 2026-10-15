@@ -419,19 +419,27 @@ fn record_unsaved_oak_natural_capture() {
             path: trial.join("frames.json"),
             frames: Vec::new(),
         };
-        let frame = |g: &mut PokemonGame,
-                     key: Option<GbButton>,
-                     records: &mut Vec<serde_json::Value>,
-                     fb: &mut FrameBuffer| {
-            let mut input = InputState::new();
-            if let Some(key) = key {
-                input.press(key);
+        let mut physical_input = InputState::new();
+        let mut previous_key = None;
+        let mut frame = |g: &mut PokemonGame,
+                         key: Option<GbButton>,
+                         records: &mut Vec<serde_json::Value>,
+                         fb: &mut FrameBuffer| {
+            physical_input.begin_frame();
+            if previous_key != key {
+                if let Some(previous) = previous_key {
+                    physical_input.release(previous);
+                }
+                if let Some(key) = key {
+                    physical_input.press(key);
+                }
             }
-            g.update(&input);
+            previous_key = key;
+            g.update(&physical_input);
             g.draw(fb);
             let state = g.debug_state_snapshot();
             records
-                .push(serde_json::json!({"input": key.map(|k| format!("{k:?}")), "state": state}));
+                .push(serde_json::json!({"input": key.map(|k| format!("{k:?}")), "input_bits": physical_input.raw_current(), "state": state}));
         };
         for count in 0..4000 {
             if matches!(g.oak_speech.phase, OakSpeechPhase::PlayerNameChoice { .. }) {
@@ -554,14 +562,25 @@ fn record_unsaved_oak_natural_capture() {
             g.save_data.game_data.player_id
         );
         assert!(!trial.join("ordinary.sav").exists());
-        frame(&mut g, Some(GbButton::Start), &mut records, &mut fb);
+        for _ in 0..64 {
+            frame(&mut g, None, &mut records, &mut fb);
+        }
+        for _ in 0..4 {
+            frame(&mut g, Some(GbButton::Start), &mut records, &mut fb);
+        }
         frame(&mut g, None, &mut records, &mut fb);
+        for _ in 0..60 {
+            frame(&mut g, None, &mut records, &mut fb);
+        }
+        assert_eq!(g.state.screen, GameScreen::StartMenu);
         for _ in 0..8 {
             if g.start_menu.current_item() == StartMenuItem::Save {
                 break;
             }
             frame(&mut g, Some(GbButton::Down), &mut records, &mut fb);
-            frame(&mut g, None, &mut records, &mut fb);
+            for _ in 0..32 {
+                frame(&mut g, None, &mut records, &mut fb);
+            }
         }
         assert_eq!(g.start_menu.current_item(), StartMenuItem::Save);
         frame(&mut g, Some(GbButton::A), &mut records, &mut fb);
