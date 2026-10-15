@@ -1,0 +1,89 @@
+{
+  "reviewer": "root",
+  "utc": "2026-10-15T08:13:10.314346+00:00",
+  "head": "b9612d7791b8fb4bb28dc06b8f0a4291c4973ca3",
+  "tested_source": "a4ee5db524216642c38a87cc1d75bc5a29c576e3",
+  "base": "32f74146eff45ec883e706d119ad56f90c2be8f0",
+  "code_review": "Read complete39-added/3-removed production delta and194-line5test file; exact32bitFNV limbs andtwoequal-name guards, no owner/schema/cache/input change. Independent earlier root3,293,760-case wide math agrees with same limb formula.",
+  "source_files_verified": 6762,
+  "docs_only_after_tests": [
+    "docs/audits/context-update-performance/README.md",
+    "docs/audits/context-update-performance/verification.json"
+  ],
+  "host_counts": {
+    "appscopeddebug": {
+      "passed": 5,
+      "ignored": 0
+    },
+    "corefull": {
+      "passed": 2890,
+      "ignored": 0
+    },
+    "appfulldebug": {
+      "passed": 303,
+      "ignored": 39
+    },
+    "appscopeddefault": {
+      "passed": 5,
+      "ignored": 0
+    }
+  },
+  "GBA": [
+    {
+      "pin": "76",
+      "verified_paths": 2165,
+      "all31_unchanged_limits_PASS": true,
+      "idle": 349,
+      "trainer": 223,
+      "ROM_sha256": "c3e80997f521e4bf986e42f7356f4cd6a21788642eac6d0ff51d88da78b58a23"
+    },
+    {
+      "pin": "99c",
+      "verified_paths": 2165,
+      "all31_unchanged_limits_PASS": true,
+      "idle": 350,
+      "trainer": 225,
+      "ROM_sha256": "7a8e904c55a1445b1dd501dbeae675898fcb7d32d1d0318b69ed41f63d117d35"
+    }
+  ],
+  "ordinary_frames": 9749,
+  "all_three_raw_prefix_arrays_equal": true,
+  "byte_equal_files": [
+    {
+      "name": "ordinary-from-BOOT.wav",
+      "bytes": 31196844,
+      "sha256": "109d6251c1415b08978f169721708d62ff16176c29c486fa98e30f86072c1e62",
+      "all_three_builds_byte_equal": true
+    },
+    {
+      "name": "private.script_flags.json",
+      "bytes": 3984,
+      "sha256": "691a86efc2cb3f11a9d591597b21c902a861b1cc1631457852879e74523cc837",
+      "all_three_builds_byte_equal": true
+    },
+    {
+      "name": "all-frame-prefix.json",
+      "bytes": 2426447,
+      "sha256": "b3a71fccab44caea8fb6a5a63c173af990c291280b80e4b1ea159dadf86f1018",
+      "all_three_builds_byte_equal": true
+    },
+    {
+      "name": "private.sav",
+      "bytes": 32768,
+      "sha256": "742b53492d5267c5ee4e4c97d3115f2b4d5d96802942d9f1179fabe44ace5b6d",
+      "all_three_builds_byte_equal": true
+    },
+    {
+      "name": "saved-prompt.png",
+      "bytes": 25053,
+      "sha256": "2df23221b55535ba2cb378154d18edd6d3cd3b7f527c1b506d8aed89812f237e",
+      "all_three_builds_byte_equal": true
+    }
+  ],
+  "before_real_name_controls_expected_0PASS2FAIL": true,
+  "diagnostic_query_all7_PASS": true,
+  "normal_GBA_build_PASS": true,
+  "production_engine_pin_unchanged_76": true,
+  "no_test_or_actual_rerun": true,
+  "limits": "Native deterministic equivalence within declared accelerated preBOOT fixture and recorded input path; no original-game parity/fresh-campaign/full-Silph-timing claim. Pin99c only isolated experiment, not committed."
+}

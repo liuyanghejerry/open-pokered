@@ -1,0 +1,304 @@
+{
+  "audit": 924,
+  "baseline": "Exact267privatef647 +master4c364111, combinedmergee26; not historical05f6.",
+  "before": {
+    "source_commit": "e26bc5c562730a55526691cddcbddcaad6da872b",
+    "source_worktree": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-924-current-before",
+    "binary_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-924-combined-before-debug",
+    "binary_sha256": "d82d9fdc733abf520c59bbea1882726459bb0d2c6a57d8a4f58aab87352ce482",
+    "build_exit": 0,
+    "build_log": "audit-924-combined-before-build.log",
+    "build_target": "fidelity-924-before-target",
+    "features": "debug-server",
+    "profile": "devopt0/debug0 incremental0 freshisolatedtarget explicitbin"
+  },
+  "after": {
+    "source_commit": "6ddab384307c4bdcbcf92feb46f205d90eb4a3d7",
+    "source_worktree": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-924-battle-medicine-negative",
+    "binary_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-924-fix-after-debug",
+    "binary_sha256": "6d2ffff5c8d0cbb7c7a8d8b790f5f2640982c34de617ae1a54ba73f27a699965",
+    "build_exit": 0,
+    "build_log": "audit-924-final-after-build.log",
+    "build_target": "fidelity-924-after-target",
+    "features": "debug-server",
+    "profile": "devopt0/debug0 incremental0 explicitbin ownisolatedtarget"
+  },
+  "compared_source_paths": 2166,
+  "changed_source_paths": [
+    "crates/pokered-app/src/battle_medicine_tests.rs",
+    "crates/pokered-app/src/move_animation_capture.rs",
+    "crates/pokered-app/src/render/battle.rs",
+    "crates/pokered-app/src/render/battle_medicine_tests.rs",
+    "crates/pokered-app/src/render/session.rs",
+    "crates/pokered-app/tests/visual_verify_gap_batch.rs",
+    "crates/pokered-app/tests/visual_verify_zh_descriptions.rs",
+    "crates/pokered-core/src/battle/medicine_result_tests.rs",
+    "crates/pokered-core/src/battle/mod.rs"
+  ],
+  "original_revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "ordinary_SAVE_counts": {
+    "source_negative": 6,
+    "current_before_negative": 6,
+    "after_negative": 6,
+    "current_before_positive": 2,
+    "after_positive": 2,
+    "total_primary": 22,
+    "all_checksums_valid": true,
+    "all8_native_entire_SRAM_input_fixture_pairs_equal": true
+  },
+  "negative_cases": [
+    {
+      "case": "potion-full",
+      "item": "Potion",
+      "target_index": 1,
+      "original_and_after_caption": "It won't have any effect.",
+      "before_caption": "It won't have any effect.",
+      "records": [
+        {
+          "repeat": 1,
+          "original_directory": "audit-924-original-negative-itan5evi/potion-full-1",
+          "before_directory": "audit-924-combined-native-before-5i4au_4e/potion-full-1",
+          "after_directory": "audit-924-fix-native-after-_i6ceu3j/potion-full-1",
+          "original_record_sha256": "caa1332a424fe058517ab2be92017b3bfddbbf1d44a3c37e83a81bf9a0e4b04f",
+          "before_record_sha256": "acdd85941ec7746aafdbbc21570b789089145e1f56bb7724b78faf721f50c76f",
+          "after_record_sha256": "24cceef020d29f65592a4dc0e8f0614f7b2e279f0e06efec255d088535c38142",
+          "original_sram_sha256": "1d628e925b0fe001b31225c8f4ef5cf3346ce05bb6cf8f11b547d65fefc9d6af",
+          "native_entire_SRAM_equal_sha256": "a943ba23c05cf758b60bd5218debdcdc0d64c77710bbda55e29c3b6d514f281e",
+          "native_allinput_equal_sha256": "88bfcbb65ec7b9d37637da41af7accdff2c00388cc0ac3400da9cd3a62ce6119",
+          "native_fixture_equal_sha256": "8bf902a78718c0ebf2b66ebac1c36fad3a2c4b7536b54773896a0d2719b5a0d5",
+          "all3ordinary_SAVE_checksums_valid": true,
+          "native_entire32768bytes_and_allinputs_equal": true,
+          "bench44bytes_unchanged_in_all3": true,
+          "OTnames22_and_nickname22_source_native_equal": true,
+          "quantity2_unchanged": true,
+          "both_parties_and_enemy_no_action_through_ACK": true,
+          "actualACK_return_toBAG": true
+        },
+        {
+          "repeat": 2,
+          "original_directory": "audit-924-original-negative-itan5evi/potion-full-2",
+          "before_directory": "audit-924-combined-native-before-5i4au_4e/potion-full-2",
+          "after_directory": "audit-924-fix-native-after-_i6ceu3j/potion-full-2",
+          "original_record_sha256": "00f0a9c91db3e36009db87b0be090b9f9fbf82ef882acfeabd474ca911bc0ff4",
+          "before_record_sha256": "27f95476f1ac99111bfc58f46f8d862119ba64548269ffaefc0b2e5f111d4a47",
+          "after_record_sha256": "b74fccfbb8c18ad4201d47b9d897ef0ffd6d88e5374f2bc2343aaf5857598f78",
+          "original_sram_sha256": "1d628e925b0fe001b31225c8f4ef5cf3346ce05bb6cf8f11b547d65fefc9d6af",
+          "native_entire_SRAM_equal_sha256": "a943ba23c05cf758b60bd5218debdcdc0d64c77710bbda55e29c3b6d514f281e",
+          "native_allinput_equal_sha256": "88bfcbb65ec7b9d37637da41af7accdff2c00388cc0ac3400da9cd3a62ce6119",
+          "native_fixture_equal_sha256": "8bf902a78718c0ebf2b66ebac1c36fad3a2c4b7536b54773896a0d2719b5a0d5",
+          "all3ordinary_SAVE_checksums_valid": true,
+          "native_entire32768bytes_and_allinputs_equal": true,
+          "bench44bytes_unchanged_in_all3": true,
+          "OTnames22_and_nickname22_source_native_equal": true,
+          "quantity2_unchanged": true,
+          "both_parties_and_enemy_no_action_through_ACK": true,
+          "actualACK_return_toBAG": true
+        }
+      ],
+      "strict_prefix": {
+        "directory": "audit-924-fix-matched-prefix-_atnbij2/potion-full",
+        "fixture_sha256": "8bf902a78718c0ebf2b66ebac1c36fad3a2c4b7536b54773896a0d2719b5a0d5",
+        "buttons_sha256": "481b3848c8417fbbcd4451f1a87f38ebf94775c1c18217515f17d8319f308960",
+        "individual_actual_frames_per_variant": 1288,
+        "PNG_per_variant": 17,
+        "pair_frame": 1288,
+        "before_PNG_sha256": "0ff01da0261deeeff251c63c39aa26680246ed3f4f054f7f839a8ff570fe5358",
+        "after_PNG_sha256": "a4ec03cea7a966fff407cc07501c4daff2ecb3d8316b6e96f9290fa43e29846c",
+        "all_inputs_and_every_other_exposed_state_equal": true,
+        "diagnostic_comparison_exceptions": "Only intended Revive caption and new typed phase debugmetadata fromframes657..1288; rawstates nevermodified."
+      }
+    },
+    {
+      "case": "parlyz-healthy",
+      "item": "ParlyzHeal",
+      "target_index": 1,
+      "original_and_after_caption": "It won't have any effect.",
+      "before_caption": "It won't have any effect.",
+      "records": [
+        {
+          "repeat": 1,
+          "original_directory": "audit-924-original-negative-itan5evi/parlyz-healthy-1",
+          "before_directory": "audit-924-combined-native-before-5i4au_4e/parlyz-healthy-1",
+          "after_directory": "audit-924-fix-native-after-_i6ceu3j/parlyz-healthy-1",
+          "original_record_sha256": "1ae250a3254e1fbfc0fb5ef1a40ab23dd38df6f129e91b7bb13b70432588d90e",
+          "before_record_sha256": "8dd0cbc859d7e13c4d43fa1bba11630e529234cca28a2e46cd56600ab7636cbb",
+          "after_record_sha256": "301dfe1b0e6a23d7f6a1963e97756b3a6faa4a06f125e2887075d4a1e5809b5d",
+          "original_sram_sha256": "572d33363106e6f4a59cf4ce50cfbd5365162d90fd399ed652755e617480c620",
+          "native_entire_SRAM_equal_sha256": "92f7bed3d72e59327a53ed142ea56c5c86cbe64a450c21822198a6c216e9f1ca",
+          "native_allinput_equal_sha256": "88bfcbb65ec7b9d37637da41af7accdff2c00388cc0ac3400da9cd3a62ce6119",
+          "native_fixture_equal_sha256": "79a4776b01a3a0b2213c8b6adb289fc163f3840a2366338807cf7d20b4bed0d1",
+          "all3ordinary_SAVE_checksums_valid": true,
+          "native_entire32768bytes_and_allinputs_equal": true,
+          "bench44bytes_unchanged_in_all3": true,
+          "OTnames22_and_nickname22_source_native_equal": true,
+          "quantity2_unchanged": true,
+          "both_parties_and_enemy_no_action_through_ACK": true,
+          "actualACK_return_toBAG": true
+        },
+        {
+          "repeat": 2,
+          "original_directory": "audit-924-original-negative-itan5evi/parlyz-healthy-2",
+          "before_directory": "audit-924-combined-native-before-5i4au_4e/parlyz-healthy-2",
+          "after_directory": "audit-924-fix-native-after-_i6ceu3j/parlyz-healthy-2",
+          "original_record_sha256": "3a0eec8de1ef9ed80d9841f38fb0261f4991421f838ff0c262eb60a0460c8fa5",
+          "before_record_sha256": "d56479895aec88787ad5a93f265b8f3bdcaacd436d307a1ded03d9388d4dd828",
+          "after_record_sha256": "ef9756403a0d7249df8b874fcbb633092f14ec3265decdc3e14985e0735939e6",
+          "original_sram_sha256": "572d33363106e6f4a59cf4ce50cfbd5365162d90fd399ed652755e617480c620",
+          "native_entire_SRAM_equal_sha256": "92f7bed3d72e59327a53ed142ea56c5c86cbe64a450c21822198a6c216e9f1ca",
+          "native_allinput_equal_sha256": "88bfcbb65ec7b9d37637da41af7accdff2c00388cc0ac3400da9cd3a62ce6119",
+          "native_fixture_equal_sha256": "79a4776b01a3a0b2213c8b6adb289fc163f3840a2366338807cf7d20b4bed0d1",
+          "all3ordinary_SAVE_checksums_valid": true,
+          "native_entire32768bytes_and_allinputs_equal": true,
+          "bench44bytes_unchanged_in_all3": true,
+          "OTnames22_and_nickname22_source_native_equal": true,
+          "quantity2_unchanged": true,
+          "both_parties_and_enemy_no_action_through_ACK": true,
+          "actualACK_return_toBAG": true
+        }
+      ],
+      "strict_prefix": {
+        "directory": "audit-924-fix-matched-prefix-_atnbij2/parlyz-healthy",
+        "fixture_sha256": "79a4776b01a3a0b2213c8b6adb289fc163f3840a2366338807cf7d20b4bed0d1",
+        "buttons_sha256": "481b3848c8417fbbcd4451f1a87f38ebf94775c1c18217515f17d8319f308960",
+        "individual_actual_frames_per_variant": 1288,
+        "PNG_per_variant": 17,
+        "pair_frame": 1288,
+        "before_PNG_sha256": "0ff01da0261deeeff251c63c39aa26680246ed3f4f054f7f839a8ff570fe5358",
+        "after_PNG_sha256": "a4ec03cea7a966fff407cc07501c4daff2ecb3d8316b6e96f9290fa43e29846c",
+        "all_inputs_and_every_other_exposed_state_equal": true,
+        "diagnostic_comparison_exceptions": "Only intended Revive caption and new typed phase debugmetadata fromframes657..1288; rawstates nevermodified."
+      }
+    },
+    {
+      "case": "revive-alive",
+      "item": "Revive",
+      "target_index": 1,
+      "original_and_after_caption": "It won't have any effect.",
+      "before_caption": "Can't revive that!",
+      "records": [
+        {
+          "repeat": 1,
+          "original_directory": "audit-924-original-negative-itan5evi/revive-alive-1",
+          "before_directory": "audit-924-combined-native-before-5i4au_4e/revive-alive-1",
+          "after_directory": "audit-924-fix-native-after-_i6ceu3j/revive-alive-1",
+          "original_record_sha256": "889fc8b188c0fa5a6cf02a72ac61f402f6462e169b46ab2f96b79ed0f235f772",
+          "before_record_sha256": "47272fa8b7c1b267a42a97db5e8cd279cd7be473654b47a28ea6985311b9b492",
+          "after_record_sha256": "818ac05d34ea9bacc057a2fe17f3d2af8e4a7d3605d7eab787a4265ca4178e63",
+          "original_sram_sha256": "18e331b2dacbd94149115716c0feff93eb3e64f445997147ea344f67997d397d",
+          "native_entire_SRAM_equal_sha256": "61c07d04919f75e46b5261044eb4ad66194db5223d7d67bcfce8b519fbf02271",
+          "native_allinput_equal_sha256": "88bfcbb65ec7b9d37637da41af7accdff2c00388cc0ac3400da9cd3a62ce6119",
+          "native_fixture_equal_sha256": "6f58e964170544cb1b179f998066e7b510a55e22e1b754a5a70e807f4500b28c",
+          "all3ordinary_SAVE_checksums_valid": true,
+          "native_entire32768bytes_and_allinputs_equal": true,
+          "bench44bytes_unchanged_in_all3": true,
+          "OTnames22_and_nickname22_source_native_equal": true,
+          "quantity2_unchanged": true,
+          "both_parties_and_enemy_no_action_through_ACK": true,
+          "actualACK_return_toBAG": true
+        },
+        {
+          "repeat": 2,
+          "original_directory": "audit-924-original-negative-itan5evi/revive-alive-2",
+          "before_directory": "audit-924-combined-native-before-5i4au_4e/revive-alive-2",
+          "after_directory": "audit-924-fix-native-after-_i6ceu3j/revive-alive-2",
+          "original_record_sha256": "fe36bfa6d4c11d96c6bd40b2be4884391578015a2b0d663c1aa7b35a6c947035",
+          "before_record_sha256": "d5f0ae477609352244a7b05879b2fbef3082ffe1ac36efd2de5c7f22d69007d2",
+          "after_record_sha256": "b2df05820b49c561bbcd2092b848c06eee8c96cb431cf4260b520f2cfbab6929",
+          "original_sram_sha256": "18e331b2dacbd94149115716c0feff93eb3e64f445997147ea344f67997d397d",
+          "native_entire_SRAM_equal_sha256": "61c07d04919f75e46b5261044eb4ad66194db5223d7d67bcfce8b519fbf02271",
+          "native_allinput_equal_sha256": "88bfcbb65ec7b9d37637da41af7accdff2c00388cc0ac3400da9cd3a62ce6119",
+          "native_fixture_equal_sha256": "6f58e964170544cb1b179f998066e7b510a55e22e1b754a5a70e807f4500b28c",
+          "all3ordinary_SAVE_checksums_valid": true,
+          "native_entire32768bytes_and_allinputs_equal": true,
+          "bench44bytes_unchanged_in_all3": true,
+          "OTnames22_and_nickname22_source_native_equal": true,
+          "quantity2_unchanged": true,
+          "both_parties_and_enemy_no_action_through_ACK": true,
+          "actualACK_return_toBAG": true
+        }
+      ],
+      "strict_prefix": {
+        "directory": "audit-924-fix-matched-prefix-_atnbij2/revive-alive",
+        "fixture_sha256": "6f58e964170544cb1b179f998066e7b510a55e22e1b754a5a70e807f4500b28c",
+        "buttons_sha256": "481b3848c8417fbbcd4451f1a87f38ebf94775c1c18217515f17d8319f308960",
+        "individual_actual_frames_per_variant": 1288,
+        "PNG_per_variant": 17,
+        "pair_frame": 1288,
+        "before_PNG_sha256": "6ee4b294c28e28b2c0341d0bf87de63e12be08f54ef14d9a1c3d8c8d12689bf9",
+        "after_PNG_sha256": "a4ec03cea7a966fff407cc07501c4daff2ecb3d8316b6e96f9290fa43e29846c",
+        "all_inputs_and_every_other_exposed_state_equal": true,
+        "diagnostic_comparison_exceptions": "Only intended Revive caption and new typed phase debugmetadata fromframes657..1288; rawstates nevermodified."
+      }
+    }
+  ],
+  "positive_benchPotion": [
+    {
+      "repeat": 1,
+      "before_directory": "audit-924-positive-native-before-1y3es2fd/potion-success-1",
+      "after_directory": "audit-924-positive-native-after-o323fyxq/potion-success-1",
+      "allinput_equal_sha256": "67e1b48d7dec9478409b241143eee201b75f5de45cfc8f7303828e307b90ae09",
+      "native_entire32768_SRAM_equal_sha256": "dba292cafb17066a547e0de0bdacc9aa1791047bff077b47e8e1fb1f792d2da4",
+      "fixture_equal_sha256": "2ca4f12b957f8c986c5eef4f9ae892daeae8808f12d4508fa71678c0a7f9f555",
+      "ordinary_SAVE_both_valid": true,
+      "one_consumed_and_bench21HP": true,
+      "selected_wait19_after32inputframes_then_zero_wait600idle_and_ACK_enemy_action_preserved": true
+    },
+    {
+      "repeat": 2,
+      "before_directory": "audit-924-positive-native-before-1y3es2fd/potion-success-2",
+      "after_directory": "audit-924-positive-native-after-o323fyxq/potion-success-2",
+      "allinput_equal_sha256": "67e1b48d7dec9478409b241143eee201b75f5de45cfc8f7303828e307b90ae09",
+      "native_entire32768_SRAM_equal_sha256": "dba292cafb17066a547e0de0bdacc9aa1791047bff077b47e8e1fb1f792d2da4",
+      "fixture_equal_sha256": "2ca4f12b957f8c986c5eef4f9ae892daeae8808f12d4508fa71678c0a7f9f555",
+      "ordinary_SAVE_both_valid": true,
+      "one_consumed_and_bench21HP": true,
+      "selected_wait19_after32inputframes_then_zero_wait600idle_and_ACK_enemy_action_preserved": true
+    }
+  ],
+  "tests": {
+    "core-full": {
+      "passed": 2898,
+      "ignored": 0
+    },
+    "app-scoped": {
+      "passed": 8,
+      "ignored": 0
+    },
+    "app-full": {
+      "passed": 304,
+      "ignored": 39
+    },
+    "app-default-full": {
+      "passed": 293,
+      "ignored": 37
+    }
+  },
+  "integration_compile": "BothmechanicalnonmedicineShowingTextdefaultBattle constructors compiled: visual_verify_gap_batch andvisual_verify_zh_descriptions(--no-run).",
+  "new_tests": "3core+4app; fullcounterparty/cancel/AI/PP/target/A-B/ordinarypagewait/pagination/snapshotlegacy/current/no-stringmatch/fullpartycache/reset-Continue-newbattle. Existing267positive/status/Revive/Transform/PP/Delay50testsremainPASS.",
+  "GBA": {
+    "source": "6ddab384307c4bdcbcf92feb46f205d90eb4a3d7",
+    "scenarios": 7,
+    "all_unchanged_budget_checks_pass": true,
+    "trainer_update": 232,
+    "idle_update": 382,
+    "Oak_draw": 2993,
+    "source_mirror": "audit-924-final2-gba-mirror.json",
+    "ROM_sha256": "0e1d06c9a962e8d4061986940d48614db091f9868544ded5b65b85b3996407f2",
+    "ELF_sha256": "9ae90108bce3e249876a8cf7658ab1deb61bb7cb0486be1c4ae296fae3d137a0",
+    "perf": "audit-924-final2-gba-perf.json",
+    "compare": "audit-924-final2-gba-compare.log"
+  },
+  "retained_failures": [
+    "Sourceoriginalv1contraction0xBEdecoderassert (initialreadonlyarchive); actualtextcorrect, noacceptedv1control.",
+    "dab firstappscope7PASS/1FAIL andea53warmretry7PASS/1FAIL: callerinitializesexistingbadgecaches duringapply, sofinalsnapshotbaselineatactualNoEffectstage pluspre/postfullBothParties equality. No production workaround.",
+    "dab/ea53 byteidenticalGBAfirstmetrics: trainer233>232.3, other6PASS. RemovedonlyredundantnewVFXphaseclassificationread; final6ddab7PASS, thresholdunchanged.",
+    "PositiveBEFOREoldconsoleHUDlabelstale; explicitItemMedicineResultassert/fullpartyPNGcorrect, rawunchanged."
+  ],
+  "limits": [
+    "Legalprebootconstructedfixtures thenordinarytrainer/menu/ACK/Tackle/SAVE; notfreshcampaign, no gameplaysetters/forcedbattle/runtimewarp.",
+    "Original/nativeRNG, fullSRAM, CPUclock/audio/wholeanimationparity notclaimed. Nativebefore/afterfullSRAM/inputequality isproved.",
+    "Actualnegativeconditions3; positiveintegrationPotiononly plusupstream267sourceproof/fulltestsforremainingpositivecases.",
+    "Fonts/Chinese/boxlayout, detailedpartyicon/HPbaranimations, unrelatedPPfailurebackgrounds andfullmaprestore areoutside.",
+    "No editsW915/W920. Newtypedphaseusesexistingread-onlyadapter andgenericprinter/ACK/BagSelect; noindependentflag/extraPartyScreenstate."
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "archive": "evidence.zip",
+  "sha256": "6b5cda10f8c4297c4324a6e56b7fbadc1189e53e036631655082c0e89f5b32f6",
+  "bytes": 2614246,
+  "original_paths": 630,
+  "unique_blobs": 165,
+  "every_entry_readback_verified": true,
+  "no_ROM_executable_emulator_state": true,
+  "input_selection": "Fiveexplicit924roots and explicitfiles only; original924archive includedunchanged.",
+  "nested_initial_archive_sha256": "3b3d48a39b289a4cee6a14f71625170869d9c115503111abc839a15c040d678e",
+  "nested_initial_paths": 344,
+  "nested_initial_blobs": 86
+}

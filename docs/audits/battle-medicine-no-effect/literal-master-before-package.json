@@ -1,0 +1,51 @@
+{
+  "utc": "2026-10-15T07:51:54.130772+00:00",
+  "archive": {
+    "path": "literal-master-before-evidence.zip",
+    "bytes": 1130071,
+    "sha256": "dea27f714e4f538133df139f1355118a7bde62f8bb97ba15b696ca1afa6983b4",
+    "original_paths": 243,
+    "unique_blobs": 63,
+    "all_paths_hashes_and_live_bytes_verified": true
+  },
+  "screenshots": [
+    {
+      "case": "potion-full",
+      "before_path": "docs/screenshots/battle-medicine-no-effect/potion-full-master-f078-before.png",
+      "before_source": "f0787e19e7623106eac1d6b8de7430ca1eb4428b",
+      "before_binary_sha256": "eb8436fc99b52e0b3b384cfd1b683e344423130a5ee61aca38e5e9017ad92217",
+      "before_sha256": "0ff01da0261deeeff251c63c39aa26680246ed3f4f054f7f839a8ff570fe5358",
+      "after_path": "docs/screenshots/battle-medicine-no-effect/potion-full-after.png",
+      "after_source": "6ddab384307c4bdcbcf92feb46f205d90eb4a3d7",
+      "after_binary_sha256": "6d2ffff5c8d0cbb7c7a8d8b790f5f2640982c34de617ae1a54ba73f27a699965",
+      "after_sha256": "a4ec03cea7a966fff407cc07501c4daff2ecb3d8316b6e96f9290fa43e29846c",
+      "same_actual_frame": 1288
+    },
+    {
+      "case": "parlyz-healthy",
+      "before_path": "docs/screenshots/battle-medicine-no-effect/parlyz-healthy-master-f078-before.png",
+      "before_source": "f0787e19e7623106eac1d6b8de7430ca1eb4428b",
+      "before_binary_sha256": "eb8436fc99b52e0b3b384cfd1b683e344423130a5ee61aca38e5e9017ad92217",
+      "before_sha256": "0ff01da0261deeeff251c63c39aa26680246ed3f4f054f7f839a8ff570fe5358",
+      "after_path": "docs/screenshots/battle-medicine-no-effect/parlyz-healthy-after.png",
+      "after_source": "6ddab384307c4bdcbcf92feb46f205d90eb4a3d7",
+      "after_binary_sha256": "6d2ffff5c8d0cbb7c7a8d8b790f5f2640982c34de617ae1a54ba73f27a699965",
+      "after_sha256": "a4ec03cea7a966fff407cc07501c4daff2ecb3d8316b6e96f9290fa43e29846c",
+      "same_actual_frame": 1288
+    },
+    {
+      "case": "revive-alive",
+      "before_path": "docs/screenshots/battle-medicine-no-effect/revive-alive-master-f078-before.png",
+      "before_source": "f0787e19e7623106eac1d6b8de7430ca1eb4428b",
+      "before_binary_sha256": "eb8436fc99b52e0b3b384cfd1b683e344423130a5ee61aca38e5e9017ad92217",
+      "before_sha256": "6ee4b294c28e28b2c0341d0bf87de63e12be08f54ef14d9a1c3d8c8d12689bf9",
+      "after_path": "docs/screenshots/battle-medicine-no-effect/revive-alive-after.png",
+      "after_source": "6ddab384307c4bdcbcf92feb46f205d90eb4a3d7",
+      "after_binary_sha256": "6d2ffff5c8d0cbb7c7a8d8b790f5f2640982c34de617ae1a54ba73f27a699965",
+      "after_sha256": "a4ec03cea7a966fff407cc07501c4daff2ecb3d8316b6e96f9290fa43e29846c",
+      "same_actual_frame": 1288
+    }
+  ],
+  "original_after_recordings_unchanged": true,
+  "staged_e26_before_recordings_preserved_separately": true
+}
