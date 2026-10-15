@@ -2190,11 +2190,11 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         self.last_map,
                     ) {
                         // PlayMapChangeSound: door tile → GoInside, otherwise → GoOutside
-                        if doors_elevators::is_standing_on_door(map.tileset, standing_tile) {
-                            self.sfx_event = OverworldSfxEvent::GoInside;
+                        let sound = if doors_elevators::is_standing_on_door(map.tileset, standing_tile) {
+                            super::poison::PoisonStepWarpSound::GoInside
                         } else {
-                            self.sfx_event = OverworldSfxEvent::GoOutside;
-                        }
+                            super::poison::PoisonStepWarpSound::GoOutside
+                        };
                         let save_last_map = special_terrain::is_outside_map(map.tileset);
                         self.pending_warp = Some(PendingWarp {
                             dest_map,
@@ -2210,9 +2210,23 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                                 standing_tile,
                             ) != pokered_data::tileset_data::WarpPadOrHoleType::None,
                         });
-                        self.warp_fade_state = WarpFadeState::FadingOut {
-                            frames_remaining: WARP_FADE_OUT_FRAMES,
-                        };
+                        if step_completed
+                            && self.poison_step_counter.wrapping_add(1) % 4 == 0
+                            && self.active_script_effect.is_none()
+                            && self.pending_dialogue.is_none()
+                        {
+                            // Poison runs before CheckWarps. Retain the target,
+                            // but don't start its sound/fade while text blocks.
+                            self.poison_step_warp_sound = Some(sound);
+                        } else {
+                            self.sfx_event = match sound {
+                                super::poison::PoisonStepWarpSound::GoInside => OverworldSfxEvent::GoInside,
+                                super::poison::PoisonStepWarpSound::GoOutside => OverworldSfxEvent::GoOutside,
+                            };
+                            self.warp_fade_state = WarpFadeState::FadingOut {
+                                frames_remaining: WARP_FADE_OUT_FRAMES,
+                            };
+                        }
                     }
                 }
                 MoveResult::ReachedMapEdge => {
@@ -2423,7 +2437,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     if self.poison_step_counter % 4 == 0
                         && self.active_script_effect.is_none()
                         && self.pending_dialogue.is_none()
-                        && self.pending_warp.is_none()
+                        && (self.pending_warp.is_none() || self.poison_step_warp_sound.is_some())
                     {
                         self.game_data_requests
                             .push(OverworldGameDataRequest::PoisonStep);
