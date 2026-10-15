@@ -1,6 +1,10 @@
 use crate::alloc_prelude::*;
 pub mod accuracy;
 pub mod presentation;
+mod fight_text;
+pub use fight_text::{
+    BattleTextFrame, BattleTextSettings, FightTextKind, FightTextReceipt, FightTextStage, FightTextWork,
+};
 mod switch_dialogue;
 #[cfg(test)]
 mod switch_dialogue_tests;
@@ -36,6 +40,10 @@ mod menu_tests;
 mod max_pp_menu_tests;
 #[cfg(test)]
 mod item_fidelity_tests;
+#[cfg(test)]
+mod fight_notice_tests;
+#[cfg(test)]
+mod fight_text_tests;
 #[cfg(test)]
 mod trainer_free_turn_tests;
 #[cfg(test)]
@@ -413,12 +421,24 @@ pub enum VictoryPhase {
     EndBattleText,
 }
 
+/// PrintText's ordinary prompt versus ManualTextScroll's link-only Delay65.
+/// Both use ShowingText's existing wait; neither owns a second timer.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub enum FightNoticeWait {
+    Ack,
+    LinkDelay,
+    /// Explicit source-call continuation; old serialized Ack/LinkDelay remain readable.
+    Source(FightTextWork),
+}
+
 /// The caller's screen retained behind a blocking text sequence.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum BattleTextBackdrop {
     #[default]
     Battle,
     MedicineParty,
+    /// Retain the selected move pane while PrintText owns confirmation.
+    FightMoveNotice { wait: FightNoticeWait },
     /// ItemUsePPRestore retains its party and, for Ethers, move chooser
     /// through PrintText. RemoveUsedItem runs only after its final ACK.
     PpRestoreParty {
@@ -1890,6 +1910,30 @@ impl BattleScreen {
     }
 
     pub fn update_frame(&mut self, input: BattleInput) -> ScreenAction {
+        let mut receipt = FightTextReceipt::default();
+        self.update_frame_inner(input, BattleTextFrame::from_edges(input), &mut receipt)
+    }
+
+    /// Physical held input and explicit text settings share this single frame
+    /// update. No frontend may call both entry points for the same frame.
+    /// Reset the output receipt even when presentation holds this frame.
+    #[inline]
+    pub fn update_frame_with_text_input(
+        &mut self,
+        input: BattleInput,
+        text: BattleTextFrame,
+        receipt: &mut FightTextReceipt,
+    ) -> ScreenAction {
+        *receipt = FightTextReceipt::default();
+        self.update_frame_inner(input, text, receipt)
+    }
+
+    fn update_frame_inner(
+        &mut self,
+        input: BattleInput,
+        text: BattleTextFrame,
+        receipt: &mut FightTextReceipt,
+    ) -> ScreenAction {
         if self.presentation.enabled && self.presentation.waiting { return ScreenAction::Continue; }
         // HP-bar drain/refill animation (engine/gfx/hp_bar.asm): steps the
         // displayed HP toward the real HP at 1 bar pixel per 2 frames.
@@ -1897,6 +1941,18 @@ impl BattleScreen {
             .tick(&mut self.player_hp, &mut self.enemy_hp);
         if self.presentation.enabled && !self.hp_bar_anim.is_active() && self.presentation.next_hit() {
             return ScreenAction::Continue;
+        }
+        if matches!(&self.phase, BattlePhase::ShowingText {
+            backdrop: BattleTextBackdrop::FightMoveNotice { wait: FightNoticeWait::Source(_) },
+            ..
+        }) {
+            if let BattlePhase::ShowingText {
+                messages, current, wait_frames, next_phase,
+                backdrop: BattleTextBackdrop::FightMoveNotice { wait: FightNoticeWait::Source(work) },
+            } = self.phase.clone() {
+                return self.update_fight_text(messages, current, wait_frames, next_phase, work,
+                    text.held_buttons, receipt);
+            }
         }
         match self.phase.clone() {
             BattlePhase::Intro {
@@ -2075,36 +2131,7 @@ impl BattleScreen {
                 } else if let Some(action) = self.battle_menu.update_frame(menu_input) {
                     match action {
                         BattleMenuAction::Fight => {
-                            // AnyMoveToSelect (core.asm:2487-2488, 2715-2762):
-                            // if every move is at 0 PP (a disabled move's PP is
-                            // ignored), print "X has no moves left!" and run the
-                            // turn as a forced Struggle instead of opening the
-                            // move menu.
-                            let struggle_now = self.battle_state.as_ref().map_or(false, |bs| {
-                                !Self::any_move_to_select(&bs.player)
-                            });
-                            if struggle_now {
-                                let name = self
-                                    .battle_state
-                                    .as_ref()
-                                    .map(|bs| {
-                                        let mut nb = [0u8; crate::battle::state::NAME_TEXT_BUF];
-                                        bs.player.active_mon().display_name(&mut nb).to_string()
-                                    })
-                                    .unwrap_or_else(|| "#MON".to_string());
-                                let msg = format!("{name} has no\nmoves left!");
-                                self.show_text_then(
-                                    vec![msg],
-                                    BattlePhase::ForcedStruggle {
-                                        wait_frames: 60,
-                                    },
-                                );
-                            } else {
-                                if let Some(ref bs) = self.battle_state {
-                                    self.move_menu = Some(Self::build_move_menu_from_state(bs));
-                                }
-                                self.phase = BattlePhase::MoveSelect;
-                            }
+                            self.enter_fight_move_menu_with_text(None, text, receipt);
                         }
                         BattleMenuAction::Run => {
                             self.handle_run();
@@ -2150,67 +2177,7 @@ impl BattleScreen {
                 }
                 ScreenAction::Continue
             }
-            BattlePhase::MoveSelect => {
-                let menu_input = MenuInput {
-                    up: input.up,
-                    down: input.down,
-                    a: input.a,
-                    b: input.b,
-                };
-                if let Some(ref mut mm) = self.move_menu {
-                    if let Some(result) = mm.update_frame(menu_input) {
-                        match result {
-                            MoveMenuResult::Selected(idx) => {
-                                if let Some((action, None)) = self.mimic_choice {
-                                    self.mimic_choice = Some((action, Some(idx)));
-                                    self.execute_turn_with_move(action);
-                                    return ScreenAction::Continue;
-                                }
-                                if self.link_mode {
-                                    // Link battle: defer execution until the
-                                    // remote action arrives (the original
-                                    // exchanges actions in SelectEnemyMove
-                                    // before anything resolves — a locked
-                                    // mon's forced move is what actually goes
-                                    // over the wire, the menu choice ignored).
-                                    let locked_idx = self.battle_state.as_ref().and_then(|bs| {
-                                        if move_is_locked(&bs.player) {
-                                            Some(bs.player.selected_move_index)
-                                        } else {
-                                            None
-                                        }
-                                    });
-                                    self.link_pending_local_action =
-                                        Some(crate::link::protocol::LinkAction::UseMove(
-                                            locked_idx.unwrap_or(idx as u8),
-                                        ));
-                                    self.phase = BattlePhase::LinkWaiting;
-                                } else {
-                                    self.execute_turn_with_move(idx);
-                                }
-                            }
-                            MoveMenuResult::Cancelled => {
-                                self.move_menu = None;
-                                self.battle_menu = BattleMenuState::new();
-                                self.phase = BattlePhase::PlayerMenu;
-                            }
-                            MoveMenuResult::NoPP(_) => {
-                                self.current_message = Some(pokered_data::battle_text::localize(
-                                    "No PP left!",
-                                    self.is_zh,
-                                ));
-                            }
-                            MoveMenuResult::Disabled(_) => {
-                                self.current_message = Some(pokered_data::battle_text::localize(
-                                    "Move is disabled!",
-                                    self.is_zh,
-                                ));
-                            }
-                        }
-                    }
-                }
-                ScreenAction::Continue
-            }
+            BattlePhase::MoveSelect => self.update_move_select(input, text, receipt),
             BattlePhase::BagSelect => {
                 let menu_input = BattleMenuInput {
                     up: input.up,
@@ -2309,7 +2276,9 @@ impl BattleScreen {
                 next_phase,
                 backdrop,
             } => {
-                if wait_frames > 0 {
+                let link_notice = matches!(backdrop,
+                    BattleTextBackdrop::FightMoveNotice { wait: FightNoticeWait::LinkDelay });
+                if wait_frames > 0 && !(link_notice && wait_frames == 1) {
                     self.phase = BattlePhase::ShowingText {
                         messages: messages.clone(),
                         current,
@@ -2326,7 +2295,7 @@ impl BattleScreen {
                 // printing the next line (predef UpdateHPBar2,
                 // engine/battle/core.asm:4727); reproduce that by holding the
                 // current page until the drain/refill finishes.
-                if (input.a || input.b) && !self.hp_bar_anim.is_active() {
+                if (link_notice || input.a || input.b) && !self.hp_bar_anim.is_active() {
                     let next_idx = current + 1;
                     if next_idx >= messages.len() {
                         if let BattleTextBackdrop::PpRestoreParty { consume_on_ack: Some(item), .. } = backdrop {
@@ -2342,13 +2311,20 @@ impl BattleScreen {
                         }
                         self.presentation.finish_pages();
                         self.sync_display_from_state();
-                        self.phase = *next_phase;
-                        self.post_text_transition();
+                        if matches!(backdrop, BattleTextBackdrop::FightMoveNotice { .. }) {
+                            // PrintText has returned: restore the caller and
+                            // re-run AnyMoveToSelect before rebuilding its rows.
+                            let row = self.move_menu.as_ref().map(|menu| menu.cursor());
+                            self.enter_fight_move_menu(row);
+                        } else {
+                            self.phase = *next_phase;
+                            self.post_text_transition();
+                        }
                     } else {
                         self.phase = BattlePhase::ShowingText {
                             messages,
                             current: next_idx,
-                            wait_frames: BATTLE_TEXT_PAGE_WAIT_FRAMES,
+                            wait_frames: if link_notice { 65 } else { BATTLE_TEXT_PAGE_WAIT_FRAMES },
                             next_phase,
                             backdrop,
                         };
@@ -2478,7 +2454,7 @@ impl BattleScreen {
                 // delay (the original's DelayFrames right after PrintText,
                 // core.asm:2751-2755), the turn runs as a Struggle against the
                 // current enemy pick.
-                if wait_frames > 0 {
+                if wait_frames > 1 {
                     self.phase = BattlePhase::ForcedStruggle {
                         wait_frames: wait_frames - 1,
                     };
@@ -2944,6 +2920,67 @@ learn {learn_name}!")];
         }
     }
 
+    fn update_move_select(
+        &mut self,
+        input: BattleInput,
+        text: BattleTextFrame,
+        receipt: &mut FightTextReceipt,
+    ) -> ScreenAction {
+        let menu_input = MenuInput {
+            up: input.up,
+            down: input.down,
+            a: input.a,
+            b: input.b,
+        };
+        if let Some(ref mut mm) = self.move_menu {
+            if let Some(result) = mm.update_frame(menu_input) {
+                match result {
+                    MoveMenuResult::Selected(idx) => {
+                        if let Some((action, None)) = self.mimic_choice {
+                            self.mimic_choice = Some((action, Some(idx)));
+                            self.execute_turn_with_move(action);
+                            return ScreenAction::Continue;
+                        }
+                        if self.link_mode {
+                            // Link battle: defer execution until the
+                            // remote action arrives (the original
+                            // exchanges actions in SelectEnemyMove
+                            // before anything resolves — a locked
+                            // mon's forced move is what actually goes
+                            // over the wire, the menu choice ignored).
+                            let locked_idx = self.battle_state.as_ref().and_then(|bs| {
+                                if move_is_locked(&bs.player) {
+                                    Some(bs.player.selected_move_index)
+                                } else {
+                                    None
+                                }
+                            });
+                            self.link_pending_local_action =
+                                Some(crate::link::protocol::LinkAction::UseMove(
+                                    locked_idx.unwrap_or(idx as u8),
+                                ));
+                            self.phase = BattlePhase::LinkWaiting;
+                        } else {
+                            self.execute_turn_with_move(idx);
+                        }
+                    }
+                    MoveMenuResult::Cancelled => {
+                        self.move_menu = None;
+                        self.battle_menu = BattleMenuState::new();
+                        self.phase = BattlePhase::PlayerMenu;
+                    }
+                    MoveMenuResult::NoPP(_) => {
+                        self.show_fight_move_notice_with_text("No PP left for\nthis move!", text, receipt);
+                    }
+                    MoveMenuResult::Disabled(_) => {
+                        self.show_fight_move_notice_with_text("The move is\ndisabled!", text, receipt);
+                    }
+                }
+            }
+        }
+        ScreenAction::Continue
+    }
+
     fn show_text_then(&mut self, messages: Vec<String>, next: BattlePhase) {
         if messages.is_empty() {
             self.phase = next;
@@ -2977,6 +3014,44 @@ learn {learn_name}!")];
             next_phase: Box::new(next),
             backdrop: BattleTextBackdrop::Battle,
         };
+    }
+
+    /// The regular FIGHT entry, also the refusal PrintText return address.
+    /// AnyMoveToSelect precedes FormatMovesString on every entry; a refusal
+    /// must not run either of them while its retained page is awaiting ACK.
+    fn enter_fight_move_menu(&mut self, saved_row: Option<usize>) {
+        let struggle = self.battle_state.as_ref()
+            .is_some_and(|bs| !Self::any_move_to_select(&bs.player));
+        if struggle {
+            // _NoMovesLeftText ends in done, then DelayFrames60 (not prompt).
+            // Transform never replaces wBattleMonNick: use the existing
+            // persistent-identity display helper rather than the working species.
+            let message = format!("{} has no\nmoves left!", self.player_display_name(false));
+            self.current_message = Some(pokered_data::battle_text::localize(&message, self.is_zh));
+            self.presentation.finish_pages();
+            self.move_menu = None;
+            self.phase = BattlePhase::ForcedStruggle { wait_frames: 60 };
+        } else {
+            self.rebuild_fight_move_menu(saved_row);
+            self.phase = BattlePhase::MoveSelect;
+        }
+    }
+
+    fn rebuild_fight_move_menu(&mut self, saved_row: Option<usize>) {
+        if let Some(bs) = self.battle_state.as_ref() {
+            let mut menu = Self::build_move_menu_from_state(bs);
+            if let Some(row) = saved_row { menu.set_cursor(row); }
+            self.move_menu = Some(menu);
+        }
+    }
+
+    fn show_fight_move_notice(&mut self, message: &str) {
+        self.show_text_then(vec![message.to_string()], BattlePhase::MoveSelect);
+        if let BattlePhase::ShowingText { backdrop, wait_frames, .. } = &mut self.phase {
+            let wait = if self.link_mode { FightNoticeWait::LinkDelay } else { FightNoticeWait::Ack };
+            *backdrop = BattleTextBackdrop::FightMoveNotice { wait };
+            if self.link_mode { *wait_frames = 65; }
+        }
     }
 
     fn show_medicine_no_effect(&mut self, message: String) {

@@ -346,17 +346,12 @@ impl GameLoop for DirectBattleGame {
     type Fb = FrameBuffer;
 
     fn update(&mut self, input: &InputState) {
+        let fight_notice_sound = crate::audio::FightNoticeSound::before(&self.battle.phase);
+        let ordinary_menu_sound = matches!(phase_tag(&self.battle.phase), 2 | 3 | 5 | 7);
         #[cfg(not(target_arch = "wasm32"))]
-        {
-            let tag = phase_tag(&self.battle.phase);
-            if matches!(tag, 2 | 3 | 5 | 7) {
-                if input.is_just_pressed(GbButton::A) {
-                    self.play_sfx(SfxId::PressAB);
-                }
-                if input.is_just_pressed(GbButton::B) {
-                    self.play_sfx(SfxId::PressAB);
-                }
-            }
+        if ordinary_menu_sound {
+            if input.is_just_pressed(GbButton::A) { self.play_sfx(SfxId::PressAB); }
+            if input.is_just_pressed(GbButton::B) { self.play_sfx(SfxId::PressAB); }
         }
 
         let battle_input = BattleInput {
@@ -371,7 +366,18 @@ impl GameLoop for DirectBattleGame {
         if self.battle.presentation.waiting && self.battle_vfx.is_frame_stable() {
             self.battle.complete_move_presentation();
         }
-        let action = self.battle.update_frame(battle_input);
+        // DirectBattle has no save/options owner: this synthetic entry uses
+        // the frontend's explicit Medium default, not an inferred SRAM flag.
+        let text_frame = crate::battle_text_input::frame(input, Some(
+            pokered_core::battle::BattleTextSettings::fight_menu(3, self.battle.link_mode),
+        ));
+        let mut text_receipt = pokered_core::battle::FightTextReceipt::default();
+        let action = self.battle.update_frame_with_text_input(battle_input, text_frame, &mut text_receipt);
+        #[cfg(not(target_arch = "wasm32"))]
+        if !ordinary_menu_sound && (text_receipt.press_ab || (fight_notice_sound.after(&self.battle.phase, false)
+            && (input.is_just_pressed(GbButton::A) || input.is_just_pressed(GbButton::B)))) {
+            self.play_sfx(SfxId::PressAB);
+        }
         self.battle_vfx.update(&self.battle);
 
         #[cfg(not(target_arch = "wasm32"))]
