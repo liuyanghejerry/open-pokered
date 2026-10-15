@@ -16,6 +16,9 @@ macro_rules! dbg_eprintln {
 pub(crate) mod rare_candy;
 #[path = "post_capture.rs"]
 pub(crate) mod post_capture;
+#[cfg(all(test, not(target_os = "none")))]
+#[path = "old_man_capture_tests.rs"]
+mod old_man_capture_tests;
 
 use crate::alloc_prelude::*;
 
@@ -4632,13 +4635,19 @@ impl PokemonGame {
                 let caught_sound_holds_input = (self.battle.captured_mon.is_some() || self.battle.is_old_man)
                     && self.battle.current_message.as_ref().is_some_and(|msg| msg.starts_with("All right!"))
                     && self.audio.as_ref().is_some_and(|audio| audio.is_sfx_playing() && !audio.low_health_alarm_active());
+                // ItemUseBall completes every toss/poof/shake before printing
+                // the success text and starting its three-channel jingle.
+                // Advancing the demo early lets a queued Tink replace CHAN5.
+                let demo_animation_holds_input = self.battle.is_old_man
+                    && matches!(self.battle.phase, pokered_core::battle::BattlePhase::ShowingText { .. })
+                    && !self.battle_vfx.item_animation_capture_finished();
                 let battle_input = BattleInput {
                     up: input.is_just_pressed(GbButton::Up),
                     down: input.is_just_pressed(GbButton::Down),
                     left: input.is_just_pressed(GbButton::Left),
                     right: input.is_just_pressed(GbButton::Right),
-                    a: input.is_just_pressed(GbButton::A) && !caught_sound_holds_input,
-                    b: input.is_just_pressed(GbButton::B) && !caught_sound_holds_input,
+                    a: input.is_just_pressed(GbButton::A) && !caught_sound_holds_input && !demo_animation_holds_input,
+                    b: input.is_just_pressed(GbButton::B) && !caught_sound_holds_input && !demo_animation_holds_input,
                 };
                 // ── Link battle driving ─────────────────────────────────
                 // The CORE `LinkBattleDriver` owns the battle screen (turn

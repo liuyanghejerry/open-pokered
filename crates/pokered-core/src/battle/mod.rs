@@ -1877,6 +1877,10 @@ impl BattleScreen {
                                 phase: IntroPhase::GhostCantID,
                                 wait_frames: 30,
                             }
+                        } else if self.is_old_man {
+                            // The demonstration goes straight to its scripted
+                            // throw; it never sends out the player's first mon.
+                            BattlePhase::PlayerMenu
                         } else {
                             BattlePhase::Intro {
                                 phase: IntroPhase::PlayerSendOut,
@@ -2191,7 +2195,12 @@ impl BattleScreen {
                 if (input.a || input.b) && !self.hp_bar_anim.is_active() {
                     let next_idx = current + 1;
                     if next_idx >= messages.len() {
-                        self.current_message = None;
+                        // Keep the demonstration's success caption while its
+                        // return-to-field caller finishes. There is no trainer
+                        // victory narration in the old man's wild battle.
+                        if !self.is_old_man {
+                            self.current_message = None;
+                        }
                         self.presentation.finish_pages();
                         self.sync_display_from_state();
                         self.phase = *next_phase;
@@ -6461,6 +6470,28 @@ mod old_man_tests {
             s.current_message
         );
         assert!(s.captured_mon.is_none(), "the tutorial WEEDLE is a demo — not kept");
+    }
+
+    #[test]
+    fn old_man_intro_skips_player_send_out_and_retains_success_caption() {
+        let mut s = BattleScreen::from_parties(true, &[mk(Species::Charmander, 5)], &[mk(Species::Weedle, 5)], None);
+        s.is_old_man = true;
+        s.phase = BattlePhase::Intro { phase: IntroPhase::WildReveal, wait_frames: 0 };
+        s.update_frame(BattleInput { a: true, ..BattleInput::none() });
+        assert_eq!(s.phase, BattlePhase::PlayerMenu);
+        s.update_frame(BattleInput::none());
+        for _ in 0..200 {
+            s.update_frame(BattleInput { a: true, ..BattleInput::none() });
+            if matches!(s.phase, BattlePhase::BattleOver { .. }) { break; }
+        }
+        assert!(matches!(s.phase, BattlePhase::BattleOver { .. }));
+        assert_eq!(s.current_message.as_deref(), Some("All right!\nWEEDLE was caught!"));
+        assert!(s.captured_mon.is_none());
+
+        let mut ordinary = BattleScreen::from_parties(true, &[mk(Species::Charmander, 5)], &[mk(Species::Weedle, 5)], None);
+        ordinary.phase = BattlePhase::Intro { phase: IntroPhase::WildReveal, wait_frames: 0 };
+        ordinary.update_frame(BattleInput { a: true, ..BattleInput::none() });
+        assert!(matches!(ordinary.phase, BattlePhase::Intro { phase: IntroPhase::PlayerSendOut, .. }));
     }
 
     #[test]
