@@ -1,0 +1,507 @@
+{
+  "audit": 915,
+  "native_before_source": "8eb08f56945bf7db3650896295e8048cf97d14c8",
+  "native_before_binary_sha256": "12facc2aba0c57d01ef00d61e9dde1c78a1d6b6f5b2c4019bdd4860226dafd9d",
+  "native_after_source": "dd04edf2cc54466b05eb069954dc903826aab5f8",
+  "native_after_binary_sha256": "e91546d6c71613fe59b1b77cc510c92f68f15f39ba8de11f6c58f508788a27ca",
+  "original_revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "original_rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+  "primary_source": "engine/items/item_effects.asm: ItemUseMedicine DisplayPartyMenu; .showHealingItemMessage ClearScreen -> RedrawPartyMenu -> DelayFrames(50) -> WaitForTextScrollButtonPress -> .done ReloadMapData. Same caller for healing/statuscure/revive.",
+  "result": "Successful medicine and its target picker now draw the full live persistent-identity battle party; result retains selected target HP/status and waits literal Delay50 then A/B before existing EnemyFreeTurnAfterItem. Only one party/text/cursor owner, no field PartyScreen input/save_data mutation.",
+  "source_controls": 8,
+  "current_master_before_controls": 8,
+  "after_controls": 8,
+  "all24_ordinary_save_checksums_valid": true,
+  "cases": [
+    {
+      "case": "active",
+      "item": "Potion",
+      "target": 0,
+      "repeats_per_provider": 2,
+      "no_ACK_hold_frames": 600,
+      "effect_and_one_consumption_preserved": true,
+      "no_enemy_action_before_ACK": true,
+      "records": [
+        {
+          "repeat": 1,
+          "source_directory": "active-1",
+          "before_directory": "active-1",
+          "after_directory": "active-1",
+          "source_parent": "audit-915-original-medicine-0z6n3lsk",
+          "native_before_parent": "audit-915-current8eb-native-before-jefydwsc",
+          "native_after_parent": "audit-915-final-text-native-after-00vbze26",
+          "source_record_sha256": "9f931e4f6bd10c9cd571be48698dce024229f76d1695d0de856ccb0085cf3fb4",
+          "before_record_sha256": "405f3a3e176dbd6358c06ac30e68522513c4fd5b6779215d92c6e3a853e5ade2",
+          "after_record_sha256": "dcab8a7044e9ee85f946d594901b2a860589b4fcdff3cd2a1118b8c3f852566c",
+          "source_sram_sha256": "62158eb3e0be0355aa92c12f5e190a1a3c8314c5eb2cc42dc5db5de498c4cde8",
+          "native_before_and_after_sram_sha256": "2cce0d5fd4c0717d453e7f514a1ab9369c794a6e184b1a04879e92b9a590fa85",
+          "ordinary_SRAM_entire_32768_bytes_equal_before_after": true,
+          "input_actions_byte_equal": true,
+          "fixture_sha256_equal": true,
+          "source_result_HP": [
+            21,
+            35
+          ],
+          "native_result_HP": [
+            21,
+            35
+          ],
+          "same_result_frame": 1280,
+          "all_three_checksums_valid": true,
+          "bench_entire44bytes_match_expected_source_and_native": true,
+          "both_native_currentbox_PC_HOF_benchPP_protected": true
+        },
+        {
+          "repeat": 2,
+          "source_directory": "active-2",
+          "before_directory": "active-2",
+          "after_directory": "active-2",
+          "source_parent": "audit-915-original-medicine-0z6n3lsk",
+          "native_before_parent": "audit-915-current8eb-native-before-jefydwsc",
+          "native_after_parent": "audit-915-final-text-native-after-00vbze26",
+          "source_record_sha256": "062a4e7ba1e7583d4a609c71271da5799111b6d1205a58b115cfc2c47c7fc02e",
+          "before_record_sha256": "44c46f98fa3d85e94c8e1686f67a04093a6d008371039668d318a3ba05658266",
+          "after_record_sha256": "9dfca52ee2524217e078ce5a9485913a4e38dd6030593b1f63cc523f631ca6f7",
+          "source_sram_sha256": "62158eb3e0be0355aa92c12f5e190a1a3c8314c5eb2cc42dc5db5de498c4cde8",
+          "native_before_and_after_sram_sha256": "2cce0d5fd4c0717d453e7f514a1ab9369c794a6e184b1a04879e92b9a590fa85",
+          "ordinary_SRAM_entire_32768_bytes_equal_before_after": true,
+          "input_actions_byte_equal": true,
+          "fixture_sha256_equal": true,
+          "source_result_HP": [
+            21,
+            35
+          ],
+          "native_result_HP": [
+            21,
+            35
+          ],
+          "same_result_frame": 1280,
+          "all_three_checksums_valid": true,
+          "bench_entire44bytes_match_expected_source_and_native": true,
+          "both_native_currentbox_PC_HOF_benchPP_protected": true
+        }
+      ]
+    },
+    {
+      "case": "bench",
+      "item": "Potion",
+      "target": 1,
+      "repeats_per_provider": 2,
+      "no_ACK_hold_frames": 600,
+      "effect_and_one_consumption_preserved": true,
+      "no_enemy_action_before_ACK": true,
+      "records": [
+        {
+          "repeat": 1,
+          "source_directory": "bench-1",
+          "before_directory": "bench-1",
+          "after_directory": "bench-1",
+          "source_parent": "audit-915-original-medicine-0z6n3lsk",
+          "native_before_parent": "audit-915-current8eb-native-before-jefydwsc",
+          "native_after_parent": "audit-915-final-text-native-after-00vbze26",
+          "source_record_sha256": "82497cd843eae83581f0681ef8dd26c06406d195b921ad12cf0e8b9cffb5b160",
+          "before_record_sha256": "d9a660b25ef63a7430befbb8beca0f2f9c462833faa40481c8d0a2d08cf39c28",
+          "after_record_sha256": "5a60d42c57f2562fe4b86aa13258d1fa1c9abe3ff8e22ddd77180fb8cefd8175",
+          "source_sram_sha256": "39eb55467746783b37d6c9dedec08375d4486546bfb4891a47357a80f6d73917",
+          "native_before_and_after_sram_sha256": "dba292cafb17066a547e0de0bdacc9aa1791047bff077b47e8e1fb1f792d2da4",
+          "ordinary_SRAM_entire_32768_bytes_equal_before_after": true,
+          "input_actions_byte_equal": true,
+          "fixture_sha256_equal": true,
+          "source_result_HP": [
+            52,
+            21
+          ],
+          "native_result_HP": [
+            52,
+            21
+          ],
+          "same_result_frame": 1288,
+          "all_three_checksums_valid": true,
+          "bench_entire44bytes_match_expected_source_and_native": true,
+          "both_native_currentbox_PC_HOF_benchPP_protected": true
+        },
+        {
+          "repeat": 2,
+          "source_directory": "bench-2",
+          "before_directory": "bench-2",
+          "after_directory": "bench-2",
+          "source_parent": "audit-915-original-medicine-0z6n3lsk",
+          "native_before_parent": "audit-915-current8eb-native-before-jefydwsc",
+          "native_after_parent": "audit-915-final-text-native-after-00vbze26",
+          "source_record_sha256": "e4682f197bb1f0e2bed9efeb9ed35a606092b8061ae567cd832aaa5cc714b2b8",
+          "before_record_sha256": "15c44058b3d8cc747107b77b1691a00720ba95f160846b3e267323cce5414206",
+          "after_record_sha256": "0aa7c1b28a29844abfde63208a58f586a3e79b93d5340ebcda16749bff033ddb",
+          "source_sram_sha256": "39eb55467746783b37d6c9dedec08375d4486546bfb4891a47357a80f6d73917",
+          "native_before_and_after_sram_sha256": "dba292cafb17066a547e0de0bdacc9aa1791047bff077b47e8e1fb1f792d2da4",
+          "ordinary_SRAM_entire_32768_bytes_equal_before_after": true,
+          "input_actions_byte_equal": true,
+          "fixture_sha256_equal": true,
+          "source_result_HP": [
+            52,
+            21
+          ],
+          "native_result_HP": [
+            52,
+            21
+          ],
+          "same_result_frame": 1288,
+          "all_three_checksums_valid": true,
+          "bench_entire44bytes_match_expected_source_and_native": true,
+          "both_native_currentbox_PC_HOF_benchPP_protected": true
+        }
+      ]
+    },
+    {
+      "case": "status-bench",
+      "item": "ParlyzHeal",
+      "target": 1,
+      "repeats_per_provider": 2,
+      "no_ACK_hold_frames": 600,
+      "effect_and_one_consumption_preserved": true,
+      "no_enemy_action_before_ACK": true,
+      "records": [
+        {
+          "repeat": 1,
+          "source_directory": "status-bench-1",
+          "before_directory": "status-bench-1",
+          "after_directory": "status-bench-1",
+          "source_parent": "audit-915-current-original-medicine-m9scqsew",
+          "native_before_parent": "audit-915-current8eb-native-before-jefydwsc",
+          "native_after_parent": "audit-915-final-text-native-after-00vbze26",
+          "source_record_sha256": "f175b78a42ff775d5170030a225b39ba8ff390f8a80b9de6779135151c610085",
+          "before_record_sha256": "baa748238a1f2f664ed9490543a4e7ac945f31b0f8011e412f214d129f8e0508",
+          "after_record_sha256": "246a26bfd6e4a6dac3f7cf65b2b580d75c82bf7aa8dfdec55b00a1d786689432",
+          "source_sram_sha256": "08a0b930ac570d03811c6d249907a5c8764f7f8804a504ae9f278b459bce38f8",
+          "native_before_and_after_sram_sha256": "acf21b1a96b9ed3099296df7f8bf343db34bf6628f8cf8d7673900ce9d6408b7",
+          "ordinary_SRAM_entire_32768_bytes_equal_before_after": true,
+          "input_actions_byte_equal": true,
+          "fixture_sha256_equal": true,
+          "source_result_HP": [
+            52,
+            35
+          ],
+          "native_result_HP": [
+            52,
+            35
+          ],
+          "same_result_frame": 1288,
+          "all_three_checksums_valid": true,
+          "bench_entire44bytes_match_expected_source_and_native": true,
+          "both_native_currentbox_PC_HOF_benchPP_protected": true
+        },
+        {
+          "repeat": 2,
+          "source_directory": "status-bench-2",
+          "before_directory": "status-bench-2",
+          "after_directory": "status-bench-2",
+          "source_parent": "audit-915-current-original-medicine-m9scqsew",
+          "native_before_parent": "audit-915-current8eb-native-before-jefydwsc",
+          "native_after_parent": "audit-915-final-text-native-after-00vbze26",
+          "source_record_sha256": "8e58b2d2474a2343d3fd9304394d1c7d00b7649473af5eaa3a3dc744e287182d",
+          "before_record_sha256": "fb0206732b5aca3d7638e86c5f4394a93385eb22e991594a022f2268f74a1a8b",
+          "after_record_sha256": "0c50be2688936447a453941a41c7441133957f9e60f27409bb380f193fb76d6b",
+          "source_sram_sha256": "08a0b930ac570d03811c6d249907a5c8764f7f8804a504ae9f278b459bce38f8",
+          "native_before_and_after_sram_sha256": "acf21b1a96b9ed3099296df7f8bf343db34bf6628f8cf8d7673900ce9d6408b7",
+          "ordinary_SRAM_entire_32768_bytes_equal_before_after": true,
+          "input_actions_byte_equal": true,
+          "fixture_sha256_equal": true,
+          "source_result_HP": [
+            52,
+            35
+          ],
+          "native_result_HP": [
+            52,
+            35
+          ],
+          "same_result_frame": 1288,
+          "all_three_checksums_valid": true,
+          "bench_entire44bytes_match_expected_source_and_native": true,
+          "both_native_currentbox_PC_HOF_benchPP_protected": true
+        }
+      ]
+    },
+    {
+      "case": "revive-bench",
+      "item": "Revive",
+      "target": 1,
+      "repeats_per_provider": 2,
+      "no_ACK_hold_frames": 600,
+      "effect_and_one_consumption_preserved": true,
+      "no_enemy_action_before_ACK": true,
+      "records": [
+        {
+          "repeat": 1,
+          "source_directory": "revive-bench-1",
+          "before_directory": "revive-bench-1",
+          "after_directory": "revive-bench-1",
+          "source_parent": "audit-915-current-original-medicine-m9scqsew",
+          "native_before_parent": "audit-915-current8eb-native-before-jefydwsc",
+          "native_after_parent": "audit-915-final-text-native-after-00vbze26",
+          "source_record_sha256": "55e81be82b332e73cbf437d99055a5106709b30b8c06e47666010ffed7f80984",
+          "before_record_sha256": "a9d3ffba6332b575567fffd7317003d96570f7e070dd8ea2051055bfa650eb5d",
+          "after_record_sha256": "6f2cbd8f124fc03959651f99469fd157b3f6a178addabf8ebe3bf3530845c276",
+          "source_sram_sha256": "1e727fa1ade825cd81d44be581d39a68a936e9074855f86f20a352b59b1eef8f",
+          "native_before_and_after_sram_sha256": "113db825be60b2add1eb79519c3e267c4a71dbf757c37578cc45123e391ef694",
+          "ordinary_SRAM_entire_32768_bytes_equal_before_after": true,
+          "input_actions_byte_equal": true,
+          "fixture_sha256_equal": true,
+          "source_result_HP": [
+            52,
+            17
+          ],
+          "native_result_HP": [
+            52,
+            17
+          ],
+          "same_result_frame": 1288,
+          "all_three_checksums_valid": true,
+          "bench_entire44bytes_match_expected_source_and_native": true,
+          "both_native_currentbox_PC_HOF_benchPP_protected": true
+        },
+        {
+          "repeat": 2,
+          "source_directory": "revive-bench-2",
+          "before_directory": "revive-bench-2",
+          "after_directory": "revive-bench-2",
+          "source_parent": "audit-915-current-original-medicine-m9scqsew",
+          "native_before_parent": "audit-915-current8eb-native-before-jefydwsc",
+          "native_after_parent": "audit-915-final-text-native-after-00vbze26",
+          "source_record_sha256": "48645e246f66a1ba0043c6e75498e1409f5b40c0b624ae6626e9a71728a0e077",
+          "before_record_sha256": "7507b7d967b1fc0a28b0732c27b077c6a12bc8d490d65e4b7955e2fb44674e3e",
+          "after_record_sha256": "c9a188a5fb5cad7ce397bc80d5bfa3b663aade7c937958a60118eb4daeea8f4b",
+          "source_sram_sha256": "1e727fa1ade825cd81d44be581d39a68a936e9074855f86f20a352b59b1eef8f",
+          "native_before_and_after_sram_sha256": "113db825be60b2add1eb79519c3e267c4a71dbf757c37578cc45123e391ef694",
+          "ordinary_SRAM_entire_32768_bytes_equal_before_after": true,
+          "input_actions_byte_equal": true,
+          "fixture_sha256_equal": true,
+          "source_result_HP": [
+            52,
+            17
+          ],
+          "native_result_HP": [
+            52,
+            17
+          ],
+          "same_result_frame": 1288,
+          "all_three_checksums_valid": true,
+          "bench_entire44bytes_match_expected_source_and_native": true,
+          "both_native_currentbox_PC_HOF_benchPP_protected": true
+        }
+      ]
+    }
+  ],
+  "matched_prefix": {
+    "directory": "audit-915-final-text-matched-prefix-kq0jr9l2",
+    "scope": "One independently replayed bench-Potion scenario per native version; same exact fixture/seed42/full1288 physical buttons from frame0. Every physical frame has actual state/frame assertion. Contiguous PNG windows620..720 and1272..1288, targetpair648/resultpair1288. No extra SAVE claimed from prefix replays.",
+    "fixture_sha256": "2ca4f12b957f8c986c5eef4f9ae892daeae8808f12d4508fa71678c0a7f9f555",
+    "buttons_sha256": "481b3848c8417fbbcd4451f1a87f38ebf94775c1c18217515f17d8319f308960",
+    "states_per_variant": 1288,
+    "PNG_per_variant": 118,
+    "sameframe_pairs": [
+      648,
+      1288
+    ],
+    "verification_sha256": "434247f01e8ab5dfadad44a598239137defc696b5d65eac4a40719a38f09ca1c"
+  },
+  "tests": {
+    "baseline_new_full_party_render_regression": "1 FAIL on clean6d30 production before fix (actual pixel32,3), preserved log",
+    "core_lib": "2894 PASS including6 new medicine owner/delay/ACK/status/Revive/Transform/PP/cancel/noeffect/snapshot tests",
+    "app_debug_lib": "293 PASS /39 ignored, including4 new full-party render/original transformedidentity/read-onlyview/appsnapshot/reset-Continue-newbattle tests",
+    "app_default_medicine": "4 PASS",
+    "data_battle_text": "13 PASS including new exact eight source medicine templates, English pass-through and preserved member Chinese localization",
+    "GBA": "Pinned nightly2025-12-07, independent outside-repo source mirror2166 exactpaths, own915target. Seven scenarios compare PASS against unchanged checked-in baseline; trainer232, idle382, Oak draw2994 (<3004.9).",
+    "git_diff_check": "PASS"
+  },
+  "source_changed_common_paths": {
+    "crates/pokered-app/src/direct_battle.rs": {
+      "before": "57be6757e2242fab3260edaf87a6f2a0485eaba74ebb224289f8a8e6d962ec54",
+      "after": "9f3652fda3914d9adf859cab58777341f7b41dd06296883509393a119e278f20"
+    },
+    "crates/pokered-app/src/game.rs": {
+      "before": "f3c603f63084525e46d62d25ad405f3dd67e061cfc76e9942f1a6e8161d380cf",
+      "after": "b6002255f45c3c0d14f556b697661f5499778e1026a0b8dd466f0a117ae04c1a"
+    },
+    "crates/pokered-app/src/render/battle.rs": {
+      "before": "b0fcf13a55974590d21da16f9729255bc9444d467472664b57656f0507cfec64",
+      "after": "822e9de114c9e490dd29707c58fabe5bd108b53cc3bb62f0d3085d1566309c4d"
+    },
+    "crates/pokered-app/src/render/session.rs": {
+      "before": "323c5002109d272ca5b84d9960200655fcff2b9551607cb3e141539f9cd1f669",
+      "after": "157b96c4ce68a3bf90befa02ce24ecc38506bf1e7d5aaf1fdd23b3b24ffeda05"
+    },
+    "crates/pokered-core/src/battle/exp_participant_tests.rs": {
+      "before": "a1b434c379ad52eb71428abdbe4ce60ccf860805d7b9c619ad6dde6c4fac1d12",
+      "after": "1c991a4583de38e827b6f8cab8aa47dbea30420fbd431af34e022cbb07579f4f"
+    },
+    "crates/pokered-core/src/battle/item_fidelity_tests.rs": {
+      "before": "5e32f3f8d784b7ff729c0784007a454237da3536485eb60b5d6504d2b3d0974d",
+      "after": "6b6f9766b3319a9613a474dfcd54196fddb5cc71fe62010cebb323a7d85a27d8"
+    },
+    "crates/pokered-core/src/battle/mod.rs": {
+      "before": "b05caece30522e159b7bca89c35b56e2e24b2faccb2957f0a6a3e2cf8c62d885",
+      "after": "a860a07b3e2a5d27867cc5241738a641d20f9b824ca029c327f0a17ad2cf6320"
+    },
+    "crates/pokered-data/src/battle_text.rs": {
+      "before": "6f0e415aab285dfb3f2e105d6c44b97c85150c4c501a6bafe0192b855194c6e0",
+      "after": "975ee9ec97796dbe597f814392f1fdb18b1bfcdb1cc47c03252296fd6a7763bd"
+    },
+    "crates/pokered-ui/src/menus/party.rs": {
+      "before": "fd6d5b85bc4472e6641b287952d8275c510d5f58b7be269616c6627b63bb1417",
+      "after": "a97c1bf57f40182b241625f0a250386413cb890b315b39da9ccf379a43c56fc0"
+    }
+  },
+  "source_added_paths": [
+    "crates/pokered-app/src/battle_medicine_tests.rs",
+    "crates/pokered-app/src/render/battle_medicine_tests.rs",
+    "crates/pokered-core/src/battle/medicine_result_tests.rs"
+  ],
+  "limits": [
+    "Preinput legal constructed party/HP/status/bag/map/trainerflags, then ordinary gameplay only. Not a fresh campaign; no post-construction RAM/gameplay setters or forced battle.",
+    "Source/native RNG is not matched; different Tackle counts/final activeHP and PP. All providers nevertheless finish and SAVE valid SRAM. No original/native full-SRAM, instruction, waveform or whole-animation timing parity claim.",
+    "This fixes the medicine caller/fullscreen result ownership and literal Delay50. Existing instant HP updates and detailed HP-bar/icon animation or loading/audio timing are not rebuilt. Successful medicine wording now names the selected persistent-identity member using original Potion/status/Revive templates.",
+    "Final current-master BEFORE is8eb08f56, independently freshly built; historical216/6d30 and318b party-only intermediate artifacts remain their actual identities. Original Potion4 controls are original915 recordings; new shared status/Revive4 are separately captured.",
+    "Native v1 current-before driver incorrectly asserted debug battle_live.player_party.status (field absent), failed after paused capture. Kept failure/log/actions/state; corrected v2 removed that schema assumption and eight successful controls validate status through actual ordinarySRAM/readback.",
+    "First load test incorrectly expected bare load_from_path to switch screen; documented API delegates scene reconstruction to caller and sole production caller is soft_reset. Failed log retained, no production load specialcase. Final test exercises actual16-frame reset combo, Title/Continue, new battle and proves no stale party writeback.",
+    "No-effect/cancel and PP/Transform/snapshot/reset lifecycle have meaningful unit coverage; successful Potion/statuscure/Revive are the new actual gameplay matrix. No claim that every medicine item has independent actual recordings."
+  ],
+  "typed_preinput_cases": [
+    {
+      "case": "active",
+      "target": 0,
+      "item": "Potion",
+      "item_id": 20,
+      "quantity": 2,
+      "hp": 1,
+      "max_hp": 52,
+      "status": "None",
+      "expected_result_message": "BULBASAUR\nrecovered by 20!"
+    },
+    {
+      "case": "bench",
+      "target": 1,
+      "item": "Potion",
+      "item_id": 20,
+      "quantity": 2,
+      "hp": 1,
+      "max_hp": 35,
+      "status": "None",
+      "expected_result_message": "BULBASAUR\nrecovered by 20!"
+    },
+    {
+      "case": "status-bench",
+      "target": 1,
+      "item": "ParlyzHeal",
+      "item_id": 15,
+      "quantity": 2,
+      "hp": 35,
+      "max_hp": 35,
+      "status": "Paralysis",
+      "expected_result_message": "BULBASAUR's\nrid of paralysis!"
+    },
+    {
+      "case": "revive-bench",
+      "target": 1,
+      "item": "Revive",
+      "item_id": 53,
+      "quantity": 2,
+      "hp": 0,
+      "max_hp": 35,
+      "status": "None",
+      "expected_result_message": "BULBASAUR\nis revitalized!"
+    }
+  ],
+  "metadata_errata_sha256": "51e5f0b3f1a3e847b778e26f408eab11aedbe6aff38a36d02254906ef3897961",
+  "GBA_final_metrics": {
+    "emulator": "stdbuf -oL -eL /tmp/pokered-mgba/usr/games/mgba -1",
+    "scenarios": {
+      "battle-entry-v1": {
+        "draw_max_ticks": 8861,
+        "draw_per_frame_ticks": 2640,
+        "present_max_ticks": 782,
+        "present_per_frame_ticks": 566,
+        "renders": 369,
+        "samples": 500,
+        "scenario": "battle-entry-v1",
+        "update_avg_ticks": 214,
+        "update_core_avg_ticks": 203,
+        "update_flush_avg_ticks": 1
+      },
+      "intro-title-v1": {
+        "draw_max_ticks": 10015,
+        "draw_per_frame_ticks": 1214,
+        "present_max_ticks": 782,
+        "present_per_frame_ticks": 353,
+        "renders": 115,
+        "samples": 250,
+        "scenario": "intro-title-v1",
+        "update_avg_ticks": 118,
+        "update_core_avg_ticks": 109,
+        "update_flush_avg_ticks": 1
+      },
+      "oak-dialogue-v1": {
+        "draw_max_ticks": 9311,
+        "draw_per_frame_ticks": 2994,
+        "present_max_ticks": 782,
+        "present_per_frame_ticks": 392,
+        "renders": 307,
+        "samples": 600,
+        "scenario": "oak-dialogue-v1",
+        "update_avg_ticks": 188,
+        "update_core_avg_ticks": 179,
+        "update_flush_avg_ticks": 1
+      },
+      "overworld-idle-v1": {
+        "draw_max_ticks": 0,
+        "draw_per_frame_ticks": 0,
+        "present_max_ticks": 0,
+        "present_per_frame_ticks": 0,
+        "renders": 0,
+        "samples": 1400,
+        "scenario": "overworld-idle-v1",
+        "update_avg_ticks": 382,
+        "update_core_avg_ticks": 372,
+        "update_flush_avg_ticks": 1
+      },
+      "overworld-movement-v1": {
+        "draw_max_ticks": 3110,
+        "draw_per_frame_ticks": 224,
+        "present_max_ticks": 769,
+        "present_per_frame_ticks": 70,
+        "renders": 24,
+        "samples": 240,
+        "scenario": "overworld-movement-v1",
+        "update_avg_ticks": 387,
+        "update_core_avg_ticks": 377,
+        "update_flush_avg_ticks": 1
+      },
+      "pokedex-entry-v1": {
+        "draw_max_ticks": 16319,
+        "draw_per_frame_ticks": 40,
+        "present_max_ticks": 766,
+        "present_per_frame_ticks": 1,
+        "renders": 1,
+        "samples": 400,
+        "scenario": "pokedex-entry-v1",
+        "update_avg_ticks": 116,
+        "update_core_avg_ticks": 105,
+        "update_flush_avg_ticks": 1
+      },
+      "trainer-battle-entry-v1": {
+        "draw_max_ticks": 10151,
+        "draw_per_frame_ticks": 2468,
+        "present_max_ticks": 782,
+        "present_per_frame_ticks": 344,
+        "renders": 224,
+        "samples": 500,
+        "scenario": "trainer-battle-entry-v1",
+        "update_avg_ticks": 232,
+        "update_core_avg_ticks": 221,
+        "update_flush_avg_ticks": 1
+      }
+    },
+    "suite": "autopilot-v1"
+  },
+  "GBA_final_ROM_sha256": "6b87ff0310b4649bd922e54452137d2f99dc1f55cdfa86bdc5be4adaca5943eb",
+  "GBA_comparison_exit": 0,
+  "GBA_comparison_log_sha256": "4632943f86be77b646de486d36af0ebcd4499d1cdeb3ac2f456f45d2b14e267e"
+}

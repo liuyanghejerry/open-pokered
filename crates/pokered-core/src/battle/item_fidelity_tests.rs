@@ -66,7 +66,7 @@ fn current_message(battle: &BattleScreen) -> String {
 }
 
 fn text_resumes_with_enemy_item_turn(battle: &BattleScreen) -> bool {
-    matches!(
+    matches!(battle.phase, BattlePhase::ItemMedicineResult { .. }) || matches!(
         &battle.phase,
         BattlePhase::ShowingText { next_phase, .. }
             if **next_phase == BattlePhase::EnemyFreeTurnAfterItem

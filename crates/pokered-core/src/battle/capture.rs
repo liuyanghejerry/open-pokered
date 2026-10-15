@@ -94,6 +94,20 @@ fn sample_rand1<R: FnMut() -> u8>(ball: ItemId, roll: &mut R) -> u8 {
     }
 }
 
+/// Original ItemUseBall draw order for the game's persistent RNG stream.
+/// Even a Master Ball consumes Rand1 before its unconditional-capture check.
+/// Rand2 is drawn only after the status, catch-rate and W guards need it.
+pub(crate) fn try_capture_with_rng<R: FnMut() -> u8>(
+    ctx: &CaptureContext,
+    roll: &mut R,
+) -> CaptureResult {
+    let rand1 = sample_rand1(ctx.ball, roll);
+    if ctx.ball == ItemId::MasterBall {
+        return CaptureResult::Captured;
+    }
+    try_capture_with_rand2(ctx, rand1, || roll())
+}
+
 pub fn try_capture_with_rolls<R: FnMut() -> u8>(
     ctx: &CaptureContext,
     roll1: &mut R,
@@ -110,7 +124,14 @@ pub fn try_capture_with_rolls<R: FnMut() -> u8>(
 /// The post-Rand1 pipeline (status subtraction → catch-rate gate → W/X/Rand2),
 /// shared by `try_capture_with_rolls` and direct-call test seams.
 fn try_capture_with_rand1(ctx: &CaptureContext, rand1: u8, rand2: u8) -> CaptureResult {
-    let randoms = CaptureRandoms { rand1, rand2 };
+    try_capture_with_rand2(ctx, rand1, || rand2)
+}
+
+fn try_capture_with_rand2(
+    ctx: &CaptureContext,
+    rand1: u8,
+    rand2: impl FnOnce() -> u8,
+) -> CaptureResult {
     let status_sub = status_subtract(&ctx.wild_status);
     if status_sub > rand1 {
         return CaptureResult::Captured;
@@ -135,7 +156,7 @@ fn try_capture_with_rand1(ctx: &CaptureContext, rand1: u8, rand2: u8) -> Capture
     }
 
     let x = w_raw as u8;
-    if rand2 <= x {
+    if rand2() <= x {
         CaptureResult::Captured
     } else {
         CaptureResult::Failed {
@@ -165,6 +186,74 @@ mod tests {
             wild_catch_rate: 190,
             wild_status: StatusCondition::None,
         }
+    }
+
+    fn owned_rolls(ctx: &CaptureContext, bytes: &[u8]) -> CaptureResult {
+        let mut bytes = bytes.iter().copied();
+        let result = try_capture_with_rng(ctx, &mut || bytes.next().expect("unexpected RNG draw"));
+        assert_eq!(bytes.next(), None, "unused expected RNG draw");
+        result
+    }
+
+    #[test]
+    fn capture_rng_owned_master_consumes_one_rand1_before_guarantee() {
+        let mut ctx = poke_ball_ctx();
+        ctx.ball = ItemId::MasterBall;
+        ctx.wild_catch_rate = 0;
+        assert_eq!(owned_rolls(&ctx, &[255]), CaptureResult::Captured);
+    }
+
+    #[test]
+    fn capture_rng_owned_rand1_precedes_rand2_and_rejections() {
+        let mut ctx = poke_ball_ctx();
+        ctx.wild_current_hp = 100;
+        ctx.wild_catch_rate = 45;
+        // W=85. Reversing these draws would fail the catch-rate check.
+        assert_eq!(owned_rolls(&ctx, &[45, 85]), CaptureResult::Captured);
+        assert!(matches!(
+            owned_rolls(&ctx, &[45, 86]),
+            CaptureResult::Failed { .. }
+        ));
+        ctx.ball = ItemId::GreatBall;
+        assert_eq!(
+            owned_rolls(&ctx, &[255, 201, 45, 0]),
+            CaptureResult::Captured
+        );
+        ctx.ball = ItemId::UltraBall;
+        assert_eq!(
+            owned_rolls(&ctx, &[255, 151, 45, 0]),
+            CaptureResult::Captured
+        );
+    }
+
+    #[test]
+    fn capture_rng_owned_early_guards_skip_rand2() {
+        let mut ctx = poke_ball_ctx();
+        ctx.wild_status = StatusCondition::Sleep(3);
+        assert_eq!(owned_rolls(&ctx, &[24]), CaptureResult::Captured);
+        // Equal Rand1/status does not underflow: Rand2 is still required.
+        assert_eq!(owned_rolls(&ctx, &[25, 0]), CaptureResult::Captured);
+        ctx.wild_status = StatusCondition::Paralysis;
+        assert_eq!(owned_rolls(&ctx, &[11]), CaptureResult::Captured);
+        ctx.wild_status = StatusCondition::None;
+        ctx.wild_catch_rate = 45;
+        ctx.wild_current_hp = 1;
+        // Catch-rate failure precedes W>255's guaranteed catch.
+        assert!(matches!(
+            owned_rolls(&ctx, &[46]),
+            CaptureResult::Failed { .. }
+        ));
+        assert_eq!(owned_rolls(&ctx, &[45]), CaptureResult::Captured);
+    }
+
+    #[test]
+    fn capture_rng_owned_w255_still_draws_rand2() {
+        let mut ctx = poke_ball_ctx();
+        ctx.wild_max_hp = 12;
+        ctx.wild_current_hp = 4;
+        assert_eq!(owned_rolls(&ctx, &[0, 255]), CaptureResult::Captured);
+        ctx.wild_max_hp = 13;
+        assert_eq!(owned_rolls(&ctx, &[0]), CaptureResult::Captured);
     }
 
     #[test]
@@ -265,7 +354,10 @@ mod tests {
             wild_catch_rate: 255,
             wild_status: StatusCondition::None,
         };
-        let randoms = CaptureRandoms { rand1: 150, rand2: 0 };
+        let randoms = CaptureRandoms {
+            rand1: 150,
+            rand2: 0,
+        };
         assert_eq!(try_capture(&ctx, &randoms), CaptureResult::Captured);
     }
 

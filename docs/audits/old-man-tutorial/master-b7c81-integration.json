@@ -1,0 +1,15 @@
+{
+  "base": "b7c81d82d7d94a06555f631c3c70d114f299d9d8",
+  "tested_head": "743e4cadfedcac2ca4ed2e0d960519321018b0d0",
+  "app": {
+    "passed": 282,
+    "failed": 0,
+    "ignored": 39,
+    "log_sha256": "256ade270271d71daff9c73bb8221d4a67a4a01ac333b80945293b98199e720b"
+  },
+  "core": {
+    "source_unchanged_since_full_tested_head": "ae8bdfe8e4afcb6f1465dd05ec21fc440e2ba41f",
+    "not_rerun": true
+  },
+  "capture_identity": "Historical original/native captures retain their recorded frozen source and binary hashes; these latest integration tests are not substituted for those actual runs."
+}

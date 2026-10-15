@@ -1,0 +1,46 @@
+[
+  {
+    "case": "flash",
+    "stage": "before",
+    "frame": 728,
+    "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-903-native-poison-wild-before-flash-1mf88zkt/actual-1/battle-ready.png",
+    "public_path": "docs/screenshots/poison-before-wild-encounter/flash-before.png",
+    "sha256": "7cf0161ee37d71f6dbcb25e7f232237b90cd580a8d678ab6d7f9eaa72334f1b7",
+    "compiled_commit": "f44e3ef500ea92b24e625bb82687a449a2ee532d",
+    "binary_sha256": "c1d22a1da550ae611bee78d831c188cec684abe15bc3649193da022577ece7d0",
+    "tag": "battle-ready"
+  },
+  {
+    "case": "flash",
+    "stage": "after",
+    "frame": 728,
+    "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-903-native-poison-wild-after-flash-sdc_4gn7/actual-1/battle-ready.png",
+    "public_path": "docs/screenshots/poison-before-wild-encounter/flash-after.png",
+    "sha256": "27e621ff81eb2464ce15ef242d1b1aebfc6f5ad74ae062cf5022c8a4170f5ca4",
+    "compiled_commit": "574d989a4a90dc16618a4513016a1b027c2ad9a7",
+    "binary_sha256": "cd0675f01e389a3e16de14ad66712dc56ed206d0f0c045ef567942774c6db5a9",
+    "tag": "battle-ready"
+  },
+  {
+    "case": "faint",
+    "stage": "before",
+    "frame": 408,
+    "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-903-native-poison-wild-before-faint-6fov9dhd/actual-1/after-four.png",
+    "public_path": "docs/screenshots/poison-before-wild-encounter/faint-before.png",
+    "sha256": "478c4cf3513b0f14a9e53cf44abb1b36beb34b639c108a63ad480d3c2c6770b7",
+    "compiled_commit": "f44e3ef500ea92b24e625bb82687a449a2ee532d",
+    "binary_sha256": "c1d22a1da550ae611bee78d831c188cec684abe15bc3649193da022577ece7d0",
+    "tag": "after-four"
+  },
+  {
+    "case": "faint",
+    "stage": "after",
+    "frame": 408,
+    "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-903-native-poison-wild-after-faint-rzqtx5l1/actual-1/after-four.png",
+    "public_path": "docs/screenshots/poison-before-wild-encounter/faint-after.png",
+    "sha256": "2731b0c06ecf1626ea39ef6062a05792be638fbdcf96132712bc82caa9782438",
+    "compiled_commit": "574d989a4a90dc16618a4513016a1b027c2ad9a7",
+    "binary_sha256": "cd0675f01e389a3e16de14ad66712dc56ed206d0f0c045ef567942774c6db5a9",
+    "tag": "after-four"
+  }
+]

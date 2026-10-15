@@ -520,6 +520,26 @@ pub fn localize(text: &str, is_zh: bool) -> String {
         return format!("{}没有能用的招式了！", zh_name(a));
     }
 
+    // Party-menu medicine results (data/text/text_2.asm:1384-1432).
+    if let Some((name, amount)) = text.split_once("\nrecovered by ") {
+        if let Some(amount) = amount.strip_suffix('!') {
+            return format!("{}回复了{}点HP！", zh_name(name), amount);
+        }
+    }
+    for (suffix, zh_suffix) in [
+        (" was\ncured of poison!", "的中毒治好了！"),
+        ("'s\nrid of paralysis!", "的麻痹治好了！"),
+        ("'s\nburn was healed!", "的灼伤治好了！"),
+        (" was\ndefrosted!", "解冻了！"),
+        ("\nwoke up!", "醒来了！"),
+        ("'s\nhealth returned!", "的异常状态治好了！"),
+        ("\nis revitalized!", "恢复活力了！"),
+    ] {
+        if let Some(name) = text.strip_suffix(suffix) {
+            return format!("{}{}", zh_name(name), zh_suffix);
+        }
+    }
+
     // In-battle item results.
     if let Some(n) = text.strip_suffix("!")
         .and_then(|t| t.strip_prefix("HP restored by ")) {
@@ -685,6 +705,23 @@ mod tests {
         assert_eq!(localize("ODDISH took in sunlight!", true), "走路草吸收了阳光！");
         assert_eq!(localize("PIKACHU put in a SUBSTITUTE!", true), "皮卡丘使用了替身！");
         assert_eq!(localize("PIKACHU's SUBSTITUTE broke!", true), "皮卡丘的替身碎了！");
+    }
+
+    #[test]
+    fn named_party_medicine_results_preserve_the_member_and_localize_each_source_message() {
+        for (english, chinese) in [
+            ("PIKACHU\nrecovered by 20!", "皮卡丘回复了20点HP！"),
+            ("SPARKY was\ncured of poison!", "SPARKY的中毒治好了！"),
+            ("SPARKY's\nrid of paralysis!", "SPARKY的麻痹治好了！"),
+            ("SPARKY's\nburn was healed!", "SPARKY的灼伤治好了！"),
+            ("SPARKY was\ndefrosted!", "SPARKY解冻了！"),
+            ("SPARKY\nwoke up!", "SPARKY醒来了！"),
+            ("SPARKY's\nhealth returned!", "SPARKY的异常状态治好了！"),
+            ("SPARKY\nis revitalized!", "SPARKY恢复活力了！"),
+        ] {
+            assert_eq!(localize(english, false), english);
+            assert_eq!(localize(english, true), chinese);
+        }
     }
 
     #[test]

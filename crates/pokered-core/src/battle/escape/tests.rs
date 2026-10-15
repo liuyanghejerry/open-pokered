@@ -259,3 +259,71 @@ fn run_increments_attempt_counter() {
     let _ = try_run_from_battle(&mut state, 255);
     assert_eq!(state.num_run_attempts, 3);
 }
+
+#[test]
+fn run_rng_lazy_automatic_branches_skip_the_roll() {
+    let mut trainer = make_state(50, 200);
+    trainer.battle_type = BattleType::Trainer;
+    assert_eq!(
+        try_run_from_battle_with_rng(&mut trainer, || panic!("trainer must not draw")),
+        RunResult::CannotRun
+    );
+    assert_eq!(trainer.num_run_attempts, 0);
+    for (player_speed, enemy_speed) in [(100, 50), (80, 80), (1, 3), (1027, 1028)] {
+        let mut state = make_state(player_speed, enemy_speed);
+        assert_eq!(
+            try_run_from_battle_with_rng(&mut state, || panic!("automatic escape must not draw")),
+            RunResult::Escaped,
+            "speeds {player_speed}/{enemy_speed}"
+        );
+        assert_eq!(state.num_run_attempts, 1);
+    }
+}
+
+#[test]
+fn run_rng_lazy_comparison_draws_once_at_inclusive_odds_and_attempt_bonus() {
+    for (attempts_before, byte, expected) in [
+        (0, 32, RunResult::Escaped),
+        (0, 33, RunResult::FailedToEscape),
+        (1, 62, RunResult::Escaped),
+        (1, 63, RunResult::FailedToEscape),
+    ] {
+        let mut state = make_state(50, 200);
+        state.num_run_attempts = attempts_before;
+        let mut draws = 0;
+        assert_eq!(
+            try_run_from_battle_with_rng(&mut state, || {
+                draws += 1;
+                byte
+            }),
+            expected
+        );
+        assert_eq!(draws, 1);
+        assert_eq!(state.num_run_attempts, attempts_before + 1);
+        assert_eq!(state.escaped, expected == RunResult::Escaped);
+    }
+}
+
+#[test]
+fn run_rng_lazy_odds_255_draws_but_bonus_carry_does_not() {
+    // (8 * 32) / (68 / 4) = 15. Eight previous attempts add 240,
+    // reaching 255 without carry: original still calls BattleRandom.
+    let mut comparison = make_state(8, 68);
+    comparison.num_run_attempts = 8;
+    let mut draws = 0;
+    assert_eq!(
+        try_run_from_battle_with_rng(&mut comparison, || {
+            draws += 1;
+            255
+        }),
+        RunResult::Escaped
+    );
+    assert_eq!(draws, 1);
+    let mut overflow = make_state(8, 68);
+    overflow.num_run_attempts = 9;
+    assert_eq!(
+        try_run_from_battle_with_rng(&mut overflow, || panic!("carry escapes before random")),
+        RunResult::Escaped
+    );
+    assert_eq!(overflow.num_run_attempts, 10);
+}

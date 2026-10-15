@@ -2429,14 +2429,14 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 // Poison: every fourth step the poisoned party takes 1 HP of
                 // damage (ApplyOutOfBattlePoisonDamage, poison.asm:1-17 — the
                 // asm skips ticks while a scripted walk is playing; the port
-                // equivalently skips steps that happen mid-script/warp/dialogue
-                // or right as a wild battle fires).
+                // skips steps that happen mid-script/warp/dialogue). A wild
+                // encounter rolled for this step must wait: home/overworld.asm
+                // calls poison before NewBattle, including on encounter steps.
                 if step_completed {
                     self.poison_step_counter = self.poison_step_counter.wrapping_add(1);
                     if self.poison_step_counter % 4 == 0
                         && self.active_script_effect.is_none()
                         && self.pending_dialogue.is_none()
-                        && self.pending_wild_encounter.is_none()
                         && (self.pending_warp.is_none() || self.poison_step_warp_sound.is_some())
                     {
                         self.game_data_requests
