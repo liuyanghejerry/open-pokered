@@ -933,6 +933,8 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     /// (`wStepCounter & 3` in ApplyOutOfBattlePoisonDamage — damage every
     /// fourth step).
     pub poison_step_counter: u32,
+    /// Suspended field poison loop; the party remains in SaveData.
+    pub poison_flow: Option<super::poison::FieldPoisonFlow>,
     /// Level of the lead (first) party Pokémon, kept in sync by the app layer.
     /// Used for the Gen-1 repel check, which blocks wild encounters whose level
     /// is below the lead party member's level. The OverworldScreen does not own
@@ -1340,6 +1342,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             script_money_box: None,
             script_coin_box: None,
             poison_step_counter: 0,
+            poison_flow: None,
             party_lead_level: 0,
             unified_flags: event_flags::EventFlags::new(),
             toggleable_object_flags: [0u8;
@@ -1545,6 +1548,14 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         self.pending_choice.is_none()
             && !self.active_script_effect.as_ref().is_some_and(|effect| effect.is_choice())
             && !matches!(effect, Some(super::script_bridge::ScriptEffect::ShowItemDialogue { .. }))
+    }
+
+    /// Drop a suspended poison caller when ordinary save loading or reset
+    /// replaces its party. Frame snapshots preserve the caller instead.
+    pub fn clear_field_poison(&mut self) {
+        if self.poison_flow.take().is_some() {
+            self.pending_dialogue = None;
+        }
     }
 
     /// Set the configured dialogue delay (1/3/5 frames per character).
