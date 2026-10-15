@@ -3321,11 +3321,6 @@ impl PokemonGame {
             vec![]
         };
 
-        // A trainer's Pokémon are registered as seen in the Pokédex.
-        for m in &enemy_party {
-            self.save_data.game_data.pokedex.set_seen(m.species);
-        }
-
         if !player_party.is_empty() && !enemy_party.is_empty() {
             let tc = parsed.map(|(c, _)| c);
             self.battle = pokered_core::battle::BattleScreen::from_parties(
@@ -3352,6 +3347,7 @@ impl PokemonGame {
         // BoxFullCannotThrowBall guard context (app-side snapshot).
         self.battle.player_box_full = self.save_data.current_box.is_full();
         self.battle.map_id = self.overworld.state.current_map as u8;
+        self.register_active_trainer_species_seen();
         // Copy of the bag so items are usable in-battle (synced back afterwards).
         self.battle.player_bag = self.save_data.game_data.bag.clone();
         self.battle_vfx = BattleVisualEffects::default();
@@ -3362,6 +3358,19 @@ impl PokemonGame {
             if let Some(id) = MusicId::from_u8(self.battle.battle_music_id()) {
                 audio.play_music(id);
             }
+        }
+    }
+
+    /// LoadEnemyMonData marks the enemy actually loaded, not ReadTrainer's
+    /// complete party. Link's LoadEnemyMonFromParty bypasses that flag write.
+    fn register_active_trainer_species_seen(&mut self) {
+        if self.battle.is_wild || self.battle.link_mode || self.battle.trainer_class.is_none() {
+            return;
+        }
+        if let Some(bs) = &self.battle.battle_state {
+            // Transform changes the battle copy, not the species sent out.
+            let species = bs.enemy.party_mon(bs.enemy.active_pokemon_index).species;
+            self.save_data.game_data.pokedex.set_seen(species);
         }
     }
 
@@ -4717,6 +4726,9 @@ impl PokemonGame {
                 } else {
                     self.battle.update_frame(battle_input)
                 };
+                // Both replacement after a faint and trainer-AI switches
+                // commit the canonical enemy active slot during this update.
+                self.register_active_trainer_species_seen();
                 // Non-move battle animation requests (ball throws, X-stat
                 // items) queued by the core this frame.
                 while let Some(event) = self.battle.take_anim_event() {
@@ -8231,6 +8243,10 @@ impl PokemonGame {
 #[cfg(all(test, feature = "debug-server"))]
 #[path = "pp_up_maxed_retry_tests.rs"]
 mod pp_up_maxed_retry_tests;
+
+#[cfg(test)]
+#[path = "trainer_seen_tests.rs"]
+mod trainer_seen_tests;
 
 #[cfg(test)]
 #[path = "rare_candy_tests.rs"]
