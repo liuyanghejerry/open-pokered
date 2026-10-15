@@ -1,0 +1,16 @@
+{
+  "archive": "evidence.zip",
+  "sha256": "73dfc220f982b6896176abcc53e0415e6bba791bde950cc0ac75ca517180495e",
+  "bytes": 2215274,
+  "entries": 526,
+  "original_path_records": 22079,
+  "storage": "Exact-content SHA256 deduplication only. entry-manifest maps every original path to its unmodified content blob; no dropped frames, altered data or duplicated timing labels.",
+  "uncompressed_evidence_bytes": 374916173,
+  "entry_manifest": "entry-manifest.json",
+  "entry_manifest_sha256": "f9b50f97d19ea69d48aa9cb5f9ac959db2552ecf13418ffd0238955ccbcabd48",
+  "all_entries_readback_sha_verified": true,
+  "source_controls": 10,
+  "historical_native_controls": 20,
+  "current_native_controls": 20,
+  "ROM_and_native_executables_excluded": "Exact hashes and manifests retained; canonical frozen files remain private. Failed helper logs/scripts retained and not counted as passing controls."
+}
