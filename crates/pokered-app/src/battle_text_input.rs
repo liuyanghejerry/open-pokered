@@ -1,6 +1,6 @@
 //! Convert the existing physical input owner to the source's logical bits.
 //! No previous-input or frame counter lives in this adapter.
-use dotzuki_app::{GbButton, InputState};
+use pokered_renderer::input::{GbButton, InputState};
 use pokered_core::battle::{BattleTextFrame, BattleTextSettings};
 
 pub(crate) fn frame(input: &InputState, settings: Option<BattleTextSettings>) -> BattleTextFrame {
