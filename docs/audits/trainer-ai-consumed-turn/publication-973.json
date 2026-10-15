@@ -1,0 +1,76 @@
+{
+  "schema": "audit973-PR266-source-identical-publication-v1",
+  "actual_master": "091fdd8d6f86fa59a02f917280d984ff6e9e590c",
+  "parent263": {
+    "baseRefName": "master",
+    "headRefName": "fix/safari-intro-910",
+    "headRefOid": "2c4e34b764314475afa4c8824130c394298953cb",
+    "mergeCommit": {
+      "oid": "091fdd8d6f86fa59a02f917280d984ff6e9e590c"
+    },
+    "mergedAt": "2026-10-15T11:28:22Z",
+    "number": 263,
+    "state": "MERGED",
+    "url": "https://github.com/liuyanghejerry/open-pokered/pull/263"
+  },
+  "tested_v3_909_head": "e912884c35d5c44d2a05bcf2d40a72528c54abca",
+  "integrated_source_before_doc_commit": "ac41a81937433e693496d32cccf312b666291b54",
+  "identity": {
+    "compiler_count": 2171,
+    "compiler_manifest_source_sha256": "05969ce47b7396e27b8bfaf30bafe7f916a2d81dc6019378a18bb279b1bbf2ac",
+    "compiler_file_mappings_equal": true,
+    "non_doc_count": 2690,
+    "non_doc_tree_equal": true,
+    "non_doc_scope": "All tracked paths outside docs/; identical Git blob IDs and modes plus clean worktree; symlinks literal target",
+    "non_doc_tree_sha256": "25af01a8ec48294cc5ef848d4b277345a2a4158bf6f6c9a9517bb74d20134800"
+  },
+  "production_paths": [
+    "crates/pokered-core/src/battle/mod.rs",
+    "crates/pokered-core/src/battle/trainer_free_turn_tests.rs"
+  ],
+  "validation": {
+    "core": {
+      "passed": 2924,
+      "ignored": 0
+    },
+    "appdebug": {
+      "passed": 316,
+      "ignored": 39
+    },
+    "determinism": {
+      "passed": 10,
+      "ignored": 0
+    }
+  },
+  "historical_v3_batch_global_status": "FAIL_STOPPED on later905; group909 PASS explicitly",
+  "historical_screenshots": {
+    "before_source": "6d30ba5abfb40e0873b6b4bea962f0ae29989bfe",
+    "after_source": "4dcbffa810e75dfb8d2bf0e82640973de054194c",
+    "frame": 1080,
+    "fixture_sha256": "a2f243170ec4c564abad1c7b43ab92029ab3ce2e169f59a9d8d81fdd76aa1e22",
+    "full1080prefix_sha256": "5a14ccb243f192d6b96828c8aa9ef1890df219fc808fd7cf03ea64bb21b707b9",
+    "images": {
+      "docs/screenshots/trainer-ai-consumed-turn/misty-item-before.png": "a8b46bdcb5eb3095fb9f3bde3a4c9763e951b6237e62b82bf64d9da0e451fe8f",
+      "docs/screenshots/trainer-ai-consumed-turn/misty-item-after.png": "4439e36866d2788300d323ff79ae9de226567954e29c2e404754975652f18fb3"
+    }
+  },
+  "rebuilds_or_actual_replays": false,
+  "remote_gate": "New exacthead CI/Build GBA ROM/GBA performance allSUCCESS beforemerge",
+  "log_archive": {
+    "path": "publication-973-logs.zip",
+    "bytes": 185283,
+    "sha256": "0427a012bbea05a71002e908f047e480d4b246ace42b2effbdb2295646a6f17b",
+    "entries": [
+      "identity-proof.json",
+      "tested-v3-909-only.json",
+      "tested-source.json",
+      "tested-wrapper.sh",
+      "old-head-workflows.json",
+      "tested-core.log",
+      "tested-appdebug.log",
+      "tested-determinism.log",
+      "entries.json"
+    ],
+    "scope": "909 only, no unrelated v3 groups/ROM/executable"
+  }
+}
