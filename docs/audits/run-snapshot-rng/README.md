@@ -107,3 +107,7 @@ presentation reset, complete frame/audio parity, source failure-path actual
 coverage and other global RNG callers are not claimed.
 
 已整合最新 master `f0787e19`（#268，巨石测试隔离；包含 #258 中毒与进门顺序）：core 2895 通过/0 忽略；app 296 通过/39 忽略；determinism 9 通过/0 忽略，全部 0 失败。当前受测源码 `24ee8a081d598b9d6e30b9128c7873a81a7b782c`、编译包装脚本与日志见 `master-f078-integration.json` 和独立日志包。历史原作/原生录制与 SAVE 保留各自冻结身份；本次新 head 仍需远程三个工作流全部通过。
+
+## Integration after medicine feedback and performance fixes
+
+The current source includes actual master `a2fa94f185c08dfb568929a022b2ca66da0e0aa4` after PR267 and PR272 merged. Prepared source `0250869ec5d6db0ee6253958c518c468dedaef46` passed core **2905**, full debug app **311** (39 ignored), and determinism **9**. After merging actual master, all 2170 compiler-source paths and every non-documentation file are byte-identical to that tested source. `parent267-master-integration.json` and its log archive preserve the original source, manifests and terminal logs. No source test, native/original input, ordinary SAVE, snapshot fork, or recording was relabeled. The earlier GBA and default-app records retain their historical measured sources; the current public head must pass all three latest remote workflows before merge.
