@@ -4381,6 +4381,11 @@ impl PokemonGame {
                         &mut self.save_data, &mut self.overworld,
                     );
                     self.apply_overworld_game_data_requests();
+                    if self.overworld.poison_step_warp_sound.is_some() {
+                        pokered_core::overworld::poison::resume_step_warp_after_poison(
+                            &mut self.overworld,
+                        );
+                    }
                     // The money box follows the committed balance, including
                     // mutations queued just before the next script query.
                     if self.overworld.script_money_box.is_some() {
