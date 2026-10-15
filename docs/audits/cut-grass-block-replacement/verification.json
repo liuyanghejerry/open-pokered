@@ -1,0 +1,819 @@
+{
+  "scope": "CUT grass replacement only. Source4 actual menu/step plus4 actual leave/reenter/SAVE continuations, native4 before+4 after same fixtures/buttons/frame580. No post-validation state writes; no exact encounter RNG/full animation parity or whole-save parity claim.",
+  "reference_archive_revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "reference_has_git_metadata": false,
+  "primary_matches_compiled_source_sha256": {
+    "engine/overworld/cut.asm": "9062c09d8a39fc0be5abccc6cd35ac422e18c9ab477464d9c91b8316bea57693",
+    "data/tilesets/cut_tree_blocks.asm": "2205136daa7d8d2a77788bcc7f907a686d13d65408c59ba4a856adf33237c7d2",
+    "gfx/blocksets/overworld.bst": "c4f6d88cc7dea8196aa51d3aa059c6d1da0ea45718dd12870fcddee9f9304d50",
+    "maps/Route6.blk": "186f302692f3da99d5fab638ba3320a7f6dbbf90a8851636132a1836e15a9de6",
+    "engine/battle/wild_encounters.asm": "5d1522885ae5a67fc4e077e8ee8ff2bac76f7011360d02a7354599326209f16d"
+  },
+  "validation": {
+    "scoped_new_tests": 2,
+    "core_library_tests": 2867,
+    "core_integration_tests": 412,
+    "core_total": 3279,
+    "doc_examples_ignored": 1,
+    "app_features": [
+      "debug-server"
+    ],
+    "app_profile": "dev opt0debug0",
+    "isolated_target": true,
+    "diff_check": true
+  },
+  "archived_script_sha256": {
+    "native_capture.py": "9abafd8c9695b311c3d5eaac0b4bf2c83a441ef0d6f22ba7126146d308dd023f",
+    "original_capture.py": "1d41fe15021f9ca331fb642ec703e20e54e9a8ac7a1f004c115fb6373e0ac1c2",
+    "original_reenter.py": "56b88f43151f95262770636274a9e8ef4d137076c79ce0b49cab3b11d80d5e74"
+  },
+  "archive": {
+    "file": "evidence.zip",
+    "sha256": "4810964e9f02cb894c4148dc71408e539426353cb7a6b35d534d0b2239bd0478",
+    "size": 849919,
+    "entry_manifest": "evidence-entry-manifest.json",
+    "entry_count": 198,
+    "full_verification_entry": "full-verification.json",
+    "raw_paths_retained": {
+      "original-cut-grass-v2": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-883-original-cut-grass-v2-eju9xw2k",
+      "original-reenter-v4": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-883-original-reenter-v4-bs9pjsvi",
+      "native-cut-grass-before": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-883-native-cut-grass-before-86pzdh5o",
+      "native-cut-grass-after": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-883-native-cut-grass-after-4xz0ruvk"
+    }
+  },
+  "original": [
+    {
+      "health": "healthy",
+      "repeat": 1,
+      "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+      "rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+      "construction_sha256": "8c53a04dfdc076458ee63eb8f5cf55918af7c7dfeb8e003cb208d59244f476cf",
+      "input_trace_sha256": "4896ab18967ed1143e62746248d2d4347fc364432f836ab8e9f03aaea95d36a0",
+      "frames": {
+        "before": 0,
+        "after": 782,
+        "stepped": 830
+      },
+      "blocks": {
+        "before": 11,
+        "after": 10,
+        "stepped": 10
+      },
+      "standing_after_real_step": 44,
+      "reentry_block": 11,
+      "initial_and_saved_party_88_hex": "9900230c0016032d212d490f00000003cd000000000000000000009a7823280a1e0c002300120013001100169900230c0016032d212d000000000003cd000000000000000000009a78232800000c00230012001300110016",
+      "ordinary_save": true,
+      "sram_sha256": "f85efe6ebcdab5762972e0b994b2dc995775de7c63a683f5787ddf198bcb57e1",
+      "sram_checksum": 208,
+      "saved_money": 3000,
+      "money_readback_source": "SRAM file0x25f3 = bank1 sMainData(a5a3)+(wPlayerMoney(d347)-wMainDataStart(d2f7))",
+      "captures": {
+        "before": {
+          "frame": 0,
+          "sha256": "16f4f71bbf339097a36857910b45cc4e269aa99e05fb350bf0a9734a83f28515"
+        },
+        "party": {
+          "frame": 236,
+          "sha256": "0e7283c223427dae8a3b3ebbabe29e687541dfb5c88cc212c8efcec8f1d2dea1"
+        },
+        "field-actions": {
+          "frame": 338,
+          "sha256": "3ea018a02e2f1e6294d7c2d6084a87d916cccb520207d5a0b98917818adbe490"
+        },
+        "after": {
+          "frame": 782,
+          "sha256": "b14be223114a526b49dd9616d8633069d2bfe5f66cbac40af5023658e4710139"
+        },
+        "stepped-on-cleared": {
+          "frame": 830,
+          "sha256": "35f5b2ec9539a5f34f5abdc0d62c9966c5940e5d4ef2ac2d2f6baf798c5f5399"
+        }
+      },
+      "full_cut_record": "raw/original-cut-grass-v2/healthy-1/record.json",
+      "full_reentry_record": "raw/original-reenter-v4/healthy-1/record.json"
+    },
+    {
+      "health": "healthy",
+      "repeat": 2,
+      "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+      "rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+      "construction_sha256": "8c53a04dfdc076458ee63eb8f5cf55918af7c7dfeb8e003cb208d59244f476cf",
+      "input_trace_sha256": "4896ab18967ed1143e62746248d2d4347fc364432f836ab8e9f03aaea95d36a0",
+      "frames": {
+        "before": 0,
+        "after": 782,
+        "stepped": 830
+      },
+      "blocks": {
+        "before": 11,
+        "after": 10,
+        "stepped": 10
+      },
+      "standing_after_real_step": 44,
+      "reentry_block": 11,
+      "initial_and_saved_party_88_hex": "9900230c0016032d212d490f00000003cd000000000000000000009a7823280a1e0c002300120013001100169900230c0016032d212d000000000003cd000000000000000000009a78232800000c00230012001300110016",
+      "ordinary_save": true,
+      "sram_sha256": "f85efe6ebcdab5762972e0b994b2dc995775de7c63a683f5787ddf198bcb57e1",
+      "sram_checksum": 208,
+      "saved_money": 3000,
+      "money_readback_source": "SRAM file0x25f3 = bank1 sMainData(a5a3)+(wPlayerMoney(d347)-wMainDataStart(d2f7))",
+      "captures": {
+        "before": {
+          "frame": 0,
+          "sha256": "16f4f71bbf339097a36857910b45cc4e269aa99e05fb350bf0a9734a83f28515"
+        },
+        "party": {
+          "frame": 236,
+          "sha256": "0e7283c223427dae8a3b3ebbabe29e687541dfb5c88cc212c8efcec8f1d2dea1"
+        },
+        "field-actions": {
+          "frame": 338,
+          "sha256": "3ea018a02e2f1e6294d7c2d6084a87d916cccb520207d5a0b98917818adbe490"
+        },
+        "after": {
+          "frame": 782,
+          "sha256": "b14be223114a526b49dd9616d8633069d2bfe5f66cbac40af5023658e4710139"
+        },
+        "stepped-on-cleared": {
+          "frame": 830,
+          "sha256": "35f5b2ec9539a5f34f5abdc0d62c9966c5940e5d4ef2ac2d2f6baf798c5f5399"
+        }
+      },
+      "full_cut_record": "raw/original-cut-grass-v2/healthy-2/record.json",
+      "full_reentry_record": "raw/original-reenter-v4/healthy-2/record.json"
+    },
+    {
+      "health": "fainted",
+      "repeat": 1,
+      "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+      "rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+      "construction_sha256": "a747a8138aa07a67067710cd6daf9011af8d61b212afe5ee5585f97b1f92f199",
+      "input_trace_sha256": "4896ab18967ed1143e62746248d2d4347fc364432f836ab8e9f03aaea95d36a0",
+      "frames": {
+        "before": 0,
+        "after": 782,
+        "stepped": 830
+      },
+      "blocks": {
+        "before": 11,
+        "after": 10,
+        "stepped": 10
+      },
+      "standing_after_real_step": 44,
+      "reentry_block": 11,
+      "initial_and_saved_party_88_hex": "9900000c0016032d212d490f00000003cd000000000000000000009a7823280a1e0c002300120013001100169900230c0016032d212d000000000003cd000000000000000000009a78232800000c00230012001300110016",
+      "ordinary_save": true,
+      "sram_sha256": "6a56936e074a90180f9631e45c6da1b30225533ead2e66675093c12139bc4a6d",
+      "sram_checksum": 243,
+      "saved_money": 3000,
+      "money_readback_source": "SRAM file0x25f3 = bank1 sMainData(a5a3)+(wPlayerMoney(d347)-wMainDataStart(d2f7))",
+      "captures": {
+        "before": {
+          "frame": 0,
+          "sha256": "16f4f71bbf339097a36857910b45cc4e269aa99e05fb350bf0a9734a83f28515"
+        },
+        "party": {
+          "frame": 236,
+          "sha256": "359e7dde90ad820fd5a440678911c6add5b7a20574e7b791c64e806e57e94170"
+        },
+        "field-actions": {
+          "frame": 338,
+          "sha256": "5c998fdd01df9b6e0ff77c88ba7e878d320a35128decee0da555536977436575"
+        },
+        "after": {
+          "frame": 782,
+          "sha256": "b14be223114a526b49dd9616d8633069d2bfe5f66cbac40af5023658e4710139"
+        },
+        "stepped-on-cleared": {
+          "frame": 830,
+          "sha256": "35f5b2ec9539a5f34f5abdc0d62c9966c5940e5d4ef2ac2d2f6baf798c5f5399"
+        }
+      },
+      "full_cut_record": "raw/original-cut-grass-v2/fainted-1/record.json",
+      "full_reentry_record": "raw/original-reenter-v4/fainted-1/record.json"
+    },
+    {
+      "health": "fainted",
+      "repeat": 2,
+      "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+      "rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+      "construction_sha256": "a747a8138aa07a67067710cd6daf9011af8d61b212afe5ee5585f97b1f92f199",
+      "input_trace_sha256": "4896ab18967ed1143e62746248d2d4347fc364432f836ab8e9f03aaea95d36a0",
+      "frames": {
+        "before": 0,
+        "after": 782,
+        "stepped": 830
+      },
+      "blocks": {
+        "before": 11,
+        "after": 10,
+        "stepped": 10
+      },
+      "standing_after_real_step": 44,
+      "reentry_block": 11,
+      "initial_and_saved_party_88_hex": "9900000c0016032d212d490f00000003cd000000000000000000009a7823280a1e0c002300120013001100169900230c0016032d212d000000000003cd000000000000000000009a78232800000c00230012001300110016",
+      "ordinary_save": true,
+      "sram_sha256": "6a56936e074a90180f9631e45c6da1b30225533ead2e66675093c12139bc4a6d",
+      "sram_checksum": 243,
+      "saved_money": 3000,
+      "money_readback_source": "SRAM file0x25f3 = bank1 sMainData(a5a3)+(wPlayerMoney(d347)-wMainDataStart(d2f7))",
+      "captures": {
+        "before": {
+          "frame": 0,
+          "sha256": "16f4f71bbf339097a36857910b45cc4e269aa99e05fb350bf0a9734a83f28515"
+        },
+        "party": {
+          "frame": 236,
+          "sha256": "359e7dde90ad820fd5a440678911c6add5b7a20574e7b791c64e806e57e94170"
+        },
+        "field-actions": {
+          "frame": 338,
+          "sha256": "5c998fdd01df9b6e0ff77c88ba7e878d320a35128decee0da555536977436575"
+        },
+        "after": {
+          "frame": 782,
+          "sha256": "b14be223114a526b49dd9616d8633069d2bfe5f66cbac40af5023658e4710139"
+        },
+        "stepped-on-cleared": {
+          "frame": 830,
+          "sha256": "35f5b2ec9539a5f34f5abdc0d62c9966c5940e5d4ef2ac2d2f6baf798c5f5399"
+        }
+      },
+      "full_cut_record": "raw/original-cut-grass-v2/fainted-2/record.json",
+      "full_reentry_record": "raw/original-reenter-v4/fainted-2/record.json"
+    }
+  ],
+  "native": [
+    {
+      "stage": "before",
+      "health": "healthy",
+      "repeat": 1,
+      "source_commit": "db250c03efa4be2161cb289a1591ac9fd71f6ac1",
+      "binary_sha256": "087e37e881621584abb2238345e2e9f23682664b8ede24468eb8117c1456ce32",
+      "fixture_sha256": "dbeb2bedef90a4f22a247363deeb093c8e4e15ce6d7715cf53042e58923c67d5",
+      "script_sha256": "9abafd8c9695b311c3d5eaac0b4bf2c83a441ef0d6f22ba7126146d308dd023f",
+      "actions_file_sha256": "daf56cd5e9e10fedce870734bbd0a730ab8737246cae322d978f4cdab535a3c9",
+      "frames": {
+        "before": 120,
+        "after": 580,
+        "stepped": 628,
+        "entered_city": 1316,
+        "returned": 1364
+      },
+      "blocks": {
+        "before": 11,
+        "after": 11,
+        "stepped": 11,
+        "returned": 11
+      },
+      "same_actual_inputs_between_builds": true,
+      "same_pngs_between_repeats": true,
+      "source_initial_88_party_bytes_match": true,
+      "initial_and_saved_party_88_hex": "9900230c0016032d212d490f00000003cd000000000000000000009a7823280a1e0c002300120013001100169900230c0016032d212d000000000003cd000000000000000000009a78232800000c00230012001300110016",
+      "ordinary_save": true,
+      "sram_sha256": "c67a8f5c4df6b169b833915655ce67838dfe18cca2448936810b7287f8b18fdc",
+      "sram_checksum": 16,
+      "saved_money": 3000,
+      "captures": {
+        "before": {
+          "frame": 120,
+          "sha256": "38b9925f4fa0088731799bf60f2f406157881418eef0692db1379267fe62a805"
+        },
+        "party": {
+          "frame": 244,
+          "sha256": "ede51a40f3e7f5dbd8e3526bed43455be1fbd6eef2d76a3dd7542afab8250ed3"
+        },
+        "field-actions": {
+          "frame": 276,
+          "sha256": "a830ebdecfb745ec875b7870bef0ec1cec42c4188a11a1a42c050f40ea9bd683"
+        },
+        "cut-notice": {
+          "frame": 308,
+          "sha256": "b5c0825f28f273a46c0a760d3d3a95b2c6be9c99324d9252b8912f4e5296d1a1"
+        },
+        "after": {
+          "frame": 580,
+          "sha256": "2155f7df64c64a87d82d98733bac9e940f4d1e6ebda401aedacca2686ea983da"
+        },
+        "stepped-on-target": {
+          "frame": 628,
+          "sha256": "3b42c76a3ff5f082db8bdcce6ff133ff1c7148f850da28dba5adcfa1837033ab"
+        },
+        "entered-city": {
+          "frame": 1316,
+          "sha256": "b690de8f13988e004e2feebf80bc4a02676443239419c470f2e029870f2d6aa4"
+        },
+        "returned": {
+          "frame": 1364,
+          "sha256": "c6c2f9672cdb16cc6c2873b1208fe8562d44e6b88e278ee71bb19dbf452d65bf"
+        },
+        "saved": {
+          "frame": 2452,
+          "sha256": "dd86e555811c2fc806ad2752e919183005b41cadf541935be93c7ee2538a36f3"
+        }
+      },
+      "full_record": "raw/native-cut-grass-before/healthy-1/record.json"
+    },
+    {
+      "stage": "after",
+      "health": "healthy",
+      "repeat": 1,
+      "source_commit": "64ba9dfda5fb2e70b9701272a11bd868e66bd204",
+      "binary_sha256": "eb3530078850c8eea7e4f852a4c0afaf1af6920365a537b99f076f47a2bff9fd",
+      "fixture_sha256": "dbeb2bedef90a4f22a247363deeb093c8e4e15ce6d7715cf53042e58923c67d5",
+      "script_sha256": "9abafd8c9695b311c3d5eaac0b4bf2c83a441ef0d6f22ba7126146d308dd023f",
+      "actions_file_sha256": "daf56cd5e9e10fedce870734bbd0a730ab8737246cae322d978f4cdab535a3c9",
+      "frames": {
+        "before": 120,
+        "after": 580,
+        "stepped": 628,
+        "entered_city": 1316,
+        "returned": 1364
+      },
+      "blocks": {
+        "before": 11,
+        "after": 10,
+        "stepped": 10,
+        "returned": 11
+      },
+      "same_actual_inputs_between_builds": true,
+      "same_pngs_between_repeats": true,
+      "source_initial_88_party_bytes_match": true,
+      "initial_and_saved_party_88_hex": "9900230c0016032d212d490f00000003cd000000000000000000009a7823280a1e0c002300120013001100169900230c0016032d212d000000000003cd000000000000000000009a78232800000c00230012001300110016",
+      "ordinary_save": true,
+      "sram_sha256": "c67a8f5c4df6b169b833915655ce67838dfe18cca2448936810b7287f8b18fdc",
+      "sram_checksum": 16,
+      "saved_money": 3000,
+      "captures": {
+        "before": {
+          "frame": 120,
+          "sha256": "38b9925f4fa0088731799bf60f2f406157881418eef0692db1379267fe62a805"
+        },
+        "party": {
+          "frame": 244,
+          "sha256": "ede51a40f3e7f5dbd8e3526bed43455be1fbd6eef2d76a3dd7542afab8250ed3"
+        },
+        "field-actions": {
+          "frame": 276,
+          "sha256": "a830ebdecfb745ec875b7870bef0ec1cec42c4188a11a1a42c050f40ea9bd683"
+        },
+        "cut-notice": {
+          "frame": 308,
+          "sha256": "b5c0825f28f273a46c0a760d3d3a95b2c6be9c99324d9252b8912f4e5296d1a1"
+        },
+        "after": {
+          "frame": 580,
+          "sha256": "8bba163141cce5b86eb99c44b6e5451433cb7f0922d9b530b9f181ff84b2e7e3"
+        },
+        "stepped-on-target": {
+          "frame": 628,
+          "sha256": "e89544700db992d72bcc0c81a4f89af4d3242849aa9e7f9a25aac454d3995993"
+        },
+        "entered-city": {
+          "frame": 1316,
+          "sha256": "b690de8f13988e004e2feebf80bc4a02676443239419c470f2e029870f2d6aa4"
+        },
+        "returned": {
+          "frame": 1364,
+          "sha256": "c6c2f9672cdb16cc6c2873b1208fe8562d44e6b88e278ee71bb19dbf452d65bf"
+        },
+        "saved": {
+          "frame": 2452,
+          "sha256": "dd86e555811c2fc806ad2752e919183005b41cadf541935be93c7ee2538a36f3"
+        }
+      },
+      "full_record": "raw/native-cut-grass-after/healthy-1/record.json"
+    },
+    {
+      "stage": "before",
+      "health": "healthy",
+      "repeat": 2,
+      "source_commit": "db250c03efa4be2161cb289a1591ac9fd71f6ac1",
+      "binary_sha256": "087e37e881621584abb2238345e2e9f23682664b8ede24468eb8117c1456ce32",
+      "fixture_sha256": "dbeb2bedef90a4f22a247363deeb093c8e4e15ce6d7715cf53042e58923c67d5",
+      "script_sha256": "9abafd8c9695b311c3d5eaac0b4bf2c83a441ef0d6f22ba7126146d308dd023f",
+      "actions_file_sha256": "daf56cd5e9e10fedce870734bbd0a730ab8737246cae322d978f4cdab535a3c9",
+      "frames": {
+        "before": 120,
+        "after": 580,
+        "stepped": 628,
+        "entered_city": 1316,
+        "returned": 1364
+      },
+      "blocks": {
+        "before": 11,
+        "after": 11,
+        "stepped": 11,
+        "returned": 11
+      },
+      "same_actual_inputs_between_builds": true,
+      "same_pngs_between_repeats": true,
+      "source_initial_88_party_bytes_match": true,
+      "initial_and_saved_party_88_hex": "9900230c0016032d212d490f00000003cd000000000000000000009a7823280a1e0c002300120013001100169900230c0016032d212d000000000003cd000000000000000000009a78232800000c00230012001300110016",
+      "ordinary_save": true,
+      "sram_sha256": "c67a8f5c4df6b169b833915655ce67838dfe18cca2448936810b7287f8b18fdc",
+      "sram_checksum": 16,
+      "saved_money": 3000,
+      "captures": {
+        "before": {
+          "frame": 120,
+          "sha256": "38b9925f4fa0088731799bf60f2f406157881418eef0692db1379267fe62a805"
+        },
+        "party": {
+          "frame": 244,
+          "sha256": "ede51a40f3e7f5dbd8e3526bed43455be1fbd6eef2d76a3dd7542afab8250ed3"
+        },
+        "field-actions": {
+          "frame": 276,
+          "sha256": "a830ebdecfb745ec875b7870bef0ec1cec42c4188a11a1a42c050f40ea9bd683"
+        },
+        "cut-notice": {
+          "frame": 308,
+          "sha256": "b5c0825f28f273a46c0a760d3d3a95b2c6be9c99324d9252b8912f4e5296d1a1"
+        },
+        "after": {
+          "frame": 580,
+          "sha256": "2155f7df64c64a87d82d98733bac9e940f4d1e6ebda401aedacca2686ea983da"
+        },
+        "stepped-on-target": {
+          "frame": 628,
+          "sha256": "3b42c76a3ff5f082db8bdcce6ff133ff1c7148f850da28dba5adcfa1837033ab"
+        },
+        "entered-city": {
+          "frame": 1316,
+          "sha256": "b690de8f13988e004e2feebf80bc4a02676443239419c470f2e029870f2d6aa4"
+        },
+        "returned": {
+          "frame": 1364,
+          "sha256": "c6c2f9672cdb16cc6c2873b1208fe8562d44e6b88e278ee71bb19dbf452d65bf"
+        },
+        "saved": {
+          "frame": 2452,
+          "sha256": "dd86e555811c2fc806ad2752e919183005b41cadf541935be93c7ee2538a36f3"
+        }
+      },
+      "full_record": "raw/native-cut-grass-before/healthy-2/record.json"
+    },
+    {
+      "stage": "after",
+      "health": "healthy",
+      "repeat": 2,
+      "source_commit": "64ba9dfda5fb2e70b9701272a11bd868e66bd204",
+      "binary_sha256": "eb3530078850c8eea7e4f852a4c0afaf1af6920365a537b99f076f47a2bff9fd",
+      "fixture_sha256": "dbeb2bedef90a4f22a247363deeb093c8e4e15ce6d7715cf53042e58923c67d5",
+      "script_sha256": "9abafd8c9695b311c3d5eaac0b4bf2c83a441ef0d6f22ba7126146d308dd023f",
+      "actions_file_sha256": "daf56cd5e9e10fedce870734bbd0a730ab8737246cae322d978f4cdab535a3c9",
+      "frames": {
+        "before": 120,
+        "after": 580,
+        "stepped": 628,
+        "entered_city": 1316,
+        "returned": 1364
+      },
+      "blocks": {
+        "before": 11,
+        "after": 10,
+        "stepped": 10,
+        "returned": 11
+      },
+      "same_actual_inputs_between_builds": true,
+      "same_pngs_between_repeats": true,
+      "source_initial_88_party_bytes_match": true,
+      "initial_and_saved_party_88_hex": "9900230c0016032d212d490f00000003cd000000000000000000009a7823280a1e0c002300120013001100169900230c0016032d212d000000000003cd000000000000000000009a78232800000c00230012001300110016",
+      "ordinary_save": true,
+      "sram_sha256": "c67a8f5c4df6b169b833915655ce67838dfe18cca2448936810b7287f8b18fdc",
+      "sram_checksum": 16,
+      "saved_money": 3000,
+      "captures": {
+        "before": {
+          "frame": 120,
+          "sha256": "38b9925f4fa0088731799bf60f2f406157881418eef0692db1379267fe62a805"
+        },
+        "party": {
+          "frame": 244,
+          "sha256": "ede51a40f3e7f5dbd8e3526bed43455be1fbd6eef2d76a3dd7542afab8250ed3"
+        },
+        "field-actions": {
+          "frame": 276,
+          "sha256": "a830ebdecfb745ec875b7870bef0ec1cec42c4188a11a1a42c050f40ea9bd683"
+        },
+        "cut-notice": {
+          "frame": 308,
+          "sha256": "b5c0825f28f273a46c0a760d3d3a95b2c6be9c99324d9252b8912f4e5296d1a1"
+        },
+        "after": {
+          "frame": 580,
+          "sha256": "8bba163141cce5b86eb99c44b6e5451433cb7f0922d9b530b9f181ff84b2e7e3"
+        },
+        "stepped-on-target": {
+          "frame": 628,
+          "sha256": "e89544700db992d72bcc0c81a4f89af4d3242849aa9e7f9a25aac454d3995993"
+        },
+        "entered-city": {
+          "frame": 1316,
+          "sha256": "b690de8f13988e004e2feebf80bc4a02676443239419c470f2e029870f2d6aa4"
+        },
+        "returned": {
+          "frame": 1364,
+          "sha256": "c6c2f9672cdb16cc6c2873b1208fe8562d44e6b88e278ee71bb19dbf452d65bf"
+        },
+        "saved": {
+          "frame": 2452,
+          "sha256": "dd86e555811c2fc806ad2752e919183005b41cadf541935be93c7ee2538a36f3"
+        }
+      },
+      "full_record": "raw/native-cut-grass-after/healthy-2/record.json"
+    },
+    {
+      "stage": "before",
+      "health": "fainted",
+      "repeat": 1,
+      "source_commit": "db250c03efa4be2161cb289a1591ac9fd71f6ac1",
+      "binary_sha256": "087e37e881621584abb2238345e2e9f23682664b8ede24468eb8117c1456ce32",
+      "fixture_sha256": "0b1a5ba7a9448857c668f6cc44d62ac386d16fd7e2d2a80122bc9a09dda2b8a1",
+      "script_sha256": "9abafd8c9695b311c3d5eaac0b4bf2c83a441ef0d6f22ba7126146d308dd023f",
+      "actions_file_sha256": "daf56cd5e9e10fedce870734bbd0a730ab8737246cae322d978f4cdab535a3c9",
+      "frames": {
+        "before": 120,
+        "after": 580,
+        "stepped": 628,
+        "entered_city": 1316,
+        "returned": 1364
+      },
+      "blocks": {
+        "before": 11,
+        "after": 11,
+        "stepped": 11,
+        "returned": 11
+      },
+      "same_actual_inputs_between_builds": true,
+      "same_pngs_between_repeats": true,
+      "source_initial_88_party_bytes_match": true,
+      "initial_and_saved_party_88_hex": "9900000c0016032d212d490f00000003cd000000000000000000009a7823280a1e0c002300120013001100169900230c0016032d212d000000000003cd000000000000000000009a78232800000c00230012001300110016",
+      "ordinary_save": true,
+      "sram_sha256": "227cfc8f755c1bb033daa08fd741eadd4ca19074c55bb8b2fb76fda85f7473b6",
+      "sram_checksum": 51,
+      "saved_money": 3000,
+      "captures": {
+        "before": {
+          "frame": 120,
+          "sha256": "38b9925f4fa0088731799bf60f2f406157881418eef0692db1379267fe62a805"
+        },
+        "party": {
+          "frame": 244,
+          "sha256": "043b0a3b906a1387ad0dd4fe8b587c9cfe883a0a2e54ce1121449e2b8405d999"
+        },
+        "field-actions": {
+          "frame": 276,
+          "sha256": "fc2ca30614aaa685cae46ed4ceac0949566093697f3a745b101dbbdfc5481e1f"
+        },
+        "cut-notice": {
+          "frame": 308,
+          "sha256": "b5c0825f28f273a46c0a760d3d3a95b2c6be9c99324d9252b8912f4e5296d1a1"
+        },
+        "after": {
+          "frame": 580,
+          "sha256": "2155f7df64c64a87d82d98733bac9e940f4d1e6ebda401aedacca2686ea983da"
+        },
+        "stepped-on-target": {
+          "frame": 628,
+          "sha256": "3b42c76a3ff5f082db8bdcce6ff133ff1c7148f850da28dba5adcfa1837033ab"
+        },
+        "entered-city": {
+          "frame": 1316,
+          "sha256": "b690de8f13988e004e2feebf80bc4a02676443239419c470f2e029870f2d6aa4"
+        },
+        "returned": {
+          "frame": 1364,
+          "sha256": "c6c2f9672cdb16cc6c2873b1208fe8562d44e6b88e278ee71bb19dbf452d65bf"
+        },
+        "saved": {
+          "frame": 2452,
+          "sha256": "dd86e555811c2fc806ad2752e919183005b41cadf541935be93c7ee2538a36f3"
+        }
+      },
+      "full_record": "raw/native-cut-grass-before/fainted-1/record.json"
+    },
+    {
+      "stage": "after",
+      "health": "fainted",
+      "repeat": 1,
+      "source_commit": "64ba9dfda5fb2e70b9701272a11bd868e66bd204",
+      "binary_sha256": "eb3530078850c8eea7e4f852a4c0afaf1af6920365a537b99f076f47a2bff9fd",
+      "fixture_sha256": "0b1a5ba7a9448857c668f6cc44d62ac386d16fd7e2d2a80122bc9a09dda2b8a1",
+      "script_sha256": "9abafd8c9695b311c3d5eaac0b4bf2c83a441ef0d6f22ba7126146d308dd023f",
+      "actions_file_sha256": "daf56cd5e9e10fedce870734bbd0a730ab8737246cae322d978f4cdab535a3c9",
+      "frames": {
+        "before": 120,
+        "after": 580,
+        "stepped": 628,
+        "entered_city": 1316,
+        "returned": 1364
+      },
+      "blocks": {
+        "before": 11,
+        "after": 10,
+        "stepped": 10,
+        "returned": 11
+      },
+      "same_actual_inputs_between_builds": true,
+      "same_pngs_between_repeats": true,
+      "source_initial_88_party_bytes_match": true,
+      "initial_and_saved_party_88_hex": "9900000c0016032d212d490f00000003cd000000000000000000009a7823280a1e0c002300120013001100169900230c0016032d212d000000000003cd000000000000000000009a78232800000c00230012001300110016",
+      "ordinary_save": true,
+      "sram_sha256": "227cfc8f755c1bb033daa08fd741eadd4ca19074c55bb8b2fb76fda85f7473b6",
+      "sram_checksum": 51,
+      "saved_money": 3000,
+      "captures": {
+        "before": {
+          "frame": 120,
+          "sha256": "38b9925f4fa0088731799bf60f2f406157881418eef0692db1379267fe62a805"
+        },
+        "party": {
+          "frame": 244,
+          "sha256": "043b0a3b906a1387ad0dd4fe8b587c9cfe883a0a2e54ce1121449e2b8405d999"
+        },
+        "field-actions": {
+          "frame": 276,
+          "sha256": "fc2ca30614aaa685cae46ed4ceac0949566093697f3a745b101dbbdfc5481e1f"
+        },
+        "cut-notice": {
+          "frame": 308,
+          "sha256": "b5c0825f28f273a46c0a760d3d3a95b2c6be9c99324d9252b8912f4e5296d1a1"
+        },
+        "after": {
+          "frame": 580,
+          "sha256": "8bba163141cce5b86eb99c44b6e5451433cb7f0922d9b530b9f181ff84b2e7e3"
+        },
+        "stepped-on-target": {
+          "frame": 628,
+          "sha256": "e89544700db992d72bcc0c81a4f89af4d3242849aa9e7f9a25aac454d3995993"
+        },
+        "entered-city": {
+          "frame": 1316,
+          "sha256": "b690de8f13988e004e2feebf80bc4a02676443239419c470f2e029870f2d6aa4"
+        },
+        "returned": {
+          "frame": 1364,
+          "sha256": "c6c2f9672cdb16cc6c2873b1208fe8562d44e6b88e278ee71bb19dbf452d65bf"
+        },
+        "saved": {
+          "frame": 2452,
+          "sha256": "dd86e555811c2fc806ad2752e919183005b41cadf541935be93c7ee2538a36f3"
+        }
+      },
+      "full_record": "raw/native-cut-grass-after/fainted-1/record.json"
+    },
+    {
+      "stage": "before",
+      "health": "fainted",
+      "repeat": 2,
+      "source_commit": "db250c03efa4be2161cb289a1591ac9fd71f6ac1",
+      "binary_sha256": "087e37e881621584abb2238345e2e9f23682664b8ede24468eb8117c1456ce32",
+      "fixture_sha256": "0b1a5ba7a9448857c668f6cc44d62ac386d16fd7e2d2a80122bc9a09dda2b8a1",
+      "script_sha256": "9abafd8c9695b311c3d5eaac0b4bf2c83a441ef0d6f22ba7126146d308dd023f",
+      "actions_file_sha256": "daf56cd5e9e10fedce870734bbd0a730ab8737246cae322d978f4cdab535a3c9",
+      "frames": {
+        "before": 120,
+        "after": 580,
+        "stepped": 628,
+        "entered_city": 1316,
+        "returned": 1364
+      },
+      "blocks": {
+        "before": 11,
+        "after": 11,
+        "stepped": 11,
+        "returned": 11
+      },
+      "same_actual_inputs_between_builds": true,
+      "same_pngs_between_repeats": true,
+      "source_initial_88_party_bytes_match": true,
+      "initial_and_saved_party_88_hex": "9900000c0016032d212d490f00000003cd000000000000000000009a7823280a1e0c002300120013001100169900230c0016032d212d000000000003cd000000000000000000009a78232800000c00230012001300110016",
+      "ordinary_save": true,
+      "sram_sha256": "227cfc8f755c1bb033daa08fd741eadd4ca19074c55bb8b2fb76fda85f7473b6",
+      "sram_checksum": 51,
+      "saved_money": 3000,
+      "captures": {
+        "before": {
+          "frame": 120,
+          "sha256": "38b9925f4fa0088731799bf60f2f406157881418eef0692db1379267fe62a805"
+        },
+        "party": {
+          "frame": 244,
+          "sha256": "043b0a3b906a1387ad0dd4fe8b587c9cfe883a0a2e54ce1121449e2b8405d999"
+        },
+        "field-actions": {
+          "frame": 276,
+          "sha256": "fc2ca30614aaa685cae46ed4ceac0949566093697f3a745b101dbbdfc5481e1f"
+        },
+        "cut-notice": {
+          "frame": 308,
+          "sha256": "b5c0825f28f273a46c0a760d3d3a95b2c6be9c99324d9252b8912f4e5296d1a1"
+        },
+        "after": {
+          "frame": 580,
+          "sha256": "2155f7df64c64a87d82d98733bac9e940f4d1e6ebda401aedacca2686ea983da"
+        },
+        "stepped-on-target": {
+          "frame": 628,
+          "sha256": "3b42c76a3ff5f082db8bdcce6ff133ff1c7148f850da28dba5adcfa1837033ab"
+        },
+        "entered-city": {
+          "frame": 1316,
+          "sha256": "b690de8f13988e004e2feebf80bc4a02676443239419c470f2e029870f2d6aa4"
+        },
+        "returned": {
+          "frame": 1364,
+          "sha256": "c6c2f9672cdb16cc6c2873b1208fe8562d44e6b88e278ee71bb19dbf452d65bf"
+        },
+        "saved": {
+          "frame": 2452,
+          "sha256": "dd86e555811c2fc806ad2752e919183005b41cadf541935be93c7ee2538a36f3"
+        }
+      },
+      "full_record": "raw/native-cut-grass-before/fainted-2/record.json"
+    },
+    {
+      "stage": "after",
+      "health": "fainted",
+      "repeat": 2,
+      "source_commit": "64ba9dfda5fb2e70b9701272a11bd868e66bd204",
+      "binary_sha256": "eb3530078850c8eea7e4f852a4c0afaf1af6920365a537b99f076f47a2bff9fd",
+      "fixture_sha256": "0b1a5ba7a9448857c668f6cc44d62ac386d16fd7e2d2a80122bc9a09dda2b8a1",
+      "script_sha256": "9abafd8c9695b311c3d5eaac0b4bf2c83a441ef0d6f22ba7126146d308dd023f",
+      "actions_file_sha256": "daf56cd5e9e10fedce870734bbd0a730ab8737246cae322d978f4cdab535a3c9",
+      "frames": {
+        "before": 120,
+        "after": 580,
+        "stepped": 628,
+        "entered_city": 1316,
+        "returned": 1364
+      },
+      "blocks": {
+        "before": 11,
+        "after": 10,
+        "stepped": 10,
+        "returned": 11
+      },
+      "same_actual_inputs_between_builds": true,
+      "same_pngs_between_repeats": true,
+      "source_initial_88_party_bytes_match": true,
+      "initial_and_saved_party_88_hex": "9900000c0016032d212d490f00000003cd000000000000000000009a7823280a1e0c002300120013001100169900230c0016032d212d000000000003cd000000000000000000009a78232800000c00230012001300110016",
+      "ordinary_save": true,
+      "sram_sha256": "227cfc8f755c1bb033daa08fd741eadd4ca19074c55bb8b2fb76fda85f7473b6",
+      "sram_checksum": 51,
+      "saved_money": 3000,
+      "captures": {
+        "before": {
+          "frame": 120,
+          "sha256": "38b9925f4fa0088731799bf60f2f406157881418eef0692db1379267fe62a805"
+        },
+        "party": {
+          "frame": 244,
+          "sha256": "043b0a3b906a1387ad0dd4fe8b587c9cfe883a0a2e54ce1121449e2b8405d999"
+        },
+        "field-actions": {
+          "frame": 276,
+          "sha256": "fc2ca30614aaa685cae46ed4ceac0949566093697f3a745b101dbbdfc5481e1f"
+        },
+        "cut-notice": {
+          "frame": 308,
+          "sha256": "b5c0825f28f273a46c0a760d3d3a95b2c6be9c99324d9252b8912f4e5296d1a1"
+        },
+        "after": {
+          "frame": 580,
+          "sha256": "8bba163141cce5b86eb99c44b6e5451433cb7f0922d9b530b9f181ff84b2e7e3"
+        },
+        "stepped-on-target": {
+          "frame": 628,
+          "sha256": "e89544700db992d72bcc0c81a4f89af4d3242849aa9e7f9a25aac454d3995993"
+        },
+        "entered-city": {
+          "frame": 1316,
+          "sha256": "b690de8f13988e004e2feebf80bc4a02676443239419c470f2e029870f2d6aa4"
+        },
+        "returned": {
+          "frame": 1364,
+          "sha256": "c6c2f9672cdb16cc6c2873b1208fe8562d44e6b88e278ee71bb19dbf452d65bf"
+        },
+        "saved": {
+          "frame": 2452,
+          "sha256": "dd86e555811c2fc806ad2752e919183005b41cadf541935be93c7ee2538a36f3"
+        }
+      },
+      "full_record": "raw/native-cut-grass-after/fainted-2/record.json"
+    }
+  ],
+  "final_validation": {
+    "source_commit": "0f40def21f7984c848f9d794b71a87d4a29f4dc7",
+    "merged_master": "db612ae63b22106632bc1b2f62b835614442d4f7",
+    "scoped_new_tests": 2,
+    "core_library_tests": 2876,
+    "core_integration_tests": 412,
+    "core_total": 3288,
+    "doc_examples_ignored": 1,
+    "debug_server_app_build_pass": true,
+    "capture_identity_unchanged": true
+  }
+}

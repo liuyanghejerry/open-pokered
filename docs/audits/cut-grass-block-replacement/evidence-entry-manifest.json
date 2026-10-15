@@ -1,0 +1,995 @@
+{
+  "scope": "Full captured metadata, action/state traces, screenshots, checkpoints, ordinary SAVE SRAM and build/test logs. ROMs and executable binaries are excluded; exact hashes/source identities remain in records. Local raw directories are retained.",
+  "entries": [
+    {
+      "path": "full-verification.json",
+      "size": 215616,
+      "sha256": "3ea2b4aefae6a169688f1d32b833a490463d9ff122926740aff23e8fb7f9740e"
+    },
+    {
+      "path": "logs/audit-883-core-full-tests.log",
+      "size": 281120,
+      "sha256": "719a085499f7c8495d253a1027eab1e90d60924778bbb6a04fe496130c342e1e"
+    },
+    {
+      "path": "logs/audit-883-core-scoped-tests.log",
+      "size": 25354,
+      "sha256": "6341f8a4e22bcc403b4c6ea78787d439260c3e7b825082862608a831b8ac633b"
+    },
+    {
+      "path": "logs/audit-883-final-core-full-tests.log",
+      "size": 282092,
+      "sha256": "bcaa599d665ded7455b533b9f68c828359f82b17fc63e780928e7984ac66f625"
+    },
+    {
+      "path": "logs/audit-883-final-core-scoped-tests.log",
+      "size": 22404,
+      "sha256": "79c2d171a01306559e59962ba2ecd4ab91afc6d5f0e254bd6956943b8348770e"
+    },
+    {
+      "path": "logs/audit-883-final-native-after-build.log",
+      "size": 79267,
+      "sha256": "e68deb958acc3e7d75b785d79e3c45e3a668fc7b963759d78ea50e42d579e745"
+    },
+    {
+      "path": "logs/audit-883-native-after-build.log",
+      "size": 79267,
+      "sha256": "1f5a09fcd99f1fcef35d6b8fd137c756240bf33d649a3f5271166fc8982fae22"
+    },
+    {
+      "path": "logs/audit-883-native-before-build.log",
+      "size": 88465,
+      "sha256": "a26175f6d13e66a172569fa8f498cc49d6d9f490f916bcddf614d63fac261820"
+    },
+    {
+      "path": "raw/native-cut-grass-after/fainted-1/actions.json",
+      "size": 2761,
+      "sha256": "daf56cd5e9e10fedce870734bbd0a730ab8737246cae322d978f4cdab535a3c9"
+    },
+    {
+      "path": "raw/native-cut-grass-after/fainted-1/after.png",
+      "size": 47144,
+      "sha256": "8bba163141cce5b86eb99c44b6e5451433cb7f0922d9b530b9f181ff84b2e7e3"
+    },
+    {
+      "path": "raw/native-cut-grass-after/fainted-1/before.png",
+      "size": 46674,
+      "sha256": "38b9925f4fa0088731799bf60f2f406157881418eef0692db1379267fe62a805"
+    },
+    {
+      "path": "raw/native-cut-grass-after/fainted-1/cut-notice.png",
+      "size": 32463,
+      "sha256": "b5c0825f28f273a46c0a760d3d3a95b2c6be9c99324d9252b8912f4e5296d1a1"
+    },
+    {
+      "path": "raw/native-cut-grass-after/fainted-1/entered-city.png",
+      "size": 32803,
+      "sha256": "b690de8f13988e004e2feebf80bc4a02676443239419c470f2e029870f2d6aa4"
+    },
+    {
+      "path": "raw/native-cut-grass-after/fainted-1/field-actions.png",
+      "size": 3488,
+      "sha256": "fc2ca30614aaa685cae46ed4ceac0949566093697f3a745b101dbbdfc5481e1f"
+    },
+    {
+      "path": "raw/native-cut-grass-after/fainted-1/game.log",
+      "size": 559,
+      "sha256": "1814baa87393df87d1afa6c8055310ead8237abc1b3bb512e0bb6bc550c73883"
+    },
+    {
+      "path": "raw/native-cut-grass-after/fainted-1/isolated.sav",
+      "size": 32768,
+      "sha256": "227cfc8f755c1bb033daa08fd741eadd4ca19074c55bb8b2fb76fda85f7473b6"
+    },
+    {
+      "path": "raw/native-cut-grass-after/fainted-1/isolated.script_flags.json",
+      "size": 436,
+      "sha256": "e4799d677682468e838fcdd0a7136805c269c28fd808eb8177464b0c04e2b418"
+    },
+    {
+      "path": "raw/native-cut-grass-after/fainted-1/party.png",
+      "size": 2812,
+      "sha256": "043b0a3b906a1387ad0dd4fe8b587c9cfe883a0a2e54ce1121449e2b8405d999"
+    },
+    {
+      "path": "raw/native-cut-grass-after/fainted-1/readback.json",
+      "size": 18208,
+      "sha256": "bc2d061280eb9c8533f38f77d5dffb10185f2bbb507566a85323435b4ddabc22"
+    },
+    {
+      "path": "raw/native-cut-grass-after/fainted-1/record.json",
+      "size": 45337,
+      "sha256": "ebca48e15bec51c97f31406ed1b035a6a78f4dc513682a3d4904e0f62c72ce85"
+    },
+    {
+      "path": "raw/native-cut-grass-after/fainted-1/returned.png",
+      "size": 43251,
+      "sha256": "c6c2f9672cdb16cc6c2873b1208fe8562d44e6b88e278ee71bb19dbf452d65bf"
+    },
+    {
+      "path": "raw/native-cut-grass-after/fainted-1/saved.png",
+      "size": 20266,
+      "sha256": "dd86e555811c2fc806ad2752e919183005b41cadf541935be93c7ee2538a36f3"
+    },
+    {
+      "path": "raw/native-cut-grass-after/fainted-1/states.json",
+      "size": 654301,
+      "sha256": "9bc1f469762363131dff5dd35ccfef8399fbd638e9825eeabd809bde2dff2fb0"
+    },
+    {
+      "path": "raw/native-cut-grass-after/fainted-1/stepped-on-target.png",
+      "size": 44840,
+      "sha256": "e89544700db992d72bcc0c81a4f89af4d3242849aa9e7f9a25aac454d3995993"
+    },
+    {
+      "path": "raw/native-cut-grass-after/fainted-2/actions.json",
+      "size": 2761,
+      "sha256": "daf56cd5e9e10fedce870734bbd0a730ab8737246cae322d978f4cdab535a3c9"
+    },
+    {
+      "path": "raw/native-cut-grass-after/fainted-2/after.png",
+      "size": 47144,
+      "sha256": "8bba163141cce5b86eb99c44b6e5451433cb7f0922d9b530b9f181ff84b2e7e3"
+    },
+    {
+      "path": "raw/native-cut-grass-after/fainted-2/before.png",
+      "size": 46674,
+      "sha256": "38b9925f4fa0088731799bf60f2f406157881418eef0692db1379267fe62a805"
+    },
+    {
+      "path": "raw/native-cut-grass-after/fainted-2/cut-notice.png",
+      "size": 32463,
+      "sha256": "b5c0825f28f273a46c0a760d3d3a95b2c6be9c99324d9252b8912f4e5296d1a1"
+    },
+    {
+      "path": "raw/native-cut-grass-after/fainted-2/entered-city.png",
+      "size": 32803,
+      "sha256": "b690de8f13988e004e2feebf80bc4a02676443239419c470f2e029870f2d6aa4"
+    },
+    {
+      "path": "raw/native-cut-grass-after/fainted-2/field-actions.png",
+      "size": 3488,
+      "sha256": "fc2ca30614aaa685cae46ed4ceac0949566093697f3a745b101dbbdfc5481e1f"
+    },
+    {
+      "path": "raw/native-cut-grass-after/fainted-2/game.log",
+      "size": 559,
+      "sha256": "8c87a4a5ee586ce619d13d2b0b56b12145cc4f3721d870c909e9ecc672732dc3"
+    },
+    {
+      "path": "raw/native-cut-grass-after/fainted-2/isolated.sav",
+      "size": 32768,
+      "sha256": "227cfc8f755c1bb033daa08fd741eadd4ca19074c55bb8b2fb76fda85f7473b6"
+    },
+    {
+      "path": "raw/native-cut-grass-after/fainted-2/isolated.script_flags.json",
+      "size": 436,
+      "sha256": "e4799d677682468e838fcdd0a7136805c269c28fd808eb8177464b0c04e2b418"
+    },
+    {
+      "path": "raw/native-cut-grass-after/fainted-2/party.png",
+      "size": 2812,
+      "sha256": "043b0a3b906a1387ad0dd4fe8b587c9cfe883a0a2e54ce1121449e2b8405d999"
+    },
+    {
+      "path": "raw/native-cut-grass-after/fainted-2/readback.json",
+      "size": 18208,
+      "sha256": "bc2d061280eb9c8533f38f77d5dffb10185f2bbb507566a85323435b4ddabc22"
+    },
+    {
+      "path": "raw/native-cut-grass-after/fainted-2/record.json",
+      "size": 45337,
+      "sha256": "108448967e3fd2ea857239783de5f62a2b82e1747fa0fcdd90f29fad313bf3cd"
+    },
+    {
+      "path": "raw/native-cut-grass-after/fainted-2/returned.png",
+      "size": 43251,
+      "sha256": "c6c2f9672cdb16cc6c2873b1208fe8562d44e6b88e278ee71bb19dbf452d65bf"
+    },
+    {
+      "path": "raw/native-cut-grass-after/fainted-2/saved.png",
+      "size": 20266,
+      "sha256": "dd86e555811c2fc806ad2752e919183005b41cadf541935be93c7ee2538a36f3"
+    },
+    {
+      "path": "raw/native-cut-grass-after/fainted-2/states.json",
+      "size": 654301,
+      "sha256": "9bc1f469762363131dff5dd35ccfef8399fbd638e9825eeabd809bde2dff2fb0"
+    },
+    {
+      "path": "raw/native-cut-grass-after/fainted-2/stepped-on-target.png",
+      "size": 44840,
+      "sha256": "e89544700db992d72bcc0c81a4f89af4d3242849aa9e7f9a25aac454d3995993"
+    },
+    {
+      "path": "raw/native-cut-grass-after/fainted-fixture.json",
+      "size": 17587,
+      "sha256": "0b1a5ba7a9448857c668f6cc44d62ac386d16fd7e2d2a80122bc9a09dda2b8a1"
+    },
+    {
+      "path": "raw/native-cut-grass-after/healthy-1/actions.json",
+      "size": 2761,
+      "sha256": "daf56cd5e9e10fedce870734bbd0a730ab8737246cae322d978f4cdab535a3c9"
+    },
+    {
+      "path": "raw/native-cut-grass-after/healthy-1/after.png",
+      "size": 47144,
+      "sha256": "8bba163141cce5b86eb99c44b6e5451433cb7f0922d9b530b9f181ff84b2e7e3"
+    },
+    {
+      "path": "raw/native-cut-grass-after/healthy-1/before.png",
+      "size": 46674,
+      "sha256": "38b9925f4fa0088731799bf60f2f406157881418eef0692db1379267fe62a805"
+    },
+    {
+      "path": "raw/native-cut-grass-after/healthy-1/cut-notice.png",
+      "size": 32463,
+      "sha256": "b5c0825f28f273a46c0a760d3d3a95b2c6be9c99324d9252b8912f4e5296d1a1"
+    },
+    {
+      "path": "raw/native-cut-grass-after/healthy-1/entered-city.png",
+      "size": 32803,
+      "sha256": "b690de8f13988e004e2feebf80bc4a02676443239419c470f2e029870f2d6aa4"
+    },
+    {
+      "path": "raw/native-cut-grass-after/healthy-1/field-actions.png",
+      "size": 3497,
+      "sha256": "a830ebdecfb745ec875b7870bef0ec1cec42c4188a11a1a42c050f40ea9bd683"
+    },
+    {
+      "path": "raw/native-cut-grass-after/healthy-1/game.log",
+      "size": 559,
+      "sha256": "7596265adcb957eb90a358d80a103e714b75eef702c38dc1cde0085de1c22257"
+    },
+    {
+      "path": "raw/native-cut-grass-after/healthy-1/isolated.sav",
+      "size": 32768,
+      "sha256": "c67a8f5c4df6b169b833915655ce67838dfe18cca2448936810b7287f8b18fdc"
+    },
+    {
+      "path": "raw/native-cut-grass-after/healthy-1/isolated.script_flags.json",
+      "size": 436,
+      "sha256": "e4799d677682468e838fcdd0a7136805c269c28fd808eb8177464b0c04e2b418"
+    },
+    {
+      "path": "raw/native-cut-grass-after/healthy-1/party.png",
+      "size": 2804,
+      "sha256": "ede51a40f3e7f5dbd8e3526bed43455be1fbd6eef2d76a3dd7542afab8250ed3"
+    },
+    {
+      "path": "raw/native-cut-grass-after/healthy-1/readback.json",
+      "size": 18209,
+      "sha256": "41c04128476c2569828c5da07cd7e7ebf3e6f9a4ac8db0b3349c95f5a1d98b2f"
+    },
+    {
+      "path": "raw/native-cut-grass-after/healthy-1/record.json",
+      "size": 45348,
+      "sha256": "d5ab284e39a95e04aa91afa5cb402fd4ebb9d1a44768c947f4f1abd0e0544d11"
+    },
+    {
+      "path": "raw/native-cut-grass-after/healthy-1/returned.png",
+      "size": 43251,
+      "sha256": "c6c2f9672cdb16cc6c2873b1208fe8562d44e6b88e278ee71bb19dbf452d65bf"
+    },
+    {
+      "path": "raw/native-cut-grass-after/healthy-1/saved.png",
+      "size": 20266,
+      "sha256": "dd86e555811c2fc806ad2752e919183005b41cadf541935be93c7ee2538a36f3"
+    },
+    {
+      "path": "raw/native-cut-grass-after/healthy-1/states.json",
+      "size": 654463,
+      "sha256": "0ca0148256d304d8e56c8f54abb4f6dab21f7b4dc10224a8aa32eb8106b1a0c9"
+    },
+    {
+      "path": "raw/native-cut-grass-after/healthy-1/stepped-on-target.png",
+      "size": 44840,
+      "sha256": "e89544700db992d72bcc0c81a4f89af4d3242849aa9e7f9a25aac454d3995993"
+    },
+    {
+      "path": "raw/native-cut-grass-after/healthy-2/actions.json",
+      "size": 2761,
+      "sha256": "daf56cd5e9e10fedce870734bbd0a730ab8737246cae322d978f4cdab535a3c9"
+    },
+    {
+      "path": "raw/native-cut-grass-after/healthy-2/after.png",
+      "size": 47144,
+      "sha256": "8bba163141cce5b86eb99c44b6e5451433cb7f0922d9b530b9f181ff84b2e7e3"
+    },
+    {
+      "path": "raw/native-cut-grass-after/healthy-2/before.png",
+      "size": 46674,
+      "sha256": "38b9925f4fa0088731799bf60f2f406157881418eef0692db1379267fe62a805"
+    },
+    {
+      "path": "raw/native-cut-grass-after/healthy-2/cut-notice.png",
+      "size": 32463,
+      "sha256": "b5c0825f28f273a46c0a760d3d3a95b2c6be9c99324d9252b8912f4e5296d1a1"
+    },
+    {
+      "path": "raw/native-cut-grass-after/healthy-2/entered-city.png",
+      "size": 32803,
+      "sha256": "b690de8f13988e004e2feebf80bc4a02676443239419c470f2e029870f2d6aa4"
+    },
+    {
+      "path": "raw/native-cut-grass-after/healthy-2/field-actions.png",
+      "size": 3497,
+      "sha256": "a830ebdecfb745ec875b7870bef0ec1cec42c4188a11a1a42c050f40ea9bd683"
+    },
+    {
+      "path": "raw/native-cut-grass-after/healthy-2/game.log",
+      "size": 559,
+      "sha256": "98625df861dddbc02cdf20064493c6ca35d1497327d6fd33e5e856c8176083c9"
+    },
+    {
+      "path": "raw/native-cut-grass-after/healthy-2/isolated.sav",
+      "size": 32768,
+      "sha256": "c67a8f5c4df6b169b833915655ce67838dfe18cca2448936810b7287f8b18fdc"
+    },
+    {
+      "path": "raw/native-cut-grass-after/healthy-2/isolated.script_flags.json",
+      "size": 436,
+      "sha256": "e4799d677682468e838fcdd0a7136805c269c28fd808eb8177464b0c04e2b418"
+    },
+    {
+      "path": "raw/native-cut-grass-after/healthy-2/party.png",
+      "size": 2804,
+      "sha256": "ede51a40f3e7f5dbd8e3526bed43455be1fbd6eef2d76a3dd7542afab8250ed3"
+    },
+    {
+      "path": "raw/native-cut-grass-after/healthy-2/readback.json",
+      "size": 18209,
+      "sha256": "41c04128476c2569828c5da07cd7e7ebf3e6f9a4ac8db0b3349c95f5a1d98b2f"
+    },
+    {
+      "path": "raw/native-cut-grass-after/healthy-2/record.json",
+      "size": 45348,
+      "sha256": "a8a74c3521f529c2db081f3e8a5279b12f4d28870358b77310a144e06331f6f7"
+    },
+    {
+      "path": "raw/native-cut-grass-after/healthy-2/returned.png",
+      "size": 43251,
+      "sha256": "c6c2f9672cdb16cc6c2873b1208fe8562d44e6b88e278ee71bb19dbf452d65bf"
+    },
+    {
+      "path": "raw/native-cut-grass-after/healthy-2/saved.png",
+      "size": 20266,
+      "sha256": "dd86e555811c2fc806ad2752e919183005b41cadf541935be93c7ee2538a36f3"
+    },
+    {
+      "path": "raw/native-cut-grass-after/healthy-2/states.json",
+      "size": 654463,
+      "sha256": "0ca0148256d304d8e56c8f54abb4f6dab21f7b4dc10224a8aa32eb8106b1a0c9"
+    },
+    {
+      "path": "raw/native-cut-grass-after/healthy-2/stepped-on-target.png",
+      "size": 44840,
+      "sha256": "e89544700db992d72bcc0c81a4f89af4d3242849aa9e7f9a25aac454d3995993"
+    },
+    {
+      "path": "raw/native-cut-grass-after/healthy-fixture.json",
+      "size": 17588,
+      "sha256": "dbeb2bedef90a4f22a247363deeb093c8e4e15ce6d7715cf53042e58923c67d5"
+    },
+    {
+      "path": "raw/native-cut-grass-after/verification.json",
+      "size": 229131,
+      "sha256": "1226adf804bab7595c2797258dba1b674c48328491a601617e4cac529479d7d5"
+    },
+    {
+      "path": "raw/native-cut-grass-before/fainted-1/actions.json",
+      "size": 2761,
+      "sha256": "daf56cd5e9e10fedce870734bbd0a730ab8737246cae322d978f4cdab535a3c9"
+    },
+    {
+      "path": "raw/native-cut-grass-before/fainted-1/after.png",
+      "size": 46626,
+      "sha256": "2155f7df64c64a87d82d98733bac9e940f4d1e6ebda401aedacca2686ea983da"
+    },
+    {
+      "path": "raw/native-cut-grass-before/fainted-1/before.png",
+      "size": 46674,
+      "sha256": "38b9925f4fa0088731799bf60f2f406157881418eef0692db1379267fe62a805"
+    },
+    {
+      "path": "raw/native-cut-grass-before/fainted-1/cut-notice.png",
+      "size": 32463,
+      "sha256": "b5c0825f28f273a46c0a760d3d3a95b2c6be9c99324d9252b8912f4e5296d1a1"
+    },
+    {
+      "path": "raw/native-cut-grass-before/fainted-1/entered-city.png",
+      "size": 32803,
+      "sha256": "b690de8f13988e004e2feebf80bc4a02676443239419c470f2e029870f2d6aa4"
+    },
+    {
+      "path": "raw/native-cut-grass-before/fainted-1/field-actions.png",
+      "size": 3488,
+      "sha256": "fc2ca30614aaa685cae46ed4ceac0949566093697f3a745b101dbbdfc5481e1f"
+    },
+    {
+      "path": "raw/native-cut-grass-before/fainted-1/game.log",
+      "size": 560,
+      "sha256": "4aea78f8fd9ace5b54250d69960ead20bd06a06fc133ad4c9b055a8102cb2431"
+    },
+    {
+      "path": "raw/native-cut-grass-before/fainted-1/isolated.sav",
+      "size": 32768,
+      "sha256": "227cfc8f755c1bb033daa08fd741eadd4ca19074c55bb8b2fb76fda85f7473b6"
+    },
+    {
+      "path": "raw/native-cut-grass-before/fainted-1/isolated.script_flags.json",
+      "size": 436,
+      "sha256": "e4799d677682468e838fcdd0a7136805c269c28fd808eb8177464b0c04e2b418"
+    },
+    {
+      "path": "raw/native-cut-grass-before/fainted-1/party.png",
+      "size": 2812,
+      "sha256": "043b0a3b906a1387ad0dd4fe8b587c9cfe883a0a2e54ce1121449e2b8405d999"
+    },
+    {
+      "path": "raw/native-cut-grass-before/fainted-1/readback.json",
+      "size": 18208,
+      "sha256": "bc2d061280eb9c8533f38f77d5dffb10185f2bbb507566a85323435b4ddabc22"
+    },
+    {
+      "path": "raw/native-cut-grass-before/fainted-1/record.json",
+      "size": 45347,
+      "sha256": "6e0f2787b6e006cb62595d1b06d3a3d0f38b6ea440162cd01b38ef4f3a89e6e7"
+    },
+    {
+      "path": "raw/native-cut-grass-before/fainted-1/returned.png",
+      "size": 43251,
+      "sha256": "c6c2f9672cdb16cc6c2873b1208fe8562d44e6b88e278ee71bb19dbf452d65bf"
+    },
+    {
+      "path": "raw/native-cut-grass-before/fainted-1/saved.png",
+      "size": 20266,
+      "sha256": "dd86e555811c2fc806ad2752e919183005b41cadf541935be93c7ee2538a36f3"
+    },
+    {
+      "path": "raw/native-cut-grass-before/fainted-1/states.json",
+      "size": 654301,
+      "sha256": "a5be81ab8e138780181ca1dfe4cf52fe6f71dc58faf9267ad497262002f3223b"
+    },
+    {
+      "path": "raw/native-cut-grass-before/fainted-1/stepped-on-target.png",
+      "size": 44325,
+      "sha256": "3b42c76a3ff5f082db8bdcce6ff133ff1c7148f850da28dba5adcfa1837033ab"
+    },
+    {
+      "path": "raw/native-cut-grass-before/fainted-2/actions.json",
+      "size": 2761,
+      "sha256": "daf56cd5e9e10fedce870734bbd0a730ab8737246cae322d978f4cdab535a3c9"
+    },
+    {
+      "path": "raw/native-cut-grass-before/fainted-2/after.png",
+      "size": 46626,
+      "sha256": "2155f7df64c64a87d82d98733bac9e940f4d1e6ebda401aedacca2686ea983da"
+    },
+    {
+      "path": "raw/native-cut-grass-before/fainted-2/before.png",
+      "size": 46674,
+      "sha256": "38b9925f4fa0088731799bf60f2f406157881418eef0692db1379267fe62a805"
+    },
+    {
+      "path": "raw/native-cut-grass-before/fainted-2/cut-notice.png",
+      "size": 32463,
+      "sha256": "b5c0825f28f273a46c0a760d3d3a95b2c6be9c99324d9252b8912f4e5296d1a1"
+    },
+    {
+      "path": "raw/native-cut-grass-before/fainted-2/entered-city.png",
+      "size": 32803,
+      "sha256": "b690de8f13988e004e2feebf80bc4a02676443239419c470f2e029870f2d6aa4"
+    },
+    {
+      "path": "raw/native-cut-grass-before/fainted-2/field-actions.png",
+      "size": 3488,
+      "sha256": "fc2ca30614aaa685cae46ed4ceac0949566093697f3a745b101dbbdfc5481e1f"
+    },
+    {
+      "path": "raw/native-cut-grass-before/fainted-2/game.log",
+      "size": 560,
+      "sha256": "e4f77212fc0660146d74e61651e8edb1eea7e0b4b51b1e2e6fc054b2945702eb"
+    },
+    {
+      "path": "raw/native-cut-grass-before/fainted-2/isolated.sav",
+      "size": 32768,
+      "sha256": "227cfc8f755c1bb033daa08fd741eadd4ca19074c55bb8b2fb76fda85f7473b6"
+    },
+    {
+      "path": "raw/native-cut-grass-before/fainted-2/isolated.script_flags.json",
+      "size": 436,
+      "sha256": "e4799d677682468e838fcdd0a7136805c269c28fd808eb8177464b0c04e2b418"
+    },
+    {
+      "path": "raw/native-cut-grass-before/fainted-2/party.png",
+      "size": 2812,
+      "sha256": "043b0a3b906a1387ad0dd4fe8b587c9cfe883a0a2e54ce1121449e2b8405d999"
+    },
+    {
+      "path": "raw/native-cut-grass-before/fainted-2/readback.json",
+      "size": 18208,
+      "sha256": "bc2d061280eb9c8533f38f77d5dffb10185f2bbb507566a85323435b4ddabc22"
+    },
+    {
+      "path": "raw/native-cut-grass-before/fainted-2/record.json",
+      "size": 45347,
+      "sha256": "cc3db92f22780baee0a30c1e7f6324d67807c1b054e6f7eac5e7c10b35bc2d5d"
+    },
+    {
+      "path": "raw/native-cut-grass-before/fainted-2/returned.png",
+      "size": 43251,
+      "sha256": "c6c2f9672cdb16cc6c2873b1208fe8562d44e6b88e278ee71bb19dbf452d65bf"
+    },
+    {
+      "path": "raw/native-cut-grass-before/fainted-2/saved.png",
+      "size": 20266,
+      "sha256": "dd86e555811c2fc806ad2752e919183005b41cadf541935be93c7ee2538a36f3"
+    },
+    {
+      "path": "raw/native-cut-grass-before/fainted-2/states.json",
+      "size": 654301,
+      "sha256": "a5be81ab8e138780181ca1dfe4cf52fe6f71dc58faf9267ad497262002f3223b"
+    },
+    {
+      "path": "raw/native-cut-grass-before/fainted-2/stepped-on-target.png",
+      "size": 44325,
+      "sha256": "3b42c76a3ff5f082db8bdcce6ff133ff1c7148f850da28dba5adcfa1837033ab"
+    },
+    {
+      "path": "raw/native-cut-grass-before/fainted-fixture.json",
+      "size": 17587,
+      "sha256": "0b1a5ba7a9448857c668f6cc44d62ac386d16fd7e2d2a80122bc9a09dda2b8a1"
+    },
+    {
+      "path": "raw/native-cut-grass-before/healthy-1/actions.json",
+      "size": 2761,
+      "sha256": "daf56cd5e9e10fedce870734bbd0a730ab8737246cae322d978f4cdab535a3c9"
+    },
+    {
+      "path": "raw/native-cut-grass-before/healthy-1/after.png",
+      "size": 46626,
+      "sha256": "2155f7df64c64a87d82d98733bac9e940f4d1e6ebda401aedacca2686ea983da"
+    },
+    {
+      "path": "raw/native-cut-grass-before/healthy-1/before.png",
+      "size": 46674,
+      "sha256": "38b9925f4fa0088731799bf60f2f406157881418eef0692db1379267fe62a805"
+    },
+    {
+      "path": "raw/native-cut-grass-before/healthy-1/cut-notice.png",
+      "size": 32463,
+      "sha256": "b5c0825f28f273a46c0a760d3d3a95b2c6be9c99324d9252b8912f4e5296d1a1"
+    },
+    {
+      "path": "raw/native-cut-grass-before/healthy-1/entered-city.png",
+      "size": 32803,
+      "sha256": "b690de8f13988e004e2feebf80bc4a02676443239419c470f2e029870f2d6aa4"
+    },
+    {
+      "path": "raw/native-cut-grass-before/healthy-1/field-actions.png",
+      "size": 3497,
+      "sha256": "a830ebdecfb745ec875b7870bef0ec1cec42c4188a11a1a42c050f40ea9bd683"
+    },
+    {
+      "path": "raw/native-cut-grass-before/healthy-1/game.log",
+      "size": 560,
+      "sha256": "a2e79d7ab8d6e202155bca64dbd641219929f4b6b7780032561b19ed0e20ef9d"
+    },
+    {
+      "path": "raw/native-cut-grass-before/healthy-1/isolated.sav",
+      "size": 32768,
+      "sha256": "c67a8f5c4df6b169b833915655ce67838dfe18cca2448936810b7287f8b18fdc"
+    },
+    {
+      "path": "raw/native-cut-grass-before/healthy-1/isolated.script_flags.json",
+      "size": 436,
+      "sha256": "e4799d677682468e838fcdd0a7136805c269c28fd808eb8177464b0c04e2b418"
+    },
+    {
+      "path": "raw/native-cut-grass-before/healthy-1/party.png",
+      "size": 2804,
+      "sha256": "ede51a40f3e7f5dbd8e3526bed43455be1fbd6eef2d76a3dd7542afab8250ed3"
+    },
+    {
+      "path": "raw/native-cut-grass-before/healthy-1/readback.json",
+      "size": 18209,
+      "sha256": "41c04128476c2569828c5da07cd7e7ebf3e6f9a4ac8db0b3349c95f5a1d98b2f"
+    },
+    {
+      "path": "raw/native-cut-grass-before/healthy-1/record.json",
+      "size": 45358,
+      "sha256": "a3b07abf0e2e887cce91a2ba9e1583585463b80ef670b208a3ca057c946c7433"
+    },
+    {
+      "path": "raw/native-cut-grass-before/healthy-1/returned.png",
+      "size": 43251,
+      "sha256": "c6c2f9672cdb16cc6c2873b1208fe8562d44e6b88e278ee71bb19dbf452d65bf"
+    },
+    {
+      "path": "raw/native-cut-grass-before/healthy-1/saved.png",
+      "size": 20266,
+      "sha256": "dd86e555811c2fc806ad2752e919183005b41cadf541935be93c7ee2538a36f3"
+    },
+    {
+      "path": "raw/native-cut-grass-before/healthy-1/states.json",
+      "size": 654463,
+      "sha256": "1012e6d84b0504c0e3344eecebdbb0cf79d70a31a278aa446ab7759a44dbac6c"
+    },
+    {
+      "path": "raw/native-cut-grass-before/healthy-1/stepped-on-target.png",
+      "size": 44325,
+      "sha256": "3b42c76a3ff5f082db8bdcce6ff133ff1c7148f850da28dba5adcfa1837033ab"
+    },
+    {
+      "path": "raw/native-cut-grass-before/healthy-2/actions.json",
+      "size": 2761,
+      "sha256": "daf56cd5e9e10fedce870734bbd0a730ab8737246cae322d978f4cdab535a3c9"
+    },
+    {
+      "path": "raw/native-cut-grass-before/healthy-2/after.png",
+      "size": 46626,
+      "sha256": "2155f7df64c64a87d82d98733bac9e940f4d1e6ebda401aedacca2686ea983da"
+    },
+    {
+      "path": "raw/native-cut-grass-before/healthy-2/before.png",
+      "size": 46674,
+      "sha256": "38b9925f4fa0088731799bf60f2f406157881418eef0692db1379267fe62a805"
+    },
+    {
+      "path": "raw/native-cut-grass-before/healthy-2/cut-notice.png",
+      "size": 32463,
+      "sha256": "b5c0825f28f273a46c0a760d3d3a95b2c6be9c99324d9252b8912f4e5296d1a1"
+    },
+    {
+      "path": "raw/native-cut-grass-before/healthy-2/entered-city.png",
+      "size": 32803,
+      "sha256": "b690de8f13988e004e2feebf80bc4a02676443239419c470f2e029870f2d6aa4"
+    },
+    {
+      "path": "raw/native-cut-grass-before/healthy-2/field-actions.png",
+      "size": 3497,
+      "sha256": "a830ebdecfb745ec875b7870bef0ec1cec42c4188a11a1a42c050f40ea9bd683"
+    },
+    {
+      "path": "raw/native-cut-grass-before/healthy-2/game.log",
+      "size": 560,
+      "sha256": "7ff5a30f470803bc7d2e9d428b086c7fc198b1f2a4c5de45a481135164c3bc57"
+    },
+    {
+      "path": "raw/native-cut-grass-before/healthy-2/isolated.sav",
+      "size": 32768,
+      "sha256": "c67a8f5c4df6b169b833915655ce67838dfe18cca2448936810b7287f8b18fdc"
+    },
+    {
+      "path": "raw/native-cut-grass-before/healthy-2/isolated.script_flags.json",
+      "size": 436,
+      "sha256": "e4799d677682468e838fcdd0a7136805c269c28fd808eb8177464b0c04e2b418"
+    },
+    {
+      "path": "raw/native-cut-grass-before/healthy-2/party.png",
+      "size": 2804,
+      "sha256": "ede51a40f3e7f5dbd8e3526bed43455be1fbd6eef2d76a3dd7542afab8250ed3"
+    },
+    {
+      "path": "raw/native-cut-grass-before/healthy-2/readback.json",
+      "size": 18209,
+      "sha256": "41c04128476c2569828c5da07cd7e7ebf3e6f9a4ac8db0b3349c95f5a1d98b2f"
+    },
+    {
+      "path": "raw/native-cut-grass-before/healthy-2/record.json",
+      "size": 45358,
+      "sha256": "51d82ba12d5dbe2d2f2761a8d1f0c1f9504f3b9ff66a2fa32d723419e633169f"
+    },
+    {
+      "path": "raw/native-cut-grass-before/healthy-2/returned.png",
+      "size": 43251,
+      "sha256": "c6c2f9672cdb16cc6c2873b1208fe8562d44e6b88e278ee71bb19dbf452d65bf"
+    },
+    {
+      "path": "raw/native-cut-grass-before/healthy-2/saved.png",
+      "size": 20266,
+      "sha256": "dd86e555811c2fc806ad2752e919183005b41cadf541935be93c7ee2538a36f3"
+    },
+    {
+      "path": "raw/native-cut-grass-before/healthy-2/states.json",
+      "size": 654463,
+      "sha256": "1012e6d84b0504c0e3344eecebdbb0cf79d70a31a278aa446ab7759a44dbac6c"
+    },
+    {
+      "path": "raw/native-cut-grass-before/healthy-2/stepped-on-target.png",
+      "size": 44325,
+      "sha256": "3b42c76a3ff5f082db8bdcce6ff133ff1c7148f850da28dba5adcfa1837033ab"
+    },
+    {
+      "path": "raw/native-cut-grass-before/healthy-fixture.json",
+      "size": 17588,
+      "sha256": "dbeb2bedef90a4f22a247363deeb093c8e4e15ce6d7715cf53042e58923c67d5"
+    },
+    {
+      "path": "raw/native-cut-grass-before/verification.json",
+      "size": 229172,
+      "sha256": "5bb52f2b4432c26e0ec61ae51fdbc17dd24cb2e2b3f7fb81d62222085c456a9a"
+    },
+    {
+      "path": "raw/original-cut-grass-v2/fainted-1/after-cut.state",
+      "size": 178100,
+      "sha256": "b00e971ae5131721367915bce3d0fcceda5bad107586755472bd908aac021c5a"
+    },
+    {
+      "path": "raw/original-cut-grass-v2/fainted-1/after.png",
+      "size": 1807,
+      "sha256": "b14be223114a526b49dd9616d8633069d2bfe5f66cbac40af5023658e4710139"
+    },
+    {
+      "path": "raw/original-cut-grass-v2/fainted-1/before.png",
+      "size": 1552,
+      "sha256": "16f4f71bbf339097a36857910b45cc4e269aa99e05fb350bf0a9734a83f28515"
+    },
+    {
+      "path": "raw/original-cut-grass-v2/fainted-1/constructed-start.state",
+      "size": 178100,
+      "sha256": "a747a8138aa07a67067710cd6daf9011af8d61b212afe5ee5585f97b1f92f199"
+    },
+    {
+      "path": "raw/original-cut-grass-v2/fainted-1/field-actions.png",
+      "size": 1986,
+      "sha256": "5c998fdd01df9b6e0ff77c88ba7e878d320a35128decee0da555536977436575"
+    },
+    {
+      "path": "raw/original-cut-grass-v2/fainted-1/party.png",
+      "size": 1676,
+      "sha256": "359e7dde90ad820fd5a440678911c6add5b7a20574e7b791c64e806e57e94170"
+    },
+    {
+      "path": "raw/original-cut-grass-v2/fainted-1/record.json",
+      "size": 29742,
+      "sha256": "8264f755e65a9bba327b1c37b3f13a3a9717f6d8922eae7537221ac2184ecd74"
+    },
+    {
+      "path": "raw/original-cut-grass-v2/fainted-1/stepped-on-cleared.png",
+      "size": 1823,
+      "sha256": "35f5b2ec9539a5f34f5abdc0d62c9966c5940e5d4ef2ac2d2f6baf798c5f5399"
+    },
+    {
+      "path": "raw/original-cut-grass-v2/fainted-2/after-cut.state",
+      "size": 178100,
+      "sha256": "b00e971ae5131721367915bce3d0fcceda5bad107586755472bd908aac021c5a"
+    },
+    {
+      "path": "raw/original-cut-grass-v2/fainted-2/after.png",
+      "size": 1807,
+      "sha256": "b14be223114a526b49dd9616d8633069d2bfe5f66cbac40af5023658e4710139"
+    },
+    {
+      "path": "raw/original-cut-grass-v2/fainted-2/before.png",
+      "size": 1552,
+      "sha256": "16f4f71bbf339097a36857910b45cc4e269aa99e05fb350bf0a9734a83f28515"
+    },
+    {
+      "path": "raw/original-cut-grass-v2/fainted-2/constructed-start.state",
+      "size": 178100,
+      "sha256": "a747a8138aa07a67067710cd6daf9011af8d61b212afe5ee5585f97b1f92f199"
+    },
+    {
+      "path": "raw/original-cut-grass-v2/fainted-2/field-actions.png",
+      "size": 1986,
+      "sha256": "5c998fdd01df9b6e0ff77c88ba7e878d320a35128decee0da555536977436575"
+    },
+    {
+      "path": "raw/original-cut-grass-v2/fainted-2/party.png",
+      "size": 1676,
+      "sha256": "359e7dde90ad820fd5a440678911c6add5b7a20574e7b791c64e806e57e94170"
+    },
+    {
+      "path": "raw/original-cut-grass-v2/fainted-2/record.json",
+      "size": 29742,
+      "sha256": "3f7101f9176bf3814300d9df970b3a8c3a824ed50ad7acfeec27ff9a53ce80cb"
+    },
+    {
+      "path": "raw/original-cut-grass-v2/fainted-2/stepped-on-cleared.png",
+      "size": 1823,
+      "sha256": "35f5b2ec9539a5f34f5abdc0d62c9966c5940e5d4ef2ac2d2f6baf798c5f5399"
+    },
+    {
+      "path": "raw/original-cut-grass-v2/healthy-1/after-cut.state",
+      "size": 178100,
+      "sha256": "d00be6d5a1b11056288270f0d253ac12acfc1776da9807c9fad5dfc4f8b86696"
+    },
+    {
+      "path": "raw/original-cut-grass-v2/healthy-1/after.png",
+      "size": 1807,
+      "sha256": "b14be223114a526b49dd9616d8633069d2bfe5f66cbac40af5023658e4710139"
+    },
+    {
+      "path": "raw/original-cut-grass-v2/healthy-1/before.png",
+      "size": 1552,
+      "sha256": "16f4f71bbf339097a36857910b45cc4e269aa99e05fb350bf0a9734a83f28515"
+    },
+    {
+      "path": "raw/original-cut-grass-v2/healthy-1/constructed-start.state",
+      "size": 178100,
+      "sha256": "8c53a04dfdc076458ee63eb8f5cf55918af7c7dfeb8e003cb208d59244f476cf"
+    },
+    {
+      "path": "raw/original-cut-grass-v2/healthy-1/field-actions.png",
+      "size": 2039,
+      "sha256": "3ea018a02e2f1e6294d7c2d6084a87d916cccb520207d5a0b98917818adbe490"
+    },
+    {
+      "path": "raw/original-cut-grass-v2/healthy-1/party.png",
+      "size": 1642,
+      "sha256": "0e7283c223427dae8a3b3ebbabe29e687541dfb5c88cc212c8efcec8f1d2dea1"
+    },
+    {
+      "path": "raw/original-cut-grass-v2/healthy-1/record.json",
+      "size": 29776,
+      "sha256": "afb8e0442031e798f0d69f014d402f7adde43d66bc3b65deba6545549dcf8ec9"
+    },
+    {
+      "path": "raw/original-cut-grass-v2/healthy-1/stepped-on-cleared.png",
+      "size": 1823,
+      "sha256": "35f5b2ec9539a5f34f5abdc0d62c9966c5940e5d4ef2ac2d2f6baf798c5f5399"
+    },
+    {
+      "path": "raw/original-cut-grass-v2/healthy-2/after-cut.state",
+      "size": 178100,
+      "sha256": "d00be6d5a1b11056288270f0d253ac12acfc1776da9807c9fad5dfc4f8b86696"
+    },
+    {
+      "path": "raw/original-cut-grass-v2/healthy-2/after.png",
+      "size": 1807,
+      "sha256": "b14be223114a526b49dd9616d8633069d2bfe5f66cbac40af5023658e4710139"
+    },
+    {
+      "path": "raw/original-cut-grass-v2/healthy-2/before.png",
+      "size": 1552,
+      "sha256": "16f4f71bbf339097a36857910b45cc4e269aa99e05fb350bf0a9734a83f28515"
+    },
+    {
+      "path": "raw/original-cut-grass-v2/healthy-2/constructed-start.state",
+      "size": 178100,
+      "sha256": "8c53a04dfdc076458ee63eb8f5cf55918af7c7dfeb8e003cb208d59244f476cf"
+    },
+    {
+      "path": "raw/original-cut-grass-v2/healthy-2/field-actions.png",
+      "size": 2039,
+      "sha256": "3ea018a02e2f1e6294d7c2d6084a87d916cccb520207d5a0b98917818adbe490"
+    },
+    {
+      "path": "raw/original-cut-grass-v2/healthy-2/party.png",
+      "size": 1642,
+      "sha256": "0e7283c223427dae8a3b3ebbabe29e687541dfb5c88cc212c8efcec8f1d2dea1"
+    },
+    {
+      "path": "raw/original-cut-grass-v2/healthy-2/record.json",
+      "size": 29776,
+      "sha256": "1e8b5edb3e181bc29c069db8f7eeb025b63002c89526d7d389714e7e3666df09"
+    },
+    {
+      "path": "raw/original-cut-grass-v2/healthy-2/stepped-on-cleared.png",
+      "size": 1823,
+      "sha256": "35f5b2ec9539a5f34f5abdc0d62c9966c5940e5d4ef2ac2d2f6baf798c5f5399"
+    },
+    {
+      "path": "raw/original-cut-grass-v2/map-preparation/prepared-map.png",
+      "size": 1552,
+      "sha256": "16f4f71bbf339097a36857910b45cc4e269aa99e05fb350bf0a9734a83f28515"
+    },
+    {
+      "path": "raw/original-cut-grass-v2/map-preparation/prepared-map.state",
+      "size": 178100,
+      "sha256": "709bae91b0ed863f736e0cffc94e949fff0b6411c03a2655261f466628a57b5a"
+    },
+    {
+      "path": "raw/original-cut-grass-v2/verification.json",
+      "size": 151884,
+      "sha256": "54c4a79c25b63a47b0bd3c10abc440171d73a6433865781d9c952c14e40ee263"
+    },
+    {
+      "path": "raw/original-reenter-v4/fainted-1/original.gbc.ram",
+      "size": 32768,
+      "sha256": "6a56936e074a90180f9631e45c6da1b30225533ead2e66675093c12139bc4a6d"
+    },
+    {
+      "path": "raw/original-reenter-v4/fainted-1/other-map.png",
+      "size": 2692,
+      "sha256": "4b49e5305b9f3ec11192b320a69a0227fefa8460fcb4cc11f6c5e2acbaf6ca3d"
+    },
+    {
+      "path": "raw/original-reenter-v4/fainted-1/record.json",
+      "size": 21367,
+      "sha256": "9e6dd77f6953b3daf8a7a79478c06eb51c5b134c58ba6c40fdd8aaa953ed0da0"
+    },
+    {
+      "path": "raw/original-reenter-v4/fainted-1/returned.png",
+      "size": 3142,
+      "sha256": "90c28a561c26ff512d0eefbc79583b263bf53295c0df344cb1e2dd6540674cad"
+    },
+    {
+      "path": "raw/original-reenter-v4/fainted-1/returned.state",
+      "size": 178100,
+      "sha256": "f26f61edbfeedea31eac74d1b1f9d1769bec969da10c64c6d55b4709e84db4c2"
+    },
+    {
+      "path": "raw/original-reenter-v4/fainted-2/original.gbc.ram",
+      "size": 32768,
+      "sha256": "6a56936e074a90180f9631e45c6da1b30225533ead2e66675093c12139bc4a6d"
+    },
+    {
+      "path": "raw/original-reenter-v4/fainted-2/other-map.png",
+      "size": 2692,
+      "sha256": "4b49e5305b9f3ec11192b320a69a0227fefa8460fcb4cc11f6c5e2acbaf6ca3d"
+    },
+    {
+      "path": "raw/original-reenter-v4/fainted-2/record.json",
+      "size": 21367,
+      "sha256": "d19907e68ff9c8d4072d02e52135efdf3ed6b576c5372a31da91d5d831e1161a"
+    },
+    {
+      "path": "raw/original-reenter-v4/fainted-2/returned.png",
+      "size": 3142,
+      "sha256": "90c28a561c26ff512d0eefbc79583b263bf53295c0df344cb1e2dd6540674cad"
+    },
+    {
+      "path": "raw/original-reenter-v4/fainted-2/returned.state",
+      "size": 178100,
+      "sha256": "f26f61edbfeedea31eac74d1b1f9d1769bec969da10c64c6d55b4709e84db4c2"
+    },
+    {
+      "path": "raw/original-reenter-v4/healthy-1/original.gbc.ram",
+      "size": 32768,
+      "sha256": "f85efe6ebcdab5762972e0b994b2dc995775de7c63a683f5787ddf198bcb57e1"
+    },
+    {
+      "path": "raw/original-reenter-v4/healthy-1/other-map.png",
+      "size": 2692,
+      "sha256": "4b49e5305b9f3ec11192b320a69a0227fefa8460fcb4cc11f6c5e2acbaf6ca3d"
+    },
+    {
+      "path": "raw/original-reenter-v4/healthy-1/record.json",
+      "size": 21367,
+      "sha256": "965a91d6f813701e1cbbe4b0e6333b35e5f885ac60b12c8407b910ba314db1ce"
+    },
+    {
+      "path": "raw/original-reenter-v4/healthy-1/returned.png",
+      "size": 3142,
+      "sha256": "90c28a561c26ff512d0eefbc79583b263bf53295c0df344cb1e2dd6540674cad"
+    },
+    {
+      "path": "raw/original-reenter-v4/healthy-1/returned.state",
+      "size": 178100,
+      "sha256": "dc7966da93fbecefeb465167415b3d66e46dc83e9a6451c739f0d08159e4869e"
+    },
+    {
+      "path": "raw/original-reenter-v4/healthy-2/original.gbc.ram",
+      "size": 32768,
+      "sha256": "f85efe6ebcdab5762972e0b994b2dc995775de7c63a683f5787ddf198bcb57e1"
+    },
+    {
+      "path": "raw/original-reenter-v4/healthy-2/other-map.png",
+      "size": 2692,
+      "sha256": "4b49e5305b9f3ec11192b320a69a0227fefa8460fcb4cc11f6c5e2acbaf6ca3d"
+    },
+    {
+      "path": "raw/original-reenter-v4/healthy-2/record.json",
+      "size": 21367,
+      "sha256": "378fd3825cdf2aa7f4802ca966bf2c6d0d17abdb9fc950c8469e2cf73ca60eac"
+    },
+    {
+      "path": "raw/original-reenter-v4/healthy-2/returned.png",
+      "size": 3142,
+      "sha256": "90c28a561c26ff512d0eefbc79583b263bf53295c0df344cb1e2dd6540674cad"
+    },
+    {
+      "path": "raw/original-reenter-v4/healthy-2/returned.state",
+      "size": 178100,
+      "sha256": "dc7966da93fbecefeb465167415b3d66e46dc83e9a6451c739f0d08159e4869e"
+    },
+    {
+      "path": "raw/original-reenter-v4/verification.json",
+      "size": 103096,
+      "sha256": "207a685cb64bf00296df6ac0f04e0de2e8d7fe010c3d1b537520108982807dc3"
+    }
+  ]
+}
