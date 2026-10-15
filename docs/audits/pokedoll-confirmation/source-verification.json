@@ -1,0 +1,124 @@
+{
+  "scope": "Source actual ordinary input/SAVE A/B\u00d72 PokeDoll ghost controls. Native source bridge initial SRAM and exact fixture hashed; one preinput construction only. Original field camera uses event_displacement +7+width10; failed +4 attempt preserved and excluded.",
+  "source_revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+  "source_verification": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-900-original-doll-s0uegzsx/verification.json",
+  "source_verification_sha256": "83d87f0b9ab3ab7b5d2572d578c7e1b4585f13866696984ebbf3af202bf4f368",
+  "native_sram_bridge": "audit-900-native-doll-before-m_g0c90_/a-1/initial.sav",
+  "native_sram_sha256": "3e76b26ed54f49229f54f8961791f01adb683b2e818fac92f2a3134662497fe8",
+  "fixture_sha256": "c3dff18737d09b8729f716dfdbf1678feab3e1d7e5336eae1f72a44bfc758767",
+  "controls": [
+    {
+      "ack": "a",
+      "repeat": 1,
+      "initial": {
+        "map": 147,
+        "xy": [
+          11,
+          16
+        ],
+        "qty": 2,
+        "HP": [
+          0,
+          21
+        ]
+      },
+      "pause_frame": 2486,
+      "pause_qty": 2,
+      "consumed_frame": 2489,
+      "consumed_qty": 1,
+      "calmed_frame": 2733,
+      "result": 0,
+      "ghost_flag": true,
+      "protected_full_raw_party_box_cash_name_id": true,
+      "ordinary_save_count": 2,
+      "sram_sha256": "6faf4fce62b8ec36bdec88a870e90e5bd67fe741864562ba907a84d8d4735d2f"
+    },
+    {
+      "ack": "a",
+      "repeat": 2,
+      "initial": {
+        "map": 147,
+        "xy": [
+          11,
+          16
+        ],
+        "qty": 2,
+        "HP": [
+          0,
+          21
+        ]
+      },
+      "pause_frame": 2486,
+      "pause_qty": 2,
+      "consumed_frame": 2489,
+      "consumed_qty": 1,
+      "calmed_frame": 2733,
+      "result": 0,
+      "ghost_flag": true,
+      "protected_full_raw_party_box_cash_name_id": true,
+      "ordinary_save_count": 2,
+      "sram_sha256": "6faf4fce62b8ec36bdec88a870e90e5bd67fe741864562ba907a84d8d4735d2f"
+    },
+    {
+      "ack": "b",
+      "repeat": 1,
+      "initial": {
+        "map": 147,
+        "xy": [
+          11,
+          16
+        ],
+        "qty": 2,
+        "HP": [
+          0,
+          21
+        ]
+      },
+      "pause_frame": 2486,
+      "pause_qty": 2,
+      "consumed_frame": 2489,
+      "consumed_qty": 1,
+      "calmed_frame": 2733,
+      "result": 0,
+      "ghost_flag": true,
+      "protected_full_raw_party_box_cash_name_id": true,
+      "ordinary_save_count": 2,
+      "sram_sha256": "6faf4fce62b8ec36bdec88a870e90e5bd67fe741864562ba907a84d8d4735d2f"
+    },
+    {
+      "ack": "b",
+      "repeat": 2,
+      "initial": {
+        "map": 147,
+        "xy": [
+          11,
+          16
+        ],
+        "qty": 2,
+        "HP": [
+          0,
+          21
+        ]
+      },
+      "pause_frame": 2486,
+      "pause_qty": 2,
+      "consumed_frame": 2489,
+      "consumed_qty": 1,
+      "calmed_frame": 2733,
+      "result": 0,
+      "ghost_flag": true,
+      "protected_full_raw_party_box_cash_name_id": true,
+      "ordinary_save_count": 2,
+      "sram_sha256": "6faf4fce62b8ec36bdec88a870e90e5bd67fe741864562ba907a84d8d4735d2f"
+    }
+  ],
+  "interpretation": "Original full RED used POKe DOLL text + HealAilment then waits fresh A/B with quantity2. Removal occurs only after ACK and result remains0; normal ghost calming branch sets10f. All other event bits and bag tail protected. Source item helper has no explicit sound-finish wait.",
+  "limits": [
+    "Constructed preboot diagnostic, not fresh playthrough. No animation/PCM/wallclock parity claim. Source does not explicitly wait for HealAilment before input ACK."
+  ],
+  "excluded_driver_failures": [
+    "audit-900-original-doll-ik477i81: wrong preinput camera +4; no battle/item entered",
+    "initial map10,17 wall construction; no validation input"
+  ]
+}

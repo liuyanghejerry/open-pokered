@@ -1,0 +1,18 @@
+{
+  "source": "6fa1a25760903fdc6ad47dcb7bcdbd5e192cd2c7",
+  "base": "f44e3ef500ea92b24e625bb82687a449a2ee532d",
+  "core_passed": 2885,
+  "debug_app_passed": 269,
+  "ignored": 39,
+  "failures": 0,
+  "logs": {
+    "core": {
+      "path": "audit-901-pokedoll-capture-integrated-core.log",
+      "sha256": "ad373f94af1e07ce93d29a869d7c4bdc5551c1a4dbdeb4ab022d8f0058f8ecd1"
+    },
+    "app": {
+      "path": "audit-901-pokedoll-capture-integrated-app.log",
+      "sha256": "f3bd7ebe560ae2da556359a28a6f522d724e2bba724f38b471d80d4fb108c494"
+    }
+  }
+}
