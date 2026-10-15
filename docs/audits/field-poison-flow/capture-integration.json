@@ -1,0 +1,19 @@
+{
+  "source": "d078c234",
+  "base": "f44e3ef500ea92b24e625bb82687a449a2ee532d",
+  "core_passed": 2887,
+  "debug_app_passed": 278,
+  "debug_app_ignored": 39,
+  "failures": 0,
+  "merge_resolution": "Keep both field poison reset and post-capture reset in load_from_path; expose both diagnostic fields. No evidence identity relabeling.",
+  "logs": {
+    "core": {
+      "file": "audit-901-poison-capture-integrated-core.log",
+      "sha256": "f1404b314b6c0e479034d42c752fa387990204bf7b51a3c3cfde4a06340b975f"
+    },
+    "app": {
+      "file": "audit-901-poison-capture-integrated-app.log",
+      "sha256": "90d92eb9dc34a72b67d540f93cec3c4067d5ca409d7815c41902c3d1c47234c3"
+    }
+  }
+}
