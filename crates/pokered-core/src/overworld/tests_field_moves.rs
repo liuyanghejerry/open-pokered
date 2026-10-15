@@ -245,6 +245,70 @@ fn cut_tree_waits_for_text_then_animates_and_plays_sfx() {
 }
 
 #[test]
+fn cut_grass_replaces_the_natural_route6_block_and_keeps_grass_particles() {
+    use super::wild_encounters::{determine_encounter_type, TileEncounterType};
+    for hp in [35, 0] {
+        let mut screen = screen_on(MapId::Route6);
+        screen.state.player.x = 10;
+        screen.state.player.y = 22;
+        screen.state.player.facing = Direction::Down;
+        let mut mon = crate::pokemon::stats::create_pokemon_with_moves(
+            pokered_data::species::Species::Bulbasaur, 12, [0x9A, 0x78],
+            [MoveId::Tackle, MoveId::Growl, MoveId::LeechSeed, MoveId::Cut],
+        ).unwrap();
+        mon.hp = hp;
+        let original_blocks = screen.map_data.as_ref().unwrap().blocks.clone();
+        assert_eq!(original_blocks[115], 0x0B);
+        assert_eq!(screen.tiles_in_front().unwrap().1, 0x52);
+        assert_eq!(determine_encounter_type(0x52, TilesetId::Overworld, MapId::Route6), TileEncounterType::Grass);
+        assert_eq!(screen.use_field_move(MoveId::Cut, &mon, CASCADE, MapId::VermilionCity), FieldMoveOutcome::Done);
+        assert_eq!(screen.map_data.as_ref().unwrap().blocks, original_blocks,
+            "UsedCutText precedes the block replacement");
+        let pending = screen.pending_cut.as_ref().unwrap();
+        assert_eq!((pending.block_x, pending.block_y), (5, 11));
+        assert_eq!(pending.replacement_block, Some(0x0A));
+        assert_eq!(pending.kind, presentation::CutAnimKind::Grass);
+        screen.pending_dialogue.as_mut().unwrap().skip_to_full_page();
+        screen.update_frame(OverworldInput::new(false, false, false, false, true, false, false, false));
+        screen.update_frame(no_input());
+        screen.update_frame(no_input());
+        assert_eq!(screen.cut_anim.as_ref().unwrap().kind, presentation::CutAnimKind::Grass);
+        let mut expected_blocks = original_blocks;
+        expected_blocks[115] = 0x0A;
+        assert_eq!(screen.map_data.as_ref().unwrap().blocks, expected_blocks,
+            "only the targeted grass block changes");
+        let map = screen.map_data.as_ref().unwrap();
+        let provider = super::collision::PokemonCollisionProvider::new(MapId::Route6, TilesetId::Overworld);
+        use super::collision::CollisionProvider;
+        for (x, y) in [(10, 22), (11, 22), (10, 23), (11, 23)] {
+            let tile = provider.get_tile_at_position(TilesetId::Overworld, &map.blocks, map.width, x, y);
+            assert_eq!(tile, 0x2C);
+            assert_eq!(determine_encounter_type(tile, TilesetId::Overworld, MapId::Route6), TileEncounterType::None);
+        }
+        for _ in 0..presentation::CUT_ANIM_FRAMES {
+            screen.update_frame(no_input());
+        }
+        assert!(screen.cut_anim.is_none());
+        assert_eq!(screen.audio_requests.iter().filter(|r|
+            matches!(r, super::screen::OverworldAudioRequest::PlaySound { sound_id } if sound_id == "SFX_CUT")
+        ).count(), 1);
+    }
+}
+
+#[test]
+fn cut_grass_without_cascade_keeps_the_route6_grass_block() {
+    let mut screen = screen_on(MapId::Route6);
+    screen.state.player.x = 10;
+    screen.state.player.y = 22;
+    screen.state.player.facing = Direction::Down;
+    let blocks = screen.map_data.as_ref().unwrap().blocks.clone();
+    assert_eq!(screen.use_field_move(MoveId::Cut, &test_mon(), NO_BADGES, MapId::VermilionCity), FieldMoveOutcome::Done);
+    assert!(screen.pending_cut.is_none());
+    assert!(screen.cut_anim.is_none());
+    assert_eq!(screen.map_data.as_ref().unwrap().blocks, blocks);
+}
+
+#[test]
 fn cut_with_nothing_in_front() {
     let mut screen = screen_on(MapId::PalletTown);
     // Face the player at an ordinary passable tile (no tree/grass).
