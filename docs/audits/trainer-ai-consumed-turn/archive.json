@@ -1,0 +1,154 @@
+{
+  "archive": "evidence.zip",
+  "sha256": "9c50be1b4c3291d4539eb4171c910059ad6a16d1bca8cec12db7efa4e37fbe6d",
+  "bytes": 1565172,
+  "original_path_records": 900,
+  "exact_content_blobs": 355,
+  "entries": 356,
+  "entry_manifest_sha256": "e1d61fcda4b640868e03581dd40c987db31c4a570061cb7ab6fc76756a1d2d27",
+  "all_readback_verified": true,
+  "passing_scope": {
+    "source_ordinary_save": 6,
+    "historical_b7c81_native_before_ordinary_save": 6,
+    "private_ed659791_native_after_ordinary_save": 6,
+    "matched_prefix_visual_replays_without_SAVE": 4
+  },
+  "preservation": "Every audit909 original source/native trial, including failed controller/build attempts and superseded derived metadata, is retained by exact original-byte SHA256 with its original path. No ROM/executables are bundled; excluded binaries are listed with exact hashes. No original records or failed results relabelled PASS.",
+  "excluded_binaries": [
+    {
+      "path": "audit-909-free-turn-after-debug",
+      "bytes": 77671960,
+      "sha256": "ec6deed1c5777a11a1d134245d566f2b0366974733ddbde4e26585a3436dd688"
+    },
+    {
+      "path": "audit-909-native-juggler-item-96td0i0b/actual-1/pokered-app",
+      "bytes": 77626984,
+      "sha256": "bb844b56204ef0c75c5a9e29282a54d19558798afb88f2f206597938a60bb2c9"
+    },
+    {
+      "path": "audit-909-native-juggler-switch-rlotvvqb/actual-1/pokered-app",
+      "bytes": 77626984,
+      "sha256": "bb844b56204ef0c75c5a9e29282a54d19558798afb88f2f206597938a60bb2c9"
+    },
+    {
+      "path": "audit-909-original-juggler-item-3imf7bl8/actual-1/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-909-original-juggler-item-3imf7bl8/preparation/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-909-original-juggler-item-5_z7z258/actual-1/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-909-original-juggler-item-5_z7z258/preparation/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-909-original-juggler-item-r8_go12q/actual-1/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-909-original-juggler-item-r8_go12q/preparation/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-909-original-juggler-item-su8v1fbg/actual-1/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-909-original-juggler-item-su8v1fbg/actual-2/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-909-original-juggler-item-su8v1fbg/preparation/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-909-original-juggler-switch-ht0rhsl0/actual-1/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-909-original-juggler-switch-ht0rhsl0/preparation/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-909-original-juggler-switch-t2oiglhe/actual-1/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-909-original-juggler-switch-t2oiglhe/actual-2/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-909-original-juggler-switch-t2oiglhe/preparation/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-909-original-misty-item-aa5gcgtf/actual-1/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-909-original-misty-item-aa5gcgtf/preparation/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-909-original-misty-item-gzzgugt4/actual-1/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-909-original-misty-item-gzzgugt4/actual-2/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-909-original-misty-item-gzzgugt4/preparation/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-909-original-misty-item-tlgmnpww/actual-1/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-909-original-misty-item-tlgmnpww/preparation/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-909-original-misty-item-ymoipwf5/actual-1/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-909-original-misty-item-ymoipwf5/preparation/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-909-perf.gba",
+      "bytes": 5654492,
+      "sha256": "1276cab34640d94a43669679a1547880b67844bd20b901785318d18872f74269"
+    }
+  ]
+}
