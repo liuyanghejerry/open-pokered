@@ -116,6 +116,7 @@ impl PokemonGame {
 
     pub(crate) fn clear_post_capture_continuation(&mut self) {
         self.post_capture_flow = None;
+        self.battle_vfx.clear_ball_continuation();
     }
 
     pub(crate) fn post_capture_active(&self) -> bool {

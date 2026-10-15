@@ -4635,12 +4635,24 @@ impl PokemonGame {
                 let capture_animation_holds_input = matches!(
                     self.battle.phase, pokered_core::battle::BattlePhase::ShowingText { .. }
                 ) && self.battle_vfx.ball_animation_active();
+                // ItemUseText00 is text_end, not text_promptbutton. Return
+                // automatically from the actual animation to its result page;
+                // later catch, failure and nickname prompts still need input.
+                let automatic_ball_result = match &self.battle.phase {
+                    pokered_core::battle::BattlePhase::ShowingText {
+                        current: 0, wait_frames: 0, messages, ..
+                    } if messages.len() > 1 => self.battle_vfx.take_ball_result_ready(),
+                    pokered_core::battle::BattlePhase::ShowingText {
+                        current: 0, messages, ..
+                    } if messages.len() > 1 => false,
+                    _ => { self.battle_vfx.take_ball_result_ready(); false }
+                };
                 let battle_input = BattleInput {
                     up: input.is_just_pressed(GbButton::Up),
                     down: input.is_just_pressed(GbButton::Down),
                     left: input.is_just_pressed(GbButton::Left),
                     right: input.is_just_pressed(GbButton::Right),
-                    a: input.is_just_pressed(GbButton::A) && !caught_sound_holds_input && !capture_animation_holds_input,
+                    a: automatic_ball_result || (input.is_just_pressed(GbButton::A) && !caught_sound_holds_input && !capture_animation_holds_input),
                     b: input.is_just_pressed(GbButton::B) && !caught_sound_holds_input && !capture_animation_holds_input,
                 };
                 // ── Link battle driving ─────────────────────────────────

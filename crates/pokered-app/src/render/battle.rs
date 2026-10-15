@@ -527,6 +527,8 @@ pub struct BattleVisualEffects {
     trainer_appear_sfx_pending: bool,
     /// Active ball-throw choreography (capture / ghost dodge / old man).
     ball_choreo: Option<BallChoreo>,
+    /// Return from a wild ItemUseBall animation to its unprompted result page.
+    ball_result_pending: bool,
     /// Horizontal tilemap displacement accumulated by Ghost Marowak's dodge.
     ball_enemy_offset_x: i32,
     /// During each Ghost Marowak tilemap copy, the upper six rows observe the
@@ -719,6 +721,15 @@ impl BattleVisualEffects {
         self.ball_choreo.is_some()
     }
 
+    pub(crate) fn take_ball_result_ready(&mut self) -> bool {
+        core::mem::take(&mut self.ball_result_pending)
+    }
+
+    pub(crate) fn clear_ball_continuation(&mut self) {
+        self.ball_result_pending = false;
+        self.ball_choreo = None;
+    }
+
     pub(crate) fn set_capture_applying_type(&mut self, kind: u8, player: bool) {
         let anim_type=match kind {
             1=>AnimationType::ShakeScreenVertically,
@@ -815,6 +826,7 @@ impl BattleVisualEffects {
                 self.ball_show_pattern = None;
                 self.scheduled_ball_sfx.clear();
                 self.ball_choreo = Some(choreo);
+                self.ball_result_pending = false;
             }
             BattleAnimEvent::XStatItem => {
                 self.start_non_move_anim(non_move_anim::XSTATITEM, true);
@@ -919,6 +931,7 @@ impl Default for BattleVisualEffects {
             silph_scope_sfx_pending: false,
             trainer_appear_sfx_pending: false,
             ball_choreo: None,
+            ball_result_pending: false,
             ball_enemy_offset_x: 0,
             ball_enemy_top_offset_x: None,
             ball_ghost_frame: None,
@@ -2300,6 +2313,9 @@ impl BattleVisualEffects {
             choreo.step += 1;
             choreo.started = false;
             if choreo.step >= choreo.steps.len() {
+                // Trainer-block text has its own two prompted pages; only
+                // wild ItemUseText00 automatically returns to the result.
+                self.ball_result_pending = !choreo.trainer_block;
                 self.ball_choreo = None;
                 self.ball_obj_palette_flipped = false;
             } else {

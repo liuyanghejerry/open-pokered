@@ -706,7 +706,12 @@ fn verify_capture_presentation(boxed: bool, low_hp: bool, safari: bool) {
     let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
     for frame in 0..2400 {
         let mut input = InputState::new();
-        if frame % 8 == 0 { input.press(GbButton::A); }
+        // Throw once, then send no A while the unprompted used-ball page
+        // owns the animation. Aggressive later A tests the sound wait.
+        if frame == 0 || (frame % 8 == 0 && g.battle.current_message.as_deref()
+            .is_some_and(|text| text.starts_with("All right!"))) {
+            input.press(GbButton::A);
+        }
         g.update(&input);
         g.draw(&mut fb);
         let channels = {
@@ -810,4 +815,47 @@ fn failed_ball_result_waits_for_the_complete_throw() {
         }
     }
     panic!("failed ball presentation did not return to its caller");
+}
+
+
+#[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
+#[test]
+fn completed_ball_event_does_not_cross_load_snapshot_or_title_reset() {
+    use pokered_core::battle::{BallAnimOutcome, BattleAnimEvent, BattlePhase};
+    use pokered_data::items::ItemId;
+    for boundary in 0..3 {
+        let mut g = game(true, false, false);
+        g.clear_post_capture_continuation();
+        g.state.screen = GameScreen::Overworld;
+        let snapshot = g.agent_save_state().unwrap();
+        g.battle_vfx.on_anim_event(BattleAnimEvent::Ball {
+            ball: ItemId::PokeBall, shakes: 0, outcome: BallAnimOutcome::Dodged,
+        });
+        for _ in 0..1200 {
+            g.battle_vfx.update(&g.battle);
+            if !g.battle_vfx.ball_animation_active() { break; }
+        }
+        assert!(!g.battle_vfx.ball_animation_active());
+        match boundary {
+            0 => g.handle_transition(GameScreen::TitleScreen),
+            1 => { g.agent_restore_state(&snapshot).unwrap(); }
+            _ => {
+                let path = std::env::temp_dir().join(format!("capture-ball-cleanup-{}.sav", std::process::id()));
+                std::fs::write(&path, pokered_core::save::sram_export::export_sram(&g.save_data)).unwrap();
+                g.load_from_path(&path).unwrap();
+                std::fs::remove_file(path).unwrap();
+            }
+        }
+        // A different two-page caller must not receive the abandoned ball's
+        // automatic continuation, even if it starts at the same text position.
+        g.state.screen = GameScreen::Battle;
+        g.battle.captured_mon = None;
+        g.battle.phase = BattlePhase::ShowingText {
+            messages: vec!["First prompt".to_string(), "Second prompt".to_string()],
+            current: 0, wait_frames: 0, next_phase: Box::new(BattlePhase::PlayerMenu),
+        };
+        g.update(&InputState::new());
+        assert!(matches!(g.battle.phase, BattlePhase::ShowingText { current: 0, .. }));
+        assert!(!g.battle_vfx.take_ball_result_ready());
+    }
 }
