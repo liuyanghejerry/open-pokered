@@ -346,11 +346,32 @@ fn move_menu_select_disabled_rejected() {
 }
 
 #[test]
-fn move_menu_disabled_takes_priority_over_no_pp() {
-    let moves = vec![make_move(MoveId::Surf, 0, 15, true)];
-    let mut menu = MoveMenuState::new(moves);
+fn move_menu_no_pp_precedes_disabled_when_other_move_is_usable() {
+    // SelectMenuItem (core.asm:2640) masks PP before checking Disable.
+    // A second usable move keeps this a reachable FIGHT menu.
+    let moves = vec![
+        make_move(MoveId::Surf, 0, 15, true),
+        make_move(MoveId::Growl, 9, 40, false),
+    ];
+    let mut menu = MoveMenuState::new(moves.clone());
     let result = menu.update_frame(menu_a());
-    assert_eq!(result, Some(MoveMenuResult::Disabled(0)));
+    assert_eq!(result, Some(MoveMenuResult::NoPP(0)));
+    assert_eq!(menu.cursor(), 0);
+    assert_eq!(
+        menu.moves(),
+        moves.as_slice(),
+        "refusal must preserve PP and Disable"
+    );
+    menu.update_frame(menu_down());
+    assert_eq!(
+        menu.update_frame(menu_a()),
+        Some(MoveMenuResult::Selected(1))
+    );
+    assert_eq!(
+        menu.moves(),
+        moves.as_slice(),
+        "menu selection itself must not consume PP"
+    );
 }
 
 #[test]
