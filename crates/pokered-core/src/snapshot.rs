@@ -175,6 +175,8 @@ pub struct OverworldSnapshot {
     pub poison_step_counter: u32,
     #[serde(default)]
     pub poison_flow: Option<crate::overworld::poison::FieldPoisonFlow>,
+    #[serde(default)]
+    pub poison_step_warp_sound: Option<crate::overworld::poison::PoisonStepWarpSound>,
     pub party_lead_level: u8,
     pub unified_flags: EventFlags,
     #[serde(with = "bytes_32_serde")]
@@ -338,6 +340,7 @@ impl OverworldSnapshot {
             box_count: 0,
             poison_step_counter: 0,
             poison_flow: None,
+            poison_step_warp_sound: None,
             party_lead_level: 0,
             unified_flags: screen.unified_flags.clone(),
             toggleable_object_flags: screen.toggleable_object_flags,
@@ -397,7 +400,7 @@ impl OverworldSnapshot {
             player_starter, pending_shop, pending_slots, active_sign_text_id,
             lucky_slot_machine_sign, pending_elevator, pending_filter_bag, pending_diploma,
             pending_pc, pending_town_map, pending_hof_ceremony, heal_requested, party_count,
-            box_count, poison_step_counter, poison_flow, party_lead_level, unified_flags,
+            box_count, poison_step_counter, poison_flow, poison_step_warp_sound, party_lead_level, unified_flags,
             toggleable_object_flags, hidden_item_flags, hidden_coin_flags, player_coins,
             itemfinder_dings, rng, safari_steps, safari_balls, safari_game_active,
             safari_eject_pending, strength_active, tried_push_boulder, boulder_dust_frames,
@@ -446,7 +449,7 @@ impl OverworldSnapshot {
             player_starter, pending_shop, pending_slots, active_sign_text_id,
             lucky_slot_machine_sign, pending_elevator, pending_filter_bag, pending_diploma,
             pending_pc, pending_town_map, pending_hof_ceremony, heal_requested, party_count,
-            box_count, poison_step_counter, poison_flow, party_lead_level, unified_flags,
+            box_count, poison_step_counter, poison_flow, poison_step_warp_sound, party_lead_level, unified_flags,
             toggleable_object_flags, hidden_item_flags, hidden_coin_flags, player_coins,
             itemfinder_dings, rng, safari_steps, safari_balls, safari_game_active,
             safari_eject_pending, strength_active, tried_push_boulder, boulder_dust_frames,
