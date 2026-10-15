@@ -323,6 +323,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             }
             FlashResult::AlreadyLit => {
                 self.dark_cave.use_flash();
+                self.flash_pending_white = true;
                 self.field_message("A blinding FLASH\nlights the area!")
             }
         }
