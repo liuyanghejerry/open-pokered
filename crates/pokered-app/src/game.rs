@@ -4627,7 +4627,9 @@ impl PokemonGame {
                 if self.battle.presentation.waiting && self.battle_vfx.is_frame_stable() {
                     self.battle.complete_move_presentation();
                 }
-                let caught_sound_holds_input = self.battle.captured_mon.is_some()
+                // ItemUseBallText05 also plays for the old man's demonstration,
+                // which deliberately does not put a captured mon in the save.
+                let caught_sound_holds_input = (self.battle.captured_mon.is_some() || self.battle.is_old_man)
                     && self.battle.current_message.as_ref().is_some_and(|msg| msg.starts_with("All right!"))
                     && self.audio.as_ref().is_some_and(|audio| audio.is_sfx_playing() && !audio.low_health_alarm_active());
                 let battle_input = BattleInput {
@@ -4850,7 +4852,7 @@ impl PokemonGame {
                     if cur_message != self.battle_prev_message {
                         if let Some(ref msg) = cur_message {
                             let msg_lower = msg.to_lowercase();
-                            if self.battle.captured_mon.is_some() && msg_lower.starts_with("all right!") {
+                            if (self.battle.captured_mon.is_some() || self.battle.is_old_man) && msg_lower.starts_with("all right!") {
                                 audio.play_sfx(SfxId::CaughtMon);
                             } else if msg_lower.contains("super effective") {
                                 audio.play_sfx(SfxId::SuperEffective);
