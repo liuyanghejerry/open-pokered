@@ -363,7 +363,11 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     }
 
     pub fn update_frame(&mut self, input: OverworldInput) -> ScreenAction {
-        self.publish_npc_frame(self.is_text_ui_active());
+        // DelayFrames in the poison flash performs no UpdateSprites. Keep
+        // the published OAM pose; a palette blink is not FontLoaded text.
+        if !matches!(self.poison_flow, Some(super::poison::FieldPoisonFlow::Flash { .. })) {
+            self.publish_npc_frame(self.is_text_ui_active());
+        }
         let was_idle = self.state.player.movement_state == MovementState::Idle;
         let action = self.update_frame_inner(input);
         let camera = self.runtime_camera_residual();
@@ -1058,6 +1062,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 self.field_move_step_needs_restore = false;
                 self.field_move_restore = Some(presentation::FieldMoveRestoreState::new());
             }
+            return ScreenAction::Continue;
+        }
+
+        // The poison caller resumes in the app against its single party
+        // owner. It owns this field frame until the text/flash/blackout ends.
+        if self.poison_flow.is_some() {
             return ScreenAction::Continue;
         }
 
@@ -2454,7 +2464,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     }
 
     fn run_npc_movement_tick(&mut self) {
-        if self.is_text_ui_active() {
+        if self.is_text_ui_active() || self.poison_flow.is_some() {
             return;
         }
         if self.map_data.is_some() { self.hasten_followed_npc(); }
