@@ -1,0 +1,73 @@
+{
+  "scope": "Text/paragraph restoration only. Source2 historical actual failed-lastball controls; currentmaster before2failed+1naturalcatch; fixedafter2failed, allordinarySAVE. PreinputconstructedSave only, thereafter normal walking/naturalBALL/ACK/SAVE, no validation setters. Safari capture entropy is notfullyCLIseeded; no deterministic outcome or crossproviderRNG/species/fullSRAM claim.",
+  "source_controls": [
+    {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-905-original-safari-failure-party6-balls1-delay0-hp0-repeat1",
+      "record_sha256": "0cdcb01b1a8576501cd6dcedbbb62eeb31bae75559caf95369a0f8b7bccdffbf",
+      "source_revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+      "rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+      "ordinary_save": true
+    },
+    {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-905-original-safari-failure-party6-balls1-delay0-hp0-repeat2",
+      "record_sha256": "aa97f7d69582629dc05bcb77ba4fa4ebc8f82ba2621f060ed2ea2f1c9c98a37d",
+      "source_revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+      "rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+      "ordinary_save": true
+    }
+  ],
+  "native_controls": [
+    {
+      "stage": "before",
+      "repeat": 1,
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-908-native-safari-before-party6-balls1-hp0-repeat1",
+      "caught": false,
+      "normal_saved": true,
+      "record_sha256": "63b83722f7be088fec956ae9973d9b8d7782e24f9c2ed827ee281c70fad3d1ce"
+    },
+    {
+      "stage": "before",
+      "repeat": 2,
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-908-native-safari-before-party6-balls1-hp0-repeat2",
+      "caught": true,
+      "normal_saved": true,
+      "record_sha256": "c5c55d9a4d32b17b195fa57ca7663b47a20b5226b12a98c143e9050719530edc"
+    },
+    {
+      "stage": "before",
+      "repeat": 3,
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-908-native-safari-before-party6-balls1-hp0-repeat3",
+      "caught": false,
+      "normal_saved": true,
+      "record_sha256": "a9d3e7123cfc115b03c7dbd721953719933fd299efa13f12a1a34b08f5e99e9f"
+    },
+    {
+      "stage": "after",
+      "repeat": 1,
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-908-native-safari-after-party6-balls1-hp0-repeat1",
+      "caught": false,
+      "normal_saved": true,
+      "record_sha256": "c27acd9adf411a30adcd1f25d0317c3426f6aa118b2220925c4e6245a9111f81"
+    },
+    {
+      "stage": "after",
+      "repeat": 2,
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-908-native-safari-after-party6-balls1-hp0-repeat2",
+      "caught": false,
+      "normal_saved": true,
+      "record_sha256": "edc4687fdf69e976854da9e73d678759f9c8b01f9a8896320aed672ed253f687"
+    }
+  ],
+  "before": "b7c81d82d7d94a06555f631c3c70d114f299d9d8",
+  "after": "aff8dcf1589babfabdcd8d049b5776cd0a0962f7",
+  "matched_frame": 2359,
+  "matched_fullphysicalprefix_sha256": "9ad4788c57d9cdc49d95e2d53c6140c9bfc2a52a5d6fa1474adb08ce8626e66f",
+  "same_fixture_and_initial_sram": true,
+  "native_pair_final_sram_differences": [
+    "0x2cf0",
+    "0x2cf1",
+    "0x3523"
+  ],
+  "protected_source_native_fields": "allfailedfinal party404/box1122/bagcash/owned/playername/playerid byteequal; source/native species/seenbit differs naturally",
+  "tests": "core2887PASS;existing data battle_text12PASS; explicitdebugappbuild0"
+}

@@ -3284,7 +3284,7 @@ learn {learn_name}!")];
 
         // Out of Safari Balls → the game ends (checked BEFORE the upkeep, per the ASM).
         if self.safari.as_ref().map_or(false, |s| s.balls == 0) {
-            msgs.push("PA: You're out of\nSAFARI BALLs! Game over!".to_string());
+            msgs.push("PA: Ding-dong!\n\nYou are out of\nSAFARI BALLs!".to_string());
             self.show_text_then(msgs, escaped_over);
             return;
         }
