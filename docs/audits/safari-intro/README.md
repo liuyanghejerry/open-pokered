@@ -1,5 +1,21 @@
 # Safari encounter intro
 
+Safari 野生出现提示确认后，按原作 `StartBattle` 的显式40帧等待进入菜单；保持 RED 背影、不派出队伍宝可梦、不显示玩家HP栏。临时队伍球仍保留。原作另有实测8帧前置工作，不把总48帧写成常量，也不声称整段时钟/轨迹/音频一致。
+
+## 当前集成
+
+#259 实际合入后整合 master `b50783c53980529e66561d525178512def859251`。全部2170项编译输入及 docs 外 2689 项 Git blob/模式等于受测 v2 `5a2cefe2a49dd3acdc9df7cbf46b813b23e55485`。v2 debug-server app316通过/39忽略、determinism10通过。core2914通过来自原始 v1 `270f52955da2b84d2fcc0ce7059dae5e62a7d386`，未伪称重跑：两版295项核心文件和其他编译输入完全相同，仅 app cfg(test) 的 Safari文本构造补了 backdrop 字段；首次 v1 app 编译失败保留。
+
+`publication-967.json` 与 `publication-967-logs.zip` 提供身份、逐项比较及仅本PR的日志。本次没有重建/重录；新远程head仍须三个工作流全绿。
+
+## 历史实际证据及范围
+
+截图保持 BEFORE6085c987 / AFTER6abff9bf 身份，同完整fixture/seed3/2703帧按键前缀与模拟帧2703。原作、修复前后各两次 RUN→普通SAVE；保护数据与完整原始证据见 verification.json / screenshots.json / evidence.zip。构造活动 SafariCenter 存档，不覆盖首次入场缴费；原作与原生自然物种不同，不注入随机结果。
+
+## 旧集成记录（历史，不代表当前重跑）
+
+# Safari encounter intro
+
 Safari encounters now keep RED’s back picture, omit the party Pokémon HP HUD,
 and enter the BALL/BAIT/ROCK/RUN menu after the original explicit, unskippable
 40-frame `StartBattle` delay. The extra “Go!” prompt, Pokémon send-out animation,

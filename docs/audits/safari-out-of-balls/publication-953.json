@@ -1,0 +1,76 @@
+{
+  "schema": "audit953-PR259-tested-source-identical-publication-v1",
+  "actual_master": "2429092a8c487d366bdf8aec44e3b631d70bef2f",
+  "parent256": {
+    "baseRefName": "master",
+    "headRefName": "fix/poison-before-wild-encounter-903",
+    "headRefOid": "016bdeed302101abeff525c08c63052c2e2b0dcb",
+    "mergeCommit": {
+      "oid": "2429092a8c487d366bdf8aec44e3b631d70bef2f"
+    },
+    "mergedAt": "2026-10-15T10:30:03Z",
+    "number": 256,
+    "state": "MERGED",
+    "url": "https://github.com/liuyanghejerry/open-pokered/pull/256"
+  },
+  "tested_source": "f42408ebf4a28c313c05a60e6c0a75aaf762bf50",
+  "integrated_source_head_before_doc_commit": "88ac029a54a61139d072bb0a7b4eb6a0cb951b7d",
+  "identity": {
+    "compiler_count": 2170,
+    "compiler_manifest_source_sha256": "a5cc0d999f40f0ba44f031dc2c1eede3d2fc4d7aa5d41ff7b9311ebbbd877e76",
+    "compiler_file_mappings_equal": true,
+    "non_doc_count": 2689,
+    "non_doc_tree_equal": true,
+    "non_doc_scope": "All tracked paths outside docs/; identical Git blob IDs and modes plus clean worktree; symlinks literal target",
+    "non_doc_tree_sha256": "b1d90ef0392556a83131187182e1410912e159bb719d5952b8046e75653d180f"
+  },
+  "relative_master_production_paths": [
+    "crates/pokered-core/src/battle/mod.rs",
+    "crates/pokered-data/src/battle_text.rs"
+  ],
+  "rebuilds_or_actual_reruns": false,
+  "validation_source_not_relabelled": true,
+  "historical_capture_before": "b7c81d82d7d94a06555f631c3c70d114f299d9d8",
+  "historical_capture_after": "aff8dcf1589babfabdcd8d049b5776cd0a0962f7",
+  "historical_screenshot_frame": 2359,
+  "images": {
+    "docs/screenshots/safari-out-of-balls/announcement-before.png": "84af9d5ca43393edf7b70168560a60e0b748449226b4d3234ffbe1128de50ce9",
+    "docs/screenshots/safari-out-of-balls/announcement-after.png": "b1ddeec10ed4f94655a20532ab44a84eba189631343448738009adc89d9b3e53"
+  },
+  "validation": {
+    "core": {
+      "passed": 2913,
+      "ignored": 0,
+      "failed": 0
+    },
+    "appdebug": {
+      "passed": 315,
+      "ignored": 39,
+      "failed": 0
+    },
+    "determinism": {
+      "passed": 10,
+      "ignored": 0,
+      "failed": 0
+    }
+  },
+  "remote_gate": "New exact head CI / Build GBA ROM / GBA performance all SUCCESS required before merge; this publisher never merges",
+  "old_CI_preserved": true,
+  "log_archive": {
+    "path": "publication-953-logs.zip",
+    "sha256": "646a0fb02ac5af1adf2e2fd9432eec71c6d9f8d563892a8ab9a9af111292075e",
+    "bytes": 184948,
+    "entries": [
+      "identity-proof.json",
+      "tested-validation-908-only.json",
+      "tested-source-manifest.json",
+      "tested-wrapper-908.sh",
+      "old-head-workflows.json",
+      "tested-core.log",
+      "tested-appdebug.log",
+      "tested-determinism.log",
+      "entries.json"
+    ],
+    "scope": "Only908 tested logs/manifests/wrapper, exactidentity proof and PR259 old-head workflowmetadata; no otherPR batch entries"
+  }
+}

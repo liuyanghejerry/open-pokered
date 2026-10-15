@@ -1,0 +1,106 @@
+{
+  "schema": "audit967-PR263-tested-source-identical-publication-v1",
+  "actual_master": "b50783c53980529e66561d525178512def859251",
+  "parent259": {
+    "baseRefName": "master",
+    "headRefName": "fix/safari-out-of-balls-text-908",
+    "headRefOid": "23b6aaeed7fb5f3137e3bb2417a2820c32ded0fa",
+    "mergeCommit": {
+      "oid": "b50783c53980529e66561d525178512def859251"
+    },
+    "mergedAt": "2026-10-15T10:59:01Z",
+    "number": 259,
+    "state": "MERGED",
+    "url": "https://github.com/liuyanghejerry/open-pokered/pull/259"
+  },
+  "tested_v2_head": "5a2cefe2a49dd3acdc9df7cbf46b813b23e55485",
+  "integrated_source_before_doc_commit": "a69fe8a0cd1f2a10a7f70c1909a6ba13a724d413",
+  "identity": {
+    "compiler_count": 2170,
+    "compiler_manifest_source_sha256": "8dd525172673f339ae2511d56461fbeb34a716fc94309115cfeed5788c2778a0",
+    "compiler_file_mappings_equal": true,
+    "non_doc_count": 2689,
+    "non_doc_tree_equal": true,
+    "non_doc_scope": "All tracked paths outside docs/; identical Git blob IDs and modes plus clean worktree; symlinks literal target",
+    "non_doc_tree_sha256": "1f490cdb6c159d1e3403c3db1a8186db375ded5962e9c5125ab7586fd63feb58"
+  },
+  "relative_master_source_paths": [
+    "crates/pokered-app/src/render/battle.rs",
+    "crates/pokered-core/src/battle/mod.rs"
+  ],
+  "core_reuse": {
+    "original_core_head": "270f52955da2b84d2fcc0ce7059dae5e62a7d386",
+    "core_passed": 2914,
+    "core_execution_not_relabelled": true,
+    "core_files_equal": 295,
+    "all_other2169_scoped_inputs_equal": true,
+    "only_changed_app_test_literal": [
+      "crates/pokered-app/src/render/battle.rs"
+    ],
+    "v1_app_compile_failure_preserved": "audit-937-910-appdebug-1.log (E0063 missing backdrop)",
+    "test_literal_diff": "diff --git a/crates/pokered-app/src/render/battle.rs b/crates/pokered-app/src/render/battle.rs\nindex 6929cfb3..91418ecf 100644\n--- a/crates/pokered-app/src/render/battle.rs\n+++ b/crates/pokered-app/src/render/battle.rs\n@@ -6083,7 +6083,8 @@ mod fidelity_flow_regressions {\n                 for phase in [BattlePhase::PlayerMenu,\n                     BattlePhase::Intro { phase: IntroPhase::SafariMenuPreparation, wait_frames: 17 },\n                     BattlePhase::ShowingText { messages: vec![\"A Safari action.\".into()], current: 0,\n-                        wait_frames: 0, next_phase: Box::new(BattlePhase::PlayerMenu) },\n+                        wait_frames: 0, next_phase: Box::new(BattlePhase::PlayerMenu),\n+                        backdrop: pokered_core::battle::BattleTextBackdrop::Battle },\n                     BattlePhase::BattleOver { won: false, escaped: true, wait_frames: 0 }] {\n                     s.phase = phase;\n                     let mut fb = FrameBuffer::new(config, Rgba::BLACK);\n"
+  },
+  "validation": {
+    "appdebug_v2": {
+      "passed": 316,
+      "ignored": 39
+    },
+    "determinism_v2": {
+      "passed": 10,
+      "ignored": 0
+    },
+    "core_v1": {
+      "passed": 2914,
+      "ignored": 0,
+      "original_head": "270f52955da2b84d2fcc0ce7059dae5e62a7d386"
+    }
+  },
+  "rebuilds_or_replays": false,
+  "historical_capture": {
+    "fixture_sha256": "90506a2e08a63ffac6aa60bade333a8692c5afba2f7c5fd33082688dc55b52c6",
+    "seed": 3,
+    "physical_simulation_frame": 2703,
+    "common_buttons": 2703,
+    "expanded_buttons_prefix_sha256": "6bc73414727dc1faf943bf5cc644851b161798c23668df57d54daf39045e2bdf",
+    "before": "audit-910-native-intro/1/after-one-ack.png",
+    "after": "audit-910-native-intro-after/1/after-one-ack.png",
+    "files": {
+      "before": {
+        "path": "docs/screenshots/safari-intro/before.png",
+        "bytes": 5443,
+        "sha256": "78ae2cbd0732bb3525453c39040ad39fb5776a2621109e94334f1fe2dc457355",
+        "physical_frame": 2703,
+        "frame_manifest_capture_index": 2702,
+        "source_commit": "6085c98704a9b0cb25cbcd34afcc028184ce9217"
+      },
+      "after": {
+        "path": "docs/screenshots/safari-intro/after.png",
+        "bytes": 5326,
+        "sha256": "1706fd44800424b0b87d1ceec2c4760102f5e09360f0cffbc843cfad716b1227",
+        "physical_frame": 2703,
+        "frame_manifest_capture_index": 2702,
+        "source_commit": "6abff9bfeb9baaae820f361645d781c492fe2454"
+      }
+    }
+  },
+  "remote_gate": "new exacthead CI/Build GBA ROM/GBA performance all success required",
+  "log_archive": {
+    "path": "publication-967-logs.zip",
+    "bytes": 293803,
+    "sha256": "c0bd30426e67146f27c4fd4a131402e75f019e0851615725c7896904c07df054",
+    "entries": [
+      "identity-proof.json",
+      "tested-v2-910-only.json",
+      "tested-v2-source.json",
+      "original-v1-core-source.json",
+      "original-v1-core-command.json",
+      "original-v1-core.log",
+      "tested-wrapper.sh",
+      "old-head-workflows.json",
+      "tested-v2-appdebug.log",
+      "tested-v2-determinism.log",
+      "entries.json"
+    ],
+    "scope": "910 only; no unrelated batch records/ROM/executable"
+  }
+}
