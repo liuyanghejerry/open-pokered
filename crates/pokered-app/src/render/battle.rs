@@ -945,8 +945,7 @@ impl BattleVisualEffects {
             // Ether's per-move pick reuses the FIGHT move-menu layout.
             BattlePhase::ItemMoveSelect { .. } => BattlePhaseKind::MoveSelect,
             BattlePhase::BagSelect => BattlePhaseKind::BagSelect,
-            BattlePhase::ItemTargetSelect { .. } | BattlePhase::ItemMedicineResult { .. }
-                | BattlePhase::ShowingText { backdrop: pokered_core::battle::BattleTextBackdrop::MedicineParty, .. } => BattlePhaseKind::ItemTargetSelect,
+            BattlePhase::ItemTargetSelect { .. } | BattlePhase::ItemMedicineResult { .. } => BattlePhaseKind::ItemTargetSelect,
             BattlePhase::ShowingText { .. } | BattlePhase::EnemyFreeTurnAfterItem => {
                 BattlePhaseKind::ShowingText
             }
