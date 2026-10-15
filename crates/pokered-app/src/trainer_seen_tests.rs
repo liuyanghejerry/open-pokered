@@ -65,7 +65,7 @@ fn trainer_seen_uses_original_party_identity_during_transform() {
         enemy.preserve_original_identity();
         enemy.active_mon_mut().species = Species::Pikachu;
         // A restored/just-loaded enemy must use the canonical original identity.
-        g.trainer_seen_active_slot = None;
+        g.trainer_seen_active_slot = u8::MAX;
         g.register_active_trainer_species_seen();
         assert!(g.save_data.game_data.pokedex.is_seen(Species::Rattata));
         assert!(!g.save_data.game_data.pokedex.is_seen(Species::Pikachu));
@@ -167,14 +167,14 @@ fn trainer_seen_ordinary_load_and_soft_reset_abandon_old_registration_cache() {
         let path = dir.join("ordinary.sav");
         let mut g = trainer_game();
         g.save_to_path(&path).unwrap();
-        assert!(g.trainer_seen_active_slot.is_some());
+        assert!(g.trainer_seen_active_slot < 6);
         g.load_from_path(&path).unwrap();
-        assert!(g.trainer_seen_active_slot.is_none());
+        assert_eq!(g.trainer_seen_active_slot, u8::MAX);
         g.register_active_trainer_species_seen();
-        assert!(g.trainer_seen_active_slot.is_some());
+        assert!(g.trainer_seen_active_slot < 6);
         g.save_path = Some(dir.join("absent.sav"));
         g.soft_reset();
-        assert!(g.trainer_seen_active_slot.is_none());
+        assert_eq!(g.trainer_seen_active_slot, u8::MAX);
         assert_eq!(g.state.screen, GameScreen::TitleScreen);
         std::fs::remove_dir_all(dir).unwrap();
     });
@@ -188,6 +188,7 @@ fn trainer_seen_does_not_add_link_or_wild_seen_flags() {
             g.save_data.game_data.pokedex = Pokedex::new();
             g.battle.is_wild = wild;
             g.battle.link_mode = link;
+            g.trainer_seen_active_slot = u8::MAX;
             g.register_active_trainer_species_seen();
             assert_eq!(g.save_data.game_data.pokedex.seen_count(), 0);
             assert_eq!(g.save_data.game_data.pokedex.owned_count(), 0);

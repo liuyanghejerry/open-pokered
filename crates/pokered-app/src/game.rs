@@ -732,7 +732,8 @@ pub struct PokemonGame {
     prev_oak_phase_tag: u8,
     battle_prev_message: Option<String>,
     /// Derived notification cache only; BattleState remains the party owner.
-    pub(crate) trainer_seen_active_slot: Option<u8>,
+    /// Enemy slots are 0..=5; u8::MAX invalidates the previous timeline.
+    pub(crate) trainer_seen_active_slot: u8,
     /// SFX_FAINT_FALL has played for an enemy faint in a trainer battle;
     /// SFX_FAINT_THUD follows once the fall finishes (engine/battle/core.asm:782-791).
     faint_thud_pending: bool,
@@ -1373,7 +1374,7 @@ impl PokemonGame {
             prev_title_phase: None,
             prev_oak_phase_tag: 0,
             battle_prev_message: None,
-            trainer_seen_active_slot: None,
+            trainer_seen_active_slot: u8::MAX,
             faint_thud_pending: false,
             black_screen_frames: 0,
             pending_screen: None,
@@ -1548,7 +1549,7 @@ impl PokemonGame {
             prev_title_phase: None,
             prev_oak_phase_tag: 0,
             battle_prev_message: None,
-            trainer_seen_active_slot: None,
+            trainer_seen_active_slot: u8::MAX,
             faint_thud_pending: false,
             black_screen_frames: 0,
             pending_screen: None,
@@ -1678,7 +1679,7 @@ impl PokemonGame {
             prev_title_phase: None,
             prev_oak_phase_tag: 0,
             battle_prev_message: None,
-            trainer_seen_active_slot: None,
+            trainer_seen_active_slot: u8::MAX,
             faint_thud_pending: false,
             black_screen_frames: 0,
             pending_screen: None,
@@ -2327,7 +2328,7 @@ impl PokemonGame {
             .map_err(|e| format!("failed to parse save from {:?}: {:?}", path, e))?;
         pokered_core::log_save!("save loaded from {:?}", path);
         self.overworld.clear_field_poison();
-        self.trainer_seen_active_slot = None;
+        self.trainer_seen_active_slot = u8::MAX;
         if self.post_capture_active() {
             // The old BattleOver caller must not settle its party into the
             // newly imported save after its capture modal is abandoned.
@@ -2902,7 +2903,7 @@ impl PokemonGame {
     /// hardware), and return to the title screen.
     fn soft_reset(&mut self) {
         self.overworld.clear_field_poison();
-        self.trainer_seen_active_slot = None;
+        self.trainer_seen_active_slot = u8::MAX;
         self.clear_rare_candy_continuation();
         self.clear_post_capture_continuation();
         #[cfg(not(target_os = "none"))]
@@ -3354,7 +3355,7 @@ impl PokemonGame {
         // BoxFullCannotThrowBall guard context (app-side snapshot).
         self.battle.player_box_full = self.save_data.current_box.is_full();
         self.battle.map_id = self.overworld.state.current_map as u8;
-        self.trainer_seen_active_slot = None;
+        self.trainer_seen_active_slot = u8::MAX;
         self.register_active_trainer_species_seen();
         // Copy of the bag so items are usable in-battle (synced back afterwards).
         self.battle.player_bag = self.save_data.game_data.bag.clone();
@@ -3377,13 +3378,13 @@ impl PokemonGame {
         }
         if let Some(bs) = &self.battle.battle_state {
             let active_slot = bs.enemy.active_pokemon_index as u8;
-            if self.trainer_seen_active_slot == Some(active_slot) {
+            if self.trainer_seen_active_slot == active_slot {
                 return;
             }
             // Transform changes the battle copy, not the species sent out.
             let species = bs.enemy.party_mon(bs.enemy.active_pokemon_index).species;
             self.save_data.game_data.pokedex.set_seen(species);
-            self.trainer_seen_active_slot = Some(active_slot);
+            self.trainer_seen_active_slot = active_slot;
         }
     }
 
@@ -4750,7 +4751,7 @@ impl PokemonGame {
                 // Keep the common GBA frame out of the registration routine:
                 // only a loaded/changed slot needs the identity and Dex write.
                 if self.battle.battle_state.as_ref().is_some_and(|bs|
-                    self.trainer_seen_active_slot != Some(bs.enemy.active_pokemon_index as u8))
+                    self.trainer_seen_active_slot != bs.enemy.active_pokemon_index as u8)
                 {
                     self.register_active_trainer_species_seen();
                 }
