@@ -3060,11 +3060,9 @@ impl PokemonGame {
         self.battle_vfx = BattleVisualEffects::default();
         self.battle_prev_message = None;
         self.faint_thud_pending = false;
-        // Encountering a wild Pokémon registers it as seen — but NOT a GHOST (the
-        // species stays unidentified until the Silph Scope reveals it).
-        if !is_ghost {
-            self.save_data.game_data.pokedex.set_seen(species);
-        }
+        // LoadEnemyMonData marks the underlying species seen before the
+        // Tower's unidentified GHOST presentation; the Scope only unveils it.
+        self.save_data.game_data.pokedex.set_seen(species);
 
         // Safari Zone during an active Safari Game → the BALL/BAIT/ROCK/RUN Safari mode
         // (no attacking; the ball economy + bait/rock catch-flee mechanics take over).
@@ -8257,6 +8255,10 @@ mod field_poison_tests;
 #[cfg(test)]
 #[path = "tmhm_learning_tests.rs"]
 mod tmhm_learning_tests;
+
+#[cfg(all(test, not(target_os = "none"), not(target_arch = "wasm32")))]
+#[path = "ghost_seen_tests.rs"]
+mod ghost_seen_tests;
 
 const BLACK_SCREEN_DURATION: u32 = 30;
 
