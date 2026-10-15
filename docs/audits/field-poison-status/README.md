@@ -30,7 +30,7 @@ Reload each actual ordinary SAVE output, then use the same START/Pokémon inputs
 
 ![后](../../screenshots/field-poison-status/party-after.png)
 
-The separate HP-zero FNT-priority UI repair is pending PR #242. This PR clears the stale saved status; it does not claim that the current party marker has full original parity.
+The separate HP-zero FNT-priority UI repair was merged as PR #242 (`64ef04af`) after these captures. The screenshot and archived report identities preserve their capture-time context. This PR clears the stale saved status.
 
 ## Regression and limits
 
