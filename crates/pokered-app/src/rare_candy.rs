@@ -1,5 +1,5 @@
-//! ItemUseRareCandy's blocking field continuation: stats, LearnMove, then
-//! TryEvolvingMon, then RemoveUsedItem. The level/stat effect runs once.
+//! Shared field LearnMove continuation. Rare Candy shows stats and checks
+//! evolution before consuming; a machine consumes only on learned-text return.
 use super::*;
 use pokered_core::party_screen::PartyScreenPhase;
 use pokered_core::pokemon::move_learning::{
@@ -21,7 +21,14 @@ pub(crate) enum RareCandyPhase {
     Evolving,
 }
 
+#[derive(Clone, Copy)]
+enum LearningOrigin {
+    RareCandy,
+    Machine { item: ItemId, learned: bool },
+}
+
 pub(super) struct RareCandyFlow {
+    origin: LearningOrigin,
     party_index: usize,
     moves: VecDeque<(MoveId, bool)>,
     current_move: Option<MoveId>,
@@ -31,9 +38,20 @@ pub(super) struct RareCandyFlow {
 
 impl PokemonGame {
     pub(crate) fn rare_candy_phase(&self) -> Option<RareCandyPhase> {
-        self.rare_candy_flow.as_ref().map(|flow| flow.phase)
+        self.rare_candy_flow
+            .as_ref()
+            .filter(|flow| matches!(flow.origin, LearningOrigin::RareCandy))
+            .map(|flow| flow.phase)
     }
 
+    pub(crate) fn machine_learning_phase(&self) -> Option<RareCandyPhase> {
+        self.rare_candy_flow
+            .as_ref()
+            .filter(|flow| matches!(flow.origin, LearningOrigin::Machine { .. }))
+            .map(|flow| flow.phase)
+    }
+
+    /// Both item kinds share this continuation, including restore/reset cleanup.
     pub(crate) fn clear_rare_candy_continuation(&mut self) {
         self.rare_candy_flow = None;
     }
@@ -44,6 +62,7 @@ impl PokemonGame {
         self.party_screen =
             PartyScreenState::new_for_move_choice(self.save_data.party.to_vec(), party_index);
         let flow = RareCandyFlow {
+            origin: LearningOrigin::RareCandy,
             party_index,
             moves: moves.into_iter().map(|move_id| (move_id, false)).collect(),
             current_move: None,
@@ -53,6 +72,37 @@ impl PokemonGame {
         let name = self.candy_mon_name(&flow);
         self.candy_notice(format!("{name} grew to\nlevel {level}!"));
         self.rare_candy_flow = Some(flow);
+    }
+
+    pub(super) fn begin_machine_learning(
+        &mut self,
+        party_index: usize,
+        item: ItemId,
+        move_id: MoveId,
+        already_learned: bool,
+    ) {
+        self.pending_bag_item = None;
+        // Keep the machine's party mode/background through LearnMove, including
+        // its compatibility hints; only the active continuation owns the input.
+        self.party_screen = PartyScreenState::new_for_item(self.save_data.party.to_vec(), item);
+        self.party_screen.set_cursor(party_index);
+        self.party_screen.enter_move_choice();
+        let mut flow = RareCandyFlow {
+            origin: LearningOrigin::Machine {
+                item,
+                learned: false,
+            },
+            party_index,
+            moves: [(move_id, already_learned)].into(),
+            current_move: None,
+            phase: RareCandyPhase::TryingToLearn(0),
+            evolution_checked: true,
+        };
+        // apply_item_to_pokemon already writes a free slot. Full-slot machines
+        // use the same Trying/Delete/Abandon/HM-guard flow as level-up learning.
+        if self.candy_next_move(&mut flow) {
+            self.rare_candy_flow = Some(flow);
+        }
     }
 
     fn candy_mon_name(&self, flow: &RareCandyFlow) -> String {
@@ -103,6 +153,12 @@ impl PokemonGame {
     }
 
     fn candy_learned_notice(&mut self, flow: &mut RareCandyFlow) {
+        if let LearningOrigin::Machine { item, .. } = flow.origin {
+            flow.origin = LearningOrigin::Machine {
+                item,
+                learned: true,
+            };
+        }
         flow.phase = RareCandyPhase::Learned(flow.current_move.unwrap());
         self.candy_notice(format!(
             "{} learned\n{}!",
@@ -135,6 +191,18 @@ impl PokemonGame {
             return true;
         }
         flow.current_move = None;
+        if let LearningOrigin::Machine { item, learned } = flow.origin {
+            // ItemUseTMHM tests LearnMove's success flag only after its learned
+            // text (and sound) return. Abandon never consumes, nor does any HM.
+            if learned
+                && pokered_core::items::bag_use::machine_of(item)
+                    .is_some_and(|machine| machine.is_tm())
+            {
+                let _ = self.save_data.game_data.bag.remove_item(item, 1);
+            }
+            self.handle_transition(GameScreen::Bag);
+            return false;
+        }
         if !flow.evolution_checked {
             flow.evolution_checked = true;
             let evolution = self.save_data.party.get(flow.party_index).and_then(|mon| {
@@ -354,7 +422,12 @@ impl PokemonGame {
         );
         let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
         let mut ui = Ui::new(&mut painter);
-        if let Some(mon) = self.save_data.party.get(flow.party_index) {
+        if let Some(mon) = self
+            .save_data
+            .party
+            .get(flow.party_index)
+            .filter(|_| matches!(flow.origin, LearningOrigin::RareCandy))
+        {
             ui.text_box(
                 TileRect::new(10, 3, 10, 10),
                 InkColor::Black,

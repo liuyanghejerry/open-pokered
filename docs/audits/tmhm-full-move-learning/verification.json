@@ -1,0 +1,1128 @@
+{
+  "scope": "Original860 actual10 + newly frozen clean master7bd BEFORE10 + childf456 AFTER10. Only new TM/HM full-set learning flow. Inputs/quantity reads/normal SAVE; preparations before input; no runtime mutations. Later inputs differ with restored prompts.",
+  "original_revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "original_rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+  "original_script_sha256": "99c7ed8ba49724a3cbc3849d8d52ef9a4902be0e1af3f37f2838e0bdf7fb6098",
+  "historical_manifest": "https://github.com/liuyanghejerry/open-pokered/blob/3054e749f43b249fd9a636b4dfdf7767d4486468/docs/audits/tmhm-full-move-learning/verification.json",
+  "builds": {
+    "before": {
+      "source_commit": "7bdba5760a5e3ee48fd91423fcca5b8bf20b13fb",
+      "binary_sha256": "2560827d483a78f51bce9fb3146daf26014a02c6ae7ce6be7ac46e148defa206",
+      "profile": "dev opt2 debug0 debug-server"
+    },
+    "after": {
+      "source_commit": "f4565329e3138a6db8603b85406d55419425592f",
+      "binary_sha256": "4451dc198a3b8e44671b81168c09db627530de68fd3b7c9e70b11d0ebe7ec351",
+      "profile": "dev opt2 debug0 debug-server",
+      "rust_source_hashes_still_identical_after_tests": true
+    }
+  },
+  "trials": [
+    {
+      "flow": "tm-replace",
+      "repeat": 1,
+      "original": {
+        "run_dir": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-860-original-tmhm-full-e0xowbj3/tm-replace-1",
+        "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+        "normal_save": true,
+        "sram_checksum": 174,
+        "sram_sha256": "37fdec28d0fb05d5812b4434c999be8a3ff248f13caa95e086c9d6808629ae90",
+        "saved_money": 3000,
+        "party_sram_raw_hex": "9900230c0016032d2148490f00000003cd000000000000000000009a78230a0a1e0c002300120013001100169900230c0016032d212d000000000003cd000000000000000000009a78232800000c00230012001300110016"
+      },
+      "native": {
+        "before": {
+          "run_dir": "tm-replace-1",
+          "normal_save": true,
+          "sram_checksum": 150,
+          "sram_sha256": "03bb8bcf3214de386d975d59239a5bff27f20f81d0193fe7f8be89e65f3a5521",
+          "fixture_sha256": "249a11b37aa965a4da95e2da2bf1b27157119382ae3b5991009162a62882b47f",
+          "script_sha256": "4ce5e6896b890a944edc5bdc75d50624315f5b32131ff8c8a54dd710c1fd30a0",
+          "record_sha256": "5b413fc19d9c390613404b9d7206af9bb6ca51b3ae8b3794a4a59d74a697bdaf",
+          "actions_sha256": "98f894cb6d2b13a52d36e84e176ac32e837edae71bb7b89199280d94b4ad41b5",
+          "states_sha256": "bdcc53d87b0db121d60a4615ddf7f99c0ef129d3a5dbbe2419cffd6a0e5778fb",
+          "party88_bytes_match_original": true,
+          "flags_unchanged": true,
+          "items": [
+            [
+              "Tm21",
+              1
+            ]
+          ],
+          "capture_frames": {
+            "booted-machine": 364,
+            "teach-choice": 400,
+            "party-selection": 436,
+            "first-learning": 472,
+            "forget-menu": 712,
+            "combined-forgot-notice": 784,
+            "learned-message": 892,
+            "after-use": 964,
+            "saved": 2040
+          },
+          "quantity_checkpoints": {},
+          "decline_source_path_absent": false
+        },
+        "after": {
+          "run_dir": "tm-replace-1",
+          "normal_save": true,
+          "sram_checksum": 155,
+          "sram_sha256": "5de8f499706f027f0f655db3f1aecf50819e39605e892d85fb624d1272ac91a7",
+          "fixture_sha256": "249a11b37aa965a4da95e2da2bf1b27157119382ae3b5991009162a62882b47f",
+          "script_sha256": "4ce5e6896b890a944edc5bdc75d50624315f5b32131ff8c8a54dd710c1fd30a0",
+          "record_sha256": "97d0bb29ce201e1f8cadaf12a719c7036a2d8e33ea291624f72dd8e3073d8fef",
+          "actions_sha256": "1ea02e650e7842e8fb33aab2311ba6fc8bcde5223f1bf2ce8adda0ad2bbb73e4",
+          "states_sha256": "0551f30f8728c3774575b4437082a682c84c98fc39a23b2cf9b4d2c13bc15a62",
+          "party88_bytes_match_original": true,
+          "flags_unchanged": true,
+          "items": [
+            [
+              "Tm21",
+              1
+            ]
+          ],
+          "capture_frames": {
+            "booted-machine": 364,
+            "teach-choice": 400,
+            "party-selection": 436,
+            "first-learning": 472,
+            "forget-menu": 712,
+            "four-moves-warning": 748,
+            "delete-confirm": 784,
+            "actual-forget-menu": 820,
+            "forgot": 892,
+            "learned": 928,
+            "learned-message": 928,
+            "learned-before-ack": 1128,
+            "learned-acknowledged": 1164,
+            "after-use": 1164,
+            "saved": 2212
+          },
+          "quantity_checkpoints": {
+            "learned": {
+              "frame": 928,
+              "bag": [
+                {
+                  "item": "Tm21",
+                  "qty": 2
+                }
+              ]
+            },
+            "learned-before-ack": {
+              "frame": 1128,
+              "bag": [
+                {
+                  "item": "Tm21",
+                  "qty": 2
+                }
+              ]
+            },
+            "learned-acknowledged": {
+              "frame": 1164,
+              "bag": [
+                {
+                  "item": "Tm21",
+                  "qty": 1
+                }
+              ]
+            }
+          },
+          "decline_source_path_absent": false
+        }
+      }
+    },
+    {
+      "flow": "tm-replace",
+      "repeat": 2,
+      "original": {
+        "run_dir": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-860-original-tmhm-full-e0xowbj3/tm-replace-2",
+        "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+        "normal_save": true,
+        "sram_checksum": 174,
+        "sram_sha256": "37fdec28d0fb05d5812b4434c999be8a3ff248f13caa95e086c9d6808629ae90",
+        "saved_money": 3000,
+        "party_sram_raw_hex": "9900230c0016032d2148490f00000003cd000000000000000000009a78230a0a1e0c002300120013001100169900230c0016032d212d000000000003cd000000000000000000009a78232800000c00230012001300110016"
+      },
+      "native": {
+        "before": {
+          "run_dir": "tm-replace-2",
+          "normal_save": true,
+          "sram_checksum": 150,
+          "sram_sha256": "03bb8bcf3214de386d975d59239a5bff27f20f81d0193fe7f8be89e65f3a5521",
+          "fixture_sha256": "249a11b37aa965a4da95e2da2bf1b27157119382ae3b5991009162a62882b47f",
+          "script_sha256": "4ce5e6896b890a944edc5bdc75d50624315f5b32131ff8c8a54dd710c1fd30a0",
+          "record_sha256": "79c73e80bf938e771edc095eca56cfcaf112612e095c3b12c897b24a3c061d9d",
+          "actions_sha256": "98f894cb6d2b13a52d36e84e176ac32e837edae71bb7b89199280d94b4ad41b5",
+          "states_sha256": "bdcc53d87b0db121d60a4615ddf7f99c0ef129d3a5dbbe2419cffd6a0e5778fb",
+          "party88_bytes_match_original": true,
+          "flags_unchanged": true,
+          "items": [
+            [
+              "Tm21",
+              1
+            ]
+          ],
+          "capture_frames": {
+            "booted-machine": 364,
+            "teach-choice": 400,
+            "party-selection": 436,
+            "first-learning": 472,
+            "forget-menu": 712,
+            "combined-forgot-notice": 784,
+            "learned-message": 892,
+            "after-use": 964,
+            "saved": 2040
+          },
+          "quantity_checkpoints": {},
+          "decline_source_path_absent": false
+        },
+        "after": {
+          "run_dir": "tm-replace-2",
+          "normal_save": true,
+          "sram_checksum": 155,
+          "sram_sha256": "5de8f499706f027f0f655db3f1aecf50819e39605e892d85fb624d1272ac91a7",
+          "fixture_sha256": "249a11b37aa965a4da95e2da2bf1b27157119382ae3b5991009162a62882b47f",
+          "script_sha256": "4ce5e6896b890a944edc5bdc75d50624315f5b32131ff8c8a54dd710c1fd30a0",
+          "record_sha256": "3167f4ffcf77e2fa18b7cc62c9d2842d99e2a48294bbc350984fbe29d07b17de",
+          "actions_sha256": "1ea02e650e7842e8fb33aab2311ba6fc8bcde5223f1bf2ce8adda0ad2bbb73e4",
+          "states_sha256": "0551f30f8728c3774575b4437082a682c84c98fc39a23b2cf9b4d2c13bc15a62",
+          "party88_bytes_match_original": true,
+          "flags_unchanged": true,
+          "items": [
+            [
+              "Tm21",
+              1
+            ]
+          ],
+          "capture_frames": {
+            "booted-machine": 364,
+            "teach-choice": 400,
+            "party-selection": 436,
+            "first-learning": 472,
+            "forget-menu": 712,
+            "four-moves-warning": 748,
+            "delete-confirm": 784,
+            "actual-forget-menu": 820,
+            "forgot": 892,
+            "learned": 928,
+            "learned-message": 928,
+            "learned-before-ack": 1128,
+            "learned-acknowledged": 1164,
+            "after-use": 1164,
+            "saved": 2212
+          },
+          "quantity_checkpoints": {
+            "learned": {
+              "frame": 928,
+              "bag": [
+                {
+                  "item": "Tm21",
+                  "qty": 2
+                }
+              ]
+            },
+            "learned-before-ack": {
+              "frame": 1128,
+              "bag": [
+                {
+                  "item": "Tm21",
+                  "qty": 2
+                }
+              ]
+            },
+            "learned-acknowledged": {
+              "frame": 1164,
+              "bag": [
+                {
+                  "item": "Tm21",
+                  "qty": 1
+                }
+              ]
+            }
+          },
+          "decline_source_path_absent": false
+        }
+      }
+    },
+    {
+      "flow": "tm-decline",
+      "repeat": 1,
+      "original": {
+        "run_dir": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-860-original-tmhm-full-e0xowbj3/tm-decline-1",
+        "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+        "normal_save": true,
+        "sram_checksum": 182,
+        "sram_sha256": "e8c084998f82d5af5308c9f806ce82fc939277e199d851cb52923e45987926f1",
+        "saved_money": 3000,
+        "party_sram_raw_hex": "9900230c0016032d212d490f00000003cd000000000000000000009a7823280a1e0c002300120013001100169900230c0016032d212d000000000003cd000000000000000000009a78232800000c00230012001300110016"
+      },
+      "native": {
+        "before": {
+          "run_dir": "tm-decline-1",
+          "normal_save": true,
+          "sram_checksum": 151,
+          "sram_sha256": "8bda7f508bddfa63399b4b8e238af00f88e00fa63459e9606ddbc50769a549ea",
+          "fixture_sha256": "249a11b37aa965a4da95e2da2bf1b27157119382ae3b5991009162a62882b47f",
+          "script_sha256": "4ce5e6896b890a944edc5bdc75d50624315f5b32131ff8c8a54dd710c1fd30a0",
+          "record_sha256": "d9a75feb1f40fae0164e82f061f9d60f766e052d161790dab373e3c949af871e",
+          "actions_sha256": "f74227093bbcf39463e47c5538ecf7b3fb2cec67f61595de1f5f01d51bd5cfed",
+          "states_sha256": "351a7adda8f8fd5521b6e43535893347f0dfa823d1cb5155610f5d8ae4b8c4c0",
+          "party88_bytes_match_original": true,
+          "flags_unchanged": true,
+          "items": [
+            [
+              "Tm21",
+              2
+            ]
+          ],
+          "capture_frames": {
+            "booted-machine": 364,
+            "teach-choice": 400,
+            "party-selection": 436,
+            "first-learning": 472,
+            "forget-menu": 712,
+            "list-cancel": 856,
+            "canceled": 892,
+            "after-use": 928,
+            "saved": 1976
+          },
+          "quantity_checkpoints": {},
+          "decline_source_path_absent": true
+        },
+        "after": {
+          "run_dir": "tm-decline-1",
+          "normal_save": true,
+          "sram_checksum": 151,
+          "sram_sha256": "8bda7f508bddfa63399b4b8e238af00f88e00fa63459e9606ddbc50769a549ea",
+          "fixture_sha256": "249a11b37aa965a4da95e2da2bf1b27157119382ae3b5991009162a62882b47f",
+          "script_sha256": "4ce5e6896b890a944edc5bdc75d50624315f5b32131ff8c8a54dd710c1fd30a0",
+          "record_sha256": "4b97d8aaafd1ed93b0c782e08aaae96bd259afe18948d6b377694e73b0330966",
+          "actions_sha256": "946dbd2d23d2718804b9e22d4a1c1579cd88255efe701d4e277654c72ceae4e8",
+          "states_sha256": "67c857b61409e1a1e8279cf2f136c52123c3cdc395a15aab500438573a973ecb",
+          "party88_bytes_match_original": true,
+          "flags_unchanged": true,
+          "items": [
+            [
+              "Tm21",
+              2
+            ]
+          ],
+          "capture_frames": {
+            "booted-machine": 364,
+            "teach-choice": 400,
+            "party-selection": 436,
+            "first-learning": 472,
+            "forget-menu": 712,
+            "four-moves-warning": 748,
+            "delete-confirm": 784,
+            "abandon-confirm": 856,
+            "did-not-learn": 892,
+            "after-use": 928,
+            "saved": 1976
+          },
+          "quantity_checkpoints": {},
+          "decline_source_path_absent": false
+        }
+      }
+    },
+    {
+      "flow": "tm-decline",
+      "repeat": 2,
+      "original": {
+        "run_dir": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-860-original-tmhm-full-e0xowbj3/tm-decline-2",
+        "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+        "normal_save": true,
+        "sram_checksum": 182,
+        "sram_sha256": "e8c084998f82d5af5308c9f806ce82fc939277e199d851cb52923e45987926f1",
+        "saved_money": 3000,
+        "party_sram_raw_hex": "9900230c0016032d212d490f00000003cd000000000000000000009a7823280a1e0c002300120013001100169900230c0016032d212d000000000003cd000000000000000000009a78232800000c00230012001300110016"
+      },
+      "native": {
+        "before": {
+          "run_dir": "tm-decline-2",
+          "normal_save": true,
+          "sram_checksum": 151,
+          "sram_sha256": "8bda7f508bddfa63399b4b8e238af00f88e00fa63459e9606ddbc50769a549ea",
+          "fixture_sha256": "249a11b37aa965a4da95e2da2bf1b27157119382ae3b5991009162a62882b47f",
+          "script_sha256": "4ce5e6896b890a944edc5bdc75d50624315f5b32131ff8c8a54dd710c1fd30a0",
+          "record_sha256": "2bd75283b971e1e037568496502393f461c97b9bcc02b171c3bb06d0bcbf61b6",
+          "actions_sha256": "f74227093bbcf39463e47c5538ecf7b3fb2cec67f61595de1f5f01d51bd5cfed",
+          "states_sha256": "351a7adda8f8fd5521b6e43535893347f0dfa823d1cb5155610f5d8ae4b8c4c0",
+          "party88_bytes_match_original": true,
+          "flags_unchanged": true,
+          "items": [
+            [
+              "Tm21",
+              2
+            ]
+          ],
+          "capture_frames": {
+            "booted-machine": 364,
+            "teach-choice": 400,
+            "party-selection": 436,
+            "first-learning": 472,
+            "forget-menu": 712,
+            "list-cancel": 856,
+            "canceled": 892,
+            "after-use": 928,
+            "saved": 1976
+          },
+          "quantity_checkpoints": {},
+          "decline_source_path_absent": true
+        },
+        "after": {
+          "run_dir": "tm-decline-2",
+          "normal_save": true,
+          "sram_checksum": 151,
+          "sram_sha256": "8bda7f508bddfa63399b4b8e238af00f88e00fa63459e9606ddbc50769a549ea",
+          "fixture_sha256": "249a11b37aa965a4da95e2da2bf1b27157119382ae3b5991009162a62882b47f",
+          "script_sha256": "4ce5e6896b890a944edc5bdc75d50624315f5b32131ff8c8a54dd710c1fd30a0",
+          "record_sha256": "ad949798b352f19ba886f60f949946419f491c926b9a2706c919a6cfedf73d01",
+          "actions_sha256": "946dbd2d23d2718804b9e22d4a1c1579cd88255efe701d4e277654c72ceae4e8",
+          "states_sha256": "67c857b61409e1a1e8279cf2f136c52123c3cdc395a15aab500438573a973ecb",
+          "party88_bytes_match_original": true,
+          "flags_unchanged": true,
+          "items": [
+            [
+              "Tm21",
+              2
+            ]
+          ],
+          "capture_frames": {
+            "booted-machine": 364,
+            "teach-choice": 400,
+            "party-selection": 436,
+            "first-learning": 472,
+            "forget-menu": 712,
+            "four-moves-warning": 748,
+            "delete-confirm": 784,
+            "abandon-confirm": 856,
+            "did-not-learn": 892,
+            "after-use": 928,
+            "saved": 1976
+          },
+          "quantity_checkpoints": {},
+          "decline_source_path_absent": false
+        }
+      }
+    },
+    {
+      "flow": "tm-forget-cancel",
+      "repeat": 1,
+      "original": {
+        "run_dir": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-860-original-tmhm-full-e0xowbj3/tm-forget-cancel-1",
+        "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+        "normal_save": true,
+        "sram_checksum": 151,
+        "sram_sha256": "85ca43273d1226e3452c2478887a2cad8cb5828427c61db4ce06b617e7b34ec3",
+        "saved_money": 3000,
+        "party_sram_raw_hex": "9900230c0016032d212d490f00000003cd000000000000000000009a7823280a1e0c002300120013001100169900230c0016032d212d000000000003cd000000000000000000009a78232800000c00230012001300110016"
+      },
+      "native": {
+        "before": {
+          "run_dir": "tm-forget-cancel-1",
+          "normal_save": true,
+          "sram_checksum": 177,
+          "sram_sha256": "1599f5df7aaf411763c1c7bfa1336b411ab2ef23b289c4db05b653cd64b2f85a",
+          "fixture_sha256": "249a11b37aa965a4da95e2da2bf1b27157119382ae3b5991009162a62882b47f",
+          "script_sha256": "4ce5e6896b890a944edc5bdc75d50624315f5b32131ff8c8a54dd710c1fd30a0",
+          "record_sha256": "8ed020085c03771dcfa3d9065dc1783621bbb2482698081f65ef0c51d17bf76c",
+          "actions_sha256": "041c62c1de152d8cf22a660f80dfbb9e61bddca3f51cf2cf919a2bedade36235",
+          "states_sha256": "225690093b3b007983a0330725c892bc6e6ca08c9d50bdbf0557f1a9c5ea3dff",
+          "party88_bytes_match_original": true,
+          "flags_unchanged": true,
+          "items": [
+            [
+              "Tm21",
+              2
+            ]
+          ],
+          "capture_frames": {
+            "booted-machine": 364,
+            "teach-choice": 400,
+            "party-selection": 436,
+            "first-learning": 472,
+            "forget-menu": 712,
+            "canceled": 748,
+            "after-use": 784,
+            "saved": 1832
+          },
+          "quantity_checkpoints": {},
+          "decline_source_path_absent": false
+        },
+        "after": {
+          "run_dir": "tm-forget-cancel-1",
+          "normal_save": true,
+          "sram_checksum": 151,
+          "sram_sha256": "8bda7f508bddfa63399b4b8e238af00f88e00fa63459e9606ddbc50769a549ea",
+          "fixture_sha256": "249a11b37aa965a4da95e2da2bf1b27157119382ae3b5991009162a62882b47f",
+          "script_sha256": "4ce5e6896b890a944edc5bdc75d50624315f5b32131ff8c8a54dd710c1fd30a0",
+          "record_sha256": "38dd84ced32a4a6df9911c2edb8c324f52a91410c2e9d856d5951120a9f6f68d",
+          "actions_sha256": "39e01e09d0f88c6ab0dc66d6524c43c26db98a8dc448c3be6e9257ba55f585c8",
+          "states_sha256": "29f89d9bf1fde9a961653109cb34ad1aba90f3a8175286d6700a939f127c70e4",
+          "party88_bytes_match_original": true,
+          "flags_unchanged": true,
+          "items": [
+            [
+              "Tm21",
+              2
+            ]
+          ],
+          "capture_frames": {
+            "booted-machine": 364,
+            "teach-choice": 400,
+            "party-selection": 436,
+            "first-learning": 472,
+            "forget-menu": 712,
+            "four-moves-warning": 748,
+            "delete-confirm": 784,
+            "actual-forget-menu": 820,
+            "canceled": 856,
+            "abandon-confirm": 856,
+            "did-not-learn": 892,
+            "after-use": 928,
+            "saved": 1976
+          },
+          "quantity_checkpoints": {},
+          "decline_source_path_absent": false
+        }
+      }
+    },
+    {
+      "flow": "tm-forget-cancel",
+      "repeat": 2,
+      "original": {
+        "run_dir": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-860-original-tmhm-full-e0xowbj3/tm-forget-cancel-2",
+        "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+        "normal_save": true,
+        "sram_checksum": 151,
+        "sram_sha256": "85ca43273d1226e3452c2478887a2cad8cb5828427c61db4ce06b617e7b34ec3",
+        "saved_money": 3000,
+        "party_sram_raw_hex": "9900230c0016032d212d490f00000003cd000000000000000000009a7823280a1e0c002300120013001100169900230c0016032d212d000000000003cd000000000000000000009a78232800000c00230012001300110016"
+      },
+      "native": {
+        "before": {
+          "run_dir": "tm-forget-cancel-2",
+          "normal_save": true,
+          "sram_checksum": 177,
+          "sram_sha256": "1599f5df7aaf411763c1c7bfa1336b411ab2ef23b289c4db05b653cd64b2f85a",
+          "fixture_sha256": "249a11b37aa965a4da95e2da2bf1b27157119382ae3b5991009162a62882b47f",
+          "script_sha256": "4ce5e6896b890a944edc5bdc75d50624315f5b32131ff8c8a54dd710c1fd30a0",
+          "record_sha256": "2599ec019f2e1d5bd8843d96333393a03f1dab0408fba34a3bcf03a31917f173",
+          "actions_sha256": "041c62c1de152d8cf22a660f80dfbb9e61bddca3f51cf2cf919a2bedade36235",
+          "states_sha256": "225690093b3b007983a0330725c892bc6e6ca08c9d50bdbf0557f1a9c5ea3dff",
+          "party88_bytes_match_original": true,
+          "flags_unchanged": true,
+          "items": [
+            [
+              "Tm21",
+              2
+            ]
+          ],
+          "capture_frames": {
+            "booted-machine": 364,
+            "teach-choice": 400,
+            "party-selection": 436,
+            "first-learning": 472,
+            "forget-menu": 712,
+            "canceled": 748,
+            "after-use": 784,
+            "saved": 1832
+          },
+          "quantity_checkpoints": {},
+          "decline_source_path_absent": false
+        },
+        "after": {
+          "run_dir": "tm-forget-cancel-2",
+          "normal_save": true,
+          "sram_checksum": 151,
+          "sram_sha256": "8bda7f508bddfa63399b4b8e238af00f88e00fa63459e9606ddbc50769a549ea",
+          "fixture_sha256": "249a11b37aa965a4da95e2da2bf1b27157119382ae3b5991009162a62882b47f",
+          "script_sha256": "4ce5e6896b890a944edc5bdc75d50624315f5b32131ff8c8a54dd710c1fd30a0",
+          "record_sha256": "8740400b03ac6a3b36f696d89a4884693578a25e9851109925ff6845b82029a0",
+          "actions_sha256": "39e01e09d0f88c6ab0dc66d6524c43c26db98a8dc448c3be6e9257ba55f585c8",
+          "states_sha256": "29f89d9bf1fde9a961653109cb34ad1aba90f3a8175286d6700a939f127c70e4",
+          "party88_bytes_match_original": true,
+          "flags_unchanged": true,
+          "items": [
+            [
+              "Tm21",
+              2
+            ]
+          ],
+          "capture_frames": {
+            "booted-machine": 364,
+            "teach-choice": 400,
+            "party-selection": 436,
+            "first-learning": 472,
+            "forget-menu": 712,
+            "four-moves-warning": 748,
+            "delete-confirm": 784,
+            "actual-forget-menu": 820,
+            "canceled": 856,
+            "abandon-confirm": 856,
+            "did-not-learn": 892,
+            "after-use": 928,
+            "saved": 1976
+          },
+          "quantity_checkpoints": {},
+          "decline_source_path_absent": false
+        }
+      }
+    },
+    {
+      "flow": "tm-hm-refusal",
+      "repeat": 1,
+      "original": {
+        "run_dir": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-860-original-tmhm-full-e0xowbj3/tm-hm-refusal-1",
+        "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+        "normal_save": true,
+        "sram_checksum": 247,
+        "sram_sha256": "a8f6ec56007637618a2d95dcf320bc7d64886f2e66a324134d47597010e7adec",
+        "saved_money": 3000,
+        "party_sram_raw_hex": "9900230c0016032d2148490f00000003cd000000000000000000009a78230a0a1e0c002300120013001100169900230c0016032d212d000000000003cd000000000000000000009a78232800000c00230012001300110016"
+      },
+      "native": {
+        "before": {
+          "run_dir": "tm-hm-refusal-1",
+          "normal_save": true,
+          "sram_checksum": 170,
+          "sram_sha256": "17905d6b2bba5d984e02b7c37fec4baa1ad985c7a8142e2c3f57915927d6ed9c",
+          "fixture_sha256": "249a11b37aa965a4da95e2da2bf1b27157119382ae3b5991009162a62882b47f",
+          "script_sha256": "4ce5e6896b890a944edc5bdc75d50624315f5b32131ff8c8a54dd710c1fd30a0",
+          "record_sha256": "2d67aba586be38562dd73b26e332c49d68a0c3583ebd47377b7fbc88aa475d13",
+          "actions_sha256": "11432530c77f2d069650cb8552989cf34b6a809c7b21c4b624391637404769e3",
+          "states_sha256": "7c1c9d1af99fb36f65f32537c285e960755f7ad9857c5aba0800842a5ccb4103",
+          "party88_bytes_match_original": true,
+          "flags_unchanged": true,
+          "items": [
+            [
+              "Tm21",
+              1
+            ]
+          ],
+          "capture_frames": {
+            "booted-machine": 364,
+            "teach-choice": 400,
+            "party-selection": 436,
+            "first-learning": 472,
+            "forget-menu": 712,
+            "hm-refusal": 856,
+            "hm-retry": 892,
+            "combined-forgot-notice": 1000,
+            "learned-message": 1108,
+            "after-use": 1180,
+            "saved": 2256
+          },
+          "quantity_checkpoints": {},
+          "decline_source_path_absent": false
+        },
+        "after": {
+          "run_dir": "tm-hm-refusal-1",
+          "normal_save": true,
+          "sram_checksum": 152,
+          "sram_sha256": "abb754dc81c88f857a04a58e09aab5c128ef57301539a5516997d7023a78ecf1",
+          "fixture_sha256": "249a11b37aa965a4da95e2da2bf1b27157119382ae3b5991009162a62882b47f",
+          "script_sha256": "4ce5e6896b890a944edc5bdc75d50624315f5b32131ff8c8a54dd710c1fd30a0",
+          "record_sha256": "ca4f8bc99dd5bf144009102ec04d05706412a33fc94caa86d3a1dd1abf705b36",
+          "actions_sha256": "b2c5725e931f60779460ef494d15aacede80fe574ae7e917400d25760829c804",
+          "states_sha256": "ab3152782f7aedef27781cd33ff4d022f765f4453e6fe239c92d0eff94f5fcb1",
+          "party88_bytes_match_original": true,
+          "flags_unchanged": true,
+          "items": [
+            [
+              "Tm21",
+              1
+            ]
+          ],
+          "capture_frames": {
+            "booted-machine": 364,
+            "teach-choice": 400,
+            "party-selection": 436,
+            "first-learning": 472,
+            "forget-menu": 712,
+            "four-moves-warning": 748,
+            "delete-confirm": 784,
+            "actual-forget-menu": 820,
+            "hm-refusal": 964,
+            "hm-retry": 1000,
+            "forgot": 1072,
+            "learned": 1108,
+            "learned-message": 1108,
+            "learned-before-ack": 1308,
+            "learned-acknowledged": 1344,
+            "after-use": 1344,
+            "saved": 2392
+          },
+          "quantity_checkpoints": {
+            "learned": {
+              "frame": 1108,
+              "bag": [
+                {
+                  "item": "Tm21",
+                  "qty": 2
+                }
+              ]
+            },
+            "learned-before-ack": {
+              "frame": 1308,
+              "bag": [
+                {
+                  "item": "Tm21",
+                  "qty": 2
+                }
+              ]
+            },
+            "learned-acknowledged": {
+              "frame": 1344,
+              "bag": [
+                {
+                  "item": "Tm21",
+                  "qty": 1
+                }
+              ]
+            }
+          },
+          "decline_source_path_absent": false
+        }
+      }
+    },
+    {
+      "flow": "tm-hm-refusal",
+      "repeat": 2,
+      "original": {
+        "run_dir": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-860-original-tmhm-full-e0xowbj3/tm-hm-refusal-2",
+        "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+        "normal_save": true,
+        "sram_checksum": 247,
+        "sram_sha256": "a8f6ec56007637618a2d95dcf320bc7d64886f2e66a324134d47597010e7adec",
+        "saved_money": 3000,
+        "party_sram_raw_hex": "9900230c0016032d2148490f00000003cd000000000000000000009a78230a0a1e0c002300120013001100169900230c0016032d212d000000000003cd000000000000000000009a78232800000c00230012001300110016"
+      },
+      "native": {
+        "before": {
+          "run_dir": "tm-hm-refusal-2",
+          "normal_save": true,
+          "sram_checksum": 170,
+          "sram_sha256": "17905d6b2bba5d984e02b7c37fec4baa1ad985c7a8142e2c3f57915927d6ed9c",
+          "fixture_sha256": "249a11b37aa965a4da95e2da2bf1b27157119382ae3b5991009162a62882b47f",
+          "script_sha256": "4ce5e6896b890a944edc5bdc75d50624315f5b32131ff8c8a54dd710c1fd30a0",
+          "record_sha256": "0470194df851bb1e7a4edbd4d0aa0c5b4534894a4296098cc824625b69d49886",
+          "actions_sha256": "11432530c77f2d069650cb8552989cf34b6a809c7b21c4b624391637404769e3",
+          "states_sha256": "7c1c9d1af99fb36f65f32537c285e960755f7ad9857c5aba0800842a5ccb4103",
+          "party88_bytes_match_original": true,
+          "flags_unchanged": true,
+          "items": [
+            [
+              "Tm21",
+              1
+            ]
+          ],
+          "capture_frames": {
+            "booted-machine": 364,
+            "teach-choice": 400,
+            "party-selection": 436,
+            "first-learning": 472,
+            "forget-menu": 712,
+            "hm-refusal": 856,
+            "hm-retry": 892,
+            "combined-forgot-notice": 1000,
+            "learned-message": 1108,
+            "after-use": 1180,
+            "saved": 2256
+          },
+          "quantity_checkpoints": {},
+          "decline_source_path_absent": false
+        },
+        "after": {
+          "run_dir": "tm-hm-refusal-2",
+          "normal_save": true,
+          "sram_checksum": 152,
+          "sram_sha256": "abb754dc81c88f857a04a58e09aab5c128ef57301539a5516997d7023a78ecf1",
+          "fixture_sha256": "249a11b37aa965a4da95e2da2bf1b27157119382ae3b5991009162a62882b47f",
+          "script_sha256": "4ce5e6896b890a944edc5bdc75d50624315f5b32131ff8c8a54dd710c1fd30a0",
+          "record_sha256": "33657adaf72d336f00eefd58df0b609f7396822cdee6f0f705819e08731154dc",
+          "actions_sha256": "b2c5725e931f60779460ef494d15aacede80fe574ae7e917400d25760829c804",
+          "states_sha256": "ab3152782f7aedef27781cd33ff4d022f765f4453e6fe239c92d0eff94f5fcb1",
+          "party88_bytes_match_original": true,
+          "flags_unchanged": true,
+          "items": [
+            [
+              "Tm21",
+              1
+            ]
+          ],
+          "capture_frames": {
+            "booted-machine": 364,
+            "teach-choice": 400,
+            "party-selection": 436,
+            "first-learning": 472,
+            "forget-menu": 712,
+            "four-moves-warning": 748,
+            "delete-confirm": 784,
+            "actual-forget-menu": 820,
+            "hm-refusal": 964,
+            "hm-retry": 1000,
+            "forgot": 1072,
+            "learned": 1108,
+            "learned-message": 1108,
+            "learned-before-ack": 1308,
+            "learned-acknowledged": 1344,
+            "after-use": 1344,
+            "saved": 2392
+          },
+          "quantity_checkpoints": {
+            "learned": {
+              "frame": 1108,
+              "bag": [
+                {
+                  "item": "Tm21",
+                  "qty": 2
+                }
+              ]
+            },
+            "learned-before-ack": {
+              "frame": 1308,
+              "bag": [
+                {
+                  "item": "Tm21",
+                  "qty": 2
+                }
+              ]
+            },
+            "learned-acknowledged": {
+              "frame": 1344,
+              "bag": [
+                {
+                  "item": "Tm21",
+                  "qty": 1
+                }
+              ]
+            }
+          },
+          "decline_source_path_absent": false
+        }
+      }
+    },
+    {
+      "flow": "hm-replace",
+      "repeat": 1,
+      "original": {
+        "run_dir": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-860-original-tmhm-full-e0xowbj3/hm-replace-1",
+        "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+        "normal_save": true,
+        "sram_checksum": 205,
+        "sram_sha256": "b7eea5fd85b84273079a2ee7cdbae482f3ac289328ada64937a8f3bd4e6d6856",
+        "saved_money": 3000,
+        "party_sram_raw_hex": "9900250d0016032d210f491600000004ed000000000000000000009a78231e0a0a0d002500140014001200179900230c0016032d212d000000000003cd000000000000000000009a78232800000c00230012001300110016"
+      },
+      "native": {
+        "before": {
+          "run_dir": "hm-replace-1",
+          "normal_save": true,
+          "sram_checksum": 181,
+          "sram_sha256": "eb69d7b1fba62911e4a01c0274414a44a96b95c434f4e3e1d07308b4753af5b9",
+          "fixture_sha256": "cbb5d1e18885790e4732603924f5e2a9387d91c9b80264eb1d6b35f6a8daf3ed",
+          "script_sha256": "4ce5e6896b890a944edc5bdc75d50624315f5b32131ff8c8a54dd710c1fd30a0",
+          "record_sha256": "fa72963a5f7ce163803ef29749c49acaeae8cbd4b2fc912dcdcab6d88bae9329",
+          "actions_sha256": "98f894cb6d2b13a52d36e84e176ac32e837edae71bb7b89199280d94b4ad41b5",
+          "states_sha256": "cf45c7315072ae8482d614f6cb3726f567bfc892d4c2302e5c0bdf7c1a96a636",
+          "party88_bytes_match_original": true,
+          "flags_unchanged": true,
+          "items": [
+            [
+              "Hm01",
+              1
+            ]
+          ],
+          "capture_frames": {
+            "booted-machine": 364,
+            "teach-choice": 400,
+            "party-selection": 436,
+            "first-learning": 472,
+            "forget-menu": 712,
+            "combined-forgot-notice": 784,
+            "learned-message": 892,
+            "after-use": 964,
+            "saved": 2040
+          },
+          "quantity_checkpoints": {},
+          "decline_source_path_absent": false
+        },
+        "after": {
+          "run_dir": "hm-replace-1",
+          "normal_save": true,
+          "sram_checksum": 186,
+          "sram_sha256": "a06e6cfc84cc0a5a8f63a51f7ba3e996099bc29caf7904a37a9bcdd1c4a45552",
+          "fixture_sha256": "cbb5d1e18885790e4732603924f5e2a9387d91c9b80264eb1d6b35f6a8daf3ed",
+          "script_sha256": "4ce5e6896b890a944edc5bdc75d50624315f5b32131ff8c8a54dd710c1fd30a0",
+          "record_sha256": "6015c990e854f8b214a922b836ee02e41fd453dd629269fad5d698a0f4b5b63d",
+          "actions_sha256": "1ea02e650e7842e8fb33aab2311ba6fc8bcde5223f1bf2ce8adda0ad2bbb73e4",
+          "states_sha256": "5d93bedcd2eaf249aa136404bc7059bcffeb19b13afa63f09e01286bbcc97015",
+          "party88_bytes_match_original": true,
+          "flags_unchanged": true,
+          "items": [
+            [
+              "Hm01",
+              1
+            ]
+          ],
+          "capture_frames": {
+            "booted-machine": 364,
+            "teach-choice": 400,
+            "party-selection": 436,
+            "first-learning": 472,
+            "forget-menu": 712,
+            "four-moves-warning": 748,
+            "delete-confirm": 784,
+            "actual-forget-menu": 820,
+            "forgot": 892,
+            "learned": 928,
+            "learned-message": 928,
+            "learned-before-ack": 1128,
+            "learned-acknowledged": 1164,
+            "after-use": 1164,
+            "saved": 2212
+          },
+          "quantity_checkpoints": {
+            "learned": {
+              "frame": 928,
+              "bag": [
+                {
+                  "item": "Hm01",
+                  "qty": 1
+                }
+              ]
+            },
+            "learned-before-ack": {
+              "frame": 1128,
+              "bag": [
+                {
+                  "item": "Hm01",
+                  "qty": 1
+                }
+              ]
+            },
+            "learned-acknowledged": {
+              "frame": 1164,
+              "bag": [
+                {
+                  "item": "Hm01",
+                  "qty": 1
+                }
+              ]
+            }
+          },
+          "decline_source_path_absent": false
+        }
+      }
+    },
+    {
+      "flow": "hm-replace",
+      "repeat": 2,
+      "original": {
+        "run_dir": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-860-original-tmhm-full-e0xowbj3/hm-replace-2",
+        "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+        "normal_save": true,
+        "sram_checksum": 205,
+        "sram_sha256": "b7eea5fd85b84273079a2ee7cdbae482f3ac289328ada64937a8f3bd4e6d6856",
+        "saved_money": 3000,
+        "party_sram_raw_hex": "9900250d0016032d210f491600000004ed000000000000000000009a78231e0a0a0d002500140014001200179900230c0016032d212d000000000003cd000000000000000000009a78232800000c00230012001300110016"
+      },
+      "native": {
+        "before": {
+          "run_dir": "hm-replace-2",
+          "normal_save": true,
+          "sram_checksum": 181,
+          "sram_sha256": "eb69d7b1fba62911e4a01c0274414a44a96b95c434f4e3e1d07308b4753af5b9",
+          "fixture_sha256": "cbb5d1e18885790e4732603924f5e2a9387d91c9b80264eb1d6b35f6a8daf3ed",
+          "script_sha256": "4ce5e6896b890a944edc5bdc75d50624315f5b32131ff8c8a54dd710c1fd30a0",
+          "record_sha256": "41667df25e5c1610fa74acb9cdea58dc853db3e71e81549167e80b10bba4f54b",
+          "actions_sha256": "98f894cb6d2b13a52d36e84e176ac32e837edae71bb7b89199280d94b4ad41b5",
+          "states_sha256": "cf45c7315072ae8482d614f6cb3726f567bfc892d4c2302e5c0bdf7c1a96a636",
+          "party88_bytes_match_original": true,
+          "flags_unchanged": true,
+          "items": [
+            [
+              "Hm01",
+              1
+            ]
+          ],
+          "capture_frames": {
+            "booted-machine": 364,
+            "teach-choice": 400,
+            "party-selection": 436,
+            "first-learning": 472,
+            "forget-menu": 712,
+            "combined-forgot-notice": 784,
+            "learned-message": 892,
+            "after-use": 964,
+            "saved": 2040
+          },
+          "quantity_checkpoints": {},
+          "decline_source_path_absent": false
+        },
+        "after": {
+          "run_dir": "hm-replace-2",
+          "normal_save": true,
+          "sram_checksum": 186,
+          "sram_sha256": "a06e6cfc84cc0a5a8f63a51f7ba3e996099bc29caf7904a37a9bcdd1c4a45552",
+          "fixture_sha256": "cbb5d1e18885790e4732603924f5e2a9387d91c9b80264eb1d6b35f6a8daf3ed",
+          "script_sha256": "4ce5e6896b890a944edc5bdc75d50624315f5b32131ff8c8a54dd710c1fd30a0",
+          "record_sha256": "894c2e22e66abf84538833f5d3731a6f0ad70ce8d26e62a34cc382c583e47a29",
+          "actions_sha256": "1ea02e650e7842e8fb33aab2311ba6fc8bcde5223f1bf2ce8adda0ad2bbb73e4",
+          "states_sha256": "5d93bedcd2eaf249aa136404bc7059bcffeb19b13afa63f09e01286bbcc97015",
+          "party88_bytes_match_original": true,
+          "flags_unchanged": true,
+          "items": [
+            [
+              "Hm01",
+              1
+            ]
+          ],
+          "capture_frames": {
+            "booted-machine": 364,
+            "teach-choice": 400,
+            "party-selection": 436,
+            "first-learning": 472,
+            "forget-menu": 712,
+            "four-moves-warning": 748,
+            "delete-confirm": 784,
+            "actual-forget-menu": 820,
+            "forgot": 892,
+            "learned": 928,
+            "learned-message": 928,
+            "learned-before-ack": 1128,
+            "learned-acknowledged": 1164,
+            "after-use": 1164,
+            "saved": 2212
+          },
+          "quantity_checkpoints": {
+            "learned": {
+              "frame": 928,
+              "bag": [
+                {
+                  "item": "Hm01",
+                  "qty": 1
+                }
+              ]
+            },
+            "learned-before-ack": {
+              "frame": 1128,
+              "bag": [
+                {
+                  "item": "Hm01",
+                  "qty": 1
+                }
+              ]
+            },
+            "learned-acknowledged": {
+              "frame": 1164,
+              "bag": [
+                {
+                  "item": "Hm01",
+                  "qty": 1
+                }
+              ]
+            }
+          },
+          "decline_source_path_absent": false
+        }
+      }
+    }
+  ],
+  "validation": {
+    "original_actual_runs": 10,
+    "before_actual_runs": 10,
+    "after_actual_runs": 10,
+    "normal_save_and_valid_checksums_all": true,
+    "all88party_bytes_match_original": true,
+    "no_catch_rate_byte_excluded": true,
+    "repeat_actions_states_png_sram_identical": true,
+    "same_fixture_same_prefix_first_learning_frame472": true,
+    "tm_learned_qty2_after200neutralframes_until_ack_then_qty1": true,
+    "hm_learned_always_qty1": true,
+    "decline_cancel_tm_qty2": true,
+    "pp_ups_other_moves_stats_partner_money_preserved": true
+  },
+  "tests": {
+    "tmhm_debug": 10,
+    "candy_compat_debug": 11,
+    "full_app_debug": {
+      "passed": 258,
+      "failed": 1,
+      "ignored": 38,
+      "failure": "preexisting gift_dialogue_debug_tests::skip_dialogue_stops_at_gift_question_without_selecting_yes: nickname prompt; retained, not called green",
+      "captured_source": "a5488a64c8f5641e80105d6b884e5fbc67296eff",
+      "historical_result_not_latest_rebuild": true
+    },
+    "debug_server_app_build": "PASS",
+    "post238_tmhm_debug": 10,
+    "post238_candy_debug": 11
+  },
+  "limits": [
+    "BEFORE binary was built from1566+testedOakpatch;584Rust crate files match committedd455. Not relabeled clean2cc/newmaster. Parent2cc added236HP0gate/tests; audit healthy cases unchanged. Final master238 base screenshots remain a publish prerequisite.",
+    "Source actual controls: replace/decline+abandonYES/forgetB+abandonYES/HMretry/HMreplace. AbandonNO-retry, extra native listCANCEL, free-slot, fainted-full, bench-target, restore/reset have meaningful unit coverage but no new original live recording in870.",
+    "The prior source1b native860 audit is historical, not substituted for newer BEFORE901. First before870v1 metadata retained old scope wording and combined-forgot dialog was labeled learned; authoritative v2 reruns retain exact build identity and record true learned-message separately.",
+    "Before cannot select the absent DeleteNO question; its listCANCEL surrogate is explicit. After follows the actual original logical choices. Inputs are identical through first-learningframe472, not after restored missing prompts.",
+    "Whole SRAM/world/font/dialogue-layout timing parity is not claimed. This does not alter parent RareCandy level/stats/evolution/consumption policy."
+  ],
+  "screenshots": [
+    {
+      "file": "first-learning-before.png",
+      "stage": "before",
+      "flow": "tm-replace",
+      "tag": "first-learning",
+      "frame": 472,
+      "sha256": "eaabf517cfed217093c538aa079b65a560000d535393b119a2bc6ed0dbb58923"
+    },
+    {
+      "file": "first-learning-after.png",
+      "stage": "after",
+      "flow": "tm-replace",
+      "tag": "first-learning",
+      "frame": 472,
+      "sha256": "34879051d5e2920f031adf9b73b235cd2aaccebb3d5bc79b8bb936fb2224a8da"
+    },
+    {
+      "file": "delete-confirm-after.png",
+      "stage": "after",
+      "flow": "tm-replace",
+      "tag": "delete-confirm",
+      "frame": 784,
+      "sha256": "49640293c8c9ba7095fc67553124629de43bba481a5a868999f9ca405097d546"
+    },
+    {
+      "file": "abandon-confirm-after.png",
+      "stage": "after",
+      "flow": "tm-decline",
+      "tag": "abandon-confirm",
+      "frame": 856,
+      "sha256": "e2703a94574bbe5fa704c3586eada2335657e5533545267f921ec276e3c4cfaf"
+    },
+    {
+      "file": "did-not-learn-after.png",
+      "stage": "after",
+      "flow": "tm-decline",
+      "tag": "did-not-learn",
+      "frame": 892,
+      "sha256": "cfafc70ee367468a1d66db9cdddc17a971537c2b621d209555dccb9bd587eaff"
+    },
+    {
+      "file": "hm-retry-after.png",
+      "stage": "after",
+      "flow": "tm-hm-refusal",
+      "tag": "hm-retry",
+      "frame": 1000,
+      "sha256": "eaabf517cfed217093c538aa079b65a560000d535393b119a2bc6ed0dbb58923"
+    },
+    {
+      "file": "learned-message-after.png",
+      "stage": "after",
+      "flow": "tm-replace",
+      "tag": "learned-message",
+      "frame": 928,
+      "sha256": "c3ec83041cd5df5707ec321e8b7404344e1deb4cd07ae2cab3a640b7ae2b3c27"
+    }
+  ]
+}
