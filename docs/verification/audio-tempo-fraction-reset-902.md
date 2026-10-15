@@ -62,8 +62,17 @@ before/after screenshots are outside the audio-only PR's scope.
 The root `cargo metadata --locked --offline` resolution passed. A standalone GBA
 metadata attempt from the nested temporary worktree hit the outer repository's
 workspace discovery error; no manifest workspace changes were made to bypass it.
-The two GBA lockfile revisions were checked by the byte comparison above.
+Both lockfiles were checked by the byte comparison above.
 
 The engine PR must merge before this game dependency update; both PRs require
 passing CI at their final heads. The game's GBA build and performance gates run
 in its CI; the local consumer checks above do not claim a GBA game build.
+
+## Integration with master `6085c987`
+
+After PR 253 merged, merge `02203306` integrated master `6085c987` while retaining
+engine pin `76da597b`. A separate freeze was verified after all integration builds:
+98 audio tests, 2,888 core tests, and the desktop debug-server application build
+passed. The earlier 2,887-test record above belongs to base `b7c81d82` and has not
+been relabeled. This integration only adds this validation paragraph to the tested
+source after its freeze check; the engine pin and production code remain unchanged.
