@@ -4691,6 +4691,7 @@ impl PokemonGame {
                 }
             }
             GameScreen::Battle => {
+                let fight_notice_sound = crate::audio::FightNoticeSound::before(&self.battle.phase);
                 // Keep deterministic turn resolution separate from presentation:
                 // finish this move's visuals, then drain its HP, then allow the
                 // next narration/action. Core-only consumers remain unblocked.
@@ -4923,7 +4924,7 @@ impl PokemonGame {
                             | BattlePhase::PartySelect
                             | BattlePhase::PlayerFaintSwitch
                     );
-                    if in_menu
+                    if fight_notice_sound.after(&self.battle.phase, in_menu)
                         && (input.is_just_pressed(GbButton::A)
                             || input.is_just_pressed(GbButton::B))
                     {

@@ -15,3 +15,111 @@ pub fn play_species_cry(audio: &AudioOutput, species: Species) {
         audio.play_cry(id, c.pitch, c.length);
     }
 }
+
+/// A one-update view of the existing FIGHT caller, not retained playback state.
+/// Game's usual sound gate sees the resulting phase, while DirectBattle's sees
+/// the entering phase. Both must beep for selection/manual ACK, never Delay65.
+#[derive(Clone, Copy)]
+pub(crate) struct FightNoticeSound {
+    move_select: bool,
+    notice: Option<pokered_core::battle::FightNoticeWait>,
+}
+
+impl FightNoticeSound {
+    #[inline]
+    pub(crate) fn before(phase: &pokered_core::battle::BattlePhase) -> Self {
+        use pokered_core::battle::{BattlePhase, BattleTextBackdrop};
+        Self {
+            move_select: matches!(phase, BattlePhase::MoveSelect),
+            notice: match phase {
+                BattlePhase::ShowingText { backdrop: BattleTextBackdrop::FightMoveNotice { wait }, .. } => Some(*wait),
+                _ => None,
+            },
+        }
+    }
+
+    /// Preserve each frontend's other menu callers verbatim. A manual notice
+    /// acknowledges only when update actually leaves it (early keys are silent).
+    #[inline]
+    pub(crate) fn after(self, phase: &pokered_core::battle::BattlePhase, other_menu: bool) -> bool {
+        use pokered_core::battle::{BattlePhase, BattleTextBackdrop, FightNoticeWait};
+        match self.notice {
+            Some(FightNoticeWait::LinkDelay) => false,
+            Some(FightNoticeWait::Ack) => !matches!(phase, BattlePhase::ShowingText {
+                backdrop: BattleTextBackdrop::FightMoveNotice { .. }, .. }),
+            None => other_menu || (self.move_select && matches!(phase, BattlePhase::ShowingText {
+                backdrop: BattleTextBackdrop::FightMoveNotice { .. }, .. })),
+        }
+    }
+}
+
+#[cfg(test)]
+mod fight_notice_sound_tests {
+    use super::*;
+    use crate::alloc_prelude::*;
+    use pokered_core::battle::{BattleInput, BattlePhase, BattleScreen};
+    use pokered_core::pokemon::stats::create_pokemon_with_moves;
+    use pokered_data::moves::MoveId;
+
+    #[test]
+    fn fight_caller_beeps_only_for_selection_and_actual_manual_ack() {
+        let make=|species,moves| create_pokemon_with_moves(species,50,[0x9a,0x78],moves).unwrap();
+        let valid_selection=FightNoticeSound::before(&BattlePhase::MoveSelect);
+        assert!(!valid_selection.after(&BattlePhase::LinkWaiting,false), "retain Game's existing valid Link-action gate");
+        let ordinary=BattlePhase::ShowingText { messages:vec!["An ordinary turn.".into()],current:0,
+            wait_frames:10,next_phase:alloc::boxed::Box::new(BattlePhase::PlayerMenu),
+            backdrop:pokered_core::battle::BattleTextBackdrop::Battle };
+        assert!(!valid_selection.after(&ordinary,false), "do not broaden Game's valid-move SFX scope");
+        assert!(valid_selection.after(&ordinary,true), "DirectBattle's pre-update menu gate is unchanged");
+        for link in [false,true] {
+            let mut player=make(Species::Snorlax,[MoveId::Headbutt,MoveId::Amnesia,MoveId::Rest,MoveId::BodySlam]);
+            player.pp[0]=0;
+            let enemy=make(Species::Magikarp,[MoveId::Splash,MoveId::None,MoveId::None,MoveId::None]);
+            let mut screen=BattleScreen::from_parties(true,&[player],&[enemy],None);
+            screen.phase=BattlePhase::PlayerMenu; screen.link_mode=link;
+            let a=BattleInput { a:true,..BattleInput::none() };
+            screen.update_frame(a);
+            let mut accepted=Vec::new();
+            // A at entry, during each wait frame and at manual readiness.
+            // A single caller gate serves both frontends' pre/post menu policy.
+            for frame in 0..=if link {65}else{11} {
+                let sound=FightNoticeSound::before(&screen.phase);
+                screen.update_frame(a);
+                if sound.after(&screen.phase,matches!(screen.phase,BattlePhase::MoveSelect)) {
+                    accepted.push(frame);
+                }
+            }
+            assert_eq!(accepted,if link {vec![0]}else{vec![0,11]});
+            assert!(matches!(screen.phase,BattlePhase::MoveSelect));
+        }
+    }
+
+    #[test]
+    fn real_game_refusal_selection_and_ack_reach_existing_pcm_sfx_owner() {
+        use crate::PokemonGame;
+        use dotzuki_app::{GbButton,InputState};
+        use pokered_core::{data::wild_data::GameVersion,game_state::GameScreen};
+        let make=|species,moves| create_pokemon_with_moves(species,50,[0x9a,0x78],moves).unwrap();
+        let mut player=make(Species::Snorlax,[MoveId::Headbutt,MoveId::Amnesia,MoveId::Rest,MoveId::BodySlam]);
+        player.pp[0]=0;
+        let enemy=make(Species::Magikarp,[MoveId::Splash,MoveId::None,MoveId::None,MoveId::None]);
+        let mut game=PokemonGame::new(GameVersion::Red);
+        game.battle=BattleScreen::from_parties(true,&[player],&[enemy],None);
+        game.battle.phase=BattlePhase::PlayerMenu; game.state.screen=GameScreen::Battle;
+        game.audio=Some(AudioOutput::new_pcm());
+        let mut a=InputState::new();a.press(GbButton::A);
+        let mut b=InputState::new();b.press(GbButton::B);
+        game.update(&a);game.update(&InputState::new());
+        game.audio.as_ref().unwrap().stop_all();
+        game.update(&a);
+        assert!(matches!(game.battle.phase,BattlePhase::ShowingText{..}));
+        assert_eq!(game.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.current_sfx_id,SfxId::PressAB as u8);
+        game.audio.as_ref().unwrap().stop_all();
+        game.update(&b); // early ACK ignored, without another sound
+        assert_eq!(game.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.current_sfx_id,0);
+        for _ in 0..10 {game.update(&InputState::new());}
+        game.update(&b);
+        assert!(matches!(game.battle.phase,BattlePhase::MoveSelect));
+        assert_eq!(game.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.current_sfx_id,SfxId::PressAB as u8);
+    }
+}
