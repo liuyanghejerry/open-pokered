@@ -103,6 +103,174 @@ fn acknowledge(g: &mut PokemonGame) {
     g.update(&InputState::new()); // HoldTextDisplayOpen returns on A release.
 }
 
+fn approach_fourth_step_door(g: &mut PokemonGame) {
+    g.overworld = OverworldScreen::new(MapId::ViridianCity, None, PokemonRedData);
+    g.overworld.state.player.x = 20;
+    g.overworld.state.player.y = 26;
+    g.overworld.state.player.facing = dotzuki_engine::overworld::types::Direction::Right;
+    for button in [GbButton::Right, GbButton::Right, GbButton::Right, GbButton::Up] {
+        for _ in 0..4 { g.update(&buttons(&[button])); }
+        for _ in 0..28 { g.update(&InputState::new()); }
+    }
+}
+
+#[test]
+fn field_poison_door_fourth_step_damages_party_before_map_change() {
+    on_game_stack(|| {
+        let mut g = game(&[(10, true), (31, false)]);
+        approach_fourth_step_door(&mut g);
+        for _ in 0..120 { g.update(&InputState::new()); }
+        assert_eq!(g.overworld.state.current_map, MapId::ViridianPokecenter);
+        assert_eq!(hp(&g), vec![9, 31], "the door step still calls poison");
+    });
+}
+
+#[test]
+fn field_poison_door_waits_for_faint_ack_before_entering() {
+    on_game_stack(|| {
+        let mut g = game(&[(1, true), (31, false)]);
+        approach_fourth_step_door(&mut g);
+        wait_for_prompt(&mut g);
+        assert_eq!(g.overworld.state.current_map, MapId::ViridianCity);
+        assert_eq!(hp(&g), vec![0, 31]);
+        assert_eq!(g.overworld.warp_fade_state, pokered_core::overworld::WarpFadeState::Idle);
+        acknowledge(&mut g);
+        for _ in 0..120 { g.update(&InputState::new()); }
+        assert_eq!(g.overworld.state.current_map, MapId::ViridianPokecenter);
+        assert_eq!(hp(&g), vec![0, 31]);
+    });
+}
+
+#[test]
+fn field_poison_door_blackout_cancels_the_door_before_recovery() {
+    on_game_stack(|| {
+        let mut g = game(&[(1, true), (1, true)]);
+        approach_fourth_step_door(&mut g);
+        wait_for_prompt(&mut g);
+        assert_eq!(g.overworld.state.current_map, MapId::ViridianCity);
+        acknowledge(&mut g);
+        acknowledge(&mut g);
+        assert_eq!(g.overworld.poison_flow, Some(FieldPoisonFlow::Blackout));
+        assert!(g.overworld.pending_warp.is_none(), "abandon the pending clinic door");
+        acknowledge(&mut g);
+        for _ in 0..120 {
+            g.update(&InputState::new());
+            assert_ne!(g.overworld.state.current_map, MapId::ViridianPokecenter);
+        }
+        assert_eq!(g.overworld.state.current_map, MapId::PalletTown);
+        assert_eq!(hp(&g), vec![31, 31]);
+        assert_eq!(g.save_data.game_data.player_money, 1500);
+    });
+}
+
+#[test]
+fn field_poison_door_snapshot_resumes_the_original_destination_once() {
+    on_game_stack(|| {
+        let mut g = game(&[(1, true), (31, false)]);
+        approach_fourth_step_door(&mut g);
+        wait_for_prompt(&mut g);
+        let saved_party = g.save_data.clone();
+        let mut value = serde_json::to_value(OverworldSnapshot::capture(&g.overworld)).unwrap();
+        let snapshot: OverworldSnapshot = serde_json::from_value(value.clone()).unwrap();
+        let mut restored = game(&[(31, false)]);
+        restored.save_data = saved_party;
+        snapshot.restore_into(&mut restored.overworld);
+        for _ in 0..60 {
+            restored.update(&InputState::new());
+            assert_eq!(restored.overworld.state.current_map, MapId::ViridianCity);
+        }
+        acknowledge(&mut restored);
+        for _ in 0..180 { restored.update(&InputState::new()); }
+        assert_eq!(restored.overworld.state.current_map, MapId::ViridianPokecenter);
+        assert_eq!(hp(&restored), vec![0, 31]);
+        assert!(restored.overworld.pending_warp.is_none());
+        assert!(restored.overworld.poison_step_warp_sound.is_none());
+        value.as_object_mut().unwrap().remove("poison_step_warp_sound");
+        let legacy: OverworldSnapshot = serde_json::from_value(value).unwrap();
+        assert!(legacy.poison_step_warp_sound.is_none());
+    });
+}
+
+#[test]
+fn field_poison_door_reset_abandons_the_suspended_destination() {
+    on_game_stack(|| {
+        let mut g = game(&[(1, true), (31, false)]);
+        approach_fourth_step_door(&mut g);
+        wait_for_prompt(&mut g);
+        assert!(g.overworld.pending_warp.is_some());
+        let missing = std::env::temp_dir().join(format!(
+            "pokered-poison-door-907-missing-{}.sav", std::process::id()
+        ));
+        assert!(!missing.exists());
+        g.save_path = Some(missing);
+        g.soft_reset();
+        assert_eq!(g.state.screen, GameScreen::TitleScreen);
+        assert!(g.overworld.poison_flow.is_none());
+        assert!(g.overworld.pending_dialogue.is_none());
+        assert!(g.overworld.pending_warp.is_none());
+        assert!(g.overworld.poison_step_warp_sound.is_none());
+    });
+}
+
+#[test]
+fn field_poison_door_healthy_fourth_step_keeps_normal_transition_timing() {
+    on_game_stack(|| {
+        let run = |counter| {
+            let mut g = game(&[(31, false), (31, false)]);
+            g.overworld = OverworldScreen::new(MapId::ViridianCity, None, PokemonRedData);
+            g.overworld.state.player.x = 23;
+            g.overworld.state.player.y = 26;
+            g.overworld.state.player.facing = dotzuki_engine::overworld::types::Direction::Up;
+            g.overworld.poison_step_counter = counter;
+            let mut transition = Vec::new();
+            for frame in 0..120 {
+                g.update(&if frame < 4 { buttons(&[GbButton::Up]) } else { InputState::new() });
+                assert!(g.overworld.pending_dialogue.is_none());
+                assert!(g.overworld.poison_flow.is_none());
+                transition.push((g.overworld.state.current_map, g.overworld.warp_fade_state));
+            }
+            assert_eq!(g.overworld.state.current_map, MapId::ViridianPokecenter);
+            assert_eq!(hp(&g), vec![31, 31]);
+            transition
+        };
+        assert_eq!(run(0), run(3), "a healthy fourth step must not add a wait");
+    });
+}
+
+#[test]
+fn field_poison_door_safari_timeout_takes_priority_over_poison_and_rest_house() {
+    on_game_stack(|| {
+        let mut g = game(&[(1, true), (31, false)]);
+        g.overworld = OverworldScreen::new(MapId::SafariZoneCenter, None, PokemonRedData);
+        g.overworld.state.player.x = 17;
+        g.overworld.state.player.y = 20;
+        g.overworld.state.player.facing = dotzuki_engine::overworld::types::Direction::Up;
+        g.overworld.start_safari_game();
+        let mut snapshot = OverworldSnapshot::capture(&g.overworld);
+        snapshot.safari_steps = 0;
+        snapshot.poison_step_counter = 3;
+        snapshot.restore_into(&mut g.overworld);
+        for _ in 0..4 { g.update(&buttons(&[GbButton::Up])); }
+        for _ in 0..28 { g.update(&InputState::new()); }
+        assert_eq!((g.overworld.state.player.x, g.overworld.state.player.y), (17, 19));
+        assert!(OverworldSnapshot::capture(&g.overworld).safari_eject_pending.is_some());
+        assert!(g.overworld.pending_warp.is_none());
+        assert!(g.overworld.poison_flow.is_none());
+        assert!(g.overworld.poison_step_warp_sound.is_none());
+        assert_eq!(hp(&g), vec![1, 31]);
+        for _ in 0..6 {
+            if g.overworld.pending_dialogue.is_none() { break; }
+            acknowledge(&mut g);
+        }
+        for _ in 0..180 {
+            g.update(&InputState::new());
+            assert_ne!(g.overworld.state.current_map, MapId::SafariZoneCenterRestHouse);
+        }
+        assert_eq!(g.overworld.state.current_map, MapId::SafariZoneGate);
+        assert_eq!(hp(&g), vec![1, 31]);
+    });
+}
+
 #[test]
 fn field_poison_damage_waits_for_each_real_faint_ack() {
     on_game_stack(|| {
@@ -417,7 +585,7 @@ fn field_poison_ordinary_sram_load_clears_old_party_continuation() {
         let path = private.0.join("ordinary.sav");
         let mut g = game(&[(1, true), (31, false)]);
         g.save_to_path(&path).unwrap();
-        begin(&mut g);
+        approach_fourth_step_door(&mut g);
         assert_eq!(hp(&g), vec![0, 31]);
         assert!(g.overworld.pending_dialogue.is_some());
         g.load_from_path(&path).unwrap();
